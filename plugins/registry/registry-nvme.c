@@ -256,6 +256,7 @@ static struct command registry_list_cmd = {
 	.name = "list",
 	.help = "List live registry entries",
 	.fn = registry_list,
+	.no_device = true,
 };
 
 static struct command registry_retrieve_cmd = {

@@ -1131,12 +1131,14 @@ static struct command netapp_smdevices_cmd = {
 	.name = "smdevices",
 	.help = "NetApp SMdevices",
 	.fn = netapp_smdevices,
+	.no_device = true,
 };
 
 static struct command netapp_ontapdevices_cmd = {
 	.name = "ontapdevices",
 	.help = "NetApp ONTAPdevices",
 	.fn = netapp_ontapdevices,
+	.no_device = true,
 };
 
 static struct command *commands[] = {

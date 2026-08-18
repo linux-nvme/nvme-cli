@@ -133,6 +133,18 @@ static void usage_cmd(struct plugin *plugin)
 		printf("usage: %s %s\n", prog->name, prog->usage);
 }
 
+static void build_command_usage(char *use, size_t size, struct program *prog,
+				struct plugin *plugin, struct command *cmd)
+{
+	const char *device = cmd->no_device ? "" : " <device>";
+
+	if (!plugin->name)
+		snprintf(use, size, "%s %s%s [OPTIONS]", prog->name, cmd->name, device);
+	else
+		snprintf(use, size, "%s %s %s%s [OPTIONS]", prog->name, plugin->name,
+			cmd->name, device);
+}
+
 void plugin_add_group(struct plugin *plugin, const char *title,
 		      struct command **commands)
 {
@@ -165,6 +177,16 @@ void plugin_add_group(struct plugin *plugin, const char *title,
 	plugin->commands = merged;
 }
 
+static void print_device_desc(void)
+{
+	printf("'<device>' is one of:\n");
+	printf("  - an NVMe controller device (ex: /dev/nvme0)\n");
+	printf("  - an NVMe namespace device (ex: /dev/nvme0n1)\n");
+#ifdef CONFIG_MI
+	printf("  - a mctp address (ex: mctp:<net>,<eid>[:ctrl-id])\n");
+#endif
+}
+
 void general_help(struct plugin *plugin, char *str)
 {
 	struct program *prog = plugin->parent;
@@ -173,14 +195,29 @@ void general_help(struct plugin *plugin, char *str)
 	unsigned int padding = 15;
 	unsigned int curr_length = 0;
 	bool have_deprecated = false;
+	bool needs_device = false;
+
+	for (i = 0; plugin->commands[i]; i++) {
+		if (!plugin->commands[i]->no_device) {
+			needs_device = true;
+			break;
+		}
+	}
 
 	printf("%s-%s\n", prog->name, prog->version);
 
 	usage_cmd(plugin);
 
-	printf("\n");
-	shr_print_word_wrapped(prog->desc, 0, 0, stdout);
-	printf("\n");
+	if (prog->desc) {
+		printf("\n");
+		shr_print_word_wrapped(prog->desc, 0, 0, stdout);
+		printf("\n");
+	}
+
+	if (needs_device) {
+		printf("\n");
+		print_device_desc();
+	}
 
 	if (plugin->desc) {
 		printf("\n");
@@ -196,7 +233,7 @@ void general_help(struct plugin *plugin, char *str)
 	 * iterate through all commands to get maximum length
 	 * Still need to handle the case of ultra long strings, help messages, etc
 	 */
-	for (; plugin->commands[i]; i++) {
+	for (i = 0; plugin->commands[i]; i++) {
 		curr_length = 2 + strlen(plugin->commands[i]->name);
 		if (padding < curr_length)
 			padding = curr_length;
@@ -406,12 +443,6 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 
 	str = argv[0];
 
-	if (!plugin->name)
-		snprintf(use, sizeof(use), "%s %s <device> [OPTIONS]", prog->name, str);
-	else
-		snprintf(use, sizeof(use), "%s %s %s <device> [OPTIONS]", prog->name, plugin->name, str);
-	argconfig_append_usage(use);
-
 	if (!strcmp(str, "help"))
 		return help(argc, argv, plugin);
 	if (!strcmp(str, "version"))
@@ -419,8 +450,11 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 
 	while (*cmd) {
 		if (!strcmp(str, (*cmd)->name) ||
-		    ((*cmd)->alias && !strcmp(str, (*cmd)->alias)))
+		    ((*cmd)->alias && !strcmp(str, (*cmd)->alias))) {
+			build_command_usage(use, sizeof(use), prog, plugin, *cmd);
+			argconfig_append_usage(use);
 			return (*cmd)->fn(argc, argv, *cmd, plugin);
+		}
 		if (!strncmp(str, (*cmd)->name, strlen(str))) {
 			if (cr) {
 				cr_valid = false;
@@ -433,7 +467,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	}
 
 	if (cr && cr_valid) {
-		snprintf(use, sizeof(use), "%s %s <device> [OPTIONS]", prog->name, cr->name);
+		build_command_usage(use, sizeof(use), prog, plugin, cr);
 		argconfig_append_usage(use);
 		return cr->fn(argc, argv, cr, plugin);
 	}

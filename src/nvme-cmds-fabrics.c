@@ -158,48 +158,56 @@ static struct command discover_cmd_cmd = {
 	.name = "discover",
 	.help = "Discover NVMeoF subsystems",
 	.fn = discover_cmd,
+	.no_device = true,
 };
 
 static struct command connect_all_cmd_cmd = {
 	.name = "connect-all",
 	.help = "Discover and Connect to NVMeoF subsystems",
 	.fn = connect_all_cmd,
+	.no_device = true,
 };
 
 static struct command connect_cmd_cmd = {
 	.name = "connect",
 	.help = "Connect to NVMeoF subsystem",
 	.fn = connect_cmd,
+	.no_device = true,
 };
 
 static struct command disconnect_cmd_cmd = {
 	.name = "disconnect",
 	.help = "Disconnect from NVMeoF subsystem",
 	.fn = disconnect_cmd,
+	.no_device = true,
 };
 
 static struct command disconnect_all_cmd_cmd = {
 	.name = "disconnect-all",
 	.help = "Disconnect from all connected NVMeoF subsystems",
 	.fn = disconnect_all_cmd,
+	.no_device = true,
 };
 
 static struct command dim_cmd_cmd = {
 	.name = "dim",
 	.help = "Send Discovery Information Management command to a Discovery Controller",
 	.fn = dim_cmd,
+	.no_device = true,
 };
 
 static struct command gen_hostnqn_cmd_cmd = {
 	.name = "gen-hostnqn",
 	.help = "Generate NVMeoF host NQN",
 	.fn = gen_hostnqn_cmd,
+	.no_device = true,
 };
 
 static struct command show_hostnqn_cmd_cmd = {
 	.name = "show-hostnqn",
 	.help = "Show NVMeoF host NQN",
 	.fn = show_hostnqn_cmd,
+	.no_device = true,
 };
 
 static struct command *commands[] = {

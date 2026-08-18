@@ -402,6 +402,7 @@ static struct command huawei_list_cmd = {
 	.name = "list",
 	.help = "List all Huawei NVMe devices and namespaces on machine",
 	.fn = huawei_list,
+	.no_device = true,
 };
 
 static struct command huawei_id_ctrl_cmd = {
