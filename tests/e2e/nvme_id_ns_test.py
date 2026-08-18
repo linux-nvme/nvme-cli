@@ -58,7 +58,7 @@ class TestNVMeIdentifyNamespace(TestNVMe):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        id_ns_cmd = f"{self.nvme_bin} id ns {self.ctrl} " + \
+        id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ctrl} " + \
             f"--namespace-id={str(nsid)}"
         return self.exec_cmd(id_ns_cmd)
 

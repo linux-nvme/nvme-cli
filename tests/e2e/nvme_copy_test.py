@@ -95,7 +95,7 @@ class TestNVMeCopy(TestNVMe):
         array.  Returns 0 if either command fails or the pif field is absent
         (0 = 16-bit guard / no PI, the safe default for format 0/2 copy).
         """
-        id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} --output-format=json"
+        id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ns1} --output-format=json"
         result = self.run_cmd(id_ns_cmd)
         if result.returncode != 0:
             return 0
@@ -103,7 +103,7 @@ class TestNVMeCopy(TestNVMe):
         flbas = int(id_ns_data.get("flbas", 0))
         lbaf_idx = (flbas & 0xF) | (((flbas >> 5) & 0x3) << 4)
 
-        nvm_id_ns_cmd = f"{self.nvme_bin} id nvm-ns {self.ns1} --output-format=json"
+        nvm_id_ns_cmd = f"{self.nvme_bin} {self.command('id nvm-ns')} {self.ns1} --output-format=json"
         result = self.run_cmd(nvm_id_ns_cmd)
         if result.returncode != 0:
             return 0
@@ -144,7 +144,7 @@ class TestNVMeCopy(TestNVMe):
         Returns the lbaf index (0-based position in the lbafs[] array), or None
         if no such format exists or the id nvm-ns command is not supported.
         """
-        nvm_id_ns_cmd = f"{self.nvme_bin} id nvm-ns {self.ns1} --output-format=json"
+        nvm_id_ns_cmd = f"{self.nvme_bin} {self.command('id nvm-ns')} {self.ns1} --output-format=json"
         result = self.run_cmd(nvm_id_ns_cmd)
         if result.returncode != 0:
             return None
