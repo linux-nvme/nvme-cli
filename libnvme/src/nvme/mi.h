@@ -614,16 +614,16 @@ static inline int libnvme_mi_mi_config_set_smbus_freq(libnvme_mi_ep_t ep, __u8 p
 }
 
 /**
- * libnvme_mi_mi_config_set_health_status_change - clear CCS bits in health status
+ * libnvme_mi_mi_config_set_health_status_change - clear CCSF bits in health status
  * @ep: endpoint for MI communication
  * @mask: bitmask to clear
  *
  * Performs a MI Configuration Set, to update the current health status poll
- * values of the Composite Controller Status bits. Bits set in @mask will
+ * values of the Composite Controller Status Flags. Bits set in @mask will
  * be cleared from future health status poll data, and may be re-triggered by
  * a future health change event.
  *
- * See &libnvme_mi_mi_subsystem_health_status_poll(), &enum nvme_mi_ccs for
+ * See &libnvme_mi_mi_subsystem_health_status_poll(), &enum nvme_mi_ccsf for
  * values in @mask.
  *
  * Return: The nvme command status if a response was received (see
