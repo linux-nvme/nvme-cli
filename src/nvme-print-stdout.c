@@ -4396,14 +4396,14 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 			       bool eds)
 {
-	int i, j, regctl, entries;
+	int i, j, regstrnt, entries;
 
-	regctl = status->regctl[0] | (status->regctl[1] << 8);
+	regstrnt = status->regstrnt[0] | (status->regstrnt[1] << 8);
 
 	printf("\nNVME Reservation status:\n\n");
 	printf("gen       : %u\n", le32_to_cpu(status->gen));
 	printf("rtype     : %d\n", status->rtype);
-	printf("regctl    : %d\n", regctl);
+	printf("regstrnt  : %d\n", regstrnt);
 	printf("ptpls     : %d\n", status->ptpls);
 
 	/* check Extended Data Structure bit */
@@ -4413,38 +4413,38 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 		 * the buffer
 		 */
 		entries = (bytes - 24) / 24;
-		if (entries < regctl)
-			regctl = entries;
+		if (entries < regstrnt)
+			regstrnt = entries;
 
-		for (i = 0; i < regctl; i++) {
-			printf("regctl[%d] :\n", i);
+		for (i = 0; i < regstrnt; i++) {
+			printf("registrant[%d] :\n", i);
 			printf("  cntlid  : %x\n",
-				le16_to_cpu(status->regctl_ds[i].cntlid));
+				le16_to_cpu(status->registrant_ds[i].cntlid));
 			printf("  rcsts   : %x\n",
-				status->regctl_ds[i].rcsts);
+				status->registrant_ds[i].rcsts);
 			printf("  hostid  : %"PRIx64"\n",
-				le64_to_cpu(status->regctl_ds[i].hostid));
+				le64_to_cpu(status->registrant_ds[i].hostid));
 			printf("  rkey    : %"PRIx64"\n",
-				le64_to_cpu(status->regctl_ds[i].rkey));
+				le64_to_cpu(status->registrant_ds[i].rkey));
 		}
 	} else {
 		/* if status buffer was too small, don't loop past the end of the buffer */
 		entries = (bytes - 64) / 64;
-		if (entries < regctl)
-			regctl = entries;
+		if (entries < regstrnt)
+			regstrnt = entries;
 
-		for (i = 0; i < regctl; i++) {
-			printf("regctlext[%d] :\n", i);
+		for (i = 0; i < regstrnt; i++) {
+			printf("registrantext[%d] :\n", i);
 			printf("  cntlid     : %x\n",
-				le16_to_cpu(status->regctl_eds[i].cntlid));
+				le16_to_cpu(status->registrant_eds[i].cntlid));
 			printf("  rcsts      : %x\n",
-				status->regctl_eds[i].rcsts);
+				status->registrant_eds[i].rcsts);
 			printf("  rkey       : %"PRIx64"\n",
-				le64_to_cpu(status->regctl_eds[i].rkey));
+				le64_to_cpu(status->registrant_eds[i].rkey));
 			printf("  hostid     : ");
 			for (j = 0; j < 16; j++)
 				printf("%02x",
-					status->regctl_eds[i].hostid[j]);
+					status->registrant_eds[i].hostid[j]);
 			printf("\n");
 		}
 	}

@@ -676,14 +676,14 @@ struct nvme_copy_range_f3 {
 };
 
 /**
- * struct nvme_registered_ctrl - Registered Controller Data Structure
+ * struct nvme_registrant - Registrant Data Structure
  * @cntlid:	Controller ID
  * @rcsts:	Reservation Status
  * @rsvd3:	Reserved
  * @hostid:	Host Identifier
  * @rkey:	Reservation Key
  */
-struct nvme_registered_ctrl {
+struct nvme_registrant {
 	__le16	cntlid;
 	__u8	rcsts;
 	__u8	rsvd3[5];
@@ -692,7 +692,7 @@ struct nvme_registered_ctrl {
 };
 
 /**
- * struct nvme_registered_ctrl_ext - Registered Controller Extended Data Structure
+ * struct nvme_registrant_ext - Registrant Extended Data Structure
  * @cntlid:	Controller ID
  * @rcsts:	Reservation Status
  * @rsvd3:	Reserved
@@ -700,7 +700,7 @@ struct nvme_registered_ctrl {
  * @hostid:	Host Identifier
  * @rsvd32:	Reserved
  */
-struct nvme_registered_ctrl_ext {
+struct nvme_registrant_ext {
 	__le16	cntlid;
 	__u8	rcsts;
 	__u8	rsvd3[5];
@@ -713,27 +713,27 @@ struct nvme_registered_ctrl_ext {
  * struct nvme_resv_status - Reservation Status Data Structure
  * @gen:	Generation
  * @rtype:	Reservation Type
- * @regctl:	Number of Registered Controllers
+ * @regstrnt:	Number of Registrants
  * @rsvd7:	Reserved
  * @ptpls:	Persist Through Power Loss State
  * @rsvd10:	Reserved
  * @rsvd24:	Reserved
- * @regctl_eds: Registered Controller Extended Data Structure
- * @regctl_ds:	Registered Controller Data Structure
+ * @registrant_eds: Registrant Extended Data Structure
+ * @registrant_ds:	Registrant Data Structure
  */
 struct nvme_resv_status {
 	__le32	gen;
 	__u8	rtype;
-	__u8	regctl[2];
+	__u8	regstrnt[2];
 	__u8	rsvd7[2];
 	__u8	ptpls;
 	__u8	rsvd10[14];
 	union {
 		struct {
 			__u8	rsvd24[40];
-			struct nvme_registered_ctrl_ext regctl_eds[0];
+			struct nvme_registrant_ext registrant_eds[0];
 		};
-		struct nvme_registered_ctrl regctl_ds[0];
+		struct nvme_registrant registrant_ds[0];
 	};
 };
 
