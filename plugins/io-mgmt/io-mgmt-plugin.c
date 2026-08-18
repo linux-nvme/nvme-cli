@@ -214,6 +214,7 @@ static struct plugin plugin = {
 	.desc = "Submit NVMe I/O Management commands",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "I/O Commands",
 };
 
 static void __shr_constructor register_plugin(void)
