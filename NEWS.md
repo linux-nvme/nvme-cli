@@ -210,6 +210,17 @@
 
 ### nvme-cli
 
+* A new `nvme monitor smart` command (part of a new `monitor` plugin,
+  built when both `ocp` and `monitor` are selected) combines the
+  standard SMART log with the OCP SMART/health extended log (LID
+  0xC0), auto-detecting OCP support at runtime. Unlike `nvme log
+  smart`/`nvme ocp smart-add-log`, which are unaffected by this
+  addition, its JSON output always uses the same top-level keys
+  (`smart_log`, and `ocp_smart_extended_log` when supported)
+  regardless of the device, so fleet-monitoring scripts get a
+  predictable shape across a mix of OCP and non-OCP drives. See
+  `nvme-monitor-smart(1)`.
+
 * A new global config file, `/etc/nvme/nvme-cli.conf`, sets
   machine-wide defaults for global options like `--timeout`,
   `--output-format`, `--no-retries`, and `--no-ioctl-probing`. 
