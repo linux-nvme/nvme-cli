@@ -865,6 +865,15 @@ wanted_dict = {
 }
 summary(wanted_dict, section: 'Features to build', bool_yn: true)
 
+if want_nvme
+    plugin_dict = {
+        'core':      ', '.join(core_plugins),
+        'vendor':    ', '.join(vendor_plugins),
+        'disabled':  ', '.join(disabled_plugins),
+    }
+    summary(plugin_dict, section: 'Plugins')
+endif
+
 conf_dict = {
     'git version':      conf.get('GIT_VERSION'),
 }
