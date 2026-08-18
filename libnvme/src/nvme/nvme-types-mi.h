@@ -251,7 +251,7 @@ enum nvme_mi_sw {
  * @sw:		Smart Warnings (see &enum nvme_mi_sw)
  * @ctemp:	Composite Temperature
  * @pdlu:	Percentage Drive Life Used
- * @ccs:	Composite Controller Status
+ * @ccsf:	Composite Controller Status Flags (see &enum nvme_mi_ccsf)
  * @rsvd8:	Reserved
  */
 struct nvme_mi_nvm_ss_health_status {
@@ -259,38 +259,40 @@ struct nvme_mi_nvm_ss_health_status {
 	__u8	sw;
 	__u8	ctemp;
 	__u8	pdlu;
-	__le16	ccs;
+	__le16	ccsf;
 	__u8	rsvd8[2];
 };
 
 /**
- * enum nvme_mi_ccs - Get State Control Primitive Success Response Fields - Control Primitive Specific Response
- * @NVME_MI_CCS_RDY:	Ready
- * @NVME_MI_CCS_CFS:	Controller Fatal Status
- * @NVME_MI_CCS_SHST:	Shutdown Status
- * @NVME_MI_CCS_NSSRO:	NVM Subsystem Reset Occurred
- * @NVME_MI_CCS_CECO:	Controller Enable Change Occurred
- * @NVME_MI_CCS_NAC:	Namespace Attribute Changed
- * @NVME_MI_CCS_FA:	Firmware Activated
- * @NVME_MI_CCS_CSTS:	Controller Status Change
- * @NVME_MI_CCS_CTEMP:	Composite Temperature Change
- * @NVME_MI_CCS_PDLU:	Percentage Used
- * @NVME_MI_CCS_SPARE:	Available Spare
- * @NVME_MI_CCS_CCWARN:	Critical Warning
+ * enum nvme_mi_ccsf - NVM Subsystem Health Data Structure (NSHDS) - Composite Controller Status Flags (CCSF)
+ * @NVME_MI_CCSF_RDYF:		Ready Flag
+ * @NVME_MI_CCSF_CFSF:		Controller Fatal Status Flag
+ * @NVME_MI_CCSF_SHSTF:		Shutdown Status Flag
+ * @NVME_MI_CCSF_NSSROF:	NVM Subsystem Reset Occurred Flag
+ * @NVME_MI_CCSF_CECOF:		Controller Enable Change Occurred Flag
+ * @NVME_MI_CCSF_NACF:		Namespace Attribute Changed Flag
+ * @NVME_MI_CCSF_FAF:		Firmware Activated Flag
+ * @NVME_MI_CCSF_CSF:		Controller Status Change Flag
+ * @NVME_MI_CCSF_CTEMPF:	Composite Temperature Change Flag
+ * @NVME_MI_CCSF_PDLUF:		Percentage Drive Life Used Flag
+ * @NVME_MI_CCSF_SPAREF:	Available Spare Flag
+ * @NVME_MI_CCSF_CWARNF:	Critical Warning Flag
+ * @NVME_MI_CCSF_TCIDAF:	Telemetry Controller-Initiated Data Available Flag
  */
-enum nvme_mi_ccs {
-	NVME_MI_CCS_RDY		= 1 << 0,
-	NVME_MI_CCS_CFS		= 1 << 1,
-	NVME_MI_CCS_SHST	= 1 << 2,
-	NVME_MI_CCS_NSSRO	= 1 << 4,
-	NVME_MI_CCS_CECO	= 1 << 5,
-	NVME_MI_CCS_NAC		= 1 << 6,
-	NVME_MI_CCS_FA		= 1 << 7,
-	NVME_MI_CCS_CSTS	= 1 << 8,
-	NVME_MI_CCS_CTEMP	= 1 << 9,
-	NVME_MI_CCS_PDLU	= 1 << 10,
-	NVME_MI_CCS_SPARE	= 1 << 11,
-	NVME_MI_CCS_CCWARN	= 1 << 12,
+enum nvme_mi_ccsf {
+	NVME_MI_CCSF_RDYF	= 1 << 0,
+	NVME_MI_CCSF_CFSF	= 1 << 1,
+	NVME_MI_CCSF_SHSTF	= 1 << 2,
+	NVME_MI_CCSF_NSSROF	= 1 << 4,
+	NVME_MI_CCSF_CECOF	= 1 << 5,
+	NVME_MI_CCSF_NACF	= 1 << 6,
+	NVME_MI_CCSF_FAF	= 1 << 7,
+	NVME_MI_CCSF_CSF	= 1 << 8,
+	NVME_MI_CCSF_CTEMPF	= 1 << 9,
+	NVME_MI_CCSF_PDLUF	= 1 << 10,
+	NVME_MI_CCSF_SPAREF	= 1 << 11,
+	NVME_MI_CCSF_CWARNF	= 1 << 12,
+	NVME_MI_CCSF_TCIDAF	= 1 << 13,
 };
 
 /**
@@ -301,7 +303,8 @@ enum nvme_mi_ccs {
  * @pdlu:	Percentage Used
  * @spare:	Available Spare
  * @cwarn:	Critical Warning
- * @rsvd9:	Reserved
+ * @chscf:	Controller Health Status Changed Flags (see &enum nvme_mi_chscf)
+ * @rsvd11:	Reserved
  */
 struct nvme_mi_ctrl_health_status {
 	__le16	ctlid;
@@ -310,7 +313,40 @@ struct nvme_mi_ctrl_health_status {
 	__u8	pdlu;
 	__u8	spare;
 	__u8	cwarn;
-	__u8	rsvd9[7];
+	__u8	chscf[2];
+	__u8	rsvd11[5];
+};
+
+/**
+ * enum nvme_mi_chscf - Controller Health Data Structure (CHDS) - Controller Health Status Changed Flags (CHSCF)
+ * @NVME_MI_CHSCF_RDYF:		Ready Flag
+ * @NVME_MI_CHSCF_CFSF:		Controller Fatal Status Flag
+ * @NVME_MI_CHSCF_SHSTF:	Shutdown Status Flag
+ * @NVME_MI_CHSCF_NSSROF:	NVM Subsystem Reset Occurred Flag
+ * @NVME_MI_CHSCF_CECOF:	Controller Enable Change Occurred Flag
+ * @NVME_MI_CHSCF_NACF:		Namespace Attribute Changed Flag
+ * @NVME_MI_CHSCF_FAF:		Firmware Activated Flag
+ * @NVME_MI_CHSCF_CSF:		Controller Status Change Flag
+ * @NVME_MI_CHSCF_CTEMPF:	Composite Temperature Change Flag
+ * @NVME_MI_CHSCF_PDLUF:	Percentage Drive Life Used Flag
+ * @NVME_MI_CHSCF_SPAREF:	Available Spare Flag
+ * @NVME_MI_CHSCF_CWARNF:	Critical Warning Flag
+ * @NVME_MI_CHSCF_TCIDAF:	Telemetry Controller-Initiated Data Available Flag
+ */
+enum nvme_mi_chscf {
+	NVME_MI_CHSCF_RDYF	= 1 << 0,
+	NVME_MI_CHSCF_CFSF	= 1 << 1,
+	NVME_MI_CHSCF_SHSTF	= 1 << 2,
+	NVME_MI_CHSCF_NSSROF	= 1 << 4,
+	NVME_MI_CHSCF_CECOF	= 1 << 5,
+	NVME_MI_CHSCF_NACF	= 1 << 6,
+	NVME_MI_CHSCF_FAF	= 1 << 7,
+	NVME_MI_CHSCF_CSF	= 1 << 8,
+	NVME_MI_CHSCF_CTEMPF	= 1 << 9,
+	NVME_MI_CHSCF_PDLUF	= 1 << 10,
+	NVME_MI_CHSCF_SPAREF	= 1 << 11,
+	NVME_MI_CHSCF_CWARNF	= 1 << 12,
+	NVME_MI_CHSCF_TCIDAF	= 1 << 13,
 };
 
 /**

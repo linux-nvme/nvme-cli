@@ -851,7 +851,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int libnvme_mi_mi_config_set_health_status_change (libnvme_mi_ep_t ep, __u32 mask)
 
-   clear CCS bits in health status
+   clear CCSF bits in health status
 
 **Parameters**
 
@@ -864,11 +864,11 @@ The nvme command status if a response was received (see
 **Description**
 
 Performs a MI Configuration Set, to update the current health status poll
-values of the Composite Controller Status bits. Bits set in **mask** will
+values of the Composite Controller Status Flags. Bits set in **mask** will
 be cleared from future health status poll data, and may be re-triggered by
 a future health change event.
 
-See :c:type:`libnvme_mi_mi_subsystem_health_status_poll`(), :c:type:`enum nvme_mi_ccs <nvme_mi_ccs>` for
+See :c:type:`libnvme_mi_mi_subsystem_health_status_poll`(), :c:type:`enum nvme_mi_ccsf <nvme_mi_ccsf>` for
 values in **mask**.
 
 **Return**

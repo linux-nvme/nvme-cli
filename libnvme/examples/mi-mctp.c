@@ -113,7 +113,7 @@ int do_info(libnvme_mi_ep_t ep)
 	printf(" smart warnings:    0x%x\n", ss_health.sw);
 	printf(" composite temp:    %d\n", ss_health.ctemp);
 	printf(" drive life used:   %d%%\n", ss_health.pdlu);
-	printf(" controller status: 0x%04x\n", le16_to_cpu(ss_health.ccs));
+	printf(" controller status: 0x%04x\n", le16_to_cpu(ss_health.ccsf));
 
 	return 0;
 }
