@@ -212,7 +212,7 @@ static void json_fw_activation_history(const struct fw_activation_history *fw_hi
 	printf("\n");
 }
 
-static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
+static struct json_object *json_smart_extended_log_v1_obj(struct ocp_smart_extended_log *log)
 {
 	struct json_object *root;
 	struct json_object *pmuw;
@@ -379,12 +379,19 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 		json_object_add_value_uint(root, "Power State Change Count",
 						le64_to_cpu(log->power_state_change_count));
 	}
+	return root;
+}
+
+static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
+{
+	struct json_object *root = json_smart_extended_log_v1_obj(log);
+
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
 }
 
-static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
+static struct json_object *json_smart_extended_log_v2_obj(struct ocp_smart_extended_log *log)
 {
 	struct json_object *root;
 	struct json_object *pmuw;
@@ -543,6 +550,13 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 		json_object_add_value_uint(root, "power_state_change_count",
 						le64_to_cpu(log->power_state_change_count));
 	}
+	return root;
+}
+
+static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
+{
+	struct json_object *root = json_smart_extended_log_v2_obj(log);
+
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -557,6 +571,18 @@ static void json_smart_extended_log(struct ocp_smart_extended_log *log, unsigned
 		break;
 	case 2:
 		json_smart_extended_log_v2(log);
+	}
+}
+
+struct json_object *ocp_smart_extended_log_to_json(struct ocp_smart_extended_log *log,
+						     unsigned int version)
+{
+	switch (version) {
+	default:
+	case 1:
+		return json_smart_extended_log_v1_obj(log);
+	case 2:
+		return json_smart_extended_log_v2_obj(log);
 	}
 }
 static void json_telemetry_log(struct ocp_telemetry_parse_options *options)

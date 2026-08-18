@@ -29,15 +29,43 @@ static __u8 scao_guid[GUID_LEN] = {
 	0xC9, 0x14, 0xD5, 0xAF
 };
 
+int ocp_get_smart_extended_log(struct libnvme_transport_handle *hdl,
+			       struct ocp_smart_extended_log *log)
+{
+	struct libnvme_passthru_cmd cmd;
+	__u8 uidx;
+	int ret;
+	int i;
+
+	memset(log, 0, sizeof(*log));
+
+	ocp_get_uuid_index(hdl, &uidx);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  (enum nvme_cmd_get_log_lid)OCP_LID_SMART,
+			  NVME_CSI_NVM, log, sizeof(*log));
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	if (ret)
+		return ret;
+
+	/* check log page guid */
+	/* Verify GUID matches */
+	for (i = 0; i < 16; i++) {
+		if (scao_guid[i] != log->log_page_guid[i])
+			return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 			   unsigned int format_version)
 {
 	struct ocp_smart_extended_log *data;
-	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t fmt;
-	__u8 uidx;
 	int ret;
-	int i;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -50,50 +78,32 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof(*data));
 
-	ocp_get_uuid_index(hdl, &uidx);
-	nvme_init_get_log(&cmd, NVME_NSID_ALL,
-			  (enum nvme_cmd_get_log_lid)OCP_LID_SMART,
-			  NVME_CSI_NVM, data, sizeof(*data));
-	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
-				       NVME_LOG_CDW14_UUID_SHIFT,
-				       NVME_LOG_CDW14_UUID_MASK);
-	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	ret = ocp_get_smart_extended_log(hdl, data);
 
 	if (strcmp(format, "json"))
 		nvme_show_error("NVMe Status:%s(%x)",
 			libnvme_status_to_string(ret, false), ret);
 
-	if (ret == 0) {
-		/* check log page guid */
-		/* Verify GUID matches */
-		for (i = 0; i < 16; i++) {
-			if (scao_guid[i] != data->log_page_guid[i]) {
-				int j;
+	if (ret == -EINVAL) {
+		int j;
 
-				nvme_show_error("ERROR : OCP : Unknown GUID in C0 Log Page data");
-				nvme_show_error("ERROR : OCP : Expected GUID:  0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%x", scao_guid[j]);
+		nvme_show_error("ERROR : OCP : Unknown GUID in C0 Log Page data");
+		nvme_show_error("ERROR : OCP : Expected GUID:  0x");
+		for (j = 0; j < 16; j++)
+			nvme_show_error("%x", scao_guid[j]);
 
-				nvme_show_error("\nERROR : OCP : Actual GUID:    0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%x", data->log_page_guid[j]);
-				nvme_show_error("");
-
-				ret = -1;
-				goto out;
-			}
-		}
-
+		nvme_show_error("\nERROR : OCP : Actual GUID:    0x");
+		for (j = 0; j < 16; j++)
+			nvme_show_error("%x", data->log_page_guid[j]);
+		nvme_show_error("");
+	} else if (ret == 0) {
 		/* print the data */
 		ocp_smart_extended_log(data, format_version, fmt);
 	} else {
 		nvme_show_error("ERROR : OCP : Unable to read C0 data from buffer");
 	}
 
-out:
 	free(data);
 	return ret;
 }

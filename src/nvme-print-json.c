@@ -828,6 +828,18 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	obj_add_uint(r, "interval_power_measurement", le32_to_cpu(smart->interval_power_measurement));
 }
 
+struct json_object *nvme_smart_log_to_json(struct nvme_smart_log *smart, unsigned int nsid)
+{
+	struct json_object *saved = json_r;
+	struct json_object *obj = json_create_object();
+
+	json_r = obj;
+	json_smart_log(smart, nsid, NULL);
+	json_r = saved;
+
+	return obj;
+}
+
 static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 			 size_t len)
 {

@@ -35,6 +35,15 @@ int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index);
 int ocp_get_log_simple(struct libnvme_transport_handle *hdl, enum ocp_dssd_log_id lid, __u32 len, void *log);
 
 /**
+ * ocp_is_supported() - Check whether a device supports the OCP SMART/health log (LID 0xC0)
+ * @hdl:	nvme transport handle
+ *
+ * Return: true if the "Supported Log Pages" log reports LID 0xC0 as supported,
+ *         false otherwise (including on any error fetching that log).
+ */
+bool ocp_is_supported(struct libnvme_transport_handle *hdl);
+
+/**
  * ocp_is_tcg_activity_event() - Determine if persistent event is TCG activity event
  * @pevent_entry_head:	persistent event entry head pointer
  * @el:			Event Length

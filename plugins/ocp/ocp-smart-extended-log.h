@@ -13,6 +13,7 @@
 
 struct command;
 struct plugin;
+struct libnvme_transport_handle;
 
 /**
  * struct ocp_smart_extended_log -		SMART / Health Information Extended
@@ -154,3 +155,14 @@ struct ocp_smart_extended_log {
 
 int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin);
+
+/**
+ * ocp_get_smart_extended_log() - Fetch the OCP SMART / Health Information Extended log (LID 0xC0)
+ * @hdl:	nvme transport handle
+ * @log:	buffer to fill with the decoded log page
+ *
+ * Return: Zero on success, -EINVAL if the log page GUID doesn't match the expected OCP GUID,
+ *         or a negative POSIX/NVMe status error code otherwise.
+ */
+int ocp_get_smart_extended_log(struct libnvme_transport_handle *hdl,
+			       struct ocp_smart_extended_log *log);

@@ -238,7 +238,7 @@ option(
   type : 'array',
   choices: ['amzn', 'config', 'dapustor', 'dell', 'dera', 'dir',
             'exclusion', 'fdp', 'feat', 'fw', 'huawei', 'ibm', 'id', 'innogrit', 'inspur',
-            'intel', 'io-mgmt', 'keys', 'lm', 'log', 'mangoboost', 'memblaze', 'micron', 'nbft',
+            'intel', 'io-mgmt', 'keys', 'lm', 'log', 'mangoboost', 'memblaze', 'micron', 'monitor', 'nbft',
             'netapp', 'ns', 'nvidia', 'nvme-mi', 'ocp', 'registry', 'resv', 'sandisk', 'scaleflux',
             'seagate', 'security', 'sed', 'shannon', 'solidigm', 'ssstc', 'toshiba',
             'transcend', 'utils', 'virtium', 'wdc', 'ymtc', 'zns'],
