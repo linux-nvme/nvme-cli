@@ -669,6 +669,7 @@ static struct plugin plugin = {
 	.desc = "Manage NVMe namespaces",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Controller Management",
 };
 
 static void __shr_constructor register_plugin(void)

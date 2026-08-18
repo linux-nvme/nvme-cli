@@ -632,6 +632,7 @@ static struct plugin plugin = {
 	.desc = "Manage Flexible Data Placement enabled devices",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "I/O Commands",
 };
 
 static void __shr_constructor register_plugin(void)

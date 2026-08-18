@@ -662,6 +662,7 @@ static struct plugin plugin = {
 	.desc = "Live Migration NVMe extensions",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Controller Management",
 };
 
 static void __shr_constructor register_plugin(void)
