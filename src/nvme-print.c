@@ -864,7 +864,7 @@ const char *nvme_log_to_string(__u8 lid)
 	case NVME_LOG_LID_ERROR:			return "Error Information";
 	case NVME_LOG_LID_SMART:			return "SMART / Health Information";
 	case NVME_LOG_LID_FW_SLOT:			return "Firmware Slot Information";
-	case NVME_LOG_LID_CHANGED_NS:			return "Changed Namespace List";
+	case NVME_LOG_LID_CHANGED_ATTACHED_NS:		return "Changed Attached Namespace List";
 	case NVME_LOG_LID_CMD_EFFECTS:			return "Commands Supported and Effects";
 	case NVME_LOG_LID_DEVICE_SELF_TEST:		return "Device Self-test";
 	case NVME_LOG_LID_TELEMETRY_HOST:		return "Telemetry Host-Initiated";
@@ -1942,7 +1942,7 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 	case NVME_LOG_LID_FW_SLOT:
 		nvme_show_fw_log(log, devname, flags);
 		break;
-	case NVME_LOG_LID_CHANGED_NS:
+	case NVME_LOG_LID_CHANGED_ATTACHED_NS:
 		nvme_show_changed_ns_list_log(log, devname, flags, false);
 		break;
 	case NVME_LOG_LID_CMD_EFFECTS:

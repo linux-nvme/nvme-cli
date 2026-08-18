@@ -550,13 +550,13 @@ nvme_init_get_log_fw_slot(struct libnvme_passthru_cmd *cmd,
  * @ns_log:	User address to store the log page
  *
  * Initializes the passthru command buffer for the Get Log command with
- * LID value %NVME_LOG_LID_CHANGED_NS.
+ * LID value %NVME_LOG_LID_CHANGED_ATTACHED_NS.
  */
 static inline void
 nvme_init_get_log_changed_ns(struct libnvme_passthru_cmd *cmd,
 			struct nvme_ns_list *ns_log)
 {
-	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_CHANGED_NS,
+	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_CHANGED_ATTACHED_NS,
 		NVME_CSI_NVM, ns_log, sizeof(*ns_log));
 }
 

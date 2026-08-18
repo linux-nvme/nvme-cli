@@ -1744,7 +1744,7 @@ enum nvme_id_ctrl_cmic {
 
 /**
  * enum nvme_id_ctrl_oaes - Optional Asynchronous Events Supported
- * @NVME_CTRL_OAES_NA_SHIFT: Shift amount to get the Namespace Attribute Notices event supported
+ * @NVME_CTRL_OAES_NSAN_SHIFT: Shift amount to get the Attached Namespace Attribute Notices event supported
  * @NVME_CTRL_OAES_FA_SHIFT: Shift amount to get the Firmware Activation Notices event supported
  * @NVME_CTRL_OAES_ANA_SHIFT: Shift amount to get the ANA Change Notices supported
  * @NVME_CTRL_OAES_PLEA_SHIFT: Shift amount to get the Predictable Latency Event Aggregate Log
@@ -1762,7 +1762,7 @@ enum nvme_id_ctrl_cmic {
  * @NVME_CTRL_OAES_ZD_SHIFT: Shift amount to get the Zone Descriptor Change Notifications supported
  * @NVME_CTRL_OAES_DL_SHIFT: Shift amount to get the Discover Log Page Change Notifications
  *                           supported
- * @NVME_CTRL_OAES_NA_MASK: Mask to get the Namespace Attribute Notices event supported
+ * @NVME_CTRL_OAES_NSAN_MASK: Mask to get the Attached Namespace Attribute Notices event supported
  * @NVME_CTRL_OAES_FA_MASK: Mask to get the Firmware Activation Notices event supported
  * @NVME_CTRL_OAES_ANA_MASK: Mask to get the ANA Change Notices supported
  * @NVME_CTRL_OAES_PLEA_MASK: Mask to get the Predictable Latency Event Aggregate Log Change Notices
@@ -1777,7 +1777,7 @@ enum nvme_id_ctrl_cmic {
  * @NVME_CTRL_OAES_ANSAN_MASK: Mask to get the Allocated Namespace Attribute Notices supported
  * @NVME_CTRL_OAES_ZD_MASK: Mask to get the Zone Descriptor Change Notifications supported
  * @NVME_CTRL_OAES_DL_MASK: Mask to get the Discover Log Page Change Notifications supported
- * @NVME_CTRL_OAES_NA: Namespace Attribute Notices event supported
+ * @NVME_CTRL_OAES_NSAN: Attached Namespace Attribute Notices event supported
  * @NVME_CTRL_OAES_FA: Firmware Activation Notices event supported
  * @NVME_CTRL_OAES_ANA: ANA Change Notices supported
  * @NVME_CTRL_OAES_PLEA: Predictable Latency Event Aggregate Log Change Notices event supported
@@ -1791,7 +1791,7 @@ enum nvme_id_ctrl_cmic {
  * @NVME_CTRL_OAES_DL: Discover Log Page Change Notifications supported
  */
 enum nvme_id_ctrl_oaes {
-	NVME_CTRL_OAES_NA_SHIFT		= 8,
+	NVME_CTRL_OAES_NSAN_SHIFT	= 8,
 	NVME_CTRL_OAES_FA_SHIFT		= 9,
 	NVME_CTRL_OAES_ANA_SHIFT	= 11,
 	NVME_CTRL_OAES_PLEA_SHIFT	= 12,
@@ -1803,7 +1803,7 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_ANSAN_SHIFT	= 19,
 	NVME_CTRL_OAES_ZD_SHIFT		= 27,
 	NVME_CTRL_OAES_DL_SHIFT		= 31,
-	NVME_CTRL_OAES_NA_MASK		= 0x1,
+	NVME_CTRL_OAES_NSAN_MASK	= 0x1,
 	NVME_CTRL_OAES_FA_MASK		= 0x1,
 	NVME_CTRL_OAES_ANA_MASK		= 0x1,
 	NVME_CTRL_OAES_PLEA_MASK	= 0x1,
@@ -1815,7 +1815,7 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_ANSAN_MASK	= 0x1,
 	NVME_CTRL_OAES_ZD_MASK		= 0x1,
 	NVME_CTRL_OAES_DL_MASK		= 0x1,
-	NVME_CTRL_OAES_NA		= NVME_VAL(CTRL_OAES_NA),
+	NVME_CTRL_OAES_NSAN		= NVME_VAL(CTRL_OAES_NSAN),
 	NVME_CTRL_OAES_FA		= NVME_VAL(CTRL_OAES_FA),
 	NVME_CTRL_OAES_ANA		= NVME_VAL(CTRL_OAES_ANA),
 	NVME_CTRL_OAES_PLEA		= NVME_VAL(CTRL_OAES_PLEA),
@@ -1829,7 +1829,7 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_DL		= NVME_VAL(CTRL_OAES_DL),
 };
 
-#define NVME_CTRL_OAES_NAN(oaes)	NVME_GET(oaes, CTRL_OAES_NA)
+#define NVME_CTRL_OAES_NSAN(oaes)	NVME_GET(oaes, CTRL_OAES_NSAN)
 #define NVME_CTRL_OAES_FAN(oaes)	NVME_GET(oaes, CTRL_OAES_FA)
 #define NVME_CTRL_OAES_ANACN(oaes)	NVME_GET(oaes, CTRL_OAES_ANA)
 #define NVME_CTRL_OAES_PLEALCN(oaes)	NVME_GET(oaes, CTRL_OAES_PLEA)
@@ -6457,7 +6457,7 @@ enum nvme_ae_info_css_nvm {
 
 /**
  * enum nvme_ae_info_notice - Asynchronous Event Information - Notice
- * @NVME_AER_NOTICE_NS_CHANGED:		Namespace Attribute Changed
+ * @NVME_AER_NOTICE_ATTACHED_NS_CHANGED:	Attached Namespace Attribute Changed
  * @NVME_AER_NOTICE_FW_ACT_STARTING:	Firmware Activation Starting
  * @NVME_AER_NOTICE_TELEMETRY:		Telemetry Log Changed
  * @NVME_AER_NOTICE_ANA:		Asymmetric Namespace Access Change
@@ -6467,7 +6467,7 @@ enum nvme_ae_info_css_nvm {
  * @NVME_AER_NOTICE_DISC_CHANGED:	Discovery Log Page Change
  */
 enum nvme_ae_info_notice {
-	NVME_AER_NOTICE_NS_CHANGED			= 0x00,
+	NVME_AER_NOTICE_ATTACHED_NS_CHANGED		= 0x00,
 	NVME_AER_NOTICE_FW_ACT_STARTING			= 0x01,
 	NVME_AER_NOTICE_TELEMETRY			= 0x02,
 	NVME_AER_NOTICE_ANA				= 0x03,
@@ -7509,7 +7509,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_ERROR:				Error Information
  * @NVME_LOG_LID_SMART:				SMART / Health Information
  * @NVME_LOG_LID_FW_SLOT:			Firmware Slot Information
- * @NVME_LOG_LID_CHANGED_NS:			Changed Namespace List
+ * @NVME_LOG_LID_CHANGED_ATTACHED_NS:		Changed Attached Namespace List
  * @NVME_LOG_LID_CMD_EFFECTS:			Commands Supported and Effects
  * @NVME_LOG_LID_DEVICE_SELF_TEST:		Device Self-test
  * @NVME_LOG_LID_TELEMETRY_HOST:		Telemetry Host-Initiated
@@ -7559,7 +7559,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_ERROR					= 0x01,
 	NVME_LOG_LID_SMART					= 0x02,
 	NVME_LOG_LID_FW_SLOT					= 0x03,
-	NVME_LOG_LID_CHANGED_NS					= 0x04,
+	NVME_LOG_LID_CHANGED_ATTACHED_NS			= 0x04,
 	NVME_LOG_LID_CMD_EFFECTS				= 0x05,
 	NVME_LOG_LID_DEVICE_SELF_TEST				= 0x06,
 	NVME_LOG_LID_TELEMETRY_HOST				= 0x07,

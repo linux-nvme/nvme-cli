@@ -177,7 +177,7 @@ static void test_get_log_changed_ns_list(void)
 		.opcode = nvme_admin_get_log_page,
 		.nsid = NVME_NSID_ALL,
 		.data_len = sizeof(expected_log),
-		.cdw10 = (NVME_LOG_LID_CHANGED_NS << 0) | (!!TEST_RAE << 15) |
+		.cdw10 = (NVME_LOG_LID_CHANGED_ATTACHED_NS << 0) | (!!TEST_RAE << 15) |
 			 (((sizeof(expected_log) >> 2) - 1) << 16),
 		.out_data = &expected_log,
 	};

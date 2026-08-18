@@ -1468,7 +1468,7 @@ const char *log_page_name[256] = {
 	[NVME_LOG_LID_ERROR]		= "Error Information",
 	[NVME_LOG_LID_SMART]		= "SMART / Health Information",
 	[NVME_LOG_LID_FW_SLOT]		= "Firmware Slot Information",
-	[NVME_LOG_LID_CHANGED_NS]	= "Changed Namespace List",
+	[NVME_LOG_LID_CHANGED_ATTACHED_NS]	= "Changed Attached Namespace List",
 	[NVME_LOG_LID_CMD_EFFECTS]	= "Command Supported and Effects",
 	[NVME_LOG_LID_TELEMETRY_HOST]	= "Telemetry Host-Initiated",
 	[NVME_LOG_LID_TELEMETRY_CTRL]	= "Telemetry Controller-Initiated",
@@ -10670,8 +10670,8 @@ static const char *nvme_log_id_to_string(__u8 log_id)
 		return "Smart/Health Information Log ID";
 	case NVME_LOG_LID_FW_SLOT:
 		return "Firmware Slot Information Log ID";
-	case NVME_LOG_LID_CHANGED_NS:
-		return "Namespace Changed Log ID";
+	case NVME_LOG_LID_CHANGED_ATTACHED_NS:
+		return "Attached Namespace Changed Log ID";
 	case NVME_LOG_LID_CMD_EFFECTS:
 		return "Commamds Supported and Effects Log ID";
 	case NVME_LOG_LID_DEVICE_SELF_TEST:
