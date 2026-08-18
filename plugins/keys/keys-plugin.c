@@ -1073,48 +1073,56 @@ static struct command gen_kxchap_cmd = {
 	.name = "gen-kxchap-secret",
 	.help = "Generate NVMeoF KX-HMAC-CHAP host secret",
 	.fn = gen_kxchap,
+	.no_device = true,
 };
 
 static struct command check_kxchap_cmd = {
 	.name = "check-kxchap-secret",
 	.help = "Validate NVMeoF KX-HMAC-CHAP host secret format or check if loaded",
 	.fn = check_kxchap,
+	.no_device = true,
 };
 
 static struct command gen_tls_cmd = {
 	.name = "gen-tls",
 	.help = "Generate NVMeoF TLS PSK",
 	.fn = gen_tls,
+	.no_device = true,
 };
 
 static struct command check_tls_cmd = {
 	.name = "check-tls",
 	.help = "Validate NVMeoF TLS PSK format or check if loaded",
 	.fn = check_tls,
+	.no_device = true,
 };
 
 static struct command insert_tls_cmd = {
 	.name = "insert-tls",
 	.help = "Insert NVMeoF TLS PSK into a keyring",
 	.fn = insert_tls,
+	.no_device = true,
 };
 
 static struct command key_import_cmd = {
 	.name = "import",
 	.help = "Import NVMeoF TLS PSKs and KX-HMAC-CHAP secrets into a keyring",
 	.fn = key_import,
+	.no_device = true,
 };
 
 static struct command key_export_cmd = {
 	.name = "export",
 	.help = "Export NVMeoF TLS PSKs from a keyring",
 	.fn = key_export,
+	.no_device = true,
 };
 
 static struct command key_revoke_cmd = {
 	.name = "revoke",
 	.help = "Revoke an NVMeoF TLS PSK from a keyring",
 	.fn = key_revoke,
+	.no_device = true,
 };
 
 static struct command *commands[] = {

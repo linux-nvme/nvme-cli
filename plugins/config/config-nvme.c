@@ -56,30 +56,35 @@ static struct command config_validate_cmd_cmd = {
 	.name = "validate",
 	.help = "Validate an NVMeoF connection configuration",
 	.fn = config_validate_cmd,
+	.no_device = true,
 };
 
 static struct command config_show_cmd_cmd = {
 	.name = "show",
 	.help = "Show the resolved NVMeoF connection configuration",
 	.fn = config_show_cmd,
+	.no_device = true,
 };
 
 static struct command config_status_cmd_cmd = {
 	.name = "status",
 	.help = "Report config status",
 	.fn = config_status_cmd,
+	.no_device = true,
 };
 
 static struct command config_convert_cmd_cmd = {
 	.name = "convert",
 	.help = "Convert config.json/discovery.conf to INI",
 	.fn = config_convert_cmd,
+	.no_device = true,
 };
 
 static struct command config_create_cmd_cmd = {
 	.name = "create",
 	.help = "Create an NVMeoF connection entry in the INI configuration",
 	.fn = config_create_cmd,
+	.no_device = true,
 };
 
 static struct command *commands[] = {

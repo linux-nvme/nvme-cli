@@ -4415,12 +4415,14 @@ static struct command plugin_version_cmd = {
 	.name = "plugin-version",
 	.help = "Display plugin version info",
 	.fn = micron_plugin_version,
+	.no_device = true,
 };
 
 static struct command cloud_ssd_plugin_version_cmd = {
 	.name = "cloud-SSD-plugin-version",
 	.help = "Display plugin version info",
 	.fn = micron_cloud_ssd_plugin_version,
+	.no_device = true,
 };
 
 static struct command log_page_directory_cmd = {

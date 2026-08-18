@@ -65,10 +65,8 @@ static struct program nvme = {
 	.name = "nvme",
 	.version = nvme_version_string,
 	.usage = "<command> [<device>] [<args>]",
-	.desc = "The '<device>' may be either an NVMe controller "
-		"device (ex: /dev/nvme0), an nvme namespace device "
-		"(ex: /dev/nvme0n1), or a mctp address in the form "
-		"mctp:<net>,<eid>[:ctrl-id]",
+	.desc = "Send NVMe Admin and I/O commands, manage NVMe devices, "
+		"and configure NVMe-oF fabrics connections.",
 	.extensions = &builtin,
 };
 

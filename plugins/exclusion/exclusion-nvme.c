@@ -607,36 +607,42 @@ static struct command excl_create_cmd = {
 	.name = "create",
 	.help = "Create an exclusion list",
 	.fn = excl_create,
+	.no_device = true,
 };
 
 static struct command excl_delete_cmd = {
 	.name = "delete",
 	.help = "Delete an exclusion list",
 	.fn = excl_delete,
+	.no_device = true,
 };
 
 static struct command excl_edit_cmd = {
 	.name = "edit",
 	.help = "Edit an exclusion list interactively",
 	.fn = excl_edit,
+	.no_device = true,
 };
 
 static struct command excl_list_cmd = {
 	.name = "list",
 	.help = "List exclusion lists or entries",
 	.fn = excl_list,
+	.no_device = true,
 };
 
 static struct command excl_add_cmd = {
 	.name = "add",
 	.help = "Add an entry to an exclusion list",
 	.fn = excl_add,
+	.no_device = true,
 };
 
 static struct command excl_remove_cmd = {
 	.name = "remove",
 	.help = "Remove an entry from an exclusion list",
 	.fn = excl_remove,
+	.no_device = true,
 };
 
 static struct command *commands[] = {

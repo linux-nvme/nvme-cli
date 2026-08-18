@@ -261,12 +261,14 @@ static struct command list_cmd = {
 	.name = "list",
 	.help = "List all NVMe devices and namespaces on machine",
 	.fn = list,
+	.no_device = true,
 };
 
 static struct command list_subsys_cmd = {
 	.name = "list-subsys",
 	.help = "List nvme subsystems",
 	.fn = list_subsys,
+	.no_device = true,
 };
 
 #ifdef CONFIG_TOP
@@ -275,6 +277,7 @@ static struct command top_cmd = {
 	.name = "top",
 	.help = "nvme top",
 	.fn = top,
+	.no_device = true,
 };
 
 #endif /* CONFIG_TOP */
@@ -283,6 +286,7 @@ static struct command show_topology_cmd_cmd = {
 	.name = "show-topology",
 	.help = "Show the topology",
 	.fn = show_topology_cmd,
+	.no_device = true,
 };
 
 static struct command *commands[] = {

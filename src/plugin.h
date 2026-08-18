@@ -11,7 +11,6 @@ struct program {
 	const char *version;
 	const char *usage;
 	const char *desc;
-	const char *more;
 	struct command **commands;
 	struct plugin *extensions;
 };
@@ -47,6 +46,8 @@ struct command {
 	int (*fn)(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 	char *alias;
 	bool deprecated;
+	/* Set for commands that don't take a positional <device> argument. */
+	bool no_device;
 };
 
 /*
