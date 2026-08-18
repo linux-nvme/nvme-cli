@@ -1990,7 +1990,7 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	__u32 anacn = NVME_CTRL_OAES_ANACN(oaes);
 	__u32 rsvd10 = (oaes >> 10) & 0x1;
 	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
-	__u32 nace = NVME_CTRL_OAES_NAN(oaes);
+	__u32 nace = NVME_CTRL_OAES_NSAN(oaes);
 	__u32 rsvd0 = oaes & 0xFF;
 
 	printf("  [31:31] : %#x\tDiscovery Log Change Notice %sSupported\n",
@@ -2025,7 +2025,7 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 		printf("  [10:10] : %#x\tReserved\n", rsvd10);
 	printf("  [9:9] : %#x\tFirmware Activation Notices %sSupported\n",
 		fan, fan ? "" : "Not ");
-	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
+	printf("  [8:8] : %#x\tAttached Namespace Attribute Changed Event %sSupported\n",
 		nace, nace ? "" : "Not ");
 	if (rsvd0)
 		printf("  [7:0] : %#x\tReserved\n", rsvd0);
@@ -5491,7 +5491,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		       NVME_FEAT_AE_TELEM(result) ? async : no_async);
 		printf("\tFirmware Activation Notices                               : %s\n",
 		       NVME_FEAT_AE_FW(result) ? async : no_async);
-		printf("\tNamespace Attribute Notices                               : %s\n",
+		printf("\tAttached Namespace Attribute Notices                      : %s\n",
 		       NVME_FEAT_AE_NAN(result) ? async : no_async);
 		printf("\tSMART / Health Critical Warnings                          : %s\n",
 		       NVME_FEAT_AE_SMART(result) ? async : no_async);

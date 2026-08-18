@@ -736,7 +736,7 @@ static int ilog_dump_no_lsp_log_pages(struct libnvme_transport_handle *hdl, stru
 		 (ilog->id_ctrl.elpe + 1) * sizeof(struct nvme_error_log_page)},
 		{NVME_LOG_LID_SMART, NULL, sizeof(struct nvme_smart_log)},
 		{NVME_LOG_LID_FW_SLOT, NULL, sizeof(struct nvme_firmware_slot)},
-		{NVME_LOG_LID_CHANGED_NS, NULL, sizeof(struct nvme_ns_list)},
+		{NVME_LOG_LID_CHANGED_ATTACHED_NS, NULL, sizeof(struct nvme_ns_list)},
 		{NVME_LOG_LID_CMD_EFFECTS, NULL, sizeof(struct nvme_cmd_effects_log)},
 		{NVME_LOG_LID_DEVICE_SELF_TEST, NULL, sizeof(struct nvme_self_test_log)},
 		{NVME_LOG_LID_LBA_STATUS, NULL, sizeof(lba_status), (__u8 *) &lba_status},

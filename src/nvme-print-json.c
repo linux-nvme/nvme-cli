@@ -3697,7 +3697,7 @@ static void json_feature_show_fields_async_event(struct json_object *r, unsigned
 			async : no_async);
 	obj_add_str(r, "Telemetry Log Notices", NVME_FEAT_AE_TELEM(result) ? async : no_async);
 	obj_add_str(r, "Firmware Activation Notices", NVME_FEAT_AE_FW(result) ? async : no_async);
-	obj_add_str(r, "Namespace Attribute Notices", NVME_FEAT_AE_NAN(result) ? async : no_async);
+	obj_add_str(r, "Attached Namespace Attribute Notices", NVME_FEAT_AE_NAN(result) ? async : no_async);
 	obj_add_str(r, "SMART / Health Critical Warnings", NVME_FEAT_AE_SMART(result) ?
 			async : no_async);
 }

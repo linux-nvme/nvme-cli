@@ -939,7 +939,7 @@ static int get_changed_ns_list_log(int argc, char **argv, bool alloc)
 		nvme_init_get_log_changed_ns(&cmd, changed_ns_list_log);
 		err = libnvme_get_log(hdl, &cmd, true, sizeof(*changed_ns_list_log));
 	} else {
-		nvme_init_get_log(&cmd, NVME_NSID_NONE, NVME_LOG_LID_CHANGED_NS,
+		nvme_init_get_log(&cmd, NVME_NSID_NONE, NVME_LOG_LID_CHANGED_ATTACHED_NS,
 			NVME_CSI_NVM, changed_ns_list_log, sizeof(*changed_ns_list_log));
 		err = libnvme_get_log(hdl, &cmd, true, sizeof(*changed_ns_list_log));
 	}
