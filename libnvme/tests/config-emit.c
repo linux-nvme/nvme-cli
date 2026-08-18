@@ -289,14 +289,12 @@ static bool test_creates_missing_directory(struct libnvme_global_ctx *ctx,
 	}
 	libnvmf_config_emit_free(e);
 
-	if (access(nested_main, F_OK)) {
+	if (unlink(nested_main)) {
 		printf(" - main file missing after install [FAIL]\n");
 		pass = false;
 	} else {
 		printf(" - missing parent directories created [PASS]\n");
 	}
-
-	unlink(nested_main);
 	rmdir(nested_dir);
 	snprintf(nested_dir, sizeof(nested_dir), "%s/a/b", fx->dir);
 	rmdir(nested_dir);
