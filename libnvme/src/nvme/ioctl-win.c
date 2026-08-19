@@ -967,9 +967,9 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 	protocol_data = (PSTORAGE_PROTOCOL_SPECIFIC_DATA)query->AdditionalParameters;
 
 	/*
-	 * Use StorageDeviceProtocolSpecificProperty for log pages.
-	 * Per Windows documentation, this queries device/namespace
-	 * protocol-specific properties.
+	 * StorageDeviceProtocolSpecificProperty works for only a small set of
+	 * log pages. StorageAdapterProtocolSpecificProperty is more general and
+	 * works for all supported log pages.
 	 */
 	query->PropertyId = StorageAdapterProtocolSpecificProperty;
 	query->QueryType = PropertyStandardQuery;
