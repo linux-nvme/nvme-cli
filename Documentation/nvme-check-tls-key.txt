@@ -22,7 +22,7 @@ Deprecated alias for linknvme-keys-check-tls[1], kept for scripts written
 against nvme-cli versions older than 3.0.
 
 One difference: the old 'check-tls-key' also accepted '--insert'/'-i' to
-derive and store a 'retained' key directly, but the new 'check-tls' never
+derive and store a TLS PSK directly, but the new 'check-tls' never
 modifies the keyring -- that functionality moved to
 linknvme-keys-insert-tls[1]. Scripts relying on '--insert' here will get an
 "unrecognized option" error and must switch to 'nvme keys insert-tls'

@@ -32,7 +32,7 @@ into the equivalent new 'keys' plugin subcommand and forwards to it:
 Only the options relevant to the selected mode are meaningful; e.g.
 '--keytype' has no effect with '--import' or '--export' since the new
 'import'/'export' subcommands no longer take a key type. This command does
-not derive or insert a 'retained' TLS key from raw secret material -- use
+not derive or insert a TLS PSK from a configured PSK -- use
 linknvme-keys-gen-tls[1] or linknvme-keys-insert-tls[1] for that.
 
 New scripts should call 'nvme keys import', 'nvme keys export', or
