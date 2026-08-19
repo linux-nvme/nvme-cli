@@ -21,77 +21,91 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Generate a base64-encoded NVMe TLS pre-shared key (PSK).
-The resulting key is either printed in the PSK interchange format
-'NVMeTLSkey-1:01:<base64 encoded data>:' or inserted as a
-'retained' key into the specified keyring if the '--insert' option
-is given.
-When the PSK should be inserted into the keyring a 'retained' key
-is derived from the secret key material using the HKDF-Expand-Label
-algorithm from RFC 8446. The resulting 'retained'
-key is stored with the identity
-'NVMe0R0<hmac> <host NQN> <subsystem NQN>'
+Generate a NVMe TLS configured PSK and print it in the PSK interchange
+format 'NVMeTLSkey-1:<hmac>:<base64 encoded data>:'.
+If the '--insert' option is given a retained PSK is additionally derived
+from the configured PSK and the host NQN, using the HKDF-Expand-Label
+algorithm from RFC 8446, the TLS PSK is derived from it, and that is
+stored in the specified keyring under an identity computed from the host
+NQN and the subsystem NQN:
+'NVMe0R<hmac> <host NQN> <subsystem NQN>'
 (for identity version '0') or
-'NVMe1R0<hmac> <host NQN> <subsystem NQN> <PSK hash>'
-(for identity version '1') in the keyring.
-The 'retained' key is derived from the secret key material,
-the specified subsystem NQN, and the host NQN.
-Once the 'retained' key is stored in the keyring the original
-secret key material cannot be retrieved.
+'NVMe1R<hmac> <host NQN> <subsystem NQN> <PSK digest>'
+(for identity version '1').
+Once the TLS PSK is stored in the keyring the configured PSK it was
+derived from cannot be retrieved from the keyring.
+
+Both NQNs are inputs to the TLS PSK itself, not just to the identity it
+is stored under: the host NQN through the retained PSK derivation, and
+both NQNs again through the identity (identity version '0') or the PSK
+digest it embeds (identity version '1'), which is the context of the
+TLS PSK derivation.
 
 OPTIONS
 -------
 -k <name>::
 --keyring=<name>::
-	Name of the keyring into which the 'retained' TLS key should be
+	Name of the keyring into which the TLS PSK should be
 	stored. Default is '.nvme'.
 
 -t <type>::
 --keytype=<type>::
-	Type of the key for resulting TLS key.
+	Type of the key under which the TLS PSK is stored.
 	Default is 'psk'.
 
 -n <nqn>::
 --hostnqn=<nqn>::
-	Host NVMe Qualified Name (NQN) to be used to derive the
-	'retained' TLS key
+	Host NVMe Qualified Name (NQN) to be used for the retained PSK
+	derivation and for the identity the TLS PSK is stored under.
+	Defaults to the host NQN of the system, read from
+	/etc/nvme/hostnqn or, if that file does not exist, generated
+	from the host ID.
 
 -c <nqn>::
 --subsysnqn=<nqn>::
-	Subsystem NVMe Qualified Name (NQN) to be used to derive the
-	'retained' TLS key
+	Subsystem NVMe Qualified Name (NQN) to be used for the identity
+	the TLS PSK is stored under. Required with --insert.
 
 -m <hmac-id>::
 --hmac=<hmac-id>::
-	Select a HMAC algorithm to use. Possible values are:
+	Select the hash function. It derives the retained PSK and
+	identifies the TLS 1.3 cipher suite the TLS PSK is bound to, so it
+	is recorded both in the PSK interchange format and in the TLS PSK
+	identity, written as two digits ('<hmac>' above). Possible values
+	are:
 	1 - SHA-256 (default)
 	2 - SHA-384
 
--I <vers>::
+-I <id-vers>::
 --identity=<id-vers>::
-	Select the TLS identity to use. Possible values are:
-	0 - Original NVMe TLS 1.0c identity
-	1 - NVMe TLS 2.0 (TP8018) identity
+	Select the TLS PSK identity version of the identity the TLS PSK
+	is stored under. Possible values are:
+	0 - Obsolete (default); defined in the NVMe TCP Transport
+	    Specification 1.0
+	1 - TLS 1.3 with the PSK digest in the TLS PSK identity
 
 -s <secret>::
 --secret=<secret>::
-	Secret value (in hexadecimal) to be used for the key. If none are
-	provided a random value is used.
+	Configured PSK (in hexadecimal) to be used. If none are provided a
+	random value is used.
 
 -i::
 --insert::
-	Insert the resulting TLS key into the keyring without printing out
-	the key in PSK interchange format.
+	Additionally derive a retained PSK and, from that, the TLS PSK,
+	and insert the TLS PSK into the keyring. The configured PSK is
+	printed in PSK interchange format either way.
 
 -C::
 --compat::
 	Use the original non-RFC 8446 compliant algorithm when
-	deriving TLS keys for compatibility with older implementations.
+	deriving the retained PSK and the TLS PSK for compatibility with
+	older implementations.
 
 -f <keyfile>::
 --keyfile=<keyfile>::
-	Append the resulting TLS key to keyfile. This command line option
-	depends on --insert.
+	Append the identity of the TLS PSK, and the TLS PSK itself in
+	PSK interchange format, to keyfile. Ignored without --insert,
+	which is what derives the TLS PSK.
 
 include::global-options.txt[]
 

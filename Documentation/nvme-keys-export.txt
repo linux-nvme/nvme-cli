@@ -16,18 +16,26 @@ DESCRIPTION
 Export all NVMe TLS pre-shared keys (PSKs) from the system keyring
 in the form
 
-<description> <psk>
+<identity> <psk>
 
-where '<description>' is the key description from the exported key
-and '<psk>' is the key data in PSK interchange format
-'NVMeTLSkey-1:01:<base64 encoded data>:'. Each key is exported in a
+where '<identity>' is the TLS PSK identity the key is stored under
+and '<psk>' is the TLS PSK itself in PSK interchange format
+'NVMeTLSkey-1:<hmac>:<base64 encoded data>:'. Each key is exported in a
 single line.
+
+The PSK interchange format otherwise carries a configured PSK: it is
+what linknvme-keys-gen-tls[1] prints and what
+linknvme-keys-insert-tls[1] and linknvme-keys-check-tls[1] read. The
+keys exported here are TLS PSKs instead. This output is meant for
+linknvme-keys-import[1], which stores each key back under its identity
+unchanged; it is not intended to be passed to
+linknvme-keys-insert-tls[1] or linknvme-keys-check-tls[1].
 
 OPTIONS
 -------
 -k <name>::
 --keyring=<name>::
-	Name of the keyring to export the retained keys from. Default
+	Name of the keyring to export the TLS PSKs from. Default
 	is '.nvme'.
 
 -f <file>::
