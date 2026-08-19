@@ -325,7 +325,7 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 	__cleanup_free char *exported_key = NULL;
 	__cleanup_free char *identity = NULL;
 	__cleanup_file FILE *fd = NULL;
-	int err, ver, hmac, key_len;
+	int err, hmac, key_len;
 	mode_t old_umask;
 	long kr_id;
 	char type;
@@ -343,7 +343,7 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 		return -EINVAL;
 	}
 
-	if (sscanf(identity, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3) {
+	if (sscanf(identity, "NVMe%*1d%c%02d %*s", &type, &hmac) != 2) {
 		nvme_show_error("Failed to parse identity\n");
 		return -EINVAL;
 	}
@@ -355,7 +355,7 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 		return err;
 	}
 
-	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data,
+	err = libnvmf_export_tls_key_versioned(ctx, 1, hmac, key_data,
 					    key_len, &exported_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s",
@@ -768,7 +768,7 @@ static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	__cleanup_free unsigned char *key_data = NULL;
 	__cleanup_free char *encoded_key = NULL;
 	int key_len;
-	int ver, hmac;
+	int hmac;
 	char type;
 	int err;
 
@@ -776,10 +776,10 @@ static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	if (err)
 		return;
 
-	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
+	if (sscanf(desc, "NVMe%*1d%c%02d %*s", &type, &hmac) != 2)
 		return;
 
-	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
+	err = libnvmf_export_tls_key_versioned(ctx, 1, hmac, key_data, key_len,
 		&encoded_key);
 	if (err)
 		return;
