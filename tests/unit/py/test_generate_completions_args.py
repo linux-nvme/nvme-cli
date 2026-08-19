@@ -8,8 +8,9 @@
 
 The generator turns `nvme utils dump-command-metadata` JSON into shell
 completion scripts.  This test covers only its CLI contract -- which
-combinations of --bash/--zsh and output targets are accepted or rejected --
-not the generated content (the test-*-completion.sh suites cover that).
+combinations of --bash/--zsh/--powershell and output targets are accepted or
+rejected -- not the generated content (the test-*-completion.sh and
+test-powershell-completion.ps1 suites cover that).
 
 The error paths fire before any model is read, and a valid model needs only
 its schema version (the command/plugin lists default to empty), so the whole
@@ -44,8 +45,23 @@ class GenerateCompletionsArgsTest(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("specify at least one", r.stderr)
 
-    def test_both_shells_sharing_stdout_is_rejected(self):
+    def test_bash_zsh_to_stdout_is_rejected(self):
         r = self.run_gen("--bash", "-", "--zsh", "-")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("give each a FILE", r.stderr)
+
+    def test_bash_powershell_to_stdout_is_rejected(self):
+        r = self.run_gen("--bash", "-", "--powershell", "-")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("give each a FILE", r.stderr)
+
+    def test_zsh_powershell_to_stdout_is_rejected(self):
+        r = self.run_gen("--zsh", "-", "--powershell", "-")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("give each a FILE", r.stderr)
+
+    def test_all_three_to_stdout_is_rejected(self):
+        r = self.run_gen("--bash", "-", "--zsh", "-", "--powershell", "-")
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("give each a FILE", r.stderr)
 
@@ -55,18 +71,41 @@ class GenerateCompletionsArgsTest(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("give each a FILE", r.stderr)
 
-    def test_both_shells_to_files_succeeds(self):
+    def test_all_shells_to_files_succeeds(self):
         with tempfile.TemporaryDirectory() as d:
-            bash, zsh = os.path.join(d, "b"), os.path.join(d, "z")
-            r = self.run_gen("--bash", bash, "--zsh", zsh)
+            bash = os.path.join(d, "b")
+            zsh = os.path.join(d, "z")
+            ps = os.path.join(d, "p")
+            r = self.run_gen("--bash", bash, "--zsh", zsh, "--powershell", ps)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertGreater(os.path.getsize(bash), 0)
             self.assertGreater(os.path.getsize(zsh), 0)
+            self.assertGreater(os.path.getsize(ps), 0)
 
-    def test_single_shell_to_stdout_succeeds(self):
+    def test_bash_to_stdout_succeeds(self):
+        r = self.run_gen("--bash", "-")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("complete", r.stdout)
+
+    def test_zsh_to_stdout_succeeds(self):
         r = self.run_gen("--zsh", "-")
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("#compdef", r.stdout)
+
+    def test_powershell_to_stdout_succeeds(self):
+        r = self.run_gen("--powershell", "-")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("Register-ArgumentCompleter", r.stdout)
+
+    def test_wrong_schema_version_is_rejected(self):
+        r = subprocess.run(
+            [sys.executable, GENERATOR, "--bash", "-"],
+            input=json.dumps({"schema_version": 999}),
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("unsupported schema_version", r.stderr)
 
 
 if __name__ == "__main__":

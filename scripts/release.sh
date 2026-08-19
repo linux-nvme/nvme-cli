@@ -129,12 +129,13 @@ fi
 ./completions/generate-completions.py \
     --bash completions/bash-nvme-completion.sh \
     --zsh completions/_nvme \
+    --powershell completions/nvme-completion.ps1 \
     < "${BUILDDIR}/metadata.json"
 rm -rf -- "${BUILDDIR}"
 
-if [[ -n $(git status -s -- completions/bash-nvme-completion.sh completions/_nvme) ]]; then
-    git add completions/bash-nvme-completion.sh completions/_nvme
-    git commit -s -m "completions: regenerate bash and zsh completions for $VERSION"
+if [[ -n $(git status -s -- completions/bash-nvme-completion.sh completions/_nvme completions/nvme-completion.ps1) ]]; then
+    git add completions/bash-nvme-completion.sh completions/_nvme completions/nvme-completion.ps1
+    git commit -s -m "completions: regenerate bash, zsh, and PowerShell completions for $VERSION"
 fi
 
 # update meson.build
