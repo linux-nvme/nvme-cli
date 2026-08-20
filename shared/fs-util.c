@@ -87,6 +87,7 @@ unsigned char *shr_read_file(const char *dir, const char *path, long *size, int 
 {
 	__cleanup_free char *file_path = NULL;
 	unsigned char *buf = NULL;
+	long file_size;
 	FILE *file = NULL;
 	size_t n;
 	int i;
@@ -105,12 +106,13 @@ unsigned char *shr_read_file(const char *dir, const char *path, long *size, int 
 		return NULL;
 
 	fseek(file, 0, SEEK_END);
-	*size = ftell(file);
-	if (*size <= 0) {
+	file_size = ftell(file);
+	if (file_size <= 0) {
 		fclose(file);
 		return NULL;
 	}
 	fseek(file, 0, SEEK_SET);
+	*size = file_size + 1;
 
 	buf = malloc(*size);
 	if (!buf) {
@@ -118,13 +120,14 @@ unsigned char *shr_read_file(const char *dir, const char *path, long *size, int 
 		return NULL;
 	}
 
-	n = fread(buf, 1, *size, file);
+	n = fread(buf, 1, file_size, file);
 	fclose(file);
 
-	if (n != (size_t)*size) {
+	if (n != (size_t)file_size) {
 		free(buf);
 		return NULL;
 	}
 
+	buf[file_size] = '\0';
 	return buf;
 }
