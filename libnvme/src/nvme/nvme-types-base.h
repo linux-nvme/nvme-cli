@@ -2447,6 +2447,8 @@ enum nvme_id_ctrl_hctm {
  * @NVME_CTRL_SANICAP_NDI_SHIFT: No-deallocate inhibited shift
  * @NVME_CTRL_SANICAP_NODMMAS_SHIFT: No-deallocate modifies media after sanitize
  *				     shift
+ * @NVME_CTRL_SANICAP_SPRRS_SHIFT: Sanitize purge request and reporting
+ *				    supported shift
  * @NVME_CTRL_SANICAP_CES_MASK: Crypto erase support mask
  * @NVME_CTRL_SANICAP_BES_MASK: Block erase support mask
  * @NVME_CTRL_SANICAP_OWS_MASK: Overwrite support mask
@@ -2455,6 +2457,8 @@ enum nvme_id_ctrl_hctm {
  * @NVME_CTRL_SANICAP_NDI_MASK: No-deallocate inhibited mask
  * @NVME_CTRL_SANICAP_NODMMAS_MASK: No-deallocate modifies media after sanitize
  *				    mask
+ * @NVME_CTRL_SANICAP_SPRRS_MASK: Sanitize purge request and reporting
+ *				   supported mask
  * @NVME_CTRL_SANICAP_CES:     Crypto Erase Support. If set, then the
  *			       controller supports the Crypto Erase sanitize operation.
  * @NVME_CTRL_SANICAP_BES:     Block Erase Support. If set, then the controller
@@ -2470,6 +2474,12 @@ enum nvme_id_ctrl_hctm {
  *			       Sanitize bit is set in a Sanitize command.
  * @NVME_CTRL_SANICAP_NODMMAS: No-Deallocate Modifies Media After Sanitize,
  *			       mask to extract value.
+ * @NVME_CTRL_SANICAP_SPRRS:   Sanitize Purge Request and Reporting
+ *			       Supported. If set, then the controller supports
+ *			       the Purged (PRGD) field in the Sanitize Status
+ *			       log page and the Purge Required (PREQ) bit in
+ *			       the Sanitize command and the Sanitize Namespace
+ *			       command.
  */
 enum nvme_id_ctrl_sanicap {
 	NVME_CTRL_SANICAP_CES_SHIFT	= 0,
@@ -2477,6 +2487,7 @@ enum nvme_id_ctrl_sanicap {
 	NVME_CTRL_SANICAP_OWS_SHIFT	= 2,
 	NVME_CTRL_SANICAP_VERS_SHIFT	= 3,
 	NVME_CTRL_SANICAP_NVERS_SHIFT	= 4,
+	NVME_CTRL_SANICAP_SPRRS_SHIFT	= 5,
 	NVME_CTRL_SANICAP_NDI_SHIFT	= 29,
 	NVME_CTRL_SANICAP_NODMMAS_SHIFT	= 30,
 	NVME_CTRL_SANICAP_CES_MASK	= 0x1,
@@ -2484,6 +2495,7 @@ enum nvme_id_ctrl_sanicap {
 	NVME_CTRL_SANICAP_OWS_MASK	= 0x1,
 	NVME_CTRL_SANICAP_VERS_MASK	= 0x1,
 	NVME_CTRL_SANICAP_NVERS_MASK	= 0x1,
+	NVME_CTRL_SANICAP_SPRRS_MASK	= 0x1,
 	NVME_CTRL_SANICAP_NDI_MASK	= 0x1,
 	NVME_CTRL_SANICAP_NODMMAS_MASK	= 0x3,
 	NVME_CTRL_SANICAP_CES		= NVME_VAL(CTRL_SANICAP_CES),
@@ -2491,6 +2503,7 @@ enum nvme_id_ctrl_sanicap {
 	NVME_CTRL_SANICAP_OWS		= NVME_VAL(CTRL_SANICAP_OWS),
 	NVME_CTRL_SANICAP_VERS		= NVME_VAL(CTRL_SANICAP_VERS),
 	NVME_CTRL_SANICAP_NVERS		= NVME_VAL(CTRL_SANICAP_NVERS),
+	NVME_CTRL_SANICAP_SPRRS		= NVME_VAL(CTRL_SANICAP_SPRRS),
 	NVME_CTRL_SANICAP_NDI		= NVME_VAL(CTRL_SANICAP_NDI),
 	NVME_CTRL_SANICAP_NODMMAS	= NVME_VAL(CTRL_SANICAP_NODMMAS),
 };
@@ -2500,6 +2513,7 @@ enum nvme_id_ctrl_sanicap {
 #define NVME_CTRL_SANICAP_OWS(sanicap)     NVME_GET(sanicap, CTRL_SANICAP_OWS)
 #define NVME_CTRL_SANICAP_VERS(sanicap)    NVME_GET(sanicap, CTRL_SANICAP_VERS)
 #define NVME_CTRL_SANICAP_NVERS(sanicap)   NVME_GET(sanicap, CTRL_SANICAP_NVERS)
+#define NVME_CTRL_SANICAP_SPRRS(sanicap)   NVME_GET(sanicap, CTRL_SANICAP_SPRRS)
 #define NVME_CTRL_SANICAP_NDI(sanicap)     NVME_GET(sanicap, CTRL_SANICAP_NDI)
 #define NVME_CTRL_SANICAP_NODMMAS(sanicap) \
 	NVME_GET(sanicap, CTRL_SANICAP_NODMMAS)
@@ -5926,6 +5940,16 @@ struct nvme_sanitize_log_page {
  *					Canceled bit of Sanitize status field.
  * @NVME_SANITIZE_SSTAT_MVCNCLD_MASK:	Mask to get the value of Media Verification Canceled
  *					bit of Sanitize status field.
+ * @NVME_SANITIZE_SSTAT_PRGD_SHIFT:	Shift amount to get the Purged (PRGD)
+ *					bit of Sanitize status field.
+ * @NVME_SANITIZE_SSTAT_PRGD_MASK:	Mask to get the Purged (PRGD) bit of
+ *					Sanitize status field.
+ * @NVME_SANITIZE_SSTAT_PRGD:		Purged: if set, then the most recent
+ *					sanitize operation purged user data, as
+ *					defined by IEEE Std 2883, because the
+ *					Purge Required (PREQ) bit was set to
+ *					'1' in the command that started that
+ *					sanitize operation.
  */
 enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_STATUS_SHIFT		= 0,
@@ -5942,6 +5966,9 @@ enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED		= 1 << NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT,
 	NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT		= 9,
 	NVME_SANITIZE_SSTAT_MVCNCLD_MASK		= 0x1,
+	NVME_SANITIZE_SSTAT_PRGD_SHIFT			= 11,
+	NVME_SANITIZE_SSTAT_PRGD_MASK			= 0x1,
+	NVME_SANITIZE_SSTAT_PRGD			= 1 << NVME_SANITIZE_SSTAT_PRGD_SHIFT,
 };
 
 #define NVME_SANITIZE_SSTAT_STATUS(sstat)		NVME_GET(sstat, SANITIZE_SSTAT_STATUS)

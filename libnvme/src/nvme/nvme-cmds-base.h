@@ -200,12 +200,18 @@ enum {
 	NVME_SANITIZE_CDW10_OIPBP_SHIFT				= 8,
 	NVME_SANITIZE_CDW10_OWPASS_SHIFT			= 4,
 	NVME_SANITIZE_CDW10_SANACT_SHIFT			= 0,
+	NVME_SANITIZE_CDW10_PREQ_SHIFT				= 11,
 	NVME_SANITIZE_CDW10_AUSE_MASK				= 0x1,
 	NVME_SANITIZE_CDW10_EMVS_MASK				= 0x1,
 	NVME_SANITIZE_CDW10_NDAS_MASK				= 0x1,
 	NVME_SANITIZE_CDW10_OIPBP_MASK				= 0x1,
 	NVME_SANITIZE_CDW10_OWPASS_MASK				= 0xf,
 	NVME_SANITIZE_CDW10_SANACT_MASK				= 0x7,
+	NVME_SANITIZE_CDW10_PREQ_MASK				= 0x1,
+
+	/* Sanitize Namespace - Admin Opcode 0x8c */
+	NVME_SANITIZE_NS_CDW10_PREQ_SHIFT			= 4,
+	NVME_SANITIZE_NS_CDW10_PREQ_MASK			= 0x1,
 
 
 	/* Get LBA Status - Admin Opcode 0x86 */
@@ -4073,6 +4079,8 @@ nvme_init_security_receive(struct libnvme_passthru_cmd *cmd, __u32 nsid,
  * @oipbp:	Set to overwrite invert pattern between passes
  * @ndas:	Set to not deallocate blocks after sanitizing
  * @emvs:	Set to enter media verification state
+ * @preq:	Set to require the sanitize operation to purge user data, as
+ *		defined by IEEE Std 2883, or fail
  * @ovrpat:	Overwrite pattern
  *
  * Initializes the passthru command buffer for the Sanitize NVM command.
@@ -4080,7 +4088,7 @@ nvme_init_security_receive(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 static inline void
 nvme_init_sanitize_nvm(struct libnvme_passthru_cmd *cmd,
 		enum nvme_sanitize_sanact sanact, bool ause, __u8 owpass,
-		bool oipbp, bool ndas, bool emvs, __u32 ovrpat)
+		bool oipbp, bool ndas, bool emvs, bool preq, __u32 ovrpat)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
@@ -4102,7 +4110,10 @@ nvme_init_sanitize_nvm(struct libnvme_passthru_cmd *cmd,
 			NVME_SANITIZE_CDW10_NDAS_MASK) |
 		      NVME_FIELD_ENCODE(emvs,
 			NVME_SANITIZE_CDW10_EMVS_SHIFT,
-			NVME_SANITIZE_CDW10_EMVS_MASK);
+			NVME_SANITIZE_CDW10_EMVS_MASK) |
+		      NVME_FIELD_ENCODE(preq,
+			NVME_SANITIZE_CDW10_PREQ_SHIFT,
+			NVME_SANITIZE_CDW10_PREQ_MASK);
 	cmd->cdw11 = ovrpat;
 }
 
@@ -4149,12 +4160,15 @@ nvme_init_get_lba_status(struct libnvme_passthru_cmd *cmd, __u32 nsid,
  * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
  * @ause:	Set to allow unrestricted sanitize exit
  * @emvs:	Set to enter media verification state
+ * @preq:	Set to require the sanitize operation to purge user data, as
+ *		defined by IEEE Std 2883, or fail
  *
  * Initializes the passthru command buffer for the Sanitize namespace command.
  */
 static inline void
 nvme_init_sanitize_ns(struct libnvme_passthru_cmd *cmd,
-		enum nvme_sanitize_sanact sanact, bool ause, bool emvs)
+		enum nvme_sanitize_sanact sanact, bool ause, bool emvs,
+		bool preq)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
@@ -4167,7 +4181,10 @@ nvme_init_sanitize_ns(struct libnvme_passthru_cmd *cmd,
 			NVME_SANITIZE_CDW10_AUSE_MASK) |
 		      NVME_FIELD_ENCODE(emvs,
 			NVME_SANITIZE_CDW10_EMVS_SHIFT,
-			NVME_SANITIZE_CDW10_EMVS_MASK);
+			NVME_SANITIZE_CDW10_EMVS_MASK) |
+		      NVME_FIELD_ENCODE(preq,
+			NVME_SANITIZE_NS_CDW10_PREQ_SHIFT,
+			NVME_SANITIZE_NS_CDW10_PREQ_MASK);
 }
 
 /*

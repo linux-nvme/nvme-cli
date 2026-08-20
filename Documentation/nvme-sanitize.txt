@@ -13,7 +13,7 @@ SYNOPSIS
 			<overwrite-pass-count>]
 			[--ause | -u] [--sanact=<action> | -a <action>]
 			[--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
-			[--emvs | -e] [--force] [--wait | -w]
+			[--emvs | -e] [--preq | -q] [--force] [--wait | -w]
 			[--repeat=<repeat-count> | -r <repeat-count>]
 
 DESCRIPTION
@@ -93,6 +93,17 @@ OPTIONS
 	no effect. If SANACT field does not specify starting a sanitize operation
 	(i.e., is set to any value other than 010b, 011b, or 100b), then this bit
 	shall be ignored by the controller.
+
+-q::
+--preq::
+	Purge Required:
+	If set, then the host is requesting that the user data be purged
+	as defined by IEEE Std 2883. If the controller supports Sanitize
+	Purge Request and Reporting (SPRRS in the Identify Controller data
+	structure) and the sanitize operation started by this command
+	does not purge user data, then that sanitize operation shall
+	fail. If cleared, then that sanitize operation is not required
+	to purge user data as a condition for succeeding.
 
 --force::
 	Ignore namespace is currently busy and performed the operation

@@ -1513,6 +1513,7 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	obj_add_int(sstat, "media_verification_canceled", NVME_GET(status, SANITIZE_SSTAT_MVCNCLD));
 	obj_add_int(sstat, "global_erased", NVME_GET(status, SANITIZE_SSTAT_GLOBAL_DATA_ERASED));
 	obj_add_int(sstat, "no_cmplted_passes", NVME_GET(status, SANITIZE_SSTAT_COMPLETED_PASSES));
+	obj_add_int(sstat, "purged", NVME_GET(status, SANITIZE_SSTAT_PRGD));
 
 	sos = NVME_GET(status, SANITIZE_SSTAT_STATUS);
 	status_str = nvme_sstat_status_to_string(status);
