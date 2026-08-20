@@ -35,6 +35,12 @@ NQN and the subsystem NQN:
 Once the TLS PSK is stored in the keyring the configured PSK it was
 derived from cannot be retrieved from the keyring.
 
+The diagnostics that validate '--secret' are printed to stdout rather
+than stderr. Most of them accompany a non-zero exit, but 'Skipping
+excess secret bytes' does not: an over-long '--secret' still exits 0,
+with the warning sitting ahead of the key, so a script reading the key
+off stdout gets the warning instead.
+
 Both NQNs are inputs to the TLS PSK itself, not just to the identity it
 is stored under: the host NQN through the retained PSK derivation, and
 both NQNs again through the identity (identity version '0') or the PSK
