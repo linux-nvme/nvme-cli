@@ -482,6 +482,11 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	obj_add_int(r, "mup", le16_to_cpu(ctrl->mup));
 	obj_add_int(r, "ipmsr", le16_to_cpu(ctrl->ipmsr));
 	obj_add_int(r, "msmt", le16_to_cpu(ctrl->msmt));
+	obj_add_uint(r, "vsen1", le32_to_cpu(ctrl->vsen1));
+	obj_add_uint(r, "vsen2", le32_to_cpu(ctrl->vsen2));
+	obj_add_uint(r, "vsen3", le32_to_cpu(ctrl->vsen3));
+	obj_add_uint(r, "vsen4", le32_to_cpu(ctrl->vsen4));
+	obj_add_int(r, "msvmt", le16_to_cpu(ctrl->msvmt));
 	obj_add_int(r, "sqes", ctrl->sqes);
 	obj_add_int(r, "cqes", ctrl->cqes);
 	obj_add_int(r, "maxcmd", le16_to_cpu(ctrl->maxcmd));
@@ -788,6 +793,8 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		obj_add_int(crt, "ro", (smart->critical_warning & 8) >> 3);
 		obj_add_int(crt, "vmbu_failed", (smart->critical_warning & 0x10) >> 4);
 		obj_add_int(crt, "pmr_ro", (smart->critical_warning & 0x20) >> 5);
+		obj_add_int(crt, "indeterminate_personality",
+			    (smart->critical_warning & 0x40) >> 6);
 
 		obj_add_obj(r, "critical_warning", crt);
 	} else {
@@ -799,6 +806,9 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	obj_add_int(r, "spare_thresh", smart->spare_thresh);
 	obj_add_int(r, "percent_used", smart->percent_used);
 	obj_add_int(r, "endurance_grp_critical_warning_summary", smart->endu_grp_crit_warn_sumry);
+	obj_add_int(r, "informative_warning", smart->informative_warning);
+	obj_add_int(r, "voltage_log_threshold_warning",
+		    smart->informative_warning & 0x1);
 	obj_add_uint128(r, "data_units_read", data_units_read);
 	obj_add_uint128(r, "data_units_written", data_units_written);
 	obj_add_uint128(r, "host_read_commands", host_read_commands);
@@ -4174,6 +4184,25 @@ static void json_feature_show_fields_power_meas(struct json_object *r,
 	obj_add_uint(r, "Stop Measurement Time (SMT)", smt);
 }
 
+static void json_feature_show_fields_voltage_threshold(struct json_object *r,
+							unsigned int result)
+{
+	obj_add_uint(r, "Voltage Sensor Select (VSENS)",
+		     NVME_FEAT_VOLTAGE_THRESHOLD_VSENS(result));
+	obj_add_str(r, "Enable Voltage Threshold (EVT)",
+		    result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT ? "Enabled" : "Disabled");
+	obj_add_uint(r, "Overvoltage Threshold (OVT)",
+		     NVME_FEAT_VOLTAGE_THRESHOLD_OVT(result));
+	obj_add_uint(r, "Undervoltage Threshold (UVT)",
+		     NVME_FEAT_VOLTAGE_THRESHOLD_UVT(result));
+}
+
+static void json_feature_show_fields_voltage_measurement(struct json_object *r,
+							  unsigned int result)
+{
+	obj_add_uint(r, "Action (ACT)", NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result));
+}
+
 static void json_feature_show(enum nvme_features_id fid, int sel,
 			      unsigned int result, void *buf, __u32 data_len)
 {
@@ -4327,6 +4356,12 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_POWER_MEASUREMENT:
 		json_feature_show_fields_power_meas(r, result);
+		break;
+	case NVME_FEAT_FID_VOLTAGE_THRESHOLD:
+		json_feature_show_fields_voltage_threshold(r, result);
+		break;
+	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
+		json_feature_show_fields_voltage_measurement(r, result);
 		break;
 	default:
 		break;

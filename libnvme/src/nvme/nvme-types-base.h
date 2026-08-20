@@ -1442,6 +1442,21 @@ struct nvme_id_psd {
  *         SMT field for a Set Features command specifying the Power
  *         Measurement feature.
  * @rsvd396:   Reserved
+ * @vsen1:     Voltage Sensor 1: indicates the characteristics of Voltage
+ *         Sensor 1, see &struct nvme_id_ctrl_vsds. A value of 0h indicates
+ *         Voltage Sensor 1 is not supported.
+ * @vsen2:     Voltage Sensor 2, see &struct nvme_id_ctrl_vsds. A value of
+ *         0h indicates Voltage Sensor 2 is not supported.
+ * @vsen3:     Voltage Sensor 3, see &struct nvme_id_ctrl_vsds. A value of
+ *         0h indicates Voltage Sensor 3 is not supported.
+ * @vsen4:     Voltage Sensor 4, see &struct nvme_id_ctrl_vsds. A value of
+ *         0h indicates Voltage Sensor 4 is not supported.
+ * @msvmt:     Maximum Stop Voltage Measurement Time: This field indicates
+ *         the maximum stop measurement time in minutes allowed to be
+ *         specified in the SVMT field for a Set Features command
+ *         specifying the Voltage Measurement feature. A value of 0h
+ *         indicates that a maximum stop measurement time is not reported.
+ * @rsvd424:   Reserved
  * @sqes:      Submission Queue Entry Size, see &enum nvme_id_ctrl_sqes.
  * @cqes:      Completion Queue Entry Size, see &enum nvme_id_ctrl_cqes.
  * @maxcmd:    Maximum Outstanding Commands indicates the maximum number of
@@ -1639,7 +1654,13 @@ struct nvme_id_ctrl {
 	__le16			mup;
 	__le16			ipmsr;
 	__le16			msmt;
-	__u8			rsvd396[116];
+	__u8			rsvd396[10];
+	__le32			vsen1 __attribute__((packed));
+	__le32			vsen2 __attribute__((packed));
+	__le32			vsen3 __attribute__((packed));
+	__le32			vsen4 __attribute__((packed));
+	__le16			msvmt;
+	__u8			rsvd424[88];
 	__u8			sqes;
 	__u8			cqes;
 	__le16			maxcmd;
@@ -3830,7 +3851,11 @@ enum nvme_err_status_field {
  *			   indicates critical warnings for the state of Endurance
  *			   Groups. Bits in this field represent the current associated
  *			   state and are not persistent (see &enum nvme_smart_egcw).
- * @rsvd7:		   Reserved
+ * @informative_warning: Informative Warning: This field indicates warnings
+ *			   that the host may choose to act upon. Bits in this
+ *			   field are not persistent, see &enum
+ *			   nvme_smart_infw.
+ * @rsvd8:		   Reserved
  * @data_units_read:	   Data Units Read: Contains the number of 512 byte data
  *			   units the host has read from the controller; this value
  *			   does not include metadata. This value is reported in
@@ -3970,7 +3995,8 @@ struct nvme_smart_log {
 	__u8			spare_thresh;
 	__u8			percent_used;
 	__u8			endu_grp_crit_warn_sumry;
-	__u8			rsvd7[25];
+	__u8			informative_warning;
+	__u8			rsvd8[24];
 	__u8			data_units_read[16];
 	__u8			data_units_written[16];
 	__u8			host_reads[16];
@@ -4105,6 +4131,294 @@ enum nvme_smart_egcw {
 	NVME_SMART_EGCW_DEGRADED	= 1 << 2,
 	NVME_SMART_EGCW_RO		= 1 << 3,
 };
+
+/**
+ * enum nvme_smart_infw - Informative Warning
+ * @NVME_SMART_INFW_VLTHW: Voltage Log Threshold Warning: if set, then the
+ *			   Overvoltage Valid (OVV) bit or the Undervoltage
+ *			   Valid (UVV) bit in the Voltage Measurement log
+ *			   page is set to '1'.
+ */
+enum nvme_smart_infw {
+	NVME_SMART_INFW_VLTHW		= 1 << 0,
+};
+
+/**
+ * enum nvme_voltage_sensor - Voltage Sensors
+ * @NVME_VOLTAGE_SENSOR_1: Voltage Sensor 1 (VSEN1)
+ * @NVME_VOLTAGE_SENSOR_2: Voltage Sensor 2 (VSEN2)
+ * @NVME_VOLTAGE_SENSOR_3: Voltage Sensor 3 (VSEN3)
+ * @NVME_VOLTAGE_SENSOR_4: Voltage Sensor 4 (VSEN4)
+ */
+enum nvme_voltage_sensor {
+	NVME_VOLTAGE_SENSOR_1	= 0x00,
+	NVME_VOLTAGE_SENSOR_2	= 0x01,
+	NVME_VOLTAGE_SENSOR_3	= 0x02,
+	NVME_VOLTAGE_SENSOR_4	= 0x03,
+};
+
+/**
+ * enum nvme_voltage_threshold_type - Voltage Threshold Type
+ * @NVME_VOLTAGE_THRESHOLD_TYPE_OVERVOLTAGE: Overvoltage Threshold
+ * @NVME_VOLTAGE_THRESHOLD_TYPE_UNDERVOLTAGE: Undervoltage Threshold
+ */
+enum nvme_voltage_threshold_type {
+	NVME_VOLTAGE_THRESHOLD_TYPE_OVERVOLTAGE		= 0x00,
+	NVME_VOLTAGE_THRESHOLD_TYPE_UNDERVOLTAGE		= 0x01,
+};
+
+/**
+ * enum nvme_id_ctrl_vsen - Identify Controller Voltage Sensor data
+ *			    structure (VSEN1-VSEN4)
+ * @NVME_CTRL_VSEN_VSRV_SHIFT:  Shift amount to get the Voltage Sample Rate
+ *				Value (VSRV)
+ * @NVME_CTRL_VSEN_VSRV_MASK:	Mask to get VSRV
+ * @NVME_CTRL_VSEN_VSRS_SHIFT:	Shift amount to get the Voltage Sample Rate
+ *				Scale (VSRS)
+ * @NVME_CTRL_VSEN_VSRS_MASK:	Mask to get VSRS
+ * @NVME_CTRL_VSEN_VOLSS_SHIFT: Shift amount to get the Voltage Sample Scale
+ *				(VOLSS)
+ * @NVME_CTRL_VSEN_VOLSS_MASK:	Mask to get VOLSS
+ * @NVME_CTRL_VSEN_PISL_SHIFT:	Shift amount to get the Power Input Supply
+ *				Label (PISL)
+ * @NVME_CTRL_VSEN_PISL_MASK:	Mask to get PISL
+ * @NVME_CTRL_VSEN_PISV_SHIFT:	Shift amount to get the Power Input Supply
+ *				Value (PISV), in units of 0.05 V
+ * @NVME_CTRL_VSEN_PISV_MASK:	Mask to get PISV
+ */
+enum nvme_id_ctrl_vsen {
+	NVME_CTRL_VSEN_VSRV_SHIFT	= 16,
+	NVME_CTRL_VSEN_VSRV_MASK	= 0xff,
+	NVME_CTRL_VSEN_VSRS_SHIFT	= 24,
+	NVME_CTRL_VSEN_VSRS_MASK	= 0xff,
+	NVME_CTRL_VSEN_VOLSS_SHIFT	= 14,
+	NVME_CTRL_VSEN_VOLSS_MASK	= 0x3,
+	NVME_CTRL_VSEN_PISL_SHIFT	= 12,
+	NVME_CTRL_VSEN_PISL_MASK	= 0x3,
+	NVME_CTRL_VSEN_PISV_SHIFT	= 0,
+	NVME_CTRL_VSEN_PISV_MASK	= 0xfff,
+};
+
+#define NVME_CTRL_VSEN_VSRV(vsen)	NVME_GET(vsen, CTRL_VSEN_VSRV)
+#define NVME_CTRL_VSEN_VSRS(vsen)	NVME_GET(vsen, CTRL_VSEN_VSRS)
+#define NVME_CTRL_VSEN_VOLSS(vsen)	NVME_GET(vsen, CTRL_VSEN_VOLSS)
+#define NVME_CTRL_VSEN_PISL(vsen)	NVME_GET(vsen, CTRL_VSEN_PISL)
+#define NVME_CTRL_VSEN_PISV(vsen)	NVME_GET(vsen, CTRL_VSEN_PISV)
+
+/**
+ * enum nvme_voltage_measurement_vma - Voltage Measurement log page -
+ *					Voltage Measurement Attributes (VMA)
+ * @NVME_VOLTAGE_MEASUREMENT_VMA_VME:		Voltage Measurement Enable
+ * @NVME_VOLTAGE_MEASUREMENT_VMA_IVOLTS:	Interval Voltage Timestamp
+ *						Support
+ * @NVME_VOLTAGE_MEASUREMENT_VMA_VSM_SHIFT:	Shift amount to get the
+ *						Voltage Sensor Measured (VSM),
+ *						see &enum nvme_voltage_sensor
+ * @NVME_VOLTAGE_MEASUREMENT_VMA_VSM_MASK:	Mask to get VSM
+ * @NVME_VOLTAGE_MEASUREMENT_VMA_VMC:		Voltage Measurement Counted
+ */
+enum nvme_voltage_measurement_vma {
+	NVME_VOLTAGE_MEASUREMENT_VMA_VME		= 1 << 0,
+	NVME_VOLTAGE_MEASUREMENT_VMA_IVOLTS		= 1 << 1,
+	NVME_VOLTAGE_MEASUREMENT_VMA_VSM_SHIFT		= 2,
+	NVME_VOLTAGE_MEASUREMENT_VMA_VSM_MASK		= 0x3,
+	NVME_VOLTAGE_MEASUREMENT_VMA_VMC		= 1 << 4,
+};
+
+#define NVME_VOLTAGE_MEASUREMENT_VMA_VSM(vma) \
+	NVME_GET(vma, VOLTAGE_MEASUREMENT_VMA_VSM)
+
+/**
+ * enum nvme_voltage_measurement_vsi - Voltage Measurement log page -
+ *					Voltage Sensor Info (VSI)
+ * @NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_SHIFT: Shift amount to get the Voltage
+ *					      Sensor Supply Value (VSSV), in
+ *					      units of 0.05 V
+ * @NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_MASK:  Mask to get VSSV
+ * @NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_SHIFT: Shift amount to get the Voltage
+ *					      Sensor Supply Label (VSSL)
+ * @NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_MASK:  Mask to get VSSL
+ * @NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_SHIFT: Shift amount to get the Voltage
+ *					      Sensor Sample Scale (VSSS)
+ * @NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_MASK:  Mask to get VSSS
+ */
+enum nvme_voltage_measurement_vsi {
+	NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_SHIFT	= 0,
+	NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_MASK		= 0xfff,
+	NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_SHIFT	= 12,
+	NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_MASK		= 0x3,
+	NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_SHIFT	= 14,
+	NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_MASK		= 0x3,
+};
+
+#define NVME_VOLTAGE_MEASUREMENT_VSI_VSSV(vsi) \
+	NVME_GET(vsi, VOLTAGE_MEASUREMENT_VSI_VSSV)
+#define NVME_VOLTAGE_MEASUREMENT_VSI_VSSL(vsi) \
+	NVME_GET(vsi, VOLTAGE_MEASUREMENT_VSI_VSSL)
+#define NVME_VOLTAGE_MEASUREMENT_VSI_VSSS(vsi) \
+	NVME_GET(vsi, VOLTAGE_MEASUREMENT_VSI_VSSS)
+
+/**
+ * enum nvme_voltage_measurement_ovol - Voltage Measurement log page -
+ *					 Overvoltage (OVOL)
+ * @NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_SHIFT: Shift amount to get the
+ *					       Maximum Overvoltage Value (MOVV)
+ * @NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_MASK:  Mask to get MOVV
+ * @NVME_VOLTAGE_MEASUREMENT_OVOL_OVV:	       Overvoltage Valid
+ */
+enum nvme_voltage_measurement_ovol {
+	NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_SHIFT	= 0,
+	NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_MASK	= 0x3fff,
+	NVME_VOLTAGE_MEASUREMENT_OVOL_OVV		= 1 << 14,
+};
+
+#define NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV(ovol) \
+	NVME_GET(ovol, VOLTAGE_MEASUREMENT_OVOL_MOVV)
+
+/**
+ * enum nvme_voltage_measurement_uvol - Voltage Measurement log page -
+ *					 Undervoltage (UVOL)
+ * @NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_SHIFT: Shift amount to get the
+ *					       Minimum Undervoltage Value
+ *					       (MUVV)
+ * @NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_MASK:  Mask to get MUVV
+ * @NVME_VOLTAGE_MEASUREMENT_UVOL_UVV:	       Undervoltage Valid
+ */
+enum nvme_voltage_measurement_uvol {
+	NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_SHIFT	= 0,
+	NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_MASK	= 0x3fff,
+	NVME_VOLTAGE_MEASUREMENT_UVOL_UVV		= 1 << 14,
+};
+
+#define NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV(uvol) \
+	NVME_GET(uvol, VOLTAGE_MEASUREMENT_UVOL_MUVV)
+
+/**
+ * enum nvme_voltage_measurement_ivmd - Voltage Measurement log page -
+ *					 Interval Voltage Measurement
+ *					 Descriptor (IVMD)
+ * @NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_SHIFT: Shift amount to get the Voltage
+ *					       Value (VOLV)
+ * @NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_MASK:  Mask to get VOLV
+ * @NVME_VOLTAGE_MEASUREMENT_IVMD_NCVM:	       Non Contiguous Voltage
+ *					       Measurement
+ */
+enum nvme_voltage_measurement_ivmd {
+	NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_SHIFT	= 0,
+	NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_MASK	= 0x3fff,
+	NVME_VOLTAGE_MEASUREMENT_IVMD_NCVM		= 1 << 14,
+};
+
+#define NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV(ivmd) \
+	NVME_GET(ivmd, VOLTAGE_MEASUREMENT_IVMD_VOLV)
+
+/**
+ * enum nvme_voltage_measurement_lvolta - Start Voltage Measurements Data
+ *					   Structure - Log Voltage Threshold
+ *					   Attributes (LVOLTA)
+ * @NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_SHIFT: Shift amount to get the
+ *						  Voltage Sensor Selected
+ *						  (VSSEL), see &enum
+ *						  nvme_voltage_sensor
+ * @NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_MASK:  Mask to get VSSEL
+ * @NVME_VOLTAGE_MEASUREMENT_LVOLTA_VMLT:	  Voltage Measurement Log
+ *						  Threshold
+ */
+enum nvme_voltage_measurement_lvolta {
+	NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_SHIFT	= 0,
+	NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_MASK	= 0x3,
+	NVME_VOLTAGE_MEASUREMENT_LVOLTA_VMLT		= 1 << 2,
+};
+
+#define NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL(lvolta) \
+	NVME_GET(lvolta, VOLTAGE_MEASUREMENT_LVOLTA_VSSEL)
+
+/**
+ * enum nvme_voltage_measurement_lvolt - Start Voltage Measurements Data
+ *					  Structure - Log Voltage Threshold
+ *					  (LVOLT)
+ * @NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_SHIFT: Shift amount to get the Log
+ *						Undervoltage Threshold (LUVT)
+ * @NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_MASK:  Mask to get LUVT
+ * @NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_SHIFT: Shift amount to get the Log
+ *						Overvoltage Threshold (LOVT)
+ * @NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_MASK:  Mask to get LOVT
+ */
+enum nvme_voltage_measurement_lvolt {
+	NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_SHIFT	= 0,
+	NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_MASK	= 0x3fff,
+	NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_SHIFT	= 16,
+	NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_MASK	= 0x3fff,
+};
+
+#define NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT(lvolt) \
+	NVME_GET(lvolt, VOLTAGE_MEASUREMENT_LVOLT_LUVT)
+#define NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT(lvolt) \
+	NVME_GET(lvolt, VOLTAGE_MEASUREMENT_LVOLT_LOVT)
+
+/**
+ * struct nvme_voltage_measurement_start_data - Start Voltage Measurements
+ *						 Data Structure
+ * @lvolta: Log Voltage Threshold Attributes, see &enum
+ *	    nvme_voltage_measurement_lvolta.
+ * @svmt:   Stop Voltage Measurement Time, in minutes. A value of 0h
+ *	    specifies no stop measurement time value.
+ * @lvolt:  Log Voltage Threshold, see &enum nvme_voltage_measurement_lvolt.
+ *	    Ignored if the VMLT bit is cleared to '0' in @lvolta.
+ * @rsvd8:  Reserved
+ */
+struct nvme_voltage_measurement_start_data {
+	__le16	lvolta;
+	__le16	svmt;
+	__le32	lvolt;
+	__u8	rsvd8[4088];
+};
+
+/**
+ * enum nvme_aer_one_shot - Asynchronous Event Information - One Shot
+ * @NVME_AER_ONE_SHOT_VOLTAGE_THRESHOLD_EVENT: Voltage Threshold Event: the
+ *	interval voltage measurement crossed one of the voltage thresholds
+ *	configured by the Voltage Threshold feature, see &enum
+ *	nvme_aer_voltage_threshold_event for the Event Specific Parameter
+ *	field format.
+ */
+enum nvme_aer_one_shot {
+	NVME_AER_ONE_SHOT_VOLTAGE_THRESHOLD_EVENT	= 0x03,
+};
+
+/**
+ * enum nvme_aer_voltage_threshold_event - Voltage Threshold Event - Event
+ *					    Specific Parameter
+ * @NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_SHIFT:   Shift amount to get the
+ *						   Interval Voltage
+ *						   Measurement (IVM)
+ * @NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_MASK:	   Mask to get IVM
+ * @NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_SHIFT:  Shift amount to get the
+ *						   Voltage Threshold Type
+ *						   (VTHT), see &enum
+ *						   nvme_voltage_threshold_type
+ * @NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_MASK:   Mask to get VTHT
+ * @NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_SHIFT: Shift amount to get the
+ *						   Voltage Sensor Triggered
+ *						   (VSENT), see &enum
+ *						   nvme_voltage_sensor
+ * @NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_MASK:  Mask to get VSENT
+ */
+enum nvme_aer_voltage_threshold_event {
+	NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_SHIFT	= 0,
+	NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_MASK	= 0x3fff,
+	NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_SHIFT	= 14,
+	NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_MASK	= 0x3,
+	NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_SHIFT	= 16,
+	NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_MASK	= 0x3,
+};
+
+#define NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM(esp) \
+	NVME_GET(esp, AER_VOLTAGE_THRESHOLD_EVENT_IVM)
+#define NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT(esp) \
+	NVME_GET(esp, AER_VOLTAGE_THRESHOLD_EVENT_VTHT)
+#define NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT(esp) \
+	NVME_GET(esp, AER_VOLTAGE_THRESHOLD_EVENT_VSENT)
 
 /**
  * struct nvme_firmware_slot - Firmware Slot Information Log
@@ -6141,6 +6455,75 @@ struct nvme_timestamp {
 };
 
 /**
+ * struct nvme_voltage_measurement_log - Voltage Measurement Log Page
+ *					  (Log Identifier 27h)
+ * @vmgn:   Voltage Measurement Generation Number: incremented each time a
+ *	    Set Features command starts Voltage Measurements.
+ * @vma:    Voltage Measurement Attributes, see &enum
+ *	    nvme_voltage_measurement_vma.
+ * @vsi:    Voltage Sensor Info, see &enum nvme_voltage_measurement_vsi.
+ *	    Meaningless if the VMC bit is cleared to '0' in @vma.
+ * @vmlsz:  Voltage Measurement Log Size: size of this log page in bytes.
+ * @nvmds:  Number of Voltage Measurement Descriptors Supported: maximum
+ *	    number of entries in the Interval Voltage Measurement Descriptor
+ *	    list.
+ * @nvmde:  Number of Voltage Measurement Descriptors Entries: number of
+ *	    entries in @ivmd.
+ * @svmtr:  Stop Voltage Measurement Time Remaining, in minutes rounded up.
+ * @svmts:  Stop Voltage Measurement Timestamp: time at which interval
+ *	    voltage measurements stopped being collected. See &struct
+ *	    nvme_timestamp.
+ * @cntlid: Controller Identifier associated with @vsi, @svmts, @ovts, and
+ *	    @uvts.
+ * @vlvss:  Voltage Log Vendor Specific Size: size in bytes of the Vendor
+ *	    Specific field following @ivmd.
+ * @rsvd26: Reserved
+ * @ovol:   Overvoltage, see &enum nvme_voltage_measurement_ovol.
+ * @ovc:    Overvoltage Count.
+ * @ovlt:   Overvoltage Log Threshold, in units of the Voltage Sensor Sample
+ *	    Scale.
+ * @ovts:   Overvoltage Timestamp. See &struct nvme_timestamp.
+ * @iovpe:  Interval Overvoltage Percent Error (0 to 100). 255 indicates a
+ *	    value is not reported.
+ * @uvol:   Undervoltage, see &enum nvme_voltage_measurement_uvol.
+ * @uvc:    Undervoltage Count.
+ * @uvlt:   Undervoltage Log Threshold, in units of the Voltage Sensor
+ *	    Sample Scale.
+ * @uvts:   Undervoltage Timestamp. See &struct nvme_timestamp.
+ * @iuvpe:  Interval Undervoltage Percent Error (0 to 100). 255 indicates a
+ *	    value is not reported.
+ * @rsvd62: Reserved
+ * @ivmd:   Interval Voltage Measurement Descriptor list, see &enum
+ *	    nvme_voltage_measurement_ivmd. Followed by a Vendor Specific
+ *	    field of @vlvss bytes, if non-zero.
+ */
+struct nvme_voltage_measurement_log {
+	__u8			vmgn;
+	__u8			vma;
+	__le16			vsi;
+	__le32			vmlsz;
+	__le16			nvmds;
+	__le16			nvmde;
+	__le16			svmtr;
+	struct nvme_timestamp	svmts;
+	__le16			cntlid;
+	__le16			vlvss;
+	__u8			rsvd26[6];
+	__le16			ovol;
+	__le16			ovc;
+	__le16			ovlt;
+	struct nvme_timestamp	ovts;
+	__u8			iovpe;
+	__le16			uvol;
+	__le16			uvc;
+	__le16			uvlt;
+	struct nvme_timestamp	uvts;
+	__u8			iuvpe;
+	__u8			rsvd62[2];
+	__le16			ivmd[];
+} __attribute__((packed));
+
+/**
  * enum nvme_timestamp_attr - Timestamp Attribute field
  * @NVME_TIMESTAMP_ATTR_SYNC_SHIFT:	Shift amount to get the timestamp synch
  * @NVME_TIMESTAMP_ATTR_TO_SHIFT:	Shift amount to get the timestamp origin
@@ -7794,7 +8177,9 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_FDP_EVENTS:			FDP Events
  * @NVME_LOG_LID_MFG_DEFAULT_CONFIG:		Manufacturer Default Configuration
  * @NVME_LOG_LID_POWER_MEASUREMENT:		Power Measurement
- * @NVME_LOG_LID_VOLTAGE_MEASUREMENT:		Voltage Measurement
+ * @NVME_LOG_LID_VOLTAGE_MEASUREMENT:		Voltage Measurement, see
+ *						&struct
+ *						nvme_voltage_measurement_log
  * @NVME_LOG_LID_RATE_LIMITING:			Rate Limiting
  * @NVME_LOG_LID_DISCOVERY:			Discovery
  * @NVME_LOG_LID_HOST_DISCOVERY:		Host Discovery
@@ -7900,8 +8285,12 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_POWER_LIMIT:		Power Limit
  * @NVME_FEAT_FID_POWER_THRESH:		Power Threshold
  * @NVME_FEAT_FID_POWER_MEASUREMENT:	Power Measurement
- * @NVME_FEAT_FID_VOLTAGE_THRESHOLD:	Voltage Threshold
- * @NVME_FEAT_FID_VOLTAGE_MEASUREMENT:	Voltage Measurement
+ * @NVME_FEAT_FID_VOLTAGE_THRESHOLD:	Voltage Threshold, see &enum
+ *					nvme_voltage_sensor
+ * @NVME_FEAT_FID_VOLTAGE_MEASUREMENT:	Voltage Measurement, see &enum
+ *					nvme_voltage_measurement_act and
+ *					&struct
+ *					nvme_voltage_measurement_start_data
  * @NVME_FEAT_FID_RATE_LIMITING:	Rate Limiting
  * @NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR:	Embedded Management Controller Address
  * @NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR:	Host Management Agent Address
@@ -8161,6 +8550,21 @@ enum nvme_features_id {
  * @NVME_FEAT_POWER_MEAS_PMTS_MASK:
  * @NVME_FEAT_POWER_MEAS_SMT_SHIFT:
  * @NVME_FEAT_POWER_MEAS_SMT_MASK:
+ * @NVME_FEAT_VOLTAGE_THRESHOLD_UVT_SHIFT:	Shift amount to set/get the
+ *						Undervoltage Threshold (UVT)
+ * @NVME_FEAT_VOLTAGE_THRESHOLD_UVT_MASK:	Mask to set/get UVT
+ * @NVME_FEAT_VOLTAGE_THRESHOLD_OVT_SHIFT:	Shift amount to set/get the
+ *						Overvoltage Threshold (OVT)
+ * @NVME_FEAT_VOLTAGE_THRESHOLD_OVT_MASK:	Mask to set/get OVT
+ * @NVME_FEAT_VOLTAGE_THRESHOLD_EVT:		Enable Voltage Threshold
+ * @NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_SHIFT:	Shift amount to set/get the
+ *						Voltage Sensor Select (VSENS),
+ *						see &enum nvme_voltage_sensor
+ * @NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_MASK:	Mask to set/get VSENS
+ * @NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_SHIFT:	Shift amount to set the
+ *						Action (ACT), see &enum
+ *						nvme_voltage_measurement_act
+ * @NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_MASK:	Mask to set ACT
  **/
 enum nvme_feat {
 	NVME_FEAT_ARBITRATION_BURST_SHIFT	= 0,
@@ -8343,6 +8747,15 @@ enum nvme_feat {
 	NVME_FEAT_POWER_MEAS_PMTS_MASK	= 0xf,
 	NVME_FEAT_POWER_MEAS_SMT_SHIFT	= 16,
 	NVME_FEAT_POWER_MEAS_SMT_MASK	= 0xffff,
+	NVME_FEAT_VOLTAGE_THRESHOLD_UVT_SHIFT	= 0,
+	NVME_FEAT_VOLTAGE_THRESHOLD_UVT_MASK	= 0x3fff,
+	NVME_FEAT_VOLTAGE_THRESHOLD_OVT_SHIFT	= 14,
+	NVME_FEAT_VOLTAGE_THRESHOLD_OVT_MASK	= 0x3fff,
+	NVME_FEAT_VOLTAGE_THRESHOLD_EVT		= 1 << 28,
+	NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_SHIFT	= 29,
+	NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_MASK	= 0x3,
+	NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_SHIFT	= 0,
+	NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_MASK	= 0xf,
 };
 
 /**
@@ -9458,6 +9871,30 @@ static inline void nvme_feature_decode_arbitration(__u32 value, __u8 *ab,
 #define NVME_FEAT_POWER_MEAS_ACT(v)	NVME_GET(v, FEAT_POWER_MEAS_ACT)
 #define NVME_FEAT_POWER_MEAS_PMTS(v)	NVME_GET(v, FEAT_POWER_MEAS_PMTS)
 #define NVME_FEAT_POWER_MEAS_SMT(v)	NVME_GET(v, FEAT_POWER_MEAS_SMT)
+
+#define NVME_FEAT_VOLTAGE_THRESHOLD_UVT(v) \
+	NVME_GET(v, FEAT_VOLTAGE_THRESHOLD_UVT)
+#define NVME_FEAT_VOLTAGE_THRESHOLD_OVT(v) \
+	NVME_GET(v, FEAT_VOLTAGE_THRESHOLD_OVT)
+#define NVME_FEAT_VOLTAGE_THRESHOLD_VSENS(v) \
+	NVME_GET(v, FEAT_VOLTAGE_THRESHOLD_VSENS)
+
+#define NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(v) \
+	NVME_GET(v, FEAT_VOLTAGE_MEASUREMENT_ACT)
+
+/**
+ * enum nvme_voltage_measurement_act - Voltage Measurement Feature -
+ *					Command Dword 11 Action (ACT)
+ * @NVME_VOLTAGE_MEASUREMENT_ACT_STOP:  Stop Voltage Measurements
+ * @NVME_VOLTAGE_MEASUREMENT_ACT_START: Start Voltage Measurements
+ * @NVME_VOLTAGE_MEASUREMENT_ACT_CLEAR: Clear Overvoltage Valid and
+ *					 Undervoltage Valid
+ */
+enum nvme_voltage_measurement_act {
+	NVME_VOLTAGE_MEASUREMENT_ACT_STOP	= 0x0,
+	NVME_VOLTAGE_MEASUREMENT_ACT_START	= 0x1,
+	NVME_VOLTAGE_MEASUREMENT_ACT_CLEAR	= 0x2,
+};
 
 static inline void
 nvme_feature_decode_power_mgmt(__u32 value, __u8 *ps, __u8 *wh, __u16 *iiell)

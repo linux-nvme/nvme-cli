@@ -2577,6 +2577,27 @@ static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_vsen(__le32 ctrl_vsen)
+{
+	__u32 vsen = le32_to_cpu(ctrl_vsen);
+
+	if (!vsen) {
+		printf("  Voltage sensor not supported\n\n");
+		return;
+	}
+
+	printf("  [31:24] : %#x\tVoltage Sample Rate Scale\n",
+	       NVME_CTRL_VSEN_VSRS(vsen));
+	printf("  [23:16] : %#x\tVoltage Sample Rate Value\n",
+	       NVME_CTRL_VSEN_VSRV(vsen));
+	printf("  [15:14] : %#x\tVoltage Sample Scale\n", NVME_CTRL_VSEN_VOLSS(vsen));
+	printf("  [13:12] : %#x\tPower Input Supply Label\n",
+	       NVME_CTRL_VSEN_PISL(vsen));
+	printf("  [11:0]  : %#x\tPower Input Supply Value (%g V)\n",
+	       NVME_CTRL_VSEN_PISV(vsen), NVME_CTRL_VSEN_PISV(vsen) * 0.05);
+	printf("\n");
+}
+
 static void stdout_id_ctrl_sqes(__u8 sqes)
 {
 	__u8 msqes = (sqes & 0xF0) >> 4;
@@ -3627,6 +3648,21 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	if (human)
 		stdout_id_ctrl_ipmsr(ctrl->ipmsr);
 	printf("msmt      : %#x\n", le16_to_cpu(ctrl->msmt));
+	if (NVME_CTRL_CTRATT_VMS(le32_to_cpu(ctrl->ctratt))) {
+		printf("vsen1     : %#x\n", le32_to_cpu(ctrl->vsen1));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen1);
+		printf("vsen2     : %#x\n", le32_to_cpu(ctrl->vsen2));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen2);
+		printf("vsen3     : %#x\n", le32_to_cpu(ctrl->vsen3));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen3);
+		printf("vsen4     : %#x\n", le32_to_cpu(ctrl->vsen4));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen4);
+		printf("msvmt     : %u\n", le16_to_cpu(ctrl->msvmt));
+	}
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		stdout_id_ctrl_sqes(ctrl->sqes);
@@ -4733,6 +4769,8 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 		       NVME_SMART_CW_VMBF(smart->critical_warning));
 		printf("      Persistent Mem. RO[5]          : %d\n",
 		       NVME_SMART_CW_PMRRO(smart->critical_warning));
+		printf("      Indeterminate Personality[6]   : %d\n",
+		       NVME_SMART_CW_IPS(smart->critical_warning));
 	}
 
 	printf("temperature				: %s (%u K, %s)\n",
@@ -4742,6 +4780,10 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 	printf("available_spare_threshold		: %u%%\n", smart->spare_thresh);
 	printf("percentage_used				: %u%%\n", smart->percent_used);
 	printf("endurance group critical warning summary: %#x\n", smart->endu_grp_crit_warn_sumry);
+	printf("informative warning			: %#x\n", smart->informative_warning);
+	if (human)
+		printf("      Voltage Log Threshold Warning[0]: %d\n",
+		       !!(smart->informative_warning & NVME_SMART_INFW_VLTHW));
 	printf("Data Units Read				: %s (%s)\n",
 	       uint128_t_to_l10n_string(le128_to_cpu(smart->data_units_read)),
 	       uint128_t_to_si_string(le128_to_cpu(smart->data_units_read), 1000 * 512));
@@ -5698,6 +5740,21 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		       field, nvme_power_measurement_type_to_string(field));
 		printf("\tStop Measurement Time (SMT): %u\n",
 		       NVME_FEAT_POWER_MEAS_SMT(result));
+		break;
+	case NVME_FEAT_FID_VOLTAGE_THRESHOLD:
+		field = NVME_FEAT_VOLTAGE_THRESHOLD_VSENS(result);
+		printf("\tVoltage Sensor Select (VSENS): %u\n", field);
+		printf("\tEnable Voltage Threshold (EVT): %u - %s\n",
+		       !!(result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT),
+		       result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT ? "Enabled" : "Disabled");
+		printf("\tOvervoltage Threshold (OVT): %u\n",
+		       NVME_FEAT_VOLTAGE_THRESHOLD_OVT(result));
+		printf("\tUndervoltage Threshold (UVT): %u\n",
+		       NVME_FEAT_VOLTAGE_THRESHOLD_UVT(result));
+		break;
+	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
+		field = NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result);
+		printf("\tAction (ACT): %u\n", field);
 		break;
 	default:
 		break;
