@@ -2242,6 +2242,8 @@ enum nvme_id_ctrl_mec {
  * @NVME_CTRL_OACS_GLSS_SHIFT: Shift amount to get the Get LBA Status supported
  * @NVME_CTRL_OACS_CFLS_SHIFT: Shift amount to get the Command and Feature Lockdown supported
  * @NVME_CTRL_OACS_HMLMS_SHIFT:Shift amount to get the Host Managed Live Migration support
+ * @NVME_CTRL_OACS_CCFLS_SHIFT: Shift amount to get the Controller-scoped
+ *			       Command and Feature Lockdown supported
  * @NVME_CTRL_OACS_SSRS_MASK:  Mask to get the Security Send Receive supported
  * @NVME_CTRL_OACS_FNVMS_MASK: Mask to get the Format NVM supported
  * @NVME_CTRL_OACS_FWDS_MASK:  Mask to get the Firmware Download supported
@@ -2254,6 +2256,8 @@ enum nvme_id_ctrl_mec {
  * @NVME_CTRL_OACS_GLSS_MASK:  Mask to get the Get LBA Status supported
  * @NVME_CTRL_OACS_CFLS_MASK:  Mask to get the Command and Feature Lockdown supported
  * @NVME_CTRL_OACS_HMLMS_MASK: Mask to get the Host Managed Live Migration support
+ * @NVME_CTRL_OACS_CCFLS_MASK: Mask to get the Controller-scoped Command and
+ *			       Feature Lockdown supported
  * @NVME_CTRL_OACS_SECURITY:   If set, then the controller supports the
  *			       Security Send and Security Receive commands.
  * @NVME_CTRL_OACS_FORMAT:     If set then the controller supports the Format
@@ -2279,6 +2283,11 @@ enum nvme_id_ctrl_mec {
  *			       and feature lockdown capability.
  * @NVME_CTRL_OACS_HMLM:       If set, then the controller supports the command
  *			       and Host Managed Live Migration capability.
+ * @NVME_CTRL_OACS_CTRL_SCOPED_CMD_FEAT_LD: If set, then the controller
+ *			       supports the Controller-scoped Command and
+ *			       Feature Lockdown capability. Cleared to '0' if
+ *			       the Command and Feature Lockdown Supported
+ *			       (CFLS) bit is cleared to '0'.
  */
 enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_SSRS_SHIFT		= 0,
@@ -2293,6 +2302,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_GLSS_SHIFT		= 9,
 	NVME_CTRL_OACS_CFLS_SHIFT		= 10,
 	NVME_CTRL_OACS_HMLMS_SHIFT		= 11,
+	NVME_CTRL_OACS_CCFLS_SHIFT		= 13,
 	NVME_CTRL_OACS_SSRS_MASK		= 1,
 	NVME_CTRL_OACS_FNVMS_MASK		= 1,
 	NVME_CTRL_OACS_FWDS_MASK		= 1,
@@ -2305,6 +2315,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_GLSS_MASK		= 1,
 	NVME_CTRL_OACS_CFLS_MASK		= 1,
 	NVME_CTRL_OACS_HMLMS_MASK		= 1,
+	NVME_CTRL_OACS_CCFLS_MASK		= 1,
 	NVME_CTRL_OACS_SECURITY			= NVME_VAL(CTRL_OACS_SSRS),
 	NVME_CTRL_OACS_FORMAT			= NVME_VAL(CTRL_OACS_FNVMS),
 	NVME_CTRL_OACS_FW			= NVME_VAL(CTRL_OACS_FWDS),
@@ -2317,6 +2328,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_LBA_STATUS		= NVME_VAL(CTRL_OACS_GLSS),
 	NVME_CTRL_OACS_CMD_FEAT_LD		= NVME_VAL(CTRL_OACS_CFLS),
 	NVME_CTRL_OACS_HMLM			= NVME_VAL(CTRL_OACS_HMLMS),
+	NVME_CTRL_OACS_CTRL_SCOPED_CMD_FEAT_LD	= NVME_VAL(CTRL_OACS_CCFLS),
 };
 
 #define NVME_CTRL_OACS_SSRS(oacs)	NVME_GET(oacs, CTRL_OACS_SSRS)
@@ -2331,6 +2343,7 @@ enum nvme_id_ctrl_oacs {
 #define NVME_CTRL_OACS_GLSS(oacs)	NVME_GET(oacs, CTRL_OACS_GLSS)
 #define NVME_CTRL_OACS_CFLS(oacs)	NVME_GET(oacs, CTRL_OACS_CFLS)
 #define NVME_CTRL_OACS_HMLMS(oacs)	NVME_GET(oacs, CTRL_OACS_HMLMS)
+#define NVME_CTRL_OACS_CCFLS(oacs)	NVME_GET(oacs, CTRL_OACS_CCFLS)
 
 /**
  * enum nvme_id_ctrl_frmw - Flags and values indicates capabilities regarding
@@ -6124,6 +6137,140 @@ struct nvme_lockdown_log {
 	__u8	rsvd1[2];
 	__u8	lngth;
 	__u8	cfil[508];
+};
+
+/**
+ * enum nvme_lockdown_csel - Lockdown Command Dword 10 - Controller Select
+ *			     (CSEL)
+ * @NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM:	NVM Subsystem: this command affects
+ *					all controllers in the NVM subsystem.
+ * @NVME_LOCKDOWN_CSEL_SPECIFIC_CTRL:	Specific Controller: this command
+ *					affects the controller specified in
+ *					the Controller Select Specific (CSS)
+ *					field of Command Dword 14.
+ * @NVME_LOCKDOWN_CSEL_SECONDARY_CTRLS: Secondary Controllers for a Specific
+ *					 Primary Controller: this command
+ *					 affects all secondary controllers
+ *					 associated with the primary
+ *					 controller specified in the CSS
+ *					 field of Command Dword 14.
+ * @NVME_LOCKDOWN_CSEL_VENDOR_SPECIFIC: Vendor Specific
+ */
+enum nvme_lockdown_csel {
+	NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM	= 0x0,
+	NVME_LOCKDOWN_CSEL_SPECIFIC_CTRL	= 0x1,
+	NVME_LOCKDOWN_CSEL_SECONDARY_CTRLS	= 0x2,
+	NVME_LOCKDOWN_CSEL_VENDOR_SPECIFIC	= 0xf,
+};
+
+/**
+ * enum nvme_lockdown_log_lsp - Command and Feature Lockdown Log Specific
+ *				 Parameter field (Get Log Page Command Dword
+ *				 10 LSP field)
+ * @NVME_LOCKDOWN_LOG_LSP_SCP_SHIFT:	Shift amount to get the Scope (SCP)
+ * @NVME_LOCKDOWN_LOG_LSP_SCP_MASK:	Mask to get SCP
+ * @NVME_LOCKDOWN_LOG_LSP_CNTTS_SHIFT:	Shift amount to get the Contents
+ *					(CNTTS)
+ * @NVME_LOCKDOWN_LOG_LSP_CNTTS_MASK:	Mask to get CNTTS
+ * @NVME_LOCKDOWN_LOG_LSP_ELPF:		Enhanced Log Page Format: if set,
+ *					then the Controller-scoped Enhanced
+ *					log page format (see &struct
+ *					nvme_lockdown_log_enhanced) is
+ *					requested instead of &struct
+ *					nvme_lockdown_log. The Controller
+ *					Identifier is specified via the Log
+ *					Specific Identifier field of Command
+ *					Dword 11 (%NVME_LOG_CDW11_LSI_SHIFT).
+ */
+enum nvme_lockdown_log_lsp {
+	NVME_LOCKDOWN_LOG_LSP_SCP_SHIFT		= 0,
+	NVME_LOCKDOWN_LOG_LSP_SCP_MASK		= 0xf,
+	NVME_LOCKDOWN_LOG_LSP_CNTTS_SHIFT	= 4,
+	NVME_LOCKDOWN_LOG_LSP_CNTTS_MASK	= 0x3,
+	NVME_LOCKDOWN_LOG_LSP_ELPF		= 1 << 6,
+};
+
+#define NVME_LOCKDOWN_LOG_LSP_SCP(lsp)	 NVME_GET(lsp, LOCKDOWN_LOG_LSP_SCP)
+#define NVME_LOCKDOWN_LOG_LSP_CNTTS(lsp) NVME_GET(lsp, LOCKDOWN_LOG_LSP_CNTTS)
+
+/**
+ * struct nvme_lockdown_cfi_desc - Command and Feature Identifier Descriptor
+ * @cfi:   Command and Feature Identifier: contents depend on the Contents
+ *	   Selected (CS) and Scope Selected (SS) fields of @struct
+ *	   nvme_lockdown_log_enhanced.cfia.
+ * @cfia:  Command and Feature Identifier Attributes, see &enum
+ *	   nvme_lockdown_cfi_desc_cfia.
+ */
+struct nvme_lockdown_cfi_desc {
+	__u8	cfi;
+	__u8	cfia;
+};
+
+/**
+ * enum nvme_lockdown_cfi_desc_cfia - Command and Feature Identifier
+ *				       Descriptor - Command and Feature
+ *				       Identifier Attributes (CFIA)
+ * @NVME_LOCKDOWN_CFI_DESC_CFIA_ACNTL: All Controllers: if set, then @cfi is
+ *				       reported by all controllers in the NVM
+ *				       subsystem; if cleared, then @cfi is
+ *				       reported by at least one but not all
+ *				       controllers in the NVM subsystem.
+ */
+enum nvme_lockdown_cfi_desc_cfia {
+	NVME_LOCKDOWN_CFI_DESC_CFIA_ACNTL	= 1 << 0,
+};
+
+/**
+ * enum nvme_lockdown_log_enhanced_cfia - Command and Feature Lockdown Log
+ *					   Page - Enhanced - Command and
+ *					   Feature Identifier Attributes
+ *					   (CFIA)
+ * @NVME_LOCKDOWN_LOG_ENHANCED_CFIA_SS_SHIFT:    Shift amount to get the
+ *						  Scope Selected (SS)
+ * @NVME_LOCKDOWN_LOG_ENHANCED_CFIA_SS_MASK:	  Mask to get SS
+ * @NVME_LOCKDOWN_LOG_ENHANCED_CFIA_CS_SHIFT:    Shift amount to get the
+ *						  Contents Selected (CS)
+ * @NVME_LOCKDOWN_LOG_ENHANCED_CFIA_CS_MASK:	  Mask to get CS
+ */
+enum nvme_lockdown_log_enhanced_cfia {
+	NVME_LOCKDOWN_LOG_ENHANCED_CFIA_SS_SHIFT	= 0,
+	NVME_LOCKDOWN_LOG_ENHANCED_CFIA_SS_MASK	= 0xf,
+	NVME_LOCKDOWN_LOG_ENHANCED_CFIA_CS_SHIFT	= 4,
+	NVME_LOCKDOWN_LOG_ENHANCED_CFIA_CS_MASK	= 0x3,
+};
+
+#define NVME_LOCKDOWN_LOG_ENHANCED_CFIA_SS(cfia) \
+	NVME_GET(cfia, LOCKDOWN_LOG_ENHANCED_CFIA_SS)
+#define NVME_LOCKDOWN_LOG_ENHANCED_CFIA_CS(cfia) \
+	NVME_GET(cfia, LOCKDOWN_LOG_ENHANCED_CFIA_CS)
+
+/**
+ * struct nvme_lockdown_log_enhanced - Command and Feature Lockdown Log Page
+ *					- Enhanced
+ * @ver:    Version: cleared to 0h.
+ * @cfia:   Command and Feature Identifier Attributes, see &enum
+ *	    nvme_lockdown_log_enhanced_cfia.
+ * @cntlid: Controller Identifier this log page applies to. FFFFh indicates
+ *	    the descriptor list entries are each reported by one or more
+ *	    controllers in the NVM subsystem, rather than a single
+ *	    controller.
+ * @sze:    Size of this log page in bytes.
+ * @ncfid:  Number of Command and Feature Identifier Descriptors in @cfid.
+ * @cfids:  Command and Feature Identifier Descriptors Size: size in bytes
+ *	    of each entry in @cfid.
+ * @rsvd12: Reserved
+ * @cfid:   Command and Feature Identifier Descriptor list, see &struct
+ *	    nvme_lockdown_cfi_desc.
+ */
+struct nvme_lockdown_log_enhanced {
+	__u8				ver;
+	__u8				cfia;
+	__le16				cntlid;
+	__le32				sze;
+	__le16				ncfid;
+	__le16				cfids;
+	__u8				rsvd12[4];
+	struct nvme_lockdown_cfi_desc	cfid[];
 };
 
 /**

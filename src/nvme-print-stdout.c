@@ -2233,7 +2233,9 @@ static void stdout_id_ctrl_mec(__u8 mec)
 static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xF000) >> 12;
+	__u16 rsvd = (oacs & 0xC000) >> 14;
+	__u16 rsvd12 = (oacs & 0x1000) >> 12;
+	__u16 ccfls = NVME_CTRL_OACS_CCFLS(oacs);
 	__u16 hmlms = NVME_CTRL_OACS_HMLMS(oacs);
 	__u16 lock = NVME_CTRL_OACS_CFLS(oacs);
 	__u16 glbas = NVME_CTRL_OACS_GLSS(oacs);
@@ -2248,7 +2250,11 @@ static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 sec = NVME_CTRL_OACS_SSRS(oacs);
 
 	if (rsvd)
-		printf(" [15:12] : %#x\tReserved\n", rsvd);
+		printf(" [15:14] : %#x\tReserved\n", rsvd);
+	printf("  [13:13] : %#x\tCtrl-scoped Command/Feature Lockdown %sSupported\n",
+	       ccfls, ccfls ? "" : "Not ");
+	if (rsvd12)
+		printf(" [12:12] : %#x\tReserved\n", rsvd12);
 	printf("  [11:11] : %#x\tHost Managed Live Migration %sSupported\n",
 		hmlms, hmlms ? "" : "Not ");
 	printf("  [10:10] : %#x\tLockdown Command and Feature %sSupported\n",

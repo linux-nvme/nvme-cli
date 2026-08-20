@@ -644,18 +644,21 @@ static void test_lockdown(void)
 	__u8 ofi = 0x12;
 	__u8 scp = 0x2;
 	__u8 ifc = 0x1;
+	__u8 csel = 0x1;
+	__u16 css = 0x5;
 	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_lockdown,
 		.cdw10 = ofi << 8 | (ifc & 0x3) << 5 |
-			 (prhbt & 0x1) << 4 | (scp & 0xF),
-		.cdw14 = uuidx & 0x3F,
+			 (prhbt & 0x1) << 4 | (scp & 0xF) |
+			 (__u32)(csel & 0xf) << 16,
+		.cdw14 = (uuidx & 0x3F) | (__u32)css << 16,
 		.result = expected_result,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
-	nvme_init_lockdown(&cmd, scp, prhbt, ifc, ofi, uuidx);
+	nvme_init_lockdown(&cmd, scp, prhbt, ifc, ofi, uuidx, csel, css);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);

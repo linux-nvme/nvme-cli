@@ -44,6 +44,13 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		"value, then the value of this field is the index of a UUID in the UUID\n"
 		"List that is used by the command.If this field is cleared to 0h,\n"
 		"then no UUID index is specified";
+	const char *csel_desc = "[0,1,2,15] Controller Select (CSEL) specifies the\n"
+		"controller(s) affected by this command: 0 = NVM subsystem,\n"
+		"1 = specific controller (see --css), 2 = secondary controllers\n"
+		"for a specific primary controller (see --css), 15 = vendor specific.";
+	const char *css_desc = "Controller Select Specific (CSS) - meaning depends\n"
+		"on --csel: the Controller Identifier if --csel=1, or the Primary\n"
+		"Controller Identifier if --csel=2. Ignored if --csel=0.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -56,6 +63,8 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		__u8	prhbt;
 		__u8	scp;
 		__u8	uuid;
+		__u8	csel;
+		__u16	css;
 	};
 
 	struct config cfg = {
@@ -64,6 +73,8 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		.prhbt	= 0,
 		.scp	= 0,
 		.uuid	= 0,
+		.csel	= 0,
+		.css	= 0,
 	};
 
 	NVME_ARGS(opts,
@@ -71,7 +82,9 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		  OPT_BYTE("ifc",	'f', &cfg.ifc,      ifc_desc),
 		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
 		  OPT_BYTE("scp",	's', &cfg.scp,      scp_desc),
-		  OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc));
+		  OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc),
+		  OPT_BYTE("csel",	'c', &cfg.csel,     csel_desc),
+		  OPT_SHRT("css",	'C', &cfg.css,      css_desc));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -94,9 +107,16 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		nvme_show_error("invalid UUID index settings:%d", cfg.uuid);
 		return -1;
 	}
+	if (cfg.csel != NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM &&
+	    cfg.csel != NVME_LOCKDOWN_CSEL_SPECIFIC_CTRL &&
+	    cfg.csel != NVME_LOCKDOWN_CSEL_SECONDARY_CTRLS &&
+	    cfg.csel != NVME_LOCKDOWN_CSEL_VENDOR_SPECIFIC) {
+		nvme_show_error("invalid controller select settings:%d", cfg.csel);
+		return -1;
+	}
 
 	nvme_init_lockdown(&cmd, cfg.scp, cfg.prhbt, cfg.ifc, cfg.ofi,
-			   cfg.uuid);
+			   cfg.uuid, cfg.csel, cfg.css);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "lockdown");
