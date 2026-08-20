@@ -65,8 +65,11 @@ def _probe_command(nvme_bin, command):
     if key not in _command_cache:
         probe = subprocess.run(f"{nvme_bin} {command} --help", shell=True,
                                stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL)
-        _command_cache[key] = command if probe.returncode == 0 else _LEGACY_COMMANDS[command]
+                               stderr=subprocess.PIPE)
+        # --help always exits non-zero whether or not the command exists,
+        # so check for the appropriate error message instead.
+        supported = b"Invalid sub-command" not in probe.stderr
+        _command_cache[key] = command if supported else _LEGACY_COMMANDS[command]
     return _command_cache[key]
 
 
