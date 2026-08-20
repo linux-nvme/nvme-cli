@@ -5077,14 +5077,47 @@ enum nvme_cdp_change_event_ps {
 
 /**
  * enum nvme_personality_identifier - Personality Identifier List
- * @NVME_PERID_MFG_DEFAULT:	Manufacturing Default Personality
- * @NVME_PERID_SECURITY:	Security Personality
- * @NVME_PERID_ALL:		All Personalities
+ * @NVME_PERID_MFG_DEFAULT:		Manufacturing Default Personality
+ * @NVME_PERID_SECURITY:		Security Personality
+ * @NVME_PERID_LOCKDOWN_PERSISTENCE:	Lockdown Persistence Personality, see
+ *					&enum nvme_lockdown_persistence_cdw11
+ *					and &enum
+ *					nvme_lockdown_persistence_cqe_dw1
+ * @NVME_PERID_ALL:			All Personalities
  */
 enum nvme_personality_identifier {
-	NVME_PERID_MFG_DEFAULT	= 0x00,
-	NVME_PERID_SECURITY	= 0x01,
-	NVME_PERID_ALL		= 0xff,
+	NVME_PERID_MFG_DEFAULT		= 0x00,
+	NVME_PERID_SECURITY		= 0x01,
+	NVME_PERID_LOCKDOWN_PERSISTENCE	= 0x02,
+	NVME_PERID_ALL			= 0xff,
+};
+
+/**
+ * enum nvme_lockdown_persistence_cdw11 - Lockdown Persistence Personality -
+ *					   Command Dword 11 (Set Features)
+ * @NVME_LOCKDOWN_PERSISTENCE_LDPE: Lockdown Persistence Enable: If set to
+ *				     '1', then Lockdown Persistence is
+ *				     enabled and the prohibitions of the
+ *				     Lockdown command that affect all
+ *				     controllers in the NVM subsystem persist
+ *				     across power cycles of the NVM subsystem.
+ *				     If cleared to '0', then Lockdown
+ *				     Persistence is disabled.
+ */
+enum nvme_lockdown_persistence_cdw11 {
+	NVME_LOCKDOWN_PERSISTENCE_LDPE	= 1 << 0,
+};
+
+/**
+ * enum nvme_lockdown_persistence_cqe_dw1 - Lockdown Persistence Personality -
+ *					     Get Features Completion Queue
+ *					     Entry Dword 1
+ * @NVME_LOCKDOWN_PERSISTENCE_LDPS: Lockdown Persistence State: set to '1' if
+ *				     Lockdown Persistence is enabled; cleared
+ *				     to '0' if disabled.
+ */
+enum nvme_lockdown_persistence_cqe_dw1 {
+	NVME_LOCKDOWN_PERSISTENCE_LDPS	= 1 << 0,
 };
 
 /**
