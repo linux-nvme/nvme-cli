@@ -15,13 +15,13 @@
 __shr_public int libnvmf_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
 				  unsigned char version, unsigned char hmac,
 				  const unsigned char *key_data,
-				  size_t key_len, char **identity)
+				  size_t key_len, char **encoded_keyp)
 {
 	return -ENOTSUP;
 }
 
 __shr_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
-	const unsigned char *key_data, int key_len, char **identity)
+	const unsigned char *key_data, int key_len, char **encoded_keyp)
 {
 	return -ENOTSUP;
 }

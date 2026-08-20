@@ -73,7 +73,7 @@ __shr_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret)
 {
-	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS 2.0 is not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS is not supported; "
 		 "recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
@@ -102,8 +102,8 @@ static int derive_psk_digest(struct libnvme_global_ctx *ctx,
 		unsigned char *retained, size_t key_len,
 		char *digest, size_t digest_len)
 {
-	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS 2.0 is not supported; "
-		 "recompile with OpenSSL support.\n");
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "TLS PSK identity version 1 is not "
+		 "supported; recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
 
@@ -177,7 +177,8 @@ static DEFINE_CLEANUP_FUNC(
 /*
  * derive_retained_key()
  *
- * Derive a retained key according to NVMe TCP Transport specification:
+ * Derive a retained PSK according to the NVMe TCP Transport
+ * Specification 1.3, section 3.6.1.3:
  *
  * The retained PSK is derived from the configured PSK. The configured PSK
  * shall be destroyed as soon as the retained PSK is generated and stored.
@@ -344,7 +345,7 @@ static int derive_retained_key_compat(struct libnvme_global_ctx *ctx,
  * where PskIdentity is the PSK identity and L is the output size in bytes of
  * the hash function (i.e., 32 for SHA-256 and 48 for SHA-384).
  *
- * Note that this is _not_ the hash value as specified by the configured key,
+ * Note that this is _not_ the hash value as specified by the configured PSK,
  * but rather the hash function of the cipher suite associated with the
  * PSK:
  * - 1 indicates SHA-245 (for the TLS_AES_128_GCM_SHA256 cipher suite)
@@ -1262,10 +1263,10 @@ static int __nvme_import_tls_key(struct libnvme_global_ctx *ctx, long keyring_id
 
 	if (hmac == LIBNVMF_HMAC_ALG_NONE || !identity) {
 		/*
-		 * This is a configured key (hmac 0) or we don't know the
-		 * identity and so the assumtion is it is also a
-		 * configured key. Derive a new key and load the newly
-		 * created key into the keystore.
+		 * This is a configured PSK (hmac 0) or we don't know the
+		 * identity and so the assumption is it is also a
+		 * configured PSK. Derive a TLS PSK from it and load the
+		 * newly created key into the keystore.
 		 */
 		return __nvme_insert_tls_key(ctx, keyring_id, "psk",
 			hostnqn, subsysnqn, version, hmac,
@@ -1336,7 +1337,7 @@ int __libnvmf_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 					    subsysnqn, identity, key, &id);
 		if (ret) {
 			libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
-				 "Failed to insert TLS KEY, error %d\n", ret);
+				 "Failed to insert TLS PSK, error %d\n", ret);
 			return ret;
 		}
 	}
@@ -1527,7 +1528,7 @@ __shr_public int libnvmf_export_tls_key_versioned(
 }
 
 __shr_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
-		const unsigned char *key_data, int key_len, char **key)
+		const unsigned char *key_data, int key_len, char **encoded_keyp)
 {
 	unsigned char hmac;
 
@@ -1537,7 +1538,7 @@ __shr_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
 		hmac = LIBNVMF_HMAC_ALG_SHA2_384;
 
 	return libnvmf_export_tls_key_versioned(ctx, 1, hmac, key_data,
-		key_len, key);
+		key_len, encoded_keyp);
 }
 
 __shr_public int libnvmf_import_tls_key_versioned(

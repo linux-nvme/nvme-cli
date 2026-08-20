@@ -162,7 +162,7 @@ int libnvmf_update_key(struct libnvme_global_ctx *ctx, long keyring_id,
 		unsigned char *key_data, int key_len, long *key);
 
 /**
- * typedef libnvmf_scan_tls_keys_cb_t - Callback for iterating TLS keys
+ * typedef libnvmf_scan_tls_keys_cb_t - Callback for iterating TLS PSKs
  * @ctx:	struct libnvme_global_ctx object
  * @keyring:	Keyring which has been iterated
  * @key:	Key for which the callback has been invoked
@@ -176,17 +176,17 @@ typedef void (*libnvmf_scan_tls_keys_cb_t)(struct libnvme_global_ctx *ctx,
 		long keyring, long key, char *desc, int desc_len, void *data);
 
 /**
- * libnvmf_scan_tls_keys() - Iterate over TLS keys in a keyring
+ * libnvmf_scan_tls_keys() - Iterate over TLS PSKs in a keyring
  * @ctx:	struct libnvme_global_ctx object
- * @keyring:	Keyring holding TLS keys
+ * @keyring:	Keyring holding TLS PSKs
  * @cb:		Callback function
  * @data:	Pointer for data to be passed to @cb
  *
- * Iterates @keyring and call @cb for each TLS key. When @keyring is NULL
+ * Iterates @keyring and call @cb for each TLS PSK. When @keyring is NULL
  * the default '.nvme' keyring is used.
- * A TLS key must be of type 'psk' and the description must be of the
- * form 'NVMe<0|1><R|G>0<1|2> <identity>', otherwise it will be skipped
- * during iteration.
+ * A key holding a TLS PSK must be of type 'psk' and its description must
+ * be of the form 'NVMe<0|1><R|G><01|02> <identity>', otherwise it will be
+ * skipped during iteration.
  *
  * Return: Number of keys for which @cb was called, or negative error code
  */
@@ -194,19 +194,26 @@ int libnvmf_scan_tls_keys(struct libnvme_global_ctx *ctx, const char *keyring,
 		libnvmf_scan_tls_keys_cb_t cb, void *data);
 
 /**
- * libnvmf_insert_tls_key() - Derive and insert TLS key
+ * libnvmf_insert_tls_key() - Derive and insert a TLS PSK
  * @ctx:	struct libnvme_global_ctx object
  * @keyring:	Keyring to use
  * @key_type:	Type of the resulting key
  * @hostnqn:	Host NVMe Qualified Name
  * @subsysnqn:	Subsystem NVMe Qualified Name
  * @hmac:	HMAC algorithm
- * @configured_key:	Configured key data to derive the key from
+ * @configured_key:	Configured PSK to derive the retained PSK from
  * @key_len:	Length of @configured_key
  * @key:	Key serial to return
  *
- * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a and
- * stores it as type @key_type in the keyring specified by @keyring.
+ * Derives a retained PSK from @configured_key and, from that, the TLS PSK
+ * and its identity, using identity version 0, as specified in the NVMe
+ * TCP Transport Specification 1.0, section 3.6.1.3. Stores the TLS PSK
+ * as type @key_type under that identity in the keyring specified by
+ * @keyring.
+ *
+ * The NVMe TCP Transport Specification 1.3 marks identity version 0
+ * obsolete. Use libnvmf_insert_tls_key_versioned() to select the
+ * identity version.
  *
  * Return: 0 on success, negative error code otherwise.
  */
@@ -216,21 +223,26 @@ int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		int key_len, long *key);
 
 /**
- * libnvmf_insert_tls_key_versioned() - Derive and insert TLS key
+ * libnvmf_insert_tls_key_versioned() - Derive and insert a TLS PSK
  * @ctx:	struct libnvme_global_ctx object
  * @keyring:    Keyring to use
  * @key_type:	Type of the resulting key
  * @hostnqn:	Host NVMe Qualified Name
  * @subsysnqn:	Subsystem NVMe Qualified Name
- * @version:	Key version to use
+ * @version:	TLS PSK identity version to use
  * @hmac:	HMAC algorithm
- * @configured_key:	Configured key data to derive the key from
+ * @configured_key:	Configured PSK to derive the retained PSK from
  * @key_len:	Length of @configured_key
  * @key:	Key serial to return
  *
- * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a (if
- * @version s set to '0') or NVMe TP8028 (if @version is set to '1) and
- * stores it as type @key_type in the keyring specified by @keyring.
+ * Derives a retained PSK from @configured_key and, from that, the TLS PSK
+ * and its identity as specified in the NVMe TCP Transport Specification
+ * 1.3, section 3.6.1.3. Stores the TLS PSK as type @key_type under that
+ * identity in the keyring specified by @keyring.
+ *
+ * @version selects the identity version: 0 is obsolete and defined in
+ * the NVMe TCP Transport Specification 1.0, 1 is TLS 1.3 with the PSK
+ * digest in the identity.
  *
  * Return: 0 on success, negative error code otherwise.
  */
@@ -242,27 +254,31 @@ int libnvmf_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		long *key);
 
 /**
- * libnvmf_insert_tls_key_compat() - Derive and insert TLS key
+ * libnvmf_insert_tls_key_compat() - Derive and insert a TLS PSK
  * @ctx:	struct libnvme_global_ctx object
  * @keyring:    Keyring to use
  * @key_type:	Type of the resulting key
  * @hostnqn:	Host NVMe Qualified Name
  * @subsysnqn:	Subsystem NVMe Qualified Name
- * @version:	Key version to use
+ * @version:	TLS PSK identity version to use
  * @hmac:	HMAC algorithm
- * @configured_key:	Configured key data to derive the key from
+ * @configured_key:	Configured PSK to derive the retained PSK from
  * @key_len:	Length of @configured_key
  * @key:	Key serial to return
  *
- * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a (if
- * @version s set to '0') or NVMe TP8028 (if @version is set to '1) and
- * stores it as type @key_type in the keyring specified by @keyring.
- * This version differs from @libnvmf_insert_tls_key_versioned() in that it
- * uses the original implementation for HKDF Expand-Label which does not
- * prefix the 'info' and 'label' strings with the length.
+ * Derives a retained PSK from @configured_key and, from that, the TLS PSK
+ * and its identity as specified in the NVMe TCP Transport Specification
+ * 1.3, section 3.6.1.3. Stores the TLS PSK as type @key_type under that
+ * identity in the keyring specified by @keyring.
+ * This function differs from libnvmf_insert_tls_key_versioned() in that
+ * it uses the original implementation for HKDF Expand-Label which does
+ * not prefix the 'info' and 'label' strings with the length.
  *
- * Return: The key serial number if the key could be inserted into
- * the keyring or 0 with errno otherwise.
+ * @version selects the identity version: 0 is obsolete and defined in
+ * the NVMe TCP Transport Specification 1.0, 1 is TLS 1.3 with the PSK
+ * digest in the identity.
+ *
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
@@ -272,18 +288,19 @@ int libnvmf_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 		long *key);
 
 /**
- * libnvmf_generate_tls_key_identity() - Generate the TLS key identity
+ * libnvmf_generate_tls_key_identity() - Generate the TLS PSK identity
  * @ctx:	struct libnvme_global_ctx object
  * @hostnqn:	Host NVMe Qualified Name
  * @subsysnqn:	Subsystem NVMe Qualified Name
- * @version:	Key version to use
+ * @version:	TLS PSK identity version to use
  * @hmac:	HMAC algorithm
- * @configured_key:	Configured key data to derive the key from
+ * @configured_key:	Configured PSK to derive the retained PSK from
  * @key_len:	Length of @configured_key
- * @identity:	TLS identity to return
+ * @identity:	TLS PSK identity to return
  *
- * Derives a 'retained' TLS key as specified in NVMe TCP and
- * generate the corresponding TLs identity.
+ * Derives a retained PSK as specified in the NVMe TCP Transport
+ * Specification 1.3, section 3.6.1.3, and generates the corresponding
+ * TLS PSK identity.
  *
  * It is the responsibility of the caller to free the returned string.
  *
@@ -296,21 +313,22 @@ int libnvmf_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
 		char **identity);
 
 /**
- * libnvmf_generate_tls_key_identity_compat() - Generate the TLS key identity
+ * libnvmf_generate_tls_key_identity_compat() - Generate the TLS PSK identity
  * @ctx:	struct libnvme_global_ctx object
  * @hostnqn:	Host NVMe Qualified Name
  * @subsysnqn:	Subsystem NVMe Qualified Name
- * @version:	Key version to use
+ * @version:	TLS PSK identity version to use
  * @hmac:	HMAC algorithm
- * @configured_key:	Configured key data to derive the key from
+ * @configured_key:	Configured PSK to derive the retained PSK from
  * @key_len:	Length of @configured_key
- * @identity:	TLS identity to return
+ * @identity:	TLS PSK identity to return
  *
- * Derives a 'retained' TLS key as specified in NVMe TCP and
- * generate the corresponding TLs identity. This version differs
- * from @libnvmf_generate_tls_key_identity() in that it uses the original
+ * Derives a retained PSK as specified in the NVMe TCP Transport
+ * Specification 1.3, section 3.6.1.3, and generates the corresponding
+ * TLS PSK identity. This function differs from
+ * libnvmf_generate_tls_key_identity() in that it uses the original
  * implementation for HKDF-Expand-Label which does not prefix the 'info'
- * and 'label' string with the length.
+ * and 'label' strings with the length.
  *
  * It is the responsibility of the caller to free the returned string.
  *
@@ -322,7 +340,7 @@ int libnvmf_generate_tls_key_identity_compat(struct libnvme_global_ctx *ctx,
 		int key_len, char **identity);
 
 /**
- * libnvmf_revoke_tls_key() - Revoke TLS key from keyring
+ * libnvmf_revoke_tls_key() - Revoke a TLS PSK from a keyring
  * @ctx:	struct libnvme_global_ctx object
  * @keyring:    Keyring to use
  * @key_type:    Type of the key to revoke
@@ -334,14 +352,14 @@ int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		const char *key_type, const char *identity);
 
 /**
- * libnvmf_export_tls_key() - Export a TLS key
+ * libnvmf_export_tls_key() - Encode a PSK in the PSK interchange format
  * @ctx:	struct libnvme_global_ctx object
- * @key_data:	Raw data of the key
+ * @key_data:	Raw PSK data
  * @key_len:	Length of @key_data
- * @identity:	TLS identity
+ * @encoded_keyp:	Encoded PSK to return
  *
  * Returns @key_data in the PSK Interchange format as defined in section
- * 3.6.1.5 of the NVMe TCP Transport specification.
+ * 3.6.1.5 of the NVMe TCP Transport Specification 1.3.
  *
  * It is the responsibility of the caller to free the returned
  * string.
@@ -349,20 +367,23 @@ int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
-		const unsigned char *key_data, int key_len, char **identity);
+		const unsigned char *key_data, int key_len, char **encoded_keyp);
 
 /**
- * libnvmf_export_tls_key_versioned() - Export a TLS pre-shared key
+ * libnvmf_export_tls_key_versioned() - Encode a PSK in the PSK
+ * interchange format
  * @ctx:	struct libnvme_global_ctx object
- * @version:	Indicated the representation of the TLS PSK
- * @hmac:	HMAC algorithm used to transfor the configured PSK
- *		in a retained PSK
- * @key_data:	Raw data of the key
+ * @version:	Version of the PSK interchange format to write. The
+ *		specification defines 1, which appears in the encoded
+ *		string as the digit after "NVMeTLSkey-".
+ * @hmac:	Hash function recorded in the encoded PSK, used to derive
+ *		a retained PSK from a configured PSK
+ * @key_data:	Raw PSK data
  * @key_len:	Length of @key_data
- * @identity:	TLS identity to return
+ * @encoded_keyp:	Encoded PSK to return
  *
  * Returns @key_data in the PSK Interchange format as defined in section
- * 3.6.1.5 of the NVMe TCP Transport specification.
+ * 3.6.1.5 of the NVMe TCP Transport Specification 1.3.
  *
  * It is the responsibility of the caller to free the returned
  * string.
@@ -372,20 +393,20 @@ int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
 int libnvmf_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		unsigned char version, unsigned char hmac,
 		const unsigned char *key_data,
-		size_t key_len, char **identity);
+		size_t key_len, char **encoded_keyp);
 
 /**
- * libnvmf_import_tls_key() - Import a TLS key
+ * libnvmf_import_tls_key() - Decode a PSK from the PSK interchange format
  * @ctx:		struct libnvme_global_ctx object
- * @encoded_key:	TLS key in PSK interchange format
- * @key_len:		Length of the resulting key data
- * @hmac:		HMAC algorithm
- * @key:		Key serial to return
+ * @encoded_key:	PSK in PSK interchange format
+ * @key_len:		Length of the decoded PSK to return
+ * @hmac:		Hash function recorded in @encoded_key to return
+ * @key:		Decoded PSK to return
  *
- * Imports @key_data in the PSK Interchange format as defined in section
- * 3.6.1.5 of the NVMe TCP Transport specification.
+ * Decodes @encoded_key from the PSK Interchange format as defined in
+ * section 3.6.1.5 of the NVMe TCP Transport Specification 1.3.
  *
- * It is the responsibility of the caller to free the returned string.
+ * It is the responsibility of the caller to free the returned buffer.
  *
  * Return: 0 on success, negative error code otherwise.
  */
@@ -394,19 +415,22 @@ int libnvmf_import_tls_key(struct libnvme_global_ctx *ctx,
 		unsigned char **key);
 
 /**
- * libnvmf_import_tls_key_versioned() - Import a TLS key
+ * libnvmf_import_tls_key_versioned() - Decode a PSK from the PSK
+ * interchange format
  * @ctx:		struct libnvme_global_ctx object
- * @encoded_key:	TLS key in PSK interchange format
- * @version:		Indicated the representation of the TLS PSK
- * @hmac:		HMAC algorithm used to transfor the configured
- *			PSK in a retained PSK
- * @key_len:		Length of the resulting key data
- * @key:		Key serial to return
+ * @encoded_key:	PSK in PSK interchange format
+ * @version:		Version of the PSK interchange format read from
+ *			@encoded_key to return. Always 1; any other value
+ *			is rejected with -EINVAL.
+ * @hmac:		Hash function recorded in @encoded_key to return; it
+ *			derives a retained PSK from a configured PSK
+ * @key_len:		Length of the decoded PSK to return
+ * @key:		Decoded PSK to return
  *
- * Imports @key_data in the PSK Interchange format as defined in section
- * 3.6.1.5 of the NVMe TCP Transport specification.
+ * Decodes @encoded_key from the PSK Interchange format as defined in
+ * section 3.6.1.5 of the NVMe TCP Transport Specification 1.3.
  *
- * It is the responsibility of the caller to free the returned string.
+ * It is the responsibility of the caller to free the returned buffer.
  *
  * Return: 0 on success, negative error code otherwise.
  */
