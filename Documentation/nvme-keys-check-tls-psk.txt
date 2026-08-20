@@ -30,7 +30,7 @@ If '--subsysnqn' is given the TLS PSK identity of the key is also printed,
 and the specified keyring is checked for a TLS PSK already stored under
 that identity; the result (loaded or not, with its serial number if loaded)
 is reported. This command never modifies the keyring; to insert a TLS PSK
-use linknvme-keys-insert-tls-psk[1].
+use linknvme:nvme-keys-insert-tls-psk[1].
 
 OPTIONS
 -------
