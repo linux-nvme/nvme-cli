@@ -15,8 +15,13 @@ $script:NvmeCommands = @(
     'capacity-mgmt'
     'changed-alloc-ns-list-log'
     'changed-ns-list-log'
+    'check-dhchap-key'
+    'check-tls-key'
     'cmdset-ind-id-ns'
     'compare'
+    'config'
+    'connect'
+    'connect-all'
     'copy'
     'create-ns'
     'dapustor'
@@ -25,15 +30,20 @@ $script:NvmeCommands = @(
     'dera'
     'detach-ns'
     'device-self-test'
+    'dim'
     'dir'
     'dir-receive'
     'dir-send'
+    'disconnect'
+    'disconnect-all'
+    'discover'
     'dispersed-ns-participating-nss-log'
     'dsm'
     'effects-log'
     'endurance-event-agg-log'
     'endurance-log'
     'error-log'
+    'exclusion'
     'fdp'
     'feat'
     'fid-support-effects-log'
@@ -44,6 +54,9 @@ $script:NvmeCommands = @(
     'fw-commit'
     'fw-download'
     'fw-log'
+    'gen-dhchap-key'
+    'gen-hostnqn'
+    'gen-tls-key'
     'get-feature'
     'get-lba-status'
     'get-log'
@@ -52,6 +65,7 @@ $script:NvmeCommands = @(
     'get-reg'
     'help'
     'host-discovery-log'
+    'huawei'
     'ibm'
     'id'
     'id-ctrl'
@@ -69,6 +83,7 @@ $script:NvmeCommands = @(
     'io-mgmt-recv'
     'io-mgmt-send'
     'io-passthru'
+    'keys'
     'lba-status-log'
     'list'
     'list-ctrl'
@@ -76,6 +91,7 @@ $script:NvmeCommands = @(
     'list-ns'
     'list-secondary'
     'list-subsys'
+    'lm'
     'lockdown'
     'log'
     'mangoboost'
@@ -84,6 +100,8 @@ $script:NvmeCommands = @(
     'mgmt-addr-list-log'
     'mi-cmd-support-effects-log'
     'micron'
+    'nbft'
+    'netapp'
     'ns'
     'ns-descs'
     'ns-rescan'
@@ -105,6 +123,7 @@ $script:NvmeCommands = @(
     'reachability-associations-log'
     'reachability-groups-log'
     'read'
+    'registry'
     'reset'
     'resv'
     'resv-acquire'
@@ -121,20 +140,26 @@ $script:NvmeCommands = @(
     'security'
     'security-recv'
     'security-send'
+    'sed'
     'self-test-log'
     'set-feature'
     'set-property'
     'set-reg'
+    'sfx'
     'shannon'
+    'show-hostnqn'
     'show-regs'
     'show-topology'
     'smart-log'
+    'sndk'
     'solidigm'
     'ssstc'
     'subsystem-reset'
     'supported-cap-config-log'
     'supported-log-pages'
     'telemetry-log'
+    'tls-key'
+    'top'
     'toshiba'
     'transcend'
     'utils'
@@ -142,46 +167,61 @@ $script:NvmeCommands = @(
     'version'
     'virt-mgmt'
     'virtium'
+    'wdc'
     'write'
     'write-uncor'
     'write-zeroes'
     'ymtc'
+    'zns'
 )
 
 $script:NvmePluginCommands = @{
     'amzn' = @('id-ctrl', 'stats')
+    'config' = @('convert', 'create', 'show', 'status', 'validate')
     'dapustor' = @('smart-log-add')
     'dell' = @('id-ctrl')
     'dera' = @('smart-log-add', 'stat')
     'dir' = @('receive', 'send')
+    'exclusion' = @('add', 'create', 'delete', 'edit', 'list', 'remove')
     'fdp' = @('configs', 'events', 'feature', 'set-events', 'stats', 'status', 'update', 'usage')
     'feat' = @('arbitration', 'err-recovery', 'hctm', 'host-behavior-support', 'num-queues', 'perf-characteristics', 'power-limit', 'power-meas', 'power-mgmt', 'power-thresh', 'temp-thresh', 'timestamp', 'volatile-wc')
     'fw' = @('activate', 'commit', 'download')
+    'huawei' = @('id-ctrl', 'list')
     'ibm' = @('crit-log', 'persist-event-log', 'vpd')
     'id' = @('ctrl', 'ctrl-list', 'domain', 'endgrp-list', 'iocs', 'ns', 'ns-descs', 'ns-granularity', 'ns-ind', 'ns-lba-format', 'ns-list', 'nvm-ctrl', 'nvm-ns', 'nvm-ns-lba-format', 'nvmset', 'primary-ctrl-caps', 'secondary-ctrl-list', 'uuid')
     'innogrit' = @('get-cdump', 'get-eventlog')
     'inspur' = @('nvme-vendor-log')
     'intel' = @('id-ctrl', 'internal-log', 'lat-stats', 'lat-stats-tracking', 'market-name', 'set-bucket-thresholds', 'smart-log-add', 'temp-stats')
     'io-mgmt' = @('recv', 'send')
-    'log' = @('ana', 'ave-discovery', 'boot-part', 'changed-alloc-ns-list', 'changed-ns-list', 'dispersed-ns-participating-nss', 'effects', 'endurance', 'endurance-event-agg', 'error', 'fid-support-effects', 'fw', 'host-discovery', 'lba-status', 'media-unit-stat', 'mgmt-addr-list', 'mi-cmd-support-effects', 'persistent-event', 'phy-rx-eom', 'power-measurement', 'pred-lat-event-agg', 'predictable-lat', 'pull-model-ddc-req', 'reachability-associations', 'reachability-groups', 'resv-notif', 'rotational-media-info', 'sanitize', 'self-test', 'smart', 'supported-cap-config', 'telemetry')
+    'keys' = @('check-kxchap-secret', 'check-tls', 'export', 'gen-kxchap-secret', 'gen-tls', 'import', 'insert-tls', 'revoke')
+    'lm' = @('create-cdq', 'delete-cdq', 'get-cdq', 'migration-recv', 'migration-send', 'set-cdq', 'track-send')
+    'log' = @('ana', 'ave-discovery', 'boot-part', 'changed-alloc-ns-list', 'changed-ns-list', 'dispersed-ns-participating-nss', 'effects', 'endurance', 'endurance-event-agg', 'error', 'fid-support-effects', 'fw', 'host-discovery', 'lba-status', 'media-unit-stat', 'mgmt-addr-list', 'mi-cmd-support-effects', 'persistent-event', 'phy-rx-eom', 'power-measurement', 'pred-lat-event-agg', 'predictable-lat', 'pull-model-ddc-req', 'reachability-associations', 'reachability-groups', 'resv-notif', 'rotational-media-info', 'sanitize', 'self-test', 'smart', 'supported-cap-config', 'supported-pages', 'telemetry')
     'mangoboost' = @('id-ctrl')
     'memblaze' = @('clear-error-log', 'get-pm-status', 'lat-get-feature-x', 'lat-log', 'lat-log-print', 'lat-log-print-x', 'lat-set-feature-x', 'lat-stats', 'lat-stats-print', 'lat-stats-print-x', 'perf-stats-print-x', 'select-download', 'set-pm-status', 'smart-log-add', 'smart-log-add-x')
     'micron' = @('clear-fw-activate-history', 'clear-pcie-correctable-errors', 'cloud-SSD-plugin-version', 'cloud-boot-SSD-version', 'id-ctrl', 'latency-logs', 'latency-stats', 'latency-tracking', 'log-page-directory', 'plugin-version', 'select-download', 'smart-log', 'vs-cloud-log', 'vs-device-waf', 'vs-drive-info', 'vs-fw-activate-history', 'vs-internal-log', 'vs-nand-stats', 'vs-pcie-stats', 'vs-smart-add-log', 'vs-smart-ext-log', 'vs-smbus-option', 'vs-telemetry-controller-option', 'vs-temperature-stats', 'vs-vendor-telemetry-log', 'vs-work-load-log')
+    'nbft' = @('show')
+    'netapp' = @('ontapdevices', 'smdevices')
     'ns' = @('attach', 'create', 'delete', 'detach', 'get-id')
     'nvidia' = @('id-ctrl')
     'nvme-mi' = @('recv', 'send')
     'ocp' = @('clear-fw-activate-history', 'clear-pcie-correctable-errors', 'device-capability-log', 'eol-plp-failure-mode', 'error-recovery-log', 'fw-activate-history', 'get-clear-pcie-correctable-errors', 'get-dssd-async-event-config', 'get-dssd-power-state-feature', 'get-enable-ieee1667-silo', 'get-error-injection', 'get-idle-wakeup-time', 'get-latency-monitor', 'get-plp-health-check-interval', 'get-telemetry-profile', 'hardware-component-log', 'internal-log', 'latency-monitor-log', 'persistent-event-log', 'set-dssd-async-event-config', 'set-dssd-power-state-feature', 'set-enable-ieee1667-silo', 'set-error-injection', 'set-latency-monitor-feature', 'set-plp-health-check-interval', 'set-telemetry-profile', 'smart-add-log', 'tcg-configuration-log', 'telemetry-string-log', 'unsupported-reqs-log')
+    'registry' = @('delete', 'list', 'retrieve', 'update')
     'resv' = @('acquire', 'register', 'release', 'report')
     'seagate' = @('clear-fw-activate-history', 'clear-pcie-correctable-errors', 'cloud-SSD-plugin-version', 'get-ctrl-tele', 'get-host-tele', 'plugin-version', 'vs-fw-activate-history', 'vs-internal-log', 'vs-log-page-sup', 'vs-pcie-stats', 'vs-smart-add-log', 'vs-temperature-stats')
     'security' = @('recv', 'send')
+    'sed' = @('1', 'discover', 'initialize', 'lock', 'password', 'revert', 'unlock')
+    'sfx' = @('change-cap', 'dump-evtlog', 'expand-cap', 'get-bad-block', 'get-feature', 'lat-stats', 'query-cap', 'set-feature', 'smart-log-add', 'status')
     'shannon' = @('get-additional-feature', 'id-ctrl', 'set-additioal-feature', 'smart-log-add')
+    'sndk' = @('capabilities', 'clear-assert-dump', 'clear-fw-activate-history', 'clear-pcie-correctable-errors', 'cloud-SSD-plugin-version', 'cloud-boot-SSD-version', 'cu-smart-log', 'drive-resize', 'get-dev-capabilities-log', 'get-drive-status', 'get-error-recovery-log', 'get-latency-monitor-log', 'get-unsupported-reqs-log', 'log-page-directory', 'namespace-resize', 'set-latency-monitor-feature', 'vs-cloud-log', 'vs-device-waf', 'vs-drive-info', 'vs-error-reason-identifier', 'vs-fw-activate-history', 'vs-hw-rev-log', 'vs-internal-log', 'vs-nand-stats', 'vs-pcie-stats', 'vs-smart-add-log', 'vs-telemetry-controller-option', 'vs-temperature-stats')
     'solidigm' = @('clear-fw-activate-history', 'clear-pcie-correctable-errors', 'cloud-SSDplugin-version', 'garbage-collect-log', 'id-ctrl', 'latency-tracking-log', 'log-page-directory', 'market-log', 'parse-telemetry-log', 'smart-log-add', 'temp-stats', 'vs-drive-info', 'vs-fw-activate-history', 'vs-internal-log', 'vs-smart-add-log', 'workload-tracker')
     'ssstc' = @('smart-log-add')
     'toshiba' = @('clear-pcie-correctable-errors', 'vs-internal-log', 'vs-smart-add-log')
     'transcend' = @('badblock', 'healthvalue')
     'utils' = @('dump-command-metadata')
     'virtium' = @('save-smart-to-vtview-log', 'show-identify')
+    'wdc' = @('cap-diag', 'capabilities', 'clear-assert-dump', 'clear-fw-activate-history', 'clear-pcie-correctable-errors', 'cloud-SSD-plugin-version', 'cloud-boot-SSD-version', 'cu-smart-log', 'drive-essentials', 'drive-log', 'drive-resize', 'enc-get-log', 'get-crash-dump', 'get-dev-capabilities-log', 'get-drive-status', 'get-error-recovery-log', 'get-latency-monitor-log', 'get-pfail-dump', 'get-unsupported-reqs-log', 'id-ctrl', 'log-page-directory', 'namespace-resize', 'purge', 'purge-monitor', 'set-latency-monitor-feature', 'vs-cloud-log', 'vs-device-waf', 'vs-drive-info', 'vs-error-reason-identifier', 'vs-fw-activate-history', 'vs-hw-rev-log', 'vs-internal-log', 'vs-nand-stats', 'vs-pcie-stats', 'vs-smart-add-log', 'vs-telemetry-controller-option', 'vs-temperature-stats')
     'ymtc' = @('smart-log-add')
+    'zns' = @('changed-zone-list', 'close-zone', 'finish-zone', 'id-ctrl', 'id-ns', 'list', 'offline-zone', 'open-zone', 'report-zones', 'reset-zone', 'set-zone-desc', 'zone-append', 'zone-mgmt-recv', 'zone-mgmt-send', 'zrwa-flush-zone')
 }
 
 $script:NvmeOptions = @{
@@ -195,8 +235,17 @@ $script:NvmeOptions = @{
     'capacity-mgmt' = @('--cap-lower', '-l', '--cap-upper', '-u', '--dry-run', '--element-id', '-i', '--ish', '-I', '--no-ioctl-probing', '--no-retries', '--operation', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'changed-alloc-ns-list-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'changed-ns-list-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'check-dhchap-key' = @('--dry-run', '--key', '-k', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'check-tls-key' = @('--compat', '-C', '--dry-run', '--hostnqn', '-n', '--identity', '-I', '--keydata', '-d', '--keyring', '-k', '--keytype', '-t', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--subsysnqn', '-c', '--timeout', '--verbose', '-v', '--help', '-h')
     'cmdset-ind-id-ns' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'compare' = @('--app-tag', '-a', '--app-tag-mask', '-m', '--block-count', '-c', '--block-size', '-b', '--data', '-d', '--data-size', '-z', '--dir-spec', '-S', '--dir-type', '-T', '--dry-run', '--dsm', '-D', '--force', '--force-unit-access', '-f', '--latency', '-t', '--limited-retry', '-l', '--metadata', '-M', '--metadata-size', '-y', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--prinfo', '-p', '--quiet', '--ref-tag', '-r', '--set-options', '--show-command', '-V', '--start-block', '-s', '--storage-tag', '-g', '--storage-tag-check', '-C', '--timeout', '--verbose', '-v', '--help', '-h')
+    'config convert' = @('--config', '-J', '--force', '--output', '-o', '--help', '-h')
+    'config create' = @('--concat', '--ctrl-loss-tmo', '-l', '--data-digest', '-G', '--disable-sqflow', '--discovery', '--dry-run', '--duplicate-connect', '-D', '--fast-io-fail-tmo', '-F', '--hdr-digest', '-g', '--host-iface', '-f', '--host-symname', '--host-traddr', '-w', '--hostid', '-I', '--hostnqn', '-q', '--keep-alive-tmo', '-k', '--keyring', '--kxchap-ctrl-secret', '-C', '--kxchap-secret', '-S', '--no-ioctl-probing', '--no-retries', '--nqn', '-n', '--nr-io-queues', '-i', '--nr-poll-queues', '-P', '--nr-write-queues', '-W', '--output', '--output-format', '-o', '--output-format-version', '--persistent', '--queue-size', '-Q', '--quiet', '--reconnect-delay', '-c', '--set-options', '--timeout', '--tls', '--tls-key', '--tls-key-identity', '--tls_key', '--tos', '-T', '--traddr', '-a', '--transport', '-t', '--trsvcid', '-s', '--verbose', '-v', '--help', '-h')
+    'config show' = @('--config', '-J', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'config status' = @('--help', '-h')
+    'config validate' = @('--config', '-J', '--help', '-h')
+    'connect' = @('--concat', '--config', '-J', '--ctrl-loss-tmo', '-l', '--data-digest', '-G', '--devid-file', '--disable-sqflow', '--dry-run', '--duplicate-connect', '-D', '--fast-io-fail-tmo', '-F', '--hdr-digest', '-g', '--host-iface', '-f', '--host-traddr', '-w', '--hostid', '-I', '--hostnqn', '-q', '--idempotent', '--keep-alive-tmo', '-k', '--keyring', '--kxchap-ctrl-secret', '-C', '--kxchap-secret', '-S', '--no-ioctl-probing', '--no-retries', '--nqn', '-n', '--nr-io-queues', '-i', '--nr-poll-queues', '-P', '--nr-write-queues', '-W', '--output-format', '-o', '--output-format-version', '--owner', '--queue-size', '-Q', '--quiet', '--reconnect-delay', '-c', '--set-options', '--timeout', '--tls', '--tls-key', '--tls-key-identity', '--tls_key', '--tos', '-T', '--traddr', '-a', '--transport', '-t', '--trsvcid', '-s', '--verbose', '-v', '--help', '-h')
+    'connect-all' = @('--concat', '--config', '-J', '--ctrl-loss-tmo', '-l', '--data-digest', '-G', '--device', '-d', '--disable-sqflow', '--dry-run', '--duplicate-connect', '-D', '--fast-io-fail-tmo', '-F', '--force', '--hdr-digest', '-g', '--host-iface', '-f', '--host-traddr', '-w', '--hostid', '-I', '--hostnqn', '-q', '--keep-alive-tmo', '-k', '--keyring', '--kxchap-ctrl-secret', '-C', '--kxchap-secret', '-S', '--nbft', '--nbft-path', '--no-ioctl-probing', '--no-nbft', '--no-retries', '--no-reuse', '--nqn', '-n', '--nr-io-queues', '-i', '--nr-poll-queues', '-P', '--nr-write-queues', '-W', '--output-format', '-o', '--output-format-version', '--owner', '--persistent', '-p', '--queue-size', '-Q', '--quiet', '--raw', '-r', '--reconnect-delay', '-c', '--set-options', '--timeout', '--tls', '--tls-key', '--tls-key-identity', '--tls_key', '--tos', '-T', '--traddr', '-a', '--transport', '-t', '--trsvcid', '-s', '--verbose', '-v', '--help', '-h')
     'copy' = @('--app-tag', '-a', '--app-tag-mask', '-m', '--blocks', '-b', '--dir-spec', '-S', '--dir-type', '-T', '--dry-run', '--expected-app-tag-masks', '-M', '--expected-app-tags', '-A', '--expected-ref-tags', '-R', '--force-unit-access', '-f', '--format', '-F', '--limited-retry', '-l', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--prinfor', '-P', '--prinfow', '-p', '--quiet', '--ref-tag', '-r', '--sdlba', '-d', '--set-options', '--slbs', '-s', '--snsids', '-N', '--sopts', '-O', '--storage-tag', '-t', '--storage-tag-check', '-c', '--timeout', '--verbose', '-v', '--help', '-h')
     'create-ns' = @('--anagrp-id', '-a', '--azr', '-z', '--block-size', '-b', '--csi', '-y', '--dps', '-d', '--dry-run', '--endg-id', '-e', '--flbas', '-f', '--ish', '-I', '--lbstm', '-l', '--ncap', '-c', '--ncap-si', '-C', '--nmic', '-m', '--no-ioctl-probing', '--no-retries', '--nphndls', '-n', '--nsze', '-s', '--nsze-si', '-S', '--nvmset-id', '-i', '--output-format', '-o', '--output-format-version', '--phndls', '-p', '--quiet', '--rar', '-r', '--rnumzrwa', '-u', '--ror', '-O', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'dapustor smart-log-add' = @('--dry-run', '--json', '-j', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -206,16 +255,26 @@ $script:NvmeOptions = @{
     'dera stat' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'detach-ns' = @('--controllers', '-c', '--dry-run', '--ish', '-I', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'device-self-test' = @('--dry-run', '--ish', '-I', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--self-test-code', '-s', '--set-options', '--timeout', '--verbose', '-v', '--wait', '-w', '--help', '-h')
+    'dim' = @('--device', '-d', '--dry-run', '--no-ioctl-probing', '--no-retries', '--nqn', '-n', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--task', '-t', '--timeout', '--verbose', '-v', '--help', '-h')
     'dir receive' = @('--data-len', '-l', '--dir-oper', '-O', '--dir-spec', '-S', '--dir-type', '-D', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--req-resource', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'dir send' = @('--data-len', '-l', '--dir-oper', '-O', '--dir-spec', '-S', '--dir-type', '-D', '--dry-run', '--endir', '-e', '--input-file', '-i', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--target-dir', '-T', '--timeout', '--verbose', '-v', '--help', '-h')
     'dir-receive' = @('--data-len', '-l', '--dir-oper', '-O', '--dir-spec', '-S', '--dir-type', '-D', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--req-resource', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'dir-send' = @('--data-len', '-l', '--dir-oper', '-O', '--dir-spec', '-S', '--dir-type', '-D', '--dry-run', '--endir', '-e', '--input-file', '-i', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--target-dir', '-T', '--timeout', '--verbose', '-v', '--help', '-h')
+    'disconnect' = @('--concat', '--ctrl-loss-tmo', '-l', '--data-digest', '-G', '--device', '-d', '--disable-sqflow', '--dry-run', '--duplicate-connect', '-D', '--exclude', '-x', '--fast-io-fail-tmo', '-F', '--hdr-digest', '-g', '--host-iface', '-f', '--host-traddr', '-w', '--hostid', '-I', '--hostnqn', '-q', '--keep-alive-tmo', '-k', '--keyring', '--kxchap-ctrl-secret', '-C', '--kxchap-secret', '-S', '--no-ioctl-probing', '--no-retries', '--nqn', '-n', '--nr-io-queues', '-i', '--nr-poll-queues', '-P', '--nr-write-queues', '-W', '--output-format', '-o', '--output-format-version', '--queue-size', '-Q', '--quiet', '--reconnect-delay', '-c', '--set-options', '--timeout', '--tls', '--tls-key', '--tls-key-identity', '--tls_key', '--tos', '-T', '--traddr', '-a', '--transport', '-t', '--trsvcid', '-s', '--verbose', '-v', '--help', '-h')
+    'disconnect-all' = @('--dry-run', '--force', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--owner', '--quiet', '--set-options', '--timeout', '--transport', '-t', '--verbose', '-v', '--help', '-h')
+    'discover' = @('--concat', '--config', '-J', '--ctrl-loss-tmo', '-l', '--data-digest', '-G', '--device', '-d', '--disable-sqflow', '--dry-run', '--duplicate-connect', '-D', '--fast-io-fail-tmo', '-F', '--force', '--hdr-digest', '-g', '--host-iface', '-f', '--host-traddr', '-w', '--hostid', '-I', '--hostnqn', '-q', '--keep-alive-tmo', '-k', '--keyring', '--kxchap-ctrl-secret', '-C', '--kxchap-secret', '-S', '--nbft', '--nbft-path', '--no-ioctl-probing', '--no-nbft', '--no-retries', '--no-reuse', '--nqn', '-n', '--nr-io-queues', '-i', '--nr-poll-queues', '-P', '--nr-write-queues', '-W', '--output-format', '-o', '--output-format-version', '--owner', '--persistent', '-p', '--queue-size', '-Q', '--quiet', '--raw', '-r', '--reconnect-delay', '-c', '--set-options', '--timeout', '--tls', '--tls-key', '--tls-key-identity', '--tls_key', '--tos', '-T', '--traddr', '-a', '--transport', '-t', '--trsvcid', '-s', '--verbose', '-v', '--help', '-h')
     'dispersed-ns-participating-nss-log' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'dsm' = @('--ad', '-d', '--blocks', '-b', '--cdw11', '-c', '--ctx-attrs', '-a', '--dry-run', '--idr', '-r', '--idw', '-w', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--slbs', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
     'effects-log' = @('--csi', '-c', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'endurance-event-agg-log' = @('--dry-run', '--log-entries', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'endurance-log' = @('--dry-run', '--group-id', '-g', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'error-log' = @('--csi', '-c', '--dry-run', '--lba', '-l', '--log-entries', '-e', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--opcode', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--sqid', '-S', '--status', '-s', '--timeout', '--trtype', '-t', '--valid-entry', '-V', '--verbose', '-v', '--help', '-h')
+    'exclusion add' = @('--dry-run', '--entry', '-e', '--name', '-N', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'exclusion create' = @('--dry-run', '--name', '-N', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'exclusion delete' = @('--dry-run', '--name', '-N', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'exclusion edit' = @('--dry-run', '--name', '-N', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'exclusion list' = @('--dry-run', '--name', '-N', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'exclusion remove' = @('--dry-run', '--name', '-N', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'fdp configs' = @('--dry-run', '--endgrp-id', '-e', '--human-readable', '-H', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'fdp events' = @('--dry-run', '--endgrp-id', '-e', '--host-events', '-E', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'fdp feature' = @('--disable', '-d', '--dry-run', '--enable-conf-idx', '-c', '--endgrp-id', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -247,6 +306,9 @@ $script:NvmeOptions = @{
     'fw-commit' = @('--action', '-a', '--bpid', '-b', '--dry-run', '--ish', '-I', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--slot', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
     'fw-download' = @('--dry-run', '--fw', '-f', '--ignore-ovr', '-i', '--ish', '-I', '--no-ioctl-probing', '--no-retries', '--offset', '-O', '--output-format', '-o', '--output-format-version', '--progress', '-p', '--quiet', '--set-options', '--stream', '--timeout', '--verbose', '-v', '--xfer', '-x', '--help', '-h')
     'fw-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'gen-dhchap-key' = @('--dry-run', '--hmac', '-m', '--key-length', '-l', '--no-ioctl-probing', '--no-retries', '--nqn', '-n', '--output-format', '-o', '--output-format-version', '--quiet', '--secret', '-s', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'gen-hostnqn' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'gen-tls-key' = @('--compat', '-C', '--dry-run', '--hmac', '-m', '--hostnqn', '-n', '--identity', '-I', '--insert', '-i', '--keyfile', '-f', '--keyring', '-k', '--keytype', '-t', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--secret', '-s', '--set-options', '--subsysnqn', '-c', '--timeout', '--verbose', '-v', '--help', '-h')
     'get-feature' = @('--cdw11', '-c', '--changed', '-C', '--data-len', '-l', '--dry-run', '--feature-id', '-f', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--sel', '-s', '--set-options', '--timeout', '--uuid-index', '-U', '--verbose', '-v', '--help', '-h')
     'get-lba-status' = @('--action', '-a', '--dry-run', '--ish', '-I', '--max-dw', '-m', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--range-len', '-l', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
     'get-log' = @('--aen', '-a', '--csi', '-y', '--dry-run', '--ish', '-I', '--log-id', '-i', '--log-len', '-l', '--lpo', '-L', '--lsi', '-S', '--lsp', '-s', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--ot', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--raw-binary', '-b', '--set-options', '--timeout', '--uuid-index', '-U', '--verbose', '-v', '--xfer-len', '-x', '--help', '-h')
@@ -254,6 +316,8 @@ $script:NvmeOptions = @{
     'get-property' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--offset', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'get-reg' = @('--acq', '--aqa', '--asq', '--bpinfo', '--bpmbl', '--bprsel', '--cap', '--cc', '--cmbebs', '--cmbloc', '--cmbmsc', '--cmbsts', '--cmbswtp', '--cmbsz', '--crto', '--csts', '--dry-run', '--intmc', '--intms', '--no-ioctl-probing', '--no-retries', '--nssd', '--nssr', '--offset', '-O', '--output-format', '-o', '--output-format-version', '--pmrcap', '--pmrctl', '--pmrebs', '--pmrmscl', '--pmrmscu', '--pmrsts', '--pmrswtp', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--vs', '--help', '-h')
     'host-discovery-log' = @('--all-host-entries', '-a', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'huawei id-ctrl' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--vendor-specific', '-V', '--verbose', '-v', '--help', '-h')
+    'huawei list' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'ibm crit-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'ibm persist-event-log' = @('--action', '-a', '--dry-run', '--log_len', '-l', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'ibm vpd' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -299,6 +363,14 @@ $script:NvmeOptions = @{
     'io-mgmt-recv' = @('--data', '-d', '--data-len', '-l', '--dry-run', '--mo', '-m', '--mos', '-s', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'io-mgmt-send' = @('--data', '-d', '--data-len', '-l', '--dry-run', '--mo', '-m', '--mos', '-s', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'io-passthru' = @('--cdw10', '-4', '--cdw11', '-5', '--cdw12', '-6', '--cdw13', '-7', '--cdw14', '-8', '--cdw15', '-9', '--cdw2', '-2', '--cdw3', '-3', '--data-len', '-l', '--dry-run', '--flags', '-f', '--input-file', '-i', '--latency', '-T', '--metadata', '-M', '--metadata-len', '-m', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--opcode', '-O', '--output-format', '-o', '--output-format-version', '--prefill', '-p', '--quiet', '--raw-binary', '-b', '--read', '-r', '--rsvd', '-R', '--set-options', '--show-command', '-s', '--timeout', '--verbose', '-v', '--write', '-w', '--help', '-h')
+    'keys check-kxchap-secret' = @('--dry-run', '--identity', '-i', '--keydata', '-d', '--keyring', '-k', '--keytype', '-t', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'keys check-tls' = @('--compat', '-C', '--dry-run', '--hostnqn', '-n', '--identity', '-I', '--keydata', '-d', '--keyring', '-k', '--keytype', '-t', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--subsysnqn', '-c', '--timeout', '--verbose', '-v', '--help', '-h')
+    'keys export' = @('--dry-run', '--keyfile', '-f', '--keyring', '-k', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'keys gen-kxchap-secret' = @('--dry-run', '--hmac', '-m', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--secret', '-s', '--secret-length', '-l', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'keys gen-tls' = @('--compat', '-C', '--dry-run', '--hmac', '-m', '--hostnqn', '-n', '--identity', '-I', '--insert', '-i', '--keyfile', '-f', '--keyring', '-k', '--keytype', '-t', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--secret', '-s', '--set-options', '--subsysnqn', '-c', '--timeout', '--verbose', '-v', '--help', '-h')
+    'keys import' = @('--dry-run', '--identity', '-i', '--keydata', '-d', '--keyfile', '-f', '--keyring', '-k', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'keys insert-tls' = @('--compat', '-C', '--dry-run', '--hostnqn', '-n', '--identity', '-I', '--keydata', '-d', '--keyfile', '-f', '--keyring', '-k', '--keytype', '-t', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--subsysnqn', '-c', '--timeout', '--verbose', '-v', '--help', '-h')
+    'keys revoke' = @('--dry-run', '--identity', '-i', '--keyring', '-k', '--keytype', '-t', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'lba-status-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'list' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'list-ctrl' = @('--cntid', '-c', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -306,6 +378,13 @@ $script:NvmeOptions = @{
     'list-ns' = @('--all', '-a', '--csi', '-y', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'list-secondary' = @('--cntid', '-c', '--dry-run', '--no-ioctl-probing', '--no-retries', '--num-entries', '-e', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'list-subsys' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'lm create-cdq' = @('--cntlid', '-c', '--consent', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--queue-type', '-q', '--quiet', '--set-options', '--size', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'lm delete-cdq' = @('--cdqid', '-C', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'lm get-cdq' = @('--cdqid', '-C', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'lm migration-recv' = @('--cntlid', '-c', '--csuuidi', '-U', '--csvi', '-V', '--dry-run', '--human-readable', '-H', '--no-ioctl-probing', '--no-retries', '--numd', '-n', '--offset', '-O', '--output-file', '-f', '--output-format', '-o', '--output-format-version', '--quiet', '--sel', '-s', '--set-options', '--timeout', '--uidx', '-u', '--verbose', '-v', '--help', '-h')
+    'lm migration-send' = @('--cntlid', '-c', '--csuuidi', '-U', '--csvi', '-V', '--dry-run', '--dudmq', '-d', '--input-file', '-f', '--no-ioctl-probing', '--no-retries', '--numd', '-n', '--offset', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--sel', '-s', '--seq-ind', '-S', '--set-options', '--stype', '-t', '--timeout', '--uidx', '-u', '--verbose', '-v', '--help', '-h')
+    'lm set-cdq' = @('--cdqid', '-C', '--dry-run', '--hp', '-H', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--tpt', '-T', '--verbose', '-v', '--help', '-h')
+    'lm track-send' = @('--cdqid', '-C', '--dry-run', '--mos', '-m', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--sel', '-s', '--set-options', '--start', '--stop', '--timeout', '--verbose', '-v', '--help', '-h')
     'lockdown' = @('--dry-run', '--ifc', '-f', '--no-ioctl-probing', '--no-retries', '--ofi', '-O', '--output-format', '-o', '--output-format-version', '--prhbt', '-p', '--quiet', '--scp', '-s', '--set-options', '--timeout', '--uuid', '-U', '--verbose', '-v', '--help', '-h')
     'log ana' = @('--dry-run', '--groups', '-g', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'log ave-discovery' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -338,6 +417,7 @@ $script:NvmeOptions = @{
     'log self-test' = @('--dry-run', '--dst-entries', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'log smart' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'log supported-cap-config' = @('--domain-id', '-d', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'log supported-pages' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'log telemetry' = @('--controller-init', '-c', '--data-area', '-d', '--dry-run', '--host-generate', '-g', '--mcda', '-m', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'mangoboost id-ctrl' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--vendor-specific', '-V', '--verbose', '-v', '--help', '-h')
     'media-unit-stat-log' = @('--domain-id', '-d', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -384,6 +464,9 @@ $script:NvmeOptions = @{
     'micron vs-temperature-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'micron vs-vendor-telemetry-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'micron vs-work-load-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'nbft show' = @('--discovery', '-d', '--dry-run', '--hfi', '-H', '--nbft-path', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--subsystem', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'netapp ontapdevices' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'netapp smdevices' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'ns attach' = @('--controllers', '-c', '--dry-run', '--ish', '-I', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'ns create' = @('--anagrp-id', '-a', '--azr', '-z', '--block-size', '-b', '--csi', '-y', '--dps', '-d', '--dry-run', '--endg-id', '-e', '--flbas', '-f', '--ish', '-I', '--lbstm', '-l', '--ncap', '-c', '--ncap-si', '-C', '--nmic', '-m', '--no-ioctl-probing', '--no-retries', '--nphndls', '-n', '--nsze', '-s', '--nsze-si', '-S', '--nvmset-id', '-i', '--output-format', '-o', '--output-format-version', '--phndls', '-p', '--quiet', '--rar', '-r', '--rnumzrwa', '-u', '--ror', '-O', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'ns delete' = @('--dry-run', '--ish', '-I', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -439,6 +522,10 @@ $script:NvmeOptions = @{
     'reachability-associations-log' = @('--associations-only', '-a', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'reachability-groups-log' = @('--dry-run', '--groups-only', '-g', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'read' = @('--app-tag', '-a', '--app-tag-mask', '-m', '--block-count', '-c', '--block-size', '-b', '--data', '-d', '--data-size', '-z', '--dir-spec', '-S', '--dir-type', '-T', '--dry-run', '--dsm', '-D', '--force', '--force-unit-access', '-f', '--latency', '-t', '--limited-retry', '-l', '--metadata', '-M', '--metadata-size', '-y', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--prinfo', '-p', '--quiet', '--ref-tag', '-r', '--set-options', '--show-command', '-V', '--start-block', '-s', '--storage-tag', '-g', '--storage-tag-check', '-C', '--timeout', '--verbose', '-v', '--help', '-h')
+    'registry delete' = @('--attr', '-a', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'registry list' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'registry retrieve' = @('--attr', '-a', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'registry update' = @('--attr', '-a', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--value', '-V', '--verbose', '-v', '--help', '-h')
     'reset' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'resv acquire' = @('--crkey', '-c', '--dry-run', '--iekey', '-i', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--prkey', '-p', '--quiet', '--racqa', '-a', '--rtype', '-t', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'resv register' = @('--cptpl', '-p', '--crkey', '-c', '--dry-run', '--iekey', '-i', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--nrkey', '-k', '--output-format', '-o', '--output-format-version', '--quiet', '--rrega', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -470,17 +557,63 @@ $script:NvmeOptions = @{
     'security send' = @('--dry-run', '--file', '-f', '--ish', '-I', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--nssf', '-N', '--output-format', '-o', '--output-format-version', '--quiet', '--secp', '-p', '--set-options', '--spsp', '-s', '--timeout', '--tl', '-t', '--verbose', '-v', '--help', '-h')
     'security-recv' = @('--al', '-t', '--dry-run', '--ish', '-I', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--nssf', '-N', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--secp', '-p', '--set-options', '--size', '-x', '--spsp', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
     'security-send' = @('--dry-run', '--file', '-f', '--ish', '-I', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--nssf', '-N', '--output-format', '-o', '--output-format-version', '--quiet', '--secp', '-p', '--set-options', '--spsp', '-s', '--timeout', '--tl', '-t', '--verbose', '-v', '--help', '-h')
+    'sed 1' = @('--udev', '-u', '--verbose', '-V', '--help', '-h')
+    'sed discover' = @('--udev', '-u', '--verbose', '-V', '--help', '-h')
+    'sed initialize' = @('--read-only', '-r', '--help', '-h')
+    'sed lock' = @('--ask-key', '-k', '--read-only', '-r', '--help', '-h')
+    'sed password' = @('--help', '-h')
+    'sed revert' = @('--destructive', '-e', '--psid', '-p', '--help', '-h')
+    'sed unlock' = @('--ask-key', '-k', '--read-only', '-r', '--help', '-h')
     'self-test-log' = @('--dry-run', '--dst-entries', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'set-feature' = @('--cdw12', '-c', '--data', '-d', '--data-len', '-l', '--dry-run', '--feature-id', '-f', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--save', '-s', '--set-options', '--timeout', '--uuid-index', '-U', '--value', '-V', '--verbose', '-v', '--help', '-h')
     'set-property' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--offset', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--value', '-V', '--verbose', '-v', '--help', '-h')
     'set-reg' = @('--acq', '--aqa', '--asq', '--bpmbl', '--bprsel', '--cc', '--cmbmsc', '--csts', '--dry-run', '--intmc', '--intms', '--mmio32', '-m', '--no-ioctl-probing', '--no-retries', '--nssd', '--nssr', '--offset', '-O', '--output-format', '-o', '--output-format-version', '--pmrctl', '--pmrmscl', '--pmrmscu', '--quiet', '--set-options', '--timeout', '--value', '-V', '--verbose', '-v', '--help', '-h')
+    'sfx change-cap' = @('--cap', '-c', '--cap-byte', '-z', '--dry-run', '--force', '-f', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sfx dump-evtlog' = @('--dry-run', '--file', '-f', '--namespace_id', '-n', '--no-ioctl-probing', '--no-retries', '--output', '-O', '--output-format', '-o', '--output-format-version', '--parse', '-p', '--quiet', '--set-options', '--storage_medium', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sfx expand-cap' = @('--dry-run', '--lbaf', '-l', '--namespace_cap', '-c', '--namespace_id', '-n', '--namespace_size', '-s', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--units', '-u', '--verbose', '-v', '--help', '-h')
+    'sfx get-bad-block' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sfx get-feature' = @('--dry-run', '--feature-id', '-f', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sfx lat-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--write', '-w', '--help', '-h')
+    'sfx query-cap' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sfx set-feature' = @('--dry-run', '--feature-id', '-f', '--force', '-s', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--value', '-V', '--verbose', '-v', '--help', '-h')
+    'sfx smart-log-add' = @('--dry-run', '--json', '-j', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sfx status' = @('--dry-run', '--json-print', '-j', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'shannon get-additional-feature' = @('--cdw11', '-c', '--data-len', '-l', '--dry-run', '--feature-id', '-f', '--human-readable', '-H', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--sel', '-s', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'shannon id-ctrl' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--vendor-specific', '-V', '--verbose', '-v', '--help', '-h')
     'shannon set-additioal-feature' = @('--data', '-d', '--data-len', '-l', '--dry-run', '--feature-id', '-f', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--save', '-s', '--set-options', '--timeout', '--value', '-V', '--verbose', '-v', '--help', '-h')
     'shannon smart-log-add' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'show-hostnqn' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'show-regs' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'show-topology' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--ranking', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'smart-log' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk capabilities' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk clear-assert-dump' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk clear-fw-activate-history' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk clear-pcie-correctable-errors' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk cloud-SSD-plugin-version' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk cloud-boot-SSD-version' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk cu-smart-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--uuid-index', '-u', '--verbose', '-v', '--help', '-h')
+    'sndk drive-resize' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--size', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk get-dev-capabilities-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk get-drive-status' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk get-error-recovery-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk get-latency-monitor-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk get-unsupported-reqs-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk log-page-directory' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk namespace-resize' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--op-option', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk set-latency-monitor-feature' = @('--active_bucket_timer_threshold', '-t', '--active_latency_config', '-f', '--active_latency_minimum_window', '-w', '--active_threshold_a', '-a', '--active_threshold_b', '-b', '--active_threshold_c', '-c', '--active_threshold_d', '-d', '--debug_log_trigger_enable', '-r', '--discard_debug_log', '-l', '--dry-run', '--latency_monitor_feature_enable', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-cloud-log' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-device-waf' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-drive-info' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-error-reason-identifier' = @('--dry-run', '--file', '-O', '--log-id', '-i', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-fw-activate-history' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-hw-rev-log' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-internal-log' = @('--data-area', '-d', '--file-size', '-f', '--offset', '-e', '--output-file', '-O', '--transfer-size', '-s', '--type', '-t', '--verbose', '-V', '--help', '-h')
+    'sndk vs-nand-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-pcie-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-smart-add-log' = @('--dry-run', '--interval', '-i', '--log-page-mask', '-p', '--log-page-version', '-l', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-telemetry-controller-option' = @('--disable', '-d', '--dry-run', '--enable', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--status', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'sndk vs-temperature-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'solidigm clear-fw-activate-history' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--no-uuid', '-n', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'solidigm clear-pcie-correctable-errors' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--no-uuid', '-n', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'solidigm cloud-SSDplugin-version' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -502,6 +635,8 @@ $script:NvmeOptions = @{
     'supported-cap-config-log' = @('--domain-id', '-d', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'supported-log-pages' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'telemetry-log' = @('--controller-init', '-c', '--data-area', '-d', '--dry-run', '--host-generate', '-g', '--mcda', '-m', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'tls-key' = @('--help', '-h')
+    'top' = @('--delay', '-d', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'toshiba clear-pcie-correctable-errors' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'toshiba vs-internal-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--prev-log', '-p', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'toshiba vs-smart-add-log' = @('--dry-run', '--log', '-l', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -512,10 +647,62 @@ $script:NvmeOptions = @{
     'virt-mgmt' = @('--act', '-a', '--cntlid', '-c', '--dry-run', '--no-ioctl-probing', '--no-retries', '--nr', '-n', '--output-format', '-o', '--output-format-version', '--quiet', '--rt', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'virtium save-smart-to-vtview-log' = @('--dry-run', '--freq', '-f', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--run-time', '-r', '--set-options', '--test-name', '-n', '--timeout', '--verbose', '-v', '--help', '-h')
     'virtium show-identify' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc cap-diag' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--transfer-size', '-s', '--verbose', '-v', '--help', '-h')
+    'wdc capabilities' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc clear-assert-dump' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc clear-fw-activate-history' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc clear-pcie-correctable-errors' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc cloud-SSD-plugin-version' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc cloud-boot-SSD-version' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc cu-smart-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--uuid-index', '-u', '--verbose', '-v', '--help', '-h')
+    'wdc drive-essentials' = @('--dir-name', '-d', '--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc drive-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc drive-resize' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--size', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc enc-get-log' = @('--dry-run', '--log-id', '-l', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--transfer-size', '-s', '--verbose', '-v', '--help', '-h')
+    'wdc get-crash-dump' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc get-dev-capabilities-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc get-drive-status' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc get-error-recovery-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc get-latency-monitor-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc get-pfail-dump' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc get-unsupported-reqs-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc id-ctrl' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--vendor-specific', '-V', '--verbose', '-v', '--help', '-h')
+    'wdc log-page-directory' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc namespace-resize' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--op-option', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc purge' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc purge-monitor' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc set-latency-monitor-feature' = @('--active_bucket_timer_threshold', '-t', '--active_latency_config', '-f', '--active_latency_minimum_window', '-w', '--active_threshold_a', '-a', '--active_threshold_b', '-b', '--active_threshold_c', '-c', '--active_threshold_d', '-d', '--debug_log_trigger_enable', '-r', '--discard_debug_log', '-l', '--dry-run', '--latency_monitor_feature_enable', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-cloud-log' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-device-waf' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-drive-info' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-error-reason-identifier' = @('--dry-run', '--file', '-O', '--log-id', '-i', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-fw-activate-history' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-hw-rev-log' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-internal-log' = @('--data-area', '-d', '--file-size', '-f', '--offset', '-e', '--output-file', '-O', '--transfer-size', '-s', '--type', '-t', '--verbose', '-V', '--help', '-h')
+    'wdc vs-nand-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-pcie-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-smart-add-log' = @('--dry-run', '--interval', '-i', '--log-page-mask', '-p', '--log-page-version', '-l', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-telemetry-controller-option' = @('--disable', '-d', '--dry-run', '--enable', '-e', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--status', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'wdc vs-temperature-stats' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'write' = @('--app-tag', '-a', '--app-tag-mask', '-m', '--block-count', '-c', '--block-size', '-b', '--data', '-d', '--data-size', '-z', '--dir-spec', '-S', '--dir-type', '-T', '--dry-run', '--dsm', '-D', '--force', '--force-unit-access', '-f', '--latency', '-t', '--limited-retry', '-l', '--metadata', '-M', '--metadata-size', '-y', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--prinfo', '-p', '--quiet', '--ref-tag', '-r', '--set-options', '--show-command', '-V', '--start-block', '-s', '--storage-tag', '-g', '--storage-tag-check', '-C', '--timeout', '--verbose', '-v', '--help', '-h')
     'write-uncor' = @('--block-count', '-c', '--dir-spec', '-S', '--dir-type', '-T', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--start-block', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
     'write-zeroes' = @('--app-tag', '-a', '--app-tag-mask', '-m', '--block-count', '-c', '--deac', '-d', '--dir-spec', '-D', '--dir-type', '-T', '--dry-run', '--force-unit-access', '-f', '--limited-retry', '-l', '--namespace-id', '-n', '--namespace-zeroes', '-Z', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--prinfo', '-p', '--quiet', '--ref-tag', '-r', '--set-options', '--start-block', '-s', '--storage-tag', '-S', '--storage-tag-check', '-C', '--timeout', '--verbose', '-v', '--help', '-h')
     'ymtc smart-log-add' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns changed-zone-list' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns close-zone' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--select-all', '-a', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns finish-zone' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--select-all', '-a', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns id-ctrl' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns id-ns' = @('--dry-run', '--human-readable', '-H', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--vendor-specific', '-V', '--verbose', '-v', '--help', '-h')
+    'zns list' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns offline-zone' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--select-all', '-a', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns open-zone' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--select-all', '-a', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--zrwaa', '-r', '--help', '-h')
+    'zns report-zones' = @('--descs', '-d', '--dry-run', '--extended', '-e', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--partial', '-p', '--quiet', '--set-options', '--start-lba', '-s', '--state', '-S', '--timeout', '--verbose', '-V', '--verbose', '-v', '--help', '-h')
+    'zns reset-zone' = @('--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--select-all', '-a', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--help', '-h')
+    'zns set-zone-desc' = @('--data', '-d', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--zrwaa', '-r', '--help', '-h')
+    'zns zone-append' = @('--data', '-d', '--data-size', '-z', '--dry-run', '--force-unit-access', '-f', '--latency', '-t', '--limited-retry', '-l', '--metadata', '-M', '--metadata-size', '-y', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--piremap', '-P', '--prinfo', '-p', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--zslba', '-s', '--help', '-h')
+    'zns zone-mgmt-recv' = @('--data-len', '-l', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--partial', '-p', '--quiet', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--zra', '-z', '--zrasf', '-S', '--help', '-h')
+    'zns zone-mgmt-send' = @('--data', '-d', '--data-len', '-l', '--dry-run', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--select-all', '-a', '--set-options', '--start-lba', '-s', '--timeout', '--verbose', '-v', '--zsa', '-z', '--zsaso', '-O', '--help', '-h')
+    'zns zrwa-flush-zone' = @('--dry-run', '--lba', '-l', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
 }
 
 $script:NvmeFileOptions = @{
@@ -529,10 +716,30 @@ $script:NvmeFileOptions = @{
     'compare --metadata' = $true
     'compare -M' = $true
     'compare -d' = $true
+    'config convert --config' = $true
+    'config convert --output' = $true
+    'config convert -J' = $true
+    'config convert -o' = $true
+    'config create --output' = $true
+    'config show --config' = $true
+    'config show -J' = $true
+    'config validate --config' = $true
+    'config validate -J' = $true
+    'connect --config' = $true
+    'connect --devid-file' = $true
+    'connect -J' = $true
+    'connect-all --config' = $true
+    'connect-all --raw' = $true
+    'connect-all -J' = $true
+    'connect-all -r' = $true
     'dir send --input-file' = $true
     'dir send -i' = $true
     'dir-send --input-file' = $true
     'dir-send -i' = $true
+    'discover --config' = $true
+    'discover --raw' = $true
+    'discover -J' = $true
+    'discover -r' = $true
     'feat perf-characteristics --vs-data' = $true
     'feat perf-characteristics -V' = $true
     'fw download --fw' = $true
@@ -553,6 +760,10 @@ $script:NvmeFileOptions = @{
     'io-passthru --metadata' = $true
     'io-passthru -M' = $true
     'io-passthru -i' = $true
+    'lm migration-recv --output-file' = $true
+    'lm migration-recv -f' = $true
+    'lm migration-send --input-file' = $true
+    'lm migration-send -f' = $true
     'log boot-part --output-file' = $true
     'log boot-part -f' = $true
     'log telemetry --output-file' = $true
@@ -593,8 +804,18 @@ $script:NvmeFileOptions = @{
     'security-send -f' = $true
     'set-feature --data' = $true
     'set-feature -d' = $true
+    'sfx dump-evtlog --file' = $true
+    'sfx dump-evtlog --output' = $true
+    'sfx dump-evtlog -O' = $true
+    'sfx dump-evtlog -f' = $true
     'shannon set-additioal-feature --data' = $true
     'shannon set-additioal-feature -d' = $true
+    'sndk vs-error-reason-identifier --file' = $true
+    'sndk vs-error-reason-identifier -O' = $true
+    'sndk vs-internal-log --output-file' = $true
+    'sndk vs-internal-log --type' = $true
+    'sndk vs-internal-log -O' = $true
+    'sndk vs-internal-log -t' = $true
     'solidigm parse-telemetry-log --config-file' = $true
     'solidigm parse-telemetry-log --source-file' = $true
     'solidigm parse-telemetry-log -j' = $true
@@ -609,10 +830,36 @@ $script:NvmeFileOptions = @{
     'toshiba vs-smart-add-log -O' = $true
     'virtium save-smart-to-vtview-log --output-file' = $true
     'virtium save-smart-to-vtview-log -O' = $true
+    'wdc cap-diag --output-file' = $true
+    'wdc cap-diag -O' = $true
+    'wdc drive-essentials --dir-name' = $true
+    'wdc drive-essentials -d' = $true
+    'wdc drive-log --output-file' = $true
+    'wdc drive-log -O' = $true
+    'wdc enc-get-log --output-file' = $true
+    'wdc enc-get-log -O' = $true
+    'wdc get-crash-dump --output-file' = $true
+    'wdc get-crash-dump -O' = $true
+    'wdc get-pfail-dump --output-file' = $true
+    'wdc get-pfail-dump -O' = $true
+    'wdc vs-error-reason-identifier --file' = $true
+    'wdc vs-error-reason-identifier -O' = $true
+    'wdc vs-internal-log --output-file' = $true
+    'wdc vs-internal-log --type' = $true
+    'wdc vs-internal-log -O' = $true
+    'wdc vs-internal-log -t' = $true
     'write --data' = $true
     'write --metadata' = $true
     'write -M' = $true
     'write -d' = $true
+    'zns set-zone-desc --data' = $true
+    'zns set-zone-desc -d' = $true
+    'zns zone-append --data' = $true
+    'zns zone-append --metadata' = $true
+    'zns zone-append -M' = $true
+    'zns zone-append -d' = $true
+    'zns zone-mgmt-send --data' = $true
+    'zns zone-mgmt-send -d' = $true
 }
 
 $script:NvmeOptionValues = @{
@@ -646,12 +893,30 @@ $script:NvmeOptionValues = @{
     'changed-ns-list-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'changed-ns-list-log --output-format-version' = @('1', '2')
     'changed-ns-list-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'check-dhchap-key --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'check-dhchap-key --output-format-version' = @('1', '2')
+    'check-dhchap-key -o' = @('normal', 'json', 'binary', 'tabular')
+    'check-tls-key --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'check-tls-key --output-format-version' = @('1', '2')
+    'check-tls-key -o' = @('normal', 'json', 'binary', 'tabular')
     'cmdset-ind-id-ns --output-format' = @('normal', 'json', 'binary', 'tabular')
     'cmdset-ind-id-ns --output-format-version' = @('1', '2')
     'cmdset-ind-id-ns -o' = @('normal', 'json', 'binary', 'tabular')
     'compare --output-format' = @('normal', 'json', 'binary', 'tabular')
     'compare --output-format-version' = @('1', '2')
     'compare -o' = @('normal', 'json', 'binary', 'tabular')
+    'config create --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'config create --output-format-version' = @('1', '2')
+    'config create -o' = @('normal', 'json', 'binary', 'tabular')
+    'config show --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'config show --output-format-version' = @('1', '2')
+    'config show -o' = @('normal', 'json', 'binary', 'tabular')
+    'connect --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'connect --output-format-version' = @('1', '2')
+    'connect -o' = @('normal', 'json', 'binary', 'tabular')
+    'connect-all --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'connect-all --output-format-version' = @('1', '2')
+    'connect-all -o' = @('normal', 'json', 'binary', 'tabular')
     'copy --output-format' = @('normal', 'json', 'binary', 'tabular')
     'copy --output-format-version' = @('1', '2')
     'copy -o' = @('normal', 'json', 'binary', 'tabular')
@@ -679,6 +944,9 @@ $script:NvmeOptionValues = @{
     'device-self-test --output-format' = @('normal', 'json', 'binary', 'tabular')
     'device-self-test --output-format-version' = @('1', '2')
     'device-self-test -o' = @('normal', 'json', 'binary', 'tabular')
+    'dim --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'dim --output-format-version' = @('1', '2')
+    'dim -o' = @('normal', 'json', 'binary', 'tabular')
     'dir receive --output-format' = @('normal', 'json', 'binary', 'tabular')
     'dir receive --output-format-version' = @('1', '2')
     'dir receive -o' = @('normal', 'json', 'binary', 'tabular')
@@ -691,6 +959,15 @@ $script:NvmeOptionValues = @{
     'dir-send --output-format' = @('normal', 'json', 'binary', 'tabular')
     'dir-send --output-format-version' = @('1', '2')
     'dir-send -o' = @('normal', 'json', 'binary', 'tabular')
+    'disconnect --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'disconnect --output-format-version' = @('1', '2')
+    'disconnect -o' = @('normal', 'json', 'binary', 'tabular')
+    'disconnect-all --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'disconnect-all --output-format-version' = @('1', '2')
+    'disconnect-all -o' = @('normal', 'json', 'binary', 'tabular')
+    'discover --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'discover --output-format-version' = @('1', '2')
+    'discover -o' = @('normal', 'json', 'binary', 'tabular')
     'dispersed-ns-participating-nss-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'dispersed-ns-participating-nss-log --output-format-version' = @('1', '2')
     'dispersed-ns-participating-nss-log -o' = @('normal', 'json', 'binary', 'tabular')
@@ -709,6 +986,24 @@ $script:NvmeOptionValues = @{
     'error-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'error-log --output-format-version' = @('1', '2')
     'error-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion add --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion add --output-format-version' = @('1', '2')
+    'exclusion add -o' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion create --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion create --output-format-version' = @('1', '2')
+    'exclusion create -o' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion delete --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion delete --output-format-version' = @('1', '2')
+    'exclusion delete -o' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion edit --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion edit --output-format-version' = @('1', '2')
+    'exclusion edit -o' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion list --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion list --output-format-version' = @('1', '2')
+    'exclusion list -o' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion remove --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'exclusion remove --output-format-version' = @('1', '2')
+    'exclusion remove -o' = @('normal', 'json', 'binary', 'tabular')
     'fdp configs --output-format' = @('normal', 'json', 'binary', 'tabular')
     'fdp configs --output-format-version' = @('1', '2')
     'fdp configs -o' = @('normal', 'json', 'binary', 'tabular')
@@ -836,6 +1131,15 @@ $script:NvmeOptionValues = @{
     'fw-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'fw-log --output-format-version' = @('1', '2')
     'fw-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'gen-dhchap-key --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'gen-dhchap-key --output-format-version' = @('1', '2')
+    'gen-dhchap-key -o' = @('normal', 'json', 'binary', 'tabular')
+    'gen-hostnqn --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'gen-hostnqn --output-format-version' = @('1', '2')
+    'gen-hostnqn -o' = @('normal', 'json', 'binary', 'tabular')
+    'gen-tls-key --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'gen-tls-key --output-format-version' = @('1', '2')
+    'gen-tls-key -o' = @('normal', 'json', 'binary', 'tabular')
     'get-feature --feature-id' = @('arbitration', 'power-mgmt', 'lba-range', 'temp-thresh', 'err-recovery', 'volatile-wc', 'num-queues', 'irq-coalesce', 'irq-config', 'write-atomic', 'async-event', 'auto-pst', 'host-mem-buf', 'timestamp', 'kato', 'hctm', 'nopsc', 'rrl', 'plm-config', 'plm-window', 'lba-sts-interval', 'host-behavior', 'sanitize', 'endurance-evt-cfg', 'iocs-profile', 'spinup-control', 'power-loss-signal', 'perf-characteristics', 'fdp', 'fdp-events', 'ns-admin-label', 'key-value', 'ctrl-data-queue', 'emb-mgmt-ctrl-addr', 'host-mgmt-agent-addr', 'enh-ctrl-metadata', 'ctrl-metadata', 'ns-metadata', 'sw-progress', 'host-id', 'resv-nf-mask', 'resv-persist', 'write-protect', 'bp-write-protect')
     'get-feature --output-format' = @('normal', 'json', 'binary', 'tabular')
     'get-feature --output-format-version' = @('1', '2')
@@ -846,10 +1150,10 @@ $script:NvmeOptionValues = @{
     'get-lba-status --output-format' = @('normal', 'json', 'binary', 'tabular')
     'get-lba-status --output-format-version' = @('1', '2')
     'get-lba-status -o' = @('normal', 'json', 'binary', 'tabular')
-    'get-log --log-id' = @('supported-log-pages', 'error', 'smart', 'fw-slot', 'changed-ns', 'cmd-effects', 'device-self-test', 'telemetry-host', 'telemetry-ctrl', 'endurance-group', 'predictable-lat-nvmset', 'predictable-lat-agg', 'ana', 'persistent-event', 'lba-status', 'endurance-grp-evt', 'media-unit-status', 'supported-cap-config-list', 'fid-supported-effects', 'mi-cmd-supported-effects', 'cmd-and-feat-lockdown', 'boot-partition', 'rotational-media-info', 'dispersed-ns-participating-ns', 'mgmt-addr-list', 'phy-rx-eom', 'reachability-groups', 'reachability-associations', 'changed-alloc-ns-list', 'fdp-configs', 'fdp-ruh-usage', 'fdp-stats', 'fdp-events', 'discover', 'host-discover', 'ave-discover', 'pull-model-ddc-req', 'reservation', 'sanitize', 'zns-changed-zones')
+    'get-log --log-id' = @('supported-log-pages', 'error', 'smart', 'fw-slot', 'changed-attached-ns', 'changed-ns', 'cmd-effects', 'device-self-test', 'telemetry-host', 'telemetry-ctrl', 'endurance-group', 'predictable-lat-nvmset', 'predictable-lat-agg', 'ana', 'persistent-event', 'lba-status', 'endurance-grp-evt', 'media-unit-status', 'supported-cap-config-list', 'fid-supported-effects', 'mi-cmd-supported-effects', 'cmd-and-feat-lockdown', 'boot-partition', 'rotational-media-info', 'dispersed-ns-participating-ns', 'mgmt-addr-list', 'phy-rx-eom', 'reachability-groups', 'reachability-associations', 'changed-alloc-ns-list', 'fdp-configs', 'fdp-ruh-usage', 'fdp-stats', 'fdp-events', 'discover', 'host-discover', 'ave-discover', 'pull-model-ddc-req', 'reservation', 'sanitize', 'zns-changed-zones')
     'get-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'get-log --output-format-version' = @('1', '2')
-    'get-log -i' = @('supported-log-pages', 'error', 'smart', 'fw-slot', 'changed-ns', 'cmd-effects', 'device-self-test', 'telemetry-host', 'telemetry-ctrl', 'endurance-group', 'predictable-lat-nvmset', 'predictable-lat-agg', 'ana', 'persistent-event', 'lba-status', 'endurance-grp-evt', 'media-unit-status', 'supported-cap-config-list', 'fid-supported-effects', 'mi-cmd-supported-effects', 'cmd-and-feat-lockdown', 'boot-partition', 'rotational-media-info', 'dispersed-ns-participating-ns', 'mgmt-addr-list', 'phy-rx-eom', 'reachability-groups', 'reachability-associations', 'changed-alloc-ns-list', 'fdp-configs', 'fdp-ruh-usage', 'fdp-stats', 'fdp-events', 'discover', 'host-discover', 'ave-discover', 'pull-model-ddc-req', 'reservation', 'sanitize', 'zns-changed-zones')
+    'get-log -i' = @('supported-log-pages', 'error', 'smart', 'fw-slot', 'changed-attached-ns', 'changed-ns', 'cmd-effects', 'device-self-test', 'telemetry-host', 'telemetry-ctrl', 'endurance-group', 'predictable-lat-nvmset', 'predictable-lat-agg', 'ana', 'persistent-event', 'lba-status', 'endurance-grp-evt', 'media-unit-status', 'supported-cap-config-list', 'fid-supported-effects', 'mi-cmd-supported-effects', 'cmd-and-feat-lockdown', 'boot-partition', 'rotational-media-info', 'dispersed-ns-participating-ns', 'mgmt-addr-list', 'phy-rx-eom', 'reachability-groups', 'reachability-associations', 'changed-alloc-ns-list', 'fdp-configs', 'fdp-ruh-usage', 'fdp-stats', 'fdp-events', 'discover', 'host-discover', 'ave-discover', 'pull-model-ddc-req', 'reservation', 'sanitize', 'zns-changed-zones')
     'get-log -o' = @('normal', 'json', 'binary', 'tabular')
     'get-ns-id --output-format' = @('normal', 'json', 'binary', 'tabular')
     'get-ns-id --output-format-version' = @('1', '2')
@@ -863,6 +1167,12 @@ $script:NvmeOptionValues = @{
     'host-discovery-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'host-discovery-log --output-format-version' = @('1', '2')
     'host-discovery-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'huawei id-ctrl --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'huawei id-ctrl --output-format-version' = @('1', '2')
+    'huawei id-ctrl -o' = @('normal', 'json', 'binary', 'tabular')
+    'huawei list --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'huawei list --output-format-version' = @('1', '2')
+    'huawei list -o' = @('normal', 'json', 'binary', 'tabular')
     'ibm crit-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'ibm crit-log --output-format-version' = @('1', '2')
     'ibm crit-log -o' = @('normal', 'json', 'binary', 'tabular')
@@ -995,6 +1305,30 @@ $script:NvmeOptionValues = @{
     'io-passthru --output-format' = @('normal', 'json', 'binary', 'tabular')
     'io-passthru --output-format-version' = @('1', '2')
     'io-passthru -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys check-kxchap-secret --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys check-kxchap-secret --output-format-version' = @('1', '2')
+    'keys check-kxchap-secret -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys check-tls --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys check-tls --output-format-version' = @('1', '2')
+    'keys check-tls -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys export --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys export --output-format-version' = @('1', '2')
+    'keys export -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys gen-kxchap-secret --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys gen-kxchap-secret --output-format-version' = @('1', '2')
+    'keys gen-kxchap-secret -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys gen-tls --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys gen-tls --output-format-version' = @('1', '2')
+    'keys gen-tls -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys import --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys import --output-format-version' = @('1', '2')
+    'keys import -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys insert-tls --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys insert-tls --output-format-version' = @('1', '2')
+    'keys insert-tls -o' = @('normal', 'json', 'binary', 'tabular')
+    'keys revoke --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'keys revoke --output-format-version' = @('1', '2')
+    'keys revoke -o' = @('normal', 'json', 'binary', 'tabular')
     'lba-status-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'lba-status-log --output-format-version' = @('1', '2')
     'lba-status-log -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1016,6 +1350,33 @@ $script:NvmeOptionValues = @{
     'list-subsys --output-format' = @('normal', 'json', 'binary', 'tabular')
     'list-subsys --output-format-version' = @('1', '2')
     'list-subsys -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm create-cdq --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'lm create-cdq --output-format-version' = @('1', '2')
+    'lm create-cdq -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm delete-cdq --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'lm delete-cdq --output-format-version' = @('1', '2')
+    'lm delete-cdq -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm get-cdq --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'lm get-cdq --output-format-version' = @('1', '2')
+    'lm get-cdq -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm migration-recv --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'lm migration-recv --output-format-version' = @('1', '2')
+    'lm migration-recv --sel' = @('0', '1', '2', '3')
+    'lm migration-recv -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm migration-recv -s' = @('0', '1', '2', '3')
+    'lm migration-send --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'lm migration-send --output-format-version' = @('1', '2')
+    'lm migration-send --sel' = @('0', '1', '2', '3')
+    'lm migration-send -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm migration-send -s' = @('0', '1', '2', '3')
+    'lm set-cdq --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'lm set-cdq --output-format-version' = @('1', '2')
+    'lm set-cdq -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm track-send --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'lm track-send --output-format-version' = @('1', '2')
+    'lm track-send --sel' = @('0', '1', '2', '3')
+    'lm track-send -o' = @('normal', 'json', 'binary', 'tabular')
+    'lm track-send -s' = @('0', '1', '2', '3')
     'lockdown --output-format' = @('normal', 'json', 'binary', 'tabular')
     'lockdown --output-format-version' = @('1', '2')
     'lockdown -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1112,6 +1473,9 @@ $script:NvmeOptionValues = @{
     'log supported-cap-config --output-format' = @('normal', 'json', 'binary', 'tabular')
     'log supported-cap-config --output-format-version' = @('1', '2')
     'log supported-cap-config -o' = @('normal', 'json', 'binary', 'tabular')
+    'log supported-pages --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'log supported-pages --output-format-version' = @('1', '2')
+    'log supported-pages -o' = @('normal', 'json', 'binary', 'tabular')
     'log telemetry --output-format' = @('normal', 'json', 'binary', 'tabular')
     'log telemetry --output-format-version' = @('1', '2')
     'log telemetry -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1244,6 +1608,15 @@ $script:NvmeOptionValues = @{
     'micron vs-work-load-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'micron vs-work-load-log --output-format-version' = @('1', '2')
     'micron vs-work-load-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'nbft show --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'nbft show --output-format-version' = @('1', '2')
+    'nbft show -o' = @('normal', 'json', 'binary', 'tabular')
+    'netapp ontapdevices --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'netapp ontapdevices --output-format-version' = @('1', '2')
+    'netapp ontapdevices -o' = @('normal', 'json', 'binary', 'tabular')
+    'netapp smdevices --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'netapp smdevices --output-format-version' = @('1', '2')
+    'netapp smdevices -o' = @('normal', 'json', 'binary', 'tabular')
     'ns attach --output-format' = @('normal', 'json', 'binary', 'tabular')
     'ns attach --output-format-version' = @('1', '2')
     'ns attach -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1431,6 +1804,18 @@ $script:NvmeOptionValues = @{
     'read --output-format' = @('normal', 'json', 'binary', 'tabular')
     'read --output-format-version' = @('1', '2')
     'read -o' = @('normal', 'json', 'binary', 'tabular')
+    'registry delete --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'registry delete --output-format-version' = @('1', '2')
+    'registry delete -o' = @('normal', 'json', 'binary', 'tabular')
+    'registry list --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'registry list --output-format-version' = @('1', '2')
+    'registry list -o' = @('normal', 'json', 'binary', 'tabular')
+    'registry retrieve --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'registry retrieve --output-format-version' = @('1', '2')
+    'registry retrieve -o' = @('normal', 'json', 'binary', 'tabular')
+    'registry update --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'registry update --output-format-version' = @('1', '2')
+    'registry update -o' = @('normal', 'json', 'binary', 'tabular')
     'reset --output-format' = @('normal', 'json', 'binary', 'tabular')
     'reset --output-format-version' = @('1', '2')
     'reset -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1542,6 +1927,36 @@ $script:NvmeOptionValues = @{
     'set-reg --output-format' = @('normal', 'json', 'binary', 'tabular')
     'set-reg --output-format-version' = @('1', '2')
     'set-reg -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx change-cap --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx change-cap --output-format-version' = @('1', '2')
+    'sfx change-cap -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx dump-evtlog --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx dump-evtlog --output-format-version' = @('1', '2')
+    'sfx dump-evtlog -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx expand-cap --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx expand-cap --output-format-version' = @('1', '2')
+    'sfx expand-cap -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx get-bad-block --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx get-bad-block --output-format-version' = @('1', '2')
+    'sfx get-bad-block -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx get-feature --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx get-feature --output-format-version' = @('1', '2')
+    'sfx get-feature -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx lat-stats --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx lat-stats --output-format-version' = @('1', '2')
+    'sfx lat-stats -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx query-cap --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx query-cap --output-format-version' = @('1', '2')
+    'sfx query-cap -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx set-feature --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx set-feature --output-format-version' = @('1', '2')
+    'sfx set-feature -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx smart-log-add --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx smart-log-add --output-format-version' = @('1', '2')
+    'sfx smart-log-add -o' = @('normal', 'json', 'binary', 'tabular')
+    'sfx status --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sfx status --output-format-version' = @('1', '2')
+    'sfx status -o' = @('normal', 'json', 'binary', 'tabular')
     'shannon get-additional-feature --output-format' = @('normal', 'json', 'binary', 'tabular')
     'shannon get-additional-feature --output-format-version' = @('1', '2')
     'shannon get-additional-feature --sel' = @('0', '1', '2', '3')
@@ -1556,6 +1971,9 @@ $script:NvmeOptionValues = @{
     'shannon smart-log-add --output-format' = @('normal', 'json', 'binary', 'tabular')
     'shannon smart-log-add --output-format-version' = @('1', '2')
     'shannon smart-log-add -o' = @('normal', 'json', 'binary', 'tabular')
+    'show-hostnqn --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'show-hostnqn --output-format-version' = @('1', '2')
+    'show-hostnqn -o' = @('normal', 'json', 'binary', 'tabular')
     'show-regs --output-format' = @('normal', 'json', 'binary', 'tabular')
     'show-regs --output-format-version' = @('1', '2')
     'show-regs -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1565,6 +1983,87 @@ $script:NvmeOptionValues = @{
     'smart-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'smart-log --output-format-version' = @('1', '2')
     'smart-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk capabilities --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk capabilities --output-format-version' = @('1', '2')
+    'sndk capabilities -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk clear-assert-dump --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk clear-assert-dump --output-format-version' = @('1', '2')
+    'sndk clear-assert-dump -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk clear-fw-activate-history --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk clear-fw-activate-history --output-format-version' = @('1', '2')
+    'sndk clear-fw-activate-history -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk clear-pcie-correctable-errors --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk clear-pcie-correctable-errors --output-format-version' = @('1', '2')
+    'sndk clear-pcie-correctable-errors -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk cloud-SSD-plugin-version --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk cloud-SSD-plugin-version --output-format-version' = @('1', '2')
+    'sndk cloud-SSD-plugin-version -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk cloud-boot-SSD-version --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk cloud-boot-SSD-version --output-format-version' = @('1', '2')
+    'sndk cloud-boot-SSD-version -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk cu-smart-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk cu-smart-log --output-format-version' = @('1', '2')
+    'sndk cu-smart-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk drive-resize --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk drive-resize --output-format-version' = @('1', '2')
+    'sndk drive-resize -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-dev-capabilities-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-dev-capabilities-log --output-format-version' = @('1', '2')
+    'sndk get-dev-capabilities-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-drive-status --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-drive-status --output-format-version' = @('1', '2')
+    'sndk get-drive-status -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-error-recovery-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-error-recovery-log --output-format-version' = @('1', '2')
+    'sndk get-error-recovery-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-latency-monitor-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-latency-monitor-log --output-format-version' = @('1', '2')
+    'sndk get-latency-monitor-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-unsupported-reqs-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk get-unsupported-reqs-log --output-format-version' = @('1', '2')
+    'sndk get-unsupported-reqs-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk log-page-directory --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk log-page-directory --output-format-version' = @('1', '2')
+    'sndk log-page-directory -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk namespace-resize --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk namespace-resize --output-format-version' = @('1', '2')
+    'sndk namespace-resize -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk set-latency-monitor-feature --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk set-latency-monitor-feature --output-format-version' = @('1', '2')
+    'sndk set-latency-monitor-feature -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-cloud-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-cloud-log --output-format-version' = @('1', '2')
+    'sndk vs-cloud-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-device-waf --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-device-waf --output-format-version' = @('1', '2')
+    'sndk vs-device-waf -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-drive-info --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-drive-info --output-format-version' = @('1', '2')
+    'sndk vs-drive-info -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-error-reason-identifier --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-error-reason-identifier --output-format-version' = @('1', '2')
+    'sndk vs-error-reason-identifier -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-fw-activate-history --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-fw-activate-history --output-format-version' = @('1', '2')
+    'sndk vs-fw-activate-history -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-hw-rev-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-hw-rev-log --output-format-version' = @('1', '2')
+    'sndk vs-hw-rev-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-nand-stats --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-nand-stats --output-format-version' = @('1', '2')
+    'sndk vs-nand-stats -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-pcie-stats --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-pcie-stats --output-format-version' = @('1', '2')
+    'sndk vs-pcie-stats -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-smart-add-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-smart-add-log --output-format-version' = @('1', '2')
+    'sndk vs-smart-add-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-telemetry-controller-option --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-telemetry-controller-option --output-format-version' = @('1', '2')
+    'sndk vs-telemetry-controller-option -o' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-temperature-stats --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'sndk vs-temperature-stats --output-format-version' = @('1', '2')
+    'sndk vs-temperature-stats -o' = @('normal', 'json', 'binary', 'tabular')
     'solidigm clear-fw-activate-history --output-format' = @('normal', 'json', 'binary', 'tabular')
     'solidigm clear-fw-activate-history --output-format-version' = @('1', '2')
     'solidigm clear-fw-activate-history -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1628,6 +2127,9 @@ $script:NvmeOptionValues = @{
     'telemetry-log --output-format' = @('normal', 'json', 'binary', 'tabular')
     'telemetry-log --output-format-version' = @('1', '2')
     'telemetry-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'top --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'top --output-format-version' = @('1', '2')
+    'top -o' = @('normal', 'json', 'binary', 'tabular')
     'toshiba clear-pcie-correctable-errors --output-format' = @('normal', 'json', 'binary', 'tabular')
     'toshiba clear-pcie-correctable-errors --output-format-version' = @('1', '2')
     'toshiba clear-pcie-correctable-errors -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1655,6 +2157,114 @@ $script:NvmeOptionValues = @{
     'virtium show-identify --output-format' = @('normal', 'json', 'binary', 'tabular')
     'virtium show-identify --output-format-version' = @('1', '2')
     'virtium show-identify -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cap-diag --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cap-diag --output-format-version' = @('1', '2')
+    'wdc cap-diag -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc capabilities --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc capabilities --output-format-version' = @('1', '2')
+    'wdc capabilities -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc clear-assert-dump --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc clear-assert-dump --output-format-version' = @('1', '2')
+    'wdc clear-assert-dump -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc clear-fw-activate-history --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc clear-fw-activate-history --output-format-version' = @('1', '2')
+    'wdc clear-fw-activate-history -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc clear-pcie-correctable-errors --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc clear-pcie-correctable-errors --output-format-version' = @('1', '2')
+    'wdc clear-pcie-correctable-errors -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cloud-SSD-plugin-version --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cloud-SSD-plugin-version --output-format-version' = @('1', '2')
+    'wdc cloud-SSD-plugin-version -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cloud-boot-SSD-version --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cloud-boot-SSD-version --output-format-version' = @('1', '2')
+    'wdc cloud-boot-SSD-version -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cu-smart-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc cu-smart-log --output-format-version' = @('1', '2')
+    'wdc cu-smart-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc drive-essentials --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc drive-essentials --output-format-version' = @('1', '2')
+    'wdc drive-essentials -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc drive-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc drive-log --output-format-version' = @('1', '2')
+    'wdc drive-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc drive-resize --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc drive-resize --output-format-version' = @('1', '2')
+    'wdc drive-resize -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc enc-get-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc enc-get-log --output-format-version' = @('1', '2')
+    'wdc enc-get-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-crash-dump --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-crash-dump --output-format-version' = @('1', '2')
+    'wdc get-crash-dump -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-dev-capabilities-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-dev-capabilities-log --output-format-version' = @('1', '2')
+    'wdc get-dev-capabilities-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-drive-status --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-drive-status --output-format-version' = @('1', '2')
+    'wdc get-drive-status -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-error-recovery-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-error-recovery-log --output-format-version' = @('1', '2')
+    'wdc get-error-recovery-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-latency-monitor-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-latency-monitor-log --output-format-version' = @('1', '2')
+    'wdc get-latency-monitor-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-pfail-dump --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-pfail-dump --output-format-version' = @('1', '2')
+    'wdc get-pfail-dump -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-unsupported-reqs-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc get-unsupported-reqs-log --output-format-version' = @('1', '2')
+    'wdc get-unsupported-reqs-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc id-ctrl --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc id-ctrl --output-format-version' = @('1', '2')
+    'wdc id-ctrl -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc log-page-directory --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc log-page-directory --output-format-version' = @('1', '2')
+    'wdc log-page-directory -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc namespace-resize --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc namespace-resize --output-format-version' = @('1', '2')
+    'wdc namespace-resize -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc purge --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc purge --output-format-version' = @('1', '2')
+    'wdc purge -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc purge-monitor --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc purge-monitor --output-format-version' = @('1', '2')
+    'wdc purge-monitor -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc set-latency-monitor-feature --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc set-latency-monitor-feature --output-format-version' = @('1', '2')
+    'wdc set-latency-monitor-feature -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-cloud-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-cloud-log --output-format-version' = @('1', '2')
+    'wdc vs-cloud-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-device-waf --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-device-waf --output-format-version' = @('1', '2')
+    'wdc vs-device-waf -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-drive-info --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-drive-info --output-format-version' = @('1', '2')
+    'wdc vs-drive-info -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-error-reason-identifier --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-error-reason-identifier --output-format-version' = @('1', '2')
+    'wdc vs-error-reason-identifier -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-fw-activate-history --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-fw-activate-history --output-format-version' = @('1', '2')
+    'wdc vs-fw-activate-history -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-hw-rev-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-hw-rev-log --output-format-version' = @('1', '2')
+    'wdc vs-hw-rev-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-nand-stats --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-nand-stats --output-format-version' = @('1', '2')
+    'wdc vs-nand-stats -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-pcie-stats --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-pcie-stats --output-format-version' = @('1', '2')
+    'wdc vs-pcie-stats -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-smart-add-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-smart-add-log --output-format-version' = @('1', '2')
+    'wdc vs-smart-add-log -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-telemetry-controller-option --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-telemetry-controller-option --output-format-version' = @('1', '2')
+    'wdc vs-telemetry-controller-option -o' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-temperature-stats --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'wdc vs-temperature-stats --output-format-version' = @('1', '2')
+    'wdc vs-temperature-stats -o' = @('normal', 'json', 'binary', 'tabular')
     'write --output-format' = @('normal', 'json', 'binary', 'tabular')
     'write --output-format-version' = @('1', '2')
     'write -o' = @('normal', 'json', 'binary', 'tabular')
@@ -1667,6 +2277,51 @@ $script:NvmeOptionValues = @{
     'ymtc smart-log-add --output-format' = @('normal', 'json', 'binary', 'tabular')
     'ymtc smart-log-add --output-format-version' = @('1', '2')
     'ymtc smart-log-add -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns changed-zone-list --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns changed-zone-list --output-format-version' = @('1', '2')
+    'zns changed-zone-list -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns close-zone --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns close-zone --output-format-version' = @('1', '2')
+    'zns close-zone -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns finish-zone --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns finish-zone --output-format-version' = @('1', '2')
+    'zns finish-zone -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns id-ctrl --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns id-ctrl --output-format-version' = @('1', '2')
+    'zns id-ctrl -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns id-ns --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns id-ns --output-format-version' = @('1', '2')
+    'zns id-ns -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns list --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns list --output-format-version' = @('1', '2')
+    'zns list -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns offline-zone --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns offline-zone --output-format-version' = @('1', '2')
+    'zns offline-zone -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns open-zone --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns open-zone --output-format-version' = @('1', '2')
+    'zns open-zone -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns report-zones --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns report-zones --output-format-version' = @('1', '2')
+    'zns report-zones -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns reset-zone --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns reset-zone --output-format-version' = @('1', '2')
+    'zns reset-zone -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns set-zone-desc --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns set-zone-desc --output-format-version' = @('1', '2')
+    'zns set-zone-desc -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns zone-append --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns zone-append --output-format-version' = @('1', '2')
+    'zns zone-append -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns zone-mgmt-recv --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns zone-mgmt-recv --output-format-version' = @('1', '2')
+    'zns zone-mgmt-recv -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns zone-mgmt-send --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns zone-mgmt-send --output-format-version' = @('1', '2')
+    'zns zone-mgmt-send -o' = @('normal', 'json', 'binary', 'tabular')
+    'zns zrwa-flush-zone --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'zns zrwa-flush-zone --output-format-version' = @('1', '2')
+    'zns zrwa-flush-zone -o' = @('normal', 'json', 'binary', 'tabular')
 }
 
 Register-ArgumentCompleter -Native -CommandName nvme -ScriptBlock {
