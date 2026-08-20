@@ -437,12 +437,16 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 			fileName = strrchr(strFilePath, '/');
 
 		if (fileName) {
-			if (!strcmp(fileName, "/"))
+			if (!strcmp(fileName, "/")) {
+				err = -1;
 				goto exit_status;
+			}
 
 			while (strFilePath[nIndex] != '\0') {
-				if ('\\' == strFilePath[nIndex] && '\\' == strFilePath[nIndex + 1])
+				if ('\\' == strFilePath[nIndex] && '\\' == strFilePath[nIndex + 1]) {
+					err = -1;
 					goto exit_status;
+				}
 				nIndex++;
 			}
 
@@ -452,8 +456,10 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 				length = 1;
 
 			fileLocation = (char *)malloc(length + 1);
-			if (!fileLocation)
+			if (!fileLocation) {
+				err = -1;
 				goto exit_status;
+			}
 			strncpy(fileLocation, strFilePath, length);
 			fileLocation[length] = '\0';
 
@@ -470,6 +476,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
 				if (!strTemp) {
 					free(fileLocation);
+					err = -1;
 					goto exit_status;
 				}
 				fileLocation = strTemp;
@@ -480,10 +487,12 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
 			if (stat(fileLocation, &st)) {
 				free(fileLocation);
+				err = -1;
 				goto exit_status;
 			}
 			free(fileLocation);
 		} else {
+			err = -1;
 			goto exit_status;
 		}
 	}
