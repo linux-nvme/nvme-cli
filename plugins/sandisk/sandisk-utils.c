@@ -7,7 +7,6 @@
  */
 
 #include <errno.h>
-#include <fcntl.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -18,6 +17,7 @@
 #include <ccan/endian/endian.h>
 
 #include "nvme-cmds.h"
+#include "nvme-pci-ids.h"
 #include "nvme-print.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"
 #include "sandisk-utils.h"
@@ -50,77 +50,6 @@ static const __u8 SNDK_EXT_SMART_GUID[SNDK_GUID_LENGTH] = {
 	0x66, 0x42, 0x1E, 0x0F, 0x92, 0xD7, 0x6D, 0xC4
 };
 
-int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_handle *hdl,
-			   uint32_t *device_id, uint32_t *vendor_id)
-{
-	char vid[256], did[256], id[32];
-	struct libnvme_ctrl *c = NULL;
-	struct libnvme_ns *n = NULL;
-	const char *name;
-	int fd, ret;
-
-	name = libnvme_transport_handle_get_name(hdl);
-	ret = libnvme_scan_ctrl(ctx, name, &c);
-	if (!ret) {
-		snprintf(vid, sizeof(vid), "%s/device/vendor",
-			libnvme_ctrl_get_sysfs_dir(c));
-		snprintf(did, sizeof(did), "%s/device/device",
-			libnvme_ctrl_get_sysfs_dir(c));
-		libnvme_free_ctrl(c);
-	} else {
-		ret = libnvme_scan_namespace(ctx, name, &n);
-		if (!ret) {
-			nvme_show_error("Unable to find %s", name);
-			return ret;
-		}
-
-		snprintf(vid, sizeof(vid), "%s/device/device/vendor",
-			libnvme_ns_get_sysfs_dir(n));
-		snprintf(did, sizeof(did), "%s/device/device/device",
-			libnvme_ns_get_sysfs_dir(n));
-		libnvme_free_ns(n);
-	}
-
-	fd = open(vid, O_RDONLY);
-	if (fd < 0) {
-		nvme_show_error("ERROR: SNDK: %s : Open vendor file failed", __func__);
-		return -1;
-	}
-
-	ret = read(fd, id, 32);
-	close(fd);
-
-	if (ret < 0) {
-		nvme_show_error("%s: Read of pci vendor id failed", __func__);
-		return -1;
-	}
-	id[ret < 32 ? ret : 31] = '\0';
-	if (id[strlen(id) - 1] == '\n')
-		id[strlen(id) - 1] = '\0';
-
-	*vendor_id = strtol(id, NULL, 0);
-
-	fd = open(did, O_RDONLY);
-	if (fd < 0) {
-		nvme_show_error("ERROR: SNDK: %s : Open device file failed", __func__);
-		return -1;
-	}
-
-	ret = read(fd, id, 32);
-	close(fd);
-
-	if (ret < 0) {
-		nvme_show_error("ERROR: SNDK: %s: Read of pci device id failed", __func__);
-		return -1;
-	}
-	id[ret < 32 ? ret : 31] = '\0';
-	if (id[strlen(id) - 1] == '\n')
-		id[strlen(id) - 1] = '\0';
-
-	*device_id = strtol(id, NULL, 0);
-	return 0;
-}
-
 int sndk_get_vendor_id(struct libnvme_transport_handle *hdl, uint32_t *vendor_id)
 {
 	struct nvme_id_ctrl ctrl;
@@ -147,7 +76,8 @@ bool sndk_check_device(struct libnvme_global_ctx *ctx,
 	bool supported;
 	int ret;
 
-	ret = sndk_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id,
+			       NULL, NULL, NULL);
 	if (ret < 0) {
 		/* Use the identify nvme command to get vendor id due to NVMeOF device. */
 		if (sndk_get_vendor_id(hdl, &read_vendor_id) < 0)
@@ -367,13 +297,13 @@ bool sndk_get_dev_mgment_data(struct libnvme_global_ctx *ctx, struct libnvme_tra
 
 	*data = NULL;
 
-	/* The sndk_get_pci_ids function could fail when drives are connected
+	/* The nvme_get_pci_ids function could fail when drives are connected
 	 * via a PCIe switch.  Therefore, the return code is intentionally
 	 * being ignored.  The device_id and vendor_id variables have been
 	 * initialized to 0 so the code can continue on without issue for
-	 * both cases: sndk_get_pci_ids successful or failed.
+	 * both cases: nvme_get_pci_ids successful or failed.
 	 */
-	sndk_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
+	nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id, NULL, NULL, NULL);
 
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (!libnvme_get_uuid_list(hdl, &uuid_list)) {
@@ -569,7 +499,8 @@ __u64 sndk_get_drive_capabilities(struct libnvme_global_ctx *ctx,
 	__u64 capabilities = 0;
 	int ret;
 
-	ret = sndk_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id,
+				NULL, NULL, NULL);
 	if (ret < 0) {
 		if (sndk_get_vendor_id(hdl, &read_vendor_id) < 0)
 			return capabilities;
