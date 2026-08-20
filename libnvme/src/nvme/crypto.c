@@ -1191,7 +1191,7 @@ __shr_public int libnvmf_insert_tls_key_versioned(
 
 	ret = libnvmf_set_keyring(ctx, keyring_id);
 	if (ret < 0)
-		return 0;
+		return ret;
 
 	return __nvme_insert_tls_key(ctx, keyring_id, key_type,
 		hostnqn, subsysnqn, version, hmac,
@@ -1215,7 +1215,7 @@ __shr_public int libnvmf_insert_tls_key_compat(
 
 	ret = libnvmf_set_keyring(ctx, keyring_id);
 	if (ret < 0)
-		return 0;
+		return ret;
 
 	return __nvme_insert_tls_key(ctx, keyring_id, key_type,
 		hostnqn, subsysnqn, version, hmac,
