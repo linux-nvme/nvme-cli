@@ -350,7 +350,7 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 
 	err = libnvmf_read_key(ctx, kr_id, id, &key_len, &key_data);
 	if (err) {
-		nvme_show_error("Failed to read back derive TLS PSK, %s",
+		nvme_show_error("Failed to read back derived TLS PSK, %s",
 			libnvme_strerror(-err));
 		return err;
 	}
@@ -406,7 +406,7 @@ static int do_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring
 		nvme_show_error("Failed to insert key, %s", libnvme_strerror(-err));
 		return err;
 	}
-	nvme_show_result("Inserted TLS key %08x", (unsigned int)*tls_key);
+	nvme_show_result("Inserted TLS PSK %08x", (unsigned int)*tls_key);
 
 	if (keyfile) {
 		err = append_keyfile(ctx, keyring, *tls_key, keyfile);
@@ -614,7 +614,7 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		nvme_show_error("Key decoding failed, %s", libnvme_strerror(-err));
 		return err;
 	}
-	nvme_show_result("Key is valid (HMAC %u, length %d)", hmac, decoded_len);
+	nvme_show_result("Configured PSK is valid (HMAC %u, length %d)", hmac, decoded_len);
 
 	if (!cfg.subsysnqn)
 		return 0;
@@ -657,11 +657,11 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 
 	err = libnvmf_lookup_key(ctx, cfg.keytype, tls_id, &key_id);
 	if (err) {
-		nvme_show_result("Key is not loaded");
+		nvme_show_result("TLS PSK is not loaded");
 		return 0;
 	}
 
-	nvme_show_result("Key is loaded (serial %08x)", (unsigned int)key_id);
+	nvme_show_result("TLS PSK is loaded (serial %08x)", (unsigned int)key_id);
 	return 0;
 }
 
@@ -841,7 +841,7 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 
 	err = libnvmf_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
 	if (err < 0) {
-		nvme_show_error("Export of TLS keys failed with '%s'",
+		nvme_show_error("Export of TLS PSKs failed with '%s'",
 			libnvme_strerror(-err));
 		return err;
 	}

@@ -22,7 +22,10 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Deprecated alias for linknvme-keys-gen-tls[1], kept for scripts written
-against nvme-cli versions older than 3.0.
+against nvme-cli versions older than 3.0, with one difference from
+nvme-cli 2.x: '--insert'/'-i' reports 'Inserted TLS PSK <serial>' where
+2.x said 'Inserted TLS key <serial>'. A script matching the old wording
+needs updating.
 
 New scripts should use 'nvme keys gen-tls' instead. This alias prints a
 deprecation warning on stderr and may be removed in a future release.

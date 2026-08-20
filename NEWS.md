@@ -81,11 +81,11 @@
   `...bababa` produced `...ababab0a`.
 
 * `nvme check-tls-key` used to print the TLS PSK identity as the only
-  line on stdout; it now prints `Key is valid (HMAC <id>, length
-  <len>)` first, the identity second, and whether that identity is
-  already in the keyring third, so a script reading the identity with
-  `head -1` gets the wrong line. Its `--insert`/`--keyfile` are gone;
-  use `nvme keys insert-tls`. See `nvme-check-tls-key(1)`.
+  line on stdout; it now prints `Configured PSK is valid (HMAC <id>,
+  length <len>)` first, the identity second, and whether that identity
+  is already in the keyring third, so a script reading the identity
+  with `head -1` gets the wrong line. Its `--insert`/`--keyfile` are
+  gone; use `nvme keys insert-tls`. See `nvme-check-tls-key(1)`.
 
 * `nvme check-dhchap-key` reports on the secret rather than on the key:
   `Key is valid`, `Key is loaded` and `Key is not loaded` are now

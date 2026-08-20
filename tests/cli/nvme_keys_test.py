@@ -335,13 +335,13 @@ class KeysCLITest(unittest.TestCase):
 
     def test_check_tls_accepts_generated_key(self):
         result = self._run('check-tls', f'--keydata={_PIN_TLS_KEY}')
-        self.assertIn('Key is valid', result.stdout)
+        self.assertIn('Configured PSK is valid', result.stdout)
         self.assertIn('HMAC 1', result.stdout)
         self.assertIn('length 32', result.stdout)
 
     def test_check_tls_reads_from_stdin(self):
         result = self._run('check-tls', stdin_data=_PIN_TLS_KEY + '\n')
-        self.assertIn('Key is valid', result.stdout)
+        self.assertIn('Configured PSK is valid', result.stdout)
 
     def test_check_tls_rejects_malformed_key(self):
         self._run('check-tls', '--keydata=bogus', expect_fail=True)
