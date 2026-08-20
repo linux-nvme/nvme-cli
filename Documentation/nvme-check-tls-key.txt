@@ -18,13 +18,13 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Deprecated alias for linknvme-keys-check-tls-psk[1], kept for scripts
+Deprecated alias for linknvme:nvme-keys-check-tls-psk[1], kept for scripts
 written against nvme-cli versions older than 3.0, with two differences
 from nvme-cli 2.x:
 
 * '--insert'/'-i' and '--keyfile'/'-f' are gone. 2.x used them to derive
   a TLS PSK and store it in the keyring; the new 'check-tls-psk' never
-  modifies the keyring -- that moved to linknvme-keys-insert-tls-psk[1].
+  modifies the keyring -- that moved to linknvme:nvme-keys-insert-tls-psk[1].
 
 * The identity is no longer the first line of stdout. 2.x printed it
   alone; the alias prints 'Configured PSK is valid (HMAC <id>, length
@@ -37,7 +37,7 @@ New scripts should use 'nvme keys check-tls-psk' instead. This alias
 prints a deprecation warning on stderr and may be removed in a future
 release.
 
-See linknvme-keys-check-tls-psk[1] for the full option reference.
+See linknvme:nvme-keys-check-tls-psk[1] for the full option reference.
 
 include::global-options.txt[]
 
@@ -51,4 +51,4 @@ Part of the nvme-user suite
 
 SEE ALSO
 --------
-linknvme-keys-check-tls-psk[1], linknvme-keys-insert-tls-psk[1]
+linknvme:nvme-keys-check-tls-psk[1], linknvme:nvme-keys-insert-tls-psk[1]

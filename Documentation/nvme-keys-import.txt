@@ -28,7 +28,7 @@ PSK -- and '<key>' is either a TLS PSK in interchange format
 'NVMeTLSkey-1:<hmac>:<base64 encoded data>:' or a KX-HMAC-CHAP secret in the
 form 'DHHC-1:<hmac>:<base64 encoded data>:', one key per line, and imported
 into the kernel keyring. This is the format produced by
-linknvme-keys-export[1].
+linknvme:nvme-keys-export[1].
 
 With '--identity', a single key is imported instead: the key is read from
 '--keydata' (or, if not given, from stdin) and stored under the given
@@ -38,7 +38,7 @@ a keyfile.
 
 Note that this command does not derive a TLS PSK from a configured PSK,
 nor compute the identity to store it under from a host/subsystem NQN pair;
-use linknvme-keys-insert-tls-psk[1] for that.
+use linknvme:nvme-keys-insert-tls-psk[1] for that.
 
 OPTIONS
 -------
