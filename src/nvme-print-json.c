@@ -552,6 +552,8 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 		obj_add_int(psd, "force_quiesce_vault_scale", ctrl->psd[i].epfr_fqv_ts >> 4);
 		obj_add_int(psd, "emerg_power_fail_vault_time", ctrl->psd[i].epfvt);
 		obj_add_int(psd, "emerg_power_fail_vault_scale", ctrl->psd[i].epfvts & 0xf);
+		obj_add_int(psd, "min_idle_io_exit_lat_limit",
+			    le16_to_cpu(ctrl->psd[i].miiell));
 
 		array_add_obj(psds, psd);
 	}
@@ -3544,6 +3546,8 @@ static void json_feature_show_fields_power_mgmt(struct json_object *r, unsigned 
 	obj_add_uint(r, "Workload Hint (WH)", field);
 	obj_add_str(r, "WH description", nvme_feature_wl_hints_to_string(field));
 	obj_add_uint(r, "Power State (PS)", result & 0x1f);
+	obj_add_uint(r, "Idle I/O Exit Latency Limit (IIELL)",
+		     NVME_FEAT_PM_IIELL(result));
 }
 
 static void json_lba_range_entry(struct nvme_lba_range_type *lbrt, int nr_ranges,

@@ -1225,6 +1225,14 @@ enum nvme_psd_workload {
  *		 Bits 3-0: Emergency power fail recovery time scale
  * @epfvts: Bits 3-0: Emergency power fail vault time scale
  * @rsvd28: Reserved
+ * @miiell: Minimum Idle I/O Exit Latency Limit: if the Idle I/O Exit Latency
+ *	    Limit capability is supported (see &enum
+ *	    nvme_id_ctrl_ctratt.NVME_CTRL_CTRATT_IIELLSS) for this operational
+ *	    power state, a non-zero value indicates the minimum supported
+ *	    Idle I/O Exit Latency Limit in units of 100 microseconds, and a
+ *	    value of 0h indicates there is no minimum. Cleared to 0h for a
+ *	    non-operational power state or if the capability is not
+ *	    supported.
  */
 struct nvme_id_psd {
 	__le16			mp;
@@ -1246,7 +1254,8 @@ struct nvme_id_psd {
 	__u8			epfvt;
 	__u8			epfr_fqv_ts;
 	__u8			epfvts;
-	__u8			rsvd28[4];
+	__u8			rsvd28[2];
+	__le16			miiell;
 };
 
 /**
@@ -7974,6 +7983,10 @@ enum nvme_features_id {
  * @NVME_FEAT_PWRMGMT_PS_MASK:
  * @NVME_FEAT_PWRMGMT_WH_SHIFT:
  * @NVME_FEAT_PWRMGMT_WH_MASK:
+ * @NVME_FEAT_PWRMGMT_IIELL_SHIFT: Shift amount to set/get the Idle I/O Exit
+ *				    Latency Limit (IIELL), in units of 100
+ *				    microseconds
+ * @NVME_FEAT_PWRMGMT_IIELL_MASK: Mask to set/get IIELL
  * @NVME_FEAT_LBAR_NR_SHIFT:
  * @NVME_FEAT_LBAR_NR_MASK:
  * @NVME_FEAT_TT_TMPTH_SHIFT:
@@ -8162,6 +8175,8 @@ enum nvme_feat {
 	NVME_FEAT_PWRMGMT_PS_MASK		= 0x1f,
 	NVME_FEAT_PWRMGMT_WH_SHIFT		= 5,
 	NVME_FEAT_PWRMGMT_WH_MASK		= 0x7,
+	NVME_FEAT_PWRMGMT_IIELL_SHIFT		= 16,
+	NVME_FEAT_PWRMGMT_IIELL_MASK		= 0xffff,
 	NVME_FEAT_LBAR_NR_SHIFT			= 0,
 	NVME_FEAT_LBAR_NR_MASK			= 0x3f,
 	NVME_FEAT_TT_TMPTH_SHIFT		= 0,
@@ -9428,6 +9443,7 @@ static inline void nvme_feature_decode_arbitration(__u32 value, __u8 *ab,
 
 #define NVME_FEAT_PM_PS(v)		NVME_GET(v, FEAT_PWRMGMT_PS)
 #define NVME_FEAT_PM_WH(v)		NVME_GET(v, FEAT_PWRMGMT_WH)
+#define NVME_FEAT_PM_IIELL(v)		NVME_GET(v, FEAT_PWRMGMT_IIELL)
 
 #define NVME_FEAT_CDP_PERID(v)		NVME_GET(v, FEAT_CDP_PERID)
 
@@ -9444,10 +9460,11 @@ static inline void nvme_feature_decode_arbitration(__u32 value, __u8 *ab,
 #define NVME_FEAT_POWER_MEAS_SMT(v)	NVME_GET(v, FEAT_POWER_MEAS_SMT)
 
 static inline void
-nvme_feature_decode_power_mgmt(__u32 value, __u8 *ps, __u8 *wh)
+nvme_feature_decode_power_mgmt(__u32 value, __u8 *ps, __u8 *wh, __u16 *iiell)
 {
 	*ps = NVME_FEAT_PM_PS(value);
 	*wh = NVME_FEAT_PM_WH(value);
+	*iiell = NVME_FEAT_PM_IIELL(value);
 }
 
 #define NVME_FEAT_LBAR_NR(v)		NVME_GET(v, FEAT_LBAR_NR)
