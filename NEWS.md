@@ -87,6 +87,12 @@
   with `head -1` gets the wrong line. Its `--insert`/`--keyfile` are
   gone; use `nvme keys insert-tls-psk`. See `nvme-check-tls-key(1)`.
 
+* `nvme gen-tls-key` rejects a `--secret` with an odd number of
+  hexadecimal characters, reports `Inserted TLS PSK <serial>` where 2.x
+  said `Inserted TLS key <serial>`, and prints its `--secret`
+  diagnostics -- including `Skipping excess secret bytes` -- to stdout
+  ahead of the key rather than to stderr. See `nvme-gen-tls-key(1)`.
+
 * `nvme check-dhchap-key` reports on the secret rather than on the key:
   `Key is valid`, `Key is loaded` and `Key is not loaded` are now
   `Secret is ...`, and the validation errors say secret where they said
