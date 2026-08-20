@@ -354,6 +354,7 @@ static bool test_read_file(void)
 
 	buf = shr_read_file(NULL, "shr-test-read-file-does-not-exist", &size, 1);
 	pass &= check_bool("a missing file returns NULL", buf == NULL);
+	free(buf);
 
 	/* A NULL/empty @path means "the whole path is in @dir". */
 	buf = shr_read_file(path, NULL, &size, 1);
@@ -382,6 +383,7 @@ static bool test_read_file(void)
 
 		buf = shr_read_file(NULL, template, &size, 1);
 		pass &= check_bool("an empty file returns NULL", buf == NULL);
+		free(buf);
 
 		shr_unlink(template);
 	}
