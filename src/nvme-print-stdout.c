@@ -3464,6 +3464,16 @@ static void stdout_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 			       ctrl->psd[i].epfr_fqv_ts >> 4);
 		print_psd_time("emergency power fail vault time", ctrl->psd[i].epfvt,
 			       ctrl->psd[i].epfvts & 0xf);
+
+		if (NVME_CTRL_CTRATT_IIELLSS(le32_to_cpu(ctrl->ctratt))) {
+			__u16 miiell = le16_to_cpu(ctrl->psd[i].miiell);
+
+			if (miiell)
+				printf("            minimum idle i/o exit latency limit:%uus\n",
+				       miiell * 100);
+			else
+				printf("            minimum idle i/o exit latency limit:none\n");
+		}
 	}
 }
 
@@ -5415,6 +5425,11 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tWorkload Hint (WH): %u - %s\n", field,
 		       nvme_feature_wl_hints_to_string(field));
 		printf("\tPower State   (PS): %u\n", NVME_FEAT_PM_PS(result));
+		field = NVME_FEAT_PM_IIELL(result);
+		if (field)
+			printf("\tIdle I/O Exit Latency Limit (IIELL): %uus\n", field * 100);
+		else
+			printf("\tIdle I/O Exit Latency Limit (IIELL): disabled\n");
 		break;
 	case NVME_FEAT_FID_LBA_RANGE:
 		field = NVME_FEAT_LBAR_NR(result);
