@@ -131,15 +131,15 @@
 #define SNDK_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
 #define SNDK_DRIVE_CAP_C1_LOG_PAGE			0x0000000000000004
 #define SNDK_DRIVE_CAP_CA_LOG_PAGE			0x0000000000000008
-#define SNDK_DRIVE_CAP_D0_LOG_PAGE			0x0000000000000010
+#define SNDK_DRIVE_CAP_RESERVED2			0x0000000000000010
 #define SNDK_DRIVE_CAP_DRIVE_STATUS			0x0000000000000020
 #define SNDK_DRIVE_CAP_CLEAR_ASSERT			0x0000000000000040
 #define SNDK_DRIVE_CAP_CLEAR_PCIE			0x0000000000000080
 #define SNDK_DRIVE_CAP_RESIZE				0x0000000000000100
 #define SNDK_DRIVE_CAP_NAND_STATS			0x0000000000000200
-#define SNDK_DRIVE_CAP_RESERVED2			0x0000000000000400
-#define SNDK_DRIVE_CAP_RESERVED3			0x0000000000000800
-#define SNDK_DRIVE_CAP_RESERVED4			0x0000000000001000
+#define SNDK_DRIVE_CAP_RESERVED3			0x0000000000000400
+#define SNDK_DRIVE_CAP_RESERVED4			0x0000000000000800
+#define SNDK_DRIVE_CAP_RESERVED5			0x0000000000001000
 #define SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY		0x0000000000002000
 #define SNDK_DRIVE_CAP_CLEAR_FW_ACT_HISTORY		0x0000000000004000
 #define SNDK_DRIVE_CAP_DISABLE_CTLR_TELE_LOG		0x0000000000008000
@@ -159,11 +159,11 @@
 #define SNDK_DRIVE_CAP_C3_LOG_PAGE			0x0000000020000000
 #define SNDK_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION		0x0000000040000000
 #define SNDK_DRIVE_CAP_CLOUD_LOG_PAGE			0x0000000080000000
-#define SNDK_DRIVE_CAP_RESERVED5			0x0000000100000000
+#define SNDK_DRIVE_CAP_RESERVED6			0x0000000100000000
 #define SNDK_DRIVE_CAP_DUI_DATA				0x0000000200000000
 #define SNDK_DRIVE_CAP_VUC_LOG				0x0000000400000000
 #define SNDK_DRIVE_CAP_DUI				0x0000000800000000
-#define SNDK_DRIVE_CAP_RESERVED6			0x0000001000000000
+#define SNDK_DRIVE_CAP_RESERVED7			0x0000001000000000
 #define SNDK_DRIVE_CAP_OCP_C1_LOG_PAGE			0x0000002000000000
 #define SNDK_DRIVE_CAP_OCP_C4_LOG_PAGE			0x0000004000000000
 #define SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE			0x0000008000000000
@@ -176,8 +176,7 @@
 
 #define SNDK_DRIVE_CAP_SMART_LOG_MASK       (SNDK_DRIVE_CAP_C0_LOG_PAGE | \
 		SNDK_DRIVE_CAP_C1_LOG_PAGE | \
-		SNDK_DRIVE_CAP_CA_LOG_PAGE | \
-		SNDK_DRIVE_CAP_D0_LOG_PAGE)
+		SNDK_DRIVE_CAP_CA_LOG_PAGE)
 #define SNDK_DRIVE_CAP_CLEAR_PCIE_MASK      (SNDK_DRIVE_CAP_CLEAR_PCIE | \
 		SNDK_DRIVE_CAP_VUC_CLEAR_PCIE | \
 		SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE)
@@ -204,7 +203,6 @@
 
 #define SNDK_NVME_GET_DEVICE_INFO_LOG_ID            0xCA
 #define SNDK_NVME_GET_FW_ACT_HISTORY_LOG_ID         0xCB
-#define SNDK_NVME_GET_VU_SMART_LOG_ID               0xD0
 
 #define SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID         0xC2
 #define SNDK_DEV_MGMNT_LOG_PAGE_LEN                 0x1000
@@ -213,6 +211,11 @@
 #define SNDK_C2_LOG_PAGES_SUPPORTED_ID              0x08
 #define SNDK_C2_FORM_FACTOR                         0x0A
 #define SNDK_C2_CUSTOMER_ID_ID                      0x15
+
+#define SNDK_SN655_MARKETING_NAME_1                 "Ultrastar DC SN655"
+#define SNDK_SN655_MARKETING_NAME_2                 "ULTRASTAR DC SN655"
+#define SNDK_SN655_MARKETING_NAME_3                 "SanDisk DC SN655"
+#define SNDK_SN655_MARKETING_NAME_4                 "SANDISK DC SN655"
 
 #define SNDK_SN861_MARKETING_NAME_1                 "Ultrastar DC SN861"
 #define SNDK_SN861_MARKETING_NAME_2                 "ULTRASTAR DC SN861"
@@ -241,6 +244,7 @@
 #define SNDK_CUSTOMER_ID_0x1004         0x1004
 #define SNDK_CUSTOMER_ID_0x1005         0x1005
 #define SNDK_CUSTOMER_ID_0x1008         0x1008
+#define SNDK_CUSTOMER_ID_0x100B         0x100B
 #define SNDK_CUSTOMER_ID_0x1304         0x1304
 #define SNDK_INVALID_CUSTOMER_ID            -1
 
@@ -258,6 +262,207 @@
 
 #define SNDK_MAX_NUM_ACT_HIST_ENTRIES       20
 #define SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN  0x1000
+
+#define SNDK_ALL_PAGE_MASK                         0xFFFF
+#define SNDK_C0_PAGE_MASK                          0x0001
+#define SNDK_C1_PAGE_MASK                          0x0002
+#define SNDK_CA_PAGE_MASK                          0x0004
+#define SNDK_RESERVED_PAGE_MASK                    0x0008
+#define SNDK_ADD_LOG_BUF_LEN                       0x4000
+#define SNDK_NVME_ADD_LOG_OPCODE                   0xC1
+#define SNDK_GET_LOG_PAGE_SSD_PERFORMANCE          0x37
+#define SNDK_NVME_GET_STAT_PERF_INTERVAL_LIFETIME  0x0F
+#define SNDK_NVME_GET_DEVICE_INFO_LOG_OPCODE       0xCA
+#define SNDK_FB_CA_LOG_BUF_LEN                     0x200
+#define SNDK_BD_CA_LOG_BUF_LEN                     0xA0
+#define SNDK_NVME_GET_EOL_STATUS_LOG_OPCODE        0xC0
+#define SNDK_NVME_EOL_STATUS_LOG_LEN               0x200
+#define SNDK_NVME_SMART_CLOUD_ATTR_LEN             0x200
+#define SNDK_SCA_V1_NAND_STATS                     0x1
+#define SNDK_SCA_V1_ALL                            0xF
+#define SNDK_SCAO_V1_LPG                           496
+#define SNDK_NVME_VU_SMART_LOG_LEN                 0x200
+
+struct sndk_log_page_header {
+	uint8_t num_subpages;
+	uint8_t reserved;
+	__le16 total_log_size;
+};
+
+struct sndk_log_page_subpage_header {
+	uint8_t spcode;
+	uint8_t pcset;
+	__le16 subpage_length;
+};
+
+struct sndk_ssd_perf_stats {
+	__le64 hr_cmds;
+	__le64 hr_blks;
+	__le64 hr_ch_cmds;
+	__le64 hr_ch_blks;
+	__le64 hr_st_cmds;
+	__le64 hw_cmds;
+	__le64 hw_blks;
+	__le64 hw_os_cmds;
+	__le64 hw_oe_cmds;
+	__le64 hw_st_cmds;
+	__le64 nr_cmds;
+	__le64 nr_blks;
+	__le64 nw_cmds;
+	__le64 nw_blks;
+	__le64 nrbw;
+};
+
+struct __packed sndk_bd_ca_log_format {
+	__u8 field_id;
+	__u8 reserved1[2];
+	__u8 normalized_value;
+	__u8 raw_value[8];
+};
+
+struct __packed sndk_ssd_ca_perf_stats {
+	__le64 nand_bytes_wr_lo;
+	__le64 nand_bytes_wr_hi;
+	__le64 nand_bytes_rd_lo;
+	__le64 nand_bytes_rd_hi;
+	__le64 nand_bad_block;
+	__le64 uncorr_read_count;
+	__le64 ecc_error_count;
+	__le32 ssd_detect_count;
+	__le32 ssd_correct_count;
+	__u8 data_percent_used;
+	__le32 data_erase_max;
+	__le32 data_erase_min;
+	__le64 refresh_count;
+	__le64 program_fail;
+	__le64 user_erase_fail;
+	__le64 system_erase_fail;
+	__u8 thermal_throttle_status;
+	__u8 thermal_throttle_count;
+	__le64 pcie_corr_error;
+	__le32 incomplete_shutdown_count;
+	__u8 percent_free_blocks;
+	__u8 rsvd[392];
+};
+
+struct sndk_ocp_bad_nand_block_count { __u64 raw : 48; __u16 normalized : 16; };
+struct sndk_ocp_e2e_correction_count { __u32 detected; __u32 corrected; };
+struct sndk_ocp_user_data_erase_count { __u32 maximum; __u32 minimum; };
+struct sndk_ocp_thermal_status { __u8 num_events; __u8 current_status; };
+
+struct __packed sndk_ocp_dssd_specific_ver {
+	__u8 errata_ver;
+	__u16 point_ver;
+	__u16 minor_ver;
+	__u8 major_ver;
+};
+
+struct sndk_ocp_cloud_smart_log {
+	__u8 physical_media_units_written[16];
+	__u8 physical_media_units_read[16];
+	struct sndk_ocp_bad_nand_block_count bad_user_nand_blocks;
+	struct sndk_ocp_bad_nand_block_count bad_system_nand_blocks;
+	__u64 xor_recovery_count;
+	__u64 uncorrectable_read_error_count;
+	__u64 soft_ecc_error_count;
+	struct sndk_ocp_e2e_correction_count e2e_correction_counts;
+	__u8 system_data_percent_used;
+	__u64 refresh_counts : 56;
+	struct sndk_ocp_user_data_erase_count user_data_erase_counts;
+	struct sndk_ocp_thermal_status thermal_status;
+	struct sndk_ocp_dssd_specific_ver dssd_specific_ver;
+	__u64 pcie_correctable_error_count;
+	__u32 incomplete_shutdowns;
+	__u8 rsvd116[4];
+	__u8 percent_free_blocks;
+	__u8 rsvd121[7];
+	__u16 capacitor_health;
+	__u8 nvme_base_errata_ver;
+	__u8 nvme_cmd_set_errata_ver;
+	__u8 rsvd132[4];
+	__u64 unaligned_io;
+	__u64 security_version_number;
+	__u64 total_nuse;
+	__u8 plp_start_count[16];
+	__u8 endurance_estimate[16];
+	__u64 pcie_link_retraining_cnt;
+	__u64 power_state_change_cnt;
+	char lowest_permitted_fw_rev[8];
+	__u8 rsvd216[278];
+	__u16 log_page_version;
+	__u8 log_page_guid[16];
+};
+
+struct __packed sndk_nvme_c0_eol_log_page {
+	__u8 rsvd1[76];
+	__u32 eol_rbc;
+	__u32 eol_rsvd2;
+	__u32 eol_wra;
+	__u32 eol_plr;
+	__u32 eol_rsvd3;
+	__u32 eol_pfc;
+	__u32 eol_efc;
+	__u32 eol_rsvd4;
+	__u32 eol_rrer;
+	__u16 eol_cp_status;
+	__u16 eol_ip_status;
+	__u8 eol_cp_state;
+	__u8 eol_ip_state;
+};
+
+struct __packed sndk_nvme_ext_smart_log {
+	__u8 ext_smart_pmuwt[16];
+	__u8 ext_smart_pmuws[16];
+	__u8 ext_smart_bunbc[8];
+	__u64 ext_smart_xrc;
+	__u64 ext_smart_urec;
+	__u64 ext_smart_eece;
+	__u64 ext_smart_eede;
+	__u64 ext_smart_eeue;
+	__u8 ext_smart_sdpu;
+	__u8 ext_smart_rsvd1[3];
+	__u64 ext_smart_mnudec;
+	__u64 ext_smart_mxudec;
+	__u64 ext_smart_avudec;
+	__u64 ext_smart_mnec;
+	__u64 ext_smart_mxec;
+	__u64 ext_smart_avec;
+	__u8 ext_smart_pfc[8];
+	__u8 ext_smart_efc[8];
+	__u64 ext_smart_pcec;
+	__u8 ext_smart_pfbu;
+	__u8 ext_smart_rsvd2[3];
+	__u64 ext_smart_svn;
+	__u8 ext_smart_pfbs;
+	__u8 ext_smart_rsvd3[3];
+	__u8 ext_smart_dcc[16];
+	__u64 ext_smart_tnu;
+	__u16 ext_smart_fcc;
+	__u8 ext_smart_bbpg;
+	__u8 ext_smart_rsvd4[3];
+	__u64 ext_smart_seec;
+	__u64 ext_smart_rfsc;
+	__u8 ext_smart_bsnbc[8];
+	__u8 ext_smart_eest[16];
+	__u16 ext_smart_ttc;
+	__u64 ext_smart_uio;
+	__u8 ext_smart_pmur[16];
+	__u32 ext_smart_rtoc;
+	__u32 ext_smart_wtoc;
+	__u32 ext_smart_ttoc;
+	__u8 ext_smart_rsvd5[4];
+	__u64 ext_smart_plrc;
+	__u64 ext_smart_pscc;
+	__u16 ext_smart_maj;
+	__u16 ext_smart_min;
+	__u16 ext_smart_pt;
+	__u16 ext_smart_err;
+	__u32 ext_smart_ftlus;
+	__u32 ext_smart_tcgos;
+	__u8 ext_smart_rsvd6[178];
+	__u16 ext_smart_lpv;
+	__u8 ext_smart_lpg[16];
+};
 
 struct SNDK_UtilsTimeInfo {
 	unsigned int year;
@@ -326,6 +531,9 @@ int sndk_get_vendor_id(struct libnvme_transport_handle *hdl,
 bool sndk_check_device(struct libnvme_global_ctx *ctx,
 		struct libnvme_transport_handle *hdl);
 
+__u32 sndk_get_fw_cust_id(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl);
+
 void sndk_get_commit_action_bin(__u8 commit_action_type,
 		char *action_bin);
 
@@ -368,3 +576,20 @@ int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
 		       const char *format, ...);
 
 int sndk_check_ctrl_telemetry_option_disabled(struct libnvme_transport_handle *hdl);
+
+int sndk_get_c0_log_page(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl,
+		__u32 device_id,
+		char *format,
+		int uuid_index,
+		__u32 namespace_id);
+
+int sndk_get_ca_log_page(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl,
+		char *format);
+
+int sndk_get_c1_log_page(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl,
+		char *format,
+		uint8_t interval);
+

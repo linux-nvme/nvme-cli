@@ -20,6 +20,7 @@
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
+#include <shared/parse-util.h>
 
 #include "global-ctx.h"
 #include "nvme-cmds.h"
@@ -587,7 +588,132 @@ static int sndk_vs_smart_add_log(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin)
 {
-	return run_wdc_vs_smart_add_log(argc, argv, command, plugin);
+	const char *desc = "Retrieve additional performance statistics.";
+	const char *interval = "Interval to read the statistics from [1, 15].";
+	const char *log_page_version = "Log Page Version: 0 = vendor, 1 = SNDK";
+	const char *log_page_mask = "Log Page Mask, comma separated list: 0xC0, 0xC1, 0xCA";
+	const char *namespace_id = "desired namespace id";
+	int ret = 0;
+	int uuid_index = 0;
+	int page_mask = 0, num, i;
+	int log_page_list[16];
+	__u64 capabilities = 0;
+	__u32 device_id = -1, read_vendor_id = -1;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+
+	struct config {
+		uint8_t interval;
+		__u8  log_page_version;
+		char *log_page_mask;
+		__u32 namespace_id;
+	};
+
+	struct config cfg = {
+		.interval = 14,
+		.log_page_version = 0,
+		.log_page_mask = "",
+		.namespace_id = NVME_NSID_ALL,
+	};
+
+	NVME_ARGS(opts,
+		OPT_UINT("interval",          'i', &cfg.interval,         interval),
+		OPT_BYTE("log-page-version",  'l', &cfg.log_page_version, log_page_version),
+		OPT_LIST("log-page-mask",     'p', &cfg.log_page_mask,    log_page_mask),
+		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id));
+
+	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	ret = libnvme_scan_topology(ctx, NULL, NULL);
+	if (ret)
+		return ret;
+
+	if (!cfg.log_page_version) {
+		uuid_index = 0;
+	} else if (cfg.log_page_version == 1) {
+		uuid_index = 1;
+	} else {
+		nvme_show_error("ERROR: SNDK: unsupported log page version for this command");
+		ret = -1;
+		goto out;
+	}
+
+	num = shr_parse_csv_int(cfg.log_page_mask, log_page_list, 16);
+	if (num == -1) {
+		nvme_show_error("ERROR: SNDK: log page list is malformed");
+		ret = -1;
+		goto out;
+	}
+
+	if (!num) {
+		page_mask |= SNDK_ALL_PAGE_MASK;
+	} else {
+		for (i = 0; i < num; i++) {
+			switch (log_page_list[i]) {
+			case 0xc0:
+				page_mask |= SNDK_C0_PAGE_MASK;
+				break;
+			case 0xc1:
+				page_mask |= SNDK_C1_PAGE_MASK;
+				break;
+			case 0xca:
+				page_mask |= SNDK_CA_PAGE_MASK;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	if (!page_mask)
+		nvme_show_error("ERROR: SNDK: Unknown log page mask - %s", cfg.log_page_mask);
+
+	ret = sndk_get_pci_ids(ctx, hdl, &device_id, &read_vendor_id);
+	if (ret < 0) {
+		nvme_show_error("ERROR: SNDK: failed to read PCI IDs");
+		ret = -1;
+		goto out;
+	}
+	(void)read_vendor_id;
+
+	capabilities = sndk_get_drive_capabilities(ctx, hdl);
+	if (!(capabilities & SNDK_DRIVE_CAP_SMART_LOG_MASK)) {
+		nvme_show_error("ERROR: SNDK: unsupported device for this command");
+		ret = -1;
+		goto out;
+	}
+
+	if (((capabilities & SNDK_DRIVE_CAP_C0_LOG_PAGE) == SNDK_DRIVE_CAP_C0_LOG_PAGE) &&
+	    (page_mask & SNDK_C0_PAGE_MASK)) {
+		/* Get 0xC0 log page if possible. */
+		ret = sndk_get_c0_log_page(ctx, hdl, device_id, nvme_args.output_format,
+					  uuid_index, cfg.namespace_id);
+
+		if (ret)
+			nvme_show_error("ERROR: SNDK: Failure reading the C0 Log Page, ret = %d\n",
+				ret);
+	}
+	if (((capabilities & SNDK_DRIVE_CAP_CA_LOG_PAGE) == SNDK_DRIVE_CAP_CA_LOG_PAGE) &&
+	    (page_mask & SNDK_CA_PAGE_MASK)) {
+		/* Get the CA Log Page */
+		ret = sndk_get_ca_log_page(ctx, hdl, nvme_args.output_format);
+		if (ret)
+			nvme_show_error("ERROR: SNDK: Failure reading the CA Log Page, ret = %d",
+				ret);
+	}
+	if (((capabilities & SNDK_DRIVE_CAP_C1_LOG_PAGE) == SNDK_DRIVE_CAP_C1_LOG_PAGE) &&
+	    (page_mask & SNDK_C1_PAGE_MASK)) {
+		/* Get the C1 Log Page */
+		ret = sndk_get_c1_log_page(ctx, hdl, nvme_args.output_format, cfg.interval);
+		if (ret)
+			nvme_show_error("ERROR: SNDK: Failure reading the C1 Log Page, ret = %d",
+				ret);
+	}
+
+out:
+	return ret;
 }
 
 static int sndk_clear_pcie_correctable_errors(int argc, char **argv,
@@ -1154,8 +1280,6 @@ static int sndk_capabilities(int argc, char **argv,
 	       capabilities & SNDK_DRIVE_CAP_C3_LOG_PAGE ? "Supported" : "Not Supported");
 	printf("--CA Log Page                 : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_CA_LOG_PAGE ? "Supported" : "Not Supported");
-	printf("--D0 Log Page                 : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_D0_LOG_PAGE ? "Supported" : "Not Supported");
 	printf("clear-pcie-correctable-errors : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_CLEAR_PCIE_MASK ? "Supported" : "Not Supported");
 	printf("get-drive-status              : %s\n",
