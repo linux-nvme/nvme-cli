@@ -107,6 +107,15 @@
   `nvme ns` plugin, e.g. `nvme create-ns` is now `nvme ns create`.
   The old top-level commands still work as deprecated aliases.
 
+* `nvme ns create`, `nvme ns delete`, `nvme ns attach`, and
+  `nvme ns detach` (and their deprecated `create-ns`/`delete-ns`/
+  `attach-ns`/`detach-ns` aliases) no longer print a confirmation
+  message on success by default; `nvme ns create` also no longer
+  prints the assigned `nsid`. Both are now gated behind
+  `-v`/`--verbose`. The exit code alone indicates success/failure;
+  the assigned `nsid` can still be found with `nvme ns list` or
+  `nvme id ctrl`. See `nvme-ns-create(1)`.
+
 * Reservation commands (`resv-acquire`, `resv-register`,
   `resv-release`, `resv-report`) have moved into a new `nvme resv`
   plugin, e.g. `nvme resv-acquire` is now `nvme resv acquire`. The
