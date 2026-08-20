@@ -159,12 +159,16 @@ enum {
 	NVME_LOCKDOWN_CDW10_OFI_SHIFT				= 8,
 	NVME_LOCKDOWN_CDW10_PRHBT_SHIFT				= 4,
 	NVME_LOCKDOWN_CDW10_SCP_SHIFT				= 0,
+	NVME_LOCKDOWN_CDW10_CSEL_SHIFT				= 16,
 	NVME_LOCKDOWN_CDW14_UIDX_SHIFT				= 0,
+	NVME_LOCKDOWN_CDW14_CSS_SHIFT				= 16,
 	NVME_LOCKDOWN_CDW10_IFC_MASK				= 0x3,
 	NVME_LOCKDOWN_CDW10_OFI_MASK				= 0xff,
 	NVME_LOCKDOWN_CDW10_PRHBT_MASK				= 0x1,
 	NVME_LOCKDOWN_CDW10_SCP_MASK				= 0xf,
+	NVME_LOCKDOWN_CDW10_CSEL_MASK				= 0xf,
 	NVME_LOCKDOWN_CDW14_UIDX_MASK				= 0x3f,
+	NVME_LOCKDOWN_CDW14_CSS_MASK				= 0xffff,
 
 
 	/* Format NVM - Admin Opcode 0x80 */
@@ -929,7 +933,13 @@ nvme_init_get_log_fid_supported_effects(struct libnvme_passthru_cmd *cmd,
  * Command and Feature Lockdown
  * @cmd:		Passthru command to use
  * @cnscp:		Contents and Scope of Command and Feature Identifier
- *			Lists
+ *			Lists, see &enum nvme_lockdown_log_lsp. Set the
+ *			NVME_LOCKDOWN_LOG_LSP_ELPF bit to request the
+ *			Controller-scoped Enhanced log page format instead of
+ *			the original format.
+ * @cntlid:		Controller Identifier: scopes the returned log page
+ *			to the specified controller if the ELPF bit is set in
+ *			@cnscp. Ignored otherwise.
  * @lockdown_log:	Buffer to store the lockdown log
  *
  * Initializes the passthru command buffer for the Get Log command with
@@ -937,7 +947,7 @@ nvme_init_get_log_fid_supported_effects(struct libnvme_passthru_cmd *cmd,
  */
 static inline void
 nvme_init_get_log_lockdown(struct libnvme_passthru_cmd *cmd,
-		__u8 cnscp, struct nvme_lockdown_log *lockdown_log)
+		__u8 cnscp, __u16 cntlid, struct nvme_lockdown_log *lockdown_log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
 		NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN, NVME_CSI_NVM,
@@ -945,6 +955,9 @@ nvme_init_get_log_lockdown(struct libnvme_passthru_cmd *cmd,
 	cmd->cdw10 |= NVME_FIELD_ENCODE(cnscp,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(cntlid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
 }
 
 /**
@@ -3679,12 +3692,18 @@ nvme_init_dim_send(struct libnvme_passthru_cmd *cmd,
   * @ifc:	Affected interface
   * @ofi:	Opcode or Feature Identifier
   * @uidx:	UUID Index if controller supports this id selection method
+  * @csel:	Controller Select (CSEL): specifies the controller(s)
+  *		affected by this command, see &enum nvme_lockdown_csel
+  * @css:	Controller Select Specific (CSS): meaning is specific to
+  *		@csel (a Controller Identifier, a Primary Controller
+  *		Identifier, or vendor specific). Ignored if @csel is
+  *		%NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM.
   *
   * Initializes the passthru command buffer for the Lockdown command.
   */
 static inline void
 nvme_init_lockdown(struct libnvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
-		__u8 ifc, __u8 ofi, __u8 uidx)
+		__u8 ifc, __u8 ofi, __u8 uidx, __u8 csel, __u16 css)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
@@ -3700,10 +3719,16 @@ nvme_init_lockdown(struct libnvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
 			NVME_LOCKDOWN_CDW10_PRHBT_MASK) |
 		      NVME_FIELD_ENCODE(scp,
 			NVME_LOCKDOWN_CDW10_SCP_SHIFT,
-			NVME_LOCKDOWN_CDW10_SCP_MASK);
+			NVME_LOCKDOWN_CDW10_SCP_MASK) |
+		      NVME_FIELD_ENCODE(csel,
+			NVME_LOCKDOWN_CDW10_CSEL_SHIFT,
+			NVME_LOCKDOWN_CDW10_CSEL_MASK);
 	cmd->cdw14 = NVME_FIELD_ENCODE(uidx,
 			NVME_LOCKDOWN_CDW14_UIDX_SHIFT,
-			NVME_LOCKDOWN_CDW14_UIDX_MASK);
+			NVME_LOCKDOWN_CDW14_UIDX_MASK) |
+		      NVME_FIELD_ENCODE(css,
+			NVME_LOCKDOWN_CDW14_CSS_SHIFT,
+			NVME_LOCKDOWN_CDW14_CSS_MASK);
 }
 
 /**

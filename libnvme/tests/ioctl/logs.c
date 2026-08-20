@@ -1080,6 +1080,7 @@ static void test_get_log_lockdown(void)
 		.cdw10 = (NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN << 0) |
 			 (TEST_LSP << 8) |
 			 (((sizeof(expected_log) >> 2) - 1) << 16),
+		.cdw11 = (TEST_CNTID << 16),
 		.out_data = &expected_log,
 	};
 	struct libnvme_passthru_cmd cmd;
@@ -1087,7 +1088,7 @@ static void test_get_log_lockdown(void)
 
 	arbitrary(&expected_log, sizeof(expected_log));
 	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
-	nvme_init_get_log_lockdown(&cmd, TEST_LSP, &log);
+	nvme_init_get_log_lockdown(&cmd, TEST_LSP, TEST_CNTID, &log);
 	err = libnvme_get_log(test_hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	libnvme_loopback_end(test_hdl);
 	check(err == 0, "get log returned error %d", err);
