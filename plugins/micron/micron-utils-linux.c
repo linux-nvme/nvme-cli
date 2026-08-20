@@ -13,6 +13,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/utsname.h>
+
 #include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
@@ -312,4 +314,18 @@ void micron_write_os_config_to_file(const char *file_name)
 				cmdline, strerror(-ret));
 		}
 	}
+}
+
+void micron_get_os_string(char *buf, size_t len)
+{
+	struct utsname un;
+
+	if (!buf || !len)
+		return;
+	buf[0] = '\0';
+
+	if (uname(&un))
+		return;
+
+	snprintf(buf, len, "%s %s %s", un.sysname, un.release, un.machine);
 }

@@ -7,6 +7,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <windows.h>
 
 #include <libnvme.h>
@@ -153,4 +154,40 @@ void micron_write_os_config_to_file(const char *file_name)
 	fprintf(fp, "Logical Processors: %lu\n", si.dwNumberOfProcessors);
 
 	fclose(fp);
+}
+
+void micron_get_os_string(char *buf, size_t len)
+{
+	OSVERSIONINFOEXA osvi;
+	SYSTEM_INFO si;
+	const char *arch;
+
+	if (!buf || !len)
+		return;
+	buf[0] = '\0';
+
+	memset(&osvi, 0, sizeof(osvi));
+	osvi.dwOSVersionInfoSize = sizeof(osvi);
+	if (!GetVersionExA((OSVERSIONINFOA *)&osvi))
+		return;
+
+	GetNativeSystemInfo(&si);
+	switch (si.wProcessorArchitecture) {
+	case PROCESSOR_ARCHITECTURE_AMD64:
+		arch = "64-bit";
+		break;
+	case PROCESSOR_ARCHITECTURE_ARM64:
+		arch = "ARM64";
+		break;
+	case PROCESSOR_ARCHITECTURE_INTEL:
+		arch = "32-bit";
+		break;
+	default:
+		arch = "unknown";
+		break;
+	}
+
+	snprintf(buf, len, "Windows %lu.%lu (build %lu), %s",
+		 osvi.dwMajorVersion, osvi.dwMinorVersion,
+		 osvi.dwBuildNumber, arch);
 }
