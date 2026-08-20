@@ -5317,6 +5317,10 @@ struct nvme_eg_event_aggregate_log {
  * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN:	Domain Scope
  * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS:	NVM Subsystem Scope
  * @NVME_FID_SUPPORTED_EFFECTS_CDQSCP:		Controller Data Queue
+ * @NVME_FID_SUPPORTED_EFFECTS_RUHS:		Reclaim Unit Handle Scope: if
+ *						set, then modifying the
+ *						attributes of the feature may
+ *						impact Reclaim Unit Handles
  */
 enum nvme_fid_supported_effects {
 	NVME_FID_SUPPORTED_EFFECTS_FSUPP	= 1 << 0,
@@ -5334,6 +5338,7 @@ enum nvme_fid_supported_effects {
 	NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN	= 1 << 4,
 	NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS	= 1 << 5,
 	NVME_FID_SUPPORTED_EFFECTS_CDQSCP	= 1 << 6,
+	NVME_FID_SUPPORTED_EFFECTS_RUHS	= 1 << 7,
 };
 
 #define NVME_FID_SUPPORTED_EFFECTS_SCOPE(effects)	NVME_GET(effects, FID_SUPPORTED_EFFECTS_SCOPE)
