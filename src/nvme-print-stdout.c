@@ -2458,7 +2458,8 @@ static void stdout_id_ctrl_mxtmt(__le16 mxtmt)
 static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 {
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
-	__u32 rsvd4 = (sanicap & 0x1FFFFFF0) >> 4;
+	__u32 rsvd6 = (sanicap & 0x1FFFFFC0) >> 6;
+	__u32 sprrs = NVME_CTRL_SANICAP_SPRRS(sanicap);
 	__u32 vers = NVME_CTRL_SANICAP_NVERS(sanicap);
 	__u32 ows = NVME_CTRL_SANICAP_OWS(sanicap);
 	__u32 bes = NVME_CTRL_SANICAP_BES(sanicap);
@@ -2476,8 +2477,10 @@ static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 	printf("  [31:30] : %#x\t%s\n", nodmmas, modifies_media[nodmmas]);
 	printf("  [29:29] : %#x\tNo-Deallocate After Sanitize bit in Sanitize command %sSupported\n",
 		ndi, ndi ? "Not " : "");
-	if (rsvd4)
-		printf("  [28:4] : %#x\tReserved\n", rsvd4);
+	if (rsvd6)
+		printf("  [28:6] : %#x\tReserved\n", rsvd6);
+	printf("  [5:5] : %#x\tSanitize Purge Request and Reporting %sSupported\n",
+		sprrs, sprrs ? "" : "Not ");
 	printf("  [3:3] : %#x\tMedia Verification and Post-Verification Deallocation state %sSupported\n",
 		vers, vers ? "" : "Not ");
 	printf("  [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
@@ -4928,7 +4931,7 @@ static void stdout_sanitize_log_sprog(__u32 sprog)
 static void stdout_sanitize_log_sstat(__u16 status)
 {
 	const char *str = nvme_sstat_status_to_string(status);
-	__u16 gde, mvcncld;
+	__u16 gde, mvcncld, prgd;
 
 	printf("  [2:0] : Sanitize Operation Status  : %#x\t%s\n",
 		NVME_GET(status, SANITIZE_SSTAT_STATUS), str);
@@ -4947,6 +4950,10 @@ static void stdout_sanitize_log_sstat(__u16 status)
 	mvcncld = NVME_GET(status, SANITIZE_SSTAT_MVCNCLD);
 	printf("  [9:9] : Media Verification Canceled: %#x\t%scanceled\n",
 		mvcncld, mvcncld ? "" : "Not ");
+
+	prgd = NVME_GET(status, SANITIZE_SSTAT_PRGD);
+	printf("  [11:11] : Purged                    : %#x\t%spurged\n",
+		prgd, prgd ? "" : "Not ");
 	printf("\n");
 }
 

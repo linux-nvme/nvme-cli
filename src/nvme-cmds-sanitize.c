@@ -442,6 +442,8 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode, 2 = Start block erase,"
 				"3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification";
 	const char *ovrpat_desc = "Overwrite pattern.";
+	const char *preq_desc = "Require the sanitize operation to purge user data, "
+				"as defined by IEEE Std 2883, or fail.";
 	const char *wait = "Wait for the sanitize to finish";
 	const char *repeat = "Repeat for the multi cycle sanitization";
 
@@ -462,6 +464,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		__u8	sanact;
 		__u32	ovrpat;
 		bool	emvs;
+		bool	preq;
 		bool	wait;
 		__u32	repeat;
 	};
@@ -475,6 +478,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		.sanact		= 0,
 		.ovrpat		= 0,
 		.emvs		= false,
+		.preq		= false,
 		.repeat		= 1,
 	};
 
@@ -496,6 +500,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		  OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
 		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
 		  OPT_FLAG("emvs",       'e', &cfg.emvs,       emvs_desc),
+		  OPT_FLAG("preq",       'q', &cfg.preq,       preq_desc),
 		  OPT_FLAG("wait",       'w', &cfg.wait,       wait),
 		  OPT_UINT("repeat",     'r', &cfg.repeat,     repeat));
 
@@ -546,6 +551,11 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
+	if (cfg.preq && !NVME_CTRL_SANICAP_SPRRS(le32_to_cpu(ctrl->sanicap))) {
+		nvme_show_error("purge required unsupported");
+		return -EINVAL;
+	}
+
 	if (cfg.ause || cfg.no_dealloc) {
 		if (cfg.sanact == NVME_SANITIZE_SANACT_EXIT_FAILURE) {
 			nvme_show_error("SANACT is Exit Failure Mode");
@@ -569,7 +579,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	nvme_init_sanitize_nvm(&cmd, cfg.sanact, cfg.ause, cfg.owpass,
-		cfg.oipbp, cfg.no_dealloc, cfg.emvs, cfg.ovrpat);
+		cfg.oipbp, cfg.no_dealloc, cfg.emvs, cfg.preq, cfg.ovrpat);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
 			nvme_init_mi_cmd_flags(&cmd, ish);
@@ -604,6 +614,8 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode,\n"
 		"4 = Start a crypto erase namespace sanitize operation,\n"
 		"5 = Exit media verification state";
+	const char *preq_desc = "Require the sanitize operation to purge user data, "
+				"as defined by IEEE Std 2883, or fail.";
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
 		NULL;
@@ -618,6 +630,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 		bool	ause;
 		__u8	sanact;
 		bool	emvs;
+		bool	preq;
 	};
 
 	struct config cfg = {
@@ -625,6 +638,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 		.ause		= false,
 		.sanact		= 0,
 		.emvs		= false,
+		.preq		= false,
 	};
 
 	OPT_VALS(sanact) = {
@@ -640,7 +654,8 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 		  OPT_FLAG("ish",    'I', &cfg.ish,    ish),
 		  OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
 		  OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
-		  OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc));
+		  OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc),
+		  OPT_FLAG("preq",   'q', &cfg.preq,   preq_desc));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -674,7 +689,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	nvme_init_sanitize_ns(&cmd, cfg.sanact, cfg.ause, cfg.emvs);
+	nvme_init_sanitize_ns(&cmd, cfg.sanact, cfg.ause, cfg.emvs, cfg.preq);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
 			nvme_init_mi_cmd_flags(&cmd, ish);
