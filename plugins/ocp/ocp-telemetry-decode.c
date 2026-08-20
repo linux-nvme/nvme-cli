@@ -602,6 +602,21 @@ int get_telemetry_das_offset_and_size(
 	return 0;
 }
 
+/*
+ * Device tables store ascii_id_length as the zero-based index of the last
+ * character, so the byte count is length + 1. Keep the copy bounded to the
+ * fixed caller buffers used throughout the telemetry parser.
+ */
+static size_t ocp_ascii_id_copy_len(__u8 ascii_id_length)
+{
+	size_t copy_len = (size_t)ascii_id_length + 1;
+
+	if (copy_len >= OCP_TELEMETRY_DESCRIPTION_MAX)
+		copy_len = OCP_TELEMETRY_DESCRIPTION_MAX - 1;
+
+	return copy_len;
+}
+
 int get_statistic_id_ascii_string(int identifier, char *description)
 {
 	if (!pstring_buffer || !description)
@@ -631,10 +646,11 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 				(pocp_ts_header->ascts * SIZE_OF_DWORD) +
 				(peach_statistic_entry->ascii_id_offset *
 				SIZE_OF_DWORD));
+			size_t copy_len = ocp_ascii_id_copy_len(
+				peach_statistic_entry->ascii_id_length);
 
-			memcpy(description, pdescription,
-			       peach_statistic_entry->ascii_id_length);
-			description[peach_statistic_entry->ascii_id_length] = '\0';
+			memcpy(description, pdescription, copy_len);
+			description[copy_len] = '\0';
 
 			return 0;
 		}
@@ -676,10 +692,11 @@ int get_event_id_ascii_string(int identifier, int debug_event_class, char *descr
 			char *pdescription = (char *)(pstring_buffer +
 				(pocp_ts_header->ascts * SIZE_OF_DWORD) +
 				(peach_event_entry->ascii_id_offset * SIZE_OF_DWORD));
+			size_t copy_len = ocp_ascii_id_copy_len(
+				peach_event_entry->ascii_id_length);
 
-			memcpy(description, pdescription,
-			       peach_event_entry->ascii_id_length);
-			description[peach_event_entry->ascii_id_length] = '\0';
+			memcpy(description, pdescription, copy_len);
+			description[copy_len] = '\0';
 			return 0;
 		}
 	}
@@ -715,10 +732,11 @@ int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *de
 			char *pdescription = (char *)(pstring_buffer +
 				(pocp_ts_header->ascts * SIZE_OF_DWORD) +
 				(peach_vu_event_entry->ascii_id_offset * SIZE_OF_DWORD));
+			size_t copy_len = ocp_ascii_id_copy_len(
+				peach_vu_event_entry->ascii_id_length);
 
-			memcpy(description, pdescription,
-			       peach_vu_event_entry->ascii_id_length);
-			description[peach_vu_event_entry->ascii_id_length] = '\0';
+			memcpy(description, pdescription, copy_len);
+			description[copy_len] = '\0';
 			return 0;
 		}
 	}
@@ -768,7 +786,7 @@ int parse_time_stamp_event(
 	struct nvme_ocp_common_dbg_evt_class_vu_data *ptime_stamp_event_vu_data = NULL;
 	__u16 vu_event_id = 0;
 	__u8 *pdata = NULL;
-	char description_str[256] = "";
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 	unsigned int vu_data_size = 0;
 	bool vu_data_present = false;
 
@@ -838,7 +856,7 @@ int parse_pcie_event(
 	struct nvme_ocp_common_dbg_evt_class_vu_data *ppcie_event_vu_data = NULL;
 	__u16 vu_event_id = 0;
 	__u8 *pdata = NULL;
-	char description_str[256] = "";
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 	unsigned int vu_data_size = 0;
 	bool vu_data_present = false;
 
@@ -908,7 +926,7 @@ int parse_nvme_event(
 	struct nvme_ocp_common_dbg_evt_class_vu_data *pnvme_event_vu_data = NULL;
 	__u16 vu_event_id = 0;
 	__u8 *pdata = NULL;
-	char description_str[256] = "";
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 	unsigned int vu_data_size = 0;
 	bool vu_data_present = false;
 
@@ -976,7 +994,7 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
 			(struct nvme_ocp_common_dbg_evt_class_vu_data *) pevent_specific_data;
 
 		__u16 vu_event_id = le16_to_cpu(pcommon_debug_event_vu_data->vu_event_identifier);
-		char description_str[256] = "";
+		char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 		__u8 *pdata = (__u8 *)&(pcommon_debug_event_vu_data->data);
 
 		unsigned int vu_data_size = ((pevent_descriptor->event_data_size *
@@ -1020,7 +1038,7 @@ int parse_media_wear_event(
 
 	__u16 vu_event_id = 0;
 	__u8 *pdata = NULL;
-	char description_str[256] = "";
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 	unsigned int vu_data_size = 0;
 	bool vu_data_present = false;
 
@@ -1139,7 +1157,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 
 		__u8 *pevent_specific_data = NULL;
 		__u16 event_id = 0;
-		char description_str[256] = "";
+		char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 		unsigned int data_size = 0;
 
 		if (pevent_descriptor->debug_event_class_type !=
@@ -1435,7 +1453,7 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 	unsigned int data_size = pstatistic_entry->statistic_data_size * SIZE_OF_DWORD;
 	__u8 *pdata = (__u8 *)pstatistic_entry +
 		sizeof(struct nvme_ocp_telemetry_statistic_descriptor);
-	char description_str[256] = "";
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 
 	parse_ocp_telemetry_string_log(0, pstatistic_entry->statistic_id, 0,
 		STATISTICS_IDENTIFIER_STRING, description_str);
