@@ -40,8 +40,8 @@ always needs a subsystem NQN (and, if not given, will look up the host
 NQN) to derive the TLS PSK and compute the identity to store it under.
 If both the key to store and the identity to store it under are already
 known -- for example a line previously written by
-linknvme-keys-export[1], or a KX-HMAC-CHAP secret -- use
-linknvme-keys-import[1] instead, which stores the key as given under an
+linknvme:nvme-keys-export[1], or a KX-HMAC-CHAP secret -- use
+linknvme:nvme-keys-import[1] instead, which stores the key as given under an
 explicit identity, deriving neither.
 
 If '--keydata' is not given the configured PSK is read from stdin, which
@@ -49,7 +49,7 @@ also allows reading it from a file, e.g.
 'nvme keys insert-tls-psk -c <subsysnqn> < keyfile'.
 
 To check whether a key is already loaded without inserting it, use
-linknvme-keys-check-tls-psk[1].
+linknvme:nvme-keys-check-tls-psk[1].
 
 OPTIONS
 -------

@@ -15,7 +15,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Deprecated alias for linknvme-keys-gen-kxchap-secret[1], kept for scripts
+Deprecated alias for linknvme:nvme-keys-gen-kxchap-secret[1], kept for scripts
 written against nvme-cli versions older than 3.0. It forwards to that command,
 with three differences from nvme-cli 2.x:
 
@@ -30,7 +30,7 @@ with three differences from nvme-cli 2.x:
 New scripts should use 'nvme keys gen-kxchap-secret' instead. This alias prints a
 deprecation warning on stderr and may be removed in a future release.
 
-See linknvme-keys-gen-kxchap-secret[1] for the full option reference.
+See linknvme:nvme-keys-gen-kxchap-secret[1] for the full option reference.
 
 include::global-options.txt[]
 
@@ -44,4 +44,4 @@ Part of the nvme-user suite
 
 SEE ALSO
 --------
-linknvme-keys-gen-kxchap-secret[1]
+linknvme:nvme-keys-gen-kxchap-secret[1]

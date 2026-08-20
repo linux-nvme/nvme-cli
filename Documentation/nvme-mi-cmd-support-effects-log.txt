@@ -13,14 +13,14 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Deprecated alias for linknvme-log-mi-cmd-support-effects[1], kept for scripts written
+Deprecated alias for linknvme:nvme-log-mi-cmd-support-effects[1], kept for scripts written
 against nvme-cli versions older than 3.0. Options and behavior are
 identical; only the top-level command name is retained.
 
 New scripts should use 'nvme log mi-cmd-support-effects' instead. This alias prints a
 deprecation warning on stderr and may be removed in a future release.
 
-See linknvme-log-mi-cmd-support-effects[1] for the full option reference.
+See linknvme:nvme-log-mi-cmd-support-effects[1] for the full option reference.
 
 include::global-options.txt[]
 
@@ -34,4 +34,4 @@ Part of the nvme-user suite
 
 SEE ALSO
 --------
-linknvme-log-mi-cmd-support-effects[1]
+linknvme:nvme-log-mi-cmd-support-effects[1]
