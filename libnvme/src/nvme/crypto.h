@@ -85,7 +85,7 @@ char *libnvmf_describe_key_serial(struct libnvme_global_ctx *ctx,
  * @key:	Key serial number to return
  *
  * Looks up the serial number of the key @identity
- * with type %type in the current session keyring.
+ * with type @type in the current session keyring.
  *
  * Return: 0 on success, negative error code otherwise.
  */
@@ -105,7 +105,7 @@ int libnvmf_lookup_key(struct libnvme_global_ctx *ctx, const char *type,
 int libnvmf_set_keyring(struct libnvme_global_ctx *ctx, long keyring_id);
 
 /**
- * libnvmf_create_raw_secret - Generate a raw secret buffer from input data
+ * libnvmf_create_raw_secret() - Generate a raw secret buffer from input data
  * @ctx:		struct libnvme_global_ctx object
  * @secret:		Input secret data
  * @key_len:		The length of the raw_secret in bytes
@@ -114,8 +114,8 @@ int libnvmf_set_keyring(struct libnvme_global_ctx *ctx, long keyring_id);
  * Transforms the provided @secret into a raw secret buffer suitable for
  * use with NVMe key management operations.
  *
- * The generated raw secret can subsequently be passed to libnvmf_read_key()
- * or libnvmf_update_key().
+ * The generated raw secret can subsequently be passed to
+ * libnvmf_insert_tls_key_versioned() or libnvmf_update_key().
  *
  * Return: 0 on success, negative error code otherwise.
  */
@@ -125,15 +125,15 @@ int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 /**
  * libnvmf_read_key() - Read key raw data
  * @ctx:		struct libnvme_global_ctx object
- * @keyring_id:		Id of the keyring holding %key_id
+ * @keyring_id:		Id of the keyring holding @key_id
  * @key_id:		Key id
- * @len:		Length of the returned data
- * @key:		Key serial to return
+ * @len:		Length of @key to return
+ * @key:		Raw key data to return
  *
  * Links the keyring specified by @keyring_id into the session
  * keyring and reads the payload of the key specified by @key_id.
  * @len holds the size of the returned buffer.
- * If @keyring is 0 the default keyring '.nvme' is used.
+ * If @keyring_id is 0 the default keyring '.nvme' is used.
  *
  * Return: 0 on success, negative error code otherwise.
  */
@@ -143,7 +143,7 @@ int libnvmf_read_key(struct libnvme_global_ctx *ctx, long keyring_id,
 /**
  * libnvmf_update_key() - Update key raw data
  * @ctx:	struct libnvme_global_ctx object
- * @keyring_id:	Id of the keyring holding %key_id
+ * @keyring_id:	Id of the keyring holding @key_id
  * @key_type:	Type of the key to insert
  * @identity:	Key identity string
  * @key_data:	Raw data of the key
