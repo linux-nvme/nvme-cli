@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <stddef.h>
+
 #include <nvme/lib-types.h>
 
 /**
@@ -85,3 +87,15 @@ int micron_run_spawn(char *const argv[], const char *outfile, bool append);
  * modules, memory, interrupts, CPU info, dmesg, etc.) to the specified file.
  */
 void micron_write_os_config_to_file(const char *file_name);
+
+/**
+ * micron_get_os_string() - Get a one-line description of the host OS
+ * @buf:	Output buffer
+ * @len:	Size of @buf in bytes
+ *
+ * Builds a short human-readable identification of the operating system and
+ * architecture, e.g. "Windows 10.0 (build 26100), 64-bit" or
+ * "Linux 6.8.0-51-generic x86_64". @buf is set to an empty string if the
+ * information cannot be determined.
+ */
+void micron_get_os_string(char *buf, size_t len);
