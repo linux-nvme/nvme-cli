@@ -76,6 +76,8 @@ static int show_port(libnvme_mi_ep_t ep, int portid)
 	printf("    type %s[%d]\n", typestr, port.portt);
 	printf("    MCTP MTU: %d\n", port.mmctptus);
 	printf("    MEB size: %d\n", port.meb);
+	printf("    AEMs supported: %s\n",
+	       (port.prtcap & NVME_MI_PORT_PRTCAP_AEMS) ? "yes" : "no");
 
 	if (show_fn)
 		show_fn(&port);

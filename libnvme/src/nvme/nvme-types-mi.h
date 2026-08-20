@@ -132,9 +132,27 @@ struct nvme_mi_port_smb {
 };
 
 /**
+ * enum nvme_mi_port_prtcap - Port Information Data Structure - Port
+ *			      Capabilities (PRTCAP)
+ * @NVME_MI_PORT_PRTCAP_CIAPS: Command Initiated Auto Pause Supported:
+ *			       obsolete as of NVMe-MI 2.2 and later (the
+ *			       Command Initiated Auto Pause bit in Command
+ *			       Messages is always supported); this bit is
+ *			       set to '1'.
+ * @NVME_MI_PORT_PRTCAP_AEMS:  Asynchronous Event Messages Supported: if set,
+ *			       then all Management Endpoints on this port
+ *			       support AEMs and the Asynchronous Event
+ *			       configuration (Configuration Identifier 04h).
+ */
+enum nvme_mi_port_prtcap {
+	NVME_MI_PORT_PRTCAP_CIAPS	= 1 << 0,
+	NVME_MI_PORT_PRTCAP_AEMS	= 1 << 1,
+};
+
+/**
  * struct nvme_mi_read_port_info - Port Information Data Structure
  * @portt:	Port Type
- * @rsvd1:	Reserved
+ * @prtcap:	Port Capabilities, see &enum nvme_mi_port_prtcap.
  * @mmctptus:	Maximum MCTP Transmission Unit Size
  * @meb:	Management Endpoint Buffer Size
  * @pcie:	PCIe Port Specific Data
@@ -142,7 +160,7 @@ struct nvme_mi_port_smb {
  */
 struct nvme_mi_read_port_info {
 	__u8	portt;
-	__u8	rsvd1;
+	__u8	prtcap;
 	__le16	mmctptus;
 	__le32	meb;
 	union {
