@@ -520,11 +520,6 @@ struct __packed sndk_fw_act_history_log_format_c2 {
 	__u8		log_page_guid[SNDK_GUID_LENGTH];
 };
 
-int sndk_get_pci_ids(struct libnvme_global_ctx *ctx,
-		struct libnvme_transport_handle *hdl,
-		uint32_t *device_id,
-		uint32_t *vendor_id);
-
 int sndk_get_vendor_id(struct libnvme_transport_handle *hdl,
 		uint32_t *vendor_id);
 
