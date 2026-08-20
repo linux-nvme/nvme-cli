@@ -4026,6 +4026,11 @@ struct nvme_smart_log {
  *			   controller has a volatile memory backup solution.
  * @NVME_SMART_CRIT_PMR_RO: If set, then the Persistent Memory Region has become
  *			   read-only or unreliable.
+ * @NVME_SMART_CRIT_INDETERMINATE_PERSONALITY: If set, then a requested change
+ *			   to the settings of a Configurable Device Personality
+ *			   did not complete successfully and the controller was
+ *			   not able to revert to the previous settings of that
+ *			   personality.
  */
 enum nvme_smart_crit {
 	NVME_SMART_CW_ASCBT_SHIFT	= 0,
@@ -4034,18 +4039,21 @@ enum nvme_smart_crit {
 	NVME_SMART_CW_AMRO_SHIFT	= 3,
 	NVME_SMART_CW_VMBF_SHIFT	= 4,
 	NVME_SMART_CW_PMRRO_SHIFT	= 5,
+	NVME_SMART_CW_IPS_SHIFT		= 6,
 	NVME_SMART_CW_ASCBT_MASK	= 0x1,
 	NVME_SMART_CW_TTC_MASK		= 0x1,
 	NVME_SMART_CW_NDR_MASK		= 0x1,
 	NVME_SMART_CW_AMRO_MASK		= 0x1,
 	NVME_SMART_CW_VMBF_MASK		= 0x1,
 	NVME_SMART_CW_PMRRO_MASK	= 0x1,
+	NVME_SMART_CW_IPS_MASK		= 0x1,
 	NVME_SMART_CRIT_SPARE		= NVME_VAL(SMART_CW_ASCBT),
 	NVME_SMART_CRIT_TEMPERATURE	= NVME_VAL(SMART_CW_TTC),
 	NVME_SMART_CRIT_DEGRADED	= NVME_VAL(SMART_CW_NDR),
 	NVME_SMART_CRIT_MEDIA		= NVME_VAL(SMART_CW_AMRO),
 	NVME_SMART_CRIT_VOLATILE_MEMORY	= NVME_VAL(SMART_CW_VMBF),
 	NVME_SMART_CRIT_PMR_RO		= NVME_VAL(SMART_CW_PMRRO),
+	NVME_SMART_CRIT_INDETERMINATE_PERSONALITY = NVME_VAL(SMART_CW_IPS),
 };
 
 #define NVME_SMART_CW_ASCBT(crit)	NVME_GET(crit, SMART_CW_ASCBT)
@@ -4054,6 +4062,7 @@ enum nvme_smart_crit {
 #define NVME_SMART_CW_AMRO(crit)	NVME_GET(crit, SMART_CW_AMRO)
 #define NVME_SMART_CW_VMBF(crit)	NVME_GET(crit, SMART_CW_VMBF)
 #define NVME_SMART_CW_PMRRO(crit)	NVME_GET(crit, SMART_CW_PMRRO)
+#define NVME_SMART_CW_IPS(crit)		NVME_GET(crit, SMART_CW_IPS)
 
 /**
  * enum nvme_smart_egcw - Endurance Group Critical Warning Summary
@@ -5032,6 +5041,160 @@ struct nvme_thermal_exc_event {
 	__u8	over_temp;
 	__u8	threshold;
 };
+
+/**
+ * struct nvme_cdp_change_event - CDP Change Event Data Format (Event Type 0Fh)
+ * @ps:		Personality Status, see &enum nvme_cdp_change_event_ps.
+ * @perid:	Personality Identifier of the personality whose settings a Set
+ *		Features command requested to change, see &enum
+ *		nvme_personality_identifier.
+ * @rsvd2:	Reserved
+ * @ped:	Personality Event Data: the data buffer of the Set Features
+ *		command corresponding to @perid, if any.
+ */
+struct nvme_cdp_change_event {
+	__u8	ps;
+	__u8	perid;
+	__u8	rsvd2[10];
+	__u8	ped[];
+};
+
+/**
+ * enum nvme_cdp_change_event_ps - CDP Change Event - Personality Status
+ * @NVME_CDP_CHANGE_EVENT_PS_CDPCE:  CDP Change Error: If the change to the
+ *				     settings of the specified personality was
+ *				     successful, then this bit is cleared to
+ *				     '0'; otherwise, this bit is set to '1'.
+ * @NVME_CDP_CHANGE_EVENT_PS_CDPRFS: CDP Requested Freeze State: If the
+ *				     personality was requested to be frozen,
+ *				     then this bit is set to '1'; otherwise,
+ *				     this bit is cleared to '0'.
+ */
+enum nvme_cdp_change_event_ps {
+	NVME_CDP_CHANGE_EVENT_PS_CDPCE	= 1 << 0,
+	NVME_CDP_CHANGE_EVENT_PS_CDPRFS	= 1 << 1,
+};
+
+/**
+ * enum nvme_personality_identifier - Personality Identifier List
+ * @NVME_PERID_MFG_DEFAULT:	Manufacturing Default Personality
+ * @NVME_PERID_SECURITY:	Security Personality
+ * @NVME_PERID_ALL:		All Personalities
+ */
+enum nvme_personality_identifier {
+	NVME_PERID_MFG_DEFAULT	= 0x00,
+	NVME_PERID_SECURITY	= 0x01,
+	NVME_PERID_ALL		= 0xff,
+};
+
+/**
+ * enum nvme_personality_mrstt - Personality Properties - Minimum Required
+ *				  Reset Type (MRSTT)
+ * @NVME_PERSONALITY_MRSTT_NONE:		No reset required
+ * @NVME_PERSONALITY_MRSTT_CTRL_RESET:		Controller Level Reset required
+ * @NVME_PERSONALITY_MRSTT_LIMITED_CTRL_RESET:	Controller Level Reset other
+ *						than one initiated by a
+ *						Controller Reset required
+ * @NVME_PERSONALITY_MRSTT_NVM_SUBSYSTEM_RESET: NVM Subsystem Reset required
+ * @NVME_PERSONALITY_MRSTT_POWER_CYCLE:	Main power cycle required
+ */
+enum nvme_personality_mrstt {
+	NVME_PERSONALITY_MRSTT_NONE			= 0x00,
+	NVME_PERSONALITY_MRSTT_CTRL_RESET		= 0x01,
+	NVME_PERSONALITY_MRSTT_LIMITED_CTRL_RESET	= 0x02,
+	NVME_PERSONALITY_MRSTT_NVM_SUBSYSTEM_RESET	= 0x03,
+	NVME_PERSONALITY_MRSTT_POWER_CYCLE		= 0x04,
+};
+
+/**
+ * enum nvme_personality_aus - Personality Properties - Authenticated
+ *			       Unfreeze Support (AUS)
+ * @NVME_PERSONALITY_AUS_PCAS: Physical Credential Authentication Support
+ * @NVME_PERSONALITY_AUS_PKAS: Programmable Key Authentication Support
+ */
+enum nvme_personality_aus {
+	NVME_PERSONALITY_AUS_PCAS	= 1 << 0,
+	NVME_PERSONALITY_AUS_PKAS	= 1 << 1,
+};
+
+/**
+ * enum nvme_personality_attrs - Personality Properties - Personality
+ *				  Attributes
+ * @NVME_PERSONALITY_ATTRS_PSCUDE: Personality Settings Change User Data
+ *				    Effect
+ */
+enum nvme_personality_attrs {
+	NVME_PERSONALITY_ATTRS_PSCUDE	= 1 << 0,
+};
+
+/**
+ * struct nvme_personality_properties - Personality Properties data structure
+ * @pps:	Personality Properties Size: size in bytes of this data
+ *		structure.
+ * @perid:	Personality Identifier, see &enum nvme_personality_identifier.
+ * @mrstt:	Minimum Required Reset Type, see &enum nvme_personality_mrstt.
+ * @aus:	Authenticated Unfreeze Support, see &enum
+ *		nvme_personality_aus. Cleared to 0h if this personality does
+ *		not support an authenticated unfreeze method, in which case a
+ *		frozen instance of this personality is permanently frozen.
+ * @attrs:	Personality Attributes, see &enum nvme_personality_attrs.
+ */
+struct nvme_personality_properties {
+	__u8	pps;
+	__u8	perid;
+	__u8	mrstt;
+	__u8	aus;
+	__u8	attrs;
+};
+
+/**
+ * struct nvme_dev_personalities_log - Device Personalities Log Page
+ *					(Log Identifier 1Dh)
+ * @nump:	Number of Personalities: number of &struct
+ *		nvme_personality_properties entries in @perprops. This is a
+ *		0's based value.
+ * @cdplpv:	CDP Log Page Version
+ * @dplphl:	Device Personalities Log Page Header Length
+ * @cdplps:	Device Personalities Log Page Size: size of this log page in
+ *		bytes.
+ * @perprops:	CDP Personality list, listed in ascending order of
+ *		Personality Identifier.
+ */
+struct nvme_dev_personalities_log {
+	__le16	nump;
+	__u8	cdplpv;
+	__u8	dplphl;
+	__le16	cdplps;
+	struct nvme_personality_properties perprops[];
+};
+
+/**
+ * enum nvme_security_personality_attrs - Security Personality Attributes
+ *					   data structure
+ * @NVME_SEC_PERSONALITY_ASP:      Allow Security Protocol: If set, then the
+ *				    security protocols specified by this data
+ *				    structure shall be allowed; if cleared,
+ *				    then they shall be prohibited.
+ * @NVME_SEC_PERSONALITY_TCGP:	    TCG Security Protocol: specifies the
+ *				    security protocol range 01h to 06h.
+ * @NVME_SEC_PERSONALITY_AHATSDP:  Authentication in Host Attachments of
+ *				    Transient Storage Devices Protocol:
+ *				    specifies the security protocol value EEh.
+ * @NVME_SEC_PERSONALITY_VSP_SHIFT: Shift amount to get the Vendor Specific
+ *				    Protocol Fx bitmap (security protocols F0h
+ *				    to FFh) field.
+ * @NVME_SEC_PERSONALITY_VSP_MASK: Mask to get the Vendor Specific Protocol
+ *				    Fx bitmap field.
+ */
+enum nvme_security_personality_attrs {
+	NVME_SEC_PERSONALITY_ASP	= 1 << 0,
+	NVME_SEC_PERSONALITY_TCGP	= 1 << 1,
+	NVME_SEC_PERSONALITY_AHATSDP	= 1 << 2,
+	NVME_SEC_PERSONALITY_VSP_SHIFT	= 16,
+	NVME_SEC_PERSONALITY_VSP_MASK	= 0xffff,
+};
+
+#define NVME_SEC_PERSONALITY_VSP(attrs)	NVME_GET(attrs, SEC_PERSONALITY_VSP)
 
 /**
  * struct nvme_lba_rd - LBA Range Descriptor
@@ -6863,6 +7026,14 @@ struct nvme_pull_model_ddc_req_log {
  * @NVME_SC_CONTROLLER_DATA_QUEUE_FULL: The controller detected that a
  *				      Controller Data Queue became full.
  * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Exceeds Max NS Sanitize Operations
+ * @NVME_SC_MFG_DEFAULT_PERSONALITY_REQUIRED: Manufacturing Default Personality
+ *				      Required: The Firmware Commit command was
+ *				      aborted due to the firmware image being
+ *				      incompatible with the current personality
+ *				      settings; the settings of each affected
+ *				      personality are required to be compatible
+ *				      with the current personality settings for
+ *				      the firmware image to be committed.
  * @NVME_SC_INVALID_POWER_LIMIT:      Invalid Power Limit: The power limit
  *				      specified for the Power Limit feature is
  *				      invalid because that power limit prohibits
@@ -7146,6 +7317,11 @@ enum nvme_status_field {
 	 * Command Set Specific
 	 */
 	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x3c,
+
+	/*
+	 * Command Set Specific - Firmware Commit
+	 */
+	NVME_SC_MFG_DEFAULT_PERSONALITY_REQUIRED = 0x3d,
 
 	/*
 	 * Command Set Specific - Set Features
@@ -7534,7 +7710,8 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_REACHABILITY_GROUPS:		Reachability Groups
  * @NVME_LOG_LID_REACHABILITY_ASSOCIATIONS:	Reachability Associations
  * @NVME_LOG_LID_CHANGED_ALLOC_NS:		Changed Allocated Namespace List
- * @NVME_LOG_LID_DEV_PERSONALITY:		Device Personalities
+ * @NVME_LOG_LID_DEV_PERSONALITY:		Device Personalities, see &struct
+ *						nvme_dev_personalities_log
  * @NVME_LOG_LID_CROSS_CTRL_RESET:		Cross-Controller Reset
  * @NVME_LOG_LID_LOST_HOST_COMMUNICATION:	Lost Host Communication
  * @NVME_LOG_LID_FDP_CONFIGS:			FDP Configurations
@@ -7640,7 +7817,12 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_NS_ADMIN_LABEL:	Namespace Admin Label
  * @NVME_FEAT_FID_KEY_VALUE:		Key Value Configuration
  * @NVME_FEAT_FID_CTRL_DATA_QUEUE:	Controller Data Queue
- * @NVME_FEAT_FID_CONF_DEV_PERSONALITY: Configurable Device Personality
+ * @NVME_FEAT_FID_CONF_DEV_PERSONALITY: Configurable Device Personality, see
+ *					&enum nvme_cdp_cdw13_fields (Set/Get
+ *					Features Command Dword 13), &enum
+ *					nvme_cdp_cqe_dw0_fields (Get Features
+ *					Completion Queue Entry Dword 0), and
+ *					&enum nvme_personality_identifier
  * @NVME_FEAT_FID_POWER_LIMIT:		Power Limit
  * @NVME_FEAT_FID_POWER_THRESH:		Power Threshold
  * @NVME_FEAT_FID_POWER_MEASUREMENT:	Power Measurement
@@ -7869,6 +8051,20 @@ enum nvme_features_id {
  * @NVME_FEAT_RRL_NVMSETID_MASK:
  * @NVME_FEAT_PLM_NVMSETID_SHIFT:
  * @NVME_FEAT_PLM_NVMSETID_MASK:
+ * @NVME_FEAT_CDP_CHPS:		Change Personality Settings (Set Features
+ *				Command Dword 13 only)
+ * @NVME_FEAT_CDP_PERFS:	Personality Freeze State (Set Features
+ *				Command Dword 13, and Get Features Completion
+ *				Queue Entry Dword 0)
+ * @NVME_FEAT_CDP_PERID_SHIFT:	Shift amount to set/get the Personality
+ *				Identifier (Set Features Command Dword 13, and
+ *				Get Features Completion Queue Entry Dword 0)
+ * @NVME_FEAT_CDP_PERID_MASK:	Mask to set/get the Personality Identifier
+ * @NVME_FEAT_CDP_PMDSS:	Personality Manufacturing Default Settings
+ *				State (Get Features Completion Queue Entry
+ *				Dword 0 only)
+ * @NVME_FEAT_CDP_PPSC:		Pending Personality Settings Change (Get
+ *				Features Completion Queue Entry Dword 0 only)
  * @NVME_FEAT_POWER_LIMIT_PLV_SHIFT:
  * @NVME_FEAT_POWER_LIMIT_PLV_MASK:
  * @NVME_FEAT_POWER_LIMIT_PLS_SHIFT:
@@ -8043,6 +8239,12 @@ enum nvme_feat {
 	NVME_FEAT_SANITIZE_NODRM_MASK	= 0x1,
 	NVME_FEAT_RESP_PTPL_SHIFT	= 0,
 	NVME_FEAT_RESP_PTPL_MASK	= 0x1,
+	NVME_FEAT_CDP_CHPS		= 1 << 9,
+	NVME_FEAT_CDP_PERFS		= 1 << 8,
+	NVME_FEAT_CDP_PERID_SHIFT	= 0,
+	NVME_FEAT_CDP_PERID_MASK	= 0xff,
+	NVME_FEAT_CDP_PMDSS		= 1 << 10,
+	NVME_FEAT_CDP_PPSC		= 1 << 9,
 	NVME_FEAT_POWER_LIMIT_PLV_SHIFT	= 0,
 	NVME_FEAT_POWER_LIMIT_PLV_MASK	= 0xffff,
 	NVME_FEAT_POWER_LIMIT_PLS_SHIFT	= 16,
@@ -9161,6 +9363,8 @@ static inline void nvme_feature_decode_arbitration(__u32 value, __u8 *ab,
 
 #define NVME_FEAT_PM_PS(v)		NVME_GET(v, FEAT_PWRMGMT_PS)
 #define NVME_FEAT_PM_WH(v)		NVME_GET(v, FEAT_PWRMGMT_WH)
+
+#define NVME_FEAT_CDP_PERID(v)		NVME_GET(v, FEAT_CDP_PERID)
 
 #define NVME_FEAT_POWER_LIMIT_PLV(v)	NVME_GET(v, FEAT_POWER_LIMIT_PLV)
 #define NVME_FEAT_POWER_LIMIT_PLS(v)	NVME_GET(v, FEAT_POWER_LIMIT_PLS)
