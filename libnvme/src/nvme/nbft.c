@@ -584,6 +584,7 @@ static int read_discovery(struct libnvme_global_ctx *ctx,
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "file %s: discovery %d HFI not found\n",
 			 nbft->filename, discovery->index);
+		r = -EINVAL;
 		goto error;
 	}
 
@@ -595,6 +596,7 @@ static int read_discovery(struct libnvme_global_ctx *ctx,
 				 "file %s: discovery %d security descriptor %d not found, skipping entry\n",
 				 nbft->filename, discovery->index,
 				 raw_discovery->sec_index);
+			r = -EINVAL;
 			goto error;
 		}
 	}
