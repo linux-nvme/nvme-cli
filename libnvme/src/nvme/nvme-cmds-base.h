@@ -4882,18 +4882,29 @@ nvme_init_lockdown(struct libnvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
  * @sel:	Select (SEL): This field specifies the type of
  *		management operation to perform
  * @mos:	Management Operation Specific (MOS): This field
- *		is specific to the SEL type
- * @cdqid:	Controller Data Queue ID (CDQID)
+ *		is specific to the SEL type. For the Track Memory Changes
+ *		operation, see &enum nvme_lm_tact for the Tracking Action
+ *		(TACT) bit.
+ * @cdqid:	Controller Data Queue ID (CDQID) for the Log User Data Changes
+ *		operation, or Controller Identifier (CNTLID) for the Track
+ *		Memory Changes operation
+ * @data:	Track Memory Changes data buffer, see &struct
+ *		nvme_lm_track_memory_changes_data. Only used for the Track
+ *		Memory Changes operation with TACT set to
+ *		%NVME_LM_TACT_START_TRACKING, otherwise NULL.
+ * @len:	Length of @data
  *
  * Initializes the passthru command buffer for the Track Send command.
  */
 static inline void
 nvme_init_lm_track_send(struct libnvme_passthru_cmd *cmd,
-		__u8 sel, __u16 mos, __u16 cdqid)
+		__u8 sel, __u16 mos, __u16 cdqid, void *data, __u32 len)
 {
 
 	memset(cmd, 0, sizeof(*cmd));
 	cmd->opcode = nvme_admin_track_send;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
 	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
 			NVME_LM_TRACK_SEND_SEL_SHIFT,
 			NVME_LM_TRACK_SEND_SEL_MASK) |
