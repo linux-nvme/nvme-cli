@@ -1076,6 +1076,25 @@ nvme_init_get_log_power_measurement(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_get_log_voltage_measurement() - Initialize passthru command for
+ * Voltage Measurement
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_VOLTAGE_MEASUREMENT
+ */
+static inline void
+nvme_init_get_log_voltage_measurement(struct libnvme_passthru_cmd *cmd,
+		struct nvme_voltage_measurement_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_VOLTAGE_MEASUREMENT, NVME_CSI_NVM,
+		log, len);
+}
+
+/**
  * nvme_init_get_log_phy_rx_eom() - Initialize passthru command for
  * Physical Interface Receiver Eye Opening Measurement
  * @cmd:	Passthru command to use
@@ -1369,6 +1388,25 @@ nvme_init_get_log_mfg_default_config_status(struct libnvme_passthru_cmd *cmd,
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
 		NVME_LOG_LID_MFG_DEFAULT_CONFIG, NVME_CSI_NVM,
 		log, sizeof(*log));
+}
+
+/**
+ * nvme_init_get_log_dev_personality() - Initialize passthru command for
+ * Device Personalities
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_DEV_PERSONALITY
+ */
+static inline void
+nvme_init_get_log_dev_personality(struct libnvme_passthru_cmd *cmd,
+		struct nvme_dev_personalities_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_DEV_PERSONALITY, NVME_CSI_NVM,
+		log, len);
 }
 
 /**
