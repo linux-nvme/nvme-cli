@@ -9977,6 +9977,121 @@ struct nvme_lm_controller_state_data {
 	struct nvme_lm_nvme_controller_state_data   data;
 };
 
+#define NVME_TDISP_NVME_IDENTIFIER 0x4e564d65
+
+/**
+ * enum nvme_tdisp_ti - NVMe TDISP DEVICE_INTERFACE_REPORT - TDISP Information (TI)
+ * @NVME_TDISP_TI_VER_SHIFT:	Shift amount to get the Version (VER)
+ * @NVME_TDISP_TI_VER_MASK:	Mask to get VER
+ * @NVME_TDISP_TI_ACPS_SHIFT:	Shift amount to get the Admin Command Processing
+ *				Status (ACPS)
+ * @NVME_TDISP_TI_ACPS_MASK:	Mask to get ACPS
+ * @NVME_TDISP_TI_ENV_SHIFT:	Shift amount to get the Enable Value (ENV)
+ * @NVME_TDISP_TI_ENV_MASK:	Mask to get ENV
+ * @NVME_TDISP_TI_SHNV_SHIFT:	Shift amount to get the Shutdown Notification
+ *				Value (SHNV)
+ * @NVME_TDISP_TI_SHNV_MASK:	Mask to get SHNV
+ * @NVME_TDISP_TI_SHSTV_SHIFT:	Shift amount to get the Shutdown Status Value
+ *				(SHSTV)
+ * @NVME_TDISP_TI_SHSTV_MASK:	Mask to get SHSTV
+ * @NVME_TDISP_TI_STV_SHIFT:	Shift amount to get the Shutdown Type Value (STV)
+ * @NVME_TDISP_TI_STV_MASK:	Mask to get STV
+ * @NVME_TDISP_TI_CSSV_SHIFT:	Shift amount to get the Command Sets Supported
+ *				Value (CSSV)
+ * @NVME_TDISP_TI_CSSV_MASK:	Mask to get CSSV
+ * @NVME_TDISP_TI_MPSV_SHIFT:	Shift amount to get the Memory Page Size Value
+ *				(MPSV)
+ * @NVME_TDISP_TI_MPSV_MASK:	Mask to get MPSV
+ * @NVME_TDISP_TI_IOSQESV_SHIFT: Shift amount to get the I/O Submission Queue
+ *				 Entry Size Value (IOSQESV)
+ * @NVME_TDISP_TI_IOSQESV_MASK: Mask to get IOSQESV
+ * @NVME_TDISP_TI_IOCQESV_SHIFT: Shift amount to get the I/O Completion Queue
+ *				 Entry Size Value (IOCQESV)
+ * @NVME_TDISP_TI_IOCQESV_MASK: Mask to get IOCQESV
+ */
+enum nvme_tdisp_ti {
+	NVME_TDISP_TI_VER_SHIFT		= 0,
+	NVME_TDISP_TI_VER_MASK		= 0xff,
+	NVME_TDISP_TI_ACPS_SHIFT	= 8,
+	NVME_TDISP_TI_ACPS_MASK		= 0x1,
+	NVME_TDISP_TI_ENV_SHIFT		= 9,
+	NVME_TDISP_TI_ENV_MASK		= 0x1,
+	NVME_TDISP_TI_SHNV_SHIFT	= 10,
+	NVME_TDISP_TI_SHNV_MASK		= 0x3,
+	NVME_TDISP_TI_SHSTV_SHIFT	= 12,
+	NVME_TDISP_TI_SHSTV_MASK	= 0x3,
+	NVME_TDISP_TI_STV_SHIFT		= 14,
+	NVME_TDISP_TI_STV_MASK		= 0x1,
+	NVME_TDISP_TI_CSSV_SHIFT	= 16,
+	NVME_TDISP_TI_CSSV_MASK		= 0x7,
+	NVME_TDISP_TI_MPSV_SHIFT	= 20,
+	NVME_TDISP_TI_MPSV_MASK		= 0xf,
+	NVME_TDISP_TI_IOSQESV_SHIFT	= 24,
+	NVME_TDISP_TI_IOSQESV_MASK	= 0xf,
+	NVME_TDISP_TI_IOCQESV_SHIFT	= 28,
+	NVME_TDISP_TI_IOCQESV_MASK	= 0xf,
+};
+
+#define NVME_TDISP_TI_VER(ti)		NVME_GET(ti, TDISP_TI_VER)
+#define NVME_TDISP_TI_ACPS(ti)		NVME_GET(ti, TDISP_TI_ACPS)
+#define NVME_TDISP_TI_ENV(ti)		NVME_GET(ti, TDISP_TI_ENV)
+#define NVME_TDISP_TI_SHNV(ti)		NVME_GET(ti, TDISP_TI_SHNV)
+#define NVME_TDISP_TI_SHSTV(ti)		NVME_GET(ti, TDISP_TI_SHSTV)
+#define NVME_TDISP_TI_STV(ti)		NVME_GET(ti, TDISP_TI_STV)
+#define NVME_TDISP_TI_CSSV(ti)		NVME_GET(ti, TDISP_TI_CSSV)
+#define NVME_TDISP_TI_MPSV(ti)		NVME_GET(ti, TDISP_TI_MPSV)
+#define NVME_TDISP_TI_IOSQESV(ti)	NVME_GET(ti, TDISP_TI_IOSQESV)
+#define NVME_TDISP_TI_IOCQESV(ti)	NVME_GET(ti, TDISP_TI_IOCQESV)
+
+/**
+ * struct nvme_tdisp_device_interface_report - NVMe TDISP
+ *		DEVICE_INTERFACE_REPORT Reporting Structure
+ *
+ * This is the NVMe class-specific DEVICE_SPECIFIC_INFO payload that a PCIe
+ * Function returns in response to a PCIe TDISP GET_DEVICE_INTERFACE_REPORT
+ * request (refer to the NVM Express over PCIe Transport Specification).
+ * There is no NVMe Admin, I/O, or MI command that transfers this structure
+ * -- it is produced by the device's Device Security Module and consumed by
+ * a platform TEE Security Module entirely via the PCIe TDISP protocol,
+ * outside of any NVMe command/response mechanism. This type is provided
+ * purely so that software which has otherwise obtained a
+ * DEVICE_INTERFACE_REPORT (e.g., from a TDISP/SPDM stack) can decode its
+ * NVMe-specific portion.
+ *
+ * @tni:    TDISP NVMe Identifier, shall be %NVME_TDISP_NVME_IDENTIFIER
+ * @ti:     TDISP Information, see &enum nvme_tdisp_ti
+ * @cu:     CSVL Used, the Controller State Version Index of the NVMe
+ *	    Controller State data structure used to generate @qh
+ * @vu:     VER Used, the Version field in the NVMe Controller State data
+ *	    structure used to generate @qh
+ * @rsvd10: Reserved
+ * @aqv:    AQA Value
+ * @asv:    ASQ Value
+ * @acv:    ACQ Value
+ * @cv:     CMBMSC Value
+ * @pmv:    PMRMSC Value
+ * @pcv:    PMRCTL Value
+ * @qh:     Queue Hash, a SHA-384 hash of all the fields in the NVMe
+ *	    Controller State data structure, see
+ *	    &struct nvme_lm_controller_state_data
+ * @rsvd84: Reserved
+ */
+struct nvme_tdisp_device_interface_report {
+	__le32	tni;
+	__le32	ti;
+	__u8	cu;
+	__u8	vu;
+	__u8	rsvd10[2];
+	__le32	aqv;
+	__le32	asv;
+	__le32	acv;
+	__le32	cv;
+	__le32	pmv;
+	__le32	pcv;
+	__u8	qh[48];
+	__u8	rsvd84[44];
+};
+
 /**
  * enum nvme_lm_queue_attributes - I/O Submission and I/O Completion Queue Attributes
  *
