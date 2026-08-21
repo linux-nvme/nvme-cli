@@ -3181,6 +3181,13 @@ struct nvme_id_ns {
  * @NVME_NS_FEAT_IO_OPT:   If set, indicates that the fields NPWG, NPWA, NPDG,
  *			   NPDA, and NOWS are defined for this namespace and
  *			   should be used by the host for I/O optimization
+ * @NVME_NS_FEAT_MAM:	   If set, indicates that Multiple Atomicity Mode
+ *			   applies to write operations to this namespace. If
+ *			   cleared, indicates that Single Atomicity Mode
+ *			   applies to write operations to this namespace.
+ * @NVME_NS_FEAT_OPTRPERF: If set, indicates that the NPRG, NPRA, and NORS
+ *			   fields are defined for this namespace and should be
+ *			   used by the host for I/O optimization.
  */
 enum nvme_id_nsfeat {
 	NVME_NS_FEAT_THIN		= 1 << 0,
@@ -3188,6 +3195,8 @@ enum nvme_id_nsfeat {
 	NVME_NS_FEAT_DULBE		= 1 << 2,
 	NVME_NS_FEAT_ID_REUSE		= 1 << 3,
 	NVME_NS_FEAT_IO_OPT		= 3 << 4,
+	NVME_NS_FEAT_MAM		= 1 << 6,
+	NVME_NS_FEAT_OPTRPERF		= 1 << 7,
 };
 
 /**
@@ -3225,11 +3234,11 @@ enum nvme_id_ns_flbas {
 
 /**
  * enum nvme_id_ns_mc - This field indicates the capabilities for metadata.
- * @NVME_NS_MC_EXTENDED: If set, indicates the namespace supports the metadata
+ * @NVME_NS_MC_EXTENDED: If set, indicates that the namespace supports the
+ *			 metadata being transferred as part of an extended data LBA.
+ * @NVME_NS_MC_SEPARATE: If set, indicates the namespace supports the metadata
  *			 being transferred as part of a separate buffer that is
  *			 specified in the Metadata Pointer.
- * @NVME_NS_MC_SEPARATE: If set, indicates that the namespace supports the
- *			 metadata being transferred as part of an extended data LBA.
  */
 enum nvme_id_ns_mc {
 	NVME_NS_MC_EXTENDED		= 1 << 0,
@@ -3371,6 +3380,27 @@ enum nvme_id_ns_dlfeat {
 	NVME_NS_DLFEAT_WRITE_ZEROES	= 1 << 3,
 	NVME_NS_DLFEAT_CRC_GUARD	= 1 << 4,
 };
+
+/**
+ * enum nvme_id_ns_kpios - Key Per I/O Status
+ * @NVME_NS_KPIOS_KPIOENS_SHIFT:	Shift amount to get Key Per I/O Enabled
+ *					in Namespace from the &struct nvme_id_ns.kpios field.
+ * @NVME_NS_KPIOS_KPIOENS_MASK:	Mask to get Key Per I/O Enabled in Namespace
+ *					from the &struct nvme_id_ns.kpios field.
+ * @NVME_NS_KPIOS_KPIOSNS_SHIFT:	Shift amount to get Key Per I/O Supported
+ *					in Namespace from the &struct nvme_id_ns.kpios field.
+ * @NVME_NS_KPIOS_KPIOSNS_MASK:	Mask to get Key Per I/O Supported in Namespace
+ *					from the &struct nvme_id_ns.kpios field.
+ */
+enum nvme_id_ns_kpios {
+	NVME_NS_KPIOS_KPIOENS_SHIFT	= 0,
+	NVME_NS_KPIOS_KPIOENS_MASK	= 0x1,
+	NVME_NS_KPIOS_KPIOSNS_SHIFT	= 1,
+	NVME_NS_KPIOS_KPIOSNS_MASK	= 0x1,
+};
+
+#define NVME_NS_KPIOS_KPIOENS(kpios)	NVME_GET(kpios, NS_KPIOS_KPIOENS)
+#define NVME_NS_KPIOS_KPIOSNS(kpios)	NVME_GET(kpios, NS_KPIOS_KPIOSNS)
 
 /**
  * enum nvme_id_ns_attr - Specifies attributes of the namespace.
