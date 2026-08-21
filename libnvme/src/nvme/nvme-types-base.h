@@ -7908,6 +7908,125 @@ struct nvme_disassociate_ns_data {
 };
 
 /**
+ * enum nvme_export_nvms_change_access_mode_mos - Manage Exported NVM
+ *		       Subsystem Send - Change Access Mode - Management
+ *		       Operation Specific (MOS) field, message-based
+ *		       transports only
+ * @NVME_EXPORT_NVMS_CHANGE_ACCESS_MODE_MOS_RA: Restricted Access (RA)
+ */
+enum nvme_export_nvms_change_access_mode_mos {
+	NVME_EXPORT_NVMS_CHANGE_ACCESS_MODE_MOS_RA	= 1 << 0,
+};
+
+/**
+ * struct nvme_exported_subsys_mgmt_host_entry - Host Entry Data Structure,
+ *		       used by the Manage Exported NVM Subsystem Send Grant
+ *		       Host Access and Revoke Host Access operations
+ * @rsvd0:	Reserved
+ * @hostid:	Host Identifier (HOSTID)
+ * @hostnqn:	Host NVMe Qualified Name (HOSTNQN)
+ * @rsvd280:	Reserved
+ */
+struct nvme_exported_subsys_mgmt_host_entry {
+	__u8	rsvd0[8];
+	__u8	hostid[16];
+	__u8	hostnqn[256];
+	__u8	rsvd280[40];
+};
+
+/**
+ * struct nvme_exported_subsys_mgmt_subsys_entry - Exported NVM Subsystem
+ *		       Entry Data Structure, used by the Manage Exported NVM
+ *		       Subsystem Send Grant Host Access and Revoke Host
+ *		       Access operations
+ * @rsvd0:	Reserved
+ * @subnqn:	NVM Subsystem NVMe Qualified Name (SUBNQN) of an Exported NVM
+ *		Subsystem
+ * @pidup:	Port ID of the Underlying Port (PIDUP)
+ * @rsvd282:	Reserved
+ */
+struct nvme_exported_subsys_mgmt_subsys_entry {
+	__u8	rsvd0[24];
+	__u8	subnqn[256];
+	__le16	pidup;
+	__u8	rsvd282[38];
+};
+
+/**
+ * struct nvme_exported_subsys_mgmt_data - Subsystem Management Data
+ *		       Structure, used by the Manage Exported NVM Subsystem
+ *		       Send Grant Host Access and Revoke Host Access
+ *		       operations
+ * @rsvd0:	Reserved
+ * @numhent:	Number of Host Entries (NUMHENT), shall be greater than 0h
+ * @numense:	Number of Exported NVM Subsystem Entries (NUMENSE), shall be
+ *		greater than 0h
+ * @rsvd68:	Reserved
+ * @entries:	@numhent entries of &struct nvme_exported_subsys_mgmt_host_entry
+ *		followed by @numense entries of &struct
+ *		nvme_exported_subsys_mgmt_subsys_entry. Left as a raw byte
+ *		buffer since the two variable-length lists have different
+ *		element sizes and cannot both be expressed as fixed struct
+ *		members - the caller walks @entries using the sizes of those
+ *		two struct types.
+ */
+struct nvme_exported_subsys_mgmt_data {
+	__u8	rsvd0[64];
+	__le16	numhent;
+	__le16	numense;
+	__u8	rsvd68[188];
+	__u8	entries[];
+};
+
+/**
+ * struct nvme_exported_ctrl_assoc_descriptor - Exported Controller
+ *		       Association Descriptor
+ * @cntlid:	Controller Identifier (CNTLID) of the Underlying Controller
+ * @ecntlid:	Exported Controller Identifier (ECNTLID) to associate with
+ *		@cntlid
+ */
+struct nvme_exported_ctrl_assoc_descriptor {
+	__le16	cntlid;
+	__le16	ecntlid;
+};
+
+/**
+ * struct nvme_exported_ctrl_assoc_data - Associate Controllers Management
+ *		       Operation Data Buffer
+ * @n:		Number of Associated Exported Controller Descriptors (N),
+ *		0's based
+ * @rsvd2:	Reserved
+ * @entries:	Exported Controller Association Descriptor list, see &struct
+ *		nvme_exported_ctrl_assoc_descriptor
+ */
+struct nvme_exported_ctrl_assoc_data {
+	__le16	n;
+	__u8	rsvd2[2];
+	struct nvme_exported_ctrl_assoc_descriptor entries[];
+};
+
+/**
+ * enum nvme_export_nvms_set_config_state_cqe_dw0 - Manage Exported NVM
+ *		       Subsystem Send - Set Exported Configuration State -
+ *		       Completion Queue Entry Dword 0, valid when the command
+ *		       fails with %NVME_SC_INVALID_EXPORTED_CONFIG_STATE
+ * @NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_SHIFT: Shift amount to get
+ *		       Dword Location (DWLOC): offset in the data buffer to
+ *		       the Dword that contained an invalid bit
+ * @NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_MASK:  Mask to get DWLOC
+ * @NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_SHIFT: Shift amount to get
+ *		       Bit Location (BITLOC): offset of the invalid bit
+ *		       within the Dword indicated by DWLOC
+ * @NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_MASK: Mask to get BITLOC
+ */
+enum nvme_export_nvms_set_config_state_cqe_dw0 {
+	NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_SHIFT	= 0,
+	NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_MASK	= 0x7ffffff,
+	NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_SHIFT	= 27,
+	NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_MASK	= 0x1f,
+};
+
+/**
  * struct nvme_exported_nvm_subsys_nqn_data - Exported NVM Subsystem NQN
  *		       Data Buffer, used by Manage Exported NVM Subsystem
  *		       Send operations that identify the target Exported NVM
@@ -8520,6 +8639,15 @@ struct nvme_pull_model_ddc_req_log {
  *				      Originator field does not match the
  *				      Host NQN used by the DDC to connect
  *				      to the CDC.
+ * @NVME_SC_INVALID_HOST:	      Invalid Host: the Manage Exported NVM
+ *				      Subsystem Send Grant/Revoke Host Access
+ *				      operation specified a host entry that
+ *				      could not be processed.
+ * @NVME_SC_INVALID_NVM_SUBSYSTEM:    Invalid NVM Subsystem: the Manage
+ *				      Exported NVM Subsystem Send Grant/Revoke
+ *				      Host Access operation specified an
+ *				      Exported NVM Subsystem entry that could
+ *				      not be processed.
  * @NVME_SC_INVALID_CONTROLER_DATA_QUEUE: This error indicates that the
  *				      specified Controller Data Queue
  *				      Identifier is invalid for the controller
@@ -8582,6 +8710,18 @@ struct nvme_pull_model_ddc_req_log {
  *				      Controller being associated with an
  *				      Exported NVM Subsystem was in a state
  *				      that could process commands.
+ * @NVME_SC_INVALID_EXPORTED_ASSOCIATION: Invalid Exported Association: an
+ *				      Underlying Controller being associated
+ *				      with an Exported NVM Subsystem has
+ *				      Underlying Namespaces attached that are
+ *				      not associated with that Exported NVM
+ *				      Subsystem, or the association otherwise
+ *				      conflicts with an existing one.
+ * @NVME_SC_INVALID_EXPORTED_CONFIG_STATE: Invalid Exported Configuration
+ *				      State: invalid data was found in the
+ *				      Exported Configuration State provided
+ *				      with the Set Exported Configuration
+ *				      State management operation.
  * @NVME_SC_BAD_ATTRIBUTES:	      Conflicting Dataset Management Attributes
  * @NVME_SC_INVALID_PI:		      Invalid Protection Information
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
@@ -8850,6 +8990,8 @@ enum nvme_status_field {
 	NVME_SC_INSUFFICIENT_DISC_RES		= 0x32,
 	NVME_SC_REQSTD_FUNCTION_DISABLED	= 0x33,
 	NVME_SC_ZONEGRP_ORIGINATOR_INVLD	= 0x34,
+	NVME_SC_INVALID_HOST			= 0x35,
+	NVME_SC_INVALID_NVM_SUBSYSTEM		= 0x36,
 
 	/*
 	 * Command Set Specific - Live Migration
@@ -8882,6 +9024,8 @@ enum nvme_status_field {
 	 * Command Set Specific - Manage Exported NVM Subsystem Send
 	 */
 	NVME_SC_CONTROLLER_ACTIVE		= 0x42,
+	NVME_SC_INVALID_EXPORTED_ASSOCIATION	= 0x43,
+	NVME_SC_INVALID_EXPORTED_CONFIG_STATE	= 0x44,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:
