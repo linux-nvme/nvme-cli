@@ -348,7 +348,7 @@ static int derive_retained_key_compat(struct libnvme_global_ctx *ctx,
  * Note that this is _not_ the hash value as specified by the configured PSK,
  * but rather the hash function of the cipher suite associated with the
  * PSK:
- * - 1 indicates SHA-245 (for the TLS_AES_128_GCM_SHA256 cipher suite)
+ * - 1 indicates SHA-256 (for the TLS_AES_128_GCM_SHA256 cipher suite)
  * - 2 indicates SHA-384 (for the TLS_AES_256_GCM_SHA384 cipher suite)
  *
  * and the value '0' is invalid here.
