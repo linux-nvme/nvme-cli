@@ -157,6 +157,10 @@
  * @NVME_ZNS_CHANGED_ZONES_MAX: Max number of zones in the changed zones log
  *				page
  * @NVME_STREAM_ID_MAX:	Max number of stream IDs
+ * @NVME_UNDERLYING_NS_LIST_MAX: The maximum number of Underlying Namespace
+ *				Entry data structures reportable in the Get
+ *				Underlying Namespace List Identify data
+ *				structure
  */
 enum nvme_constants {
 	NVME_NSID_ALL				= 0xffffffff,
@@ -189,6 +193,7 @@ enum nvme_constants {
 	NVMF_TSAS_SIZE				= 256,
 	NVME_ZNS_CHANGED_ZONES_MAX		= 511,
 	NVME_STREAM_ID_MAX			= 0xffff,
+	NVME_UNDERLYING_NS_LIST_MAX		= 12,
 };
 
 /**
@@ -3563,6 +3568,107 @@ enum nvme_id_uuid {
 struct nvme_id_uuid_list {
 	__u8	rsvd0[32];
 	struct nvme_id_uuid_list_entry entry[NVME_ID_UUID_LIST_MAX];
+};
+
+/**
+ * struct nvme_underlying_ns_entry - Underlying Namespace Entry Data
+ *		Structure
+ * @unsnqn:	Underlying NVM Subsystem NQN (UNSNQN)
+ * @nsid:	Namespace Identifier (NSID) of the Underlying Namespace
+ * @cntlid:	Controller ID (CNTLID) of a controller able to attach @nsid
+ * @rsvd58:	Reserved
+ * @idx:	Index (IDX) into the list of reportable Underlying Namespaces
+ */
+struct nvme_underlying_ns_entry {
+	__u8	unsnqn[NVME_NQN_LENGTH];
+	__le32	nsid;
+	__le16	cntlid;
+	__u8	rsvd58[56];
+	__le16	idx;
+};
+
+/**
+ * struct nvme_underlying_ns_list - Underlying Namespace List Data Structure
+ *		(CNS 1Dh)
+ * @genctr:	Generation Counter (GENCTR)
+ * @nument:	Number Entries (NUMENT)
+ * @rsvd10:	Reserved
+ * @entries:	Underlying Namespace list, see &struct
+ *		nvme_underlying_ns_entry. Reportable up to
+ *		%NVME_UNDERLYING_NS_LIST_MAX entries.
+ */
+struct nvme_underlying_ns_list {
+	__le64	genctr;
+	__le16	nument;
+	__u8	rsvd10[6];
+	struct nvme_underlying_ns_entry entries[NVME_UNDERLYING_NS_LIST_MAX];
+};
+
+/**
+ * struct nvme_fabrics_transport_entry - Underlying Fabrics Transport Entry
+ *		Data Structure
+ * @traddr:	Transport Address (TRADDR)
+ * @tsas:	Transport Specific Address Subtype (TSAS)
+ * @pidup:	Port ID of the Underlying Port (PIDUP)
+ * @trtype:	Transport Type (TRTYPE), see &enum nvmf_trtype
+ * @adrfam:	Transport Address Family (ADRFAM), see &enum nvmf_addr_family
+ * @treq:	Transport Requirements (TREQ), see &enum nvmf_treq
+ * @rsvd517:	Reserved
+ */
+struct nvme_fabrics_transport_entry {
+	__u8	traddr[NVMF_TRADDR_SIZE];
+	__u8	tsas[NVMF_TSAS_SIZE];
+	__le16	pidup;
+	__u8	trtype;
+	__u8	adrfam;
+	__u8	treq;
+	__u8	rsvd517[59];
+};
+
+/**
+ * struct nvme_ports_list - Ports List Data Structure (CNS 1Eh)
+ * @genctr:	Generation Counter (GENCTR)
+ * @nument:	Number Entries (NUMENT)
+ * @rsvd10:	Reserved
+ * @entries:	Underlying Fabrics Transport Entry list, see &struct
+ *		nvme_fabrics_transport_entry
+ */
+struct nvme_ports_list {
+	__le64	genctr;
+	__le16	nument;
+	__u8	rsvd10[6];
+	struct nvme_fabrics_transport_entry entries[];
+};
+
+/**
+ * struct nvme_supported_ctrl_state_formats - Supported Controller State
+ *		Formats Data Structure (CNS 20h)
+ * @nv:		Number of Versions (NV) in the NVMe Controller State Version
+ *		list at the start of @data
+ * @nuuid:	Number of UUIDs (NUUID) in the Vendor Specific Controller
+ *		State UUID Supported list, immediately following the NVMe
+ *		Controller State Version list in @data
+ * @data:	NVMe Controller State Version list (@nv &__le16 entries)
+ *		immediately followed by the Vendor Specific Controller State
+ *		UUID Supported list (@nuuid 128-bit UUID entries)
+ */
+struct nvme_supported_ctrl_state_formats {
+	__u8	nv;
+	__u8	nuuid;
+	__u8	data[4094];
+};
+
+/**
+ * struct nvme_exported_nvm_subsys_template_uuid_list - Exported NVM
+ *		Subsystem Template UUID List data structure (CNS 22h)
+ * @rsvd0:	Reserved
+ * @enst:	Exported NVM Subsystem Template UUID list, up to 255 entries,
+ *		listed in ascending order. An entry that is not reserved and
+ *		is cleared to 0h indicates the end of the list.
+ */
+struct nvme_exported_nvm_subsys_template_uuid_list {
+	__u8	rsvd0[16];
+	__u8	enst[255][16];
 };
 
 /**
@@ -8538,6 +8644,9 @@ enum nvme_abort_cqe_dw0 {
  * @NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS:	Supported Controller State Formats
  *							identifying the supported NVMe Controller
  *							State data structures
+ * @NVME_IDENTIFY_CNS_UNDERLYING_CTRL_LIST:		Get Underlying Controller List
+ * @NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST: Exported NVM
+ *							Subsystem Template UUID List
  */
 enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_NS					= 0x00,
@@ -8568,6 +8677,8 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_PORTS_LIST				= 0x1E,
 	NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS			= 0x1F,
 	NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS		= 0x20,
+	NVME_IDENTIFY_CNS_UNDERLYING_CTRL_LIST			= 0x21,
+	NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST = 0x22,
 };
 
 /**
