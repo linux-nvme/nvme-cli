@@ -898,6 +898,31 @@ enum nvme_resv_rrela {
 };
 
 /**
+ * enum nvme_cancel_acode - Cancel - Action Code (ACODE)
+ * @NVME_CANCEL_ACODE_SINGLE_CMD:   Single Command Cancel
+ * @NVME_CANCEL_ACODE_MULTIPLE_CMD: Multiple Command Cancel
+ */
+enum nvme_cancel_acode {
+	NVME_CANCEL_ACODE_SINGLE_CMD	= 0,
+	NVME_CANCEL_ACODE_MULTIPLE_CMD	= 1,
+};
+
+/**
+ * enum nvme_cancel_cqe_dw0 - Cancel - Completion Queue Entry Dword 0
+ * @NVME_CANCEL_CQE_CMDA_SHIFT: Shift amount to get Commands Aborted (CMDA)
+ * @NVME_CANCEL_CQE_CMDA_MASK:  Mask to get CMDA
+ * @NVME_CANCEL_CQE_CEDA_SHIFT: Shift amount to get Commands Eligible for
+ *			       Deferred Abort (CEDA)
+ * @NVME_CANCEL_CQE_CEDA_MASK:  Mask to get CEDA
+ */
+enum nvme_cancel_cqe_dw0 {
+	NVME_CANCEL_CQE_CMDA_SHIFT	= 0,
+	NVME_CANCEL_CQE_CMDA_MASK	= 0xffff,
+	NVME_CANCEL_CQE_CEDA_SHIFT	= 16,
+	NVME_CANCEL_CQE_CEDA_MASK	= 0xffff,
+};
+
+/**
  * enum nvme_io_mgmt_recv_mo - I/O Management Receive - Management Operation
  * @NVME_IO_MGMT_RECV_RUH_STATUS:	Reclaim Unit Handle Status
  */
