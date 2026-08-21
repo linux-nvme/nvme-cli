@@ -10807,6 +10807,15 @@ enum nvme_kv_opcode {
 
 #ifndef SWIG
 /**
+ * enum nvme_ns_mgmt_zns_znsco - Zoned Namespace Create Options, see
+ *				  &struct nvme_ns_mgmt_host_sw_specified.zns.znsco
+ * @NVME_NS_MGMT_ZNSCO_AZR:	Allocate ZRWA Resources (AZR)
+ */
+enum nvme_ns_mgmt_zns_znsco {
+	NVME_NS_MGMT_ZNSCO_AZR	= 1 << 0,
+};
+
+/**
  * struct nvme_ns_mgmt_host_sw_specified - Namespace management Host Software
  * Specified Fields.
  * @nsze:     Namespace Size indicates the total size of the namespace in
