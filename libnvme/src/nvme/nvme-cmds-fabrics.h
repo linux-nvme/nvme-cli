@@ -102,6 +102,53 @@ nvme_init_get_log_pull_model_ddc_req(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_get_log_cross_ctrl_reset() - Initialize passthru command for
+ * Cross-Controller Reset
+ * @cmd:	Passthru command to use
+ * @rmc:	Remove Completed (RMC), see &enum nvme_cross_ctrl_reset_lsp
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_CROSS_CTRL_RESET
+ */
+static inline void
+nvme_init_get_log_cross_ctrl_reset(struct libnvme_passthru_cmd *cmd,
+		bool rmc, struct nvme_cross_ctrl_reset_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_CROSS_CTRL_RESET, NVME_CSI_NVM,
+		log, len);
+	if (rmc)
+		cmd->cdw10 |= NVME_FIELD_ENCODE(NVME_CROSS_CTRL_RESET_LSP_RMC,
+				NVME_LOG_CDW10_LSP_SHIFT,
+				NVME_LOG_CDW10_LSP_MASK);
+}
+
+/**
+ * nvme_init_get_log_lost_host_comm() - Initialize passthru command for
+ * Lost Host Communication
+ * @cmd:	Passthru command to use
+ * @rae:	Retain Asynchronous Event
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_LOST_HOST_COMMUNICATION
+ */
+static inline void
+nvme_init_get_log_lost_host_comm(struct libnvme_passthru_cmd *cmd,
+		bool rae, struct nvme_lost_host_comm_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_LOST_HOST_COMMUNICATION, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE(rae,
+			NVME_LOG_CDW10_RAE_SHIFT,
+			NVME_LOG_CDW10_RAE_MASK);
+}
+
+/**
  * nvme_init_set_property() - Initialize passthru command to set
  * controller property
  * @cmd:	Passthru command to use

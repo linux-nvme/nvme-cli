@@ -7402,6 +7402,112 @@ enum nvme_ae_info_notice {
 
 
 /**
+ * enum nvme_cross_ctrl_reset_lsp - Cross-Controller Reset Log Specific
+ *				     Parameter Field
+ * @NVME_CROSS_CTRL_RESET_LSP_RMC: Remove Completed (RMC)
+ */
+enum nvme_cross_ctrl_reset_lsp {
+	NVME_CROSS_CTRL_RESET_LSP_RMC	= 1 << 0,
+};
+
+/**
+ * enum nvme_cross_ctrl_reset_ccrs - Cross-Controller Reset Entry - Cross-
+ *				      Controller Reset Status (CCRS)
+ * @NVME_CROSS_CTRL_RESET_CCRS_IN_PROGRESS: In Progress
+ * @NVME_CROSS_CTRL_RESET_CCRS_SUCCESS:	   Success
+ * @NVME_CROSS_CTRL_RESET_CCRS_FAILED:	   Failed
+ */
+enum nvme_cross_ctrl_reset_ccrs {
+	NVME_CROSS_CTRL_RESET_CCRS_IN_PROGRESS	= 0x00,
+	NVME_CROSS_CTRL_RESET_CCRS_SUCCESS	= 0x01,
+	NVME_CROSS_CTRL_RESET_CCRS_FAILED	= 0x02,
+};
+
+/**
+ * enum nvme_cross_ctrl_reset_ccrf - Cross-Controller Reset Entry - Cross-
+ *				      Controller Reset Flags (CCRF)
+ * @NVME_CROSS_CTRL_RESET_CCRF_V:	    Validated (V)
+ * @NVME_CROSS_CTRL_RESET_CCRF_CLRI:	    Controller Level Reset Initiated
+ *					    (CLRI)
+ * @NVME_CROSS_CTRL_RESET_CCRF_RETRY_SHIFT: Shift amount to get the Retry
+ *					     (RETRY) field
+ * @NVME_CROSS_CTRL_RESET_CCRF_RETRY_MASK:  Mask to get RETRY
+ */
+enum nvme_cross_ctrl_reset_ccrf {
+	NVME_CROSS_CTRL_RESET_CCRF_V		= 1 << 0,
+	NVME_CROSS_CTRL_RESET_CCRF_CLRI		= 1 << 1,
+	NVME_CROSS_CTRL_RESET_CCRF_RETRY_SHIFT	= 2,
+	NVME_CROSS_CTRL_RESET_CCRF_RETRY_MASK	= 0x3,
+};
+
+#define NVME_CROSS_CTRL_RESET_CCRF_RETRY(ccrf) \
+	NVME_GET(ccrf, CROSS_CTRL_RESET_CCRF_RETRY)
+
+/**
+ * struct nvme_cross_ctrl_reset_entry - Cross-Controller Reset Entry Data
+ *					 Structure
+ * @icid:	Impacted Controller ID (ICID)
+ * @ciu:	Controller Instance Uniquifier (CIU)
+ * @rsvd3:	Reserved
+ * @acid:	Alternate Controller ID (ACID)
+ * @ccrs:	Cross-Controller Reset Status (CCRS), see &enum
+ *		nvme_cross_ctrl_reset_ccrs
+ * @ccrf:	Cross-Controller Reset Flags (CCRF), see &enum
+ *		nvme_cross_ctrl_reset_ccrf
+ */
+struct nvme_cross_ctrl_reset_entry {
+	__le16	icid;
+	__u8	ciu;
+	__u8	rsvd3;
+	__le16	acid;
+	__u8	ccrs;
+	__u8	ccrf;
+};
+
+/**
+ * struct nvme_cross_ctrl_reset_log - Cross-Controller Reset Log Page
+ *				       (Log Identifier 1Eh)
+ * @ne:		Number of Entries (NE)
+ * @rsvd2:	Reserved
+ * @entries:	Cross-Controller Reset Entry list, see &struct
+ *		nvme_cross_ctrl_reset_entry
+ */
+struct nvme_cross_ctrl_reset_log {
+	__le16	ne;
+	__u8	rsvd2[6];
+	struct nvme_cross_ctrl_reset_entry entries[];
+};
+
+/**
+ * struct nvme_lost_host_comm_entry - Lost Host Communication Entry Data
+ *				       Structure
+ * @cntlid:	Controller ID (CNTLID) of the LHC Controller
+ * @lc:		Loss Count (LC)
+ * @ciu:	Controller Instance Uniquifier (CIU)
+ * @rsvd4:	Reserved
+ */
+struct nvme_lost_host_comm_entry {
+	__le16	cntlid;
+	__u8	lc;
+	__u8	ciu;
+	__u8	rsvd4[4];
+};
+
+/**
+ * struct nvme_lost_host_comm_log - Lost Host Communication Log Page
+ *				     (Log Identifier 1Fh)
+ * @ne:		Number of Entries (NE)
+ * @rsvd2:	Reserved
+ * @entries:	Lost Host Communication Entry list, see &struct
+ *		nvme_lost_host_comm_entry
+ */
+struct nvme_lost_host_comm_log {
+	__le16	ne;
+	__u8	rsvd2[6];
+	struct nvme_lost_host_comm_entry entries[];
+};
+
+/**
  * struct nvme_pull_model_ddc_req_log - Pull Model DDC Request Log
  * @ori:	Operation Request Identifier
  * @rsvd1:	Reserved
