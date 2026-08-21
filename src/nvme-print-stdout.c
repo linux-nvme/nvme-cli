@@ -2145,6 +2145,18 @@ static void stdout_id_ctrl_bpcap(__u8 ctrl_bpcap)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_chsi(__u8 ctrl_chsi)
+{
+	__u8 rsvd1 = (ctrl_chsi >> 1);
+	__u8 chs = NVME_CTRL_CHSI_CHS(ctrl_chsi);
+
+	if (rsvd1)
+		printf(" [7:1] : %#x\tReserved\n", rsvd1);
+
+	printf("  [0:0] : %#x\tCXL HDM %sSupported\n", chs, chs ? "" : "Not ");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_plsi(__u8 ctrl_plsi)
 {
 	__u8 rsvd2 = (ctrl_plsi >> 2);
@@ -3545,6 +3557,9 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	printf("bpcap     : %#x\n", le16_to_cpu(ctrl->bpcap));
 	if (human)
 		stdout_id_ctrl_bpcap(ctrl->bpcap);
+	printf("chsi      : %#x\n", ctrl->chsi);
+	if (human)
+		stdout_id_ctrl_chsi(ctrl->chsi);
 	printf("nssl      : %#x\n", le32_to_cpu(ctrl->nssl));
 	printf("plsi      : %u\n", ctrl->plsi);
 	if (human)

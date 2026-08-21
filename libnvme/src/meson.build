@@ -50,6 +50,7 @@ headers = [
     'nvme/nvme-types-fabrics.h',
     'nvme/nvme-types-mi.h',
     'nvme/nvme-types-nvm.h',
+    'nvme/nvme-types-slm.h',
     'nvme/nvme-types-zns.h',
     'nvme/nvme-types.h',
     'nvme/scan.h',
