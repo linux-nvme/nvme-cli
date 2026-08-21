@@ -7827,6 +7827,87 @@ struct nvme_exported_port_list {
 };
 
 /**
+ * enum nvme_manage_export_ns_sel - Manage Exported Namespace - Select (SEL)
+ * @NVME_MANAGE_EXPORT_NS_SEL_ASSOCIATE:    Associate Namespace
+ * @NVME_MANAGE_EXPORT_NS_SEL_DISASSOCIATE: Disassociate Namespace
+ */
+enum nvme_manage_export_ns_sel {
+	NVME_MANAGE_EXPORT_NS_SEL_ASSOCIATE	= 0x01,
+	NVME_MANAGE_EXPORT_NS_SEL_DISASSOCIATE	= 0x02,
+};
+
+/**
+ * enum nvme_manage_export_ns_cdw10 - Manage Exported Namespace - Command
+ *		       Dword 10
+ * @NVME_MANAGE_EXPORT_NS_CDW10_SEL_SHIFT: Shift amount to set Select (SEL),
+ *		       see &enum nvme_manage_export_ns_sel
+ * @NVME_MANAGE_EXPORT_NS_CDW10_SEL_MASK:  Mask to set SEL
+ * @NVME_MANAGE_EXPORT_NS_CDW10_MOS_SHIFT: Shift amount to set Management
+ *		       Operation Specific (MOS)
+ * @NVME_MANAGE_EXPORT_NS_CDW10_MOS_MASK:  Mask to set MOS
+ */
+enum nvme_manage_export_ns_cdw10 {
+	NVME_MANAGE_EXPORT_NS_CDW10_SEL_SHIFT	= 0,
+	NVME_MANAGE_EXPORT_NS_CDW10_SEL_MASK	= 0xff,
+	NVME_MANAGE_EXPORT_NS_CDW10_MOS_SHIFT	= 8,
+	NVME_MANAGE_EXPORT_NS_CDW10_MOS_MASK	= 0xff,
+};
+
+/**
+ * enum nvme_manage_export_ns_cdw14 - Manage Exported Namespace - Command
+ *		       Dword 14
+ * @NVME_MANAGE_EXPORT_NS_CDW14_ESUBIDV: Exported NVM Subsystem Identifier
+ *		       Valid (ESUBIDV)
+ * @NVME_MANAGE_EXPORT_NS_CDW14_ESUBID_SHIFT: Shift amount to set Exported
+ *		       NVM Subsystem Identifier (ESUBID), used if ESUBIDV is
+ *		       set
+ * @NVME_MANAGE_EXPORT_NS_CDW14_ESUBID_MASK: Mask to set ESUBID
+ */
+enum nvme_manage_export_ns_cdw14 {
+	NVME_MANAGE_EXPORT_NS_CDW14_ESUBIDV		= 1 << 7,
+	NVME_MANAGE_EXPORT_NS_CDW14_ESUBID_SHIFT	= 16,
+	NVME_MANAGE_EXPORT_NS_CDW14_ESUBID_MASK		= 0xffff,
+};
+
+/**
+ * struct nvme_associate_ns_data - Associate Namespace Data Structure
+ * @pad:	Padding (PAD), shall be cleared to 0h
+ * @ensid:	Exported Namespace ID (ENSID) to associate
+ * @ensnqn:	Exported NVM Subsystem NQN (ENSNQN). Ignored for a
+ *		memory-based controller, or if ESUBIDV is set.
+ * @unsid:	Underlying Namespace ID (UNSID) to associate with @ensid
+ * @uctrlid:	Underlying Controller ID (UCTRLID). Ignored for a
+ *		memory-based controller.
+ * @unsnqn:	Underlying NVM Subsystem NQN (UNSNQN). Ignored for a
+ *		memory-based controller.
+ * @rsvd554:	Reserved
+ */
+struct nvme_associate_ns_data {
+	__u8	pad[32];
+	__le32	ensid;
+	__u8	ensnqn[256];
+	__le32	unsid;
+	__le16	uctrlid;
+	__u8	unsnqn[256];
+	__u8	rsvd554[22];
+};
+
+/**
+ * struct nvme_disassociate_ns_data - Disassociate Namespace Data Structure
+ * @pad:	Padding (PAD), shall be cleared to 0h
+ * @ensid:	Exported Namespace ID (ENSID) to disassociate
+ * @ensnqn:	Exported NVM Subsystem NQN (ENSNQN). Ignored for a
+ *		memory-based controller, or if ESUBIDV is set.
+ * @rsvd292:	Reserved
+ */
+struct nvme_disassociate_ns_data {
+	__u8	pad[32];
+	__le32	ensid;
+	__u8	ensnqn[256];
+	__u8	rsvd292[28];
+};
+
+/**
  * struct nvme_exported_nvm_subsys_nqn_data - Exported NVM Subsystem NQN
  *		       Data Buffer, used by Manage Exported NVM Subsystem
  *		       Send operations that identify the target Exported NVM

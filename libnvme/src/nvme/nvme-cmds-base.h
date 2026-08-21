@@ -5039,6 +5039,101 @@ nvme_init_manage_export_nvms_receive_list_ports(
 }
 
 /**
+ * nvme_init_manage_export_ns() - Initialize passthru command for
+ * Manage Exported Namespace
+ * @cmd:	Passthru command to use
+ * @sel:	Select (SEL): management operation to perform, see &enum
+ *		nvme_manage_export_ns_sel
+ * @mos:	Management Operation Specific (MOS): specific to @sel
+ * @esubidv:	Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+ *		@esubid identifies the target Exported NVM Subsystem;
+ *		otherwise the target is identified by the SUBNQN in @data
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID), used if
+ *		@esubidv is set
+ * @data:	Pointer to data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported
+ * Namespace command.
+ */
+static inline void
+nvme_init_manage_export_ns(struct libnvme_passthru_cmd *cmd,
+		__u8 sel, __u8 mos, bool esubidv, __u16 esubid,
+		void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_manage_export_ns;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_MANAGE_EXPORT_NS_CDW10_SEL_SHIFT,
+			NVME_MANAGE_EXPORT_NS_CDW10_SEL_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_MANAGE_EXPORT_NS_CDW10_MOS_SHIFT,
+			NVME_MANAGE_EXPORT_NS_CDW10_MOS_MASK);
+	cmd->cdw14 = NVME_FIELD_ENCODE(esubid,
+			NVME_MANAGE_EXPORT_NS_CDW14_ESUBID_SHIFT,
+			NVME_MANAGE_EXPORT_NS_CDW14_ESUBID_MASK) |
+		     (esubidv ? NVME_MANAGE_EXPORT_NS_CDW14_ESUBIDV : 0);
+}
+
+/**
+ * nvme_init_manage_export_ns_associate() - Initialize passthru command for
+ * Manage Exported Namespace - Associate Namespace
+ * @cmd:	Passthru command to use
+ * @andsf:	Associate Namespace Data Structure Format (ANDSF): the bit
+ *		number in the Exported Namespace Data Structure Formats
+ *		Supported (ENDSFS) field (Identify Controller data structure)
+ *		that defines the format of @data. Bit 1 selects the format
+ *		defined by &struct nvme_associate_ns_data.
+ * @esubidv:	Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+ *		@esubid identifies the target Exported NVM Subsystem;
+ *		otherwise the target is identified by the ENSNQN field in
+ *		@data
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID), used if
+ *		@esubidv is set
+ * @data:	Associate Namespace data buffer, see &struct
+ *		nvme_associate_ns_data
+ *
+ * Initializes the passthru command buffer for the Manage Exported
+ * Namespace command with SEL value %NVME_MANAGE_EXPORT_NS_SEL_ASSOCIATE.
+ */
+static inline void
+nvme_init_manage_export_ns_associate(struct libnvme_passthru_cmd *cmd,
+		__u8 andsf, bool esubidv, __u16 esubid,
+		struct nvme_associate_ns_data *data)
+{
+	nvme_init_manage_export_ns(cmd, NVME_MANAGE_EXPORT_NS_SEL_ASSOCIATE,
+		andsf, esubidv, esubid, data, sizeof(*data));
+}
+
+/**
+ * nvme_init_manage_export_ns_disassociate() - Initialize passthru command
+ * for Manage Exported Namespace - Disassociate Namespace
+ * @cmd:	Passthru command to use
+ * @esubidv:	Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+ *		@esubid identifies the target Exported NVM Subsystem;
+ *		otherwise the target is identified by the ENSNQN field in
+ *		@data
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID), used if
+ *		@esubidv is set
+ * @data:	Disassociate Namespace data buffer, see &struct
+ *		nvme_disassociate_ns_data
+ *
+ * Initializes the passthru command buffer for the Manage Exported
+ * Namespace command with SEL value
+ * %NVME_MANAGE_EXPORT_NS_SEL_DISASSOCIATE.
+ */
+static inline void
+nvme_init_manage_export_ns_disassociate(struct libnvme_passthru_cmd *cmd,
+		bool esubidv, __u16 esubid,
+		struct nvme_disassociate_ns_data *data)
+{
+	nvme_init_manage_export_ns(cmd, NVME_MANAGE_EXPORT_NS_SEL_DISASSOCIATE,
+		0, esubidv, esubid, data, sizeof(*data));
+}
+
+/**
  * nvme_init_manage_export_nvms_send() - Initialize passthru command for
  * Manage Exported NVM Subsystem Send
  * @cmd:	Passthru command to use
