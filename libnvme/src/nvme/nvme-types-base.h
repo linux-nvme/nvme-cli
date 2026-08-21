@@ -3749,6 +3749,38 @@ enum nvme_id_ctrl_nvm_rla {
 #define NVME_ID_CTRL_NVM_RLA_SLS(rla)	NVME_GET(rla, ID_CTRL_NVM_RLA_SLS)
 
 /**
+ * enum nvme_id_ctrl_nvm_kpiocap - Key Per I/O Capabilities
+ * @NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_SHIFT:	Shift amount to get Key Per I/O
+ *						Supported (KPIOS)
+ * @NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_MASK:	Mask to get KPIOS
+ * @NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_SHIFT:	Shift amount to get Key Per I/O
+ *						Scope (KPIOSC)
+ * @NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_MASK:	Mask to get KPIOSC
+ */
+enum nvme_id_ctrl_nvm_kpiocap {
+	NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_SHIFT	= 0,
+	NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_MASK	= 0x1,
+	NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_SHIFT	= 1,
+	NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_MASK	= 0x1,
+};
+
+#define NVME_ID_CTRL_NVM_KPIOCAP_KPIOS(kpiocap)	NVME_GET(kpiocap, ID_CTRL_NVM_KPIOCAP_KPIOS)
+#define NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC(kpiocap)	NVME_GET(kpiocap, ID_CTRL_NVM_KPIOCAP_KPIOSC)
+
+/**
+ * enum nvme_id_ctrl_nvm_aocs - Admin Optional Command Support
+ * @NVME_ID_CTRL_NVM_AOCS_RALBAS_SHIFT:	Shift amount to get Reporting
+ *						Allocated LBA Supported (RALBAS)
+ * @NVME_ID_CTRL_NVM_AOCS_RALBAS_MASK:	Mask to get RALBAS
+ */
+enum nvme_id_ctrl_nvm_aocs {
+	NVME_ID_CTRL_NVM_AOCS_RALBAS_SHIFT	= 0,
+	NVME_ID_CTRL_NVM_AOCS_RALBAS_MASK	= 0x1,
+};
+
+#define NVME_ID_CTRL_NVM_AOCS_RALBAS(aocs)	NVME_GET(aocs, ID_CTRL_NVM_AOCS_RALBAS)
+
+/**
  * struct nvme_id_ctrl_nvm - I/O Command Set Specific Identify Controller data structure
  * @vsl:	Verify Size Limit
  * @wzsl:	Write Zeroes Size Limit
