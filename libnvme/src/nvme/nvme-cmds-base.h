@@ -72,6 +72,13 @@ enum {
 	NVME_IDENTIFY_CDW14_UUID_MASK				= 0x7f,
 
 
+	/* Abort - Admin Opcode 0x08 */
+	NVME_ABORT_CDW10_SQID_SHIFT				= 0,
+	NVME_ABORT_CDW10_CID_SHIFT				= 16,
+	NVME_ABORT_CDW10_SQID_MASK				= 0xffff,
+	NVME_ABORT_CDW10_CID_MASK				= 0xffff,
+
+
 	/* Set Features - Admin Opcode 0x09 */
 	NVME_SET_FEATURES_CDW10_FID_SHIFT			= 0,
 	NVME_SET_FEATURES_CDW10_SV_SHIFT			= 31,
@@ -1902,6 +1909,41 @@ nvme_init_identify_command_set_structure(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_abort() - Initialize passthru command for
+ * Abort command
+ * @cmd:	Passthru command to use
+ * @sqid:	Submission Queue Identifier (SQID) of the command to abort
+ * @cid:	Command Identifier (CID) of the command to abort
+ *
+ * Initializes the passthru command buffer for the Abort command.
+ */
+static inline void
+nvme_init_abort(struct libnvme_passthru_cmd *cmd, __u16 sqid, __u16 cid)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_abort_cmd;
+	cmd->cdw10 = NVME_FIELD_ENCODE(cid, NVME_ABORT_CDW10_CID_SHIFT,
+					NVME_ABORT_CDW10_CID_MASK) |
+		     NVME_FIELD_ENCODE(sqid, NVME_ABORT_CDW10_SQID_SHIFT,
+					NVME_ABORT_CDW10_SQID_MASK);
+}
+
+/**
+ * nvme_init_async_event() - Initialize passthru command for
+ * Asynchronous Event Request command
+ * @cmd:	Passthru command to use
+ *
+ * Initializes the passthru command buffer for the Asynchronous Event
+ * Request command. All command specific fields are reserved.
+ */
+static inline void
+nvme_init_async_event(struct libnvme_passthru_cmd *cmd)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_async_event;
+}
+
+/**
  * nvme_init_set_features() - Initialize passthru command for
  * Set Features
  * @cmd:	Passthru command to use
@@ -3504,6 +3546,21 @@ nvme_init_ns_detach_ctrls(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
+ * nvme_init_keep_alive() - Initialize passthru command for
+ * Keep Alive command
+ * @cmd:	Passthru command to use
+ *
+ * Initializes the passthru command buffer for the Keep Alive command. All
+ * command specific fields are reserved.
+ */
+static inline void
+nvme_init_keep_alive(struct libnvme_passthru_cmd *cmd)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_keep_alive;
+}
+
+/**
  * nvme_init_directive_send() - Initialize passthru command for Directive Send
  * @cmd:	Passthru command to use
  * @nsid:	Namespace ID, if applicable
@@ -3912,6 +3969,38 @@ nvme_init_lm_track_send(struct libnvme_passthru_cmd *cmd,
 			NVME_LM_TRACK_SEND_MOS_SHIFT,
 			NVME_LM_TRACK_SEND_MOS_MASK);
 	cmd->cdw11 = cdqid;
+}
+
+/**
+ * nvme_init_lm_track_receive() - Initialize passthru command for
+ * Track Receive command
+ * @cmd:	Passthru command to use
+ * @sel:	Select (SEL): This field specifies the type of management
+ *		operation to perform.
+ * @cntlid:	Controller Identifier (CNTLID): Specifies the identifier of
+ *		the controller for which the tracked memory changes, if any,
+ *		are to be returned. Used by the Tracked Memory Changes
+ *		management operation.
+ * @data:	Pointer to data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Track Receive command.
+ */
+static inline void
+nvme_init_lm_track_receive(struct libnvme_passthru_cmd *cmd,
+		__u8 sel, __u16 cntlid, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_track_receive;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->data_len = len;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_LM_TRACK_RECV_SEL_SHIFT,
+			NVME_LM_TRACK_RECV_SEL_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(cntlid,
+			NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_SHIFT,
+			NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_MASK);
+	cmd->cdw12 = len ? (__u32)((len - 1) / sizeof(__u32)) : 0;
 }
 
 /**

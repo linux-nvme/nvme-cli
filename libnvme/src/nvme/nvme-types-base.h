@@ -9823,6 +9823,85 @@ enum nvme_lm_track_send_fields {
 #define NVME_LM_LACT(fields)		NVME_GET(fields, LM_LACT)
 
 /**
+ * enum nvme_lm_track_receive_fields - Track Receive command fields
+ *
+ * @NVME_LM_TRACK_RECV_SEL_SHIFT:		Shift to set Select (SEL) field
+ * @NVME_LM_TRACK_RECV_SEL_MASK:		Mask to set SEL field
+ * @NVME_LM_SEL_TRACKED_MEMORY_CHANGES:	Tracked Memory Changes select option
+ * @NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_SHIFT: Shift amount to set Controller
+ *						Identifier (CNTLID)
+ * @NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_MASK: Mask to set CNTLID
+ */
+enum nvme_lm_track_receive_fields {
+	NVME_LM_TRACK_RECV_SEL_SHIFT			= 0,
+	NVME_LM_TRACK_RECV_SEL_MASK			= 0xff,
+	NVME_LM_SEL_TRACKED_MEMORY_CHANGES		= 0,
+
+	NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_SHIFT	= 0,
+	NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_MASK	= 0xffff,
+};
+
+#define NVME_LM_TRACK_RECV_SEL(fields)	NVME_GET(fields, LM_TRACK_RECV_SEL)
+
+/**
+ * enum nvme_lm_tracked_memory_change_attrb - Tracked Memory Change Data
+ * Structure Attributes (ATTRB) field
+ *
+ * @NVME_LM_TMC_ATTRB_MTR_SHIFT:	Shift to get More To Report (MTR)
+ * @NVME_LM_TMC_ATTRB_MTR_MASK:	Mask to get MTR
+ * @NVME_LM_TMC_ATTRB_SUSP_SHIFT:	Shift to get Suspended (SUSP)
+ * @NVME_LM_TMC_ATTRB_SUSP_MASK:	Mask to get SUSP
+ */
+enum nvme_lm_tracked_memory_change_attrb {
+	NVME_LM_TMC_ATTRB_MTR_SHIFT	= 0,
+	NVME_LM_TMC_ATTRB_MTR_MASK	= 0x1,
+	NVME_LM_TMC_ATTRB_SUSP_SHIFT	= 1,
+	NVME_LM_TMC_ATTRB_SUSP_MASK	= 0x1,
+};
+
+#define NVME_LM_TMC_ATTRB_MTR(attrb)	NVME_GET(attrb, LM_TMC_ATTRB_MTR)
+#define NVME_LM_TMC_ATTRB_SUSP(attrb)	NVME_GET(attrb, LM_TMC_ATTRB_SUSP)
+
+/**
+ * struct nvme_lm_tracked_memory_changed_descriptor - Tracked Memory Changed
+ * Descriptor
+ *
+ * @saddr:	Start Address (SADDR)
+ * @len:	Length (LEN), in units of the tracking granularity indicated
+ *		by @rpmpg in &struct nvme_lm_tracked_memory_change_data
+ * @rsvd12:	Reserved
+ */
+struct nvme_lm_tracked_memory_changed_descriptor {
+	__le64	saddr;
+	__le32	len;
+	__u8	rsvd12[4];
+};
+
+/**
+ * struct nvme_lm_tracked_memory_change_data - Tracked Memory Change Data
+ * Structure returned by the Track Receive command's Tracked Memory Changes
+ * management operation
+ *
+ * @ver:	Version (VER)
+ * @attrb:	Attributes (ATTRB), see &enum nvme_lm_tracked_memory_change_attrb
+ * @cntlid:	Controller Identifier (CNTLID) whose memory modifications are
+ *		being tracked and reported
+ * @ntmcd:	Number of Tracked Memory Changed Descriptors (NTMCD)
+ * @rpmpg:	Reported Memory Range Granularity (RPMPG)
+ * @rsvd10:	Reserved
+ * @desc:	Tracked Memory Changed Descriptor list
+ */
+struct nvme_lm_tracked_memory_change_data {
+	__u8	ver;
+	__u8	attrb;
+	__le16	cntlid;
+	__le32	ntmcd;
+	__le16	rpmpg;
+	__u8	rsvd10[6];
+	struct nvme_lm_tracked_memory_changed_descriptor desc[];
+};
+
+/**
  * enum nvme_lm_migration_send_fields - Migration Send command fields
  *
  * @NVME_LM_MIGRATION_SEND_MOS_SHIFT:		Shift to set Management Operation Specific (MOS)
