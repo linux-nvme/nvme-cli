@@ -4845,6 +4845,90 @@ nvme_init_clear_export_nvm_res(struct libnvme_passthru_cmd *cmd)
 }
 
 /**
+ * nvme_init_manage_export_nvms_receive() - Initialize passthru command for
+ * Manage Exported NVM Subsystem Receive
+ * @cmd:	Passthru command to use
+ * @sel:	Select (SEL): management operation to perform, see &enum
+ *		nvme_manage_export_nvms_recv_sel
+ * @mos:	Management Operation Specific (MOS): specific to @sel
+ * @mose:	Management Operation Specific Extended (MOSE): specific to
+ *		@sel
+ * @mosi:	Management Operation Specific Identifier (MOSI): specific to
+ *		@sel
+ * @ol:		Offset Lower (OL), in dwords: specific to @sel
+ * @ou:		Offset Upper (OU), in dwords: specific to @sel
+ * @numdl:	Number of Dwords (NUMDL) requested, 0's based: specific to
+ *		@sel
+ * @data:	Pointer to data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Receive command.
+ */
+static inline void
+nvme_init_manage_export_nvms_receive(struct libnvme_passthru_cmd *cmd,
+		__u8 sel, __u8 mos, __u16 mose, __u16 mosi,
+		__u32 ol, __u32 ou, __u32 numdl, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_manage_export_nvms_receive;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_SEL_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_SEL_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOS_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOS_MASK) |
+		     NVME_FIELD_ENCODE(mose,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOSE_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOSE_MASK);
+	cmd->cdw12 = ol;
+	cmd->cdw13 = ou;
+	cmd->cdw14 = NVME_FIELD_ENCODE(mosi,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW14_MOSI_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_RECV_CDW14_MOSI_MASK);
+	cmd->cdw15 = numdl;
+}
+
+/**
+ * nvme_init_manage_export_nvms_receive_create() - Initialize passthru
+ * command for Manage Exported NVM Subsystem Receive - Create Exported NVM
+ * Subsystem
+ * @cmd:	Passthru command to use
+ * @tr:		Template Required (TR)
+ * @ensti:	Exported NVM Subsystem Template Index (ENSTI), used if @tr is
+ *		set. Indexes the Exported NVM Subsystem Template UUID List,
+ *		see %NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST.
+ * @ra:		Restricted Access (RA): message-based transports only,
+ *		ignored by memory-based transports
+ * @data:	Create Exported NVM Subsystem data buffer, see &struct
+ *		nvme_exported_nvm_subsys_create_data. The assigned Exported
+ *		NVM Subsystem NQN is returned in this same buffer.
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Receive command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_RECV_SEL_CREATE. The created Exported NVM
+ * Subsystem Identifier is returned in the CQE result, see &enum
+ * nvme_export_nvms_create_cqe_dw0.
+ */
+static inline void
+nvme_init_manage_export_nvms_receive_create(struct libnvme_passthru_cmd *cmd,
+		bool tr, __u8 ensti, bool ra,
+		struct nvme_exported_nvm_subsys_create_data *data)
+{
+	__u8 mos = ra ? NVME_EXPORT_NVMS_CREATE_MOS_RA : 0;
+
+	nvme_init_manage_export_nvms_receive(cmd,
+		NVME_MANAGE_EXPORT_NVMS_RECV_SEL_CREATE, mos, 0, 0, 0, 0, 0,
+		data, sizeof(*data));
+	cmd->cdw11 = NVME_FIELD_ENCODE(ensti,
+			NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_SHIFT,
+			NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_MASK) |
+		     (tr ? NVME_EXPORT_NVMS_CREATE_CDW11_TR : 0);
+}
+
+/**
   * nvme_init_lockdown() - Initialize passthru command for Lockdown
   * @cmd:	Passthru command to use
   * @scp:	Scope of the command
