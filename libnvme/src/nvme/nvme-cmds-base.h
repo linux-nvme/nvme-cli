@@ -2863,6 +2863,34 @@ nvme_init_set_features_power_loss_signal(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_set_features_perf_characteristics() - Initialize passthru
+ * command for Performance Characteristics
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @attri:	Attribute Index (ATTRI)
+ * @rvspa:	Revert Vendor Specific Performance Attribute (RVSPA)
+ * @data:	Pointer to structure nvme_perf_characteristics
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_PERF_CHARACTERISTICS
+ */
+static inline void
+nvme_init_set_features_perf_characteristics(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 attri, bool rvspa,
+		struct nvme_perf_characteristics *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_PERF_CHARACTERISTICS, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(attri,
+				NVME_FEAT_PERFC_ATTRI_SHIFT,
+				NVME_FEAT_PERFC_ATTRI_MASK) |
+		     NVME_FIELD_ENCODE(rvspa,
+				NVME_FEAT_PERFC_RVSPA_SHIFT,
+				NVME_FEAT_PERFC_RVSPA_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
  * nvme_init_set_features_fdp() - Initialize passthru command for
  * Flexible Data Placement
  * @cmd:	Passthru command to use
@@ -3947,6 +3975,31 @@ nvme_init_get_features_power_loss_signal(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_POWER_LOSS_SIGNAL, sel);
+}
+
+/**
+ * nvme_init_get_features_perf_characteristics() - Initialize passthru
+ * command for Get Features - Performance Characteristics
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @attri:	Attribute Index (ATTRI)
+ * @data:	Buffer for returned struct nvme_perf_characteristics
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_PERF_CHARACTERISTICS
+ */
+static inline void
+nvme_init_get_features_perf_characteristics(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u8 attri,
+		struct nvme_perf_characteristics *data)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_PERF_CHARACTERISTICS, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(attri,
+				NVME_FEAT_PERFC_ATTRI_SHIFT,
+				NVME_FEAT_PERFC_ATTRI_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
 }
 
 /**
