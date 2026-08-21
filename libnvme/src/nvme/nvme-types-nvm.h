@@ -426,7 +426,7 @@ struct nvme_fdp_event_realloc {
 	__le16 nlbam;
 	__le64 lba;
 	__u8  rsvd12[4];
-};
+} __attribute__((packed));
 
 /**
  * enum nvme_fdp_event_flags - FDP Event Flags
