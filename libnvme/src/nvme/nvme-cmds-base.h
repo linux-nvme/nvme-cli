@@ -5206,6 +5206,148 @@ nvme_init_manage_export_nvms_send_delete(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_manage_export_nvms_send_change_access_mode() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Send - Change Access
+ * Mode (message-based transports only)
+ * @cmd:	Passthru command to use
+ * @ra:		Restricted Access (RA): if set, the Exported NVM Subsystem is
+ *		configured to restrict access to Host NQNs in its Allowed
+ *		Host List; if clear, unrestricted access is allowed
+ * @esubidv:	Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+ *		@esubid identifies the target Exported NVM Subsystem;
+ *		otherwise the target is identified by the SUBNQN in @data
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID), used if
+ *		@esubidv is set
+ * @data:	Exported NVM Subsystem NQN data buffer, see &struct
+ *		nvme_exported_nvm_subsys_nqn_data. Ignored if @esubidv is set.
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Send command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_SEND_SEL_CHANGE_ACCESS_MODE.
+ */
+static inline void
+nvme_init_manage_export_nvms_send_change_access_mode(
+		struct libnvme_passthru_cmd *cmd, bool ra,
+		bool esubidv, __u16 esubid,
+		struct nvme_exported_nvm_subsys_nqn_data *data)
+{
+	__u8 mos = ra ? NVME_EXPORT_NVMS_CHANGE_ACCESS_MODE_MOS_RA : 0;
+
+	nvme_init_manage_export_nvms_send(cmd,
+		NVME_MANAGE_EXPORT_NVMS_SEND_SEL_CHANGE_ACCESS_MODE, mos, 0,
+		esubidv, esubid,
+		esubidv ? NULL : data,
+		esubidv ? 0 : sizeof(*data));
+}
+
+/**
+ * nvme_init_manage_export_nvms_send_grant_host_access() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Send - Grant Host
+ * Access (message-based transports only)
+ * @cmd:	Passthru command to use
+ * @data:	Subsystem Management data buffer, see &struct
+ *		nvme_exported_subsys_mgmt_data
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Send command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_SEND_SEL_GRANT_HOST_ACCESS. Command Dword 14
+ * (ESUBIDV/ESUBID) is not used by this operation - the target Exported NVM
+ * Subsystem(s) are specified in @data.
+ */
+static inline void
+nvme_init_manage_export_nvms_send_grant_host_access(
+		struct libnvme_passthru_cmd *cmd,
+		struct nvme_exported_subsys_mgmt_data *data, __u32 len)
+{
+	nvme_init_manage_export_nvms_send(cmd,
+		NVME_MANAGE_EXPORT_NVMS_SEND_SEL_GRANT_HOST_ACCESS, 0, 0,
+		false, 0, data, len);
+}
+
+/**
+ * nvme_init_manage_export_nvms_send_revoke_host_access() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Send - Revoke Host
+ * Access (message-based transports only)
+ * @cmd:	Passthru command to use
+ * @data:	Subsystem Management data buffer, see &struct
+ *		nvme_exported_subsys_mgmt_data
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Send command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_SEND_SEL_REVOKE_HOST_ACCESS. Command Dword 14
+ * (ESUBIDV/ESUBID) is not used by this operation - the target Exported NVM
+ * Subsystem(s) are specified in @data.
+ */
+static inline void
+nvme_init_manage_export_nvms_send_revoke_host_access(
+		struct libnvme_passthru_cmd *cmd,
+		struct nvme_exported_subsys_mgmt_data *data, __u32 len)
+{
+	nvme_init_manage_export_nvms_send(cmd,
+		NVME_MANAGE_EXPORT_NVMS_SEND_SEL_REVOKE_HOST_ACCESS, 0, 0,
+		false, 0, data, len);
+}
+
+/**
+ * nvme_init_manage_export_nvms_send_associate_controllers() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Send - Associate
+ * Controllers (memory-based transports only)
+ * @cmd:	Passthru command to use
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID) of the target
+ *		Exported NVM Subsystem
+ * @data:	Associate Controllers data buffer, see &struct
+ *		nvme_exported_ctrl_assoc_data
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Send command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_SEND_SEL_ASSOCIATE_CONTROLLERS.
+ */
+static inline void
+nvme_init_manage_export_nvms_send_associate_controllers(
+		struct libnvme_passthru_cmd *cmd, __u16 esubid,
+		struct nvme_exported_ctrl_assoc_data *data, __u32 len)
+{
+	nvme_init_manage_export_nvms_send(cmd,
+		NVME_MANAGE_EXPORT_NVMS_SEND_SEL_ASSOCIATE_CONTROLLERS, 0, 0,
+		true, esubid, data, len);
+}
+
+/**
+ * nvme_init_manage_export_nvms_send_set_config_state() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Send - Set Exported
+ * Configuration State
+ * @cmd:	Passthru command to use
+ * @esubidv:	Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+ *		@esubid identifies the target Exported NVM Subsystem;
+ *		otherwise the target is identified by the SUBNQN in @data
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID), used if
+ *		@esubidv is set
+ * @data:	Exported NVM Subsystem Template specific configuration state
+ *		data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Send command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_SEND_SEL_SET_CONFIG_STATE. On failure with
+ * status %NVME_SC_INVALID_EXPORTED_CONFIG_STATE, the location of the first
+ * invalid bit is returned in the CQE result, see &enum
+ * nvme_export_nvms_set_config_state_cqe_dw0.
+ */
+static inline void
+nvme_init_manage_export_nvms_send_set_config_state(
+		struct libnvme_passthru_cmd *cmd, bool esubidv, __u16 esubid,
+		void *data, __u32 len)
+{
+	nvme_init_manage_export_nvms_send(cmd,
+		NVME_MANAGE_EXPORT_NVMS_SEND_SEL_SET_CONFIG_STATE, 0, 0,
+		esubidv, esubid, data, len);
+	cmd->cdw15 = len ? (len - 1) / sizeof(__u32) : 0;
+}
+
+/**
   * nvme_init_lockdown() - Initialize passthru command for Lockdown
   * @cmd:	Passthru command to use
   * @scp:	Scope of the command
