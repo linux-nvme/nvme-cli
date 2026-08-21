@@ -18,6 +18,8 @@
 extern __u8 *ptelemetry_buffer;
 extern __u8 *pstring_buffer;
 
+#define OCP_TELEMETRY_DESCRIPTION_MAX 256
+
 /*****************************************************************************
  * Telemetry Statistics ID's and Strings
  *****************************************************************************/
