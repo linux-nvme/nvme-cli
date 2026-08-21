@@ -1978,7 +1978,9 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	__u32 dlpcn = NVME_CTRL_OAES_DLPCN(oaes);
 	__u32 rsvd28 = (oaes & 0x70000000) >> 28;
 	__u32 zdcn = NVME_CTRL_OAES_ZDCN(oaes);
-	__u32 rsvd20 = (oaes & 0x7fe0000) >> 20;
+	__u32 rsvd23 = (oaes >> 23) & 0xf;
+	__u32 rlcc = NVME_CTRL_OAES_RLCC(oaes);
+	__u32 rsvd20 = (oaes >> 20) & 0x3;
 	__u32 ansan = NVME_CTRL_OAES_ANSAN(oaes);
 	__u32 rsvd18 = (oaes >> 18) & 0x1;
 	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
@@ -1999,8 +2001,12 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 		printf("  [30:28] : %#x\tReserved\n", rsvd28);
 	printf("  [27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
 			zdcn, zdcn ? "" : "Not ");
+	if (rsvd23)
+		printf("  [26:23] : %#x\tReserved\n", rsvd23);
+	printf("  [22:22] : %#x\tRate Limiting Configuration Change Notices %sSupported\n",
+			rlcc, rlcc ? "" : "Not ");
 	if (rsvd20)
-		printf("  [26:20] : %#x\tReserved\n", rsvd20);
+		printf("  [21:20] : %#x\tReserved\n", rsvd20);
 	printf("  [19:19] : %#x\tAllocated Namespace Attribute Notices %sSupported\n",
 			ansan, ansan ? "" : "Not ");
 	if (rsvd18)
@@ -5334,6 +5340,27 @@ static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
 }
 
+static void stdout_rate_limiting_data(struct nvme_rate_limiting_data *rld)
+{
+	__u16 rlc = le16_to_cpu(rld->rlc);
+
+	printf("\tRate Limiting Enable (RLE): %s\n",
+	       NVME_RATE_LIMITING_RLC_RLE(rlc) ? "Enabled" : "Disabled");
+	printf("\tRate Limiting Mode (RLM): %u - %s\n",
+	       NVME_RATE_LIMITING_RLC_RLM(rlc),
+	       NVME_RATE_LIMITING_RLC_RLM(rlc) == NVME_RATE_LIMITING_MODE_SOFT_LIMIT ?
+	       "Soft Limit" : "Hard Limit");
+	printf("\tBandwidth Scale Factor (BWSF): %u\n", rld->bwsf);
+	printf("\tTotal Bandwidth Value (TBWV): %"PRIu64"\n", le64_to_cpu(rld->tbwv));
+	printf("\tWrite Bandwidth Value (WBWV): %"PRIu64"\n", le64_to_cpu(rld->wbwv));
+	printf("\tTotal IOPS (TIOPS): %u\n", le32_to_cpu(rld->tiops));
+	printf("\tWrite IOPS (WIOPS): %u\n", le32_to_cpu(rld->wiops));
+	printf("\tRead IOPS Ratio (RIOPSR): %u\n", rld->riopsr);
+	printf("\tWrite IOPS Ratio (WIOPSR): %u\n", rld->wiopsr);
+	printf("\tRead Bandwidth Ratio (RBWR): %u\n", rld->rbwr);
+	printf("\tWrite Bandwidth Ratio (WBWR): %u\n", rld->wbwr);
+}
+
 static void stdout_feat_perfc_std(struct nvme_std_perf_attr *data)
 {
 	printf("random 4 kib average read latency (R4KARL): %s (0x%02x)\n",
@@ -5761,6 +5788,10 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
 		field = NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result);
 		printf("\tAction (ACT): %u\n", field);
+		break;
+	case NVME_FEAT_FID_RATE_LIMITING:
+		if (buf)
+			stdout_rate_limiting_data((struct nvme_rate_limiting_data *)buf);
 		break;
 	default:
 		break;
