@@ -7707,6 +7707,80 @@ struct nvme_exported_nvm_subsys_create_data {
 };
 
 /**
+ * struct nvme_exported_nvm_subsys_nqn_data - Exported NVM Subsystem NQN
+ *		       Data Buffer, used by Manage Exported NVM Subsystem
+ *		       Send operations that identify the target Exported NVM
+ *		       Subsystem by NQN instead of by Exported NVM Subsystem
+ *		       Identifier (ESUBID)
+ * @esubnqn:	Exported NVM Subsystem NQN (ESUBNQN)
+ */
+struct nvme_exported_nvm_subsys_nqn_data {
+	__u8	esubnqn[256];
+};
+
+/**
+ * enum nvme_manage_export_nvms_send_sel - Manage Exported NVM Subsystem
+ *		       Send - Select (SEL)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_SEL_DELETE:  Delete
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_SEL_CHANGE_ACCESS_MODE: Change Access Mode
+ *		       (message-based transports only)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_SEL_GRANT_HOST_ACCESS: Grant Host Access
+ *		       (message-based transports only)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_SEL_REVOKE_HOST_ACCESS: Revoke Host Access
+ *		       (message-based transports only)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_SEL_ASSOCIATE_CONTROLLERS: Associate
+ *		       Controllers (memory-based transports only)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_SEL_SET_CONFIG_STATE: Set Exported
+ *		       Configuration State
+ */
+enum nvme_manage_export_nvms_send_sel {
+	NVME_MANAGE_EXPORT_NVMS_SEND_SEL_DELETE		= 0x01,
+	NVME_MANAGE_EXPORT_NVMS_SEND_SEL_CHANGE_ACCESS_MODE	= 0x02,
+	NVME_MANAGE_EXPORT_NVMS_SEND_SEL_GRANT_HOST_ACCESS	= 0x03,
+	NVME_MANAGE_EXPORT_NVMS_SEND_SEL_REVOKE_HOST_ACCESS	= 0x04,
+	NVME_MANAGE_EXPORT_NVMS_SEND_SEL_ASSOCIATE_CONTROLLERS	= 0x05,
+	NVME_MANAGE_EXPORT_NVMS_SEND_SEL_SET_CONFIG_STATE	= 0x06,
+};
+
+/**
+ * enum nvme_manage_export_nvms_send_cdw10 - Manage Exported NVM Subsystem
+ *		       Send - Command Dword 10
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_SEL_SHIFT:  Shift amount to set Select
+ *		       (SEL), see &enum nvme_manage_export_nvms_send_sel
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_SEL_MASK:   Mask to set SEL
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOS_SHIFT:  Shift amount to set
+ *		       Management Operation Specific (MOS)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOS_MASK:   Mask to set MOS
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOSE_SHIFT: Shift amount to set
+ *		       Management Operation Specific Extended (MOSE)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOSE_MASK:  Mask to set MOSE
+ */
+enum nvme_manage_export_nvms_send_cdw10 {
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_SEL_SHIFT	= 0,
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_SEL_MASK	= 0xff,
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOS_SHIFT	= 8,
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOS_MASK	= 0xff,
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOSE_SHIFT	= 16,
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOSE_MASK	= 0xffff,
+};
+
+/**
+ * enum nvme_manage_export_nvms_send_cdw14 - Manage Exported NVM Subsystem
+ *		       Send - Command Dword 14
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBIDV: Exported NVM Subsystem
+ *		       Identifier Valid (ESUBIDV)
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBID_SHIFT: Shift amount to set
+ *		       Exported NVM Subsystem Identifier (ESUBID), used if
+ *		       ESUBIDV is set
+ * @NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBID_MASK: Mask to set ESUBID
+ */
+enum nvme_manage_export_nvms_send_cdw14 {
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBIDV		= 1 << 7,
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBID_SHIFT	= 16,
+	NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBID_MASK		= 0xffff,
+};
+
+/**
  * enum nvme_send_discovery_log_page_rlps - Send Discovery Log Page (SDLP) -
  *					     Requested Log Page Status (RLPS)
  * @NVME_SDLP_RLPS_VALID:	 Valid Log Page: the requested log page is
@@ -8298,6 +8372,15 @@ struct nvme_pull_model_ddc_req_log {
  *				      the Cross-Controller Reset Limit field
  *				      in the Identify Controller data
  *				      structure.
+ * @NVME_SC_CONTROLLER_ACTIVE:	      Controller Active: for a Manage Exported
+ *				      NVM Subsystem Send Delete operation, an
+ *				      Underlying Controller in the specified
+ *				      Exported NVM Subsystem is able to
+ *				      process commands. For an Associate
+ *				      Controllers operation, an Underlying
+ *				      Controller being associated with an
+ *				      Exported NVM Subsystem was in a state
+ *				      that could process commands.
  * @NVME_SC_BAD_ATTRIBUTES:	      Conflicting Dataset Management Attributes
  * @NVME_SC_INVALID_PI:		      Invalid Protection Information
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
@@ -8593,6 +8676,11 @@ enum nvme_status_field {
 	NVME_SC_CROSS_CTRL_RESET_IN_PROGRESS	= 0x3f,
 	NVME_SC_CROSS_CTRL_RESET_LOG_FULL	= 0x40,
 	NVME_SC_CROSS_CTRL_RESET_LIMIT_EXCEEDED = 0x41,
+
+	/*
+	 * Command Set Specific - Manage Exported NVM Subsystem Send
+	 */
+	NVME_SC_CONTROLLER_ACTIVE		= 0x42,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:
