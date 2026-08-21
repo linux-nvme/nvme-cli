@@ -197,6 +197,8 @@ static bool test_add_columns_invalid_width(void)
 	t = shr_table_init_with_columns(columns, 2);
 	pass &= check_bool("fixed width smaller than name length fails",
 			    t == NULL);
+	if (t)
+		shr_table_free(t);
 
 	return pass;
 }
