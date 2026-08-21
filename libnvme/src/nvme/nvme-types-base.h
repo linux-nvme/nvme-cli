@@ -7508,12 +7508,144 @@ enum nvme_ae_info_notice {
 
 
 /**
+ * enum nvme_cross_ctrl_reset_cdw10 - Cross-Controller Reset - Command
+ *				       Dword 10
+ * @NVME_CROSS_CTRL_RESET_CDW10_ICID_SHIFT: Shift amount to set Impacted
+ *					     Controller ID (ICID)
+ * @NVME_CROSS_CTRL_RESET_CDW10_ICID_MASK:  Mask to set ICID
+ * @NVME_CROSS_CTRL_RESET_CDW10_CIU_SHIFT:  Shift amount to set Controller
+ *					     Instance Uniquifier (CIU)
+ * @NVME_CROSS_CTRL_RESET_CDW10_CIU_MASK:   Mask to set CIU
+ */
+enum nvme_cross_ctrl_reset_cdw10 {
+	NVME_CROSS_CTRL_RESET_CDW10_ICID_SHIFT	= 0,
+	NVME_CROSS_CTRL_RESET_CDW10_ICID_MASK	= 0xffff,
+	NVME_CROSS_CTRL_RESET_CDW10_CIU_SHIFT	= 16,
+	NVME_CROSS_CTRL_RESET_CDW10_CIU_MASK	= 0xff,
+};
+
+/**
+ * enum nvme_cross_ctrl_reset_cqe_dw0 - Cross-Controller Reset Command -
+ *					 Completion Queue Entry Dword 0
+ * @NVME_CROSS_CTRL_RESET_CQE_IRS:  Immediate Reset Successful (IRS)
+ * @NVME_CROSS_CTRL_RESET_CQE_V:    Validated (V). Undefined if IRS is
+ *				    cleared to '0'.
+ * @NVME_CROSS_CTRL_RESET_CQE_CLRI: Controller Level Reset Initiated (CLRI).
+ *				    Undefined if IRS is cleared to '0'.
+ */
+enum nvme_cross_ctrl_reset_cqe_dw0 {
+	NVME_CROSS_CTRL_RESET_CQE_IRS	= 1 << 0,
+	NVME_CROSS_CTRL_RESET_CQE_V	= 1 << 1,
+	NVME_CROSS_CTRL_RESET_CQE_CLRI	= 1 << 2,
+};
+
+/**
  * enum nvme_cross_ctrl_reset_lsp - Cross-Controller Reset Log Specific
  *				     Parameter Field
  * @NVME_CROSS_CTRL_RESET_LSP_RMC: Remove Completed (RMC)
  */
 enum nvme_cross_ctrl_reset_lsp {
 	NVME_CROSS_CTRL_RESET_LSP_RMC	= 1 << 0,
+};
+
+/**
+ * enum nvme_fabric_zoning_recv_cdw12 - Fabric Zoning Receive - Command
+ *					 Dword 12
+ * @NVME_FABRIC_ZONING_RECV_CDW12_NUMD_SHIFT: Shift amount to set Number of
+ *					       Dwords (NUMD)
+ * @NVME_FABRIC_ZONING_RECV_CDW12_NUMD_MASK:  Mask to set NUMD
+ * @NVME_FABRIC_ZONING_RECV_CDW12_ZDKC:	     ZDK Context (ZDKC)
+ */
+enum nvme_fabric_zoning_recv_cdw12 {
+	NVME_FABRIC_ZONING_RECV_CDW12_NUMD_SHIFT	= 0,
+	NVME_FABRIC_ZONING_RECV_CDW12_NUMD_MASK	= 0xfffffff,
+	NVME_FABRIC_ZONING_RECV_CDW12_ZDKC		= 1 << 28,
+};
+
+/**
+ * enum nvme_fabric_zoning_recv_cqe_dw0 - Fabric Zoning Receive - Completion
+ *					   Queue Entry Dword 0
+ * @NVME_FABRIC_ZONING_RECV_CQE_LF: Last Fragment (LF)
+ */
+enum nvme_fabric_zoning_recv_cqe_dw0 {
+	NVME_FABRIC_ZONING_RECV_CQE_LF	= 1 << 31,
+};
+
+/**
+ * enum nvme_fabric_zoning_send_cdw12 - Fabric Zoning Send - Command
+ *					 Dword 12
+ * @NVME_FABRIC_ZONING_SEND_CDW12_NUMD_SHIFT: Shift amount to set Number of
+ *					       Dwords (NUMD)
+ * @NVME_FABRIC_ZONING_SEND_CDW12_NUMD_MASK:  Mask to set NUMD
+ * @NVME_FABRIC_ZONING_SEND_CDW12_ZDKC:	     ZDK Context (ZDKC)
+ * @NVME_FABRIC_ZONING_SEND_CDW12_LF:	     Last Fragment (LF)
+ */
+enum nvme_fabric_zoning_send_cdw12 {
+	NVME_FABRIC_ZONING_SEND_CDW12_NUMD_SHIFT	= 0,
+	NVME_FABRIC_ZONING_SEND_CDW12_NUMD_MASK	= 0xfffffff,
+	NVME_FABRIC_ZONING_SEND_CDW12_ZDKC		= 1 << 28,
+	NVME_FABRIC_ZONING_SEND_CDW12_LF		= 1 << 31,
+};
+
+/**
+ * enum nvme_send_discovery_log_page_rlps - Send Discovery Log Page (SDLP) -
+ *					     Requested Log Page Status (RLPS)
+ * @NVME_SDLP_RLPS_VALID:	 Valid Log Page: the requested log page is
+ *				 carried in the command.
+ * @NVME_SDLP_RLPS_INVALID:	 Invalid Log Page: the requested log page is
+ *				 invalid or not supported.
+ * @NVME_SDLP_RLPS_NOT_ALLOWED: Not Allowed Log Page: the requested log page
+ *				 is not allowed to be transferred by an SDLP
+ *				 command.
+ * @NVME_SDLP_RLPS_NOT_SUCCESSFUL: Not Successful: retrieving the requested
+ *				 log page failed. Further details are
+ *				 provided in the SCT and SC fields.
+ */
+enum nvme_send_discovery_log_page_rlps {
+	NVME_SDLP_RLPS_VALID		= 0x0,
+	NVME_SDLP_RLPS_INVALID		= 0x1,
+	NVME_SDLP_RLPS_NOT_ALLOWED	= 0x2,
+	NVME_SDLP_RLPS_NOT_SUCCESSFUL	= 0x3,
+};
+
+/**
+ * enum nvme_send_discovery_log_page_cdw10 - Send Discovery Log Page (SDLP) -
+ *					      Command Dword 10
+ * @NVME_SDLP_CDW10_TLID_SHIFT: Shift amount to set Transferred Log Page
+ *				Identifier (TLID)
+ * @NVME_SDLP_CDW10_TLID_MASK:	Mask to set TLID
+ * @NVME_SDLP_CDW10_TLSP_SHIFT: Shift amount to set Transferred Log Specific
+ *				Parameter (TLSP)
+ * @NVME_SDLP_CDW10_TLSP_MASK:	Mask to set TLSP
+ * @NVME_SDLP_CDW10_SC_SHIFT:	Shift amount to set Status Code (SC)
+ * @NVME_SDLP_CDW10_SC_MASK:	Mask to set SC
+ * @NVME_SDLP_CDW10_SCT_SHIFT:	Shift amount to set Status Code Type (SCT)
+ * @NVME_SDLP_CDW10_SCT_MASK:	Mask to set SCT
+ * @NVME_SDLP_CDW10_RLPS_SHIFT:	Shift amount to set Requested Log Page
+ *				Status (RLPS), see &enum
+ *				nvme_send_discovery_log_page_rlps
+ * @NVME_SDLP_CDW10_RLPS_MASK:	Mask to set RLPS
+ */
+enum nvme_send_discovery_log_page_cdw10 {
+	NVME_SDLP_CDW10_TLID_SHIFT	= 0,
+	NVME_SDLP_CDW10_TLID_MASK	= 0xff,
+	NVME_SDLP_CDW10_TLSP_SHIFT	= 8,
+	NVME_SDLP_CDW10_TLSP_MASK	= 0x7f,
+	NVME_SDLP_CDW10_SC_SHIFT	= 17,
+	NVME_SDLP_CDW10_SC_MASK		= 0xff,
+	NVME_SDLP_CDW10_SCT_SHIFT	= 25,
+	NVME_SDLP_CDW10_SCT_MASK	= 0x7,
+	NVME_SDLP_CDW10_RLPS_SHIFT	= 30,
+	NVME_SDLP_CDW10_RLPS_MASK	= 0x3,
+};
+
+/**
+ * enum nvme_send_discovery_log_page_cqe_dw0 - Send Discovery Log Page (SDLP)
+ *					 Completion Queue Entry Dword 0
+ * @NVME_SDLP_CQE_LPUR: Log Page Update Registration (LPUR)
+ */
+enum nvme_send_discovery_log_page_cqe_dw0 {
+	NVME_SDLP_CQE_LPUR	= 1 << 31,
 };
 
 /**
@@ -8021,6 +8153,23 @@ struct nvme_pull_model_ddc_req_log {
  *				      specified for the Power Limit feature is
  *				      invalid because that power limit prohibits
  *				      all operational power states.
+ * @NVME_SC_CROSS_CTRL_RESET_IN_PROGRESS: Cross-Controller Reset in Progress:
+ *				      there is already an in-progress
+ *				      Cross-Controller Reset operation that
+ *				      this controller caused to be initiated
+ *				      for the Impacted Controller.
+ * @NVME_SC_CROSS_CTRL_RESET_LOG_FULL: Cross-Controller Reset Log Page Full:
+ *				      the Cross-Controller Reset log page
+ *				      already contains the maximum number of
+ *				      entries.
+ * @NVME_SC_CROSS_CTRL_RESET_LIMIT_EXCEEDED: Cross-Controller Reset Limit
+ *				      Exceeded: the number of simultaneous
+ *				      in-progress Cross-Controller Reset
+ *				      operations this controller caused to be
+ *				      initiated is greater than or equal to
+ *				      the Cross-Controller Reset Limit field
+ *				      in the Identify Controller data
+ *				      structure.
  * @NVME_SC_BAD_ATTRIBUTES:	      Conflicting Dataset Management Attributes
  * @NVME_SC_INVALID_PI:		      Invalid Protection Information
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
@@ -8313,6 +8462,9 @@ enum nvme_status_field {
 	 * Command Set Specific - Set Features
 	 */
 	NVME_SC_INVALID_POWER_LIMIT		= 0x3e,
+	NVME_SC_CROSS_CTRL_RESET_IN_PROGRESS	= 0x3f,
+	NVME_SC_CROSS_CTRL_RESET_LOG_FULL	= 0x40,
+	NVME_SC_CROSS_CTRL_RESET_LIMIT_EXCEEDED = 0x41,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:
