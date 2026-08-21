@@ -23,6 +23,7 @@
 #include <nvme/ioctl.h>
 #include <nvme/nvme-types-base.h>
 #include <nvme/nvme-types-nvm.h>
+#include <nvme/nvme-types-slm.h>
 
 #ifndef NVME_FIELD_ENCODE
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -1284,6 +1285,27 @@ nvme_init_get_log_rate_limiting(struct libnvme_passthru_cmd *cmd,
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
 		NVME_LOG_LID_RATE_LIMITING, NVME_CSI_NVM,
+		log, len);
+	nvme_init_get_log_lpo(cmd, lpo);
+}
+
+/**
+ * nvme_init_get_log_host_addressable_ns() - Initialize passthru command for
+ * Host Addressable Namespaces
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset into log page
+ * @log:	Log page data buffer
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_HOST_ADDRESSABLE_NS
+ */
+static inline void
+nvme_init_get_log_host_addressable_ns(struct libnvme_passthru_cmd *cmd,
+		__u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_HOST_ADDRESSABLE_NS, NVME_CSI_SLM,
 		log, len);
 	nvme_init_get_log_lpo(cmd, lpo);
 }

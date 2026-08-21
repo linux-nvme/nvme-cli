@@ -1290,7 +1290,7 @@ struct nvme_id_psd {
  *	       Read Recovery Level is supported. If a bit is cleared, then the
  *	       corresponding Read Recovery Level is not supported.
  * @bpcap:     Boot Partition Capabilities, see &enum nvme_id_ctrl_bpcap.
- * @rsvd103:   Reserved
+ * @chsi:      CXL HDM Support Information, see &enum nvme_id_ctrl_chsi.
  * @nssl:      NVM Subsystem Shutdown Latency (NSSL). This field indicates the
  *	       typical latency in microseconds for an NVM Subsystem Shutdown to
  *	       complete.
@@ -1590,7 +1590,7 @@ struct nvme_id_ctrl {
 	__le32			ctratt;
 	__le16			rrls;
 	__u8			bpcap;
-	__u8			rsvd103;
+	__u8			chsi;
 	__le32			nssl;
 	__u8			rsvd108[2];
 	__u8			plsi;
@@ -2091,6 +2091,19 @@ enum nvme_id_ctrl_bpcap {
 	NVME_CTRL_BACAP_RPMBBPWPS_NOT_SUPPORTED	= 1,
 	NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED	= 2,
 };
+
+/**
+ * enum nvme_id_ctrl_chsi - CXL HDM Support Information
+ * @NVME_CTRL_CHSI_CHS_SHIFT:	Shift amount to get the CXL HDM Support (CHS)
+ *				from the &struct nvme_id_ctrl.chsi field.
+ * @NVME_CTRL_CHSI_CHS_MASK:	Mask to get CHS
+ */
+enum nvme_id_ctrl_chsi {
+	NVME_CTRL_CHSI_CHS_SHIFT	= 0,
+	NVME_CTRL_CHSI_CHS_MASK		= 0x1,
+};
+
+#define NVME_CTRL_CHSI_CHS(chsi)	NVME_GET(chsi, CTRL_CHSI_CHS)
 
 #define NVME_CTRL_BACAP_RPMBBPWPS(bpcap)	NVME_GET(bpcap, CTRL_BACAP_RPMBBPWPS)
 #define NVME_CTRL_BACAP_SFBPWPS(bpcap)		NVME_GET(bpcap, CTRL_BACAP_SFBPWPS)
@@ -8366,6 +8379,8 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_SANITIZE_NS_STATUS_LIST:	Sanitize Namespace Status List
  * @NVME_LOG_LID_RESERVATION:			Reservation Notification
  * @NVME_LOG_LID_SANITIZE:			Sanitize Status
+ * @NVME_LOG_LID_HOST_ADDRESSABLE_NS:		Host Addressable Namespaces, see
+ *						&struct nvme_host_addressable_ns_log
  * @NVME_LOG_LID_ZNS_CHANGED_ZONES:		Changed Zone List
  */
 enum nvme_cmd_get_log_lid {
@@ -8416,6 +8431,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_SANITIZE_NS_STATUS_LIST			= 0x7f,
 	NVME_LOG_LID_RESERVATION				= 0x80,
 	NVME_LOG_LID_SANITIZE					= 0x81,
+	NVME_LOG_LID_HOST_ADDRESSABLE_NS			= 0x85,
 	NVME_LOG_LID_ZNS_CHANGED_ZONES				= 0xbf,
 };
 
