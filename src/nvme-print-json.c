@@ -4203,6 +4203,34 @@ static void json_feature_show_fields_voltage_measurement(struct json_object *r,
 	obj_add_uint(r, "Action (ACT)", NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result));
 }
 
+static void json_rate_limiting_data(struct json_object *r, struct nvme_rate_limiting_data *rld)
+{
+	__u16 rlc = le16_to_cpu(rld->rlc);
+	__u16 rlm = NVME_RATE_LIMITING_RLC_RLM(rlc);
+
+	obj_add_str(r, "Rate Limiting Enable (RLE)",
+		    NVME_RATE_LIMITING_RLC_RLE(rlc) ? "Enabled" : "Disabled");
+	obj_add_uint(r, "Rate Limiting Mode (RLM)", rlm);
+	obj_add_str(r, "RLM description",
+		    rlm == NVME_RATE_LIMITING_MODE_SOFT_LIMIT ? "Soft Limit" :
+		    rlm == NVME_RATE_LIMITING_MODE_HARD_LIMIT ? "Hard Limit" : "Reserved");
+	obj_add_uint(r, "Bandwidth Scale Factor (BWSF)", rld->bwsf);
+	obj_add_uint64(r, "Total Bandwidth Value (TBWV)", le64_to_cpu(rld->tbwv));
+	obj_add_uint64(r, "Write Bandwidth Value (WBWV)", le64_to_cpu(rld->wbwv));
+	obj_add_uint(r, "Total IOPS (TIOPS)", le32_to_cpu(rld->tiops));
+	obj_add_uint(r, "Write IOPS (WIOPS)", le32_to_cpu(rld->wiops));
+	obj_add_uint(r, "Read IOPS Ratio (RIOPSR)", rld->riopsr);
+	obj_add_uint(r, "Write IOPS Ratio (WIOPSR)", rld->wiopsr);
+	obj_add_uint(r, "Read Bandwidth Ratio (RBWR)", rld->rbwr);
+	obj_add_uint(r, "Write Bandwidth Ratio (WBWR)", rld->wbwr);
+}
+
+static void json_feature_show_fields_rate_limiting(struct json_object *r, unsigned char *buf)
+{
+	if (buf)
+		json_rate_limiting_data(r, (struct nvme_rate_limiting_data *)buf);
+}
+
 static void json_feature_show(enum nvme_features_id fid, int sel,
 			      unsigned int result, void *buf, __u32 data_len)
 {
@@ -4362,6 +4390,9 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
 		json_feature_show_fields_voltage_measurement(r, result);
+		break;
+	case NVME_FEAT_FID_RATE_LIMITING:
+		json_feature_show_fields_rate_limiting(r, buf);
 		break;
 	default:
 		break;
