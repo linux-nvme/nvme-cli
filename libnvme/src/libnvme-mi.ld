@@ -21,6 +21,9 @@ LIBNVME_MI_3 {
 		libnvme_mi_init_transport_handle;
 		libnvme_mi_mi_config_get;
 		libnvme_mi_mi_config_set;
+		libnvme_mi_mi_pda_read;
+		libnvme_mi_mi_pda_write;
+		libnvme_mi_mi_pda_write_zeroes;
 		libnvme_mi_mi_read_mi_data_ctrl;
 		libnvme_mi_mi_read_mi_data_ctrl_list;
 		libnvme_mi_mi_read_mi_data_port;
