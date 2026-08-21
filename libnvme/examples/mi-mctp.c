@@ -573,7 +573,7 @@ int do_security_info(libnvme_mi_ep_t ep, int argc, char **argv)
 	}
 
 	n_proto = be16_to_cpu(proto_info.len);
-	if (data_len < 6 + n_proto) {
+	if (data_len < offsetof(typeof(proto_info), protocols) + n_proto) {
 		warnx("Short response in security receive command (%d bytes), "
 		      "for %d protocols", data_len, n_proto);
 		return -1;
