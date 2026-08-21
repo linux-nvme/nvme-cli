@@ -39,9 +39,60 @@ struct nvme_zns_lbafe {
 };
 
 /**
+ * enum nvme_zns_id_ns_zoc - Zone Operation Characteristics
+ * @NVME_ZNS_ID_NS_ZOC_VZC_SHIFT:	Shift amount to get Variable Zone
+ *					Capacity (VZC)
+ * @NVME_ZNS_ID_NS_ZOC_VZC_MASK:	Mask to get VZC
+ * @NVME_ZNS_ID_NS_ZOC_ZAE_SHIFT:	Shift amount to get Zone Active
+ *					Excursions (ZAE)
+ * @NVME_ZNS_ID_NS_ZOC_ZAE_MASK:	Mask to get ZAE
+ */
+enum nvme_zns_id_ns_zoc {
+	NVME_ZNS_ID_NS_ZOC_VZC_SHIFT	= 0,
+	NVME_ZNS_ID_NS_ZOC_VZC_MASK	= 0x1,
+	NVME_ZNS_ID_NS_ZOC_ZAE_SHIFT	= 1,
+	NVME_ZNS_ID_NS_ZOC_ZAE_MASK	= 0x1,
+};
+
+#define NVME_ZNS_ID_NS_ZOC_VZC(zoc)	NVME_GET(zoc, ZNS_ID_NS_ZOC_VZC)
+#define NVME_ZNS_ID_NS_ZOC_ZAE(zoc)	NVME_GET(zoc, ZNS_ID_NS_ZOC_ZAE)
+
+/**
+ * enum nvme_zns_id_ns_ozcs - Optional Zoned Command Support
+ * @NVME_ZNS_ID_NS_OZCS_RAZB_SHIFT:	Shift amount to get Read Across Zone
+ *					Boundaries (RAZB)
+ * @NVME_ZNS_ID_NS_OZCS_RAZB_MASK:	Mask to get RAZB
+ * @NVME_ZNS_ID_NS_OZCS_ZRWASUP_SHIFT:	Shift amount to get ZRWA Supported
+ *					(ZRWASUP)
+ * @NVME_ZNS_ID_NS_OZCS_ZRWASUP_MASK:	Mask to get ZRWASUP
+ */
+enum nvme_zns_id_ns_ozcs {
+	NVME_ZNS_ID_NS_OZCS_RAZB_SHIFT		= 0,
+	NVME_ZNS_ID_NS_OZCS_RAZB_MASK		= 0x1,
+	NVME_ZNS_ID_NS_OZCS_ZRWASUP_SHIFT	= 1,
+	NVME_ZNS_ID_NS_OZCS_ZRWASUP_MASK	= 0x1,
+};
+
+#define NVME_ZNS_ID_NS_OZCS_RAZB(ozcs)		NVME_GET(ozcs, ZNS_ID_NS_OZCS_RAZB)
+#define NVME_ZNS_ID_NS_OZCS_ZRWASUP(ozcs)	NVME_GET(ozcs, ZNS_ID_NS_OZCS_ZRWASUP)
+
+/**
+ * enum nvme_zns_id_ns_zrwacap - ZRWA Capability
+ * @NVME_ZNS_ID_NS_ZRWACAP_EXPFLUSHSUP_SHIFT:	Shift amount to get Explicit
+ *						Flush Support (EXPFLUSHSUP)
+ * @NVME_ZNS_ID_NS_ZRWACAP_EXPFLUSHSUP_MASK:	Mask to get EXPFLUSHSUP
+ */
+enum nvme_zns_id_ns_zrwacap {
+	NVME_ZNS_ID_NS_ZRWACAP_EXPFLUSHSUP_SHIFT	= 0,
+	NVME_ZNS_ID_NS_ZRWACAP_EXPFLUSHSUP_MASK		= 0x1,
+};
+
+#define NVME_ZNS_ID_NS_ZRWACAP_EXPFLUSHSUP(zrwacap)	NVME_GET(zrwacap, ZNS_ID_NS_ZRWACAP_EXPFLUSHSUP)
+
+/**
  * struct nvme_zns_id_ns -  Zoned Namespace Command Set Specific  Identify Namespace Data Structure
- * @zoc:     Zone Operation Characteristics
- * @ozcs:    Optional Zoned Command Support
+ * @zoc:     Zone Operation Characteristics, see &enum nvme_zns_id_ns_zoc
+ * @ozcs:    Optional Zoned Command Support, see &enum nvme_zns_id_ns_ozcs
  * @mar:     Maximum Active Resources
  * @mor:     Maximum Open Resources
  * @rrl:     Reset Recommended Limit
@@ -55,7 +106,7 @@ struct nvme_zns_lbafe {
  * @numzrwa: Number of ZRWA Resources
  * @zrwafg:  ZRWA Flush Granularity
  * @zrwasz:  ZRWA Size
- * @zrwacap: ZRWA Capability
+ * @zrwacap: ZRWA Capability, see &enum nvme_zns_id_ns_zrwacap
  * @rsvd53:  Reserved
  * @lbafe:   LBA Format Extension
  * @vs:	     Vendor Specific
@@ -83,13 +134,45 @@ struct nvme_zns_id_ns {
 };
 
 /**
+ * enum nvme_zns_id_ctrl_zctratt - Zoned Controller Attributes
+ * @NVME_ZNS_CTRL_ZCTRATT_ZNRM_SHIFT:	Shift amount to get Zoned Namespace
+ *					Resource Management (ZNRM)
+ * @NVME_ZNS_CTRL_ZCTRATT_ZNRM_MASK:	Mask to get ZNRM
+ */
+enum nvme_zns_id_ctrl_zctratt {
+	NVME_ZNS_CTRL_ZCTRATT_ZNRM_SHIFT	= 0,
+	NVME_ZNS_CTRL_ZCTRATT_ZNRM_MASK		= 0x1,
+};
+
+#define NVME_ZNS_CTRL_ZCTRATT_ZNRM(zctratt)	NVME_GET(zctratt, ZNS_CTRL_ZCTRATT_ZNRM)
+
+/**
  * struct nvme_zns_id_ctrl -  I/O Command Set Specific Identify Controller Data Structure for the Zoned Namespace Command Set
  * @zasl:	Zone Append Size Limit
  * @rsvd1:	Reserved
+ * @zctratt:	Zoned Controller Attributes, see &enum nvme_zns_id_ctrl_zctratt
+ * @tar:	Total Active Resources
+ * @uar:	Unallocated Active Resources
+ * @tor:	Total Open Resources
+ * @uor:	Unallocated Open Resources
+ * @tzrwar:	Total ZRWA Resources
+ * @uzrwar:	Unallocated ZRWA Resources
+ * @ver:	Version, a Specification Version Descriptor, see
+ *		%NVME_MAJOR, %NVME_MINOR, %NVME_TERTIARY
+ * @rsvd36:	Reserved
  */
 struct nvme_zns_id_ctrl {
 	__u8	zasl;
-	__u8	rsvd1[4095];
+	__u8	rsvd1[3];
+	__le32	zctratt;
+	__le32	tar;
+	__le32	uar;
+	__le32	tor;
+	__le32	uor;
+	__le32	tzrwar;
+	__le32	uzrwar;
+	__le32	ver;
+	__u8	rsvd36[4060];
 };
 
 /**
