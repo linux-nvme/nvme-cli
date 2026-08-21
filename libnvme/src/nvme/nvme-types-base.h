@@ -7046,11 +7046,45 @@ struct nvme_power_meas_log {
 
 
 /**
+ * enum nvme_lba_status_lbars - LBA Range Status (LBARS), used with the
+ *				 &struct nvme_lba_status_desc.status field.
+ * @NVME_LBA_STATUS_LBARS_SHIFT:	Shift amount to get the value of LBARS
+ * @NVME_LBA_STATUS_LBARS_MASK:	Mask to get the value of LBARS
+ * @NVME_LBA_STATUS_LBARS_MAY_ERR:	Each logical block may report Unrecovered
+ *					Read Error status, be a logical block
+ *					most recently written by a Write
+ *					Uncorrectable command, or be read
+ *					successfully. Used with ATYPE 10h/11h.
+ * @NVME_LBA_STATUS_LBARS_ERR:		Each logical block may report
+ *					Unrecovered Read Error status or be a
+ *					logical block most recently written by
+ *					a Write Uncorrectable command. Used
+ *					with ATYPE 10h/11h.
+ * @NVME_LBA_STATUS_LBARS_ALLOCATED:	One or more of the reported logical
+ *					blocks are allocated. Used with
+ *					ATYPE 02h.
+ * @NVME_LBA_STATUS_LBARS_WRITE_UNC:	Each logical block was most recently
+ *					written by a Write Uncorrectable
+ *					command. Used with ATYPE 10h/11h.
+ */
+enum nvme_lba_status_lbars {
+	NVME_LBA_STATUS_LBARS_SHIFT		= 0,
+	NVME_LBA_STATUS_LBARS_MASK		= 0x7,
+	NVME_LBA_STATUS_LBARS_MAY_ERR		= 0x0,
+	NVME_LBA_STATUS_LBARS_ERR		= 0x1,
+	NVME_LBA_STATUS_LBARS_ALLOCATED	= 0x2,
+	NVME_LBA_STATUS_LBARS_WRITE_UNC	= 0x3,
+};
+
+#define NVME_LBA_STATUS_LBARS(status)	NVME_GET(status, LBA_STATUS_LBARS)
+
+/**
  * struct nvme_lba_status_desc - LBA Status Descriptor Entry
  * @dslba:	Descriptor Starting LBA
  * @nlb:	Number of Logical Blocks
  * @rsvd12:	Reserved
- * @status:	Additional status about this LBA range
+ * @status:	Additional status about this LBA range, see
+ *		&enum nvme_lba_status_lbars
  * @rsvd14:	Reserved
  */
 struct nvme_lba_status_desc {
