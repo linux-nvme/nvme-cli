@@ -42,6 +42,42 @@ nvme_init_flush(struct libnvme_passthru_cmd *cmd, __u32 nsid)
 }
 
 /**
+ * nvme_init_cancel() - Initialize passthru command for Cancel command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier, or %NVME_NSID_ALL
+ * @sqid:	Submission Queue Identifier (SQID) that the Cancel command is
+ *		associated with
+ * @cid:	Command Identifier (CID) of the command to abort. Ignored if
+ *		@acode is %NVME_CANCEL_ACODE_MULTIPLE_CMD.
+ * @acode:	Action Code (ACODE), see &enum nvme_cancel_acode
+ *
+ * The Cancel command requests an abort for specified commands submitted on
+ * the same I/O Submission Queue to which the Cancel command is submitted.
+ * The number of commands eligible for a deferred abort and the number of
+ * commands aborted are returned in the CQE result, see &enum
+ * nvme_cancel_cqe_dw0.
+ *
+ * Initializes the passthru command buffer for the Cancel command.
+ */
+static inline void
+nvme_init_cancel(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u16 sqid, __u16 cid, enum nvme_cancel_acode acode)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_cmd_cancel;
+	cmd->nsid = nsid;
+	cmd->cdw10 = NVME_FIELD_ENCODE(cid,
+			NVME_CANCEL_CDW10_CID_SHIFT,
+			NVME_CANCEL_CDW10_CID_MASK) |
+		     NVME_FIELD_ENCODE(sqid,
+			NVME_CANCEL_CDW10_SQID_SHIFT,
+			NVME_CANCEL_CDW10_SQID_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(acode,
+			NVME_CANCEL_CDW11_ACODE_SHIFT,
+			NVME_CANCEL_CDW11_ACODE_MASK);
+}
+
+/**
  * nvme_init_io() - Initialize passthru command for a generic user I/O command
  * @cmd:	Passthru command to use
  * @nsid:	Namespace ID

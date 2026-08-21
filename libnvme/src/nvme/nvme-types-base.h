@@ -8810,6 +8810,10 @@ struct nvme_pull_model_ddc_req_log {
  * @NVME_SC_INVALID_PI:		      Invalid Protection Information
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
  * @NVME_SC_CMD_SIZE_LIMIT_EXCEEDED:  Command Size Limit Exceeded
+ * @NVME_SC_INVALID_CMD_ID:	      Invalid Command ID: for the Cancel
+ *				      command, the specified Command
+ *				      Identifier (CID) matched the CID of
+ *				      the Cancel command itself.
  * @NVME_SC_INCOMPATIBLE_NS:	      Incompatible Namespace or Format: At
  *				      least one source namespace and the
  *				      destination namespace have incompatible
@@ -9118,6 +9122,7 @@ enum nvme_status_field {
 	NVME_SC_INVALID_PI		= 0x81,
 	NVME_SC_READ_ONLY		= 0x82,
 	NVME_SC_CMD_SIZE_LIMIT_EXCEEDED = 0x83,
+	NVME_SC_INVALID_CMD_ID		= 0x84,
 	NVME_SC_INCOMPATIBLE_NS		= 0x85,
 	NVME_SC_FAST_COPY_NOT_POSSIBLE	= 0x86,
 	NVME_SC_OVERLAPPING_IO_RANGE	= 0x87,
