@@ -1947,6 +1947,128 @@ nvme_init_identify_command_set_structure(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_identify_underlying_ns_list() - Initialize passthru command for
+ * Get Underlying Namespace List
+ * @cmd:	Command data structure to initialize
+ * @idx:	Index into the list of reportable Underlying Namespaces to
+ *		start reporting from
+ * @list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_UNDERLYING_NS_LIST.
+ */
+static inline void
+nvme_init_identify_underlying_ns_list(struct libnvme_passthru_cmd *cmd,
+		__u16 idx, struct nvme_underlying_ns_list *list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_UNDERLYING_NS_LIST,
+			   list, sizeof(*list));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(idx,
+					NVME_IDENTIFY_CDW11_CNSSPECID_SHIFT,
+					NVME_IDENTIFY_CDW11_CNSSPECID_MASK);
+}
+
+/**
+ * nvme_init_identify_ports_list() - Initialize passthru command for
+ * Get Ports List
+ * @cmd:	Command data structure to initialize
+ * @list:	User space destination address to transfer the data
+ * @len:	The allocated length of @list
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_PORTS_LIST.
+ */
+static inline void
+nvme_init_identify_ports_list(struct libnvme_passthru_cmd *cmd,
+		struct nvme_ports_list *list, __u32 len)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_PORTS_LIST,
+			   list, len);
+}
+
+/**
+ * nvme_init_identify_iocs_ind_id_alloc_ns() - Initialize passthru command for
+ * I/O Command Set Independent Identify Namespace data structure for an
+ * Allocated Namespace ID
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Allocated namespace identifier
+ * @ns:		I/O Command Set Independent Identify Namespace data structure
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS.
+ */
+static inline void
+nvme_init_identify_iocs_ind_id_alloc_ns(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_independent_id_ns *ns)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS,
+			   ns, sizeof(*ns));
+}
+
+/**
+ * nvme_init_identify_supported_ctrl_state_formats() - Initialize passthru
+ * command for Supported Controller State Formats
+ * @cmd:	Command data structure to initialize
+ * @formats:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS.
+ */
+static inline void
+nvme_init_identify_supported_ctrl_state_formats(
+		struct libnvme_passthru_cmd *cmd,
+		struct nvme_supported_ctrl_state_formats *formats)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS,
+			   formats, sizeof(*formats));
+}
+
+/**
+ * nvme_init_identify_underlying_ctrl_list() - Initialize passthru command
+ * for Get Underlying Controller List
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Starting CNTLID to return in the list
+ * @cntlist:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_UNDERLYING_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_underlying_ctrl_list(struct libnvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_ctrl_list *cntlist)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_UNDERLYING_CTRL_LIST,
+			   cntlist, sizeof(*cntlist));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_exported_nvm_subsys_template_uuid_list() - Initialize
+ * passthru command for Exported NVM Subsystem Template UUID List
+ * @cmd:	Command data structure to initialize
+ * @list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST.
+ */
+static inline void
+nvme_init_identify_exported_nvm_subsys_template_uuid_list(
+		struct libnvme_passthru_cmd *cmd,
+		struct nvme_exported_nvm_subsys_template_uuid_list *list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST,
+			   list, sizeof(*list));
+}
+
+/**
  * nvme_init_abort() - Initialize passthru command for
  * Abort command
  * @cmd:	Passthru command to use
