@@ -364,6 +364,7 @@ foreach hdr : [
     'nvme-types-mi',
     'nvme-types-nbft',
     'nvme-types-nvm',
+    'nvme-types-slm',
     'nvme-types-zns',
     'scan',
     'tree',

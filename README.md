@@ -53,6 +53,7 @@ summary with `nvme help`.
 | Building from source: dependencies, alternative build systems, packaging, plugin selection | [Documentation/BUILDING.md](Documentation/BUILDING.md) |
 | Configuring host identity, NVMe-oF connections, and multi-orchestrator coordination | [Documentation/CONFIGURATION.md](Documentation/CONFIGURATION.md) |
 | Pre-built binaries, reproducing CI builds, memory/sanitizer testing | [Documentation/TESTING.md](Documentation/TESTING.md) |
+| libnvme coverage against NVMe specifications, chapter by chapter | [Documentation/SPEC-COVERAGE.md](Documentation/SPEC-COVERAGE.md) |
 | Command/plugin man pages | `man nvme`, or browse [Documentation/](Documentation/) |
 | Contributing: adding commands/plugins, API naming, commit & PR workflow | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Reporting security vulnerabilities | [SECURITY.md](SECURITY.md) |

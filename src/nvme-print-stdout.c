@@ -1978,7 +1978,9 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	__u32 dlpcn = NVME_CTRL_OAES_DLPCN(oaes);
 	__u32 rsvd28 = (oaes & 0x70000000) >> 28;
 	__u32 zdcn = NVME_CTRL_OAES_ZDCN(oaes);
-	__u32 rsvd20 = (oaes & 0x7fe0000) >> 20;
+	__u32 rsvd23 = (oaes >> 23) & 0xf;
+	__u32 rlcc = NVME_CTRL_OAES_RLCC(oaes);
+	__u32 rsvd20 = (oaes >> 20) & 0x3;
 	__u32 ansan = NVME_CTRL_OAES_ANSAN(oaes);
 	__u32 rsvd18 = (oaes >> 18) & 0x1;
 	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
@@ -1999,8 +2001,12 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 		printf("  [30:28] : %#x\tReserved\n", rsvd28);
 	printf("  [27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
 			zdcn, zdcn ? "" : "Not ");
+	if (rsvd23)
+		printf("  [26:23] : %#x\tReserved\n", rsvd23);
+	printf("  [22:22] : %#x\tRate Limiting Configuration Change Notices %sSupported\n",
+			rlcc, rlcc ? "" : "Not ");
 	if (rsvd20)
-		printf("  [26:20] : %#x\tReserved\n", rsvd20);
+		printf("  [21:20] : %#x\tReserved\n", rsvd20);
 	printf("  [19:19] : %#x\tAllocated Namespace Attribute Notices %sSupported\n",
 			ansan, ansan ? "" : "Not ");
 	if (rsvd18)
@@ -2139,6 +2145,37 @@ static void stdout_id_ctrl_bpcap(__u8 ctrl_bpcap)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_chsi(__u8 ctrl_chsi)
+{
+	__u8 rsvd1 = (ctrl_chsi >> 1);
+	__u8 chs = NVME_CTRL_CHSI_CHS(ctrl_chsi);
+
+	if (rsvd1)
+		printf(" [7:1] : %#x\tReserved\n", rsvd1);
+
+	printf("  [0:0] : %#x\tCXL HDM %sSupported\n", chs, chs ? "" : "Not ");
+	printf("\n");
+}
+
+static void stdout_id_ctrl_rmdca(__u8 ctrl_rmdca)
+{
+	__u8 rsvd3 = (ctrl_rmdca >> 3);
+	__u8 rdccs = NVME_CTRL_RMDCA_RDCCS(ctrl_rmdca);
+	__u8 rdncs = NVME_CTRL_RMDCA_RDNCS(ctrl_rmdca);
+	__u8 rdscs = NVME_CTRL_RMDCA_RDSCS(ctrl_rmdca);
+
+	if (rsvd3)
+		printf(" [7:3] : %#x\tReserved\n", rsvd3);
+
+	printf("  [2:2] : %#x\tRestore Default Capacity Management Configuration %sSupported\n",
+	       rdccs, rdccs ? "" : "Not ");
+	printf("  [1:1] : %#x\tRestore Default Namespace Configuration %sSupported\n",
+	       rdncs, rdncs ? "" : "Not ");
+	printf("  [0:0] : %#x\tRestore Default NVM Subsystem Configuration %sSupported\n",
+	       rdscs, rdscs ? "" : "Not ");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_plsi(__u8 ctrl_plsi)
 {
 	__u8 rsvd2 = (ctrl_plsi >> 2);
@@ -2233,7 +2270,9 @@ static void stdout_id_ctrl_mec(__u8 mec)
 static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xF000) >> 12;
+	__u16 rsvd = (oacs & 0xC000) >> 14;
+	__u16 rsvd12 = (oacs & 0x1000) >> 12;
+	__u16 ccfls = NVME_CTRL_OACS_CCFLS(oacs);
 	__u16 hmlms = NVME_CTRL_OACS_HMLMS(oacs);
 	__u16 lock = NVME_CTRL_OACS_CFLS(oacs);
 	__u16 glbas = NVME_CTRL_OACS_GLSS(oacs);
@@ -2248,7 +2287,11 @@ static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 sec = NVME_CTRL_OACS_SSRS(oacs);
 
 	if (rsvd)
-		printf(" [15:12] : %#x\tReserved\n", rsvd);
+		printf(" [15:14] : %#x\tReserved\n", rsvd);
+	printf("  [13:13] : %#x\tCtrl-scoped Command/Feature Lockdown %sSupported\n",
+	       ccfls, ccfls ? "" : "Not ");
+	if (rsvd12)
+		printf(" [12:12] : %#x\tReserved\n", rsvd12);
 	printf("  [11:11] : %#x\tHost Managed Live Migration %sSupported\n",
 		hmlms, hmlms ? "" : "Not ");
 	printf("  [10:10] : %#x\tLockdown Command and Feature %sSupported\n",
@@ -2458,7 +2501,8 @@ static void stdout_id_ctrl_mxtmt(__le16 mxtmt)
 static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 {
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
-	__u32 rsvd4 = (sanicap & 0x1FFFFFF0) >> 4;
+	__u32 rsvd6 = (sanicap & 0x1FFFFFC0) >> 6;
+	__u32 sprrs = NVME_CTRL_SANICAP_SPRRS(sanicap);
 	__u32 vers = NVME_CTRL_SANICAP_NVERS(sanicap);
 	__u32 ows = NVME_CTRL_SANICAP_OWS(sanicap);
 	__u32 bes = NVME_CTRL_SANICAP_BES(sanicap);
@@ -2476,8 +2520,10 @@ static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 	printf("  [31:30] : %#x\t%s\n", nodmmas, modifies_media[nodmmas]);
 	printf("  [29:29] : %#x\tNo-Deallocate After Sanitize bit in Sanitize command %sSupported\n",
 		ndi, ndi ? "Not " : "");
-	if (rsvd4)
-		printf("  [28:4] : %#x\tReserved\n", rsvd4);
+	if (rsvd6)
+		printf("  [28:6] : %#x\tReserved\n", rsvd6);
+	printf("  [5:5] : %#x\tSanitize Purge Request and Reporting %sSupported\n",
+		sprrs, sprrs ? "" : "Not ");
 	printf("  [3:3] : %#x\tMedia Verification and Post-Verification Deallocation state %sSupported\n",
 		vers, vers ? "" : "Not ");
 	printf("  [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
@@ -2571,6 +2617,27 @@ static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
 		nvme_ipmsr_srs_to_string(srs));
 	printf("  [7:0]  : %#x\tSample Rate Value\n", srv);
 
+	printf("\n");
+}
+
+static void stdout_id_ctrl_vsen(__le32 ctrl_vsen)
+{
+	__u32 vsen = le32_to_cpu(ctrl_vsen);
+
+	if (!vsen) {
+		printf("  Voltage sensor not supported\n\n");
+		return;
+	}
+
+	printf("  [31:24] : %#x\tVoltage Sample Rate Scale\n",
+	       NVME_CTRL_VSEN_VSRS(vsen));
+	printf("  [23:16] : %#x\tVoltage Sample Rate Value\n",
+	       NVME_CTRL_VSEN_VSRV(vsen));
+	printf("  [15:14] : %#x\tVoltage Sample Scale\n", NVME_CTRL_VSEN_VOLSS(vsen));
+	printf("  [13:12] : %#x\tPower Input Supply Label\n",
+	       NVME_CTRL_VSEN_PISL(vsen));
+	printf("  [11:0]  : %#x\tPower Input Supply Value (%g V)\n",
+	       NVME_CTRL_VSEN_PISV(vsen), NVME_CTRL_VSEN_PISV(vsen) * 0.05);
 	printf("\n");
 }
 
@@ -3461,6 +3528,16 @@ static void stdout_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 			       ctrl->psd[i].epfr_fqv_ts >> 4);
 		print_psd_time("emergency power fail vault time", ctrl->psd[i].epfvt,
 			       ctrl->psd[i].epfvts & 0xf);
+
+		if (NVME_CTRL_CTRATT_IIELLSS(le32_to_cpu(ctrl->ctratt))) {
+			__u16 miiell = le16_to_cpu(ctrl->psd[i].miiell);
+
+			if (miiell)
+				printf("            minimum idle i/o exit latency limit:%uus\n",
+				       miiell * 100);
+			else
+				printf("            minimum idle i/o exit latency limit:none\n");
+		}
 	}
 }
 
@@ -3499,6 +3576,9 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	printf("bpcap     : %#x\n", le16_to_cpu(ctrl->bpcap));
 	if (human)
 		stdout_id_ctrl_bpcap(ctrl->bpcap);
+	printf("chsi      : %#x\n", ctrl->chsi);
+	if (human)
+		stdout_id_ctrl_chsi(ctrl->chsi);
 	printf("nssl      : %#x\n", le32_to_cpu(ctrl->nssl));
 	printf("plsi      : %u\n", ctrl->plsi);
 	if (human)
@@ -3600,6 +3680,9 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	if (human)
 		stdout_id_ctrl_kpioc(ctrl->kpioc);
 	printf("mptfawr   : %d\n", le16_to_cpu(ctrl->mptfawr));
+	printf("rmdca     : %#x\n", ctrl->rmdca);
+	if (human)
+		stdout_id_ctrl_rmdca(ctrl->rmdca);
 	printf("megcap    : %s\n",
 		uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
 	printf("tmpthha   : %#x\n", ctrl->tmpthha);
@@ -3614,6 +3697,21 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	if (human)
 		stdout_id_ctrl_ipmsr(ctrl->ipmsr);
 	printf("msmt      : %#x\n", le16_to_cpu(ctrl->msmt));
+	if (NVME_CTRL_CTRATT_VMS(le32_to_cpu(ctrl->ctratt))) {
+		printf("vsen1     : %#x\n", le32_to_cpu(ctrl->vsen1));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen1);
+		printf("vsen2     : %#x\n", le32_to_cpu(ctrl->vsen2));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen2);
+		printf("vsen3     : %#x\n", le32_to_cpu(ctrl->vsen3));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen3);
+		printf("vsen4     : %#x\n", le32_to_cpu(ctrl->vsen4));
+		if (human)
+			stdout_id_ctrl_vsen(ctrl->vsen4);
+		printf("msvmt     : %u\n", le16_to_cpu(ctrl->msvmt));
+	}
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		stdout_id_ctrl_sqes(ctrl->sqes);
@@ -4720,6 +4818,8 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 		       NVME_SMART_CW_VMBF(smart->critical_warning));
 		printf("      Persistent Mem. RO[5]          : %d\n",
 		       NVME_SMART_CW_PMRRO(smart->critical_warning));
+		printf("      Indeterminate Personality[6]   : %d\n",
+		       NVME_SMART_CW_IPS(smart->critical_warning));
 	}
 
 	printf("temperature				: %s (%u K, %s)\n",
@@ -4729,6 +4829,10 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 	printf("available_spare_threshold		: %u%%\n", smart->spare_thresh);
 	printf("percentage_used				: %u%%\n", smart->percent_used);
 	printf("endurance group critical warning summary: %#x\n", smart->endu_grp_crit_warn_sumry);
+	printf("informative warning			: %#x\n", smart->informative_warning);
+	if (human)
+		printf("      Voltage Log Threshold Warning[0]: %d\n",
+		       !!(smart->informative_warning & NVME_SMART_INFW_VLTHW));
 	printf("Data Units Read				: %s (%s)\n",
 	       uint128_t_to_l10n_string(le128_to_cpu(smart->data_units_read)),
 	       uint128_t_to_si_string(le128_to_cpu(smart->data_units_read), 1000 * 512));
@@ -4928,7 +5032,7 @@ static void stdout_sanitize_log_sprog(__u32 sprog)
 static void stdout_sanitize_log_sstat(__u16 status)
 {
 	const char *str = nvme_sstat_status_to_string(status);
-	__u16 gde, mvcncld;
+	__u16 gde, mvcncld, prgd;
 
 	printf("  [2:0] : Sanitize Operation Status  : %#x\t%s\n",
 		NVME_GET(status, SANITIZE_SSTAT_STATUS), str);
@@ -4947,6 +5051,10 @@ static void stdout_sanitize_log_sstat(__u16 status)
 	mvcncld = NVME_GET(status, SANITIZE_SSTAT_MVCNCLD);
 	printf("  [9:9] : Media Verification Canceled: %#x\t%scanceled\n",
 		mvcncld, mvcncld ? "" : "Not ");
+
+	prgd = NVME_GET(status, SANITIZE_SSTAT_PRGD);
+	printf("  [11:11] : Purged                    : %#x\t%spurged\n",
+		prgd, prgd ? "" : "Not ");
 	printf("\n");
 }
 
@@ -5269,6 +5377,27 @@ static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
 }
 
+static void stdout_rate_limiting_data(struct nvme_rate_limiting_data *rld)
+{
+	__u16 rlc = le16_to_cpu(rld->rlc);
+
+	printf("\tRate Limiting Enable (RLE): %s\n",
+	       NVME_RATE_LIMITING_RLC_RLE(rlc) ? "Enabled" : "Disabled");
+	printf("\tRate Limiting Mode (RLM): %u - %s\n",
+	       NVME_RATE_LIMITING_RLC_RLM(rlc),
+	       NVME_RATE_LIMITING_RLC_RLM(rlc) == NVME_RATE_LIMITING_MODE_SOFT_LIMIT ?
+	       "Soft Limit" : "Hard Limit");
+	printf("\tBandwidth Scale Factor (BWSF): %u\n", rld->bwsf);
+	printf("\tTotal Bandwidth Value (TBWV): %"PRIu64"\n", le64_to_cpu(rld->tbwv));
+	printf("\tWrite Bandwidth Value (WBWV): %"PRIu64"\n", le64_to_cpu(rld->wbwv));
+	printf("\tTotal IOPS (TIOPS): %u\n", le32_to_cpu(rld->tiops));
+	printf("\tWrite IOPS (WIOPS): %u\n", le32_to_cpu(rld->wiops));
+	printf("\tRead IOPS Ratio (RIOPSR): %u\n", rld->riopsr);
+	printf("\tWrite IOPS Ratio (WIOPSR): %u\n", rld->wiopsr);
+	printf("\tRead Bandwidth Ratio (RBWR): %u\n", rld->rbwr);
+	printf("\tWrite Bandwidth Ratio (WBWR): %u\n", rld->wbwr);
+}
+
 static void stdout_feat_perfc_std(struct nvme_std_perf_attr *data)
 {
 	printf("random 4 kib average read latency (R4KARL): %s (0x%02x)\n",
@@ -5408,6 +5537,11 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tWorkload Hint (WH): %u - %s\n", field,
 		       nvme_feature_wl_hints_to_string(field));
 		printf("\tPower State   (PS): %u\n", NVME_FEAT_PM_PS(result));
+		field = NVME_FEAT_PM_IIELL(result);
+		if (field)
+			printf("\tIdle I/O Exit Latency Limit (IIELL): %uus\n", field * 100);
+		else
+			printf("\tIdle I/O Exit Latency Limit (IIELL): disabled\n");
 		break;
 	case NVME_FEAT_FID_LBA_RANGE:
 		field = NVME_FEAT_LBAR_NR(result);
@@ -5676,6 +5810,25 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		       field, nvme_power_measurement_type_to_string(field));
 		printf("\tStop Measurement Time (SMT): %u\n",
 		       NVME_FEAT_POWER_MEAS_SMT(result));
+		break;
+	case NVME_FEAT_FID_VOLTAGE_THRESHOLD:
+		field = NVME_FEAT_VOLTAGE_THRESHOLD_VSENS(result);
+		printf("\tVoltage Sensor Select (VSENS): %u\n", field);
+		printf("\tEnable Voltage Threshold (EVT): %u - %s\n",
+		       !!(result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT),
+		       result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT ? "Enabled" : "Disabled");
+		printf("\tOvervoltage Threshold (OVT): %u\n",
+		       NVME_FEAT_VOLTAGE_THRESHOLD_OVT(result));
+		printf("\tUndervoltage Threshold (UVT): %u\n",
+		       NVME_FEAT_VOLTAGE_THRESHOLD_UVT(result));
+		break;
+	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
+		field = NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result);
+		printf("\tAction (ACT): %u\n", field);
+		break;
+	case NVME_FEAT_FID_RATE_LIMITING:
+		if (buf)
+			stdout_rate_limiting_data((struct nvme_rate_limiting_data *)buf);
 		break;
 	default:
 		break;

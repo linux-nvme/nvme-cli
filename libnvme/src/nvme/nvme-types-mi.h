@@ -114,13 +114,34 @@ struct nvme_mi_port_pcie {
 };
 
 /**
+ * enum nvme_mi_port_sdformat - 2-Wire Port Specific Data - Supported Data
+ *			Format (SDFORMAT)
+ * @NVME_MI_PORT_SDFORMAT_BYTE_LEVEL:	Byte Level data format of the
+ *					NVMe-MI Persistent Data Area is
+ *					supported
+ * @NVME_MI_PORT_SDFORMAT_512B:	512B data format of the NVMe-MI
+ *					Persistent Data Area is supported
+ * @NVME_MI_PORT_SDFORMAT_4KIB:	4KiB data format of the NVMe-MI
+ *					Persistent Data Area is supported
+ */
+enum nvme_mi_port_sdformat {
+	NVME_MI_PORT_SDFORMAT_BYTE_LEVEL	= 1 << 0,
+	NVME_MI_PORT_SDFORMAT_512B		= 1 << 1,
+	NVME_MI_PORT_SDFORMAT_4KIB		= 1 << 2,
+};
+
+/**
  * struct nvme_mi_port_smb - SMBus Port Specific Data
  * @vpd_addr:	Current VPD SMBus/I2C Address
  * @mvpd_freq:	Maximum VPD Access SMBus/I2C Frequency
  * @mme_addr:	Current Management Endpoint SMBus/I2C Address
  * @mme_freq:	Maximum Management Endpoint SMBus/I2C Frequency
  * @nvmebm:	NVMe Basic Management
- * @rsvd13:	Reserved
+ * @pdas:	PDA Size, the size of the NVMe-MI Persistent Data Area (PDA)
+ *		is 2^@pdas bytes; 0h indicates there is no NVMe-MI PDA
+ * @sdformat:	Supported Data Format for the NVMe-MI PDA, see &enum
+ *		nvme_mi_port_sdformat
+ * @rsvd18:	Reserved
  */
 struct nvme_mi_port_smb {
 	__u8	vpd_addr;
@@ -128,13 +149,33 @@ struct nvme_mi_port_smb {
 	__u8	mme_addr;
 	__u8	mme_freq;
 	__u8	nvmebm;
-	__u8	rsvd13[19];
+	__le32	pdas __attribute__((packed));
+	__u8	sdformat;
+	__u8	rsvd18[14];
+};
+
+/**
+ * enum nvme_mi_port_prtcap - Port Information Data Structure - Port
+ *			      Capabilities (PRTCAP)
+ * @NVME_MI_PORT_PRTCAP_CIAPS: Command Initiated Auto Pause Supported:
+ *			       obsolete as of NVMe-MI 2.2 and later (the
+ *			       Command Initiated Auto Pause bit in Command
+ *			       Messages is always supported); this bit is
+ *			       set to '1'.
+ * @NVME_MI_PORT_PRTCAP_AEMS:  Asynchronous Event Messages Supported: if set,
+ *			       then all Management Endpoints on this port
+ *			       support AEMs and the Asynchronous Event
+ *			       configuration (Configuration Identifier 04h).
+ */
+enum nvme_mi_port_prtcap {
+	NVME_MI_PORT_PRTCAP_CIAPS	= 1 << 0,
+	NVME_MI_PORT_PRTCAP_AEMS	= 1 << 1,
 };
 
 /**
  * struct nvme_mi_read_port_info - Port Information Data Structure
  * @portt:	Port Type
- * @rsvd1:	Reserved
+ * @prtcap:	Port Capabilities, see &enum nvme_mi_port_prtcap.
  * @mmctptus:	Maximum MCTP Transmission Unit Size
  * @meb:	Management Endpoint Buffer Size
  * @pcie:	PCIe Port Specific Data
@@ -142,7 +183,7 @@ struct nvme_mi_port_smb {
  */
 struct nvme_mi_read_port_info {
 	__u8	portt;
-	__u8	rsvd1;
+	__u8	prtcap;
 	__le16	mmctptus;
 	__le32	meb;
 	union {
@@ -480,6 +521,140 @@ enum nvme_mi_elem {
 	NVME_MI_ELEM_SMBMED	= 5,
 	NVME_MI_ELEM_PCIESED	= 6,
 	NVME_MI_ELEM_NVMED	= 7,
+};
+
+/**
+ * enum nvme_mi_form_factor - Upstream Connector Element Descriptor - Form
+ *			      Factor (FF) values
+ * @NVME_MI_FF_UNKNOWN:			Unspecified: Other - unknown
+ * @NVME_MI_FF_PCIE_INTEGRATED:		PCIe: Integrated
+ * @NVME_MI_FF_PCIE_OTHER:		PCIe: Other - unknown
+ * @NVME_MI_FF_PCIE_2_5_UNKNOWN:	PCIe: 2.5" Form Factor - unknown
+ * @NVME_MI_FF_PCIE_2_5_U2_15MM:	PCIe: 2.5" Form Factor - PCI Express
+ *					SFF-8639 Module (U.2) 15 mm
+ * @NVME_MI_FF_PCIE_2_5_U2_7MM:		PCIe: 2.5" Form Factor - PCI Express
+ *					SFF-8639 Module (U.2) 7 mm
+ * @NVME_MI_FF_PCIE_2_5_SFF_TA_1001_15MM: PCIe: 2.5" Form Factor -
+ *					   (SFF-TA-1001) 15 mm
+ * @NVME_MI_FF_PCIE_2_5_SFF_TA_1001_7MM:  PCIe: 2.5" Form Factor -
+ *					   (SFF-TA-1001) 7 mm
+ * @NVME_MI_FF_PCIE_CEM_UNKNOWN:	PCIe: CEM add in card - unknown
+ * @NVME_MI_FF_PCIE_CEM_HHHL:		PCIe: CEM add in card - Low Profile
+ *					(HHHL)
+ * @NVME_MI_FF_PCIE_CEM_FHHL:		PCIe: CEM add in card - Standard
+ *					Height Half Length (FHHL)
+ * @NVME_MI_FF_PCIE_CEM_FHFL:		PCIe: CEM add in card - Standard
+ *					Height Full Length (FHFL)
+ * @NVME_MI_FF_PCIE_M2_UNKNOWN:		PCIe: M.2 module - unknown
+ * @NVME_MI_FF_PCIE_M2_2230:		PCIe: M.2 module - 2230
+ * @NVME_MI_FF_PCIE_M2_2242:		PCIe: M.2 module - 2242
+ * @NVME_MI_FF_PCIE_M2_2260:		PCIe: M.2 module - 2260
+ * @NVME_MI_FF_PCIE_M2_2280:		PCIe: M.2 module - 2280
+ * @NVME_MI_FF_PCIE_M2_22110:		PCIe: M.2 module - 22110
+ * @NVME_MI_FF_PCIE_BGA_UNKNOWN:	PCIe: BGA SSD - unknown
+ * @NVME_MI_FF_PCIE_BGA_M2_1620:	PCIe: BGA SSD - 16 x 20 mm (M.2 Type
+ *					1620)
+ * @NVME_MI_FF_PCIE_BGA_M2_1113:	PCIe: BGA SSD - 11.5 x 13 mm (M.2
+ *					Type 1113)
+ * @NVME_MI_FF_PCIE_EDSFF_UNKNOWN:	PCIe: Enterprise & Datacenter SSD
+ *					Form Factor - unknown
+ * @NVME_MI_FF_PCIE_E1S_5_9MM:		PCIe: E1.S - (SFF-TA-1006) 5.9 mm
+ * @NVME_MI_FF_PCIE_E1S_8MM:		PCIe: E1.S - (SFF-TA-1006) 8 mm
+ * @NVME_MI_FF_PCIE_E1L_9_5MM:		PCIe: E1.L - (SFF-TA-1007) 9.5 mm
+ * @NVME_MI_FF_PCIE_E1L_18MM:		PCIe: E1.L - (SFF-TA-1007) 18 mm
+ * @NVME_MI_FF_PCIE_E3S_7_5MM:		PCIe: E3.S - (SFF-TA-1008) 7.5 mm
+ * @NVME_MI_FF_PCIE_E3S_16_8MM:	PCIe: E3.S - (SFF-TA-1008) 16.8 mm
+ * @NVME_MI_FF_PCIE_E3L_7_5MM:		PCIe: E3.L - (SFF-TA-1008) 7.5 mm
+ * @NVME_MI_FF_PCIE_E3L_16_8MM:	PCIe: E3.L - (SFF-TA-1008) 16.8 mm
+ * @NVME_MI_FF_PCIE_E1S_9_5MM:		PCIe: E1.S - (SFF-TA-1006) 9.5 mm
+ * @NVME_MI_FF_PCIE_E1S_15MM:		PCIe: E1.S - (SFF-TA-1006) 15 mm
+ * @NVME_MI_FF_PCIE_E1S_25MM:		PCIe: E1.S - (SFF-TA-1006) 25 mm
+ * @NVME_MI_FF_PCIE_E2_9_5MM:		PCIe: E2 - (SFF-TA-1042) 9.5 mm
+ * @NVME_MI_FF_ETHERNET_UNKNOWN:	Ethernet: Other - unknown
+ * @NVME_MI_FF_ETHERNET_2_5_15MM:	Ethernet: 2.5" Form Factor (Native
+ *					NVMe-oF Drive) 15 mm
+ * @NVME_MI_FF_ETHERNET_2_5_7MM:	Ethernet: 2.5" Form Factor (Native
+ *					NVMe-oF Drive) 7 mm
+ * @NVME_MI_FF_ETHERNET_E3S_7_5MM:	Ethernet: E3.S (Native NVMe-oF Drive)
+ *					7.5 mm
+ * @NVME_MI_FF_ETHERNET_E3S_16_8MM:	Ethernet: E3.S (Native NVMe-oF Drive)
+ *					16.8 mm
+ */
+enum nvme_mi_form_factor {
+	NVME_MI_FF_UNKNOWN				= 0,
+	NVME_MI_FF_PCIE_INTEGRATED			= 1,
+	NVME_MI_FF_PCIE_OTHER				= 2,
+	NVME_MI_FF_PCIE_2_5_UNKNOWN			= 16,
+	NVME_MI_FF_PCIE_2_5_U2_15MM			= 17,
+	NVME_MI_FF_PCIE_2_5_U2_7MM			= 18,
+	NVME_MI_FF_PCIE_2_5_SFF_TA_1001_15MM		= 19,
+	NVME_MI_FF_PCIE_2_5_SFF_TA_1001_7MM		= 20,
+	NVME_MI_FF_PCIE_CEM_UNKNOWN			= 32,
+	NVME_MI_FF_PCIE_CEM_HHHL			= 33,
+	NVME_MI_FF_PCIE_CEM_FHHL			= 34,
+	NVME_MI_FF_PCIE_CEM_FHFL			= 35,
+	NVME_MI_FF_PCIE_M2_UNKNOWN			= 48,
+	NVME_MI_FF_PCIE_M2_2230				= 49,
+	NVME_MI_FF_PCIE_M2_2242				= 50,
+	NVME_MI_FF_PCIE_M2_2260				= 51,
+	NVME_MI_FF_PCIE_M2_2280				= 52,
+	NVME_MI_FF_PCIE_M2_22110			= 53,
+	NVME_MI_FF_PCIE_BGA_UNKNOWN			= 64,
+	NVME_MI_FF_PCIE_BGA_M2_1620			= 65,
+	NVME_MI_FF_PCIE_BGA_M2_1113			= 66,
+	NVME_MI_FF_PCIE_EDSFF_UNKNOWN			= 80,
+	NVME_MI_FF_PCIE_E1S_5_9MM			= 81,
+	NVME_MI_FF_PCIE_E1S_8MM				= 82,
+	NVME_MI_FF_PCIE_E1L_9_5MM			= 83,
+	NVME_MI_FF_PCIE_E1L_18MM			= 84,
+	NVME_MI_FF_PCIE_E3S_7_5MM			= 85,
+	NVME_MI_FF_PCIE_E3S_16_8MM			= 86,
+	NVME_MI_FF_PCIE_E3L_7_5MM			= 87,
+	NVME_MI_FF_PCIE_E3L_16_8MM			= 88,
+	NVME_MI_FF_PCIE_E1S_9_5MM			= 89,
+	NVME_MI_FF_PCIE_E1S_15MM			= 90,
+	NVME_MI_FF_PCIE_E1S_25MM			= 91,
+	NVME_MI_FF_PCIE_E2_9_5MM			= 92,
+	NVME_MI_FF_ETHERNET_UNKNOWN			= 96,
+	NVME_MI_FF_ETHERNET_2_5_15MM			= 97,
+	NVME_MI_FF_ETHERNET_2_5_7MM			= 98,
+	NVME_MI_FF_ETHERNET_E3S_7_5MM			= 99,
+	NVME_MI_FF_ETHERNET_E3S_16_8MM			= 100,
+};
+
+/**
+ * struct nvme_mi_vpd_usce - Upstream Connector Element Descriptor
+ * @typ:	Type: set to %NVME_MI_ELEM_USCE.
+ * @rev:	Revision: cleared to 0h.
+ * @len:	Length of this Upstream Connector Element Descriptor in
+ *		bytes.
+ * @ff:		Form Factor of the NVMe Storage Device, see &enum
+ *		nvme_mi_form_factor.
+ * @lptr:	Label Pointer: index of the Label Element Descriptor
+ *		containing this Upstream Connector's label, if any. A value
+ *		of 0h indicates there is no associated label.
+ * @rsvd6:	Reserved
+ * @maxapwr:	Maximum Auxiliary Power in 10 mW increments consumed by the
+ *		NVMe Storage Device from this Upstream Connector. A value
+ *		of 0h indicates auxiliary power is not used.
+ * @maxpwr:	Maximum Power in Watts consumed by the NVMe Storage Device.
+ * @updc:	Upstream Port Descriptor Count: number of Upstream Port
+ *		Descriptors in @upd.
+ * @upd:	Upstream Port Descriptor list. Each entry's size is
+ *		implementation specific; use @len and @updc to walk the
+ *		list.
+ */
+struct nvme_mi_vpd_usce {
+	__u8	typ;
+	__u8	rev;
+	__u8	len;
+	__u8	ff;
+	__u8	lptr;
+	__u8	rsvd6[2];
+	__u8	maxapwr;
+	__le16	maxpwr;
+	__u8	updc;
+	__u8	upd[];
 };
 
 /**

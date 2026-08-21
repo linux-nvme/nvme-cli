@@ -34,6 +34,7 @@
  * - Data Set Management & Copy: DSM ranges and copy operation formats
  * - Reservation Support: Controller registration and reservation management
  * - I/O Management: Control flags and management operations
+ * - Rate Limiting: Bandwidth and IOPS limiting feature and log page
  */
 
 /**
@@ -425,7 +426,7 @@ struct nvme_fdp_event_realloc {
 	__le16 nlbam;
 	__le64 lba;
 	__u8  rsvd12[4];
-};
+} __attribute__((packed));
 
 /**
  * enum nvme_fdp_event_flags - FDP Event Flags
@@ -897,6 +898,31 @@ enum nvme_resv_rrela {
 };
 
 /**
+ * enum nvme_cancel_acode - Cancel - Action Code (ACODE)
+ * @NVME_CANCEL_ACODE_SINGLE_CMD:   Single Command Cancel
+ * @NVME_CANCEL_ACODE_MULTIPLE_CMD: Multiple Command Cancel
+ */
+enum nvme_cancel_acode {
+	NVME_CANCEL_ACODE_SINGLE_CMD	= 0,
+	NVME_CANCEL_ACODE_MULTIPLE_CMD	= 1,
+};
+
+/**
+ * enum nvme_cancel_cqe_dw0 - Cancel - Completion Queue Entry Dword 0
+ * @NVME_CANCEL_CQE_CMDA_SHIFT: Shift amount to get Commands Aborted (CMDA)
+ * @NVME_CANCEL_CQE_CMDA_MASK:  Mask to get CMDA
+ * @NVME_CANCEL_CQE_CEDA_SHIFT: Shift amount to get Commands Eligible for
+ *			       Deferred Abort (CEDA)
+ * @NVME_CANCEL_CQE_CEDA_MASK:  Mask to get CEDA
+ */
+enum nvme_cancel_cqe_dw0 {
+	NVME_CANCEL_CQE_CMDA_SHIFT	= 0,
+	NVME_CANCEL_CQE_CMDA_MASK	= 0xffff,
+	NVME_CANCEL_CQE_CEDA_SHIFT	= 16,
+	NVME_CANCEL_CQE_CEDA_MASK	= 0xffff,
+};
+
+/**
  * enum nvme_io_mgmt_recv_mo - I/O Management Receive - Management Operation
  * @NVME_IO_MGMT_RECV_RUH_STATUS:	Reclaim Unit Handle Status
  */
@@ -910,5 +936,227 @@ enum nvme_io_mgmt_recv_mo {
  */
 enum nvme_io_mgmt_send_mo {
 	NVME_IO_MGMT_SEND_RUH_UPDATE = 0x1,
+};
+
+/**
+ * enum nvme_rate_limiting_bw_scale - Rate Limiting Bandwidth Scale Factors (BWS)
+ * @NVME_RATE_LIMITING_BW_SCALE_1MIB:	1 MiB/second
+ * @NVME_RATE_LIMITING_BW_SCALE_10MIB:	10 MiB/second
+ * @NVME_RATE_LIMITING_BW_SCALE_100MIB:	100 MiB/second
+ * @NVME_RATE_LIMITING_BW_SCALE_1GIB:	1 GiB/second
+ * @NVME_RATE_LIMITING_BW_SCALE_10GIB:	10 GiB/second
+ * @NVME_RATE_LIMITING_BW_SCALE_100GIB:	100 GiB/second
+ */
+enum nvme_rate_limiting_bw_scale {
+	NVME_RATE_LIMITING_BW_SCALE_1MIB	= 0x0,
+	NVME_RATE_LIMITING_BW_SCALE_10MIB	= 0x1,
+	NVME_RATE_LIMITING_BW_SCALE_100MIB	= 0x2,
+	NVME_RATE_LIMITING_BW_SCALE_1GIB	= 0x3,
+	NVME_RATE_LIMITING_BW_SCALE_10GIB	= 0x4,
+	NVME_RATE_LIMITING_BW_SCALE_100GIB	= 0x5,
+};
+
+/**
+ * enum nvme_rate_limiting_mode - Rate Limiting Control - Rate Limiting Mode (RLM)
+ * @NVME_RATE_LIMITING_MODE_HARD_LIMIT:	Hard Limit mode
+ * @NVME_RATE_LIMITING_MODE_SOFT_LIMIT:	Soft Limit mode
+ */
+enum nvme_rate_limiting_mode {
+	NVME_RATE_LIMITING_MODE_HARD_LIMIT	= 0x0,
+	NVME_RATE_LIMITING_MODE_SOFT_LIMIT	= 0x1,
+};
+
+/**
+ * enum nvme_rate_limiting_rlc - Rate Limiting Data Buffer - Rate Limits Control (RLC)
+ * @NVME_RATE_LIMITING_RLC_RLM_SHIFT:	Shift amount to get/set the Rate
+ *					Limiting Mode (RLM), see &enum
+ *					nvme_rate_limiting_mode
+ * @NVME_RATE_LIMITING_RLC_RLM_MASK:	Mask to get/set RLM
+ * @NVME_RATE_LIMITING_RLC_RLE_SHIFT:	Shift amount to get/set the Rate
+ *					Limiting Enable (RLE)
+ * @NVME_RATE_LIMITING_RLC_RLE_MASK:	Mask to get/set RLE
+ */
+enum nvme_rate_limiting_rlc {
+	NVME_RATE_LIMITING_RLC_RLM_SHIFT	= 0,
+	NVME_RATE_LIMITING_RLC_RLM_MASK		= 0xf,
+	NVME_RATE_LIMITING_RLC_RLE_SHIFT	= 15,
+	NVME_RATE_LIMITING_RLC_RLE_MASK		= 0x1,
+};
+
+#define NVME_RATE_LIMITING_RLC_RLM(rlc)	NVME_GET(rlc, RATE_LIMITING_RLC_RLM)
+#define NVME_RATE_LIMITING_RLC_RLE(rlc)	NVME_GET(rlc, RATE_LIMITING_RLC_RLE)
+
+/**
+ * struct nvme_rate_limiting_data - Rate Limiting Feature - Data Buffer (RLDB)
+ * @rlc:	Rate Limits Control, see &enum nvme_rate_limiting_rlc
+ * @rsvd2:	Reserved
+ * @bwsf:	Bandwidth Scale Factor, see &enum nvme_rate_limiting_bw_scale
+ * @tbwv:	Total Bandwidth Value
+ * @wbwv:	Write Bandwidth Value
+ * @tiops:	Total IOPS
+ * @wiops:	Write IOPS
+ * @riopsr:	Read IOPS Ratio portion of the Write to Read IOPS Ratio, non-zero
+ * @wiopsr:	Write IOPS Ratio portion of the Write to Read IOPS Ratio, non-zero
+ * @rbwr:	Read Bandwidth Ratio portion of the Write to Read Bandwidth Ratio, non-zero
+ * @wbwr:	Write Bandwidth Ratio portion of the Write to Read Bandwidth Ratio, non-zero
+ * @rsvd36:	Reserved
+ * @vs:		Vendor Specific
+ */
+struct nvme_rate_limiting_data {
+	__le16	rlc;
+	__u8	rsvd2[5];
+	__u8	bwsf;
+	__le64	tbwv;
+	__le64	wbwv;
+	__le32	tiops;
+	__le32	wiops;
+	__u8	riopsr;
+	__u8	wiopsr;
+	__u8	rbwr;
+	__u8	wbwr;
+	__u8	rsvd36[476];
+	__u8	vs[512];
+};
+
+/**
+ * struct nvme_rate_limiting_max_access_descriptor - Rate Limiting Maximum
+ *		Access Descriptor (QMAD)
+ * @mbsf:	Maximum Bandwidth Scale Factor, see &enum nvme_rate_limiting_bw_scale
+ * @rsvd1:	Reserved
+ * @mrbwv:	Maximum Read Bandwidth Value, shall not be cleared to 0h
+ * @mwbwv:	Maximum Write Bandwidth Value, shall not be cleared to 0h
+ * @mriops:	Maximum Random Read IOPS, shall not be cleared to 0h
+ * @mwiops:	Maximum Random Write IOPS, shall not be cleared to 0h
+ */
+struct nvme_rate_limiting_max_access_descriptor {
+	__u8	mbsf;
+	__u8	rsvd1[7];
+	__le64	mrbwv;
+	__le64	mwbwv;
+	__le32	mriops;
+	__le32	mwiops;
+};
+
+/**
+ * enum nvme_rate_limiting_scope - Non-Volatile Storage Medium Access
+ *		Descriptor - Scope (SC)
+ * @NVME_RATE_LIMITING_SCOPE_NVM_SUBSYSTEM:	NVM subsystem
+ * @NVME_RATE_LIMITING_SCOPE_DOMAIN:		Domain
+ * @NVME_RATE_LIMITING_SCOPE_ENDURANCE_GROUP:	Endurance Group
+ * @NVME_RATE_LIMITING_SCOPE_NAMESPACE:	Namespace
+ */
+enum nvme_rate_limiting_scope {
+	NVME_RATE_LIMITING_SCOPE_NVM_SUBSYSTEM		= 0x0,
+	NVME_RATE_LIMITING_SCOPE_DOMAIN			= 0x1,
+	NVME_RATE_LIMITING_SCOPE_ENDURANCE_GROUP	= 0x2,
+	NVME_RATE_LIMITING_SCOPE_NAMESPACE		= 0x3,
+};
+
+/**
+ * struct nvme_non_volatile_storage_medium_access_descriptor - Non-Volatile
+ *		Storage Medium Access Descriptor (QNSED)
+ * @sc:		Scope, see &enum nvme_rate_limiting_scope
+ * @rsvd1:	Reserved
+ * @nnsmad:	Number of Non-Volatile Storage Medium Access Descriptors in
+ *		@nvsma_offset, cleared to 0h if @sc is NVM subsystem or the
+ *		NVM subsystem supports a single domain
+ * @si:		Scope Identifier for the scope indicated by @sc
+ * @rlma:	Rate Limiting Maximum Access for the scope indicated by @sc
+ * @rsvd40:	Reserved
+ * @nvsma_offset: Dword offsets, relative to the start of the Rate Limiting
+ *		log page, to the nested Non-Volatile Storage Medium Access
+ *		Descriptors, @nnsmad entries
+ */
+struct nvme_non_volatile_storage_medium_access_descriptor {
+	__u8	sc;
+	__u8	rsvd1;
+	__le16	nnsmad;
+	__le32	si;
+	struct nvme_rate_limiting_max_access_descriptor rlma;
+	__u8	rsvd40[24];
+	__le32	nvsma_offset[];
+};
+
+/**
+ * struct nvme_rate_limiting_controller_descriptor - Rate Limiting Controller
+ *		Descriptor (QCD)
+ * @cntlid:	Controller Identifier
+ * @nnsmad:	Number of Non-Volatile Storage Medium Access Descriptors in
+ *		@nvsma_offset, non-zero
+ * @rsvd4:	Reserved
+ * @rlma:	Rate Limiting Maximum Access of the controller to the NVM
+ *		subsystem port
+ * @rsvd40:	Reserved
+ * @vs:		Vendor Specific
+ * @nvsma_offset: Dword offsets, relative to the start of the Rate Limiting
+ *		log page, to the Non-Volatile Storage Medium Access
+ *		Descriptors, @nnsmad entries
+ */
+struct nvme_rate_limiting_controller_descriptor {
+	__le16	cntlid;
+	__le16	nnsmad;
+	__u8	rsvd4[4];
+	struct nvme_rate_limiting_max_access_descriptor rlma;
+	__u8	rsvd40[24];
+	__u8	vs[256];
+	__le32	nvsma_offset[];
+};
+
+/**
+ * struct nvme_rate_limiting_port_descriptor - Rate Limiting Port Descriptor (QPD)
+ * @portid:	NVM subsystem Port Identifier
+ * @nc:		Number of Controllers in @rlc_offset (0's based)
+ * @rsvd4:	Reserved
+ * @abwsf:	Available Bandwidth Scale Factor, see &enum nvme_rate_limiting_bw_scale
+ * @rlma:	Rate Limiting Maximum Access to the non-volatile storage
+ *		medium of the port
+ * @arbwv:	Available Read Bandwidth Value of the NVM subsystem to the transport
+ * @awbwv:	Available Write Bandwidth Value of the NVM subsystem to the transport
+ * @ariops:	Available Read IOPS of the NVM subsystem to the transport
+ * @awiops:	Available Write IOPS of the NVM subsystem to the transport
+ * @rsvd64:	Reserved
+ * @vs:		Vendor Specific
+ * @rlc_offset:	Dword offsets, relative to the start of the Rate Limiting log
+ *		page, to the Rate Limiting Controller Descriptors accessible
+ *		by this port, @nc + 1 entries
+ */
+struct nvme_rate_limiting_port_descriptor {
+	__le16	portid;
+	__le16	nc;
+	__u8	rsvd4[3];
+	__u8	abwsf;
+	struct nvme_rate_limiting_max_access_descriptor rlma;
+	__le64	arbwv;
+	__le64	awbwv;
+	__le32	ariops;
+	__le32	awiops;
+	__u8	rsvd64[448];
+	__u8	vs[512];
+	__le32	rlc_offset[];
+};
+
+/**
+ * struct nvme_rate_limiting_log - Rate Limiting log page (Log Page Identifier 28h)
+ * @rsvd0:	Reserved
+ * @np:		Number of Ports in @port_offset (0's based)
+ * @lpl:	Log Page Length, in dwords, of this log page
+ * @gc:		Generation Count, incremented each time the information in
+ *		this log page changes since the last time the host read it
+ * @nst:	Number of Supported Targets (0's based)
+ * @rsvd14:	Reserved
+ * @port_offset: Dword offsets, relative to the start of this log page, to
+ *		the Rate Limiting Port Descriptors, @np + 1 entries.
+ *		The Rate Limiting Data (referenced by these and nested
+ *		offsets), the Supported Target list, and trailing padding
+ *		follow this array and are located using @lpl, @np, and @nst.
+ */
+struct nvme_rate_limiting_log {
+	__u8	rsvd0[2];
+	__le16	np;
+	__le32	lpl;
+	__le32	gc;
+	__le16	nst;
+	__u8	rsvd14[2];
+	__le32	port_offset[];
 };
 

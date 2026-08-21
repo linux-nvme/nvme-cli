@@ -15,4 +15,5 @@
 #include <nvme/nvme-types-fabrics.h>
 #include <nvme/nvme-types-mi.h>
 #include <nvme/nvme-types-nvm.h>
+#include <nvme/nvme-types-slm.h>
 #include <nvme/nvme-types-zns.h>
