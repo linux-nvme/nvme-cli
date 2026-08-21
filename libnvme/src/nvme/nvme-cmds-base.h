@@ -4931,6 +4931,116 @@ nvme_init_manage_export_nvms_receive_create(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_manage_export_nvms_receive_list_subsystems() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Receive - List
+ * Exported NVM Subsystems
+ * @cmd:	Passthru command to use
+ * @esubid:	Return Exported NVM Subsystems with an Exported NVM
+ *		Subsystem Identifier greater than or equal to this value
+ * @list:	User address to store the Exported NVM Subsystems List data
+ *		structure, see &struct nvme_exported_nvm_subsys_list
+ * @len:	The allocated length of @list
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Receive command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_SUBSYSTEMS.
+ */
+static inline void
+nvme_init_manage_export_nvms_receive_list_subsystems(
+		struct libnvme_passthru_cmd *cmd, __u16 esubid,
+		struct nvme_exported_nvm_subsys_list *list, __u32 len)
+{
+	__u32 numdl = len ? (len >> 2) - 1 : 0;
+
+	nvme_init_manage_export_nvms_receive(cmd,
+		NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_SUBSYSTEMS, 0, 0,
+		esubid, 0, 0, numdl, list, len);
+}
+
+/**
+ * nvme_init_manage_export_nvms_receive_list_namespaces() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Receive - List
+ * Exported Namespaces
+ * @cmd:	Passthru command to use
+ * @nsid:	Return Exported Namespaces associated with this Exported NVM
+ *		Subsystem, with an Exported Namespace Identifier greater
+ *		than this value
+ * @list:	User address to store the Exported Namespace List data
+ *		structure, see &struct nvme_exported_ns_list
+ * @len:	The allocated length of @list
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Receive command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_NAMESPACES.
+ */
+static inline void
+nvme_init_manage_export_nvms_receive_list_namespaces(
+		struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		struct nvme_exported_ns_list *list, __u32 len)
+{
+	__u32 numdl = len ? (len >> 2) - 1 : 0;
+
+	nvme_init_manage_export_nvms_receive(cmd,
+		NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_NAMESPACES, 0, 0, 0,
+		0, 0, numdl, list, len);
+	cmd->nsid = nsid;
+}
+
+/**
+ * nvme_init_manage_export_nvms_receive_list_controllers() - Initialize
+ * passthru command for Manage Exported NVM Subsystem Receive - List
+ * Exported Controllers (message-based transports only)
+ * @cmd:	Passthru command to use
+ * @ecntlid:	Return Exported Controllers with an Exported Controller
+ *		Identifier greater than or equal to this value
+ * @list:	User address to store the Exported Controller List data
+ *		structure, see &struct nvme_exported_ctrl_list
+ * @len:	The allocated length of @list
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Receive command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_CONTROLLERS.
+ */
+static inline void
+nvme_init_manage_export_nvms_receive_list_controllers(
+		struct libnvme_passthru_cmd *cmd, __u16 ecntlid,
+		struct nvme_exported_ctrl_list *list, __u32 len)
+{
+	__u32 numdl = len ? (len >> 2) - 1 : 0;
+
+	nvme_init_manage_export_nvms_receive(cmd,
+		NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_CONTROLLERS, 0, ecntlid,
+		0, 0, 0, numdl, list, len);
+}
+
+/**
+ * nvme_init_manage_export_nvms_receive_list_ports() - Initialize passthru
+ * command for Manage Exported NVM Subsystem Receive - List Exported Ports
+ * (memory-based transports only)
+ * @cmd:	Passthru command to use
+ * @epid:	Return Exported Ports with an Exported Port Identifier
+ *		greater than or equal to this value
+ * @list:	User address to store the Exported Ports List data
+ *		structure, see &struct nvme_exported_port_list
+ * @len:	The allocated length of @list
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Receive command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_PORTS.
+ */
+static inline void
+nvme_init_manage_export_nvms_receive_list_ports(
+		struct libnvme_passthru_cmd *cmd, __u16 epid,
+		struct nvme_exported_port_list *list, __u32 len)
+{
+	__u32 numdl = len ? (len >> 2) - 1 : 0;
+
+	nvme_init_manage_export_nvms_receive(cmd,
+		NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_PORTS, 0, epid,
+		0, 0, 0, numdl, list, len);
+}
+
+/**
  * nvme_init_manage_export_nvms_send() - Initialize passthru command for
  * Manage Exported NVM Subsystem Send
  * @cmd:	Passthru command to use

@@ -7707,6 +7707,126 @@ struct nvme_exported_nvm_subsys_create_data {
 };
 
 /**
+ * struct nvme_exported_nvm_subsys_descriptor - Exported NVM Subsystem
+ *		       Descriptor
+ * @esubnqn:	Exported NVM Subsystem NQN (ESUBNQN)
+ * @rsvd256:	Reserved
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID)
+ */
+struct nvme_exported_nvm_subsys_descriptor {
+	__u8	esubnqn[256];
+	__u8	rsvd256[2];
+	__le16	esubid;
+};
+
+/**
+ * struct nvme_exported_nvm_subsys_list - Exported NVM Subsystems List Data
+ *		       Structure, returned by the Manage Exported NVM
+ *		       Subsystem Receive command's List Exported NVM
+ *		       Subsystems management operation
+ * @n:		Number of Exported NVM Subsystem Descriptors (N)
+ * @rsvd2:	Reserved
+ * @gn:		Generation Number (GN)
+ * @entries:	Exported NVM Subsystem Descriptor list, see &struct
+ *		nvme_exported_nvm_subsys_descriptor
+ */
+struct nvme_exported_nvm_subsys_list {
+	__le16	n;
+	__u8	rsvd2;
+	__u8	gn;
+	struct nvme_exported_nvm_subsys_descriptor entries[];
+};
+
+/**
+ * struct nvme_exported_ns_descriptor - Exported Namespace Descriptor
+ * @ensid:	Exported Namespace ID (ENSID)
+ * @unsid:	Underlying Namespace ID (UNSID)
+ */
+struct nvme_exported_ns_descriptor {
+	__le32	ensid;
+	__le32	unsid;
+};
+
+/**
+ * struct nvme_exported_ns_list - Exported Namespace List Data Structure,
+ *		       returned by the Manage Exported NVM Subsystem Receive
+ *		       command's List Exported Namespaces management
+ *		       operation
+ * @n:		Number of Exported Namespaces (N)
+ * @rsvd2:	Reserved
+ * @gn:		Generation Number (GN)
+ * @rsvd4:	Reserved
+ * @entries:	Exported Namespace Descriptor list, see &struct
+ *		nvme_exported_ns_descriptor
+ */
+struct nvme_exported_ns_list {
+	__le16	n;
+	__u8	rsvd2;
+	__u8	gn;
+	__u8	rsvd4[4];
+	struct nvme_exported_ns_descriptor entries[];
+};
+
+/**
+ * struct nvme_exported_ctrl_descriptor - Exported Controller Descriptor
+ * @ecntlid:	Exported Controller Identifier (ECNTLID)
+ * @cntlid:	Controller Identifier (CNTLID) of the associated Underlying
+ *		Controller
+ */
+struct nvme_exported_ctrl_descriptor {
+	__le16	ecntlid;
+	__le16	cntlid;
+};
+
+/**
+ * struct nvme_exported_ctrl_list - Exported Controller List Data Structure,
+ *		       returned by the Manage Exported NVM Subsystem Receive
+ *		       command's List Exported Controllers management
+ *		       operation (message-based transports only)
+ * @n:		Number of Exported Controllers (N)
+ * @rsvd2:	Reserved
+ * @gn:		Generation Number (GN)
+ * @entries:	Exported Controller Descriptor list, see &struct
+ *		nvme_exported_ctrl_descriptor
+ */
+struct nvme_exported_ctrl_list {
+	__le16	n;
+	__u8	rsvd2;
+	__u8	gn;
+	struct nvme_exported_ctrl_descriptor entries[];
+};
+
+/**
+ * struct nvme_exported_port_descriptor - Exported Port Descriptor
+ * @epid:	Exported Port ID (EPID)
+ * @pidud:	Port ID of the Underlying Port (PIDUD)
+ * @rsvd4:	Reserved
+ * @trsvcid:	Transport Service ID (TRSVCID), ASCII string
+ */
+struct nvme_exported_port_descriptor {
+	__le16	epid;
+	__le16	pidud;
+	__u8	rsvd4[4];
+	__u8	trsvcid[32];
+};
+
+/**
+ * struct nvme_exported_port_list - Exported Ports List Data Structure,
+ *		       returned by the Manage Exported NVM Subsystem Receive
+ *		       command's List Exported Ports management operation
+ *		       (memory-based transports only)
+ * @n:		Number of Exported Ports (N)
+ * @rsvd2:	Reserved
+ * @entries:	Exported Port Descriptor list, see &struct
+ *		nvme_exported_port_descriptor
+ */
+struct nvme_exported_port_list {
+	__le16	n;
+	__u8	rsvd2[6];
+	struct nvme_exported_port_descriptor entries[];
+};
+
+/**
  * struct nvme_exported_nvm_subsys_nqn_data - Exported NVM Subsystem NQN
  *		       Data Buffer, used by Manage Exported NVM Subsystem
  *		       Send operations that identify the target Exported NVM
