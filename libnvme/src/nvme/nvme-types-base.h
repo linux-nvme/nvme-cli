@@ -8101,6 +8101,90 @@ enum nvme_manage_export_nvms_send_cdw14 {
 };
 
 /**
+ * enum nvme_manage_export_port_sel - Manage Exported Port - Select (SEL)
+ * @NVME_MANAGE_EXPORT_PORT_SEL_CREATE: Create
+ * @NVME_MANAGE_EXPORT_PORT_SEL_DELETE: Delete
+ */
+enum nvme_manage_export_port_sel {
+	NVME_MANAGE_EXPORT_PORT_SEL_CREATE	= 0x01,
+	NVME_MANAGE_EXPORT_PORT_SEL_DELETE	= 0x02,
+};
+
+/**
+ * enum nvme_manage_export_port_cdw10 - Manage Exported Port - Command
+ *		       Dword 10
+ * @NVME_MANAGE_EXPORT_PORT_CDW10_SEL_SHIFT: Shift amount to set Select
+ *		       (SEL), see &enum nvme_manage_export_port_sel
+ * @NVME_MANAGE_EXPORT_PORT_CDW10_SEL_MASK:  Mask to set SEL
+ * @NVME_MANAGE_EXPORT_PORT_CDW10_MOS_SHIFT: Shift amount to set Management
+ *		       Operation Specific (MOS)
+ * @NVME_MANAGE_EXPORT_PORT_CDW10_MOS_MASK:  Mask to set MOS
+ */
+enum nvme_manage_export_port_cdw10 {
+	NVME_MANAGE_EXPORT_PORT_CDW10_SEL_SHIFT	= 0,
+	NVME_MANAGE_EXPORT_PORT_CDW10_SEL_MASK		= 0xff,
+	NVME_MANAGE_EXPORT_PORT_CDW10_MOS_SHIFT	= 8,
+	NVME_MANAGE_EXPORT_PORT_CDW10_MOS_MASK		= 0xff,
+};
+
+/**
+ * enum nvme_export_port_create_mos - Manage Exported Port - Create -
+ *		       Management Operation Specific (MOS) field
+ * @NVME_EXPORT_PORT_CREATE_MOS_GEPID: Generate Exported Port ID (GEPID): if
+ *		       set, the controller generates the Exported Port ID
+ *		       instead of using the value in the data buffer
+ */
+enum nvme_export_port_create_mos {
+	NVME_EXPORT_PORT_CREATE_MOS_GEPID	= 1 << 0,
+};
+
+/**
+ * enum nvme_export_port_create_cqe_dw0 - Manage Exported Port - Create -
+ *		       Completion Queue Entry Dword 0
+ * @NVME_EXPORT_PORT_CREATE_CQE_EPID_SHIFT: Shift amount to get Exported
+ *		       Port ID (EPID)
+ * @NVME_EXPORT_PORT_CREATE_CQE_EPID_MASK:  Mask to get EPID
+ */
+enum nvme_export_port_create_cqe_dw0 {
+	NVME_EXPORT_PORT_CREATE_CQE_EPID_SHIFT	= 0,
+	NVME_EXPORT_PORT_CREATE_CQE_EPID_MASK	= 0xffff,
+};
+
+/**
+ * struct nvme_exported_port_create_data - Manage Exported Port - Create
+ *		       Data Structure
+ * @subnqn:	Exported NVM Subsystem NQN (SUBNQN) to associate the created
+ *		Exported Port with
+ * @epid:	Exported Port ID (EPID). Used unless GEPID is set in the MOS
+ *		field, in which case this field is ignored and the assigned
+ *		Exported Port ID is returned in the CQE result instead.
+ * @pidud:	Port ID of the Underlying Port (PIDUD)
+ * @trsvcid:	Transport Service ID (TRSVCID), ASCII string
+ * @rsvd292:	Reserved
+ */
+struct nvme_exported_port_create_data {
+	__u8	subnqn[256];
+	__le16	epid;
+	__le16	pidud;
+	__u8	trsvcid[32];
+	__u8	rsvd292[28];
+};
+
+/**
+ * struct nvme_exported_port_delete_data - Manage Exported Port - Delete
+ *		       Data Structure
+ * @subnqn:	Exported NVM Subsystem NQN (SUBNQN) associated with the
+ *		Exported Port to delete
+ * @epid:	Exported Port ID (EPID) of the Exported Port to delete
+ * @rsvd258:	Reserved
+ */
+struct nvme_exported_port_delete_data {
+	__u8	subnqn[256];
+	__le16	epid;
+	__u8	rsvd258[62];
+};
+
+/**
  * enum nvme_send_discovery_log_page_rlps - Send Discovery Log Page (SDLP) -
  *					     Requested Log Page Status (RLPS)
  * @NVME_SDLP_RLPS_VALID:	 Valid Log Page: the requested log page is
