@@ -2157,6 +2157,25 @@ static void stdout_id_ctrl_chsi(__u8 ctrl_chsi)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_rmdca(__u8 ctrl_rmdca)
+{
+	__u8 rsvd3 = (ctrl_rmdca >> 3);
+	__u8 rdccs = NVME_CTRL_RMDCA_RDCCS(ctrl_rmdca);
+	__u8 rdncs = NVME_CTRL_RMDCA_RDNCS(ctrl_rmdca);
+	__u8 rdscs = NVME_CTRL_RMDCA_RDSCS(ctrl_rmdca);
+
+	if (rsvd3)
+		printf(" [7:3] : %#x\tReserved\n", rsvd3);
+
+	printf("  [2:2] : %#x\tRestore Default Capacity Management Configuration %sSupported\n",
+	       rdccs, rdccs ? "" : "Not ");
+	printf("  [1:1] : %#x\tRestore Default Namespace Configuration %sSupported\n",
+	       rdncs, rdncs ? "" : "Not ");
+	printf("  [0:0] : %#x\tRestore Default NVM Subsystem Configuration %sSupported\n",
+	       rdscs, rdscs ? "" : "Not ");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_plsi(__u8 ctrl_plsi)
 {
 	__u8 rsvd2 = (ctrl_plsi >> 2);
@@ -3661,6 +3680,9 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	if (human)
 		stdout_id_ctrl_kpioc(ctrl->kpioc);
 	printf("mptfawr   : %d\n", le16_to_cpu(ctrl->mptfawr));
+	printf("rmdca     : %#x\n", ctrl->rmdca);
+	if (human)
+		stdout_id_ctrl_rmdca(ctrl->rmdca);
 	printf("megcap    : %s\n",
 		uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
 	printf("tmpthha   : %#x\n", ctrl->tmpthha);

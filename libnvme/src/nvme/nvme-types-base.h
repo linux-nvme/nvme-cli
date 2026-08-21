@@ -1419,7 +1419,9 @@ struct nvme_id_psd {
  *	       in 100 ms units required by the controller to process a Firmware
  *	       Commit command that specifies a value of 011b in the Commit
  *	       Action field
- * @rsvd362:   Reserved
+ * @rmdca:     Restore Manufacturing Configuration Attributes, see &enum
+ *	       nvme_id_ctrl_rmdca
+ * @rsvd363:   Reserved
  * @megcap:    Max Endurance Group Capacity indicates the maximum capacity
  *	       of a single Endurance Group.
  * @tmpthha:   Temperature Threshold Hysteresis Attributes
@@ -1645,7 +1647,8 @@ struct nvme_id_ctrl {
 	__u8			kpioc;
 	__u8			rsvd359;
 	__le16			mptfawr;
-	__u8			rsvd362[6];
+	__u8			rmdca;
+	__u8			rsvd363[5];
 	__u8			megcap[16];
 	__u8			tmpthha;
 	__u8			rsvd385;
@@ -2104,6 +2107,35 @@ enum nvme_id_ctrl_chsi {
 };
 
 #define NVME_CTRL_CHSI_CHS(chsi)	NVME_GET(chsi, CTRL_CHSI_CHS)
+
+/**
+ * enum nvme_id_ctrl_rmdca - Restore Manufacturing Configuration Attributes
+ * @NVME_CTRL_RMDCA_RDSCS_SHIFT:	Shift amount to get the Restore Default
+ *					NVM Subsystem Configuration Supported
+ *					(RDSCS) from the &struct
+ *					nvme_id_ctrl.rmdca field.
+ * @NVME_CTRL_RMDCA_RDSCS_MASK:	Mask to get RDSCS
+ * @NVME_CTRL_RMDCA_RDNCS_SHIFT:	Shift amount to get the Restore Default
+ *					Namespace Configuration Supported
+ *					(RDNCS)
+ * @NVME_CTRL_RMDCA_RDNCS_MASK:	Mask to get RDNCS
+ * @NVME_CTRL_RMDCA_RDCCS_SHIFT:	Shift amount to get the Restore Default
+ *					Capacity Management Configuration
+ *					Supported (RDCCS)
+ * @NVME_CTRL_RMDCA_RDCCS_MASK:	Mask to get RDCCS
+ */
+enum nvme_id_ctrl_rmdca {
+	NVME_CTRL_RMDCA_RDSCS_SHIFT	= 0,
+	NVME_CTRL_RMDCA_RDSCS_MASK	= 0x1,
+	NVME_CTRL_RMDCA_RDNCS_SHIFT	= 1,
+	NVME_CTRL_RMDCA_RDNCS_MASK	= 0x1,
+	NVME_CTRL_RMDCA_RDCCS_SHIFT	= 2,
+	NVME_CTRL_RMDCA_RDCCS_MASK	= 0x1,
+};
+
+#define NVME_CTRL_RMDCA_RDSCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDSCS)
+#define NVME_CTRL_RMDCA_RDNCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDNCS)
+#define NVME_CTRL_RMDCA_RDCCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDCCS)
 
 #define NVME_CTRL_BACAP_RPMBBPWPS(bpcap)	NVME_GET(bpcap, CTRL_BACAP_RPMBBPWPS)
 #define NVME_CTRL_BACAP_SFBPWPS(bpcap)		NVME_GET(bpcap, CTRL_BACAP_SFBPWPS)
@@ -5475,12 +5507,23 @@ enum nvme_cdp_change_event_ps {
  *					&enum nvme_lockdown_persistence_cdw11
  *					and &enum
  *					nvme_lockdown_persistence_cqe_dw1
+ * @NVME_PERID_REVERT_MFG_SETTINGS:	Revert to Subsystem Manufacturing
+ *					Settings Personality: reverts all
+ *					supported Features (other than CDP
+ *					itself), restorable log pages, and
+ *					vendor specific settings to their
+ *					manufacturing default content for the
+ *					current active firmware image. Uses no
+ *					data buffer; requires an NVM Subsystem
+ *					Reset (see &enum
+ *					nvme_personality_mrstt) to take effect.
  * @NVME_PERID_ALL:			All Personalities
  */
 enum nvme_personality_identifier {
 	NVME_PERID_MFG_DEFAULT		= 0x00,
 	NVME_PERID_SECURITY		= 0x01,
 	NVME_PERID_LOCKDOWN_PERSISTENCE	= 0x02,
+	NVME_PERID_REVERT_MFG_SETTINGS	= 0x03,
 	NVME_PERID_ALL			= 0xff,
 };
 
@@ -5591,6 +5634,46 @@ struct nvme_dev_personalities_log {
 	__u8	dplphl;
 	__le16	cdplps;
 	struct nvme_personality_properties perprops[];
+};
+
+/**
+ * enum nvme_mfg_default_config_status_mdcs - Manufacturer Default
+ *		Configuration Status log page - Manufacturer Default
+ *		Configuration Status (MDCS)
+ * @NVME_MDCS_DSCS_SHIFT:	Shift amount to get the Default NVM Subsystem
+ *				Configuration Status (DSCS)
+ * @NVME_MDCS_DSCS_MASK:	Mask to get DSCS
+ * @NVME_MDCS_DNCS_SHIFT:	Shift amount to get the Default Namespace
+ *				Configuration Status (DNCS)
+ * @NVME_MDCS_DNCS_MASK:	Mask to get DNCS
+ * @NVME_MDCS_DCCS_SHIFT:	Shift amount to get the Default Capacity
+ *				Configuration Status (DCCS)
+ * @NVME_MDCS_DCCS_MASK:	Mask to get DCCS
+ */
+enum nvme_mfg_default_config_status_mdcs {
+	NVME_MDCS_DSCS_SHIFT	= 0,
+	NVME_MDCS_DSCS_MASK	= 0x1,
+	NVME_MDCS_DNCS_SHIFT	= 1,
+	NVME_MDCS_DNCS_MASK	= 0x1,
+	NVME_MDCS_DCCS_SHIFT	= 2,
+	NVME_MDCS_DCCS_MASK	= 0x1,
+};
+
+#define NVME_MDCS_DSCS(mdcs)	NVME_GET(mdcs, MDCS_DSCS)
+#define NVME_MDCS_DNCS(mdcs)	NVME_GET(mdcs, MDCS_DNCS)
+#define NVME_MDCS_DCCS(mdcs)	NVME_GET(mdcs, MDCS_DCCS)
+
+/**
+ * struct nvme_mfg_default_config_status_log - Manufacturer Default
+ *		Configuration Status log page (Log Page Identifier 24h)
+ * @mdcsv:	Manufacturer Default Configuration Status Version: version of
+ *		this data structure, shall be cleared to 0h
+ * @mdcs:	Manufacturer Default Configuration Status, see &enum
+ *		nvme_mfg_default_config_status_mdcs
+ */
+struct nvme_mfg_default_config_status_log {
+	__u8	mdcsv;
+	__u8	mdcs;
 };
 
 /**
@@ -7477,6 +7560,9 @@ struct nvme_pull_model_ddc_req_log {
  *				      valid Reclaim Unit Handle Identifier but restricted or
  *				      the Placement Handle List number of entries exceeded the
  *				      maximum number allowed.
+ * @NVME_SC_FAILED_TO_RESTORE_CONFIG:  Failed to Restore Configuration: The
+ *				      command was aborted due to the command
+ *				      failing to restore configuration.
  * @NVME_SC_LBA_RANGE:		      LBA Out of Range: The command references
  *				      an LBA that exceeds the size of the namespace.
  * @NVME_SC_CAP_EXCEEDED:	      Capacity Exceeded: Execution of the
@@ -7878,6 +7964,7 @@ enum nvme_status_field {
 	NVME_SC_INCORRECT_KEY			= 0x28,
 	NVME_SC_FDP_DISABLED			= 0x29,
 	NVME_SC_INVALID_PLACEMENT_HANDLE_LIST	= 0x2A,
+	NVME_SC_FAILED_TO_RESTORE_CONFIG	= 0x2D,
 	NVME_SC_LBA_RANGE			= 0x80,
 	NVME_SC_CAP_EXCEEDED			= 0x81,
 	NVME_SC_NS_NOT_READY			= 0x82,
@@ -8367,6 +8454,8 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_FDP_STATS:			FDP Statistics
  * @NVME_LOG_LID_FDP_EVENTS:			FDP Events
  * @NVME_LOG_LID_MFG_DEFAULT_CONFIG:		Manufacturer Default Configuration
+ *						Status, see &struct
+ *						nvme_mfg_default_config_status_log
  * @NVME_LOG_LID_POWER_MEASUREMENT:		Power Measurement
  * @NVME_LOG_LID_VOLTAGE_MEASUREMENT:		Voltage Measurement, see
  *						&struct
@@ -9044,10 +9133,13 @@ enum nvme_cmd_format_ses {
  * enum nvme_ns_mgmt_sel - Namespace Management - Select
  * @NVME_NS_MGMT_SEL_CREATE:	Namespace Create selection
  * @NVME_NS_MGMT_SEL_DELETE:	Namespace Delete selection
+ * @NVME_NS_MGMT_SEL_RESTORE_DEFAULT_CONFIG:	Restore Default Namespace
+ *						Configuration selection
  */
 enum nvme_ns_mgmt_sel {
 	NVME_NS_MGMT_SEL_CREATE					= 0,
 	NVME_NS_MGMT_SEL_DELETE					= 1,
+	NVME_NS_MGMT_SEL_RESTORE_DEFAULT_CONFIG			= 2,
 };
 
 /**
@@ -9186,6 +9278,18 @@ enum nvme_virt_mgmt_act {
 	NVME_VIRT_MGMT_ACT_OFFLINE_SEC_CTRL			= 7,
 	NVME_VIRT_MGMT_ACT_ASSIGN_SEC_CTRL			= 8,
 	NVME_VIRT_MGMT_ACT_ONLINE_SEC_CTRL			= 9,
+};
+
+/**
+ * enum nvme_capacity_mgmt_oper - Capacity Management - Operation (OPER)
+ * @NVME_CAPACITY_MGMT_OPER_RESTORE_DEFAULT_CONFIG:	Restore Default
+ *		Capacity Management Configuration: restores the default
+ *		Endurance Groups and NVM Sets configuration in the NVM
+ *		subsystem. The Element Identifier field should be set to
+ *		0h and shall be ignored by the controller.
+ */
+enum nvme_capacity_mgmt_oper {
+	NVME_CAPACITY_MGMT_OPER_RESTORE_DEFAULT_CONFIG		= 0x5,
 };
 
 /**

@@ -1347,6 +1347,24 @@ nvme_init_get_log_sanitize(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_get_log_mfg_default_config_status() - Initialize passthru
+ * command for Manufacturer Default Configuration Status
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_MFG_DEFAULT_CONFIG
+ */
+static inline void
+nvme_init_get_log_mfg_default_config_status(struct libnvme_passthru_cmd *cmd,
+		struct nvme_mfg_default_config_status_log *log)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_MFG_DEFAULT_CONFIG, NVME_CSI_NVM,
+		log, sizeof(*log));
+}
+
+/**
  * nvme_init_identify() - Initialize passthru command for
  * NVMe Identify
  * @cmd:	Command data structure to initialize
@@ -3320,6 +3338,23 @@ nvme_init_ns_mgmt_delete(struct libnvme_passthru_cmd *cmd, __u32 nsid)
 }
 
 /**
+ * nvme_init_ns_mgmt_restore_default_config() - Initialize passthru command to
+ * restore the default NVM subsystem namespace configuration
+ * @cmd:	Passthru command to use
+ *
+ * Initializes the passthru command buffer for the Namespace Management -
+ * Restore Default Namespace Configuration operation
+ * (NVME_NS_MGMT_SEL_RESTORE_DEFAULT_CONFIG). The NSID field is unused for
+ * this operation and is cleared to 0h.
+ */
+static inline void
+nvme_init_ns_mgmt_restore_default_config(struct libnvme_passthru_cmd *cmd)
+{
+	nvme_init_ns_mgmt(cmd, NVME_NSID_NONE,
+		NVME_NS_MGMT_SEL_RESTORE_DEFAULT_CONFIG, 0, NULL);
+}
+
+/**
  * nvme_init_fw_commit() - Initialize passthru command to commit firmware
  * using the specified action
  * @cmd:	Passthru command to use
@@ -3760,6 +3795,22 @@ nvme_init_capacity_mgmt(struct libnvme_passthru_cmd *cmd,
 	cmd->cdw12 = NVME_FIELD_ENCODE(cap >> 32,
 			NVME_CAPACITY_MGMT_CDW12_CAPU_SHIFT,
 			NVME_CAPACITY_MGMT_CDW12_CAPU_MASK);
+}
+
+/**
+ * nvme_init_capacity_mgmt_restore_default_config() - Initialize passthru
+ * command to restore the default Endurance Groups and NVM Sets configuration
+ * @cmd:	Passthru command to use
+ *
+ * Initializes the passthru command buffer for the Capacity Management -
+ * Restore Default Capacity Management Configuration operation
+ * (NVME_CAPACITY_MGMT_OPER_RESTORE_DEFAULT_CONFIG).
+ */
+static inline void
+nvme_init_capacity_mgmt_restore_default_config(struct libnvme_passthru_cmd *cmd)
+{
+	nvme_init_capacity_mgmt(cmd,
+		NVME_CAPACITY_MGMT_OPER_RESTORE_DEFAULT_CONFIG, 0, 0);
 }
 
 /**
