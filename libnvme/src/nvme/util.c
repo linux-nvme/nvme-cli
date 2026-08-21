@@ -260,6 +260,7 @@ static const char * const generic_status[] = {
 	[NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED]	  = "The command is prohibited while the Host Disperesed Namespace Support (HDISNS) field is not set to 1h in the Host Behavior Support feature",
 	[NVME_SC_HOST_ID_NOT_INITIALIZED]	  = "Host Identifier Not Initialized",
 	[NVME_SC_INCORRECT_KEY]			  = "The command was aborted due to the key associated with the KEYTAG field being incorrect",
+	[NVME_SC_FAILED_TO_RESTORE_CONFIG]	  = "Failed to Restore Configuration: The command was aborted due to the command failing to restore configuration",
 	[NVME_SC_LBA_RANGE]			  = "LBA Out of Range: The command references an LBA that exceeds the size of the namespace",
 	[NVME_SC_CAP_EXCEEDED]			  = "Capacity Exceeded: Execution of the command has caused the capacity of the namespace to be exceeded",
 	[NVME_SC_NS_NOT_READY]			  = "Namespace Not Ready: The namespace is not ready to be accessed",
