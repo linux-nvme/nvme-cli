@@ -7590,6 +7590,8 @@ enum nvme_ae_info_css_nvm {
  * @NVME_AER_NOTICE_LBA_STATUS_ALERT:	LBA Status Information Alert
  * @NVME_AER_NOTICE_EG_EVENT:		Endurance Group Event Aggregate Log Page Change
  * @NVME_AER_NOTICE_RATE_LIMITING_CFG_CHANGE:	Rate Limiting Configuration Change
+ * @NVME_AER_NOTICE_ZONE_DESC_CHANGED:	Zone Descriptor Changed (Zoned Namespace
+ *					Command Set specific)
  * @NVME_AER_NOTICE_DISC_CHANGED:	Discovery Log Page Change
  */
 enum nvme_ae_info_notice {
@@ -7601,6 +7603,7 @@ enum nvme_ae_info_notice {
 	NVME_AER_NOTICE_LBA_STATUS_ALERT		= 0x05,
 	NVME_AER_NOTICE_EG_EVENT			= 0x06,
 	NVME_AER_NOTICE_RATE_LIMITING_CFG_CHANGE	= 0x0a,
+	NVME_AER_NOTICE_ZONE_DESC_CHANGED		= 0xef,
 	NVME_AER_NOTICE_DISC_CHANGED			= 0xf0,
 };
 
