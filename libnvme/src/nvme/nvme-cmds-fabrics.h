@@ -267,6 +267,75 @@ nvme_init_send_discovery_log_page(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_manage_export_port() - Initialize passthru command for
+ * Manage Exported Port
+ * @cmd:	Passthru command to use
+ * @sel:	Select (SEL): management operation to perform, see &enum
+ *		nvme_manage_export_port_sel
+ * @mos:	Management Operation Specific (MOS): specific to @sel
+ * @data:	Pointer to data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported Port
+ * command.
+ */
+static inline void
+nvme_init_manage_export_port(struct libnvme_passthru_cmd *cmd,
+		__u8 sel, __u8 mos, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_manage_export_port;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_MANAGE_EXPORT_PORT_CDW10_SEL_SHIFT,
+			NVME_MANAGE_EXPORT_PORT_CDW10_SEL_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_MANAGE_EXPORT_PORT_CDW10_MOS_SHIFT,
+			NVME_MANAGE_EXPORT_PORT_CDW10_MOS_MASK);
+}
+
+/**
+ * nvme_init_manage_export_port_create() - Initialize passthru command for
+ * Manage Exported Port - Create
+ * @cmd:	Passthru command to use
+ * @gepid:	Generate Exported Port ID (GEPID): if set, the controller
+ *		generates the Exported Port ID (returned in the CQE result,
+ *		see &enum nvme_export_port_create_cqe_dw0); if clear, the
+ *		EPID field in @data specifies it
+ * @data:	Create data buffer, see &struct nvme_exported_port_create_data
+ *
+ * Initializes the passthru command buffer for the Manage Exported Port
+ * command with SEL value %NVME_MANAGE_EXPORT_PORT_SEL_CREATE.
+ */
+static inline void
+nvme_init_manage_export_port_create(struct libnvme_passthru_cmd *cmd,
+		bool gepid, struct nvme_exported_port_create_data *data)
+{
+	__u8 mos = gepid ? NVME_EXPORT_PORT_CREATE_MOS_GEPID : 0;
+
+	nvme_init_manage_export_port(cmd, NVME_MANAGE_EXPORT_PORT_SEL_CREATE,
+		mos, data, sizeof(*data));
+}
+
+/**
+ * nvme_init_manage_export_port_delete() - Initialize passthru command for
+ * Manage Exported Port - Delete
+ * @cmd:	Passthru command to use
+ * @data:	Delete data buffer, see &struct nvme_exported_port_delete_data
+ *
+ * Initializes the passthru command buffer for the Manage Exported Port
+ * command with SEL value %NVME_MANAGE_EXPORT_PORT_SEL_DELETE.
+ */
+static inline void
+nvme_init_manage_export_port_delete(struct libnvme_passthru_cmd *cmd,
+		struct nvme_exported_port_delete_data *data)
+{
+	nvme_init_manage_export_port(cmd, NVME_MANAGE_EXPORT_PORT_SEL_DELETE,
+		0, data, sizeof(*data));
+}
+
+/**
  * nvme_init_get_log_cross_ctrl_reset() - Initialize passthru command for
  * Cross-Controller Reset
  * @cmd:	Passthru command to use
