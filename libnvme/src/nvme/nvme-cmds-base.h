@@ -4829,6 +4829,22 @@ nvme_init_dim_send(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_clear_export_nvm_res() - Initialize passthru command for
+ * Clear Exported NVM Resource Configuration
+ * @cmd:	Passthru command to use
+ *
+ * Initializes the passthru command buffer for the Clear Exported NVM
+ * Resource Configuration command. All command specific fields are
+ * reserved.
+ */
+static inline void
+nvme_init_clear_export_nvm_res(struct libnvme_passthru_cmd *cmd)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_clear_export_nvm_res;
+}
+
+/**
   * nvme_init_lockdown() - Initialize passthru command for Lockdown
   * @cmd:	Passthru command to use
   * @scp:	Scope of the command
