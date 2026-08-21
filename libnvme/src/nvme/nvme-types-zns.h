@@ -284,3 +284,17 @@ enum nvme_zns_report_options {
 	NVME_ZNS_ZRAS_REPORT_OFFLINE		= 0x7,
 };
 
+/**
+ * enum nvme_zns_mgmt_send_cqe_dw0 - Zone Management Send - Completion Queue
+ *				      Entry Dword 0
+ * @NVME_ZNS_MGMT_SEND_CQE_ZCC_SHIFT:	Shift amount to get Zone Capacity
+ *					Changed (ZCC)
+ * @NVME_ZNS_MGMT_SEND_CQE_ZCC_MASK:	Mask to get ZCC
+ */
+enum nvme_zns_mgmt_send_cqe_dw0 {
+	NVME_ZNS_MGMT_SEND_CQE_ZCC_SHIFT	= 0,
+	NVME_ZNS_MGMT_SEND_CQE_ZCC_MASK		= 0x1,
+};
+
+#define NVME_ZNS_MGMT_SEND_CQE_ZCC(dw0)	NVME_GET(dw0, ZNS_MGMT_SEND_CQE_ZCC)
+
