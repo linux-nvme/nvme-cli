@@ -23,7 +23,7 @@
  * NVM Command Set type definitions
  *
  * Based on NVM Express NVM Command Set Specification,
- * Revision 1.2, August 1, 2025 (Ratified)
+ * Revision 1.3
  *
  * This file is organized into functional groups:
  * - NVM Namespace Identification: Extended LBA formats and namespace-specific data

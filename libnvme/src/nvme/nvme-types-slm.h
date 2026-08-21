@@ -21,7 +21,7 @@
  * Subsystem Local Memory (SLM) Command Set type definitions
  *
  * Based on NVM Express Subsystem Local Memory Command Set Specification,
- * Revision 1.2
+ * Revision 1.3
  *
  * Only the Host Addressable Namespaces log page (added by TP4184 Host
  * Addressable Subsystem Local Memory) is defined here. The SLM Command
