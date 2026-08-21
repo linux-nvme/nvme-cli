@@ -1178,6 +1178,92 @@ __shr_public int libnvme_mi_mi_subsystem_health_status_poll(
 	return 0;
 }
 
+__shr_public int libnvme_mi_mi_pda_read(libnvme_mi_ep_t ep,
+		enum nvme_mi_pda_dformat dformat, __u32 dofst, __u32 dlen,
+		void *data, size_t *data_len)
+{
+	struct nvme_mi_mi_resp_hdr resp_hdr;
+	struct nvme_mi_mi_req_hdr req_hdr;
+	struct libnvme_mi_resp resp;
+	struct libnvme_mi_req req;
+	int rc;
+
+	libnvme_mi_mi_init_req(ep, &req, &req_hdr, dofst,
+		nvme_mi_mi_opcode_pda_read);
+	req_hdr.rsvd0[0] = dformat;
+	req_hdr.cdw1 = cpu_to_le32(dlen);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &resp_hdr.hdr;
+	resp.hdr_len = sizeof(resp_hdr);
+	resp.data = data;
+	resp.data_len = *data_len;
+
+	rc = libnvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	*data_len = resp.data_len;
+
+	return 0;
+}
+
+__shr_public int libnvme_mi_mi_pda_write(libnvme_mi_ep_t ep,
+		enum nvme_mi_pda_dformat dformat, __u32 dofst, __u32 dlen,
+		void *data, size_t data_len)
+{
+	struct nvme_mi_mi_resp_hdr resp_hdr;
+	struct nvme_mi_mi_req_hdr req_hdr;
+	struct libnvme_mi_resp resp;
+	struct libnvme_mi_req req;
+	int rc;
+
+	libnvme_mi_mi_init_req(ep, &req, &req_hdr, dofst,
+		nvme_mi_mi_opcode_pda_write);
+	req_hdr.rsvd0[0] = dformat;
+	req_hdr.cdw1 = cpu_to_le32(dlen);
+	req.data = data;
+	req.data_len = data_len;
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &resp_hdr.hdr;
+	resp.hdr_len = sizeof(resp_hdr);
+
+	rc = libnvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	return resp_hdr.status;
+}
+
+__shr_public int libnvme_mi_mi_pda_write_zeroes(libnvme_mi_ep_t ep,
+		enum nvme_mi_pda_dformat dformat, __u32 dofst, __u32 dlen)
+{
+	struct nvme_mi_mi_resp_hdr resp_hdr;
+	struct nvme_mi_mi_req_hdr req_hdr;
+	struct libnvme_mi_resp resp;
+	struct libnvme_mi_req req;
+	int rc;
+
+	libnvme_mi_mi_init_req(ep, &req, &req_hdr, dofst,
+		nvme_mi_mi_opcode_pda_write_zeroes);
+	req_hdr.rsvd0[0] = dformat;
+	req_hdr.cdw1 = cpu_to_le32(dlen);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &resp_hdr.hdr;
+	resp.hdr_len = sizeof(resp_hdr);
+
+	rc = libnvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	return resp_hdr.status;
+}
+
 int libnvme_mi_mi_config_set_get_ex(libnvme_mi_ep_t ep, __u8 opcode, __u32 dw0,
 				__u32 dw1, void *data_out, size_t data_out_len,
 				void *data_in, size_t *data_in_len, __u32 *nmresp)
