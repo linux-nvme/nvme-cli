@@ -2654,6 +2654,438 @@ nvme_init_set_features_rate_limiting(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_set_features_spinup_control() - Initialize passthru command for
+ * Spinup Control
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @sce:	Spinup Control Enable (SCE)
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_SPINUP_CONTROL
+ */
+static inline void
+nvme_init_set_features_spinup_control(struct libnvme_passthru_cmd *cmd,
+		bool sv, bool sce)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_SPINUP_CONTROL, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(sce,
+			NVME_FEAT_SPINUP_CONTROL_SHIFT,
+			NVME_FEAT_SPINUP_CONTROL_MASK);
+}
+
+/**
+ * nvme_init_set_features_power_loss_signal() - Initialize passthru command
+ * for Power Loss Signaling Config
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @plsm:	Power Loss Signaling Mode (PLSM)
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_POWER_LOSS_SIGNAL
+ */
+static inline void
+nvme_init_set_features_power_loss_signal(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 plsm)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_POWER_LOSS_SIGNAL, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(plsm,
+			NVME_FEAT_PLS_MODE_SHIFT,
+			NVME_FEAT_PLS_MODE_MASK);
+}
+
+/**
+ * nvme_init_set_features_fdp() - Initialize passthru command for
+ * Flexible Data Placement
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @endgid:	Endurance Group Identifier (ENDGID)
+ * @fdpcidx:	Flexible Data Placement Configuration Index (FDPCIDX)
+ * @fdpe:	Flexible Data Placement Enable (FDPE)
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_FDP
+ */
+static inline void
+nvme_init_set_features_fdp(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u16 endgid, __u8 fdpcidx, bool fdpe)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_FDP, sv);
+	cmd->cdw11 = endgid;
+	cmd->cdw12 = NVME_FIELD_ENCODE(fdpcidx,
+			NVME_FEAT_FDP_INDEX_SHIFT,
+			NVME_FEAT_FDP_INDEX_MASK) |
+		     NVME_FIELD_ENCODE(fdpe,
+			NVME_FEAT_FDP_ENABLED_SHIFT,
+			NVME_FEAT_FDP_ENABLED_MASK);
+}
+
+/**
+ * nvme_init_set_features_fdp_events() - Initialize passthru command for
+ * Flexible Data Placement Events
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @phndl:	Placement Handle (PHNDL)
+ * @fdpee:	FDP Event Enable (FDPEE)
+ * @event_types: FDP Event Type List data buffer, see Figure 504 of the Base
+ *		Specification
+ * @noet:	Number of FDP Event Types (NOET) contained in @event_types
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_FDP_EVENTS
+ */
+static inline void
+nvme_init_set_features_fdp_events(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u16 phndl, bool fdpee, __u8 *event_types, __u8 noet)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_FDP_EVENTS, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(phndl,
+			NVME_FEAT_FDPE_PHNDL_SHIFT,
+			NVME_FEAT_FDPE_PHNDL_MASK) |
+		     NVME_FIELD_ENCODE(noet,
+			NVME_FEAT_FDPE_NOET_SHIFT,
+			NVME_FEAT_FDPE_NOET_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(fdpee,
+			NVME_FEAT_FDP_EVENTS_ENABLE_SHIFT,
+			NVME_FEAT_FDP_EVENTS_ENABLE_MASK);
+	cmd->data_len = noet;
+	cmd->addr = (__u64)(uintptr_t)event_types;
+}
+
+/**
+ * nvme_init_set_features_ns_admin_label() - Initialize passthru command for
+ * Namespace Admin Label
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace Identifier
+ * @sv:		Save value across power states
+ * @label:	256 byte, null-terminated UTF-8 Namespace Admin Label (NSAL)
+ *		data buffer
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_NS_ADMIN_LABEL
+ */
+static inline void
+nvme_init_set_features_ns_admin_label(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, bool sv, void *label)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_NS_ADMIN_LABEL, sv);
+	cmd->nsid = nsid;
+	cmd->data_len = 256;
+	cmd->addr = (__u64)(uintptr_t)label;
+}
+
+/**
+ * nvme_init_set_features_personality() - Initialize passthru command for
+ * Configurable Device Personality
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @perid:	Personality Identifier (PERID), see &enum nvme_personality_identifier
+ * @chps:	Change Personality Settings (CHPS)
+ * @perfs:	Personality Freeze State (PERFS)
+ * @cdw11:	Personality Identifier specific Command Dword 11 value
+ * @data:	Personality Identifier specific data buffer, or NULL if the
+ *		personality does not use the data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_CONF_DEV_PERSONALITY
+ */
+static inline void
+nvme_init_set_features_personality(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 perid, bool chps, bool perfs, __u32 cdw11,
+		void *data, __u32 len)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_CONF_DEV_PERSONALITY, sv);
+	cmd->cdw11 = cdw11;
+	cmd->cdw13 = NVME_FIELD_ENCODE(perid,
+			NVME_FEAT_CDP_PERID_SHIFT,
+			NVME_FEAT_CDP_PERID_MASK) |
+		     (chps ? NVME_FEAT_CDP_CHPS : 0) |
+		     (perfs ? NVME_FEAT_CDP_PERFS : 0);
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_set_features_power_limit() - Initialize passthru command for
+ * Power Limit
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @pls:	Power Limit Scale (PLS)
+ * @plv:	Power Limit Value (PLV)
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_POWER_LIMIT
+ */
+static inline void
+nvme_init_set_features_power_limit(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 pls, __u16 plv)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_POWER_LIMIT, sv);
+	cmd->cdw13 = NVME_FIELD_ENCODE(pls,
+			NVME_FEAT_POWER_LIMIT_PLS_SHIFT,
+			NVME_FEAT_POWER_LIMIT_PLS_MASK) |
+		     NVME_FIELD_ENCODE(plv,
+			NVME_FEAT_POWER_LIMIT_PLV_SHIFT,
+			NVME_FEAT_POWER_LIMIT_PLV_MASK);
+}
+
+/**
+ * nvme_init_set_features_power_threshold() - Initialize passthru command for
+ * Power Threshold
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @ept:	Enable Power Threshold (EPT)
+ * @pmts:	Power Measurement Type Select (PMTS)
+ * @pts:	Power Threshold Scale (PTS)
+ * @ptv:	Power Threshold Value (PTV)
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_POWER_THRESH
+ */
+static inline void
+nvme_init_set_features_power_threshold(struct libnvme_passthru_cmd *cmd,
+		bool sv, bool ept, __u8 pmts, __u8 pts, __u16 ptv)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_POWER_THRESH, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(ept,
+			NVME_FEAT_POWER_THRESH_EPT_SHIFT,
+			NVME_FEAT_POWER_THRESH_EPT_MASK) |
+		     NVME_FIELD_ENCODE(pmts,
+			NVME_FEAT_POWER_THRESH_PMTS_SHIFT,
+			NVME_FEAT_POWER_THRESH_PMTS_MASK) |
+		     NVME_FIELD_ENCODE(pts,
+			NVME_FEAT_POWER_THRESH_PTS_SHIFT,
+			NVME_FEAT_POWER_THRESH_PTS_MASK) |
+		     NVME_FIELD_ENCODE(ptv,
+			NVME_FEAT_POWER_THRESH_PTV_SHIFT,
+			NVME_FEAT_POWER_THRESH_PTV_MASK);
+}
+
+/**
+ * nvme_init_set_features_power_measurement() - Initialize passthru command
+ * for Power Measurement
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @act:	Action (ACT), see &enum nvme_voltage_measurement_act (the
+ *		Power Measurement and Voltage Measurement Action field
+ *		values are defined identically)
+ * @pmts:	Power Measurement Type Select (PMTS), used if @act requests
+ *		Start Power Measurements
+ * @smt:	Stop Measurement Time (SMT), used if @act requests Start Power
+ *		Measurements
+ * @actsp:	Action Specific (ACTSP) Command Dword 12 value
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_POWER_MEASUREMENT
+ */
+static inline void
+nvme_init_set_features_power_measurement(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 act, __u8 pmts, __u16 smt, __u32 actsp)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_POWER_MEASUREMENT, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(smt,
+			NVME_FEAT_POWER_MEAS_SMT_SHIFT,
+			NVME_FEAT_POWER_MEAS_SMT_MASK) |
+		     NVME_FIELD_ENCODE(pmts,
+			NVME_FEAT_POWER_MEAS_PMTS_SHIFT,
+			NVME_FEAT_POWER_MEAS_PMTS_MASK) |
+		     NVME_FIELD_ENCODE(act,
+			NVME_FEAT_POWER_MEAS_ACT_SHIFT,
+			NVME_FEAT_POWER_MEAS_ACT_MASK);
+	cmd->cdw12 = actsp;
+}
+
+/**
+ * nvme_init_set_features_voltage_threshold() - Initialize passthru command
+ * for Voltage Threshold
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @vsens:	Voltage Sensor Select (VSENS)
+ * @evt:	Enable Voltage Threshold (EVT)
+ * @ovt:	Overvoltage Threshold (OVT)
+ * @uvt:	Undervoltage Threshold (UVT)
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_VOLTAGE_THRESHOLD
+ */
+static inline void
+nvme_init_set_features_voltage_threshold(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 vsens, bool evt, __u16 ovt, __u16 uvt)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_VOLTAGE_THRESHOLD, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(vsens,
+			NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_SHIFT,
+			NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_MASK) |
+		     (evt ? NVME_FEAT_VOLTAGE_THRESHOLD_EVT : 0) |
+		     NVME_FIELD_ENCODE(ovt,
+			NVME_FEAT_VOLTAGE_THRESHOLD_OVT_SHIFT,
+			NVME_FEAT_VOLTAGE_THRESHOLD_OVT_MASK) |
+		     NVME_FIELD_ENCODE(uvt,
+			NVME_FEAT_VOLTAGE_THRESHOLD_UVT_SHIFT,
+			NVME_FEAT_VOLTAGE_THRESHOLD_UVT_MASK);
+}
+
+/**
+ * nvme_init_set_features_voltage_measurement() - Initialize passthru command
+ * for Voltage Measurement
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @act:	Action (ACT), see &enum nvme_voltage_measurement_act
+ * @data:	Start Voltage Measurements data buffer, used if @act is
+ *		%NVME_VOLTAGE_MEASUREMENT_ACT_START, otherwise NULL, see
+ *		&struct nvme_voltage_measurement_start_data
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_VOLTAGE_MEASUREMENT
+ */
+static inline void
+nvme_init_set_features_voltage_measurement(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 act, struct nvme_voltage_measurement_start_data *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_VOLTAGE_MEASUREMENT, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(act,
+			NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_SHIFT,
+			NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_MASK);
+	if (act == NVME_VOLTAGE_MEASUREMENT_ACT_START && data) {
+		cmd->data_len = sizeof(*data);
+		cmd->addr = (__u64)(uintptr_t)data;
+	}
+}
+
+/**
+ * nvme_init_set_features_emb_mgmt_ctrl_addr() - Initialize passthru command
+ * for Embedded Management Controller Address
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @data:	512 byte Embedded Management Controller Address (EMCA) data
+ *		buffer, see &struct nvme_mgmt_addr_desc
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR
+ */
+static inline void
+nvme_init_set_features_emb_mgmt_ctrl_addr(struct libnvme_passthru_cmd *cmd,
+		bool sv, void *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR, sv);
+	cmd->data_len = sizeof(struct nvme_mgmt_addr_desc);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_set_features_host_mgmt_agent_addr() - Initialize passthru
+ * command for Host Management Agent Address
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @data:	512 byte Host Management Agent Address (HMAA) data buffer,
+ *		see &struct nvme_mgmt_addr_desc
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR
+ */
+static inline void
+nvme_init_set_features_host_mgmt_agent_addr(struct libnvme_passthru_cmd *cmd,
+		bool sv, void *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR, sv);
+	cmd->data_len = sizeof(struct nvme_mgmt_addr_desc);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_set_features_enh_ctrl_metadata() - Initialize passthru command
+ * for Enhanced Controller Metadata
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @ea:		Element Action (EA), see &enum nvme_host_metadata_ea
+ * @data:	Host Metadata data buffer, see &struct nvme_host_metadata
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_ENH_CTRL_METADATA
+ */
+static inline void
+nvme_init_set_features_enh_ctrl_metadata(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 ea, struct nvme_host_metadata *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_ENH_CTRL_METADATA, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(ea,
+			NVME_HOST_METADATA_EA_SHIFT,
+			NVME_HOST_METADATA_EA_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_set_features_ctrl_metadata() - Initialize passthru command for
+ * Controller Metadata
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @ea:		Element Action (EA), see &enum nvme_host_metadata_ea
+ * @data:	Host Metadata data buffer, see &struct nvme_host_metadata
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_CTRL_METADATA
+ */
+static inline void
+nvme_init_set_features_ctrl_metadata(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 ea, struct nvme_host_metadata *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_CTRL_METADATA, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(ea,
+			NVME_HOST_METADATA_EA_SHIFT,
+			NVME_HOST_METADATA_EA_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_set_features_ns_metadata() - Initialize passthru command for
+ * Namespace Metadata
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @ea:		Element Action (EA), see &enum nvme_host_metadata_ea
+ * @data:	Host Metadata data buffer, see &struct nvme_host_metadata
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_NS_METADATA
+ */
+static inline void
+nvme_init_set_features_ns_metadata(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 ea, struct nvme_host_metadata *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_NS_METADATA, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(ea,
+			NVME_HOST_METADATA_EA_SHIFT,
+			NVME_HOST_METADATA_EA_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_set_features_bp_write_protect() - Initialize passthru command
+ * for Boot Partition Write Protection Config
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @bp0wps:	Boot Partition 0 Write Protection State (BP0WPS)
+ * @bp1wps:	Boot Partition 1 Write Protection State (BP1WPS)
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_BP_WRITE_PROTECT
+ */
+static inline void
+nvme_init_set_features_bp_write_protect(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 bp0wps, __u8 bp1wps)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_BP_WRITE_PROTECT, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(bp0wps,
+			NVME_FEAT_BPWPC_BP0WPS_SHIFT,
+			NVME_FEAT_BPWPC_BP0WPS_MASK) |
+		     NVME_FIELD_ENCODE(bp1wps,
+			NVME_FEAT_BPWPC_BP1WPS_SHIFT,
+			NVME_FEAT_BPWPC_BP1WPS_MASK);
+}
+
+/**
  * nvme_init_get_features() - Initialize passthru command for
  * Get Features
  * @cmd:	Passthru command to use
@@ -3312,6 +3744,348 @@ nvme_init_get_features_rate_limiting(struct libnvme_passthru_cmd *cmd,
 			NVME_FEAT_RATE_LIMITING_TID_MASK);
 	cmd->data_len = sizeof(*data);
 	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_spinup_control() - Initialize passthru command for
+ * Get Features - Spinup Control
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_SPINUP_CONTROL
+ */
+static inline void
+nvme_init_get_features_spinup_control(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_SPINUP_CONTROL, sel);
+}
+
+/**
+ * nvme_init_get_features_power_loss_signal() - Initialize passthru command
+ * for Get Features - Power Loss Signaling Config
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_POWER_LOSS_SIGNAL
+ */
+static inline void
+nvme_init_get_features_power_loss_signal(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_POWER_LOSS_SIGNAL, sel);
+}
+
+/**
+ * nvme_init_get_features_fdp() - Initialize passthru command for
+ * Get Features - Flexible Data Placement
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @endgid:	Endurance Group Identifier (ENDGID)
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_FDP
+ */
+static inline void
+nvme_init_get_features_fdp(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 endgid)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_FDP, sel);
+	cmd->cdw11 = endgid;
+}
+
+/**
+ * nvme_init_get_features_fdp_events() - Initialize passthru command for
+ * Get Features - Flexible Data Placement Events
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @phndl:	Placement Handle (PHNDL)
+ * @data:	Supported FDP Event Type List data buffer, see &struct
+ *		nvme_fdp_supported_event_desc
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_FDP_EVENTS
+ */
+static inline void
+nvme_init_get_features_fdp_events(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 phndl,
+		void *data, __u32 len)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_FDP_EVENTS, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(phndl,
+			NVME_FEAT_FDPE_PHNDL_SHIFT,
+			NVME_FEAT_FDPE_PHNDL_MASK);
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_ns_admin_label() - Initialize passthru command for
+ * Get Features - Namespace Admin Label
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @label:	256 byte, null-terminated UTF-8 Namespace Admin Label (NSAL)
+ *		data buffer
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_NS_ADMIN_LABEL
+ */
+static inline void
+nvme_init_get_features_ns_admin_label(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, void *label)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_NS_ADMIN_LABEL, sel);
+	cmd->data_len = 256;
+	cmd->addr = (__u64)(uintptr_t)label;
+}
+
+/**
+ * nvme_init_get_features_personality() - Initialize passthru command for
+ * Get Features - Configurable Device Personality
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @perid:	Personality Identifier (PERID), see &enum
+ *		nvme_personality_identifier
+ * @data:	Personality Identifier specific data buffer, or NULL if the
+ *		personality does not use the data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_CONF_DEV_PERSONALITY
+ */
+static inline void
+nvme_init_get_features_personality(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u8 perid,
+		void *data, __u32 len)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_CONF_DEV_PERSONALITY, sel);
+	cmd->cdw13 = NVME_FIELD_ENCODE(perid,
+			NVME_FEAT_CDP_PERID_SHIFT,
+			NVME_FEAT_CDP_PERID_MASK);
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_power_limit() - Initialize passthru command for
+ * Get Features - Power Limit
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_POWER_LIMIT
+ */
+static inline void
+nvme_init_get_features_power_limit(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_POWER_LIMIT, sel);
+}
+
+/**
+ * nvme_init_get_features_power_threshold() - Initialize passthru command for
+ * Get Features - Power Threshold
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_POWER_THRESH
+ */
+static inline void
+nvme_init_get_features_power_threshold(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_POWER_THRESH, sel);
+}
+
+/**
+ * nvme_init_get_features_power_measurement() - Initialize passthru command
+ * for Get Features - Power Measurement
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_POWER_MEASUREMENT
+ */
+static inline void
+nvme_init_get_features_power_measurement(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_POWER_MEASUREMENT, sel);
+}
+
+/**
+ * nvme_init_get_features_voltage_threshold() - Initialize passthru command
+ * for Get Features - Voltage Threshold
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @vsens:	Voltage Sensor Select (VSENS)
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_VOLTAGE_THRESHOLD
+ */
+static inline void
+nvme_init_get_features_voltage_threshold(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u8 vsens)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_VOLTAGE_THRESHOLD, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(vsens,
+			NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_SHIFT,
+			NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_MASK);
+}
+
+/**
+ * nvme_init_get_features_voltage_measurement() - Initialize passthru command
+ * for Get Features - Voltage Measurement
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @data:	Start Voltage Measurements data buffer, see &struct
+ *		nvme_voltage_measurement_start_data
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_VOLTAGE_MEASUREMENT
+ */
+static inline void
+nvme_init_get_features_voltage_measurement(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, void *data, __u32 len)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_VOLTAGE_MEASUREMENT, sel);
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_emb_mgmt_ctrl_addr() - Initialize passthru command
+ * for Get Features - Embedded Management Controller Address
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @data:	512 byte Embedded Management Controller Address (EMCA) data
+ *		buffer, see &struct nvme_mgmt_addr_desc
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR
+ */
+static inline void
+nvme_init_get_features_emb_mgmt_ctrl_addr(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, void *data)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR, sel);
+	cmd->data_len = sizeof(struct nvme_mgmt_addr_desc);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_host_mgmt_agent_addr() - Initialize passthru
+ * command for Get Features - Host Management Agent Address
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @data:	512 byte Host Management Agent Address (HMAA) data buffer,
+ *		see &struct nvme_mgmt_addr_desc
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR
+ */
+static inline void
+nvme_init_get_features_host_mgmt_agent_addr(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, void *data)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR, sel);
+	cmd->data_len = sizeof(struct nvme_mgmt_addr_desc);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_enh_ctrl_metadata() - Initialize passthru command
+ * for Get Features - Enhanced Controller Metadata
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @data:	Host Metadata data buffer, see &struct nvme_host_metadata
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_ENH_CTRL_METADATA
+ */
+static inline void
+nvme_init_get_features_enh_ctrl_metadata(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, struct nvme_host_metadata *data)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_ENH_CTRL_METADATA, sel);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_ctrl_metadata() - Initialize passthru command for
+ * Get Features - Controller Metadata
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @data:	Host Metadata data buffer, see &struct nvme_host_metadata
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_CTRL_METADATA
+ */
+static inline void
+nvme_init_get_features_ctrl_metadata(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, struct nvme_host_metadata *data)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_CTRL_METADATA, sel);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_ns_metadata() - Initialize passthru command for
+ * Get Features - Namespace Metadata
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @data:	Host Metadata data buffer, see &struct nvme_host_metadata
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_NS_METADATA
+ */
+static inline void
+nvme_init_get_features_ns_metadata(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, struct nvme_host_metadata *data)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_NS_METADATA, sel);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_features_bp_write_protect() - Initialize passthru command
+ * for Get Features - Boot Partition Write Protection Config
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_BP_WRITE_PROTECT
+ */
+static inline void
+nvme_init_get_features_bp_write_protect(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_BP_WRITE_PROTECT, sel);
 }
 
 /**
