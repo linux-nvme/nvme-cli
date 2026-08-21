@@ -105,12 +105,20 @@ struct nvme_zns_changed_zone_log {
 };
 
 /**
- * enum nvme_zns_zt - Zone Descriptor Data Structure - Zone Type
+ * enum nvme_zns_zt - Zone Descriptor Data Structure - Zone Type Attributes
+ * @NVME_ZNS_DESC_ZT_SHIFT:		Shift amount to get the Zone Type (ZT)
+ *					from the &struct nvme_zns_desc.zt field.
+ * @NVME_ZNS_DESC_ZT_MASK:		Mask to get ZT from the
+ *					&struct nvme_zns_desc.zt field.
  * @NVME_ZONE_TYPE_SEQWRITE_REQ:	Sequential Write Required
  */
 enum nvme_zns_zt {
+	NVME_ZNS_DESC_ZT_SHIFT		= 0,
+	NVME_ZNS_DESC_ZT_MASK		= 0xf,
 	NVME_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
 };
+
+#define NVME_ZNS_DESC_ZT(ztattr)	NVME_GET(ztattr, ZNS_DESC_ZT)
 
 /**
  * enum nvme_zns_za - Zone Descriptor Data Structure
@@ -129,7 +137,11 @@ enum nvme_zns_za {
 };
 
 /**
- * enum nvme_zns_zs - Zone Descriptor Data Structure - Zone State
+ * enum nvme_zns_zs - Zone Descriptor Data Structure - Zone State Attributes
+ * @NVME_ZNS_DESC_ZS_SHIFT:	Shift amount to get the Zone State (ZS) from
+ *				the &struct nvme_zns_desc.zs field.
+ * @NVME_ZNS_DESC_ZS_MASK:	Mask to get ZS from the
+ *				&struct nvme_zns_desc.zs field.
  * @NVME_ZNS_ZS_EMPTY:		Empty state
  * @NVME_ZNS_ZS_IMPL_OPEN:	Implicitly open state
  * @NVME_ZNS_ZS_EXPL_OPEN:	Explicitly open state
@@ -139,6 +151,8 @@ enum nvme_zns_za {
  * @NVME_ZNS_ZS_OFFLINE:	Offline state
  */
 enum nvme_zns_zs {
+	NVME_ZNS_DESC_ZS_SHIFT		= 4,
+	NVME_ZNS_DESC_ZS_MASK		= 0xf,
 	NVME_ZNS_ZS_EMPTY		= 0x1,
 	NVME_ZNS_ZS_IMPL_OPEN		= 0x2,
 	NVME_ZNS_ZS_EXPL_OPEN		= 0x3,
@@ -148,12 +162,46 @@ enum nvme_zns_zs {
 	NVME_ZNS_ZS_OFFLINE		= 0xf,
 };
 
+#define NVME_ZNS_DESC_ZS(zsattr)	NVME_GET(zsattr, ZNS_DESC_ZS)
+
+/**
+ * enum nvme_zns_zai - Zone Descriptor Data Structure - Zone Attributes
+ *		       Information
+ * @NVME_ZNS_ZAI_RZRTL_SHIFT:	Shift amount to get the Reset Zone
+ *				Recommended Time Limit (RZRTL) from the
+ *				&struct nvme_zns_desc.zai field.
+ * @NVME_ZNS_ZAI_RZRTL_MASK:	Mask to get RZRTL from the
+ *				&struct nvme_zns_desc.zai field.
+ * @NVME_ZNS_ZAI_FZRTL_SHIFT:	Shift amount to get the Finish Zone
+ *				Recommended Time Limit (FZRTL) from the
+ *				&struct nvme_zns_desc.zai field.
+ * @NVME_ZNS_ZAI_FZRTL_MASK:	Mask to get FZRTL from the
+ *				&struct nvme_zns_desc.zai field.
+ * @NVME_ZNS_ZAI_RTL_0:	Reset/Finish Recommended Limit (RRL/FRL)
+ * @NVME_ZNS_ZAI_RTL_1:	Reset/Finish Recommended Limit 1 (RRL1/FRL1)
+ * @NVME_ZNS_ZAI_RTL_2:	Reset/Finish Recommended Limit 2 (RRL2/FRL2)
+ * @NVME_ZNS_ZAI_RTL_3:	Reset/Finish Recommended Limit 3 (RRL3/FRL3)
+ */
+enum nvme_zns_zai {
+	NVME_ZNS_ZAI_RZRTL_SHIFT	= 2,
+	NVME_ZNS_ZAI_RZRTL_MASK		= 0x3,
+	NVME_ZNS_ZAI_FZRTL_SHIFT	= 0,
+	NVME_ZNS_ZAI_FZRTL_MASK		= 0x3,
+	NVME_ZNS_ZAI_RTL_0		= 0x0,
+	NVME_ZNS_ZAI_RTL_1		= 0x1,
+	NVME_ZNS_ZAI_RTL_2		= 0x2,
+	NVME_ZNS_ZAI_RTL_3		= 0x3,
+};
+
+#define NVME_ZNS_ZAI_RZRTL(zai)	NVME_GET(zai, ZNS_ZAI_RZRTL)
+#define NVME_ZNS_ZAI_FZRTL(zai)	NVME_GET(zai, ZNS_ZAI_FZRTL)
+
 /**
  * struct nvme_zns_desc - Zone Descriptor Data Structure
- * @zt:		Zone Type
- * @zs:		Zone State
- * @za:		Zone Attributes
- * @zai:	Zone Attributes Information
+ * @zt:		Zone Type Attributes, ZT is bits 3:0, see &enum nvme_zns_zt
+ * @zs:		Zone State Attributes, ZS is bits 7:4, see &enum nvme_zns_zs
+ * @za:		Zone Attributes, see &enum nvme_zns_za
+ * @zai:	Zone Attributes Information, see &enum nvme_zns_zai
  * @rsvd4:	Reserved
  * @zcap:	Zone Capacity
  * @zslba:	Zone Start Logical Block Address
