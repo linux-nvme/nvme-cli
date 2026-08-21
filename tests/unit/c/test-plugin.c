@@ -151,6 +151,10 @@ static int run_handle_plugin(char *argv[], int argc, struct plugin *plugin,
 	if (saved_stdout < 0 || saved_stderr < 0) {
 		printf("ERROR: dup failed: %s\n", libnvme_strerror(errno));
 		test_rc = 1;
+		if (saved_stdout >= 0)
+			close(saved_stdout);
+		if (saved_stderr >= 0)
+			close(saved_stderr);
 		goto done;
 	}
 
