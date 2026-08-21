@@ -1268,6 +1268,27 @@ nvme_init_get_log_fdp_events(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_get_log_rate_limiting() - Initialize passthru command for
+ * Rate Limiting
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset into log page
+ * @log:	Log page data buffer
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_RATE_LIMITING
+ */
+static inline void
+nvme_init_get_log_rate_limiting(struct libnvme_passthru_cmd *cmd,
+		__u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_RATE_LIMITING, NVME_CSI_NVM,
+		log, len);
+	nvme_init_get_log_lpo(cmd, lpo);
+}
+
+/**
  * nvme_init_get_log_reservation() - Initialize passthru command for
  * Reservation Notification
  * @cmd:	Passthru command to use
@@ -2521,6 +2542,36 @@ nvme_init_lm_set_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_set_features_rate_limiting() - Initialize passthru command for
+ * Rate Limiting
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @target:	Target of the rate limits setting, see
+ *		&enum nvme_rate_limiting_target
+ * @tid:	Target Identifier for the target specified by @target
+ * @data:	User address of the Rate Limiting data buffer, see
+ *		&struct nvme_rate_limiting_data
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_RATE_LIMITING
+ */
+static inline void
+nvme_init_set_features_rate_limiting(struct libnvme_passthru_cmd *cmd,
+		bool sv, __u8 target, __u16 tid,
+		struct nvme_rate_limiting_data *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_RATE_LIMITING, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(target,
+			NVME_FEAT_RATE_LIMITING_TGT_SHIFT,
+			NVME_FEAT_RATE_LIMITING_TGT_MASK) |
+		     NVME_FIELD_ENCODE(tid,
+			NVME_FEAT_RATE_LIMITING_TID_SHIFT,
+			NVME_FEAT_RATE_LIMITING_TID_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
+
+/**
  * nvme_init_get_features() - Initialize passthru command for
  * Get Features
  * @cmd:	Passthru command to use
@@ -3148,6 +3199,37 @@ nvme_init_lm_get_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
 	cmd->data_len = sizeof(*qfd);
 	cmd->addr = (__u64)(uintptr_t)qfd;
 	cmd->cdw11 = cdqid;
+}
+
+/**
+ * nvme_init_get_features_rate_limiting() - Initialize passthru command for
+ * Get Features - Rate Limiting
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @target:	Target of the rate limits setting, see
+ *		&enum nvme_rate_limiting_target
+ * @tid:	Target Identifier for the target specified by @target
+ * @data:	Buffer to receive the Rate Limiting data buffer, see
+ *		&struct nvme_rate_limiting_data
+ *
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_RATE_LIMITING
+ */
+static inline void
+nvme_init_get_features_rate_limiting(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u8 target, __u16 tid,
+		struct nvme_rate_limiting_data *data)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_RATE_LIMITING, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(target,
+			NVME_FEAT_RATE_LIMITING_TGT_SHIFT,
+			NVME_FEAT_RATE_LIMITING_TGT_MASK) |
+		     NVME_FIELD_ENCODE(tid,
+			NVME_FEAT_RATE_LIMITING_TID_SHIFT,
+			NVME_FEAT_RATE_LIMITING_TID_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
 }
 
 /**

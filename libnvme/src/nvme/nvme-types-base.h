@@ -1789,6 +1789,8 @@ enum nvme_id_ctrl_cmic {
  * @NVME_CTRL_OAES_RGCNS_SHIFT: Shift amount to get the Reachability Groups Change Notices supported
  * @NVME_CTRL_OAES_ANSAN_SHIFT: Shift amount to get the Allocated Namespace Attribute Notices
  *                              supported
+ * @NVME_CTRL_OAES_RLCC_SHIFT: Shift amount to get the Rate Limiting Configuration Change event
+ *                             supported
  * @NVME_CTRL_OAES_ZD_SHIFT: Shift amount to get the Zone Descriptor Change Notifications supported
  * @NVME_CTRL_OAES_DL_SHIFT: Shift amount to get the Discover Log Page Change Notifications
  *                           supported
@@ -1805,6 +1807,7 @@ enum nvme_id_ctrl_cmic {
  *                           supported
  * @NVME_CTRL_OAES_RGCNS_MASK: Mask to get the Reachability Groups Change Notices supported
  * @NVME_CTRL_OAES_ANSAN_MASK: Mask to get the Allocated Namespace Attribute Notices supported
+ * @NVME_CTRL_OAES_RLCC_MASK: Mask to get the Rate Limiting Configuration Change event supported
  * @NVME_CTRL_OAES_ZD_MASK: Mask to get the Zone Descriptor Change Notifications supported
  * @NVME_CTRL_OAES_DL_MASK: Mask to get the Discover Log Page Change Notifications supported
  * @NVME_CTRL_OAES_NSAN: Attached Namespace Attribute Notices event supported
@@ -1817,6 +1820,7 @@ enum nvme_id_ctrl_cmic {
  * @NVME_CTRL_OAES_TTH: Temperature Threshold Hysteresis Recovery event supported
  * @NVME_CTRL_OAES_RGCNS: Reachability Groups Change Notices supported
  * @NVME_CTRL_OAES_ANSAN: Allocated Namespace Attribute Notices supported
+ * @NVME_CTRL_OAES_RLCC: Rate Limiting Configuration Change event supported
  * @NVME_CTRL_OAES_ZD: Zone Descriptor Change Notifications supported
  * @NVME_CTRL_OAES_DL: Discover Log Page Change Notifications supported
  */
@@ -1831,6 +1835,7 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_TTH_SHIFT	= 16,
 	NVME_CTRL_OAES_RGCNS_SHIFT	= 17,
 	NVME_CTRL_OAES_ANSAN_SHIFT	= 19,
+	NVME_CTRL_OAES_RLCC_SHIFT	= 22,
 	NVME_CTRL_OAES_ZD_SHIFT		= 27,
 	NVME_CTRL_OAES_DL_SHIFT		= 31,
 	NVME_CTRL_OAES_NSAN_MASK	= 0x1,
@@ -1843,6 +1848,7 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_TTH_MASK		= 0x1,
 	NVME_CTRL_OAES_RGCNS_MASK	= 0x1,
 	NVME_CTRL_OAES_ANSAN_MASK	= 0x1,
+	NVME_CTRL_OAES_RLCC_MASK	= 0x1,
 	NVME_CTRL_OAES_ZD_MASK		= 0x1,
 	NVME_CTRL_OAES_DL_MASK		= 0x1,
 	NVME_CTRL_OAES_NSAN		= NVME_VAL(CTRL_OAES_NSAN),
@@ -1855,6 +1861,7 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_TTH		= NVME_VAL(CTRL_OAES_TTH),
 	NVME_CTRL_OAES_RGCNS		= NVME_VAL(CTRL_OAES_RGCNS),
 	NVME_CTRL_OAES_ANSAN		= NVME_VAL(CTRL_OAES_ANSAN),
+	NVME_CTRL_OAES_RLCC		= NVME_VAL(CTRL_OAES_RLCC),
 	NVME_CTRL_OAES_ZD		= NVME_VAL(CTRL_OAES_ZD),
 	NVME_CTRL_OAES_DL		= NVME_VAL(CTRL_OAES_DL),
 };
@@ -1869,6 +1876,7 @@ enum nvme_id_ctrl_oaes {
 #define NVME_CTRL_OAES_TTHR(oaes)	NVME_GET(oaes, CTRL_OAES_TTH)
 #define NVME_CTRL_OAES_RGCNS(oaes)	NVME_GET(oaes, CTRL_OAES_RGCNS)
 #define NVME_CTRL_OAES_ANSAN(oaes)	NVME_GET(oaes, CTRL_OAES_ANSAN)
+#define NVME_CTRL_OAES_RLCC(oaes)	NVME_GET(oaes, CTRL_OAES_RLCC)
 #define NVME_CTRL_OAES_ZDCN(oaes)	NVME_GET(oaes, CTRL_OAES_ZD)
 #define NVME_CTRL_OAES_DLPCN(oaes)	NVME_GET(oaes, CTRL_OAES_DL)
 
@@ -3543,6 +3551,23 @@ enum nvme_id_ctrl_nvm_lbamqf {
 };
 
 /**
+ * enum nvme_id_ctrl_nvm_rla - Rate Limiting Attributes
+ * @NVME_ID_CTRL_NVM_RLA_HLS_SHIFT:	Shift amount to get Hard Limit Support (HLS)
+ * @NVME_ID_CTRL_NVM_RLA_HLS_MASK:	Mask to get HLS
+ * @NVME_ID_CTRL_NVM_RLA_SLS_SHIFT:	Shift amount to get Soft Limit Support (SLS)
+ * @NVME_ID_CTRL_NVM_RLA_SLS_MASK:	Mask to get SLS
+ */
+enum nvme_id_ctrl_nvm_rla {
+	NVME_ID_CTRL_NVM_RLA_HLS_SHIFT	= 0,
+	NVME_ID_CTRL_NVM_RLA_HLS_MASK	= 0x1,
+	NVME_ID_CTRL_NVM_RLA_SLS_SHIFT	= 1,
+	NVME_ID_CTRL_NVM_RLA_SLS_MASK	= 0x1,
+};
+
+#define NVME_ID_CTRL_NVM_RLA_HLS(rla)	NVME_GET(rla, ID_CTRL_NVM_RLA_HLS)
+#define NVME_ID_CTRL_NVM_RLA_SLS(rla)	NVME_GET(rla, ID_CTRL_NVM_RLA_SLS)
+
+/**
  * struct nvme_id_ctrl_nvm - I/O Command Set Specific Identify Controller data structure
  * @vsl:	Verify Size Limit
  * @wzsl:	Write Zeroes Size Limit
@@ -3555,7 +3580,9 @@ enum nvme_id_ctrl_nvm_lbamqf {
  * @aocs:	Admin Optional Command Support
  * @ver:	Version
  * @lbamqf:	LBA Migration Queue Format
- * @rsvd25:	Reserved
+ * @rla:	Rate Limiting Attributes, see &enum nvme_id_ctrl_nvm_rla
+ * @slmc:	Soft Limit Maximum Controllers (0's based), valid only if SLS is set
+ * @rsvd28:	Reserved
  */
 struct nvme_id_ctrl_nvm {
 	__u8	vsl;
@@ -3569,7 +3596,9 @@ struct nvme_id_ctrl_nvm {
 	__le16	aocs;
 	__le32	ver;
 	__u8	lbamqf;
-	__u8	rsvd25[4071];
+	__u8	rla;
+	__le16	slmc;
+	__u8	rsvd28[4068];
 };
 
 
@@ -7231,6 +7260,7 @@ enum nvme_ae_info_css_nvm {
  * @NVME_AER_NOTICE_PL_EVENT:		Predictable Latency Event Aggregate Log Change
  * @NVME_AER_NOTICE_LBA_STATUS_ALERT:	LBA Status Information Alert
  * @NVME_AER_NOTICE_EG_EVENT:		Endurance Group Event Aggregate Log Page Change
+ * @NVME_AER_NOTICE_RATE_LIMITING_CFG_CHANGE:	Rate Limiting Configuration Change
  * @NVME_AER_NOTICE_DISC_CHANGED:	Discovery Log Page Change
  */
 enum nvme_ae_info_notice {
@@ -7241,6 +7271,7 @@ enum nvme_ae_info_notice {
 	NVME_AER_NOTICE_PL_EVENT			= 0x04,
 	NVME_AER_NOTICE_LBA_STATUS_ALERT		= 0x05,
 	NVME_AER_NOTICE_EG_EVENT			= 0x06,
+	NVME_AER_NOTICE_RATE_LIMITING_CFG_CHANGE	= 0x0a,
 	NVME_AER_NOTICE_DISC_CHANGED			= 0xf0,
 };
 
@@ -8712,6 +8743,15 @@ enum nvme_features_id {
  *						Action (ACT), see &enum
  *						nvme_voltage_measurement_act
  * @NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_MASK:	Mask to set ACT
+ * @NVME_FEAT_AE_RLCCN_SHIFT:	Shift amount to get/set the Rate Limiting
+ *				Configuration Change Notices (RLCCN)
+ * @NVME_FEAT_AE_RLCCN_MASK:	Mask to get/set RLCCN
+ * @NVME_FEAT_RATE_LIMITING_TID_SHIFT:	Shift amount to set/get the Target
+ *					Identifier (TID)
+ * @NVME_FEAT_RATE_LIMITING_TID_MASK:	Mask to set/get TID
+ * @NVME_FEAT_RATE_LIMITING_TGT_SHIFT:	Shift amount to set/get the Target
+ *					(TGT), see &enum nvme_rate_limiting_target
+ * @NVME_FEAT_RATE_LIMITING_TGT_MASK:	Mask to set/get TGT
  **/
 enum nvme_feat {
 	NVME_FEAT_ARBITRATION_BURST_SHIFT	= 0,
@@ -8903,6 +8943,12 @@ enum nvme_feat {
 	NVME_FEAT_VOLTAGE_THRESHOLD_VSENS_MASK	= 0x3,
 	NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_SHIFT	= 0,
 	NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_MASK	= 0xf,
+	NVME_FEAT_AE_RLCCN_SHIFT		= 22,
+	NVME_FEAT_AE_RLCCN_MASK			= 0x1,
+	NVME_FEAT_RATE_LIMITING_TID_SHIFT	= 0,
+	NVME_FEAT_RATE_LIMITING_TID_MASK	= 0xffff,
+	NVME_FEAT_RATE_LIMITING_TGT_SHIFT	= 16,
+	NVME_FEAT_RATE_LIMITING_TGT_MASK	= 0xff,
 };
 
 /**
@@ -10029,6 +10075,23 @@ static inline void nvme_feature_decode_arbitration(__u32 value, __u8 *ab,
 #define NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(v) \
 	NVME_GET(v, FEAT_VOLTAGE_MEASUREMENT_ACT)
 
+#define NVME_FEAT_RATE_LIMITING_TID(v)	NVME_GET(v, FEAT_RATE_LIMITING_TID)
+#define NVME_FEAT_RATE_LIMITING_TGT(v)	NVME_GET(v, FEAT_RATE_LIMITING_TGT)
+
+/**
+ * enum nvme_rate_limiting_target - Rate Limiting Feature Command Dword 11
+ *				     Target (TGT)
+ * @NVME_RATE_LIMITING_TARGET_CONTROLLER:	Target Identifier field specifies
+ *						the controller identifier
+ * @NVME_RATE_LIMITING_TARGET_VENDOR_MIN:	Start of vendor specific range
+ * @NVME_RATE_LIMITING_TARGET_VENDOR_MAX:	End of vendor specific range
+ */
+enum nvme_rate_limiting_target {
+	NVME_RATE_LIMITING_TARGET_CONTROLLER	= 0x00,
+	NVME_RATE_LIMITING_TARGET_VENDOR_MIN	= 0xc0,
+	NVME_RATE_LIMITING_TARGET_VENDOR_MAX	= 0xff,
+};
+
 /**
  * enum nvme_voltage_measurement_act - Voltage Measurement Feature -
  *					Command Dword 11 Action (ACT)
@@ -10148,6 +10211,7 @@ nvme_feature_decode_write_atomicity(__u32 value, bool *dn)
 #define NVME_FEAT_AE_ADLPCN(v)		NVME_GET(v, FEAT_AE_ADLPCN)
 #define NVME_FEAT_AE_HDLPCN(v)		NVME_GET(v, FEAT_AE_HDLPCN)
 #define NVME_FEAT_AE_DLPCN(v)		NVME_GET(v, FEAT_AE_DLPCN)
+#define NVME_FEAT_AE_RLCCN(v)		NVME_GET(v, FEAT_AE_RLCCN)
 
 static inline void
 nvme_feature_decode_async_event_config(__u32 value, __u8 *smart, bool *nan,
