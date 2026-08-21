@@ -114,13 +114,34 @@ struct nvme_mi_port_pcie {
 };
 
 /**
+ * enum nvme_mi_port_sdformat - 2-Wire Port Specific Data - Supported Data
+ *			Format (SDFORMAT)
+ * @NVME_MI_PORT_SDFORMAT_BYTE_LEVEL:	Byte Level data format of the
+ *					NVMe-MI Persistent Data Area is
+ *					supported
+ * @NVME_MI_PORT_SDFORMAT_512B:	512B data format of the NVMe-MI
+ *					Persistent Data Area is supported
+ * @NVME_MI_PORT_SDFORMAT_4KIB:	4KiB data format of the NVMe-MI
+ *					Persistent Data Area is supported
+ */
+enum nvme_mi_port_sdformat {
+	NVME_MI_PORT_SDFORMAT_BYTE_LEVEL	= 1 << 0,
+	NVME_MI_PORT_SDFORMAT_512B		= 1 << 1,
+	NVME_MI_PORT_SDFORMAT_4KIB		= 1 << 2,
+};
+
+/**
  * struct nvme_mi_port_smb - SMBus Port Specific Data
  * @vpd_addr:	Current VPD SMBus/I2C Address
  * @mvpd_freq:	Maximum VPD Access SMBus/I2C Frequency
  * @mme_addr:	Current Management Endpoint SMBus/I2C Address
  * @mme_freq:	Maximum Management Endpoint SMBus/I2C Frequency
  * @nvmebm:	NVMe Basic Management
- * @rsvd13:	Reserved
+ * @pdas:	PDA Size, the size of the NVMe-MI Persistent Data Area (PDA)
+ *		is 2^@pdas bytes; 0h indicates there is no NVMe-MI PDA
+ * @sdformat:	Supported Data Format for the NVMe-MI PDA, see &enum
+ *		nvme_mi_port_sdformat
+ * @rsvd18:	Reserved
  */
 struct nvme_mi_port_smb {
 	__u8	vpd_addr;
@@ -128,7 +149,9 @@ struct nvme_mi_port_smb {
 	__u8	mme_addr;
 	__u8	mme_freq;
 	__u8	nvmebm;
-	__u8	rsvd13[19];
+	__le32	pdas __attribute__((packed));
+	__u8	sdformat;
+	__u8	rsvd18[14];
 };
 
 /**

@@ -125,12 +125,30 @@ struct nvme_mi_msg_resp {
  * @nvme_mi_mi_opcode_subsys_health_status_poll: Subsystem Health Status Poll
  * @nvme_mi_mi_opcode_configuration_set: MI Configuration Set
  * @nvme_mi_mi_opcode_configuration_get: MI Configuration Get
+ * @nvme_mi_mi_opcode_pda_read: NVMe-MI PDA Read
+ * @nvme_mi_mi_opcode_pda_write: NVMe-MI PDA Write
+ * @nvme_mi_mi_opcode_pda_write_zeroes: NVMe-MI PDA Write Zeroes
  */
 enum nvme_mi_mi_opcode {
 	nvme_mi_mi_opcode_mi_data_read = 0x00,
 	nvme_mi_mi_opcode_subsys_health_status_poll = 0x01,
 	nvme_mi_mi_opcode_configuration_set = 0x03,
 	nvme_mi_mi_opcode_configuration_get = 0x04,
+	nvme_mi_mi_opcode_pda_read = 0x0d,
+	nvme_mi_mi_opcode_pda_write = 0x0e,
+	nvme_mi_mi_opcode_pda_write_zeroes = 0x0f,
+};
+
+/**
+ * enum nvme_mi_pda_dformat - NVMe-MI PDA Command - Data Format (DFORMAT)
+ * @nvme_mi_pda_dformat_4kib:	4KiB data format
+ * @nvme_mi_pda_dformat_512b:	512B data format
+ * @nvme_mi_pda_dformat_byte:	Byte Level data format
+ */
+enum nvme_mi_pda_dformat {
+	nvme_mi_pda_dformat_4kib = 0x1,
+	nvme_mi_pda_dformat_512b = 0x2,
+	nvme_mi_pda_dformat_byte = 0x3,
 };
 
 /**

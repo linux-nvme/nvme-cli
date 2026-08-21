@@ -522,6 +522,69 @@ int libnvme_mi_mi_subsystem_health_status_poll(libnvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *nshds);
 
 /**
+ * libnvme_mi_mi_pda_read() - Read the NVMe-MI Persistent Data Area (PDA)
+ * @ep: endpoint for MI communication
+ * @dformat: data format to use for @dofst and @dlen, see
+ *	     &enum nvme_mi_pda_dformat
+ * @dofst: starting offset, in units of @dformat, into the PDA to read
+ * @dlen: length, in units of @dformat, to read from the PDA starting at
+ *	  @dofst
+ * @data: buffer to receive the PDA contents
+ * @data_len: in: size of @data; out: length of data actually returned
+ *
+ * Performs an NVMe-MI PDA Read command. See the PDA Size (PDAS) and
+ * Supported Data Format (SDFORMAT) fields of &struct nvme_mi_port_smb for
+ * the size and supported @dformat values of the PDA on a given port.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or negative error code otherwise.
+ */
+int libnvme_mi_mi_pda_read(libnvme_mi_ep_t ep,
+			enum nvme_mi_pda_dformat dformat,
+			__u32 dofst, __u32 dlen,
+			void *data, size_t *data_len);
+
+/**
+ * libnvme_mi_mi_pda_write() - Write the NVMe-MI Persistent Data Area (PDA)
+ * @ep: endpoint for MI communication
+ * @dformat: data format to use for @dofst and @dlen, see
+ *	     &enum nvme_mi_pda_dformat
+ * @dofst: starting offset, in units of @dformat, into the PDA to write
+ * @dlen: length, in units of @dformat, of @data to write to the PDA
+ *	  starting at @dofst
+ * @data: data to write to the PDA
+ * @data_len: length of @data
+ *
+ * Performs an NVMe-MI PDA Write command.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or negative error code otherwise.
+ */
+int libnvme_mi_mi_pda_write(libnvme_mi_ep_t ep,
+			enum nvme_mi_pda_dformat dformat,
+			__u32 dofst, __u32 dlen,
+			void *data, size_t data_len);
+
+/**
+ * libnvme_mi_mi_pda_write_zeroes() - Clear a range of the NVMe-MI Persistent
+ * Data Area (PDA) to 0h
+ * @ep: endpoint for MI communication
+ * @dformat: data format to use for @dofst and @dlen, see
+ *	     &enum nvme_mi_pda_dformat
+ * @dofst: starting offset, in units of @dformat, into the PDA to clear
+ * @dlen: length, in units of @dformat, of the PDA to clear starting at
+ *	  @dofst
+ *
+ * Performs an NVMe-MI PDA Write Zeroes command.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or negative error code otherwise.
+ */
+int libnvme_mi_mi_pda_write_zeroes(libnvme_mi_ep_t ep,
+			enum nvme_mi_pda_dformat dformat,
+			__u32 dofst, __u32 dlen);
+
+/**
  * libnvme_mi_mi_config_get - query a configuration parameter
  * @ep: endpoint for MI communication
  * @dw0: management doubleword 0, containing configuration identifier, plus
