@@ -7588,6 +7588,125 @@ enum nvme_fabric_zoning_send_cdw12 {
 };
 
 /**
+ * enum nvme_manage_export_nvms_recv_sel - Manage Exported NVM Subsystem
+ *		       Receive - Select (SEL)
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_SEL_CREATE:	    Create Exported NVM
+ *						    Subsystem
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_SUBSYSTEMS: List Exported NVM
+ *						    Subsystems
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_NAMESPACES: List Exported
+ *						    Namespaces
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_CONTROLLERS: List Exported
+ *						    Controllers (message-based
+ *						    transports only)
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_PORTS: List Exported Ports
+ *						    (memory-based transports
+ *						    only)
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_SEL_GET_CONFIG_STATE: Get Exported NVM
+ *						    Subsystem Configuration
+ *						    State
+ */
+enum nvme_manage_export_nvms_recv_sel {
+	NVME_MANAGE_EXPORT_NVMS_RECV_SEL_CREATE		= 0x00,
+	NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_SUBSYSTEMS	= 0x01,
+	NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_NAMESPACES	= 0x02,
+	NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_CONTROLLERS	= 0x03,
+	NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_PORTS		= 0x04,
+	NVME_MANAGE_EXPORT_NVMS_RECV_SEL_GET_CONFIG_STATE	= 0x05,
+};
+
+/**
+ * enum nvme_manage_export_nvms_recv_cdw10 - Manage Exported NVM Subsystem
+ *		       Receive - Command Dword 10
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_SEL_SHIFT:  Shift amount to set Select
+ *						    (SEL), see &enum
+ *						    nvme_manage_export_nvms_recv_sel
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_SEL_MASK:   Mask to set SEL
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOS_SHIFT:  Shift amount to set
+ *						    Management Operation
+ *						    Specific (MOS)
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOS_MASK:   Mask to set MOS
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOSE_SHIFT: Shift amount to set
+ *						    Management Operation
+ *						    Specific Extended (MOSE)
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOSE_MASK:  Mask to set MOSE
+ */
+enum nvme_manage_export_nvms_recv_cdw10 {
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_SEL_SHIFT	= 0,
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_SEL_MASK	= 0xff,
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOS_SHIFT	= 8,
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOS_MASK	= 0xff,
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOSE_SHIFT	= 16,
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW10_MOSE_MASK	= 0xffff,
+};
+
+/**
+ * enum nvme_manage_export_nvms_recv_cdw14 - Manage Exported NVM Subsystem
+ *		       Receive - Command Dword 14
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW14_MOSI_SHIFT: Shift amount to set
+ *						    Management Operation
+ *						    Specific Identifier (MOSI)
+ * @NVME_MANAGE_EXPORT_NVMS_RECV_CDW14_MOSI_MASK:  Mask to set MOSI
+ */
+enum nvme_manage_export_nvms_recv_cdw14 {
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW14_MOSI_SHIFT	= 16,
+	NVME_MANAGE_EXPORT_NVMS_RECV_CDW14_MOSI_MASK	= 0xffff,
+};
+
+/**
+ * enum nvme_export_nvms_create_cdw11 - Manage Exported NVM Subsystem Receive
+ *		       - Create Exported NVM Subsystem - Command Dword 11
+ * @NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_SHIFT: Shift amount to set Exported
+ *		       NVM Subsystem Template Index (ENSTI), see the Identify
+ *		       CNS value %NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST
+ * @NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_MASK:  Mask to set ENSTI
+ * @NVME_EXPORT_NVMS_CREATE_CDW11_TR:	       Template Required (TR)
+ */
+enum nvme_export_nvms_create_cdw11 {
+	NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_SHIFT	= 0,
+	NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_MASK	= 0xff,
+	NVME_EXPORT_NVMS_CREATE_CDW11_TR		= 1 << 31,
+};
+
+/**
+ * enum nvme_export_nvms_create_mos - Manage Exported NVM Subsystem Receive -
+ *		       Create Exported NVM Subsystem - Management Operation
+ *		       Specific (MOS) field, message-based transports only
+ * @NVME_EXPORT_NVMS_CREATE_MOS_RA: Restricted Access (RA)
+ */
+enum nvme_export_nvms_create_mos {
+	NVME_EXPORT_NVMS_CREATE_MOS_RA	= 1 << 0,
+};
+
+/**
+ * enum nvme_export_nvms_create_cqe_dw0 - Manage Exported NVM Subsystem
+ *		       Receive - Create Exported NVM Subsystem - Completion
+ *		       Queue Entry Dword 0
+ * @NVME_EXPORT_NVMS_CREATE_CQE_ESUBID_SHIFT: Shift amount to get Exported
+ *		       NVM Subsystem Identifier (ESUBID)
+ * @NVME_EXPORT_NVMS_CREATE_CQE_ESUBID_MASK:  Mask to get ESUBID
+ */
+enum nvme_export_nvms_create_cqe_dw0 {
+	NVME_EXPORT_NVMS_CREATE_CQE_ESUBID_SHIFT	= 0,
+	NVME_EXPORT_NVMS_CREATE_CQE_ESUBID_MASK		= 0xffff,
+};
+
+#define NVME_EXPORT_NVMS_CREATE_CQE_ESUBID(dw0) \
+	NVME_GET(dw0, EXPORT_NVMS_CREATE_CQE_ESUBID)
+
+/**
+ * struct nvme_exported_nvm_subsys_create_data - Create Exported NVM
+ *		       Subsystem Data Buffer
+ * @esubnqn:	Exported NVM Subsystem NQN (ESUBNQN): the host may leave this
+ *		field cleared to request an NQN be assigned by the
+ *		controller; the assigned/confirmed NQN is returned in this
+ *		same buffer on successful completion.
+ */
+struct nvme_exported_nvm_subsys_create_data {
+	__u8	esubnqn[256];
+};
+
+/**
  * enum nvme_send_discovery_log_page_rlps - Send Discovery Log Page (SDLP) -
  *					     Requested Log Page Status (RLPS)
  * @NVME_SDLP_RLPS_VALID:	 Valid Log Page: the requested log page is
