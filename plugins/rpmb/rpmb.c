@@ -1,0 +1,1185 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (C) 2020 Micron Technology Inc. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * rpmb.c - Implementation of NVMe RPMB support commands
+ */
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <libnvme.h>
+
+#include <ccan/endian/endian.h>
+#include <shared/compiler-attributes-util.h>
+#include <shared/crypto-util.h>
+#include <shared/fs-util.h>
+
+#include "cleanup.h"
+#include "global-ctx.h"
+#include "nvme-print.h"
+#include "plugin.h"
+
+/* Read data from given file into buffer and return its length */
+static int read_file(const char *file, unsigned char **data, unsigned int *len)
+{
+	struct stat sb;
+	size_t size;
+	unsigned char *buf = NULL;
+	int fd;
+	int err = -EINVAL;
+
+	if (!file)
+		return err;
+
+	fd = shr_open_rawdata(file, O_RDONLY);
+	if (fd < 0) {
+		nvme_show_error("Failed to open %s: %s", file, libnvme_strerror(errno));
+		return fd;
+	}
+
+	err = fstat(fd, &sb);
+	if (err < 0) {
+		nvme_show_perror("fstat");
+		goto out;
+	}
+
+	size = sb.st_size;
+	buf = libnvme_alloc(size);
+	if (!buf) {
+		nvme_show_error("No memory for reading file: %s", file);
+		err = -ENOMEM;
+		goto out;
+	}
+
+	err = read(fd, buf, size);
+	if (err < 0) {
+		err = -errno;
+		nvme_show_error("Failed to read data from file %s with %s", file,
+				 libnvme_strerror(errno));
+		libnvme_free(buf);
+		goto out;
+	}
+	*data = buf;
+	*len = err;
+	err = 0;
+out:
+	close(fd);
+	return err;
+}
+
+/* Write given buffer data to specified file */
+static void write_file(unsigned char *data, size_t len, const char *dir,
+			const char *file, const char *msg)
+{
+	char temp_folder[PATH_MAX] = { 0 };
+	__cleanup_file FILE *fp = NULL;
+
+	if (dir)
+		sprintf(temp_folder, "%s/%s", dir, file);
+	else
+		sprintf(temp_folder, "./%s", file);
+
+	fp = fopen(temp_folder, "ab+");
+	if (fp) {
+		if (fwrite(data, 1, len, fp) != len)
+			nvme_show_error("Failed to write %s data to %s", msg ? msg : "",
+					 temp_folder);
+	} else {
+		nvme_show_error("Failed to open %s file to write %s", temp_folder,
+				 msg ? msg : "");
+	}
+}
+
+/* Various definitions used in RPMB related support */
+enum rpmb_request_type {
+	RPMB_REQ_AUTH_KEY_PROGRAM = 0x0001,
+	RPMB_REQ_READ_WRITE_CNTR  = 0x0002,
+	RPMB_REQ_AUTH_DATA_WRITE  = 0x0003,
+	RPMB_REQ_AUTH_DATA_READ   = 0x0004,
+	RPMB_REQ_READ_RESULT      = 0x0005,
+	RPMB_REQ_AUTH_DCB_WRITE   = 0x0006,
+	RPMB_REQ_AUTH_DCB_READ    = 0x0007,
+};
+
+/* RPMB data frame structure */
+#pragma pack(1)
+struct rpmb_data_frame_t {
+	unsigned char  pad[191];
+	unsigned char  mac[32];
+	unsigned char  target;     /* 0-6, should match with NSSF with SS, SR */
+	unsigned char  nonce[16];
+	unsigned int   write_counter;
+	unsigned int   address;
+	unsigned int   sectors;
+	unsigned short result;
+	unsigned short type;       /* req or response */
+	unsigned char  data[0];    /* in sector count times */
+};
+#pragma pack()
+
+struct rpmb_config_block_t {
+	unsigned char bp_enable;
+	unsigned char bp_lock;
+	unsigned char rsvd[510];
+};
+
+#define RPMB_DATA_FRAME_SIZE  256
+#define RPMB_NVME_SECP        0xEA
+#define RPMB_NVME_SPSP        0x0001
+
+union ctrl_rpmbs_reg {
+	struct {
+		unsigned int num_targets:3;
+		unsigned int auth_method:3;
+		unsigned int reserved:10;
+		unsigned int total_size:8;   /* 128K units */
+		unsigned int access_size:8;  /* in 512 byte count */
+	};
+	unsigned int rpmbs;
+};
+
+static int send_rpmb_req(struct libnvme_transport_handle *hdl, unsigned char tgt,
+			  int size, struct rpmb_data_frame_t *req)
+{
+	struct libnvme_passthru_cmd cmd;
+
+	nvme_init_security_send(&cmd, NVME_NSID_NONE, tgt, RPMB_NVME_SPSP,
+				 RPMB_NVME_SECP, 0, req, size);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
+}
+
+static int recv_rpmb_rsp(struct libnvme_transport_handle *hdl, int tgt, int size,
+			  struct rpmb_data_frame_t *rsp)
+{
+	struct libnvme_passthru_cmd cmd;
+
+	nvme_init_security_receive(&cmd, 0, tgt, RPMB_NVME_SPSP, RPMB_NVME_SECP, 0, rsp,
+				    size);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
+}
+
+/* Initialize nonce value in rpmb request frame */
+static void rpmb_nonce_init(struct rpmb_data_frame_t *req)
+{
+	int num = rand();
+	unsigned char *hash = shr_md5((unsigned char *)&num, sizeof(num));
+
+	if (hash)
+		memcpy(req->nonce, hash, sizeof(req->nonce));
+}
+
+/* Read key from a given key buffer or key file */
+static unsigned char *read_rpmb_key(char *keystr, char *keyfile, unsigned int *keysize)
+{
+	unsigned char *keybuf = NULL;
+	int err;
+
+	if (!keystr) {
+		if (keyfile) {
+			err = read_file(keyfile, &keybuf, keysize);
+			if (err < 0)
+				return NULL;
+		}
+	} else {
+		keybuf = libnvme_alloc(strlen(keystr));
+		if (keybuf) {
+			*keysize = strlen(keystr);
+			memcpy(keybuf, keystr, *keysize);
+		}
+	}
+
+	return keybuf;
+}
+
+/* Initialize RPMB request frame with given values */
+static struct rpmb_data_frame_t *
+rpmb_request_init(unsigned int req_size, unsigned short type, unsigned char target,
+		   unsigned char nonce, unsigned int addr, unsigned int sectors,
+		   unsigned char *data, unsigned short data_offset, unsigned int data_size)
+{
+	struct rpmb_data_frame_t *req;
+
+	req = calloc(req_size, 1);
+	if (!req) {
+		nvme_show_error("Memory allocation failed for request 0x%04x", type);
+		return req;
+	}
+
+	req->type = type;
+	req->target = target;
+	req->address = addr;
+	req->sectors = sectors;
+
+	if (nonce)
+		rpmb_nonce_init(req);
+	if (data)
+		memcpy((unsigned char *)req + data_offset, data, data_size);
+
+	return req;
+}
+
+/* Process rpmb response and print appropriate error message */
+static int check_rpmb_response(struct rpmb_data_frame_t *req, struct rpmb_data_frame_t *rsp,
+				char *msg)
+{
+	const char *rpmb_result_string[] = {
+		"Operation successful",
+		"General failure",
+		"Authentication (MAC) failure",
+		"Counter failure (not matching/incrementing failure)",
+		"Address failure (out of range or wrong alignment)",
+		"Write (data/counter/result) failure",
+		"Read (data/counter/result) failure",
+		"Authentication key not yet programmed",
+		"Invalid device configuration block",
+		"Unknown error",
+	};
+
+	/* check error status before comparing nonce and mac */
+	if (rsp->result != 0) {
+		if (rsp->type != ((req->type << 8) & 0xFF00)) {
+			nvme_show_error("%s ! non-matching response 0x%04x for 0x%04x", msg,
+					 rsp->type, req->type);
+		} else if ((rsp->result & 0x80) == 0x80) {
+			nvme_show_error("%s ! Expired write-counter !", msg);
+		} else if (rsp->result) {
+			nvme_show_error("%s ! %s", msg, rpmb_result_string[rsp->result & 0x7F]);
+		} else if (memcmp(req->nonce, rsp->nonce, 16)) {
+			nvme_show_error("%s ! non-matching nonce", msg);
+		} else if (memcmp(req->mac, rsp->mac, 32)) {
+			nvme_show_error("%s ! non-matching MAC", msg);
+		} else if ((req->write_counter + 1) != rsp->write_counter) {
+			nvme_show_error("%s ! out-of-sync write-counters", msg);
+		}
+	}
+
+	return (int)rsp->result;
+}
+
+/*
+ * send an initialized rpmb request to the controller and read its response;
+ * expected response size given in 'rsp_size'. returns response buffer upon
+ * successful completion (caller must free), NULL otherwise
+ */
+static struct rpmb_data_frame_t *
+rpmb_read_request(struct libnvme_transport_handle *hdl, struct rpmb_data_frame_t *req,
+		   int req_size, int rsp_size)
+{
+	struct rpmb_data_frame_t *rsp = NULL;
+	unsigned char msg[1024] = { 0 };
+	int error;
+
+	sprintf((char *)msg, "RPMB request 0x%04x to target 0x%x", req->type, req->target);
+
+	error = send_rpmb_req(hdl, req->target, req_size, req);
+	if (error != 0) {
+		nvme_show_error("%s failed with error = 0x%x", msg, error);
+		goto error_out;
+	}
+
+	/* read the result back */
+	rsp = calloc(rsp_size, 1);
+	if (!rsp) {
+		nvme_show_error("memory alloc failed for %s", msg);
+		goto error_out;
+	}
+
+	/* Read result of previous request */
+	error = recv_rpmb_rsp(hdl, req->target, rsp_size, rsp);
+	if (error) {
+		nvme_show_error("error 0x%x receiving response for %s", error, msg);
+		goto error_out;
+	}
+
+	/* validate response buffer - match target, nonce, and mac */
+	error = check_rpmb_response(req, rsp, (char *)msg);
+	if (error == 0)
+		return rsp;
+
+error_out:
+	free(rsp);
+	return NULL;
+}
+
+/* read current write counter value from controller */
+static int rpmb_read_write_counter(struct libnvme_transport_handle *hdl, unsigned char target,
+				    unsigned int *counter)
+{
+	int error = -1;
+	int req_size = sizeof(struct rpmb_data_frame_t);
+	struct rpmb_data_frame_t *req = NULL;
+	struct rpmb_data_frame_t *rsp = NULL;
+
+	req = rpmb_request_init(req_size, RPMB_REQ_READ_WRITE_CNTR, target, 1, 0, 0, NULL, 0,
+				 0);
+	if (!req)
+		goto out;
+	rsp = rpmb_read_request(hdl, req, req_size, req_size);
+	if (!rsp)
+		goto out;
+	*counter = rsp->write_counter;
+	error = 0;
+
+out:
+	free(req);
+	free(rsp);
+	return error;
+}
+
+/*
+ * Read current device configuration block into specified buffer. It also
+ * returns current write counter value returned as part of response, in case
+ * of error it returns 0
+ */
+static unsigned int rpmb_read_config_block(struct libnvme_transport_handle *hdl,
+					    unsigned char **config_buf)
+{
+	int req_size = sizeof(struct rpmb_data_frame_t);
+	int cfg_size = sizeof(struct rpmb_config_block_t);
+	int rsp_size = req_size + cfg_size;
+
+	struct rpmb_data_frame_t *req = NULL;
+	struct rpmb_data_frame_t *rsp = NULL;
+	struct rpmb_config_block_t *cfg = NULL;
+	unsigned int retval = 0;
+
+	/* initialize request with nonce, no data on input */
+	req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DCB_READ, 0, 1, 0, 1, 0, 0, 0);
+	if (!req)
+		return 0;
+	rsp = rpmb_read_request(hdl, req, req_size, rsp_size);
+	if (!rsp) {
+		free(req);
+		return 0;
+	}
+
+	/* copy configuration data to be sent back to caller */
+	cfg = calloc(cfg_size, 1);
+	if (!cfg) {
+		nvme_show_error("failed to allocate RPMB config buffer");
+		goto out;
+	}
+
+	memcpy(cfg, rsp->data, cfg_size);
+	*config_buf = (unsigned char *)cfg;
+	cfg = NULL;
+	retval = rsp->write_counter;
+out:
+	free(req);
+	free(rsp);
+	return retval;
+}
+
+static int rpmb_auth_data_read(struct libnvme_transport_handle *hdl, unsigned char target,
+				unsigned int offset, unsigned char **msg_buf, int msg_size,
+				int acc_size)
+{
+	struct rpmb_data_frame_t *req = NULL;
+	struct rpmb_data_frame_t *rsp = NULL;
+	int req_size = sizeof(struct rpmb_data_frame_t);
+	int chunk_size = (acc_size < msg_size) ? acc_size : msg_size;
+	int xfer = chunk_size;
+	unsigned char *bufp = malloc(msg_size * 512);
+	unsigned char *tbufp = bufp;
+	int data_size, rsp_size;
+	int error = -1;
+
+	if (!bufp) {
+		nvme_show_error("Failed to allocated memory for read-data req");
+		goto out;
+	}
+
+	while (xfer > 0) {
+		rsp_size = req_size + xfer * 512;
+		req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DATA_READ, target, 1, offset,
+					 xfer, 0, 0, 0);
+		if (!req)
+			break;
+		rsp = rpmb_read_request(hdl, req, req_size, rsp_size);
+		if (!rsp) {
+			nvme_show_error("read_request failed");
+			free(req);
+			break;
+		}
+
+		data_size = rsp->sectors * 512;
+		memcpy(tbufp, rsp->data, data_size);
+		offset += rsp->sectors;
+		tbufp += data_size;
+		if (offset + chunk_size > msg_size)
+			xfer = msg_size - offset;
+		else
+			xfer = chunk_size;
+		free(req);
+		free(rsp);
+	}
+
+	*msg_buf = bufp;
+	error = offset;
+out:
+	return error;
+}
+
+/* Implementation of programming authentication key to given RPMB target */
+static int rpmb_program_auth_key(struct libnvme_transport_handle *hdl, unsigned char target,
+				  unsigned char *key_buf, int key_size)
+{
+	int req_size = sizeof(struct rpmb_data_frame_t);
+	int rsp_size = sizeof(struct rpmb_data_frame_t);
+
+	struct rpmb_data_frame_t *req = NULL;
+	struct rpmb_data_frame_t *rsp = NULL;
+
+	int err = -ENOMEM;
+
+	req = rpmb_request_init(req_size, RPMB_REQ_AUTH_KEY_PROGRAM, target, 0, 0, 0, key_buf,
+				 (223 - key_size), key_size);
+	if (!req) {
+		nvme_show_error("failed to allocate request buffer memory");
+		goto out;
+	}
+
+	/* send the request and get response */
+	err = send_rpmb_req(hdl, req->target, req_size, req);
+	if (err) {
+		nvme_show_error("RPMB request 0x%04x for 0x%x, err: %d", req->type, req->target,
+				 err);
+		goto out;
+	}
+
+	/* send the request to get the result and then request to get the response */
+	rsp = calloc(rsp_size, 1);
+	if (!rsp) {
+		nvme_show_error("failed to allocate response buffer memory");
+		err = -ENOMEM;
+		goto out;
+	}
+
+	rsp->target = req->target;
+	rsp->type = RPMB_REQ_READ_RESULT;
+	err = send_rpmb_req(hdl, req->target, rsp_size, rsp);
+	if (err || rsp->result) {
+		nvme_show_error("Program auth key read result 0x%x, error = 0x%x", rsp->result,
+				 err);
+		goto out;
+	}
+
+	/* reuse response buffer */
+	memset(rsp, 0, rsp_size);
+	err = recv_rpmb_rsp(hdl, req->target, rsp_size, rsp);
+	if (err != 0)
+		nvme_show_error("Program Key recv error = 0x%x", err);
+	else
+		err = check_rpmb_response(req, rsp, "Failed to Program Key");
+out:
+	free(req);
+	free(rsp);
+
+	return err;
+}
+
+/*
+ * Implementation of RPMB authenticated data write command; this function
+ * transfers msg_size bytes from msg_buf to controller 'addr'. Returns
+ * number of bytes actually written to, otherwise negative error code on
+ * failures.
+ */
+static int auth_data_write_chunk(struct libnvme_transport_handle *hdl, unsigned char tgt,
+				  unsigned int addr, unsigned char *msg_buf, int msg_size,
+				  unsigned char *keybuf, int keysize)
+{
+	int req_size = sizeof(struct rpmb_data_frame_t) + msg_size;
+	int rsp_size = sizeof(struct rpmb_data_frame_t);
+
+	struct rpmb_data_frame_t *req = NULL;
+	struct rpmb_data_frame_t *rsp = NULL;
+
+	unsigned int write_cntr = 0;
+	unsigned char *mac = NULL;
+	int error = -ENOMEM;
+
+	/* get current write counter and copy to the request  */
+	error = rpmb_read_write_counter(hdl, tgt, &write_cntr);
+	if (error != 0) {
+		nvme_show_error("Failed to read write counter for write-data");
+		goto out;
+	}
+
+	req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DATA_WRITE, tgt, 0, addr,
+				 (msg_size / 512), msg_buf,
+				 offsetof(struct rpmb_data_frame_t, data), msg_size);
+	if (!req) {
+		nvme_show_error("Memory alloc failed for write-data command");
+		goto out;
+	}
+
+	req->write_counter = write_cntr;
+
+	/* compute HMAC hash */
+	mac = shr_hmac_sha256(((unsigned char *)req + 223), req_size - 223, keybuf, keysize);
+	if (!mac) {
+		nvme_show_error("failed to compute HMAC-SHA256");
+		error = -1;
+		goto out;
+	}
+
+	memcpy(req->mac, mac, 32);
+
+	/* send the request and get response */
+	error = send_rpmb_req(hdl, tgt, req_size, req);
+	if (error != 0) {
+		nvme_show_error("RPMB request 0x%04x for 0x%x, error: %d", req->type, tgt,
+				 error);
+		goto out;
+	}
+
+	/* send the request to get the result and then request to get the response */
+	rsp = calloc(rsp_size, 1);
+	if (!rsp) {
+		nvme_show_error("failed to allocate response buffer memory");
+		error = -ENOMEM;
+		goto out;
+	}
+	rsp->target = req->target;
+	rsp->type = RPMB_REQ_READ_RESULT;
+	error = send_rpmb_req(hdl, tgt, rsp_size, rsp);
+	if (error != 0 || rsp->result != 0) {
+		nvme_show_error("Write-data read result 0x%x, error = 0x%x", rsp->result,
+				 error);
+		goto out;
+	}
+
+	/* Read final response */
+	memset(rsp, 0, rsp_size);
+	error = recv_rpmb_rsp(hdl, tgt, rsp_size, rsp);
+	if (error != 0)
+		nvme_show_error("Auth data write recv error = 0x%x", error);
+	else
+		error = check_rpmb_response(req, rsp, "Failed to write-data");
+out:
+	free(req);
+	free(rsp);
+	free(mac);
+
+	return error;
+}
+
+/* send the request and get response */
+static int rpmb_auth_data_write(struct libnvme_transport_handle *hdl, unsigned char target,
+				 unsigned int addr, int acc_size, unsigned char *msg_buf,
+				 int msg_size, unsigned char *keybuf, int keysize)
+{
+	int chunk_size = acc_size < msg_size ? acc_size : msg_size;
+	int xfer = chunk_size;
+	int offset = 0;
+
+	while (xfer > 0) {
+		if (auth_data_write_chunk(hdl, target, (addr + offset / 512), msg_buf + offset,
+					   xfer, keybuf, keysize) != 0) {
+			/* error writing chunk data */
+			break;
+		}
+
+		offset += xfer;
+		if (offset + chunk_size > msg_size)
+			xfer = msg_size - offset;
+		else
+			xfer = chunk_size;
+	}
+
+	return offset;
+}
+
+/* writes given config_block buffer to the drive target 0 */
+static int rpmb_write_config_block(struct libnvme_transport_handle *hdl,
+				    unsigned char *cfg_buf, unsigned char *keybuf, int keysize)
+{
+	int cfg_size = sizeof(struct rpmb_config_block_t);
+	int rsp_size = sizeof(struct rpmb_data_frame_t);
+	int req_size = rsp_size + cfg_size;
+
+	struct rpmb_data_frame_t *req = NULL;
+	struct rpmb_data_frame_t *rsp = NULL;
+	unsigned char *cfg_buf_read = NULL, *mac = NULL;
+	unsigned int write_cntr = 0;
+	int error = -ENOMEM;
+
+	/* initialize request */
+	req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DCB_WRITE, 0, 0, 0, 1, cfg_buf,
+				 offsetof(struct rpmb_data_frame_t, data), cfg_size);
+	if (!req) {
+		nvme_show_error("failed to allocate rpmb request buffer");
+		goto out;
+	}
+
+	/* read config block write_counter from controller */
+	write_cntr = rpmb_read_config_block(hdl, &cfg_buf_read);
+	if (!cfg_buf_read) {
+		nvme_show_error("failed to read config block write counter");
+		error = -EIO;
+		goto out;
+	}
+
+	free(cfg_buf_read);
+	req->write_counter = write_cntr;
+	mac = shr_hmac_sha256(((unsigned char *)req + 223), req_size - 223, keybuf, keysize);
+	if (!mac) {
+		nvme_show_error("failed to compute hmac-sha256 hash");
+		error = -EINVAL;
+		goto out;
+	}
+
+	memcpy(req->mac, mac, sizeof(req->mac));
+
+	error = send_rpmb_req(hdl, 0, req_size, req);
+	if (error != 0) {
+		nvme_show_error("Write-config RPMB request, error = 0x%x", error);
+		goto out;
+	}
+
+	/* get response */
+	rsp = calloc(rsp_size, 1);
+	if (!rsp) {
+		nvme_show_error("failed to allocate response buffer memory");
+		error = -ENOMEM;
+		goto out;
+	}
+
+	/* get result first */
+	memset(rsp, 0, rsp_size);
+	rsp->target = req->target;
+	rsp->type = RPMB_REQ_READ_RESULT;
+	/* get the response and validate */
+	error = recv_rpmb_rsp(hdl, req->target, rsp_size, rsp);
+	if (error != 0) {
+		nvme_show_error("Failed getting write-config response error = 0x%x", error);
+		goto out;
+	}
+	error = check_rpmb_response(req, rsp, "Failed to retrieve write-config response");
+out:
+	free(req);
+	free(rsp);
+	free(mac);
+
+	return error;
+}
+
+static bool invalid_xfer_size(int blocks, unsigned int bpsz)
+{
+	return (blocks <= 0) || (blocks * 512) > ((bpsz + 1) * 128 * 1024);
+}
+
+/* Identify the controller and fetch its RPMBS support register */
+static int rpmb_get_regs(struct libnvme_transport_handle *hdl, union ctrl_rpmbs_reg *regs)
+{
+	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
+	int err;
+
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	if (err)
+		return err;
+
+	regs->rpmbs = le32_to_cpu(ctrl.rpmbs);
+	if (regs->num_targets == 0) {
+		nvme_show_error("No RPMB targets are supported by the drive");
+		return -1;
+	}
+
+	return 0;
+}
+
+/* Read key from a given key buffer or key file and validate its size */
+static unsigned char *rpmb_read_and_validate_key(char *keystr, char *keyfile,
+						  unsigned int *keysize)
+{
+	unsigned char *keybuf = read_rpmb_key(keystr, keyfile, keysize);
+
+	if (!keybuf) {
+		nvme_show_error("Failed to read key");
+		return NULL;
+	}
+
+	if (*keysize > 223 || *keysize == 0) {
+		nvme_show_error("Invalid key size %u, valid input 1 to 223", *keysize);
+		libnvme_free(keybuf);
+		return NULL;
+	}
+
+	return keybuf;
+}
+
+/* Read msg data from either a literal string or a file */
+static int rpmb_read_msg(char *msgstr, char *msgfile, unsigned char **msg_buf,
+			  unsigned int *msg_size)
+{
+	if (msgstr) {
+		*msg_size = strlen(msgstr);
+		*msg_buf = libnvme_alloc(*msg_size);
+		if (!*msg_buf)
+			return -ENOMEM;
+		memcpy(*msg_buf, msgstr, *msg_size);
+		return 0;
+	}
+
+	return read_file(msgfile, msg_buf, msg_size);
+}
+
+static int rpmb_info(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	const char *desc = "Print RPMB support information for the controller";
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	union ctrl_rpmbs_reg regs;
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = rpmb_get_regs(hdl, &regs);
+	if (err)
+		return err;
+
+	nvme_show_id_ctrl_rpmbs(regs.rpmbs, 0);
+
+	return 0;
+}
+
+static int rpmb_program_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	const char *desc = "Program the RPMB authentication key for a given target";
+	const char *key = "key to be used for authentication";
+	const char *kfile = "key file that has authentication key to be used";
+	const char *target = "RPMB target - numerical value of 0 to 6, default 0";
+
+	struct config {
+		char *key;
+		char *keyfile;
+		__u8 target;
+	};
+
+	struct config cfg = {
+		.key = NULL,
+		.keyfile = NULL,
+		.target = 0,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STRING("key",     'k', "key",  &cfg.key,     key),
+		  OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
+		  OPT_BYTE("target",    't', &cfg.target,           target));
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_libnvme_free unsigned char *key_buf = NULL;
+	union ctrl_rpmbs_reg regs;
+	unsigned int key_size = 0;
+	int err;
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = rpmb_get_regs(hdl, &regs);
+	if (err)
+		return err;
+
+	key_buf = rpmb_read_and_validate_key(cfg.key, cfg.keyfile, &key_size);
+	if (!key_buf)
+		return -1;
+
+	err = rpmb_program_auth_key(hdl, cfg.target, key_buf, key_size);
+	if (!err)
+		nvme_show_verbose_result("RPMB authentication key programmed");
+
+	return err;
+}
+
+static int rpmb_read_counter(int argc, char **argv, struct command *acmd,
+			      struct plugin *plugin)
+{
+	const char *desc = "Read the current RPMB write counter for a given target";
+	const char *target = "RPMB target - numerical value of 0 to 6, default 0";
+
+	struct config {
+		__u8 target;
+	};
+
+	struct config cfg = {
+		.target = 0,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_BYTE("target", 't', &cfg.target, target));
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	union ctrl_rpmbs_reg regs;
+	unsigned int write_cntr = 0;
+	int err;
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = rpmb_get_regs(hdl, &regs);
+	if (err)
+		return err;
+
+	err = rpmb_read_write_counter(hdl, cfg.target, &write_cntr);
+	if (!err)
+		nvme_show_result("Write Counter is: %u", write_cntr);
+
+	return err;
+}
+
+static int rpmb_read_data(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	const char *desc = "Read authenticated data from an RPMB target";
+	const char *mfile = "data file to save read data to";
+	const char *target = "RPMB target - numerical value of 0 to 6, default 0";
+	const char *address = "Sector offset to read from for an RPMB target, default 0";
+	const char *blocks = "Number of 512 byte blocks to read";
+
+	struct config {
+		char *msgfile;
+		__u32 address;
+		__u32 blocks;
+		__u8 target;
+	};
+
+	struct config cfg = {
+		.msgfile = NULL,
+		.address = 0,
+		.blocks = 0,
+		.target = 0,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
+		  OPT_UINT("address",   'o', &cfg.address,          address),
+		  OPT_UINT("blocks",    'b', &cfg.blocks,           blocks),
+		  OPT_BYTE("target",    't', &cfg.target,           target));
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
+	union ctrl_rpmbs_reg regs;
+	int err;
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = rpmb_get_regs(hdl, &regs);
+	if (err)
+		return err;
+
+	if (invalid_xfer_size(cfg.blocks, regs.total_size)) {
+		nvme_show_error("invalid transfer size %u", cfg.blocks * 512);
+		return -1;
+	}
+
+	err = rpmb_auth_data_read(hdl, cfg.target, cfg.address, &msg_buf, cfg.blocks,
+				   (regs.access_size + 1));
+	if (err > 0 && msg_buf) {
+		nvme_show_result("Writing %d bytes to file %s", err * 512, cfg.msgfile);
+		write_file(msg_buf, err * 512, NULL, cfg.msgfile, NULL);
+	}
+
+	return err > 0 ? 0 : err;
+}
+
+static int rpmb_write_data(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	const char *desc = "Write authenticated data to an RPMB target";
+	const char *msg = "data to be written";
+	const char *mfile = "data file to be written";
+	const char *kfile = "key file that has authentication key to be used";
+	const char *target = "RPMB target - numerical value of 0 to 6, default 0";
+	const char *address = "Sector offset to write to for an RPMB target, default 0";
+	const char *blocks = "Number of 512 byte blocks to write";
+	const char *key = "key to be used for authentication";
+
+	struct config {
+		char *key;
+		char *msg;
+		char *keyfile;
+		char *msgfile;
+		__u32 address;
+		__u32 blocks;
+		__u8 target;
+	};
+
+	struct config cfg = {
+		.key = NULL,
+		.msg = NULL,
+		.msgfile = NULL,
+		.keyfile = NULL,
+		.address = 0,
+		.blocks = 0,
+		.target = 0,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
+		  OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
+		  OPT_STRING("key",     'k', "key",  &cfg.key,     key),
+		  OPT_STRING("msg",     'd', "data", &cfg.msg,     msg),
+		  OPT_UINT("address",   'o', &cfg.address,          address),
+		  OPT_UINT("blocks",    'b', &cfg.blocks,           blocks),
+		  OPT_BYTE("target",    't', &cfg.target,           target));
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_libnvme_free unsigned char *key_buf = NULL;
+	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
+	union ctrl_rpmbs_reg regs;
+	unsigned int key_size = 0;
+	unsigned int msg_size = 0;
+	int err;
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = rpmb_get_regs(hdl, &regs);
+	if (err)
+		return err;
+
+	key_buf = rpmb_read_and_validate_key(cfg.key, cfg.keyfile, &key_size);
+	if (!key_buf)
+		return -1;
+
+	err = rpmb_read_msg(cfg.msg, cfg.msgfile, &msg_buf, &msg_size);
+	if (err || !msg_size) {
+		nvme_show_error("Failed to read msg data");
+		return -1;
+	}
+
+	if (invalid_xfer_size(cfg.blocks, regs.total_size) || (cfg.blocks * 512) > msg_size) {
+		nvme_show_error("invalid transfer size %u", cfg.blocks * 512);
+		return -1;
+	} else if ((cfg.blocks * 512) < msg_size) {
+		msg_size = cfg.blocks * 512;
+	}
+
+	err = rpmb_auth_data_write(hdl, cfg.target, cfg.address, ((regs.access_size + 1) * 512),
+				    msg_buf, msg_size, key_buf, key_size);
+
+	/* print whatever extent of data written to target */
+	nvme_show_result("Written %d sectors out of %u @target(%d):0x%x", err / 512,
+			  msg_size / 512, cfg.target, cfg.address);
+
+	return err == (int)msg_size ? 0 : -1;
+}
+
+static int rpmb_read_config(int argc, char **argv, struct command *acmd,
+			     struct plugin *plugin)
+{
+	const char *desc = "Read the RPMB device configuration block";
+	const char *mfile = "data file to save the read configuration block to";
+
+	struct config {
+		char *msgfile;
+	};
+
+	struct config cfg = {
+		.msgfile = NULL,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile));
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
+	union ctrl_rpmbs_reg regs;
+	unsigned int write_cntr;
+	int err;
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = rpmb_get_regs(hdl, &regs);
+	if (err)
+		return err;
+
+	write_cntr = rpmb_read_config_block(hdl, &msg_buf);
+	if (!msg_buf) {
+		nvme_show_error("failed to read config block");
+		return -1;
+	}
+
+	if (!cfg.msgfile) {
+		struct rpmb_config_block_t *rcfg = (struct rpmb_config_block_t *)msg_buf;
+
+		nvme_show_result("Boot Partition Protection is %s",
+				  (rcfg->bp_enable & 0x1) ? "Enabled" : "Disabled");
+		nvme_show_result("Boot Partition 1 is %s",
+				  (rcfg->bp_lock & 0x2) ? "Locked" : "Unlocked");
+		nvme_show_result("Boot Partition 0 is %s",
+				  (rcfg->bp_lock & 0x1) ? "Locked" : "Unlocked");
+	} else {
+		nvme_show_result("Saving received config data to %s file", cfg.msgfile);
+		write_file(msg_buf, sizeof(struct rpmb_config_block_t), NULL, cfg.msgfile,
+			   NULL);
+	}
+
+	return write_cntr == 0 ? -1 : 0;
+}
+
+static int rpmb_write_config(int argc, char **argv, struct command *acmd,
+			      struct plugin *plugin)
+{
+	const char *desc = "Write the RPMB device configuration block";
+	const char *msg = "configuration block data to be written";
+	const char *mfile = "data file with the configuration block to be written";
+	const char *kfile = "key file that has authentication key to be used";
+	const char *key = "key to be used for authentication";
+
+	struct config {
+		char *key;
+		char *msg;
+		char *keyfile;
+		char *msgfile;
+	};
+
+	struct config cfg = {
+		.key = NULL,
+		.msg = NULL,
+		.msgfile = NULL,
+		.keyfile = NULL,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
+		  OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
+		  OPT_STRING("key",     'k', "key",  &cfg.key,     key),
+		  OPT_STRING("msg",     'd', "data", &cfg.msg,     msg));
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_libnvme_free unsigned char *key_buf = NULL;
+	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
+	union ctrl_rpmbs_reg regs;
+	unsigned int key_size = 0;
+	unsigned int msg_size = 0;
+	int err;
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = rpmb_get_regs(hdl, &regs);
+	if (err)
+		return err;
+
+	key_buf = rpmb_read_and_validate_key(cfg.key, cfg.keyfile, &key_size);
+	if (!key_buf)
+		return -1;
+
+	err = rpmb_read_msg(cfg.msg, cfg.msgfile, &msg_buf, &msg_size);
+	if (err || !msg_size) {
+		nvme_show_error("Failed to read msg data");
+		return -1;
+	}
+
+	err = rpmb_write_config_block(hdl, msg_buf, key_buf, key_size);
+	if (!err)
+		nvme_show_verbose_result("RPMB configuration block written");
+
+	return err;
+}
+
+static struct command rpmb_info_cmd = {
+	.name = "info",
+	.help = "Print RPMB support information for the controller",
+	.fn = rpmb_info,
+};
+
+static struct command rpmb_program_key_cmd = {
+	.name = "program-key",
+	.help = "Program the RPMB authentication key",
+	.fn = rpmb_program_key,
+};
+
+static struct command rpmb_read_counter_cmd = {
+	.name = "read-counter",
+	.help = "Read the RPMB write counter",
+	.fn = rpmb_read_counter,
+};
+
+static struct command rpmb_read_data_cmd = {
+	.name = "read-data",
+	.help = "Read authenticated data from an RPMB target",
+	.fn = rpmb_read_data,
+};
+
+static struct command rpmb_write_data_cmd = {
+	.name = "write-data",
+	.help = "Write authenticated data to an RPMB target",
+	.fn = rpmb_write_data,
+};
+
+static struct command rpmb_read_config_cmd = {
+	.name = "read-config",
+	.help = "Read the RPMB device configuration block",
+	.fn = rpmb_read_config,
+};
+
+static struct command rpmb_write_config_cmd = {
+	.name = "write-config",
+	.help = "Write the RPMB device configuration block",
+	.fn = rpmb_write_config,
+};
+
+static struct command *commands[] = {
+	&rpmb_info_cmd,
+	&rpmb_program_key_cmd,
+	&rpmb_read_counter_cmd,
+	&rpmb_read_data_cmd,
+	&rpmb_write_data_cmd,
+	&rpmb_read_config_cmd,
+	&rpmb_write_config_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "rpmb",
+	.desc = "Replay Protected Memory Block commands",
+	.version = NVME_VERSION,
+	.core = true,
+	.group = "Security & Access Control",
+};
+
+static void __shr_constructor register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
+}

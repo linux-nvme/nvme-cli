@@ -265,8 +265,26 @@ linknvme:nvme-primary-ctrl-caps[1]::
 linknvme:nvme-reset[1]::
 	Resets the controller
 
-linknvme:nvme-rpmb[1]::
-	Replay Protection Memory Block commands
+linknvme:nvme-rpmb-info[1]::
+	Print RPMB support information for the controller
+
+linknvme:nvme-rpmb-program-key[1]::
+	Program the RPMB authentication key
+
+linknvme:nvme-rpmb-read-counter[1]::
+	Read the RPMB write counter
+
+linknvme:nvme-rpmb-read-data[1]::
+	Read authenticated data from an RPMB target
+
+linknvme:nvme-rpmb-write-data[1]::
+	Write authenticated data to an RPMB target
+
+linknvme:nvme-rpmb-read-config[1]::
+	Read the RPMB device configuration block
+
+linknvme:nvme-rpmb-write-config[1]::
+	Write the RPMB device configuration block
 
 linknvme:nvme-sanitize-log[1]::
 	Retrieve sanitize log
