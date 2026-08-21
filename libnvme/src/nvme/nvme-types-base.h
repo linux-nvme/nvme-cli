@@ -137,7 +137,9 @@
  *				index in the endurance group list
  * @NVME_ID_ND_DESCRIPTOR_MAX:	The largest possible namespace granularity
  *				index in the namespace granularity descriptor
- *				list
+ *				list (i.e. with the LBA Format Extension
+ *				Enable field set to 1h in the Host Behavior
+ *				Support feature)
  * @NVME_FEAT_LBA_RANGE_MAX:	The largest possible LBA range index in feature
  *				lba range type
  * @NVME_LOG_ST_MAX_RESULTS:	The largest possible self test result index in the
@@ -180,7 +182,7 @@ enum nvme_constants {
 	NVME_ID_SECONDARY_CTRL_MAX		= 127,
 	NVME_ID_DOMAIN_LIST_MAX			= 31,
 	NVME_ID_ENDURANCE_GROUP_LIST_MAX	= 2047,
-	NVME_ID_ND_DESCRIPTOR_MAX		= 16,
+	NVME_ID_ND_DESCRIPTOR_MAX		= 64,
 	NVME_FEAT_LBA_RANGE_MAX			= 64,
 	NVME_LOG_ST_MAX_RESULTS			= 20,
 	NVME_LOG_TELEM_BLOCK_SIZE		= 512,
@@ -3557,7 +3559,7 @@ struct nvme_id_ns_granularity_list {
 	__u8			num_descriptors;
 	__u8			rsvd5[27];
 	struct nvme_id_ns_granularity_desc entry[NVME_ID_ND_DESCRIPTOR_MAX];
-	__u8			rsvd288[3808];
+	__u8			rsvd288[3040];
 };
 
 /**
