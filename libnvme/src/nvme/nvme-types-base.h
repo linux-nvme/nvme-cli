@@ -7043,6 +7043,35 @@ struct nvme_host_metadata {
 };
 
 /**
+ * enum nvme_host_metadata_cdw11 - Host Metadata Features (7Dh/7Eh/7Fh) -
+ *				    Command Dword 11
+ * @NVME_HOST_METADATA_GDHM: Generate Default Host Metadata (Get Features
+ *			     Command Dword 11 only)
+ * @NVME_HOST_METADATA_EA_SHIFT: Shift amount to set the Element Action (EA)
+ *				 field (Set Features Command Dword 11 only)
+ * @NVME_HOST_METADATA_EA_MASK: Mask to set EA
+ */
+enum nvme_host_metadata_cdw11 {
+	NVME_HOST_METADATA_GDHM	= 1 << 0,
+	NVME_HOST_METADATA_EA_SHIFT	= 13,
+	NVME_HOST_METADATA_EA_MASK	= 0x3,
+};
+
+#define NVME_HOST_METADATA_EA(cdw11)	NVME_GET(cdw11, HOST_METADATA_EA)
+
+/**
+ * enum nvme_host_metadata_ea - Host Metadata Features - Element Action (EA)
+ * @NVME_HOST_METADATA_EA_ADD_REPLACE: Add or Replace Entry
+ * @NVME_HOST_METADATA_EA_DELETE_MULTIPLE: Delete Entry Multiple
+ * @NVME_HOST_METADATA_EA_ADD_MULTIPLE: Add Entry Multiple
+ */
+enum nvme_host_metadata_ea {
+	NVME_HOST_METADATA_EA_ADD_REPLACE	= 0,
+	NVME_HOST_METADATA_EA_DELETE_MULTIPLE	= 1,
+	NVME_HOST_METADATA_EA_ADD_MULTIPLE	= 2,
+};
+
+/**
  * enum nvme_ctrl_metadata_type - Controller Metadata Element Types
  * @NVME_CTRL_METADATA_OS_CTRL_NAME:		Name of the controller in
  *						the operating system.
@@ -8347,6 +8376,17 @@ enum nvme_admin_opcode {
 };
 
 /**
+ * enum nvme_abort_cqe_dw0 - Abort Command – Completion Queue Entry Dword 0
+ * @NVME_ABORT_CQE_DW0_IANP: Immediate Abort Not Performed: if set to '1',
+ *			     then an immediate abort was not performed for
+ *			     any reason. If cleared to '0', then an
+ *			     immediate abort was performed.
+ */
+enum nvme_abort_cqe_dw0 {
+	NVME_ABORT_CQE_DW0_IANP	= 1 << 0,
+};
+
+/**
  * enum nvme_identify_cns -			Identify - CNS Values
  * @NVME_IDENTIFY_CNS_NS:			Identify Namespace data structure
  * @NVME_IDENTIFY_CNS_CTRL:			Identify Controller data structure
@@ -9078,6 +9118,23 @@ enum nvme_get_features_sel {
 	NVME_GET_FEATURES_SEL_DEFAULT				= 1,
 	NVME_GET_FEATURES_SEL_SAVED				= 2,
 	NVME_GET_FEATURES_SEL_SUPPORTED				= 3,
+};
+
+/**
+ * enum nvme_get_features_supported_cqe_dw0 - Get Features Completion Queue
+ *		Entry Dword 0 when the Select field is set to
+ *		%NVME_GET_FEATURES_SEL_SUPPORTED
+ * @NVME_GET_FEATURES_SUPPORTED_SVBL:  Saveable: the feature values are
+ *				       saveable if set to '1'.
+ * @NVME_GET_FEATURES_SUPPORTED_NSSPEC: NS Specific: the Feature Identifier
+ *				       has a namespace scope if set to '1'.
+ * @NVME_GET_FEATURES_SUPPORTED_CHANG: Changeable: the feature values are
+ *				       changeable if set to '1'.
+ */
+enum nvme_get_features_supported_cqe_dw0 {
+	NVME_GET_FEATURES_SUPPORTED_SVBL	= 1 << 0,
+	NVME_GET_FEATURES_SUPPORTED_NSSPEC	= 1 << 1,
+	NVME_GET_FEATURES_SUPPORTED_CHANG	= 1 << 2,
 };
 
 /**
