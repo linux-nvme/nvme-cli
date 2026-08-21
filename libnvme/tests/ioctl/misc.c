@@ -1369,7 +1369,7 @@ static void test_lm_track_send(void)
 	int err;
 
 	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
-	nvme_init_lm_track_send(&cmd, sel, mos, cdqid);
+	nvme_init_lm_track_send(&cmd, sel, mos, cdqid, NULL, 0);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);

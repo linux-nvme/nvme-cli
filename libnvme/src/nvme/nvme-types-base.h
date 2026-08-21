@@ -8140,7 +8140,16 @@ struct nvme_pull_model_ddc_req_log {
  *				      suspended.
  * @NVME_SC_CONTROLLER_DATA_QUEUE_FULL: The controller detected that a
  *				      Controller Data Queue became full.
- * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Exceeds Max NS Sanitize Operations
+ * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Request Exceeds Maximum Namespace
+ *				      Sanitize Operations In Progress
+ *				      (Sanitize Namespace command specific
+ *				      status). Numerically identical to
+ *				      %NVME_SC_FW_NEEDS_MAX_TIME (Firmware
+ *				      Commit) - command specific status is
+ *				      scoped per opcode, so this collision is
+ *				      expected; use only when decoding the
+ *				      completion of a Sanitize Namespace
+ *				      command.
  * @NVME_SC_MFG_DEFAULT_PERSONALITY_REQUIRED: Manufacturing Default Personality
  *				      Required: The Firmware Commit command was
  *				      aborted due to the firmware image being
@@ -8449,9 +8458,9 @@ enum nvme_status_field {
 	NVME_SC_CONTROLLER_DATA_QUEUE_FULL	= 0x3B,
 
 	/*
-	 * Command Set Specific
+	 * Command Set Specific - Sanitize Namespace
 	 */
-	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x3c,
+	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x12,
 
 	/*
 	 * Command Set Specific - Firmware Commit
@@ -10247,6 +10256,70 @@ enum nvme_lm_track_send_fields {
 #define NVME_LM_TRACK_SEND_SEL(fields)	NVME_GET(fields, LM_TRACK_SEND_SEL)
 
 #define NVME_LM_LACT(fields)		NVME_GET(fields, LM_LACT)
+
+/**
+ * enum nvme_lm_tact - Track Send - Track Memory Changes - Management
+ *		       Operation Specific field - Tracking Action (TACT)
+ * @NVME_LM_TACT_STOP_TRACKING:  Stop tracking host memory changes
+ * @NVME_LM_TACT_START_TRACKING: Start tracking host memory changes; the
+ *		       data buffer contains a Track Memory Changes data
+ *		       structure, see &struct nvme_lm_track_memory_changes_data
+ */
+enum nvme_lm_tact {
+	NVME_LM_TACT_STOP_TRACKING	= 0,
+	NVME_LM_TACT_START_TRACKING	= 1,
+};
+
+/**
+ * enum nvme_lm_track_memory_changes_cqe - Track Send - Track Memory Changes -
+ *		       Completion Queue Entry Dword 0
+ * @NVME_LM_TRACK_MEMORY_CHANGES_CQE_MRTG_SHIFT: Shift amount to get Memory
+ *		       Range Tracking Granularity (MRTG)
+ * @NVME_LM_TRACK_MEMORY_CHANGES_CQE_MRTG_MASK:  Mask to get MRTG
+ */
+enum nvme_lm_track_memory_changes_cqe {
+	NVME_LM_TRACK_MEMORY_CHANGES_CQE_MRTG_SHIFT	= 0,
+	NVME_LM_TRACK_MEMORY_CHANGES_CQE_MRTG_MASK	= 0xffff,
+};
+
+#define NVME_LM_TRACK_MEMORY_CHANGES_CQE_MRTG(dw0) \
+	NVME_GET(dw0, LM_TRACK_MEMORY_CHANGES_CQE_MRTG)
+
+/**
+ * struct nvme_lm_memory_range_tracking_descriptor - Memory Range Tracking
+ *		       Descriptor
+ * @saddr:	Address (SADDR): starting host memory address of the range,
+ *		aligned to the granularity specified by @rmrtg in &struct
+ *		nvme_lm_track_memory_changes_data
+ * @len:	Length (LEN), in units of the tracking granularity specified
+ *		by @rmrtg
+ */
+struct nvme_lm_memory_range_tracking_descriptor {
+	__le64	saddr;
+	__le32	len;
+} __attribute__((packed));
+
+/**
+ * struct nvme_lm_track_memory_changes_data - Track Memory Changes Data
+ *		       Structure, supplied by the host in the data buffer of a
+ *		       Track Send command's Track Memory Changes management
+ *		       operation when starting tracking (TACT set to
+ *		       %NVME_LM_TACT_START_TRACKING)
+ * @ver:	Version (VER), shall be cleared to 0h
+ * @rsvd1:	Reserved
+ * @rmrtg:	Requested Memory Range Tracking Granularity (RMRTG)
+ * @rnmrtd:	Number of Memory Range Tracking Descriptors (RNMRTD), a 1's
+ *		based value
+ * @desc:	Memory Range Tracking Descriptor list, see &struct
+ *		nvme_lm_memory_range_tracking_descriptor
+ */
+struct nvme_lm_track_memory_changes_data {
+	__u8	ver;
+	__u8	rsvd1[2];
+	__u8	rmrtg;
+	__le32	rnmrtd;
+	struct nvme_lm_memory_range_tracking_descriptor desc[];
+};
 
 /**
  * enum nvme_lm_track_receive_fields - Track Receive command fields
