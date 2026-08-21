@@ -4931,6 +4931,78 @@ nvme_init_manage_export_nvms_receive_create(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_manage_export_nvms_send() - Initialize passthru command for
+ * Manage Exported NVM Subsystem Send
+ * @cmd:	Passthru command to use
+ * @sel:	Select (SEL): management operation to perform, see &enum
+ *		nvme_manage_export_nvms_send_sel
+ * @mos:	Management Operation Specific (MOS): specific to @sel
+ * @mose:	Management Operation Specific Extended (MOSE): specific to
+ *		@sel
+ * @esubidv:	Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+ *		@esubid identifies the target Exported NVM Subsystem;
+ *		otherwise the target is identified by the SUBNQN in @data
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID), used if
+ *		@esubidv is set
+ * @data:	Pointer to data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Send command.
+ */
+static inline void
+nvme_init_manage_export_nvms_send(struct libnvme_passthru_cmd *cmd,
+		__u8 sel, __u8 mos, __u16 mose, bool esubidv, __u16 esubid,
+		void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_manage_export_nvms_send;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_SEL_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_SEL_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOS_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOS_MASK) |
+		     NVME_FIELD_ENCODE(mose,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOSE_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW10_MOSE_MASK);
+	cmd->cdw14 = NVME_FIELD_ENCODE(esubid,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBID_SHIFT,
+			NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBID_MASK) |
+		     (esubidv ? NVME_MANAGE_EXPORT_NVMS_SEND_CDW14_ESUBIDV : 0);
+}
+
+/**
+ * nvme_init_manage_export_nvms_send_delete() - Initialize passthru command
+ * for Manage Exported NVM Subsystem Send - Delete
+ * @cmd:	Passthru command to use
+ * @esubidv:	Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+ *		@esubid identifies the Exported NVM Subsystem to delete;
+ *		otherwise it is identified by the SUBNQN in @data
+ * @esubid:	Exported NVM Subsystem Identifier (ESUBID), used if
+ *		@esubidv is set
+ * @data:	Exported NVM Subsystem NQN data buffer, see &struct
+ *		nvme_exported_nvm_subsys_nqn_data. Ignored if @esubidv is set.
+ *
+ * Initializes the passthru command buffer for the Manage Exported NVM
+ * Subsystem Send command with SEL value
+ * %NVME_MANAGE_EXPORT_NVMS_SEND_SEL_DELETE.
+ */
+static inline void
+nvme_init_manage_export_nvms_send_delete(struct libnvme_passthru_cmd *cmd,
+		bool esubidv, __u16 esubid,
+		struct nvme_exported_nvm_subsys_nqn_data *data)
+{
+	nvme_init_manage_export_nvms_send(cmd,
+		NVME_MANAGE_EXPORT_NVMS_SEND_SEL_DELETE, 0, 0,
+		esubidv, esubid,
+		esubidv ? NULL : data,
+		esubidv ? 0 : sizeof(*data));
+}
+
+/**
   * nvme_init_lockdown() - Initialize passthru command for Lockdown
   * @cmd:	Passthru command to use
   * @scp:	Scope of the command
