@@ -1,0 +1,35 @@
+nvme-rpmb-info(1)
+=================
+
+NAME
+----
+nvme-rpmb-info - Print RPMB support information for the controller
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'rpmb info' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, print information regarding supported RPMB
+targets, and access and total sizes, as reported in the RPMBS field of
+the Identify Controller data structure.
+
+The <device> parameter is mandatory and an NVMe character device (ex:
+/dev/nvme0) must be specified. If the given device does not support any
+RPMB targets, an error is printed instead.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Print RPMB support information of an NVMe device
++
+-----------
+# nvme rpmb info /dev/nvme0
+-----------
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,42 @@
+nvme-rpmb-read-counter(1)
+=========================
+
+NAME
+----
+nvme-rpmb-read-counter - Read the RPMB write counter
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'rpmb read-counter' <device>
+			[--target=<target-id> | -t <target-id>]
+
+DESCRIPTION
+-----------
+Reads the current write counter of the specified RPMB target. The
+counter value read is printed to STDOUT.
+
+The <device> parameter is mandatory and an NVMe character device (ex:
+/dev/nvme0) must be specified.
+
+OPTIONS
+-------
+-t <target>::
+--target=<target>::
+	RPMB target id. This should be one of the supported RPMB targets as
+	reported by 'nvme rpmb info'. If nothing is given, the default of 0
+	is used as the RPMB target.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Read current write counter of RPMB target 0
++
+------------
+# nvme rpmb read-counter /dev/nvme0 --target=0
+------------
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,79 @@
+nvme-rpmb-write-data(1)
+=======================
+
+NAME
+----
+nvme-rpmb-write-data - Write authenticated data to an RPMB target
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'rpmb write-data' <device>
+			[--msgfile=<data-file> | -f <data-file>]
+			[--msg=<data> | -d <data>]
+			[--keyfile=<key-file> | -g <key-file>]
+			[--key=<key> | -k <key>]
+			[--address=<offset> | -o <offset>]
+			[--blocks=<512 byte sectors> | -b <sectors>]
+			[--target=<target-id> | -t <target-id>]
+
+DESCRIPTION
+-----------
+Supports authenticated data writing to the specified RPMB target, at the
+given sector offset, using the authentication key previously programmed
+with 'nvme rpmb program-key' for that target.
+
+If the requested size is not within the total size supported by the
+target, the request fails without being sent to the device.
+
+The <device> parameter is mandatory and an NVMe character device (ex:
+/dev/nvme0) must be specified.
+
+OPTIONS
+-------
+-t <target>::
+--target=<target>::
+	RPMB target id. This should be one of the supported RPMB targets as
+	reported by 'nvme rpmb info'. If nothing is given, the default of 0
+	is used as the RPMB target.
+
+-o <offset>::
+--address=<offset>::
+	The address (in 512 byte sector offset from 0) to write to on the
+	specified RPMB target.
+
+-b <sectors>::
+--blocks=<sectors>::
+	The size in 512 byte sectors to write to the specified RPMB target.
+
+-k <key>::
+--key=<key>::
+-g <key-file>::
+--keyfile=<key-file>::
+	Authentication key previously programmed with 'nvme rpmb
+	program-key' for the given target. The key can be specified on the
+	command line using --key or -k, or read from a file using --keyfile
+	or -g.
+
+-f <data-file>::
+--msgfile=<data-file>::
+	Name of the file the data to be written is read from.
+
+-d <data>::
+--msg=<data>::
+	Provides the data to be written directly on the command line,
+	instead of reading it from a file.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Write 200 blocks of (512 bytes) from input.bin onto target 0
++
+------------
+# nvme rpmb write-data /dev/nvme0 -t 0 -f input.bin -b 200 -k 'SecretKey'
+------------
+
+NVME
+----
+Part of the nvme-user suite

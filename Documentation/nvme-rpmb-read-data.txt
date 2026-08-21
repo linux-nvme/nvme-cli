@@ -1,0 +1,65 @@
+nvme-rpmb-read-data(1)
+======================
+
+NAME
+----
+nvme-rpmb-read-data - Read authenticated data from an RPMB target
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'rpmb read-data' <device>
+			[--msgfile=<data-file> | -f <data-file>]
+			[--address=<offset> | -o <offset>]
+			[--blocks=<512 byte sectors> | -b <sectors>]
+			[--target=<target-id> | -t <target-id>]
+
+DESCRIPTION
+-----------
+Supports authenticated data reading from the specified RPMB target, at
+the given sector offset, writing the resulting data to the file given
+with --msgfile.
+
+If the requested size is not within the total size supported by the
+target, the request fails without being sent to the device.
+
+The <device> parameter is mandatory and an NVMe character device (ex:
+/dev/nvme0) must be specified.
+
+OPTIONS
+-------
+-t <target>::
+--target=<target>::
+	RPMB target id. This should be one of the supported RPMB targets as
+	reported by 'nvme rpmb info'. If nothing is given, the default of 0
+	is used as the RPMB target.
+
+-o <offset>::
+--address=<offset>::
+	The address (in 512 byte sector offset from 0) to read from on the
+	specified RPMB target.
+
+-b <sectors>::
+--blocks=<sectors>::
+	The size in 512 byte sectors to read from the specified RPMB
+	target.
+
+-f <data-file>::
+--msgfile=<data-file>::
+	Name of the file the read data is written to. If an existing file
+	is given, data is appended to it.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Read 200 blocks of (512 bytes) from target 2, at offset 0x100 and save
+* the data onto output.bin
++
+------------
+# nvme rpmb read-data /dev/nvme0 -t 2 -f output.bin -b 200 -o 0x100
+------------
+
+NVME
+----
+Part of the nvme-user suite

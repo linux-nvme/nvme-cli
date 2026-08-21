@@ -146,6 +146,15 @@
   `nvme fw download`. The old top-level commands still work as
   deprecated aliases.
 
+* The RPMB command has moved into a new `nvme rpmb` plugin and, since
+  RPMB is not part of the NVMe base specification, has been split
+  into one subcommand per action instead of a `--cmd=<action>` flag:
+  `nvme rpmb --cmd=info` is now `nvme rpmb info`, and likewise
+  `program-key`, `read-counter`, `read-data`, `write-data`,
+  `read-config`, and `write-config`. Unlike the other command moves
+  above, the old `nvme rpmb --cmd=...` form no longer works at all;
+  there is no deprecated alias. See `nvme-rpmb-info(1)` and friends.
+
 * Deprecated commands (currently the old `nvme keys`, `nvme log`,
   `nvme id`, `nvme ns`, `nvme resv`, `nvme nvme-mi`, `nvme io-mgmt`,
   `nvme dir`, `nvme security`, and `nvme fw` aliases above) are

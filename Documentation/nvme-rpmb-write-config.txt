@@ -1,0 +1,57 @@
+nvme-rpmb-write-config(1)
+=========================
+
+NAME
+----
+nvme-rpmb-write-config - Write the RPMB device configuration block
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'rpmb write-config' <device>
+			[--msgfile=<data-file> | -f <data-file>]
+			[--msg=<data> | -d <data>]
+			[--keyfile=<key-file> | -g <key-file>]
+			[--key=<key> | -k <key>]
+
+DESCRIPTION
+-----------
+Writes 512 bytes of device configuration block data to RPMB target 0 of
+the NVMe device, authenticated with the key previously programmed with
+'nvme rpmb program-key'.
+
+The <device> parameter is mandatory and an NVMe character device (ex:
+/dev/nvme0) must be specified.
+
+OPTIONS
+-------
+-k <key>::
+--key=<key>::
+-g <key-file>::
+--keyfile=<key-file>::
+	Authentication key previously programmed with 'nvme rpmb
+	program-key' for target 0. The key can be specified on the command
+	line using --key or -k, or read from a file using --keyfile or -g.
+
+-f <data-file>::
+--msgfile=<data-file>::
+	Name of the file the configuration block data is read from.
+
+-d <data>::
+--msg=<data>::
+	Provides the configuration block data directly on the command
+	line, instead of reading it from a file.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Write configuration data block from config.bin file
++
+------------
+# nvme rpmb write-config /dev/nvme0 -f config.bin -k 'SecretKey'
+------------
+
+NVME
+----
+Part of the nvme-user suite

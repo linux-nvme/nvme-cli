@@ -1,0 +1,53 @@
+nvme-rpmb-program-key(1)
+========================
+
+NAME
+----
+nvme-rpmb-program-key - Program the RPMB authentication key
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'rpmb program-key' <device>
+			[--key=<key> | -k <key>]
+			[--keyfile=<key-file> | -g <key-file>]
+			[--target=<target-id> | -t <target-id>]
+
+DESCRIPTION
+-----------
+Programs the given authentication key to the specified RPMB target. As
+per the RPMB specification, this is a one time action per target which
+cannot be undone.
+
+The <device> parameter is mandatory and an NVMe character device (ex:
+/dev/nvme0) must be specified.
+
+OPTIONS
+-------
+-t <target>::
+--target=<target>::
+	RPMB target id. This should be one of the supported RPMB targets as
+	reported by 'nvme rpmb info'. If nothing is given, the default of 0
+	is used as the RPMB target.
+
+-k <key>::
+--key=<key>::
+-g <key-file>::
+--keyfile=<key-file>::
+	Authentication key to program. The key can be specified on the
+	command line using --key or -k, or read from a file using --keyfile
+	or -g. The key size must be between 1 and 223 bytes.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Program 'SecretKey' as authentication key for target 1
++
+------------
+# nvme rpmb program-key /dev/nvme0 --key='SecretKey' --target=1
+------------
+
+NVME
+----
+Part of the nvme-user suite

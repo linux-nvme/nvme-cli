@@ -11,18 +11,10 @@
 
 #include <shared/compiler-attributes-util.h>
 
-#include "argconfig.h"
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
-
-/* rpmb_cmd_option is defined in nvme-rpmb.c */
-extern int rpmb_cmd_option(int, char **, struct command *, struct plugin *);
-static int rpmb_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	return rpmb_cmd_option(argc, argv, acmd, plugin);
-}
 
 static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
@@ -108,12 +100,6 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 	return err;
 }
 
-static struct command rpmb_cmd_cmd = {
-	.name = "rpmb",
-	.help = "Replay Protection Memory Block commands",
-	.fn = rpmb_cmd,
-};
-
 static struct command lockdown_cmd_cmd = {
 	.name = "lockdown",
 	.help = "Submit a Lockdown command,return result",
@@ -121,7 +107,6 @@ static struct command lockdown_cmd_cmd = {
 };
 
 static struct command *commands[] = {
-	&rpmb_cmd_cmd,
 	&lockdown_cmd_cmd,
 	NULL,
 };

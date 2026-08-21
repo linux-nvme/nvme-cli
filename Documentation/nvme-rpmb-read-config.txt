@@ -1,0 +1,46 @@
+nvme-rpmb-read-config(1)
+========================
+
+NAME
+----
+nvme-rpmb-read-config - Read the RPMB device configuration block
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'rpmb read-config' <device>
+			[--msgfile=<data-file> | -f <data-file>]
+
+DESCRIPTION
+-----------
+Reads the 512 byte device configuration block from RPMB target 0 of the
+NVMe device.
+
+If --msgfile is not given, a summary of the boot partition protection
+and lock state is printed to STDOUT instead of the raw configuration
+block.
+
+The <device> parameter is mandatory and an NVMe character device (ex:
+/dev/nvme0) must be specified.
+
+OPTIONS
+-------
+-f <data-file>::
+--msgfile=<data-file>::
+	Name of the file the read configuration block is written to. If an
+	existing file is given, data is appended to it. If not given, a
+	summary is printed to STDOUT instead.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Read configuration data block into config.bin file
++
+------------
+# nvme rpmb read-config /dev/nvme0 -f config.bin
+------------
+
+NVME
+----
+Part of the nvme-user suite
