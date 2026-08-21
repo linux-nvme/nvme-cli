@@ -7560,6 +7560,14 @@ struct nvme_pull_model_ddc_req_log {
  *				      valid Reclaim Unit Handle Identifier but restricted or
  *				      the Placement Handle List number of entries exceeded the
  *				      maximum number allowed.
+ * @NVME_SC_SANITIZE_NS_FAILED:	      Sanitize Namespace Failed: The most
+ *				      recent namespace sanitize operation failed
+ *				      and no recovery action has been
+ *				      successfully completed.
+ * @NVME_SC_SANITIZE_NS_IN_PROGRESS:  Sanitize Namespace In Progress: The
+ *				      requested function (e.g., command) is
+ *				      prohibited while a namespace sanitize
+ *				      operation is in progress.
  * @NVME_SC_FAILED_TO_RESTORE_CONFIG:  Failed to Restore Configuration: The
  *				      command was aborted due to the command
  *				      failing to restore configuration.
@@ -7964,6 +7972,8 @@ enum nvme_status_field {
 	NVME_SC_INCORRECT_KEY			= 0x28,
 	NVME_SC_FDP_DISABLED			= 0x29,
 	NVME_SC_INVALID_PLACEMENT_HANDLE_LIST	= 0x2A,
+	NVME_SC_SANITIZE_NS_FAILED		= 0x2B,
+	NVME_SC_SANITIZE_NS_IN_PROGRESS		= 0x2C,
 	NVME_SC_FAILED_TO_RESTORE_CONFIG	= 0x2D,
 	NVME_SC_LBA_RANGE			= 0x80,
 	NVME_SC_CAP_EXCEEDED			= 0x81,
