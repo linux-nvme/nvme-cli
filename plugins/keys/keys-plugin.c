@@ -325,7 +325,7 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 	__cleanup_free char *exported_key = NULL;
 	__cleanup_free char *identity = NULL;
 	__cleanup_file FILE *fd = NULL;
-	int err, ver, hmac, key_len;
+	int err, hmac, key_len;
 	mode_t old_umask;
 	long kr_id;
 	char type;
@@ -343,19 +343,20 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 		return -EINVAL;
 	}
 
-	if (sscanf(identity, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3) {
+	if (sscanf(identity, "NVMe%*1d%c%02d %*s", &type, &hmac) != 2) {
 		nvme_show_error("Failed to parse identity\n");
 		return -EINVAL;
 	}
 
 	err = libnvmf_read_key(ctx, kr_id, id, &key_len, &key_data);
 	if (err) {
-		nvme_show_error("Failed to read back derive TLS PSK, %s",
+		nvme_show_error("Failed to read back derived TLS PSK, %s",
 			libnvme_strerror(-err));
 		return err;
 	}
 
-	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data,
+	/* PSK interchange format version, not the identity version */
+	err = libnvmf_export_tls_key_versioned(ctx, 1, hmac, key_data,
 					    key_len, &exported_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s",
@@ -406,7 +407,7 @@ static int do_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring
 		nvme_show_error("Failed to insert key, %s", libnvme_strerror(-err));
 		return err;
 	}
-	nvme_show_result("Inserted TLS key %08x", (unsigned int)*tls_key);
+	nvme_show_result("Inserted TLS PSK %08x", (unsigned int)*tls_key);
 
 	if (keyfile) {
 		err = append_keyfile(ctx, keyring, *tls_key, keyfile);
@@ -419,18 +420,19 @@ static int do_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring
 
 static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Generate a TLS key in NVMe PSK Interchange format.";
+	const char *desc = "Generate a TLS configured PSK in NVMe PSK Interchange format.";
 	const char *secret =
-	    "Optional secret (in hexadecimal characters) to be used for the TLS key.";
-	const char *hmac = "HMAC function to use for the retained key (1 = SHA-256, 2 = SHA-384).";
-	const char *version = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
-	const char *hostnqn = "Host NQN for the retained key.";
-	const char *subsysnqn = "Subsystem NQN for the retained key.";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *insert = "Insert retained key into the keyring.";
-	const char *keyfile = "Update key file with the derived TLS PSK.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations.";
+	    "Optional configured PSK (in hexadecimal characters) to be used.";
+	const char *hmac =
+	    "Hash function for the retained PSK and for the cipher suite the TLS PSK is bound to (1 = SHA-256, 2 = SHA-384).";
+	const char *version = "TLS PSK identity version to use (0 = obsolete; 1 = TLS 1.3 with the PSK digest in the identity)";
+	const char *hostnqn = "Host NQN for the retained PSK and the TLS PSK identity.";
+	const char *subsysnqn = "Subsystem NQN for the TLS PSK identity.";
+	const char *keyring = "Keyring for the TLS PSK.";
+	const char *keytype = "Key type of the TLS PSK.";
+	const char *insert = "Additionally insert the TLS PSK into the keyring.";
+	const char *keyfile = "Append the identity of the TLS PSK, and the TLS PSK itself, to keyfile.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving the retained PSK and the TLS PSK for older implementations.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free unsigned char *raw_secret = NULL;
@@ -486,7 +488,7 @@ static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *p
 		return -EINVAL;
 	}
 	if (cfg.version > 1) {
-		nvme_show_error("Invalid TLS identity version %u",
+		nvme_show_error("Invalid TLS PSK identity version %u",
 				cfg.version);
 		return -EINVAL;
 	}
@@ -536,16 +538,16 @@ static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *p
 static int check_tls(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
-	    "Check a TLS key for NVMe PSK Interchange format, and, if a subsystem\n"
-	    "NQN is given, check whether the corresponding retained key is already\n"
-	    "loaded into a keyring.";
-	const char *keydata = "TLS key (in PSK Interchange format) to be validated. Reads from stdin if not given.";
-	const char *identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
-	const char *hostnqn = "Host NQN to use when checking whether the key is already loaded.";
-	const char *subsysnqn = "Subsystem NQN to use when checking whether the key is already loaded.";
-	const char *keyring = "Keyring to check for an already loaded key.";
-	const char *keytype = "Key type of the key to look up.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
+	    "Check a TLS configured PSK for NVMe PSK Interchange format, and, if a\n"
+	    "subsystem NQN is given, check whether the corresponding TLS PSK is\n"
+	    "already loaded into a keyring.";
+	const char *keydata = "Configured PSK (in PSK Interchange format) to be validated. Reads from stdin if not given.";
+	const char *identity = "TLS PSK identity version to use (0 = obsolete; 1 = TLS 1.3 with the PSK digest in the identity)";
+	const char *hostnqn = "Host NQN for the TLS PSK identity.";
+	const char *subsysnqn = "Subsystem NQN for the TLS PSK identity. If not given, only the format is validated.";
+	const char *keyring = "Keyring to check for an already loaded TLS PSK.";
+	const char *keytype = "Key type of the TLS PSK to look up.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving the TLS PSK identity for older implementations.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *key_value = NULL;
@@ -589,7 +591,7 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 
 	if (cfg.identity > 1) {
-		nvme_show_error("Invalid TLS identity version %u",
+		nvme_show_error("Invalid TLS PSK identity version %u",
 				cfg.identity);
 		return -EINVAL;
 	}
@@ -613,7 +615,7 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		nvme_show_error("Key decoding failed, %s", libnvme_strerror(-err));
 		return err;
 	}
-	nvme_show_result("Key is valid (HMAC %u, length %d)", hmac, decoded_len);
+	nvme_show_result("Configured PSK is valid (HMAC %u, length %d)", hmac, decoded_len);
 
 	if (!cfg.subsysnqn)
 		return 0;
@@ -656,25 +658,27 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 
 	err = libnvmf_lookup_key(ctx, cfg.keytype, tls_id, &key_id);
 	if (err) {
-		nvme_show_result("Key is not loaded");
+		nvme_show_result("TLS PSK is not loaded");
 		return 0;
 	}
 
-	nvme_show_result("Key is loaded (serial %08x)", (unsigned int)key_id);
+	nvme_show_result("TLS PSK is loaded (serial %08x)", (unsigned int)key_id);
 	return 0;
 }
 
 static int insert_tls(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Insert a TLS key (in NVMe PSK Interchange format) into a keyring.\n";
-	const char *keydata = "TLS key (in PSK Interchange format) to be inserted. Reads from stdin if not given.";
-	const char *identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
-	const char *hostnqn = "Host NQN for the retained key.";
-	const char *subsysnqn = "Subsystem NQN for the retained key.";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *keyfile = "Append the derived TLS PSK to keyfile.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for older implementations.";
+	const char *desc =
+	    "Derive a TLS PSK from a configured PSK (in NVMe PSK Interchange\n"
+	    "format) and insert it into a keyring.\n";
+	const char *keydata = "Configured PSK (in PSK Interchange format) to derive from. Reads from stdin if not given.";
+	const char *identity = "TLS PSK identity version to use (0 = obsolete; 1 = TLS 1.3 with the PSK digest in the identity)";
+	const char *hostnqn = "Host NQN for the retained PSK and the TLS PSK identity.";
+	const char *subsysnqn = "Subsystem NQN for the TLS PSK identity.";
+	const char *keyring = "Keyring for the TLS PSK.";
+	const char *keytype = "Key type of the TLS PSK.";
+	const char *keyfile = "Append the identity of the TLS PSK, and the TLS PSK itself, to keyfile.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving the retained PSK and the TLS PSK for older implementations.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *key_value = NULL;
@@ -724,7 +728,7 @@ static int insert_tls(int argc, char **argv, struct command *acmd, struct plugin
 		return -EINVAL;
 	}
 	if (cfg.identity > 1) {
-		nvme_show_error("Invalid TLS identity version %u",
+		nvme_show_error("Invalid TLS PSK identity version %u",
 				cfg.identity);
 		return -EINVAL;
 	}
@@ -768,7 +772,7 @@ static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	__cleanup_free unsigned char *key_data = NULL;
 	__cleanup_free char *encoded_key = NULL;
 	int key_len;
-	int ver, hmac;
+	int hmac;
 	char type;
 	int err;
 
@@ -776,10 +780,11 @@ static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	if (err)
 		return;
 
-	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
+	if (sscanf(desc, "NVMe%*1d%c%02d %*s", &type, &hmac) != 2)
 		return;
 
-	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
+	/* PSK interchange format version, not the identity version */
+	err = libnvmf_export_tls_key_versioned(ctx, 1, hmac, key_data, key_len,
 		&encoded_key);
 	if (err)
 		return;
@@ -789,7 +794,7 @@ static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
 static int key_export(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Export NVMeoF TLS PSKs from a keyring.\n";
-	const char *keyring = "Keyring to export the retained keys from.";
+	const char *keyring = "Keyring to export the TLS PSKs from.";
 	const char *keyfile = "File to write the exported keys to (default: stdout).";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -838,7 +843,7 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 
 	err = libnvmf_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
 	if (err < 0) {
-		nvme_show_error("Export of TLS keys failed with '%s'",
+		nvme_show_error("Export of TLS PSKs failed with '%s'",
 			libnvme_strerror(-err));
 		return err;
 	}
@@ -1084,21 +1089,21 @@ static struct command check_kxchap_cmd = {
 };
 
 static struct command gen_tls_cmd = {
-	.name = "gen-tls",
+	.name = "gen-tls-psk",
 	.help = "Generate NVMeoF TLS PSK",
 	.fn = gen_tls,
 	.no_device = true,
 };
 
 static struct command check_tls_cmd = {
-	.name = "check-tls",
+	.name = "check-tls-psk",
 	.help = "Validate NVMeoF TLS PSK format or check if loaded",
 	.fn = check_tls,
 	.no_device = true,
 };
 
 static struct command insert_tls_cmd = {
-	.name = "insert-tls",
+	.name = "insert-tls-psk",
 	.help = "Insert NVMeoF TLS PSK into a keyring",
 	.fn = insert_tls,
 	.no_device = true,
@@ -1139,7 +1144,7 @@ static struct command *commands[] = {
 
 static struct plugin plugin = {
 	.name = "keys",
-	.desc = "Manage NVMeoF KX-HMAC-CHAP and TLS keys",
+	.desc = "Manage NVMeoF KX-HMAC-CHAP secrets and TLS PSKs",
 	.version = NVME_VERSION,
 	.core = true,
 	.group = "Fabrics",

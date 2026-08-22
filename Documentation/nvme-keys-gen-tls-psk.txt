@@ -1,0 +1,124 @@
+nvme-keys-gen-tls-psk(1)
+========================
+
+NAME
+----
+nvme-keys-gen-tls-psk - Generate a NVMe TLS PSK
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys gen-tls-psk' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--hostnqn=<nqn> | -n <nqn>]
+			[--subsysnqn=<nqn> | -c <nqn>]
+			[--hmac=<hmac-id> | -m <hmac-id>]
+			[--identity=<id-vers> | -I <id-vers>]
+			[--secret=<secret> | -s <secret>]
+			[--insert | -i]
+			[--compat | -C]
+			[--keyfile=<keyfile> | -f <keyfile>]
+
+DESCRIPTION
+-----------
+Generate a NVMe TLS configured PSK and print it in the PSK interchange
+format 'NVMeTLSkey-1:<hmac>:<base64 encoded data>:'.
+If the '--insert' option is given a retained PSK is additionally derived
+from the configured PSK and the host NQN, using the HKDF-Expand-Label
+algorithm from RFC 8446, the TLS PSK is derived from it, and that is
+stored in the specified keyring under an identity computed from the host
+NQN and the subsystem NQN:
+'NVMe0R<hmac> <host NQN> <subsystem NQN>'
+(for identity version '0') or
+'NVMe1R<hmac> <host NQN> <subsystem NQN> <PSK digest>'
+(for identity version '1').
+Once the TLS PSK is stored in the keyring the configured PSK it was
+derived from cannot be retrieved from the keyring.
+
+The diagnostics that validate '--secret' are printed to stdout rather
+than stderr. Most of them accompany a non-zero exit, but 'Skipping
+excess secret bytes' does not: an over-long '--secret' still exits 0,
+with the warning sitting ahead of the key, so a script reading the key
+off stdout gets the warning instead.
+
+Both NQNs are inputs to the TLS PSK itself, not just to the identity it
+is stored under: the host NQN through the retained PSK derivation, and
+both NQNs again through the identity (identity version '0') or the PSK
+digest it embeds (identity version '1'), which is the context of the
+TLS PSK derivation.
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring into which the TLS PSK should be
+	stored. Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key under which the TLS PSK is stored.
+	Default is 'psk'.
+
+-n <nqn>::
+--hostnqn=<nqn>::
+	Host NVMe Qualified Name (NQN) to be used for the retained PSK
+	derivation and for the identity the TLS PSK is stored under.
+	Defaults to the host NQN of the system, read from
+	/etc/nvme/hostnqn or, if that file does not exist, generated
+	from the host ID.
+
+-c <nqn>::
+--subsysnqn=<nqn>::
+	Subsystem NVMe Qualified Name (NQN) to be used for the identity
+	the TLS PSK is stored under. Required with --insert.
+
+-m <hmac-id>::
+--hmac=<hmac-id>::
+	Select the hash function. It derives the retained PSK and
+	identifies the TLS 1.3 cipher suite the TLS PSK is bound to, so it
+	is recorded both in the PSK interchange format and in the TLS PSK
+	identity, written as two digits ('<hmac>' above). Possible values
+	are:
+	1 - SHA-256 (default)
+	2 - SHA-384
+
+-I <id-vers>::
+--identity=<id-vers>::
+	Select the TLS PSK identity version of the identity the TLS PSK
+	is stored under. Possible values are:
+	0 - Obsolete (default); defined in the NVMe TCP Transport
+	    Specification 1.0
+	1 - TLS 1.3 with the PSK digest in the TLS PSK identity
+
+-s <secret>::
+--secret=<secret>::
+	Configured PSK (in hexadecimal) to be used. If none are provided a
+	random value is used.
+
+-i::
+--insert::
+	Additionally derive a retained PSK and, from that, the TLS PSK,
+	and insert the TLS PSK into the keyring. The configured PSK is
+	printed in PSK interchange format either way.
+
+-C::
+--compat::
+	Use the original non-RFC 8446 compliant algorithm when
+	deriving the retained PSK and the TLS PSK for compatibility with
+	older implementations.
+
+-f <keyfile>::
+--keyfile=<keyfile>::
+	Append the identity of the TLS PSK, and the TLS PSK itself in
+	PSK interchange format, to keyfile. Ignored without --insert,
+	which is what derives the TLS PSK.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

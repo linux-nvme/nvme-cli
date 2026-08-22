@@ -1,0 +1,88 @@
+nvme-keys-check-tls-psk(1)
+==========================
+
+NAME
+----
+nvme-keys-check-tls-psk - Check a NVMe TLS PSK
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys check-tls-psk' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--hostnqn=<nqn> | -n <nqn>]
+			[--subsysnqn=<nqn> | -c <nqn>]
+			[--keydata=<key> | -d <key>]
+			[--identity=<id-vers> | -I <id-vers>]
+			[--compat | -C]
+
+DESCRIPTION
+-----------
+Checks if the key is a valid NVMe TLS configured PSK in the PSK
+interchange format 'NVMeTLSkey-1:<hmac>:<base64-encoded data>:' and
+prints the hash function it records and the length of the PSK.
+
+If '--keydata' is not given the configured PSK is read from stdin, which
+also allows reading it from a file, e.g.
+'nvme keys check-tls-psk < keyfile'.
+
+If '--subsysnqn' is given the TLS PSK identity of the key is also printed,
+and the specified keyring is checked for a TLS PSK already stored under
+that identity; the result (loaded or not, with its serial number if loaded)
+is reported. This command never modifies the keyring; to insert a TLS PSK
+use linknvme:nvme-keys-insert-tls-psk[1].
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to check for an already loaded TLS PSK.
+	Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Key type of the TLS PSK to look up.
+	Default is 'psk'.
+
+-n <nqn>::
+--hostnqn=<nqn>::
+	Host NVMe Qualified Name (NQN) to be used when checking whether
+	the TLS PSK is already loaded. Only used together with
+	--subsysnqn. Defaults to the host NQN of the system, read from
+	/etc/nvme/hostnqn or, if that file does not exist, generated
+	from the host ID.
+
+-c <nqn>::
+--subsysnqn=<nqn>::
+	Subsystem NVMe Qualified Name (NQN) to be used when checking
+	whether the TLS PSK is already loaded. If not given, only the
+	configured PSK format is validated.
+
+-d <key>::
+--keydata=<key>::
+	Configured PSK to be checked. If not given, it is read from
+	stdin.
+
+-I <id-vers>::
+--identity=<id-vers>::
+	TLS PSK identity version of the identity to look up; '0' (the
+	default) is obsolete and defined in the NVMe TCP Transport
+	Specification 1.0, '1' is TLS 1.3 with the PSK digest in the PSK
+	identity.
+
+-C::
+--compat::
+	Use the original non-RFC 8446 compliant algorithm when
+	deriving the TLS PSK identity for compatibility with older
+	implementations. Has no effect with identity version '0', whose
+	identity does not embed the PSK digest.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

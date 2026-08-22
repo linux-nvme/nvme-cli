@@ -10,17 +10,17 @@
 Tests invoke the nvme binary directly and need no real NVMe hardware.
 
 They are deliberately restricted to the commands (and option combinations)
-that only generate or validate key material: 'gen-kxchap-secret', 'gen-tls',
-'check-kxchap-secret' and 'check-tls' without '--identity'/'--subsysnqn'. Those
-never touch a kernel keyring. The remaining commands ('insert-tls',
-'import', 'export', 'revoke', and check-*/--identity or --subsysnqn) look
-up or modify a real '.nvme' keyring via keyctl, whose presence and contents
-depend on the host/container the tests run on (and keyctl itself may be
-unavailable, e.g. under seccomp) -- exercising those paths here would mean
-either mutating shared system state or asserting on host-dependent
-behavior. Their argument-validation errors that are checked *before* any
-keyring access (e.g. "insert-tls" without "--subsysnqn") are still safe to
-test and are included below.
+that only generate or validate key material: 'gen-kxchap-secret',
+'gen-tls-psk', 'check-kxchap-secret' and 'check-tls-psk' without
+'--identity'/'--subsysnqn'. Those never touch a kernel keyring. The
+remaining commands ('insert-tls-psk', 'import', 'export', 'revoke', and
+check-*/--identity or --subsysnqn) look up or modify a real '.nvme' keyring
+via keyctl, whose presence and contents depend on the host/container the
+tests run on (and keyctl itself may be unavailable, e.g. under seccomp) --
+exercising those paths here would mean either mutating shared system state
+or asserting on host-dependent behavior. Their argument-validation errors
+that are checked *before* any keyring access (e.g. "insert-tls-psk" without
+"--subsysnqn") are still safe to test and are included below.
 
 The deprecated top-level aliases ('nvme gen-dhchap-key' and friends) are
 out of scope with one exception: where an alias does something of its own
@@ -259,29 +259,29 @@ class KeysCLITest(unittest.TestCase):
         self._run('gen-kxchap-secret', '--secret-length=33', expect_fail=True)
 
     # ------------------------------------------------------------------ #
-    # gen-tls                                                             #
+    # gen-tls-psk                                                        #
     # ------------------------------------------------------------------ #
 
     def test_gen_tls_default_is_hmac_sha256(self):
-        result = self._run('gen-tls', '--secret=pin:1234')
+        result = self._run('gen-tls-psk', '--secret=pin:1234')
         self.assertEqual(result.stdout.strip(), _PIN_TLS_KEY)
 
     def test_gen_tls_hmac_sha384_uses_longer_key(self):
-        result = self._run('gen-tls', '--secret=pin:1234', '--hmac=2')
+        result = self._run('gen-tls-psk', '--secret=pin:1234', '--hmac=2')
         self.assertTrue(result.stdout.startswith('NVMeTLSkey-1:02:'))
         self.assertNotEqual(result.stdout.strip(), _PIN_TLS_KEY)
 
     def test_gen_tls_invalid_hmac_fails(self):
-        self._run('gen-tls', '--hmac=9', expect_fail=True)
+        self._run('gen-tls-psk', '--hmac=9', expect_fail=True)
 
     def test_gen_tls_invalid_identity_version_fails(self):
-        self._run('gen-tls', '--secret=pin:1234', '--identity=9',
+        self._run('gen-tls-psk', '--secret=pin:1234', '--identity=9',
                   expect_fail=True)
 
     def test_gen_tls_insert_without_subsysnqn_fails(self):
         # --insert requires --subsysnqn; this is checked before any
         # keyring access is attempted.
-        self._run('gen-tls', '--secret=pin:1234', '--insert',
+        self._run('gen-tls-psk', '--secret=pin:1234', '--insert',
                   expect_fail=True)
 
     # ------------------------------------------------------------------ #
@@ -330,24 +330,24 @@ class KeysCLITest(unittest.TestCase):
         self.assertIn('CRC mismatch', result.stdout + result.stderr)
 
     # ------------------------------------------------------------------ #
-    # check-tls                                                           #
+    # check-tls-psk                                                      #
     # ------------------------------------------------------------------ #
 
     def test_check_tls_accepts_generated_key(self):
-        result = self._run('check-tls', f'--keydata={_PIN_TLS_KEY}')
-        self.assertIn('Key is valid', result.stdout)
+        result = self._run('check-tls-psk', f'--keydata={_PIN_TLS_KEY}')
+        self.assertIn('Configured PSK is valid', result.stdout)
         self.assertIn('HMAC 1', result.stdout)
         self.assertIn('length 32', result.stdout)
 
     def test_check_tls_reads_from_stdin(self):
-        result = self._run('check-tls', stdin_data=_PIN_TLS_KEY + '\n')
-        self.assertIn('Key is valid', result.stdout)
+        result = self._run('check-tls-psk', stdin_data=_PIN_TLS_KEY + '\n')
+        self.assertIn('Configured PSK is valid', result.stdout)
 
     def test_check_tls_rejects_malformed_key(self):
-        self._run('check-tls', '--keydata=bogus', expect_fail=True)
+        self._run('check-tls-psk', '--keydata=bogus', expect_fail=True)
 
     def test_check_tls_invalid_identity_version_fails(self):
-        self._run('check-tls', f'--keydata={_PIN_TLS_KEY}', '--identity=9',
+        self._run('check-tls-psk', f'--keydata={_PIN_TLS_KEY}', '--identity=9',
                   expect_fail=True)
 
     # ------------------------------------------------------------------ #
@@ -358,7 +358,7 @@ class KeysCLITest(unittest.TestCase):
     # only their pre-keyring argument validation is exercised here.
 
     def test_insert_tls_requires_subsysnqn(self):
-        result = self._run('insert-tls', f'--keydata={_PIN_TLS_KEY}',
+        result = self._run('insert-tls-psk', f'--keydata={_PIN_TLS_KEY}',
                            expect_fail=True)
         self.assertIn('subsystem NQN', result.stdout + result.stderr)
 
