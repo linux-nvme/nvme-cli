@@ -317,6 +317,8 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	lbs = 1 << ns->lbaf[lba_index].ds;
 	ms = le16_to_cpu(ns->lbaf[lba_index].ms);
+	*logical_block_size = lbs;
+	*metadata_size = ms;
 
 	nvm_ns = libnvme_alloc(sizeof(*nvm_ns));
 	if (!nvm_ns)
@@ -349,8 +351,15 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 			lbs += ms;
 	}
 
-	if (invalid_tags(lbst, ilbrt, sts, pif))
+	if (invalid_tags(lbst, ilbrt, sts, pif)) {
+		/*
+		 * The requested PI is invalid; clear the block size so
+		 * that the caller fails the command.
+		 */
+		*logical_block_size = 0;
+		*metadata_size = 0;
 		return -EINVAL;
+	}
 
 	*logical_block_size = lbs;
 	*metadata_size = ms;
@@ -1117,6 +1126,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	} else {
 		err = get_pi_info(hdl, cfg.nsid, cfg.prinfo,
 			cfg.ilbrt, cfg.lbst, &logical_block_size, &ms);
+		if (err && !logical_block_size)
+			return err;
+		/* PI is not available if get_pi_info() failed */
 		pi_available = err == 0;
 	}
 
@@ -1213,7 +1225,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (pi_available) {
 		err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 			cfg.lbat, cfg.lbatm);
-		if (err)
+		if (err && err != NVME_SC_INVALID_FIELD)
 			return err;
 	}
 	gettimeofday(&start_time, NULL);
