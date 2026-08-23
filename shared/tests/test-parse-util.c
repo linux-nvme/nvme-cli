@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <shared/parse-util.h>
 
@@ -288,6 +289,67 @@ static bool test_csv_u8(void)
 	return pass;
 }
 
+#ifdef NVME_HAVE_INT128
+static char *get_int128_str(uint128_t n, char *str)
+{
+	char buf[40];
+	int i = 0;
+
+	if (!n) {
+		sprintf(str, "0");
+		return str;
+	}
+
+	while (n > 0) {
+		buf[i++] = (char)('0' + (n % 10));
+		n /= 10;
+	}
+
+	while (i > 0)
+		sprintf(&str[strlen(str)], "%c", buf[--i]);
+
+	return str;
+}
+
+static bool check_uint128_ret(const char *name, uint128_t got, uint128_t want)
+{
+	char got_str[40] = { 0 };
+	char want_str[40] = { 0 };
+
+	if (got == want) {
+		printf(" - %s [PASS]\n", name);
+		return true;
+	}
+
+	printf(" - %s: got %s, want %s [FAIL]\n", name,
+	       get_int128_str(got, got_str), get_int128_str(want, want_str));
+
+	return false;
+}
+
+static bool test_csv_u128(void)
+{
+	const uint128_t want =
+	    UINT128_CONST(0x123e4567e89b12d3ULL, 0xa456426614174000ULL);
+	char buf[] = "42,2147483647,0x123e4567e89b12d3a456426614174000";
+	uint128_t val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_u128:\n");
+
+	ret = shr_parse_csv_u128(buf, val, 8);
+	pass &= check_int_ret("parses one entry", ret, 3);
+	pass &= check_int_ret("val[0]", (int)val[0], 42);
+	pass &= check_int_ret("val[1]", (int)val[1], 2147483647);
+	pass &= check_uint128_ret("val[2]", val[2], want);
+
+	return pass;
+}
+#else /* NVME_HAVE_INT128 */
+#define test_csv_u128() true
+#endif /* NVME_HAVE_INT128 */
+
 int main(void)
 {
 	bool pass = true;
@@ -299,10 +361,11 @@ int main(void)
 	pass &= test_csv_ushort();
 	pass &= test_csv_uint();
 	pass &= test_csv_ulonglong();
+	pass &= test_csv_u8();
 	pass &= test_csv_u16();
 	pass &= test_csv_u32();
 	pass &= test_csv_u64();
-	pass &= test_csv_u8();
+	pass &= test_csv_u128();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
