@@ -5,7 +5,9 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+#include <ccan/ccan/array_size/array_size.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/parse-util.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
@@ -28,6 +30,7 @@
 #define ERR_RECOVERY_DESC "Get and set error recovery feature"
 #define NUM_QUEUES_DESC "Get and set number of queues feature"
 #define HOST_BEHAVIOR_DESC "Get and set host behavior support feature"
+#define LBA_RANGE_DESC "Get and set lba range type feature"
 
 #define FEAT_ARGS(n, ...)                                              \
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
@@ -78,6 +81,18 @@ struct host_behavior_config {
 	__u8 sel;
 };
 
+struct lba_range_type_config {
+	__u32 nsid;
+	__u8 num;
+	char *types;
+	char *lbaros;
+	char *hlbars;
+	char *slbas;
+	char *nlbs;
+	char *guids;
+	__u8 sel;
+};
+
 static const char *power_mgmt_feat = "power management feature";
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
@@ -93,6 +108,7 @@ static const char *power_meas_feat = "power measurement feature";
 static const char *err_recovery_feat = "error recovery feature";
 static const char *num_queues_feat = "number of queues feature";
 static const char *host_behavior_feat = "host behavior support feature";
+static const char *lba_range_feat = "lba range type feature";
 
 static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 			 const __u8 fid, __u32 cdw11, __u8 sel, __u8 uidx,
@@ -1050,6 +1066,155 @@ static int feat_host_behavior_support(int argc, char **argv, struct command *acm
 	return err;
 }
 
+static int lba_range_type_set(struct libnvme_transport_handle *hdl, __u8 fid,
+			      struct argconfig_commandline_options *opts,
+			      struct lba_range_type_config *cfg, bool sv)
+{
+	enum nvme_get_features_sel gsel = NVME_GET_FEATURES_SEL_CURRENT;
+	__u8 lbaros[NVME_FEAT_LBA_RANGE_MAX] = { 0 };
+	__u8 hlbars[NVME_FEAT_LBA_RANGE_MAX] = { 0 };
+	__u64 slbas[NVME_FEAT_LBA_RANGE_MAX] = { 0 };
+	__u8 types[NVME_FEAT_LBA_RANGE_MAX] = { 0 };
+	__u64 nlbs[NVME_FEAT_LBA_RANGE_MAX] = { 0 };
+	struct nvme_lba_range_type data = { 0 };
+	struct libnvme_passthru_cmd cmd;
+	uint8_t num = cfg->num + 1, nt, nl, nh, ns, nn;
+	int err, i;
+#ifdef NVME_HAVE_INT128
+	uint128_t guids[NVME_FEAT_LBA_RANGE_MAX] = { 0 };
+	uint8_t ng;
+	int j;
+#endif /* NVME_HAVE_INT128 */
+
+	if (sv)
+		gsel = NVME_GET_FEATURES_SEL_SAVED;
+
+	nvme_init_get_features_lba_range(&cmd, cfg->nsid, gsel, &data);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "Get %s", host_behavior_feat);
+		return err;
+	}
+
+	nt = shr_parse_csv_u8(cfg->types, types, ARRAY_SIZE(types));
+	if (nt != num) {
+		nvme_show_error("No valid type definition provided");
+		return -EINVAL;
+	}
+
+	nl = shr_parse_csv_u8(cfg->lbaros, lbaros, ARRAY_SIZE(lbaros));
+	if (nl != num) {
+		nvme_show_error("No valid lbaro definition provided");
+		return -EINVAL;
+	}
+
+	nh = shr_parse_csv_u8(cfg->hlbars, hlbars, ARRAY_SIZE(hlbars));
+	if (nh != num) {
+		nvme_show_error("No valid hlbar definition provided");
+		return -EINVAL;
+	}
+
+	ns = shr_parse_csv_u64(cfg->slbas, slbas, ARRAY_SIZE(slbas));
+	if (ns != num) {
+		nvme_show_error("No valid slba definition provided");
+		return -EINVAL;
+	}
+
+	nn = shr_parse_csv_u64(cfg->nlbs, nlbs, ARRAY_SIZE(nlbs));
+	if (nn != num) {
+		nvme_show_error("No valid nlb definition provided");
+		return -EINVAL;
+	}
+
+#ifdef NVME_HAVE_INT128
+	ng = shr_parse_csv_u128(cfg->guids, guids, ARRAY_SIZE(guids));
+	if (ng != num) {
+		nvme_show_error("No valid guid definition provided");
+		return -EINVAL;
+	}
+#else /* NVME_HAVE_INT128 */
+	if (argconfig_parse_seen(opts, "guids")) {
+		nvme_show_error("guid unsupported without __int128 available");
+		return -EINVAL;
+	}
+#endif /* NVME_HAVE_INT128 */
+
+	for (i = 0; i < num; i++) {
+		data.entry[i].type = (__u8)types[i];
+		data.entry[i].attributes =
+		    NVME_SET(!!lbaros[i], LBART_ATTRB_LBARO) |
+		    NVME_SET(!!hlbars[i], LBART_ATTRB_HLBAR);
+		data.entry[i].slba = cpu_to_le64(slbas[i]);
+		data.entry[i].nlb = cpu_to_le64(nlbs[i]);
+#ifdef NVME_HAVE_INT128
+		for (j = 0; j < sizeof(data.entry[i].guid); j++)
+			data.entry[i].guid[j] = guids[i] >> CHAR_BIT * j;
+#endif /* NVME_HAVE_INT128 */
+	}
+
+	nvme_init_set_features_lba_range(&cmd, cfg->nsid, sv, num, &data);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "Set %s", lba_range_feat);
+		return err;
+	}
+
+	nvme_show_result("Set %s: (%s)", host_behavior_feat,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, 0, (unsigned char *)&data);
+
+	return err;
+}
+
+static int feat_lba_range_type(int argc, char **argv, struct command *acmd,
+				      struct plugin *plugin)
+{
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
+	    NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	const char *nlbs_desc = "zeroes based logical blocks number list";
+	const char *lbaros_desc = "LBA range overwriteable list";
+	const char *num_desc = "zeroes based LBA ranges number";
+	const char *guids_desc = "unique identifier list";
+	const char *hlbars_desc = "hide LBA range list";
+	const char *types_desc = "LBA range type list";
+	const char *slbas_desc = "starting LBA list";
+	const __u8 fid = NVME_FEAT_FID_LBA_RANGE;
+	struct lba_range_type_config cfg = { 0 };
+	int err;
+
+	FEAT_ARGS(opts,
+		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired),
+		  OPT_BYTE("num", 'N', &cfg.num, num_desc),
+		  OPT_LIST("types", 't', &cfg.types, types_desc),
+		  OPT_LIST("lbaros", 'l', &cfg.lbaros, lbaros_desc),
+		  OPT_LIST("hlbars", 'h', &cfg.hlbars, hlbars_desc),
+		  OPT_LIST("slbas", 's', &cfg.slbas, slbas_desc),
+		  OPT_LIST("nlbs", 'b', &cfg.nlbs, nlbs_desc),
+		  OPT_LIST("guids", 'g', &cfg.guids, guids_desc));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, HOST_BEHAVIOR_DESC, opts);
+	if (err)
+		return err;
+
+	if (!cfg.nsid) {
+		err = libnvme_get_nsid(hdl, &cfg.nsid);
+		if (err < 0) {
+			nvme_show_error("get-nsid: %s", libnvme_strerror(-err));
+			return err;
+		}
+	}
+
+	if (argconfig_parse_seen(opts, "num"))
+		err = lba_range_type_set(hdl, fid, opts, &cfg,
+					 argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get_nsid(hdl, cfg.nsid, fid, 0, cfg.sel, 0,
+				    lba_range_feat);
+
+	return err;
+}
+
 static struct command feat_arbitration_cmd = {
 	.name = "arbitration",
 	.help = ARBITRATION_DESC,
@@ -1128,6 +1293,12 @@ static struct command feat_err_recovery_cmd = {
 	.fn = feat_err_recovery,
 };
 
+static struct command feat_lba_range_type_cmd = {
+	.name = "lba-range-type",
+	.help = LBA_RANGE_DESC,
+	.fn = feat_lba_range_type,
+};
+
 static struct command *commands[] = {
 	&feat_arbitration_cmd,
 	&feat_power_mgmt_cmd,
@@ -1142,6 +1313,7 @@ static struct command *commands[] = {
 	&feat_power_thresh_cmd,
 	&feat_power_meas_cmd,
 	&feat_err_recovery_cmd,
+	&feat_lba_range_type_cmd,
 	NULL,
 };
 
