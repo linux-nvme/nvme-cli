@@ -1290,7 +1290,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		bool	limited_retry;
 		bool	force_unit_access;
 		__u8	prinfo;
-		__u32	ilbrt;
+		__u64	ilbrt;
 		__u16	lbat;
 		__u16	lbatm;
 		__u64	lbst;
