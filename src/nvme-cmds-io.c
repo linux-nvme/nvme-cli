@@ -1062,7 +1062,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	if (cfg.prinfo > 0xf)
-		return err;
+		return -EINVAL;
 
 	dsmgmt = cfg.dsmgmt;
 	control |= (cfg.prinfo << 10);
