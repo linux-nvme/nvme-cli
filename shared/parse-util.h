@@ -11,6 +11,13 @@
 
 #include <ccan/build_assert/build_assert.h>
 
+#ifdef NVME_HAVE_INT128
+typedef unsigned __int128 uint128_t;
+
+#define UINT128_CONST(high, low) (((uint128_t)(high) << 64) | (low))
+#define UINT128_MAX UINT128_CONST(UINT64_MAX, UINT64_MAX)
+#endif /* NVME_HAVE_INT128 */
+
 /*
  * Parse a boolean string using the systemd parse_boolean() convention:
  * 1/yes/y/true/t/on, 0/no/n/false/f/off (case-insensitive).
@@ -31,6 +38,10 @@ int shr_parse_csv_uint(char *string, unsigned int *val, unsigned int max_length)
 int shr_parse_csv_ulonglong(char *string, unsigned long long *val, unsigned int max_length);
 int shr_parse_csv_uchar(char *string, unsigned char *val,
 			unsigned int max_length);
+#ifdef NVME_HAVE_INT128
+int shr_parse_csv_uint128(char *string, uint128_t *val,
+			  unsigned int max_length);
+#endif /* NVME_HAVE_INT128 */
 
 /*
  * Fixed-width aliases for the parsers above, for callers whose buffer is
@@ -44,6 +55,12 @@ int shr_parse_csv_uchar(char *string, unsigned char *val,
  * it; BUILD_ASSERT_OR_ZERO() below rejects, at compile time, a val whose
  * pointee isn't that width instead of silently mis-parsing into it.
  */
+#define shr_parse_csv_u8(string, val, max_length)			\
+	shr_parse_csv_uchar(string,					\
+		(unsigned char *)(val) + BUILD_ASSERT_OR_ZERO(		\
+			sizeof(*(val)) == sizeof(unsigned char)),	\
+		max_length)
+
 #define shr_parse_csv_u16(string, val, max_length)			\
 	shr_parse_csv_ushort(string,					\
 		(unsigned short *)(val) + BUILD_ASSERT_OR_ZERO(	\
@@ -62,8 +79,8 @@ int shr_parse_csv_uchar(char *string, unsigned char *val,
 			sizeof(*(val)) == sizeof(unsigned long long)),	\
 		max_length)
 
-#define shr_parse_csv_u8(string, val, max_length)			\
-	shr_parse_csv_uchar(string,					\
-		(unsigned char *)(val) + BUILD_ASSERT_OR_ZERO(		\
-			sizeof(*(val)) == sizeof(unsigned char)),	\
+#define shr_parse_csv_u128(string, val, max_length)			\
+	shr_parse_csv_uint128(string,					\
+		(uint128_t *)(val) + BUILD_ASSERT_OR_ZERO(		\
+			sizeof(*(val)) == sizeof(uint128_t)),		\
 		max_length)

@@ -514,6 +514,20 @@ conf.set10(
     description: 'Does winioctl.h define struct STORAGE_REINITIALIZE_MEDIA'
 )
 
+conf.set(
+    'NVME_HAVE_INT128',
+    cc.compiles(
+        '''
+            int main(void) {
+                __int128 v;
+                v = 1;
+            }
+        ''',
+        name: 'int128'
+    ),
+    description: 'Is __int128 available?'
+)
+
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
 config_dep = declare_dependency(
