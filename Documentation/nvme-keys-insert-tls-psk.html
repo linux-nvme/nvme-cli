@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 10.2.0" />
-<title>nvme-keys-insert-tls(1)</title>
+<title>nvme-keys-insert-tls-psk(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,11 +735,11 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-keys-insert-tls(1) Manual Page
+nvme-keys-insert-tls-psk(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-keys-insert-tls -
+<p>nvme-keys-insert-tls-psk -
    Insert a NVMe TLS PSK into a keyring
 </p>
 </div>
@@ -749,7 +749,7 @@ nvme-keys-insert-tls(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>keys insert-tls</em> [--keyring=&lt;name&gt; | -k &lt;name&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>keys insert-tls-psk</em> [--keyring=&lt;name&gt; | -k &lt;name&gt;]
                         [--keytype=&lt;type&gt; | -t &lt;type&gt;]
                         [--hostnqn=&lt;nqn&gt; | -n &lt;nqn&gt;]
                         [--subsysnqn=&lt;nqn&gt; | -c &lt;nqn&gt;]
@@ -764,27 +764,33 @@ nvme-keys-insert-tls(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Takes a NVMe TLS PSK in the PSK interchange format
-<em>NVMeTLSkey-1:01:&lt;base64-encoded data&gt;:</em>, <strong>derives</strong> a <em>retained</em> key
-identity from it and the given host/subsystem NQNs using the
-HKDF-Expand-Label algorithm from RFC 8446, and stores the result into the
-specified keyring. The <em>retained</em> key is stored with the identity
-<em>NVMe0R0&lt;hmac&gt; &lt;host NQN&gt; &lt;subsystem NQN&gt;</em> (for identity version <em>0</em>) or
-<em>NVMe1R0&lt;hmac&gt; &lt;host NQN&gt; &lt;subsystem NQN&gt; &lt;PSK hash&gt;</em> (for identity version
-<em>1</em>). Once the <em>retained</em> key is stored in the keyring the original key
-material cannot be retrieved.</p></div>
-<div class="paragraph"><p>This command is for deriving a <strong>new</strong> retained-key identity from raw PSK
-material; it always needs a subsystem NQN (and, if not given, will look up
-the host NQN) to compute that identity. If the identity under which a key
-should be stored is already known&#8201;&#8212;&#8201;for example a key previously exported
-by linknvme-keys-export[1], or a KX-HMAC-CHAP secret&#8201;&#8212;&#8201;use
-linknvme-keys-import[1] instead, which inserts a key under an explicit
-identity without deriving one.</p></div>
-<div class="paragraph"><p>If <em>--keydata</em> is not given the key is read from stdin, which also allows
-inserting a key stored in a file, e.g. <em>nvme keys insert-tls -c &lt;subsysnqn&gt;
-&lt; keyfile</em>.</p></div>
+<div class="paragraph"><p>Takes a NVMe TLS configured PSK in the PSK interchange format
+<em>NVMeTLSkey-1:&lt;hmac&gt;:&lt;base64-encoded data&gt;:</em>, <strong>derives</strong> a retained PSK
+from it and the given host NQN using the HKDF-Expand-Label algorithm
+from RFC 8446, derives the TLS PSK from that, and stores the result
+into the specified keyring. The TLS PSK is stored with the identity
+<em>NVMe0R&lt;hmac&gt; &lt;host NQN&gt; &lt;subsystem NQN&gt;</em> (for identity version <em>0</em>) or
+<em>NVMe1R&lt;hmac&gt; &lt;host NQN&gt; &lt;subsystem NQN&gt; &lt;PSK digest&gt;</em> (for identity
+version <em>1</em>). Once the TLS PSK is stored in the keyring the configured
+PSK it was derived from cannot be retrieved from the keyring.</p></div>
+<div class="paragraph"><p>Both NQNs are inputs to the TLS PSK itself, not just to the identity it
+is stored under: the host NQN through the retained PSK derivation, and
+both NQNs again through the identity (identity version <em>0</em>) or the PSK
+digest it embeds (identity version <em>1</em>), which is the context of the
+TLS PSK derivation.</p></div>
+<div class="paragraph"><p>This command is for deriving a <strong>new</strong> TLS PSK from a configured PSK; it
+always needs a subsystem NQN (and, if not given, will look up the host
+NQN) to derive the TLS PSK and compute the identity to store it under.
+If both the key to store and the identity to store it under are already
+known&#8201;&#8212;&#8201;for example a line previously written by
+<a href="nvme-keys-export.html">nvme-keys-export(1)</a>, or a KX-HMAC-CHAP secret&#8201;&#8212;&#8201;use
+<a href="nvme-keys-import.html">nvme-keys-import(1)</a> instead, which stores the key as given under an
+explicit identity, deriving neither.</p></div>
+<div class="paragraph"><p>If <em>--keydata</em> is not given the configured PSK is read from stdin, which
+also allows reading it from a file, e.g.
+<em>nvme keys insert-tls-psk -c &lt;subsysnqn&gt; &lt; keyfile</em>.</p></div>
 <div class="paragraph"><p>To check whether a key is already loaded without inserting it, use
-linknvme-keys-check-tls[1].</p></div>
+<a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -799,7 +805,7 @@ linknvme-keys-check-tls[1].</p></div>
 </dt>
 <dd>
 <p>
-        Name of the keyring into which the <em>retained</em> TLS key should be
+        Name of the keyring into which the TLS PSK should be
         stored. Default is <em>.nvme</em>.
 </p>
 </dd>
@@ -811,7 +817,7 @@ linknvme-keys-check-tls[1].</p></div>
 </dt>
 <dd>
 <p>
-        Type of the key for resulting TLS key.
+        Type of the key under which the TLS PSK is stored.
         Default is <em>psk</em>.
 </p>
 </dd>
@@ -823,8 +829,11 @@ linknvme-keys-check-tls[1].</p></div>
 </dt>
 <dd>
 <p>
-        Host NVMe Qualified Name (NQN) to be used to derive the
-        <em>retained</em> TLS key.
+        Host NVMe Qualified Name (NQN) to be used for the retained PSK
+        derivation and for the identity the TLS PSK is stored under.
+        Defaults to the host NQN of the system, read from
+        /etc/nvme/hostnqn or, if that file does not exist, generated
+        from the host ID.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -835,8 +844,8 @@ linknvme-keys-check-tls[1].</p></div>
 </dt>
 <dd>
 <p>
-        Subsystem NVMe Qualified Name (NQN) to be used to derive the
-        <em>retained</em> TLS key. Required.
+        Subsystem NVMe Qualified Name (NQN) to be used for the identity
+        the TLS PSK is stored under. Required.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -847,7 +856,8 @@ linknvme-keys-check-tls[1].</p></div>
 </dt>
 <dd>
 <p>
-        Key to be inserted. If not given, the key is read from stdin.
+        Configured PSK to derive the TLS PSK from. If not given, it is
+        read from stdin.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -858,9 +868,9 @@ linknvme-keys-check-tls[1].</p></div>
 </dt>
 <dd>
 <p>
-        NVMe TLS key identity version to be used; <em>0</em> for the default
-        identity, and <em>1</em> for the TLS identity suffixed by the PSK hash
-        as specified in TP8018.
+        TLS PSK identity version to be used; <em>0</em> (the default) is
+        obsolete and defined in the NVMe TCP Transport Specification 1.0,
+        <em>1</em> is TLS 1.3 with the PSK digest in the TLS PSK identity.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -872,7 +882,8 @@ linknvme-keys-check-tls[1].</p></div>
 <dd>
 <p>
         Use the original non-RFC 8446 compliant algorithm when
-        deriving the TLS key for compatibility with older implementations.
+        deriving the retained PSK and the TLS PSK for compatibility with
+        older implementations.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -883,7 +894,8 @@ linknvme-keys-check-tls[1].</p></div>
 </dt>
 <dd>
 <p>
-        Append the resulting TLS key to keyfile.
+        Append the identity of the TLS PSK, and the TLS PSK itself in
+        PSK interchange format, to keyfile.
 </p>
 </dd>
 </dl></div>
@@ -984,7 +996,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

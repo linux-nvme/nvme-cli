@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -395,7 +395,7 @@ Check a host DH\-HMAC\-CHAP secret (deprecated, see nvme\-keys\-check\-kxchap\-s
 .PP
 \fBnvme-check-tls-key\fR(1)
 .RS 4
-Check a NVMe TLS PSK (deprecated, see nvme\-keys\-check\-tls)
+Check a NVMe TLS PSK (deprecated, see nvme\-keys\-check\-tls\-psk)
 .RE
 .PP
 \fBnvme-cmdset-ind-id-ns\fR(1)
@@ -425,7 +425,7 @@ Generate NVMeoF host NQN
 .PP
 \fBnvme-gen-tls-key\fR(1)
 .RS 4
-Generate a NVMe TLS PSK (deprecated, see nvme\-keys\-gen\-tls)
+Generate a NVMe TLS PSK (deprecated, see nvme\-keys\-gen\-tls\-psk)
 .RE
 .PP
 \fBnvme-get-lba-status\fR(1)
@@ -498,9 +498,39 @@ NVMe Identify Primary Controller Capabilities
 Resets the controller
 .RE
 .PP
-\fBnvme-rpmb\fR(1)
+\fBnvme-rpmb-info\fR(1)
 .RS 4
-Replay Protection Memory Block commands
+Print RPMB support information for the controller
+.RE
+.PP
+\fBnvme-rpmb-program-key\fR(1)
+.RS 4
+Program the RPMB authentication key
+.RE
+.PP
+\fBnvme-rpmb-read-counter\fR(1)
+.RS 4
+Read the RPMB write counter
+.RE
+.PP
+\fBnvme-rpmb-read-data\fR(1)
+.RS 4
+Read authenticated data from an RPMB target
+.RE
+.PP
+\fBnvme-rpmb-write-data\fR(1)
+.RS 4
+Write authenticated data to an RPMB target
+.RE
+.PP
+\fBnvme-rpmb-read-config\fR(1)
+.RS 4
+Read the RPMB device configuration block
+.RE
+.PP
+\fBnvme-rpmb-write-config\fR(1)
+.RS 4
+Write the RPMB device configuration block
 .RE
 .PP
 \fBnvme-sanitize-log\fR(1)
@@ -1154,14 +1184,19 @@ Generate NVMeoF KX\-HMAC\-CHAP host secret
 Validate NVMeoF KX\-HMAC\-CHAP host secret
 .RE
 .PP
-\fBnvme-keys-gen-tls\fR(1)
+\fBnvme-keys-gen-tls-psk\fR(1)
 .RS 4
 Generate NVMeoF TLS PSK
 .RE
 .PP
-\fBnvme-keys-check-tls\fR(1)
+\fBnvme-keys-check-tls-psk\fR(1)
 .RS 4
 Validate NVMeoF TLS PSK
+.RE
+.PP
+\fBnvme-keys-insert-tls-psk\fR(1)
+.RS 4
+Insert an NVMeoF TLS PSK into a keyring
 .RE
 .PP
 \fBnvme-keys-import\fR(1)

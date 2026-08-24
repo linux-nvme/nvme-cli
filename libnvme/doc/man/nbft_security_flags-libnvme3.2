@@ -76,7 +76,7 @@ enum nbft_security_flags {
 , 
 .br
 .br
-.BI "    NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED"
+.BI "    NBFT_SECURITY_AUTH_KX_GROUPS_RESTRICTED"
 , 
 .br
 .br
@@ -161,14 +161,14 @@ of supported cipher suites by the driver.
 If cleared to 0h, then the Cipher Suite Offset
 field and the Cipher Suite Length field
 are reserved.
-.IP "NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED" 12
-Authentication DH Groups Restricted
+.IP "NBFT_SECURITY_AUTH_KX_GROUPS_RESTRICTED" 12
+Authentication KX Groups Restricted
 by Policy List: If set to 1h, then connections
-shall use one of the authentication DH groups
-in the Authentication DH Groups List is required.
-If cleared to 0h, then no Authentication DH Groups
+shall use one of the authentication KX groups
+in the Authentication KX Groups List is required.
+If cleared to 0h, then no Authentication KX Groups
 List is indicated and use of an authentication
-DH Group is not required.
+KX Group is not required.
 .IP "NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST" 12
 Secure Hash Functions Policy List: If set to 1h,
 then connections shall use one of the secure

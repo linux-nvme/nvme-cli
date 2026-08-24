@@ -2,12 +2,12 @@
 .\"     Title: nvme-keys-export
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-KEYS\-EXPORT" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-KEYS\-EXPORT" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,14 +39,16 @@ nvme-keys-export \- Export NVMe TLS PSKs from a keyring
 .sp
 Export all NVMe TLS pre\-shared keys (PSKs) from the system keyring in the form
 .sp
-<description> <psk>
+<identity> <psk>
 .sp
-where \fI<description>\fR is the key description from the exported key and \fI<psk>\fR is the key data in PSK interchange format \fINVMeTLSkey\-1:01:<base64 encoded data>:\fR\&. Each key is exported in a single line\&.
+where \fI<identity>\fR is the TLS PSK identity the key is stored under and \fI<psk>\fR is the TLS PSK itself in PSK interchange format \fINVMeTLSkey\-1:<hmac>:<base64 encoded data>:\fR\&. Each key is exported in a single line\&.
+.sp
+The PSK interchange format otherwise carries a configured PSK: it is what \fBnvme-keys-gen-tls-psk\fR(1) prints and what \fBnvme-keys-insert-tls-psk\fR(1) and \fBnvme-keys-check-tls-psk\fR(1) read\&. The keys exported here are TLS PSKs instead\&. This output is meant for \fBnvme-keys-import\fR(1), which stores each key back under its identity unchanged; it is not intended to be passed to \fBnvme-keys-insert-tls-psk\fR(1) or \fBnvme-keys-check-tls-psk\fR(1)\&.
 .SH "OPTIONS"
 .PP
 \-k <name>, \-\-keyring=<name>
 .RS 4
-Name of the keyring to export the retained keys from\&. Default is
+Name of the keyring to export the TLS PSKs from\&. Default is
 \fI\&.nvme\fR\&.
 .RE
 .PP

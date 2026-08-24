@@ -754,7 +754,9 @@ nvme-lockdown(1) Manual Page
                         [--ifc=&lt;ifc&gt; | -f &lt;ifc&gt;]
                         [--prhbt=&lt;prhbt&gt; | -p &lt;prhbt&gt;]
                         [--scp=&lt;scp&gt; | -s &lt;scp&gt;]
-                        [--uuid=&lt;UUID_Index&gt; | -U &lt;UUID_Index&gt;]</pre>
+                        [--uuid=&lt;UUID_Index&gt; | -U &lt;UUID_Index&gt;]
+                        [--csel=&lt;csel&gt; | -c &lt;csel&gt;]
+                        [--css=&lt;css&gt; | -C &lt;css&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -829,6 +831,34 @@ Identifier.</p></div>
         UUID Index - If this field is set to a non-zero value, then the value of
         this field is the index of a UUID in the UUID List that is used by the command.
         If this field is cleared to 0h,then no UUID index is specified.
+</p>
+</dd>
+<dt class="hdlist1">
+-c &lt;csel&gt;
+</dt>
+<dt class="hdlist1">
+--csel=&lt;csel&gt;
+</dt>
+<dd>
+<p>
+        Controller Select (CSEL) specifies the controller(s) affected by
+        this command: 0 = NVM subsystem (all controllers), 1 = the specific
+        controller identified by --css, 2 = the secondary controllers of
+        the specific primary controller identified by --css, 15 = vendor
+        specific.
+</p>
+</dd>
+<dt class="hdlist1">
+-C &lt;css&gt;
+</dt>
+<dt class="hdlist1">
+--css=&lt;css&gt;
+</dt>
+<dd>
+<p>
+        Controller Select Specific (CSS) - meaning depends on --csel: the
+        Controller Identifier if --csel=1, or the Primary Controller
+        Identifier if --csel=2. Ignored if --csel=0.
 </p>
 </dd>
 </dl></div>
@@ -929,7 +959,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

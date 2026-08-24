@@ -763,17 +763,32 @@ nvme-check-tls-key(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Deprecated alias for linknvme-keys-check-tls[1], kept for scripts written
-against nvme-cli versions older than 3.0.</p></div>
-<div class="paragraph"><p>One difference: the old <em>check-tls-key</em> also accepted <em>--insert</em>/<em>-i</em> to
-derive and store a <em>retained</em> key directly, but the new <em>check-tls</em> never
-modifies the keyring&#8201;&#8212;&#8201;that functionality moved to
-linknvme-keys-insert-tls[1]. Scripts relying on <em>--insert</em> here will get an
-"unrecognized option" error and must switch to <em>nvme keys insert-tls</em>
-directly; all other options continue to work unchanged through this alias.</p></div>
-<div class="paragraph"><p>New scripts should use <em>nvme keys check-tls</em> instead. This alias prints a
-deprecation warning on stderr and may be removed in a future release.</p></div>
-<div class="paragraph"><p>See linknvme-keys-check-tls[1] for the full option reference.</p></div>
+<div class="paragraph"><p>Deprecated alias for <a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>, kept for scripts
+written against nvme-cli versions older than 3.0, with two differences
+from nvme-cli 2.x:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<em>--insert</em>/<em>-i</em> and <em>--keyfile</em>/<em>-f</em> are gone. 2.x used them to derive
+  a TLS PSK and store it in the keyring; the new <em>check-tls-psk</em> never
+  modifies the keyring&#8201;&#8212;&#8201;that moved to <a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a>.
+</p>
+</li>
+<li>
+<p>
+The identity is no longer the first line of stdout. 2.x printed it
+  alone; the alias prints <em>Configured PSK is valid (HMAC &lt;id&gt;, length
+  &lt;len&gt;)</em> first and reports the keyring state after it, so a script
+  taking the identity with <em>head -1</em> reads the wrong line. Searching the
+  keyring is itself new, and a keyring that does not exist is reported
+  as a failure: the command exits 1 where 2.x exited 0.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>New scripts should use <em>nvme keys check-tls-psk</em> instead. This alias
+prints a deprecation warning on stderr and may be removed in a future
+release.</p></div>
+<div class="paragraph"><p>See <a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a> for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -869,7 +884,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>linknvme-keys-check-tls[1], linknvme-keys-insert-tls[1]</p></div>
+<div class="paragraph"><p><a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>, <a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a></p></div>
 </div>
 </div>
 </div>
@@ -877,7 +892,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

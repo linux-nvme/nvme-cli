@@ -758,22 +758,22 @@ The value of the hostnqn field, or NULL if not set.
 The value of the hostid field, or NULL if not set.
 
 
-.. c:function:: void libnvme_host_set_dhchap_host_key (struct libnvme_host *p, const char *dhchap_host_key)
+.. c:function:: void libnvme_host_set_kxchap_host_key (struct libnvme_host *p, const char *kxchap_host_key)
 
-   Set dhchap_host_key.
+   Set kxchap_host_key.
 
 **Parameters**
 
 ``struct libnvme_host *p``
   The :c:type:`struct libnvme_host <libnvme_host>` instance to update.
 
-``const char *dhchap_host_key``
+``const char *kxchap_host_key``
   New string; a copy is stored. Pass NULL to clear.
 
 
-.. c:function:: const char * libnvme_host_get_dhchap_host_key (const struct libnvme_host *p)
+.. c:function:: const char * libnvme_host_get_kxchap_host_key (const struct libnvme_host *p)
 
-   Get dhchap_host_key.
+   Get kxchap_host_key.
 
 **Parameters**
 
@@ -782,7 +782,7 @@ The value of the hostid field, or NULL if not set.
 
 **Return**
 
-The value of the dhchap_host_key field, or NULL if not set.
+The value of the kxchap_host_key field, or NULL if not set.
 
 
 .. c:function:: void libnvme_host_set_hostsymname (struct libnvme_host *p, const char *hostsymname)

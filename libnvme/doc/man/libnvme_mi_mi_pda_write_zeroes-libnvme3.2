@@ -1,0 +1,25 @@
+.TH "libnvme_mi_mi_pda_write_zeroes" 9 "libnvme_mi_mi_pda_write_zeroes" "August 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_mi_mi_pda_write_zeroes \- Clear a range of the NVMe-MI Persistent Data Area (PDA) to 0h
+.SH SYNOPSIS
+.B "int" libnvme_mi_mi_pda_write_zeroes
+.BI "(libnvme_mi_ep_t ep "  ","
+.BI "enum nvme_mi_pda_dformat dformat "  ","
+.BI "__u32 dofst "  ","
+.BI "__u32 dlen "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint for MI communication
+.IP "dformat" 12
+data format to use for \fIdofst\fP and \fIdlen\fP, see
+\fIenum nvme_mi_pda_dformat\fP
+.IP "dofst" 12
+starting offset, in units of \fIdformat\fP, into the PDA to clear
+.IP "dlen" 12
+length, in units of \fIdformat\fP, of the PDA to clear starting at
+\fIdofst\fP
+.SH "DESCRIPTION"
+Performs an NVMe-MI PDA Write Zeroes command.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or negative error code otherwise.

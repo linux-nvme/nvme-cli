@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,7 +37,7 @@ nvme-sanitize \- Send NVMe Sanitize Command, return result
                         <overwrite\-pass\-count>]
                         [\-\-ause | \-u] [\-\-sanact=<action> | \-a <action>]
                         [\-\-ovrpat=<overwrite\-pattern> | \-p <overwrite\-pattern>]
-                        [\-\-emvs | \-e] [\-\-force] [\-\-wait | \-w]
+                        [\-\-emvs | \-e] [\-\-preq | \-q] [\-\-force] [\-\-wait | \-w]
                         [\-\-repeat=<repeat\-count> | \-r <repeat\-count>]
 .fi
 .SH "DESCRIPTION"
@@ -133,6 +133,11 @@ Overwrite Pattern: This field is ignored unless the Sanitize Action field in Com
 \-e, \-\-emvs
 .RS 4
 Enter Media Verification State: If set, then the Media Verification state shall be entered if sanitize processing completes successfully\&. If cleared, then this bit shall have no effect\&. If SANACT field does not specify starting a sanitize operation (i\&.e\&., is set to any value other than 010b, 011b, or 100b), then this bit shall be ignored by the controller\&.
+.RE
+.PP
+\-q, \-\-preq
+.RS 4
+Purge Required: If set, then the host is requesting that the user data be purged as defined by IEEE Std 2883\&. If the controller supports Sanitize Purge Request and Reporting (SPRRS in the Identify Controller data structure) and the sanitize operation started by this command does not purge user data, then that sanitize operation shall fail\&. If cleared, then that sanitize operation is not required to purge user data as a condition for succeeding\&.
 .RE
 .PP
 \-\-force

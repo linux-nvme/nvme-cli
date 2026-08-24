@@ -760,11 +760,18 @@ nvme-keys-export(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>Export all NVMe TLS pre-shared keys (PSKs) from the system keyring
 in the form</p></div>
-<div class="paragraph"><p>&lt;description&gt; &lt;psk&gt;</p></div>
-<div class="paragraph"><p>where <em>&lt;description&gt;</em> is the key description from the exported key
-and <em>&lt;psk&gt;</em> is the key data in PSK interchange format
-<em>NVMeTLSkey-1:01:&lt;base64 encoded data&gt;:</em>. Each key is exported in a
+<div class="paragraph"><p>&lt;identity&gt; &lt;psk&gt;</p></div>
+<div class="paragraph"><p>where <em>&lt;identity&gt;</em> is the TLS PSK identity the key is stored under
+and <em>&lt;psk&gt;</em> is the TLS PSK itself in PSK interchange format
+<em>NVMeTLSkey-1:&lt;hmac&gt;:&lt;base64 encoded data&gt;:</em>. Each key is exported in a
 single line.</p></div>
+<div class="paragraph"><p>The PSK interchange format otherwise carries a configured PSK: it is
+what <a href="nvme-keys-gen-tls-psk.html">nvme-keys-gen-tls-psk(1)</a> prints and what
+<a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a> and <a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>
+read. The keys exported here are TLS PSKs instead. This output is
+meant for <a href="nvme-keys-import.html">nvme-keys-import(1)</a>, which stores each key back under
+its identity unchanged; it is not intended to be passed to
+<a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a> or <a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -779,7 +786,7 @@ single line.</p></div>
 </dt>
 <dd>
 <p>
-        Name of the keyring to export the retained keys from. Default
+        Name of the keyring to export the TLS PSKs from. Default
         is <em>.nvme</em>.
 </p>
 </dd>
@@ -919,7 +926,7 @@ Session Keyring
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

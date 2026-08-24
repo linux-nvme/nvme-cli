@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: nvme-keys-check-tls
+.\"     Title: nvme-keys-check-tls-psk
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-KEYS\-CHECK\-T" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-KEYS\-CHECK\-T" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,11 +28,11 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-keys-check-tls \- Check a NVMe TLS PSK
+nvme-keys-check-tls-psk \- Check a NVMe TLS PSK
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIkeys check\-tls\fR [\-\-keyring=<name> | \-k <name>]
+\fInvme\fR [<global\-options>] \fIkeys check\-tls\-psk\fR [\-\-keyring=<name> | \-k <name>]
                         [\-\-keytype=<type> | \-t <type>]
                         [\-\-hostnqn=<nqn> | \-n <nqn>]
                         [\-\-subsysnqn=<nqn> | \-c <nqn>]
@@ -42,54 +42,53 @@ nvme-keys-check-tls \- Check a NVMe TLS PSK
 .fi
 .SH "DESCRIPTION"
 .sp
-Checks if the key is a valid NVMe TLS PSK in the PSK interchange format \fINVMeTLSkey\-1:01:<base64\-encoded data>:\fR and prints the resulting HMAC algorithm and key length\&.
+Checks if the key is a valid NVMe TLS configured PSK in the PSK interchange format \fINVMeTLSkey\-1:<hmac>:<base64\-encoded data>:\fR and prints the hash function it records and the length of the PSK\&.
 .sp
-If \fI\-\-keydata\fR is not given the key is read from stdin, which also allows checking a key stored in a file, e\&.g\&. \fInvme keys check\-tls < keyfile\fR\&.
+If \fI\-\-keydata\fR is not given the configured PSK is read from stdin, which also allows reading it from a file, e\&.g\&. \fInvme keys check\-tls\-psk < keyfile\fR\&.
 .sp
-If \fI\-\-subsysnqn\fR is given the TLS identity of the key is also printed, and the specified keyring is checked for a \fIretained\fR key already stored under that identity; the result (loaded or not, with its serial number if loaded) is reported\&. This command never modifies the keyring; to insert a \fIretained\fR key use linknvme\-keys\-insert\-tls[1]\&.
+If \fI\-\-subsysnqn\fR is given the TLS PSK identity of the key is also printed, and the specified keyring is checked for a TLS PSK already stored under that identity; the result (loaded or not, with its serial number if loaded) is reported\&. This command never modifies the keyring; to insert a TLS PSK use \fBnvme-keys-insert-tls-psk\fR(1)\&.
 .SH "OPTIONS"
 .PP
 \-k <name>, \-\-keyring=<name>
 .RS 4
-Name of the keyring to check for an already loaded
-\fIretained\fR
-TLS key\&. Default is
+Name of the keyring to check for an already loaded TLS PSK\&. Default is
 \fI\&.nvme\fR\&.
 .RE
 .PP
 \-t <type>, \-\-keytype=<type>
 .RS 4
-Type of the key to look up\&. Default is
+Key type of the TLS PSK to look up\&. Default is
 \fIpsk\fR\&.
 .RE
 .PP
 \-n <nqn>, \-\-hostnqn=<nqn>
 .RS 4
-Host NVMe Qualified Name (NQN) to be used when checking whether the key is already loaded\&. Only used together with \-\-subsysnqn\&.
+Host NVMe Qualified Name (NQN) to be used when checking whether the TLS PSK is already loaded\&. Only used together with \-\-subsysnqn\&. Defaults to the host NQN of the system, read from /etc/nvme/hostnqn or, if that file does not exist, generated from the host ID\&.
 .RE
 .PP
 \-c <nqn>, \-\-subsysnqn=<nqn>
 .RS 4
-Subsystem NVMe Qualified Name (NQN) to be used when checking whether the key is already loaded\&. If not given, only the key format is validated\&.
+Subsystem NVMe Qualified Name (NQN) to be used when checking whether the TLS PSK is already loaded\&. If not given, only the configured PSK format is validated\&.
 .RE
 .PP
 \-d <key>, \-\-keydata=<key>
 .RS 4
-Key to be checked\&. If not given, the key is read from stdin\&.
+Configured PSK to be checked\&. If not given, it is read from stdin\&.
 .RE
 .PP
 \-I <id\-vers>, \-\-identity=<id\-vers>
 .RS 4
-NVMe TLS key identity version to be used;
+TLS PSK identity version of the identity to look up;
 \fI0\fR
-for the default identity, and
+(the default) is obsolete and defined in the NVMe TCP Transport Specification 1\&.0,
 \fI1\fR
-for the TLS identity suffixed by the PSK hash as specified in TP8018\&.
+is TLS 1\&.3 with the PSK digest in the PSK identity\&.
 .RE
 .PP
 \-C, \-\-compat
 .RS 4
-Use the original non\-RFC 8446 compliant algorithm when checking TLS keys for compatibility with older implementations\&.
+Use the original non\-RFC 8446 compliant algorithm when deriving the TLS PSK identity for compatibility with older implementations\&. Has no effect with identity version
+\fI0\fR, whose identity does not embed the PSK digest\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

@@ -186,6 +186,33 @@ will define parts of the reserved data, and may add further fields.
 ``nvme_mi_mi_opcode_configuration_get``
   MI Configuration Get
 
+``nvme_mi_mi_opcode_pda_read``
+  NVMe-MI PDA Read
+
+``nvme_mi_mi_opcode_pda_write``
+  NVMe-MI PDA Write
+
+``nvme_mi_mi_opcode_pda_write_zeroes``
+  NVMe-MI PDA Write Zeroes
+
+
+
+
+.. c:enum:: nvme_mi_pda_dformat
+
+   NVMe-MI PDA Command - Data Format (DFORMAT)
+
+**Constants**
+
+``nvme_mi_pda_dformat_4kib``
+  4KiB data format
+
+``nvme_mi_pda_dformat_512b``
+  512B data format
+
+``nvme_mi_pda_dformat_byte``
+  Byte Level data format
+
 
 
 

@@ -768,19 +768,19 @@ into the equivalent new <em>keys</em> plugin subcommand and forwards to it:</p><
 <div class="ulist"><ul>
 <li>
 <p>
-<em>--import</em> translates to linknvme-keys-import[1], forwarding
+<em>--import</em> translates to <a href="nvme-keys-import.html">nvme-keys-import(1)</a>, forwarding
   <em>--keyring</em> and <em>--keyfile</em>.
 </p>
 </li>
 <li>
 <p>
-<em>--export</em> translates to linknvme-keys-export[1], forwarding
+<em>--export</em> translates to <a href="nvme-keys-export.html">nvme-keys-export(1)</a>, forwarding
   <em>--keyring</em> and <em>--keyfile</em>.
 </p>
 </li>
 <li>
 <p>
-<em>--revoke=&lt;description&gt;</em> translates to linknvme-keys-revoke[1],
+<em>--revoke=&lt;description&gt;</em> translates to <a href="nvme-keys-revoke.html">nvme-keys-revoke(1)</a>,
   forwarding <em>--keyring</em> and <em>--keytype</em>, with <em>&lt;description&gt;</em> passed as
   <em>--identity</em>.
 </p>
@@ -789,8 +789,8 @@ into the equivalent new <em>keys</em> plugin subcommand and forwards to it:</p><
 <div class="paragraph"><p>Only the options relevant to the selected mode are meaningful; e.g.
 <em>--keytype</em> has no effect with <em>--import</em> or <em>--export</em> since the new
 <em>import</em>/<em>export</em> subcommands no longer take a key type. This command does
-not derive or insert a <em>retained</em> TLS key from raw secret material&#8201;&#8212;&#8201;use
-linknvme-keys-gen-tls[1] or linknvme-keys-insert-tls[1] for that.</p></div>
+not derive or insert a TLS PSK from a configured PSK&#8201;&#8212;&#8201;use
+<a href="nvme-keys-gen-tls-psk.html">nvme-keys-gen-tls-psk(1)</a> or <a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a> for that.</p></div>
 <div class="paragraph"><p>New scripts should call <em>nvme keys import</em>, <em>nvme keys export</em>, or
 <em>nvme keys revoke</em> directly instead. This alias prints a deprecation
 warning on stderr and may be removed in a future release.</p></div>
@@ -844,7 +844,7 @@ warning on stderr and may be removed in a future release.</p></div>
 </dt>
 <dd>
 <p>
-        Import keys in bulk; see linknvme-keys-import[1].
+        Import keys in bulk; see <a href="nvme-keys-import.html">nvme-keys-import(1)</a>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -855,7 +855,7 @@ warning on stderr and may be removed in a future release.</p></div>
 </dt>
 <dd>
 <p>
-        Export all keys from the keyring; see linknvme-keys-export[1].
+        Export all keys from the keyring; see <a href="nvme-keys-export.html">nvme-keys-export(1)</a>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -867,7 +867,7 @@ warning on stderr and may be removed in a future release.</p></div>
 <dd>
 <p>
         Revoke the key stored under <em>&lt;description&gt;</em> from the keyring; see
-        linknvme-keys-revoke[1].
+        <a href="nvme-keys-revoke.html">nvme-keys-revoke(1)</a>.
 </p>
 </dd>
 </dl></div>
@@ -966,7 +966,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>linknvme-keys-import[1], linknvme-keys-export[1], linknvme-keys-revoke[1]</p></div>
+<div class="paragraph"><p><a href="nvme-keys-import.html">nvme-keys-import(1)</a>, <a href="nvme-keys-export.html">nvme-keys-export(1)</a>, <a href="nvme-keys-revoke.html">nvme-keys-revoke(1)</a></p></div>
 </div>
 </div>
 </div>
@@ -974,7 +974,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

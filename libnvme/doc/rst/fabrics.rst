@@ -544,7 +544,7 @@ been previously created with libnvmf_context_create().
 After this call, **fctx** must not be used.
 
 
-.. c:function:: int libnvmf_context_set_discovery_hooks (struct libnvmf_context *fctx, void (*discovery_log)(struct libnvmf_context *fctx, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data))
+.. c:function:: int libnvmf_context_set_discovery_hooks (struct libnvmf_context *fctx, void (*discovery_log)(struct libnvmf_context *fctx, const struct nvmf_discovery_log *log, uint64_t numrec, void *user_data))
 
    Set discovery hooks for context
 
@@ -553,7 +553,7 @@ After this call, **fctx** must not be used.
 ``struct libnvmf_context *fctx``
   Fabrics context
 
-``void (*discovery_log)(struct libnvmf_context *fctx, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data)``
+``void (*discovery_log)(struct libnvmf_context *fctx, const struct nvmf_discovery_log *log, uint64_t numrec, void *user_data)``
   Hook for discovery log events
 
 **Description**

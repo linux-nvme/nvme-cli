@@ -728,6 +728,110 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or negative error code otherwise.
 
 
+.. c:function:: int libnvme_mi_mi_pda_read (libnvme_mi_ep_t ep, enum nvme_mi_pda_dformat dformat, __u32 dofst, __u32 dlen, void *data, size_t *data_len)
+
+   Read the NVMe-MI Persistent Data Area (PDA)
+
+**Parameters**
+
+``libnvme_mi_ep_t ep``
+  endpoint for MI communication
+
+``enum nvme_mi_pda_dformat dformat``
+  data format to use for **dofst** and **dlen**, see
+  :c:type:`enum nvme_mi_pda_dformat <nvme_mi_pda_dformat>`
+
+``__u32 dofst``
+  starting offset, in units of **dformat**, into the PDA to read
+
+``__u32 dlen``
+  length, in units of **dformat**, to read from the PDA starting at
+  **dofst**
+
+``void *data``
+  buffer to receive the PDA contents
+
+``size_t *data_len``
+  in: size of **data**; out: length of data actually returned
+
+**Description**
+
+Performs an NVMe-MI PDA Read command. See the PDA Size (PDAS) and
+Supported Data Format (SDFORMAT) fields of :c:type:`struct nvme_mi_port_smb <nvme_mi_port_smb>` for
+the size and supported **dformat** values of the PDA on a given port.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or negative error code otherwise.
+
+
+.. c:function:: int libnvme_mi_mi_pda_write (libnvme_mi_ep_t ep, enum nvme_mi_pda_dformat dformat, __u32 dofst, __u32 dlen, void *data, size_t data_len)
+
+   Write the NVMe-MI Persistent Data Area (PDA)
+
+**Parameters**
+
+``libnvme_mi_ep_t ep``
+  endpoint for MI communication
+
+``enum nvme_mi_pda_dformat dformat``
+  data format to use for **dofst** and **dlen**, see
+  :c:type:`enum nvme_mi_pda_dformat <nvme_mi_pda_dformat>`
+
+``__u32 dofst``
+  starting offset, in units of **dformat**, into the PDA to write
+
+``__u32 dlen``
+  length, in units of **dformat**, of **data** to write to the PDA
+  starting at **dofst**
+
+``void *data``
+  data to write to the PDA
+
+``size_t data_len``
+  length of **data**
+
+**Description**
+
+Performs an NVMe-MI PDA Write command.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or negative error code otherwise.
+
+
+.. c:function:: int libnvme_mi_mi_pda_write_zeroes (libnvme_mi_ep_t ep, enum nvme_mi_pda_dformat dformat, __u32 dofst, __u32 dlen)
+
+   Clear a range of the NVMe-MI Persistent Data Area (PDA) to 0h
+
+**Parameters**
+
+``libnvme_mi_ep_t ep``
+  endpoint for MI communication
+
+``enum nvme_mi_pda_dformat dformat``
+  data format to use for **dofst** and **dlen**, see
+  :c:type:`enum nvme_mi_pda_dformat <nvme_mi_pda_dformat>`
+
+``__u32 dofst``
+  starting offset, in units of **dformat**, into the PDA to clear
+
+``__u32 dlen``
+  length, in units of **dformat**, of the PDA to clear starting at
+  **dofst**
+
+**Description**
+
+Performs an NVMe-MI PDA Write Zeroes command.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or negative error code otherwise.
+
+
 .. c:function:: int libnvme_mi_mi_config_get (libnvme_mi_ep_t ep, __u32 dw0, __u32 dw1, __u32 *nmresp)
 
    query a configuration parameter

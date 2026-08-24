@@ -2,12 +2,12 @@
 .\"     Title: nvme-tls-key
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-TLS\-KEY" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-TLS\-KEY" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,8 @@ Deprecated command kept for scripts written against nvme\-cli versions older tha
 .IP \(bu 2.3
 .\}
 \fI\-\-import\fR
-translates to linknvme\-keys\-import[1], forwarding
+translates to
+\fBnvme-keys-import\fR(1), forwarding
 \fI\-\-keyring\fR
 and
 \fI\-\-keyfile\fR\&.
@@ -66,7 +67,8 @@ and
 .IP \(bu 2.3
 .\}
 \fI\-\-export\fR
-translates to linknvme\-keys\-export[1], forwarding
+translates to
+\fBnvme-keys-export\fR(1), forwarding
 \fI\-\-keyring\fR
 and
 \fI\-\-keyfile\fR\&.
@@ -81,7 +83,8 @@ and
 .IP \(bu 2.3
 .\}
 \fI\-\-revoke=<description>\fR
-translates to linknvme\-keys\-revoke[1], forwarding
+translates to
+\fBnvme-keys-revoke\fR(1), forwarding
 \fI\-\-keyring\fR
 and
 \fI\-\-keytype\fR, with
@@ -90,7 +93,7 @@ passed as
 \fI\-\-identity\fR\&.
 .RE
 .sp
-Only the options relevant to the selected mode are meaningful; e\&.g\&. \fI\-\-keytype\fR has no effect with \fI\-\-import\fR or \fI\-\-export\fR since the new \fIimport\fR/\fIexport\fR subcommands no longer take a key type\&. This command does not derive or insert a \fIretained\fR TLS key from raw secret material \(em use linknvme\-keys\-gen\-tls[1] or linknvme\-keys\-insert\-tls[1] for that\&.
+Only the options relevant to the selected mode are meaningful; e\&.g\&. \fI\-\-keytype\fR has no effect with \fI\-\-import\fR or \fI\-\-export\fR since the new \fIimport\fR/\fIexport\fR subcommands no longer take a key type\&. This command does not derive or insert a TLS PSK from a configured PSK \(em use \fBnvme-keys-gen-tls-psk\fR(1) or \fBnvme-keys-insert-tls-psk\fR(1) for that\&.
 .sp
 New scripts should call \fInvme keys import\fR, \fInvme keys export\fR, or \fInvme keys revoke\fR directly instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
 .SH "OPTIONS"
@@ -115,19 +118,22 @@ File to read the keys from (\fI\-\-import\fR) or write the keys to (\fI\-\-expor
 .PP
 \-i, \-\-import
 .RS 4
-Import keys in bulk; see linknvme\-keys\-import[1]\&.
+Import keys in bulk; see
+\fBnvme-keys-import\fR(1)\&.
 .RE
 .PP
 \-e, \-\-export
 .RS 4
-Export all keys from the keyring; see linknvme\-keys\-export[1]\&.
+Export all keys from the keyring; see
+\fBnvme-keys-export\fR(1)\&.
 .RE
 .PP
 \-r <description>, \-\-revoke=<description>
 .RS 4
 Revoke the key stored under
 \fI<description>\fR
-from the keyring; see linknvme\-keys\-revoke[1]\&.
+from the keyring; see
+\fBnvme-keys-revoke\fR(1)\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -184,4 +190,4 @@ No Examples
 Part of the nvme\-user suite
 .SH "SEE ALSO"
 .sp
-linknvme\-keys\-import[1], linknvme\-keys\-export[1], linknvme\-keys\-revoke[1]
+\fBnvme-keys-import\fR(1), \fBnvme-keys-export\fR(1), \fBnvme-keys-revoke\fR(1)

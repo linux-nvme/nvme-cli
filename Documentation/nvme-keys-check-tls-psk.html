@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 10.2.0" />
-<title>nvme-keys-check-tls(1)</title>
+<title>nvme-keys-check-tls-psk(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,11 +735,11 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-keys-check-tls(1) Manual Page
+nvme-keys-check-tls-psk(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-keys-check-tls -
+<p>nvme-keys-check-tls-psk -
    Check a NVMe TLS PSK
 </p>
 </div>
@@ -749,7 +749,7 @@ nvme-keys-check-tls(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>keys check-tls</em> [--keyring=&lt;name&gt; | -k &lt;name&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>keys check-tls-psk</em> [--keyring=&lt;name&gt; | -k &lt;name&gt;]
                         [--keytype=&lt;type&gt; | -t &lt;type&gt;]
                         [--hostnqn=&lt;nqn&gt; | -n &lt;nqn&gt;]
                         [--subsysnqn=&lt;nqn&gt; | -c &lt;nqn&gt;]
@@ -763,16 +763,17 @@ nvme-keys-check-tls(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Checks if the key is a valid NVMe TLS PSK in the PSK interchange format
-<em>NVMeTLSkey-1:01:&lt;base64-encoded data&gt;:</em> and prints the resulting HMAC
-algorithm and key length.</p></div>
-<div class="paragraph"><p>If <em>--keydata</em> is not given the key is read from stdin, which also allows
-checking a key stored in a file, e.g. <em>nvme keys check-tls &lt; keyfile</em>.</p></div>
-<div class="paragraph"><p>If <em>--subsysnqn</em> is given the TLS identity of the key is also printed, and
-the specified keyring is checked for a <em>retained</em> key already stored under
+<div class="paragraph"><p>Checks if the key is a valid NVMe TLS configured PSK in the PSK
+interchange format <em>NVMeTLSkey-1:&lt;hmac&gt;:&lt;base64-encoded data&gt;:</em> and
+prints the hash function it records and the length of the PSK.</p></div>
+<div class="paragraph"><p>If <em>--keydata</em> is not given the configured PSK is read from stdin, which
+also allows reading it from a file, e.g.
+<em>nvme keys check-tls-psk &lt; keyfile</em>.</p></div>
+<div class="paragraph"><p>If <em>--subsysnqn</em> is given the TLS PSK identity of the key is also printed,
+and the specified keyring is checked for a TLS PSK already stored under
 that identity; the result (loaded or not, with its serial number if loaded)
-is reported. This command never modifies the keyring; to insert a
-<em>retained</em> key use linknvme-keys-insert-tls[1].</p></div>
+is reported. This command never modifies the keyring; to insert a TLS PSK
+use <a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -787,8 +788,8 @@ is reported. This command never modifies the keyring; to insert a
 </dt>
 <dd>
 <p>
-        Name of the keyring to check for an already loaded <em>retained</em> TLS
-        key. Default is <em>.nvme</em>.
+        Name of the keyring to check for an already loaded TLS PSK.
+        Default is <em>.nvme</em>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -799,7 +800,7 @@ is reported. This command never modifies the keyring; to insert a
 </dt>
 <dd>
 <p>
-        Type of the key to look up.
+        Key type of the TLS PSK to look up.
         Default is <em>psk</em>.
 </p>
 </dd>
@@ -812,7 +813,10 @@ is reported. This command never modifies the keyring; to insert a
 <dd>
 <p>
         Host NVMe Qualified Name (NQN) to be used when checking whether
-        the key is already loaded. Only used together with --subsysnqn.
+        the TLS PSK is already loaded. Only used together with
+        --subsysnqn. Defaults to the host NQN of the system, read from
+        /etc/nvme/hostnqn or, if that file does not exist, generated
+        from the host ID.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -824,8 +828,8 @@ is reported. This command never modifies the keyring; to insert a
 <dd>
 <p>
         Subsystem NVMe Qualified Name (NQN) to be used when checking
-        whether the key is already loaded. If not given, only the key
-        format is validated.
+        whether the TLS PSK is already loaded. If not given, only the
+        configured PSK format is validated.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -836,7 +840,8 @@ is reported. This command never modifies the keyring; to insert a
 </dt>
 <dd>
 <p>
-        Key to be checked. If not given, the key is read from stdin.
+        Configured PSK to be checked. If not given, it is read from
+        stdin.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -847,9 +852,10 @@ is reported. This command never modifies the keyring; to insert a
 </dt>
 <dd>
 <p>
-        NVMe TLS key identity version to be used; <em>0</em> for the default
-        identity, and <em>1</em> for the TLS identity suffixed by the PSK hash
-        as specified in TP8018.
+        TLS PSK identity version of the identity to look up; <em>0</em> (the
+        default) is obsolete and defined in the NVMe TCP Transport
+        Specification 1.0, <em>1</em> is TLS 1.3 with the PSK digest in the PSK
+        identity.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -861,7 +867,9 @@ is reported. This command never modifies the keyring; to insert a
 <dd>
 <p>
         Use the original non-RFC 8446 compliant algorithm when
-        checking TLS keys for compatibility with older implementations.
+        deriving the TLS PSK identity for compatibility with older
+        implementations. Has no effect with identity version <em>0</em>, whose
+        identity does not embed the PSK digest.
 </p>
 </dd>
 </dl></div>
@@ -962,7 +970,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

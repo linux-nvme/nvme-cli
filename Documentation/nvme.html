@@ -1335,7 +1335,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls)
+        Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls-psk)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1383,7 +1383,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Generate a NVMe TLS PSK (deprecated, see nvme-keys-gen-tls)
+        Generate a NVMe TLS PSK (deprecated, see nvme-keys-gen-tls-psk)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1499,11 +1499,59 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-rpmb.html">nvme-rpmb(1)</a>
+<a href="nvme-rpmb-info.html">nvme-rpmb-info(1)</a>
 </dt>
 <dd>
 <p>
-        Replay Protection Memory Block commands
+        Print RPMB support information for the controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-rpmb-program-key.html">nvme-rpmb-program-key(1)</a>
+</dt>
+<dd>
+<p>
+        Program the RPMB authentication key
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-rpmb-read-counter.html">nvme-rpmb-read-counter(1)</a>
+</dt>
+<dd>
+<p>
+        Read the RPMB write counter
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-rpmb-read-data.html">nvme-rpmb-read-data(1)</a>
+</dt>
+<dd>
+<p>
+        Read authenticated data from an RPMB target
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-rpmb-write-data.html">nvme-rpmb-write-data(1)</a>
+</dt>
+<dd>
+<p>
+        Write authenticated data to an RPMB target
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-rpmb-read-config.html">nvme-rpmb-read-config(1)</a>
+</dt>
+<dd>
+<p>
+        Read the RPMB device configuration block
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-rpmb-write-config.html">nvme-rpmb-write-config(1)</a>
+</dt>
+<dd>
+<p>
+        Write the RPMB device configuration block
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2552,7 +2600,7 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-gen-tls.html">nvme-keys-gen-tls(1)</a>
+<a href="nvme-keys-gen-tls-psk.html">nvme-keys-gen-tls-psk(1)</a>
 </dt>
 <dd>
 <p>
@@ -2560,11 +2608,19 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-check-tls.html">nvme-keys-check-tls(1)</a>
+<a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>
 </dt>
 <dd>
 <p>
         Validate NVMeoF TLS PSK
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a>
+</dt>
+<dd>
+<p>
+        Insert an NVMeoF TLS PSK into a keyring
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2712,7 +2768,7 @@ NVM-Express Site</a>.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

@@ -754,7 +754,7 @@ nvme-sanitize(1) Manual Page
                         &lt;overwrite-pass-count&gt;]
                         [--ause | -u] [--sanact=&lt;action&gt; | -a &lt;action&gt;]
                         [--ovrpat=&lt;overwrite-pattern&gt; | -p &lt;overwrite-pattern&gt;]
-                        [--emvs | -e] [--force] [--wait | -w]
+                        [--emvs | -e] [--preq | -q] [--force] [--wait | -w]
                         [--repeat=&lt;repeat-count&gt; | -r &lt;repeat-count&gt;]</pre>
 <div class="attribution">
 </div></div>
@@ -918,6 +918,24 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-q
+</dt>
+<dt class="hdlist1">
+--preq
+</dt>
+<dd>
+<p>
+        Purge Required:
+        If set, then the host is requesting that the user data be purged
+        as defined by IEEE Std 2883. If the controller supports Sanitize
+        Purge Request and Reporting (SPRRS in the Identify Controller data
+        structure) and the sanitize operation started by this command
+        does not purge user data, then that sanitize operation shall
+        fail. If cleared, then that sanitize operation is not required
+        to purge user data as a condition for succeeding.
+</p>
+</dd>
+<dt class="hdlist1">
 --force
 </dt>
 <dd>
@@ -1058,7 +1076,7 @@ Has the program issue Sanitize Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

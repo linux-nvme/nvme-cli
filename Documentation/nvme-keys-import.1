@@ -2,12 +2,12 @@
 .\"     Title: nvme-keys-import
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-KEYS\-IMPORT" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-KEYS\-IMPORT" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,11 +45,11 @@ Without \fI\-\-identity\fR, keys are read in bulk\&. Key data is read in the for
 .sp
 <description> <key>
 .sp
-where \fI<description>\fR is the key description and \fI<key>\fR is either a TLS PSK in interchange format \fINVMeTLSkey\-1:01:<base64 encoded data>:\fR or a KX\-HMAC\-CHAP secret in the form \fIDHHC\-1:00:<base64 encoded data>:\fR, one key per line, and imported into the kernel keyring\&. This is the format produced by linknvme\-keys\-export[1]\&.
+where \fI<description>\fR is the key description \(em the TLS PSK identity for a TLS PSK \(em and \fI<key>\fR is either a TLS PSK in interchange format \fINVMeTLSkey\-1:<hmac>:<base64 encoded data>:\fR or a KX\-HMAC\-CHAP secret in the form \fIDHHC\-1:<hmac>:<base64 encoded data>:\fR, one key per line, and imported into the kernel keyring\&. This is the format produced by \fBnvme-keys-export\fR(1)\&.
 .sp
-With \fI\-\-identity\fR, a single key is imported instead: the key is read from \fI\-\-keydata\fR (or, if not given, from stdin) and stored under the given identity\&. This is the way to insert a single KX\-HMAC\-CHAP secret, or a previously derived TLS retained key, directly by identity, without needing a keyfile\&.
+With \fI\-\-identity\fR, a single key is imported instead: the key is read from \fI\-\-keydata\fR (or, if not given, from stdin) and stored under the given identity\&. This is the way to insert a single KX\-HMAC\-CHAP secret, or a previously derived TLS PSK, directly by identity, without needing a keyfile\&.
 .sp
-Note that this command does not derive a retained TLS key identity from raw PSK material and a host/subsystem NQN pair; use linknvme\-keys\-insert\-tls[1] for that\&.
+Note that this command does not derive a TLS PSK from a configured PSK, nor compute the identity to store it under from a host/subsystem NQN pair; use \fBnvme-keys-insert-tls-psk\fR(1) for that\&.
 .SH "OPTIONS"
 .PP
 \-k <name>, \-\-keyring=<name>

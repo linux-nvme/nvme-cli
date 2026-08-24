@@ -765,19 +765,20 @@ nvme-keys-import(1) Manual Page
 prefix (<em>NVMeTLSkey-1:</em> or <em>DHHC-1:</em>).</p></div>
 <div class="paragraph"><p>Without <em>--identity</em>, keys are read in bulk. Key data is read in the form</p></div>
 <div class="paragraph"><p>&lt;description&gt; &lt;key&gt;</p></div>
-<div class="paragraph"><p>where <em>&lt;description&gt;</em> is the key description and <em>&lt;key&gt;</em> is either a TLS PSK
-in interchange format <em>NVMeTLSkey-1:01:&lt;base64 encoded data&gt;:</em> or a
-KX-HMAC-CHAP secret in the form <em>DHHC-1:00:&lt;base64 encoded data&gt;:</em>, one key per
-line, and imported into the kernel keyring. This is the format produced by
-linknvme-keys-export[1].</p></div>
+<div class="paragraph"><p>where <em>&lt;description&gt;</em> is the key description&#8201;&#8212;&#8201;the TLS PSK identity for a TLS
+PSK&#8201;&#8212;&#8201;and <em>&lt;key&gt;</em> is either a TLS PSK in interchange format
+<em>NVMeTLSkey-1:&lt;hmac&gt;:&lt;base64 encoded data&gt;:</em> or a KX-HMAC-CHAP secret in the
+form <em>DHHC-1:&lt;hmac&gt;:&lt;base64 encoded data&gt;:</em>, one key per line, and imported
+into the kernel keyring. This is the format produced by
+<a href="nvme-keys-export.html">nvme-keys-export(1)</a>.</p></div>
 <div class="paragraph"><p>With <em>--identity</em>, a single key is imported instead: the key is read from
 <em>--keydata</em> (or, if not given, from stdin) and stored under the given
 identity. This is the way to insert a single KX-HMAC-CHAP secret, or a
-previously derived TLS retained key, directly by identity, without needing
+previously derived TLS PSK, directly by identity, without needing
 a keyfile.</p></div>
-<div class="paragraph"><p>Note that this command does not derive a retained TLS key identity from raw
-PSK material and a host/subsystem NQN pair; use linknvme-keys-insert-tls[1]
-for that.</p></div>
+<div class="paragraph"><p>Note that this command does not derive a TLS PSK from a configured PSK,
+nor compute the identity to store it under from a host/subsystem NQN pair;
+use <a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a> for that.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -956,7 +957,7 @@ Import a single KX-HMAC-CHAP secret under an explicit identity
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

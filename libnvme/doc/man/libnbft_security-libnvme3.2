@@ -22,9 +22,9 @@ struct libnbft_security {
 .br
 .BI "    __u16 cipher_suites_len;"
 .br
-.BI "    __u8 *dh_groups;"
+.BI "    __u8 *kx_groups;"
 .br
-.BI "    __u16 dh_groups_len;"
+.BI "    __u16 kx_groups_len;"
 .br
 .BI "    __u8 *sec_hash_funcs;"
 .br
@@ -67,15 +67,15 @@ the number of entries is \fIcipher_suites_len\fP / 2.
 NULL if not present in the NBFT heap.
 .IP "cipher_suites_len" 12
 Length in bytes of \fIcipher_suites\fP.
-.IP "dh_groups" 12
-DH-HMAC-CHAP Diffie-Hellman group identifier list.
-Values are DH Group Identifiers as defined in the
-NVM Express Base Specification. NULL if not present
-in the NBFT heap.
-.IP "dh_groups_len" 12
-Length in bytes of \fIdh_groups\fP.
+.IP "kx_groups" 12
+KX-HMAC-CHAP key exchange group identifier list.
+Values are Key Exchange Group Identifiers as defined
+in the NVM Express Base Specification. NULL if not
+present in the NBFT heap.
+.IP "kx_groups_len" 12
+Length in bytes of \fIkx_groups\fP.
 .IP "sec_hash_funcs" 12
-DH-HMAC-CHAP hash function identifier list,
+KX-HMAC-CHAP hash function identifier list,
 see \fIenum libnvmf_hmac_alg\fP. NULL if not present
 in the NBFT heap.
 .IP "sec_hash_funcs_len" 12

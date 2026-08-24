@@ -2,12 +2,12 @@
 .\"     Title: nvme-check-tls-key
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CHECK\-TLS\-KE" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CHECK\-TLS\-KE" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,13 +42,43 @@ nvme-check-tls-key \- Check a NVMe TLS PSK (deprecated)
 .fi
 .SH "DESCRIPTION"
 .sp
-Deprecated alias for linknvme\-keys\-check\-tls[1], kept for scripts written against nvme\-cli versions older than 3\&.0\&.
+Deprecated alias for \fBnvme-keys-check-tls-psk\fR(1), kept for scripts written against nvme\-cli versions older than 3\&.0, with two differences from nvme\-cli 2\&.x:
 .sp
-One difference: the old \fIcheck\-tls\-key\fR also accepted \fI\-\-insert\fR/\fI\-i\fR to derive and store a \fIretained\fR key directly, but the new \fIcheck\-tls\fR never modifies the keyring \(em that functionality moved to linknvme\-keys\-insert\-tls[1]\&. Scripts relying on \fI\-\-insert\fR here will get an "unrecognized option" error and must switch to \fInvme keys insert\-tls\fR directly; all other options continue to work unchanged through this alias\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI\-\-insert\fR/\fI\-i\fR
+and
+\fI\-\-keyfile\fR/\fI\-f\fR
+are gone\&. 2\&.x used them to derive a TLS PSK and store it in the keyring; the new
+\fIcheck\-tls\-psk\fR
+never modifies the keyring \(em that moved to
+\fBnvme-keys-insert-tls-psk\fR(1)\&.
+.RE
 .sp
-New scripts should use \fInvme keys check\-tls\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The identity is no longer the first line of stdout\&. 2\&.x printed it alone; the alias prints
+\fIConfigured PSK is valid (HMAC <id>, length <len>)\fR
+first and reports the keyring state after it, so a script taking the identity with
+\fIhead \-1\fR
+reads the wrong line\&. Searching the keyring is itself new, and a keyring that does not exist is reported as a failure: the command exits 1 where 2\&.x exited 0\&.
+.RE
 .sp
-See linknvme\-keys\-check\-tls[1] for the full option reference\&.
+New scripts should use \fInvme keys check\-tls\-psk\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
+.sp
+See \fBnvme-keys-check-tls-psk\fR(1) for the full option reference\&.
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -104,4 +134,4 @@ No Examples
 Part of the nvme\-user suite
 .SH "SEE ALSO"
 .sp
-linknvme\-keys\-check\-tls[1], linknvme\-keys\-insert\-tls[1]
+\fBnvme-keys-check-tls-psk\fR(1), \fBnvme-keys-insert-tls-psk\fR(1)

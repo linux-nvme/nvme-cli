@@ -17,6 +17,18 @@ enum nvme_mi_mi_opcode {
 .br
 .br
 .BI "    nvme_mi_mi_opcode_configuration_get"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_pda_read"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_pda_write"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_pda_write_zeroes"
 
 };
 .SH Constants
@@ -28,3 +40,9 @@ Subsystem Health Status Poll
 MI Configuration Set
 .IP "nvme_mi_mi_opcode_configuration_get" 12
 MI Configuration Get
+.IP "nvme_mi_mi_opcode_pda_read" 12
+NVMe-MI PDA Read
+.IP "nvme_mi_mi_opcode_pda_write" 12
+NVMe-MI PDA Write
+.IP "nvme_mi_mi_opcode_pda_write_zeroes" 12
+NVMe-MI PDA Write Zeroes

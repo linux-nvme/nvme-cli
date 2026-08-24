@@ -74,7 +74,7 @@ libnvme utility functions
   connect attempt is ignored due to configuration
 
 ``ENVME_CONNECT_NOKEY``
-  the TLS key is missing
+  TLS PSK or KX-HMAC-CHAP secret not available
 
 
 .. c:function:: __u8 libnvme_status_to_errno (int status, bool fabrics)

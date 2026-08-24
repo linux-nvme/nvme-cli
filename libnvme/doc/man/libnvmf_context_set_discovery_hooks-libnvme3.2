@@ -4,7 +4,7 @@ libnvmf_context_set_discovery_hooks \- Set discovery hooks for context
 .SH SYNOPSIS
 .B "int" libnvmf_context_set_discovery_hooks
 .BI "(struct libnvmf_context *fctx "  ","
-.BI "void (*discovery_log)(struct libnvmf_context *fctx, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data) "  ");"
+.BI "void (*discovery_log)(struct libnvmf_context *fctx, const struct nvmf_discovery_log *log, uint64_t numrec, void *user_data) "  ");"
 .SH ARGUMENTS
 .IP "fctx" 12
 Fabrics context

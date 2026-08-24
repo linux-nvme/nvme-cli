@@ -803,6 +803,15 @@ If cleared to 0, then non-volatile storage in the NVM subsystem has been written
  a) since being manufactured and the NVM subsystem has never been sanitized; or
  b) since the most recent successful sanitize operation of the NVM subsystem.</p></td>
 </tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0800</p></td>
+<td align="left" valign="top"><p class="table">Purged (PRGD) bit
+If set to 1, then the most recent sanitize operation purged user data,
+as defined by IEEE Std 2883, because the Purge Required (PREQ) bit was
+set to 1 in the command that started that sanitize operation. If
+cleared to 0, either PREQ was not set, or the sanitize operation
+cleared (rather than purged) user data.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -945,7 +954,7 @@ Has the program issue Sanitize-log Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-14 19:01:21 CEST
+ 2026-08-24 15:30:08 CEST
 </div>
 </div>
 </body>

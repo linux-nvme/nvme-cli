@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: nvme-keys-gen-tls
+.\"     Title: nvme-keys-gen-tls-psk
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2026
+.\"      Date: 08/24/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-KEYS\-GEN\-TLS" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-KEYS\-GEN\-TLS" "1" "08/24/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,11 +28,11 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-keys-gen-tls \- Generate a NVMe TLS PSK
+nvme-keys-gen-tls-psk \- Generate a NVMe TLS PSK
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIkeys gen\-tls\fR [\-\-keyring=<name> | \-k <name>]
+\fInvme\fR [<global\-options>] \fIkeys gen\-tls\-psk\fR [\-\-keyring=<name> | \-k <name>]
                         [\-\-keytype=<type> | \-t <type>]
                         [\-\-hostnqn=<nqn> | \-n <nqn>]
                         [\-\-subsysnqn=<nqn> | \-c <nqn>]
@@ -45,65 +45,64 @@ nvme-keys-gen-tls \- Generate a NVMe TLS PSK
 .fi
 .SH "DESCRIPTION"
 .sp
-Generate a base64\-encoded NVMe TLS pre\-shared key (PSK)\&. The resulting key is either printed in the PSK interchange format \fINVMeTLSkey\-1:01:<base64 encoded data>:\fR or inserted as a \fIretained\fR key into the specified keyring if the \fI\-\-insert\fR option is given\&. When the PSK should be inserted into the keyring a \fIretained\fR key is derived from the secret key material using the HKDF\-Expand\-Label algorithm from RFC 8446\&. The resulting \fIretained\fR key is stored with the identity \fINVMe0R0<hmac> <host NQN> <subsystem NQN>\fR (for identity version \fI0\fR) or \fINVMe1R0<hmac> <host NQN> <subsystem NQN> <PSK hash>\fR (for identity version \fI1\fR) in the keyring\&. The \fIretained\fR key is derived from the secret key material, the specified subsystem NQN, and the host NQN\&. Once the \fIretained\fR key is stored in the keyring the original secret key material cannot be retrieved\&.
+Generate a NVMe TLS configured PSK and print it in the PSK interchange format \fINVMeTLSkey\-1:<hmac>:<base64 encoded data>:\fR\&. If the \fI\-\-insert\fR option is given a retained PSK is additionally derived from the configured PSK and the host NQN, using the HKDF\-Expand\-Label algorithm from RFC 8446, the TLS PSK is derived from it, and that is stored in the specified keyring under an identity computed from the host NQN and the subsystem NQN: \fINVMe0R<hmac> <host NQN> <subsystem NQN>\fR (for identity version \fI0\fR) or \fINVMe1R<hmac> <host NQN> <subsystem NQN> <PSK digest>\fR (for identity version \fI1\fR)\&. Once the TLS PSK is stored in the keyring the configured PSK it was derived from cannot be retrieved from the keyring\&.
+.sp
+The diagnostics that validate \fI\-\-secret\fR are printed to stdout rather than stderr\&. Most of them accompany a non\-zero exit, but \fISkipping excess secret bytes\fR does not: an over\-long \fI\-\-secret\fR still exits 0, with the warning sitting ahead of the key, so a script reading the key off stdout gets the warning instead\&.
+.sp
+Both NQNs are inputs to the TLS PSK itself, not just to the identity it is stored under: the host NQN through the retained PSK derivation, and both NQNs again through the identity (identity version \fI0\fR) or the PSK digest it embeds (identity version \fI1\fR), which is the context of the TLS PSK derivation\&.
 .SH "OPTIONS"
 .PP
 \-k <name>, \-\-keyring=<name>
 .RS 4
-Name of the keyring into which the
-\fIretained\fR
-TLS key should be stored\&. Default is
+Name of the keyring into which the TLS PSK should be stored\&. Default is
 \fI\&.nvme\fR\&.
 .RE
 .PP
 \-t <type>, \-\-keytype=<type>
 .RS 4
-Type of the key for resulting TLS key\&. Default is
+Type of the key under which the TLS PSK is stored\&. Default is
 \fIpsk\fR\&.
 .RE
 .PP
 \-n <nqn>, \-\-hostnqn=<nqn>
 .RS 4
-Host NVMe Qualified Name (NQN) to be used to derive the
-\fIretained\fR
-TLS key
+Host NVMe Qualified Name (NQN) to be used for the retained PSK derivation and for the identity the TLS PSK is stored under\&. Defaults to the host NQN of the system, read from /etc/nvme/hostnqn or, if that file does not exist, generated from the host ID\&.
 .RE
 .PP
 \-c <nqn>, \-\-subsysnqn=<nqn>
 .RS 4
-Subsystem NVMe Qualified Name (NQN) to be used to derive the
-\fIretained\fR
-TLS key
+Subsystem NVMe Qualified Name (NQN) to be used for the identity the TLS PSK is stored under\&. Required with \-\-insert\&.
 .RE
 .PP
 \-m <hmac\-id>, \-\-hmac=<hmac\-id>
 .RS 4
-Select a HMAC algorithm to use\&. Possible values are: 1 \- SHA\-256 (default) 2 \- SHA\-384
+Select the hash function\&. It derives the retained PSK and identifies the TLS 1\&.3 cipher suite the TLS PSK is bound to, so it is recorded both in the PSK interchange format and in the TLS PSK identity, written as two digits (\fI<hmac>\fR
+above)\&. Possible values are: 1 \- SHA\-256 (default) 2 \- SHA\-384
 .RE
 .PP
-\-I <vers>, \-\-identity=<id\-vers>
+\-I <id\-vers>, \-\-identity=<id\-vers>
 .RS 4
-Select the TLS identity to use\&. Possible values are: 0 \- Original NVMe TLS 1\&.0c identity 1 \- NVMe TLS 2\&.0 (TP8018) identity
+Select the TLS PSK identity version of the identity the TLS PSK is stored under\&. Possible values are: 0 \- Obsolete (default); defined in the NVMe TCP Transport Specification 1\&.0 1 \- TLS 1\&.3 with the PSK digest in the TLS PSK identity
 .RE
 .PP
 \-s <secret>, \-\-secret=<secret>
 .RS 4
-Secret value (in hexadecimal) to be used for the key\&. If none are provided a random value is used\&.
+Configured PSK (in hexadecimal) to be used\&. If none are provided a random value is used\&.
 .RE
 .PP
 \-i, \-\-insert
 .RS 4
-Insert the resulting TLS key into the keyring without printing out the key in PSK interchange format\&.
+Additionally derive a retained PSK and, from that, the TLS PSK, and insert the TLS PSK into the keyring\&. The configured PSK is printed in PSK interchange format either way\&.
 .RE
 .PP
 \-C, \-\-compat
 .RS 4
-Use the original non\-RFC 8446 compliant algorithm when deriving TLS keys for compatibility with older implementations\&.
+Use the original non\-RFC 8446 compliant algorithm when deriving the retained PSK and the TLS PSK for compatibility with older implementations\&.
 .RE
 .PP
 \-f <keyfile>, \-\-keyfile=<keyfile>
 .RS 4
-Append the resulting TLS key to keyfile\&. This command line option depends on \-\-insert\&.
+Append the identity of the TLS PSK, and the TLS PSK itself in PSK interchange format, to keyfile\&. Ignored without \-\-insert, which is what derives the TLS PSK\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

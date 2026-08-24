@@ -20,7 +20,7 @@ struct nbft_security {
 .br
 .BI "    struct nbft_heap_obj cipher_suite_obj;"
 .br
-.BI "    struct nbft_heap_obj dh_grp_obj;"
+.BI "    struct nbft_heap_obj kx_grp_obj;"
 .br
 .BI "    struct nbft_heap_obj sec_hash_func_obj;"
 .br
@@ -72,12 +72,12 @@ if any, is an array of bytes and the values are defined
 in the IANA TLS Parameters Registry. If the Cipher Suites
 Restricted by Policy bit is cleared to 0h, then this field
 is reserved.
-.IP "dh_grp_obj" 12
-DH Groups Heap Object Reference: If the Authentication DH Groups
+.IP "kx_grp_obj" 12
+KX Groups Heap Object Reference: If the Authentication KX Groups
 Restricted by Policy List bit is set to 1h, then this field
 indicates the location and size of a heap object containing
-a list of DH-HMAC-CHAP Diffie-Hellman (DH) group identifiers.
-If the Authentication DH Groups Restricted by Policy List
+a list of KX-HMAC-CHAP key exchange (KX) group identifiers.
+If the Authentication KX Groups Restricted by Policy List
 bit is cleared to 0h, then this field is reserved.
 .IP "sec_hash_func_obj" 12
 Secure Hash Functions Offset Heap Object Reference: If the
