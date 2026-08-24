@@ -7,25 +7,23 @@
 # Authors: Daniel Wagner <dwagner@suse.com>
 """Integration tests for 'nvme discover', 'nvme connect', and 'nvme connect-all'.
 
-Uses LD_PRELOAD mocking (see libmock_fabrics.c), so no real NVMe hardware or
+Uses LD_PRELOAD mocking (see libmock_nvme.c), so no real NVMe hardware or
 root privileges are required. The mock shim forwards every connect() write
-and admin passthru ioctl() over a Unix socket to the MockIPCServer below,
-which is steered per-test to fabricate discovery log pages, Identify data,
-and simulated errno failures.
+and admin passthru ioctl() over a Unix socket to the FabricsMockIPCServer
+below, which is steered per-test to fabricate discovery log pages, Identify
+data, and simulated errno failures.
 
 Usage: python3 nvme_fabrics_mock_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
 import os
-import shlex
 import shutil
-import socket
 import struct
-import subprocess
 import sys
 import tempfile
-import threading
 import unittest
 from pathlib import Path
+
+from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
 
 # Capture the nvme binary path and preload library path from argv before
 # unittest.main() strips them.
@@ -44,32 +42,11 @@ NVME_NQN_CURR = 3   # This Discovery Controller's own port
 # struct nvmf_disc_log_entry EFLAGS bit (enum nvmf_disc_eflags).
 NVMF_DISC_EFLAGS_EPCSD = 1 << 1
 
-# IPC wire format shared with libmock_fabrics.c -- keep both sides in sync.
-_IPC_REQUEST_FMT = "=IIII B3x I IIIIII QI"
-_IPC_REQUEST_LEN = struct.calcsize(_IPC_REQUEST_FMT)
-_IPC_RESPONSE_FMT = "=iiII"
-
 _NVME_OPCODE_GET_LOG_PAGE = 0x02
 _NVME_OPCODE_IDENTIFY = 0x06
 _DISCOVERY_LOG_LID = 0x70
 
-
-def resolve_mock_lib_path():
-    if len(sys.argv) > 2:
-        raw_path = sys.argv[2]
-        candidates = (
-            Path(raw_path),
-            Path(raw_path).resolve(),
-            Path(os.getcwd()) / ".build" / raw_path,
-            Path(__file__).parent.parent.parent / ".build" / raw_path,
-        )
-        for candidate in candidates:
-            if candidate.exists():
-                return str(candidate.resolve())
-    return "./libmock_fabrics.so"
-
-
-_MOCK_LIB = resolve_mock_lib_path()
+_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
 
 
 def _pack_disc_log_entry(portid, entry):
@@ -103,15 +80,9 @@ def _pack_disc_log_entry(portid, entry):
     return header + rsvd12 + trsvcid_bytes + rsvd64 + subnqn_bytes + traddr_bytes + tsas
 
 
-class MockIPCServer(threading.Thread):
+class FabricsMockIPCServer(MockIPCServer):
     def __init__(self, sock_path):
-        super().__init__()
-        self.sock_path = sock_path
-        self.running = True
-        self.server_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.server_sock.bind(self.sock_path)
-        self.server_sock.listen(5)
-        self.server_sock.settimeout(0.5)
+        super().__init__(sock_path)
 
         # Test-specific state overrides, steered from Python tests.
         self.connect_errno = 0
@@ -125,26 +96,10 @@ class MockIPCServer(threading.Thread):
         self.controllers = {}        # maps instance (int) -> dict of connect options
         self.log_page_fetch_count = {}  # maps subsysnqn (str) -> completed-fetch count
 
-    def run(self):
-        while self.running:
-            try:
-                conn, _ = self.server_sock.accept()
-            except socket.timeout:
-                continue
-            except OSError:
-                break
-
-            self.handle_client(conn)
-
-    @staticmethod
-    def _send_response(conn, status, errno_val=0, result=0, payload=b""):
-        conn.sendall(struct.pack(_IPC_RESPONSE_FMT, status, errno_val, result, len(payload)))
-        if payload:
-            conn.sendall(payload)
-
-    def _handle_connect(self, conn, payload):
+    def handle_write(self, conn, payload):
+        """A write() on /dev/nvme-fabrics: fabrics connect args."""
         if self.connect_errno != 0:
-            self._send_response(conn, -1, errno_val=self.connect_errno)
+            self.send_response(conn, -1, errno_val=self.connect_errno)
             return
 
         opts = {}
@@ -178,7 +133,7 @@ class MockIPCServer(threading.Thread):
                                     host_traddr, host_iface, hostnqn, hostid)
 
         resp_payload = f"instance={inst}\n".encode('utf-8')
-        self._send_response(conn, 0, payload=resp_payload)
+        self.send_response(conn, 0, payload=resp_payload)
 
     def _write_sysfs_ctrl(self, inst, subsysnqn, transport, traddr, trsvcid,
                            host_traddr, host_iface, hostnqn, hostid):
@@ -208,15 +163,16 @@ class MockIPCServer(threading.Thread):
         (sub_path / "subsysnqn").write_text(f"{subsysnqn}\n")
         (sub_path / f"nvme{inst}").mkdir(exist_ok=True)
 
-    def _handle_ioctl(self, conn, fd, opcode, cdw10, lpo, req_len):
+    def handle_ioctl(self, conn, fd, request, opcode, nsid,
+                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
         if self.ioctl_errno != 0:
-            self._send_response(conn, -1, errno_val=self.ioctl_errno)
+            self.send_response(conn, -1, errno_val=self.ioctl_errno)
             return
 
         resp_payload = b""
 
         if opcode == _NVME_OPCODE_GET_LOG_PAGE and (cdw10 & 0xff) == _DISCOVERY_LOG_LID:
-            # fd carries the controller instance for IOCTLs (see libmock_fabrics.c).
+            # fd carries the controller instance for IOCTLs (see libmock_nvme.c).
             ctrl_nqn = self.controllers.get(fd, {}).get('subsysnqn', '')
             entries = self.discovery_map.get(ctrl_nqn, self.discovery_entries)
 
@@ -244,38 +200,7 @@ class MockIPCServer(threading.Thread):
             rsvd = b"\x00" * (4096 - len(vid) - len(sn_bytes) - len(mn_bytes) - len(fr_bytes))
             resp_payload = (vid + sn_bytes + mn_bytes + fr_bytes + rsvd)[:req_len]
 
-        self._send_response(conn, 0, payload=resp_payload)
-
-    def handle_client(self, conn):
-        try:
-            req_header = conn.recv(_IPC_REQUEST_LEN)
-            if len(req_header) < _IPC_REQUEST_LEN:
-                return
-
-            req_type, fd, data_len, _ioctl_request, opcode, _nsid, \
-                cdw10, _cdw11, _cdw12, _cdw13, _cdw14, _cdw15, lpo, req_len = \
-                struct.unpack(_IPC_REQUEST_FMT, req_header)
-
-            payload = conn.recv(data_len) if data_len > 0 else b""
-
-            if req_type == 1:    # WRITE (connect args)
-                self._handle_connect(conn, payload)
-            elif req_type == 2:  # IOCTL (admin passthru)
-                self._handle_ioctl(conn, fd, opcode, cdw10, lpo, req_len)
-        except OSError as e:
-            print(f"Exception handling IPC client: {e}", file=sys.stderr)
-        finally:
-            conn.close()
-
-    def shutdown(self):
-        self.running = False
-        try:
-            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            client.connect(self.sock_path)
-            client.close()
-        except OSError:
-            pass
-        self.server_sock.close()
+        self.send_response(conn, 0, payload=resp_payload)
 
 
 class FabricsMockCLITest(unittest.TestCase):
@@ -294,21 +219,11 @@ class FabricsMockCLITest(unittest.TestCase):
         self.ipc_dir = tempfile.mkdtemp(prefix='nvme-mock-ipc-', dir='/tmp')
         self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
 
-        self.server = MockIPCServer(self.ipc_sock_path)
+        self.server = FabricsMockIPCServer(self.ipc_sock_path)
         self.server.sysfs_dir = self.sysfs_dir
         self.server.start()
 
-        self.env = os.environ.copy()
-        # Append (don't clobber) LD_PRELOAD so an existing entry, e.g.
-        # libasan, is kept. If libasan isn't first in the LD_PRELOAD list,
-        # ASan warns/aborts because its interceptors weren't installed
-        # first; verify_asan_link_order=0 silences that check, since we
-        # can't control the order and it isn't a real problem here.
-        existing_preload = self.env.get("LD_PRELOAD", "")
-        self.env["LD_PRELOAD"] = f"{existing_preload} {_MOCK_LIB}".strip()
-        existing_asan_options = self.env.get("ASAN_OPTIONS", "")
-        self.env["ASAN_OPTIONS"] = f"{existing_asan_options}:verify_asan_link_order=0".strip(':')
-        self.env["MOCK_IPC_SOCK"] = self.ipc_sock_path
+        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
 
     def tearDown(self):
         self.server.shutdown()
@@ -319,44 +234,14 @@ class FabricsMockCLITest(unittest.TestCase):
         shutil.rmtree(self.ipc_dir, ignore_errors=True)
 
     def _run(self, *args, expect_fail=False):
-        cmd = [
-            _NVME_BIN,
-            '--set-options', f'test-sysfs-dir={self.sysfs_dir},test-base-dir={self.base_dir}',
-        ] + list(args)
-
-        # Under 'meson test --setup=valgrind' this script itself runs under
-        # valgrind, but nvme must run natively. Valgrind rewrites LD_PRELOAD
-        # on every execve() it traps (to strip its own vgpreload bookkeeping),
-        # which wipes out our appended mock lib entry too since it's part of
-        # the same string. Route through a shell: the exec() below is what
-        # valgrind sees and mangles, but the shell's own subsequent exec of
-        # nvme happens in a process valgrind no longer traces, so the
-        # LD_PRELOAD it sets there reaches nvme intact.
-        env = dict(self.env)
-        ld_preload = env.pop("LD_PRELOAD", "")
-        wrapped_cmd = [
-            '/bin/sh', '-c', f'export LD_PRELOAD={shlex.quote(ld_preload)}; exec "$@"',
-            'nvme-mock-wrapper',
-        ] + cmd
-
-        result = subprocess.run(wrapped_cmd, env=env,
-                                stdin=subprocess.DEVNULL,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                encoding='utf-8')
-
-        # Print outputs to sys.stderr so they are displayed by unittest on failure.
-        print(f"\n--- RUN: {' '.join(cmd)} ---", file=sys.stderr)
-        print(f"STDOUT:\n{result.stdout}", file=sys.stderr)
-        print(f"STDERR:\n{result.stderr}", file=sys.stderr)
-        print("-----------------------------------", file=sys.stderr)
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir, *args)
 
         if not expect_fail:
             self.assertEqual(result.returncode, 0,
-                             f'Command {cmd} failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+                             f'Command {args} failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
         else:
             self.assertNotEqual(result.returncode, 0,
-                                f'Command {cmd} was expected to fail but succeeded')
+                                f'Command {args} was expected to fail but succeeded')
         return result
 
     def _ctrl_path(self, instance):

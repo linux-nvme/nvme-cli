@@ -65,19 +65,22 @@ if python3.found()
              depends: nvme_exe)
     endif
 
-    if want_fabrics and (not is_static) and (not is_cross)
-        mock_fabrics_lib = shared_library(
-            'mock_fabrics',
-            'libmock_fabrics.c',
+    if (not is_static) and (not is_cross) and (host_system == 'linux')
+        mock_nvme_lib = shared_library(
+            'mock_nvme',
+            'libmock_nvme.c',
             include_directories: '../..',
             dependencies: dl_dep,
             install: false
         )
         # cli_test_env.prepend('MOCK_DEBUG', '1')
-        test('nvme-cli - fabrics-mock-cli',
-             python3,
-             args: [files('nvme_fabrics_mock_test.py'), nvme_exe, mock_fabrics_lib],
-             env: cli_test_env,
-             depends: [nvme_exe, mock_fabrics_lib])
+
+        if want_fabrics
+            test('nvme-cli - fabrics-mock-cli',
+                 python3,
+                 args: [files('nvme_fabrics_mock_test.py'), nvme_exe, mock_nvme_lib],
+                 env: cli_test_env,
+                 depends: [nvme_exe, mock_nvme_lib])
+        endif
     endif
 endif
