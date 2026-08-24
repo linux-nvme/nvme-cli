@@ -114,8 +114,9 @@ struct __attribute__((packed)) ipc_request {
 };
 
 struct __attribute__((packed)) ipc_response {
-	int32_t  status;	/* 0 for success, -1 for error */
-	int32_t  errno_val;	/* errno to return on error */
+	int32_t  status;	/* 0 for success, -1 for a real syscall/errno failure */
+	int32_t  errno_val;	/* errno to return on error (status == -1 only) */
+	int32_t  sc_status;	/* NVMe completion status */
 	uint32_t result;	/* cmd->result */
 	uint32_t data_len;	/* payload length (follows immediately) */
 };
@@ -563,8 +564,8 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 	orig_write(ipc_fd, &req, sizeof(req));
 
 	resp_data = read_ipc_response(ipc_fd, &resp);
-	mock_dbg("ioctl received IPC response status %d, result %u, data_len %u\n",
-		 resp.status, resp.result, resp.data_len);
+	mock_dbg("ioctl received IPC response status %d, sc_status %d, result %u, data_len %u\n",
+		 resp.status, resp.sc_status, resp.result, resp.data_len);
 
 	if (resp.status == -1) {
 		free(resp_data);
@@ -594,7 +595,7 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 	free(resp_data);
 	orig_close(ipc_fd);
 
-	return 0;
+	return resp.sc_status;
 }
 
 int ioctl(int fd, unsigned long request, ...)
