@@ -4070,20 +4070,35 @@ __shr_public int libnvmf_connect(
 		/*
 		 * Kernel-level race: something else connected between our
 		 * scan and this ioctl. @c is our own unconnected draft, not
-		 * the winner -- rescan to find it.
+		 * the winner.
 		 */
-		if (err == -ENVME_CONNECT_ALREADY &&
-		    libnvme_scan_topology(ctx, NULL, NULL) == 0) {
-			libnvme_ctrl_t winner = lookup_ctrl(h, &fctx->ctrl_params);
-			int instance = ctrl_instance(winner);
+		if (err == -ENVME_CONNECT_ALREADY) {
+			if (libnvme_scan_topology(ctx, NULL, NULL) == 0) {
+				libnvme_ctrl_t winner;
 
-			write_devid_file(fctx, devid_fd, winner);
-			if (instance >= 0)
-				registry_update_on_connect(ctx, instance);
+				winner = lookup_ctrl(h, &fctx->ctrl_params);
+				if (winner) {
+					int instance = ctrl_instance(winner);
+
+					write_devid_file(fctx, devid_fd, winner);
+					if (instance >= 0)
+						registry_update_on_connect(ctx,
+							instance);
+				}
+			}
+
+			if (fctx->hooks.already_connected)
+				fctx->hooks.already_connected(fctx, h,
+					fctx->ctrl_params.subsysnqn,
+					fctx->ctrl_params.transport,
+					fctx->ctrl_params.traddr,
+					fctx->ctrl_params.trsvcid,
+					fctx->hooks.user_data);
+		} else {
+			libnvme_msg(ctx, LIBNVME_LOG_ERR, "could not add new controller: %s\n",
+				libnvme_strerror(-err));
 		}
 
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "could not add new controller: %s\n",
-			libnvme_strerror(-err));
 		libnvme_free_ctrl(c);
 		return err;
 	}
