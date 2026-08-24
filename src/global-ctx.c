@@ -146,7 +146,7 @@ static int __nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
 		return -ENOMEM;
 
 	log_level = map_log_level(nvme_args.verbose, nvme_args.quiet);
-	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_file(ctx, stderr);
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (!nvme_args.set_options)
