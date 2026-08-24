@@ -1541,7 +1541,8 @@ static int ctrl_instance(struct libnvme_ctrl *c)
 
 	name = libnvme_ctrl_get_name(c);
 	if (name)
-		sscanf(name, "nvme%d", &instance);
+		if (sscanf(name, "nvme%d", &instance) != 1)
+			instance = -1;
 
 	return instance;
 }
