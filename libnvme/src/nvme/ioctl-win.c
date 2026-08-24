@@ -954,8 +954,12 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 				NVME_LOG_CDW14_CSI_SHIFT,
 				NVME_LOG_CDW14_CSI_MASK);
 	if (csi != NVME_CSI_NVM) {
-		err = -ENOTSUP;
-		goto out;
+		/*
+		 * IOCTL_STORAGE_QUERY_PROPERTY doesn't take a CSI-equivalent
+		 * parameter and only supports NVME_CSI_NVM. For other CSI
+		 * values, fall back to IOCTL_STORAGE_PROTOCOL_COMMAND.
+		 */
+		return submit_storage_protocol_command(hdl, cmd, true, user_data);
 	}
 
 	buffer_len = FIELD_OFFSET(STORAGE_PROPERTY_QUERY, AdditionalParameters) +
