@@ -28,7 +28,8 @@ from pathlib import Path
 # IPC wire format shared with libmock_nvme.c -- keep both sides in sync.
 IPC_REQUEST_FMT = "=IIII B3x I IIIIII QI"
 IPC_REQUEST_LEN = struct.calcsize(IPC_REQUEST_FMT)
-IPC_RESPONSE_FMT = "=iiII"
+# status, errno_val, sc_status, result, data_len -- see struct ipc_response.
+IPC_RESPONSE_FMT = "=iiiII"
 
 IPC_TYPE_WRITE = 1  # write() on /dev/nvme-fabrics (connect args)
 IPC_TYPE_IOCTL = 2  # ioctl() admin or I/O passthru command
@@ -81,8 +82,11 @@ class MockIPCServer(threading.Thread):
             self.handle_client(conn)
 
     @staticmethod
-    def send_response(conn, status, errno_val=0, result=0, payload=b""):
-        conn.sendall(struct.pack(IPC_RESPONSE_FMT, status, errno_val, result, len(payload)))
+    def send_response(conn, status, errno_val=0, sc_status=0, result=0, payload=b""):
+        """@status/@errno_val: a real syscall/errno-level failure (status=-1),
+        vs. a normal ioctl() return (status=0). @sc_status: with status=0,
+        the raw NVMe completion status ioctl() itself should return."""
+        conn.sendall(struct.pack(IPC_RESPONSE_FMT, status, errno_val, sc_status, result, len(payload)))
         if payload:
             conn.sendall(payload)
 

@@ -26,6 +26,9 @@ _NVME_OPCODE_IDENTIFY = 0x06
 _NVME_IDENTIFY_CNS_NS = 0x00
 _NVME_IDENTIFY_CNS_CSI_NS = 0x05
 
+NVME_SC_INVALID_FIELD = 0x2
+NVME_SC_INTERNAL = 0x6
+
 PIF_16B_GUARD = 0
 PIF_32B_GUARD = 1
 PIF_64B_GUARD = 2
@@ -70,18 +73,21 @@ class PIFMockIPCServer(MockIPCServer):
         super().__init__(sock_path)
         self.id_ns = _pack_id_ns()
         self.nvm_id_ns = _pack_nvm_id_ns()
+        self.nvm_id_ns_sc_status = 0
 
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                       cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
         if opcode == _NVME_OPCODE_IDENTIFY:
             cns = cdw10 & 0xff
             if cns == _NVME_IDENTIFY_CNS_NS:
-                payload = self.id_ns[:req_len]
+                self.send_response(conn, 0, payload=self.id_ns[:req_len])
             elif cns == _NVME_IDENTIFY_CNS_CSI_NS:
-                payload = self.nvm_id_ns[:req_len]
+                if self.nvm_id_ns_sc_status:
+                    self.send_response(conn, 0, sc_status=self.nvm_id_ns_sc_status)
+                else:
+                    self.send_response(conn, 0, payload=self.nvm_id_ns[:req_len])
             else:
-                payload = b"\x00" * req_len
-            self.send_response(conn, 0, payload=payload)
+                self.send_response(conn, 0, payload=b"\x00" * req_len)
         else:
             self.send_response(conn, 0)
 
@@ -110,9 +116,11 @@ class PIFStsCLITest(unittest.TestCase):
         shutil.rmtree(self.base_dir, ignore_errors=True)
         shutil.rmtree(self.ipc_dir, ignore_errors=True)
 
-    def _verify(self, ref_tag=0, storage_tag=0, expect_fail=False, lba_index=0, **ns_kwargs):
+    def _verify(self, ref_tag=0, storage_tag=0, expect_fail=False, lba_index=0,
+               nvm_id_ns_sc_status=0, **ns_kwargs):
         self.server.id_ns = _pack_id_ns(lba_index=lba_index)
         self.server.nvm_id_ns = _pack_nvm_id_ns(lba_index=lba_index, **ns_kwargs)
+        self.server.nvm_id_ns_sc_status = nvm_id_ns_sc_status
 
         result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
                           'verify', self.DEVICE, '-n', self.NSID,
@@ -221,6 +229,28 @@ class PIFStsCLITest(unittest.TestCase):
                            pifa=PIFA_BIT_GRANULARITY_MASKING, lbstm=0,
                            expect_fail=True)
         self.assertIn("Invalid PIF", res.stdout + res.stderr)
+
+    # ------------------------------------------------------------------ #
+    # Identify NVM CS NS itself failing: init_pi_tags()'s "skip           #
+    # get_pif_sts() on Invalid Field" fallback -- a controller that does  #
+    # not support the NVM Command Set Identify Namespace data structure   #
+    # at all (e.g. pre-TP4068).                                           #
+    # ------------------------------------------------------------------ #
+
+    def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
+        """Invalid Field means "not supported": get_pif_sts() is skipped,
+        PIF/STS default to 16B Guard/0, and the command proceeds."""
+        self._verify(nvm_id_ns_sc_status=NVME_SC_INVALID_FIELD, ref_tag=0, storage_tag=0)
+
+    def test_nvm_cs_ns_other_status_error_also_falls_back(self):
+        """Surprising: this hits the *same* fallback as Invalid Field
+        above, not a propagated error. init_pi_tags() collapses any
+        Identify NVM CS NS failure into the same NVME_SC_INVALID_FIELD
+        sentinel, so verify_cmd() cannot tell them apart. A genuinely
+        unexpected failure (Internal Error here) is silently treated as
+        "not supported" instead of surfacing as an error. This documents
+        current behavior; it does not claim the behavior is correct."""
+        self._verify(nvm_id_ns_sc_status=NVME_SC_INTERNAL, ref_tag=0, storage_tag=0)
 
 
 if __name__ == '__main__':
