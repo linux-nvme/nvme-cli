@@ -4038,7 +4038,7 @@ __shr_public int libnvmf_connect(
 				libnvme_ctrl_get_traddr(c),
 				libnvme_ctrl_get_trsvcid(c),
 				fctx->hooks.user_data);
-		return -EALREADY;
+		return -ENVME_CONNECT_ALREADY;
 	}
 
 	err = libnvme_create_ctrl(ctx, &fctx->ctrl_params, &c);

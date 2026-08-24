@@ -467,6 +467,42 @@ class FabricsMockCLITest(unittest.TestCase):
                         '--idempotent', '-v')
         self.assertIn("already connected", res.stdout)
 
+    def test_connect_already_connected_precheck(self):
+        """A second connect to an already-live target is caught by
+        libnvmf_connect()'s own precheck (lookup_live_ctrl()), before any
+        ioctl is attempted. The CLI relies on for --idempotent and for
+        knowing not to print its own generic "failed to connect" message
+        on top of hook_already_connected()'s on the correct error code."""
+        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:my-io-subsys-1"
+        # Each nvme invocation auto-generates its own random hostnqn/hostid
+        # unless one is pinned, landing in a different in-memory host object.
+        # lookup_live_ctrl() only searches the *current* host's own
+        # subsystems, so without a shared identity the second process could
+        # never recognize this as already connected, no matter what the
+        # fake sysfs tree says.
+        hostnqn = "nqn.2014-08.org.nvmexpress:uuid:22222222-2222-2222-2222-222222222222"
+        connect_args = ('connect', '-t', 'tcp', '-a', '192.168.1.10', '-s', '4420', '-n', subsysnqn,
+                        '--hostnqn', hostnqn)
+
+        self._run(*connect_args)
+        self.assertTrue(self._ctrl_path(0).exists(), "Mock controller directory was not created under sysfs")
+
+        # Plain connect: fails, silently unless -v, and without a second,
+        # generic "failed to connect" message alongside it.
+        res = self._run(*connect_args, expect_fail=True)
+        self.assertNotIn("already connected", res.stdout)
+        self.assertNotIn("already connected", res.stderr)
+        self.assertNotIn("failed to connect", res.stderr)
+
+        res = self._run(*connect_args, '-v', expect_fail=True)
+        self.assertIn("already connected", res.stdout)
+        self.assertNotIn("failed to connect", res.stderr)
+
+        # --idempotent: succeeds instead.
+        res = self._run(*connect_args, '--idempotent')
+        self.assertNotIn("already connected", res.stdout)
+        self.assertNotIn("already connected", res.stderr)
+
     def test_custom_identify(self):
         """Test getting custom Identify Controller fields steered by environment."""
         # Create a mock controller nvme0 in sysfs first, so nvme list has something to read.
