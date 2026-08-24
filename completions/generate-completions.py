@@ -94,6 +94,25 @@ def builtin_commands(model):
     return model.get("commands", [])
 
 
+def sorted_commands(commands):
+    """Commands ordered alphabetically by primary name.
+
+    Sort on the stripped name so the order matches the whitespace-normalized
+    names cmd_names() emits.
+    """
+    return sorted(commands, key=lambda c: c["name"].strip())
+
+
+def sorted_plugins(model):
+    """Plugins ordered alphabetically by name."""
+    return sorted(plugins(model), key=lambda p: p["name"])
+
+
+def sorted_options(opts):
+    """Options ordered alphabetically by long name."""
+    return sorted(opts, key=lambda o: o["long"])
+
+
 # ---------------------------------------------------------------------------
 # bash
 # ---------------------------------------------------------------------------
@@ -382,8 +401,8 @@ def emit_bash_command_group(out, commands, func, device_argpos):
     # when the C command definitions change. version/help accept nothing and so
     # get no case; -h/--help is still appended for every command in the epilogue.
     clauses = []
-    for c in commands:
-        clause_body = bash_option_body(list(command_options(c)))
+    for c in sorted_commands(commands):
+        clause_body = bash_option_body(sorted_options(command_options(c)))
         if not clause_body:
             continue
         label = "|".join(f'"{n}"' for n in cmd_names(c))
@@ -405,7 +424,7 @@ def generate_bash(model, out):
     out.write(BASH_FINISH_FUNC)
 
     emit_bash_command_group(out, builtin_commands(model), "nvme_list_opts", 2)
-    for p in plugins(model):
+    for p in sorted_plugins(model):
         emit_bash_command_group(out, p["commands"], bash_func_name(p["name"]), 3)
 
     # Dispatcher.
@@ -414,16 +433,16 @@ def generate_bash(model, out):
               "\t_init_completion || return\n"
               "\n"
               "\ttypeset -Ar _plugin_subcmds=(\n")
-    for p in plugins(model):
-        names = " ".join(n for c in p["commands"] for n in cmd_names(c))
+    for p in sorted_plugins(model):
+        names = " ".join(sorted(n for c in p["commands"] for n in cmd_names(c)))
         out.write(f'\t\t[{p["name"]}]="{names}"\n')
     out.write("\t)\n\n\ttypeset -Ar _plugin_funcs=(\n")
-    for p in plugins(model):
+    for p in sorted_plugins(model):
         out.write(f'\t\t[{p["name"]}]="{bash_func_name(p["name"])}"\n')
     out.write("\t)\n\n\tlocal -a _cmds=(\n")
-    cmds = ([n for c in builtin_commands(model) for n in cmd_names(c)] +
-            [p["name"] for p in plugins(model)] +
-            BUILTIN_COMMANDS)
+    cmds = sorted([n for c in builtin_commands(model) for n in cmd_names(c)] +
+                  [p["name"] for p in plugins(model)] +
+                  BUILTIN_COMMANDS)
     out.write(wrap_words(cmds, "\t\t"))
     out.write("\n\t)\n\n"
               "\tlocal func subcmd\n"
@@ -583,7 +602,7 @@ def emit_zsh_value_completions(out, tab, cmd):
     """Emit a single _nvme_opt_vals call listing the command's value-set options
     as alternating spelling/value-list pairs."""
     pairs = [f'"{opt_spellings(o)}" "{" ".join(o["values"])}"'
-             for o in command_options(cmd) if o.get("values")]
+             for o in sorted_options(command_options(cmd)) if o.get("values")]
     if not pairs:
         return
     if len(pairs) == 1:
@@ -598,7 +617,7 @@ def emit_zsh_value_completions(out, tab, cmd):
 def emit_zsh_file_completions(out, tab, cmd):
     """Emit a _nvme_opt_files call for the command's file/directory-valued
     options (those without an enumerated value set)."""
-    args = [f'"{opt_spellings(o)}"' for o in command_options(cmd)
+    args = [f'"{opt_spellings(o)}"' for o in sorted_options(command_options(cmd))
             if not o.get("values") and opt_is_file(o)]
     if not args:
         return
@@ -621,7 +640,7 @@ def emit_zsh_command_clause(out, tab, path, cmd):
     body = tab + "\t"
     out.write(f'{tab}({"|".join(names)})\n')
 
-    opts = list(command_options(cmd))
+    opts = sorted_options(command_options(cmd))
     if not opts:
         # No options to offer, but still complete a device argument.
         out.write(f"{body}_nvme_has_device || compadd -- /dev/nvme*(N)\n")
@@ -653,13 +672,17 @@ def emit_zsh_command_clause(out, tab, path, cmd):
 def generate_zsh(model, out):
     out.write(ZSH_HEADER)
     out.write("\n_nvme () {\n\tlocal -a _cmds\n\t_cmds=(\n")
+    entries = []
     for c in builtin_commands(model):
         for n in cmd_names(c):
-            out.write(f"\t\t'{n}:{zsh_escape(flatten(c.get('description')))}'\n")
+            entries.append((n, f"\t\t'{n}:{zsh_escape(flatten(c.get('description')))}'\n"))
     for p in plugins(model):
-        out.write(f"\t\t'{p['name']}:{zsh_escape(flatten(p.get('description')))}'\n")
+        entries.append((p['name'],
+                        f"\t\t'{p['name']}:{zsh_escape(flatten(p.get('description')))}'\n"))
     for name in BUILTIN_COMMANDS:
-        out.write(f"\t\t'{name}'\n")
+        entries.append((name, f"\t\t'{name}'\n"))
+    for _, line in sorted(entries, key=lambda e: e[0]):
+        out.write(line)
     out.write("\t)\n\n")
 
     out.write(ZSH_HELPERS)
@@ -678,24 +701,27 @@ def generate_zsh(model, out):
               "\tfi\n\n"
               "\tcase ${words[1]} in\n")
 
-    for p in plugins(model):
+    for p in sorted_plugins(model):
         out.write(f"\t\t({p['name']})\n"
                   f"\t\t\tif (( CURRENT == 2 )); then\n"
                   f"\t\t\t\tlocal -a _sub\n\t\t\t\t_sub=(\n")
+        sub = []
         for c in p["commands"]:
             desc = zsh_escape(flatten(c.get("description")))
             for n in cmd_names(c):
-                out.write(f"\t\t\t\t\t'{n}:{desc}'\n")
+                sub.append((n, f"\t\t\t\t\t'{n}:{desc}'\n"))
+        for _, line in sorted(sub, key=lambda e: e[0]):
+            out.write(line)
         out.write(f"\t\t\t\t)\n"
                   f'\t\t\t\t_describe -t commands "nvme {p["name"]} commands" _sub\n'
                   f"\t\t\t\treturn\n\t\t\tfi\n\n"
                   f"\t\t\tcase ${{words[2]}} in\n")
-        for c in p["commands"]:
+        for c in sorted_commands(p["commands"]):
             emit_zsh_command_clause(out, "\t\t\t\t", p["name"], c)
         out.write("\t\t\t\t(*)\n\t\t\t\t\t_files\n\t\t\t\t\t;;\n")
         out.write("\t\t\tesac\n\t\t\t;;\n\n")
 
-    for c in builtin_commands(model):
+    for c in sorted_commands(builtin_commands(model)):
         emit_zsh_command_clause(out, "\t\t", None, c)
 
     # help and version have no metadata command clause. 'help CMD' prints CMD's
@@ -872,7 +898,7 @@ def generate_powershell(model, out):
     out.write(")\n")
 
     out.write("\n$script:NvmePluginCommands = @{\n")
-    for p in sorted(plugins(model), key=lambda p: p["name"]):
+    for p in sorted_plugins(model):
         names = ", ".join("'%s'" % ps_escape(n) for n in sorted(
             n for c in p["commands"] for n in cmd_names(c)))
         out.write(f"    '{ps_escape(p['name'])}' = @({names})\n")
