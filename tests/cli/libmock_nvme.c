@@ -8,15 +8,17 @@
  */
 
 /*
- * LD_PRELOAD shim for the fabrics CLI tests (see nvme_fabrics_mock_test.py).
+ * LD_PRELOAD shim for the CLI-driven, hardware-free tests under tests/cli/.
  *
- * It intercepts open()/write()/ioctl()/close() on /dev/nvme-fabrics and
- * /dev/nvme<N> so that "nvme discover"/"connect"/"connect-all" can run
- * against a fake target without a kernel nvme-fabrics module or root
- * privileges. Every intercepted write() (connect args) and ioctl() (admin
- * passthru command) is forwarded over a Unix socket to a Python-side IPC
- * server that supplies the response, so all test scenarios are steered from
- * the Python test file rather than from this shim.
+ * Intercepts open()/write()/ioctl()/close() on /dev/nvme-fabrics,
+ * /dev/nvme<N> (controller char device), and /dev/nvme<N>n<M> (namespace
+ * char device). This lets any nvme-cli command run against a fake target,
+ * with no kernel nvme-fabrics module, no real hardware, and no root.
+ *
+ * Every intercepted write() (fabrics connect args) or ioctl() (admin or
+ * I/O passthru command) goes over a Unix socket to a Python IPC server.
+ * The server sends back the response. This way, the Python test file
+ * controls the whole scenario, not this shim.
  */
 
 #undef _FILE_OFFSET_BITS
@@ -44,11 +46,6 @@
 
 #include <shared/compiler-attributes-util.h>
 
-/*
- * Mirrors struct linux_passthru_cmd32/64 in libnvme/src/nvme/private.h --
- * the layout libnvme's own ioctl() callers use -- so casting the ioctl()
- * argp we're handed back to this type lines up with the real fields.
- */
 struct linux_passthru_cmd32 {
 	__u8	opcode;
 	__u8	flags;
@@ -93,7 +90,9 @@ struct linux_passthru_cmd64 {
 };
 
 #define LIBNVME_IOCTL_ADMIN_CMD		_IOWR('N', 0x41, struct linux_passthru_cmd32)
+#define LIBNVME_IOCTL_IO_CMD		_IOWR('N', 0x43, struct linux_passthru_cmd32)
 #define LIBNVME_IOCTL_ADMIN64_CMD	_IOWR('N', 0x47, struct linux_passthru_cmd64)
+#define LIBNVME_IOCTL_IO64_CMD		_IOWR('N', 0x48, struct linux_passthru_cmd64)
 
 /* Wire format shared with the Python IPC server -- keep both sides in sync. */
 struct __attribute__((packed)) ipc_request {
@@ -129,6 +128,8 @@ typedef ssize_t (*orig_write_t)(int fd, const void *buf, size_t count);
 typedef ssize_t (*orig_read_t)(int fd, void *buf, size_t count);
 typedef int (*orig_ioctl_t)(int fd, unsigned long request, ...);
 typedef int (*orig_close_t)(int fd);
+typedef int (*orig_fstat_t)(int fd, struct stat *buf);
+typedef int (*orig_fstat64_t)(int fd, struct stat64 *buf);
 
 static orig_open_t orig_open;
 static orig_open64_t orig_open64;
@@ -138,6 +139,8 @@ static orig_write_t orig_write;
 static orig_read_t orig_read;
 static orig_ioctl_t orig_ioctl;
 static orig_close_t orig_close;
+static orig_fstat_t orig_fstat;
+static orig_fstat64_t orig_fstat64;
 
 static int mock_fabrics_fd = -1;
 static int mock_fabrics_manager_fd = -1;
@@ -147,6 +150,7 @@ static bool mock_debug;
 static struct {
 	int fd;
 	int instance;
+	bool is_block;
 } mock_ctrl_fds[MAX_MOCK_CTRLS];
 static int num_mock_ctrls;
 
@@ -159,7 +163,7 @@ static int num_mock_ctrls;
 static void __shr_constructor mock_init(void)
 {
 	mock_debug = !!getenv("MOCK_DEBUG");
-	mock_dbg("libmock_fabrics loaded, sizeof(ipc_request)=%zu, sizeof(ipc_response)=%zu\n",
+	mock_dbg("libmock_nvme loaded, sizeof(ipc_request)=%zu, sizeof(ipc_response)=%zu\n",
 		 sizeof(struct ipc_request), sizeof(struct ipc_response));
 }
 
@@ -176,6 +180,8 @@ static void init_orig_functions(void)
 	orig_read = (orig_read_t)dlsym(RTLD_NEXT, "read");
 	orig_ioctl = (orig_ioctl_t)dlsym(RTLD_NEXT, "ioctl");
 	orig_close = (orig_close_t)dlsym(RTLD_NEXT, "close");
+	orig_fstat = (orig_fstat_t)dlsym(RTLD_NEXT, "fstat");
+	orig_fstat64 = (orig_fstat64_t)dlsym(RTLD_NEXT, "fstat64");
 }
 
 static int connect_ipc_socket(void)
@@ -199,7 +205,8 @@ static int connect_ipc_socket(void)
 	addr.sun_family = AF_UNIX;
 	strncpy(addr.sun_path, sock_path, sizeof(addr.sun_path) - 1);
 	if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-		mock_dbg("connect failed to '%s': %s\n", sock_path, strerror(errno));
+		mock_dbg("connect failed to '%s': %s\n",
+			sock_path, strerror(errno));
 		orig_close(fd);
 		return -1;
 	}
@@ -207,10 +214,20 @@ static int connect_ipc_socket(void)
 	return fd;
 }
 
-/* Returns -2 when @pathname is not one we intercept. */
+const char *default_opts =
+	"instance,cntlid,concat,ctrl_loss_tmo,data_digest,"
+	"dhchap_ctrl_secret,dhchap_secret,disable_sqflow,"
+	"discovery,duplicate_connect,fast_io_fail_tmo,"
+	"hdr_digest,host_iface,host_traddr,hostid,hostnqn,"
+	"keep_alive_tmo,keyring,nqn,nr_io_queues,"
+	"nr_poll_queues,nr_write_queues,queue_size,"
+	"reconnect_delay,tls,tls_key,tos,traddr,transport,"
+	"trsvcid\n";
+
 static int handle_open_intercept(const char *pathname, int flags)
 {
 	int instance, real_fd, sv[2];
+	bool is_block;
 	char *endp;
 
 	if (!pathname)
@@ -229,14 +246,7 @@ static int handle_open_intercept(const char *pathname, int flags)
 			const char *opts = getenv("MOCK_SUPPORTED_OPTIONS");
 
 			if (!opts)
-				opts = "instance,cntlid,concat,ctrl_loss_tmo,data_digest,"
-				       "dhchap_ctrl_secret,dhchap_secret,disable_sqflow,"
-				       "discovery,duplicate_connect,fast_io_fail_tmo,"
-				       "hdr_digest,host_iface,host_traddr,hostid,hostnqn,"
-				       "keep_alive_tmo,keyring,nqn,nr_io_queues,"
-				       "nr_poll_queues,nr_write_queues,queue_size,"
-				       "reconnect_delay,tls,tls_key,tos,traddr,transport,"
-				       "trsvcid\n";
+				opts = default_opts;
 			orig_write(mock_fabrics_manager_fd, opts, strlen(opts));
 			orig_close(mock_fabrics_manager_fd);
 			mock_fabrics_manager_fd = -1;
@@ -251,14 +261,23 @@ static int handle_open_intercept(const char *pathname, int flags)
 		return -2;
 
 	instance = strtol(pathname + 9, &endp, 10);
-	if (!endp || *endp != '\0')
+	is_block = (*endp == 'n');
+	if (is_block) {
+		char *nsp;
+
+		strtol(endp + 1, &nsp, 10);
+		if (nsp == endp + 1 || *nsp != '\0')
+			return -2;
+	} else if (*endp != '\0') {
 		return -2;
+	}
 
 	real_fd = orig_open("/dev/null", flags);
 	if (real_fd >= 0) {
 		if (num_mock_ctrls < MAX_MOCK_CTRLS) {
 			mock_ctrl_fds[num_mock_ctrls].fd = real_fd;
 			mock_ctrl_fds[num_mock_ctrls].instance = instance;
+			mock_ctrl_fds[num_mock_ctrls].is_block = is_block;
 			num_mock_ctrls++;
 		}
 		mock_dbg("intercepted /dev/nvme%d open (mapped to fd %d)\n",
@@ -348,15 +367,6 @@ int openat64(int dirfd, const char *pathname, int flags, ...)
 	return orig_openat64(dirfd, pathname, flags, mode);
 }
 
-/*
- * With _FORTIFY_SOURCE >= 1 and optimization enabled, glibc's <fcntl.h>
- * rewrites the 2-argument form of open()/openat() (no O_CREAT, so no mode)
- * at the call site into a call to these symbols instead of open()/openat().
- * Callers built that way (e.g. the Tumbleweed release CI job, which passes
- * -D_FORTIFY_SOURCE=3 -O2) bypass our open()/openat() overrides entirely
- * unless these are intercepted too. No mode argument is needed here since
- * the 2-argument form implies O_CREAT/O_TMPFILE weren't set.
- */
 int __open_2(const char *pathname, int flags)
 {
 	int fd;
@@ -405,11 +415,6 @@ int __openat64_2(int dirfd, const char *pathname, int flags)
 	return orig_openat64(dirfd, pathname, flags, 0);
 }
 
-/* read() on a stream socket may return fewer bytes than requested even
- * when more are on the way; loop until @len bytes are read, an orig_read()
- * error/EOF occurs, or a short read is treated as an error by the caller.
- * Returns true if all @len bytes were read.
- */
 static bool read_full(int fd, void *buf, size_t len)
 {
 	size_t total_read = 0;
@@ -425,10 +430,6 @@ static bool read_full(int fd, void *buf, size_t len)
 	return true;
 }
 
-/* Reads the fixed-size ipc_response header, then its variable-length
- * payload (if any) into a freshly malloc()'d buffer. Returns the payload
- * (NULL if empty or on error) and fills in @resp.
- */
 static void *read_ipc_response(int ipc_fd, struct ipc_response *resp)
 {
 	char *payload;
@@ -515,14 +516,27 @@ static int mock_ctrl_instance(int fd)
 	return -1;
 }
 
-static int handle_admin_ioctl(int instance, unsigned long request,
-			       struct linux_passthru_cmd64 *cmd)
+static bool mock_ctrl_is_block(int fd, bool *is_block)
+{
+	for (int i = 0; i < num_mock_ctrls; i++) {
+		if (mock_ctrl_fds[i].fd == fd) {
+			*is_block = mock_ctrl_fds[i].is_block;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static int handle_passthru_ioctl(int instance, unsigned long request,
+				  struct linux_passthru_cmd64 *cmd)
 {
 	struct ipc_response resp;
 	void *resp_data;
 	int ipc_fd;
 
-	mock_dbg("ioctl intercepted on instance %d\n", instance);
+	mock_dbg("ioctl intercepted on instance %d (request 0x%lx)\n",
+		instance, request);
 
 	ipc_fd = connect_ipc_socket();
 	if (ipc_fd < 0) {
@@ -559,16 +573,10 @@ static int handle_admin_ioctl(int instance, unsigned long request,
 		return -1;
 	}
 
-	/*
-	 * argp is only guaranteed to be a full struct linux_passthru_cmd64
-	 * for the ADMIN64_CMD request; for the legacy ADMIN_CMD request it
-	 * really points at the smaller struct linux_passthru_cmd32, whose
-	 * result field is 4 bytes narrower and sits 4 bytes earlier. Writing
-	 * through the wider cmd64 view in that case scribbles 8 bytes past
-	 * the end of the caller's 32-bit struct.
-	 */
-	if (request == LIBNVME_IOCTL_ADMIN_CMD) {
-		struct linux_passthru_cmd32 *cmd32 = (struct linux_passthru_cmd32 *)cmd;
+	if (request == LIBNVME_IOCTL_ADMIN_CMD ||
+			request == LIBNVME_IOCTL_IO_CMD) {
+		struct linux_passthru_cmd32 *cmd32 =
+			(struct linux_passthru_cmd32 *)cmd;
 
 		cmd32->result = resp.result;
 	} else {
@@ -603,8 +611,11 @@ int ioctl(int fd, unsigned long request, ...)
 	va_end(args);
 
 	if (instance >= 0 &&
-	    (request == LIBNVME_IOCTL_ADMIN_CMD || request == LIBNVME_IOCTL_ADMIN64_CMD)) {
-		ret = handle_admin_ioctl(instance, request, argp);
+			(request == LIBNVME_IOCTL_ADMIN_CMD ||
+			request == LIBNVME_IOCTL_ADMIN64_CMD ||
+			request == LIBNVME_IOCTL_IO_CMD ||
+			request == LIBNVME_IOCTL_IO64_CMD)) {
+		ret = handle_passthru_ioctl(instance, request, argp);
 		if (ret != -2)
 			return ret;
 	}
@@ -612,11 +623,6 @@ int ioctl(int fd, unsigned long request, ...)
 	return orig_ioctl(fd, request, argp);
 }
 
-/*
- * Some libc admin-passthru call sites resolve ioctl() through this alias
- * rather than the public symbol; keep it in sync with ioctl() above so
- * those calls are intercepted too.
- */
 int __ioctl(int fd, unsigned long request, ...)
 {
 	va_list args;
@@ -648,4 +654,34 @@ int close(int fd)
 	}
 
 	return orig_close(fd);
+}
+
+int fstat(int fd, struct stat *buf)
+{
+	bool is_block;
+
+	init_orig_functions();
+
+	if (mock_ctrl_is_block(fd, &is_block)) {
+		memset(buf, 0, sizeof(*buf));
+		buf->st_mode = (is_block ? S_IFBLK : S_IFCHR) | 0600;
+		return 0;
+	}
+
+	return orig_fstat(fd, buf);
+}
+
+int fstat64(int fd, struct stat64 *buf)
+{
+	bool is_block;
+
+	init_orig_functions();
+
+	if (mock_ctrl_is_block(fd, &is_block)) {
+		memset(buf, 0, sizeof(*buf));
+		buf->st_mode = (is_block ? S_IFBLK : S_IFCHR) | 0600;
+		return 0;
+	}
+
+	return orig_fstat64(fd, buf);
 }
