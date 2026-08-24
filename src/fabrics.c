@@ -1112,14 +1112,14 @@ do_connect:
 	}
 
 	ret = libnvmf_connect(ctx, fctx);
-	if (idempotent && (ret == -EALREADY || ret == -ENVME_CONNECT_ALREADY))
+	if (ret == -ENVME_CONNECT_ALREADY && idempotent)
 		ret = 0;
 	if (ret) {
 		/*
 		 * hook_already_connected() already reported the specific
 		 * reason; the generic message here would just overwrite it.
 		 */
-		if (ret != -EALREADY && ret != -ENVME_CONNECT_ALREADY)
+		if (ret != -ENVME_CONNECT_ALREADY)
 			nvme_show_error("failed to connect: %s",
 				libnvme_strerror(-ret));
 		return ret;
