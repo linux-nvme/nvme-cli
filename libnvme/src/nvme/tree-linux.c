@@ -568,14 +568,14 @@ static inline bool libnvme_ns_is_generic(const char *name)
 
 static char *libnvme_ns_generic_to_blkdev(const char *generic)
 {
-
 	int instance, head_instance;
 	char blkdev[PATH_MAX];
 
 	if (!libnvme_ns_is_generic(generic))
 		return strdup(generic);
 
-	sscanf(generic, "ng%dn%d", &instance, &head_instance);
+	if (sscanf(generic, "ng%dn%d", &instance, &head_instance) != 2)
+		return NULL;
 	sprintf(blkdev, "nvme%dn%d", instance, head_instance);
 
 	return strdup(blkdev);
