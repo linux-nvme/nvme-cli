@@ -48,6 +48,7 @@
 #include "argconfig.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-errno.h"
 #include "nvme-print.h"
 #include "plugin.h"
 
@@ -172,7 +173,7 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 
 	if (sts < 64 && storage_tag >= (1LL << sts)) {
 		nvme_show_error("Storage tag larger than storage tag size");
-		return 1;
+		return -ECLI_INVALID_TAGS;
 	}
 
 	switch (pif) {
@@ -194,10 +195,12 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 		break;
 	}
 
-	if (result)
-		nvme_show_error("Reference tag larger than allowed by PIF");
+	if (!result)
+		return 0;
 
-	return result;
+	nvme_show_error("Reference tag larger than allowed by PIF");
+
+	return -ECLI_INVALID_TAGS;
 }
 
 static int check_lbstm_byte_granularity(__u64 lbstm, __u8 sts)
@@ -266,10 +269,12 @@ static int get_pif_sts_via_qpif(struct nvme_nvm_id_ns *nvm_ns, __u32 elbaf,
 		break;
 	}
 
-	if (err)
-		nvme_show_error("Logical Block Storage Tag Mask is inconsistent with the Storage Tag Masking Level Attribute");
+	if (!err)
+		return 0;
 
-	return err;
+	nvme_show_error("Logical Block Storage Tag Mask is inconsistent with the Storage Tag Masking Level Attribute");
+
+	return -ECLI_INVALID_PI_FORMAT;
 }
 
 static int get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
@@ -311,7 +316,7 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify namespace");
-		return err;
+		return -ECLI_IDENTIFY_NS_FAILED;
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
@@ -349,8 +354,9 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 			lbs += ms;
 	}
 
-	if (invalid_tags(lbst, ilbrt, sts, pif))
-		return -EINVAL;
+	err = invalid_tags(lbst, ilbrt, sts, pif);
+	if (err)
+		return err;
 
 	*logical_block_size = lbs;
 	*metadata_size = ms;
@@ -399,8 +405,9 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 		return NVME_SC_INVALID_FIELD;
 	}
 
-	if (invalid_tags(lbst, ilbrt, sts, pif))
-		return -EINVAL;
+	err = invalid_tags(lbst, ilbrt, sts, pif);
+	if (err)
+		return err;
 
 	nvme_init_var_size_tags(cmd, pif, sts, ilbrt, lbst);
 	nvme_init_app_tag(cmd, lbat, lbatm);
