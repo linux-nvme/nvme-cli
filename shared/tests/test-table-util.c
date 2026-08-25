@@ -389,6 +389,9 @@ static bool test_shr_table_print(void)
 		return pass;
 
 	row = shr_table_get_row_id(t);
+	pass &= check_bool("row id is non-negative", row >= 0);
+	if (row < 0)
+		return pass;
 	shr_table_set_value_str(t, 0, row, "stdout-target", LEFT);
 	shr_table_add_row(t, row);
 
