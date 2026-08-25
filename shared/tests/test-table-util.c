@@ -334,6 +334,9 @@ static bool test_invalid_format_type(void)
 		return pass;
 
 	row = shr_table_get_row_id(t);
+	pass &= check_bool("row id is non-negative", row >= 0);
+	if (row < 0)
+		return pass;
 	shr_table_set_value_int(t, 0, row, 0, CENTERED);
 	shr_table_set_value_int(t, 1, row, 0, RIGHT);
 	/* Force an out-of-range format type to exercise the defensive
