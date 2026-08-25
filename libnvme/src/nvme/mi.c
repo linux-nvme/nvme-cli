@@ -517,7 +517,7 @@ int libnvme_mi_async_read(struct libnvme_mi_ep *ep, struct libnvme_mi_resp *resp
 		return -EPROTO;
 	}
 
-	if (!(resp->hdr->nmp & ~(NVME_MI_ROR_REQ << 7))) {
+	if (resp->hdr->nmp & (NVME_MI_ROR_RSP << 7)) {
 		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "ROR value in response indicates a response\n");
 		return -EIO;
