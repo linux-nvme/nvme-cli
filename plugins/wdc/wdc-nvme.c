@@ -9867,6 +9867,14 @@ static int wdc_fetch_log_directory(struct libnvme_transport_handle *hdl, struct 
 	/* First four bytes of header directory is headerSize */
 	memcpy(&headerSize, fileDirectory, WDC_DE_FILE_HEADER_SIZE);
 
+	/* headerSize describes the offset table inside fileDirectory */
+	if (headerSize < WDC_DE_FILE_HEADER_SIZE || headerSize > fileDirectorySize) {
+		nvme_show_error("ERROR: WDC: %s: Invalid filesystem directory header size %u (buffer size %u)\n",
+			__func__, headerSize, fileDirectorySize);
+		ret = WDC_STATUS_FAILURE;
+		goto end;
+	}
+
 	/* minimum buffer for 1 entry is required */
 	if (!directory->maxNumLogEntries) {
 		ret = WDC_STATUS_INVALID_PARAMETER;
@@ -9885,6 +9893,13 @@ static int wdc_fetch_log_directory(struct libnvme_transport_handle *hdl, struct 
 
 		if (!fileOffsetTemp)
 			continue;
+
+		if (fileOffsetTemp + sizeof(struct WDC_DE_VU_FILE_META_DATA) > fileDirectorySize) {
+			nvme_show_error("ERROR: WDC: %s: Invalid file offset %u (buffer size %u)\n",
+				__func__, fileOffsetTemp, fileDirectorySize);
+			ret = WDC_STATUS_FAILURE;
+			goto end;
+		}
 
 		memset(&directory->logEntry[entryId], 0, sizeof(struct WDC_DRIVE_ESSENTIALS));
 		memcpy(&directory->logEntry[entryId].metaData, fileOffset, sizeof(struct __packed WDC_DE_VU_FILE_META_DATA));
