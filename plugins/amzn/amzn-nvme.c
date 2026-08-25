@@ -468,6 +468,20 @@ static void amzn_print_stats(struct amzn_latency_log_page *log,
 		amzn_print_normal_stats(log, detail);
 }
 
+/* the log page counts come from the device; cap to the buffer sizes */
+static void amzn_sanitize_log_page(struct amzn_latency_log_page *log)
+{
+	struct amzn_latency_log_page_base *base = &log->base;
+
+	if (base->num_of_hists > AMZN_NVME_STATS_NUM_HISTOGRAM)
+		base->num_of_hists = AMZN_NVME_STATS_NUM_HISTOGRAM;
+
+	if (base->read_io_latency_histogram.num_bins > AMZN_NVME_STATS_NUM_HISTOGRAM_BINS)
+		base->read_io_latency_histogram.num_bins = AMZN_NVME_STATS_NUM_HISTOGRAM_BINS;
+	if (base->write_io_latency_histogram.num_bins > AMZN_NVME_STATS_NUM_HISTOGRAM_BINS)
+		base->write_io_latency_histogram.num_bins = AMZN_NVME_STATS_NUM_HISTOGRAM_BINS;
+}
+
 static sig_atomic_t amzn_keep_polling = 1;
 
 static void amzn_sigint_handler(int sig)
@@ -623,6 +637,8 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		goto done;
 	}
 
+	amzn_sanitize_log_page(&log);
+
 	if (log.base.magic != AMZN_NVME_EBS_STATS_MAGIC &&
 		log.base.magic != AMZN_NVME_LOCAL_STORAGE_STATS_MAGIC) {
 		nvme_show_error("[ERROR] %s: Not an EC2 device", __func__);
@@ -673,6 +689,8 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 						rc);
 				goto done;
 			}
+
+			amzn_sanitize_log_page(&curr);
 
 			memset(&diff, 0, sizeof(diff));
 			amzn_compute_stats_diff(&diff, &curr, &prev);
