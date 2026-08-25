@@ -115,7 +115,10 @@ size_t libnvmf_get_entity_version(char *buffer, size_t bufsz)
 	/* /proc/sys/kernel/osrelease contains the Linux
 	 * version (e.g. 5.8.0-63-generic)
 	 */
-	buffer[num_bytes++] = ' '; /* Append a space */
+	if (bufsz) {
+		buffer[num_bytes++] = ' '; /* Append a space */
+		bufsz--;
+	}
 	num_bytes += read_file("/proc/sys/kernel/osrelease",
 			       &buffer[num_bytes], &bufsz);
 
@@ -158,7 +161,10 @@ size_t libnvmf_get_entity_version(char *buffer, size_t bufsz)
 
 		if (name_len) {
 			/* Append a space */
-			buffer[num_bytes++] = ' ';
+			if (bufsz) {
+				buffer[num_bytes++] = ' ';
+				bufsz--;
+			}
 			name_len = min(name_len, bufsz);
 			memcpy(&buffer[num_bytes], name, name_len);
 			bufsz -= name_len;
@@ -167,7 +173,10 @@ size_t libnvmf_get_entity_version(char *buffer, size_t bufsz)
 
 		if (ver_id_len) {
 			/* Append a space */
-			buffer[num_bytes++] = ' ';
+			if (bufsz) {
+				buffer[num_bytes++] = ' ';
+				bufsz--;
+			}
 			ver_id_len = min(ver_id_len, bufsz);
 			memcpy(&buffer[num_bytes], ver_id, ver_id_len);
 			bufsz -= ver_id_len;
