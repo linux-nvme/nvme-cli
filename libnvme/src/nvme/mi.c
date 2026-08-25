@@ -1954,7 +1954,8 @@ __shr_public int libnvme_mi_aem_process(struct libnvme_mi_ep *ep, void *userdata
 		reset_list_info(ep->aem_ctx);
 
 		if (action == NVME_MI_AEM_HNA_ACK) {
-			response_len = sizeof(response_buffer);
+			response_len = sizeof(response_buffer) -
+				offsetof(struct nvme_mi_aem_msg, occ_list_hdr);
 
 			rc = libnvme_mi_aem_ack(ep, &response->occ_list_hdr, &response_len);
 			if (rc)
