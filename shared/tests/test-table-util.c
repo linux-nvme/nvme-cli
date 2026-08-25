@@ -44,6 +44,10 @@ static bool test_basic_table(void)
 
 	row = shr_table_get_row_id(t);
 	pass &= check_bool("row id is non-negative", row >= 0);
+	if (row < 0) {
+		shr_table_free(t);
+		return pass;
+	}
 	pass &= check_bool("set string value succeeds",
 			    shr_table_set_value_str(t, 0, row, "widgets", LEFT) == 0);
 	pass &= check_bool("set int value succeeds",
