@@ -124,19 +124,32 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 	}
 
 	name = json_object_get_string(obj);
+	if (!name) {
+		SOLIDIGM_LOG_WARNING(
+			"Warning: Structure definition property 'name' is NULL: %s",
+				     json_object_to_json_string(struct_def));
+		return  -1;
+	}
 
 	if (metadata) {
 		json_object_get(obj);
 		json_object_object_add(metadata, "objName", obj);
 	}
 
-	if (json_object_object_get_ex(struct_def, "type", &obj))
+	if (json_object_object_get_ex(struct_def, "type", &obj)) {
 		type = json_object_get_string(obj);
+		if (!type) {
+			SOLIDIGM_LOG_WARNING(
+				"Warning: Structure '%s' property 'type' is not a string.",
+				name);
+			return -1;
+		}
+	}
 
 	if (!json_object_object_get_ex(struct_def, "offsetBit", &obj)) {
 		SOLIDIGM_LOG_WARNING(
-		    "Warning: Structure definition missing property 'offsetBit': %s",
-		    json_object_to_json_string(struct_def));
+			    "Warning: Structure '%s' missing property 'offsetBit'.",
+			    name);
 		return  -1;
 	}
 
@@ -144,8 +157,8 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 
 	if (!json_object_object_get_ex(struct_def, "sizeBit", &obj)) {
 		SOLIDIGM_LOG_WARNING(
-		    "Warning: Structure definition missing property 'sizeBit': %s",
-		    json_object_to_json_string(struct_def));
+			    "Warning: Structure '%s' missing property 'sizeBit'.",
+			    name);
 		return  -1;
 	}
 
@@ -156,27 +169,28 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 
 	has_member_list = json_object_object_get_ex(struct_def,
 						    "memberList",
-						    &obj_memberList);
+						    &obj_memberList) &&
+			  json_object_array_length(obj_memberList) > 0;
 
 	if (!json_object_object_get_ex(struct_def, "arraySize",
 				       &obj_arraySizeArray)) {
 		SOLIDIGM_LOG_WARNING(
-		    "Warning: Structure definition missing property 'arraySize': %s",
-		    json_object_to_json_string(struct_def));
+			    "Warning: Structure '%s' missing property 'arraySize'.",
+			    name);
 		return  -1;
 	}
 
 	array_rank = json_object_array_length(obj_arraySizeArray);
 	if (!array_rank) {
 		SOLIDIGM_LOG_WARNING(
-		    "Warning: Structure property 'arraySize' don't support flexible array: %s",
-		    json_object_to_json_string(struct_def));
+			    "Warning: '%s' arraySize does not support flexible arrays.",
+			    name);
 		return -1;
 	}
 	if (array_rank > MAX_ARRAY_RANK) {
 		SOLIDIGM_LOG_WARNING(
-		    "Warning: Structure property 'arraySize' don't support more than %d dimensions: %s",
-		    MAX_ARRAY_RANK, json_object_to_json_string(struct_def));
+		    "Warning: Structure '%s' 'arraySize' exceeds maximum %d dimensions.",
+		    name, MAX_ARRAY_RANK);
 		return -1;
 	}
 
@@ -313,7 +327,6 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 				json_object_array_put_idx(sub_output, j, sub_sub_output);
 			else
 				json_object_add_value_object(sub_output, name, sub_sub_output);
-
 			num_members = json_object_array_length(obj_memberList);
 			for (int k = 0; k < num_members; k++) {
 				struct json_object *member = json_object_array_get_idx(obj_memberList, k);
