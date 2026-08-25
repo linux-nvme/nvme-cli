@@ -242,15 +242,11 @@ class PIFStsCLITest(unittest.TestCase):
         PIF/STS default to 16B Guard/0, and the command proceeds."""
         self._verify(nvm_id_ns_sc_status=NVME_SC_INVALID_FIELD, ref_tag=0, storage_tag=0)
 
-    def test_nvm_cs_ns_other_status_error_also_falls_back(self):
-        """Surprising: this hits the *same* fallback as Invalid Field
-        above, not a propagated error. init_pi_tags() collapses any
-        Identify NVM CS NS failure into the same NVME_SC_INVALID_FIELD
-        sentinel, so verify_cmd() cannot tell them apart. A genuinely
-        unexpected failure (Internal Error here) is silently treated as
-        "not supported" instead of surfacing as an error. This documents
-        current behavior; it does not claim the behavior is correct."""
-        self._verify(nvm_id_ns_sc_status=NVME_SC_INTERNAL, ref_tag=0, storage_tag=0)
+    def test_nvm_cs_ns_other_status_error_propagates(self):
+        """Any other failure (Internal Error here) is a real error, not
+        "not supported". It must not be swallowed: the command fails."""
+        self._verify(nvm_id_ns_sc_status=NVME_SC_INTERNAL, ref_tag=0, storage_tag=0,
+                     expect_fail=True)
 
 
 if __name__ == '__main__':
