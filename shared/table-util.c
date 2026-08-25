@@ -232,7 +232,7 @@ int shr_table_get_row_id(struct shr_table *t)
 
 	t->rows = new_rows;
 	t->rows[row].val = calloc(t->num_columns, sizeof(struct shr_table_value));
-	if (!t->rows->val)
+	if (!t->rows[row].val)
 		return -ENOMEM;
 
 	t->num_rows++;
