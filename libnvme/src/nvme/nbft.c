@@ -111,7 +111,7 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		struct nbft_header *header, const char *filename,
 		const char *descriptorname, const char *fieldname,
 		struct nbft_heap_obj obj, bool is_string,
-		char **output, __u16 *length)
+		size_t min_len, char **output, __u16 *length)
 {
 	__u16 obj_length = le16_to_cpu(obj.length);
 
@@ -125,6 +125,14 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			"file %s: field '%s' in descriptor '%s' has invalid offset or length\n",
 			filename, fieldname, descriptorname);
+		return -EINVAL;
+	}
+
+	if (!is_string && obj_length < min_len) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			"file %s: object '%s' in descriptor '%s' is too short (%d, expected %zu)\n",
+			filename, fieldname, descriptorname,
+			obj_length, min_len);
 		return -EINVAL;
 	}
 
@@ -150,16 +158,31 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-#define get_heap_obj(ctx, descriptor, obj, is_string, output)	\
-	__get_heap_obj(ctx, header, nbft->filename,		\
-		       stringify(descriptor), stringify(obj),	\
-		       descriptor->obj, is_string,		\
-		       output, NULL)
+/*
+ * Heap objects with structured (non-string) content are dereferenced as a
+ * struct by the caller, so make sure the object is at least as large as the
+ * structure it is interpreted as.  String and plain byte-array objects
+ * have no minimum.  The SSNS extended-info reader performs its own
+ * spec-length validation, so it is exempt here too.
+ */
+#define get_heap_obj(ctx, descriptor, obj, is_string, output)		\
+	__get_heap_obj(ctx, header, nbft->filename,			\
+		       stringify(descriptor), stringify(obj),		\
+		       descriptor->obj, is_string,			\
+		       _Generic((output),				\
+			   char **: 0,				\
+			   __u8 **: 0,				\
+			   struct nbft_hfi_info_tcp **:		\
+				   sizeof(**(output)),			\
+			   struct nbft_hfi_info_ext **:		\
+				   sizeof(**(output)),			\
+			   struct nbft_ssns_ext_info **: 0),		\
+		       (char **)(output), NULL)
 
 #define get_heap_obj_len(ctx, descriptor, obj, is_string, output, length) \
 	__get_heap_obj(ctx, header, nbft->filename,			\
 		       stringify(descriptor), stringify(obj),		\
-		       descriptor->obj, is_string, output, length)
+		       descriptor->obj, is_string, 0, output, length)
 
 static struct libnbft_discovery *discovery_from_index(struct libnbft_info *nbft,
 		int i)
@@ -275,9 +298,19 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 	}
 
 	/* subsystem transport address */
-	ret = get_heap_obj(ctx, raw_ssns, subsys_traddr_obj, 0, (char **)&tmp);
+	ret = get_heap_obj(ctx, raw_ssns, subsys_traddr_obj, 0, &tmp);
 	if (ret)
 		goto fail;
+
+	/* format_ip_addr() always reads a full 16 bytes of IP address */
+	if (le16_to_cpu(raw_ssns->subsys_traddr_obj.length) < sizeof(struct in6_addr)) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			"file %s: SSNS %d transport address heap object too short (%d bytes)\n",
+			nbft->filename, ssns->index,
+			le16_to_cpu(raw_ssns->subsys_traddr_obj.length));
+		ret = -EINVAL;
+		goto fail;
+	}
 
 	format_ip_addr(ssns->traddr, sizeof(ssns->traddr), tmp);
 
@@ -314,7 +347,7 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 
 	/* HFI descriptors */
 	ret = get_heap_obj(ctx, raw_ssns, secondary_hfi_assoc_obj,
-		0, (char **)&ss_hfi_indexes);
+		0, &ss_hfi_indexes);
 	if (ret)
 		goto fail;
 
@@ -383,7 +416,7 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 		struct nbft_ssns_ext_info *ssns_extended_info;
 
 		if (!get_heap_obj(ctx, raw_ssns, ssns_extended_info_desc_obj,
-				0, (char **)&ssns_extended_info)) {
+				0, &ssns_extended_info)) {
 			read_ssns_exended_info(ctx, nbft, ssns,
 				ssns_extended_info,
 				le16_to_cpu(raw_ssns->ssns_extended_info_desc_obj.length));
@@ -479,7 +512,7 @@ static int read_hfi_info_tcp(struct libnvme_global_ctx *ctx,
 		hfi->tcp_info.pcie_seg_num = raw_hfi_info_tcp->pcie_seg_num;
 
 		if (!get_heap_obj(ctx, raw_hfi_info_tcp, hfi_ext_info_obj,
-				0, (char **)&hfi_ext_info))
+				0, &hfi_ext_info))
 			read_hfi_info_dhcp(ctx, nbft, hfi_ext_info, hfi);
 	}
 
@@ -517,7 +550,7 @@ static int read_hfi(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft,
 		hfi->transport[sizeof(hfi->transport) - 1] = '\0';
 
 		ret = get_heap_obj(ctx, raw_hfi, trinfo_obj,
-			0, (char **)&raw_hfi_info_tcp);
+			0, &raw_hfi_info_tcp);
 		if (ret)
 			goto fail;
 

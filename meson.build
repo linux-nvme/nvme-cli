@@ -21,7 +21,7 @@ project(
     ],
     version: '3.0-rc2',
     default_options: [
-        'c_std=gnu99',
+        'c_std=gnu11',
         'buildtype=debugoptimized',
         'warning_level=1',
         'sysconfdir=etc',

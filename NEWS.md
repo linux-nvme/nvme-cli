@@ -177,6 +177,11 @@
   instead of alongside current commands, and running one prints a
   warning that it will be removed in the next major version.
 
+* The project now builds with `-std=gnu11` instead of `-std=gnu99`,
+  raising the minimum required compiler support from C99 to C11. A
+  toolchain new enough for C11 is now required to build nvme-cli and
+  libnvme.
+
 * `nvme disconnect-all` with no options no longer disconnects every
   fabric controller. It now only disconnects controllers with no
   recorded owner in the new ownership registry. A
