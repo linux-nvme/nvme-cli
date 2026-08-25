@@ -345,12 +345,7 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 			return err;
 	} else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
 				       NVME_SC_INVALID_FIELD)) {
-		/*
-		 * Ignore the invalid field error and skip get_pif_sts().
-		 * Keep the I/O commands behavior same as before.
-		 * Since the error returned by drives unsupported.
-		 */
-		return NVME_SC_INVALID_FIELD;
+		return err;
 	}
 
 	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
@@ -407,12 +402,7 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 			return err;
 	} else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
 				       NVME_SC_INVALID_FIELD)) {
-		/*
-		 * Ignore the invalid field error and skip get_pif_sts().
-		 * Keep the I/O commands behavior same as before.
-		 * Since the error returned by drives unsupported.
-		 */
-		return NVME_SC_INVALID_FIELD;
+		return err;
 	}
 
 	err = invalid_tags(lbst, ilbrt, sts, pif);
@@ -530,7 +520,7 @@ static int write_zeroes(int argc, char **argv,
 
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
 			   cfg.lbatm);
-	if (err && err != NVME_SC_INVALID_FIELD)
+	if (err)
 		return err;
 
 	err = libnvme_exec_io_passthru(hdl, &cmd);
@@ -869,7 +859,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
 		cfg.lbatm);
-	if (err != 0 && err != NVME_SC_INVALID_FIELD)
+	if (err)
 		return err;
 	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
@@ -1248,7 +1238,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (pi_available) {
 		err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 			cfg.lbat, cfg.lbatm);
-		if (err && err != NVME_SC_INVALID_FIELD)
+		if (err)
 			return err;
 	}
 	gettimeofday(&start_time, NULL);
@@ -1390,7 +1380,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		cfg.block_count, control, 0, NULL, 0, NULL, 0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 		cfg.lbat, cfg.lbatm);
-	if (err != 0 && err != NVME_SC_INVALID_FIELD)
+	if (err)
 		return err;
 	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
