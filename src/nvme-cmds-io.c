@@ -322,6 +322,16 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	lbs = 1 << ns->lbaf[lba_index].ds;
 	ms = le16_to_cpu(ns->lbaf[lba_index].ms);
+	/*
+	 * Conservative fallback: if Identify NVM CS NS below fails for any
+	 * reason other than Invalid Field, we return early with PI simply
+	 * unavailable, and this is the size submit_io() will use. For an
+	 * extended-LBA namespace the metadata is always part of the
+	 * transfer, so publish the full size now; the PRACT exception below
+	 * can only shrink it once PI info actually comes back.
+	 */
+	*logical_block_size = lbs + (NVME_FLBAS_META_EXT(ns->flbas) ? ms : 0);
+	*metadata_size = ms;
 
 	nvm_ns = libnvme_alloc(sizeof(*nvm_ns));
 	if (!nvm_ns)
@@ -1124,7 +1134,25 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	} else {
 		err = get_pi_info(hdl, cfg.nsid, cfg.prinfo,
 			cfg.ilbrt, cfg.lbst, &logical_block_size, &ms);
-		pi_available = err == 0;
+		switch (err) {
+		case 0:
+			pi_available = true;
+			break;
+		case -ENOMEM:
+			/* Could not even allocate the Identify buffer. */
+		case -ECLI_IDENTIFY_NS_FAILED:
+			/* Base Identify Namespace failed: no logical block size. */
+		case -ECLI_INVALID_TAGS:
+			/* Reference/storage tag is invalid for this PI format. */
+		case -ECLI_INVALID_PI_FORMAT:
+			/* Namespace's reported PI format is self-inconsistent. */
+			return err;
+		default:
+			/* Identify NVM CS NS failed/unsupported: PI unavailable. */
+			nvme_show_err(err, "identify NVM CS NS: continuing without protection information");
+			pi_available = false;
+			break;
+		}
 	}
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
@@ -1220,7 +1248,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (pi_available) {
 		err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 			cfg.lbat, cfg.lbatm);
-		if (err)
+		if (err && err != NVME_SC_INVALID_FIELD)
 			return err;
 	}
 	gettimeofday(&start_time, NULL);

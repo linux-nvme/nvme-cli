@@ -88,5 +88,11 @@ if python3.found()
              args: [files('nvme_pif_sts_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
+
+        test('nvme-cli - init-pi-tags-cli',
+             python3,
+             args: [files('nvme_init_pi_tags_test.py'), nvme_exe, mock_nvme_lib],
+             env: cli_test_env,
+             depends: [nvme_exe, mock_nvme_lib])
     endif
 endif
