@@ -1965,6 +1965,14 @@ static int nvme_discovery_log(struct libnvme_ctrl *ctrl,
 		if (numrec == 0)
 			break;
 
+		if (numrec > (SIZE_MAX - sizeof(*log)) / sizeof(*log->entries)) {
+			libnvme_msg(ctx, LIBNVME_LOG_INFO,
+				 "%s: don't trust record count %" PRIu64 "\n",
+				 name, numrec);
+			err = -EINVAL;
+			goto out_free_log;
+		}
+
 		libnvme_free(log);
 		entries_size = sizeof(*log->entries) * numrec;
 		log = libnvme_alloc(sizeof(*log) + entries_size);
