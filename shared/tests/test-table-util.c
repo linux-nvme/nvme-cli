@@ -258,6 +258,8 @@ static bool test_multi_type_and_centered(void)
 	/* Row A: every value centered, exercising every value type. */
 	ra = shr_table_get_row_id(t);
 	pass &= check_bool("row A id is non-negative", ra >= 0);
+	if (ra < 0)
+		return pass;
 	shr_table_set_value_str(t, 0, ra, "abc", CENTERED);
 	shr_table_set_value_int(t, 1, ra, -5, CENTERED);
 	shr_table_set_value_unsigned(t, 2, ra, 7, CENTERED);
@@ -270,6 +272,8 @@ static bool test_multi_type_and_centered(void)
 	/* Row B: mix of left/right alignment, same set of types. */
 	rb = shr_table_get_row_id(t);
 	pass &= check_bool("row B id is non-negative", rb >= 0);
+	if (rb < 0)
+		return pass;
 	shr_table_set_value_str(t, 0, rb, "xyz", LEFT);
 	shr_table_set_value_int(t, 1, rb, 42, RIGHT);
 	shr_table_set_value_unsigned(t, 2, rb, 3, LEFT);
