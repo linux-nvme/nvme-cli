@@ -126,11 +126,15 @@ if ! "${BUILDDIR}/nvme" utils dump-command-metadata > "${BUILDDIR}/metadata.json
     exit 1
 fi
 
-./completions/generate-completions.py \
+if ! ./completions/generate-completions.py \
     --bash completions/bash-nvme-completion.sh \
     --zsh completions/_nvme \
     --powershell completions/nvme-completion.ps1 \
-    < "${BUILDDIR}/metadata.json"
+    < "${BUILDDIR}/metadata.json"; then
+    echo "release.sh: failed to generate completions" >&2
+    rm -rf -- "${BUILDDIR}"
+    exit 1
+fi
 rm -rf -- "${BUILDDIR}"
 
 if [[ -n $(git status -s -- completions/bash-nvme-completion.sh completions/_nvme completions/nvme-completion.ps1) ]]; then
