@@ -142,6 +142,8 @@ int main()
 			}
 		}
 	}
+
+	libnvme_free_global_ctx(ctx);
 	return 0;
 }
 
