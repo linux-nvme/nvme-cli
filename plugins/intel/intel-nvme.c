@@ -1352,10 +1352,10 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	int err, output, i, j, count = 0, core_num = 1;
 	struct libnvme_passthru_cmd cmd;
 	struct intel_cd_log cdlog;
-	struct intel_vu_log *intel = malloc(sizeof(struct intel_vu_log));
 	struct intel_vu_nlog *intel_nlog = (struct intel_vu_nlog *)buf;
-	struct intel_assert_dump *ad = (struct intel_assert_dump *) intel->reserved;
-	struct intel_event_header *ehdr = (struct intel_event_header *)intel->reserved;
+	struct intel_assert_dump *ad;
+	struct intel_event_header *ehdr;
+	__cleanup_free struct intel_vu_log *intel = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -1392,10 +1392,15 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 		OPT_FLAG("verbose-nlog", 'V', &cfg.verbose,      verbose));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		free(intel);
+	if (err)
 		return err;
-	}
+
+	intel = malloc(sizeof(*intel));
+	if (!intel)
+		return -ENOMEM;
+
+	ad = (struct intel_assert_dump *)intel->reserved;
+	ehdr = (struct intel_event_header *)intel->reserved;
 
 	if (cfg.log > 2 || cfg.core > 4 || cfg.lnum > 255) {
 		err = -EINVAL;
@@ -1526,7 +1531,6 @@ out:
 		nvme_show_verbose_result("Successfully wrote log to %s", cfg.file);
 	close(output);
 out_free:
-	free(intel);
 	return err;
 }
 
