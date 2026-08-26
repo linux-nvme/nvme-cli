@@ -108,22 +108,55 @@ static int excl_delete(int argc, char **argv, struct command *acmd,
 	return ret;
 }
 
-static void print_list_name(const char *name, void *user_data __attribute__((unused)))
+struct entry_print_ctx {
+	struct libnvme_global_ctx *ctx;
+	unsigned int count;
+};
+
+/*
+ * An entry that fails validation can never match anything, so say so: a typo
+ * in a hand-edited list is otherwise invisible.  stdout is flushed first
+ * because at -v the validator logs the reason to stderr.
+ */
+static void print_entry(const char *entry, void *user_data)
 {
-	printf("%s\n", name);
+	struct entry_print_ctx *pc = user_data;
+	bool valid;
+
+	pc->count++;
+	fflush(stdout);
+	valid = libnvmf_exclusion_entry_valid(pc->ctx, entry);
+	printf("  %s%s\n", entry, valid ? "" : "  # invalid: never matches");
 }
 
-static void print_entry(const char *entry, void *user_data __attribute__((unused)))
+/* @name is NULL for the main hand-edited list. */
+static void print_one_list(struct libnvme_global_ctx *ctx, const char *name)
 {
-	printf("  %s\n", entry);
+	struct entry_print_ctx pc = { .ctx = ctx };
+	int ret;
+
+	printf("%s\n", name ? name : "(default)");
+
+	ret = libnvmf_exclusion_entry_for_each(ctx, name, print_entry, &pc);
+	if (ret && ret != -ENOENT)
+		nvme_show_error("list failed: %s", libnvme_strerror(-ret));
+	else if (!pc.count)
+		printf("  (empty)\n");
+}
+
+static void print_named_list(const char *name, void *user_data)
+{
+	printf("\n");
+	print_one_list(user_data, name);
 }
 
 static int excl_list(int argc, char **argv, struct command *acmd,
 		     struct plugin *plugin)
 {
 	const char *desc = "List exclusion lists, or entries within a named list.";
-	const char *name_help = "exclusion list name (omit to list all lists)";
+	const char *name_help = "exclusion list name (omit to list every list)";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	struct entry_print_ctx pc = { 0 };
 	int ret;
 
 	struct config {
@@ -142,17 +175,23 @@ static int excl_list(int argc, char **argv, struct command *acmd,
 		return ret;
 
 	if (!cfg.name) {
-		ret = libnvmf_exclusion_list_for_each(ctx, print_list_name, NULL);
+		print_one_list(ctx, NULL);
+		ret = libnvmf_exclusion_list_for_each(ctx, print_named_list,
+						      ctx);
 		if (ret)
-			nvme_show_error("list failed: %s", libnvme_strerror(-ret));
+			nvme_show_error("list failed: %s",
+					libnvme_strerror(-ret));
 		return ret;
 	}
 
-	ret = libnvmf_exclusion_entry_for_each(ctx, cfg.name, print_entry, NULL);
+	pc.ctx = ctx;
+	ret = libnvmf_exclusion_entry_for_each(ctx, cfg.name, print_entry, &pc);
 	if (ret == -ENOENT)
 		nvme_show_error("exclusion list '%s' not found", cfg.name);
 	else if (ret)
 		nvme_show_error("list failed: %s", libnvme_strerror(-ret));
+	else if (!pc.count)
+		printf("  (empty)\n");
 	return ret;
 }
 

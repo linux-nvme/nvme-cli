@@ -12,9 +12,15 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Without --name, print the name of every named exclusion list under
-/etc/nvme/exclusions.conf.d/.  With --name, print the entries contained
-in that one list.
+Without --name, print every exclusion list and its entries: the main
+hand-edited /etc/nvme/exclusions.conf first, shown as '(default)', then
+each named list under /etc/nvme/exclusions.conf.d/.  With --name, print
+the entries of that one list.
+
+An entry that can never match is marked '# invalid: never matches'.  An
+entry is invalid when it uses an unknown key, a token without '=', an
+empty value, or a hostname where the transport requires a numeric
+address.  Add --verbose to log the reason for each one.
 
 This command is read-only and does not require root.
 
@@ -29,7 +35,7 @@ include::global-options.txt[]
 
 EXAMPLES
 --------
-* Show every exclusion list:
+* Show every exclusion list and its entries:
 +
 ------------
 # nvme exclusion list
