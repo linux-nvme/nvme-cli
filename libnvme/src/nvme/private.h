@@ -40,8 +40,9 @@ const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_slots_sysfs_dir(struct libnvme_global_ctx *ctx);
-const char *libnvme_uuid_ibm_filename(void);
-const char *libnvme_dmi_entries_dir(void);
+const char *libnvme_uuid_ibm_filename(struct libnvme_global_ctx *ctx);
+const char *libnvme_dmi_entries_dir(struct libnvme_global_ctx *ctx);
+const char *libnvme_dmi_product_uuid_filename(struct libnvme_global_ctx *ctx);
 
 struct linux_passthru_cmd32 {
 	__u8    opcode;

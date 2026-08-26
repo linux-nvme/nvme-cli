@@ -90,12 +90,13 @@ const char *arg_str(const char * const *strings,
 #define NVMF_HOSTNQN_FILE	SYSCONFDIR "/nvme/hostnqn"
 #define NVMF_HOSTID_FILE	SYSCONFDIR "/nvme/hostid"
 
-static int uuid_from_device_tree(char *system_uuid)
+static int uuid_from_device_tree(struct libnvme_global_ctx *ctx,
+				 char *system_uuid)
 {
 	__cleanup_fd int f = -1;
 	ssize_t len;
 
-	f = open(libnvme_uuid_ibm_filename(), O_RDONLY);
+	f = open(libnvme_uuid_ibm_filename(ctx), O_RDONLY);
 	if (f < 0)
 		return -ENXIO;
 
@@ -148,10 +149,11 @@ static int read_file(char *filename, char *buf, size_t size)
 	return len;
 }
 
-static int uuid_from_dmi_entries(char *system_uuid)
+static int uuid_from_dmi_entries(struct libnvme_global_ctx *ctx,
+				 char *system_uuid)
 {
 	__cleanup_dir DIR *d = NULL;
-	const char *entries_dir = libnvme_dmi_entries_dir();
+	const char *entries_dir = libnvme_dmi_entries_dir(ctx);
 	char filename[PATH_MAX];
 	struct dirent *de;
 	char buf[513] = {0};
@@ -200,19 +202,19 @@ static int uuid_from_dmi_entries(char *system_uuid)
 	return strlen(system_uuid) ? 0 : -ENXIO;
 }
 
-#define PATH_DMI_PROD_UUID  "/sys/class/dmi/id/product_uuid"
-
 /**
  * uuid_from_product_uuid() - Get system UUID from product_uuid
+ * @ctx: Global context, for the sysfs path.
  * @system_uuid: Where to save the system UUID.
  *
  * Return: 0 on success, -ENXIO otherwise.
  */
-static int uuid_from_product_uuid(char *system_uuid)
+static int uuid_from_product_uuid(struct libnvme_global_ctx *ctx,
+				  char *system_uuid)
 {
 	__cleanup_file FILE *stream = NULL;
 
-	stream = fopen(PATH_DMI_PROD_UUID, "re");
+	stream = fopen(libnvme_dmi_product_uuid_filename(ctx), "re");
 	if (!stream)
 		return -ENXIO;
 
@@ -242,6 +244,7 @@ static int uuid_from_product_uuid(char *system_uuid)
 
 /**
  * uuid_from_dmi() - read system UUID
+ * @ctx: Global context, for the sysfs paths.
  * @system_uuid: buffer for the UUID
  *
  * The system UUID can be read from two different locations:
@@ -253,23 +256,26 @@ static int uuid_from_product_uuid(char *system_uuid)
  *
  * Return: 0 on success, negative errno otherwise.
  */
-static int uuid_from_dmi(char *system_uuid)
+static int uuid_from_dmi(struct libnvme_global_ctx *ctx, char *system_uuid)
 {
-	int ret = uuid_from_product_uuid(system_uuid);
+	int ret = uuid_from_product_uuid(ctx, system_uuid);
 	if (ret != 0)
-		ret = uuid_from_dmi_entries(system_uuid);
+		ret = uuid_from_dmi_entries(ctx, system_uuid);
 	return ret;
 }
 
-__shr_public char *libnvmf_generate_hostid(void)
+__shr_public char *libnvmf_generate_hostid(struct libnvme_global_ctx *ctx)
 {
 	int ret;
 	char uuid_str[NVME_UUID_LEN_STRING];
 	unsigned char uuid[NVME_UUID_LEN];
 
-	ret = uuid_from_dmi(uuid_str);
+	if (!ctx)
+		return NULL;
+
+	ret = uuid_from_dmi(ctx, uuid_str);
 	if (ret < 0)
-		ret = uuid_from_device_tree(uuid_str);
+		ret = uuid_from_device_tree(ctx, uuid_str);
 	if (ret < 0) {
 		if (libnvme_random_uuid(uuid) < 0)
 			memset(uuid, 0, NVME_UUID_LEN);
@@ -279,14 +285,21 @@ __shr_public char *libnvmf_generate_hostid(void)
 	return strdup(uuid_str);
 }
 
-__shr_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
+__shr_public char *libnvmf_generate_hostnqn_from_hostid(
+				struct libnvme_global_ctx *ctx, char *hostid)
 {
 	char *hid = NULL;
 	char *hostnqn;
 	int ret;
 
-	if (!hostid)
-		hostid = hid = libnvmf_generate_hostid();
+	if (!ctx)
+		return NULL;
+
+	if (!hostid) {
+		hostid = hid = libnvmf_generate_hostid(ctx);
+		if (!hostid)
+			return NULL;
+	}
 
 	ret = asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", hostid);
 	free(hid);
@@ -294,9 +307,9 @@ __shr_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
 	return (ret < 0) ? NULL : hostnqn;
 }
 
-__shr_public char *libnvmf_generate_hostnqn(void)
+__shr_public char *libnvmf_generate_hostnqn(struct libnvme_global_ctx *ctx)
 {
-	return libnvmf_generate_hostnqn_from_hostid(NULL);
+	return libnvmf_generate_hostnqn_from_hostid(ctx, NULL);
 }
 
 static char *nvmf_read_file(const char *f, int len)
@@ -387,7 +400,7 @@ __shr_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 	 * fails generate one
 	 */
 	if (!hid) {
-		hid = libnvmf_generate_hostid();
+		hid = libnvmf_generate_hostid(ctx);
 		if (!hid)
 			return -ENOMEM;
 
@@ -397,7 +410,7 @@ __shr_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 
 	/* incomplete configuration, thus derive hostnqn from hostid */
 	if (!hnqn) {
-		hnqn = libnvmf_generate_hostnqn_from_hostid(hid);
+		hnqn = libnvmf_generate_hostnqn_from_hostid(ctx, hid);
 		if (!hnqn)
 			return -ENOMEM;
 	}

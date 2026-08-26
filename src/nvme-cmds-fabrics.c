@@ -57,6 +57,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 {
 	const char *desc = "Generate a hostnqn";
 
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *hostnqn = NULL;
 	int err;
 
@@ -66,7 +67,11 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 	if (err)
 		return err;
 
-	hostnqn = libnvmf_generate_hostnqn();
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return -ENOMEM;
+
+	hostnqn = libnvmf_generate_hostnqn(ctx);
 	if (!hostnqn) {
 		nvme_show_error("\"%s\" not supported. Install lib uuid and rebuild.",
 				acmd->name);
@@ -98,7 +103,7 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 
 	hostnqn = libnvmf_read_hostnqn(ctx);
 	if (!hostnqn)
-		hostnqn =  libnvmf_generate_hostnqn();
+		hostnqn =  libnvmf_generate_hostnqn(ctx);
 
 	if (!hostnqn) {
 		nvme_show_error("hostnqn is not available -- use nvme gen-hostnqn");

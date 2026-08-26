@@ -13,17 +13,18 @@
 
 #include "private.h"
 
-__shr_public char *libnvmf_generate_hostid(void)
+__shr_public char *libnvmf_generate_hostid(struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }
 
-__shr_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
+__shr_public char *libnvmf_generate_hostnqn_from_hostid(
+				struct libnvme_global_ctx *ctx, char *hostid)
 {
 	return NULL;
 }
 
-__shr_public char *libnvmf_generate_hostnqn(void)
+__shr_public char *libnvmf_generate_hostnqn(struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }
