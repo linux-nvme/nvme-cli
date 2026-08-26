@@ -40,7 +40,7 @@ static int parse_mctp(const char *devstr, unsigned int *net, uint8_t *eid)
 	return 0;
 }
 
-int find_port(libnvme_mi_ep_t ep, uint8_t *portp, uint16_t *mtup)
+int find_port(struct libnvme_mi_ep *ep, uint8_t *portp, uint16_t *mtup)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	struct nvme_mi_read_port_info port_info;
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 	const char *devstr;
 	uint8_t eid, port;
 	unsigned int net;
-	libnvme_mi_ep_t ep;
+	struct libnvme_mi_ep *ep;
 	DBusError berr;
 	int rc;
 

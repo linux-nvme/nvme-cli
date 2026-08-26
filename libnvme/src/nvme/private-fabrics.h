@@ -63,7 +63,7 @@ struct libnvmf_hooks {
 	int (*connect_leaf)(struct libnvme_global_ctx *ctx,
 			struct libnvmf_context *fctx, struct libnvme_host *h,
 			struct nvmf_disc_log_entry *e,
-			struct libnvme_ctrl_params *params, libnvme_ctrl_t *cp);
+			struct libnvme_ctrl_params *params, struct libnvme_ctrl **cp);
 
 	void *user_data;
 };

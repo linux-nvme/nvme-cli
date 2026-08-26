@@ -91,7 +91,7 @@ __shr_public int libnvme_scan_subsystems(struct libnvme_global_ctx *ctx,
 	return ret;
 }
 
-__shr_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
+__shr_public int libnvme_scan_subsystem_namespaces(struct libnvme_subsystem *s,
 		struct dirent ***ns)
 {
 	int ret;
@@ -117,7 +117,7 @@ __shr_public int libnvme_scan_ctrls(struct libnvme_global_ctx *ctx,
 	return ret;
 }
 
-__shr_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
+__shr_public int libnvme_scan_ctrl_namespace_paths(struct libnvme_ctrl *c,
 		struct dirent ***paths)
 {
 	int ret;
@@ -131,7 +131,7 @@ __shr_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 }
 
 __shr_public int libnvme_scan_ctrl_namespaces(
-		libnvme_ctrl_t c, struct dirent ***ns)
+		struct libnvme_ctrl *c, struct dirent ***ns)
 {
 	int ret;
 
@@ -143,7 +143,7 @@ __shr_public int libnvme_scan_ctrl_namespaces(
 	return ret;
 }
 
-__shr_public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
+__shr_public int libnvme_scan_ns_head_paths(struct libnvme_ns_head *head,
 		struct dirent ***paths)
 {
 	int ret;

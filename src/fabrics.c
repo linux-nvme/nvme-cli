@@ -992,7 +992,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	bool idempotent = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
-	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
+	__cleanup_nvme_ctrl struct libnvme_ctrl *c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
 	struct nvmf_args fa = { 0 };
@@ -1128,12 +1128,12 @@ do_connect:
 	return 0;
 }
 
-static libnvme_ctrl_t lookup_nvme_ctrl(struct libnvme_global_ctx *ctx,
+static struct libnvme_ctrl *lookup_nvme_ctrl(struct libnvme_global_ctx *ctx,
 				    const char *name)
 {
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
 
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
@@ -1151,7 +1151,7 @@ static bool opt_matches(const char *want, const char *have)
 	return !want || (have && !strcmp(want, have));
 }
 
-static bool nvmf_ctrl_matches_args(libnvme_host_t h, libnvme_ctrl_t c,
+static bool nvmf_ctrl_matches_args(struct libnvme_host *h, struct libnvme_ctrl *c,
 				    const struct nvmf_args *fa)
 {
 	return opt_matches(fa->transport, libnvme_ctrl_get_transport(c)) &&
@@ -1169,9 +1169,9 @@ static int nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 	int i = 0;
 	char *n = nqn;
 	char *p;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
 
 	while ((p = strsep(&n, ",")) != NULL) {
 		if (!strlen(p))
@@ -1259,7 +1259,7 @@ static int add_exclusion_subsysnqn(struct libnvme_global_ctx *ctx,
 static int disconnect_by_device(struct libnvme_global_ctx *ctx,
 		char *device,  bool exclude)
 {
-	libnvme_ctrl_t c;
+	struct libnvme_ctrl *c;
 	char *p;
 	int err;
 
@@ -1288,9 +1288,9 @@ static int disconnect_by_device(struct libnvme_global_ctx *ctx,
 static int disconnect_by_args(struct libnvme_global_ctx *ctx,
 		const struct nvmf_args *fa, bool exclude)
 {
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
 	int err, i = 0;
 
 	libnvme_for_each_host(ctx, h) {
@@ -1424,7 +1424,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 /* disconnect-all policy: should controller @c be torn down? */
 static bool disconnect_all_match(struct libnvme_global_ctx *ctx,
-				 libnvme_ctrl_t c, const char *transport,
+				 struct libnvme_ctrl *c, const char *transport,
 				 const char *owner, bool force)
 {
 	if (transport && strcmp(transport, libnvme_ctrl_get_transport(c)))
@@ -1447,9 +1447,9 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	const char *owner_help = "disconnect only controllers owned by NAME";
 	const char *force_help = "disconnect all controllers regardless of ownership";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
 	int ret;
 
 	struct config {
@@ -1606,7 +1606,7 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 	return 0;
 }
 
-static int dim_operation(libnvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
+static int dim_operation(struct libnvme_ctrl *c, enum nvmf_dim_tas tas, const char *name)
 {
 	static const char * const task[] = {
 		[NVMF_DIM_TAS_REGISTER]   = "register",
@@ -1635,7 +1635,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 {
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	enum nvmf_dim_tas tas;
-	libnvme_ctrl_t c;
+	struct libnvme_ctrl *c;
 	char *p;
 	int ret;
 
@@ -1689,8 +1689,8 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 	}
 
 	if (cfg.nqn) {
-		libnvme_host_t h;
-		libnvme_subsystem_t s;
+		struct libnvme_host *h;
+		struct libnvme_subsystem *s;
 		char *n = cfg.nqn;
 
 		while ((p = strsep(&n, ",")) != NULL) {

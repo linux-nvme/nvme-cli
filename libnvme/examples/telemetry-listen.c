@@ -31,11 +31,11 @@
 #include "nvme/tree.h"
 
 struct events {
-	libnvme_ctrl_t c;
+	struct libnvme_ctrl *c;
 	int uevent_fd;
 };
 
-static int open_uevent(libnvme_ctrl_t c)
+static int open_uevent(struct libnvme_ctrl *c)
 {
 	char buf[0x1000];
 	if (snprintf(buf, sizeof(buf), "%s/uevent", libnvme_ctrl_get_sysfs_dir(c)) < 0)
@@ -43,7 +43,7 @@ static int open_uevent(libnvme_ctrl_t c)
 	return open(buf, O_RDONLY);
 }
 
-static void save_telemetry(libnvme_ctrl_t c)
+static void save_telemetry(struct libnvme_ctrl *c)
 {
 	char buf[0x1000];
 	size_t log_size;
@@ -81,7 +81,7 @@ static void save_telemetry(libnvme_ctrl_t c)
 	free(log);
 }
 
-static void check_telemetry(libnvme_ctrl_t c, int ufd)
+static void check_telemetry(struct libnvme_ctrl *c, int ufd)
 {
 	char buf[0x1000] = { 0 };
 	char *p, *ptr;
@@ -137,9 +137,9 @@ int main()
 	int i = 0;
 
 	struct libnvme_global_ctx *ctx;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
-	libnvme_host_t h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
+	struct libnvme_host *h;
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)

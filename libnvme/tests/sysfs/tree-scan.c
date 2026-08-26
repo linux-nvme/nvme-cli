@@ -74,7 +74,7 @@ static int parse_set_options(struct libnvme_global_ctx *ctx, char *arg)
 	return 0;
 }
 
-static void print_ctrl(libnvme_ctrl_t c, const char *indent)
+static void print_ctrl(struct libnvme_ctrl *c, const char *indent)
 {
 	const char *value;
 
@@ -97,10 +97,10 @@ static void print_ctrl(libnvme_ctrl_t c, const char *indent)
 	printf("\n");
 }
 
-static unsigned int print_subsys_multipath(libnvme_subsystem_t s)
+static unsigned int print_subsys_multipath(struct libnvme_subsystem *s)
 {
-	libnvme_ns_t n;
-	libnvme_path_t p;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
 	unsigned int i = 0;
 
 	libnvme_subsystem_for_each_ns(s, n) {
@@ -128,10 +128,10 @@ static unsigned int print_subsys_multipath(libnvme_subsystem_t s)
 	return i;
 }
 
-static void print_subsys_non_multipath(libnvme_subsystem_t s)
+static void print_subsys_non_multipath(struct libnvme_subsystem *s)
 {
-	libnvme_ctrl_t c;
-	libnvme_ns_t n;
+	struct libnvme_ctrl *c;
+	struct libnvme_ns *n;
 
 	libnvme_subsystem_for_each_ctrl(s, c) {
 		libnvme_ctrl_for_each_ns(c, n) {
@@ -142,7 +142,7 @@ static void print_subsys_non_multipath(libnvme_subsystem_t s)
 	}
 }
 
-static void print_subsys(libnvme_subsystem_t s)
+static void print_subsys(struct libnvme_subsystem *s)
 {
 	printf("  subsystem %s %s\n", libnvme_subsystem_get_name(s),
 	       libnvme_subsystem_get_subsysnqn(s));
@@ -153,10 +153,10 @@ static void print_subsys(libnvme_subsystem_t s)
 
 static void print_tree(struct libnvme_global_ctx *ctx)
 {
-	libnvme_host_t h;
+	struct libnvme_host *h;
 
 	libnvme_for_each_host(ctx, h) {
-		libnvme_subsystem_t s;
+		struct libnvme_subsystem *s;
 		const char *hostid, *hostsymname;
 
 		printf("host %s", libnvme_host_get_hostnqn(h));

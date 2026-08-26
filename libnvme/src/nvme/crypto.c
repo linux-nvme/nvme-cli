@@ -1277,7 +1277,7 @@ static int __nvme_import_tls_key(struct libnvme_global_ctx *ctx, long keyring_id
 			      key_data, key_len, keyp);
 }
 
-int __libnvmf_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
+int __libnvmf_import_keys_from_config(struct libnvme_host *h, struct libnvme_ctrl *c,
 		long *keyring_id, long *key_id)
 {
 	const char *hostnqn = libnvme_host_get_hostnqn(h);
@@ -1445,7 +1445,7 @@ __shr_public int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx,
 	return -ENOTSUP;
 }
 
-int __libnvmf_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
+int __libnvmf_import_keys_from_config(struct libnvme_host *h, struct libnvme_ctrl *c,
 				   long *keyring_id, long *key_id)
 {
 	*keyring_id = 0;

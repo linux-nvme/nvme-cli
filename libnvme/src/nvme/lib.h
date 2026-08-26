@@ -172,11 +172,6 @@ libnvme_fd_t libnvme_transport_handle_get_fd(
  * for MI-type transport handles (check with libnvme_transport_handle_is_mi
  * first).
  *
- * Returns the same type mi.h's API names libnvme_mi_ep_t, spelled here as
- * the bare struct pointer: lib.h is core and builds without the optional
- * MI layer (libnvme-mi.h), so it cannot use a typedef defined there. The
- * two spellings are the same type.
- *
  * Return: the MI endpoint, or NULL if the handle is not an MI handle.
  */
 struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(

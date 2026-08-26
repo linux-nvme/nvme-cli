@@ -111,7 +111,7 @@ __shr_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
 #ifdef CONFIG_MI
-	libnvme_mi_ep_t ep, tmp;
+	struct libnvme_mi_ep *ep, *tmp;
 #endif
 
 	if (!ctx)

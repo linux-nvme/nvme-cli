@@ -1530,7 +1530,7 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		     const char *hostid = NULL,
 		     const char *hostkey = NULL,
 		     const char *hostsymname = NULL) {
-		libnvme_host_t h;
+		struct libnvme_host *h;
 		int err;
 
 		if (!hostnqn)

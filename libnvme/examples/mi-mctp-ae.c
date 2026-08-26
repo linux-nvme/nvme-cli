@@ -55,7 +55,7 @@ static void print_event_info(struct libnvme_mi_event *event)
 	}
 }
 
-enum libnvme_mi_aem_handler_next_action aem_handler(libnvme_mi_ep_t ep, size_t num_events, void *userdata)
+enum libnvme_mi_aem_handler_next_action aem_handler(struct libnvme_mi_ep *ep, size_t num_events, void *userdata)
 {
 	struct app_userdata *data = (struct app_userdata *) userdata;
 
@@ -80,7 +80,7 @@ enum libnvme_mi_aem_handler_next_action aem_handler(libnvme_mi_ep_t ep, size_t n
 int main(int argc, char **argv)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_mi_ep_t ep;
+	struct libnvme_mi_ep *ep;
 	uint8_t eid = 0;
 	int rc = 0, net = 0;
 	struct libnvme_mi_aem_config aem_config = {0};

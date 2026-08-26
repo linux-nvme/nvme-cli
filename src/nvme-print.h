@@ -37,10 +37,10 @@ enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_MULTIPATH,
 };
 
-static inline bool nvme_is_multipath(libnvme_subsystem_t s)
+static inline bool nvme_is_multipath(struct libnvme_subsystem *s)
 {
-	libnvme_ns_t n;
-	libnvme_path_t p;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
 
 	libnvme_subsystem_for_each_ns(s, n)
 		libnvme_namespace_for_each_path(n, p)
@@ -51,7 +51,7 @@ static inline bool nvme_is_multipath(libnvme_subsystem_t s)
 
 static inline bool subsystem_iopolicy_filter(const char *name, void *arg)
 {
-	libnvme_subsystem_t s = arg;
+	struct libnvme_subsystem *s = arg;
 	const char *iopolicy;
 
 	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
@@ -176,7 +176,7 @@ struct print_ops {
 	void (*pull_model_ddc_req_log)(struct nvme_pull_model_ddc_req_log *log);
 
 	/* libnvme tree print functions */
-	void (*list_item)(libnvme_ns_t n, struct shr_table *t);
+	void (*list_item)(struct libnvme_ns *n, struct shr_table *t);
 	void (*list_items)(struct libnvme_global_ctx *ctx);
 	void (*print_nvme_subsystem_list)(struct libnvme_global_ctx *ctx, bool show_ana);
 	void (*topology_ctrl)(struct libnvme_global_ctx *ctx);
@@ -191,7 +191,7 @@ struct print_ops {
 	void (*top)(int refresh_interval);
 
 	/* status and error messages */
-	void (*connect_msg)(libnvme_ctrl_t c);
+	void (*connect_msg)(struct libnvme_ctrl *c);
 	void (*show_message)(bool error, const char *msg, va_list ap);
 	void (*show_perror)(const char *msg, va_list ap);
 	void (*show_status)(int status);
@@ -375,7 +375,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 				nvme_print_flags_t flags);
 void json_nvme_finish_zone_list(__u64 nr_zones, 
 	struct json_object *zone_list);
-void nvme_show_list_item(libnvme_ns_t n, struct shr_table *t);
+void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t);
 
 void nvme_show_fdp_configs(struct nvme_fdp_config_log *configs, size_t len,
 		nvme_print_flags_t flags);
@@ -390,7 +390,7 @@ void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 
 void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
 			     uint64_t numrec, nvme_print_flags_t flags);
-void nvme_show_connect_msg(libnvme_ctrl_t c, nvme_print_flags_t flags);
+void nvme_show_connect_msg(struct libnvme_ctrl *c, nvme_print_flags_t flags);
 void nvme_show_config_conn_list(struct libnvmf_config *config,
 				 nvme_print_flags_t flags);
 
@@ -433,8 +433,8 @@ const char *nvme_power_measurement_type_to_string(__u8 pmt);
 const char *nvme_power_measurement_action_to_string(__u8 act);
 const char *nvme_ipmsr_srs_to_string(__u8 srs);
 
-void nvme_dev_full_path(libnvme_ns_t n, char *path, size_t len);
-void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len);
+void nvme_dev_full_path(struct libnvme_ns *n, char *path, size_t len);
+void nvme_generic_full_path(struct libnvme_ns *n, char *path, size_t len);
 void nvme_show_message(bool error, const char *msg, ...);
 void nvme_show_verbose_message(const char *msg, ...);
 void nvme_show_perror(const char *msg, ...);

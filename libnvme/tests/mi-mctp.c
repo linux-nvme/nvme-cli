@@ -238,7 +238,7 @@ static struct __mi_mctp_socket_ops ops = {
 };
 
 /* tests */
-static void test_rx_err(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_rx_err(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -254,7 +254,7 @@ static int tx_none(struct test_peer *peer, void *buf, size_t len, int sd)
 	return 0;
 }
 
-static void test_tx_none(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_tx_none(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -266,7 +266,7 @@ static void test_tx_none(libnvme_mi_ep_t ep, struct test_peer *peer)
 	shr_assert(rc != 0);
 }
 
-static void test_tx_err(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_tx_err(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -277,7 +277,7 @@ static void test_tx_err(libnvme_mi_ep_t ep, struct test_peer *peer)
 	shr_assert(rc != 0);
 }
 
-static void test_tx_short(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_tx_short(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -294,7 +294,7 @@ static int poll_fn_err(struct test_peer *peer, struct pollfd *fds,
 	return -1;
 }
 
-static void test_poll_err(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_poll_err(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -305,7 +305,7 @@ static void test_poll_err(libnvme_mi_ep_t ep, struct test_peer *peer)
 	shr_assert(rc != 0);
 }
 
-static void test_read_mi_data(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_read_mi_data(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -317,7 +317,7 @@ static void test_read_mi_data(libnvme_mi_ep_t ep, struct test_peer *peer)
 	shr_assert(rc == 0);
 }
 
-static void test_mi_resp_err(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_resp_err(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -351,7 +351,7 @@ static void setup_unaligned_ctrl_list_resp(struct test_peer *peer)
  * resp->data_len is set to sizeof(list)), but the endpoint will return an
  * unaligned short list.
  */
-static void test_mi_resp_unaligned(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_resp_unaligned(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_ctrl_list list;
 	int rc;
@@ -371,11 +371,11 @@ static void test_mi_resp_unaligned(libnvme_mi_ep_t ep, struct test_peer *peer)
 /* Will call through the xfer/submit API expecting an unaligned list,
  * and get a response of exactly that size.
  */
-static void test_mi_resp_unaligned_expected(libnvme_mi_ep_t ep,
+static void test_mi_resp_unaligned_expected(struct libnvme_mi_ep *ep,
 					    struct test_peer *peer)
 {
 	/* direct access to the raw submit() API */
-	extern int libnvme_mi_submit(libnvme_mi_ep_t ep, struct libnvme_mi_req *req,
+	extern int libnvme_mi_submit(struct libnvme_mi_ep *ep, struct libnvme_mi_req *req,
 		   struct libnvme_mi_resp *resp);
 	struct nvme_mi_mi_resp_hdr resp_hdr;
 	struct nvme_mi_mi_req_hdr req_hdr;
@@ -413,7 +413,7 @@ static void test_mi_resp_unaligned_expected(libnvme_mi_ep_t ep,
 	shr_assert(le16_to_cpu(list.identifier[1]) == 2);
 }
 
-static void test_admin_resp_err(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_admin_resp_err(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -440,7 +440,7 @@ static void test_admin_resp_err(libnvme_mi_ep_t ep, struct test_peer *peer)
  * doublewords), and we need to ensure that an error response is correctly
  * interpreted, including having the MIC extracted from the message.
  */
-static void test_admin_resp_sizes(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_admin_resp_sizes(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -472,7 +472,7 @@ static int poll_fn_timeout_value(struct test_peer *peer, struct pollfd *fds,
 	return 1;
 }
 
-static void test_poll_timeout_value(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_poll_timeout_value(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -494,7 +494,7 @@ static int poll_fn_timeout(struct test_peer *peer, struct pollfd *fds,
 	return 0;
 }
 
-static void test_poll_timeout(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_poll_timeout(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
@@ -546,7 +546,7 @@ static int tx_mpr(struct test_peer *peer, void *buf, size_t len, int sd)
 	return 0;
 }
 
-static void test_mpr_mi(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mpr_mi(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	struct mpr_tx_info tx_info;
@@ -563,7 +563,7 @@ static void test_mpr_mi(libnvme_mi_ep_t ep, struct test_peer *peer)
 	shr_assert(rc == 0);
 }
 
-static void test_mpr_admin(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mpr_admin(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -590,7 +590,7 @@ static void test_mpr_admin(libnvme_mi_ep_t ep, struct test_peer *peer)
 /* We have seen drives that send a MPR response as a full Admin message,
  * rather than a MI message; these have a larger message body
  */
-static void test_mpr_admin_quirked(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mpr_admin_quirked(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -675,7 +675,7 @@ static int tx_fn_mpr_poll(struct test_peer *peer, void *buf, size_t len, int sd)
 }
 
 /* test: correct timeout value used from MPR response */
-static void test_mpr_timeouts(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mpr_timeouts(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	struct mpr_poll_info poll_info;
@@ -703,7 +703,7 @@ static void test_mpr_timeouts(libnvme_mi_ep_t ep, struct test_peer *peer)
 }
 
 /* test: MPR value is limited to the max mpr */
-static void test_mpr_timeout_clamp(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mpr_timeout_clamp(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	struct mpr_poll_info poll_info;
@@ -732,7 +732,7 @@ static void test_mpr_timeout_clamp(libnvme_mi_ep_t ep, struct test_peer *peer)
 }
 
 /* test: MPR value of zero doesn't result in poll with zero timeout */
-static void test_mpr_mprt_zero(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mpr_mprt_zero(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	struct mpr_poll_info poll_info;
@@ -1053,7 +1053,7 @@ static int aem_rcv_enable_fn(struct test_peer *peer, void *buf, size_t len, int 
 	return 0;
 }
 
-enum libnvme_mi_aem_handler_next_action aem_handler(libnvme_mi_ep_t ep, size_t num_events, void *userdata)
+enum libnvme_mi_aem_handler_next_action aem_handler(struct libnvme_mi_ep *ep, size_t num_events, void *userdata)
 {
 	struct aem_rcv_enable_fn_data *fn_data = userdata;
 
@@ -1117,7 +1117,7 @@ enum libnvme_mi_aem_handler_next_action aem_handler(libnvme_mi_ep_t ep, size_t n
 	return NVME_MI_AEM_HNA_ACK;
 }
 
-static void aem_test_aem_api_helper(libnvme_mi_ep_t ep,
+static void aem_test_aem_api_helper(struct libnvme_mi_ep *ep,
 	struct libnvme_mi_aem_config *config, int expected_event_count)
 {
 	struct aem_rcv_enable_fn_data *fn_data =
@@ -1145,7 +1145,7 @@ static void aem_test_aem_api_helper(libnvme_mi_ep_t ep,
 	shr_assert(libnvme_mi_aem_get_next_event(ep) == NULL);
 }
 
-static void aem_test_aem_disable_helper(libnvme_mi_ep_t ep,
+static void aem_test_aem_disable_helper(struct libnvme_mi_ep *ep,
 	struct aem_rcv_enable_fn_data *fn_data)
 {
 	memcpy(&fn_data->ep_enabled_map, &fn_data->host_enabled_map,
@@ -1155,7 +1155,7 @@ static void aem_test_aem_disable_helper(libnvme_mi_ep_t ep,
 	shr_assert(libnvme_mi_aem_disable(ep) == 0);
 }
 
-static void test_mi_aem_ep_based_failure_helper(libnvme_mi_ep_t ep,
+static void test_mi_aem_ep_based_failure_helper(struct libnvme_mi_ep *ep,
 	enum aem_failure_condition fc, struct test_peer *peer)
 {
 	struct aem_rcv_enable_fn_data fn_data = {0};
@@ -1201,7 +1201,7 @@ static void test_mi_aem_ep_based_failure_helper(libnvme_mi_ep_t ep,
 }
 
 /* test: Check validation of endpoint messages in various stages of aem handling */
-static void test_mi_aem_ep_based_failure_conditions(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_ep_based_failure_conditions(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	test_mi_aem_ep_based_failure_helper(ep, AEM_FC_BAD_GET_CONFIG_HEADER_LEN, peer);
 	test_mi_aem_ep_based_failure_helper(ep, AEM_FC_BAD_GET_CONFIG_TOTAL_LEN, peer);
@@ -1215,7 +1215,7 @@ static void test_mi_aem_ep_based_failure_conditions(libnvme_mi_ep_t ep, struct t
 }
 
 /* test: Check aem process logic when API used improperly */
-static void test_mi_aem_enable_invalid_usage(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_enable_invalid_usage(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct libnvme_mi_aem_config config = {0};
 
@@ -1244,7 +1244,7 @@ static void test_mi_aem_enable_invalid_usage(libnvme_mi_ep_t ep, struct test_pee
 }
 
 /* test: Check aem process logic when API used improperly */
-static void test_mi_aem_process_invalid_usage(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_process_invalid_usage(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	//Without calling enable first
 	shr_assert(libnvme_mi_aem_process(ep, NULL) == -1);
@@ -1254,12 +1254,12 @@ static void test_mi_aem_process_invalid_usage(libnvme_mi_ep_t ep, struct test_pe
 }
 
 /* test: Check aem disable logic when API used improperly */
-static void test_mi_aem_disable_invalid_usage(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_disable_invalid_usage(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	shr_assert(libnvme_mi_aem_disable(NULL) == -1);
 }
 
-static void test_mi_aem_get_enabled_invalid_usage(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_get_enabled_invalid_usage(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct libnvme_mi_aem_enabled_map map;
 
@@ -1268,7 +1268,7 @@ static void test_mi_aem_get_enabled_invalid_usage(libnvme_mi_ep_t ep, struct tes
 }
 
 /* test: Check aem get enabled logic*/
-static void test_mi_aem_get_enabled(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_get_enabled(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	//When no events enabled on Endpoint
 	struct aem_rcv_enable_fn_data fn_data = {0};
@@ -1287,7 +1287,7 @@ static void test_mi_aem_get_enabled(libnvme_mi_ep_t ep, struct test_peer *peer)
 
 
 /* test: Check aem disable logic when called without an enable */
-static void test_mi_aem_disable_no_enable(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_disable_no_enable(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	//When no events enabled on Endpoint
 	struct aem_rcv_enable_fn_data fn_data = {0};
@@ -1304,7 +1304,7 @@ static void test_mi_aem_disable_no_enable(libnvme_mi_ep_t ep, struct test_peer *
 }
 
 /* test: Check aem enable logic with ack carrying events */
-static void test_mi_aem_api_w_ack_events(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_api_w_ack_events(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct aem_rcv_enable_fn_data fn_data = {0};
 	struct libnvme_mi_aem_config config = {0};
@@ -1350,7 +1350,7 @@ static void test_mi_aem_api_w_ack_events(libnvme_mi_ep_t ep, struct test_peer *p
 }
 
 /* test: Check aem enable logic */
-static void test_mi_aem_api_simple(libnvme_mi_ep_t ep, struct test_peer *peer)
+static void test_mi_aem_api_simple(struct libnvme_mi_ep *ep, struct test_peer *peer)
 {
 	struct aem_rcv_enable_fn_data fn_data = {0};
 	struct libnvme_mi_aem_config config = {0};
@@ -1410,7 +1410,7 @@ static void test_mi_aem_api_simple(libnvme_mi_ep_t ep, struct test_peer *peer)
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
-	void (*fn)(libnvme_mi_ep_t, struct test_peer *);
+	void (*fn)(struct libnvme_mi_ep *, struct test_peer *);
 } tests[] = {
 	DEFINE_TEST(rx_err),
 	DEFINE_TEST(tx_none),
@@ -1442,7 +1442,7 @@ struct test {
 	DEFINE_TEST(mi_aem_ep_based_failure_conditions),
 };
 
-static void run_test(struct test *test, FILE *logfd, libnvme_mi_ep_t ep,
+static void run_test(struct test *test, FILE *logfd, struct libnvme_mi_ep *ep,
 		     struct test_peer *peer)
 {
 	printf("Running test %s...", test->name);
@@ -1455,7 +1455,7 @@ static void run_test(struct test *test, FILE *logfd, libnvme_mi_ep_t ep,
 int main(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_mi_ep_t ep;
+	struct libnvme_mi_ep *ep;
 	unsigned int i;
 	FILE *fd;
 

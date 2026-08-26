@@ -25,7 +25,7 @@ __shr_public int libnvme_scan_subsystems(
 }
 
 __shr_public int libnvme_scan_subsystem_namespaces(
-		__shr_unused libnvme_subsystem_t s,
+		__shr_unused struct libnvme_subsystem *s,
 		__shr_unused struct dirent ***ns)
 {
 	return 0;
@@ -81,14 +81,14 @@ enomem:
 }
 
 __shr_public int libnvme_scan_ctrl_namespace_paths(
-		__shr_unused libnvme_ctrl_t c,
+		__shr_unused struct libnvme_ctrl *c,
 		__shr_unused struct dirent ***paths)
 {
 	return 0;
 }
 
 __shr_public int libnvme_scan_ctrl_namespaces(
-		__shr_unused libnvme_ctrl_t c,
+		__shr_unused struct libnvme_ctrl *c,
 		__shr_unused struct dirent ***ns)
 {
 	struct dirent **entries = NULL;
@@ -145,7 +145,7 @@ enomem:
 }
 
 __shr_public int libnvme_scan_ns_head_paths(
-		__shr_unused libnvme_ns_head_t head,
+		__shr_unused struct libnvme_ns_head *head,
 		__shr_unused struct dirent ***paths)
 {
 	return 0;

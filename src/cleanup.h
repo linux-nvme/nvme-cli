@@ -24,7 +24,7 @@ static inline void cleanup_nvme_transport_handle(struct libnvme_transport_handle
 }
 #define __cleanup_nvme_transport_handle __cleanup(cleanup_nvme_transport_handle)
 
-static inline void cleanup_nvme_ctrl(libnvme_ctrl_t *__p)
+static inline void cleanup_nvme_ctrl(struct libnvme_ctrl **__p)
 {
 	libnvme_free_ctrl(*__p);
 }

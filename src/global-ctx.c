@@ -70,7 +70,7 @@ static void setup_transport_handle(struct libnvme_global_ctx *ctx,
 
 #ifdef CONFIG_MI
 	if (libnvme_transport_handle_is_mi(hdl)) {
-		libnvme_mi_ep_t ep = libnvme_transport_handle_get_mi_ep(hdl);
+		struct libnvme_mi_ep *ep = libnvme_transport_handle_get_mi_ep(hdl);
 		if (ep) {
 			libnvme_mi_ep_set_submit_entry(ep, nvme_mi_submit_entry);
 			libnvme_mi_ep_set_submit_exit(ep, nvme_mi_submit_exit);

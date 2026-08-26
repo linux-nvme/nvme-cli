@@ -636,7 +636,7 @@ __shr_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
  * exclusion built from a controller applies regardless of which host persona
  * is connecting.
  */
-static int excl_entry_from_ctrl(libnvme_ctrl_t c, char *buf, size_t len)
+static int excl_entry_from_ctrl(struct libnvme_ctrl *c, char *buf, size_t len)
 {
 	int n = 0;
 

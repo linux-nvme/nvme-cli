@@ -76,12 +76,12 @@ void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
 }
 
 void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
+		struct libnvme_ctrl *c)
 {
 }
 
-libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		const struct libnvme_ctrl_params *params, libnvme_ctrl_t p)
+struct libnvme_ctrl *libnvme_ctrl_find(struct libnvme_subsystem *s,
+		const struct libnvme_ctrl_params *params, struct libnvme_ctrl *p)
 {
 #ifndef _WIN32
 	struct libnvme_ctrl *c;
@@ -100,7 +100,7 @@ libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 	return NULL;
 }
 
-__shr_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
+__shr_public char *libnvme_ctrl_owner(struct libnvme_ctrl *c)
 {
 	return NULL;
 }

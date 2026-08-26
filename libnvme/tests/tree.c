@@ -36,7 +36,7 @@
 static bool test_host_dedup(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h1, h2, h3;
+	struct libnvme_host *h1, *h2, *h3;
 	bool pass = true;
 
 	printf("test_host_dedup:\n");
@@ -81,7 +81,7 @@ static bool test_host_dedup(void)
 static bool test_hostid_from_hostnqn(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h;
+	struct libnvme_host *h;
 	const char *hostid;
 	bool pass = true;
 
@@ -116,7 +116,7 @@ static bool test_hostid_from_hostnqn(void)
 static bool test_host_attrs(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h;
+	struct libnvme_host *h;
 	bool pass = true;
 
 	printf("test_host_attrs:\n");
@@ -157,7 +157,7 @@ static bool test_host_attrs(void)
 static bool test_host_iteration(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h;
+	struct libnvme_host *h;
 	unsigned int count = 0;
 	bool pass = true;
 
@@ -198,8 +198,8 @@ static bool test_host_iteration(void)
 static bool test_subsystem_dedup(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h;
-	libnvme_subsystem_t s1, s2, s3;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s1, *s2, *s3;
 	bool pass = true;
 
 	printf("test_subsystem_dedup:\n");
@@ -247,8 +247,8 @@ static bool test_subsystem_dedup(void)
 static bool test_subsystem_attrs(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
 	bool pass = true;
 
 	printf("test_subsystem_attrs:\n");
@@ -292,8 +292,8 @@ static bool test_subsystem_attrs(void)
 static bool test_subsystem_iteration(void)
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
 	unsigned int count = 0;
 	bool pass = true;
 

@@ -475,7 +475,7 @@ static bool test_traddr_is_hostname(struct libnvme_global_ctx *ctx)
 static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_ctrl_params params = { .transport = "tcp" };
-	libnvme_ctrl_t c;
+	struct libnvme_ctrl *c;
 	bool pass = true, p;
 	int ret;
 

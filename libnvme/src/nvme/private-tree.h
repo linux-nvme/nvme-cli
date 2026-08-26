@@ -54,8 +54,8 @@ char *libnvme_hostid_from_hostnqn(const char *hostnqn);
 char *libnvme_parse_src_addr(struct libnvme_global_ctx *ctx,
 		const char *address, char *src_addr, size_t src_addr_len);
 
-int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
-		const char *path, const char *name, libnvme_ctrl_t *cp);
+int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, struct libnvme_subsystem *s,
+		const char *path, const char *name, struct libnvme_ctrl **cp);
 
 int libnvme_ctrl_scan_namespaces(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl *c);
@@ -64,7 +64,7 @@ int libnvme_ctrl_scan_paths(struct libnvme_global_ctx *ctx,
 			struct libnvme_ctrl *c);
 
 int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c, const char *path, const char *name);
+		struct libnvme_ctrl *c, const char *path, const char *name);
 
 /**
  * libnvme_get_ctrl_transport - Get transport type and address for a controller
@@ -85,12 +85,12 @@ int libnvme_get_ctrl_transport(struct libnvme_global_ctx *ctx,
 		char **transport, char **traddr, char **addr, char **trsvcid,
 		char **host_traddr, char **host_iface);
 
-int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name);
+int libnvme_init_subsystem(struct libnvme_subsystem *s, const char *name);
 
 int libnvme_ns_init(const char *path, struct libnvme_ns *ns);
 
 int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
-		    const char *name, libnvme_ns_t *ns);
+		    const char *name, struct libnvme_ns **ns);
 
 int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
-		const char *sysfs_dir, const char *name, libnvme_ns_t *ns);
+		const char *sysfs_dir, const char *name, struct libnvme_ns **ns);

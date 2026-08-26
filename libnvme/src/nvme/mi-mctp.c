@@ -653,7 +653,7 @@ static const struct libnvme_mi_transport libnvme_mi_transport_mctp = {
 	.aem_purge = libnvme_mi_mctp_aem_purge,
 };
 
-int libnvme_mi_aem_open(libnvme_mi_ep_t ep)
+int libnvme_mi_aem_open(struct libnvme_mi_ep *ep)
 {
 	struct libnvme_mi_transport_mctp *mctp;
 
@@ -676,7 +676,7 @@ int libnvme_mi_aem_open(libnvme_mi_ep_t ep)
 	return 0;
 }
 
-__shr_public libnvme_mi_ep_t libnvme_mi_open_mctp(
+__shr_public struct libnvme_mi_ep *libnvme_mi_open_mctp(
 		struct libnvme_global_ctx *ctx, unsigned int netid, __u8 eid)
 {
 	struct libnvme_mi_transport_mctp *mctp;
@@ -750,7 +750,7 @@ err_close_ep:
 
 static int libnvme_mi_mctp_add(struct libnvme_global_ctx *ctx, unsigned int netid, __u8 eid)
 {
-	libnvme_mi_ep_t ep = NULL;
+	struct libnvme_mi_ep *ep = NULL;
 
 	/* ensure we don't already have an endpoint with the same net/eid. if
 	 * we do, just skip, no need to re-add. */
