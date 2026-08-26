@@ -463,7 +463,7 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		const struct libnvme_ctrl_params *params,
 		struct libnvme_ctrl **cp);
-void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
+void libnvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
 int libnvme_create_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid,

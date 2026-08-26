@@ -1199,7 +1199,7 @@ __shr_public libnvme_path_t libnvme_ctrl_next_path(libnvme_ctrl_t c,
 	return p ? list_next(&c->paths, p, entry) : NULL;
 }
 
-void nvme_deconfigure_ctrl(libnvme_ctrl_t c)
+void libnvme_deconfigure_ctrl(libnvme_ctrl_t c)
 {
 	libnvme_ctrl_release_transport_handle(c);
 	FREE_CTRL_ATTR(c->name);
@@ -1230,7 +1230,7 @@ static void __libnvme_free_ctrl(libnvme_ctrl_t c)
 	libnvme_ctrl_for_each_ns_safe(c, n, _n)
 		__nvme_free_ns(n);
 
-	nvme_deconfigure_ctrl(c);
+	libnvme_deconfigure_ctrl(c);
 
 	FREE_CTRL_ATTR(c->transport);
 	FREE_CTRL_ATTR(c->subsysnqn);
