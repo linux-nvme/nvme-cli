@@ -582,6 +582,10 @@ int libnvmf_context_set_reconnect_policy(struct libnvmf_context *fctx,
  * to NULL. A negative errno return indicates the lookup failed; it is
  * never used to report that no owner exists.
  *
+ * See also: libnvme_set_owner() (lib.h) to declare an orchestrator's own
+ * identity, and libnvmf_registry_retrieve() (registry.h) to read a live
+ * controller's registry entry by device name rather than by TID.
+ *
  * Return: 0 on success (check @owner), negative errno on failure.
  */
 int libnvmf_get_owner_from_tid(struct libnvme_global_ctx *ctx,
