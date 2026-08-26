@@ -173,7 +173,7 @@ __shr_public int libnvme_get_log_dynamic_chunk(
 		 */
 		if (ret < 0 ||
 		    (ret > 0 &&
-		     (ret >> NVME_SCT_SHIFT) <= NVME_SCT_CMD_SPECIFIC)) {
+		     (nvme_status_code_type(ret) <= NVME_SCT_CMD_SPECIFIC))) {
 			xfer_len = (xfer_len / 2) &
 				   ~(__u32)(NVME_LOG_PAGE_PDU_SIZE - 1);
 			if (xfer_len < NVME_LOG_PAGE_PDU_SIZE)
