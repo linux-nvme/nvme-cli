@@ -119,9 +119,9 @@ struct nvme_get_log_args {
 	__u64 *result;
 };
 
-static inline bool nvme_match_devname(char *devname, libnvme_ns_t ns)
+static inline bool nvme_match_devname(char *devname, struct libnvme_ns *ns)
 {
-	libnvme_ctrl_t c = libnvme_ns_get_ctrl(ns);
+	struct libnvme_ctrl *c = libnvme_ns_get_ctrl(ns);
 
 	if (!strcmp(devname, libnvme_ns_get_name(ns)) ||
 	    (c && !strcmp(devname, libnvme_ctrl_get_name(c))) ||
@@ -131,11 +131,11 @@ static inline bool nvme_match_devname(char *devname, libnvme_ns_t ns)
 	return false;
 }
 
-static inline bool nvme_match_device_filter(libnvme_subsystem_t s,
-		libnvme_ctrl_t c, libnvme_ns_t ns, void *f_args)
+static inline bool nvme_match_device_filter(struct libnvme_subsystem *s,
+		struct libnvme_ctrl *c, struct libnvme_ns *ns, void *f_args)
 {
 	char *devname = f_args;
-	libnvme_ns_t n;
+	struct libnvme_ns *n;
 
 	if (ns && nvme_match_devname(devname, ns))
 		return true;

@@ -17,7 +17,7 @@
 int __nvme_get_sysfs_dir(struct libnvme_global_ctx *ctx,
 		const char *ctrl_name, char **sysfs_dir)
 {
-	libnvme_ctrl_t c = NULL;
+	struct libnvme_ctrl *c = NULL;
 	const char *path;
 	int ret;
 

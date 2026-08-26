@@ -231,7 +231,7 @@ const char *libnvmf_cms_str(__u8 cms);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c);
+int libnvmf_add_ctrl(struct libnvme_host *h, struct libnvme_ctrl *c);
 
 /**
  * libnvmf_connect_ctrl() - Connect a controller
@@ -242,7 +242,7 @@ int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvmf_connect_ctrl(libnvme_ctrl_t c);
+int libnvmf_connect_ctrl(struct libnvme_ctrl *c);
 
 /*
  * struct libnvmf_discovery_args - Opaque arguments for libnvmf_get_discovery_log()
@@ -269,7 +269,7 @@ struct libnvmf_uri;
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvmf_get_discovery_log(libnvme_ctrl_t ctrl,
+int libnvmf_get_discovery_log(struct libnvme_ctrl *ctrl,
 			   const struct libnvmf_discovery_args *args,
 			   struct nvmf_discovery_log **logp);
 
@@ -287,7 +287,7 @@ int libnvmf_get_discovery_log(libnvme_ctrl_t ctrl,
  * Return: true if controller supports explicit registration. false
  * otherwise.
  */
-bool libnvmf_is_registration_supported(libnvme_ctrl_t c);
+bool libnvmf_is_registration_supported(struct libnvme_ctrl *c);
 
 /**
  * libnvmf_register_ctrl() - Perform registration task with a DC
@@ -302,7 +302,7 @@ bool libnvmf_is_registration_supported(libnvme_ctrl_t c);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
+int libnvmf_register_ctrl(struct libnvme_ctrl *c, enum nvmf_dim_tas tas, __u32 *result);
 
 /**
  * libnvmf_uri_parse() - Parse the URI string
@@ -638,14 +638,14 @@ int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
  * libnvmf_create_ctrl() - Allocate an unconnected NVMe controller
  * @ctx:		struct libnvme_global_ctx object
  * @fctx:		Fabrics context
- * @c:			@libnvme_ctrl_t object to return
+ * @c:			&struct libnvme_ctrl object to return
  *
  * Creates an unconnected controller to be used for libnvme_add_ctrl().
  *
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, libnvme_ctrl_t *c);
+		struct libnvmf_context *fctx, struct libnvme_ctrl **c);
 
 /**
  * libnvmf_connect() - Connect to fabrics subsystem
@@ -667,7 +667,7 @@ int libnvmf_connect(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success, -1 on failure.
  */
-int libnvmf_disconnect_ctrl(libnvme_ctrl_t c);
+int libnvmf_disconnect_ctrl(struct libnvme_ctrl *c);
 
 struct nbft_file_entry;
 

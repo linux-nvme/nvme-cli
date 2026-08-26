@@ -183,27 +183,27 @@ __shr_public char *libnvme_get_attr(const char *dir, const char *attr)
 }
 
 __shr_public char *libnvme_get_subsys_attr(
-		libnvme_subsystem_t s, const char *attr)
+		struct libnvme_subsystem *s, const char *attr)
 {
 	return libnvme_get_attr(libnvme_subsystem_get_sysfs_dir(s), attr);
 }
 
-__shr_public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
+__shr_public char *libnvme_get_ctrl_attr(struct libnvme_ctrl *c, const char *attr)
 {
 	return libnvme_get_attr(libnvme_ctrl_get_sysfs_dir(c), attr);
 }
 
-__shr_public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
+__shr_public char *libnvme_get_ns_attr(struct libnvme_ns *n, const char *attr)
 {
 	return libnvme_get_attr(libnvme_ns_get_sysfs_dir(n), attr);
 }
 
-__shr_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
+__shr_public char *libnvme_get_path_attr(struct libnvme_path *p, const char *attr)
 {
 	return libnvme_get_attr(libnvme_path_get_sysfs_dir(p), attr);
 }
 
-__shr_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
+__shr_public const char *libnvme_ctrl_get_state(struct libnvme_ctrl *c)
 {
 	char *state = c->state;
 
@@ -245,7 +245,7 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 }
 
 int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c, const char *path, const char *name)
+		struct libnvme_ctrl *c, const char *path, const char *name)
 {
 	DIR *d;
 
@@ -277,10 +277,10 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 }
 
 __shr_public int libnvme_init_ctrl(
-		libnvme_host_t h, libnvme_ctrl_t c, int instance)
+		struct libnvme_host *h, struct libnvme_ctrl *c, int instance)
 {
 	__cleanup_free char *subsys_name = NULL, *name = NULL, *path = NULL;
-	libnvme_subsystem_t s;
+	struct libnvme_subsystem *s;
 	int ret;
 
 	ret = asprintf(&name, "nvme%d", instance);
@@ -326,15 +326,15 @@ __shr_public int libnvme_init_ctrl(
 
 __shr_public int libnvme_scan_ctrl(
 		struct libnvme_global_ctx *ctx, const char *name,
-		libnvme_ctrl_t *cp)
+		struct libnvme_ctrl **cp)
 {
 	__cleanup_free char *subsysnqn = NULL, *subsysname = NULL;
 	__cleanup_free char *hostnqn = NULL, *hostid = NULL;
 	__cleanup_free char *path = NULL;
 	char *host_key;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s\n", name);
@@ -482,7 +482,7 @@ static void libnvme_ns_set_generic_name(struct libnvme_ns *n, const char *name)
 }
 
 int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
-		const char *name, libnvme_ns_t *ns)
+		const char *name, struct libnvme_ns **ns)
 {
 	int ret;
 	struct libnvme_ns *n;
@@ -571,7 +571,7 @@ static char *libnvme_ns_generic_to_blkdev(const char *generic)
 }
 
 int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
-		const char *sysfs_dir, const char *name, libnvme_ns_t *ns)
+		const char *sysfs_dir, const char *name, struct libnvme_ns **ns)
 {
 	__cleanup_free char *blkdev = NULL;
 	__cleanup_free char *path = NULL;
@@ -665,7 +665,7 @@ skip_address:
 	return 0;
 }
 
-int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
+int libnvme_init_subsystem(struct libnvme_subsystem *s, const char *name)
 {
 	char *path;
 

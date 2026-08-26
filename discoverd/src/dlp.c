@@ -52,7 +52,7 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 	      void (*self_callback)(bool epcsd, void *user_data),
 	      void *user_data)
 {
-	libnvme_ctrl_t ctrl = NULL;
+	struct libnvme_ctrl *ctrl = NULL;
 	struct nvmf_discovery_log *log = NULL;
 	uint64_t numrec;
 	uint64_t i;

@@ -47,7 +47,7 @@ static double nvme_calc_util_percent(unsigned int ticks, double interval_ms)
 	return (ticks / interval_ms) * 100;
 }
 
-static double nvme_path_calc_util_percent(libnvme_path_t p, double interval_ms)
+static double nvme_path_calc_util_percent(struct libnvme_path *p, double interval_ms)
 {
 	unsigned int ticks;
 
@@ -55,7 +55,7 @@ static double nvme_path_calc_util_percent(libnvme_path_t p, double interval_ms)
 	return nvme_calc_util_percent(ticks, interval_ms);
 }
 
-static double nvme_ns_calc_util_percent(libnvme_ns_t n, double interval_ms)
+static double nvme_ns_calc_util_percent(struct libnvme_ns *n, double interval_ms)
 {
 	unsigned int ticks;
 
@@ -74,7 +74,7 @@ static double nvme_calc_iops(unsigned long ios, double interval_ms)
 	return (ios / interval_sec);
 }
 
-static double nvme_path_calc_read_iops(libnvme_path_t p, double interval_ms)
+static double nvme_path_calc_read_iops(struct libnvme_path *p, double interval_ms)
 {
 	unsigned long read_ios;
 
@@ -82,7 +82,7 @@ static double nvme_path_calc_read_iops(libnvme_path_t p, double interval_ms)
 	return nvme_calc_iops(read_ios, interval_ms);
 }
 
-static double nvme_path_calc_write_iops(libnvme_path_t p, double interval_ms)
+static double nvme_path_calc_write_iops(struct libnvme_path *p, double interval_ms)
 {
 	unsigned long write_ios;
 
@@ -90,7 +90,7 @@ static double nvme_path_calc_write_iops(libnvme_path_t p, double interval_ms)
 	return nvme_calc_iops(write_ios, interval_ms);
 }
 
-static double nvme_ns_calc_read_iops(libnvme_ns_t n, double interval_ms)
+static double nvme_ns_calc_read_iops(struct libnvme_ns *n, double interval_ms)
 {
 	unsigned long read_ios;
 
@@ -98,7 +98,7 @@ static double nvme_ns_calc_read_iops(libnvme_ns_t n, double interval_ms)
 	return nvme_calc_iops(read_ios, interval_ms);
 }
 
-static double nvme_ns_calc_write_iops(libnvme_ns_t n, double interval_ms)
+static double nvme_ns_calc_write_iops(struct libnvme_ns *n, double interval_ms)
 {
 	unsigned long write_ios;
 
@@ -114,7 +114,7 @@ static double nvme_calc_latency(unsigned long ticks, unsigned long ios)
 	return ((double)ticks/ios);
 }
 
-static double nvme_path_calc_read_latency(libnvme_path_t p)
+static double nvme_path_calc_read_latency(struct libnvme_path *p)
 {
 	unsigned int ticks;
 	unsigned long ios;
@@ -125,7 +125,7 @@ static double nvme_path_calc_read_latency(libnvme_path_t p)
 	return nvme_calc_latency(ticks, ios);
 }
 
-static double nvme_path_calc_write_latency(libnvme_path_t p)
+static double nvme_path_calc_write_latency(struct libnvme_path *p)
 {
 	unsigned int ticks;
 	unsigned long ios;
@@ -136,7 +136,7 @@ static double nvme_path_calc_write_latency(libnvme_path_t p)
 	return nvme_calc_latency(ticks, ios);
 }
 
-static double nvme_ns_calc_read_latency(libnvme_ns_t n)
+static double nvme_ns_calc_read_latency(struct libnvme_ns *n)
 {
 	unsigned int ticks;
 	unsigned long ios;
@@ -147,7 +147,7 @@ static double nvme_ns_calc_read_latency(libnvme_ns_t n)
 	return nvme_calc_latency(ticks, ios);
 }
 
-static double nvme_ns_calc_write_latency(libnvme_ns_t n)
+static double nvme_ns_calc_write_latency(struct libnvme_ns *n)
 {
 	unsigned int ticks;
 	unsigned long ios;
@@ -172,7 +172,7 @@ static double nvme_calc_bandwidth(unsigned long long sectors,
 	return (bytes / sec);
 }
 
-static double nvme_path_calc_read_bw(libnvme_path_t p, double interval_ms)
+static double nvme_path_calc_read_bw(struct libnvme_path *p, double interval_ms)
 {
 	unsigned long long sectors;
 
@@ -180,7 +180,7 @@ static double nvme_path_calc_read_bw(libnvme_path_t p, double interval_ms)
 	return nvme_calc_bandwidth(sectors, interval_ms);
 }
 
-static double nvme_path_calc_write_bw(libnvme_path_t p, double interval_ms)
+static double nvme_path_calc_write_bw(struct libnvme_path *p, double interval_ms)
 {
 	unsigned long long sectors;
 
@@ -188,7 +188,7 @@ static double nvme_path_calc_write_bw(libnvme_path_t p, double interval_ms)
 	return nvme_calc_bandwidth(sectors, interval_ms);
 }
 
-static double nvme_ns_calc_read_bw(libnvme_ns_t n, double interval_ms)
+static double nvme_ns_calc_read_bw(struct libnvme_ns *n, double interval_ms)
 {
 	unsigned long long sectors;
 
@@ -196,7 +196,7 @@ static double nvme_ns_calc_read_bw(libnvme_ns_t n, double interval_ms)
 	return nvme_calc_bandwidth(sectors, interval_ms);
 }
 
-static double nvme_ns_calc_write_bw(libnvme_ns_t n, double interval_ms)
+static double nvme_ns_calc_write_bw(struct libnvme_ns *n, double interval_ms)
 {
 	unsigned long long sectors;
 
@@ -244,7 +244,7 @@ static int nvme_format_lat(double lat, char *buf, size_t size)
 	return snprintf(buf, size, "%.2f", lat);
 }
 
-static void nvme_ns_calc_aggr_stat(libnvme_ns_t n,
+static void nvme_ns_calc_aggr_stat(struct libnvme_ns *n,
 			double *r_iops, double *w_iops,
 			double *r_bw, double *w_bw,
 			double *max_rlat, double *max_wlat,
@@ -275,7 +275,7 @@ static void nvme_ns_calc_aggr_stat(libnvme_ns_t n,
 		*max_util = util;
 }
 
-static void nvme_path_calc_aggr_stat(libnvme_path_t p,
+static void nvme_path_calc_aggr_stat(struct libnvme_path *p,
 			double *r_iops, double *w_iops,
 			double *r_bw, double *w_bw,
 			double *max_rlat, double *max_wlat,
@@ -306,7 +306,7 @@ static void nvme_path_calc_aggr_stat(libnvme_path_t p,
 		*max_util = util;
 }
 
-static void nvme_ns_calc_stat(libnvme_ns_t n,
+static void nvme_ns_calc_stat(struct libnvme_ns *n,
 			double *r_iops, double *w_iops,
 			double *r_lat, double *w_lat,
 			double *r_bw, double *w_bw,
@@ -338,7 +338,7 @@ static void nvme_ns_calc_stat(libnvme_ns_t n,
 	*util = nvme_ns_calc_util_percent(n, interval_ms);
 }
 
-static void nvme_path_calc_stat(libnvme_path_t p,
+static void nvme_path_calc_stat(struct libnvme_path *p,
 			double *r_iops, double *w_iops,
 			double *r_lat, double *w_lat,
 			double *r_bw, double *w_bw,
@@ -370,7 +370,7 @@ static void nvme_path_calc_stat(libnvme_path_t p,
 	*util = nvme_path_calc_util_percent(p, interval_ms);
 }
 
-static bool stdout_top_nvme_ctrl_is_fabric(libnvme_ctrl_t c)
+static bool stdout_top_nvme_ctrl_is_fabric(struct libnvme_ctrl *c)
 {
 	if (strcmp(libnvme_ctrl_get_transport(c), "pcie"))
 		return true;
@@ -381,8 +381,8 @@ static bool stdout_top_nvme_ctrl_is_fabric(libnvme_ctrl_t c)
 static bool stdout_top_print_ctrl_summary_tbl_filter(const char *name,
 		void *arg)
 {
-	libnvme_ctrl_t c;
-	libnvme_subsystem_t s = arg;
+	struct libnvme_ctrl *c;
+	struct libnvme_subsystem *s = arg;
 	bool multipath = nvme_is_multipath(s);
 
 	if (!strcmp(name, "Paths")) {
@@ -403,12 +403,12 @@ static bool stdout_top_print_ctrl_summary_tbl_filter(const char *name,
 	return true;
 }
 
-static int stdout_top_print_path_health(FILE *stream, libnvme_subsystem_t s)
+static int stdout_top_print_path_health(FILE *stream, struct libnvme_subsystem *s)
 {
 	int ret = 0;
 	int col, row;
-	libnvme_ns_t n;
-	libnvme_path_t p;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
 	struct shr_table *t;
 	struct shr_table_column columns[] = {
 		{"NSPath",    LEFT, AUTO_WIDTH},
@@ -476,13 +476,13 @@ free_tbl:
 }
 
 static int stdout_top_print_ctrl_summary(FILE *stream,
-		libnvme_subsystem_t s, bool multipath)
+		struct libnvme_subsystem *s, bool multipath)
 {
 	int ret = 0;
 	int row, col, npaths;
-	libnvme_ctrl_t c;
-	libnvme_path_t p;
-	libnvme_ns_t n;
+	struct libnvme_ctrl *c;
+	struct libnvme_path *p;
+	struct libnvme_ns *n;
 	double max_util, max_rlat, max_wlat;
 	double r_iops, w_iops, r_bw, w_bw;
 	char r_bw_str[16], w_bw_str[16];
@@ -622,11 +622,11 @@ free_tbl:
 	return ret;
 }
 
-static int stdout_top_print_ns_stat(FILE *stream, libnvme_subsystem_t s)
+static int stdout_top_print_ns_stat(FILE *stream, struct libnvme_subsystem *s)
 {
 	int ret = 0;
-	libnvme_ns_t n;
-	libnvme_ctrl_t c;
+	struct libnvme_ns *n;
+	struct libnvme_ctrl *c;
 	int col, row;
 	unsigned int inflights;
 	double r_iops, w_iops, r_lat, w_lat, r_bw, w_bw, util;
@@ -731,11 +731,11 @@ free_tbl:
 	return ret;
 }
 
-static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
+static int stdout_top_print_nshead_stat(FILE *stream, struct libnvme_subsystem *s)
 {
 	int ret = 0;
-	libnvme_ns_t n;
-	libnvme_path_t p;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
 	double r_iops, w_iops, r_lat, w_lat, r_bw, w_bw, util;
 	unsigned int inflights;
 	int col, row, npaths;
@@ -839,12 +839,12 @@ free_tbl:
 	return ret;
 }
 
-static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
+static int stdout_top_print_path_perf(FILE *stream, struct libnvme_subsystem *s)
 {
 	int ret = 0;
-	libnvme_ns_t n;
-	libnvme_path_t p;
-	libnvme_ctrl_t c;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
+	struct libnvme_ctrl *c;
 	unsigned int inflights;
 	int row, col;
 	double util, r_iops, w_iops, r_lat, w_lat, r_bw, w_bw;
@@ -980,7 +980,7 @@ free_tbl:
 }
 
 static void  stdout_top_print_subsys_topology_config(FILE *stream,
-		libnvme_subsystem_t s)
+		struct libnvme_subsystem *s)
 {
 	int len = strlen(libnvme_subsystem_get_name(s));
 	const char *iopolicy;
@@ -1008,11 +1008,11 @@ static void  stdout_top_print_subsys_topology_config(FILE *stream,
 	fprintf(stream, "\n");
 }
 
-static int stdout_top_update_stat(libnvme_subsystem_t s)
+static int stdout_top_update_stat(struct libnvme_subsystem *s)
 {
-	libnvme_ctrl_t c;
-	libnvme_ns_t n;
-	libnvme_path_t p;
+	struct libnvme_ctrl *c;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
 	int ret;
 
 	if (nvme_is_multipath(s)) {
@@ -1046,11 +1046,11 @@ static int stdout_top_update_stat(libnvme_subsystem_t s)
 	return 0;
 }
 
-static void stdout_top_reset_stat(libnvme_subsystem_t s)
+static void stdout_top_reset_stat(struct libnvme_subsystem *s)
 {
-	libnvme_ctrl_t c;
-	libnvme_ns_t n;
-	libnvme_path_t p;
+	struct libnvme_ctrl *c;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
 
 	if (nvme_is_multipath(s)) {
 		libnvme_subsystem_for_each_ns(s, n) {
@@ -1069,7 +1069,7 @@ static void stdout_top_reset_stat(libnvme_subsystem_t s)
 }
 
 static int stdout_top_print_subsys_topology(struct dashboard_ctx *db_ctx,
-		FILE *stream, libnvme_subsystem_t s)
+		FILE *stream, struct libnvme_subsystem *s)
 {
 	int ret = 0;
 	bool multipath = nvme_is_multipath(s);
@@ -1127,11 +1127,11 @@ static void stdout_top_print_subsys_topology_footer(
 	dashboard_set_footer_row_reverse(db_ctx, 2);
 }
 
-static libnvme_subsystem_t stdout_top_search_subsystem(
+static struct libnvme_subsystem *stdout_top_search_subsystem(
 		struct libnvme_global_ctx *ctx, const char *subsys_name)
 {
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
 
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
@@ -1143,12 +1143,12 @@ static libnvme_subsystem_t stdout_top_search_subsystem(
 	return NULL;
 }
 
-static libnvme_subsystem_t *stdout_top_build_subsys_arr(
+static struct libnvme_subsystem **stdout_top_build_subsys_arr(
 		struct libnvme_global_ctx *ctx, int *num_subsys)
 {
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_subsystem_t *subsys_arr;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_subsystem **subsys_arr;
 	int subsys_idx = 0;
 	int n = 0;
 
@@ -1160,7 +1160,7 @@ static libnvme_subsystem_t *stdout_top_build_subsys_arr(
 		return NULL;
 	}
 
-	subsys_arr = calloc(n, sizeof(libnvme_subsystem_t));
+	subsys_arr = calloc(n, sizeof(struct libnvme_subsystem *));
 	if (!subsys_arr) {
 		nvme_show_error("Failed to allocate memory for subsys array\n");
 		return NULL;
@@ -1175,11 +1175,11 @@ static libnvme_subsystem_t *stdout_top_build_subsys_arr(
 	return subsys_arr;
 }
 
-static int stdout_top_find_subsys_by_name(libnvme_subsystem_t *subsys_arr,
+static int stdout_top_find_subsys_by_name(struct libnvme_subsystem **subsys_arr,
 		int num_subsys, const char *subsys_name)
 {
 	int idx;
-	libnvme_subsystem_t s;
+	struct libnvme_subsystem *s;
 
 	for (idx = 0; idx < num_subsys; idx++) {
 		s = subsys_arr[idx];
@@ -1249,13 +1249,13 @@ static int handle_event_page_up(struct dashboard_ctx *db_ctx)
  */
 static int stdout_top_draw_subsys_topology_screen(
 		struct libnvme_global_ctx *ctx, struct dashboard_ctx *db_ctx,
-		FILE *stream, libnvme_subsystem_t _s)
+		FILE *stream, struct libnvme_subsystem *_s)
 {
 	enum event_type event;
 	int ret, scroll = 0;
 	int data_start, data_rows;
 	__cleanup_free const char *subsys_name;
-	libnvme_subsystem_t s = _s;
+	struct libnvme_subsystem *s = _s;
 
 	subsys_name = strdup(libnvme_subsystem_get_name(s));
 	if (!subsys_name)
@@ -1353,13 +1353,13 @@ wait_for_event:
 }
 
 static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
-		FILE *stream, libnvme_subsystem_t *subsys_arr, int num_subsys)
+		FILE *stream, struct libnvme_subsystem **subsys_arr, int num_subsys)
 {
 	int ret = 0;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
-	libnvme_ns_t n;
-	libnvme_path_t p;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
+	struct libnvme_ns *n;
+	struct libnvme_path *p;
 	int i, row, col, num_ns, num_path, num_ctrl;
 	double r_iops, w_iops;
 	double r_bw, w_bw;
@@ -1514,10 +1514,10 @@ void stdout_top(int refresh_interval)
 	FILE *stream;
 	enum event_type event;
 	struct dashboard_ctx *db_ctx;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_free libnvme_subsystem_t *subsys_arr = NULL;
+	__cleanup_free struct libnvme_subsystem **subsys_arr = NULL;
 	int data_start, frame_rows, quit = 0, scroll = 0;
 	int num_subsys = 0, subsys_idx = 0;
 	int err;
@@ -1598,7 +1598,7 @@ wait_for_event:
 		}
 		case EVENT_TYPE_NVME_UEVENT: {
 			__cleanup_free char *subsys_name = NULL;
-			libnvme_subsystem_t s = subsys_arr[subsys_idx];
+			struct libnvme_subsystem *s = subsys_arr[subsys_idx];
 
 			subsys_name = strdup(libnvme_subsystem_get_name(s));
 			if (!subsys_name) {

@@ -57,8 +57,8 @@ int main()
 	struct nvmf_discovery_log *log = NULL;
 	struct libnvme_global_ctx *ctx;
 	struct libnvmf_context *fctx;
-	libnvme_host_t h;
-	libnvme_ctrl_t c;
+	struct libnvme_host *h;
+	struct libnvme_ctrl *c;
 	int ret;
 	struct libnvmf_discovery_args *args;
 

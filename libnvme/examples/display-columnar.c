@@ -18,11 +18,11 @@ static const char dash[101] = {[0 ... 99] = '-'};
 int main()
 {
 	struct libnvme_global_ctx *ctx;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
-	libnvme_path_t p;
-	libnvme_ns_t n;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
+	struct libnvme_path *p;
+	struct libnvme_ns *n;
 	int err;
 
 	ctx = libnvme_create_global_ctx();

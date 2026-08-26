@@ -31,7 +31,7 @@
 
 
 int libnvme_reconfigure_ctrl(__shr_unused struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c, const char *path, const char *name)
+		struct libnvme_ctrl *c, const char *path, const char *name)
 {
 	/*
 	 * It's necessary to release any resources first because a ctrl
@@ -57,7 +57,7 @@ int libnvme_reconfigure_ctrl(__shr_unused struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__shr_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
+__shr_public const char *libnvme_ctrl_get_state(struct libnvme_ctrl *c)
 {
 	char *state = c->state;
 
@@ -66,8 +66,8 @@ __shr_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 	return c->state;
 }
 
-__shr_public int libnvme_init_ctrl(__shr_unused libnvme_host_t h,
-		__shr_unused libnvme_ctrl_t c,
+__shr_public int libnvme_init_ctrl(__shr_unused struct libnvme_host *h,
+		__shr_unused struct libnvme_ctrl *c,
 		__shr_unused int instance)
 {
 	return -ENOTSUP;
@@ -117,10 +117,10 @@ free_transport:
 	return ret;
 }
 
-static libnvme_subsystem_t libnvme_get_subsystem_windows(libnvme_host_t h,
+static struct libnvme_subsystem *libnvme_get_subsystem_windows(struct libnvme_host *h,
 		const struct ctrl_map_entry *ctrl_entry)
 {
-	libnvme_subsystem_t s;
+	struct libnvme_subsystem *s;
 	char *subsysnqn;
 	char *subsysname;
 	int ret;
@@ -171,13 +171,13 @@ static libnvme_subsystem_t libnvme_get_subsystem_windows(libnvme_host_t h,
 }
 
 __shr_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx,
-		const char *name, libnvme_ctrl_t *cp)
+		const char *name, struct libnvme_ctrl **cp)
 {
 	__cleanup_free char *path = NULL;
 	const struct ctrl_map_entry *ctrl_entry;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s\n", name);
@@ -217,14 +217,14 @@ __shr_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx,
 }
 
 __shr_public char *libnvme_get_subsys_attr(
-		__shr_unused libnvme_subsystem_t s,
+		__shr_unused struct libnvme_subsystem *s,
 		__shr_unused const char *attr)
 {
 	return NULL;
 }
 
 __shr_public char *libnvme_get_path_attr(
-		__shr_unused libnvme_path_t p,
+		__shr_unused struct libnvme_path *p,
 		__shr_unused const char *attr)
 {
 	return NULL;
@@ -238,14 +238,14 @@ __shr_public char *libnvme_get_attr(
 }
 
 __shr_public char *libnvme_get_ctrl_attr(
-		__shr_unused libnvme_ctrl_t c,
+		__shr_unused struct libnvme_ctrl *c,
 		__shr_unused const char *attr)
 {
 	return NULL;
 }
 
 __shr_public char *libnvme_get_ns_attr(
-		__shr_unused libnvme_ns_t n,
+		__shr_unused struct libnvme_ns *n,
 		__shr_unused const char *attr)
 {
 	return NULL;
@@ -274,7 +274,7 @@ int libnvme_ns_init(__shr_unused const char *path, struct libnvme_ns *ns)
 
 int libnvme_ns_open(struct libnvme_global_ctx *ctx,
 		__shr_unused const char *sys_path,
-		const char *name, libnvme_ns_t *ns)
+		const char *name, struct libnvme_ns **ns)
 {
 	const struct ctrl_map_entry *ctrl_entry;
 	struct libnvme_transport_handle *hdl;
@@ -364,7 +364,7 @@ free_ns:
 
 int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 		__shr_unused const char *sysfs_dir,
-		const char *name, libnvme_ns_t *ns)
+		const char *name, struct libnvme_ns **ns)
 {
 	struct libnvme_ns *n = NULL;
 	int ret;
@@ -383,7 +383,7 @@ int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
+int libnvme_init_subsystem(struct libnvme_subsystem *s, const char *name)
 {
 	s->subsystype = strdup("nvm");
 	if (!s->subsystype)

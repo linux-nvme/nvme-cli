@@ -318,7 +318,7 @@ static ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
  * there.
  */
 static void libnvmf_read_sysfs_tls(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
+		struct libnvme_ctrl *c)
 {
 	char *endptr;
 	long key_id;
@@ -350,7 +350,7 @@ static void libnvmf_read_sysfs_tls(struct libnvme_global_ctx *ctx,
 }
 
 static void libnvmf_read_sysfs_tls_mode(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
+		struct libnvme_ctrl *c)
 {
 	__cleanup_free char *mode = NULL;
 
@@ -365,7 +365,7 @@ static void libnvmf_read_sysfs_tls_mode(struct libnvme_global_ctx *ctx,
 }
 
 void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
+		struct libnvme_ctrl *c)
 {
 	libnvmf_read_sysfs_tls(ctx, c);
 	libnvmf_read_sysfs_tls_mode(ctx, c);
@@ -420,7 +420,7 @@ static ctrl_match_t _libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 	return _libnvmf_tree_ctrl_match;
 }
 
-__shr_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
+__shr_public char *libnvme_ctrl_owner(struct libnvme_ctrl *c)
 {
 	char *owner = NULL;
 
@@ -429,8 +429,8 @@ __shr_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
 	return owner;
 }
 
-libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		const struct libnvme_ctrl_params *params, libnvme_ctrl_t p)
+struct libnvme_ctrl *libnvme_ctrl_find(struct libnvme_subsystem *s,
+		const struct libnvme_ctrl_params *params, struct libnvme_ctrl *p)
 {
 	struct candidate_args candidate = {};
 	struct libnvme_ctrl *c, *matching_c = NULL;

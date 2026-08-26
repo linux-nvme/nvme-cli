@@ -20,16 +20,15 @@
  * libnvme tree object interface
  */
 
-typedef struct libnvme_ns *libnvme_ns_t;
-typedef struct libnvme_ns_head *libnvme_ns_head_t;
-typedef struct libnvme_path *libnvme_path_t;
-typedef struct libnvme_stat *libnvme_stat_t;
-typedef struct libnvme_ctrl *libnvme_ctrl_t;
-typedef struct libnvme_subsystem *libnvme_subsystem_t;
-typedef struct libnvme_host *libnvme_host_t;
+struct libnvme_host;
+struct libnvme_subsystem;
+struct libnvme_ctrl;
+struct libnvme_ns;
+struct libnvme_ns_head;
+struct libnvme_path;
 
-typedef bool (*libnvme_scan_filter_t)(libnvme_subsystem_t, libnvme_ctrl_t,
-				   libnvme_ns_t, void *);
+typedef bool (*libnvme_scan_filter_t)(struct libnvme_subsystem *, struct libnvme_ctrl *,
+				   struct libnvme_ns *, void *);
 
 /**
  * libnvme_skip_namespaces - Skip namespace scanning
@@ -54,34 +53,34 @@ void libnvme_release_fds(struct libnvme_global_ctx *ctx);
  * libnvme_first_host() - Start host iterator
  * @ctx:	struct libnvme_global_ctx object
  *
- * Return: First &libnvme_host_t object in an iterator
+ * Return: First &struct libnvme_host object in an iterator
  */
-libnvme_host_t libnvme_first_host(struct libnvme_global_ctx *ctx);
+struct libnvme_host *libnvme_first_host(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvme_next_host() - Next host iterator
  * @ctx:	struct libnvme_global_ctx object
- * @h:	Previous &libnvme_host_t iterator
+ * @h:	Previous &struct libnvme_host iterator
  *
- * Return: Next &libnvme_host_t object in an iterator
+ * Return: Next &struct libnvme_host object in an iterator
  */
-libnvme_host_t libnvme_next_host(struct libnvme_global_ctx *ctx,
-		libnvme_host_t h);
+struct libnvme_host *libnvme_next_host(struct libnvme_global_ctx *ctx,
+		struct libnvme_host *h);
 
 /**
  * libnvme_host_get_global_ctx() - Returns libnvme_global_ctx object
- * @h:	&libnvme_host_t object
+ * @h:	&struct libnvme_host object
  *
  * Return: &struct libnvme_global_ctx object from @h
  */
-struct libnvme_global_ctx *libnvme_host_get_global_ctx(libnvme_host_t h);
+struct libnvme_global_ctx *libnvme_host_get_global_ctx(struct libnvme_host *h);
 
 /**
  * libnvme_get_host() - Returns a host object
  * @ctx:	struct libnvme_global_ctx object
  * @hostnqn:	Host NQN (optional)
  * @hostid:	Host ID (optional)
- * @h:		&libnvme_host_t object to return
+ * @h:		&struct libnvme_host object to return
  *
  * Returns a host object based on the hostnqn/hostid values or the default if
  * hostnqn/hostid are NULL.
@@ -89,35 +88,35 @@ struct libnvme_global_ctx *libnvme_host_get_global_ctx(libnvme_host_t h);
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_get_host(struct libnvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, libnvme_host_t *h);
+		const char *hostid, struct libnvme_host **h);
 
 /**
  * libnvme_first_subsystem() - Start subsystem iterator
- * @h:	&libnvme_host_t object
+ * @h:	&struct libnvme_host object
  *
- * Return: first &libnvme_subsystem_t object in an iterator
+ * Return: first &struct libnvme_subsystem object in an iterator
  */
-libnvme_subsystem_t libnvme_first_subsystem(libnvme_host_t h);
+struct libnvme_subsystem *libnvme_first_subsystem(struct libnvme_host *h);
 
 /**
  * libnvme_next_subsystem() - Next subsystem iterator
- * @h:	&libnvme_host_t object
- * @s:	Previous &libnvme_subsystem_t iterator
+ * @h:	&struct libnvme_host object
+ * @s:	Previous &struct libnvme_subsystem iterator
  *
- * Return: next &libnvme_subsystem_t object in an iterator
+ * Return: next &struct libnvme_subsystem object in an iterator
  */
-libnvme_subsystem_t libnvme_next_subsystem(libnvme_host_t h,
-		libnvme_subsystem_t s);
+struct libnvme_subsystem *libnvme_next_subsystem(struct libnvme_host *h,
+		struct libnvme_subsystem *s);
 
 /**
- * libnvme_get_subsystem() - Returns libnvme_subsystem_t object
+ * libnvme_get_subsystem() - Returns struct libnvme_subsystem object
  * @ctx:	struct libnvme_global_ctx object
- * @h:		&libnvme_host_t object
+ * @h:		&struct libnvme_host object
  * @name:	Name of the subsystem (may be NULL)
  * @subsysnqn:	Subsystem NQN
- * @s: 		libnvme_subsystem_t object
+ * @s: 		struct libnvme_subsystem object
  *
- * Returns an &libnvme_subsystem_t object in @h base on @name (if present)
+ * Returns an &struct libnvme_subsystem object in @h base on @name (if present)
  * and @subsysnqn or create one if not found.
  *
  */
@@ -134,104 +133,104 @@ int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
 void libnvme_free_subsystem(struct libnvme_subsystem *s);
 
 /**
- * libnvme_subsystem_get_host() - Returns libnvme_host_t object
+ * libnvme_subsystem_get_host() - Returns struct libnvme_host object
  * @s:	subsystem
  *
- * Return: &libnvme_host_t object from @s
+ * Return: &struct libnvme_host object from @s
  */
-libnvme_host_t libnvme_subsystem_get_host(libnvme_subsystem_t s);
+struct libnvme_host *libnvme_subsystem_get_host(struct libnvme_subsystem *s);
 
 /**
  * libnvme_ctrl_first_ns() - Start namespace iterator
  * @c:	Controller instance
  *
- * Return: First &libnvme_ns_t object of an @c iterator
+ * Return: First &struct libnvme_ns object of an @c iterator
  */
-libnvme_ns_t libnvme_ctrl_first_ns(libnvme_ctrl_t c);
+struct libnvme_ns *libnvme_ctrl_first_ns(struct libnvme_ctrl *c);
 
 /**
  * libnvme_ctrl_next_ns() - Next namespace iterator
  * @c:	Controller instance
- * @n:	Previous libnvme_ns_t iterator
+ * @n:	Previous struct libnvme_ns iterator
  *
- * Return: Next libnvme_ns_t object of an @c iterator
+ * Return: Next struct libnvme_ns object of an @c iterator
  */
-libnvme_ns_t libnvme_ctrl_next_ns(libnvme_ctrl_t c, libnvme_ns_t n);
+struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_ns *n);
 
 /**
  * libnvme_ctrl_first_path() - Start path iterator
  * @c:	Controller instance
  *
- * Return: First &libnvme_path_t object of an @c iterator
+ * Return: First &struct libnvme_path object of an @c iterator
  */
-libnvme_path_t libnvme_ctrl_first_path(libnvme_ctrl_t c);
+struct libnvme_path *libnvme_ctrl_first_path(struct libnvme_ctrl *c);
 
 /**
  * libnvme_ctrl_next_path() - Next path iterator
  * @c:	Controller instance
- * @p:	Previous &libnvme_path_t object of an @c iterator
+ * @p:	Previous &struct libnvme_path object of an @c iterator
  *
- * Return: Next &libnvme_path_t object of an @c iterator
+ * Return: Next &struct libnvme_path object of an @c iterator
  */
-libnvme_path_t libnvme_ctrl_next_path(libnvme_ctrl_t c, libnvme_path_t p);
+struct libnvme_path *libnvme_ctrl_next_path(struct libnvme_ctrl *c, struct libnvme_path *p);
 
 /**
  * libnvme_subsystem_first_ctrl() - First ctrl iterator
- * @s:	&libnvme_subsystem_t object
+ * @s:	&struct libnvme_subsystem object
  *
  * Return: First controller of an @s iterator
  */
-libnvme_ctrl_t libnvme_subsystem_first_ctrl(libnvme_subsystem_t s);
+struct libnvme_ctrl *libnvme_subsystem_first_ctrl(struct libnvme_subsystem *s);
 
 /**
  * libnvme_subsystem_next_ctrl() - Next ctrl iterator
- * @s:	&libnvme_subsystem_t object
+ * @s:	&struct libnvme_subsystem object
  * @c:	Previous controller instance of an @s iterator
  *
  * Return: Next controller of an @s iterator
  */
-libnvme_ctrl_t libnvme_subsystem_next_ctrl(libnvme_subsystem_t s,
-		libnvme_ctrl_t c);
+struct libnvme_ctrl *libnvme_subsystem_next_ctrl(struct libnvme_subsystem *s,
+		struct libnvme_ctrl *c);
 
 /**
  * libnvme_namespace_first_path() - Start path iterator
  * @ns:	Namespace instance
  *
- * Return: First &libnvme_path_t object of an @ns iterator
+ * Return: First &struct libnvme_path object of an @ns iterator
  */
-libnvme_path_t libnvme_namespace_first_path(libnvme_ns_t ns);
+struct libnvme_path *libnvme_namespace_first_path(struct libnvme_ns *ns);
 
 /**
  * libnvme_namespace_next_path() - Next path iterator
  * @ns:	Namespace instance
- * @p:	Previous &libnvme_path_t object of an @ns iterator
+ * @p:	Previous &struct libnvme_path object of an @ns iterator
  *
- * Return: Next &libnvme_path_t object of an @ns iterator
+ * Return: Next &struct libnvme_path object of an @ns iterator
  */
-libnvme_path_t libnvme_namespace_next_path(libnvme_ns_t ns, libnvme_path_t p);
+struct libnvme_path *libnvme_namespace_next_path(struct libnvme_ns *ns, struct libnvme_path *p);
 
 /**
  * libnvme_subsystem_first_ns() - Start namespace iterator
- * @s:	&libnvme_subsystem_t object
+ * @s:	&struct libnvme_subsystem object
  *
- * Return: First &libnvme_ns_t object of an @s iterator
+ * Return: First &struct libnvme_ns object of an @s iterator
  */
-libnvme_ns_t libnvme_subsystem_first_ns(libnvme_subsystem_t s);
+struct libnvme_ns *libnvme_subsystem_first_ns(struct libnvme_subsystem *s);
 
 /**
  * libnvme_subsystem_next_ns() - Next namespace iterator
- * @s:	&libnvme_subsystem_t object
- * @n:	Previous &libnvme_ns_t iterator
+ * @s:	&struct libnvme_subsystem object
+ * @n:	Previous &struct libnvme_ns iterator
  *
- * Return: Next &libnvme_ns_t object of an @s iterator
+ * Return: Next &struct libnvme_ns object of an @s iterator
  */
-libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
+struct libnvme_ns *libnvme_subsystem_next_ns(struct libnvme_subsystem *s, struct libnvme_ns *n);
 
 /**
  * libnvme_for_each_host_safe() - Traverse host list
  * @r:	&libnvme_root_t object
- * @h:	&libnvme_host_t object
- * @_h:	Temporary &libnvme_host_t object
+ * @h:	&struct libnvme_host object
+ * @_h:	Temporary &struct libnvme_host object
  */
 #define libnvme_for_each_host_safe(r, h, _h)		\
 	for (h = libnvme_first_host(r),			\
@@ -242,7 +241,7 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 /**
  * libnvme_for_each_host() - Traverse host list
  * @r:	&libnvme_root_t object
- * @h:	&libnvme_host_t object
+ * @h:	&struct libnvme_host object
  */
 #define libnvme_for_each_host(r, h)			\
 	for (h = libnvme_first_host(r); h != NULL;	\
@@ -250,9 +249,9 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 
 /**
  * libnvme_for_each_subsystem_safe() - Traverse subsystems
- * @h:	&libnvme_host_t object
- * @s:	&libnvme_subsystem_t object
- * @_s:	Temporary &libnvme_subsystem_t object
+ * @h:	&struct libnvme_host object
+ * @s:	&struct libnvme_subsystem object
+ * @_s:	Temporary &struct libnvme_subsystem object
  */
 #define libnvme_for_each_subsystem_safe(h, s, _s)		\
 	for (s = libnvme_first_subsystem(h),			\
@@ -262,8 +261,8 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 
 /**
  * libnvme_for_each_subsystem() - Traverse subsystems
- * @h:	&libnvme_host_t object
- * @s:	&libnvme_subsystem_t object
+ * @h:	&struct libnvme_host object
+ * @s:	&struct libnvme_subsystem object
  */
 #define libnvme_for_each_subsystem(h, s)			\
 	for (s = libnvme_first_subsystem(h); s != NULL;		\
@@ -271,9 +270,9 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 
 /**
  * libnvme_subsystem_for_each_ctrl_safe() - Traverse controllers
- * @s:	&libnvme_subsystem_t object
+ * @s:	&struct libnvme_subsystem object
  * @c:	Controller instance
- * @_c:	A &libnvme_ctrl_t_node to use as temporary storage
+ * @_c:	A &struct libnvme_ctrl node to use as temporary storage
  */
 #define libnvme_subsystem_for_each_ctrl_safe(s, c, _c)		\
 	for (c = libnvme_subsystem_first_ctrl(s),		\
@@ -283,7 +282,7 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 
 /**
  * libnvme_subsystem_for_each_ctrl() - Traverse controllers
- * @s:	&libnvme_subsystem_t object
+ * @s:	&struct libnvme_subsystem object
  * @c:	Controller instance
  */
 #define libnvme_subsystem_for_each_ctrl(s, c)			\
@@ -293,8 +292,8 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 /**
  * libnvme_ctrl_for_each_ns_safe() - Traverse namespaces
  * @c:	Controller instance
- * @n:	&libnvme_ns_t object
- * @_n:	A &libnvme_ns_t_node to use as temporary storage
+ * @n:	&struct libnvme_ns object
+ * @_n:	A &struct libnvme_ns node to use as temporary storage
  */
 #define libnvme_ctrl_for_each_ns_safe(c, n, _n)			\
 	for (n = libnvme_ctrl_first_ns(c),			\
@@ -305,7 +304,7 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 /**
  * libnvme_ctrl_for_each_ns() - Traverse namespaces
  * @c:	Controller instance
- * @n:	&libnvme_ns_t object
+ * @n:	&struct libnvme_ns object
  */
 #define libnvme_ctrl_for_each_ns(c, n)				\
 	for (n = libnvme_ctrl_first_ns(c); n != NULL;		\
@@ -314,8 +313,8 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 /**
  * libnvme_ctrl_for_each_path_safe() - Traverse paths
  * @c:	Controller instance
- * @p:	&libnvme_path_t object
- * @_p:	A &libnvme_path_t_node to use as temporary storage
+ * @p:	&struct libnvme_path object
+ * @_p:	A &struct libnvme_path node to use as temporary storage
  */
 #define libnvme_ctrl_for_each_path_safe(c, p, _p)		\
 	for (p = libnvme_ctrl_first_path(c),			\
@@ -326,7 +325,7 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 /**
  * libnvme_ctrl_for_each_path() - Traverse paths
  * @c:	Controller instance
- * @p:	&libnvme_path_t object
+ * @p:	&struct libnvme_path object
  */
 #define libnvme_ctrl_for_each_path(c, p)			\
 	for (p = libnvme_ctrl_first_path(c); p != NULL;		\
@@ -334,9 +333,9 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 
 /**
  * libnvme_subsystem_for_each_ns_safe() - Traverse namespaces
- * @s:	&libnvme_subsystem_t object
- * @n:	&libnvme_ns_t object
- * @_n:	A &libnvme_ns_t_node to use as temporary storage
+ * @s:	&struct libnvme_subsystem object
+ * @n:	&struct libnvme_ns object
+ * @_n:	A &struct libnvme_ns node to use as temporary storage
  */
 #define libnvme_subsystem_for_each_ns_safe(s, n, _n)		\
 	for (n = libnvme_subsystem_first_ns(s),			\
@@ -346,8 +345,8 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 
 /**
  * libnvme_subsystem_for_each_ns() - Traverse namespaces
- * @s:	&libnvme_subsystem_t object
- * @n:	&libnvme_ns_t object
+ * @s:	&struct libnvme_subsystem object
+ * @n:	&struct libnvme_ns object
  */
 #define libnvme_subsystem_for_each_ns(s, n)			\
 	for (n = libnvme_subsystem_first_ns(s); n != NULL;	\
@@ -356,8 +355,8 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 /**
  * libnvme_namespace_for_each_path_safe() - Traverse paths
  * @n:	Namespace instance
- * @p:	&libnvme_path_t object
- * @_p:	A &libnvme_path_t_node to use as temporary storage
+ * @p:	&struct libnvme_path object
+ * @_p:	A &struct libnvme_path node to use as temporary storage
  */
 #define libnvme_namespace_for_each_path_safe(n, p, _p)		\
 	for (p = libnvme_namespace_first_path(n),		\
@@ -368,7 +367,7 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 /**
  * libnvme_namespace_for_each_path() - Traverse paths
  * @n:	Namespace instance
- * @p:	&libnvme_path_t object
+ * @p:	&struct libnvme_path object
  */
 #define libnvme_namespace_for_each_path(n, p)			\
 	for (p = libnvme_namespace_first_path(n); p != NULL;	\
@@ -380,7 +379,7 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
  *
  * Return: Firmware string of @n
  */
-const char *libnvme_ns_get_firmware(libnvme_ns_t n);
+const char *libnvme_ns_get_firmware(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_serial() - Serial number of a namespace
@@ -388,7 +387,7 @@ const char *libnvme_ns_get_firmware(libnvme_ns_t n);
  *
  * Return: Serial number string of @n
  */
-const char *libnvme_ns_get_serial(libnvme_ns_t n);
+const char *libnvme_ns_get_serial(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_model() - Model of a namespace
@@ -396,25 +395,25 @@ const char *libnvme_ns_get_serial(libnvme_ns_t n);
  *
  * Return: Model string of @n
  */
-const char *libnvme_ns_get_model(libnvme_ns_t n);
+const char *libnvme_ns_get_model(struct libnvme_ns *n);
 
 /**
- * libnvme_ns_get_subsystem() - &libnvme_subsystem_t of a namespace
+ * libnvme_ns_get_subsystem() - &struct libnvme_subsystem of a namespace
  * @n:	Namespace instance
  *
- * Return: libnvme_subsystem_t object of @n
+ * Return: struct libnvme_subsystem object of @n
  */
-libnvme_subsystem_t libnvme_ns_get_subsystem(libnvme_ns_t n);
+struct libnvme_subsystem *libnvme_ns_get_subsystem(struct libnvme_ns *n);
 
 /**
- * libnvme_ns_get_ctrl() - &libnvme_ctrl_t of a namespace
+ * libnvme_ns_get_ctrl() - &struct libnvme_ctrl of a namespace
  * @n:	Namespace instance
  *
- * libnvme_ctrl_t object may be NULL for a multipathed namespace
+ * struct libnvme_ctrl object may be NULL for a multipathed namespace
  *
- * Return: libnvme_ctrl_t object of @n if present
+ * Return: struct libnvme_ctrl object of @n if present
  */
-libnvme_ctrl_t libnvme_ns_get_ctrl(libnvme_ns_t n);
+struct libnvme_ctrl *libnvme_ns_get_ctrl(struct libnvme_ns *n);
 
 /**
  * libnvme_free_ns() - Free a namespace object
@@ -431,7 +430,7 @@ void libnvme_free_ns(struct libnvme_ns *n);
  *
  * Return: Number of sectors read or -1 on error.
  */
-int libnvme_ns_read(libnvme_ns_t n, void *buf, off_t offset, size_t count);
+int libnvme_ns_read(struct libnvme_ns *n, void *buf, off_t offset, size_t count);
 
 /**
  * libnvme_ns_write() - Write to a namespace
@@ -442,7 +441,7 @@ int libnvme_ns_read(libnvme_ns_t n, void *buf, off_t offset, size_t count);
  *
  * Return: Number of sectors written or -1 on error
  */
-int libnvme_ns_write(libnvme_ns_t n, void *buf, off_t offset, size_t count);
+int libnvme_ns_write(struct libnvme_ns *n, void *buf, off_t offset, size_t count);
 
 /**
  * libnvme_ns_verify() - Verify data on a namespace
@@ -452,7 +451,7 @@ int libnvme_ns_write(libnvme_ns_t n, void *buf, off_t offset, size_t count);
  *
  * Return: Number of sectors verified
  */
-int libnvme_ns_verify(libnvme_ns_t n, off_t offset, size_t count);
+int libnvme_ns_verify(struct libnvme_ns *n, off_t offset, size_t count);
 
 /**
  * libnvme_ns_compare() - Compare data on a namespace
@@ -463,7 +462,7 @@ int libnvme_ns_verify(libnvme_ns_t n, off_t offset, size_t count);
  *
  * Return: Number of sectors compared
  */
-int libnvme_ns_compare(libnvme_ns_t n, void *buf, off_t offset, size_t count);
+int libnvme_ns_compare(struct libnvme_ns *n, void *buf, off_t offset, size_t count);
 
 /**
  * libnvme_ns_write_zeros() - Write zeros to a namespace
@@ -473,7 +472,7 @@ int libnvme_ns_compare(libnvme_ns_t n, void *buf, off_t offset, size_t count);
  *
  * Return: Number of sectors written
  */
-int libnvme_ns_write_zeros(libnvme_ns_t n, off_t offset, size_t count);
+int libnvme_ns_write_zeros(struct libnvme_ns *n, off_t offset, size_t count);
 
 /**
  * libnvme_ns_write_uncorrectable() - Issus a 'write uncorrectable' command
@@ -483,7 +482,7 @@ int libnvme_ns_write_zeros(libnvme_ns_t n, off_t offset, size_t count);
  *
  * Return: Number of sectors written
  */
-int libnvme_ns_write_uncorrectable(libnvme_ns_t n, off_t offset, size_t count);
+int libnvme_ns_write_uncorrectable(struct libnvme_ns *n, off_t offset, size_t count);
 
 /**
  * libnvme_ns_flush() - Flush data to a namespace
@@ -491,7 +490,7 @@ int libnvme_ns_write_uncorrectable(libnvme_ns_t n, off_t offset, size_t count);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_ns_flush(libnvme_ns_t n);
+int libnvme_ns_flush(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_identify() - Issue an 'identify namespace' command
@@ -503,7 +502,7 @@ int libnvme_ns_flush(libnvme_ns_t n);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns);
+int libnvme_ns_identify(struct libnvme_ns *n, struct nvme_id_ns *ns);
 
 /**
  * libnvme_ns_identify_descs() - Issue an 'identify descriptors' command
@@ -515,115 +514,115 @@ int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_ns_identify_descs(libnvme_ns_t n, struct nvme_ns_id_desc *descs);
+int libnvme_ns_identify_descs(struct libnvme_ns *n, struct nvme_ns_id_desc *descs);
 
 /**
- * libnvme_path_get_ctrl() - Parent controller of an libnvme_path_t object
- * @p:	&libnvme_path_t object
+ * libnvme_path_get_ctrl() - Parent controller of an struct libnvme_path object
+ * @p:	&struct libnvme_path object
  *
  * Return: Parent controller if present
  */
-libnvme_ctrl_t libnvme_path_get_ctrl(libnvme_path_t p);
+struct libnvme_ctrl *libnvme_path_get_ctrl(struct libnvme_path *p);
 
 /**
- * libnvme_path_get_ns() - Parent namespace of an libnvme_path_t object
- * @p:	&libnvme_path_t object
+ * libnvme_path_get_ns() - Parent namespace of an struct libnvme_path object
+ * @p:	&struct libnvme_path object
  *
  * Return: Parent namespace if present
  */
-libnvme_ns_t libnvme_path_get_ns(libnvme_path_t p);
+struct libnvme_ns *libnvme_path_get_ns(struct libnvme_path *p);
 
 /**
  * libnvme_path_reset_stat() - Resets namespace path nvme stat
- * @p:	&libnvme_path_t object
+ * @p:	&struct libnvme_path object
  */
-void libnvme_path_reset_stat(libnvme_path_t p);
+void libnvme_path_reset_stat(struct libnvme_path *p);
 
 /**
  * libnvme_path_update_stat() - Update stat of an nvme_path_t object
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  * @diffstat:	If set to true then getters return the diff stat otherwise
  *		return the current absolute stat
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_path_update_stat(libnvme_path_t p, bool diffstat);
+int libnvme_path_update_stat(struct libnvme_path *p, bool diffstat);
 
 /**
  * libnvme_path_get_read_ios() - Calculate and return read IOs
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Num of read IOs processed between two stat samples
  */
-unsigned long libnvme_path_get_read_ios(libnvme_path_t p);
+unsigned long libnvme_path_get_read_ios(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_write_ios() - Get write I/Os
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Num of write I/Os processed between two stat samples
  */
-unsigned long libnvme_path_get_write_ios(libnvme_path_t p);
+unsigned long libnvme_path_get_write_ios(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_read_ticks() - Get read I/O ticks
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Time, in milliseconds, sepnt processing read I/O requests
  *		between two stat samples
  */
-unsigned int libnvme_path_get_read_ticks(libnvme_path_t p);
+unsigned int libnvme_path_get_read_ticks(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_read_sectors() - Get read I/O sectors
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Number of sectors read from the device between two stat samples
  */
-unsigned long long libnvme_path_get_read_sectors(libnvme_path_t p);
+unsigned long long libnvme_path_get_read_sectors(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_write_sectors() - Get write I/O sectors
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Num of sectors written to the device between two stat samples
  */
-unsigned long long libnvme_path_get_write_sectors(libnvme_path_t p);
+unsigned long long libnvme_path_get_write_sectors(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_write_ticks() - Get write I/O ticks
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Time, in milliseconds, sepnt processing write I/O requests
  *		between two stat samples
  */
-unsigned int libnvme_path_get_write_ticks(libnvme_path_t p);
+unsigned int libnvme_path_get_write_ticks(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_stat_interval() - Get interval between two stat samples
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Interval, in milliseconds between collection of two consecutive
  *		stat samples
  */
-double libnvme_path_get_stat_interval(libnvme_path_t p);
+double libnvme_path_get_stat_interval(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_io_ticks() - Get I/O ticks
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Time consumed, in milliseconds, processing I/O requests between
  *		two stat samples
  */
-unsigned int libnvme_path_get_io_ticks(libnvme_path_t p);
+unsigned int libnvme_path_get_io_ticks(struct libnvme_path *p);
 
 /**
  * libnvme_path_get_inflights() - Inflight IOs for nvme_path_t object
- * @p:		&libnvme_path_t object
+ * @p:		&struct libnvme_path object
  *
  * Return:	Inflight number of IOs
  */
-unsigned int libnvme_path_get_inflights(libnvme_path_t p);
+unsigned int libnvme_path_get_inflights(struct libnvme_path *p);
 
 /**
  * libnvme_ctrl_get_transport_handle() - Get associated transport handle
@@ -638,7 +637,7 @@ unsigned int libnvme_path_get_inflights(libnvme_path_t p);
  * Return: Link handle associated with @c or NULL
  */
 struct libnvme_transport_handle *
-libnvme_ctrl_get_transport_handle(libnvme_ctrl_t c);
+libnvme_ctrl_get_transport_handle(struct libnvme_ctrl *c);
 
 /**
  * libnvme_ctrl_release_transport_handle() - Free transport handle
@@ -646,7 +645,7 @@ libnvme_ctrl_get_transport_handle(libnvme_ctrl_t c);
  * @c:	Controller instance
  *
  */
-void libnvme_ctrl_release_transport_handle(libnvme_ctrl_t c);
+void libnvme_ctrl_release_transport_handle(struct libnvme_ctrl *c);
 
 /**
  * libnvme_ctrl_get_src_addr() - Extract src_addr from the c->address string
@@ -658,7 +657,7 @@ void libnvme_ctrl_release_transport_handle(libnvme_ctrl_t c);
  * Return: Pointer to @src_addr on success. NULL on failure to extract the
  * src_addr.
  */
-char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
+char *libnvme_ctrl_get_src_addr(struct libnvme_ctrl *c, char *src_addr,
 		size_t src_addr_len);
 
 /**
@@ -667,7 +666,7 @@ char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
  *
  * Return: String indicating the running state of @c
  */
-const char *libnvme_ctrl_get_state(libnvme_ctrl_t c);
+const char *libnvme_ctrl_get_state(struct libnvme_ctrl *c);
 
 /**
  * libnvme_transport_is_fabric() - True for a fabrics transport string
@@ -691,7 +690,7 @@ bool libnvme_transport_is_fabric(const char *transport);
  *
  * Return: true if @c uses a fabrics transport, false if local.
  */
-bool libnvme_ctrl_is_transport_fabric(libnvme_ctrl_t c);
+bool libnvme_ctrl_is_transport_fabric(struct libnvme_ctrl *c);
 
 /**
  * libnvme_ctrl_owner() - Registered orchestrator owner of a controller
@@ -703,15 +702,15 @@ bool libnvme_ctrl_is_transport_fabric(libnvme_ctrl_t c);
  * Return: a newly allocated owner string (the caller frees), or NULL if the
  * controller is unowned, local (non-fabrics), or the registry is unreadable.
  */
-char *libnvme_ctrl_owner(libnvme_ctrl_t c);
+char *libnvme_ctrl_owner(struct libnvme_ctrl *c);
 
 /**
  * libnvme_ctrl_get_subsystem() - Parent subsystem of a controller
  * @c:	Controller instance
  *
- * Return: Parent libnvme_subsystem_t object
+ * Return: Parent struct libnvme_subsystem object
  */
-libnvme_subsystem_t libnvme_ctrl_get_subsystem(libnvme_ctrl_t c);
+struct libnvme_subsystem *libnvme_ctrl_get_subsystem(struct libnvme_ctrl *c);
 
 /**
  * libnvme_ns_head_get_sysfs_dir() - sysfs dir of namespave head
@@ -719,100 +718,100 @@ libnvme_subsystem_t libnvme_ctrl_get_subsystem(libnvme_ctrl_t c);
  *
  * Return: sysfs directory name of @head
  */
-const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head);
+const char *libnvme_ns_head_get_sysfs_dir(struct libnvme_ns_head *head);
 
 /**
  * libnvme_ns_update_stat() - update the nvme namespace stat
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  * @diffstat:	If set to true then getters return the diff stat otherwise
  *		return the current absolute stat
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_ns_update_stat(libnvme_ns_t n, bool diffstat);
+int libnvme_ns_update_stat(struct libnvme_ns *n, bool diffstat);
 
 /**
  * libnvme_ns_reset_stat() - Resets nvme namespace stat
- * @n:	&libnvme_ns_t object
+ * @n:	&struct libnvme_ns object
  *
  */
-void libnvme_ns_reset_stat(libnvme_ns_t n);
+void libnvme_ns_reset_stat(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_inflights() - Inflight IOs for nvme_ns_t object
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Inflight number of IOs
  */
-unsigned int libnvme_ns_get_inflights(libnvme_ns_t n);
+unsigned int libnvme_ns_get_inflights(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_io_ticks() - Get IO ticks
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Time consumed, in milliseconds, processing I/O requests between
  *		two stat samples
  */
-unsigned int libnvme_ns_get_io_ticks(libnvme_ns_t n);
+unsigned int libnvme_ns_get_io_ticks(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_read_ticks() - Get read I/O ticks
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Time, in milliseconds, sepnt processing read I/O requests
  *		between two stat samples
  */
-unsigned int libnvme_ns_get_read_ticks(libnvme_ns_t n);
+unsigned int libnvme_ns_get_read_ticks(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_write_ticks() - Get write I/O ticks
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Time, in milliseconds, sepnt processing write I/O requests
  *		between two stat samples
  */
-unsigned int libnvme_ns_get_write_ticks(libnvme_ns_t n);
+unsigned int libnvme_ns_get_write_ticks(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_stat_interval() - Get interval between two stat samples
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Interval, in milliseconds, between collection of two consecutive
  *		stat samples
  */
-double libnvme_ns_get_stat_interval(libnvme_ns_t n);
+double libnvme_ns_get_stat_interval(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_read_ios() - Get num of read I/Os
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Num of read IOs processed between two stat samples
  */
-unsigned long libnvme_ns_get_read_ios(libnvme_ns_t n);
+unsigned long libnvme_ns_get_read_ios(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_write_ios() - Get num of write I/Os
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Num of write IOs processed between two consecutive stat samples
  */
-unsigned long libnvme_ns_get_write_ios(libnvme_ns_t n);
+unsigned long libnvme_ns_get_write_ios(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_read_sectors() - Get num of read sectors
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Num of sectors read from the device between two stat samples
  */
-unsigned long long libnvme_ns_get_read_sectors(libnvme_ns_t n);
+unsigned long long libnvme_ns_get_read_sectors(struct libnvme_ns *n);
 
 /**
  * libnvme_ns_get_write_sectors() - Get num of write sectors
- * @n:		&libnvme_ns_t object
+ * @n:		&struct libnvme_ns object
  *
  * Return:	Num of sectors written to the device between two stat samples
  */
-unsigned long long libnvme_ns_get_write_sectors(libnvme_ns_t n);
+unsigned long long libnvme_ns_get_write_sectors(struct libnvme_ns *n);
 
 /**
  * libnvme_ctrl_identify() - Issues an 'identify controller' command
@@ -824,37 +823,37 @@ unsigned long long libnvme_ns_get_write_sectors(libnvme_ns_t n);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id);
+int libnvme_ctrl_identify(struct libnvme_ctrl *c, struct nvme_id_ctrl *id);
 
 /**
  * libnvme_scan_ctrl() - Scan on a controller
  * @ctx:	struct libnvme_global_ctx object
  * @name:	Name of the controller
- * @c:		@libnvme_ctrl_t object to return
+ * @c:		@struct libnvme_ctrl object to return
  *
  * Scans a controller with sysfs name @name and add it to @r.
  *
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
-		libnvme_ctrl_t *c);
+		struct libnvme_ctrl **c);
 
 /**
  * libnvme_rescan_ctrl() - Rescan an existing controller
  * @c:	Controller instance
  */
-void libnvme_rescan_ctrl(libnvme_ctrl_t c);
+void libnvme_rescan_ctrl(struct libnvme_ctrl *c);
 
 /**
- * libnvme_init_ctrl() - Initialize libnvme_ctrl_t object for an existing
+ * libnvme_init_ctrl() - Initialize struct libnvme_ctrl object for an existing
  * controller.
- * @h:		libnvme_host_t object
- * @c:		libnvme_ctrl_t object
+ * @h:		struct libnvme_host object
+ * @c:		struct libnvme_ctrl object
  * @instance:	Instance number (e.g. 1 for nvme1)
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance);
+int libnvme_init_ctrl(struct libnvme_host *h, struct libnvme_ctrl *c, int instance);
 
 /**
  * libnvme_free_ctrl() - Free controller
@@ -884,7 +883,7 @@ int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 
 /**
  * libnvme_host_release_fds() - Close all opened file descriptors under host
- * @h:	libnvme_host_t object
+ * @h:	struct libnvme_host object
  *
  * Controller and Namespace objects cache the file descriptors
  * of opened nvme devices. This API can be used to close and
@@ -893,10 +892,10 @@ int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 void libnvme_host_release_fds(struct libnvme_host *h);
 
 /**
- * libnvme_free_host() - Free libnvme_host_t object
- * @h:	libnvme_host_t object
+ * libnvme_free_host() - Free struct libnvme_host object
+ * @h:	struct libnvme_host object
  */
-void libnvme_free_host(libnvme_host_t h);
+void libnvme_free_host(struct libnvme_host *h);
 
 /**
  * libnvme_refresh_topology() - Refresh libnvme_root_t object contents
@@ -920,13 +919,13 @@ char *libnvme_get_attr(const char *d, const char *attr);
 
 /**
  * libnvme_get_subsys_attr() - Read subsystem sysfs attribute
- * @s:		libnvme_subsystem_t object
+ * @s:		struct libnvme_subsystem object
  * @attr:	sysfs attribute name
  *
  * Return: A newly allocated string with the contents of @attr (the caller
  *	   frees), or %NULL in case of an empty value or error.
  */
-char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr);
+char *libnvme_get_subsys_attr(struct libnvme_subsystem *s, const char *attr);
 
 /**
  * libnvme_get_ctrl_attr() - Read controller sysfs attribute
@@ -936,31 +935,31 @@ char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr);
  * Return: A newly allocated string with the contents of @attr (the caller
  *	   frees), or %NULL in case of an empty value or error.
  */
-char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr);
+char *libnvme_get_ctrl_attr(struct libnvme_ctrl *c, const char *attr);
 
 /**
  * libnvme_get_ns_attr() - Read namespace sysfs attribute
- * @n:		libnvme_ns_t object
+ * @n:		struct libnvme_ns object
  * @attr:	sysfs attribute name
  *
  * Return: A newly allocated string with the contents of @attr (the caller
  *	   frees), or %NULL in case of an empty value or error.
  */
-char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr);
+char *libnvme_get_ns_attr(struct libnvme_ns *n, const char *attr);
 
 /**
  * libnvme_subsystem_lookup_namespace() - lookup namespace by NSID
- * @s:		libnvme_subsystem_t object
+ * @s:		struct libnvme_subsystem object
  * @nsid:	Namespace id
  *
- * Return: libnvme_ns_t of the namespace with id @nsid in subsystem @s
+ * Return: struct libnvme_ns of the namespace with id @nsid in subsystem @s
  */
-libnvme_ns_t libnvme_subsystem_lookup_namespace(struct libnvme_subsystem *s,
+struct libnvme_ns *libnvme_subsystem_lookup_namespace(struct libnvme_subsystem *s,
 					  __u32 nsid);
 
 /**
  * libnvme_subsystem_release_fds() - Close all opened fds under subsystem
- * @s:		libnvme_subsystem_t object
+ * @s:		struct libnvme_subsystem object
  *
  * Controller and Namespace objects cache the file descriptors
  * of opened nvme devices. This API can be used to close and
@@ -972,21 +971,21 @@ void libnvme_subsystem_release_fds(struct libnvme_subsystem *s);
 
 /**
  * libnvme_get_path_attr() - Read path sysfs attribute
- * @p:		libnvme_path_t object
+ * @p:		struct libnvme_path object
  * @attr:	sysfs attribute name
  *
  * Return: A newly allocated string with the contents of @attr (the caller
  *	   frees), or %NULL in case of an empty value or error.
  */
-char *libnvme_get_path_attr(libnvme_path_t p, const char *attr);
+char *libnvme_get_path_attr(struct libnvme_path *p, const char *attr);
 
 /**
  * libnvme_scan_namespace() - scan namespace based on sysfs name
  * @ctx:	&struct libnvme_global_ctx object
  * @name:	sysfs name of the namespace to scan
- * @ns:		&libnvme_ns_t object to return
+ * @ns:		&struct libnvme_ns object to return
  *
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_scan_namespace(struct libnvme_global_ctx *ctx, const char *name,
-		libnvme_ns_t *ns);
+		struct libnvme_ns **ns);

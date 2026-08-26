@@ -54,7 +54,7 @@ void hexdump(const unsigned char *buf, int len)
 	fhexdump(stdout, buf, len);
 }
 
-int do_get_log_page(libnvme_mi_ep_t ep, int argc, char **argv)
+int do_get_log_page(struct libnvme_mi_ep *ep, int argc, char **argv)
 {
 	struct libnvme_transport_handle *hdl;
 	enum nvme_cmd_get_log_lid lid;
@@ -104,7 +104,7 @@ int do_get_log_page(libnvme_mi_ep_t ep, int argc, char **argv)
 }
 
 struct thread_struct {
-	libnvme_mi_ep_t ep;
+	struct libnvme_mi_ep *ep;
 	int argc;
 	char **argv;
 	int rc;
@@ -126,7 +126,7 @@ int do_csi_test(struct libnvme_global_ctx *ctx, int net, __u8 eid,
 		int argc, char **argv)
 {
 	int rc = 0;
-	libnvme_mi_ep_t ep1, ep2;
+	struct libnvme_mi_ep *ep1, *ep2;
 
 	ep1 = libnvme_mi_open_mctp(ctx, net, eid);
 	if (!ep1)

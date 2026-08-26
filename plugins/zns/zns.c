@@ -23,7 +23,7 @@
 
 static const char *namespace_id = "Namespace identifier to use";
 
-static int detect_zns(libnvme_ns_t ns, int *out_supported)
+static int detect_zns(struct libnvme_ns *ns, int *out_supported)
 {
 	int err = 0;
 	char *zoned;
@@ -42,7 +42,7 @@ static int detect_zns(libnvme_ns_t ns, int *out_supported)
 	return err;
 }
 
-static int print_zns_list_ns(libnvme_ns_t ns, struct shr_table *t)
+static int print_zns_list_ns(struct libnvme_ns *ns, struct shr_table *t)
 {
 	int supported;
 	int err = 0;
@@ -62,10 +62,10 @@ static int print_zns_list_ns(libnvme_ns_t ns, struct shr_table *t)
 static int print_zns_list(struct libnvme_global_ctx *ctx, struct shr_table *t)
 {
 	int err = 0;
-	libnvme_host_t h;
-	libnvme_subsystem_t s;
-	libnvme_ctrl_t c;
-	libnvme_ns_t n;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ctrl *c;
+	struct libnvme_ns *n;
 
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
