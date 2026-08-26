@@ -167,7 +167,7 @@ static void import_test(struct libnvme_global_ctx *ctx,
 {
 	unsigned char *psk;
 	int psk_length;
-	unsigned int hmac;
+	enum libnvmf_hmac_alg hmac;
 	int ret;
 
 	if (test->version != 1 ||
@@ -238,7 +238,7 @@ static void import_versioned_test(struct libnvme_global_ctx *ctx,
 {
 	unsigned char *psk;
 	unsigned char version;
-	unsigned char hmac;
+	enum libnvmf_hmac_alg hmac;
 	size_t psk_length;
 	int ret;
 

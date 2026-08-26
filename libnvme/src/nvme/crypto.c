@@ -887,7 +887,7 @@ static ssize_t nvme_identity_len(int hmac, int version, const char *hostnqn,
 
 __shr_public int libnvmf_generate_tls_key_identity(
 		struct libnvme_global_ctx *ctx, const char *hostnqn,
-		const char *subsysnqn, int version, int hmac,
+		const char *subsysnqn, int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len, char **ident)
 {
 	__cleanup_free unsigned char *psk = NULL;
@@ -924,7 +924,7 @@ __shr_public int libnvmf_generate_tls_key_identity(
 
 __shr_public int libnvmf_generate_tls_key_identity_compat(
 		struct libnvme_global_ctx *ctx, const char *hostnqn,
-		const char *subsysnqn, int version, int hmac,
+		const char *subsysnqn, int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len, char **ident)
 {
 	__cleanup_free unsigned char *psk = NULL;
@@ -1179,7 +1179,7 @@ __shr_public int libnvmf_insert_tls_key_versioned(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *key)
 {
@@ -1203,7 +1203,7 @@ __shr_public int libnvmf_insert_tls_key_compat(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *key)
 {
@@ -1252,7 +1252,7 @@ static int __nvme_import_tls_key(struct libnvme_global_ctx *ctx, long keyring_id
 {
 	__cleanup_free unsigned char *key_data = NULL;
 	unsigned char version;
-	unsigned char hmac;
+	enum libnvmf_hmac_alg hmac;
 	size_t key_len;
 	int ret;
 
@@ -1414,7 +1414,7 @@ __shr_public int libnvmf_insert_tls_key_versioned(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *keyp)
 {
@@ -1427,7 +1427,7 @@ __shr_public int libnvmf_insert_tls_key_compat(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *keyp)
 {
@@ -1457,7 +1457,8 @@ int __libnvmf_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 
 __shr_public int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
-		const char *hostnqn, const char *subsysnqn, int hmac,
+		const char *hostnqn, const char *subsysnqn,
+		enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len, long *key)
 {
 	return libnvmf_insert_tls_key_versioned(ctx, keyring, key_type,
@@ -1479,7 +1480,7 @@ __shr_public int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx,
  */
 __shr_public int libnvmf_export_tls_key_versioned(
 		struct libnvme_global_ctx *ctx, unsigned char version,
-		unsigned char hmac, const unsigned char *key_data,
+		enum libnvmf_hmac_alg hmac, const unsigned char *key_data,
 		size_t key_len, char **encoded_keyp)
 {
 	unsigned int raw_len, encoded_len, len;
@@ -1530,7 +1531,7 @@ __shr_public int libnvmf_export_tls_key_versioned(
 __shr_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
 		const unsigned char *key_data, int key_len, char **encoded_keyp)
 {
-	unsigned char hmac;
+	enum libnvmf_hmac_alg hmac;
 
 	if (key_len == 32)
 		hmac = LIBNVMF_HMAC_ALG_SHA2_256;
@@ -1543,8 +1544,8 @@ __shr_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
 
 __shr_public int libnvmf_import_tls_key_versioned(
 		struct libnvme_global_ctx *ctx, const char *encoded_key,
-		unsigned char *version, unsigned char *hmac, size_t *key_len,
-		unsigned char **keyp)
+		unsigned char *version, enum libnvmf_hmac_alg *hmac,
+		size_t *key_len, unsigned char **keyp)
 {
 	unsigned char decoded_key[128], *key_data;
 	unsigned int crc = shr_crc32(0L, NULL, 0);
@@ -1612,9 +1613,10 @@ __shr_public int libnvmf_import_tls_key_versioned(
 
 __shr_public int libnvmf_import_tls_key(
 		struct libnvme_global_ctx *ctx, const char *encoded_key,
-		int *key_len, unsigned int *hmac, unsigned char **keyp)
+		int *key_len, enum libnvmf_hmac_alg *hmac, unsigned char **keyp)
 {
-	unsigned char version, _hmac;
+	unsigned char version;
+	enum libnvmf_hmac_alg _hmac;
 	unsigned char *psk;
 	size_t len;
 	int ret;
