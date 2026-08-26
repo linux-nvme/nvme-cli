@@ -330,7 +330,8 @@ static bool fw_commit_support_mud(struct libnvme_transport_handle *hdl)
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 
 	if (err)
-		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
+		nvme_show_error("identify-ctrl: %s",
+				libnvme_strerror(err < 0 ? -err : err));
 	else if (ctrl->frmw >> 5 & 0x1)
 		return true;
 
