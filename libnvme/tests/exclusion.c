@@ -19,6 +19,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <ccan/array_size/array_size.h>
+
 #include <nvme/lib.h>
 #include <nvme/exclusion.h>
 #include <nvme/tid.h>
@@ -39,6 +41,7 @@ static void cleanup_tmpdir(struct libnvme_global_ctx *ctx)
 
 	libnvmf_exclusion_delete(ctx, "list");
 	libnvmf_exclusion_delete(ctx, "fresh");
+	libnvmf_exclusion_delete(ctx, "bad");
 	snprintf(dropin, sizeof(dropin), "%s/exclusions.conf.d", tmpdir);
 	rmdir(dropin);
 	rmdir(tmpdir);
@@ -365,6 +368,82 @@ static bool test_match(struct libnvme_global_ctx *ctx)
 }
 
 /*
+ * A malformed hand-edited entry must never match, and must never take the
+ * caller down.  Regression: the match path parsed entries with a NULL context
+ * while the parser dereferences that context to log a malformed token, so one
+ * typo in exclusions.conf crashed every process that consults the list.
+ */
+static bool test_malformed_entry(struct libnvme_global_ctx *ctx)
+{
+	/*
+	 * Unknown key, no '=', empty value, the code-style spelling of the
+	 * "nqn" key, and a hostname where a numeric address is required.
+	 */
+	static const char *const bad[] = {
+		"bogus=x",
+		"baretoken",
+		"nqn=",
+		"subsysnqn=nqn.example",
+		"transport=tcp;traddr=dc.example.com",
+	};
+	struct libnvmf_tid *tid;
+	char path[512];
+	bool pass = true;
+	FILE *f;
+	size_t i;
+	int ret;
+
+	printf("test_malformed_entry:\n");
+
+	ret = libnvmf_exclusion_create(ctx, "bad");
+	if (ret) {
+		printf(" - create failed: %d [FAIL]\n", ret);
+		return false;
+	}
+
+	snprintf(path, sizeof(path), "%s/exclusions.conf.d/bad.conf", tmpdir);
+	f = fopen(path, "a");
+	shr_assert(f);
+	fputs("[exclusions]\n", f);
+	for (i = 0; i < ARRAY_SIZE(bad); i++)
+		fprintf(f, "exclusion = %s\n", bad[i]);
+	fputs("exclusion = transport=tcp;traddr=7.7.7.7\n", f);
+	fclose(f);
+
+	for (i = 0; i < ARRAY_SIZE(bad); i++) {
+		if (libnvmf_exclusion_entry_valid(ctx, bad[i])) {
+			printf(" - \"%s\" reported valid [FAIL]\n", bad[i]);
+			pass = false;
+		}
+	}
+
+	/* Nothing the malformed entries name is excluded. */
+	libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", "nqn.example",
+				NULL, NULL, NULL, NULL, &tid);
+	if (libnvmf_exclusion_match(ctx, tid)) {
+		printf(" - malformed entries match nothing [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - malformed entries match nothing [PASS]\n");
+	}
+	libnvmf_tid_free(tid);
+
+	/* The well-formed entry in the same file still works. */
+	libnvmf_tid_from_fields("tcp", "7.7.7.7", "4420", "nqn.example",
+				NULL, NULL, NULL, NULL, &tid);
+	if (libnvmf_exclusion_match(ctx, tid)) {
+		printf(" - valid entry after malformed ones matches [PASS]\n");
+	} else {
+		printf(" - valid entry after malformed ones matches [FAIL]\n");
+		pass = false;
+	}
+	libnvmf_tid_free(tid);
+
+	libnvmf_exclusion_delete(ctx, "bad");
+	return pass;
+}
+
+/*
  * Section semantics: entries count only inside [exclusions].  Writing is
  * strict (a stray entry or malformed header is rejected); reading is
  * fail-safe (anything outside the section is skipped, foreign sections are
@@ -519,6 +598,7 @@ int main(void)
 	setup_tmpdir(ctx);
 
 	pass &= test_match(ctx);
+	pass &= test_malformed_entry(ctx);
 	pass &= test_mode_policy(ctx);
 	pass &= test_read_write_roundtrip(ctx);
 	pass &= test_stale_rejected(ctx);

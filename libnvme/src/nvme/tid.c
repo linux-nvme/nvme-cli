@@ -327,8 +327,10 @@ __shr_public struct libnvmf_tid *libnvmf_tid_dup(
  * (no '='), an empty value, or an unrecognized key -- fails the whole parse
  * with -EINVAL; in lenient mode such tokens are logged and skipped.  Empty
  * tokens (from ";;" or a trailing ';') are always benign and skipped.
+ * Diagnostics are emitted at @level.  A caller that parses on a hot path asks
+ * for LIBNVME_LOG_DEBUG so that one bad entry cannot flood the log.
  */
-static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
+static int tid_parse(struct libnvme_global_ctx *ctx, int level, const char *str,
 		     bool strict, struct libnvmf_tid **out)
 {
 	struct libnvmf_tid *t;
@@ -340,7 +342,12 @@ static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
 		return -EINVAL;
 	*out = NULL;
 
-	if (!str)
+	/*
+	 * A NULL @ctx is rejected here rather than tolerated in the logging
+	 * path: libnvme_msg() dereferences it, so the check belongs at the
+	 * entry point.
+	 */
+	if (!ctx || !str)
 		return -EINVAL;
 
 	rc = libnvmf_tid_new(&t);
@@ -359,7 +366,7 @@ static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
 
 		if (!eq) {
 			if (*shr_trim(tok)) {
-				libnvme_msg(ctx, LIBNVME_LOG_WARN,
+				libnvme_msg(ctx, level,
 					    "tid_parse: ignoring \"%s\": missing '='\n",
 					    tok);
 				bad = strict;
@@ -372,7 +379,7 @@ static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
 			val = shr_trim(eq + 1);
 
 			if (!*val) {
-				libnvme_msg(ctx, LIBNVME_LOG_WARN,
+				libnvme_msg(ctx, level,
 					    "tid_parse: ignoring empty value for \"%s\"\n",
 					    key);
 				bad = strict;
@@ -409,7 +416,7 @@ static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
 				t->hostid = strdup(val);
 				oom = !t->hostid;
 			} else {
-				libnvme_msg(ctx, LIBNVME_LOG_WARN,
+				libnvme_msg(ctx, level,
 					    "tid_parse: ignoring unknown key \"%s\"\n",
 					    key);
 				bad = strict;
@@ -430,6 +437,10 @@ static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
 	}
 
 	rc = tid_sanitize_addr(t);
+	if (rc == -EINVAL)
+		libnvme_msg(ctx, level,
+			    "tid_parse: bad address for transport \"%s\"\n",
+			    t->transport);
 	if (rc) {
 		libnvmf_tid_free(t);
 		return rc;
@@ -443,14 +454,21 @@ __shr_public int libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
 					const char *str,
 					struct libnvmf_tid **out)
 {
-	return tid_parse(ctx, str, false, out);
+	return tid_parse(ctx, LIBNVME_LOG_WARN, str, false, out);
 }
 
 __shr_public int libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
 					       const char *str,
 					       struct libnvmf_tid **out)
 {
-	return tid_parse(ctx, str, true, out);
+	return tid_parse(ctx, LIBNVME_LOG_WARN, str, true, out);
+}
+
+int _libnvmf_tid_parse_strict_at_level(struct libnvme_global_ctx *ctx,
+				       int level, const char *str,
+				       struct libnvmf_tid **out)
+{
+	return tid_parse(ctx, level, str, true, out);
 }
 
 /*

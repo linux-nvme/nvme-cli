@@ -107,6 +107,16 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
  */
 int _libnvmf_persistent_from_str(const char *str, enum libnvmf_persistent *val);
 
+/*
+ * Like libnvmf_tid_parse_strict(), but emit the parse diagnostics at @level
+ * instead of WARN.  The exclusion match path runs on every connect attempt, so
+ * it reports a malformed entry at DEBUG: the entry is static, and one typo
+ * would otherwise produce a log line per connect.
+ */
+int _libnvmf_tid_parse_strict_at_level(struct libnvme_global_ctx *ctx,
+				       int level, const char *str,
+				       struct libnvmf_tid **out);
+
 /**
  * NVMe-oF private struct definitions.
  *
