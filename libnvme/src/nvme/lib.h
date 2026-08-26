@@ -187,7 +187,7 @@ struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(
  * transport handle
  * @hdl:	Transport handle
  *
- * Return: Device file name, otherwise -1.
+ * Return: Device file name, otherwise NULL.
  */
 const char *libnvme_transport_handle_get_name(
 		struct libnvme_transport_handle *hdl);
