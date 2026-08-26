@@ -1729,7 +1729,7 @@ __shr_public int libnvmf_disconnect_ctrl(libnvme_ctrl_t c)
 	}
 	libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: %s disconnected\n",
 		c->name, c->subsysnqn);
-	nvme_deconfigure_ctrl(c);
+	libnvme_deconfigure_ctrl(c);
 	return 0;
 }
 
