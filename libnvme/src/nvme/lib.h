@@ -55,6 +55,11 @@ void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx);
  * This is the supported way to record the registry owner;
  * libnvme_create_global_ctx() deliberately takes no owner parameter.
  *
+ * See also: libnvmf_get_owner_from_tid() and libnvmf_get_owner_from_fctx()
+ * (fabrics.h) to look up who owns a candidate connection before connecting
+ * it, and libnvmf_registry_retrieve() (registry.h) to read a live
+ * controller's registry entry directly.
+ *
  * Return: 0 on success, -EINVAL or -ENOMEM on error.
  */
 int libnvme_set_owner(struct libnvme_global_ctx *ctx, const char *owner);
@@ -166,6 +171,11 @@ libnvme_fd_t libnvme_transport_handle_get_fd(
  * Retrieve the MI endpoint associated with this transport handle. Only valid
  * for MI-type transport handles (check with libnvme_transport_handle_is_mi
  * first).
+ *
+ * Returns the same type mi.h's API names libnvme_mi_ep_t, spelled here as
+ * the bare struct pointer: lib.h is core and builds without the optional
+ * MI layer (libnvme-mi.h), so it cannot use a typedef defined there. The
+ * two spellings are the same type.
  *
  * Return: the MI endpoint, or NULL if the handle is not an MI handle.
  */
