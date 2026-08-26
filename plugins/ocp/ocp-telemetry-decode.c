@@ -1148,9 +1148,6 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 			(struct nvme_ocp_telemetry_event_descriptor *)
 			(pfifo_start + offset_to_move);
 
-		if (pevent_descriptor == NULL)
-			break;
-
 		/* check if at the end of the list */
 		if (pevent_descriptor->debug_event_class_type == RESERVED_CLASS_TYPE)
 			break;
@@ -1288,9 +1285,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				else
 					printf(STR_LINE2);
 			}
-		} else if ((pevent_descriptor != NULL) &&
-			(pevent_descriptor->debug_event_class_type ==
-				STATISTIC_SNAPSHOT_CLASS_TYPE)) {
+		} else {
 			parse_ocp_telemetry_string_log(0, event_id,
 				pevent_descriptor->debug_event_class_type, EVENT_STRING,
 				description_str);
@@ -1342,15 +1337,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					pstats_array,
 					fp);
 			}
-		} else {
-			if (fp)
-				fprintf(fp, "Unknown or null event class %p\n", pevent_descriptor);
-			else
-				printf("Unknown or null event class %p\n", pevent_descriptor);
-
-			break;
 		}
-
 		offset_to_move += (data_size + event_des_size);
 	}
 
