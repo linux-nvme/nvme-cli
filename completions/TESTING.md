@@ -94,6 +94,11 @@ These items apply to both Unix shells but not PowerShell.
       (`-o`, `-v`, …) and long options.
 - [ ] **No device when one is present** — `nvme id ctrl /dev/nvme0 <tab>` does
       not offer a second device.
+- [ ] **No space after a value-taking option** — `nvme feat power-meas --tim<tab>`
+      completes to `--timeout=`, leaving the cursor right after `=` with no space,
+      ready for a value.
+- [ ] **No space before a completed value** — `nvme id ctrl --output-format=<tab>`
+      then selecting `json` gives `--output-format=json`, with no space after `=`.
 - [ ] **help takes one argument** — `nvme help id ctrl <tab>` offers nothing
       (no filename fall-back past it).
 - [ ] **version takes no argument** — `nvme version <tab>` offers nothing at all
