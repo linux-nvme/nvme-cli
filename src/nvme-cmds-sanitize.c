@@ -423,7 +423,7 @@ struct nvme_id_ctrl *identify_ctrl(struct libnvme_transport_handle *hdl)
 	nvme_init_identify_ctrl(&cmd, ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
-		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
+		nvme_show_err(err, "identify-ctrl");
 		libnvme_free(ctrl);
 		return NULL;
 	}
@@ -833,8 +833,8 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	nvme_init_identify_ctrl(&cmd, ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
-		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
-		return -errno;
+		nvme_show_err(err, "identify-ctrl");
+		return err;
 	}
 
 	if (ctrl->fna & NVME_CTRL_FNA_FMT_ALL_NAMESPACES) {
