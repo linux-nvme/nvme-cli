@@ -39,6 +39,7 @@
 #define PATH_SYSFS_NVME_SUBSYSTEM	"/sys/class/nvme-subsystem"
 #define PATH_SYSFS_NVME			"/sys/class/nvme"
 #define PATH_DMI_ENTRIES		"/sys/firmware/dmi/entries"
+#define PATH_DMI_PROD_UUID		"/sys/class/dmi/id/product_uuid"
 
 static const char *make_sysfs_dir(struct libnvme_global_ctx *ctx,
 		const char *path)
@@ -94,24 +95,34 @@ const char *libnvme_slots_sysfs_dir(struct libnvme_global_ctx *ctx)
 	return str = make_sysfs_dir(ctx, PATH_SYSFS_SLOTS);
 }
 
-const char *libnvme_uuid_ibm_filename(void)
+const char *libnvme_uuid_ibm_filename(struct libnvme_global_ctx *ctx)
 {
 	static const char *str;
 
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(NULL, PATH_UUID_IBM);
+	return str = make_sysfs_dir(ctx, PATH_UUID_IBM);
 }
 
-const char *libnvme_dmi_entries_dir(void)
+const char *libnvme_dmi_entries_dir(struct libnvme_global_ctx *ctx)
 {
 	static const char *str;
 
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(NULL, PATH_DMI_ENTRIES);
+	return str = make_sysfs_dir(ctx, PATH_DMI_ENTRIES);
+}
+
+const char *libnvme_dmi_product_uuid_filename(struct libnvme_global_ctx *ctx)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(ctx, PATH_DMI_PROD_UUID);
 }
 
 static int __nvme_set_attr(const char *path, const char *value)

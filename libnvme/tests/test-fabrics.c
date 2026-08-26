@@ -715,6 +715,76 @@ static bool test_dc_decide(struct libnvme_global_ctx *ctx)
 }
 
 /* -------------------------------------------------------------------------
+ * libnvmf_generate_hostid — the machine identifier comes from sysfs, so a
+ * test sandbox must be able to redirect it.  Regression: the generators took
+ * no context and always read the real machine.
+ * -------------------------------------------------------------------------
+ */
+static bool test_generate_hostid(struct libnvme_global_ctx *ctx)
+{
+	static const char uuid[] = "12345678-1234-1234-1234-123456789abc";
+	char dir[] = "/tmp/nvme-hostid-test-XXXXXX";
+	char *hostid = NULL, *hostnqn = NULL;
+	char path[PATH_MAX], want[256];
+	bool pass = true;
+	FILE *f;
+
+	printf("test_generate_hostid:\n");
+
+	if (!mkdtemp(dir)) {
+		CHECK(false, "mkdtemp");
+		return false;
+	}
+
+	snprintf(path, sizeof(path), "%s/sys/class/dmi/id", dir);
+	if (shr_mkdir_p(path, 0755)) {
+		CHECK(false, "create fixture");
+		rmdir(dir);
+		return false;
+	}
+
+	snprintf(path, sizeof(path), "%s/sys/class/dmi/id/product_uuid", dir);
+	f = fopen(path, "w");
+	if (!f) {
+		CHECK(false, "write fixture");
+		return false;
+	}
+	fprintf(f, "%s\n", uuid);
+	fclose(f);
+
+	libnvme_set_test_sysfs_dir(ctx, dir);
+
+	hostid = libnvmf_generate_hostid(ctx);
+	CHECK(hostid && !strcmp(hostid, uuid), "hostid read from the sandbox");
+	pass &= hostid && !strcmp(hostid, uuid);
+
+	hostnqn = libnvmf_generate_hostnqn(ctx);
+	snprintf(want, sizeof(want),
+		 "nqn.2014-08.org.nvmexpress:uuid:%s", uuid);
+	CHECK(hostnqn && !strcmp(hostnqn, want), "hostnqn from that hostid");
+	pass &= hostnqn && !strcmp(hostnqn, want);
+
+	CHECK(!libnvmf_generate_hostid(NULL), "NULL context rejected");
+	pass &= !libnvmf_generate_hostid(NULL);
+
+	free(hostid);
+	free(hostnqn);
+	libnvme_set_test_sysfs_dir(ctx, NULL);
+	unlink(path);
+	snprintf(path, sizeof(path), "%s/sys/class/dmi/id", dir);
+	rmdir(path);
+	snprintf(path, sizeof(path), "%s/sys/class/dmi", dir);
+	rmdir(path);
+	snprintf(path, sizeof(path), "%s/sys/class", dir);
+	rmdir(path);
+	snprintf(path, sizeof(path), "%s/sys", dir);
+	rmdir(path);
+	rmdir(dir);
+
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
  * main
  * -------------------------------------------------------------------------
  */
@@ -749,6 +819,7 @@ int main(int argc, char *argv[])
 	test_nvmf_sanitize_addrs(ctx);
 	test_unescape_uri();
 	test_dc_decide(ctx);
+	test_generate_hostid(ctx);
 
 	libnvme_free_global_ctx(ctx);
 

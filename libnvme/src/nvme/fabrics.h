@@ -33,14 +33,17 @@ struct libnvmf_tid;
 
 /**
  * libnvmf_generate_hostnqn() - Generate a machine specific host nqn
+ * @ctx:		struct libnvme_global_ctx object
+ *
  * Return: An nvm namespace qualified name string based on the machine
  * identifier, or NULL if not successful.
  */
-char *libnvmf_generate_hostnqn(void);
+char *libnvmf_generate_hostnqn(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvmf_generate_hostnqn_from_hostid() - Generate a host nqn from
  * host identifier
+ * @ctx:		struct libnvme_global_ctx object
  * @hostid:		Host identifier
  *
  * If @hostid is NULL, the function generates it based on the machine
@@ -49,15 +52,17 @@ char *libnvmf_generate_hostnqn(void);
  * Return: On success, an NVMe Qualified Name for host identification. This
  * name is based on the given host identifier. On failure, NULL.
  */
-char *libnvmf_generate_hostnqn_from_hostid(char *hostid);
+char *libnvmf_generate_hostnqn_from_hostid(struct libnvme_global_ctx *ctx,
+					   char *hostid);
 
 /**
  * libnvmf_generate_hostid() - Generate a machine specific host identifier
+ * @ctx:		struct libnvme_global_ctx object
  *
  * Return: On success, an identifier string based on the machine identifier to
  * be used as NVMe Host Identifier, or NULL on failure.
  */
-char *libnvmf_generate_hostid(void);
+char *libnvmf_generate_hostid(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvmf_read_hostnqn() - Reads the host nvm qualified name from the config
