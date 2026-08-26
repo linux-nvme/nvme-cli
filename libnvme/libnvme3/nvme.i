@@ -1550,7 +1550,7 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		return h;
 	}
 	~libnvme_host() {
-		libnvme_free_host($self);
+		/* tree-owned, do not free */
 	}
 	struct libnvme_host* __enter__() {
 		return $self;
@@ -1599,7 +1599,7 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		return s;
 	}
 	~libnvme_subsystem() {
-		libnvme_free_subsystem($self);
+		/* tree-owned, do not free */
 	}
 	struct libnvme_subsystem* __enter__() {
 		return $self;
@@ -1962,7 +1962,7 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		return libnvme_subsystem_lookup_namespace(s, nsid);
 	}
 	~libnvme_ns() {
-		libnvme_free_ns($self);
+		/* tree-owned, do not free */
 	}
 	struct libnvme_ns* __enter__() {
 		return $self;
