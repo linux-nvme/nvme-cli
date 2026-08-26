@@ -219,8 +219,8 @@ int libnvmf_scan_tls_keys(struct libnvme_global_ctx *ctx, const char *keyring,
  */
 int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		const char *key_type, const char *hostnqn,
-		const char *subsysnqn, int hmac, unsigned char *configured_key,
-		int key_len, long *key);
+		const char *subsysnqn, enum libnvmf_hmac_alg hmac,
+		unsigned char *configured_key, int key_len, long *key);
 
 /**
  * libnvmf_insert_tls_key_versioned() - Derive and insert a TLS PSK
@@ -249,7 +249,7 @@ int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
 int libnvmf_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *key);
 
@@ -283,7 +283,7 @@ int libnvmf_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 int libnvmf_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *key);
 
@@ -308,7 +308,7 @@ int libnvmf_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
  */
 int libnvmf_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		char **identity);
 
@@ -336,7 +336,8 @@ int libnvmf_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
  */
 int libnvmf_generate_tls_key_identity_compat(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac, unsigned char *configured_key,
+		int version, enum libnvmf_hmac_alg hmac,
+		unsigned char *configured_key,
 		int key_len, char **identity);
 
 /**
@@ -391,7 +392,7 @@ int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
-		unsigned char version, unsigned char hmac,
+		unsigned char version, enum libnvmf_hmac_alg hmac,
 		const unsigned char *key_data,
 		size_t key_len, char **encoded_keyp);
 
@@ -411,8 +412,8 @@ int libnvmf_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_import_tls_key(struct libnvme_global_ctx *ctx,
-		const char *encoded_key, int *key_len, unsigned int *hmac,
-		unsigned char **key);
+		const char *encoded_key, int *key_len,
+		enum libnvmf_hmac_alg *hmac, unsigned char **key);
 
 /**
  * libnvmf_import_tls_key_versioned() - Decode a PSK from the PSK
@@ -436,4 +437,5 @@ int libnvmf_import_tls_key(struct libnvme_global_ctx *ctx,
  */
 int libnvmf_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		const char *encoded_key, unsigned char *version,
-		unsigned char *hmac, size_t *key_len, unsigned char **key);
+		enum libnvmf_hmac_alg *hmac, size_t *key_len,
+		unsigned char **key);

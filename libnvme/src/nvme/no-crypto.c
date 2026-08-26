@@ -13,7 +13,7 @@
 #include <nvme/crypto.h>
 
 __shr_public int libnvmf_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
-				  unsigned char version, unsigned char hmac,
+				  unsigned char version, enum libnvmf_hmac_alg hmac,
 				  const unsigned char *key_data,
 				  size_t key_len, char **encoded_keyp)
 {
@@ -29,7 +29,7 @@ __shr_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
 __shr_public int libnvmf_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
 				  const char *encoded_key,
 				  unsigned char *version,
-				  unsigned char *hmac,
+				  enum libnvmf_hmac_alg *hmac,
 				  size_t *key_len,
 				  unsigned char **key)
 {
@@ -37,7 +37,7 @@ __shr_public int libnvmf_import_tls_key_versioned(struct libnvme_global_ctx *ctx
 }
 
 __shr_public int libnvmf_import_tls_key(struct libnvme_global_ctx *ctx, const char *encoded_key,
-			int *key_len, unsigned int *hmac, unsigned char **key)
+			int *key_len, enum libnvmf_hmac_alg *hmac, unsigned char **key)
 {
 	return -ENOTSUP;
 }
@@ -82,7 +82,7 @@ __shr_public char *libnvmf_describe_key_serial(struct libnvme_global_ctx *ctx,
 __shr_public int libnvmf_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *key)
 {
@@ -91,7 +91,7 @@ __shr_public int libnvmf_insert_tls_key_versioned(struct libnvme_global_ctx *ctx
 
 __shr_public int libnvmf_generate_tls_key_identity_compat(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac, unsigned char *configured_key,
+		int version, enum libnvmf_hmac_alg hmac, unsigned char *configured_key,
 		int key_len, char **identity)
 {
 	return -ENOTSUP;
@@ -100,7 +100,7 @@ __shr_public int libnvmf_generate_tls_key_identity_compat(struct libnvme_global_
 __shr_public int libnvmf_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		long *key)
 {
@@ -109,7 +109,7 @@ __shr_public int libnvmf_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 
 __shr_public int libnvmf_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
-		int version, int hmac,
+		int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len,
 		char **identity)
 {

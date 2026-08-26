@@ -554,7 +554,7 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 	__cleanup_free char *hnqn = NULL;
 	__cleanup_free char *tls_id = NULL;
 	int decoded_len, err = 0;
-	unsigned int hmac;
+	enum libnvmf_hmac_alg hmac;
 	long keyring_id, key_id;
 	struct config {
 		char		*keyring;
@@ -684,7 +684,7 @@ static int insert_tls(int argc, char **argv, struct command *acmd, struct plugin
 	__cleanup_free unsigned char *decoded_key = NULL;
 	__cleanup_free char *hnqn = NULL;
 	int decoded_len, err = 0;
-	unsigned int hmac;
+	enum libnvmf_hmac_alg hmac;
 	long tls_key;
 	struct config {
 		char		*keyring;
@@ -868,7 +868,7 @@ static int import_one_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	unsigned char decoded_key[128];
 	long key_serial;
 	int decoded_len, kxchap_hmac, err;
-	unsigned int tls_hmac;
+	enum libnvmf_hmac_alg tls_hmac;
 	uint32_t crc;
 
 	if (is_kxchap_key(key_str)) {
