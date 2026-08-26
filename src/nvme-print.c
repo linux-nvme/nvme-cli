@@ -58,6 +58,10 @@ static bool nvme_print_check(struct print_ops *ops, void *func)
 	if (func == ops->show_init || func == ops->show_finish)
 		return true;
 
+	/* Always dump command datum. */
+	if (func == ops->d)
+		return true;
+
 	if (nvme_args.dry_run)
 		return false;
 
