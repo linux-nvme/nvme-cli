@@ -214,15 +214,18 @@ static bool tid_subset_match(const struct libnvmf_tid *e,
  * Check one entry against a transport ID (minimal match): the entry is parsed
  * into a partial TID, and only the fields it sets are compared against @tid.  A
  * malformed entry (unknown key, bare token, or empty value) or one that sets no
- * fields matches nothing -- we never guess.  Parsed silently (ctx == NULL):
- * matching runs on every connect, so a bad hand-edited entry must stay quiet.
+ * fields matches nothing -- we never guess.  The parse reports what was wrong
+ * at DEBUG: matching runs on every connect, so a bad hand-edited entry must
+ * stay quiet by default.  "nvme exclusion list" flags it for the admin.
  */
-static bool entry_matches(const char *entry, const struct libnvmf_tid *tid)
+static bool entry_matches(struct libnvme_global_ctx *ctx, const char *entry,
+			  const struct libnvmf_tid *tid)
 {
 	struct libnvmf_tid *e;
 	bool matches;
 
-	if (libnvmf_tid_parse_strict(NULL, entry, &e))
+	if (_libnvmf_tid_parse_strict_at_level(ctx, LIBNVME_LOG_DEBUG,
+					       entry, &e))
 		return false;
 	if (libnvmf_tid_is_empty(e)) {
 		libnvmf_tid_free(e);
@@ -236,8 +239,8 @@ static bool entry_matches(const char *entry, const struct libnvmf_tid *tid)
 
 /*
  * Validate an entry before writing it: it must parse cleanly (every key known,
- * no malformed token) and set at least one field.  @ctx is used only to log
- * what was wrong; it may be NULL to validate silently.
+ * no malformed token) and set at least one field.  @ctx must be non-NULL; it
+ * is used to log what was wrong.
  */
 static bool entry_valid(struct libnvme_global_ctx *ctx, const char *entry)
 {
@@ -312,9 +315,9 @@ static enum excl_line_type classify_line(char *s, bool *in_excl, char **val)
 	return EXCL_LINE_ENTRY;
 }
 
-typedef bool (*scan_fn)(const char *entry, void *ctx);
+typedef bool (*scan_fn)(const char *entry, void *user_data);
 
-static bool scan_conf_file(const char *path, scan_fn fn, void *ctx)
+static bool scan_conf_file(const char *path, scan_fn fn, void *user_data)
 {
 	FILE *f;
 	char line[EXCL_LINE_MAX];
@@ -332,7 +335,7 @@ static bool scan_conf_file(const char *path, scan_fn fn, void *ctx)
 		if (classify_line(s, &in_excl, &val) != EXCL_LINE_ENTRY)
 			continue;
 
-		if (fn(val, ctx)) {
+		if (fn(val, user_data)) {
 			result = true;
 			break;
 		}
@@ -341,15 +344,23 @@ static bool scan_conf_file(const char *path, scan_fn fn, void *ctx)
 	return result;
 }
 
-static bool match_entry(const char *entry, void *ctx)
+struct match_ctx {
+	struct libnvme_global_ctx *ctx;
+	const struct libnvmf_tid *tid;
+};
+
+static bool match_entry(const char *entry, void *user_data)
 {
-	return entry_matches(entry, ctx);
+	const struct match_ctx *mc = user_data;
+
+	return entry_matches(mc->ctx, entry, mc->tid);
 }
 
 __shr_public bool libnvmf_exclusion_match(struct libnvme_global_ctx *ctx,
 					      const struct libnvmf_tid *tid)
 {
 	const char *dir, *mainp;
+	struct match_ctx mc;
 	DIR *d;
 	struct dirent *de;
 	bool found = false;
@@ -357,9 +368,12 @@ __shr_public bool libnvmf_exclusion_match(struct libnvme_global_ctx *ctx,
 	if (!ctx || !tid)
 		return false;
 
+	mc.ctx = ctx;
+	mc.tid = tid;
+
 	/* The hand-edited main list first, then each managed drop-in. */
 	mainp = excl_main_path(ctx);
-	if (mainp && scan_conf_file(mainp, match_entry, (void *)tid))
+	if (mainp && scan_conf_file(mainp, match_entry, &mc))
 		return true;
 
 	dir = excl_dropin_dir(ctx);
@@ -385,7 +399,7 @@ __shr_public bool libnvmf_exclusion_match(struct libnvme_global_ctx *ctx,
 		if (snprintf(path, sizeof(path), "%s/%s", dir,
 			     de->d_name) >= (int)sizeof(path))
 			continue;
-		found = scan_conf_file(path, match_entry, (void *)tid);
+		found = scan_conf_file(path, match_entry, &mc);
 	}
 	closedir(d);
 	return found;

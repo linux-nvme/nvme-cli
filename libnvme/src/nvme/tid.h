@@ -73,8 +73,7 @@ struct libnvmf_tid *libnvmf_tid_dup(const struct libnvmf_tid *tid);
 /**
  * libnvmf_tid_parse() - Allocate a TID from a semicolon-separated key=value
  * string.
- * @ctx: Global context used only for logging the diagnostics below; may be NULL
- *       to parse silently.
+ * @ctx: Global context used only for logging the diagnostics below.
  * @str: Input string, e.g. "transport=tcp;traddr=1.2.3.4;trsvcid=8009".
  * @out: The allocated TID on success; NULL on error.
  *
@@ -83,13 +82,13 @@ struct libnvmf_tid *libnvmf_tid_dup(const struct libnvmf_tid *tid);
  * "host-traddr", and "host-iface" string keys map onto the struct's
  * subsysnqn, host_traddr, and host_iface fields, whose names follow the
  * C-identifier convention.)  Unknown keys, bare keys (no '='), and empty
- * values are logged at WARN level (when @ctx is non-NULL) and skipped.
+ * values are logged at WARN level and skipped.
  * Whitespace around keys and values is trimmed.
  * Like libnvmf_tid_from_fields(), a traddr/host-traddr that is not numeric on
  * an IP transport fails the whole parse.
  *
- * Return: 0 on success (*@out is the allocated TID); -EINVAL if @out or @str
- * is NULL, or a traddr/host-traddr is not numeric on an IP transport;
+ * Return: 0 on success (*@out is the allocated TID); -EINVAL if @ctx, @out or
+ * @str is NULL, or a traddr/host-traddr is not numeric on an IP transport;
  * -ENOMEM on allocation failure.
  */
 int libnvmf_tid_parse(struct libnvme_global_ctx *ctx, const char *str,
@@ -98,7 +97,7 @@ int libnvmf_tid_parse(struct libnvme_global_ctx *ctx, const char *str,
 /**
  * libnvmf_tid_parse_strict() - Like libnvmf_tid_parse(), but reject malformed
  * input.
- * @ctx: Global context for logging; may be NULL to parse silently.
+ * @ctx: Global context for logging.
  * @str: Input string.
  * @out: The allocated TID on success; NULL on error.
  *
@@ -108,8 +107,8 @@ int libnvmf_tid_parse(struct libnvme_global_ctx *ctx, const char *str,
  * are still benign.  Useful when an unrecognized key should be treated as an
  * error (e.g. a typo in a hand-edited config) rather than silently ignored.
  *
- * Return: 0 on success (*@out is the allocated TID); -EINVAL if @out or @str
- * is NULL, or on a malformed token; -ENOMEM on allocation failure.
+ * Return: 0 on success (*@out is the allocated TID); -EINVAL if @ctx, @out or
+ * @str is NULL, or on a malformed token; -ENOMEM on allocation failure.
  */
 int libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx, const char *str,
 			     struct libnvmf_tid **out);

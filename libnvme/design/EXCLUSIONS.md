@@ -78,6 +78,9 @@ A controller is **excluded** if it matches **any** entry in **any** list. Matchi
 - **Field absent from the entry** → not checked; the entry can still match on its other fields.
 - **Unknown key in an entry** → that entry **never matches** (fail-safe): a typo weakens nothing.
 - **Empty or field-less entry** → never matches; it cannot be used to exclude everything by accident.
+- **Hostname where the transport requires a numeric address** → never matches; a TID is a canonical post-resolution identity.
+
+Matching runs on every connect attempt, so an invalid entry is reported at DEBUG level only: one typo in a static file must not produce a log line per connect. `nvme exclusion list` marks such entries, which is where an administrator looks for them.
 
 This makes an entry as broad or as narrow as the administrator writes it. `nqn=nqn.…:retired` excludes that subsystem on every transport and address; adding `traddr=` and `trsvcid=` narrows it to one path.
 

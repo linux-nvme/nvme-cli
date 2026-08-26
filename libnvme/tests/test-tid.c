@@ -64,6 +64,10 @@ static bool test_tid_parse_null(void)
 	pass = (libnvmf_tid_parse(ctx, NULL, &t) == -EINVAL && t == NULL);
 	CHECK(pass, "NULL input → -EINVAL");
 
+	pass &= (libnvmf_tid_parse(NULL, "transport=tcp", &t) == -EINVAL &&
+		 t == NULL);
+	CHECK(pass, "NULL ctx → -EINVAL");
+
 	libnvme_free_global_ctx(ctx);
 
 	return pass;
