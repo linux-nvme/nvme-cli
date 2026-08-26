@@ -913,8 +913,8 @@ int libnvme_refresh_topology(struct libnvme_global_ctx *ctx);
  * @d:		sysfs directory
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr or %NULL in case of an empty
- *         value or error.
+ * Return: A newly allocated string with the contents of @attr (the caller
+ *         frees), or %NULL in case of an empty value or error.
  */
 char *libnvme_get_attr(const char *d, const char *attr);
 
@@ -923,8 +923,8 @@ char *libnvme_get_attr(const char *d, const char *attr);
  * @s:		libnvme_subsystem_t object
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr or %NULL in case of an empty
- *	   value or error.
+ * Return: A newly allocated string with the contents of @attr (the caller
+ *	   frees), or %NULL in case of an empty value or error.
  */
 char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr);
 
@@ -933,8 +933,8 @@ char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr);
  * @c:		Controller instance
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error.
+ * Return: A newly allocated string with the contents of @attr (the caller
+ *	   frees), or %NULL in case of an empty value or error.
  */
 char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr);
 
@@ -943,8 +943,8 @@ char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr);
  * @n:		libnvme_ns_t object
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error.
+ * Return: A newly allocated string with the contents of @attr (the caller
+ *	   frees), or %NULL in case of an empty value or error.
  */
 char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr);
 
@@ -975,8 +975,8 @@ void libnvme_subsystem_release_fds(struct libnvme_subsystem *s);
  * @p:		libnvme_path_t object
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error.
+ * Return: A newly allocated string with the contents of @attr (the caller
+ *	   frees), or %NULL in case of an empty value or error.
  */
 char *libnvme_get_path_attr(libnvme_path_t p, const char *attr);
 
