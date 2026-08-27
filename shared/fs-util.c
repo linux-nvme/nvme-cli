@@ -48,6 +48,16 @@ int shr_mkdir_from_fname(const char *file, mode_t mode)
 {
 	__cleanup_free char *file_copy = NULL;
 	char *parent;
+	size_t len = strlen(file);
+
+	/*
+	 * A trailing '/' means there is no file name to strip and the path is
+	 * a directory in full. dirname() cannot be used for it: it removes
+	 * the trailing '/' before the last component, so "a/b/" would come
+	 * back as "a" and leave "a/b" uncreated.
+	 */
+	if (len && file[len - 1] == '/')
+		return shr_mkdir_p(file, mode);
 
 	file_copy = strdup(file);
 	if (!file_copy)
@@ -62,6 +72,11 @@ char *shr_basename(const char *path)
 	char *p = (char *)strrchr(path, '/');
 
 	return p ? p + 1 : (char *)path;
+}
+
+size_t shr_dir_prefix_len(const char *path)
+{
+	return (size_t)(shr_basename(path) - path);
 }
 
 static char *join_path(const char *dir, const char *path)

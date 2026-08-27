@@ -293,6 +293,14 @@ static bool test_mkdir_from_fname(void)
 	pass &= check_ret("bare filename without directories is a no-op success",
 			   ret, 0);
 
+	snprintf(fname, sizeof(fname), "%s/level1/level3/", base);
+	ret = shr_mkdir_from_fname(fname, 0755);
+	pass &= check_ret("a path ending in '/' has no file name to strip",
+			   ret, 0);
+	snprintf(fname, sizeof(fname), "%s/level1/level3", base);
+	pass &= check_bool("its last component is created, not dropped",
+			    dir_is_writable(fname));
+
 	{
 		char toolong[PATH_MAX + 10];
 
@@ -305,6 +313,7 @@ static bool test_mkdir_from_fname(void)
 	}
 
 	/* Clean up what we created, deepest first. */
+	shr_rmdir("shr-test-mkdir-fname-dir/level1/level3");
 	shr_rmdir("shr-test-mkdir-fname-dir/level1/level2");
 	shr_rmdir("shr-test-mkdir-fname-dir/level1");
 	shr_rmdir("shr-test-mkdir-fname-dir");

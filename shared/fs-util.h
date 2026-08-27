@@ -26,7 +26,8 @@ int shr_mkdir_p(const char *path, mode_t mode);
 
 /*
  * Create path and every missing parent directory using shr_mkdir_p
- * from a full path including a filename.
+ * from a full path including a filename. A path ending in '/' carries no
+ * filename and is created in full.
  */
 int shr_mkdir_from_fname(const char *file, mode_t mode);
 
@@ -66,6 +67,17 @@ int shr_unlink(const char *path);
  * never returns a pointer to static storage.
  */
 char *shr_basename(const char *path);
+
+/*
+ * The length of the leading directory part of path, including the '/' that
+ * ends it, or 0 when path holds no '/'. The counterpart of shr_basename():
+ *
+ *	path + shr_dir_prefix_len(path) == shr_basename(path)
+ *
+ * Unlike dirname(), a trailing '/' keeps its meaning, so the directory part
+ * of "a/b/" is "a/b/" rather than "a".
+ */
+size_t shr_dir_prefix_len(const char *path);
 
 /*
  * dirname returns the string up to, but not including, the final '/', and
