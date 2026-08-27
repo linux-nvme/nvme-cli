@@ -381,3 +381,6 @@ linknvme:nvme-keys-export[1]::
 
 linknvme:nvme-keys-revoke[1]::
 	Revoke an NVMeoF TLS PSK from a keyring
+
+linknvme:nvme-samsung-vs-internal-log[1]::
+	Retrieve Samsung vendor specific internal firmware logs

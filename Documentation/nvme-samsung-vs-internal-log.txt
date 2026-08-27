@@ -1,0 +1,103 @@
+nvme-samsung-vs-internal-log(1)
+===============================
+
+NAME
+----
+nvme-samsung-vs-internal-log - Retrieve Samsung vendor specific internal
+firmware logs
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'samsung vs-internal-log' <device> [OPTIONS]
+
+DESCRIPTION
+-----------
+Collect the internal firmware logs of a Samsung NVMe SSD and write them to
+disk. Host-initiated telemetry, controller-initiated telemetry and the
+vendor crash, memory and debug dumps are supported. Each dump is saved as
+its own file, so a single run usually produces several files.
+
+Use '--dump-type' to pick which dumps to collect; several types may be
+requested in a single run.
+
+This command will only work on Samsung devices supporting this feature.
+
+The '<device>' parameter is mandatory and may be either an NVMe character
+device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-t <TYPE>::
+--dump-type=<TYPE>::
+	Comma-separated list of dump types to extract, given without
+	spaces. The supported types are 'host0' and 'host1' for the
+	host-initiated telemetry dump using Log Specific Parameter 0 and
+	1 respectively, 'ctlr' for the controller-initiated telemetry
+	dump, and 'vendor' for the vendor dumps. When this option is
+	omitted, every dump type except 'host0' is extracted; 'host0'
+	is only collected when it is requested explicitly.
+
+-a <NUM>::
+--telemetry-data-area=<NUM>::
+	Telemetry data area to retrieve, 1 to 4. Defaults to 0, which
+	retrieves every data area. Data area 4 is only extracted when the
+	device reports that it supports it. This option only affects the
+	telemetry dumps.
+
+-O <FILE>::
+--output-file=<FILE>::
+	Output file name, optionally preceded by a path (ex:
+	'./path/name' or './path1/path2/'). Any directory in the path
+	that does not exist yet is created. When this option is omitted,
+	the dumps are written to the current directory.
+
+-z::
+--compress::
+	Collect the dumps into a temporary directory and save them as a
+	single compressed .tar.gz archive.
+
+-H::
+--hide-progress::
+	Do not print the incremental progress of an extraction. Useful
+	where the output is captured line by line and a carriage return
+	does not overwrite, so that every update would be kept. The
+	completion line of each dump is still printed.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+Extract the controller-initiated telemetry, the host-initiated telemetry
+using Log Specific Parameter 1 and the vendor dumps of the given device
+into the current directory.
+
+------------
+# nvme samsung vs-internal-log /dev/nvme0
+------------
+
+Extract only the controller-initiated telemetry and the vendor dumps,
+naming both types in a single run.
+
+------------
+# nvme samsung vs-internal-log /dev/nvme0 -t ctlr,vendor
+------------
+
+Extract the host-initiated telemetry using Log Specific Parameter 0, which
+is not collected unless it is named explicitly, into ./dumps/, creating
+that directory if it does not exist.
+
+------------
+# nvme samsung vs-internal-log /dev/nvme0 -t host0 -O ./dumps/
+------------
+
+Extract data area 2 of the host-initiated telemetry using Log Specific
+Parameter 1, store the result compressed and keep the output quiet.
+
+------------
+# nvme samsung vs-internal-log /dev/nvme0 -t host1 -a 2 -z -H
+------------
+
+NVME
+----
+Part of the nvme-user suite
