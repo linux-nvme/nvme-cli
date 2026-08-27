@@ -174,6 +174,7 @@ adoc_sources_man1 = [
     'nvme-rpmb-read-data',
     'nvme-rpmb-write-config',
     'nvme-rpmb-write-data',
+    'nvme-samsung-vs-internal-log',
     'nvme-sanitize',
     'nvme-seagate-clear-fw-activate-history',
     'nvme-seagate-clear-pcie-correctable-errors',
