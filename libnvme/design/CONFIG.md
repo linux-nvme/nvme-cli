@@ -2,13 +2,13 @@
 
 This is the host-side configuration that specifies **which NVMe over Fabrics (NVMe-oF) controllers a host should connect to, and with what parameters**. The configuration file uses the INI format.
 
-The format is parsed by **libnvme**, so every cooperating consumer reads one format through one parser: `nvme connect-all` / `nvme config` in nvme-cli, the **nvme-discoverd** daemon, and (through the Python bindings) **nvme-stas**. It sits alongside two other host-wide coordination files, the [ownership registry](REGISTRY.md) and the [exclusion list](EXCLUSIONS.md), and shares their transport-ID identity model (`src/nvme/tid.h`).
+The format is parsed by **libnvme**, so every cooperating consumer reads one file *format* through one parser. `nvme connect-all` / `nvme config` in nvme-cli and the **nvme-discoverd** daemon are complementary tools that work together from this one shared file. **nvme-stas** is a separate orchestrator: it reads the same format through the same parser (via the Python bindings), but from its own file, so that the two do not act on each other's configuration. The format shares the transport-ID identity model (`src/nvme/tid.h`) of the two host-wide coordination files, the [ownership registry](REGISTRY.md) and the [exclusion list](EXCLUSIONS.md) — which, unlike a connection configuration, are genuinely one per host.
 
 > This document describes the configuration **format and intent**. Once the parser lands, the header kdoc and the `nvme-*` man pages are the authoritative reference; the code is the source of truth.
 
 ## Design goals
 
-- **One shared format for every libnvme consumer** — nvme-cli, nvme-discoverd, and (via the Python bindings) nvme-stas all read the same file through the same parser.
+- **One shared format for every libnvme consumer** — nvme-cli, nvme-discoverd, and (via the Python bindings) nvme-stas all read the same format through the same parser. The nvme-cli tools and nvme-discoverd share one file; nvme-stas keeps its own.
 - **Human-editable, systemd-style** — `[Section]` / `key = value`, comments, and drop-ins, the same idiom as systemd's own `.conf` files.
 - **Deterministic parsing and precedence** — the same input always resolves to the same connections, with one well-defined merge order.
 - **Validated before connecting** — a dry-run entry point catches a bad configuration before it reaches the kernel.
@@ -301,16 +301,16 @@ The shared parser validates a configuration when it is read and reports problems
 
 The parser follows systemd conventions. Boolean values accept `1`/`yes`/`y`/`true`/`t`/`on` and `0`/`no`/`n`/`false`/`f`/`off` (all case-insensitive), matching systemd's `parse_boolean()`. Lines beginning with `#` are comments; blank lines are ignored. An empty value (`key =`) is meaningful — it resets a cascade-able tunable to the kernel default (above) — so the parser distinguishes a key that is absent from one present with an empty value. Every key has **exactly one spelling**: no hidden aliases, no underscore variants, and the subsystem NQN is written `nqn` (not `subsysnqn`). This is greenfield work — there are no legacy INI files to stay compatible with, so there is nothing ambiguous to parse or document.
 
-Connection-parameter keys are the **same names as the `nvme connect` command-line options** — `keep-alive-tmo`, `ctrl-loss-tmo`, `reconnect-delay`, `host-iface`, `kxchap-secret`, and so on (hyphenated, not the underscored spellings the legacy `config.json` used). What you write here is exactly what you would pass on the command line, which is the rule to reach for when in doubt about a key's name. The one key with no connect option is `hostsymname`: the host's symbolic name, sent to a Discovery Controller by the Discovery Information Management (DIM) command (`nvme dim`, TP8010). It is carried here for nvme-stas (which reads this format through the Python bindings) and for eventual TP8010 support in nvme-discoverd.
+Connection-parameter keys are the **same names as the `nvme connect` command-line options** — `keep-alive-tmo`, `ctrl-loss-tmo`, `reconnect-delay`, `host-iface`, `kxchap-secret`, and so on (hyphenated, not the underscored spellings the legacy `config.json` used). What you write here is exactly what you would pass on the command line, which is the rule to reach for when in doubt about a key's name. The one key with no connect option is `hostsymname`: the host's symbolic name, sent to a Discovery Controller by the Discovery Information Management (DIM) command (`nvme dim`, TP8010). It is carried in this format for nvme-stas (which reads it through the Python bindings, from its own file) and for eventual TP8010 support in nvme-discoverd.
 
 ## Relationship to the registry and exclusion list
 
-The three host-wide files cover complementary questions for the same goal — letting independent actors share a host's NVMe-oF connections:
+These three files cover complementary questions for the same goal — letting independent actors share a host's NVMe-oF connections. Two of them are genuinely host-wide, one registry and one exclusion list for the whole machine. A connection configuration is not: it states one orchestrator's intent, and each orchestrator names its own file.
 
 | | This config | [Registry](REGISTRY.md) | [Exclusion list](EXCLUSIONS.md) |
 |---|---|---|---|
 | Question | *What should be connected?* | *Who owns this controller?* | *May anyone connect this controller?* |
-| Location | `/etc/nvme/` (persistent config) | `/run/nvme/registry/` (runtime, per-boot) | `/etc/nvme/exclusions.conf` + `.conf.d/` (persistent config) |
+| Location | per orchestrator (persistent config); `/etc/nvme/nvme-fabrics.conf` + `.conf.d/` for the nvme-cli tools and nvme-discoverd | `/run/nvme/registry/` (runtime, per-boot) | `/etc/nvme/exclusions.conf` + `.conf.d/` (persistent config) |
 | Author | the administrator | libnvme, automatically on connect | the administrator |
 
 All three rest on the same transport-ID identity (`src/nvme/tid.h`) and the same principle: cooperation by convention, not enforcement.
