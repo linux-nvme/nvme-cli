@@ -52,13 +52,16 @@ jobs:
 
             # mdadm has a buffer overflow in v4.3 and was fixed with this commit:
             # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7f960c3bd050e76f8bf0a8a0c8fbdcbaa565fc78
-            # The Fedora packages ship v4.3.
-            # We are now compiling and installing mdadm from source with the most
-            # recent known good commit. The v4.4 release does not compile.
+            # The Fedora 44 packages ship v4.3.
+            # We are now compiling and installing mdadm from source using the
+            # mdadm-4.6 release, which includes the fix above.
+            # TODO: once the CI VM base image moves to Fedora 45+ (which ships
+            # mdadm-4.6), drop this block and add mdadm to the dnf install list
+            # above instead.
 
             git clone https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
             cd mdadm
-            git checkout d764c4829947923142a83251296d04edaee7d2f7
+            git checkout mdadm-4.6
             make -j$(nproc)
             sudo make install
             cd -
