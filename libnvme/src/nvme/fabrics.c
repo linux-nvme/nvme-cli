@@ -1634,10 +1634,63 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 }
 
 
+static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
+				const char *tls_key_identity,
+				struct libnvme_fabrics_config *cfg, struct libnvme_ctrl *c)
+{
+	if (keyring) {
+		char *endptr;
+		long id = strtol(keyring, &endptr, 0);
+
+		if (endptr != keyring)
+			cfg->keyring_id = id;
+		else
+			libnvme_ctrl_set_keyring(c, keyring);
+	}
+
+	if (tls_key_identity)
+		libnvme_ctrl_set_tls_key_identity(c, tls_key_identity);
+
+	if (tls_key) {
+		char *endptr;
+		long id = strtol(tls_key, &endptr, 0);
+
+		if (endptr != tls_key)
+			cfg->tls_key_id = id;
+		else
+			libnvme_ctrl_set_tls_key(c, tls_key);
+	}
+}
+
 __shr_public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, struct libnvme_ctrl **cp)
 {
-	return libnvme_create_ctrl(ctx, &fctx->ctrl_params, cp);
+	struct libnvme_ctrl *c;
+	int ret;
+
+	ret = libnvme_create_ctrl(ctx, &fctx->ctrl_params, &c);
+	if (ret)
+		return ret;
+
+	/*
+	 * The credentials live on @fctx next to, not inside, ctrl_params,
+	 * so libnvme_create_ctrl() cannot carry them over. Apply them here
+	 * or a controller created from a context that has them would
+	 * silently connect without.
+	 */
+	if (fctx->hostkey) {
+		libnvme_ctrl_set_kxchap_host_key(c, fctx->hostkey);
+		if (fctx->ctrlkey)
+			libnvme_ctrl_set_kxchap_ctrl_key(c, fctx->ctrlkey);
+	}
+
+	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
+		fctx->tls_key_identity, &fctx->ctrl_params.cfg, c);
+	update_config(c, &fctx->ctrl_params.cfg);
+
+	*cp = c;
+
+	return 0;
 }
 
 __shr_public int libnvmf_add_ctrl(struct libnvme_host *h, struct libnvme_ctrl *c)
@@ -2679,34 +2732,6 @@ static int set_discovery_kato(struct libnvmf_context *fctx,
 		params->cfg.keep_alive_tmo = 0;
 
 	return tmo;
-}
-
-static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
-				const char *tls_key_identity,
-				struct libnvme_fabrics_config *cfg, struct libnvme_ctrl *c)
-{
-	if (keyring) {
-		char *endptr;
-		long id = strtol(keyring, &endptr, 0);
-
-		if (endptr != keyring)
-			cfg->keyring_id = id;
-		else
-			libnvme_ctrl_set_keyring(c, keyring);
-	}
-
-	if (tls_key_identity)
-		libnvme_ctrl_set_tls_key_identity(c, tls_key_identity);
-
-	if (tls_key) {
-		char *endptr;
-		long id = strtol(tls_key, &endptr, 0);
-
-		if (endptr != tls_key)
-			cfg->tls_key_id = id;
-		else
-			libnvme_ctrl_set_tls_key(c, tls_key);
-	}
 }
 
 enum dc_ownership {
@@ -4062,19 +4087,9 @@ __shr_public int libnvmf_connect(
 		return -ENVME_CONNECT_ALREADY;
 	}
 
-	err = libnvme_create_ctrl(ctx, &fctx->ctrl_params, &c);
+	err = libnvmf_create_ctrl(ctx, fctx, &c);
 	if (err)
 		return err;
-
-	if (fctx->hostkey) {
-		libnvme_ctrl_set_kxchap_host_key(c, fctx->hostkey);
-		if (fctx->ctrlkey)
-			libnvme_ctrl_set_kxchap_ctrl_key(c, fctx->ctrlkey);
-	}
-
-	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
-		fctx->tls_key_identity, &fctx->ctrl_params.cfg, c);
-	update_config(c, &fctx->ctrl_params.cfg);
 
 	/*
 	 * We are connecting to a discovery controller, so let's treat

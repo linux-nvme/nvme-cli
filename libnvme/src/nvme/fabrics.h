@@ -646,6 +646,9 @@ int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
  * @c:			&struct libnvme_ctrl object to return
  *
  * Creates an unconnected controller to be used for libnvme_add_ctrl().
+ * The controller carries over @fctx's connection parameters together with
+ * its authentication and transport encryption settings (kxchap keys,
+ * keyring, TLS key and TLS key identity).
  *
  * Return: 0 on success, negative error code otherwise.
  */

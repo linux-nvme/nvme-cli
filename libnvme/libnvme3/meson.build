@@ -99,6 +99,7 @@ if want_python
         [ 'registry', [ files('tests/test-registry.py'), ] ],
         [ 'config', [ files('tests/test-config.py'), ] ],
         [ 'setattr-guards', [ files('tests/test-setattr.py'), ] ],
+        [ 'ctrl-crypto', [ files('tests/test-ctrl-crypto.py'), ] ],
     ]
     foreach test: py_tests
         description = test[0]
