@@ -14,9 +14,14 @@ SYNOPSIS
 DESCRIPTION
 -----------
 An INI-format file describing which NVMe over Fabrics (NVMe-oF)
-controllers a host should connect to, and with what parameters. It is
-read by 'nvme connect-all', 'nvme discover' and 'nvme connect', by the
-nvme-discoverd daemon, and (through the Python bindings) by nvme-stas.
+controllers a host should connect to, and with what parameters. This
+file is read by 'nvme connect-all', 'nvme discover' and 'nvme connect',
+and by the nvme-discoverd daemon.
+
+Other orchestrators read the same format through the same parser, but
+from a file of their own: nvme-stas reads its configuration through the
+Python bindings. The file name is a parameter of every entry point, so
+each orchestrator names its own and is unaffected by the others'.
 
 A configuration is a main file plus an optional drop-in directory,
 the same 'foo.conf' + 'foo.conf.d/' pattern systemd uses. Both parts
