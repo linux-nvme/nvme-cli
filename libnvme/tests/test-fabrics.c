@@ -715,6 +715,99 @@ static bool test_dc_decide(struct libnvme_global_ctx *ctx)
 }
 
 /* -------------------------------------------------------------------------
+ * libnvmf_create_ctrl — the credentials on the fabrics context live next to
+ * ctrl_params, not inside it.  Regression: the function forwarded only
+ * ctrl_params, so a controller built from a context carrying a keyring, TLS
+ * key or kxchap secret came out without any of them and the connect failed
+ * with ENOKEY.
+ * -------------------------------------------------------------------------
+ */
+static bool test_create_ctrl_credentials(struct libnvme_global_ctx *ctx)
+{
+	struct libnvmf_context fctx = { .ctx = ctx };
+	struct libnvme_ctrl *c = NULL;
+	const char *val;
+	bool pass = true, p;
+	int ret;
+
+	printf("\ntest_create_ctrl_credentials:\n");
+
+	fctx.ctrl_params.subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:subsys";
+	fctx.ctrl_params.transport = "tcp";
+	fctx.ctrl_params.traddr = "192.168.1.100";
+	fctx.ctrl_params.cfg.tls = true;
+
+	/* Named keyring and key: they end up as strings on the ctrl. */
+	fctx.hostkey = "hostkey";
+	fctx.ctrlkey = "ctrlkey";
+	fctx.keyring = ".nvme";
+	fctx.tls_key = "tlskey";
+	fctx.tls_key_identity = "identity";
+
+	ret = libnvmf_create_ctrl(ctx, &fctx, &c);
+	p = ret == 0 && c;
+	CHECK(p, "create with named keys: ret=%d", ret);
+	pass &= p;
+	if (!p)
+		return pass;
+
+	p = libnvme_ctrl_get_kxchap_host_key(c, &val, NULL) == 0 &&
+		!strcmp(val, "hostkey");
+	CHECK(p, "kxchap host key carried over");
+	pass &= p;
+
+	p = libnvme_ctrl_get_kxchap_ctrl_key(c, &val, NULL) == 0 &&
+		!strcmp(val, "ctrlkey");
+	CHECK(p, "kxchap ctrl key carried over");
+	pass &= p;
+
+	p = libnvme_ctrl_get_keyring(c, &val, NULL) == 0 &&
+		!strcmp(val, ".nvme");
+	CHECK(p, "keyring carried over");
+	pass &= p;
+
+	val = libnvme_ctrl_get_tls_key(c);
+	p = val && !strcmp(val, "tlskey");
+	CHECK(p, "tls key carried over");
+	pass &= p;
+
+	val = libnvme_ctrl_get_tls_key_identity(c);
+	p = val && !strcmp(val, "identity");
+	CHECK(p, "tls key identity carried over");
+	pass &= p;
+
+	p = c->cfg.tls;
+	CHECK(p, "fabrics config still carried over");
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	/* Numeric keyring and key: they end up as serials in the config. */
+	c = NULL;
+	fctx.keyring = "0x2a";
+	fctx.tls_key = "42";
+
+	ret = libnvmf_create_ctrl(ctx, &fctx, &c);
+	p = ret == 0 && c;
+	CHECK(p, "create with numeric keys: ret=%d", ret);
+	pass &= p;
+	if (!p)
+		return pass;
+
+	p = c->cfg.keyring_id == 0x2a;
+	CHECK(p, "keyring serial carried over: %ld", c->cfg.keyring_id);
+	pass &= p;
+
+	p = c->cfg.tls_key_id == 42;
+	CHECK(p, "tls key serial carried over: %ld", c->cfg.tls_key_id);
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
  * libnvmf_generate_hostid — the machine identifier comes from sysfs, so a
  * test sandbox must be able to redirect it.  Regression: the generators took
  * no context and always read the real machine.
@@ -819,6 +912,7 @@ int main(int argc, char *argv[])
 	test_nvmf_sanitize_addrs(ctx);
 	test_unescape_uri();
 	test_dc_decide(ctx);
+	test_create_ctrl_credentials(ctx);
 	test_generate_hostid(ctx);
 
 	libnvme_free_global_ctx(ctx);
