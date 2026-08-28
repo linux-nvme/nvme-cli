@@ -23,6 +23,9 @@ LIBNVMF_3 {
 		libnvmf_config_emit_install;
 		libnvmf_config_emit_new;
 		libnvmf_config_free;
+		libnvmf_config_get_hostid;
+		libnvmf_config_get_hostnqn;
+		libnvmf_config_get_hostsymname;
 		libnvmf_config_read;
 		libnvmf_config_resolve_discovered;
 		libnvmf_config_validate;

@@ -276,6 +276,51 @@ const struct libnvmf_params *libnvmf_config_resolve_discovered(
 		bool is_dc);
 
 /**
+ * libnvmf_config_get_hostnqn() - the top-level [Host] host NQN.
+ * @config: the resolved configuration
+ *
+ * The identity of the configuration's default persona, as written in the
+ * top-level file's [Host] section.  A drop-in's persona is deliberately not
+ * reachable here: it belongs to that drop-in's own connections.
+ *
+ * Each connection already carries the identity it is made under, but a
+ * configuration may name a persona and configure no connections at all -- a
+ * host that only connects what it discovers.  This is how that identity is
+ * read.
+ *
+ * Return: borrowed string, valid while @config is alive, or NULL when the
+ * top-level file names no host NQN (the caller falls back to the system
+ * identity in /etc/nvme/hostnqn).
+ */
+const char *libnvmf_config_get_hostnqn(const struct libnvmf_config *config);
+
+/**
+ * libnvmf_config_get_hostid() - the top-level [Host] host ID.
+ * @config: the resolved configuration
+ *
+ * See libnvmf_config_get_hostnqn().
+ *
+ * Return: borrowed string, valid while @config is alive, or NULL when the
+ * top-level file names no host ID (the caller falls back to the system
+ * identity in /etc/nvme/hostid).
+ */
+const char *libnvmf_config_get_hostid(const struct libnvmf_config *config);
+
+/**
+ * libnvmf_config_get_hostsymname() - the top-level [Host] symbolic name.
+ * @config: the resolved configuration
+ *
+ * The symbolic name a Discovery Information Management (DIM) command reports
+ * to a Centralized Discovery Controller (TP8010).  Unlike the host NQN and
+ * host ID it has no system-wide file to fall back on, so this is the only
+ * place it can be configured for a host that connects only what it discovers.
+ *
+ * Return: borrowed string, valid while @config is alive, or NULL when the
+ * top-level file names no symbolic name.
+ */
+const char *libnvmf_config_get_hostsymname(const struct libnvmf_config *config);
+
+/**
  * libnvmf_connect_args_emit() - render a connection as "nvme connect"
  * options.
  * @tid:       addressing + identity, or NULL to emit the parameters only
