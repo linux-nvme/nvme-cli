@@ -31,7 +31,7 @@
 #include "sandisk-utils.h"
 #include "src/cleanup.h"
 
-#define SANDISK_PLUGIN_VERSION   "3.1.4"
+#define SANDISK_PLUGIN_VERSION   "3.1.5"
 
 static __u8 ocp_C2_guid[SNDK_GUID_LENGTH] = {
 	0x6D, 0x79, 0x9A, 0x76, 0xB4, 0xDA, 0xF6, 0xA3,
