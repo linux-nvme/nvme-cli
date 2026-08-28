@@ -729,6 +729,54 @@ PyObject *config_read(struct libnvme_global_ctx *ctx, const char *file)
 	return list;
 }
 
+static PyObject *_config_params_to_dict(const struct libnvmf_params *params)
+{
+	PyObject *dict = PyDict_New();
+
+	/* No such *Defaults section is not an error: nothing is defaulted. */
+	if (dict && params)
+		libnvmf_params_for_each(params, _config_collect_param, dict);
+
+	return dict;
+}
+
+PyObject *config_defaults(struct libnvme_global_ctx *ctx, const char *file)
+{
+	__cleanup_config struct libnvmf_config *config = NULL;
+	PyObject *dict, *dc, *ioc;
+	int ret;
+
+	ret = libnvmf_config_read(ctx, file, &config);
+	if (ret < 0) {
+		PyErr_Format(PyExc_OSError, "config_defaults failed: %s",
+			     strerror(-ret));
+		return NULL;
+	}
+
+	/*
+	 * A NULL @via_dc asks for the top-level scope: the defaults that apply
+	 * to a controller with no configured origin. A drop-in's own overlay
+	 * is deliberately not reachable here -- an orchestrator that finds a
+	 * controller over mDNS has no way to know which drop-in it belongs to.
+	 */
+	dc = _config_params_to_dict(
+		libnvmf_config_resolve_discovered(config, NULL, true));
+	ioc = _config_params_to_dict(
+		libnvmf_config_resolve_discovered(config, NULL, false));
+
+	dict = (dc && ioc) ? PyDict_New() : NULL;
+	if (!dict) {
+		Py_XDECREF(dc);
+		Py_XDECREF(ioc);
+		return NULL;
+	}
+
+	PyDict_SetItemStringDecRef(dict, "dc", dc);
+	PyDict_SetItemStringDecRef(dict, "ioc", ioc);
+
+	return dict;
+}
+
 void config_validate(struct libnvme_global_ctx *ctx, const char *file)
 {
 	int ret;
@@ -1340,6 +1388,31 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename);
 	if (PyErr_Occurred()) SWIG_fail;
 }
 PyObject *config_read(struct libnvme_global_ctx *ctx, const char *file = NULL);
+
+%exception config_defaults {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+%feature("autodoc", "Read the default connection parameters from a "
+		"configuration.\n"
+		"\n"
+		"These are the defaults for a controller with no configured\n"
+		"origin -- one found over mDNS, or learned from a discovery\n"
+		"log page -- taken from the top-level file. A drop-in's own\n"
+		"overlay is not included: a controller discovered at runtime\n"
+		"cannot be attributed to a drop-in.\n"
+		"\n"
+		"Args:\n"
+		"    file: Path to the main configuration file, or None for\n"
+		"          the default.\n"
+		"\n"
+		"Returns:\n"
+		"    {'dc': {...}, 'ioc': {...}} -- the [Discovery Controller\n"
+		"    Defaults] and [I/O Controller Defaults] parameters, each\n"
+		"    an empty dict when the section is absent.")
+		config_defaults;
+PyObject *config_defaults(struct libnvme_global_ctx *ctx,
+			  const char *file = NULL);
 
 %exception config_validate {
 	$action
