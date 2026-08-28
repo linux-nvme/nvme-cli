@@ -32,6 +32,7 @@ bool is_printable_at_level(int level)
 
 int map_log_level(int verbose, bool quiet)
 {
+	// quiet cancels -v but never goes below ERR
 	if (quiet)
 		return LIBNVME_LOG_ERR;
 
