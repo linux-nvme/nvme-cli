@@ -777,6 +777,47 @@ PyObject *config_defaults(struct libnvme_global_ctx *ctx, const char *file)
 	return dict;
 }
 
+PyObject *config_host(struct libnvme_global_ctx *ctx, const char *file)
+{
+	__cleanup_config struct libnvmf_config *config = NULL;
+	PyObject *dict;
+	const char *val;
+	int ret;
+
+	ret = libnvmf_config_read(ctx, file, &config);
+	if (ret < 0) {
+		PyErr_Format(PyExc_OSError, "config_host failed: %s",
+			     strerror(-ret));
+		return NULL;
+	}
+
+	dict = PyDict_New();
+	if (!dict)
+		return NULL;
+
+	/*
+	 * Only what the file actually names. An absent key is omitted rather
+	 * than reported as empty, so the caller can tell "not configured"
+	 * from "configured to nothing" and fall back accordingly.
+	 */
+	val = libnvmf_config_get_hostnqn(config);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "hostnqn",
+					   PyUnicode_FromString(val));
+
+	val = libnvmf_config_get_hostid(config);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "hostid",
+					   PyUnicode_FromString(val));
+
+	val = libnvmf_config_get_hostsymname(config);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "hostsymname",
+					   PyUnicode_FromString(val));
+
+	return dict;
+}
+
 void config_validate(struct libnvme_global_ctx *ctx, const char *file)
 {
 	int ret;
@@ -1413,6 +1454,33 @@ PyObject *config_read(struct libnvme_global_ctx *ctx, const char *file = NULL);
 		config_defaults;
 PyObject *config_defaults(struct libnvme_global_ctx *ctx,
 			  const char *file = NULL);
+
+%exception config_host {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+%feature("autodoc", "Read the top-level host identity from a "
+		"configuration.\n"
+		"\n"
+		"The default persona, as written in the top-level file's\n"
+		"[Host] section. A drop-in's persona belongs to that\n"
+		"drop-in's own connections and is not reported here.\n"
+		"\n"
+		"Each connection carries the identity it is made under, but a\n"
+		"configuration may name a persona and configure no\n"
+		"connections at all -- a host that connects only what it\n"
+		"discovers. This is how that identity is read.\n"
+		"\n"
+		"Args:\n"
+		"    file: Path to the main configuration file, or None for\n"
+		"          the default.\n"
+		"\n"
+		"Returns:\n"
+		"    A dict with 'hostnqn', 'hostid' and 'hostsymname', each\n"
+		"    present only when the file names it.")
+		config_host;
+PyObject *config_host(struct libnvme_global_ctx *ctx,
+		      const char *file = NULL);
 
 %exception config_validate {
 	$action

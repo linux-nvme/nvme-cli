@@ -140,6 +140,9 @@ __shr_public void libnvmf_config_free(struct libnvmf_config *conf)
 	free_conns(&conf->conns);
 	libnvmf_params_free(conf->top_dc_params);
 	libnvmf_params_free(conf->top_ioc_params);
+	free(conf->top_hostnqn);
+	free(conf->top_hostid);
+	free(conf->top_hostsymname);
 	free(conf);
 }
 
@@ -399,6 +402,23 @@ int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
 	conf->top_dc_params = build_base(files[0], files[0], true);
 	conf->top_ioc_params = build_base(files[0], files[0], false);
 	if (!conf->top_dc_params || !conf->top_ioc_params) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	/*
+	 * The top-level persona.  Only a real value is kept: an unset or
+	 * reset field means "no such identity", not an empty one.
+	 */
+	if (real_value(files[0]->hostnqn))
+		conf->top_hostnqn = shr_xstrdup(files[0]->hostnqn);
+	if (real_value(files[0]->hostid))
+		conf->top_hostid = shr_xstrdup(files[0]->hostid);
+	if (real_value(files[0]->hostsymname))
+		conf->top_hostsymname = shr_xstrdup(files[0]->hostsymname);
+	if ((real_value(files[0]->hostnqn) && !conf->top_hostnqn) ||
+	    (real_value(files[0]->hostid) && !conf->top_hostid) ||
+	    (real_value(files[0]->hostsymname) && !conf->top_hostsymname)) {
 		ret = -ENOMEM;
 		goto out;
 	}

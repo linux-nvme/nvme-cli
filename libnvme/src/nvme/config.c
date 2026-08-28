@@ -159,6 +159,24 @@ __shr_public const struct libnvmf_params *libnvmf_config_resolve_discovered(
 	return is_dc ? config->top_dc_params : config->top_ioc_params;
 }
 
+__shr_public const char *libnvmf_config_get_hostnqn(
+		const struct libnvmf_config *config)
+{
+	return config ? config->top_hostnqn : NULL;
+}
+
+__shr_public const char *libnvmf_config_get_hostid(
+		const struct libnvmf_config *config)
+{
+	return config ? config->top_hostid : NULL;
+}
+
+__shr_public const char *libnvmf_config_get_hostsymname(
+		const struct libnvmf_config *config)
+{
+	return config ? config->top_hostsymname : NULL;
+}
+
 struct emit_state {
 	void (*callback)(const char *arg, void *user_data);
 	void *user_data;

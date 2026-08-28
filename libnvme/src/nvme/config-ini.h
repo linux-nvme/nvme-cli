@@ -201,6 +201,14 @@ struct libnvmf_config {
 	 */
 	struct libnvmf_params *top_dc_params;
 	struct libnvmf_params *top_ioc_params;
+	/*
+	 * Top-level [Host] identity.  Retained because a consumer that
+	 * configures no connections still has a host identity: the
+	 * connections carry a copy each, but there may not be any.
+	 */
+	char *top_hostnqn;
+	char *top_hostid;
+	char *top_hostsymname;
 };
 
 /*

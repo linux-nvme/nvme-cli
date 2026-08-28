@@ -283,6 +283,71 @@ static bool test_resolve_discovered(struct libnvme_global_ctx *ctx,
 	return pass;
 }
 
+static const char host_only_text[] =
+	"[Host]\n"
+	"hostnqn = nqn.2014-08.org.nvmexpress:solo-host\n"
+	"hostid = 8b6b8b6b-0000-4000-8000-00000000dead\n"
+	"hostsymname = solo\n";
+
+static bool test_top_level_host(struct libnvme_global_ctx *ctx,
+				const struct fixture *fx)
+{
+	struct conn_list list = { 0 };
+	struct libnvmf_config *config;
+	char path[352];
+	bool pass = true;
+
+	printf("test_top_level_host:\n");
+
+	/*
+	 * The fixture's main file carries no [Host]; only the drop-in does.
+	 * A drop-in's persona belongs to that drop-in's own connections and
+	 * must not be reported as the configuration's identity.
+	 */
+	shr_assert(!libnvmf_config_read(ctx, fx->main_path, &config));
+	if (libnvmf_config_get_hostnqn(config) ||
+	    libnvmf_config_get_hostid(config) ||
+	    libnvmf_config_get_hostsymname(config)) {
+		printf(" - a drop-in persona must not be reported [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - drop-in persona is not the top-level one [PASS]\n");
+	}
+	libnvmf_config_free(config);
+
+	/*
+	 * A [Host] and nothing else: no connections, but an identity. This is
+	 * the host that connects only what it discovers.
+	 */
+	write_file(fx->dir, "host-only.conf", host_only_text);
+	snprintf(path, sizeof(path), "%s/host-only.conf", fx->dir);
+	shr_assert(!libnvmf_config_read(ctx, path, &config));
+
+	libnvmf_config_conn_for_each(config, collect, &list);
+	if (list.n) {
+		printf(" - expected no connections, got %zu [FAIL]\n", list.n);
+		pass = false;
+	}
+
+	if (!libnvmf_config_get_hostnqn(config) ||
+	    strcmp(libnvmf_config_get_hostnqn(config),
+		   "nqn.2014-08.org.nvmexpress:solo-host") ||
+	    !libnvmf_config_get_hostid(config) ||
+	    strcmp(libnvmf_config_get_hostid(config),
+		   "8b6b8b6b-0000-4000-8000-00000000dead") ||
+	    !libnvmf_config_get_hostsymname(config) ||
+	    strcmp(libnvmf_config_get_hostsymname(config), "solo")) {
+		printf(" - identity of a connection-less config [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - identity without connections [PASS]\n");
+	}
+	libnvmf_config_free(config);
+	rm_file(fx->dir, "host-only.conf");
+
+	return pass;
+}
+
 static bool test_validate(struct libnvme_global_ctx *ctx,
 			  const struct fixture *fx)
 {
@@ -809,6 +874,9 @@ static bool test_edge_cases(struct libnvme_global_ctx *ctx,
 	    libnvmf_config_conn_get_hostsymname(NULL) ||
 	    libnvmf_config_conn_get_source(NULL) ||
 	    libnvmf_config_resolve_discovered(NULL, NULL, true) ||
+	    libnvmf_config_get_hostnqn(NULL) ||
+	    libnvmf_config_get_hostid(NULL) ||
+	    libnvmf_config_get_hostsymname(NULL) ||
 	    libnvmf_params_get(NULL, "tos")) {
 		printf(" - NULL tolerance [FAIL]\n");
 		pass = false;
@@ -835,6 +903,7 @@ int main(void)
 
 	pass &= test_read(ctx, &fx);
 	pass &= test_resolve_discovered(ctx, &fx);
+	pass &= test_top_level_host(ctx, &fx);
 	pass &= test_validate(ctx, &fx);
 	pass &= test_emit(ctx, &fx);
 	pass &= test_hostnqn_precedence(ctx, &fx);
