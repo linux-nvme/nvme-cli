@@ -3,10 +3,10 @@
 libnvme_ns_get_io_ticks \- Get IO ticks
 .SH SYNOPSIS
 .B "unsigned int" libnvme_ns_get_io_ticks
-.BI "(libnvme_ns_t n "  ");"
+.BI "(struct libnvme_ns *n "  ");"
 .SH ARGUMENTS
 .IP "n" 12
-\fIlibnvme_ns_t\fP object
+\fIstruct libnvme_ns\fP object
 .SH "RETURN"
 Time consumed, in milliseconds, processing I/O requests between
 two stat samples

@@ -2,13 +2,13 @@
 .SH NAME
 libnvme_ctrl_next_ns \- Next namespace iterator
 .SH SYNOPSIS
-.B "libnvme_ns_t" libnvme_ctrl_next_ns
-.BI "(libnvme_ctrl_t c "  ","
-.BI "libnvme_ns_t n "  ");"
+.B "struct libnvme_ns *" libnvme_ctrl_next_ns
+.BI "(struct libnvme_ctrl *c "  ","
+.BI "struct libnvme_ns *n "  ");"
 .SH ARGUMENTS
 .IP "c" 12
 Controller instance
 .IP "n" 12
-Previous libnvme_ns_t iterator
+Previous struct libnvme_ns iterator
 .SH "RETURN"
-Next libnvme_ns_t object of an \fIc\fP iterator
+Next struct libnvme_ns object of an \fIc\fP iterator

@@ -5,14 +5,14 @@
 
 Fabrics-specific definitions.
 
-.. c:function:: char * libnvmf_generate_hostnqn (void)
+.. c:function:: char * libnvmf_generate_hostnqn (struct libnvme_global_ctx *ctx)
 
    Generate a machine specific host nqn
 
 **Parameters**
 
-``void``
-  no arguments
+``struct libnvme_global_ctx *ctx``
+  struct libnvme_global_ctx object
 
 **Return**
 
@@ -20,11 +20,14 @@ An nvm namespace qualified name string based on the machine
 identifier, or NULL if not successful.
 
 
-.. c:function:: char * libnvmf_generate_hostnqn_from_hostid (char *hostid)
+.. c:function:: char * libnvmf_generate_hostnqn_from_hostid (struct libnvme_global_ctx *ctx, char *hostid)
 
    Generate a host nqn from host identifier
 
 **Parameters**
+
+``struct libnvme_global_ctx *ctx``
+  struct libnvme_global_ctx object
 
 ``char *hostid``
   Host identifier
@@ -40,14 +43,14 @@ On success, an NVMe Qualified Name for host identification. This
 name is based on the given host identifier. On failure, NULL.
 
 
-.. c:function:: char * libnvmf_generate_hostid (void)
+.. c:function:: char * libnvmf_generate_hostid (struct libnvme_global_ctx *ctx)
 
    Generate a machine specific host identifier
 
 **Parameters**
 
-``void``
-  no arguments
+``struct libnvme_global_ctx *ctx``
+  struct libnvme_global_ctx object
 
 **Return**
 
@@ -316,16 +319,16 @@ log page entry.
 decoded string
 
 
-.. c:function:: int libnvmf_add_ctrl (libnvme_host_t h, libnvme_ctrl_t c)
+.. c:function:: int libnvmf_add_ctrl (struct libnvme_host *h, struct libnvme_ctrl *c)
 
    Connect a controller and update topology
 
 **Parameters**
 
-``libnvme_host_t h``
+``struct libnvme_host *h``
   Host to which the controller should be attached
 
-``libnvme_ctrl_t c``
+``struct libnvme_ctrl *c``
   Controller to be connected
 
 **Description**
@@ -339,13 +342,13 @@ into the topology using **h** as parent.
 0 on success, negative error code otherwise.
 
 
-.. c:function:: int libnvmf_connect_ctrl (libnvme_ctrl_t c)
+.. c:function:: int libnvmf_connect_ctrl (struct libnvme_ctrl *c)
 
    Connect a controller
 
 **Parameters**
 
-``libnvme_ctrl_t c``
+``struct libnvme_ctrl *c``
   Controller to be connected
 
 **Description**
@@ -358,13 +361,13 @@ Issues a 'connect' command to the NVMe-oF controller.
 0 on success, negative error code otherwise.
 
 
-.. c:function:: int libnvmf_get_discovery_log (libnvme_ctrl_t ctrl, const struct libnvmf_discovery_args *args, struct nvmf_discovery_log **logp)
+.. c:function:: int libnvmf_get_discovery_log (struct libnvme_ctrl *ctrl, const struct libnvmf_discovery_args *args, struct nvmf_discovery_log **logp)
 
    Fetch the NVMe-oF discovery log page
 
 **Parameters**
 
-``libnvme_ctrl_t ctrl``
+``struct libnvme_ctrl *ctrl``
   Discovery controller
 
 ``const struct libnvmf_discovery_args *args``
@@ -383,13 +386,13 @@ generation-counter atomicity, and normalises each log entry.
 0 on success, negative error code otherwise.
 
 
-.. c:function:: bool libnvmf_is_registration_supported (libnvme_ctrl_t c)
+.. c:function:: bool libnvmf_is_registration_supported (struct libnvme_ctrl *c)
 
    check whether registration can be performed.
 
 **Parameters**
 
-``libnvme_ctrl_t c``
+``struct libnvme_ctrl *c``
   Controller instance
 
 **Description**
@@ -406,13 +409,13 @@ true if controller supports explicit registration. false
 otherwise.
 
 
-.. c:function:: int libnvmf_register_ctrl (libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
+.. c:function:: int libnvmf_register_ctrl (struct libnvme_ctrl *c, enum nvmf_dim_tas tas, __u32 *result)
 
    Perform registration task with a DC
 
 **Parameters**
 
-``libnvme_ctrl_t c``
+``struct libnvme_ctrl *c``
   Controller instance
 
 ``enum nvmf_dim_tas tas``
@@ -880,6 +883,10 @@ allocated string that the caller must free(). Otherwise, **owner** is set
 to NULL. A negative errno return indicates the lookup failed; it is
 never used to report that no owner exists.
 
+See also: libnvme_set_owner() (lib.h) to declare an orchestrator's own
+identity, and libnvmf_registry_retrieve() (registry.h) to read a live
+controller's registry entry by device name rather than by TID.
+
 **Return**
 
 0 on success (check **owner**), negative errno on failure.
@@ -956,7 +963,7 @@ Performs discovery using the NBFT tables found at **fctx**'s nbft_path.
 0 on success, negative error code otherwise.
 
 
-.. c:function:: int libnvmf_create_ctrl (struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx, libnvme_ctrl_t *c)
+.. c:function:: int libnvmf_create_ctrl (struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx, struct libnvme_ctrl **c)
 
    Allocate an unconnected NVMe controller
 
@@ -968,12 +975,15 @@ Performs discovery using the NBFT tables found at **fctx**'s nbft_path.
 ``struct libnvmf_context *fctx``
   Fabrics context
 
-``libnvme_ctrl_t *c``
-  **libnvme_ctrl_t** object to return
+``struct libnvme_ctrl **c``
+  :c:type:`struct libnvme_ctrl <libnvme_ctrl>` object to return
 
 **Description**
 
 Creates an unconnected controller to be used for libnvme_add_ctrl().
+The controller carries over **fctx**'s connection parameters together with
+its authentication and transport encryption settings (kxchap keys,
+keyring, TLS key and TLS key identity).
 
 **Return**
 
@@ -1001,13 +1011,13 @@ Connects to the fabrics subsystem using the provided context.
 0 on success, negative error code otherwise.
 
 
-.. c:function:: int libnvmf_disconnect_ctrl (libnvme_ctrl_t c)
+.. c:function:: int libnvmf_disconnect_ctrl (struct libnvme_ctrl *c)
 
    Disconnect a controller
 
 **Parameters**
 
-``libnvme_ctrl_t c``
+``struct libnvme_ctrl *c``
   Controller instance
 
 **Description**

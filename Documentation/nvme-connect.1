@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/24/2026
+.\"      Date: 08/28/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "08/24/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "08/28/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -86,7 +86,7 @@ Exit with status 0 if the requested controller is already connected instead of r
 .PP
 \-\-owner=<NAME>
 .RS 4
-Record NAME as the owner of the connected controller in the NVMe ownership registry, so other orchestrators (and nvme\-disconnect\-all) leave it alone\&. See nvme\-disconnect\-all(1)\&.
+Record NAME as the owner of the connected controller in the NVMe ownership registry, so other orchestrators (and nvme\-disconnect\-all) leave it alone\&. See nvme\-disconnect\-all(1)\&. An empty NAME (\-\-owner=) removes the registry entry instead, leaving the controller unowned\&. Without \-\-owner, a controller that was already connected keeps the entry it has\&.
 .RE
 .SH "FABRICS OPTIONS"
 .sp

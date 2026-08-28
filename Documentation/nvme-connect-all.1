@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/24/2026
+.\"      Date: 08/28/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "08/24/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "08/28/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -147,7 +147,7 @@ Use a user\-defined path to the NBFT tables
 \-\-owner=<NAME>
 .RS 4
 Record NAME as the owner of connected controllers in the NVMe ownership registry, so other orchestrators (and nvme\-disconnect\-all) leave them alone\&. See nvme\-disconnect\-all(1)\&. When \-\-nbft is also given, \-\-owner takes precedence over its default owner of
-\fInbft\fR\&.
+\fInbft\fR\&. An empty NAME (\-\-owner=) removes the registry entries instead, leaving the controllers unowned\&. Without \-\-owner, a controller that was already connected keeps the entry it has\&.
 .RE
 .SH "FABRICS OPTIONS"
 .sp

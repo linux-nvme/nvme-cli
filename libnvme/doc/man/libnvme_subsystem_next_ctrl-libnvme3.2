@@ -2,12 +2,12 @@
 .SH NAME
 libnvme_subsystem_next_ctrl \- Next ctrl iterator
 .SH SYNOPSIS
-.B "libnvme_ctrl_t" libnvme_subsystem_next_ctrl
-.BI "(libnvme_subsystem_t s "  ","
-.BI "libnvme_ctrl_t c "  ");"
+.B "struct libnvme_ctrl *" libnvme_subsystem_next_ctrl
+.BI "(struct libnvme_subsystem *s "  ","
+.BI "struct libnvme_ctrl *c "  ");"
 .SH ARGUMENTS
 .IP "s" 12
-\fIlibnvme_subsystem_t\fP object
+\fIstruct libnvme_subsystem\fP object
 .IP "c" 12
 Previous controller instance of an \fIs\fP iterator
 .SH "RETURN"

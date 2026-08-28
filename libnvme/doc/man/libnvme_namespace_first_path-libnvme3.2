@@ -2,10 +2,10 @@
 .SH NAME
 libnvme_namespace_first_path \- Start path iterator
 .SH SYNOPSIS
-.B "libnvme_path_t" libnvme_namespace_first_path
-.BI "(libnvme_ns_t ns "  ");"
+.B "struct libnvme_path *" libnvme_namespace_first_path
+.BI "(struct libnvme_ns *ns "  ");"
 .SH ARGUMENTS
 .IP "ns" 12
 Namespace instance
 .SH "RETURN"
-First \fIlibnvme_path_t\fP object of an \fIns\fP iterator
+First \fIstruct libnvme_path\fP object of an \fIns\fP iterator

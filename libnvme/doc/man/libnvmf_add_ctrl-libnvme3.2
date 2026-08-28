@@ -3,8 +3,8 @@
 libnvmf_add_ctrl \- Connect a controller and update topology
 .SH SYNOPSIS
 .B "int" libnvmf_add_ctrl
-.BI "(libnvme_host_t h "  ","
-.BI "libnvme_ctrl_t c "  ");"
+.BI "(struct libnvme_host *h "  ","
+.BI "struct libnvme_ctrl *c "  ");"
 .SH ARGUMENTS
 .IP "h" 12
 Host to which the controller should be attached

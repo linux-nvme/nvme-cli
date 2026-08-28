@@ -6,7 +6,7 @@ libnvme_host_release_fds \- Close all opened file descriptors under host
 .BI "(struct libnvme_host *h "  ");"
 .SH ARGUMENTS
 .IP "h" 12
-libnvme_host_t object
+struct libnvme_host object
 .SH "DESCRIPTION"
 Controller and Namespace objects cache the file descriptors
 of opened nvme devices. This API can be used to close and

@@ -3,7 +3,7 @@
 libnvme_mi_mi_read_mi_data_ctrl_list \- Perform a Read MI Data Structure command, retrieving the list of attached controllers.
 .SH SYNOPSIS
 .B "int" libnvme_mi_mi_read_mi_data_ctrl_list
-.BI "(libnvme_mi_ep_t ep "  ","
+.BI "(struct libnvme_mi_ep *ep "  ","
 .BI "__u8 start_ctrlid "  ","
 .BI "struct nvme_ctrl_list *list "  ");"
 .SH ARGUMENTS

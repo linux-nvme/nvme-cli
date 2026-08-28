@@ -2,10 +2,10 @@
 .SH NAME
 libnvme_first_subsystem \- Start subsystem iterator
 .SH SYNOPSIS
-.B "libnvme_subsystem_t" libnvme_first_subsystem
-.BI "(libnvme_host_t h "  ");"
+.B "struct libnvme_subsystem *" libnvme_first_subsystem
+.BI "(struct libnvme_host *h "  ");"
 .SH ARGUMENTS
 .IP "h" 12
-\fIlibnvme_host_t\fP object
+\fIstruct libnvme_host\fP object
 .SH "RETURN"
-first \fIlibnvme_subsystem_t\fP object in an iterator
+first \fIstruct libnvme_subsystem\fP object in an iterator

@@ -759,9 +759,13 @@ nvme-fabrics.conf(5) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>An INI-format file describing which NVMe over Fabrics (NVMe-oF)
-controllers a host should connect to, and with what parameters. It is
-read by <em>nvme connect-all</em>, <em>nvme discover</em> and <em>nvme connect</em>, by the
-nvme-discoverd daemon, and (through the Python bindings) by nvme-stas.</p></div>
+controllers a host should connect to, and with what parameters. This
+file is read by <em>nvme connect-all</em>, <em>nvme discover</em> and <em>nvme connect</em>,
+and by the nvme-discoverd daemon.</p></div>
+<div class="paragraph"><p>Other orchestrators read the same format through the same parser, but
+from a file of their own: nvme-stas reads its configuration through the
+Python bindings. The file name is a parameter of every entry point, so
+each orchestrator names its own and is unaffected by the others'.</p></div>
 <div class="paragraph"><p>A configuration is a main file plus an optional drop-in directory,
 the same <em>foo.conf</em> + <em>foo.conf.d/</em> pattern systemd uses. Both parts
 are read independently, and either may be absent; an absent
@@ -939,7 +943,7 @@ nvme-config-convert(1)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-24 15:30:08 CEST
+ 2026-08-28 19:07:51 CEST
 </div>
 </div>
 </body>

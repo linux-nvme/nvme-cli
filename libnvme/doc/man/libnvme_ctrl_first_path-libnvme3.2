@@ -2,10 +2,10 @@
 .SH NAME
 libnvme_ctrl_first_path \- Start path iterator
 .SH SYNOPSIS
-.B "libnvme_path_t" libnvme_ctrl_first_path
-.BI "(libnvme_ctrl_t c "  ");"
+.B "struct libnvme_path *" libnvme_ctrl_first_path
+.BI "(struct libnvme_ctrl *c "  ");"
 .SH ARGUMENTS
 .IP "c" 12
 Controller instance
 .SH "RETURN"
-First \fIlibnvme_path_t\fP object of an \fIc\fP iterator
+First \fIstruct libnvme_path\fP object of an \fIc\fP iterator

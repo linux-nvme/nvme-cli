@@ -3,9 +3,9 @@
 libnvme_ns_get_write_sectors \- Get num of write sectors
 .SH SYNOPSIS
 .B "unsigned long long" libnvme_ns_get_write_sectors
-.BI "(libnvme_ns_t n "  ");"
+.BI "(struct libnvme_ns *n "  ");"
 .SH ARGUMENTS
 .IP "n" 12
-\fIlibnvme_ns_t\fP object
+\fIstruct libnvme_ns\fP object
 .SH "RETURN"
 Num of sectors written to the device between two stat samples

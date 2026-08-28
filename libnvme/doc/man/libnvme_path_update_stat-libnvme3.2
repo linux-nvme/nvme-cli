@@ -3,11 +3,11 @@
 libnvme_path_update_stat \- Update stat of an nvme_path_t object
 .SH SYNOPSIS
 .B "int" libnvme_path_update_stat
-.BI "(libnvme_path_t p "  ","
+.BI "(struct libnvme_path *p "  ","
 .BI "bool diffstat "  ");"
 .SH ARGUMENTS
 .IP "p" 12
-\fIlibnvme_path_t\fP object
+\fIstruct libnvme_path\fP object
 .IP "diffstat" 12
 If set to true then getters return the diff stat otherwise
 return the current absolute stat

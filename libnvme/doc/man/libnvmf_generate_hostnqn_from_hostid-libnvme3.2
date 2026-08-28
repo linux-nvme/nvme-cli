@@ -3,8 +3,11 @@
 libnvmf_generate_hostnqn_from_hostid \- Generate a host nqn from host identifier
 .SH SYNOPSIS
 .B "char *" libnvmf_generate_hostnqn_from_hostid
-.BI "(char *hostid "  ");"
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "char *hostid "  ");"
 .SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
 .IP "hostid" 12
 Host identifier
 .SH "DESCRIPTION"

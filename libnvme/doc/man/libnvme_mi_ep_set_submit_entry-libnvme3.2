@@ -3,7 +3,7 @@
 libnvme_mi_ep_set_submit_entry \- Install MI submit-entry callback
 .SH SYNOPSIS
 .B "void" libnvme_mi_ep_set_submit_entry
-.BI "(libnvme_mi_ep_t ep "  ","
+.BI "(struct libnvme_mi_ep *ep "  ","
 .BI "void *(*mi_submit_entry)(struct libnvme_mi_ep *ep, __u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len, const void *data, size_t data_len) "  ");"
 .SH ARGUMENTS
 .IP "ep" 12

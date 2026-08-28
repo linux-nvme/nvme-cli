@@ -3,9 +3,9 @@
 libnvme_path_get_write_ios \- Get write I/Os
 .SH SYNOPSIS
 .B "unsigned long" libnvme_path_get_write_ios
-.BI "(libnvme_path_t p "  ");"
+.BI "(struct libnvme_path *p "  ");"
 .SH ARGUMENTS
 .IP "p" 12
-\fIlibnvme_path_t\fP object
+\fIstruct libnvme_path\fP object
 .SH "RETURN"
 Num of write I/Os processed between two stat samples

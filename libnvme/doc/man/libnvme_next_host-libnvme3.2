@@ -2,13 +2,13 @@
 .SH NAME
 libnvme_next_host \- Next host iterator
 .SH SYNOPSIS
-.B "libnvme_host_t" libnvme_next_host
+.B "struct libnvme_host *" libnvme_next_host
 .BI "(struct libnvme_global_ctx *ctx "  ","
-.BI "libnvme_host_t h "  ");"
+.BI "struct libnvme_host *h "  ");"
 .SH ARGUMENTS
 .IP "ctx" 12
 struct libnvme_global_ctx object
 .IP "h" 12
-Previous \fIlibnvme_host_t\fP iterator
+Previous \fIstruct libnvme_host\fP iterator
 .SH "RETURN"
-Next \fIlibnvme_host_t\fP object in an iterator
+Next \fIstruct libnvme_host\fP object in an iterator

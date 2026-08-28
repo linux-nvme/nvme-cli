@@ -757,9 +757,14 @@ nvme-exclusion-list(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Without --name, print the name of every named exclusion list under
-/etc/nvme/exclusions.conf.d/.  With --name, print the entries contained
-in that one list.</p></div>
+<div class="paragraph"><p>Without --name, print every exclusion list and its entries: the main
+hand-edited /etc/nvme/exclusions.conf first, shown as <em>(default)</em>, then
+each named list under /etc/nvme/exclusions.conf.d/.  With --name, print
+the entries of that one list.</p></div>
+<div class="paragraph"><p>An entry that can never match is marked <em># invalid: never matches</em>.  An
+entry is invalid when it uses an unknown key, a token without <em>=</em>, an
+empty value, or a hostname where the transport requires a numeric
+address.  Add --verbose to log the reason for each one.</p></div>
 <div class="paragraph"><p>This command is read-only and does not require root.</p></div>
 </div>
 </div>
@@ -866,7 +871,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Show every exclusion list:
+Show every exclusion list and its entries:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -905,7 +910,7 @@ nvme-disconnect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-24 15:30:08 CEST
+ 2026-08-28 19:07:51 CEST
 </div>
 </div>
 </body>

@@ -3,7 +3,7 @@
 libnvme_mi_mi_pda_write_zeroes \- Clear a range of the NVMe-MI Persistent Data Area (PDA) to 0h
 .SH SYNOPSIS
 .B "int" libnvme_mi_mi_pda_write_zeroes
-.BI "(libnvme_mi_ep_t ep "  ","
+.BI "(struct libnvme_mi_ep *ep "  ","
 .BI "enum nvme_mi_pda_dformat dformat "  ","
 .BI "__u32 dofst "  ","
 .BI "__u32 dlen "  ");"

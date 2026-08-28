@@ -23,5 +23,9 @@ When a matching owned controller exists, \fIowner\fP is set to a newly
 allocated string that the caller must \fBfree\fP. Otherwise, \fIowner\fP is set
 to NULL. A negative errno return indicates the lookup failed; it is
 never used to report that no owner exists.
+
+See also: \fBlibnvme_set_owner\fP (lib.h) to declare an orchestrator's own
+identity, and \fBlibnvmf_registry_retrieve\fP (registry.h) to read a live
+controller's registry entry by device name rather than by TID.
 .SH "RETURN"
 0 on success (check \fIowner\fP), negative errno on failure.

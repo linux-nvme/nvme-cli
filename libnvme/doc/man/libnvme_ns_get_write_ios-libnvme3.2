@@ -3,9 +3,9 @@
 libnvme_ns_get_write_ios \- Get num of write I/Os
 .SH SYNOPSIS
 .B "unsigned long" libnvme_ns_get_write_ios
-.BI "(libnvme_ns_t n "  ");"
+.BI "(struct libnvme_ns *n "  ");"
 .SH ARGUMENTS
 .IP "n" 12
-\fIlibnvme_ns_t\fP object
+\fIstruct libnvme_ns\fP object
 .SH "RETURN"
 Num of write IOs processed between two consecutive stat samples

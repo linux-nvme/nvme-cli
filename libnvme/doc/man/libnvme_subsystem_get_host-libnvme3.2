@@ -1,11 +1,11 @@
 .TH "libnvme_subsystem_get_host" 9 "libnvme_subsystem_get_host" "August 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvme_subsystem_get_host \- Returns libnvme_host_t object
+libnvme_subsystem_get_host \- Returns struct libnvme_host object
 .SH SYNOPSIS
-.B "libnvme_host_t" libnvme_subsystem_get_host
-.BI "(libnvme_subsystem_t s "  ");"
+.B "struct libnvme_host *" libnvme_subsystem_get_host
+.BI "(struct libnvme_subsystem *s "  ");"
 .SH ARGUMENTS
 .IP "s" 12
 subsystem
 .SH "RETURN"
-\fIlibnvme_host_t\fP object from \fIs\fP
+\fIstruct libnvme_host\fP object from \fIs\fP

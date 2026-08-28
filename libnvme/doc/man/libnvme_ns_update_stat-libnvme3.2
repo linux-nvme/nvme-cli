@@ -3,11 +3,11 @@
 libnvme_ns_update_stat \- update the nvme namespace stat
 .SH SYNOPSIS
 .B "int" libnvme_ns_update_stat
-.BI "(libnvme_ns_t n "  ","
+.BI "(struct libnvme_ns *n "  ","
 .BI "bool diffstat "  ");"
 .SH ARGUMENTS
 .IP "n" 12
-\fIlibnvme_ns_t\fP object
+\fIstruct libnvme_ns\fP object
 .IP "diffstat" 12
 If set to true then getters return the diff stat otherwise
 return the current absolute stat

@@ -55,6 +55,11 @@ A process that does not participate in the registry simply never calls this.
 This is the supported way to record the registry owner;
 libnvme_create_global_ctx() deliberately takes no owner parameter.
 
+See also: libnvmf_get_owner_from_tid() and libnvmf_get_owner_from_fctx()
+(fabrics.h) to look up who owns a candidate connection before connecting
+it, and libnvmf_registry_retrieve() (registry.h) to read a live
+controller's registry entry directly.
+
 **Return**
 
 0 on success, -EINVAL or -ENOMEM on error.
@@ -261,7 +266,7 @@ the MI endpoint, or NULL if the handle is not an MI handle.
 
 **Return**
 
-Device file name, otherwise -1.
+Device file name, otherwise NULL.
 
 
 .. c:function:: bool libnvme_transport_handle_is_ctrl (struct libnvme_transport_handle *hdl)

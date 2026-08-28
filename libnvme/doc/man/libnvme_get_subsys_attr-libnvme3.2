@@ -3,13 +3,13 @@
 libnvme_get_subsys_attr \- Read subsystem sysfs attribute
 .SH SYNOPSIS
 .B "char *" libnvme_get_subsys_attr
-.BI "(libnvme_subsystem_t s "  ","
+.BI "(struct libnvme_subsystem *s "  ","
 .BI "const char *attr "  ");"
 .SH ARGUMENTS
 .IP "s" 12
-libnvme_subsystem_t object
+struct libnvme_subsystem object
 .IP "attr" 12
 sysfs attribute name
 .SH "RETURN"
-String with the contents of \fIattr\fP or NULL in case of an empty
-value or error.
+A newly allocated string with the contents of \fIattr\fP (the caller
+frees), or NULL in case of an empty value or error.

@@ -2,10 +2,10 @@
 .SH NAME
 libnvme_ctrl_get_subsystem \- Parent subsystem of a controller
 .SH SYNOPSIS
-.B "libnvme_subsystem_t" libnvme_ctrl_get_subsystem
-.BI "(libnvme_ctrl_t c "  ");"
+.B "struct libnvme_subsystem *" libnvme_ctrl_get_subsystem
+.BI "(struct libnvme_ctrl *c "  ");"
 .SH ARGUMENTS
 .IP "c" 12
 Controller instance
 .SH "RETURN"
-Parent libnvme_subsystem_t object
+Parent struct libnvme_subsystem object

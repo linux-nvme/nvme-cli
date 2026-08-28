@@ -6,7 +6,7 @@ libnvme_subsystem_release_fds \- Close all opened fds under subsystem
 .BI "(struct libnvme_subsystem *s "  ");"
 .SH ARGUMENTS
 .IP "s" 12
-libnvme_subsystem_t object
+struct libnvme_subsystem object
 .SH "DESCRIPTION"
 Controller and Namespace objects cache the file descriptors
 of opened nvme devices. This API can be used to close and

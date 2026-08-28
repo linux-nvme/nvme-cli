@@ -18,5 +18,10 @@ A process that does not participate in the registry simply never calls this.
 
 This is the supported way to record the registry owner;
 \fBlibnvme_create_global_ctx\fP deliberately takes no owner parameter.
+
+See also: \fBlibnvmf_get_owner_from_tid\fP and \fBlibnvmf_get_owner_from_fctx\fP
+(fabrics.h) to look up who owns a candidate connection before connecting
+it, and \fBlibnvmf_registry_retrieve\fP (registry.h) to read a live
+controller's registry entry directly.
 .SH "RETURN"
 0 on success, -EINVAL or -ENOMEM on error.

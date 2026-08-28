@@ -6,7 +6,7 @@ libnvme_get_host \- Returns a host object
 .BI "(struct libnvme_global_ctx *ctx "  ","
 .BI "const char *hostnqn "  ","
 .BI "const char *hostid "  ","
-.BI "libnvme_host_t *h "  ");"
+.BI "struct libnvme_host **h "  ");"
 .SH ARGUMENTS
 .IP "ctx" 12
 struct libnvme_global_ctx object
@@ -15,7 +15,7 @@ Host NQN (optional)
 .IP "hostid" 12
 Host ID (optional)
 .IP "h" 12
-\fIlibnvme_host_t\fP object to return
+\fIstruct libnvme_host\fP object to return
 .SH "DESCRIPTION"
 Returns a host object based on the hostnqn/hostid values or the default if
 hostnqn/hostid are NULL.

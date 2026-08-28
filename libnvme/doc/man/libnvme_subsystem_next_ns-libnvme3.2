@@ -2,13 +2,13 @@
 .SH NAME
 libnvme_subsystem_next_ns \- Next namespace iterator
 .SH SYNOPSIS
-.B "libnvme_ns_t" libnvme_subsystem_next_ns
-.BI "(libnvme_subsystem_t s "  ","
-.BI "libnvme_ns_t n "  ");"
+.B "struct libnvme_ns *" libnvme_subsystem_next_ns
+.BI "(struct libnvme_subsystem *s "  ","
+.BI "struct libnvme_ns *n "  ");"
 .SH ARGUMENTS
 .IP "s" 12
-\fIlibnvme_subsystem_t\fP object
+\fIstruct libnvme_subsystem\fP object
 .IP "n" 12
-Previous \fIlibnvme_ns_t\fP iterator
+Previous \fIstruct libnvme_ns\fP iterator
 .SH "RETURN"
-Next \fIlibnvme_ns_t\fP object of an \fIs\fP iterator
+Next \fIstruct libnvme_ns\fP object of an \fIs\fP iterator

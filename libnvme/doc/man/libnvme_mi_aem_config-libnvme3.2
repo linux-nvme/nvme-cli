@@ -4,7 +4,7 @@ struct libnvme_mi_aem_config \- Provided for libnvme_mi_aem_enable
 .SH SYNOPSIS
 struct libnvme_mi_aem_config {
 .br
-.BI "    enum libnvme_mi_aem_handler_next_action (*aem_handler)(libnvme_mi_ep_t ep,size_t num_events, void *userdata);"
+.BI "    enum libnvme_mi_aem_handler_next_action (*aem_handler)(struct libnvme_mi_ep *ep,size_t num_events, void *userdata);"
 .br
 .BI "    struct libnvme_mi_aem_enabled_map enabled_map;"
 .br

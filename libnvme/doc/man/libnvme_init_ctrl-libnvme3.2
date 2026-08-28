@@ -1,16 +1,16 @@
 .TH "libnvme_init_ctrl" 9 "libnvme_init_ctrl" "August 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvme_init_ctrl \- Initialize libnvme_ctrl_t object for an existing controller.
+libnvme_init_ctrl \- Initialize struct libnvme_ctrl object for an existing controller.
 .SH SYNOPSIS
 .B "int" libnvme_init_ctrl
-.BI "(libnvme_host_t h "  ","
-.BI "libnvme_ctrl_t c "  ","
+.BI "(struct libnvme_host *h "  ","
+.BI "struct libnvme_ctrl *c "  ","
 .BI "int instance "  ");"
 .SH ARGUMENTS
 .IP "h" 12
-libnvme_host_t object
+struct libnvme_host object
 .IP "c" 12
-libnvme_ctrl_t object
+struct libnvme_ctrl object
 .IP "instance" 12
 Instance number (e.g. 1 for nvme1)
 .SH "RETURN"

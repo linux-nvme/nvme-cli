@@ -2,12 +2,12 @@
 .\"     Title: nvme-exclusion-list
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/24/2026
+.\"      Date: 08/28/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-EXCLUSION\-LIS" "1" "08/24/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-EXCLUSION\-LIS" "1" "08/28/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,9 @@ nvme-exclusion-list \- List NVMe\-oF exclusion lists or their entries
 .fi
 .SH "DESCRIPTION"
 .sp
-Without \-\-name, print the name of every named exclusion list under /etc/nvme/exclusions\&.conf\&.d/\&. With \-\-name, print the entries contained in that one list\&.
+Without \-\-name, print every exclusion list and its entries: the main hand\-edited /etc/nvme/exclusions\&.conf first, shown as \fI(default)\fR, then each named list under /etc/nvme/exclusions\&.conf\&.d/\&. With \-\-name, print the entries of that one list\&.
+.sp
+An entry that can never match is marked \fI# invalid: never matches\fR\&. An entry is invalid when it uses an unknown key, a token without \fI=\fR, an empty value, or a hostname where the transport requires a numeric address\&. Add \-\-verbose to log the reason for each one\&.
 .sp
 This command is read\-only and does not require root\&.
 .SH "OPTIONS"
@@ -102,7 +104,7 @@ These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&
 .sp -1
 .IP \(bu 2.3
 .\}
-Show every exclusion list:
+Show every exclusion list and its entries:
 .sp
 .if n \{\
 .RS 4

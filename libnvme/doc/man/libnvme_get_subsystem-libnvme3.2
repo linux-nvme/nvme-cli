@@ -1,6 +1,6 @@
 .TH "libnvme_get_subsystem" 9 "libnvme_get_subsystem" "August 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvme_get_subsystem \- Returns libnvme_subsystem_t object
+libnvme_get_subsystem \- Returns struct libnvme_subsystem object
 .SH SYNOPSIS
 .B "int" libnvme_get_subsystem
 .BI "(struct libnvme_global_ctx *ctx "  ","
@@ -12,13 +12,13 @@ libnvme_get_subsystem \- Returns libnvme_subsystem_t object
 .IP "ctx" 12
 struct libnvme_global_ctx object
 .IP "h" 12
-\fIlibnvme_host_t\fP object
+\fIstruct libnvme_host\fP object
 .IP "name" 12
 Name of the subsystem (may be NULL)
 .IP "subsysnqn" 12
 Subsystem NQN
 .IP "s" 12
-libnvme_subsystem_t object
+struct libnvme_subsystem object
 .SH "DESCRIPTION"
-Returns an \fIlibnvme_subsystem_t\fP object in \fIh\fP base on \fIname\fP (if present)
+Returns an \fIstruct libnvme_subsystem\fP object in \fIh\fP base on \fIname\fP (if present)
 and \fIsubsysnqn\fP or create one if not found.

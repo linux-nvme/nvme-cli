@@ -920,6 +920,10 @@ background.</p></div>
         ownership registry, so other orchestrators (and nvme-disconnect-all)
         leave them alone.  See nvme-disconnect-all(1).  When --nbft is also
         given, --owner takes precedence over its default owner of <em>nbft</em>.
+        An empty NAME (--owner=) removes the registry entries instead,
+        leaving the controllers unowned.
+        Without --owner, a controller that was already connected keeps
+        the entry it has.
 </p>
 </dd>
 </dl></div>
@@ -1430,7 +1434,7 @@ nvme-connect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-24 15:30:08 CEST
+ 2026-08-28 19:07:51 CEST
 </div>
 </div>
 </body>

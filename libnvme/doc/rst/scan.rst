@@ -20,13 +20,13 @@
 number of entries in **subsys** or a negative error code
 
 
-.. c:function:: int libnvme_scan_subsystem_namespaces (libnvme_subsystem_t s, struct dirent ***ns)
+.. c:function:: int libnvme_scan_subsystem_namespaces (struct libnvme_subsystem *s, struct dirent ***ns)
 
    Scan for namespaces in a subsystem
 
 **Parameters**
 
-``libnvme_subsystem_t s``
+``struct libnvme_subsystem *s``
   Subsystem to scan
 
 ``struct dirent ***ns``
@@ -54,13 +54,13 @@ number of entries in **ns** or a negative error code
 number of entries in **ctrls** or a negative error code
 
 
-.. c:function:: int libnvme_scan_ctrl_namespace_paths (libnvme_ctrl_t c, struct dirent ***paths)
+.. c:function:: int libnvme_scan_ctrl_namespace_paths (struct libnvme_ctrl *c, struct dirent ***paths)
 
    Scan for namespace paths in a controller
 
 **Parameters**
 
-``libnvme_ctrl_t c``
+``struct libnvme_ctrl *c``
   Controller to scan
 
 ``struct dirent ***paths``
@@ -71,13 +71,13 @@ number of entries in **ctrls** or a negative error code
 number of entries in **paths** or a negative error code
 
 
-.. c:function:: int libnvme_scan_ctrl_namespaces (libnvme_ctrl_t c, struct dirent ***ns)
+.. c:function:: int libnvme_scan_ctrl_namespaces (struct libnvme_ctrl *c, struct dirent ***ns)
 
    Scan for namespaces in a controller
 
 **Parameters**
 
-``libnvme_ctrl_t c``
+``struct libnvme_ctrl *c``
   Controller to scan
 
 ``struct dirent ***ns``
@@ -88,13 +88,13 @@ number of entries in **paths** or a negative error code
 number of entries in **ns** or a negative error code
 
 
-.. c:function:: int libnvme_scan_ns_head_paths (libnvme_ns_head_t head, struct dirent ***paths)
+.. c:function:: int libnvme_scan_ns_head_paths (struct libnvme_ns_head *head, struct dirent ***paths)
 
    Scan for namespace paths
 
 **Parameters**
 
-``libnvme_ns_head_t head``
+``struct libnvme_ns_head *head``
   Namespace head node to scan
 
 ``struct dirent ***paths``

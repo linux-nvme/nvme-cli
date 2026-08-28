@@ -3,10 +3,10 @@
 libnvmf_generate_hostid \- Generate a machine specific host identifier
 .SH SYNOPSIS
 .B "char *" libnvmf_generate_hostid
-.BI "(void "  ");"
+.BI "(struct libnvme_global_ctx *ctx "  ");"
 .SH ARGUMENTS
-.IP "void" 12
-no arguments
+.IP "ctx" 12
+struct libnvme_global_ctx object
 .SH "RETURN"
 On success, an identifier string based on the machine identifier to
 be used as NVMe Host Identifier, or NULL on failure.

@@ -2,13 +2,13 @@
 .SH NAME
 libnvme_namespace_next_path \- Next path iterator
 .SH SYNOPSIS
-.B "libnvme_path_t" libnvme_namespace_next_path
-.BI "(libnvme_ns_t ns "  ","
-.BI "libnvme_path_t p "  ");"
+.B "struct libnvme_path *" libnvme_namespace_next_path
+.BI "(struct libnvme_ns *ns "  ","
+.BI "struct libnvme_path *p "  ");"
 .SH ARGUMENTS
 .IP "ns" 12
 Namespace instance
 .IP "p" 12
-Previous \fIlibnvme_path_t\fP object of an \fIns\fP iterator
+Previous \fIstruct libnvme_path\fP object of an \fIns\fP iterator
 .SH "RETURN"
-Next \fIlibnvme_path_t\fP object of an \fIns\fP iterator
+Next \fIstruct libnvme_path\fP object of an \fIns\fP iterator

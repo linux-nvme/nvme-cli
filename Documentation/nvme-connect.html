@@ -820,6 +820,10 @@ the connection.</code></pre>
         Record NAME as the owner of the connected controller in the NVMe
         ownership registry, so other orchestrators (and nvme-disconnect-all)
         leave it alone.  See nvme-disconnect-all(1).
+        An empty NAME (--owner=) removes the registry entry instead,
+        leaving the controller unowned.
+        Without --owner, a controller that was already connected keeps
+        the entry it has.
 </p>
 </dd>
 </dl></div>
@@ -1301,7 +1305,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-24 15:30:08 CEST
+ 2026-08-28 19:07:51 CEST
 </div>
 </div>
 </body>
