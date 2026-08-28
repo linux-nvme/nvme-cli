@@ -49,6 +49,10 @@ OPTIONS
 	Record NAME as the owner of the connected controller in the NVMe
 	ownership registry, so other orchestrators (and nvme-disconnect-all)
 	leave it alone.  See nvme-disconnect-all(1).
+	An empty NAME (--owner=) removes the registry entry instead,
+	leaving the controller unowned.
+	Without --owner, a controller that was already connected keeps
+	the entry it has.
 
 include::fabrics-options.txt[]
 
