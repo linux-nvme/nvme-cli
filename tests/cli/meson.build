@@ -94,5 +94,13 @@ if python3.found()
              args: [files('nvme_init_pi_tags_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
+
+        if 'samsung' in selected_plugins
+            test('nvme-cli - samsung-cli',
+                 python3,
+                 args: [files('nvme_samsung_test.py'), nvme_exe, mock_nvme_lib],
+                 env: cli_test_env,
+                 depends: [nvme_exe, mock_nvme_lib])
+        endif
     endif
 endif
