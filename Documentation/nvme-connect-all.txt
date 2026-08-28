@@ -104,6 +104,10 @@ OPTIONS
 	ownership registry, so other orchestrators (and nvme-disconnect-all)
 	leave them alone.  See nvme-disconnect-all(1).  When --nbft is also
 	given, --owner takes precedence over its default owner of 'nbft'.
+	An empty NAME (--owner=) removes the registry entries instead,
+	leaving the controllers unowned.
+	Without --owner, a controller that was already connected keeps
+	the entry it has.
 
 include::fabrics-options.txt[]
 

@@ -57,7 +57,17 @@ struct libnvme_global_ctx *ctx = libnvme_create_global_ctx(...);
 libnvme_set_owner(ctx, "stas");   /* registers owner=stas on every connect */
 ```
 
-A process that does not call `libnvme_set_owner()` produces **unowned** connections. On connect, libnvme writes the entry when an owner is set — stamping it with the current `/sys/kernel/uevent_seqnum` (used by the cleanup rule below) — and clears any stale entry for a recycled instance number when it is not.
+A process that does not call `libnvme_set_owner()` produces **unowned** connections.
+
+What a connect does to the entry depends on the owner and on whether the kernel just created the controller:
+
+| owner | new controller | already connected |
+|---|---|---|
+| a name | write the entry, overwriting any existing one | write the entry (an explicit claim) |
+| never set | clear the entry | leave the entry alone |
+| set to `""` | clear the entry | clear the entry (an explicit disown) |
+
+A new controller is cleared because it cannot legitimately be owned by anybody: the entry can only be what a recycled instance number left behind. An already-connected controller may belong to another orchestrator, so an unstated intent must not touch it. Written entries are stamped with the current `/sys/kernel/uevent_seqnum` (used by the cleanup rule below).
 
 From the CLI, pass `--owner NAME` to register ownership at connect time:
 
@@ -67,9 +77,12 @@ nvme discover    --owner discoverd ...
 nvme connect-all --owner discoverd ...
 nvme connect-all --nbft                 # NBFT controllers, owner=nbft
 nvme connect-all --owner boot --nbft    # NBFT controllers, owner=boot (overrides nbft)
+nvme connect     --owner= ...           # explicitly disown
 ```
 
-`nvme connect-all --nbft` records `owner=nbft` automatically to protect firmware boot volumes. That `nbft` is only a default, though: an explicit `--owner NAME` given alongside `--nbft` overrides it, so `nvme connect-all --owner NAME --nbft` records the controllers as `NAME`. A plain `--nbft` (no `--owner`) keeps `owner=nbft`, which is what lets existing boot scripts get ownership for free without being changed. Without `--owner` and without `--nbft`, connections are unowned.
+`nvme connect-all --nbft` records `owner=nbft` automatically to protect firmware boot volumes. That `nbft` is only a default, though: an explicit `--owner NAME` given alongside `--nbft` overrides it, so `nvme connect-all --owner NAME --nbft` records the controllers as `NAME`. A plain `--nbft` (no `--owner`) keeps `owner=nbft`, which is what lets existing boot scripts get ownership for free without being changed. Without `--owner` and without `--nbft`, new connections are unowned and an already-connected controller keeps whatever entry it has.
+
+An empty `--owner=` is the explicit disown, and it beats the `--nbft` default: `nvme connect-all --owner= --nbft` leaves the controllers unowned.
 
 ## Automatic cleanup
 

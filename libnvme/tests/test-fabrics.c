@@ -715,6 +715,53 @@ static bool test_dc_decide(struct libnvme_global_ctx *ctx)
 }
 
 /* -------------------------------------------------------------------------
+ * registry_action_on_connect — what a successful connect does to the
+ * registry entry
+ * -------------------------------------------------------------------------
+ */
+static bool test_registry_action_on_connect(void)
+{
+	bool pass = true, p;
+	enum registry_action a;
+
+	printf("\ntest_registry_action_on_connect:\n");
+
+	a = registry_action_on_connect("stas", true);
+	p = a == REG_CLAIM;
+	CHECK(p, "owner=\"stas\", fresh: action=%d", a);
+	pass &= p;
+
+	/* A fresh instance number may carry a stale entry; drop it. */
+	a = registry_action_on_connect(NULL, true);
+	p = a == REG_CLEAR;
+	CHECK(p, "owner=NULL, fresh: action=%d", a);
+	pass &= p;
+
+	a = registry_action_on_connect("", true);
+	p = a == REG_CLEAR;
+	CHECK(p, "owner=\"\", fresh: action=%d", a);
+	pass &= p;
+
+	a = registry_action_on_connect("stas", false);
+	p = a == REG_CLAIM;
+	CHECK(p, "owner=\"stas\", reuse: action=%d", a);
+	pass &= p;
+
+	a = registry_action_on_connect("", false);
+	p = a == REG_CLEAR;
+	CHECK(p, "owner=\"\", reuse: action=%d", a);
+	pass &= p;
+
+	/* No intent stated on a controller we did not create: don't touch. */
+	a = registry_action_on_connect(NULL, false);
+	p = a == REG_NONE;
+	CHECK(p, "owner=NULL, reuse: action=%d", a);
+	pass &= p;
+
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
  * libnvmf_create_ctrl — the credentials on the fabrics context live next to
  * ctrl_params, not inside it.  Regression: the function forwarded only
  * ctrl_params, so a controller built from a context carrying a keyring, TLS
@@ -912,6 +959,7 @@ int main(int argc, char *argv[])
 	test_nvmf_sanitize_addrs(ctx);
 	test_unescape_uri();
 	test_dc_decide(ctx);
+	test_registry_action_on_connect();
 	test_create_ctrl_credentials(ctx);
 	test_generate_hostid(ctx);
 

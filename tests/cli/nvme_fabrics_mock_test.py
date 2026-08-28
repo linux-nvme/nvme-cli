@@ -87,6 +87,10 @@ class FabricsMockIPCServer(MockIPCServer):
         # Test-specific state overrides, steered from Python tests.
         self.connect_errno = 0
         self.ioctl_errno = 0
+        # Off by default: the mock hands out a fresh instance for every
+        # connect. Turn it on to make a repeat connect fail with EALREADY
+        # the way the kernel does.
+        self.reject_duplicate_connect = False
         self.discovery_entries = []  # fallback list of dicts (see _pack_disc_log_entry)
         self.discovery_map = {}      # maps subsysnqn (str) -> list of dicts
         self.model_number = "Mock NVMe Controller"
@@ -108,14 +112,23 @@ class FabricsMockIPCServer(MockIPCServer):
                 k, v = part.split('=', 1)
                 opts[k.strip()] = v.strip()
 
-        inst = int(opts.get('instance', self.next_instance))
-        if 'instance' not in opts:
-            self.next_instance += 1
-
         subsysnqn = opts.get('nqn', opts.get('subsysnqn', ''))
         transport = opts.get('transport', 'tcp')
         traddr = opts.get('traddr', '')
         trsvcid = opts.get('trsvcid', '4420')
+
+        if self.reject_duplicate_connect:
+            key = (transport, traddr, trsvcid, subsysnqn)
+            for c in self.controllers.values():
+                if (c['transport'], c['traddr'], c['trsvcid'],
+                        c['subsysnqn']) == key:
+                    self.send_response(conn, -1, errno_val=114)  # EALREADY
+                    return
+
+        inst = int(opts.get('instance', self.next_instance))
+        if 'instance' not in opts:
+            self.next_instance += 1
+
         host_traddr = opts.get('host_traddr', 'none')
         host_iface = opts.get('host_iface', 'none')
         hostnqn = opts.get('hostnqn', '')
@@ -246,6 +259,13 @@ class FabricsMockCLITest(unittest.TestCase):
 
     def _ctrl_path(self, instance):
         return Path(f"{self.sysfs_dir}/sys/class/nvme/nvme{instance}")
+
+    def _owner_path(self, instance):
+        return Path(f"{self.base_dir}/registry/nvme{instance}/owner")
+
+    def _owner(self, instance):
+        path = self._owner_path(instance)
+        return path.read_text().strip() if path.exists() else None
 
     def _subsysnqn(self, instance):
         return (self._ctrl_path(instance) / "subsysnqn").read_text().strip()
@@ -387,6 +407,76 @@ class FabricsMockCLITest(unittest.TestCase):
         res = self._run(*connect_args, '--idempotent')
         self.assertNotIn("already connected", res.stdout)
         self.assertNotIn("already connected", res.stderr)
+
+    # ------------------------------------------------------------------ #
+    # Registry ownership across connect                                  #
+    # ------------------------------------------------------------------ #
+    #
+    # A pinned hostnqn is required throughout: every nvme invocation
+    # otherwise generates its own, landing in a different in-memory host
+    # object, and lookup_live_ctrl() only searches the current host's
+    # subsystems. Without it a second connect could never be recognized as
+    # a reuse (see test_connect_already_connected_precheck).
+    _OWNER_HOSTNQN = ("nqn.2014-08.org.nvmexpress:uuid:"
+                      "33333333-3333-3333-3333-333333333333")
+
+    def _owner_connect_args(self, subsysnqn, traddr='192.168.20.10'):
+        return ('connect', '-t', 'tcp', '-a', traddr, '-s', '4420',
+                '-n', subsysnqn, '--hostnqn', self._OWNER_HOSTNQN)
+
+    def test_connect_registry_ownership(self):
+        """A fresh connect claims the registry entry; a reuse only touches
+        it when --owner says so."""
+        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:owned-io-subsys"
+        args = self._owner_connect_args(subsysnqn)
+
+        self._run(*args, '--owner=stas')
+        self.assertEqual(self._owner(0), 'stas')
+
+        # Reuse without --owner: intent unstated, entry left alone.
+        self._run(*args, '--idempotent')
+        self.assertEqual(self._owner(0), 'stas')
+
+        # Reuse with --owner: an explicit steal.
+        self._run(*args, '--idempotent', '--owner=other')
+        self.assertEqual(self._owner(0), 'other')
+
+        # Reuse with an empty --owner: an explicit disown.
+        self._run(*args, '--idempotent', '--owner=')
+        self.assertIsNone(self._owner(0))
+
+    def test_connect_fresh_clears_stale_registry_entry(self):
+        """A controller the kernel just created cannot legitimately be
+        owned, so a recycled instance number's stale entry is dropped."""
+        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:recycled-io-subsys"
+        stale = Path(f"{self.base_dir}/registry/nvme0")
+        stale.mkdir(parents=True)
+        (stale / "owner").write_text("stas\n")
+
+        self._run(*self._owner_connect_args(subsysnqn))
+        self.assertIsNone(self._owner(0))
+
+    def test_connect_all_does_not_steal_io_ctrl_ownership(self):
+        """The Discovery Log Page walk reaches an already-connected I/O
+        controller through the kernel's EALREADY, before any registry
+        update, so connect-all never claims one it did not create."""
+        self.server.reject_duplicate_connect = True
+        io_subsys = "nqn.2014-08.org.nvmexpress:uuid:walked-io-subsys"
+        io_addr = '192.168.20.10'
+        dc_addr = '192.168.20.1'
+
+        self._run(*self._owner_connect_args(io_subsys, io_addr),
+                  '--owner=stas')
+        self.assertEqual(self._owner(0), 'stas')
+
+        self.server.discovery_entries = [
+            {'transport': 'tcp', 'traddr': io_addr, 'trsvcid': '4420',
+             'subsysnqn': io_subsys},
+        ]
+        self._run('connect-all', '-t', 'tcp', '-a', dc_addr,
+                  '--hostnqn', self._OWNER_HOSTNQN, '--owner=other')
+
+        self.assertEqual(self._owner(0), 'stas')
 
     def test_custom_identify(self):
         """Test getting custom Identify Controller fields steered by environment."""

@@ -414,7 +414,12 @@ struct libnvme_fabric_options { // !generate-accessors
 };
 
 struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=libnvme !generate-python:alias=GlobalCtx
-	char *owner; /* orchestrator identity; NULL = unowned */
+	/*
+	 * Orchestrator identity. Tri-state: NULL means --owner was never
+	 * given, "" means an explicit disown, and a name means a claim.
+	 * On a reuse the NULL case leaves the registry entry alone.
+	 */
+	char *owner;
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
 	struct libnvme_log log;
