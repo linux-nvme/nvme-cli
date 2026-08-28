@@ -59,7 +59,7 @@ enum nvme_print_flags {
 		OPT_INCR("verbose",      'v', &nvme_args.verbose,                      \
                          "Increase output verbosity"),                                 \
 		OPT_FLAG("quiet",        0, &nvme_args.quiet,                          \
-                         "suppress output messages, overwrites verbose mode"),         \
+			 "suppress informational output"),                             \
 		OPT_FMT("output-format", 'o', &nvme_args.output_format, of_desc),      \
 		OPT_UINT("timeout",        0, &nvme_args.timeout,                      \
                          "timeout value, in milliseconds"),                            \

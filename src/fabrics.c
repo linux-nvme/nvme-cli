@@ -775,8 +775,9 @@ static int check_ctrl_owner(struct libnvme_global_ctx *ctx,
 	if (owner && streq(reg_owner, owner))
 		return 0;
 
-	nvme_show_error("owned by '%s'; skipping -- owner handles discovery",
-			 reg_owner);
+	nvme_show_message(false,
+			  "owned by '%s'; skipping -- owner handles discovery",
+			  reg_owner);
 	return 1;
 }
 

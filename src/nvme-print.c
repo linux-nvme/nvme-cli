@@ -1767,6 +1767,9 @@ static void show_message(bool error, const char *msg, va_list ap)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
 
+	if (nvme_args.quiet && !error)
+		return;
+
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
