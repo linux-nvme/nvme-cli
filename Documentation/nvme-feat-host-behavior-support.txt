@@ -1,0 +1,82 @@
+nvme-feat-host-behavior-support(1)
+==================================
+
+NAME
+----
+nvme-feat-host-behavior-support - Get and set host behavior support feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat host-behavior-support' <device>
+			[--acre=<acre> | -a <acre>]
+			[--etdas=<etdas> | -e <etdas>]
+			[--lbafee=<lbafee> | -l <lbafee>]
+			[--hdisns=<hdisns> | -H <hdisns>]
+			[--cdfe=<cdfe> | -c <cdfe>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set host behavior support feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--acre`, `--etdas`, `--lbafee`, `--hdisns`,
+or `--cdfe`) are specified, the command will update the host behavior support
+feature fields accordingly. If none of these options are specified, it will
+retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-a <acre>::
+--acre=<acre>::
+	Advanced Command Retry Enable (0 or 1).
+
+-e <etdas>::
+--etdas=<etdas>::
+	Extended Telemetry Data Area 4 Supported (0 or 1).
+
+-l <lbafee>::
+--lbafee=<lbafee>::
+	LBA Format Extension Enable (0 or 1).
+
+-H <hdisns>::
+--hdisns=<hdisns>::
+	Host Dispersed Namespace Support (0 or 1).
+
+-c <cdfe>::
+--cdfe=<cdfe>::
+	Copy Descriptor Formats Enable bitmask.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat host-behavior-support to get the current configuration:
++
+------------
+# nvme feat host-behavior-support /dev/nvme0
+------------
+
+* Has the program issue a feat host-behavior-support to set fields with saving enabled:
++
+------------
+# nvme feat host-behavior-support /dev/nvme0 --acre=1 --lbafee=1 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
