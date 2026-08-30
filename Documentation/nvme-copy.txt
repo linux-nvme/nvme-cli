@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'copy' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 			[--sdlba=<sdlba> | -d <sdlba>]
 			[--blocks=<nlb-list,> | -b <nlb-list,>]
 			[--slbs=<slbas,> | -s <slbas,>]
@@ -33,8 +34,20 @@ DESCRIPTION
 The Copy command is used by the host to copy data from one or more source
 logical block ranges to a single consecutive destination logical block range.
 
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+If the character device is given, the `'--namespace-id'` option is
+mandatory, otherwise it will use the ns-id of the namespace for the block
+device you opened. For block devices, the ns-id used can be overridden
+with the same option.
+
 OPTIONS
 -------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Sends the command with the requested nsid. This is required for the
+	character devices, or overrides the block nsid if given.
+
 -d <sdlba>::
 --sdlba=<sdlba>::
 	64-bit addr of first destination logical block
