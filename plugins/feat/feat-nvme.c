@@ -895,6 +895,14 @@ static int feat_err_recovery(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
+	if (!cfg.nsid) {
+		err = libnvme_get_nsid(hdl, &cfg.nsid);
+		if (err < 0) {
+			nvme_show_error("get-nsid: %s", libnvme_strerror(-err));
+			return err;
+		}
+	}
+
 	if (argconfig_parse_seen(opts, "tler") ||
 	    argconfig_parse_seen(opts, "dulbe"))
 		err = err_recovery_set(hdl, fid, cfg.nsid, cfg.tler, cfg.dulbe,
