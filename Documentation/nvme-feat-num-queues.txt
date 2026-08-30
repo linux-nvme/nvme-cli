@@ -1,0 +1,68 @@
+nvme-feat-num-queues(1)
+=======================
+
+NAME
+----
+nvme-feat-num-queues - Get and set number of queues feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat num-queues' <device>
+			[--nsqr=<nsqr> | -n <nsqr>]
+			[--ncqr=<ncqr> | -c <ncqr>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set the number of queues feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--nsqr` or `--ncqr`) are specified, the
+command will update the requested number of queues. If an option is omitted
+during a set operation, the command will first retrieve the current values
+and retain them. If neither option is specified, it will simply retrieve
+and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-n <nsqr>::
+--nsqr=<nsqr>::
+	Number of I/O submission queues requested.
+
+-c <ncqr>::
+--ncqr=<ncqr>::
+	Number of I/O completion queues requested.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat num-queues to get the current configuration:
++
+------------
+# nvme feat num-queues /dev/nvme0
+------------
+
+* Has the program issue a feat num-queues to set submission and completion queues:
++
+------------
+# nvme feat num-queues /dev/nvme0 --nsqr=4 --ncqr=4
+------------
+
+NVME
+----
+Part of the nvme-user suite.
