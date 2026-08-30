@@ -1,0 +1,95 @@
+nvme-feat-lba-range-type(1)
+===========================
+
+NAME
+----
+nvme-feat-lba-range-type - Get and set lba range type feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat lba-range-type' <device>
+			[--nsid=<nsid> | -n <nsid>] [--num=<num> | -N <num>]
+			[--types=<type-list,> | -t <type-list,>]
+			[--lbaros=<lbaro-list,> | -l <lbaro-list,>]
+			[--hlbars=<hlbar-list,> | -h <hlbar-list,>]
+			[--slbas=<slba-list,> | -s <slba-list,>]
+			[--nlbs=<nlb-list,> | -b <nlb-list,>]
+			[--guids=<guid-list,> | -g <guid-list,>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set lba range type feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+If the character device is given, the `'--nsid'` option is mandatory, otherwise
+it will use the ns-id of the namespace for the block device you opened.
+For block devices, the ns-id used can be overridden with the same option.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-n <nsid>::
+--nsid=<nsid>::
+	Sends the command with the requested nsid. This is required for the
+	character devices, or overrides the block nsid if given.
+
+-N <num>::
+--num=<num>::
+	zeroes based LBA ranges number.
+
+-t <type-list,>::
+--types=<type-list,>::
+	LBA range type list.
+
+-l <type-list,>::
+--lbaros=<lbaro-list,>::
+	LBA range overwriteable list.
+
+-h <hlbar-list,>::
+--hlbars=<hlbar-list,>::
+	hide LBA range list.
+
+-s <slba-list,>::
+--slbas=<slba-list,>::
+	starting LBA list.
+
+-b <nlb-list,>::
+--nlbs=<nlb-list,>::
+	zeroes based logical blocks number list.
+
+-g <guid-list,>::
+--guids=<guid-list,>::
+	unique identifier list. Only supported with __int128 available.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat lba-range-type to get
++
+------------
+# nvme feat lba-range-type /dev/nvme0 -n 1
+------------
+
+* Has the program issue a ocp feat lba-range-type with LBA ranges to set
++
+------------
+# nvme feat lba-range-type /dev/nvme0n1 --num=1 -t 0,1 -l 0,1 -h 1,0 -b 7,7 -s 0,4096 -g 1234,5678
+------------
+
+NVME
+----
+Part of the nvme-user suite.
