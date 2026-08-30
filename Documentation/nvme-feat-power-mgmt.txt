@@ -1,0 +1,65 @@
+nvme-feat-power-mgmt(1)
+=======================
+
+NAME
+----
+nvme-feat-power-mgmt - Get and set power management feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat power-mgmt' <device>
+			[--ps=<ps> | -p <ps>] [--wh=<wh> | -w <wh>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set power management feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If the setting option (`--ps`) is specified, the command will update the
+power management configuration. If the `--ps` option is omitted, it will
+retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-p <ps>::
+--ps=<ps>::
+	Power state. Specifies the power state to transition the controller to.
+
+-w <wh>::
+--wh=<wh>::
+	Workload hint. Provides a hint to the controller about the workload characteristics.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat power-mgmt to get the current configuration:
++
+------------
+# nvme feat power-mgmt /dev/nvme0
+------------
+
+* Has the program issue a feat power-mgmt to set power state and workload hint:
++
+------------
+# nvme feat power-mgmt /dev/nvme0 --ps=1 --wh=2 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
