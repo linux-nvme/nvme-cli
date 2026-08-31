@@ -1222,46 +1222,10 @@ def exclusion_match(ctx, transport=None, traddr=None, trsvcid=None,
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 		PyObject *entry = PyDict_New(), *val;
 
-		switch (e->trtype) {
-		case NVMF_TRTYPE_UNSPECIFIED:
-			val = PyUnicode_FromString("unspecified");
-			break;
-		case NVMF_TRTYPE_RDMA:
-			val = PyUnicode_FromString("rdma");
-			break;
-		case NVMF_TRTYPE_FC:
-			val = PyUnicode_FromString("fc");
-			break;
-		case NVMF_TRTYPE_TCP:
-			val = PyUnicode_FromString("tcp");
-			break;
-		case NVMF_TRTYPE_LOOP:
-			val = PyUnicode_FromString("loop");
-			break;
-		default:
-			val = PyLong_FromLong(e->trtype);
-		}
+		val = PyUnicode_FromString(libnvmf_trtype_str(e->trtype));
 		PyDict_SetItemStringDecRef(entry, "trtype", val);
 
-		switch (e->adrfam) {
-		case NVMF_ADDR_FAMILY_PCI:
-			val = PyUnicode_FromString("pci");
-			break;
-		case NVMF_ADDR_FAMILY_IP4:
-			val = PyUnicode_FromString("ipv4");
-			break;
-		case NVMF_ADDR_FAMILY_IP6:
-			val = PyUnicode_FromString("ipv6");
-			break;
-		case NVMF_ADDR_FAMILY_IB:
-			val = PyUnicode_FromString("infiniband");
-			break;
-		case NVMF_ADDR_FAMILY_FC:
-			val = PyUnicode_FromString("fc");
-			break;
-		default:
-			val = PyLong_FromLong(e->adrfam);
-		}
+		val = PyUnicode_FromString(libnvmf_adrfam_str(e->adrfam));
 		PyDict_SetItemStringDecRef(entry, "adrfam", val);
 
 		val = PyUnicode_FromString(e->traddr);
@@ -1271,104 +1235,32 @@ def exclusion_match(ctx, transport=None, traddr=None, trsvcid=None,
 		val = PyUnicode_FromString(e->subnqn);
 		PyDict_SetItemStringDecRef(entry, "subnqn", val);
 
-		switch (e->subtype) {
-		case NVME_NQN_DISC:
-			val = PyUnicode_FromString("referral");
-			break;
-		case NVME_NQN_NVME:
-			val = PyUnicode_FromString("nvme");
-			break;
-		case NVME_NQN_CURR:
-			val = PyUnicode_FromString("discovery");
-			break;
-		default:
-			val = PyLong_FromLong(e->subtype);
-		}
+		val = PyUnicode_FromString(libnvmf_subtype_str(e->subtype));
 		PyDict_SetItemStringDecRef(entry, "subtype", val);
 
-		switch (e->treq) {
-		case NVMF_TREQ_NOT_SPECIFIED:
-			val = PyUnicode_FromString("not specified");
-			break;
-		case NVMF_TREQ_REQUIRED:
-			val = PyUnicode_FromString("required");
-			break;
-		case NVMF_TREQ_NOT_REQUIRED:
-			val = PyUnicode_FromString("not required");
-			break;
-		case NVMF_TREQ_DISABLE_SQFLOW:
-			val = PyUnicode_FromString("disable sqflow");
-			break;
-		default:
-			val = PyLong_FromLong(e->treq);
-		}
+		val = PyUnicode_FromString(libnvmf_treq_str(e->treq));
 		PyDict_SetItemStringDecRef(entry, "treq", val);
 
 		if (e->trtype == NVMF_TRTYPE_TCP) {
 			PyObject *tsas = PyDict_New();
 
-			switch (e->tsas.tcp.sectype) {
-			case NVMF_TCP_SECTYPE_NONE:
-				val = PyUnicode_FromString("none");
-				break;
-			case NVMF_TCP_SECTYPE_TLS:
-				val = PyUnicode_FromString("tls");
-				break;
-			case NVMF_TCP_SECTYPE_TLS13:
-				val = PyUnicode_FromString("tls1.3");
-				break;
-			default:
-				val = PyUnicode_FromString("reserved");
-				break;
-			}
+			val = PyUnicode_FromString(
+				libnvmf_sectype_str(e->tsas.tcp.sectype));
 			PyDict_SetItemStringDecRef(tsas, "sectype", val);
 			PyDict_SetItemStringDecRef(entry, "tsas", tsas);
 		} else if (e->trtype == NVMF_TRTYPE_RDMA) {
 			PyObject *tsas = PyDict_New();
 
-			switch (e->tsas.rdma.qptype) {
-			case NVMF_RDMA_QPTYPE_CONNECTED:
-				val = PyUnicode_FromString("connected");
-				break;
-			case NVMF_RDMA_QPTYPE_DATAGRAM:
-				val = PyUnicode_FromString("datagram");
-				break;
-			default:
-				val = PyUnicode_FromString("reserved");
-				break;
-			}
+			val = PyUnicode_FromString(
+				libnvmf_qptype_str(e->tsas.rdma.qptype));
 			PyDict_SetItemStringDecRef(tsas, "qptype", val);
 
-			switch (e->tsas.rdma.prtype) {
-			case NVMF_RDMA_PRTYPE_NOT_SPECIFIED:
-				val = PyUnicode_FromString("not specified");
-				break;
-			case NVMF_RDMA_PRTYPE_IB:
-				val = PyUnicode_FromString("infiniband");
-				break;
-			case NVMF_RDMA_PRTYPE_ROCE:
-				val = PyUnicode_FromString("roce");
-				break;
-			case NVMF_RDMA_PRTYPE_ROCEV2:
-				val = PyUnicode_FromString("rocev2");
-				break;
-			case NVMF_RDMA_PRTYPE_IWARP:
-				val = PyUnicode_FromString("iwarp");
-				break;
-			default:
-				val = PyUnicode_FromString("reserved");
-				break;
-			}
+			val = PyUnicode_FromString(
+				libnvmf_prtype_str(e->tsas.rdma.prtype));
 			PyDict_SetItemStringDecRef(tsas, "prtype", val);
 
-			switch (e->tsas.rdma.cms) {
-			case NVMF_RDMA_CMS_RDMA_CM:
-				val = PyUnicode_FromString("cm");
-				break;
-			default:
-				val = PyUnicode_FromString("reserved");
-				break;
-			}
+			val = PyUnicode_FromString(
+				libnvmf_cms_str(e->tsas.rdma.cms));
 			PyDict_SetItemStringDecRef(tsas, "cms", val);
 			PyDict_SetItemStringDecRef(entry, "tsas", tsas);
 		}
