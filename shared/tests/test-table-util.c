@@ -262,8 +262,10 @@ static bool test_multi_type_and_centered(void)
 	/* Row A: every value centered, exercising every value type. */
 	ra = shr_table_get_row_id(t);
 	pass &= check_bool("row A id is non-negative", ra >= 0);
-	if (ra < 0)
+	if (ra < 0) {
+		shr_table_free(t);
 		return pass;
+	}
 	shr_table_set_value_str(t, 0, ra, "abc", CENTERED);
 	shr_table_set_value_int(t, 1, ra, -5, CENTERED);
 	shr_table_set_value_unsigned(t, 2, ra, 7, CENTERED);
@@ -276,8 +278,10 @@ static bool test_multi_type_and_centered(void)
 	/* Row B: mix of left/right alignment, same set of types. */
 	rb = shr_table_get_row_id(t);
 	pass &= check_bool("row B id is non-negative", rb >= 0);
-	if (rb < 0)
+	if (rb < 0) {
+		shr_table_free(t);
 		return pass;
+	}
 	shr_table_set_value_str(t, 0, rb, "xyz", LEFT);
 	shr_table_set_value_int(t, 1, rb, 42, RIGHT);
 	shr_table_set_value_unsigned(t, 2, rb, 3, LEFT);
@@ -343,8 +347,10 @@ static bool test_invalid_format_type(void)
 
 	row = shr_table_get_row_id(t);
 	pass &= check_bool("row id is non-negative", row >= 0);
-	if (row < 0)
+	if (row < 0) {
+		shr_table_free(t);
 		return pass;
+	}
 	shr_table_set_value_int(t, 0, row, 0, CENTERED);
 	shr_table_set_value_int(t, 1, row, 0, RIGHT);
 	/* Force an out-of-range format type to exercise the defensive
@@ -394,8 +400,10 @@ static bool test_shr_table_print(void)
 
 	row = shr_table_get_row_id(t);
 	pass &= check_bool("row id is non-negative", row >= 0);
-	if (row < 0)
+	if (row < 0) {
+		shr_table_free(t);
 		return pass;
+	}
 	shr_table_set_value_str(t, 0, row, "stdout-target", LEFT);
 	shr_table_add_row(t, row);
 
