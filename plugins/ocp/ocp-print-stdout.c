@@ -115,12 +115,10 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 
 	printf("SMART Cloud Attributes :-\n");
 
-	printf("  Physical media units written -		%"PRIu64" %"PRIu64"\n",
-		le64_to_cpu(*(uint64_t *)&log->physical_media_units_written[8]),
-		le64_to_cpu(*(uint64_t *)&log->physical_media_units_written));
-	printf("  Physical media units read    -		%"PRIu64" %"PRIu64"\n",
-		le64_to_cpu(*(uint64_t *)&log->physical_media_units_read[8]),
-		le64_to_cpu(*(uint64_t *)&log->physical_media_units_read));
+	printf("  Physical media units written -		%s\n",
+		uint128_t_to_string(le128_to_cpu(log->physical_media_units_written)));
+	printf("  Physical media units read    -		%s\n",
+		uint128_t_to_string(le128_to_cpu(log->physical_media_units_read)));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
 		int48_to_long(log->bad_user_nand_blocks_raw));
 	printf("  Bad user nand blocks - Normalized		%d\n",
