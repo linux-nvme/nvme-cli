@@ -64,11 +64,13 @@ def _probe_command(nvme_bin, command):
     key = (nvme_bin, command)
     if key not in _command_cache:
         probe = subprocess.run(f"{nvme_bin} {command} --help", shell=True,
-                               stdout=subprocess.DEVNULL,
-                               stderr=subprocess.PIPE)
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
         # --help always exits non-zero whether or not the command exists,
-        # so check for the appropriate error message instead.
-        supported = b"Invalid sub-command" not in probe.stderr
+        # so check for the error message instead of returncode. nvme-cli
+        # prints it to stderr on current builds but to stdout on 2.16 and
+        # earlier, so capture both into one stream rather than picking one.
+        supported = b"Invalid sub-command" not in probe.stdout
         _command_cache[key] = command if supported else _LEGACY_COMMANDS[command]
     return _command_cache[key]
 
