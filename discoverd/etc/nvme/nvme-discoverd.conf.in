@@ -24,8 +24,10 @@
 # detect FC equipment replacement sooner.
 #fc-kickstart-interval-minutes = 0
 
-# Hours a dynamically-discovered DC (found only via referral or FC
+# How long a dynamically-discovered DC (found only via referral or FC
 # kickstart, not NBFT or the fabrics config) keeps retrying a failed
-# (re)connect before it's dropped from tracking. 0 = never give up, same
-# as a static/NBFT-sourced DC.
-#dc-giveup-hours = 72
+# (re)connect before it's dropped from tracking. Takes a systemd time
+# span ("72hours", "3 days 5 hours") or a unit-less value in seconds.
+# "infinity" = never give up, same as a static/NBFT-sourced DC.
+# 0 = give up on the first failure.
+#dc-giveup-timeout = 72hours
