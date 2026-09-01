@@ -321,7 +321,7 @@ expect_match \
 expect_match \
     "plugin sub-commands are filtered by the typed prefix" \
     "nvme feat power-" \
-    "power-mgmt.*power-meas"
+    "power-meas.*power-mgmt"
 
 # A different plugin, to prove routing isn't hardcoded to one name.
 expect_match \
