@@ -16,6 +16,7 @@
 #include <ccan/str/str.h>
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
+#include <shared/time-util.h>
 
 #include "config.h"
 #include "log.h"
@@ -26,7 +27,7 @@ static void config_set_defaults(struct discoverd_config *cfg)
 	cfg->debug_level = DISC_LOG_INFO;
 	cfg->fc_kickstart_interval_minutes = 0;
 	cfg->epcsd_poll_interval_minutes = 15;
-	cfg->dc_giveup_hours = 72;
+	cfg->dc_giveup_timeout_usec = 72 * SHR_USEC_PER_HOUR;
 }
 
 static int parse_debug_level(const char *val, int *out)
@@ -88,8 +89,9 @@ static void apply_global_key(struct discoverd_config *cfg, const char *key,
 	else if (streq(key, "epcsd-poll-interval-minutes"))
 		r = parse_epcsd_poll_interval(
 			val, &cfg->epcsd_poll_interval_minutes);
-	else if (streq(key, "dc-giveup-hours"))
-		r = parse_uint(val, &cfg->dc_giveup_hours);
+	else if (streq(key, "dc-giveup-timeout"))
+		r = shr_parse_time(val, &cfg->dc_giveup_timeout_usec,
+				   SHR_USEC_PER_SEC);
 	else
 		disc_warn("%s:%u: unknown key '%s', ignored", conf_path,
 			  lineno, key);

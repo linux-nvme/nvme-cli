@@ -23,6 +23,7 @@
 #include <ccan/list/list.h>
 
 #include <shared/array-util.h>
+#include <shared/time-util.h>
 #include <nvme/config.h>
 #include <nvme/exclusion.h>
 #include <nvme/lib.h>
@@ -42,8 +43,8 @@
 // Exponential backoff for failed (re)connect attempts: 1s, 2s, 4s, ... capped
 // at 5 min. A dynamically-discovered DC (not NBFT- or config-sourced — a
 // referral or FC-kickstart find) additionally gives up after
-// dc-giveup-hours (default 72h) of unbroken failure and is dropped from
-// tracking, since nothing but its own retries vouches for it any more.
+// dc-giveup-timeout (default 72hours) of unbroken failure and is dropped
+// from tracking, since nothing but its own retries vouches for it any more.
 // Static and NBFT-sourced DCs represent deliberate admin/firmware intent
 // and always retry forever.
 #define RETRY_INITIAL_DELAY_SEC 1
@@ -395,25 +396,33 @@ static void fetch_and_process_dlp(const char *devname,
 /*
  * Arm a dynamically-discovered DC's give-up deadline the first time it is
  * seen failing to (re)connect. Static/NBFT-sourced DCs and IOCs never get
- * one and retry forever, and so does a dynamic DC when dc-giveup-hours is
- * configured to 0.
+ * one and retry forever, and so does a dynamic DC when dc-giveup-timeout
+ * is configured to infinity.
+ *
+ * Note the two distinct zeros: giveup_at_usec == 0 means no deadline is
+ * armed, while a dc-giveup-timeout of 0 means give up on the first
+ * failure. The latter still arms, because now + 0 is not 0.
  */
 static void ctrl_arm_giveup(struct active_ctrl *e)
 {
-	uint64_t now, giveup_usec;
+	uint64_t now;
 
 	if (e->giveup_at_usec || !e->is_dc)
 		return;
 	if (inventory_is_nbft(ctx.inventory, e->tid) ||
 	    inventory_config_conn_for(ctx.inventory, e->tid))
 		return;
-	if (!ctx.cfg->dc_giveup_hours)
+	if (ctx.cfg->dc_giveup_timeout_usec == SHR_USEC_INFINITY)
 		return;
 
-	giveup_usec = (uint64_t)ctx.cfg->dc_giveup_hours *
-		      3600 * UINT64_C(1000000);
-	if (sd_event_now(ctx.event, CLOCK_BOOTTIME, &now) >= 0)
-		e->giveup_at_usec = now + giveup_usec;
+	if (sd_event_now(ctx.event, CLOCK_BOOTTIME, &now) < 0)
+		return;
+
+	// A span so large the deadline would wrap means forever, not now.
+	if (ctx.cfg->dc_giveup_timeout_usec >= SHR_USEC_INFINITY - now)
+		return;
+
+	e->giveup_at_usec = now + ctx.cfg->dc_giveup_timeout_usec;
 }
 
 static uint64_t backoff_delay_usec(unsigned int attempts)

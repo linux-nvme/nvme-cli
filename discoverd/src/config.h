@@ -8,6 +8,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /*
  * nvme-discoverd's config file carries the daemon's own knobs only — the
@@ -19,7 +20,7 @@
  *   debug-level = info
  *   fc-kickstart-interval-minutes = 0
  *   epcsd-poll-interval-minutes = 15
- *   dc-giveup-hours = 72
+ *   dc-giveup-timeout = 72hours
  */
 struct discoverd_config {
 	bool nbft; // adopt/connect NBFT-listed controllers; default true
@@ -48,12 +49,13 @@ struct discoverd_config {
 	unsigned int epcsd_poll_interval_minutes;
 
 	/*
-	 * Hours a dynamically-discovered DC (found only via referral or FC
-	 * kickstart, not NBFT or the fabrics config) keeps retrying a failed
-	 * (re)connect before it's dropped from tracking. Default 72. 0 =
-	 * never give up, same as a static/NBFT-sourced DC.
+	 * Microseconds a dynamically-discovered DC (found only via referral
+	 * or FC kickstart, not NBFT or the fabrics config) keeps retrying a
+	 * failed (re)connect before it's dropped from tracking. Default 72
+	 * hours. SHR_USEC_INFINITY = never give up, same as a
+	 * static/NBFT-sourced DC; 0 = give up on the first failure.
 	 */
-	unsigned int dc_giveup_hours;
+	uint64_t dc_giveup_timeout_usec;
 };
 
 /*
