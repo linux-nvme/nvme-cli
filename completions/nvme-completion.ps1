@@ -140,6 +140,7 @@ $script:NvmeCommands = @(
     'resv-report'
     'rotational-media-info-log'
     'rpmb'
+    'samsung'
     'sanitize'
     'sanitize-log'
     'sanitize-ns'
@@ -215,6 +216,7 @@ $script:NvmePluginCommands = @{
     'registry' = @('delete', 'list', 'retrieve', 'update')
     'resv' = @('acquire', 'register', 'release', 'report')
     'rpmb' = @('info', 'program-key', 'read-config', 'read-counter', 'read-data', 'write-config', 'write-data')
+    'samsung' = @('vs-internal-log')
     'seagate' = @('clear-fw-activate-history', 'clear-pcie-correctable-errors', 'cloud-SSD-plugin-version', 'get-ctrl-tele', 'get-host-tele', 'plugin-version', 'vs-fw-activate-history', 'vs-internal-log', 'vs-log-page-sup', 'vs-pcie-stats', 'vs-smart-add-log', 'vs-temperature-stats')
     'security' = @('recv', 'send')
     'sed' = @('1', 'discover', 'initialize', 'lock', 'password', 'revert', 'unlock')
@@ -552,6 +554,7 @@ $script:NvmeOptions = @{
     'rpmb read-data' = @('--address', '-o', '--blocks', '-b', '--dry-run', '--msgfile', '-f', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--target', '-t', '--timeout', '--verbose', '-v', '--help', '-h')
     'rpmb write-config' = @('--dry-run', '--key', '-k', '--keyfile', '-g', '--msg', '-d', '--msgfile', '-f', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'rpmb write-data' = @('--address', '-o', '--blocks', '-b', '--dry-run', '--key', '-k', '--keyfile', '-g', '--msg', '-d', '--msgfile', '-f', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--target', '-t', '--timeout', '--verbose', '-v', '--help', '-h')
+    'samsung vs-internal-log' = @('--compress', '-z', '--dry-run', '--dump-type', '-t', '--hide-progress', '-H', '--no-ioctl-probing', '--no-retries', '--output-file', '-O', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--telemetry-data-area', '-a', '--timeout', '--verbose', '-v', '--help', '-h')
     'sanitize' = @('--ause', '-u', '--dry-run', '--emvs', '-e', '--ish', '-I', '--no-dealloc', '-d', '--no-ioctl-probing', '--no-retries', '--oipbp', '-i', '--output-format', '-o', '--output-format-version', '--ovrpat', '-p', '--owpass', '-n', '--preq', '-q', '--quiet', '--repeat', '-r', '--sanact', '-a', '--set-options', '--timeout', '--verbose', '-v', '--wait', '-w', '--help', '-h')
     'sanitize-log' = @('--dry-run', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--rae', '-r', '--raw-binary', '-b', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
     'sanitize-ns' = @('--ause', '-u', '--dry-run', '--emvs', '-e', '--ish', '-I', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--preq', '-q', '--quiet', '--sanact', '-a', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
@@ -820,6 +823,8 @@ $script:NvmeFileOptions = @{
     'rpmb write-data --msgfile' = $true
     'rpmb write-data -f' = $true
     'rpmb write-data -g' = $true
+    'samsung vs-internal-log --output-file' = $true
+    'samsung vs-internal-log -O' = $true
     'seagate vs-internal-log --dump-file' = $true
     'seagate vs-internal-log -f' = $true
     'security send --file' = $true
@@ -1894,6 +1899,9 @@ $script:NvmeOptionValues = @{
     'rpmb write-data --output-format' = @('normal', 'json', 'binary', 'tabular')
     'rpmb write-data --output-format-version' = @('1', '2')
     'rpmb write-data -o' = @('normal', 'json', 'binary', 'tabular')
+    'samsung vs-internal-log --output-format' = @('normal', 'json', 'binary', 'tabular')
+    'samsung vs-internal-log --output-format-version' = @('1', '2')
+    'samsung vs-internal-log -o' = @('normal', 'json', 'binary', 'tabular')
     'sanitize --output-format' = @('normal', 'json', 'binary', 'tabular')
     'sanitize --output-format-version' = @('1', '2')
     'sanitize --sanact' = @('exit-failure', 'start-block-erase', 'start-overwrite', 'start-crypto-erase', 'exit-media-verification')
