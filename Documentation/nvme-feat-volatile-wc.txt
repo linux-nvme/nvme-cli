@@ -1,0 +1,62 @@
+nvme-feat-volatile-wc(1)
+========================
+
+NAME
+----
+nvme-feat-volatile-wc - Get and set volatile write cache feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat volatile-wc' <device>
+			[--wce | -w]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set volatile write cache feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If the setting option (`--wce`) is specified, the command will update the
+volatile write cache configuration. If the option is omitted, it will
+retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-w::
+--wce::
+	Write Cache Enable. If specified, enables the volatile write cache.
+	If omitted when updating, disables the volatile write cache.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat volatile-wc to get the current configuration:
++
+------------
+# nvme feat volatile-wc /dev/nvme0
+------------
+
+* Has the program issue a feat volatile-wc to enable the volatile write cache:
++
+------------
+# nvme feat volatile-wc /dev/nvme0 --wce --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.

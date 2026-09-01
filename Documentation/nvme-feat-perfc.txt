@@ -1,0 +1,95 @@
+nvme-feat-perfc(1)
+==================
+
+NAME
+----
+nvme-feat-perfc - Get and set performance characteristics feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat perfc' <device>
+			[--namespace-id=<nsid> | -n <nsid>] [--attri=<attri> | -a <attri>]
+			[--rvspa | -r] [--r4karl=<r4karl> | -R <r4karl>]
+			[--paid=<paid> | -p <paid>] [--attrl=<attrl> | -A <attrl>]
+			[--vs-data=<file> | -V <file>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set performance characteristics feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--rvspa`, `--r4karl`, or `--paid`) are specified,
+the command will update the performance characteristics configuration. If none
+of these options are specified, it will retrieve and display the current
+configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Optional namespace attached to controller.
+
+-a <attri>::
+--attri=<attri>::
+	Attribute index. Specifies the performance attribute index to set or get.
+
+-r::
+--rvspa::
+	Revert vendor specific performance attribute flag.
+
+-R <r4karl>::
+--r4karl=<r4karl>::
+	Random 4 KiB average read latency.
+
+-p <paid>::
+--paid=<paid>::
+	Performance attribute identifier. Must be a valid UUID string format.
+
+-A <attrl>::
+--attrl=<attrl>::
+	Attribute length. Required when using vendor specific performance data.
+
+-V <file>::
+--vs-data=<file>::
+	Vendor specific data input file path. Reads data buffer from the specified file.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat perfc to get the current configuration:
++
+------------
+# nvme feat perfc /dev/nvme0
+------------
+
+* Has the program issue a feat perfc to set standard performance attributes:
++
+------------
+# nvme feat perfc /dev/nvme0 --attri=0 --r4karl=10 --save
+------------
+
+* Has the program issue a feat perfc to set vendor specific data from a file:
++
+------------
+# nvme feat perfc /dev/nvme0 --attri=128 --paid=12345678-1234-1234-1234-123456789abc --attrl=64 --vs-data=vs_buf.bin
+------------
+
+NVME
+----
+Part of the nvme-user suite.

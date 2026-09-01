@@ -1,0 +1,69 @@
+nvme-feat-hctm(1)
+=================
+
+NAME
+----
+nvme-feat-hctm - Get and set host controlled thermal management feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat hctm' <device>
+			[--tmt1=<tmt1> | -t <tmt1>] [--tmt2=<tmt2> | -T <tmt2>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set host controlled thermal management feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--tmt1` or `--tmt2`) are specified, the
+command will update the host controlled thermal management configuration.
+If none of these options are specified, it will retrieve and display the
+current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-t <tmt1>::
+--tmt1=<tmt1>::
+	Thermal Management Temperature 1. Specifies the temperature threshold
+	in Kelvin at which the controller transitions to lower power states
+	or throttling.
+
+-T <tmt2>::
+--tmt2=<tmt2>::
+	Thermal Management Temperature 2. Specifies the secondary temperature
+	threshold in Kelvin for heavy throttling or critical cooling actions.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat hctm to get the current configuration:
++
+------------
+# nvme feat hctm /dev/nvme0
+------------
+
+* Has the program issue a feat hctm to set TMT1 and TMT2 thresholds with saving enabled:
++
+------------
+# nvme feat hctm /dev/nvme0 --tmt1=320 --tmt2=330 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.

@@ -1,0 +1,75 @@
+nvme-feat-arbitration(1)
+========================
+
+NAME
+----
+nvme-feat-arbitration - Get and set arbitration feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat arbitration' <device>
+			[--ab=<ab> | -a <ab>] [--lpw=<lpw> | -l <lpw>]
+			[--mpw=<mpw> | -m <mpw>] [--hpw=<hpw> | -h <hpw>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set arbitration feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--ab`, `--lpw`, `--mpw`, or `--hpw`) are specified,
+the command will update the arbitration configuration. If none of these options
+are specified, it will retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-a <ab>::
+--ab=<ab>::
+	Arbitration Burst. Specifies the maximum number of commands that the
+	controller may launch at one time from a submission queue.
+
+-l <lpw>::
+--lpw=<lpw>::
+	Low Priority Weight. Specifies the low priority service weight.
+
+-m <mpw>::
+--mpw=<mpw>::
+	Medium Priority Weight. Specifies the medium priority service weight.
+
+-h <hpw>::
+--hpw=<hpw>::
+	High Priority Weight. Specifies the high priority service weight.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat arbitration to get the current configuration:
++
+------------
+# nvme feat arbitration /dev/nvme0
+------------
+
+* Has the program issue a feat arbitration to set arbitration burst and weights:
++
+------------
+# nvme feat arbitration /dev/nvme0 --ab=2 --lpw=10 --mpw=20 --hpw=30 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
