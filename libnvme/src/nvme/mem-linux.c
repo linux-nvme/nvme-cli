@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <malloc.h>
+#include <stdint.h>
 #include <sys/mman.h>
 
 #include <ccan/minmax/minmax.h>
@@ -20,10 +21,40 @@
 
 #define HUGE_MIN 0x80000
 
+/*
+ * Round @n up to the next multiple of @s, rejecting the wrap-around that the
+ * round_up() macro produces for near-SIZE_MAX inputs. Returns false on
+ * overflow (or @s == 0) so callers fail the allocation instead of silently
+ * under-allocating and later overflowing the buffer.
+ */
+static bool round_up_checked(size_t n, size_t s, size_t *out)
+{
+	size_t rem, add;
+
+	if (!s)
+		return false;
+
+	rem = n % s;
+	if (!rem) {
+		*out = n;
+		return true;
+	}
+
+	add = s - rem;
+	if (n > SIZE_MAX - add)
+		return false;
+
+	*out = n + add;
+	return true;
+}
+
 __shr_public void *libnvme_alloc(size_t len)
 {
-	size_t _len = round_up(len, 0x1000);
+	size_t _len;
 	void *p;
+
+	if (!round_up_checked(len, 0x1000, &_len))
+		return NULL;
 
 	if (posix_memalign((void *)&p, getpagesize(), _len))
 		return NULL;
@@ -34,14 +65,19 @@ __shr_public void *libnvme_alloc(size_t len)
 
 __shr_public void *libnvme_realloc(void *p, size_t len)
 {
-	size_t old_len = malloc_usable_size(p);
+	size_t old_len;
+	void *result;
 
-	void *result = libnvme_alloc(len);
+	if (!p)
+		return libnvme_alloc(len);
 
-	if (p && result) {
-		memcpy(result, p, min_t(size_t, old_len, len));
-		free(p);
-	}
+	old_len = malloc_usable_size(p);
+	result = libnvme_alloc(len);
+	if (!result)
+		return NULL;
+
+	memcpy(result, p, min_t(size_t, old_len, len));
+	free(p);
 
 	return result;
 }
@@ -56,7 +92,8 @@ __shr_public void *libnvme_alloc_huge(size_t len,
 {
 	memset(mh, 0, sizeof(*mh));
 
-	len = round_up(len, 0x1000);
+	if (!round_up_checked(len, 0x1000, &len))
+		return NULL;
 
 	/*
 	 * For smaller allocation we just use posix_memalign and hope the kernel
@@ -91,7 +128,8 @@ __shr_public void *libnvme_alloc_huge(size_t len,
 	 * fullfil the request. This gives the kernel a chance to try to claim
 	 * some huge pages. This might still fail though.
 	 */
-	len = round_up(len, 0x200000);
+	if (!round_up_checked(len, 0x200000, &len))
+		return NULL;
 	if (posix_memalign(&mh->p, 0x200000, len))
 		return NULL;
 	mh->libnvme_alloc = true;
