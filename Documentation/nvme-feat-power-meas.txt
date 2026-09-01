@@ -1,0 +1,65 @@
+nvme-feat-power-meas(1)
+=======================
+
+NAME
+----
+nvme-feat-power-meas - Get and set power measurement feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat power-meas' <device>
+			[--pwrmsr=<pwrmsr> | -p <pwrmsr>] [--pwrmsd=<pwrmsd> | -d <pwrmsd>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set power measurement feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--pwrmsr` or `--pwrmsd`) are specified, the
+command will update the power measurement configuration. If none of these options
+are specified, it will retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-p <pwrmsr>::
+--pwrmsr=<pwrmsr>::
+	Power Measurement Sample Rate. Specifies the sampling rate for power measurement.
+
+-d <pwrmsd>::
+--pwrmsd=<pwrmsd>::
+	Power Measurement Duration. Specifies the total duration for the power measurement window.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat power-meas to get the current configuration:
++
+------------
+# nvme feat power-meas /dev/nvme0
+------------
+
+* Has the program issue a feat power-meas to set power measurement settings with saving enabled:
++
+------------
+# nvme feat power-meas /dev/nvme0 --pwrmsr=5 --pwrmsd=100 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.

@@ -1,0 +1,66 @@
+nvme-feat-temp-thresh(1)
+========================
+
+NAME
+----
+nvme-feat-temp-thresh - Get and set temperature threshold feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat temp-thresh' <device>
+			[--tmpth=<tmpth> | -t <tmpth>] [--thsel=<thsel> | -T <thsel>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set temperature threshold feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If the setting options (`--tmpth` or `--thsel`) are specified, the command
+will update the temperature threshold configuration for the device. If the
+options are omitted, it will retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-t <tmpth>::
+--tmpth=<tmpth>::
+	Temperature Threshold. Specifies the threshold temperature value in Kelvin.
+
+-T <thsel>::
+--thsel=<thsel>::
+	Threshold Type Select. Specifies the type of threshold (e.g., over-temperature
+	threshold or under-temperature threshold).
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat temp-thresh to get the current configuration:
++
+------------
+# nvme feat temp-thresh /dev/nvme0
+------------
+
+* Has the program issue a feat temp-thresh to set the over-temperature threshold to 310 Kelvin:
++
+------------
+# nvme feat temp-thresh /dev/nvme0 --tmpth=310 --thsel=0 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.

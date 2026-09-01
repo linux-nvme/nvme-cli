@@ -1,0 +1,65 @@
+nvme-feat-power-thresh(1)
+=========================
+
+NAME
+----
+nvme-feat-power-thresh - Get and set power threshold feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat power-thresh' <device>
+			[--pwrth=<pwrth> | -p <pwrth>] [--pvtht=<pvtht> | -t <pvtht>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set power threshold feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--pwrth` or `--pvtht`) are specified, the
+command will update the power threshold configuration. If none of these options
+are specified, it will retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-p <pwrth>::
+--pwrth=<pwrth>::
+	Power Threshold. Specifies the power threshold value to be applied to the controller.
+
+-t <pvtht>::
+--pvtht=<pvtht>::
+	Power Threshold Type. Specifies the type of power threshold (e.g., static or dynamic threshold).
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat power-thresh to get the current configuration:
++
+------------
+# nvme feat power-thresh /dev/nvme0
+------------
+
+* Has the program issue a feat power-thresh to set power threshold with saving enabled:
++
+------------
+# nvme feat power-thresh /dev/nvme0 --pwrth=30 --pvtht=1 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.

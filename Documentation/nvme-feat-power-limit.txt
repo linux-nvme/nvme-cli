@@ -1,0 +1,65 @@
+nvme-feat-power-limit(1)
+========================
+
+NAME
+----
+nvme-feat-power-limit - Get and set power limit feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat power-limit' <device>
+			[--pwrlm=<pwrlm> | -p <pwrlm>] [--pvlmt=<pvlmt> | -t <pvlmt>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set power limit feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--pwrlm` or `--pvlmt`) are specified, the
+command will update the power limit configuration. If none of these options
+are specified, it will retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-p <pwrlm>::
+--pwrlm=<pwrlm>::
+	Power Limit. Specifies the power limit value to be applied to the controller.
+
+-t <pvlmt>::
+--pvlmt=<pvlmt>::
+	Power Limit Type. Specifies the type of power limit (e.g., static or dynamic limit).
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat power-limit to get the current configuration:
++
+------------
+# nvme feat power-limit /dev/nvme0
+------------
+
+* Has the program issue a feat power-limit to set power limit with saving enabled:
++
+------------
+# nvme feat power-limit /dev/nvme0 --pwrlm=25 --pvlmt=1 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.

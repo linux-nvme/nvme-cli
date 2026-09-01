@@ -1,0 +1,62 @@
+nvme-feat-timestamp(1)
+======================
+
+NAME
+----
+nvme-feat-timestamp - Get and set timestamp feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat timestamp' <device>
+			[--timestamp=<timestamp> | -t <timestamp>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set timestamp feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If the setting option (`--timestamp`) is specified, the command will update
+the controller's internal clock to the provided timestamp value. If the option
+is omitted, it will retrieve and display the current timestamp from the device.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-t <timestamp>::
+--timestamp=<timestamp>::
+	Timestamp value. Specifies the number of milliseconds since midnight,
+	January 1, 1970 (POSIX epoch time), to set the controller clock.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat timestamp to get the current device time:
++
+------------
+# nvme feat timestamp /dev/nvme0
+------------
+
+* Has the program issue a feat timestamp to set the clock to a specific value:
++
+------------
+# nvme feat timestamp /dev/nvme0 --timestamp=1700000000000
+------------
+
+NVME
+----
+Part of the nvme-user suite.
