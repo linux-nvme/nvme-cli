@@ -277,6 +277,7 @@ static int submit_storage_protocol_command(
 	PSTORAGE_PROTOCOL_COMMAND protocol_command = NULL;
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
+	ULONG pad_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
 	int err = 0;
@@ -321,10 +322,22 @@ static int submit_storage_protocol_command(
 		goto out;
 	}
 
+	/*
+	 * The Namespace Management opcode declares a host to controller
+	 * transfer (DTD 01b), so the driver requires a data-out buffer even
+	 * for operations that transfer no data (i.e. Delete).  Namespace
+	 * management requests that carry no host to controller transfer
+	 * fail STORAGE_PROTOCOL_STATUS_INVALID_REQUEST without being submitted
+	 * to the controller.  Pad these requests with a zeroed Host Software
+	 * Specified Fields buffer.
+	 */
+	if (cmd->opcode == nvme_admin_ns_mgmt && !cmd->data_len)
+		pad_len = sizeof(struct nvme_ns_mgmt_host_sw_specified);
+
 	/* Allocate buffer for STORAGE_PROTOCOL_COMMAND + NVME command + data */
 	buffer_len = FIELD_OFFSET(STORAGE_PROTOCOL_COMMAND, Command) +
 		STORAGE_PROTOCOL_COMMAND_LENGTH_NVME +
-		(cmd->data_len > 0 ? cmd->data_len : 0);
+		cmd->data_len + pad_len;
 
 	buffer = (PUCHAR)malloc(buffer_len);
 	if (!buffer) {
@@ -361,6 +374,11 @@ static int submit_storage_protocol_command(
 			STORAGE_PROTOCOL_COMMAND_LENGTH_NVME;
 		memcpy((PUCHAR)buffer + protocol_command->DataToDeviceBufferOffset,
 			(void *)(uintptr_t)cmd->addr, cmd->data_len);
+	} else if (pad_len) {
+		protocol_command->DataToDeviceTransferLength = pad_len;
+		protocol_command->DataToDeviceBufferOffset =
+			FIELD_OFFSET(STORAGE_PROTOCOL_COMMAND, Command) +
+			STORAGE_PROTOCOL_COMMAND_LENGTH_NVME;
 	}
 
 	do {
