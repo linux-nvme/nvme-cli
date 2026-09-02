@@ -1499,6 +1499,15 @@ plugin_feat_opts () {
 			               "--sel -S" "0 1 2 3"
 			;;
 
+		"lba-range-type")
+			opts+=" --dry-run --guids= -g --hlbars= -h --lbaros= -l --nlbs= -b --no-ioctl-probing --no-retries --nsid= -n --num= -N --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --slbas= -s --timeout= --types= -t --verbose -v"
+			valopts+=" --guids -g --hlbars -h --lbaros -l --nlbs -b --nsid -n --num -N --output-format -o --output-format-version --sel -S --set-options --slbas -s --timeout --types -t"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" \
+			               "--sel -S" "0 1 2 3"
+			;;
+
 		"num-queues")
 			opts+=" --dry-run --ncqr= -c --no-ioctl-probing --no-retries --nsqr= -n --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --ncqr -c --nsqr -n --output-format -o --output-format-version --sel -S --set-options --timeout"
@@ -4867,7 +4876,7 @@ _nvme_subcmds () {
 		[dir]="receive send"
 		[exclusion]="add create delete edit list remove"
 		[fdp]="configs events feature set-events stats status update usage"
-		[feat]="arbitration err-recovery hctm host-behavior-support num-queues perf-characteristics power-limit power-meas power-mgmt power-thresh temp-thresh timestamp volatile-wc"
+		[feat]="arbitration err-recovery hctm host-behavior-support lba-range-type num-queues perf-characteristics power-limit power-meas power-mgmt power-thresh temp-thresh timestamp volatile-wc"
 		[fw]="activate commit download"
 		[huawei]="id-ctrl list"
 		[ibm]="crit-log persist-event-log vpd"
