@@ -661,12 +661,12 @@ int libnvme_ctrl_map_entry_get_pci_address(const struct ctrl_map_entry *entry,
 		char **address)
 {
 	WCHAR instance_id[MAX_DEVICE_ID_LEN];
-	WCHAR location_info[256];
 	DEVPROPTYPE prop_type = 0;
-	ULONG size;
+	DWORD bus_number = 0, pci_address = 0;
+	unsigned int segment, bus, device, function;
+	ULONG reg_type, size;
 	CONFIGRET cr;
 	DEVINST devinst;
-	unsigned int bus = 0, device = 0, function = 0;
 	char *addr;
 
 	if (!entry || !address || !entry->ctrl_path)
@@ -692,28 +692,39 @@ int libnvme_ctrl_map_entry_get_pci_address(const struct ctrl_map_entry *entry,
 		return -ENODEV;
 
 	/*
-	 * Query DEVPKEY_Device_LocationInfo which returns a string like
-	 * "PCI bus 2, device 0, function 0"
+	 * CM_DRP_BUSNUMBER packs the PCI segment above the low 8 bits, which
+	 * hold the bus. CM_DRP_ADDRESS packs the device number in the high 16
+	 * bits and the function in the low 16, and reads 0xffffffff when the
+	 * bus driver does not supply it.
 	 */
-	size = sizeof(location_info);
-	prop_type = 0;
-	cr = CM_Get_DevNode_PropertyW(
-		devinst,
-		&DEVPKEY_Device_LocationInfo,
-		&prop_type,
-		(PBYTE)location_info,
-		&size,
-		0);
-	if (cr != CR_SUCCESS || prop_type != DEVPROP_TYPE_STRING)
+	reg_type = 0;
+	size = sizeof(bus_number);
+	cr = CM_Get_DevNode_Registry_PropertyW(devinst, CM_DRP_BUSNUMBER,
+					       &reg_type, &bus_number,
+					       &size, 0);
+	if (cr != CR_SUCCESS || reg_type != REG_DWORD)
 		return -ENODEV;
 
-	if (swscanf(location_info, L"PCI bus %u, device %u, function %u",
-		    &bus, &device, &function) != 3)
-		return -EINVAL;
+	reg_type = 0;
+	size = sizeof(pci_address);
+	cr = CM_Get_DevNode_Registry_PropertyW(devinst, CM_DRP_ADDRESS,
+					       &reg_type, &pci_address,
+					       &size, 0);
+	if (cr != CR_SUCCESS || reg_type != REG_DWORD ||
+	    pci_address == 0xffffffff)
+		return -ENODEV;
 
-	/* Format as Linux-compatible BDF: DOMAIN:BUS:DEVICE.FUNCTION */
-	if (asprintf(&addr, "0000:%02x:%02x.%x",
-		     bus, device, function) < 0)
+	segment = (bus_number >> 8) & 0xffff;
+	bus = bus_number & 0xff;
+	device = (pci_address >> 16) & 0xffff;
+	function = pci_address & 0xffff;
+
+	/*
+	 * Format as Linux-compatible BDF: DOMAIN:BUS:DEVICE.FUNCTION, with
+	 * the PCI segment as the domain.
+	 */
+	if (asprintf(&addr, "%04x:%02x:%02x.%x",
+		     segment, bus, device, function) < 0)
 		return -ENOMEM;
 
 	*address = addr;
@@ -1010,8 +1021,14 @@ HDEVINFO libnvme_ctrl_map_entry_get_devinfo(
 		return INVALID_HANDLE_VALUE;
 
 	for (index = 0;; index++) {
-		get_device_interface_path(hdev, index, &ctrl_path,
-			dev_info_data);
+		int ret;
+
+		ret = get_device_interface_path(hdev, index, &ctrl_path,
+						dev_info_data);
+		if (ret == -ENOENT)
+			break;
+		if (ret)
+			continue;
 
 		if (_wcsicmp(ctrl_path, entry->ctrl_path) == 0) {
 			free(ctrl_path);
