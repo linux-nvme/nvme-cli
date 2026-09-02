@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "name": "nvme",
+  "version": "0.0-fixture",
+  "description": "Synthetic fixture for the completion generator tests.",
+  "commands": [
+    {
+      "name": "zulu-cmd",
+      "alias": "alpha-alias",
+      "description": "zulu builtin command",
+      "options": [
+        {
+          "long": "mode",
+          "short": "m",
+          "argument": "required",
+          "metavar": "MODE",
+          "description": "operating mode",
+          "values": ["fast", "slow"]
+        },
+        {
+          "long": "force",
+          "short": "x",
+          "argument": "none",
+          "description": "don't    prompt for 'confirmation'"
+        },
+        {
+          "long": "format",
+          "short": "o",
+          "argument": "required",
+          "metavar": "FMT",
+          "description": "output format",
+          "global": true,
+          "values": ["raw", "pretty", "wide"]
+        },
+        {
+          "long": "secret",
+          "argument": "none",
+          "hidden": true,
+          "description": "undocumented, hidden from help"
+        },
+        {
+          "long": "verbose-level",
+          "argument": "optional",
+          "description": "verbosity level"
+        }
+      ]
+    },
+    {
+      "name": "no-opt-cmd",
+      "description": "builtin command with no options",
+      "options": []
+    },
+    {
+      "name": "alpha-cmd",
+      "description": "alpha builtin command",
+      "options": [
+        {
+          "long": "wait-time",
+          "short": "w",
+          "argument": "required",
+          "metavar": "NUM",
+          "description": "milliseconds to wait"
+        },
+        {
+          "long": "format",
+          "short": "o",
+          "argument": "required",
+          "metavar": "FMT",
+          "description": "output format",
+          "global": true,
+          "values": ["raw", "pretty", "wide"]
+        },
+        {
+          "long": "in-file",
+          "short": "f",
+          "argument": "required",
+          "metavar": "FILE",
+          "description": "input file path"
+        },
+        {
+          "long": "format-version",
+          "argument": "required",
+          "metavar": "VER",
+          "description": "metadata format version",
+          "global": true,
+          "values": ["1", "2"]
+        },
+        {
+          "long": "dry-run",
+          "argument": "none",
+          "description": "print actions without running them"
+        }
+      ]
+    }
+  ],
+  "plugins": [
+    {
+      "name": "zeta-plug",
+      "description": "zeta plugin",
+      "commands": [
+        {
+          "name": "report",
+          "alias": "rpt",
+          "description": "report a thing",
+          "options": [
+            {
+              "long": "out-dir",
+              "argument": "required",
+              "metavar": "DIRECTORY",
+              "description": "output directory"
+            },
+            {
+              "long": "format",
+              "short": "o",
+              "argument": "required",
+              "metavar": "FMT",
+              "description": "output format",
+              "global": true,
+              "values": ["raw", "pretty", "wide"]
+            },
+            {
+              "long": "sel",
+              "short": "S",
+              "argument": "required",
+              "metavar": "SEL",
+              "description": "selection source"
+            },
+            {
+              "long": "in-file",
+              "short": "f",
+              "argument": "required",
+              "metavar": "FILE",
+              "description": "input file path"
+            }
+          ]
+        },
+        {
+          "name": "no-opt-sub",
+          "description": "sub-command with no options",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "beta-plug",
+      "description": "beta plugin",
+      "commands": [
+        {
+          "name": "local-sub",
+          "description": "sub-command with local options but no globals",
+          "options": [
+            {
+              "long": "mode",
+              "short": "m",
+              "argument": "required",
+              "metavar": "MODE",
+              "description": "operating mode",
+              "values": ["fast", "slow"]
+            },
+            {
+              "long": "secret",
+              "argument": "none",
+              "hidden": true,
+              "description": "undocumented, hidden from help"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

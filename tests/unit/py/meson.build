@@ -35,4 +35,46 @@ if python3.found()
         ],
         timeout: 60,
     )
+
+    # The generated completion scripts must not depend on the order commands,
+    # plugins, or options arrive in; this shuffles the committed fixture and
+    # checks each shell's output is byte-identical. Committed inputs, no binary.
+    test(
+        'nvme-cli - generate-completions-stable',
+        python3,
+        args: [
+            files('test_generate_completions_stable.py'),
+            meson.project_source_root() / 'completions' / 'generate-completions.py',
+            meson.project_source_root() / 'completions' / 'test-command-metadata.json',
+        ],
+        timeout: 60,
+    )
+
+    # Commands, plugins, sub-commands, and options must be listed
+    # alphabetically; this checks each shell's generated output is sorted.
+    # Complements the stability test above. Committed inputs, no binary.
+    test(
+        'nvme-cli - generate-completions-sorted',
+        python3,
+        args: [
+            files('test_generate_completions_sorted.py'),
+            meson.project_source_root() / 'completions' / 'generate-completions.py',
+            meson.project_source_root() / 'completions' / 'test-command-metadata.json',
+        ],
+        timeout: 60,
+    )
+
+    # The completion test fixture is a hand-written, synthetic metadata model;
+    # validate it against the schema so a schema change the fixture no longer
+    # satisfies is caught. Both inputs are committed, so no binary needed.
+    test(
+        'nvme-cli - completion-fixture-schema',
+        python3,
+        args: [
+            files('test_completion_fixture_schema.py'),
+            meson.project_source_root() / 'completions' / 'test-command-metadata.json',
+            meson.project_source_root() / 'plugins' / 'utils' / 'command-metadata-schema.json',
+        ],
+        timeout: 60,
+    )
 endif

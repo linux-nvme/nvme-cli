@@ -13,7 +13,21 @@
 # script's `complete` call needs it on to register without error.
 shopt -s progcomp
 
-source "$(dirname "$0")/bash-nvme-completion.sh"
+# The completion under test is generated fresh from a committed metadata fixture
+# rather than sourced from the checked-in bash-nvme-completion.sh: the generator
+# is the unit under test, so we exercise its current output. The fixture
+# (test-command-metadata.json) is a hand-written, schema-validated model of
+# synthetic commands and options -- deliberately not real nvme output -- built
+# to exercise every generator branch, and needs no nvme binary or build.
+_here="$(cd "$(dirname "$0")" && pwd)"
+_generated="$(mktemp)"
+trap 'rm -f "$_generated"' EXIT
+if ! python3 "$_here/generate-completions.py" --bash "$_generated" \
+        < "$_here/test-command-metadata.json"; then
+    echo "failed to generate bash completion from fixture" >&2
+    exit 1
+fi
+source "$_generated"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -274,29 +288,29 @@ echo "========================================"
 expect_match \
     "top-level list offers builtin commands" \
     "nvme " \
-    "id-ctrl.*smart-log"
+    "alpha-cmd.*zulu-cmd"
 
 expect_match \
     "top-level list is filtered by the typed prefix" \
-    "nvme id-" \
-    "id-ctrl.*id-ns"
+    "nvme alpha-" \
+    "alpha-alias.*alpha-cmd"
 
 expect_match \
     "top-level list includes plugin names" \
     "nvme " \
-    "feat.*zns"
+    "beta-plug.*zeta-plug"
 
-# A command's alias is offered alongside its primary name (fw-commit/fw-activate)
+# A command's alias is offered alongside its primary name (zulu-cmd/alpha-alias)
 # and its options complete when invoked by the alias.
 expect_match \
     "top-level list includes a command alias" \
-    "nvme fw-a" \
-    "fw-activate"
+    "nvme alpha-a" \
+    "alpha-alias"
 
 expect_match \
     "a command invoked by its alias completes options" \
-    "nvme fw-activate --" \
-    "--action"
+    "nvme alpha-alias --" \
+    "--mode"
 
 # help and version are dispatcher built-ins (not in the metadata) but are still
 # completable top-level commands.
@@ -315,39 +329,49 @@ expect_match \
 # ---------------------------------------------------------------------------
 expect_match \
     "a plugin lists its sub-commands" \
-    "nvme feat " \
-    "arbitration.*power-mgmt"
+    "nvme zeta-plug " \
+    "no-opt-sub.*report"
 
 expect_match \
     "plugin sub-commands are filtered by the typed prefix" \
-    "nvme feat power-" \
-    "power-meas.*power-mgmt"
+    "nvme zeta-plug r" \
+    "report.*rpt"
 
 # A different plugin, to prove routing isn't hardcoded to one name.
 expect_match \
     "sub-command routing works for any plugin" \
-    "nvme zns " \
-    "report-zones.*reset-zone"
+    "nvme beta-plug " \
+    "local-sub"
 
-# A plugin sub-command alias is listed alongside its primary name (dera defines
-# alias 'stat' for 'smart-log-add').
+# A plugin sub-command alias is listed alongside its primary name (zeta-plug
+# defines alias 'rpt' for 'report').
 expect_match \
     "a plugin lists a sub-command alias" \
-    "nvme dera " \
-    "smart-log-add.*stat"
+    "nvme zeta-plug " \
+    "report.*rpt"
 
 # ---------------------------------------------------------------------------
 # Device-argument injection
 # ---------------------------------------------------------------------------
 expect_device \
     "a builtin command that takes a device offers /dev/nvme*" \
-    "nvme id-ctrl "
+    "nvme alpha-cmd "
 
 # Plugin sub-commands sit one word later, so their opts functions inject the
 # device at a higher non-option-argument threshold (3 vs 2). Cover that path.
 expect_device \
     "a plugin sub-command that takes a device offers /dev/nvme*" \
-    "nvme feat power-meas "
+    "nvme zeta-plug report "
+
+# A command with no options of its own must still inject the device argument --
+# exercises the generator's empty-options path for a builtin and a plugin sub.
+expect_device \
+    "an option-less command still injects a device" \
+    "nvme no-opt-cmd "
+
+expect_device \
+    "an option-less plugin sub-command still injects a device" \
+    "nvme zeta-plug no-opt-sub "
 
 expect_no_device \
     "help takes no device" \
@@ -362,81 +386,88 @@ expect_no_device \
 # not us, so it isn't exercised here.)
 expect_no_device \
     "a device already on the line is not offered again" \
-    "nvme id-ctrl /dev/nvme0 "
+    "nvme alpha-cmd /dev/nvme0 "
 
-# A non-NVMe /dev/* path as an option value (e.g. --output-file /dev/null) is not
+# A non-NVMe /dev/* path as an option value (e.g. --in-file /dev/null) is not
 # the device argument, so device injection must still happen.
 expect_device \
     "a /dev/* option value is not mistaken for the device argument" \
-    "nvme telemetry-log --output-file /dev/null "
+    "nvme alpha-cmd --in-file /dev/null "
 
 # Even a /dev/nvme* path given as an option value is not the positional device
 # argument, so injection must still happen.
 expect_device \
     "a /dev/nvme* option value is not mistaken for the device argument" \
-    "nvme telemetry-log --output-file /dev/nvme0 "
+    "nvme alpha-cmd --in-file /dev/nvme0 "
 
-# Same, but the '=' value form split by bash into '--output-file = /dev/nvme0'.
+# Same, but the '=' value form split by bash into '--in-file = /dev/nvme0'.
 # The /dev/nvme0 must still be recognised as the option's value, not the device.
 expect_device_words \
     "a /dev/nvme* value after a split '=' is not mistaken for the device" \
-    nvme telemetry-log --output-file = /dev/nvme0 ""
+    nvme alpha-cmd --in-file = /dev/nvme0 ""
 
-# And the unsplit-option form '--output-file=' as its own word: the trailing '='
+# And the unsplit-option form '--in-file=' as its own word: the trailing '='
 # must be stripped so the option still matches $valopts and its value is not
 # counted as the device.
 expect_device_words \
     "a /dev/nvme* value after an unsplit '--opt=' token is not the device" \
-    nvme telemetry-log "--output-file=" /dev/nvme0 ""
+    nvme alpha-cmd "--in-file=" /dev/nvme0 ""
 
 # ---------------------------------------------------------------------------
 # Option-name completion
 # ---------------------------------------------------------------------------
 expect_match \
     "-h/--help is always offered" \
-    "nvme id-ctrl -" \
+    "nvme alpha-cmd -" \
     "(^| )--help( |\$)"
 
 expect_match \
     "a partial option name completes to the full option" \
-    "nvme id-ctrl --output-f" \
-    "--output-format"
+    "nvme alpha-cmd --wait-" \
+    "--wait-time"
 
 # Global options are offered per command, straight from the metadata -- so a
-# command that takes them gets them, and one that does not (e.g. intel
-# lat-stats-tracking) is not wrongly offered them.
+# command that takes them gets them, and one that does not (local-sub carries no
+# global 'format' option) is not wrongly offered them.
 expect_match \
     "a command with global options offers them" \
-    "nvme id-ctrl -" \
-    "--output-format"
+    "nvme alpha-cmd -" \
+    "--format"
 
 expect_no_match \
     "a command without global options is not offered them" \
-    "nvme intel lat-stats-tracking -" \
-    "--output-format"
+    "nvme beta-plug local-sub -" \
+    "--format"
 
 # An option that takes a value completes to 'name=' with no trailing space, so
 # the user can type the value immediately.
 expect_compopt \
     "a value-taking option completes with a trailing '=' and no space" \
-    "nvme id-ctrl --timeout" \
+    "nvme alpha-cmd --wait-time" \
     "-o nospace"
 
 # But nospace must NOT fire when a prefix matches several options -- e.g.
-# '--output-format' matches both '--output-format=' and '--output-format-version='.
-# bash appends nothing for an ambiguous completion, and suppressing the space
-# would be wrong. (Regression: the check once looked only at COMPREPLY[0].)
+# '--format' matches both '--format=' and '--format-version='. bash appends
+# nothing for an ambiguous completion, and suppressing the space would be wrong.
+# (Regression: the check once looked only at COMPREPLY[0].)
 expect_no_compopt \
     "no nospace when a prefix matches multiple options" \
-    "nvme id-ctrl --output-format" \
+    "nvme alpha-cmd --format" \
     "-o nospace"
+
+# A hidden option is accepted on the command line but suppressed from --help, so
+# the generator must not offer it as a completion.
+expect_no_match \
+    "a hidden option is not offered" \
+    "nvme zulu-cmd -" \
+    "--secret"
 
 # Regression: the generated opts functions once used their loop counter i
 # without declaring it local, silently clobbering the user's own $i. It must
 # stay local so a completion never leaks into the caller's shell.
 expect_no_var_leak \
     "completion does not leak loop variable i" \
-    "nvme id-ctrl " \
+    "nvme alpha-cmd " \
     i
 
 # A flag option takes no value, so completing after it (empty word, i.e. a
@@ -444,152 +475,163 @@ expect_no_var_leak \
 # (which offers nothing and suppresses files). Covers both long and short flags.
 expect_match \
     "completion resumes after a long flag option" \
-    "nvme id-ctrl --verbose " \
+    "nvme alpha-cmd --dry-run " \
     "--help"
 
 expect_match \
     "completion resumes after a short flag option" \
-    "nvme id-ctrl -v " \
+    "nvme zulu-cmd -x " \
     "--help"
 
 # The complement stays correct: a value-taking flagless option still completes
 # its value (guard against the fix over-reaching and disabling value mode).
 expect_match \
     "a value option still completes its value after the fix" \
-    "nvme id-ctrl --output-format " \
-    "normal.*json"
+    "nvme alpha-cmd --format " \
+    "raw.*pretty"
 
 # ---------------------------------------------------------------------------
 # Option-value completion (enumerated values)
 # ---------------------------------------------------------------------------
-# --output-format is a global option available on every command.
+# --format is a global option carried by several commands, with an enumerated
+# value list in the metadata.
 expect_match \
     "a global option lists its values (--opt= form)" \
-    "nvme id-ctrl --output-format=" \
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd --format=" \
+    "raw.*pretty.*wide"
 
 expect_match \
     "a global option lists its values (--opt <space> form)" \
-    "nvme id-ctrl --output-format " \
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd --format " \
+    "raw.*pretty.*wide"
 
 expect_match \
     "a partial value is filtered against the value list" \
-    "nvme id-ctrl --output-format j" \
-    "json"
+    "nvme alpha-cmd --format p" \
+    "pretty"
 
 expect_match \
     "a partial value is filtered after '=' too" \
-    "nvme id-ctrl --output-format=j" \
-    "json"
+    "nvme alpha-cmd --format=p" \
+    "pretty"
 
 expect_match \
     "the short-option form lists the same values" \
-    "nvme id-ctrl -o " \
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd -o " \
+    "raw.*pretty.*wide"
 
 expect_match \
     "the short-option form filters a partial value" \
-    "nvme id-ctrl -o j" \
-    "json"
+    "nvme alpha-cmd -o p" \
+    "pretty"
 
-# nvme's getopt also accepts the short-option '=' form ('-o=json'). When bash
+# nvme's getopt also accepts the short-option '=' form ('-o=pretty'). When bash
 # splits on '=', that arrives as '-o = [partial]'; the value list must appear
 # just as it does for the long-option '=' form.
 expect_match \
     "the short-option '=' form lists values" \
-    "nvme id-ctrl -o=" \
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd -o=" \
+    "raw.*pretty.*wide"
 
 expect_match \
     "the short-option '=' form filters a partial value" \
-    "nvme id-ctrl -o=j" \
-    "json"
+    "nvme alpha-cmd -o=p" \
+    "pretty"
 
-# Depending on COMP_WORDBREAKS, bash may present 'nvme id-ctrl --output-format='
+# Depending on COMP_WORDBREAKS, bash may present 'nvme alpha-cmd --format='
 # as three tokens ending in a bare '=' (option is the previous word) OR as a
-# single unsplit '--output-format=' token. The string helpers always split on
-# '=', so drive both forms explicitly to prove the value list appears either way.
+# single unsplit '--format=' token. The string helpers always split on '=', so
+# drive both forms explicitly to prove the value list appears either way.
 expect_match_words \
     "value list appears when '=' is the current word (split form)" \
-    "normal.*json.*binary.*tabular" \
-    nvme feat power-meas --output-format =
+    "raw.*pretty.*wide" \
+    nvme zeta-plug report --format =
 
 expect_match_words \
     "value list appears for an unsplit '--opt=' token" \
-    "normal.*json.*binary.*tabular" \
-    nvme id-ctrl "--output-format="
+    "raw.*pretty.*wide" \
+    nvme alpha-cmd "--format="
 
-# Same unsplit form but with a partial value ('--output-format=j'), which occurs
-# when '=' is removed from COMP_WORDBREAKS. The partial must still filter the
-# value list down to the match.
+# Same unsplit form but with a partial value ('--format=p'), which occurs when
+# '=' is removed from COMP_WORDBREAKS. The partial must still filter the value
+# list down to the match.
 expect_match_words \
     "partial value filters for an unsplit '--opt=partial' token" \
-    "json" \
-    nvme id-ctrl "--output-format=j"
+    "pretty" \
+    nvme alpha-cmd "--format=p"
 
 # Trailing space after an unsplit '--opt=' token: the previous word is the whole
-# '--output-format=' (with '='), so the value list must still appear -- the
-# detector has to strip the '=' before matching option names.
+# '--format=' (with '='), so the value list must still appear -- the detector
+# has to strip the '=' before matching option names.
 expect_match_words \
     "value list appears after an unsplit '--opt= ' with trailing space" \
-    "normal.*json.*binary.*tabular" \
-    nvme id-ctrl "--output-format=" ""
+    "raw.*pretty.*wide" \
+    nvme alpha-cmd "--format=" ""
 
-# --sel is an enumerated option carried by feat's sub-commands. Its values come
-# from the generator's VALUE_HINTS table (the arg parser leaves --sel
+# --sel is an enumerated option carried by zeta-plug's report. Its values
+# come from the generator's VALUE_HINTS table (the arg parser leaves --sel
 # unconstrained, so the command metadata carries no values). This also exercises
 # value completion reached through the plugin sub-command routing path.
 expect_match \
     "an enumerated option on a plugin sub-command lists its values (--opt= form)" \
-    "nvme feat power-meas --sel=" \
+    "nvme zeta-plug report --sel=" \
     "0.*1.*2.*3"
 
 expect_match \
     "an enumerated option on a plugin sub-command lists its values (space form)" \
-    "nvme feat power-meas --sel " \
+    "nvme zeta-plug report --sel " \
     "0.*1.*2.*3"
 
 expect_match \
     "an enumerated option on a plugin sub-command lists its values (short opt)" \
-    "nvme feat power-meas -S " \
+    "nvme zeta-plug report -S " \
     "0.*1.*2.*3"
 
 # A command-LOCAL enumerated option whose values DO come from the metadata
-# (fw-commit --action has an OPT_VALS table). Regression guard: the generator
-# once emitted the per-command value clause only for global options, so local
-# option values silently never completed.
+# (local-sub --mode carries a value set). Regression guard: the generator once
+# emitted the per-command value clause only for global options, so local option
+# values silently never completed.
 expect_match \
     "a command-local enumerated option lists its metadata values" \
-    "nvme fw-commit --action " \
-    "replace.*set-active"
+    "nvme beta-plug local-sub --mode " \
+    "fast.*slow"
 
 expect_match \
     "a command-local enumerated option lists its values (short opt)" \
-    "nvme fw-commit -a " \
-    "replace.*set-active"
+    "nvme beta-plug local-sub -m " \
+    "fast.*slow"
 
 # ---------------------------------------------------------------------------
 # File-vs-no-file fallback for value-taking options
 # ---------------------------------------------------------------------------
-# A NUM value (e.g. --timeout, a freeform millisecond count that will never get
-# an OPT_VALS table) must not fall back to listing files.
+# A NUM value (--wait-time, a freeform millisecond count with no value set) must
+# not fall back to listing files.
 expect_suppresses_files \
     "a numeric value offers nothing and suppresses files (--opt= form)" \
-    "nvme id-ctrl --timeout="
+    "nvme alpha-cmd --wait-time="
 
 expect_suppresses_files \
     "a numeric value offers nothing and suppresses files (space form)" \
-    "nvme id-ctrl --timeout "
+    "nvme alpha-cmd --wait-time "
 
-# A FILE value (e.g. fw-download --fw) must leave readline's file completion on.
+# A FILE value (alpha-cmd --in-file) must leave readline's file completion on.
 expect_allows_files \
     "a FILE value keeps file completion enabled (--opt= form)" \
-    "nvme fw-download --fw="
+    "nvme alpha-cmd --in-file="
 
 expect_allows_files \
     "a FILE value keeps file completion enabled (space form)" \
-    "nvme fw-download --fw "
+    "nvme alpha-cmd --in-file "
+
+# A DIRECTORY value is treated the same as FILE (report --out-dir), and
+# sits alongside --in-file so this also exercises the multi-file-option path.
+expect_allows_files \
+    "a DIRECTORY value keeps file completion enabled (--opt= form)" \
+    "nvme zeta-plug report --out-dir="
+
+expect_allows_files \
+    "a DIRECTORY value keeps file completion enabled (space form)" \
+    "nvme zeta-plug report --out-dir "
 
 echo ""
 echo "========================================"
