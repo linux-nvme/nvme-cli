@@ -29,11 +29,12 @@ import os
 import platform
 import re
 import shutil
-import stat
 import subprocess
 import sys
 import unittest
 import time
+from pathlib import Path
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +198,7 @@ class TestNVMe(TestNVMeBase):
         # common code used in various testcases.
         self.ctrl = "XXX"
         self.ns1 = "XXX"
-        self.test_log_dir = "XXX"
+        self.test_log_dir: Optional[Path] = None
         self.do_validate_pci_device = True
         self.default_nsid = 0x1
         self.flbas = 0
@@ -294,7 +295,7 @@ class TestNVMe(TestNVMeBase):
         config = json.loads(raw_config)
         self.ctrl = config['controller']
         self.ns1 = config['ns1']
-        self.log_dir = config.get('log_dir', 'nvmetests')
+        self.log_dir = Path(config.get('log_dir', 'nvmetests'))
         self.nvme_bin = config.get('nvme_bin', self.nvme_bin)
         self.do_validate_pci_device = config.get(
             'do_validate_pci_device', self.do_validate_pci_device)
@@ -310,8 +311,7 @@ class TestNVMe(TestNVMeBase):
         if self.clear_log_dir is True:
             shutil.rmtree(self.log_dir, ignore_errors=True)
 
-        if not os.path.exists(self.log_dir):
-            os.makedirs(self.log_dir)
+        self.log_dir.mkdir(parents=True, exist_ok=True)
 
     def setup_log_dir(self, test_name):
         """ Set up the log directory for a testcase
@@ -320,11 +320,10 @@ class TestNVMe(TestNVMeBase):
             Returns:
               - None
         """
-        self.test_log_dir = self.log_dir + "/" + test_name
-        if not os.path.exists(self.test_log_dir):
-            os.makedirs(self.test_log_dir)
-        self.stdout_log = open(self.test_log_dir + "/" + "stdout.log", "w")
-        self.stderr_log = open(self.test_log_dir + "/" + "stderr.log", "w")
+        self.test_log_dir = self.log_dir / test_name
+        self.test_log_dir.mkdir(parents=True, exist_ok=True)
+        self.stdout_log = (self.test_log_dir / "stdout.log").open("w")
+        self.stderr_log = (self.test_log_dir / "stderr.log").open("w")
 
     def _capture_device_metadata(self):
         """ Run 'nvme id ctrl' once and cache the fields that identify this
@@ -360,10 +359,10 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - None
         """
-        if self.test_log_dir == "XXX" or not self.device_data:
+        if self.test_log_dir is None or not self.device_data:
             return
-        path = os.path.join(self.test_log_dir, "device_data.json")
-        with open(path, "w") as f:
+        path = self.test_log_dir / "device_data.json"
+        with path.open("w") as f:
             json.dump({
                 'metadata': self.device_metadata or {},
                 'commands': self.device_data,
@@ -748,7 +747,7 @@ class TestNVMe(TestNVMeBase):
         device_path = f"{self.ctrl}n{str(nsid)}"
         stop_time = time.time() + 5
         while time.time() < stop_time:
-            if os.path.exists(device_path) and stat.S_ISBLK(os.stat(device_path).st_mode):
+            if Path(device_path).is_block_device():
                 return 0
             time.sleep(0.1)
 
@@ -929,23 +928,22 @@ class TestNVMe(TestNVMeBase):
         data_size = data_size_per_lba * count
         metadata_size = ms * count if ms > 0 and not self.ns_meta_ext else 0
 
-        log_root = self.test_log_dir if self.test_log_dir != "XXX" else self.log_dir
-        if not os.path.exists(log_root):
-            os.makedirs(log_root)
+        log_root = self.test_log_dir if self.test_log_dir is not None else self.log_dir
+        log_root.mkdir(parents=True, exist_ok=True)
 
-        write_file = os.path.join(log_root, f"run_ns_io_write_{nsid}.bin")
-        read_file = os.path.join(log_root, f"run_ns_io_read_{nsid}.bin")
-        write_meta_file = os.path.join(log_root, f"run_ns_io_write_meta_{nsid}.bin")
-        read_meta_file = os.path.join(log_root, f"run_ns_io_read_meta_{nsid}.bin")
+        write_file = log_root / f"run_ns_io_write_{nsid}.bin"
+        read_file = log_root / f"run_ns_io_read_{nsid}.bin"
+        write_meta_file = log_root / f"run_ns_io_write_meta_{nsid}.bin"
+        read_meta_file = log_root / f"run_ns_io_read_meta_{nsid}.bin"
 
-        with open(write_file, "wb") as out_file:
+        with write_file.open("wb") as out_file:
             out_file.write(bytes(data_size))
-        open(read_file, 'a').close()
+        read_file.touch()
 
         if metadata_size > 0:
-            with open(write_meta_file, "wb") as meta_out:
+            with write_meta_file.open("wb") as meta_out:
                 meta_out.write(bytes(metadata_size))
-            open(read_meta_file, 'a').close()
+            read_meta_file.touch()
 
         read_cmd = self._build_nvme_rw_cmd("read", ns_path, 0, block_count,
                                            data_size, read_file, prinfo,

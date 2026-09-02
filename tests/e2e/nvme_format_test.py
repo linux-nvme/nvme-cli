@@ -77,7 +77,7 @@ class TestNVMeFormatCmd(TestNVMe):
         self.nsze = ncap
         self.ctrl_id = self.get_ctrl_id()
         self.lba_format_list = []
-        self.test_log_dir = self.log_dir + "/" + self.__class__.__name__
+        self.test_log_dir = self.log_dir / self.__class__.__name__
         self.setup_log_dir(self.__class__.__name__)
         self.delete_all_ns()
 

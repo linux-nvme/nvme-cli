@@ -58,15 +58,15 @@ class TestNVMeQPIFTest(TestNVMeIO):
 
         self.start_block = 1023
         self.storage_tag = 0x1
-        self.test_log_dir = self.log_dir + "/" + self.__class__.__name__
+        self.test_log_dir = self.log_dir / self.__class__.__name__
         self.setup_log_dir(self.__class__.__name__)
-        self.write_file = self.test_log_dir + "/" + self.write_file
-        self.read_file = self.test_log_dir + "/" + self.read_file
+        self.write_file = self.test_log_dir / self.write_file
+        self.read_file = self.test_log_dir / self.read_file
         self.create_data_file(self.write_file, self.data_size, "15")
-        open(self.read_file, 'a').close()
+        self.read_file.touch()
         if self.ms > 0 and not self.ns_meta_ext:
-            self.write_meta_file = self.test_log_dir + "/" + self.write_meta_file
-            self.read_meta_file = self.test_log_dir + "/" + self.read_meta_file
+            self.write_meta_file = self.test_log_dir / self.write_meta_file
+            self.read_meta_file = self.test_log_dir / self.read_meta_file
             self.create_meta_file(self.write_meta_file, self.ms)
 
     def tearDown(self):
