@@ -262,6 +262,13 @@ __shr_public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 #define PROTOCOL_COMMAND_MAX_PAGES 512
 
 /*
+ * Smallest data-out length the driver accepts for a command that declares a
+ * host to controller transfer but carries no data.  NVMe transfers are dword
+ * granular, so one dword is the minimum.
+ */
+#define PROTOCOL_COMMAND_MIN_DATA_OUT_LEN 4
+
+/*
  * IOCTL_STORAGE_PROTOCOL_COMMAND pass-through implementation used for
  * VU commands and a small subset of other admin and IO commands.
  * 
@@ -323,16 +330,15 @@ static int submit_storage_protocol_command(
 	}
 
 	/*
-	 * The Namespace Management opcode declares a host to controller
-	 * transfer (DTD 01b), so the driver requires a data-out buffer even
-	 * for operations that transfer no data (i.e. Delete).  Namespace
-	 * management requests that carry no host to controller transfer
-	 * fail STORAGE_PROTOCOL_STATUS_INVALID_REQUEST without being submitted
-	 * to the controller.  Pad these requests with a zeroed Host Software
-	 * Specified Fields buffer.
+	 * For commands that declare a host to controller transfer (DTD 01b),
+	 * the driver requires a data-out buffer even for operations that
+	 * transfer no data.  Requests without a data buffer fail with
+	 * STORAGE_PROTOCOL_STATUS_INVALID_REQUEST without being submitted to
+	 * the controller.  Pad these requests with a zeroed buffer to satisfy
+	 * the driver requirement.
 	 */
-	if (is_admin && cmd->opcode == nvme_admin_ns_mgmt && !cmd->data_len)
-		pad_len = sizeof(struct nvme_ns_mgmt_host_sw_specified);
+	if (is_write && !cmd->data_len)
+		pad_len = PROTOCOL_COMMAND_MIN_DATA_OUT_LEN;
 
 	/* Allocate buffer for STORAGE_PROTOCOL_COMMAND + NVME command + data */
 	buffer_len = FIELD_OFFSET(STORAGE_PROTOCOL_COMMAND, Command) +
