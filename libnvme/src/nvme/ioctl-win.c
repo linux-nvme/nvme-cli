@@ -272,7 +272,7 @@ __shr_public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 static int submit_storage_protocol_command(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd,
-		bool entry_called, void *user_data)
+		bool is_admin, bool entry_called, void *user_data)
 {
 	PSTORAGE_PROTOCOL_COMMAND protocol_command = NULL;
 	ULONG buffer_len = 0;
@@ -331,7 +331,7 @@ static int submit_storage_protocol_command(
 	 * to the controller.  Pad these requests with a zeroed Host Software
 	 * Specified Fields buffer.
 	 */
-	if (cmd->opcode == nvme_admin_ns_mgmt && !cmd->data_len)
+	if (is_admin && cmd->opcode == nvme_admin_ns_mgmt && !cmd->data_len)
 		pad_len = sizeof(struct nvme_ns_mgmt_host_sw_specified);
 
 	/* Allocate buffer for STORAGE_PROTOCOL_COMMAND + NVME command + data */
@@ -357,8 +357,9 @@ static int submit_storage_protocol_command(
 	protocol_command->TimeOutValue = (cmd->timeout_ms > 0) ?
 		((cmd->timeout_ms + 999) / 1000) : 10; /* Round up to seconds */
 
-	protocol_command->CommandSpecific =
-		STORAGE_PROTOCOL_SPECIFIC_NVME_ADMIN_COMMAND;
+	protocol_command->CommandSpecific = is_admin ?
+		STORAGE_PROTOCOL_SPECIFIC_NVME_ADMIN_COMMAND :
+		STORAGE_PROTOCOL_SPECIFIC_NVME_NVM_COMMAND;
 	memcpy(protocol_command->Command, cmd,
 		STORAGE_PROTOCOL_COMMAND_LENGTH_NVME);
 
@@ -977,7 +978,7 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 		 * parameter and only supports NVME_CSI_NVM. For other CSI
 		 * values, fall back to IOCTL_STORAGE_PROTOCOL_COMMAND.
 		 */
-		return submit_storage_protocol_command(hdl, cmd, true, user_data);
+		return submit_storage_protocol_command(hdl, cmd, true, true, user_data);
 	}
 
 	buffer_len = FIELD_OFFSET(STORAGE_PROPERTY_QUERY, AdditionalParameters) +
@@ -1053,7 +1054,7 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 			 * allows the controller to respond if not supported.
 			 */
 			free(buffer);
-			return submit_storage_protocol_command(hdl, cmd, true, user_data);
+			return submit_storage_protocol_command(hdl, cmd, true, true, user_data);
 		}
 		err = -get_errno_from_error(last_error);
 	} while (hdl->decide_retry(hdl, cmd, err));
@@ -1841,7 +1842,7 @@ static int submit_admin_sanitize(
 		 * Default namespace handle not available,
 		 * fall back to IOCTL_STORAGE_PROTOCOL_COMMAND.
 		 */
-		err = submit_storage_protocol_command(hdl, cmd, false, NULL);
+		err = submit_storage_protocol_command(hdl, cmd, true, false, NULL);
 	}
 
 	return err;
@@ -2006,7 +2007,7 @@ static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
 
 	/* For WinPE, use storage protocol command. */
 	if (get_is_win_pe())
-		return submit_storage_protocol_command(hdl, cmd, false, NULL);
+		return submit_storage_protocol_command(hdl, cmd, true, false, NULL);
 
 	if (!libnvme_transport_handle_is_ns(hdl)) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
@@ -2216,11 +2217,11 @@ __shr_public int libnvme_exec_io_passthru(
 	case nvme_cmd_compare:
 		/* Only supported on WinPE */
 		if (get_is_win_pe())
-			return submit_storage_protocol_command(hdl, cmd, false, NULL);
+			return submit_storage_protocol_command(hdl, cmd, false, false, NULL);
 		else
 			return -ENOTSUP;
 	case 0x80 ... 0xFF: /* vendor-specific commands */
-		return submit_storage_protocol_command(hdl, cmd, false, NULL);
+		return submit_storage_protocol_command(hdl, cmd, false, false, NULL);
 	default:
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: opcode=0x%02x\n",
 			__func__, cmd->opcode);
@@ -2268,7 +2269,7 @@ __shr_public int libnvme_exec_admin_passthru(
 	case nvme_admin_nvme_mi_recv:
 		/* Only supported on WinPE */
 		if (get_is_win_pe())
-			return submit_storage_protocol_command(hdl, cmd, false, NULL);
+			return submit_storage_protocol_command(hdl, cmd, true, false, NULL);
 		else
 			return -ENOTSUP;
 	case nvme_admin_fw_commit:
@@ -2276,7 +2277,7 @@ __shr_public int libnvme_exec_admin_passthru(
 	case nvme_admin_fw_download:
 		return submit_admin_fw_download(hdl, cmd);
 	case nvme_admin_dev_self_test:
-		return submit_storage_protocol_command(hdl, cmd, false, NULL);
+		return submit_storage_protocol_command(hdl, cmd, true, false, NULL);
 	case nvme_admin_format_nvm:
 		return submit_admin_format_nvm(hdl, cmd);
 	case nvme_admin_security_send:
@@ -2285,7 +2286,7 @@ __shr_public int libnvme_exec_admin_passthru(
 	case nvme_admin_sanitize_nvm:
 		return submit_admin_sanitize(hdl, cmd);
 	case 0xC0 ... 0xFF: /* vendor-specific commands */
-		return submit_storage_protocol_command(hdl, cmd, false, NULL);
+		return submit_storage_protocol_command(hdl, cmd, true, false, NULL);
 	default:
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: opcode=0x%02x\n",
 			__func__, cmd->opcode);
