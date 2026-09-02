@@ -1202,6 +1202,7 @@ _nvme () {
 					'err-recovery:Get and set error recovery feature'
 					'hctm:Get and set host controlled thermal management feature'
 					'host-behavior-support:Get and set host behavior support feature'
+					'lba-range-type:Get and set lba range type feature'
 					'num-queues:Get and set number of queues feature'
 					'perf-characteristics:Get and set perf characteristics feature'
 					'power-limit:Get and set power limit feature'
@@ -1358,6 +1359,51 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme feat host-behavior-support options" _feat_host_behavior_support
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(lba-range-type)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" \
+					               "--sel -S" "0 1 2 3" && return
+					local _feat_lba_range_type
+					_feat_lba_range_type=(
+						--dry-run':show command instead of executing'
+						--guids=':unique identifier list'
+						-g':alias for --guids'
+						--hlbars=':hide LBA range list'
+						-h':alias for --hlbars'
+						--lbaros=':LBA range overwriteable list'
+						-l':alias for --lbaros'
+						--nlbs=':zeroes based logical blocks number list'
+						-b':alias for --nlbs'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--nsid=':identifier of desired namespace'
+						-n':alias for --nsid'
+						--num=':zeroes based LBA ranges number'
+						-N':alias for --num'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--save':Specifies that the controller shall save the attribute'
+						-s':alias for --save'
+						--sel=':[0-3]: current/default/saved/supported'
+						-S':alias for --sel'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--slbas=':starting LBA list'
+						-s':alias for --slbas'
+						--timeout=':timeout value, in milliseconds'
+						--types=':LBA range type list'
+						-t':alias for --types'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme feat lba-range-type options" _feat_lba_range_type
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
