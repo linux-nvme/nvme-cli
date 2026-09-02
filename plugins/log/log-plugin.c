@@ -460,6 +460,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	const char *dgen = "Pick which telemetry data area to report. Default is 3 to fetch areas 1-3. Valid options are 1, 2, 3, 4.";
 	const char *mcda = "Host-init Maximum Created Data Area. Valid options are 0 ~ 4 "
 		"If given, This option will override dgen. 0 : controller determines data area";
+	const char *force = "Report data area 4 without LPA: DA4S and ETDAS";
 
 	__cleanup_libnvme_free struct nvme_telemetry_log *log = NULL;
 	__cleanup_libnvme_free struct nvme_id_ctrl *id_ctrl = NULL;
@@ -482,6 +483,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		int	data_area;
 		bool	rae;
 		__u8	mcda;
+		bool	force;
 	};
 	struct config cfg = {
 		.file_name	= NULL,
@@ -498,8 +500,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
 		  OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
 		  OPT_FLAG("rae",             'r', &cfg.rae,       rae),
-		  OPT_BYTE("mcda",            'm', &cfg.mcda,      mcda));
-
+		  OPT_BYTE("mcda",            'm', &cfg.mcda,      mcda),
+		  OPT_FLAG("force",             0, &cfg.force,     force));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -538,7 +540,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 			return err;
 		}
 
-		da4_support = id_ctrl->lpa & 0x40;
+		da4_support = id_ctrl->lpa & 0x40 || cfg.force;
 
 		if (!da4_support) {
 			nvme_show_error("%s: Telemetry data area 4 not supported by device",
@@ -547,7 +549,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		}
 
 		err = libnvme_set_etdas(hdl, &host_behavior_changed);
-		if (err) {
+		if (err && !cfg.force) {
 			nvme_show_error("%s: Failed to set ETDAS bit", __func__);
 			return err;
 		}
