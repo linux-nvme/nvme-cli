@@ -38,14 +38,15 @@ import sys
 import time
 import traceback
 import unittest
+from pathlib import Path
 
 CONFIG_ENV_VAR = 'NVME_E2E_CONFIG'
 
 # Directory this file lives in (tests/e2e in a checkout, or .../nvme_e2e/e2e
 # once pip-installed) and the directory that must be on sys.path for dotted
 # imports under this package to resolve (the checkout root, or site-packages).
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_TOP_LEVEL_DIR = os.path.dirname(os.path.dirname(_HERE))
+_HERE = Path(__file__).resolve().parent
+_TOP_LEVEL_DIR = _HERE.parent.parent
 
 
 def discover_plugin_names() -> list[str]:
@@ -53,12 +54,11 @@ def discover_plugin_names() -> list[str]:
     'ocp'), regardless of which nvme-cli plugins the target binary was built
     with -- that's checked at test time, not here.
     """
-    plugins_dir = os.path.join(_HERE, 'plugins')
-    if not os.path.isdir(plugins_dir):
+    plugins_dir = _HERE / 'plugins'
+    if not plugins_dir.is_dir():
         return []
-    return sorted(
-        name for name in os.listdir(plugins_dir)
-        if os.path.isfile(os.path.join(plugins_dir, name, '__init__.py')))
+    return sorted(p.name for p in plugins_dir.iterdir()
+                  if (p / '__init__.py').is_file())
 
 
 def _iter_test_cases(suite: unittest.TestSuite):
@@ -242,7 +242,7 @@ def build_config(args: argparse.Namespace) -> dict:
     """
     config = {}
     if args.config:
-        with open(args.config) as f:
+        with Path(args.config).open() as f:
             config = json.load(f)
 
     overrides = {
@@ -285,8 +285,8 @@ def load_tests(test_module_name: str | None,
         module = importlib.import_module(test_module_name)
         return loader.loadTestsFromModule(module)
 
-    suite = loader.discover(start_dir=_HERE, pattern='*_test.py',
-                            top_level_dir=_TOP_LEVEL_DIR)
+    suite = loader.discover(start_dir=str(_HERE), pattern='*_test.py',
+                            top_level_dir=str(_TOP_LEVEL_DIR))
     return filter_plugins(suite, enabled_plugins)
 
 
@@ -324,7 +324,7 @@ def run_tests(test_module_name: str | None, json_report: str | None,
             'finished_at': finished_at,
             'tests': result.records,
         }
-        with open(json_report, 'w') as f:
+        with Path(json_report).open('w') as f:
             json.dump(report, f, indent=2)
 
     return result.wasSuccessful()
