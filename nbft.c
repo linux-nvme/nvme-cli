@@ -106,6 +106,10 @@ static bool validate_uri(struct nbft_info_discovery *dd,
 static void update_tls_concat(struct nvmf_disc_log_entry *e,
 		struct nvme_fabrics_config *cfg)
 {
+	/* Direct connects (e.g. NBFT io controllers) have no log entry. */
+	if (!e)
+		return;
+
 	if (e->trtype != NVMF_TRTYPE_TCP ||
 	    e->tsas.tcp.sectype == NVMF_TCP_SECTYPE_NONE)
 		return;
