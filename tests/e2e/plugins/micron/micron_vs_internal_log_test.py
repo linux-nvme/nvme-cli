@@ -26,8 +26,8 @@ Tests in this module verify:
     mis-use, and out-of-range data_area.
 """
 
-import os
 import struct
+from pathlib import Path
 
 from .micron_test import TestMicron
 
@@ -64,8 +64,7 @@ class TestMicronVsInternalLog(TestMicron):
 
     def tearDown(self):
         for path in self._archive_files:
-            if os.path.exists(path):
-                os.remove(path)
+            path.unlink(missing_ok=True)
         super().tearDown()
 
     # ------------------------------------------------------------------
@@ -78,13 +77,13 @@ class TestMicronVsInternalLog(TestMicron):
         The path is registered for automatic deletion in tearDown so that
         large archive files do not accumulate between test runs.
         """
-        path = os.path.join(self.test_log_dir, filename)
+        path = self.test_log_dir / filename
         self._archive_files.append(path)
         return path
 
     def _subdirs(self, path):
         """Return the set of subdirectory names in path."""
-        return {n for n in os.listdir(path) if os.path.isdir(os.path.join(path, n))}
+        return {p.name for p in path.iterdir() if p.is_dir()}
 
     def _run_log(self, args=""):
         """Run micron vs-internal-log against the default controller.
@@ -118,7 +117,7 @@ class TestMicronVsInternalLog(TestMicron):
             after the command returns.
         """
         output_path = self._archive_path(f"internal_log{extension}")
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         dirs_before = self._subdirs(cwd)
 
         result = self._run_log(args=f"--package={output_path}")
@@ -131,11 +130,11 @@ class TestMicronVsInternalLog(TestMicron):
 
         # Archive must exist and contain data.
         self.assertTrue(
-            os.path.isfile(output_path),
+            output_path.is_file(),
             f"Archive was not created: {output_path}",
         )
         self.assertGreater(
-            os.path.getsize(output_path), 0,
+            output_path.stat().st_size, 0,
             f"Archive is empty: {output_path}",
         )
 
@@ -318,10 +317,10 @@ class TestMicronVsInternalLog(TestMicron):
             f"rc={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}",
         )
         self.assertTrue(
-            os.path.isfile(output_path),
+            output_path.is_file(),
             f"Telemetry log file was not created: {output_path}",
         )
-        size = os.path.getsize(output_path)
+        size = output_path.stat().st_size
         self.assertGreater(size, 0, "Telemetry log file is empty")
         self.assertEqual(
             size % 512, 0,
@@ -355,11 +354,11 @@ class TestMicronVsInternalLog(TestMicron):
             f"rc={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}",
         )
         self.assertTrue(
-            os.path.isfile(output_path),
+            output_path.is_file(),
             f"Telemetry log file was not created: {output_path}",
         )
 
-        actual_size = os.path.getsize(output_path)
+        actual_size = output_path.stat().st_size
         self.assertGreaterEqual(
             actual_size, _TELEMETRY_BLOCK_SIZE,
             f"Telemetry log file is smaller than one block: {actual_size} bytes",
@@ -367,7 +366,7 @@ class TestMicronVsInternalLog(TestMicron):
 
         # Read the data-area block count straight out of the file's header.
         offset, fmt = _DALB_HEADER[data_area]
-        with open(output_path, "rb") as f:
+        with output_path.open("rb") as f:
             header = f.read(_TELEMETRY_BLOCK_SIZE)
         (dalb,) = struct.unpack_from(fmt, header, offset)
 

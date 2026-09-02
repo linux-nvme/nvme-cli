@@ -50,10 +50,10 @@ class TestNVMeUncor(TestNVMeIO):
             self.skipTest("Write Uncorrectable command not supported by Windows")
         self.start_block = 1023
         self.setup_log_dir(self.__class__.__name__)
-        self.write_file = self.test_log_dir + "/" + self.write_file
-        self.read_file = self.test_log_dir + "/" + self.read_file
+        self.write_file = self.test_log_dir / self.write_file
+        self.read_file = self.test_log_dir / self.read_file
         self.create_data_file(self.write_file, self.data_size, "15")
-        open(self.read_file, 'a').close()
+        self.read_file.touch()
         oncs = to_decimal(self.get_id_ctrl_field_value("oncs"))
         if not oncs & (1 << 1):
             self.skipTest("write-uncor is not supported by this controller")

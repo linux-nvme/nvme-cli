@@ -22,6 +22,7 @@
 """ Inherit TestNVMeIO for nvme read/write operations """
 
 import os
+from pathlib import Path
 
 from ..nvme_test import TestNVMe
 
@@ -54,13 +55,13 @@ class TestNVMeIO(TestNVMe):
         self.ms, self.prinfo, self.data_size = self._get_rw_io_params_per_lba()
         self.start_block = 0
         self.block_count = 0
-        self.write_file = "write_file.txt"
-        self.read_file = "read_file.txt"
+        self.write_file = Path("write_file.txt")
+        self.read_file = Path("read_file.txt")
         # Basename only; subclasses must prepend the test_log_dir path before
         # use (same convention as write_file and read_file above).
         if self.ms > 0 and not self.ns_meta_ext:
-            self.write_meta_file = "write_meta_file.bin"
-            self.read_meta_file = "read_meta_file.bin"
+            self.write_meta_file = Path("write_meta_file.bin")
+            self.read_meta_file = Path("read_meta_file.bin")
         else:
             self.write_meta_file = None
             self.read_meta_file = None
