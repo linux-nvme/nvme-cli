@@ -110,10 +110,11 @@ int libnvme_ctrl_map_entry_get_ctrl_path(const struct ctrl_map_entry *entry,
  * libnvme_ctrl_map_entry_get_pci_address() - Get PCI BDF address for a
  * controller
  * @entry: controller map entry
- * @address: Output BDF string in "DDDD:BB:DD.F" format, allocated on success
+ * @address: Output BDF string in "DDDD:BB:DD.F" format,
+ * allocated on success (caller frees)
  *
- * Queries the Windows CM API for the PCI bus, device, and function numbers
- * and formats them into a Linux-compatible BDF address string.
+ * Queries the Windows CM API for the PCI segment, bus, device, and function
+ * numbers and formats them into a Linux-compatible BDF address string.
  *
  * Return: 0 on success, or a negative error code
  */
