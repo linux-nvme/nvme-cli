@@ -214,7 +214,7 @@ class KeysCLITest(unittest.TestCase):
         for form in (('-k', _PIN_KXCHAP_KEY), ('--key', _PIN_KXCHAP_KEY),
                      (f'--key={_PIN_KXCHAP_KEY}',)):
             with self.subTest(form=form):
-                result = self._run_alias('check-dhchap-key', *form,
+                result = self._run_alias('check-dhchap-key', '-v', *form,
                                          stdin_data='')
                 self.assertIn('Secret is valid', result.stdout)
 
@@ -289,11 +289,24 @@ class KeysCLITest(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_check_kxchap_accepts_generated_key(self):
-        result = self._run('check-kxchap-secret',
+        result = self._run('check-kxchap-secret', '-v',
                            f'--keydata={_PIN_KXCHAP_KEY}')
         self.assertIn('Secret is valid', result.stdout)
         self.assertIn('HMAC 0', result.stdout)
         self.assertIn('length 32', result.stdout)
+
+    def test_check_kxchap_is_silent_without_verbose(self):
+        # POSIX-style check commands encode the verdict in the exit
+        # status; the human-readable line appears only with -v.
+        result = self._run('check-kxchap-secret',
+                           f'--keydata={_PIN_KXCHAP_KEY}')
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, '')
+
+    def test_check_tls_is_silent_without_verbose(self):
+        result = self._run('check-tls-psk', f'--keydata={_PIN_TLS_KEY}')
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, '')
 
     def test_check_kxchap_accepts_every_generated_length(self):
         # gen and check apply the same length rule, so every pair gen
@@ -306,13 +319,13 @@ class KeysCLITest(unittest.TestCase):
                     gen = self._run('gen-kxchap-secret', f'--hmac={hmac}',
                                     f'--secret-length={secret_len}')
                     key = gen.stdout.strip()
-                    result = self._run('check-kxchap-secret',
+                    result = self._run('check-kxchap-secret', '-v',
                                        f'--keydata={key}')
                     self.assertIn(f'HMAC {hmac}', result.stdout)
                     self.assertIn(f'length {secret_len}', result.stdout)
 
     def test_check_kxchap_reads_from_stdin(self):
-        result = self._run('check-kxchap-secret',
+        result = self._run('check-kxchap-secret', '-v',
                            stdin_data=_PIN_KXCHAP_KEY + '\n')
         self.assertIn('Secret is valid', result.stdout)
 
@@ -334,13 +347,13 @@ class KeysCLITest(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_check_tls_accepts_generated_key(self):
-        result = self._run('check-tls-psk', f'--keydata={_PIN_TLS_KEY}')
+        result = self._run('check-tls-psk', '-v', f'--keydata={_PIN_TLS_KEY}')
         self.assertIn('Configured PSK is valid', result.stdout)
         self.assertIn('HMAC 1', result.stdout)
         self.assertIn('length 32', result.stdout)
 
     def test_check_tls_reads_from_stdin(self):
-        result = self._run('check-tls-psk', stdin_data=_PIN_TLS_KEY + '\n')
+        result = self._run('check-tls-psk', '-v', stdin_data=_PIN_TLS_KEY + '\n')
         self.assertIn('Configured PSK is valid', result.stdout)
 
     def test_check_tls_rejects_malformed_key(self):

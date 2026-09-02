@@ -271,7 +271,7 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	nvme_show_result("Secret is valid (HMAC %d, length %d, CRC %08x)", hmac, decoded_len, crc);
+	nvme_show_verbose_result("Secret is valid (HMAC %d, length %d, CRC %08x)", hmac, decoded_len, crc);
 
 	if (!cfg.identity)
 		return 0;
@@ -299,7 +299,7 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 
 	err = libnvmf_lookup_key(ctx, cfg.keytype, cfg.identity, &key_id);
 	if (err) {
-		nvme_show_result("Secret is not loaded for identity '%s'", cfg.identity);
+		nvme_show_verbose_result("Secret is not loaded for identity '%s'", cfg.identity);
 		return 0;
 	}
 
@@ -311,9 +311,9 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	if ((size_t)stored_len == strlen(key) && !memcmp(stored, key, stored_len))
-		nvme_show_result("Secret is loaded (serial %08x) and matches", (unsigned int)key_id);
+		nvme_show_verbose_result("Secret is loaded (serial %08x) and matches", (unsigned int)key_id);
 	else
-		nvme_show_result("Secret is loaded (serial %08x) but differs", (unsigned int)key_id);
+		nvme_show_verbose_result("Secret is loaded (serial %08x) but differs", (unsigned int)key_id);
 
 	return 0;
 }
@@ -614,7 +614,7 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		nvme_show_error("Key decoding failed, %s", libnvme_strerror(-err));
 		return err;
 	}
-	nvme_show_result("Configured PSK is valid (HMAC %u, length %d)", hmac, decoded_len);
+	nvme_show_verbose_result("Configured PSK is valid (HMAC %u, length %d)", hmac, decoded_len);
 
 	if (!cfg.subsysnqn)
 		return 0;
@@ -657,11 +657,11 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 
 	err = libnvmf_lookup_key(ctx, cfg.keytype, tls_id, &key_id);
 	if (err) {
-		nvme_show_result("TLS PSK is not loaded");
+		nvme_show_verbose_result("TLS PSK is not loaded");
 		return 0;
 	}
 
-	nvme_show_result("TLS PSK is loaded (serial %08x)", (unsigned int)key_id);
+	nvme_show_verbose_result("TLS PSK is loaded (serial %08x)", (unsigned int)key_id);
 	return 0;
 }
 
