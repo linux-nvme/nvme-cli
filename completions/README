@@ -2,8 +2,8 @@
 
 Kelly Kaoudis, kelly.n.kaoudis at intel.com, June 2015
 
-Setting Up NVMe Tab Autocompletion for bash or zsh
-==================================================
+Setting Up NVMe Tab Autocompletion for bash, zsh, or PowerShell
+===============================================================
 
 If your working shell is bash...
 --------------------------------
@@ -68,55 +68,43 @@ _nvme and .zshrc. Also, make sure your .zshrc is ordered correctly: we want to
 source _nvme before updating our fpath. Both of these should occur before
 compinit is loaded.
 
+if your working shell is PowerShell...
+--------------------------------------
+dot-source the completion script in the current session
+#. ./nvme-completion.ps1
+
+to load it automatically in every session, append that dot-source line to
+your PowerShell profile
+#Add-Content $PROFILE ". $PWD/nvme-completion.ps1"
+
+You should be able to autocomplete with the nvme utility now. In PowerShell,
+single TAB cycles through the candidates one at a time and Ctrl+Space shows the
+full list. (In VS Code's integrated terminal Ctrl+Space is bound to IntelliSense
+-- use a standalone PowerShell terminal or rebind it.)
+
 Updating NVMe Tab Autocompletions
 =================================
 
-zsh
----
+The completion scripts (bash-nvme-completion.sh, _nvme, and
+nvme-completion.ps1) are generated, not hand-edited. generate-completions.py
+builds all three from the command and option metadata that
+`nvme utils dump-command-metadata` emits, so one source of truth drives every
+shell.
 
-Add your new command to the _cmds array in the following format:
+The generated files are committed to the source tree and are not rebuilt during
+a normal build. After adding or changing a command, plugin, or option,
+regenerate them:
 
-'command:short-form description'
+	meson compile -C .build update-completions
 
-Add a case to the zsh case statement for autocompletion of subopts
-in the following format (as seen in _nvme):
+then commit the updated bash-nvme-completion.sh, _nvme, and
+nvme-completion.ps1.
 
-(bar)
-	local _list_of_subopts
-	_list_of_subopts=(
-	/dev/nvme':supply a device to use (required)'
-	--foo':do something cool'
-	-f':alias of --foo'
-	)
+Regenerate on Linux using the default build, which includes every plugin. A
+Windows build -- and any build configured with a reduced -Dplugins= set --
+leaves some plugins out, so completions generated there would be missing
+commands. A CI check (.github/workflows/check-completions.yml) regenerates from
+a full Linux build and fails if the committed files differ, so a partial
+regeneration will be caught.
 
-	_arguments '*:: :->subcmds'
-	_describe -t commands "nvme bar options" _list_of_subopts
-	;;
-
-All zsh autocompletion built-ins start with _, and so should anything
-internal to your autocompletes. _arguments and _describe are built-ins.
-The '*:: :->subcmds' bit describes the format in which we want our
-options to be displayed (don't change this, unless you like pain.)
-_describe -t adds our list of options to the data structure associated with
-our command `bar'.
-
-Add the name of your command to the (help) case as well.
-
-Update your ~/.zsh/completion/_nvme with your new changes and re-source as needed.
-
-bash
-----
-
-Add the name of your command to _cmds in bash_nvme_completion.sh. Add a case to
-_nvme_list_opts in the following format:
-
-"bar")
-opts+="--foo= -f --baz= -b"
-;;
-
-Update your /etc/bash_completion.d/nvme version, and re-source things as needed.
-
-TO DO
------
-Automatically generate man pages and autocompletions for new NVMe commands, possibly
-with kerneldoc.
+See TESTING.md for how to load the completions and verify them by hand.

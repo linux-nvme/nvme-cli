@@ -1,0 +1,41 @@
+---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 Micron Technology, Inc.
+#
+# Verify that the committed shell completion files are in sync with the
+# generate-completions.py tool and the command/option metadata dumped by the
+# freshly built nvme binary.
+#
+# The bash, zsh, and PowerShell files must be byte-identical to what the
+# generator produces from a default build (all plugins).
+#
+# If this check fails, run:
+#   meson compile -C <build-dir> update-completions
+# and commit the result.
+
+name: Check completions
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+  workflow_dispatch:
+
+jobs:
+  check-completions:
+    name: check generated completion files are up to date
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Configure
+        run: meson setup .build-ci
+      - name: Check completion files are in sync
+        run: meson compile -C .build-ci check-completions

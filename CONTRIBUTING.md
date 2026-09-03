@@ -169,6 +169,30 @@ file, and have each file call `plugin_add_group()` with its own commands
 (and its own title, if you want `nvme <plugin> help` to show sub-headings)
 . only *one* file should call `register_extension()`.
 
+### Regenerating shell completions
+
+nvme-cli ships bash, zsh, and PowerShell tab-completion scripts under
+`completions/`. They are generated from the command and option metadata the
+built `nvme` binary emits, committed to the source tree, and are **not**
+regenerated during a normal build. A CI check rejects any change that leaves
+them out of sync with the CLI.
+
+After adding or changing a command, plugin, or option, regenerate and commit
+the completions:
+
+```shell
+$ meson compile -C .build update-completions
+$ git add completions/bash-nvme-completion.sh completions/_nvme completions/nvme-completion.ps1
+$ git commit -s -m "completions: regenerate for <your change>"
+```
+
+Do this on **Linux** with the default (all-plugins) build. Windows and other
+reduced builds leave some plugins out, so completions generated there would be
+missing commands and fail the CI check.
+
+See [completions/README](completions/README) for how the generator works and
+how to install the completions locally.
+
 ### Updating the libnvme accessor functions
 
 libnvme exposes auto-generated getter/setter accessor functions for its
