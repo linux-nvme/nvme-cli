@@ -19,6 +19,7 @@ sources = [
     'hex-util.c',
     'ini-util.c',
     'int-util.c',
+    'nqn-util.c',
     'parse-util.c',
     'progress-util.c',
     'suffix-util.c',

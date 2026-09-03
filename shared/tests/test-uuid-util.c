@@ -39,6 +39,39 @@ static bool test_uuid_to_string(void)
 	return pass;
 }
 
+static bool check_valid(const char *str, bool want)
+{
+	bool got = shr_uuid_str_valid(str);
+
+	if (got == want) {
+		printf(" - \"%s\" [PASS]\n", str ? str : "(null)");
+		return true;
+	}
+
+	printf(" - \"%s\": got %s, want %s [FAIL]\n", str ? str : "(null)",
+	       got ? "valid" : "invalid", want ? "valid" : "invalid");
+	return false;
+}
+
+static bool test_uuid_str_valid(void)
+{
+	bool pass = true;
+
+	printf("test_uuid_str_valid:\n");
+
+	pass &= check_valid(NULL, false);
+	pass &= check_valid("", false);
+	pass &= check_valid("1b4e28ba-2fa1-11d2-883f-0016d3cca427", true);
+	pass &= check_valid("1B4E28BA-2FA1-11D2-883F-0016D3CCA427", true);
+	pass &= check_valid("1b4e28ba2fa111d2883f0016d3cca427", false);
+	pass &= check_valid("1b4e28ba-2fa1-11d2-883f-0016d3cca42", false);
+	pass &= check_valid("1b4e28ba-2fa1-11d2-883f-0016d3cca4277", false);
+	pass &= check_valid("1b4e28ba-2fa1-11d2-883f-0016d3cca42g", false);
+	pass &= check_valid("1b4e28ba:2fa1-11d2-883f-0016d3cca427", false);
+
+	return pass;
+}
+
 static bool test_fw_to_string(void)
 {
 	bool pass = true;
@@ -59,6 +92,7 @@ int main(void)
 	bool pass = true;
 
 	pass &= test_uuid_to_string();
+	pass &= test_uuid_str_valid();
 	pass &= test_fw_to_string();
 
 	fflush(stdout);

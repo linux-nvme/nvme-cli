@@ -35,6 +35,17 @@ test_crc32_util = executable(
 
 test('shared - crc32-util', test_crc32_util)
 
+test_nqn_util = executable(
+    'test-nqn-util',
+    ['test-nqn-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - nqn-util', test_nqn_util)
+
 test_ini_util = executable(
     'test-ini-util',
     ['test-ini-util.c'],
