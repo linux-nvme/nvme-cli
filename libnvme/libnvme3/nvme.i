@@ -1462,7 +1462,7 @@ struct libnvme_ns *libnvme_ctrl_first_ns(struct libnvme_ctrl *c);
 struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_ns *n);
 
 %extend libnvme_global_ctx {
-	%feature("autodoc", "__init__(self, owner=None)\n"
+	%feature("autodoc", "__init__(self, owner=None, hostnqn=None, hostid=None)\n"
 		"\n"
 		"Create the root context for the libnvme device tree.\n"
 		"\n"
@@ -1472,8 +1472,14 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		"Args:\n"
 		"    owner: Orchestrator identity (e.g. 'stas', 'nbft').\n"
 		"           Pass None if this process does not participate\n"
-		"           in the ownership registry.") libnvme_global_ctx;
-	libnvme_global_ctx(const char *owner = NULL) {
+		"           in the ownership registry.\n"
+		"    hostnqn: Default host NQN. Pass None to use\n"
+		"           $SYSCONFDIR/nvme/hostnqn.\n"
+		"    hostid: Default host identifier. Pass None to use\n"
+		"           $SYSCONFDIR/nvme/hostid.") libnvme_global_ctx;
+	libnvme_global_ctx(const char *owner = NULL,
+			   const char *hostnqn = NULL,
+			   const char *hostid = NULL) {
 		struct libnvme_global_ctx *ctx;
 
 		ctx = libnvme_create_global_ctx();
@@ -1483,6 +1489,11 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 
 		if (owner)
 			libnvme_set_owner(ctx, owner);
+
+		if (hostnqn)
+			libnvme_set_hostnqn(ctx, hostnqn);
+		if (hostid)
+			libnvme_set_hostid(ctx, hostid);
 
 		libnvme_scan_topology(ctx, NULL, NULL);
 
