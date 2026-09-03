@@ -331,16 +331,20 @@ static int set_fctx_from_dict(struct libnvme_global_ctx *ctx,
 PyObject *read_hostnqn(struct libnvme_global_ctx *ctx)
 {
 	char *val = libnvmf_read_hostnqn(ctx);
-	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
+	PyObject *obj = Py_BuildValue("s", val);
+
 	free(val);
+
 	return obj;
 }
 
 PyObject *read_hostid(struct libnvme_global_ctx *ctx)
 {
 	char *val = libnvmf_read_hostid(ctx);
-	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
+	PyObject *obj = Py_BuildValue("s", val);
+
 	free(val);
+
 	return obj;
 }
 
@@ -349,7 +353,6 @@ PyObject *host_get_ids(struct libnvme_global_ctx *ctx,
 		       const char *hostid_arg)
 {
 	char *hostnqn = NULL, *hostid = NULL;
-	PyObject *hostnqn_obj = NULL, *hostid_obj = NULL;
 	PyObject *obj;
 	int err;
 
@@ -360,28 +363,11 @@ PyObject *host_get_ids(struct libnvme_global_ctx *ctx,
 		return NULL;
 	}
 
-	hostnqn_obj = hostnqn ? PyUnicode_FromString(hostnqn) : Py_NewRef(Py_None);
-	hostid_obj = hostid ? PyUnicode_FromString(hostid) : Py_NewRef(Py_None);
-	if (!hostnqn_obj || !hostid_obj) {
-		Py_XDECREF(hostnqn_obj);
-		Py_XDECREF(hostid_obj);
-		free(hostnqn);
-		free(hostid);
-		return NULL;
-	}
+	obj = Py_BuildValue("(ss)", hostnqn, hostid);
 
-	obj = PyTuple_New(2);
-	if (!obj) {
-		Py_DECREF(hostnqn_obj);
-		Py_DECREF(hostid_obj);
-		free(hostnqn);
-		free(hostid);
-		return NULL;
-	}
-	PyTuple_SET_ITEM(obj, 0, hostnqn_obj);
-	PyTuple_SET_ITEM(obj, 1, hostid_obj);
 	free(hostnqn);
 	free(hostid);
+
 	return obj;
 }
 
