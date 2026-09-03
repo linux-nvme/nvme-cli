@@ -1466,7 +1466,8 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		"\n"
 		"Create the root context for the libnvme device tree.\n"
 		"\n"
-		"Scans the NVMe topology on creation.\n"
+		"The device tree starts empty. Call scan_topology() to\n"
+		"populate it.\n"
 		"Supports use as a context manager (``with GlobalCtx() as ctx:``).\n"
 		"\n"
 		"Args:\n"
@@ -1494,8 +1495,6 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 			libnvme_set_hostnqn(ctx, hostnqn);
 		if (hostid)
 			libnvme_set_hostid(ctx, hostid);
-
-		libnvme_scan_topology(ctx, NULL, NULL);
 
 		return ctx;
 	}

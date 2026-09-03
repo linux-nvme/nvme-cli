@@ -55,6 +55,13 @@ def discover(ctx, host, ctrl, iteration):
             discover(ctx, host, new_ctrl, iteration + 1)
 
 ctx = nvme.GlobalCtx()
+
+# scan_topology() is optional. It parses sysfs and builds a tree of the
+# Host, Subsystem and Ctrl objects that already exist. With that tree in
+# place, the controller created below inherits configuration from a peer
+# controller on the same subsystem.
+ctx.scan_topology()
+
 host = nvme.Host(ctx)
 subsysnqn = nvme.NVME_DISC_SUBSYS_NAME
 transport = 'tcp'
