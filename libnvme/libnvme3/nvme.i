@@ -1529,7 +1529,22 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	        yield h
 	        h = _libnvme_next_host(self, h)
 	%}
-	%feature("autodoc", "Rescan the NVMe topology and update the device tree.") refresh_topology;
+	%feature("autodoc", "Scan the NVMe topology and add what is found to "
+		"the device tree.\n"
+		"\n"
+		"Only adds: a device already in the tree is updated in place, "
+		"and nothing is removed. Objects held by the caller stay "
+		"valid.") scan_topology;
+	void scan_topology() {
+		libnvme_scan_topology($self, NULL, NULL);
+	}
+	%feature("autodoc", "Discard the device tree and scan the NVMe "
+		"topology again.\n"
+		"\n"
+		"Destructive: every host, subsystem, controller and namespace "
+		"is freed before the scan, so any object the caller still "
+		"holds becomes invalid. Use it to drop devices that have gone "
+		"away; use scan_topology() to pick up new ones.") refresh_topology;
 	void refresh_topology() {
 		libnvme_refresh_topology($self);
 	}
