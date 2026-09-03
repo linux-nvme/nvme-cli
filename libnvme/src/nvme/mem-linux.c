@@ -56,7 +56,7 @@ __shr_public void *libnvme_alloc(size_t len)
 	if (!round_up_checked(len, 0x1000, &_len))
 		return NULL;
 
-	if (posix_memalign((void *)&p, getpagesize(), _len))
+	if (posix_memalign(&p, getpagesize(), _len))
 		return NULL;
 
 	memset(p, 0, _len);
