@@ -37,6 +37,7 @@
 
 #include <shared/array-util.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/string-util.h>
 
 #include <libnvme.h>
 
@@ -2476,7 +2477,7 @@ __shr_public bool libnvmf_is_registration_supported(struct libnvme_ctrl *c)
 			return false;
 
 	libnvme_ctrl_get_dctype(c, &dctype, NULL);
-	return !strcmp(dctype, "ddc") || !strcmp(dctype, "cdc");
+	return shr_streq0(dctype, "ddc") || shr_streq0(dctype, "cdc");
 }
 
 __shr_public int libnvmf_register_ctrl(
