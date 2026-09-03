@@ -50,12 +50,23 @@ static bool test_nqn_valid(void)
 	pass &= check("nqn.2014-08.org.nvmexpress.discovery", true);
 	pass &= check("nqn.2014-08.org.nvmexpress:host-a", true);
 
+	/* Real-world names that must keep working */
+	pass &= check("nqn.1988-11.com.dell:PowerSANxxx:01:"
+		      "20210225100113-454f73093ceb4847a7bdfc6e34ae8e28", true);
+	pass &= check("nqn.1988-11.com.dell:starfleet", true);
+	pass &= check("nqn.1988-11.com.dell:klingons", true);
+
 	/* Malformed */
 	pass &= check("qn.2014-08.com.example:host", false);
 	pass &= check("nqn.201408.com.example:host", false);
 	pass &= check("nqn.2014-0x.com.example:host", false);
 	pass &= check("nqn.2014-08com.example:host", false);
 	pass &= check("nqn.2014-08.", false);
+	pass &= check("nqn.2014-00.com.example:host", false);
+	pass &= check("nqn.2014-13.com.example:host", false);
+	pass &= check("nqn.2014-08.com.example:host name", false);
+	pass &= check("nqn.2014-08.com.example:host\n", false);
+	pass &= check("nqn.2014-08.com.example:h\x7fst", false);
 
 	memset(too_long, 'a', sizeof(too_long) - 1);
 	too_long[sizeof(too_long) - 1] = '\0';
@@ -65,11 +76,43 @@ static bool test_nqn_valid(void)
 	return pass;
 }
 
+static bool check_hostid(const char *hostid, bool want)
+{
+	bool got = shr_hostid_valid(hostid);
+
+	if (got == want) {
+		printf(" - \"%s\" [PASS]\n", hostid ? hostid : "(null)");
+		return true;
+	}
+
+	printf(" - \"%s\": got %s, want %s [FAIL]\n", hostid ? hostid : "(null)",
+	       got ? "valid" : "invalid", want ? "valid" : "invalid");
+	return false;
+}
+
+static bool test_hostid_valid(void)
+{
+	bool pass = true;
+
+	printf("test_hostid_valid:\n");
+
+	pass &= check_hostid(NULL, false);
+	pass &= check_hostid("", false);
+	pass &= check_hostid("1b4e28ba-2fa1-11d2-883f-0016d3cca427", true);
+	pass &= check_hostid("00000000-0000-0000-0000-000000000000", false);
+	pass &= check_hostid("00000000-0000-0000-0000-000000000001", true);
+	pass &= check_hostid("ffffffff-ffff-ffff-ffff-ffffffffffff", true);
+	pass &= check_hostid("abc-123", false);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
 
 	pass &= test_nqn_valid();
+	pass &= test_hostid_valid();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
