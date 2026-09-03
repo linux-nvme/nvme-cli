@@ -364,11 +364,11 @@ __shr_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
 	if (!ctx)
 		return NULL;
 
-	if (shr_uuid_str_valid(ctx->hostid))
+	if (shr_hostid_valid(ctx->hostid))
 		return strdup(ctx->hostid);
 
 	val = nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
-	if (shr_uuid_str_valid(val))
+	if (shr_hostid_valid(val))
 		return val;
 
 	if (val) {
