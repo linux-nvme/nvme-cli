@@ -37,7 +37,9 @@
 
 #include <shared/array-util.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/nqn-util.h>
 #include <shared/string-util.h>
+#include <shared/uuid-util.h>
 
 #include <libnvme.h>
 
@@ -333,30 +335,50 @@ static char *nvmf_read_file(const char *f, int len)
 
 __shr_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 {
+	char *val;
+
 	if (!ctx)
 		return NULL;
 
-	if (ctx->hostnqn) {
-		if (!strcmp(ctx->hostnqn, ""))
-			return NULL;
+	if (shr_nqn_valid(ctx->hostnqn))
 		return strdup(ctx->hostnqn);
+
+	val = nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
+	if (shr_nqn_valid(val))
+		return val;
+
+	if (val) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			    "%s does not contain a valid host NQN\n",
+			    NVMF_HOSTNQN_FILE);
+		free(val);
 	}
 
-	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
+	return NULL;
 }
 
 __shr_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
 {
+	char *val;
+
 	if (!ctx)
 		return NULL;
 
-	if (ctx->hostid) {
-		if (!strcmp(ctx->hostid, ""))
-			return NULL;
+	if (shr_uuid_str_valid(ctx->hostid))
 		return strdup(ctx->hostid);
+
+	val = nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
+	if (shr_uuid_str_valid(val))
+		return val;
+
+	if (val) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			    "%s does not contain a valid host identifier\n",
+			    NVMF_HOSTID_FILE);
+		free(val);
 	}
 
-	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
+	return NULL;
 }
 
 __shr_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
