@@ -21,6 +21,7 @@
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/ini-util.h>
+#include <shared/nqn-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
 
@@ -604,70 +605,6 @@ fail:
 	return ret;
 }
 
-/*
- * Validate the basic NQN syntax defined by the NVMe Base specification,
- * section 4.7.
- *
- * The expected format starts with "nqn.", followed by a four-digit year,
- * a two-digit month (01-12), and a non-empty suffix after the domain
- * separator.
- *
- * Examples of valid NQNs:
- *
- *   nqn.2014-08.org.nvmexpress
- *   nqn.2014-08.org.example:subsystem1
- *
- * This function checks only the structural format. It does not validate the
- * reverse domain name, domain ownership, or uniqueness requirements.
- */
-static bool nqn_valid(const char *nqn)
-{
-	size_t len = strlen(nqn);
-	const char *p = nqn + 4;
-	int month;
-
-	if (!len || len > NVMF_NQN_SIZE || strncmp(nqn, "nqn.", 4))
-		return false;
-	if (!isdigit((unsigned char)p[0]) || !isdigit((unsigned char)p[1]) ||
-	    !isdigit((unsigned char)p[2]) || !isdigit((unsigned char)p[3]) ||
-	    p[4] != '-' || !isdigit((unsigned char)p[5]) ||
-	    !isdigit((unsigned char)p[6]) || p[7] != '.' || !p[8])
-		return false;
-
-	month = (p[5] - '0') * 10 + (p[6] - '0');
-	if (month < 1 || month > 12)
-		return false;
-
-	for (p = nqn; *p; p++) {
-		if ((unsigned char)*p < 0x21 || (unsigned char)*p > 0x7e)
-			return false;
-	}
-
-	return true;
-}
-
-/*
- * Validate the HostID syntax defined by the NVMe Base specification,
- * section 5.2.26.1.32.2.
- *
- * A HostID is a 128-bit value represented as a UUID string. The all-zero UUID
- * is not a valid HostID because it does not identify a host.
- */
-static bool hostid_valid(const char *hostid)
-{
-	unsigned char uuid[NVME_UUID_LEN];
-	int i;
-
-	if (libnvme_uuid_from_string(hostid, uuid))
-		return false;
-	for (i = 0; i < NVME_UUID_LEN; i++) {
-		if (uuid[i])
-			return true;
-	}
-
-	return false;
-}
-
 static int set_identity(struct conf_parse *pc, char **field, const char *value)
 {
 	free(*field);
@@ -708,7 +645,7 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 			conf_err(pc, line, "empty nqn");
 			return -EINVAL;
 		}
-		if (!nqn_valid(value)) {
+		if (!shr_nqn_valid(value)) {
 			conf_err(pc, line, "\"%s\" is not a valid NQN", value);
 			return -EINVAL;
 		}
@@ -717,7 +654,7 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 		if (pc->sect != SECT_HOST)
 			break;
 		if (!strcmp(key, "hostnqn")) {
-			if (*value && !nqn_valid(value)) {
+			if (*value && !shr_nqn_valid(value)) {
 				conf_err(pc, line,
 					 "hostnqn \"%s\" is not a valid NQN",
 					 value);
@@ -726,7 +663,7 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 			return set_identity(pc, &pc->f->hostnqn, value);
 		}
 		if (!strcmp(key, "hostid")) {
-			if (*value && !hostid_valid(value)) {
+			if (*value && !shr_hostid_valid(value)) {
 				conf_err(pc, line,
 					 "hostid \"%s\" is not a valid, non-zero 128-bit UUID",
 					 value);
