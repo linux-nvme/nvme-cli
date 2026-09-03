@@ -97,7 +97,7 @@ controller = transport=tcp;traddr=192.168.1.20;trsvcid=4420
 """)
         _write(os.path.join(self.conf + '.d', 'prod.conf'), """
 [Host]
-hostnqn     = nqn.2014-08.org.nvmexpress:uuid:1111
+hostnqn     = nqn.2014-08.org.nvmexpress:1111
 hostid      = 46ba5037-7ce5-41fa-9452-48477bf00080
 hostsymname = prod-persona
 
@@ -110,7 +110,7 @@ controller = transport=tcp;traddr=10.0.0.9;trsvcid=4420
         self.assertEqual(conns[0]['hostsymname'], 'default-persona')
         self.assertEqual(conns[1]['hostsymname'], 'prod-persona')
         self.assertEqual(conns[1]['hostnqn'],
-                         'nqn.2014-08.org.nvmexpress:uuid:1111')
+                         'nqn.2014-08.org.nvmexpress:1111')
         self.assertTrue(conns[1]['source'].endswith('prod.conf'))
 
     def test_multipath_yields_one_connection_per_controller_line(self):

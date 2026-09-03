@@ -80,7 +80,7 @@ class ConfigCreateCLITest(TestNVMeBase):
         self._create('--transport', 'fc',
                      '--traddr=nn-0x58ccf090c92006da:pn-0x58ccf091492806da',
                      '--host-traddr=nn-0x20000024ff7fa448:pn-0x21000024ff7fa448',
-                     '--hostnqn=nqn.2014-08.org.nvmexpress:uuid:62a4ab74',
+                     '--hostnqn=nqn.2014-08.org.nvmexpress:62a4ab74',
                      '--hostid=62a4ab74-1e18-11f1-8bb7-6c1ff71ba506',
                      '--discovery')
         content = self._read_output()
@@ -90,7 +90,7 @@ class ConfigCreateCLITest(TestNVMeBase):
             'traddr=nn-0x58ccf090c92006da:pn-0x58ccf091492806da;'
             'host-traddr=nn-0x20000024ff7fa448:pn-0x21000024ff7fa448',
             content)
-        self.assertIn('hostnqn = nqn.2014-08.org.nvmexpress:uuid:62a4ab74',
+        self.assertIn('hostnqn = nqn.2014-08.org.nvmexpress:62a4ab74',
                       content)
         self.assertIn('hostid = 62a4ab74-1e18-11f1-8bb7-6c1ff71ba506',
                       content)
@@ -111,7 +111,7 @@ class ConfigCreateCLITest(TestNVMeBase):
     def test_host_symname_gets_own_dropin(self):
         self._create('--transport', 'tcp', '--traddr=192.168.1.21',
                      '--nqn=nqn.2024-01.com.example:data.vol2',
-                     '--hostnqn=nqn.2014-08.org.nvmexpress:uuid:aaaa',
+                     '--hostnqn=nqn.2014-08.org.nvmexpress:aaaa',
                      '--host-symname=lab-host-01')
         content = self._read_output()
         self.assertIn('hostsymname = lab-host-01', content)
@@ -192,7 +192,7 @@ class ConfigCreateCLITest(TestNVMeBase):
 
     def test_repeated_identical_create_is_idempotent(self):
         args = ('--transport', 'fc', '--traddr=nn-0x1:pn-0x1', '--discovery',
-               '--hostnqn=nqn.2014-08.org.nvmexpress:uuid:aaaa',
+               '--hostnqn=nqn.2014-08.org.nvmexpress:aaaa',
                '--hostid=46ba5037-7ce5-41fa-9452-48477bf00080')
         self._create(*args)
         self._create(*args)

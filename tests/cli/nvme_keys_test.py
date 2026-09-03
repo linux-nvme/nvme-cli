@@ -58,7 +58,7 @@ _DEPRECATED_CMDS = _has_deprecated_cmds()
 
 _PIN_KXCHAP_KEY = 'DHHC-1:00:9wCYVQqDvADjGIZo6q/v2SfmXZqqkNa9TcvYu97Ly3Q/gajh:'
 _PIN_TLS_KEY = 'NVMeTLSkey-1:01:9wCYVQqDvADjGIZo6q/v2SfmXZqqkNa9TcvYu97Ly3Q/gajh:'
-_HOST_NQN = 'nqn.2014-08.org.nvmexpress:uuid:abc'
+_HOST_NQN = 'nqn.2014-08.org.nvmexpress:abc'
 # The alias prints this when it drops '--nqn'. Matching the option
 # name alone would also hit the getopt error listing it as a
 # candidate, and the help text naming it.
@@ -165,7 +165,7 @@ class KeysCLITest(unittest.TestCase):
         # The payload is the secret, which no NQN takes part in deriving,
         # so '--nqn' is gone rather than accepted and ignored.
         self._run('gen-kxchap-secret', '--secret=pin:1234', '--hmac=1',
-                  '--nqn=nqn.2014-08.org.nvmexpress:uuid:abc',
+                  '--nqn=nqn.2014-08.org.nvmexpress:abc',
                   expect_fail=True)
 
     @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
