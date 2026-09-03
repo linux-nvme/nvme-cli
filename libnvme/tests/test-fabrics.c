@@ -779,7 +779,7 @@ static bool test_create_ctrl_credentials(struct libnvme_global_ctx *ctx)
 
 	printf("\ntest_create_ctrl_credentials:\n");
 
-	fctx.ctrl_params.subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:subsys";
+	fctx.ctrl_params.subsysnqn = "nqn.2014-08.org.nvmexpress:subsys";
 	fctx.ctrl_params.transport = "tcp";
 	fctx.ctrl_params.traddr = "192.168.1.100";
 	fctx.ctrl_params.cfg.tls = true;

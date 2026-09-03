@@ -101,7 +101,7 @@ class ConfigConvertCLITest(TestNVMeBase):
     def test_convert_dc_and_subsystem(self):
         self._write_json({
             'hosts': [{
-                'hostnqn': 'nqn.2014-08.org.nvmexpress:uuid:1111',
+                'hostnqn': 'nqn.2014-08.org.nvmexpress:1111',
                 'hostid': '46ba5037-7ce5-41fa-9452-48477bf00080',
                 'hostsymname': 'lab-host-01',
                 'subsystems': [
@@ -129,7 +129,7 @@ class ConfigConvertCLITest(TestNVMeBase):
         self._convert()
         content = self._read_output()
         self.assertIn('[Host]', content)
-        self.assertIn('hostnqn = nqn.2014-08.org.nvmexpress:uuid:1111',
+        self.assertIn('hostnqn = nqn.2014-08.org.nvmexpress:1111',
                       content)
         self.assertIn('hostid = 46ba5037-7ce5-41fa-9452-48477bf00080',
                       content)
@@ -150,7 +150,7 @@ class ConfigConvertCLITest(TestNVMeBase):
 
     def test_convert_legacy_bare_array_format(self):
         self._write_json([{
-            'hostnqn': 'nqn.2014-08.org.nvmexpress:uuid:2222',
+            'hostnqn': 'nqn.2014-08.org.nvmexpress:2222',
             'subsystems': [{
                 'nqn': 'nqn.2024-01.com.example:data.vol2',
                 'ports': [{
@@ -161,14 +161,14 @@ class ConfigConvertCLITest(TestNVMeBase):
         }])
         self._convert()
         content = self._read_output()
-        self.assertIn('hostnqn = nqn.2014-08.org.nvmexpress:uuid:2222',
+        self.assertIn('hostnqn = nqn.2014-08.org.nvmexpress:2222',
                       content)
         self.assertIn('nqn = nqn.2024-01.com.example:data.vol2', content)
 
     def test_dhchap_default_inherited_by_port(self):
         self._write_json({
             'hosts': [{
-                'hostnqn': 'nqn.2014-08.org.nvmexpress:uuid:3333',
+                'hostnqn': 'nqn.2014-08.org.nvmexpress:3333',
                 'dhchap_key': 'DHHC-1:00:host-default-key:',
                 'subsystems': [{
                     'nqn': 'nqn.2024-01.com.example:data.vol3',
@@ -186,7 +186,7 @@ class ConfigConvertCLITest(TestNVMeBase):
     def test_dhchap_port_value_overrides_default(self):
         self._write_json({
             'hosts': [{
-                'hostnqn': 'nqn.2014-08.org.nvmexpress:uuid:4444',
+                'hostnqn': 'nqn.2014-08.org.nvmexpress:4444',
                 'dhchap_key': 'DHHC-1:00:host-default-key:',
                 'subsystems': [{
                     'nqn': 'nqn.2024-01.com.example:data.vol4',

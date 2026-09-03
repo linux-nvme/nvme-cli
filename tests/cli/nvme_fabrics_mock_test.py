@@ -291,7 +291,7 @@ class FabricsMockCLITest(unittest.TestCase):
                 'transport': 'tcp',
                 'traddr': '192.168.1.200',
                 'trsvcid': '4420',
-                'subsysnqn': 'nqn.2014-08.org.nvmexpress:uuid:mock-target-nvm-subsystem',
+                'subsysnqn': 'nqn.2014-08.org.nvmexpress:mock-target-nvm-subsystem',
             },
         ]
         res = self._run('discover', '-t', 'tcp', '-a', '192.168.1.1')
@@ -303,7 +303,7 @@ class FabricsMockCLITest(unittest.TestCase):
 
     def test_connect_simple(self):
         """Test connecting to a single target."""
-        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:my-io-subsys-1"
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
         self._run('connect', '-t', 'tcp', '-a', '192.168.1.10', '-s', '4420', '-n', subsysnqn)
 
         # The command should succeed, and our mock should have created the sysfs entries.
@@ -317,8 +317,8 @@ class FabricsMockCLITest(unittest.TestCase):
     def test_connect_all_recursive(self):
         """Test connect-all recursive discovery cascade."""
         # Setup pre-configured mock discovery log entries pointing to two standard I/O controllers.
-        subsys1 = "nqn.2014-08.org.nvmexpress:uuid:io-subsys-A"
-        subsys2 = "nqn.2014-08.org.nvmexpress:uuid:io-subsys-B"
+        subsys1 = "nqn.2014-08.org.nvmexpress:io-subsys-A"
+        subsys2 = "nqn.2014-08.org.nvmexpress:io-subsys-B"
         self.server.discovery_entries = [
             {'transport': 'tcp', 'traddr': '192.168.5.1', 'trsvcid': '4420', 'subsysnqn': subsys1},
             {'transport': 'tcp', 'traddr': '192.168.5.2', 'trsvcid': '4420', 'subsysnqn': subsys2},
@@ -339,7 +339,7 @@ class FabricsMockCLITest(unittest.TestCase):
     def test_connect_already_connected(self):
         """Test how connect handles EALREADY (already connected) error gracefully."""
         self.server.connect_errno = 114  # EALREADY
-        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:my-io-subsys-1"
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
 
         # Without --verbose, EALREADY is reported through the exit code alone --
         # no "already connected" text on either stream, so scripts don't have to
@@ -361,7 +361,7 @@ class FabricsMockCLITest(unittest.TestCase):
         """--idempotent turns EALREADY into success (exit 0) instead of a
         failure, still silent unless --verbose is given."""
         self.server.connect_errno = 114  # EALREADY
-        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:my-io-subsys-1"
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
 
         res = self._run('connect', '-t', 'tcp', '-a', '192.168.1.10', '-s', '4420', '-n', subsysnqn,
                         '--idempotent')
@@ -378,7 +378,7 @@ class FabricsMockCLITest(unittest.TestCase):
         ioctl is attempted. The CLI relies on for --idempotent and for
         knowing not to print its own generic "failed to connect" message
         on top of hook_already_connected()'s on the correct error code."""
-        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:my-io-subsys-1"
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
         # Each nvme invocation auto-generates its own random hostnqn/hostid
         # unless one is pinned, landing in a different in-memory host object.
         # lookup_live_ctrl() only searches the *current* host's own
@@ -427,7 +427,7 @@ class FabricsMockCLITest(unittest.TestCase):
     def test_connect_registry_ownership(self):
         """A fresh connect claims the registry entry; a reuse only touches
         it when --owner says so."""
-        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:owned-io-subsys"
+        subsysnqn = "nqn.2014-08.org.nvmexpress:owned-io-subsys"
         args = self._owner_connect_args(subsysnqn)
 
         self._run(*args, '--owner=stas')
@@ -448,7 +448,7 @@ class FabricsMockCLITest(unittest.TestCase):
     def test_connect_fresh_clears_stale_registry_entry(self):
         """A controller the kernel just created cannot legitimately be
         owned, so a recycled instance number's stale entry is dropped."""
-        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:recycled-io-subsys"
+        subsysnqn = "nqn.2014-08.org.nvmexpress:recycled-io-subsys"
         stale = Path(f"{self.base_dir}/registry/nvme0")
         stale.mkdir(parents=True)
         (stale / "owner").write_text("stas\n")
@@ -461,7 +461,7 @@ class FabricsMockCLITest(unittest.TestCase):
         controller through the kernel's EALREADY, before any registry
         update, so connect-all never claims one it did not create."""
         self.server.reject_duplicate_connect = True
-        io_subsys = "nqn.2014-08.org.nvmexpress:uuid:walked-io-subsys"
+        io_subsys = "nqn.2014-08.org.nvmexpress:walked-io-subsys"
         io_addr = '192.168.20.10'
         dc_addr = '192.168.20.1'
 
@@ -481,7 +481,7 @@ class FabricsMockCLITest(unittest.TestCase):
     def test_custom_identify(self):
         """Test getting custom Identify Controller fields steered by environment."""
         # Create a mock controller nvme0 in sysfs first, so nvme list has something to read.
-        subsysnqn = "nqn.2014-08.org.nvmexpress:uuid:my-io-subsys-1"
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
         inst_dir = self._ctrl_path(0)
         inst_dir.mkdir(parents=True, exist_ok=True)
         (inst_dir / "transport").write_text("tcp\n")
@@ -512,10 +512,10 @@ class FabricsMockCLITest(unittest.TestCase):
 
     def test_connect_all_three_hop_referral_cascade(self):
         """Test connect-all with three Discovery Controllers in a referral chain: DC a -> DC b -> DC c -> IO subsys C."""
-        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-A"
-        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-B"
-        dc_c = "nqn.2014-08.org.nvmexpress:uuid:dc-C"
-        io_c = "nqn.2014-08.org.nvmexpress:uuid:io-subsys-C"
+        dc_a = "nqn.2014-08.org.nvmexpress:dc-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:dc-B"
+        dc_c = "nqn.2014-08.org.nvmexpress:dc-C"
+        io_c = "nqn.2014-08.org.nvmexpress:io-subsys-C"
 
         # Configure our Python mock server to map each subsystem NQN to its specific log entries.
         self.server.discovery_map = {
@@ -633,9 +633,9 @@ class FabricsMockCLITest(unittest.TestCase):
     def test_connect_all_persistent_auto_epcsd_referral_hop(self):
         """Referral (non-self) Discovery Controller entries decide persistence
         from their own EFLAGS directly, without needing a self-entry."""
-        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-epcsd-A"
-        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-epcsd-B"  # EPCSD set: should persist
-        dc_c = "nqn.2014-08.org.nvmexpress:uuid:dc-epcsd-C"  # EPCSD unset: should disconnect
+        dc_a = "nqn.2014-08.org.nvmexpress:dc-epcsd-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:dc-epcsd-B"  # EPCSD set: should persist
+        dc_c = "nqn.2014-08.org.nvmexpress:dc-epcsd-C"  # EPCSD unset: should disconnect
 
         self.server.discovery_map = {
             dc_a: [
@@ -664,8 +664,8 @@ class FabricsMockCLITest(unittest.TestCase):
         """A referred DC's own self entry (SUBTYPE=03h) decides its own
         persistence -- not the EPCSD its parent's referral entry reported
         for it."""
-        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-self-override-A"
-        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-self-override-B"
+        dc_a = "nqn.2014-08.org.nvmexpress:dc-self-override-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:dc-self-override-B"
         dc_b_addr = '192.168.130.2'
         dc_b_trsvcid = '4420'
 
@@ -695,9 +695,9 @@ class FabricsMockCLITest(unittest.TestCase):
         """A referral DC that's already connected before connect-all runs
         must still have its own Discovery Log Page walked, not just
         skipped -- the bug that motivated the discovery-walk rewrite."""
-        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-resume-A"
-        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-resume-B"
-        io_c = "nqn.2014-08.org.nvmexpress:uuid:io-resume-C"
+        dc_a = "nqn.2014-08.org.nvmexpress:dc-resume-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:dc-resume-B"
+        io_c = "nqn.2014-08.org.nvmexpress:io-resume-C"
         dc_b_addr = '192.168.140.2'
         dc_b_trsvcid = '4420'
         # Each invocation of the nvme binary auto-generates its own random
@@ -745,7 +745,7 @@ class FabricsMockCLITest(unittest.TestCase):
         the primary is depth 0, dc_1..dc_8 (depths 1-8) connect, dc_9
         (depth 9) does not."""
         n = 10  # dc_0 (primary) .. dc_9
-        dcs = [f"nqn.2014-08.org.nvmexpress:uuid:dc-depth-{i}" for i in range(n)]
+        dcs = [f"nqn.2014-08.org.nvmexpress:dc-depth-{i}" for i in range(n)]
         self.server.discovery_map = {
             dcs[i]: [{'transport': 'tcp', 'traddr': f'192.168.120.{i + 2}',
                      'trsvcid': '4420', 'subsysnqn': dcs[i + 1]}]
@@ -768,9 +768,9 @@ class FabricsMockCLITest(unittest.TestCase):
         dc_a's Discovery Log Page is fetched exactly once despite the
         cycle, and a sibling entry alongside the back-reference is still
         discovered."""
-        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-cycle-A"
-        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-cycle-B"
-        io_c = "nqn.2014-08.org.nvmexpress:uuid:io-cycle-C"
+        dc_a = "nqn.2014-08.org.nvmexpress:dc-cycle-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:dc-cycle-B"
+        io_c = "nqn.2014-08.org.nvmexpress:io-cycle-C"
 
         self.server.discovery_map = {
             dc_a: [
@@ -799,9 +799,9 @@ class FabricsMockCLITest(unittest.TestCase):
         <-> dc_a, every node referring to both its ring-neighbors) must not
         re-walk any of them: each DC's Discovery Log Page is fetched exactly
         once despite every node having a path back to every other node."""
-        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-ring-A"
-        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-ring-B"
-        dc_c = "nqn.2014-08.org.nvmexpress:uuid:dc-ring-C"
+        dc_a = "nqn.2014-08.org.nvmexpress:dc-ring-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:dc-ring-B"
+        dc_c = "nqn.2014-08.org.nvmexpress:dc-ring-C"
 
         self.server.discovery_map = {
             dc_a: [

@@ -20,7 +20,7 @@ class TestCtrlCrypto(unittest.TestCase):
         self.ctx.hostnqn = hostnqn
         self.ctx.hostid = hostid
         self.ctrl = nvme.Ctrl(self.ctx, {
-            'subsysnqn': 'nqn.2014-08.org.nvmexpress:uuid:subsys',
+            'subsysnqn': 'nqn.2014-08.org.nvmexpress:subsys',
             'transport': 'tcp',
             'traddr': '192.168.1.100',
             'trsvcid': '4420',
@@ -52,7 +52,7 @@ class TestCtrlCrypto(unittest.TestCase):
     def test_unset_keys_stay_unset(self):
         """A controller built without keys must not grow any."""
         ctrl = nvme.Ctrl(self.ctx, {
-            'subsysnqn': 'nqn.2014-08.org.nvmexpress:uuid:subsys',
+            'subsysnqn': 'nqn.2014-08.org.nvmexpress:subsys',
             'transport': 'tcp',
             'traddr': '192.168.1.100',
             'trsvcid': '4420',
