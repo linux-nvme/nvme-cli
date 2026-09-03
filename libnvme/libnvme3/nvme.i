@@ -41,6 +41,18 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 "Ctrl          An NVMe or NVMe-oF controller; connect, discover, disconnect.\n"
 "Namespace     A namespace within a subsystem or controller.\n"
 "\n"
+"Functions\n"
+"---------\n"
+"read_hostnqn(ctx)   The configured host NQN: the GlobalCtx default if\n"
+"                    one is set, otherwise /etc/nvme/hostnqn.\n"
+"read_hostid(ctx)    The configured host ID, resolved the same way.\n"
+"host_get_ids(ctx, hostnqn_arg=None, hostid_arg=None)\n"
+"                    The identity a connect will use, fully resolved:\n"
+"                    the _arg values (a command-line override, if the\n"
+"                    application has one), then the first host in the\n"
+"                    tree, then the two functions above, then derived\n"
+"                    or generated. Returns a (hostnqn, hostid) tuple.\n"
+"\n"
 "Scan attached NVMe devices::\n"
 "\n"
 "    import nvme\n"
@@ -62,7 +74,6 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 "        log = c.discover()\n"
 "\n"
 "All classes support the context manager protocol (the ``with`` statement).\n"
-"read_hostnqn() and read_hostid() return the system-wide host NQN and ID.\n"
 %enddef
 %module(docstring=MODULE_DOCSTRING) nvme
 %feature("autodoc", "1");

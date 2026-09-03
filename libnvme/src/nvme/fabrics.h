@@ -65,12 +65,15 @@ char *libnvmf_generate_hostnqn_from_hostid(struct libnvme_global_ctx *ctx,
 char *libnvmf_generate_hostid(struct libnvme_global_ctx *ctx);
 
 /**
- * libnvmf_read_hostnqn() - Reads the host nvm qualified name from the config
- *			      default location
+ * libnvmf_read_hostnqn() - Get the configured host nvm qualified name
  * @ctx:		struct libnvme_global_ctx object
  *
- * Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
- * $SYSCONFDIR is usually /etc.
+ * Return @ctx's hostnqn default if one is set, otherwise read the name
+ * from $SYSCONFDIR/nvme/hostnqn. $SYSCONFDIR is usually /etc. An empty
+ * @ctx default suppresses the file lookup.
+ *
+ * This is not the identity a connect uses. See libnvmf_host_get_ids()
+ * for the full resolution order.
  *
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
  * is responsible to free the string.
@@ -78,12 +81,15 @@ char *libnvmf_generate_hostid(struct libnvme_global_ctx *ctx);
 char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx);
 
 /**
- * libnvmf_read_hostid() - Reads the host identifier from the config default
- *			     location
+ * libnvmf_read_hostid() - Get the configured host identifier
  * @ctx:		struct libnvme_global_ctx object
  *
- * Retrieve the host idenditifer from the config file located in
- * $SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
+ * Return @ctx's hostid default if one is set, otherwise read the
+ * identifier from $SYSCONFDIR/nvme/hostid. $SYSCONFDIR is usually /etc.
+ * An empty @ctx default suppresses the file lookup.
+ *
+ * This is not the identity a connect uses. See libnvmf_host_get_ids()
+ * for the full resolution order.
  *
  * Return: The host identifier, or NULL if unsuccessful. If found, the caller
  *	   is responsible to free the string.
