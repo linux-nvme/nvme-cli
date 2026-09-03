@@ -85,7 +85,7 @@ static inline int shr_table_set_value_str(struct shr_table *t, int col, int row,
 	if (col >= t->num_columns || row >= t->num_rows)
 		return -EINVAL;
 
-	s = strdup(str);
+	s = strdup(str ? str : "");
 	if (!s)
 		return -ENOMEM;
 
