@@ -2227,6 +2227,11 @@ def generate_swig_fragment(f, prefix, sname, struct_name, members, errors,
           → ``%immutable name;`` immediately before the field declaration
             makes the attribute read-only.
 
+      read == none (all-generated only)
+          → SWIG has no write-only counterpart to ``%immutable``, so the
+            member keeps its Python getter even though no C getter exists.
+            A trailing comment marks the mismatch in the generated file.
+
       both axes == none  →  member is not Python-visible; already excluded
                              by the ``has_accessor`` filter.
 
@@ -2311,10 +2316,14 @@ def generate_swig_fragment(f, prefix, sname, struct_name, members, errors,
         py_name = m.py_alias or m.name
         if m.write_mode == 'none':
             f.write(f'\t%immutable {py_name};\n')
+        # SWIG has no write-only counterpart to %immutable, so a read=none
+        # member still gets a Python getter.  Flag the mismatch in place.
+        note = '\t// no C getter; SWIG emits one anyway' \
+            if m.read_mode == 'none' else ''
         if m.is_scalar_array:
-            f.write(f'\t{m.type} {py_name}[{m.array_size}];\n')
+            f.write(f'\t{m.type} {py_name}[{m.array_size}];{note}\n')
         else:
-            f.write(f'\t{m.type} {py_name};\n')
+            f.write(f'\t{m.type} {py_name};{note}\n')
 
     # Custom members: inside %extend — SWIG calls the hand-written accessor.
     # Members with read=none are excluded: SWIG always generates a getter for

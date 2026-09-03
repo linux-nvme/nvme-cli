@@ -139,8 +139,8 @@ struct libnvme_global_ctx {
 	bool force_4k;
 	bool mi_probe_enabled;
 	bool ioctl_probing;
-	const char * hostnqn;
-	const char * hostid;
+	const char * hostnqn;	// no C getter; SWIG emits one anyway
+	const char * hostid;	// no C getter; SWIG emits one anyway
 };
 
 %pythoncode %{
