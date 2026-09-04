@@ -14,6 +14,16 @@
 #
 #   meson compile -C <build-dir> check-completions
 
+install_data(
+    'bash-nvme-completion.sh',
+    rename: 'nvme',
+    install_dir: datadir / 'bash-completion/completions',
+)
+install_data(
+    '_nvme',
+    install_dir: datadir / 'zsh/site-functions',
+)
+
 # The metadata dump lives in the "utils" plugin and needs json-c, and the
 # generator needs python3; define the targets only when all are present.
 _py3 = find_program('python3', required: false)
