@@ -28,6 +28,7 @@
 #include <libnvme.h>
 
 #include "cleanup.h"
+#include "endian.h"
 #include "ioctl.h"
 #include "loopback.h"
 #include "private.h"
@@ -610,6 +611,7 @@ static void log_scsi_pass_through_error(struct libnvme_transport_handle *hdl,
 
 /* SCSI operation code definitions */
 #define SCSIOP_SYNCHRONIZE_CACHE 0x35
+#define SCSIOP_UNMAP 0x42
 #define SCSIOP_READ16 0x88
 #define SCSIOP_WRITE16 0x8A
 
@@ -944,6 +946,241 @@ out_free_buffer:
 out:
 	hdl->submit_exit(hdl, cmd, err, user_data);
 	return err;
+}
+
+/*
+ * Geometry of the SCSI UNMAP parameter list, per SBC-3:
+ * an 8 byte header followed by one 16 byte block descriptor per range.
+ */
+#define SCSI_UNMAP_PARAM_HEADER_LEN 8
+#define SCSI_UNMAP_BLOCK_DESC_LEN 16
+
+/*
+ * fill_scsi_unmap_param_list() - Translate DSM ranges into an UNMAP parameter
+ * list
+ * @param:	Parameter list buffer of at least @param_len bytes
+ * @param_len:	Total length of the parameter list
+ * @ranges:	DSM range descriptors to translate
+ * @nr:		Number of range descriptors
+ *
+ * Builds the SBC-3 UNMAP parameter list. The range descriptor length in
+ * logical blocks maps directly onto NUMBER OF LOGICAL BLOCKS; both are counts
+ * rather than zero-based values.
+ */
+static void fill_scsi_unmap_param_list(PUCHAR param, ULONG param_len,
+		const struct nvme_dsm_range *ranges, __u32 nr)
+{
+	PUCHAR desc;
+	__u32 i;
+
+	/* UNMAP DATA LENGTH excludes its own two bytes. */
+	param[0] = ((param_len - 2) >> 8) & 0xFF;
+	param[1] = (param_len - 2) & 0xFF;
+
+	/* UNMAP BLOCK DESCRIPTOR DATA LENGTH covers the descriptors only. */
+	param[2] = ((param_len - SCSI_UNMAP_PARAM_HEADER_LEN) >> 8) & 0xFF;
+	param[3] = (param_len - SCSI_UNMAP_PARAM_HEADER_LEN) & 0xFF;
+
+	desc = param + SCSI_UNMAP_PARAM_HEADER_LEN;
+	for (i = 0; i < nr; i++, desc += SCSI_UNMAP_BLOCK_DESC_LEN) {
+		__u64 slba = le64toh(ranges[i].slba);
+		__u32 nlb = le32toh(ranges[i].nlb);
+
+		desc[0] = (slba >> 56) & 0xFF;
+		desc[1] = (slba >> 48) & 0xFF;
+		desc[2] = (slba >> 40) & 0xFF;
+		desc[3] = (slba >> 32) & 0xFF;
+		desc[4] = (slba >> 24) & 0xFF;
+		desc[5] = (slba >> 16) & 0xFF;
+		desc[6] = (slba >> 8) & 0xFF;
+		desc[7] = slba & 0xFF;
+		desc[8] = (nlb >> 24) & 0xFF;
+		desc[9] = (nlb >> 16) & 0xFF;
+		desc[10] = (nlb >> 8) & 0xFF;
+		desc[11] = nlb & 0xFF;
+	}
+}
+
+/*
+ * Windows maps SCSI_PASS_THROUGH with SCSIOP_UNMAP to the NVMe Dataset
+ * Management command with the Deallocate attribute set.
+ */
+static int submit_io_dsm_deallocate(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	PSCSI_PASS_THROUGH pass_through = NULL;
+	const struct nvme_dsm_range *ranges = NULL;
+	ULONG buffer_len = 0;
+	ULONG returned_len = 0;
+	ULONG sense_offset = 0;
+	ULONG data_offset = 0;
+	ULONG param_len = 0;
+	BOOL result = FALSE;
+	PUCHAR buffer = NULL;
+	void *user_data = NULL;
+	int err = 0;
+	DWORD last_error = 0;
+	__u32 nr;
+	__u32 i;
+
+	user_data = hdl->submit_entry(hdl, cmd);
+	if (hdl->ctx->dry_run)
+		goto out;
+
+	if (hdl->fd == INVALID_HANDLE_VALUE || hdl->fd == NULL) {
+		err = -EBADF;
+		goto out;
+	}
+
+	nr = NVME_FIELD_DECODE(cmd->cdw10,
+			NVME_DSM_CDW10_NR_SHIFT,
+			NVME_DSM_CDW10_NR_MASK) + 1; /* NR + 1 */
+
+	if (!cmd->addr || cmd->data_len < nr * sizeof(*ranges)) {
+		err = -EINVAL;
+		goto out;
+	}
+
+	ranges = (const struct nvme_dsm_range *)(uintptr_t)cmd->addr;
+
+	/*
+	 * Context attributes carry access frequency, latency and access size
+	 * hints that UNMAP cannot express. Reject rather than silently drop
+	 * them.
+	 */
+	for (i = 0; i < nr; i++) {
+		if (le32toh(ranges[i].cattr)) {
+			libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Context "
+				"attributes (range %u) are not supported on "
+				"Windows\n", i);
+			err = -ENOTSUP;
+			goto out;
+		}
+	}
+
+	/* Allocate buffer for SCSI_PASS_THROUGH + sense data + param list */
+	param_len = SCSI_UNMAP_PARAM_HEADER_LEN +
+		nr * SCSI_UNMAP_BLOCK_DESC_LEN;
+	sense_offset = sizeof(SCSI_PASS_THROUGH);
+	data_offset = sense_offset + SCSI_SENSE_BUFFER_LEN;
+	buffer_len = data_offset + param_len;
+	buffer = (PUCHAR)malloc(buffer_len);
+	if (!buffer) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	ZeroMemory(buffer, buffer_len);
+
+	pass_through = (PSCSI_PASS_THROUGH)buffer;
+	pass_through->Length = sizeof(SCSI_PASS_THROUGH);
+	pass_through->CdbLength = 10;
+	pass_through->DataIn = SCSI_IOCTL_DATA_OUT;
+	pass_through->DataTransferLength = param_len;
+	pass_through->SenseInfoLength = SCSI_SENSE_BUFFER_LEN;
+	pass_through->SenseInfoOffset = sense_offset;
+	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
+		((cmd->timeout_ms + 999) / 1000) : 30;
+	pass_through->DataBufferOffset = data_offset;
+
+	/*
+	 * Build the Unmap CDB (10 bytes, per SBC-3)
+	 * Byte 0: Operation code (0x42)
+	 * Byte 1: Bit 0: ANCHOR, bits 7-1 reserved
+	 * Bytes 2-5: Reserved
+	 * Byte 6: Bits 4-0: Group number
+	 * Bytes 7-8: Parameter list length (big-endian)
+	 * Byte 9: Control
+	 *
+	 * NVMe Dataset Management has no ANCHOR or group number equivalent, so
+	 * both are left zero.
+	 */
+	pass_through->Cdb[0] = SCSIOP_UNMAP;
+	pass_through->Cdb[7] = (param_len >> 8) & 0xFF;
+	pass_through->Cdb[8] = param_len & 0xFF;
+
+	fill_scsi_unmap_param_list(buffer + data_offset, param_len, ranges, nr);
+
+	do {
+		err = 0;
+		result = DeviceIoControl(hdl->fd,
+				IOCTL_SCSI_PASS_THROUGH,
+				buffer,
+				buffer_len,
+				buffer,
+				buffer_len,
+				&returned_len,
+				NULL);
+		if (result && !pass_through->ScsiStatus)
+			break;
+
+		last_error = result ? 0 : GetLastError();
+		if (!result)
+			err = -get_errno_from_error(last_error);
+		else
+			err = get_status_from_scsi_status(pass_through, buffer);
+	} while (hdl->decide_retry(hdl, cmd, err));
+
+	if (err) {
+		log_scsi_pass_through_error(hdl, __func__, pass_through,
+			buffer, last_error, err, result);
+		goto out_free_buffer;
+	}
+
+	cmd->result = 0;
+
+out_free_buffer:
+	free(buffer);
+out:
+	hdl->submit_exit(hdl, cmd, err, user_data);
+	return err;
+}
+
+static int submit_io_dsm(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	__u8 ad;
+	__u8 idr;
+	__u8 idw;
+
+	/*
+	 * IOCTL_SCSI_PASS_THROUGH requires a handle to a disk. A controller
+	 * handle on Windows names the PCI device and cannot service it.
+	 */
+	if (!libnvme_transport_handle_is_ns(hdl)) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
+			"dsm on namespace devices (e.g. nvme0n1)\n");
+		return -ENOTSUP;
+	}
+
+	ad = NVME_FIELD_DECODE(cmd->cdw11,
+			NVME_DSM_CDW11_AD_SHIFT,
+			NVME_DSM_CDW11_AD_MASK);
+	idr = NVME_FIELD_DECODE(cmd->cdw11,
+			NVME_DSM_CDW11_IDR_SHIFT,
+			NVME_DSM_CDW11_IDR_MASK);
+	idw = NVME_FIELD_DECODE(cmd->cdw11,
+			NVME_DSM_CDW11_IDW_SHIFT,
+			NVME_DSM_CDW11_IDW_MASK);
+
+	/*
+	 * Per Microsoft StorNVMe documentation, only the Deallocate attribute
+	 * is supported, translated to SCSI UNMAP. The integral dataset
+	 * attributes have no UNMAP equivalent and cannot be conveyed to the
+	 * controller.
+	 */
+	if (!ad) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
+			"dsm with the Deallocate attribute (AD) set\n");
+		return -ENOTSUP;
+	}
+	if (idr || idw) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "The integral dataset "
+			"attributes (IDR, IDW) are not supported on Windows\n");
+		return -ENOTSUP;
+	}
+
+	return submit_io_dsm_deallocate(hdl, cmd);
 }
 
 /*
@@ -2226,6 +2463,8 @@ __shr_public int libnvme_exec_io_passthru(
 			return submit_storage_protocol_command(hdl, cmd, false, false, NULL);
 		else
 			return -ENOTSUP;
+	case nvme_cmd_dsm:
+		return submit_io_dsm(hdl, cmd);
 	case 0x80 ... 0xFF: /* vendor-specific commands */
 		return submit_storage_protocol_command(hdl, cmd, false, false, NULL);
 	default:
