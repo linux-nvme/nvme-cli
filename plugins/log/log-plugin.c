@@ -549,7 +549,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		}
 
 		err = libnvme_set_etdas(hdl, &host_behavior_changed);
-		if (err && !cfg.force) {
+		if (err && !libnvme_status_is_invalid_field(err) &&
+		    !cfg.force) {
 			nvme_show_error("%s: Failed to set ETDAS bit", __func__);
 			return err;
 		}
