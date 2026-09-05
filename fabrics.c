@@ -295,6 +295,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
 	nvme_host_t h = nvme_subsystem_get_host(s);
 	uint64_t numrec;
+	int err, ret = 0;
 
 	struct nvme_get_discovery_args args = {
 		.c = c,
@@ -384,9 +385,12 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			defcfg->keep_alive_tmo = tmo;
 
 			if (child) {
-				if (discover)
-					__discover(child, defcfg, raw,
+				if (discover) {
+					err = __discover(child, defcfg, raw,
 						   true, persistent, flags);
+					if (err)
+						ret = err;
+				}
 
 				if (disconnect) {
 					nvme_disconnect_ctrl(child);
@@ -402,12 +406,13 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 					"already connected to hostnqn=%s,nqn=%s,transport=%s,traddr=%s,trsvcid=%s\n",
 					nvme_host_get_hostnqn(h), subnqn,
 					trtype, traddr, trsvcid);
-			}
+			} else if (errno && errno != ENVME_CONNECT_ALREADY)
+				ret = -errno;
 		}
 	}
 
 	free(log);
-	return 0;
+	return ret;
 }
 
 char *nvmf_get_default_trsvcid(const char *transport, bool discovery_ctrl)
@@ -437,7 +442,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 	char *subsysnqn = NULL, *keyring = NULL, *tls_key = NULL;
 	char *tls_key_identity = NULL;
 	char *ptr, **argv, *p, line[4096];
-	int argc, ret = 0;
+	int argc, err, ret = 0;
 	unsigned int verbose = 0;
 	_cleanup_file_ FILE *f = NULL;
 	nvme_print_flags_t flags;
@@ -508,19 +513,29 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		if (!force) {
 			c = lookup_ctrl(h, &trcfg);
 			if (c) {
-				__discover(c, &cfg, raw, connect,
-					   true, flags);
+				err = __discover(c, &cfg, raw, connect,
+						 true, flags);
+				if (err)
+					ret = err;
 				goto next;
 			}
 		}
 
 		c = nvmf_create_discover_ctrl(r, h, &cfg, &trcfg);
-		if (!c)
+		if (!c) {
+			if (errno && errno != ENVME_CONNECT_IGNORED)
+				ret = -errno;
 			goto next;
+		}
 
-		__discover(c, &cfg, raw, connect, persistent, flags);
-		if (!(persistent || is_persistent_discovery_ctrl(h, c)))
-			ret = nvme_disconnect_ctrl(c);
+		err = __discover(c, &cfg, raw, connect, persistent, flags);
+		if (err)
+			ret = err;
+		if (!(persistent || is_persistent_discovery_ctrl(h, c))) {
+			err = nvme_disconnect_ctrl(c);
+			if (err)
+				ret = err;
+		}
 		nvme_free_ctrl(c);
 
 next:
@@ -541,7 +556,7 @@ static int _discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 	const char *host_iface, *trsvcid, *subsysnqn;
 	struct nvme_fabrics_config cfg;
 	nvme_ctrl_t cn;
-	int ret = 0;
+	int err, ret = 0;
 
 	transport = nvme_ctrl_get_transport(c);
 	traddr = nvme_ctrl_get_traddr(c);
@@ -600,18 +615,26 @@ static int _discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 	if (!force) {
 		cn = lookup_ctrl(h, &trcfg);
 		if (cn) {
-			__discover(cn, &cfg, raw, connect, true, flags);
-			return 0;
+			ret = __discover(cn, &cfg, raw, connect, true, flags);
+			return ret;
 		}
 	}
 
 	cn = nvmf_create_discover_ctrl(r, h, &cfg, &trcfg);
-	if (!cn)
-		return 0;
+	if (!cn) {
+		if (errno && errno != ENVME_CONNECT_IGNORED)
+			ret = -errno;
+		return ret;
+	}
 
-	__discover(cn, &cfg, raw, connect, persistent, flags);
-	if (!(persistent || is_persistent_discovery_ctrl(h, cn)))
-		ret = nvme_disconnect_ctrl(cn);
+	err = __discover(cn, &cfg, raw, connect, persistent, flags);
+	if (err)
+		ret = err;
+	if (!(persistent || is_persistent_discovery_ctrl(h, cn))) {
+		err = nvme_disconnect_ctrl(cn);
+		if (err)
+			ret = err;
+	}
 	nvme_free_ctrl(cn);
 
 	return ret;
