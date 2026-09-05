@@ -185,6 +185,23 @@ libnvme_opcode_status_to_string(int status, bool admin, __u8 opcode)
 }
 
 /**
+ * libnvme_status_is_invalid_field() - Checks nvme status if invalid field.
+ * @status: Return status from an nvme command
+ *
+ * Return: true if it is an nvme status invalid field or false if not.
+ */
+static inline bool
+libnvme_status_is_invalid_field(int status)
+{
+	if (status < 0 ||
+	    nvme_status_get_type(status) != NVME_STATUS_TYPE_NVME)
+		return false;
+
+	return nvme_status_code_type(status) == NVME_SCT_GENERIC &&
+	       nvme_status_code(status) == NVME_SC_INVALID_FIELD;
+}
+
+/**
  * libnvme_errno_to_string() - Returns string describing nvme connect failures
  * @err: Returned error code from libnvme_add_ctrl()
  *
