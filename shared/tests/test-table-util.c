@@ -379,6 +379,33 @@ static bool test_invalid_format_type(void)
 	return pass;
 }
 
+static bool test_null_string_value(void)
+{
+	struct shr_table_column columns[] = {
+		{ "FW Rev", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *t;
+	bool pass = true;
+	int row;
+
+	printf("test_null_string_value:\n");
+
+	t = shr_table_init_with_columns(columns, 1);
+	shr_assert(t != NULL);
+	row = shr_table_get_row_id(t);
+	shr_assert(row >= 0);
+
+	/* A missing device attribute reaches the table as a NULL string. */
+	pass &= check_bool("set NULL string value succeeds",
+			    shr_table_set_value_str(t, 0, row, NULL, LEFT) == 0);
+	pass &= check_bool("NULL string value stored as empty string",
+			    t->rows[row].val[0].s && !t->rows[row].val[0].s[0]);
+
+	shr_table_free(t);
+
+	return pass;
+}
+
 static bool test_shr_table_print(void)
 {
 	struct shr_table_column columns[] = {
@@ -447,6 +474,7 @@ int main(void)
 	pass &= test_add_columns_filter_invalid_width();
 	pass &= test_multi_type_and_centered();
 	pass &= test_invalid_format_type();
+	pass &= test_null_string_value();
 	pass &= test_shr_table_print();
 
 	fflush(stdout);
