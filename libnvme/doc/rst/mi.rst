@@ -1356,7 +1356,7 @@ The fd value or -1 if error
   Endpoint to enable AEs
 
 ``struct libnvme_mi_aem_config *config``
-  AE configuraiton including which events are enabled and the callback function
+  AE configuration including which events are enabled and the callback function
 
 ``void *userdata``
   Application provided context pointer for callback function
