@@ -1199,9 +1199,13 @@ _nvme () {
 				local -a _sub
 				_sub=(
 					'arbitration:Get and set arbitration feature'
+					'async-event-conf:Get and set async event configuration feature'
 					'err-recovery:Get and set error recovery feature'
 					'hctm:Get and set host controlled thermal management feature'
 					'host-behavior-support:Get and set host behavior support feature'
+					'int-coalesce:Get and set interrupt coalescing feature'
+					'int-vector-config:Get and set interrupt vector configuration feature'
+					'keep-alive-timer:Get and set keep alive timer feature'
 					'lba-range-type:Get and set lba range type feature'
 					'num-queues:Get and set number of queues feature'
 					'perf-characteristics:Get and set perf characteristics feature'
@@ -1212,6 +1216,7 @@ _nvme () {
 					'temp-thresh:Get and set temperature threshold feature'
 					'timestamp:Get and set timestamp feature'
 					'volatile-wc:Get and set volatile write cache feature'
+					'write-atom-normal:Get and set write atomicity normal feature'
 				)
 				_describe -t commands "nvme feat commands" _sub
 				return
@@ -1252,6 +1257,37 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme feat arbitration options" _feat_arbitration
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(async-event-conf)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" \
+					               "--sel -S" "0 1 2 3" && return
+					local _feat_async_event_conf
+					_feat_async_event_conf=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--result=':event mask'
+						-r':alias for --result'
+						--save':Specifies that the controller shall save the attribute'
+						-s':alias for --save'
+						--sel=':[0-3]: current/default/saved/supported'
+						-S':alias for --sel'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme feat async-event-conf options" _feat_async_event_conf
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
@@ -1359,6 +1395,103 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme feat host-behavior-support options" _feat_host_behavior_support
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(int-coalesce)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" \
+					               "--sel -S" "0 1 2 3" && return
+					local _feat_int_coalesce
+					_feat_int_coalesce=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--save':Specifies that the controller shall save the attribute'
+						-s':alias for --save'
+						--sel=':[0-3]: current/default/saved/supported'
+						-S':alias for --sel'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--thr=':aggregation threshold'
+						-t':alias for --thr'
+						--time=':aggregation time'
+						-T':alias for --time'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme feat int-coalesce options" _feat_int_coalesce
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(int-vector-config)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" \
+					               "--sel -S" "0 1 2 3" && return
+					local _feat_int_vector_config
+					_feat_int_vector_config=(
+						--cd':coalescing disable'
+						-c':alias for --cd'
+						--dry-run':show command instead of executing'
+						--iv=':interrupt vector'
+						-i':alias for --iv'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--save':Specifies that the controller shall save the attribute'
+						-s':alias for --save'
+						--sel=':[0-3]: current/default/saved/supported'
+						-S':alias for --sel'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme feat int-vector-config options" _feat_int_vector_config
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(keep-alive-timer)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" \
+					               "--sel -S" "0 1 2 3" && return
+					local _feat_keep_alive_timer
+					_feat_keep_alive_timer=(
+						--dry-run':show command instead of executing'
+						--kato=':keep alive timeout'
+						-k':alias for --kato'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--save':Specifies that the controller shall save the attribute'
+						-s':alias for --save'
+						--sel=':[0-3]: current/default/saved/supported'
+						-S':alias for --sel'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme feat keep-alive-timer options" _feat_keep_alive_timer
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
@@ -1721,6 +1854,37 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme feat volatile-wc options" _feat_volatile_wc
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(write-atom-normal)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" \
+					               "--sel -S" "0 1 2 3" && return
+					local _feat_write_atom_normal
+					_feat_write_atom_normal=(
+						--dn':disable normal'
+						-d':alias for --dn'
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--save':Specifies that the controller shall save the attribute'
+						-s':alias for --save'
+						--sel=':[0-3]: current/default/saved/supported'
+						-S':alias for --sel'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme feat write-atom-normal options" _feat_write_atom_normal
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
