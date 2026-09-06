@@ -3688,41 +3688,47 @@ static void json_feature_show_fields_async_event(struct json_object *r, unsigned
 	const char *async = "Send async event";
 	const char *no_async = "Do not send async event";
 
-	obj_add_str(r, "Discovery Log Page Change Notices", NVME_FEAT_AE_DLPCN(result) ?
-			async : no_async);
-	obj_add_str(r, "Host Discovery Log Page Change Notification", NVME_FEAT_AE_HDLPCN(result) ?
-			async : no_async);
-	obj_add_str(r, "AVE Discovery Log Page Change Notification", NVME_FEAT_AE_ADLPCN(result) ?
-			async : no_async);
-	obj_add_str(r, "Pull Model DDC Request Log Page Change Notification",
-			NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
-	obj_add_str(r, "Zone Descriptor Changed Notices", NVME_FEAT_AE_ZDCN(result) ?
-			async : no_async);
-	obj_add_str(r, "Rate Limiting Configuration Change Notices",
+	obj_add_str(r, feat_ae_dlpcn,
+		    NVME_FEAT_AE_DLPCN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_hdlpcn,
+		    NVME_FEAT_AE_HDLPCN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_adlpcn,
+		    NVME_FEAT_AE_ADLPCN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_pmdrlpcn,
+		    NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_zdcn,
+		    NVME_FEAT_AE_ZDCN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_tthry,
+		    NVME_FEAT_AE_TTHRY(result) ? async : no_async);
+	obj_add_str(r, feat_ae_rlccn,
 		    NVME_FEAT_AE_RLCCN(result) ? async : no_async);
-	obj_add_str(r, "Lost Host Communication Notices",
+	obj_add_str(r, feat_ae_lhcn,
 		    NVME_FEAT_AE_LHCN(result) ? async : no_async);
-	obj_add_str(r, "Cross-Controller Reset Completed Notices",
+	obj_add_str(r, feat_ae_ccrcn,
 		    NVME_FEAT_AE_CCRCN(result) ? async : no_async);
-	obj_add_str(r, "Allocated Namespace Attribute Notices",
+	obj_add_str(r, feat_ae_ansan,
 		    NVME_FEAT_AE_ANSAN(result) ? async : no_async);
-	obj_add_str(r, "Reachability Group", NVME_FEAT_AE_RGRP0(result) ? async : no_async);
-	obj_add_str(r, "Reachability Association", NVME_FEAT_AE_RASSN(result) ? async : no_async);
-	obj_add_str(r, "Normal NVM Subsystem Shutdown", NVME_FEAT_AE_NNSSHDN(result) ?
-			async : no_async);
-	obj_add_str(r, "Endurance Group Event Aggregate Log Change Notices",
-			NVME_FEAT_AE_EGA(result) ? async : no_async);
-	obj_add_str(r, "LBA Status Information Notices", NVME_FEAT_AE_LBAS(result) ?
-			async : no_async);
-	obj_add_str(r, "Predictable Latency Event Aggregate Log Change Notices",
-			NVME_FEAT_AE_PLA(result) ? async : no_async);
-	obj_add_str(r, "Asymmetric Namespace Access Change Notices", NVME_FEAT_AE_ANA(result) ?
-			async : no_async);
-	obj_add_str(r, "Telemetry Log Notices", NVME_FEAT_AE_TELEM(result) ? async : no_async);
-	obj_add_str(r, "Firmware Activation Notices", NVME_FEAT_AE_FW(result) ? async : no_async);
-	obj_add_str(r, "Attached Namespace Attribute Notices", NVME_FEAT_AE_NAN(result) ? async : no_async);
-	obj_add_str(r, "SMART / Health Critical Warnings", NVME_FEAT_AE_SMART(result) ?
-			async : no_async);
+	obj_add_str(r, feat_ae_rgrp0,
+		    NVME_FEAT_AE_RGRP0(result) ? async : no_async);
+	obj_add_str(r, feat_ae_rassn,
+		    NVME_FEAT_AE_RASSN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_nnsshdn,
+		    NVME_FEAT_AE_NNSSHDN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_ega,
+		    NVME_FEAT_AE_EGA(result) ? async : no_async);
+	obj_add_str(r, feat_ae_lbas,
+		    NVME_FEAT_AE_LBAS(result) ? async : no_async);
+	obj_add_str(r, feat_ae_pla,
+		    NVME_FEAT_AE_PLA(result) ? async : no_async);
+	obj_add_str(r, feat_ae_ana,
+		    NVME_FEAT_AE_ANA(result) ? async : no_async);
+	obj_add_str(r, feat_ae_telem,
+		    NVME_FEAT_AE_TELEM(result) ? async : no_async);
+	obj_add_str(r, feat_ae_fw, NVME_FEAT_AE_FW(result) ? async : no_async);
+	obj_add_str(r, feat_ae_nan,
+		    NVME_FEAT_AE_NAN(result) ? async : no_async);
+	obj_add_str(r, feat_ae_smart,
+		    NVME_FEAT_AE_SMART(result) ? async : no_async);
 }
 
 static void json_auto_pst(struct nvme_feat_auto_pst *apst, struct json_object *r)

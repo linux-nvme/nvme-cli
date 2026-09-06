@@ -31,6 +31,27 @@
 	nvme_print(name, nvme_is_output_format_json() ? JSON : NORMAL, ##__VA_ARGS__);
 
 char *alloc_error = "Could not allocate string";
+char *feat_ae_dlpcn = "Discovery Log Page Change Notices";
+char *feat_ae_hdlpcn = "Host Discovery Log Page Change Notification";
+char *feat_ae_adlpcn = "AVE Discovery Log Page Change Notification";
+char *feat_ae_pmdrlpcn = "Pull Model DDC Request Log Page Change Notification";
+char *feat_ae_zdcn = "Zone Descriptor Changed Notices";
+char *feat_ae_rlccn = "Rate Limiting Configuration Change Notices";
+char *feat_ae_lhcn = "Lost Host Communication Notices";
+char *feat_ae_ccrcn = "Cross-Controller Reset Completed Notices";
+char *feat_ae_ansan = "Allocated Namespace Attribute Notices";
+char *feat_ae_rgrp0 = "Reachability Group";
+char *feat_ae_rassn = "Reachability Association";
+char *feat_ae_tthry = "Temperature Threshold Hysteresis Recovery";
+char *feat_ae_nnsshdn = "Normal NVM Subsystem Shutdown";
+char *feat_ae_ega = "Endurance Group Event Aggregate Log Change Notices";
+char *feat_ae_lbas = "LBA Status Information Notices";
+char *feat_ae_pla = "Predictable Latency Event Aggregate Log Change Notices";
+char *feat_ae_ana = "Asymmetric Namespace Access Change Notices";
+char *feat_ae_telem = "Telemetry Log Notices";
+char *feat_ae_fw = "Firmware Activation Notices";
+char *feat_ae_nan = "Attached Namespace Attribute Notices";
+char *feat_ae_smart = "SMART / Health Critical Warnings";
 
 static struct print_ops *nvme_print_ops(nvme_print_flags_t flags)
 {
