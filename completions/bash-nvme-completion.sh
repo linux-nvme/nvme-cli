@@ -1472,6 +1472,15 @@ plugin_feat_opts () {
 			               "--sel -S" "0 1 2 3"
 			;;
 
+		"async-event-conf")
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --result= -r --save -s --sel= -S --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --result -r --sel -S --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" \
+			               "--sel -S" "0 1 2 3"
+			;;
+
 		"err-recovery")
 			opts+=" --dry-run --dulbe -d --no-ioctl-probing --no-retries --nsid= -n --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --tler= -t --verbose -v"
 			valopts+=" --nsid -n --output-format -o --output-format-version --sel -S --set-options --timeout --tler -t"
@@ -1493,6 +1502,33 @@ plugin_feat_opts () {
 		"host-behavior-support")
 			opts+=" --acre= -a --cdfe= -c --dry-run --etdas= -e --hdisns= -H --lbafee= -l --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --acre -a --cdfe -c --etdas -e --hdisns -H --lbafee -l --output-format -o --output-format-version --sel -S --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" \
+			               "--sel -S" "0 1 2 3"
+			;;
+
+		"int-coalesce")
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --thr= -t --time= -T --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --sel -S --set-options --thr -t --time -T --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" \
+			               "--sel -S" "0 1 2 3"
+			;;
+
+		"int-vector-config")
+			opts+=" --cd -c --dry-run --iv= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
+			valopts+=" --iv -i --output-format -o --output-format-version --sel -S --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" \
+			               "--sel -S" "0 1 2 3"
+			;;
+
+		"keep-alive-timer")
+			opts+=" --dry-run --kato= -k --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
+			valopts+=" --kato -k --output-format -o --output-format-version --sel -S --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
 			               "--output-format-version" "1 2" \
@@ -1583,6 +1619,15 @@ plugin_feat_opts () {
 
 		"volatile-wc")
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v --wce -w"
+			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" \
+			               "--sel -S" "0 1 2 3"
+			;;
+
+		"write-atom-normal")
+			opts+=" --dn -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -4876,7 +4921,7 @@ _nvme_subcmds () {
 		[dir]="receive send"
 		[exclusion]="add create delete edit list remove"
 		[fdp]="configs events feature set-events stats status update usage"
-		[feat]="arbitration err-recovery hctm host-behavior-support lba-range-type num-queues perf-characteristics power-limit power-meas power-mgmt power-thresh temp-thresh timestamp volatile-wc"
+		[feat]="arbitration async-event-conf err-recovery hctm host-behavior-support int-coalesce int-vector-config keep-alive-timer lba-range-type num-queues perf-characteristics power-limit power-meas power-mgmt power-thresh temp-thresh timestamp volatile-wc write-atom-normal"
 		[fw]="activate commit download"
 		[huawei]="id-ctrl list"
 		[ibm]="crit-log persist-event-log vpd"
