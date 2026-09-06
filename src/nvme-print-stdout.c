@@ -5608,6 +5608,12 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
 		printf("\tZone Descriptor Changed Notices                           : %s\n",
 			NVME_FEAT_AE_ZDCN(result) ? async : no_async);
+		printf("\tRate Limiting Configuration Change Notices                : %s\n",
+			NVME_FEAT_AE_RLCCN(result) ? async : no_async);
+		printf("\tLost Host Communication Notices                           : %s\n",
+			NVME_FEAT_AE_LHCN(result) ? async : no_async);
+		printf("\tCross-Controller Reset Completed Notices                  : %s\n",
+			NVME_FEAT_AE_CCRCN(result) ? async : no_async);
 		printf("\tAllocated Namespace Attribute Notices                     : %s\n",
 			NVME_FEAT_AE_ANSAN(result) ? async : no_async);
 		printf("\tReachability Group                                        : %s\n",
