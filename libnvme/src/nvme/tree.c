@@ -1563,9 +1563,9 @@ __shr_public const char *libnvme_ns_get_model(struct libnvme_ns *n)
 	const char *val;
 
 	if (!n->c)
-		libnvme_subsystem_get_model(n->s, &val, NULL);
+		libnvme_subsystem_get_model(n->s, &val, "");
 	else
-		libnvme_ctrl_get_model(n->c, &val, NULL);
+		libnvme_ctrl_get_model(n->c, &val, "");
 
 	return val;
 }
@@ -1575,9 +1575,9 @@ __shr_public const char *libnvme_ns_get_serial(struct libnvme_ns *n)
 	const char *val;
 
 	if (!n->c)
-		libnvme_subsystem_get_serial(n->s, &val, NULL);
+		libnvme_subsystem_get_serial(n->s, &val, "");
 	else
-		libnvme_ctrl_get_serial(n->c, &val, NULL);
+		libnvme_ctrl_get_serial(n->c, &val, "");
 
 	return val;
 }
@@ -1587,9 +1587,9 @@ __shr_public const char *libnvme_ns_get_firmware(struct libnvme_ns *n)
 	const char *val;
 
 	if (!n->c)
-		libnvme_subsystem_get_firmware(n->s, &val, NULL);
+		libnvme_subsystem_get_firmware(n->s, &val, "");
 	else
-		libnvme_ctrl_get_firmware(n->c, &val, NULL);
+		libnvme_ctrl_get_firmware(n->c, &val, "");
 
 	return val;
 }
