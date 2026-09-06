@@ -31,6 +31,11 @@
 #define NUM_QUEUES_DESC "Get and set number of queues feature"
 #define HOST_BEHAVIOR_DESC "Get and set host behavior support feature"
 #define LBA_RANGE_DESC "Get and set lba range type feature"
+#define INT_COALESCE_DESC "Get and set interrupt coalescing feature"
+#define INT_VEC_CONF_DESC "Get and set interrupt vector configuration feature"
+#define WRITE_ATOM_NORMAL_DESC "Get and set write atomicity normal feature"
+#define ASYNC_EVENT_CONF_DESC "Get and set async event configuration feature"
+#define KEEP_ALIVE_TIMER_DESC "Get and set keep alive timer feature"
 
 #define FEAT_ARGS(n, ...)                                              \
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
@@ -93,6 +98,28 @@ struct lba_range_type_config {
 	__u8 sel;
 };
 
+struct int_coalesce_config {
+	__u8 thr;
+	__u8 time;
+	__u8 sel;
+};
+
+struct int_vec_conf {
+	__u16 iv;
+	bool cd;
+	__u8 sel;
+};
+
+struct write_atom_normal_config {
+	bool dn;
+	__u8 sel;
+};
+
+struct keep_alive_timer_config {
+	__u32 kato;
+	__u8 sel;
+};
+
 static const char *power_mgmt_feat = "power management feature";
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
@@ -109,6 +136,11 @@ static const char *err_recovery_feat = "error recovery feature";
 static const char *num_queues_feat = "number of queues feature";
 static const char *host_behavior_feat = "host behavior support feature";
 static const char *lba_range_feat = "lba range type feature";
+static const char *int_coalesce_feat = "interrupt coalescing feature";
+static const char *int_vec_conf_feat = "interrupt vector configuration feature";
+static const char *write_atom_normal_feat = "write atomicity normal feature";
+static const char *async_event_conf_feat = "async event configuration feature";
+static const char *keep_alive_timer_feat = "keep alive timer feature";
 
 static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 			 const __u8 fid, __u32 cdw11, __u8 sel, __u8 uidx,
@@ -1223,6 +1255,261 @@ static int feat_lba_range_type(int argc, char **argv, struct command *acmd,
 	return err;
 }
 
+static int int_coalesce_set(struct libnvme_transport_handle *hdl,
+			    const __u8 fid, struct int_coalesce_config *cfg,
+			    bool sv)
+{
+	__u32 cdw11 = NVME_SET(cfg->thr, FEAT_IRQC_THR) |
+		      NVME_SET(cfg->time, FEAT_IRQC_TIME);
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
+				&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", int_coalesce_feat);
+		return err;
+	}
+
+	nvme_show_result("Set %s: 0x%08x (%s)", int_coalesce_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
+
+	return err;
+}
+
+static int feat_int_coalesce(int argc, char **argv, struct command *acmd,
+			     struct plugin *plugin)
+{
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
+	    NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	const __u8 fid = NVME_FEAT_FID_IRQ_COALESCE;
+	const char *thr = "aggregation threshold";
+	const char *time = "aggregation time";
+	struct int_coalesce_config cfg = { 0 };
+	int err;
+
+	FEAT_ARGS(opts,
+		  OPT_BYTE("thr", 't', &cfg.thr, thr),
+		  OPT_BYTE("time", 'T', &cfg.time, time));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, INT_COALESCE_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "thr") ||
+	    argconfig_parse_seen(opts, "time"))
+		err = int_coalesce_set(hdl, fid, &cfg,
+				       argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, int_coalesce_feat);
+
+	return err;
+}
+
+static int int_vec_conf_set(struct libnvme_transport_handle *hdl,
+			    const __u8 fid, struct int_vec_conf *cfg, bool sv)
+{
+	__u32 cdw11 = NVME_SET(cfg->iv, FEAT_ICFG_IV) |
+		      NVME_SET(cfg->cd, FEAT_ICFG_CD);
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
+			&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", int_vec_conf_feat);
+		return err;
+	}
+
+	nvme_show_result("Set %s: 0x%08x (%s)", int_vec_conf_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
+
+	return err;
+}
+
+static int feat_int_vec_conf(int argc, char **argv, struct command *acmd,
+			     struct plugin *plugin)
+{
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
+	    NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	const __u8 fid = NVME_FEAT_FID_IRQ_CONFIG;
+	const char *cd = "coalescing disable";
+	const char *iv = "interrupt vector";
+	struct int_vec_conf cfg = { 0 };
+	int err;
+
+	FEAT_ARGS(opts,
+		  OPT_SHRT("iv", 'i', &cfg.iv, iv),
+		  OPT_FLAG("cd", 'c', &cfg.cd, cd));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, INT_VEC_CONF_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "iv") ||
+	    argconfig_parse_seen(opts, "cd"))
+		err = int_vec_conf_set(hdl, fid, &cfg,
+				       argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, int_vec_conf_feat);
+
+	return err;
+}
+
+static int write_atom_normal_set(struct libnvme_transport_handle *hdl,
+				 const __u8 fid,
+				 struct write_atom_normal_config *cfg, bool sv)
+{
+	__u32 cdw11 = NVME_SET(cfg->dn, FEAT_WA_DN);
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
+				&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", write_atom_normal_feat);
+		return err;
+	}
+
+	nvme_show_result("Set %s: 0x%08x (%s)", write_atom_normal_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
+
+	return err;
+}
+
+static int feat_write_atom_normal(int argc, char **argv, struct command *acmd,
+				  struct plugin *plugin)
+{
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
+	    NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	struct write_atom_normal_config cfg = { 0 };
+	const __u8 fid = NVME_FEAT_FID_WRITE_ATOMIC;
+	const char *dn = "disable normal";
+	int err;
+
+	FEAT_ARGS(opts, OPT_FLAG("dn", 'd', &cfg.dn, dn));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, WRITE_ATOM_NORMAL_DESC,
+			     opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "dn"))
+		err = write_atom_normal_set(hdl, fid, &cfg,
+					    argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, write_atom_normal_feat);
+
+	return err;
+}
+
+static int async_event_conf_set(struct libnvme_transport_handle *hdl,
+				const __u8 fid, __u32 result, bool sv)
+{
+	__u64 res;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, result, 0, 0, 0, 0, NULL, 0,
+			&res);
+	if (err) {
+		nvme_show_err(err, "Set %s", async_event_conf_feat);
+		return err;
+	}
+
+	nvme_show_result("Set %s: 0x%08x (%s)", async_event_conf_feat, result,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, result, NULL);
+
+	return err;
+}
+
+static int feat_async_event_conf(int argc, char **argv, struct command *acmd,
+				 struct plugin *plugin)
+{
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
+	    NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	const __u8 fid = NVME_FEAT_FID_ASYNC_EVENT;
+	const char *result_desc = "event mask";
+	int err;
+
+	struct config {
+		__u32 result;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts, OPT_UINT("result", 'r', &cfg.result, result_desc));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, ASYNC_EVENT_CONF_DESC,
+			     opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "result"))
+		err = async_event_conf_set(hdl, fid, cfg.result,
+					   argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, async_event_conf_feat);
+
+	return err;
+}
+
+static int keep_alive_timer_set(struct libnvme_transport_handle *hdl,
+				const __u8 fid,
+				struct keep_alive_timer_config *cfg, bool sv)
+{
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, cfg->kato, 0, 0, 0, 0, NULL, 0,
+			&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", keep_alive_timer_feat);
+		return err;
+	}
+
+	nvme_show_result("Set %s: 0x%08x (%s)", keep_alive_timer_feat,
+			 cfg->kato, sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cfg->kato, NULL);
+
+	return err;
+}
+
+static int feat_keep_alive_timer(int argc, char **argv, struct command *acmd,
+				 struct plugin *plugin)
+{
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
+	    NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	struct keep_alive_timer_config cfg = { 0 };
+	const char *kato = "keep alive timeout";
+	const __u8 fid = NVME_FEAT_FID_KATO;
+	int err;
+
+	FEAT_ARGS(opts, OPT_UINT("kato", 'k', &cfg.kato, kato));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, KEEP_ALIVE_TIMER_DESC,
+			     opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "kato"))
+		err = keep_alive_timer_set(hdl, fid, &cfg,
+					   argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, keep_alive_timer_feat);
+
+	return err;
+}
+
 static struct command feat_arbitration_cmd = {
 	.name = "arbitration",
 	.help = ARBITRATION_DESC,
@@ -1307,6 +1594,36 @@ static struct command feat_lba_range_type_cmd = {
 	.fn = feat_lba_range_type,
 };
 
+static struct command feat_int_coalesce_cmd = {
+	.name = "int-coalesce",
+	.help = INT_COALESCE_DESC,
+	.fn = feat_int_coalesce,
+};
+
+static struct command feat_int_vec_conf_cmd = {
+	.name = "int-vector-config",
+	.help = INT_VEC_CONF_DESC,
+	.fn = feat_int_vec_conf,
+};
+
+static struct command feat_write_atom_normal_cmd = {
+	.name = "write-atom-normal",
+	.help = WRITE_ATOM_NORMAL_DESC,
+	.fn = feat_write_atom_normal,
+};
+
+static struct command feat_async_event_conf_cmd = {
+	.name = "async-event-conf",
+	.help = ASYNC_EVENT_CONF_DESC,
+	.fn = feat_async_event_conf,
+};
+
+static struct command feat_keep_alive_timer_cmd = {
+	.name = "keep-alive-timer",
+	.help = KEEP_ALIVE_TIMER_DESC,
+	.fn = feat_keep_alive_timer,
+};
+
 static struct command *commands[] = {
 	&feat_arbitration_cmd,
 	&feat_power_mgmt_cmd,
@@ -1322,6 +1639,11 @@ static struct command *commands[] = {
 	&feat_power_meas_cmd,
 	&feat_err_recovery_cmd,
 	&feat_lba_range_type_cmd,
+	&feat_int_coalesce_cmd,
+	&feat_int_vec_conf_cmd,
+	&feat_write_atom_normal_cmd,
+	&feat_async_event_conf_cmd,
+	&feat_keep_alive_timer_cmd,
 	NULL,
 };
 
