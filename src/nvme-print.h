@@ -528,3 +528,24 @@ void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 					 struct json_object *valid_attrs);
 
 extern char *alloc_error;
+extern char *feat_ae_dlpcn;
+extern char *feat_ae_hdlpcn;
+extern char *feat_ae_adlpcn;
+extern char *feat_ae_pmdrlpcn;
+extern char *feat_ae_zdcn;
+extern char *feat_ae_rlccn;
+extern char *feat_ae_lhcn;
+extern char *feat_ae_ccrcn;
+extern char *feat_ae_ansan;
+extern char *feat_ae_rgrp0;
+extern char *feat_ae_rassn;
+extern char *feat_ae_tthry;
+extern char *feat_ae_nnsshdn;
+extern char *feat_ae_ega;
+extern char *feat_ae_lbas;
+extern char *feat_ae_pla;
+extern char *feat_ae_ana;
+extern char *feat_ae_telem;
+extern char *feat_ae_fw;
+extern char *feat_ae_nan;
+extern char *feat_ae_smart;
