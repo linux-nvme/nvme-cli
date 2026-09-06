@@ -3698,6 +3698,14 @@ static void json_feature_show_fields_async_event(struct json_object *r, unsigned
 			NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
 	obj_add_str(r, "Zone Descriptor Changed Notices", NVME_FEAT_AE_ZDCN(result) ?
 			async : no_async);
+	obj_add_str(r, "Rate Limiting Configuration Change Notices",
+		    NVME_FEAT_AE_RLCCN(result) ? async : no_async);
+	obj_add_str(r, "Lost Host Communication Notices",
+		    NVME_FEAT_AE_LHCN(result) ? async : no_async);
+	obj_add_str(r, "Cross-Controller Reset Completed Notices",
+		    NVME_FEAT_AE_CCRCN(result) ? async : no_async);
+	obj_add_str(r, "Allocated Namespace Attribute Notices",
+		    NVME_FEAT_AE_ANSAN(result) ? async : no_async);
 	obj_add_str(r, "Reachability Group", NVME_FEAT_AE_RGRP0(result) ? async : no_async);
 	obj_add_str(r, "Reachability Association", NVME_FEAT_AE_RASSN(result) ? async : no_async);
 	obj_add_str(r, "Normal NVM Subsystem Shutdown", NVME_FEAT_AE_NNSSHDN(result) ?
