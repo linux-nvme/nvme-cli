@@ -4296,6 +4296,8 @@ struct nvme_smart_log {
  *			   controller has a volatile memory backup solution.
  * @NVME_SMART_CW_PMRRO_SHIFT: Shift amount to get the Persistent Memory Region has become
  *			   read-only or unreliable.
+ * @NVME_SMART_CW_IPS_SHIFT: Shift amount to get the indeterminate Personality
+ *			   State.
  * @NVME_SMART_CW_ASCBT_MASK: If set, then the available spare capacity has fallen
  *			   below the threshold.
  * @NVME_SMART_CW_TTC_MASK: Mask to get the temperature is either greater
@@ -4314,6 +4316,7 @@ struct nvme_smart_log {
  *			   controller has a volatile memory backup solution.
  * @NVME_SMART_CW_PMRRO_MASK: Mask to get the Persistent Memory Region has become
  *			   read-only or unreliable.
+ * @NVME_SMART_CW_IPS_MASK: Mask to get the indeterminate Personality State.
  * @NVME_SMART_CRIT_SPARE: If set, then the available spare capacity has fallen
  *			   below the threshold.
  * @NVME_SMART_CRIT_TEMPERATURE: If set, then a temperature is either greater
