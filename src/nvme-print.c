@@ -62,6 +62,10 @@ static bool nvme_print_check(struct print_ops *ops, void *func)
 	if (func == ops->d)
 		return true;
 
+	/* Always show feature fields since called set features command */
+	if (func == ops->show_feature_fields)
+		return true;
+
 	if (nvme_args.dry_run)
 		return false;
 
