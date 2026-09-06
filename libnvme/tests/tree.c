@@ -286,6 +286,64 @@ static bool test_subsystem_attrs(void)
 }
 
 /**
+ * test_ns_attr_not_null - the namespace attribute getters must not return
+ * NULL when the device does not report the attribute.
+ */
+static bool test_ns_attr_not_null(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	struct libnvme_subsystem *s;
+	struct libnvme_ns n = {};
+	const char *firmware, *serial, *model;
+	bool pass = true;
+
+	printf("test_ns_attr_not_null:\n");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	shr_assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s));
+	shr_assert(s);
+
+	n.s = s;
+
+	firmware = libnvme_ns_get_firmware(&n);
+	serial = libnvme_ns_get_serial(&n);
+	model = libnvme_ns_get_model(&n);
+
+	if (!firmware) {
+		printf(" - firmware getter returned NULL [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - firmware getter returned a string [PASS]\n");
+	}
+
+	if (!serial) {
+		printf(" - serial getter returned NULL [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - serial getter returned a string [PASS]\n");
+	}
+
+	if (!model) {
+		printf(" - model getter returned NULL [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - model getter returned a string [PASS]\n");
+	}
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
+/**
  * test_subsystem_iteration - libnvme_for_each_subsystem() must visit every
  * subsystem exactly once.
  */
@@ -335,6 +393,7 @@ int main(int argc, char *argv[])
 	pass &= test_host_iteration();
 	pass &= test_subsystem_dedup();
 	pass &= test_subsystem_attrs();
+	pass &= test_ns_attr_not_null();
 	pass &= test_subsystem_iteration();
 
 	fflush(stdout);
