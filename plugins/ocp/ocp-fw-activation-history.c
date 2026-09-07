@@ -44,11 +44,12 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	/*
-	 * Best effort attempt at uuid. Otherwise, assume no index (i.e. 0)
-	 * Log GUID check will ensure correctness of returned data
-	 */
-	ocp_get_uuid_index(hdl, &uuid_index);
+	err = ocp_get_uuid_index(hdl, &uuid_index);
+	if (err) {
+		nvme_show_error("ERROR : OCP : Failed to get UUID index: %s",
+				libnvme_strerror(-err));
+		return err;
+	}
 	nvme_init_get_log(&cmd, NVME_NSID_ALL,
 			  (enum nvme_cmd_get_log_lid)OCP_LID_FAHL_OBSOLETE,
 			  NVME_CSI_NVM, &fw_history, sizeof(fw_history));

@@ -52,7 +52,12 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 	}
 	memset(data, 0, sizeof(*data));
 
-	ocp_get_uuid_index(hdl, &uidx);
+	ret = ocp_get_uuid_index(hdl, &uidx);
+	if (ret < 0) {
+		nvme_show_error("ERROR : OCP : get uuid index : %s",
+				libnvme_strerror(-ret));
+		goto out;
+	}
 	nvme_init_get_log(&cmd, NVME_NSID_ALL,
 			  (enum nvme_cmd_get_log_lid)OCP_LID_SMART,
 			  NVME_CSI_NVM, data, sizeof(*data));
