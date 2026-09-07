@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+[binaries]
+c = 'gcc'
+ar = 'ar'
+strip = 'strip'
+pkgconfig = 'pkg-config'
+ld = 'ld'
+
+c_native = 'gcc'
+cpp_native = 'g++'
+
+[built-in options]
+c_args = ['-m32']
+c_link_args = ['-m32']
+
+[properties]
+# Same CPU family as the amd64 build host (gcc-multilib, not a separate
+# cross-gcc), so the 32-bit binaries run directly, no qemu needed.
+needs_exe_wrapper = false
+
+[host_machine]
+system = 'linux'
+cpu_family = 'x86'
+cpu = 'i686'
+endian = 'little'
