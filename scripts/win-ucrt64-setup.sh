@@ -37,6 +37,7 @@ shift $((OPTIND-1))
 # Install the UCRT64 MinGW build toolchain, meson build system, and nvme-cli
 # dependencies. Use -u to also refresh and upgrade all packages.
 pacman $PACMAN_CMD --noconfirm --needed \
+    git \
     mingw-w64-ucrt-x86_64-toolchain \
     mingw-w64-ucrt-x86_64-meson \
     mingw-w64-ucrt-x86_64-ninja \
