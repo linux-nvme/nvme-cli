@@ -26,6 +26,12 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Create Release
         run: |
-          gh release create "${GITHUB_REF_NAME}" --generate-notes
+          args=(--generate-notes)
+          # rc/alpha/beta tags (e.g. v3.0-rc1) are pre-releases and must
+          # not be eligible for GitHub's "Latest release" label.
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${GITHUB_REF_NAME}" "${args[@]}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
