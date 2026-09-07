@@ -28,7 +28,7 @@ usage() {
     echo " -m [meson]|muon      use meson or muon"
     echo " -p                   enable coverage report"
     echo " -s                   run tests with ASan+UBSan (asanubsan setup)"
-    echo " -t [arm]|ppc64le|s390x  cross compile target"
+    echo " -t [arm]|ppc64le|s390x|i386  cross compile target"
     echo " -x                   run tests with valgrind (valgrind setup)"
     echo ""
     echo "options for the 'tests' config (mirror the e2e-* meson options):"
@@ -253,6 +253,15 @@ config_meson_fallback() {
 }
 
 config_meson_cross() {
+    # armhf/ppc64le/s390x each get a dedicated <triplet>-pkg-config wrapper
+    # from their cross-gcc package, preconfigured to look in the right
+    # multiarch dir. i386 has no such wrapper (it's gcc-multilib, not a
+    # separate cross-gcc), so point plain pkg-config at the i386 multiarch
+    # dir directly instead.
+    if [ "${CROSS_TARGET}" = "i386" ]; then
+        export PKG_CONFIG_LIBDIR=/usr/lib/i386-linux-gnu/pkgconfig
+    fi
+
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
