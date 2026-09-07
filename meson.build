@@ -880,7 +880,11 @@ if want_nvme
     summary(plugin_dict, section: 'Plugins')
 endif
 
+c_args = get_option('c_args')
+c_link_args = get_option('c_link_args')
 conf_dict = {
     'git version':      conf.get('GIT_VERSION'),
+    'CFLAGS':           c_args.length() > 0 ? ' '.join(c_args) : '(none)',
+    'LDFLAGS':          c_link_args.length() > 0 ? ' '.join(c_link_args) : '(none)',
 }
 summary(conf_dict, section: 'Configuration', bool_yn: true)
