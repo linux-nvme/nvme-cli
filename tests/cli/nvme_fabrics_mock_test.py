@@ -69,7 +69,7 @@ def _pack_disc_log_entry(portid, entry):
     trtype = {'tcp': 3, 'rdma': 1, 'fc': 2}.get(transport, 254)
     adrfam = 4 if transport == 'fc' else (1 if transport in ('tcp', 'rdma') else 254)
 
-    header = struct.pack("=BBBBHHHH", trtype, adrfam, subtype, 0, portid, 0xffff, 32, eflags)
+    header = struct.pack("<BBBBHHHH", trtype, adrfam, subtype, 0, portid, 0xffff, 32, eflags)
     rsvd12 = b"\x00" * 20
     trsvcid_bytes = trsvcid.encode('utf-8').ljust(32, b"\x00")
     rsvd64 = b"\x00" * 192
