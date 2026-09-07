@@ -21,8 +21,8 @@ libnvme:
 ![GitHub](https://img.shields.io/github/license/linux-nvme/libnvme)
 [![Docs](https://img.shields.io/readthedocs/libnvme)](https://libnvme.readthedocs.io/en/latest/)
 ![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)
-[![PyPI](https://img.shields.io/pypi/v/libnvme)](https://pypi.org/project/libnvme3/)
-[![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme)](https://pypi.org/project/libnvme3/)
+[![PyPI](https://img.shields.io/pypi/v/libnvme3)](https://pypi.org/project/libnvme3/)
+[![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme3)](https://pypi.org/project/libnvme3/)
 
 ## Reports
 
