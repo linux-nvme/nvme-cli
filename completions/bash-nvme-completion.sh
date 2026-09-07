@@ -1052,7 +1052,7 @@ nvme_list_opts () {
 			;;
 
 		"telemetry-log")
-			opts+=" --controller-init -c --data-area= -d --dry-run --host-generate= -g --mcda= -m --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
+			opts+=" --controller-init -c --data-area= -d --dry-run --force --host-generate= -g --mcda= -m --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --data-area -d --host-generate -g --mcda -m --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -2465,7 +2465,7 @@ plugin_log_opts () {
 			;;
 
 		"telemetry")
-			opts+=" --controller-init -c --data-area= -d --dry-run --host-generate= -g --mcda= -m --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
+			opts+=" --controller-init -c --data-area= -d --dry-run --force --host-generate= -g --mcda= -m --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --data-area -d --host-generate -g --mcda -m --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
