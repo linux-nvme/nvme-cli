@@ -65,7 +65,7 @@ if python3.found()
              depends: nvme_exe)
     endif
 
-    if (not is_static) and (not is_cross) and (host_system == 'linux')
+    if (not is_static) and (host_system == 'linux')
         mock_nvme_lib = shared_library(
             'mock_nvme',
             'libmock_nvme.c',

@@ -134,6 +134,40 @@ struct __attribute__((packed)) ipc_response {
 	uint32_t data_len;	/* payload length (follows immediately) */
 };
 
+/*
+ * This process may be running as real target-arch code (a cross build
+ * under qemu-user), while nvme_mock_ipc.py on the other end of the socket
+ * is always native host-arch Python. Those are only the same "native" byte
+ * order on a non-cross run, so the wire format is explicit little-endian
+ * (matching nvme_mock_ipc.py's "<" struct formats) rather than whatever
+ * this process's native order happens to be.
+ */
+static void ipc_request_encode(struct ipc_request *r)
+{
+	r->type     = htole32(r->type);
+	r->fd       = htole32(r->fd);
+	r->data_len = htole32(r->data_len);
+	r->request  = htole32(r->request);
+	r->nsid     = htole32(r->nsid);
+	r->cdw10    = htole32(r->cdw10);
+	r->cdw11    = htole32(r->cdw11);
+	r->cdw12    = htole32(r->cdw12);
+	r->cdw13    = htole32(r->cdw13);
+	r->cdw14    = htole32(r->cdw14);
+	r->cdw15    = htole32(r->cdw15);
+	r->lpo      = htole64(r->lpo);
+	r->req_len  = htole32(r->req_len);
+}
+
+static void ipc_response_decode(struct ipc_response *r)
+{
+	r->status    = (int32_t)le32toh((uint32_t)r->status);
+	r->errno_val = (int32_t)le32toh((uint32_t)r->errno_val);
+	r->sc_status = (int32_t)le32toh((uint32_t)r->sc_status);
+	r->result    = le32toh(r->result);
+	r->data_len  = le32toh(r->data_len);
+}
+
 typedef int (*orig_open_t)(const char *pathname, int flags, ...);
 typedef int (*orig_open64_t)(const char *pathname, int flags, ...);
 typedef int (*orig_openat_t)(int dirfd, const char *pathname, int flags, ...);
@@ -460,6 +494,7 @@ static void *read_ipc_response(int ipc_fd, struct ipc_response *resp)
 		resp->errno_val = EIO;
 		return NULL;
 	}
+	ipc_response_decode(resp);
 
 	if (!resp->data_len)
 		return NULL;
@@ -504,6 +539,7 @@ ssize_t write(int fd, const void *buf, size_t count)
 		.data_len = count,
 	};
 
+	ipc_request_encode(&req);
 	orig_write(ipc_fd, &req, sizeof(req));
 	orig_write(ipc_fd, buf, count);
 
@@ -579,6 +615,7 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 		.req_len = cmd->data_len,
 	};
 
+	ipc_request_encode(&req);
 	orig_write(ipc_fd, &req, sizeof(req));
 
 	resp_data = read_ipc_response(ipc_fd, &resp);
