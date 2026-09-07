@@ -48,7 +48,7 @@ def json_c_available():
     proc = subprocess.run(
         [NVME_BIN, "list", "--help"],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True)
+        encoding="utf-8")
     return "json" in proc.stdout + proc.stderr
 
 
@@ -59,7 +59,7 @@ def dump_metadata():
         [NVME_BIN, "utils", "dump-command-metadata"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        universal_newlines=True,
+        encoding="utf-8",
     )
     text = proc.stdout.strip()
     if proc.returncode != 0 or not text:
@@ -78,7 +78,7 @@ class TestCommandMetadataSchema(unittest.TestCase):
             if stderr:
                 msg += "\nstderr: " + stderr.rstrip()
             raise AssertionError(msg)
-        with open(SCHEMA_PATH) as f:
+        with open(SCHEMA_PATH, encoding="utf-8") as f:
             cls.schema = json.load(f)
 
     def test_conforms_to_schema(self):
@@ -122,7 +122,7 @@ class TestCommandMetadataSchema(unittest.TestCase):
         proc = subprocess.run(
             [NVME_BIN, "utils", "dump-command-metadata"],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            universal_newlines=True)
+            encoding="utf-8")
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(proc.stderr, "")
         json.loads(proc.stdout)  # raises if stdout is not pure JSON
@@ -132,7 +132,7 @@ class TestCommandMetadataSchema(unittest.TestCase):
         runs = [
             subprocess.run(
                 [NVME_BIN, "utils", "dump-command-metadata"],
-                stdout=subprocess.PIPE, universal_newlines=True).stdout
+                stdout=subprocess.PIPE, encoding="utf-8").stdout
             for _ in range(2)
         ]
         self.assertEqual(runs[0], runs[1])

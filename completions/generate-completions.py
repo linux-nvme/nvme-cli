@@ -981,7 +981,7 @@ GENERATORS = {"bash": generate_bash, "zsh": generate_zsh,
 
 
 def open_out(path):
-    return sys.stdout if path == "-" else open(path, "w")
+    return sys.stdout if path == "-" else open(path, "w", encoding="utf-8")
 
 
 def main():
@@ -1011,7 +1011,7 @@ def main():
     if args.input == "-":
         model = json.load(sys.stdin)
     else:
-        with open(args.input) as src:
+        with open(args.input, encoding="utf-8") as src:
             model = json.load(src)
 
     version = model.get("schema_version")
