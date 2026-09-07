@@ -145,6 +145,26 @@ void register_extension(struct plugin *plugin)
 	nvme.extensions->tail = plugin;
 }
 
+/*
+ * plugin_add_group() runs from constructors, before main(), and its
+ * allocations live for the whole process. Release them at exit.
+ */
+static void free_plugins(void)
+{
+	struct plugin *plugin;
+
+	for (plugin = nvme.extensions; plugin; plugin = plugin->next) {
+		while (plugin->groups) {
+			struct command_group *group = plugin->groups;
+
+			plugin->groups = group->next;
+			free(group);
+		}
+		free(plugin->commands);
+		plugin->commands = NULL;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int err;
@@ -159,6 +179,7 @@ int main(int argc, char **argv)
 #endif
 
 	nvme.extensions->parent = &nvme;
+	atexit(free_plugins);
 	if (argc < 2) {
 		general_help(&builtin, NULL);
 		return 0;
