@@ -6,7 +6,6 @@
 
 #include <stdint.h>
 #include <sys/time.h>
-#include <time.h>
 
 #define SHR_USEC_PER_MSEC	UINT64_C(1000)
 #define SHR_USEC_PER_SEC	UINT64_C(1000000)
@@ -24,7 +23,7 @@
  * Format time_ms (milliseconds since the epoch) as "Y-M-D|H:M:S:MS" into
  * ts_buf, which must be at least 32 bytes. Return: 0.
  */
-int shr_format_ts(time_t time_ms, char *ts_buf);
+int shr_format_ts(int64_t time_ms, char *ts_buf);
 
 unsigned long long shr_elapsed_utime(struct timeval start_time,
 				      struct timeval end_time);
