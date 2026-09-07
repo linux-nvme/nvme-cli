@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <ccan/array_size/array_size.h>
 
@@ -17,10 +18,11 @@
 #define WHITESPACE " \t\n\r"
 #define DIGITS "0123456789"
 
-int shr_format_ts(time_t time_ms, char *ts_buf)
+int shr_format_ts(int64_t time_ms, char *ts_buf)
 {
 	struct tm  time_info;
-	time_t     time_s, ms;
+	time_t     time_s;
+	int64_t    ms;
 	char       buf[80];
 
 	time_s = time_ms / 1000;
