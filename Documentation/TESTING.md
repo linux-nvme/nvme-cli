@@ -139,6 +139,13 @@ The exact supported targets depend on the toolchains installed in the container.
 A named Valgrind test setup is registered in `meson.build`. It runs all unit
 tests under `valgrind --leak-check=full` and treats any leak as a test failure.
 
+`--show-leak-kinds=all` is set, so the log lists every leak kind with a full
+stack, including blocks that are still reachable from a global at exit. Only
+"definite" and "possible" leaks fail the run, which is Valgrind's default: a
+still-reachable block is usually third-party global state a process holds
+until it exits, so it is reported for inspection rather than gating CI. If
+one of them turns out to be ours and unbounded, fix it or suppress it.
+
 Prerequisites: Valgrind must be installed (`apt install valgrind` or equivalent).
 
 Build and run:

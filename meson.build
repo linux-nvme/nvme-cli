@@ -793,6 +793,7 @@ if host_system == 'linux'
     valgrind_cmd = [
         'valgrind',
         '--leak-check=full',
+        '--show-leak-kinds=all',
         '--error-exitcode=1',
         '--suppressions=' + meson.current_source_dir() / 'valgrind.supp',
     ]
