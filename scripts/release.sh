@@ -51,7 +51,7 @@ cleanup() {
     if [ -z "${OLD_HEAD}" ] ; then
         exit
     fi
-    git tag -d "Release $VERSION" "$VERSION"
+    git tag -d "$VERSION"
     git reset --hard "${OLD_HEAD}"
 }
 
@@ -86,9 +86,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 if [ "$force" = false ] ; then
     if [[ -n $(git status -s) ]]; then
         echo "tree is dirty."
-        if [[ "${dry_run}" = false ]]; then
-            exit 1
-        fi
+        exit 1
     fi
 
     if [ "$(git rev-parse --abbrev-ref HEAD)" != "master" ] ; then
@@ -140,6 +138,17 @@ rm -rf -- "${BUILDDIR}"
 if [[ -n $(git status -s -- completions/bash-nvme-completion.sh completions/_nvme completions/nvme-completion.ps1) ]]; then
     git add completions/bash-nvme-completion.sh completions/_nvme completions/nvme-completion.ps1
     git commit -s -m "completions: regenerate bash, zsh, and PowerShell completions for $VERSION"
+fi
+
+if [[ "$ver" != *-* ]]; then
+    news_ver="${ver%%.*}.$(echo "$ver" | cut -d. -f2)"
+    news_heading="## Changes in $news_ver (unreleased)"
+    if ! grep -qF "$news_heading" NEWS.md; then
+        echo "release.sh: could not find '$news_heading' in NEWS.md" >&2
+        exit 1
+    fi
+    sed -i "0,/^${news_heading//./\\.}$/s//## Changes in $news_ver ($(date +%Y-%m-%d))/" NEWS.md
+    git add NEWS.md
 fi
 
 # update meson.build
