@@ -37,7 +37,7 @@ class GenerateCompletionsArgsTest(unittest.TestCase):
             [sys.executable, GENERATOR, *args],
             input=MINIMAL_MODEL,
             capture_output=True,
-            text=True,
+            encoding="utf-8",
         )
 
     def test_no_shell_is_rejected(self):
@@ -102,7 +102,7 @@ class GenerateCompletionsArgsTest(unittest.TestCase):
             [sys.executable, GENERATOR, "--bash", "-"],
             input=json.dumps({"schema_version": 999}),
             capture_output=True,
-            text=True,
+            encoding="utf-8",
         )
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("unsupported schema_version", r.stderr)
