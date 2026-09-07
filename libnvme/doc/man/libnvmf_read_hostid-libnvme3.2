@@ -1,6 +1,6 @@
-.TH "libnvmf_read_hostid" 9 "libnvmf_read_hostid" "August 2026" "libnvme API manual" LINUX
+.TH "libnvmf_read_hostid" 9 "libnvmf_read_hostid" "September 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvmf_read_hostid \- Reads the host identifier from the config default location
+libnvmf_read_hostid \- Get the configured host identifier
 .SH SYNOPSIS
 .B "char *" libnvmf_read_hostid
 .BI "(struct libnvme_global_ctx *ctx "  ");"
@@ -8,8 +8,12 @@ libnvmf_read_hostid \- Reads the host identifier from the config default locatio
 .IP "ctx" 12
 struct libnvme_global_ctx object
 .SH "DESCRIPTION"
-Retrieve the host idenditifer from the config file located in
-$SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
+Return \fIctx\fP's hostid default if one is set, otherwise read the
+identifier from $SYSCONFDIR/nvme/hostid. $SYSCONFDIR is usually /etc.
+An empty \fIctx\fP default suppresses the file lookup.
+
+This is not the identity a connect uses. See \fBlibnvmf_host_get_ids\fP
+for the full resolution order.
 .SH "RETURN"
 The host identifier, or NULL if unsuccessful. If found, the caller
 is responsible to free the string.

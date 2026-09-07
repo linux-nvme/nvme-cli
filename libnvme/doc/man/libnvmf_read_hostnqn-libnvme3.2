@@ -1,6 +1,6 @@
-.TH "libnvmf_read_hostnqn" 9 "libnvmf_read_hostnqn" "August 2026" "libnvme API manual" LINUX
+.TH "libnvmf_read_hostnqn" 9 "libnvmf_read_hostnqn" "September 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvmf_read_hostnqn \- Reads the host nvm qualified name from the config default location
+libnvmf_read_hostnqn \- Get the configured host nvm qualified name
 .SH SYNOPSIS
 .B "char *" libnvmf_read_hostnqn
 .BI "(struct libnvme_global_ctx *ctx "  ");"
@@ -8,8 +8,12 @@ libnvmf_read_hostnqn \- Reads the host nvm qualified name from the config defaul
 .IP "ctx" 12
 struct libnvme_global_ctx object
 .SH "DESCRIPTION"
-Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
-$SYSCONFDIR is usually /etc.
+Return \fIctx\fP's hostnqn default if one is set, otherwise read the name
+from $SYSCONFDIR/nvme/hostnqn. $SYSCONFDIR is usually /etc. An empty
+\fIctx\fP default suppresses the file lookup.
+
+This is not the identity a connect uses. See \fBlibnvmf_host_get_ids\fP
+for the full resolution order.
 .SH "RETURN"
 The host nqn, or NULL if unsuccessful. If found, the caller
 is responsible to free the string.

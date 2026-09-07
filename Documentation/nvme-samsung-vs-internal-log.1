@@ -1,0 +1,185 @@
+'\" t
+.\"     Title: nvme-samsung-vs-internal-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/07/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SAMSUNG\-VS\-I" "1" "09/07/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-samsung-vs-internal-log \- Retrieve Samsung vendor specific internal firmware logs
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIsamsung vs\-internal\-log\fR <device> [OPTIONS]
+.fi
+.SH "DESCRIPTION"
+.sp
+Collect the internal firmware logs of a Samsung NVMe SSD and write them to disk\&. Host\-initiated telemetry, controller\-initiated telemetry and the vendor crash, memory and debug dumps are supported\&. Each dump is saved as its own file, so a single run usually produces several files\&.
+.sp
+Use \fI\-\-dump\-type\fR to pick which dumps to collect; several types may be requested in a single run\&.
+.sp
+This command will only work on Samsung devices supporting this feature\&.
+.sp
+The \fI<device>\fR parameter is mandatory and may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-t <TYPE>, \-\-dump\-type=<TYPE>
+.RS 4
+Comma\-separated list of dump types to extract, given without spaces\&. The supported types are
+\fIhost0\fR
+and
+\fIhost1\fR
+for the host\-initiated telemetry dump using Log Specific Parameter 0 and 1 respectively,
+\fIctlr\fR
+for the controller\-initiated telemetry dump, and
+\fIvendor\fR
+for the vendor dumps\&. When this option is omitted, every dump type except
+\fIhost0\fR
+is extracted;
+\fIhost0\fR
+is only collected when it is requested explicitly\&.
+.RE
+.PP
+\-a <NUM>, \-\-telemetry\-data\-area=<NUM>
+.RS 4
+Telemetry data area to retrieve, 1 to 4\&. Defaults to 0, which retrieves every data area\&. Data area 4 is only extracted when the device reports that it supports it\&. This option only affects the telemetry dumps\&.
+.RE
+.PP
+\-O <FILE>, \-\-output\-file=<FILE>
+.RS 4
+Output file name, optionally preceded by a path (ex:
+\fI\&./path/name\fR
+or
+\fI\&./path1/path2/\fR)\&. Any directory in the path that does not exist yet is created\&. When this option is omitted, the dumps are written to the current directory\&.
+.RE
+.PP
+\-z, \-\-compress
+.RS 4
+Collect the dumps into a temporary directory and save them as a single compressed \&.tar\&.gz archive\&.
+.RE
+.PP
+\-H, \-\-hide\-progress
+.RS 4
+Do not print the incremental progress of an extraction\&. Useful where the output is captured line by line and a carriage return does not overwrite, so that every update would be kept\&. The completion line of each dump is still printed\&.
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
+.SH "EXAMPLES"
+.sp
+Extract the controller\-initiated telemetry, the host\-initiated telemetry using Log Specific Parameter 1 and the vendor dumps of the given device into the current directory\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme samsung vs\-internal\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Extract only the controller\-initiated telemetry and the vendor dumps, naming both types in a single run\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme samsung vs\-internal\-log /dev/nvme0 \-t ctlr,vendor
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Extract the host\-initiated telemetry using Log Specific Parameter 0, which is not collected unless it is named explicitly, into \&./dumps/, creating that directory if it does not exist\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme samsung vs\-internal\-log /dev/nvme0 \-t host0 \-O \&./dumps/
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Extract data area 2 of the host\-initiated telemetry using Log Specific Parameter 1, store the result compressed and keep the output quiet\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme samsung vs\-internal\-log /dev/nvme0 \-t host1 \-a 2 \-z \-H
+.fi
+.if n \{\
+.RE
+.\}
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

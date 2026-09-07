@@ -1,0 +1,11 @@
+.TH "libnvme_status_is_invalid_field" 9 "libnvme_status_is_invalid_field" "September 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_status_is_invalid_field \- Checks nvme status if invalid field.
+.SH SYNOPSIS
+.B "bool" libnvme_status_is_invalid_field
+.BI "(int status "  ");"
+.SH ARGUMENTS
+.IP "status" 12
+Return status from an nvme command
+.SH "RETURN"
+true if it is an nvme status invalid field or false if not.

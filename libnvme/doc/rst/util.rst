@@ -184,6 +184,20 @@ The nvme opcode status string if it is an nvme status field,
 or a standard errno string if status is < 0.
 
 
+.. c:function:: bool libnvme_status_is_invalid_field (int status)
+
+   Checks nvme status if invalid field.
+
+**Parameters**
+
+``int status``
+  Return status from an nvme command
+
+**Return**
+
+true if it is an nvme status invalid field or false if not.
+
+
 .. c:function:: const char * libnvme_errno_to_string (int err)
 
    Returns string describing nvme connect failures

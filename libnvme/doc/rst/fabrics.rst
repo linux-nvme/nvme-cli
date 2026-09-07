@@ -60,7 +60,7 @@ be used as NVMe Host Identifier, or NULL on failure.
 
 .. c:function:: char * libnvmf_read_hostnqn (struct libnvme_global_ctx *ctx)
 
-   Reads the host nvm qualified name from the config default location
+   Get the configured host nvm qualified name
 
 **Parameters**
 
@@ -69,8 +69,12 @@ be used as NVMe Host Identifier, or NULL on failure.
 
 **Description**
 
-Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
-$SYSCONFDIR is usually /etc.
+Return **ctx**'s hostnqn default if one is set, otherwise read the name
+from $SYSCONFDIR/nvme/hostnqn. $SYSCONFDIR is usually /etc. An empty
+**ctx** default suppresses the file lookup.
+
+This is not the identity a connect uses. See libnvmf_host_get_ids()
+for the full resolution order.
 
 **Return**
 
@@ -80,7 +84,7 @@ is responsible to free the string.
 
 .. c:function:: char * libnvmf_read_hostid (struct libnvme_global_ctx *ctx)
 
-   Reads the host identifier from the config default location
+   Get the configured host identifier
 
 **Parameters**
 
@@ -89,8 +93,12 @@ is responsible to free the string.
 
 **Description**
 
-Retrieve the host idenditifer from the config file located in
-$SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
+Return **ctx**'s hostid default if one is set, otherwise read the
+identifier from $SYSCONFDIR/nvme/hostid. $SYSCONFDIR is usually /etc.
+An empty **ctx** default suppresses the file lookup.
+
+This is not the identity a connect uses. See libnvmf_host_get_ids()
+for the full resolution order.
 
 **Return**
 
