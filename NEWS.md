@@ -1,6 +1,23 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
+## Changes in 3.1 (unreleased)
+
+### Feature removals and incompatible changes
+
+* `nvme gen-hostnqn` must now be run as root. The DMI and device tree
+  files it reads are readable by root only. An unprivileged run
+  returned a random identifier instead. See `nvme-gen-hostnqn(1)`.
+
+### libnvme
+
+* `libnvmf_generate_hostid()` now falls back to the local machine ID,
+  after DMI and the device tree and before a random UUID. The machine
+  ID itself is never published. The UUID is derived from it with
+  HMAC-SHA256 and a fixed application identifier.
+
+* A system UUID of all zeros or all ones is now discarded as invalid.
+
 ## Changes in 3.0 (2026-09-07)
 
 ### Feature removals and incompatible changes
