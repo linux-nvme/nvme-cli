@@ -37,6 +37,7 @@
 
 #include <shared/array-util.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/machine-id-util.h>
 #include <shared/nqn-util.h>
 #include <shared/string-util.h>
 #include <shared/uuid-util.h>
@@ -246,6 +247,43 @@ static int uuid_from_product_uuid(struct libnvme_global_ctx *ctx,
 }
 
 /**
+ * uuid_from_machine_id() - Derive a system UUID from the local machine ID
+ * @ctx: Global context, for the file path.
+ * @system_uuid: Where to save the system UUID.
+ *
+ * The machine ID identifies an installation rather than the hardware, so it
+ * is less stable than DMI or the device tree. It is still deterministic, and
+ * unlike them it is readable without privileges.
+ *
+ * Return: 0 on success, negative errno otherwise.
+ */
+static int uuid_from_machine_id(struct libnvme_global_ctx *ctx,
+				char *system_uuid)
+{
+	/*
+	 * Fixed application ID for nvme-cli's use of the local machine ID.
+	 * Chosen once, at random, and part of the derivation: changing it
+	 * changes the host identifier of every machine that has no DMI or
+	 * device tree UUID.
+	 */
+	static const unsigned char app_id[SHR_UUID_LEN] = {
+		0x85, 0x3c, 0x32, 0x20, 0xca, 0x64, 0x4d, 0xad,
+		0xa0, 0x6f, 0x1d, 0xc7, 0x52, 0xe3, 0x22, 0x63
+	};
+	unsigned char uuid[NVME_UUID_LEN];
+	int ret;
+
+	ret = shr_machine_id_app_specific(libnvme_machine_id_filename(ctx),
+					  app_id, uuid);
+	if (ret)
+		return ret;
+
+	libnvme_uuid_to_string(uuid, system_uuid);
+
+	return 0;
+}
+
+/**
  * uuid_from_dmi() - read system UUID
  * @ctx: Global context, for the sysfs paths.
  * @system_uuid: buffer for the UUID
@@ -267,23 +305,68 @@ static int uuid_from_dmi(struct libnvme_global_ctx *ctx, char *system_uuid)
 	return ret;
 }
 
+/*
+ * Virtual machines and some firmware report a placeholder instead of a real
+ * identifier. Every machine reporting the same placeholder would end up with
+ * the same host identifier.
+ *
+ * shr_hostid_valid() rejects the all-zeros UUID. The all-ones UUID is the
+ * other common placeholder, but it is a legitimate value to configure by
+ * hand, so it is refused here rather than in the shared validator.
+ */
+static bool hostid_source_usable(const char *system_uuid)
+{
+	return shr_hostid_valid(system_uuid) &&
+	       !shr_streqcase0(system_uuid,
+			       "ffffffff-ffff-ffff-ffff-ffffffffffff");
+}
+
 __shr_public char *libnvmf_generate_hostid(struct libnvme_global_ctx *ctx)
 {
-	int ret;
+	/*
+	 * Ordered from most to least stable. The firmware sources describe
+	 * the hardware and survive a reinstall; the machine ID describes the
+	 * installation and does not.
+	 */
+	static const struct {
+		const char *name;
+		int (*get)(struct libnvme_global_ctx *ctx, char *system_uuid);
+	} hostid_sources[] = {
+		{ "DMI",         uuid_from_dmi },
+		{ "device tree", uuid_from_device_tree },
+		{ "machine ID",  uuid_from_machine_id },
+	};
 	char uuid_str[NVME_UUID_LEN_STRING];
 	unsigned char uuid[NVME_UUID_LEN];
+	size_t i;
 
 	if (!ctx)
 		return NULL;
 
-	ret = uuid_from_dmi(ctx, uuid_str);
-	if (ret < 0)
-		ret = uuid_from_device_tree(ctx, uuid_str);
-	if (ret < 0) {
-		if (libnvme_random_uuid(uuid) < 0)
-			memset(uuid, 0, NVME_UUID_LEN);
-		libnvme_uuid_to_string(uuid, uuid_str);
+	for (i = 0; i < ARRAY_SIZE(hostid_sources); i++) {
+		if (hostid_sources[i].get(ctx, uuid_str))
+			continue;
+
+		if (!hostid_source_usable(uuid_str)) {
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+				    "%s reports an unusable host identifier '%s'\n",
+				    hostid_sources[i].name, uuid_str);
+			continue;
+		}
+
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			    "host identifier taken from %s\n",
+			    hostid_sources[i].name);
+
+		return strdup(uuid_str);
 	}
+
+	libnvme_msg(ctx, LIBNVME_LOG_WARN,
+		    "no stable host identifier available, using a random one\n");
+
+	if (libnvme_random_uuid(uuid) < 0)
+		memset(uuid, 0, NVME_UUID_LEN);
+	libnvme_uuid_to_string(uuid, uuid_str);
 
 	return strdup(uuid_str);
 }

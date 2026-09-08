@@ -863,6 +863,11 @@ static bool test_create_ctrl_credentials(struct libnvme_global_ctx *ctx)
 static bool test_generate_hostid(struct libnvme_global_ctx *ctx)
 {
 	static const char uuid[] = "12345678-1234-1234-1234-123456789abc";
+	static const char placeholder[] =
+		"ffffffff-ffff-ffff-ffff-ffffffffffff";
+	static const char machine_id[] = "3d1b2f4c5e6a7b8c9d0e1f2a3b4c5d6e";
+	static const char from_machine_id[] =
+		"122333a9-35f5-474d-9a82-4507e71c4fb1";
 	char dir[] = "/tmp/nvme-hostid-test-XXXXXX";
 	char *hostid = NULL, *hostnqn = NULL;
 	char path[PATH_MAX], want[256];
@@ -909,7 +914,44 @@ static bool test_generate_hostid(struct libnvme_global_ctx *ctx)
 
 	free(hostid);
 	free(hostnqn);
+
+	/*
+	 * A placeholder from DMI must be skipped, and the machine ID picked up
+	 * instead. The expected value is the one systemd derives from this
+	 * machine ID; see shared/tests/test-machine-id-util.c.
+	 */
+	snprintf(path, sizeof(path), "%s/sys/class/dmi/id/product_uuid", dir);
+	f = fopen(path, "w");
+	if (f) {
+		fprintf(f, "%s\n", placeholder);
+		fclose(f);
+	}
+
+	snprintf(path, sizeof(path), "%s/etc", dir);
+	if (shr_mkdir_p(path, 0755)) {
+		CHECK(false, "create etc fixture");
+		return false;
+	}
+
+	snprintf(path, sizeof(path), "%s/etc/machine-id", dir);
+	f = fopen(path, "w");
+	if (f) {
+		fprintf(f, "%s\n", machine_id);
+		fclose(f);
+	}
+
+	hostid = libnvmf_generate_hostid(ctx);
+	CHECK(hostid && !strcmp(hostid, from_machine_id),
+	      "placeholder skipped, machine ID used");
+	pass &= hostid && !strcmp(hostid, from_machine_id);
+	free(hostid);
+
+	unlink(path);
+	snprintf(path, sizeof(path), "%s/etc", dir);
+	rmdir(path);
+
 	libnvme_set_test_sysfs_dir(ctx, NULL);
+	snprintf(path, sizeof(path), "%s/sys/class/dmi/id/product_uuid", dir);
 	unlink(path);
 	snprintf(path, sizeof(path), "%s/sys/class/dmi/id", dir);
 	rmdir(path);

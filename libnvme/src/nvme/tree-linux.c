@@ -40,6 +40,7 @@
 #define PATH_SYSFS_NVME			"/sys/class/nvme"
 #define PATH_DMI_ENTRIES		"/sys/firmware/dmi/entries"
 #define PATH_DMI_PROD_UUID		"/sys/class/dmi/id/product_uuid"
+#define PATH_MACHINE_ID			"/etc/machine-id" /* no SYSCONFDIR */
 
 static const char *make_sysfs_dir(struct libnvme_global_ctx *ctx,
 		const char *path)
@@ -123,6 +124,16 @@ const char *libnvme_dmi_product_uuid_filename(struct libnvme_global_ctx *ctx)
 		return str;
 
 	return str = make_sysfs_dir(ctx, PATH_DMI_PROD_UUID);
+}
+
+const char *libnvme_machine_id_filename(struct libnvme_global_ctx *ctx)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(ctx, PATH_MACHINE_ID);
 }
 
 static int __nvme_set_attr(const char *path, const char *value)
