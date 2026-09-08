@@ -1337,8 +1337,8 @@ static void json_stx_vs_fw_activate_history(const stx_fw_activ_history_log_page 
 	if (fwActivHis->numValidFwActHisEnt > 0) {
 		for (i = 0; i < fwActivHis->numValidFwActHisEnt; i++) {
 			struct json_object *lbaf = json_create_object();
-			char prev_fw[8] = { 0 };
-			char new_fw[8] = { 0 };
+			char prev_fw[9] = { 0 };
+			char new_fw[9] = { 0 };
 
 			json_object_add_value_int(lbaf, "Counter", fwActivHis->fwActHisEnt[i].fwActivCnt);
 
@@ -1350,10 +1350,14 @@ static void json_stx_vs_fw_activate_history(const stx_fw_activ_history_log_page 
 			json_object_add_value_string(lbaf, "Timestamp", buf);
 
 			json_object_add_value_int(lbaf, "PCC", fwActivHis->fwActHisEnt[i].powCycleCnt);
-			sprintf(prev_fw, "%s", fwActivHis->fwActHisEnt[i].previousFW);
+			/* the device supplies fixed-width, not NUL-terminated,
+			 * strings: copy by size and rely on the zeroed buffer */
+			memcpy(prev_fw, fwActivHis->fwActHisEnt[i].previousFW,
+			       sizeof(fwActivHis->fwActHisEnt[i].previousFW));
 			json_object_add_value_string(lbaf, "Previous_FW", prev_fw);
 
-			sprintf(new_fw, "%s", fwActivHis->fwActHisEnt[i].newFW);
+			memcpy(new_fw, fwActivHis->fwActHisEnt[i].newFW,
+			       sizeof(fwActivHis->fwActHisEnt[i].newFW));
 			json_object_add_value_string(lbaf, "New_FW", new_fw);
 
 			json_object_add_value_int(lbaf, "Slot", fwActivHis->fwActHisEnt[i].slotNum);
@@ -1400,6 +1404,14 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 
 	err = nvme_get_log_simple(hdl, 0xC2, &fwActivHis, sizeof(fwActivHis));
 	if (!err) {
+		/* the device supplies the entry count: never walk past the
+		 * fixed-size table in the log header */
+		const unsigned int max_ent =
+			sizeof(fwActivHis.fwActHisEnt) / sizeof(fwActivHis.fwActHisEnt[0]);
+
+		if (fwActivHis.numValidFwActHisEnt > max_ent)
+			fwActivHis.numValidFwActHisEnt = max_ent;
+
 		if (!(flags & JSON))
 			print_stx_vs_fw_activate_history(&fwActivHis);
 		else
