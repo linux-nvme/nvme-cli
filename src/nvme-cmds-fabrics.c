@@ -67,6 +67,16 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 	if (err)
 		return err;
 
+	/*
+	 * The firmware sources are readable by root only. A regular user
+	 * silently produces a random identifier instead of the machine's own,
+	 * which is useless.
+	 */
+	if (geteuid()) {
+		nvme_show_error("\"%s\" must be run as root.", acmd->name);
+		return -EPERM;
+	}
+
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
