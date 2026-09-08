@@ -22,6 +22,7 @@ sources = [
     'nqn-util.c',
     'parse-util.c',
     'progress-util.c',
+    'sha256-util.c',
     'suffix-util.c',
     'table-util.c',
     'time-util.c',
