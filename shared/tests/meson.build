@@ -299,6 +299,19 @@ test_assert_util = executable(
 
 test('shared - assert-util', test_assert_util)
 
+if host_system != 'windows'
+    test_machine_id_util = executable(
+        'test-machine-id-util',
+        ['test-machine-id-util.c'],
+        dependencies: [
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - machine-id-util', test_machine_id_util)
+endif
+
 test_sha256_util = executable(
     'test-sha256-util',
     ['test-sha256-util.c'],

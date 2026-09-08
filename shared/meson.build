@@ -41,6 +41,7 @@ if host_system == 'windows'
 else
     sources += [
         'fs-util-linux.c',
+        'machine-id-util-linux.c',
         'net-util-linux.c',
         'crypto-util-linux.c',
         'proc-util-linux.c',
