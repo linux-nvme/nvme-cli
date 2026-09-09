@@ -9,6 +9,7 @@
 
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <strings.h>
 
@@ -75,6 +76,22 @@ static inline char *shr_rtrim(char *s)
 		end--;
 	*end = '\0';
 	return s;
+}
+
+/*
+ * Copy a fixed-size, not-necessarily-NUL-terminated wire field @s of
+ * size @sz into a newly allocated, NUL-terminated, right-trimmed C
+ * string. "%.*s" bounds the read to @sz regardless of whether s
+ * contains a NUL. Returns NULL on allocation failure.
+ */
+static inline char *shr_buf2str(const char s[], size_t sz)
+{
+	char *p;
+
+	if (asprintf(&p, "%.*s", (int)sz, s) < 0)
+		return NULL;
+
+	return shr_rtrim(p);
 }
 
 /*
