@@ -15,6 +15,7 @@
 #include <ccan/endian/endian.h>
 
 #include <shared/compiler-attributes-util.h>
+#include <shared/nqn-util.h>
 
 #include <libnvme.h>
 
@@ -867,6 +868,14 @@ static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *n
 	nbft->host.id = (unsigned char *) &(host->host_id);
 	if (get_heap_obj(ctx, host, host_nqn_obj, 1, &nbft->host.nqn) != 0)
 		return -EINVAL;
+	/*
+	 * Boot Specification 1.4 section 3.1 requires an SMBIOS-derived
+	 * UUID-format NQN's UUID to already be lower case; firmware that
+	 * gets this wrong is normalized here, at the point the value
+	 * enters libnvme, so every later comparison stays a plain
+	 * strcmp() -- see shr_nqn_normalize().
+	 */
+	shr_nqn_normalize(nbft->host.nqn);
 	nbft->host.flags = host->flags;
 
 	/*
