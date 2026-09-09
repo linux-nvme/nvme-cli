@@ -5,6 +5,10 @@
 
 ### Feature removals and incompatible changes
 
+* The minimum required Meson version is now 1.0.0, up from 0.62.0.
+  Meson 1.0.0 was released in December 2022, so any reasonably
+  current build environment should already meet it.
+
 * `nvme gen-hostnqn` must now be run as root. The DMI and device tree
   files it reads are readable by root only. An unprivileged run
   returned a random identifier instead. See `nvme-gen-hostnqn(1)`.
