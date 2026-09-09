@@ -278,10 +278,6 @@
   writes a matching entry to the exclusion list before disconnecting.
   See `nvme-disconnect(1)`.
 
-* `nvme discover` and `nvme config-create` gained
-  `--epcsd`/`--no-epcsd`, to request or refuse Explicit Persistent
-  Connection Support for Discovery. See `nvme-config-create(1)`.
-
 * `nvme utils dump-command-metadata` prints the full command and
   option tree as JSON. It is meant to  drive shell-completion
   generation.
@@ -314,9 +310,8 @@
   and Python scripts that reference the library, its headers, or the
   Python module by name must update.
 
-* `nvme-fabrics.conf` entries can now record `persistent` and
-  `epcsd` settings per discovery controller, matching the CLI flags
-  above.
+* `nvme-fabrics.conf` entries can now record a `persistent` setting
+  per discovery controller, matching the `--persistent` CLI option.
 
 * New diagnostic accessors report per-path, per-namespace, and
   per-controller command retry/error counts, multipath failover
