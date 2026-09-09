@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <nvme/nvme-types-fabrics.h>
+
 #include "ctx.h"
 #include "tid.h"
 
@@ -41,3 +43,19 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 				 void *user_data),
 	      void (*self_callback)(bool epcsd, void *user_data),
 	      void *user_data);
+
+/*
+ * Dispatch an already-fetched Discovery Log Page, the second half of
+ * dlp_fetch(). Split out so the entry dispatch can be unit tested against a
+ * synthetic log page, without a device or a fabrics connection.
+ *
+ * log: a Discovery Log Page; numrec is read from its own header.
+ */
+void dlp_process_log(const struct nvmf_discovery_log *log,
+		     const struct libnvmf_tid *dc_tid,
+		     void (*ioc_callback)(const struct libnvmf_tid *t,
+					  void *user_data),
+		     void (*dc_callback)(const struct libnvmf_tid *t,
+					 bool epcsd, void *user_data),
+		     void (*self_callback)(bool epcsd, void *user_data),
+		     void *user_data);

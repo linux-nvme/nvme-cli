@@ -41,6 +41,10 @@ executable(
     install_dir: sbindir,
 )
 
+if get_option('tests')
+    subdir('tests')
+endif
+
 configure_file(
     input: 'systemd/nvme-discoverd.service.in',
     output: 'nvme-discoverd.service',
