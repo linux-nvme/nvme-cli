@@ -63,6 +63,13 @@ static inline char *shr_xstrdup(const char *s)
 	return s ? strdup(s) : NULL;
 }
 
+/* Lower-cases str in place. */
+static inline void shr_strtolower(char *str)
+{
+	for (; *str; str++)
+		*str = tolower((unsigned char)*str);
+}
+
 /*
  * Trim trailing whitespace from s in place: the byte after the last
  * non-whitespace character is overwritten with '\0'. Returns s.
