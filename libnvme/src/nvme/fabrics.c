@@ -2663,6 +2663,19 @@ __shr_public int libnvmf_uri_parse(
 		   &uri->scheme, &uri->protocol) < 1)
 		return -EINVAL;
 
+	/*
+	 * The scheme and transport protocol are a fixed, small vocabulary
+	 * ("nvme", "tcp"/"rdma"/"fc"), unlike the host/subsystem NQNs that can
+	 * also appear in this URI -- so, unlike those, normalizing case here
+	 * costs nothing. Boot Specification section 3.1.2.5.3 spells the DHCP
+	 * root-path form in upper case ("NVME<+PROTOCOL>://..."), and both that
+	 * and mixed case are otherwise rejected by validate_uri()'s
+	 * case-sensitive comparisons below.
+	 */
+	shr_strtolower(uri->scheme);
+	if (uri->protocol)
+		shr_strtolower(uri->protocol);
+
 	/* split userinfo */
 	host = strrchr(authority, '@');
 	if (host) {
