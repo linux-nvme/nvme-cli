@@ -22,6 +22,17 @@
 
 * A system UUID of all zeros or all ones is now discarded as invalid.
 
+* A UUID-format host NQN read out of firmware-supplied NBFT data now
+  has its UUID lower-cased on entry if the firmware got that wrong.
+  All NQN comparisons remain plain, byte-exact, locale-independent
+  string comparisons, per the Base Specification; only the value is
+  normalized, at the one point it enters libnvme, not the comparison.
+
+* NVMe-oF URI parsing now normalizes the `nvme+<transport>` scheme to
+  lower case regardless of how it was spelled, matching the Boot
+  Specification's requirement for that token. DHCP root-path and NBFT
+  data are not consistent about its case.
+
 ## Changes in 3.0 (2026-09-07)
 
 ### Feature removals and incompatible changes
