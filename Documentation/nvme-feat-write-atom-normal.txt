@@ -1,0 +1,64 @@
+nvme-feat-write-atom-normal(1)
+==============================
+
+NAME
+----
+nvme-feat-write-atom-normal - Get and set write atomicity normal feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat write-atom-normal' <device>
+			[--dn | -d]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set write atomicity normal feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If the setting option (`--dn`) is specified, the command will update the
+write atomicity configuration. If this option is not specified, it will
+retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-d::
+--dn::
+	Disable Normal. When set, this flag disables write atomicity for
+	normal (non-atomic) write commands.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat write-atom-normal to get the current configuration:
++
+------------
+# nvme feat write-atom-normal /dev/nvme0
+------------
+
+* Has the program issue a feat write-atom-normal to disable normal write
+  atomicity:
++
+------------
+# nvme feat write-atom-normal /dev/nvme0 --dn --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
+

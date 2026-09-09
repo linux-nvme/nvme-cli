@@ -1,0 +1,67 @@
+nvme-feat-async-event-conf(1)
+==============================
+
+NAME
+----
+nvme-feat-async-event-conf - Get and set async event configuration feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat async-event-conf' <device>
+			[--result=<result> | -r <result>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set async event configuration feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If the setting option (`--result`) is specified, the command will update the
+asynchronous event configuration. If this option is not specified, it will
+retrieve and display the current configuration.
+
+The event configuration is specified as an event mask that determines which
+asynchronous events are enabled on the controller.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-r <result>::
+--result=<result>::
+	Event Mask. A bitmask specifying which asynchronous events are enabled.
+	Each bit corresponds to a different event type. Refer to the NVMe
+	specification for the specific bit definitions.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat async-event-conf to get the current configuration:
++
+------------
+# nvme feat async-event-conf /dev/nvme0
+------------
+
+* Has the program issue a feat async-event-conf to set the event mask:
++
+------------
+# nvme feat async-event-conf /dev/nvme0 --result=0xFF --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
+
