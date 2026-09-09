@@ -2216,6 +2216,272 @@ static void test_admin_dlen_doff_resp(struct libnvme_mi_ep *ep)
 	shr_assert(!rc);
 };
 
+/* Controller Health Status Poll tests */
+struct ctrl_health_paging_data {
+	int call_count;
+};
+
+static int test_mi_ctrl_health_single_cb(struct libnvme_mi_ep *ep,
+					 struct libnvme_mi_req *req,
+					 struct libnvme_mi_resp *resp,
+					 void *data)
+{
+	struct nvme_mi_mi_resp_hdr *mi_resp;
+	struct nvme_mi_ctrl_health_status *chs;
+	uint8_t *buf;
+
+	shr_assert(req->hdr_len == sizeof(struct nvme_mi_mi_req_hdr));
+	buf = (void *)req->hdr;
+	shr_assert(buf[4] == nvme_mi_mi_opcode_ctrl_health_status_poll);
+
+	/*
+	 * Check cdw0: SCTLID = 0, MAXRENT = 0 (1 entry),
+	 * ALL=1, INCF=1, INCPF=1, INCVF=1
+	 */
+	shr_assert(buf[8] == 0x00);
+	shr_assert(buf[9] == 0x00);
+	shr_assert(buf[10] == 0x00);
+	shr_assert(buf[11] == 0x87);
+
+	/* Check cdw1: CCF=0 */
+	shr_assert(buf[12] == 0x00);
+	shr_assert(buf[13] == 0x00);
+	shr_assert(buf[14] == 0x00);
+	shr_assert(buf[15] == 0x00);
+
+	shr_assert(resp->hdr_len >= sizeof(struct nvme_mi_mi_resp_hdr));
+	shr_assert(resp->data_len >= sizeof(*chs));
+
+	mi_resp = (void *)resp->hdr;
+	mi_resp->status = 0;
+	mi_resp->nmresp[0] = 0;
+	mi_resp->nmresp[1] = 0;
+	mi_resp->nmresp[2] = 1; /* RENT = 1 entry */
+
+	chs = (void *)resp->data;
+	memset(chs, 0, sizeof(*chs));
+	chs->ctlid = cpu_to_le16(0x42);
+	chs->csts = cpu_to_le16(NVME_MI_CSTS_RDY);
+	chs->ctemp = cpu_to_le16(310);
+	chs->pdlu = 12;
+	chs->spare = 88;
+	chs->cwarn = 0;
+	chs->chscf[0] = NVME_MI_CHSC_RDY & 0xff;
+	chs->chscf[1] = 0;
+
+	resp->data_len = sizeof(*chs);
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_mi_ctrl_health_single(struct libnvme_mi_ep *ep)
+{
+	struct nvme_mi_ctrl_health_status entry = { 0 };
+	unsigned int count = 1;
+	int rc;
+
+	test_set_transport_callback(ep, test_mi_ctrl_health_single_cb, NULL);
+	rc = libnvme_mi_mi_controller_health_status_poll_all(ep, false,
+							     &entry, &count);
+	shr_assert(rc == 0);
+	shr_assert(count == 1);
+	shr_assert(le16_to_cpu(entry.ctlid) == 0x42);
+	shr_assert(le16_to_cpu(entry.csts) == NVME_MI_CSTS_RDY);
+	shr_assert(le16_to_cpu(entry.ctemp) == 310);
+	shr_assert(entry.pdlu == 12);
+	shr_assert(entry.spare == 88);
+}
+
+static int test_mi_ctrl_health_flags_cb(struct libnvme_mi_ep *ep,
+					struct libnvme_mi_req *req,
+					struct libnvme_mi_resp *resp,
+					void *data)
+{
+	struct nvme_mi_mi_resp_hdr *mi_resp;
+	uint8_t *buf;
+
+	shr_assert(req->hdr_len == sizeof(struct nvme_mi_mi_req_hdr));
+	buf = (void *)req->hdr;
+	shr_assert(buf[4] == nvme_mi_mi_opcode_ctrl_health_status_poll);
+
+	/*
+	 * Check cdw0: start_ctrl_id=0x0102, MAXRENT=4 (for count=5),
+	 * ALL=0, INCF=1, INCPF=0, INCVF=0
+	 */
+	shr_assert(buf[8] == 0x02);
+	shr_assert(buf[9] == 0x01);
+	shr_assert(buf[10] == 0x04);
+	shr_assert(buf[11] == 0x01);
+
+	/*
+	 * Check cdw1: clear=1 (bit 31), filter_cwarn=1 (bit 4),
+	 * filter_csts=1 (bit 0)
+	 */
+	shr_assert(buf[12] == 0x11);
+	shr_assert(buf[13] == 0x00);
+	shr_assert(buf[14] == 0x00);
+	shr_assert(buf[15] == 0x80);
+
+	mi_resp = (void *)resp->hdr;
+	mi_resp->status = 0;
+	mi_resp->nmresp[2] = 0; /* RENT = 0 */
+	resp->data_len = 0;
+
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_mi_ctrl_health_flags(struct libnvme_mi_ep *ep)
+{
+	struct nvme_mi_ctrl_health_status entries[5] = { 0 };
+	unsigned int count = 5;
+	struct libnvme_mi_ctrl_health_poll_args args = {
+		.args_size = sizeof(args),
+		.start_ctrl_id = 0x0102,
+		.clear = true,
+		.all = false,
+		.inc_pci = true,
+		.inc_sriov_pf = false,
+		.inc_sriov_vf = false,
+		.filter_cwarn = true,
+		.filter_csts = true,
+		.entries = entries,
+		.num_entries = &count,
+	};
+	int rc;
+
+	test_set_transport_callback(ep, test_mi_ctrl_health_flags_cb, NULL);
+	rc = libnvme_mi_mi_controller_health_status_poll(ep, &args);
+	shr_assert(rc == 0);
+	shr_assert(count == 0);
+}
+
+static int test_mi_ctrl_health_autopaging_cb(struct libnvme_mi_ep *ep,
+					     struct libnvme_mi_req *req,
+					     struct libnvme_mi_resp *resp,
+					     void *data)
+{
+	struct ctrl_health_paging_data *pd = data;
+	struct nvme_mi_mi_resp_hdr *mi_resp;
+	struct nvme_mi_ctrl_health_status *chs;
+	uint8_t *buf = (void *)req->hdr;
+	unsigned int i, num;
+
+	shr_assert(buf[4] == nvme_mi_mi_opcode_ctrl_health_status_poll);
+
+	if (pd->call_count == 0) {
+		/*
+		 * First chunk: start_ctrl_id = 0,
+		 * MAXRENT = 254 (255 entries)
+		 */
+		shr_assert(buf[8] == 0x00 && buf[9] == 0x00);
+		shr_assert(buf[10] == 254);
+		num = 255;
+	} else if (pd->call_count == 1) {
+		/*
+		 * Second chunk: start_ctrl_id = 255,
+		 * MAXRENT = 44 (45 entries)
+		 */
+		shr_assert(buf[8] == 255 && buf[9] == 0x00);
+		shr_assert(buf[10] == 44);
+		num = 45;
+	} else {
+		shr_assert(false);
+	}
+
+	mi_resp = (void *)resp->hdr;
+	mi_resp->status = 0;
+	mi_resp->nmresp[2] = num;
+
+	chs = (void *)resp->data;
+	for (i = 0; i < num; i++)
+		chs[i].ctlid = cpu_to_le16(pd->call_count * 255 + i);
+
+	resp->data_len = num * sizeof(*chs);
+	pd->call_count++;
+
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_mi_ctrl_health_autopaging(struct libnvme_mi_ep *ep)
+{
+	struct nvme_mi_ctrl_health_status entries[300] = { 0 };
+	struct ctrl_health_paging_data pd = { 0 };
+	unsigned int count = 300;
+	int rc;
+
+	test_set_transport_callback(ep, test_mi_ctrl_health_autopaging_cb, &pd);
+	rc = libnvme_mi_mi_controller_health_status_poll_all(ep, false,
+							     entries, &count);
+	shr_assert(rc == 0);
+	shr_assert(count == 300);
+	shr_assert(pd.call_count == 2);
+	shr_assert(le16_to_cpu(entries[0].ctlid) == 0);
+	shr_assert(le16_to_cpu(entries[254].ctlid) == 254);
+	shr_assert(le16_to_cpu(entries[255].ctlid) == 255);
+	shr_assert(le16_to_cpu(entries[299].ctlid) == 299);
+}
+
+static int test_mi_ctrl_health_mismatch_cb(struct libnvme_mi_ep *ep,
+					   struct libnvme_mi_req *req,
+					   struct libnvme_mi_resp *resp,
+					   void *data)
+{
+	struct nvme_mi_mi_resp_hdr *mi_resp = (void *)resp->hdr;
+
+	mi_resp->status = 0;
+	mi_resp->nmresp[2] = 1; /* RENT = 1, but return 0 bytes */
+	resp->data_len = 0;
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_mi_ctrl_health_errors(struct libnvme_mi_ep *ep)
+{
+	struct nvme_mi_ctrl_health_status entry;
+	unsigned int count = 1;
+	struct libnvme_mi_ctrl_health_poll_args args = {
+		.args_size = sizeof(args),
+		.entries = &entry,
+		.num_entries = &count,
+	};
+	int rc;
+
+	/* NULL args */
+	rc = libnvme_mi_mi_controller_health_status_poll(ep, NULL);
+	shr_assert(rc == -EINVAL);
+
+	/* Bad args_size */
+	args.args_size = 0;
+	rc = libnvme_mi_mi_controller_health_status_poll(ep, &args);
+	shr_assert(rc == -EINVAL);
+	args.args_size = sizeof(args);
+
+	/* NULL entries */
+	args.entries = NULL;
+	rc = libnvme_mi_mi_controller_health_status_poll(ep, &args);
+	shr_assert(rc == -EINVAL);
+	args.entries = &entry;
+
+	/* NULL num_entries */
+	args.num_entries = NULL;
+	rc = libnvme_mi_mi_controller_health_status_poll(ep, &args);
+	shr_assert(rc == -EINVAL);
+
+	/* zero num_entries */
+	count = 0;
+	args.num_entries = &count;
+	rc = libnvme_mi_mi_controller_health_status_poll(ep, &args);
+	shr_assert(rc == -EINVAL);
+
+	/* Length mismatch returns -EPROTO */
+	count = 1;
+	test_set_transport_callback(ep, test_mi_ctrl_health_mismatch_cb, NULL);
+	rc = libnvme_mi_mi_controller_health_status_poll(ep, &args);
+	shr_assert(rc == -EPROTO);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -2264,6 +2530,10 @@ struct test {
 	DEFINE_TEST(admin_dlen_doff_req),
 	DEFINE_TEST(admin_dlen_doff_resp),
 	DEFINE_TEST(mi_invalid_formats),
+	DEFINE_TEST(mi_ctrl_health_single),
+	DEFINE_TEST(mi_ctrl_health_flags),
+	DEFINE_TEST(mi_ctrl_health_autopaging),
+	DEFINE_TEST(mi_ctrl_health_errors),
 };
 
 static void run_test(struct test *test, FILE *logfd, struct libnvme_mi_ep *ep)

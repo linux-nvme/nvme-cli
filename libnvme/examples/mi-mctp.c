@@ -120,7 +120,56 @@ int do_info(struct libnvme_mi_ep *ep)
 	return 0;
 }
 
-static int show_ctrl(struct libnvme_mi_ep *ep, uint16_t ctrl_id)
+static void show_chsc_flags(uint16_t chsc)
+{
+	static const struct {
+		uint16_t mask;
+		const char *name;
+	} chsc_bits[] = {
+		{ NVME_MI_CHSC_RDY,   "RDY (Ready)" },
+		{ NVME_MI_CHSC_CFS,   "CFS (Controller Fatal Status)" },
+		{ NVME_MI_CHSC_SHST,  "SHST (Shutdown Status)" },
+		{ NVME_MI_CHSC_NSSRO,
+		  "NSSRO (NVM Subsystem Reset Occurred)" },
+		{ NVME_MI_CHSC_CECO,
+		  "CECO (Controller Enable Change Occurred)" },
+		{ NVME_MI_CHSC_NAC,   "NAC (Namespace Attribute Changed)" },
+		{ NVME_MI_CHSC_FA,    "FA (Firmware Activated)" },
+		{ NVME_MI_CHSC_CSTS,  "CSTS (Controller Status Change)" },
+		{ NVME_MI_CHSC_CTEMP,
+		  "CTEMP (Composite Temperature Change)" },
+		{ NVME_MI_CHSC_PDLU,  "PDLU (Percentage Used Change)" },
+		{ NVME_MI_CHSC_SPARE, "SPARE (Available Spare Change)" },
+		{ NVME_MI_CHSC_CWARN, "CWARN (Critical Warning Change)" },
+		{ NVME_MI_CHSC_TCIDA,
+		  "TCIDA (Telemetry Controller-Initiated Data Available)" },
+	};
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(chsc_bits); i++) {
+		if (chsc & chsc_bits[i].mask)
+			printf("        flag: %s\n", chsc_bits[i].name);
+	}
+}
+
+static void show_ctrl_health(const struct nvme_mi_ctrl_health_status *chs)
+{
+	uint16_t chsc = (uint16_t)chs->chscf[0] |
+			((uint16_t)chs->chscf[1] << 8);
+
+	printf("    health:\n");
+	printf("      controller status:  0x%04x\n", le16_to_cpu(chs->csts));
+	printf("      composite temp:     %d\n", le16_to_cpu(chs->ctemp));
+	printf("      drive life used:    %d%%\n", chs->pdlu);
+	printf("      available spare:    %d%%\n", chs->spare);
+	printf("      critical warnings:  0x%02x\n", chs->cwarn);
+	printf("      status changed:     0x%04x\n", chsc);
+	if (chsc)
+		show_chsc_flags(chsc);
+}
+
+static int show_ctrl(struct libnvme_mi_ep *ep, uint16_t ctrl_id,
+		     const struct nvme_mi_ctrl_health_status *chs)
 {
 	struct nvme_mi_read_ctrl_info ctrl;
 	int rc;
@@ -145,11 +194,16 @@ static int show_ctrl(struct libnvme_mi_ep *ep, uint16_t ctrl_id)
 	printf("    PCI subsys vendor: %04x\n", le16_to_cpu(ctrl.ssvid));
 	printf("    PCI subsys device: %04x\n", le16_to_cpu(ctrl.ssvid));
 
+	if (chs)
+		show_ctrl_health(chs);
+
 	return 0;
 }
 
 static int do_controllers(struct libnvme_mi_ep *ep)
 {
+	struct nvme_mi_ctrl_health_status *chs = NULL;
+	unsigned int num_health = NVME_ID_CTRL_LIST_MAX;
 	struct nvme_ctrl_list ctrl_list;
 	int rc, i;
 
@@ -159,11 +213,38 @@ static int do_controllers(struct libnvme_mi_ep *ep)
 		return rc;
 	}
 
+	chs = calloc(num_health, sizeof(*chs));
+	if (chs) {
+		rc = libnvme_mi_mi_controller_health_status_poll_all(
+			ep, true, chs, &num_health);
+		if (rc) {
+			warnx("Can't perform Controller Health Poll operation");
+			free(chs);
+			chs = NULL;
+			num_health = 0;
+		}
+	}
+
 	printf("NVMe controller list:\n");
 	for (i = 0; i < le16_to_cpu(ctrl_list.num); i++) {
 		uint16_t id = le16_to_cpu(ctrl_list.identifier[i]);
-		show_ctrl(ep, id);
+		const struct nvme_mi_ctrl_health_status *ctrl_chs = NULL;
+
+		if (chs) {
+			unsigned int j;
+
+			for (j = 0; j < num_health; j++) {
+				if (le16_to_cpu(chs[j].ctlid) == id) {
+					ctrl_chs = &chs[j];
+					break;
+				}
+			}
+		}
+
+		show_ctrl(ep, id, ctrl_chs);
 	}
+
+	free(chs);
 	return 0;
 }
 

@@ -123,6 +123,7 @@ struct nvme_mi_msg_resp {
  * enum nvme_mi_mi_opcode - Operation code for supported NVMe-MI commands.
  * @nvme_mi_mi_opcode_mi_data_read: Read NVMe-MI Data Structure
  * @nvme_mi_mi_opcode_subsys_health_status_poll: Subsystem Health Status Poll
+ * @nvme_mi_mi_opcode_ctrl_health_status_poll: Controller Health Status Poll
  * @nvme_mi_mi_opcode_configuration_set: MI Configuration Set
  * @nvme_mi_mi_opcode_configuration_get: MI Configuration Get
  * @nvme_mi_mi_opcode_pda_read: NVMe-MI PDA Read
@@ -132,6 +133,7 @@ struct nvme_mi_msg_resp {
 enum nvme_mi_mi_opcode {
 	nvme_mi_mi_opcode_mi_data_read = 0x00,
 	nvme_mi_mi_opcode_subsys_health_status_poll = 0x01,
+	nvme_mi_mi_opcode_ctrl_health_status_poll = 0x02,
 	nvme_mi_mi_opcode_configuration_set = 0x03,
 	nvme_mi_mi_opcode_configuration_get = 0x04,
 	nvme_mi_mi_opcode_pda_read = 0x0d,
