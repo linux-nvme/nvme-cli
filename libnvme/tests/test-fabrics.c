@@ -650,6 +650,8 @@ static bool test_dc_decide(struct libnvme_global_ctx *ctx)
 	struct libnvmf_context fctx = { .ctx = ctx };
 	__u16 epcsd_set = NVMF_DISC_EFLAGS_EPCSD;
 	__u16 epcsd_clear = 0;
+	__u16 both_set = NVMF_DISC_EFLAGS_EPCSD | NVMF_DISC_EFLAGS_DUPRETINFO;
+	__u16 dup_only = NVMF_DISC_EFLAGS_DUPRETINFO;
 	bool pass = true, p, d;
 
 	printf("\ntest_dc_decide:\n");
@@ -709,6 +711,34 @@ static bool test_dc_decide(struct libnvme_global_ctx *ctx)
 	d = dc_decide(&fctx, "nqn", DC_OWNED, true, epcsd_set, NULL);
 	p = d;
 	CHECK(p, "DC_OWNED, NO, self EPCSD=1: disconnect=%d", d);
+	pass &= p;
+
+	/*
+	 * DUPRETINFO plays no part in the persistence decision. It says a set
+	 * of this Discovery subsystem's ports return the same log page, so a
+	 * host need not read the log page from all of them. Only EPCSD decides
+	 * whether the connection is kept. Setting DUPRETINFO alongside EPCSD,
+	 * or on its own, must not change the outcome.
+	 */
+	fctx.persistent = LIBNVMF_PERSISTENT_AUTO;
+	d = dc_decide(&fctx, "nqn", DC_OWNED, true, both_set, NULL);
+	p = !d;
+	CHECK(p, "DC_OWNED, AUTO, self EPCSD=1|DUPRETINFO: disconnect=%d", d);
+	pass &= p;
+
+	d = dc_decide(&fctx, "nqn", DC_OWNED, true, dup_only, NULL);
+	p = d;
+	CHECK(p, "DC_OWNED, AUTO, self DUPRETINFO only: disconnect=%d", d);
+	pass &= p;
+
+	d = dc_decide(&fctx, "nqn", DC_OWNED, false, 0, &both_set);
+	p = !d;
+	CHECK(p, "DC_OWNED, AUTO, parent EPCSD=1|DUPRETINFO: disconnect=%d", d);
+	pass &= p;
+
+	d = dc_decide(&fctx, "nqn", DC_OWNED, false, 0, &dup_only);
+	p = d;
+	CHECK(p, "DC_OWNED, AUTO, parent DUPRETINFO only: disconnect=%d", d);
 	pass &= p;
 
 	return pass;
