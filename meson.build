@@ -14,7 +14,7 @@
 
 project(
     'nvme-cli', ['c'],
-    meson_version: '>= 0.62.0',
+    meson_version: '>= 1.0.0',
     license: [
         'GPL-2.0-only',         # nvme-cli
         'LGPL-2.1-or-later',    # libnvme
