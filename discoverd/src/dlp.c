@@ -79,9 +79,6 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 		uint16_t eflags = le16toh((__u16)e->eflags);
 		struct libnvmf_tid *t;
 
-		if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
-			continue;
-
 		t = tid_from_dlpe(e, dc_tid);
 		if (!t)
 			continue;

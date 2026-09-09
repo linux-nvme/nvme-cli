@@ -17,11 +17,11 @@
  *   subtype == NVME_NQN_NVME (I/O controller):       ioc_callback is called.
  *   subtype == NVME_NQN_DISC (referral DC):          dc_callback is called.
  *   subtype == NVME_NQN_CURR (this DC's self entry): self_callback is called.
- *   DUPRETINFO flag set: entry is skipped.
  *
- * self_callback is called at most once, with the self entry's EPCSD bit
- * (EFLAGS bit 1). It is not called at all if the log page carries no self
- * entry; the caller must supply its own fallback for that case.
+ * self_callback is called once per self entry, with that entry's EPCSD bit
+ * (EFLAGS bit 1); a multi-port DC may publish several. It is not called at
+ * all if the log page carries no self entry; the caller must supply its own
+ * fallback for that case.
  *
  * dc_callback is passed the referral entry's own EPCSD bit, i.e. this DC's
  * report of whether the referred-to DC supports persistent connections.
