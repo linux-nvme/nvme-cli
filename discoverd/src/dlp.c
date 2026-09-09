@@ -43,36 +43,17 @@ static struct libnvmf_tid *tid_from_dlpe(const struct nvmf_disc_log_entry *e,
 		       e->subtype == NVME_NQN_DISC);
 }
 
-int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
-	      const struct libnvmf_tid *dc_tid,
-	      void (*ioc_callback)(const struct libnvmf_tid *t,
-				   void *user_data),
-	      void (*dc_callback)(const struct libnvmf_tid *t, bool epcsd,
-				 void *user_data),
-	      void (*self_callback)(bool epcsd, void *user_data),
-	      void *user_data)
+void dlp_process_log(const struct nvmf_discovery_log *log,
+		     const struct libnvmf_tid *dc_tid,
+		     void (*ioc_callback)(const struct libnvmf_tid *t,
+					  void *user_data),
+		     void (*dc_callback)(const struct libnvmf_tid *t,
+					 bool epcsd, void *user_data),
+		     void (*self_callback)(bool epcsd, void *user_data),
+		     void *user_data)
 {
-	struct libnvme_ctrl *ctrl = NULL;
-	struct nvmf_discovery_log *log = NULL;
-	uint64_t numrec;
+	uint64_t numrec = le64toh((__u64)log->numrec);
 	uint64_t i;
-	int ret;
-
-	ret = libnvme_scan_ctrl(ctx->nvme_ctx, devname, &ctrl);
-	if (ret < 0) {
-		disc_warn("%s | %s - scan_ctrl failed: %s",
-			  libnvmf_tid_str(dc_tid), devname, strerror(-ret));
-		goto out;
-	}
-
-	ret = libnvmf_get_discovery_log(ctrl, NULL, &log);
-	if (ret < 0) {
-		disc_warn("%s | %s - get_discovery_log failed: %s",
-			  libnvmf_tid_str(dc_tid), devname, strerror(-ret));
-		goto out;
-	}
-
-	numrec = le64toh((__u64)log->numrec);
 
 	for (i = 0; i < numrec; i++) {
 		const struct nvmf_disc_log_entry *e = &log->entries[i];
@@ -104,6 +85,37 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 
 		tid_free(t);
 	}
+}
+
+int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
+	      const struct libnvmf_tid *dc_tid,
+	      void (*ioc_callback)(const struct libnvmf_tid *t,
+				   void *user_data),
+	      void (*dc_callback)(const struct libnvmf_tid *t, bool epcsd,
+				 void *user_data),
+	      void (*self_callback)(bool epcsd, void *user_data),
+	      void *user_data)
+{
+	struct libnvme_ctrl *ctrl = NULL;
+	struct nvmf_discovery_log *log = NULL;
+	int ret;
+
+	ret = libnvme_scan_ctrl(ctx->nvme_ctx, devname, &ctrl);
+	if (ret < 0) {
+		disc_warn("%s | %s - scan_ctrl failed: %s",
+			  libnvmf_tid_str(dc_tid), devname, strerror(-ret));
+		goto out;
+	}
+
+	ret = libnvmf_get_discovery_log(ctrl, NULL, &log);
+	if (ret < 0) {
+		disc_warn("%s | %s - get_discovery_log failed: %s",
+			  libnvmf_tid_str(dc_tid), devname, strerror(-ret));
+		goto out;
+	}
+
+	dlp_process_log(log, dc_tid, ioc_callback, dc_callback, self_callback,
+			user_data);
 
 	ret = 0;
 out:
