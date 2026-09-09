@@ -108,7 +108,7 @@ class TestNVMeBase(unittest.TestCase):
         if not logging.getLogger().handlers:
             logging.basicConfig(format='%(message)s', stream=sys.stdout)
 
-    def run_cmd(self, cmd, stdin_data=None, shell=True):
+    def run_cmd(self, cmd, stdin_data=None, shell=True, quiet=False):
         """ Run a command using subprocess.run, log the command and its
             output, and return the CompletedProcess result.
             - Args:
@@ -116,6 +116,8 @@ class TestNVMeBase(unittest.TestCase):
                   (the default); an argv list when shell=False.
                 - stdin_data : optional string to pass as stdin input.
                 - shell : passed straight through to subprocess.run().
+                - quiet : don't echo captured stdout/stderr to the
+                  console/log files.
             - Returns:
                 - CompletedProcess result.
         """
@@ -123,20 +125,21 @@ class TestNVMeBase(unittest.TestCase):
         result = subprocess.run(cmd, shell=shell, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, encoding='utf-8',
                                 input=stdin_data)
-        if result.stdout:
-            logger.debug(result.stdout)
-            sys.stdout.write(result.stdout)
-            sys.stdout.flush()
-            if getattr(self, 'stdout_log', None):
-                self.stdout_log.write(result.stdout)
-                self.stdout_log.flush()
-        if result.stderr:
-            logger.debug(result.stderr)
-            sys.stderr.write(result.stderr)
-            sys.stderr.flush()
-            if getattr(self, 'stderr_log', None):
-                self.stderr_log.write(result.stderr)
-                self.stderr_log.flush()
+        if not quiet:
+            if result.stdout:
+                logger.debug(result.stdout)
+                sys.stdout.write(result.stdout)
+                sys.stdout.flush()
+                if getattr(self, 'stdout_log', None):
+                    self.stdout_log.write(result.stdout)
+                    self.stdout_log.flush()
+            if result.stderr:
+                logger.debug(result.stderr)
+                sys.stderr.write(result.stderr)
+                sys.stderr.flush()
+                if getattr(self, 'stderr_log', None):
+                    self.stderr_log.write(result.stderr)
+                    self.stderr_log.flush()
         self._record_device_data(cmd, result)
         return result
 
@@ -396,9 +399,9 @@ class TestNVMe(TestNVMeBase):
             self.fail(f"ERROR : missing key '{key}' in {context}: {data!r}")
         return data.get(key, default)
 
-    def exec_cmd(self, cmd):
+    def exec_cmd(self, cmd, quiet=False):
         """ Wrapper for executing a shell command and return the result. """
-        return self.run_cmd(cmd).returncode
+        return self.run_cmd(cmd, quiet=quiet).returncode
 
     def nvme_reset_ctrl(self):
         """ Wrapper for nvme reset command.
