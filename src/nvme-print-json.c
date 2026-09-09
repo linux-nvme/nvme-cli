@@ -5331,22 +5331,6 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 }
 
 #ifdef CONFIG_FABRICS
-/*
- * Copy a fixed-size, not-necessarily-NUL-terminated wire field @s of
- * size @sz into a newly allocated, NUL-terminated, right-trimmed C
- * string. "%.*s" bounds the read to @sz regardless of whether s
- * contains a NUL. Returns NULL on allocation failure.
- */
-static char *buf2str(const char s[], size_t sz)
-{
-	char *p;
-
-	if (asprintf(&p, "%.*s", (int)sz, s) < 0)
-		return NULL;
-
-	return shr_rtrim(p);
-}
-
 static void json_discovery_log(const struct nvmf_discovery_log *log, int numrec)
 {
 	struct json_object *r = json_r;
@@ -5370,9 +5354,9 @@ static void json_discovery_log(const struct nvmf_discovery_log *log, int numrec)
 		__cleanup_free char *traddr = NULL;
 		__cleanup_free char *subnqn = NULL;
 
-		trsvcid = buf2str(e->trsvcid, sizeof(e->trsvcid));
-		traddr = buf2str(e->traddr, sizeof(e->traddr));
-		subnqn = buf2str(e->subnqn, sizeof(e->subnqn));
+		trsvcid = shr_buf2str(e->trsvcid, sizeof(e->trsvcid));
+		traddr = shr_buf2str(e->traddr, sizeof(e->traddr));
+		subnqn = shr_buf2str(e->subnqn, sizeof(e->subnqn));
 
 		obj_add_str(entry, "trtype", libnvmf_trtype_str(e->trtype));
 		obj_add_str(entry, "adrfam", libnvmf_adrfam_str(e->adrfam));

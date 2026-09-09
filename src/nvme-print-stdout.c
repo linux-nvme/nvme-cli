@@ -30,6 +30,7 @@
 #include <shared/table-util.h>
 #include <shared/uint128-util.h>
 #include <shared/uuid-util.h>
+#include <shared/string-util.h>
 
 #include "cleanup.h"
 #include "logging.h"
@@ -6824,9 +6825,18 @@ static void stdout_discovery_log(const struct nvmf_discovery_log *log,
 
 		/*
 		 * e->trsvcid/subnqn/traddr are fixed-width fields off the
-		 * wire, not guaranteed NUL-terminated by a non-compliant DC.
-		 * %-.*s bounds the read to the field's own size regardless.
+		 * wire, space-padded per the spec, and not guaranteed
+		 * NUL-terminated by a non-compliant DC. shr_buf2str() bounds
+		 * the read to the field's own size and strips the padding.
 		 */
+		__cleanup_free char *trsvcid = NULL;
+		__cleanup_free char *subnqn = NULL;
+		__cleanup_free char *traddr = NULL;
+
+		trsvcid = shr_buf2str(e->trsvcid, sizeof(e->trsvcid));
+		subnqn = shr_buf2str(e->subnqn, sizeof(e->subnqn));
+		traddr = shr_buf2str(e->traddr, sizeof(e->traddr));
+
 		printf("=====Discovery Log Entry %d======\n", i);
 		printf("trtype:  %s\n", libnvmf_trtype_str(e->trtype));
 		printf("adrfam:  %s\n",
@@ -6835,9 +6845,9 @@ static void stdout_discovery_log(const struct nvmf_discovery_log *log,
 		printf("subtype: %s\n", libnvmf_subtype_str(e->subtype));
 		printf("treq:    %s\n", libnvmf_treq_str(e->treq));
 		printf("portid:  %d\n", le16_to_cpu(e->portid));
-		printf("trsvcid: %-.*s\n", (int)sizeof(e->trsvcid), e->trsvcid);
-		printf("subnqn:  %-.*s\n", (int)sizeof(e->subnqn), e->subnqn);
-		printf("traddr:  %-.*s\n", (int)sizeof(e->traddr), e->traddr);
+		printf("trsvcid: %s\n", trsvcid);
+		printf("subnqn:  %s\n", subnqn);
+		printf("traddr:  %s\n", traddr);
 		printf("eflags:  %s\n",
 		       libnvmf_eflags_str(le16_to_cpu(e->eflags)));
 
