@@ -400,8 +400,8 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 		err = get_pif_sts(ns, nvm_ns, &pif, &sts);
 		if (err)
 			return err;
-	} else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
-				       NVME_SC_INVALID_FIELD)) {
+	} else if (nvme_status_get_type(err) != NVME_STATUS_TYPE_NVME ||
+		   nvme_status_code(nvme_status_get_value(err)) != NVME_SC_INVALID_FIELD) {
 		return err;
 	}
 
