@@ -33,7 +33,7 @@
 static int check_persistent(const char *value);
 
 static const struct libnvmf_key keys[] = {
-	/* connection tunables; only class overridable per controller= line */
+	/* connection tunables; overridable per controller= line */
 	{ "nr-io-queues",		LIBNVMF_KEY_INT,	LIBNVMF_KEY_TUNABLE },
 	{ "nr-write-queues",		LIBNVMF_KEY_INT,	LIBNVMF_KEY_TUNABLE },
 	{ "nr-poll-queues",		LIBNVMF_KEY_INT,	LIBNVMF_KEY_TUNABLE },
