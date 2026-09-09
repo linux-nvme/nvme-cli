@@ -1,0 +1,70 @@
+nvme-feat-int-coalesce(1)
+=========================
+
+NAME
+----
+nvme-feat-int-coalesce - Get and set interrupt coalescing feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat int-coalesce' <device>
+			[--thr=<thr> | -t <thr>] [--time=<time> | -T <time>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set interrupt coalescing feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--thr` or `--time`) are specified,
+the command will update the interrupt coalescing configuration. If none of
+these options are specified, it will retrieve and display the current
+configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-t <thr>::
+--thr=<thr>::
+	Aggregation Threshold. Specifies the minimum number of completion
+	queue entries required to trigger an interrupt.
+
+-T <time>::
+--time=<time>::
+	Aggregation Time. Specifies the maximum time in 100 microsecond
+	units that the controller may delay an interrupt due to coalescing.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat int-coalesce to get the current configuration:
++
+------------
+# nvme feat int-coalesce /dev/nvme0
+------------
+
+* Has the program issue a feat int-coalesce to set the aggregation threshold
+  and time:
++
+------------
+# nvme feat int-coalesce /dev/nvme0 --thr=10 --time=5 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
+

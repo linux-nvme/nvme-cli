@@ -1,0 +1,68 @@
+nvme-feat-keep-alive-timer(1)
+=============================
+
+NAME
+----
+nvme-feat-keep-alive-timer - Get and set keep alive timer feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat keep-alive-timer' <device>
+			[--kato=<kato> | -k <kato>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set keep alive timer feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If the setting option (`--kato`) is specified, the command will update the
+keep alive timer configuration. If this option is not specified, it will
+retrieve and display the current configuration.
+
+The keep alive timeout (KATO) specifies the interval in milliseconds that
+the host shall send Keep Alive Commands to the controller.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-k <kato>::
+--kato=<kato>::
+	Keep Alive Timeout. Specifies the time interval in milliseconds
+	between Keep Alive Commands that the host shall send to the controller.
+	A value of 0 disables the keep alive functionality.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat keep-alive-timer to get the current configuration:
++
+------------
+# nvme feat keep-alive-timer /dev/nvme0
+------------
+
+* Has the program issue a feat keep-alive-timer to set the keep alive timeout
+  to 10 seconds:
++
+------------
+# nvme feat keep-alive-timer /dev/nvme0 --kato=10000 --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
+

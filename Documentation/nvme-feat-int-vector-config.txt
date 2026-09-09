@@ -1,0 +1,69 @@
+nvme-feat-int-vector-config(1)
+==============================
+
+NAME
+----
+nvme-feat-int-vector-config - Get and set interrupt vector configuration feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat int-vector-config' <device>
+			[--iv=<iv> | -i <iv>] [--cd | -c]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set interrupt vector configuration feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options (`--iv` or `--cd`) are specified,
+the command will update the interrupt vector configuration. If none of these
+options are specified, it will retrieve and display the current configuration.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-i <iv>::
+--iv=<iv>::
+	Interrupt Vector. Specifies the interrupt vector to use for this
+	configuration. The value is the number of the interrupt vector.
+
+-c::
+--cd::
+	Coalescing Disable. When set, this flag disables interrupt coalescing
+	for the specified interrupt vector.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a feat int-vector-config to get the current configuration:
++
+------------
+# nvme feat int-vector-config /dev/nvme0
+------------
+
+* Has the program issue a feat int-vector-config to set the interrupt vector
+  and disable coalescing:
++
+------------
+# nvme feat int-vector-config /dev/nvme0 --iv=0 --cd --save
+------------
+
+NVME
+----
+Part of the nvme-user suite.
+
