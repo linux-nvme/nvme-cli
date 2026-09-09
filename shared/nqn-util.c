@@ -86,3 +86,22 @@ bool shr_hostid_valid(const char *hostid)
 	return shr_uuid_str_valid(hostid) &&
 	       !shr_streq0(hostid, "00000000-0000-0000-0000-000000000000");
 }
+
+bool shr_nqn_normalize(char *nqn)
+{
+	char *p;
+
+	if (!nqn)
+		return false;
+
+	if (strncmp(nqn, NQN_UUID_PREFIX, strlen(NQN_UUID_PREFIX)))
+		return false;
+
+	/* tolower is locale aware, thus hand role our own version */
+	for (p = nqn + strlen(NQN_UUID_PREFIX); *p; p++) {
+		if (*p >= 'A' && *p <= 'F')
+			*p += 'a' - 'A';
+	}
+
+	return true;
+}
