@@ -38,7 +38,8 @@ class TestPlugin(TestNVMe):
         super().setUp()
         self.setup_log_dir(self.__class__.__name__)
         # Verify the plugin is available
-        ret = self.exec_cmd(f"{self.nvme_bin} {self.plugin_name} help")
+        ret = self.exec_cmd(f"{self.nvme_bin} {self.plugin_name} help",
+                            quiet=True)
         if ret != 0:
             self.skipTest(f"Plugin '{self.plugin_name}' not available")
 
