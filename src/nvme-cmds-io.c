@@ -171,22 +171,34 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 {
 	int result = 0;
 
-	if (sts < 64 && storage_tag >= (1LL << sts)) {
+	if (sts < 64 && storage_tag >= (1ULL << sts)) {
 		nvme_show_error("Storage tag larger than storage tag size");
 		return -ECLI_INVALID_TAGS;
 	}
 
 	switch (pif) {
 	case NVME_NVM_PIF_16B_GUARD:
-		if (ref_tag >= (1LL << (32 - sts)))
+		if (sts > 32) {
+			nvme_show_error("Storage tag size larger than reference tag width");
+			return -ECLI_INVALID_TAGS;
+		}
+		if (ref_tag >= (1ULL << (32 - sts)))
 			result = 1;
 		break;
 	case NVME_NVM_PIF_32B_GUARD:
-		if (sts > 16 && ref_tag >= (1LL << (80 - sts)))
+		if (sts > 80) {
+			nvme_show_error("Storage tag size larger than reference tag width");
+			return -ECLI_INVALID_TAGS;
+		}
+		if (sts > 16 && ref_tag >= (1ULL << (80 - sts)))
 			result = 1;
 		break;
 	case NVME_NVM_PIF_64B_GUARD:
-		if (sts > 0 && ref_tag >= (1LL << (48 - sts)))
+		if (sts > 48) {
+			nvme_show_error("Storage tag size larger than reference tag width");
+			return -ECLI_INVALID_TAGS;
+		}
+		if (sts > 0 && ref_tag >= (1ULL << (48 - sts)))
 			result = 1;
 		break;
 	default:
