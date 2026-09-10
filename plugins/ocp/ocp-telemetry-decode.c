@@ -1665,6 +1665,11 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	int status = 0;
 	char file_path[PATH_MAX];
 
+	if (ptelemetry_buffer == NULL) {
+		nvme_show_error("No telemetry data to parse.");
+		return -1;
+	}
+
 	if (options->output_file != NULL) {
 		sprintf(file_path, "%s.%s", options->output_file, "txt");
 		FILE *fp = fopen(file_path, "w");
