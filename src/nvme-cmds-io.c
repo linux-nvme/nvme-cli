@@ -169,38 +169,54 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 
 static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 {
-	int result = 0;
-
-	if (sts < 64 && storage_tag >= (1LL << sts)) {
-		nvme_show_error("Storage tag larger than storage tag size");
+	if (sts < 64 && storage_tag >= (1ULL << sts)) {
+		nvme_show_error("Storage tag larger than the STS-defined %u-bit width", sts);
 		return -ECLI_INVALID_TAGS;
 	}
 
 	switch (pif) {
 	case NVME_NVM_PIF_16B_GUARD:
-		if (ref_tag >= (1LL << (32 - sts)))
-			result = 1;
+		if (sts > 32) {
+			nvme_show_error("Storage tag size (STS=%u) larger than the 32-bit maximum allowed by 16b Guard PIF",
+					sts);
+			return -ECLI_INVALID_TAGS;
+		}
+		if (ref_tag >= (1ULL << (32 - sts))) {
+			nvme_show_error("Reference tag larger than the %u-bit width allowed by 16b Guard PIF (STS=%u)",
+					32 - sts, sts);
+			return -ECLI_INVALID_TAGS;
+		}
 		break;
 	case NVME_NVM_PIF_32B_GUARD:
-		if (sts > 16 && ref_tag >= (1LL << (80 - sts)))
-			result = 1;
+		if (sts < 16 || sts > 64) {
+			nvme_show_error("Storage tag size (STS=%u) outside the 16-64 range allowed by 32b Guard PIF",
+					sts);
+			return -ECLI_INVALID_TAGS;
+		}
+		if (sts > 16 && ref_tag >= (1ULL << (80 - sts))) {
+			nvme_show_error("Reference tag larger than the %u-bit width allowed by 32b Guard PIF (STS=%u)",
+					80 - sts, sts);
+			return -ECLI_INVALID_TAGS;
+		}
 		break;
 	case NVME_NVM_PIF_64B_GUARD:
-		if (sts > 0 && ref_tag >= (1LL << (48 - sts)))
-			result = 1;
+		if (sts > 48) {
+			nvme_show_error("Storage tag size (STS=%u) larger than the 48-bit maximum allowed by 64b Guard PIF",
+					sts);
+			return -ECLI_INVALID_TAGS;
+		}
+		if (sts > 0 && ref_tag >= (1ULL << (48 - sts))) {
+			nvme_show_error("Reference tag larger than the %u-bit width allowed by 64b Guard PIF (STS=%u)",
+					48 - sts, sts);
+			return -ECLI_INVALID_TAGS;
+		}
 		break;
 	default:
-		nvme_show_error("Invalid PIF");
-		result = 1;
-		break;
+		nvme_show_error("Invalid PIF value: %u", pif);
+		return -ECLI_INVALID_TAGS;
 	}
 
-	if (!result)
-		return 0;
-
-	nvme_show_error("Reference tag larger than allowed by PIF");
-
-	return -ECLI_INVALID_TAGS;
+	return 0;
 }
 
 static int check_lbstm_byte_granularity(__u64 lbstm, __u8 sts)
