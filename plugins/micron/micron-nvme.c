@@ -2050,10 +2050,40 @@ out:
 #define LOGPULL_STATUS_SUCCESS "Success"
 
 /*
- * Command info identifiers, keyed by the binary file each one describes. These
- * are the names offline log decoders use to identify each log, so they must
- * match exactly; an unrecognized name causes that log to be skipped. Covers
- * the files vs-internal-log collects.
+ * Binary file names for each log, command and feature vs-internal-log collects.
+ * These are the names expected by log decoders, so they must match exactly.
+ */
+#define LOG_FILE_ID_CTRL "nvme_controller_identify_data.bin"
+#define LOG_FILE_ID_NS "identify_namespace_%d_data.bin"
+#define LOG_FILE_SMART "smart_data.bin"
+#define LOG_FILE_ERROR_INFO "error_information_log.bin"
+#define LOG_FILE_FW_SLOT "firmware_slot_info_log.bin"
+#define LOG_FILE_CHANGED_NS "changed_namespace_log.bin"
+#define LOG_FILE_CMD_EFFECTS "command_effects_log.bin"
+#define LOG_FILE_SELF_TEST "drive_self_test.bin"
+#define LOG_FILE_TELEMETRY_HOST "nvme_host_telemetry_log.bin"
+#define LOG_FILE_TELEMETRY_CTRL "nvme_controller_telemetry_log.bin"
+#define LOG_FILE_PEVENT "persistent_event_log.bin"
+
+/* Vendor log files are named after their log page identifier. */
+#define LOG_FILE_VS_LOG(id) "nvmelog_" #id ".bin"
+
+#define LOG_FILE_FEAT_ARBITRATION "nvme_feature_setting_arbitration.bin"
+#define LOG_FILE_FEAT_POWER_MGMT "nvme_feature_setting_pm.bin"
+#define LOG_FILE_FEAT_LBA_RANGE "nvme_feature_setting_lba_range_namespace_1.bin"
+#define LOG_FILE_FEAT_TEMP_THRESHOLD "nvme_feature_setting_temp_threshold.bin"
+#define LOG_FILE_FEAT_ERROR_RECOVERY "nvme_feature_setting_error_recovery.bin"
+#define LOG_FILE_FEAT_VWC "nvme_feature_setting_volatile_write_cache.bin"
+#define LOG_FILE_FEAT_NUM_QUEUES "nvme_feature_setting_num_queues.bin"
+#define LOG_FILE_FEAT_IRQ_COAL "nvme_feature_setting_interrupt_coalescing.bin"
+#define LOG_FILE_FEAT_IRQ_VECTOR "nvme_feature_setting_interrupt_vec_config.bin"
+#define LOG_FILE_FEAT_WRITE_ATOMICITY "nvme_feature_setting_write_atomicity.bin"
+#define LOG_FILE_FEAT_ASYNC_EVENT "nvme_feature_setting_async_event_config.bin"
+#define LOG_FILE_FEAT_SW_PROGRESS "nvme_feature_setting_sw_progress_marker.bin"
+
+/*
+ * Command info identifiers, keyed by the binary file each one describes. An
+ * unrecognized name causes that log to be skipped.
  */
 static const struct logpull_cmd_info {
 	const char *cmd_info;
@@ -2063,37 +2093,37 @@ static const struct logpull_cmd_info {
 	__u16 cmd_code;
 	const char *binary_file;
 } logpull_cmd_info_table[] = {
-	{ "NVME_IDENTIFY_CONTROLLER", 0x06, 0, 0, 0, "nvme_controller_identify_data.bin" },
-	{ "NVME_IDENTIFY_NAMESPACE_ALL", 0x06, 0, 0, 0, "identify_namespace_%d_data.bin" },
-	{ "NVME_SMART_LOG", 0x02, 0x02, 0, 0, "smart_data.bin" },
-	{ "NVME_ERROR_INFO_LOG", 0x02, 0x01, 0, 0, "error_information_log.bin" },
-	{ "NVME_FW_SLOT_INFO_LOG", 0x02, 0x03, 0, 0, "firmware_slot_info_log.bin" },
-	{ "NVME_CHANGED_NAMESPACE_LIST_LOG", 0x02, 0x04, 0, 0, "changed_namespace_log.bin" },
-	{ "NVME_CMD_SUPPORTED_AND_EFFECTS_LOG", 0x02, 0x05, 0, 0, "command_effects_log.bin" },
-	{ "NVME_DEVICE_SELF_TEST_LOG", 0x02, 0x06, 0, 0, "drive_self_test.bin" },
-	{ "NVME_HOST_TELEMETRY_LOG", 0x02, 0x07, 0, 0, "nvme_host_telemetry_log.bin" },
-	{ "NVME_CTRL_TELEMETRY_LOG", 0x02, 0x08, 0, 0, "nvme_controller_telemetry_log.bin" },
-	{ "NVME_PERSISTENT_EVENT_LOG", 0x02, 0x0D, 0, 0, "persistent_event_log.bin" },
-	{ "NVME_GET_FEATURE_ARBITRATION", 0, 0, 0, 0, "nvme_feature_setting_arbitration.bin" },
-	{ "NVME_GET_FEATURE_POWER_MGNT", 0, 0, 0, 0, "nvme_feature_setting_pm.bin" },
-	{ "NVME_GET_FEATURE_LBA_RANGE_TYPE", 0, 0, 0, 0, "nvme_feature_setting_lba_range_namespace_1.bin" },
-	{ "NVME_GET_FEATURE_TEMP_THRESHOLD", 0, 0, 0, 0, "nvme_feature_setting_temp_threshold.bin" },
-	{ "NVME_GET_FEATURE_ERROR_RECOVERY", 0, 0, 0, 0, "nvme_feature_setting_error_recovery.bin" },
-	{ "NVME_GET_FEATURE_VOLATILE_WRITE_CACHE", 0, 0, 0, 0, "nvme_feature_setting_volatile_write_cache.bin" },
-	{ "NVME_GET_FEATURE_NUM_QUEUES", 0, 0, 0, 0, "nvme_feature_setting_num_queues.bin" },
-	{ "NVME_GET_FEATURE_INTERRUPT_COALESCING", 0, 0, 0, 0, "nvme_feature_setting_interrupt_coalescing.bin" },
-	{ "NVME_GET_FEATURE_INTERRUPT_VECTOR_CONFIG", 0, 0, 0, 0, "nvme_feature_setting_interrupt_vec_config.bin" },
-	{ "NVME_GET_FEATURE_WRITE_ATOMICITY", 0, 0, 0, 0, "nvme_feature_setting_write_atomicity.bin" },
-	{ "NVME_GET_FEATURE_ASYNC_EVENT_CONFIG", 0, 0, 0, 0, "nvme_feature_setting_async_event_config.bin" },
-	{ "NVME_GET_FEATURE_SW_PROGRESS_MARKER", 0, 0, 0, 0, "nvme_feature_setting_sw_progress_marker.bin" },
-	{ "VU_SMART_EXTENED_LOG", 0x02, 0xE1, 0, 0, "nvmelog_E1.bin" },
-	{ "MICRON_VS_LOG_D2", 0x02, 0xD2, 0, 0, "nvmelog_D2.bin" },
-	{ "MICRON_VS_LOG_E3", 0x02, 0xE3, 0, 0, "nvmelog_E3.bin" },
-	{ "MICRON_VS_LOG_E4", 0x02, 0xE4, 0, 0, "nvmelog_E4.bin" },
-	{ "MICRON_VS_LOG_E8", 0x02, 0xE8, 0, 0, "nvmelog_E8.bin" },
-	{ "MICRON_VS_LOG_E9", 0x02, 0xE9, 0, 0, "nvmelog_E9.bin" },
-	{ "MICRON_VS_LOG_EA", 0x02, 0xEA, 0, 0, "nvmelog_EA.bin" },
-	{ "MICRON_VS_LOG_FA", 0x02, 0xFA, 0, 0, "nvmelog_FA.bin" },
+	{ "NVME_IDENTIFY_CONTROLLER", 0x06, 0, 0, 0, LOG_FILE_ID_CTRL },
+	{ "NVME_IDENTIFY_NAMESPACE_ALL", 0x06, 0, 0, 0, LOG_FILE_ID_NS },
+	{ "NVME_SMART_LOG", 0x02, 0x02, 0, 0, LOG_FILE_SMART },
+	{ "NVME_ERROR_INFO_LOG", 0x02, 0x01, 0, 0, LOG_FILE_ERROR_INFO },
+	{ "NVME_FW_SLOT_INFO_LOG", 0x02, 0x03, 0, 0, LOG_FILE_FW_SLOT },
+	{ "NVME_CHANGED_NAMESPACE_LIST_LOG", 0x02, 0x04, 0, 0, LOG_FILE_CHANGED_NS },
+	{ "NVME_CMD_SUPPORTED_AND_EFFECTS_LOG", 0x02, 0x05, 0, 0, LOG_FILE_CMD_EFFECTS },
+	{ "NVME_DEVICE_SELF_TEST_LOG", 0x02, 0x06, 0, 0, LOG_FILE_SELF_TEST },
+	{ "NVME_HOST_TELEMETRY_LOG", 0x02, 0x07, 0, 0, LOG_FILE_TELEMETRY_HOST },
+	{ "NVME_CTRL_TELEMETRY_LOG", 0x02, 0x08, 0, 0, LOG_FILE_TELEMETRY_CTRL },
+	{ "NVME_PERSISTENT_EVENT_LOG", 0x02, 0x0D, 0, 0, LOG_FILE_PEVENT },
+	{ "NVME_GET_FEATURE_ARBITRATION", 0, 0, 0, 0, LOG_FILE_FEAT_ARBITRATION },
+	{ "NVME_GET_FEATURE_POWER_MGNT", 0, 0, 0, 0, LOG_FILE_FEAT_POWER_MGMT },
+	{ "NVME_GET_FEATURE_LBA_RANGE_TYPE", 0, 0, 0, 0, LOG_FILE_FEAT_LBA_RANGE },
+	{ "NVME_GET_FEATURE_TEMP_THRESHOLD", 0, 0, 0, 0, LOG_FILE_FEAT_TEMP_THRESHOLD },
+	{ "NVME_GET_FEATURE_ERROR_RECOVERY", 0, 0, 0, 0, LOG_FILE_FEAT_ERROR_RECOVERY },
+	{ "NVME_GET_FEATURE_VOLATILE_WRITE_CACHE", 0, 0, 0, 0, LOG_FILE_FEAT_VWC },
+	{ "NVME_GET_FEATURE_NUM_QUEUES", 0, 0, 0, 0, LOG_FILE_FEAT_NUM_QUEUES },
+	{ "NVME_GET_FEATURE_INTERRUPT_COALESCING", 0, 0, 0, 0, LOG_FILE_FEAT_IRQ_COAL },
+	{ "NVME_GET_FEATURE_INTERRUPT_VECTOR_CONFIG", 0, 0, 0, 0, LOG_FILE_FEAT_IRQ_VECTOR },
+	{ "NVME_GET_FEATURE_WRITE_ATOMICITY", 0, 0, 0, 0, LOG_FILE_FEAT_WRITE_ATOMICITY },
+	{ "NVME_GET_FEATURE_ASYNC_EVENT_CONFIG", 0, 0, 0, 0, LOG_FILE_FEAT_ASYNC_EVENT },
+	{ "NVME_GET_FEATURE_SW_PROGRESS_MARKER", 0, 0, 0, 0, LOG_FILE_FEAT_SW_PROGRESS },
+	{ "VU_SMART_EXTENED_LOG", 0x02, 0xE1, 0, 0, LOG_FILE_VS_LOG(E1) },
+	{ "MICRON_VS_LOG_D2", 0x02, 0xD2, 0, 0, LOG_FILE_VS_LOG(D2) },
+	{ "MICRON_VS_LOG_E3", 0x02, 0xE3, 0, 0, LOG_FILE_VS_LOG(E3) },
+	{ "MICRON_VS_LOG_E4", 0x02, 0xE4, 0, 0, LOG_FILE_VS_LOG(E4) },
+	{ "MICRON_VS_LOG_E8", 0x02, 0xE8, 0, 0, LOG_FILE_VS_LOG(E8) },
+	{ "MICRON_VS_LOG_E9", 0x02, 0xE9, 0, 0, LOG_FILE_VS_LOG(E9) },
+	{ "MICRON_VS_LOG_EA", 0x02, 0xEA, 0, 0, LOG_FILE_VS_LOG(EA) },
+	{ "MICRON_VS_LOG_FA", 0x02, 0xFA, 0, 0, LOG_FILE_VS_LOG(FA) },
 };
 
 /*
@@ -2398,8 +2428,8 @@ static void GetTimestampInfo(const char *strOSDirName)
 static void GetCtrlIDDInfo(const char *dir, struct nvme_id_ctrl *ctrlp)
 {
 	WriteData((__u8 *)ctrlp, sizeof(*ctrlp), dir,
-			  "nvme_controller_identify_data.bin", "id-ctrl");
-	LogCmdStatus("nvme_controller_identify_data.bin", 0);
+			  LOG_FILE_ID_CTRL, "id-ctrl");
+	LogCmdStatus(LOG_FILE_ID_CTRL, 0);
 }
 
 static void GetSmartlogData(struct libnvme_transport_handle *hdl, const char *dir)
@@ -2410,8 +2440,8 @@ static void GetSmartlogData(struct libnvme_transport_handle *hdl, const char *di
 	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (!err)
 		WriteData((__u8 *)&smart_log, sizeof(smart_log), dir,
-			  "smart_data.bin", "smart log");
-	LogCmdStatus("smart_data.bin", err);
+			  LOG_FILE_SMART, "smart log");
+	LogCmdStatus(LOG_FILE_SMART, err);
 }
 
 static void GetErrorlogData(struct libnvme_transport_handle *hdl, int entries, const char *dir)
@@ -2434,8 +2464,8 @@ static void GetErrorlogData(struct libnvme_transport_handle *hdl, int entries, c
 	err = libnvme_get_log(hdl, &cmd, false, len);
 	if (!err)
 		WriteData((__u8 *)error_log, logSize, dir,
-			  "error_information_log.bin", "error log");
-	LogCmdStatus("error_information_log.bin", err);
+			  LOG_FILE_ERROR_INFO, "error log");
+	LogCmdStatus(LOG_FILE_ERROR_INFO, err);
 }
 
 static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir)
@@ -2458,8 +2488,8 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	err = libnvme_get_log(hdl, &cmd, false, len);
 	if (!err)
 		WriteData((__u8 *)&self_test_log, len, dir,
-			  "drive_self_test.bin", "self test log");
-	LogCmdStatus("drive_self_test.bin", err);
+			  LOG_FILE_SELF_TEST, "self test log");
+	LogCmdStatus(LOG_FILE_SELF_TEST, err);
 
 	/* get fw slot info log */
 	len = sizeof(fw_log);
@@ -2468,8 +2498,8 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	err = libnvme_get_log(hdl, &cmd, false, len);
 	if (!err)
 		WriteData((__u8 *)&fw_log, len, dir,
-			  "firmware_slot_info_log.bin", "firmware log");
-	LogCmdStatus("firmware_slot_info_log.bin", err);
+			  LOG_FILE_FW_SLOT, "firmware log");
+	LogCmdStatus(LOG_FILE_FW_SLOT, err);
 
 	/* get effects log */
 	len = sizeof(effects);
@@ -2477,8 +2507,8 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	err = libnvme_get_log(hdl, &cmd, false, len);
 	if (!err)
 		WriteData((__u8 *)&effects, len, dir,
-			  "command_effects_log.bin", "effects log");
-	LogCmdStatus("command_effects_log.bin", err);
+			  LOG_FILE_CMD_EFFECTS, "effects log");
+	LogCmdStatus(LOG_FILE_CMD_EFFECTS, err);
 
 	/* get persistent event log */
 	(void)nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
@@ -2502,8 +2532,8 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 						pevent_log_info, log_len);
 	if (!err)
 		WriteData((__u8 *)pevent_log_info, log_len, dir,
-			  "persistent_event_log.bin", "persistent event log");
-	LogCmdStatus("persistent_event_log.bin", err);
+			  LOG_FILE_PEVENT, "persistent event log");
+	LogCmdStatus(LOG_FILE_PEVENT, err);
 }
 
 static int GetNSIDDInfo(struct libnvme_transport_handle *hdl, const char *dir, int nsid)
@@ -2516,7 +2546,7 @@ static int GetNSIDDInfo(struct libnvme_transport_handle *hdl, const char *dir, i
 	nvme_init_identify_ns(&cmd, nsid, &ns);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
-		snprintf(file, sizeof(file), "identify_namespace_%d_data.bin", nsid);
+		snprintf(file, sizeof(file), LOG_FILE_ID_NS, nsid);
 		WriteData((__u8 *)&ns, sizeof(ns), dir, file, "id-ns");
 	}
 
@@ -2628,8 +2658,8 @@ static int GetTelemetryData(struct libnvme_transport_handle *hdl,
 		__u8 log;
 		char *file;
 	} tmap[] = {
-		{NVME_LOG_LID_TELEMETRY_HOST, "nvme_host_telemetry_log.bin"},
-		{NVME_LOG_LID_TELEMETRY_CTRL, "nvme_controller_telemetry_log.bin"},
+		{NVME_LOG_LID_TELEMETRY_HOST, LOG_FILE_TELEMETRY_HOST},
+		{NVME_LOG_LID_TELEMETRY_CTRL, LOG_FILE_TELEMETRY_CTRL},
 	};
 
 	for (i = 0; i < (int)(ARRAY_SIZE(tmap)); i++) {
@@ -2658,18 +2688,18 @@ static int GetFeatureSettings(struct libnvme_transport_handle *hdl, const char *
 		int id;
 		char *file;
 	} fmap[] = {
-		{0x01, "nvme_feature_setting_arbitration.bin"},
-		{0x02, "nvme_feature_setting_pm.bin"},
-		{0x03, "nvme_feature_setting_lba_range_namespace_1.bin"},
-		{0x04, "nvme_feature_setting_temp_threshold.bin"},
-		{0x05, "nvme_feature_setting_error_recovery.bin"},
-		{0x06, "nvme_feature_setting_volatile_write_cache.bin"},
-		{0x07, "nvme_feature_setting_num_queues.bin"},
-		{0x08, "nvme_feature_setting_interrupt_coalescing.bin"},
-		{0x09, "nvme_feature_setting_interrupt_vec_config.bin"},
-		{0x0A, "nvme_feature_setting_write_atomicity.bin"},
-		{0x0B, "nvme_feature_setting_async_event_config.bin"},
-		{0x80, "nvme_feature_setting_sw_progress_marker.bin"},
+		{0x01, LOG_FILE_FEAT_ARBITRATION},
+		{0x02, LOG_FILE_FEAT_POWER_MGMT},
+		{0x03, LOG_FILE_FEAT_LBA_RANGE},
+		{0x04, LOG_FILE_FEAT_TEMP_THRESHOLD},
+		{0x05, LOG_FILE_FEAT_ERROR_RECOVERY},
+		{0x06, LOG_FILE_FEAT_VWC},
+		{0x07, LOG_FILE_FEAT_NUM_QUEUES},
+		{0x08, LOG_FILE_FEAT_IRQ_COAL},
+		{0x09, LOG_FILE_FEAT_IRQ_VECTOR},
+		{0x0A, LOG_FILE_FEAT_WRITE_ATOMICITY},
+		{0x0B, LOG_FILE_FEAT_ASYNC_EVENT},
+		{0x80, LOG_FILE_FEAT_SW_PROGRESS},
 	};
 
 	for (i = 0; i < (int)(ARRAY_SIZE(fmap)); i++) {
@@ -3772,50 +3802,51 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		int nLogSize;
 		int nMaxSize;
 	} aVendorLogs[32] = {
-		{ 0x03, "firmware_slot_info_log.bin", 512, 0 },
-		{ 0xC1, "nvmelog_C1.bin", 0, 0 },
-		{ 0xC2, "nvmelog_C2.bin", 0, 0 },
-		{ 0xC4, "nvmelog_C4.bin", 0, 0 },
-		{ 0xC5, "nvmelog_C5.bin", C5_log_size, 0 },
-		{ 0xD0, "nvmelog_D0.bin", D0_log_size, 0 },
-		{ 0xE6, "nvmelog_E6.bin", 0, 0 },
-		{ 0xE7, "nvmelog_E7.bin", 0, 0 }
+		{ 0x03, LOG_FILE_FW_SLOT, 512, 0 },
+		{ 0xC1, LOG_FILE_VS_LOG(C1), 0, 0 },
+		{ 0xC2, LOG_FILE_VS_LOG(C2), 0, 0 },
+		{ 0xC4, LOG_FILE_VS_LOG(C4), 0, 0 },
+		{ 0xC5, LOG_FILE_VS_LOG(C5), C5_log_size, 0 },
+		{ 0xD0, LOG_FILE_VS_LOG(D0), D0_log_size, 0 },
+		{ 0xE6, LOG_FILE_VS_LOG(E6), 0, 0 },
+		{ 0xE7, LOG_FILE_VS_LOG(E7), 0, 0 }
 	},
 	aM51XXLogs[] = {
-		{ 0xFB, "nvmelog_FB.bin", 4096, 0 },  /* this should be collected first for M51AX */
-		{ 0xD0, "nvmelog_D0.bin", 512, 0 },
-		{ 0x03, "firmware_slot_info_log.bin", 512, 0},
-		{ 0xF7, "nvmelog_F7.bin", 4096, 512 * 1024 },
-		{ 0xF8, "nvmelog_F8.bin", 4096, 512 * 1024 },
-		{ 0xF9, "nvmelog_F9.bin", 4096, 200 * 1024 * 1024 },
-		{ 0xFC, "nvmelog_FC.bin", 4096, 200 * 1024 * 1024 },
-		{ 0xFD, "nvmelog_FD.bin", 4096, 80 * 1024 * 1024 }
+		/* this should be collected first for M51AX */
+		{ 0xFB, LOG_FILE_VS_LOG(FB), 4096, 0 },
+		{ 0xD0, LOG_FILE_VS_LOG(D0), 512, 0 },
+		{ 0x03, LOG_FILE_FW_SLOT, 512, 0},
+		{ 0xF7, LOG_FILE_VS_LOG(F7), 4096, 512 * 1024 },
+		{ 0xF8, LOG_FILE_VS_LOG(F8), 4096, 512 * 1024 },
+		{ 0xF9, LOG_FILE_VS_LOG(F9), 4096, 200 * 1024 * 1024 },
+		{ 0xFC, LOG_FILE_VS_LOG(FC), 4096, 200 * 1024 * 1024 },
+		{ 0xFD, LOG_FILE_VS_LOG(FD), 4096, 80 * 1024 * 1024 }
 	},
 	aM51AXLogs[] = {
-		{ 0xCA, "nvmelog_CA.bin", 512, 0 },
-		{ 0xFA, "nvmelog_FA.bin", 4096, 15232 },
-		{ 0xF6, "nvmelog_F6.bin", 4096, 512 * 1024 },
-		{ 0xFE, "nvmelog_FE.bin", 4096, 512 * 1024 },
-		{ 0xFF, "nvmelog_FF.bin", 4096, 162 * 1024 },
-		{ 0x04, "changed_namespace_log.bin", 4096, 0 },
-		{ 0x05, "command_effects_log.bin", 4096, 0 },
-		{ 0x06, "drive_self_test.bin", 4096, 0 }
+		{ 0xCA, LOG_FILE_VS_LOG(CA), 512, 0 },
+		{ 0xFA, LOG_FILE_VS_LOG(FA), 4096, 15232 },
+		{ 0xF6, LOG_FILE_VS_LOG(F6), 4096, 512 * 1024 },
+		{ 0xFE, LOG_FILE_VS_LOG(FE), 4096, 512 * 1024 },
+		{ 0xFF, LOG_FILE_VS_LOG(FF), 4096, 162 * 1024 },
+		{ 0x04, LOG_FILE_CHANGED_NS, 4096, 0 },
+		{ 0x05, LOG_FILE_CMD_EFFECTS, 4096, 0 },
+		{ 0x06, LOG_FILE_SELF_TEST, 4096, 0 }
 	},
 	aM51BXLogs[] = {
-		{ 0xFA, "nvmelog_FA.bin", 4096, 16376 },
-		{ 0xFE, "nvmelog_FE.bin", 4096, 256 * 1024 },
-		{ 0xFF, "nvmelog_FF.bin", 4096, 64 * 1024 },
-		{ 0xCA, "nvmelog_CA.bin", 512, 1024 }
+		{ 0xFA, LOG_FILE_VS_LOG(FA), 4096, 16376 },
+		{ 0xFE, LOG_FILE_VS_LOG(FE), 4096, 256 * 1024 },
+		{ 0xFF, LOG_FILE_VS_LOG(FF), 4096, 64 * 1024 },
+		{ 0xCA, LOG_FILE_VS_LOG(CA), 512, 1024 }
 	},
 	aM51CXLogs[] = {
-		{ 0xE1, "nvmelog_E1.bin", 0, 0 },
-		{ 0xE2, "nvmelog_E2.bin", 0, 0 },
-		{ 0xE3, "nvmelog_E3.bin", 0, 0 },
-		{ 0xE4, "nvmelog_E4.bin", 0, 0 },
-		{ 0xE5, "nvmelog_E5.bin", 0, 0 },
-		{ 0xE8, "nvmelog_E8.bin", 0, 0 },
-		{ 0xE9, "nvmelog_E9.bin", 0, 0 },
-		{ 0xEA, "nvmelog_EA.bin", 0, 0 }
+		{ 0xE1, LOG_FILE_VS_LOG(E1), 0, 0 },
+		{ 0xE2, LOG_FILE_VS_LOG(E2), 0, 0 },
+		{ 0xE3, LOG_FILE_VS_LOG(E3), 0, 0 },
+		{ 0xE4, LOG_FILE_VS_LOG(E4), 0, 0 },
+		{ 0xE5, LOG_FILE_VS_LOG(E5), 0, 0 },
+		{ 0xE8, LOG_FILE_VS_LOG(E8), 0, 0 },
+		{ 0xE9, LOG_FILE_VS_LOG(E9), 0, 0 },
+		{ 0xEA, LOG_FILE_VS_LOG(EA), 0, 0 }
 	};
 
 	enum eDriveModel eModel = UNKNOWN_MODEL;
@@ -3955,7 +3986,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		if (!GetNSIDDInfo(hdl, strCtrlDirName, i))
 			ns_err = 0;
 	}
-	LogCmdStatus("identify_namespace_%d_data.bin", ns_err);
+	LogCmdStatus(LOG_FILE_ID_NS, ns_err);
 
 	GetSmartlogData(hdl, strCtrlDirName);
 	GetErrorlogData(hdl, ctrl.elpe, strCtrlDirName);
