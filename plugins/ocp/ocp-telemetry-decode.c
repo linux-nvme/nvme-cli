@@ -758,7 +758,7 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 			memcpy(description, pocp_ts_header->fifo_ascii_string[event_fifo_num-1],
 			       16);
 		else
-			description = "";
+			description[0] = '\0';
 
 		return 0;
 	}
