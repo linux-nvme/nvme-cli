@@ -33,6 +33,14 @@
   Specification's requirement for that token. DHCP root-path and NBFT
   data are not consistent about its case.
 
+### Build
+
+* `-Ddocs=man` and `-Ddocs=all` install the man pages shipped in
+  `Documentation/` unless `-Ddocs-build=true` is also given. The
+  section 5 and 8 pages were never written there, so those builds
+  failed to configure. They are regenerated from now on, and a
+  release aborts if any page is missing.
+
 ## Changes in 3.0 (2026-09-07)
 
 ### Feature removals and incompatible changes

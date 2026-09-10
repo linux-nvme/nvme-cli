@@ -96,7 +96,10 @@ if [ "$force" = false ] ; then
 fi
 
 if [ "$build_doc" = true ]; then
-    ./scripts/update-docs.sh
+    if ! ./scripts/update-docs.sh; then
+        echo "release.sh: failed to regenerate the documentation" >&2
+        exit 1
+    fi
     git add Documentation libnvme/doc
     git commit -s -m "doc: Regenerate all docs for $VERSION"
 fi
