@@ -150,12 +150,13 @@ class PIFStsCLITest(unittest.TestCase):
     def test_16b_guard_ref_tag_over_boundary_fails(self):
         res = self._verify(sts=8, pif=PIF_16B_GUARD,
                            ref_tag=0x1000000, storage_tag=0, expect_fail=True)
-        self.assertIn("Reference tag larger than allowed by PIF", res.stdout + res.stderr)
+        self.assertIn("Reference tag larger than the 24-bit width allowed by 16b Guard PIF (STS=8)",
+                     res.stdout + res.stderr)
 
     def test_16b_guard_storage_tag_over_boundary_fails(self):
         res = self._verify(sts=8, pif=PIF_16B_GUARD,
                            ref_tag=0, storage_tag=0x100, expect_fail=True)
-        self.assertIn("Storage tag larger than storage tag size", res.stdout + res.stderr)
+        self.assertIn("Storage tag larger than the STS-defined 8-bit width", res.stdout + res.stderr)
 
     def test_32b_guard_ref_tag_at_boundary_succeeds(self):
         """32B Guard: ref tag is (80 - STS) bits, checked only for STS>16.
@@ -165,7 +166,8 @@ class PIFStsCLITest(unittest.TestCase):
     def test_32b_guard_ref_tag_over_boundary_fails(self):
         res = self._verify(sts=64, pif=PIF_32B_GUARD,
                            ref_tag=0x10000, storage_tag=0, expect_fail=True)
-        self.assertIn("Reference tag larger than allowed by PIF", res.stdout + res.stderr)
+        self.assertIn("Reference tag larger than the 16-bit width allowed by 32b Guard PIF (STS=64)",
+                     res.stdout + res.stderr)
 
     def test_64b_guard_ref_tag_at_boundary_succeeds(self):
         """64B Guard: ref tag is (48 - STS) bits. STS=40 -> 8 bits.
@@ -175,7 +177,8 @@ class PIFStsCLITest(unittest.TestCase):
     def test_64b_guard_ref_tag_over_boundary_fails(self):
         res = self._verify(sts=40, pif=PIF_64B_GUARD,
                            ref_tag=0x100, storage_tag=0, expect_fail=True)
-        self.assertIn("Reference tag larger than allowed by PIF", res.stdout + res.stderr)
+        self.assertIn("Reference tag larger than the 8-bit width allowed by 64b Guard PIF (STS=40)",
+                     res.stdout + res.stderr)
 
     def test_elbaf_uses_the_in_use_lba_format_index(self):
         """get_pif_sts() must index ELBAF by the FLBAS-selected format, not

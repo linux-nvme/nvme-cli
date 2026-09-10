@@ -319,7 +319,8 @@ class WriteZeroesInvalidTagsTest(PITagsMockTestBase):
         self.assertNotEqual(result.returncode, 0,
                             f'write-zeroes with an out-of-range ref tag should have failed:\n'
                             f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
-        self.assertIn("Reference tag larger than allowed by PIF", result.stdout + result.stderr)
+        self.assertIn("Reference tag larger than the 24-bit width allowed by 16b Guard PIF (STS=8)",
+                     result.stdout + result.stderr)
 
     def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
         self.server.nvm_id_ns_sc_status = NVME_SC_INVALID_FIELD
@@ -355,7 +356,8 @@ class CopyInvalidTagsTest(PITagsMockTestBase):
         self.assertNotEqual(result.returncode, 0,
                             f'copy with an out-of-range ref tag should have failed:\n'
                             f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
-        self.assertIn("Reference tag larger than allowed by PIF", result.stdout + result.stderr)
+        self.assertIn("Reference tag larger than the 24-bit width allowed by 16b Guard PIF (STS=8)",
+                     result.stdout + result.stderr)
 
     def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
         self.server.nvm_id_ns_sc_status = NVME_SC_INVALID_FIELD
