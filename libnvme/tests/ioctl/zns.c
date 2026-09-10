@@ -57,6 +57,49 @@ static void test_zns_append(void)
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
+/*
+ * nvme_init_var_size_tags()'s 32B Guard case packs an 80-bit combined
+ * reference/storage tag field across cdw14 (bits 0-31), cdw3 (bits 32-63)
+ * and cdw2 (bits 64-79), with the storage tag occupying the top `sts` bits
+ * of that field, at [80-sts, 80). For sts <= 16 the storage tag sits
+ * entirely within cdw2 and contributes nothing to cdw14 or cdw3 -- this
+ * used to compute cdw14's contribution via a shift of 64 or more
+ * (undefined behaviour) instead of just being 0.
+ */
+static void test_zns_var_size_tags_32b_guard_low_sts(void)
+{
+	__u64 reftag = 0x123456;
+	__u64 storage_tag = 0xab;
+	struct libnvme_passthru_cmd cmd = { 0 };
+
+	/* sts = 8: entirely below cdw2's own 16-bit window. */
+	nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_32B_GUARD, 8, reftag, storage_tag);
+	check(cmd.cdw14 == (__u32)reftag, "cdw14 %#x, expected %#x", cmd.cdw14, (__u32)reftag);
+	check(cmd.cdw3 == 0, "cdw3 %#x, expected 0", cmd.cdw3);
+	check(cmd.cdw2 == (storage_tag << 8), "cdw2 %#x, expected %#llx",
+	      cmd.cdw2, (unsigned long long)(storage_tag << 8));
+
+	/* sts = 16: the exact boundary -- 80 - sts == 64. */
+	cmd = (struct libnvme_passthru_cmd){ 0 };
+	nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_32B_GUARD, 16, reftag, storage_tag);
+	check(cmd.cdw14 == (__u32)reftag, "cdw14 %#x, expected %#x", cmd.cdw14, (__u32)reftag);
+	check(cmd.cdw3 == 0, "cdw3 %#x, expected 0", cmd.cdw3);
+	check(cmd.cdw2 == storage_tag, "cdw2 %#x, expected %#llx",
+	      cmd.cdw2, (unsigned long long)storage_tag);
+
+	/*
+	 * sts = 80: the widest STS this PIF allows -- storage_tag occupies
+	 * the entire 80-bit field, but as a __u64 it has no bits at or
+	 * beyond position 64, so cdw2's "sts - 16 == 64" shift must not be
+	 * taken; cdw2 is 0 instead.
+	 */
+	cmd = (struct libnvme_passthru_cmd){ 0 };
+	nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_32B_GUARD, 80, reftag, storage_tag);
+	check(cmd.cdw14 == (__u32)reftag, "cdw14 %#x, expected %#x", cmd.cdw14, (__u32)reftag);
+	check(cmd.cdw3 == 0, "cdw3 %#x, expected 0", cmd.cdw3);
+	check(cmd.cdw2 == 0, "cdw2 %#x, expected 0", cmd.cdw2);
+}
+
 static void test_zns_report_zones(void)
 {
 	enum nvme_zns_report_options opts = NVME_ZNS_ZRAS_REPORT_CLOSED;
@@ -168,6 +211,7 @@ int main(void)
 	      "opening test link failed");
 
 	RUN_TEST(zns_append);
+	RUN_TEST(zns_var_size_tags_32b_guard_low_sts);
 	RUN_TEST(zns_report_zones);
 	RUN_TEST(zns_mgmt_send);
 	RUN_TEST(zns_mgmt_recv);

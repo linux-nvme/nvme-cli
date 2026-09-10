@@ -368,7 +368,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 				// Restore original config , but don't reenable trigger
 				we = log->config;
 				we.triggerEnable = false;
-				err = wltracker_config(wlt, &we);
+				wltracker_config(wlt, &we);
 				if (nvme_args.verbose > 1)
 					printf("Restored config value: 0x%08x\n",
 					       we.dword);

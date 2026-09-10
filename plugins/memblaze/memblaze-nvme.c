@@ -879,7 +879,8 @@ static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, ch
 		snprintf(subString1, sizeof(subString1), "%s", "+INF");
 	len = snprintf(string, sizeof(string), "%-11d %-11s %-11s %-11u\n",
 		       index, subString0, subString1, pHistogram[index]);
-	fwrite(string, 1, len, fd);
+	if (fd)
+		fwrite(string, 1, len, fd);
 	if (print)
 		printf("%s", string);
 }

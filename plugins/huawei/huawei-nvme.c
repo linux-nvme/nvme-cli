@@ -88,6 +88,8 @@ static int huawei_get_nvme_info(struct libnvme_transport_handle *hdl,
 
 	item->huawei_device = true;
 	err = libnvme_get_nsid(hdl, &item->nsid);
+	if (err)
+		return err;
 	nvme_init_identify_ns(&cmd, item->nsid, &item->ns);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
@@ -149,6 +151,8 @@ static void huawei_json_print_list_items(struct huawei_list_item *list_items,
 	devices = json_create_array();
 	for (i = 0; i < len; i++) {
 		device_attrs = json_create_object();
+		if (!device_attrs)
+			continue;
 
 		json_object_add_value_string(device_attrs,
 						 "DevicePath",

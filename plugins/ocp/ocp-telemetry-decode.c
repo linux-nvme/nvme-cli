@@ -758,7 +758,7 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 			memcpy(description, pocp_ts_header->fifo_ascii_string[event_fifo_num-1],
 			       16);
 		else
-			description = "";
+			description[0] = '\0';
 
 		return 0;
 	}
@@ -1690,12 +1690,16 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			fprintf(fp, STR_LINE);
 			fprintf(fp, "%s\n", STR_REASON_IDENTIFIER);
 			fprintf(fp, STR_LINE);
-			__u8 *preason_identifier_offset = ptelemetry_buffer +
-				offsetof(struct nvme_ocp_telemetry_host_initiated_header,
-				reason_id);
+			if (ptelemetry_buffer == NULL) {
+				printf("skip generic_structure_parser\n");
+			} else {
+				__u8 *preason_identifier_offset = ptelemetry_buffer +
+					offsetof(struct nvme_ocp_telemetry_host_initiated_header,
+					reason_id);
 
-			generic_structure_parser(preason_identifier_offset, reason_identifier,
-				ARRAY_SIZE(reason_identifier), NULL, 0, fp);
+				generic_structure_parser(preason_identifier_offset, reason_identifier,
+					ARRAY_SIZE(reason_identifier), NULL, 0, fp);
+			}
 
 			fprintf(fp, STR_LINE);
 			fprintf(fp, "%s\n", STR_TELEMETRY_HOST_DATA_BLOCK_1);
@@ -1807,10 +1811,14 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 		printf(STR_LINE);
 		printf("%s\n", STR_REASON_IDENTIFIER);
 		printf(STR_LINE);
-		__u8 *preason_identifier_offset = ptelemetry_buffer +
-			offsetof(struct nvme_ocp_telemetry_host_initiated_header, reason_id);
-		generic_structure_parser(preason_identifier_offset, reason_identifier,
-			ARRAY_SIZE(reason_identifier), NULL, 0, NULL);
+		if (ptelemetry_buffer == NULL) {
+			printf("skip generic_structure_parser\n");
+		} else {
+			__u8 *preason_identifier_offset = ptelemetry_buffer +
+				offsetof(struct nvme_ocp_telemetry_host_initiated_header, reason_id);
+			generic_structure_parser(preason_identifier_offset, reason_identifier,
+				ARRAY_SIZE(reason_identifier), NULL, 0, NULL);
+		}
 
 		printf(STR_LINE);
 		printf("%s\n", STR_TELEMETRY_HOST_DATA_BLOCK_1);

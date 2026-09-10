@@ -19,6 +19,7 @@
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/io-util.h>
 
 #include "global-ctx.h"
 #include "nvme-cmds.h"
@@ -44,8 +45,6 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	size_t full_size = 0;
 	int err = 0, output;
 	int ctrl_init = 0;
-	__u8 *data_ptr = NULL;
-	int data_written = 0, data_remaining = 0;
 	struct nvme_id_ctrl ctrl;
 	struct libnvme_passthru_cmd cmd;
 	__u64 capabilities = 0;
@@ -131,42 +130,26 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	}
 
 	/*
-	 *Continuously pull data until the offset hits the end of the last
-	 *block.
+	 * Continuously pull data until the offset hits the end of the last
+	 * block.
 	 */
-	data_written = 0;
-	data_remaining = full_size;
-	data_ptr = (__u8 *)log;
-
-	while (data_remaining) {
-		data_written = write(output, data_ptr, data_remaining);
-
-		if (data_written < 0) {
-			data_remaining = data_written;
-			break;
-		} else if (data_written <= data_remaining) {
-			data_remaining -= data_written;
-			data_ptr += data_written;
-		} else {
-			/* Unexpected overwrite */
-			nvme_show_error("Failure: Unexpected telemetry log overwrite" \
-				"- data_remaining = 0x%x, data_written = 0x%x\n",
-				data_remaining, data_written);
-			break;
-		}
-	}
-
-	if (shr_fsync(output) < 0) {
+	err = shr_write_all(output, log, full_size);
+	if (err)
+		nvme_show_error("ERROR: %s: write: %s", __func__, libnvme_strerror(-err));
+	else if (shr_fsync(output) < 0) {
 		nvme_show_error("ERROR: %s: fsync: %s", __func__, libnvme_strerror(errno));
 		err = -1;
 	}
 
 	if (host_behavior_changed) {
+		int clr_err;
+
 		host_behavior_changed = false;
-		err = libnvme_clear_etdas(hdl, &host_behavior_changed);
-		if (err) {
+		clr_err = libnvme_clear_etdas(hdl, &host_behavior_changed);
+		if (clr_err) {
 			nvme_show_error("%s: Failed to clear ETDAS bit", __func__);
-			return err;
+			if (!err)
+				err = clr_err;
 		}
 	}
 
@@ -672,7 +655,7 @@ static int sndk_drive_resize(int argc, char **argv,
 		return ret;
 	sndk_check_device(ctx, hdl);
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
-	ret = sndk_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
+	sndk_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
 
 	if ((capabilities & SNDK_DRIVE_CAP_RESIZE_SN861) == SNDK_DRIVE_CAP_RESIZE_SN861) {
 		ret = sndk_do_sn861_drive_resize(hdl, cfg.size, &result);

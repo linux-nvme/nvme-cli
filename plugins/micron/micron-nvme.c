@@ -305,8 +305,8 @@ static int RemoveDirRecursive(const char *path)
 
 		if (snprintf(child, sizeof(child), "%s/%s", path, entry->d_name) >=
 		    (int)sizeof(child)) {
-			errno = ENAMETOOLONG;
 			closedir(dir);
+			errno = ENAMETOOLONG;
 			return -1;
 		}
 
@@ -319,14 +319,20 @@ static int RemoveDirRecursive(const char *path)
 		 * to attempt recursive removal.
 		 */
 		if (errno != EISDIR && errno != EPERM && errno != EACCES) {
+			int saved_errno = errno;
+
 			closedir(dir);
+			errno = saved_errno;
 			return -1;
 		}
 
 		if (RemoveDirRecursive(child) < 0) {
-			if (errno == ENOENT)
+			int saved_errno = errno;
+
+			if (saved_errno == ENOENT)
 				continue;
 			closedir(dir);
+			errno = saved_errno;
 			return -1;
 		}
 	}
@@ -2296,7 +2302,6 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	}
 
 	*logSize = (dalb + 1) * bs;
-	err = 0;
 	log = libnvme_realloc(log, (size_t)(*logSize));
 	if (!log) {
 		nvme_show_error("Failed to allocate memory for %s telemetry data (%u bytes)",

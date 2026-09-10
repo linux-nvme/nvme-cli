@@ -47,7 +47,6 @@ void shr_print_word_wrapped(const char *s, int indent, int start, FILE *stream)
 			putc('\n', stream);
 			for (col = 0; col < indent; col++)
 				putc(' ', stream);
-			at_line_start = true;
 		}
 
 		fwrite(s, 1, word_len, stream);

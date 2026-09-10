@@ -267,72 +267,80 @@ static void hook_discovery_log(struct libnvmf_context *fctx,
  * time, no threads. nvme-cli is a one-shot tool, so multiple discovery.conf
  * lines simply resolve one after another.
  */
-static int nvmf_resolve_addr(const char *transport, const char **addr)
+/*
+ * Resolve @addr to a canonical (numeric) address when @transport is tcp or
+ * rdma and @addr is a hostname; otherwise just copy it through unchanged.
+ *
+ * On success (0), *resolved always holds a fresh, caller-owned copy of the
+ * address to use from then on -- NULL only if @addr itself was NULL. The
+ * caller never needs to compare it against @addr to work out whether
+ * resolution actually happened: *resolved is always safe to free (e.g.
+ * __cleanup_free) once this returns 0.
+ */
+static int nvmf_resolve_addr(const char *transport, const char *addr, char **resolved)
 {
-#ifdef NVME_HAVE_NETDB
-	struct addrinfo hints = { .ai_family = AF_UNSPEC };
-	struct addrinfo *host_info = NULL;
-	char addrstr[NVMF_TRADDR_SIZE];
-	const char *p = NULL;
-	char *resolved;
-	int ret;
-#endif
+	*resolved = NULL;
 
-	if (!*addr || !transport)
+	if (!addr)
 		return 0;
-	if (strcmp(transport, "tcp") && strcmp(transport, "rdma"))
-		return 0;
-	if (!strcmp(*addr, "none"))
-		return 0;
-	if (libnvmf_traddr_is_numeric(*addr))
-		return 0;
+
+	if (!transport || (strcmp(transport, "tcp") && strcmp(transport, "rdma")) ||
+	    !strcmp(addr, "none") || libnvmf_traddr_is_numeric(addr))
+		goto copy_through;
 
 #ifdef NVME_HAVE_NETDB
-	ret = getaddrinfo(*addr, NULL, &hints, &host_info);
-	if (ret) {
-		nvme_show_error("failed to resolve host '%s': %s",
-			*addr, gai_strerror(ret));
-		return -EINVAL;
-	}
+	{
+		struct addrinfo hints = { .ai_family = AF_UNSPEC };
+		struct addrinfo *host_info = NULL;
+		char addrstr[NVMF_TRADDR_SIZE];
+		const char *p = NULL;
+		int ret;
 
-	switch (host_info->ai_family) {
-	case AF_INET:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	case AF_INET6:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in6 *)
-				host_info->ai_addr)->sin6_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	default:
-		break;
-	}
+		ret = getaddrinfo(addr, NULL, &hints, &host_info);
+		if (ret) {
+			nvme_show_error("failed to resolve host '%s': %s",
+				addr, gai_strerror(ret));
+			return -EINVAL;
+		}
 
-	if (!p) {
-		nvme_show_error(
-			"failed to resolve host '%s': unrecognized address family",
-			*addr);
+		switch (host_info->ai_family) {
+		case AF_INET:
+			p = inet_ntop(host_info->ai_family,
+				&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
+				addrstr, NVMF_TRADDR_SIZE);
+			break;
+		case AF_INET6:
+			p = inet_ntop(host_info->ai_family,
+				&(((struct sockaddr_in6 *)
+					host_info->ai_addr)->sin6_addr),
+				addrstr, NVMF_TRADDR_SIZE);
+			break;
+		default:
+			break;
+		}
+
+		if (!p) {
+			nvme_show_error(
+				"failed to resolve host '%s': unrecognized address family",
+				addr);
+			freeaddrinfo(host_info);
+			return -EINVAL;
+		}
+
 		freeaddrinfo(host_info);
-		return -EINVAL;
+
+		*resolved = strdup(addrstr);
+		return *resolved ? 0 : -ENOMEM;
 	}
-
-	freeaddrinfo(host_info);
-
-	resolved = strdup(addrstr);
-	if (!resolved)
-		return -ENOMEM;
-
-	*addr = resolved;
-
-	return 0;
 #else /* NVME_HAVE_NETDB */
 	nvme_show_error(
 		"hostname resolution is not available in this build; use a numeric address");
 	return -ENOTSUP;
 #endif /* NVME_HAVE_NETDB */
+
+copy_through:
+	*resolved = strdup(addr);
+	return *resolved ? 0 : -ENOMEM;
 }
 
 static int set_fabrics_options(struct libnvmf_context *fctx,
@@ -390,14 +398,14 @@ static int build_conn_tid(const struct libnvmf_config_conn *conn,
 		const char *default_hostnqn, const char *default_hostid,
 		struct libnvmf_tid **tid)
 {
-	const char *transport, *traddr, *hostnqn, *hostid;
+	const char *transport, *hostnqn, *hostid;
+	__cleanup_free char *traddr = NULL;
 	int err;
 
 	transport = libnvmf_config_conn_get_transport(conn);
-	traddr = libnvmf_config_conn_get_traddr(conn);
 
 	/* Only traddr (remote target) may be a hostname (not host_traddr) */
-	err = nvmf_resolve_addr(transport, &traddr);
+	err = nvmf_resolve_addr(transport, libnvmf_config_conn_get_traddr(conn), &traddr);
 	if (err)
 		return err;
 
@@ -789,6 +797,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
+	__cleanup_free char *resolved_traddr = NULL;
 	int ret;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
@@ -873,9 +882,10 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 
 	/* Only traddr may be a hostname; host_traddr never is. */
-	ret = nvmf_resolve_addr(fa.transport, &fa.traddr);
+	ret = nvmf_resolve_addr(fa.transport, fa.traddr, &resolved_traddr);
 	if (ret)
 		return ret;
+	fa.traddr = resolved_traddr;
 
 	struct hook_fabrics_data dld = {
 		.flags = flags,
@@ -994,6 +1004,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_nvme_ctrl struct libnvme_ctrl *c = NULL;
+	__cleanup_free char *resolved_traddr = NULL;
 	int ret;
 	nvme_print_flags_t flags;
 	struct nvmf_args fa = { 0 };
@@ -1048,9 +1059,10 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	}
 
 	/* Only traddr may be a hostname; host_traddr never is. */
-	ret = nvmf_resolve_addr(fa.transport, &fa.traddr);
+	ret = nvmf_resolve_addr(fa.transport, fa.traddr, &resolved_traddr);
 	if (ret)
 		return ret;
+	fa.traddr = resolved_traddr;
 
 do_connect:
 	ret = nvme_create_global_ctx_hostnqn(&ctx,
@@ -1356,6 +1368,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	const char *exclude_help = "write exclusion entry before disconnecting";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_free char *resolved_traddr = NULL;
 	struct nvmf_args fa = { 0 };
 	bool match_args;
 	int err;
@@ -1389,9 +1402,10 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	if (err)
 		return err;
 
-	err = nvmf_resolve_addr(fa.transport, &fa.traddr);
+	err = nvmf_resolve_addr(fa.transport, fa.traddr, &resolved_traddr);
 	if (err)
 		return err;
+	fa.traddr = resolved_traddr;
 
 	err = nvme_create_global_ctx_hostnqn(&ctx,
 		fa.hostnqn, fa.hostid, NULL, NULL);

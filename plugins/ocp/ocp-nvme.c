@@ -914,9 +914,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 	if (da1->da1_stat_size != 0) {
 		diff = 0;
 		da1_sz = le64_to_cpu(da1->da1_stat_size) * 4;
-		m_512_sz = le64_to_cpu(da1->da1_stat_size) * 4;
 		da1_off = le64_to_cpu(da1->da1_stat_start) * 4;
-		m_512_off = le64_to_cpu(da1->da1_stat_start) * 4;
 		temp_sz = le64_to_cpu(da1->da1_stat_size) * 4;
 		temp_ofst = le64_to_cpu(da1->da1_stat_start) * 4;
 		flag = 0;
@@ -968,9 +966,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 		if ((da1->event_fifo_da[i] == 1) && (da1->event_fifos[i].size != 0)) {
 			diff = 0;
 			da1_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
-			m_512_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
 			da1_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
-			m_512_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
 			temp_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
 			temp_ofst = le64_to_cpu(da1->event_fifos[i].start) * 4;
 			flag = 0;
@@ -1087,9 +1083,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 		if ((da1->event_fifo_da[i] == 2) && (da1->event_fifos[i].size != 0)) {
 			diff = 0;
 			da1_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
-			m_512_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
 			da1_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
-			m_512_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
 			temp_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
 			temp_ofst = le64_to_cpu(da1->event_fifos[i].start) * 4;
 			flag = 0;

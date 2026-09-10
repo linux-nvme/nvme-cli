@@ -2298,7 +2298,7 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 	return printable_start;
 
 fail_free_eye_printable:
-	free(printable);
+	free(printable_start);
 fail_free_eye_array:
 	json_free_object(eye_array);
 

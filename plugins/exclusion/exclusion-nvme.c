@@ -478,6 +478,7 @@ static char *read_file(const char *path)
 	buf = malloc(sz + 1);
 	if (!buf) {
 		fclose(f);
+		errno = ENOMEM;
 		return NULL;
 	}
 	n = fread(buf, 1, sz, f);

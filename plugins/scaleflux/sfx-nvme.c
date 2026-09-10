@@ -1567,7 +1567,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	struct nvme_additional_smart_log additional_smart_log = { 0 };
 	struct sfx_freespace_ctx sfx_freespace = { 0 };
 	unsigned int pcie_correctable, pcie_fatal, pcie_nonfatal;
-	unsigned long long capacity;
+	unsigned long long capacity = 0;
 	bool capacity_valid = false;
 	bool pcie_cor_valid, pcie_fatal_valid, pcie_nonfatal_valid;
 	int err, fd, len, sector_size;
