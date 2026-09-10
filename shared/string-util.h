@@ -121,6 +121,13 @@ static inline char *shr_trim(char *s)
 	return shr_ltrim(shr_rtrim(s));
 }
 
+/* True if c may appear in a name: alphanumeric, '_', or '-'. */
+static inline bool shr_name_char(char c)
+{
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+	       (c >= '0' && c <= '9') || c == '_' || c == '-';
+}
+
 /* True if s is non-empty and every character is alphanumeric, '_', or '-'. */
 static inline bool shr_valid_name(const char *s)
 {
@@ -129,12 +136,30 @@ static inline bool shr_valid_name(const char *s)
 	if (!s || !*s)
 		return false;
 	for (p = s; *p; p++) {
-		if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
-		    (*p >= '0' && *p <= '9') || *p == '_' || *p == '-')
-			continue;
-		return false;
+		if (!shr_name_char(*p))
+			return false;
 	}
 	return true;
+}
+
+/*
+ * Replace every character shr_valid_name() would reject with '_', in place,
+ * and return s. This turns a field a device supplies, such as a serial
+ * number, into something that can go into a file name; pair it with
+ * shr_rtrim() so that trailing padding does not become underscores.
+ * A NULL s is returned unchanged.
+ */
+static inline char *shr_sanitize_name(char *s)
+{
+	char *p;
+
+	if (!s)
+		return s;
+	for (p = s; *p; p++) {
+		if (!shr_name_char(*p))
+			*p = '_';
+	}
+	return s;
 }
 
 /*
