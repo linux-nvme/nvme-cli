@@ -38,6 +38,7 @@
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/io-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
 #include <shared/sig-util.h>
@@ -470,8 +471,6 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	struct libnvme_passthru_cmd cmd;
 	int err = 0;
 	size_t total_size = 0;
-	__u8 *data_ptr = NULL;
-	int data_written, data_remaining = 0;
 	nvme_print_flags_t flags;
 	bool da4_support = false,
 	host_behavior_changed = false;
@@ -584,27 +583,10 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	data_remaining = total_size;
-	data_ptr = (__u8 *)log;
-
-	while (data_remaining) {
-		data_written = write(output, data_ptr, data_remaining);
-		if (data_written < 0) {
-			err = -errno;
-			nvme_show_error("ERROR: %s: : write failed with error : %s",
-					__func__, libnvme_strerror(errno));
-			break;
-		} else if (data_written <= data_remaining) {
-			data_remaining -= data_written;
-			data_ptr += data_written;
-		} else {
-			/* Unexpected overwrite */
-			nvme_show_error("Failure: Unexpected telemetry log overwrite - data_remaining = 0x%x, data_written = 0x%x",
-					data_remaining, data_written);
-			err = -1;
-			break;
-		}
-	}
+	err = shr_write_all(output, log, total_size);
+	if (err)
+		nvme_show_error("ERROR: %s: : Telemetry log write failed: %s",
+				__func__, libnvme_strerror(-err));
 
 	if (shr_fsync(output) < 0) {
 		nvme_show_error("ERROR : %s: : fsync : %s", __func__, libnvme_strerror(errno));
