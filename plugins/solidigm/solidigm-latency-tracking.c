@@ -157,6 +157,10 @@ static int latency_tracker_bucket_pos2us(const struct latency_tracker *lt, int i
 		return i;
 
 	int error_bits = (i >> lt->base_range_bits) - 1;
+
+	if (error_bits < 0)
+		return i;
+
 	int base = 1 << (error_bits + lt->base_range_bits);
 	int k = i % base_val;
 
