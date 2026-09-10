@@ -38,6 +38,7 @@
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/io-util.h>
 #include <shared/parse-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
@@ -2095,13 +2096,11 @@ static __u64 wdc_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 				uuid_index) == false) {
 			nvme_show_error("ERROR: SNDK: 0xC2 Log Page not supported, index: %d",
 					uuid_index);
-			ret = -1;
 			goto out;
 		}
 
 		if (!get_dev_mgment_data(ctx, hdl, &dev_mng_log)) {
 			nvme_show_error("ERROR: SNDK: 0xC2 Log Page not found");
-			ret = -1;
 			goto out;
 		}
 
@@ -2648,7 +2647,6 @@ static bool get_dev_mgmt_log_page_lid_data(struct libnvme_transport_handle *hdl,
 	}
 
 	/* Check the log data to see if the WD version of log page ID's is found */
-	length = sizeof(struct wdc_c2_log_page_header);
 	hdr_ptr = (struct wdc_c2_log_page_header *)data;
 	sph = NULL;
 	found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
@@ -3215,8 +3213,6 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	int ctrl_init = 0;
 	__u64 result;
 	void *buf = NULL;
-	__u8 *data_ptr = NULL;
-	int data_written = 0, data_remaining = 0;
 	struct libnvme_passthru_cmd cmd;
 	struct nvme_id_ctrl ctrl;
 	__u64 capabilities = 0;
@@ -3301,31 +3297,13 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	}
 
 	/*
-	 *Continuously pull data until the offset hits the end of the last
-	 *block.
+	 * Continuously pull data until the offset hits the end of the last
+	 * block.
 	 */
-	data_written = 0;
-	data_remaining = full_size;
-	data_ptr = (__u8 *)log;
-
-	while (data_remaining) {
-		data_written = write(output, data_ptr, data_remaining);
-
-		if (data_written < 0) {
-			data_remaining = data_written;
-			break;
-		} else if (data_written <= data_remaining) {
-			data_remaining -= data_written;
-			data_ptr += data_written;
-		} else {
-			/* Unexpected overwrite */
-			nvme_show_error("Failure: Unexpected telemetry log overwrite - data_remaining = 0x%x, data_written = 0x%x",
-					data_remaining, data_written);
-			break;
-		}
-	}
-
-	if (shr_fsync(output) < 0) {
+	err = shr_write_all(output, log, full_size);
+	if (err)
+		nvme_show_error("ERROR: %s: write: %s", __func__, libnvme_strerror(-err));
+	else if (shr_fsync(output) < 0) {
 		nvme_show_error("ERROR: %s: fsync: %s", __func__, libnvme_strerror(errno));
 		err = -1;
 	}
@@ -7200,7 +7178,7 @@ static int wdc_get_c0_log_page_sn(struct libnvme_global_ctx *ctx, struct libnvme
 static int wdc_get_c0_log_page(struct libnvme_global_ctx *ctx, struct libnvme_transport_handle *hdl, char *format, int uuid_index,
 			       __u32 namespace_id)
 {
-	uint32_t device_id, read_vendor_id;
+	uint32_t device_id = 0, read_vendor_id;
 	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
@@ -7218,7 +7196,7 @@ static int wdc_get_c0_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 		return ret;
 	}
 
-	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &device_id, NULL, NULL, NULL);
+	nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &device_id, NULL, NULL, NULL);
 
 	switch (device_id) {
 	case WDC_NVME_SN640_DEV_ID:
@@ -7477,7 +7455,7 @@ static int wdc_print_fw_act_history_log(__u8 *data, int num_entries, int fmt,
 
 static int wdc_get_ca_log_page(struct libnvme_global_ctx *ctx, struct libnvme_transport_handle *hdl, char *format)
 {
-	uint32_t read_device_id, read_vendor_id;
+	uint32_t read_device_id = 0, read_vendor_id;
 	struct wdc_ssd_ca_perf_stats *perf;
 	nvme_print_flags_t fmt;
 	__u32 cust_id;
@@ -7506,7 +7484,7 @@ static int wdc_get_ca_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 		return -1;
 	}
 
-	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
+	nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 
 	switch (read_device_id) {
 	case WDC_NVME_SN200_DEV_ID:
@@ -8434,7 +8412,7 @@ static int wdc_cu_smart_log(int argc, char **argv, struct command *acmd,
 	struct libnvme_passthru_cmd cmd;
 	int ret = 0;
 	__u64 capabilities = 0;
-	uint32_t read_device_id, read_vendor_id;
+	uint32_t read_device_id = 0, read_vendor_id;
 	nvme_print_flags_t fmt;
 	__u8 *data;
 
@@ -8482,7 +8460,7 @@ static int wdc_cu_smart_log(int argc, char **argv, struct command *acmd,
 			return -1;
 		}
 
-		ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
+		nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 
 		switch (read_device_id) {
 		case WDC_NVME_SN861_DEV_ID:
@@ -9365,7 +9343,7 @@ static int wdc_get_fw_act_history_C2(struct libnvme_global_ctx *ctx, struct libn
 		return ret;
 	}
 
-	ret = nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id, NULL, NULL, NULL);
+	nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id, NULL, NULL, NULL);
 
 	data = (__u8 *)malloc(sizeof(__u8) * WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
 	if (!data) {
@@ -10353,7 +10331,7 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 		}
 	}
 
-	ret = wdc_read_debug_directory(hdl, bufferFolderPath, serialNo, timeString);
+	wdc_read_debug_directory(hdl, bufferFolderPath, serialNo, timeString);
 
 	/* Get Dump Trace Data */
 	wdc_UtilsSnprintf(fileName, MAX_PATH_LEN, "%s%s%s_%s_%s.bin", (char *)bufferFolderPath, WDC_DE_PATH_SEPARATOR, "dumptrace", serialNo, timeString);
