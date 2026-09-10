@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include <libnvme.h>
 
@@ -14,6 +15,7 @@
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
+#include <shared/proc-util.h>
 #include <shared/progress-util.h>
 #include <shared/string-util.h>
 
@@ -243,19 +245,21 @@ static void measure_loop_time(struct timeval *begin, __s64 loop_cnt,
 
 /*
  * Insert dir_name as an extra directory level in front of the final
- * component of base_dir, create that directory, and hand back the result:
+ * component of base_dir, create that directory, and hand back both paths:
  *
- *   base_dir      dir_name  *result
- *   (NULL)        path2     ./path2/
- *   name          path2     ./path2/name
- *   /path1/       path2     /path1/path2/
- *   /path1/name   path2     /path1/path2/name
+ *   base_dir      dir_name  *dir_path     *result
+ *   (NULL)        path2     ./path2       ./path2/
+ *   name          path2     ./path2       ./path2/name
+ *   /path1/       path2     /path1/path2  /path1/path2/
+ *   /path1/name   path2     /path1/path2  /path1/path2/name
  *
- * *result is allocated and the caller frees it.
+ * Both output strings are allocated and the caller frees them.
  */
-static int insert_dir(const char *base_dir, const char *dir_name, char **result)
+static int insert_dir(const char *base_dir, const char *dir_name,
+		char **dir_path, char **result)
 {
 	__cleanup_free char *dir = NULL;
+	__cleanup_free char *path = NULL;
 	const char *prefix = "./";
 	const char *name = "";
 	int prefix_len = 2;
@@ -272,67 +276,198 @@ static int insert_dir(const char *base_dir, const char *dir_name, char **result)
 	if (asprintf(&dir, "%.*s%s", prefix_len, prefix, dir_name) < 0)
 		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
 
+	if (asprintf(&path, "%s/%s", dir, name) < 0)
+		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
+
 	ret = shr_mkdir_p(dir, 0777);
 	if (ret < 0) {
 		fprintf(stderr, "mkdir %s: %s\n", dir, strerror(-ret));
 		return SAMSUNG_GENERAL_FILE_OPEN_ERROR;
 	}
 
-	if (asprintf(result, "%s/%s", dir, name) < 0)
-		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
+	*dir_path = dir;
+	dir = NULL;
+	*result = path;
+	path = NULL;
 
 	return 0;
 }
 
 /*
- * The archiving below runs through system(), as in the other vendor
- * plugins. Every interpolated argument is single-quoted, so reject the one
- * character that could escape that quoting.
+ * Run argv without a shell. No command string is built, so a serial number
+ * or an output path can never become syntax. shr_spawnp() resolves argv[0]
+ * through PATH, as the micron plugin does: tar and rm sit in different
+ * directories across platforms, so there is no absolute path to prefer.
  */
-static bool shell_arg_is_safe(const char *s)
+static int run_command(const char *const argv[])
 {
-	return !strchr(s, '\'');
-}
+	shr_proc_t proc;
+	bool exited;
+	int code;
+	int ret;
 
-static int compress_dump_files(const char *dump_path_with_name, const char *sn)
-{
-	__cleanup_free char *targz_file = NULL;
-	__cleanup_free char *tar_cmd = NULL;
-	__cleanup_free char *rm_cmd = NULL;
-	const char *dump_name_only = shr_basename(dump_path_with_name);
-	int dump_path_len = (int)shr_dir_prefix_len(dump_path_with_name);
+	/*
+	 * The child writes to this process's stdout, so flush what is still
+	 * buffered here or it lands after the child's output.
+	 */
+	fflush(stdout);
 
-	if (!shell_arg_is_safe(dump_path_with_name) || !shell_arg_is_safe(sn)) {
-		fprintf(stderr, "Output path and serial number must not contain \"'\".\n");
-		return SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR;
-	}
-
-	if (asprintf(&targz_file, "../%sSamsung_Dump_%s.tar.gz",
-			dump_name_only, sn) < 0)
-		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
-
-	if (asprintf(&tar_cmd, "cd '%.*s'; tar cvzf '%s' ./*",
-			dump_path_len, dump_path_with_name, targz_file) < 0)
-		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
-
-	if (asprintf(&rm_cmd, "rm -rf '%.*s'",
-			dump_path_len, dump_path_with_name) < 0)
-		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
-
-	printf("Compressing...\n");
-	if (system(tar_cmd)) {
-		fprintf(stderr, "%s failed!\n", tar_cmd);
+	ret = shr_spawnp(argv, -1, -1, &proc);
+	if (!ret)
+		ret = shr_wait_proc(proc, &exited, &code);
+	if (ret) {
+		fprintf(stderr, "%s: %s\n", argv[0], strerror(-ret));
 		return SAMSUNG_GENERAL_FILE_WRITE_ERROR;
 	}
-	printf("%sSamsung_Dump_%s.tar.gz saved at the designated location.\n",
-			dump_name_only, sn);
 
-	if (system(rm_cmd)) {
-		fprintf(stderr, "%s failed!\n", rm_cmd);
+	if (!exited) {
+		fprintf(stderr, "%s was killed.\n", argv[0]);
+		return SAMSUNG_GENERAL_FILE_WRITE_ERROR;
+	}
+
+	if (code != 0) {
+		fprintf(stderr, "%s exited with status %d.\n", argv[0], code);
 		return SAMSUNG_GENERAL_FILE_WRITE_ERROR;
 	}
 
 	return 0;
+}
+
+/* The names of the dump files staged for archiving. */
+struct dump_names {
+	char **name;
+	size_t count;
+};
+
+static void free_dump_names(struct dump_names *names)
+{
+	size_t i;
+
+	for (i = 0; i < names->count; i++)
+		free(names->name[i]);
+	free(names->name);
+	names->name = NULL;
+	names->count = 0;
+}
+
+/*
+ * Collect the staged file names so that tar can be given them one by one.
+ * A "." operand would be shorter, but it also archives the staging
+ * directory itself as a "./" member carrying that directory's mode, and
+ * extracting the member applies the mode to whatever directory the archive
+ * is unpacked into. Skipping names that start with '.' keeps the
+ * behaviour of the shell glob this replaces.
+ */
+static int list_dump_names(const char *dir, struct dump_names *names)
+{
+	struct dirent *entry;
+	DIR *d;
+	int ret = 0;
+
+	names->name = NULL;
+	names->count = 0;
+
+	d = opendir(dir);
+	if (!d) {
+		fprintf(stderr, "opendir %s: %s\n", dir, strerror(errno));
+		return SAMSUNG_GENERAL_FILE_OPEN_ERROR;
+	}
+
+	while ((entry = readdir(d))) {
+		char **grown;
+
+		if (entry->d_name[0] == '.')
+			continue;
+
+		grown = realloc(names->name,
+				(names->count + 1) * sizeof(*grown));
+		if (!grown) {
+			ret = SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
+			break;
+		}
+		names->name = grown;
+
+		names->name[names->count] = strdup(entry->d_name);
+		if (!names->name[names->count]) {
+			ret = SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
+			break;
+		}
+		names->count++;
+	}
+
+	closedir(d);
+
+	if (ret != 0)
+		free_dump_names(names);
+	else if (names->count == 0) {
+		fprintf(stderr, "No dump was collected in %s.\n", dir);
+		ret = SAMSUNG_GENERAL_FILE_WRITE_ERROR;
+	}
+
+	return ret;
+}
+
+/* "tar" "cvzf" <archive> "-C" <dir> "--", ahead of the file names */
+#define TAR_ARGC_FIXED 6
+
+static int compress_dump_files(const char *temp_dir, const char *output_prefix,
+		const char *sn)
+{
+	__cleanup_free char *targz_file = NULL;
+	__cleanup_free const char **argv = NULL;
+	const char *prefix = output_prefix ? output_prefix : "./";
+	const char *archive_name = shr_basename(prefix);
+	const char *local_prefix = "";
+	struct dump_names names = { NULL, 0 };
+	size_t argc;
+	size_t i;
+	int ret;
+
+#if !defined(_WIN32)
+	/*
+	 * Keep a colon before the first slash from invoking tar's remote mode.
+	 */
+	if (prefix[strcspn(prefix, "/:")] == ':')
+		local_prefix = "./";
+#endif
+
+	if (asprintf(&targz_file, "%s%sSamsung_Dump_%s.tar.gz",
+			local_prefix, prefix, sn) < 0)
+		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
+
+	ret = list_dump_names(temp_dir, &names);
+	if (ret != 0)
+		return ret;
+
+	argv = calloc(TAR_ARGC_FIXED + names.count + 1, sizeof(*argv));
+	if (!argv) {
+		free_dump_names(&names);
+		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
+	}
+
+	argc = 0;
+	argv[argc++] = "tar";
+	argv[argc++] = "cvzf";
+	argv[argc++] = targz_file;
+	argv[argc++] = "-C";
+	argv[argc++] = temp_dir;
+	argv[argc++] = "--";
+	for (i = 0; i < names.count; i++)
+		argv[argc++] = names.name[i];
+	argv[argc] = NULL;
+
+	printf("Compressing...\n");
+	ret = run_command(argv);
+	free_dump_names(&names);
+	if (ret != 0)
+		return ret;
+
+	printf("%sSamsung_Dump_%s.tar.gz saved at the designated location.\n",
+			archive_name, sn);
+
+	return run_command((const char *const []) {
+		"rm", "-rf", "--", temp_dir, NULL
+	});
 }
 
 static void print_border(const char *dump_name, char cmd_type, int arg1, int arg2)
@@ -1245,6 +1380,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	char sn[21] = {0,};
 	struct nvme_id_ctrl ctrl = {0,};
 	struct libnvme_passthru_cmd cmd;
+	__cleanup_free char *dump_temp_dir = NULL;
 	__cleanup_free char *dump_save_dir = NULL;
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -1353,7 +1489,8 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	}
 
 	if (cfg.compress) {
-		err = insert_dir(cfg.file, "temp_samsung_dumps", &dump_save_dir);
+		err = insert_dir(cfg.file, "temp_samsung_dumps",
+				&dump_temp_dir, &dump_save_dir);
 		if (err != 0) {
 			samsung_print_error(err);
 			return err;
@@ -1428,7 +1565,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	 */
 	err = 0;
 	if (cfg.compress) {
-		err = compress_dump_files(dump_save_dir, sn);
+		err = compress_dump_files(dump_temp_dir, cfg.file, sn);
 		if (err != 0)
 			samsung_print_error(err);
 	}
