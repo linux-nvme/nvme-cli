@@ -329,6 +329,12 @@ static int delete_dir(const char *path)
 		return -errno;
 
 	dir_fd = dirfd(d);
+	if (dir_fd < 0) {
+		ret = -errno;
+		closedir(d);
+		return ret;
+	}
+
 	while ((de = readdir(d)) != NULL) {
 		if (de->d_name[0] == '.')
 			continue;
@@ -558,6 +564,7 @@ __shr_public int libnvmf_registry_device_for_each(
 {
 	char dev_path[NAME_MAX + 6]; /* "/dev/" + name + NUL */
 	struct dirent *de;
+	int dir_fd;
 	DIR *d;
 	int ret = 0;
 
@@ -571,6 +578,13 @@ __shr_public int libnvmf_registry_device_for_each(
 		if (errno == ENOENT)
 			return 0;
 		return -errno;
+	}
+
+	dir_fd = dirfd(d);
+	if (dir_fd < 0) {
+		ret = -errno;
+		closedir(d);
+		return ret;
 	}
 
 	while ((de = readdir(d)) != NULL) {
@@ -591,7 +605,7 @@ __shr_public int libnvmf_registry_device_for_each(
 			 * building an absolute path: avoids a fixed-size path
 			 * buffer (and the format-truncation it invites).
 			 */
-			if (fstatat(dirfd(d), de->d_name, &st, 0) < 0 ||
+			if (fstatat(dir_fd, de->d_name, &st, 0) < 0 ||
 			    !S_ISDIR(st.st_mode))
 				continue;
 		}
@@ -637,6 +651,13 @@ __shr_public int libnvmf_registry_attr_for_each(
 		return -errno;
 
 	dir_fd = dirfd(d);
+	if (dir_fd < 0) {
+		int ret = -errno;
+
+		closedir(d);
+		return ret;
+	}
+
 	while ((de = readdir(d)) != NULL) {
 		__cleanup_free char *val = NULL;
 		int fd, rc;
