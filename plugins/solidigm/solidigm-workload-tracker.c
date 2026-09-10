@@ -369,6 +369,11 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 				we = log->config;
 				we.triggerEnable = false;
 				err = wltracker_config(wlt, &we);
+				if (err < 0)
+					nvme_show_error("Failed to restore original tracker config: %s",
+							libnvme_strerror(-err));
+				else if (err > 0)
+					nvme_show_status(err);
 				if (nvme_args.verbose > 1)
 					printf("Restored config value: 0x%08x\n",
 					       we.dword);
