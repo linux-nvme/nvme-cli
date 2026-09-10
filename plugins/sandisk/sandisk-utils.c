@@ -88,7 +88,6 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 		id[strlen(id) - 1] = '\0';
 
 	*vendor_id = strtol(id, NULL, 0);
-	ret = 0;
 
 	fd = open(did, O_RDONLY);
 	if (fd < 0) {
@@ -755,13 +754,11 @@ __u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 				uuid_index) == false) {
 			nvme_show_error("ERROR: SNDK: 0xC2 Log Page not supported, ");
 			nvme_show_error("uuid_index: %d", uuid_index);
-			ret = -1;
 			goto out;
 		}
 
 		if (!sndk_get_dev_mgment_data(ctx, hdl, &dev_mng_log)) {
 			nvme_show_error("ERROR: SNDK: 0xC2 Log Page not found");
-			ret = -1;
 			goto out;
 		}
 
