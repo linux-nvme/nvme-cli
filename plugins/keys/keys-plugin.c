@@ -975,12 +975,20 @@ static int key_import(int argc, char **argv, struct command *acmd, struct plugin
 		if (cfg.keyfile) {
 			fd = fopen(cfg.keyfile, "r");
 			if (!fd) {
+				int saved_errno = errno;
+
 				nvme_show_error("Cannot open keyfile %s, error %d",
-						cfg.keyfile, errno);
-				return -errno;
+						cfg.keyfile, saved_errno);
+				return -saved_errno;
 			}
 		} else {
 			fd = freopen(NULL, "r", stdin);
+			if (!fd) {
+				int saved_errno = errno;
+
+				nvme_show_error("Cannot reopen stdin, error %d", saved_errno);
+				return -saved_errno;
+			}
 		}
 
 		err = import_key(ctx, cfg.keyring, fd);
