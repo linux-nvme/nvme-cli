@@ -177,6 +177,39 @@ class PIFStsCLITest(unittest.TestCase):
                            ref_tag=0x100, storage_tag=0, expect_fail=True)
         self.assertIn("Reference tag larger than allowed by PIF", res.stdout + res.stderr)
 
+    # ------------------------------------------------------------------ #
+    # STS wider than the PIF's reference-tag field: invalid_tags() used   #
+    # to compute a negative/oversized shift amount for these (undefined  #
+    # behaviour) instead of rejecting them outright.                     #
+    # ------------------------------------------------------------------ #
+
+    def test_16b_guard_sts_at_new_limit_succeeds(self):
+        """16B Guard: STS=32 leaves a 0-bit ref tag, still valid."""
+        self._verify(sts=32, pif=PIF_16B_GUARD, ref_tag=0, storage_tag=0)
+
+    def test_16b_guard_sts_over_new_limit_fails(self):
+        res = self._verify(sts=33, pif=PIF_16B_GUARD,
+                           ref_tag=0, storage_tag=0, expect_fail=True)
+        self.assertIn("Storage tag size larger than reference tag width", res.stdout + res.stderr)
+
+    def test_32b_guard_sts_at_new_limit_succeeds(self):
+        """32B Guard: STS=80 leaves a 0-bit ref tag, still valid."""
+        self._verify(sts=80, pif=PIF_32B_GUARD, ref_tag=0, storage_tag=0)
+
+    def test_32b_guard_sts_over_new_limit_fails(self):
+        res = self._verify(sts=81, pif=PIF_32B_GUARD,
+                           ref_tag=0, storage_tag=0, expect_fail=True)
+        self.assertIn("Storage tag size larger than reference tag width", res.stdout + res.stderr)
+
+    def test_64b_guard_sts_at_new_limit_succeeds(self):
+        """64B Guard: STS=48 leaves a 0-bit ref tag, still valid."""
+        self._verify(sts=48, pif=PIF_64B_GUARD, ref_tag=0, storage_tag=0)
+
+    def test_64b_guard_sts_over_new_limit_fails(self):
+        res = self._verify(sts=49, pif=PIF_64B_GUARD,
+                           ref_tag=0, storage_tag=0, expect_fail=True)
+        self.assertIn("Storage tag size larger than reference tag width", res.stdout + res.stderr)
+
     def test_elbaf_uses_the_in_use_lba_format_index(self):
         """get_pif_sts() must index ELBAF by the FLBAS-selected format, not
         always slot 0. Slot 0 stays all-zero (STS=0, 16B Guard: ref tags
