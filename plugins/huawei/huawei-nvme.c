@@ -88,6 +88,8 @@ static int huawei_get_nvme_info(struct libnvme_transport_handle *hdl,
 
 	item->huawei_device = true;
 	err = libnvme_get_nsid(hdl, &item->nsid);
+	if (err)
+		return err;
 	nvme_init_identify_ns(&cmd, item->nsid, &item->ns);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
