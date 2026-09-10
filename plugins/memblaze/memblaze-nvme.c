@@ -879,7 +879,8 @@ static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, ch
 		snprintf(subString1, sizeof(subString1), "%s", "+INF");
 	len = snprintf(string, sizeof(string), "%-11d %-11s %-11s %-11u\n",
 		       index, subString0, subString1, pHistogram[index]);
-	fwrite(string, 1, len, fd);
+	if (fd)
+		fwrite(string, 1, len, fd);
 	if (print)
 		printf("%s", string);
 }
@@ -887,9 +888,13 @@ static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, ch
 int io_latency_histogram(char *file, char *buf, int print, int logid)
 {
 	FILE *fdi = fopen(file, "w+");
+	int saved_errno = fdi ? 0 : errno;
 	int i, index;
 	char unit[2][3];
 	unsigned int *revision = (unsigned int *)buf;
+
+	if (!fdi)
+		nvme_show_error("Failed to create %s: %s", file, libnvme_strerror(saved_errno));
 
 	if (logid == GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM)
 		fPRINT_PARAM1("Memblaze IO Read Command Latency Histogram\n");
@@ -948,7 +953,7 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
 
 	if (fdi)
 		fclose(fdi);
-	return 1;
+	return fdi ? 0 : -saved_errno;
 }
 
 static int mb_lat_stats_log_print(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -980,7 +985,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *acmd, s
 
 	err = nvme_get_log_simple(hdl, cfg.write ? 0xc2 : 0xc1, &stats, sizeof(stats));
 	if (!err)
-		io_latency_histogram(cfg.write ? f2 : f1, stats, DO_PRINT_FLAG,
+		err = io_latency_histogram(cfg.write ? f2 : f1, stats, DO_PRINT_FLAG,
 				     cfg.write ? GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM :
 				     GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM);
 	else
