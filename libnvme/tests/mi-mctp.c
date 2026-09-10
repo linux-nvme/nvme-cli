@@ -1198,6 +1198,10 @@ static void test_mi_aem_ep_based_failure_helper(struct libnvme_mi_ep *ep,
 	default:
 		shr_assert(false);//Unexpected
 	}
+
+	/* fn_data is about to go out of scope; don't leave peer->tx_data
+	 * dangling for whatever the next test does with peer. */
+	peer->tx_data = NULL;
 }
 
 /* test: Check validation of endpoint messages in various stages of aem handling */
