@@ -348,7 +348,7 @@ static int telemetry_log_data_area_get_offset(const struct telemetry_log *tl,
 					      uint32_t *offset, uint32_t *size)
 {
 	uint32_t offset_blocks = 1;
-	uint32_t last_block = tl->log->dalb1;
+	uint32_t last_block;
 	uint32_t last;
 
 	switch (da) {
