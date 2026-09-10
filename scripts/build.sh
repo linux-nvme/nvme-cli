@@ -316,6 +316,7 @@ config_meson_static() {
         --prefix=/usr                           \
         -Dc_link_args="-static"                 \
         -Dkeyutils=disabled                     \
+        -Dlibkmod=disabled                      \
         -Dliburing=disabled                     \
         -Dpython=disabled                       \
         -Dopenssl=disabled                      \
@@ -358,6 +359,7 @@ config_meson_minimal_static() {
         -Dc_args="${cflags_str}"                \
         -Dc_link_args="${ldflags_str}"          \
         -Dfabrics=disabled                      \
+        -Dlibkmod=disabled                      \
         -Dmi=disabled                           \
         -Djson-c=disabled                       \
         -Dopenssl=disabled                      \

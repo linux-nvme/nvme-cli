@@ -77,13 +77,14 @@ debug:
 
 .PHONY: static
 static:
-	meson setup ${BUILD-DIR} ${MESON_ARGS}
+	meson setup ${BUILD-DIR} ${MESON_ARGS} \
 		--buildtype=release \
-		--wrap-mode=forcefallback \
 		--default-library=static \
+		--wrap-mode=forcefallback \
 		--prefix=/usr \
 		-Dc_link_args="-static" \
 		-Dkeyutils=disabled \
+		-Dlibkmod=disabled \
 		-Dliburing=disabled \
 		-Dpython=disabled \
 		-Dopenssl=disabled \
