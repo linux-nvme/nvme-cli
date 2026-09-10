@@ -441,7 +441,7 @@ if want_docs != 'false'
 
         # man pages
         if want_docs == 'all' or want_docs == 'man'
-            xmlto = find_program('xmlto', required: false)
+            xmlto = find_program('xmlto', required: true)
             if xmlto.found()
                 foreach man_set : man_sets
                     section = man_set['section']
