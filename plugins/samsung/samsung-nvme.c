@@ -119,12 +119,16 @@ static int samsung_nvme_get_log_page(struct libnvme_transport_handle *hdl,
  * The serial number is space padded rather than NUL terminated, so copy
  * the whole field and trim the padding. sn holds sizeof(ctrl->sn) + 1
  * bytes. Trimming from the end keeps a serial that has a space in it.
+ *
+ * The drive supplies this field and make_file_path() puts it straight
+ * into the dump file names, so sanitize it here: a serial holding "../"
+ * would otherwise write the dumps outside the directory -O asked for.
  */
 static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
 {
 	memcpy(sn, ctrl->sn, sizeof(ctrl->sn));
 	sn[sizeof(ctrl->sn)] = '\0';
-	shr_rtrim(sn);
+	shr_sanitize_name(shr_rtrim(sn));
 }
 
 /*

@@ -323,6 +323,35 @@ class SamsungCLITest(unittest.TestCase):
                       '--hide-progress suppressed the --verbose timing table')
 
     # ---------------------------------------------------------------- #
+    # Serial number handling: the drive supplies it and it lands in     #
+    # the dump file names, so it must not steer the output path.        #
+    # ---------------------------------------------------------------- #
+
+    BAD_SERIAL = "../bad'\x01sn"
+    SAFE_SERIAL = '___bad__sn'
+
+    def test_serial_is_sanitized_before_it_is_used_in_file_names(self):
+        self.server.serial = self.BAD_SERIAL
+        result = self.run_cmd('-t', 'ctlr', '-O', './serial/')
+        self.assertOk(result)
+        names = self.files('serial')
+        self.assertTrue(names, 'no dump was written')
+        self.assertTrue(all(f.startswith(self.SAFE_SERIAL) for f in names),
+                        names)
+        self.assertEqual(self.files(), ['serial'],
+                         'the serial escaped the designated output directory')
+
+    def test_serial_is_sanitized_before_it_is_used_in_the_archive_name(self):
+        self.server.serial = self.BAD_SERIAL
+        result = self.run_cmd('-t', 'ctlr', '-O', './serial/', '-z')
+        self.assertOk(result)
+        archive = f'serial/Samsung_Dump_{self.SAFE_SERIAL}.tar.gz'
+        self.assertTrue(os.path.isfile(os.path.join(self.out_dir, archive)),
+                        f'no archive at {archive}: {self.files("serial")}')
+        self.assertEqual(self.files(), ['serial'],
+                         'the serial escaped the designated output directory')
+
+    # ---------------------------------------------------------------- #
     # -z archiving                                                      #
     # ---------------------------------------------------------------- #
 
