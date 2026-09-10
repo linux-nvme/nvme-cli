@@ -192,6 +192,28 @@ static bool test_valid_name(void)
 	return pass;
 }
 
+static bool test_sanitize_name(void)
+{
+	char valid[] = "Valid_Name-123";
+	char traversal[] = "../etc";
+	char mixed[] = "a b.c";
+	bool pass = true;
+
+	printf("test_sanitize_name:\n");
+
+	pass &= check_str("NULL in, NULL out", shr_sanitize_name(NULL), NULL);
+	pass &= check_str("an already valid name is left alone",
+			   shr_sanitize_name(valid), "Valid_Name-123");
+	pass &= check_str("only the rejected characters are replaced",
+			   shr_sanitize_name(traversal), "___etc");
+	pass &= check_str("spaces and dots become '_'",
+			   shr_sanitize_name(mixed), "a_b_c");
+	pass &= check_bool("the result always satisfies shr_valid_name()",
+			    shr_valid_name(mixed), true);
+
+	return pass;
+}
+
 static bool test_kv_strip(void)
 {
 	char buf1[] = "  key = value \x20\n";
@@ -246,6 +268,7 @@ int main(void)
 	pass &= test_ltrim();
 	pass &= test_trim();
 	pass &= test_valid_name();
+	pass &= test_sanitize_name();
 	pass &= test_kv_strip();
 	pass &= test_kv_keymatch();
 
