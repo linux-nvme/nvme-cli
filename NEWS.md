@@ -41,6 +41,10 @@
   failed to configure. They are regenerated from now on, and a
   release aborts if any page is missing.
 
+* Building the man pages now requires `xmlto`. It was optional, so a
+  build with `-Ddocs=man -Ddocs-build=true` and no `xmlto` installed
+  succeeded and produced no man pages at all.
+
 ## Changes in 3.0 (2026-09-07)
 
 ### Feature removals and incompatible changes
