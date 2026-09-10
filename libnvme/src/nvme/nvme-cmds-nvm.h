@@ -905,6 +905,13 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
  * for commands supporting Extended LBA. This logic is usually called from
  * the command-specific init function (like nvme_init_zns_append).
  *
+ * @sts must be within the range the NVM Command Set spec (Figure 119,
+ * STS field) allows for @pif: [0, 32] for 16b Guard, [16, 64] for 32b
+ * Guard, [0, 48] for 64b Guard. A @sts outside that range is rejected
+ * rather than encoded: for 32b Guard in particular, @storage_tag and
+ * @reftag are only 64 bits wide each, so a @sts outside [16, 64] would
+ * require one of them to be wider than this interface can represent.
+ *
  * Return: 0 on success, -EINVAL otherwise.
  */
 static inline int
@@ -915,6 +922,8 @@ nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
 
 	switch (pif) {
 	case NVME_NVM_PIF_16B_GUARD:
+		if (sts > 32)
+			return -EINVAL;
 		cdw14 = NVME_FIELD_ENCODE(reftag,
 				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
 				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
@@ -923,16 +932,19 @@ nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
 				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
 		break;
 	case NVME_NVM_PIF_32B_GUARD:
+		if (sts < 16 || sts > 64)
+			return -EINVAL;
 		cdw14 = NVME_FIELD_ENCODE(reftag,
 				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
 				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
 		cdw3 = NVME_FIELD_ENCODE(reftag >> 32,
 				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
 				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		cdw14 |= NVME_FIELD_ENCODE(
-				(storage_tag << (80 - sts)) & 0xffff0000,
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		if (sts > 16)
+			cdw14 |= NVME_FIELD_ENCODE(
+					(storage_tag << (80 - sts)) & 0xffff0000,
+					NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+					NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
 		if (sts >= 48)
 			cdw3 |= NVME_FIELD_ENCODE(storage_tag >> (sts - 48),
 					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
@@ -942,10 +954,12 @@ nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
 					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
 					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
 		cdw2 = NVME_FIELD_ENCODE(storage_tag >> (sts - 16),
-			NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
-			NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
+				NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
+				NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
 		break;
 	case NVME_NVM_PIF_64B_GUARD:
+		if (sts > 48)
+			return -EINVAL;
 		cdw14 = NVME_FIELD_ENCODE(reftag,
 				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
 				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
