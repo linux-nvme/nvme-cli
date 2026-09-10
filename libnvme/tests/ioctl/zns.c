@@ -57,6 +57,82 @@ static void test_zns_append(void)
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
+/*
+ * nvme_init_var_size_tags()'s 32B Guard case packs an 80-bit combined
+ * reference/storage tag field across cdw14 (bits 0-31), cdw3 (bits 32-63)
+ * and cdw2 (bits 64-79), with the storage tag occupying the top `sts` bits
+ * of that field, at [80-sts, 80). Per the NVM Command Set spec (Figure 119,
+ * STS field), the only valid `sts` range for this PIF is [16, 64] --
+ * @reftag and @storage_tag are each only 64 bits wide, so an sts outside
+ * that range would require one of them to hold more than 64 meaningful
+ * bits, which this interface can't represent. Cover both valid boundaries
+ * and the first rejected value past each.
+ */
+static void test_zns_var_size_tags_32b_guard_sts_bounds(void)
+{
+	__u64 reftag = 0x123456;
+	__u64 storage_tag = 0xab;
+	struct libnvme_passthru_cmd cmd = { 0 };
+	int ret;
+
+	/* sts = 16: the spec minimum -- the exact boundary where
+	 * 80 - sts == 64, so cdw14 must get no storage_tag contribution.
+	 */
+	cmd = (struct libnvme_passthru_cmd){ 0 };
+	ret = nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_32B_GUARD, 16, reftag, storage_tag);
+	check(ret == 0, "sts=16 should be accepted, got %d", ret);
+	check(cmd.cdw14 == (__u32)reftag, "cdw14 %#x, expected %#x", cmd.cdw14, (__u32)reftag);
+	check(cmd.cdw3 == 0, "cdw3 %#x, expected 0", cmd.cdw3);
+	check(cmd.cdw2 == storage_tag, "cdw2 %#x, expected %#llx",
+	      cmd.cdw2, (unsigned long long)storage_tag);
+
+	/*
+	 * sts = 64: the spec maximum. The reference tag is only 16 bits
+	 * wide at this boundary (80 - 64), unlike sts=16's 64-bit-wide
+	 * reference tag above -- reusing the wider `reftag` here would
+	 * overflow into the bits storage_tag's own contribution occupies,
+	 * masking a packing bug behind the overlap instead of catching it.
+	 */
+	cmd = (struct libnvme_passthru_cmd){ 0 };
+	ret = nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_32B_GUARD, 64, 0x1234, storage_tag);
+	check(ret == 0, "sts=64 should be accepted, got %d", ret);
+	check(cmd.cdw14 == 0x00ab1234, "cdw14 %#x, expected %#x", cmd.cdw14, 0x00ab1234);
+	check(cmd.cdw3 == 0, "cdw3 %#x, expected 0", cmd.cdw3);
+	check(cmd.cdw2 == 0, "cdw2 %#x, expected 0", cmd.cdw2);
+
+	/* sts = 15: just below the spec minimum -- rejected. */
+	ret = nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_32B_GUARD, 15, reftag, storage_tag);
+	check(ret == -EINVAL, "sts=15 should be rejected, got %d", ret);
+
+	/* sts = 65: just above the spec maximum -- rejected. Before this
+	 * was enforced, sts=80 (storage_tag occupying the entire 80-bit
+	 * field) silently encoded to cdw2=0, discarding storage_tag rather
+	 * than reporting that it can't be represented.
+	 */
+	ret = nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_32B_GUARD, 65, reftag, storage_tag);
+	check(ret == -EINVAL, "sts=65 should be rejected, got %d", ret);
+}
+
+/*
+ * nvme_init_var_size_tags() enforces a per-PIF sts range from the same
+ * spec table: [0, 32] for 16b Guard, [0, 48] for 64b Guard. Cover
+ * just-past-the-maximum rejection for both, mirroring the 32B Guard
+ * coverage above.
+ */
+static void test_zns_var_size_tags_16b_64b_guard_sts_bounds(void)
+{
+	__u64 reftag = 0x1234;
+	__u64 storage_tag = 0xab;
+	struct libnvme_passthru_cmd cmd = { 0 };
+	int ret;
+
+	ret = nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_16B_GUARD, 33, reftag, storage_tag);
+	check(ret == -EINVAL, "16B Guard sts=33 should be rejected, got %d", ret);
+
+	ret = nvme_init_var_size_tags(&cmd, NVME_NVM_PIF_64B_GUARD, 49, reftag, storage_tag);
+	check(ret == -EINVAL, "64B Guard sts=49 should be rejected, got %d", ret);
+}
+
 static void test_zns_report_zones(void)
 {
 	enum nvme_zns_report_options opts = NVME_ZNS_ZRAS_REPORT_CLOSED;
@@ -168,6 +244,8 @@ int main(void)
 	      "opening test link failed");
 
 	RUN_TEST(zns_append);
+	RUN_TEST(zns_var_size_tags_32b_guard_sts_bounds);
+	RUN_TEST(zns_var_size_tags_16b_64b_guard_sts_bounds);
 	RUN_TEST(zns_report_zones);
 	RUN_TEST(zns_mgmt_send);
 	RUN_TEST(zns_mgmt_recv);
