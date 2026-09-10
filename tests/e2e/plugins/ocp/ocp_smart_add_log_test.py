@@ -20,6 +20,7 @@ Tests in this module verify:
     two cannot drift apart again.
 """
 
+import json
 import re
 
 from .ocp_test import TestOCP
@@ -28,7 +29,11 @@ from .ocp_test import TestOCP
 # OCP's SCAO format (GUID mismatch), or when reading it failed outright (e.g.
 # the drive returns "Invalid Log Page" because it doesn't implement log ID
 # 0xC0 at all) -- both indicate the drive isn't an OCP-compliant device
-# rather than a genuine command failure.
+# rather than a genuine command failure. In JSON output mode nvme-cli folds
+# whichever of these was printed last into the "error" field of the JSON
+# object on stdout (see _unsupported_reason below), so only the final,
+# summary message ever shows up there; the first one is only ever seen in
+# plain-text mode, ahead of the summary line, on stderr.
 _UNSUPPORTED_MSGS = (
     "ERROR : OCP : Unknown GUID in C0 Log Page data",
     "ERROR : OCP : Failure reading the C0 Log Page",
@@ -63,19 +68,43 @@ class TestOCPSmartAddLog(TestOCP):
         """Run ocp smart-add-log and return the CompletedProcess result,
         skipping the calling test when the drive is not an OCP device."""
         result = self.run_plugin_cmd("smart-add-log", args=args)
-        if result.returncode != 0 and any(
-            msg in result.stderr for msg in _UNSUPPORTED_MSGS
-        ):
-            self.skipTest(
-                f"ocp smart-add-log not supported on this drive "
-                f"(stderr: {result.stderr!r})"
-            )
+        if result.returncode != 0:
+            reason = self._unsupported_reason(result)
+            if reason is not None:
+                self.skipTest(
+                    f"ocp smart-add-log not supported on this drive: "
+                    f"{reason!r}"
+                )
         self.assertEqual(
             result.returncode, 0,
             f"Expected exit code 0, got {result.returncode}; "
-            f"stderr={result.stderr!r}",
+            f"stdout={result.stdout!r}, stderr={result.stderr!r}",
         )
         return result
+
+    @staticmethod
+    def _unsupported_reason(result):
+        """Return the unsupported-drive message from a failed run, or None
+        when the failure doesn't look like an unsupported drive.
+
+        -o json is meant to be parsed by machines, not scraped as text, so
+        prefer reading its structured "error" field over guessing which
+        stream carries the message: nvme-cli folds error text that would
+        otherwise go to stderr into that field instead when JSON output was
+        requested, so plain stdout/stderr text matching only ever applies to
+        genuine plain-text output.
+        """
+        try:
+            error = json.loads(result.stdout).get("error")
+        except (TypeError, ValueError, AttributeError):
+            error = None
+        haystacks = (error,) if error is not None else (
+            result.stdout, result.stderr)
+        return next(
+            (haystack for haystack in haystacks
+             if any(msg in haystack for msg in _UNSUPPORTED_MSGS)),
+            None,
+        )
 
     def _json_log(self, format_version=None):
         """Run smart-add-log with JSON output and return the parsed page."""
@@ -100,7 +129,7 @@ class TestOCPSmartAddLog(TestOCP):
 
     def test_smart_add_log(self):
         """Run ocp smart-add-log and verify it returns success."""
-        self._run()
+        self._run(args="-o json")
 
     def test_smart_add_log_json_is_wellformed(self):
         """-o json produces a JSON object reporting its layout version."""
