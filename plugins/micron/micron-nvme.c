@@ -2302,7 +2302,6 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	}
 
 	*logSize = (dalb + 1) * bs;
-	err = 0;
 	log = libnvme_realloc(log, (size_t)(*logSize));
 	if (!log) {
 		nvme_show_error("Failed to allocate memory for %s telemetry data (%u bytes)",
