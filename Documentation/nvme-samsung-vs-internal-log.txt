@@ -54,8 +54,12 @@ OPTIONS
 
 -z::
 --compress::
-	Collect the dumps into a temporary directory and save them as a
-	single compressed .tar.gz archive.
+	Collect the dumps into a 'temp_samsung_dumps' directory next to the
+	output path and save them as a single compressed .tar.gz archive,
+	removing that directory afterwards. The directory is created for
+	this run alone, so the command fails if anything already sits at
+	that path: one left behind by an interrupted run has to be removed
+	before retrying.
 
 -H::
 --hide-progress::
