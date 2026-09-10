@@ -123,8 +123,17 @@ struct nvme_mi_msg_resp {
  * enum nvme_mi_mi_opcode - Operation code for supported NVMe-MI commands.
  * @nvme_mi_mi_opcode_mi_data_read: Read NVMe-MI Data Structure
  * @nvme_mi_mi_opcode_subsys_health_status_poll: Subsystem Health Status Poll
+ * @nvme_mi_mi_opcode_ctrl_health_status_poll: Controller Health Status Poll
  * @nvme_mi_mi_opcode_configuration_set: MI Configuration Set
  * @nvme_mi_mi_opcode_configuration_get: MI Configuration Get
+ * @nvme_mi_mi_opcode_vpd_read: VPD Read
+ * @nvme_mi_mi_opcode_vpd_write: VPD Write
+ * @nvme_mi_mi_opcode_reset: Reset
+ * @nvme_mi_mi_opcode_ses_recv: SES Receive
+ * @nvme_mi_mi_opcode_ses_send: SES Send
+ * @nvme_mi_mi_opcode_meb_read: Management Endpoint Buffer Read
+ * @nvme_mi_mi_opcode_meb_write: Management Endpoint Buffer Write
+ * @nvme_mi_mi_opcode_shutdown: Shutdown
  * @nvme_mi_mi_opcode_pda_read: NVMe-MI PDA Read
  * @nvme_mi_mi_opcode_pda_write: NVMe-MI PDA Write
  * @nvme_mi_mi_opcode_pda_write_zeroes: NVMe-MI PDA Write Zeroes
@@ -132,8 +141,17 @@ struct nvme_mi_msg_resp {
 enum nvme_mi_mi_opcode {
 	nvme_mi_mi_opcode_mi_data_read = 0x00,
 	nvme_mi_mi_opcode_subsys_health_status_poll = 0x01,
+	nvme_mi_mi_opcode_ctrl_health_status_poll = 0x02,
 	nvme_mi_mi_opcode_configuration_set = 0x03,
 	nvme_mi_mi_opcode_configuration_get = 0x04,
+	nvme_mi_mi_opcode_vpd_read = 0x05,
+	nvme_mi_mi_opcode_vpd_write = 0x06,
+	nvme_mi_mi_opcode_reset = 0x07,
+	nvme_mi_mi_opcode_ses_recv = 0x08,
+	nvme_mi_mi_opcode_ses_send = 0x09,
+	nvme_mi_mi_opcode_meb_read = 0x0a,
+	nvme_mi_mi_opcode_meb_write = 0x0b,
+	nvme_mi_mi_opcode_shutdown = 0x0c,
 	nvme_mi_mi_opcode_pda_read = 0x0d,
 	nvme_mi_mi_opcode_pda_write = 0x0e,
 	nvme_mi_mi_opcode_pda_write_zeroes = 0x0f,
