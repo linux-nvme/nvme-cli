@@ -15,6 +15,7 @@ Usage: python3 nvme_samsung_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
 import os
 import shutil
+import stat
 import struct
 import subprocess
 import sys
@@ -434,6 +435,44 @@ class SamsungCLITest(unittest.TestCase):
                 self.assertFalse(os.path.exists(os.path.join(self.out_dir,
                                                              staging)))
 
+    def test_compress_refuses_preexisting_staging_objects(self):
+        for kind in ('directory', 'file', 'symlink'):
+            with self.subTest(kind=kind):
+                relative_parent = f'existing-{kind}'
+                parent = os.path.join(self.out_dir, relative_parent)
+                staging = os.path.join(parent, 'temp_samsung_dumps')
+                os.makedirs(parent)
+
+                if kind == 'directory':
+                    os.mkdir(staging)
+                    sentinel = os.path.join(staging, 'sentinel')
+                elif kind == 'file':
+                    sentinel = staging
+                else:
+                    target = os.path.join(self.out_dir, 'symlink-target')
+                    os.makedirs(target, exist_ok=True)
+                    sentinel = os.path.join(target, 'sentinel')
+                    os.symlink(target, staging)
+
+                with open(sentinel, 'w', encoding='utf-8') as f:
+                    f.write(kind)
+
+                self.server.seen_opcodes.clear()
+                result = self.run_cmd('-t', 'ctlr',
+                                      '-O', f'./{relative_parent}/', '-z')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotIn(_OPC_GET_LOG_PAGE, self.server.seen_opcodes,
+                                 'the dump started despite a taken staging path')
+                self.assertIn(f'Remove ./{relative_parent}/temp_samsung_dumps '
+                              'and run the command again', result.stderr,
+                              'the failure does not say what to remove')
+                with open(sentinel, encoding='utf-8') as f:
+                    self.assertEqual(f.read(), kind, 'the sentinel was written over')
+                if kind == 'symlink':
+                    self.assertTrue(os.path.islink(staging))
+                self.assertFalse(os.path.exists(os.path.join(
+                    parent, f'Samsung_Dump_{SERIAL}.tar.gz')))
+
     def test_compress_reports_tool_failures_and_keeps_staging(self):
         for command in ('tar', 'rm'):
             with self.subTest(command=command):
@@ -451,6 +490,8 @@ class SamsungCLITest(unittest.TestCase):
                                        'temp_samsung_dumps')
                 self.assertTrue(os.path.isdir(staging),
                                 'the staged dumps were discarded')
+                self.assertEqual(stat.S_IMODE(os.stat(staging).st_mode), 0o700,
+                                 'the staging directory is not private')
                 staged = set(os.listdir(staging))
                 self.assertTrue(staged, 'the staged dumps were discarded')
 

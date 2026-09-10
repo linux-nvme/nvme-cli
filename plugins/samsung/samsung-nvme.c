@@ -254,6 +254,7 @@ static void measure_loop_time(struct timeval *begin, __s64 loop_cnt,
  *   /path1/name   path2     /path1/path2  /path1/path2/name
  *
  * Both output strings are allocated and the caller frees them.
+ * Creating dir_name fails if anything already sits at that path.
  */
 static int insert_dir(const char *base_dir, const char *dir_name,
 		char **dir_path, char **result)
@@ -279,9 +280,21 @@ static int insert_dir(const char *base_dir, const char *dir_name,
 	if (asprintf(&path, "%s/%s", dir, name) < 0)
 		return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
 
-	ret = shr_mkdir_p(dir, 0777);
+	/*
+	 * Every dump sits here until it is archived, so keep the staging
+	 * directory to this user. shr_mkdir() rather than shr_mkdir_p():
+	 * a path that is already taken must fail rather than be reused,
+	 * since it may be a symlink or a directory somebody else can
+	 * write to. Its parent is already there either way, created by
+	 * the shr_mkdir_from_fname() the caller runs first.
+	 */
+	ret = shr_mkdir(dir, 0700);
 	if (ret < 0) {
 		fprintf(stderr, "mkdir %s: %s\n", dir, strerror(-ret));
+		if (ret == -EEXIST)
+			fprintf(stderr,
+				"A run that was interrupted leaves it behind. "
+				"Remove %s and run the command again.\n", dir);
 		return SAMSUNG_GENERAL_FILE_OPEN_ERROR;
 	}
 
