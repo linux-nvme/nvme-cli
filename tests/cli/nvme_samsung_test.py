@@ -18,6 +18,7 @@ import shutil
 import struct
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 
@@ -190,6 +191,10 @@ class SamsungCLITest(unittest.TestCase):
         self.server = SamsungMockServer(self.ipc_sock_path)
         self.server.start()
         self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
+        self.tool_dir = os.path.join(self.ipc_dir, 'bin')
+        os.makedirs(self.tool_dir)
+        self.env['PATH'] = (self.tool_dir + os.pathsep
+                            + self.env.get('PATH', os.defpath))
         self.cwd = os.getcwd()
         os.chdir(self.out_dir)
 
@@ -214,6 +219,22 @@ class SamsungCLITest(unittest.TestCase):
         self.assertEqual(result.returncode, 0,
                          f'command failed:\nstdout:\n{result.stdout}\n'
                          f'stderr:\n{result.stderr}')
+
+    def _archive_members(self, relative_path):
+        archive = os.path.join(self.out_dir, relative_path)
+        with tarfile.open(archive, 'r:gz') as tar:
+            return tar.getmembers()
+
+    def _archive_files(self, relative_path):
+        return {os.path.basename(member.name)
+                for member in self._archive_members(relative_path)
+                if member.isfile()}
+
+    def _fail_command(self, name):
+        """Shadow a tool on PATH with one that always fails."""
+        path = os.path.join(self.tool_dir, name)
+        os.symlink(shutil.which('false') or '/bin/false', path)
+        return path
 
     # ---------------------------------------------------------------- #
     # Output path handling: -O is a file name prefix, so directories    #
@@ -358,18 +379,88 @@ class SamsungCLITest(unittest.TestCase):
     def test_compress_produces_an_archive_and_removes_the_temp_dir(self):
         result = self.run_cmd('-t', 'ctlr', '-O', './dumps/', '-z')
         self.assertOk(result)
-        names = self.files('dumps')
-        self.assertTrue(any(f.endswith('.tar.gz') for f in names),
-                        f'no archive produced: {names}')
+        archive = f'dumps/Samsung_Dump_{SERIAL}.tar.gz'
+        self.assertTrue(os.path.isfile(os.path.join(self.out_dir, archive)),
+                        f'no archive produced: {self.files("dumps")}')
+        members = self._archive_files(archive)
+        self.assertTrue(members, 'the archive holds no dump file')
+        self.assertTrue(all(name.startswith(SERIAL) for name in members), members)
         self.assertFalse(os.path.isdir(os.path.join(self.out_dir,
                                                     'dumps/temp_samsung_dumps')),
                          'the temporary directory was left behind')
 
-    def test_compress_rejects_a_quote_in_the_output_path(self):
-        os.makedirs(os.path.join(self.out_dir, "od'd"), exist_ok=True)
-        result = self.run_cmd('-t', 'ctlr', '-O', "./od'd/", '-z')
-        self.assertNotEqual(result.returncode, 0,
-                            "a path containing ' must be refused, not shelled out")
+    def test_compress_archives_the_dump_files_and_nothing_else(self):
+        """A directory member would carry the staging directory's mode, and
+        tar applies that mode to the directory the archive is extracted
+        into."""
+        result = self.run_cmd('-t', 'ctlr', '-O', './dumps/', '-z')
+        self.assertOk(result)
+        members = self._archive_members(f'dumps/Samsung_Dump_{SERIAL}.tar.gz')
+        self.assertTrue(members, 'the archive is empty')
+        self.assertTrue(all(member.isfile() for member in members),
+                        [member.name for member in members])
+
+    def test_compress_treats_shell_metacharacters_as_literal_path_data(self):
+        for component in ("odd'; touch PWNED; #", 'odd& echo PWNED &'):
+            with self.subTest(component=component):
+                result = self.run_cmd('-t', 'ctlr', '-O', f'./{component}/', '-z')
+                self.assertOk(result)
+                archive = os.path.join(component,
+                                       f'Samsung_Dump_{SERIAL}.tar.gz')
+                self.assertTrue(os.path.isfile(os.path.join(self.out_dir,
+                                                            archive)))
+                self.assertNotIn('PWNED', self.files(),
+                                 'the output path was interpreted by a shell')
+                self.assertFalse(os.path.exists(os.path.join(
+                    self.out_dir, component, 'temp_samsung_dumps')))
+
+    def test_compress_keeps_file_name_prefixes_local(self):
+        cases = (
+            ('./dumps/run1', f'dumps/run1Samsung_Dump_{SERIAL}.tar.gz',
+             'run1', 'dumps/temp_samsung_dumps'),
+            ('local:name', f'local:nameSamsung_Dump_{SERIAL}.tar.gz',
+             'local:name', 'temp_samsung_dumps'),
+        )
+        for output, archive, member_prefix, staging in cases:
+            with self.subTest(output=output):
+                result = self.run_cmd('-t', 'ctlr', '-O', output, '-z')
+                self.assertOk(result)
+                self.assertTrue(os.path.isfile(os.path.join(self.out_dir,
+                                                            archive)))
+                members = self._archive_files(archive)
+                self.assertTrue(members, 'the archive holds no dump file')
+                self.assertTrue(all(name.startswith(member_prefix + SERIAL)
+                                    for name in members), members)
+                self.assertFalse(os.path.exists(os.path.join(self.out_dir,
+                                                             staging)))
+
+    def test_compress_reports_tool_failures_and_keeps_staging(self):
+        for command in ('tar', 'rm'):
+            with self.subTest(command=command):
+                parent = f'{command}-failure'
+                archive = os.path.join(parent, f'Samsung_Dump_{SERIAL}.tar.gz')
+                failed_tool = self._fail_command(command)
+                try:
+                    result = self.run_cmd('-t', 'ctlr', '-O', f'./{parent}/',
+                                          '-z')
+                finally:
+                    os.unlink(failed_tool)
+
+                self.assertNotEqual(result.returncode, 0)
+                staging = os.path.join(self.out_dir, parent,
+                                       'temp_samsung_dumps')
+                self.assertTrue(os.path.isdir(staging),
+                                'the staged dumps were discarded')
+                staged = set(os.listdir(staging))
+                self.assertTrue(staged, 'the staged dumps were discarded')
+
+                if command == 'tar':
+                    self.assertFalse(os.path.exists(os.path.join(self.out_dir,
+                                                                 archive)))
+                else:
+                    self.assertTrue(os.path.isfile(os.path.join(self.out_dir,
+                                                                archive)))
+                    self.assertEqual(self._archive_files(archive), staged)
 
     # ---------------------------------------------------------------- #
     # Dump type selection                                               #
@@ -568,8 +659,12 @@ class SamsungCLITest(unittest.TestCase):
     def test_compress_without_output_option(self):
         result = self.run_cmd('-t', 'ctlr', '-z')
         self.assertOk(result)
-        self.assertTrue(any(f.endswith('.tar.gz') for f in self.files()),
+        archive = f'Samsung_Dump_{SERIAL}.tar.gz'
+        self.assertTrue(os.path.isfile(os.path.join(self.out_dir, archive)),
                         f'no archive in the cwd: {self.files()}')
+        members = self._archive_files(archive)
+        self.assertTrue(members, 'the archive holds no dump file')
+        self.assertTrue(all(name.startswith(SERIAL) for name in members), members)
         self.assertFalse(os.path.isdir(os.path.join(self.out_dir,
                                                     'temp_samsung_dumps')),
                          'the temporary directory was left behind')
