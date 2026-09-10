@@ -21,6 +21,11 @@ static char *capture(void (*fn)(FILE *stream))
 	FILE *stream = tmpfile();
 	size_t n;
 
+	if (!stream) {
+		perror("tmpfile");
+		exit(1);
+	}
+
 	memset(buf, 0, sizeof(buf));
 	fn(stream);
 	rewind(stream);
