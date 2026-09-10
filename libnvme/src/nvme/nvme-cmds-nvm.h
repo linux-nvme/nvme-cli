@@ -929,10 +929,21 @@ nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
 		cdw3 = NVME_FIELD_ENCODE(reftag >> 32,
 				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
 				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		cdw14 |= NVME_FIELD_ENCODE(
-				(storage_tag << (80 - sts)) & 0xffff0000,
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		/*
+		 * storage_tag occupies field bits [80-sts, 80) of the
+		 * combined 80-bit ELBT; it only reaches down into cdw14's
+		 * bits [0, 32) once sts > 16 (80 - sts < 64).  For sts <= 16
+		 * cdw14 gets no contribution from storage_tag at all, and
+		 * `80 - sts` would be >= 64 -- shifting a __u64 by that is
+		 * undefined behaviour, so this must stay guarded rather
+		 * than relying on truncation to zero it out like the cdw3
+		 * and cdw2 halves below do.
+		 */
+		if (sts > 16)
+			cdw14 |= NVME_FIELD_ENCODE(
+					(storage_tag << (80 - sts)) & 0xffff0000,
+					NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+					NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
 		if (sts >= 48)
 			cdw3 |= NVME_FIELD_ENCODE(storage_tag >> (sts - 48),
 					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
@@ -941,9 +952,23 @@ nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
 			cdw3 |= NVME_FIELD_ENCODE(storage_tag << (48 - sts),
 					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
 					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		cdw2 = NVME_FIELD_ENCODE(storage_tag >> (sts - 16),
-			NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
-			NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
+		/*
+		 * storage_tag is a __u64, so it has no bits at or beyond
+		 * position 64; at sts == 80 (the widest STS this PIF allows)
+		 * `sts - 16` is exactly 64, and shifting by the value's own
+		 * width is undefined behaviour, so that boundary has to stay
+		 * its own case rather than fall out of `storage_tag >> (sts - 16)`.
+		 */
+		if (sts >= 80)
+			cdw2 = 0;
+		else if (sts >= 16)
+			cdw2 = NVME_FIELD_ENCODE(storage_tag >> (sts - 16),
+				NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
+				NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
+		else
+			cdw2 = NVME_FIELD_ENCODE(storage_tag << (16 - sts),
+				NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
+				NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
 		break;
 	case NVME_NVM_PIF_64B_GUARD:
 		cdw14 = NVME_FIELD_ENCODE(reftag,
