@@ -6,23 +6,34 @@
 
 The C0 SMART / Health Information Extended log page grows with the OCP
 datacenter NVMe SSD specification, and the page reports which layout it
-carries in its own log page version field.  Three printers render it --
+carries in its own log page version field. Three printers render it --
 text, JSON format version 1, and JSON format version 2 (the default) --
-and each gates the same fields on that version, so a field added to one
-printer and not the others goes missing from some output modes only.
+and each gates the same fields on that version.
+
+Field values, version gating and the option surface at every log page version
+are tested without hardware by ocp_smart_add_log_mock_test.py.
+This tests in this module focus on the plugin's ability to read a real drive
+and decode its C0 log page correctly.  Tests read the raw C0 log page using
+`nvme get-log` and decode it against the spec-based field table in
+ocp_c0_layout.py, then compare the decoded values against those reported by
+the plugin's printers.
 
 Tests in this module verify:
-  * smart-add-log succeeds, and its JSON output parses.
-  * The version 6 fields (form factor and die-in-use bad NAND blocks)
-    appear in both JSON format versions, with a value agreeing with the
-    text output.
-  * Both JSON format versions report the same number of fields, so the
-    two cannot drift apart again.
+  * smart-add-log succeeds against a real controller, and its JSON
+    output parses.
+  * Every field each printer reports agrees with the same field decoded
+    straight out of the raw log page.
+  * All three printers report exactly the field set that the version the
+    drive reports calls for -- no more and no less.
+  * The page identifies itself with OCP's SCAO log page GUID.
 """
 
 import json
-import re
 
+from .ocp_c0_layout import (FIELDS, LOG_PAGE_SIZE, OCP_UUID, SCAO_GUID_BYTES,
+                            by_name, coerce_json, decode, fields_for_version,
+                            parse_stdout, parse_stdout_value, render_guid,
+                            render_uuid)
 from .ocp_test import TestOCP
 
 # Printed when the C0 log page was read successfully but doesn't look like
@@ -39,30 +50,15 @@ _UNSUPPORTED_MSGS = (
     "ERROR : OCP : Failure reading the C0 Log Page",
 )
 
-# First log page version carrying the form factor and die-in-use bad NAND
-# block fields (OCP 2.7).
-_FORM_FACTOR_VERSION = 6
-
-# The version 6 fields as each printer spells them.
-_V2_KEYS = (
-    "form_factor",
-    "die_in_use_bad_nand_block_raw",
-    "die_in_use_bad_nand_block_normalized",
-)
-_V1_KEYS = (
-    "Form factor",
-    "Die use badnandblock raw",
-    "Die use badnandblock normal",
-)
-
-_FORM_FACTOR_LABEL = "Form factor"
+_OCP_LID_SMART = 0xC0
 
 _V1_CONTEXT = "ocp smart-add-log -o json --output-format-version 1"
 _V2_CONTEXT = "ocp smart-add-log -o json"
+_TEXT_CONTEXT = "ocp smart-add-log"
 
 
 class TestOCPSmartAddLog(TestOCP):
-    """Verify that the ocp smart-add-log command executes successfully."""
+    """Verify that ocp smart-add-log decodes the drive's C0 log page."""
 
     def _run(self, args=""):
         """Run ocp smart-add-log and return the CompletedProcess result,
@@ -115,17 +111,130 @@ class TestOCPSmartAddLog(TestOCP):
         return self.parse_json_output(result.stdout,
                                       f"ocp smart-add-log {args}")
 
-    def _skip_unless_version_6(self, log, version_key, context):
-        """Skip the calling test unless the drive's C0 log page is new
-        enough to carry the version 6 fields."""
-        version = int(self.json_get(log, version_key, context=context,
-                                    required=True))
-        if version < _FORM_FACTOR_VERSION:
-            self.skipTest(
-                f"drive reports C0 log page version {version}; the form "
-                f"factor and die-in-use bad NAND block fields are version "
-                f"{_FORM_FACTOR_VERSION} and later"
-            )
+    def _ocp_uuid_index(self):
+        """Return the UUID index the plugin uses to request the C0 page.
+
+        ocp_get_uuid_index() looks the OCP vendor UUID up in the drive's
+        UUID list and uses its 1-based position, or 0 when the drive
+        publishes no such entry. `nvme id uuid` walks the same list and
+        stops at the same terminator, so enumerating its output
+        reproduces the index without guessing.
+        """
+        cmd = (f"{self.nvme_bin} {self.command('id uuid')} {self.ctrl} "
+               f"-o json")
+        result = self.run_cmd(cmd, quiet=True)
+        if result.returncode != 0:
+            return 0
+        try:
+            entries = json.loads(result.stdout).get("UUID-list", [])
+        except (TypeError, ValueError, AttributeError):
+            return 0
+
+        wanted = render_uuid(OCP_UUID)
+        for position, entry in enumerate(entries):
+            if str(entry.get("uuid", "")).lower() == wanted:
+                return position + 1
+        return 0
+
+    def _raw_page(self, name):
+        """Read the C0 log page with a generic get-log and return its
+        512 raw bytes.
+
+        Goes through a file rather than captured stdout for two reasons:
+        the log page is binary and run_cmd() decodes output as UTF-8, and
+        the normal-mode hex dump is lossy -- stdout_d() collapses runs of
+        identical lines to a '*'.
+        """
+        path = self.test_log_dir / name
+        uuid_index = self._ocp_uuid_index()
+        args = [f"--log-id={_OCP_LID_SMART}",
+                f"--log-len={LOG_PAGE_SIZE}",
+                "--raw-binary"]
+        if uuid_index:
+            args.append(f"--uuid-index={uuid_index}")
+        cmd = (f"{self.nvme_bin} get-log {self.ctrl} {' '.join(args)} "
+               f"> \"{path}\"")
+        result = self.run_cmd(cmd)
+        self.assertEqual(
+            result.returncode, 0,
+            f"reference read of the C0 log page failed: "
+            f"rc={result.returncode}, stderr={result.stderr!r}")
+
+        page = path.read_bytes()
+        self.assertEqual(
+            len(page), LOG_PAGE_SIZE,
+            f"reference read returned {len(page)} bytes, expected "
+            f"{LOG_PAGE_SIZE}")
+
+        guid = decode(page, by_name("log_page_guid"))
+        self.assertEqual(
+            guid, render_guid(SCAO_GUID_BYTES),
+            f"the reference get-log read (uuid index {uuid_index}) did not "
+            f"return OCP's C0 page; its GUID is {guid}. The plugin and this "
+            f"test disagree about how to request the page.")
+        return page
+
+    def _bracketed_outputs(self):
+        """Collect every printer's output, bracketed by two raw reads.
+
+        The plugin and the reference get-log cannot read the drive at the
+        same instant, and most C0 fields are live counters, so comparing
+        against a single snapshot would fail whenever one ticked in
+        between. Reading the page before and after brackets the true
+        value of every field at the time the plugin read it: on a quiet
+        drive both reads agree and the comparison is an exact one.
+        """
+        # _raw_page() asserts rather than skips, so establish that the
+        # drive is an OCP device first -- _run() skips when it is not.
+        self._run(args="-o json")
+        before = self._raw_page("c0-before.bin")
+        outputs = {
+            _V1_CONTEXT: ('json', 1, self._json_log(format_version=1)),
+            _V2_CONTEXT: ('json', 2, self._json_log(format_version=2)),
+            _TEXT_CONTEXT: ('text', None, parse_stdout(self._run().stdout)),
+        }
+        after = self._raw_page("c0-after.bin")
+        return before, outputs, after
+
+    def _reported_key(self, field, mode, format_version):
+        """Return the name @field goes by in a given output mode.
+
+        None means that printer does not report the field at all.
+        parse_stdout() keys its result by field name, so that is the
+        lookup for text mode -- the label only decides whether the field
+        is reported.
+        """
+        if mode == 'text':
+            return field.name if field.stdout_label is not None else None
+        return field.v1_key if format_version == 1 else field.v2_key
+
+    def _reported_value(self, field, mode, reported):
+        """Normalise one printer's value into decode()'s form."""
+        if mode == 'text':
+            return parse_stdout_value(field, reported)
+        return coerce_json(field, reported)
+
+    def _assert_matches_raw(self, field, value, before, after, context):
+        """Assert @value is what the raw page says @field holds."""
+        low = decode(before, field)
+        high = decode(after, field)
+        if isinstance(low, int) and isinstance(high, int):
+            self.assertGreaterEqual(
+                value, min(low, high),
+                f"{context}: {field.name} reads {value}, below both raw "
+                f"reads ({low}, {high}) at offset {field.offset} "
+                f"({field.size} bytes, {field.kind})")
+            self.assertLessEqual(
+                value, max(low, high),
+                f"{context}: {field.name} reads {value}, above both raw "
+                f"reads ({low}, {high}) at offset {field.offset} "
+                f"({field.size} bytes, {field.kind})")
+        else:
+            self.assertIn(
+                value, {low, high},
+                f"{context}: {field.name} reads {value!r}, but the raw log "
+                f"page says {low!r} at offset {field.offset} "
+                f"({field.size} bytes, {field.kind})")
 
     def test_smart_add_log(self):
         """Run ocp smart-add-log and verify it returns success."""
@@ -137,47 +246,53 @@ class TestOCPSmartAddLog(TestOCP):
         self.json_get(log, "log_page_version", context=_V2_CONTEXT,
                       required=True)
 
-    def test_json_v2_reports_version_6_fields(self):
-        """The default JSON output must not drop version 6 fields that the
-        text output prints."""
+    def test_log_page_guid_is_the_ocp_guid(self):
+        """The GUID is what marks the page as OCP's, so the plugin has to
+        render the one the drive returned, not merely accept it."""
         log = self._json_log()
-        self._skip_unless_version_6(log, "log_page_version", _V2_CONTEXT)
-        missing = [key for key in _V2_KEYS if key not in log]
         self.assertEqual(
-            missing, [],
-            f"{_V2_CONTEXT} omits {missing}; keys present: {sorted(log)}")
+            str(self.json_get(log, "log_page_guid", context=_V2_CONTEXT,
+                              required=True)).lower(),
+            render_guid(SCAO_GUID_BYTES))
 
-    def test_json_v1_reports_version_6_fields(self):
-        """The same fields under JSON format version 1's key spellings."""
-        log = self._json_log(format_version=1)
-        self._skip_unless_version_6(log, "Log page version", _V1_CONTEXT)
-        missing = [key for key in _V1_KEYS if key not in log]
-        self.assertEqual(
-            missing, [],
-            f"{_V1_CONTEXT} omits {missing}; keys present: {sorted(log)}")
+    def test_every_printer_matches_the_raw_log_page(self):
+        """The decode itself: every field every printer reports has to
+        agree with that field read straight out of the drive's bytes."""
+        before, outputs, after = self._bracketed_outputs()
+        version = decode(before, by_name("log_page_version"))
 
-    def test_json_v2_form_factor_matches_text_output(self):
-        """The form factor value, not just its key, has to survive the trip
-        through the JSON printer."""
-        log = self._json_log()
-        self._skip_unless_version_6(log, "log_page_version", _V2_CONTEXT)
-        text = self._run().stdout
-        match = re.search(rf"^\s*{re.escape(_FORM_FACTOR_LABEL)}\s+(\d+)\s*$",
-                          text, re.MULTILINE)
-        if match is None:
-            self.fail(f"no {_FORM_FACTOR_LABEL!r} line in the text output "
-                      f"of ocp smart-add-log: {text!r}")
-        self.assertEqual(
-            int(log["form_factor"]), int(match.group(1)),
-            "form factor differs between the JSON and the text output")
+        for context, (mode, format_version, reported) in outputs.items():
+            for field in fields_for_version(version):
+                key = self._reported_key(field, mode, format_version)
+                if key is None or key not in reported:
+                    continue
+                with self.subTest(context=context, field=field.name):
+                    value = self._reported_value(field, mode, reported[key])
+                    self._assert_matches_raw(field, value, before, after,
+                                             context)
 
-    def test_json_format_versions_report_the_same_fields(self):
-        """The two JSON format versions differ in key naming only, so a
-        field reaching one printer but not the other is a bug -- that is
-        how the version 6 fields went missing from version 2."""
-        v1 = self._json_log(format_version=1)
-        v2 = self._json_log(format_version=2)
-        self.assertEqual(
-            len(v1), len(v2),
-            f"JSON format version 1 reports {len(v1)} fields and version 2 "
-            f"reports {len(v2)}: v1={sorted(v1)}, v2={sorted(v2)}")
+    def test_every_printer_reports_the_expected_field_set(self):
+        """A field is either in the layout the drive's version calls for,
+        or it is not reported at all. Nothing in between."""
+        before, outputs, _after = self._bracketed_outputs()
+        version = decode(before, by_name("log_page_version"))
+        expected = set(fields_for_version(version))
+
+        for context, (mode, format_version, reported) in outputs.items():
+            for field in FIELDS:
+                key = self._reported_key(field, mode, format_version)
+                if key is None:
+                    continue
+                with self.subTest(context=context, field=field.name):
+                    if field in expected:
+                        self.assertIn(
+                            key, reported,
+                            f"{context} omits {key!r}, a version "
+                            f"{field.min_version} field, from a version "
+                            f"{version} page")
+                    else:
+                        self.assertNotIn(
+                            key, reported,
+                            f"{context} reports {key!r}, a version "
+                            f"{field.min_version} field, for a version "
+                            f"{version} page")

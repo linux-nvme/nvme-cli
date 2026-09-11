@@ -149,10 +149,13 @@ def make_mock_env(mock_lib, ipc_sock_path):
     return env
 
 
-def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args):
+def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8'):
     """Runs `nvme_bin *args` under libmock_nvme.c. Returns the completed
     subprocess.Popen result, with stdout/stderr captured as text. Callers
-    check .returncode/.stdout/.stderr themselves."""
+    check .returncode/.stdout/.stderr themselves.
+
+    Pass encoding=None to capture stdout/stderr as bytes instead, for
+    commands whose output is not text ('-o binary')."""
     cmd = [
         nvme_bin,
         '--set-options', f'test-sysfs-dir={sysfs_dir},test-base-dir={base_dir}',
@@ -177,12 +180,19 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args):
                             stdin=subprocess.DEVNULL,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
-                            encoding='utf-8')
+                            encoding=encoding)
 
-    # Print outputs to sys.stderr so they are displayed by unittest on failure.
+    # Print outputs to sys.stderr so they are displayed by unittest on
+    # failure. With encoding=None these are bytes, so summarise stdout
+    # rather than dumping a binary blob into the log.
     print(f"\n--- RUN: {' '.join(cmd)} ---", file=sys.stderr)
-    print(f"STDOUT:\n{result.stdout}", file=sys.stderr)
-    print(f"STDERR:\n{result.stderr}", file=sys.stderr)
+    if encoding is None:
+        print(f"STDOUT: {len(result.stdout)} bytes", file=sys.stderr)
+        print(f"STDERR:\n{result.stderr.decode('utf-8', 'replace')}",
+              file=sys.stderr)
+    else:
+        print(f"STDOUT:\n{result.stdout}", file=sys.stderr)
+        print(f"STDERR:\n{result.stderr}", file=sys.stderr)
     print("-----------------------------------", file=sys.stderr)
 
     return result

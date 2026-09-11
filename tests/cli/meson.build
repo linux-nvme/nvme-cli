@@ -65,7 +65,9 @@ if python3.found()
              depends: nvme_exe)
     endif
 
-    if (not is_static) and (host_system == 'linux')
+    have_mock_nvme = (not is_static) and (host_system == 'linux')
+
+    if have_mock_nvme
         mock_nvme_lib = shared_library(
             'mock_nvme',
             'libmock_nvme.c',
@@ -102,5 +104,9 @@ if python3.found()
                  env: cli_test_env,
                  depends: [nvme_exe, mock_nvme_lib])
         endif
+    endif
+
+    if 'ocp' in selected_plugins
+        subdir('ocp')
     endif
 endif
