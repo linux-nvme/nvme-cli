@@ -32,6 +32,7 @@
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/string-util.h>
 #include <shared/uint128-util.h>
 
 #include "field-parser.h"
@@ -436,12 +437,16 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 			fileName = strrchr(strFilePath, '/');
 
 		if (fileName) {
-			if (!strcmp(fileName, "/"))
+			if (!strcmp(fileName, "/")) {
+				err = -1;
 				goto exit_status;
+			}
 
 			while (strFilePath[nIndex] != '\0') {
-				if ('\\' == strFilePath[nIndex] && '\\' == strFilePath[nIndex + 1])
+				if ('\\' == strFilePath[nIndex] && '\\' == strFilePath[nIndex + 1]) {
+					err = -1;
 					goto exit_status;
+				}
 				nIndex++;
 			}
 
@@ -451,8 +456,10 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 				length = 1;
 
 			fileLocation = (char *)malloc(length + 1);
-			if (!fileLocation)
+			if (!fileLocation) {
+				err = -1;
 				goto exit_status;
+			}
 			strncpy(fileLocation, strFilePath, length);
 			fileLocation[length] = '\0';
 
@@ -469,6 +476,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
 				if (!strTemp) {
 					free(fileLocation);
+					err = -1;
 					goto exit_status;
 				}
 				fileLocation = strTemp;
@@ -479,10 +487,12 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
 			if (stat(fileLocation, &st)) {
 				free(fileLocation);
+				err = -1;
 				goto exit_status;
 			}
 			free(fileLocation);
 		} else {
+			err = -1;
 			goto exit_status;
 		}
 	}
@@ -2032,6 +2042,300 @@ out:
 	return err;
 }
 
+#define LOGPULL_METADATA_FILE  "logpull_metadata_info.json"
+#define LOGPULL_CMD_STATUS_FILE "logpull_cmd_status_info.csv"
+
+#define LOGPULL_PACKAGE_VERSION "1.4"
+
+#define LOGPULL_STATUS_SUCCESS "Success"
+
+/*
+ * Binary file names for each log, command and feature vs-internal-log collects.
+ * These are the names expected by log decoders, so they must match exactly.
+ */
+#define LOG_FILE_ID_CTRL "nvme_controller_identify_data.bin"
+#define LOG_FILE_ID_NS "identify_namespace_%d_data.bin"
+#define LOG_FILE_SMART "smart_data.bin"
+#define LOG_FILE_ERROR_INFO "error_information_log.bin"
+#define LOG_FILE_FW_SLOT "firmware_slot_info_log.bin"
+#define LOG_FILE_CHANGED_NS "changed_namespace_log.bin"
+#define LOG_FILE_CMD_EFFECTS "command_effects_log.bin"
+#define LOG_FILE_SELF_TEST "drive_self_test.bin"
+#define LOG_FILE_TELEMETRY_HOST "nvme_host_telemetry_log.bin"
+#define LOG_FILE_TELEMETRY_CTRL "nvme_controller_telemetry_log.bin"
+#define LOG_FILE_PEVENT "persistent_event_log.bin"
+
+/* Vendor log files are named after their log page identifier. */
+#define LOG_FILE_VS_LOG(id) "nvmelog_" #id ".bin"
+
+#define LOG_FILE_FEAT_ARBITRATION "nvme_feature_setting_arbitration.bin"
+#define LOG_FILE_FEAT_POWER_MGMT "nvme_feature_setting_pm.bin"
+#define LOG_FILE_FEAT_LBA_RANGE "nvme_feature_setting_lba_range_namespace_1.bin"
+#define LOG_FILE_FEAT_TEMP_THRESHOLD "nvme_feature_setting_temp_threshold.bin"
+#define LOG_FILE_FEAT_ERROR_RECOVERY "nvme_feature_setting_error_recovery.bin"
+#define LOG_FILE_FEAT_VWC "nvme_feature_setting_volatile_write_cache.bin"
+#define LOG_FILE_FEAT_NUM_QUEUES "nvme_feature_setting_num_queues.bin"
+#define LOG_FILE_FEAT_IRQ_COAL "nvme_feature_setting_interrupt_coalescing.bin"
+#define LOG_FILE_FEAT_IRQ_VECTOR "nvme_feature_setting_interrupt_vec_config.bin"
+#define LOG_FILE_FEAT_WRITE_ATOMICITY "nvme_feature_setting_write_atomicity.bin"
+#define LOG_FILE_FEAT_ASYNC_EVENT "nvme_feature_setting_async_event_config.bin"
+#define LOG_FILE_FEAT_SW_PROGRESS "nvme_feature_setting_sw_progress_marker.bin"
+
+/*
+ * Command info identifiers, keyed by the binary file each one describes. An
+ * unrecognized name causes that log to be skipped.
+ */
+static const struct logpull_cmd_info {
+	const char *cmd_info;
+	__u8 opcode;
+	__u8 log_id;
+	__u16 cmd_class;
+	__u16 cmd_code;
+	const char *binary_file;
+} logpull_cmd_info_table[] = {
+	{ "NVME_IDENTIFY_CONTROLLER", 0x06, 0, 0, 0, LOG_FILE_ID_CTRL },
+	{ "NVME_IDENTIFY_NAMESPACE_ALL", 0x06, 0, 0, 0, LOG_FILE_ID_NS },
+	{ "NVME_SMART_LOG", 0x02, 0x02, 0, 0, LOG_FILE_SMART },
+	{ "NVME_ERROR_INFO_LOG", 0x02, 0x01, 0, 0, LOG_FILE_ERROR_INFO },
+	{ "NVME_FW_SLOT_INFO_LOG", 0x02, 0x03, 0, 0, LOG_FILE_FW_SLOT },
+	{ "NVME_CHANGED_NAMESPACE_LIST_LOG", 0x02, 0x04, 0, 0, LOG_FILE_CHANGED_NS },
+	{ "NVME_CMD_SUPPORTED_AND_EFFECTS_LOG", 0x02, 0x05, 0, 0, LOG_FILE_CMD_EFFECTS },
+	{ "NVME_DEVICE_SELF_TEST_LOG", 0x02, 0x06, 0, 0, LOG_FILE_SELF_TEST },
+	{ "NVME_HOST_TELEMETRY_LOG", 0x02, 0x07, 0, 0, LOG_FILE_TELEMETRY_HOST },
+	{ "NVME_CTRL_TELEMETRY_LOG", 0x02, 0x08, 0, 0, LOG_FILE_TELEMETRY_CTRL },
+	{ "NVME_PERSISTENT_EVENT_LOG", 0x02, 0x0D, 0, 0, LOG_FILE_PEVENT },
+	{ "NVME_GET_FEATURE_ARBITRATION", 0, 0, 0, 0, LOG_FILE_FEAT_ARBITRATION },
+	{ "NVME_GET_FEATURE_POWER_MGNT", 0, 0, 0, 0, LOG_FILE_FEAT_POWER_MGMT },
+	{ "NVME_GET_FEATURE_LBA_RANGE_TYPE", 0, 0, 0, 0, LOG_FILE_FEAT_LBA_RANGE },
+	{ "NVME_GET_FEATURE_TEMP_THRESHOLD", 0, 0, 0, 0, LOG_FILE_FEAT_TEMP_THRESHOLD },
+	{ "NVME_GET_FEATURE_ERROR_RECOVERY", 0, 0, 0, 0, LOG_FILE_FEAT_ERROR_RECOVERY },
+	{ "NVME_GET_FEATURE_VOLATILE_WRITE_CACHE", 0, 0, 0, 0, LOG_FILE_FEAT_VWC },
+	{ "NVME_GET_FEATURE_NUM_QUEUES", 0, 0, 0, 0, LOG_FILE_FEAT_NUM_QUEUES },
+	{ "NVME_GET_FEATURE_INTERRUPT_COALESCING", 0, 0, 0, 0, LOG_FILE_FEAT_IRQ_COAL },
+	{ "NVME_GET_FEATURE_INTERRUPT_VECTOR_CONFIG", 0, 0, 0, 0, LOG_FILE_FEAT_IRQ_VECTOR },
+	{ "NVME_GET_FEATURE_WRITE_ATOMICITY", 0, 0, 0, 0, LOG_FILE_FEAT_WRITE_ATOMICITY },
+	{ "NVME_GET_FEATURE_ASYNC_EVENT_CONFIG", 0, 0, 0, 0, LOG_FILE_FEAT_ASYNC_EVENT },
+	{ "NVME_GET_FEATURE_SW_PROGRESS_MARKER", 0, 0, 0, 0, LOG_FILE_FEAT_SW_PROGRESS },
+	{ "VU_SMART_EXTENED_LOG", 0x02, 0xE1, 0, 0, LOG_FILE_VS_LOG(E1) },
+	{ "MICRON_VS_LOG_D2", 0x02, 0xD2, 0, 0, LOG_FILE_VS_LOG(D2) },
+	{ "MICRON_VS_LOG_E3", 0x02, 0xE3, 0, 0, LOG_FILE_VS_LOG(E3) },
+	{ "MICRON_VS_LOG_E4", 0x02, 0xE4, 0, 0, LOG_FILE_VS_LOG(E4) },
+	{ "MICRON_VS_LOG_E8", 0x02, 0xE8, 0, 0, LOG_FILE_VS_LOG(E8) },
+	{ "MICRON_VS_LOG_E9", 0x02, 0xE9, 0, 0, LOG_FILE_VS_LOG(E9) },
+	{ "MICRON_VS_LOG_EA", 0x02, 0xEA, 0, 0, LOG_FILE_VS_LOG(EA) },
+	{ "MICRON_VS_LOG_FA", 0x02, 0xFA, 0, 0, LOG_FILE_VS_LOG(FA) },
+};
+
+/*
+ * State for the cmd status CSV, set up once per debug-data collection.
+ * Collection helpers are spread across several functions that don't share a
+ * context argument, so the destination path and serial number are kept here
+ * rather than threaded through every signature.
+ */
+static char logpull_csv_path[PATH_MAX];
+static char logpull_csv_serial[sizeof(((struct nvme_id_ctrl *)0)->sn) + 1];
+
+/*
+ * Tracks which table entries already have a Success row. Some log pages are
+ * reachable from more than one collection table (LID 0x03, 0x05 and 0x06 are
+ * collected generically and again as vendor log entries), and re-decoding the
+ * same binary serves no purpose. A failed attempt is not recorded here, so a
+ * later success on the same file still gets a row.
+ */
+static bool logpull_csv_logged[ARRAY_SIZE(logpull_cmd_info_table)];
+
+/*
+ * Replace characters that would produce invalid JSON, in place. They are
+ * substituted rather than escaped: these fields hold printable identifiers,
+ * so anything else is already suspect, and malformed JSON would make the
+ * whole metadata file unreadable.
+ */
+static char *sanitize_json_value(char *s)
+{
+	char *p;
+
+	for (p = s; *p; p++) {
+		if (*p == '"' || *p == '\\' || !isprint((unsigned char)*p))
+			*p = '_';
+	}
+
+	return s;
+}
+
+/*
+ * Create the cmd status CSV and write its header. Also records the serial
+ * number and path used by LogCmdStatus(). Collection continues even if this
+ * fails; the package is simply missing its log index.
+ */
+static void SetupCmdStatusLog(const char *ctrl_dir, const char *serial)
+{
+	FILE *fp = NULL;
+
+	logpull_csv_path[0] = '\0';
+	memset(logpull_csv_logged, 0, sizeof(logpull_csv_logged));
+	snprintf(logpull_csv_serial, sizeof(logpull_csv_serial), "%s", serial);
+
+	if (snprintf(logpull_csv_path, sizeof(logpull_csv_path), "%s/%s",
+		     ctrl_dir, LOGPULL_CMD_STATUS_FILE) >=
+	    (int)sizeof(logpull_csv_path)) {
+		logpull_csv_path[0] = '\0';
+		nvme_show_error("Path too long for %s", LOGPULL_CMD_STATUS_FILE);
+		return;
+	}
+
+	fp = fopen(logpull_csv_path, "wb+");
+	if (!fp) {
+		nvme_show_error("Failed to create %s", logpull_csv_path);
+		logpull_csv_path[0] = '\0';
+		return;
+	}
+
+	fprintf(fp,
+		"serial_number,cmd_info,op_code,log_id,cmd_class,cmd_code,binary_file,execution_time_us,mse_status\n");
+	fclose(fp);
+}
+
+/*
+ * Append a row to the cmd status CSV describing the collection of @file.
+ *
+ * @err is the result of the collection: 0 marks the log as available to
+ * decode, any other value records the failure and excludes the log.
+ * Files with no cmd_info identifier are skipped rather than listed under a
+ * made-up name.
+ *
+ * execution_time_us is emitted as 0; the collection paths are not
+ * instrumented for timing.
+ */
+static void LogCmdStatus(const char *file, int err)
+{
+	const struct logpull_cmd_info *info = NULL;
+	char status[256] = { 0 };
+	FILE *fp = NULL;
+	size_t i;
+
+	if (!logpull_csv_path[0] || !file)
+		return;
+
+	for (i = 0; i < ARRAY_SIZE(logpull_cmd_info_table); i++) {
+		if (!strcmp(file, logpull_cmd_info_table[i].binary_file)) {
+			info = &logpull_cmd_info_table[i];
+			break;
+		}
+	}
+	if (!info || logpull_csv_logged[i])
+		return;
+	if (!err)
+		logpull_csv_logged[i] = true;
+
+	/*
+	 * Some status descriptions contain commas, which would split the last
+	 * cell across columns. Substitute them so the row keeps its 9 fields.
+	 */
+	snprintf(status, sizeof(status), "%s",
+		 err ? libnvme_status_to_string(err, false) : LOGPULL_STATUS_SUCCESS);
+	for (char *p = status; *p; p++) {
+		if (*p == ',')
+			*p = ';';
+	}
+
+	fp = fopen(logpull_csv_path, "ab+");
+	if (!fp)
+		return;
+
+	fprintf(fp, "%s,%s,0x%.2X,0x%.2X,0x%.4X,0x%.4X,%s,%llu,%s\n",
+		logpull_csv_serial, info->cmd_info, info->opcode, info->log_id,
+		info->cmd_class, info->cmd_code, info->binary_file, 0ULL, status);
+
+	fclose(fp);
+}
+
+/*
+ * Write the log pull metadata JSON to the package root. This identifies the
+ * drive the package was collected from.
+ *
+ * device_id and vendor_id must be correct for a valid decode.
+ */
+static void GetLogPullMetadata(const char *strOSDirName, struct nvme_id_ctrl *ctrlp,
+			       const char *tool_version)
+{
+	__cleanup_free char *tempFile = NULL;
+	__cleanup_free char *strPDir = NULL;
+	char model[sizeof(ctrlp->mn) + 1] = { 0 };
+	char serial[sizeof(ctrlp->sn) + 1] = { 0 };
+	char fwrev[sizeof(ctrlp->fr) + 1] = { 0 };
+	char os_string[256] = { 0 };
+	char timestamp[64] = { 0 };
+	char utc_offset[16] = { 0 };
+	char *mn, *sn, *fr;
+	char *strDest = NULL;
+	FILE *fp = NULL;
+	struct tm *tmp;
+	time_t t;
+
+	strPDir = strdup(strOSDirName);
+	if (!strPDir) {
+		nvme_show_error("Failed to allocate memory for directory name");
+		return;
+	}
+	strDest = dirname(strPDir);
+
+	if (asprintf(&tempFile, "%s/%s", strDest, LOGPULL_METADATA_FILE) < 0) {
+		nvme_show_error("Failed to allocate memory for temp file name");
+		return;
+	}
+
+	/*
+	 * Identify strings are space-padded and not NUL-terminated; copy them
+	 * out and trim any whitespace.
+	 */
+	snprintf(model, sizeof(model), "%-.*s", (int)sizeof(ctrlp->mn), ctrlp->mn);
+	snprintf(serial, sizeof(serial), "%-.*s", (int)sizeof(ctrlp->sn), ctrlp->sn);
+	snprintf(fwrev, sizeof(fwrev), "%-.*s", (int)sizeof(ctrlp->fr), ctrlp->fr);
+
+	mn = sanitize_json_value(shr_trim(model));
+	sn = sanitize_json_value(shr_trim(serial));
+	fr = sanitize_json_value(shr_trim(fwrev));
+
+	micron_get_os_string(os_string, sizeof(os_string));
+	sanitize_json_value(os_string);
+
+	t = time(NULL);
+	tmp = localtime(&t);
+	if (tmp) {
+		char zone[8] = { 0 };
+
+		strftime(timestamp, sizeof(timestamp), "%a %b %d %H:%M:%S %Y", tmp);
+		/* %z gives "+hhmm"; this field is written as "+hh:mm" */
+		if (strftime(zone, sizeof(zone), "%z", tmp) == 5)
+			snprintf(utc_offset, sizeof(utc_offset), "%.3s:%.2s",
+				 zone, zone + 3);
+		else
+			snprintf(utc_offset, sizeof(utc_offset), "%s", zone);
+	}
+
+	fp = fopen(tempFile, "wb+");
+	if (!fp) {
+		nvme_show_error("Failed to create %s", tempFile);
+		return;
+	}
+
+	fprintf(fp, "{\n");
+	fprintf(fp, "    \"system_os\": \"%s\",\n", os_string);
+	fprintf(fp, "    \"logpull_timestamp\": \"%s\",\n", timestamp);
+	fprintf(fp, "    \"utc_offset\": \"%s\",\n", utc_offset);
+	fprintf(fp, "    \"package_version\": \"%s\",\n", LOGPULL_PACKAGE_VERSION);
+	fprintf(fp, "    \"tool_pull_name\": \"nvme-cli\",\n");
+	fprintf(fp, "    \"tool_pull_version\": \"%s\",\n", tool_version);
+	fprintf(fp, "    \"vendor_id\": \"0x%04X\",\n", vendor_id);
+	fprintf(fp, "    \"device_id\": \"0x%04X\",\n", device_id);
+	fprintf(fp, "    \"serial_number\": \"%s\",\n", sn);
+	fprintf(fp, "    \"model_number_identify\": \"%s\",\n", mn);
+	fprintf(fp, "    \"firmware_revision\": \"%s\"\n", fr);
+	fprintf(fp, "}\n");
+
+	fclose(fp);
+}
+
 static void GetDriveInfo(const char *strOSDirName, int nFD,
 						 struct nvme_id_ctrl *ctrlp)
 {
@@ -2055,7 +2359,8 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 		nvme_show_error("Failed to allocate memory for temp file name");
 		return;
 	}
-	fpOutFile = fopen(tempFile, "w+");
+
+	fpOutFile = fopen(tempFile, "wb+");
 	if (!fpOutFile) {
 		nvme_show_error("Failed to create %s", tempFile);
 		return;
@@ -2123,16 +2428,20 @@ static void GetTimestampInfo(const char *strOSDirName)
 static void GetCtrlIDDInfo(const char *dir, struct nvme_id_ctrl *ctrlp)
 {
 	WriteData((__u8 *)ctrlp, sizeof(*ctrlp), dir,
-			  "nvme_controller_identify_data.bin", "id-ctrl");
+			  LOG_FILE_ID_CTRL, "id-ctrl");
+	LogCmdStatus(LOG_FILE_ID_CTRL, 0);
 }
 
 static void GetSmartlogData(struct libnvme_transport_handle *hdl, const char *dir)
 {
 	struct nvme_smart_log smart_log;
+	int err;
 
-	if (!nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log))
+	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
+	if (!err)
 		WriteData((__u8 *)&smart_log, sizeof(smart_log), dir,
-			  "smart_data.bin", "smart log");
+			  LOG_FILE_SMART, "smart log");
+	LogCmdStatus(LOG_FILE_SMART, err);
 }
 
 static void GetErrorlogData(struct libnvme_transport_handle *hdl, int entries, const char *dir)
@@ -2142,6 +2451,7 @@ static void GetErrorlogData(struct libnvme_transport_handle *hdl, int entries, c
 				(struct nvme_error_log_page *)libnvme_alloc(logSize);
 	struct libnvme_passthru_cmd cmd;
 	size_t len;
+	int err;
 
 	if (!error_log)
 		return;
@@ -2151,9 +2461,11 @@ static void GetErrorlogData(struct libnvme_transport_handle *hdl, int entries, c
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_ERROR,
 		NVME_CSI_NVM, error_log, len);
 
-	if (!libnvme_get_log(hdl, &cmd, false, len))
+	err = libnvme_get_log(hdl, &cmd, false, len);
+	if (!err)
 		WriteData((__u8 *)error_log, logSize, dir,
-			  "error_information_log.bin", "error log");
+			  LOG_FILE_ERROR_INFO, "error log");
+	LogCmdStatus(LOG_FILE_ERROR_INFO, err);
 }
 
 static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir)
@@ -2173,23 +2485,30 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	len = sizeof(self_test_log);
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
 		NVME_CSI_NVM, &self_test_log, len);
-	if (!libnvme_get_log(hdl, &cmd, false, len))
-		WriteData((__u8 *)&self_test_log, sizeof(self_test_log), dir,
-			  "drive_self_test.bin", "self test log");
+	err = libnvme_get_log(hdl, &cmd, false, len);
+	if (!err)
+		WriteData((__u8 *)&self_test_log, len, dir,
+			  LOG_FILE_SELF_TEST, "self test log");
+	LogCmdStatus(LOG_FILE_SELF_TEST, err);
 
 	/* get fw slot info log */
+	len = sizeof(fw_log);
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_FW_SLOT,
-		NVME_CSI_NVM, &fw_log, sizeof(fw_log));
-	if (!libnvme_get_log(hdl, &cmd, false, sizeof(fw_log)))
-		WriteData((__u8 *)&fw_log, sizeof(fw_log), dir,
-			  "firmware_slot_info_log.bin", "firmware log");
+		NVME_CSI_NVM, &fw_log, len);
+	err = libnvme_get_log(hdl, &cmd, false, len);
+	if (!err)
+		WriteData((__u8 *)&fw_log, len, dir,
+			  LOG_FILE_FW_SLOT, "firmware log");
+	LogCmdStatus(LOG_FILE_FW_SLOT, err);
 
 	/* get effects log */
 	len = sizeof(effects);
 	nvme_init_get_log_cmd_effects(&cmd, NVME_CSI_NVM, &effects);
-	if (!libnvme_get_log(hdl, &cmd, false, len))
-		WriteData((__u8 *)&effects, sizeof(effects), dir,
-			  "command_effects_log.bin", "effects log");
+	err = libnvme_get_log(hdl, &cmd, false, len);
+	if (!err)
+		WriteData((__u8 *)&effects, len, dir,
+			  LOG_FILE_CMD_EFFECTS, "effects log");
+	LogCmdStatus(LOG_FILE_CMD_EFFECTS, err);
 
 	/* get persistent event log */
 	(void)nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
@@ -2213,20 +2532,25 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 						pevent_log_info, log_len);
 	if (!err)
 		WriteData((__u8 *)pevent_log_info, log_len, dir,
-			  "persistent_event_log.bin", "persistent event log");
+			  LOG_FILE_PEVENT, "persistent event log");
+	LogCmdStatus(LOG_FILE_PEVENT, err);
 }
 
-static void GetNSIDDInfo(struct libnvme_transport_handle *hdl, const char *dir, int nsid)
+static int GetNSIDDInfo(struct libnvme_transport_handle *hdl, const char *dir, int nsid)
 {
 	char file[PATH_MAX] = { 0 };
 	struct nvme_id_ns ns;
 	struct libnvme_passthru_cmd cmd;
+	int err;
 
 	nvme_init_identify_ns(&cmd, nsid, &ns);
-	if (!libnvme_exec_admin_passthru(hdl, &cmd)) {
-		snprintf(file, sizeof(file), "identify_namespace_%d_data.bin", nsid);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	if (!err) {
+		snprintf(file, sizeof(file), LOG_FILE_ID_NS, nsid);
 		WriteData((__u8 *)&ns, sizeof(ns), dir, file, "id-ns");
 	}
+
+	return err;
 }
 
 static void GetOSConfig(const char *strOSDirName)
@@ -2334,8 +2658,8 @@ static int GetTelemetryData(struct libnvme_transport_handle *hdl,
 		__u8 log;
 		char *file;
 	} tmap[] = {
-		{NVME_LOG_LID_TELEMETRY_HOST, "nvme_host_telemetry_log.bin"},
-		{NVME_LOG_LID_TELEMETRY_CTRL, "nvme_controller_telemetry_log.bin"},
+		{NVME_LOG_LID_TELEMETRY_HOST, LOG_FILE_TELEMETRY_HOST},
+		{NVME_LOG_LID_TELEMETRY_CTRL, LOG_FILE_TELEMETRY_CTRL},
 	};
 
 	for (i = 0; i < (int)(ARRAY_SIZE(tmap)); i++) {
@@ -2345,6 +2669,7 @@ static int GetTelemetryData(struct libnvme_transport_handle *hdl,
 			snprintf(msg, sizeof(msg), "telemetry log: 0x%X", tmap[i].log);
 			WriteData(buffer, logSize, dir, tmap[i].file, msg);
 		}
+		LogCmdStatus(tmap[i].file, err);
 		libnvme_free(buffer);
 		buffer = NULL;
 		logSize = 0;
@@ -2363,18 +2688,18 @@ static int GetFeatureSettings(struct libnvme_transport_handle *hdl, const char *
 		int id;
 		char *file;
 	} fmap[] = {
-		{0x01, "nvme_feature_setting_arbitration.bin"},
-		{0x02, "nvme_feature_setting_pm.bin"},
-		{0x03, "nvme_feature_setting_lba_range_namespace_1.bin"},
-		{0x04, "nvme_feature_setting_temp_threshold.bin"},
-		{0x05, "nvme_feature_setting_error_recovery.bin"},
-		{0x06, "nvme_feature_setting_volatile_write_cache.bin"},
-		{0x07, "nvme_feature_setting_num_queues.bin"},
-		{0x08, "nvme_feature_setting_interrupt_coalescing.bin"},
-		{0x09, "nvme_feature_setting_interrupt_vec_config.bin"},
-		{0x0A, "nvme_feature_setting_write_atomicity.bin"},
-		{0x0B, "nvme_feature_setting_async_event_config.bin"},
-		{0x80, "nvme_feature_setting_sw_progress_marker.bin"},
+		{0x01, LOG_FILE_FEAT_ARBITRATION},
+		{0x02, LOG_FILE_FEAT_POWER_MGMT},
+		{0x03, LOG_FILE_FEAT_LBA_RANGE},
+		{0x04, LOG_FILE_FEAT_TEMP_THRESHOLD},
+		{0x05, LOG_FILE_FEAT_ERROR_RECOVERY},
+		{0x06, LOG_FILE_FEAT_VWC},
+		{0x07, LOG_FILE_FEAT_NUM_QUEUES},
+		{0x08, LOG_FILE_FEAT_IRQ_COAL},
+		{0x09, LOG_FILE_FEAT_IRQ_VECTOR},
+		{0x0A, LOG_FILE_FEAT_WRITE_ATOMICITY},
+		{0x0B, LOG_FILE_FEAT_ASYNC_EVENT},
+		{0x80, LOG_FILE_FEAT_SW_PROGRESS},
 	};
 
 	for (i = 0; i < (int)(ARRAY_SIZE(fmap)); i++) {
@@ -2397,6 +2722,7 @@ static int GetFeatureSettings(struct libnvme_transport_handle *hdl, const char *
 					fmap[i].id, err);
 			errcnt++;
 		}
+		LogCmdStatus(fmap[i].file, err);
 	}
 	return (int)(errcnt == ARRAY_SIZE(fmap));
 }
@@ -3452,12 +3778,12 @@ static int GetOcpEnhancedTelemetryLogs(struct libnvme_transport_handle *hdl, con
 	return GetTelemetryData(hdl, dir, !err);
 }
 
-
 static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 				struct plugin *plugin)
 {
 	int err = -EINVAL;
 	int ctrlIdx, telemetry_option = 0;
+	int ns_err;
 	char strOSDirName[1024];
 	char strCtrlDirName[1024];
 	char strMainDirName[256];
@@ -3476,50 +3802,51 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		int nLogSize;
 		int nMaxSize;
 	} aVendorLogs[32] = {
-		{ 0x03, "firmware_slot_info_log.bin", 512, 0 },
-		{ 0xC1, "nvmelog_C1.bin", 0, 0 },
-		{ 0xC2, "nvmelog_C2.bin", 0, 0 },
-		{ 0xC4, "nvmelog_C4.bin", 0, 0 },
-		{ 0xC5, "nvmelog_C5.bin", C5_log_size, 0 },
-		{ 0xD0, "nvmelog_D0.bin", D0_log_size, 0 },
-		{ 0xE6, "nvmelog_E6.bin", 0, 0 },
-		{ 0xE7, "nvmelog_E7.bin", 0, 0 }
+		{ 0x03, LOG_FILE_FW_SLOT, 512, 0 },
+		{ 0xC1, LOG_FILE_VS_LOG(C1), 0, 0 },
+		{ 0xC2, LOG_FILE_VS_LOG(C2), 0, 0 },
+		{ 0xC4, LOG_FILE_VS_LOG(C4), 0, 0 },
+		{ 0xC5, LOG_FILE_VS_LOG(C5), C5_log_size, 0 },
+		{ 0xD0, LOG_FILE_VS_LOG(D0), D0_log_size, 0 },
+		{ 0xE6, LOG_FILE_VS_LOG(E6), 0, 0 },
+		{ 0xE7, LOG_FILE_VS_LOG(E7), 0, 0 }
 	},
 	aM51XXLogs[] = {
-		{ 0xFB, "nvmelog_FB.bin", 4096, 0 },  /* this should be collected first for M51AX */
-		{ 0xD0, "nvmelog_D0.bin", 512, 0 },
-		{ 0x03, "firmware_slot_info_log.bin", 512, 0},
-		{ 0xF7, "nvmelog_F7.bin", 4096, 512 * 1024 },
-		{ 0xF8, "nvmelog_F8.bin", 4096, 512 * 1024 },
-		{ 0xF9, "nvmelog_F9.bin", 4096, 200 * 1024 * 1024 },
-		{ 0xFC, "nvmelog_FC.bin", 4096, 200 * 1024 * 1024 },
-		{ 0xFD, "nvmelog_FD.bin", 4096, 80 * 1024 * 1024 }
+		/* this should be collected first for M51AX */
+		{ 0xFB, LOG_FILE_VS_LOG(FB), 4096, 0 },
+		{ 0xD0, LOG_FILE_VS_LOG(D0), 512, 0 },
+		{ 0x03, LOG_FILE_FW_SLOT, 512, 0},
+		{ 0xF7, LOG_FILE_VS_LOG(F7), 4096, 512 * 1024 },
+		{ 0xF8, LOG_FILE_VS_LOG(F8), 4096, 512 * 1024 },
+		{ 0xF9, LOG_FILE_VS_LOG(F9), 4096, 200 * 1024 * 1024 },
+		{ 0xFC, LOG_FILE_VS_LOG(FC), 4096, 200 * 1024 * 1024 },
+		{ 0xFD, LOG_FILE_VS_LOG(FD), 4096, 80 * 1024 * 1024 }
 	},
 	aM51AXLogs[] = {
-		{ 0xCA, "nvmelog_CA.bin", 512, 0 },
-		{ 0xFA, "nvmelog_FA.bin", 4096, 15232 },
-		{ 0xF6, "nvmelog_F6.bin", 4096, 512 * 1024 },
-		{ 0xFE, "nvmelog_FE.bin", 4096, 512 * 1024 },
-		{ 0xFF, "nvmelog_FF.bin", 4096, 162 * 1024 },
-		{ 0x04, "changed_namespace_log.bin", 4096, 0 },
-		{ 0x05, "command_effects_log.bin", 4096, 0 },
-		{ 0x06, "drive_self_test.bin", 4096, 0 }
+		{ 0xCA, LOG_FILE_VS_LOG(CA), 512, 0 },
+		{ 0xFA, LOG_FILE_VS_LOG(FA), 4096, 15232 },
+		{ 0xF6, LOG_FILE_VS_LOG(F6), 4096, 512 * 1024 },
+		{ 0xFE, LOG_FILE_VS_LOG(FE), 4096, 512 * 1024 },
+		{ 0xFF, LOG_FILE_VS_LOG(FF), 4096, 162 * 1024 },
+		{ 0x04, LOG_FILE_CHANGED_NS, 4096, 0 },
+		{ 0x05, LOG_FILE_CMD_EFFECTS, 4096, 0 },
+		{ 0x06, LOG_FILE_SELF_TEST, 4096, 0 }
 	},
 	aM51BXLogs[] = {
-		{ 0xFA, "nvmelog_FA.bin", 4096, 16376 },
-		{ 0xFE, "nvmelog_FE.bin", 4096, 256 * 1024 },
-		{ 0xFF, "nvmelog_FF.bin", 4096, 64 * 1024 },
-		{ 0xCA, "nvmelog_CA.bin", 512, 1024 }
+		{ 0xFA, LOG_FILE_VS_LOG(FA), 4096, 16376 },
+		{ 0xFE, LOG_FILE_VS_LOG(FE), 4096, 256 * 1024 },
+		{ 0xFF, LOG_FILE_VS_LOG(FF), 4096, 64 * 1024 },
+		{ 0xCA, LOG_FILE_VS_LOG(CA), 512, 1024 }
 	},
 	aM51CXLogs[] = {
-		{ 0xE1, "nvmelog_E1.bin", 0, 0 },
-		{ 0xE2, "nvmelog_E2.bin", 0, 0 },
-		{ 0xE3, "nvmelog_E3.bin", 0, 0 },
-		{ 0xE4, "nvmelog_E4.bin", 0, 0 },
-		{ 0xE5, "nvmelog_E5.bin", 0, 0 },
-		{ 0xE8, "nvmelog_E8.bin", 0, 0 },
-		{ 0xE9, "nvmelog_E9.bin", 0, 0 },
-		{ 0xEA, "nvmelog_EA.bin", 0, 0 }
+		{ 0xE1, LOG_FILE_VS_LOG(E1), 0, 0 },
+		{ 0xE2, LOG_FILE_VS_LOG(E2), 0, 0 },
+		{ 0xE3, LOG_FILE_VS_LOG(E3), 0, 0 },
+		{ 0xE4, LOG_FILE_VS_LOG(E4), 0, 0 },
+		{ 0xE5, LOG_FILE_VS_LOG(E5), 0, 0 },
+		{ 0xE8, LOG_FILE_VS_LOG(E8), 0, 0 },
+		{ 0xE9, LOG_FILE_VS_LOG(E9), 0, 0 },
+		{ 0xEA, LOG_FILE_VS_LOG(EA), 0, 0 }
 	};
 
 	enum eDriveModel eModel = UNKNOWN_MODEL;
@@ -3638,13 +3965,28 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		goto out;
 	}
 
+	/*
+	 * Set up the cmd status CSV before any collection so each helper can
+	 * append its own row.
+	 */
+	SetupCmdStatusLog(strCtrlDirName, safe_sn);
+
+	GetLogPullMetadata(strOSDirName, &ctrl, plugin->version);
 	GetTimestampInfo(strOSDirName);
 	GetCtrlIDDInfo(strCtrlDirName, &ctrl);
 	GetOSConfig(strOSDirName);
 	GetDriveInfo(strOSDirName, ctrlIdx, &ctrl);
 
-	for (int i = 1; i <= ctrl.nn; i++)
-		GetNSIDDInfo(hdl, strCtrlDirName, i);
+	/*
+	 * All namespaces share a single command info entry.
+	 * Report success if any namespace was collected.
+	 */
+	ns_err = -1;
+	for (int i = 1; i <= ctrl.nn; i++) {
+		if (!GetNSIDDInfo(hdl, strCtrlDirName, i))
+			ns_err = 0;
+	}
+	LogCmdStatus(LOG_FILE_ID_NS, ns_err);
 
 	GetSmartlogData(hdl, strCtrlDirName);
 	GetErrorlogData(hdl, ctrl.elpe, strCtrlDirName);
@@ -3670,14 +4012,17 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	}
 
 	for (int i = 0; i < (int)(ARRAY_SIZE(aVendorLogs)) && aVendorLogs[i].ucLogPage; i++) {
+		bool wrote = false;
+
 		err = -1;
 		switch (aVendorLogs[i].ucLogPage) {
 		case 0xE1:
 		case 0xE5:
-			err = 1;
-			break;
+			continue;
 		case 0xE9:
-		if (eModel == M51CX || eModel == M51BY) {
+			if (eModel != M51CX && eModel != M51BY)
+				continue;
+
 			err = NVMEGetLogPage(hdl, aVendorLogs[i].ucLogPage,
 					(unsigned char *)&stWllHdr,
 					sizeof(struct MICRON_WORKLOAD_LOG_HDR), 0);
@@ -3708,9 +4053,6 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 					nvme_show_error("Failed to fetch the E9 logs");
 
 			}
-		} else {
-			err = 1;
-		}
 			break;
 		case 0xE2:
 			if (eModel == M51CX || eModel == M51BY || eModel == M51CY)
@@ -3752,13 +4094,12 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			puiIDDBuf = (unsigned int *)&ctrl;
 			uiMask = puiIDDBuf[1015];
 			if (!uiMask || (aVendorLogs[i].ucLogPage == 0xE6 && uiMask == 2) ||
-				(aVendorLogs[i].ucLogPage == 0xE7 && uiMask == 1)) {
-				bSize = 0;
-			} else {
-				bSize = (int)puiIDDBuf[1023];
-				if (bSize % (16 * 1024))
-					bSize += (16 * 1024) - (bSize % (16 * 1024));
-			}
+			    (aVendorLogs[i].ucLogPage == 0xE7 && uiMask == 1))
+				continue;
+
+			bSize = (int)puiIDDBuf[1023];
+			if (bSize % (16 * 1024))
+				bSize += (16 * 1024) - (bSize % (16 * 1024));
 			dataBuffer = (unsigned char *)libnvme_alloc(bSize);
 			if (bSize && dataBuffer) {
 				memset(dataBuffer, 0, bSize);
@@ -3780,7 +4121,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 				(void)NVMEResetLog(hdl, aVendorLogs[i].ucLogPage,
 						   aVendorLogs[i].nLogSize, aVendorLogs[i].nMaxSize);
 
-			break;
+			continue;
 		default:
 			bSize = aVendorLogs[i].nLogSize;
 			dataBuffer = (unsigned char *)libnvme_alloc(bSize);
@@ -3793,6 +4134,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			while (!err && maxSize > 0 && ((unsigned int *)dataBuffer)[0] != 0xdeadbeef) {
 				snprintf(msg, sizeof(msg), "log 0x%x", aVendorLogs[i].ucLogPage);
 				WriteData(dataBuffer, bSize, strCtrlDirName, aVendorLogs[i].strFileName, msg);
+				wrote = true;
 				err = nvme_get_log_simple(hdl,
 					  aVendorLogs[i].ucLogPage,
 					  dataBuffer, bSize);
@@ -3806,7 +4148,17 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		if (!err && dataBuffer && ((unsigned int *)dataBuffer)[0] != 0xdeadbeef) {
 			snprintf(msg, sizeof(msg), "log 0x%x", aVendorLogs[i].ucLogPage);
 			WriteData(dataBuffer, bSize, strCtrlDirName, aVendorLogs[i].strFileName, msg);
+			wrote = true;
 		}
+
+		/*
+		 * Only logs with data on disk are marked available to decode.
+		 * A log that is empty or intentionally skipped gets no row.
+		 */
+		if (wrote)
+			LogCmdStatus(aVendorLogs[i].strFileName, 0);
+		else if (err)
+			LogCmdStatus(aVendorLogs[i].strFileName, err);
 
 		libnvme_free(dataBuffer);
 		dataBuffer = NULL;
