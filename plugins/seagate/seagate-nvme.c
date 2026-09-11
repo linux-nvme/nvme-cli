@@ -172,6 +172,15 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 
 	err = nvme_get_log_simple(hdl, 0xc5, &logPageMap, sizeof(logPageMap));
 	if (!err) {
+		/*
+		 * NumLogPages comes from the device: never walk past the
+		 * fixed-size table in the log header.
+		 */
+		if (le32_to_cpu(logPageMap.NumLogPages) >
+		    MAX_SUPPORTED_LOG_PAGE_ENTRIES)
+			logPageMap.NumLogPages =
+				cpu_to_le32(MAX_SUPPORTED_LOG_PAGE_ENTRIES);
+
 		if (!(flags & JSON)) {
 			printf("Seagate Supported Log-pages count :%d\n",
 				le32_to_cpu(logPageMap.NumLogPages));
@@ -1346,7 +1355,6 @@ static void json_stx_vs_fw_activate_history(const stx_fw_activ_history_log_page 
 			struct tm  ts = *localtime(&t);
 
 			strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
-			printf(" %-20s   ", buf);
 			json_object_add_value_string(lbaf, "Timestamp", buf);
 
 			json_object_add_value_int(lbaf, "PCC", fwActivHis->fwActHisEnt[i].powCycleCnt);
@@ -1366,8 +1374,6 @@ static void json_stx_vs_fw_activate_history(const stx_fw_activ_history_log_page 
 
 			json_array_add_value_object(historyLogPage, lbaf);
 		}
-	} else {
-		printf("%s\n", "Do not have valid FW Activation History");
 	}
 
 	json_print_object(root, NULL);
