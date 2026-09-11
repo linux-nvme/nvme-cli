@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 	const uint8_t AEM_FD_INDEX = 0;
 	const uint8_t STD_IN_FD_INDEX = 1;
 
-	if (argc == 4) {
+	if (argc >= 4) {
 		net = atoi(argv[1]);
 		eid = atoi(argv[2]) & 0xff;
 		argv += 2;
@@ -101,6 +101,12 @@ int main(int argc, char **argv)
 		for (int i = 0; i < event_count; i++) {
 			int event = atoi(argv[1+i]);
 
+			if (event < 0 || event > 255) {
+				fprintf(stderr,
+					"invalid AE number %d (must be 0-255)\n",
+					event);
+				return EXIT_FAILURE;
+			}
 			aem_config.enabled_map.enabled[event] = true;
 		}
 	} else {
