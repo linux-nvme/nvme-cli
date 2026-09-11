@@ -48,6 +48,7 @@ _LEGACY_COMMANDS = {
     "id ctrl-list": "list-ctrl",
     "id ns-list": "list-ns",
     "id nvm-ns": "nvm-id-ns",
+    "id uuid": "id-uuid",
     "log smart": "smart-log",
     "log error": "error-log",
     "log fw": "fw-log",
