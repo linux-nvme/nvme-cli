@@ -311,7 +311,7 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_AMS_SHIFT:		Shift amount to get the arbitration mechanism supported
  * @NVME_CAP_TO_SHIFT:		Shift amount to get the timeout
  * @NVME_CAP_DSTRD_SHIFT:	Shift amount to get the doorbell stride
- * @NVME_CAP_NSSRC_SHIFT:	Shift amount to get the NVM subsystem reset supported
+ * @NVME_CAP_NSSRS_SHIFT:	Shift amount to get the NVM subsystem reset supported
  * @NVME_CAP_CSS_SHIFT:		Shift amount to get the command sets supported
  * @NVME_CAP_BPS_SHIFT:		Shift amount to get the boot partition support
  * @NVME_CAP_CPS_SHIFT:		Shift amount to get the controller power scope
@@ -327,7 +327,7 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_AMS_MASK:		Mask to get the arbitration mechanism supported
  * @NVME_CAP_TO_MASK:		Mask to get the timeout
  * @NVME_CAP_DSTRD_MASK:	Mask to get the doorbell stride
- * @NVME_CAP_NSSRC_MASK:	Mask to get the NVM subsystem reset supported
+ * @NVME_CAP_NSSRS_MASK:	Mask to get the NVM subsystem reset supported
  * @NVME_CAP_CSS_MASK:		Mask to get the command sets supported
  * @NVME_CAP_BPS_MASK:		Mask to get the boot partition support
  * @NVME_CAP_CPS_MASK:		Mask to get the controller power scope
@@ -356,7 +356,7 @@ enum nvme_cap {
 	NVME_CAP_AMS_SHIFT		= 17,
 	NVME_CAP_TO_SHIFT		= 24,
 	NVME_CAP_DSTRD_SHIFT		= 32,
-	NVME_CAP_NSSRC_SHIFT		= 36,
+	NVME_CAP_NSSRS_SHIFT		= 36,
 	NVME_CAP_CSS_SHIFT		= 37,
 	NVME_CAP_BPS_SHIFT		= 45,
 	NVME_CAP_CPS_SHIFT		= 46,
@@ -372,7 +372,7 @@ enum nvme_cap {
 	NVME_CAP_AMS_MASK		= 0x3,
 	NVME_CAP_TO_MASK		= 0xff,
 	NVME_CAP_DSTRD_MASK		= 0xf,
-	NVME_CAP_NSSRC_MASK		= 0x1,
+	NVME_CAP_NSSRS_MASK		= 0x1,
 	NVME_CAP_CSS_MASK		= 0xff,
 	NVME_CAP_BPS_MASK		= 0x1,
 	NVME_CAP_CPS_MASK		= 0x3,
@@ -401,7 +401,7 @@ enum nvme_cap {
 #define NVME_CAP_AMS(cap)	NVME_GET(cap, CAP_AMS)
 #define NVME_CAP_TO(cap)	NVME_GET(cap, CAP_TO)
 #define NVME_CAP_DSTRD(cap)	NVME_GET(cap, CAP_DSTRD)
-#define NVME_CAP_NSSRC(cap)	NVME_GET(cap, CAP_NSSRC)
+#define NVME_CAP_NSSRS(cap)	NVME_GET(cap, CAP_NSSRS)
 #define NVME_CAP_CSS(cap)	NVME_GET(cap, CAP_CSS)
 #define NVME_CAP_BPS(cap)	NVME_GET(cap, CAP_BPS)
 #define NVME_CAP_CPS(cap)	NVME_GET(cap, CAP_CPS)

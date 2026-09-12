@@ -33,6 +33,10 @@
   Specification's requirement for that token. DHCP root-path and NBFT
   data are not consistent about its case.
 
+* The API name `NVME_CAP_NSSRC()` changed to `NVME_CAP_NSSRS()`.
+  Since the CAP property NVM Subsystem Reset Supported bit symbol name
+  is described as NSSRS by the spec then the API name was not correct.
+
 ### Build
 
 * `-Ddocs=man` and `-Ddocs=all` install the man pages shipped in
