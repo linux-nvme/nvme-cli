@@ -23,7 +23,7 @@
  * NVMe Base Specification type definitions
  *
  * Based on NVM Express Base Specification,
- * Revision 2.3, August 1, 2025 (Ratified)
+ * Revision 2.4, July 31, 2026 (Ratified)
  *
  * This file contains core NVMe types organized by functional area:
  * - Helper Macros: NVME_GET, NVME_SET, NVME_CHECK, NVME_VAL
