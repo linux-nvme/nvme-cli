@@ -87,6 +87,7 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %" PRIx64 "\n", "CMBS", (uint64_t)NVME_CAP_CMBS(cap));
 	printf("  %-8s : %" PRIx64 "\n", "NSSS", (uint64_t)NVME_CAP_NSSS(cap));
 	printf("  %-8s : %" PRIx64 "\n", "CRMS", (uint64_t)NVME_CAP_CRMS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "NSSES", (uint64_t)NVME_CAP_NSSES(cap));
 
 	printf("%-10s : %x\n", "VS", vs);
 	printf("  %-8s : %x\n", "MJR", NVME_VS_TER(vs));
