@@ -650,6 +650,9 @@ if want_nvme
         endif
     else
         link_args_list = ['-ldl']
+        if cc.has_link_argument('-rdynamic')
+            link_args_list += '-rdynamic'
+        endif
     endif
 
     nvme_exe = executable(
