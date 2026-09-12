@@ -321,6 +321,7 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_CMBS_SHIFT:	Shift amount to get the controller memory buffer supported
  * @NVME_CAP_NSSS_SHIFT:	Shift amount to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_SHIFT:	Shift amount to get the controller ready modes supported
+ * @NVME_CAP_NSSES_SHIFT:	Shift amount to get the NVM subsystem shutdown enhancements supported
  * @NVME_CAP_MQES_MASK:		Mask to get the maximum queue entries supported
  * @NVME_CAP_CQR_MASK:		Mask to get the contiguous queues required
  * @NVME_CAP_AMS_MASK:		Mask to get the arbitration mechanism supported
@@ -336,6 +337,7 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_CMBS_MASK:		Mask to get the controller memory buffer supported
  * @NVME_CAP_NSSS_MASK:		Mask to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_MASK:		Mask to get the controller ready modes supported
+ * @NVME_CAP_NSSES_MASK:	Mask to get the NVM subsystem shutdown enhancements supported
  * @NVME_CAP_AMS_WRR:		Weighted round robin with urgent priority class
  * @NVME_CAP_AMS_VS:		Vendor specific
  * @NVME_CAP_CSS_NVM:		NVM command set or a discovery controller
@@ -364,6 +366,7 @@ enum nvme_cap {
 	NVME_CAP_CMBS_SHIFT		= 57,
 	NVME_CAP_NSSS_SHIFT		= 58,
 	NVME_CAP_CRMS_SHIFT		= 59,
+	NVME_CAP_NSSES_SHIFT		= 61,
 	NVME_CAP_MQES_MASK		= 0xffff,
 	NVME_CAP_CQR_MASK		= 0x1,
 	NVME_CAP_AMS_MASK		= 0x3,
@@ -379,6 +382,7 @@ enum nvme_cap {
 	NVME_CAP_CMBS_MASK		= 0x1,
 	NVME_CAP_NSSS_MASK		= 0x1,
 	NVME_CAP_CRMS_MASK		= 0x3,
+	NVME_CAP_NSSES_MASK		= 0x1,
 	NVME_CAP_AMS_WRR		= 1 << 0,
 	NVME_CAP_AMS_VS			= 1 << 1,
 	NVME_CAP_CSS_NVM		= 1 << 0,
@@ -407,6 +411,7 @@ enum nvme_cap {
 #define NVME_CAP_CMBS(cap)	NVME_GET(cap, CAP_CMBS)
 #define NVME_CAP_NSSS(cap)	NVME_GET(cap, CAP_NSSS)
 #define NVME_CAP_CRMS(cap)	NVME_GET(cap, CAP_CRMS)
+#define NVME_CAP_NSSES(cap)	NVME_GET(cap, CAP_NSSES)
 
 /**
  * enum nvme_vs - This field indicates the version
