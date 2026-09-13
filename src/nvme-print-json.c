@@ -5520,9 +5520,9 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 	__cleanup_free char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
-		value = alloc_error;
+		value = NULL;
 
-	sprintf(json_str, "Error: %s", value);
+	sprintf(json_str, "Error: %s", value ? value : alloc_error);
 	r = obj_create(json_str);
 
 	if (status < 0) {
