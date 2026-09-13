@@ -43,14 +43,13 @@
 #define obj_add_uint json_object_add_value_uint
 #define obj_add_uint128 json_object_add_value_uint128
 #define obj_add_uint64 json_object_add_value_uint64
-#define obj_add_str json_object_add_value_string
 #define obj_add_uint_02x json_object_add_uint_02x
 #define obj_add_uint_0x json_object_add_uint_0x
 #define obj_add_byte_array json_object_add_byte_array
 #define obj_add_nprix64 json_object_add_nprix64
 #define obj_add_uint_0nx json_object_add_uint_0nx
 #define obj_add_0nprix64 json_object_add_0nprix64
-#define obj_add_string json_object_add_string
+#define obj_add_str json_object_add_string
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -282,11 +281,14 @@ static void json_nvme_id_ns_lbaf(struct nvme_id_ns *ns, int i, struct json_objec
 
 	if (verbose_mode()) {
 		obj_add_int(lbaf, "LBA Format", i);
-		obj_add_string(lbaf, "Metadata Size", "%d bytes", le16_to_cpu(ns->lbaf[i].ms));
-		obj_add_string(lbaf, "Data Size", "%d bytes", 1 << ns->lbaf[i].ds);
-		obj_add_string(lbaf, "Relative Performance", "0x%x %s", ns->lbaf[i].rp,
-			       ns->lbaf[i].rp == 3 ? "Degraded" : ns->lbaf[i].rp == 2 ? "Good" :
-			       ns->lbaf[i].rp == 1 ? "Better" : "Best");
+		obj_add_str(lbaf, "Metadata Size", "%d bytes",
+			    le16_to_cpu(ns->lbaf[i].ms));
+		obj_add_str(lbaf, "Data Size", "%d bytes", 1 << ns->lbaf[i].ds);
+		obj_add_str(lbaf, "Relative Performance", "0x%x %s",
+			    ns->lbaf[i].rp,
+			    ns->lbaf[i].rp == 3 ? "Degraded" :
+			    ns->lbaf[i].rp == 2 ? "Good" :
+			    ns->lbaf[i].rp == 1 ? "Better" : "Best");
 		obj_add_str(lbaf, "in use", i == flbas ? "yes" : "no");
 	} else {
 		obj_add_int(lbaf, "lbaf", i);
