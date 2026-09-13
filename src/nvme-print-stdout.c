@@ -47,6 +47,10 @@ enum simple_list_col {
 	SIMPLE_LIST_COL_FW_REV,
 };
 
+#define stdout_prop_cap(fld, val, ...) \
+	stdout_prop_field(prop_cap[fld][0], prop_cap[fld][1], 41, 59, \
+	val, ##__VA_ARGS__)
+
 static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
@@ -1384,55 +1388,66 @@ static void stdout_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana)
 	stdout_subsystem(ctx, show_ana);
 }
 
+static void stdout_prop_field(const char *name, const char *symbol,
+			      unsigned int prop_width, unsigned int col_width,
+			      const char *val, ...)
+{
+	int prop_len = strlen(name) + strlen(symbol) + 3;
+	int name_width = prop_width - strlen(symbol) - 3;
+	bool pad = col_width > prop_len;
+	int pad_len = prop_len < prop_width ? col_width - prop_width : pad ?
+	    col_width - prop_len : 0;
+	__cleanup_free char *value = NULL;
+	va_list ap;
+
+	va_start(ap, val);
+
+	if (vasprintf(&value, val, ap) < 0)
+		value = NULL;
+
+	va_end(ap);
+
+	if (strlen(name))
+		printf("\t%-*s (%s)%*s: %s\n", name_width, name, symbol,
+		       pad_len, pad ? " " : "", value);
+	else
+		printf("\t%*s %s\n", col_width + 1, " ", value);
+}
+
 static void stdout_registers_cap(uint64_t cap)
 {
-	printf("\tNVM Subsystem Shutdown Enhancements Supported (NSSES)      : %s\n",
-	       NVME_CAP_NSSES(cap) ? "Supported" : "Not Supported");
-	printf("\tController Ready With Media Support (CRWMS)                : %s\n",
-	       NVME_CAP_CRMS(cap) & NVME_CAP_CRWMS ? "Supported" : "Not Supported");
-	printf("\tController Ready Independent of Media Support (CRIMS)      : %s\n",
-	       NVME_CAP_CRMS(cap) & NVME_CAP_CRIMS ? "Supported" : "Not Supported");
-	printf("\tNVM Subsystem Shutdown Supported   (NSSS)                  : %s\n",
-	       NVME_CAP_NSSS(cap) ? "Supported" : "Not Supported");
-	printf("\tController Memory Buffer Supported (CMBS)                  : The Controller Memory Buffer is %s\n",
-	       NVME_CAP_CMBS(cap) ? "Supported" : "Not Supported");
-	printf("\tPersistent Memory Region Supported (PMRS)                  : The Persistent Memory Region is %s\n",
-	       NVME_CAP_PMRS(cap) ? "Supported" : "Not Supported");
-	printf("\tMemory Page Size Maximum         (MPSMAX)                  : %u bytes\n",
-	       1 << (12 + NVME_CAP_MPSMAX(cap)));
-	printf("\tMemory Page Size Minimum         (MPSMIN)                  : %u bytes\n",
-	       1 << (12 + NVME_CAP_MPSMIN(cap)));
-	printf("\tController Power Scope              (CPS)                  : %s\n",
-	       NVME_CAP_CPS(cap) == NVME_CAP_CPS_NONE ? "Not Reported" :
-	       NVME_CAP_CPS(cap) == NVME_CAP_CPS_CTRL ? "Controller scope" :
-	       NVME_CAP_CPS(cap) == NVME_CAP_CPS_DOMAIN ? "Domain scope" :
-	       "NVM subsystem scope");
-	printf("\tBoot Partition Support              (BPS)                  : %s\n",
-	       NVME_CAP_BPS(cap) ? "Yes" : "No");
-	printf("\tCommand Sets Supported              (CSS)                  : NVM command set is %s\n",
-	       NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM ? "Supported" :
-	       "Not Supported");
-	printf("\t                                                             One or more I/O Command Sets are %s\n",
-	       NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI ? "Supported" :
-	       "Not Supported");
-	printf("\t                                                             %s\n",
-	       NVME_CAP_CSS(cap) & NVME_CAP_CSS_ADMIN ? "Only Admin Command Set Supported" : "I/O Command Set is Supported");
-	printf("\tNVM Subsystem Reset Supported     (NSSRS)                  : %s\n",
-	       NVME_CAP_NSSRS(cap) ? "Yes" : "No");
-	printf("\tDoorbell Stride                   (DSTRD)                  : %u bytes\n",
-	       1 << (2 + NVME_CAP_DSTRD(cap)));
-	printf("\tTimeout                              (TO)                  : %"PRIu64" ms\n",
-	       NVME_CAP_TO(cap) * 500);
-	printf("\tArbitration Mechanism Supported     (AMS)                  : Weighted Round Robin with Urgent Priority Class is %s\n",
-	       NVME_CAP_AMS(cap) & NVME_CAP_AMS_WRR ? "Supported" :
-	       "Not supported");
-	printf("\t                                                           : Vendor Specific is %s\n",
-	       NVME_CAP_AMS(cap) & NVME_CAP_AMS_VS ? "Supported" :
-	       "Not supported");
-	printf("\tContiguous Queues Required          (CQR)                  : %s\n",
-	       NVME_CAP_CQR(cap) ? "Yes" : "No");
-	printf("\tMaximum Queue Entries Supported    (MQES)                  : %"PRIu64"\n\n",
-	       NVME_CAP_MQES(cap) + 1);
+	stdout_prop_cap(PROP_CAP_NSSES, nvme_support_str(NVME_CAP_NSSES(cap)));
+	stdout_prop_cap(PROP_CAP_CRWMS,
+			nvme_support_str(NVME_CAP_CRMS(cap) & NVME_CAP_CRWMS));
+	stdout_prop_cap(PROP_CAP_CRIMS,
+			nvme_support_str(NVME_CAP_CRMS(cap) & NVME_CAP_CRIMS));
+	stdout_prop_cap(PROP_CAP_NSSS, nvme_support_str(NVME_CAP_NSSS(cap)));
+	stdout_prop_cap(PROP_CAP_PMRS, "The Persistent Memory Region is %s",
+			nvme_support_str(NVME_CAP_PMRS(cap)));
+	stdout_prop_cap(PROP_CAP_MPSMAX, "%u bytes",
+			1 << (12 + NVME_CAP_MPSMAX(cap)));
+	stdout_prop_cap(PROP_CAP_MPSMIN, "%u bytes",
+			1 << (12 + NVME_CAP_MPSMIN(cap)));
+	stdout_prop_cap(PROP_CAP_CPS, prop_cap_cps_str(NVME_CAP_CPS(cap)));
+	stdout_prop_cap(PROP_CAP_BPS, nvme_yes_str(NVME_CAP_BPS(cap)));
+	stdout_prop_cap(PROP_CAP_CSS, "NVM command set is %s",
+			nvme_support_str(NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM));
+	stdout_prop_cap(PROP_CAP_NONE, "One or more I/O Command Sets are %s",
+			nvme_support_str(NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI));
+	stdout_prop_cap(PROP_CAP_NONE, NVME_CAP_CSS(cap) & NVME_CAP_CSS_ADMIN ?
+			"Only Admin Command Set Supported" :
+			"I/O Command Set is Supported");
+	stdout_prop_cap(PROP_CAP_NSSRS, nvme_yes_str(NVME_CAP_NSSRS(cap)));
+	stdout_prop_cap(PROP_CAP_DSTRD, "%u bytes",
+			1 << (2 + NVME_CAP_DSTRD(cap)));
+	stdout_prop_cap(PROP_CAP_TO, "%"PRIu64" ms", NVME_CAP_TO(cap) * 500);
+	stdout_prop_cap(PROP_CAP_AMS,
+			"Weighted Round Robin with Urgent Priority Class is %s",
+			nvme_support_str(NVME_CAP_AMS(cap) & NVME_CAP_AMS_WRR));
+	stdout_prop_cap(PROP_CAP_NONE, "Vendor Specific is %s",
+			nvme_support_str(NVME_CAP_AMS(cap) & NVME_CAP_AMS_VS));
+	stdout_prop_cap(PROP_CAP_CQR, nvme_yes_str(NVME_CAP_CQR(cap)));
+	stdout_prop_cap(PROP_CAP_MQES, "%"PRIu64"\n", NVME_CAP_MQES(cap) + 1);
 }
 
 static void stdout_registers_version(__u32 vs)

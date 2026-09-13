@@ -37,6 +37,27 @@ enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_MULTIPATH,
 };
 
+enum prop_cap {
+	PROP_CAP_MQES,
+	PROP_CAP_CQR,
+	PROP_CAP_AMS,
+	PROP_CAP_TO,
+	PROP_CAP_DSTRD,
+	PROP_CAP_NSSRS,
+	PROP_CAP_CSS,
+	PROP_CAP_BPS,
+	PROP_CAP_CPS,
+	PROP_CAP_MPSMIN,
+	PROP_CAP_MPSMAX,
+	PROP_CAP_PMRS,
+	PROP_CAP_CMBS,
+	PROP_CAP_NSSS,
+	PROP_CAP_CRIMS,
+	PROP_CAP_CRWMS,
+	PROP_CAP_NSSES,
+	PROP_CAP_NONE,
+};
+
 static inline bool nvme_is_multipath(struct libnvme_subsystem *s)
 {
 	struct libnvme_ns *n;
@@ -526,6 +547,9 @@ void nvme_json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
 void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 					 __u32 event_data_len,
 					 struct json_object *valid_attrs);
+const char *nvme_support_str(bool support);
+const char *nvme_yes_str(bool yes);
+const char *prop_cap_cps_str(uint8_t cps);
 
 extern const char *alloc_error;
 extern const char *feat_ae_dlpcn;
@@ -549,3 +573,4 @@ extern const char *feat_ae_telem;
 extern const char *feat_ae_fw;
 extern const char *feat_ae_nan;
 extern const char *feat_ae_smart;
+extern const char *prop_cap[][2];
