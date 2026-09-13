@@ -23,7 +23,7 @@
  * NVMe Base Specification type definitions
  *
  * Based on NVM Express Base Specification,
- * Revision 2.3, August 1, 2025 (Ratified)
+ * Revision 2.4, July 31, 2026 (Ratified)
  *
  * This file contains core NVMe types organized by functional area:
  * - Helper Macros: NVME_GET, NVME_SET, NVME_CHECK, NVME_VAL
@@ -311,7 +311,7 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_AMS_SHIFT:		Shift amount to get the arbitration mechanism supported
  * @NVME_CAP_TO_SHIFT:		Shift amount to get the timeout
  * @NVME_CAP_DSTRD_SHIFT:	Shift amount to get the doorbell stride
- * @NVME_CAP_NSSRC_SHIFT:	Shift amount to get the NVM subsystem reset supported
+ * @NVME_CAP_NSSRS_SHIFT:	Shift amount to get the NVM subsystem reset supported
  * @NVME_CAP_CSS_SHIFT:		Shift amount to get the command sets supported
  * @NVME_CAP_BPS_SHIFT:		Shift amount to get the boot partition support
  * @NVME_CAP_CPS_SHIFT:		Shift amount to get the controller power scope
@@ -321,12 +321,13 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_CMBS_SHIFT:	Shift amount to get the controller memory buffer supported
  * @NVME_CAP_NSSS_SHIFT:	Shift amount to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_SHIFT:	Shift amount to get the controller ready modes supported
+ * @NVME_CAP_NSSES_SHIFT:	Shift amount to get the NVM subsystem shutdown enhancements supported
  * @NVME_CAP_MQES_MASK:		Mask to get the maximum queue entries supported
  * @NVME_CAP_CQR_MASK:		Mask to get the contiguous queues required
  * @NVME_CAP_AMS_MASK:		Mask to get the arbitration mechanism supported
  * @NVME_CAP_TO_MASK:		Mask to get the timeout
  * @NVME_CAP_DSTRD_MASK:	Mask to get the doorbell stride
- * @NVME_CAP_NSSRC_MASK:	Mask to get the NVM subsystem reset supported
+ * @NVME_CAP_NSSRS_MASK:	Mask to get the NVM subsystem reset supported
  * @NVME_CAP_CSS_MASK:		Mask to get the command sets supported
  * @NVME_CAP_BPS_MASK:		Mask to get the boot partition support
  * @NVME_CAP_CPS_MASK:		Mask to get the controller power scope
@@ -336,6 +337,7 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_CMBS_MASK:		Mask to get the controller memory buffer supported
  * @NVME_CAP_NSSS_MASK:		Mask to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_MASK:		Mask to get the controller ready modes supported
+ * @NVME_CAP_NSSES_MASK:	Mask to get the NVM subsystem shutdown enhancements supported
  * @NVME_CAP_AMS_WRR:		Weighted round robin with urgent priority class
  * @NVME_CAP_AMS_VS:		Vendor specific
  * @NVME_CAP_CSS_NVM:		NVM command set or a discovery controller
@@ -354,7 +356,7 @@ enum nvme_cap {
 	NVME_CAP_AMS_SHIFT		= 17,
 	NVME_CAP_TO_SHIFT		= 24,
 	NVME_CAP_DSTRD_SHIFT		= 32,
-	NVME_CAP_NSSRC_SHIFT		= 36,
+	NVME_CAP_NSSRS_SHIFT		= 36,
 	NVME_CAP_CSS_SHIFT		= 37,
 	NVME_CAP_BPS_SHIFT		= 45,
 	NVME_CAP_CPS_SHIFT		= 46,
@@ -364,12 +366,13 @@ enum nvme_cap {
 	NVME_CAP_CMBS_SHIFT		= 57,
 	NVME_CAP_NSSS_SHIFT		= 58,
 	NVME_CAP_CRMS_SHIFT		= 59,
+	NVME_CAP_NSSES_SHIFT		= 61,
 	NVME_CAP_MQES_MASK		= 0xffff,
 	NVME_CAP_CQR_MASK		= 0x1,
 	NVME_CAP_AMS_MASK		= 0x3,
 	NVME_CAP_TO_MASK		= 0xff,
 	NVME_CAP_DSTRD_MASK		= 0xf,
-	NVME_CAP_NSSRC_MASK		= 0x1,
+	NVME_CAP_NSSRS_MASK		= 0x1,
 	NVME_CAP_CSS_MASK		= 0xff,
 	NVME_CAP_BPS_MASK		= 0x1,
 	NVME_CAP_CPS_MASK		= 0x3,
@@ -379,6 +382,7 @@ enum nvme_cap {
 	NVME_CAP_CMBS_MASK		= 0x1,
 	NVME_CAP_NSSS_MASK		= 0x1,
 	NVME_CAP_CRMS_MASK		= 0x3,
+	NVME_CAP_NSSES_MASK		= 0x1,
 	NVME_CAP_AMS_WRR		= 1 << 0,
 	NVME_CAP_AMS_VS			= 1 << 1,
 	NVME_CAP_CSS_NVM		= 1 << 0,
@@ -397,7 +401,7 @@ enum nvme_cap {
 #define NVME_CAP_AMS(cap)	NVME_GET(cap, CAP_AMS)
 #define NVME_CAP_TO(cap)	NVME_GET(cap, CAP_TO)
 #define NVME_CAP_DSTRD(cap)	NVME_GET(cap, CAP_DSTRD)
-#define NVME_CAP_NSSRC(cap)	NVME_GET(cap, CAP_NSSRC)
+#define NVME_CAP_NSSRS(cap)	NVME_GET(cap, CAP_NSSRS)
 #define NVME_CAP_CSS(cap)	NVME_GET(cap, CAP_CSS)
 #define NVME_CAP_BPS(cap)	NVME_GET(cap, CAP_BPS)
 #define NVME_CAP_CPS(cap)	NVME_GET(cap, CAP_CPS)
@@ -407,6 +411,7 @@ enum nvme_cap {
 #define NVME_CAP_CMBS(cap)	NVME_GET(cap, CAP_CMBS)
 #define NVME_CAP_NSSS(cap)	NVME_GET(cap, CAP_NSSS)
 #define NVME_CAP_CRMS(cap)	NVME_GET(cap, CAP_CRMS)
+#define NVME_CAP_NSSES(cap)	NVME_GET(cap, CAP_NSSES)
 
 /**
  * enum nvme_vs - This field indicates the version
