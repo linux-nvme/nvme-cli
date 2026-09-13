@@ -54,6 +54,26 @@ const char *feat_ae_telem = "Telemetry Log Notices";
 const char *feat_ae_fw = "Firmware Activation Notices";
 const char *feat_ae_nan = "Attached Namespace Attribute Notices";
 const char *feat_ae_smart = "SMART / Health Critical Warnings";
+const char *prop_cap[][2] = {
+	{ "Maximum Queue Entries Supported", "MQES" },
+	{ "Contiguous Queues Required", "CQR" },
+	{ "Arbitration Mechanism Supported", "AMS" },
+	{ "Timeout", "TO" },
+	{ "Doorbell Stride", "DSTRD" },
+	{ "NVM Subsystem Reset Supported", "NSSRS" },
+	{ "Command Sets Supported", "CSS" },
+	{ "Boot Partition Support", "BPS" },
+	{ "Controller Power Scope", "CPS" },
+	{ "Memory Page Size Minimum", "MPSMIN" },
+	{ "Memory Page Size Maximum", "MPSMAX" },
+	{ "Persistent Memory Region Supported", "PMRS" },
+	{ "Controller Memory Buffer Supported", "CMBS" },
+	{ "NVM Subsystem Shutdown Supported", "NSSS" },
+	{ "Controller Ready Independent of Media Support", "CRIMS" },
+	{ "Controller Ready With Media Support", "CRWMS" },
+	{ "NVM Subsystem Shutdown Enhancements Supported", "NSSES" },
+	{ "", "" }
+};
 
 static struct print_ops *nvme_print_ops(nvme_print_flags_t flags)
 {
@@ -2096,4 +2116,37 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 	default:
 		break;
 	}
+}
+
+const char *nvme_support_str(bool support)
+{
+	if (support)
+		return "Supported";
+
+	return "Not Supported";
+}
+
+const char *nvme_yes_str(bool yes)
+{
+	if (yes)
+		return "Yes";
+
+	return "No";
+}
+
+const char *prop_cap_cps_str(uint8_t cps)
+{
+	switch (cps) {
+	case NVME_CAP_CPS_NONE:
+		return "Not Reported";
+	case NVME_CAP_CPS_CTRL:
+		return "Controller scope";
+	case NVME_CAP_CPS_DOMAIN:
+		return "Domain scope";
+	case NVME_CAP_CPS_NVMS:
+	default:
+		break;
+	}
+
+	return "NVM subsystem scope";
 }
