@@ -308,7 +308,8 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 
 			offset = parent_offset_bit + offset_bit + linear_array_pos_bit;
 			if (telemetry_log_get_value(tl, offset, size_bit, is_signed, &val_obj)) {
-				if (array_size_dimension[0] > 1 || force_array)
+				if (json_object_is_type(sub_output,
+							json_type_array))
 					json_object_array_put_idx(sub_output, j, val_obj);
 				else
 					json_object_object_add(sub_output, name, val_obj);
@@ -323,7 +324,7 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 			struct json_object *sub_sub_output = json_object_new_object();
 			int num_members;
 
-			if (array_size_dimension[0] > 1 || force_array)
+			if (json_object_is_type(sub_output, json_type_array))
 				json_object_array_put_idx(sub_output, j, sub_sub_output);
 			else
 				json_object_add_value_object(sub_output, name, sub_sub_output);
@@ -636,10 +637,12 @@ int solidigm_telemetry_log_data_areas_parse(struct telemetry_log *tl,
 
 		if (json_object_object_get_ex(tl->configuration,
 					     "TELEMETRY_CONFIG_META",
-					      &config_meta))
+					      &config_meta)) {
+			json_object_get(config_meta);
 			json_object_object_add(tl->root,
 					       "TELEMETRY_CONFIG_META",
 					       config_meta);
+		}
 	}
 	solidigm_telemetry_log_header_parse(tl);
 	solidigm_telemetry_log_cod_parse(tl);
