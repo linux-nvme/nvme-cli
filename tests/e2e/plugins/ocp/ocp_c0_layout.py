@@ -382,11 +382,10 @@ def render_uuid(raw: bytes) -> str:
 def normalize_ascii(raw: bytes) -> str:
     """Canonical form of a fixed-length ASCII field.
 
-    Truncated at the first NUL and stripped of trailing blanks, because
-    the printers disagree past that point: the JSON printers hand the
-    buffer to json_object_new_string(), which stops at the first NUL,
-    while stdout writes every byte with %c, NULs included. Comparisons
-    across output modes therefore only have this prefix in common.
+    Truncated at the first NUL and stripped of trailing blanks: all three
+    printers render these buffers with a bounded "%.*s", which stops at
+    the first NUL, and no spec dictates whether a drive pads with NULs or
+    with blanks.
     """
     return raw.split(b'\0', 1)[0].decode('latin-1').rstrip()
 

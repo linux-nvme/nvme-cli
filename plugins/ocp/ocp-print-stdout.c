@@ -111,7 +111,6 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 {
 	uint16_t smart_log_ver = 0;
 	uint16_t dssd_version = 0;
-	int i = 0;
 
 	printf("SMART Cloud Attributes :-\n");
 
@@ -219,16 +218,14 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 			le16_to_cpu(log->current_max_avg_power));
 		printf("  Lifetime power consumed			%"PRIu64"\n",
 			int48_to_long(log->lifetime_power_consumed));
-		printf("  Dssd firmware revision			");
-		for (i = 0; i < sizeof(log->dssd_firmware_revision); i++)
-			printf("%c", log->dssd_firmware_revision[i]);
-		printf("\n");
+		printf("  Dssd firmware revision			%.*s\n",
+			(int)sizeof(log->dssd_firmware_revision),
+			(char *)log->dssd_firmware_revision);
 		printf("  Dssd firmware build UUID			%s\n",
 			shr_uuid_to_string(log->dssd_firmware_build_uuid));
-		printf("  Dssd firmware build label			");
-		for (i = 0; i < sizeof(log->dssd_firmware_build_label); i++)
-			printf("%c", log->dssd_firmware_build_label[i]);
-		printf("\n");
+		printf("  Dssd firmware build label			%.*s\n",
+			(int)sizeof(log->dssd_firmware_build_label),
+			(char *)log->dssd_firmware_build_label);
 		fallthrough;
 	case 4:
 		printf("  NVMe Command Set Errata Version               %d\n",
