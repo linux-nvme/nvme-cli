@@ -48,6 +48,12 @@ static void binary_c1_log(struct ocp_error_recovery_log_page *log_data)
 	d_raw((unsigned char *)log_data, sizeof(*log_data));
 }
 
+static void binary_smart_extended_log(struct ocp_smart_extended_log *log,
+				      unsigned int version)
+{
+	d_raw((unsigned char *)log, sizeof(*log));
+}
+
 static void binary_c4_log(struct ocp_device_capabilities_log_page *log_data)
 {
 	d_raw((unsigned char *)log_data, sizeof(*log_data));
@@ -67,6 +73,7 @@ static void binary_c7_log(struct libnvme_transport_handle *hdl, struct tcg_confi
 static struct ocp_print_ops binary_print_ops = {
 	.hwcomp_log = binary_hwcomp_log,
 	.persistent_event_log = binary_persistent_event_log,
+	.smart_extended_log = binary_smart_extended_log,
 	.c5_log = binary_c5_log,
 	.c1_log = binary_c1_log,
 	.c4_log = binary_c4_log,
