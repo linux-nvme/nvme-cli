@@ -28,10 +28,6 @@
 #define NAME_LEN 128
 #define BUF_LEN 320
 #define VAL_LEN 4096
-#define BYTE_TO_BIT(byte) ((byte) * 8)
-#define MS_TO_SEC(time) ((time) / 1000)
-#define MS500_TO_MS(time) ((time) * 500)
-#define MS500_TO_SEC(time) (MS_TO_SEC(MS500_TO_MS(time)))
 
 #define array_add_obj json_array_add_value_object
 #define array_add_str json_array_add_value_string
@@ -50,6 +46,10 @@
 #define obj_add_uint_0nx json_object_add_uint_0nx
 #define obj_add_0nprix64 json_object_add_0nprix64
 #define obj_add_str json_object_add_string
+
+#define json_prop_cap(r, fld, val, ...) \
+	json_prop_field(r, prop_cap[fld][0], prop_cap[fld][1], val, \
+	##__VA_ARGS__)
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -957,7 +957,25 @@ add:
 	obj_add_array(r, "List of Valid Reports", valid);
 }
 
-static void json_registers_cap(struct nvme_bar_cap *cap, struct json_object *r)
+static void json_prop_field(struct json_object *r, const char *name,
+			    const char *symbol, const char *val, ...)
+{
+	__cleanup_free char *value = NULL;
+	char json_str[STR_LEN];
+	va_list ap;
+
+	va_start(ap, val);
+
+	if (vasprintf(&value, val, ap) < 0)
+		value = NULL;
+
+	va_end(ap);
+
+	sprintf(json_str, "%s (%s)", name, symbol);
+	obj_add_str(r, json_str, value);
+}
+
+static void json_registers_cap(uint64_t cap, struct json_object *r)
 {
 	char json_str[STR_LEN];
 	struct json_object *cssa = json_create_array();
@@ -965,55 +983,53 @@ static void json_registers_cap(struct nvme_bar_cap *cap, struct json_object *r)
 	struct json_object *amsa = json_create_array();
 	struct json_object *amso = json_create_object();
 
-	sprintf(json_str, "%"PRIx64"", *(uint64_t *)cap);
+	sprintf(json_str, "%"PRIx64"", cap);
 	obj_add_str(r, "cap", json_str);
 
-	obj_add_str(r, "NVM Subsystem Shutdown Enhancements Supported (NSSES)",
-			cap->nsses ? "Supported" : "Not supported");
-	obj_add_str(r, "Controller Ready With Media Support (CRWMS)",
-		     cap->crwms ? "Supported" : "Not supported");
-	obj_add_str(r, "Controller Ready Independent of Media Support (CRIMS)",
-		     cap->crims ? "Supported" : "Not supported");
-	obj_add_str(r, "NVM Subsystem Shutdown Supported (NSSS)",
-		     cap->nsss ? "Supported" : "Not supported");
-	obj_add_str(r, "Controller Memory Buffer Supported (CMBS):",
-		     cap->cmbs ? "Supported" : "Not supported");
-	obj_add_str(r, "Persistent Memory Region Supported (PMRS)",
-		     cap->pmrs ? "Supported" : "Not supported");
+	json_prop_cap(r, PROP_CAP_NSSES, nvme_support_str(NVME_CAP_NSSES(cap)));
+	json_prop_cap(r, PROP_CAP_CRWMS,
+		      nvme_support_str(NVME_CAP_CRMS(cap) & NVME_CAP_CRWMS));
+	json_prop_cap(r, PROP_CAP_CRIMS,
+		      nvme_support_str(NVME_CAP_CRMS(cap) & NVME_CAP_CRIMS));
+	json_prop_cap(r, PROP_CAP_NSSS, nvme_support_str(NVME_CAP_NSSS(cap)));
+	json_prop_cap(r, PROP_CAP_CMBS, nvme_support_str(NVME_CAP_CMBS(cap)));
+	json_prop_cap(r, PROP_CAP_PMRS, nvme_support_str(NVME_CAP_PMRS(cap)));
+	json_prop_cap(r, PROP_CAP_MPSMAX, "%u bytes",
+		      1 << (12 + NVME_CAP_MPSMAX(cap)));
+	json_prop_cap(r, PROP_CAP_MPSMIN, "%u bytes",
+		      1 << (12 + NVME_CAP_MPSMIN(cap)));
+	json_prop_cap(r, PROP_CAP_CPS, prop_cap_cps_str(NVME_CAP_CPS(cap)));
+	json_prop_cap(r, PROP_CAP_BPS, nvme_yes_str(NVME_CAP_BPS(cap)));
 
-	sprintf(json_str, "%u bytes", 1 << (12 + cap->mpsmax));
-	obj_add_str(r, "Memory Page Size Maximum (MPSMAX)", json_str);
-
-	sprintf(json_str, "%u bytes", 1 << (12 + cap->mpsmin));
-	obj_add_str(r, "Memory Page Size Minimum (MPSMIN)", json_str);
-
-	obj_add_str(r, "Controller Power Scope (CPS)", !cap->cps ? "Not Reported" : cap->cps == 1 ?
-		     "Controller scope" : cap->cps == 2 ? "Domain scope" : "NVM subsystem scope");
-	obj_add_str(r, "Boot Partition Support (BPS)", cap->bps ? "Yes" : "No");
-
-	obj_add_array(r, "Command Sets Supported (CSS)", cssa);
-	obj_add_str(csso, "NVM command set", cap->css & 1 ? "Supported" : "Not supported");
+	sprintf(json_str, "%s (%s)", prop_cap[PROP_CAP_CSS][0],
+		prop_cap[PROP_CAP_CSS][1]);
+	obj_add_array(r, json_str, cssa);
+	obj_add_str(csso, "NVM command set",
+		    nvme_support_str(NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM));
 	obj_add_str(csso, "One or more I/O Command Sets",
-		    cap->css & 0x40 ? "Supported" : "Not supported");
-	obj_add_str(csso, cap->css & 0x80 ? "Only Admin Command Set" : "I/O Command Set",
-		    "Supported");
+		    nvme_support_str(NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI));
+	obj_add_str(csso, NVME_CAP_CSS(cap) & NVME_CAP_CSS_ADMIN ?
+		    "Only Admin Command Set" : "I/O Command Set", "Supported");
 	array_add_obj(cssa, csso);
 
-	obj_add_str(r, "NVM Subsystem Reset Supported (NSSRS)", cap->nssrs ? "Yes" : "No");
+	json_prop_cap(r, PROP_CAP_NSSRS, nvme_yes_str(NVME_CAP_NSSRS(cap)));
 
-	sprintf(json_str, "%u bytes", 1 << (2 + cap->dstrd));
-	obj_add_str(r, "Doorbell Stride (DSTRD)", json_str);
+	json_prop_cap(r, PROP_CAP_DSTRD, "%u bytes",
+		      1 << (2 + NVME_CAP_DSTRD(cap)));
 
-	sprintf(json_str, "%u ms", MS500_TO_MS(cap->to));
-	obj_add_str(r, "Timeout (TO)", json_str);
+	json_prop_cap(r, PROP_CAP_TO, "%u ms", MS500_TO_MS(NVME_CAP_TO(cap)));
 
-	obj_add_array(r, "Arbitration Mechanism Supported (AMS)", amsa);
+	sprintf(json_str, "%s (%s)", prop_cap[PROP_CAP_AMS][0],
+		prop_cap[PROP_CAP_AMS][1]);
+	obj_add_array(r, json_str, amsa);
 	obj_add_str(amso, "Weighted Round Robin with Urgent Priority Class",
-		    cap->ams & 2 ? "Supported" : "Not supported");
+		    nvme_support_str(NVME_CAP_AMS(cap)));
 	array_add_obj(amsa, amso);
 
-	obj_add_str(r, "Contiguous Queues Required (CQR)", cap->cqr ? "Yes" : "No");
-	obj_add_uint(r, "Maximum Queue Entries Supported (MQES)", cap->mqes + 1);
+	json_prop_cap(r, PROP_CAP_CQR, nvme_yes_str(NVME_CAP_CQR(cap)));
+	sprintf(json_str, "%s (%s)", prop_cap[PROP_CAP_MQES][0],
+		prop_cap[PROP_CAP_MQES][1]);
+	obj_add_uint(r, json_str, NVME_CAP_MQES(cap) + 1);
 }
 
 static void json_registers_version(__u32 vs, struct json_object *r)
@@ -1410,7 +1426,7 @@ static void json_single_property_human(int offset, uint64_t value64, struct json
 
 	switch (offset) {
 	case NVME_REG_CAP:
-		json_registers_cap((struct nvme_bar_cap *)&value64, r);
+		json_registers_cap(value64, r);
 		break;
 	case NVME_REG_VS:
 		json_registers_version(value32, r);
@@ -2801,7 +2817,7 @@ static void json_ctrl_registers_cap(void *bar, struct json_object *r)
 	uint64_t cap = shr_mmio_read64(bar + NVME_REG_CAP);
 
 	if (verbose_mode())
-		json_registers_cap((struct nvme_bar_cap *)&cap, obj_create_array_obj(r, "cap"));
+		json_registers_cap(cap, obj_create_array_obj(r, "cap"));
 	else
 		obj_add_uint64(r, "cap", cap);
 }
