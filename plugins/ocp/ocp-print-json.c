@@ -201,7 +201,7 @@ static void json_fw_activation_history(const struct fw_activation_history *fw_hi
 
 	char guid[2 * sizeof(fw_history->log_page_guid) + 3] = { 0 };
 
-	sprintf(guid, "0x%"PRIx64"%"PRIx64"",
+	sprintf(guid, "0x%016"PRIx64"%016"PRIx64"",
 		le64_to_cpu(fw_history->log_page_guid[1]),
 		le64_to_cpu(fw_history->log_page_guid[0]));
 	json_object_add_value_string(root, "log page guid", guid);
@@ -289,7 +289,7 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	json_object_add_value_uint(root, "Log page version", smart_log_ver);
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
 		le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
 		le64_to_cpu(*(uint64_t *)&log->log_page_guid));
 	json_object_add_value_string(root, "Log page GUID", guid);
@@ -458,7 +458,7 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 	json_object_add_value_uint(root, "log_page_version", smart_log_ver);
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
 		le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
 		le64_to_cpu(*(uint64_t *)&log->log_page_guid));
 	json_object_add_value_string(root, "log_page_guid", guid);
@@ -802,7 +802,7 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 				  le16_to_cpu(log_data->log_page_version));
 
 	memset((void *)guid, 0, 64);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
@@ -840,7 +840,7 @@ static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 				  le16_to_cpu(log_data->log_page_version));
 
 	memset((void *)guid, 0, 64);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);

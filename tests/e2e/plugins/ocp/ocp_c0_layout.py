@@ -361,15 +361,13 @@ def fields_for_version(version: int) -> Tuple[C0Field, ...]:
 def render_guid(raw: bytes) -> str:
     """Render 16 GUID bytes the way all three printers do.
 
-    Two little-endian halves, high half first, through "%"PRIx64 -- which
-    is not zero-padded, so a half whose top bytes are zero renders
-    shorter than 16 digits. Reproduced faithfully: a test comparing
-    against a differently-padded string would report a mismatch that the
-    printers do not actually have.
+    Two little-endian halves, high half first, each through
+    "%016"PRIx64 -- so the result is always "0x" plus 32 hex digits and
+    distinct GUIDs cannot collapse onto the same string.
     """
     lo = int.from_bytes(raw[0:8], 'little')
     hi = int.from_bytes(raw[8:16], 'little')
-    return f'0x{hi:x}{lo:x}'
+    return f'0x{hi:016x}{lo:016x}'
 
 
 def render_uuid(raw: bytes) -> str:
