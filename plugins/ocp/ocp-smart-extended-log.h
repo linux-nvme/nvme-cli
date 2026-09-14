@@ -32,6 +32,7 @@ struct plugin;
  * @user_data_erase_count_max:			Max User data erase counts
  * @user_data_erase_count_min:			Min User data erase counts
  * @thermal_throttling_event_count:		Number of Thermal throttling events
+ * @thermal_throttling_current_status:		Current throttling status
  * @dssd_errata_version:			DSSD Errata Version
  * @dssd_point_version:				DSSD Point Version
  * @dssd_minor_version:				DSSD Minor Version
@@ -44,9 +45,9 @@ struct plugin;
  * @capacitor_health:				Capacitor health
  * @nvme_base_errata_version:			NVM Express Base Errata Version
  * @nvme_cmdset_errata_version:			NVMe Command Set Errata Version
- * @rsvd132:					Reserved
  * @nvme_over_pcie_errate_version:		NVMe Over Pcie Errata Version
  * @nvme_mi_errata_version:			NVMe MI Errata Version
+ * @rsvd134:					Reserved
  * @unaligned_io:				Unaligned I/O
  * @security_version:				Security Version Number
  * @total_nuse:					Total NUSE - Namespace utilization
@@ -54,31 +55,32 @@ struct plugin;
  * @endurance_estimate:				Endurance Estimate
  * @pcie_link_retaining_count:			PCIe Link Retraining Count
  * @power_state_change_count:			Power State Change Count
- * @lowest_permitted_fw_rev:			Lowest Permitted Firmware Revision -------------
- * @rsvd216:					Reserved
+ * @lowest_permitted_fw_rev:			Lowest Permitted FW Revision
  * @total_media_dies:				Total media dies
  * @total_die_failure_tolerance:		Total die failure tolerance
  * @media_dies_offline:				Media dies offline
  * @max_temperature_recorded:			Max temperature recorded
- * @rsvd223:					Reserved
+ * @form_factor:				Form factor
  * @nand_avg_erase_count:			Nand avg erase count
  * @command_timeouts:				Command timeouts
  * @sys_area_program_fail_count_raw:		Sys area program fail count raw
  * @sys_area_program_fail_count_normalized:	Sys area program fail count noralized
- * @revd241:					Reserved
+ * @rsvd241:					Reserved
  * @sys_area_uncorr_read_count_raw:		Sys area uncorrectable read count raw
  * @sys_area_uncorr_read_count_normalized:	Sys area uncorrectable read count noralized
- * @revd249:					Reserved
+ * @rsvd249:					Reserved
  * @sys_area_erase_fail_count_raw:		Sys area erase fail count raw
  * @sys_area_erase_fail_count_normalized:	Sys area erase fail count noralized
- * @revd257:					Reserved
+ * @rsvd257:					Reserved
  * @max_peak_power_capability:			Max peak power capability
  * @current_max_avg_power:			Current max avg power
  * @lifetime_power_consumed:			Lifetime power consumed
  * @dssd_firmware_revision:			Dssd firmware revision
  * @dssd_firmware_build_uuid:			Dssd firmware build UUID
  * @dssd_firmware_build_label:			Dssd firmware build label
- * @revd358:					Reserved
+ * @die_in_use_bad_nand_block_raw:		Die in use badnandblock-Raw
+ * @die_in_use_bad_nand_block_normalized:	Die in use badnandblock-Normal
+ * @rsvd366:					Reserved
  * @log_page_version:				Log page version
  * @log_page_guid:				Log page GUID
  */
@@ -147,7 +149,7 @@ struct ocp_smart_extended_log {
 	__u8   dssd_firmware_build_label[64];		/* [357:294] */
 	__u8   die_in_use_bad_nand_block_raw[6];	/* [363:358] */
 	__le16 die_in_use_bad_nand_block_normalized;	/* [365:364] */
-	__u8   rsvd358[128];				/* [493:358] */
+	__u8   rsvd366[128];				/* [493:366] */
 	__le16 log_page_version;			/* [495:494] */
 	__u8   log_page_guid[16];			/* [511:496] */
 };
