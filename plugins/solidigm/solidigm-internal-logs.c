@@ -819,16 +819,18 @@ static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
 						pevent_log_full, lp.buffer_size);
 	if (err)
-		return err;
+		goto out;
 
 	ilog->count++;
 
 	err = log_save(&lp, ilog->cfg->out_dir, "log_pages", "lid_0x0d_lsp_0x00_lsi_0x0000.bin",
 		       pevent_log_full, lp.buffer_size);
+	if (err)
+		goto out;
 
-	nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
-				      pevent, sizeof(*pevent));
-
+	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
+					    pevent, sizeof(*pevent));
+out:
 	return err;
 }
 
