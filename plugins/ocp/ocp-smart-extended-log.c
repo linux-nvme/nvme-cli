@@ -29,6 +29,15 @@ static __u8 scao_guid[GUID_LEN] = {
 	0xC9, 0x14, 0xD5, 0xAF
 };
 
+/* Render a log page GUID as GUID_LEN * 2 lower-case hex digits. */
+static void format_guid(char str[GUID_LEN * 2 + 1], const __u8 guid[GUID_LEN])
+{
+	int i;
+
+	for (i = 0; i < GUID_LEN; i++)
+		sprintf(&str[i * 2], "%02x", guid[i]);
+}
+
 static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 			   unsigned int format_version, bool uuid)
 {
@@ -37,7 +46,6 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 	nvme_print_flags_t fmt;
 	__u8 uidx = 0;
 	int ret;
-	int i;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -73,33 +81,30 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 		nvme_show_error("NVMe Status:%s(%x)",
 			libnvme_status_to_string(ret, false), ret);
 
-	if (ret == 0) {
-		/* check log page guid */
-		/* Verify GUID matches */
-		for (i = 0; i < 16; i++) {
-			if (scao_guid[i] != data->log_page_guid[i]) {
-				int j;
-
-				nvme_show_error("ERROR : OCP : Unknown GUID in C0 Log Page data");
-				nvme_show_error("ERROR : OCP : Expected GUID:  0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%x", scao_guid[j]);
-
-				nvme_show_error("\nERROR : OCP : Actual GUID:    0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%x", data->log_page_guid[j]);
-				nvme_show_error("");
-
-				ret = -1;
-				goto out;
-			}
-		}
-
-		/* print the data */
-		ocp_smart_extended_log(data, format_version, fmt);
-	} else {
-		nvme_show_error("ERROR : OCP : Unable to read C0 data from buffer");
+	if (ret) {
+		nvme_show_error(
+			"ERROR : OCP : Unable to read C0 data from buffer");
+		goto out;
 	}
+
+	/* A page carrying any other GUID is not OCP's SCAO layout. */
+	if (memcmp(scao_guid, data->log_page_guid, GUID_LEN)) {
+		char expected[GUID_LEN * 2 + 1];
+		char actual[GUID_LEN * 2 + 1];
+
+		format_guid(expected, scao_guid);
+		format_guid(actual, data->log_page_guid);
+
+		nvme_show_error(
+			"ERROR : OCP : Unknown GUID in C0 Log Page data");
+		nvme_show_error("ERROR : OCP : Expected GUID: 0x%s", expected);
+		nvme_show_error("ERROR : OCP : Actual GUID:   0x%s", actual);
+
+		ret = -1;
+		goto out;
+	}
+
+	ocp_smart_extended_log(data, format_version, fmt);
 
 out:
 	free(data);

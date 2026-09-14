@@ -100,7 +100,7 @@ static void stdout_fw_activation_history(const struct fw_activation_history *fw_
 	printf("  %-26s%d\n", "log page version:",
 	       le16_to_cpu(fw_history->log_page_version));
 
-	printf("  %-26s0x%"PRIx64"%"PRIx64"\n", "log page guid:",
+	printf("  %-26s0x%016"PRIx64"%016"PRIx64"\n", "log page guid:",
 	       le64_to_cpu(fw_history->log_page_guid[1]),
 	       le64_to_cpu(fw_history->log_page_guid[0]));
 
@@ -169,7 +169,8 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 	smart_log_ver = le16_to_cpu(log->log_page_version);
 	printf("  Log page version				%"PRIu16"\n", smart_log_ver);
 	printf("  Log page GUID					0x");
-	printf("%"PRIx64"%"PRIx64"\n", le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
+	printf("%016"PRIx64"%016"PRIx64"\n",
+		le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
 		le64_to_cpu(*(uint64_t *)&log->log_page_guid));
 	switch (smart_log_ver) {
 	case 0 ... 1:
