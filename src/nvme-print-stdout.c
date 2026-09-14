@@ -1440,7 +1440,8 @@ static void stdout_registers_cap(uint64_t cap)
 	stdout_prop_cap(PROP_CAP_NSSRS, nvme_yes_str(NVME_CAP_NSSRS(cap)));
 	stdout_prop_cap(PROP_CAP_DSTRD, "%u bytes",
 			1 << (2 + NVME_CAP_DSTRD(cap)));
-	stdout_prop_cap(PROP_CAP_TO, "%"PRIu64" ms", NVME_CAP_TO(cap) * 500);
+	stdout_prop_cap(PROP_CAP_TO, "%"PRIu64" ms",
+			MS500_TO_MS(NVME_CAP_TO(cap)));
 	stdout_prop_cap(PROP_CAP_AMS,
 			"Weighted Round Robin with Urgent Priority Class is %s",
 			nvme_support_str(NVME_CAP_AMS(cap) & NVME_CAP_AMS_WRR));

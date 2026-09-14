@@ -28,6 +28,11 @@ typedef struct nvme_effects_log_node {
 
 #define POWER_OF_TWO(exponent) (1 << (exponent))
 
+#define BYTE_TO_BIT(byte) ((byte) * 8)
+#define MS_TO_SEC(time) ((time) / 1000)
+#define MS500_TO_MS(time) ((time) * 500)
+#define MS500_TO_SEC(time) (MS_TO_SEC(MS500_TO_MS(time)))
+
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 
@@ -221,28 +226,6 @@ struct print_ops {
 	void (*show_key_value)(const char *key, const char *val, va_list ap);
 
 	nvme_print_flags_t flags;
-};
-
-struct nvme_bar_cap {
-	__u16	mqes;
-	__u8	cqr:1;
-	__u8	ams:2;
-	__u8	rsvd19:5;
-	__u8	to;
-	__u16	dstrd:4;
-	__u16	nssrs:1;
-	__u16	css:8;
-	__u16	bps:1;
-	__u16	cps:2;
-	__u8	mpsmin:4;
-	__u8	mpsmax:4;
-	__u8	pmrs:1;
-	__u8	cmbs:1;
-	__u8	nsss:1;
-	__u8	crwms:1;
-	__u8	crims:1;
-	__u8	nsses:1;
-	__u8	rsvd62:2;
 };
 
 #ifdef CONFIG_JSONC
