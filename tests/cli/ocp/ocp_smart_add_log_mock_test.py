@@ -336,12 +336,24 @@ class TestOCPSmartAddLogDecode(OCPSmartAddLogTestBase):
 
 
 class TestOCPSmartAddLogAsciiFields(OCPSmartAddLogTestBase):
-    """The ASCII buffers, which the printers walk byte by byte."""
+    """The fixed-width ASCII and UUID buffers.
+
+    These assert on the printers' output verbatim rather than through
+    layout.coerce_json(): normalising a value the way coerce_json() does
+    -- truncate at the first NUL, strip trailing blanks -- is exactly the
+    handling under test here, so comparing through it could not fail.
+    """
 
     def _revision(self):
         return layout.by_name('dssd_firmware_revision')
 
-    def test_space_padded_ascii_is_reported_without_the_padding(self):
+    def test_space_padded_ascii_is_reported_verbatim(self):
+        """A blank-padded buffer reaches the output as the drive sent it.
+
+        The printers render these fields with a bounded "%.*s", which
+        drops NUL padding but says nothing about blanks, and no spec
+        dictates which padding a drive uses.
+        """
         field = self._revision()
         self.server.page = layout.pack(
             version=layout.MAX_LOG_PAGE_VERSION,
@@ -350,8 +362,7 @@ class TestOCPSmartAddLogAsciiFields(OCPSmartAddLogTestBase):
             with self.subTest(format_version=format_version):
                 log = self.json_log(format_version=format_version)
                 key = self.json_key(field, format_version)
-                self.assertEqual(
-                    layout.coerce_json(field, log[key]), 'FW1234')
+                self.assertEqual(log[key], 'FW1234  ')
 
     def test_nul_padded_ascii_stops_at_the_nul(self):
         """A NUL-padded buffer must not leak the bytes past the
@@ -364,8 +375,7 @@ class TestOCPSmartAddLogAsciiFields(OCPSmartAddLogTestBase):
             with self.subTest(format_version=format_version):
                 log = self.json_log(format_version=format_version)
                 key = self.json_key(field, format_version)
-                self.assertEqual(
-                    layout.coerce_json(field, log[key]), 'FW1')
+                self.assertEqual(log[key], 'FW1')
 
     def test_text_output_carries_no_nul_bytes(self):
         """Text output is meant to be read in a terminal, so a

@@ -219,10 +219,8 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	struct json_object *pmur;
 	uint16_t smart_log_ver = 0;
 	uint16_t dssd_version = 0;
-	int i = 0;
 	char guid[40];
 	char ascii_arr[65];
-	char *ascii = ascii_arr;
 
 	root = json_create_object();
 	pmuw = json_create_object();
@@ -343,16 +341,15 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 						le16_to_cpu(log->current_max_avg_power));
 		json_object_add_value_uint64(root, "Lifetime power consumed",
 						int48_to_long(log->lifetime_power_consumed));
-		memset((void *)ascii, 0, 65);
-		for (i = 0; i < 8; i++)
-			ascii += sprintf(ascii, "%c", log->dssd_firmware_revision[i]);
+		snprintf(ascii_arr, sizeof(ascii_arr), "%.*s",
+			 (int)sizeof(log->dssd_firmware_revision),
+			 (char *)log->dssd_firmware_revision);
 		json_object_add_value_string(root, "Dssd firmware revision", ascii_arr);
 		json_object_add_value_string(root, "Dssd firmware build UUID",
 						shr_uuid_to_string(log->dssd_firmware_build_uuid));
-		ascii = ascii_arr;
-		memset((void *)ascii, 0, 65);
-		for (i = 0; i < 64; i++)
-			ascii += sprintf(ascii, "%c", log->dssd_firmware_build_label[i]);
+		snprintf(ascii_arr, sizeof(ascii_arr), "%.*s",
+			 (int)sizeof(log->dssd_firmware_build_label),
+			 (char *)log->dssd_firmware_build_label);
 		json_object_add_value_string(root, "Dssd firmware build label", ascii_arr);
 		fallthrough;
 	case 4:
@@ -389,12 +386,10 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 	struct json_object *root;
 	struct json_object *pmuw;
 	struct json_object *pmur;
-	int i = 0;
 	uint16_t smart_log_ver = 0;
 	uint16_t dssd_version = 0;
 	char guid[40];
 	char ascii_arr[65];
-	char *ascii = ascii_arr;
 
 	root = json_create_object();
 	pmuw = json_create_object();
@@ -515,16 +510,15 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 						le16_to_cpu(log->current_max_avg_power));
 		json_object_add_value_uint64(root, "lifetime_power_consumed",
 						int48_to_long(log->lifetime_power_consumed));
-		memset((void *)ascii, 0, 65);
-		for (i = 0; i < 8; i++)
-			ascii += sprintf(ascii, "%c", log->dssd_firmware_revision[i]);
+		snprintf(ascii_arr, sizeof(ascii_arr), "%.*s",
+			 (int)sizeof(log->dssd_firmware_revision),
+			 (char *)log->dssd_firmware_revision);
 		json_object_add_value_string(root, "dssd_firmware_revision", ascii_arr);
 		json_object_add_value_string(root, "dssd_firmware_build_uuid",
 						shr_uuid_to_string(log->dssd_firmware_build_uuid));
-		ascii = ascii_arr;
-		memset((void *)ascii, 0, 65);
-		for (i = 0; i < 64; i++)
-			ascii += sprintf(ascii, "%c", log->dssd_firmware_build_label[i]);
+		snprintf(ascii_arr, sizeof(ascii_arr), "%.*s",
+			 (int)sizeof(log->dssd_firmware_build_label),
+			 (char *)log->dssd_firmware_build_label);
 		json_object_add_value_string(root, "dssd_firmware_build_label", ascii_arr);
 		fallthrough;
 	case 4:
