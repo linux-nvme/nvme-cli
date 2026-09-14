@@ -77,7 +77,7 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 				       NVME_LOG_CDW14_UUID_MASK);
 	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 
-	if (strcmp(format, "json"))
+	if (ret && strcmp(format, "json"))
 		nvme_show_error("NVMe Status:%s(%x)",
 			libnvme_status_to_string(ret, false), ret);
 
