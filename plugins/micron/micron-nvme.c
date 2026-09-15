@@ -2811,6 +2811,10 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 		goto out;
 	}
 
+	/* device-supplied entry count stays within the fixed table */
+	if (le32_to_cpu(table->num_entries) > ARRAY_SIZE(table->entries))
+		table->num_entries = cpu_to_le32(ARRAY_SIZE(table->entries));
+
 	if (is_json) {
 		root = json_create_object();
 			fw_act = json_create_object();
