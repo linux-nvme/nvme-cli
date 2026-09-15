@@ -483,8 +483,11 @@ static char *read_file(const char *path)
 	}
 	n = fread(buf, 1, sz, f);
 	if (ferror(f)) {
+		int saved_errno = errno;
+
 		free(buf);
 		fclose(f);
+		errno = saved_errno;
 		return NULL;
 	}
 	buf[n] = '\0';
