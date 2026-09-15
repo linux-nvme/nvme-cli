@@ -2342,8 +2342,11 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		struct json_object *jdesc;
 		char *hexdata;
 
-		jdesc = json_create_object();
 		if (!desc)
+			return;
+
+		jdesc = json_create_object();
+		if (!jdesc)
 			return;
 
 		nrows = le16_to_cpu(desc->nrows);
@@ -2364,8 +2367,11 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		if (NVME_EOM_ODP_PEFP(log->odp))
 			allocated_eyes[i] = json_eom_printable_eye(desc, jdesc);
 
-		if (edlen == 0)
+		if (edlen == 0) {
+			json_free_object(jdesc);
+			p += log->dsize;
 			continue;
+		}
 
 		/* 2 hex chars + space per byte */
 		hexstr = malloc(edlen * 3 + 1);
@@ -2422,7 +2428,7 @@ static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controlle
 
 	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED) {
 		/* Save Printable Eye strings allocated to free later */
-		allocated_eyes = malloc(log->nd * sizeof(char *));
+		allocated_eyes = calloc(log->nd, sizeof(char *));
 		if (allocated_eyes)
 			json_phy_rx_eom_descs(log, r, allocated_eyes);
 	}
