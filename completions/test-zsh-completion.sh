@@ -14,7 +14,21 @@
 autoload -Uz compinit
 compinit -u 2>/dev/null
 
-source "${0:A:h}/_nvme"
+# The completion under test is generated fresh from a committed metadata fixture
+# rather than sourced from the checked-in _nvme: the generator is the unit under
+# test, so we exercise its current output. The fixture
+# (test-command-metadata.json) is a hand-written, schema-validated model of
+# synthetic commands and options -- deliberately not real nvme output -- built
+# to exercise every generator branch, and needs no nvme binary or build.
+_here="${0:A:h}"
+_generated="$(mktemp)"
+trap 'rm -f "$_generated"' EXIT
+if ! python3 "$_here/generate-completions.py" --zsh "$_generated" \
+        < "$_here/test-command-metadata.json"; then
+    print -u2 "failed to generate zsh completion from fixture"
+    exit 1
+fi
+source "$_generated"
 
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'
@@ -198,12 +212,12 @@ echo "========================================"
 expect_match \
     "top-level list offers builtin commands" \
     "nvme " \
-    "id-ctrl"
+    "alpha-cmd"
 
 expect_match \
     "top-level list includes plugin names" \
     "nvme " \
-    "feat"
+    "zeta-plug"
 
 expect_match \
     "top-level list includes the help built-in" \
@@ -215,117 +229,125 @@ expect_match \
     "nvme " \
     "version"
 
-# A command alias is listed alongside its primary name (fw-activate is an alias
-# of fw-commit).
+# A command alias is listed alongside its primary name (alpha-alias is an alias
+# of zulu-cmd).
 expect_match \
     "top-level list includes a command alias" \
     "nvme " \
-    "fw-activate"
+    "alpha-alias"
 
 # A plugin lists its sub-commands.
 expect_match \
     "a plugin lists its sub-commands" \
-    "nvme feat " \
-    "power-mgmt"
+    "nvme zeta-plug " \
+    "report"
 
 # A different plugin, to prove sub-command routing isn't hardcoded to one name.
 expect_match \
     "sub-command routing works for any plugin" \
-    "nvme zns " \
-    "report-zones"
+    "nvme beta-plug " \
+    "local-sub"
 
-# A plugin sub-command alias is listed alongside its primary name (dera defines
-# alias 'stat' for 'smart-log-add').
+# A plugin sub-command alias is listed alongside its primary name (zeta-plug
+# defines alias 'rpt' for 'report').
 expect_match \
     "a plugin lists a sub-command alias" \
-    "nvme dera " \
-    "stat"
+    "nvme zeta-plug " \
+    "rpt"
 
 # ---------------------------------------------------------------------------
 # Option-name completion
 # ---------------------------------------------------------------------------
 # Regression: builtin commands complete their options at the first option word.
 # The dispatch once guarded on CURRENT > 2, so a builtin's first option (e.g.
-# 'nvme id-ctrl -<TAB>', CURRENT == 2) fell through to file completion and
+# 'nvme alpha-cmd -<TAB>', CURRENT == 2) fell through to file completion and
 # offered nothing. Only plugin sub-command options (CURRENT >= 3) worked.
 expect_match \
     "a builtin command offers its options at the first option word" \
-    "nvme id-ctrl -" \
-    "--output-format"
+    "nvme alpha-cmd -" \
+    "--format"
 
-# A command invoked by its alias completes the same options (fw-activate is an
-# alias of fw-commit).
+# A command invoked by its alias completes the same options (alpha-alias is an
+# alias of zulu-cmd).
 expect_match \
     "a command invoked by its alias completes options" \
-    "nvme fw-activate -" \
-    "--action"
+    "nvme alpha-alias -" \
+    "--mode"
 
 # -h/--help is offered for every command (added explicitly; it is not in the
 # metadata option list).
 expect_match \
     "--help is always offered" \
-    "nvme id-ctrl -" \
+    "nvme alpha-cmd -" \
     "--help"
 
 # Global options are offered per command, straight from the metadata -- so a
-# command that takes them gets them, and one that does not (intel
-# lat-stats-tracking) is not wrongly offered them.
+# command that takes them gets them, and one that does not (local-sub carries no
+# global 'format' option) is not wrongly offered them.
 expect_match \
     "a command with global options offers them" \
-    "nvme id-ctrl -" \
-    "--output-format"
+    "nvme alpha-cmd -" \
+    "--format"
 
 expect_no_match \
     "a command without global options is not offered them" \
-    "nvme intel lat-stats-tracking -" \
-    "--output-format"
+    "nvme beta-plug local-sub -" \
+    "--format"
+
+# Option descriptions are flattened (runs of whitespace collapsed to one space)
+# and their quotes survive escaping -- zulu-cmd's 'force' carries a description
+# with both. Regression guard on the generator's flatten() and zsh_escape().
+expect_match \
+    "an option description is flattened and quote-escaped" \
+    "nvme zulu-cmd -" \
+    "don't prompt for 'confirmation'"
 
 # ---------------------------------------------------------------------------
 # Option-value completion (enumerated values)
 # ---------------------------------------------------------------------------
 expect_match \
     "a value option lists its values (--opt= form)" \
-    "nvme id-ctrl --output-format=" \
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd --format=" \
+    "raw.*pretty.*wide"
 
 expect_match \
     "a value option lists its values (space form)" \
-    "nvme id-ctrl --output-format " \
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd --format " \
+    "raw.*pretty.*wide"
 
 expect_match \
     "the short-option form lists the same values" \
-    "nvme id-ctrl -o " \
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd -o " \
+    "raw.*pretty.*wide"
 
 # --sel values come from the generator's VALUE_HINTS table, reached through the
 # plugin sub-command routing path.
 expect_match \
     "an enumerated option on a plugin sub-command lists its values (--opt= form)" \
-    "nvme feat power-meas --sel=" \
+    "nvme zeta-plug report --sel=" \
     "0.*1.*2.*3"
 
 expect_match \
     "an enumerated option on a plugin sub-command lists its values (space form)" \
-    "nvme feat power-meas --sel " \
+    "nvme zeta-plug report --sel " \
     "0.*1.*2.*3"
 
 expect_match \
     "an enumerated option on a plugin sub-command lists its values (short opt)" \
-    "nvme feat power-meas -S " \
+    "nvme zeta-plug report -S " \
     "0.*1.*2.*3"
 
 # A command-local enumerated option whose values come from the metadata
-# (fw-commit --action has an OPT_VALS table).
+# (local-sub --mode carries a value set).
 expect_match \
     "a command-local enumerated option lists its metadata values" \
-    "nvme fw-commit --action " \
-    "replace.*set-active"
+    "nvme beta-plug local-sub --mode " \
+    "fast.*slow"
 
 expect_match \
     "a command-local enumerated option lists its values (short opt)" \
-    "nvme fw-commit -a " \
-    "replace.*set-active"
+    "nvme beta-plug local-sub -m " \
+    "fast.*slow"
 
 # ---------------------------------------------------------------------------
 # File-valued options (metavar FILE/DIRECTORY)
@@ -334,31 +356,47 @@ expect_match \
 # forms, and via its short spelling.
 expect_files \
     "a file-valued option completes filenames (space form)" \
-    "nvme fw-download --fw "
+    "nvme alpha-cmd --in-file "
 
 expect_files \
     "a file-valued option completes filenames (--opt= form)" \
-    "nvme fw-download --fw="
+    "nvme alpha-cmd --in-file="
 
 expect_files \
     "a file-valued option completes filenames (short opt)" \
-    "nvme fw-download -f "
+    "nvme alpha-cmd -f "
+
+# A DIRECTORY-valued option is treated the same as FILE, and sits alongside
+# --in-file so this also exercises the multi-file-option path.
+expect_files \
+    "a directory-valued option completes filenames" \
+    "nvme zeta-plug report --out-dir "
 
 # A non-file value option must NOT trigger file completion (it lists values).
 expect_no_files \
     "an enumerated option does not offer files" \
-    "nvme id-ctrl --output-format "
+    "nvme alpha-cmd --format "
 
 # ---------------------------------------------------------------------------
 # Device-argument injection
 # ---------------------------------------------------------------------------
 expect_device \
     "a command that takes a device offers /dev/nvme*" \
-    "nvme id-ctrl "
+    "nvme alpha-cmd "
 
 expect_device \
     "a plugin sub-command that takes a device offers /dev/nvme*" \
-    "nvme feat power-meas "
+    "nvme zeta-plug report "
+
+# A command with no options of its own must still offer the device -- exercises
+# the generator's empty-options path for a builtin and a plugin sub-command.
+expect_device \
+    "an option-less command still offers a device" \
+    "nvme no-opt-cmd "
+
+expect_device \
+    "an option-less plugin sub-command still offers a device" \
+    "nvme zeta-plug no-opt-sub "
 
 # help and version never offer a device.
 expect_no_device \
@@ -378,7 +416,7 @@ expect_no_device \
 expect_match \
     "help completes a command name" \
     "nvme help " \
-    "id-ctrl"
+    "alpha-cmd"
 
 expect_no_files \
     "help does not fall through to file completion" \
@@ -388,7 +426,7 @@ expect_no_files \
 # (and it must not fall through to file completion).
 expect_nothing \
     "help offers nothing past its one command argument" \
-    "nvme help id-ctrl "
+    "nvme help alpha-cmd "
 
 # 'version' takes no argument, so it offers nothing at all -- in particular it
 # does not fall through to file completion.
@@ -399,21 +437,23 @@ expect_nothing \
 # Once a device is on the line the injection is suppressed (_nvme_has_device).
 expect_no_device \
     "a device already on the line is not offered again" \
-    "nvme id-ctrl /dev/nvme0 "
+    "nvme alpha-cmd /dev/nvme0 "
 
 # ---------------------------------------------------------------------------
 # Generated-output assertions
 # ---------------------------------------------------------------------------
-# _nvme is a generated artifact, so its text is a legitimate thing to test: the
-# generator must not tag the option groups with the reserved 'options' tag.
-# Alongside the device candidate, the completion system suppresses that tag's
-# group at an empty prefix, so '--help' etc. rendered only after a '-' was
+# The completion is a generated artifact, so its text is a legitimate thing to
+# test: the generator must not tag the option groups with the reserved 'options'
+# tag. Alongside the device candidate, the completion system suppresses that
+# tag's group at an empty prefix, so '--help' etc. rendered only after a '-' was
 # typed. The live rendering is what breaks, but the stubbed harness above cannot
-# observe it -- the enforceable generator contract is "don't emit that tag".
+# observe it -- the enforceable generator contract is "don't emit that tag". Grep
+# the freshly generated completer, not the committed _nvme, so this tracks the
+# generator under test.
 (( TESTS_RUN++ ))
 print ""
 print "TEST $TESTS_RUN: option groups avoid the reserved 'options' tag"
-if grep -Eq $'_describe -t options|_describe -t eq-options' "${0:A:h}/_nvme"; then
+if grep -Eq $'_describe -t options|_describe -t eq-options' "$_generated"; then
     print "  ${RED}FAIL${NC}: _nvme uses the reserved 'options'/'eq-options' tag"
     (( TESTS_FAILED++ ))
 else

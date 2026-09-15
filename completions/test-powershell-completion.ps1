@@ -4,13 +4,32 @@
 #
 # Unit tests for the generated PowerShell completion (nvme-completion.ps1).
 #
-# PowerShell's Register-ArgumentCompleter drives completion via the framework,
-# so we test by calling TabExpansion2 against the loaded completer and
-# inspecting the CompletionResult list.
+# The completion under test is generated fresh from a committed metadata fixture
+# rather than sourced from the checked-in nvme-completion.ps1: the generator is
+# the unit under test, so we exercise its current output. The fixture
+# (test-command-metadata.json) is a hand-written, schema-validated model of
+# synthetic commands and options -- deliberately not real nvme output -- built to
+# exercise every generator branch, and needs no nvme binary or build.
+#
+# PowerShell's Register-ArgumentCompleter drives completion via the framework, so
+# we test by calling TabExpansion2 against the loaded completer and inspecting the
+# CompletionResult list.
 
 $ErrorActionPreference = 'Stop'
 
-. "$PSScriptRoot/nvme-completion.ps1"
+# Pass the fixture as the generator's input path argument rather than piping it
+# in: PowerShell's native-command pipeline re-encodes text and can corrupt JSON.
+$python = Get-Command python3 -ErrorAction SilentlyContinue
+if (-not $python) { $python = Get-Command python -ErrorAction SilentlyContinue }
+if (-not $python) { Write-Error 'python3 not found'; exit 1 }
+
+$generated = Join-Path ([System.IO.Path]::GetTempPath()) `
+    ("nvme-completion-{0}.ps1" -f [System.IO.Path]::GetRandomFileName())
+& $python.Source "$PSScriptRoot/generate-completions.py" `
+    "$PSScriptRoot/test-command-metadata.json" --powershell $generated
+if ($LASTEXITCODE -ne 0) { Write-Error 'failed to generate PowerShell completion from fixture'; exit 1 }
+. $generated
+Remove-Item $generated -ErrorAction SilentlyContinue
 
 $script:TestsRun = 0
 $script:TestsPassed = 0
@@ -59,21 +78,6 @@ function Assert-NoMatch {
     }
 }
 
-function Assert-Empty {
-    param([string]$Desc, [string]$InputScript)
-    $script:TestsRun++
-    $completions = Get-Completions $InputScript
-    if ($completions.Count -eq 0) {
-        Write-Host "  PASS: $Desc" -ForegroundColor Green
-        $script:TestsPassed++
-    } else {
-        Write-Host "  FAIL: $Desc" -ForegroundColor Red
-        Write-Host "    Input: '$InputScript'" -ForegroundColor Yellow
-        Write-Host "    Expected nothing, got: '$($completions -join ' ')'" -ForegroundColor Yellow
-        $script:TestsFailed++
-    }
-}
-
 Write-Host "========================================"
 Write-Host "PowerShell Completion Tests"
 Write-Host "========================================"
@@ -87,12 +91,19 @@ Write-Host "Top-level command dispatch:"
 Assert-Match `
     "top-level list offers builtin commands" `
     "nvme " `
-    "\blist\b"
+    "\balpha-cmd\b"
 
 Assert-Match `
     "top-level list includes plugin names" `
     "nvme " `
-    "feat"
+    "\bzeta-plug\b"
+
+# A command alias is listed alongside its primary name (alpha-alias is an alias
+# of zulu-cmd).
+Assert-Match `
+    "top-level list includes a command alias" `
+    "nvme " `
+    "\balpha-alias\b"
 
 Assert-Match `
     "top-level list includes help" `
@@ -106,13 +117,13 @@ Assert-Match `
 
 Assert-Match `
     "prefix narrows the top-level list" `
-    "nvme li" `
-    "\blist\b"
+    "nvme alpha-" `
+    "\balpha-cmd\b"
 
 Assert-NoMatch `
     "prefix excludes non-matching commands" `
-    "nvme li" `
-    "\bformat\b"
+    "nvme alpha-" `
+    "\bzulu-cmd\b"
 
 Write-Host ""
 
@@ -123,18 +134,21 @@ Write-Host "Plugin sub-command listing:"
 
 Assert-Match `
     "a plugin lists its sub-commands" `
-    "nvme feat " `
-    "power-mgmt"
+    "nvme zeta-plug " `
+    "\breport\b"
 
+# A different plugin, to prove sub-command routing isn't hardcoded to one name.
 Assert-Match `
     "sub-command routing works for any plugin" `
-    "nvme ocp " `
-    "smart-add-log"
+    "nvme beta-plug " `
+    "\blocal-sub\b"
 
+# A plugin sub-command alias is listed alongside its primary name (zeta-plug
+# defines alias 'rpt' for 'report').
 Assert-Match `
     "a plugin lists a sub-command alias" `
-    "nvme dera " `
-    "stat"
+    "nvme zeta-plug " `
+    "\brpt\b"
 
 Write-Host ""
 
@@ -145,33 +159,42 @@ Write-Host "Option-name completion:"
 
 Assert-Match `
     "a builtin command offers its options" `
-    "nvme list --out" `
-    "--output-format"
+    "nvme alpha-cmd --wait-" `
+    "--wait-time"
 
+# A command invoked by its alias completes the same options (alpha-alias is an
+# alias of zulu-cmd).
 Assert-Match `
     "a command invoked by alias completes options" `
-    "nvme fw activate --a" `
-    "--action"
+    "nvme alpha-alias --m" `
+    "--mode"
 
 Assert-Match `
     "a plugin sub-command offers its options" `
-    "nvme feat power-meas --s" `
+    "nvme zeta-plug report --s" `
     "--sel"
 
 Assert-Match `
     "all options listed for a command (space trigger)" `
-    "nvme list " `
-    "--output-format"
+    "nvme alpha-cmd " `
+    "--format"
 
 Assert-Match `
     "short options are offered" `
-    "nvme list " `
+    "nvme alpha-cmd " `
     "(^| )-o( |$)"
 
 Assert-Match `
     "--help is always offered" `
-    "nvme list --hel" `
+    "nvme alpha-cmd --hel" `
     "--help"
+
+# A hidden option is accepted on the command line but suppressed from --help, so
+# the generator must not offer it as a completion (zulu-cmd has a hidden 'secret').
+Assert-NoMatch `
+    "a hidden option is not offered" `
+    "nvme zulu-cmd -" `
+    "--secret"
 
 Write-Host ""
 
@@ -183,9 +206,9 @@ Write-Host "help / version built-ins:"
 Assert-Match `
     "help completes a command name" `
     "nvme help " `
-    "\blist\b"
+    "\balpha-cmd\b"
 
-# Note: 'nvme help list <TAB>' and 'nvme version <TAB>' -- our completer
+# Note: 'nvme help alpha-cmd <TAB>' and 'nvme version <TAB>' -- our completer
 # returns nothing (correct), but PowerShell's framework falls back to file
 # completion which we cannot suppress from a native-command completer.
 
@@ -198,33 +221,37 @@ Write-Host "Option-value completion:"
 
 Assert-Match `
     "a value option lists its values (long opt)" `
-    "nvme list --output-format " `
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd --format " `
+    "raw.*pretty.*wide"
 
 Assert-Match `
     "a value option lists its values (short opt)" `
-    "nvme list -o " `
-    "normal.*json.*binary.*tabular"
+    "nvme alpha-cmd -o " `
+    "raw.*pretty.*wide"
 
+# --sel values come from the generator's VALUE_HINTS table, reached through the
+# plugin sub-command routing path.
 Assert-Match `
     "a value option on a plugin sub-command (--sel)" `
-    "nvme feat power-meas --sel " `
+    "nvme zeta-plug report --sel " `
     "0.*1.*2.*3"
 
 Assert-Match `
     "a value option on a plugin sub-command (short opt)" `
-    "nvme feat power-meas -S " `
+    "nvme zeta-plug report -S " `
     "0.*1.*2.*3"
 
+# A command-local enumerated option whose values come from the metadata
+# (local-sub --mode carries a value set).
 Assert-Match `
     "a command-local enumerated option lists its values" `
-    "nvme fw commit --action " `
-    "replace.*set-active"
+    "nvme beta-plug local-sub --mode " `
+    "fast.*slow"
 
 Assert-Match `
     "--opt=value attached form lists values" `
-    "nvme list --output-format=" `
-    "output-format=normal.*output-format=json"
+    "nvme alpha-cmd --format=" `
+    "--format=raw.*--format=pretty"
 
 Write-Host ""
 
@@ -233,20 +260,43 @@ Write-Host ""
 # ---------------------------------------------------------------------------
 Write-Host "File-valued options:"
 
-Assert-Match `
-    "a file-valued option completes filenames (long opt)" `
-    "nvme fw download --fw " `
-    "."
+# File completion enumerates the real filesystem (Get-ChildItem), so seed a temp
+# directory with a known file and complete from there: a file-valued option must
+# then offer that file, and an enumerated option must not. Asserting the sentinel
+# name -- rather than "any output" -- is deterministic and independent of cwd.
+$fileDir = Join-Path ([System.IO.Path]::GetTempPath()) `
+    ("nvme-filetest-{0}" -f [System.IO.Path]::GetRandomFileName())
+New-Item -ItemType Directory -Path $fileDir | Out-Null
+$sentinel = 'fixture-sentinel-file'
+New-Item -ItemType File -Path (Join-Path $fileDir $sentinel) | Out-Null
+Push-Location $fileDir
+try {
+    Assert-Match `
+        "a file-valued option completes filenames (long opt)" `
+        "nvme alpha-cmd --in-file " `
+        $sentinel
 
-Assert-Match `
-    "a file-valued option completes filenames (short opt)" `
-    "nvme fw download -f " `
-    "."
+    Assert-Match `
+        "a file-valued option completes filenames (short opt)" `
+        "nvme alpha-cmd -f " `
+        $sentinel
 
-Assert-NoMatch `
-    "an enumerated option does not offer files" `
-    "nvme list --output-format " `
-    "\\\\|/"
+    # A DIRECTORY-valued option is treated the same as FILE (report --out-dir).
+    Assert-Match `
+        "a directory-valued option completes filenames" `
+        "nvme zeta-plug report --out-dir " `
+        $sentinel
+
+    # An enumerated option lists its values, never the filesystem -- so even with
+    # the seeded file present it must not be offered.
+    Assert-NoMatch `
+        "an enumerated option does not offer files" `
+        "nvme alpha-cmd --format " `
+        $sentinel
+} finally {
+    Pop-Location
+    Remove-Item $fileDir -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 Write-Host ""
 
@@ -257,12 +307,12 @@ Write-Host "Device argument hint:"
 
 Assert-Match `
     "a command offers /dev/nvme as a device hint" `
-    "nvme list " `
+    "nvme alpha-cmd " `
     "/dev/nvme"
 
 Assert-Match `
     "typing /dev narrows to the device hint" `
-    "nvme list /dev" `
+    "nvme alpha-cmd /dev" `
     "/dev/nvme"
 
 Write-Host ""
@@ -293,7 +343,7 @@ if (Test-OrdinalSorted $completions) {
 }
 
 $script:TestsRun++
-$completions = Get-Completions "nvme list "
+$completions = Get-Completions "nvme alpha-cmd "
 # Exclude short options and /dev/nvme hint; --help is appended last by design.
 $optOnly = @($completions | Where-Object { $_ -like '--*' -and $_ -ne '--help' })
 if (Test-OrdinalSorted $optOnly) {
@@ -312,15 +362,16 @@ Write-Host ""
 # ---------------------------------------------------------------------------
 Write-Host "Per-command global options:"
 
+# alpha-cmd carries the global 'format' option; local-sub carries no globals.
 Assert-Match `
     "a command with global options offers them" `
-    "nvme list --verb" `
-    "--verbose"
+    "nvme alpha-cmd -" `
+    "--format"
 
 Assert-NoMatch `
     "a command without global options is not offered them" `
-    "nvme intel lat-stats-tracking --output" `
-    "--output-format"
+    "nvme beta-plug local-sub -" `
+    "--format"
 
 Write-Host ""
 
