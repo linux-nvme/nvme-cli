@@ -732,7 +732,8 @@ __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 	int secret_len = 0, i, err;
 
 	if (key_len != 32 && key_len != 48 && key_len != 64) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Invalid key length %ld", key_len);
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"Invalid key length %zu", key_len);
 		return -EINVAL;
 	}
 
