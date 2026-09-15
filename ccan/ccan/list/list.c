@@ -11,7 +11,7 @@ static void *corrupt(const char *abortstr,
 	if (abortstr) {
 		fprintf(stderr,
 			"%s: prev corrupt in node %p (%u) of %p\n",
-			abortstr, node, count, head);
+			abortstr, (const void *)node, count, (const void *)head);
 		abort();
 	}
 	return NULL;
