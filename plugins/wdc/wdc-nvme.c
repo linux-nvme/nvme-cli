@@ -5396,7 +5396,7 @@ static void wdc_print_unsupported_reqs_log_normal(struct wdc_ocp_C5_unsupported_
 	       le16_to_cpu(log_data->unsupported_count));
 
 	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++)
-		printf("  Unsupported Requirement List %d	: %s\n", j,
+		printf("  Unsupported Requirement List %d	: %.16s\n", j,
 		       log_data->unsupported_req_list[j]);
 
 	printf("  Log Page Version			: 0x%x\n", le16_to_cpu(log_data->log_page_version));
@@ -5418,7 +5418,9 @@ static void wdc_print_unsupported_reqs_log_json(struct wdc_ocp_C5_unsupported_re
 	memset((void *)unsup_req_list_str, 0, 41);
 	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
 		sprintf((char *)unsup_req_list_str, "Unsupported Requirement List %d", j);
-		json_object_add_value_string(root, unsup_req_list_str, (char *)log_data->unsupported_req_list[j]);
+		json_object_object_add(root, unsup_req_list_str,
+			json_object_new_string_len(
+				(char *)log_data->unsupported_req_list[j], 16));
 	}
 
 	json_object_add_value_int(root, "Log Page Version",
@@ -7387,6 +7389,12 @@ static int wdc_print_unsupported_reqs_log(struct wdc_ocp_C5_unsupported_reqs *lo
 	if (!log_data) {
 		nvme_show_error("ERROR: WDC: Invalid C5 log data buffer");
 		return -1;
+	}
+	/* device-supplied entry count stays within the fixed table */
+	if (le16_to_cpu(log_data->unsupported_count) >
+	    WDC_NUM_UNSUPPORTED_REQ_ENTRIES) {
+		log_data->unsupported_count =
+			cpu_to_le16(WDC_NUM_UNSUPPORTED_REQ_ENTRIES);
 	}
 	switch (fmt) {
 	case NORMAL:
