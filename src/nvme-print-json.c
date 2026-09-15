@@ -381,7 +381,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 	obj_add_array(r, "lbafs", lbafs);
 
-	for (i = 0; i <= ns->nlbaf; i++)
+	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++)
 		json_nvme_id_ns_lbaf(ns, i, lbafs);
 
 	d_json(ns->vs, strnlen((const char *)ns->vs, sizeof(ns->vs)), 16, 1, vs);
