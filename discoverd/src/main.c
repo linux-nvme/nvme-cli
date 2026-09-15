@@ -785,7 +785,7 @@ static char *find_devname_for_tid(const struct libnvmf_tid *t)
 		return NULL;
 
 	while (!match && (ent = readdir(d))) {
-		struct libnvmf_tid *dt;
+		__cleanup_tid struct libnvmf_tid *dt = NULL;
 		bool is_dc;
 
 		if (ent->d_name[0] == '.')
@@ -795,7 +795,6 @@ static char *find_devname_for_tid(const struct libnvmf_tid *t)
 			continue;
 		if (tid_same(dt, t))
 			match = strdup(ent->d_name);
-		tid_free(dt);
 	}
 	closedir(d);
 	return match;
@@ -903,7 +902,7 @@ static void startup_audit(void)
 		while ((ent = readdir(d))) {
 			const char *devname = ent->d_name;
 			char *existing_unit;
-			struct libnvmf_tid *t;
+			__cleanup_tid struct libnvmf_tid *t = NULL;
 			bool is_nbft, is_dc;
 
 			if (devname[0] == '.')
@@ -921,14 +920,12 @@ static void startup_audit(void)
 			if (!inventory_is_desired(ctx.inventory, t)) {
 				disc_info("%s | %s - not desired, skipping",
 					  libnvmf_tid_str(t), devname);
-				tid_free(t);
 				continue;
 			}
 
 			is_nbft = inventory_is_nbft(ctx.inventory, t);
 			if (should_connect(t, devname))
 				start_ctrl(t, is_dc, is_nbft, NULL);
-			tid_free(t);
 		}
 		closedir(d);
 	}
