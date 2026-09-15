@@ -2,6 +2,7 @@
 /*
  * This file is part of nvme-cli.
  */
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,14 @@ static char *capture(void (*fn)(FILE *stream))
 
 	memset(buf, 0, sizeof(buf));
 	fn(stream);
+
+	errno = 0;
 	rewind(stream);
+	if (errno) {
+		perror("rewind");
+		exit(1);
+	}
+
 	n = fread(buf, 1, sizeof(buf) - 1, stream);
 	buf[n] = '\0';
 	fclose(stream);
