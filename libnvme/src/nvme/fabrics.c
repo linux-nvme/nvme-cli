@@ -3193,6 +3193,22 @@ static void dc_walk_referral(struct libnvme_global_ctx *ctx,
 }
 
 /*
+ * Is @e the self entry for the DC's own connection (@c)? A multi-homed DC may
+ * report one self entry per port (Base spec 2.4, Figure 320, subtype 03h);
+ * only the entry matching @c's transport, traddr and trsvcid is this same
+ * connection, so only its EFLAGS apply here. The others describe the DC's
+ * other ports.
+ */
+static bool dc_entry_is_self(const struct libnvme_ctrl *c,
+		const struct nvmf_disc_log_entry *e)
+{
+	return e->subtype == NVME_NQN_CURR &&
+	       shr_streq0(c->transport, libnvmf_trtype_str(e->trtype)) &&
+	       shr_streq0(c->traddr, e->traddr) &&
+	       shr_streq0(c->trsvcid, e->trsvcid);
+}
+
+/*
  * Pass 1: a first pass over the DLP entries to sanitize them and survey
  * this DC's own self entry (SUBTYPE 03h) -- the only place this DC's own
  * EPCSD is ever reported. Returns whether c should be disconnected once
@@ -3222,7 +3238,7 @@ static bool dc_survey_self_entry(struct libnvmf_context *fctx,
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 
 		sanitize_discovery_log_entry(c->ctx, e);
-		if (e->subtype == NVME_NQN_CURR)
+		if (dc_entry_is_self(c, e))
 			self_entry = e;
 	}
 
