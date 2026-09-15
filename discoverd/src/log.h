@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <stdbool.h>
+
 /*
  * Logging wrapper.
  *
@@ -35,6 +37,15 @@ void log_msg(int level, const char *fmt, ...)
 	__attribute__((format(printf, 2, 3)));
 
 /*
+ * Emit one message at @level, but only the first time this is called for a
+ * given @fired. @fired is caller-owned and must live as long as the entity
+ * the message is about (e.g. a field on that entity's struct) — the "already
+ * logged" state is per entity, not per call site.
+ */
+void log_msg_once(bool *fired, int level, const char *fmt, ...)
+	__attribute__((format(printf, 3, 4)));
+
+/*
  * INFO and higher print the message as-is (per convention, lead with the
  * TID: "<tid> | <dev> - msg" — see libnvmf_tid_str()). DEBUG additionally
  * prepends the calling function name for call tracing ("<func>() - msg");
@@ -44,3 +55,6 @@ void log_msg(int level, const char *fmt, ...)
 #define disc_warn(fmt, ...) log_msg(DISC_LOG_WARN,  fmt, ##__VA_ARGS__)
 #define disc_info(fmt, ...) log_msg(DISC_LOG_INFO,  fmt, ##__VA_ARGS__)
 #define disc_dbg(fmt, ...)  log_msg(DISC_LOG_DEBUG, "%s() - " fmt, __func__, ##__VA_ARGS__)
+
+#define disc_info_once(fired, fmt, ...) \
+	log_msg_once(fired, DISC_LOG_INFO, fmt, ##__VA_ARGS__)

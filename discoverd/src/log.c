@@ -27,16 +27,34 @@ void log_set_level(int level)
 	log_level = level;
 }
 
-void log_msg(int level, const char *fmt, ...)
+static void log_vmsg(int level, const char *fmt, va_list ap)
 {
-	va_list ap;
-
 	if (level > log_level)
 		return;
 	if (level < DISC_LOG_ERR || level > DISC_LOG_DEBUG)
 		level = DISC_LOG_ERR;
 
-	va_start(ap, fmt);
 	sd_journal_printv(prio_map[level], fmt, ap);
+}
+
+void log_msg(int level, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	log_vmsg(level, fmt, ap);
+	va_end(ap);
+}
+
+void log_msg_once(bool *fired, int level, const char *fmt, ...)
+{
+	va_list ap;
+
+	if (*fired)
+		return;
+	*fired = true;
+
+	va_start(ap, fmt);
+	log_vmsg(level, fmt, ap);
 	va_end(ap);
 }
