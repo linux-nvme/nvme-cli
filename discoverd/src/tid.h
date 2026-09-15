@@ -12,7 +12,18 @@
 #include <nvme/generated/accessors-fabrics.h>
 #include <nvme/tid.h>
 
+#include <shared/cleanup-util.h>
 #include <shared/string-util.h>
+
+/*
+ * __cleanup_tid - free a struct libnvmf_tid * when it goes out of scope.
+ * Declare fresh inside a loop body to free the previous iteration's TID
+ * automatically, on every exit path including continue, instead of a
+ * manual tid_free() before each one.
+ */
+static inline DEFINE_CLEANUP_FUNC(cleanup_tid, struct libnvmf_tid *,
+				  libnvmf_tid_free)
+#define __cleanup_tid __cleanup(cleanup_tid)
 
 /*
  * tid_new() - allocate a TID from individual field strings.
@@ -53,6 +64,28 @@ static inline bool tid_same(const struct libnvmf_tid *a,
 {
 	return shr_streq0(libnvmf_tid_get_canonical(a),
 			 libnvmf_tid_get_canonical(b));
+}
+
+/*
+ * tid_target_same() - do two TIDs point at the same target?
+ *
+ * Compares transport, traddr and trsvcid only - the target-side addressing -
+ * not subsysnqn, hostnqn, or the host-side host_traddr/host_iface. Use this
+ * to tell whether a DLPE's connection point is the same one a DC's own TID
+ * already points at, e.g. to accept a Current Discovery Subsystem entry only
+ * for the interface actually in use. tid_same() is the stricter, full
+ * comparison; reach for that instead when subsysnqn/host identity matters
+ * too.
+ */
+static inline bool tid_target_same(const struct libnvmf_tid *a,
+				   const struct libnvmf_tid *b)
+{
+	return shr_streq0(libnvmf_tid_get_transport(a),
+			 libnvmf_tid_get_transport(b)) &&
+	       shr_streq0(libnvmf_tid_get_traddr(a),
+			 libnvmf_tid_get_traddr(b)) &&
+	       shr_streq0(libnvmf_tid_get_trsvcid(a),
+			 libnvmf_tid_get_trsvcid(b));
 }
 
 /*
