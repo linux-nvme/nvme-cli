@@ -170,7 +170,7 @@ static inline int is_class_info(char *line)
 	return !memcmp(line, "# C class", 9);
 }
 
-static void parse_vendor_device(char *line, FILE *file,
+static bool parse_vendor_device(char *line, FILE *file,
 			       char *device, char *subdev,
 			       char *subven)
 {
@@ -181,22 +181,29 @@ static void parse_vendor_device(char *line, FILE *file,
 		len = strlen(line);
 		if (len > 0 && line[len - 1] == '\n')
 			line[len - 1] = '\0';
+
+		if (is_class_info(line))
+			return true;
 		if (is_comment(line))
 			continue;
 		if (!is_tab(line))
-			return;
+			return true;
 
-		if (!device_single_found && is_mid_level_match(line, device, false)) {
+		if (!device_single_found &&
+				is_mid_level_match(line, device, false)) {
 			device_single_found = true;
 			device_mid = strdup(line);
 			continue;
 		}
 
-		if (device_single_found && is_inner_sub_vendev(line, subven, subdev)) {
+		if (device_single_found &&
+				is_inner_sub_vendev(line, subven, subdev)) {
 			device_final = strdup(line);
 			break;
 		}
 	}
+
+	return false;
 }
 
 static void pull_class_info(char *line, FILE *file, char *class)
@@ -273,6 +280,7 @@ static char *__nvme_product_name(__u32 *vid, __u32 *did,
 	size_t len;
 	char *result;
 	FILE *file = open_pci_ids();
+	bool have_line = false;
 
 	if (!file)
 		goto error1;
@@ -283,7 +291,9 @@ static char *__nvme_product_name(__u32 *vid, __u32 *did,
 	sprintf(sub_device, "0x%04x", *subsys_did & 0xFFFF);
 	sprintf(class, "0x%06x", *class_code & 0xFFFFFF);
 
-	while (fgets(readbuf, sizeof(readbuf), file) != NULL) {
+	while (have_line || fgets(readbuf, sizeof(readbuf), file) != NULL) {
+		have_line = false;
+
 		len = strlen(readbuf);
 		if (len > 0 && readbuf[len - 1] == '\n')
 			readbuf[len - 1] = '\0';
@@ -292,15 +302,19 @@ static char *__nvme_product_name(__u32 *vid, __u32 *did,
 		if (is_top_level_match(readbuf, vendor, false)) {
 			free(device_top);
 			device_top = strdup(readbuf);
-			parse_vendor_device(readbuf, file,
+			have_line = parse_vendor_device(readbuf, file,
 						device,
 						sub_device,
 						sub_vendor);
-			clearerr(file);
+			if (ferror(file) || feof(file))
+				break;
+			if (have_line)
+				continue;
 		}
 		if (is_class_info(readbuf)) {
 			pull_class_info(readbuf, file, class);
-			clearerr(file);
+			if (ferror(file) || feof(file))
+				break;
 		}
 	}
 	fclose(file);
