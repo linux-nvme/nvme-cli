@@ -137,6 +137,17 @@ class E2ETestResult(unittest.TestResult):
     run rather than requiring the suite to run twice.
     """
 
+    # Ranking of the outcomes unittest can report for one test method. The
+    # worst one names that method's single TAP line, so that a subtest
+    # skipped for a missing capability cannot hide a later subtest failure.
+    _RANK = {'pass': 0, 'expected_failure': 1, 'skip': 2,
+             'unexpected_success': 3, 'fail': 4, 'error': 5}
+
+    # Outcomes TAP renders as 'ok'.
+    # An unexpected success should be reported as 'ok ... # TODO'.
+    # An expected failure should be reported as 'not ok ... # TODO'.
+    _TAP_OK = frozenset({'pass', 'skip', 'unexpected_success'})
+
     def __init__(self, stdout_stream: io.TextIOBase,
                  stderr_stream: io.TextIOBase) -> None:
         super().__init__()
@@ -144,10 +155,69 @@ class E2ETestResult(unittest.TestResult):
         self._stderr_stream = stderr_stream
         self._test_count = 0
         self._test_start_time = None
+        self._pending = None
         self.records = []
 
+    @staticmethod
+    def _test_method_of(test: unittest.TestCase) -> unittest.TestCase:
+        """The test method @test belongs to.
+
+        unittest reports a subtest as a _SubTest wrapper, which carries the
+        parent test case in .test_case. Resolve to the parent test case.
+        """
+        return getattr(test, 'test_case', test)
+
+    @staticmethod
+    def _method_name_of(test: unittest.TestCase) -> str | None:
+        """@test's method name, or None if it isn't a test method.
+
+        A setUpClass/setUpModule error is reported against unittest's
+        _ErrorHolder, which stands in for a whole class or module and names
+        itself instead of carrying a method.
+        """
+        return getattr(test, '_testMethodName', None)
+
     def _description(self, test: unittest.TestCase) -> str:
-        return '{} ({})'.format(test._testMethodName, type(test).__name__)
+        test = self._test_method_of(test)
+        name = self._method_name_of(test)
+        if name is None:
+            return str(test)
+        return '{} ({})'.format(name, type(test).__name__)
+
+    def _write_result(self, test: unittest.TestCase, status: str,
+                      directive: str) -> None:
+        self._test_count += 1
+        self._stdout_stream.write('{} {} - {}{}\n'.format(
+            'ok' if status in self._TAP_OK else 'not ok',
+            self._test_count, self._description(test), directive))
+        self._stdout_stream.flush()
+
+    def _track_outcome(self, test: unittest.TestCase, status: str,
+                       directive: str = '',
+                       message: str | None = None) -> None:
+        """Merge one reported outcome into the running test's buffered result.
+
+        unittest can report the same test method several times -- once per
+        failing subtest, once for a skip raised inside a subtest, then again
+        for an error during tearDown. The plan written up front counts test
+        methods, so all of those must collapse into one TAP line: the most
+        severe outcome names the TAP line, but every message is kept.
+        """
+        test = self._test_method_of(test)
+        pending = self._pending
+        if pending is None or pending['test'] is not test:
+            # No startTest() ran for this one (an _ErrorHolder standing in
+            # for a class or module), so there is nothing to buffer against
+            # and no stopTest() coming to flush it.
+            self._write_result(test, status, directive)
+            self._add_record(test, status, message)
+            return
+        if pending['status'] is None or \
+                self._RANK[status] > self._RANK[pending['status']]:
+            pending['status'] = status
+            pending['directive'] = directive
+        if message:
+            pending['messages'].append(message)
 
     def _duration(self):
         if self._test_start_time is None:
@@ -167,70 +237,99 @@ class E2ETestResult(unittest.TestResult):
         self._stderr_stream.write('  ...\n')
         self._stderr_stream.flush()
 
-    def _add_record(self, test, outcome, message=None) -> None:
+    def _add_record(self, test, outcome, message=None, duration=None) -> None:
+        test = self._test_method_of(test)
         self.records.append({
-            'name': test._testMethodName,
+            'name': self._method_name_of(test) or str(test),
             'class': type(test).__name__,
             'outcome': outcome,
-            'duration_s': self._duration(),
+            'duration_s': duration,
             'message': message,
         })
 
     def startTest(self, test: unittest.TestCase) -> None:
         super().startTest(test)
         self._test_start_time = time.time()
+        self._pending = {'test': test, 'status': None, 'directive': '',
+                         'messages': []}
+
+    def stopTest(self, test: unittest.TestCase) -> None:
+        """Write the buffered result for @test, now that it is complete.
+
+        Report outcome here rather than from the individual add*() hooks to
+        lets the worst outcome be reported. This is also the only point at which
+        the test's full duration is known.
+        """
+        super().stopTest(test)
+        pending, self._pending = self._pending, None
+        if pending is None:
+            return
+        status = pending['status']
+        message = '\n'.join(pending['messages']) or None
+        if status is None:
+            # Nothing was reported at all, e.g. a KeyboardInterrupt unwinding
+            # through TestCase.run(). Never leave the line out.
+            status = 'error'
+            message = message or 'no outcome reported'
+        self._write_result(pending['test'], status, pending['directive'])
+        self._add_record(pending['test'], status, message, self._duration())
+
+    def addSubTest(self, test: unittest.TestCase, subtest: unittest.TestCase,
+                   outcome: object) -> None:
+        """Report a failing subtest as a failure of its parent test.
+
+        unittest calls neither addSuccess() nor addFailure() for a test
+        whose subtests failed, so without this a self.subTest() failure
+        would produce no TAP line at all and the run would look clean.
+
+        One line per test method, not per subtest, so the count still
+        matches the plan emitted up front. Every failing subtest's
+        traceback goes to stderr as it arrives, ahead of that line.
+        """
+        super().addSubTest(test, subtest, outcome)
+        if outcome is None:
+            return
+
+        tb = self._format_traceback(outcome)
+        # Mirror the split TestResult.addSubTest() itself makes between
+        # self.failures and self.errors, so the JSON report agrees with it.
+        status = ('fail' if issubclass(outcome[0], test.failureException)
+                  else 'error')
+        self._track_outcome(test, status, message=tb)
+
+        self._stderr_stream.write(f'  # subtest: {subtest}\n')
+        self._output_traceback(tb)
 
     def addSuccess(self, test: unittest.TestCase) -> None:
         super().addSuccess(test)
-        self._test_count += 1
-        self._stdout_stream.write('ok {} - {}\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-        self._add_record(test, 'pass')
+        self._track_outcome(test, 'pass')
 
     def addError(self, test: unittest.TestCase, err: object) -> None:
         super().addError(test, err)
-        self._test_count += 1
-        self._stdout_stream.write('not ok {} - {}\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
         tb = self._format_traceback(err)
+        self._track_outcome(test, 'error', message=tb)
         self._output_traceback(tb)
-        self._add_record(test, 'error', tb)
 
     def addFailure(self, test: unittest.TestCase, err: object) -> None:
         super().addFailure(test, err)
-        self._test_count += 1
-        self._stdout_stream.write('not ok {} - {}\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
         tb = self._format_traceback(err)
+        self._track_outcome(test, 'fail', message=tb)
         self._output_traceback(tb)
-        self._add_record(test, 'fail', tb)
 
     def addSkip(self, test: unittest.TestCase, reason: str) -> None:
         super().addSkip(test, reason)
-        self._test_count += 1
-        self._stdout_stream.write('ok {} - {} # SKIP {}\n'.format(
-            self._test_count, self._description(test), reason))
-        self._stdout_stream.flush()
-        self._add_record(test, 'skip', reason)
+        self._track_outcome(test, 'skip', f' # SKIP {reason}', reason)
 
     def addExpectedFailure(self, test: unittest.TestCase, err: object) -> None:
         super().addExpectedFailure(test, err)
-        self._test_count += 1
-        self._stdout_stream.write('ok {} - {} # TODO expected failure\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-        self._add_record(test, 'expected_failure', self._format_traceback(err))
+        self._track_outcome(test, 'expected_failure',
+                            ' # TODO expected failure',
+                            self._format_traceback(err))
 
     def addUnexpectedSuccess(self, test: unittest.TestCase) -> None:
         super().addUnexpectedSuccess(test)
-        self._test_count += 1
-        self._stdout_stream.write('not ok {} - {} # TODO unexpected success\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-        self._add_record(test, 'unexpected_success')
+        self._track_outcome(test, 'unexpected_success',
+                            ' # TODO unexpected success')
 
 
 def build_config(args: argparse.Namespace) -> dict:
