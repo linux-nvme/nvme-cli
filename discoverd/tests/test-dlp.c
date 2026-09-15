@@ -15,6 +15,7 @@
 #include <nvme/nvme-types-fabrics.h>
 
 #include "dlp.h"
+#include "tid.h"
 
 #define DC_NQN		"nqn.2014-08.org.nvmexpress.discovery"
 #define IOC_NQN		"nqn.1992-08.com.example:sn.xxxx:subsystem.vol1"
@@ -204,6 +205,88 @@ static bool test_multiple_self_entries(void)
 	return pass;
 }
 
+/*
+ * A DLPE carries no host-side addressing, so host_traddr and host_iface are
+ * inherited from the DC. That inheritance is meaningless once the entry's
+ * transport differs from the DC's: host_iface is TCP-only, and host_traddr's
+ * format is transport-specific (an IP for tcp/rdma, a WWN pair for fc). Skip
+ * such an entry, referral or not.
+ */
+static bool test_cross_transport_skipped(void)
+{
+	struct nvmf_discovery_log *log;
+	struct counters c = { 0 };
+	struct libnvmf_tid *dc_tid;
+	bool pass = true;
+
+	printf("test_cross_transport_skipped:\n");
+
+	dc_tid = tid_new("tcp", "192.168.1.116", "8009", DC_NQN, NULL, NULL,
+			 NULL, true);
+
+	log = make_log(4);
+	set_entry(log, 0, NVME_NQN_CURR, NVMF_DISC_EFLAGS_EPCSD,
+		  "192.168.1.116", "8009", DC_NQN);
+	set_entry(log, 1, NVME_NQN_NVME, 0, "192.168.1.117", "4420", IOC_NQN);
+	set_entry(log, 2, NVME_NQN_NVME, 0, "192.168.1.118", "4420", IOC_NQN);
+	log->entries[2].trtype = NVMF_TRTYPE_RDMA;
+	set_entry(log, 3, NVME_NQN_DISC, 0, "192.168.1.119", "8009",
+		  REFERRAL_NQN);
+	log->entries[3].trtype = NVMF_TRTYPE_RDMA;
+
+	dlp_process_log(log, dc_tid, ioc_cb, dc_cb, self_cb, &c);
+
+	pass &= check(c.self == 1, "matching-transport self entry dispatched");
+	pass &= check(c.ioc == 1,
+		      "only the matching-transport I/O entry dispatched");
+	pass &= check(!strcmp(c.last_ioc_subnqn, IOC_NQN),
+		      "dispatched I/O entry is the matching-transport one");
+	pass &= check(c.dc == 0, "cross-transport referral skipped");
+
+	free(log);
+	tid_free(dc_tid);
+
+	return pass;
+}
+
+/*
+ * A multi-homed DC may report one self entry per interface (Base spec 2.4,
+ * Figure 320, subtype 03). Only the entry for the interface this DLP was
+ * fetched over describes the connection in use, so only its EFLAGS (e.g.
+ * EPCSD) are trustworthy. A self entry for a different interface of the same
+ * DC - same subnqn, different transport/traddr/trsvcid - is discarded rather
+ * than dispatched.
+ */
+static bool test_self_entry_other_interface_skipped(void)
+{
+	struct nvmf_discovery_log *log;
+	struct counters c = { 0 };
+	struct libnvmf_tid *dc_tid;
+	bool pass = true;
+
+	printf("test_self_entry_other_interface_skipped:\n");
+
+	dc_tid = tid_new("tcp", "192.168.1.116", "8009", DC_NQN, NULL, NULL,
+			 NULL, true);
+
+	log = make_log(2);
+	set_entry(log, 0, NVME_NQN_CURR, NVMF_DISC_EFLAGS_EPCSD,
+		  "192.168.1.116", "8009", DC_NQN);
+	set_entry(log, 1, NVME_NQN_CURR, NVMF_DISC_EFLAGS_EPCSD,
+		  "192.168.2.116", "8009", DC_NQN);
+
+	dlp_process_log(log, dc_tid, ioc_cb, dc_cb, self_cb, &c);
+
+	pass &= check(c.self == 1,
+		      "only the connected-interface self entry dispatched");
+	pass &= check(c.self_epcsd, "its EPCSD flag is passed through");
+
+	free(log);
+	tid_free(dc_tid);
+
+	return pass;
+}
+
 /* An empty log page dispatches nothing. */
 static bool test_no_entries(void)
 {
@@ -254,6 +337,8 @@ int main(void)
 	pass &= test_dupretinfo_does_not_drop_entries();
 	pass &= test_subtype_dispatch();
 	pass &= test_multiple_self_entries();
+	pass &= test_cross_transport_skipped();
+	pass &= test_self_entry_other_interface_skipped();
 	pass &= test_no_entries();
 	pass &= test_null_callbacks();
 

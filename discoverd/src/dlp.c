@@ -58,11 +58,44 @@ void dlp_process_log(const struct nvmf_discovery_log *log,
 	for (i = 0; i < numrec; i++) {
 		const struct nvmf_disc_log_entry *e = &log->entries[i];
 		uint16_t eflags = le16toh((__u16)e->eflags);
-		struct libnvmf_tid *t;
+		__cleanup_tid struct libnvmf_tid *t;
 
 		t = tid_from_dlpe(e, dc_tid);
 		if (!t)
 			continue;
+
+		/*
+		 * A DLPE carries no host-side addressing, so host_traddr and
+		 * host_iface are always inherited from the DC (dc_tid). This
+		 * ensures the connection to the DLPE follows the same path
+		 * used to connect to the DC.
+		 *
+		 * Inheriting host_traddr and host_iface from the DC is only
+		 * valid if the DLPE's transport type matches the DC's. Here
+		 * we filter out any DLPE with a transport type that doesn't.
+		 *
+		 * One exception is the self entry (the entry that matches
+		 * the DC). We need to extract the EFLAGS of the DC's own
+		 * entry, and therefore cannot filter it out. A DC with
+		 * multiple ports may report more than one self entry in the
+		 * DLP (Base spec 2.4, Figure 320, subtype 03), so we only
+		 * keep the one that precisely matches the DC (dc_tid) and
+		 * eliminate all others.
+		 */
+		if (dc_tid && e->subtype == NVME_NQN_CURR) {
+			if (!tid_target_same(dc_tid, t)) {
+				disc_warn("%s | skipping %s - other-interface self entry",
+					  libnvmf_tid_str(dc_tid),
+					  libnvmf_tid_str(t));
+				continue;
+			}
+		} else if (dc_tid &&
+			   strcmp(libnvmf_tid_get_transport(dc_tid),
+				  libnvmf_tid_get_transport(t))) {
+			disc_warn("%s | skipping %s - transport mismatch",
+				  libnvmf_tid_str(dc_tid), libnvmf_tid_str(t));
+			continue;
+		}
 
 		switch (e->subtype) {
 		case NVME_NQN_NVME:
@@ -82,8 +115,6 @@ void dlp_process_log(const struct nvmf_discovery_log *log,
 		default:
 			break;
 		}
-
-		tid_free(t);
 	}
 }
 
