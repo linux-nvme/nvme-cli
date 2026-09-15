@@ -1112,7 +1112,7 @@ __shr_public int libnvmf_scan_tls_keys(
 		libnvmf_scan_tls_keys_cb_t cb, void *data)
 {
 	struct __scan_keys_data d;
-	long keyring_id;
+	long keyring_id = 0;
 	int ret;
 
 	ret = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
@@ -1143,7 +1143,7 @@ static int __nvme_insert_tls_key(struct libnvme_global_ctx *ctx,
 	__cleanup_free unsigned char *psk = NULL;
 	__cleanup_free char *identity = NULL;
 	ssize_t identity_len;
-	long key;
+	long key = 0;
 	int ret;
 
 	identity_len = nvme_identity_len(hmac, version, hostnqn, subsysnqn);
@@ -1184,7 +1184,7 @@ __shr_public int libnvmf_insert_tls_key_versioned(
 		unsigned char *configured_key, int key_len,
 		long *key)
 {
-	long keyring_id;
+	long keyring_id = 0;
 	int ret;
 
 	ret = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
@@ -1208,7 +1208,7 @@ __shr_public int libnvmf_insert_tls_key_compat(
 		unsigned char *configured_key, int key_len,
 		long *key)
 {
-	long keyring_id;
+	long keyring_id = 0;
 	int ret;
 
 	ret = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
@@ -1228,7 +1228,7 @@ __shr_public int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *identity)
 {
-	long keyring_id, key;
+	long keyring_id = 0, key;
 	int ret;
 
 	ret = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
