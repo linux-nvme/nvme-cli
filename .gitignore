@@ -25,3 +25,6 @@ tests/**/*.pyc
 dist/
 
 .vscode/
+
+# Claude Code local state - never intended for this repo (see ../nvme-cli-ai/)
+.claude/
