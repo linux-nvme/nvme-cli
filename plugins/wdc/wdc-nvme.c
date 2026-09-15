@@ -12349,6 +12349,7 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct p
 	const char *log = "Enclosure Log Page ID.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_file FILE *output_file = NULL;
 	FILE *output_fd;
 	int xfer_size = 0;
 	int len;
@@ -12399,12 +12400,13 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct p
 		xfer_size = (xfer_size) ? xfer_size : WDC_NVME_ENC_LOG_SIZE_CHUNK;
 		len = !cfg.file ? 0 : strlen(cfg.file);
 		if (len > 0) {
-			output_fd = fopen(cfg.file, "wb");
-			if (!output_fd) {
+			output_file = fopen(cfg.file, "wb");
+			if (!output_file) {
 				nvme_show_error("%s: ERROR: opening:%s: %s", __func__, cfg.file,
 					libnvme_strerror(errno));
 				return -EINVAL;
 			}
+			output_fd = output_file;
 		} else {
 			output_fd = stdout;
 		}
