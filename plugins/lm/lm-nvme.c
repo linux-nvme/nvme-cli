@@ -359,8 +359,6 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 
 		size_t n_data = fread(data, 1, cfg.numd << 2, file);
 
-		fclose(file);
-
 		if (n_data != (size_t)(cfg.numd << 2)) {
 			nvme_show_error("failed to read controller state data %s", libnvme_strerror(errno));
 			return -errno;
