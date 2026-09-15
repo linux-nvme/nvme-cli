@@ -340,6 +340,7 @@ bool sndk_nvme_parse_dev_status_log_entry(void *log_data,
 bool sndk_nvme_parse_dev_status_log_str(void *log_data,
 		__u32 entry_id,
 		char *ret_data,
+		size_t ret_data_size,
 		__u32 *ret_data_len);
 
 bool sndk_get_dev_mgment_data(struct libnvme_global_ctx *ctx,
