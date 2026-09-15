@@ -148,7 +148,15 @@ static void huawei_json_print_list_items(struct huawei_list_item *list_items,
 	int index, i = 0;
 
 	root = json_create_object();
+	if (!root)
+		return;
+
 	devices = json_create_array();
+	if (!devices) {
+		json_free_object(root);
+		return;
+	}
+
 	for (i = 0; i < len; i++) {
 		device_attrs = json_create_object();
 		if (!device_attrs)
