@@ -745,6 +745,72 @@ static bool test_dc_decide(struct libnvme_global_ctx *ctx)
 }
 
 /* -------------------------------------------------------------------------
+ * dc_entry_is_self — is this entry, among possibly several a multi-homed
+ * DC reports (Base spec 2.4, Figure 320, subtype 03h), the self entry
+ * for this connection
+ * -------------------------------------------------------------------------
+ */
+static bool test_dc_entry_is_self(void)
+{
+	struct libnvme_ctrl c = {
+		.transport = "tcp",
+		.traddr = "192.168.1.116",
+		.trsvcid = "8009",
+	};
+	struct nvmf_disc_log_entry e = { 0 };
+	bool pass = true, p;
+
+	printf("\ntest_dc_entry_is_self:\n");
+
+	e.subtype = NVME_NQN_CURR;
+	e.trtype = NVMF_TRTYPE_TCP;
+	memcpy(e.traddr, "192.168.1.116", 13);
+	memcpy(e.trsvcid, "8009", 4);
+
+	p = dc_entry_is_self(&c, &e);
+	CHECK(p, "self entry, matching transport/traddr/trsvcid: is self");
+	pass &= p;
+
+	memset(&e, 0, sizeof(e));
+	e.subtype = NVME_NQN_CURR;
+	e.trtype = NVMF_TRTYPE_TCP;
+	memcpy(e.traddr, "192.168.2.116", 13);
+	memcpy(e.trsvcid, "8009", 4);
+	p = !dc_entry_is_self(&c, &e);
+	CHECK(p, "same transport, different traddr (other port): not self");
+	pass &= p;
+
+	memset(&e, 0, sizeof(e));
+	e.subtype = NVME_NQN_CURR;
+	e.trtype = NVMF_TRTYPE_RDMA;
+	memcpy(e.traddr, "192.168.1.116", 13);
+	memcpy(e.trsvcid, "8009", 4);
+	p = !dc_entry_is_self(&c, &e);
+	CHECK(p, "same traddr/trsvcid, different transport: not self");
+	pass &= p;
+
+	memset(&e, 0, sizeof(e));
+	e.subtype = NVME_NQN_CURR;
+	e.trtype = NVMF_TRTYPE_TCP;
+	memcpy(e.traddr, "192.168.1.116", 13);
+	memcpy(e.trsvcid, "8010", 4);
+	p = !dc_entry_is_self(&c, &e);
+	CHECK(p, "same transport/traddr, different trsvcid: not self");
+	pass &= p;
+
+	memset(&e, 0, sizeof(e));
+	e.subtype = NVME_NQN_NVME;
+	e.trtype = NVMF_TRTYPE_TCP;
+	memcpy(e.traddr, "192.168.1.116", 13);
+	memcpy(e.trsvcid, "8009", 4);
+	p = !dc_entry_is_self(&c, &e);
+	CHECK(p, "matching addressing, wrong subtype: not self");
+	pass &= p;
+
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
  * registry_action_on_connect — what a successful connect does to the
  * registry entry
  * -------------------------------------------------------------------------
@@ -1031,6 +1097,7 @@ int main(int argc, char *argv[])
 	test_nvmf_sanitize_addrs(ctx);
 	test_unescape_uri();
 	test_dc_decide(ctx);
+	test_dc_entry_is_self();
 	test_registry_action_on_connect();
 	test_create_ctrl_credentials(ctx);
 	test_generate_hostid(ctx);
