@@ -424,7 +424,8 @@ __shr_public char *libnvme_ctrl_owner(struct libnvme_ctrl *c)
 {
 	char *owner = NULL;
 
-	libnvmf_registry_retrieve(c->ctx,
+	/* Any failure (e.g. no owner registered) is reported as NULL. */
+	(void)libnvmf_registry_retrieve(c->ctx,
 				  libnvme_ctrl_get_name(c), "owner", &owner);
 	return owner;
 }
