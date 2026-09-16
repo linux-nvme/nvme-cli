@@ -261,6 +261,21 @@ static int dup_field(const char *src, const char **dst)
 	return 0;
 }
 
+/* Free the deep-copied fields of one option entry (safe on a partial entry). */
+static void free_option_fields(struct command_metadata_option *o)
+{
+	free((char *)o->option);
+	free((char *)o->meta);
+	free((char *)o->help);
+	if (o->opt_val) {
+		const struct argconfig_opt_val *v;
+
+		for (v = o->opt_val; v->str; v++)
+			free((char *)v->str);
+		free((void *)o->opt_val);
+	}
+}
+
 /*
  * Deep-copy an options array into *out (a heap array of *n_out entries).
  * Returns -ENOMEM on failure; the partial allocation is left for process exit
@@ -295,8 +310,14 @@ static int copy_options(const struct argconfig_commandline_options *opts,
 		if (dup_field(opts[i].option, &dst[i].option) ||
 		    dup_field(opts[i].meta, &dst[i].meta) ||
 		    dup_field(opts[i].help, &dst[i].help) ||
-		    copy_opt_val(opts[i].opt_val, &dst[i].opt_val))
+		    copy_opt_val(opts[i].opt_val, &dst[i].opt_val)) {
+			size_t j;
+
+			for (j = 0; j <= i; j++)
+				free_option_fields(&dst[j]);
+			free(dst);
 			return -ENOMEM;
+		}
 		dst[i].short_option = opts[i].short_option;
 		dst[i].config_type = opts[i].config_type;
 		dst[i].argument_type = opts[i].argument_type;
