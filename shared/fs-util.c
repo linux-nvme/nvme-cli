@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include "cleanup-util.h"
 #include "fs-util.h"
@@ -98,32 +97,25 @@ static char *join_path(const char *dir, const char *path)
 	return out;
 }
 
-int shr_read_file(const char *dir, const char *path, long *size, int retries,
-		   unsigned char **out)
+int shr_read_file(const char *dir, const char *path, long *size,
+		  unsigned char **out)
 {
 	__cleanup_free char *file_path = NULL;
 	unsigned char *buf;
-	FILE *file = NULL;
+	FILE *file;
 	long file_size;
 	size_t n;
-	int ret = -EIO;
-	int i;
+	int ret;
 
 	file_path = join_path(dir, path);
 	if (!file_path)
 		return -ENOMEM;
 
-	for (i = 0; i < retries; i++) {
-		file = fopen(file_path, "rb");
-		if (file)
-			break;
-		ret = -errno;
-		sleep((unsigned int)(retries > 1));
-	}
+	file = fopen(file_path, "rb");
 	if (!file)
-		return ret;
+		return -errno;
 
-	if (fseek(file, 0, SEEK_END) < 0 || (file_size = ftell(file)) < 0) {
+	if (fseek(file, 0, SEEK_END) != 0 || (file_size = ftell(file)) < 0) {
 		ret = -errno;
 		goto close_file;
 	}
@@ -131,7 +123,10 @@ int shr_read_file(const char *dir, const char *path, long *size, int retries,
 		ret = -ENODATA;
 		goto close_file;
 	}
-	fseek(file, 0, SEEK_SET);
+	if (fseek(file, 0, SEEK_SET) != 0) {
+		ret = -errno;
+		goto close_file;
+	}
 
 	buf = malloc(file_size);
 	if (!buf) {
@@ -155,23 +150,23 @@ close_file:
 	return ret;
 }
 
-int shr_read_file_as_string(const char *dir, const char *path, long *size, int retries,
-			     char **out)
+int shr_read_file_as_string(const char *dir, const char *path, long *size,
+			    char **out)
 {
-	__cleanup_free unsigned char *raw = NULL;
+	unsigned char *raw = NULL;
 	char *str;
 	long raw_size = 0;
 	int ret;
 
-	ret = shr_read_file(dir, path, &raw_size, retries, &raw);
+	ret = shr_read_file(dir, path, &raw_size, &raw);
 	if (ret < 0 && ret != -ENODATA)
 		return ret;
 
-	str = malloc(raw_size + 1);
-	if (!str)
+	str = realloc(raw, raw_size + 1);
+	if (!str) {
+		free(raw);
 		return -ENOMEM;
-	if (raw_size)
-		memcpy(str, raw, raw_size);
+	}
 	str[raw_size] = '\0';
 
 	if (size)

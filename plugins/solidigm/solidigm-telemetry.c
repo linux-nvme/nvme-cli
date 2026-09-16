@@ -99,10 +99,11 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 			"Device path not allowed when using --source-file");
 			return -EINVAL;
 		}
+		unsigned char *raw = NULL;
 		long raw_size = 0;
 
-		err = shr_read_file(NULL, cfg.binary_file, &raw_size, 1,
-				     (unsigned char **)&tlog);
+		err = shr_read_file(NULL, cfg.binary_file, &raw_size, &raw);
+		tlog = (struct nvme_telemetry_log *)raw;
 		tl.log_size = raw_size;
 	} else {
 		err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -121,9 +122,11 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		__cleanup_free char *conf_str = NULL;
 		enum json_tokener_error jerr;
 
-		err = shr_read_file_as_string(NULL, cfg.cfg_file, NULL, 1, &conf_str);
+		err = shr_read_file_as_string(NULL, cfg.cfg_file, NULL,
+					      &conf_str);
 		if (err) {
-			nvme_show_perror("config-file %s", cfg.cfg_file);
+			nvme_show_error("config-file %s: %s", cfg.cfg_file,
+					libnvme_strerror(-err));
 			return err;
 		}
 		configuration = json_tokener_parse_verbose(conf_str, &jerr);
