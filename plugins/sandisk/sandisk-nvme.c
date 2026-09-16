@@ -23,6 +23,7 @@
 
 #include "global-ctx.h"
 #include "nvme-cmds.h"
+#include "nvme-pci-ids.h"
 #include "nvme-print.h"
 #include "plugin.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"
@@ -453,7 +454,8 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		goto out;
 	}
 
-	ret = sndk_get_pci_ids(ctx, hdl, &device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &device_id,
+			       NULL, NULL, NULL);
 
 	if (cfg.file) {
 		int verify_file;
@@ -671,7 +673,8 @@ static int sndk_drive_resize(int argc, char **argv,
 		return ret;
 	sndk_check_device(ctx, hdl);
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
-	sndk_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
+	nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id,
+			 NULL, NULL, NULL);
 
 	if ((capabilities & SNDK_DRIVE_CAP_RESIZE_SN861) == SNDK_DRIVE_CAP_RESIZE_SN861) {
 		ret = sndk_do_sn861_drive_resize(hdl, cfg.size, &result);
