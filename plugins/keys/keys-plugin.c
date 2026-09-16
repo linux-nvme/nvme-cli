@@ -363,11 +363,25 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 		return err;
 	}
 
-	old_umask = umask(0);
+	old_umask = umask(S_IRWXG | S_IRWXO);
 
 	fd = fopen(keyfile, "a");
 	if (!fd) {
 		nvme_show_error("Failed to open '%s', %s",
+				keyfile, libnvme_strerror(errno));
+		err = -errno;
+		goto out;
+	}
+
+	/*
+	 * The umask above only affects newly created files: an existing
+	 * keyfile could already be more permissive, so restrict the mode of
+	 * the file we actually opened, via its descriptor, before writing
+	 * the key to it. Using the descriptor rather than the path avoids a
+	 * rename/symlink race between checking and fixing up the mode.
+	 */
+	if (fchmod(fileno(fd), 0600) < 0) {
+		nvme_show_error("Failed to restrict permissions on '%s', %s",
 				keyfile, libnvme_strerror(errno));
 		err = -errno;
 		goto out;
@@ -383,7 +397,6 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 	}
 
 out:
-	chmod(keyfile, 0600);
 	umask(old_umask);
 
 	return err;
