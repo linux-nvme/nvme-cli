@@ -322,3 +322,14 @@ test_sha256_util = executable(
 )
 
 test('shared - sha256-util', test_sha256_util)
+
+test_mem_util = executable(
+    'test-mem-util',
+    ['test-mem-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - mem-util', test_mem_util)
