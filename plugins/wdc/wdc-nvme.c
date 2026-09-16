@@ -276,6 +276,8 @@
 /* Capture Diagnostics */
 #define WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE		WDC_NVME_LOG_SIZE_DATA_LEN
 #define WDC_NVME_CAP_DIAG_OPCODE			0xE6
+/* Sanity bound on the device-reported Capture Diagnostics log length. */
+#define WDC_NVME_CAP_DIAG_LENGTH_MAX			(1U << 30)
 #define WDC_NVME_CAP_DIAG_CMD_OPCODE			0xC6
 #define WDC_NVME_CAP_DIAG_SUBCMD			0x00
 #define WDC_NVME_CAP_DIAG_CMD				0x00
@@ -3356,6 +3358,14 @@ static int wdc_do_cap_diag(struct libnvme_global_ctx *ctx, struct libnvme_transp
 
 		if (!cap_diag_length) {
 			nvme_show_error("INFO: WDC: Capture Diagnostics log is empty");
+		} else if (cap_diag_length < WDC_NVME_LOG_SIZE_HDR_LEN) {
+			nvme_show_error("%s: ERROR: Capture Diagnostics log length 0x%x is smaller than the header (0x%x)",
+					__func__, cap_diag_length, WDC_NVME_LOG_SIZE_HDR_LEN);
+			ret = -1;
+		} else if (cap_diag_length > WDC_NVME_CAP_DIAG_LENGTH_MAX) {
+			nvme_show_error("%s: ERROR: Capture Diagnostics log length 0x%x exceeds maximum 0x%x",
+					__func__, cap_diag_length, WDC_NVME_CAP_DIAG_LENGTH_MAX);
+			ret = -1;
 		} else {
 			ret = wdc_do_dump_e6(hdl,
 					 WDC_NVME_CAP_DIAG_OPCODE,
