@@ -770,8 +770,11 @@ struct ocp_cloud_smart_log {
 	__u8 endurance_estimate[16];
 	__u64 pcie_link_retraining_cnt;
 	__u64 power_state_change_cnt;
-	char  lowest_permitted_fw_rev[8];
-	__u8 rsvd216[278];
+	union {
+		char  lowest_permitted_fw_rev[8]; /* log_page_version >= 4 */
+		__u8  hardware_revision[16];      /* log_page_version == 3 */
+	};
+	__u8 rsvd224[270];
 	__u16 log_page_version;
 	__u8 log_page_guid[16];
 };
@@ -8151,7 +8154,7 @@ static void wdc_show_cloud_smart_log_json(struct ocp_cloud_smart_log *log)
 			json_object_add_value_string(root, "lowest_permitted_fw_rev", lowest_fr);
 		} else
 			json_object_add_value_uint128(root, "hardware_revision",
-					le128_to_cpu((__u8 *)&log->lowest_permitted_fw_rev[0]));
+					le128_to_cpu(log->hardware_revision));
 	}
 	json_object_add_value_uint(root, "log_page_version",
 			smart_log_ver);
@@ -8255,8 +8258,7 @@ static void wdc_show_cloud_smart_log_normal(struct ocp_cloud_smart_log *log,
 					log->lowest_permitted_fw_rev);
 		else
 			printf("Hardware Revision                            : %s\n",
-					uint128_t_to_string(le128_to_cpu(
-							(__u8 *)&log->lowest_permitted_fw_rev[0])));
+					uint128_t_to_string(le128_to_cpu(log->hardware_revision)));
 	}
 	printf("Log Page Version                             : %" PRIu16 "\n",
 			smart_log_ver);
