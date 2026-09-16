@@ -2382,7 +2382,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		}
 
 		/* Hex dump Vendor Specific Eye Data */
-		vsdataoffset = (nrows * ncols) + sizeof(struct nvme_eom_lane_desc);
+		vsdataoffset = (unsigned int)nrows * ncols + sizeof(struct nvme_eom_lane_desc);
 		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
 
 		hexdata = hexstr;
