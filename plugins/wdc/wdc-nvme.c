@@ -3143,14 +3143,21 @@ static int wdc_do_dump_e6(struct libnvme_transport_handle *hdl, __u32 opcode, __
 	int i;
 	struct libnvme_passthru_cmd admin_cmd;
 
+	/* data_len is device-supplied and must hold the header copied in below */
+	if (data_len < WDC_NVME_LOG_SIZE_HDR_LEN) {
+		nvme_show_error("%s: ERROR: invalid log length (0x%x), must be >= 0x%x",
+				__func__, data_len, WDC_NVME_LOG_SIZE_HDR_LEN);
+		return -EINVAL;
+	}
+
 	/* if data_len is not 4 byte aligned */
 	if (data_len & 0x00000003) {
 		/* Round down to the next 4 byte aligned value */
 		nvme_show_error("%s: INFO: data_len 0x%x not 4 byte aligned.",
 				__func__, data_len);
-		nvme_show_error("%s: INFO: Round down to 0x%x.",
-				__func__, (data_len &= 0xFFFFFFFC));
 		data_len &= 0xFFFFFFFC;
+		nvme_show_error("%s: INFO: Round down to 0x%x.",
+				__func__, data_len);
 	}
 
 	dump_data = (__u8 *)malloc(sizeof(__u8) * data_len);
