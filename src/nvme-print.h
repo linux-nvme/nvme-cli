@@ -4,13 +4,15 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
 #include "args.h"
 #include "nvme-json.h"
+#include <shared/int-util.h>
+#include <shared/mem-util.h>
 #include <shared/table-util.h>
 #include <shared/uint128-util.h>
-#include <shared/int-util.h>
 #include <shared/uuid-util.h>
 
 #define STR_LEN 100
@@ -122,7 +124,7 @@ struct print_ops {
 	/* libnvme types.h print functions */
 	void (*ana_log)(struct nvme_ana_log *ana_log, const char *devname, size_t len);
 	void (*boot_part_log)(void *bp_log, const char *devname, __u32 size);
-	void (*phy_rx_eom_log)(struct nvme_phy_rx_eom_log *log, __u16 controller);
+	void (*phy_rx_eom_log)(struct nvme_phy_rx_eom_log *log, __u16 controller, size_t len);
 	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
 	void (*ctrl_registers)(void *bar, bool fabrics);
 	void (*ctrl_register)(int offset, uint64_t value);
@@ -310,7 +312,82 @@ void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
 void nvme_show_boot_part_log(void *bp_log, const char *devname,
 	__u32 size, nvme_print_flags_t flags);
 void nvme_show_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log,
-	__u16 controller, nvme_print_flags_t flags);
+	__u16 controller, size_t len, nvme_print_flags_t flags);
+
+/*
+ * Walks the variable-length, device-reported array of EOM descriptors in a
+ * phy_rx_eom_log, bounding every step against both dsize and the log
+ * buffer actually allocated for it (see shr_buf_has_room()). Shared by the
+ * json and stdout backends so the bounds-checking logic exists once.
+ */
+struct eom_desc_iter {
+	unsigned char *p;
+	unsigned char *cur;
+	unsigned char *end;
+	uint32_t dsize;
+	uint16_t remaining;
+};
+
+static inline void eom_desc_iter_init(struct eom_desc_iter *it,
+		struct nvme_phy_rx_eom_log *log, size_t len)
+{
+	it->p = (unsigned char *)log->descs;
+	it->end = (unsigned char *)log + len;
+	it->dsize = le32_to_cpu(log->dsize);
+	it->remaining = le16_to_cpu(log->nd);
+}
+
+/*
+ * Returns the next descriptor, or NULL once the count is exhausted or a
+ * descriptor no longer fits the log buffer -- a corrupt or hostile
+ * dsize/nd pair gives no way to locate anything past that point, so the
+ * walk stops there rather than guessing.
+ */
+static inline struct nvme_eom_lane_desc *eom_desc_iter_next(struct eom_desc_iter *it)
+{
+	struct nvme_eom_lane_desc *desc;
+
+	if (!it->remaining)
+		return NULL;
+
+	/*
+	 * The full stride, not just the fixed descriptor, must fit: advancing
+	 * by dsize below would otherwise form an out-of-bounds pointer.
+	 */
+	if (it->dsize < sizeof(*desc) || !shr_buf_has_room(it->p, it->end, it->dsize))
+		return NULL;
+
+	it->remaining--;
+	it->cur = it->p;
+	desc = (struct nvme_eom_lane_desc *)it->cur;
+	it->p += it->dsize;
+
+	return desc;
+}
+
+/*
+ * Validates the vendor-specific eye data following the descriptor most
+ * recently returned by eom_desc_iter_next() against both dsize and the log
+ * buffer. Returns the data and its length via *vsdatalen, or NULL with
+ * *vsdatalen == 0 if it doesn't fit.
+ */
+static inline unsigned char *eom_desc_iter_vsdata(struct eom_desc_iter *it,
+		struct nvme_eom_lane_desc *desc, uint16_t *vsdatalen)
+{
+	uint16_t nrows = le16_to_cpu(desc->nrows);
+	uint16_t ncols = le16_to_cpu(desc->ncols);
+	uint16_t edlen = le16_to_cpu(desc->edlen);
+	size_t vsdataoffset = (size_t)nrows * ncols + sizeof(*desc);
+
+	if (vsdataoffset > it->dsize || edlen > it->dsize - vsdataoffset ||
+	    !shr_buf_has_room(it->cur, it->end, vsdataoffset + edlen)) {
+		*vsdatalen = 0;
+		return NULL;
+	}
+
+	*vsdatalen = edlen;
+	return it->cur + vsdataoffset;
+}
 void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fid_log,
 	const char *devname, nvme_print_flags_t flags);
 void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,

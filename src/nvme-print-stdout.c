@@ -973,30 +973,28 @@ static void stdout_phy_rx_eom_odp(uint8_t odp)
 static void stdout_eom_printable_eye(struct nvme_eom_lane_desc *lane)
 {
 	char *eye = (char *)lane->eye_desc;
-	int i, j;
+	size_t nrows = le16_to_cpu(lane->nrows);
+	size_t ncols = le16_to_cpu(lane->ncols);
+	size_t i, j;
 
 	printf("Printable Eye:\n");
-	for (i = 0; i < le16_to_cpu(lane->nrows); i++) {
-		for (j = 0; j < le16_to_cpu(lane->ncols); j++)
-			printf("%c", eye[i * le16_to_cpu(lane->ncols) + j]);
+	for (i = 0; i < nrows; i++) {
+		for (j = 0; j < ncols; j++)
+			printf("%c", eye[i * ncols + j]);
 		printf("\n");
 	}
 }
 
-static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
+static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log, size_t len)
 {
-	void *p = log->descs;
-	int i;
+	struct eom_desc_iter it;
+	struct nvme_eom_lane_desc *desc;
 
-	for (i = 0; i < log->nd; i++) {
-		struct nvme_eom_lane_desc *desc = p;
-		unsigned char *vsdata = NULL;
-		size_t vsdataoffset;
-		uint16_t nrows, ncols, edlen;
+	eom_desc_iter_init(&it, log, len);
 
-		nrows = le16_to_cpu(desc->nrows);
-		ncols = le16_to_cpu(desc->ncols);
-		edlen = le16_to_cpu(desc->edlen);
+	while ((desc = eom_desc_iter_next(&it))) {
+		unsigned char *vsdata;
+		uint16_t vsdatalen;
 
 		printf("Measurement Status: %s\n",
 			desc->mstatus ? "Successful" : "Not Successful");
@@ -1006,31 +1004,33 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 		printf("Bottom: %u\n", le16_to_cpu(desc->bottom));
 		printf("Left: %u\n", le16_to_cpu(desc->left));
 		printf("Right: %u\n", le16_to_cpu(desc->right));
-		printf("Number of Rows: %u\n", nrows);
-		printf("Number of Columns: %u\n", ncols);
+		printf("Number of Rows: %u\n", le16_to_cpu(desc->nrows));
+		printf("Number of Columns: %u\n", le16_to_cpu(desc->ncols));
 		printf("Eye Data Length: %u\n", desc->edlen);
+
+		vsdata = eom_desc_iter_vsdata(&it, desc, &vsdatalen);
+		if (!vsdata)
+			continue;
 
 		if (NVME_EOM_ODP_PEFP(log->odp))
 			stdout_eom_printable_eye(desc);
 
 		/* Eye Data field is vendor specific */
-		if (edlen == 0)
+		if (vsdatalen == 0)
 			continue;
 
-		vsdataoffset = (size_t)nrows * ncols +
-			       sizeof(struct nvme_eom_lane_desc);
-		vsdata = (unsigned char *)desc + vsdataoffset;
 		printf("Eye Data:\n");
-		d(vsdata, edlen, 16, 1);
+		d(vsdata, vsdatalen, 16, 1);
 		printf("\n");
-
-		p += log->dsize;
 	}
 }
 
-static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller)
+static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller, size_t len)
 {
 	int human = stdout_print_ops.flags & VERBOSE;
+
+	if (len < sizeof(*log))
+		return;
 
 	printf("Physical Interface Receiver Eye Opening Measurement Log for controller ID: %u\n", controller);
 	printf("Log ID: %u\n", log->lid);
@@ -1056,7 +1056,7 @@ static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 control
 	printf("Estimated Time for Best Quality: %u\n", le16_to_cpu(log->etbest));
 
 	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED)
-		stdout_phy_rx_eom_descs(log);
+		stdout_phy_rx_eom_descs(log, len);
 }
 
 static void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
