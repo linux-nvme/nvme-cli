@@ -5,10 +5,48 @@
  *
  * Authors: Daniel Wagner <dwagner@suse.com>
  */
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#if NVME_HAVE_SYS_RANDOM
+#include <sys/random.h>
+#endif
 
+#include "cleanup-util.h"
 #include "crypto-util.h"
+
+int shr_getrandom(void *buf, unsigned int len)
+{
+	__cleanup_free unsigned char *tmp = NULL;
+	ssize_t ret;
+
+	if (!len)
+		return 0;
+
+	tmp = malloc(len);
+	if (!tmp)
+		return -1;
+
+#if NVME_HAVE_SYS_RANDOM
+	ret = getrandom(tmp, len, 0);
+#else
+	{
+		int fd = open("/dev/urandom", O_RDONLY);
+
+		if (fd < 0)
+			return -1;
+		ret = read(fd, tmp, len);
+		close(fd);
+	}
+#endif
+	if (ret != (ssize_t)len)
+		return -1;
+
+	memcpy(buf, tmp, len);
+	return 0;
+}
 
 #ifdef CONFIG_OPENSSL
 #include <openssl/evp.h>
