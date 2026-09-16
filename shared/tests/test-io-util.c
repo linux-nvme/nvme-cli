@@ -106,7 +106,10 @@ static bool test_read_all(void)
 	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (!check_bool("temp file opened for writing", fd >= 0))
 		return false;
-	shr_write_all(fd, msg, strlen(msg));
+	if (!check_ret("test file written", shr_write_all(fd, msg, strlen(msg)), 0)) {
+		close(fd);
+		return false;
+	}
 	close(fd);
 
 	/* Buffer large enough: whole content read back, NUL-terminated. */
