@@ -25,6 +25,11 @@ number of controllers in the NVM Subsystem that are associated with
 hosts that are registrants of the namespace (i.e., there is a Registered
 Controller data structure for each such controller).
 
+That size is not known in advance, so the transfer is sized automatically:
+the fixed-size header of the structure is read first, and the structure
+is then read again with a buffer large enough to hold every registrant the
+namespace reports. Pass '--numd' to transfer a fixed length instead.
+
 The bare 'nvme resv-report' form (without a space) still works as a deprecated
 alias and will be removed in a future major version. New scripts should
 use 'nvme resv report' instead.
@@ -39,8 +44,9 @@ OPTIONS
 
 -d <num-dwords>::
 --numd=<num-dwords>::
-	Specify the number of Dwords of the Reservation Status structure
-	to transfer. Defaults to 4k.
+	Transfer a fixed number of Dwords of the Reservation Status
+	structure instead of sizing the transfer automatically. The count
+	is zero-based, so one Dword more than requested is transferred.
 
 -e::
 --eds::
