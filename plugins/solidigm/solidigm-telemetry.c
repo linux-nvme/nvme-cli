@@ -13,6 +13,8 @@
 
 #include <libnvme.h>
 
+#include <shared/fs-util.h>
+
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
@@ -21,28 +23,6 @@
 #include "solidigm-telemetry/data-area.h"
 #include "solidigm-telemetry/telemetry-log.h"
 #include "solidigm-util.h"
-
-static int read_file2buffer(char *file_name, char **buffer, size_t *length)
-{
-	FILE *fd = fopen(file_name, "rb");
-
-	if (!fd)
-		return -errno;
-
-	fseek(fd, 0, SEEK_END);
-	size_t length_bytes = ftell(fd);
-
-	fseek(fd, 0, SEEK_SET);
-
-	*buffer = malloc(length_bytes);
-	if (!*buffer) {
-		fclose(fd);
-		return -errno;
-	}
-	*length = fread(*buffer, 1, length_bytes, fd);
-	fclose(fd);
-	return 0;
-}
 
 struct config {
 	__u32 host_gen;
@@ -119,7 +99,13 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 			"Device path not allowed when using --source-file");
 			return -EINVAL;
 		}
-		err = read_file2buffer(cfg.binary_file, (char **)&tlog, &tl.log_size);
+		long raw_size = 0;
+
+		errno = 0;
+		tlog = (struct nvme_telemetry_log *)shr_read_file(NULL, cfg.binary_file,
+								   &raw_size, 1);
+		err = tlog ? 0 : (errno ? -errno : -EIO);
+		tl.log_size = raw_size;
 	} else {
 		err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	}
@@ -135,10 +121,11 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 
 	if (argconfig_parse_seen(opts, "config-file")) {
 		__cleanup_free char *conf_str = NULL;
-		size_t length = 0;
 		enum json_tokener_error jerr;
 
-		err = read_file2buffer(cfg.cfg_file, &conf_str, &length);
+		errno = 0;
+		conf_str = shr_read_file_as_string(NULL, cfg.cfg_file, NULL, 1);
+		err = conf_str ? 0 : (errno ? -errno : -EIO);
 		if (err) {
 			nvme_show_perror("config-file %s", cfg.cfg_file);
 			return err;
