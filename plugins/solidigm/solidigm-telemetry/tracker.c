@@ -233,14 +233,32 @@ static void parse_tracker_chunk_json(const struct telemetry_log *tl, uint32_t ch
 			json_object_put(header_obj);
 			json_object_put(entry_json);
 			json_object_put(entry_metadata);
+			/* Header itself didn't parse: no next_entry_index to recover. */
+			break;
+		}
 
-			// Skip to next entry if we know where it is, otherwise break
-			if (next_entry_index == 0 || next_entry_index >= TRACKER_CHUNK_SIZE)
-				break;
+		// Get the inner object from header_obj
+		if (!json_object_object_get_ex(header_obj,
+				"ablist_entry_t", &ablist_entry_obj)) {
+			SOLIDIGM_LOG_WARNING(
+				"Warning: ablist_entry_t not in header");
+			json_object_put(header_obj);
+			json_object_put(entry_json);
+			json_object_put(entry_metadata);
+			/* No ablist_entry_t: no next_entry_index to recover. */
+			break;
+		}
 
-			offset = next_entry_index;
-			entry_count--;
-			continue;
+		// Get next_entry_index from ablist_entry_obj, before any further
+		// parsing that might fail: this is the only chance to learn where
+		// to resume if a later step in this entry fails.
+		if (!json_object_object_get_ex(ablist_entry_obj,
+				"next_entry_index", &next_obj)) {
+			SOLIDIGM_LOG_WARNING(
+				"Warning: ablist_entry_t.next_idx missing");
+			// Continue with next_entry_index = 0 (will likely break)
+		} else {
+			next_entry_index = json_object_get_int(next_obj);
 		}
 
 		// Parse entry data using tracker_entry_t structure
@@ -265,34 +283,6 @@ static void parse_tracker_chunk_json(const struct telemetry_log *tl, uint32_t ch
 			continue;
 		}
 
-		// Get the inner object from header_obj
-		if (!json_object_object_get_ex(header_obj,
-				"ablist_entry_t", &ablist_entry_obj)) {
-			SOLIDIGM_LOG_WARNING(
-				"Warning: ablist_entry_t not in header");
-			json_object_put(header_obj);
-			json_object_put(data_obj);
-			json_object_put(entry_json);
-			json_object_put(entry_metadata);
-
-			// Skip to next entry if we know where it is, otherwise break
-			if (next_entry_index == 0 || next_entry_index >= TRACKER_CHUNK_SIZE)
-				break;
-
-			offset = next_entry_index;
-			entry_count--;
-			continue;
-		}
-
-		// Get next_entry_index from ablist_entry_obj
-		if (!json_object_object_get_ex(ablist_entry_obj,
-				"next_entry_index", &next_obj)) {
-			SOLIDIGM_LOG_WARNING(
-				"Warning: ablist_entry_t.next_idx missing");
-			// Continue with next_entry_index = 0 (will likely break)
-		} else {
-			next_entry_index = json_object_get_int(next_obj);
-		}
 		// Get the inner object from data_obj - only supporting nested
 		// structure format
 		if (!json_object_object_get_ex(data_obj,
