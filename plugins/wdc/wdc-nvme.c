@@ -37,6 +37,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/crypto-util.h>
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
 #include <shared/parse-util.h>
@@ -12452,7 +12453,6 @@ static int wdc_enc_submit_move_data(struct libnvme_transport_handle *hdl, char *
 				    int xfer_size, FILE *out, int log_id,
 				    int cdw14, int cdw15)
 {
-	struct timespec time;
 	uint32_t response_size, more;
 	int err;
 	int handle;
@@ -12480,9 +12480,12 @@ static int wdc_enc_submit_move_data(struct libnvme_transport_handle *hdl, char *
 		.cdw15      = cdw15,
 	};
 
-	clock_gettime(CLOCK_REALTIME, &time);
-	srand(time.tv_nsec);
-	handle = random(); /* Handle to associate send request with receive request */
+	/* Handle to associate send request with receive request */
+	if (shr_getrandom(&handle, sizeof(handle)) != 0) {
+		nvme_show_error("%s: ERROR: failed to generate a random handle", __func__);
+		free(buf);
+		return -1;
+	}
 	nvme_cmd.cdw11 = handle;
 
 #ifdef WDC_NVME_CLI_DEBUG
