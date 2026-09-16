@@ -489,6 +489,7 @@ static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 	params.subsysnqn = "nqn.2024-01.com.example:test";
 	params.traddr = "192.168.1.10";
 	params.host_traddr = "storage.example.com";
+	c = NULL;
 	libnvme_create_ctrl(ctx, &params, &c);
 	CHECK(c, "ctrl created with hostname host_traddr");
 	if (!c)
@@ -507,6 +508,7 @@ static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 	/* A hostname traddr is rejected the same way. */
 	params.traddr = "storage.example.com";
 	params.host_traddr = NULL;
+	c = NULL;
 	libnvme_create_ctrl(ctx, &params, &c);
 	CHECK(c, "ctrl created with hostname traddr");
 	if (!c)
@@ -521,6 +523,7 @@ static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 
 	/* An uncompressed IPv6 traddr is canonicalized. */
 	params.traddr = "2001:0db8:0000:0000:0000:0000:0000:0001";
+	c = NULL;
 	libnvme_create_ctrl(ctx, &params, &c);
 	CHECK(c, "ctrl created with uncompressed IPv6 traddr");
 	if (!c)
@@ -540,6 +543,7 @@ static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 	 * call, same as host_iface.
 	 */
 	params.traddr = "fe80::1%nonexistent0";
+	c = NULL;
 	libnvme_create_ctrl(ctx, &params, &c);
 	CHECK(c, "ctrl created with bad-zone scoped IPv6 traddr");
 	if (!c)
@@ -556,6 +560,7 @@ static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 	/* fc: a WWN traddr is left untouched (not an IP transport). */
 	params.transport = "fc";
 	params.traddr = "nn-0x1:pn-0x2";
+	c = NULL;
 	libnvme_create_ctrl(ctx, &params, &c);
 	CHECK(c, "ctrl created with fc WWN traddr");
 	if (!c)
@@ -572,6 +577,7 @@ static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 	/* loop: no traddr at all -- nothing to sanitize. */
 	params.transport = "loop";
 	params.traddr = NULL;
+	c = NULL;
 	libnvme_create_ctrl(ctx, &params, &c);
 	CHECK(c, "ctrl created for loop transport");
 	if (!c)
