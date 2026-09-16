@@ -1110,6 +1110,12 @@ static int rpmb_write_config(int argc, char **argv, struct command *acmd,
 		return -1;
 	}
 
+	if (msg_size < sizeof(struct rpmb_config_block_t)) {
+		nvme_show_error("invalid config block size %u, expected %zu", msg_size,
+				 sizeof(struct rpmb_config_block_t));
+		return -1;
+	}
+
 	err = rpmb_write_config_block(hdl, msg_buf, key_buf, key_size);
 	if (!err)
 		nvme_show_verbose_result("RPMB configuration block written");
