@@ -434,6 +434,96 @@ static bool test_read_file(void)
 	return pass;
 }
 
+static bool test_read_file_as_string(void)
+{
+	static const char *dir = "shr-test-read-file-str-dir";
+	static const char *name = "data.txt";
+	static const char *content = "some file content\n";
+	char path[256];
+	bool pass = true;
+	long size = 0;
+	char *buf;
+	FILE *f;
+
+	printf("test_read_file_as_string:\n");
+
+	shr_mkdir(dir, 0755);
+	snprintf(path, sizeof(path), "%s/%s", dir, name);
+	f = fopen(path, "wb");
+	pass &= check_bool("test file created", f != NULL);
+	if (f) {
+		fwrite(content, 1, strlen(content), f);
+		fclose(f);
+	}
+
+	buf = shr_read_file_as_string(NULL, path, &size, 1);
+	pass &= check_bool("reads a file given as a plain path", buf != NULL);
+	if (buf) {
+		pass &= check_bool("size matches file content",
+				    (size_t)size == strlen(content));
+		pass &= check_bool("result is NUL-terminated at the reported size",
+				    buf[size] == '\0');
+		pass &= check_bool("content matches what was written",
+				    !strcmp(buf, content));
+		pass &= check_bool("strstr() works directly on the result",
+				    strstr(buf, "file content") != NULL);
+		free(buf);
+	}
+
+	buf = shr_read_file_as_string(NULL, "shr-test-read-file-str-does-not-exist", &size, 1);
+	pass &= check_bool("a missing file returns NULL", buf == NULL);
+	free(buf);
+
+	buf = shr_read_file_as_string(NULL, path, NULL, 1);
+	pass &= check_bool("a NULL size out-param is tolerated", buf != NULL);
+	free(buf);
+
+	shr_unlink(path);
+	shr_rmdir(dir);
+
+	{
+		char embedded_path[256];
+		static const char embedded[] = "abc\0def";
+
+		snprintf(embedded_path, sizeof(embedded_path), "%s", "shr-test-read-file-str-nul");
+		f = fopen(embedded_path, "wb");
+		shr_assert(f != NULL);
+		fwrite(embedded, 1, sizeof(embedded) - 1, f);
+		fclose(f);
+
+		buf = shr_read_file_as_string(NULL, embedded_path, &size, 1);
+		pass &= check_bool("a file with an embedded NUL is still read in full",
+				    buf != NULL && (size_t)size == sizeof(embedded) - 1);
+		pass &= check_bool("strlen() stops at the embedded NUL",
+				    buf && strlen(buf) == 3);
+		free(buf);
+
+		shr_unlink(embedded_path);
+	}
+
+	{
+		char empty_path[256] = "shr-test-read-file-str-empty-XXXXXX";
+		int fd = shr_mkstemp(empty_path);
+
+		shr_assert(fd >= 0);
+		shr_close(fd);
+
+		size = -1;
+		buf = shr_read_file_as_string(NULL, empty_path, &size, 1);
+		pass &= check_bool("an empty file is not an error",
+				    buf != NULL);
+		pass &= check_bool("an empty file reports size 0",
+				    size == 0);
+		pass &= check_bool("an empty file reads as an empty string",
+				    buf && buf[0] == '\0');
+		free(buf);
+
+		shr_unlink(empty_path);
+	}
+
+	return pass;
+}
+
 static bool test_fsync_dir(void)
 {
 	printf("test_fsync_dir:\n");
@@ -582,6 +672,7 @@ int main(void)
 	pass &= test_mkdir_from_fname();
 	pass &= test_mkstemp();
 	pass &= test_read_file();
+	pass &= test_read_file_as_string();
 	pass &= test_fsync_dir();
 	pass &= test_dev_null();
 	pass &= test_close();
