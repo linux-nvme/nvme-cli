@@ -113,15 +113,19 @@ static bool check_normalize(const char *input, bool want_uuid_form,
 	char buf[SHR_NQN_MAX_LEN + 1];
 	bool got;
 
-	if (input)
-		strcpy(buf, input);
+	if (input) {
+		strncpy(buf, input, sizeof(buf) - 1);
+		buf[sizeof(buf) - 1] = '\0';
+	} else {
+		buf[0] = '\0';
+	}
 
 	got = shr_nqn_normalize(input ? buf : NULL);
 
 	if (got == want_uuid_form &&
 	    (!want_result || !strcmp(buf, want_result))) {
 		printf(" - \"%s\" -> \"%s\" [PASS]\n",
-		       input ? input : "(null)", got ? buf : input);
+		       input ? input : "(null)", got ? buf : (input ? input : "(null)"));
 		return true;
 	}
 
