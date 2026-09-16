@@ -205,10 +205,15 @@ void shr_sha256_update(struct shr_sha256_ctx *ctx, const void *data,
 			sha256_process_block(ctx->buffer, ctx->buflen & ~63,
 					     ctx);
 			ctx->buflen &= 63;
-			/* The copied regions cannot overlap. */
-			memcpy(ctx->buffer,
-			       &ctx->buffer[(left_over + add) & ~63],
-			       ctx->buflen);
+			/*
+			 * Provably non-overlapping (src offset is always a
+			 * multiple of 64, dst length is always < 64), but use
+			 * memmove() rather than rely on that being obvious to
+			 * every reader (and analyzer).
+			 */
+			memmove(ctx->buffer,
+				&ctx->buffer[(left_over + add) & ~63],
+				ctx->buflen);
 		}
 
 		data = (const char *)data + add;
