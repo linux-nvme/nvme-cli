@@ -7,9 +7,12 @@
  * haro.panosyan@solidigm.com
  */
 
+#include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -22,6 +25,8 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 #include <shared/fs-util.h>
+#include <shared/proc-util.h>
+#include <shared/string-util.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
@@ -221,7 +226,47 @@ static int read_header(struct libnvme_passthru_cmd *cmd, struct libnvme_transpor
 	return cmd_dump_repeat(cmd, INTERNAL_LOG_MAX_DWORD_TRANSFER, -1, hdl, false);
 }
 
-static int get_serial_number(char *str, struct libnvme_transport_handle *hdl)
+/*
+ * run_cmd - run argv without a shell and wait for it to finish. No command
+ * string is built, so there is no shell to interpret metacharacters in a
+ * device-supplied serial number or a user-supplied path.
+ * Return: 0 on success, -1 with errno set on failure.
+ */
+static int run_cmd(const char *const argv[])
+{
+	shr_proc_t proc;
+	bool exited;
+	int code, ret;
+
+	/*
+	 * The child writes to this process's stdout, so flush what is still
+	 * buffered here or it lands after the child's output.
+	 */
+	fflush(stdout);
+
+	ret = shr_spawnp(argv, -1, -1, &proc);
+	if (!ret)
+		ret = shr_wait_proc(proc, &exited, &code);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
+
+	if (!exited) {
+		errno = EINTR;
+		return -1;
+	}
+
+	if (code != 0) {
+		errno = EIO;
+		return -1;
+	}
+
+	return 0;
+}
+
+static int get_serial_number(char *str, size_t str_size,
+			     struct libnvme_transport_handle *hdl)
 {
 	struct nvme_id_ctrl ctrl = {0};
 	struct libnvme_passthru_cmd cmd;
@@ -232,10 +277,8 @@ static int get_serial_number(char *str, struct libnvme_transport_handle *hdl)
 	if (err)
 		return err;
 
-	/* Remove trailing spaces  */
-	for (int i = sizeof(ctrl.sn) - 1; i && ctrl.sn[i] == ' '; i--)
-		ctrl.sn[i] = '\0';
-	sprintf(str, "%-.*s", (int)sizeof(ctrl.sn), ctrl.sn);
+	snprintf(str, str_size, "%-.*s", (int)sizeof(ctrl.sn), ctrl.sn);
+	shr_sanitize_name(shr_rtrim(str));
 	return err;
 }
 
@@ -907,7 +950,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 
 	initial_folder = cfg.out_dir;
 
-	err = get_serial_number(sn_prefix, hdl);
+	err = get_serial_number(sn_prefix, sizeof(sn_prefix), hdl);
 	if (err)
 		return err;
 
@@ -978,31 +1021,63 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 
 	if (ilog.count > 0) {
 		int ret_cmd;
-		__cleanup_free char *cmd = NULL;
-		char *quiet = nvme_args.verbose ? "" : " -q";
+		__cleanup_free char *zip_path = NULL;
+		char saved_cwd[PATH_MAX];
 
 		if (asprintf(&zip_name, "%s.zip", unique_folder) < 0)
 			return -errno;
 
-		if (asprintf(&cmd, "cd \"%s\" && zip -MM -r \"../%s\" ./* %s", cfg.out_dir,
-			     zip_name, quiet) < 0) {
-			err = errno;
-			nvme_show_perror("Can't allocate string for zip command");
+		/*
+		 * zip runs with cfg.out_dir (initial_folder/unique_folder) as
+		 * its cwd, so the target has to be relative to that directory,
+		 * not to the cwd this process started in: initial_folder may
+		 * be "." (the default), and resolving zip_path against it
+		 * before the chdir() below would put the archive inside the
+		 * very directory being archived -- and then shr_rmdir_recursive()
+		 * would delete it right back out again. cfg.out_dir is always
+		 * exactly one level under initial_folder, so ".." always lands
+		 * back there regardless of what initial_folder is.
+		 */
+		if (asprintf(&zip_path, "../%s", zip_name) < 0)
+			return -errno;
+
+		printf("Compressing logs to %s\n", zip_name);
+
+		/* no shell: run zip with an explicit argv */
+		const char *zip_argv_quiet[] = {
+			"zip", "-MM", "-r", "-q", zip_path, ".", NULL
+		};
+		const char *zip_argv_verbose[] = {
+			"zip", "-MM", "-r", zip_path, ".", NULL
+		};
+		const char **zip_argv = nvme_args.verbose ? zip_argv_verbose
+							   : zip_argv_quiet;
+
+		/* zip needs to run from inside the log directory */
+		if (!getcwd(saved_cwd, sizeof(saved_cwd))) {
+			nvme_show_perror("getcwd");
 			goto out;
 		}
-		printf("Compressing logs to %s\n", zip_name);
-		ret_cmd = system(cmd);
+
+		if (chdir(cfg.out_dir) < 0) {
+			nvme_show_perror("chdir to log directory");
+			goto out;
+		}
+
+		ret_cmd = run_cmd(zip_argv);
+
+		if (chdir(saved_cwd) < 0)
+			nvme_show_perror("chdir back");
+
 		if (ret_cmd)
-			nvme_show_perror("%s", cmd);
+			nvme_show_perror("zip");
 		else {
 			output_path = zip_name;
-			if (asprintf(&cmd, "rm -rf %s", cfg.out_dir) < 0) {
-				err = errno;
-				nvme_show_perror("Can't allocate string for cleanup");
-				goto out;
-			}
-			if (system(cmd) != 0)
+			ret_cmd = shr_rmdir_recursive(cfg.out_dir);
+			if (ret_cmd) {
+				errno = -ret_cmd;
 				nvme_show_perror("Failed removing logs folder");
+			}
 		}
 	}
 
