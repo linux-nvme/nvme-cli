@@ -363,6 +363,7 @@ static bool test_read_file(void)
 	bool pass = true;
 	long size = 0;
 	unsigned char *buf;
+	int ret;
 	FILE *f;
 
 	printf("test_read_file:\n");
@@ -376,9 +377,9 @@ static bool test_read_file(void)
 		fclose(f);
 	}
 
-	buf = shr_read_file(NULL, path, &size, 1);
-	pass &= check_bool("reads a file given as a plain path", buf != NULL);
-	if (buf) {
+	ret = shr_read_file(NULL, path, &size, 1, &buf);
+	pass &= check_bool("reads a file given as a plain path", ret == 0);
+	if (ret == 0) {
 		pass &= check_bool("size matches file content",
 				    (size_t)size == strlen(content));
 		pass &= check_bool("content matches what was written",
@@ -386,32 +387,31 @@ static bool test_read_file(void)
 		free(buf);
 	}
 
-	buf = shr_read_file(dir, name, &size, 1);
-	pass &= check_bool("reads a file given as dir + name", buf != NULL);
-	if (buf) {
+	ret = shr_read_file(dir, name, &size, 1, &buf);
+	pass &= check_bool("reads a file given as dir + name", ret == 0);
+	if (ret == 0) {
 		pass &= check_bool("content matches when joining dir and name",
 				    (size_t)size == strlen(content) &&
 				    !memcmp(buf, content, strlen(content)));
 		free(buf);
 	}
 
-	buf = shr_read_file(NULL, "shr-test-read-file-does-not-exist", &size, 1);
-	pass &= check_bool("a missing file returns NULL", buf == NULL);
-	free(buf);
+	ret = shr_read_file(NULL, "shr-test-read-file-does-not-exist", &size, 1, &buf);
+	pass &= check_bool("a missing file fails", ret < 0);
 
 	/* A NULL/empty @path means "the whole path is in @dir". */
-	buf = shr_read_file(path, NULL, &size, 1);
-	pass &= check_bool("reads a file given as dir with a NULL name", buf != NULL);
-	if (buf) {
+	ret = shr_read_file(path, NULL, &size, 1, &buf);
+	pass &= check_bool("reads a file given as dir with a NULL name", ret == 0);
+	if (ret == 0) {
 		pass &= check_bool("content matches when name is NULL",
 				    (size_t)size == strlen(content) &&
 				    !memcmp(buf, content, strlen(content)));
 		free(buf);
 	}
 
-	buf = shr_read_file(path, "", &size, 1);
-	pass &= check_bool("reads a file given as dir with an empty name", buf != NULL);
-	if (buf)
+	ret = shr_read_file(path, "", &size, 1, &buf);
+	pass &= check_bool("reads a file given as dir with an empty name", ret == 0);
+	if (ret == 0)
 		free(buf);
 
 	shr_unlink(path);
@@ -424,9 +424,8 @@ static bool test_read_file(void)
 		shr_assert(fd >= 0);
 		shr_close(fd);
 
-		buf = shr_read_file(NULL, template, &size, 1);
-		pass &= check_bool("an empty file returns NULL", buf == NULL);
-		free(buf);
+		ret = shr_read_file(NULL, template, &size, 1, &buf);
+		pass &= check_bool("an empty file fails with -ENODATA", ret == -ENODATA);
 
 		shr_unlink(template);
 	}
@@ -443,6 +442,7 @@ static bool test_read_file_as_string(void)
 	bool pass = true;
 	long size = 0;
 	char *buf;
+	int ret;
 	FILE *f;
 
 	printf("test_read_file_as_string:\n");
@@ -456,9 +456,9 @@ static bool test_read_file_as_string(void)
 		fclose(f);
 	}
 
-	buf = shr_read_file_as_string(NULL, path, &size, 1);
-	pass &= check_bool("reads a file given as a plain path", buf != NULL);
-	if (buf) {
+	ret = shr_read_file_as_string(NULL, path, &size, 1, &buf);
+	pass &= check_bool("reads a file given as a plain path", ret == 0);
+	if (ret == 0) {
 		pass &= check_bool("size matches file content",
 				    (size_t)size == strlen(content));
 		pass &= check_bool("result is NUL-terminated at the reported size",
@@ -470,13 +470,14 @@ static bool test_read_file_as_string(void)
 		free(buf);
 	}
 
-	buf = shr_read_file_as_string(NULL, "shr-test-read-file-str-does-not-exist", &size, 1);
-	pass &= check_bool("a missing file returns NULL", buf == NULL);
-	free(buf);
+	ret = shr_read_file_as_string(NULL, "shr-test-read-file-str-does-not-exist", &size, 1,
+				       &buf);
+	pass &= check_bool("a missing file fails", ret < 0);
 
-	buf = shr_read_file_as_string(NULL, path, NULL, 1);
-	pass &= check_bool("a NULL size out-param is tolerated", buf != NULL);
-	free(buf);
+	ret = shr_read_file_as_string(NULL, path, NULL, 1, &buf);
+	pass &= check_bool("a NULL size out-param is tolerated", ret == 0);
+	if (ret == 0)
+		free(buf);
 
 	shr_unlink(path);
 	shr_rmdir(dir);
@@ -491,12 +492,13 @@ static bool test_read_file_as_string(void)
 		fwrite(embedded, 1, sizeof(embedded) - 1, f);
 		fclose(f);
 
-		buf = shr_read_file_as_string(NULL, embedded_path, &size, 1);
+		ret = shr_read_file_as_string(NULL, embedded_path, &size, 1, &buf);
 		pass &= check_bool("a file with an embedded NUL is still read in full",
-				    buf != NULL && (size_t)size == sizeof(embedded) - 1);
+				    ret == 0 && (size_t)size == sizeof(embedded) - 1);
 		pass &= check_bool("strlen() stops at the embedded NUL",
-				    buf && strlen(buf) == 3);
-		free(buf);
+				    ret == 0 && strlen(buf) == 3);
+		if (ret == 0)
+			free(buf);
 
 		shr_unlink(embedded_path);
 	}
@@ -509,14 +511,15 @@ static bool test_read_file_as_string(void)
 		shr_close(fd);
 
 		size = -1;
-		buf = shr_read_file_as_string(NULL, empty_path, &size, 1);
+		ret = shr_read_file_as_string(NULL, empty_path, &size, 1, &buf);
 		pass &= check_bool("an empty file is not an error",
-				    buf != NULL);
+				    ret == 0);
 		pass &= check_bool("an empty file reports size 0",
 				    size == 0);
 		pass &= check_bool("an empty file reads as an empty string",
-				    buf && buf[0] == '\0');
-		free(buf);
+				    ret == 0 && buf[0] == '\0');
+		if (ret == 0)
+			free(buf);
 
 		shr_unlink(empty_path);
 	}

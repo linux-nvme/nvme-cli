@@ -98,81 +98,85 @@ static char *join_path(const char *dir, const char *path)
 	return out;
 }
 
-unsigned char *shr_read_file(const char *dir, const char *path, long *size, int retries)
+int shr_read_file(const char *dir, const char *path, long *size, int retries,
+		   unsigned char **out)
 {
 	__cleanup_free char *file_path = NULL;
-	unsigned char *buf = NULL;
+	unsigned char *buf;
 	FILE *file = NULL;
+	long file_size;
 	size_t n;
+	int ret = -EIO;
 	int i;
 
 	file_path = join_path(dir, path);
 	if (!file_path)
-		return NULL;
+		return -ENOMEM;
 
 	for (i = 0; i < retries; i++) {
 		file = fopen(file_path, "rb");
 		if (file)
 			break;
+		ret = -errno;
 		sleep((unsigned int)(retries > 1));
 	}
 	if (!file)
-		return NULL;
+		return ret;
 
-	fseek(file, 0, SEEK_END);
-	*size = ftell(file);
-	if (*size <= 0) {
-		fclose(file);
-		return NULL;
+	if (fseek(file, 0, SEEK_END) < 0 || (file_size = ftell(file)) < 0) {
+		ret = -errno;
+		goto close_file;
+	}
+	if (file_size == 0) {
+		ret = -ENODATA;
+		goto close_file;
 	}
 	fseek(file, 0, SEEK_SET);
 
-	buf = malloc(*size);
+	buf = malloc(file_size);
 	if (!buf) {
-		fclose(file);
-		return NULL;
+		ret = -ENOMEM;
+		goto close_file;
 	}
 
-	n = fread(buf, 1, *size, file);
-	fclose(file);
-
-	if (n != (size_t)*size) {
+	n = fread(buf, 1, file_size, file);
+	if (n != (size_t)file_size) {
 		free(buf);
-		return NULL;
+		ret = -EIO;
+		goto close_file;
 	}
 
-	return buf;
+	*size = file_size;
+	*out = buf;
+	ret = 0;
+
+close_file:
+	fclose(file);
+	return ret;
 }
 
-char *shr_read_file_as_string(const char *dir, const char *path, long *size, int retries)
+int shr_read_file_as_string(const char *dir, const char *path, long *size, int retries,
+			     char **out)
 {
-	unsigned char *raw;
+	__cleanup_free unsigned char *raw = NULL;
 	char *str;
-	long raw_size = -1;
+	long raw_size = 0;
+	int ret;
 
-	/*
-	 * shr_read_file() reports an empty file as NULL with *size == 0,
-	 * indistinguishable by pointer alone from an error -- but an empty
-	 * file is valid string content (""). raw_size starts at -1 so that
-	 * an error path that returns without touching it (e.g. open
-	 * failure) isn't mistaken for that empty-file case.
-	 */
-	raw = shr_read_file(dir, path, &raw_size, retries);
-	if (!raw && raw_size != 0)
-		return NULL;
+	ret = shr_read_file(dir, path, &raw_size, retries, &raw);
+	if (ret < 0 && ret != -ENODATA)
+		return ret;
 
 	str = malloc(raw_size + 1);
-	if (!str) {
-		free(raw);
-		return NULL;
-	}
+	if (!str)
+		return -ENOMEM;
 	if (raw_size)
 		memcpy(str, raw, raw_size);
 	str[raw_size] = '\0';
-	free(raw);
 
 	if (size)
 		*size = raw_size;
 
-	return str;
+	*out = str;
+	return 0;
 }

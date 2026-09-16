@@ -101,10 +101,8 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		}
 		long raw_size = 0;
 
-		errno = 0;
-		tlog = (struct nvme_telemetry_log *)shr_read_file(NULL, cfg.binary_file,
-								   &raw_size, 1);
-		err = tlog ? 0 : (errno ? -errno : -EIO);
+		err = shr_read_file(NULL, cfg.binary_file, &raw_size, 1,
+				     (unsigned char **)&tlog);
 		tl.log_size = raw_size;
 	} else {
 		err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -123,9 +121,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		__cleanup_free char *conf_str = NULL;
 		enum json_tokener_error jerr;
 
-		errno = 0;
-		conf_str = shr_read_file_as_string(NULL, cfg.cfg_file, NULL, 1);
-		err = conf_str ? 0 : (errno ? -errno : -EIO);
+		err = shr_read_file_as_string(NULL, cfg.cfg_file, NULL, 1, &conf_str);
 		if (err) {
 			nvme_show_perror("config-file %s", cfg.cfg_file);
 			return err;
