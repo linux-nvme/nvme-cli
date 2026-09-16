@@ -316,6 +316,8 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 			}
 		}
 		err = read(ffd, (void *)buf, cfg.data_len);
+		if (ffd != STDIN_FILENO)
+			close(ffd);
 		if (err < 0) {
 			nvme_show_error("failed to read data buffer from input file");
 			return -EINVAL;
