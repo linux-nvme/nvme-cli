@@ -288,9 +288,25 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 		goto out;
 	}
 
-	total_size = (le32_to_cpu(log->dalb4) + 1) * 512;
+	total_size = ((__u64)le32_to_cpu(log->dalb4) + 1) * 512;
 
-	log = (struct nvme_telemetry_log *)realloc(log, chunk_size);
+	if (total_size > UINT32_MAX) {
+		nvme_show_error("%s: ERROR: SNDK: UDUI log size 0x%"PRIx64" exceeds the maximum addressable size (4GiB)",
+				__func__, (uint64_t)total_size);
+		ret = -1;
+		goto out;
+	}
+
+	{
+		struct nvme_telemetry_log *new_log = realloc(log, chunk_size);
+
+		if (!new_log) {
+			nvme_show_error("%s: ERROR: log buffer realloc failed", __func__);
+			ret = -1;
+			goto out;
+		}
+		log = new_log;
+	}
 
 	output = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
