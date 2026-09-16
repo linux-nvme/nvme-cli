@@ -3665,7 +3665,7 @@ __shr_public int libnvmf_nbft_read_files(
 		struct nbft_file_entry **head)
 {
 	struct nbft_file_entry *entry = NULL;
-	struct libnbft_info *nbft;
+	struct libnbft_info *nbft = NULL;
 	struct dirent **dent;
 	char filename[PATH_MAX];
 	int i, count, ret;
