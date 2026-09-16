@@ -799,15 +799,17 @@ static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog
 	};
 	int err;
 
-	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
-					    pevent, sizeof(*pevent));
-	if (err)
-		return err;
-
-
 	pevent = libnvme_alloc(sizeof(*pevent));
 	if (!pevent)
 		return -ENOMEM;
+
+	/*
+	 * Best-effort: release any context left open by a prior run before
+	 * establishing a fresh one. Whether this succeeds or fails doesn't
+	 * change what we do next, so its result is intentionally ignored.
+	 */
+	(void)nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
+					    pevent, sizeof(*pevent));
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_EST_CTX_AND_READ,
 					    pevent, sizeof(*pevent));
@@ -829,7 +831,8 @@ static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog
 	err = log_save(&lp, ilog->cfg->out_dir, "log_pages", "lid_0x0d_lsp_0x00_lsi_0x0000.bin",
 		       pevent_log_full, lp.buffer_size);
 
-	nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
+	/* Best-effort release; the dump above already succeeded or failed. */
+	(void)nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
 				      pevent, sizeof(*pevent));
 
 	return err;
