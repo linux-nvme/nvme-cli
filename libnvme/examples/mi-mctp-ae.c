@@ -101,6 +101,9 @@ int main(int argc, char **argv)
 		for (int i = 0; i < event_count; i++) {
 			int event = atoi(argv[1+i]);
 
+			if (event < 0 || event >= (int)ARRAY_SIZE(aem_config.enabled_map.enabled))
+				errx(EXIT_FAILURE, "Invalid AE #: %d (must be 0-255)", event);
+
 			aem_config.enabled_map.enabled[event] = true;
 		}
 	} else {
