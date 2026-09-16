@@ -196,7 +196,7 @@ struct libnvme_mi_msg_resp_mpr {
 	struct nvme_mi_msg_hdr hdr;
 	__u8	status;
 	__u8	rsvd0;
-	__u16	mprt;
+	__le16	mprt;
 };
 
 /* Check if this response was a More Processing Required response; if so,
@@ -239,7 +239,7 @@ static bool libnvme_mi_mctp_resp_is_mpr(void *buf, size_t len,
 		return false;
 
 	if (mpr_time)
-		*mpr_time = cpu_to_le16(msg->mprt) * 100;
+		*mpr_time = le16_to_cpu(msg->mprt) * 100;
 
 	return true;
 }
