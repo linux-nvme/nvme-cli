@@ -16,3 +16,9 @@ unsigned char *shr_hmac_sha256(unsigned char *data, int datalen,
  * must free(), or NULL on failure.
  */
 unsigned char *shr_md5(unsigned char *data, int datalen);
+
+/*
+ * Fill buf with len bytes from the platform's CSPRNG. Returns 0 on success,
+ * -1 on failure (buf is left unmodified).
+ */
+int shr_getrandom(void *buf, unsigned int len);

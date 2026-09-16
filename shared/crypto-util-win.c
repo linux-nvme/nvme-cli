@@ -3,11 +3,33 @@
  * This file is part of nvme-cli.
  */
 #include <stdlib.h>
+#include <string.h>
 
 #include <windows.h>
 #include <bcrypt.h>
 
+#include "cleanup-util.h"
 #include "crypto-util.h"
+
+int shr_getrandom(void *buf, unsigned int len)
+{
+	__cleanup_free unsigned char *tmp = NULL;
+	NTSTATUS status;
+
+	if (!len)
+		return 0;
+
+	tmp = malloc(len);
+	if (!tmp)
+		return -1;
+
+	status = BCryptGenRandom(NULL, tmp, len, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+	if (!BCRYPT_SUCCESS(status))
+		return -1;
+
+	memcpy(buf, tmp, len);
+	return 0;
+}
 
 #define HMAC_SHA256_ALGO_NAME		BCRYPT_SHA256_ALGORITHM
 #define MD5_HASH_ALGO_NAME		BCRYPT_MD5_ALGORITHM
