@@ -38,7 +38,8 @@ static void init_entry(struct ifaddrs_storage *storage,
 	p = &storage->ifa;
 	p->ifa_next = last ? NULL : &storage[1].ifa;
 	p->ifa_name = storage->name;
-	strcpy(p->ifa_name, ifname);
+	strncpy(p->ifa_name, ifname, IF_NAMESIZE);
+	p->ifa_name[IF_NAMESIZE] = '\0';
 	p->ifa_flags = 0;
 
 	if (family == AF_INET) {
