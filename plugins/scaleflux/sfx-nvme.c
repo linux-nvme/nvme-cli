@@ -1443,14 +1443,14 @@ static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace
 			 libnvme_transport_handle_get_name(hdl));
 
 	num = scandir("/dev", &devices, filter_namespace, alphasort);
-	if (num <= 0) {
+	if (num < 0) {
 		err = num;
 		goto ret;
 	}
 
-	if (strcmp(dev_name, devices[num-1]->d_name)) {
+	if (!num || strcmp(dev_name, devices[num-1]->d_name)) {
 		nvme_show_error("Expand namespace not the last one");
-		err = EINVAL;
+		err = -EINVAL;
 		goto free_devices;
 	}
 
