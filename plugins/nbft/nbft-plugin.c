@@ -21,7 +21,7 @@ static const char dash[100] = {[0 ... 98] = '-', [99] = '\0'};
 #define PCI_DEV(sbdf) ((sbdf & 0x000000f8) >> 3)
 #define PCI_FUNC(sbdf) ((sbdf & 0x00000007) >> 0)
 
-static const char *pci_sbdf_to_string(__u16 pci_sbdf)
+static const char *pci_sbdf_to_string(__u32 pci_sbdf)
 {
 	static char pcidev[13];
 
