@@ -36,9 +36,9 @@ int shr_mkdir_p(const char *path, mode_t mode)
 			continue;
 		*p = '\0';
 		ret = shr_mkdir(buf, mode);
+		*p = '/';
 		if (ret < 0 && ret != -EEXIST)
 			return ret;
-		*p = '/';
 	}
 	ret = shr_mkdir(buf, mode);
 	return (ret == 0 || ret == -EEXIST) ? 0 : ret;
