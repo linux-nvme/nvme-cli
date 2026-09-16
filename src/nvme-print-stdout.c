@@ -6424,6 +6424,8 @@ static void stdout_tabular_subsystem_topology_multipath(struct libnvme_subsystem
 							      0);
 				snprintf(iopolicy_info, sizeof(iopolicy_info),
 					"%d", queue_depth);
+			} else {
+				snprintf(iopolicy_info, sizeof(iopolicy_info), "--");
 			}
 
 			ret = subsystem_topology_multipath_add_row(t,
