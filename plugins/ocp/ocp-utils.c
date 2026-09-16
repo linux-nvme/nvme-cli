@@ -53,8 +53,12 @@ int ocp_get_log_simple(struct libnvme_transport_handle *hdl,
 {
 	struct libnvme_passthru_cmd cmd;
 	__u8 uidx;
+	int err;
 
-	ocp_get_uuid_index(hdl, &uidx);
+	err = ocp_get_uuid_index(hdl, &uidx);
+	if (err || !uidx)
+		return err ? err : -ENOENT;
+
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, (enum nvme_cmd_get_log_lid) lid,
 			   NVME_CSI_NVM, log, len);
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
