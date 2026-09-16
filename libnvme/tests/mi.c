@@ -1683,7 +1683,7 @@ static int test_admin_fw_download_cb(struct libnvme_mi_ep *ep,
 	/* ensure that the request len matches too */
 	shr_assert(req->data_len == info->len);
 
-	shr_assert(!memcmp(req->data, info->data, len));
+	shr_assert(!memcmp(req->data, info->data, info->len));
 
 	test_transport_resp_calc_mic(resp);
 
