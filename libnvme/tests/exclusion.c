@@ -73,8 +73,10 @@ static void count_entry(const char *entry, void *user_data)
 static int entry_count(struct libnvme_global_ctx *ctx, const char *name)
 {
 	struct counter c = { 0 };
+	int ret;
 
-	libnvmf_exclusion_entry_for_each(ctx, name, count_entry, &c);
+	ret = libnvmf_exclusion_entry_for_each(ctx, name, count_entry, &c);
+	shr_assert(ret == 0 || ret == -ENOENT);
 	return c.count;
 }
 

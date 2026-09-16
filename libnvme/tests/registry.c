@@ -474,11 +474,12 @@ static bool test_parallel_writes(struct libnvme_global_ctx *ctx)
 	char *value = NULL;
 	int status;
 	bool pass;
+	bool children_ok = true;
 	int i;
 
 	printf("test_parallel_writes:\n");
 
-	libnvmf_registry_update(ctx, "nvme10", "owner", "parent");
+	shr_assert(libnvmf_registry_update(ctx, "nvme10", "owner", "parent") == 0);
 
 #define NPROCS 10
 	pid_t pids[NPROCS];
@@ -490,16 +491,19 @@ static bool test_parallel_writes(struct libnvme_global_ctx *ctx)
 		if (pids[i] == 0) {
 			snprintf(owner, sizeof(owner), "child%d", i);
 			for (int j = 0; j < 200; j++)
-				libnvmf_registry_update(ctx, "nvme10", "owner",
-							owner);
+				shr_assert(libnvmf_registry_update(ctx, "nvme10",
+							"owner", owner) == 0);
 			exit(0);
 		}
 	}
 
-	for (i = 0; i < NPROCS; i++)
-		waitpid(pids[i], &status, 0);
+	for (i = 0; i < NPROCS; i++) {
+		if (waitpid(pids[i], &status, 0) < 0 ||
+		    !WIFEXITED(status) || WEXITSTATUS(status) != 0)
+			children_ok = false;
+	}
 
-	libnvmf_registry_retrieve(ctx, "nvme10", "owner", &value);
+	shr_assert(libnvmf_registry_retrieve(ctx, "nvme10", "owner", &value) == 0);
 
 	pass = false;
 	for (i = 0; i < NPROCS; i++) {
@@ -509,6 +513,7 @@ static bool test_parallel_writes(struct libnvme_global_ctx *ctx)
 			break;
 		}
 	}
+	pass = pass && children_ok;
 
 	if (pass)
 		printf(" - final owner='%s', well-formed [PASS]\n", value);
