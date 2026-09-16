@@ -1110,7 +1110,12 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 	unsigned int event_fifo_number = fifo_num + 1;
 	char *description = (char *)malloc((40 + 1) * sizeof(char));
 
-	memset(description, 0, sizeof(40));
+	if (!description) {
+		nvme_show_error("Failed to allocate description buffer");
+		return -1;
+	}
+
+	memset(description, 0, 40 + 1);
 
 	status =
 		parse_ocp_telemetry_string_log(event_fifo_number, 0, 0, EVENT_STRING, description);
