@@ -436,9 +436,7 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 	    "%s, Array Name %s, Volume Name %s, NSID %d, Volume ID %s, Controller %c, Access State %s, %s\n";
 	char columnstr[] = "%-16s %-30s %-30s %4d %32s  %c   %-12s %9s\n";
 
-	if (format == NNORMAL)
-		formatstr = basestr;
-	else if (format == NCOLUMN) {
+	if (format == NCOLUMN) {
 		/* print column headers and change the output string */
 		printf("%-16s %-30s %-30s %-4s %-32s %-4s %-12s %-9s\n",
 			"Device", "Array Name", "Volume Name", "NSID",
@@ -449,7 +447,8 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 			"--------------------------------", "----",
 			"------------", "---------");
 		formatstr = columnstr;
-	}
+	} else
+		formatstr = basestr;
 
 	for (i = 0; i < count; i++) {
 		if (devname && !strcmp(devname, basename(devices[i].dev))) {
