@@ -1422,11 +1422,13 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 	if (options->telemetry_log) {
 		if (strstr((const char *)options->telemetry_log, "bin")) {
 			/* Read the data from the telemetry binary file */
-			status = shr_read_file(NULL, (const char *)options->telemetry_log,
-						&telemetry_buffer_size, 1, &ptelemetry_buffer);
+			status = shr_read_file(NULL,
+					(const char *)options->telemetry_log,
+					&telemetry_buffer_size,
+					&ptelemetry_buffer);
 			if (status) {
 				nvme_show_error("Failed to read telemetry-log.");
-				return -1;
+				return status;
 			}
 		}
 	} else {
@@ -1443,11 +1445,13 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 	if (options->string_log) {
 		/* Read the data from the string binary file */
 		if (strstr((const char *)options->string_log, "bin")) {
-			status = shr_read_file(NULL, (const char *)options->string_log,
-						&string_buffer_size, 1, &pstring_buffer);
+			status = shr_read_file(NULL,
+					(const char *)options->string_log,
+					&string_buffer_size,
+					&pstring_buffer);
 			if (status) {
 				nvme_show_error("Failed to read string-log.");
-				return -1;
+				return status;
 			}
 		}
 	} else {

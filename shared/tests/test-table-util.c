@@ -62,7 +62,7 @@ static bool test_basic_table(void)
 	shr_table_print_stream(stream, t);
 	fclose(stream);
 
-	shr_assert(shr_read_file_as_string(NULL, template, &size, 1, &buf) == 0);
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
 	shr_unlink(template);
 
 	pass &= check_bool("output contains the column header",
@@ -298,7 +298,7 @@ static bool test_multi_type_and_centered(void)
 	shr_table_print_stream(stream, t);
 	fclose(stream);
 
-	shr_assert(shr_read_file_as_string(NULL, template, &size, 1, &buf) == 0);
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
 	shr_unlink(template);
 
 	pass &= check_bool("output contains the centered column header",
@@ -368,7 +368,7 @@ static bool test_invalid_format_type(void)
 	fclose(stream);
 
 	pass &= check_bool("output was still produced",
-			    shr_read_file(NULL, template, &size, 1, &buf) == 0);
+			    shr_read_file(NULL, template, &size, &buf) == 0);
 	shr_unlink(template);
 	free(buf);
 
@@ -420,7 +420,7 @@ static bool test_shr_table_print(void)
 	shr_assert(dup2(saved_stdout, STDOUT_FILENO) >= 0);
 	close(saved_stdout);
 
-	shr_assert(shr_read_file_as_string(NULL, template, &size, 1, &buf) == 0);
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
 	shr_unlink(template);
 
 	pass &= check_bool("shr_table_print wrote to stdout",
