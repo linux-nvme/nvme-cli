@@ -268,8 +268,6 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 					logtime->tm_mon+1, logtime->tm_mday, logtime->tm_hour,
 					logtime->tm_min, logtime->tm_sec, ipackindex, fwvera);
 				sprintf(filename, "%s/%s", currentdir, fname);
-				if (fp != NULL)
-					fclose(fp);
 				fp = fopen(filename, "a+");
 			}
 		}
@@ -279,19 +277,14 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 		memset(data, 0, 4096);
 		nvme_init_get_log(&cmd, NVME_NSID_ALL, 0x07, NVME_CSI_NVM, data, 4096);
 		ret = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
-		if (ret != 0) {
-			if (fp != NULL)
-				fclose(fp);
+		if (ret != 0)
 			return ret;
-		}
 
 		ipackcount = 1;
 		memcpy(&itotal, &data[4092], 4);
 		sprintf(fname, "cdump_%02d%02d-%02d%02d%02d.cdp", logtime->tm_mon+1,
 			logtime->tm_mday, logtime->tm_hour, logtime->tm_min, logtime->tm_sec);
 		sprintf(filename, "%s/%s", currentdir, fname);
-		if (fp != NULL)
-			fclose(fp);
 		fp = fopen(filename, "a+");
 	}
 
