@@ -177,14 +177,15 @@ static int recv_rpmb_rsp(struct libnvme_transport_handle *hdl, int tgt, int size
 	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
-/* Initialize nonce value in rpmb request frame */
-static void rpmb_nonce_init(struct rpmb_data_frame_t *req)
+/* Initialize nonce value in rpmb request frame. Returns 0 on success, -1 on failure. */
+static int rpmb_nonce_init(struct rpmb_data_frame_t *req)
 {
-	int num = rand();
-	unsigned char *hash = shr_md5((unsigned char *)&num, sizeof(num));
+	if (shr_getrandom(req->nonce, sizeof(req->nonce)) != 0) {
+		nvme_show_error("Failed to generate RPMB nonce");
+		return -1;
+	}
 
-	if (hash)
-		memcpy(req->nonce, hash, sizeof(req->nonce));
+	return 0;
 }
 
 /* Read key from a given key buffer or key file */
@@ -229,8 +230,10 @@ rpmb_request_init(unsigned int req_size, unsigned short type, unsigned char targ
 	req->address = addr;
 	req->sectors = sectors;
 
-	if (nonce)
-		rpmb_nonce_init(req);
+	if (nonce && rpmb_nonce_init(req) != 0) {
+		free(req);
+		return NULL;
+	}
 	if (data)
 		memcpy((unsigned char *)req + data_offset, data, data_size);
 
