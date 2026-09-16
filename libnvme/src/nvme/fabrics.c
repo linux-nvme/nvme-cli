@@ -2979,11 +2979,13 @@ static void dc_log_decision(struct libnvmf_context *fctx,
 		traddr = e->traddr;
 		trsvcid = e->trsvcid;
 		eflags = le16_to_cpu(e->eflags);
-	} else {
+	} else if (d->c) {
 		subnqn = libnvme_ctrl_get_subsysnqn(d->c);
 		transport = libnvme_ctrl_get_transport(d->c);
 		traddr = libnvme_ctrl_get_traddr(d->c);
 		trsvcid = libnvme_ctrl_get_trsvcid(d->c);
+	} else {
+		subnqn = transport = traddr = trsvcid = "-";
 	}
 
 	libnvme_msg(fctx->ctx, LIBNVME_LOG_DEBUG,
