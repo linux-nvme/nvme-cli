@@ -134,14 +134,14 @@ void nvme_submit_exit(struct libnvme_transport_handle *hdl,
 bool nvme_decide_retry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, int err)
 {
-	if (!nvme_args.no_retries)
+	if (nvme_args.no_retries)
 		return false;
 
-	if (err != -EAGAIN ||
+	if (err != -EAGAIN &&
 	    !(err == -EINTR && !shr_sigint_received))
 		return false;
 
-	nvme_log_retry(errno);
+	nvme_log_retry(-err);
 	return true;
 }
 
