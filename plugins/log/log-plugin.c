@@ -1625,7 +1625,7 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	nvme_show_phy_rx_eom_log(phy_rx_eom_log, cfg.controller, flags);
+	nvme_show_phy_rx_eom_log(phy_rx_eom_log, cfg.controller, phy_rx_eom_log_len, flags);
 
 	return err;
 }

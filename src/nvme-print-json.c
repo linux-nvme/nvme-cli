@@ -2267,8 +2267,8 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 				    struct json_object *r)
 {
 	char *eye = (char *)lane->eye_desc;
-	uint16_t nrows = le16_to_cpu(lane->nrows);
-	uint16_t ncols = le16_to_cpu(lane->ncols);
+	size_t nrows = le16_to_cpu(lane->nrows);
+	size_t ncols = le16_to_cpu(lane->ncols);
 	struct json_object *eye_array = NULL;
 	char *printable_start = NULL;
 	char *printable = NULL;
@@ -2290,13 +2290,13 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 	if (!printable)
 		goto fail_free_eye_array;
 
-	for (int i = 0; i < nrows; i++) {
+	for (size_t i = 0; i < nrows; i++) {
 		char *row = malloc(ncols + 1);
 
 		if (!row)
 			goto fail_free_eye_printable;
 
-		for (int j = 0; j < ncols; j++) {
+		for (size_t j = 0; j < ncols; j++) {
 			char ch = eye[i * ncols + j];
 			*printable++ = ch;
 			row[j] = ch;
@@ -2324,34 +2324,28 @@ fail_free_eye_array:
 }
 
 static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
-			struct json_object *r, char **allocated_eyes)
+			struct json_object *r, char **allocated_eyes, size_t len)
 {
-	void *p = log->descs;
-	uint16_t num_descs = le16_to_cpu(log->nd);
-	int i;
+	struct eom_desc_iter it;
+	struct nvme_eom_lane_desc *desc;
 	struct json_object *descs = json_create_array();
+	int i = 0;
 
 	obj_add_array(r, "descs", descs);
 
-	for (i = 0; i < num_descs; i++) {
-		struct nvme_eom_lane_desc *desc = p;
+	eom_desc_iter_init(&it, log, len);
+
+	while ((desc = eom_desc_iter_next(&it))) {
+		int idx = i++;
 		__cleanup_free char *hexstr = NULL;
-		unsigned char *vsdata = NULL;
-		unsigned int vsdataoffset = 0;
-		uint16_t nrows, ncols, edlen;
+		unsigned char *vsdata;
+		uint16_t vsdatalen;
 		struct json_object *jdesc;
 		char *hexdata;
-
-		if (!desc)
-			return;
 
 		jdesc = json_create_object();
 		if (!jdesc)
 			return;
-
-		nrows = le16_to_cpu(desc->nrows);
-		ncols = le16_to_cpu(desc->ncols);
-		edlen = le16_to_cpu(desc->edlen);
 
 		obj_add_uint(jdesc, "lid", desc->mstatus);
 		obj_add_uint(jdesc, "lane", desc->lane);
@@ -2360,21 +2354,26 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		obj_add_uint(jdesc, "bottom", le16_to_cpu(desc->bottom));
 		obj_add_uint(jdesc, "left", le16_to_cpu(desc->left));
 		obj_add_uint(jdesc, "right", le16_to_cpu(desc->right));
-		obj_add_uint(jdesc, "nrows", nrows);
-		obj_add_uint(jdesc, "ncols", ncols);
-		obj_add_uint(jdesc, "edlen", edlen);
+		obj_add_uint(jdesc, "nrows", le16_to_cpu(desc->nrows));
+		obj_add_uint(jdesc, "ncols", le16_to_cpu(desc->ncols));
+		obj_add_uint(jdesc, "edlen", le16_to_cpu(desc->edlen));
+
+		vsdata = eom_desc_iter_vsdata(&it, desc, &vsdatalen);
+		if (!vsdata) {
+			json_free_object(jdesc);
+			continue;
+		}
 
 		if (NVME_EOM_ODP_PEFP(log->odp))
-			allocated_eyes[i] = json_eom_printable_eye(desc, jdesc);
+			allocated_eyes[idx] = json_eom_printable_eye(desc, jdesc);
 
-		if (edlen == 0) {
+		if (vsdatalen == 0) {
 			json_free_object(jdesc);
-			p += log->dsize;
 			continue;
 		}
 
 		/* 2 hex chars + space per byte */
-		hexstr = malloc(edlen * 3 + 1);
+		hexstr = malloc(vsdatalen * 3 + 1);
 
 		if (!hexstr) {
 			json_free_object(jdesc);
@@ -2382,12 +2381,9 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		}
 
 		/* Hex dump Vendor Specific Eye Data */
-		vsdataoffset = (unsigned int)nrows * ncols + sizeof(struct nvme_eom_lane_desc);
-		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
-
 		hexdata = hexstr;
 
-		for (int offset = 0; offset < edlen; offset++)
+		for (int offset = 0; offset < vsdatalen; offset++)
 			hexdata += sprintf(hexdata, "%02X ", vsdata[offset]);
 		/* remove trailing space */
 		*(hexdata - 1) = '\0';
@@ -2395,17 +2391,21 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		obj_add_str(jdesc, "vsdata_hex", hexstr);
 
 		array_add_obj(descs, jdesc);
-
-		p += log->dsize;
 	}
 }
 
-static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller)
+static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller, size_t len)
 {
 	int i;
+	uint16_t num_descs;
 	struct json_object *r = json_r;
 
 	__cleanup_free char **allocated_eyes = NULL;
+
+	if (len < sizeof(*log))
+		return;
+
+	num_descs = le16_to_cpu(log->nd);
 
 	obj_add_uint(r, "lid", log->lid);
 	obj_add_uint(r, "eomip", log->eomip);
@@ -2428,13 +2428,13 @@ static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controlle
 
 	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED) {
 		/* Save Printable Eye strings allocated to free later */
-		allocated_eyes = calloc(log->nd, sizeof(char *));
+		allocated_eyes = calloc(num_descs, sizeof(char *));
 		if (allocated_eyes)
-			json_phy_rx_eom_descs(log, r, allocated_eyes);
+			json_phy_rx_eom_descs(log, r, allocated_eyes, len);
 	}
 
 	if (allocated_eyes) {
-		for (i = 0; i < log->nd; i++) {
+		for (i = 0; i < num_descs; i++) {
 			/* Free any Printable Eye strings allocated */
 			free(allocated_eyes[i]);
 		}

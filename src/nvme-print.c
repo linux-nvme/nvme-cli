@@ -390,9 +390,9 @@ void nvme_show_boot_part_log(void *bp_log, const char *devname,
 }
 
 void nvme_show_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller,
-	nvme_print_flags_t flags)
+	size_t len, nvme_print_flags_t flags)
 {
-	nvme_print(phy_rx_eom_log, flags, log, controller);
+	nvme_print(phy_rx_eom_log, flags, log, controller, len);
 }
 
 void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
@@ -2063,7 +2063,7 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		nvme_show_mgmt_addr_list_log(log, flags);
 		break;
 	case NVME_LOG_LID_PHY_RX_EOM:
-		nvme_show_phy_rx_eom_log(log, lsi, flags);
+		nvme_show_phy_rx_eom_log(log, lsi, len, flags);
 		break;
 	case NVME_LOG_LID_REACHABILITY_GROUPS:
 		nvme_show_reachability_groups_log(log, len, flags);
