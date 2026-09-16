@@ -2555,23 +2555,42 @@ static void json_supported_cap_config_log(
 static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 {
 	struct json_object *r, *obj_configs;
+	unsigned char *p, *end;
 	uint16_t n;
-
-	void *p = log->configs;
 
 	r = json_r;
 	obj_configs = json_create_array();
 
+	if (len < sizeof(*log)) {
+		obj_add_array(r, "configs", obj_configs);
+		return;
+	}
+
+	p = (unsigned char *)log->configs;
+	end = (unsigned char *)log + len;
 	n = le16_to_cpu(log->n);
 
 	obj_add_uint(r, "n", n);
 
 	for (int i = 0; i < n + 1; i++) {
-		struct nvme_fdp_config_desc *config = p;
-		uint16_t nruh = le16_to_cpu(config->nruh);
+		struct nvme_fdp_config_desc *config = (struct nvme_fdp_config_desc *)p;
+		uint16_t nruh, size, max_nruh;
+		struct json_object *obj_config, *obj_ruhs;
 
-		struct json_object *obj_config = json_create_object();
-		struct json_object *obj_ruhs = json_create_array();
+		if (!shr_buf_has_room(p, end, sizeof(*config)))
+			break;
+
+		size = le16_to_cpu(config->size);
+		if (size < sizeof(*config) || !shr_buf_has_room(p, end, size))
+			break;
+
+		nruh = le16_to_cpu(config->nruh);
+		max_nruh = (size - sizeof(*config)) / sizeof(struct nvme_fdp_ruh_desc);
+		if (nruh > max_nruh)
+			nruh = max_nruh;
+
+		obj_config = json_create_object();
+		obj_ruhs = json_create_array();
 
 		obj_add_uint(obj_config, "fdpa", config->fdpa);
 		obj_add_uint(obj_config, "vss", config->vss);
@@ -2593,7 +2612,7 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 
 		array_add_obj(obj_configs, obj_config);
 
-		p += config->size;
+		p += size;
 	}
 
 	obj_add_array(r, "configs", obj_configs);

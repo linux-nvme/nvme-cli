@@ -1104,14 +1104,23 @@ static void stdout_fdp_config_fdpa(uint8_t fdpa)
 
 static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 {
-	void *p = log->configs;
+	unsigned char *p, *end;
 	int human = stdout_print_ops.flags & VERBOSE;
 	uint16_t n;
 
+	if (len < sizeof(*log))
+		return;
+
+	p = (unsigned char *)log->configs;
+	end = (unsigned char *)log + len;
 	n = le16_to_cpu(log->n) + 1;
 
 	for (int i = 0; i < n; i++) {
-		struct nvme_fdp_config_desc *config = p;
+		struct nvme_fdp_config_desc *config = (struct nvme_fdp_config_desc *)p;
+		uint16_t size, nruh, max_nruh;
+
+		if (!shr_buf_has_room(p, end, sizeof(*config)))
+			break;
 
 		printf("FDP Attributes: %#x\n", config->fdpa);
 		if (human)
@@ -1124,14 +1133,23 @@ static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 		printf("Reclaim Unit Nominal Size: %"PRIu64"\n", le64_to_cpu(config->runs));
 		printf("Estimated Reclaim Unit Time Limit: %"PRIu32"\n", le32_to_cpu(config->erutl));
 
+		size = le16_to_cpu(config->size);
+		if (size < sizeof(*config) || !shr_buf_has_room(p, end, size))
+			break;
+
+		nruh = le16_to_cpu(config->nruh);
+		max_nruh = (size - sizeof(*config)) / sizeof(struct nvme_fdp_ruh_desc);
+		if (nruh > max_nruh)
+			nruh = max_nruh;
+
 		printf("Reclaim Unit Handle List:\n");
-		for (int j = 0; j < le16_to_cpu(config->nruh); j++) {
+		for (int j = 0; j < nruh; j++) {
 			struct nvme_fdp_ruh_desc *ruh = &config->ruhs[j];
 
 			printf("  [%d]: %s\n", j, ruh->ruht == NVME_FDP_RUHT_INITIALLY_ISOLATED ? "Initially Isolated" : "Persistently Isolated");
 		}
 
-		p += config->size;
+		p += size;
 	}
 }
 
