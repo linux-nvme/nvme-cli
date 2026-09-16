@@ -62,9 +62,8 @@ static bool test_basic_table(void)
 	shr_table_print_stream(stream, t);
 	fclose(stream);
 
-	buf = shr_read_file_as_string(NULL, template, &size, 1);
+	shr_assert(shr_read_file_as_string(NULL, template, &size, 1, &buf) == 0);
 	shr_unlink(template);
-	shr_assert(buf != NULL);
 
 	pass &= check_bool("output contains the column header",
 			    strstr(buf, "Name") != NULL);
@@ -299,9 +298,8 @@ static bool test_multi_type_and_centered(void)
 	shr_table_print_stream(stream, t);
 	fclose(stream);
 
-	buf = shr_read_file_as_string(NULL, template, &size, 1);
+	shr_assert(shr_read_file_as_string(NULL, template, &size, 1, &buf) == 0);
 	shr_unlink(template);
-	shr_assert(buf != NULL);
 
 	pass &= check_bool("output contains the centered column header",
 			    strstr(buf, "Double") != NULL);
@@ -332,7 +330,7 @@ static bool test_invalid_format_type(void)
 	};
 	char template[] = "shr-test-table-XXXXXX";
 	struct shr_table *t;
-	unsigned char *buf;
+	unsigned char *buf = NULL;
 	FILE *stream;
 	bool pass = true;
 	long size;
@@ -369,9 +367,9 @@ static bool test_invalid_format_type(void)
 	shr_table_print_stream(stream, t);
 	fclose(stream);
 
-	buf = shr_read_file(NULL, template, &size, 1);
+	pass &= check_bool("output was still produced",
+			    shr_read_file(NULL, template, &size, 1, &buf) == 0);
 	shr_unlink(template);
-	pass &= check_bool("output was still produced", buf != NULL);
 	free(buf);
 
 	shr_table_free(t);
@@ -422,9 +420,8 @@ static bool test_shr_table_print(void)
 	shr_assert(dup2(saved_stdout, STDOUT_FILENO) >= 0);
 	close(saved_stdout);
 
-	buf = shr_read_file_as_string(NULL, template, &size, 1);
+	shr_assert(shr_read_file_as_string(NULL, template, &size, 1, &buf) == 0);
 	shr_unlink(template);
-	shr_assert(buf != NULL);
 
 	pass &= check_bool("shr_table_print wrote to stdout",
 			    strstr(buf, "stdout-target") != NULL);

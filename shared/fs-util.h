@@ -95,25 +95,32 @@ char *shr_dirname(char *path);
  * If retries > 1, a failed open is retried up to retries times, sleeping
  * 1 second between attempts.
  *
- * Return: allocated buffer with *size set to its length (caller must
- * free), or NULL on error.
+ * On success, *out is set to an allocated buffer (caller must free) and
+ * *size to its length. An empty file is reported as the error -ENODATA,
+ * with *out left untouched.
+ *
+ * Return: 0 on success, -errno otherwise.
  */
-unsigned char *shr_read_file(const char *dir, const char *path, long *size, int retries);
+int shr_read_file(const char *dir, const char *path, long *size, int retries,
+		   unsigned char **out);
 
 /*
  * Read an entire file into a newly allocated, NUL-terminated buffer, for
  * callers that want to treat the contents as a C string (e.g. strstr()).
  * A NUL byte embedded in the file's contents ends the string early, same
  * as strlen() would report for it. Unlike shr_read_file(), an empty file
- * is not an error: it is returned as an allocated "" with *size == 0.
+ * is not an error: *out is set to an allocated "" with *size == 0.
  *
  * dir, path and retries are as in shr_read_file(). If size is non-NULL,
  * *size is set to the file's actual byte length (which may exceed the
  * string length reported by strlen() if the file has an embedded NUL).
  *
- * Return: allocated buffer (caller must free), or NULL on error.
+ * On success, *out is set to an allocated buffer (caller must free).
+ *
+ * Return: 0 on success, -errno otherwise.
  */
-char *shr_read_file_as_string(const char *dir, const char *path, long *size, int retries);
+int shr_read_file_as_string(const char *dir, const char *path, long *size, int retries,
+			     char **out);
 
 /* Path to the platform's null device, for e.g. open(). */
 const char *shr_dev_null(void);
