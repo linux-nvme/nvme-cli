@@ -29,7 +29,7 @@ static bool test_basic_table(void)
 	};
 	char template[] = "shr-test-table-XXXXXX";
 	struct shr_table *t;
-	unsigned char *buf;
+	char *buf;
 	FILE *stream;
 	bool pass = true;
 	long size;
@@ -62,16 +62,16 @@ static bool test_basic_table(void)
 	shr_table_print_stream(stream, t);
 	fclose(stream);
 
-	buf = shr_read_file(NULL, template, &size, 1);
+	buf = shr_read_file_as_string(NULL, template, &size, 1);
 	shr_unlink(template);
 	shr_assert(buf != NULL);
 
 	pass &= check_bool("output contains the column header",
-			    strstr((char *)buf, "Name") != NULL);
+			    strstr(buf, "Name") != NULL);
 	pass &= check_bool("output contains the row string value",
-			    strstr((char *)buf, "widgets") != NULL);
+			    strstr(buf, "widgets") != NULL);
 	pass &= check_bool("output contains the row int value",
-			    strstr((char *)buf, "42") != NULL);
+			    strstr(buf, "42") != NULL);
 	free(buf);
 
 	shr_table_free(t);
@@ -246,7 +246,7 @@ static bool test_multi_type_and_centered(void)
 	};
 	char template[] = "shr-test-table-XXXXXX";
 	struct shr_table *t;
-	unsigned char *buf;
+	char *buf;
 	FILE *stream;
 	bool pass = true;
 	long size;
@@ -299,24 +299,24 @@ static bool test_multi_type_and_centered(void)
 	shr_table_print_stream(stream, t);
 	fclose(stream);
 
-	buf = shr_read_file(NULL, template, &size, 1);
+	buf = shr_read_file_as_string(NULL, template, &size, 1);
 	shr_unlink(template);
 	shr_assert(buf != NULL);
 
 	pass &= check_bool("output contains the centered column header",
-			    strstr((char *)buf, "Double") != NULL);
+			    strstr(buf, "Double") != NULL);
 	pass &= check_bool("output contains the centered string value",
-			    strstr((char *)buf, "abc") != NULL);
+			    strstr(buf, "abc") != NULL);
 	pass &= check_bool("output contains the centered negative int value",
-			    strstr((char *)buf, "-5") != NULL);
+			    strstr(buf, "-5") != NULL);
 	pass &= check_bool("output contains the centered float value",
-			    strstr((char *)buf, "3.14") != NULL);
+			    strstr(buf, "3.14") != NULL);
 	pass &= check_bool("output contains the left-aligned string value",
-			    strstr((char *)buf, "xyz") != NULL);
+			    strstr(buf, "xyz") != NULL);
 	pass &= check_bool("output contains the right-aligned int value",
-			    strstr((char *)buf, "42") != NULL);
+			    strstr(buf, "42") != NULL);
 	pass &= check_bool("output contains the double value",
-			    strstr((char *)buf, "9.99") != NULL);
+			    strstr(buf, "9.99") != NULL);
 	free(buf);
 
 	shr_table_free(t);
@@ -386,7 +386,7 @@ static bool test_shr_table_print(void)
 	};
 	char template[] = "shr-test-table-XXXXXX";
 	struct shr_table *t;
-	unsigned char *buf;
+	char *buf;
 	bool pass = true;
 	long size;
 	int row, fd, saved_stdout;
@@ -422,12 +422,12 @@ static bool test_shr_table_print(void)
 	shr_assert(dup2(saved_stdout, STDOUT_FILENO) >= 0);
 	close(saved_stdout);
 
-	buf = shr_read_file(NULL, template, &size, 1);
+	buf = shr_read_file_as_string(NULL, template, &size, 1);
 	shr_unlink(template);
 	shr_assert(buf != NULL);
 
 	pass &= check_bool("shr_table_print wrote to stdout",
-			    strstr((char *)buf, "stdout-target") != NULL);
+			    strstr(buf, "stdout-target") != NULL);
 	free(buf);
 
 	shr_table_free(t);
