@@ -25,6 +25,7 @@
 #include "micron-utils.h"
 #include "nvme-print.h"
 #include "src/cleanup.h"
+#include "src/global-ctx.h"
 
 /*
  * Validates that a string is a canonical PCI address in the
@@ -74,7 +75,9 @@ static int get_pcie_bdf(struct libnvme_transport_handle *hdl,
 	char *bdf, size_t bdf_len)
 {
 	__cleanup_free char *ctrl_name = micron_get_ctrl_name(hdl);
-	char path[512];
+	__cleanup_free char *ctrl_dir = NULL;
+	__cleanup_free char *addr_path = NULL;
+	__cleanup_free char *dev_path = NULL;
 	char target[512];
 	ssize_t n;
 	int fd;
@@ -84,12 +87,18 @@ static int get_pcie_bdf(struct libnvme_transport_handle *hdl,
 	if (!ctrl_name)
 		return -EINVAL;
 
+	err = nvme_sysfs_ctrl_path(ctrl_name, &ctrl_dir);
+	if (err)
+		return err;
+
 	/*
 	 * If possible, use /sys/class/nvme/<ctrl>/address (kernel >= 4.13).
 	 * On failure, fall back to using the /device symlink.
 	 */
-	snprintf(path, sizeof(path), "/sys/class/nvme/%s/address", ctrl_name);
-	fd = open(path, O_RDONLY);
+	if (asprintf(&addr_path, "%s/address", ctrl_dir) < 0)
+		return -ENOMEM;
+
+	fd = open(addr_path, O_RDONLY);
 	if (fd >= 0) {
 		n = read(fd, target, sizeof(target) - 1);
 		close(fd);
@@ -111,11 +120,13 @@ static int get_pcie_bdf(struct libnvme_transport_handle *hdl,
 	 * If unable to use the address file, use the last component of the
 	 * /sys/class/nvme/<ctrl>/device symlink.
 	 */
-	snprintf(path, sizeof(path), "/sys/class/nvme/%s/device", ctrl_name);
-	n = readlink(path, target, sizeof(target) - 1);
+	if (asprintf(&dev_path, "%s/device", ctrl_dir) < 0)
+		return -ENOMEM;
+
+	n = readlink(dev_path, target, sizeof(target) - 1);
 	if (n < 0) {
 		err = -errno;
-		nvme_show_perror("%s", path);
+		nvme_show_perror("%s", dev_path);
 		return err;
 	}
 	target[n] = '\0';

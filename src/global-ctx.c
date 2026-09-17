@@ -91,6 +91,35 @@ static bool is_true(const char *val)
 }
 
 /*
+ * Mirror of libnvme's test sysfs root. libnvme keeps its own copy, set
+ * through libnvme_set_test_sysfs_dir(); this one covers the sysfs
+ * attributes nvme-cli reads by path rather than through libnvme.
+ */
+static char *test_sysfs_dir;
+
+static int set_test_sysfs_dir(const char *path)
+{
+	char *dup = strdup(path);
+
+	if (!dup)
+		return -ENOMEM;
+
+	free(test_sysfs_dir);
+	test_sysfs_dir = dup;
+
+	return 0;
+}
+
+int nvme_sysfs_ctrl_path(const char *ctrl_name, char **path)
+{
+	if (asprintf(path, "%s/sys/class/nvme/%s",
+		     test_sysfs_dir ? test_sysfs_dir : "", ctrl_name) < 0)
+		return -ENOMEM;
+
+	return 0;
+}
+
+/*
  * nvme_apply_option() - apply a single "key=value" pair to @ctx.
  *
  * Returns 0 on success, -EINVAL for unknown keys or missing '='.
@@ -121,6 +150,8 @@ static int nvme_apply_option(struct libnvme_global_ctx *ctx, const char *kv)
 		ret = libnvme_set_test_base_dir(ctx, val);
 	} else if (!strcmp(key, "test-sysfs-dir")) {
 		ret = libnvme_set_test_sysfs_dir(ctx, val);
+		if (!ret)
+			ret = set_test_sysfs_dir(val);
 	} else {
 		nvme_show_error("--set-options: unknown key '%s'", key);
 		return -EINVAL;
