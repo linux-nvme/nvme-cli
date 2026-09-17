@@ -32,6 +32,18 @@ int nvme_create_global_ctx_hostnqn(struct libnvme_global_ctx **ctx,
 int nvme_create_global_ctx(struct libnvme_global_ctx **ctx);
 
 /*
+ * nvme_sysfs_ctrl_path() - Build the sysfs directory path of a controller
+ * @ctrl_name: controller name, e.g. "nvme0"
+ * @path: output path, allocated; caller frees
+ *
+ * Prefixed by "--set-options test-sysfs-dir=" when given, so callers reading
+ * sysfs attributes directly stay consistent with libnvme under test.
+ *
+ * Return: 0 on success, -ENOMEM on allocation failure.
+ */
+int nvme_sysfs_ctrl_path(const char *ctrl_name, char **path);
+
+/*
  * parse_and_open - parses arguments and opens the NVMe device, populating @ctx, @hdl
  */
 int parse_and_open(struct libnvme_global_ctx **ctx,

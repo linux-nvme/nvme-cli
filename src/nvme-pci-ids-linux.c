@@ -13,6 +13,7 @@
 
 #include <libnvme.h>
 
+#include "global-ctx.h"
 #include "nvme-print.h"
 
 static int read_pci_attr(const char *dir, const char *attr, __u32 *out)
@@ -61,10 +62,7 @@ static int read_pci_attr(const char *dir, const char *attr, __u32 *out)
 int __nvme_get_sysfs_dir(__attribute__((__unused__)) struct libnvme_global_ctx *ctx,
 		const char *ctrl_name, char **sysfs_dir)
 {
-	if (asprintf(sysfs_dir, "/sys/class/nvme/%s", ctrl_name) < 0)
-		return -ENOMEM;
-
-	return 0;
+	return nvme_sysfs_ctrl_path(ctrl_name, sysfs_dir);
 }
 
 int __nvme_get_pci_ids(const char *sysfs_dir,
