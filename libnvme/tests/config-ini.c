@@ -639,6 +639,7 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 		"tos = 1\n"
 		"[Host]\n"
 		"hostnqn = nqn.2014-08.org.nvmexpress:main-host\n"
+		"hostid = 11111111-1111-1111-1111-111111111111\n"
 		"[Subsystem]\n"
 		"nqn = nqn.2014-08.org.nvmexpress:main-vol\n"
 		"controller = transport=tcp;traddr=192.0.2.1;trsvcid=4420\n";
@@ -699,7 +700,7 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 	if (mv->is_dc ||
 	    strcmp(mv->subsysnqn, "nqn.2014-08.org.nvmexpress:main-vol") ||
 	    strcmp(mv->hostnqn, "nqn.2014-08.org.nvmexpress:main-host") ||
-	    mv->hostid ||
+	    strcmp(mv->hostid, "11111111-1111-1111-1111-111111111111") ||
 	    strcmp(libnvmf_params_get(mv->params, "ctrl-loss-tmo"), "600") ||
 	    strcmp(libnvmf_params_get(mv->params, "keep-alive-tmo"), "5") ||
 	    strcmp(libnvmf_params_get(mv->params, "tos"), "1")) {

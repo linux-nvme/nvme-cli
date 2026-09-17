@@ -427,10 +427,12 @@ static bool test_all_dropins(struct libnvme_global_ctx *ctx, struct fixture *fx)
 	e = libnvmf_config_emit_new(ctx);
 	shr_assert(e);
 	shr_assert(add(e, false, "10.0.0.9", "nqn.2014-08.org.nvmexpress:a",
-		   "nqn.2014-08.org.nvmexpress:host-a", NULL, "a",
+		   "nqn.2014-08.org.nvmexpress:host-a",
+		   "11111111-1111-1111-1111-111111111111", "a",
 		   NULL, NULL) == 0);
 	shr_assert(add(e, false, "10.0.0.10", "nqn.2014-08.org.nvmexpress:b",
-		   "nqn.2014-08.org.nvmexpress:host-b", NULL, "b",
+		   "nqn.2014-08.org.nvmexpress:host-b",
+		   "22222222-2222-2222-2222-222222222222", "b",
 		   NULL, NULL) == 0);
 
 	if (libnvmf_config_emit_install(e, fx->main_path, false)) {
