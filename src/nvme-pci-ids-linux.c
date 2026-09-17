@@ -13,11 +13,13 @@
 
 #include <libnvme.h>
 
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "nvme-print.h"
 
 static int read_pci_attr(const char *dir, const char *attr, __u32 *out)
 {
-	char path[512];
+	__cleanup_free char *path = NULL;
 	char buf[32] = { '\0' };
 	char *endptr;
 	int len, fd, ret;
@@ -26,7 +28,8 @@ static int read_pci_attr(const char *dir, const char *attr, __u32 *out)
 	if (!out)
 		return 0;
 
-	snprintf(path, sizeof(path), "%s/device/%s", dir, attr);
+	if (asprintf(&path, "%s/device/%s", dir, attr) < 0)
+		return -ENOMEM;
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
@@ -61,10 +64,7 @@ static int read_pci_attr(const char *dir, const char *attr, __u32 *out)
 int __nvme_get_sysfs_dir(__attribute__((__unused__)) struct libnvme_global_ctx *ctx,
 		const char *ctrl_name, char **sysfs_dir)
 {
-	if (asprintf(sysfs_dir, "/sys/class/nvme/%s", ctrl_name) < 0)
-		return -ENOMEM;
-
-	return 0;
+	return nvme_sysfs_ctrl_path(ctrl_name, sysfs_dir);
 }
 
 int __nvme_get_pci_ids(const char *sysfs_dir,
