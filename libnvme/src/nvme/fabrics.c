@@ -3519,7 +3519,14 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 		return ret;
 	}
 
-	if (!strcmp(id->subnqn, NVME_DISC_SUBSYS_NAME)) {
+	/* Force NUL termination — id->subnqn is a fixed-width wire field */
+	char subnqn[NVME_NQN_LENGTH + 1];
+
+	memcpy(subnqn, id->subnqn, NVME_NQN_LENGTH);
+	subnqn[NVME_NQN_LENGTH] = '\0';
+	shr_rtrim(subnqn);
+
+	if (!strcmp(subnqn, NVME_DISC_SUBSYS_NAME)) {
 		*ctrl = c;
 		return 0;
 	}
@@ -3531,8 +3538,19 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 
-	params->subsysnqn = id->subnqn;
+	/*
+	 * params may be &fctx->ctrl_params, which outlives this
+	 * function; libnvme_create_ctrl() (called from
+	 * __create_discovery_ctrl() below) takes its own strdup()'d
+	 * copy of subsysnqn before returning, so restoring the
+	 * caller's pointer right after that call is safe and keeps
+	 * params from being left pointing at this function's stack.
+	 */
+	const char *prev_subsysnqn = params->subsysnqn;
+
+	params->subsysnqn = subnqn;
 	ret = __create_discovery_ctrl(ctx, fctx, params, h, &c);
+	params->subsysnqn = prev_subsysnqn;
 	if (ret)
 		return ret;
 
