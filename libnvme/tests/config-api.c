@@ -348,6 +348,65 @@ static bool test_top_level_host(struct libnvme_global_ctx *ctx,
 	return pass;
 }
 
+static bool test_persona_validation(struct libnvme_global_ctx *ctx,
+				    const struct fixture *fx)
+{
+	struct libnvmf_config *config;
+	char path[352];
+	bool pass = true;
+
+	printf("test_persona_validation:\n");
+
+	/* A drop-in persona with a hostnqn but no hostid. */
+	write_file(fx->dropin_dir, "20-no-hostid.conf",
+		   "[Host]\n"
+		   "hostnqn = nqn.2014-08.org.nvmexpress:no-hostid\n");
+	if (libnvmf_config_read(ctx, fx->main_path, &config) != -EINVAL) {
+		printf(" - drop-in hostnqn without hostid [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - drop-in hostnqn without hostid rejected [PASS]\n");
+	}
+	rm_file(fx->dropin_dir, "20-no-hostid.conf");
+
+	/* The same shape on a top-level file's own [Host] section. */
+	write_file(fx->dir, "top-no-hostid.conf",
+		   "[Host]\n"
+		   "hostnqn = nqn.2014-08.org.nvmexpress:top-no-hostid\n");
+	snprintf(path, sizeof(path), "%s/top-no-hostid.conf", fx->dir);
+	if (libnvmf_config_read(ctx, path, &config) != -EINVAL) {
+		printf(" - top-level hostnqn without hostid [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - top-level hostnqn without hostid rejected [PASS]\n");
+	}
+	rm_file(fx->dir, "top-no-hostid.conf");
+
+	/* A uuid:-form hostnqn is not derived into a hostid either. */
+	write_file(fx->dropin_dir, "20-uuid-no-hostid.conf",
+		   "[Host]\n"
+		   "hostnqn = nqn.2014-08.org.nvmexpress:"
+		   "uuid:8b6b8b6b-0000-4000-8000-00000000dead\n");
+	if (libnvmf_config_read(ctx, fx->main_path, &config) != -EINVAL) {
+		printf(" - uuid: hostnqn without hostid [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - uuid: hostnqn without hostid rejected too [PASS]\n");
+	}
+	rm_file(fx->dropin_dir, "20-uuid-no-hostid.conf");
+
+	/* Regression: hostnqn and hostid together is still unaffected. */
+	if (libnvmf_config_read(ctx, fx->main_path, &config)) {
+		printf(" - hostnqn+hostid persona still valid [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - hostnqn+hostid persona still valid [PASS]\n");
+		libnvmf_config_free(config);
+	}
+
+	return pass;
+}
+
 static bool test_validate(struct libnvme_global_ctx *ctx,
 			  const struct fixture *fx)
 {
@@ -904,6 +963,7 @@ int main(void)
 	pass &= test_read(ctx, &fx);
 	pass &= test_resolve_discovered(ctx, &fx);
 	pass &= test_top_level_host(ctx, &fx);
+	pass &= test_persona_validation(ctx, &fx);
 	pass &= test_validate(ctx, &fx);
 	pass &= test_emit(ctx, &fx);
 	pass &= test_hostnqn_precedence(ctx, &fx);

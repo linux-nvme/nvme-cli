@@ -268,6 +268,14 @@ static int check_personas(struct libnvme_global_ctx *ctx,
 			return -EINVAL;
 		}
 
+		/* A persona must state both hostnqn and hostid */
+		if (real_value(f->hostnqn) && !real_value(f->hostid)) {
+			resolve_err(ctx, f->path,
+				    "hostnqn %s given without a hostid",
+				    f->hostnqn);
+			return -EINVAL;
+		}
+
 		for (j = 0; j < i; j++) {
 			struct libnvmf_conf_file *o = files[j];
 
