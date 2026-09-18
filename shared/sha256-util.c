@@ -245,7 +245,7 @@ void shr_sha256_update(struct shr_sha256_ctx *ctx, const void *data,
 		if (left_over >= 64) {
 			sha256_process_block(ctx->buffer, 64, ctx);
 			left_over -= 64;
-			memcpy(ctx->buffer, &ctx->buffer[64], left_over);
+			memmove(ctx->buffer, &ctx->buffer[64], left_over);
 		}
 		ctx->buflen = left_over;
 	}
