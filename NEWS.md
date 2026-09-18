@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
-## Changes in 3.1 (unreleased)
+## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
 
