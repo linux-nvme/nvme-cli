@@ -28,6 +28,7 @@
 
 #include <libnvme.h>
 
+#include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/crypto-util.h>
@@ -265,7 +266,11 @@ static int check_rpmb_response(struct rpmb_data_frame_t *req, struct rpmb_data_f
 		} else if ((rsp->result & 0x80) == 0x80) {
 			nvme_show_error("%s ! Expired write-counter !", msg);
 		} else if (rsp->result) {
-			nvme_show_error("%s ! %s", msg, rpmb_result_string[rsp->result & 0x7F]);
+			unsigned int code = rsp->result & 0x7F;
+
+			nvme_show_error("%s ! %s", msg,
+					 code < ARRAY_SIZE(rpmb_result_string) ?
+					 rpmb_result_string[code] : "Unknown error");
 		} else if (memcmp(req->nonce, rsp->nonce, 16)) {
 			nvme_show_error("%s ! non-matching nonce", msg);
 		} else if (memcmp(req->mac, rsp->mac, 32)) {
