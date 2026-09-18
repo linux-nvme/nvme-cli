@@ -268,12 +268,18 @@ bool sndk_nvme_parse_dev_status_log_str(void *log_data,
 			entry_str_data = (struct sndk_c2_cbs_data *)&entry_data->data;
 			entry_len = le32_to_cpu(entry_str_data->length);
 			entry_total_len = le32_to_cpu(entry_data->length);
-			if (entry_total_len < sizeof(struct sndk_c2_log_subpage_header))
+			if (entry_total_len < sizeof(struct sndk_c2_log_subpage_header)) {
+				*ret_data = 0;
+				*ret_data_len = 0;
 				return false;
+			}
 			max_payload_len = entry_total_len -
 				sizeof(struct sndk_c2_log_subpage_header);
-			if (entry_len > max_payload_len || entry_len >= ret_data_size)
+			if (entry_len > max_payload_len || entry_len >= ret_data_size) {
+				*ret_data = 0;
+				*ret_data_len = 0;
 				return false;
+			}
 			memcpy(ret_data, (void *)&entry_str_data->data, entry_len);
 			ret_data[entry_len] = '\0';
 			*ret_data_len = entry_len;
@@ -678,8 +684,9 @@ __u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 	int ret;
 	uint32_t read_vendor_id;
 	__u64 capabilities = 0;
-	__u32 cust_id, market_name_len,
-		drive_form_factor = 0;
+	__u32 cust_id = 0;
+	__u32 market_name_len = 0;
+	__u32 drive_form_factor = 0;
 	char marketing_name[64];
 	void *dev_mng_log = NULL;
 	int uuid_index = 0;
