@@ -77,4 +77,15 @@ if python3.found()
         ],
         timeout: 60,
     )
+
+    # Test e2e runner's TAP/JSON generation.
+    test(
+        'nvme-cli - e2e-runner-tap',
+        python3,
+        args: [
+            files('test_e2e_runner_tap.py'),
+            meson.project_source_root() / 'tests' / 'e2e' / 'runner.py',
+        ],
+        timeout: 60,
+    )
 endif
