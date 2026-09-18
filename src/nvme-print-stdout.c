@@ -51,6 +51,9 @@ enum simple_list_col {
 	stdout_prop_field(prop_cap[fld][0], prop_cap[fld][1], 41, 59, \
 	val, ##__VA_ARGS__)
 
+#define stdout_id_ctrl_field(val, field) \
+	stdout_id_ctrl_print(#field, val, field)
+
 static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
@@ -2651,6 +2654,26 @@ static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_print(const char *name, const char *val, ...)
+{
+	__cleanup_free char *value = NULL;
+	va_list ap;
+
+	va_start(ap, val);
+
+	if (vasprintf(&value, val, ap) < 0)
+		value = NULL;
+
+	va_end(ap);
+
+	printf("%-*s: %s\n", 10, name, value ? value : alloc_error);
+}
+
+static void stdout_id_ctrl_mupa(__u8 mupa)
+{
+	stdout_id_ctrl_field("%#x", mupa);
+}
+
 static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
 {
 	__u16 cdpa = le16_to_cpu(ctrl_cdpa);
@@ -3748,6 +3771,7 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	printf("tmpthha   : %#x\n", ctrl->tmpthha);
 	if (human)
 		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
+	stdout_id_ctrl_mupa(ctrl->mupa);
 	printf("cqt       : %d\n", le16_to_cpu(ctrl->cqt));
 	printf("cdpa      : %d\n", le16_to_cpu(ctrl->cdpa));
 	if (human)
