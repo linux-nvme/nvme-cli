@@ -20,6 +20,7 @@
 
 #include <shared/array-util.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/fs-util.h>
 
 #include "global-ctx.h"
 #include "nvme-print.h"
@@ -452,50 +453,6 @@ static int validate_conf_file(struct libnvme_global_ctx *ctx, const char *path)
 }
 
 /*
- * Read a whole file into a newly allocated, NUL-terminated string (caller
- * frees).  Returns NULL on error (errno set).
- */
-static char *read_file(const char *path)
-{
-	FILE *f = fopen(path, "r");
-	long sz;
-	char *buf;
-	size_t n;
-
-	if (!f)
-		return NULL;
-	if (fseek(f, 0, SEEK_END) < 0) {
-		fclose(f);
-		return NULL;
-	}
-	sz = ftell(f);
-	if (sz < 0) {
-		fclose(f);
-		return NULL;
-	}
-	rewind(f);
-
-	buf = malloc(sz + 1);
-	if (!buf) {
-		fclose(f);
-		errno = ENOMEM;
-		return NULL;
-	}
-	n = fread(buf, 1, sz, f);
-	if (ferror(f)) {
-		int saved_errno = errno;
-
-		free(buf);
-		fclose(f);
-		errno = saved_errno;
-		return NULL;
-	}
-	buf[n] = '\0';
-	fclose(f);
-	return buf;
-}
-
-/*
  * excl_edit() - the "nvme exclusion edit" command.
  *
  * Opens an exclusion list in the user's $EDITOR for hand-editing, in the same
@@ -624,10 +581,10 @@ re_edit:
 	}
 
 	{
-		__cleanup_free char *edited = read_file(tmp_path);
+		__cleanup_free char *edited = NULL;
 
-		if (!edited) {
-			ret = errno ? -errno : -EIO;
+		ret = shr_read_file_as_string(NULL, tmp_path, NULL, &edited);
+		if (ret) {
 			nvme_show_error("cannot read back temp file: %s",
 				libnvme_strerror(-ret));
 			unlink(tmp_path);
