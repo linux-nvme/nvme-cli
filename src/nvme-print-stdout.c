@@ -51,7 +51,7 @@ enum simple_list_col {
 	stdout_prop_field(prop_cap[fld][0], prop_cap[fld][1], 41, 59, \
 	val, ##__VA_ARGS__)
 
-#define stdout_id_ctrl_field(val, field) \
+#define stdout_id_ctrl_field(field, val) \
 	stdout_id_ctrl_print(#field, val, field)
 
 static const uint8_t zero_uuid[16] = { 0 };
@@ -2671,7 +2671,7 @@ static void stdout_id_ctrl_print(const char *name, const char *val, ...)
 
 static void stdout_id_ctrl_mupa(__u8 mupa)
 {
-	stdout_id_ctrl_field("%#x", mupa);
+	stdout_id_ctrl_field(mupa, "%#x");
 }
 
 static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
