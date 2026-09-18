@@ -2406,6 +2406,8 @@ static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controlle
 		return;
 
 	num_descs = le16_to_cpu(log->nd);
+	if (num_descs > (len - sizeof(*log)) / sizeof(struct nvme_eom_lane_desc))
+		num_descs = (len - sizeof(*log)) / sizeof(struct nvme_eom_lane_desc);
 
 	obj_add_uint(r, "lid", log->lid);
 	obj_add_uint(r, "eomip", log->eomip);
