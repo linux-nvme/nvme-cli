@@ -360,6 +360,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 			sprintf(fname, "cdump_%02d%02d-%02d%02d%02d_%d_%s.cdp", logtime->tm_mon+1,
 				logtime->tm_mday, logtime->tm_hour, logtime->tm_min, logtime->tm_sec,
 				ipackindex,	fwvera);
+			sprintf(filename, "%s/%s", currentdir, fname);
 			if (fp != NULL)
 				fclose(fp);
 			fp = fopen(filename, "a+");
