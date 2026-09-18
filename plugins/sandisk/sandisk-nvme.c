@@ -777,7 +777,6 @@ static int sndk_drive_resize(int argc, char **argv,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
-	uint32_t device_id = -1, vendor_id = -1;
 	__u64 result = 0;
 
 	struct config {
@@ -800,8 +799,6 @@ static int sndk_drive_resize(int argc, char **argv,
 		return ret;
 	sndk_check_device(ctx, hdl);
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
-	ret = nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id,
-			       NULL, NULL, NULL);
 
 	if ((capabilities & SNDK_DRIVE_CAP_RESIZE_SN861) == SNDK_DRIVE_CAP_RESIZE_SN861) {
 		ret = sndk_do_sn861_drive_resize(hdl, cfg.size, &result);
