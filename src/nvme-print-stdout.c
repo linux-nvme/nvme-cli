@@ -2690,6 +2690,55 @@ static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_mnens(__u16 mnens)
+{
+	printf("%-*s: %u\n", 10, "mnens", mnens);
+}
+
+static void stdout_id_ctrl_mnecpens(__u16 mnecpens)
+{
+	printf("%-*s: %u\n", 10, "mnecpens", mnecpens);
+}
+
+static void stdout_id_ctrl_mensnn(__u32 mensnn)
+{
+	printf("%-*s: %u\n", 10, "mensnn", mensnn);
+}
+
+static void stdout_id_ctrl_ensa(__u8 ensa, bool human)
+{
+	bool ensts = !!NVME_CTRL_ENSA_ENSTS(ensa);
+	bool ensms = !!NVME_CTRL_ENSA_ENSMS(ensa);
+
+	printf("%-*s: %#x\n", 10, "ensa", ensa);
+
+	if (human) {
+		printf("  [1:1] : %#x\t%s %s\n", ensms,
+		       "Exported NVM Subsystem Support Migration",
+		       nvme_support_str(ensms));
+		printf("  [0:0] : %#x\t%s %s\n\n", ensts,
+		       "Exported NVM Subsystem Template",
+		       nvme_support_str(ensts));
+	}
+}
+
+static void stdout_id_ctrl_endsfs(__u8 endsfs, bool human)
+{
+	bool enf0 = !!NVME_CTRL_ENDSFS_ENF0(endsfs);
+	bool enf1 = !!NVME_CTRL_ENDSFS_ENF1(endsfs);
+
+	printf("%-*s: %#x\n", 10, "endsfs", endsfs);
+
+	if (human) {
+		printf("  [1:1] : %#x\t%s %s\n", enf1,
+		       "Exported Namespace Format 1",
+		       nvme_support_str(enf1));
+		printf("  [0:0] : %#x\t%s %s\n\n", enf0,
+		       "Exported Namespace Format 0",
+		       nvme_support_str(enf0));
+	}
+}
+
 static void stdout_id_ctrl_vsen(__le32 ctrl_vsen)
 {
 	__u32 vsen = le32_to_cpu(ctrl_vsen);
@@ -3770,6 +3819,11 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	if (human)
 		stdout_id_ctrl_ipmsr(ctrl->ipmsr);
 	printf("msmt      : %#x\n", le16_to_cpu(ctrl->msmt));
+	stdout_id_ctrl_mnens(le16_to_cpu(ctrl->mnens));
+	stdout_id_ctrl_mnecpens(le16_to_cpu(ctrl->mnecpens));
+	stdout_id_ctrl_mensnn(le32_to_cpu(ctrl->mensnn));
+	stdout_id_ctrl_ensa(ctrl->ensa, human);
+	stdout_id_ctrl_endsfs(ctrl->endsfs, human);
 	if (NVME_CTRL_CTRATT_VMS(le32_to_cpu(ctrl->ctratt))) {
 		printf("vsen1     : %#x\n", le32_to_cpu(ctrl->vsen1));
 		if (human)

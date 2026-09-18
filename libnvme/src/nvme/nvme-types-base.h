@@ -2732,6 +2732,48 @@ enum nvme_id_ctrl_ipmsr {
 #define NVME_CTRL_IPMSR_SRV(ipmsr)	NVME_GET(ipmsr, CTRL_IPMSR_SRV)
 
 /**
+ * enum nvme_id_ctrl_ensa - Exported NVM Subsystem Attributes
+ * @NVME_CTRL_ENSA_ENSMS_SHIFT:	Shift amount to get the Exported NVM Subsystem
+ *				Support Migration Support
+ * @NVME_CTRL_ENSA_ENSTS_SHIFT:	Shift amount to get the Exported NVM Subsystem
+ *				Template Support
+ * @NVME_CTRL_ENSA_ENSMS_MASK:	Mask to get the Exported NVM Subsystem Support
+ *				Migration Support
+ * @NVME_CTRL_ENSA_ENSTS_MASK:	Mask to get the Exported NVM Subsystem Template
+ *				Support
+ */
+enum nvme_id_ctrl_ensa {
+	NVME_CTRL_ENSA_ENSMS_SHIFT	= 1,
+	NVME_CTRL_ENSA_ENSTS_SHIFT	= 0,
+	NVME_CTRL_ENSA_ENSMS_MASK	= 0x1,
+	NVME_CTRL_ENSA_ENSTS_MASK	= 0x1,
+};
+
+#define NVME_CTRL_ENSA_ENSMS(ensa)	NVME_GET(ensa, CTRL_ENSA_ENSMS)
+#define NVME_CTRL_ENSA_ENSTS(ensa)	NVME_GET(ensa, CTRL_ENSA_ENSTS)
+
+/**
+ * enum nvme_id_ctrl_endsfs - Exported Namespace Data Structure Formats
+ *			      Supported
+ * @NVME_CTRL_ENDSFS_ENF1_SHIFT:Shift amount to get the Exported Namespace
+ *				Format 1
+ * @NVME_CTRL_ENDSFS_ENF0_SHIFT:Shift amount to get the Exported Namespace
+ *				Format 0
+ *				Template Support
+ * @NVME_CTRL_ENDSFS_ENF1_MASK:	Mask to get the Exported Namespace Format 1
+ * @NVME_CTRL_ENDSFS_ENF0_MASK:	Mask to get the Exported Namespace Format 0
+ */
+enum nvme_id_ctrl_endsfs {
+	NVME_CTRL_ENDSFS_ENF1_SHIFT	= 1,
+	NVME_CTRL_ENDSFS_ENF0_SHIFT	= 0,
+	NVME_CTRL_ENDSFS_ENF1_MASK	= 0x1,
+	NVME_CTRL_ENDSFS_ENF0_MASK	= 0x1,
+};
+
+#define NVME_CTRL_ENDSFS_ENF1(endsfs)	NVME_GET(endsfs, CTRL_ENDSFS_ENF1)
+#define NVME_CTRL_ENDSFS_ENF0(endsfs)	NVME_GET(endsfs, CTRL_ENDSFS_ENF0)
+
+/**
  * enum nvme_id_ctrl_sqes - Defines the required and maximum Submission Queue
  *			    entry size when using the NVM Command Set.
  * @NVME_CTRL_SQES_MIN: Mask to get the value of the required Submission Queue
