@@ -1,36 +1,27 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # nvme-cli and libnvme
 
-NVM-Express user space tooling for Linux: the `nvme` command line tool and
-the `libnvme` library it's built on, including NVMe-oF fabrics support and
-vendor plugins.
+`nvme-cli` is the command line tool for managing NVMe devices. It is
+built on the `libnvme` library. Together they support local NVMe drives,
+NVMe-oF fabrics (TCP, RDMA, FC), and many vendor-specific plugins.
 
 For more information on the NVM Express standard, see https://nvmexpress.org.
+
+The project is developed on GitHub at
+https://github.com/linux-nvme/nvme-cli.
 
 Subscribe to linux-nvme@lists.infradead.org for Linux NVMe discussions and
 development. The list is archived at
 https://lists.infradead.org/mailman/listinfo/linux-nvme
 
-![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
-
-nvme-cli:
-![GitHub](https://img.shields.io/github/license/linux-nvme/nvme-cli)
-[![Docs](https://img.shields.io/readthedocs/nvme-cli)](https://nvme-cli.readthedocs.io/en/latest/)
-
-libnvme:
-![GitHub](https://img.shields.io/github/license/linux-nvme/libnvme)
-[![Docs](https://img.shields.io/readthedocs/libnvme)](https://libnvme.readthedocs.io/en/latest/)
-![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)
-[![PyPI](https://img.shields.io/pypi/v/libnvme3)](https://pypi.org/project/libnvme3/)
-[![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme3)](https://pypi.org/project/libnvme3/)
-
-## Reports
-
-- **Static analysis**
-  - [[clang-analyzer]](https://monom.org/linux-nvme/clang-analyze/current/)
-  - [![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli)
-- **Test coverage**
-  - [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
+| | Shared | nvme-cli | libnvme |
+|---|---|---|---|
+| Build | [![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml) |  | [![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml) |
+| Static analysis | [![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli) [![clang-analyzer](https://img.shields.io/badge/clang--analyzer-report-blue)](https://monom.org/linux-nvme/clang-analyze/current/) |  |  |
+| Test coverage | [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli) |  |  |
+| Docs |  | [![nvme-cli Docs](https://img.shields.io/readthedocs/nvme-cli?label=docs)](https://nvme-cli.readthedocs.io/en/latest/) | [![libnvme Docs](https://img.shields.io/readthedocs/libnvme?label=docs)](https://libnvme.readthedocs.io/en/latest/) |
+| Package |  |  | [![PyPI](https://img.shields.io/pypi/v/libnvme3)](https://pypi.org/project/libnvme3/) [![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme3)](https://pypi.org/project/libnvme3/) |
+| License |  | [![nvme-cli License](https://img.shields.io/github/license/linux-nvme/nvme-cli?label=license)](https://github.com/linux-nvme/nvme-cli/blob/master/COPYING) | [![libnvme License](https://img.shields.io/github/license/linux-nvme/libnvme?label=license)](https://github.com/linux-nvme/libnvme/blob/master/COPYING) |
 
 ## Quick start
 
@@ -50,11 +41,11 @@ summary with `nvme help`.
 
 | Topic | Where |
 |---|---|
-| Building from source: dependencies, alternative build systems, packaging, plugin selection | [Documentation/BUILDING.md](Documentation/BUILDING.md) |
-| Configuring host identity, NVMe-oF connections, and multi-orchestrator coordination | [Documentation/CONFIGURATION.md](Documentation/CONFIGURATION.md) |
-| Pre-built binaries, reproducing CI builds, memory/sanitizer testing | [Documentation/TESTING.md](Documentation/TESTING.md) |
-| libnvme coverage against NVMe specifications, chapter by chapter | [Documentation/SPEC-COVERAGE.md](Documentation/SPEC-COVERAGE.md) |
-| Command/plugin man pages | `man nvme`, or browse [Documentation/](Documentation/) |
+| Building from source: dependencies, alternative build systems, packaging, plugin selection | [BUILDING.md](Documentation/BUILDING.md) |
+| Configuring host identity, NVMe-oF connections, and multi-orchestrator coordination | [CONFIGURATION.md](Documentation/CONFIGURATION.md) |
+| Pre-built binaries, reproducing CI builds, memory/sanitizer testing | [TESTING.md](Documentation/TESTING.md) |
+| libnvme coverage against NVMe specifications, chapter by chapter | [SPEC-COVERAGE.md](Documentation/SPEC-COVERAGE.md) |
+| Command/plugin man pages | `man nvme`, or browse [Documentation](Documentation/) |
 | Contributing: adding commands/plugins, API naming, commit & PR workflow | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Reporting security vulnerabilities | [SECURITY.md](SECURITY.md) |
 | Release history | [NEWS.md](NEWS.md) |
