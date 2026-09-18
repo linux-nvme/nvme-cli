@@ -3949,7 +3949,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 {
 	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	char uuid[NVME_UUID_LEN_STRING];
-	struct nbft_file_entry *entry = NULL;
+	struct nbft_file_entry *head = NULL, *entry;
 	struct libnbft_subsystem_ns **ss;
 	struct libnbft_hfi *hfi;
 	struct libnbft_discovery **dd;
@@ -3971,7 +3971,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 		/* TODO: print discovery-type info from NBFT tables */
 		return 0;
 
-	ret = libnvmf_nbft_read_files(ctx, fctx->nbft_path, &entry);
+	ret = libnvmf_nbft_read_files(ctx, fctx->nbft_path, &head);
 	if (ret) {
 		if (ret != -ENOENT)
 			libnvme_msg(ctx, LIBNVME_LOG_ERR,
@@ -3981,7 +3981,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 		goto out_free;
 	}
 
-	for (; entry; entry = entry->next) {
+	for (entry = head; entry; entry = entry->next) {
 		hostid = fctx->hostid;
 		if (fctx->hostnqn)
 			hostnqn = fctx->hostnqn;
@@ -4191,7 +4191,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 		}
 	}
 out_free:
-	libnvmf_nbft_free(ctx, entry);
+	libnvmf_nbft_free(ctx, head);
 	return ret;
 }
 
