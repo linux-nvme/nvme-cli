@@ -409,24 +409,30 @@ static int rpmb_auth_data_read(struct libnvme_transport_handle *hdl, unsigned ch
 	unsigned char *bufp = malloc(msg_size * 512);
 	unsigned char *tbufp = bufp;
 	int data_size, rsp_size;
-	int error = -1;
 
 	if (!bufp) {
 		nvme_show_error("Failed to allocated memory for read-data req");
-		goto out;
+		return -1;
 	}
 
 	while (xfer > 0) {
 		rsp_size = req_size + xfer * 512;
 		req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DATA_READ, target, 1, offset,
 					 xfer, 0, 0, 0);
-		if (!req)
-			break;
+		if (!req) {
+			nvme_show_error("failed to allocate read-data request");
+			goto err_free_bufp;
+		}
 		rsp = rpmb_read_request(hdl, req, req_size, rsp_size);
 		if (!rsp) {
 			nvme_show_error("read_request failed");
-			free(req);
-			break;
+			goto err_free_req;
+		}
+
+		if (rsp->sectors > (unsigned int)xfer) {
+			nvme_show_error("device reported %u sectors, more than the %d requested",
+					 rsp->sectors, xfer);
+			goto err_free_rsp;
 		}
 
 		data_size = rsp->sectors * 512;
@@ -442,9 +448,15 @@ static int rpmb_auth_data_read(struct libnvme_transport_handle *hdl, unsigned ch
 	}
 
 	*msg_buf = bufp;
-	error = offset;
-out:
-	return error;
+	return offset;
+
+err_free_rsp:
+	free(rsp);
+err_free_req:
+	free(req);
+err_free_bufp:
+	free(bufp);
+	return -1;
 }
 
 /* Implementation of programming authentication key to given RPMB target */
