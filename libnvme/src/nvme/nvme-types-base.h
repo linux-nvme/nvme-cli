@@ -2667,7 +2667,6 @@ enum nvme_id_ctrl_anacap {
 	NVME_CTRL_ANACAP_GRPID_MGMT		= 1 << 7,
 };
 
-
 /**
  * enum nvme_id_ctrl_kpioc - Key Per I/O Capabilities
  * @NVME_CTRL_KPIOC_KPIOS_SHIFT:	Shift amount to get the Key Per I/O Supported from the
@@ -2688,6 +2687,19 @@ enum nvme_id_ctrl_kpioc {
 
 #define NVME_CTRL_KPIOC_KPIOS(kpioc)	NVME_GET(kpioc, CTRL_KPIOC_KPIOS)
 #define NVME_CTRL_KPIOC_KPIOSC(kpioc)	NVME_GET(kpioc, CTRL_KPIOC_KPIOSC)
+
+/**
+ * enum nvme_id_ctrl_mupa - Maximum Unlimited Power Attributes
+ * @NVME_CTRL_MUPA_MUPS_SHIFT: Shift amount to get the Maximum Unlimited Power
+ *			       Scale
+ * @NVME_CTRL_MUPA_MUPS_MASK:  Mask to get the Maximum Unlimited Power Scale
+ */
+enum nvme_id_ctrl_mupa {
+	NVME_CTRL_MUPA_MUPS_SHIFT	= 0,
+	NVME_CTRL_MUPA_MUPS_MASK	= 0x3,
+};
+
+#define NVME_CTRL_MUPA_MUPS(MUPA)	NVME_GET(MUPA, CTRL_MUPA_MUPS)
 
 /**
  * enum nvme_id_ctrl_cdpa - Configurable Device Personality Attributes
