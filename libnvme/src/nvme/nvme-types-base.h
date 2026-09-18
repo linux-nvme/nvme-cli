@@ -1437,7 +1437,7 @@ struct nvme_id_psd {
  * @megcap:    Max Endurance Group Capacity indicates the maximum capacity
  *	       of a single Endurance Group.
  * @tmpthha:   Temperature Threshold Hysteresis Attributes
- * @rsvd385:   Reserved
+ * @mupa:      Maximum Unlimited Power Attributes
  * @cqt:       Command Quiesce Time (CQT). This field indicates the expected
  *	       worst-case time in 1 millisecond units for the controller to
  *	       quiesce all outstanding commands after a Keep Alive Timeout or
@@ -1455,7 +1455,12 @@ struct nvme_id_psd {
  *         maximum stop measurement time allowed to be specified in the
  *         SMT field for a Set Features command specifying the Power
  *         Measurement feature.
- * @rsvd396:   Reserved
+ * @mnens:     Maximum Number of Exported NVM Subsystems
+ * @mnecpens:  Maximum Number of Exported Controllers per Exported NVM
+ *             Subsystem
+ * @mensnn:    Maximum Exported NVM Subsystem Number of Namespaces
+ * @ensa:      Exported NVM Subsystem Attributes
+ * @endsfs:    Exported Namespace Data Structure Formats Supported
  * @vsen1:     Voltage Sensor 1: indicates the characteristics of Voltage
  *         Sensor 1, see &struct nvme_id_ctrl_vsds. A value of 0h indicates
  *         Voltage Sensor 1 is not supported.
@@ -1663,13 +1668,17 @@ struct nvme_id_ctrl {
 	__u8			rsvd363[5];
 	__u8			megcap[16];
 	__u8			tmpthha;
-	__u8			rsvd385;
+	__u8			mupa;
 	__le16			cqt;
 	__le16			cdpa;
 	__le16			mup;
 	__le16			ipmsr;
 	__le16			msmt;
-	__u8			rsvd396[10];
+	__le16			mnens;
+	__le16			mnecpens;
+	__le32			mensnn;
+	__u8			ensa;
+	__u8			endsfs;
 	__le32			vsen1 __attribute__((packed));
 	__le32			vsen2 __attribute__((packed));
 	__le32			vsen3 __attribute__((packed));
