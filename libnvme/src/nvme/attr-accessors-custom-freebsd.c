@@ -1,0 +1,306 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+/*
+ * This file is part of libnvme.
+ * Copyright (c) 2026 SUSE Software Solutions
+ *
+ * Authors: Daniel Wagner <dwagner@suse.de>
+ */
+
+#include <ccan/endian/endian.h>
+#include <ccan/ilog/ilog.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <shared/compiler-attributes-util.h>
+
+#include "cleanup.h"
+#include "lib.h"
+#include "mem.h"
+
+#include "generated/attr-accessors.c"
+#include "generated/attr-accessors-freebsd.c"
+
+/*
+ * FreeBSD has no sysfs, so like attr-accessors-custom-win.c every
+ * lazily-loaded attribute below comes from an Identify command instead
+ * of a file read. Fabrics isn't wired up on FreeBSD (CONFIG_FABRICS is
+ * Linux-only), so there is no build axis to branch on here either.
+ */
+int libnvmf_ctrl_load_fabrics_attrs(__shr_unused struct libnvme_ctrl *c)
+{
+	return 0;
+}
+
+/*
+ * Trim an NVMe spec ASCII field (space-padded, not NUL-terminated) of up
+ * to @len characters into a newly allocated, NUL-terminated string.
+ */
+static char *dup_ascii_field(const char *field, size_t len)
+{
+	while (len > 0 && field[len - 1] == ' ')
+		len--;
+
+	return strndup(field, len);
+}
+
+int libnvme_ctrl_load_identity(struct libnvme_ctrl *c)
+{
+	struct nvme_id_ctrl id_ctrl;
+	int ret;
+
+	ret = libnvme_ctrl_identify(c, &id_ctrl);
+	if (ret != 0)
+		return ret;
+
+	c->attrs->firmware = dup_ascii_field(id_ctrl.fr, sizeof(id_ctrl.fr));
+	c->attrs->model = dup_ascii_field(id_ctrl.mn, sizeof(id_ctrl.mn));
+	c->attrs->serial = dup_ascii_field(id_ctrl.sn, sizeof(id_ctrl.sn));
+	if (!c->attrs->firmware || !c->attrs->model || !c->attrs->serial)
+		return -ENOMEM;
+
+	if (asprintf(&c->attrs->cntrltype, "%u", id_ctrl.cntrltype) < 0)
+		return -ENOMEM;
+
+	if (asprintf(&c->attrs->cntlid, "%u", le16_to_cpu(id_ctrl.cntlid)) < 0)
+		return -ENOMEM;
+
+	if (asprintf(&c->attrs->dctype, "%u", id_ctrl.dctype) < 0)
+		return -ENOMEM;
+
+	return 0;
+}
+
+int libnvme_ctrl_load_phy_slot(__shr_unused struct libnvme_ctrl *c)
+{
+	/* FreeBSD has no PCIe physical slot sysfs equivalent. */
+	return 0;
+}
+
+/*
+ * lba_size/lba_count/lba_util/meta_size all come from one Identify
+ * Namespace command, matching what tree-freebsd.c's libnvme_ns_init()
+ * used to do eagerly before the lazy-getter conversion. Each field's
+ * own ATTR_IS_LOADED() check keeps a caller that only reads one of
+ * these four from paying for more than one Identify command in the
+ * common case, but a prior call can leave some fields loaded and others
+ * not (e.g. -ENOMEM after lba_count's malloc but before lba_util's) --
+ * guard each field here too, so a retry never re-mallocs an
+ * already-loaded field and leaks the old allocation.
+ */
+static int ns_freebsd_load_geometry(struct libnvme_ns *n)
+{
+	__cleanup_libnvme_free struct nvme_id_ns *id = NULL;
+	uint8_t flbas;
+	int ret;
+
+	id = libnvme_alloc(sizeof(*id));
+	if (!id)
+		return -ENOMEM;
+
+	ret = libnvme_ns_identify(n, id);
+	if (ret)
+		return ret;
+
+	nvme_id_ns_flbas_to_lbaf_inuse(id->flbas, &flbas);
+
+	if (!ATTR_IS_LOADED(n->attrs->lba_size)) {
+		n->attrs->lba_size = malloc(sizeof(int));
+		if (!n->attrs->lba_size)
+			return -ENOMEM;
+		*n->attrs->lba_size = 1 << id->lbaf[flbas].ds;
+	}
+
+	if (!ATTR_IS_LOADED(n->attrs->lba_count)) {
+		n->attrs->lba_count = malloc(sizeof(uint64_t));
+		if (!n->attrs->lba_count)
+			return -ENOMEM;
+		*n->attrs->lba_count = le64_to_cpu(id->nsze);
+	}
+
+	if (!ATTR_IS_LOADED(n->attrs->lba_util)) {
+		n->attrs->lba_util = malloc(sizeof(uint64_t));
+		if (!n->attrs->lba_util)
+			return -ENOMEM;
+		*n->attrs->lba_util = le64_to_cpu(id->nuse);
+	}
+
+	if (!ATTR_IS_LOADED(n->attrs->meta_size)) {
+		n->attrs->meta_size = malloc(sizeof(int));
+		if (!n->attrs->meta_size)
+			return -ENOMEM;
+		*n->attrs->meta_size = le16_to_cpu(id->lbaf[flbas].ms);
+	}
+
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_lba_size(
+		const struct libnvme_ns *p,
+		int *val,
+		int dflt)
+{
+	struct libnvme_ns *n = (struct libnvme_ns *)p;
+	int ret;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->lba_size))) {
+		ret = ns_freebsd_load_geometry(n);
+		if (ret)
+			return ret;
+		if (!n->attrs->lba_size)
+			n->attrs->lba_size = (int *)NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(n->attrs->lba_size))
+		return -ENOENT;
+
+	*val = *n->attrs->lba_size;
+	return 0;
+}
+
+/* Pure derivation, no field of its own -- depends only on lba_size's
+ * own (already per-OS-resolved) getter, never on sysfs directly.
+ */
+__shr_public int libnvme_ns_get_lba_shift(
+		const struct libnvme_ns *p,
+		int *val,
+		int dflt)
+{
+	int lba_size;
+	int ret;
+
+	*val = dflt;
+
+	ret = libnvme_ns_get_lba_size(p, &lba_size, 0);
+	if (ret)
+		return ret;
+
+	/* lba_size is a power of two (NVMe LBADS is defined as an
+	 * exponent, 2^n), so it has exactly one bit set -- ilog32()
+	 * reports the position of that bit, i.e. the shift.
+	 */
+	*val = ilog32(lba_size) - 1;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_lba_count(
+		const struct libnvme_ns *p,
+		uint64_t *val,
+		uint64_t dflt)
+{
+	struct libnvme_ns *n = (struct libnvme_ns *)p;
+	int ret;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->lba_count))) {
+		ret = ns_freebsd_load_geometry(n);
+		if (ret)
+			return ret;
+		if (!n->attrs->lba_count)
+			n->attrs->lba_count = (uint64_t *)NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(n->attrs->lba_count))
+		return -ENOENT;
+
+	*val = *n->attrs->lba_count;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_lba_util(
+		const struct libnvme_ns *p,
+		uint64_t *val,
+		uint64_t dflt)
+{
+	struct libnvme_ns *n = (struct libnvme_ns *)p;
+	int ret;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->lba_util))) {
+		ret = ns_freebsd_load_geometry(n);
+		if (ret)
+			return ret;
+		if (!n->attrs->lba_util)
+			n->attrs->lba_util = (uint64_t *)NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(n->attrs->lba_util))
+		return -ENOENT;
+
+	*val = *n->attrs->lba_util;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_meta_size(
+		const struct libnvme_ns *p,
+		int *val,
+		int dflt)
+{
+	struct libnvme_ns *n = (struct libnvme_ns *)p;
+	int ret;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->meta_size))) {
+		ret = ns_freebsd_load_geometry(n);
+		if (ret)
+			return ret;
+		if (!n->attrs->meta_size)
+			n->attrs->meta_size = (int *)NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(n->attrs->meta_size))
+		return -ENOENT;
+
+	*val = *n->attrs->meta_size;
+	return 0;
+}
+
+/*
+ * FreeBSD has no source for csi/eui64/nguid/uuid either -- same as
+ * Windows (attr-accessors-custom-win.c), which never populated these
+ * from its eager-Identify days and simply reports -ENOENT now.
+ */
+__shr_public int libnvme_ns_get_csi(
+		__shr_unused const struct libnvme_ns *p,
+		enum nvme_csi *val,
+		enum nvme_csi dflt)
+{
+	*val = dflt;
+
+	return -ENOENT;
+}
+
+__shr_public int libnvme_ns_get_eui64(
+		__shr_unused const struct libnvme_ns *p,
+		const uint8_t **val,
+		const uint8_t *dflt)
+{
+	*val = dflt;
+
+	return -ENOENT;
+}
+
+__shr_public int libnvme_ns_get_nguid(
+		__shr_unused const struct libnvme_ns *p,
+		const uint8_t **val,
+		const uint8_t *dflt)
+{
+	*val = dflt;
+
+	return -ENOENT;
+}
+
+__shr_public int libnvme_ns_get_uuid(
+		__shr_unused const struct libnvme_ns *p,
+		const unsigned char **val,
+		const unsigned char *dflt)
+{
+	*val = dflt;
+
+	return -ENOENT;
+}
