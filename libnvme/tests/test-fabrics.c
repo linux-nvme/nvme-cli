@@ -770,8 +770,8 @@ static bool test_dc_entry_is_self(void)
 
 	e.subtype = NVME_NQN_CURR;
 	e.trtype = NVMF_TRTYPE_TCP;
-	memcpy(e.traddr, "192.168.1.116", 13);
-	memcpy(e.trsvcid, "8009", 4);
+	memcpy(e.traddr, "192.168.1.116", sizeof("192.168.1.116"));
+	memcpy(e.trsvcid, "8009", sizeof("8009"));
 
 	p = dc_entry_is_self(&c, &e);
 	CHECK(p, "self entry, matching transport/traddr/trsvcid: is self");
@@ -780,8 +780,8 @@ static bool test_dc_entry_is_self(void)
 	memset(&e, 0, sizeof(e));
 	e.subtype = NVME_NQN_CURR;
 	e.trtype = NVMF_TRTYPE_TCP;
-	memcpy(e.traddr, "192.168.2.116", 13);
-	memcpy(e.trsvcid, "8009", 4);
+	memcpy(e.traddr, "192.168.2.116", sizeof("192.168.2.116"));
+	memcpy(e.trsvcid, "8009", sizeof("8009"));
 	p = !dc_entry_is_self(&c, &e);
 	CHECK(p, "same transport, different traddr (other port): not self");
 	pass &= p;
@@ -789,8 +789,8 @@ static bool test_dc_entry_is_self(void)
 	memset(&e, 0, sizeof(e));
 	e.subtype = NVME_NQN_CURR;
 	e.trtype = NVMF_TRTYPE_RDMA;
-	memcpy(e.traddr, "192.168.1.116", 13);
-	memcpy(e.trsvcid, "8009", 4);
+	memcpy(e.traddr, "192.168.1.116", sizeof("192.168.1.116"));
+	memcpy(e.trsvcid, "8009", sizeof("8009"));
 	p = !dc_entry_is_self(&c, &e);
 	CHECK(p, "same traddr/trsvcid, different transport: not self");
 	pass &= p;
@@ -798,8 +798,8 @@ static bool test_dc_entry_is_self(void)
 	memset(&e, 0, sizeof(e));
 	e.subtype = NVME_NQN_CURR;
 	e.trtype = NVMF_TRTYPE_TCP;
-	memcpy(e.traddr, "192.168.1.116", 13);
-	memcpy(e.trsvcid, "8010", 4);
+	memcpy(e.traddr, "192.168.1.116", sizeof("192.168.1.116"));
+	memcpy(e.trsvcid, "8010", sizeof("8010"));
 	p = !dc_entry_is_self(&c, &e);
 	CHECK(p, "same transport/traddr, different trsvcid: not self");
 	pass &= p;
@@ -807,8 +807,8 @@ static bool test_dc_entry_is_self(void)
 	memset(&e, 0, sizeof(e));
 	e.subtype = NVME_NQN_NVME;
 	e.trtype = NVMF_TRTYPE_TCP;
-	memcpy(e.traddr, "192.168.1.116", 13);
-	memcpy(e.trsvcid, "8009", 4);
+	memcpy(e.traddr, "192.168.1.116", sizeof("192.168.1.116"));
+	memcpy(e.trsvcid, "8009", sizeof("8009"));
 	p = !dc_entry_is_self(&c, &e);
 	CHECK(p, "matching addressing, wrong subtype: not self");
 	pass &= p;
