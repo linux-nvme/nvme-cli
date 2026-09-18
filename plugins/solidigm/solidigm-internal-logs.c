@@ -509,7 +509,7 @@ static int ilog_dump_identify_page(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	if (!ilog->cfg)
+	if (!ilog || !ilog->cfg)
 		return -EINVAL;
 
 	nvme_init_identify(&cmd, nsid, NVME_CSI_NVM, cns->id, buff, sizeof(data));
