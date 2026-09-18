@@ -1427,9 +1427,10 @@ static void stdout_prop_field(const char *name, const char *symbol,
 
 	if (strlen(name))
 		printf("\t%-*s (%s)%*s: %s\n", name_width, name, symbol,
-		       pad_len, pad ? " " : "", value);
+		       pad_len, pad ? " " : "", value ? value : alloc_error);
 	else
-		printf("\t%*s %s\n", col_width + 1, " ", value);
+		printf("\t%*s %s\n", col_width + 1, " ",
+		       value ? value : alloc_error);
 }
 
 static void stdout_registers_cap(uint64_t cap)
