@@ -288,6 +288,17 @@ test_sig_util = executable(
 
 test('shared - sig-util', test_sig_util)
 
+test_crash_util = executable(
+    'test-crash-util',
+    ['test-crash-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - crash-util', test_crash_util)
+
 test_assert_util = executable(
     'test-assert-util',
     ['test-assert-util.c'],
