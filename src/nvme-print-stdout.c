@@ -2651,6 +2651,18 @@ static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_mupa(__u8 mupa, bool human)
+{
+	__u8 mups = NVME_CTRL_MUPA_MUPS(mupa);
+
+	printf("%-*s: %#x\n", 10, "mupa", mupa);
+
+	if (human)
+		printf("  [1:0] : %#x\t%s (%s)\n\n", mups,
+		       nvme_feature_power_limit_scale_to_string(mups),
+		       "Maximum Unlimited Power Scale");
+}
+
 static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
 {
 	__u16 cdpa = le16_to_cpu(ctrl_cdpa);
@@ -3748,6 +3760,7 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	printf("tmpthha   : %#x\n", ctrl->tmpthha);
 	if (human)
 		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
+	stdout_id_ctrl_mupa(ctrl->mupa, human);
 	printf("cqt       : %d\n", le16_to_cpu(ctrl->cqt));
 	printf("cdpa      : %d\n", le16_to_cpu(ctrl->cdpa));
 	if (human)
