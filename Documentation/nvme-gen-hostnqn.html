@@ -757,9 +757,45 @@ nvme-gen-hostnqn(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Generate a random host NQN in the form:
+<div class="paragraph"><p>Generate a host NQN in the form:
 nqn.2014-08.org.nvmexpress:uuid:1b4e28ba-2fa1-11d2-883f-0016d3cca427
-and prints it to stdout.</p></div>
+and print it to stdout.</p></div>
+<div class="paragraph"><p>The UUID is taken from the first of these sources that provides a usable
+value:</p></div>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+The system UUID reported by DMI, from /sys/class/dmi/id/product_uuid or
+   /sys/firmware/dmi/entries.
+</p>
+</li>
+<li>
+<p>
+The firmware device tree, from /proc/device-tree/ibm,partition-uuid.
+</p>
+</li>
+<li>
+<p>
+The local machine ID, /etc/machine-id. The machine ID itself is never
+   published: the UUID is derived from it with HMAC-SHA256 and a fixed
+   application identifier, as systemd&#8217;s
+   sd_id128_get_machine_app_specific(3) does.
+</p>
+</li>
+<li>
+<p>
+A random UUID, if none of the above is available. This value is not
+   stable across invocations, and a warning is printed.
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>The first two sources describe the hardware and survive a reinstall. The
+machine ID describes the installation and does not. A UUID that is all zeros
+or all ones is a placeholder reported by some virtual machines and firmware,
+and is skipped.</p></div>
+<div class="paragraph"><p>This command must be run as root. The DMI and device tree files are readable
+by root only, so an unprivileged run cannot reach the stable sources, and its
+output cannot be written to /etc/nvme/hostnqn either.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -862,7 +898,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-07 12:00:29 CEST
+ 2026-09-18 12:15:54 CEST
 </div>
 </div>
 </body>

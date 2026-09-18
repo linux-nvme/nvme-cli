@@ -768,6 +768,10 @@ of a namespace.</p></div>
 number of controllers in the NVM Subsystem that are associated with
 hosts that are registrants of the namespace (i.e., there is a Registered
 Controller data structure for each such controller).</p></div>
+<div class="paragraph"><p>That size is not known in advance, so the transfer is sized automatically:
+the fixed-size header of the structure is read first, and the structure
+is then read again with a buffer large enough to hold every registrant the
+namespace reports. Pass <em>--numd</em> to transfer a fixed length instead.</p></div>
 <div class="paragraph"><p>The bare <em>nvme resv-report</em> form (without a space) still works as a deprecated
 alias and will be removed in a future major version. New scripts should
 use <em>nvme resv report</em> instead.</p></div>
@@ -798,8 +802,9 @@ use <em>nvme resv report</em> instead.</p></div>
 </dt>
 <dd>
 <p>
-        Specify the number of Dwords of the Reservation Status structure
-        to transfer. Defaults to 4k.
+        Transfer a fixed number of Dwords of the Reservation Status
+        structure instead of sizing the transfer automatically. The count
+        is zero-based, so one Dword more than requested is transferred.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -924,7 +929,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-07 12:00:29 CEST
+ 2026-09-18 12:15:54 CEST
 </div>
 </div>
 </body>

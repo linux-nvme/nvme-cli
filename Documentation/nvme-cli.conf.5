@@ -1,0 +1,84 @@
+'\" t
+.\"     Title: nvme-cli.conf
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/18/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-CLI\&.CONF" "5" "09/18/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-cli.conf \- nvme\-cli global option defaults file format
+.SH "SYNOPSIS"
+.sp
+.nf
+\fI/usr/local/etc/nvme/nvme\-cli\&.conf\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+An INI\-format file that sets machine\-wide defaults for the global options accepted by every \fInvme\fR subcommand (see GLOBAL OPTIONS in \fBnvme\fR(1)) \(em for example, always disabling IOCTL probing without passing \fI\-\-no\-ioctl\-probing\fR on every invocation\&.
+.sp
+The file is read once, before command\-line parsing, and only sets \fBdefaults\fR: an explicit command\-line flag always overrides whatever this file set\&. A missing file is not an error; it simply changes nothing\&.
+.sp
+There is no \fI\-\-config\fR override and no drop\-in directory for this file; it always lives at the path above\&.
+.SH "SECTIONS"
+.sp
+The file has a single recognized section, \fI[Global]\fR\&. Keys outside \fI[Global]\fR (including an unrecognized section) are ignored with a warning\&. Boolean values accept \fI1\fR/\fIyes\fR/\fIy\fR/\fItrue\fR/\fIt\fR/\fIon\fR and \fI0\fR/\fIno\fR/\fIn\fR/\fIfalse\fR/\fIf\fR/\fIoff\fR (case\-insensitive)\&. Unknown keys and malformed values are ignored with a warning; they do not stop the rest of the file from being applied\&.
+.SH "KEYS"
+.sp
+Every key here is the same name as its \fInvme\fR long option (hyphenated); see GLOBAL OPTIONS in \fBnvme\fR(1) for what each one means\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+verbose, quiet, output\-format, timeout, dry\-run, no\-retries,
+no\-ioctl\-probing, output\-format\-version, set\-options
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fIverbose\fR takes the desired verbosity level directly (e\&.g\&. \fIverbose = 2\fR is equivalent to \fI\-vv\fR), rather than the increment\-per\-flag behavior of \fI\-v\fR on the command line\&.
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /usr/local/etc/nvme/nvme\-cli\&.conf
+
+[Global]
+no\-ioctl\-probing = true
+output\-format = json
+timeout = 5000
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+nvme(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

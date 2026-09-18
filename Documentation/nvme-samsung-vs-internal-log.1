@@ -2,12 +2,12 @@
 .\"     Title: nvme-samsung-vs-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/07/2026
+.\"      Date: 09/18/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SAMSUNG\-VS\-I" "1" "09/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SAMSUNG\-VS\-I" "1" "09/18/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -77,7 +77,9 @@ or
 .PP
 \-z, \-\-compress
 .RS 4
-Collect the dumps into a temporary directory and save them as a single compressed \&.tar\&.gz archive\&.
+Collect the dumps into a
+\fItemp_samsung_dumps\fR
+directory next to the output path and save them as a single compressed \&.tar\&.gz archive, removing that directory afterwards\&. The directory is created for this run alone, so the command fails if anything already sits at that path: one left behind by an interrupted run has to be removed before retrying\&.
 .RE
 .PP
 \-H, \-\-hide\-progress

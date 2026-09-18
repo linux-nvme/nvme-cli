@@ -1,0 +1,126 @@
+'\" t
+.\"     Title: nvme-discoverd
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/18/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-DISCOVERD" "8" "09/18/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-discoverd \- NVMe\-oF discovery and connectivity daemon
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-discoverd\fR [\-\-config=<FILE>] [\-\-nvme\-path=<PATH>] [\-\-debug] [\-\-help]
+.fi
+.SH "DESCRIPTION"
+.sp
+nvme\-discoverd is a persistent daemon that connects the host\(cqs desired NVMe\-oF controllers and keeps them connected\&. It reads three sources to build its set of desired connections: the NBFT ACPI table (boot\-time controllers), the shared NVMe\-oF fabrics configuration (nvme\-fabrics\&.conf(5)), and the Discovery Log Pages of any Discovery Controllers it connects to (including FC targets found via FC kickstart)\&. It never disconnects a live controller in response to a discovery change; the only disconnects it causes are a side effect of stopping its own systemd units, at shutdown or on request\&.
+.sp
+Every connection attempt is delegated to \fInvme connect\fR, which runs inside a systemd transient unit instead of writing directly to /dev/nvme\-fabrics\&. As a result, a stuck connect attempt never blocks the daemon\(cqs event loop\&. Each unit is named after a hash of the controller\(cqs transport identity\&.
+.sp
+Failed connections retry with exponential backoff\&. Discovery Controllers from NBFT or the fabrics config represent explicit intent, so they always retry forever\&. A Discovery Controller found only through a referral or FC kickstart is different: it gives up after \fIdc\-giveup\-timeout\fR (default 72hours) of unbroken failure and is dropped from tracking\&.
+.sp
+Before connecting or reconnecting anything, nvme\-discoverd checks the system\-wide exclusion list\&. It also registers ownership of every controller it connects (\-\-owner discoverd, or \-\-owner nbft for an NBFT\-sourced controller) in the NVMe\-oF ownership registry\&. See nvme\-registry\-list(1) and nvme\-exclusion\-add(1)\&.
+.sp
+nvme\-discoverd is still experimental\&. It is meant to replace the older udev\-rule/systemd\-unit autoconnect mechanism (built when the \fInvmf\-autoconnect\fR meson option is enabled)\&. For now, nvme\-discoverd can run alongside the legacy udev rules \(em the goal is to eventually eliminate them completely\&. Switching a host over is a deliberate administrator choice (\fIsystemctl enable \-\-now nvme\-discoverd\fR, alongside disabling the legacy units), not something either mechanism decides automatically\&.
+.SH "OPTIONS"
+.PP
+\-c <FILE>, \-\-config=<FILE>
+.RS 4
+Path to the daemon\(cqs own configuration file\&. Default: /usr/local/etc/nvme/nvme\-discoverd\&.conf; see CONFIGURATION below\&. A missing file is not an error \(em every knob keeps its default\&.
+.RE
+.PP
+\-\-nvme\-path=<PATH>
+.RS 4
+Absolute or relative path to the
+\fInvme\fR
+binary that transient connection units exec\&. Default: /usr/local/sbin/nvme\&. Mainly useful for running nvme\-discoverd against a locally built
+\fInvme\fR
+instead of the installed one\&.
+.RE
+.PP
+\-d, \-\-debug
+.RS 4
+Enable debug\-level logging for both nvme\-discoverd and the libnvme calls it makes, overriding the configured debug\-level\&.
+.RE
+.PP
+\-h, \-\-help
+.RS 4
+Print usage and exit\&.
+.RE
+.SH "CONFIGURATION"
+.sp
+nvme\-discoverd\&.conf holds only the daemon\(cqs own knobs, in a single \fI[Global]\fR section:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Global]
+nbft = true
+debug\-level = info
+fc\-kickstart\-interval\-minutes = 0
+dc\-giveup\-timeout = 72hours
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fInbft\fR (boolean, default true) controls whether NBFT\-listed controllers are adopted and reconnected\&. \fIdebug\-level\fR (err, warn, info, or debug; default info) sets the log threshold; \fI\-\-debug\fR on the command line overrides it\&. \fIfc\-kickstart\-interval\-minutes\fR (default 0, disabled) re\-probes the FC fabric on a timer\&. This is independent of the kickstart nvme\-discoverd already issues at startup and on every FC controller drop \(em use it to detect FC equipment replacement sooner than the next connection event\&. \fIdc\-giveup\-timeout\fR (default 72hours) is the give\-up horizon described above\&. It takes a systemd time span ("72hours", "3 days 5 hours") or a unit\-less value in seconds; "infinity" makes a dynamically\-discovered DC retry forever, same as a static/NBFT\-sourced one, and 0 gives up on the first failure\&.
+.sp
+The connections nvme\-discoverd manages come entirely from the shared fabrics configuration, not from this file: which Discovery Controllers and subsystems to connect, host identity, per\-connection parameters\&. See nvme\-fabrics\&.conf(5)\&.
+.SH "SIGNALS"
+.PP
+SIGHUP
+.RS 4
+Reload both nvme\-discoverd\&.conf and the shared fabrics configuration\&. Newly desired connections are started; nothing already connected is ever disconnected by a reload\&. If the fabrics configuration fails to reload (e\&.g\&. a syntax error), the previous one is kept and the failure is logged\&.
+.RE
+.PP
+SIGTERM, SIGINT
+.RS 4
+Shut down gracefully\&.
+.RE
+.SH "FILES"
+.PP
+/usr/local/etc/nvme/nvme\-discoverd\&.conf
+.RS 4
+The daemon\(cqs own configuration; see CONFIGURATION\&.
+.RE
+.PP
+/usr/local/etc/nvme/nvme\-fabrics\&.conf, /usr/local/etc/nvme/nvme\-fabrics\&.conf\&.d/*\&.conf
+.RS 4
+The connections nvme\-discoverd manages; see nvme\-fabrics\&.conf(5)\&.
+.RE
+.PP
+/run/nvme/discoverd/
+.RS 4
+Runtime state linking each connected controller to the systemd transient unit that owns it\&. Does not survive a reboot\&.
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-fabrics\&.conf(5) nvme\-connect(1) nvme\-registry\-list(1) nvme\-exclusion\-add(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

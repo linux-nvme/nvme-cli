@@ -2,12 +2,12 @@
 .\"     Title: nvme-gen-hostnqn
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/07/2026
+.\"      Date: 09/18/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GEN\-HOSTNQN" "1" "09/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-GEN\-HOSTNQN" "1" "09/18/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,57 @@ nvme-gen-hostnqn \- Generate a host NVMe Qualified Name
 .fi
 .SH "DESCRIPTION"
 .sp
-Generate a random host NQN in the form: nqn\&.2014\-08\&.org\&.nvmexpress:uuid:1b4e28ba\-2fa1\-11d2\-883f\-0016d3cca427 and prints it to stdout\&.
+Generate a host NQN in the form: nqn\&.2014\-08\&.org\&.nvmexpress:uuid:1b4e28ba\-2fa1\-11d2\-883f\-0016d3cca427 and print it to stdout\&.
+.sp
+The UUID is taken from the first of these sources that provides a usable value:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+The system UUID reported by DMI, from /sys/class/dmi/id/product_uuid or /sys/firmware/dmi/entries\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+The firmware device tree, from /proc/device\-tree/ibm,partition\-uuid\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+The local machine ID, /etc/machine\-id\&. The machine ID itself is never published: the UUID is derived from it with HMAC\-SHA256 and a fixed application identifier, as systemd\(cqs sd_id128_get_machine_app_specific(3) does\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+A random UUID, if none of the above is available\&. This value is not stable across invocations, and a warning is printed\&.
+.RE
+.sp
+The first two sources describe the hardware and survive a reinstall\&. The machine ID describes the installation and does not\&. A UUID that is all zeros or all ones is a placeholder reported by some virtual machines and firmware, and is skipped\&.
+.sp
+This command must be run as root\&. The DMI and device tree files are readable by root only, so an unprivileged run cannot reach the stable sources, and its output cannot be written to /etc/nvme/hostnqn either\&.
 .SH "OPTIONS"
 .SH "GLOBAL OPTIONS"
 .sp

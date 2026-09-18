@@ -825,8 +825,12 @@ device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1).</p></div>
 </dt>
 <dd>
 <p>
-        Collect the dumps into a temporary directory and save them as a
-        single compressed .tar.gz archive.
+        Collect the dumps into a <em>temp_samsung_dumps</em> directory next to the
+        output path and save them as a single compressed .tar.gz archive,
+        removing that directory afterwards. The directory is created for
+        this run alone, so the command fails if anything already sits at
+        that path: one left behind by an interrupted run has to be removed
+        before retrying.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -966,7 +970,7 @@ Parameter 1, store the result compressed and keep the output quiet.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-07 12:00:29 CEST
+ 2026-09-18 12:15:54 CEST
 </div>
 </div>
 </body>

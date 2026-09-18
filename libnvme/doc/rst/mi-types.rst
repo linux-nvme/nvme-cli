@@ -180,11 +180,38 @@ will define parts of the reserved data, and may add further fields.
 ``nvme_mi_mi_opcode_subsys_health_status_poll``
   Subsystem Health Status Poll
 
+``nvme_mi_mi_opcode_ctrl_health_status_poll``
+  Controller Health Status Poll
+
 ``nvme_mi_mi_opcode_configuration_set``
   MI Configuration Set
 
 ``nvme_mi_mi_opcode_configuration_get``
   MI Configuration Get
+
+``nvme_mi_mi_opcode_vpd_read``
+  VPD Read
+
+``nvme_mi_mi_opcode_vpd_write``
+  VPD Write
+
+``nvme_mi_mi_opcode_reset``
+  Reset
+
+``nvme_mi_mi_opcode_ses_recv``
+  SES Receive
+
+``nvme_mi_mi_opcode_ses_send``
+  SES Send
+
+``nvme_mi_mi_opcode_meb_read``
+  Management Endpoint Buffer Read
+
+``nvme_mi_mi_opcode_meb_write``
+  Management Endpoint Buffer Write
+
+``nvme_mi_mi_opcode_shutdown``
+  Shutdown
 
 ``nvme_mi_mi_opcode_pda_read``
   NVMe-MI PDA Read

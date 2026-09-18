@@ -774,8 +774,9 @@ controller&#8217;s transport identity.</p></div>
 <div class="paragraph"><p>Failed connections retry with exponential backoff. Discovery
 Controllers from NBFT or the fabrics config represent explicit intent,
 so they always retry forever. A Discovery Controller found only
-through a referral or FC kickstart is different: it gives up after 72
-hours of unbroken failure and is dropped from tracking.</p></div>
+through a referral or FC kickstart is different: it gives up after
+<em>dc-giveup-timeout</em> (default 72hours) of unbroken failure and is
+dropped from tracking.</p></div>
 <div class="paragraph"><p>Before connecting or reconnecting anything, nvme-discoverd checks the
 system-wide exclusion list. It also registers ownership of every
 controller it connects (--owner discoverd, or --owner nbft for an
@@ -855,7 +856,8 @@ mechanism decides automatically.</p></div>
 <pre><code>[Global]
 nbft = true
 debug-level = info
-fc-kickstart-interval-minutes = 0</code></pre>
+fc-kickstart-interval-minutes = 0
+dc-giveup-timeout = 72hours</code></pre>
 </div></div>
 <div class="paragraph"><p><em>nbft</em> (boolean, default true) controls whether NBFT-listed controllers
 are adopted and reconnected. <em>debug-level</em> (err, warn, info, or debug;
@@ -864,7 +866,11 @@ overrides it. <em>fc-kickstart-interval-minutes</em> (default 0, disabled)
 re-probes the FC fabric on a timer. This is independent of the
 kickstart nvme-discoverd already issues at startup and on every FC
 controller drop&#8201;&#8212;&#8201;use it to detect FC equipment replacement sooner
-than the next connection event.</p></div>
+than the next connection event. <em>dc-giveup-timeout</em> (default 72hours)
+is the give-up horizon described above. It takes a systemd time span
+("72hours", "3 days 5 hours") or a unit-less value in seconds;
+"infinity" makes a dynamically-discovered DC retry forever, same as a
+static/NBFT-sourced one, and 0 gives up on the first failure.</p></div>
 <div class="paragraph"><p>The connections nvme-discoverd manages come entirely from the shared
 fabrics configuration, not from this file: which Discovery Controllers
 and subsystems to connect, host identity, per-connection parameters.
@@ -950,7 +956,7 @@ nvme-exclusion-add(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-07-31 16:39:45 CEST
+ 2026-09-18 12:15:54 CEST
 </div>
 </div>
 </body>

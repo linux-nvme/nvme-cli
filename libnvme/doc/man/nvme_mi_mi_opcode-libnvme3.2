@@ -12,11 +12,47 @@ enum nvme_mi_mi_opcode {
 , 
 .br
 .br
+.BI "    nvme_mi_mi_opcode_ctrl_health_status_poll"
+, 
+.br
+.br
 .BI "    nvme_mi_mi_opcode_configuration_set"
 , 
 .br
 .br
 .BI "    nvme_mi_mi_opcode_configuration_get"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_vpd_read"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_vpd_write"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_reset"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_ses_recv"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_ses_send"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_meb_read"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_meb_write"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_shutdown"
 , 
 .br
 .br
@@ -36,10 +72,28 @@ enum nvme_mi_mi_opcode {
 Read NVMe-MI Data Structure
 .IP "nvme_mi_mi_opcode_subsys_health_status_poll" 12
 Subsystem Health Status Poll
+.IP "nvme_mi_mi_opcode_ctrl_health_status_poll" 12
+Controller Health Status Poll
 .IP "nvme_mi_mi_opcode_configuration_set" 12
 MI Configuration Set
 .IP "nvme_mi_mi_opcode_configuration_get" 12
 MI Configuration Get
+.IP "nvme_mi_mi_opcode_vpd_read" 12
+VPD Read
+.IP "nvme_mi_mi_opcode_vpd_write" 12
+VPD Write
+.IP "nvme_mi_mi_opcode_reset" 12
+Reset
+.IP "nvme_mi_mi_opcode_ses_recv" 12
+SES Receive
+.IP "nvme_mi_mi_opcode_ses_send" 12
+SES Send
+.IP "nvme_mi_mi_opcode_meb_read" 12
+Management Endpoint Buffer Read
+.IP "nvme_mi_mi_opcode_meb_write" 12
+Management Endpoint Buffer Write
+.IP "nvme_mi_mi_opcode_shutdown" 12
+Shutdown
 .IP "nvme_mi_mi_opcode_pda_read" 12
 NVMe-MI PDA Read
 .IP "nvme_mi_mi_opcode_pda_write" 12
