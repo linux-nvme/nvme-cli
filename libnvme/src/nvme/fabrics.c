@@ -3672,6 +3672,8 @@ __shr_public int libnvmf_nbft_read_files(
 	char filename[PATH_MAX];
 	int i, count, ret;
 
+	*head = NULL;
+
 	count = scandir(path, &dent, nbft_filter, NULL);
 	if (count < 0)
 		return -errno;
