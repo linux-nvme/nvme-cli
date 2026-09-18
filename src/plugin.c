@@ -35,7 +35,7 @@ static int help(int argc, char **argv, struct plugin *plugin)
 {
 	char man[0x100];
 	struct program *prog = plugin->parent;
-	char *str = argv[1];
+	char *str;
 	int i;
 
 	if (argc == 1) {
@@ -43,6 +43,7 @@ static int help(int argc, char **argv, struct plugin *plugin)
 		return 0;
 	}
 
+	str = argv[1];
 	for (i = 0; plugin->commands[i]; i++) {
 		struct command *command = plugin->commands[i];
 
