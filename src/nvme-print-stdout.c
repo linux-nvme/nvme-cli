@@ -3650,6 +3650,8 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	printf("crcap     : %u\n", ctrl->crcap);
 	if (human)
 		stdout_id_ctrl_crcap(ctrl->crcap);
+	printf("ciu       : %u\n", ctrl->ciu);
+	printf("cirn      : %"PRIu64"\n", le64_to_cpu(*(__le64 *)ctrl->cirn));
 	printf("nvmsr     : %u\n", ctrl->nvmsr);
 	if (human)
 		stdout_id_ctrl_nvmsr(ctrl->nvmsr);
