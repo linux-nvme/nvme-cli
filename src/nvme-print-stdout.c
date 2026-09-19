@@ -54,6 +54,23 @@ enum simple_list_col {
 #define stdout_id_ctrl_field(name, val, ...) \
 	stdout_id_ctrl_print(name, 10, val, ##__VA_ARGS__)
 
+#define stdout_id_ctrl_field_bit(first, last, val, desc, ...)		\
+	do {								\
+		__cleanup_free char *name = NULL;			\
+		if (asprintf(&name, "  [%d:%d] ", last, first) < 0)	\
+			name = NULL;					\
+		stdout_id_ctrl_print(name ? name : alloc_error, 8,	\
+				     val "\t" desc, ##__VA_ARGS__);	\
+	} while (false)
+
+#define stdout_id_ctrl_field_name(name, val, desc, ...)			\
+	do {								\
+		int first = NVME_##name##_SHIFT;			\
+		int last = NVME_##name##_SHIFT + NVME_BIT(name) - 1;	\
+		stdout_id_ctrl_field_bit(first, last, val, desc,	\
+					 ##__VA_ARGS__);		\
+	} while (false)
+
 static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
@@ -2029,7 +2046,7 @@ static void stdout_id_ctrl_print(const char *name, int width, const char *val,
 
 	va_end(ap);
 
-	printf("%-*s: %s\n", 10, name, value ? value : alloc_error);
+	printf("%-*s: %s\n", width, name, value ? value : alloc_error);
 }
 
 static void stdout_id_ctrl_cmic(__u8 cmic, bool human)
@@ -2046,12 +2063,15 @@ static void stdout_id_ctrl_cmic(__u8 cmic, bool human)
 		return;
 
 	if (rsvd)
-		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tANA %ssupported\n", ana, ana ? "" : "not ");
-	printf("  [2:2] : %#x\t%s\n", sriov, sriov ? "SR-IOV" : "PCI");
-	printf("  [1:1] : %#x\t%s Controller\n", mctl, mctl ? "Multi" : "Single");
-	printf("  [0:0] : %#x\t%s Port\n", mp, mp ? "Multi" : "Single");
-	printf("\n");
+		stdout_id_ctrl_field_bit(4, 7, "%#x", "Reserved", rsvd);
+	stdout_id_ctrl_field_name(CMIC_MULTI_ANA, "%#x", "ANA %ssupported", ana,
+				  ana ? "" : "not ");
+	stdout_id_ctrl_field_name(CMIC_MULTI_SRIOV, "%#x", "%s", sriov,
+				  sriov ? "SR-IOV" : "PCI");
+	stdout_id_ctrl_field_name(CMIC_MULTI_CTRL, "%#x", "%s Controller", mctl,
+				  mctl ? "Multi" : "Single");
+	stdout_id_ctrl_field_name(CMIC_MULTI_PORT, "%#x", "%s Port\n", mp,
+				  mp ? "Multi" : "Single");
 }
 
 static void stdout_id_ctrl_oaes(__u32 oaes, bool human)
