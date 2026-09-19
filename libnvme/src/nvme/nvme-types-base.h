@@ -106,6 +106,28 @@
  */
 #define NVME_VAL(name) (NVME_##name##_MASK << NVME_##name##_SHIFT)
 
+#ifdef NVME_HAVE_FFSLL
+#define nvme_ffs ffsll
+#else /* NVME_HAVE_FFSLL */
+static inline int nvme_ffs(long long i)
+{
+	int j;
+
+	for (j = 1; !(i & 1); i >>= 1)
+		j++;
+
+	return j;
+}
+#endif /* NVME_HAVE_FFSLL */
+
+/**
+ * NVME_BIT() - get mask bit width
+ * @name: The name of the sub-field within an nvme value
+ *
+ * Return: The mask bit number
+ */
+#define NVME_BIT(name) (nvme_ffs(NVME_##name##_MASK + 1) - 1)
+
 /**
  * enum nvme_constants - A place to stash various constant nvme values
  * @NVME_NSID_ALL:		A broadcast value that is used to specify all
