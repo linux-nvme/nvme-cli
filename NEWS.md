@@ -1,6 +1,14 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
+## Changes in 3.2 (unreleased)
+
+### libnvme
+
+* The API name `NVME_CTRL_MEC_SMBUSME` changed to `NVME_CTRL_MEC_TWPME`.
+  Since the identify controller data structure MEC field bit name was
+  changed by the spec then the API name followed this.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

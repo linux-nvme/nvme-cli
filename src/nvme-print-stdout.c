@@ -2384,8 +2384,8 @@ static void stdout_id_ctrl_vwci(__u8 vwci, bool human)
 static void stdout_id_ctrl_mec(__u8 mec, bool human)
 {
 	__u8 rsvd = (mec >> 2) & 0xfc;
-	__u8 pcieme = (mec >> 1) & 0x1;
-	__u8 smbusme = mec & 0x1;
+	__u8 pcieme = NVME_CTRL_MEC_PCIEME(mec);
+	__u8 twpme = NVME_CTRL_MEC_TWPME(mec);
 
 	stdout_id_ctrl_field("mec", "%u", mec);
 
@@ -2394,10 +2394,13 @@ static void stdout_id_ctrl_mec(__u8 mec, bool human)
 
 	if (rsvd)
 		printf(" [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tNVM subsystem %scontains a Management Endpoint"\
-		" on a PCIe port\n", pcieme, pcieme ? "" : "Not ");
-	printf("  [0:0] : %#x\tNVM subsystem %scontains a Management Endpoint"\
-		" on an SMBus/I2C port\n", smbusme, smbusme ? "" : "Not ");
+	printf("  [1:1] : %#x\tNVM subsystem %scontains one or more Management"\
+	       " Endpoints on one or more PCIe ports\n", pcieme,
+	       pcieme ? "" : "Not ");
+	printf("  [0:0] : %#x\tNVM subsystem %scontains one or more the NVM"\
+	    " Subsystem one or more Management Endpoints on the 2-Wire port\n",
+	    twpme, twpme ? "" : "Not ");
+
 	printf("\n");
 
 }
