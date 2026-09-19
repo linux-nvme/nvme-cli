@@ -238,3 +238,17 @@ static inline size_t shr_linelen(char *s)
 
 	return i;
 }
+
+#ifdef NVME_HAVE_FFSLL
+#define shr_ffs ffsll
+#else /* NVME_HAVE_FFSLL */
+static inline int shr_ffs(long long i)
+{
+	int j;
+
+	for (j = 1; !(i & 1); i >>= 1)
+		j++;
+
+	return j;
+}
+#endif /* NVME_HAVE_FFSLL */
