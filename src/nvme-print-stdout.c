@@ -51,6 +51,26 @@ enum simple_list_col {
 	stdout_prop_field(prop_cap[fld][0], prop_cap[fld][1], 41, 59, \
 	val, ##__VA_ARGS__)
 
+#define stdout_id_ctrl_field(name, val, ...) \
+	stdout_id_ctrl_print(name, 10, val, ##__VA_ARGS__)
+
+#define stdout_id_ctrl_field_bit(first, last, val, desc, ...)		\
+	do {								\
+		__cleanup_free char *name = NULL;			\
+		if (asprintf(&name, "  [%d:%d] ", last, first) < 0)	\
+			name = NULL;					\
+		stdout_id_ctrl_print(name ? name : alloc_error, 8,	\
+				     val "\t" desc, ##__VA_ARGS__);	\
+	} while (false)
+
+#define stdout_id_ctrl_field_name(name, val, desc, ...)			\
+	do {								\
+		int first = NVME_##name##_SHIFT;			\
+		int last = NVME_##name##_SHIFT + NVME_BIT(name) - 1;	\
+		stdout_id_ctrl_field_bit(first, last, val, desc,	\
+					 ##__VA_ARGS__);		\
+	} while (false)
+
 static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
@@ -1427,9 +1447,10 @@ static void stdout_prop_field(const char *name, const char *symbol,
 
 	if (strlen(name))
 		printf("\t%-*s (%s)%*s: %s\n", name_width, name, symbol,
-		       pad_len, pad ? " " : "", value);
+		       pad_len, pad ? " " : "", value ? value : alloc_error);
 	else
-		printf("\t%*s %s\n", col_width + 1, " ", value);
+		printf("\t%*s %s\n", col_width + 1, " ",
+		       value ? value : alloc_error);
 }
 
 static void stdout_registers_cap(uint64_t cap)
@@ -2012,7 +2033,23 @@ static void stdout_error_status(int status, const char *msg, va_list ap)
 	stdout_status(status);
 }
 
-static void stdout_id_ctrl_cmic(__u8 cmic)
+static void stdout_id_ctrl_print(const char *name, int width, const char *val,
+				 ...)
+{
+	__cleanup_free char *value = NULL;
+	va_list ap;
+
+	va_start(ap, val);
+
+	if (vasprintf(&value, val, ap) < 0)
+		value = NULL;
+
+	va_end(ap);
+
+	printf("%-*s: %s\n", width, name, value ? value : alloc_error);
+}
+
+static void stdout_id_ctrl_cmic(__u8 cmic, bool human)
 {
 	__u8 rsvd = NVME_CMIC_MULTI_RSVD(cmic);
 	__u8 ana = NVME_CMIC_MULTI_ANA(cmic);
@@ -2020,18 +2057,25 @@ static void stdout_id_ctrl_cmic(__u8 cmic)
 	__u8 mctl = NVME_CMIC_MULTI_CTRL(cmic);
 	__u8 mp = NVME_CMIC_MULTI_PORT(cmic);
 
+	stdout_id_ctrl_field("cmic", "%#x", cmic);
+
+	if (!human)
+		return;
+
 	if (rsvd)
-		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tANA %ssupported\n", ana, ana ? "" : "not ");
-	printf("  [2:2] : %#x\t%s\n", sriov, sriov ? "SR-IOV" : "PCI");
-	printf("  [1:1] : %#x\t%s Controller\n", mctl, mctl ? "Multi" : "Single");
-	printf("  [0:0] : %#x\t%s Port\n", mp, mp ? "Multi" : "Single");
-	printf("\n");
+		stdout_id_ctrl_field_bit(4, 7, "%#x", "Reserved", rsvd);
+	stdout_id_ctrl_field_name(CMIC_MULTI_ANA, "%#x", "ANA %ssupported", ana,
+				  ana ? "" : "not ");
+	stdout_id_ctrl_field_name(CMIC_MULTI_SRIOV, "%#x", "%s", sriov,
+				  sriov ? "SR-IOV" : "PCI");
+	stdout_id_ctrl_field_name(CMIC_MULTI_CTRL, "%#x", "%s Controller", mctl,
+				  mctl ? "Multi" : "Single");
+	stdout_id_ctrl_field_name(CMIC_MULTI_PORT, "%#x", "%s Port\n", mp,
+				  mp ? "Multi" : "Single");
 }
 
-static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
+static void stdout_id_ctrl_oaes(__u32 oaes, bool human)
 {
-	__u32 oaes = le32_to_cpu(ctrl_oaes);
 	__u32 dlpcn = NVME_CTRL_OAES_DLPCN(oaes);
 	__u32 rsvd28 = (oaes & 0x70000000) >> 28;
 	__u32 zdcn = NVME_CTRL_OAES_ZDCN(oaes);
@@ -2051,6 +2095,11 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
 	__u32 nace = NVME_CTRL_OAES_NSAN(oaes);
 	__u32 rsvd0 = oaes & 0xFF;
+
+	stdout_id_ctrl_field("oaes", "%#x", oaes);
+
+	if (!human)
+		return;
 
 	printf("  [31:31] : %#x\tDiscovery Log Change Notice %sSupported\n",
 			dlpcn, dlpcn ? "" : "Not ");
@@ -2095,9 +2144,8 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
+static void stdout_id_ctrl_ctratt(__u32 ctratt, bool human)
 {
-	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
 	__u32 rsvd25 = (ctratt >> 25);
 	__u32 iiellss = NVME_CTRL_CTRATT_IIELLSS(ctratt);
 	__u32 vms = NVME_CTRL_CTRATT_VMS(ctratt);
@@ -2123,6 +2171,11 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	__u32 nsets = NVME_CTRL_CTRATT_NSETS(ctratt);
 	__u32 nopspm = NVME_CTRL_CTRATT_NOPSPM(ctratt);
 	__u32 hids = NVME_CTRL_CTRATT_HIDS(ctratt);
+
+	stdout_id_ctrl_field("ctratt", "%#x", ctratt);
+
+	if (!human)
+		return;
 
 	if (rsvd25)
 		printf("  [31:25] : %#x\tReserved\n", rsvd25);
@@ -2181,16 +2234,21 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_bpcap(__u8 ctrl_bpcap)
+static void stdout_id_ctrl_bpcap(__u8 bpcap, bool human)
 {
-	__u8 rsvd3 = (ctrl_bpcap >> 3);
-	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_SFBPWPS);
-	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_RPMBBPWPS);
+	__u8 rsvd3 = (bpcap >> 3);
+	__u8 sfbpwps = NVME_GET(bpcap, CTRL_BACAP_SFBPWPS);
+	__u8 rpmbbpwps = NVME_GET(bpcap, CTRL_BACAP_RPMBBPWPS);
 	static const char * const rpmbbpwps_def[] = {
 		"Support Not Specified",
 		"Not Supported",
 		"Supported"
 	};
+
+	stdout_id_ctrl_field("bpcap", "%#x", bpcap);
+
+	if (!human)
+		return;
 
 	if (rsvd3)
 		printf(" [7:3] : %#x\tReserved\n", rsvd3);
@@ -2202,10 +2260,15 @@ static void stdout_id_ctrl_bpcap(__u8 ctrl_bpcap)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_chsi(__u8 ctrl_chsi)
+static void stdout_id_ctrl_chsi(__u8 chsi, bool human)
 {
-	__u8 rsvd1 = (ctrl_chsi >> 1);
-	__u8 chs = NVME_CTRL_CHSI_CHS(ctrl_chsi);
+	__u8 rsvd1 = (chsi >> 1);
+	__u8 chs = NVME_CTRL_CHSI_CHS(chsi);
+
+	stdout_id_ctrl_field("chsi", "%#x", chsi);
+
+	if (!human)
+		return;
 
 	if (rsvd1)
 		printf(" [7:1] : %#x\tReserved\n", rsvd1);
@@ -2214,12 +2277,17 @@ static void stdout_id_ctrl_chsi(__u8 ctrl_chsi)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_rmdca(__u8 ctrl_rmdca)
+static void stdout_id_ctrl_rmdca(__u8 rmdca, bool human)
 {
-	__u8 rsvd3 = (ctrl_rmdca >> 3);
-	__u8 rdccs = NVME_CTRL_RMDCA_RDCCS(ctrl_rmdca);
-	__u8 rdncs = NVME_CTRL_RMDCA_RDNCS(ctrl_rmdca);
-	__u8 rdscs = NVME_CTRL_RMDCA_RDSCS(ctrl_rmdca);
+	__u8 rsvd3 = (rmdca >> 3);
+	__u8 rdccs = NVME_CTRL_RMDCA_RDCCS(rmdca);
+	__u8 rdncs = NVME_CTRL_RMDCA_RDNCS(rmdca);
+	__u8 rdscs = NVME_CTRL_RMDCA_RDSCS(rmdca);
+
+	stdout_id_ctrl_field("rmdca", "%#x", rmdca);
+
+	if (!human)
+		return;
 
 	if (rsvd3)
 		printf(" [7:3] : %#x\tReserved\n", rsvd3);
@@ -2233,11 +2301,16 @@ static void stdout_id_ctrl_rmdca(__u8 ctrl_rmdca)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_plsi(__u8 ctrl_plsi)
+static void stdout_id_ctrl_plsi(__u8 plsi, bool human)
 {
-	__u8 rsvd2 = (ctrl_plsi >> 2);
-	__u8 plsfq = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSFQ);
-	__u8 plsepf = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSEPF);
+	__u8 rsvd2 = (plsi >> 2);
+	__u8 plsfq = NVME_GET(plsi, CTRL_PLSI_PLSFQ);
+	__u8 plsepf = NVME_GET(plsi, CTRL_PLSI_PLSEPF);
+
+	stdout_id_ctrl_field("plsi", "%u", plsi);
+
+	if (!human)
+		return;
 
 	if (rsvd2)
 		printf(" [7:2] : %#x\tReserved\n", rsvd2);
@@ -2249,11 +2322,16 @@ static void stdout_id_ctrl_plsi(__u8 ctrl_plsi)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_crcap(__u8 ctrl_crcap)
+static void stdout_id_ctrl_crcap(__u8 crcap, bool human)
 {
-	__u8 rsvd2 = (ctrl_crcap >> 2);
-	__u8 rgidc = NVME_GET(ctrl_crcap, CTRL_CRCAP_RGIDC);
-	__u8 rrsup = NVME_GET(ctrl_crcap, CTRL_CRCAP_RRSUP);
+	__u8 rsvd2 = (crcap >> 2);
+	__u8 rgidc = NVME_GET(crcap, CTRL_CRCAP_RGIDC);
+	__u8 rrsup = NVME_GET(crcap, CTRL_CRCAP_RRSUP);
+
+	stdout_id_ctrl_field("crcap", "%u", crcap);
+
+	if (!human)
+		return;
 
 	if (rsvd2)
 		printf(" [7:2] : %#x\tReserved\n", rsvd2);
@@ -2265,7 +2343,7 @@ static void stdout_id_ctrl_crcap(__u8 ctrl_crcap)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_cntrltype(__u8 cntrltype)
+static void stdout_id_ctrl_cntrltype(__u8 cntrltype, bool human)
 {
 	__u8 rsvd = (cntrltype & 0xFC) >> 2;
 	__u8 cntrl = cntrltype & 0x3;
@@ -2277,15 +2355,25 @@ static void stdout_id_ctrl_cntrltype(__u8 cntrltype)
 		"Administrative Controller"
 	};
 
+	stdout_id_ctrl_field("cntrltype", "%d", cntrltype);
+
+	if (!human)
+		return;
+
 	printf("  [7:2] : %#x\tReserved\n", rsvd);
 	printf("  [1:0] : %#x\t%s\n", cntrltype, type[cntrl]);
 }
 
-static void stdout_id_ctrl_nvmsr(__u8 nvmsr)
+static void stdout_id_ctrl_nvmsr(__u8 nvmsr, bool human)
 {
 	__u8 rsvd = (nvmsr >> 2) & 0xfc;
 	__u8 nvmee = NVME_CTRL_NVMSR_NVMEE(nvmsr);
 	__u8 nvmesd = NVME_CTRL_NVMSR_NVMESD(nvmsr);
+
+	stdout_id_ctrl_field("nvmsr", "%u", nvmsr);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf(" [7:2] : %#x\tReserved\n", rsvd);
@@ -2296,10 +2384,15 @@ static void stdout_id_ctrl_nvmsr(__u8 nvmsr)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_vwci(__u8 vwci)
+static void stdout_id_ctrl_vwci(__u8 vwci, bool human)
 {
 	__u8 vwcrv = NVME_CTRL_VWCI_VWCRV(vwci);
 	__u8 vwcr = NVME_CTRL_VWCI_VWCR(vwci);
+
+	stdout_id_ctrl_field("vwci", "%u", vwci);
+
+	if (!human)
+		return;
 
 	printf("  [7:7] : %#x\tVPD Write Cycles Remaining field is %svalid.\n",
 		vwcrv, vwcrv ? "" : "Not ");
@@ -2308,25 +2401,32 @@ static void stdout_id_ctrl_vwci(__u8 vwci)
 
 }
 
-static void stdout_id_ctrl_mec(__u8 mec)
+static void stdout_id_ctrl_mec(__u8 mec, bool human)
 {
 	__u8 rsvd = (mec >> 2) & 0xfc;
-	__u8 pcieme = (mec >> 1) & 0x1;
-	__u8 smbusme = mec & 0x1;
+	__u8 pcieme = NVME_CTRL_MEC_PCIEME(mec);
+	__u8 twpme = NVME_CTRL_MEC_TWPME(mec);
+
+	stdout_id_ctrl_field("mec", "%u", mec);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf(" [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tNVM subsystem %scontains a Management Endpoint"\
-		" on a PCIe port\n", pcieme, pcieme ? "" : "Not ");
-	printf("  [0:0] : %#x\tNVM subsystem %scontains a Management Endpoint"\
-		" on an SMBus/I2C port\n", smbusme, smbusme ? "" : "Not ");
+	printf("  [1:1] : %#x\tNVM subsystem %scontains one or more Management"\
+	       " Endpoints on one or more PCIe ports\n", pcieme,
+	       pcieme ? "" : "Not ");
+	printf("  [0:0] : %#x\tNVM subsystem %scontains one or more the NVM"\
+	    " Subsystem one or more Management Endpoints on the 2-Wire port\n",
+	    twpme, twpme ? "" : "Not ");
+
 	printf("\n");
 
 }
 
-static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
+static void stdout_id_ctrl_oacs(__u16 oacs, bool human)
 {
-	__u16 oacs = le16_to_cpu(ctrl_oacs);
 	__u16 rsvd = (oacs & 0xC000) >> 14;
 	__u16 rsvd12 = (oacs & 0x1000) >> 12;
 	__u16 ccfls = NVME_CTRL_OACS_CCFLS(oacs);
@@ -2342,6 +2442,11 @@ static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 fwc = NVME_CTRL_OACS_FWDS(oacs);
 	__u16 fmt = NVME_CTRL_OACS_FNVMS(oacs);
 	__u16 sec = NVME_CTRL_OACS_SSRS(oacs);
+
+	stdout_id_ctrl_field("oacs", "%#x", oacs);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf(" [15:14] : %#x\tReserved\n", rsvd);
@@ -2376,13 +2481,18 @@ static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_frmw(__u8 frmw)
+static void stdout_id_ctrl_frmw(__u8 frmw, bool human)
 {
 	__u8 rsvd = (frmw & 0xC0) >> 6;
 	__u8 smud = (frmw >> 5) & 0x1;
 	__u8 fawr = (frmw & 0x10) >> 4;
 	__u8 nfws = (frmw & 0xE) >> 1;
 	__u8 s1ro = frmw & 0x1;
+
+	stdout_id_ctrl_field("frmw", "%#x", frmw);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:6] : %#x\tReserved\n", rsvd);
@@ -2396,7 +2506,7 @@ static void stdout_id_ctrl_frmw(__u8 frmw)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_lpa(__u8 lpa)
+static void stdout_id_ctrl_lpa(__u8 lpa, bool human)
 {
 	__u8 rsvd = (lpa & 0x80) >> 7;
 	__u8 tel = (lpa >> 6) & 0x1;
@@ -2406,6 +2516,11 @@ static void stdout_id_ctrl_lpa(__u8 lpa)
 	__u8 ed = (lpa & 0x4) >> 2;
 	__u8 celp = (lpa & 0x2) >> 1;
 	__u8 smlp = lpa & 0x1;
+
+	stdout_id_ctrl_field("lpa", "%#x", lpa);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:7] : %#x\tReserved\n", rsvd);
@@ -2426,24 +2541,39 @@ static void stdout_id_ctrl_lpa(__u8 lpa)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_elpe(__u8 elpe)
+static void stdout_id_ctrl_elpe(__u8 elpe, bool human)
 {
+	stdout_id_ctrl_field("elpe", "%d", elpe);
+
+	if (!human)
+		return;
+
 	printf("  [7:0] : %d (0's based)\tError Log Page Entries (ELPE)\n",
 	       elpe);
 	printf("\n");
 }
 
-static void stdout_id_ctrl_npss(__u8 npss)
+static void stdout_id_ctrl_npss(__u8 npss, bool human)
 {
+	stdout_id_ctrl_field("npss", "%d", npss);
+
+	if (!human)
+		return;
+
 	printf("  [7:0] : %d (0's based)\tNumber of Power States Support (NPSS)\n",
 	       npss);
 	printf("\n");
 }
 
-static void stdout_id_ctrl_avscc(__u8 avscc)
+static void stdout_id_ctrl_avscc(__u8 avscc, bool human)
 {
 	__u8 rsvd = (avscc & 0xFE) >> 1;
 	__u8 fmt = avscc & 0x1;
+
+	stdout_id_ctrl_field("avscc", "%#x", avscc);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:1] : %#x\tReserved\n", rsvd);
@@ -2452,10 +2582,15 @@ static void stdout_id_ctrl_avscc(__u8 avscc)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_apsta(__u8 apsta)
+static void stdout_id_ctrl_apsta(__u8 apsta, bool human)
 {
 	__u8 rsvd = (apsta & 0xFE) >> 1;
 	__u8 apst = apsta & 0x1;
+
+	stdout_id_ctrl_field("apsta", "%#x", apsta);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:1] : %#x\tReserved\n", rsvd);
@@ -2464,37 +2599,58 @@ static void stdout_id_ctrl_apsta(__u8 apsta)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_wctemp(__le16 wctemp)
+static void stdout_id_ctrl_wctemp(__u16 wctemp, bool human)
 {
+	stdout_id_ctrl_field("wctemp", "%d", wctemp);
+
+	if (!human)
+		return;
+
 	printf(" [15:0] : %s (%u K, %s)\tWarning Composite Temperature Threshold (WCTEMP)\n",
-	       nvme_degrees_string(le16_to_cpu(wctemp)), le16_to_cpu(wctemp),
-	       nvme_degrees_fahrenheit_string(le16_to_cpu(wctemp)));
+	       nvme_degrees_string(wctemp), wctemp,
+	       nvme_degrees_fahrenheit_string(wctemp));
 	printf("\n");
 }
 
-static void stdout_id_ctrl_cctemp(__le16 cctemp)
+static void stdout_id_ctrl_cctemp(__u16 cctemp, bool human)
 {
+	stdout_id_ctrl_field("cctemp", "%d", cctemp);
+
+	if (!human)
+		return;
+
 	printf(" [15:0] : %s (%u K, %s)\tCritical Composite Temperature Threshold (CCTEMP)\n",
 	       nvme_degrees_string(le16_to_cpu(cctemp)), le16_to_cpu(cctemp),
 	       nvme_degrees_fahrenheit_string(le16_to_cpu(cctemp)));
 	printf("\n");
 }
 
-static void stdout_id_ctrl_tnvmcap(__u8 *tnvmcap)
+static void stdout_id_ctrl_tnvmcap(shr_uint128_t tnvmcap, bool human)
 {
-	printf("[127:0] : %s\n", uint128_t_to_l10n_string(le128_to_cpu(tnvmcap)));
+	stdout_id_ctrl_field("tnvmcap", "%s",
+			     uint128_t_to_l10n_string(tnvmcap));
+
+	if (!human)
+		return;
+
+	printf("[127:0] : %s\n", uint128_t_to_l10n_string(tnvmcap));
 	printf("\tTotal NVM Capacity (TNVMCAP)\n\n");
 }
 
-static void stdout_id_ctrl_unvmcap(__u8 *unvmcap)
+static void stdout_id_ctrl_unvmcap(shr_uint128_t unvmcap, bool human)
 {
-	printf("[127:0] : %s\n", uint128_t_to_l10n_string(le128_to_cpu(unvmcap)));
+	stdout_id_ctrl_field("unvmcap", "%s",
+			     uint128_t_to_l10n_string(unvmcap));
+
+	if (!human)
+		return;
+
+	printf("[127:0] : %s\n", uint128_t_to_l10n_string(unvmcap));
 	printf("\tUnallocated NVM Capacity (UNVMCAP)\n\n");
 }
 
-void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+static void stdout_id_ctrl_rpmbs_human(__u32 rpmbs)
 {
-	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
 	__u32 asz = (rpmbs & 0xFF000000) >> 24;
 	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
 	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
@@ -2510,11 +2666,26 @@ void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_dsto(__u8 dsto)
+static void stdout_id_ctrl_rpmbs(__u32 rpmbs, bool human)
+{
+	stdout_id_ctrl_field("rpmbs", "%#x", rpmbs);
+
+	if (!human)
+		return;
+
+	stdout_id_ctrl_rpmbs_human(rpmbs);
+}
+
+static void stdout_id_ctrl_dsto(__u8 dsto, bool human)
 {
 	__u8 rsvd2 = (dsto & 0xfc) >> 2;
 	__u8 hirs = NVME_CTRL_DSTO_HIRS(dsto);
 	__u8 sdso = NVME_CTRL_DSTO_SDSO(dsto);
+
+	stdout_id_ctrl_field("dsto", "%d", dsto);
+
+	if (!human)
+		return;
 
 	if (rsvd2)
 		printf("  [7:2] : %#x\tReserved\n", rsvd2);
@@ -2526,11 +2697,15 @@ static void stdout_id_ctrl_dsto(__u8 dsto)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_hctma(__le16 ctrl_hctma)
+static void stdout_id_ctrl_hctma(__u16 hctma, bool human)
 {
-	__u16 hctma = le16_to_cpu(ctrl_hctma);
 	__u16 rsvd = (hctma & 0xFFFE) >> 1;
 	__u16 hctm = hctma & 0x1;
+
+	stdout_id_ctrl_field("hctma", "%#x", hctma);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
@@ -2539,25 +2714,34 @@ static void stdout_id_ctrl_hctma(__le16 ctrl_hctma)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_mntmt(__le16 mntmt)
+static void stdout_id_ctrl_mntmt(__u16 mntmt, bool human)
 {
+	stdout_id_ctrl_field("mntmt", "%d", mntmt);
+
+	if (!human)
+		return;
+
 	printf(" [15:0] : %s (%u K, %s)\tMinimum Thermal Management Temperature (MNTMT)\n",
-	       nvme_degrees_string(le16_to_cpu(mntmt)), le16_to_cpu(mntmt),
-	       nvme_degrees_fahrenheit_string(le16_to_cpu(mntmt)));
+	       nvme_degrees_string(le16_to_cpu(mntmt)), mntmt,
+	       nvme_degrees_fahrenheit_string(mntmt));
 	printf("\n");
 }
 
-static void stdout_id_ctrl_mxtmt(__le16 mxtmt)
+static void stdout_id_ctrl_mxtmt(__u16 mxtmt, bool human)
 {
+	stdout_id_ctrl_field("mxtmt", "%d", mxtmt);
+
+	if (!human)
+		return;
+
 	printf(" [15:0] : %s (%u K, %s)\tMaximum Thermal Management Temperature (MXTMT)\n",
-	       nvme_degrees_string(le16_to_cpu(mxtmt)), le16_to_cpu(mxtmt),
-	       nvme_degrees_fahrenheit_string(le16_to_cpu(mxtmt)));
+	       nvme_degrees_string(mxtmt), mxtmt,
+	       nvme_degrees_fahrenheit_string(mxtmt));
 	printf("\n");
 }
 
-static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
+static void stdout_id_ctrl_sanicap(__u32 sanicap, bool human)
 {
-	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
 	__u32 rsvd6 = (sanicap & 0x1FFFFFC0) >> 6;
 	__u32 sprrs = NVME_CTRL_SANICAP_SPRRS(sanicap);
 	__u32 vers = NVME_CTRL_SANICAP_NVERS(sanicap);
@@ -2573,6 +2757,11 @@ static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 		"Media is additionally modified after sanitize operation completes successfully",
 		"Reserved"
 	};
+
+	stdout_id_ctrl_field("sanicap", "%#x", sanicap);
+
+	if (!human)
+		return;
 
 	printf("  [31:30] : %#x\t%s\n", nodmmas, modifies_media[nodmmas]);
 	printf("  [29:29] : %#x\tNo-Deallocate After Sanitize bit in Sanitize command %sSupported\n",
@@ -2592,7 +2781,7 @@ static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_anacap(__u8 anacap)
+static void stdout_id_ctrl_anacap(__u8 anacap, bool human)
 {
 	__u8 nz = (anacap & 0x80) >> 7;
 	__u8 grpid_static = (anacap & 0x40) >> 6;
@@ -2602,6 +2791,11 @@ static void stdout_id_ctrl_anacap(__u8 anacap)
 	__u8 ana_inaccessible = (anacap & 0x04) >> 2;
 	__u8 ana_nonopt = (anacap & 0x02) >> 1;
 	__u8 ana_opt = (anacap & 0x01);
+
+	stdout_id_ctrl_field("anacap", "%d", anacap);
+
+	if (!human)
+		return;
 
 	printf("  [7:7] : %#x\tNon-zero group ID %sSupported\n",
 			nz, nz ? "" : "Not ");
@@ -2622,11 +2816,16 @@ static void stdout_id_ctrl_anacap(__u8 anacap)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_kpioc(__u8 ctrl_kpioc)
+static void stdout_id_ctrl_kpioc(__u8 kpioc, bool human)
 {
-	__u8 rsvd2 = (ctrl_kpioc >> 2);
-	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(ctrl_kpioc);
-	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(ctrl_kpioc);
+	__u8 rsvd2 = (kpioc >> 2);
+	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(kpioc);
+	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(kpioc);
+
+	stdout_id_ctrl_field("kpioc", "%u", kpioc);
+
+	if (!human)
+		return;
 
 	if (rsvd2)
 		printf(" [7:2] : %#x\tReserved\n", rsvd2);
@@ -2638,10 +2837,15 @@ static void stdout_id_ctrl_kpioc(__u8 ctrl_kpioc)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
+static void stdout_id_ctrl_tmpthha(__u8 tmpthha, bool human)
 {
 	__u8 rsvd3 = (tmpthha & 0xf8) >> 3;
 	__u8 tmpthmh = tmpthha & 0x7;
+
+	stdout_id_ctrl_field("tmpthha", "%#x", tmpthha);
+
+	if (!human)
+		return;
 
 	if (rsvd3)
 		printf("  [7:3] : %#x\tReserved\n", rsvd3);
@@ -2650,11 +2854,29 @@ static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
+static void stdout_id_ctrl_mupa(__u8 mupa, bool human)
 {
-	__u16 cdpa = le16_to_cpu(ctrl_cdpa);
+	__u8 mups = NVME_CTRL_MUPA_MUPS(mupa);
+
+	stdout_id_ctrl_field("mupa", "%#x", mupa);
+
+	if (!human)
+		return;
+
+	printf("  [1:0] : %#x\t%s (%s)\n\n", mups,
+	       nvme_feature_power_limit_scale_to_string(mups),
+	       "Maximum Unlimited Power Scale");
+}
+
+static void stdout_id_ctrl_cdpa(__u16 cdpa, bool human)
+{
 	__u16 rsvd1 = (cdpa >> 1);
 	bool hmac_sha_384 = !!(cdpa & NVME_CTRL_CDPA_HMAC_SHA_384);
+
+	stdout_id_ctrl_field("cdpa", "%d", cdpa);
+
+	if (!human)
+		return;
 
 	if (rsvd1)
 		printf("  [15:1] : %#x\tReserved\n", rsvd1);
@@ -2664,11 +2886,15 @@ static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
+static void stdout_id_ctrl_ipmsr(__u16 ipmsr, bool human)
 {
-	__u16 ipmsr = le16_to_cpu(ctrl_ipmsr);
 	__u16 srs = NVME_CTRL_IPMSR_SRS(ipmsr);
 	__u16 srv = NVME_CTRL_IPMSR_SRV(ipmsr);
+
+	stdout_id_ctrl_field("ipmsr", "%#x", ipmsr);
+
+	if (!human)
+		return;
 
 	printf("  [15:8] : %#x\tSample Rate Scale (%s)\n", srs,
 		nvme_ipmsr_srs_to_string(srs));
@@ -2677,9 +2903,45 @@ static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_vsen(__le32 ctrl_vsen)
+static void stdout_id_ctrl_ensa(__u8 ensa, bool human)
 {
-	__u32 vsen = le32_to_cpu(ctrl_vsen);
+	bool ensts = !!NVME_CTRL_ENSA_ENSTS(ensa);
+	bool ensms = !!NVME_CTRL_ENSA_ENSMS(ensa);
+
+	stdout_id_ctrl_field("ensa", "%#x", ensa);
+
+	if (!human)
+		return;
+
+	printf("  [1:1] : %#x\t%s %s\n", ensms,
+	       "Exported NVM Subsystem Support Migration",
+	       nvme_support_str(ensms));
+	printf("  [0:0] : %#x\t%s %s\n\n", ensts,
+	       "Exported NVM Subsystem Template", nvme_support_str(ensts));
+}
+
+static void stdout_id_ctrl_endsfs(__u8 endsfs, bool human)
+{
+	bool enf0 = !!NVME_CTRL_ENDSFS_ENF0(endsfs);
+	bool enf1 = !!NVME_CTRL_ENDSFS_ENF1(endsfs);
+
+	stdout_id_ctrl_field("endsfs", "%#x", endsfs);
+
+	if (!human)
+		return;
+
+	printf("  [1:1] : %#x\t%s %s\n", enf1, "Exported Namespace Format 1",
+	       nvme_support_str(enf1));
+	printf("  [0:0] : %#x\t%s %s\n\n", enf0, "Exported Namespace Format 0",
+	       nvme_support_str(enf0));
+}
+
+static void stdout_id_ctrl_vsen(const char *name, __u32 vsen, bool human)
+{
+	stdout_id_ctrl_field(name, "%#x", vsen);
+
+	if (!human)
+		return;
 
 	if (!vsen) {
 		printf("  Voltage sensor not supported\n\n");
@@ -2698,29 +2960,38 @@ static void stdout_id_ctrl_vsen(__le32 ctrl_vsen)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_sqes(__u8 sqes)
+static void stdout_id_ctrl_sqes(__u8 sqes, bool human)
 {
 	__u8 msqes = (sqes & 0xF0) >> 4;
 	__u8 rsqes = sqes & 0xF;
+
+	stdout_id_ctrl_field("sqes", "%#x", sqes);
+
+	if (!human)
+		return;
 
 	printf("  [7:4] : %#x\tMax SQ Entry Size (%d)\n", msqes, 1 << msqes);
 	printf("  [3:0] : %#x\tMin SQ Entry Size (%d)\n", rsqes, 1 << rsqes);
 	printf("\n");
 }
 
-static void stdout_id_ctrl_cqes(__u8 cqes)
+static void stdout_id_ctrl_cqes(__u8 cqes, bool human)
 {
 	__u8 mcqes = (cqes & 0xF0) >> 4;
 	__u8 rcqes = cqes & 0xF;
+
+	stdout_id_ctrl_field("cqes", "%#x", cqes);
+
+	if (!human)
+		return;
 
 	printf("  [7:4] : %#x\tMax CQ Entry Size (%d)\n", mcqes, 1 << mcqes);
 	printf("  [3:0] : %#x\tMin CQ Entry Size (%d)\n", rcqes, 1 << rcqes);
 	printf("\n");
 }
 
-static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
+static void stdout_id_ctrl_oncs(__u16 oncs, bool human)
 {
-	__u16 oncs = le16_to_cpu(ctrl_oncs);
 	__u16 rsvd13 = oncs >> 13;
 	bool nszs = !!(oncs & NVME_CTRL_ONCS_NAMESPACE_ZEROES);
 	bool maxwzd = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE);
@@ -2735,6 +3006,11 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	bool nvmdsmsv = !!(oncs & NVME_CTRL_ONCS_DSM);
 	bool nvmwusv = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
 	bool nvmcmps  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
+
+	stdout_id_ctrl_field("oncs", "%#x", oncs);
+
+	if (!human)
+		return;
 
 	if (rsvd13)
 		printf("  [15:13] : %#x\tReserved\n", rsvd13);
@@ -2767,11 +3043,15 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_fuses(__le16 ctrl_fuses)
+static void stdout_id_ctrl_fuses(__u16 fuses, bool human)
 {
-	__u16 fuses = le16_to_cpu(ctrl_fuses);
 	__u16 rsvd = (fuses & 0xFE) >> 1;
 	__u16 cmpw = fuses & 0x1;
+
+	stdout_id_ctrl_field("fuses", "%#x", fuses);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
@@ -2780,13 +3060,18 @@ static void stdout_id_ctrl_fuses(__le16 ctrl_fuses)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_fna(__u8 fna)
+static void stdout_id_ctrl_fna(__u8 fna, bool human)
 {
 	__u8 rsvd = (fna & 0xF0) >> 4;
 	__u8 bcnsid = NVME_CTRL_FNA_NSID_ALL_F(fna);
 	__u8 cese = NVME_CTRL_FNA_CES(fna);
 	__u8 cens = NVME_CTRL_FNA_SEC_ALL_NS(fna);
 	__u8 fmns = NVME_CTRL_FNA_FMT_ALL_NS(fna);
+
+	stdout_id_ctrl_field("fna", "%#x", fna);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
@@ -2801,7 +3086,7 @@ static void stdout_id_ctrl_fna(__u8 fna)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_vwc(__u8 vwc)
+static void stdout_id_ctrl_vwc(__u8 vwc, bool human)
 {
 	__u8 rsvd = (vwc & 0xF8) >> 3;
 	__u8 flush = (vwc & 0x6) >> 1;
@@ -2814,6 +3099,11 @@ static void stdout_id_ctrl_vwc(__u8 vwc)
 		"The Flush command supports NSID set to FFFFFFFFh"
 	};
 
+	stdout_id_ctrl_field("vwc", "%#x", vwc);
+
+	if (!human)
+		return;
+
 	if (rsvd)
 		printf("  [7:3] : %#x\tReserved\n", rsvd);
 	printf("  [2:1] : %#x\t%s\n", flush, flush_behavior[flush]);
@@ -2821,10 +3111,15 @@ static void stdout_id_ctrl_vwc(__u8 vwc)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_icsvscc(__u8 icsvscc)
+static void stdout_id_ctrl_icsvscc(__u8 icsvscc, bool human)
 {
 	__u8 rsvd = (icsvscc & 0xFE) >> 1;
 	__u8 fmt = icsvscc & 0x1;
+
+	stdout_id_ctrl_field("icsvscc", "%d", icsvscc);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:1] : %#x\tReserved\n", rsvd);
@@ -2833,12 +3128,17 @@ static void stdout_id_ctrl_icsvscc(__u8 icsvscc)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_nwpc(__u8 nwpc)
+static void stdout_id_ctrl_nwpc(__u8 nwpc, bool human)
 {
 	__u8 no_wp_wp = (nwpc & 0x01);
 	__u8 wp_power_cycle = (nwpc & 0x02) >> 1;
 	__u8 wp_permanent = (nwpc & 0x04) >> 2;
 	__u8 rsvd = (nwpc & 0xF8) >> 3;
+
+	stdout_id_ctrl_field("nwpc", "%d", nwpc);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:3] : %#x\tReserved\n", rsvd);
@@ -2852,12 +3152,16 @@ static void stdout_id_ctrl_nwpc(__u8 nwpc)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_ocfs(__le16 ctrl_ocfs)
+static void stdout_id_ctrl_ocfs(__u16 ocfs, bool human)
 {
-	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
 	__u16 rsvd = ocfs >> 4;
 	__u8 copy_fmt_supported;
 	int copy_fmt;
+
+	stdout_id_ctrl_field("ocfs", "%#x", ocfs);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [15:4] : %#x\tReserved\n", rsvd);
@@ -2869,9 +3173,8 @@ static void stdout_id_ctrl_ocfs(__le16 ctrl_ocfs)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_sgls(__le32 ctrl_sgls)
+static void stdout_id_ctrl_sgls(__u32 sgls, bool human)
 {
-	__u32 sgls = le32_to_cpu(ctrl_sgls);
 	__u32 rsvd0 = (sgls & 0xFFC00000) >> 22;
 	__u32 trsdbd = (sgls & 0x200000) >> 21;
 	__u32 aofdsl = (sgls & 0x100000) >> 20;
@@ -2883,6 +3186,11 @@ static void stdout_id_ctrl_sgls(__le32 ctrl_sgls)
 	__u32 rsvd1 = (sgls & 0xF8) >> 3;
 	__u32 key = (sgls & 0x4) >> 2;
 	__u32 sglsp = sgls & 0x3;
+
+	stdout_id_ctrl_field("sgls", "%#x", sgls);
+
+	if (!human)
+		return;
 
 	if (rsvd0)
 		printf(" [31:22]: %#x\tReserved\n", rsvd0);
@@ -2924,12 +3232,17 @@ static void stdout_id_ctrl_sgls(__le32 ctrl_sgls)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_trattr(__u8 ctrl_trattr)
+static void stdout_id_ctrl_trattr(__u8 trattr, bool human)
 {
-	__u8 rsvd3 = (ctrl_trattr >> 3);
-	__u8 mrtll = NVME_CTRL_TRATTR_MRTLL(ctrl_trattr);
-	__u8 tudcs = NVME_CTRL_TRATTR_TUDCS(ctrl_trattr);
-	__u8 thmcs = NVME_CTRL_TRATTR_THMCS(ctrl_trattr);
+	__u8 rsvd3 = (trattr >> 3);
+	__u8 mrtll = NVME_CTRL_TRATTR_MRTLL(trattr);
+	__u8 tudcs = NVME_CTRL_TRATTR_TUDCS(trattr);
+	__u8 thmcs = NVME_CTRL_TRATTR_THMCS(trattr);
+
+	stdout_id_ctrl_field("trattr", "%d", trattr);
+
+	if (!human)
+		return;
 
 	if (rsvd3)
 		printf(" [7:3] : %#x\tReserved\n", rsvd3);
@@ -2942,10 +3255,15 @@ static void stdout_id_ctrl_trattr(__u8 ctrl_trattr)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_fcatt(__u8 fcatt)
+static void stdout_id_ctrl_fcatt(__u8 fcatt, bool human)
 {
 	__u8 rsvd = (fcatt & 0xFE) >> 1;
 	__u8 scm = fcatt & 0x1;
+
+	stdout_id_ctrl_field("fcatt", "%#x", fcatt);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:1] : %#x\tReserved\n", rsvd);
@@ -2954,10 +3272,15 @@ static void stdout_id_ctrl_fcatt(__u8 fcatt)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_ofcs(__le16 ofcs)
+static void stdout_id_ctrl_ofcs(__u16 ofcs, bool human)
 {
 	__u16 rsvd = (ofcs & 0xfffe) >> 1;
 	__u8 disconn = ofcs & 0x1;
+
+	stdout_id_ctrl_field("ofcs", "%d", ofcs);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [15:1] : %#x\tReserved\n", rsvd);
@@ -2967,11 +3290,16 @@ static void stdout_id_ctrl_ofcs(__le16 ofcs)
 
 }
 
-static void stdout_id_ctrl_dctype(__u8 dctype)
+static void stdout_id_ctrl_dctype(__u8 dctype, bool human)
 {
 	__u8 rsvd = (dctype & 0xFC) >> 2;
 	__u8 dctype_val = dctype & 0x3;
 	char *dctype_str;
+
+	stdout_id_ctrl_field("dctype", "%d", dctype);
+
+	if (!human)
+		return;
 
 	if (rsvd)
 		printf("  [7:3] : %#x\tReserved\n", rsvd);
@@ -3607,237 +3935,140 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 		printf("%s\n\n", product_name);
 
 	printf("NVME Identify Controller:\n");
-	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
-	printf("ssvid     : %#x\n", le16_to_cpu(ctrl->ssvid));
-	printf("sn        : %-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
-	printf("mn        : %-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
-	printf("fr        : %-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
-	printf("rab       : %d\n", ctrl->rab);
-	printf("ieee      : %02x%02x%02x\n",
-		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
-	printf("cmic      : %#x\n", ctrl->cmic);
-	if (human)
-		stdout_id_ctrl_cmic(ctrl->cmic);
-	printf("mdts      : %d\n", ctrl->mdts);
-	printf("cntlid    : %#x\n", le16_to_cpu(ctrl->cntlid));
-	printf("ver       : %#x\n", le32_to_cpu(ctrl->ver));
-	printf("rtd3r     : %#x\n", le32_to_cpu(ctrl->rtd3r));
-	printf("rtd3e     : %#x\n", le32_to_cpu(ctrl->rtd3e));
-	printf("oaes      : %#x\n", le32_to_cpu(ctrl->oaes));
-	if (human)
-		stdout_id_ctrl_oaes(ctrl->oaes);
-	printf("ctratt    : %#x\n", le32_to_cpu(ctrl->ctratt));
-	if (human)
-		stdout_id_ctrl_ctratt(ctrl->ctratt);
-	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
-	printf("bpcap     : %#x\n", le16_to_cpu(ctrl->bpcap));
-	if (human)
-		stdout_id_ctrl_bpcap(ctrl->bpcap);
-	printf("chsi      : %#x\n", ctrl->chsi);
-	if (human)
-		stdout_id_ctrl_chsi(ctrl->chsi);
-	printf("nssl      : %#x\n", le32_to_cpu(ctrl->nssl));
-	printf("plsi      : %u\n", ctrl->plsi);
-	if (human)
-		stdout_id_ctrl_plsi(ctrl->plsi);
-	printf("cntrltype : %d\n", ctrl->cntrltype);
-	if (human)
-		stdout_id_ctrl_cntrltype(ctrl->cntrltype);
-	printf("fguid     : %s\n", shr_uuid_to_string(ctrl->fguid));
-	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
-	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
-	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
-	printf("crcap     : %u\n", ctrl->crcap);
-	if (human)
-		stdout_id_ctrl_crcap(ctrl->crcap);
-	printf("nvmsr     : %u\n", ctrl->nvmsr);
-	if (human)
-		stdout_id_ctrl_nvmsr(ctrl->nvmsr);
-	printf("vwci      : %u\n", ctrl->vwci);
-	if (human)
-		stdout_id_ctrl_vwci(ctrl->vwci);
-	printf("mec       : %u\n", ctrl->mec);
-	if (human)
-		stdout_id_ctrl_mec(ctrl->mec);
-
-	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
-	if (human)
-		stdout_id_ctrl_oacs(ctrl->oacs);
-	printf("acl       : %d\n", ctrl->acl);
-	printf("aerl      : %d\n", ctrl->aerl);
-	printf("frmw      : %#x\n", ctrl->frmw);
-	if (human)
-		stdout_id_ctrl_frmw(ctrl->frmw);
-	printf("lpa       : %#x\n", ctrl->lpa);
-	if (human)
-		stdout_id_ctrl_lpa(ctrl->lpa);
-	printf("elpe      : %d\n", ctrl->elpe);
-	if (human)
-		stdout_id_ctrl_elpe(ctrl->elpe);
-	printf("npss      : %d\n", ctrl->npss);
-	if (human)
-		stdout_id_ctrl_npss(ctrl->npss);
-	printf("avscc     : %#x\n", ctrl->avscc);
-	if (human)
-		stdout_id_ctrl_avscc(ctrl->avscc);
-	printf("apsta     : %#x\n", ctrl->apsta);
-	if (human)
-		stdout_id_ctrl_apsta(ctrl->apsta);
-	printf("wctemp    : %d\n", le16_to_cpu(ctrl->wctemp));
-	if (human)
-		stdout_id_ctrl_wctemp(ctrl->wctemp);
-	printf("cctemp    : %d\n", le16_to_cpu(ctrl->cctemp));
-	if (human)
-		stdout_id_ctrl_cctemp(ctrl->cctemp);
-	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
-	printf("hmpre     : %u\n", le32_to_cpu(ctrl->hmpre));
-	printf("hmmin     : %u\n", le32_to_cpu(ctrl->hmmin));
-	printf("tnvmcap   : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->tnvmcap)));
-	if (human)
-		stdout_id_ctrl_tnvmcap(ctrl->tnvmcap);
-	printf("unvmcap   : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->unvmcap)));
-	if (human)
-		stdout_id_ctrl_unvmcap(ctrl->unvmcap);
-	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
-	if (human)
-		stdout_id_ctrl_rpmbs(ctrl->rpmbs);
-	printf("edstt     : %d\n", le16_to_cpu(ctrl->edstt));
-	printf("dsto      : %d\n", ctrl->dsto);
-	if (human)
-		stdout_id_ctrl_dsto(ctrl->dsto);
-	printf("fwug      : %d\n", ctrl->fwug);
-	printf("kas       : %d\n", le16_to_cpu(ctrl->kas));
-	printf("hctma     : %#x\n", le16_to_cpu(ctrl->hctma));
-	if (human)
-		stdout_id_ctrl_hctma(ctrl->hctma);
-	printf("mntmt     : %d\n", le16_to_cpu(ctrl->mntmt));
-	if (human)
-		stdout_id_ctrl_mntmt(ctrl->mntmt);
-	printf("mxtmt     : %d\n", le16_to_cpu(ctrl->mxtmt));
-	if (human)
-		stdout_id_ctrl_mxtmt(ctrl->mxtmt);
-	printf("sanicap   : %#x\n", le32_to_cpu(ctrl->sanicap));
-	if (human)
-		stdout_id_ctrl_sanicap(ctrl->sanicap);
-	printf("hmminds   : %u\n", le32_to_cpu(ctrl->hmminds));
-	printf("hmmaxd    : %d\n", le16_to_cpu(ctrl->hmmaxd));
-	printf("nsetidmax : %d\n", le16_to_cpu(ctrl->nsetidmax));
-	printf("endgidmax : %d\n", le16_to_cpu(ctrl->endgidmax));
-	printf("anatt     : %d\n", ctrl->anatt);
-	printf("anacap    : %d\n", ctrl->anacap);
-	if (human)
-		stdout_id_ctrl_anacap(ctrl->anacap);
-	printf("anagrpmax : %u\n", ctrl->anagrpmax);
-	printf("nanagrpid : %u\n", le32_to_cpu(ctrl->nanagrpid));
-	printf("pels      : %u\n", le32_to_cpu(ctrl->pels));
-	printf("domainid  : %d\n", le16_to_cpu(ctrl->domainid));
-	printf("kpioc     : %u\n", ctrl->kpioc);
-	if (human)
-		stdout_id_ctrl_kpioc(ctrl->kpioc);
-	printf("mptfawr   : %d\n", le16_to_cpu(ctrl->mptfawr));
-	printf("rmdca     : %#x\n", ctrl->rmdca);
-	if (human)
-		stdout_id_ctrl_rmdca(ctrl->rmdca);
-	printf("megcap    : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
-	printf("tmpthha   : %#x\n", ctrl->tmpthha);
-	if (human)
-		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
-	printf("cqt       : %d\n", le16_to_cpu(ctrl->cqt));
-	printf("cdpa      : %d\n", le16_to_cpu(ctrl->cdpa));
-	if (human)
-		stdout_id_ctrl_cdpa(ctrl->cdpa);
-	printf("mup       : %d\n", le16_to_cpu(ctrl->mup));
-	printf("ipmsr     : %#x\n", le16_to_cpu(ctrl->ipmsr));
-	if (human)
-		stdout_id_ctrl_ipmsr(ctrl->ipmsr);
-	printf("msmt      : %#x\n", le16_to_cpu(ctrl->msmt));
+	stdout_id_ctrl_field("vid", "%#x", le16_to_cpu(ctrl->vid));
+	stdout_id_ctrl_field("ssvid", "%#x", le16_to_cpu(ctrl->ssvid));
+	stdout_id_ctrl_field("sn", "%-.*s", (int)sizeof(ctrl->sn), ctrl->sn);
+	stdout_id_ctrl_field("mn", "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
+	stdout_id_ctrl_field("fr", "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
+	stdout_id_ctrl_field("rab", "%d", ctrl->rab);
+	stdout_id_ctrl_field("ieee", "%02x%02x%02x", ctrl->ieee[2],
+			     ctrl->ieee[1], ctrl->ieee[0]);
+	stdout_id_ctrl_cmic(ctrl->cmic, human);
+	stdout_id_ctrl_field("mdts", "%d", ctrl->mdts);
+	stdout_id_ctrl_field("cntlid", "%#x", le16_to_cpu(ctrl->cntlid));
+	stdout_id_ctrl_field("ver", "%#x", le32_to_cpu(ctrl->ver));
+	stdout_id_ctrl_field("rtd3r", "%#x", le32_to_cpu(ctrl->rtd3r));
+	stdout_id_ctrl_field("rtd3e", "%#x", le32_to_cpu(ctrl->rtd3e));
+	stdout_id_ctrl_oaes(le32_to_cpu(ctrl->oaes), human);
+	stdout_id_ctrl_ctratt(le32_to_cpu(ctrl->ctratt), human);
+	stdout_id_ctrl_field("rrls", "%#x", le16_to_cpu(ctrl->rrls));
+	stdout_id_ctrl_bpcap(ctrl->bpcap, human);
+	stdout_id_ctrl_chsi(ctrl->chsi, human);
+	stdout_id_ctrl_field("nssl", "%#x", le32_to_cpu(ctrl->nssl));
+	stdout_id_ctrl_plsi(ctrl->plsi, human);
+	stdout_id_ctrl_cntrltype(ctrl->cntrltype, human);
+	stdout_id_ctrl_field("fguid", "%s", shr_uuid_to_string(ctrl->fguid));
+	stdout_id_ctrl_field("crdt1", "%u", le16_to_cpu(ctrl->crdt1));
+	stdout_id_ctrl_field("crdt2", "%u", le16_to_cpu(ctrl->crdt2));
+	stdout_id_ctrl_field("crdt3", "%u", le16_to_cpu(ctrl->crdt3));
+	stdout_id_ctrl_crcap(ctrl->crcap, human);
+	stdout_id_ctrl_field("ciu", "%u", ctrl->ciu);
+	stdout_id_ctrl_field("cirn", "%"PRIu64"",
+			     le64_to_cpu(*(__le64 *)ctrl->cirn));
+	stdout_id_ctrl_nvmsr(ctrl->nvmsr, human);
+	stdout_id_ctrl_vwci(ctrl->vwci, human);
+	stdout_id_ctrl_mec(ctrl->mec, human);
+	stdout_id_ctrl_oacs(le16_to_cpu(ctrl->oacs), human);
+	stdout_id_ctrl_field("acl", "%d", ctrl->acl);
+	stdout_id_ctrl_field("aerl", "%d", ctrl->aerl);
+	stdout_id_ctrl_frmw(ctrl->frmw, human);
+	stdout_id_ctrl_lpa(ctrl->lpa, human);
+	stdout_id_ctrl_elpe(ctrl->elpe, human);
+	stdout_id_ctrl_npss(ctrl->npss, human);
+	stdout_id_ctrl_avscc(ctrl->avscc, human);
+	stdout_id_ctrl_apsta(ctrl->apsta, human);
+	stdout_id_ctrl_wctemp(le16_to_cpu(ctrl->wctemp), human);
+	stdout_id_ctrl_cctemp(le16_to_cpu(ctrl->cctemp), human);
+	stdout_id_ctrl_field("mtfa", "%d", le16_to_cpu(ctrl->mtfa));
+	stdout_id_ctrl_field("hmpre", "%u", le32_to_cpu(ctrl->hmpre));
+	stdout_id_ctrl_field("hmmin", "%u", le32_to_cpu(ctrl->hmmin));
+	stdout_id_ctrl_tnvmcap(le128_to_cpu(ctrl->tnvmcap), human);
+	stdout_id_ctrl_unvmcap(le128_to_cpu(ctrl->unvmcap), human);
+	stdout_id_ctrl_rpmbs(le32_to_cpu(ctrl->rpmbs), human);
+	stdout_id_ctrl_field("edstt", "%d", le16_to_cpu(ctrl->edstt));
+	stdout_id_ctrl_dsto(ctrl->dsto, human);
+	stdout_id_ctrl_field("fwug", "%d", ctrl->fwug);
+	stdout_id_ctrl_field("kas", "%d", le16_to_cpu(ctrl->kas));
+	stdout_id_ctrl_hctma(le16_to_cpu(ctrl->hctma), human);
+	stdout_id_ctrl_mntmt(le16_to_cpu(ctrl->mntmt), human);
+	stdout_id_ctrl_mxtmt(le16_to_cpu(ctrl->mxtmt), human);
+	stdout_id_ctrl_sanicap(le32_to_cpu(ctrl->sanicap), human);
+	stdout_id_ctrl_field("hmminds", "%u", le32_to_cpu(ctrl->hmminds));
+	stdout_id_ctrl_field("hmmaxd", "%d", le16_to_cpu(ctrl->hmmaxd));
+	stdout_id_ctrl_field("nsetidmax", "%d", le16_to_cpu(ctrl->nsetidmax));
+	stdout_id_ctrl_field("endgidmax", "%d", le16_to_cpu(ctrl->endgidmax));
+	stdout_id_ctrl_field("anatt", "%d", ctrl->anatt);
+	stdout_id_ctrl_anacap(ctrl->anacap, human);
+	stdout_id_ctrl_field("anagrpmax", "%u", ctrl->anagrpmax);
+	stdout_id_ctrl_field("nanagrpid", "%u", le32_to_cpu(ctrl->nanagrpid));
+	stdout_id_ctrl_field("pels", "%u", le32_to_cpu(ctrl->pels));
+	stdout_id_ctrl_field("domainid", "%d", le16_to_cpu(ctrl->domainid));
+	stdout_id_ctrl_kpioc(ctrl->kpioc, human);
+	stdout_id_ctrl_field("mptfawr", "%d", le16_to_cpu(ctrl->mptfawr));
+	stdout_id_ctrl_rmdca(ctrl->rmdca, human);
+	stdout_id_ctrl_field("megcap", "%s",
+	    uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
+	stdout_id_ctrl_tmpthha(ctrl->tmpthha, human);
+	stdout_id_ctrl_mupa(ctrl->mupa, human);
+	stdout_id_ctrl_field("cqt", "%d", le16_to_cpu(ctrl->cqt));
+	stdout_id_ctrl_cdpa(le16_to_cpu(ctrl->cdpa), human);
+	stdout_id_ctrl_field("mup", "%d", le16_to_cpu(ctrl->mup));
+	stdout_id_ctrl_ipmsr(le16_to_cpu(ctrl->ipmsr), human);
+	stdout_id_ctrl_field("msmt", "%#x", le16_to_cpu(ctrl->msmt));
+	stdout_id_ctrl_field("mnens", "%u", le16_to_cpu(ctrl->mnens));
+	stdout_id_ctrl_field("mnecpens", "%u", le16_to_cpu(ctrl->mnecpens));
+	stdout_id_ctrl_field("mensnn", "%u", le32_to_cpu(ctrl->mensnn));
+	stdout_id_ctrl_ensa(ctrl->ensa, human);
+	stdout_id_ctrl_endsfs(ctrl->endsfs, human);
 	if (NVME_CTRL_CTRATT_VMS(le32_to_cpu(ctrl->ctratt))) {
-		printf("vsen1     : %#x\n", le32_to_cpu(ctrl->vsen1));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen1);
-		printf("vsen2     : %#x\n", le32_to_cpu(ctrl->vsen2));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen2);
-		printf("vsen3     : %#x\n", le32_to_cpu(ctrl->vsen3));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen3);
-		printf("vsen4     : %#x\n", le32_to_cpu(ctrl->vsen4));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen4);
-		printf("msvmt     : %u\n", le16_to_cpu(ctrl->msvmt));
+		stdout_id_ctrl_vsen("vsen1", le32_to_cpu(ctrl->vsen1), human);
+		stdout_id_ctrl_vsen("vsen2", le32_to_cpu(ctrl->vsen2), human);
+		stdout_id_ctrl_vsen("vsen3", le32_to_cpu(ctrl->vsen3), human);
+		stdout_id_ctrl_vsen("vsen4", le32_to_cpu(ctrl->vsen4), human);
+		stdout_id_ctrl_field("msvmt", "%u", le16_to_cpu(ctrl->msvmt));
 	}
-	printf("sqes      : %#x\n", ctrl->sqes);
-	if (human)
-		stdout_id_ctrl_sqes(ctrl->sqes);
-	printf("cqes      : %#x\n", ctrl->cqes);
-	if (human)
-		stdout_id_ctrl_cqes(ctrl->cqes);
-	printf("maxcmd    : %d\n", le16_to_cpu(ctrl->maxcmd));
-	printf("nn        : %u\n", le32_to_cpu(ctrl->nn));
-	printf("oncs      : %#x\n", le16_to_cpu(ctrl->oncs));
-	if (human)
-		stdout_id_ctrl_oncs(ctrl->oncs);
-	printf("fuses     : %#x\n", le16_to_cpu(ctrl->fuses));
-	if (human)
-		stdout_id_ctrl_fuses(ctrl->fuses);
-	printf("fna       : %#x\n", ctrl->fna);
-	if (human)
-		stdout_id_ctrl_fna(ctrl->fna);
-	printf("vwc       : %#x\n", ctrl->vwc);
-	if (human)
-		stdout_id_ctrl_vwc(ctrl->vwc);
-	printf("awun      : %d\n", le16_to_cpu(ctrl->awun));
-	printf("awupf     : %d\n", le16_to_cpu(ctrl->awupf));
-	printf("icsvscc   : %d\n", ctrl->icsvscc);
-	if (human)
-		stdout_id_ctrl_icsvscc(ctrl->icsvscc);
-	printf("nwpc      : %d\n", ctrl->nwpc);
-	if (human)
-		stdout_id_ctrl_nwpc(ctrl->nwpc);
-	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
-	printf("ocfs      : %#x\n", le16_to_cpu(ctrl->ocfs));
-	if (human)
-		stdout_id_ctrl_ocfs(ctrl->ocfs);
-	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
-	if (human)
-		stdout_id_ctrl_sgls(ctrl->sgls);
-	printf("mnan      : %u\n", le32_to_cpu(ctrl->mnan));
-	printf("maxdna    : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->maxdna)));
-	printf("maxcna    : %u\n", le32_to_cpu(ctrl->maxcna));
-	printf("oaqd      : %u\n", le32_to_cpu(ctrl->oaqd));
-	printf("rhiri     : %d\n", ctrl->rhiri);
-	printf("hirt      : %d\n", ctrl->hirt);
-	printf("cmmrtd    : %d\n", le16_to_cpu(ctrl->cmmrtd));
-	printf("nmmrtd    : %d\n", le16_to_cpu(ctrl->nmmrtd));
-	printf("minmrtg   : %d\n", ctrl->minmrtg);
-	printf("maxmrtg   : %d\n", ctrl->maxmrtg);
-	printf("trattr    : %d\n", ctrl->trattr);
-	if (human)
-		stdout_id_ctrl_trattr(ctrl->trattr);
-	printf("mcudmq    : %d\n", le16_to_cpu(ctrl->mcudmq));
-	printf("mnsudmq   : %d\n", le16_to_cpu(ctrl->mnsudmq));
-	printf("mcmr      : %d\n", le16_to_cpu(ctrl->mcmr));
-	printf("nmcmr     : %d\n", le16_to_cpu(ctrl->nmcmr));
-	printf("mcdqpc    : %d\n", le16_to_cpu(ctrl->mcdqpc));
-	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
-	printf("ioccsz    : %u\n", le32_to_cpu(ctrl->ioccsz));
-	printf("iorcsz    : %u\n", le32_to_cpu(ctrl->iorcsz));
-	printf("icdoff    : %d\n", le16_to_cpu(ctrl->icdoff));
-	printf("fcatt     : %#x\n", ctrl->fcatt);
-	if (human)
-		stdout_id_ctrl_fcatt(ctrl->fcatt);
-	printf("msdbd     : %d\n", ctrl->msdbd);
-	printf("ofcs      : %d\n", le16_to_cpu(ctrl->ofcs));
-	if (human)
-		stdout_id_ctrl_ofcs(ctrl->ofcs);
-	printf("dctype    : %d\n", ctrl->dctype);
-	if (human)
-		stdout_id_ctrl_dctype(ctrl->dctype);
-	printf("ccrl      : %d\n", ctrl->ccrl);
+	stdout_id_ctrl_sqes(ctrl->sqes, human);
+	stdout_id_ctrl_cqes(ctrl->cqes, human);
+	stdout_id_ctrl_field("maxcmd", "%d", le16_to_cpu(ctrl->maxcmd));
+	stdout_id_ctrl_field("nn", "%u", le32_to_cpu(ctrl->nn));
+	stdout_id_ctrl_oncs(le16_to_cpu(ctrl->oncs), human);
+	stdout_id_ctrl_fuses(le16_to_cpu(ctrl->fuses), human);
+	stdout_id_ctrl_fna(ctrl->fna, human);
+	stdout_id_ctrl_vwc(ctrl->vwc, human);
+	stdout_id_ctrl_field("awun", "%d", le16_to_cpu(ctrl->awun));
+	stdout_id_ctrl_field("awupf", "%d", le16_to_cpu(ctrl->awupf));
+	stdout_id_ctrl_icsvscc(ctrl->icsvscc, human);
+	stdout_id_ctrl_nwpc(ctrl->nwpc, human);
+	stdout_id_ctrl_field("acwu", "%d", le16_to_cpu(ctrl->acwu));
+	stdout_id_ctrl_ocfs(le16_to_cpu(ctrl->ocfs), human);
+	stdout_id_ctrl_sgls(le32_to_cpu(ctrl->sgls), human);
+	stdout_id_ctrl_field("mnan", "%u", le32_to_cpu(ctrl->mnan));
+	stdout_id_ctrl_field("maxdna", "%s",
+	    uint128_t_to_l10n_string(le128_to_cpu(ctrl->maxdna)));
+	stdout_id_ctrl_field("maxcna", "%u", le32_to_cpu(ctrl->maxcna));
+	stdout_id_ctrl_field("oaqd", "%u", le32_to_cpu(ctrl->oaqd));
+	stdout_id_ctrl_field("rhiri", "%d", ctrl->rhiri);
+	stdout_id_ctrl_field("hirt", "%d", ctrl->hirt);
+	stdout_id_ctrl_field("cmmrtd", "%d", le16_to_cpu(ctrl->cmmrtd));
+	stdout_id_ctrl_field("nmmrtd", "%d", le16_to_cpu(ctrl->nmmrtd));
+	stdout_id_ctrl_field("minmrtg", "%d", ctrl->minmrtg);
+	stdout_id_ctrl_field("maxmrtg", "%d", ctrl->maxmrtg);
+	stdout_id_ctrl_trattr(ctrl->trattr, human);
+	stdout_id_ctrl_field("mcudmq", "%d", le16_to_cpu(ctrl->mcudmq));
+	stdout_id_ctrl_field("mnsudmq", "%d", le16_to_cpu(ctrl->mnsudmq));
+	stdout_id_ctrl_field("mcmr", "%d", le16_to_cpu(ctrl->mcmr));
+	stdout_id_ctrl_field("nmcmr", "%d", le16_to_cpu(ctrl->nmcmr));
+	stdout_id_ctrl_field("mcdqpc", "%d", le16_to_cpu(ctrl->mcdqpc));
+	stdout_id_ctrl_field("subnqn", "%-.*s", (int)sizeof(ctrl->subnqn),
+			     ctrl->subnqn);
+	stdout_id_ctrl_field("ioccsz", "%u", le32_to_cpu(ctrl->ioccsz));
+	stdout_id_ctrl_field("iorcsz", "%u", le32_to_cpu(ctrl->iorcsz));
+	stdout_id_ctrl_field("icdoff", "%d", le16_to_cpu(ctrl->icdoff));
+	stdout_id_ctrl_fcatt(ctrl->fcatt, human);
+	stdout_id_ctrl_field("msdbd", "%d", ctrl->msdbd);
+	stdout_id_ctrl_ofcs(le16_to_cpu(ctrl->ofcs), human);
+	stdout_id_ctrl_dctype(ctrl->dctype, human);
+	stdout_id_ctrl_field("ccrl", "%d", ctrl->ccrl);
 
 	stdout_id_ctrl_power(ctrl);
 	if (vendor_show)
@@ -7454,7 +7685,7 @@ static struct print_ops stdout_print_ops = {
 	.zns_report_zones		= stdout_zns_report_zones,
 	.show_feature			= stdout_feature_show,
 	.show_feature_fields		= stdout_feature_show_fields,
-	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
+	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs_human,
 	.lba_range			= stdout_lba_range,
 	.lba_status_info		= stdout_lba_status_info,
 	.d				= stdout_d,

@@ -187,7 +187,7 @@ struct print_ops {
 	void (*show_feature)(enum nvme_features_id fid, int sel,
 			     unsigned int result, void *buf, __u32 data_len);
 	void (*show_feature_fields)(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
-	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
+	void (*id_ctrl_rpmbs)(__u32 ctrl_rpmbs);
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
 	void (*lba_status_info)(__u64 result);
 	void (*d)(unsigned char *buf, int len, int width, int group);

@@ -437,6 +437,8 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	obj_add_int(r, "crdt2", le16_to_cpu(ctrl->crdt2));
 	obj_add_int(r, "crdt3", le16_to_cpu(ctrl->crdt3));
 	obj_add_int(r, "crcap", ctrl->crcap);
+	obj_add_int(r, "ciu", ctrl->ciu);
+	obj_add_uint64(r, "cirn", le64_to_cpu(*(__le64 *)ctrl->cirn));
 	obj_add_int(r, "nvmsr", ctrl->nvmsr);
 	obj_add_int(r, "vwci", ctrl->vwci);
 	obj_add_int(r, "mec", ctrl->mec);
@@ -479,11 +481,17 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	obj_add_int(r, "mptfawr", le16_to_cpu(ctrl->mptfawr));
 	obj_add_uint128(r, "megcap", megcap);
 	obj_add_int(r, "tmpthha", ctrl->tmpthha);
+	obj_add_int(r, "mupa", ctrl->mupa);
 	obj_add_int(r, "cqt", le16_to_cpu(ctrl->cqt));
 	obj_add_int(r, "cdpa", le16_to_cpu(ctrl->cdpa));
 	obj_add_int(r, "mup", le16_to_cpu(ctrl->mup));
 	obj_add_int(r, "ipmsr", le16_to_cpu(ctrl->ipmsr));
 	obj_add_int(r, "msmt", le16_to_cpu(ctrl->msmt));
+	obj_add_int(r, "mnens", le16_to_cpu(ctrl->mnens));
+	obj_add_int(r, "mnecpens", le16_to_cpu(ctrl->mnecpens));
+	obj_add_uint(r, "mensnn", le32_to_cpu(ctrl->mensnn));
+	obj_add_int(r, "ensa", le16_to_cpu(ctrl->ensa));
+	obj_add_int(r, "endsfs", le16_to_cpu(ctrl->endsfs));
 	obj_add_uint(r, "vsen1", le32_to_cpu(ctrl->vsen1));
 	obj_add_uint(r, "vsen2", le32_to_cpu(ctrl->vsen2));
 	obj_add_uint(r, "vsen3", le32_to_cpu(ctrl->vsen3));
@@ -4460,7 +4468,7 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 	obj_print(r);
 }
 
-void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+static void json_id_ctrl_rpmbs(__u32 ctrl_rpmbs)
 {
 	struct json_object *r = json_r;
 	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
