@@ -4468,7 +4468,7 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 	obj_print(r);
 }
 
-void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+static void json_id_ctrl_rpmbs(__u32 ctrl_rpmbs)
 {
 	struct json_object *r = json_r;
 	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);

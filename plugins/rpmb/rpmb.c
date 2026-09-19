@@ -784,7 +784,7 @@ static int rpmb_info(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	nvme_show_id_ctrl_rpmbs(regs.rpmbs, 0);
+	nvme_show_id_ctrl_rpmbs(le32_to_cpu(regs.rpmbs), 0);
 
 	return 0;
 }
