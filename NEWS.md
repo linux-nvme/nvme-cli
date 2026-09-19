@@ -96,6 +96,10 @@
   `libnvmf_kernel_options_for_each()` report the fabrics options the
   kernel lists in `/dev/nvme-fabrics`.
 
+* The API name `NVME_CTRL_MEC_SMBUSME` changed to `NVME_CTRL_MEC_TWPME`.
+  Since the identify controller data structure MEC field bit name was
+  changed by the spec then the API name followed this.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

@@ -2318,15 +2318,26 @@ enum nvme_id_ctrl_vwci {
 /**
  * enum nvme_id_ctrl_mec - Flags indicating the capabilities of the Management
  *			   Endpoint in the Controller, &struct nvme_id_ctrl.mec.
- * @NVME_CTRL_MEC_SMBUSME: If set, then the NVM Subsystem contains a Management
- *			   Endpoint on an SMBus/I2C port.
- * @NVME_CTRL_MEC_PCIEME:  If set, then the NVM Subsystem contains a Management
- *			   Endpoint on a PCIe port.
+ * @NVME_CTRL_MEC_TWPME_SHIFT: TWPME shift
+ * @NVME_CTRL_MEC_PCIEME_SHIFT: PCIEME shift
+ * @NVME_CTRL_MEC_TWPME_MASK: TWPME mask
+ * @NVME_CTRL_MEC_PCIEME_MASK: PCIEME mask
+ * @NVME_CTRL_MEC_TWPME: If set, then the NVM Subsystem one or more Management
+ *			 Endpoints on the 2-Wire port.
+ * @NVME_CTRL_MEC_PCIEME: If set, then the NVM Subsystem contains one or more
+ *			  Management Endpoints on one or more PCIe ports.
  */
 enum nvme_id_ctrl_mec {
-	NVME_CTRL_MEC_SMBUSME			= 1 << 0,
-	NVME_CTRL_MEC_PCIEME			= 1 << 1,
+	NVME_CTRL_MEC_TWPME_SHIFT		= 0,
+	NVME_CTRL_MEC_PCIEME_SHIFT		= 1,
+	NVME_CTRL_MEC_TWPME_MASK		= 0x1,
+	NVME_CTRL_MEC_PCIEME_MASK		= 0x1,
+	NVME_CTRL_MEC_TWPME			= NVME_VAL(CTRL_MEC_TWPME),
+	NVME_CTRL_MEC_PCIEME			= NVME_VAL(CTRL_MEC_PCIEME),
 };
+
+#define NVME_CTRL_MEC_TWPME(mec)	NVME_GET(mec, CTRL_MEC_TWPME)
+#define NVME_CTRL_MEC_PCIEME(mec)	NVME_GET(mec, CTRL_MEC_PCIEME)
 
 /**
  * enum nvme_id_ctrl_oacs - Flags indicating the optional Admin commands and
