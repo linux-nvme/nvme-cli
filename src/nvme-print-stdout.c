@@ -3248,8 +3248,8 @@ static struct shr_table *stdout_id_ctrl_bpcap_table(__u8 ctrl_bpcap)
 {
 	struct shr_table *t;
 	__u8 rsvd3 = (ctrl_bpcap >> 3);
-	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_SFBPWPS);
-	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_RPMBBPWPS);
+	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_SFBPWPS);
+	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_RPMBBPWPS);
 	static const char * const rpmbbpwps_def[] = {
 		"Support Not Specified",
 		"Not Supported",

@@ -2156,34 +2156,45 @@ enum nvme_id_ctrl_ctratt {
 
 /**
  * enum nvme_id_ctrl_bpcap - Boot Partition Capabilities
- * @NVME_CTRL_BACAP_RPMBBPWPS_SHIFT:		Shift amount to get the RPMB Boot Partition Write
- *						Protection Support from the &struct
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_SHIFT:		Shift amount to get the RPMB
+ *						Boot Partition Write Protection
+ *						Support from the &struct
  *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_SFBPWPS_SHIFT:		Shift amount to get the Set Features Boot Partition
- *						Write Protection Support from the &struct
+ * @NVME_CTRL_BPCAP_SFBPWPS_SHIFT:		Shift amount to get the Set
+ *						Features Boot Partition Write
+ *						Protection Support from the
+ *						&struct nvme_id_ctrl.bpcap
+ *						field.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_MASK:		Mask to get the RPMB Boot
+ *						Partition Write Protection
+ *						Support from the &struct
  *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_RPMBBPWPS_MASK:		Mask to get the RPMB Boot Partition Write
- *						Protection Support from the &struct
+ * @NVME_CTRL_BPCAP_SFBPWPS_MASK:		Mask to get the Set Features
+ *						Boot Partition Write Protection
+ *						Support from the &struct
  *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_SFBPWPS_MASK:		Mask to get the Set Features Boot Partition Write
- *						Protection Support from the &struct
- *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_RPMBBPWPS_NOT_SPECIFIED:	Support for RPMB Boot Partition Write Protection
- *						is not specified.
- * @NVME_CTRL_BACAP_RPMBBPWPS_NOT_SUPPORTED:	RPMB Boot Partition Write Protection is not
- *						supported by this controller.
- * @NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED:	RPMB Boot Partition Write Protection is supported
- *						by this controller.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SPECIFIED:	Support for RPMB Boot Partition
+ *						Write Protection is not
+ *						specified.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SUPPORTED:	RPMB Boot Partition Write
+ *						Protection is not supported by
+ *						this controller.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_SUPPORTED:	RPMB Boot Partition Write
+ *						Protection is supported by this
+ *						controller.
  */
 enum nvme_id_ctrl_bpcap {
-	NVME_CTRL_BACAP_RPMBBPWPS_SHIFT		= 0,
-	NVME_CTRL_BACAP_SFBPWPS_SHIFT		= 2,
-	NVME_CTRL_BACAP_RPMBBPWPS_MASK		= 0x3,
-	NVME_CTRL_BACAP_SFBPWPS_MASK		= 0x1,
-	NVME_CTRL_BACAP_RPMBBPWPS_NOT_SPECIFIED	= 0,
-	NVME_CTRL_BACAP_RPMBBPWPS_NOT_SUPPORTED	= 1,
-	NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED	= 2,
+	NVME_CTRL_BPCAP_RPMBBPWPS_SHIFT		= 0,
+	NVME_CTRL_BPCAP_SFBPWPS_SHIFT		= 2,
+	NVME_CTRL_BPCAP_RPMBBPWPS_MASK		= 0x3,
+	NVME_CTRL_BPCAP_SFBPWPS_MASK		= 0x1,
+	NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SPECIFIED	= 0,
+	NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SUPPORTED	= 1,
+	NVME_CTRL_BPCAP_RPMBBPWPS_SUPPORTED	= 2,
 };
+
+#define NVME_CTRL_BPCAP_RPMBBPWPS(bpcap) NVME_GET(bpcap, CTRL_BPCAP_RPMBBPWPS)
+#define NVME_CTRL_BPCAP_SFBPWPS(bpcap)   NVME_GET(bpcap, CTRL_BPCAP_SFBPWPS)
 
 /**
  * enum nvme_id_ctrl_chsi - CXL HDM Support Information
@@ -2226,9 +2237,6 @@ enum nvme_id_ctrl_rmdca {
 #define NVME_CTRL_RMDCA_RDSCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDSCS)
 #define NVME_CTRL_RMDCA_RDNCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDNCS)
 #define NVME_CTRL_RMDCA_RDCCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDCCS)
-
-#define NVME_CTRL_BACAP_RPMBBPWPS(bpcap)	NVME_GET(bpcap, CTRL_BACAP_RPMBBPWPS)
-#define NVME_CTRL_BACAP_SFBPWPS(bpcap)		NVME_GET(bpcap, CTRL_BACAP_SFBPWPS)
 
 /**
  * enum nvme_id_ctrl_plsi - Power Loss Signaling Information
