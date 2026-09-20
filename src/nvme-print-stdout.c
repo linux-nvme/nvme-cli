@@ -3075,10 +3075,10 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	__u32 rsvd18 = (oaes >> 18) & 0x1;
 	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
 	__u32 tthr = NVME_CTRL_OAES_TTHR(oaes);
-	__u32 normal_shn = NVME_CTRL_OAES_NNVMSS(oaes);
-	__u32 egealpcn = NVME_CTRL_OAES_EGEALPCN(oaes);
-	__u32 lbasin = NVME_CTRL_OAES_LBASIAN(oaes);
-	__u32 plealcn = NVME_CTRL_OAES_PLEALCN(oaes);
+	__u32 normal_shn = NVME_CTRL_OAES_NNSS(oaes);
+	__u32 egealpcn = NVME_CTRL_OAES_EGEAN(oaes);
+	__u32 lbasin = NVME_CTRL_OAES_LSIAN(oaes);
+	__u32 plealcn = NVME_CTRL_OAES_PLEAN(oaes);
 	__u32 anacn = NVME_CTRL_OAES_ANACN(oaes);
 	__u32 rsvd10 = (oaes >> 10) & 0x1;
 	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
