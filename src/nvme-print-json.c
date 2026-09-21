@@ -845,7 +845,7 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 			 size_t len)
 {
-	int offset = sizeof(struct nvme_ana_log);
+	size_t offset = sizeof(struct nvme_ana_log);
 	struct nvme_ana_log *hdr = ana_log;
 	struct nvme_ana_group_desc *ana_desc;
 	struct json_object *desc_list = json_create_array();
@@ -863,10 +863,14 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	obj_add_uint(r, "ngrps", le16_to_cpu(hdr->ngrps));
 
 	for (i = 0; i < le16_to_cpu(ana_log->ngrps); i++) {
+		if (offset > len || len - offset < sizeof(*ana_desc))
+			break;
 		desc = json_create_object();
 		ana_desc = base + offset;
 		nr_nsids = le32_to_cpu(ana_desc->nnsids);
-		nsid_buf_size = nr_nsids * sizeof(__le32);
+		nsid_buf_size = (size_t)nr_nsids * sizeof(__le32);
+		if (len - offset - sizeof(*ana_desc) < nsid_buf_size)
+			break;
 
 		offset += sizeof(*ana_desc);
 		obj_add_uint(desc, "grpid", le32_to_cpu(ana_desc->grpid));
@@ -875,7 +879,7 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 		obj_add_str(desc, "state", nvme_ana_state_to_string(ana_desc->state));
 
 		ns_list = json_create_array();
-		for (j = 0; j < le32_to_cpu(ana_desc->nnsids); j++) {
+		for (j = 0; j < nr_nsids; j++) {
 			nsid = json_create_object();
 			obj_add_uint(nsid, "nsid", le32_to_cpu(ana_desc->nsids[j]));
 			array_add_obj(ns_list, nsid);
