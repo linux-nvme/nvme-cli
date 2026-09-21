@@ -110,6 +110,8 @@
 
 * The NVME_CTRL_LPA API bit field names changed to follow the spec.
 
+* The NVME_CTRL_AVSCC API bit field names changed to follow the spec.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
