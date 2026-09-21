@@ -8,6 +8,7 @@
 #pragma once
 
 #include <ifaddrs.h>
+#include <inttypes.h>
 #include <stdbool.h>
 
 /*
@@ -72,3 +73,18 @@ bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
  */
 int shr_route_get_egress_iface(const char *saddr, const char *daddr,
 		char *ifname, size_t iflen);
+
+/*
+ * shr_netdev_get_hw_queues - Get h/w queues details for a netdevice
+ *
+ * @ifname: Name of network interface
+ * @combined_count: combined h/w queue count
+ * @tx_count: tx queue count
+ * @rx_count: rx queue count
+ *
+ * Retrieves the NIC h/w queue details.
+ *
+ * Return: 0 on success and negative errno on failure.
+ */
+int shr_netdev_get_hw_queues(const char *ifname, uint32_t *combined_count,
+		uint32_t *tx_count, uint32_t *rx_count);
