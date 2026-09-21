@@ -17,6 +17,7 @@ SYNOPSIS
 			[--output-file=<file> | -f <file>]
 			[--data-area=<da> | -a <da>]
 			[--telemetry-type=<type> | -t <type>]
+			[--no-uuid | -n]
 
 DESCRIPTION
 -----------
@@ -64,6 +65,11 @@ OPTIONS
 	representing the internal state of the controller at the time the associated
 	Get Log Page command is processed. If set to host0, controller shall not
 	update this data.
+
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index when retrieving the OCP
+	String Log from <device> (default UUID index to 0).
 
 include::global-options.txt[]
 

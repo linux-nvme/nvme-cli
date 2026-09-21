@@ -30,12 +30,12 @@ static __u8 scao_guid[GUID_LEN] = {
 };
 
 static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
-			   unsigned int format_version)
+			   unsigned int format_version, bool uuid)
 {
 	struct ocp_smart_extended_log *data;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t fmt;
-	__u8 uidx;
+	__u8 uidx = 0;
 	int ret;
 	int i;
 
@@ -52,11 +52,13 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 	}
 	memset(data, 0, sizeof(*data));
 
-	ret = ocp_get_uuid_index(hdl, &uidx);
-	if (ret || !uidx) {
-		nvme_show_error("ERROR : OCP : No OCP UUID index found");
-		free(data);
-		return ret ? ret : -ENOENT;
+	if (uuid) {
+		ret = ocp_get_uuid_index(hdl, &uidx);
+		if (ret || !uidx) {
+			nvme_show_error("ERROR : OCP : No OCP UUID index found");
+			free(data);
+			return ret ? ret : -ENOENT;
+		}
 	}
 
 	nvme_init_get_log(&cmd, NVME_NSID_ALL,
@@ -108,18 +110,21 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 		      struct plugin *plugin)
 {
 	const char *desc = "Retrieve the extended SMART health data.";
+	const char *no_uuid = "Skip UUID index search (UUID index not required for OCP 1.0)";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	NVME_ARGS(opts);
+	NVME_ARGS(opts,
+		OPT_FLAG("no-uuid", 'n', NULL, no_uuid));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
 	ret = get_c0_log_page(hdl, nvme_args.output_format,
-			      nvme_args.output_format_ver);
+			      nvme_args.output_format_ver,
+			      !argconfig_parse_seen(opts, "no-uuid"));
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C0 Log Page, ret = %d",
 			ret);
