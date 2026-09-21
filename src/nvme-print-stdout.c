@@ -1433,6 +1433,160 @@ static void stdout_prop_field(const char *name, const char *symbol,
 		       value ? value : alloc_error);
 }
 
+/*
+ * Adds one row (name, ':', the vasprintf()'d value) to @t and returns its
+ * row id. The ':' is its own column so it lines up across a table and its
+ * subtables even where two other columns need a plain space instead.
+ */
+static int stdout_kv_add(struct shr_table *t, const char *name,
+		const char *fmt, ...)
+{
+	__cleanup_free char *value = NULL;
+	va_list ap;
+	int row;
+
+	va_start(ap, fmt);
+	if (vasprintf(&value, fmt, ap) < 0)
+		value = NULL;
+	va_end(ap);
+
+	row = shr_table_get_row_id(t);
+
+	shr_table_set_value_str(t, 0, row, name, LEFT);
+	shr_table_set_value_str(t, 1, row, ":", LEFT);
+	shr_table_set_value_str(t, 2, row, value ?: "", LEFT);
+	shr_table_add_row(t, row);
+
+	return row;
+}
+
+/* Creates the 3-column "name : value" table stdout_kv_add() populates. */
+static struct shr_table *stdout_kv_table_create(void)
+{
+	struct shr_table_column columns[] = {
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *t = shr_table_init_with_columns(columns, 3);
+
+	if (!t)
+		return NULL;
+
+	shr_table_set_no_header(t, true);
+
+	return t;
+}
+
+/*
+ * Shared by stdout_bits_add() and stdout_bits_add_str(): adds one row to a
+ * 4-column "bits : value description" table, with a constant gutter before
+ * the description, independent of the value column's own width.
+ */
+static void stdout_bits_add_strv(struct shr_table *t, const char *bits,
+		const char *value, const char *desc_fmt, va_list ap)
+{
+	__cleanup_free char *desc_raw = NULL;
+	__cleanup_free char *desc = NULL;
+	int row;
+
+	if (vasprintf(&desc_raw, desc_fmt, ap) < 0)
+		desc_raw = NULL;
+
+	if (asprintf(&desc, "  %s", desc_raw ?: "") < 0)
+		desc = NULL;
+
+	row = shr_table_get_row_id(t);
+
+	shr_table_set_value_str(t, 0, row, bits, RIGHT);
+	shr_table_set_value_str(t, 1, row, ":", LEFT);
+	shr_table_set_value_str(t, 2, row, value ?: "", LEFT);
+	shr_table_set_value_str(t, 3, row, desc ?: "", LEFT);
+	shr_table_add_row(t, row);
+}
+
+/*
+ * Adds one row to a 4-column "bits : value description" table, using a
+ * caller-formatted value string instead of an unsigned int -- for a value
+ * that isn't a small bitfield (e.g. a 128-bit capacity).
+ */
+static void stdout_bits_add_str(struct shr_table *t, const char *bits,
+		const char *value, const char *desc_fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, desc_fmt);
+	stdout_bits_add_strv(t, bits, value, desc_fmt, ap);
+	va_end(ap);
+}
+
+/*
+ * Adds one row to a 4-column "bits : value description" table, one row per
+ * bit-field. @desc_fmt works like printf(), matching the "%sSupported"
+ * pattern the decode descriptions use.
+ */
+static void stdout_bits_add(struct shr_table *t, const char *bits,
+		unsigned int val, const char *desc_fmt, ...)
+{
+	__cleanup_free char *value = NULL;
+	va_list ap;
+
+	if (asprintf(&value, "%#x", val) < 0)
+		value = NULL;
+
+	va_start(ap, desc_fmt);
+	stdout_bits_add_strv(t, bits, value ?: "", desc_fmt, ap);
+	va_end(ap);
+}
+
+/*
+ * Creates the 4-column table a bit-decode builder (e.g.
+ * stdout_id_ctrl_cmic_table()) returns.
+ */
+static struct shr_table *stdout_bits_table_create(void)
+{
+	struct shr_table_column columns[] = {
+		{ "", RIGHT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", RIGHT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *t = shr_table_init_with_columns(columns, 4);
+
+	if (!t)
+		return NULL;
+
+	shr_table_set_no_header(t, true);
+	shr_table_set_indent(t, 2);
+
+	return t;
+}
+
+/*
+ * Prints every row of @t, and, for a row with a nested bit-decode table
+ * attached, that table right after it. Aligns column 0 (name/bits) across
+ * @t and every subtable, and column 2 (value) across the subtables
+ * themselves, so both the ':' and the description start at the same
+ * column everywhere.
+ */
+static void stdout_kv_render(FILE *stream, struct shr_table *t)
+{
+	int row;
+	struct shr_table *sub;
+
+	shr_table_align_column(t, 0, 0);
+	shr_table_align_subtable_column(t, 2);
+
+	for (row = 0; row < t->num_rows; row++) {
+		shr_table_print_row(stream, t, row);
+		sub = shr_table_get_row_subtable(t, row);
+		if (sub) {
+			shr_table_print_stream(stream, sub);
+			fprintf(stream, "\n");
+		}
+	}
+}
+
 static void stdout_registers_cap(uint64_t cap)
 {
 	stdout_prop_cap(PROP_CAP_NSSES, nvme_support_str(NVME_CAP_NSSES(cap)));
@@ -2013,25 +2167,34 @@ static void stdout_error_status(int status, const char *msg, va_list ap)
 	stdout_status(status);
 }
 
-static void stdout_id_ctrl_cmic(__u8 cmic)
+static struct shr_table *stdout_id_ctrl_cmic_table(__u8 cmic)
 {
+	struct shr_table *t;
 	__u8 rsvd = NVME_CMIC_MULTI_RSVD(cmic);
 	__u8 ana = NVME_CMIC_MULTI_ANA(cmic);
 	__u8 sriov = NVME_CMIC_MULTI_SRIOV(cmic);
 	__u8 mctl = NVME_CMIC_MULTI_CTRL(cmic);
 	__u8 mp = NVME_CMIC_MULTI_PORT(cmic);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tANA %ssupported\n", ana, ana ? "" : "not ");
-	printf("  [2:2] : %#x\t%s\n", sriov, sriov ? "SR-IOV" : "PCI");
-	printf("  [1:1] : %#x\t%s Controller\n", mctl, mctl ? "Multi" : "Single");
-	printf("  [0:0] : %#x\t%s Port\n", mp, mp ? "Multi" : "Single");
-	printf("\n");
+		stdout_bits_add(t, "[7:4]", rsvd, "Reserved");
+	stdout_bits_add(t, "[3:3]", ana,
+			 ana ? "ANA supported" : "ANA not supported");
+	stdout_bits_add(t, "[2:2]", sriov, sriov ? "SR-IOV" : "PCI");
+	stdout_bits_add(t, "[1:1]", mctl,
+			 mctl ? "Multi Controller" : "Single Controller");
+	stdout_bits_add(t, "[0:0]", mp, mp ? "Multi Port" : "Single Port");
+
+	return t;
 }
 
-static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
+static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 {
+	struct shr_table *t;
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
 	__u32 dlpcn = NVME_CTRL_OAES_DLPCN(oaes);
 	__u32 rsvd28 = (oaes & 0x70000000) >> 28;
@@ -2053,51 +2216,68 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	__u32 nace = NVME_CTRL_OAES_NSAN(oaes);
 	__u32 rsvd0 = oaes & 0xFF;
 
-	printf("  [31:31] : %#x\tDiscovery Log Change Notice %sSupported\n",
-			dlpcn, dlpcn ? "" : "Not ");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[31:31]", dlpcn,
+			"Discovery Log Change Notice %sSupported",
+			dlpcn ? "" : "Not ");
 	if (rsvd28)
-		printf("  [30:28] : %#x\tReserved\n", rsvd28);
-	printf("  [27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
-			zdcn, zdcn ? "" : "Not ");
+		stdout_bits_add(t, "[30:28]", rsvd28, "Reserved");
+	stdout_bits_add(t, "[27:27]", zdcn,
+			"Zone Descriptor Changed Notices %sSupported",
+			zdcn ? "" : "Not ");
 	if (rsvd23)
-		printf("  [26:23] : %#x\tReserved\n", rsvd23);
-	printf("  [22:22] : %#x\tRate Limiting Configuration Change Notices %sSupported\n",
-			rlcc, rlcc ? "" : "Not ");
+		stdout_bits_add(t, "[26:23]", rsvd23, "Reserved");
+	stdout_bits_add(t, "[22:22]", rlcc,
+			"Rate Limiting Configuration Change Notices %sSupported",
+			rlcc ? "" : "Not ");
 	if (rsvd20)
-		printf("  [21:20] : %#x\tReserved\n", rsvd20);
-	printf("  [19:19] : %#x\tAllocated Namespace Attribute Notices %sSupported\n",
-			ansan, ansan ? "" : "Not ");
+		stdout_bits_add(t, "[21:20]", rsvd20, "Reserved");
+	stdout_bits_add(t, "[19:19]", ansan,
+			"Allocated Namespace Attribute Notices %sSupported",
+			ansan ? "" : "Not ");
 	if (rsvd18)
-		printf("  [18:18] : %#x\tReserved\n", rsvd18);
-	printf("  [17:17] : %#x\tReachability Groups Change Notices %sSupported\n",
-			rgcns, rgcns ? "" : "Not ");
-	printf("  [16:16] : %#x\tTemperature Threshold Hysteresis Recovery %sSupported\n",
-		tthr, tthr ? "" : "Not ");
-	printf("  [15:15] : %#x\tNormal NSS Shutdown Event %sSupported\n",
-			normal_shn, normal_shn ? "" : "Not ");
-	printf("  [14:14] : %#x\tEndurance Group Event Aggregate Log Page"\
-			" Change Notice %sSupported\n",
-			egealpcn, egealpcn ? "" : "Not ");
-	printf("  [13:13] : %#x\tLBA Status Information Notices %sSupported\n",
-			lbasin, lbasin ? "" : "Not ");
-	printf("  [12:12] : %#x\tPredictable Latency Event Aggregate Log Change"\
-			" Notices %sSupported\n",
-			plealcn, plealcn ? "" : "Not ");
-	printf("  [11:11] : %#x\tAsymmetric Namespace Access Change Notices"\
-			" %sSupported\n", anacn, anacn ? "" : "Not ");
+		stdout_bits_add(t, "[18:18]", rsvd18, "Reserved");
+	stdout_bits_add(t, "[17:17]", rgcns,
+			"Reachability Groups Change Notices %sSupported",
+			rgcns ? "" : "Not ");
+	stdout_bits_add(t, "[16:16]", tthr,
+			"Temperature Threshold Hysteresis Recovery %sSupported",
+			tthr ? "" : "Not ");
+	stdout_bits_add(t, "[15:15]", normal_shn,
+			"Normal NSS Shutdown Event %sSupported",
+			normal_shn ? "" : "Not ");
+	stdout_bits_add(t, "[14:14]", egealpcn,
+			"Endurance Group Event Aggregate Log Page Change Notice %sSupported",
+			egealpcn ? "" : "Not ");
+	stdout_bits_add(t, "[13:13]", lbasin,
+			"LBA Status Information Notices %sSupported",
+			lbasin ? "" : "Not ");
+	stdout_bits_add(t, "[12:12]", plealcn,
+			"Predictable Latency Event Aggregate Log Change Notices %sSupported",
+			plealcn ? "" : "Not ");
+	stdout_bits_add(t, "[11:11]", anacn,
+			"Asymmetric Namespace Access Change Notices %sSupported",
+			anacn ? "" : "Not ");
 	if (rsvd10)
-		printf("  [10:10] : %#x\tReserved\n", rsvd10);
-	printf("  [9:9] : %#x\tFirmware Activation Notices %sSupported\n",
-		fan, fan ? "" : "Not ");
-	printf("  [8:8] : %#x\tAttached Namespace Attribute Changed Event %sSupported\n",
-		nace, nace ? "" : "Not ");
+		stdout_bits_add(t, "[10:10]", rsvd10, "Reserved");
+	stdout_bits_add(t, "[9:9]", fan,
+			"Firmware Activation Notices %sSupported",
+			fan ? "" : "Not ");
+	stdout_bits_add(t, "[8:8]", nace,
+			"Attached Namespace Attribute Changed Event %sSupported",
+			nace ? "" : "Not ");
 	if (rsvd0)
-		printf("  [7:0] : %#x\tReserved\n", rsvd0);
-	printf("\n");
+		stdout_bits_add(t, "[7:0]", rsvd0, "Reserved");
+
+	return t;
 }
 
-static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
+static struct shr_table *stdout_id_ctrl_ctratt_table(__le32 ctrl_ctratt)
 {
+	struct shr_table *t;
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
 	__u32 rsvd25 = (ctratt >> 25);
 	__u32 iiellss = NVME_CTRL_CTRATT_IIELLSS(ctratt);
@@ -2125,65 +2305,79 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	__u32 nopspm = NVME_CTRL_CTRATT_NOPSPM(ctratt);
 	__u32 hids = NVME_CTRL_CTRATT_HIDS(ctratt);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd25)
-		printf("  [31:25] : %#x\tReserved\n", rsvd25);
-	printf("  [24:23] : %#x\tIdle I/O Exit Latency Limit %s\n", iiellss,
-	       !iiellss ? "Not Supported" :
-	       iiellss == NVME_CTRL_CTRATT_IIELLSS_POWER_STATE ?
-	       "Supported (Power state)" :
-	       iiellss == NVME_CTRL_CTRATT_IIELLSS_GLOBAL ?
-	       "Supported (Global)" : "Reserved");
-	printf("  [22:22] : %#x\tVoltage Measurement %sSupported\n", vms,
-	       vms ? "" : "Not ");
-	printf("  [21:21] : %#x\tPower Measurement %sSupported\n",
-		pms, pms ? "" : "Not ");
-	printf("  [20:20] : %#x\tPower Limit %sSupported\n",
-		pls, pls ? "" : "Not ");
-	printf("  [19:19] : %#x\tFlexible Data Placement %sSupported\n",
-		fdps, fdps ? "" : "Not ");
-	printf("  [18:18] : %#x\tReservations and Host Identifier Interaction %sSupported\n",
-		rhii, rhii ? "" : "Not ");
-	printf("  [17:17] : %#x\tHMB Restrict Non-Operational Power State Access %sSupported\n",
-		hmbr, hmbr ? "" : "Not ");
-	printf("  [16:16] : %#x\tMDTS and Size Limits Exclude Metadata %sSupported\n",
-		mem, mem ? "" : "Not ");
-	printf("  [15:15] : %#x\tExtended LBA Formats %sSupported\n",
-		elbas, elbas ? "" : "Not ");
-	printf("  [14:14] : %#x\tDelete NVM Set %sSupported\n",
-		dnvms, dnvms ? "" : "Not ");
-	printf("  [13:13] : %#x\tDelete Endurance Group %sSupported\n",
-		deg, deg ? "" : "Not ");
-	printf("  [12:12] : %#x\tVariable Capacity Management %sSupported\n",
-		vcm, vcm ? "" : "Not ");
-	printf("  [11:11] : %#x\tFixed Capacity Management %sSupported\n",
-		fcm, fcm ? "" : "Not ");
-	printf("  [10:10] : %#x\tMulti Domain Subsystem %sSupported\n",
-		mds, mds ? "" : "Not ");
-	printf("  [9:9] : %#x\tUUID List %sSupported\n",
-		ulist, ulist ? "" : "Not ");
-	printf("  [8:8] : %#x\tSQ Associations %sSupported\n",
-		sqa, sqa ? "" : "Not ");
-	printf("  [7:7] : %#x\tNamespace Granularity %sSupported\n",
-		ng, ng ? "" : "Not ");
-	printf("  [6:6] : %#x\tTraffic Based Keep Alive %sSupported\n",
-		tbkas, tbkas ? "" : "Not ");
-	printf("  [5:5] : %#x\tPredictable Latency Mode %sSupported\n",
-		plm, plm ? "" : "Not ");
-	printf("  [4:4] : %#x\tEndurance Groups %sSupported\n",
-		egs, egs ? "" : "Not ");
-	printf("  [3:3] : %#x\tRead Recovery Levels %sSupported\n",
-		rrlvls, rrlvls ? "" : "Not ");
-	printf("  [2:2] : %#x\tNVM Sets %sSupported\n",
-		nsets, nsets ? "" : "Not ");
-	printf("  [1:1] : %#x\tNon-Operational Power State Permissive %sSupported\n",
-		nopspm, nopspm ? "" : "Not ");
-	printf("  [0:0] : %#x\t128-bit Host Identifier %sSupported\n",
-		hids, hids ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[31:25]", rsvd25, "Reserved");
+	stdout_bits_add(t, "[24:23]", iiellss, "Idle I/O Exit Latency Limit %s",
+			 !iiellss ? "Not Supported" :
+			 iiellss == NVME_CTRL_CTRATT_IIELLSS_POWER_STATE ?
+			 "Supported (Power state)" :
+			 iiellss == NVME_CTRL_CTRATT_IIELLSS_GLOBAL ?
+			 "Supported (Global)" : "Reserved");
+	stdout_bits_add(t, "[22:22]", vms, "Voltage Measurement %sSupported",
+			 vms ? "" : "Not ");
+	stdout_bits_add(t, "[21:21]", pms, "Power Measurement %sSupported",
+			 pms ? "" : "Not ");
+	stdout_bits_add(t, "[20:20]", pls, "Power Limit %sSupported",
+			 pls ? "" : "Not ");
+	stdout_bits_add(t, "[19:19]", fdps,
+			 "Flexible Data Placement %sSupported",
+			 fdps ? "" : "Not ");
+	stdout_bits_add(t, "[18:18]", rhii,
+			 "Reservations and Host Identifier Interaction %sSupported",
+			 rhii ? "" : "Not ");
+	stdout_bits_add(t, "[17:17]", hmbr,
+			 "HMB Restrict Non-Operational Power State Access %sSupported",
+			 hmbr ? "" : "Not ");
+	stdout_bits_add(t, "[16:16]", mem,
+			 "MDTS and Size Limits Exclude Metadata %sSupported",
+			 mem ? "" : "Not ");
+	stdout_bits_add(t, "[15:15]", elbas, "Extended LBA Formats %sSupported",
+			 elbas ? "" : "Not ");
+	stdout_bits_add(t, "[14:14]", dnvms, "Delete NVM Set %sSupported",
+			 dnvms ? "" : "Not ");
+	stdout_bits_add(t, "[13:13]", deg, "Delete Endurance Group %sSupported",
+			 deg ? "" : "Not ");
+	stdout_bits_add(t, "[12:12]", vcm,
+			 "Variable Capacity Management %sSupported",
+			 vcm ? "" : "Not ");
+	stdout_bits_add(t, "[11:11]", fcm,
+			 "Fixed Capacity Management %sSupported",
+			 fcm ? "" : "Not ");
+	stdout_bits_add(t, "[10:10]", mds, "Multi Domain Subsystem %sSupported",
+			 mds ? "" : "Not ");
+	stdout_bits_add(t, "[9:9]", ulist, "UUID List %sSupported",
+			 ulist ? "" : "Not ");
+	stdout_bits_add(t, "[8:8]", sqa, "SQ Associations %sSupported",
+			 sqa ? "" : "Not ");
+	stdout_bits_add(t, "[7:7]", ng, "Namespace Granularity %sSupported",
+			 ng ? "" : "Not ");
+	stdout_bits_add(t, "[6:6]", tbkas,
+			 "Traffic Based Keep Alive %sSupported",
+			 tbkas ? "" : "Not ");
+	stdout_bits_add(t, "[5:5]", plm, "Predictable Latency Mode %sSupported",
+			 plm ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", egs, "Endurance Groups %sSupported",
+			 egs ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", rrlvls, "Read Recovery Levels %sSupported",
+			 rrlvls ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", nsets, "NVM Sets %sSupported",
+			 nsets ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", nopspm,
+			 "Non-Operational Power State Permissive %sSupported",
+			 nopspm ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", hids, "128-bit Host Identifier %sSupported",
+			 hids ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_bpcap(__u8 ctrl_bpcap)
+static struct shr_table *stdout_id_ctrl_bpcap_table(__u8 ctrl_bpcap)
 {
+	struct shr_table *t;
 	__u8 rsvd3 = (ctrl_bpcap >> 3);
 	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_SFBPWPS);
 	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_RPMBBPWPS);
@@ -2193,81 +2387,115 @@ static void stdout_id_ctrl_bpcap(__u8 ctrl_bpcap)
 		"Supported"
 	};
 
-	if (rsvd3)
-		printf(" [7:3] : %#x\tReserved\n", rsvd3);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [2:2] : %#x\tSet Features Boot Partition Write Protection %sSupported\n",
-		sfbpwps, sfbpwps ? "" : "Not ");
-	printf("  [1:0] : %#x\tRPMB Boot Partition Write Protection %s\n",
-		rpmbbpwps, rpmbbpwps_def[rpmbbpwps]);
-	printf("\n");
+	if (rsvd3)
+		stdout_bits_add(t, "[7:3]", rsvd3, "Reserved");
+	stdout_bits_add(t, "[2:2]", sfbpwps,
+			 "Set Features Boot Partition Write Protection %sSupported",
+			 sfbpwps ? "" : "Not ");
+	stdout_bits_add(t, "[1:0]", rpmbbpwps,
+			 "RPMB Boot Partition Write Protection %s",
+			 rpmbbpwps_def[rpmbbpwps]);
+
+	return t;
 }
 
-static void stdout_id_ctrl_chsi(__u8 ctrl_chsi)
+static struct shr_table *stdout_id_ctrl_chsi_table(__u8 ctrl_chsi)
 {
+	struct shr_table *t;
 	__u8 rsvd1 = (ctrl_chsi >> 1);
 	__u8 chs = NVME_CTRL_CHSI_CHS(ctrl_chsi);
 
-	if (rsvd1)
-		printf(" [7:1] : %#x\tReserved\n", rsvd1);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [0:0] : %#x\tCXL HDM %sSupported\n", chs, chs ? "" : "Not ");
-	printf("\n");
+	if (rsvd1)
+		stdout_bits_add(t, "[7:1]", rsvd1, "Reserved");
+	stdout_bits_add(t, "[0:0]", chs,
+			 "CXL HDM %sSupported", chs ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_rmdca(__u8 ctrl_rmdca)
+static struct shr_table *stdout_id_ctrl_rmdca_table(__u8 ctrl_rmdca)
 {
+	struct shr_table *t;
 	__u8 rsvd3 = (ctrl_rmdca >> 3);
 	__u8 rdccs = NVME_CTRL_RMDCA_RDCCS(ctrl_rmdca);
 	__u8 rdncs = NVME_CTRL_RMDCA_RDNCS(ctrl_rmdca);
 	__u8 rdscs = NVME_CTRL_RMDCA_RDSCS(ctrl_rmdca);
 
-	if (rsvd3)
-		printf(" [7:3] : %#x\tReserved\n", rsvd3);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [2:2] : %#x\tRestore Default Capacity Management Configuration %sSupported\n",
-	       rdccs, rdccs ? "" : "Not ");
-	printf("  [1:1] : %#x\tRestore Default Namespace Configuration %sSupported\n",
-	       rdncs, rdncs ? "" : "Not ");
-	printf("  [0:0] : %#x\tRestore Default NVM Subsystem Configuration %sSupported\n",
-	       rdscs, rdscs ? "" : "Not ");
-	printf("\n");
+	if (rsvd3)
+		stdout_bits_add(t, "[7:3]", rsvd3, "Reserved");
+	stdout_bits_add(t, "[2:2]", rdccs,
+			 "Restore Default Capacity Management Configuration %sSupported",
+			 rdccs ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", rdncs,
+			 "Restore Default Namespace Configuration %sSupported",
+			 rdncs ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", rdscs,
+			 "Restore Default NVM Subsystem Configuration %sSupported",
+			 rdscs ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_plsi(__u8 ctrl_plsi)
+static struct shr_table *stdout_id_ctrl_plsi_table(__u8 ctrl_plsi)
 {
+	struct shr_table *t;
 	__u8 rsvd2 = (ctrl_plsi >> 2);
 	__u8 plsfq = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSFQ);
 	__u8 plsepf = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSEPF);
 
-	if (rsvd2)
-		printf(" [7:2] : %#x\tReserved\n", rsvd2);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [1:1] : %#x\tPower Loss Signaling with Forced Quiescence %sSupported\n",
-		plsfq, plsfq ? "" : "Not ");
-	printf("  [0:0] : %#x\tPower Loss Signaling with Emergency Power Fail %sSupported\n",
-		plsepf, plsepf ? "" : "Not ");
-	printf("\n");
+	if (rsvd2)
+		stdout_bits_add(t, "[7:2]", rsvd2, "Reserved");
+	stdout_bits_add(t, "[1:1]", plsfq,
+			 "Power Loss Signaling with Forced Quiescence %sSupported",
+			 plsfq ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", plsepf,
+			 "Power Loss Signaling with Emergency Power Fail %sSupported",
+			 plsepf ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_crcap(__u8 ctrl_crcap)
+static struct shr_table *stdout_id_ctrl_crcap_table(__u8 ctrl_crcap)
 {
+	struct shr_table *t;
 	__u8 rsvd2 = (ctrl_crcap >> 2);
 	__u8 rgidc = NVME_GET(ctrl_crcap, CTRL_CRCAP_RGIDC);
 	__u8 rrsup = NVME_GET(ctrl_crcap, CTRL_CRCAP_RRSUP);
 
-	if (rsvd2)
-		printf(" [7:2] : %#x\tReserved\n", rsvd2);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [1:1] : %#x\tRGRPID %s while the namespace is attached to any controller.\n",
-		rgidc, rgidc ? "does not change" : "may change");
-	printf("  [0:0] : %#x\tReachability Reporting %sSupported\n",
-		rrsup, rrsup ? "" : "Not ");
-	printf("\n");
+	if (rsvd2)
+		stdout_bits_add(t, "[7:2]", rsvd2, "Reserved");
+	stdout_bits_add(t, "[1:1]", rgidc,
+			 "RGRPID %s while the namespace is attached to any controller.",
+			 rgidc ? "does not change" : "may change");
+	stdout_bits_add(t, "[0:0]", rrsup, "Reachability Reporting %sSupported",
+			 rrsup ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_cntrltype(__u8 cntrltype)
+static struct shr_table *stdout_id_ctrl_cntrltype_table(__u8 cntrltype)
 {
+	struct shr_table *t;
 	__u8 rsvd = (cntrltype & 0xFC) >> 2;
 	__u8 cntrl = cntrltype & 0x3;
 
@@ -2278,55 +2506,83 @@ static void stdout_id_ctrl_cntrltype(__u8 cntrltype)
 		"Administrative Controller"
 	};
 
-	printf("  [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:0] : %#x\t%s\n", cntrltype, type[cntrl]);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:0]", cntrltype, "%s", type[cntrl]);
+
+	return t;
 }
 
-static void stdout_id_ctrl_nvmsr(__u8 nvmsr)
+static struct shr_table *stdout_id_ctrl_nvmsr_table(__u8 nvmsr)
 {
+	struct shr_table *t;
 	__u8 rsvd = (nvmsr >> 2) & 0xfc;
 	__u8 nvmee = NVME_CTRL_NVMSR_NVMEE(nvmsr);
 	__u8 nvmesd = NVME_CTRL_NVMSR_NVMESD(nvmsr);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf(" [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tNVM subsystem %spart of an Enclosure\n",
-		nvmee, nvmee ? "" : "Not ");
-	printf("  [0:0] : %#x\tNVM subsystem %spart of a Storage Device\n",
-		nvmesd, nvmesd ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", nvmee,
+			 "NVM subsystem %spart of an Enclosure",
+			 nvmee ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", nvmesd,
+			 "NVM subsystem %spart of a Storage Device",
+			 nvmesd ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_vwci(__u8 vwci)
+static struct shr_table *stdout_id_ctrl_vwci_table(__u8 vwci)
 {
+	struct shr_table *t;
 	__u8 vwcrv = NVME_CTRL_VWCI_VWCRV(vwci);
 	__u8 vwcr = NVME_CTRL_VWCI_VWCR(vwci);
 
-	printf("  [7:7] : %#x\tVPD Write Cycles Remaining field is %svalid.\n",
-		vwcrv, vwcrv ? "" : "Not ");
-	printf("  [6:0] : %#x\tVPD Write Cycles Remaining\n", vwcr);
-	printf("\n");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
+	stdout_bits_add(t, "[7:7]", vwcrv,
+			 "VPD Write Cycles Remaining field is %svalid.",
+			 vwcrv ? "" : "Not ");
+	stdout_bits_add(t, "[6:0]", vwcr, "VPD Write Cycles Remaining");
+
+	return t;
 }
 
-static void stdout_id_ctrl_mec(__u8 mec)
+static struct shr_table *stdout_id_ctrl_mec_table(__u8 mec)
 {
+	struct shr_table *t;
 	__u8 rsvd = (mec >> 2) & 0xfc;
 	__u8 pcieme = (mec >> 1) & 0x1;
 	__u8 smbusme = mec & 0x1;
 
-	if (rsvd)
-		printf(" [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tNVM subsystem %scontains a Management Endpoint"\
-		" on a PCIe port\n", pcieme, pcieme ? "" : "Not ");
-	printf("  [0:0] : %#x\tNVM subsystem %scontains a Management Endpoint"\
-		" on an SMBus/I2C port\n", smbusme, smbusme ? "" : "Not ");
-	printf("\n");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
+	if (rsvd)
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", pcieme,
+			 "NVM subsystem %scontains a Management Endpoint on a PCIe port",
+			 pcieme ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", smbusme,
+			 "NVM subsystem %scontains a Management Endpoint on an SMBus/I2C port",
+			 smbusme ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
+static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 {
+	struct shr_table *t;
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
 	__u16 rsvd = (oacs & 0xC000) >> 14;
 	__u16 rsvd12 = (oacs & 0x1000) >> 12;
@@ -2344,61 +2600,82 @@ static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 fmt = NVME_CTRL_OACS_FNVMS(oacs);
 	__u16 sec = NVME_CTRL_OACS_SSRS(oacs);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf(" [15:14] : %#x\tReserved\n", rsvd);
-	printf("  [13:13] : %#x\tCtrl-scoped Command/Feature Lockdown %sSupported\n",
-	       ccfls, ccfls ? "" : "Not ");
+		stdout_bits_add(t, "[15:14]", rsvd, "Reserved");
+	stdout_bits_add(t, "[13:13]", ccfls,
+			 "Ctrl-scoped Command/Feature Lockdown %sSupported",
+			 ccfls ? "" : "Not ");
 	if (rsvd12)
-		printf(" [12:12] : %#x\tReserved\n", rsvd12);
-	printf("  [11:11] : %#x\tHost Managed Live Migration %sSupported\n",
-		hmlms, hmlms ? "" : "Not ");
-	printf("  [10:10] : %#x\tLockdown Command and Feature %sSupported\n",
-		lock, lock ? "" : "Not ");
-	printf("  [9:9] : %#x\tGet LBA Status Capability %sSupported\n",
-		glbas, glbas ? "" : "Not ");
-	printf("  [8:8] : %#x\tDoorbell Buffer Config %sSupported\n",
-		dbc, dbc ? "" : "Not ");
-	printf("  [7:7] : %#x\tVirtualization Management %sSupported\n",
-		vir, vir ? "" : "Not ");
-	printf("  [6:6] : %#x\tNVMe-MI Send and Receive %sSupported\n",
-		nmi, nmi ? "" : "Not ");
-	printf("  [5:5] : %#x\tDirectives %sSupported\n",
-		dir, dir ? "" : "Not ");
-	printf("  [4:4] : %#x\tDevice Self-test %sSupported\n",
-		sft, sft ? "" : "Not ");
-	printf("  [3:3] : %#x\tNS Management and Attachment %sSupported\n",
-		nsm, nsm ? "" : "Not ");
-	printf("  [2:2] : %#x\tFW Commit and Download %sSupported\n",
-		fwc, fwc ? "" : "Not ");
-	printf("  [1:1] : %#x\tFormat NVM %sSupported\n",
-		fmt, fmt ? "" : "Not ");
-	printf("  [0:0] : %#x\tSecurity Send and Receive %sSupported\n",
-		sec, sec ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[12:12]", rsvd12, "Reserved");
+	stdout_bits_add(t, "[11:11]", hmlms,
+			 "Host Managed Live Migration %sSupported",
+			 hmlms ? "" : "Not ");
+	stdout_bits_add(t, "[10:10]", lock,
+			 "Lockdown Command and Feature %sSupported",
+			 lock ? "" : "Not ");
+	stdout_bits_add(t, "[9:9]", glbas,
+			 "Get LBA Status Capability %sSupported",
+			 glbas ? "" : "Not ");
+	stdout_bits_add(t, "[8:8]", dbc, "Doorbell Buffer Config %sSupported",
+			 dbc ? "" : "Not ");
+	stdout_bits_add(t, "[7:7]", vir,
+			 "Virtualization Management %sSupported",
+			 vir ? "" : "Not ");
+	stdout_bits_add(t, "[6:6]", nmi, "NVMe-MI Send and Receive %sSupported",
+			 nmi ? "" : "Not ");
+	stdout_bits_add(t, "[5:5]", dir, "Directives %sSupported",
+			 dir ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", sft, "Device Self-test %sSupported",
+			 sft ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", nsm,
+			 "NS Management and Attachment %sSupported",
+			 nsm ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", fwc, "FW Commit and Download %sSupported",
+			 fwc ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", fmt, "Format NVM %sSupported",
+			 fmt ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", sec,
+			 "Security Send and Receive %sSupported",
+			 sec ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_frmw(__u8 frmw)
+static struct shr_table *stdout_id_ctrl_frmw_table(__u8 frmw)
 {
+	struct shr_table *t;
 	__u8 rsvd = (frmw & 0xC0) >> 6;
 	__u8 smud = (frmw >> 5) & 0x1;
 	__u8 fawr = (frmw & 0x10) >> 4;
 	__u8 nfws = (frmw & 0xE) >> 1;
 	__u8 s1ro = frmw & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:6] : %#x\tReserved\n", rsvd);
-	printf("  [5:5] : %#x\tMultiple FW or Boot Update Detection %sSupported\n",
-		smud, smud ? "" : "Not ");
-	printf("  [4:4] : %#x\tFirmware Activate Without Reset %sSupported\n",
-		fawr, fawr ? "" : "Not ");
-	printf("  [3:1] : %#x\tNumber of Firmware Slots\n", nfws);
-	printf("  [0:0] : %#x\tFirmware Slot 1 Read%s\n",
-		s1ro, s1ro ? "-Only" : "/Write");
-	printf("\n");
+		stdout_bits_add(t, "[7:6]", rsvd, "Reserved");
+	stdout_bits_add(t, "[5:5]", smud,
+			 "Multiple FW or Boot Update Detection %sSupported",
+			 smud ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", fawr,
+			 "Firmware Activate Without Reset %sSupported",
+			 fawr ? "" : "Not ");
+	stdout_bits_add(t, "[3:1]", nfws, "Number of Firmware Slots");
+	stdout_bits_add(t, "[0:0]", s1ro, "Firmware Slot 1 Read%s",
+			 s1ro ? "-Only" : "/Write");
+
+	return t;
 }
 
-static void stdout_id_ctrl_lpa(__u8 lpa)
+static struct shr_table *stdout_id_ctrl_lpa_table(__u8 lpa)
 {
+	struct shr_table *t;
 	__u8 rsvd = (lpa & 0x80) >> 7;
 	__u8 tel = (lpa >> 6) & 0x1;
 	__u8 lid_sup = (lpa >> 5) & 0x1;
@@ -2408,89 +2685,165 @@ static void stdout_id_ctrl_lpa(__u8 lpa)
 	__u8 celp = (lpa & 0x2) >> 1;
 	__u8 smlp = lpa & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:7] : %#x\tReserved\n", rsvd);
-	printf("  [6:6] : %#x\tTelemetry Log Data Area 4 %sSupported\n",
-			tel, tel ? "" : "Not ");
-	printf("  [5:5] : %#x\tLID 0x0, Scope of each command in LID 0x5, "\
-			"0x12, 0x13 %sSupported\n", lid_sup, lid_sup ? "" : "Not ");
-	printf("  [4:4] : %#x\tPersistent Event log %sSupported\n",
-			persevnt, persevnt ? "" : "Not ");
-	printf("  [3:3] : %#x\tTelemetry host/controller initiated log page %sSupported\n",
-	       telem, telem ? "" : "Not ");
-	printf("  [2:2] : %#x\tExtended data for Get Log Page %sSupported\n",
-		ed, ed ? "" : "Not ");
-	printf("  [1:1] : %#x\tCommand Effects Log Page %sSupported\n",
-		celp, celp ? "" : "Not ");
-	printf("  [0:0] : %#x\tSMART/Health Log Page per NS %sSupported\n",
-		smlp, smlp ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:7]", rsvd, "Reserved");
+	stdout_bits_add(t, "[6:6]", tel,
+			 "Telemetry Log Data Area 4 %sSupported",
+			 tel ? "" : "Not ");
+	stdout_bits_add(t, "[5:5]", lid_sup,
+			 "LID 0x0, Scope of each command in LID 0x5, 0x12, 0x13 %sSupported",
+			 lid_sup ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", persevnt,
+			 "Persistent Event log %sSupported",
+			 persevnt ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", telem,
+			 "Telemetry host/controller initiated log page %sSupported",
+			 telem ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", ed,
+			 "Extended data for Get Log Page %sSupported",
+			 ed ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", celp,
+			 "Command Effects Log Page %sSupported",
+			 celp ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", smlp,
+			 "SMART/Health Log Page per NS %sSupported",
+			 smlp ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_elpe(__u8 elpe)
+static struct shr_table *stdout_id_ctrl_elpe_table(__u8 elpe)
 {
-	printf("  [7:0] : %d (0's based)\tError Log Page Entries (ELPE)\n",
-	       elpe);
-	printf("\n");
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:0]", elpe,
+			 "Error Log Page Entries (ELPE), 0's based");
+
+	return t;
 }
 
-static void stdout_id_ctrl_npss(__u8 npss)
+static struct shr_table *stdout_id_ctrl_npss_table(__u8 npss)
 {
-	printf("  [7:0] : %d (0's based)\tNumber of Power States Support (NPSS)\n",
-	       npss);
-	printf("\n");
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:0]", npss,
+			 "Number of Power States Support (NPSS), 0's based");
+
+	return t;
 }
 
-static void stdout_id_ctrl_avscc(__u8 avscc)
+static struct shr_table *stdout_id_ctrl_avscc_table(__u8 avscc)
 {
+	struct shr_table *t;
 	__u8 rsvd = (avscc & 0xFE) >> 1;
 	__u8 fmt = avscc & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tAdmin Vendor Specific Commands uses %s Format\n",
-		fmt, fmt ? "NVMe" : "Vendor Specific");
-	printf("\n");
+		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", fmt,
+			 "Admin Vendor Specific Commands uses %s Format",
+			 fmt ? "NVMe" : "Vendor Specific");
+
+	return t;
 }
 
-static void stdout_id_ctrl_apsta(__u8 apsta)
+static struct shr_table *stdout_id_ctrl_apsta_table(__u8 apsta)
 {
+	struct shr_table *t;
 	__u8 rsvd = (apsta & 0xFE) >> 1;
 	__u8 apst = apsta & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tAutonomous Power State Transitions %sSupported\n",
-		apst, apst ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", apst,
+			 "Autonomous Power State Transitions %sSupported",
+			 apst ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_wctemp(__le16 wctemp)
+static struct shr_table *stdout_id_ctrl_wctemp_table(__le16 wctemp)
 {
-	printf(" [15:0] : %s (%u K, %s)\tWarning Composite Temperature Threshold (WCTEMP)\n",
-	       nvme_degrees_string(le16_to_cpu(wctemp)), le16_to_cpu(wctemp),
-	       nvme_degrees_fahrenheit_string(le16_to_cpu(wctemp)));
-	printf("\n");
+	struct shr_table *t;
+	__u16 val = le16_to_cpu(wctemp);
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[15:0]", val,
+			 "%s (%u K, %s) Warning Composite Temperature Threshold (WCTEMP)",
+			 nvme_degrees_string(val), val,
+			 nvme_degrees_fahrenheit_string(val));
+
+	return t;
 }
 
-static void stdout_id_ctrl_cctemp(__le16 cctemp)
+static struct shr_table *stdout_id_ctrl_cctemp_table(__le16 cctemp)
 {
-	printf(" [15:0] : %s (%u K, %s)\tCritical Composite Temperature Threshold (CCTEMP)\n",
-	       nvme_degrees_string(le16_to_cpu(cctemp)), le16_to_cpu(cctemp),
-	       nvme_degrees_fahrenheit_string(le16_to_cpu(cctemp)));
-	printf("\n");
+	struct shr_table *t;
+	__u16 val = le16_to_cpu(cctemp);
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[15:0]", val,
+			 "%s (%u K, %s) Critical Composite Temperature Threshold (CCTEMP)",
+			 nvme_degrees_string(val), val,
+			 nvme_degrees_fahrenheit_string(val));
+
+	return t;
 }
 
-static void stdout_id_ctrl_tnvmcap(__u8 *tnvmcap)
+static struct shr_table *stdout_id_ctrl_tnvmcap_table(__u8 *tnvmcap)
 {
-	printf("[127:0] : %s\n", uint128_t_to_l10n_string(le128_to_cpu(tnvmcap)));
-	printf("\tTotal NVM Capacity (TNVMCAP)\n\n");
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add_str(t, "[127:0]",
+			     uint128_t_to_l10n_string(le128_to_cpu(tnvmcap)),
+			     "Total NVM Capacity (TNVMCAP)");
+
+	return t;
 }
 
-static void stdout_id_ctrl_unvmcap(__u8 *unvmcap)
+static struct shr_table *stdout_id_ctrl_unvmcap_table(__u8 *unvmcap)
 {
-	printf("[127:0] : %s\n", uint128_t_to_l10n_string(le128_to_cpu(unvmcap)));
-	printf("\tUnallocated NVM Capacity (UNVMCAP)\n\n");
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add_str(t, "[127:0]",
+			     uint128_t_to_l10n_string(le128_to_cpu(unvmcap)),
+			     "Unallocated NVM Capacity (UNVMCAP)");
+
+	return t;
 }
 
 void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
@@ -2511,53 +2864,111 @@ void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 	printf("\n");
 }
 
-static void stdout_id_ctrl_dsto(__u8 dsto)
+static struct shr_table *stdout_id_ctrl_rpmbs_table(__le32 ctrl_rpmbs)
 {
+	struct shr_table *t;
+	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
+	__u32 asz = (rpmbs & 0xFF000000) >> 24;
+	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
+	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
+	__u32 auth = (rpmbs & 0x38) >> 3;
+	__u32 rpmb = rpmbs & 0x7;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[31:24]", asz, "Access Size");
+	stdout_bits_add(t, "[23:16]", tsz, "Total Size");
+	if (rsvd)
+		stdout_bits_add(t, "[15:6]", rsvd, "Reserved");
+	stdout_bits_add(t, "[5:3]", auth, "Authentication Method");
+	stdout_bits_add(t, "[2:0]", rpmb, "Number of RPMB Units");
+
+	return t;
+}
+
+static struct shr_table *stdout_id_ctrl_dsto_table(__u8 dsto)
+{
+	struct shr_table *t;
 	__u8 rsvd2 = (dsto & 0xfc) >> 2;
 	__u8 hirs = NVME_CTRL_DSTO_HIRS(dsto);
 	__u8 sdso = NVME_CTRL_DSTO_SDSO(dsto);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd2)
-		printf("  [7:2] : %#x\tReserved\n", rsvd2);
-	printf("  [1:1] : %#x\tHost-Initiated Refresh capability %sSupported\n",
-		hirs, hirs ? "" : "Not ");
-	printf("  [0:0] : %#x\tNVM subsystem supports %s at a time\n", sdso,
-		sdso ? "only one device self-test operation in progress" :
-		"one device self-test operation per controller");
-	printf("\n");
+		stdout_bits_add(t, "[7:2]", rsvd2, "Reserved");
+	stdout_bits_add(t, "[1:1]", hirs,
+			 "Host-Initiated Refresh capability %sSupported",
+			 hirs ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", sdso, "NVM subsystem supports %s at a time",
+			 sdso ?
+			 "only one device self-test operation in progress" :
+			 "one device self-test operation per controller");
+
+	return t;
 }
 
-static void stdout_id_ctrl_hctma(__le16 ctrl_hctma)
+static struct shr_table *stdout_id_ctrl_hctma_table(__le16 ctrl_hctma)
 {
+	struct shr_table *t;
 	__u16 hctma = le16_to_cpu(ctrl_hctma);
 	__u16 rsvd = (hctma & 0xFFFE) >> 1;
 	__u16 hctm = hctma & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf(" [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tHost Controlled Thermal Management %sSupported\n",
-		hctm, hctm ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[15:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", hctm,
+			 "Host Controlled Thermal Management %sSupported",
+			 hctm ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_mntmt(__le16 mntmt)
+static struct shr_table *stdout_id_ctrl_mntmt_table(__le16 mntmt_le)
 {
-	printf(" [15:0] : %s (%u K, %s)\tMinimum Thermal Management Temperature (MNTMT)\n",
-	       nvme_degrees_string(le16_to_cpu(mntmt)), le16_to_cpu(mntmt),
-	       nvme_degrees_fahrenheit_string(le16_to_cpu(mntmt)));
-	printf("\n");
+	struct shr_table *t;
+	__u16 mntmt = le16_to_cpu(mntmt_le);
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[15:0]", mntmt,
+			 "%s (%u K, %s) Minimum Thermal Management Temperature (MNTMT)",
+			 nvme_degrees_string(mntmt), mntmt,
+			 nvme_degrees_fahrenheit_string(mntmt));
+
+	return t;
 }
 
-static void stdout_id_ctrl_mxtmt(__le16 mxtmt)
+static struct shr_table *stdout_id_ctrl_mxtmt_table(__le16 mxtmt_le)
 {
-	printf(" [15:0] : %s (%u K, %s)\tMaximum Thermal Management Temperature (MXTMT)\n",
-	       nvme_degrees_string(le16_to_cpu(mxtmt)), le16_to_cpu(mxtmt),
-	       nvme_degrees_fahrenheit_string(le16_to_cpu(mxtmt)));
-	printf("\n");
+	struct shr_table *t;
+	__u16 mxtmt = le16_to_cpu(mxtmt_le);
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[15:0]", mxtmt,
+			 "%s (%u K, %s) Maximum Thermal Management Temperature (MXTMT)",
+			 nvme_degrees_string(mxtmt), mxtmt,
+			 nvme_degrees_fahrenheit_string(mxtmt));
+
+	return t;
 }
 
-static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
+static struct shr_table *stdout_id_ctrl_sanicap_table(__le32 ctrl_sanicap)
 {
+	struct shr_table *t;
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
 	__u32 rsvd6 = (sanicap & 0x1FFFFFC0) >> 6;
 	__u32 sprrs = NVME_CTRL_SANICAP_SPRRS(sanicap);
@@ -2575,26 +2986,38 @@ static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 		"Reserved"
 	};
 
-	printf("  [31:30] : %#x\t%s\n", nodmmas, modifies_media[nodmmas]);
-	printf("  [29:29] : %#x\tNo-Deallocate After Sanitize bit in Sanitize command %sSupported\n",
-		ndi, ndi ? "Not " : "");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[31:30]", nodmmas, "%s", modifies_media[nodmmas]);
+	stdout_bits_add(t, "[29:29]", ndi,
+			 "No-Deallocate After Sanitize bit in Sanitize command %sSupported",
+			 ndi ? "Not " : "");
 	if (rsvd6)
-		printf("  [28:6] : %#x\tReserved\n", rsvd6);
-	printf("  [5:5] : %#x\tSanitize Purge Request and Reporting %sSupported\n",
-		sprrs, sprrs ? "" : "Not ");
-	printf("  [3:3] : %#x\tMedia Verification and Post-Verification Deallocation state %sSupported\n",
-		vers, vers ? "" : "Not ");
-	printf("  [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
-		ows, ows ? "" : "Not ");
-	printf("  [1:1] : %#x\tBlock Erase Sanitize Operation %sSupported\n",
-		bes, bes ? "" : "Not ");
-	printf("  [0:0] : %#x\tCrypto Erase Sanitize Operation %sSupported\n",
-		ces, ces ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[28:6]", rsvd6, "Reserved");
+	stdout_bits_add(t, "[5:5]", sprrs,
+			 "Sanitize Purge Request and Reporting %sSupported",
+			 sprrs ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", vers,
+			 "Media Verification and Post-Verification Deallocation state %sSupported",
+			 vers ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", ows,
+			 "Overwrite Sanitize Operation %sSupported",
+			 ows ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", bes,
+			 "Block Erase Sanitize Operation %sSupported",
+			 bes ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", ces,
+			 "Crypto Erase Sanitize Operation %sSupported",
+			 ces ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_anacap(__u8 anacap)
+static struct shr_table *stdout_id_ctrl_anacap_table(__u8 anacap)
 {
+	struct shr_table *t;
 	__u8 nz = (anacap & 0x80) >> 7;
 	__u8 grpid_static = (anacap & 0x40) >> 6;
 	__u8 rsvd = (anacap & 0x20) >> 5;
@@ -2604,184 +3027,239 @@ static void stdout_id_ctrl_anacap(__u8 anacap)
 	__u8 ana_nonopt = (anacap & 0x02) >> 1;
 	__u8 ana_opt = (anacap & 0x01);
 
-	printf("  [7:7] : %#x\tNon-zero group ID %sSupported\n",
-			nz, nz ? "" : "Not ");
-	printf("  [6:6] : %#x\tGroup ID does %schange\n",
-			grpid_static, grpid_static ? "not " : "");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:7]", nz, "Non-zero group ID %sSupported",
+			 nz ? "" : "Not ");
+	stdout_bits_add(t, "[6:6]", grpid_static, "Group ID does %schange",
+			 grpid_static ? "not " : "");
 	if (rsvd)
-		printf(" [5:5] : %#x\tReserved\n", rsvd);
-	printf("  [4:4] : %#x\tANA Change state %sSupported\n",
-			ana_change, ana_change ? "" : "Not ");
-	printf("  [3:3] : %#x\tANA Persistent Loss state %sSupported\n",
-			ana_persist_loss, ana_persist_loss ? "" : "Not ");
-	printf("  [2:2] : %#x\tANA Inaccessible state %sSupported\n",
-			ana_inaccessible, ana_inaccessible ? "" : "Not ");
-	printf("  [1:1] : %#x\tANA Non-optimized state %sSupported\n",
-			ana_nonopt, ana_nonopt ? "" : "Not ");
-	printf("  [0:0] : %#x\tANA Optimized state %sSupported\n",
-			ana_opt, ana_opt ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[5:5]", rsvd, "Reserved");
+	stdout_bits_add(t, "[4:4]", ana_change, "ANA Change state %sSupported",
+			 ana_change ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", ana_persist_loss,
+			 "ANA Persistent Loss state %sSupported",
+			 ana_persist_loss ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", ana_inaccessible,
+			 "ANA Inaccessible state %sSupported",
+			 ana_inaccessible ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", ana_nonopt,
+			 "ANA Non-optimized state %sSupported",
+			 ana_nonopt ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", ana_opt, "ANA Optimized state %sSupported",
+			 ana_opt ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_kpioc(__u8 ctrl_kpioc)
+static struct shr_table *stdout_id_ctrl_kpioc_table(__u8 ctrl_kpioc)
 {
+	struct shr_table *t;
 	__u8 rsvd2 = (ctrl_kpioc >> 2);
 	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(ctrl_kpioc);
 	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(ctrl_kpioc);
 
-	if (rsvd2)
-		printf(" [7:2] : %#x\tReserved\n", rsvd2);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [1:1] : %#x\tKey Per I/O capability %s to all namespaces\n",
-		kpiosc, kpiosc ? "applies" : "Not apply");
-	printf("  [0:0] : %#x\tKey Per I/O capability %sSupported\n",
-		kpios, kpios ? "" : "Not ");
-	printf("\n");
+	if (rsvd2)
+		stdout_bits_add(t, "[7:2]", rsvd2, "Reserved");
+	stdout_bits_add(t, "[1:1]", kpiosc,
+			 "Key Per I/O capability %s to all namespaces",
+			 kpiosc ? "applies" : "Not apply");
+	stdout_bits_add(t, "[0:0]", kpios, "Key Per I/O capability %sSupported",
+			 kpios ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
+static struct shr_table *stdout_id_ctrl_tmpthha_table(__u8 tmpthha)
 {
+	struct shr_table *t;
 	__u8 rsvd3 = (tmpthha & 0xf8) >> 3;
 	__u8 tmpthmh = tmpthha & 0x7;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd3)
-		printf("  [7:3] : %#x\tReserved\n", rsvd3);
-	printf("  [2:0] : %#x\tTemperature Threshold Maximum Hysteresis\n",
-		tmpthmh);
-	printf("\n");
+		stdout_bits_add(t, "[7:3]", rsvd3, "Reserved");
+	stdout_bits_add(t, "[2:0]", tmpthmh,
+			 "Temperature Threshold Maximum Hysteresis");
+
+	return t;
 }
 
-static void stdout_id_ctrl_mupa(__u8 mupa, bool human)
+static struct shr_table *stdout_id_ctrl_mupa_table(__u8 mupa)
 {
+	struct shr_table *t;
 	__u8 mups = NVME_CTRL_MUPA_MUPS(mupa);
 
-	printf("%-*s: %#x\n", 10, "mupa", mupa);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	if (human)
-		printf("  [1:0] : %#x\t%s (%s)\n\n", mups,
-		       nvme_feature_power_limit_scale_to_string(mups),
-		       "Maximum Unlimited Power Scale");
+	stdout_bits_add(t, "[1:0]", mups, "Maximum Unlimited Power Scale (%s)",
+			 nvme_feature_power_limit_scale_to_string(mups));
+
+	return t;
 }
 
-static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
+static struct shr_table *stdout_id_ctrl_cdpa_table(__le16 ctrl_cdpa)
 {
+	struct shr_table *t;
 	__u16 cdpa = le16_to_cpu(ctrl_cdpa);
 	__u16 rsvd1 = (cdpa >> 1);
 	bool hmac_sha_384 = !!(cdpa & NVME_CTRL_CDPA_HMAC_SHA_384);
 
-	if (rsvd1)
-		printf("  [15:1] : %#x\tReserved\n", rsvd1);
-	printf("  [0:0] : %#x\tHMAC-SHA-384 %sSupported\n",
-			hmac_sha_384, hmac_sha_384 ? "" : "Not ");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("\n");
+	if (rsvd1)
+		stdout_bits_add(t, "[15:1]", rsvd1, "Reserved");
+	stdout_bits_add(t, "[0:0]", hmac_sha_384, "HMAC-SHA-384 %sSupported",
+			 hmac_sha_384 ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
+static struct shr_table *stdout_id_ctrl_ipmsr_table(__le16 ctrl_ipmsr)
 {
+	struct shr_table *t;
 	__u16 ipmsr = le16_to_cpu(ctrl_ipmsr);
 	__u16 srs = NVME_CTRL_IPMSR_SRS(ipmsr);
 	__u16 srv = NVME_CTRL_IPMSR_SRV(ipmsr);
 
-	printf("  [15:8] : %#x\tSample Rate Scale (%s)\n", srs,
-		nvme_ipmsr_srs_to_string(srs));
-	printf("  [7:0]  : %#x\tSample Rate Value\n", srv);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("\n");
+	stdout_bits_add(t, "[15:8]", srs, "Sample Rate Scale (%s)",
+			 nvme_ipmsr_srs_to_string(srs));
+	stdout_bits_add(t, "[7:0]", srv, "Sample Rate Value");
+
+	return t;
 }
 
-static void stdout_id_ctrl_mnens(__u16 mnens)
+static struct shr_table *stdout_id_ctrl_ensa_table(__u8 ensa)
 {
-	printf("%-*s: %u\n", 10, "mnens", mnens);
-}
-
-static void stdout_id_ctrl_mnecpens(__u16 mnecpens)
-{
-	printf("%-*s: %u\n", 10, "mnecpens", mnecpens);
-}
-
-static void stdout_id_ctrl_mensnn(__u32 mensnn)
-{
-	printf("%-*s: %u\n", 10, "mensnn", mensnn);
-}
-
-static void stdout_id_ctrl_ensa(__u8 ensa, bool human)
-{
-	bool ensts = !!NVME_CTRL_ENSA_ENSTS(ensa);
+	struct shr_table *t;
 	bool ensms = !!NVME_CTRL_ENSA_ENSMS(ensa);
+	bool ensts = !!NVME_CTRL_ENSA_ENSTS(ensa);
 
-	printf("%-*s: %#x\n", 10, "ensa", ensa);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	if (human) {
-		printf("  [1:1] : %#x\t%s %s\n", ensms,
-		       "Exported NVM Subsystem Support Migration",
-		       nvme_support_str(ensms));
-		printf("  [0:0] : %#x\t%s %s\n\n", ensts,
-		       "Exported NVM Subsystem Template",
-		       nvme_support_str(ensts));
-	}
+	stdout_bits_add(t, "[1:1]", ensms,
+			 "Exported NVM Subsystem Support Migration %s",
+			 nvme_support_str(ensms));
+	stdout_bits_add(t, "[0:0]", ensts,
+			 "Exported NVM Subsystem Template %s",
+			 nvme_support_str(ensts));
+
+	return t;
 }
 
-static void stdout_id_ctrl_endsfs(__u8 endsfs, bool human)
+static struct shr_table *stdout_id_ctrl_endsfs_table(__u8 endsfs)
 {
-	bool enf0 = !!NVME_CTRL_ENDSFS_ENF0(endsfs);
+	struct shr_table *t;
 	bool enf1 = !!NVME_CTRL_ENDSFS_ENF1(endsfs);
+	bool enf0 = !!NVME_CTRL_ENDSFS_ENF0(endsfs);
 
-	printf("%-*s: %#x\n", 10, "endsfs", endsfs);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	if (human) {
-		printf("  [1:1] : %#x\t%s %s\n", enf1,
-		       "Exported Namespace Format 1",
-		       nvme_support_str(enf1));
-		printf("  [0:0] : %#x\t%s %s\n\n", enf0,
-		       "Exported Namespace Format 0",
-		       nvme_support_str(enf0));
-	}
+	stdout_bits_add(t, "[1:1]", enf1, "Exported Namespace Format 1 %s",
+			 nvme_support_str(enf1));
+	stdout_bits_add(t, "[0:0]", enf0, "Exported Namespace Format 0 %s",
+			 nvme_support_str(enf0));
+
+	return t;
 }
 
-static void stdout_id_ctrl_vsen(__le32 ctrl_vsen)
+static struct shr_table *stdout_id_ctrl_vsen_table(__le32 ctrl_vsen)
 {
+	struct shr_table *t;
 	__u32 vsen = le32_to_cpu(ctrl_vsen);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (!vsen) {
-		printf("  Voltage sensor not supported\n\n");
-		return;
+		int row = shr_table_get_row_id(t);
+
+		shr_table_set_value_str(t, 0, row, "", RIGHT);
+		shr_table_set_value_str(t, 1, row, "", LEFT);
+		shr_table_set_value_str(t, 2, row, "", RIGHT);
+		shr_table_set_value_str(t, 3, row,
+					 "Voltage sensor not supported", LEFT);
+		shr_table_add_row(t, row);
+
+		return t;
 	}
 
-	printf("  [31:24] : %#x\tVoltage Sample Rate Scale\n",
-	       NVME_CTRL_VSEN_VSRS(vsen));
-	printf("  [23:16] : %#x\tVoltage Sample Rate Value\n",
-	       NVME_CTRL_VSEN_VSRV(vsen));
-	printf("  [15:14] : %#x\tVoltage Sample Scale\n", NVME_CTRL_VSEN_VOLSS(vsen));
-	printf("  [13:12] : %#x\tPower Input Supply Label\n",
-	       NVME_CTRL_VSEN_PISL(vsen));
-	printf("  [11:0]  : %#x\tPower Input Supply Value (%g V)\n",
-	       NVME_CTRL_VSEN_PISV(vsen), NVME_CTRL_VSEN_PISV(vsen) * 0.05);
-	printf("\n");
+	stdout_bits_add(t, "[31:24]", NVME_CTRL_VSEN_VSRS(vsen),
+			 "Voltage Sample Rate Scale");
+	stdout_bits_add(t, "[23:16]", NVME_CTRL_VSEN_VSRV(vsen),
+			 "Voltage Sample Rate Value");
+	stdout_bits_add(t, "[15:14]", NVME_CTRL_VSEN_VOLSS(vsen),
+			 "Voltage Sample Scale");
+	stdout_bits_add(t, "[13:12]", NVME_CTRL_VSEN_PISL(vsen),
+			 "Power Input Supply Label");
+	stdout_bits_add(t, "[11:0]", NVME_CTRL_VSEN_PISV(vsen),
+			 "Power Input Supply Value (%g V)",
+			 NVME_CTRL_VSEN_PISV(vsen) * 0.05);
+
+	return t;
 }
 
-static void stdout_id_ctrl_sqes(__u8 sqes)
+static struct shr_table *stdout_id_ctrl_sqes_table(__u8 sqes)
 {
+	struct shr_table *t;
 	__u8 msqes = (sqes & 0xF0) >> 4;
 	__u8 rsqes = sqes & 0xF;
 
-	printf("  [7:4] : %#x\tMax SQ Entry Size (%d)\n", msqes, 1 << msqes);
-	printf("  [3:0] : %#x\tMin SQ Entry Size (%d)\n", rsqes, 1 << rsqes);
-	printf("\n");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:4]", msqes,
+			 "Max SQ Entry Size (%d)", 1 << msqes);
+	stdout_bits_add(t, "[3:0]", rsqes,
+			 "Min SQ Entry Size (%d)", 1 << rsqes);
+
+	return t;
 }
 
-static void stdout_id_ctrl_cqes(__u8 cqes)
+static struct shr_table *stdout_id_ctrl_cqes_table(__u8 cqes)
 {
+	struct shr_table *t;
 	__u8 mcqes = (cqes & 0xF0) >> 4;
 	__u8 rcqes = cqes & 0xF;
 
-	printf("  [7:4] : %#x\tMax CQ Entry Size (%d)\n", mcqes, 1 << mcqes);
-	printf("  [3:0] : %#x\tMin CQ Entry Size (%d)\n", rcqes, 1 << rcqes);
-	printf("\n");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:4]", mcqes,
+			 "Max CQ Entry Size (%d)", 1 << mcqes);
+	stdout_bits_add(t, "[3:0]", rcqes,
+			 "Min CQ Entry Size (%d)", 1 << rcqes);
+
+	return t;
 }
 
-static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
+static struct shr_table *stdout_id_ctrl_oncs_table(__le16 ctrl_oncs)
 {
+	struct shr_table *t;
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
 	__u16 rsvd13 = oncs >> 13;
 	bool nszs = !!(oncs & NVME_CTRL_ONCS_NAMESPACE_ZEROES);
@@ -2798,73 +3276,94 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	bool nvmwusv = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
 	bool nvmcmps  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd13)
-		printf("  [15:13] : %#x\tReserved\n", rsvd13);
-	printf("  [12:12] : %#x\tNamespace Zeroes %sSupported\n",
-		nszs, nszs ? "" : "Not ");
-	printf("  [11:11] : %#x\tMaximum Write Zeroes with Deallocate %sSupported\n",
-		maxwzd, maxwzd ? "" : "Not ");
-	printf("  [10:10] : %#x\tAll Fast Copy %sSupported\n",
-		nvmafc, nvmafc ? "" : "Not ");
-	printf("  [9:9] : %#x\tCopy Single Atomicity %sSupported\n",
-		nvmcsa, nvmcsa ? "" : "Not ");
-	printf("  [8:8] : %#x\tCopy %sSupported\n",
-		nvmcpys, nvmcpys ? "" : "Not ");
-	printf("  [7:7] : %#x\tVerify %sSupported\n",
-		nvmvfys, nvmvfys ? "" : "Not ");
-	printf("  [6:6] : %#x\tTimestamp %sSupported\n",
-		tss, tss ? "" : "Not ");
-	printf("  [5:5] : %#x\tReservations %sSupported\n",
-		reservs, reservs ? "" : "Not ");
-	printf("  [4:4] : %#x\tSave and Select %sSupported\n",
-		ssfs, ssfs ? "" : "Not ");
-	printf("  [3:3] : %#x\tWrite Zeroes Support Variants\n",
-		nvmwzsv);
-	printf("  [2:2] : %#x\tDataset Management Support Variants\n",
-		nvmdsmsv);
-	printf("  [1:1] : %#x\tWrite Uncorrectable Support Variants\n",
-		nvmwusv);
-	printf("  [0:0] : %#x\tCompare Command %sSupported\n",
-		nvmcmps, nvmcmps ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[15:13]", rsvd13, "Reserved");
+	stdout_bits_add(t, "[12:12]", nszs, "Namespace Zeroes %sSupported",
+			 nszs ? "" : "Not ");
+	stdout_bits_add(t, "[11:11]", maxwzd,
+			 "Maximum Write Zeroes with Deallocate %sSupported",
+			 maxwzd ? "" : "Not ");
+	stdout_bits_add(t, "[10:10]", nvmafc, "All Fast Copy %sSupported",
+			 nvmafc ? "" : "Not ");
+	stdout_bits_add(t, "[9:9]", nvmcsa, "Copy Single Atomicity %sSupported",
+			 nvmcsa ? "" : "Not ");
+	stdout_bits_add(t, "[8:8]", nvmcpys, "Copy %sSupported",
+			 nvmcpys ? "" : "Not ");
+	stdout_bits_add(t, "[7:7]", nvmvfys, "Verify %sSupported",
+			 nvmvfys ? "" : "Not ");
+	stdout_bits_add(t, "[6:6]", tss, "Timestamp %sSupported",
+			 tss ? "" : "Not ");
+	stdout_bits_add(t, "[5:5]", reservs, "Reservations %sSupported",
+			 reservs ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", ssfs, "Save and Select %sSupported",
+			 ssfs ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", nvmwzsv, "Write Zeroes Support Variants");
+	stdout_bits_add(t, "[2:2]", nvmdsmsv,
+			 "Dataset Management Support Variants");
+	stdout_bits_add(t, "[1:1]", nvmwusv,
+			 "Write Uncorrectable Support Variants");
+	stdout_bits_add(t, "[0:0]", nvmcmps, "Compare Command %sSupported",
+			 nvmcmps ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_fuses(__le16 ctrl_fuses)
+static struct shr_table *stdout_id_ctrl_fuses_table(__le16 ctrl_fuses)
 {
+	struct shr_table *t;
 	__u16 fuses = le16_to_cpu(ctrl_fuses);
 	__u16 rsvd = (fuses & 0xFE) >> 1;
 	__u16 cmpw = fuses & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf(" [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tFused Compare and Write %sSupported\n",
-		cmpw, cmpw ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[15:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", cmpw, "Fused Compare and Write %sSupported",
+			 cmpw ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_fna(__u8 fna)
+static struct shr_table *stdout_id_ctrl_fna_table(__u8 fna)
 {
+	struct shr_table *t;
 	__u8 rsvd = (fna & 0xF0) >> 4;
 	__u8 bcnsid = NVME_CTRL_FNA_NSID_ALL_F(fna);
 	__u8 cese = NVME_CTRL_FNA_CES(fna);
 	__u8 cens = NVME_CTRL_FNA_SEC_ALL_NS(fna);
 	__u8 fmns = NVME_CTRL_FNA_FMT_ALL_NS(fna);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tFormat NVM Broadcast NSID (FFFFFFFFh) %sSupported\n",
-		bcnsid, bcnsid ? "Not " : "");
-	printf("  [2:2] : %#x\tCrypto Erase %sSupported as part of Secure Erase\n",
-		cese, cese ? "" : "Not ");
-	printf("  [1:1] : %#x\tCrypto Erase Applies to %s Namespace(s)\n",
-		cens, cens ? "All" : "Single");
-	printf("  [0:0] : %#x\tFormat Applies to %s Namespace(s)\n",
-		fmns, fmns ? "All" : "Single");
-	printf("\n");
+		stdout_bits_add(t, "[7:4]", rsvd, "Reserved");
+	stdout_bits_add(t, "[3:3]", bcnsid,
+			 "Format NVM Broadcast NSID (FFFFFFFFh) %sSupported",
+			 bcnsid ? "Not " : "");
+	stdout_bits_add(t, "[2:2]", cese,
+			 "Crypto Erase %sSupported as part of Secure Erase",
+			 cese ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", cens,
+			 "Crypto Erase Applies to %s Namespace(s)",
+			 cens ? "All" : "Single");
+	stdout_bits_add(t, "[0:0]", fmns, "Format Applies to %s Namespace(s)",
+			 fmns ? "All" : "Single");
+
+	return t;
 }
 
-static void stdout_id_ctrl_vwc(__u8 vwc)
+static struct shr_table *stdout_id_ctrl_vwc_table(__u8 vwc)
 {
+	struct shr_table *t;
 	__u8 rsvd = (vwc & 0xF8) >> 3;
 	__u8 flush = (vwc & 0x6) >> 1;
 	__u8 vwcp = vwc & 0x1;
@@ -2876,63 +3375,99 @@ static void stdout_id_ctrl_vwc(__u8 vwc)
 		"The Flush command supports NSID set to FFFFFFFFh"
 	};
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
-	printf("  [2:1] : %#x\t%s\n", flush, flush_behavior[flush]);
-	printf("  [0:0] : %#x\tVolatile Write Cache %sPresent\n", vwcp, vwcp ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
+	stdout_bits_add(t, "[2:1]", flush, "%s", flush_behavior[flush]);
+	stdout_bits_add(t, "[0:0]", vwcp, "Volatile Write Cache %sPresent",
+			 vwcp ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_icsvscc(__u8 icsvscc)
+static struct shr_table *stdout_id_ctrl_icsvscc_table(__u8 icsvscc)
 {
+	struct shr_table *t;
 	__u8 rsvd = (icsvscc & 0xFE) >> 1;
 	__u8 fmt = icsvscc & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tNVM Vendor Specific Commands uses %s Format\n",
-		fmt, fmt ? "NVMe" : "Vendor Specific");
-	printf("\n");
+		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", fmt,
+			 "NVM Vendor Specific Commands uses %s Format",
+			 fmt ? "NVMe" : "Vendor Specific");
+
+	return t;
 }
 
-static void stdout_id_ctrl_nwpc(__u8 nwpc)
+static struct shr_table *stdout_id_ctrl_nwpc_table(__u8 nwpc)
 {
+	struct shr_table *t;
 	__u8 no_wp_wp = (nwpc & 0x01);
 	__u8 wp_power_cycle = (nwpc & 0x02) >> 1;
 	__u8 wp_permanent = (nwpc & 0x04) >> 2;
 	__u8 rsvd = (nwpc & 0xF8) >> 3;
 
-	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [2:2] : %#x\tPermanent Write Protect %sSupported\n",
-		wp_permanent, wp_permanent ? "" : "Not ");
-	printf("  [1:1] : %#x\tWrite Protect Until Power Supply %sSupported\n",
-		wp_power_cycle, wp_power_cycle ? "" : "Not ");
-	printf("  [0:0] : %#x\tNo Write Protect and Write Protect Namespace %sSupported\n",
-		no_wp_wp, no_wp_wp ? "" : "Not ");
-	printf("\n");
+	if (rsvd)
+		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
+	stdout_bits_add(t, "[2:2]", wp_permanent,
+			 "Permanent Write Protect %sSupported",
+			 wp_permanent ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", wp_power_cycle,
+			 "Write Protect Until Power Supply %sSupported",
+			 wp_power_cycle ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", no_wp_wp,
+			 "No Write Protect and Write Protect Namespace %sSupported",
+			 no_wp_wp ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_ocfs(__le16 ctrl_ocfs)
+static struct shr_table *stdout_id_ctrl_ocfs_table(__le16 ctrl_ocfs)
 {
+	struct shr_table *t;
 	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
 	__u16 rsvd = ocfs >> 4;
-	__u8 copy_fmt_supported;
 	int copy_fmt;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [15:4] : %#x\tReserved\n", rsvd);
+		stdout_bits_add(t, "[15:4]", rsvd, "Reserved");
+
 	for (copy_fmt = 3; copy_fmt >= 0; copy_fmt--) {
-		copy_fmt_supported = ocfs >> copy_fmt & 1;
-		printf("  [%d:%d] : %#x\tController Copy Format %xh %sSupported\n", copy_fmt,
-		       copy_fmt, copy_fmt_supported, copy_fmt, copy_fmt_supported ? "" : "Not ");
+		__u8 supported = ocfs >> copy_fmt & 1;
+		__cleanup_free char *bits = NULL;
+		__cleanup_free char *desc = NULL;
+
+		if (asprintf(&bits, "[%d:%d]", copy_fmt, copy_fmt) < 0)
+			bits = NULL;
+		if (asprintf(&desc, "Controller Copy Format %xh %sSupported",
+			     copy_fmt, supported ? "" : "Not ") < 0)
+			desc = NULL;
+
+		stdout_bits_add(t, bits ?: "", supported, desc ?: "");
 	}
-	printf("\n");
+
+	return t;
 }
 
-static void stdout_id_ctrl_sgls(__le32 ctrl_sgls)
+static struct shr_table *stdout_id_ctrl_sgls_table(__le32 ctrl_sgls)
 {
+	struct shr_table *t;
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
 	__u32 rsvd0 = (sgls & 0xFFC00000) >> 22;
 	__u32 trsdbd = (sgls & 0x200000) >> 21;
@@ -2946,97 +3481,133 @@ static void stdout_id_ctrl_sgls(__le32 ctrl_sgls)
 	__u32 key = (sgls & 0x4) >> 2;
 	__u32 sglsp = sgls & 0x3;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd0)
-		printf(" [31:22]: %#x\tReserved\n", rsvd0);
+		stdout_bits_add(t, "[31:22]", rsvd0, "Reserved");
 	if (sglsp || (!sglsp && trsdbd))
-		printf(" [21:21]: %#x\tTransport SGL Data Block Descriptor %sSupported\n",
-			trsdbd, trsdbd ? "" : "Not ");
+		stdout_bits_add(t, "[21:21]", trsdbd,
+				 "Transport SGL Data Block Descriptor %sSupported",
+				 trsdbd ? "" : "Not ");
 	if (sglsp || (!sglsp && aofdsl))
-		printf(" [20:20]: %#x\tAddress Offsets %sSupported\n",
-			aofdsl, aofdsl ? "" : "Not ");
+		stdout_bits_add(t, "[20:20]", aofdsl,
+				 "Address Offsets %sSupported",
+				 aofdsl ? "" : "Not ");
 	if (sglsp || (!sglsp && mpcsd))
-		printf(" [19:19]: %#x\tMetadata Pointer Containing "
-			"SGL Descriptor is %sSupported\n",
-			mpcsd, mpcsd ? "" : "Not ");
+		stdout_bits_add(t, "[19:19]", mpcsd,
+				 "Metadata Pointer Containing SGL Descriptor is %sSupported",
+				 mpcsd ? "" : "Not ");
 	if (sglsp || (!sglsp && sglltb))
-		printf(" [18:18]: %#x\tSGL Length Larger than Buffer %sSupported\n",
-			sglltb, sglltb ? "" : "Not ");
+		stdout_bits_add(t, "[18:18]", sglltb,
+				 "SGL Length Larger than Buffer %sSupported",
+				 sglltb ? "" : "Not ");
 	if (sglsp || (!sglsp && bacmdb))
-		printf(" [17:17]: %#x\tByte-Aligned Contig. MD Buffer %sSupported\n",
-			bacmdb, bacmdb ? "" : "Not ");
+		stdout_bits_add(t, "[17:17]", bacmdb,
+				 "Byte-Aligned Contig. MD Buffer %sSupported",
+				 bacmdb ? "" : "Not ");
 	if (sglsp || (!sglsp && bbs))
-		printf(" [16:16]: %#x\tSGL Bit-Bucket %sSupported\n",
-			bbs, bbs ? "" : "Not ");
-	printf(" [15:8] : %#x\tSGL Descriptor Threshold\n", sdt);
+		stdout_bits_add(t, "[16:16]", bbs, "SGL Bit-Bucket %sSupported",
+				 bbs ? "" : "Not ");
+	stdout_bits_add(t, "[15:8]", sdt, "SGL Descriptor Threshold");
 	if (rsvd1)
-		printf(" [7:3] : %#x\tReserved\n", rsvd1);
+		stdout_bits_add(t, "[7:3]", rsvd1, "Reserved");
 	if (sglsp || (!sglsp && key))
-		printf("  [2:2] : %#x\tKeyed SGL Data Block descriptor %sSupported\n",
-			key, key ? "" : "Not ");
+		stdout_bits_add(t, "[2:2]", key,
+				 "Keyed SGL Data Block descriptor %sSupported",
+				 key ? "" : "Not ");
 	if (sglsp == 0x3)
-		printf("  [1:0] : %#x\tReserved\n", sglsp);
+		stdout_bits_add(t, "[1:0]", sglsp, "Reserved");
 	else if (sglsp == 0x2)
-		printf("  [1:0] : %#x\tScatter-Gather Lists Supported."
-			" Dword alignment required.\n", sglsp);
+		stdout_bits_add(t, "[1:0]", sglsp,
+				 "Scatter-Gather Lists Supported. Dword alignment required.");
 	else if (sglsp == 0x1)
-		printf("  [1:0] : %#x\tScatter-Gather Lists Supported."
-			" No Dword alignment required.\n", sglsp);
+		stdout_bits_add(t, "[1:0]", sglsp,
+				 "Scatter-Gather Lists Supported. No Dword alignment required.");
 	else
-		printf(" [1:0]  : %#x\tScatter-Gather Lists Not Supported\n", sglsp);
-	printf("\n");
+		stdout_bits_add(t, "[1:0]", sglsp,
+				 "Scatter-Gather Lists Not Supported");
+
+	return t;
 }
 
-static void stdout_id_ctrl_trattr(__u8 ctrl_trattr)
+static struct shr_table *stdout_id_ctrl_trattr_table(__u8 ctrl_trattr)
 {
+	struct shr_table *t;
 	__u8 rsvd3 = (ctrl_trattr >> 3);
 	__u8 mrtll = NVME_CTRL_TRATTR_MRTLL(ctrl_trattr);
 	__u8 tudcs = NVME_CTRL_TRATTR_TUDCS(ctrl_trattr);
 	__u8 thmcs = NVME_CTRL_TRATTR_THMCS(ctrl_trattr);
 
-	if (rsvd3)
-		printf(" [7:3] : %#x\tReserved\n", rsvd3);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	printf("  [2:2] : %#x\tMemory Range Tracking Length Limit\n", mrtll);
-	printf("  [1:1] : %#x\tTracking User Data Changes %sSupported\n",
-		tudcs, tudcs ? "" : "Not ");
-	printf("  [0:0] : %#x\tTrack Host Memory Changes %sSupported\n",
-		thmcs, thmcs ? "" : "Not ");
-	printf("\n");
+	if (rsvd3)
+		stdout_bits_add(t, "[7:3]", rsvd3, "Reserved");
+	stdout_bits_add(t, "[2:2]", mrtll,
+			 "Memory Range Tracking Length Limit");
+	stdout_bits_add(t, "[1:1]", tudcs,
+			 "Tracking User Data Changes %sSupported",
+			 tudcs ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", thmcs,
+			 "Track Host Memory Changes %sSupported",
+			 thmcs ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_fcatt(__u8 fcatt)
+static struct shr_table *stdout_id_ctrl_fcatt_table(__u8 fcatt)
 {
+	struct shr_table *t;
 	__u8 rsvd = (fcatt & 0xFE) >> 1;
 	__u8 scm = fcatt & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\t%s Controller Model\n",
-		scm, scm ? "Static" : "Dynamic");
-	printf("\n");
+		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", scm, "%s Controller Model",
+			 scm ? "Static" : "Dynamic");
+
+	return t;
 }
 
-static void stdout_id_ctrl_ofcs(__le16 ofcs)
+static struct shr_table *stdout_id_ctrl_ofcs_table(__le16 ofcs_le)
 {
+	struct shr_table *t;
+	__u16 ofcs = le16_to_cpu(ofcs_le);
 	__u16 rsvd = (ofcs & 0xfffe) >> 1;
 	__u8 disconn = ofcs & 0x1;
 
-	if (rsvd)
-		printf("  [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tDisconnect command %s Supported\n",
-		disconn, disconn ? "" : "Not");
-	printf("\n");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
+	if (rsvd)
+		stdout_bits_add(t, "[15:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", disconn, "Disconnect command %s Supported",
+			 disconn ? "" : "Not");
+
+	return t;
 }
 
-static void stdout_id_ctrl_dctype(__u8 dctype)
+static struct shr_table *stdout_id_ctrl_dctype_table(__u8 dctype)
 {
+	struct shr_table *t;
 	__u8 rsvd = (dctype & 0xFC) >> 2;
 	__u8 dctype_val = dctype & 0x3;
 	char *dctype_str;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
+		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
 	if (dctype_val == NVME_CTRL_DCTYPE_CDC)
 		dctype_str = "CDC";
 	else if (dctype_val == NVME_CTRL_DCTYPE_DDC)
@@ -3044,9 +3615,10 @@ static void stdout_id_ctrl_dctype(__u8 dctype)
 	else
 		dctype_str = "not reported";
 
-	printf("  [0:2] : %#x\tDiscovery Controller Type: %s\n",
-				dctype_val, dctype_str);
-	printf("\n");
+	stdout_bits_add(t, "[0:2]", dctype_val, "Discovery Controller Type: %s",
+			 dctype_str);
+
+	return t;
 }
 
 static void stdout_id_ns_size(uint64_t nsze, uint64_t ncap, uint64_t nuse)
@@ -3537,27 +4109,6 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 	}
 }
 
-static void print_psd_workload(__u8 apw)
-{
-	switch (apw & 0x7) {
-	case NVME_PSD_WORKLOAD_NP:
-		/* Unknown or not provided */
-		printf("-");
-		break;
-	case 1:
-		/* Extended idle period with burst of random write */
-		printf("1MiB 32 RW, 30s idle");
-		break;
-	case 2:
-		/* Heavy sequential writes */
-		printf("80K 128KiB SW");
-		break;
-	default:
-		printf("reserved");
-		break;
-	}
-}
-
 static void print_power_and_scale(__u16 power, __u8 scale)
 {
 	switch (scale & 0x3) {
@@ -3579,337 +4130,632 @@ static void print_power_and_scale(__u16 power, __u8 scale)
 	}
 }
 
-static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
-{
-	print_power_and_scale(le16_to_cpu(ctr_power), scale);
-}
-
 static void print_power_field(__u32 pwr)
 {
 	print_power_and_scale(pwr & 0xffff, (pwr >> 16) & 0x3);
 }
 
-static void print_psd_time(const char *desc, __u8 time, __u8 ts)
+static char *stdout_power_and_scale_str(__u16 power, __u8 scale)
 {
-	int width = 12 + strlen(desc);
-	char value[STR_LEN] = { 0 };
+	char *s = NULL;
+
+	switch (scale & 0x3) {
+	case NVME_PSD_PS_NOT_REPORTED:
+		if (asprintf(&s, "-") < 0)
+			s = NULL;
+		break;
+	case NVME_PSD_PS_100_MICRO_WATT:
+		if (asprintf(&s, "%01u.%04uW",
+			     power / 10000, power % 10000) < 0)
+			s = NULL;
+		break;
+	case NVME_PSD_PS_10_MILLI_WATT:
+		if (asprintf(&s, "%01u.%02uW", power / 100, power % 100) < 0)
+			s = NULL;
+		break;
+	default:
+		if (asprintf(&s, "reserved") < 0)
+			s = NULL;
+		break;
+	}
+
+	return s;
+}
+
+static char *stdout_psd_workload_str(__u8 apw)
+{
+	const char *s;
+
+	switch (apw & 0x7) {
+	case NVME_PSD_WORKLOAD_NP:
+		s = "-";
+		break;
+	case 1:
+		s = "1MiB 32 RW, 30s idle";
+		break;
+	case 2:
+		s = "80K 128KiB SW";
+		break;
+	default:
+		s = "reserved";
+		break;
+	}
+
+	return strdup(s);
+}
+
+/*
+ * Multiplies @time by @ts's scale up front -- e.g. "60us" (6 counts of 10
+ * microseconds each) rather than leaving that math to the reader. @ts values
+ * beyond the scale table are reserved.
+ */
+static char *stdout_psd_time_str(__u8 time, __u8 ts)
+{
+	static const struct {
+		unsigned int mult;
+		const char *unit;
+	} scale[] = {
+		{ 1, "us" }, { 10, "us" }, { 100, "us" },
+		{ 1, "ms" }, { 10, "ms" }, { 100, "ms" },
+		{ 1, "s" }, { 10, "s" }, { 100, "s" },
+		{ 1000, "s" }, { 10000, "s" }, { 100000, "s" },
+		{ 1000000, "s" },
+	};
+	char *s = NULL;
 
 	switch (time) {
 	case 0:
-		snprintf(value, sizeof(value), "-");
+		if (asprintf(&s, "-") < 0)
+			s = NULL;
 		break;
 	case 1 ... 99:
-		snprintf(value, sizeof(value), "%d (unit: %s)", time,
-			 nvme_time_scale_to_string(ts));
+		if (ts >= ARRAY_SIZE(scale)) {
+			if (asprintf(&s, "reserved") < 0)
+				s = NULL;
+		} else if (asprintf(&s, "%u%s", time * scale[ts].mult,
+				    scale[ts].unit) < 0) {
+			s = NULL;
+		}
 		break;
 	default:
-		snprintf(value, sizeof(value), "reserved");
+		if (asprintf(&s, "reserved") < 0)
+			s = NULL;
 		break;
 	}
 
-	printf("%*s: %s\n", width, desc, value);
+	return s;
 }
 
-static void stdout_id_ctrl_power(struct nvme_id_ctrl *ctrl)
+/*
+ * One row per power state, one column per sub-field -- unlike the bit-decode
+ * subtables, which are one row per bit range -- since every power state
+ * repeats the same fixed set of fields: a real table, not a "name : value"
+ * list. Attached unconditionally, not just under -v.
+ */
+static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 {
+	/*
+	 * no_widen on "ps" and "state": columns 0 and 2 are what
+	 * shr_table_align_column() widens to line up the outer table's
+	 * "name :" and the bits subtables' "value" column, and this table
+	 * happens to have its own columns at those same indices -- which do
+	 * not mean the same thing, so they must opt out.
+	 */
+	struct shr_table_column columns[] = {
+		{ "ps", RIGHT, AUTO_WIDTH, .no_widen = true },
+		{ "mp", RIGHT, AUTO_WIDTH },
+		{ "state", LEFT, AUTO_WIDTH, .no_widen = true },
+		{ "enlat", RIGHT, AUTO_WIDTH },
+		{ "exlat", RIGHT, AUTO_WIDTH },
+		{ "rrt", RIGHT, AUTO_WIDTH },
+		{ "rrl", RIGHT, AUTO_WIDTH },
+		{ "rwt", RIGHT, AUTO_WIDTH },
+		{ "rwl", RIGHT, AUTO_WIDTH },
+		{ "idle_power", RIGHT, AUTO_WIDTH },
+		{ "active_power", RIGHT, AUTO_WIDTH },
+		{ "workload", LEFT, AUTO_WIDTH },
+		{ "epfrt", LEFT, AUTO_WIDTH },
+		{ "fqvt", LEFT, AUTO_WIDTH },
+		{ "epfvt", LEFT, AUTO_WIDTH },
+		{ "miiell", RIGHT, AUTO_WIDTH },
+	};
+	struct shr_table *t;
+	bool iiellss = NVME_CTRL_CTRATT_IIELLSS(le32_to_cpu(ctrl->ctratt));
 	int i;
 
+	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t)
+		return NULL;
+
 	for (i = 0; i <= ctrl->npss; i++) {
-		__u16 max_power = le16_to_cpu(ctrl->psd[i].mp);
+		struct nvme_id_psd *psd = &ctrl->psd[i];
+		__u16 max_power = le16_to_cpu(psd->mp);
+		__cleanup_free char *mp = NULL;
+		__cleanup_free char *idle_power = NULL;
+		__cleanup_free char *active_power = NULL;
+		__cleanup_free char *workload = NULL;
+		__cleanup_free char *epfrt = NULL;
+		__cleanup_free char *fqvt = NULL;
+		__cleanup_free char *epfvt = NULL;
+		__cleanup_free char *miiell = NULL;
+		int row = shr_table_get_row_id(t);
 
-		printf("ps   %4d : mp:", i);
-
-		if (ctrl->psd[i].flags & NVME_PSD_FLAGS_MXPS)
-			printf("%01u.%04uW ", max_power / 10000, max_power % 10000);
-		else
-			printf("%01u.%02uW ", max_power / 100, max_power % 100);
-
-		if (ctrl->psd[i].flags & NVME_PSD_FLAGS_NOPS)
-			printf("non-");
-
-		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
-			"            rwt:%d rwl:%d idle_power:",
-			le32_to_cpu(ctrl->psd[i].enlat),
-			le32_to_cpu(ctrl->psd[i].exlat),
-			ctrl->psd[i].rrt, ctrl->psd[i].rrl,
-			ctrl->psd[i].rwt, ctrl->psd[i].rwl);
-		print_ps_power_and_scale(ctrl->psd[i].idlp,
-				 nvme_psd_power_scale(ctrl->psd[i].ips));
-		printf(" active_power:");
-		print_ps_power_and_scale(ctrl->psd[i].actp,
-				 nvme_psd_power_scale(ctrl->psd[i].apws));
-		printf("\n            active_power_workload:");
-		print_psd_workload(ctrl->psd[i].apws);
-		printf("\n");
-		print_psd_time("emergency power fail recovery time", ctrl->psd[i].epfrt,
-			       ctrl->psd[i].epfr_fqv_ts & 0xf);
-		print_psd_time("forced quiescence vault time", ctrl->psd[i].fqvt,
-			       ctrl->psd[i].epfr_fqv_ts >> 4);
-		print_psd_time("emergency power fail vault time", ctrl->psd[i].epfvt,
-			       ctrl->psd[i].epfvts & 0xf);
-
-		if (NVME_CTRL_CTRATT_IIELLSS(le32_to_cpu(ctrl->ctratt))) {
-			__u16 miiell = le16_to_cpu(ctrl->psd[i].miiell);
-
-			if (miiell)
-				printf("            minimum idle i/o exit latency limit:%uus\n",
-				       miiell * 100);
-			else
-				printf("            minimum idle i/o exit latency limit:none\n");
+		if (psd->flags & NVME_PSD_FLAGS_MXPS) {
+			if (asprintf(&mp, "%01u.%04uW",
+				     max_power / 10000, max_power % 10000) < 0)
+				mp = NULL;
+		} else {
+			if (asprintf(&mp, "%01u.%02uW",
+				     max_power / 100, max_power % 100) < 0)
+				mp = NULL;
 		}
+
+		idle_power = stdout_power_and_scale_str(
+				le16_to_cpu(psd->idlp),
+				nvme_psd_power_scale(psd->ips));
+		active_power = stdout_power_and_scale_str(
+				le16_to_cpu(psd->actp),
+				nvme_psd_power_scale(psd->apws));
+		workload = stdout_psd_workload_str(psd->apws);
+		epfrt = stdout_psd_time_str(psd->epfrt, psd->epfr_fqv_ts & 0xf);
+		fqvt = stdout_psd_time_str(psd->fqvt, psd->epfr_fqv_ts >> 4);
+		epfvt = stdout_psd_time_str(psd->epfvt, psd->epfvts & 0xf);
+
+		if (iiellss) {
+			__u16 miiell_val = le16_to_cpu(psd->miiell);
+
+			if (miiell_val) {
+				if (asprintf(&miiell, "%uus",
+					     miiell_val * 100) < 0)
+					miiell = NULL;
+			} else {
+				if (asprintf(&miiell, "none") < 0)
+					miiell = NULL;
+			}
+		}
+
+		shr_table_set_value_int(t, 0, row, i, RIGHT);
+		shr_table_set_value_str(t, 1, row, mp ?: "-", RIGHT);
+		shr_table_set_value_str(t, 2, row,
+				psd->flags & NVME_PSD_FLAGS_NOPS ?
+				"non-operational" : "operational",
+				LEFT);
+		shr_table_set_value_unsigned(t, 3, row,
+					      le32_to_cpu(psd->enlat), RIGHT);
+		shr_table_set_value_unsigned(t, 4, row,
+					      le32_to_cpu(psd->exlat), RIGHT);
+		shr_table_set_value_unsigned(t, 5, row, psd->rrt, RIGHT);
+		shr_table_set_value_unsigned(t, 6, row, psd->rrl, RIGHT);
+		shr_table_set_value_unsigned(t, 7, row, psd->rwt, RIGHT);
+		shr_table_set_value_unsigned(t, 8, row, psd->rwl, RIGHT);
+		shr_table_set_value_str(t, 9, row, idle_power ?: "-", RIGHT);
+		shr_table_set_value_str(t, 10, row, active_power ?: "-", RIGHT);
+		shr_table_set_value_str(t, 11, row, workload ?: "-", LEFT);
+		shr_table_set_value_str(t, 12, row, epfrt ?: "-", LEFT);
+		shr_table_set_value_str(t, 13, row, fqvt ?: "-", LEFT);
+		shr_table_set_value_str(t, 14, row, epfvt ?: "-", LEFT);
+		shr_table_set_value_str(t, 15, row, miiell ?: "-", RIGHT);
+
+		shr_table_add_row(t, row);
 	}
+
+	return t;
 }
 
 static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 			   void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
-	bool human = stdout_print_ops.flags & VERBOSE, vs = stdout_print_ops.flags & VS;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
+	bool vs = stdout_print_ops.flags & VS;
+	struct shr_table *t;
+	int row;
 
-	if (human && product_name)
+	if (verbose && product_name)
 		printf("%s\n\n", product_name);
-
 	printf("NVME Identify Controller:\n");
-	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
-	printf("ssvid     : %#x\n", le16_to_cpu(ctrl->ssvid));
-	printf("sn        : %-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
-	printf("mn        : %-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
-	printf("fr        : %-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
-	printf("rab       : %d\n", ctrl->rab);
-	printf("ieee      : %02x%02x%02x\n",
-		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
-	printf("cmic      : %#x\n", ctrl->cmic);
-	if (human)
-		stdout_id_ctrl_cmic(ctrl->cmic);
-	printf("mdts      : %d\n", ctrl->mdts);
-	printf("cntlid    : %#x\n", le16_to_cpu(ctrl->cntlid));
-	printf("ver       : %#x\n", le32_to_cpu(ctrl->ver));
-	printf("rtd3r     : %#x\n", le32_to_cpu(ctrl->rtd3r));
-	printf("rtd3e     : %#x\n", le32_to_cpu(ctrl->rtd3e));
-	printf("oaes      : %#x\n", le32_to_cpu(ctrl->oaes));
-	if (human)
-		stdout_id_ctrl_oaes(ctrl->oaes);
-	printf("ctratt    : %#x\n", le32_to_cpu(ctrl->ctratt));
-	if (human)
-		stdout_id_ctrl_ctratt(ctrl->ctratt);
-	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
-	printf("bpcap     : %#x\n", le16_to_cpu(ctrl->bpcap));
-	if (human)
-		stdout_id_ctrl_bpcap(ctrl->bpcap);
-	printf("chsi      : %#x\n", ctrl->chsi);
-	if (human)
-		stdout_id_ctrl_chsi(ctrl->chsi);
-	printf("nssl      : %#x\n", le32_to_cpu(ctrl->nssl));
-	printf("plsi      : %u\n", ctrl->plsi);
-	if (human)
-		stdout_id_ctrl_plsi(ctrl->plsi);
-	printf("cntrltype : %d\n", ctrl->cntrltype);
-	if (human)
-		stdout_id_ctrl_cntrltype(ctrl->cntrltype);
-	printf("fguid     : %s\n", shr_uuid_to_string(ctrl->fguid));
-	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
-	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
-	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
-	printf("crcap     : %u\n", ctrl->crcap);
-	if (human)
-		stdout_id_ctrl_crcap(ctrl->crcap);
-	printf("ciu       : %u\n", ctrl->ciu);
-	printf("cirn      : %"PRIu64"\n", le64_to_cpu(*(__le64 *)ctrl->cirn));
-	printf("nvmsr     : %u\n", ctrl->nvmsr);
-	if (human)
-		stdout_id_ctrl_nvmsr(ctrl->nvmsr);
-	printf("vwci      : %u\n", ctrl->vwci);
-	if (human)
-		stdout_id_ctrl_vwci(ctrl->vwci);
-	printf("mec       : %u\n", ctrl->mec);
-	if (human)
-		stdout_id_ctrl_mec(ctrl->mec);
 
-	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
-	if (human)
-		stdout_id_ctrl_oacs(ctrl->oacs);
-	printf("acl       : %d\n", ctrl->acl);
-	printf("aerl      : %d\n", ctrl->aerl);
-	printf("frmw      : %#x\n", ctrl->frmw);
-	if (human)
-		stdout_id_ctrl_frmw(ctrl->frmw);
-	printf("lpa       : %#x\n", ctrl->lpa);
-	if (human)
-		stdout_id_ctrl_lpa(ctrl->lpa);
-	printf("elpe      : %d\n", ctrl->elpe);
-	if (human)
-		stdout_id_ctrl_elpe(ctrl->elpe);
-	printf("npss      : %d\n", ctrl->npss);
-	if (human)
-		stdout_id_ctrl_npss(ctrl->npss);
-	printf("avscc     : %#x\n", ctrl->avscc);
-	if (human)
-		stdout_id_ctrl_avscc(ctrl->avscc);
-	printf("apsta     : %#x\n", ctrl->apsta);
-	if (human)
-		stdout_id_ctrl_apsta(ctrl->apsta);
-	printf("wctemp    : %d\n", le16_to_cpu(ctrl->wctemp));
-	if (human)
-		stdout_id_ctrl_wctemp(ctrl->wctemp);
-	printf("cctemp    : %d\n", le16_to_cpu(ctrl->cctemp));
-	if (human)
-		stdout_id_ctrl_cctemp(ctrl->cctemp);
-	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
-	printf("hmpre     : %u\n", le32_to_cpu(ctrl->hmpre));
-	printf("hmmin     : %u\n", le32_to_cpu(ctrl->hmmin));
-	printf("tnvmcap   : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->tnvmcap)));
-	if (human)
-		stdout_id_ctrl_tnvmcap(ctrl->tnvmcap);
-	printf("unvmcap   : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->unvmcap)));
-	if (human)
-		stdout_id_ctrl_unvmcap(ctrl->unvmcap);
-	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
-	if (human)
-		stdout_id_ctrl_rpmbs(ctrl->rpmbs);
-	printf("edstt     : %d\n", le16_to_cpu(ctrl->edstt));
-	printf("dsto      : %d\n", ctrl->dsto);
-	if (human)
-		stdout_id_ctrl_dsto(ctrl->dsto);
-	printf("fwug      : %d\n", ctrl->fwug);
-	printf("kas       : %d\n", le16_to_cpu(ctrl->kas));
-	printf("hctma     : %#x\n", le16_to_cpu(ctrl->hctma));
-	if (human)
-		stdout_id_ctrl_hctma(ctrl->hctma);
-	printf("mntmt     : %d\n", le16_to_cpu(ctrl->mntmt));
-	if (human)
-		stdout_id_ctrl_mntmt(ctrl->mntmt);
-	printf("mxtmt     : %d\n", le16_to_cpu(ctrl->mxtmt));
-	if (human)
-		stdout_id_ctrl_mxtmt(ctrl->mxtmt);
-	printf("sanicap   : %#x\n", le32_to_cpu(ctrl->sanicap));
-	if (human)
-		stdout_id_ctrl_sanicap(ctrl->sanicap);
-	printf("hmminds   : %u\n", le32_to_cpu(ctrl->hmminds));
-	printf("hmmaxd    : %d\n", le16_to_cpu(ctrl->hmmaxd));
-	printf("nsetidmax : %d\n", le16_to_cpu(ctrl->nsetidmax));
-	printf("endgidmax : %d\n", le16_to_cpu(ctrl->endgidmax));
-	printf("anatt     : %d\n", ctrl->anatt);
-	printf("anacap    : %d\n", ctrl->anacap);
-	if (human)
-		stdout_id_ctrl_anacap(ctrl->anacap);
-	printf("anagrpmax : %u\n", ctrl->anagrpmax);
-	printf("nanagrpid : %u\n", le32_to_cpu(ctrl->nanagrpid));
-	printf("pels      : %u\n", le32_to_cpu(ctrl->pels));
-	printf("domainid  : %d\n", le16_to_cpu(ctrl->domainid));
-	printf("kpioc     : %u\n", ctrl->kpioc);
-	if (human)
-		stdout_id_ctrl_kpioc(ctrl->kpioc);
-	printf("mptfawr   : %d\n", le16_to_cpu(ctrl->mptfawr));
-	printf("rmdca     : %#x\n", ctrl->rmdca);
-	if (human)
-		stdout_id_ctrl_rmdca(ctrl->rmdca);
-	printf("megcap    : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
-	printf("tmpthha   : %#x\n", ctrl->tmpthha);
-	if (human)
-		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
-	stdout_id_ctrl_mupa(ctrl->mupa, human);
-	printf("cqt       : %d\n", le16_to_cpu(ctrl->cqt));
-	printf("cdpa      : %d\n", le16_to_cpu(ctrl->cdpa));
-	if (human)
-		stdout_id_ctrl_cdpa(ctrl->cdpa);
-	printf("mup       : %d\n", le16_to_cpu(ctrl->mup));
-	printf("ipmsr     : %#x\n", le16_to_cpu(ctrl->ipmsr));
-	if (human)
-		stdout_id_ctrl_ipmsr(ctrl->ipmsr);
-	printf("msmt      : %#x\n", le16_to_cpu(ctrl->msmt));
-	stdout_id_ctrl_mnens(le16_to_cpu(ctrl->mnens));
-	stdout_id_ctrl_mnecpens(le16_to_cpu(ctrl->mnecpens));
-	stdout_id_ctrl_mensnn(le32_to_cpu(ctrl->mensnn));
-	stdout_id_ctrl_ensa(ctrl->ensa, human);
-	stdout_id_ctrl_endsfs(ctrl->endsfs, human);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "vid", "%#x", le16_to_cpu(ctrl->vid));
+	stdout_kv_add(t, "ssvid", "%#x", le16_to_cpu(ctrl->ssvid));
+	stdout_kv_add(t, "sn", "%-.*s", (int)sizeof(ctrl->sn), ctrl->sn);
+	stdout_kv_add(t, "mn", "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
+	stdout_kv_add(t, "fr", "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
+	stdout_kv_add(t, "rab", "%d", ctrl->rab);
+	stdout_kv_add(t, "ieee", "%02x%02x%02x",
+		      ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
+
+	row = stdout_kv_add(t, "cmic", "%#x", ctrl->cmic);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_cmic_table(ctrl->cmic));
+
+	stdout_kv_add(t, "mdts", "%d", ctrl->mdts);
+	stdout_kv_add(t, "cntlid", "%#x", le16_to_cpu(ctrl->cntlid));
+	stdout_kv_add(t, "ver", "%#x", le32_to_cpu(ctrl->ver));
+	stdout_kv_add(t, "rtd3r", "%#x", le32_to_cpu(ctrl->rtd3r));
+	stdout_kv_add(t, "rtd3e", "%#x", le32_to_cpu(ctrl->rtd3e));
+
+	row = stdout_kv_add(t, "oaes", "%#x", le32_to_cpu(ctrl->oaes));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_oaes_table(ctrl->oaes));
+
+	row = stdout_kv_add(t, "ctratt", "%#x", le32_to_cpu(ctrl->ctratt));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_ctratt_table(ctrl->ctratt));
+
+	stdout_kv_add(t, "rrls", "%#x", le16_to_cpu(ctrl->rrls));
+
+	row = stdout_kv_add(t, "bpcap", "%#x", le16_to_cpu(ctrl->bpcap));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_bpcap_table(ctrl->bpcap));
+
+	row = stdout_kv_add(t, "chsi", "%#x", ctrl->chsi);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_chsi_table(ctrl->chsi));
+
+	stdout_kv_add(t, "nssl", "%#x", le32_to_cpu(ctrl->nssl));
+
+	row = stdout_kv_add(t, "plsi", "%u", ctrl->plsi);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_plsi_table(ctrl->plsi));
+
+	row = stdout_kv_add(t, "cntrltype", "%d", ctrl->cntrltype);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_id_ctrl_cntrltype_table(ctrl->cntrltype));
+
+	stdout_kv_add(t, "fguid", "%s", shr_uuid_to_string(ctrl->fguid));
+	stdout_kv_add(t, "crdt1", "%u", le16_to_cpu(ctrl->crdt1));
+	stdout_kv_add(t, "crdt2", "%u", le16_to_cpu(ctrl->crdt2));
+	stdout_kv_add(t, "crdt3", "%u", le16_to_cpu(ctrl->crdt3));
+
+	row = stdout_kv_add(t, "crcap", "%u", ctrl->crcap);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_crcap_table(ctrl->crcap));
+
+	stdout_kv_add(t, "ciu", "%u", ctrl->ciu);
+	stdout_kv_add(t, "cirn", "%"PRIu64,
+		      le64_to_cpu(*(__le64 *)ctrl->cirn));
+
+	row = stdout_kv_add(t, "nvmsr", "%u", ctrl->nvmsr);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_nvmsr_table(ctrl->nvmsr));
+
+	row = stdout_kv_add(t, "vwci", "%u", ctrl->vwci);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_vwci_table(ctrl->vwci));
+
+	row = stdout_kv_add(t, "mec", "%u", ctrl->mec);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_mec_table(ctrl->mec));
+
+	row = stdout_kv_add(t, "oacs", "%#x", le16_to_cpu(ctrl->oacs));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_oacs_table(ctrl->oacs));
+
+	stdout_kv_add(t, "acl", "%d", ctrl->acl);
+	stdout_kv_add(t, "aerl", "%d", ctrl->aerl);
+
+	row = stdout_kv_add(t, "frmw", "%#x", ctrl->frmw);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_frmw_table(ctrl->frmw));
+
+	row = stdout_kv_add(t, "lpa", "%#x", ctrl->lpa);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_lpa_table(ctrl->lpa));
+
+	row = stdout_kv_add(t, "elpe", "%d", ctrl->elpe);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_elpe_table(ctrl->elpe));
+
+	row = stdout_kv_add(t, "npss", "%d", ctrl->npss);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_npss_table(ctrl->npss));
+
+	row = stdout_kv_add(t, "avscc", "%#x", ctrl->avscc);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_avscc_table(ctrl->avscc));
+
+	row = stdout_kv_add(t, "apsta", "%#x", ctrl->apsta);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_apsta_table(ctrl->apsta));
+
+	row = stdout_kv_add(t, "wctemp", "%d", le16_to_cpu(ctrl->wctemp));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_wctemp_table(ctrl->wctemp));
+
+	row = stdout_kv_add(t, "cctemp", "%d", le16_to_cpu(ctrl->cctemp));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_cctemp_table(ctrl->cctemp));
+
+	stdout_kv_add(t, "mtfa", "%d", le16_to_cpu(ctrl->mtfa));
+	stdout_kv_add(t, "hmpre", "%u", le32_to_cpu(ctrl->hmpre));
+	stdout_kv_add(t, "hmmin", "%u", le32_to_cpu(ctrl->hmmin));
+
+	row = stdout_kv_add(t, "tnvmcap", "%s",
+			     uint128_t_to_l10n_string(
+					le128_to_cpu(ctrl->tnvmcap)));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_id_ctrl_tnvmcap_table(ctrl->tnvmcap));
+
+	row = stdout_kv_add(t, "unvmcap", "%s",
+			     uint128_t_to_l10n_string(
+					le128_to_cpu(ctrl->unvmcap)));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_id_ctrl_unvmcap_table(ctrl->unvmcap));
+
+	row = stdout_kv_add(t, "rpmbs", "%#x", le32_to_cpu(ctrl->rpmbs));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_rpmbs_table(ctrl->rpmbs));
+
+	stdout_kv_add(t, "edstt", "%d", le16_to_cpu(ctrl->edstt));
+
+	row = stdout_kv_add(t, "dsto", "%d", ctrl->dsto);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_dsto_table(ctrl->dsto));
+
+	stdout_kv_add(t, "fwug", "%d", ctrl->fwug);
+	stdout_kv_add(t, "kas", "%d", le16_to_cpu(ctrl->kas));
+
+	row = stdout_kv_add(t, "hctma", "%#x", le16_to_cpu(ctrl->hctma));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_hctma_table(ctrl->hctma));
+
+	row = stdout_kv_add(t, "mntmt", "%d", le16_to_cpu(ctrl->mntmt));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_mntmt_table(ctrl->mntmt));
+
+	row = stdout_kv_add(t, "mxtmt", "%d", le16_to_cpu(ctrl->mxtmt));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_mxtmt_table(ctrl->mxtmt));
+
+	row = stdout_kv_add(t, "sanicap", "%#x", le32_to_cpu(ctrl->sanicap));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_sanicap_table(ctrl->sanicap));
+
+	stdout_kv_add(t, "hmminds", "%u", le32_to_cpu(ctrl->hmminds));
+	stdout_kv_add(t, "hmmaxd", "%d", le16_to_cpu(ctrl->hmmaxd));
+	stdout_kv_add(t, "nsetidmax", "%d", le16_to_cpu(ctrl->nsetidmax));
+	stdout_kv_add(t, "endgidmax", "%d", le16_to_cpu(ctrl->endgidmax));
+	stdout_kv_add(t, "anatt", "%d", ctrl->anatt);
+
+	row = stdout_kv_add(t, "anacap", "%d", ctrl->anacap);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_anacap_table(ctrl->anacap));
+
+	stdout_kv_add(t, "anagrpmax", "%u", ctrl->anagrpmax);
+	stdout_kv_add(t, "nanagrpid", "%u", le32_to_cpu(ctrl->nanagrpid));
+	stdout_kv_add(t, "pels", "%u", le32_to_cpu(ctrl->pels));
+	stdout_kv_add(t, "domainid", "%d", le16_to_cpu(ctrl->domainid));
+
+	row = stdout_kv_add(t, "kpioc", "%u", ctrl->kpioc);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_kpioc_table(ctrl->kpioc));
+
+	stdout_kv_add(t, "mptfawr", "%d", le16_to_cpu(ctrl->mptfawr));
+
+	row = stdout_kv_add(t, "rmdca", "%#x", ctrl->rmdca);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_rmdca_table(ctrl->rmdca));
+
+	stdout_kv_add(t, "megcap", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
+
+	row = stdout_kv_add(t, "tmpthha", "%#x", ctrl->tmpthha);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_tmpthha_table(ctrl->tmpthha));
+
+	row = stdout_kv_add(t, "mupa", "%#x", ctrl->mupa);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_mupa_table(ctrl->mupa));
+
+	stdout_kv_add(t, "cqt", "%d", le16_to_cpu(ctrl->cqt));
+
+	row = stdout_kv_add(t, "cdpa", "%d", le16_to_cpu(ctrl->cdpa));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_cdpa_table(ctrl->cdpa));
+
+	stdout_kv_add(t, "mup", "%d", le16_to_cpu(ctrl->mup));
+
+	row = stdout_kv_add(t, "ipmsr", "%#x", le16_to_cpu(ctrl->ipmsr));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_ipmsr_table(ctrl->ipmsr));
+
+	stdout_kv_add(t, "msmt", "%#x", le16_to_cpu(ctrl->msmt));
+	stdout_kv_add(t, "mnens", "%u", le16_to_cpu(ctrl->mnens));
+	stdout_kv_add(t, "mnecpens", "%u", le16_to_cpu(ctrl->mnecpens));
+	stdout_kv_add(t, "mensnn", "%u", le32_to_cpu(ctrl->mensnn));
+
+	row = stdout_kv_add(t, "ensa", "%#x", ctrl->ensa);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_ensa_table(ctrl->ensa));
+
+	row = stdout_kv_add(t, "endsfs", "%#x", ctrl->endsfs);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_endsfs_table(ctrl->endsfs));
+
 	if (NVME_CTRL_CTRATT_VMS(le32_to_cpu(ctrl->ctratt))) {
-		printf("vsen1     : %#x\n", le32_to_cpu(ctrl->vsen1));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen1);
-		printf("vsen2     : %#x\n", le32_to_cpu(ctrl->vsen2));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen2);
-		printf("vsen3     : %#x\n", le32_to_cpu(ctrl->vsen3));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen3);
-		printf("vsen4     : %#x\n", le32_to_cpu(ctrl->vsen4));
-		if (human)
-			stdout_id_ctrl_vsen(ctrl->vsen4);
-		printf("msvmt     : %u\n", le16_to_cpu(ctrl->msvmt));
-	}
-	printf("sqes      : %#x\n", ctrl->sqes);
-	if (human)
-		stdout_id_ctrl_sqes(ctrl->sqes);
-	printf("cqes      : %#x\n", ctrl->cqes);
-	if (human)
-		stdout_id_ctrl_cqes(ctrl->cqes);
-	printf("maxcmd    : %d\n", le16_to_cpu(ctrl->maxcmd));
-	printf("nn        : %u\n", le32_to_cpu(ctrl->nn));
-	printf("oncs      : %#x\n", le16_to_cpu(ctrl->oncs));
-	if (human)
-		stdout_id_ctrl_oncs(ctrl->oncs);
-	printf("fuses     : %#x\n", le16_to_cpu(ctrl->fuses));
-	if (human)
-		stdout_id_ctrl_fuses(ctrl->fuses);
-	printf("fna       : %#x\n", ctrl->fna);
-	if (human)
-		stdout_id_ctrl_fna(ctrl->fna);
-	printf("vwc       : %#x\n", ctrl->vwc);
-	if (human)
-		stdout_id_ctrl_vwc(ctrl->vwc);
-	printf("awun      : %d\n", le16_to_cpu(ctrl->awun));
-	printf("awupf     : %d\n", le16_to_cpu(ctrl->awupf));
-	printf("icsvscc   : %d\n", ctrl->icsvscc);
-	if (human)
-		stdout_id_ctrl_icsvscc(ctrl->icsvscc);
-	printf("nwpc      : %d\n", ctrl->nwpc);
-	if (human)
-		stdout_id_ctrl_nwpc(ctrl->nwpc);
-	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
-	printf("ocfs      : %#x\n", le16_to_cpu(ctrl->ocfs));
-	if (human)
-		stdout_id_ctrl_ocfs(ctrl->ocfs);
-	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
-	if (human)
-		stdout_id_ctrl_sgls(ctrl->sgls);
-	printf("mnan      : %u\n", le32_to_cpu(ctrl->mnan));
-	printf("maxdna    : %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(ctrl->maxdna)));
-	printf("maxcna    : %u\n", le32_to_cpu(ctrl->maxcna));
-	printf("oaqd      : %u\n", le32_to_cpu(ctrl->oaqd));
-	printf("rhiri     : %d\n", ctrl->rhiri);
-	printf("hirt      : %d\n", ctrl->hirt);
-	printf("cmmrtd    : %d\n", le16_to_cpu(ctrl->cmmrtd));
-	printf("nmmrtd    : %d\n", le16_to_cpu(ctrl->nmmrtd));
-	printf("minmrtg   : %d\n", ctrl->minmrtg);
-	printf("maxmrtg   : %d\n", ctrl->maxmrtg);
-	printf("trattr    : %d\n", ctrl->trattr);
-	if (human)
-		stdout_id_ctrl_trattr(ctrl->trattr);
-	printf("mcudmq    : %d\n", le16_to_cpu(ctrl->mcudmq));
-	printf("mnsudmq   : %d\n", le16_to_cpu(ctrl->mnsudmq));
-	printf("mcmr      : %d\n", le16_to_cpu(ctrl->mcmr));
-	printf("nmcmr     : %d\n", le16_to_cpu(ctrl->nmcmr));
-	printf("mcdqpc    : %d\n", le16_to_cpu(ctrl->mcdqpc));
-	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
-	printf("ioccsz    : %u\n", le32_to_cpu(ctrl->ioccsz));
-	printf("iorcsz    : %u\n", le32_to_cpu(ctrl->iorcsz));
-	printf("icdoff    : %d\n", le16_to_cpu(ctrl->icdoff));
-	printf("fcatt     : %#x\n", ctrl->fcatt);
-	if (human)
-		stdout_id_ctrl_fcatt(ctrl->fcatt);
-	printf("msdbd     : %d\n", ctrl->msdbd);
-	printf("ofcs      : %d\n", le16_to_cpu(ctrl->ofcs));
-	if (human)
-		stdout_id_ctrl_ofcs(ctrl->ofcs);
-	printf("dctype    : %d\n", ctrl->dctype);
-	if (human)
-		stdout_id_ctrl_dctype(ctrl->dctype);
-	printf("ccrl      : %d\n", ctrl->ccrl);
+		row = stdout_kv_add(t, "vsen1", "%#x",
+				    le32_to_cpu(ctrl->vsen1));
+		if (verbose)
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ctrl_vsen_table(ctrl->vsen1));
 
-	stdout_id_ctrl_power(ctrl);
+		row = stdout_kv_add(t, "vsen2", "%#x",
+				    le32_to_cpu(ctrl->vsen2));
+		if (verbose)
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ctrl_vsen_table(ctrl->vsen2));
+
+		row = stdout_kv_add(t, "vsen3", "%#x",
+				    le32_to_cpu(ctrl->vsen3));
+		if (verbose)
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ctrl_vsen_table(ctrl->vsen3));
+
+		row = stdout_kv_add(t, "vsen4", "%#x",
+				    le32_to_cpu(ctrl->vsen4));
+		if (verbose)
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ctrl_vsen_table(ctrl->vsen4));
+
+		stdout_kv_add(t, "msvmt", "%u", le16_to_cpu(ctrl->msvmt));
+	}
+
+	row = stdout_kv_add(t, "sqes", "%#x", ctrl->sqes);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_sqes_table(ctrl->sqes));
+
+	row = stdout_kv_add(t, "cqes", "%#x", ctrl->cqes);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_cqes_table(ctrl->cqes));
+
+	stdout_kv_add(t, "maxcmd", "%d", le16_to_cpu(ctrl->maxcmd));
+	stdout_kv_add(t, "nn", "%u", le32_to_cpu(ctrl->nn));
+
+	row = stdout_kv_add(t, "oncs", "%#x", le16_to_cpu(ctrl->oncs));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_oncs_table(ctrl->oncs));
+
+	row = stdout_kv_add(t, "fuses", "%#x", le16_to_cpu(ctrl->fuses));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_fuses_table(ctrl->fuses));
+
+	row = stdout_kv_add(t, "fna", "%#x", ctrl->fna);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_fna_table(ctrl->fna));
+
+	row = stdout_kv_add(t, "vwc", "%#x", ctrl->vwc);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_vwc_table(ctrl->vwc));
+
+	stdout_kv_add(t, "awun", "%d", le16_to_cpu(ctrl->awun));
+	stdout_kv_add(t, "awupf", "%d", le16_to_cpu(ctrl->awupf));
+
+	row = stdout_kv_add(t, "icsvscc", "%d", ctrl->icsvscc);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_icsvscc_table(ctrl->icsvscc));
+
+	row = stdout_kv_add(t, "nwpc", "%d", ctrl->nwpc);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_nwpc_table(ctrl->nwpc));
+
+	stdout_kv_add(t, "acwu", "%d", le16_to_cpu(ctrl->acwu));
+
+	row = stdout_kv_add(t, "ocfs", "%#x", le16_to_cpu(ctrl->ocfs));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_ocfs_table(ctrl->ocfs));
+
+	row = stdout_kv_add(t, "sgls", "%#x", le32_to_cpu(ctrl->sgls));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_sgls_table(ctrl->sgls));
+
+	stdout_kv_add(t, "mnan", "%u", le32_to_cpu(ctrl->mnan));
+	stdout_kv_add(t, "maxdna", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(ctrl->maxdna)));
+	stdout_kv_add(t, "maxcna", "%u", le32_to_cpu(ctrl->maxcna));
+	stdout_kv_add(t, "oaqd", "%u", le32_to_cpu(ctrl->oaqd));
+	stdout_kv_add(t, "rhiri", "%d", ctrl->rhiri);
+	stdout_kv_add(t, "hirt", "%d", ctrl->hirt);
+	stdout_kv_add(t, "cmmrtd", "%d", le16_to_cpu(ctrl->cmmrtd));
+	stdout_kv_add(t, "nmmrtd", "%d", le16_to_cpu(ctrl->nmmrtd));
+	stdout_kv_add(t, "minmrtg", "%d", ctrl->minmrtg);
+	stdout_kv_add(t, "maxmrtg", "%d", ctrl->maxmrtg);
+
+	row = stdout_kv_add(t, "trattr", "%d", ctrl->trattr);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_trattr_table(ctrl->trattr));
+
+	stdout_kv_add(t, "mcudmq", "%d", le16_to_cpu(ctrl->mcudmq));
+	stdout_kv_add(t, "mnsudmq", "%d", le16_to_cpu(ctrl->mnsudmq));
+	stdout_kv_add(t, "mcmr", "%d", le16_to_cpu(ctrl->mcmr));
+	stdout_kv_add(t, "nmcmr", "%d", le16_to_cpu(ctrl->nmcmr));
+	stdout_kv_add(t, "mcdqpc", "%d", le16_to_cpu(ctrl->mcdqpc));
+	stdout_kv_add(t, "subnqn", "%-.*s",
+		      (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+	stdout_kv_add(t, "ioccsz", "%u", le32_to_cpu(ctrl->ioccsz));
+	stdout_kv_add(t, "iorcsz", "%u", le32_to_cpu(ctrl->iorcsz));
+	stdout_kv_add(t, "icdoff", "%d", le16_to_cpu(ctrl->icdoff));
+
+	row = stdout_kv_add(t, "fcatt", "%#x", ctrl->fcatt);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_fcatt_table(ctrl->fcatt));
+
+	stdout_kv_add(t, "msdbd", "%d", ctrl->msdbd);
+
+	row = stdout_kv_add(t, "ofcs", "%d", le16_to_cpu(ctrl->ofcs));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_ofcs_table(ctrl->ofcs));
+
+	row = stdout_kv_add(t, "dctype", "%d", ctrl->dctype);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_dctype_table(ctrl->dctype));
+
+	stdout_kv_add(t, "ccrl", "%d", ctrl->ccrl);
+
+	row = stdout_kv_add(t, "ps", "%d states", ctrl->npss + 1);
+	/* Unlike the fields above, shown regardless of @verbose. */
+	shr_table_set_row_subtable(t, row, stdout_id_ctrl_ps_table(ctrl));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build identify-controller table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
+
 	if (vendor_show)
 		vendor_show(ctrl->vs, NULL);
 	else if (vs) {
