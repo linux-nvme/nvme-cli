@@ -7,7 +7,9 @@
  */
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <ifaddrs.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -39,6 +41,17 @@ static bool check_str(const char *name, const char *got, const char *want)
 
 	printf(" - %s: got \"%s\", want \"%s\" [FAIL]\n",
 	       name, got ? got : "(null)", want ? want : "(null)");
+	return false;
+}
+
+static bool check_ret(const char *name, int got, int want)
+{
+	if (got == want) {
+		printf(" - %s [PASS]\n", name);
+		return true;
+	}
+
+	printf(" - %s: got %d, want %d [FAIL]\n", name, got, want);
 	return false;
 }
 
@@ -200,6 +213,108 @@ static bool test_iface_primary_addr_matches(void)
 	return pass;
 }
 
+static bool test_route_get_egress_iface(void)
+{
+	char ifname[IF_NAMESIZE];
+	char small_buf[8];
+	bool pass = true;
+	int ret;
+
+	printf("test_route_get_egress_iface:\n");
+
+	/* Invalid arguments */
+	pass &= check_ret("NULL daddr fails with -EINVAL",
+			  shr_route_get_egress_iface(NULL, NULL, ifname,
+					  sizeof(ifname)),
+			  -EINVAL);
+	pass &= check_ret("invalid daddr string fails with -EINVAL",
+			  shr_route_get_egress_iface(NULL, "invalid_ip",
+					  ifname, sizeof(ifname)),
+			  -EINVAL);
+	pass &= check_ret("invalid saddr string fails with -EINVAL",
+			  shr_route_get_egress_iface("invalid_ip", "127.0.0.1",
+					  ifname, sizeof(ifname)),
+			  -EINVAL);
+	pass &= check_ret("mismatched saddr IPv4 and daddr IPv6 families fails with -EINVAL",
+			  shr_route_get_egress_iface("127.0.0.1", "::1",
+					  ifname, sizeof(ifname)),
+			  -EINVAL);
+	pass &= check_ret("mismatched saddr IPv6 and daddr IPv4 families fails with -EINVAL",
+			  shr_route_get_egress_iface("::1", "127.0.0.1",
+					  ifname, sizeof(ifname)),
+			  -EINVAL);
+	pass &= check_ret("buffer smaller than IF_NAMESIZE fails with -EINVAL",
+			  shr_route_get_egress_iface(NULL, "127.0.0.1",
+					  small_buf, sizeof(small_buf)),
+			  -EINVAL);
+
+	/* Valid lookups (loopback routes always present) */
+	memset(ifname, 0, sizeof(ifname));
+	ret = shr_route_get_egress_iface(NULL, "127.0.0.1", ifname,
+			sizeof(ifname));
+	pass &= check_ret("IPv4 loopback destination lookup returns 0", ret, 0);
+	pass &= check_str("IPv4 loopback egress interface is lo", ifname, "lo");
+
+	memset(ifname, 0, sizeof(ifname));
+	ret = shr_route_get_egress_iface("127.0.0.1", "127.0.0.1", ifname,
+			sizeof(ifname));
+	pass &= check_ret("IPv4 loopback src and dst lookup returns 0", ret, 0);
+	pass &= check_str("IPv4 loopback src/dst egress interface is lo",
+			ifname, "lo");
+
+	memset(ifname, 0, sizeof(ifname));
+	ret = shr_route_get_egress_iface(NULL, "::1", ifname, sizeof(ifname));
+	pass &= check_ret("IPv6 loopback destination lookup returns 0", ret, 0);
+	pass &= check_str("IPv6 loopback egress interface is lo", ifname, "lo");
+
+	memset(ifname, 0, sizeof(ifname));
+	ret = shr_route_get_egress_iface("::1", "::1", ifname, sizeof(ifname));
+	pass &= check_ret("IPv6 loopback src and dst lookup returns 0", ret, 0);
+	pass &= check_str("IPv6 loopback src/dst egress interface is lo",
+			ifname, "lo");
+
+	return pass;
+}
+
+static bool test_netdev_get_hw_queues(void)
+{
+	uint32_t combined, tx, rx;
+	bool pass = true;
+	int ret;
+
+	printf("test_netdev_get_hw_queues:\n");
+
+	/* Invalid arguments */
+	pass &= check_ret("NULL ifname fails with -EINVAL",
+			  shr_netdev_get_hw_queues(NULL, &combined, &tx, &rx),
+			  -EINVAL);
+	pass &= check_ret("NULL combined_count fails with -EINVAL",
+			  shr_netdev_get_hw_queues("lo", NULL, &tx, &rx),
+			  -EINVAL);
+	pass &= check_ret("NULL tx_count fails with -EINVAL",
+			  shr_netdev_get_hw_queues("lo", &combined, NULL, &rx),
+			  -EINVAL);
+	pass &= check_ret("NULL rx_count fails with -EINVAL",
+			  shr_netdev_get_hw_queues("lo", &combined, &tx, NULL),
+			  -EINVAL);
+
+	/* Non-existent interface */
+	ret = shr_netdev_get_hw_queues("nonexistent99", &combined, &tx, &rx);
+	pass &= check_ret("non-existent interface fails with -ENODEV or -ENOTTY",
+			  (ret == -ENODEV || ret == -ENOTTY), true);
+
+	/*
+	 * Querying loopback interface ("lo") or an interface without ethtool
+	 * channel support typically returns -EOPNOTSUPP or -ENOTTY (or 0 if
+	 * supported).
+	 */
+	ret = shr_netdev_get_hw_queues("lo", &combined, &tx, &rx);
+	pass &= check_bool("querying loopback interface returns 0 or -EOPNOTSUPP or -ENOTTY",
+			  (ret == 0 || ret == -EOPNOTSUPP || ret == -ENOTTY),
+			  true);
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -208,6 +323,8 @@ int main(void)
 	pass &= test_ipv6_is_link_local();
 	pass &= test_iface_matching_addr();
 	pass &= test_iface_primary_addr_matches();
+	pass &= test_route_get_egress_iface();
+	pass &= test_netdev_get_hw_queues();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
