@@ -19,17 +19,20 @@
  * Fabrics specification standard.
  */
 
+#include <ccan/minmax/minmax.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
+#include <net/if.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -49,6 +52,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/str/str.h>
 #include <shared/io-util.h>
+#include <shared/net-util.h>
 #include <shared/sig-util.h>
 
 #include "cleanup.h"
@@ -424,6 +428,50 @@ static int build_conn_tid(const struct libnvmf_config_conn *conn,
 			hostnqn, hostid, tid);
 }
 
+/*
+ * Return the number of I/O queues on success. Return 0 if the number
+ * cannot be determined or the NIC has only one hardware queue, in
+ * which case the host should determine the number of I/O queues.
+ */
+static int fabrics_connect_nr_io_queues(const char *transport,
+					const char *traddr,
+					const char *host_traddr,
+					const char *host_iface)
+{
+	uint32_t combined_count, tx_count, rx_count;
+	char ifname[IF_NAMESIZE] = {};
+	int nr_cpus, nr_hw_queues = 0;
+
+	if (!transport || strcmp(transport, "tcp"))
+		return 0;
+
+	nr_cpus = get_nprocs();
+	if (nr_cpus <= 0)
+		return 0;
+
+	if (host_iface && host_iface[0]) {
+		strncpy(ifname, host_iface, IF_NAMESIZE - 1);
+	} else {
+		if (shr_route_get_egress_iface(host_traddr, traddr,
+				ifname, IF_NAMESIZE))
+			return 0;
+	}
+
+	if (shr_netdev_get_hw_queues(ifname, &combined_count,
+			&tx_count, &rx_count))
+		return 0;
+
+	if (combined_count)
+		nr_hw_queues = combined_count;
+	else if (tx_count && rx_count)
+		nr_hw_queues = min(tx_count, rx_count);
+
+	if (nr_hw_queues <= 1)
+		return 0;
+
+	return min(nr_cpus, nr_hw_queues);
+}
+
 /* libnvmf_config_conn_for_each() callback: settle addressing/identity,
  * check exclusion, then discover or connect.
  */
@@ -435,6 +483,8 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 	struct hook_fabrics_data hfd = { .flags = st->flags, .raw = st->raw };
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_nvmf_tid struct libnvmf_tid *tid = NULL;
+	const struct libnvmf_params *params;
+	const char *key = "nr-io-queues";
 	int err;
 
 	if (st->mode == CONSUME_ROLE_BASED && !is_dc && !st->connect)
@@ -460,9 +510,24 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 		goto record_err;
 
 	err = libnvmf_context_set_connection_from_tid(fctx, tid);
-	if (!err)
-		err = libnvmf_context_apply_params(fctx,
-				libnvmf_config_conn_get_params(conn));
+	if (err)
+		goto record_err;
+
+	params = libnvmf_config_conn_get_params(conn);
+	if (!libnvmf_params_get(params, key)) {
+		int nr_io_queues;
+
+		nr_io_queues = fabrics_connect_nr_io_queues(
+				libnvmf_tid_get_transport(tid),
+				libnvmf_tid_get_traddr(tid),
+				libnvmf_tid_get_host_traddr(tid),
+				libnvmf_tid_get_host_iface(tid));
+
+		if (nr_io_queues > 0)
+			libnvmf_context_set_nr_io_queues(fctx, nr_io_queues);
+	}
+
+	err = libnvmf_context_apply_params(fctx, params);
 	if (err)
 		goto record_err;
 
@@ -1067,6 +1132,9 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		return ret;
 	fa.traddr = resolved_traddr;
 
+	if (!fa.nr_io_queues)
+		fa.nr_io_queues = fabrics_connect_nr_io_queues(fa.transport,
+				      fa.traddr, fa.host_traddr, fa.host_iface);
 do_connect:
 	ret = nvme_create_global_ctx_hostnqn(&ctx,
 		fa.hostnqn, fa.hostid, &hnqn, &hid);
