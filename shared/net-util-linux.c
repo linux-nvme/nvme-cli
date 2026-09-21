@@ -9,13 +9,16 @@
 #include <arpa/inet.h>
 #include <asm/types.h>
 #include <errno.h>
+#include <linux/ethtool.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#include <linux/sockios.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -409,6 +412,37 @@ int shr_route_get_egress_iface(const char *saddr, const char *daddr,
 	}
 
 	return -ENOENT;
+out:
+	close(fd);
+	return ret;
+}
+
+int shr_netdev_get_hw_queues(const char *ifname, uint32_t *combined_count,
+		uint32_t *tx_count, uint32_t *rx_count)
+{
+	struct ethtool_channels chan = {};
+	struct ifreq ifr = {};
+	int fd, ret = 0;
+
+	if (!ifname || !combined_count || !tx_count || !rx_count)
+		return -EINVAL;
+
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd < 0)
+		return -errno;
+
+	chan.cmd = ETHTOOL_GCHANNELS;
+	snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", ifname);
+	ifr.ifr_data = (void *)&chan;
+
+	if (ioctl(fd, SIOCETHTOOL, &ifr) < 0) {
+		ret = -errno;
+		goto out;
+	}
+
+	*combined_count = chan.combined_count;
+	*tx_count = chan.tx_count;
+	*rx_count = chan.rx_count;
 out:
 	close(fd);
 	return ret;
