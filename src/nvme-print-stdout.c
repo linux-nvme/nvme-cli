@@ -4946,7 +4946,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 			   size_t len)
 {
-	int offset = sizeof(struct nvme_ana_log);
+	size_t offset = sizeof(struct nvme_ana_log);
 	struct nvme_ana_log *hdr = ana_log;
 	struct nvme_ana_group_desc *desc;
 	size_t nsid_buf_size;
@@ -4963,9 +4963,13 @@ static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	printf("ANA Log Desc :-\n");
 
 	for (i = 0; i < le16_to_cpu(ana_log->ngrps); i++) {
+		if (offset > len || len - offset < sizeof(*desc))
+			return;
 		desc = base + offset;
 		nr_nsids = le32_to_cpu(desc->nnsids);
-		nsid_buf_size = nr_nsids * sizeof(__le32);
+		nsid_buf_size = (size_t)nr_nsids * sizeof(__le32);
+		if (len - offset - sizeof(*desc) < nsid_buf_size)
+			return;
 
 		offset += sizeof(*desc);
 		printf("grpid	:	%u\n", le32_to_cpu(desc->grpid));
@@ -4974,7 +4978,7 @@ static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 		       le64_to_cpu(desc->chgcnt));
 		printf("state	:	%s\n",
 				nvme_ana_state_to_string(desc->state));
-		for (j = 0; j < le32_to_cpu(desc->nnsids); j++)
+		for (j = 0; j < nr_nsids; j++)
 			printf("	nsid	:	%u\n",
 					le32_to_cpu(desc->nsids[j]));
 		printf("\n");
