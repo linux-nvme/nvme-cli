@@ -106,6 +106,8 @@
 
 * The NVME_CTRL_OACS API bit field names changed to follow the spec.
 
+* The NVME_CTRL_FRMW API bit field names changed to follow the spec.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
