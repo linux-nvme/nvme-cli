@@ -604,6 +604,323 @@ static bool test_shr_table_print(void)
 	return pass;
 }
 
+/*
+ * Builds a tiny 2-column "bit : description" table, the shape a bit-field
+ * decode breakdown would use as a row's nested extra table.
+ */
+static struct shr_table *build_decode_table(void)
+{
+	struct shr_table_column columns[] = {
+		{ "", RIGHT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *sub = shr_table_init_with_columns(columns, 2);
+	int row;
+
+	shr_table_set_column_sep(sub, " : ");
+	shr_table_set_no_header(sub, true);
+	shr_table_set_indent(sub, 2);
+
+	row = shr_table_get_row_id(sub);
+	shr_table_set_value_str(sub, 0, row, "[0:0]", RIGHT);
+	shr_table_set_value_str(sub, 1, row, "Multi Port", LEFT);
+	shr_table_add_row(sub, row);
+
+	return sub;
+}
+
+static bool test_row_extra(void)
+{
+	struct shr_table_column columns[] = {
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	char template[] = "shr-test-table-XXXXXX";
+	struct shr_table *t;
+	struct shr_table *sub;
+	FILE *stream;
+	char *buf;
+	bool pass = true;
+	long size;
+	int plain_row, tagged_row, row, fd;
+
+	printf("test_row_extra:\n");
+
+	t = shr_table_init_with_columns(columns, 2);
+	pass &= check_bool("table allocated", t != NULL);
+	if (!t)
+		return pass;
+
+	plain_row = shr_table_get_row_id(t);
+	shr_table_set_value_str(t, 0, plain_row, "plain", LEFT);
+	shr_table_set_value_str(t, 1, plain_row, "v1", LEFT);
+	shr_table_add_row(t, plain_row);
+
+	tagged_row = shr_table_get_row_id(t);
+	shr_table_set_value_str(t, 0, tagged_row, "tagged", LEFT);
+	shr_table_set_value_str(t, 1, tagged_row, "v2", LEFT);
+	shr_table_add_row(t, tagged_row);
+
+	pass &= check_bool("plain row has no extra table by default",
+			    shr_table_get_row_subtable(t, plain_row) == NULL);
+
+	shr_table_set_row_subtable(t, tagged_row, build_decode_table());
+	pass &= check_bool("tagged row's extra table reads back",
+			    shr_table_get_row_subtable(t, tagged_row) != NULL);
+
+	/* A second set_row_subtable() replaces (and frees) the first. */
+	shr_table_set_row_subtable(t, tagged_row, build_decode_table());
+	sub = shr_table_get_row_subtable(t, tagged_row);
+	pass &= check_bool("set_row_subtable overwrites the previous sub-table",
+			    sub != NULL);
+
+	/* Render like a caller would: print the row, then its extra table
+	 * indented, whenever one is attached.
+	 */
+	fd = shr_mkstemp(template);
+	shr_assert(fd >= 0);
+	stream = fdopen(fd, "w");
+	shr_assert(stream != NULL);
+
+	for (row = 0; row < t->num_rows; row++) {
+		shr_table_print_row(stream, t, row);
+		sub = shr_table_get_row_subtable(t, row);
+		if (sub)
+			shr_table_print_stream(stream, sub);
+	}
+	fclose(stream);
+
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
+	shr_unlink(template);
+
+	pass &= check_bool("plain row's line has no nested content below it",
+			    strstr(buf, "plain") != NULL);
+	pass &= check_bool("tagged row's nested table is indented and printed",
+			    strstr(buf, "  [0:0] : Multi Port") != NULL);
+	free(buf);
+
+	shr_table_free(t);
+
+	return pass;
+}
+
+static bool test_align_column_including_outer(void)
+{
+	struct shr_table_column kv_columns[] = {
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table_column sub_columns[] = {
+		{ "", RIGHT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	char template[] = "shr-test-table-XXXXXX";
+	char label[32];
+	struct shr_table *t, *sub_a, *sub_b, *sub;
+	FILE *stream;
+	char *buf;
+	bool pass = true;
+	long size;
+	int vid_row, cntlid_row, sub_row, fd, row;
+
+	printf("test_align_column_including_outer:\n");
+
+	t = shr_table_init_with_columns(kv_columns, 3);
+	pass &= check_bool("table allocated", t != NULL);
+	if (!t)
+		return pass;
+	shr_table_set_no_header(t, true);
+
+	vid_row = shr_table_get_row_id(t);
+	shr_table_set_value_str(t, 0, vid_row, "vid", LEFT);
+	shr_table_set_value_str(t, 1, vid_row, ":", LEFT);
+	shr_table_set_value_str(t, 2, vid_row, "0x1", LEFT);
+	shr_table_add_row(t, vid_row);
+
+	cntlid_row = shr_table_get_row_id(t);
+	shr_table_set_value_str(t, 0, cntlid_row, "cntlid", LEFT);
+	shr_table_set_value_str(t, 1, cntlid_row, ":", LEFT);
+	shr_table_set_value_str(t, 2, cntlid_row, "0x2", LEFT);
+	shr_table_add_row(t, cntlid_row);
+
+	/* Narrower subtable, attached to the shorter "vid" row. */
+	sub_a = shr_table_init_with_columns(sub_columns, 3);
+	shr_table_set_no_header(sub_a, true);
+	shr_table_set_indent(sub_a, 2);
+	sub_row = shr_table_get_row_id(sub_a);
+	shr_table_set_value_str(sub_a, 0, sub_row, "[0:0]", RIGHT);
+	shr_table_set_value_str(sub_a, 1, sub_row, ":", LEFT);
+	shr_table_set_value_str(sub_a, 2, sub_row, "bit zero", LEFT);
+	shr_table_add_row(sub_a, sub_row);
+	shr_table_set_row_subtable(t, vid_row, sub_a);
+
+	/* Wider subtable, attached to the longer "cntlid" row -- forces
+	 * both the outer table and the narrower subtable to grow.
+	 */
+	sub_b = shr_table_init_with_columns(sub_columns, 3);
+	shr_table_set_no_header(sub_b, true);
+	shr_table_set_indent(sub_b, 2);
+	sub_row = shr_table_get_row_id(sub_b);
+	shr_table_set_value_str(sub_b, 0, sub_row, "[100:100]", RIGHT);
+	shr_table_set_value_str(sub_b, 1, sub_row, ":", LEFT);
+	shr_table_set_value_str(sub_b, 2, sub_row, "a wide bit range", LEFT);
+	shr_table_add_row(sub_b, sub_row);
+	shr_table_set_row_subtable(t, cntlid_row, sub_b);
+
+	shr_table_align_column(t, 0, 0);
+
+	fd = shr_mkstemp(template);
+	shr_assert(fd >= 0);
+	stream = fdopen(fd, "w");
+	shr_assert(stream != NULL);
+
+	for (row = 0; row < t->num_rows; row++) {
+		shr_table_print_row(stream, t, row);
+		sub = shr_table_get_row_subtable(t, row);
+		if (sub)
+			shr_table_print_stream(stream, sub);
+	}
+	fclose(stream);
+
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
+	shr_unlink(template);
+
+	/*
+	 * The widest label is "[100:100]" (9 chars), indented by 2, so the
+	 * shared column has to reach 11 -- wider than either the outer
+	 * table's own "cntlid" (6) or the narrower subtable's "[0:0]" (5)
+	 * would need alone.
+	 */
+	snprintf(label, sizeof(label), "%-11s : ", "vid");
+	pass &= check_bool("outer 'vid' row's ':' is pushed out to match",
+			    strstr(buf, label) != NULL);
+
+	snprintf(label, sizeof(label), "%-11s : ", "cntlid");
+	pass &= check_bool("outer 'cntlid' row's ':' is pushed out to match",
+			    strstr(buf, label) != NULL);
+
+	/* Both subtables' bits column is RIGHT-aligned, unlike the outer
+	 * table's LEFT-aligned name column above.
+	 */
+	snprintf(label, sizeof(label), "  %9s : ", "[0:0]");
+	pass &= check_bool("narrower subtable's ':' is pushed out to match",
+			    strstr(buf, label) != NULL);
+
+	snprintf(label, sizeof(label), "  %9s : ", "[100:100]");
+	pass &= check_bool("widest subtable's ':' lands at the shared column",
+			    strstr(buf, label) != NULL);
+
+	free(buf);
+	shr_table_free(t);
+
+	return pass;
+}
+
+static struct shr_table *build_bits_subtable(const char *bits,
+		const char *val, const char *desc)
+{
+	struct shr_table_column columns[] = {
+		{ "", RIGHT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", RIGHT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *sub = shr_table_init_with_columns(columns, 4);
+	int row;
+
+	shr_table_set_no_header(sub, true);
+	shr_table_set_indent(sub, 2);
+
+	row = shr_table_get_row_id(sub);
+	shr_table_set_value_str(sub, 0, row, bits, RIGHT);
+	shr_table_set_value_str(sub, 1, row, ":", LEFT);
+	shr_table_set_value_str(sub, 2, row, val, RIGHT);
+	shr_table_set_value_str(sub, 3, row, desc, LEFT);
+	shr_table_add_row(sub, row);
+
+	return sub;
+}
+
+static bool test_align_column_subtables_only(void)
+{
+	struct shr_table_column kv_columns[] = {
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	char template[] = "shr-test-table-XXXXXX";
+	char expected[64];
+	struct shr_table *t;
+	FILE *stream;
+	char *buf;
+	bool pass = true;
+	long size;
+	int narrow_row, wide_row, fd, row;
+	struct shr_table *sub;
+
+	printf("test_align_column_subtables_only:\n");
+
+	t = shr_table_init_with_columns(kv_columns, 3);
+	pass &= check_bool("table allocated", t != NULL);
+	if (!t)
+		return pass;
+	shr_table_set_no_header(t, true);
+
+	narrow_row = shr_table_get_row_id(t);
+	shr_table_set_value_str(t, 0, narrow_row, "cmic", LEFT);
+	shr_table_set_value_str(t, 1, narrow_row, ":", LEFT);
+	shr_table_set_value_str(t, 2, narrow_row, "0", LEFT);
+	shr_table_add_row(t, narrow_row);
+	/* Every value in this subtable is a single digit. */
+	shr_table_set_row_subtable(t, narrow_row,
+			build_bits_subtable("[0:0]", "0", "Single Port"));
+
+	wide_row = shr_table_get_row_id(t);
+	shr_table_set_value_str(t, 0, wide_row, "elpe", LEFT);
+	shr_table_set_value_str(t, 1, wide_row, ":", LEFT);
+	shr_table_set_value_str(t, 2, wide_row, "63", LEFT);
+	shr_table_add_row(t, wide_row);
+	/* This subtable's value column needs to be wider than "cmic"'s. */
+	shr_table_set_row_subtable(t, wide_row,
+			build_bits_subtable("[7:0]", "0x3f", "ELPE"));
+
+	shr_table_align_subtable_column(t, 2);
+
+	fd = shr_mkstemp(template);
+	shr_assert(fd >= 0);
+	stream = fdopen(fd, "w");
+	shr_assert(stream != NULL);
+
+	for (row = 0; row < t->num_rows; row++) {
+		shr_table_print_row(stream, t, row);
+		sub = shr_table_get_row_subtable(t, row);
+		if (sub)
+			shr_table_print_stream(stream, sub);
+	}
+	fclose(stream);
+
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
+	shr_unlink(template);
+
+	/* "0x3f" (4 chars) is the widest value, so the narrower subtable's
+	 * "0" must be padded out to the same width for its description to
+	 * start at the same column as the wide subtable's.
+	 */
+	snprintf(expected, sizeof(expected), "%4s Single Port", "0");
+	pass &= check_bool("narrow subtable's value is padded to match",
+			    strstr(buf, expected) != NULL);
+	snprintf(expected, sizeof(expected), "%4s ELPE", "0x3f");
+	pass &= check_bool("wide subtable's value keeps its own width",
+			    strstr(buf, expected) != NULL);
+
+	free(buf);
+	shr_table_free(t);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -618,6 +935,9 @@ int main(void)
 	pass &= test_invalid_format_type();
 	pass &= test_key_value_style();
 	pass &= test_print_row_interleaved();
+	pass &= test_row_extra();
+	pass &= test_align_column_including_outer();
+	pass &= test_align_column_subtables_only();
 	pass &= test_shr_table_print();
 
 	fflush(stdout);
