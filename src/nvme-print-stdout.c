@@ -3460,11 +3460,11 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 	__u16 lock = NVME_CTRL_OACS_CFLS(oacs);
 	__u16 glbas = NVME_CTRL_OACS_GLSS(oacs);
 	__u16 dbc = NVME_CTRL_OACS_DBCS(oacs);
-	__u16 vir = NVME_CTRL_OACS_VMS_M(oacs);
+	__u16 vir = NVME_CTRL_OACS_VMS(oacs);
 	__u16 nmi = NVME_CTRL_OACS_NSRS(oacs);
 	__u16 dir = NVME_CTRL_OACS_DIRS(oacs);
 	__u16 sft = NVME_CTRL_OACS_DSTS(oacs);
-	__u16 nsm = NVME_CTRL_OACS_NMS_M(oacs);
+	__u16 nsm = NVME_CTRL_OACS_NMS(oacs);
 	__u16 fwc = NVME_CTRL_OACS_FWDS(oacs);
 	__u16 fmt = NVME_CTRL_OACS_FNVMS(oacs);
 	__u16 sec = NVME_CTRL_OACS_SSRS(oacs);

@@ -2420,28 +2420,28 @@ enum nvme_id_ctrl_mec {
  * @NVME_CTRL_OACS_HMLMS_MASK: Mask to get the Host Managed Live Migration support
  * @NVME_CTRL_OACS_CCFLS_MASK: Mask to get the Controller-scoped Command and
  *			       Feature Lockdown supported
- * @NVME_CTRL_OACS_SECURITY:   If set, then the controller supports the
+ * @NVME_CTRL_OACS_SSRS:       If set, then the controller supports the
  *			       Security Send and Security Receive commands.
- * @NVME_CTRL_OACS_FORMAT:     If set then the controller supports the Format
+ * @NVME_CTRL_OACS_FNVMS:      If set then the controller supports the Format
  *			       NVM command.
- * @NVME_CTRL_OACS_FW:	       If set, then the controller supports the
+ * @NVME_CTRL_OACS_FWDS:       If set, then the controller supports the
  *			       Firmware Commit and Firmware Image Download commands.
- * @NVME_CTRL_OACS_NS_MGMT:    If set, then the controller supports the
+ * @NVME_CTRL_OACS_NMS:	       If set, then the controller supports the
  *			       Namespace Management capability
- * @NVME_CTRL_OACS_SELF_TEST:  If set, then the controller supports the Device
+ * @NVME_CTRL_OACS_DSTS:       If set, then the controller supports the Device
  *			       Self-test command.
- * @NVME_CTRL_OACS_DIRECTIVES: If set, then the controller supports Directives
+ * @NVME_CTRL_OACS_DIRS:       If set, then the controller supports Directives
  *			       and the Directive Send and Directive Receive
  *			       commands.
- * @NVME_CTRL_OACS_NVME_MI:    If set, then the controller supports the NVMe-MI
+ * @NVME_CTRL_OACS_NSRS:       If set, then the controller supports the NVMe-MI
  *			       Send and NVMe-MI Receive commands.
- * @NVME_CTRL_OACS_VIRT_MGMT:  If set, then the controller supports the
+ * @NVME_CTRL_OACS_VMS:	       If set, then the controller supports the
  *			       Virtualization Management command.
- * @NVME_CTRL_OACS_DBBUF_CFG:  If set, then the controller supports the
+ * @NVME_CTRL_OACS_DBCS:       If set, then the controller supports the
  *			       Doorbell Buffer Config command.
- * @NVME_CTRL_OACS_LBA_STATUS: If set, then the controller supports the Get LBA
+ * @NVME_CTRL_OACS_GLSS:       If set, then the controller supports the Get LBA
  *			       Status capability.
- * @NVME_CTRL_OACS_CMD_FEAT_LD:If set, then the controller supports the command
+ * @NVME_CTRL_OACS_CFLS:       If set, then the controller supports the command
  *			       and feature lockdown capability.
  * @NVME_CTRL_OACS_HMLM:       If set, then the controller supports the command
  *			       and Host Managed Live Migration capability.
@@ -2478,17 +2478,17 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_CFLS_MASK		= 1,
 	NVME_CTRL_OACS_HMLMS_MASK		= 1,
 	NVME_CTRL_OACS_CCFLS_MASK		= 1,
-	NVME_CTRL_OACS_SECURITY			= NVME_VAL(CTRL_OACS_SSRS),
-	NVME_CTRL_OACS_FORMAT			= NVME_VAL(CTRL_OACS_FNVMS),
-	NVME_CTRL_OACS_FW			= NVME_VAL(CTRL_OACS_FWDS),
-	NVME_CTRL_OACS_NS_MGMT			= NVME_VAL(CTRL_OACS_NMS),
-	NVME_CTRL_OACS_SELF_TEST		= NVME_VAL(CTRL_OACS_DSTS),
-	NVME_CTRL_OACS_DIRECTIVES		= NVME_VAL(CTRL_OACS_DIRS),
-	NVME_CTRL_OACS_NVME_MI			= NVME_VAL(CTRL_OACS_NSRS),
-	NVME_CTRL_OACS_VIRT_MGMT		= NVME_VAL(CTRL_OACS_VMS),
-	NVME_CTRL_OACS_DBBUF_CFG		= NVME_VAL(CTRL_OACS_DBCS),
-	NVME_CTRL_OACS_LBA_STATUS		= NVME_VAL(CTRL_OACS_GLSS),
-	NVME_CTRL_OACS_CMD_FEAT_LD		= NVME_VAL(CTRL_OACS_CFLS),
+	NVME_CTRL_OACS_SSRS			= NVME_VAL(CTRL_OACS_SSRS),
+	NVME_CTRL_OACS_FNVMS			= NVME_VAL(CTRL_OACS_FNVMS),
+	NVME_CTRL_OACS_FWDS			= NVME_VAL(CTRL_OACS_FWDS),
+	NVME_CTRL_OACS_NMS			= NVME_VAL(CTRL_OACS_NMS),
+	NVME_CTRL_OACS_DSTS			= NVME_VAL(CTRL_OACS_DSTS),
+	NVME_CTRL_OACS_DIRS			= NVME_VAL(CTRL_OACS_DIRS),
+	NVME_CTRL_OACS_NSRS			= NVME_VAL(CTRL_OACS_NSRS),
+	NVME_CTRL_OACS_VMS			= NVME_VAL(CTRL_OACS_VMS),
+	NVME_CTRL_OACS_DBCS			= NVME_VAL(CTRL_OACS_DBCS),
+	NVME_CTRL_OACS_GLSS			= NVME_VAL(CTRL_OACS_GLSS),
+	NVME_CTRL_OACS_CFLS			= NVME_VAL(CTRL_OACS_CFLS),
 	NVME_CTRL_OACS_HMLM			= NVME_VAL(CTRL_OACS_HMLMS),
 	NVME_CTRL_OACS_CTRL_SCOPED_CMD_FEAT_LD	= NVME_VAL(CTRL_OACS_CCFLS),
 };
@@ -2496,11 +2496,11 @@ enum nvme_id_ctrl_oacs {
 #define NVME_CTRL_OACS_SSRS(oacs)	NVME_GET(oacs, CTRL_OACS_SSRS)
 #define NVME_CTRL_OACS_FNVMS(oacs)	NVME_GET(oacs, CTRL_OACS_FNVMS)
 #define NVME_CTRL_OACS_FWDS(oacs)	NVME_GET(oacs, CTRL_OACS_FWDS)
-#define NVME_CTRL_OACS_NMS_M(oacs)	NVME_GET(oacs, CTRL_OACS_NMS)
+#define NVME_CTRL_OACS_NMS(oacs)	NVME_GET(oacs, CTRL_OACS_NMS)
 #define NVME_CTRL_OACS_DSTS(oacs)	NVME_GET(oacs, CTRL_OACS_DSTS)
 #define NVME_CTRL_OACS_DIRS(oacs)	NVME_GET(oacs, CTRL_OACS_DIRS)
 #define NVME_CTRL_OACS_NSRS(oacs)	NVME_GET(oacs, CTRL_OACS_NSRS)
-#define NVME_CTRL_OACS_VMS_M(oacs)	NVME_GET(oacs, CTRL_OACS_VMS)
+#define NVME_CTRL_OACS_VMS(oacs)	NVME_GET(oacs, CTRL_OACS_VMS)
 #define NVME_CTRL_OACS_DBCS(oacs)	NVME_GET(oacs, CTRL_OACS_DBCS)
 #define NVME_CTRL_OACS_GLSS(oacs)	NVME_GET(oacs, CTRL_OACS_GLSS)
 #define NVME_CTRL_OACS_CFLS(oacs)	NVME_GET(oacs, CTRL_OACS_CFLS)
