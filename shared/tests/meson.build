@@ -140,6 +140,7 @@ test_table_util = executable(
     ['test-table-util.c'],
     dependencies: [
         config_dep,
+        ccan_dep,
         shared_dep,
     ],
 )

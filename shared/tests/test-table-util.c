@@ -11,6 +11,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <ccan/array_size/array_size.h>
+
 #include <shared/fs-util.h>
 #include <shared/assert-util.h>
 #include <shared/table-util.h>
@@ -377,6 +379,176 @@ static bool test_invalid_format_type(void)
 	return pass;
 }
 
+static bool test_key_value_style(void)
+{
+	struct shr_table_column columns[] = {
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	static const struct {
+		const char *name;
+		const char *val;
+	} fields[] = {
+		{ "vid",    "0x1234" },
+		{ "ssvid",  "0x5678" },
+		{ "cntlid", "0xabcd" },
+	};
+	char template[] = "shr-test-table-XXXXXX";
+	struct shr_table *t;
+	char *buf;
+	FILE *stream;
+	bool pass = true;
+	long size;
+	int row, fd, i, name_width = 0, val_width = 0;
+	char expected[64];
+
+	printf("test_key_value_style:\n");
+
+	/*
+	 * A key/value listing (as used for e.g. identify-structure dumps)
+	 * has no real header and uses ": " rather than a bare space between
+	 * the field name and its value. Both are supported without
+	 * touching the row/column printing model itself.
+	 */
+	t = shr_table_init_with_columns(columns, 2);
+	pass &= check_bool("table allocated", t != NULL);
+	if (!t)
+		return pass;
+
+	shr_table_set_column_sep(t, " : ");
+	shr_table_set_no_header(t, true);
+
+	for (i = 0; i < (int)ARRAY_SIZE(fields); i++) {
+		row = shr_table_get_row_id(t);
+		pass &= check_bool("row id is non-negative", row >= 0);
+		if (row < 0) {
+			shr_table_free(t);
+			return pass;
+		}
+		shr_table_set_value_str(t, 0, row, fields[i].name, LEFT);
+		shr_table_set_value_str(t, 1, row, fields[i].val, LEFT);
+		shr_table_add_row(t, row);
+
+		if ((int)strlen(fields[i].name) > name_width)
+			name_width = (int)strlen(fields[i].name);
+		if ((int)strlen(fields[i].val) > val_width)
+			val_width = (int)strlen(fields[i].val);
+	}
+
+	fd = shr_mkstemp(template);
+	shr_assert(fd >= 0);
+	stream = fdopen(fd, "w");
+	shr_assert(stream != NULL);
+
+	shr_table_print_stream(stream, t);
+	fclose(stream);
+
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
+	shr_unlink(template);
+
+	pass &= check_bool("no header/dash line is printed",
+			    strstr(buf, "----") == NULL);
+
+	/* Every field name is padded to the width of the longest one
+	 * ("cntlid"), even the shorter names added earlier, proving the
+	 * width reflects all collected rows rather than a hand-picked
+	 * constant.
+	 */
+	for (i = 0; i < (int)ARRAY_SIZE(fields); i++) {
+		snprintf(expected, sizeof(expected), "%-*s : %-*s\n",
+			 name_width, fields[i].name, val_width, fields[i].val);
+		pass &= check_bool(fields[i].name,
+				    strstr(buf, expected) != NULL);
+	}
+
+	free(buf);
+	shr_table_free(t);
+
+	return pass;
+}
+
+static bool test_print_row_interleaved(void)
+{
+	struct shr_table_column columns[] = {
+		{ "", LEFT, AUTO_WIDTH },
+		{ "", LEFT, AUTO_WIDTH },
+	};
+	char template[] = "shr-test-table-XXXXXX";
+	struct shr_table *t;
+	char *buf;
+	FILE *stream;
+	bool pass = true;
+	long size;
+	int row_vid, row_cntlid, fd, name_width;
+	char expected[128];
+
+	printf("test_print_row_interleaved:\n");
+
+	/*
+	 * Mirrors how a verbose identify-structure dump wants to print a
+	 * field and immediately follow it with extra decoded bit-field
+	 * text, instead of the whole table being emitted as one block at
+	 * the end. shr_table_print_row() lets the caller drive that, while
+	 * still benefiting from the width already computed across all rows
+	 * added so far.
+	 */
+	t = shr_table_init_with_columns(columns, 2);
+	pass &= check_bool("table allocated", t != NULL);
+	if (!t)
+		return pass;
+
+	shr_table_set_column_sep(t, " : ");
+	shr_table_set_no_header(t, true);
+
+	row_vid = shr_table_get_row_id(t);
+	pass &= check_bool("vid row id is non-negative", row_vid >= 0);
+	shr_table_set_value_str(t, 0, row_vid, "vid", LEFT);
+	shr_table_set_value_str(t, 1, row_vid, "0x1234", LEFT);
+	shr_table_add_row(t, row_vid);
+
+	row_cntlid = shr_table_get_row_id(t);
+	pass &= check_bool("cntlid row id is non-negative", row_cntlid >= 0);
+	shr_table_set_value_str(t, 0, row_cntlid, "cntlid", LEFT);
+	shr_table_set_value_str(t, 1, row_cntlid, "0xabcd", LEFT);
+	shr_table_add_row(t, row_cntlid);
+
+	fd = shr_mkstemp(template);
+	shr_assert(fd >= 0);
+	stream = fdopen(fd, "w");
+	shr_assert(stream != NULL);
+
+	/* Print "vid" now, with a decoded line right after it, then
+	 * "cntlid" later -- even though "cntlid" (added after "vid") is
+	 * what determines the name column's width.
+	 */
+	shr_table_print_row(stream, t, row_vid);
+	fprintf(stream, "  [decoded: vendor id]\n");
+	shr_table_print_row(stream, t, row_cntlid);
+
+	fclose(stream);
+
+	shr_assert(shr_read_file_as_string(NULL, template, &size, &buf) == 0);
+	shr_unlink(template);
+
+	name_width = (int)strlen("cntlid");
+
+	snprintf(expected, sizeof(expected),
+		 "%-*s : %-*s\n  [decoded: vendor id]\n",
+		 name_width, "vid", (int)strlen("0x1234"), "0x1234");
+	pass &= check_bool("decoded text follows its row, already padded",
+			    strstr(buf, expected) != NULL);
+
+	snprintf(expected, sizeof(expected), "%-*s : %-*s\n",
+		 name_width, "cntlid", (int)strlen("0xabcd"), "0xabcd");
+	pass &= check_bool("cntlid row follows the interleaved text",
+			    strstr(buf, expected) != NULL);
+
+	free(buf);
+	shr_table_free(t);
+
+	return pass;
+}
+
 static bool test_shr_table_print(void)
 {
 	struct shr_table_column columns[] = {
@@ -444,6 +616,8 @@ int main(void)
 	pass &= test_add_columns_filter_invalid_width();
 	pass &= test_multi_type_and_centered();
 	pass &= test_invalid_format_type();
+	pass &= test_key_value_style();
+	pass &= test_print_row_interleaved();
 	pass &= test_shr_table_print();
 
 	fflush(stdout);
