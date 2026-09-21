@@ -2623,13 +2623,19 @@ enum nvme_id_ctrl_lpa {
 /**
  * enum nvme_id_ctrl_avscc - Flags indicating the configuration settings for
  *			     Admin Vendor Specific command handling.
- * @NVME_CTRL_AVSCC_AVS: If set, all Admin Vendor Specific Commands use the
- *			 optional vendor specific command format with NDT and
- *			 NDM fields.
+ * @NVME_CTRL_AVSCC_VSCF_SHIFT:	VSCF shift
+ * @NVME_CTRL_AVSCC_VSCF_MASK:	VSCF mask
+ * @NVME_CTRL_AVSCC_VSCF:	If set, all Admin Vendor Specific Commands use
+ *				the optional vendor specific command format with
+ *				NDT and NDM fields.
  */
 enum nvme_id_ctrl_avscc {
-	NVME_CTRL_AVSCC_AVS			= 1 << 0,
+	NVME_CTRL_AVSCC_VSCF_SHIFT	= 0,
+	NVME_CTRL_AVSCC_VSCF_MASK	= 0x1,
+	NVME_CTRL_AVSCC_VSCF		= NVME_VAL(CTRL_AVSCC_VSCF),
 };
+
+#define NVME_CTRL_AVSCC_VSCF(avscc)	NVME_GET(avscc, CTRL_AVSCC_VSCF)
 
 /**
  * enum nvme_id_ctrl_apsta - Flags indicating the attributes of the autonomous
