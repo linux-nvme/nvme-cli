@@ -2550,40 +2550,75 @@ enum nvme_id_ctrl_frmw {
 /**
  * enum nvme_id_ctrl_lpa - Flags indicating optional attributes for log pages
  *			   that are accessed via the Get Log Page command.
- * @NVME_CTRL_LPA_SMART_PER_NS: If set, controller supports SMART/Health log
- *				page on a per namespace basis.
- * @NVME_CTRL_LPA_CMD_EFFECTS:	If Set, the controller supports the commands
+ * @NVME_CTRL_LPA_SMARTS_SHIFT:	SMARTS shift
+ * @NVME_CTRL_LPA_CSES_SHIFT:	CSES shift
+ * @NVME_CTRL_LPA_LPEDS_SHIFT:	LPEDS shift
+ * @NVME_CTRL_LPA_TS_SHIFT:	TS shift
+ * @NVME_CTRL_LPA_PES_SHIFT:	PES shift
+ * @NVME_CTRL_LPA_MLPS_SHIFT:	MLPS shift
+ * @NVME_CTRL_LPA_DA4S_SHIFT:	DA4S shift
+ * @NVME_CTRL_LPA_SMARTS_MASK:	SMARTS mask
+ * @NVME_CTRL_LPA_CSES_MASK:	CSES mask
+ * @NVME_CTRL_LPA_LPEDS_MASK:	LPEDS mask
+ * @NVME_CTRL_LPA_TS_MASK:	TS mask
+ * @NVME_CTRL_LPA_PES_MASK:	PES mask
+ * @NVME_CTRL_LPA_MLPS_MASK:	MLPS mask
+ * @NVME_CTRL_LPA_DA4S_MASK:	DA4S mask
+ * @NVME_CTRL_LPA_SMARTS:	If set, controller supports SMART/Health log
+ * @NVME_CTRL_LPA_CSES:		If Set, the controller supports the commands
  *				supported and effects log page.
- * @NVME_CTRL_LPA_EXTENDED:	If set, the controller supports extended data
+ * @NVME_CTRL_LPA_LPEDS:	If set, the controller supports extended data
  *				for log page command including extended number
  *				of dwords and log page offset fields.
- * @NVME_CTRL_LPA_TELEMETRY:	If set, the controller supports the telemetry
+ * @NVME_CTRL_LPA_TS:		If set, the controller supports the telemetry
  *				host-initiated and telemetry controller-initiated
  *				log pages and sending telemetry log notices.
- * @NVME_CTRL_LPA_PERSETENT_EVENT:	If set, the controller supports
- *					persistent event log.
- * @NVME_CTRL_LPA_LI0_LI5_LI12_LI13:	If set, the controller supports
- *					- log pages log page.
- *					- returning scope of each command in
- *					  commands supported and effects log
- *					  page.
- *					- feature identifiers supported and
- *					  effects log page.
- *					- NVMe-MI commands supported and
- *					  effects log page.
- * @NVME_CTRL_LPA_DA4_TELEMETRY:	If set, the controller supports data
- *					area 4 for telemetry host-initiated and
- *					telemetry.
+ * @NVME_CTRL_LPA_PES:		If set, the controller supports
+ *				persistent event log.
+ * @NVME_CTRL_LPA_MLPS:		If set, the controller supports
+ *				- log pages log page.
+ *				- returning scope of each command in
+ *				  commands supported and effects log
+ *				  page.
+ *				- feature identifiers supported and
+ *				  effects log page.
+ *				- NVMe-MI commands supported and
+ *				  effects log page.
+ * @NVME_CTRL_LPA_DA4S:		If set, the controller supports data
+ *				area 4 for telemetry host-initiated and
+ *				telemetry.
  */
 enum nvme_id_ctrl_lpa {
-	NVME_CTRL_LPA_SMART_PER_NS		= 1 << 0,
-	NVME_CTRL_LPA_CMD_EFFECTS		= 1 << 1,
-	NVME_CTRL_LPA_EXTENDED			= 1 << 2,
-	NVME_CTRL_LPA_TELEMETRY			= 1 << 3,
-	NVME_CTRL_LPA_PERSETENT_EVENT		= 1 << 4,
-	NVME_CTRL_LPA_LI0_LI5_LI12_LI13		= 1 << 5,
-	NVME_CTRL_LPA_DA4_TELEMETRY		= 1 << 6,
+	NVME_CTRL_LPA_SMARTS_SHIFT	= 0,
+	NVME_CTRL_LPA_CSES_SHIFT	= 1,
+	NVME_CTRL_LPA_LPEDS_SHIFT	= 2,
+	NVME_CTRL_LPA_TS_SHIFT		= 3,
+	NVME_CTRL_LPA_PES_SHIFT		= 4,
+	NVME_CTRL_LPA_MLPS_SHIFT	= 5,
+	NVME_CTRL_LPA_DA4S_SHIFT	= 6,
+	NVME_CTRL_LPA_SMARTS_MASK	= 0x1,
+	NVME_CTRL_LPA_CSES_MASK		= 0x1,
+	NVME_CTRL_LPA_LPEDS_MASK	= 0x1,
+	NVME_CTRL_LPA_TS_MASK		= 0x1,
+	NVME_CTRL_LPA_PES_MASK		= 0x1,
+	NVME_CTRL_LPA_MLPS_MASK		= 0x1,
+	NVME_CTRL_LPA_DA4S_MASK		= 0x1,
+	NVME_CTRL_LPA_SMARTS		= NVME_VAL(CTRL_LPA_SMARTS),
+	NVME_CTRL_LPA_CSES		= NVME_VAL(CTRL_LPA_CSES),
+	NVME_CTRL_LPA_LPEDS		= NVME_VAL(CTRL_LPA_LPEDS),
+	NVME_CTRL_LPA_TS		= NVME_VAL(CTRL_LPA_TS),
+	NVME_CTRL_LPA_PES		= NVME_VAL(CTRL_LPA_PES),
+	NVME_CTRL_LPA_MLPS		= NVME_VAL(CTRL_LPA_MLPS),
+	NVME_CTRL_LPA_DA4S		= NVME_VAL(CTRL_LPA_DA4S),
 };
+
+#define NVME_CTRL_LPA_SMARTS(lpa)	NVME_GET(lpa, CTRL_LPA_SMARTS)
+#define NVME_CTRL_LPA_CSES(lpa)		NVME_GET(lpa, CTRL_LPA_CSES)
+#define NVME_CTRL_LPA_LPEDS(lpa)	NVME_GET(lpa, CTRL_LPA_LPEDS)
+#define NVME_CTRL_LPA_TS(lpa)		NVME_GET(lpa, CTRL_LPA_TS)
+#define NVME_CTRL_LPA_PES(lpa)		NVME_GET(lpa, CTRL_LPA_PES)
+#define NVME_CTRL_LPA_MLPS(lpa)		NVME_GET(lpa, CTRL_LPA_MLPS)
+#define NVME_CTRL_LPA_DA4S(lpa)		NVME_GET(lpa, CTRL_LPA_DA4S)
 
 /**
  * enum nvme_id_ctrl_avscc - Flags indicating the configuration settings for
