@@ -8,9 +8,12 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <libnvme.h>
+
 #include <ccan/endian/endian.h>
 
 #include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 
@@ -49,15 +52,19 @@ int ocp_get_uuid_index(struct libnvme_transport_handle *hdl, __u8 *index)
 }
 
 int ocp_get_log_simple(struct libnvme_transport_handle *hdl,
-		       enum ocp_dssd_log_id lid, __u32 len, void *log)
+		       enum ocp_dssd_log_id lid, __u32 len, void *log, bool uuid)
 {
 	struct libnvme_passthru_cmd cmd;
-	__u8 uidx;
+	__u8 uidx = 0;
 	int err;
 
-	err = ocp_get_uuid_index(hdl, &uidx);
-	if (err || !uidx)
-		return err ? err : -ENOENT;
+	if (uuid) {
+		err = ocp_get_uuid_index(hdl, &uidx);
+		if (err || !uidx) {
+			nvme_show_error("ERROR : OCP : No OCP UUID index found");
+			return err ? err : -ENOENT;
+		}
+	}
 
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, (enum nvme_cmd_get_log_lid) lid,
 			   NVME_CSI_NVM, log, len);

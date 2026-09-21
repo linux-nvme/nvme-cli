@@ -32,7 +32,20 @@ int ocp_get_uuid_index(struct libnvme_transport_handle *hdl, __u8 *index);
  */
 int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index);
 
-int ocp_get_log_simple(struct libnvme_transport_handle *hdl, enum ocp_dssd_log_id lid, __u32 len, void *log);
+/**
+ * ocp_get_log_simple() - Get an OCP log page in one transfer
+ * @hdl:	nvme transport handle
+ * @lid:	OCP log page identifier
+ * @len:	length of @log in bytes
+ * @log:	buffer to receive the log page
+ * @uuid:	look the OCP UUID index up and request the page with it; when
+ *		false the page is requested with UUID index 0, which is what
+ *		OCP 1.0 devices and devices misreporting their UUID list need
+ *
+ * Return: Zero on success, negative POSIX error code or NVMe status otherwise.
+ */
+int ocp_get_log_simple(struct libnvme_transport_handle *hdl, enum ocp_dssd_log_id lid, __u32 len,
+		       void *log, bool uuid);
 
 /**
  * ocp_is_tcg_activity_event() - Determine if persistent event is TCG activity event

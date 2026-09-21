@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'ocp telemetry-string-log' <device>
-			[--output-file=<file> | -f <file>]
+			[--output-file=<file> | -f <file>] [--no-uuid | -n]
 
 DESCRIPTION
 -----------
@@ -28,6 +28,11 @@ OPTIONS
 -f <file>::
 --output-file=<file>::
 	Filepath name to where binary output data will be saved to.
+
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (default
+	UUID index to 0).
 
 include::global-options.txt[]
 

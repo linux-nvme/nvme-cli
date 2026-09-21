@@ -9,7 +9,7 @@ compliant device
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ocp smart-add-log' <device>
+'nvme' [<global-options>] 'ocp smart-add-log' <device> [--no-uuid | -n]
 
 DESCRIPTION
 -----------
@@ -26,6 +26,10 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
 
 include::global-options.txt[]
 

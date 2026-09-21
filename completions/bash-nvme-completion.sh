@@ -3109,7 +3109,7 @@ plugin_ocp_opts () {
 			;;
 
 		"device-capability-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -3126,7 +3126,7 @@ plugin_ocp_opts () {
 			;;
 
 		"error-recovery-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -3232,7 +3232,7 @@ plugin_ocp_opts () {
 			;;
 
 		"internal-log")
-			opts+=" --data-area= -a --dry-run --no-ioctl-probing --no-retries --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --string-log= -s --telemetry-log= -l --telemetry-type= -t --timeout= --verbose -v"
+			opts+=" --data-area= -a --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --string-log= -s --telemetry-log= -l --telemetry-type= -t --timeout= --verbose -v"
 			valopts+=" --data-area -a --output-file -f --output-format -o --output-format-version --set-options --string-log -s --telemetry-log -l --telemetry-type -t --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -3241,7 +3241,7 @@ plugin_ocp_opts () {
 			;;
 
 		"latency-monitor-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -3314,7 +3314,7 @@ plugin_ocp_opts () {
 			;;
 
 		"smart-add-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -3322,7 +3322,7 @@ plugin_ocp_opts () {
 			;;
 
 		"tcg-configuration-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -3330,7 +3330,7 @@ plugin_ocp_opts () {
 			;;
 
 		"telemetry-string-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-file -f --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -3339,7 +3339,7 @@ plugin_ocp_opts () {
 			;;
 
 		"unsupported-reqs-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
@@ -4255,7 +4255,7 @@ plugin_solidigm_opts () {
 			;;
 
 		"vs-smart-add-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \

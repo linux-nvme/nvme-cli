@@ -9,7 +9,7 @@ compliant device
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ocp tcg-configuration-log' <device>
+'nvme' [<global-options>] 'ocp tcg-configuration-log' <device> [--no-uuid | -n]
 
 DESCRIPTION
 -----------
@@ -26,6 +26,10 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (default
+	UUID index to 0).
 
 include::global-options.txt[]
 
