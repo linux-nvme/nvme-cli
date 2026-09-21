@@ -2510,21 +2510,42 @@ enum nvme_id_ctrl_oacs {
 /**
  * enum nvme_id_ctrl_frmw - Flags and values indicates capabilities regarding
  *			    firmware updates from &struct nvme_id_ctrl.frmw.
- * @NVME_CTRL_FRMW_1ST_RO:	    If set, the first firmware slot is readonly
- * @NVME_CTRL_FRMW_NR_SLOTS:	    Mask to get the value of the number of
- *				    firmware slots that the controller supports.
- * @NVME_CTRL_FRMW_FW_ACT_NO_RESET: If set, the controller supports firmware
- *				    activation without a reset.
- * @NVME_CTRL_FRMW_MP_UP_DETECTION: If set, the controller is able to detect
- *				    overlapping firmware/boot partition
- *				    image update.
+ * @NVME_CTRL_FRMW_FFSRO_SHIFT:	FFSRO shift
+ * @NVME_CTRL_FRMW_NOFS_SHIFT:	NOFS shift
+ * @NVME_CTRL_FRMW_FAWR_SHIFT:	FAWR shift
+ * @NVME_CTRL_FRMW_SMUD_SHIFT:	SMUD shift
+ * @NVME_CTRL_FRMW_FFSRO_MASK:	FFSRO mask
+ * @NVME_CTRL_FRMW_NOFS_MASK:	NOFS mask
+ * @NVME_CTRL_FRMW_FAWR_MASK:	FAWR mask
+ * @NVME_CTRL_FRMW_SMUD_MASK:	SMUD mask
+ * @NVME_CTRL_FRMW_FFSRO:	If set, the first firmware slot is readonly
+ * @NVME_CTRL_FRMW_NOFS:	Mask to get the value of the number of
+ *				firmware slots that the controller supports.
+ * @NVME_CTRL_FRMW_FAWR:	If set, the controller supports firmware
+ *				activation without a reset.
+ * @NVME_CTRL_FRMW_SMUD:	If set, the controller is able to detect
+ *				overlapping firmware/boot partition
+ *				image update.
  */
 enum nvme_id_ctrl_frmw {
-	NVME_CTRL_FRMW_1ST_RO			= 1 << 0,
-	NVME_CTRL_FRMW_NR_SLOTS			= 3 << 1,
-	NVME_CTRL_FRMW_FW_ACT_NO_RESET		= 1 << 4,
-	NVME_CTRL_FRMW_MP_UP_DETECTION		= 1 << 5,
+	NVME_CTRL_FRMW_FFSRO_SHIFT	= 0,
+	NVME_CTRL_FRMW_NOFS_SHIFT	= 1,
+	NVME_CTRL_FRMW_FAWR_SHIFT	= 4,
+	NVME_CTRL_FRMW_SMUD_SHIFT	= 5,
+	NVME_CTRL_FRMW_FFSRO_MASK	= 0x1,
+	NVME_CTRL_FRMW_NOFS_MASK	= 0x7,
+	NVME_CTRL_FRMW_FAWR_MASK	= 0x1,
+	NVME_CTRL_FRMW_SMUD_MASK	= 0x1,
+	NVME_CTRL_FRMW_FFSRO		= NVME_VAL(CTRL_FRMW_FFSRO),
+	NVME_CTRL_FRMW_NOFS		= NVME_VAL(CTRL_FRMW_NOFS),
+	NVME_CTRL_FRMW_FAWR		= NVME_VAL(CTRL_FRMW_FAWR),
+	NVME_CTRL_FRMW_SMUD		= NVME_VAL(CTRL_FRMW_SMUD),
 };
+
+#define NVME_CTRL_FRMW_FFSRO(frmw)	NVME_GET(frmw, CTRL_FRMW_FFSRO)
+#define NVME_CTRL_FRMW_NOFS(frmw)	NVME_GET(frmw, CTRL_FRMW_NOFS)
+#define NVME_CTRL_FRMW_FAWR(frmw)	NVME_GET(frmw, CTRL_FRMW_FAWR)
+#define NVME_CTRL_FRMW_SMUD(frmw)	NVME_GET(frmw, CTRL_FRMW_SMUD)
 
 /**
  * enum nvme_id_ctrl_lpa - Flags indicating optional attributes for log pages
