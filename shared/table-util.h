@@ -73,7 +73,17 @@ struct shr_table {
 	int num_columns;
 	struct shr_table_row *rows;
 	int num_rows;
+	char *col_sep;
+	bool no_header;
+	bool error;
 };
+
+static inline bool shr_table_value_valid(const struct shr_table *t, int col,
+					  int row)
+{
+	return col >= 0 && col < t->num_columns &&
+	       row >= 0 && row < t->num_rows;
+}
 
 static inline int shr_table_set_value_str(struct shr_table *t, int col, int row,
 		const char *str, enum alignment align)
@@ -82,12 +92,14 @@ static inline int shr_table_set_value_str(struct shr_table *t, int col, int row,
 	struct shr_table_value *v;
 	char *s;
 
-	if (col >= t->num_columns || row >= t->num_rows)
+	if (!shr_table_value_valid(t, col, row))
 		return -EINVAL;
 
 	s = strdup(str);
-	if (!s)
+	if (!s) {
+		t->error = true;
 		return -ENOMEM;
+	}
 
 	r = &t->rows[row];
 	v = &r->val[col];
@@ -104,7 +116,7 @@ static inline int shr_table_set_value_int(struct shr_table *t, int col, int row,
 	struct shr_table_row *r;
 	struct shr_table_value *v;
 
-	if (col >= t->num_columns || row >= t->num_rows)
+	if (!shr_table_value_valid(t, col, row))
 		return -EINVAL;
 
 	r = &t->rows[row];
@@ -122,7 +134,7 @@ static inline int shr_table_set_value_unsigned(struct shr_table *t, int col, int
 	struct shr_table_row *r;
 	struct shr_table_value *v;
 
-	if (col >= t->num_columns || row >= t->num_rows)
+	if (!shr_table_value_valid(t, col, row))
 		return -EINVAL;
 
 	r = &t->rows[row];
@@ -140,7 +152,7 @@ static inline int shr_table_set_value_long(struct shr_table *t, int col, int row
 	struct shr_table_row *r;
 	struct shr_table_value *v;
 
-	if (col >= t->num_columns || row >= t->num_rows)
+	if (!shr_table_value_valid(t, col, row))
 		return -EINVAL;
 
 	r = &t->rows[row];
@@ -196,6 +208,39 @@ void shr_table_add_row(struct shr_table *t, int row);
 void shr_table_print_stream(FILE *stream, struct shr_table *t);
 void shr_table_print(struct shr_table *t);
 void shr_table_free(struct shr_table *t);
+
+/**
+ * shr_table_set_column_sep() - Change the separator printed between columns
+ * @t:		Table instance
+ * @sep:	Separator string, e.g. " : ". Copied, so @sep need not outlive
+ *		@t. Pass NULL to restore the default single space.
+ *
+ * Return: 0 on success, or -ENOMEM if the copy could not be allocated (@t
+ * keeps its previous separator in that case).
+ */
+int shr_table_set_column_sep(struct shr_table *t, const char *sep);
+
+/**
+ * shr_table_set_no_header() - Enable/disable the header and separator line
+ * @t:		Table instance
+ * @no_header:	If true, shr_table_print_stream() prints only the data rows,
+ *		useful for key/value style listings that have no real header.
+ */
+void shr_table_set_no_header(struct shr_table *t, bool no_header);
+
+/**
+ * shr_table_print_row() - Print a single data row
+ * @stream:	Output stream
+ * @t:		Table instance
+ * @row:	Row id, as returned by shr_table_get_row_id()
+ *
+ * Lets a caller drive the row-by-row output itself (e.g. to interleave
+ * extra, non-tabular output after specific rows) instead of using
+ * shr_table_print_stream() to print the whole table in one go. Column
+ * widths reflect all rows added so far, not just @row, so call this only
+ * after every row that should influence the width has been added.
+ */
+void shr_table_print_row(FILE *stream, struct shr_table *t, int row);
 
 /**
  * shr_table_init_with_columns() - Allocate a table instance with column definitions

@@ -34,7 +34,7 @@ static int table_get_value_width(struct shr_table_value *v)
 
 	switch (v->type) {
 	case FMT_STRING:
-		len = strlen((const char *)v->s);
+		len = v->s ? strlen(v->s) : 0;
 		break;
 	case FMT_INT:
 		len = snprintf(buf, sizeof(buf), "%d", v->i);
@@ -109,6 +109,11 @@ static void table_print_centered(FILE *stream, struct shr_table_value *val, int 
 		fputc(' ', stream);
 }
 
+static void table_print_sep(FILE *stream, const struct shr_table *t)
+{
+	fputs(t->col_sep ? t->col_sep : " ", stream);
+}
+
 static void table_print_columns(FILE *stream, const struct shr_table *t)
 {
 	int col, j, width;
@@ -133,7 +138,7 @@ static void table_print_columns(FILE *stream, const struct shr_table *t)
 			break;
 		}
 		if (col + 1 != t->num_columns)
-			fputc(' ', stream);
+			table_print_sep(stream, t);
 	}
 
 	fprintf(stream, "\n");
@@ -142,78 +147,108 @@ static void table_print_columns(FILE *stream, const struct shr_table *t)
 		for (j = 0; j < t->columns[col].width; j++)
 			fputc('-', stream);
 		if (col + 1 != t->num_columns)
-			fputc(' ', stream);
+			table_print_sep(stream, t);
 	}
 
 	fprintf(stream, "\n");
 }
 
-static void table_print_rows(FILE *stream, const struct shr_table *t)
+void shr_table_print_row(FILE *stream, struct shr_table *t, int row)
 {
-	int row, col;
 	struct shr_table_column *c;
 	struct shr_table_row *r;
-	int width;
 	struct shr_table_value *v;
+	int col, width;
 
-	for (row = 0; row < t->num_rows; row++) {
-		r = &t->rows[row];
-		for (col = 0; col < t->num_columns; col++) {
-			c = &t->columns[col];
-			v = &r->val[col];
+	if (row < 0 || row >= t->num_rows)
+		return;
 
-			width = c->width;
-			switch (v->align) {
-			case CENTERED:
-				table_print_centered(stream, v, width);
+	r = &t->rows[row];
+	for (col = 0; col < t->num_columns; col++) {
+		c = &t->columns[col];
+		v = &r->val[col];
+
+		width = c->width;
+		switch (v->align) {
+		case CENTERED:
+			table_print_centered(stream, v, width);
+			break;
+		case LEFT:
+			width *= -1;
+			fallthrough;
+		default:
+			switch (v->type) {
+			case FMT_STRING:
+				fprintf(stream, "%*s", width, v->s);
 				break;
-			case LEFT:
-				width *= -1;
-				fallthrough;
+			case FMT_INT:
+				fprintf(stream, "%*d", width, v->i);
+				break;
+			case FMT_UNSIGNED:
+				fprintf(stream, "%*u", width, v->u);
+				break;
+			case FMT_LONG:
+				fprintf(stream, "%*ld", width, v->ld);
+				break;
+			case FMT_UNSIGNED_LONG:
+				fprintf(stream, "%*lu", width, v->lu);
+				break;
+			case FMT_FLOAT:
+				fprintf(stream, "%*.2f", width, v->f);
+				break;
+			case FMT_DOUBLE:
+				fprintf(stream, "%*.2f", width, v->d);
+				break;
 			default:
-				switch (v->type) {
-				case FMT_STRING:
-					fprintf(stream, "%*s", width, v->s);
-					break;
-				case FMT_INT:
-					fprintf(stream, "%*d", width, v->i);
-					break;
-				case FMT_UNSIGNED:
-					fprintf(stream, "%*u", width, v->u);
-					break;
-				case FMT_LONG:
-					fprintf(stream, "%*ld", width, v->ld);
-					break;
-				case FMT_UNSIGNED_LONG:
-					fprintf(stream, "%*lu", width, v->lu);
-					break;
-				case FMT_FLOAT:
-					fprintf(stream, "%*.2f", width, v->f);
-					break;
-				case FMT_DOUBLE:
-					fprintf(stream, "%*.2f", width, v->d);
-					break;
-				default:
-					fprintf(stderr, "Invalid format!\n");
-					break;
-				}
+				fprintf(stderr, "Invalid format!\n");
 				break;
 			}
-			if (col + 1 != t->num_columns)
-				fputc(' ', stream);
+			break;
 		}
-
-		fprintf(stream, "\n");
+		if (col + 1 != t->num_columns)
+			table_print_sep(stream, t);
 	}
+
+	fprintf(stream, "\n");
+}
+
+static void table_print_rows(FILE *stream, struct shr_table *t)
+{
+	int row;
+
+	for (row = 0; row < t->num_rows; row++)
+		shr_table_print_row(stream, t, row);
 }
 
 void shr_table_print_stream(FILE *stream, struct shr_table *t)
 {
-	/* first print columns */
-	table_print_columns(stream, t);
+	if (!t->no_header)
+		table_print_columns(stream, t);
 
-	/* next print rows */
 	table_print_rows(stream, t);
+}
+
+int shr_table_set_column_sep(struct shr_table *t, const char *sep)
+{
+	char *s = NULL;
+
+	if (sep) {
+		s = strdup(sep);
+		if (!s) {
+			t->error = true;
+			return -ENOMEM;
+		}
+	}
+
+	free(t->col_sep);
+	t->col_sep = s;
+
+	return 0;
+}
+
+void shr_table_set_no_header(struct shr_table *t, bool no_header)
+{
+	t->no_header = no_header;
 }
 
 void shr_table_print(struct shr_table *t)
@@ -227,13 +262,17 @@ int shr_table_get_row_id(struct shr_table *t)
 	int row = t->num_rows;
 
 	new_rows = reallocarray(t->rows, (row + 1), sizeof(struct shr_table_row));
-	if (!new_rows)
+	if (!new_rows) {
+		t->error = true;
 		return -ENOMEM;
+	}
 
 	t->rows = new_rows;
 	t->rows[row].val = calloc(t->num_columns, sizeof(struct shr_table_value));
-	if (!t->rows[row].val)
+	if (!t->rows[row].val) {
+		t->error = true;
 		return -ENOMEM;
+	}
 
 	t->num_rows++;
 	return row;
@@ -242,7 +281,12 @@ int shr_table_get_row_id(struct shr_table *t)
 void shr_table_add_row(struct shr_table *t, int row_id)
 {
 	int col, max_width, width;
-	struct shr_table_row *row = &t->rows[row_id];
+	struct shr_table_row *row;
+
+	if (row_id < 0 || row_id >= t->num_rows)
+		return;
+
+	row = &t->rows[row_id];
 
 	/* Adjust the column width based on the row value. */
 	for (col = 0; col < t->num_columns; col++) {
@@ -401,6 +445,8 @@ void shr_table_free(struct shr_table *t)
 	for (col = 0; col < t->num_columns; col++)
 		free(t->columns[col].name);
 	free(t->columns);
+
+	free(t->col_sep);
 
 	/* free table */
 	free(t);
