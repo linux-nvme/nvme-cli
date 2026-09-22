@@ -7435,12 +7435,24 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 
 static void stdout_select_result(enum nvme_features_id fid, __u64 result)
 {
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	if (result & 0x1)
-		printf("  Feature is saveable\n");
+		stdout_kv_add(t, "", "Feature is saveable");
 	if (result & 0x2)
-		printf("  Feature is per-namespace\n");
+		stdout_kv_add(t, "", "Feature is per-namespace");
 	if (result & 0x4)
-		printf("  Feature is changeable\n");
+		stdout_kv_add(t, "", "Feature is changeable");
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build select-result table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
