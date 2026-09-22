@@ -8901,13 +8901,26 @@ out:
 
 static void stdout_rotational_media_info_log(struct nvme_rotational_media_info_log *info)
 {
-	printf("endgid: %u\n", le16_to_cpu(info->endgid));
-	printf("numa: %u\n", le16_to_cpu(info->numa));
-	printf("nrs: %u\n", le16_to_cpu(info->nrs));
-	printf("spinc: %u\n", le32_to_cpu(info->spinc));
-	printf("fspinc: %u\n", le32_to_cpu(info->fspinc));
-	printf("ldc: %u\n", le32_to_cpu(info->ldc));
-	printf("fldc: %u\n", le32_to_cpu(info->fldc));
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "endgid", "%u", le16_to_cpu(info->endgid));
+	stdout_kv_add(t, "numa", "%u", le16_to_cpu(info->numa));
+	stdout_kv_add(t, "nrs", "%u", le16_to_cpu(info->nrs));
+	stdout_kv_add(t, "spinc", "%u", le32_to_cpu(info->spinc));
+	stdout_kv_add(t, "fspinc", "%u", le32_to_cpu(info->fspinc));
+	stdout_kv_add(t, "ldc", "%u", le32_to_cpu(info->ldc));
+	stdout_kv_add(t, "fldc", "%u", le32_to_cpu(info->fldc));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build rotational-media-info table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
