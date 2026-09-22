@@ -4266,8 +4266,15 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 	__u8 eui64[8];
 	__u8 nguid[16];
 	__u8 csi;
+	struct shr_table *t;
+	char hex[NVME_UUID_LEN * 2 + 1], *hp;
 
 	printf("NVME Namespace Identification Descriptors NS %d:\n", nsid);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	for (pos = 0; pos < NVME_IDENTIFY_DATA_SIZE; pos += len) {
 		struct nvme_ns_id_desc *cur = data + pos;
 
@@ -4275,45 +4282,45 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 			break;
 
 		if (verbose) {
-			printf("loc     : %d\n", pos);
-			printf("nidt    : %d\n", (int)cur->nidt);
-			printf("nidl    : %d\n", (int)cur->nidl);
+			stdout_kv_add(t, "loc", "%d", pos);
+			stdout_kv_add(t, "nidt", "%d", (int)cur->nidt);
+			stdout_kv_add(t, "nidl", "%d", (int)cur->nidl);
 		}
 
 		switch (cur->nidt) {
 		case NVME_NIDT_EUI64:
 			memcpy(eui64, data + pos + sizeof(*cur), sizeof(eui64));
 			if (verbose)
-				printf("type    : eui64\n");
-			printf("eui64   : ");
+				stdout_kv_add(t, "type", "%s", "eui64");
+			hp = hex;
 			for (i = 0; i < 8; i++)
-				printf("%02x", eui64[i]);
-			printf("\n");
+				hp += sprintf(hp, "%02x", eui64[i]);
+			stdout_kv_add(t, "eui64", "%s", hex);
 			len = sizeof(eui64);
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
 			if (verbose)
-				printf("type    : nguid\n");
-			printf("nguid   : ");
+				stdout_kv_add(t, "type", "%s", "nguid");
+			hp = hex;
 			for (i = 0; i < 16; i++)
-				printf("%02x", nguid[i]);
-			printf("\n");
+				hp += sprintf(hp, "%02x", nguid[i]);
+			stdout_kv_add(t, "nguid", "%s", hex);
 			len = sizeof(nguid);
 			break;
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			libnvme_uuid_to_string(uuid, uuid_str);
 			if (verbose)
-				printf("type    : uuid\n");
-			printf("uuid    : %s\n", uuid_str);
+				stdout_kv_add(t, "type", "%s", "uuid");
+			stdout_kv_add(t, "uuid", "%s", uuid_str);
 			len = sizeof(uuid);
 			break;
 		case NVME_NIDT_CSI:
 			memcpy(&csi, data + pos + sizeof(*cur), 1);
 			if (verbose)
-				printf("type    : csi\n");
-			printf("csi     : %#x\n", csi);
+				stdout_kv_add(t, "type", "%s", "csi");
+			stdout_kv_add(t, "csi", "%#x", csi);
 			len += sizeof(csi);
 			break;
 		default:
@@ -4324,6 +4331,13 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 
 		len += sizeof(*cur);
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build id-ns-descs table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 }
 
 static void print_power_and_scale(__u16 power, __u8 scale)
