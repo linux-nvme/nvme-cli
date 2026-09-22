@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include <systemd/sd-bus.h>
 
 #include <ccan/array_size/array_size.h>
@@ -349,6 +351,41 @@ void unit_mgr_free(struct unit_mgr *mgr)
 }
 
 /*
+ * Wait for @unit_name to stop being loaded, up to roughly
+ * UNIT_GONE_TIMEOUT_MSEC. StopUnit() only enqueues the stop; the unit stays
+ * loaded until that job runs and systemd garbage-collects it, which measures
+ * in tens of milliseconds. Polling avoids needing the event loop to run,
+ * since the caller is inside a synchronous D-Bus call, and the bound keeps a
+ * unit that refuses to go away from wedging the daemon.
+ *
+ * Return: true once the name is free, false if it is still loaded.
+ */
+#define UNIT_GONE_POLL_MSEC	10
+#define UNIT_GONE_TIMEOUT_MSEC	2000
+
+static bool unit_wait_gone(struct unit_mgr *mgr, const char *unit_name)
+{
+	int i;
+
+	for (i = 0; i < UNIT_GONE_TIMEOUT_MSEC / UNIT_GONE_POLL_MSEC; i++) {
+		sd_bus_error err = SD_BUS_ERROR_NULL;
+		int r;
+
+		r = sd_bus_call_method(mgr->bus,
+				       SYSTEMD_BUS_NAME, SYSTEMD_OBJ_PATH,
+				       SYSTEMD_MGR_IFACE, "GetUnit",
+				       &err, NULL, "s", unit_name);
+		sd_bus_error_free(&err);
+		if (r == -ENOENT)
+			return true;
+
+		usleep(UNIT_GONE_POLL_MSEC * 1000);
+	}
+
+	return false;
+}
+
+/*
  * Internal: call StartTransientUnit and track the returned job.
  *
  * Caller has built the message up through the properties array and must
@@ -366,6 +403,24 @@ static int do_start_transient(struct unit_mgr *mgr, sd_bus_message *msg,
 	int r;
 
 	r = sd_bus_call(mgr->bus, msg, 0, &err, &reply);
+	if (r == -EEXIST) {
+		/*
+		 * A unit from an earlier daemon lifetime still holds the
+		 * name. Its connection is gone and its parameters may be
+		 * stale, so replace it rather than restart it. msg is
+		 * unmodified by a failed sd_bus_call() and safe to resend.
+		 */
+		sd_bus_error_free(&err);
+		err = SD_BUS_ERROR_NULL;
+		disc_info("%s - name held by a stale unit, replacing it",
+			  unit_name);
+		unit_stop(mgr, unit_name);
+		if (unit_wait_gone(mgr, unit_name))
+			r = sd_bus_call(mgr->bus, msg, 0, &err, &reply);
+		else
+			disc_warn("%s - still loaded after stop, giving up",
+				  unit_name);
+	}
 	if (r < 0) {
 		disc_err("StartTransientUnit(%s): %s",
 			 unit_name, err.message ?: strerror(-r));
