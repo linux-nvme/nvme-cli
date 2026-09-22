@@ -717,16 +717,20 @@ static void on_nvme_remove(const char *devname,
 		return;
 	}
 
+	/*
+	 * Checked before "not desired": this removal is discoverd's own
+	 * doing, and the poll timer owns what happens next. Checking
+	 * "desired" first can call ctrl_remove(), which frees the timer
+	 * epcsd_park() armed moments ago. The timer re-checks "desired"
+	 * itself when it fires, so nothing is skipped by deferring.
+	 */
+	if (e->epcsd_poll_timer)
+		return;
+
 	if (!inventory_is_desired(ctx.inventory, e->tid)) {
 		disc_info("%s | %s - removed, not desired, dropping",
 			  libnvmf_tid_str(e->tid), devname);
 		ctrl_remove(e);
-		return;
-	}
-
-	if (e->epcsd_poll_timer) {
-		// Intentionally disconnected (EPCSD=0); the poll timer
-		// reconnects it, not this removal handler.
 		return;
 	}
 
