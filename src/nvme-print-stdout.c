@@ -8414,20 +8414,50 @@ static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
 {
 	int i;
 	int attri_vs;
+	struct shr_table *t;
 
-	printf("attribute type (ATTRTYP): %s (0x%02x)\n",
-	       nvme_feature_perfc_attrtyp_to_string(data->attrtyp), data->attrtyp);
-	printf("maximum saveable vendor specific performance attributes (MSVSPA): %d\n",
-	       data->msvspa);
-	printf("unused saveable vendor specific performance attributes (USVSPA): %d\n",
-	       data->usvspa);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "attribute type (ATTRTYP)", "%s (0x%02x)",
+		      nvme_feature_perfc_attrtyp_to_string(data->attrtyp),
+		      data->attrtyp);
+	stdout_kv_add(t,
+		      "maximum saveable vendor specific performance attributes (MSVSPA)",
+		      "%d", data->msvspa);
+	stdout_kv_add(t,
+		      "unused saveable vendor specific performance attributes (USVSPA)",
+		      "%d", data->usvspa);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build feat-perfc-id-list table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	printf("performance attribute identifier list\n");
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	for (i = 0; i < ARRAY_SIZE(data->id_list); i++) {
+		char name[48];
+
 		attri_vs = i + NVME_FEAT_PERFC_ATTRI_VS_MIN;
-		printf("performance attribute %02xh identifier (PA%02XHI): %s\n", attri_vs,
-		       attri_vs, shr_uuid_to_string(data->id_list[i].id));
+		snprintf(name, sizeof(name),
+			 "performance attribute %02xh identifier (PA%02XHI)",
+			 attri_vs, attri_vs);
+		stdout_kv_add(t, name, "%s",
+			      shr_uuid_to_string(data->id_list[i].id));
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build feat-perfc-id-list table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
