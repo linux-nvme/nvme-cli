@@ -8429,11 +8429,22 @@ static void stdout_feat_perfc(unsigned int result,
 {
 	__u8 attri;
 	bool rvspa;
+	struct shr_table *t;
 
 	nvme_feature_decode_perf_characteristics(result, &attri, &rvspa);
 
-	printf("attribute index (ATTRI): %s (0x%02x)\n", nvme_feature_perfc_attri_to_string(attri),
-	       attri);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "attribute index (ATTRI)", "%s (0x%02x)",
+		      nvme_feature_perfc_attri_to_string(attri), attri);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build feat-perfc table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	switch (attri) {
 	case NVME_FEAT_PERFC_ATTRI_STD:
