@@ -3769,21 +3769,6 @@ static struct shr_table *stdout_id_ns_dps_table(__u8 dps)
 	return t;
 }
 
-static void stdout_id_ns_nmic(__u8 nmic)
-{
-	__u8 rsvd = (nmic & 0xfc) >> 2;
-	__u8 disns = (nmic & 0x2) >> 1;
-	__u8 shrns = nmic & 0x1;
-
-	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tNamespace is %sa Dispersed Namespace\n",
-		disns, disns ? "" : "Not ");
-	printf("  [0:0] : %#x\tNamespace Multipath %sCapable\n",
-		shrns, shrns ? "" : "Not ");
-	printf("\n");
-}
-
 static struct shr_table *stdout_id_ns_nmic_table(__u8 nmic)
 {
 	struct shr_table *t;
@@ -3804,36 +3789,6 @@ static struct shr_table *stdout_id_ns_nmic_table(__u8 nmic)
 			 shrns ? "" : "Not ");
 
 	return t;
-}
-
-static void stdout_id_ns_rescap(__u8 rescap)
-{
-	__u8 iekr = (rescap & 0x80) >> 7;
-	__u8 eaar = (rescap & 0x40) >> 6;
-	__u8 wear = (rescap & 0x20) >> 5;
-	__u8 earo = (rescap & 0x10) >> 4;
-	__u8 wero = (rescap & 0x8) >> 3;
-	__u8 ea = (rescap & 0x4) >> 2;
-	__u8 we = (rescap & 0x2) >> 1;
-	__u8 ptpl = rescap & 0x1;
-
-	printf("  [7:7] : %#x\tIgnore Existing Key - Used as defined in revision %s\n",
-		iekr, iekr ? "1.3 or later" : "1.2.1 or earlier");
-	printf("  [6:6] : %#x\tExclusive Access - All Registrants %sSupported\n",
-		eaar, eaar ? "" : "Not ");
-	printf("  [5:5] : %#x\tWrite Exclusive - All Registrants %sSupported\n",
-		wear, wear ? "" : "Not ");
-	printf("  [4:4] : %#x\tExclusive Access - Registrants Only %sSupported\n",
-		earo, earo ? "" : "Not ");
-	printf("  [3:3] : %#x\tWrite Exclusive - Registrants Only %sSupported\n",
-		wero, wero ? "" : "Not ");
-	printf("  [2:2] : %#x\tExclusive Access %sSupported\n",
-		ea, ea ? "" : "Not ");
-	printf("  [1:1] : %#x\tWrite Exclusive %sSupported\n",
-		we, we ? "" : "Not ");
-	printf("  [0:0] : %#x\tPersist Through Power Loss %sSupported\n",
-		ptpl, ptpl ? "" : "Not ");
-	printf("\n");
 }
 
 static struct shr_table *stdout_id_ns_rescap_table(__u8 rescap)
@@ -3878,19 +3833,6 @@ static struct shr_table *stdout_id_ns_rescap_table(__u8 rescap)
 	return t;
 }
 
-static void stdout_id_ns_fpi(__u8 fpi)
-{
-	__u8 fpis = (fpi & 0x80) >> 7;
-	__u8 fpii = fpi & 0x7F;
-
-	printf("  [7:7] : %#x\tFormat Progress Indicator %sSupported\n",
-		fpis, fpis ? "" : "Not ");
-	if (fpis || (!fpis && fpii))
-		printf("  [6:0] : %#x\tFormat Progress Indicator (Remaining %d%%)\n",
-		fpii, fpii);
-	printf("\n");
-}
-
 static struct shr_table *stdout_id_ns_fpi_table(__u8 fpi)
 {
 	struct shr_table *t;
@@ -3910,18 +3852,6 @@ static struct shr_table *stdout_id_ns_fpi_table(__u8 fpi)
 				 fpii);
 
 	return t;
-}
-
-static void stdout_id_ns_nsattr(__u8 nsattr)
-{
-	__u8 rsvd = (nsattr & 0xFE) >> 1;
-	__u8 write_protected = nsattr & 0x1;
-
-	if (rsvd)
-		printf("  [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tNamespace %sWrite Protected\n",
-			write_protected, write_protected ? "" : "Not ");
-	printf("\n");
 }
 
 static struct shr_table *stdout_id_ns_nsattr_table(__u8 nsattr)
@@ -3970,21 +3900,6 @@ static struct shr_table *stdout_id_ns_dlfeat_table(__u8 dlfeat)
 			 val == 0 ? "Not Reported" : "Reserved Value");
 
 	return t;
-}
-
-static void stdout_id_ns_kpios(__u8 kpios)
-{
-	__u8 rsvd = (kpios & 0xfc) >> 2;
-	__u8 kpiosns = (kpios & 0x2) >> 1;
-	__u8 kpioens = kpios & 0x1;
-
-	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tKey Per I/O Capability %sSupported\n",
-		kpiosns, kpiosns ? "" : "Not ");
-	printf("  [0:0] : %#x\tKey Per I/O Capability %s\n", kpioens,
-		kpioens ? "Enabled" : "Disabled");
-	printf("\n");
 }
 
 static struct shr_table *stdout_id_ns_kpios_table(__u8 kpios)
@@ -4180,29 +4095,41 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	}
 }
 
-static void stdout_cmd_set_independent_id_ns_nsfeat(__u8 nsfeat)
+static struct shr_table *
+stdout_cmd_set_independent_id_ns_nsfeat_table(__u8 nsfeat)
 {
+	struct shr_table *t;
 	__u8 rsvd6 = (nsfeat & 0xE0) >> 6;
 	__u8 vwcnp = (nsfeat & 0x20) >> 5;
 	__u8 rmedia = (nsfeat & 0x10) >> 4;
 	__u8 uidreuse = (nsfeat & 0x8) >> 3;
 	__u8 rsvd0 = (nsfeat & 0x7);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd6)
-		printf("  [7:6] : %#x\tReserved\n", rsvd6);
-	printf("  [5:5] : %#x\tVolatile Write Cache is %sPresent\n",
-		vwcnp, vwcnp ? "" : "Not ");
-	printf("  [4:4] : %#x\tNamespace %sstore data on rotational media\n",
-		rmedia, rmedia ? "" : "does not ");
-	printf("  [3:3] : %#x\tNGUID and EUI64 fields if non-zero, %sReused\n",
-		uidreuse, uidreuse ? "Never " : "");
+		stdout_bits_add(t, "[7:6]", rsvd6, "Reserved");
+	stdout_bits_add(t, "[5:5]", vwcnp,
+			 "Volatile Write Cache is %sPresent",
+			 vwcnp ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", rmedia,
+			 "Namespace %sstore data on rotational media",
+			 rmedia ? "" : "does not ");
+	stdout_bits_add(t, "[3:3]", uidreuse,
+			 "NGUID and EUI64 fields if non-zero, %sReused",
+			 uidreuse ? "Never " : "");
 	if (rsvd0)
-		printf("  [2:0] : %#x\tReserved\n", rsvd0);
-	printf("\n");
+		stdout_bits_add(t, "[2:0]", rsvd0, "Reserved");
+
+	return t;
 }
 
-static void stdout_cmd_set_independent_id_ns_nstat(__u8 nstat)
+static struct shr_table *
+stdout_cmd_set_independent_id_ns_nstat_table(__u8 nstat)
 {
+	struct shr_table *t;
 	__u8 rsvd3 = (nstat & 0xf8) >> 3;
 	__u8 ioi = (nstat & 0x6) >> 1;
 	__u8 nrdy = nstat & 0x1;
@@ -4214,47 +4141,84 @@ static void stdout_cmd_set_independent_id_ns_nstat(__u8 nstat)
 		"I/O performance is currently degraded"
 	};
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd3)
-		printf("  [7:3] : %#x\tReserved\n", rsvd3);
-	printf("  [2:1] : %#x\t%s\n", ioi, ioi_string[ioi]);
-	printf("  [0:0] : %#x\tName space is %sready\n",
-		nrdy, nrdy ? "" : "not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:3]", rsvd3, "Reserved");
+	stdout_bits_add(t, "[2:1]", ioi, "%s", ioi_string[ioi]);
+	stdout_bits_add(t, "[0:0]", nrdy, "Name space is %sready",
+			 nrdy ? "" : "not ");
+
+	return t;
 }
 
 static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *ns,
 					     unsigned int nsid)
 {
-	int human = stdout_print_ops.flags & VERBOSE;
+	bool human = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	int row;
 
 	printf("NVME Identify Command Set Independent Namespace %d:\n", nsid);
-	printf("nsfeat  : %#x\n", ns->nsfeat);
-	if (human)
-		stdout_cmd_set_independent_id_ns_nsfeat(ns->nsfeat);
-	printf("nmic    : %#x\n", ns->nmic);
-	if (human)
-		stdout_id_ns_nmic(ns->nmic);
-	printf("rescap  : %#x\n", ns->rescap);
-	if (human)
-		stdout_id_ns_rescap(ns->rescap);
-	printf("fpi     : %#x\n", ns->fpi);
-	if (human)
-		stdout_id_ns_fpi(ns->fpi);
-	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
-	printf("nsattr	: %u\n", ns->nsattr);
-	if (human)
-		stdout_id_ns_nsattr(ns->nsattr);
-	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
-	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
-	printf("nstat   : %#x\n", ns->nstat);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	row = stdout_kv_add(t, "nsfeat", "%#x", ns->nsfeat);
 	if (human)
-		stdout_cmd_set_independent_id_ns_nstat(ns->nstat);
-	printf("kpios   : %#x\n", ns->kpios);
+		shr_table_set_row_subtable(t, row,
+				stdout_cmd_set_independent_id_ns_nsfeat_table(
+						ns->nsfeat));
+
+	row = stdout_kv_add(t, "nmic", "%#x", ns->nmic);
 	if (human)
-		stdout_id_ns_kpios(ns->kpios);
-	printf("maxkt   : %#x\n", le16_to_cpu(ns->maxkt));
-	printf("rgrpid  : %#x\n", le32_to_cpu(ns->rgrpid));
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ns_nmic_table(ns->nmic));
+
+	row = stdout_kv_add(t, "rescap", "%#x", ns->rescap);
+	if (human)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ns_rescap_table(ns->rescap));
+
+	row = stdout_kv_add(t, "fpi", "%#x", ns->fpi);
+	if (human)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ns_fpi_table(ns->fpi));
+
+	stdout_kv_add(t, "anagrpid", "%u", le32_to_cpu(ns->anagrpid));
+
+	row = stdout_kv_add(t, "nsattr", "%u", ns->nsattr);
+	if (human)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ns_nsattr_table(ns->nsattr));
+
+	stdout_kv_add(t, "nvmsetid", "%d", le16_to_cpu(ns->nvmsetid));
+	stdout_kv_add(t, "endgid", "%d", le16_to_cpu(ns->endgid));
+
+	row = stdout_kv_add(t, "nstat", "%#x", ns->nstat);
+	if (human)
+		shr_table_set_row_subtable(t, row,
+				stdout_cmd_set_independent_id_ns_nstat_table(
+						ns->nstat));
+
+	row = stdout_kv_add(t, "kpios", "%#x", ns->kpios);
+	if (human)
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ns_kpios_table(ns->kpios));
+
+	stdout_kv_add(t, "maxkt", "%#x", le16_to_cpu(ns->maxkt));
+	stdout_kv_add(t, "rgrpid", "%#x", le32_to_cpu(ns->rgrpid));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build id-independent-id-ns table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 }
 
 static void stdout_id_ns_descs(void *data, unsigned int nsid)
