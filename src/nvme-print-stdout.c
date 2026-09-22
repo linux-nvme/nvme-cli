@@ -5895,48 +5895,103 @@ static void stdout_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc
 
 	__u16 num = sc_list->num;
 	__u32 entries = min(num, count);
+	struct shr_table *t;
 	int i;
 
 	printf("Identify Secondary Controller List:\n");
-	printf("   NUMID       : Number of Identifiers           : %d\n", num);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Number of Identifiers (NUMID)", "%d", num);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build secondary-ctrl-list table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	for (i = 0; i < entries; i++) {
 		printf("   SCEntry[%-3d]:\n", i);
 		printf("................\n");
-		printf("     SCID      : Secondary Controller Identifier : %#.04x\n",
-				le16_to_cpu(sc_entry[i].scid));
-		printf("     PCID      : Primary Controller Identifier   : %#.04x\n",
-				le16_to_cpu(sc_entry[i].pcid));
-		printf("     SCS       : Secondary Controller State      : %#.04x (%s)\n",
-				sc_entry[i].scs,
-				state_desc[sc_entry[i].scs & 0x1]);
-		printf("     VFN       : Virtual Function Number         : %#.04x\n",
-				le16_to_cpu(sc_entry[i].vfn));
-		printf("     NVQ       : Num VQ Flex Resources Assigned  : %#.04x\n",
-				le16_to_cpu(sc_entry[i].nvq));
-		printf("     NVI       : Num VI Flex Resources Assigned  : %#.04x\n",
-				le16_to_cpu(sc_entry[i].nvi));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 2);
+
+		stdout_kv_add(t, "Secondary Controller Identifier (SCID)",
+			      "%#.04x", le16_to_cpu(sc_entry[i].scid));
+		stdout_kv_add(t, "Primary Controller Identifier (PCID)",
+			      "%#.04x", le16_to_cpu(sc_entry[i].pcid));
+		stdout_kv_add(t, "Secondary Controller State (SCS)",
+			      "%#.04x (%s)", sc_entry[i].scs,
+			      state_desc[sc_entry[i].scs & 0x1]);
+		stdout_kv_add(t, "Virtual Function Number (VFN)",
+			      "%#.04x", le16_to_cpu(sc_entry[i].vfn));
+		stdout_kv_add(t, "Num VQ Flex Resources Assigned (NVQ)",
+			      "%#.04x", le16_to_cpu(sc_entry[i].nvq));
+		stdout_kv_add(t, "Num VI Flex Resources Assigned (NVI)",
+			      "%#.04x", le16_to_cpu(sc_entry[i].nvi));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build secondary-ctrl-list table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 	}
 }
 
 static void stdout_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist)
 {
+	struct shr_table *t;
 	int i;
 
 	printf("Identify Namespace Granularity List:\n");
-	printf("   ATTR        : Namespace Granularity Attributes: %#x\n",
-		glist->attributes);
-	printf("   NUMD        : Number of Descriptors           : %d\n",
-		glist->num_descriptors);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Namespace Granularity Attributes (ATTR)",
+		      "%#x", glist->attributes);
+	stdout_kv_add(t, "Number of Descriptors (NUMD)",
+		      "%d", glist->num_descriptors);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build id-ns-granularity-list table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	/* Number of Descriptors is a 0's based value */
 	for (i = 0; i <= glist->num_descriptors; i++) {
 		printf("\n     Entry[%2d] :\n", i);
 		printf("................\n");
-		printf("     NSG       : Namespace Size Granularity     : %#"PRIx64"\n",
-			le64_to_cpu(glist->entry[i].nszegran));
-		printf("     NCG       : Namespace Capacity Granularity : %#"PRIx64"\n",
-			le64_to_cpu(glist->entry[i].ncapgran));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 2);
+
+		stdout_kv_add(t, "Namespace Size Granularity (NSG)",
+			      "%#"PRIx64,
+			      le64_to_cpu(glist->entry[i].nszegran));
+		stdout_kv_add(t, "Namespace Capacity Granularity (NCG)",
+			      "%#"PRIx64,
+			      le64_to_cpu(glist->entry[i].ncapgran));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build id-ns-granularity-list table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 	}
 }
 
