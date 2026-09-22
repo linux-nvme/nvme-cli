@@ -8135,14 +8135,26 @@ static void stdout_timestamp(struct nvme_timestamp *ts)
 
 static void stdout_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
 {
-	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n",
-		le32_to_cpu(hmb->hmdlec));
-	printf("\tHost Memory Descriptor List Address     (HMDLAU): %#x\n",
-		le32_to_cpu(hmb->hmdlau));
-	printf("\tHost Memory Descriptor List Address     (HMDLAL): %#x\n",
-		le32_to_cpu(hmb->hmdlal));
-	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n",
-		le32_to_cpu(hmb->hsize));
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Host Memory Descriptor List Entry Count (HMDLEC)",
+		      "%u", le32_to_cpu(hmb->hmdlec));
+	stdout_kv_add(t, "Host Memory Descriptor List Address (HMDLAU)",
+		      "%#x", le32_to_cpu(hmb->hmdlau));
+	stdout_kv_add(t, "Host Memory Descriptor List Address (HMDLAL)",
+		      "%#x", le32_to_cpu(hmb->hmdlal));
+	stdout_kv_add(t, "Host Memory Buffer Size (HSIZE)", "%u",
+		      le32_to_cpu(hmb->hsize));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build host-mem-buffer table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
