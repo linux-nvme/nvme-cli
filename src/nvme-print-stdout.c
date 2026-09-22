@@ -1163,26 +1163,56 @@ static void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 {
 	int i;
 	int nmu = le16_to_cpu(mus_log->nmu);
+	struct shr_table *t;
 
-	printf("Number of Media Unit Status Descriptors: %u\n", nmu);
-	printf("Number of Channels: %u\n", le16_to_cpu(mus_log->cchans));
-	printf("Selected Configuration: %u\n", le16_to_cpu(mus_log->sel_config));
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Number of Media Unit Status Descriptors", "%u", nmu);
+	stdout_kv_add(t, "Number of Channels", "%u",
+		      le16_to_cpu(mus_log->cchans));
+	stdout_kv_add(t, "Selected Configuration", "%u",
+		      le16_to_cpu(mus_log->sel_config));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build media-unit-stat-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
 	for (i = 0; i < nmu; i++) {
 		printf("Media Unit Status Descriptor: %u\n", i);
-		printf("Media Unit Identifier: %u\n",
-			le16_to_cpu(mus_log->mus_desc[i].muid));
-		printf("Domain Identifier: %u\n",
-			le16_to_cpu(mus_log->mus_desc[i].domainid));
-		printf("Endurance Group Identifier: %u\n",
-			le16_to_cpu(mus_log->mus_desc[i].endgid));
-		printf("NVM Set Identifier: %u\n",
-			le16_to_cpu(mus_log->mus_desc[i].nvmsetid));
-		printf("Capacity Adjustment Factor: %u\n",
-			le16_to_cpu(mus_log->mus_desc[i].cap_adj_fctr));
-		printf("Available Spare: %u\n", mus_log->mus_desc[i].avl_spare);
-		printf("Percentage Used: %u\n", mus_log->mus_desc[i].percent_used);
-		printf("Number of Channels: %u\n", mus_log->mus_desc[i].mucs);
-		printf("Channel Identifiers Offset: %u\n", mus_log->mus_desc[i].cio);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Media Unit Identifier", "%u",
+			      le16_to_cpu(mus_log->mus_desc[i].muid));
+		stdout_kv_add(t, "Domain Identifier", "%u",
+			      le16_to_cpu(mus_log->mus_desc[i].domainid));
+		stdout_kv_add(t, "Endurance Group Identifier", "%u",
+			      le16_to_cpu(mus_log->mus_desc[i].endgid));
+		stdout_kv_add(t, "NVM Set Identifier", "%u",
+			      le16_to_cpu(mus_log->mus_desc[i].nvmsetid));
+		stdout_kv_add(t, "Capacity Adjustment Factor", "%u",
+			      le16_to_cpu(mus_log->mus_desc[i].cap_adj_fctr));
+		stdout_kv_add(t, "Available Spare", "%u",
+			      mus_log->mus_desc[i].avl_spare);
+		stdout_kv_add(t, "Percentage Used", "%u",
+			      mus_log->mus_desc[i].percent_used);
+		stdout_kv_add(t, "Number of Channels", "%u",
+			      mus_log->mus_desc[i].mucs);
+		stdout_kv_add(t, "Channel Identifiers Offset", "%u",
+			      mus_log->mus_desc[i].cio);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build media-unit-stat-log table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 	}
 }
 
