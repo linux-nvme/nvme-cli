@@ -1499,18 +1499,32 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log, size_t len)
 	while ((desc = eom_desc_iter_next(&it))) {
 		unsigned char *vsdata;
 		uint16_t vsdatalen;
+		struct shr_table *t;
 
-		printf("Measurement Status: %s\n",
-			desc->mstatus ? "Successful" : "Not Successful");
-		printf("Lane: %u\n", desc->lane);
-		printf("Eye: %u\n", desc->eye);
-		printf("Top: %u\n", le16_to_cpu(desc->top));
-		printf("Bottom: %u\n", le16_to_cpu(desc->bottom));
-		printf("Left: %u\n", le16_to_cpu(desc->left));
-		printf("Right: %u\n", le16_to_cpu(desc->right));
-		printf("Number of Rows: %u\n", le16_to_cpu(desc->nrows));
-		printf("Number of Columns: %u\n", le16_to_cpu(desc->ncols));
-		printf("Eye Data Length: %u\n", desc->edlen);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Measurement Status", "%s",
+			      desc->mstatus ? "Successful" : "Not Successful");
+		stdout_kv_add(t, "Lane", "%u", desc->lane);
+		stdout_kv_add(t, "Eye", "%u", desc->eye);
+		stdout_kv_add(t, "Top", "%u", le16_to_cpu(desc->top));
+		stdout_kv_add(t, "Bottom", "%u", le16_to_cpu(desc->bottom));
+		stdout_kv_add(t, "Left", "%u", le16_to_cpu(desc->left));
+		stdout_kv_add(t, "Right", "%u", le16_to_cpu(desc->right));
+		stdout_kv_add(t, "Number of Rows", "%u",
+			      le16_to_cpu(desc->nrows));
+		stdout_kv_add(t, "Number of Columns", "%u",
+			      le16_to_cpu(desc->ncols));
+		stdout_kv_add(t, "Eye Data Length", "%u", desc->edlen);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build phy-rx-eom-descs table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 
 		vsdata = eom_desc_iter_vsdata(&it, desc, &vsdatalen);
 		if (!vsdata)
