@@ -5883,15 +5883,29 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 			       bool eds)
 {
+	struct shr_table *t;
 	int i, j, regstrnt, entries;
+	char hex[33], *hp;
 
 	regstrnt = status->regstrnt[0] | (status->regstrnt[1] << 8);
 
 	printf("\nNVME Reservation status:\n\n");
-	printf("gen       : %u\n", le32_to_cpu(status->gen));
-	printf("rtype     : %d\n", status->rtype);
-	printf("regstrnt  : %d\n", regstrnt);
-	printf("ptpls     : %d\n", status->ptpls);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "gen", "%u", le32_to_cpu(status->gen));
+	stdout_kv_add(t, "rtype", "%d", status->rtype);
+	stdout_kv_add(t, "regstrnt", "%d", regstrnt);
+	stdout_kv_add(t, "ptpls", "%d", status->ptpls);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build resv-report table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 
 	/* check Extended Data Structure bit */
 	if (!eds) {
@@ -5904,15 +5918,30 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 			regstrnt = entries;
 
 		for (i = 0; i < regstrnt; i++) {
+			struct nvme_registrant *reg = &status->registrant_ds[i];
+
 			printf("registrant[%d] :\n", i);
-			printf("  cntlid  : %x\n",
-				le16_to_cpu(status->registrant_ds[i].cntlid));
-			printf("  rcsts   : %x\n",
-				status->registrant_ds[i].rcsts);
-			printf("  hostid  : %"PRIx64"\n",
-				le64_to_cpu(status->registrant_ds[i].hostid));
-			printf("  rkey    : %"PRIx64"\n",
-				le64_to_cpu(status->registrant_ds[i].rkey));
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+			shr_table_set_indent(t, 2);
+
+			stdout_kv_add(t, "cntlid", "%x",
+				      le16_to_cpu(reg->cntlid));
+			stdout_kv_add(t, "rcsts", "%x", reg->rcsts);
+			stdout_kv_add(t, "hostid", "%"PRIx64,
+				      le64_to_cpu(reg->hostid));
+			stdout_kv_add(t, "rkey", "%"PRIx64,
+				      le64_to_cpu(reg->rkey));
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build registrant table\n");
+			else
+				stdout_kv_render(stdout, t);
+
+			shr_table_free(t);
 		}
 	} else {
 		/* if status buffer was too small, don't loop past the end of the buffer */
@@ -5921,18 +5950,34 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 			regstrnt = entries;
 
 		for (i = 0; i < regstrnt; i++) {
+			struct nvme_registrant_ext *reg =
+				&status->registrant_eds[i];
+
 			printf("registrantext[%d] :\n", i);
-			printf("  cntlid     : %x\n",
-				le16_to_cpu(status->registrant_eds[i].cntlid));
-			printf("  rcsts      : %x\n",
-				status->registrant_eds[i].rcsts);
-			printf("  rkey       : %"PRIx64"\n",
-				le64_to_cpu(status->registrant_eds[i].rkey));
-			printf("  hostid     : ");
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+			shr_table_set_indent(t, 2);
+
+			stdout_kv_add(t, "cntlid", "%x",
+				      le16_to_cpu(reg->cntlid));
+			stdout_kv_add(t, "rcsts", "%x", reg->rcsts);
+			stdout_kv_add(t, "rkey", "%"PRIx64,
+				      le64_to_cpu(reg->rkey));
+
+			hp = hex;
 			for (j = 0; j < 16; j++)
-				printf("%02x",
-					status->registrant_eds[i].hostid[j]);
-			printf("\n");
+				hp += sprintf(hp, "%02x", reg->hostid[j]);
+			stdout_kv_add(t, "hostid", "%s", hex);
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build registrant table\n");
+			else
+				stdout_kv_render(stdout, t);
+
+			shr_table_free(t);
 		}
 	}
 	printf("\n");
