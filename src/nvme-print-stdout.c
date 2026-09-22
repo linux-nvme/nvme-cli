@@ -8162,32 +8162,83 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 {
 	__u8 *field = buf;
 	int count, i;
+	struct shr_table *t;
 
 	switch (dtype) {
 	case NVME_DIRECTIVE_DTYPE_IDENTIFY:
 		switch (doper) {
 		case NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
 			printf("\tDirective support\n");
-			printf("\t\tIdentify Directive       : %s\n",
-				(*field & 0x1) ? "supported" : "not supported");
-			printf("\t\tStream Directive         : %s\n",
-				(*field & 0x2) ? "supported" : "not supported");
-			printf("\t\tData Placement Directive : %s\n",
-				(*field & 0x4) ? "supported" : "not supported");
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			shr_table_set_indent(t, 2);
+			stdout_kv_add(t, "Identify Directive", "%s",
+				      (*field & 0x1) ?
+				      "supported" : "not supported");
+			stdout_kv_add(t, "Stream Directive", "%s",
+				      (*field & 0x2) ?
+				      "supported" : "not supported");
+			stdout_kv_add(t, "Data Placement Directive", "%s",
+				      (*field & 0x4) ?
+				      "supported" : "not supported");
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build directive-show table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
+
 			printf("\tDirective enabled\n");
-			printf("\t\tIdentify Directive       : %s\n",
-				(*(field + 32) & 0x1) ? "enabled" : "disabled");
-			printf("\t\tStream Directive         : %s\n",
-				(*(field + 32) & 0x2) ? "enabled" : "disabled");
-			printf("\t\tData Placement Directive : %s\n",
-				(*(field + 32) & 0x4) ? "enabled" : "disabled");
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			shr_table_set_indent(t, 2);
+			stdout_kv_add(t, "Identify Directive", "%s",
+				      (*(field + 32) & 0x1) ?
+				      "enabled" : "disabled");
+			stdout_kv_add(t, "Stream Directive", "%s",
+				      (*(field + 32) & 0x2) ?
+				      "enabled" : "disabled");
+			stdout_kv_add(t, "Data Placement Directive", "%s",
+				      (*(field + 32) & 0x4) ?
+				      "enabled" : "disabled");
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build directive-show table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
+
 			printf("\tDirective Persistent Across Controller Level Resets\n");
-			printf("\t\tIdentify Directive       : %s\n",
-				(*(field + 64) & 0x1) ? "enabled" : "disabled");
-			printf("\t\tStream Directive         : %s\n",
-				(*(field + 64) & 0x2) ? "enabled" : "disabled");
-			printf("\t\tData Placement Directive : %s\n",
-				(*(field + 64) & 0x4) ? "enabled" : "disabled");
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			shr_table_set_indent(t, 2);
+			stdout_kv_add(t, "Identify Directive", "%s",
+				      (*(field + 64) & 0x1) ?
+				      "enabled" : "disabled");
+			stdout_kv_add(t, "Stream Directive", "%s",
+				      (*(field + 64) & 0x2) ?
+				      "enabled" : "disabled");
+			stdout_kv_add(t, "Data Placement Directive", "%s",
+				      (*(field + 64) & 0x4) ?
+				      "enabled" : "disabled");
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build directive-show table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 			break;
 		default:
 			fprintf(stderr,
@@ -8198,33 +8249,80 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 	case NVME_DIRECTIVE_DTYPE_STREAMS:
 		switch (doper) {
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
-			printf("\tMax Streams Limit                          (MSL): %u\n",
-				*(__u16 *)field);
-			printf("\tNVM Subsystem Streams Available           (NSSA): %u\n",
-				*(__u16 *)(field + 2));
-			printf("\tNVM Subsystem Streams Open                (NSSO): %u\n",
-				*(__u16 *)(field + 4));
-			printf("\tNVM Subsystem Stream Capability           (NSSC): %u\n",
-				*(__u16 *)(field + 6));
-			printf("\tStream Write Size (in unit of LB size)     (SWS): %u\n",
-				*(__u32 *)(field + 16));
-			printf("\tStream Granularity Size (in unit of SWS)   (SGS): %u\n",
-				*(__u16 *)(field + 20));
-			printf("\tNamespace Streams Allocated                (NSA): %u\n",
-				*(__u16 *)(field + 22));
-			printf("\tNamespace Streams Open                     (NSO): %u\n",
-				*(__u16 *)(field + 24));
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			stdout_kv_add(t, "Max Streams Limit (MSL)", "%u",
+				      *(__u16 *)field);
+			stdout_kv_add(t,
+				      "NVM Subsystem Streams Available (NSSA)",
+				      "%u", *(__u16 *)(field + 2));
+			stdout_kv_add(t,
+				      "NVM Subsystem Streams Open (NSSO)",
+				      "%u", *(__u16 *)(field + 4));
+			stdout_kv_add(t,
+				      "NVM Subsystem Stream Capability (NSSC)",
+				      "%u", *(__u16 *)(field + 6));
+			stdout_kv_add(t,
+				      "Stream Write Size (in unit of LB size) (SWS)",
+				      "%u", *(__u32 *)(field + 16));
+			stdout_kv_add(t,
+				      "Stream Granularity Size (in unit of SWS) (SGS)",
+				      "%u", *(__u16 *)(field + 20));
+			stdout_kv_add(t,
+				      "Namespace Streams Allocated (NSA)",
+				      "%u", *(__u16 *)(field + 22));
+			stdout_kv_add(t, "Namespace Streams Open (NSO)", "%u",
+				      *(__u16 *)(field + 24));
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build directive-show table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 			break;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
 			count = *(__u16 *)field;
-			printf("\tOpen Stream Count  : %u\n", *(__u16 *)field);
-			for (i = 0; i < count; i++)
-				printf("\tStream Identifier %.6u : %u\n", i + 1,
-					*(__u16 *)(field + ((i + 1) * 2)));
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			stdout_kv_add(t, "Open Stream Count", "%u",
+				      *(__u16 *)field);
+			for (i = 0; i < count; i++) {
+				char name[32];
+
+				snprintf(name, sizeof(name),
+					 "Stream Identifier %.6u", i + 1);
+				stdout_kv_add(t, name, "%u",
+					      *(__u16 *)(field +
+							 (i + 1) * 2));
+			}
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build directive-show table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 			break;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE:
-			printf("\tNamespace Streams Allocated (NSA): %u\n",
-				result & 0xffff);
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			stdout_kv_add(t, "Namespace Streams Allocated (NSA)",
+				      "%u", result & 0xffff);
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build directive-show table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 			break;
 		default:
 			fprintf(stderr,
