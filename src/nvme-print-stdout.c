@@ -8359,21 +8359,35 @@ static void stdout_rate_limiting_data(struct nvme_rate_limiting_data *rld)
 {
 	__u16 rlc = le16_to_cpu(rld->rlc);
 	__u16 rlm = NVME_RATE_LIMITING_RLC_RLM(rlc);
+	struct shr_table *t;
 
-	printf("\tRate Limiting Enable (RLE): %s\n",
-	       NVME_RATE_LIMITING_RLC_RLE(rlc) ? "Enabled" : "Disabled");
-	printf("\tRate Limiting Mode (RLM): %u - %s\n", rlm,
-		rlm == NVME_RATE_LIMITING_MODE_SOFT_LIMIT ? "Soft Limit" :
-		rlm == NVME_RATE_LIMITING_MODE_HARD_LIMIT ? "Hard Limit" : "Reserved");
-	printf("\tBandwidth Scale Factor (BWSF): %u\n", rld->bwsf);
-	printf("\tTotal Bandwidth Value (TBWV): %"PRIu64"\n", le64_to_cpu(rld->tbwv));
-	printf("\tWrite Bandwidth Value (WBWV): %"PRIu64"\n", le64_to_cpu(rld->wbwv));
-	printf("\tTotal IOPS (TIOPS): %u\n", le32_to_cpu(rld->tiops));
-	printf("\tWrite IOPS (WIOPS): %u\n", le32_to_cpu(rld->wiops));
-	printf("\tRead IOPS Ratio (RIOPSR): %u\n", rld->riopsr);
-	printf("\tWrite IOPS Ratio (WIOPSR): %u\n", rld->wiopsr);
-	printf("\tRead Bandwidth Ratio (RBWR): %u\n", rld->rbwr);
-	printf("\tWrite Bandwidth Ratio (WBWR): %u\n", rld->wbwr);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Rate Limiting Enable (RLE)", "%s",
+		      NVME_RATE_LIMITING_RLC_RLE(rlc) ? "Enabled" : "Disabled");
+	stdout_kv_add(t, "Rate Limiting Mode (RLM)", "%u - %s", rlm,
+		      rlm == NVME_RATE_LIMITING_MODE_SOFT_LIMIT ? "Soft Limit" :
+		      rlm == NVME_RATE_LIMITING_MODE_HARD_LIMIT ?
+		      "Hard Limit" : "Reserved");
+	stdout_kv_add(t, "Bandwidth Scale Factor (BWSF)", "%u", rld->bwsf);
+	stdout_kv_add(t, "Total Bandwidth Value (TBWV)", "%"PRIu64,
+		      le64_to_cpu(rld->tbwv));
+	stdout_kv_add(t, "Write Bandwidth Value (WBWV)", "%"PRIu64,
+		      le64_to_cpu(rld->wbwv));
+	stdout_kv_add(t, "Total IOPS (TIOPS)", "%u", le32_to_cpu(rld->tiops));
+	stdout_kv_add(t, "Write IOPS (WIOPS)", "%u", le32_to_cpu(rld->wiops));
+	stdout_kv_add(t, "Read IOPS Ratio (RIOPSR)", "%u", rld->riopsr);
+	stdout_kv_add(t, "Write IOPS Ratio (WIOPSR)", "%u", rld->wiopsr);
+	stdout_kv_add(t, "Read Bandwidth Ratio (RBWR)", "%u", rld->rbwr);
+	stdout_kv_add(t, "Write Bandwidth Ratio (WBWR)", "%u", rld->wbwr);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build rate-limiting-data table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_feat_perfc_std(struct nvme_std_perf_attr *data)
