@@ -5070,39 +5070,55 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	shr_table_free(t);
 }
 
-static void stdout_nvm_id_ns_pic(__u8 pic)
+static struct shr_table *stdout_nvm_id_ns_pic_table(__u8 pic)
 {
+	struct shr_table *t;
 	__u8 rsvd = (pic & 0xF0) >> 4;
 	__u8 qpifs = (pic & 0x8) >> 3;
 	__u8 stcrs = (pic & 0x4) >> 2;
 	__u8 pic_16bpistm = (pic & 0x2) >> 1;
 	__u8 pic_16bpists = pic & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tQualified Protection Information Format %sSupported\n",
-		qpifs, qpifs ? "" : "Not ");
-	printf("  [2:2] : %#x\tStorage Tag Check Read %sSupported\n",
-		stcrs, stcrs ? "" : "Not ");
-	printf("  [1:1] : %#x\t16b Guard Protection Information Storage Tag Mask\n",
-		pic_16bpistm);
-	printf("  [0:0] : %#x\t16b Guard Protection Information Storage Tag %sSupported\n",
-		pic_16bpists, pic_16bpists ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:4]", rsvd, "Reserved");
+	stdout_bits_add(t, "[3:3]", qpifs,
+			 "Qualified Protection Information Format %sSupported",
+			 qpifs ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", stcrs,
+			 "Storage Tag Check Read %sSupported",
+			 stcrs ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", pic_16bpistm,
+			 "16b Guard Protection Information Storage Tag Mask");
+	stdout_bits_add(t, "[0:0]", pic_16bpists,
+			 "16b Guard Protection Information Storage Tag %sSupported",
+			 pic_16bpists ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_nvm_id_ns_pifa(__u8 pifa)
+static struct shr_table *stdout_nvm_id_ns_pifa_table(__u8 pifa)
 {
+	struct shr_table *t;
 	__u8 rsvd = (pifa & 0xF8) >> 3;
 	__u8 stmla = pifa & 0x7;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
-	printf("  [2:0] : %#x\tStorage Tag Masking Level Attribute : %s\n", stmla,
-		stmla == 0 ? "Bit Granularity Masking" :
-		stmla == 1 ? "Byte Granularity Masking" :
-		stmla == 2 ? "Masking Not Supported" : "Reserved");
-	printf("\n");
+		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
+	stdout_bits_add(t, "[2:0]", stmla,
+			 "Storage Tag Masking Level Attribute : %s",
+			 stmla == 0 ? "Bit Granularity Masking" :
+			 stmla == 1 ? "Byte Granularity Masking" :
+			 stmla == 2 ? "Masking Not Supported" : "Reserved");
+
+	return t;
 }
 
 static char *pif_to_string(__u8 pif, bool qpifs, bool pif_field)
@@ -5126,28 +5142,47 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 			     struct nvme_id_ns *ns, unsigned int lba_index,
 			     bool cap_only)
 {
-	int i, verbose = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	bool qpifs = (nvm_ns->pic & 0x8) >> 3;
+	struct shr_table *t;
 	__u32 elbaf;
 	__u8 lbaf;
 	int pif, sts, qpif;
 	char *in_use = "(in use)";
+	int i, row;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lbaf);
 
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	if (!cap_only) {
 		printf("NVMe NVM Identify Namespace %d:\n", nsid);
-		printf("lbstm : %#"PRIx64"\n", le64_to_cpu(nvm_ns->lbstm));
+		stdout_kv_add(t, "lbstm", "%#"PRIx64,
+			      le64_to_cpu(nvm_ns->lbstm));
 	} else {
-		printf("NVMe NVM Identify Namespace for LBA format[%d]:\n", lba_index);
+		printf("NVMe NVM Identify Namespace for LBA format[%d]:\n",
+		       lba_index);
 		in_use = "";
 	}
-	printf("pic   : %#x\n", nvm_ns->pic);
+
+	row = stdout_kv_add(t, "pic", "%#x", nvm_ns->pic);
 	if (verbose)
-		stdout_nvm_id_ns_pic(nvm_ns->pic);
-	printf("pifa  : %#x\n", nvm_ns->pifa);
+		shr_table_set_row_subtable(t, row,
+				stdout_nvm_id_ns_pic_table(nvm_ns->pic));
+
+	row = stdout_kv_add(t, "pifa", "%#x", nvm_ns->pifa);
 	if (verbose)
-		stdout_nvm_id_ns_pifa(nvm_ns->pifa);
+		shr_table_set_row_subtable(t, row,
+				stdout_nvm_id_ns_pifa_table(nvm_ns->pifa));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build nvm-id-ns table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 
 	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
 		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
@@ -5163,15 +5198,27 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 			printf("elbaf %2d : qpif:%d pif:%d sts:%-2d %s\n", i,
 				qpif, pif, sts, i == lbaf ? in_use : "");
 	}
-	if (ns->nsfeat & 0x20)
-		printf("npdgl : %#x\n", le32_to_cpu(nvm_ns->npdgl));
 
-	printf("nprg  : %#x\n", le32_to_cpu(nvm_ns->nprg));
-	printf("npra  : %#x\n", le32_to_cpu(nvm_ns->npra));
-	printf("nors  : %#x\n", le32_to_cpu(nvm_ns->nors));
-	printf("npdal : %#x\n", le32_to_cpu(nvm_ns->npdal));
-	printf("lbapss: %#x\n", le32_to_cpu(nvm_ns->lbapss));
-	printf("tlbaag: %#x\n", le32_to_cpu(nvm_ns->tlbaag));
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	if (ns->nsfeat & 0x20)
+		stdout_kv_add(t, "npdgl", "%#x", le32_to_cpu(nvm_ns->npdgl));
+
+	stdout_kv_add(t, "nprg", "%#x", le32_to_cpu(nvm_ns->nprg));
+	stdout_kv_add(t, "npra", "%#x", le32_to_cpu(nvm_ns->npra));
+	stdout_kv_add(t, "nors", "%#x", le32_to_cpu(nvm_ns->nors));
+	stdout_kv_add(t, "npdal", "%#x", le32_to_cpu(nvm_ns->npdal));
+	stdout_kv_add(t, "lbapss", "%#x", le32_to_cpu(nvm_ns->lbapss));
+	stdout_kv_add(t, "tlbaag", "%#x", le32_to_cpu(nvm_ns->tlbaag));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build nvm-id-ns table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 }
 
 static void stdout_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
