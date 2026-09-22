@@ -5650,6 +5650,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 	int i;
 	__u16 status;
 	__u16 sts;
+	struct shr_table *t;
 
 	printf("Error Log Entries for device:%s entries:%d\n", devname,
 	       entries);
@@ -5665,29 +5666,43 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 
 		printf(" Entry[%2d]\n", i);
 		printf(".................\n");
-		printf("error_count	: %"PRIu64"\n",
-		       le64_to_cpu(err_log[i].error_count));
-		printf("sqid		: %d\n", le16_to_cpu(err_log[i].sqid));
-		printf("cmdid		: %#x\n",
-		       le16_to_cpu(err_log[i].cmdid));
-		printf("status_field	: %#x (%s)\n", status,
-		       libnvme_status_to_string(status, false));
-		printf("phase_tag	: %#x\n", NVME_ERR_SF_PHASE_TAG(sts));
-		printf("parm_err_loc	: %#x\n",
-		       le16_to_cpu(err_log[i].parm_error_location));
-		printf("lba		: %#"PRIx64"\n",
-		       le64_to_cpu(err_log[i].lba));
-		printf("nsid		: %#x\n", le32_to_cpu(err_log[i].nsid));
-		printf("vs		: %d\n", err_log[i].vs);
-		printf("trtype		: %#x (%s)\n", err_log[i].trtype,
-		       nvme_trtype_to_string(err_log[i].trtype));
-		printf("csi		: %d\n", err_log[i].csi);
-		printf("opcode		: %#x\n", err_log[i].opcode);
-		printf("cs		: %#"PRIx64"\n",
-		       le64_to_cpu(err_log[i].cs));
-		printf("trtype_spec_info: %#x\n",
-		       le16_to_cpu(err_log[i].trtype_spec_info));
-		printf("log_page_version: %d\n", err_log[i].log_page_version);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "error_count", "%"PRIu64,
+			      le64_to_cpu(err_log[i].error_count));
+		stdout_kv_add(t, "sqid", "%d", le16_to_cpu(err_log[i].sqid));
+		stdout_kv_add(t, "cmdid", "%#x",
+			      le16_to_cpu(err_log[i].cmdid));
+		stdout_kv_add(t, "status_field", "%#x (%s)", status,
+			      libnvme_status_to_string(status, false));
+		stdout_kv_add(t, "phase_tag", "%#x",
+			      NVME_ERR_SF_PHASE_TAG(sts));
+		stdout_kv_add(t, "parm_err_loc", "%#x",
+			      le16_to_cpu(err_log[i].parm_error_location));
+		stdout_kv_add(t, "lba", "%#"PRIx64,
+			      le64_to_cpu(err_log[i].lba));
+		stdout_kv_add(t, "nsid", "%#x", le32_to_cpu(err_log[i].nsid));
+		stdout_kv_add(t, "vs", "%d", err_log[i].vs);
+		stdout_kv_add(t, "trtype", "%#x (%s)", err_log[i].trtype,
+			      nvme_trtype_to_string(err_log[i].trtype));
+		stdout_kv_add(t, "csi", "%d", err_log[i].csi);
+		stdout_kv_add(t, "opcode", "%#x", err_log[i].opcode);
+		stdout_kv_add(t, "cs", "%#"PRIx64, le64_to_cpu(err_log[i].cs));
+		stdout_kv_add(t, "trtype_spec_info", "%#x",
+			      le16_to_cpu(err_log[i].trtype_spec_info));
+		stdout_kv_add(t, "log_page_version", "%d",
+			      err_log[i].log_page_version);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr, "Failed to build error-log table\n");
+		else
+			stdout_kv_render(stdout, t);
+
+		shr_table_free(t);
+
 		printf(".................\n");
 	}
 
