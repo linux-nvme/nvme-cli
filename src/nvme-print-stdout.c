@@ -8334,10 +8334,25 @@ void stdout_d(unsigned char *buf, int len, int width, int group)
 
 static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 {
-	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->ee));
-	printf("\tDTWIN Reads Threshold :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwinrt));
-	printf("\tDTWIN Writes Threshold:%"PRIu64"\n", le64_to_cpu(plmcfg->dtwinwt));
-	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Enable Event", "%04x", le16_to_cpu(plmcfg->ee));
+	stdout_kv_add(t, "DTWIN Reads Threshold", "%"PRIu64,
+		      le64_to_cpu(plmcfg->dtwinrt));
+	stdout_kv_add(t, "DTWIN Writes Threshold", "%"PRIu64,
+		      le64_to_cpu(plmcfg->dtwinwt));
+	stdout_kv_add(t, "DTWIN Time Threshold", "%"PRIu64,
+		      le64_to_cpu(plmcfg->dtwintt));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build plm-config table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_rate_limiting_data(struct nvme_rate_limiting_data *rld)
