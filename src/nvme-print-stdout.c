@@ -9834,12 +9834,12 @@ static void stdout_kv_add_traddr(struct shr_table *t, const char *field,
 		af = AF_INET6;
 		size = INET6_ADDRSTRLEN;
 	} else {
-		printf("%s: <invalid>\n", field);
+		stdout_kv_add(t, field, "<invalid>");
 		return;
 	}
 
 	if (inet_ntop(af, traddr, dst, size))
-		printf("%s: %s\n", field, dst);
+		stdout_kv_add(t, field, "%s", dst);
 }
 
 static void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log)
@@ -9852,27 +9852,66 @@ static void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log)
 	__u32 tel;
 	__u8 numatr;
 	int n = 0;
+	struct shr_table *t;
 
-	printf("genctr: %"PRIu64"\n", le64_to_cpu(log->genctr));
-	printf("numrec: %"PRIu64"\n", le64_to_cpu(log->numrec));
-	printf("recfmt: %u\n", le16_to_cpu(log->recfmt));
-	printf("tadlpl: %u\n", tadlpl);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "genctr", "%"PRIu64, le64_to_cpu(log->genctr));
+	stdout_kv_add(t, "numrec", "%"PRIu64, le64_to_cpu(log->numrec));
+	stdout_kv_add(t, "recfmt", "%u", le16_to_cpu(log->recfmt));
+	stdout_kv_add(t, "tadlpl", "%u", tadlpl);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build ave-discovery-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	for (i = sizeof(*log); i < le32_to_cpu(log->tadlpl); i += tel) {
 		printf("adlpe: %d\n", n++);
 		adlpe = (void *)log + i;
 		tel = le32_to_cpu(adlpe->tel);
 		numatr = adlpe->numatr;
-		printf("tel: %u\n", tel);
-		printf("avenqn: %s\n", adlpe->avenqn);
-		printf("numatr: %u\n", numatr);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "tel", "%u", tel);
+		stdout_kv_add(t, "avenqn", "%s", adlpe->avenqn);
+		stdout_kv_add(t, "numatr", "%u", numatr);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build ave-discovery-log table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 
 		atr = adlpe->atr;
 		for (j = 0; j < numatr; j++) {
 			printf("atr: %d\n", j);
-			printf("aveadrfam: %s\n", libnvmf_adrfam_str(atr->aveadrfam));
-			printf("avetrsvcid: %u\n", le16_to_cpu(atr->avetrsvcid));
-			print_traddr("avetraddr", atr->aveadrfam, atr->avetraddr);
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			stdout_kv_add(t, "aveadrfam", "%s",
+				      libnvmf_adrfam_str(atr->aveadrfam));
+			stdout_kv_add(t, "avetrsvcid", "%u",
+				      le16_to_cpu(atr->avetrsvcid));
+			stdout_kv_add_traddr(t, "avetraddr", atr->aveadrfam,
+					     atr->avetraddr);
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build ave-discovery-log table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
+
 			atr++;
 		}
 	}
