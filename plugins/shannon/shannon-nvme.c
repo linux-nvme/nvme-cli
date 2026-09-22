@@ -310,7 +310,7 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	if (buf) {
 		if (strlen(cfg.file)) {
 			ffd = open(cfg.file, O_RDONLY);
-			if (ffd <= 0) {
+			if (ffd < 0) {
 				nvme_show_error("no firmware file provided");
 				return -EINVAL;
 			}
