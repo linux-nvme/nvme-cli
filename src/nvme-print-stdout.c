@@ -879,10 +879,24 @@ void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset)
 void nvme_show_pel_thermal_excursion_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_thermal_exc_event *thermal_exc_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("Thermal Excursion Event Entry:\n");
-	printf("Over Temperature: %u\n", thermal_exc_event->over_temp);
-	printf("Threshold: %u\n", thermal_exc_event->threshold);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Over Temperature", "%u",
+		      thermal_exc_event->over_temp);
+	stdout_kv_add(t, "Threshold", "%u", thermal_exc_event->threshold);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build pel-thermal-excursion-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
