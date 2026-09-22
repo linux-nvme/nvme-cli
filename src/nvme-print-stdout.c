@@ -8991,21 +8991,40 @@ static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *
 static void stdout_reachability_associations_log(struct nvme_reachability_associations_log *log,
 						 __u64 len)
 {
+	struct shr_table *t;
 	__u16 i;
 	__u32 j;
 
 	print_debug("len: %"PRIu64"\n", (uint64_t)len);
-	printf("chngc: %"PRIu64"\n", le64_to_cpu(log->chngc));
-	printf("nrad: %u\n", le16_to_cpu(log->nrad));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "chngc", "%"PRIu64, le64_to_cpu(log->chngc));
+	stdout_kv_add(t, "nrad", "%u", le16_to_cpu(log->nrad));
 
 	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
-		printf("rasid: %u\n", le32_to_cpu(log->rad[i].rasid));
-		printf("nrid: %u\n", le32_to_cpu(log->rad[i].nrid));
-		printf("chngc: %"PRIu64"\n", le64_to_cpu(log->rad[i].chngc));
-		printf("rac: %u\n", log->rad[i].rac);
-		for (j = 0; j < le32_to_cpu(log->rad[i].nrid); j++)
-			printf("rgid%u: %u\n", j, le32_to_cpu(log->rad[i].rgid[j]));
+		stdout_kv_add(t, "rasid", "%u", le32_to_cpu(log->rad[i].rasid));
+		stdout_kv_add(t, "nrid", "%u", le32_to_cpu(log->rad[i].nrid));
+		stdout_kv_add(t, "chngc", "%"PRIu64,
+			      le64_to_cpu(log->rad[i].chngc));
+		stdout_kv_add(t, "rac", "%u", log->rad[i].rac);
+		for (j = 0; j < le32_to_cpu(log->rad[i].nrid); j++) {
+			char name[16];
+
+			snprintf(name, sizeof(name), "rgid%u", j);
+			stdout_kv_add(t, name, "%u",
+				      le32_to_cpu(log->rad[i].rgid[j]));
+		}
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build reachability-associations table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 #ifdef CONFIG_FABRICS
