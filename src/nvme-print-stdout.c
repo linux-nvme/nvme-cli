@@ -7642,10 +7642,24 @@ static void stdout_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, 
 
 static void stdout_lba_status_info(__u64 result)
 {
-	printf("\tLBA Status Information Poll Interval (LSIPI)  : %u\n",
-	       (__u32)NVME_FEAT_LBAS_LSIPI(result));
-	printf("\tLBA Status Information Report Interval (LSIRI): %u\n",
-	       (__u32)NVME_FEAT_LBAS_LSIRI(result));
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	shr_table_set_indent(t, 1);
+
+	stdout_kv_add(t, "LBA Status Information Poll Interval (LSIPI)",
+		      "%u", (__u32)NVME_FEAT_LBAS_LSIPI(result));
+	stdout_kv_add(t, "LBA Status Information Report Interval (LSIRI)",
+		      "%u", (__u32)NVME_FEAT_LBAS_LSIRI(result));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build lba-status-info table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static bool line_equal(unsigned char *buf, int len, int width, int offset)
