@@ -6896,36 +6896,60 @@ static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 	shr_table_free(t);
 }
 
-static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log, __u16 group_id,
-				 const char *devname)
+static void stdout_endurance_log(struct nvme_endurance_group_log *el,
+				 __u16 group_id, const char *devname)
 {
+	struct shr_table *t;
+
 	printf("Endurance Group Log for NVME device:%s Group ID:%x\n", devname, group_id);
-	printf("critical_warning	: %u\n", endurance_log->critical_warning);
-	printf("endurance_group_features: %u\n", endurance_log->endurance_group_features);
-	printf("avl_spare		: %u\n", endurance_log->avl_spare);
-	printf("avl_spare_threshold	: %u\n", endurance_log->avl_spare_threshold);
-	printf("percent_used		: %u%%\n", endurance_log->percent_used);
-	printf("domain_identifier	: %u\n", endurance_log->domain_identifier);
-	printf("endurance_estimate	: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->endurance_estimate)));
-	printf("data_units_read		: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->data_units_read)));
-	printf("data_units_written	: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->data_units_written)));
-	printf("media_units_written	: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->media_units_written)));
-	printf("host_read_cmds		: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->host_read_cmds)));
-	printf("host_write_cmds		: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->host_write_cmds)));
-	printf("media_data_integrity_err: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->media_data_integrity_err)));
-	printf("num_err_info_log_entries: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->num_err_info_log_entries)));
-	printf("total_end_grp_cap	: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->total_end_grp_cap)));
-	printf("unalloc_end_grp_cap	: %s\n",
-	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->unalloc_end_grp_cap)));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "critical_warning", "%u", el->critical_warning);
+	stdout_kv_add(t, "endurance_group_features", "%u",
+		      el->endurance_group_features);
+	stdout_kv_add(t, "avl_spare", "%u", el->avl_spare);
+	stdout_kv_add(t, "avl_spare_threshold", "%u", el->avl_spare_threshold);
+	stdout_kv_add(t, "percent_used", "%u%%", el->percent_used);
+	stdout_kv_add(t, "domain_identifier", "%u", el->domain_identifier);
+	stdout_kv_add(t, "endurance_estimate", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->endurance_estimate)));
+	stdout_kv_add(t, "data_units_read", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->data_units_read)));
+	stdout_kv_add(t, "data_units_written", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->data_units_written)));
+	stdout_kv_add(t, "media_units_written", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->media_units_written)));
+	stdout_kv_add(t, "host_read_cmds", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->host_read_cmds)));
+	stdout_kv_add(t, "host_write_cmds", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->host_write_cmds)));
+	stdout_kv_add(t, "media_data_integrity_err", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->media_data_integrity_err)));
+	stdout_kv_add(t, "num_err_info_log_entries", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->num_err_info_log_entries)));
+	stdout_kv_add(t, "total_end_grp_cap", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->total_end_grp_cap)));
+	stdout_kv_add(t, "unalloc_end_grp_cap", "%s",
+		      uint128_t_to_l10n_string(
+			      le128_to_cpu(el->unalloc_end_grp_cap)));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build endurance-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static struct shr_table *stdout_smart_log_critical_warning_table(__u8 cw)
