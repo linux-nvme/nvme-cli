@@ -1422,7 +1422,7 @@ static int filter_namespace(const struct dirent *d)
 static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace_id, __u64 namespace_size,
 			   __u64 namespace_cap, __u32 lbaf, __u32 units)
 {
-	struct dirent **devices;
+	struct dirent **devices = NULL;
 	char dev_name[32] = "";
 	int i   = 0;
 	int num = 0;
