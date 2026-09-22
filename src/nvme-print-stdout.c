@@ -8526,18 +8526,44 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 	int i;
 	char val[4096];
 	__u16 len;
+	struct shr_table *t;
 
-	printf("\tNum Metadata Element Descriptors: %d\n", data->ndesc);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Num Metadata Element Descriptors", "%d", data->ndesc);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build host-metadata table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
 	for (i = 0; i < data->ndesc; i++) {
 		len = le16_to_cpu(desc->len);
 		strncpy(val, (char *)desc->val, min(sizeof(val) - 1, len));
 
 		printf("\tElement[%-3d]:\n", i);
-		printf("\t\tType	    : %#02x (%s)\n", desc->type,
-		       nvme_host_metadata_type_to_string(fid, desc->type));
-		printf("\t\tRevision : %d\n", desc->rev);
-		printf("\t\tLength   : %d\n", len);
-		printf("\t\tValue    : %s\n", val);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 2);
+		stdout_kv_add(t, "Type", "%#02x (%s)", desc->type,
+			      nvme_host_metadata_type_to_string(fid,
+								 desc->type));
+		stdout_kv_add(t, "Revision", "%d", desc->rev);
+		stdout_kv_add(t, "Length", "%d", len);
+		stdout_kv_add(t, "Value", "%s", val);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build host-metadata table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 
 		desc = (struct nvme_metadata_element_desc *)&desc->val[desc->len];
 	}
