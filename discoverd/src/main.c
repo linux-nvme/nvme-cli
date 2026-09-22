@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <ifaddrs.h>
 
 #include <systemd/sd-bus.h>
 #include <systemd/sd-daemon.h>
@@ -21,8 +22,11 @@
 #include <systemd/sd-event.h>
 
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <shared/array-util.h>
+#include <shared/cleanup-util.h>
+#include <shared/string-util.h>
 #include <shared/time-util.h>
 #include <nvme/config.h>
 #include <nvme/exclusion.h>
@@ -149,7 +153,49 @@ static void ctrl_remove(struct active_ctrl *entry)
 	ctrl_free(entry);
 }
 
-static char *find_devname_for_tid(const struct libnvmf_tid *t);
+/* One connected controller, as sysfs reports it. */
+struct scanned_ctrl {
+	char *devname;
+	struct libnvmf_tid *tid;
+	bool is_dc;
+};
+
+SHR_PTRARRAY_DEFINE(scanned_ctrl_list, struct scanned_ctrl);
+
+static void scanned_ctrl_free(struct scanned_ctrl *sc)
+{
+	if (!sc)
+		return;
+	tid_free(sc->tid);
+	free(sc->devname);
+	free(sc);
+}
+
+/*
+ * Snapshot of every connected controller plus the host's interface
+ * addresses. Matching one candidate needs both, and both are expensive to
+ * build: a sysfs walk reads six attributes per controller, and getifaddrs()
+ * dumps the whole address table. A caller about to test many candidates --
+ * every entry of a Discovery Log Page, every desired connection at startup
+ * -- builds one snapshot and passes it down, instead of paying for both per
+ * candidate.
+ *
+ * The snapshot is deliberately not cached across calls. Addresses and
+ * controllers change under a daemon that runs for weeks, and a stale
+ * snapshot produces wrong match results rather than merely slow ones.
+ */
+struct conn_scan {
+	struct ifaddrs *iface_list;
+	struct scanned_ctrl_list ctrls;
+};
+
+static void conn_scan_load(struct conn_scan *scan);
+static void conn_scan_free(struct conn_scan *scan);
+static const char *find_devname_for_tid(const struct conn_scan *scan,
+					const struct libnvmf_tid *tid);
+
+/* Frees a conn_scan on scope exit; a zeroed scan is a safe no-op. */
+#define __cleanup_conn_scan __attribute__((cleanup(conn_scan_free)))
 
 /*
  * Exclusion + registry-owner check — called before every connect decision.
@@ -166,10 +212,14 @@ static char *find_devname_for_tid(const struct libnvmf_tid *t);
  * registry owner strings (see unit_start_dc()/unit_start_ioc() in units.c),
  * so a controller discoverd itself owns is never skipped here.
  *
- * @known_devname is the live (or just-removed) device name for @t, when
- * the caller already has it in hand (on_nvme_remove(), startup_audit()'s
- * sysfs walk); NULL otherwise, in which case this function resolves it
- * itself via a live sysfs scan (find_devname_for_tid()). Either way the
+ * @scan is a snapshot the caller built before a loop, or NULL to build a
+ * throwaway one for this call. It is only consulted when @known_devname
+ * is NULL.
+ *
+ * @known_devname is the existing (or just-removed) device name for @tid,
+ * when the caller already has it in hand (on_nvme_remove(),
+ * startup_audit()); NULL otherwise, in which case this function resolves
+ * it itself from @scan (find_devname_for_tid()). Either way the
  * registry is checked directly by device name, never through libnvme's
  * in-process topology tree: that tree is only populated by a caller that
  * has just run libnvme_scan_topology() (true for the CLI's one-shot
@@ -177,22 +227,26 @@ static char *find_devname_for_tid(const struct libnvmf_tid *t);
  * tree-based match would silently report "no owner" for every
  * already-connected controller discoverd didn't itself just scan.
  */
-static bool should_connect(const struct libnvmf_tid *t,
+static bool should_connect(const struct conn_scan *scan,
+			   const struct libnvmf_tid *tid,
 			   const char *known_devname)
 {
-	char *owner = NULL;
-	char *resolved_devname = NULL;
+	__cleanup_conn_scan struct conn_scan local = { 0 };
+	__cleanup_free char *owner = NULL;
 	const char *devname = known_devname;
 	int r;
 
-	if (libnvmf_exclusion_match(ctx.nvme_ctx, t)) {
-		disc_info("%s - excluded, skipping", libnvmf_tid_str(t));
+	if (libnvmf_exclusion_match(ctx.nvme_ctx, tid)) {
+		disc_info("%s - excluded, skipping", libnvmf_tid_str(tid));
 		return false;
 	}
 
 	if (!devname) {
-		resolved_devname = find_devname_for_tid(t);
-		devname = resolved_devname;
+		if (!scan) {
+			conn_scan_load(&local);
+			scan = &local;
+		}
+		devname = find_devname_for_tid(scan, tid);
 	}
 
 	if (devname) {
@@ -201,23 +255,20 @@ static bool should_connect(const struct libnvmf_tid *t,
 		if (r == -ENOENT)
 			r = 0;
 	} else {
-		r = 0; // nothing currently connected matching t
+		r = 0; // nothing currently connected matching tid
 	}
-	free(resolved_devname);
 
 	if (r < 0) {
 		disc_warn("%s - failed to check registry owner: %s",
-			  libnvmf_tid_str(t), strerror(-r));
+			  libnvmf_tid_str(tid), strerror(-r));
 		return false;
 	}
-	if (owner && strcmp(owner, "discoverd") && strcmp(owner, "nbft")) {
+	if (owner && !streq(owner, "discoverd") && !streq(owner, "nbft")) {
 		disc_info("%s - owned by '%s', skipping",
-			  libnvmf_tid_str(t), owner);
-		free(owner);
+			  libnvmf_tid_str(tid), owner);
 		return false;
 	}
 
-	free(owner);
 	return true;
 }
 
@@ -286,6 +337,7 @@ SHR_PTRARRAY_DEFINE(ioc_list, struct libnvmf_tid);
 
 struct dlp_fetch_ctx {
 	const struct libnvmf_config_conn *via_dc; // dc_tid's own conn, if any
+	const struct conn_scan *scan; // shared by every entry's connect check
 	struct ioc_list iocs;
 	bool self_seen;
 	bool epcsd; // meaningful only if self_seen
@@ -304,7 +356,7 @@ static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
 		return;
 	}
 
-	if (should_connect(t, NULL))
+	if (should_connect(fctx->scan, t, NULL))
 		start_ctrl(t, false, is_nbft, fctx->via_dc);
 }
 
@@ -336,7 +388,7 @@ static void dlp_dc_callback(const struct libnvmf_tid *t, bool epcsd,
 	struct dlp_fetch_ctx *fctx = user_data;
 	bool is_nbft = inventory_is_nbft(ctx.inventory, t);
 
-	if (should_connect(t, NULL)) {
+	if (should_connect(fctx->scan, t, NULL)) {
 		start_ctrl(t, true, is_nbft, fctx->via_dc);
 		record_parent_epcsd(t, epcsd);
 	}
@@ -370,11 +422,16 @@ static void epcsd_park(struct active_ctrl *e);
 static void fetch_and_process_dlp(const char *devname,
 				  const struct libnvmf_tid *dc_tid)
 {
+	__cleanup_conn_scan struct conn_scan scan = { 0 };
 	struct dlp_fetch_ctx fctx = {
 		.via_dc = inventory_config_conn_for(ctx.inventory, dc_tid),
 	};
 	struct active_ctrl *e = ctrl_find_by_devname(devname);
 	bool epcsd;
+
+	// One snapshot for every entry this log page turns out to hold.
+	conn_scan_load(&scan);
+	fctx.scan = &scan;
 
 	dlp_fetch(&ctx, devname, dc_tid, dlp_ioc_callback, dlp_dc_callback,
 		  dlp_self_callback, &fctx);
@@ -711,7 +768,7 @@ static void on_nvme_remove(const char *devname,
 	 * entry wins even over a still-desired controller — it is the
 	 * administrator's explicit override.
 	 */
-	if (!should_connect(e->tid, devname)) {
+	if (!should_connect(NULL, e->tid, devname)) {
 		unit_stop(ctx.umgr, e->unit_name);
 		ctrl_remove(e);
 		return;
@@ -763,7 +820,7 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 	 * always a DC here, never an IOC. Connect as a DC; we fetch its
 	 * DLP (and discover any IOCs behind it) once the device appears.
 	 */
-	if (should_connect(t, NULL))
+	if (should_connect(NULL, t, NULL))
 		start_ctrl(t, true, is_nbft, NULL);
 }
 
@@ -785,37 +842,91 @@ static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc)
 	return t;
 }
 
-/*
- * Find the device name (e.g. "nvme3") of a currently-connected controller
- * matching t, by walking sysfs directly -- the same approach
- * sysfs_read_tid()'s callers already use, not libnvme's topology tree (see
- * should_connect()'s comment for why that tree can't be relied on here).
- * Returns NULL if nothing currently connected matches t. Caller frees the
- * result.
- */
-static char *find_devname_for_tid(const struct libnvmf_tid *t)
+static void conn_scan_free(struct conn_scan *scan)
 {
-	DIR *d = opendir("/sys/class/nvme");
+	size_t i;
+
+	for (i = 0; i < scan->ctrls.len; i++)
+		scanned_ctrl_free(scan->ctrls.items[i]);
+	scanned_ctrl_list_free(&scan->ctrls);
+	freeifaddrs(scan->iface_list);
+	memset(scan, 0, sizeof(*scan));
+}
+
+/*
+ * Read every connected controller out of sysfs and snapshot the host's
+ * interface addresses. A controller whose TID cannot be built is left out:
+ * it cannot be matched against anyway. On failure the scan is left short
+ * rather than failed, which costs a missed match, not a crash.
+ */
+static void conn_scan_load(struct conn_scan *scan)
+{
+	DIR *d;
 	struct dirent *ent;
-	char *match = NULL;
 
-	if (!d)
-		return NULL;
+	memset(scan, 0, sizeof(*scan));
 
-	while (!match && (ent = readdir(d))) {
-		__cleanup_tid struct libnvmf_tid *dt = NULL;
-		bool is_dc;
+	if (getifaddrs(&scan->iface_list) < 0) {
+		disc_warn("getifaddrs: %s", strerror(errno));
+		scan->iface_list = NULL;
+	}
+
+	d = opendir("/sys/class/nvme");
+	if (!d) {
+		if (errno != ENOENT)
+			disc_warn("opendir /sys/class/nvme: %s",
+				  strerror(errno));
+		return;
+	}
+
+	while ((ent = readdir(d))) {
+		struct scanned_ctrl *sc;
 
 		if (ent->d_name[0] == '.')
 			continue;
-		dt = sysfs_read_tid(ent->d_name, &is_dc);
-		if (!dt)
+
+		sc = calloc(1, sizeof(*sc));
+		if (!sc) {
+			disc_warn("connection scan: out of memory");
+			break;
+		}
+
+		sc->tid = sysfs_read_tid(ent->d_name, &sc->is_dc);
+		sc->devname = shr_xstrdup(ent->d_name);
+		if (!sc->tid || !sc->devname) {
+			scanned_ctrl_free(sc);
 			continue;
-		if (tid_same(dt, t))
-			match = strdup(ent->d_name);
+		}
+
+		if (scanned_ctrl_list_append(&scan->ctrls, sc) < 0) {
+			disc_warn("connection scan: out of memory");
+			scanned_ctrl_free(sc);
+			break;
+		}
 	}
 	closedir(d);
-	return match;
+}
+
+/*
+ * Find the device name (e.g. "nvme3") of a connected controller that
+ * satisfies @tid, using the snapshot rather than libnvme's topology tree
+ * (see should_connect()'s comment for why that tree can't be relied on
+ * here). Returns NULL if nothing in the snapshot matches. The returned
+ * string belongs to the scan.
+ */
+static const char *find_devname_for_tid(const struct conn_scan *scan,
+					const struct libnvmf_tid *tid)
+{
+	size_t i;
+
+	for (i = 0; i < scan->ctrls.len; i++) {
+		const struct scanned_ctrl *sc = scan->ctrls.items[i];
+
+		if (tid_matches_existing(tid, sc->tid, sc->is_dc,
+					 scan->iface_list))
+			return sc->devname;
+	}
+	return NULL;
 }
 
 static bool nvme_dev_exists(const char *devname)
@@ -944,7 +1055,7 @@ static void startup_audit(void)
 			}
 
 			is_nbft = inventory_is_nbft(ctx.inventory, t);
-			if (should_connect(t, devname))
+			if (should_connect(NULL, t, devname))
 				start_ctrl(t, is_dc, is_nbft, NULL);
 		}
 		closedir(d);
@@ -953,15 +1064,18 @@ static void startup_audit(void)
 
 static void connect_desired(void)
 {
+	__cleanup_conn_scan struct conn_scan scan = { 0 };
 	struct libnvmf_tid **dcs, **iocs;
 	int i;
+
+	conn_scan_load(&scan);
 
 	dcs = inventory_desired_dcs(ctx.inventory);
 	if (dcs) {
 		for (i = 0; dcs[i]; i++) {
 			bool is_nbft = inventory_is_nbft(ctx.inventory, dcs[i]);
 
-			if (should_connect(dcs[i], NULL))
+			if (should_connect(&scan, dcs[i], NULL))
 				start_ctrl(dcs[i], true, is_nbft, NULL);
 			tid_free(dcs[i]);
 		}
@@ -974,7 +1088,7 @@ static void connect_desired(void)
 			bool is_nbft =
 				inventory_is_nbft(ctx.inventory, iocs[i]);
 
-			if (should_connect(iocs[i], NULL))
+			if (should_connect(&scan, iocs[i], NULL))
 				start_ctrl(iocs[i], false, is_nbft, NULL);
 			tid_free(iocs[i]);
 		}

@@ -71,10 +71,13 @@ void inventory_remove_dlp(struct inventory *inv,
 /*
  * Query: is tid in the desired connection set?
  * Returns true if tid appears in the NBFT set, the config set, or any
- * per-DC entry in the DLP cache.
+ * per-DC entry in the DLP cache. tid must be a candidate TID: one built
+ * from NBFT, config, a Discovery Log Page, or mDNS. A TID read from sysfs
+ * seldom compares equal to the candidate that produced it. Match those
+ * with tid_matches_existing().
  */
 bool inventory_is_desired(const struct inventory *inv,
-			  const struct libnvmf_tid *t);
+			  const struct libnvmf_tid *tid);
 
 /*
  * Query: is tid in the NBFT set?

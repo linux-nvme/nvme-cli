@@ -6,11 +6,15 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
+#include <ifaddrs.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <nvme/fabrics.h>
+#include <nvme/nvme-types-fabrics.h>
+
+#include <shared/net-util.h>
 
 #include "tid.h"
 
@@ -27,6 +31,119 @@ struct libnvmf_tid *tid_new(const char *transport, const char *traddr,
 	libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
 				host_traddr, host_iface, hostnqn, NULL, &t);
 	return t;
+}
+
+/*
+ * Compare transport addresses. Defensive: every TID reaching here was
+ * built by libnvmf_tid_from_fields(), which canonicalizes traddr and
+ * host_traddr, so a literal comparison would do. Compare IP addresses
+ * numerically anyway, so a TID that arrives from somewhere that did not
+ * canonicalize still matches its other spelling.
+ */
+static bool tid_addr_eq(bool ip, const char *a, const char *b)
+{
+	if (ip)
+		return shr_ipaddrs_eq(a, b);
+
+	return shr_streq0(a, b);
+}
+
+/*
+ * Match the host-side fields of a TCP connection. The kernel reports the
+ * source address it selected; map it back to an interface instead of
+ * comparing interface names, because a connection made with host_iface
+ * alone carries a source address the candidate never named. Kernels older
+ * than 6.1 report no source address, so fall back to the interface the
+ * connection recorded and, for a candidate host_traddr, to that
+ * interface's primary address. That fallback cannot distinguish a
+ * connection that overrode the primary address.
+ */
+static bool tcp_host_side_matches(const char *candidate_host_traddr,
+				  const char *candidate_host_iface,
+				  const struct libnvmf_tid *existing,
+				  const struct ifaddrs *iface_list)
+{
+	const char *src = libnvmf_tid_get_host_traddr(existing);
+	const char *existing_iface = libnvmf_tid_get_host_iface(existing);
+
+	if (!src) {
+		if (candidate_host_iface && existing_iface &&
+		    !shr_streq0(candidate_host_iface, existing_iface))
+			return false;
+		if (candidate_host_traddr && existing_iface &&
+		    !shr_iface_primary_addr_matches(iface_list, existing_iface,
+						    candidate_host_traddr))
+			return false;
+
+		return true;
+	}
+
+	if (candidate_host_traddr &&
+	    !shr_ipaddrs_eq(candidate_host_traddr, src))
+		return false;
+
+	if (candidate_host_iface &&
+	    !shr_streq0(candidate_host_iface,
+			shr_iface_matching_addr(iface_list, src)))
+		return false;
+
+	return true;
+}
+
+bool tid_matches_existing(const struct libnvmf_tid *candidate,
+		      const struct libnvmf_tid *existing, bool existing_is_dc,
+		      const struct ifaddrs *iface_list)
+{
+	const char *transport = libnvmf_tid_get_transport(candidate);
+	const char *subsysnqn = libnvmf_tid_get_subsysnqn(candidate);
+	const char *host_traddr = libnvmf_tid_get_host_traddr(candidate);
+	const char *host_iface = libnvmf_tid_get_host_iface(candidate);
+	bool ip = shr_streq0(transport, "tcp") || shr_streq0(transport, "rdma");
+
+	if (!shr_streq0(transport, libnvmf_tid_get_transport(existing)))
+		return false;
+
+	if (!shr_streq0(libnvmf_tid_get_trsvcid(candidate),
+			libnvmf_tid_get_trsvcid(existing)))
+		return false;
+
+	if (!tid_addr_eq(ip, libnvmf_tid_get_traddr(candidate),
+			 libnvmf_tid_get_traddr(existing)))
+		return false;
+
+	if (!shr_streq0(libnvmf_tid_get_hostnqn(candidate),
+			libnvmf_tid_get_hostnqn(existing)))
+		return false;
+
+	if (shr_streq0(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		if (!existing_is_dc)
+			return false;
+	} else if (!shr_streq0(subsysnqn,
+			       libnvmf_tid_get_subsysnqn(existing))) {
+		return false;
+	}
+
+	if (shr_streq0(transport, "tcp")) {
+		if ((host_traddr || host_iface) &&
+		    !tcp_host_side_matches(host_traddr, host_iface, existing,
+					   iface_list))
+			return false;
+	} else {
+		const char *existing_traddr =
+			libnvmf_tid_get_host_traddr(existing);
+		const char *existing_iface =
+			libnvmf_tid_get_host_iface(existing);
+
+		if (host_traddr && existing_traddr &&
+		    !tid_addr_eq(ip, host_traddr, existing_traddr))
+			return false;
+
+		if (host_iface && existing_iface &&
+		    !shr_streq0(host_iface, existing_iface))
+			return false;
+	}
+
+	return true;
 }
 
 /*

@@ -49,15 +49,15 @@ static inline void tid_free(struct libnvmf_tid *t)
 }
 
 /*
- * tid_same() - are two TIDs the same connection?
+ * tid_same() - do two TIDs refer to the same host-subsystem relationship?
  *
  * Byte-comparison of libnvmf_tid_get_canonical(). Correct here because every
  * TID discoverd compares is discoverd-built (sanitized/canonicalized by the
  * same constructors), so canonical-string equality is byte-reproducible for
- * this single producer. Do not reach for a sysfs connection-identity
- * matcher instead - that answers "is this live kernel connection the same",
- * a different question; this compares candidate TIDs from one producer
- * (NBFT, config, or a Discovery Log Page).
+ * this single producer. Valid only between candidate TIDs (NBFT, config, a
+ * Discovery Log Page, or mDNS). A TID read from sysfs carries the fields
+ * the kernel chose, so it never compares equal to the candidate that
+ * produced the connection - use tid_matches_existing() for that.
  */
 static inline bool tid_same(const struct libnvmf_tid *a,
 			    const struct libnvmf_tid *b)
@@ -65,6 +65,31 @@ static inline bool tid_same(const struct libnvmf_tid *a,
 	return shr_streq0(libnvmf_tid_get_canonical(a),
 			 libnvmf_tid_get_canonical(b));
 }
+
+struct ifaddrs;
+
+/*
+ * tid_matches_existing() - can an existing connection serve a candidate?
+ * @candidate:      candidate TID (from NBFT, config, a DLPE, or mDNS)
+ * @existing:       TID read from sysfs for a currently-connected controller
+ * @existing_is_dc: is @existing a Discovery Controller?
+ * @iface_list:     interface list from getifaddrs(), or NULL
+ *
+ * Unlike tid_same(), this is asymmetric: @candidate states what the connection
+ * must provide, @existing reports what the kernel actually did. Host-side
+ * fields are checked only when @candidate asks for them, and the kernel's
+ * source address is mapped back to an interface rather than compared
+ * literally, because a connection made with host_iface alone reports a
+ * source address the candidate never named. A candidate requesting the
+ * well-known discovery NQN accepts any DC, since a DC may answer with a
+ * unique NQN.
+ *
+ * Return: true if @existing satisfies @candidate.
+ */
+bool tid_matches_existing(const struct libnvmf_tid *candidate,
+			  const struct libnvmf_tid *existing,
+			  bool existing_is_dc,
+			  const struct ifaddrs *iface_list);
 
 /*
  * tid_target_same() - do two TIDs point at the same target?
