@@ -843,14 +843,26 @@ void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset)
 	int fid, cdw11, cdw12, dword_cnt;
 	unsigned char *mem_buf;
 	struct nvme_set_feature_event *set_feat_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("Set Feature Event Entry:\n");
 	dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
 	fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), SET_FEATURES_CDW10_FID);
 	cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 
-	printf("Set Feature ID: 0x%02x (%s), value: 0x%08x\n", fid, nvme_feature_to_string(fid),
-	       cdw11);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Set Feature ID", "0x%02x (%s), value: 0x%08x", fid,
+		      nvme_feature_to_string(fid), cdw11);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build pel-set-feature-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	if (!NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout))
 		return;
