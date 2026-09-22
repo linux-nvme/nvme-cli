@@ -399,6 +399,8 @@ static bool test_read_file(void)
 	ret = shr_read_file(NULL, "shr-test-read-file-does-not-exist", &size,
 			    &buf);
 	pass &= check_bool("a missing file fails", ret < 0);
+	if (ret == 0)
+		free(buf);
 
 	/* A NULL/empty @path means "the whole path is in @dir". */
 	ret = shr_read_file(path, NULL, &size, &buf);
@@ -475,6 +477,8 @@ static bool test_read_file_as_string(void)
 				       "shr-test-read-file-str-does-not-exist",
 				       &size, &buf);
 	pass &= check_bool("a missing file fails", ret < 0);
+	if (ret == 0)
+		free(buf);
 
 	ret = shr_read_file_as_string(NULL, path, NULL, &buf);
 	pass &= check_bool("a NULL size out-param is tolerated", ret == 0);
