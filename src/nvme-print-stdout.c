@@ -8392,8 +8392,22 @@ static void stdout_rate_limiting_data(struct nvme_rate_limiting_data *rld)
 
 static void stdout_feat_perfc_std(struct nvme_std_perf_attr *data)
 {
-	printf("random 4 kib average read latency (R4KARL): %s (0x%02x)\n",
-	       nvme_feature_perfc_r4karl_to_string(data->r4karl), data->r4karl);
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "random 4 kib average read latency (R4KARL)",
+		      "%s (0x%02x)",
+		      nvme_feature_perfc_r4karl_to_string(data->r4karl),
+		      data->r4karl);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build feat-perfc-std table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
