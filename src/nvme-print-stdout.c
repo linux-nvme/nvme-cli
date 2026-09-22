@@ -8462,8 +8462,22 @@ static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
 
 static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
 {
-	printf("performance attribute identifier (PAID): %s\n", shr_uuid_to_string(data->paid));
-	printf("attribute length (ATTRL): %u\n", data->attrl);
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "performance attribute identifier (PAID)", "%s",
+		      shr_uuid_to_string(data->paid));
+	stdout_kv_add(t, "attribute length (ATTRL)", "%u", data->attrl);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build feat-perfc-vs table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
 	printf("vendor specific (VS):\n");
 	d((unsigned char *)data->vs, data->attrl, 16, 1);
 }
