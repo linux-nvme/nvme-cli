@@ -4579,11 +4579,6 @@ static void print_power_and_scale(__u16 power, __u8 scale)
 	}
 }
 
-static void print_power_field(__u32 pwr)
-{
-	print_power_and_scale(pwr & 0xffff, (pwr >> 16) & 0x3);
-}
-
 static char *stdout_power_and_scale_str(__u16 power, __u8 scale)
 {
 	char *s = NULL;
@@ -9172,79 +9167,145 @@ static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *lo
 	d((unsigned char *)log->osp, osp_len, 16, 1);
 }
 
+static struct shr_table *stdout_power_meas_log_pma_table(__u16 pma)
+{
+	struct shr_table *t;
+	__u8 pmt = NVME_GET(pma, PMA_PMT);
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[0:0]", NVME_GET(pma, PMA_PME),
+			"Power Measurement Enable");
+	stdout_bits_add(t, "[1:1]", NVME_GET(pma, PMA_NCPDF),
+			"Non-Contiguous Power Data Flag");
+	stdout_bits_add(t, "[2:2]", NVME_GET(pma, PMA_EPF),
+			"Estimated Power Flag");
+	stdout_bits_add(t, "[3:3]", NVME_GET(pma, PMA_MIPWRTS),
+			"Maximum Interval Power Timestamp Support");
+	stdout_bits_add(t, "[4:4]", NVME_GET(pma, PMA_PHDO),
+			"Power Histogram Descriptor Overflow");
+	stdout_bits_add(t, "[15:12]", pmt, "%s",
+			nvme_power_measurement_type_to_string(pmt));
+
+	return t;
+}
+
+static struct shr_table *stdout_power_meas_log_ts_table(__u8 attr)
+{
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[3:1]", NVME_TIMESTAMP_ATTR_TO(attr), "%s",
+			nvme_format_timestamp_origin(attr));
+	stdout_bits_add(t, "[0:0]", NVME_TIMESTAMP_ATTR_SYNC(attr), "%s",
+			nvme_format_timestamp_sync(attr));
+
+	return t;
+}
+
 static void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 {
 	__u16 nphd = le16_to_cpu(log->nphd);
 	__u16 pma = le16_to_cpu(log->pma);
-	__u8 pmt = NVME_GET(pma, PMA_PMT);
 	__u32 aipwr = le32_to_cpu(log->aipwr);
 	__u32 mipwr = le32_to_cpu(log->mipwr);
-	__u16 i;
+	__cleanup_free char *aipwr_str = NULL;
+	__cleanup_free char *mipwr_str = NULL;
 	bool verbose = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	__u16 i;
+	int row;
 
 	printf("Power Measurement Log\n");
-	printf("%-47s : %u\n",   "Version", log->ver);
-	printf("%-47s : %u\n",   "Power Measurement Generation Number", log->pmgn);
-	printf("%-47s : %#06x\n", "Power Measurement Attributes", pma);
 
-	if (verbose) {
-		printf("    %-43s : %u\n", "Power Measurement Enable", NVME_GET(pma, PMA_PME));
-		printf("    %-43s : %u\n", "Non-Contiguous Power Data Flag", NVME_GET(pma, PMA_NCPDF));
-		printf("    %-43s : %u\n", "Estimated Power Flag", NVME_GET(pma, PMA_EPF));
-		printf("    %-43s : %u\n", "Maximum Interval Power Timestamp Support", NVME_GET(pma, PMA_MIPWRTS));
-		printf("    %-43s : %u\n", "Power Histogram Descriptor Overflow", NVME_GET(pma, PMA_PHDO));
-		printf("    %-43s : %u (%s)\n", "Power Measurement Type", pmt,
-		       nvme_power_measurement_type_to_string(pmt));
-	}
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
 
-	printf("%-47s : %u\n",   "Size (bytes)", le32_to_cpu(log->sze));
-	printf("%-47s : %u\n",   "Power Measurement Count", le32_to_cpu(log->pmc));
-	printf("%-47s : %u\n",   "Number of Power Histogram Descriptors", nphd);
-	printf("%-47s : %u\n",   "Stop Measurement Time Remaining (minutes)", le16_to_cpu(log->smtr));
-	printf("%-47s : %s\n", "Stop Measurement Timestamp", stdout_format_timestamp(log->smts.timestamp));
+	stdout_kv_add(t, "Version", "%u", log->ver);
+	stdout_kv_add(t, "Power Measurement Generation Number", "%u",
+		      log->pmgn);
+	row = stdout_kv_add(t, "Power Measurement Attributes", "%#06x", pma);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_power_meas_log_pma_table(pma));
 
-	if (verbose) {
-		printf("    %-43s : %u (%s)\n", "Timestamp Origin",
-		       NVME_TIMESTAMP_ATTR_TO(log->smts.attr),
-		       nvme_format_timestamp_origin(log->smts.attr));
-		printf("    %-43s : %u (%s)\n", "Sync",
-		       NVME_TIMESTAMP_ATTR_SYNC(log->smts.attr),
-		       nvme_format_timestamp_sync(log->smts.attr));
-	}
+	stdout_kv_add(t, "Size (bytes)", "%u", le32_to_cpu(log->sze));
+	stdout_kv_add(t, "Power Measurement Count", "%u",
+		      le32_to_cpu(log->pmc));
+	stdout_kv_add(t, "Number of Power Histogram Descriptors", "%u", nphd);
+	stdout_kv_add(t, "Stop Measurement Time Remaining (minutes)", "%u",
+		      le16_to_cpu(log->smtr));
+	row = stdout_kv_add(t, "Stop Measurement Timestamp", "%s",
+			     stdout_format_timestamp(log->smts.timestamp));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_power_meas_log_ts_table(log->smts.attr));
 
-	printf("%-47s : %u\n",   "Power Histogram Descriptor Size (bytes)", le16_to_cpu(log->phds));
-	printf("%-47s : %u\n",   "Power Histogram Bin Size (mW)", le16_to_cpu(log->phbs));
-	printf("%-47s : %u\n",   "Number of Power Histogram Descriptors Supported", le16_to_cpu(log->nphds));
-	printf("%-47s : %u\n",   "Vendor Specific Size (bytes)", le16_to_cpu(log->vss));
-	printf("%-47s : %u\n",   "Power Histogram Descriptor Overflow Count", le32_to_cpu(log->phdoc));
-	printf("%-47s : ", "Average Interval Power");
-	print_power_field(aipwr);
-	printf("\n");
-	printf("%-47s : ", "Maximum Interval Power");
-	print_power_field(mipwr);
-	printf("\n");
-	printf("%-47s : %s\n", "Maximum Interval Power Timestamp", stdout_format_timestamp(log->mipwrt.timestamp));
+	stdout_kv_add(t, "Power Histogram Descriptor Size (bytes)", "%u",
+		      le16_to_cpu(log->phds));
+	stdout_kv_add(t, "Power Histogram Bin Size (mW)", "%u",
+		      le16_to_cpu(log->phbs));
+	stdout_kv_add(t, "Number of Power Histogram Descriptors Supported",
+		      "%u", le16_to_cpu(log->nphds));
+	stdout_kv_add(t, "Vendor Specific Size (bytes)", "%u",
+		      le16_to_cpu(log->vss));
+	stdout_kv_add(t, "Power Histogram Descriptor Overflow Count", "%u",
+		      le32_to_cpu(log->phdoc));
 
-	if (verbose) {
-		printf("    %-43s : %u (%s)\n", "Timestamp Origin",
-		       NVME_TIMESTAMP_ATTR_TO(log->mipwrt.attr),
-		       nvme_format_timestamp_origin(log->mipwrt.attr));
-		printf("    %-43s : %u (%s)\n", "Sync",
-		       NVME_TIMESTAMP_ATTR_SYNC(log->mipwrt.attr),
-		       nvme_format_timestamp_sync(log->mipwrt.attr));
-	}
+	aipwr_str = stdout_power_and_scale_str(aipwr & 0xffff,
+						(aipwr >> 16) & 0x3);
+	stdout_kv_add(t, "Average Interval Power", "%s", aipwr_str ?: "-");
+	mipwr_str = stdout_power_and_scale_str(mipwr & 0xffff,
+						(mipwr >> 16) & 0x3);
+	stdout_kv_add(t, "Maximum Interval Power", "%s", mipwr_str ?: "-");
 
-	printf("%-47s : %u\n",   "Interval Power Percent Error", log->ipwrpe);
+	row = stdout_kv_add(t, "Maximum Interval Power Timestamp", "%s",
+			     stdout_format_timestamp(log->mipwrt.timestamp));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_power_meas_log_ts_table(log->mipwrt.attr));
+
+	stdout_kv_add(t, "Interval Power Percent Error", "%u", log->ipwrpe);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build power-meas-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	if (verbose) {
 		for (i = 0; i < nphd; i++) {
 			__u32 phblt = le32_to_cpu(log->descs[i].phblt);
+			__cleanup_free char *phblt_str = NULL;
 
 			printf("Power Histogram Descriptor [%u]:\n", i);
-			printf("    %-43s : %u\n", "Power Histogram Bin Count", le32_to_cpu(log->descs[i].phbc));
-			printf("    %-43s : ", "Power Histogram Bin Lower Threshold");
-			print_power_field(phblt);
-			printf("\n");
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			shr_table_set_indent(t, 2);
+
+			stdout_kv_add(t, "Power Histogram Bin Count", "%u",
+				      le32_to_cpu(log->descs[i].phbc));
+			phblt_str = stdout_power_and_scale_str(
+				phblt & 0xffff, (phblt >> 16) & 0x3);
+			stdout_kv_add(t, "Power Histogram Bin Lower Threshold",
+				      "%s",
+				      phblt_str ?: "-");
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build power-meas-log table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 		}
 	}
 }
