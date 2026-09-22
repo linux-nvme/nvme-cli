@@ -674,17 +674,37 @@ void nvme_show_pel_nss_hw_error_event(void *pevent_log_info, __u32 offset)
 void nvme_show_pel_change_ns_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_change_ns_event *ns_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("Change Namespace Event Entry:\n");
-	printf("Namespace Management CDW10: %u\n", le32_to_cpu(ns_event->nsmgt_cdw10));
-	printf("Namespace Size: %"PRIu64"\n", le64_to_cpu(ns_event->nsze));
-	printf("Namespace Capacity: %"PRIu64"\n", le64_to_cpu(ns_event->nscap));
-	printf("Formatted LBA Size: %u\n", ns_event->flbas);
-	printf("End-to-end Data Protection Type Settings: %u\n", ns_event->dps);
-	printf("Namespace Multi-path I/O and Namespace Sharing Capabilities: %u\n", ns_event->nmic);
-	printf("ANA Group Identifier: %u\n", le32_to_cpu(ns_event->ana_grp_id));
-	printf("NVM Set Identifier: %u\n", le16_to_cpu(ns_event->nvmset_id));
-	printf("Namespace ID: %u\n", le32_to_cpu(ns_event->nsid));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Namespace Management CDW10", "%u",
+		      le32_to_cpu(ns_event->nsmgt_cdw10));
+	stdout_kv_add(t, "Namespace Size", "%"PRIu64,
+		      le64_to_cpu(ns_event->nsze));
+	stdout_kv_add(t, "Namespace Capacity", "%"PRIu64,
+		      le64_to_cpu(ns_event->nscap));
+	stdout_kv_add(t, "Formatted LBA Size", "%u", ns_event->flbas);
+	stdout_kv_add(t, "End-to-end Data Protection Type Settings", "%u",
+		      ns_event->dps);
+	stdout_kv_add(t,
+		      "Namespace Multi-path I/O and Namespace Sharing Capabilities",
+		      "%u", ns_event->nmic);
+	stdout_kv_add(t, "ANA Group Identifier", "%u",
+		      le32_to_cpu(ns_event->ana_grp_id));
+	stdout_kv_add(t, "NVM Set Identifier", "%u",
+		      le16_to_cpu(ns_event->nvmset_id));
+	stdout_kv_add(t, "Namespace ID", "%u", le32_to_cpu(ns_event->nsid));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build pel-change-ns-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_format_start_event(void *pevent_log_info, __u32 offset)
