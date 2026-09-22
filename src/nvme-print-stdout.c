@@ -931,6 +931,7 @@ void nvme_show_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 	__u16 vsedl;
 	int i;
 	struct nvme_vs_event_desc *vs_desc;
+	struct shr_table *t;
 
 	printf("Vendor Specific Event Entry:\n");
 	for (i = 0; progress < event_data_len; i++) {
@@ -938,10 +939,27 @@ void nvme_show_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 		vsedl = le16_to_cpu(vs_desc->vsedl);
 
 		printf("Vendor Specific Event Descriptor %u:\n", i);
-		printf("Vendor Specific Event Code: %u\n", le16_to_cpu(vs_desc->vsec));
-		printf("Vendor Specific Event Data Type: %u\n", vs_desc->vsedt);
-		printf("Vendor Specific Event UIndex: %u\n", vs_desc->uidx);
-		printf("Vendor Specific Event Data Length: %u\n", vsedl);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Vendor Specific Event Code", "%u",
+			      le16_to_cpu(vs_desc->vsec));
+		stdout_kv_add(t, "Vendor Specific Event Data Type", "%u",
+			      vs_desc->vsedt);
+		stdout_kv_add(t, "Vendor Specific Event UIndex", "%u",
+			      vs_desc->uidx);
+		stdout_kv_add(t, "Vendor Specific Event Data Length", "%u",
+			      vsedl);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build pel-vendor-specific-event table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+
 		if (vsedl)
 			pel_vs_event_data(vs_desc + 1, vs_desc->vsedt,
 					  vsedl);
