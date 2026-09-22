@@ -5516,28 +5516,56 @@ static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 static void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 			     unsigned int nvmset_id)
 {
+	struct shr_table *t;
 	int i;
 
 	printf("NVME Identify NVM Set List %d:\n", nvmset_id);
-	printf("nid     : %d\n", nvmset->nid);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "nid", "%d", nvmset->nid);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build id-nvmset table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
+
 	printf(".................\n");
 	for (i = 0; i < nvmset->nid; i++) {
 		printf(" NVM Set Attribute Entry[%2d]\n", i);
 		printf(".................\n");
-		printf("nvmset_id               : %d\n",
-			le16_to_cpu(nvmset->ent[i].endgid));
-		printf("endurance_group_id      : %d\n",
-			le16_to_cpu(nvmset->ent[i].endgid));
-		printf("random_4k_read_typical  : %u\n",
-			le32_to_cpu(nvmset->ent[i].rr4kt));
-		printf("optimal_write_size      : %u\n",
-			le32_to_cpu(nvmset->ent[i].ows));
-		printf("total_nvmset_cap        : %s\n",
-			uint128_t_to_l10n_string(
-				le128_to_cpu(nvmset->ent[i].tnvmsetcap)));
-		printf("unalloc_nvmset_cap      : %s\n",
-			uint128_t_to_l10n_string(
-				le128_to_cpu(nvmset->ent[i].unvmsetcap)));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "nvmset_id", "%d",
+			      le16_to_cpu(nvmset->ent[i].nvmsetid));
+		stdout_kv_add(t, "endurance_group_id", "%d",
+			      le16_to_cpu(nvmset->ent[i].endgid));
+		stdout_kv_add(t, "random_4k_read_typical", "%u",
+			      le32_to_cpu(nvmset->ent[i].rr4kt));
+		stdout_kv_add(t, "optimal_write_size", "%u",
+			      le32_to_cpu(nvmset->ent[i].ows));
+		stdout_kv_add(t, "total_nvmset_cap", "%s",
+			      uint128_t_to_l10n_string(le128_to_cpu(
+					nvmset->ent[i].tnvmsetcap)));
+		stdout_kv_add(t, "unalloc_nvmset_cap", "%s",
+			      uint128_t_to_l10n_string(le128_to_cpu(
+					nvmset->ent[i].unvmsetcap)));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build nvm-set-attribute table\n");
+		else
+			stdout_kv_render(stdout, t);
+
+		shr_table_free(t);
+
 		printf(".................\n");
 	}
 }
