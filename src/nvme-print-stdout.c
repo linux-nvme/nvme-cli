@@ -551,18 +551,35 @@ void nvme_show_pel_smart_health_event(void *pevent_log_info, __u32 offset,
 void nvme_show_pel_fw_commit_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_fw_commit_event *fw_commit_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("FW Commit Event Entry:\n");
-	printf("Old Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(fw_commit_event->old_fw_rev),
-	       shr_fw_to_string((char *)&fw_commit_event->old_fw_rev));
-	printf("New Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(fw_commit_event->new_fw_rev),
-	       shr_fw_to_string((char *)&fw_commit_event->new_fw_rev));
-	printf("FW Commit Action: %u\n", fw_commit_event->fw_commit_action);
-	printf("FW Slot: %u\n", fw_commit_event->fw_slot);
-	printf("Status Code Type for Firmware Commit Command: %u\n", fw_commit_event->sct_fw);
-	printf("Status Returned for Firmware Commit Command: %u\n", fw_commit_event->sc_fw);
-	printf("Vendor Assigned Firmware Commit Result Code: %u\n",
-	       le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Old Firmware Revision", "%"PRIu64" (%s)",
+		      le64_to_cpu(fw_commit_event->old_fw_rev),
+		      shr_fw_to_string((char *)&fw_commit_event->old_fw_rev));
+	stdout_kv_add(t, "New Firmware Revision", "%"PRIu64" (%s)",
+		      le64_to_cpu(fw_commit_event->new_fw_rev),
+		      shr_fw_to_string((char *)&fw_commit_event->new_fw_rev));
+	stdout_kv_add(t, "FW Commit Action", "%u",
+		      fw_commit_event->fw_commit_action);
+	stdout_kv_add(t, "FW Slot", "%u", fw_commit_event->fw_slot);
+	stdout_kv_add(t, "Status Code Type for Firmware Commit Command", "%u",
+		      fw_commit_event->sct_fw);
+	stdout_kv_add(t, "Status Returned for Firmware Commit Command", "%u",
+		      fw_commit_event->sc_fw);
+	stdout_kv_add(t, "Vendor Assigned Firmware Commit Result Code", "%u",
+		      le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build pel-fw-commit-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_timestamp_event(void *pevent_log_info, __u32 offset)
