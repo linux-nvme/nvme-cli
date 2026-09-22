@@ -653,10 +653,22 @@ void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
 void nvme_show_pel_nss_hw_error_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_nss_hw_err_event *nss_hw_err_event = pevent_log_info + offset;
+	__u16 code = le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code);
+	struct shr_table *t;
 
-	printf("NVM Subsystem Hardware Error Event Code Entry: %u, %s\n",
-	       le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code),
-	       nvme_nss_hw_error_to_string(nss_hw_err_event->nss_hw_err_event_code));
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "NVM Subsystem Hardware Error Event Code Entry",
+		      "%u, %s", code, nvme_nss_hw_error_to_string(code));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build pel-nss-hw-error-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_change_ns_event(void *pevent_log_info, __u32 offset)
