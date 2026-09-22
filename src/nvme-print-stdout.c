@@ -843,15 +843,25 @@ static void stdout_lba_status_log(void *lba_status, __u32 size,
 static void stdout_resv_notif_log(struct nvme_resv_notification_log *resv,
 				  const char *devname)
 {
+	struct shr_table *t;
+
 	printf("Reservation Notif Log for device: %s\n", devname);
-	printf("Log Page Count				: %"PRIx64"\n",
-		le64_to_cpu(resv->lpc));
-	printf("Resv Notif Log Page Type	: %u (%s)\n",
-		resv->rnlpt,
-		nvme_resv_notif_to_string(resv->rnlpt));
-	printf("Num of Available Log Pages	: %u\n", resv->nalp);
-	printf("Namespace ID:				: %"PRIx32"\n",
-		le32_to_cpu(resv->nsid));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Log Page Count", "%"PRIx64, le64_to_cpu(resv->lpc));
+	stdout_kv_add(t, "Resv Notif Log Page Type", "%u (%s)", resv->rnlpt,
+		      nvme_resv_notif_to_string(resv->rnlpt));
+	stdout_kv_add(t, "Num of Available Log Pages", "%u", resv->nalp);
+	stdout_kv_add(t, "Namespace ID", "%"PRIx32, le32_to_cpu(resv->nsid));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build resv-notif-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_fid_support_effects_log_human(__u32 fid_support)
