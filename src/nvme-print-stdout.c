@@ -373,20 +373,31 @@ static void stdout_predictable_latency_event_agg_log(
 	shr_table_free(t);
 }
 
-static void stdout_persistent_event_log_rci(__le32 pel_header_rci)
+static struct shr_table *
+stdout_persistent_event_log_rci_table(__le32 pel_header_rci)
 {
+	struct shr_table *t;
 	__u32 rci = le32_to_cpu(pel_header_rci);
 	__u32 rsvd19 = NVME_PEL_RCI_RSVD(rci);
 	__u8 rce = NVME_PEL_RCI_RCE(rci);
 	__u8 rcpit = NVME_PEL_RCI_RCPIT(rci);
 	__u16 rcpid = NVME_PEL_RCI_RCPID(rci);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd19)
-		printf("  [31:19] : %#x\tReserved\n", rsvd19);
-	printf("\tReporting Context Exists (RCE): %s(%u)\n", rce ? "true" : "false", rce);
-	printf("\tReporting Context Port Identifier Type (RCPIT): %u(%s)\n", rcpit,
-	       nvme_pel_rci_rcpit_to_string(rcpit));
-	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
+		stdout_bits_add(t, "[31:19]", rsvd19, "Reserved");
+	stdout_bits_add(t, "[18:18]", rce, "Reporting Context %sExists",
+			rce ? "" : "Not ");
+	stdout_bits_add(t, "[17:16]", rcpit,
+			"Reporting Context Port Identifier Type: %s",
+			nvme_pel_rci_rcpit_to_string(rcpit));
+	stdout_bits_add(t, "[15:0]", rcpid,
+			"Reporting Context Port Identifier");
+
+	return t;
 }
 
 static void stdout_persistent_event_entry_ehai(__u8 ehai)
@@ -420,35 +431,59 @@ static void stdout_persistent_event_log_fdp_events(unsigned int cdw11, unsigned 
 	}
 }
 
-void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head, int human)
+void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head,
+			   int human)
 {
-	printf("Log Identifier: %u\n", pevent_log_head->lid);
-	printf("Total Number of Events: %u\n", le32_to_cpu(pevent_log_head->tnev));
-	printf("Total Log Length : %"PRIu64"\n", le64_to_cpu(pevent_log_head->tll));
-	printf("Log Revision: %u\n", pevent_log_head->rv);
-	printf("Log Header Length: %u\n", pevent_log_head->lhl);
-	printf("Timestamp: %"PRIu64"\n", le64_to_cpu(pevent_log_head->ts));
-	printf("Power On Hours (POH): %s",
-	       uint128_t_to_l10n_string(le128_to_cpu(pevent_log_head->poh)));
-	printf("Power Cycle Count: %"PRIu64"\n", le64_to_cpu(pevent_log_head->pcc));
-	printf("PCI Vendor ID (VID): %u\n", le16_to_cpu(pevent_log_head->vid));
-	printf("PCI Subsystem Vendor ID (SSVID): %u\n", le16_to_cpu(pevent_log_head->ssvid));
-	printf("Serial Number (SN): %-.*s\n", (int)sizeof(pevent_log_head->sn),
-	       pevent_log_head->sn);
-	printf("Model Number (MN): %-.*s\n", (int)sizeof(pevent_log_head->mn), pevent_log_head->mn);
-	printf("NVM Subsystem NVMe Qualified Name (SUBNQN): %-.*s\n",
-	       (int)sizeof(pevent_log_head->subnqn), pevent_log_head->subnqn);
-	printf("Generation Number: %u\n", le16_to_cpu(pevent_log_head->gen_number));
-	printf("Reporting Context Information (RCI): %u\n", le32_to_cpu(pevent_log_head->rci));
+	struct nvme_persistent_event_log *hdr = pevent_log_head;
+	struct shr_table *t;
+	int row;
 
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Log Identifier", "%u", hdr->lid);
+	stdout_kv_add(t, "Total Number of Events", "%u",
+		      le32_to_cpu(hdr->tnev));
+	stdout_kv_add(t, "Total Log Length", "%"PRIu64,
+		      le64_to_cpu(hdr->tll));
+	stdout_kv_add(t, "Log Revision", "%u", hdr->rv);
+	stdout_kv_add(t, "Log Header Length", "%u", hdr->lhl);
+	stdout_kv_add(t, "Timestamp", "%"PRIu64, le64_to_cpu(hdr->ts));
+	stdout_kv_add(t, "Power On Hours (POH)", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(hdr->poh)));
+	stdout_kv_add(t, "Power Cycle Count", "%"PRIu64,
+		      le64_to_cpu(hdr->pcc));
+	stdout_kv_add(t, "PCI Vendor ID (VID)", "%u",
+		      le16_to_cpu(hdr->vid));
+	stdout_kv_add(t, "PCI Subsystem Vendor ID (SSVID)", "%u",
+		      le16_to_cpu(hdr->ssvid));
+	stdout_kv_add(t, "Serial Number (SN)", "%-.*s",
+		      (int)sizeof(hdr->sn), hdr->sn);
+	stdout_kv_add(t, "Model Number (MN)", "%-.*s",
+		      (int)sizeof(hdr->mn), hdr->mn);
+	stdout_kv_add(t, "NVM Subsystem NVMe Qualified Name (SUBNQN)", "%-.*s",
+		      (int)sizeof(hdr->subnqn), hdr->subnqn);
+	stdout_kv_add(t, "Generation Number", "%u",
+		      le16_to_cpu(hdr->gen_number));
+	row = stdout_kv_add(t, "Reporting Context Information (RCI)", "%u",
+			     le32_to_cpu(hdr->rci));
 	if (human)
-		stdout_persistent_event_log_rci(pevent_log_head->rci);
+		shr_table_set_row_subtable(t, row,
+			stdout_persistent_event_log_rci_table(hdr->rci));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build persistent-event-log header table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	printf("Supported Events Bitmap:\n");
 	for (int i = 0; i < 32; i++) {
-		if (!pevent_log_head->seb[i])
+		if (!hdr->seb[i])
 			continue;
-		stdout_add_bitmap(i, pevent_log_head->seb[i]);
+		stdout_add_bitmap(i, hdr->seb[i]);
 	}
 }
 
