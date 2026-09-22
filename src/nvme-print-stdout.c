@@ -6811,39 +6811,53 @@ static void stdout_effects_log_pages(struct list_head *list)
 	}
 }
 
-static void stdout_support_log_human(__u32 support, __u8 lid)
+static struct shr_table *stdout_support_log_human_table(__u32 support, __u8 lid)
 {
-	const char *set = "supported";
-	const char *clr = "not supported";
+	struct shr_table *t;
 	__u16 lidsp = support >> 16;
 
-	printf("  LSUPP is %s\n", (support & 0x1) ? set : clr);
-	printf("  IOS is %s\n", ((support >> 0x1) & 0x1) ? set : clr);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[0:0]", support & 0x1, "LSUPP is %sSupported",
+			(support & 0x1) ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", (support >> 0x1) & 0x1,
+			"IOS is %sSupported",
+			((support >> 0x1) & 0x1) ? "" : "Not ");
 
 	switch (lid) {
 	case NVME_LOG_LID_TELEMETRY_HOST:
-		printf("  Maximum Created Data Area is %s\n",
-			(lidsp & 0x1) ? set : clr);
+		stdout_bits_add(t, "[16:16]", lidsp & 0x1,
+				"Maximum Created Data Area is %sSupported",
+				(lidsp & 0x1) ? "" : "Not ");
 		break;
 	case NVME_LOG_LID_PERSISTENT_EVENT:
-		printf("  Establish Context and Read 512 Bytes of Header is %s\n",
-			(lidsp & 0x1) ? set : clr);
+		stdout_bits_add(t, "[16:16]", lidsp & 0x1,
+				"Establish Context and Read 512 Bytes of Header is %sSupported",
+				(lidsp & 0x1) ? "" : "Not ");
 		break;
 	case NVME_LOG_LID_DISCOVERY:
-		printf("  Extended Discovery Log Page Entry is %s\n",
-			(lidsp & 0x1) ? set : clr);
-		printf("  Port Local Entries Only is %s\n",
-			(lidsp & 0x2) ? set : clr);
-		printf("  All NVM Subsystem Entries is %s\n",
-			(lidsp & 0x4) ? set : clr);
+		stdout_bits_add(t, "[16:16]", lidsp & 0x1,
+				"Extended Discovery Log Page Entry is %sSupported",
+				(lidsp & 0x1) ? "" : "Not ");
+		stdout_bits_add(t, "[17:17]", (lidsp >> 1) & 0x1,
+				"Port Local Entries Only is %sSupported",
+				((lidsp >> 1) & 0x1) ? "" : "Not ");
+		stdout_bits_add(t, "[18:18]", (lidsp >> 2) & 0x1,
+				"All NVM Subsystem Entries is %sSupported",
+				((lidsp >> 2) & 0x1) ? "" : "Not ");
 		break;
 	case NVME_LOG_LID_HOST_DISCOVERY:
-		printf("  All Host Entries is %s\n",
-			(lidsp & 0x1) ? set : clr);
+		stdout_bits_add(t, "[16:16]", lidsp & 0x1,
+				"All Host Entries is %sSupported",
+				(lidsp & 0x1) ? "" : "Not ");
 		break;
 	default:
 		break;
 	}
+
+	return t;
 }
 
 static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
@@ -6851,16 +6865,35 @@ static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 {
 	int lid, human = stdout_print_ops.flags & VERBOSE;
 	__u32 support = 0;
+	struct shr_table *t;
 
 	printf("Support Log Pages Details for %s:\n", devname);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	for (lid = 0; lid < 256; lid++) {
 		support = le32_to_cpu(support_log->lid_support[lid]);
 		if (support & 0x1) {
-			printf("LID %#x - %s\n", lid, nvme_log_to_string(lid));
+			char name[16];
+			int row;
+
+			snprintf(name, sizeof(name), "LID %#x", lid);
+			row = stdout_kv_add(t, name, "%s",
+					     nvme_log_to_string(lid));
 			if (human)
-				stdout_support_log_human(support, lid);
+				shr_table_set_row_subtable(t, row,
+					stdout_support_log_human_table(
+						support, lid));
 		}
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build supported-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log, __u16 group_id,
