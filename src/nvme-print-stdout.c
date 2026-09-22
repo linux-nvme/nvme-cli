@@ -8087,14 +8087,30 @@ static void stdout_auto_pst(struct nvme_feat_auto_pst *apst)
 	printf("\tAuto PST Entries");
 	printf("\t.................\n");
 	for (i = 0; i < ARRAY_SIZE(apst->apst_entry); i++) {
+		struct shr_table *t;
+
 		value = le64_to_cpu(apst->apst_entry[i]);
 
 		printf("\tEntry[%2d]\n", i);
 		printf("\t.................\n");
-		printf("\tIdle Time Prior to Transition (ITPT): %u ms\n",
-		       (__u32)NVME_GET(value, APST_ENTRY_ITPT));
-		printf("\tIdle Transition Power State   (ITPS): %u\n",
-		       (__u32)NVME_GET(value, APST_ENTRY_ITPS));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 2);
+		stdout_kv_add(t, "Idle Time Prior to Transition (ITPT)",
+			      "%u ms",
+			      (__u32)NVME_GET(value, APST_ENTRY_ITPT));
+		stdout_kv_add(t, "Idle Transition Power State (ITPS)", "%u",
+			      (__u32)NVME_GET(value, APST_ENTRY_ITPS));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr, "Failed to build auto-pst table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+
 		printf("\t.................\n");
 	}
 }
