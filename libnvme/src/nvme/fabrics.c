@@ -2716,15 +2716,31 @@ __shr_public int libnvmf_uri_parse(
 			if (*e == '/' && *(e + 1) != '/')
 				i++;
 		uri->path_segments = calloc(i + 2, sizeof(char *));
+		if (!uri->path_segments)
+			return -ENOMEM;
 
+		/*
+		 * libnvmf_uri_free() walks path_segments until the first NULL
+		 * entry, so a failed unescape_uri() partway through must abort
+		 * the whole parse instead of leaving a NULL hole followed by
+		 * more entries that would then never be freed.
+		 */
 		i = 0;
 		elem = strtok_r(path, "/", &e);
-		if (elem)
-			uri->path_segments[i++] = unescape_uri(elem, 0);
+		if (elem) {
+			uri->path_segments[i] = unescape_uri(elem, 0);
+			if (!uri->path_segments[i])
+				return -ENOMEM;
+			i++;
+		}
 		while (elem && strlen(elem)) {
 			elem = strtok_r(NULL, "/", &e);
-			if (elem)
-				uri->path_segments[i++] = unescape_uri(elem, 0);
+			if (elem) {
+				uri->path_segments[i] = unescape_uri(elem, 0);
+				if (!uri->path_segments[i])
+					return -ENOMEM;
+				i++;
+			}
 		}
 	}
 
