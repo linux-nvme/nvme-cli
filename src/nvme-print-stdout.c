@@ -5688,7 +5688,9 @@ static void stdout_id_ns_granularity_list(const struct nvme_id_ns_granularity_li
 
 static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 {
-	int i, human = stdout_print_ops.flags & VERBOSE;
+	bool human = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	int i;
 
 	printf("NVME Identify UUID:\n");
 
@@ -5716,14 +5718,33 @@ static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 				break;
 			}
 		}
-		printf(" Entry[%3d]\n", i+1);
+
+		printf(" Entry[%3d]\n", i + 1);
 		printf(".................\n");
-		printf("association  : %#x %s\n", identifier_association, association);
-		printf("UUID         : %s", shr_uuid_to_string(uuid));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "association", "%#x %s",
+			      identifier_association, association);
+
 		if (memcmp(uuid_list->entry[i].uuid, invalid_uuid,
 			   sizeof(zero_uuid)) == 0)
-			printf(" (Invalid UUID)");
-		printf("\n.................\n");
+			stdout_kv_add(t, "UUID", "%s (Invalid UUID)",
+				      shr_uuid_to_string(uuid));
+		else
+			stdout_kv_add(t, "UUID", "%s",
+				      shr_uuid_to_string(uuid));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr, "Failed to build id-uuid-list table\n");
+		else
+			stdout_kv_render(stdout, t);
+
+		shr_table_free(t);
+
+		printf(".................\n");
 	}
 }
 
