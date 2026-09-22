@@ -9153,9 +9153,21 @@ static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *lo
 {
 	__u32 tpdrpl = le32_to_cpu(log->tpdrpl);
 	__u32 osp_len = tpdrpl - offsetof(struct nvme_pull_model_ddc_req_log, osp);
+	struct shr_table *t;
 
-	printf("ori: %u\n", log->ori);
-	printf("tpdrpl: %u\n", tpdrpl);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "ori", "%u", log->ori);
+	stdout_kv_add(t, "tpdrpl", "%u", tpdrpl);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build pull-model-ddc-req table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
 	printf("osp:\n");
 	d((unsigned char *)log->osp, osp_len, 16, 1);
 }
