@@ -6485,77 +6485,104 @@ static void stdout_self_test_result(struct nvme_st_result *res)
 		"Reserved",
 		[NVME_ST_RESULT_NOT_USED] = "Entry not used (does not contain a result)",
 	};
+	static const char * const code_desc[] = {
+		[NVME_ST_CODE_SHORT] = "Short device self-test operation",
+		[NVME_ST_CODE_EXTENDED] = "Extended device self-test operation",
+		[NVME_ST_CODE_HOST_INIT] = "Host-Initiated Refresh operation",
+		[NVME_ST_CODE_VS] = "Vendor specific",
+	};
+	bool verbose = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
 	__u8 op, code;
 
-	op = res->dsts & NVME_ST_RESULT_MASK;
-	printf("  Operation Result             : %#x", op);
-	if (stdout_print_ops.flags & VERBOSE)
-		printf(" %s", (op < ARRAY_SIZE(test_res) && test_res[op]) ?
-			test_res[op] : test_res[ARRAY_SIZE(test_res) - 1]);
-	printf("\n");
-	if (op == NVME_ST_RESULT_NOT_USED)
+	t = stdout_kv_table_create();
+	if (!t)
 		return;
+	shr_table_set_indent(t, 2);
 
-	code = res->dsts >> NVME_ST_CODE_SHIFT;
-	printf("  Self Test Code               : %x", code);
+	op = res->dsts & NVME_ST_RESULT_MASK;
+	if (verbose)
+		stdout_kv_add(t, "Operation Result", "%#x %s", op,
+			      (op < ARRAY_SIZE(test_res) && test_res[op]) ?
+			      test_res[op] :
+			      test_res[ARRAY_SIZE(test_res) - 1]);
+	else
+		stdout_kv_add(t, "Operation Result", "%#x", op);
 
-	if (stdout_print_ops.flags & VERBOSE) {
-		switch (code) {
-		case NVME_ST_CODE_SHORT:
-			printf(" Short device self-test operation");
-			break;
-		case NVME_ST_CODE_EXTENDED:
-			printf(" Extended device self-test operation");
-			break;
-		case NVME_ST_CODE_HOST_INIT:
-			printf(" Host-Initiated Refresh operation");
-			break;
-		case NVME_ST_CODE_VS:
-			printf(" Vendor specific");
-			break;
-		default:
-			printf(" Reserved");
-			break;
+	if (op != NVME_ST_RESULT_NOT_USED) {
+		code = res->dsts >> NVME_ST_CODE_SHIFT;
+		if (verbose)
+			stdout_kv_add(t, "Self Test Code", "%x %s", code,
+				      code < ARRAY_SIZE(code_desc) &&
+				      code_desc[code] ?
+				      code_desc[code] : "Reserved");
+		else
+			stdout_kv_add(t, "Self Test Code", "%x", code);
+
+		if (op == NVME_ST_RESULT_KNOWN_SEG_FAIL)
+			stdout_kv_add(t, "Segment Number", "%#x", res->seg);
+
+		stdout_kv_add(t, "Valid Diagnostic Information", "%#x",
+			      res->vdi);
+		stdout_kv_add(t, "Power on hours (POH)", "%#"PRIx64,
+			      (uint64_t)le64_to_cpu(res->poh));
+
+		if (res->vdi & NVME_ST_VALID_DIAG_INFO_NSID)
+			stdout_kv_add(t, "Namespace Identifier", "%#x",
+				      le32_to_cpu(res->nsid));
+		if (res->vdi & NVME_ST_VALID_DIAG_INFO_FLBA)
+			stdout_kv_add(t, "Failing LBA", "%#"PRIx64,
+				      (uint64_t)le64_to_cpu(res->flba));
+		if (res->vdi & NVME_ST_VALID_DIAG_INFO_SCT)
+			stdout_kv_add(t, "Status Code Type", "%#x", res->sct);
+		if (res->vdi & NVME_ST_VALID_DIAG_INFO_SC) {
+			if (verbose)
+				stdout_kv_add(t, "Status Code", "%#x %s",
+					      res->sc,
+					      libnvme_status_to_string(
+						(res->sct & 7) << 8 | res->sc,
+						false));
+			else
+				stdout_kv_add(t, "Status Code", "%#x",
+					      res->sc);
 		}
+		stdout_kv_add(t, "Vendor Specific", "%#x %#x",
+			      res->vs[0], res->vs[1]);
 	}
-	printf("\n");
 
-	if (op == NVME_ST_RESULT_KNOWN_SEG_FAIL)
-		printf("  Segment Number               : %#x\n", res->seg);
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build self-test-result table\n");
+	else
+		stdout_kv_render(stdout, t);
 
-	printf("  Valid Diagnostic Information : %#x\n", res->vdi);
-	printf("  Power on hours (POH)         : %#"PRIx64"\n",
-		(uint64_t)le64_to_cpu(res->poh));
-
-	if (res->vdi & NVME_ST_VALID_DIAG_INFO_NSID)
-		printf("  Namespace Identifier         : %#x\n",
-			le32_to_cpu(res->nsid));
-	if (res->vdi & NVME_ST_VALID_DIAG_INFO_FLBA)
-		printf("  Failing LBA                  : %#"PRIx64"\n",
-			(uint64_t)le64_to_cpu(res->flba));
-	if (res->vdi & NVME_ST_VALID_DIAG_INFO_SCT)
-		printf("  Status Code Type             : %#x\n", res->sct);
-	if (res->vdi & NVME_ST_VALID_DIAG_INFO_SC) {
-		printf("  Status Code                  : %#x", res->sc);
-		if (stdout_print_ops.flags & VERBOSE)
-			printf(" %s", libnvme_status_to_string(
-				(res->sct & 7) << 8 | res->sc, false));
-		printf("\n");
-	}
-	printf("  Vendor Specific              : %#x %#x\n",
-		res->vs[0], res->vs[1]);
+	shr_table_free(t);
 }
 
 static void stdout_self_test_log(struct nvme_self_test_log *self_test,
 				 __u8 dst_entries, __u32 size,
 				 const char *devname)
 {
-	int i;
+	struct shr_table *t;
 	__u8 num_entries;
+	int i;
 
 	printf("Device Self Test Log for NVME device:%s\n", devname);
-	printf("Current operation  : %#x\n", self_test->current_operation);
-	printf("Current Completion : %u%%\n", self_test->completion);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Current operation", "%#x",
+		      self_test->current_operation);
+	stdout_kv_add(t, "Current Completion", "%u%%", self_test->completion);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build self-test-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
+
 	num_entries = min(dst_entries, NVME_LOG_ST_MAX_RESULTS);
 	for (i = 0; i < num_entries; i++) {
 		printf("Self Test Result[%d]:\n", i);
