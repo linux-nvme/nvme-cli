@@ -6426,22 +6426,44 @@ static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 
 static void stdout_id_domain_list(struct nvme_id_domain_list *id_dom)
 {
+	struct shr_table *t;
 	int i;
 
-	printf("Number of Domain Entries: %u\n", id_dom->num);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Number of Domain Entries", "%u", id_dom->num);
+
 	for (i = 0; i < id_dom->num; i++) {
-		printf("Domain Id for Attr Entry[%u]: %u\n", i,
-			le16_to_cpu(id_dom->domain_attr[i].dom_id));
-		printf("Domain Capacity for Attr Entry[%u]: %s\n", i,
-			uint128_t_to_l10n_string(
-				le128_to_cpu(id_dom->domain_attr[i].dom_cap)));
-		printf("Unallocated Domain Capacity for Attr Entry[%u]: %s\n", i,
-			uint128_t_to_l10n_string(
-				le128_to_cpu(id_dom->domain_attr[i].unalloc_dom_cap)));
-		printf("Max Endurance Group Domain Capacity for Attr Entry[%u]: %s\n", i,
-			uint128_t_to_l10n_string(
-				le128_to_cpu(id_dom->domain_attr[i].max_egrp_dom_cap)));
+		struct nvme_id_domain_attr *attr = &id_dom->domain_attr[i];
+		char name[64];
+
+		snprintf(name, sizeof(name), "Domain Id for Attr Entry[%u]", i);
+		stdout_kv_add(t, name, "%u", le16_to_cpu(attr->dom_id));
+
+		snprintf(name, sizeof(name),
+			 "Domain Capacity for Attr Entry[%u]", i);
+		stdout_kv_add(t, name, "%s", uint128_t_to_l10n_string(
+			      le128_to_cpu(attr->dom_cap)));
+
+		snprintf(name, sizeof(name),
+			 "Unallocated Domain Capacity for Attr Entry[%u]", i);
+		stdout_kv_add(t, name, "%s", uint128_t_to_l10n_string(
+			      le128_to_cpu(attr->unalloc_dom_cap)));
+
+		snprintf(name, sizeof(name),
+			 "Max Endurance Group Domain Capacity for Attr Entry[%u]",
+			 i);
+		stdout_kv_add(t, name, "%s", uint128_t_to_l10n_string(
+			      le128_to_cpu(attr->max_egrp_dom_cap)));
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build id-domain-list table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list)
