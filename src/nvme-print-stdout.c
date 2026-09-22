@@ -8926,13 +8926,30 @@ static void stdout_rotational_media_info_log(struct nvme_rotational_media_info_l
 static void stdout_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
 {
 	__u64 numpsub = le64_to_cpu(log->numpsub);
+	struct shr_table *t;
 	__u64 i;
 
-	printf("genctr: %"PRIu64"\n", le64_to_cpu(log->genctr));
-	printf("numpsub: %"PRIu64"\n", (uint64_t)numpsub);
-	for (i = 0; i < numpsub; i++)
-		printf("participating_nss %"PRIu64": %-.*s\n", (uint64_t)i, NVME_NQN_LENGTH,
-		       &log->participating_nss[i * NVME_NQN_LENGTH]);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "genctr", "%"PRIu64, le64_to_cpu(log->genctr));
+	stdout_kv_add(t, "numpsub", "%"PRIu64, (uint64_t)numpsub);
+
+	for (i = 0; i < numpsub; i++) {
+		char name[40];
+
+		snprintf(name, sizeof(name), "participating_nss %"PRIu64,
+			 (uint64_t)i);
+		stdout_kv_add(t, name, "%-.*s", NVME_NQN_LENGTH,
+			      &log->participating_nss[i * NVME_NQN_LENGTH]);
+	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build dispersed-ns-psub table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log, __u64 len)
