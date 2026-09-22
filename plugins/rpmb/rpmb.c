@@ -202,10 +202,12 @@ static unsigned char *read_rpmb_key(char *keystr, char *keyfile, unsigned int *k
 				return NULL;
 		}
 	} else {
-		keybuf = libnvme_alloc(strlen(keystr));
+		size_t len = strlen(keystr);
+
+		keybuf = libnvme_alloc(len + 1);
 		if (keybuf) {
-			*keysize = strlen(keystr);
-			memcpy(keybuf, keystr, *keysize);
+			*keysize = len;
+			memcpy(keybuf, keystr, len);
 		}
 	}
 
@@ -754,11 +756,13 @@ static int rpmb_read_msg(char *msgstr, char *msgfile, unsigned char **msg_buf,
 			  unsigned int *msg_size)
 {
 	if (msgstr) {
-		*msg_size = strlen(msgstr);
-		*msg_buf = libnvme_alloc(*msg_size);
+		size_t len = strlen(msgstr);
+
+		*msg_buf = libnvme_alloc(len + 1);
 		if (!*msg_buf)
 			return -ENOMEM;
-		memcpy(*msg_buf, msgstr, *msg_size);
+		*msg_size = len;
+		memcpy(*msg_buf, msgstr, len);
 		return 0;
 	}
 
