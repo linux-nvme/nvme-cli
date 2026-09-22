@@ -1365,6 +1365,7 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 	char buffer[320];
 	time_t ts;
 	uint32_t n = le32_to_cpu(log->n);
+	struct shr_table *t;
 
 	for (unsigned int i = 0; i < n; i++) {
 		struct nvme_fdp_event *event = &log->events[i];
@@ -1373,34 +1374,54 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 		tm = localtime(&ts);
 
 		printf("Event[%u]\n", i);
-		printf("  Event Type: %#"PRIx8" (%s)\n", event->type,
-		       nvme_fdp_event_to_string(event->type));
-		printf("  Event Timestamp: %"PRIu64" (%s)\n", int48_to_long(event->ts.timestamp),
-			strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 2);
+
+		stdout_kv_add(t, "Event Type", "%#"PRIx8" (%s)", event->type,
+			      nvme_fdp_event_to_string(event->type));
+		stdout_kv_add(t, "Event Timestamp", "%"PRIu64" (%s)",
+			      int48_to_long(event->ts.timestamp),
+			      strftime(buffer, sizeof(buffer), "%c %Z", tm) ?
+			      buffer : "-");
 
 		if (event->flags & NVME_FDP_EVENT_F_PIV)
-			printf("  Placement Identifier (PID): %#"PRIx16"\n",
-			       le16_to_cpu(event->pid));
+			stdout_kv_add(t, "Placement Identifier (PID)",
+				      "%#"PRIx16, le16_to_cpu(event->pid));
 
 		if (event->flags & NVME_FDP_EVENT_F_NSIDV)
-			printf("  Namespace Identifier (NSID): %"PRIu32"\n", le32_to_cpu(event->nsid));
+			stdout_kv_add(t, "Namespace Identifier (NSID)",
+				      "%"PRIu32, le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
 			struct nvme_fdp_event_realloc *mr;
 
 			mr = (struct nvme_fdp_event_realloc *)&event->type_specific;
 
-			printf("  Number of LBAs Moved (NLBAM): %"PRIu16"\n", le16_to_cpu(mr->nlbam));
+			stdout_kv_add(t, "Number of LBAs Moved (NLBAM)",
+				      "%"PRIu16, le16_to_cpu(mr->nlbam));
 
 			if (mr->flags & NVME_FDP_EVENT_REALLOC_F_LBAV)
-				printf("  Logical Block Address (LBA): %#"PRIx64"\n",
-				       le64_to_cpu(mr->lba));
+				stdout_kv_add(t, "Logical Block Address (LBA)",
+					      "%#"PRIx64,
+					      le64_to_cpu(mr->lba));
 		}
 
 		if (event->flags & NVME_FDP_EVENT_F_LV) {
-			printf("  Reclaim Group Identifier: %"PRIu16"\n", le16_to_cpu(event->rgid));
-			printf("  Reclaim Unit Handle Identifier %"PRIu8"\n", event->ruhid);
+			stdout_kv_add(t, "Reclaim Group Identifier", "%"PRIu16,
+				      le16_to_cpu(event->rgid));
+			stdout_kv_add(t, "Reclaim Unit Handle Identifier",
+				      "%"PRIu8, event->ruhid);
 		}
+
+		if (shr_table_has_error(t))
+			fprintf(stderr, "Failed to build fdp-events table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 
 		printf("\n");
 	}
