@@ -1027,12 +1027,25 @@ static void stdout_boot_part_log(void *bp_log, const char *devname,
 				 __u32 size)
 {
 	struct nvme_boot_partition *hdr = bp_log;
+	struct shr_table *t;
 
 	printf("Boot Partition Log for device: %s\n", devname);
-	printf("Log ID: %u\n", hdr->lid);
-	printf("Boot Partition Size: %u KiB\n",
-	       NVME_BOOT_PARTITION_INFO_BPSZ(le32_to_cpu(hdr->bpinfo)));
-	printf("Active BPID: %u\n", NVME_BOOT_PARTITION_INFO_ABPID(le32_to_cpu(hdr->bpinfo)));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Log ID", "%u", hdr->lid);
+	stdout_kv_add(t, "Boot Partition Size", "%u KiB",
+		      NVME_BOOT_PARTITION_INFO_BPSZ(le32_to_cpu(hdr->bpinfo)));
+	stdout_kv_add(t, "Active BPID", "%u",
+		      NVME_BOOT_PARTITION_INFO_ABPID(le32_to_cpu(hdr->bpinfo)));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build boot-part-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static const char *eomip_to_string(__u8 eomip)
