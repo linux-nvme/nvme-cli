@@ -5027,27 +5027,6 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 	shr_table_free(t);
 }
 
-static void print_power_and_scale(__u16 power, __u8 scale)
-{
-	switch (scale & 0x3) {
-	case NVME_PSD_PS_NOT_REPORTED:
-		/* Not reported for this power state */
-		printf("-");
-		break;
-	case NVME_PSD_PS_100_MICRO_WATT:
-		/* Units of 0.0001W */
-		printf("%01u.%04uW", power / 10000, power % 10000);
-		break;
-	case NVME_PSD_PS_10_MILLI_WATT:
-		/* Units of 0.01W */
-		printf("%01u.%02uW", power / 100, power % 100);
-		break;
-	default:
-		printf("reserved");
-		break;
-	}
-}
-
 static char *stdout_power_and_scale_str(__u16 power, __u8 scale)
 {
 	char *s = NULL;
@@ -8177,136 +8156,309 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 {
 	const char *async = "Send async event";
 	const char *no_async = "Do not send async event";
+	struct shr_table *t;
 	__u8 field;
 
 	switch (fid) {
 	case NVME_FEAT_FID_ARBITRATION:
-		printf("\tHigh Priority Weight   (HPW): %u\n", NVME_FEAT_ARB_HPW(result) + 1);
-		printf("\tMedium Priority Weight (MPW): %u\n", NVME_FEAT_ARB_MPW(result) + 1);
-		printf("\tLow Priority Weight    (LPW): %u\n", NVME_FEAT_ARB_LPW(result) + 1);
-		printf("\tArbitration Burst       (AB): ");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "High Priority Weight (HPW)", "%u",
+			      NVME_FEAT_ARB_HPW(result) + 1);
+		stdout_kv_add(t, "Medium Priority Weight (MPW)", "%u",
+			      NVME_FEAT_ARB_MPW(result) + 1);
+		stdout_kv_add(t, "Low Priority Weight (LPW)", "%u",
+			      NVME_FEAT_ARB_LPW(result) + 1);
 		if (NVME_FEAT_ARB_BURST(result) == NVME_FEAT_ARBITRATION_BURST_MASK)
-			printf("No limit\n");
+			stdout_kv_add(t, "Arbitration Burst (AB)", "No limit");
 		else
-			printf("%u\n", 1 << NVME_FEAT_ARB_BURST(result));
+			stdout_kv_add(t, "Arbitration Burst (AB)", "%u",
+				      1 << NVME_FEAT_ARB_BURST(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_POWER_MGMT:
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_PM_WH(result);
-		printf("\tWorkload Hint (WH): %u - %s\n", field,
-		       nvme_feature_wl_hints_to_string(field));
-		printf("\tPower State   (PS): %u\n", NVME_FEAT_PM_PS(result));
+		stdout_kv_add(t, "Workload Hint (WH)", "%u - %s", field,
+			      nvme_feature_wl_hints_to_string(field));
+		stdout_kv_add(t, "Power State (PS)", "%u",
+			      NVME_FEAT_PM_PS(result));
 		field = NVME_FEAT_PM_IIELL(result);
 		if (field)
-			printf("\tIdle I/O Exit Latency Limit (IIELL): %uus\n", field * 100);
+			stdout_kv_add(t, "Idle I/O Exit Latency Limit (IIELL)",
+				      "%uus", field * 100);
 		else
-			printf("\tIdle I/O Exit Latency Limit (IIELL): disabled\n");
+			stdout_kv_add(t, "Idle I/O Exit Latency Limit (IIELL)",
+				      "disabled");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_LBA_RANGE:
 		field = NVME_FEAT_LBAR_NR(result);
-		printf("\tNumber of LBA Ranges (NUM): %u\n", field + 1);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Number of LBA Ranges (NUM)", "%u", field + 1);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+
 		if (buf)
 			stdout_lba_range((struct nvme_lba_range_type *)buf, field);
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_TT_TMPTHH(result);
-		printf("\tTemperature Threshold Hysteresis(TMPTHH): %s (%u K, %s)\n",
-		       nvme_degrees_string(field), field, nvme_degrees_fahrenheit_string(field));
+		stdout_kv_add(t, "Temperature Threshold Hysteresis (TMPTHH)",
+			      "%s (%u K, %s)", nvme_degrees_string(field),
+			      field, nvme_degrees_fahrenheit_string(field));
 		field = NVME_FEAT_TT_THSEL(result);
-		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field,
-		       nvme_feature_temp_type_to_string(field));
+		stdout_kv_add(t, "Threshold Type Select (THSEL)", "%u - %s",
+			      field, nvme_feature_temp_type_to_string(field));
 		field = NVME_FEAT_TT_TMPSEL(result);
-		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n",
-		       field, nvme_feature_temp_sel_to_string(field));
-		printf("\tTemperature Threshold         (TMPTH): %s (%u K, %s)\n",
-		       nvme_degrees_string(NVME_FEAT_TT_TMPTH(result)), NVME_FEAT_TT_TMPTH(result),
-		       nvme_degrees_fahrenheit_string(NVME_FEAT_TT_TMPTH(result)));
+		stdout_kv_add(t, "Threshold Temperature Select (TMPSEL)",
+			      "%u - %s", field,
+			      nvme_feature_temp_sel_to_string(field));
+		field = NVME_FEAT_TT_TMPTH(result);
+		stdout_kv_add(t, "Temperature Threshold (TMPTH)",
+			      "%s (%u K, %s)",
+			      nvme_degrees_string(field), field,
+			      nvme_degrees_fahrenheit_string(field));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_ERR_RECOVERY:
-		printf("\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n",
-		       NVME_FEAT_ER_DULBE(result) ? "Enabled" : "Disabled");
-		printf("\tTime Limited Error Recovery                          (TLER): %u ms\n",
-		       NVME_FEAT_ER_TLER(result) * 100);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t,
+			      "Deallocated or Unwritten Logical Block Error Enable (DULBE)",
+			      "%s",
+			      NVME_FEAT_ER_DULBE(result) ?
+			      "Enabled" : "Disabled");
+		stdout_kv_add(t, "Time Limited Error Recovery (TLER)", "%u ms",
+			      NVME_FEAT_ER_TLER(result) * 100);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_VOLATILE_WC:
-		printf("\tVolatile Write Cache Enable (WCE): %s\n",
-		       NVME_FEAT_VWC_WCE(result) ? "Enabled" : "Disabled");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Volatile Write Cache Enable (WCE)", "%s",
+			      NVME_FEAT_VWC_WCE(result) ?
+			      "Enabled" : "Disabled");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_NUM_QUEUES:
-		printf("\tNumber of IO Completion Queues Allocated (NCQA): %u\n",
-		       NVME_FEAT_NRQS_NCQR(result) + 1);
-		printf("\tNumber of IO Submission Queues Allocated (NSQA): %u\n",
-		       NVME_FEAT_NRQS_NSQR(result) + 1);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t,
+			      "Number of IO Completion Queues Allocated (NCQA)",
+			      "%u", NVME_FEAT_NRQS_NCQR(result) + 1);
+		stdout_kv_add(t,
+			      "Number of IO Submission Queues Allocated (NSQA)",
+			      "%u", NVME_FEAT_NRQS_NSQR(result) + 1);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_IRQ_COALESCE:
-		printf("\tAggregation Time     (TIME): %u usec\n",
-		       NVME_FEAT_IRQC_TIME(result) * 100);
-		printf("\tAggregation Threshold (THR): %u\n", NVME_FEAT_IRQC_THR(result) + 1);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Aggregation Time (TIME)", "%u usec",
+			      NVME_FEAT_IRQC_TIME(result) * 100);
+		stdout_kv_add(t, "Aggregation Threshold (THR)", "%u",
+			      NVME_FEAT_IRQC_THR(result) + 1);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_IRQ_CONFIG:
-		printf("\tCoalescing Disable (CD): %s\n",
-		       NVME_FEAT_ICFG_CD(result) ? "True" : "False");
-		printf("\tInterrupt Vector   (IV): %u\n", NVME_FEAT_ICFG_IV(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Coalescing Disable (CD)", "%s",
+			      NVME_FEAT_ICFG_CD(result) ? "True" : "False");
+		stdout_kv_add(t, "Interrupt Vector (IV)", "%u",
+			      NVME_FEAT_ICFG_IV(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_WRITE_ATOMIC:
-		printf("\tDisable Normal (DN): %s\n", NVME_FEAT_WA_DN(result) ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Disable Normal (DN)", "%s",
+			      NVME_FEAT_WA_DN(result) ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_ASYNC_EVENT:
-		printf("\t%-58s: %s\n", feat_ae_dlpcn,
-		       NVME_FEAT_AE_DLPCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_hdlpcn,
-		       NVME_FEAT_AE_HDLPCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_adlpcn,
-		       NVME_FEAT_AE_ADLPCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_pmdrlpcn,
-		       NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_zdcn,
-		       NVME_FEAT_AE_ZDCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_rlccn,
-		       NVME_FEAT_AE_RLCCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_lhcn,
-		       NVME_FEAT_AE_LHCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_ccrcn,
-		       NVME_FEAT_AE_CCRCN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_ansan,
-		       NVME_FEAT_AE_ANSAN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_rgrp0,
-		       NVME_FEAT_AE_RGRP0(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_rassn,
-		       NVME_FEAT_AE_RASSN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_tthry,
-		       NVME_FEAT_AE_TTHRY(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_nnsshdn,
-		       NVME_FEAT_AE_NNSSHDN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_ega,
-		       NVME_FEAT_AE_EGA(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_lbas,
-		       NVME_FEAT_AE_LBAS(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_pla,
-		       NVME_FEAT_AE_PLA(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_ana,
-		       NVME_FEAT_AE_ANA(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_telem,
-		       NVME_FEAT_AE_TELEM(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_fw,
-		       NVME_FEAT_AE_FW(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_nan,
-		       NVME_FEAT_AE_NAN(result) ? async : no_async);
-		printf("\t%-58s: %s\n", feat_ae_smart,
-		       NVME_FEAT_AE_SMART(result) ? async : no_async);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, feat_ae_dlpcn, "%s",
+			      NVME_FEAT_AE_DLPCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_hdlpcn, "%s",
+			      NVME_FEAT_AE_HDLPCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_adlpcn, "%s",
+			      NVME_FEAT_AE_ADLPCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_pmdrlpcn, "%s",
+			      NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_zdcn, "%s",
+			      NVME_FEAT_AE_ZDCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_rlccn, "%s",
+			      NVME_FEAT_AE_RLCCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_lhcn, "%s",
+			      NVME_FEAT_AE_LHCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_ccrcn, "%s",
+			      NVME_FEAT_AE_CCRCN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_ansan, "%s",
+			      NVME_FEAT_AE_ANSAN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_rgrp0, "%s",
+			      NVME_FEAT_AE_RGRP0(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_rassn, "%s",
+			      NVME_FEAT_AE_RASSN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_tthry, "%s",
+			      NVME_FEAT_AE_TTHRY(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_nnsshdn, "%s",
+			      NVME_FEAT_AE_NNSSHDN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_ega, "%s",
+			      NVME_FEAT_AE_EGA(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_lbas, "%s",
+			      NVME_FEAT_AE_LBAS(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_pla, "%s",
+			      NVME_FEAT_AE_PLA(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_ana, "%s",
+			      NVME_FEAT_AE_ANA(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_telem, "%s",
+			      NVME_FEAT_AE_TELEM(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_fw, "%s",
+			      NVME_FEAT_AE_FW(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_nan, "%s",
+			      NVME_FEAT_AE_NAN(result) ? async : no_async);
+		stdout_kv_add(t, feat_ae_smart, "%s",
+			      NVME_FEAT_AE_SMART(result) ? async : no_async);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_AUTO_PST:
-		printf("\tAutonomous Power State Transition Enable (APSTE): %s\n",
-		       NVME_FEAT_APST_APSTE(result) ? "Enabled" : "Disabled");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t,
+			      "Autonomous Power State Transition Enable (APSTE)",
+			      "%s",
+			      NVME_FEAT_APST_APSTE(result) ?
+			      "Enabled" : "Disabled");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+
 		if (buf)
 			stdout_auto_pst((struct nvme_feat_auto_pst *)buf);
 		break;
 	case NVME_FEAT_FID_HOST_MEM_BUF:
-		printf("\tEnable Host Memory (EHM): %s\n",
-		       NVME_FEAT_HMEM_EHM(result) ? "Enabled" : "Disabled");
-		printf("\tHost Memory Non-operational Access Restriction Enable (HMNARE): %s\n",
-		       (result & 0x00000004) ? "True" : "False");
-		printf("\tHost Memory Non-operational Access Restricted (HMNAR): %s\n",
-		       (result & 0x00000008) ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Enable Host Memory (EHM)", "%s",
+			      NVME_FEAT_HMEM_EHM(result) ?
+			      "Enabled" : "Disabled");
+		stdout_kv_add(t,
+			      "Host Memory Non-operational Access Restriction Enable (HMNARE)",
+			      "%s", (result & 0x00000004) ? "True" : "False");
+		stdout_kv_add(t,
+			      "Host Memory Non-operational Access Restricted (HMNAR)",
+			      "%s", (result & 0x00000008) ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+
 		if (buf)
 			stdout_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf);
 		break;
@@ -8315,73 +8467,229 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			stdout_timestamp((struct nvme_timestamp *)buf);
 		break;
 	case NVME_FEAT_FID_KATO:
-		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Keep Alive Timeout (KATO) in milliseconds",
+			      "%u", result);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_HCTM:
-		printf("\tThermal Management Temperature 1 (TMT1) : %u K (%s, %s)\n",
-		       NVME_FEAT_HCTM_TMT1(result),
-		       nvme_degrees_string(NVME_FEAT_HCTM_TMT1(result)),
-		       nvme_degrees_fahrenheit_string(NVME_FEAT_HCTM_TMT1(result)));
-		printf("\tThermal Management Temperature 2 (TMT2) : %u K (%s, %s)\n",
-		       NVME_FEAT_HCTM_TMT2(result),
-		       nvme_degrees_string(NVME_FEAT_HCTM_TMT2(result)),
-		       nvme_degrees_fahrenheit_string(NVME_FEAT_HCTM_TMT2(result)));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		field = NVME_FEAT_HCTM_TMT1(result);
+		stdout_kv_add(t, "Thermal Management Temperature 1 (TMT1)",
+			      "%u K (%s, %s)", field,
+			      nvme_degrees_string(field),
+			      nvme_degrees_fahrenheit_string(field));
+		field = NVME_FEAT_HCTM_TMT2(result);
+		stdout_kv_add(t, "Thermal Management Temperature 2 (TMT2)",
+			      "%u K (%s, %s)", field,
+			      nvme_degrees_string(field),
+			      nvme_degrees_fahrenheit_string(field));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_NOPSC:
-		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n",
-		       NVME_FEAT_NOPS_NOPPME(result) ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t,
+			      "Non-Operational Power State Permissive Mode Enable (NOPPME)",
+			      "%s",
+			      NVME_FEAT_NOPS_NOPPME(result) ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_RRL:
-		printf("\tRead Recovery Level (RRL): %u\n", NVME_FEAT_RRL_RRL(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Read Recovery Level (RRL)", "%u",
+			      NVME_FEAT_RRL_RRL(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_PLM_CONFIG:
-		printf("\tPredictable Latency Window Enabled: %s\n",
-		       NVME_FEAT_PLM_LPE(result) ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Predictable Latency Window Enabled", "%s",
+			      NVME_FEAT_PLM_LPE(result) ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+
 		if (buf)
 			stdout_plm_config((struct nvme_plm_config *)buf);
 		break;
 	case NVME_FEAT_FID_PLM_WINDOW:
-		printf("\tWindow Select: %s", nvme_plm_window_to_string(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Window Select", "%s",
+			      nvme_plm_window_to_string(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_LBA_STS_INTERVAL:
 		stdout_lba_status_info(result);
 		break;
 	case NVME_FEAT_FID_HOST_BEHAVIOR:
 		if (buf) {
-			struct nvme_feat_host_behavior *host_behavior =
+			struct nvme_feat_host_behavior *hb =
 				(struct nvme_feat_host_behavior *)buf;
-			printf("\tAdvanced Command Retry Enable (ACRE)                    : %s\n",
-			       host_behavior->acre ? "True" : "False");
-			printf("\tExtended Telemetry Data Area 4 Supported (ETDAS)        : %s\n",
-			       host_behavior->etdas ? "True" : "False");
-			printf("\tLBA Format Extension Enable (LBAFEE)                    : %s\n",
-			       host_behavior->lbafee ? "True" : "False");
-			printf("\tHost Dispersed Namespace Support (HDISNS)               : %s\n",
-			       host_behavior->hdisns ? "Enabled" : "Disabled");
-			printf("\tCopy Descriptor Format 2h Enabled (CDF2E)               : %s\n",
-			       host_behavior->cdfe & (1 << 2) ? "True" : "False");
-			printf("\tCopy Descriptor Format 3h Enabled (CDF3E)               : %s\n",
-			       host_behavior->cdfe & (1 << 3) ? "True" : "False");
-			printf("\tCopy Descriptor Format 4h Enabled (CDF4E)               : %s\n",
-			       host_behavior->cdfe & (1 << 4) ? "True" : "False");
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			stdout_kv_add(t, "Advanced Command Retry Enable (ACRE)",
+				      "%s", hb->acre ? "True" : "False");
+			stdout_kv_add(t,
+				      "Extended Telemetry Data Area 4 Supported (ETDAS)",
+				      "%s", hb->etdas ? "True" : "False");
+			stdout_kv_add(t, "LBA Format Extension Enable (LBAFEE)",
+				      "%s", hb->lbafee ? "True" : "False");
+			stdout_kv_add(t,
+				      "Host Dispersed Namespace Support (HDISNS)",
+				      "%s",
+				      hb->hdisns ? "Enabled" : "Disabled");
+			stdout_kv_add(t,
+				      "Copy Descriptor Format 2h Enabled (CDF2E)",
+				      "%s",
+				      hb->cdfe & (1 << 2) ? "True" : "False");
+			stdout_kv_add(t,
+				      "Copy Descriptor Format 3h Enabled (CDF3E)",
+				      "%s",
+				      hb->cdfe & (1 << 3) ? "True" : "False");
+			stdout_kv_add(t,
+				      "Copy Descriptor Format 4h Enabled (CDF4E)",
+				      "%s",
+				      hb->cdfe & (1 << 4) ? "True" : "False");
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build feature-show-fields table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 		}
 		break;
 	case NVME_FEAT_FID_SANITIZE:
-		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", NVME_FEAT_SC_NODRM(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "No-Deallocate Response Mode (NODRM)", "%u",
+			      NVME_FEAT_SC_NODRM(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:
-		printf("\tEndurance Group Identifier (ENDGID): %u\n", NVME_FEAT_EG_ENDGID(result));
-		printf("\tEndurance Group Critical Warnings  : %u\n", NVME_FEAT_EG_EGCW(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Endurance Group Identifier (ENDGID)", "%u",
+			      NVME_FEAT_EG_ENDGID(result));
+		stdout_kv_add(t, "Endurance Group Critical Warnings", "%u",
+			      NVME_FEAT_EG_EGCW(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_IOCS_PROFILE:
-		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "I/O Command Set Profile", "%s",
+			      result & 0x1 ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_SPINUP_CONTROL:
-		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Spinup control feature Enabled", "%s",
+			      (result & 1) ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_POWER_LOSS_SIGNAL:
-		printf("\tPower Loss Signaling Mode (PLSM): %s\n",
-		       nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Power Loss Signaling Mode (PLSM)", "%s",
+			      nvme_pls_mode_to_string(
+					NVME_GET(result, FEAT_PLS_MODE)));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
 		stdout_feat_perfc(result,
@@ -8394,101 +8702,253 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			stdout_host_metadata(fid, (struct nvme_host_metadata *)buf);
 		break;
 	case NVME_FEAT_FID_SW_PROGRESS:
-		printf("\tPre-boot Software Load Count (PBSLC): %u\n", NVME_FEAT_SPM_PBSLC(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Pre-boot Software Load Count (PBSLC)", "%u",
+			      NVME_FEAT_SPM_PBSLC(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_HOST_ID:
 		stdout_feat_host_id(result, buf);
 		break;
 	case NVME_FEAT_FID_RESV_NF_MASK:
-		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n",
-		       NVME_FEAT_RM_RESPRE(result) ? "True" : "False");
-		printf("\tMask Reservation Released Notification   (RESREL): %s\n",
-		       NVME_FEAT_RM_RESREL(result) ? "True" : "False");
-		printf("\tMask Registration Preempted Notification (REGPRE): %s\n",
-		       NVME_FEAT_RM_REGPRE(result) ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t,
+			      "Mask Reservation Preempted Notification (RESPRE)",
+			      "%s",
+			      NVME_FEAT_RM_RESPRE(result) ? "True" : "False");
+		stdout_kv_add(t,
+			      "Mask Reservation Released Notification (RESREL)",
+			      "%s",
+			      NVME_FEAT_RM_RESREL(result) ? "True" : "False");
+		stdout_kv_add(t,
+			      "Mask Registration Preempted Notification (REGPRE)",
+			      "%s",
+			      NVME_FEAT_RM_REGPRE(result) ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_RESV_PERSIST:
-		printf("\tPersist Through Power Loss (PTPL): %s\n",
-		       NVME_FEAT_RP_PTPL(result) ? "True" : "False");
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Persist Through Power Loss (PTPL)", "%s",
+			      NVME_FEAT_RP_PTPL(result) ? "True" : "False");
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_WRITE_PROTECT:
-		printf("\tNamespace Write Protect: %s\n", nvme_ns_wp_cfg_to_string(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Namespace Write Protect", "%s",
+			      nvme_ns_wp_cfg_to_string(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_FDP:
-		printf("\tFlexible Direct Placement Enable (FDPE)       : %s\n",
-		       NVME_FEAT_FDPE(result) ? "Yes" : "No");
-		printf("\tFlexible Direct Placement Configuration Index : %u\n",
-		       NVME_FEAT_FDPCIDX(result));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Flexible Direct Placement Enable (FDPE)",
+			      "%s", NVME_FEAT_FDPE(result) ? "Yes" : "No");
+		stdout_kv_add(t,
+			      "Flexible Direct Placement Configuration Index",
+			      "%u", NVME_FEAT_FDPCIDX(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_FDP_EVENTS:
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		for (unsigned int i = 0; i < result; i++) {
 			struct nvme_fdp_supported_event_desc *d;
 
 			d = &((struct nvme_fdp_supported_event_desc *)buf)[i];
 
-			printf("\t%-53s: %sEnabled\n", nvme_fdp_event_to_string(d->evt),
-			       d->evta & 0x1 ? "" : "Not ");
+			stdout_kv_add(t, nvme_fdp_event_to_string(d->evt),
+				      "%sEnabled", d->evta & 0x1 ? "" : "Not ");
 		}
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_BP_WRITE_PROTECT:
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_BPWPC_BP1WPS(result);
-		printf("\tBoot Partition 1 Write Protection State (BP1WPS): %s\n",
-			nvme_bpwps_to_string(field));
+		stdout_kv_add(t,
+			      "Boot Partition 1 Write Protection State (BP1WPS)",
+			      "%s", nvme_bpwps_to_string(field));
 		field = NVME_FEAT_BPWPC_BP0WPS(result);
-		printf("\tBoot Partition 0 Write Protection State (BP0WPS): %s\n",
-			nvme_bpwps_to_string(field));
+		stdout_kv_add(t,
+			      "Boot Partition 0 Write Protection State (BP0WPS)",
+			      "%s", nvme_bpwps_to_string(field));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
-	case NVME_FEAT_FID_POWER_LIMIT:
+	case NVME_FEAT_FID_POWER_LIMIT: {
+		__cleanup_free char *power_str = NULL;
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_POWER_LIMIT_PLS(result);
-		printf("\tPower Limit Scale (PLS): %u - %s\n", field,
-		       nvme_feature_power_limit_scale_to_string(field));
-		printf("\tPower Limit Value (PLV): %u\n",
-		       NVME_FEAT_POWER_LIMIT_PLV(result));
-		printf("\tPower Limit: ");
-		print_power_and_scale(NVME_FEAT_POWER_LIMIT_PLV(result), field);
-		printf("\n");
+		power_str = stdout_power_and_scale_str(
+				NVME_FEAT_POWER_LIMIT_PLV(result), field);
+		stdout_kv_add(t, "Power Limit Scale (PLS)", "%u - %s", field,
+			      nvme_feature_power_limit_scale_to_string(field));
+		stdout_kv_add(t, "Power Limit Value (PLV)", "%u",
+			      NVME_FEAT_POWER_LIMIT_PLV(result));
+		stdout_kv_add(t, "Power Limit", "%s", power_str);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
-	case NVME_FEAT_FID_POWER_THRESH:
+	}
+	case NVME_FEAT_FID_POWER_THRESH: {
+		__cleanup_free char *power_str = NULL;
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_POWER_THRESH_EPT(result);
-		printf("\tEnable Power Threshold (EPT): %u - %s\n",
-		       field, field ? "Enabled" : "Disabled");
+		stdout_kv_add(t, "Enable Power Threshold (EPT)", "%u - %s",
+			      field, field ? "Enabled" : "Disabled");
 		field = NVME_FEAT_POWER_THRESH_PMTS(result);
-		printf("\tPower Measurement Type Select (PMTS): %u - %s\n",
-		       field, nvme_power_measurement_type_to_string(field));
+		stdout_kv_add(t, "Power Measurement Type Select (PMTS)",
+			      "%u - %s", field,
+			      nvme_power_measurement_type_to_string(field));
 		field = NVME_FEAT_POWER_THRESH_PTS(result);
-		printf("\tPower Threshold Scale (PTS): %u - %s\n", field,
-		       nvme_feature_power_limit_scale_to_string(field));
-		printf("\tPower Threshold Value (PTV): %u\n",
-		       NVME_FEAT_POWER_THRESH_PTV(result));
-		printf("\tPower Threshold: ");
-		print_power_and_scale(NVME_FEAT_POWER_THRESH_PTV(result),
-				      field);
-		printf("\n");
+		power_str = stdout_power_and_scale_str(
+				NVME_FEAT_POWER_THRESH_PTV(result), field);
+		stdout_kv_add(t, "Power Threshold Scale (PTS)", "%u - %s",
+			      field,
+			      nvme_feature_power_limit_scale_to_string(field));
+		stdout_kv_add(t, "Power Threshold Value (PTV)", "%u",
+			      NVME_FEAT_POWER_THRESH_PTV(result));
+		stdout_kv_add(t, "Power Threshold", "%s", power_str);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
+	}
 	case NVME_FEAT_FID_POWER_MEASUREMENT:
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_POWER_MEAS_ACT(result);
-		printf("\tAction (ACT): %u - %s\n", field,
-		       nvme_power_measurement_action_to_string(field));
+		stdout_kv_add(t, "Action (ACT)", "%u - %s", field,
+			      nvme_power_measurement_action_to_string(field));
 		field = NVME_FEAT_POWER_MEAS_PMTS(result);
-		printf("\tPower Measurement Type Select (PMTS): %u - %s\n",
-		       field, nvme_power_measurement_type_to_string(field));
-		printf("\tStop Measurement Time (SMT): %u\n",
-		       NVME_FEAT_POWER_MEAS_SMT(result));
+		stdout_kv_add(t, "Power Measurement Type Select (PMTS)",
+			      "%u - %s", field,
+			      nvme_power_measurement_type_to_string(field));
+		stdout_kv_add(t, "Stop Measurement Time (SMT)", "%u",
+			      NVME_FEAT_POWER_MEAS_SMT(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_VOLTAGE_THRESHOLD:
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_VOLTAGE_THRESHOLD_VSENS(result);
-		printf("\tVoltage Sensor Select (VSENS): %u\n", field);
-		printf("\tEnable Voltage Threshold (EVT): %u - %s\n",
-		       !!(result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT),
-		       result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT ? "Enabled" : "Disabled");
-		printf("\tOvervoltage Threshold (OVT): %u\n",
-		       NVME_FEAT_VOLTAGE_THRESHOLD_OVT(result));
-		printf("\tUndervoltage Threshold (UVT): %u\n",
-		       NVME_FEAT_VOLTAGE_THRESHOLD_UVT(result));
+		stdout_kv_add(t, "Voltage Sensor Select (VSENS)", "%u", field);
+		stdout_kv_add(t, "Enable Voltage Threshold (EVT)", "%u - %s",
+			      !!(result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT),
+			      result & NVME_FEAT_VOLTAGE_THRESHOLD_EVT ?
+			      "Enabled" : "Disabled");
+		stdout_kv_add(t, "Overvoltage Threshold (OVT)", "%u",
+			      NVME_FEAT_VOLTAGE_THRESHOLD_OVT(result));
+		stdout_kv_add(t, "Undervoltage Threshold (UVT)", "%u",
+			      NVME_FEAT_VOLTAGE_THRESHOLD_UVT(result));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
 		field = NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result);
-		printf("\tAction (ACT): %u\n", field);
+		stdout_kv_add(t, "Action (ACT)", "%u", field);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build feature-show-fields table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_FEAT_FID_RATE_LIMITING:
 		if (buf)
