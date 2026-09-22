@@ -14,6 +14,7 @@
 #include "cleanup.h"
 #include "field-parser.h"
 #include "nvme-json.h"
+#include "nvme-print.h"
 
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {
@@ -22,6 +23,10 @@ void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t dat
 
 	/* Allocate 2 chars for each value in the data + 2 bytes for the null terminator */
 	description_str = (char *) calloc(1, data_size*2 + 2);
+	if (!description_str) {
+		nvme_show_error("Failed to allocate description buffer");
+		return;
+	}
 
 	for (size_t i = 0; i < data_size; ++i) {
 		sprintf(temp_buffer, "%02X", pdata[i]);
