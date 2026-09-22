@@ -239,7 +239,7 @@ static bool libnvme_mi_mctp_resp_is_mpr(void *buf, size_t len,
 		return false;
 
 	if (mpr_time)
-		*mpr_time = le16_to_cpu(msg->mprt) * 100;
+		*mpr_time = (unsigned int)le16_to_cpu(msg->mprt) * 100;
 
 	return true;
 }
