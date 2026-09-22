@@ -5227,120 +5227,168 @@ static void stdout_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
 	printf("zasl    : %u\n", ctrl->zasl);
 }
 
-static void show_nvme_id_ns_zoned_zoc(__le16 ns_zoc)
+static struct shr_table *show_nvme_id_ns_zoned_zoc_table(__le16 ns_zoc)
 {
+	struct shr_table *t;
 	__u16 zoc = le16_to_cpu(ns_zoc);
 	__u8 rsvd = (zoc & 0xfffc) >> 2;
 	__u8 ze = (zoc & 0x2) >> 1;
 	__u8 vzc = zoc & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf(" [15:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\t  Zone Active Excursions: %s\n",
-		ze, ze ? "Yes (Host support required)" : "No");
-	printf("  [0:0] : %#x\t  Variable Zone Capacity: %s\n",
-		vzc, vzc ? "Yes (Host support required)" : "No");
-	printf("\n");
+		stdout_bits_add(t, "[15:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", ze, "Zone Active Excursions: %s",
+			 ze ? "Yes (Host support required)" : "No");
+	stdout_bits_add(t, "[0:0]", vzc, "Variable Zone Capacity: %s",
+			 vzc ? "Yes (Host support required)" : "No");
+
+	return t;
 }
 
-static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
+static struct shr_table *show_nvme_id_ns_zoned_ozcs_table(__le16 ns_ozcs)
 {
+	struct shr_table *t;
 	__u16 ozcs = le16_to_cpu(ns_ozcs);
 	__u8 rsvd = (ozcs & 0xfffc) >> 2;
 	__u8 razb = ozcs & 0x1;
 	__u8 zrwasup = (ozcs & 0x2) >> 1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf(" [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\t  Read Across Zone Boundaries: %s\n",
-		razb, razb ? "Yes" : "No");
-	printf("  [1:1] : %#x\t  Zone Random Write Area: %s\n", zrwasup,
-				zrwasup ? "Yes" : "No");
+		stdout_bits_add(t, "[15:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", razb, "Read Across Zone Boundaries: %s",
+			 razb ? "Yes" : "No");
+	stdout_bits_add(t, "[1:1]", zrwasup, "Zone Random Write Area: %s",
+			 zrwasup ? "Yes" : "No");
+
+	return t;
 }
 
-static void stdout_zns_id_ns_recommended_limit(__le32 ns_rl, int human,
-					       const char *target_limit)
+static void stdout_zns_id_ns_recommended_limit(struct shr_table *t,
+		const char *name, __le32 ns_rl, bool human)
 {
 	unsigned int recommended_limit = le32_to_cpu(ns_rl);
 
 	if (!recommended_limit && human)
-		printf("%s    : Not Reported\n", target_limit);
+		stdout_kv_add(t, name, "%s", "Not Reported");
 	else
-		printf("%s    : %u\n", target_limit, recommended_limit);
+		stdout_kv_add(t, name, "%u", recommended_limit);
 }
 
-static void stdout_zns_id_ns_zrwacap(__u8 zrwacap)
+static struct shr_table *stdout_zns_id_ns_zrwacap_table(__u8 zrwacap)
 {
+	struct shr_table *t;
 	__u8 rsvd = (zrwacap & 0xfe) >> 1;
 	__u8 expflushsup = zrwacap & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf(" [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\t  Explicit ZRWA Flush Operations: %s\n",
-		expflushsup, expflushsup ? "Yes" : "No");
+		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", expflushsup,
+			 "Explicit ZRWA Flush Operations: %s",
+			 expflushsup ? "Yes" : "No");
+
+	return t;
 }
 
 static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 			     struct nvme_id_ns *id_ns)
 {
-	int human = stdout_print_ops.flags & VERBOSE, vs = stdout_print_ops.flags & VS;
+	bool human = stdout_print_ops.flags & VERBOSE;
+	bool vs = stdout_print_ops.flags & VS;
+	struct shr_table *t;
 	uint8_t lbaf;
-	int i;
+	int i, row;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(id_ns->flbas, &lbaf);
 
 	printf("ZNS Command Set Identify Namespace:\n");
 
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	if (human) {
-		printf("zoc     : %u\tZone Operation Characteristics\n", le16_to_cpu(ns->zoc));
-		show_nvme_id_ns_zoned_zoc(ns->zoc);
+		row = stdout_kv_add(t, "zoc",
+				     "%u\tZone Operation Characteristics",
+				     le16_to_cpu(ns->zoc));
+		shr_table_set_row_subtable(t, row,
+				show_nvme_id_ns_zoned_zoc_table(ns->zoc));
 	} else {
-		printf("zoc     : %u\n", le16_to_cpu(ns->zoc));
+		stdout_kv_add(t, "zoc", "%u", le16_to_cpu(ns->zoc));
 	}
 
 	if (human) {
-		printf("ozcs    : %u\tOptional Zoned Command Support\n", le16_to_cpu(ns->ozcs));
-		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
+		row = stdout_kv_add(t, "ozcs",
+				     "%u\tOptional Zoned Command Support",
+				     le16_to_cpu(ns->ozcs));
+		shr_table_set_row_subtable(t, row,
+				show_nvme_id_ns_zoned_ozcs_table(ns->ozcs));
 	} else {
-		printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
+		stdout_kv_add(t, "ozcs", "%u", le16_to_cpu(ns->ozcs));
 	}
 
 	if (human) {
 		if (ns->mar == 0xffffffff)
-			printf("mar     : No Active Resource Limit\n");
+			stdout_kv_add(t, "mar", "%s",
+				      "No Active Resource Limit");
 		else
-			printf("mar     : %u\tActive Resources\n", le32_to_cpu(ns->mar) + 1);
+			stdout_kv_add(t, "mar", "%u\tActive Resources",
+				      le32_to_cpu(ns->mar) + 1);
 	} else {
-		printf("mar     : %#x\n", le32_to_cpu(ns->mar));
+		stdout_kv_add(t, "mar", "%#x", le32_to_cpu(ns->mar));
 	}
 
 	if (human) {
 		if (ns->mor == 0xffffffff)
-			printf("mor     : No Open Resource Limit\n");
+			stdout_kv_add(t, "mor", "%s",
+				      "No Open Resource Limit");
 		else
-			printf("mor     : %u\tOpen Resources\n", le32_to_cpu(ns->mor) + 1);
+			stdout_kv_add(t, "mor", "%u\tOpen Resources",
+				      le32_to_cpu(ns->mor) + 1);
 	} else {
-		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
+		stdout_kv_add(t, "mor", "%#x", le32_to_cpu(ns->mor));
 	}
 
-	stdout_zns_id_ns_recommended_limit(ns->rrl,  human, "rrl ");
-	stdout_zns_id_ns_recommended_limit(ns->frl,  human, "frl ");
-	stdout_zns_id_ns_recommended_limit(ns->rrl1, human, "rrl1");
-	stdout_zns_id_ns_recommended_limit(ns->rrl2, human, "rrl2");
-	stdout_zns_id_ns_recommended_limit(ns->rrl3, human, "rrl3");
-	stdout_zns_id_ns_recommended_limit(ns->frl1,  human, "frl1");
-	stdout_zns_id_ns_recommended_limit(ns->frl2,  human, "frl2");
-	stdout_zns_id_ns_recommended_limit(ns->frl3,  human, "frl3");
+	stdout_zns_id_ns_recommended_limit(t, "rrl", ns->rrl, human);
+	stdout_zns_id_ns_recommended_limit(t, "frl", ns->frl, human);
+	stdout_zns_id_ns_recommended_limit(t, "rrl1", ns->rrl1, human);
+	stdout_zns_id_ns_recommended_limit(t, "rrl2", ns->rrl2, human);
+	stdout_zns_id_ns_recommended_limit(t, "rrl3", ns->rrl3, human);
+	stdout_zns_id_ns_recommended_limit(t, "frl1", ns->frl1, human);
+	stdout_zns_id_ns_recommended_limit(t, "frl2", ns->frl2, human);
+	stdout_zns_id_ns_recommended_limit(t, "frl3", ns->frl3, human);
 
-	printf("numzrwa : %#x\n", le32_to_cpu(ns->numzrwa));
-	printf("zrwafg  : %u\n", le16_to_cpu(ns->zrwafg));
-	printf("zrwasz  : %u\n", le16_to_cpu(ns->zrwasz));
+	stdout_kv_add(t, "numzrwa", "%#x", le32_to_cpu(ns->numzrwa));
+	stdout_kv_add(t, "zrwafg", "%u", le16_to_cpu(ns->zrwafg));
+	stdout_kv_add(t, "zrwasz", "%u", le16_to_cpu(ns->zrwasz));
+
 	if (human) {
-		printf("zrwacap : %u\tZone Random Write Area Capability\n", ns->zrwacap);
-		stdout_zns_id_ns_zrwacap(ns->zrwacap);
+		row = stdout_kv_add(t, "zrwacap",
+				     "%u\tZone Random Write Area Capability",
+				     ns->zrwacap);
+		shr_table_set_row_subtable(t, row,
+				stdout_zns_id_ns_zrwacap_table(ns->zrwacap));
 	} else {
-		printf("zrwacap : %u\n", ns->zrwacap);
+		stdout_kv_add(t, "zrwacap", "%u", ns->zrwacap);
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build zns-id-ns table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 
 	for (i = 0; i <= id_ns->nlbaf; i++) {
 		if (human)
