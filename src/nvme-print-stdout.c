@@ -9718,57 +9718,110 @@ static void stdout_host_discovery_log(struct nvme_host_discovery_log *log)
 	__u32 tel;
 	__u16 numexat;
 	int n = 0;
+	struct shr_table *t;
 
-	printf("genctr: %"PRIu64"\n", le64_to_cpu(log->genctr));
-	printf("numrec: %"PRIu64"\n", le64_to_cpu(log->numrec));
-	printf("recfmt: %u\n", le16_to_cpu(log->recfmt));
-	printf("hdlpf: %02x\n", log->hdlpf);
-	printf("thdlpl: %u\n", thdlpl);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "genctr", "%"PRIu64, le64_to_cpu(log->genctr));
+	stdout_kv_add(t, "numrec", "%"PRIu64, le64_to_cpu(log->numrec));
+	stdout_kv_add(t, "recfmt", "%u", le16_to_cpu(log->recfmt));
+	stdout_kv_add(t, "hdlpf", "%02x", log->hdlpf);
+	stdout_kv_add(t, "thdlpl", "%u", thdlpl);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build host-discovery-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	for (i = sizeof(*log); i < le32_to_cpu(log->thdlpl); i += tel) {
 		printf("hedlpe: %d\n", n++);
 		hedlpe = (void *)log + i;
 		tel = le32_to_cpu(hedlpe->tel);
 		numexat = le16_to_cpu(hedlpe->numexat);
-		printf("trtype: %s\n", libnvmf_trtype_str(hedlpe->trtype));
-		printf("adrfam: %s\n",
-		       strlen(hedlpe->traddr) ? libnvmf_adrfam_str(hedlpe->adrfam) : "");
-		printf("eflags: %s\n", libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
-		printf("hostnqn: %s\n", hedlpe->hostnqn);
-		printf("traddr: %s\n", hedlpe->traddr);
-		printf("tsas: ");
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "trtype", "%s",
+			      libnvmf_trtype_str(hedlpe->trtype));
+		stdout_kv_add(t, "adrfam", "%s",
+			      strlen(hedlpe->traddr) ?
+			      libnvmf_adrfam_str(hedlpe->adrfam) : "");
+		stdout_kv_add(t, "eflags", "%s",
+			      libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
+		stdout_kv_add(t, "hostnqn", "%s", hedlpe->hostnqn);
+		stdout_kv_add(t, "traddr", "%s", hedlpe->traddr);
 		switch (hedlpe->trtype) {
 		case NVMF_TRTYPE_RDMA:
-			printf("prtype: %s, qptype: %s, cms: %s, pkey: 0x%04x\n",
-			       libnvmf_prtype_str(hedlpe->tsas.rdma.prtype),
-			       libnvmf_qptype_str(hedlpe->tsas.rdma.qptype),
-			       libnvmf_cms_str(hedlpe->tsas.rdma.cms),
-			       le16_to_cpu(hedlpe->tsas.rdma.pkey));
+			stdout_kv_add(t, "tsas.prtype", "%s",
+				      libnvmf_prtype_str(
+						hedlpe->tsas.rdma.prtype));
+			stdout_kv_add(t, "tsas.qptype", "%s",
+				      libnvmf_qptype_str(
+						hedlpe->tsas.rdma.qptype));
+			stdout_kv_add(t, "tsas.cms", "%s",
+				      libnvmf_cms_str(hedlpe->tsas.rdma.cms));
+			stdout_kv_add(t, "tsas.pkey", "0x%04x",
+				      le16_to_cpu(hedlpe->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
-			printf("sectype: %s\n", libnvmf_sectype_str(hedlpe->tsas.tcp.sectype));
+			stdout_kv_add(t, "tsas.sectype", "%s",
+				      libnvmf_sectype_str(
+						hedlpe->tsas.tcp.sectype));
 			break;
 		default:
-			printf("common:\n");
-			d((unsigned char *)hedlpe->tsas.common, sizeof(hedlpe->tsas.common), 16, 1);
+			stdout_kv_add(t, "tsas.common", "");
 			break;
 		}
-		printf("tel: %u\n", tel);
-		printf("numexat: %u\n", numexat);
+		stdout_kv_add(t, "tel", "%u", tel);
+		stdout_kv_add(t, "numexat", "%u", numexat);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build host-discovery-log table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+
+		if (hedlpe->trtype != NVMF_TRTYPE_RDMA &&
+		    hedlpe->trtype != NVMF_TRTYPE_TCP)
+			d((unsigned char *)hedlpe->tsas.common,
+			  sizeof(hedlpe->tsas.common), 16, 1);
 
 		exat = hedlpe->exat;
 		for (j = 0; j < numexat; j++) {
 			printf("exat: %d\n", j);
-			printf("exattype: %u\n", le16_to_cpu(exat->exattype));
-			printf("exatlen: %u\n", le16_to_cpu(exat->exatlen));
+
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
+			stdout_kv_add(t, "exattype", "%u",
+				      le16_to_cpu(exat->exattype));
+			stdout_kv_add(t, "exatlen", "%u",
+				      le16_to_cpu(exat->exatlen));
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build host-discovery-log table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
+
 			printf("exatval:\n");
-			d((unsigned char *)exat->exatval, le16_to_cpu(exat->exatlen), 16, 1);
+			d((unsigned char *)exat->exatval,
+			  le16_to_cpu(exat->exatlen), 16, 1);
 			exat = libnvmf_exat_ptr_next(exat);
 		}
 	}
 }
 
-static void print_traddr(char *field, __u8 adrfam, __u8 *traddr)
+static void stdout_kv_add_traddr(struct shr_table *t, const char *field,
+				 __u8 adrfam, __u8 *traddr)
 {
 	char dst[INET6_ADDRSTRLEN];
 	socklen_t size;
