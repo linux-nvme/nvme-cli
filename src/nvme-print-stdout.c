@@ -585,11 +585,24 @@ void nvme_show_pel_fw_commit_event(void *pevent_log_info, __u32 offset)
 void nvme_show_pel_timestamp_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_time_stamp_change_event *ts_change_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("Time Stamp Change Event Entry:\n");
-	printf("Previous Timestamp: %"PRIu64"\n", le64_to_cpu(ts_change_event->previous_timestamp));
-	printf("Milliseconds Since Reset: %"PRIu64"\n",
-	       le64_to_cpu(ts_change_event->ml_secs_since_reset));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Previous Timestamp", "%"PRIu64,
+		      le64_to_cpu(ts_change_event->previous_timestamp));
+	stdout_kv_add(t, "Milliseconds Since Reset", "%"PRIu64,
+		      le64_to_cpu(ts_change_event->ml_secs_since_reset));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build pel-timestamp-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
