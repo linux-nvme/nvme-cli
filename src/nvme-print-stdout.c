@@ -9372,41 +9372,55 @@ static void stdout_discovery_log(const struct nvmf_discovery_log *log,
 		__cleanup_free char *trsvcid = NULL;
 		__cleanup_free char *subnqn = NULL;
 		__cleanup_free char *traddr = NULL;
+		struct shr_table *t;
 
 		trsvcid = shr_buf2str(e->trsvcid, sizeof(e->trsvcid));
 		subnqn = shr_buf2str(e->subnqn, sizeof(e->subnqn));
 		traddr = shr_buf2str(e->traddr, sizeof(e->traddr));
 
 		printf("=====Discovery Log Entry %d======\n", i);
-		printf("trtype:  %s\n", libnvmf_trtype_str(e->trtype));
-		printf("adrfam:  %s\n",
-			e->traddr[0] ?
-			libnvmf_adrfam_str(e->adrfam) : "");
-		printf("subtype: %s\n", libnvmf_subtype_str(e->subtype));
-		printf("treq:    %s\n", libnvmf_treq_str(e->treq));
-		printf("portid:  %d\n", le16_to_cpu(e->portid));
-		printf("trsvcid: %s\n", trsvcid);
-		printf("subnqn:  %s\n", subnqn);
-		printf("traddr:  %s\n", traddr);
-		printf("eflags:  %s\n",
-		       libnvmf_eflags_str(le16_to_cpu(e->eflags)));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "trtype", "%s", libnvmf_trtype_str(e->trtype));
+		stdout_kv_add(t, "adrfam", "%s",
+			      e->traddr[0] ?
+			      libnvmf_adrfam_str(e->adrfam) : "");
+		stdout_kv_add(t, "subtype", "%s",
+			      libnvmf_subtype_str(e->subtype));
+		stdout_kv_add(t, "treq", "%s", libnvmf_treq_str(e->treq));
+		stdout_kv_add(t, "portid", "%d", le16_to_cpu(e->portid));
+		stdout_kv_add(t, "trsvcid", "%s", trsvcid);
+		stdout_kv_add(t, "subnqn", "%s", subnqn);
+		stdout_kv_add(t, "traddr", "%s", traddr);
+		stdout_kv_add(t, "eflags", "%s",
+			      libnvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
-			printf("rdma_prtype: %s\n",
-				libnvmf_prtype_str(e->tsas.rdma.prtype));
-			printf("rdma_qptype: %s\n",
-				libnvmf_qptype_str(e->tsas.rdma.qptype));
-			printf("rdma_cms:    %s\n",
-				libnvmf_cms_str(e->tsas.rdma.cms));
-			printf("rdma_pkey: %#04x\n",
-				le16_to_cpu(e->tsas.rdma.pkey));
+			stdout_kv_add(t, "rdma_prtype", "%s",
+				      libnvmf_prtype_str(e->tsas.rdma.prtype));
+			stdout_kv_add(t, "rdma_qptype", "%s",
+				      libnvmf_qptype_str(e->tsas.rdma.qptype));
+			stdout_kv_add(t, "rdma_cms", "%s",
+				      libnvmf_cms_str(e->tsas.rdma.cms));
+			stdout_kv_add(t, "rdma_pkey", "%#04x",
+				      le16_to_cpu(e->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
-			printf("sectype: %s\n",
-				libnvmf_sectype_str(e->tsas.tcp.sectype));
+			stdout_kv_add(t, "sectype", "%s",
+				      libnvmf_sectype_str(e->tsas.tcp.sectype));
 			break;
 		}
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build discovery-log table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 	}
 }
 #else
