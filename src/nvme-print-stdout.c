@@ -4959,79 +4959,115 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	}
 }
 
-static void stdout_id_ctrl_nvm_kpiocap(__u8 kpiocap)
+static struct shr_table *stdout_id_ctrl_nvm_kpiocap_table(__u8 kpiocap)
 {
+	struct shr_table *t;
 	__u8 rsvd2 = (kpiocap & 0xfc) >> 2;
 	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(kpiocap);
 	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(kpiocap);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd2)
-		printf("  [7:2] : %#x\tReserved\n", rsvd2);
-	printf("  [1:1] : %#x\tKey Per I/O capability enabled and disabled %s in the"
-		"NVM subsystem\n", kpiosc, kpiosc ? "all namespaces" : "each namespace");
-	printf("  [0:0] : %#x\tKey Per I/O capability %sSupported\n", kpios,
-		kpios ? "" : "Not ");
+		stdout_bits_add(t, "[7:2]", rsvd2, "Reserved");
+	stdout_bits_add(t, "[1:1]", kpiosc,
+			 "Key Per I/O capability enabled and disabled %s in the NVM subsystem",
+			 kpiosc ? "all namespaces" : "each namespace");
+	stdout_bits_add(t, "[0:0]", kpios, "Key Per I/O capability %sSupported",
+			 kpios ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_nvm_aocs(__u16 aocs)
+static struct shr_table *stdout_id_ctrl_nvm_aocs_table(__u16 aocs)
 {
+	struct shr_table *t;
 	__u16 rsvd = (aocs & 0xfffe) >> 1;
 	__u8 ralbas = aocs & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tReporting Allocated LBA %sSupported\n", ralbas,
-		ralbas ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[15:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", ralbas,
+			 "Reporting Allocated LBA %sSupported",
+			 ralbas ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ctrl_nvm_ver(__u32 ver)
+static const char *stdout_id_ctrl_nvm_lbamqf_str(__u8 lbamqf)
 {
-	printf("  NVM command set specification: %d.%d.%d\n\n", NVME_MAJOR(ver), NVME_MINOR(ver),
-	       NVME_TERTIARY(ver));
-}
-
-static void stdout_id_ctrl_nvm_lbamqf(__u8 lbamqf)
-{
-	printf("  0x%x: ", lbamqf);
-
 	switch (lbamqf) {
 	case NVME_ID_CTRL_NVM_LBAMQF_TYPE_0:
-		printf("LBA Migration Queue Entry Type 0\n\n");
-		break;
+		return "LBA Migration Queue Entry Type 0";
 	case NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MIN ... NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MAX:
-		printf("Vendor Specific\n\n");
-		break;
+		return "Vendor Specific";
 	default:
-		printf("Reserved\n\n");
-		break;
+		return "Reserved";
 	}
 }
 
 static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
-	int verbose = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	__u32 ver;
+	int row;
 
 	printf("NVMe Identify Controller NVM:\n");
-	printf("vsl    : %u\n", ctrl_nvm->vsl);
-	printf("wzsl   : %u\n", ctrl_nvm->wzsl);
-	printf("wusl   : %u\n", ctrl_nvm->wusl);
-	printf("dmrl   : %u\n", ctrl_nvm->dmrl);
-	printf("dmrsl  : %u\n", le32_to_cpu(ctrl_nvm->dmrsl));
-	printf("dmsl   : %"PRIu64"\n", le64_to_cpu(ctrl_nvm->dmsl));
-	printf("kpiocap: %u\n", ctrl_nvm->kpiocap);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "vsl", "%u", ctrl_nvm->vsl);
+	stdout_kv_add(t, "wzsl", "%u", ctrl_nvm->wzsl);
+	stdout_kv_add(t, "wusl", "%u", ctrl_nvm->wusl);
+	stdout_kv_add(t, "dmrl", "%u", ctrl_nvm->dmrl);
+	stdout_kv_add(t, "dmrsl", "%u", le32_to_cpu(ctrl_nvm->dmrsl));
+	stdout_kv_add(t, "dmsl", "%"PRIu64, le64_to_cpu(ctrl_nvm->dmsl));
+
+	row = stdout_kv_add(t, "kpiocap", "%u", ctrl_nvm->kpiocap);
 	if (verbose)
-		stdout_id_ctrl_nvm_kpiocap(ctrl_nvm->kpiocap);
-	printf("wzdsl  : %u\n", ctrl_nvm->wzdsl);
-	printf("aocs   : %u\n", le16_to_cpu(ctrl_nvm->aocs));
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_nvm_kpiocap_table(
+						ctrl_nvm->kpiocap));
+
+	stdout_kv_add(t, "wzdsl", "%u", ctrl_nvm->wzdsl);
+
+	row = stdout_kv_add(t, "aocs", "%u", le16_to_cpu(ctrl_nvm->aocs));
 	if (verbose)
-		stdout_id_ctrl_nvm_aocs(le16_to_cpu(ctrl_nvm->aocs));
-	printf("ver    : 0x%x\n", le32_to_cpu(ctrl_nvm->ver));
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ctrl_nvm_aocs_table(
+						le16_to_cpu(ctrl_nvm->aocs)));
+
+	ver = le32_to_cpu(ctrl_nvm->ver);
 	if (verbose)
-		stdout_id_ctrl_nvm_ver(le32_to_cpu(ctrl_nvm->ver));
-	printf("lbamqf : %u\n", ctrl_nvm->lbamqf);
+		stdout_kv_add(t, "ver",
+			      "0x%x\tNVM command set specification: %d.%d.%d",
+			      ver, NVME_MAJOR(ver), NVME_MINOR(ver),
+			      NVME_TERTIARY(ver));
+	else
+		stdout_kv_add(t, "ver", "0x%x", ver);
+
 	if (verbose)
-		stdout_id_ctrl_nvm_lbamqf(ctrl_nvm->lbamqf);
+		stdout_kv_add(t, "lbamqf", "%u\t0x%x: %s", ctrl_nvm->lbamqf,
+			      ctrl_nvm->lbamqf,
+			      stdout_id_ctrl_nvm_lbamqf_str(ctrl_nvm->lbamqf));
+	else
+		stdout_kv_add(t, "lbamqf", "%u", ctrl_nvm->lbamqf);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build id-ctrl-nvm table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 }
 
 static void stdout_nvm_id_ns_pic(__u8 pic)
