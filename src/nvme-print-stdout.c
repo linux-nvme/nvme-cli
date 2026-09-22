@@ -766,11 +766,26 @@ void nvme_show_pel_format_completion_event(void *pevent_log_info, __u32 offset)
 void nvme_show_pel_sanitize_start_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_sanitize_start_event *sanitize_start_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("Sanitize Start Event Entry:\n");
-	printf("SANICAP: %u\n", sanitize_start_event->sani_cap);
-	printf("Sanitize CDW10: %u\n", le32_to_cpu(sanitize_start_event->sani_cdw10));
-	printf("Sanitize CDW11: %u\n", le32_to_cpu(sanitize_start_event->sani_cdw11));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "SANICAP", "%u", sanitize_start_event->sani_cap);
+	stdout_kv_add(t, "Sanitize CDW10", "%u",
+		      le32_to_cpu(sanitize_start_event->sani_cdw10));
+	stdout_kv_add(t, "Sanitize CDW11", "%u",
+		      le32_to_cpu(sanitize_start_event->sani_cdw11));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build pel-sanitize-start-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_sanitize_completion_event(void *pevent_log_info, __u32 offset)
