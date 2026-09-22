@@ -548,6 +548,10 @@ void json_add_formatted_var_size_str(struct json_object *pobject, const char *ms
 
 	/* Allocate 2 chars for each value in the data + 2 bytes for the null terminator */
 	description_str = (char *) calloc(1, data_size*2 + 2);
+	if (!description_str) {
+		nvme_show_error("Failed to allocate description buffer");
+		return;
+	}
 
 	for (size_t i = 0; i < data_size; ++i) {
 		sprintf(temp_buffer, "%02X", pdata[i]);
