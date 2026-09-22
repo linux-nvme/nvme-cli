@@ -600,23 +600,53 @@ void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
 			     le16_to_cpu(pevent_entry_head->vsil) - sizeof(*fw_rev);
 	struct nvme_power_on_reset_info_list *por_event;
 	__u32 por_info_list = por_info_len / sizeof(*por_event);
+	struct shr_table *t;
 
 	printf("Power On Reset Event Entry:\n");
 	fw_rev = pevent_log_info + offset;
-	printf("Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(*fw_rev),
-	       shr_fw_to_string((char *)fw_rev));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Firmware Revision", "%"PRIu64" (%s)",
+		      le64_to_cpu(*fw_rev), shr_fw_to_string((char *)fw_rev));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build pel-power-on-reset-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
 	printf("Reset Information List:\n");
 
 	for (int i = 0; i < por_info_list; i++) {
 		por_event = pevent_log_info + offset + sizeof(*fw_rev) + i * sizeof(*por_event);
-		printf("Controller ID: %u\n", le16_to_cpu(por_event->cid));
-		printf("Firmware Activation: %u\n", por_event->fw_act);
-		printf("Operation in Progress: %u\n", por_event->op_in_prog);
-		printf("Controller Power Cycle: %u\n", le32_to_cpu(por_event->ctrl_power_cycle));
-		printf("Power on milliseconds: %"PRIu64"\n",
-		       le64_to_cpu(por_event->power_on_ml_seconds));
-		printf("Controller Timestamp: %"PRIu64"\n",
-		       le64_to_cpu(por_event->ctrl_time_stamp));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Controller ID", "%u",
+			      le16_to_cpu(por_event->cid));
+		stdout_kv_add(t, "Firmware Activation", "%u",
+			      por_event->fw_act);
+		stdout_kv_add(t, "Operation in Progress", "%u",
+			      por_event->op_in_prog);
+		stdout_kv_add(t, "Controller Power Cycle", "%u",
+			      le32_to_cpu(por_event->ctrl_power_cycle));
+		stdout_kv_add(t, "Power on milliseconds", "%"PRIu64,
+			      le64_to_cpu(por_event->power_on_ml_seconds));
+		stdout_kv_add(t, "Controller Timestamp", "%"PRIu64,
+			      le64_to_cpu(por_event->ctrl_time_stamp));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build pel-power-on-reset-event table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 	}
 }
 
