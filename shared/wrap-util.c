@@ -17,6 +17,9 @@ void shr_print_word_wrapped(const char *s, int indent, int start, FILE *stream)
 	bool at_line_start = start <= indent;
 	int col = start;
 
+	if (!s)
+		return;
+
 	while (col < indent) {
 		putc(' ', stream);
 		col++;
