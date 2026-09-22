@@ -791,11 +791,27 @@ void nvme_show_pel_sanitize_start_event(void *pevent_log_info, __u32 offset)
 void nvme_show_pel_sanitize_completion_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_sanitize_compln_event *sanitize_cmpln_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("Sanitize Completion Event Entry:\n");
-	printf("Sanitize Progress: %u\n", le16_to_cpu(sanitize_cmpln_event->sani_prog));
-	printf("Sanitize Status: %u\n", le16_to_cpu(sanitize_cmpln_event->sani_status));
-	printf("Completion Information: %u\n", le16_to_cpu(sanitize_cmpln_event->cmpln_info));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Sanitize Progress", "%u",
+		      le16_to_cpu(sanitize_cmpln_event->sani_prog));
+	stdout_kv_add(t, "Sanitize Status", "%u",
+		      le16_to_cpu(sanitize_cmpln_event->sani_status));
+	stdout_kv_add(t, "Completion Information", "%u",
+		      le16_to_cpu(sanitize_cmpln_event->cmpln_info));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build pel-sanitize-completion-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset)
