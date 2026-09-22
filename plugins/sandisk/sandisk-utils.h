@@ -259,6 +259,7 @@
 /* Misc */
 #define SNDK_MAX_PATH_LEN                   256
 #define SNDK_GUID_LENGTH                    16
+#define SNDK_FW_REV_LENGTH                  8
 
 #define SNDK_MAX_NUM_ACT_HIST_ENTRIES       20
 #define SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN  0x1000
@@ -387,8 +388,8 @@ struct sndk_ocp_cloud_smart_log {
 	__u8 endurance_estimate[16];
 	__u64 pcie_link_retraining_cnt;
 	__u64 power_state_change_cnt;
-	char lowest_permitted_fw_rev[8];
-	__u8 rsvd216[278];
+	char lowest_permitted_fw_rev[16];
+	__u8 rsvd216[270];
 	__u16 log_page_version;
 	__u8 log_page_guid[16];
 };

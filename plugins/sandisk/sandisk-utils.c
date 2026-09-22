@@ -973,7 +973,7 @@ static void sndk_show_cloud_smart_log_json(struct sndk_ocp_cloud_smart_log *log)
 	struct json_object *thermal_status;
 	struct json_object *dssd_specific_ver;
 	char buf[2 * sizeof(log->log_page_guid) + 3];
-	char lowest_fr[sizeof(log->lowest_permitted_fw_rev) + 1];
+	char lowest_fr[SNDK_FW_REV_LENGTH + 1];
 	uint16_t smart_log_ver = (uint16_t)le16_to_cpu(log->log_page_version);
 
 	bad_user_nand_blocks = json_create_object();
@@ -1082,7 +1082,7 @@ static void sndk_show_cloud_smart_log_json(struct sndk_ocp_cloud_smart_log *log)
 					   le64_to_cpu(log->power_state_change_cnt));
 		if (smart_log_ver >= 4) {
 			snprintf(lowest_fr, sizeof(lowest_fr), "%-.*s",
-				(int)sizeof(log->lowest_permitted_fw_rev),
+				SNDK_FW_REV_LENGTH,
 				log->lowest_permitted_fw_rev);
 			json_object_add_value_string(root, "lowest_permitted_fw_rev", lowest_fr);
 		} else {
@@ -1188,7 +1188,7 @@ static void sndk_show_cloud_smart_log_normal(struct sndk_ocp_cloud_smart_log *lo
 		       le64_to_cpu(log->power_state_change_cnt));
 		if (smart_log_ver >= 4)
 			printf("Lowest Permitted FW Revision                 : %-.*s\n",
-				(int)sizeof(log->lowest_permitted_fw_rev),
+				SNDK_FW_REV_LENGTH,
 				log->lowest_permitted_fw_rev);
 		else
 			printf("Hardware Revision                            : %s\n",
