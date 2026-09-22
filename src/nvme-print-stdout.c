@@ -296,29 +296,44 @@ static void stdout_predictable_latency_per_nvmset(
 		struct nvme_nvmset_predictable_lat_log *plpns_log,
 		__u16 nvmset_id, const char *devname)
 {
+	struct shr_table *t;
+
 	printf("Predictable Latency Per NVM Set Log for device: %s\n",
 		devname);
 	printf("Predictable Latency Per NVM Set Log for NVM Set ID: %u\n",
 		le16_to_cpu(nvmset_id));
-	printf("Status: %u\n", plpns_log->status);
-	printf("Event Type: %u\n",
-		le16_to_cpu(plpns_log->event_type));
-	printf("DTWIN Reads Typical: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_rt));
-	printf("DTWIN Writes Typical: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_wt));
-	printf("DTWIN Time Maximum: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_tmax));
-	printf("NDWIN Time Minimum High: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->ndwin_tmin_hi));
-	printf("NDWIN Time Minimum Low: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->ndwin_tmin_lo));
-	printf("DTWIN Reads Estimate: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_re));
-	printf("DTWIN Writes Estimate: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_we));
-	printf("DTWIN Time Estimate: %"PRIu64"\n\n\n",
-		le64_to_cpu(plpns_log->dtwin_te));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Status", "%u", plpns_log->status);
+	stdout_kv_add(t, "Event Type", "%u",
+		      le16_to_cpu(plpns_log->event_type));
+	stdout_kv_add(t, "DTWIN Reads Typical", "%"PRIu64,
+		      le64_to_cpu(plpns_log->dtwin_rt));
+	stdout_kv_add(t, "DTWIN Writes Typical", "%"PRIu64,
+		      le64_to_cpu(plpns_log->dtwin_wt));
+	stdout_kv_add(t, "DTWIN Time Maximum", "%"PRIu64,
+		      le64_to_cpu(plpns_log->dtwin_tmax));
+	stdout_kv_add(t, "NDWIN Time Minimum High", "%"PRIu64,
+		      le64_to_cpu(plpns_log->ndwin_tmin_hi));
+	stdout_kv_add(t, "NDWIN Time Minimum Low", "%"PRIu64,
+		      le64_to_cpu(plpns_log->ndwin_tmin_lo));
+	stdout_kv_add(t, "DTWIN Reads Estimate", "%"PRIu64,
+		      le64_to_cpu(plpns_log->dtwin_re));
+	stdout_kv_add(t, "DTWIN Writes Estimate", "%"PRIu64,
+		      le64_to_cpu(plpns_log->dtwin_we));
+	stdout_kv_add(t, "DTWIN Time Estimate", "%"PRIu64,
+		      le64_to_cpu(plpns_log->dtwin_te));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build predictable-latency-nvmset table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+	printf("\n\n");
 }
 
 static void stdout_predictable_latency_event_agg_log(
