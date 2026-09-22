@@ -7460,24 +7460,41 @@ static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 	int i, j;
 
 	for (i = 0; i <= nr_ranges; i++) {
-		printf("\ttype       : %#x - %s\n", lbrt->entry[i].type,
-		       nvme_feature_lba_type_to_string(lbrt->entry[i].type));
-		printf("\tattributes : %#x - %s, %s\n",
-		       lbrt->entry[i].attributes,
-		       NVME_LBART_ATTRB_LBARO(lbrt->entry[i].attributes) ?
-		       "LBA range may be overwritten" :
-		       "LBA range should not be overwritten",
-		       NVME_LBART_ATTRB_HLBAR(lbrt->entry[i].attributes) ?
-		       "LBA range should be hidden from the OS/EFI/BIOS" :
-		       "LBA range should be visible from the OS/EFI/BIOS");
-		printf("\tslba       : %#"PRIx64"\n",
-		       le64_to_cpu(lbrt->entry[i].slba));
-		printf("\tnlb        : %#"PRIx64"\n",
-		       le64_to_cpu(lbrt->entry[i].nlb));
-		printf("\tguid       : ");
-		for (j = 0; j < ARRAY_SIZE(lbrt->entry[i].guid); j++)
-			printf("%02x", lbrt->entry[i].guid[j]);
-		printf("\n");
+		struct nvme_lba_range_type_entry *e = &lbrt->entry[i];
+		struct shr_table *t;
+		char guid[2 * ARRAY_SIZE(e->guid) + 1];
+		char *p = guid;
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 1);
+
+		stdout_kv_add(t, "type", "%#x - %s", e->type,
+			      nvme_feature_lba_type_to_string(e->type));
+		const char *overwrite_str =
+			NVME_LBART_ATTRB_LBARO(e->attributes) ?
+			"LBA range may be overwritten" :
+			"LBA range should not be overwritten";
+		const char *hidden_str = NVME_LBART_ATTRB_HLBAR(e->attributes) ?
+			"LBA range should be hidden from the OS/EFI/BIOS" :
+			"LBA range should be visible from the OS/EFI/BIOS";
+
+		stdout_kv_add(t, "attributes", "%#x - %s, %s", e->attributes,
+			      overwrite_str, hidden_str);
+		stdout_kv_add(t, "slba", "%#"PRIx64, le64_to_cpu(e->slba));
+		stdout_kv_add(t, "nlb", "%#"PRIx64, le64_to_cpu(e->nlb));
+
+		for (j = 0; j < ARRAY_SIZE(e->guid); j++)
+			p += sprintf(p, "%02x", e->guid[j]);
+		stdout_kv_add(t, "guid", "%s", guid);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr, "Failed to build lba-range table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 	}
 }
 
