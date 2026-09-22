@@ -941,47 +941,95 @@ static void stdout_resv_notif_log(struct nvme_resv_notification_log *resv,
 	shr_table_free(t);
 }
 
-static void stdout_fid_support_effects_log_human(__u32 fid_support)
+static struct shr_table *
+stdout_fid_support_effects_log_human_table(__u32 fid_support)
 {
-	const char *set = "+";
-	const char *clr = "-";
-	__u16 fsp;
+	struct shr_table *t;
+	__u8 fsupp = !!(fid_support & NVME_FID_SUPPORTED_EFFECTS_FSUPP);
+	__u8 udcc = !!(fid_support & NVME_FID_SUPPORTED_EFFECTS_UDCC);
+	__u8 ncc = !!(fid_support & NVME_FID_SUPPORTED_EFFECTS_NCC);
+	__u8 nic = !!(fid_support & NVME_FID_SUPPORTED_EFFECTS_NIC);
+	__u8 ccc = !!(fid_support & NVME_FID_SUPPORTED_EFFECTS_CCC);
+	__u8 uss = !!(fid_support & NVME_FID_SUPPORTED_EFFECTS_UUID_SEL);
+	__u16 fsp = NVME_GET(fid_support, FID_SUPPORTED_EFFECTS_SCOPE);
+	__u8 ns_scope = !!(fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_NS);
+	__u8 ctrl_scope = !!(fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_CTRL);
+	__u8 nvmset_scope = !!(fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_NVM_SET);
+	__u8 endgrp_scope = !!(fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP);
+	__u8 domain_scope = !!(fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN);
+	__u8 nss_scope = !!(fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS);
 
-	printf("  FSUPP+");
-	printf("  UDCC%s", (fid_support & NVME_FID_SUPPORTED_EFFECTS_UDCC) ? set : clr);
-	printf("  NCC%s", (fid_support & NVME_FID_SUPPORTED_EFFECTS_NCC) ? set : clr);
-	printf("  NIC%s", (fid_support & NVME_FID_SUPPORTED_EFFECTS_NIC) ? set : clr);
-	printf("  CCC%s", (fid_support & NVME_FID_SUPPORTED_EFFECTS_CCC) ? set : clr);
-	printf("  USS%s", (fid_support & NVME_FID_SUPPORTED_EFFECTS_UUID_SEL) ? set : clr);
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
-	fsp = NVME_GET(fid_support, FID_SUPPORTED_EFFECTS_SCOPE);
+	stdout_bits_add(t, "[0:0]", fsupp, "Command %sSupported",
+			fsupp ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", udcc, "Logical Block Content %sChanged",
+			udcc ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", ncc, "Namespace Capabilities %sChanged",
+			ncc ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", nic, "Namespace Inventory %sChanged",
+			nic ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", ccc, "Controller Capabilities %sChanged",
+			ccc ? "" : "Not ");
+	stdout_bits_add(t, "[19:19]", uss, "UUID Selection %sSupported",
+			uss ? "" : "Not ");
+	stdout_bits_add(t, "[20:20]", ns_scope, "Namespace Scope %sIndicated",
+			ns_scope ? "" : "Not ");
+	stdout_bits_add(t, "[21:21]", ctrl_scope,
+			"Controller Scope %sIndicated",
+			ctrl_scope ? "" : "Not ");
+	stdout_bits_add(t, "[22:22]", nvmset_scope, "NVM Set Scope %sIndicated",
+			nvmset_scope ? "" : "Not ");
+	stdout_bits_add(t, "[23:23]", endgrp_scope,
+			"Endurance Group Scope %sIndicated",
+			endgrp_scope ? "" : "Not ");
+	stdout_bits_add(t, "[24:24]", domain_scope, "Domain Scope %sIndicated",
+			domain_scope ? "" : "Not ");
+	stdout_bits_add(t, "[25:25]", nss_scope,
+			"NVM Subsystem Scope %sIndicated",
+			nss_scope ? "" : "Not ");
 
-	printf("  NAMESPACE SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_NS) ? set : clr);
-	printf("  CONTROLLER SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_CTRL) ? set : clr);
-	printf("  NVM SET SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_NVM_SET) ? set : clr);
-	printf("  ENDURANCE GROUP SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP) ? set : clr);
-	printf("  DOMAIN SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN) ? set : clr);
-	printf("  NVM Subsystem SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS) ? set : clr);
+	return t;
 }
 
 static void stdout_fid_support_effects_log(struct nvme_fid_supported_effects_log *fid_log,
 					   const char *devname)
 {
+	struct shr_table *t;
 	__u32 fid_effect;
-	int i, human = stdout_print_ops.flags & VERBOSE;
+	int i, row, human = stdout_print_ops.flags & VERBOSE;
 
 	printf("FID Supports Effects Log for device: %s\n", devname);
 	printf("Admin Command Set\n");
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	for (i = 0; i < 256; i++) {
+		char name[48];
+
 		fid_effect = le32_to_cpu(fid_log->fid_support[i]);
-		if (fid_effect & NVME_FID_SUPPORTED_EFFECTS_FSUPP) {
-			printf("FID %02x -> Support Effects Log: %08x", i,
-				fid_effect);
-			if (human)
-				stdout_fid_support_effects_log_human(fid_effect);
-			printf("\n");
-		}
+		if (!(fid_effect & NVME_FID_SUPPORTED_EFFECTS_FSUPP))
+			continue;
+
+		snprintf(name, sizeof(name), "FID %02x -> Support Effects Log",
+			 i);
+		row = stdout_kv_add(t, name, "%08x", fid_effect);
+		if (human)
+			shr_table_set_row_subtable(t, row,
+				stdout_fid_support_effects_log_human_table(
+					fid_effect));
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build fid-support-effects-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_mi_cmd_support_effects_log_human(__u32 mi_cmd_support)
