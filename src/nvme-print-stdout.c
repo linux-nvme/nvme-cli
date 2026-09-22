@@ -8858,18 +8858,29 @@ static void stdout_connect_msg(struct libnvme_ctrl *c)
 
 static void stdout_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
 {
-	int i;
+	struct shr_table *t;
 	bool reserved = true;
+	int i;
 
 	printf("Management Address List:\n");
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	for (i = 0; i < ARRAY_SIZE(ma_list->mad); i++) {
+		char name[16];
+
 		switch (ma_list->mad[i].mat) {
 		case 1:
 		case 2:
-			printf("Descriptor: %d, Type: %d (%s), Address: %s\n", i,
-			       ma_list->mad[i].mat,
-			       ma_list->mad[i].mat == 1 ? "NVM subsystem management agent" :
-			       "fabric interface manager", ma_list->mad[i].madrs);
+			snprintf(name, sizeof(name), "Descriptor %d", i);
+			stdout_kv_add(t, name, "Type: %d (%s), Address: %s",
+				      ma_list->mad[i].mat,
+				      ma_list->mad[i].mat == 1 ?
+				      "NVM subsystem management agent" :
+				      "fabric interface manager",
+				      ma_list->mad[i].madrs);
 			reserved = false;
 			break;
 		case 0xff:
@@ -8881,6 +8892,11 @@ static void stdout_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
 out:
 	if (reserved)
 		printf("All management address descriptors reserved\n");
+	else if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build mgmt-addr-list table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_rotational_media_info_log(struct nvme_rotational_media_info_log *info)
