@@ -1312,12 +1312,24 @@ static void stdout_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 
 static void stdout_fdp_stats(struct nvme_fdp_stats_log *log)
 {
-	printf("Host Bytes with Metadata Written (HBMW): %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(log->hbmw)));
-	printf("Media Bytes with Metadata Written (MBMW): %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(log->mbmw)));
-	printf("Media Bytes Erased (MBE): %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(log->mbe)));
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Host Bytes with Metadata Written (HBMW)", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(log->hbmw)));
+	stdout_kv_add(t, "Media Bytes with Metadata Written (MBMW)", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(log->mbmw)));
+	stdout_kv_add(t, "Media Bytes Erased (MBE)", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(log->mbe)));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build fdp-stats table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_fdp_events(struct nvme_fdp_events_log *log)
