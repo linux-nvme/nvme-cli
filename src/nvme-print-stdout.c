@@ -6191,14 +6191,27 @@ static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	size_t nsid_buf_size;
 	void *base = ana_log;
 	__u32 nr_nsids;
+	struct shr_table *t;
 	int i, j;
 
 	printf("Asymmetric Namespace Access Log for NVMe device: %s\n",
 			devname);
 	printf("ANA LOG HEADER :-\n");
-	printf("chgcnt	:	%"PRIu64"\n",
-			le64_to_cpu(hdr->chgcnt));
-	printf("ngrps	:	%u\n", le16_to_cpu(hdr->ngrps));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "chgcnt", "%"PRIu64, le64_to_cpu(hdr->chgcnt));
+	stdout_kv_add(t, "ngrps", "%u", le16_to_cpu(hdr->ngrps));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build ana-log header table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
+
 	printf("ANA Log Desc :-\n");
 
 	for (i = 0; i < le16_to_cpu(ana_log->ngrps); i++) {
@@ -6211,15 +6224,29 @@ static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 			return;
 
 		offset += sizeof(*desc);
-		printf("grpid	:	%u\n", le32_to_cpu(desc->grpid));
-		printf("nnsids	:	%u\n", le32_to_cpu(desc->nnsids));
-		printf("chgcnt	:	%"PRIu64"\n",
-		       le64_to_cpu(desc->chgcnt));
-		printf("state	:	%s\n",
-				nvme_ana_state_to_string(desc->state));
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "grpid", "%u", le32_to_cpu(desc->grpid));
+		stdout_kv_add(t, "nnsids", "%u", le32_to_cpu(desc->nnsids));
+		stdout_kv_add(t, "chgcnt", "%"PRIu64,
+			      le64_to_cpu(desc->chgcnt));
+		stdout_kv_add(t, "state", "%s",
+			      nvme_ana_state_to_string(desc->state));
 		for (j = 0; j < nr_nsids; j++)
-			printf("	nsid	:	%u\n",
-					le32_to_cpu(desc->nsids[j]));
+			stdout_kv_add(t, "nsid", "%u",
+				      le32_to_cpu(desc->nsids[j]));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build ana-log group table\n");
+		else
+			stdout_kv_render(stdout, t);
+
+		shr_table_free(t);
+
 		printf("\n");
 		offset += nsid_buf_size;
 	}
