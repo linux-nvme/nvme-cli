@@ -1072,18 +1072,25 @@ static const char *eomip_to_string(__u8 eomip)
 	return string;
 }
 
-static void stdout_phy_rx_eom_odp(uint8_t odp)
+static struct shr_table *stdout_phy_rx_eom_odp_table(uint8_t odp)
 {
+	struct shr_table *t;
 	__u8 rsvd = NVME_EOM_ODP_RSVD(odp);
 	__u8 edfp = NVME_EOM_ODP_EDFP(odp);
 	__u8 pefp = NVME_EOM_ODP_PEFP(odp);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tEye Data Field %sPresent\n",
-		edfp, edfp ? "" : "Not ");
-	printf("  [0:0] : %#x\tPrintable Eye Field %sPresent\n",
-		pefp, pefp ? "" : "Not ");
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", edfp, "Eye Data Field %sPresent",
+			edfp ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", pefp, "Printable Eye Field %sPresent",
+			pefp ? "" : "Not ");
+
+	return t;
 }
 
 static void stdout_eom_printable_eye(struct nvme_eom_lane_desc *lane)
@@ -1144,32 +1151,50 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log, size_t len)
 static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller, size_t len)
 {
 	int human = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	int row;
 
 	if (len < sizeof(*log))
 		return;
 
 	printf("Physical Interface Receiver Eye Opening Measurement Log for controller ID: %u\n", controller);
-	printf("Log ID: %u\n", log->lid);
-	printf("EOM In Progress: %s\n", eomip_to_string(log->eomip));
-	printf("Header Size: %u\n", le16_to_cpu(log->hsize));
-	printf("Result Size: %u\n", le32_to_cpu(log->rsize));
-	printf("EOM Data Generation Number: %u\n", log->eomdgn);
-	printf("Log Revision: %u\n", log->lr);
-	printf("Optional Data Present: %u\n", log->odp);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Log ID", "%u", log->lid);
+	stdout_kv_add(t, "EOM In Progress", "%s", eomip_to_string(log->eomip));
+	stdout_kv_add(t, "Header Size", "%u", le16_to_cpu(log->hsize));
+	stdout_kv_add(t, "Result Size", "%u", le32_to_cpu(log->rsize));
+	stdout_kv_add(t, "EOM Data Generation Number", "%u", log->eomdgn);
+	stdout_kv_add(t, "Log Revision", "%u", log->lr);
+	row = stdout_kv_add(t, "Optional Data Present", "%u", log->odp);
 	if (human)
-		stdout_phy_rx_eom_odp(log->odp);
-	printf("Lanes: %u\n", log->lanes);
-	printf("Eyes Per Lane: %u\n", log->epl);
-	printf("Log Specific Parameter Field Copy: %u\n", log->lspfc);
-	printf("Link Information: %u\n", log->li);
-	printf("Log Specific Identifier Copy: %u\n", le16_to_cpu(log->lsic));
-	printf("Descriptor Size: %u\n", le32_to_cpu(log->dsize));
-	printf("Number of Descriptors: %u\n", le16_to_cpu(log->nd));
-	printf("Maximum Top Bottom: %u\n", le16_to_cpu(log->maxtb));
-	printf("Maximum Left Right: %u\n", le16_to_cpu(log->maxlr));
-	printf("Estimated Time for Good Quality: %u\n", le16_to_cpu(log->etgood));
-	printf("Estimated Time for Better Quality: %u\n", le16_to_cpu(log->etbetter));
-	printf("Estimated Time for Best Quality: %u\n", le16_to_cpu(log->etbest));
+		shr_table_set_row_subtable(t, row,
+			stdout_phy_rx_eom_odp_table(log->odp));
+	stdout_kv_add(t, "Lanes", "%u", log->lanes);
+	stdout_kv_add(t, "Eyes Per Lane", "%u", log->epl);
+	stdout_kv_add(t, "Log Specific Parameter Field Copy", "%u", log->lspfc);
+	stdout_kv_add(t, "Link Information", "%u", log->li);
+	stdout_kv_add(t, "Log Specific Identifier Copy", "%u",
+		      le16_to_cpu(log->lsic));
+	stdout_kv_add(t, "Descriptor Size", "%u", le32_to_cpu(log->dsize));
+	stdout_kv_add(t, "Number of Descriptors", "%u", le16_to_cpu(log->nd));
+	stdout_kv_add(t, "Maximum Top Bottom", "%u", le16_to_cpu(log->maxtb));
+	stdout_kv_add(t, "Maximum Left Right", "%u", le16_to_cpu(log->maxlr));
+	stdout_kv_add(t, "Estimated Time for Good Quality", "%u",
+		      le16_to_cpu(log->etgood));
+	stdout_kv_add(t, "Estimated Time for Better Quality", "%u",
+		      le16_to_cpu(log->etbetter));
+	stdout_kv_add(t, "Estimated Time for Best Quality", "%u",
+		      le16_to_cpu(log->etbest));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build phy-rx-eom-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED)
 		stdout_phy_rx_eom_descs(log, len);
