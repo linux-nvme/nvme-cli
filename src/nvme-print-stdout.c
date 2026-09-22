@@ -7298,105 +7298,139 @@ static void stdout_self_test_log(struct nvme_self_test_log *self_test,
 	}
 }
 
-static void stdout_sanitize_log_sprog(__u32 sprog)
+static struct shr_table *stdout_sanitize_log_sstat_table(__u16 status)
 {
-	double percent;
-
-	percent = (((double)sprog * 100) / 0x10000);
-	printf("\t(%f%%)\n", percent);
-}
-
-static void stdout_sanitize_log_sstat(__u16 status)
-{
+	struct shr_table *t;
 	const char *str = nvme_sstat_status_to_string(status);
 	__u16 gde, mvcncld, prgd;
 
-	printf("  [2:0] : Sanitize Operation Status  : %#x\t%s\n",
-		NVME_GET(status, SANITIZE_SSTAT_STATUS), str);
-	printf("  [7:3] : Overwrite Passes Completed : %u\n",
-		NVME_GET(status, SANITIZE_SSTAT_COMPLETED_PASSES));
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[2:0]", NVME_GET(status, SANITIZE_SSTAT_STATUS),
+			"Sanitize Operation Status: %s", str);
+	stdout_bits_add(t, "[7:3]",
+			NVME_GET(status, SANITIZE_SSTAT_COMPLETED_PASSES),
+			"Overwrite Passes Completed");
 
 	gde = NVME_GET(status, SANITIZE_SSTAT_GLOBAL_DATA_ERASED);
 	if (gde)
-		str = "No user data has been written in the NVM subsystem and"\
+		str = "No user data has been written in the NVM subsystem and"
 		       " no PMR has been enabled in the NVM subsystem";
 	else
-		str = "User data has been written in the NVM subsystem or"\
+		str = "User data has been written in the NVM subsystem or"
 		       " PMR has been enabled in the NVM subsystem";
-	printf("  [8:8] : Global Data Erased         : %#x\t%s\n", gde, str);
+	stdout_bits_add(t, "[8:8]", gde, "Global Data Erased: %s", str);
 
 	mvcncld = NVME_GET(status, SANITIZE_SSTAT_MVCNCLD);
-	printf("  [9:9] : Media Verification Canceled: %#x\t%scanceled\n",
-		mvcncld, mvcncld ? "" : "Not ");
+	stdout_bits_add(t, "[9:9]", mvcncld, "Media Verification %scanceled",
+			mvcncld ? "" : "Not ");
 
 	prgd = NVME_GET(status, SANITIZE_SSTAT_PRGD);
-	printf("  [11:11] : Purged                    : %#x\t%spurged\n",
-		prgd, prgd ? "" : "Not ");
-	printf("\n");
+	stdout_bits_add(t, "[11:11]", prgd, "%sPurged", prgd ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_estimate_sanitize_time(const char *text, uint32_t value)
+static struct shr_table *stdout_sanitize_log_ssi_table(__u8 ssi, __u16 status)
 {
-	printf("%s:  %u%s\n", text, value,
-		value == 0xffffffff ? " (No time period reported)" : "");
-}
-
-static void stdout_sanitize_log_ssi(__u8 ssi, __u16 status)
-{
+	struct shr_table *t;
 	__u8 sans, fails;
-	const char *str;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
 
 	sans = NVME_GET(ssi, SANITIZE_SSI_SANS);
-	str = nvme_ssi_state_to_string(sans);
-	printf("  [3:0] : Sanitize State : %#x\t%s\n", sans, str);
+	stdout_bits_add(t, "[3:0]", sans, "Sanitize State: %s",
+			nvme_ssi_state_to_string(sans));
 
 	if (status == NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED) {
 		fails = NVME_GET(ssi, SANITIZE_SSI_FAILS);
-		str = nvme_ssi_state_to_string(fails);
-		printf("  [7:4] : Failure State  : %#x\t%s\n", fails, str);
+		stdout_bits_add(t, "[7:4]", fails, "Failure State: %s",
+				nvme_ssi_state_to_string(fails));
 	}
-	printf("\n");
+
+	return t;
+}
+
+static int stdout_estimate_sanitize_time_add(struct shr_table *t,
+		const char *name, uint32_t value)
+{
+	const char *note;
+
+	note = value == 0xffffffff ? " (No time period reported)" : "";
+	return stdout_kv_add(t, name, "%u%s", value, note);
 }
 
 static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 				const char *devname)
 {
+	__cleanup_free char *sprog_val = NULL;
+	struct shr_table *t;
 	int human = stdout_print_ops.flags & VERBOSE;
-	__u16 status = le16_to_cpu(sanitize->sstat) & NVME_SANITIZE_SSTAT_STATUS_MASK;
+	__u16 sstat = le16_to_cpu(sanitize->sstat);
+	__u16 status = sstat & NVME_SANITIZE_SSTAT_STATUS_MASK;
+	double percent;
+	int row;
 
-	printf("Sanitize Progress                      (SPROG) :  %u",
-	       le16_to_cpu(sanitize->sprog));
+	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS) {
+		percent = ((double)le16_to_cpu(sanitize->sprog) * 100) /
+			  0x10000;
 
-	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS)
-		stdout_sanitize_log_sprog(le16_to_cpu(sanitize->sprog));
+		if (asprintf(&sprog_val, "%u  (%f%%)",
+			     le16_to_cpu(sanitize->sprog), percent) < 0)
+			sprog_val = NULL;
+	}
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	if (sprog_val)
+		stdout_kv_add(t, "Sanitize Progress (SPROG)", "%s", sprog_val);
 	else
-		printf("\n");
+		stdout_kv_add(t, "Sanitize Progress (SPROG)", "%u",
+			      le16_to_cpu(sanitize->sprog));
 
-	printf("Sanitize Status                        (SSTAT) :  %#x\n",
-		le16_to_cpu(sanitize->sstat));
+	row = stdout_kv_add(t, "Sanitize Status (SSTAT)", "%#x", sstat);
 	if (human)
-		stdout_sanitize_log_sstat(le16_to_cpu(sanitize->sstat));
+		shr_table_set_row_subtable(t, row,
+			stdout_sanitize_log_sstat_table(sstat));
 
-	printf("Sanitize Command Dword 10 Information (SCDW10) :  %#x\n",
-		le32_to_cpu(sanitize->scdw10));
-	stdout_estimate_sanitize_time("Estimated Time For Overwrite                   ",
-		le32_to_cpu(sanitize->eto));
-	stdout_estimate_sanitize_time("Estimated Time For Block Erase                 ",
-		le32_to_cpu(sanitize->etbe));
-	stdout_estimate_sanitize_time("Estimated Time For Crypto Erase                ",
-		le32_to_cpu(sanitize->etce));
-	stdout_estimate_sanitize_time("Estimated Time For Overwrite (No-Deallocate)   ",
+	stdout_kv_add(t, "Sanitize Command Dword 10 Information (SCDW10)",
+		      "%#x", le32_to_cpu(sanitize->scdw10));
+	stdout_estimate_sanitize_time_add(t, "Estimated Time For Overwrite",
+					   le32_to_cpu(sanitize->eto));
+	stdout_estimate_sanitize_time_add(t, "Estimated Time For Block Erase",
+					   le32_to_cpu(sanitize->etbe));
+	stdout_estimate_sanitize_time_add(t, "Estimated Time For Crypto Erase",
+					   le32_to_cpu(sanitize->etce));
+	stdout_estimate_sanitize_time_add(t,
+		"Estimated Time For Overwrite (No-Deallocate)",
 		le32_to_cpu(sanitize->etond));
-	stdout_estimate_sanitize_time("Estimated Time For Block Erase (No-Deallocate) ",
+	stdout_estimate_sanitize_time_add(t,
+		"Estimated Time For Block Erase (No-Deallocate)",
 		le32_to_cpu(sanitize->etbend));
-	stdout_estimate_sanitize_time("Estimated Time For Crypto Erase (No-Deallocate)",
+	stdout_estimate_sanitize_time_add(t,
+		"Estimated Time For Crypto Erase (No-Deallocate)",
 		le32_to_cpu(sanitize->etcend));
-	stdout_estimate_sanitize_time("Estimated Time For Post-Verification Deallocation",
+	stdout_estimate_sanitize_time_add(t,
+		"Estimated Time For Post-Verification Deallocation",
 		le32_to_cpu(sanitize->etpvds));
 
-	printf("Sanitize State Information               (SSI) : %#x\n", sanitize->ssi);
+	row = stdout_kv_add(t, "Sanitize State Information (SSI)", "%#x",
+			     sanitize->ssi);
 	if (human)
-		stdout_sanitize_log_ssi(sanitize->ssi, status);
+		shr_table_set_row_subtable(t, row,
+			stdout_sanitize_log_ssi_table(sanitize->ssi, status));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build sanitize-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_select_result(enum nvme_features_id fid, __u64 result)
