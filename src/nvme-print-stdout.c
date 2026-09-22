@@ -432,11 +432,22 @@ static void stdout_persistent_event_log_fdp_events(unsigned int cdw11, unsigned 
 						   unsigned char *buf)
 {
 	unsigned int num = NVME_GET(cdw11, FEAT_FDPE_NOET);
+	struct shr_table *t;
 
-	for (unsigned int i = 0; i < num; i++) {
-		printf("\t%-53s: %sEnabled\n", nvme_fdp_event_to_string(buf[i]),
-		       NVME_GET(cdw12, FDP_SUPP_EVENT_ENABLED) ? "" : "Not ");
-	}
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	for (unsigned int i = 0; i < num; i++)
+		stdout_kv_add(t, nvme_fdp_event_to_string(buf[i]), "%sEnabled",
+			      NVME_GET(cdw12, FDP_SUPP_EVENT_ENABLED) ?
+			      "" : "Not ");
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build pel-fdp-events table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head,
