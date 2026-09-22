@@ -5771,19 +5771,34 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 static void stdout_fw_log(struct nvme_firmware_slot *fw_log,
 			  const char *devname)
 {
-	int i;
+	struct shr_table *t;
 	__le64 *frs;
+	char name[8];
+	int i;
 
 	printf("Firmware Log for device:%s\n", devname);
-	printf("afi  : %#x\n", fw_log->afi);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "afi", "%#x", fw_log->afi);
 	for (i = 0; i < 7; i++) {
 		if (fw_log->frs[i][0]) {
 			frs = (__le64 *)&fw_log->frs[i];
-			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1,
-				le64_to_cpu(*frs),
-				shr_fw_to_string(fw_log->frs[i]));
+			snprintf(name, sizeof(name), "frs%d", i + 1);
+			stdout_kv_add(t, name, "%#016"PRIx64" (%s)",
+				      le64_to_cpu(*frs),
+				      shr_fw_to_string(fw_log->frs[i]));
 		}
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build fw-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 }
 
 static void stdout_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, bool alloc)
