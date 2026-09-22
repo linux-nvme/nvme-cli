@@ -8572,18 +8572,29 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 static void stdout_feat_host_id(unsigned int result, unsigned char *hostid)
 {
 	bool exhid;
+	struct shr_table *t;
 
 	if (!hostid)
 		return;
 
 	nvme_feature_decode_host_id(result, &exhid);
 
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	if (exhid)
-		printf("\tHost Identifier (HOSTID):  %s\n",
-		       uint128_t_to_l10n_string(le128_to_cpu(hostid)));
+		stdout_kv_add(t, "Host Identifier (HOSTID)", "%s",
+			      uint128_t_to_l10n_string(le128_to_cpu(hostid)));
 	else
-		printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n",
-		       le64_to_cpu(*(__le64 *)hostid));
+		stdout_kv_add(t, "Host Identifier (HOSTID)", "%"PRIu64,
+			      le64_to_cpu(*(__le64 *)hostid));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build feat-host-id table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_feature_show(enum nvme_features_id fid, int sel,
