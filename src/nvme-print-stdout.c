@@ -6053,6 +6053,7 @@ static void stdout_zns_start_zone_list(__u64 nr_zones, struct json_object **zone
 
 static void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 {
+	struct shr_table *t;
 	uint16_t nrzid;
 	int i;
 
@@ -6064,9 +6065,24 @@ static void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 		return;
 	}
 
-	printf("nrzid:  %u\n", nrzid);
-	for (i = 0; i < nrzid; i++)
-		printf("zid %03d: %"PRIu64"\n", i, (uint64_t)le64_to_cpu(log->zid[i]));
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "nrzid", "%u", nrzid);
+	for (i = 0; i < nrzid; i++) {
+		char name[16];
+
+		snprintf(name, sizeof(name), "zid %03d", i);
+		stdout_kv_add(t, name, "%"PRIu64,
+			      (uint64_t)le64_to_cpu(log->zid[i]));
+	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build zns-changed-zone-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_zns_report_zone_attributes(__u8 za, __u8 zai)
