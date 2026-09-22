@@ -6540,38 +6540,68 @@ static void stdout_endurance_group_list(struct nvme_id_endurance_group_list *end
 		printf("[%4u]:%#x\n", i, le16_to_cpu(endgrp_list->identifier[i]));
 }
 
-static void stdout_id_iocs_iocsc(__u64 iocsc)
+static struct shr_table *stdout_id_iocs_iocsc_table(__u64 iocsc)
 {
+	struct shr_table *t;
 	__u8 cpncs = NVME_GET(iocsc, IOCS_IOCSC_CPNCS);
 	__u8 slmcs = NVME_GET(iocsc, IOCS_IOCSC_SLMCS);
 	__u8 znscs = NVME_GET(iocsc, IOCS_IOCSC_ZNSCS);
 	__u8 kvcs = NVME_GET(iocsc, IOCS_IOCSC_KVCS);
 	__u8 nvmcs = NVME_GET(iocsc, IOCS_IOCSC_NVMCS);
 
-	printf("  [4:4] : %#x\tComputational Programs Namespace Command Set %sSelected\n",
-		cpncs, cpncs ? "" : "Not ");
-	printf("  [3:3] : %#x\tSubsystem Local Memory Command Set %sSelected\n", slmcs,
-		slmcs ? "" : "Not ");
-	printf("  [2:2] : %#x\tZoned Namespace Command Set %sSelected\n", znscs,
-		znscs ? "" : "Not ");
-	printf("  [1:1] : %#x\tKey Value Command Set %sSelected\n", kvcs, kvcs ? "" : "Not ");
-	printf("  [0:0] : %#x\tNVM Command Set %sSelected\n", nvmcs, nvmcs ? "" : "Not ");
-	printf("\n");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[4:4]", cpncs,
+			"Computational Programs Namespace Command Set %sSelected",
+			cpncs ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", slmcs,
+			"Subsystem Local Memory Command Set %sSelected",
+			slmcs ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", znscs,
+			"Zoned Namespace Command Set %sSelected",
+			znscs ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", kvcs, "Key Value Command Set %sSelected",
+			kvcs ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", nvmcs, "NVM Command Set %sSelected",
+			nvmcs ? "" : "Not ");
+
+	return t;
 }
 
 static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 {
 	bool human = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	int row;
 	__u16 i;
 
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
 	for (i = 0; i < ARRAY_SIZE(iocs->iocsc); i++) {
-		if (iocs->iocsc[i]) {
-			printf("I/O Command Set Combination[%u]:%"PRIx64"\n", i,
-				(uint64_t)le64_to_cpu(iocs->iocsc[i]));
-			if (human)
-				stdout_id_iocs_iocsc(le64_to_cpu(iocs->iocsc[i]));
-		}
+		char name[48];
+		__u64 iocsc;
+
+		if (!iocs->iocsc[i])
+			continue;
+
+		iocsc = le64_to_cpu(iocs->iocsc[i]);
+		snprintf(name, sizeof(name), "I/O Command Set Combination[%u]",
+			 i);
+		row = stdout_kv_add(t, name, "%"PRIx64, iocsc);
+		if (human)
+			shr_table_set_row_subtable(t, row,
+				stdout_id_iocs_iocsc_table(iocsc));
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build id-iocs table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
