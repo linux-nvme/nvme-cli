@@ -804,35 +804,77 @@ static void stdout_lba_status_log(void *lba_status, __u32 size,
 	struct nvme_lba_rd *range_desc;
 	int offset = sizeof(*hdr);
 	__u32 num_lba_desc, num_elements;
+	struct shr_table *t;
 
 	hdr = lba_status;
 	printf("LBA Status Log for device: %s\n", devname);
-	printf("LBA Status Log Page Length: %"PRIu32"\n",
-		le32_to_cpu(hdr->lslplen));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "LBA Status Log Page Length", "%"PRIu32,
+		      le32_to_cpu(hdr->lslplen));
 	num_elements = le32_to_cpu(hdr->nlslne);
-	printf("Number of LBA Status Log Namespace Elements: %"PRIu32"\n",
-		num_elements);
-	printf("Estimate of Unrecoverable Logical Blocks: %"PRIu32"\n",
-		le32_to_cpu(hdr->estulb));
-	printf("LBA Status Generation Counter: %"PRIu16"\n", le16_to_cpu(hdr->lsgc));
+	stdout_kv_add(t, "Number of LBA Status Log Namespace Elements",
+		      "%"PRIu32, num_elements);
+	stdout_kv_add(t, "Estimate of Unrecoverable Logical Blocks", "%"PRIu32,
+		      le32_to_cpu(hdr->estulb));
+	stdout_kv_add(t, "LBA Status Generation Counter", "%"PRIu16,
+		      le16_to_cpu(hdr->lsgc));
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build lba-status-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
 	for (int ele = 0; ele < num_elements; ele++) {
 		ns_element = lba_status + offset;
-		printf("Namespace Element Identifier: %"PRIu32"\n",
-			le32_to_cpu(ns_element->neid));
 		num_lba_desc = le32_to_cpu(ns_element->nlrd);
-		printf("Number of LBA Range Descriptors: %"PRIu32"\n", num_lba_desc);
-		printf("Recommended Action Type: %u\n", ns_element->ratype);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Namespace Element Identifier", "%"PRIu32,
+			      le32_to_cpu(ns_element->neid));
+		stdout_kv_add(t, "Number of LBA Range Descriptors", "%"PRIu32,
+			      num_lba_desc);
+		stdout_kv_add(t, "Recommended Action Type", "%u",
+			      ns_element->ratype);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build lba-status-log table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 
 		offset += sizeof(*ns_element);
 		if (num_lba_desc != 0xffffffff) {
+			t = stdout_kv_table_create();
+			if (!t)
+				return;
+
 			for (int i = 0; i < num_lba_desc; i++) {
+				char name[24];
+
 				range_desc = lba_status + offset;
-				printf("RSLBA[%d]: %"PRIu64"\n", i,
-					le64_to_cpu(range_desc->rslba));
-				printf("RNLB[%d]: %"PRIu32"\n", i,
-					le32_to_cpu(range_desc->rnlb));
+				snprintf(name, sizeof(name), "RSLBA[%d]", i);
+				stdout_kv_add(t, name, "%"PRIu64,
+					      le64_to_cpu(range_desc->rslba));
+				snprintf(name, sizeof(name), "RNLB[%d]", i);
+				stdout_kv_add(t, name, "%"PRIu32,
+					      le32_to_cpu(range_desc->rnlb));
 				offset += sizeof(*range_desc);
 			}
+
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build lba-status-log table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 		} else {
 			printf("Number of LBA Range Descriptors (NLRD) set to %#x for "\
 				"NS element %d\n", num_lba_desc, ele);
