@@ -5570,40 +5570,66 @@ static void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 	}
 }
 
-static void stdout_primary_ctrl_caps_crt(__u8 crt)
+static struct shr_table *stdout_primary_ctrl_caps_crt_table(__u8 crt)
 {
+	struct shr_table *t;
 	__u8 rsvd = (crt & 0xFC) >> 2;
 	__u8 vi = (crt & 0x2) >> 1;
 	__u8 vq = crt & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] %#x\tVI Resources are %ssupported\n", vi, vi ? "" : "not ");
-	printf("  [0:0] %#x\tVQ Resources are %ssupported\n", vq, vq ? "" : "not ");
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", vi, "VI Resources are %ssupported",
+			 vi ? "" : "not ");
+	stdout_bits_add(t, "[0:0]", vq, "VQ Resources are %ssupported",
+			 vq ? "" : "not ");
+
+	return t;
 }
 
 static void stdout_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps)
 {
-	int human = stdout_print_ops.flags & VERBOSE;
+	bool human = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	int row;
 
 	printf("NVME Identify Primary Controller Capabilities:\n");
-	printf("cntlid    : %#x\n", le16_to_cpu(caps->cntlid));
-	printf("portid    : %#x\n", le16_to_cpu(caps->portid));
-	printf("crt       : %#x\n", caps->crt);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "cntlid", "%#x", le16_to_cpu(caps->cntlid));
+	stdout_kv_add(t, "portid", "%#x", le16_to_cpu(caps->portid));
+
+	row = stdout_kv_add(t, "crt", "%#x", caps->crt);
 	if (human)
-		stdout_primary_ctrl_caps_crt(caps->crt);
-	printf("vqfrt     : %u\n", le32_to_cpu(caps->vqfrt));
-	printf("vqrfa     : %u\n", le32_to_cpu(caps->vqrfa));
-	printf("vqrfap    : %d\n", le16_to_cpu(caps->vqrfap));
-	printf("vqprt     : %d\n", le16_to_cpu(caps->vqprt));
-	printf("vqfrsm    : %d\n", le16_to_cpu(caps->vqfrsm));
-	printf("vqgran    : %d\n", le16_to_cpu(caps->vqgran));
-	printf("vifrt     : %u\n", le32_to_cpu(caps->vifrt));
-	printf("virfa     : %u\n", le32_to_cpu(caps->virfa));
-	printf("virfap    : %d\n", le16_to_cpu(caps->virfap));
-	printf("viprt     : %d\n", le16_to_cpu(caps->viprt));
-	printf("vifrsm    : %d\n", le16_to_cpu(caps->vifrsm));
-	printf("vigran    : %d\n", le16_to_cpu(caps->vigran));
+		shr_table_set_row_subtable(t, row,
+				stdout_primary_ctrl_caps_crt_table(caps->crt));
+
+	stdout_kv_add(t, "vqfrt", "%u", le32_to_cpu(caps->vqfrt));
+	stdout_kv_add(t, "vqrfa", "%u", le32_to_cpu(caps->vqrfa));
+	stdout_kv_add(t, "vqrfap", "%d", le16_to_cpu(caps->vqrfap));
+	stdout_kv_add(t, "vqprt", "%d", le16_to_cpu(caps->vqprt));
+	stdout_kv_add(t, "vqfrsm", "%d", le16_to_cpu(caps->vqfrsm));
+	stdout_kv_add(t, "vqgran", "%d", le16_to_cpu(caps->vqgran));
+	stdout_kv_add(t, "vifrt", "%u", le32_to_cpu(caps->vifrt));
+	stdout_kv_add(t, "virfa", "%u", le32_to_cpu(caps->virfa));
+	stdout_kv_add(t, "virfap", "%d", le16_to_cpu(caps->virfap));
+	stdout_kv_add(t, "viprt", "%d", le16_to_cpu(caps->viprt));
+	stdout_kv_add(t, "vifrsm", "%d", le16_to_cpu(caps->vifrsm));
+	stdout_kv_add(t, "vigran", "%d", le16_to_cpu(caps->vigran));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build primary-ctrl-cap table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 }
 
 static void stdout_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc_list,
