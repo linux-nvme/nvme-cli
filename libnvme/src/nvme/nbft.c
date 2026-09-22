@@ -1048,6 +1048,7 @@ __shr_public int libnvmf_read_nbft(
 	if (parse_raw_nbft(ctx, *nbft)) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to parse %s\n", filename);
 		libnvmf_free_nbft(ctx, *nbft);
+		*nbft = NULL;
 		return -EINVAL;
 	}
 	return 0;
