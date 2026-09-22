@@ -975,9 +975,20 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u3
 	__u16 vsil, el;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	int human = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
 
-	printf("Persistent Event Log for device: %s\n", devname);
-	printf("Action for Persistent Event Log: %u\n", action);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Persistent Event Log for device", "%s", devname);
+	stdout_kv_add(t, "Action for Persistent Event Log", "%u", action);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build persistent-event-log table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	if (size < offset) {
 		printf("No log data can be shown with this log len at least " \
