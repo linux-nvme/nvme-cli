@@ -13,3 +13,17 @@ test_dlp = executable(
 )
 
 test('nvme-discoverd - dlp', test_dlp)
+
+test_tid = executable(
+    'test-tid',
+    ['test-tid.c', '../src/tid.c'],
+    include_directories: discoverd_inc,
+    dependencies: [
+        ccan_dep,
+        libnvme_dep,
+        libsystemd_dep,
+        shared_dep,
+    ],
+)
+
+test('nvme-discoverd - tid', test_tid)
