@@ -3621,18 +3621,9 @@ static struct shr_table *stdout_id_ctrl_dctype_table(__u8 dctype)
 	return t;
 }
 
-static void stdout_id_ns_size(uint64_t nsze, uint64_t ncap, uint64_t nuse)
+static struct shr_table *stdout_id_ns_nsfeat_table(__u8 nsfeat)
 {
-	printf("nsze    : %#"PRIx64"\tTotal size in logical blocks\n",
-			le64_to_cpu(nsze));
-	printf("ncap    : %#"PRIx64"\tMaximum size in logical blocks\n",
-			le64_to_cpu(ncap));
-	printf("nuse    : %#"PRIx64"\tCurrent size in logical blocks\n",
-			le64_to_cpu(nuse));
-}
-
-static void stdout_id_ns_nsfeat(__u8 nsfeat)
-{
+	struct shr_table *t;
 	__u8 optrperf = (nsfeat & 0x80) >> 7;
 	__u8 mam = (nsfeat & 0x40) >> 6;
 	__u8 optperf = (nsfeat & 0x30) >> 4;
@@ -3641,59 +3632,86 @@ static void stdout_id_ns_nsfeat(__u8 nsfeat)
 	__u8 na = (nsfeat & 0x2) >> 1;
 	__u8 thin = nsfeat & 0x1;
 
-	printf("  [7:7] : %#x\tNPRG, NPRA and NORS are %sSupported\n",
-		optrperf, optrperf ? "" : "Not ");
-	printf("  [6:6] : %#x\t%s Atomicity Mode applies to write operations\n",
-		mam, mam ? "Multiple" : "Single");
-	printf("  [5:4] : %#x\tNPWG, NPWA, %s%sNPDA, and NOWS are %sSupported\n",
-		optperf, ((optperf & 0x1) || (!optperf)) ? "NPDG, " : "",
-		((optperf & 0x2) || (!optperf)) ? "NPDGL, " : "", optperf ? "" : "Not ");
-	printf("  [3:3] : %#x\tNGUID and EUI64 fields if non-zero, %sReused\n",
-		uidreuse, uidreuse ? "Never " : "");
-	printf("  [2:2] : %#x\tDeallocated or Unwritten Logical Block error %sSupported\n",
-		dulbe, dulbe ? "" : "Not ");
-	printf("  [1:1] : %#x\tNamespace uses %s\n",
-		na, na ? "NAWUN, NAWUPF, and NACWU" : "AWUN, AWUPF, and ACWU");
-	printf("  [0:0] : %#x\tThin Provisioning %sSupported\n",
-		thin, thin ? "" : "Not ");
-	printf("\n");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:7]", optrperf,
+			 "NPRG, NPRA and NORS are %sSupported",
+			 optrperf ? "" : "Not ");
+	stdout_bits_add(t, "[6:6]", mam,
+			 "%s Atomicity Mode applies to write operations",
+			 mam ? "Multiple" : "Single");
+	stdout_bits_add(t, "[5:4]", optperf,
+			 "NPWG, NPWA, %s%sNPDA, and NOWS are %sSupported",
+			 ((optperf & 0x1) || (!optperf)) ? "NPDG, " : "",
+			 ((optperf & 0x2) || (!optperf)) ? "NPDGL, " : "",
+			 optperf ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", uidreuse,
+			 "NGUID and EUI64 fields if non-zero, %sReused",
+			 uidreuse ? "Never " : "");
+	stdout_bits_add(t, "[2:2]", dulbe,
+			 "Deallocated or Unwritten Logical Block error %sSupported",
+			 dulbe ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", na, "Namespace uses %s",
+			 na ? "NAWUN, NAWUPF, and NACWU" :
+			 "AWUN, AWUPF, and ACWU");
+	stdout_bits_add(t, "[0:0]", thin, "Thin Provisioning %sSupported",
+			 thin ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ns_flbas(__u8 flbas)
+static struct shr_table *stdout_id_ns_flbas_table(__u8 flbas)
 {
+	struct shr_table *t;
 	__u8 rsvd = (flbas & 0x80) >> 7;
 	__u8 msb2_lbaf = NVME_FLBAS_HIGHER(flbas);
 	__u8 mdedata = NVME_FLBAS_META_EXT(flbas);
 	__u8 lsb4_lbaf = NVME_FLBAS_LOWER(flbas);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:7] : %#x\tReserved\n", rsvd);
-	printf("  [6:5] : %#x\tMost significant 2 bits of Current LBA Format Selected\n",
-		msb2_lbaf);
-	printf("  [4:4] : %#x\tMetadata Transferred %s\n",
-		mdedata, mdedata ? "at End of Data LBA" : "in Separate Contiguous Buffer");
-	printf("  [3:0] : %#x\tLeast significant 4 bits of Current LBA Format Selected\n",
-		lsb4_lbaf);
-	printf("\n");
+		stdout_bits_add(t, "[7:7]", rsvd, "Reserved");
+	stdout_bits_add(t, "[6:5]", msb2_lbaf,
+			 "Most significant 2 bits of Current LBA Format Selected");
+	stdout_bits_add(t, "[4:4]", mdedata, "Metadata Transferred %s",
+			 mdedata ? "at End of Data LBA" :
+			 "in Separate Contiguous Buffer");
+	stdout_bits_add(t, "[3:0]", lsb4_lbaf,
+			 "Least significant 4 bits of Current LBA Format Selected");
+
+	return t;
 }
 
-static void stdout_id_ns_mc(__u8 mc)
+static struct shr_table *stdout_id_ns_mc_table(__u8 mc)
 {
+	struct shr_table *t;
 	__u8 rsvd = (mc & 0xFC) >> 2;
 	__u8 mdp = (mc & 0x2) >> 1;
 	__u8 extdlba = mc & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tMetadata Pointer %sSupported\n",
-		mdp, mdp ? "" : "Not ");
-	printf("  [0:0] : %#x\tMetadata as Part of Extended Data LBA %sSupported\n",
-		extdlba, extdlba ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", mdp, "Metadata Pointer %sSupported",
+			 mdp ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", extdlba,
+			 "Metadata as Part of Extended Data LBA %sSupported",
+			 extdlba ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ns_dpc(__u8 dpc)
+static struct shr_table *stdout_id_ns_dpc_table(__u8 dpc)
 {
+	struct shr_table *t;
 	__u8 rsvd = (dpc & 0xE0) >> 5;
 	__u8 pil8 = (dpc & 0x10) >> 4;
 	__u8 pif8 = (dpc & 0x8) >> 3;
@@ -3701,37 +3719,54 @@ static void stdout_id_ns_dpc(__u8 dpc)
 	__u8 pit2 = (dpc & 0x2) >> 1;
 	__u8 pit1 = dpc & 0x1;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:5] : %#x\tReserved\n", rsvd);
-	printf("  [4:4] : %#x\tProtection Information Transferred as Last Bytes of Metadata %sSupported\n",
-		pil8, pil8 ? "" : "Not ");
-	printf("  [3:3] : %#x\tProtection Information Transferred as First Bytes of Metadata %sSupported\n",
-		pif8, pif8 ? "" : "Not ");
-	printf("  [2:2] : %#x\tProtection Information Type 3 %sSupported\n",
-		pit3, pit3 ? "" : "Not ");
-	printf("  [1:1] : %#x\tProtection Information Type 2 %sSupported\n",
-		pit2, pit2 ? "" : "Not ");
-	printf("  [0:0] : %#x\tProtection Information Type 1 %sSupported\n",
-		pit1, pit1 ? "" : "Not ");
-	printf("\n");
+		stdout_bits_add(t, "[7:5]", rsvd, "Reserved");
+	stdout_bits_add(t, "[4:4]", pil8,
+			 "Protection Information Transferred as Last Bytes of Metadata %sSupported",
+			 pil8 ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", pif8,
+			 "Protection Information Transferred as First Bytes of Metadata %sSupported",
+			 pif8 ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", pit3,
+			 "Protection Information Type 3 %sSupported",
+			 pit3 ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", pit2,
+			 "Protection Information Type 2 %sSupported",
+			 pit2 ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", pit1,
+			 "Protection Information Type 1 %sSupported",
+			 pit1 ? "" : "Not ");
+
+	return t;
 }
 
-static void stdout_id_ns_dps(__u8 dps)
+static struct shr_table *stdout_id_ns_dps_table(__u8 dps)
 {
+	struct shr_table *t;
 	__u8 rsvd = (dps & 0xF0) >> 4;
 	__u8 pif8 = NVME_NS_DPS_PI_FIRST(dps);
 	__u8 pit = NVME_NS_DPS_PI(dps);
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tProtection Information is Transferred as %s Bytes of Metadata\n",
-		pif8, pif8 ? "First" : "Last");
-	printf("  [2:0] : %#x\tProtection Information %s\n", pit,
-		pit == 3 ? "Type 3 Enabled" :
-		pit == 2 ? "Type 2 Enabled" :
-		pit == 1 ? "Type 1 Enabled" :
-		pit == 0 ? "Disabled" : "Reserved Enabled");
-	printf("\n");
+		stdout_bits_add(t, "[7:4]", rsvd, "Reserved");
+	stdout_bits_add(t, "[3:3]", pif8,
+			 "Protection Information is Transferred as %s Bytes of Metadata",
+			 pif8 ? "First" : "Last");
+	stdout_bits_add(t, "[2:0]", pit, "Protection Information %s",
+			 pit == 3 ? "Type 3 Enabled" :
+			 pit == 2 ? "Type 2 Enabled" :
+			 pit == 1 ? "Type 1 Enabled" :
+			 pit == 0 ? "Disabled" : "Reserved Enabled");
+
+	return t;
 }
 
 static void stdout_id_ns_nmic(__u8 nmic)
@@ -3747,6 +3782,28 @@ static void stdout_id_ns_nmic(__u8 nmic)
 	printf("  [0:0] : %#x\tNamespace Multipath %sCapable\n",
 		shrns, shrns ? "" : "Not ");
 	printf("\n");
+}
+
+static struct shr_table *stdout_id_ns_nmic_table(__u8 nmic)
+{
+	struct shr_table *t;
+	__u8 rsvd = (nmic & 0xfc) >> 2;
+	__u8 disns = (nmic & 0x2) >> 1;
+	__u8 shrns = nmic & 0x1;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	if (rsvd)
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", disns,
+			 "Namespace is %sa Dispersed Namespace",
+			 disns ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", shrns, "Namespace Multipath %sCapable",
+			 shrns ? "" : "Not ");
+
+	return t;
 }
 
 static void stdout_id_ns_rescap(__u8 rescap)
@@ -3779,6 +3836,48 @@ static void stdout_id_ns_rescap(__u8 rescap)
 	printf("\n");
 }
 
+static struct shr_table *stdout_id_ns_rescap_table(__u8 rescap)
+{
+	struct shr_table *t;
+	__u8 iekr = (rescap & 0x80) >> 7;
+	__u8 eaar = (rescap & 0x40) >> 6;
+	__u8 wear = (rescap & 0x20) >> 5;
+	__u8 earo = (rescap & 0x10) >> 4;
+	__u8 wero = (rescap & 0x8) >> 3;
+	__u8 ea = (rescap & 0x4) >> 2;
+	__u8 we = (rescap & 0x2) >> 1;
+	__u8 ptpl = rescap & 0x1;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:7]", iekr,
+			 "Ignore Existing Key - Used as defined in revision %s",
+			 iekr ? "1.3 or later" : "1.2.1 or earlier");
+	stdout_bits_add(t, "[6:6]", eaar,
+			 "Exclusive Access - All Registrants %sSupported",
+			 eaar ? "" : "Not ");
+	stdout_bits_add(t, "[5:5]", wear,
+			 "Write Exclusive - All Registrants %sSupported",
+			 wear ? "" : "Not ");
+	stdout_bits_add(t, "[4:4]", earo,
+			 "Exclusive Access - Registrants Only %sSupported",
+			 earo ? "" : "Not ");
+	stdout_bits_add(t, "[3:3]", wero,
+			 "Write Exclusive - Registrants Only %sSupported",
+			 wero ? "" : "Not ");
+	stdout_bits_add(t, "[2:2]", ea, "Exclusive Access %sSupported",
+			 ea ? "" : "Not ");
+	stdout_bits_add(t, "[1:1]", we, "Write Exclusive %sSupported",
+			 we ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", ptpl,
+			 "Persist Through Power Loss %sSupported",
+			 ptpl ? "" : "Not ");
+
+	return t;
+}
+
 static void stdout_id_ns_fpi(__u8 fpi)
 {
 	__u8 fpis = (fpi & 0x80) >> 7;
@@ -3790,6 +3889,27 @@ static void stdout_id_ns_fpi(__u8 fpi)
 		printf("  [6:0] : %#x\tFormat Progress Indicator (Remaining %d%%)\n",
 		fpii, fpii);
 	printf("\n");
+}
+
+static struct shr_table *stdout_id_ns_fpi_table(__u8 fpi)
+{
+	struct shr_table *t;
+	__u8 fpis = (fpi & 0x80) >> 7;
+	__u8 fpii = fpi & 0x7F;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:7]", fpis,
+			 "Format Progress Indicator %sSupported",
+			 fpis ? "" : "Not ");
+	if (fpis || (!fpis && fpii))
+		stdout_bits_add(t, "[6:0]", fpii,
+				 "Format Progress Indicator (Remaining %d%%)",
+				 fpii);
+
+	return t;
 }
 
 static void stdout_id_ns_nsattr(__u8 nsattr)
@@ -3804,24 +3924,52 @@ static void stdout_id_ns_nsattr(__u8 nsattr)
 	printf("\n");
 }
 
-static void stdout_id_ns_dlfeat(__u8 dlfeat)
+static struct shr_table *stdout_id_ns_nsattr_table(__u8 nsattr)
 {
+	struct shr_table *t;
+	__u8 rsvd = (nsattr & 0xFE) >> 1;
+	__u8 write_protected = nsattr & 0x1;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	if (rsvd)
+		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+	stdout_bits_add(t, "[0:0]", write_protected,
+			 "Namespace %sWrite Protected",
+			 write_protected ? "" : "Not ");
+
+	return t;
+}
+
+static struct shr_table *stdout_id_ns_dlfeat_table(__u8 dlfeat)
+{
+	struct shr_table *t;
 	__u8 rsvd = (dlfeat & 0xE0) >> 5;
 	__u8 guard = (dlfeat & 0x10) >> 4;
 	__u8 dwz = (dlfeat & 0x8) >> 3;
 	__u8 val = dlfeat & 0x7;
 
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
 	if (rsvd)
-		printf("  [7:5] : %#x\tReserved\n", rsvd);
-	printf("  [4:4] : %#x\tGuard Field of Deallocated Logical Blocks is set to %s\n",
-		guard, guard ? "CRC of The Value Read" : "0xFFFF");
-	printf("  [3:3] : %#x\tDeallocate Bit in the Write Zeroes Command is %sSupported\n",
-		dwz, dwz ? "" : "Not ");
-	printf("  [2:0] : %#x\tBytes Read From a Deallocated Logical Block and its Metadata are %s\n",
-		val, val == 2 ? "0xFF" :
-			val == 1 ? "0x00" :
-			val == 0 ? "Not Reported" : "Reserved Value");
-	printf("\n");
+		stdout_bits_add(t, "[7:5]", rsvd, "Reserved");
+	stdout_bits_add(t, "[4:4]", guard,
+			 "Guard Field of Deallocated Logical Blocks is set to %s",
+			 guard ? "CRC of The Value Read" : "0xFFFF");
+	stdout_bits_add(t, "[3:3]", dwz,
+			 "Deallocate Bit in the Write Zeroes Command is %sSupported",
+			 dwz ? "" : "Not ");
+	stdout_bits_add(t, "[2:0]", val,
+			 "Bytes Read From a Deallocated Logical Block and its Metadata are %s",
+			 val == 2 ? "0xFF" :
+			 val == 1 ? "0x00" :
+			 val == 0 ? "Not Reported" : "Reserved Value");
+
+	return t;
 }
 
 static void stdout_id_ns_kpios(__u8 kpios)
@@ -3839,106 +3987,175 @@ static void stdout_id_ns_kpios(__u8 kpios)
 	printf("\n");
 }
 
+static struct shr_table *stdout_id_ns_kpios_table(__u8 kpios)
+{
+	struct shr_table *t;
+	__u8 rsvd = (kpios & 0xfc) >> 2;
+	__u8 kpiosns = (kpios & 0x2) >> 1;
+	__u8 kpioens = kpios & 0x1;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	if (rsvd)
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", kpiosns,
+			 "Key Per I/O Capability %sSupported",
+			 kpiosns ? "" : "Not ");
+	stdout_bits_add(t, "[0:0]", kpioens, "Key Per I/O Capability %s",
+			 kpioens ? "Enabled" : "Disabled");
+
+	return t;
+}
+
 static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			 unsigned int lba_index, bool cap_only)
 {
 	bool human = stdout_print_ops.flags & VERBOSE;
 	int vs = stdout_print_ops.flags & VS;
-	int i;
-	__u8 flbas;
+	struct shr_table *t;
 	char *in_use = "(in use)";
+	char nguid_buf[2 * sizeof(ns->nguid) + 1], *nguid = nguid_buf;
+	char eui64_buf[2 * sizeof(ns->eui64) + 1], *eui64 = eui64_buf;
+	__u8 flbas;
+	int row, i;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
 
 	if (!cap_only) {
 		printf("NVME Identify Namespace %d:\n", nsid);
 
-		if (human)
-			stdout_id_ns_size(ns->nsze, ns->ncap, ns->nuse);
-		else {
-			printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
-			printf("ncap    : %#"PRIx64"\n", le64_to_cpu(ns->ncap));
-			printf("nuse    : %#"PRIx64"\n", le64_to_cpu(ns->nuse));
+		if (human) {
+			stdout_kv_add(t, "nsze",
+				"%#"PRIx64"\tTotal size in logical blocks",
+				le64_to_cpu(ns->nsze));
+			stdout_kv_add(t, "ncap",
+				"%#"PRIx64"\tMaximum size in logical blocks",
+				le64_to_cpu(ns->ncap));
+			stdout_kv_add(t, "nuse",
+				"%#"PRIx64"\tCurrent size in logical blocks",
+				le64_to_cpu(ns->nuse));
+		} else {
+			stdout_kv_add(t, "nsze", "%#"PRIx64,
+				      le64_to_cpu(ns->nsze));
+			stdout_kv_add(t, "ncap", "%#"PRIx64,
+				      le64_to_cpu(ns->ncap));
+			stdout_kv_add(t, "nuse", "%#"PRIx64,
+				      le64_to_cpu(ns->nuse));
 		}
 
-		printf("nsfeat  : %#x\n", ns->nsfeat);
+		row = stdout_kv_add(t, "nsfeat", "%#x", ns->nsfeat);
 		if (human)
-			stdout_id_ns_nsfeat(ns->nsfeat);
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_nsfeat_table(ns->nsfeat));
 	} else
 		printf("NVMe Identify Namespace for LBA format[%d]:\n", lba_index);
 
-	printf("nlbaf   : %d\n", ns->nlbaf);
+	stdout_kv_add(t, "nlbaf", "%d", ns->nlbaf);
 	if (!cap_only) {
-		printf("flbas   : %#x\n", ns->flbas);
+		row = stdout_kv_add(t, "flbas", "%#x", ns->flbas);
 		if (human)
-			stdout_id_ns_flbas(ns->flbas);
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_flbas_table(ns->flbas));
 	} else
 		in_use = "";
 
-	printf("mc      : %#x\n", ns->mc);
+	row = stdout_kv_add(t, "mc", "%#x", ns->mc);
 	if (human)
-		stdout_id_ns_mc(ns->mc);
-	printf("dpc     : %#x\n", ns->dpc);
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ns_mc_table(ns->mc));
+
+	row = stdout_kv_add(t, "dpc", "%#x", ns->dpc);
 	if (human)
-		stdout_id_ns_dpc(ns->dpc);
+		shr_table_set_row_subtable(t, row,
+				stdout_id_ns_dpc_table(ns->dpc));
+
 	if (!cap_only) {
-		printf("dps     : %#x\n", ns->dps);
+		row = stdout_kv_add(t, "dps", "%#x", ns->dps);
 		if (human)
-			stdout_id_ns_dps(ns->dps);
-		printf("nmic    : %#x\n", ns->nmic);
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_dps_table(ns->dps));
+
+		row = stdout_kv_add(t, "nmic", "%#x", ns->nmic);
 		if (human)
-			stdout_id_ns_nmic(ns->nmic);
-		printf("rescap  : %#x\n", ns->rescap);
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_nmic_table(ns->nmic));
+
+		row = stdout_kv_add(t, "rescap", "%#x", ns->rescap);
 		if (human)
-			stdout_id_ns_rescap(ns->rescap);
-		printf("fpi     : %#x\n", ns->fpi);
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_rescap_table(ns->rescap));
+
+		row = stdout_kv_add(t, "fpi", "%#x", ns->fpi);
 		if (human)
-			stdout_id_ns_fpi(ns->fpi);
-		printf("dlfeat  : %d\n", ns->dlfeat);
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_fpi_table(ns->fpi));
+
+		row = stdout_kv_add(t, "dlfeat", "%d", ns->dlfeat);
 		if (human)
-			stdout_id_ns_dlfeat(ns->dlfeat);
-		printf("nawun   : %d\n", le16_to_cpu(ns->nawun));
-		printf("nawupf  : %d\n", le16_to_cpu(ns->nawupf));
-		printf("nacwu   : %d\n", le16_to_cpu(ns->nacwu));
-		printf("nabsn   : %d\n", le16_to_cpu(ns->nabsn));
-		printf("nabo    : %d\n", le16_to_cpu(ns->nabo));
-		printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
-		printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
-		printf("nvmcap  : %s\n",
-			uint128_t_to_l10n_string(le128_to_cpu(ns->nvmcap)));
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_dlfeat_table(ns->dlfeat));
+
+		stdout_kv_add(t, "nawun", "%d", le16_to_cpu(ns->nawun));
+		stdout_kv_add(t, "nawupf", "%d", le16_to_cpu(ns->nawupf));
+		stdout_kv_add(t, "nacwu", "%d", le16_to_cpu(ns->nacwu));
+		stdout_kv_add(t, "nabsn", "%d", le16_to_cpu(ns->nabsn));
+		stdout_kv_add(t, "nabo", "%d", le16_to_cpu(ns->nabo));
+		stdout_kv_add(t, "nabspf", "%d", le16_to_cpu(ns->nabspf));
+		stdout_kv_add(t, "noiob", "%d", le16_to_cpu(ns->noiob));
+		stdout_kv_add(t, "nvmcap", "%s",
+			      uint128_t_to_l10n_string(
+					      le128_to_cpu(ns->nvmcap)));
 		if (ns->nsfeat & 0x30) {
-			printf("npwg    : %u\n", le16_to_cpu(ns->npwg));
-			printf("npwa    : %u\n", le16_to_cpu(ns->npwa));
+			stdout_kv_add(t, "npwg", "%u", le16_to_cpu(ns->npwg));
+			stdout_kv_add(t, "npwa", "%u", le16_to_cpu(ns->npwa));
 			if (ns->nsfeat & 0x10)
-				printf("npdg    : %u\n", le16_to_cpu(ns->npdg));
-			printf("npda    : %u\n", le16_to_cpu(ns->npda));
-			printf("nows    : %u\n", le16_to_cpu(ns->nows));
+				stdout_kv_add(t, "npdg", "%u",
+					      le16_to_cpu(ns->npdg));
+			stdout_kv_add(t, "npda", "%u", le16_to_cpu(ns->npda));
+			stdout_kv_add(t, "nows", "%u", le16_to_cpu(ns->nows));
 		}
-		printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
-		printf("mcl     : %u\n", le32_to_cpu(ns->mcl));
-		printf("msrc    : %u\n", ns->msrc);
-		printf("kpios   : %u\n", ns->kpios);
+		stdout_kv_add(t, "mssrl", "%u", le16_to_cpu(ns->mssrl));
+		stdout_kv_add(t, "mcl", "%u", le32_to_cpu(ns->mcl));
+		stdout_kv_add(t, "msrc", "%u", ns->msrc);
+
+		row = stdout_kv_add(t, "kpios", "%u", ns->kpios);
 		if (human)
-			stdout_id_ns_kpios(ns->kpios);
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_kpios_table(ns->kpios));
 	}
-	printf("nulbaf  : %u\n", ns->nulbaf);
+
+	stdout_kv_add(t, "nulbaf", "%u", ns->nulbaf);
 	if (!cap_only) {
-		printf("kpiodaag: %u\n", le32_to_cpu(ns->kpiodaag));
-		printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
-		printf("nsattr	: %u\n", ns->nsattr);
+		stdout_kv_add(t, "kpiodaag", "%u", le32_to_cpu(ns->kpiodaag));
+		stdout_kv_add(t, "anagrpid", "%u", le32_to_cpu(ns->anagrpid));
+
+		row = stdout_kv_add(t, "nsattr", "%u", ns->nsattr);
 		if (human)
-			stdout_id_ns_nsattr(ns->nsattr);
-		printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
-		printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
+			shr_table_set_row_subtable(t, row,
+					stdout_id_ns_nsattr_table(ns->nsattr));
 
-		printf("nguid   : ");
-		for (i = 0; i < 16; i++)
-			printf("%02x", ns->nguid[i]);
-		printf("\n");
+		stdout_kv_add(t, "nvmsetid", "%d", le16_to_cpu(ns->nvmsetid));
+		stdout_kv_add(t, "endgid", "%d", le16_to_cpu(ns->endgid));
 
-		printf("eui64   : ");
-		for (i = 0; i < 8; i++)
-			printf("%02x", ns->eui64[i]);
-		printf("\n");
+		for (i = 0; i < (int)sizeof(ns->nguid); i++)
+			nguid += sprintf(nguid, "%02x", ns->nguid[i]);
+		stdout_kv_add(t, "nguid", "%s", nguid_buf);
+
+		for (i = 0; i < (int)sizeof(ns->eui64); i++)
+			eui64 += sprintf(eui64, "%02x", ns->eui64[i]);
+		stdout_kv_add(t, "eui64", "%s", eui64_buf);
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build identify-namespace table\n");
+	else
+		stdout_kv_render(stdout, t);
+
+	shr_table_free(t);
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
 	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
