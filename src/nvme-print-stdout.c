@@ -342,15 +342,32 @@ static void stdout_predictable_latency_event_agg_log(
 {
 	__u64 num_iter;
 	__u64 num_entries;
+	struct shr_table *t;
 
 	num_entries = le64_to_cpu(pea_log->num_entries);
 	printf("Predictable Latency Event Aggregate Log for device: %s\n", devname);
 
-	printf("Number of Entries Available: %"PRIu64"\n", (uint64_t)num_entries);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Number of Entries Available", "%"PRIu64,
+		      (uint64_t)num_entries);
 
 	num_iter = min(num_entries, log_entries);
-	for (int i = 0; i < num_iter; i++)
-		printf("Entry[%d]: %u\n", i + 1, le16_to_cpu(pea_log->entries[i]));
+	for (int i = 0; i < num_iter; i++) {
+		char name[24];
+
+		snprintf(name, sizeof(name), "Entry[%d]", i + 1);
+		stdout_kv_add(t, name, "%u", le16_to_cpu(pea_log->entries[i]));
+	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build predictable-latency-event-agg table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_persistent_event_log_rci(__le32 pel_header_rci)
