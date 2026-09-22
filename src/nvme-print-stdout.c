@@ -287,6 +287,10 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 				       unsigned int result,
 				       unsigned char *buf);
 static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
+static struct shr_table *stdout_kv_table_create(void);
+static int stdout_kv_add(struct shr_table *t, const char *name,
+		const char *fmt, ...);
+static void stdout_kv_render(FILE *stream, struct shr_table *t);
 
 static void stdout_predictable_latency_per_nvmset(
 		struct nvme_nvmset_predictable_lat_log *plpns_log,
@@ -765,15 +769,31 @@ static void stdout_endurance_group_event_agg_log(
 		struct nvme_aggregate_endurance_group_event *endurance_log,
 		__u64 log_entries, __u32 size, const char *devname)
 {
+	struct shr_table *t;
+
 	printf("Endurance Group Event Aggregate Log for device: %s\n", devname);
 
-	printf("Number of Entries Available: %"PRIu64"\n",
-		le64_to_cpu(endurance_log->num_entries));
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Number of Entries Available", "%"PRIu64,
+		      le64_to_cpu(endurance_log->num_entries));
 
 	for (int i = 0; i < log_entries; i++) {
-		printf("Entry[%d]: %u\n", i + 1,
-			le16_to_cpu(endurance_log->entries[i]));
+		char name[24];
+
+		snprintf(name, sizeof(name), "Entry[%d]", i + 1);
+		stdout_kv_add(t, name, "%u",
+			      le16_to_cpu(endurance_log->entries[i]));
 	}
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build endurance-group-event-agg table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static void stdout_lba_status_log(void *lba_status, __u32 size,
