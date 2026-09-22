@@ -736,13 +736,31 @@ void nvme_show_pel_format_start_event(void *pevent_log_info, __u32 offset)
 void nvme_show_pel_format_completion_event(void *pevent_log_info, __u32 offset)
 {
 	struct nvme_format_nvm_compln_event *format_cmpln_event = pevent_log_info + offset;
+	struct shr_table *t;
 
 	printf("Format NVM Completion Event Entry:\n");
-	printf("Namespace Identifier: %u\n", le32_to_cpu(format_cmpln_event->nsid));
-	printf("Smallest Format Progress Indicator: %u\n", format_cmpln_event->smallest_fpi);
-	printf("Format NVM Status: %u\n", format_cmpln_event->format_nvm_status);
-	printf("Completion Information: %u\n", le16_to_cpu(format_cmpln_event->compln_info));
-	printf("Status Field: %u\n", le32_to_cpu(format_cmpln_event->status_field));
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Namespace Identifier", "%u",
+		      le32_to_cpu(format_cmpln_event->nsid));
+	stdout_kv_add(t, "Smallest Format Progress Indicator", "%u",
+		      format_cmpln_event->smallest_fpi);
+	stdout_kv_add(t, "Format NVM Status", "%u",
+		      format_cmpln_event->format_nvm_status);
+	stdout_kv_add(t, "Completion Information", "%u",
+		      le16_to_cpu(format_cmpln_event->compln_info));
+	stdout_kv_add(t, "Status Field", "%u",
+		      le32_to_cpu(format_cmpln_event->status_field));
+
+	if (shr_table_has_error(t))
+		fprintf(stderr,
+			"Failed to build pel-format-completion-event table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 void nvme_show_pel_sanitize_start_event(void *pevent_log_info, __u32 offset)
