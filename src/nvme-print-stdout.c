@@ -291,6 +291,9 @@ static struct shr_table *stdout_kv_table_create(void);
 static int stdout_kv_add(struct shr_table *t, const char *name,
 		const char *fmt, ...);
 static void stdout_kv_render(FILE *stream, struct shr_table *t);
+static struct shr_table *stdout_bits_table_create(void);
+static void stdout_bits_add(struct shr_table *t, const char *bits,
+		unsigned int val, const char *desc_fmt, ...);
 
 static void stdout_predictable_latency_per_nvmset(
 		struct nvme_nvmset_predictable_lat_log *plpns_log,
@@ -1229,20 +1232,56 @@ static void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 	}
 }
 
-static void stdout_fdp_config_fdpa(uint8_t fdpa)
+static struct shr_table *stdout_fdp_config_fdpa_table(uint8_t fdpa)
 {
+	struct shr_table *t;
 	__u8 valid = NVME_GET(fdpa, FDP_CONFIG_FDPA_VALID);
 	__u8 rsvd = (fdpa >> 5) & 0x3;
 	__u8 fdpvwc = NVME_GET(fdpa, FDP_CONFIG_FDPA_FDPVWC);
 	__u8 rgif = NVME_GET(fdpa, FDP_CONFIG_FDPA_RGIF);
 
-	printf("  [7:7] : %#x\tFDP Configuration %sValid\n",
-		valid, valid ? "" : "Not ");
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[7:7]", valid, "FDP Configuration %sValid",
+			valid ? "" : "Not ");
 	if (rsvd)
-		printf("  [6:5] : %#x\tReserved\n", rsvd);
-	printf("  [4:4] : %#x\tFDP Volatile Write Cache %sPresent\n",
-		fdpvwc, fdpvwc ? "" : "Not ");
-	printf("  [3:0] : %#x\tReclaim Group Identifier Format\n", rgif);
+		stdout_bits_add(t, "[6:5]", rsvd, "Reserved");
+	stdout_bits_add(t, "[4:4]", fdpvwc,
+			"FDP Volatile Write Cache %sPresent",
+			fdpvwc ? "" : "Not ");
+	stdout_bits_add(t, "[3:0]", rgif, "Reclaim Group Identifier Format");
+
+	return t;
+}
+
+static struct shr_table *stdout_fdp_config_ruh_list_table(
+		struct nvme_fdp_config_desc *config, uint16_t nruh)
+{
+	struct shr_table *t;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return NULL;
+
+	shr_table_set_indent(t, 2);
+
+	for (int j = 0; j < nruh; j++) {
+		struct nvme_fdp_ruh_desc *ruh = &config->ruhs[j];
+		const char *ruht_str;
+		char name[16];
+
+		if (ruh->ruht == NVME_FDP_RUHT_INITIALLY_ISOLATED)
+			ruht_str = "Initially Isolated";
+		else
+			ruht_str = "Persistently Isolated";
+
+		snprintf(name, sizeof(name), "[%d]", j);
+		stdout_kv_add(t, name, "%s", ruht_str);
+	}
+
+	return t;
 }
 
 static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
@@ -1250,6 +1289,8 @@ static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 	unsigned char *p, *end;
 	int human = stdout_print_ops.flags & VERBOSE;
 	uint16_t n;
+	struct shr_table *t;
+	int row;
 
 	if (len < sizeof(*log))
 		return;
@@ -1265,32 +1306,54 @@ static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 		if (!shr_buf_has_room(p, end, sizeof(*config)))
 			break;
 
-		printf("FDP Attributes: %#x\n", config->fdpa);
-		if (human)
-			stdout_fdp_config_fdpa(config->fdpa);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
 
-		printf("Vendor Specific Size: %u\n", config->vss);
-		printf("Number of Reclaim Groups: %"PRIu32"\n", le32_to_cpu(config->nrg));
-		printf("Number of Reclaim Unit Handles: %"PRIu16"\n", le16_to_cpu(config->nruh));
-		printf("Number of Namespaces Supported: %"PRIu32"\n", le32_to_cpu(config->nnss));
-		printf("Reclaim Unit Nominal Size: %"PRIu64"\n", le64_to_cpu(config->runs));
-		printf("Estimated Reclaim Unit Time Limit: %"PRIu32"\n", le32_to_cpu(config->erutl));
+		row = stdout_kv_add(t, "FDP Attributes", "%#x", config->fdpa);
+		if (human)
+			shr_table_set_row_subtable(t, row,
+				stdout_fdp_config_fdpa_table(config->fdpa));
+
+		stdout_kv_add(t, "Vendor Specific Size", "%u", config->vss);
+		stdout_kv_add(t, "Number of Reclaim Groups", "%"PRIu32,
+			      le32_to_cpu(config->nrg));
+		stdout_kv_add(t, "Number of Reclaim Unit Handles", "%"PRIu16,
+			      le16_to_cpu(config->nruh));
+		stdout_kv_add(t, "Number of Namespaces Supported", "%"PRIu32,
+			      le32_to_cpu(config->nnss));
+		stdout_kv_add(t, "Reclaim Unit Nominal Size", "%"PRIu64,
+			      le64_to_cpu(config->runs));
+		stdout_kv_add(t, "Estimated Reclaim Unit Time Limit", "%"PRIu32,
+			      le32_to_cpu(config->erutl));
 
 		size = le16_to_cpu(config->size);
-		if (size < sizeof(*config) || !shr_buf_has_room(p, end, size))
+		if (size < sizeof(*config) || !shr_buf_has_room(p, end, size)) {
+			if (shr_table_has_error(t))
+				fprintf(stderr,
+					"Failed to build fdp-configs table\n");
+			else
+				stdout_kv_render(stdout, t);
+			shr_table_free(t);
 			break;
+		}
 
 		nruh = le16_to_cpu(config->nruh);
 		max_nruh = (size - sizeof(*config)) / sizeof(struct nvme_fdp_ruh_desc);
 		if (nruh > max_nruh)
 			nruh = max_nruh;
 
-		printf("Reclaim Unit Handle List:\n");
-		for (int j = 0; j < nruh; j++) {
-			struct nvme_fdp_ruh_desc *ruh = &config->ruhs[j];
-
-			printf("  [%d]: %s\n", j, ruh->ruht == NVME_FDP_RUHT_INITIALLY_ISOLATED ? "Initially Isolated" : "Persistently Isolated");
+		if (nruh) {
+			row = stdout_kv_add(t, "Reclaim Unit Handle List", "");
+			shr_table_set_row_subtable(t, row,
+				stdout_fdp_config_ruh_list_table(config, nruh));
 		}
+
+		if (shr_table_has_error(t))
+			fprintf(stderr, "Failed to build fdp-configs table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 
 		p += size;
 	}
