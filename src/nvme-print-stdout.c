@@ -438,7 +438,7 @@ static void stdout_persistent_event_log_fdp_events(unsigned int cdw11, unsigned 
 }
 
 void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head,
-			   int human)
+			   int verbose)
 {
 	struct nvme_persistent_event_log *hdr = pevent_log_head;
 	struct shr_table *t;
@@ -474,7 +474,7 @@ void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head,
 		      le16_to_cpu(hdr->gen_number));
 	row = stdout_kv_add(t, "Reporting Context Information (RCI)", "%u",
 			     le32_to_cpu(hdr->rci));
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 			stdout_persistent_event_log_rci_table(hdr->rci));
 
@@ -490,7 +490,7 @@ void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head,
 
 void nvme_show_pel_event_header(int i,
 				 struct nvme_persistent_event_entry *hdr,
-				 int human)
+				 int verbose)
 {
 	struct shr_table *t;
 	__u16 vsil = le16_to_cpu(hdr->vsil);
@@ -507,7 +507,7 @@ void nvme_show_pel_event_header(int i,
 	stdout_kv_add(t, "Event Header Length", "%u", hdr->ehl);
 	row = stdout_kv_add(t, "Event Header Additional Info", "%u",
 			     hdr->ehai);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 			stdout_persistent_event_entry_ehai_table(hdr->ehai));
 	stdout_kv_add(t, "Controller Identifier", "%u",
@@ -910,7 +910,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u3
 	__u32 offset = sizeof(*pevent_log_head);
 	__u16 vsil, el;
 	struct nvme_persistent_event_entry *pevent_entry_head;
-	int human = stdout_print_ops.flags & VERBOSE;
+	int verbose = stdout_print_ops.flags & VERBOSE;
 	struct shr_table *t;
 
 	t = stdout_kv_table_create();
@@ -931,7 +931,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u3
 
 	pevent_log_head = pevent_log_info;
 
-	nvme_show_pel_header(pevent_log_head, human);
+	nvme_show_pel_header(pevent_log_head, verbose);
 
 	printf("\n");
 	printf("\nPersistent Event Entries:\n");
@@ -946,7 +946,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u3
 		if ((offset + pevent_entry_head->ehl + 3 + el) >= size)
 			break;
 
-		nvme_show_pel_event_header(i, pevent_entry_head, human);
+		nvme_show_pel_event_header(i, pevent_entry_head, verbose);
 
 		offset += pevent_entry_head->ehl + vsil + 3;
 
@@ -1135,7 +1135,7 @@ static void stdout_resv_notif_log(struct nvme_resv_notification_log *resv,
 }
 
 static struct shr_table *
-stdout_fid_support_effects_log_human_table(__u32 fid_support)
+stdout_fid_support_effects_log_verbose_table(__u32 fid_support)
 {
 	struct shr_table *t;
 	__u8 fsupp = !!(fid_support & NVME_FID_SUPPORTED_EFFECTS_FSUPP);
@@ -1192,7 +1192,7 @@ static void stdout_fid_support_effects_log(struct nvme_fid_supported_effects_log
 {
 	struct shr_table *t;
 	__u32 fid_effect;
-	int i, row, human = stdout_print_ops.flags & VERBOSE;
+	int i, row, verbose = stdout_print_ops.flags & VERBOSE;
 
 	printf("FID Supports Effects Log for device: %s\n", devname);
 	printf("Admin Command Set\n");
@@ -1211,9 +1211,9 @@ static void stdout_fid_support_effects_log(struct nvme_fid_supported_effects_log
 		snprintf(name, sizeof(name), "FID %02x -> Support Effects Log",
 			 i);
 		row = stdout_kv_add(t, name, "%08x", fid_effect);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
-				stdout_fid_support_effects_log_human_table(
+				stdout_fid_support_effects_log_verbose_table(
 					fid_effect));
 	}
 
@@ -1221,7 +1221,7 @@ static void stdout_fid_support_effects_log(struct nvme_fid_supported_effects_log
 }
 
 static struct shr_table *
-stdout_mi_cmd_support_effects_log_human_table(__u32 mi_cmd_support)
+stdout_mi_cmd_support_effects_log_verbose_table(__u32 mi_cmd_support)
 {
 	struct shr_table *t;
 	__u8 csupp = !!(mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP);
@@ -1278,7 +1278,7 @@ static void stdout_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effec
 {
 	struct shr_table *t;
 	__u32 mi_cmd_effect;
-	int i, row, human = stdout_print_ops.flags & VERBOSE;
+	int i, row, verbose = stdout_print_ops.flags & VERBOSE;
 
 	printf("MI Commands Support Effects Log for device: %s\n", devname);
 	printf("Admin Command Set\n");
@@ -1297,9 +1297,9 @@ static void stdout_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effec
 		snprintf(name, sizeof(name),
 			 "MI CMD %02x -> Support Effects Log", i);
 		row = stdout_kv_add(t, name, "%08x", mi_cmd_effect);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
-				stdout_mi_cmd_support_effects_log_human_table(
+				stdout_mi_cmd_support_effects_log_verbose_table(
 					mi_cmd_effect));
 	}
 
@@ -1435,7 +1435,7 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log, size_t len)
 
 static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller, size_t len)
 {
-	int human = stdout_print_ops.flags & VERBOSE;
+	int verbose = stdout_print_ops.flags & VERBOSE;
 	struct shr_table *t;
 	int row;
 
@@ -1455,7 +1455,7 @@ static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 control
 	stdout_kv_add(t, "EOM Data Generation Number", "%u", log->eomdgn);
 	stdout_kv_add(t, "Log Revision", "%u", log->lr);
 	row = stdout_kv_add(t, "Optional Data Present", "%u", log->odp);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 			stdout_phy_rx_eom_odp_table(log->odp));
 	stdout_kv_add(t, "Lanes", "%u", log->lanes);
@@ -1584,7 +1584,7 @@ static struct shr_table *stdout_fdp_config_ruh_list_table(
 static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 {
 	unsigned char *p, *end;
-	int human = stdout_print_ops.flags & VERBOSE;
+	int verbose = stdout_print_ops.flags & VERBOSE;
 	uint16_t n;
 	struct shr_table *t;
 	int row;
@@ -1608,7 +1608,7 @@ static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 			return;
 
 		row = stdout_kv_add(t, "FDP Attributes", "%#x", config->fdpa);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 				stdout_fdp_config_fdpa_table(config->fdpa));
 
@@ -2802,7 +2802,7 @@ static struct shr_table *stdout_registers_pmrmscu_table(uint32_t pmrmscu)
 	return t;
 }
 
-static struct shr_table *stdout_ctrl_register_human_table(int offset,
+static struct shr_table *stdout_ctrl_register_verbose_table(int offset,
 		uint64_t value, bool support)
 {
 	struct shr_table *t;
@@ -2892,7 +2892,7 @@ static struct shr_table *stdout_ctrl_register_human_table(int offset,
 
 static void stdout_ctrl_register_common(int offset, uint64_t value, bool fabrics)
 {
-	bool human = !!(stdout_print_ops.flags & VERBOSE);
+	bool verbose = !!(stdout_print_ops.flags & VERBOSE);
 	const char *name = nvme_register_to_string(offset);
 	const char *type = fabrics ? "property" : "register";
 	struct shr_table *t;
@@ -2902,11 +2902,12 @@ static void stdout_ctrl_register_common(int offset, uint64_t value, bool fabrics
 	if (!t)
 		return;
 
-	if (human) {
+	if (verbose) {
 		row = stdout_kv_add(t, name, "%#"PRIx64, value);
 		shr_table_set_row_subtable(t, row,
-				stdout_ctrl_register_human_table(offset, value,
-								  true));
+				stdout_ctrl_register_verbose_table(offset,
+								    value,
+								    true));
 	} else {
 		stdout_kv_add(t, type, "%#04x (%s), value: %#"PRIx64, offset,
 			      name, value);
@@ -2921,7 +2922,7 @@ static void stdout_ctrl_register(int offset, uint64_t value)
 }
 
 static void stdout_ctrl_register_support(struct shr_table *t, void *bar,
-		bool fabrics, int offset, bool human, bool support)
+		bool fabrics, int offset, bool verbose, bool support)
 {
 	uint64_t value = nvme_is_64bit_reg(offset) ? shr_mmio_read64(bar + offset) :
 	    shr_mmio_read32(bar + offset);
@@ -2932,16 +2933,17 @@ static void stdout_ctrl_register_support(struct shr_table *t, void *bar,
 
 	row = stdout_kv_add(t, nvme_register_symbol_to_string(offset),
 			     "%#"PRIx64, value);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
-				stdout_ctrl_register_human_table(offset, value,
-								  support));
+				stdout_ctrl_register_verbose_table(offset,
+								    value,
+								    support));
 }
 
 void stdout_ctrl_registers(void *bar, bool fabrics)
 {
 	uint32_t value;
-	bool human = !!(stdout_print_ops.flags & VERBOSE);
+	bool verbose = !!(stdout_print_ops.flags & VERBOSE);
 	struct shr_table *t;
 	int offset;
 	bool support;
@@ -2966,7 +2968,7 @@ void stdout_ctrl_registers(void *bar, bool fabrics)
 			support = true;
 			break;
 		}
-		stdout_ctrl_register_support(t, bar, fabrics, offset, human,
+		stdout_ctrl_register_support(t, bar, fabrics, offset, verbose,
 					      support);
 	}
 
@@ -4794,7 +4796,7 @@ static struct shr_table *stdout_id_ns_kpios_table(__u8 kpios)
 static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			 unsigned int lba_index, bool cap_only)
 {
-	bool human = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	int vs = stdout_print_ops.flags & VS;
 	struct shr_table *t;
 	char *in_use = "(in use)";
@@ -4810,7 +4812,7 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	if (!cap_only) {
 		printf("NVME Identify Namespace %d:\n", nsid);
 
-		if (human) {
+		if (verbose) {
 			stdout_kv_add(t, "nsze",
 				"%#"PRIx64"\tTotal size in logical blocks",
 				le64_to_cpu(ns->nsze));
@@ -4830,7 +4832,7 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		}
 
 		row = stdout_kv_add(t, "nsfeat", "%#x", ns->nsfeat);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_nsfeat_table(ns->nsfeat));
 	} else
@@ -4839,45 +4841,45 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	stdout_kv_add(t, "nlbaf", "%d", ns->nlbaf);
 	if (!cap_only) {
 		row = stdout_kv_add(t, "flbas", "%#x", ns->flbas);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_flbas_table(ns->flbas));
 	} else
 		in_use = "";
 
 	row = stdout_kv_add(t, "mc", "%#x", ns->mc);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ns_mc_table(ns->mc));
 
 	row = stdout_kv_add(t, "dpc", "%#x", ns->dpc);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ns_dpc_table(ns->dpc));
 
 	if (!cap_only) {
 		row = stdout_kv_add(t, "dps", "%#x", ns->dps);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_dps_table(ns->dps));
 
 		row = stdout_kv_add(t, "nmic", "%#x", ns->nmic);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_nmic_table(ns->nmic));
 
 		row = stdout_kv_add(t, "rescap", "%#x", ns->rescap);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_rescap_table(ns->rescap));
 
 		row = stdout_kv_add(t, "fpi", "%#x", ns->fpi);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_fpi_table(ns->fpi));
 
 		row = stdout_kv_add(t, "dlfeat", "%d", ns->dlfeat);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_dlfeat_table(ns->dlfeat));
 
@@ -4905,7 +4907,7 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		stdout_kv_add(t, "msrc", "%u", ns->msrc);
 
 		row = stdout_kv_add(t, "kpios", "%u", ns->kpios);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_kpios_table(ns->kpios));
 	}
@@ -4916,7 +4918,7 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		stdout_kv_add(t, "anagrpid", "%u", le32_to_cpu(ns->anagrpid));
 
 		row = stdout_kv_add(t, "nsattr", "%u", ns->nsattr);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_nsattr_table(ns->nsattr));
 
@@ -4936,7 +4938,7 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
 	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
-		if (human)
+		if (verbose)
 			printf("LBA Format %2d : Metadata Size: %-3d bytes - "
 				"Data Size: %-2d bytes - Relative Performance: %#x %s %s\n",
 				i, le16_to_cpu(ns->lbaf[i].ms),
@@ -5019,7 +5021,7 @@ stdout_cmd_set_independent_id_ns_nstat_table(__u8 nstat)
 static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *ns,
 					     unsigned int nsid)
 {
-	bool human = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	struct shr_table *t;
 	int row;
 
@@ -5030,30 +5032,30 @@ static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *n
 		return;
 
 	row = stdout_kv_add(t, "nsfeat", "%#x", ns->nsfeat);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_cmd_set_independent_id_ns_nsfeat_table(
 						ns->nsfeat));
 
 	row = stdout_kv_add(t, "nmic", "%#x", ns->nmic);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ns_nmic_table(ns->nmic));
 
 	row = stdout_kv_add(t, "rescap", "%#x", ns->rescap);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ns_rescap_table(ns->rescap));
 
 	row = stdout_kv_add(t, "fpi", "%#x", ns->fpi);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ns_fpi_table(ns->fpi));
 
 	stdout_kv_add(t, "anagrpid", "%u", le32_to_cpu(ns->anagrpid));
 
 	row = stdout_kv_add(t, "nsattr", "%u", ns->nsattr);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ns_nsattr_table(ns->nsattr));
 
@@ -5061,13 +5063,13 @@ static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *n
 	stdout_kv_add(t, "endgid", "%d", le16_to_cpu(ns->endgid));
 
 	row = stdout_kv_add(t, "nstat", "%#x", ns->nstat);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_cmd_set_independent_id_ns_nstat_table(
 						ns->nstat));
 
 	row = stdout_kv_add(t, "kpios", "%#x", ns->kpios);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ns_kpios_table(ns->kpios));
 
@@ -6077,11 +6079,11 @@ static struct shr_table *show_nvme_id_ns_zoned_ozcs_table(__le16 ns_ozcs)
 }
 
 static void stdout_zns_id_ns_recommended_limit(struct shr_table *t,
-		const char *name, __le32 ns_rl, bool human)
+		const char *name, __le32 ns_rl, bool verbose)
 {
 	unsigned int recommended_limit = le32_to_cpu(ns_rl);
 
-	if (!recommended_limit && human)
+	if (!recommended_limit && verbose)
 		stdout_kv_add(t, name, "%s", "Not Reported");
 	else
 		stdout_kv_add(t, name, "%u", recommended_limit);
@@ -6109,7 +6111,7 @@ static struct shr_table *stdout_zns_id_ns_zrwacap_table(__u8 zrwacap)
 static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 			     struct nvme_id_ns *id_ns)
 {
-	bool human = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	bool vs = stdout_print_ops.flags & VS;
 	struct shr_table *t;
 	uint8_t lbaf;
@@ -6123,7 +6125,7 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 	if (!t)
 		return;
 
-	if (human) {
+	if (verbose) {
 		row = stdout_kv_add(t, "zoc",
 				     "%u\tZone Operation Characteristics",
 				     le16_to_cpu(ns->zoc));
@@ -6133,7 +6135,7 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 		stdout_kv_add(t, "zoc", "%u", le16_to_cpu(ns->zoc));
 	}
 
-	if (human) {
+	if (verbose) {
 		row = stdout_kv_add(t, "ozcs",
 				     "%u\tOptional Zoned Command Support",
 				     le16_to_cpu(ns->ozcs));
@@ -6143,7 +6145,7 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 		stdout_kv_add(t, "ozcs", "%u", le16_to_cpu(ns->ozcs));
 	}
 
-	if (human) {
+	if (verbose) {
 		if (ns->mar == 0xffffffff)
 			stdout_kv_add(t, "mar", "%s",
 				      "No Active Resource Limit");
@@ -6154,7 +6156,7 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 		stdout_kv_add(t, "mar", "%#x", le32_to_cpu(ns->mar));
 	}
 
-	if (human) {
+	if (verbose) {
 		if (ns->mor == 0xffffffff)
 			stdout_kv_add(t, "mor", "%s",
 				      "No Open Resource Limit");
@@ -6165,20 +6167,20 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 		stdout_kv_add(t, "mor", "%#x", le32_to_cpu(ns->mor));
 	}
 
-	stdout_zns_id_ns_recommended_limit(t, "rrl", ns->rrl, human);
-	stdout_zns_id_ns_recommended_limit(t, "frl", ns->frl, human);
-	stdout_zns_id_ns_recommended_limit(t, "rrl1", ns->rrl1, human);
-	stdout_zns_id_ns_recommended_limit(t, "rrl2", ns->rrl2, human);
-	stdout_zns_id_ns_recommended_limit(t, "rrl3", ns->rrl3, human);
-	stdout_zns_id_ns_recommended_limit(t, "frl1", ns->frl1, human);
-	stdout_zns_id_ns_recommended_limit(t, "frl2", ns->frl2, human);
-	stdout_zns_id_ns_recommended_limit(t, "frl3", ns->frl3, human);
+	stdout_zns_id_ns_recommended_limit(t, "rrl", ns->rrl, verbose);
+	stdout_zns_id_ns_recommended_limit(t, "frl", ns->frl, verbose);
+	stdout_zns_id_ns_recommended_limit(t, "rrl1", ns->rrl1, verbose);
+	stdout_zns_id_ns_recommended_limit(t, "rrl2", ns->rrl2, verbose);
+	stdout_zns_id_ns_recommended_limit(t, "rrl3", ns->rrl3, verbose);
+	stdout_zns_id_ns_recommended_limit(t, "frl1", ns->frl1, verbose);
+	stdout_zns_id_ns_recommended_limit(t, "frl2", ns->frl2, verbose);
+	stdout_zns_id_ns_recommended_limit(t, "frl3", ns->frl3, verbose);
 
 	stdout_kv_add(t, "numzrwa", "%#x", le32_to_cpu(ns->numzrwa));
 	stdout_kv_add(t, "zrwafg", "%u", le16_to_cpu(ns->zrwafg));
 	stdout_kv_add(t, "zrwasz", "%u", le16_to_cpu(ns->zrwasz));
 
-	if (human) {
+	if (verbose) {
 		row = stdout_kv_add(t, "zrwacap",
 				     "%u\tZone Random Write Area Capability",
 				     ns->zrwacap);
@@ -6191,7 +6193,7 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 	stdout_kv_table_finish(t, "zns-id-ns");
 
 	for (i = 0; i <= id_ns->nlbaf; i++) {
-		if (human)
+		if (verbose)
 			printf("LBA Format Extension %2d : Zone Size: %#"PRIx64" LBAs - "
 					"Zone Descriptor Extension Size: %-1d bytes%s\n",
 				i, le64_to_cpu(ns->lbafe[i].zsze), ns->lbafe[i].zdes << 6,
@@ -6466,7 +6468,7 @@ static struct shr_table *stdout_primary_ctrl_caps_crt_table(__u8 crt)
 
 static void stdout_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps)
 {
-	bool human = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	struct shr_table *t;
 	int row;
 
@@ -6480,7 +6482,7 @@ static void stdout_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps)
 	stdout_kv_add(t, "portid", "%#x", le16_to_cpu(caps->portid));
 
 	row = stdout_kv_add(t, "crt", "%#x", caps->crt);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_primary_ctrl_caps_crt_table(caps->crt));
 
@@ -6592,7 +6594,7 @@ static void stdout_id_ns_granularity_list(const struct nvme_id_ns_granularity_li
 
 static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 {
-	bool human = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	struct shr_table *t;
 	int i;
 
@@ -6606,7 +6608,7 @@ static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 		if (memcmp(uuid_list->entry[i].uuid, zero_uuid, NVME_UUID_LEN) == 0)
 			break;
 		memcpy(&uuid, uuid_list->entry[i].uuid, NVME_UUID_LEN);
-		if (human) {
+		if (verbose) {
 			switch (identifier_association) {
 			case 0x0:
 				association = "No association reported";
@@ -6757,7 +6759,7 @@ static struct shr_table *stdout_id_iocs_iocsc_table(__u64 iocsc)
 
 static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 {
-	bool human = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	struct shr_table *t;
 	int row;
 	__u16 i;
@@ -6777,7 +6779,7 @@ static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 		snprintf(name, sizeof(name), "I/O Command Set Combination[%u]",
 			 i);
 		row = stdout_kv_add(t, name, "%"PRIx64, iocsc);
-		if (human)
+		if (verbose)
 			shr_table_set_row_subtable(t, row,
 				stdout_id_iocs_iocsc_table(iocsc));
 	}
@@ -6982,7 +6984,7 @@ static void stdout_changed_ns_list_log(struct nvme_ns_list *log, const char *dev
 			NVME_ID_NS_LIST_MAX);
 }
 
-static void stdout_effects_log_human(__u32 effect)
+static void stdout_effects_log_verbose(__u32 effect)
 {
 	const char *set = "+";
 	const char *clr = "-";
@@ -7021,7 +7023,7 @@ static void stdout_effects_log_human(__u32 effect)
 }
 
 static void stdout_effects_entry(int admin, int index,
-				 __le32 entry, unsigned int human)
+				 __le32 entry, unsigned int verbose)
 {
 	__u32 effect;
 	char *format_string;
@@ -7032,8 +7034,8 @@ static void stdout_effects_entry(int admin, int index,
 	if (effect & NVME_CMD_EFFECTS_CSUPP) {
 		printf(format_string, index, nvme_cmd_to_string(admin, index),
 		       effect);
-		if (human)
-			stdout_effects_log_human(effect);
+		if (verbose)
+			stdout_effects_log_verbose(effect);
 		else
 			printf("\n");
 	}
@@ -7041,7 +7043,7 @@ static void stdout_effects_entry(int admin, int index,
 
 static void stdout_effects_log_segment(int admin, int a, int b,
 				       struct nvme_cmd_effects_log *effects,
-				       char *header, int human)
+				       char *header, int verbose)
 {
 	bool printed_header = false;
 
@@ -7060,7 +7062,7 @@ static void stdout_effects_log_segment(int admin, int a, int b,
 			printed_header = true;
 		}
 
-		stdout_effects_entry(admin, i, entry, human);
+		stdout_effects_entry(admin, i, entry, verbose);
 	}
 
 	if (printed_header)
@@ -7070,7 +7072,7 @@ static void stdout_effects_log_segment(int admin, int a, int b,
 static void stdout_effects_log_page(enum nvme_csi csi,
 				    struct nvme_cmd_effects_log *effects)
 {
-	int human = stdout_print_ops.flags & VERBOSE;
+	int verbose = stdout_print_ops.flags & VERBOSE;
 
 	switch (csi) {
 	case NVME_CSI_NVM:
@@ -7091,10 +7093,14 @@ static void stdout_effects_log_page(enum nvme_csi csi,
 		break;
 	}
 
-	stdout_effects_log_segment(1, 0, 0xbf, effects, "Admin Commands", human);
-	stdout_effects_log_segment(1, 0xc0, 0xff, effects, "Vendor Specific Admin Commands", human);
-	stdout_effects_log_segment(0, 0, 0x80, effects, "I/O Commands", human);
-	stdout_effects_log_segment(0, 0x80, 0x100, effects, "Vendor Specific I/O Commands", human);
+	stdout_effects_log_segment(1, 0, 0xbf, effects, "Admin Commands",
+				    verbose);
+	stdout_effects_log_segment(1, 0xc0, 0xff, effects,
+				    "Vendor Specific Admin Commands", verbose);
+	stdout_effects_log_segment(0, 0, 0x80, effects, "I/O Commands",
+				    verbose);
+	stdout_effects_log_segment(0, 0x80, 0x100, effects,
+				    "Vendor Specific I/O Commands", verbose);
 }
 
 static void stdout_effects_log_pages(struct list_head *list)
@@ -7106,7 +7112,8 @@ static void stdout_effects_log_pages(struct list_head *list)
 	}
 }
 
-static struct shr_table *stdout_support_log_human_table(__u32 support, __u8 lid)
+static struct shr_table *
+stdout_support_log_verbose_table(__u32 support, __u8 lid)
 {
 	struct shr_table *t;
 	__u16 lidsp = support >> 16;
@@ -7158,7 +7165,7 @@ static struct shr_table *stdout_support_log_human_table(__u32 support, __u8 lid)
 static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 				 const char *devname)
 {
-	int lid, human = stdout_print_ops.flags & VERBOSE;
+	int lid, verbose = stdout_print_ops.flags & VERBOSE;
 	__u32 support = 0;
 	struct shr_table *t;
 
@@ -7177,9 +7184,9 @@ static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 			snprintf(name, sizeof(name), "LID %#x", lid);
 			row = stdout_kv_add(t, name, "%s",
 					     nvme_log_to_string(lid));
-			if (human)
+			if (verbose)
 				shr_table_set_row_subtable(t, row,
-					stdout_support_log_human_table(
+					stdout_support_log_verbose_table(
 						support, lid));
 		}
 	}
@@ -7281,7 +7288,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 	__cleanup_free char *ipm_str = NULL;
 	__u16 temperature = smart->temperature[1] << 8 | smart->temperature[0];
 	__u32 ipm = le32_to_cpu(smart->interval_power_measurement);
-	bool human = stdout_print_ops.flags & VERBOSE;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
 	struct shr_table *t;
 	char name[32];
 	int i, row;
@@ -7294,7 +7301,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 
 	row = stdout_kv_add(t, "critical_warning", "%#x",
 			     smart->critical_warning);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_smart_log_critical_warning_table(
 						smart->critical_warning));
@@ -7311,7 +7318,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 
 	row = stdout_kv_add(t, "informative warning", "%#x",
 			     smart->informative_warning);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_smart_log_informative_warning_table(
 						smart->informative_warning));
@@ -7630,13 +7637,13 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 {
 	__cleanup_free char *sprog_val = NULL;
 	struct shr_table *t;
-	int human = stdout_print_ops.flags & VERBOSE;
+	int verbose = stdout_print_ops.flags & VERBOSE;
 	__u16 sstat = le16_to_cpu(sanitize->sstat);
 	__u16 status = sstat & NVME_SANITIZE_SSTAT_STATUS_MASK;
 	double percent;
 	int row;
 
-	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS) {
+	if (verbose && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS) {
 		percent = ((double)le16_to_cpu(sanitize->sprog) * 100) /
 			  0x10000;
 
@@ -7656,7 +7663,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 			      le16_to_cpu(sanitize->sprog));
 
 	row = stdout_kv_add(t, "Sanitize Status (SSTAT)", "%#x", sstat);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 			stdout_sanitize_log_sstat_table(sstat));
 
@@ -7683,7 +7690,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 
 	row = stdout_kv_add(t, "Sanitize State Information (SSI)", "%#x",
 			     sanitize->ssi);
-	if (human)
+	if (verbose)
 		shr_table_set_row_subtable(t, row,
 			stdout_sanitize_log_ssi_table(sanitize->ssi, status));
 
