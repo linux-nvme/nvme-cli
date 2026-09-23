@@ -7048,22 +7048,51 @@ static void stdout_fw_log(struct nvme_firmware_slot *fw_log,
 
 static void stdout_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, bool alloc)
 {
+	struct shr_table_column columns[] = {
+		{ "Index", RIGHT, AUTO_WIDTH },
+		{ "NSID",  LEFT,  AUTO_WIDTH },
+	};
+	struct shr_table *t;
 	__u32 nsid;
-	int i;
+	int i, row;
+	bool changed = false, terminated = false;
 
-	if (log->ns[0] != cpu_to_le32(NVME_NSID_ALL)) {
-		for (i = 0; i < NVME_ID_NS_LIST_MAX; i++) {
-			nsid = le32_to_cpu(log->ns[i]);
-			if (nsid == 0) {
-				printf("no ns changed\n");
-				break;
-			}
+	if (log->ns[0] == cpu_to_le32(NVME_NSID_ALL)) {
+		printf("more than %d ns changed\n", NVME_ID_NS_LIST_MAX);
+		return;
+	}
 
-			printf("[%4u]:%#x\n", i, nsid);
+	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t)
+		return;
+
+	for (i = 0; i < NVME_ID_NS_LIST_MAX; i++) {
+		char id[16];
+
+		nsid = le32_to_cpu(log->ns[i]);
+		if (nsid == 0) {
+			terminated = true;
+			break;
 		}
-	} else
-		printf("more than %d ns changed\n",
-			NVME_ID_NS_LIST_MAX);
+
+		changed = true;
+		row = shr_table_get_row_id(t);
+		snprintf(id, sizeof(id), "%#x", nsid);
+		shr_table_set_value_int(t, 0, row, i, RIGHT);
+		shr_table_set_value_str(t, 1, row, id, LEFT);
+		shr_table_add_row(t, row);
+	}
+
+	if (changed)
+		shr_table_print(t);
+	shr_table_free(t);
+
+	/*
+	 * The terminating 0 can appear at any index, not just index 0, so
+	 * this can print after a non-empty list too -- matches old behavior.
+	 */
+	if (terminated)
+		printf("no ns changed\n");
 }
 
 static void stdout_effects_log_verbose(__u32 effect)
