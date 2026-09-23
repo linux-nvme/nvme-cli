@@ -567,6 +567,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 		obj_add_int(psd, "force_quiesce_vault_scale", ctrl->psd[i].epfr_fqv_ts >> 4);
 		obj_add_int(psd, "emerg_power_fail_vault_time", ctrl->psd[i].epfvt);
 		obj_add_int(psd, "emerg_power_fail_vault_scale", ctrl->psd[i].epfvts & 0xf);
+		obj_add_int(psd, "max_bandwidth", ctrl->psd[i].mbw);
+		obj_add_int(psd, "max_bandwidth_scale",
+			    ctrl->psd[i].mbws & 0x7);
 		obj_add_int(psd, "min_idle_io_exit_lat_limit",
 			    le16_to_cpu(ctrl->psd[i].miiell));
 
