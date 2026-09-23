@@ -7095,132 +7095,201 @@ static void stdout_changed_ns_list_log(struct nvme_ns_list *log, const char *dev
 		printf("no ns changed\n");
 }
 
-static void stdout_effects_log_verbose(__u32 effect)
+static void stdout_effects_entry_decoded(char *buf, size_t len, __u32 effect)
 {
-	const char *set = "+";
-	const char *clr = "-";
+	static const char * const cser_desc[] = {
+		"No CSER defined",
+		"No admin command for any namespace",
+	};
+	static const char * const cse_desc[] = {
+		"No command restriction",
+		"No other command for same namespace",
+		"No other command for any namespace",
+	};
+	__u8 cser = NVME_CMD_EFFECTS_CSER(effect);
+	__u8 cse = NVME_CMD_EFFECTS_CSE(effect);
+	const char *parts[7];
+	int n = 0, i;
 
-	printf("  CSUPP+");
-	printf("  LBCC%s", (effect & NVME_CMD_EFFECTS_LBCC) ? set : clr);
-	printf("  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
-	printf("  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
-	printf("  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
-	printf("  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
+	if (effect & NVME_CMD_EFFECTS_LBCC)
+		parts[n++] = "LBCC";
+	if (effect & NVME_CMD_EFFECTS_NCC)
+		parts[n++] = "NCC";
+	if (effect & NVME_CMD_EFFECTS_NIC)
+		parts[n++] = "NIC";
+	if (effect & NVME_CMD_EFFECTS_CCC)
+		parts[n++] = "CCC";
+	if (effect & NVME_CMD_EFFECTS_UUID_SEL)
+		parts[n++] = "USS";
+	parts[n++] = cser < ARRAY_SIZE(cser_desc) ? cser_desc[cser] :
+						     "Reserved CSER";
+	parts[n++] = cse < ARRAY_SIZE(cse_desc) ? cse_desc[cse] :
+						  "Reserved CSE";
 
-	switch (NVME_CMD_EFFECTS_CSER(effect)) {
-	case 0:
-		printf("  No CSER defined\n");
-		break;
-	case 1:
-		printf("  No admin command for any namespace\n");
-		break;
-	default:
-		printf("  Reserved CSER\n");
-	}
-
-	switch (NVME_CMD_EFFECTS_CSE(effect)) {
-	case 0:
-		printf("  No command restriction\n");
-		break;
-	case 1:
-		printf("  No other command for same namespace\n");
-		break;
-	case 2:
-		printf("  No other command for any namespace\n");
-		break;
-	default:
-		printf("  Reserved CSE\n");
-	}
-}
-
-static void stdout_effects_entry(int admin, int index,
-				 __le32 entry, unsigned int verbose)
-{
-	__u32 effect;
-	char *format_string;
-
-	format_string = admin ? "ACS%-6d[%-32s] %08x" : "IOCS%-5d[%-32s] %08x";
-
-	effect = le32_to_cpu(entry);
-	if (effect & NVME_CMD_EFFECTS_CSUPP) {
-		printf(format_string, index, nvme_cmd_to_string(admin, index),
-		       effect);
-		if (verbose)
-			stdout_effects_log_verbose(effect);
-		else
-			printf("\n");
+	buf[0] = '\0';
+	for (i = 0; i < n; i++) {
+		if (i)
+			strncat(buf, ", ", len - strlen(buf) - 1);
+		strncat(buf, parts[i], len - strlen(buf) - 1);
 	}
 }
 
-static void stdout_effects_log_segment(int admin, int a, int b,
-				       struct nvme_cmd_effects_log *effects,
-				       char *header, int verbose)
+static struct shr_table *stdout_effects_log_segment_build(int admin, int a,
+		int b, struct nvme_cmd_effects_log *effects, int verbose)
 {
-	bool printed_header = false;
+	struct shr_table_column columns_verbose[] = {
+		{ "ID",      LEFT, AUTO_WIDTH },
+		{ "Command", LEFT, AUTO_WIDTH },
+		{ "Effects", LEFT, AUTO_WIDTH },
+		{ "Decoded", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table_column columns[] = {
+		{ "ID",      LEFT, AUTO_WIDTH },
+		{ "Command", LEFT, AUTO_WIDTH },
+		{ "Effects", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *t;
+	bool has_entries = false;
+	int i, row;
 
-	for (int i = a; i < b; i++) {
-		__le32 entry;
-		__u32 effect;
+	if (verbose)
+		t = shr_table_init_with_columns(columns_verbose,
+						 ARRAY_SIZE(columns_verbose));
+	else
+		t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t)
+		return NULL;
 
-		entry = admin ? effects->acs[i] : effects->iocs[i];
-		effect = le32_to_cpu(entry);
+	for (i = a; i < b; i++) {
+		__le32 entry = admin ? effects->acs[i] : effects->iocs[i];
+		__u32 effect = le32_to_cpu(entry);
+		char id[16], hex[16];
+		int col = 0;
 
 		if (!(effect & NVME_CMD_EFFECTS_CSUPP))
 			continue;
 
-		if (!printed_header && header) {
-			printf("%s\n", header);
-			printed_header = true;
-		}
+		has_entries = true;
+		snprintf(id, sizeof(id), "%s%d", admin ? "ACS" : "IOCS", i);
+		snprintf(hex, sizeof(hex), "%08x", effect);
 
-		stdout_effects_entry(admin, i, entry, verbose);
+		row = shr_table_get_row_id(t);
+		shr_table_set_value_str(t, col++, row, id, LEFT);
+		shr_table_set_value_str(t, col++, row,
+					 nvme_cmd_to_string(admin, i), LEFT);
+		shr_table_set_value_str(t, col++, row, hex, LEFT);
+		if (verbose) {
+			char decoded[128];
+
+			stdout_effects_entry_decoded(decoded,
+						      sizeof(decoded), effect);
+			shr_table_set_value_str(t, col++, row, decoded, LEFT);
+		}
+		shr_table_add_row(t, row);
 	}
 
-	if (printed_header)
-		printf("\n");
+	if (!has_entries) {
+		shr_table_free(t);
+		return NULL;
+	}
+
+	return t;
 }
 
-static void stdout_effects_log_page(enum nvme_csi csi,
-				    struct nvme_cmd_effects_log *effects)
+static void stdout_effects_align_tables(struct shr_table **tables, int n,
+		int num_columns)
 {
-	int verbose = stdout_print_ops.flags & VERBOSE;
+	int col, i, width;
 
-	switch (csi) {
-	case NVME_CSI_NVM:
-		printf("NVM Command Set Log Page\n");
-		printf("%-.80s\n", dash);
-		break;
-	case NVME_CSI_KV:
-		printf("KV Command Set Log Page\n");
-		printf("%-.80s\n", dash);
-		break;
-	case NVME_CSI_ZNS:
-		printf("ZNS Command Set Log Page\n");
-		printf("%-.80s\n", dash);
-		break;
-	default:
-		printf("Unknown Command Set Log Page\n");
-		printf("%-.80s\n", dash);
-		break;
+	for (col = 0; col < num_columns; col++) {
+		width = 0;
+		for (i = 0; i < n; i++) {
+			int w;
+
+			if (!tables[i])
+				continue;
+			w = shr_table_get_column_width(tables[i], col);
+			if (w > width)
+				width = w;
+		}
+		for (i = 0; i < n; i++) {
+			if (tables[i])
+				shr_table_set_column_width(tables[i], col,
+							    width);
+		}
 	}
-
-	stdout_effects_log_segment(1, 0, 0xbf, effects, "Admin Commands",
-				    verbose);
-	stdout_effects_log_segment(1, 0xc0, 0xff, effects,
-				    "Vendor Specific Admin Commands", verbose);
-	stdout_effects_log_segment(0, 0, 0x80, effects, "I/O Commands",
-				    verbose);
-	stdout_effects_log_segment(0, 0x80, 0x100, effects,
-				    "Vendor Specific I/O Commands", verbose);
 }
 
 static void stdout_effects_log_pages(struct list_head *list)
 {
+	static const char * const headers[4] = {
+		"Admin Commands",
+		"Vendor Specific Admin Commands",
+		"I/O Commands",
+		"Vendor Specific I/O Commands",
+	};
 	nvme_effects_log_node_t *node = NULL;
+	int verbose = stdout_print_ops.flags & VERBOSE;
+	int num_columns = verbose ? 4 : 3;
+	struct shr_table **segs;
+	int count = 0, idx, i;
 
+	list_for_each(list, node, node)
+		count++;
+	if (!count)
+		return;
+
+	segs = calloc(count * 4, sizeof(*segs));
+	if (!segs)
+		return;
+
+	idx = 0;
 	list_for_each(list, node, node) {
-		stdout_effects_log_page(node->csi, &node->effects);
+		segs[idx * 4 + 0] = stdout_effects_log_segment_build(1, 0,
+				0xbf, &node->effects, verbose);
+		segs[idx * 4 + 1] = stdout_effects_log_segment_build(1, 0xc0,
+				0xff, &node->effects, verbose);
+		segs[idx * 4 + 2] = stdout_effects_log_segment_build(0, 0,
+				0x80, &node->effects, verbose);
+		segs[idx * 4 + 3] = stdout_effects_log_segment_build(0, 0x80,
+				0x100, &node->effects, verbose);
+		idx++;
 	}
+
+	stdout_effects_align_tables(segs, count * 4, num_columns);
+
+	idx = 0;
+	list_for_each(list, node, node) {
+		switch (node->csi) {
+		case NVME_CSI_NVM:
+			printf("NVM Command Set Log Page\n");
+			break;
+		case NVME_CSI_KV:
+			printf("KV Command Set Log Page\n");
+			break;
+		case NVME_CSI_ZNS:
+			printf("ZNS Command Set Log Page\n");
+			break;
+		default:
+			printf("Unknown Command Set Log Page\n");
+			break;
+		}
+		printf("%-.80s\n", dash);
+
+		for (i = 0; i < 4; i++) {
+			struct shr_table *t = segs[idx * 4 + i];
+
+			if (!t)
+				continue;
+			printf("%s\n", headers[i]);
+			shr_table_print(t);
+			shr_table_free(t);
+			printf("\n");
+		}
+		idx++;
+	}
+
+	free(segs);
 }
 
 static struct shr_table *
