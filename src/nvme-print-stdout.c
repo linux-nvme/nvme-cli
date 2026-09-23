@@ -6239,12 +6239,46 @@ static void stdout_zns_report_zones(void *report, __u32 descs,
 
 static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 {
+	struct shr_table_column columns[] = {
+		{ "Index",         RIGHT, AUTO_WIDTH },
+		{ "Controller ID", LEFT,  AUTO_WIDTH },
+	};
 	__u16 num = le16_to_cpu(ctrl_list->num);
-	int i;
+	struct shr_table *t;
+	int i, row, n = min(num, 2047);
 
-	printf("num of ctrls present: %u\n", num);
-	for (i = 0; i < min(num, 2047); i++)
-		printf("[%4u]:%#x\n", i, le16_to_cpu(ctrl_list->identifier[i]));
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "num of ctrls present", "%u", num);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build list-ctrl table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
+	if (!n)
+		return;
+
+	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t)
+		return;
+
+	for (i = 0; i < n; i++) {
+		char id[16];
+
+		row = shr_table_get_row_id(t);
+		snprintf(id, sizeof(id), "%#x",
+			 le16_to_cpu(ctrl_list->identifier[i]));
+		shr_table_set_value_int(t, 0, row, i, RIGHT);
+		shr_table_set_value_str(t, 1, row, id, LEFT);
+		shr_table_add_row(t, row);
+	}
+
+	shr_table_print(t);
+	shr_table_free(t);
 }
 
 static void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,
