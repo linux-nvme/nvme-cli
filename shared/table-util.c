@@ -348,6 +348,12 @@ void shr_table_print(struct shr_table *t)
 	shr_table_print_stream(stdout, t);
 }
 
+void shr_table_print_header(FILE *stream, struct shr_table *t)
+{
+	if (!t->no_header)
+		table_print_columns(stream, t);
+}
+
 int shr_table_get_row_id(struct shr_table *t)
 {
 	struct shr_table_row *new_rows;
