@@ -115,8 +115,10 @@ struct nvmf_args {
 /*
  * Resolve an OPT_STRING_OPTIONAL() "--persistent[=no|auto|force]" argument
  * to the string libnvmf_context_set_persistent()/libnvmf_params_set()
- * expect: NULL if not given at all, "auto" if given bare, or the value as
- * typed otherwise.
+ * expect: "auto" when the option is absent or given bare, or the value as
+ * typed otherwise. Never NULL -- persistence is on by default, and
+ * "--persistent=no" is the opt-out. A caller that has to tell "absent"
+ * from "given" apart needs argconfig_parse_seen() itself.
  */
 const char *nvmf_resolve_persistent_arg(
 		struct argconfig_commandline_options *opts, const char *arg);

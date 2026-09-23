@@ -568,16 +568,24 @@ class FabricsMockCLITest(unittest.TestCase):
             'eflags': eflags,
         }
 
-    def test_discover_persistent_default_disconnects(self):
-        """Without --persistent, the discovery controller is always torn down, EPCSD or not."""
+    def test_discover_persistent_default_persists(self):
+        """Without --persistent, the default is "auto": persist when EPCSD is set."""
         addr = '192.168.10.1'
         self.server.discovery_entries = [self._self_entry(addr, eflags=NVMF_DISC_EFLAGS_EPCSD)]
+
+        self._run('discover', '-t', 'tcp', '-a', addr)
+        self._assert_persisted(self._DISCOVERY_INSTANCE)
+
+    def test_discover_persistent_default_disconnects_without_epcsd(self):
+        """The "auto" default still degrades to non-persistent when EPCSD isn't set."""
+        addr = '192.168.10.11'
+        self.server.discovery_entries = [self._self_entry(addr, eflags=0)]
 
         self._run('discover', '-t', 'tcp', '-a', addr)
         self._assert_disconnected(self._DISCOVERY_INSTANCE)
 
     def test_discover_persistent_no_ignores_epcsd(self):
-        """--persistent=no behaves like the default: always disconnect, even with EPCSD set."""
+        """--persistent=no opts out of the default: always disconnect, even with EPCSD set."""
         addr = '192.168.10.2'
         self.server.discovery_entries = [self._self_entry(addr, eflags=NVMF_DISC_EFLAGS_EPCSD)]
 
