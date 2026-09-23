@@ -901,22 +901,58 @@ void nvme_show_pel_thermal_excursion_event(void *pevent_log_info, __u32 offset)
 
 static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
 {
+	struct shr_table *t;
+
 	printf("Vendor Specific Event Data:\n");
 	switch (vsedt) {
 	case NVME_PEL_VSEDT_EVENT_NAME:
-		printf("Event Name for Vendor Specific Event Code:\n");
-		printf("%.*s\n", vsedl, (char *)vsed);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Event Name for Vendor Specific Event Code",
+			      "%.*s", vsedl, (char *)vsed);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build pel-vs-event-data table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_PEL_VSEDT_ASCII_STRING:
-		printf("ASCII String Data:\n");
-		printf("%.*s\n", vsedl, (char *)vsed);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "ASCII String Data", "%.*s", vsedl,
+			      (char *)vsed);
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build pel-vs-event-data table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	case NVME_PEL_VSEDT_BINARY:
 		printf("Binary Data:\n");
 		d(vsed, vsedl, 16, 1);
 		break;
 	case NVME_PEL_VSEDT_SIGNED_INT:
-		printf("Signed Integer Data: %" PRId64 "\n", (int64_t)vsedt);
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		stdout_kv_add(t, "Signed Integer Data", "%"PRId64,
+			      (int64_t)le64_to_cpu(*(__le64 *)vsed));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build pel-vs-event-data table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 		break;
 	default:
 		printf("Reserved data type. As Binary:\n");
