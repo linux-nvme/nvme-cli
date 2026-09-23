@@ -32,6 +32,8 @@ Tests in this module verify:
   * The Get Log Page command carries the OCP UUID index in CDW14 and
     NVME_NSID_ALL as its namespace, and a controller whose UUID list
     holds no OCP entry is refused instead of being read with index 0.
+  * --no-uuid skips UUID lookup and requests the page with UUID index 0
+    without loosening any of the checks on the page itself.
   * Output-mode and error handling: -o binary, -o json format version
     selection, invalid format and format-version values, a failing Get
     Log Page, a truncated page, and a nonexistent device.
@@ -110,23 +112,26 @@ def pack_uuid_list(slot=0, filler_count=0):
 
 class OCPMockServer(MockIPCServer):
     """Serves the two commands smart-add-log issues, and records how it
-    asked for the log page. Anything else succeeds with zeroes."""
+    asked for each: the UUID list lookups in @uuid_requests and the log
+    page reads in @log_requests. Anything else succeeds with zeroes."""
 
     def __init__(self, sock_path):
         super().__init__(sock_path)
         self.page = layout.pack(version=layout.MAX_LOG_PAGE_VERSION)
-        # None: no OCP UUID in the list, so the plugin must fall back to
-        # UUID index 0.
+        # None: no OCP UUID in the list. The plugin refuses such a
+        # controller unless --no-uuid tells it to skip the lookup.
         self.uuid_slot = 0
         self.uuid_filler_count = 0
         self.log_sc_status = 0
         # Serve fewer bytes than asked for, to model a short transfer.
         self.truncate_to = None
+        self.uuid_requests = []
         self.log_requests = []
 
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
         if opcode == _OPC_IDENTIFY and (cdw10 & 0xFF) == _CNS_UUID_LIST:
+            self.uuid_requests.append({'len': req_len})
             payload = pack_uuid_list(self.uuid_slot, self.uuid_filler_count)
             self.send_response(conn, 0, payload=payload[:req_len])
             return
@@ -477,6 +482,93 @@ class TestOCPSmartAddLogCommand(OCPSmartAddLogTestBase):
         request = self.server.log_requests[-1]
         self.assertEqual(request['len'], layout.LOG_PAGE_SIZE)
         self.assertEqual(request['lpo'], 0)
+
+
+class TestOCPSmartAddLogNoUuid(OCPSmartAddLogTestBase):
+    """--no-uuid: read the page with UUID index 0 and no lookup at all."""
+
+    def _assert_page_decoded(self, log, format_version=2):
+        """The page reached a printer and came out intact."""
+        guid = layout.by_name('log_page_guid')
+        self.assertEqual(log[self.json_key(guid, format_version)].lower(),
+                         layout.render_guid(layout.SCAO_GUID_BYTES))
+        field = layout.by_name('xor_recovery_count')
+        self.assertEqual(
+            layout.coerce_json(field,
+                               log[self.json_key(field, format_version)]),
+            layout.decode(self.server.page, field))
+
+    def test_no_uuid_requests_uuid_index_zero(self):
+        self.assertOk(self.run_smart('--no-uuid', '-o', 'json'))
+        self.assertEqual(self.server.log_requests[-1]['cdw14'] & 0x7F, 0)
+
+    def test_no_uuid_skips_the_uuid_list_lookup(self):
+        for args, lookups_expected in (((), True), (('--no-uuid',), False)):
+            with self.subTest(args=args):
+                self.server.uuid_requests.clear()
+                self.assertOk(self.run_smart(*args, '-o', 'json'))
+                if lookups_expected:
+                    self.assertNotEqual(
+                        self.server.uuid_requests, [],
+                        'the default path did not look the OCP UUID up')
+                else:
+                    self.assertEqual(
+                        self.server.uuid_requests, [],
+                        '--no-uuid still looked the OCP UUID up')
+
+    def test_no_uuid_reads_the_log_without_an_ocp_uuid_entry(self):
+        """A controller the default path refuses is read successfully,
+        and the page still decodes."""
+        self.server.uuid_slot = None
+        for filler_count in (0, 2):
+            with self.subTest(uuid_filler_count=filler_count):
+                self.server.uuid_filler_count = filler_count
+                self.server.log_requests.clear()
+                result = self.assertOk(
+                    self.run_smart('--no-uuid', '-o', 'json'))
+                self.assertNotIn(_NO_UUID_MSG, result.stdout + result.stderr)
+                self.assertEqual(
+                    self.server.log_requests[-1]['cdw14'] & 0x7F, 0)
+                self._assert_page_decoded(json.loads(result.stdout))
+
+    def test_no_uuid_still_rejects_a_wrong_guid(self):
+        """Bypassing the UUID index says nothing about the page that comes
+        back, so the GUID check has to survive the flag."""
+        self.server.uuid_slot = None
+        self.server.page = layout.pack(
+            version=layout.MAX_LOG_PAGE_VERSION, guid=bytes(range(16)))
+        result = self.run_smart('--no-uuid')
+        self.assertNotEqual(result.returncode, 0,
+                            'a non-OCP GUID must not exit 0 under --no-uuid')
+        self.assertIn(_UNKNOWN_GUID_MSG, result.stdout + result.stderr)
+
+    def test_short_form_matches_the_long_form(self):
+        """-n is the documented short form."""
+        self.server.uuid_slot = None
+        long_form = self.assertOk(self.run_smart('--no-uuid'))
+        long_cdw14 = self.server.log_requests[-1]['cdw14']
+        short_form = self.assertOk(self.run_smart('-n'))
+        self.assertEqual(short_form.stdout, long_form.stdout)
+        self.assertEqual(self.server.log_requests[-1]['cdw14'], long_cdw14)
+
+    def test_no_uuid_output_matches_the_default_path(self):
+        """The flag changes which UUID index the page is asked for, not
+        how the page that comes back is reported."""
+        for format_version in _JSON_FORMAT_VERSIONS:
+            with self.subTest(format_version=format_version):
+                default = self.json_log(format_version=format_version)
+                skipped = json.loads(self.assertOk(self.run_smart(
+                    '--no-uuid', '-o', 'json',
+                    '--output-format-version', str(format_version))).stdout)
+                self.assertEqual(default, skipped)
+
+    def test_help_lists_both_spellings_of_the_option(self):
+        """show_option() in src/argconfig.c renders an option with a short
+        form as "--long, -s", so the pair appears verbatim."""
+        result = subprocess.run(
+            [_NVME_BIN, 'ocp', 'smart-add-log', '--help'],
+            capture_output=True, text=True)
+        self.assertIn('--no-uuid, -n', result.stdout + result.stderr)
 
 
 class TestOCPSmartAddLogOutputModes(OCPSmartAddLogTestBase):
