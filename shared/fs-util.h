@@ -38,6 +38,23 @@ int shr_mkdir_from_fname(const char *file, mode_t mode);
 int shr_rmdir(const char *path);
 
 /*
+ * True if path exists and is a directory, without following a symlink (or,
+ * on Windows, a reparse point such as a directory junction) at path itself:
+ * a symlink to a directory is reported as false, the same as lstat() +
+ * S_ISDIR() would report it on Linux. False if path does not exist.
+ */
+bool shr_isdir(const char *path);
+
+/*
+ * Remove a directory and everything in it, like "rm -rf", without invoking
+ * a shell or an external "rm" -- so a path never becomes syntax and no
+ * "rm" executable needs to be on PATH. A path that is already missing is
+ * not an error.
+ * Return: 0 on success, -errno otherwise.
+ */
+int shr_rmdir_recursive(const char *path);
+
+/*
  * mkstemp(), with O_CLOEXEC set atomically where possible.
  * Return: an open fd on success, -errno otherwise.
  */

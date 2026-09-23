@@ -94,6 +94,15 @@ int shr_rmdir(const char *path)
 	return 0;
 }
 
+bool shr_isdir(const char *path)
+{
+	struct stat st;
+
+	if (lstat(path, &st) < 0)
+		return false;
+	return S_ISDIR(st.st_mode);
+}
+
 bool shr_fd_is_open(int fd)
 {
 	return fcntl(fd, F_GETFD) != -1;
