@@ -6302,52 +6302,134 @@ static void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 	stdout_kv_table_finish(t, "zns-changed-zone-log");
 }
 
-static void stdout_zns_report_zone_attributes(__u8 za, __u8 zai)
+static void stdout_zns_report_zone_attrs_decoded(char *buf, size_t len,
+		__u8 za, __u8 zai)
 {
 	const char * const recommended_limit[4] = {"", "1", "2", "3"};
+	int n;
 
-	printf("Attrs: Zone Descriptor Extension is %sVaild\n",
-	       za & NVME_ZNS_ZA_ZDEV ? "" : "Not ");
+	n = snprintf(buf, len, "%sValid", za & NVME_ZNS_ZA_ZDEV ? "" : "Not ");
 
 	if (za & NVME_ZNS_ZA_RZR)
-		printf("       Reset Zone Recommended with Reset Recommended Limit%s\n",
-		       recommended_limit[(zai&0xd)>>2]);
+		n += snprintf(buf + n, len - n,
+			      ", Reset Recommended (Limit %s)",
+			      recommended_limit[(zai&0xd)>>2]);
 
 	if (za & NVME_ZNS_ZA_FZR)
-		printf("       Finish Zone Recommended with Finish Recommended Limit%s\n",
-		       recommended_limit[zai&0x3]);
+		n += snprintf(buf + n, len - n,
+			      ", Finish Recommended (Limit %s)",
+			      recommended_limit[zai&0x3]);
 
 	if (za & NVME_ZNS_ZA_ZFC)
-		printf("       Zone Finished by Controller\n");
+		snprintf(buf + n, len - n, ", Finished by Controller");
+}
+
+static struct nvme_zns_desc *stdout_zns_report_zones_desc(void *report,
+		__u8 ext_size, int i)
+{
+	struct nvme_zone_report *r = report;
+
+	return (struct nvme_zns_desc *)(report + sizeof(*r) +
+			i * (sizeof(struct nvme_zns_desc) + ext_size));
 }
 
 static void stdout_zns_report_zones(void *report, __u32 descs,
 				    __u8 ext_size, __u32 report_size,
 				    struct json_object *zone_list)
 {
+	struct shr_table_column columns_verbose[] = {
+		{ "SLBA",          LEFT, AUTO_WIDTH },
+		{ "WP",            LEFT, AUTO_WIDTH },
+		{ "Cap",           LEFT, AUTO_WIDTH },
+		{ "State",         LEFT, AUTO_WIDTH },
+		{ "Type",          LEFT, AUTO_WIDTH },
+		{ "Attrs",         LEFT, AUTO_WIDTH },
+		{ "AttrsInfo",     LEFT, AUTO_WIDTH },
+		{ "Attrs Decoded", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table_column columns[] = {
+		{ "SLBA",      LEFT, AUTO_WIDTH },
+		{ "WP",        LEFT, AUTO_WIDTH },
+		{ "Cap",       LEFT, AUTO_WIDTH },
+		{ "State",     LEFT, AUTO_WIDTH },
+		{ "Type",      LEFT, AUTO_WIDTH },
+		{ "Attrs",     LEFT, AUTO_WIDTH },
+		{ "AttrsInfo", LEFT, AUTO_WIDTH },
+	};
 	struct nvme_zone_report *r = report;
 	struct nvme_zns_desc *desc;
-	int i, verbose = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	int i, row, verbose = stdout_print_ops.flags & VERBOSE;
 	__u64 nr_zones = le64_to_cpu(r->nr_zones);
 
 	if (nr_zones < descs)
 		descs = nr_zones;
 
+	if (verbose)
+		t = shr_table_init_with_columns(columns_verbose,
+						 ARRAY_SIZE(columns_verbose));
+	else
+		t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t)
+		return;
+
 	for (i = 0; i < descs; i++) {
-		desc = (struct nvme_zns_desc *)
-			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
+		char slba[24], wp[24], cap[24], attrs[8], attrsinfo[8];
+		int col = 0;
+
+		desc = stdout_zns_report_zones_desc(report, ext_size, i);
+		row = shr_table_get_row_id(t);
+
+		snprintf(slba, sizeof(slba), "%#"PRIx64,
+			 (uint64_t)le64_to_cpu(desc->zslba));
+		snprintf(wp, sizeof(wp), "%#"PRIx64,
+			 (uint64_t)le64_to_cpu(desc->wp));
+		snprintf(cap, sizeof(cap), "%#"PRIx64,
+			 (uint64_t)le64_to_cpu(desc->zcap));
+		snprintf(attrs, sizeof(attrs), "%#x", desc->za);
+		snprintf(attrsinfo, sizeof(attrsinfo), "%#x", desc->zai);
+
+		shr_table_set_value_str(t, col++, row, slba, LEFT);
+		shr_table_set_value_str(t, col++, row, wp, LEFT);
+		shr_table_set_value_str(t, col++, row, cap, LEFT);
+
 		if (verbose) {
-			printf("SLBA: %#-10"PRIx64" WP: %#-10"PRIx64" Cap: %#-10"PRIx64" State: %-12s Type: %-14s\n",
-				(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
-				(uint64_t)le64_to_cpu(desc->zcap), nvme_zone_state_to_string(desc->zs >> 4),
-				nvme_zone_type_to_string(desc->zt));
-			stdout_zns_report_zone_attributes(desc->za, desc->zai);
+			const char *state =
+				nvme_zone_state_to_string(desc->zs >> 4);
+			const char *type = nvme_zone_type_to_string(desc->zt);
+
+			shr_table_set_value_str(t, col++, row, state, LEFT);
+			shr_table_set_value_str(t, col++, row, type, LEFT);
 		} else {
-			printf("SLBA: %#-10"PRIx64" WP: %#-10"PRIx64" Cap: %#-10"PRIx64" State: %#-4x Type: %#-4x Attrs: %#-4x AttrsInfo: %#-4x\n",
-				(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
-				(uint64_t)le64_to_cpu(desc->zcap), desc->zs, desc->zt,
-				desc->za, desc->zai);
+			char state[8], type[8];
+
+			snprintf(state, sizeof(state), "%#x", desc->zs);
+			snprintf(type, sizeof(type), "%#x", desc->zt);
+
+			shr_table_set_value_str(t, col++, row, state, LEFT);
+			shr_table_set_value_str(t, col++, row, type, LEFT);
 		}
+
+		shr_table_set_value_str(t, col++, row, attrs, LEFT);
+		shr_table_set_value_str(t, col++, row, attrsinfo, LEFT);
+
+		if (verbose) {
+			char decoded[128];
+
+			stdout_zns_report_zone_attrs_decoded(decoded,
+					sizeof(decoded), desc->za, desc->zai);
+			shr_table_set_value_str(t, col++, row, decoded, LEFT);
+		}
+
+		shr_table_add_row(t, row);
+	}
+
+	shr_table_print_header(stdout, t);
+
+	for (i = 0; i < descs; i++) {
+		desc = stdout_zns_report_zones_desc(report, ext_size, i);
+
+		shr_table_print_row(stdout, t, i);
 
 		if (ext_size && (desc->za & NVME_ZNS_ZA_ZDEV)) {
 			printf("Extension Data: ");
@@ -6355,6 +6437,8 @@ static void stdout_zns_report_zones(void *report, __u32 descs,
 			printf("..\n");
 		}
 	}
+
+	shr_table_free(t);
 }
 
 static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list)
