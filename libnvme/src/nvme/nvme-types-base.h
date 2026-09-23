@@ -1128,6 +1128,25 @@ enum nvme_psd_ps {
 };
 
 /**
+ * enum nvme_psd_mbws - Known values for &struct nvme_id_psd %mbws, the scale
+ *			for &struct nvme_id_psd.mbw.
+ * @NVME_PSD_MBWS_1_MIB_S:   1 MiB/second scale
+ * @NVME_PSD_MBWS_10_MIB_S:  10 MiB/second scale
+ * @NVME_PSD_MBWS_100_MIB_S: 100 MiB/second scale
+ * @NVME_PSD_MBWS_1_GIB_S:   1 GiB/second scale
+ * @NVME_PSD_MBWS_10_GIB_S:  10 GiB/second scale
+ * @NVME_PSD_MBWS_100_GIB_S: 100 GiB/second scale
+ */
+enum nvme_psd_mbws {
+	NVME_PSD_MBWS_1_MIB_S		= 0,
+	NVME_PSD_MBWS_10_MIB_S		= 1,
+	NVME_PSD_MBWS_100_MIB_S	= 2,
+	NVME_PSD_MBWS_1_GIB_S		= 3,
+	NVME_PSD_MBWS_10_GIB_S		= 4,
+	NVME_PSD_MBWS_100_GIB_S	= 5,
+};
+
+/**
  * enum nvme_power_measurement_type - Power measurement types.
  * @NVME_PMT_NSS_TOTAL_POWER: NVM subsystem total power
  * @NVME_PMT_RSVD_MIN:	      Reserved minimum value
@@ -1236,7 +1255,15 @@ enum nvme_psd_workload {
  * @epfr_fqv_ts: Bits 7-4: Forced quiescence vault time scale
  *		 Bits 3-0: Emergency power fail recovery time scale
  * @epfvts: Bits 3-0: Emergency power fail vault time scale
- * @rsvd28: Reserved
+ * @mbw:   Max Bandwidth indicates the maximum bandwidth attainable in this
+ *	   power state when submitting MDTS-length sequential read commands
+ *	   at a queue depth of the Optimal Aggregated Queue Depth field. The
+ *	   bandwidth is equal to the value in this field multiplied by the
+ *	   scale indicated in the Max Bandwidth Scale field. A value of 0
+ *	   indicates no maximum bandwidth is reported.
+ * @mbws:  Bits 2-0: Max Bandwidth Scale (MBWS) indicates the scale for
+ *	   &struct nvme_id_psd.mbw, see &enum nvme_psd_mbws for decoding
+ *	   this field.
  * @miiell: Minimum Idle I/O Exit Latency Limit: if the Idle I/O Exit Latency
  *	    Limit capability is supported (see &enum
  *	    nvme_id_ctrl_ctratt.NVME_CTRL_CTRATT_IIELLSS) for this operational
@@ -1266,7 +1293,8 @@ struct nvme_id_psd {
 	__u8			epfvt;
 	__u8			epfr_fqv_ts;
 	__u8			epfvts;
-	__u8			rsvd28[2];
+	__u8			mbw;
+	__u8			mbws;
 	__le16			miiell;
 };
 
