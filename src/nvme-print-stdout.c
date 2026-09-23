@@ -291,6 +291,7 @@ static struct shr_table *stdout_kv_table_create(void);
 static int stdout_kv_add(struct shr_table *t, const char *name,
 		const char *fmt, ...);
 static void stdout_kv_render(FILE *stream, struct shr_table *t);
+static void stdout_kv_table_finish(struct shr_table *t, const char *what);
 static struct shr_table *stdout_bits_table_create(void);
 static void stdout_bits_add(struct shr_table *t, const char *bits,
 		unsigned int val, const char *desc_fmt, ...);
@@ -330,12 +331,7 @@ static void stdout_predictable_latency_per_nvmset(
 	stdout_kv_add(t, "DTWIN Time Estimate", "%"PRIu64,
 		      le64_to_cpu(plpns_log->dtwin_te));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build predictable-latency-nvmset table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "predictable-latency-nvmset");
 	printf("\n\n");
 }
 
@@ -365,12 +361,7 @@ static void stdout_predictable_latency_event_agg_log(
 		stdout_kv_add(t, name, "%u", le16_to_cpu(pea_log->entries[i]));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build predictable-latency-event-agg table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "predictable-latency-event-agg");
 }
 
 static struct shr_table *
@@ -443,11 +434,7 @@ static void stdout_persistent_event_log_fdp_events(unsigned int cdw11, unsigned 
 			      NVME_GET(cdw12, FDP_SUPP_EVENT_ENABLED) ?
 			      "" : "Not ");
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build pel-fdp-events table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-fdp-events");
 }
 
 void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head,
@@ -491,12 +478,7 @@ void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head,
 		shr_table_set_row_subtable(t, row,
 			stdout_persistent_event_log_rci_table(hdr->rci));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build persistent-event-log header table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "persistent-event-log header");
 
 	printf("Supported Events Bitmap:\n");
 	for (int i = 0; i < 32; i++) {
@@ -537,12 +519,7 @@ void nvme_show_pel_event_header(int i,
 	stdout_kv_add(t, "Vendor Specific Information Length", "%u", vsil);
 	stdout_kv_add(t, "Event Length", "%u", le16_to_cpu(hdr->el));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build persistent-event-entry-header table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "persistent-event-entry-header");
 
 	if (vsil) {
 		printf("Vendor Specific Information:\n");
@@ -586,11 +563,7 @@ void nvme_show_pel_fw_commit_event(void *pevent_log_info, __u32 offset)
 	stdout_kv_add(t, "Vendor Assigned Firmware Commit Result Code", "%u",
 		      le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build pel-fw-commit-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-fw-commit-event");
 }
 
 void nvme_show_pel_timestamp_event(void *pevent_log_info, __u32 offset)
@@ -609,11 +582,7 @@ void nvme_show_pel_timestamp_event(void *pevent_log_info, __u32 offset)
 	stdout_kv_add(t, "Milliseconds Since Reset", "%"PRIu64,
 		      le64_to_cpu(ts_change_event->ml_secs_since_reset));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build pel-timestamp-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-timestamp-event");
 }
 
 void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
@@ -636,12 +605,7 @@ void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
 	stdout_kv_add(t, "Firmware Revision", "%"PRIu64" (%s)",
 		      le64_to_cpu(*fw_rev), shr_fw_to_string((char *)fw_rev));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-power-on-reset-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-power-on-reset-event");
 
 	printf("Reset Information List:\n");
 
@@ -665,12 +629,7 @@ void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
 		stdout_kv_add(t, "Controller Timestamp", "%"PRIu64,
 			      le64_to_cpu(por_event->ctrl_time_stamp));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build pel-power-on-reset-event table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "pel-power-on-reset-event");
 	}
 }
 
@@ -687,12 +646,7 @@ void nvme_show_pel_nss_hw_error_event(void *pevent_log_info, __u32 offset)
 	stdout_kv_add(t, "NVM Subsystem Hardware Error Event Code Entry",
 		      "%u, %s", code, nvme_nss_hw_error_to_string(code));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-nss-hw-error-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-nss-hw-error-event");
 }
 
 void nvme_show_pel_change_ns_event(void *pevent_log_info, __u32 offset)
@@ -724,11 +678,7 @@ void nvme_show_pel_change_ns_event(void *pevent_log_info, __u32 offset)
 		      le16_to_cpu(ns_event->nvmset_id));
 	stdout_kv_add(t, "Namespace ID", "%u", le32_to_cpu(ns_event->nsid));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build pel-change-ns-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-change-ns-event");
 }
 
 void nvme_show_pel_format_start_event(void *pevent_log_info, __u32 offset)
@@ -749,12 +699,7 @@ void nvme_show_pel_format_start_event(void *pevent_log_info, __u32 offset)
 	stdout_kv_add(t, "Format NVM CDW10", "%u",
 		      le32_to_cpu(format_start_event->format_nvm_cdw10));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-format-start-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-format-start-event");
 }
 
 void nvme_show_pel_format_completion_event(void *pevent_log_info, __u32 offset)
@@ -779,12 +724,7 @@ void nvme_show_pel_format_completion_event(void *pevent_log_info, __u32 offset)
 	stdout_kv_add(t, "Status Field", "%u",
 		      le32_to_cpu(format_cmpln_event->status_field));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-format-completion-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-format-completion-event");
 }
 
 void nvme_show_pel_sanitize_start_event(void *pevent_log_info, __u32 offset)
@@ -804,12 +744,7 @@ void nvme_show_pel_sanitize_start_event(void *pevent_log_info, __u32 offset)
 	stdout_kv_add(t, "Sanitize CDW11", "%u",
 		      le32_to_cpu(sanitize_start_event->sani_cdw11));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-sanitize-start-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-sanitize-start-event");
 }
 
 void nvme_show_pel_sanitize_completion_event(void *pevent_log_info, __u32 offset)
@@ -830,12 +765,7 @@ void nvme_show_pel_sanitize_completion_event(void *pevent_log_info, __u32 offset
 	stdout_kv_add(t, "Completion Information", "%u",
 		      le16_to_cpu(sanitize_cmpln_event->cmpln_info));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-sanitize-completion-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-sanitize-completion-event");
 }
 
 void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset)
@@ -857,12 +787,7 @@ void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset)
 	stdout_kv_add(t, "Set Feature ID", "0x%02x (%s), value: 0x%08x", fid,
 		      nvme_feature_to_string(fid), cdw11);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-set-feature-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-set-feature-event");
 
 	if (!NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout))
 		return;
@@ -891,12 +816,7 @@ void nvme_show_pel_thermal_excursion_event(void *pevent_log_info, __u32 offset)
 		      thermal_exc_event->over_temp);
 	stdout_kv_add(t, "Threshold", "%u", thermal_exc_event->threshold);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build pel-thermal-excursion-event table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pel-thermal-excursion-event");
 }
 
 static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
@@ -913,12 +833,7 @@ static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
 		stdout_kv_add(t, "Event Name for Vendor Specific Event Code",
 			      "%.*s", vsedl, (char *)vsed);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build pel-vs-event-data table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "pel-vs-event-data");
 		break;
 	case NVME_PEL_VSEDT_ASCII_STRING:
 		t = stdout_kv_table_create();
@@ -928,12 +843,7 @@ static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
 		stdout_kv_add(t, "ASCII String Data", "%.*s", vsedl,
 			      (char *)vsed);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build pel-vs-event-data table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "pel-vs-event-data");
 		break;
 	case NVME_PEL_VSEDT_BINARY:
 		printf("Binary Data:\n");
@@ -947,12 +857,7 @@ static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
 		stdout_kv_add(t, "Signed Integer Data", "%"PRId64,
 			      (int64_t)le64_to_cpu(*(__le64 *)vsed));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build pel-vs-event-data table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "pel-vs-event-data");
 		break;
 	default:
 		printf("Reserved data type. As Binary:\n");
@@ -989,12 +894,7 @@ void nvme_show_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 		stdout_kv_add(t, "Vendor Specific Event Data Length", "%u",
 			      vsedl);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build pel-vendor-specific-event table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "pel-vendor-specific-event");
 
 		if (vsedl)
 			pel_vs_event_data(vs_desc + 1, vs_desc->vsedt,
@@ -1020,11 +920,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u3
 	stdout_kv_add(t, "Persistent Event Log for device", "%s", devname);
 	stdout_kv_add(t, "Action for Persistent Event Log", "%u", action);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build persistent-event-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "persistent-event-log");
 
 	if (size < offset) {
 		printf("No log data can be shown with this log len at least " \
@@ -1143,12 +1039,7 @@ static void stdout_endurance_group_event_agg_log(
 			      le16_to_cpu(endurance_log->entries[i]));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build endurance-group-event-agg table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "endurance-group-event-agg");
 }
 
 static void stdout_lba_status_log(void *lba_status, __u32 size,
@@ -1177,11 +1068,7 @@ static void stdout_lba_status_log(void *lba_status, __u32 size,
 		      le32_to_cpu(hdr->estulb));
 	stdout_kv_add(t, "LBA Status Generation Counter", "%"PRIu16,
 		      le16_to_cpu(hdr->lsgc));
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build lba-status-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "lba-status-log");
 
 	for (int ele = 0; ele < num_elements; ele++) {
 		ns_element = lba_status + offset;
@@ -1198,12 +1085,7 @@ static void stdout_lba_status_log(void *lba_status, __u32 size,
 		stdout_kv_add(t, "Recommended Action Type", "%u",
 			      ns_element->ratype);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build lba-status-log table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "lba-status-log");
 
 		offset += sizeof(*ns_element);
 		if (num_lba_desc != 0xffffffff) {
@@ -1224,12 +1106,7 @@ static void stdout_lba_status_log(void *lba_status, __u32 size,
 				offset += sizeof(*range_desc);
 			}
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build lba-status-log table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "lba-status-log");
 		} else {
 			printf("Number of LBA Range Descriptors (NLRD) set to %#x for "\
 				"NS element %d\n", num_lba_desc, ele);
@@ -1254,11 +1131,7 @@ static void stdout_resv_notif_log(struct nvme_resv_notification_log *resv,
 	stdout_kv_add(t, "Num of Available Log Pages", "%u", resv->nalp);
 	stdout_kv_add(t, "Namespace ID", "%"PRIx32, le32_to_cpu(resv->nsid));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build resv-notif-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "resv-notif-log");
 }
 
 static struct shr_table *
@@ -1344,12 +1217,7 @@ static void stdout_fid_support_effects_log(struct nvme_fid_supported_effects_log
 					fid_effect));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build fid-support-effects-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "fid-support-effects-log");
 }
 
 static struct shr_table *
@@ -1435,12 +1303,7 @@ static void stdout_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effec
 					mi_cmd_effect));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build mi-cmd-support-effects-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "mi-cmd-support-effects-log");
 }
 
 static void stdout_boot_part_log(void *bp_log, const char *devname,
@@ -1461,11 +1324,7 @@ static void stdout_boot_part_log(void *bp_log, const char *devname,
 	stdout_kv_add(t, "Active BPID", "%u",
 		      NVME_BOOT_PARTITION_INFO_ABPID(le32_to_cpu(hdr->bpinfo)));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build boot-part-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "boot-part-log");
 }
 
 static const char *eomip_to_string(__u8 eomip)
@@ -1555,12 +1414,7 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log, size_t len)
 			      le16_to_cpu(desc->ncols));
 		stdout_kv_add(t, "Eye Data Length", "%u", desc->edlen);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build phy-rx-eom-descs table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "phy-rx-eom-descs");
 
 		vsdata = eom_desc_iter_vsdata(&it, desc, &vsdatalen);
 		if (!vsdata)
@@ -1621,11 +1475,7 @@ static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 control
 	stdout_kv_add(t, "Estimated Time for Best Quality", "%u",
 		      le16_to_cpu(log->etbest));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build phy-rx-eom-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "phy-rx-eom-log");
 
 	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED)
 		stdout_phy_rx_eom_descs(log, len);
@@ -1647,11 +1497,7 @@ static void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 	stdout_kv_add(t, "Selected Configuration", "%u",
 		      le16_to_cpu(mus_log->sel_config));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build media-unit-stat-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "media-unit-stat-log");
 
 	for (i = 0; i < nmu; i++) {
 		printf("Media Unit Status Descriptor: %u\n", i);
@@ -1679,12 +1525,7 @@ static void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 		stdout_kv_add(t, "Channel Identifiers Offset", "%u",
 			      mus_log->mus_desc[i].cio);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build media-unit-stat-log table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "media-unit-stat-log");
 	}
 }
 
@@ -1785,12 +1626,7 @@ static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 
 		size = le16_to_cpu(config->size);
 		if (size < sizeof(*config) || !shr_buf_has_room(p, end, size)) {
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build fdp-configs table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "fdp-configs");
 			break;
 		}
 
@@ -1805,11 +1641,7 @@ static void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 				stdout_fdp_config_ruh_list_table(config, nruh));
 		}
 
-		if (shr_table_has_error(t))
-			fprintf(stderr, "Failed to build fdp-configs table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "fdp-configs");
 
 		p += size;
 	}
@@ -1849,11 +1681,7 @@ static void stdout_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 		stdout_kv_add(t, name, "%#"PRIx8" (%s)", ruhu->ruha, ruha_str);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build fdp-usage table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "fdp-usage");
 }
 
 static void stdout_fdp_stats(struct nvme_fdp_stats_log *log)
@@ -1871,11 +1699,7 @@ static void stdout_fdp_stats(struct nvme_fdp_stats_log *log)
 	stdout_kv_add(t, "Media Bytes Erased (MBE)", "%s",
 		      uint128_t_to_l10n_string(le128_to_cpu(log->mbe)));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build fdp-stats table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "fdp-stats");
 }
 
 static void stdout_fdp_events(struct nvme_fdp_events_log *log)
@@ -1936,11 +1760,7 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 				      "%"PRIu8, event->ruhid);
 		}
 
-		if (shr_table_has_error(t))
-			fprintf(stderr, "Failed to build fdp-events table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "fdp-events");
 
 		printf("\n");
 	}
@@ -1970,12 +1790,7 @@ static void stdout_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len
 		stdout_kv_add(t, "Reclaim Unit Available Media Writes (RUAMW)",
 			      "%"PRIu64, le64_to_cpu(ruhs->ruamw));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build fdp-ruh-status table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "fdp-ruh-status");
 
 		printf("\n");
 	}
@@ -2066,11 +1881,7 @@ static void stdout_supported_cap_config_log(
 	stdout_kv_add(t, "Number of Supported Capacity Configurations", "%u",
 		      sccn);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build supported-cap-config table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "supported-cap-config");
 
 	for (int i = 0; i < sccn; i++) {
 		printf("Capacity Configuration Descriptor: %u\n", i);
@@ -2087,12 +1898,7 @@ static void stdout_supported_cap_config_log(
 
 		stdout_supported_cap_config_add_egcd(t, cap, i);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build supported-cap-config table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "supported-cap-config");
 	}
 }
 
@@ -2394,6 +2200,20 @@ static void stdout_kv_render(FILE *stream, struct shr_table *t)
 			fprintf(stream, "\n");
 		}
 	}
+}
+
+/*
+ * Renders @t to stdout, or reports the build error to stderr naming
+ * @what, then frees @t either way. Common tail for every kv table
+ * built via stdout_kv_table_create()/stdout_kv_add().
+ */
+static void stdout_kv_table_finish(struct shr_table *t, const char *what)
+{
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build %s table\n", what);
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 }
 
 static struct shr_table *stdout_registers_cap_table(uint64_t cap)
@@ -3092,12 +2912,7 @@ static void stdout_ctrl_register_common(int offset, uint64_t value, bool fabrics
 			      name, value);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build register table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "register");
 }
 
 static void stdout_ctrl_register(int offset, uint64_t value)
@@ -3155,12 +2970,7 @@ void stdout_ctrl_registers(void *bar, bool fabrics)
 					      support);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build registers table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "registers");
 }
 
 static void stdout_single_property(int offset, uint64_t value)
@@ -5122,12 +4932,7 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		stdout_kv_add(t, "eui64", "%s", eui64_buf);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build identify-namespace table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "identify-namespace");
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
 	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
@@ -5269,13 +5074,7 @@ static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *n
 	stdout_kv_add(t, "maxkt", "%#x", le16_to_cpu(ns->maxkt));
 	stdout_kv_add(t, "rgrpid", "%#x", le32_to_cpu(ns->rgrpid));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build id-independent-id-ns table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "id-independent-id-ns");
 }
 
 static void stdout_id_ns_descs(void *data, unsigned int nsid)
@@ -5353,12 +5152,7 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 		len += sizeof(*cur);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build id-ns-descs table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "id-ns-descs");
 }
 
 static char *stdout_power_and_scale_str(__u16 power, __u8 scale)
@@ -5975,12 +5769,7 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	/* Unlike the fields above, shown regardless of @verbose. */
 	shr_table_set_row_subtable(t, row, stdout_id_ctrl_ps_table(ctrl));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build identify-controller table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "identify-controller");
 
 	if (vendor_show)
 		vendor_show(ctrl->vs, NULL);
@@ -6093,12 +5882,7 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	else
 		stdout_kv_add(t, "lbamqf", "%u", ctrl_nvm->lbamqf);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build id-ctrl-nvm table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "id-ctrl-nvm");
 }
 
 static struct shr_table *stdout_nvm_id_ns_pic_table(__u8 pic)
@@ -6208,12 +5992,7 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 		shr_table_set_row_subtable(t, row,
 				stdout_nvm_id_ns_pifa_table(nvm_ns->pifa));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build nvm-id-ns table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "nvm-id-ns");
 
 	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
 		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
@@ -6244,12 +6023,7 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	stdout_kv_add(t, "lbapss", "%#x", le32_to_cpu(nvm_ns->lbapss));
 	stdout_kv_add(t, "tlbaag", "%#x", le32_to_cpu(nvm_ns->tlbaag));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build nvm-id-ns table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "nvm-id-ns");
 }
 
 static void stdout_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
@@ -6414,12 +6188,7 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 		stdout_kv_add(t, "zrwacap", "%u", ns->zrwacap);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build zns-id-ns table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "zns-id-ns");
 
 	for (i = 0; i <= id_ns->nlbaf; i++) {
 		if (human)
@@ -6463,11 +6232,7 @@ static void stdout_list_ns(struct nvme_ns_list *ns_list)
 				      le32_to_cpu(ns_list->ns[i]));
 		}
 
-		if (shr_table_has_error(t))
-			fprintf(stderr, "Failed to build list-ns table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "list-ns");
 	} else {
 		struct shr_table_column columns[] = {
 			{ "Index", RIGHT, AUTO_WIDTH },
@@ -6534,11 +6299,7 @@ static void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 			      (uint64_t)le64_to_cpu(log->zid[i]));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build zns-changed-zone-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "zns-changed-zone-log");
 }
 
 static void stdout_zns_report_zone_attributes(__u8 za, __u8 zai)
@@ -6612,11 +6373,7 @@ static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 
 	stdout_kv_add(t, "num of ctrls present", "%u", num);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build list-ctrl table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "list-ctrl");
 
 	if (!n)
 		return;
@@ -6654,12 +6411,7 @@ static void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 
 	stdout_kv_add(t, "nid", "%d", nvmset->nid);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build id-nvmset table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "id-nvmset");
 
 	printf(".................\n");
 	for (i = 0; i < nvmset->nid; i++) {
@@ -6685,13 +6437,7 @@ static void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 			      uint128_t_to_l10n_string(le128_to_cpu(
 					nvmset->ent[i].unvmsetcap)));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build nvm-set-attribute table\n");
-		else
-			stdout_kv_render(stdout, t);
-
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "nvm-set-attribute");
 
 		printf(".................\n");
 	}
@@ -6751,12 +6497,7 @@ static void stdout_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps)
 	stdout_kv_add(t, "vifrsm", "%d", le16_to_cpu(caps->vifrsm));
 	stdout_kv_add(t, "vigran", "%d", le16_to_cpu(caps->vigran));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build primary-ctrl-cap table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "primary-ctrl-cap");
 }
 
 static void stdout_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc_list,
@@ -6779,11 +6520,7 @@ static void stdout_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc
 
 	stdout_kv_add(t, "Number of Identifiers (NUMID)", "%d", num);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build secondary-ctrl-list table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "secondary-ctrl-list");
 
 	for (i = 0; i < entries; i++) {
 		printf("   SCEntry[%-3d]:\n", i);
@@ -6809,12 +6546,7 @@ static void stdout_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc
 		stdout_kv_add(t, "Num VI Flex Resources Assigned (NVI)",
 			      "%#.04x", le16_to_cpu(sc_entry[i].nvi));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build secondary-ctrl-list table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "secondary-ctrl-list");
 	}
 }
 
@@ -6834,12 +6566,7 @@ static void stdout_id_ns_granularity_list(const struct nvme_id_ns_granularity_li
 	stdout_kv_add(t, "Number of Descriptors (NUMD)",
 		      "%d", glist->num_descriptors);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build id-ns-granularity-list table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "id-ns-granularity-list");
 
 	/* Number of Descriptors is a 0's based value */
 	for (i = 0; i <= glist->num_descriptors; i++) {
@@ -6859,12 +6586,7 @@ static void stdout_id_ns_granularity_list(const struct nvme_id_ns_granularity_li
 			      "%#"PRIx64,
 			      le64_to_cpu(glist->entry[i].ncapgran));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build id-ns-granularity-list table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "id-ns-granularity-list");
 	}
 }
 
@@ -6919,12 +6641,7 @@ static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 			stdout_kv_add(t, "UUID", "%s",
 				      shr_uuid_to_string(uuid));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr, "Failed to build id-uuid-list table\n");
-		else
-			stdout_kv_render(stdout, t);
-
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "id-uuid-list");
 
 		printf(".................\n");
 	}
@@ -6965,11 +6682,7 @@ static void stdout_id_domain_list(struct nvme_id_domain_list *id_dom)
 			      le128_to_cpu(attr->max_egrp_dom_cap)));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build id-domain-list table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "id-domain-list");
 }
 
 static void stdout_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list)
@@ -6988,11 +6701,7 @@ static void stdout_endurance_group_list(struct nvme_id_endurance_group_list *end
 
 	stdout_kv_add(t, "num of endurance group ids", "%u", num);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build endurance-group-list table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "endurance-group-list");
 
 	if (!n)
 		return;
@@ -7073,11 +6782,7 @@ static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 				stdout_id_iocs_iocsc_table(iocsc));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build id-iocs table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "id-iocs");
 }
 
 static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
@@ -7134,12 +6839,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		stdout_kv_add(t, "log_page_version", "%d",
 			      err_log[i].log_page_version);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr, "Failed to build error-log table\n");
-		else
-			stdout_kv_render(stdout, t);
-
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "error-log");
 
 		printf(".................\n");
 	}
@@ -7168,12 +6868,7 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 	stdout_kv_add(t, "regstrnt", "%d", regstrnt);
 	stdout_kv_add(t, "ptpls", "%d", status->ptpls);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build resv-report table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "resv-report");
 
 	/* check Extended Data Structure bit */
 	if (!eds) {
@@ -7203,13 +6898,7 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 			stdout_kv_add(t, "rkey", "%"PRIx64,
 				      le64_to_cpu(reg->rkey));
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build registrant table\n");
-			else
-				stdout_kv_render(stdout, t);
-
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "registrant");
 		}
 	} else {
 		/* if status buffer was too small, don't loop past the end of the buffer */
@@ -7239,13 +6928,7 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 				hp += sprintf(hp, "%02x", reg->hostid[j]);
 			stdout_kv_add(t, "hostid", "%s", hex);
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build registrant table\n");
-			else
-				stdout_kv_render(stdout, t);
-
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "registrant");
 		}
 	}
 	printf("\n");
@@ -7276,12 +6959,7 @@ static void stdout_fw_log(struct nvme_firmware_slot *fw_log,
 		}
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build fw-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "fw-log");
 }
 
 static void stdout_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, bool alloc)
@@ -7506,11 +7184,7 @@ static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 		}
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build supported-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "supported-log");
 }
 
 static void stdout_endurance_log(struct nvme_endurance_group_log *el,
@@ -7562,11 +7236,7 @@ static void stdout_endurance_log(struct nvme_endurance_group_log *el,
 		      uint128_t_to_l10n_string(
 			      le128_to_cpu(el->unalloc_end_grp_cap)));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build endurance-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "endurance-log");
 }
 
 static struct shr_table *stdout_smart_log_critical_warning_table(__u8 cw)
@@ -7714,12 +7384,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 	ipm_str = stdout_power_and_scale_str(ipm & 0xffff, (ipm >> 16) & 0x3);
 	stdout_kv_add(t, "Interval Power Measurement", "%s", ipm_str ?: "-");
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build smart-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "smart-log");
 }
 
 static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
@@ -7745,12 +7410,7 @@ static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	stdout_kv_add(t, "chgcnt", "%"PRIu64, le64_to_cpu(hdr->chgcnt));
 	stdout_kv_add(t, "ngrps", "%u", le16_to_cpu(hdr->ngrps));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build ana-log header table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "ana-log header");
 
 	printf("ANA Log Desc :-\n");
 
@@ -7779,13 +7439,7 @@ static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 			stdout_kv_add(t, "nsid", "%u",
 				      le32_to_cpu(desc->nsids[j]));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build ana-log group table\n");
-		else
-			stdout_kv_render(stdout, t);
-
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "ana-log group");
 
 		printf("\n");
 		offset += nsid_buf_size;
@@ -7875,12 +7529,7 @@ static void stdout_self_test_result(struct nvme_st_result *res)
 			      res->vs[0], res->vs[1]);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build self-test-result table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "self-test-result");
 }
 
 static void stdout_self_test_log(struct nvme_self_test_log *self_test,
@@ -7901,12 +7550,7 @@ static void stdout_self_test_log(struct nvme_self_test_log *self_test,
 		      self_test->current_operation);
 	stdout_kv_add(t, "Current Completion", "%u%%", self_test->completion);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build self-test-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "self-test-log");
 
 	num_entries = min(dst_entries, NVME_LOG_ST_MAX_RESULTS);
 	for (i = 0; i < num_entries; i++) {
@@ -8043,11 +7687,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		shr_table_set_row_subtable(t, row,
 			stdout_sanitize_log_ssi_table(sanitize->ssi, status));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build sanitize-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "sanitize-log");
 }
 
 static void stdout_select_result(enum nvme_features_id fid, __u64 result)
@@ -8065,11 +7705,7 @@ static void stdout_select_result(enum nvme_features_id fid, __u64 result)
 	if (result & 0x4)
 		stdout_kv_add(t, "", "Feature is changeable");
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build select-result table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "select-result");
 }
 
 static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
@@ -8107,11 +7743,7 @@ static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 			p += sprintf(p, "%02x", e->guid[j]);
 		stdout_kv_add(t, "guid", "%s", guid);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr, "Failed to build lba-range table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "lba-range");
 	}
 }
 
@@ -8141,11 +7773,7 @@ static void stdout_auto_pst(struct nvme_feat_auto_pst *apst)
 		stdout_kv_add(t, "Idle Transition Power State (ITPS)", "%u",
 			      (__u32)NVME_GET(value, APST_ENTRY_ITPS));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr, "Failed to build auto-pst table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "auto-pst");
 
 		printf("\t.................\n");
 	}
@@ -8186,11 +7814,7 @@ static void stdout_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
 	stdout_kv_add(t, "Host Memory Buffer Size (HSIZE)", "%u",
 		      le32_to_cpu(hmb->hsize));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build host-mem-buffer table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "host-mem-buffer");
 }
 
 static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
@@ -8221,12 +7845,7 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 				      (*field & 0x4) ?
 				      "supported" : "not supported");
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build directive-show table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "directive-show");
 
 			printf("\tDirective enabled\n");
 
@@ -8245,12 +7864,7 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 				      (*(field + 32) & 0x4) ?
 				      "enabled" : "disabled");
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build directive-show table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "directive-show");
 
 			printf("\tDirective Persistent Across Controller Level Resets\n");
 
@@ -8269,12 +7883,7 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 				      (*(field + 64) & 0x4) ?
 				      "enabled" : "disabled");
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build directive-show table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "directive-show");
 			break;
 		default:
 			fprintf(stderr,
@@ -8312,12 +7921,7 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 			stdout_kv_add(t, "Namespace Streams Open (NSO)", "%u",
 				      *(__u16 *)(field + 24));
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build directive-show table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "directive-show");
 			break;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
 			count = *(__u16 *)field;
@@ -8338,12 +7942,7 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 							 (i + 1) * 2));
 			}
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build directive-show table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "directive-show");
 			break;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE:
 			t = stdout_kv_table_create();
@@ -8353,12 +7952,7 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 			stdout_kv_add(t, "Namespace Streams Allocated (NSA)",
 				      "%u", result & 0xffff);
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build directive-show table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "directive-show");
 			break;
 		default:
 			fprintf(stderr,
@@ -8398,11 +7992,7 @@ static void stdout_lba_status_info(__u64 result)
 	stdout_kv_add(t, "LBA Status Information Report Interval (LSIRI)",
 		      "%u", (__u32)NVME_FEAT_LBAS_LSIRI(result));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build lba-status-info table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "lba-status-info");
 }
 
 static bool line_equal(unsigned char *buf, int len, int width, int offset)
@@ -8482,11 +8072,7 @@ static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 	stdout_kv_add(t, "DTWIN Time Threshold", "%"PRIu64,
 		      le64_to_cpu(plmcfg->dtwintt));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build plm-config table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "plm-config");
 }
 
 static void stdout_rate_limiting_data(struct nvme_rate_limiting_data *rld)
@@ -8517,11 +8103,7 @@ static void stdout_rate_limiting_data(struct nvme_rate_limiting_data *rld)
 	stdout_kv_add(t, "Read Bandwidth Ratio (RBWR)", "%u", rld->rbwr);
 	stdout_kv_add(t, "Write Bandwidth Ratio (WBWR)", "%u", rld->wbwr);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build rate-limiting-data table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "rate-limiting-data");
 }
 
 static void stdout_feat_perfc_std(struct nvme_std_perf_attr *data)
@@ -8537,11 +8119,7 @@ static void stdout_feat_perfc_std(struct nvme_std_perf_attr *data)
 		      nvme_feature_perfc_r4karl_to_string(data->r4karl),
 		      data->r4karl);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build feat-perfc-std table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "feat-perfc-std");
 }
 
 static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
@@ -8564,11 +8142,7 @@ static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
 		      "unused saveable vendor specific performance attributes (USVSPA)",
 		      "%d", data->usvspa);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build feat-perfc-id-list table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "feat-perfc-id-list");
 
 	printf("performance attribute identifier list\n");
 
@@ -8587,11 +8161,7 @@ static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
 			      shr_uuid_to_string(data->id_list[i].id));
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build feat-perfc-id-list table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "feat-perfc-id-list");
 }
 
 static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
@@ -8606,11 +8176,7 @@ static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
 		      shr_uuid_to_string(data->paid));
 	stdout_kv_add(t, "attribute length (ATTRL)", "%u", data->attrl);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build feat-perfc-vs table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "feat-perfc-vs");
 
 	printf("vendor specific (VS):\n");
 	d((unsigned char *)data->vs, data->attrl, 16, 1);
@@ -8632,11 +8198,7 @@ static void stdout_feat_perfc(unsigned int result,
 	stdout_kv_add(t, "attribute index (ATTRI)", "%s (0x%02x)",
 		      nvme_feature_perfc_attri_to_string(attri), attri);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build feat-perfc table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "feat-perfc");
 
 	switch (attri) {
 	case NVME_FEAT_PERFC_ATTRI_STD:
@@ -8668,11 +8230,7 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 
 	stdout_kv_add(t, "Num Metadata Element Descriptors", "%d", data->ndesc);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build host-metadata table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "host-metadata");
 
 	for (i = 0; i < data->ndesc; i++) {
 		len = le16_to_cpu(desc->len);
@@ -8692,12 +8250,7 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 		stdout_kv_add(t, "Length", "%d", len);
 		stdout_kv_add(t, "Value", "%s", val);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build host-metadata table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "host-metadata");
 
 		desc = (struct nvme_metadata_element_desc *)&desc->val[desc->len];
 	}
@@ -8724,11 +8277,7 @@ static void stdout_feat_host_id(unsigned int result, unsigned char *hostid)
 		stdout_kv_add(t, "Host Identifier (HOSTID)", "%"PRIu64,
 			      le64_to_cpu(*(__le64 *)hostid));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build feat-host-id table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "feat-host-id");
 }
 
 static void stdout_feature_show(enum nvme_features_id fid, int sel,
@@ -8772,12 +8321,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			stdout_kv_add(t, "Arbitration Burst (AB)", "%u",
 				      1 << NVME_FEAT_ARB_BURST(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_POWER_MGMT:
 		t = stdout_kv_table_create();
@@ -8797,12 +8341,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			stdout_kv_add(t, "Idle I/O Exit Latency Limit (IIELL)",
 				      "disabled");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_LBA_RANGE:
 		field = NVME_FEAT_LBAR_NR(result);
@@ -8813,12 +8352,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 
 		stdout_kv_add(t, "Number of LBA Ranges (NUM)", "%u", field + 1);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 
 		if (buf)
 			stdout_lba_range((struct nvme_lba_range_type *)buf, field);
@@ -8845,12 +8379,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      nvme_degrees_string(field), field,
 			      nvme_degrees_fahrenheit_string(field));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_ERR_RECOVERY:
 		t = stdout_kv_table_create();
@@ -8865,12 +8394,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Time Limited Error Recovery (TLER)", "%u ms",
 			      NVME_FEAT_ER_TLER(result) * 100);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_VOLATILE_WC:
 		t = stdout_kv_table_create();
@@ -8881,12 +8405,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      NVME_FEAT_VWC_WCE(result) ?
 			      "Enabled" : "Disabled");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_NUM_QUEUES:
 		t = stdout_kv_table_create();
@@ -8900,12 +8419,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      "Number of IO Submission Queues Allocated (NSQA)",
 			      "%u", NVME_FEAT_NRQS_NSQR(result) + 1);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_IRQ_COALESCE:
 		t = stdout_kv_table_create();
@@ -8917,12 +8431,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Aggregation Threshold (THR)", "%u",
 			      NVME_FEAT_IRQC_THR(result) + 1);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_IRQ_CONFIG:
 		t = stdout_kv_table_create();
@@ -8934,12 +8443,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Interrupt Vector (IV)", "%u",
 			      NVME_FEAT_ICFG_IV(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_WRITE_ATOMIC:
 		t = stdout_kv_table_create();
@@ -8949,12 +8453,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Disable Normal (DN)", "%s",
 			      NVME_FEAT_WA_DN(result) ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_ASYNC_EVENT:
 		t = stdout_kv_table_create();
@@ -9004,12 +8503,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, feat_ae_smart, "%s",
 			      NVME_FEAT_AE_SMART(result) ? async : no_async);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_AUTO_PST:
 		t = stdout_kv_table_create();
@@ -9022,12 +8516,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      NVME_FEAT_APST_APSTE(result) ?
 			      "Enabled" : "Disabled");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 
 		if (buf)
 			stdout_auto_pst((struct nvme_feat_auto_pst *)buf);
@@ -9047,12 +8536,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      "Host Memory Non-operational Access Restricted (HMNAR)",
 			      "%s", (result & 0x00000008) ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 
 		if (buf)
 			stdout_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf);
@@ -9069,12 +8553,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Keep Alive Timeout (KATO) in milliseconds",
 			      "%u", result);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_HCTM:
 		t = stdout_kv_table_create();
@@ -9092,12 +8571,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      nvme_degrees_string(field),
 			      nvme_degrees_fahrenheit_string(field));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_NOPSC:
 		t = stdout_kv_table_create();
@@ -9109,12 +8583,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      "%s",
 			      NVME_FEAT_NOPS_NOPPME(result) ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_RRL:
 		t = stdout_kv_table_create();
@@ -9124,12 +8593,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Read Recovery Level (RRL)", "%u",
 			      NVME_FEAT_RRL_RRL(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_PLM_CONFIG:
 		t = stdout_kv_table_create();
@@ -9139,12 +8603,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Predictable Latency Window Enabled", "%s",
 			      NVME_FEAT_PLM_LPE(result) ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 
 		if (buf)
 			stdout_plm_config((struct nvme_plm_config *)buf);
@@ -9157,12 +8616,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Window Select", "%s",
 			      nvme_plm_window_to_string(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_LBA_STS_INTERVAL:
 		stdout_lba_status_info(result);
@@ -9200,12 +8654,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 				      "%s",
 				      hb->cdfe & (1 << 4) ? "True" : "False");
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build feature-show-fields table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "feature-show-fields");
 		}
 		break;
 	case NVME_FEAT_FID_SANITIZE:
@@ -9216,12 +8665,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "No-Deallocate Response Mode (NODRM)", "%u",
 			      NVME_FEAT_SC_NODRM(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:
 		t = stdout_kv_table_create();
@@ -9233,12 +8677,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Endurance Group Critical Warnings", "%u",
 			      NVME_FEAT_EG_EGCW(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_IOCS_PROFILE:
 		t = stdout_kv_table_create();
@@ -9248,12 +8687,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "I/O Command Set Profile", "%s",
 			      result & 0x1 ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_SPINUP_CONTROL:
 		t = stdout_kv_table_create();
@@ -9263,12 +8697,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Spinup control feature Enabled", "%s",
 			      (result & 1) ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_POWER_LOSS_SIGNAL:
 		t = stdout_kv_table_create();
@@ -9279,12 +8708,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      nvme_pls_mode_to_string(
 					NVME_GET(result, FEAT_PLS_MODE)));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
 		stdout_feat_perfc(result,
@@ -9304,12 +8728,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Pre-boot Software Load Count (PBSLC)", "%u",
 			      NVME_FEAT_SPM_PBSLC(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_HOST_ID:
 		stdout_feat_host_id(result, buf);
@@ -9332,12 +8751,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      "%s",
 			      NVME_FEAT_RM_REGPRE(result) ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_RESV_PERSIST:
 		t = stdout_kv_table_create();
@@ -9347,12 +8761,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Persist Through Power Loss (PTPL)", "%s",
 			      NVME_FEAT_RP_PTPL(result) ? "True" : "False");
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_WRITE_PROTECT:
 		t = stdout_kv_table_create();
@@ -9362,12 +8771,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Namespace Write Protect", "%s",
 			      nvme_ns_wp_cfg_to_string(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_FDP:
 		t = stdout_kv_table_create();
@@ -9380,12 +8784,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      "Flexible Direct Placement Configuration Index",
 			      "%u", NVME_FEAT_FDPCIDX(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_FDP_EVENTS:
 		t = stdout_kv_table_create();
@@ -9401,12 +8800,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 				      "%sEnabled", d->evta & 0x1 ? "" : "Not ");
 		}
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_BP_WRITE_PROTECT:
 		t = stdout_kv_table_create();
@@ -9422,12 +8816,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      "Boot Partition 0 Write Protection State (BP0WPS)",
 			      "%s", nvme_bpwps_to_string(field));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_POWER_LIMIT: {
 		__cleanup_free char *power_str = NULL;
@@ -9445,12 +8834,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      NVME_FEAT_POWER_LIMIT_PLV(result));
 		stdout_kv_add(t, "Power Limit", "%s", power_str);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	}
 	case NVME_FEAT_FID_POWER_THRESH: {
@@ -9477,12 +8861,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			      NVME_FEAT_POWER_THRESH_PTV(result));
 		stdout_kv_add(t, "Power Threshold", "%s", power_str);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	}
 	case NVME_FEAT_FID_POWER_MEASUREMENT:
@@ -9500,12 +8879,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Stop Measurement Time (SMT)", "%u",
 			      NVME_FEAT_POWER_MEAS_SMT(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_VOLTAGE_THRESHOLD:
 		t = stdout_kv_table_create();
@@ -9523,12 +8897,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_kv_add(t, "Undervoltage Threshold (UVT)", "%u",
 			      NVME_FEAT_VOLTAGE_THRESHOLD_UVT(result));
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
 		t = stdout_kv_table_create();
@@ -9538,12 +8907,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		field = NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result);
 		stdout_kv_add(t, "Action (ACT)", "%u", field);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build feature-show-fields table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_RATE_LIMITING:
 		if (buf)
@@ -9574,11 +8938,7 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 		      nlsd);
 	stdout_kv_add(t, "Completion Condition(CMPC)", "%u", list->cmpc);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build lba-status table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "lba-status");
 
 	switch (list->cmpc) {
 	case NVME_LBA_STATUS_CMPC_NO_CMPC:
@@ -10619,12 +9979,7 @@ static void stdout_discovery_log(const struct nvmf_discovery_log *log,
 			break;
 		}
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build discovery-log table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "discovery-log");
 	}
 }
 #else
@@ -10774,13 +10129,13 @@ static void stdout_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
 		}
 	}
 out:
-	if (reserved)
+	if (reserved) {
 		printf("All management address descriptors reserved\n");
-	else if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build mgmt-addr-list table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+		shr_table_free(t);
+		return;
+	}
+
+	stdout_kv_table_finish(t, "mgmt-addr-list");
 }
 
 static void stdout_rotational_media_info_log(struct nvme_rotational_media_info_log *info)
@@ -10799,12 +10154,7 @@ static void stdout_rotational_media_info_log(struct nvme_rotational_media_info_l
 	stdout_kv_add(t, "ldc", "%u", le32_to_cpu(info->ldc));
 	stdout_kv_add(t, "fldc", "%u", le32_to_cpu(info->fldc));
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build rotational-media-info table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "rotational-media-info");
 }
 
 static void stdout_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
@@ -10829,11 +10179,7 @@ static void stdout_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_
 			      &log->participating_nss[i * NVME_NQN_LENGTH]);
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build dispersed-ns-psub table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "dispersed-ns-psub");
 }
 
 static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log, __u64 len)
@@ -10865,11 +10211,7 @@ static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *
 		}
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build reachability-groups table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "reachability-groups");
 }
 
 static void stdout_reachability_associations_log(struct nvme_reachability_associations_log *log,
@@ -10903,12 +10245,7 @@ static void stdout_reachability_associations_log(struct nvme_reachability_associ
 		}
 	}
 
-	if (shr_table_has_error(t))
-		fprintf(stderr,
-			"Failed to build reachability-associations table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "reachability-associations");
 }
 
 #ifdef CONFIG_FABRICS
@@ -10934,11 +10271,7 @@ static void stdout_host_discovery_log(struct nvme_host_discovery_log *log)
 	stdout_kv_add(t, "hdlpf", "%02x", log->hdlpf);
 	stdout_kv_add(t, "thdlpl", "%u", thdlpl);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build host-discovery-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "host-discovery-log");
 
 	for (i = sizeof(*log); i < le32_to_cpu(log->thdlpl); i += tel) {
 		printf("hedlpe: %d\n", n++);
@@ -10984,12 +10317,7 @@ static void stdout_host_discovery_log(struct nvme_host_discovery_log *log)
 		stdout_kv_add(t, "tel", "%u", tel);
 		stdout_kv_add(t, "numexat", "%u", numexat);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build host-discovery-log table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "host-discovery-log");
 
 		if (hedlpe->trtype != NVMF_TRTYPE_RDMA &&
 		    hedlpe->trtype != NVMF_TRTYPE_TCP)
@@ -11009,12 +10337,7 @@ static void stdout_host_discovery_log(struct nvme_host_discovery_log *log)
 			stdout_kv_add(t, "exatlen", "%u",
 				      le16_to_cpu(exat->exatlen));
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build host-discovery-log table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "host-discovery-log");
 
 			printf("exatval:\n");
 			d((unsigned char *)exat->exatval,
@@ -11067,11 +10390,7 @@ static void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log)
 	stdout_kv_add(t, "recfmt", "%u", le16_to_cpu(log->recfmt));
 	stdout_kv_add(t, "tadlpl", "%u", tadlpl);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build ave-discovery-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "ave-discovery-log");
 
 	for (i = sizeof(*log); i < le32_to_cpu(log->tadlpl); i += tel) {
 		printf("adlpe: %d\n", n++);
@@ -11087,12 +10406,7 @@ static void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log)
 		stdout_kv_add(t, "avenqn", "%s", adlpe->avenqn);
 		stdout_kv_add(t, "numatr", "%u", numatr);
 
-		if (shr_table_has_error(t))
-			fprintf(stderr,
-				"Failed to build ave-discovery-log table\n");
-		else
-			stdout_kv_render(stdout, t);
-		shr_table_free(t);
+		stdout_kv_table_finish(t, "ave-discovery-log");
 
 		atr = adlpe->atr;
 		for (j = 0; j < numatr; j++) {
@@ -11109,12 +10423,7 @@ static void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log)
 			stdout_kv_add_traddr(t, "avetraddr", atr->aveadrfam,
 					     atr->avetraddr);
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build ave-discovery-log table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "ave-discovery-log");
 
 			atr++;
 		}
@@ -11138,11 +10447,7 @@ static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *lo
 	stdout_kv_add(t, "ori", "%u", log->ori);
 	stdout_kv_add(t, "tpdrpl", "%u", tpdrpl);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build pull-model-ddc-req table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "pull-model-ddc-req");
 
 	printf("osp:\n");
 	d((unsigned char *)log->osp, osp_len, 16, 1);
@@ -11254,11 +10559,7 @@ static void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 
 	stdout_kv_add(t, "Interval Power Percent Error", "%u", log->ipwrpe);
 
-	if (shr_table_has_error(t))
-		fprintf(stderr, "Failed to build power-meas-log table\n");
-	else
-		stdout_kv_render(stdout, t);
-	shr_table_free(t);
+	stdout_kv_table_finish(t, "power-meas-log");
 
 	if (verbose) {
 		for (i = 0; i < nphd; i++) {
@@ -11281,12 +10582,7 @@ static void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 				      "%s",
 				      phblt_str ?: "-");
 
-			if (shr_table_has_error(t))
-				fprintf(stderr,
-					"Failed to build power-meas-log table\n");
-			else
-				stdout_kv_render(stdout, t);
-			shr_table_free(t);
+			stdout_kv_table_finish(t, "power-meas-log");
 		}
 	}
 }
