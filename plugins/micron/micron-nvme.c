@@ -10,7 +10,6 @@
  */
 
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -218,32 +217,6 @@ static enum eDriveModel GetDriveModel(
 }
 
 /*
- * sanitize_serial - trim trailing spaces, null-terminate, and replace any
- * characters that are not alphanumeric, hyphen, or underscore with underscores.
- */
-static void sanitize_serial(char *sn, size_t len)
-{
-	size_t i;
-	size_t end;
-
-	if (!sn || len == 0)
-		return;
-
-	end = len - 1;
-	while (end > 0 && isblank((unsigned char)sn[end - 1]))
-		end--;
-	sn[end] = '\0';
-
-	for (i = 0; i < end; i++) {
-		if (!((sn[i] >= 'A' && sn[i] <= 'Z') ||
-		      (sn[i] >= 'a' && sn[i] <= 'z') ||
-		      (sn[i] >= '0' && sn[i] <= '9') ||
-		      sn[i] == '-' || sn[i] == '_'))
-			sn[i] = '_';
-	}
-}
-
-/*
  * is_safe_path - validate that a path string is safe for use as a filename.
  *
  * Rejects control characters (0x00-0x1F), characters invalid on Windows
@@ -280,70 +253,6 @@ static bool is_safe_path(const char *path)
 		return false;
 
 	return true;
-}
-
-/*
- * Recursively remove a directory and its contents.
- * Since this is only used for temporary directories that we create that
- * have no symlinks, it is safe to not check for and handle symlinks here.
- */
-static int RemoveDirRecursive(const char *path)
-{
-	DIR *dir = NULL;
-	struct dirent *entry;
-	char child[PATH_MAX];
-
-	dir = opendir(path);
-	if (!dir) {
-		if (errno == ENOENT)
-			return 0;
-		return -1;
-	}
-
-	while ((entry = readdir(dir))) {
-		if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
-			continue;
-
-		if (snprintf(child, sizeof(child), "%s/%s", path, entry->d_name) >=
-		    (int)sizeof(child)) {
-			closedir(dir);
-			errno = ENAMETOOLONG;
-			return -1;
-		}
-
-		if (unlink(child) == 0 || errno == ENOENT)
-			continue;
-
-		/*
-		 * On Linux, unlinking a directory fails with EISDIR or EPERM.
-		 * On Windows, it fails with EACCES. In all cases, fall through
-		 * to attempt recursive removal.
-		 */
-		if (errno != EISDIR && errno != EPERM && errno != EACCES) {
-			int saved_errno = errno;
-
-			closedir(dir);
-			errno = saved_errno;
-			return -1;
-		}
-
-		if (RemoveDirRecursive(child) < 0) {
-			int saved_errno = errno;
-
-			if (saved_errno == ENOENT)
-				continue;
-			closedir(dir);
-			errno = saved_errno;
-			return -1;
-		}
-	}
-
-	closedir(dir);
-
-	if (rmdir(path) < 0 && errno != ENOENT)
-		return -1;
-
-	return 0;
 }
 
 /*
@@ -416,7 +325,7 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 				"check if zip command is installed!\n");
 	}
 
-	if (RemoveDirRecursive(strDirName) < 0)
+	if (shr_rmdir_recursive(strDirName) < 0)
 		nvme_show_error("Failed to remove temporary files!");
 
 	return err;
@@ -3964,7 +3873,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	printf("Preparing log package. This will take a few seconds...\n");
 
 	strncpy(safe_sn, ctrl.sn, sizeof(safe_sn) - 1);
-	sanitize_serial(safe_sn, sizeof(safe_sn));
+	shr_sanitize_name(shr_rtrim(safe_sn));
 	err = SetupDebugDataDirectories(safe_sn, cfg.package,
 			strMainDirName, sizeof(strMainDirName),
 			strOSDirName, sizeof(strOSDirName),
