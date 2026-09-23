@@ -640,7 +640,7 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 
 	if (log_data->sitsz != 0) {
 		memcpy(stat_id_str_table_arr, (__u8 *)log_data_buf + stat_id_str_table_ofst,
-		       (log_data->sitsz * 4));
+		       stat_id_index * sizeof(struct statistics_id_str_table_entry));
 		printf("  Statistics Identifier String Table\n");
 		for (j = 0; j < stat_id_index; j++) {
 			printf("   Vendor Specific Statistic Identifier : 0x%x\n",
@@ -658,7 +658,7 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 
 	if (log_data->estsz != 0) {
 		memcpy(event_id_str_table_arr, (__u8 *)log_data_buf + event_str_table_ofst,
-		       (log_data->estsz * 4));
+		       eve_id_index * sizeof(struct event_id_str_table_entry));
 		printf("  Event Identifier String Table Entry\n");
 		for (j = 0; j < eve_id_index; j++) {
 			printf("   Debug Event Class        : 0x%x\n",
@@ -677,7 +677,7 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 
 	if (log_data->vu_eve_st_sz != 0) {
 		memcpy(vu_event_id_str_table_arr, (__u8 *)log_data_buf + vu_event_str_table_ofst,
-		       (log_data->vu_eve_st_sz * 4));
+		       vu_eve_index * sizeof(struct vu_event_id_str_table_entry));
 		printf("  VU Event Identifier String Table Entry\n");
 		for (j = 0; j < vu_eve_index; j++) {
 			printf("   Debug Event Class        : 0x%x\n",

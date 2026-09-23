@@ -1034,7 +1034,7 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 
 		memcpy(stat_id_str_table_arr,
 		(__u8 *)log_data_buf + stat_id_str_table_ofst,
-		(log_data->sitsz * 4));
+		stat_id_index * sizeof(struct statistics_id_str_table_entry));
 		struct json_object *stat_table = json_create_object();
 
 		for (j = 0; j < stat_id_index; j++) {
@@ -1063,7 +1063,7 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 
 		memcpy(event_id_str_table_arr,
 		(__u8 *)log_data_buf + event_str_table_ofst,
-		(log_data->estsz * 4));
+		eve_id_index * sizeof(struct event_id_str_table_entry));
 		for (j = 0; j < eve_id_index; j++) {
 			struct json_object *entry = json_create_object();
 
@@ -1090,7 +1090,7 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 
 		memcpy(vu_event_id_str_table_arr,
 		(__u8 *)log_data_buf + vu_event_str_table_ofst,
-		(log_data->vu_eve_st_sz * 4));
+		vu_eve_index * sizeof(struct vu_event_id_str_table_entry));
 		for (j = 0; j < vu_eve_index; j++) {
 			struct json_object *entry = json_create_object();
 
