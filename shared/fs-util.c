@@ -6,12 +6,14 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
+#include <dirent.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "cleanup-util.h"
 #include "fs-util.h"
@@ -95,6 +97,66 @@ static char *join_path(const char *dir, const char *path)
 	snprintf(out, len, "%s/%s", dir, path);
 
 	return out;
+}
+
+int shr_rmdir_recursive(const char *path)
+{
+	DIR *dir;
+	struct dirent *entry;
+	char child[PATH_MAX];
+	int ret;
+
+	/*
+	 * opendir() follows symlinks, so without this check a path that is
+	 * itself a symlink to a directory would have its target's contents
+	 * walked and removed instead of just the link, like "rm -rf" does.
+	 * A missing path is not a directory either, so unlink() below runs
+	 * for it too and reports the ENOENT that makes this a no-op.
+	 */
+	if (!shr_isdir(path))
+		return unlink(path) == 0 || errno == ENOENT ? 0 : -errno;
+
+	dir = opendir(path);
+	if (!dir)
+		return errno == ENOENT ? 0 : -errno;
+
+	while ((entry = readdir(dir))) {
+		int saved_errno;
+
+		if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+			continue;
+
+		if (snprintf(child, sizeof(child), "%s/%s",
+			     path, entry->d_name) >= (int)sizeof(child)) {
+			closedir(dir);
+			return -ENAMETOOLONG;
+		}
+
+		if (unlink(child) == 0 || errno == ENOENT)
+			continue;
+
+		/*
+		 * Unlinking a directory fails with EISDIR or EPERM on Linux,
+		 * EACCES on Windows. Any other errno means child could not be
+		 * removed at all, directory or not.
+		 */
+		if (errno != EISDIR && errno != EPERM && errno != EACCES) {
+			saved_errno = errno;
+			closedir(dir);
+			return -saved_errno;
+		}
+
+		ret = shr_rmdir_recursive(child);
+		if (ret < 0 && ret != -ENOENT) {
+			closedir(dir);
+			return ret;
+		}
+	}
+
+	closedir(dir);
+
+	ret = shr_rmdir(path);
+	return (ret == 0 || ret == -ENOENT) ? 0 : ret;
 }
 
 int shr_read_file(const char *dir, const char *path, long *size,

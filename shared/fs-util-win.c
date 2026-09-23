@@ -95,6 +95,22 @@ int shr_rmdir(const char *path)
 	return 0;
 }
 
+bool shr_isdir(const char *path)
+{
+	DWORD attrs = GetFileAttributesA(path);
+
+	if (attrs == INVALID_FILE_ATTRIBUTES)
+		return false;
+	/*
+	 * GetFileAttributesA() reports the attributes of a symlink or
+	 * junction itself, not its target, so this does not follow it --
+	 * the same as lstat() + S_ISDIR() on Linux.
+	 */
+	if (attrs & FILE_ATTRIBUTE_REPARSE_POINT)
+		return false;
+	return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
 bool shr_fd_is_open(int fd)
 {
 	return _get_osfhandle(fd) != -1;

@@ -260,6 +260,152 @@ static bool test_rmdir(void)
 	return pass;
 }
 
+static bool test_isdir(void)
+{
+	static const char *dir = "shr-test-isdir-dir";
+	static const char *file = "shr-test-isdir-file";
+	bool pass = true;
+	FILE *f;
+
+	printf("test_isdir:\n");
+
+	/* Clean up if left over from a previous crashed run */
+	shr_rmdir(dir);
+	shr_unlink(file);
+
+	shr_mkdir(dir, 0755);
+	pass &= check_bool("a real directory is a directory", shr_isdir(dir));
+
+	f = fopen(file, "w");
+	if (f)
+		fclose(f);
+	pass &= check_bool("a regular file is not a directory", !shr_isdir(file));
+
+	pass &= check_bool("a missing path is not a directory",
+			    !shr_isdir("shr-test-isdir-never-existed"));
+
+#if !defined(_WIN32)
+	{
+		static const char *link = "shr-test-isdir-link";
+
+		shr_unlink(link);
+		pass &= check_bool("symlink to the directory created",
+				    symlink(dir, link) == 0);
+		pass &= check_bool("a symlink to a directory is not reported as one, unlike stat()",
+				    !shr_isdir(link));
+		unlink(link);
+	}
+#endif
+
+	shr_rmdir(dir);
+	shr_unlink(file);
+
+	return pass;
+}
+
+static bool test_rmdir_recursive(void)
+{
+	static const char *base = "shr-test-rmdir-recursive-dir";
+	char path[256];
+	bool pass = true;
+	int ret;
+	FILE *f;
+
+	printf("test_rmdir_recursive:\n");
+
+	/* Clean up if it was left over from a previous crashed run */
+	shr_rmdir_recursive(base);
+
+	snprintf(path, sizeof(path), "%s/level1/level2", base);
+	shr_mkdir_p(path, 0755);
+	snprintf(path, sizeof(path), "%s/level1/file.txt", base);
+	f = fopen(path, "w");
+	pass &= check_bool("nested file created", f != NULL);
+	if (f)
+		fclose(f);
+
+	ret = shr_rmdir_recursive(base);
+	pass &= check_ret("removes a populated directory tree", ret, 0);
+	pass &= check_bool("the top-level directory is really gone",
+			    !dir_is_writable(base));
+
+	ret = shr_rmdir_recursive(base);
+	pass &= check_ret("removing an already-missing tree is a no-op success",
+			   ret, 0);
+
+	ret = shr_rmdir_recursive("shr-test-rmdir-recursive-never-existed");
+	pass &= check_ret("removing a tree that never existed is a no-op success",
+			   ret, 0);
+
+	shr_mkdir(base, 0755);
+	ret = shr_rmdir_recursive(base);
+	pass &= check_ret("removes an empty directory too", ret, 0);
+	pass &= check_bool("the empty directory is really gone",
+			    !dir_is_writable(base));
+
+#if !defined(_WIN32)
+	{
+		static const char *target = "shr-test-rmdir-recursive-target";
+		static const char *link = "shr-test-rmdir-recursive-link";
+		char marker[256];
+
+		/* Clean up if left over from a previous crashed run */
+		shr_unlink(link);
+		shr_rmdir_recursive(target);
+
+		shr_mkdir(target, 0755);
+		snprintf(marker, sizeof(marker), "%s/marker", target);
+		f = fopen(marker, "w");
+		if (f)
+			fclose(f);
+
+		pass &= check_bool("symlink to the target created",
+				    symlink(target, link) == 0);
+
+		ret = shr_rmdir_recursive(link);
+		pass &= check_ret("removing a top-level symlink to a directory succeeds",
+				   ret, 0);
+		pass &= check_bool("the symlink itself is gone",
+				    unlink(link) != 0 && errno == ENOENT);
+		pass &= check_bool("the symlink's target is untouched, not walked into",
+				    dir_is_writable(target));
+
+		shr_rmdir_recursive(target);
+	}
+
+	{
+		static const char *tree = "shr-test-rmdir-recursive-tree";
+		static const char *outside = "shr-test-rmdir-recursive-outside";
+		char link[256];
+		char marker[256];
+
+		/* Clean up if left over from a previous crashed run */
+		shr_rmdir_recursive(tree);
+		shr_rmdir_recursive(outside);
+
+		shr_mkdir(tree, 0755);
+		shr_mkdir(outside, 0755);
+		snprintf(marker, sizeof(marker), "%s/marker", outside);
+		f = fopen(marker, "w");
+		if (f)
+			fclose(f);
+
+		snprintf(link, sizeof(link), "%s/link-to-outside", tree);
+		pass &= check_bool("symlink to an unrelated directory nested inside the tree",
+				    symlink(outside, link) == 0);
+
+		ret = shr_rmdir_recursive(tree);
+		pass &= check_ret("removes a tree holding a nested symlink", ret, 0);
+		pass &= check_bool("the symlinked-to directory is untouched, not walked into",
+				    dir_is_writable(outside));
+
+		shr_rmdir_recursive(outside);
+	}
+#endif
+
+	return pass;
+}
+
 static bool test_mkstemp(void)
 {
 	char template[] = "shr-test-mkstemp-XXXXXX";
@@ -678,6 +824,8 @@ int main(void)
 	pass &= test_mkdir();
 	pass &= test_mkdir_p();
 	pass &= test_rmdir();
+	pass &= test_isdir();
+	pass &= test_rmdir_recursive();
 	pass &= test_mkdir_from_fname();
 	pass &= test_mkstemp();
 	pass &= test_read_file();
