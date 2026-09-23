@@ -49,9 +49,10 @@ OPTIONS
 	(mode "auto"), with no error.
 +
 --
-* 'auto' (the default when --persistent is given with no value): persist
-  the connection only where the target's own EPCSD (Explicit Persistent
-  Connection Support for Discovery) flag reports support for it.
+* 'auto' (the default for every --discovery entry, whether or not
+  --persistent is given): persist the connection only where the target's
+  own EPCSD (Explicit Persistent Connection Support for Discovery) flag
+  reports support for it.
 * 'force': persist regardless of what EPCSD reports, for a target whose
   self-reported EPCSD cannot be trusted.
 * 'no': explicitly record that this discovery controller is not
