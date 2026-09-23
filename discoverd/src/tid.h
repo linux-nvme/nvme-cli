@@ -40,7 +40,21 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_tid, struct libnvmf_tid *,
 struct libnvmf_tid *tid_new(const char *transport, const char *traddr,
 			    const char *trsvcid, const char *subsysnqn,
 			    const char *host_traddr, const char *host_iface,
-			    const char *hostnqn, bool is_dc);
+			    const char *hostnqn, const char *hostid,
+			    bool is_dc);
+
+/*
+ * tid_set_default_host_if_unset() - give a hostless TID the default host.
+ *
+ * If @tid names no host, give it @hostnqn and @hostid, the default
+ * identity. A TID that names a host is left as it is: the default hostid
+ * belongs to the default hostnqn, not to another host. A hostid the TID
+ * already has is kept. The TID copies both strings.
+ *
+ * Returns 0, or a negative errno from libnvmf_tid_set_identity().
+ */
+int tid_set_default_host_if_unset(struct libnvmf_tid *tid,
+				  const char *hostnqn, const char *hostid);
 
 /* tid_free() - release a TID (delegates to libnvmf_tid_free). */
 static inline void tid_free(struct libnvmf_tid *t)

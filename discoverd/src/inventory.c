@@ -23,7 +23,9 @@
 #include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/nbft.h>
+#include <nvme/util.h>
 
+#include "ctx.h"
 #include "inventory.h"
 #include "log.h"
 
@@ -86,6 +88,23 @@ struct inventory *inventory_new(void)
 	list_head_init(&inv->dlp_cache);
 	list_head_init(&inv->cfg_conns);
 	return inv;
+}
+
+/*
+ * Give @tid the daemon's default host if it names none. A candidate
+ * without a host connects as the default host, and its TID must say so to
+ * match the connection it makes. Frees @tid and returns NULL on failure.
+ */
+static struct libnvmf_tid *with_default_host(const struct discoverd_ctx *dctx,
+					     struct libnvmf_tid *tid)
+{
+	if (tid && tid_set_default_host_if_unset(tid, dctx->hostnqn,
+						 dctx->hostid) < 0) {
+		tid_free(tid);
+		return NULL;
+	}
+
+	return tid;
 }
 
 /*
@@ -348,8 +367,35 @@ static char *uri_transport(const char *uri)
 
 #define NBFT_SYSFS_PATH "/sys/firmware/acpi/tables"
 
-static void load_one_nbft(struct inventory *inv, struct libnbft_info *nbft)
+static bool uuid_is_null(const unsigned char uuid[NVME_UUID_LEN])
 {
+	static const unsigned char null_uuid[NVME_UUID_LEN];
+
+	return !memcmp(uuid, null_uuid, sizeof(null_uuid));
+}
+
+/*
+ * The hostid from the NBFT's Host Descriptor, as the boot connections used
+ * it, written to @buf. Returns @buf, or NULL if the firmware left the Host
+ * ID empty.
+ */
+static const char *nbft_hostid(const struct libnbft_info *nbft,
+			       char buf[NVME_UUID_LEN_STRING])
+{
+	if (uuid_is_null(nbft->host.id))
+		return NULL;
+	if (libnvme_uuid_to_string(nbft->host.id, buf))
+		return NULL;
+
+	return buf;
+}
+
+static void load_one_nbft(struct inventory *inv,
+			  const struct discoverd_ctx *dctx,
+			  struct libnbft_info *nbft)
+{
+	char hostid_buf[NVME_UUID_LEN_STRING];
+	const char *hostid = nbft_hostid(nbft, hostid_buf);
 	int i;
 
 	if (nbft->discovery_list) {
@@ -377,7 +423,9 @@ static void load_one_nbft(struct inventory *inv, struct libnbft_info *nbft)
 			host_traddr = d->hfi->tcp_info.ipaddr;
 
 			t = tid_new(transport, traddr, trsvcid, d->nqn,
-				    host_traddr, NULL, NULL, true);
+				    host_traddr, NULL, nbft->host.nqn, hostid,
+				    true);
+			t = with_default_host(dctx, t);
 			free(traddr);
 			free(trsvcid);
 			free(transport);
@@ -398,7 +446,9 @@ static void load_one_nbft(struct inventory *inv, struct libnbft_info *nbft)
 
 			t = tid_new(ns->transport, ns->traddr,
 				    ns->trsvcid, ns->subsys_nqn,
-				    host_traddr, NULL, NULL, false);
+				    host_traddr, NULL, nbft->host.nqn, hostid,
+				    false);
+			t = with_default_host(dctx, t);
 			if (t)
 				tid_list_append(&inv->nbft_iocs, t);
 		}
@@ -406,21 +456,21 @@ static void load_one_nbft(struct inventory *inv, struct libnbft_info *nbft)
 }
 
 int inventory_load_nbft(struct inventory *inv,
-			struct libnvme_global_ctx *nvme_ctx)
+			const struct discoverd_ctx *dctx)
 {
 	char *nbft_path = NBFT_SYSFS_PATH;
 	struct nbft_file_entry *head = NULL;
 	struct nbft_file_entry *e;
 	int ret;
 
-	ret = libnvmf_nbft_read_files(nvme_ctx, nbft_path, &head);
+	ret = libnvmf_nbft_read_files(dctx->nvme_ctx, nbft_path, &head);
 	if (ret)
 		return 0; // no NBFT is not an error
 
 	for (e = head; e; e = e->next)
-		load_one_nbft(inv, e->nbft);
+		load_one_nbft(inv, dctx, e->nbft);
 
-	libnvmf_nbft_free(nvme_ctx, head);
+	libnvmf_nbft_free(dctx->nvme_ctx, head);
 	return 0;
 }
 
@@ -484,10 +534,16 @@ static char *resolve_traddr(const char *transport, const char *traddr)
 #endif
 }
 
+struct load_config_args {
+	struct inventory *inv;
+	const struct discoverd_ctx *dctx;
+};
+
 static void load_config_conn_callback(const struct libnvmf_config_conn *conn,
 				   void *user_data)
 {
-	struct inventory *inv = user_data;
+	struct load_config_args *args = user_data;
+	struct inventory *inv = args->inv;
 	const char *transport = libnvmf_config_conn_get_transport(conn);
 	const char *raw_traddr = libnvmf_config_conn_get_traddr(conn);
 	bool is_dc = libnvmf_config_conn_is_dc(conn);
@@ -506,7 +562,9 @@ static void load_config_conn_callback(const struct libnvmf_config_conn *conn,
 		   libnvmf_config_conn_get_subsysnqn(conn),
 		   libnvmf_config_conn_get_host_traddr(conn),
 		   libnvmf_config_conn_get_host_iface(conn),
-		   libnvmf_config_conn_get_hostnqn(conn), is_dc);
+		   libnvmf_config_conn_get_hostnqn(conn),
+		   libnvmf_config_conn_get_hostid(conn), is_dc);
+	t = with_default_host(args->dctx, t);
 	free(traddr);
 	if (!t)
 		return;
@@ -532,8 +590,9 @@ static void load_config_conn_callback(const struct libnvmf_config_conn *conn,
 }
 
 void inventory_load_config(struct inventory *inv,
-		       const struct libnvmf_config *fabrics_cfg)
+		       const struct discoverd_ctx *dctx)
 {
+	struct load_config_args args = { .inv = inv, .dctx = dctx };
 	struct cfg_conn_entry *ce, *next;
 
 	tlist_free_items(&inv->cfg_dcs);
@@ -544,9 +603,9 @@ void inventory_load_config(struct inventory *inv,
 	}
 	list_head_init(&inv->cfg_conns);
 
-	if (fabrics_cfg)
-		libnvmf_config_conn_for_each(fabrics_cfg,
-					     load_config_conn_callback, inv);
+	if (dctx->fabrics_cfg)
+		libnvmf_config_conn_for_each(dctx->fabrics_cfg,
+					     load_config_conn_callback, &args);
 
 	disc_dbg("loaded %zu DC(s), %zu IOC(s) from the fabrics config",
 		 inv->cfg_dcs.len, inv->cfg_iocs.len);
