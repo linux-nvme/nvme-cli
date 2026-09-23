@@ -7977,11 +7977,41 @@ static const char *stdout_format_timestamp(__u8 *timestamp_bytes)
 	return buf;
 }
 
+static struct shr_table *stdout_timestamp_attr_table(__u8 attr)
+{
+	struct shr_table *t;
+	__u8 to = NVME_TIMESTAMP_ATTR_TO(attr);
+	__u8 sync = NVME_TIMESTAMP_ATTR_SYNC(attr);
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[3:1]", to, "%s",
+			nvme_format_timestamp_origin(attr));
+	stdout_bits_add(t, "[0:0]", sync, "%s",
+			nvme_format_timestamp_sync(attr));
+
+	return t;
+}
+
 static void stdout_timestamp(struct nvme_timestamp *ts)
 {
-	printf("\tThe timestamp is : %s\n", stdout_format_timestamp(ts->timestamp));
-	printf("\t%s\n", nvme_format_timestamp_origin(ts->attr));
-	printf("\t%s\n", nvme_format_timestamp_sync(ts->attr));
+	struct shr_table *t;
+	int row;
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Timestamp", "%s",
+		      stdout_format_timestamp(ts->timestamp));
+
+	row = stdout_kv_add(t, "Attributes", "%#x", ts->attr);
+	shr_table_set_row_subtable(t, row,
+				    stdout_timestamp_attr_table(ts->attr));
+
+	stdout_kv_table_finish(t, "timestamp");
 }
 
 static void stdout_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
