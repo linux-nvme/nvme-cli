@@ -8456,11 +8456,28 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 static void stdout_lba_status(struct nvme_lba_status *list,
 			      unsigned long len)
 {
-	int idx;
+	struct shr_table_column columns[] = {
+		{ "DSLBA",  LEFT, AUTO_WIDTH },
+		{ "NLB",    LEFT, AUTO_WIDTH },
+		{ "Status", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *t;
+	__u32 nlsd = le32_to_cpu(list->nlsd);
+	int idx, row;
 
-	printf("Number of LBA Status Descriptors(NLSD): %" PRIu32 "\n",
-		le32_to_cpu(list->nlsd));
-	printf("Completion Condition(CMPC): %u\n", list->cmpc);
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Number of LBA Status Descriptors(NLSD)", "%"PRIu32,
+		      nlsd);
+	stdout_kv_add(t, "Completion Condition(CMPC)", "%u", list->cmpc);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build lba-status table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
 
 	switch (list->cmpc) {
 	case NVME_LBA_STATUS_CMPC_NO_CMPC:
@@ -8480,13 +8497,31 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 		break;
 	}
 
-	for (idx = 0; idx < list->nlsd; idx++) {
-		struct nvme_lba_status_desc *e = &list->descs[idx];
+	if (!nlsd)
+		return;
 
-		printf("{ DSLBA: %#016"PRIx64", NLB: %#08x, Status: %#02x }\n",
-				le64_to_cpu(e->dslba), le32_to_cpu(e->nlb),
-				e->status);
+	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t)
+		return;
+
+	for (idx = 0; idx < nlsd; idx++) {
+		struct nvme_lba_status_desc *e = &list->descs[idx];
+		char dslba[24], nlb[16], status[8];
+
+		snprintf(dslba, sizeof(dslba), "%#016"PRIx64,
+			 le64_to_cpu(e->dslba));
+		snprintf(nlb, sizeof(nlb), "%#08x", le32_to_cpu(e->nlb));
+		snprintf(status, sizeof(status), "%#02x", e->status);
+
+		row = shr_table_get_row_id(t);
+		shr_table_set_value_str(t, 0, row, dslba, LEFT);
+		shr_table_set_value_str(t, 1, row, nlb, LEFT);
+		shr_table_set_value_str(t, 2, row, status, LEFT);
+		shr_table_add_row(t, row);
 	}
+
+	shr_table_print(t);
+	shr_table_free(t);
 }
 
 static void stdout_dev_full_path(struct libnvme_ns *n, char *path, size_t len)
