@@ -140,7 +140,7 @@ class ConfigCreateCLITest(TestNVMeBase):
                      '--traddr=nn-0x4:pn-0x4',
                      '--host-traddr=nn-0x5:pn-0x5', '--discovery')
         content = self._read_output()
-        self.assertNotIn('persistent', content)
+        self.assertIn('persistent = auto', content)
 
         self._create('--transport', 'fc',
                      '--traddr=nn-0x4:pn-0x4',

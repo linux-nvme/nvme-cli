@@ -175,10 +175,9 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	const char *desc_persistent = "keep the discovery controller connected "
 		"to receive Asynchronous Event Notifications instead of "
 		"disconnecting after the discovery log page fetch; \"auto\" "
-		"(the default when given bare) persists only where the "
-		"target's own EPCSD flag supports it, \"force\" persists "
-		"regardless, \"no\" explicitly records non-persistence; "
-		"requires --discovery";
+		"(the default) persists only where the target's own EPCSD "
+		"flag supports it, \"force\" persists regardless, \"no\" "
+		"explicitly records non-persistence; requires --discovery";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvmf_config_emitter *emitter = NULL;

@@ -496,7 +496,7 @@ const char *nvmf_resolve_persistent_arg(
 		struct argconfig_commandline_options *opts, const char *arg)
 {
 	if (!argconfig_parse_seen(opts, "persistent"))
-		return NULL;
+		return "auto";
 
 	return arg ? arg : "auto";
 }
@@ -525,7 +525,7 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 		  OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
 			   &persistent_arg,
 			   "persistent discovery connection mode "
-			   "(default: no; auto if given bare)"),
+			   "(default: auto; use =no to disable)"),
 		  OPT_FLAG("no-reuse",     0, &no_reuse,
 			   "always create a new connection, never reuse "
 			   "an existing one"),
@@ -814,7 +814,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		  OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
 			   &persistent_arg,
 			   "persistent discovery connection mode "
-			   "(default: no; auto if given bare)"),
+			   "(default: auto; use =no to disable)"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_FLAG("no-reuse",       0, &no_reuse,
 			   "always create a new connection, never reuse "
