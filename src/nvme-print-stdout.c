@@ -6019,8 +6019,17 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 
 static void stdout_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
 {
+	struct shr_table *t;
+
 	printf("NVMe ZNS Identify Controller:\n");
-	printf("zasl    : %u\n", ctrl->zasl);
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "zasl", "%u", ctrl->zasl);
+
+	stdout_kv_table_finish(t, "zns-id-ctrl");
 }
 
 static struct shr_table *show_nvme_id_ns_zoned_zoc_table(__le16 ns_zoc)
