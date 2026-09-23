@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <ifaddrs.h>
 
 #include <systemd/sd-bus.h>
@@ -218,15 +217,15 @@ static const char *find_devname_for_tid(const struct conn_scan *scan,
  * is NULL.
  *
  * @known_devname is the existing (or just-removed) device name for @tid,
- * when the caller already has it in hand (on_nvme_remove(),
- * startup_audit()); NULL otherwise, in which case this function resolves
- * it itself from @scan (find_devname_for_tid()). Either way the
- * registry is checked directly by device name, never through libnvme's
- * in-process topology tree: that tree is only populated by a caller that
- * has just run libnvme_scan_topology() (true for the CLI's one-shot
- * fabrics commands, never true for this long-running daemon), so a
- * tree-based match would silently report "no owner" for every
- * already-connected controller discoverd didn't itself just scan.
+ * when the caller already has it in hand (on_nvme_remove()); NULL
+ * otherwise, in which case this function resolves it itself from @scan
+ * (find_devname_for_tid()). Either way the registry is checked directly by
+ * device name, never through libnvme's in-process topology tree: that tree
+ * is only populated by a caller that has just run libnvme_scan_topology()
+ * (true for the CLI's one-shot fabrics commands, never true for this
+ * long-running daemon), so a tree-based match would silently report "no
+ * owner" for every already-connected controller discoverd didn't itself
+ * just scan.
  */
 static bool should_connect(const struct conn_scan *scan,
 			   const struct libnvmf_tid *tid,
@@ -295,45 +294,107 @@ static const struct libnvmf_params *params_for(
 						 is_dc);
 }
 
+static void fetch_and_process_dlp(const char *devname,
+				  const struct libnvmf_tid *dc_tid);
+static bool devname_matches_tid(const char *devname,
+				const struct libnvmf_tid *tid);
+
 /*
- * Start a transient unit for @t (as a DC or an IOC) and track it — unless a
- * unit for this TID is already tracked, in which case we skip to avoid
- * issuing a duplicate StartTransient (e.g. startup_audit and
- * connect_desired both reaching the same controller, or the same IOC
- * appearing behind two DCs). The caller is responsible for the
- * should_connect() decision. @via_dc is the parent DC's config connection,
- * if @t was learned via that DC's Discovery Log Page; NULL otherwise.
+ * Track a unit this daemon started before it restarted. The connection is
+ * already up and @devname names it. Takes ownership of @devname.
  */
-static void start_ctrl(const struct libnvmf_tid *t, bool is_dc,
+static void adopt_ctrl(const char *unit_name, const struct libnvmf_tid *tid,
+		       bool is_dc, const struct libnvmf_params *params,
+		       char *devname)
+{
+	struct active_ctrl *e;
+
+	ctrl_add(unit_name, tid, is_dc, params);
+	e = ctrl_find_by_unit(unit_name);
+	if (!e) {
+		free(devname);
+		return;
+	}
+	e->devname = devname;
+
+	disc_info("%s | %s - adopted, already connected",
+		  libnvmf_tid_str(tid), devname);
+
+	/*
+	 * An adopted DC produces no device-add event, so fetch its DLP here.
+	 * Otherwise its DLP-sourced IOCs never enter the desired set and are
+	 * not reconnected if they drop.
+	 */
+	if (is_dc)
+		fetch_and_process_dlp(devname, tid);
+}
+
+/*
+ * Start a transient unit for @tid (as a DC or an IOC) and track it, or adopt
+ * the unit if a previous run of this daemon left it connected. Skipped when
+ * a unit for this TID is already tracked, so that the same IOC behind two
+ * DCs does not issue a duplicate StartTransient. The caller is responsible
+ * for the should_connect() decision. @via_dc is the parent DC's config
+ * connection, if @tid was learned via that DC's Discovery Log Page; NULL
+ * otherwise.
+ */
+static void start_ctrl(const struct libnvmf_tid *tid, bool is_dc,
 		       const struct libnvmf_config_conn *via_dc)
 {
-	char *unit_name = tid_unit_name(t);
+	__cleanup_free char *unit_name = tid_unit_name(tid);
 	const struct libnvmf_params *params;
 	bool is_nbft;
 	int r;
 
 	if (!unit_name)
 		return;
-	if (ctrl_find_by_unit(unit_name)) {
-		free(unit_name); // already tracked — no duplicate connect
-		return;
+	if (ctrl_find_by_unit(unit_name))
+		return; // already tracked — no duplicate connect
+
+	params = params_for(tid, is_dc, via_dc);
+
+	/*
+	 * A transient unit outlives the daemon. Starting it again fails with
+	 * -EEXIST, and the recovery for that stops the unit, which
+	 * disconnects. So adopt it if its recorded device is still this
+	 * connection. Otherwise the unit is stale, and the -EEXIST recovery
+	 * below replaces it.
+	 *
+	 * The kernel reuses nvmeN names, so the recorded device may now be
+	 * another orchestrator's connection. Delete the stale state first:
+	 * ExecStop= disconnects whatever device it records.
+	 */
+	if (unit_exists(ctx.umgr, unit_name)) {
+		char *devname = unit_read_devid(unit_name);
+
+		if (devname && devname_matches_tid(devname, tid)) {
+			adopt_ctrl(unit_name, tid, is_dc, params, devname);
+			return;
+		}
+		state_remove_devid(unit_name);
+		if (devname) {
+			__cleanup_free char *owner_unit =
+				state_read_unit(devname);
+
+			if (shr_streq0(owner_unit, unit_name))
+				state_remove_ctrl(devname);
+		}
+		free(devname);
 	}
 
-	params = params_for(t, is_dc, via_dc);
-	is_nbft = inventory_is_nbft(ctx.inventory, t);
+	is_nbft = inventory_is_nbft(ctx.inventory, tid);
 
-	r = is_dc ? unit_start_dc(ctx.umgr, t, params, is_nbft)
-		  : unit_start_ioc(ctx.umgr, t, params, is_nbft);
+	r = is_dc ? unit_start_dc(ctx.umgr, tid, params, is_nbft)
+		  : unit_start_ioc(ctx.umgr, tid, params, is_nbft);
 	if (r >= 0) {
-		ctrl_add(unit_name, t, is_dc, params);
-		disc_dbg("%s: requested %s unit", libnvmf_tid_str(t),
+		ctrl_add(unit_name, tid, is_dc, params);
+		disc_dbg("%s: requested %s unit", libnvmf_tid_str(tid),
 			 is_dc ? "DC" : "IOC");
 	} else {
 		disc_warn("%s - failed to start %s unit: %s",
-			  libnvmf_tid_str(t), is_dc ? "DC" : "IOC",
+			  libnvmf_tid_str(tid), is_dc ? "DC" : "IOC",
 			  strerror(-r));
 	}
-	free(unit_name);
 }
 
 SHR_PTRARRAY_DEFINE(ioc_list, struct libnvmf_tid);
@@ -848,6 +909,32 @@ static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc)
 	return t;
 }
 
+/*
+ * Is @devname a connection that satisfies @tid? A device name alone does not
+ * identify a controller, because the kernel reuses nvmeN names.
+ */
+static bool devname_matches_tid(const char *devname,
+				const struct libnvmf_tid *tid)
+{
+	__cleanup_tid struct libnvmf_tid *existing = NULL;
+	struct ifaddrs *iface_list = NULL;
+	bool is_dc, match;
+
+	existing = sysfs_read_tid(devname, &is_dc);
+	if (!existing)
+		return false;
+
+	if (getifaddrs(&iface_list) < 0) {
+		disc_warn("getifaddrs: %s", strerror(errno));
+		iface_list = NULL;
+	}
+
+	match = tid_matches_existing(tid, existing, is_dc, iface_list);
+	freeifaddrs(iface_list);
+
+	return match;
+}
+
 static void conn_scan_free(struct conn_scan *scan)
 {
 	size_t i;
@@ -933,138 +1020,6 @@ static const char *find_devname_for_tid(const struct conn_scan *scan,
 			return sc->devname;
 	}
 	return NULL;
-}
-
-static bool nvme_dev_exists(const char *devname)
-{
-	char path[256];
-	struct stat st;
-
-	snprintf(path, sizeof(path), "/sys/class/nvme/%s", devname);
-	return stat(path, &st) == 0;
-}
-
-static void startup_audit(void)
-{
-	char **devids;
-	int i;
-
-	// Phase 1: handle controllers with state files.
-	devids = state_list_ctrls();
-	if (devids) {
-		for (i = 0; devids[i]; i++) {
-			const char *devid = devids[i];
-			char *unit_name = state_read_unit(devid);
-
-			if (!unit_name) {
-				free(devids[i]);
-				continue;
-			}
-
-			if (nvme_dev_exists(devid)) {
-				// Device alive: read its TID, track it.
-				bool is_dc = false;
-				struct libnvmf_tid *t =
-					sysfs_read_tid(devid, &is_dc);
-
-				if (t) {
-					struct active_ctrl *e;
-					const struct libnvmf_params *params =
-						params_for(t, is_dc, NULL);
-
-					ctrl_add(unit_name, t, is_dc, params);
-					e = ctrl_find_by_unit(unit_name);
-					if (e)
-						e->devname = strdup(devid);
-
-					/*
-					 * An adopted DC produces no device-add
-					 * event, so warm its DLP here.
-					 * Otherwise its DLP-sourced IOCs never
-					 * enter the desired set and would not
-					 * be reconnected if they drop after a
-					 * warm restart.
-					 */
-					if (is_dc)
-						fetch_and_process_dlp(devid, t);
-
-					tid_free(t);
-				}
-			} else {
-				/*
-				 * Device gone while we were down. Reconnect
-				 * unless another orchestrator has since taken
-				 * ownership (an intentional handoff while we
-				 * were down) -- there is no TID available
-				 * here to also run the exclusion check
-				 * against, since state files don't store
-				 * transport parameters, only the registry
-				 * lookup by device name is possible.
-				 */
-				char *owner = NULL;
-				int r = libnvmf_registry_retrieve(
-						ctx.nvme_ctx, devid, "owner",
-						&owner);
-
-				if (r == -ENOENT)
-					r = 0;
-				if (r < 0) {
-					disc_warn("%s - failed to check registry owner: %s",
-						  devid, strerror(-r));
-				} else if (owner &&
-					   strcmp(owner, "discoverd") &&
-					   strcmp(owner, "nbft")) {
-					disc_info("%s - owned by '%s', not reconnecting",
-						  devid, owner);
-				} else {
-					unit_restart(ctx.umgr, unit_name);
-				}
-				free(owner);
-			}
-
-			free(unit_name);
-			free(devids[i]);
-		}
-		free(devids);
-	}
-
-	// Phase 2: find pre-existing connections without state files.
-	{
-		DIR *d = opendir("/sys/class/nvme");
-		struct dirent *ent;
-
-		if (!d)
-			return;
-
-		while ((ent = readdir(d))) {
-			const char *devname = ent->d_name;
-			char *existing_unit;
-			__cleanup_tid struct libnvmf_tid *t = NULL;
-			bool is_dc;
-
-			if (devname[0] == '.')
-				continue;
-			existing_unit = state_read_unit(devname);
-			if (existing_unit) {
-				free(existing_unit);
-				continue;
-			}
-
-			t = sysfs_read_tid(devname, &is_dc);
-			if (!t)
-				continue;
-
-			if (!inventory_is_desired(ctx.inventory, t)) {
-				disc_info("%s | %s - not desired, skipping",
-					  libnvmf_tid_str(t), devname);
-				continue;
-			}
-
-			if (should_connect(NULL, t, devname))
-				start_ctrl(t, is_dc, NULL);
-		}
-		closedir(d);
-	}
 }
 
 static void connect_desired(void)
@@ -1350,8 +1305,10 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	// Startup: adopt existing connections, then connect the desired set.
-	startup_audit();
+	/*
+	 * Connect the desired set. start_ctrl() adopts anything a previous
+	 * run of this daemon left connected.
+	 */
 	connect_desired();
 
 	/*

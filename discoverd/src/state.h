@@ -44,10 +44,3 @@ void state_remove_ctrl(const char *devid);
  * directly.
  */
 void state_remove_devid(const char *unit_name);
-
-/*
- * Enumerate all device IDs that have a state directory.
- * Returns a NULL-terminated array of strings; caller must free each and
- * the array itself. Returns NULL on error.
- */
-char **state_list_ctrls(void);
