@@ -748,7 +748,7 @@ static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported
 	int j;
 	struct json_object *root;
 	char unsup_req_list_str[40];
-	char guid_buf[GUID_LEN];
+	char guid_buf[(GUID_LEN * 2) + 1];
 	char *guid = guid_buf;
 
 	root = json_create_object();
@@ -766,7 +766,7 @@ static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported
 	json_object_add_value_int(root, "Log Page Version",
 				  le16_to_cpu(log_data->log_page_version));
 
-	memset((void *)guid, 0, GUID_LEN);
+	memset((void *)guid, 0, sizeof(guid_buf));
 	for (j = GUID_LEN - 1; j >= 0; j--)
 		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
 	json_object_add_value_string(root, "Log page GUID", guid_buf);
@@ -1131,7 +1131,7 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 {
 	int j;
 	struct json_object *root;
-	char guid_buf[GUID_LEN];
+	char guid_buf[(GUID_LEN * 2) + 1];
 	char *guid = guid_buf;
 	char res_arr[458];
 	char *res = res_arr;
@@ -1193,7 +1193,7 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 
 	json_object_add_value_int(root, "Log Page Version", log_page_version);
 
-	memset((void *)guid, 0, GUID_LEN);
+	memset((void *)guid, 0, sizeof(guid_buf));
 	for (j = GUID_LEN - 1; j >= 0; j--)
 		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
 	json_object_add_value_string(root, "Log page GUID", guid_buf);
