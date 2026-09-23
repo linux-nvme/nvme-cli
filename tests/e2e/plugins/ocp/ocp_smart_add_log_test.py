@@ -18,6 +18,10 @@ and decode its C0 log page correctly.  Tests read the raw C0 log page using
 ocp_c0_layout.py, then compare the decoded values against those reported by
 the plugin's printers.
 
+Drives with no usable OCP UUID index -- OCP 1.0 and other similarly
+limited devices -- are tested through the plugin's --no-uuid path, which
+TestOCP.run_ocp_cmd() falls back to on its own.
+
 Tests in this module verify:
   * smart-add-log succeeds against a real controller, and its JSON
     output parses.
@@ -40,11 +44,7 @@ from .ocp_test import TestOCP
 # OCP's SCAO format (GUID mismatch), or when reading it failed outright (e.g.
 # the drive returns "Invalid Log Page" because it doesn't implement log ID
 # 0xC0 at all) -- both indicate the drive isn't an OCP-compliant device
-# rather than a genuine command failure. In JSON output mode nvme-cli folds
-# whichever of these was printed last into the "error" field of the JSON
-# object on stdout (see _unsupported_reason below), so only the final,
-# summary message ever shows up there; the first one is only ever seen in
-# plain-text mode, ahead of the summary line, on stderr.
+# rather than a genuine command failure.
 _UNSUPPORTED_MSGS = (
     "ERROR : OCP : Unknown GUID in C0 Log Page data",
     "ERROR : OCP : Failure reading the C0 Log Page",
@@ -62,8 +62,13 @@ class TestOCPSmartAddLog(TestOCP):
 
     def _run(self, args=""):
         """Run ocp smart-add-log and return the CompletedProcess result,
-        skipping the calling test when the drive is not an OCP device."""
-        result = self.run_plugin_cmd("smart-add-log", args=args)
+        skipping the calling test when the drive is not an OCP device.
+
+        run_ocp_cmd() retries without the UUID index lookup where that is
+        what stood in the way, so a skip here means the drive could not
+        produce the page either way.
+        """
+        result = self.run_ocp_cmd("smart-add-log", args=args)
         if result.returncode != 0:
             reason = self._unsupported_reason(result)
             if reason is not None:
@@ -78,29 +83,14 @@ class TestOCPSmartAddLog(TestOCP):
         )
         return result
 
-    @staticmethod
-    def _unsupported_reason(result):
+    @classmethod
+    def _unsupported_reason(cls, result):
         """Return the unsupported-drive message from a failed run, or None
-        when the failure doesn't look like an unsupported drive.
-
-        -o json is meant to be parsed by machines, not scraped as text, so
-        prefer reading its structured "error" field over guessing which
-        stream carries the message: nvme-cli folds error text that would
-        otherwise go to stderr into that field instead when JSON output was
-        requested, so plain stdout/stderr text matching only ever applies to
-        genuine plain-text output.
-        """
-        try:
-            error = json.loads(result.stdout).get("error")
-        except (TypeError, ValueError, AttributeError):
-            error = None
-        haystacks = (error,) if error is not None else (
-            result.stdout, result.stderr)
-        return next(
-            (haystack for haystack in haystacks
-             if any(msg in haystack for msg in _UNSUPPORTED_MSGS)),
-            None,
-        )
+        when the failure doesn't look like an unsupported drive."""
+        text = cls.ocp_error_text(result)
+        if any(msg in text for msg in _UNSUPPORTED_MSGS):
+            return text
+        return None
 
     def _json_log(self, format_version=None):
         """Run smart-add-log with JSON output and return the parsed page."""
@@ -119,7 +109,14 @@ class TestOCPSmartAddLog(TestOCP):
         publishes no such entry. `nvme id uuid` walks the same list and
         stops at the same terminator, so enumerating its output
         reproduces the index without guessing.
+
+        Under --no-uuid the plugin skips the lookup and asks for index 0
+        regardless of what the list holds, so the reference read has to do
+        the same.
         """
+        if self.ocp_uses_no_uuid("smart-add-log"):
+            return 0
+
         cmd = (f"{self.nvme_bin} {self.command('id uuid')} {self.ctrl} "
                f"-o json")
         result = self.run_cmd(cmd, quiet=True)
