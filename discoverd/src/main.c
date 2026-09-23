@@ -30,6 +30,7 @@
 #include <shared/time-util.h>
 #include <nvme/config.h>
 #include <nvme/exclusion.h>
+#include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/registry.h>
 
@@ -811,17 +812,25 @@ static void on_nvme_remove(const char *devname,
 static void on_fc_discovery(const struct libnvmf_tid *t,
 			    void *user_data __attribute__((unused)))
 {
-	bool is_nbft = inventory_is_nbft(ctx.inventory, t);
+	__cleanup_tid struct libnvmf_tid *tid = libnvmf_tid_dup(t);
+	bool is_nbft;
+
+	// The uevent names no host: connect as the default host.
+	if (!tid ||
+	    tid_set_default_host_if_unset(tid, ctx.hostnqn, ctx.hostid) < 0)
+		return;
+
+	is_nbft = inventory_is_nbft(ctx.inventory, tid);
 
 	/*
 	 * fc_monitor_handler() is the only producer of fc_discovery
 	 * callbacks, and the kernel only fires that uevent for an FC
-	 * remote port advertising FC_PORT_ROLE_NVME_DISCOVERY - so t is
+	 * remote port advertising FC_PORT_ROLE_NVME_DISCOVERY - so tid is
 	 * always a DC here, never an IOC. Connect as a DC; we fetch its
 	 * DLP (and discover any IOCs behind it) once the device appears.
 	 */
-	if (should_connect(NULL, t, NULL))
-		start_ctrl(t, true, is_nbft, NULL);
+	if (should_connect(NULL, tid, NULL))
+		start_ctrl(tid, true, is_nbft, NULL);
 }
 
 static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc)
@@ -1137,7 +1146,7 @@ static int sighup_handler(sd_event_source *src __attribute__((unused)),
 	} else {
 		disc_err("failed to reload fabrics config, keeping last-good");
 	}
-	inventory_load_config(ctx.inventory, ctx.fabrics_cfg);
+	inventory_load_config(ctx.inventory, &ctx);
 
 	// Connect any newly added desired controllers (no disconnects).
 	connect_desired();
@@ -1152,6 +1161,25 @@ static int sigterm_handler(sd_event_source *src __attribute__((unused)),
 			   void *user_data __attribute__((unused)))
 {
 	sd_event_exit(ctx.event, 0);
+	return 0;
+}
+
+/*
+ * Resolve the identity a connect without --hostnqn uses. Must run before
+ * anything scans a controller into the libnvme tree:
+ * libnvmf_host_get_ids() prefers a host already in the tree.
+ */
+static int resolve_default_host(void)
+{
+	int r;
+
+	r = libnvmf_host_get_ids(ctx.nvme_ctx, NULL, NULL,
+				 &ctx.hostnqn, &ctx.hostid);
+	if (r < 0)
+		return r;
+
+	disc_dbg("default host identity: %s, %s", ctx.hostnqn, ctx.hostid);
+
 	return 0;
 }
 
@@ -1282,13 +1310,20 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	r = resolve_default_host();
+	if (r < 0) {
+		disc_err("failed to resolve the host identity: %s",
+			 strerror(-r));
+		return 1;
+	}
+
 	ctx.inventory = inventory_new();
 	if (!ctx.inventory)
 		return 1;
 
 	if (ctx.cfg->nbft)
-		inventory_load_nbft(ctx.inventory, ctx.nvme_ctx);
-	inventory_load_config(ctx.inventory, ctx.fabrics_cfg);
+		inventory_load_nbft(ctx.inventory, &ctx);
+	inventory_load_config(ctx.inventory, &ctx);
 
 	ctx.umgr = unit_mgr_new(ctx.bus, ctx.event, on_job_done, NULL,
 				nvme_path_abs);
@@ -1364,6 +1399,8 @@ int main(int argc, char **argv)
 	free(nvme_path_abs);
 	free(config_path_abs);
 	inventory_free(ctx.inventory);
+	free(ctx.hostnqn);
+	free(ctx.hostid);
 	config_free(ctx.cfg);
 	libnvmf_config_free(ctx.fabrics_cfg);
 	libnvme_free_global_ctx(ctx.nvme_ctx);

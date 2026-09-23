@@ -13,7 +13,7 @@
 
 #include "tid.h"
 
-struct libnvme_global_ctx;
+struct discoverd_ctx;
 struct inventory;
 
 /* Allocate an empty inventory. */
@@ -24,11 +24,12 @@ void inventory_free(struct inventory *inv);
  * Populate the NBFT DC/IOC sets from the firmware NBFT ACPI table. Call
  * once at startup; the NBFT itself does not change at runtime, so unlike
  * inventory_load_config() this never needs a rebuild. A missing/absent
- * NBFT is not an error.
+ * NBFT is not an error. A candidate that names no host gets @dctx's default
+ * identity.
  * Returns 0 on success, negative errno on failure.
  */
 int inventory_load_nbft(struct inventory *inv,
-			struct libnvme_global_ctx *nvme_ctx);
+			const struct discoverd_ctx *dctx);
 
 /*
  * Rebuild the config DC/IOC sets from the resolved fabrics configuration
@@ -37,11 +38,12 @@ int inventory_load_nbft(struct inventory *inv,
  * traddr is resolved here, blocking, one connection at a time — this is a
  * rare, small, startup/SIGHUP-only path, not the daemon's steady-state
  * event loop, so no worker thread is warranted. A connection whose traddr
- * cannot be resolved is skipped and logged.
- * @fabrics_cfg may be NULL (equivalent to an empty configuration).
+ * cannot be resolved is skipped and logged. A candidate that names no host
+ * gets @dctx's default identity. @dctx->fabrics_cfg may be NULL (equivalent
+ * to an empty configuration).
  */
 void inventory_load_config(struct inventory *inv,
-			   const struct libnvmf_config *fabrics_cfg);
+			   const struct discoverd_ctx *dctx);
 
 /*
  * The libnvmf_config_conn that produced @t via inventory_load_config(), or

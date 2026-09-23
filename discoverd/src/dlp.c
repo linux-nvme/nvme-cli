@@ -21,8 +21,8 @@
 
 /*
  * Build a TID for one DLPE. Host-side parameters (host_traddr, host_iface,
- * hostnqn) are inherited from the DC's TID since the IOC is reached via the
- * same physical interface as the DC.
+ * hostnqn, hostid) are inherited from the DC's TID since the IOC is reached
+ * via the same physical interface as the DC.
  */
 static struct libnvmf_tid *tid_from_dlpe(const struct nvmf_disc_log_entry *e,
 					 const struct libnvmf_tid *dc_tid)
@@ -40,6 +40,7 @@ static struct libnvmf_tid *tid_from_dlpe(const struct nvmf_disc_log_entry *e,
 		       dc_tid ? libnvmf_tid_get_host_traddr(dc_tid) : NULL,
 		       dc_tid ? libnvmf_tid_get_host_iface(dc_tid) : NULL,
 		       dc_tid ? libnvmf_tid_get_hostnqn(dc_tid) : NULL,
+		       dc_tid ? libnvmf_tid_get_hostid(dc_tid) : NULL,
 		       e->subtype == NVME_NQN_DISC);
 }
 

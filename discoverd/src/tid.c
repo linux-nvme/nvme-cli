@@ -21,7 +21,8 @@
 struct libnvmf_tid *tid_new(const char *transport, const char *traddr,
 			    const char *trsvcid, const char *subsysnqn,
 			    const char *host_traddr, const char *host_iface,
-			    const char *hostnqn, bool is_dc)
+			    const char *hostnqn, const char *hostid,
+			    bool is_dc)
 {
 	struct libnvmf_tid *t;
 
@@ -29,8 +30,19 @@ struct libnvmf_tid *tid_new(const char *transport, const char *traddr,
 		trsvcid = libnvmf_get_default_trsvcid(transport, is_dc);
 
 	libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
-				host_traddr, host_iface, hostnqn, NULL, &t);
+				host_traddr, host_iface, hostnqn, hostid, &t);
 	return t;
+}
+
+int tid_set_default_host_if_unset(struct libnvmf_tid *tid,
+				  const char *hostnqn, const char *hostid)
+{
+	if (libnvmf_tid_get_hostnqn(tid))
+		return 0;
+	if (libnvmf_tid_get_hostid(tid))
+		hostid = NULL; // NULL leaves the TID's own hostid unchanged
+
+	return libnvmf_tid_set_identity(tid, NULL, hostnqn, hostid);
 }
 
 /*

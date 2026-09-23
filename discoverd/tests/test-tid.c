@@ -30,7 +30,7 @@ static struct libnvmf_tid *mk(const char *transport, const char *traddr,
 {
 	struct libnvmf_tid *t = tid_new(transport, traddr, trsvcid, subsysnqn,
 					host_traddr, host_iface, hostnqn,
-					is_dc);
+					NULL, is_dc);
 
 	if (!t) {
 		printf(" - tid_new(%s, %s, %s, %s) returned NULL [FAIL]\n",
@@ -381,6 +381,30 @@ static bool test_transport(void)
 	return pass;
 }
 
+/*
+ * A candidate must name the host its connection used. One that names none
+ * never matches, which is why every candidate gets the default identity.
+ */
+static bool test_hostless_candidate(void)
+{
+	__cleanup_tid struct libnvmf_tid *candidate = NULL;
+	__cleanup_tid struct libnvmf_tid *existing = NULL;
+	bool pass = true;
+
+	printf("test_hostless_candidate:\n");
+
+	candidate = mk("tcp", "10.0.0.200", "4420", IOC_NQN, NULL, NULL, NULL,
+		       false);
+	existing = mk("tcp", "10.0.0.200", "4420", IOC_NQN, NULL, NULL,
+		      HOST_NQN, false);
+
+	pass &= check("a hostless candidate does not match",
+		      tid_matches_existing(candidate, existing, false, NULL),
+		      false);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -394,6 +418,7 @@ int main(void)
 	pass &= test_address_forms();
 	pass &= test_tcp_no_src_addr();
 	pass &= test_transport();
+	pass &= test_hostless_candidate();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

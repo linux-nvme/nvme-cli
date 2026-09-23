@@ -222,7 +222,7 @@ static bool test_cross_transport_skipped(void)
 	printf("test_cross_transport_skipped:\n");
 
 	dc_tid = tid_new("tcp", "192.168.1.116", "8009", DC_NQN, NULL, NULL,
-			 NULL, true);
+			 NULL, NULL, true);
 
 	log = make_log(4);
 	set_entry(log, 0, NVME_NQN_CURR, NVMF_DISC_EFLAGS_EPCSD,
@@ -267,7 +267,7 @@ static bool test_self_entry_other_interface_skipped(void)
 	printf("test_self_entry_other_interface_skipped:\n");
 
 	dc_tid = tid_new("tcp", "192.168.1.116", "8009", DC_NQN, NULL, NULL,
-			 NULL, true);
+			 NULL, NULL, true);
 
 	log = make_log(2);
 	set_entry(log, 0, NVME_NQN_CURR, NVMF_DISC_EFLAGS_EPCSD,

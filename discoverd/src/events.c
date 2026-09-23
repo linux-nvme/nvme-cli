@@ -77,7 +77,7 @@ static char *extract_addr_field(const char *address, const char *key)
 struct libnvmf_tid *tid_from_sysfs(sd_device *dev, bool *is_dc)
 {
 	const char *transport = NULL, *address = NULL;
-	const char *subsysnqn = NULL, *hostnqn = NULL;
+	const char *subsysnqn = NULL, *hostnqn = NULL, *hostid = NULL;
 	const char *host_iface = NULL, *cntrltype = NULL;
 	char *traddr = NULL, *trsvcid = NULL, *host_traddr = NULL;
 	struct libnvmf_tid *t = NULL;
@@ -89,6 +89,7 @@ struct libnvmf_tid *tid_from_sysfs(sd_device *dev, bool *is_dc)
 	sd_device_get_sysattr_value(dev, "address", &address);
 	sd_device_get_sysattr_value(dev, "subsysnqn", &subsysnqn);
 	sd_device_get_sysattr_value(dev, "hostnqn", &hostnqn);
+	sd_device_get_sysattr_value(dev, "hostid", &hostid);
 	sd_device_get_sysattr_value(dev, "host_iface", &host_iface);
 	sd_device_get_sysattr_value(dev, "cntrltype", &cntrltype);
 
@@ -107,7 +108,7 @@ struct libnvmf_tid *tid_from_sysfs(sd_device *dev, bool *is_dc)
 		bool dc = shr_streq0(cntrltype, "discovery");
 
 		t = tid_new(transport, traddr, trsvcid, subsysnqn,
-			    host_traddr, host_iface, hostnqn, dc);
+			    host_traddr, host_iface, hostnqn, hostid, dc);
 		if (is_dc)
 			*is_dc = dc;
 	}
@@ -307,7 +308,7 @@ static int fc_monitor_handler(sd_device_monitor *monitor __attribute__((unused))
 	 */
 	t = tid_new("fc", traddr, NULL,
 		    "nqn.2014-08.org.nvmexpress.discovery",
-		    host_traddr, NULL, NULL, true);
+		    host_traddr, NULL, NULL, NULL, true);
 	if (!t)
 		return 0;
 

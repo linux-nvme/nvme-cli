@@ -28,6 +28,8 @@ struct events_ctx;
  */
 struct discoverd_ctx {
 	struct libnvme_global_ctx *nvme_ctx;     // libnvme logging/scanning
+	char                      *hostnqn;      // default host identity
+	char                      *hostid;       // default host identity
 	const char                *conf_path;    // nvme-discoverd's conf path
 	struct discoverd_config   *cfg;          // parsed @conf_path
 	struct libnvmf_config     *fabrics_cfg;  // resolved fabrics config
