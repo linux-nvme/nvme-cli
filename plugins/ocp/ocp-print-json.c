@@ -1133,14 +1133,19 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 	struct json_object *root;
 	char guid_buf[(GUID_LEN * 2) + 1];
 	char *guid = guid_buf;
-	char res_arr[458];
+	/*
+	 * rsvd38 holds 456 __u8 values printed as decimal (up to 3 digits
+	 * each), preceded on log_page_version == 1 by two more __u8 values
+	 * (up to 3 digits each) from no_of_ns_prov_locking_obj_ext, plus NUL.
+	 */
+	char res_arr[456 * 3 + 2 * 3 + 1];
 	char *res = res_arr;
 	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 
 	root = json_create_object();
 
 	json_object_add_value_int(root, "State", log_data->state);
-	memset((__u8 *)res, 0, 3);
+	memset((__u8 *)res, 0, sizeof(res_arr));
 	for (j = 0; j < 3; j++)
 		res += sprintf(res, "%d", log_data->rsvd1[j]);
 	json_object_add_value_string(root, "Reserved1", res_arr);
@@ -1177,7 +1182,7 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 	json_object_add_value_int(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
 
 	res = res_arr;
-	memset((__u8 *)res, 0, 458);
+	memset((__u8 *)res, 0, sizeof(res_arr));
 	if (log_page_version == 1) {
 		res += sprintf(res, "%d%d", *(__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
 			*((__u8 *)&log_data->no_of_ns_prov_locking_obj_ext + 1));
