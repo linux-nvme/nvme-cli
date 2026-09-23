@@ -304,11 +304,12 @@ static const struct libnvmf_params *params_for(
  * should_connect() decision. @via_dc is the parent DC's config connection,
  * if @t was learned via that DC's Discovery Log Page; NULL otherwise.
  */
-static void start_ctrl(const struct libnvmf_tid *t, bool is_dc, bool is_nbft,
+static void start_ctrl(const struct libnvmf_tid *t, bool is_dc,
 		       const struct libnvmf_config_conn *via_dc)
 {
 	char *unit_name = tid_unit_name(t);
 	const struct libnvmf_params *params;
+	bool is_nbft;
 	int r;
 
 	if (!unit_name)
@@ -319,6 +320,7 @@ static void start_ctrl(const struct libnvmf_tid *t, bool is_dc, bool is_nbft,
 	}
 
 	params = params_for(t, is_dc, via_dc);
+	is_nbft = inventory_is_nbft(ctx.inventory, t);
 
 	r = is_dc ? unit_start_dc(ctx.umgr, t, params, is_nbft)
 		  : unit_start_ioc(ctx.umgr, t, params, is_nbft);
@@ -347,7 +349,6 @@ struct dlp_fetch_ctx {
 static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
 {
 	struct dlp_fetch_ctx *fctx = user_data;
-	bool is_nbft = inventory_is_nbft(ctx.inventory, t);
 	struct libnvmf_tid *dup;
 
 	// Accumulate IOC TIDs for inventory_update_dlp().
@@ -358,7 +359,7 @@ static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
 	}
 
 	if (should_connect(fctx->scan, t, NULL))
-		start_ctrl(t, false, is_nbft, fctx->via_dc);
+		start_ctrl(t, false, fctx->via_dc);
 }
 
 /*
@@ -387,10 +388,9 @@ static void dlp_dc_callback(const struct libnvmf_tid *t, bool epcsd,
 			    void *user_data)
 {
 	struct dlp_fetch_ctx *fctx = user_data;
-	bool is_nbft = inventory_is_nbft(ctx.inventory, t);
 
 	if (should_connect(fctx->scan, t, NULL)) {
-		start_ctrl(t, true, is_nbft, fctx->via_dc);
+		start_ctrl(t, true, fctx->via_dc);
 		record_parent_epcsd(t, epcsd);
 	}
 }
@@ -813,14 +813,11 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 			    void *user_data __attribute__((unused)))
 {
 	__cleanup_tid struct libnvmf_tid *tid = libnvmf_tid_dup(t);
-	bool is_nbft;
 
 	// The uevent names no host: connect as the default host.
 	if (!tid ||
 	    tid_set_default_host_if_unset(tid, ctx.hostnqn, ctx.hostid) < 0)
 		return;
-
-	is_nbft = inventory_is_nbft(ctx.inventory, tid);
 
 	/*
 	 * fc_monitor_handler() is the only producer of fc_discovery
@@ -830,7 +827,7 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 	 * DLP (and discover any IOCs behind it) once the device appears.
 	 */
 	if (should_connect(NULL, tid, NULL))
-		start_ctrl(tid, true, is_nbft, NULL);
+		start_ctrl(tid, true, NULL);
 }
 
 static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc)
@@ -1043,7 +1040,7 @@ static void startup_audit(void)
 			const char *devname = ent->d_name;
 			char *existing_unit;
 			__cleanup_tid struct libnvmf_tid *t = NULL;
-			bool is_nbft, is_dc;
+			bool is_dc;
 
 			if (devname[0] == '.')
 				continue;
@@ -1063,9 +1060,8 @@ static void startup_audit(void)
 				continue;
 			}
 
-			is_nbft = inventory_is_nbft(ctx.inventory, t);
 			if (should_connect(NULL, t, devname))
-				start_ctrl(t, is_dc, is_nbft, NULL);
+				start_ctrl(t, is_dc, NULL);
 		}
 		closedir(d);
 	}
@@ -1082,10 +1078,8 @@ static void connect_desired(void)
 	dcs = inventory_desired_dcs(ctx.inventory);
 	if (dcs) {
 		for (i = 0; dcs[i]; i++) {
-			bool is_nbft = inventory_is_nbft(ctx.inventory, dcs[i]);
-
 			if (should_connect(&scan, dcs[i], NULL))
-				start_ctrl(dcs[i], true, is_nbft, NULL);
+				start_ctrl(dcs[i], true, NULL);
 			tid_free(dcs[i]);
 		}
 		free(dcs);
@@ -1094,11 +1088,8 @@ static void connect_desired(void)
 	iocs = inventory_desired_iocs(ctx.inventory);
 	if (iocs) {
 		for (i = 0; iocs[i]; i++) {
-			bool is_nbft =
-				inventory_is_nbft(ctx.inventory, iocs[i]);
-
 			if (should_connect(&scan, iocs[i], NULL))
-				start_ctrl(iocs[i], false, is_nbft, NULL);
+				start_ctrl(iocs[i], false, NULL);
 			tid_free(iocs[i]);
 		}
 		free(iocs);
