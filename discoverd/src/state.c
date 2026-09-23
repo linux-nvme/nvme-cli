@@ -6,16 +6,13 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
-#include <dirent.h>
 #include <errno.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <shared/array-util.h>
 #include <shared/fs-util.h>
 
 #include "state.h"
@@ -92,59 +89,4 @@ void state_remove_devid(const char *unit_name)
 
 	snprintf(path, sizeof(path), STATE_UNITS_DIR "/%s.devid", base);
 	unlink(path);
-}
-
-/*
- * List every devid (e.g. "nvme3") that currently has a state directory
- * under STATE_CTRLS_DIR - i.e. every controller discoverd believes it
- * owns a transient unit for, regardless of whether the kernel device
- * still exists right now. Used by the startup audit to reconcile that
- * belief against what is actually present in sysfs: a devid that no
- * longer exists means the device dropped while discoverd was down and
- * needs reconnecting; a devid that does exist is simply adopted.
- *
- * Returns a NULL-terminated array of strdup'd devid strings (caller
- * frees each entry and the array itself), an empty (non-NULL,
- * single NULL-terminator) array if the directory exists but is empty,
- * or NULL if STATE_CTRLS_DIR itself could not be opened or on
- * allocation failure.
- */
-SHR_PTRARRAY_DEFINE(str_list, char);
-
-char **state_list_ctrls(void)
-{
-	DIR *d;
-	struct dirent *ent;
-	struct str_list a = { 0 };
-	bool ok = true;
-	size_t i;
-
-	d = opendir(STATE_CTRLS_DIR);
-	if (!d)
-		return NULL;
-
-	while ((ent = readdir(d))) {
-		char *name;
-
-		if (ent->d_name[0] == '.')
-			continue;
-		name = strdup(ent->d_name);
-		if (!name || str_list_append(&a, name) < 0) {
-			free(name);
-			ok = false;
-			break;
-		}
-	}
-	closedir(d);
-
-	if (ok && str_list_append(&a, NULL) < 0)
-		ok = false;
-
-	if (ok)
-		return a.items;
-
-	for (i = 0; i < a.len; i++)
-		free(a.items[i]);
-	str_list_free(&a);
-	return NULL;
 }

@@ -350,6 +350,45 @@ void unit_mgr_free(struct unit_mgr *mgr)
 	free(mgr);
 }
 
+bool unit_exists(struct unit_mgr *mgr, const char *unit_name)
+{
+	sd_bus_error err = SD_BUS_ERROR_NULL;
+	int r;
+
+	r = sd_bus_call_method(mgr->bus, SYSTEMD_BUS_NAME, SYSTEMD_OBJ_PATH,
+			       SYSTEMD_MGR_IFACE, "GetUnit",
+			       &err, NULL, "s", unit_name);
+	sd_bus_error_free(&err);
+
+	return r != -ENOENT;
+}
+
+char *unit_read_devid(const char *unit_name)
+{
+	char path[PATH_MAX];
+	char buf[256];
+	char *nl;
+	FILE *f;
+
+	if (unit_devid_path(path, sizeof(path), unit_name) < 0)
+		return NULL;
+
+	f = fopen(path, "r");
+	if (!f)
+		return NULL;
+
+	nl = fgets(buf, sizeof(buf), f);
+	fclose(f);
+	if (!nl)
+		return NULL;
+
+	nl = strchr(buf, '\n');
+	if (nl)
+		*nl = '\0';
+
+	return buf[0] ? strdup(buf) : NULL;
+}
+
 /*
  * Wait for @unit_name to stop being loaded, up to roughly
  * UNIT_GONE_TIMEOUT_MSEC. StopUnit() only enqueues the stop; the unit stays
@@ -368,15 +407,7 @@ static bool unit_wait_gone(struct unit_mgr *mgr, const char *unit_name)
 	int i;
 
 	for (i = 0; i < UNIT_GONE_TIMEOUT_MSEC / UNIT_GONE_POLL_MSEC; i++) {
-		sd_bus_error err = SD_BUS_ERROR_NULL;
-		int r;
-
-		r = sd_bus_call_method(mgr->bus,
-				       SYSTEMD_BUS_NAME, SYSTEMD_OBJ_PATH,
-				       SYSTEMD_MGR_IFACE, "GetUnit",
-				       &err, NULL, "s", unit_name);
-		sd_bus_error_free(&err);
-		if (r == -ENOENT)
+		if (!unit_exists(mgr, unit_name))
 			return true;
 
 		usleep(UNIT_GONE_POLL_MSEC * 1000);

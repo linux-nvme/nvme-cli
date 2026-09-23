@@ -73,3 +73,16 @@ int unit_stop(struct unit_mgr *mgr, const char *unit_name);
 
 /* Reset a failed unit so it can be started again. */
 int unit_reset_failed(struct unit_mgr *mgr, const char *unit_name);
+
+/*
+ * Is @unit_name loaded by systemd? Any error other than "no such unit"
+ * reports true: starting a unit that is really there fails with -EEXIST,
+ * and the recovery for that stops the unit, which disconnects.
+ */
+bool unit_exists(struct unit_mgr *mgr, const char *unit_name);
+
+/*
+ * Read the kernel device name (e.g. "nvme3") that @unit_name's connect
+ * recorded. Returns NULL if none was recorded. Caller must free.
+ */
+char *unit_read_devid(const char *unit_name);
