@@ -6131,15 +6131,61 @@ static void stdout_list_ns(struct nvme_ns_list *ns_list)
 	int i, verbose = stdout_print_ops.flags & VERBOSE;
 
 	printf("NVME Namespace List:\n");
-	for (i = 0; i < 1024; i++) {
-		if (ns_list->ns[i]) {
-			if (verbose)
-				printf("Identifier %4u: NSID %#x\n",
-						i, le32_to_cpu(ns_list->ns[i]));
-			else
-				printf("[%4u]:%#x\n",
-						i, le32_to_cpu(ns_list->ns[i]));
+
+	if (verbose) {
+		struct shr_table *t;
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		for (i = 0; i < 1024; i++) {
+			char name[24];
+
+			if (!ns_list->ns[i])
+				continue;
+
+			snprintf(name, sizeof(name), "Identifier %4u", i);
+			stdout_kv_add(t, name, "NSID %#x",
+				      le32_to_cpu(ns_list->ns[i]));
 		}
+
+		if (shr_table_has_error(t))
+			fprintf(stderr, "Failed to build list-ns table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
+	} else {
+		struct shr_table_column columns[] = {
+			{ "Index", RIGHT, AUTO_WIDTH },
+			{ "NSID",  LEFT,  AUTO_WIDTH },
+		};
+		struct shr_table *t;
+		bool has_entries = false;
+
+		t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+		if (!t)
+			return;
+
+		for (i = 0; i < 1024; i++) {
+			char id[16];
+			int row;
+
+			if (!ns_list->ns[i])
+				continue;
+
+			has_entries = true;
+			row = shr_table_get_row_id(t);
+			snprintf(id, sizeof(id), "%#x",
+				 le32_to_cpu(ns_list->ns[i]));
+			shr_table_set_value_int(t, 0, row, i, RIGHT);
+			shr_table_set_value_str(t, 1, row, id, LEFT);
+			shr_table_add_row(t, row);
+		}
+
+		if (has_entries)
+			shr_table_print(t);
+		shr_table_free(t);
 	}
 }
 
