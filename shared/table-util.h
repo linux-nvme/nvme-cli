@@ -274,6 +274,17 @@ void shr_table_set_indent(struct shr_table *t, int indent);
 void shr_table_print_row(FILE *stream, struct shr_table *t, int row);
 
 /**
+ * shr_table_print_header() - Print the column header, if any
+ * @stream:	Output stream
+ * @t:		Table instance
+ *
+ * Companion to shr_table_print_row() for a caller driving row-by-row
+ * output itself: print the header (a no-op if shr_table_set_no_header()
+ * is set) once, then shr_table_print_row() each row.
+ */
+void shr_table_print_header(FILE *stream, struct shr_table *t);
+
+/**
  * shr_table_get_row_subtable() - Get the subtable attached to a row
  * @t:		Table instance
  * @row:	Row id
