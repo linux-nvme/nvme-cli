@@ -1,6 +1,20 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
+## Changes in 3.2 (unreleased)
+
+### Feature removals and incompatible changes
+
+* The human-readable stdout output of `id-ctrl`, `id-ns`, and most
+  other identify/log-page/feature commands is now rendered through a
+  computed-width table instead of hand-aligned `printf()` calls.
+  Field names, values, and decoded bit breakdowns are unchanged, but
+  column widths, spacing, and blank lines around them may differ from
+  previous releases. stdout was never a stable, parseable interface;
+  scripts that depend on its exact layout should switch to
+  `--output-format=json` (`-o json`), which this change does not
+  affect.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
