@@ -1409,16 +1409,33 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 static void stdout_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len)
 {
 	uint16_t nruhsd = le16_to_cpu(status->nruhsd);
+	struct shr_table *t;
 
 	for (unsigned int i = 0; i < nruhsd; i++) {
 		struct nvme_fdp_ruh_status_desc *ruhs = &status->ruhss[i];
 
-		printf("Placement Identifier %"PRIu16"; Reclaim Unit Handle Identifier %"PRIu16"\n",
-				le16_to_cpu(ruhs->pid), le16_to_cpu(ruhs->ruhid));
-		printf("  Estimated Active Reclaim Unit Time Remaining (EARUTR): %"PRIu32"\n",
-				le32_to_cpu(ruhs->earutr));
-		printf("  Reclaim Unit Available Media Writes (RUAMW): %"PRIu64"\n",
-				le64_to_cpu(ruhs->ruamw));
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 2);
+
+		stdout_kv_add(t, "Placement Identifier (PID)", "%"PRIu16,
+			      le16_to_cpu(ruhs->pid));
+		stdout_kv_add(t, "Reclaim Unit Handle Identifier", "%"PRIu16,
+			      le16_to_cpu(ruhs->ruhid));
+		stdout_kv_add(t,
+			      "Estimated Active Reclaim Unit Time Remaining (EARUTR)",
+			      "%"PRIu32, le32_to_cpu(ruhs->earutr));
+		stdout_kv_add(t, "Reclaim Unit Available Media Writes (RUAMW)",
+			      "%"PRIu64, le64_to_cpu(ruhs->ruamw));
+
+		if (shr_table_has_error(t))
+			fprintf(stderr,
+				"Failed to build fdp-ruh-status table\n");
+		else
+			stdout_kv_render(stdout, t);
+		shr_table_free(t);
 
 		printf("\n");
 	}
