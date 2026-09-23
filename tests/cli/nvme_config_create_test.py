@@ -107,6 +107,9 @@ class ConfigCreateCLITest(TestNVMeBase):
         self.assertIn(
             'controller = transport=tcp;traddr=192.168.1.20;trsvcid=4420',
             content)
+        # "persistent" is discovery-only; so it must never reach
+        # a non-discovery entry.
+        self.assertNotIn('persistent', content)
 
     def test_host_symname_gets_own_dropin(self):
         self._create('--transport', 'tcp', '--traddr=192.168.1.21',
