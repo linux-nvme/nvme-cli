@@ -6615,12 +6615,46 @@ static void stdout_id_domain_list(struct nvme_id_domain_list *id_dom)
 
 static void stdout_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list)
 {
-	int i;
+	struct shr_table_column columns[] = {
+		{ "Index",               RIGHT, AUTO_WIDTH },
+		{ "Endurance Group ID",  LEFT,  AUTO_WIDTH },
+	};
 	__u16 num = le16_to_cpu(endgrp_list->num);
+	struct shr_table *t;
+	int i, row, n = min(num, 2047);
 
-	printf("num of endurance group ids: %u\n", num);
-	for (i = 0; i < min(num, 2047); i++)
-		printf("[%4u]:%#x\n", i, le16_to_cpu(endgrp_list->identifier[i]));
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "num of endurance group ids", "%u", num);
+
+	if (shr_table_has_error(t))
+		fprintf(stderr, "Failed to build endurance-group-list table\n");
+	else
+		stdout_kv_render(stdout, t);
+	shr_table_free(t);
+
+	if (!n)
+		return;
+
+	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t)
+		return;
+
+	for (i = 0; i < n; i++) {
+		char id[16];
+
+		row = shr_table_get_row_id(t);
+		snprintf(id, sizeof(id), "%#x",
+			 le16_to_cpu(endgrp_list->identifier[i]));
+		shr_table_set_value_int(t, 0, row, i, RIGHT);
+		shr_table_set_value_str(t, 1, row, id, LEFT);
+		shr_table_add_row(t, row);
+	}
+
+	shr_table_print(t);
+	shr_table_free(t);
 }
 
 static struct shr_table *stdout_id_iocs_iocsc_table(__u64 iocsc)
