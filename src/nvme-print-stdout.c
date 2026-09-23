@@ -3715,24 +3715,6 @@ static struct shr_table *stdout_id_ctrl_unvmcap_table(__u8 *unvmcap)
 	return t;
 }
 
-void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
-{
-	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
-	__u32 asz = (rpmbs & 0xFF000000) >> 24;
-	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
-	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
-	__u32 auth = (rpmbs & 0x38) >> 3;
-	__u32 rpmb = rpmbs & 0x7;
-
-	printf(" [31:24]: %#x\tAccess Size\n", asz);
-	printf(" [23:16]: %#x\tTotal Size\n", tsz);
-	if (rsvd)
-		printf(" [15:6] : %#x\tReserved\n", rsvd);
-	printf("  [5:3] : %#x\tAuthentication Method\n", auth);
-	printf("  [2:0] : %#x\tNumber of RPMB Units\n", rpmb);
-	printf("\n");
-}
-
 static struct shr_table *stdout_id_ctrl_rpmbs_table(__le32 ctrl_rpmbs)
 {
 	struct shr_table *t;
@@ -3755,6 +3737,13 @@ static struct shr_table *stdout_id_ctrl_rpmbs_table(__le32 ctrl_rpmbs)
 	stdout_bits_add(t, "[2:0]", rpmb, "Number of RPMB Units");
 
 	return t;
+}
+
+static void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+{
+	stdout_kv_table_finish(stdout_id_ctrl_rpmbs_table(ctrl_rpmbs),
+				"id-ctrl-rpmbs");
+	printf("\n");
 }
 
 static struct shr_table *stdout_id_ctrl_dsto_table(__u8 dsto)
