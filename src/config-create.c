@@ -209,7 +209,7 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 
 	persistent = nvmf_resolve_persistent_arg(opts, persistent_arg);
 
-	if (persistent && !discovery) {
+	if (argconfig_parse_seen(opts, "persistent") && !discovery) {
 		nvme_show_error("--persistent requires --discovery");
 		return -EINVAL;
 	}
@@ -230,7 +230,7 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		goto out;
 	}
 	nvmf_args_to_params(params, &fa);
-	if (persistent &&
+	if (discovery && persistent &&
 	    libnvmf_params_set(params, "persistent", persistent)) {
 		nvme_show_error(
 			"invalid --persistent value '%s' (expected no, auto, or force)",
