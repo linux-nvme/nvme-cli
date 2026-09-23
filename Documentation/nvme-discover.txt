@@ -95,8 +95,9 @@ OPTIONS
 	no error.
 +
 --
-* 'no' (the default when the option is omitted entirely): never persist.
-* 'auto' (the default when --persistent is given with no value): persist
+* 'no': never persist. Use this to opt out of the default.
+* 'auto' (the default, both when the option is omitted entirely and
+  when --persistent is given with no value): persist
   a Discovery Log Page entry's connection only where that entry's own
   EPCSD (Explicit Persistent Connection Support for Discovery) flag
   reports support for it; degrade to non-persistent, with a log message,
