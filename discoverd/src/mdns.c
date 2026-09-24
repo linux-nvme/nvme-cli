@@ -14,7 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/epoll.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
@@ -43,11 +45,40 @@ static const char * const mdns_service_types[] = {
 	"_nvme-disc._udp",
 };
 
+/*
+ * Retry intervals, in seconds, for the TCP reachability check. Some DCs
+ * advertise before their TCP listener is up. An NVMe connect through the
+ * kernel fails at that point, and the nvme driver logs errors. A plain
+ * TCP connect from userspace fails silently. So a tcp endpoint is
+ * reported only after a userspace TCP connect to it succeeds. The last
+ * interval repeats: the check stops only when the advertisement is
+ * withdrawn.
+ */
+static const unsigned int tcp_check_retry_sec[] = {
+	2, 5, 10, 30, 60, 300, 600,
+};
+
 /* One resolved connect endpoint for a discovered mDNS service instance. */
 struct mdns_endpoint {
 	struct list_node entry;
 	char *traddr;
 	char *trsvcid;
+};
+
+/* A TCP reachability check for a tcp endpoint not yet reported. */
+struct tcp_check {
+	struct list_node entry;
+	struct mdns_browse *br;
+	struct mdns_service *svc;
+	char *traddr;
+	char *trsvcid;
+	struct sockaddr_storage addr;
+	socklen_t addrlen;
+	int fd; // -1 when not connecting
+	sd_event_source *io_source;
+	sd_event_source *retry_timer;
+	size_t retry_idx; // into tcp_check_retry_sec[]
+	bool ceiling_logged; // for disc_info_once()
 };
 
 /* One discovered mDNS service instance, keyed by name within its browse. */
@@ -57,6 +88,7 @@ struct mdns_service {
 	const char *transport; // "tcp" or "rdma", from the TXT record's p= key
 	char *nqn; // TXT record's optional nqn= key, NULL if absent
 	struct list_head endpoints;
+	struct list_head checks; // struct tcp_check
 };
 
 /* One outstanding ResolveService call for a just-added service instance. */
@@ -139,6 +171,20 @@ static void mdns_endpoint_free(struct mdns_endpoint *ep)
 	free(ep);
 }
 
+static void tcp_check_free(struct tcp_check *tc)
+{
+	if (!tc)
+		return;
+	list_del_init(&tc->entry);
+	sd_event_source_unref(tc->io_source);
+	sd_event_source_unref(tc->retry_timer);
+	if (tc->fd >= 0)
+		close(tc->fd);
+	free(tc->traddr);
+	free(tc->trsvcid);
+	free(tc);
+}
+
 static struct mdns_service *service_find(struct mdns_browse *br,
 					  const char *name)
 {
@@ -151,10 +197,14 @@ static struct mdns_service *service_find(struct mdns_browse *br,
 	return NULL;
 }
 
-/* Report every cached endpoint as removed, then free @svc. */
+/* Cancel the checks, report every endpoint as removed, then free @svc. */
 static void service_free(struct mdns_browse *br, struct mdns_service *svc)
 {
 	struct mdns_endpoint *ep, *next;
+	struct tcp_check *tc, *next_tc;
+
+	list_for_each_safe(&svc->checks, tc, next_tc, entry)
+		tcp_check_free(tc);
 
 	list_for_each_safe(&svc->endpoints, ep, next, entry) {
 		if (br->mctx->callbacks.service_remove)
@@ -252,6 +302,167 @@ static void report_endpoint(struct mdns_browse *br, struct mdns_service *svc,
 						br->mctx->user_data);
 }
 
+static void tcp_check_start(struct tcp_check *tc);
+
+static int tcp_check_retry_cback(sd_event_source *s __attribute__((unused)),
+				 uint64_t usec __attribute__((unused)),
+				 void *userdata)
+{
+	struct tcp_check *tc = userdata;
+
+	tc->retry_timer = sd_event_source_unref(tc->retry_timer);
+	tcp_check_start(tc);
+
+	return 0;
+}
+
+/* Close the current attempt, if any, and arm the next retry. */
+static void tcp_check_schedule_retry(struct tcp_check *tc)
+{
+	size_t last = ARRAY_SIZE(tcp_check_retry_sec) - 1;
+	unsigned int sec;
+	uint64_t now;
+	int r;
+
+	tc->io_source = sd_event_source_unref(tc->io_source);
+	if (tc->fd >= 0) {
+		close(tc->fd);
+		tc->fd = -1;
+	}
+
+	sec = tcp_check_retry_sec[tc->retry_idx];
+	if (tc->retry_idx < last)
+		tc->retry_idx++;
+	else
+		disc_info_once(&tc->ceiling_logged,
+			       "mdns: %s: %s:%s still unreachable, retrying every %us",
+			       tc->br->ifname, tc->traddr, tc->trsvcid, sec);
+
+	r = sd_event_now(tc->br->mctx->event, CLOCK_BOOTTIME, &now);
+	if (r >= 0)
+		r = sd_event_add_time(tc->br->mctx->event, &tc->retry_timer,
+				      CLOCK_BOOTTIME,
+				      now + sec * UINT64_C(1000000), 0,
+				      tcp_check_retry_cback, tc);
+	if (r < 0)
+		disc_err("mdns: %s: %s:%s: cannot arm retry timer: %s",
+			 tc->br->ifname, tc->traddr, tc->trsvcid,
+			 strerror(-r));
+}
+
+/* Reachable: report the endpoint and free @tc. */
+static void tcp_check_succeeded(struct tcp_check *tc)
+{
+	char *traddr = tc->traddr;
+	char *trsvcid = tc->trsvcid;
+
+	tc->traddr = NULL;
+	tc->trsvcid = NULL;
+	report_endpoint(tc->br, tc->svc, traddr, trsvcid);
+	tcp_check_free(tc);
+}
+
+static int tcp_check_io_cback(sd_event_source *s __attribute__((unused)),
+			      int fd,
+			      uint32_t revents __attribute__((unused)),
+			      void *userdata)
+{
+	struct tcp_check *tc = userdata;
+	socklen_t len = sizeof(int);
+	int err = 0;
+
+	if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len) < 0 || err) {
+		tcp_check_schedule_retry(tc);
+		return 0;
+	}
+
+	tcp_check_succeeded(tc);
+
+	return 0;
+}
+
+static void tcp_check_start(struct tcp_check *tc)
+{
+	int r;
+
+	tc->fd = socket(tc->addr.ss_family,
+			SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
+			IPPROTO_TCP);
+	if (tc->fd < 0) {
+		tcp_check_schedule_retry(tc);
+		return;
+	}
+
+	r = connect(tc->fd, (struct sockaddr *)&tc->addr, tc->addrlen);
+	if (r < 0 && errno != EINPROGRESS) {
+		tcp_check_schedule_retry(tc);
+		return;
+	}
+
+	r = sd_event_add_io(tc->br->mctx->event, &tc->io_source, tc->fd,
+			    EPOLLOUT, tcp_check_io_cback, tc);
+	if (r < 0)
+		tcp_check_schedule_retry(tc);
+}
+
+/*
+ * Start a reachability check for a tcp endpoint. Takes ownership of
+ * @traddr and @trsvcid.
+ */
+static void tcp_check_new(struct mdns_browse *br, struct mdns_service *svc,
+			  char *traddr, char *trsvcid,
+			  const struct sockaddr_storage *ss, socklen_t sslen)
+{
+	struct tcp_check *tc;
+
+	if (!traddr || !trsvcid)
+		goto err;
+
+	tc = calloc(1, sizeof(*tc));
+	if (!tc)
+		goto err;
+	tc->br = br;
+	tc->svc = svc;
+	tc->traddr = traddr;
+	tc->trsvcid = trsvcid;
+	tc->addr = *ss;
+	tc->addrlen = sslen;
+	tc->fd = -1;
+	list_add(&svc->checks, &tc->entry);
+
+	tcp_check_start(tc);
+	return;
+err:
+	free(traddr);
+	free(trsvcid);
+}
+
+/* Build the sockaddr for a tcp endpoint. Returns its length. */
+static socklen_t endpoint_sockaddr(int family, const void *addr, int port,
+				   int ifindex, struct sockaddr_storage *ss)
+{
+	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)ss;
+	struct sockaddr_in *sin = (struct sockaddr_in *)ss;
+
+	memset(ss, 0, sizeof(*ss));
+
+	if (family == AF_INET) {
+		sin->sin_family = AF_INET;
+		sin->sin_port = htons((uint16_t)port);
+		memcpy(&sin->sin_addr, addr, sizeof(sin->sin_addr));
+
+		return sizeof(*sin);
+	}
+
+	sin6->sin6_family = AF_INET6;
+	sin6->sin6_port = htons((uint16_t)port);
+	memcpy(&sin6->sin6_addr, addr, sizeof(sin6->sin6_addr));
+	if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
+		sin6->sin6_scope_id = ifindex;
+
+	return sizeof(*sin6);
+}
+
 /* Parse one ResolveService "services[]" entry's port and addresses. */
 static void add_endpoints(struct mdns_browse *br, struct mdns_service *svc,
 			  sd_json_variant *service_item)
@@ -315,7 +526,17 @@ static void add_endpoints(struct mdns_browse *br, struct mdns_service *svc,
 		if (!inet_ntop(family, &a, buf, sizeof(buf)))
 			continue;
 
-		report_endpoint(br, svc, strdup(buf), strdup(trsvcid));
+		if (streq(svc->transport, "tcp")) {
+			struct sockaddr_storage ss;
+			socklen_t sslen;
+
+			sslen = endpoint_sockaddr(family, &a, port, br->ifindex,
+						  &ss);
+			tcp_check_new(br, svc, strdup(buf), strdup(trsvcid),
+				      &ss, sslen);
+		} else {
+			report_endpoint(br, svc, strdup(buf), strdup(trsvcid));
+		}
 	}
 
 	free(trsvcid);
@@ -365,6 +586,7 @@ static int resolve_reply_cb(sd_varlink *link __attribute__((unused)),
 		goto out;
 	list_node_init(&svc->entry); // safe to free even if never list_add()'d
 	list_head_init(&svc->endpoints);
+	list_head_init(&svc->checks);
 	svc->name = req->name;
 	svc->transport = transport;
 	svc->nqn = nqn ? strdup(nqn) : NULL;
@@ -374,7 +596,7 @@ static int resolve_reply_cb(sd_varlink *link __attribute__((unused)),
 	for (i = 0; i < n; i++)
 		add_endpoints(br, svc, sd_json_variant_by_index(services, i));
 
-	if (list_empty(&svc->endpoints))
+	if (list_empty(&svc->endpoints) && list_empty(&svc->checks))
 		service_free(br, svc); // nothing resolved
 	else
 		list_add(&br->services, &svc->entry);
