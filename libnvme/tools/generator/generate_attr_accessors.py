@@ -57,33 +57,38 @@ def load_specs(path):
 # ---------------------------------------------------------------------------
 
 
+_OS_KEYS = ('linux', 'win', 'freebsd')
+
+
 def _resolve_os(m, os_key):
     """Return m's resolved definition dict for one OS.
 
-    The base dict merged with m[os_key] (the 'linux' or 'win' sub-dict),
-    if present -- the override wins on any key it names. 'type' and
-    'writable' are never valid inside an override: a member's public
-    signature must be identical on every platform, only *where its
-    value comes from* (attr / group / absent) may vary.
+    The base dict merged with m[os_key] (the 'linux', 'win', or
+    'freebsd' sub-dict), if present -- the override wins on any key it
+    names. 'type' and 'writable' are never valid inside an override: a
+    member's public signature must be identical on every platform, only
+    *where its value comes from* (attr / group / absent) may vary.
     """
-    resolved = {k: v for k, v in m.items() if k not in ('linux', 'win')}
+    resolved = {k: v for k, v in m.items() if k not in _OS_KEYS}
     resolved.update(m.get(os_key, {}))
     return resolved
 
 
 def _os_variants_equal(m):
-    """True when a member's Linux and Windows resolution are identical.
+    """True when a member's Linux, Windows, and FreeBSD resolutions are
+    all identical.
 
     Most members are OS-common for free: libnvme_get_{ctrl,ns,path,
-    subsys}_attr() already has a Windows implementation that
+    subsys}_attr() already has a Windows/FreeBSD implementation that
     unconditionally returns NULL, so a plain 'attr' member needs no
-    override at all -- Windows absence falls out of the existing
+    override at all -- that absence falls out of the existing
     attr-reader stub, not from anything this generator does. A member
-    only needs 'linux'/'win' keys when its *loader or grouping* itself
-    differs (a different function gets called, not just a different
-    result from the same one).
+    only needs 'linux'/'win'/'freebsd' keys when its *loader or
+    grouping* itself differs (a different function gets called, not
+    just a different result from the same one).
     """
-    return _resolve_os(m, 'linux') == _resolve_os(m, 'win')
+    resolved = [_resolve_os(m, os_key) for os_key in _OS_KEYS]
+    return all(r == resolved[0] for r in resolved)
 
 
 def _pub_type(raw_type):
@@ -136,18 +141,19 @@ def build_members(spec):
     """Resolve a spec's members and groups into canonical and per-OS
     Member lists.
 
-    Returns a dict with four keys:
-      'all'    -- one Member per member/group-member, using its
-                  OS-invariant definition (name/type/writable never
-                  vary per OS). Drives the header, .ld and SWIG
-                  fragment, none of which depend on where a value
-                  actually comes from.
-      'shared' -- members whose Linux and Windows resolution is
-                  identical; their getter body goes in the spec's
-                  shared .c file.
-      'linux'  -- the Linux-resolved Member for every member whose
-                  resolution differs, for the spec's Linux-only .c file.
-      'win'    -- likewise, for the Windows-only .c file.
+    Returns a dict with five keys:
+      'all'     -- one Member per member/group-member, using its
+                   OS-invariant definition (name/type/writable never
+                   vary per OS). Drives the header, .ld and SWIG
+                   fragment, none of which depend on where a value
+                   actually comes from.
+      'shared'  -- members whose Linux, Windows, and FreeBSD resolutions
+                   are all identical; their getter body goes in the
+                   spec's shared .c file.
+      'linux'   -- the Linux-resolved Member for every member whose
+                   resolution differs, for the spec's Linux-only .c file.
+      'win'     -- likewise, for the Windows-only .c file.
+      'freebsd' -- likewise, for the FreeBSD-only .c file.
 
     field_path uses '->' throughout (e.g. 'attrs->model'): the owner
     struct holds a pointer to this struct, not an embedded value.
@@ -159,21 +165,20 @@ def build_members(spec):
     """
     all_members = []
     shared_members = []
-    linux_members = []
-    win_members = []
+    os_members = {os_key: [] for os_key in _OS_KEYS}
 
     for m in spec['members']:
-        base = {k: v for k, v in m.items() if k not in ('linux', 'win')}
+        base = {k: v for k, v in m.items() if k not in _OS_KEYS}
         all_members.append(_make_member(spec, base))
 
         if _os_variants_equal(m):
             shared_members.append(_make_member(spec, _resolve_os(m, 'linux')))
             continue
 
-        for os_key, bucket in (('linux', linux_members), ('win', win_members)):
+        for os_key in _OS_KEYS:
             resolved = _resolve_os(m, os_key)
-            bucket.append(_make_member(spec, resolved,
-                                        is_absent=resolved.get('absent', False)))
+            os_members[os_key].append(_make_member(
+                spec, resolved, is_absent=resolved.get('absent', False)))
 
     owner_field = spec['owner_field']
     for g in spec['groups']:
@@ -199,8 +204,7 @@ def build_members(spec):
     return {
         'all': all_members,
         'shared': shared_members,
-        'linux': linux_members,
-        'win': win_members,
+        **os_members,
     }
 
 
@@ -405,7 +409,7 @@ def generate_source_shared(buf, spec, shared_members):
 
 def generate_source_os(buf, spec, os_members):
     """Append one spec's OS-divergent getters/setters (members whose
-    Linux and Windows resolution differ) to buf.
+    per-OS resolution differs from the other platforms) to buf.
 
     No SPDX/banner here -- every spec sharing this OS's file shares one
     preamble, written once by main(). No struct definition or
@@ -679,16 +683,13 @@ def main():
     for spec in specs:
         resolved = build_members(spec)
         generate_source_shared(c_buf, spec, resolved['shared'])
-        if resolved['linux']:
-            name = spec['source_linux']
+        for os_key in _OS_KEYS:
+            if not resolved[os_key]:
+                continue
+            name = spec[f'source_{os_key}']
             generate_source_os(
                 os_bufs.setdefault(name, io.StringIO()),
-                spec, resolved['linux'])
-        if resolved['win']:
-            name = spec['source_win']
-            generate_source_os(
-                os_bufs.setdefault(name, io.StringIO()),
-                spec, resolved['win'])
+                spec, resolved[os_key])
         generate_header(h_buf, spec, resolved['all'])
         generate_ld(ld_buf, spec, resolved['all'])
         generate_swig(swig_buf, spec, resolved['all'])

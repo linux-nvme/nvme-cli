@@ -11,9 +11,9 @@ schema each dict follows and how to add a new member.
 Every entry's 'source'/'header'/'ld'/'swig'/'ld_section' keys must be
 identical across the whole list -- generate_attr_accessors.py merges
 every struct into one shared attr-accessors.{c,h,ld,i} set (plus
-attr-accessors-{linux,win}.c for whichever structs have OS-divergent
-members) rather than one file set per struct, so there is nothing to
-choose per entry. 'ld_section' is 'LIBNVME_ATTR_ACCESSORS_NEXT', not a
+attr-accessors-{linux,win,freebsd}.c for whichever structs have
+OS-divergent members) rather than one file set per struct, so there is
+nothing to choose per entry. 'ld_section' is 'LIBNVME_ATTR_ACCESSORS_NEXT', not a
 real version number: the committed .ld is hand-written and never
 auto-overwritten (see update-attr-accessors.sh), so this string only
 ever appears in the generator's own scratch copy -- it is not diffed,
@@ -134,17 +134,19 @@ PATH_ATTRS = {
     'attr_reader': 'libnvme_get_path_attr',
     'source_linux': 'attr-accessors-linux.c',
     'source_win': 'attr-accessors-win.c',
+    'source_freebsd': 'attr-accessors-freebsd.c',
     # No reconfigure_reset on any member: a path is never updated in
     # place on rescan -- libnvme_ctrl_scan_path() always calloc()s a new
     # one -- so there is no in-place-invalidate event these fields would
     # ever need to respond to. They live for the object's whole lifetime
     # and are freed only when the path itself is destroyed.
     #
-    # Every member is 'win': {'absent': True} -- multipath, and so
-    # struct libnvme_path itself, is a Linux-only concept. Windows still
-    # needs every getter to exist and link (an app must not need
-    # #ifdef _WIN32 to call them), so this is the simplest possible use
-    # of a per-OS override: nothing to resolve, just no source.
+    # Every member is 'win'/'freebsd': {'absent': True} -- multipath, and
+    # so struct libnvme_path itself, is a Linux-only concept. Windows and
+    # FreeBSD still need every getter to exist and link (an app must not
+    # need #ifdef _WIN32/__FreeBSD__ to call them), so this is the
+    # simplest possible use of a per-OS override: nothing to resolve,
+    # just no source.
     'members': [
         {
             'name': 'ana_state',
@@ -152,18 +154,21 @@ PATH_ATTRS = {
             'type': 'char *',
             'volatile': True,
             'win': {'absent': True},
+            'freebsd': {'absent': True},
         },
         {
             'name': 'numa_nodes',
             'attr': 'numa_nodes',
             'type': 'char *',
             'win': {'absent': True},
+            'freebsd': {'absent': True},
         },
         {
             'name': 'grpid',
             'attr': 'ana_grpid',
             'type': 'int',
             'win': {'absent': True},
+            'freebsd': {'absent': True},
         },
         {
             'name': 'queue_depth',
@@ -171,6 +176,7 @@ PATH_ATTRS = {
             'type': 'int',
             'volatile': True,
             'win': {'absent': True},
+            'freebsd': {'absent': True},
         },
         {
             'name': 'multipath_failover_count',
@@ -178,6 +184,7 @@ PATH_ATTRS = {
             'type': 'long',
             'volatile': True,
             'win': {'absent': True},
+            'freebsd': {'absent': True},
         },
         {
             'name': 'command_retry_count',
@@ -185,6 +192,7 @@ PATH_ATTRS = {
             'type': 'long',
             'volatile': True,
             'win': {'absent': True},
+            'freebsd': {'absent': True},
         },
         {
             'name': 'command_error_count',
@@ -192,6 +200,7 @@ PATH_ATTRS = {
             'type': 'long',
             'volatile': True,
             'win': {'absent': True},
+            'freebsd': {'absent': True},
         },
     ],
     'groups': [],
