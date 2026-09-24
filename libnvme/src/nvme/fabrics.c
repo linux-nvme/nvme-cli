@@ -3721,8 +3721,11 @@ __shr_public int libnvmf_nbft_read_files(
 			struct nbft_file_entry *new;
 
 			new = calloc(1, sizeof(*new));
-			if (!new)
-				return -ENOMEM;
+			if (!new) {
+				libnvmf_free_nbft(ctx, nbft);
+				ret = -ENOMEM;
+				goto err;
+			}
 			new->nbft = nbft;
 			if (entry) {
 				entry->next = new;
@@ -3736,6 +3739,14 @@ __shr_public int libnvmf_nbft_read_files(
 	}
 	free(dent);
 	return 0;
+
+err:
+	for (; i < count; i++)
+		free(dent[i]);
+	free(dent);
+	libnvmf_nbft_free(ctx, *head);
+	*head = NULL;
+	return ret;
 }
 
 __shr_public void libnvmf_nbft_free(
