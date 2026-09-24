@@ -13,14 +13,20 @@
 /*
  * nvme-discoverd's config file carries the daemon's own knobs only — the
  * connections it manages come from the shared fabrics config
- * (libnvmf_config_read()), not from here. Just a single [Global] section:
+ * (libnvmf_config_read()), not from here. Two sections:
  *
  *   [Global]
  *   nbft = true
  *   debug-level = info
- *   fc-kickstart-interval-minutes = 0
+ *
+ *   [Discovery]
  *   epcsd-poll-interval-minutes = 15
+ *   fc-kickstart-interval-minutes = 0
  *   dc-giveup-timeout = 72hours
+ *
+ * [Global] holds daemon-wide settings. [Discovery] holds the settings for
+ * dynamically discovered DCs. The [Discovery] keys are still accepted in
+ * [Global], where releases up to 3.1 placed them, with a warning.
  */
 struct discoverd_config {
 	bool nbft; // adopt/connect NBFT-listed controllers; default true

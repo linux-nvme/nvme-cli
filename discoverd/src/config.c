@@ -73,28 +73,59 @@ static int parse_epcsd_poll_interval(const char *val, unsigned int *out)
 	return *out > 0 ? 0 : -EINVAL; // 0 would mean "never wait"
 }
 
-/* Apply one "key = value" line from [Global]; @lineno is for diagnostics. */
-static void apply_global_key(struct discoverd_config *cfg, const char *key,
-			     const char *val, const char *conf_path,
-			     unsigned int lineno)
+/* Apply one [Global] key. Returns false if @key is not a [Global] key. */
+static bool apply_global_key(struct discoverd_config *cfg, const char *key,
+			     const char *val, int *r)
 {
+	if (streq(key, "nbft"))
+		*r = shr_parse_bool(val, &cfg->nbft);
+	else if (streq(key, "debug-level"))
+		*r = parse_debug_level(val, &cfg->debug_level);
+	else
+		return false;
+
+	return true;
+}
+
+/* Apply one [Discovery] key. Returns false if @key is not a [Discovery] key. */
+static bool apply_discovery_key(struct discoverd_config *cfg, const char *key,
+				const char *val, int *r)
+{
+	if (streq(key, "epcsd-poll-interval-minutes"))
+		*r = parse_epcsd_poll_interval(
+			val, &cfg->epcsd_poll_interval_minutes);
+	else if (streq(key, "fc-kickstart-interval-minutes"))
+		*r = parse_uint(val, &cfg->fc_kickstart_interval_minutes);
+	else if (streq(key, "dc-giveup-timeout"))
+		*r = shr_parse_time(val, &cfg->dc_giveup_timeout_usec,
+				    SHR_USEC_PER_SEC);
+	else
+		return false;
+
+	return true;
+}
+
+/*
+ * Apply one "key = value" line from [Global] or [Discovery]; @lineno is for
+ * diagnostics.
+ */
+static void apply_key(struct discoverd_config *cfg, bool global,
+		      const char *key, const char *val, const char *conf_path,
+		      unsigned int lineno)
+{
+	bool known;
 	int r = 0;
 
-	if (streq(key, "nbft"))
-		r = shr_parse_bool(val, &cfg->nbft);
-	else if (streq(key, "debug-level"))
-		r = parse_debug_level(val, &cfg->debug_level);
-	else if (streq(key, "fc-kickstart-interval-minutes"))
-		r = parse_uint(val, &cfg->fc_kickstart_interval_minutes);
-	else if (streq(key, "epcsd-poll-interval-minutes"))
-		r = parse_epcsd_poll_interval(
-			val, &cfg->epcsd_poll_interval_minutes);
-	else if (streq(key, "dc-giveup-timeout"))
-		r = shr_parse_time(val, &cfg->dc_giveup_timeout_usec,
-				   SHR_USEC_PER_SEC);
+	if (global)
+		known = apply_global_key(cfg, key, val, &r);
 	else
-		disc_warn("%s:%u: unknown key '%s', ignored", conf_path,
-			  lineno, key);
+		known = apply_discovery_key(cfg, key, val, &r);
+
+	if (!known) {
+		disc_warn("%s:%u: unknown key '%s', ignored", conf_path, lineno,
+			  key);
+		return;
+	}
 
 	if (r < 0)
 		disc_warn("%s:%u: invalid value for '%s', ignored", conf_path,
@@ -116,11 +147,12 @@ static int config_event(enum shr_ini_event event, const char *section,
 	case SHR_INI_SECTION:
 		break;
 	case SHR_INI_KV:
-		if (section && streq(section, "Global"))
-			apply_global_key(pc->cfg, key, value, pc->conf_path,
-					 line);
+		if (section && (streq(section, "Global") ||
+				streq(section, "Discovery")))
+			apply_key(pc->cfg, streq(section, "Global"), key,
+				  value, pc->conf_path, line);
 		else
-			disc_warn("%s:%u: key outside [Global], ignored",
+			disc_warn("%s:%u: key outside a known section, ignored",
 				  pc->conf_path, line);
 		break;
 	case SHR_INI_JUNK:

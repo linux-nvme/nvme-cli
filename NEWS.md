@@ -25,6 +25,13 @@
   --discovery` and converted `discovery.conf` lines now record
   `persistent = auto`. See `nvme-discover(1)` and `nvme-config-create(1)`.
 
+### nvme-discoverd
+
+* `epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes` and
+  `dc-giveup-timeout` move from `[Global]` to a new `[Discovery]`
+  section in `nvme-discoverd.conf`. In `[Global]`, they are now
+  ignored with an "unknown key" warning. See `nvme-discoverd(8)`.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

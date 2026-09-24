@@ -1,33 +1,46 @@
 # nvme-discoverd configuration
 # @SYSCONFDIR@/nvme/nvme-discoverd.conf
 #
-# The daemon's own knobs. The connections it manages come from the shared
-# NVMe-oF fabrics configuration (nvme-fabrics.conf(5)), not from here.
-# This file is entirely optional -- every knob below has the shown default,
-# so a missing file (or a missing key) is not an error.
+# All options are optional and have the defaults shown below.
+# Connections managed by nvme-discoverd are configured in the shared
+# NVMe-oF fabrics configuration (nvme-fabrics.conf(5)).
 #
 # Boolean values: yes/no, true/false, 1/0, on/off (case-insensitive).
 
+# ==============================================================================
 [Global]
 
-# Adopt and connect controllers listed in the NBFT ACPI table.
+# Adopt/Connect controllers listed in the NBFT ACPI table.
 #nbft = true
 
-# Log verbosity for discoverd and the libnvme calls it makes: err, warn,
-# info, or debug (case-insensitive). A command-line --debug overrides this
-# and forces debug.
+# Log verbosity: err, warn, info, or debug (case-insensitive).
+# The --debug command-line option overrides this setting and enables debug
+# logging.
 #debug-level = info
 
-# FC kickstart interval in minutes.
-# 0 = kickstart only at startup and on every FC controller drop.
-# N (N >= 1) = additionally re-issue kickstart every N minutes, e.g. to
-# detect FC equipment replacement sooner.
+# ==============================================================================
+[Discovery]
+
+# Settings for dynamically discovered Discovery Controllers.
+
+# How often, in minutes, to reconnect and check a Discovery Controller whose
+# effective EPCSD (Explicit Persistent Connection Support for Discovery) value
+# is 0. Such controllers are disconnected between checks.
+# Must be at least 1.
+#epcsd-poll-interval-minutes = 15
+
+# FC kickstart interval, in minutes.
+# 0 = kickstart only at startup and when an FC controller is disconnected.
+# N (N >= 1) = additionally kickstart every N minutes.
 #fc-kickstart-interval-minutes = 0
 
-# How long a dynamically-discovered DC (found only via referral or FC
-# kickstart, not NBFT or the fabrics config) keeps retrying a failed
-# (re)connect before it's dropped from tracking. Takes a systemd time
-# span ("72hours", "3 days 5 hours") or a unit-less value in seconds.
-# "infinity" = never give up, same as a static/NBFT-sourced DC.
-# 0 = give up on the first failure.
+# How long to retry a failed connection to a dynamically discovered Discovery
+# Controller before giving up and removing it from tracking. Applies to
+# controllers discovered through referrals or FC kickstart, but not those
+# configured through NBFT or the fabrics configuration.
+#
+# Accepts a systemd time span (e.g. "72hours" or "3 days 5 hours") or a
+# value in seconds without a unit.
+# "infinity" = never give up.
+# 0 = give up after the first failure.
 #dc-giveup-timeout = 72hours

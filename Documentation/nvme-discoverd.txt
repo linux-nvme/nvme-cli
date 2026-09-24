@@ -75,27 +75,32 @@ OPTIONS
 
 CONFIGURATION
 -------------
-nvme-discoverd.conf holds only the daemon's own knobs, in a single
-'[Global]' section:
+nvme-discoverd.conf holds the daemon's own knobs, in a '[Global]'
+section and a '[Discovery]' section:
 
 	[Global]
 	nbft = true
 	debug-level = info
+
+	[Discovery]
+	epcsd-poll-interval-minutes = 15
 	fc-kickstart-interval-minutes = 0
 	dc-giveup-timeout = 72hours
 
-'nbft' (boolean, default true) controls whether NBFT-listed controllers
-are adopted and reconnected. 'debug-level' (err, warn, info, or debug;
+'nbft' (boolean, default true) adopts and connects controllers listed
+in the NBFT ACPI table. 'debug-level' (err, warn, info, or debug;
 default info) sets the log threshold; '--debug' on the command line
-overrides it. 'fc-kickstart-interval-minutes' (default 0, disabled)
-re-probes the FC fabric on a timer. This is independent of the
-kickstart nvme-discoverd already issues at startup and on every FC
-controller drop -- use it to detect FC equipment replacement sooner
-than the next connection event. 'dc-giveup-timeout' (default 72hours)
-is the give-up horizon described above. It takes a systemd time span
-("72hours", "3 days 5 hours") or a unit-less value in seconds;
-"infinity" makes a dynamically-discovered DC retry forever, same as a
-static/NBFT-sourced one, and 0 gives up on the first failure.
+overrides it.
+
+'epcsd-poll-interval-minutes' (default 15, minimum 1) sets how often,
+in minutes, to reconnect and re-check a DC whose effective EPCSD
+(Explicit Persistent Connection Support for Discovery) is 0. Such a DC
+is disconnected between checks. 'fc-kickstart-interval-minutes'
+(default 0) re-issues FC kickstart every N minutes; 0 = only at
+startup and on every FC controller drop. 'dc-giveup-timeout' (default
+72hours) is the give-up horizon described above. It takes a systemd
+time span ("72hours", "3 days 5 hours") or a unit-less value in
+seconds; "infinity" = never give up, 0 = give up on the first failure.
 
 The connections nvme-discoverd manages come entirely from the shared
 fabrics configuration, not from this file: which Discovery Controllers
