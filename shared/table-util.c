@@ -61,7 +61,8 @@ static int table_get_value_width(struct shr_table_value *v)
 	return len;
 }
 
-static void table_print_centered(FILE *stream, struct shr_table_value *val, int width)
+static void table_print_centered(FILE *stream, struct shr_table_value *val,
+				 int width, bool last_col)
 {
 	int i, len, left_pad, right_pad;
 
@@ -70,7 +71,10 @@ static void table_print_centered(FILE *stream, struct shr_table_value *val, int 
 		return;
 
 	left_pad = (width - len) / 2;
-	right_pad = width - len - left_pad;
+	if (last_col)
+		right_pad = 0;
+	else
+		right_pad = width - len - left_pad;
 
 	/* add left padding */
 	for (i = 0; i < left_pad; i++)
@@ -124,9 +128,12 @@ static void table_print_columns(FILE *stream, const struct shr_table *t)
 	int col, j, width;
 	struct shr_table_column *c;
 	struct shr_table_value v;
+	bool last_col = false;
 
 	table_print_indent(stream, t);
 	for (col = 0; col < t->num_columns; col++) {
+		if (col + 1 == t->num_columns)
+			last_col = true;
 		c = &t->columns[col];
 		width = c->width;
 		switch (c->align) {
@@ -134,10 +141,13 @@ static void table_print_columns(FILE *stream, const struct shr_table *t)
 			v.s = c->name;
 			v.align = c->align;
 			v.type = FMT_STRING;
-			table_print_centered(stream, &v, width);
+			table_print_centered(stream, &v, width, last_col);
 			break;
 		case LEFT:
-			width *= -1;
+			if (last_col)
+				width = 0;
+			else
+				width *= -1;
 			fallthrough;
 		default:
 			fprintf(stream, "%*s", width, c->name);
@@ -165,6 +175,7 @@ void shr_table_print_row(FILE *stream, struct shr_table *t, int row)
 	struct shr_table_column *c;
 	struct shr_table_row *r;
 	struct shr_table_value *v;
+	bool last_col = false;
 	int col, width;
 
 	if (row < 0 || row >= t->num_rows)
@@ -173,16 +184,21 @@ void shr_table_print_row(FILE *stream, struct shr_table *t, int row)
 	table_print_indent(stream, t);
 	r = &t->rows[row];
 	for (col = 0; col < t->num_columns; col++) {
+		if (col + 1 == t->num_columns)
+			last_col = true;
 		c = &t->columns[col];
 		v = &r->val[col];
 
 		width = c->width;
 		switch (v->align) {
 		case CENTERED:
-			table_print_centered(stream, v, width);
+			table_print_centered(stream, v, width, last_col);
 			break;
 		case LEFT:
-			width *= -1;
+			if (last_col)
+				width = 0;
+			else
+				width *= -1;
 			fallthrough;
 		default:
 			switch (v->type) {
