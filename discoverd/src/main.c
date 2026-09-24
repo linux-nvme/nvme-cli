@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1172,9 +1173,16 @@ static int sighup_handler(sd_event_source *src __attribute__((unused)),
 {
 	struct discoverd_config *new_cfg;
 	struct libnvmf_config *new_fabrics_cfg;
+	uint64_t now = 0;
 
-	sd_notify(0, "RELOADING=1\n"
-		     "STATUS=Reloading configuration...");
+	/*
+	 * Type=notify-reload: systemd ignores RELOADING=1 without
+	 * MONOTONIC_USEC=, and the reload job times out.
+	 */
+	sd_event_now(ctx.event, CLOCK_MONOTONIC, &now);
+	sd_notifyf(0, "RELOADING=1\n"
+		      "MONOTONIC_USEC=%" PRIu64 "\n"
+		      "STATUS=Reloading configuration...", now);
 
 	new_cfg = config_load(ctx.conf_path);
 	if (!new_cfg) {
