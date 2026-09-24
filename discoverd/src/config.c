@@ -66,11 +66,16 @@ static int parse_uint(const char *val, unsigned int *out)
 
 static int parse_epcsd_poll_interval(const char *val, unsigned int *out)
 {
-	int r = parse_uint(val, out);
+	unsigned int v;
+	int r = parse_uint(val, &v);
 
 	if (r < 0)
 		return r;
-	return *out > 0 ? 0 : -EINVAL; // 0 would mean "never wait"
+	if (!v)
+		return -EINVAL; // 0 would mean "never wait"
+	*out = v;
+
+	return 0;
 }
 
 /* Apply one [Global] key. Returns false if @key is not a [Global] key. */

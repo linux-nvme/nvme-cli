@@ -153,6 +153,23 @@ static bool test_invalid_and_unknown_ignored(void)
 	return pass;
 }
 
+static bool test_epcsd_poll_interval_zero_ignored(void)
+{
+	struct discoverd_config *cfg;
+	bool pass = true;
+
+	printf("test_epcsd_poll_interval_zero_ignored:\n");
+
+	cfg = load_text("[Discovery]\n"
+			"epcsd-poll-interval-minutes = 0\n");
+	pass &= check(cfg->epcsd_poll_interval_minutes == 15,
+		      "0 rejected, default kept");
+
+	config_free(cfg);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -162,6 +179,7 @@ int main(void)
 	pass &= test_discovery_key_in_global_ignored();
 	pass &= test_global_key_in_discovery_ignored();
 	pass &= test_invalid_and_unknown_ignored();
+	pass &= test_epcsd_poll_interval_zero_ignored();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
