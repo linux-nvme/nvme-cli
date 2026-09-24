@@ -813,6 +813,25 @@ static bool test_dc_entry_is_self(void)
 	CHECK(p, "matching addressing, wrong subtype: not self");
 	pass &= p;
 
+	c.transport = "rdma";
+	c.traddr = "fe80::20c:caff:fe12:6747%lo";
+	memset(&e, 0, sizeof(e));
+	e.subtype = NVME_NQN_CURR;
+	e.trtype = NVMF_TRTYPE_RDMA;
+	memcpy(e.traddr, "FE80::20C:CAFF:FE12:6747%lo",
+	       sizeof("FE80::20C:CAFF:FE12:6747%lo"));
+	memcpy(e.trsvcid, "8009", sizeof("8009"));
+	p = dc_entry_is_self(&c, &e);
+	CHECK(p, "same IPv6 address, different notation: is self");
+	pass &= p;
+
+	memset(e.traddr, 0, sizeof(e.traddr));
+	memcpy(e.traddr, "FE80::20C:CAFF:FE12:6748%lo",
+	       sizeof("FE80::20C:CAFF:FE12:6748%lo"));
+	p = !dc_entry_is_self(&c, &e);
+	CHECK(p, "different IPv6 address: not self");
+	pass &= p;
+
 	return pass;
 }
 

@@ -631,6 +631,25 @@ class FabricsMockCLITest(unittest.TestCase):
         self._run('discover', '-t', 'tcp', '-a', addr)
         self._assert_persisted(self._DISCOVERY_INSTANCE)
 
+    def test_discover_persistent_self_entry_ipv6_notation(self):
+        """The self entry matches by address value, not by spelling.
+
+        libnvme canonicalizes the DC's traddr, while the DC may report
+        itself in any valid IPv6 notation.
+        """
+        for addr, reported in (('2001:db8::a', '2001:DB8:0:0::A'),
+                               ('fe80::a%lo', 'FE80:0::A')):
+            with self.subTest(addr=addr):
+                self.server.discovery_entries = [
+                    self._self_entry(reported, eflags=NVMF_DISC_EFLAGS_EPCSD)]
+                self.server.controllers.clear()
+                self.server.next_instance = 0
+                shutil.rmtree(Path(self.sysfs_dir) / "sys/class/nvme")
+                Path(self.sysfs_dir, "sys/class/nvme").mkdir()
+
+                self._run('discover', '-t', 'tcp', '-a', addr)
+                self._assert_persisted(self._DISCOVERY_INSTANCE)
+
     def test_discover_persistent_default_disconnects_without_epcsd(self):
         """The "auto" default still degrades to non-persistent when EPCSD isn't set."""
         addr = '192.168.10.11'

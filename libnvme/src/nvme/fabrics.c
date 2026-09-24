@@ -3271,10 +3271,22 @@ static void dc_scope_link_local_entry(const struct libnvme_ctrl *c,
 static bool dc_entry_is_self(const struct libnvme_ctrl *c,
 		const struct nvmf_disc_log_entry *e)
 {
-	return e->subtype == NVME_NQN_CURR &&
-	       shr_streq0(c->transport, libnvmf_trtype_str(e->trtype)) &&
-	       shr_streq0(c->traddr, e->traddr) &&
-	       shr_streq0(c->trsvcid, e->trsvcid);
+	if (e->subtype != NVME_NQN_CURR ||
+	    !shr_streq0(c->transport, libnvmf_trtype_str(e->trtype)) ||
+	    !shr_streq0(c->trsvcid, e->trsvcid))
+		return false;
+
+	if (shr_streq0(c->traddr, e->traddr))
+		return true;
+
+	/*
+	 * c->traddr is canonicalized, but the DC may report its own address
+	 * in any valid notation (e.g. "FE80::20C:..."). Compare IP addresses
+	 * by value.
+	 */
+	return (e->trtype == NVMF_TRTYPE_TCP ||
+		e->trtype == NVMF_TRTYPE_RDMA) &&
+	       libnvme_ipaddrs_eq(c->traddr, e->traddr);
 }
 
 /*
