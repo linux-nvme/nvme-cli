@@ -611,6 +611,9 @@ substs.set('SBINDIR', sbindir)
 substs.set('SYSCONFDIR', sysconfdir)
 substs.set('SYSTEMDDIR', systemddir)
 substs.set('SYSTEMCTL', get_option('systemctl'))
+# mDNS uses systemd-resolved, so nvme-discoverd must start after it.
+substs.set('DISCOVERD_AFTER_RESOLVED',
+           want_mdns ? 'After=systemd-resolved.service' : '')
 substs.set('PREFIX', prefixdir)
 substs.set('URL', 'https://github.com/linux-nvme/nvme-cli/')
 substs.set('LIBNVME_API_NAME', libnvme_api_name)
