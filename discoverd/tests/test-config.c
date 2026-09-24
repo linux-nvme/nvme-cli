@@ -63,6 +63,7 @@ static bool test_missing_file_defaults(void)
 		      "fc-kickstart-interval-minutes defaults 0");
 	pass &= check(cfg->dc_giveup_timeout_usec == 72 * SHR_USEC_PER_HOUR,
 		      "dc-giveup-timeout defaults 72hours");
+	pass &= check(!cfg->zeroconf, "zeroconf defaults false");
 
 	config_free(cfg);
 
@@ -82,7 +83,8 @@ static bool test_discovery_section_parsed(void)
 			"[Discovery]\n"
 			"epcsd-poll-interval-minutes = 30\n"
 			"fc-kickstart-interval-minutes = 5\n"
-			"dc-giveup-timeout = 2hours\n");
+			"dc-giveup-timeout = 2hours\n"
+			"zeroconf = true\n");
 	pass &= check(!cfg->nbft, "[Global] nbft parses");
 	pass &= check(cfg->epcsd_poll_interval_minutes == 30,
 		      "[Discovery] epcsd-poll-interval-minutes parses");
@@ -90,6 +92,7 @@ static bool test_discovery_section_parsed(void)
 		      "[Discovery] fc-kickstart-interval-minutes parses");
 	pass &= check(cfg->dc_giveup_timeout_usec == 2 * SHR_USEC_PER_HOUR,
 		      "[Discovery] dc-giveup-timeout parses");
+	pass &= check(cfg->zeroconf, "[Discovery] zeroconf parses");
 
 	config_free(cfg);
 

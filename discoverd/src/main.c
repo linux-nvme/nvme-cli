@@ -8,12 +8,14 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ifaddrs.h>
+#include <unistd.h>
 
 #include <systemd/sd-bus.h>
 #include <systemd/sd-daemon.h>
@@ -40,6 +42,7 @@
 #include "events.h"
 #include "fc.h"
 #include "log.h"
+#include "mdns.h"
 #include "state.h"
 #include "tid.h"
 #include "units.h"
@@ -891,6 +894,103 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 		start_ctrl(tid, true, NULL);
 }
 
+/*
+ * Whether the kernel accepts a discovery connect to a DC's own NQN (TP8013).
+ * libnvme does not export this check, so read /dev/nvme-fabrics directly.
+ * On any error, answer no: the well-known discovery NQN always works.
+ */
+static bool kernel_supports_discovery_nqn(void)
+{
+	static bool checked, supported;
+	char buf[0x1000];
+	char *p, *options;
+	ssize_t len;
+	int fd;
+
+	if (checked)
+		return supported;
+	checked = true;
+
+	fd = open("/dev/nvme-fabrics", O_RDONLY);
+	if (fd < 0)
+		return supported;
+
+	len = read(fd, buf, sizeof(buf) - 1);
+	close(fd);
+	if (len < 0)
+		return supported;
+
+	buf[len] = '\0';
+	options = buf;
+	while ((p = strsep(&options, ",\n"))) {
+		char *v = strsep(&p, "= ");
+
+		if (v && streq(v, "discovery")) {
+			supported = true;
+			break;
+		}
+	}
+
+	return supported;
+}
+
+/*
+ * mDNS found a DC. Connect with its advertised NQN if the kernel allows
+ * it, else with the well-known discovery NQN. The DLP gives the real NQN
+ * either way. host_iface is only valid for tcp.
+ */
+static void on_mdns_add(const char *traddr, const char *trsvcid,
+			const char *transport, const char *nqn,
+			const char *ifname,
+			int ifindex __attribute__((unused)),
+			void *user_data __attribute__((unused)))
+{
+	const char *subsysnqn = NVME_DISC_SUBSYS_NAME;
+	__cleanup_tid struct libnvmf_tid *tid = NULL;
+	bool is_tcp = shr_streq0(transport, "tcp");
+
+	if (nqn && kernel_supports_discovery_nqn())
+		subsysnqn = nqn;
+
+	tid = tid_new(transport, traddr, trsvcid, subsysnqn, NULL,
+		      is_tcp ? ifname : NULL, NULL, NULL, true);
+	if (!tid ||
+	    tid_set_default_host_if_unset(tid, ctx.hostnqn, ctx.hostid) < 0)
+		return;
+
+	if (should_connect(NULL, tid, NULL))
+		start_ctrl(tid, true, NULL);
+}
+
+/*
+ * No service_remove callback: an mDNS announcement can disappear briefly
+ * (cache expiry, link flap). A connected DC is managed by the same paths
+ * as any other DC, not by its announcement.
+ */
+static const struct mdns_callbacks mdns_callbacks = {
+	.service_add = on_mdns_add,
+};
+
+/* Start or stop mDNS to match the zeroconf setting. */
+static void apply_zeroconf(void)
+{
+	int r;
+
+	if (ctx.cfg->zeroconf && !ctx.mdns) {
+		r = mdns_start(ctx.event, &mdns_callbacks, NULL, &ctx.mdns);
+		if (r == -ENOSYS)
+			disc_warn("mdns: zeroconf is enabled, but nvme-discoverd was built without mDNS support");
+		else if (r == -EOPNOTSUPP)
+			disc_warn("mdns: zeroconf is enabled, but systemd-resolved has no BrowseServices (needs >= v258)");
+		else if (r < 0)
+			disc_warn("mdns: zeroconf is enabled, but mDNS cannot start: %s",
+				  strerror(-r));
+	} else if (!ctx.cfg->zeroconf && ctx.mdns) {
+		mdns_stop(ctx.mdns);
+		ctx.mdns = NULL;
+	}
+}
+
 static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc)
 {
 	sd_device *dev = NULL;
@@ -1096,6 +1196,7 @@ static int sighup_handler(sd_event_source *src __attribute__((unused)),
 
 	// Connect any newly added desired controllers (no disconnects).
 	connect_desired();
+	apply_zeroconf();
 
 	sd_notify(0, "READY=1");
 	return 0;
@@ -1320,6 +1421,8 @@ int main(int argc, char **argv)
 	 */
 	fc_kickstart();
 
+	apply_zeroconf();
+
 	// Periodic FC kickstart: opt-in (default 0 = disabled).
 	if (ctx.cfg->fc_kickstart_interval_minutes > 0) {
 		uint64_t now, interval;
@@ -1342,6 +1445,7 @@ int main(int argc, char **argv)
 	if (r < 0)
 		disc_err("sd_event_loop: %s", strerror(-r));
 
+	mdns_stop(ctx.mdns);
 	events_stop(ctx.evts);
 	unit_mgr_free(ctx.umgr);
 	free(nvme_path_abs);

@@ -19,6 +19,7 @@ struct discoverd_config;
 struct inventory;
 struct unit_mgr;
 struct events_ctx;
+struct mdns_ctx;
 
 /*
  * Top-level discoverd application context. Created once at startup and
@@ -38,5 +39,6 @@ struct discoverd_ctx {
 	sd_bus                    *bus;          // D-Bus connection to systemd
 	struct unit_mgr           *umgr;         // transient unit manager
 	struct events_ctx         *evts;         // udev event monitor
+	struct mdns_ctx           *mdns;         // mDNS discovery, or NULL
 	bool                       force_debug;  // --debug forces DEBUG
 };
