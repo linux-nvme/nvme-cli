@@ -69,7 +69,9 @@ DISC_PORT=8009
 DISC_PORT_ID=1
 
 # Connected by hand, never listed in a Discovery Log Page: nvmet's DLP only
-# lists the subsystems on its own port. Stands in for another orchestrator.
+# lists the subsystems on its own port. Stands in for another orchestrator,
+# registered in the ownership registry as FOREIGN_OWNER.
+FOREIGN_OWNER=wringer
 FOREIGN_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:foreign
 FOREIGN_PORT=4420
 FOREIGN_PORT_ID=2
@@ -366,7 +368,7 @@ connect_onto_dev() {
 		before=$(ls /sys/class/nvme)
 		"${NVME_BIN}" connect -t tcp -a "${TRADDR}" \
 			-s "${FOREIGN_PORT}" -n "${nqn}" --duplicate-connect \
-			>/dev/null 2>&1 || return 1
+			--owner "${FOREIGN_OWNER}" >/dev/null 2>&1 || return 1
 		after=$(ls /sys/class/nvme)
 		for d in ${after}; do
 			if ! grep -qx "${d}" <<<"${before}"; then
@@ -414,6 +416,23 @@ disconnect_out_of_band() {
 	wait_for_disconnected "${nqn}" 10
 }
 
+# Disconnect every connection made by hand as ${FOREIGN_OWNER}. stdin is
+# /dev/null because disconnect-all --owner asks for confirmation on a
+# terminal.
+#
+# libnvme's scan merges controllers with identical connection parameters
+# into one node, so one disconnect-all removes only one of phase 5's
+# duplicate connections. Repeat until none is left.
+disconnect_foreign() {
+	local i
+
+	for i in 1 2 3 4 5 6 7 8; do
+		is_connected "${FOREIGN_NQN}" || return 0
+		"${NVME_BIN}" disconnect-all --owner "${FOREIGN_OWNER}" \
+			</dev/null >/dev/null 2>&1 || true
+	done
+}
+
 # ---------------------------------------------------------------------------
 # Cleanup: always runs, even on Ctrl-C or an assertion failing partway.
 # ---------------------------------------------------------------------------
@@ -421,7 +440,7 @@ disconnect_out_of_band() {
 cleanup() {
 	log "Cleanup"
 	discoverd_stop
-	"${NVME_BIN}" disconnect -n "${FOREIGN_NQN}" >/dev/null 2>&1 || true
+	disconnect_foreign
 	nvmet_teardown
 	rm -rf "${ETC_NVME_DIR}" "${BACKING_DIR}"
 	rm -f "${SCRATCH}"
@@ -438,7 +457,7 @@ trap cleanup EXIT
 # A prior run killed before reaching cleanup() could have left these
 # connected on the real host.
 "${NVME_BIN}" disconnect -n "${TARGET_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${FOREIGN_NQN}" >/dev/null 2>&1 || true
+disconnect_foreign
 "${NVME_BIN}" disconnect -n "${CONF_NQN}" >/dev/null 2>&1 || true
 
 etc_nvme_populate
