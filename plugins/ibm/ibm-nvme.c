@@ -78,144 +78,144 @@ static void show_ibm_smart_log(struct nvme_ibm_additional_smart_log *smart, cons
 		switch (le16_to_cpu(entry->attr)) {
 		case 0x0001:
 			printf("Total UC Read Errors                : %"PRIu64"\n",
-				le64_to_cpu(smart->read_err_rate.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Total Reads vs Read Errors          : %"PRIu64"\n",
-				le64_to_cpu(smart->read_err_rate.raw2));
+				le64_to_cpu(entry->raw2));
 			break;
 		case 0x0005:
 			printf("Total Retired Blks                  : %"PRIu64"\n",
-				le64_to_cpu(smart->retired_clk_cnt.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x0009:
 			printf("Total Power On Hours                : %"PRIu64"\n",
-				le64_to_cpu(smart->power_on_hours.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Time since Last P/C(ms)             : %"PRIu64"\n",
-				le64_to_cpu(smart->power_on_hours.raw2));
+				le64_to_cpu(entry->raw2));
 			break;
 		case 0x000c:
 			printf("Total Number of Power Cycles        : %"PRIu64"\n",
-				le64_to_cpu(smart->power_cycle_cnt.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x000d:
 			printf("Read (ECC) Errors recov nodelay     : %"PRIu64"\n",
-				le64_to_cpu(smart->ecc_rate.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Total Reads vs Read Errs nodelay    : %"PRIu64"\n",
-				le64_to_cpu(smart->ecc_rate.raw2));
+				le64_to_cpu(entry->raw2));
 			break;
 		case 0x0064:
 			printf("Total MB Erased                     : %"PRIu64"\n",
-				le64_to_cpu(smart->mb_erased.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00aa:
 			printf("Unused Rsv Blk 100*Cur/Mfg Spares   : %"PRIu64"\n",
-				le64_to_cpu(smart->unused_rsvd_blk_cnt_percent.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Current Spares                      : %"PRIu32"\n",
-				le32_to_cpu(smart->unused_rsvd_blk_cnt_percent.split_raw2.upper));
+				le32_to_cpu(entry->split_raw2.upper));
 			printf("Total Spares @ Mfg                  : %"PRIu32"\n",
-				le32_to_cpu(smart->unused_rsvd_blk_cnt_percent.split_raw2.lower));
+				le32_to_cpu(entry->split_raw2.lower));
 			break;
 		case 0x00ab:
 			printf("Total Number of Program Fails       : %"PRIu64"\n",
-				le64_to_cpu(smart->progrm_fail_cnt.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Program fails since Power Cycle     : %"PRIu64"\n",
-				le64_to_cpu(smart->progrm_fail_cnt.raw2));
+				le64_to_cpu(entry->raw2));
 			break;
 		case 0x00ac:
 			printf("Total Number of Erase Fails         : %"PRIu64"\n",
-				le64_to_cpu(smart->erase_fail_cnt.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Erase fails since Power Cycle       : %"PRIu64"\n",
-				le64_to_cpu(smart->erase_fail_cnt.raw2));
+				le64_to_cpu(entry->raw2));
 			break;
 		case 0x00b1:
 			printf("Life remaining percent              : %"PRIu64"\n",
-				le64_to_cpu(smart->drive_life_remain_percent.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("PE Cycles most                      : %"PRIu32"\n",
-				le32_to_cpu(smart->drive_life_remain_percent.split_raw2.upper));
+				le32_to_cpu(entry->split_raw2.upper));
 			printf("PE Cycles least                     : %"PRIu32"\n",
-				le32_to_cpu(smart->drive_life_remain_percent.split_raw2.lower));
+				le32_to_cpu(entry->split_raw2.lower));
 			break;
 		case 0x00b8:
 			printf("Total number of IOEDC               : %"PRIu64"\n",
-				le64_to_cpu(smart->io_err_det_code_events.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00bb:
 			printf("Total number of UC Errors           : %"PRIu64"\n",
-				le64_to_cpu(smart->reported_uc_errs.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00be:
 			printf("Current Temperature (in C)          : %"PRIu64"\n",
-				le64_to_cpu(smart->drive_temperature.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Highest Temperature since Power ON  : %"PRIu32"\n",
-				le32_to_cpu(smart->drive_temperature.split_raw2.upper));
+				le32_to_cpu(entry->split_raw2.upper));
 			printf("Lowest Temperature since Power ON   : %"PRIu32"\n",
-				le32_to_cpu(smart->drive_temperature.split_raw2.lower));
+				le32_to_cpu(entry->split_raw2.lower));
 			break;
 		case 0x00bf:
 			printf("Percentage throttled                : %"PRIu64"\n",
-				le64_to_cpu(smart->thermal_throt.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Thermal throttling starts           : %"PRIu32"\n",
-				le32_to_cpu(smart->thermal_throt.split_raw2.upper));
+				le32_to_cpu(entry->split_raw2.upper));
 			printf("Thermal throttling stops            : %"PRIu32"\n",
-				le32_to_cpu(smart->thermal_throt.split_raw2.lower));
+				le32_to_cpu(entry->split_raw2.lower));
 			break;
 		case 0x00c2:
 			printf("PON Time in mins Highest Temperature: %"PRIu32"\n",
-				le32_to_cpu(smart->drive_life_temp.split_raw1.upper));
+				le32_to_cpu(entry->split_raw1.upper));
 			printf("PON Time in mins Lowest Temperature : %"PRIu32"\n",
-				le32_to_cpu(smart->drive_life_temp.split_raw1.lower));
+				le32_to_cpu(entry->split_raw1.lower));
 			printf("Highest Lifetime Temperature (in C) : %"PRIu32"\n",
-				le32_to_cpu(smart->drive_life_temp.split_raw2.upper));
+				le32_to_cpu(entry->split_raw2.upper));
 			printf("Lowest Lifetime Temperature (in C)  : %"PRIu32"\n",
-				le32_to_cpu(smart->drive_life_temp.split_raw2.lower));
+				le32_to_cpu(entry->split_raw2.lower));
 			break;
 		case 0x00c3:
 			printf("Internal RAID Correctable Error     : %"PRIu64"\n",
-				le64_to_cpu(smart->int_raid_correct_err_cnt.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00e7:
 			printf("Life used in percentage             : %"PRIu64"\n",
-				le64_to_cpu(smart->ssd_life_used.raw1));
+				le64_to_cpu(entry->raw1));
 			printf("Average PE Cycles of Flash          : %"PRIu64"\n",
-				le64_to_cpu(smart->ssd_life_used.raw2));
+				le64_to_cpu(entry->raw2));
 			break;
 		case 0x00e8:
 			printf("Accurate Life used in percentage    : %"PRIu64".%"PRIu64"\n",
-				le64_to_cpu(smart->ssd_life_used_accurate.raw1)/100,
-				le64_to_cpu(smart->ssd_life_used_accurate.raw1)%100);
+				le64_to_cpu(entry->raw1)/100,
+				le64_to_cpu(entry->raw1)%100);
 			break;
 		case 0x00e9:
 			printf("Lifetime Writes to flash in MB      : %"PRIu64"\n",
-				le64_to_cpu(smart->lifetime_wr_to_flash_mb.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00ea:
 			printf("Lifetime Read from flash in MB      : %"PRIu64"\n",
-				le64_to_cpu(smart->lifetime_rd_from_flash_mb.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00f1:
 			printf("Lifetime Writes from Host in MB     : %"PRIu64"\n",
-				le64_to_cpu(smart->lifetime_wr_from_host_mb.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00f2:
 			printf("Lifetime Read to Host in MB         : %"PRIu64"\n",
-				le64_to_cpu(smart->lifetime_rd_to_host_mb.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00f3:
 			printf("Vol. Memory Backup Failures         : %"PRIu64"\n",
-				le64_to_cpu(smart->vol_mem_backup_fail.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00f4:
 			printf("Security Wear Indicator             : %"PRIu64"\n",
-				le64_to_cpu(smart->security_wear_indicator.raw1));
+				le64_to_cpu(entry->raw1));
 			break;
 		case 0x00f5:
 			printf("PCIe Received Errors                : %"PRIu32"\n",
-				le32_to_cpu(smart->device_pcie_received_errors.split_raw1.upper));
+				le32_to_cpu(entry->split_raw1.upper));
 			printf("PCIe Received Bad TLP               : %"PRIu32"\n",
-				le32_to_cpu(smart->device_pcie_received_errors.split_raw1.lower));
+				le32_to_cpu(entry->split_raw1.lower));
 			printf("PCIe Received Bad DLLP              : %"PRIu32"\n",
-				le32_to_cpu(smart->device_pcie_received_errors.split_raw2.upper));
+				le32_to_cpu(entry->split_raw2.upper));
 			printf("PCIe Recd Transitions to Recoveries : %"PRIu32"\n",
-				le32_to_cpu(smart->device_pcie_received_errors.split_raw2.lower));
+				le32_to_cpu(entry->split_raw2.lower));
 			break;
 		default:
 			break;
