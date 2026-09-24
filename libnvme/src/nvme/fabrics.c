@@ -1258,9 +1258,6 @@ static int inet6_pton(struct libnvme_global_ctx *ctx, const char *src, uint16_t 
 	const char *scope = NULL;
 	char *p;
 
-	if (strlen(src) > INET6_ADDRSTRLEN)
-		return -EINVAL;
-
 	__cleanup_free char *tmp = strdup(src);
 	if (!tmp) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "cannot copy: %s\n", src);
