@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
+name: Build FreeBSD
+
+# Runs against the FreeBSD containerDisk (ghcr.io/linux-nvme/blktests-freebsd-
+# containerdisk) on the same ARC/KubeVirt infrastructure as run-nightly-
+# tests.yml, via linux-blktests/blktests-ci's kubevirt-action.
+#
+# workflow_dispatch only for now: vm-init.sh.j2 in blktests-ci has no
+# "freebsd" case yet (it only knows ubuntu/debian/opensuse/dnf-based
+# distros), so provisioning the VM currently fails before run_cmds ever
+# executes. Fold this into a schedule/push trigger once that lands upstream.
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  build-freebsd:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
+    runs-on: arc-vm-nvme-cli
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: "linux-blktests/blktests-ci"
+      - name: Build and test nvme-cli in VM
+        id: build
+        uses: ./.github/actions/kubevirt-action
+        with:
+          container_disk_image: ghcr.io/linux-nvme/blktests-freebsd-containerdisk:next
+          distro: freebsd
+          run_cmds: |
+            set -e
+            set -x
+            uname -a
+
+            git clone https://github.com/${{ github.repository }} nvme-cli
+            cd nvme-cli
+            git checkout ${{ github.sha }}
+
+            sudo pkg install -y git meson ninja pkgconf json-c openssl
+
+            meson setup .build
+            ninja -C .build
+            meson test -C .build
