@@ -500,6 +500,12 @@ conf.set10(
 )
 
 conf.set10(
+    'NVME_HAVE_ENODATA',
+    cc.has_header_symbol('errno.h', 'ENODATA'),
+    description: 'Does errno.h define ENODATA',
+)
+
+conf.set10(
     'NVME_HAVE_SIGACTION',
     cc.has_function(
         'sigaction',
