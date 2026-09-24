@@ -382,6 +382,25 @@ static bool test_inet_pton_with_scope(struct libnvme_global_ctx *ctx)
 	CHECK(p, "AF_UNSPEC \"fe80::1%%lo\" (scoped): ret=%d", ret);
 	pass &= p;
 
+	/*
+	 * A maximum-length address plus scope is longer than
+	 * INET6_ADDRSTRLEN. Only the address part is bounded by it.
+	 */
+	ret = inet_pton_with_scope(ctx, AF_INET6,
+			"0000:0000:0000:0000:0000:ffff:255.255.255.255%lo",
+			"4420", &addr);
+	p = (ret == 0);
+	CHECK(p, "AF_INET6 max-length address with scope: ret=%d", ret);
+	pass &= p;
+
+	/* Over-long address part is still rejected by inet_pton() */
+	ret = inet_pton_with_scope(ctx, AF_INET6,
+			"fe80:0000:0000:0000:0000:020c:caff:fe12:66ff", "4420",
+			&addr);
+	p = (ret != 0);
+	CHECK(p, "AF_INET6 nine groups rejected: ret=%d", ret);
+	pass &= p;
+
 	/* Scoped address for non-link-local: scope is ignored by inet6_pton */
 	ret = inet_pton_with_scope(ctx, AF_UNSPEC, "2001:db8::1", NULL, &addr);
 	p = (ret == 0);
