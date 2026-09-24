@@ -575,6 +575,8 @@ static bool test_read_file(void)
 
 		ret = shr_read_file(NULL, template, &size, &buf);
 		pass &= check_bool("an empty file fails with -ENODATA", ret == -ENODATA);
+		if (ret == 0)
+			free(buf);
 
 		shr_unlink(template);
 	}
