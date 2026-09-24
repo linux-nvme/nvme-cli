@@ -3210,6 +3210,57 @@ static void dc_walk_referral(struct libnvme_global_ctx *ctx,
 		libnvme_free_ctrl(d.c);
 }
 
+static bool ipv6_link_local(const char *addr, size_t len)
+{
+	char host[INET6_ADDRSTRLEN];
+	struct in6_addr in6;
+
+	if (len >= sizeof(host))
+		return false;
+	memcpy(host, addr, len);
+	host[len] = '\0';
+
+	return inet_pton(AF_INET6, host, &in6) == 1 &&
+	       IN6_IS_ADDR_LINKLOCAL(&in6);
+}
+
+/*
+ * A Discovery Log Page entry never carries an IPv6 scope, but a link-local
+ * address is only meaningful together with the link it was learned on.
+ * Without the scope the kernel has to guess the outgoing interface, which
+ * fails on multi-homed hosts. TCP can fall back on host_iface, RDMA has no
+ * such option, so the scope in traddr is the only way to pass it along.
+ *
+ * If @c was reached through a scoped link-local address, the DC can only
+ * have reported link-local addresses on that very same link, so inherit
+ * @c's scope for any unscoped link-local traddr in @e.
+ */
+static void dc_scope_link_local_entry(const struct libnvme_ctrl *c,
+		struct nvmf_disc_log_entry *e)
+{
+	const char *scope;
+	size_t len;
+
+	if (e->adrfam != NVMF_ADDR_FAMILY_IP6 || strchr(e->traddr, '%'))
+		return;
+	scope = c->traddr ? strchr(c->traddr, '%') : NULL;
+	if (!scope)
+		return;
+	/* A scope on anything but a link-local address names no link. */
+	if (!ipv6_link_local(c->traddr, scope - c->traddr) ||
+	    !ipv6_link_local(e->traddr, strlen(e->traddr)))
+		return;
+
+	len = strlen(e->traddr);
+	if (len + strlen(scope) >= sizeof(e->traddr))
+		return;
+
+	strcpy(e->traddr + len, scope);
+	libnvme_msg(c->ctx, LIBNVME_LOG_DEBUG,
+		 "using scope '%s' of %s for link-local traddr %s\n",
+		 scope + 1, libnvme_ctrl_get_name(c), e->traddr);
+}
+
 /*
  * Is @e the self entry for the DC's own connection (@c)? A multi-homed DC may
  * report one self entry per port (Base spec 2.4, Figure 320, subtype 03h);
@@ -3227,16 +3278,30 @@ static bool dc_entry_is_self(const struct libnvme_ctrl *c,
 }
 
 /*
- * Pass 1: a first pass over the DLP entries to sanitize them and survey
- * this DC's own self entry (SUBTYPE 03h) -- the only place this DC's own
- * EPCSD is ever reported. Returns whether c should be disconnected once
- * its own Discovery Log Page has been fully walked.
+ * Pass 1a: sanitize the DLP entries and inherit @c's IPv6 scope for
+ * link-local ones. This must happen before dc_survey_self_entry(), which
+ * relies on terminated strings and compares traddr including the scope.
  *
  * Sanitizing here, not right after the fetch, is deliberate: fctx->hooks
  * .discovery_log fires before this runs, and it must see the log page
- * exactly as the DC returned it (e.g. for --raw). Only Pass 2's connect
- * logic, which runs after this pass completes, needs the guaranteed-
- * terminated strings this pass produces.
+ * exactly as the DC returned it (e.g. for --raw). Only the passes that
+ * follow need the guaranteed-terminated strings this pass produces.
+ */
+static void dc_prepare_entries(struct libnvme_ctrl *c,
+		struct nvmf_discovery_log *log, uint64_t numrec)
+{
+	for (uint64_t i = 0; i < numrec; i++) {
+		struct nvmf_disc_log_entry *e = &log->entries[i];
+
+		sanitize_discovery_log_entry(c->ctx, e);
+		dc_scope_link_local_entry(c, e);
+	}
+}
+
+/*
+ * Pass 1b: survey this DC's own self entry (SUBTYPE 03h) -- the only place
+ * this DC's own EPCSD is ever reported. Returns whether c should be
+ * disconnected once its own Discovery Log Page has been fully walked.
  */
 static bool dc_survey_self_entry(struct libnvmf_context *fctx,
 		struct libnvme_ctrl *c, enum dc_ownership own, bool primary,
@@ -3255,7 +3320,6 @@ static bool dc_survey_self_entry(struct libnvmf_context *fctx,
 	for (uint64_t i = 0; i < numrec; i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 
-		sanitize_discovery_log_entry(c->ctx, e);
 		if (dc_entry_is_self(c, e))
 			self_entry = e;
 	}
@@ -3321,9 +3385,10 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 	dc_visited_register(visited, c, fctx);
 
 	/*
-	 * Pass 1: survey c's own self entry, and determine if safe to
-	 * disconnect.
+	 * Pass 1: prepare the entries, then survey c's own self entry and
+	 * determine if safe to disconnect.
 	 */
+	dc_prepare_entries(c, log, numrec);
 	disconnect = dc_survey_self_entry(fctx, c, own, !parent_eflags,
 					   parent_eflags, log, numrec);
 
