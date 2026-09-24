@@ -4782,16 +4782,105 @@ static struct shr_table *stdout_id_ns_kpios_table(__u8 kpios)
 	return t;
 }
 
+struct stdout_id_ns_lbaf_table_support {
+	bool verbose;
+	bool cap_only;
+};
+
+static bool stdout_id_ns_lbaf_table_filter(const char *name, void *arg)
+{
+	const struct stdout_id_ns_lbaf_table_support *sup = arg;
+
+	if (!sup->verbose &&
+	    (!strcmp(name, "data_size") || !strcmp(name, "performance")))
+		return false;
+	if (sup->cap_only && !strcmp(name, "in_use"))
+		return false;
+
+	return true;
+}
+
+static const char *stdout_id_ns_lbaf_rp_str(__u8 rp)
+{
+	switch (rp) {
+	case 3:
+		return "Degraded";
+	case 2:
+		return "Good";
+	case 1:
+		return "Better";
+	default:
+		return "Best";
+	}
+}
+
+static struct shr_table *stdout_id_ns_lbaf_table(struct nvme_id_ns *ns,
+						 bool cap_only)
+{
+	/* no_widen on "lbaf" and "lbads", see stdout_id_ctrl_ps_table(). */
+	struct shr_table_column columns[] = {
+		{ "lbaf", RIGHT, AUTO_WIDTH, .no_widen = true },
+		{ "ms", RIGHT, AUTO_WIDTH },
+		{ "lbads", RIGHT, AUTO_WIDTH, .no_widen = true },
+		{ "data_size", RIGHT, AUTO_WIDTH },
+		{ "rp", RIGHT, AUTO_WIDTH },
+		{ "performance", LEFT, AUTO_WIDTH },
+		{ "in_use", LEFT, AUTO_WIDTH },
+	};
+	struct shr_table *t;
+	struct stdout_id_ns_lbaf_table_support sup = {
+		.verbose = stdout_print_ops.flags & VERBOSE,
+		.cap_only = cap_only,
+	};
+	__u8 flbas;
+	int i;
+
+	t = shr_table_create();
+	if (!t)
+		return NULL;
+
+	if (shr_table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
+			stdout_id_ns_lbaf_table_filter, &sup) < 0) {
+		shr_table_free(t);
+		return NULL;
+	}
+
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
+	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+		struct nvme_lbaf *lbaf = &ns->lbaf[i];
+		int row = shr_table_get_row_id(t);
+		int col = -1;
+
+		shr_table_set_value_int(t, ++col, row, i, RIGHT);
+		shr_table_set_value_unsigned(t, ++col, row,
+				le16_to_cpu(lbaf->ms), RIGHT);
+		shr_table_set_value_unsigned(t, ++col, row, lbaf->ds, RIGHT);
+		if (sup.verbose)
+			shr_table_set_value_unsigned(t, ++col, row,
+					1U << lbaf->ds, RIGHT);
+		shr_table_set_value_unsigned(t, ++col, row, lbaf->rp, RIGHT);
+		if (sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					stdout_id_ns_lbaf_rp_str(lbaf->rp),
+					LEFT);
+		if (!cap_only)
+			shr_table_set_value_str(t, ++col, row,
+					i == flbas ? "yes" : "", LEFT);
+
+		shr_table_add_row(t, row);
+	}
+
+	return t;
+}
+
 static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			 unsigned int lba_index, bool cap_only)
 {
 	bool verbose = stdout_print_ops.flags & VERBOSE;
 	int vs = stdout_print_ops.flags & VS;
 	struct shr_table *t;
-	char *in_use = "(in use)";
 	char nguid_buf[2 * sizeof(ns->nguid) + 1], *nguid = nguid_buf;
 	char eui64_buf[2 * sizeof(ns->eui64) + 1], *eui64 = eui64_buf;
-	__u8 flbas;
 	int row, i;
 
 	t = stdout_kv_table_create();
@@ -4833,8 +4922,7 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		if (verbose)
 			shr_table_set_row_subtable(t, row,
 					stdout_id_ns_flbas_table(ns->flbas));
-	} else
-		in_use = "";
+	}
 
 	row = stdout_kv_add(t, "mc", "%#x", ns->mc);
 	if (verbose)
@@ -4923,24 +5011,12 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		stdout_kv_add(t, "eui64", "%s", eui64_buf);
 	}
 
-	stdout_kv_table_finish(t, "identify-namespace");
+	row = stdout_kv_add(t, "lbaf", "%d formats",
+			    ns->nlbaf + ns->nulbaf + 1);
+	shr_table_set_row_subtable(t, row,
+				   stdout_id_ns_lbaf_table(ns, cap_only));
 
-	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
-		if (verbose)
-			printf("LBA Format %2d : Metadata Size: %-3d bytes - "
-				"Data Size: %-2d bytes - Relative Performance: %#x %s %s\n",
-				i, le16_to_cpu(ns->lbaf[i].ms),
-				1 << ns->lbaf[i].ds, ns->lbaf[i].rp,
-				ns->lbaf[i].rp == 3 ? "Degraded" :
-					ns->lbaf[i].rp == 2 ? "Good" :
-					ns->lbaf[i].rp == 1 ? "Better" : "Best",
-					i == flbas ? in_use : "");
-		else
-			printf("lbaf %2d : ms:%-3d lbads:%-2d rp:%#x %s\n", i,
-				le16_to_cpu(ns->lbaf[i].ms), ns->lbaf[i].ds,
-				ns->lbaf[i].rp,	i == flbas ? in_use : "");
-	}
+	stdout_kv_table_finish(t, "identify-namespace");
 
 	if (vs && !cap_only) {
 		printf("vs[]:\n");
