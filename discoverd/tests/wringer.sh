@@ -15,7 +15,16 @@
 # nvmet-tcp, nvme-tcp). Invoke directly, after building with
 # -Dnvme-discoverd=enabled:
 #
-#   sudo "$0"
+#   sudo "$0" [-y] [<iface>]
+#
+# It asks for confirmation first. -y skips the question.
+#
+# With <iface>, the mDNS (TP8009) phases run too. They advertise DCs with
+# avahi-publish (package avahi-utils) and need an nvme-discoverd built with
+# mDNS support. <iface> must be up, multicast-capable, not loopback, and
+# have an IPv4 address. The test sends real mDNS traffic on it, so use a
+# test link, not a production one. The test enables mDNS in
+# systemd-resolved and restarts it, and restores the setting at the end.
 #
 # Run it on a test host only. Cleanup stops every nvme-discoverd-*.service
 # unit on the machine, which disconnects the controllers they manage.
@@ -27,7 +36,51 @@ if [ "$(id -u)" -ne 0 ]; then
 	exit 1
 fi
 
-for tool in nvme systemd-run modprobe; do
+ASSUME_YES=false
+if [ "${1:-}" = "-y" ]; then
+	ASSUME_YES=true
+	shift
+fi
+
+IFACE="${1:-}"
+if [ -n "${IFACE}" ] && ! ip link show "${IFACE}" >/dev/null 2>&1; then
+	echo "No such interface: ${IFACE}" >&2
+	exit 1
+fi
+
+confirm() {
+	cat <<EOF
+This test changes the state of this machine:
+  - It stops every nvme-discoverd-*.service unit, which disconnects the
+    controllers they manage.
+  - It creates nvmet-tcp subsystems and ports on ${TRADDR}.
+EOF
+	if [ -n "${IFACE}" ]; then
+		cat <<EOF
+  - It sends mDNS traffic on ${IFACE}, and nvmet listens on its address.
+  - It enables mDNS in systemd-resolved and restarts it several times.
+EOF
+	fi
+	echo "Run it on a test machine only."
+
+	if [ "${ASSUME_YES}" = true ]; then
+		return
+	fi
+	if [ ! -t 0 ]; then
+		echo "stdin is not a terminal: use -y to continue" >&2
+		exit 1
+	fi
+
+	local answer
+	read -r -p "Continue? [y/N] " answer
+	if [ "${answer}" != y ] && [ "${answer}" != Y ]; then
+		exit 1
+	fi
+}
+
+TOOLS="nvme systemd-run modprobe"
+[ -n "${IFACE}" ] && TOOLS="${TOOLS} avahi-publish resolvectl"
+for tool in ${TOOLS}; do
 	if ! command -v "${tool}" >/dev/null 2>&1; then
 		echo "Missing required tool: ${tool}" >&2
 		exit 1
@@ -81,6 +134,20 @@ FOREIGN_PORT_ID=2
 CONF_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:configured
 CONF_PORT=4421
 CONF_PORT_ID=3
+
+# mDNS phases only. Advertised through mDNS, on ${IFACE}'s address. The
+# port is opened and closed per phase, so a phase can advertise a DC whose
+# port is not open yet.
+MDNS_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:mdns
+MDNS_PORT=8010
+MDNS_PORT_ID=4
+MDNS_TRADDR=
+MDNS_DC_REQUESTED=
+PUBLISHER_UNIT=discoverd-wringer-mdns-publisher.service
+RESOLVED_DROPIN=/etc/systemd/resolved.conf.d/99-discoverd-wringer.conf
+RESOLVED_MDNS_WAS=
+
+confirm
 
 ETC_NVME_DIR=$(mktemp -d /tmp/discoverd-wringer-etc-nvme.XXXXXX)
 BACKING_DIR=$(mktemp -d /tmp/discoverd-wringer-ns.XXXXXX)
@@ -159,11 +226,13 @@ nvmet_teardown() {
 	local id nqn
 
 	log "nvmet: tear down"
-	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}"; do
+	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}" \
+		  "${MDNS_PORT_ID}"; do
 		rm -f /sys/kernel/config/nvmet/ports/"${id}"/subsystems/*
 		rmdir "/sys/kernel/config/nvmet/ports/${id}" 2>/dev/null
 	done
-	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}"; do
+	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}" \
+		   "${MDNS_NQN}"; do
 		local subsys_dir="/sys/kernel/config/nvmet/subsystems/${nqn}"
 
 		if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
@@ -252,6 +321,7 @@ discoverd_stop() {
 		>/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${TARGET_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${CONF_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${MDNS_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -416,6 +486,122 @@ disconnect_out_of_band() {
 	wait_for_disconnected "${nqn}" 10
 }
 
+# ---------------------------------------------------------------------------
+# mDNS phases only.
+#
+# systemd-resolved needs mDNS enabled both globally (MulticastDNS= in
+# resolved.conf, "no" on many distributions) and on the link. The global
+# setting needs a drop-in and a restart. A restart drops the runtime link
+# setting, so set the link after every restart.
+# ---------------------------------------------------------------------------
+
+resolved_mdns_link_enable() {
+	resolvectl mdns "${IFACE}" yes
+}
+
+resolved_mdns_enable() {
+	log "systemd-resolved: enable mDNS globally and on ${IFACE}"
+	RESOLVED_MDNS_WAS=$(resolvectl mdns "${IFACE}" 2>/dev/null \
+		| awk -F': ' '{print $2}')
+	mkdir -p "$(dirname "${RESOLVED_DROPIN}")"
+	printf '[Resolve]\nMulticastDNS=yes\n' > "${RESOLVED_DROPIN}"
+	systemctl restart systemd-resolved
+	sleep 1
+	resolved_mdns_link_enable
+}
+
+resolved_mdns_restore() {
+	[ -e "${RESOLVED_DROPIN}" ] || return 0
+	log "systemd-resolved: restore mDNS settings"
+	rm -f "${RESOLVED_DROPIN}"
+	systemctl restart systemd-resolved
+	sleep 1
+	if [ -n "${RESOLVED_MDNS_WAS}" ]; then
+		resolvectl mdns "${IFACE}" "${RESOLVED_MDNS_WAS}" \
+			>/dev/null 2>&1
+	fi
+}
+
+mdns_setup() {
+	MDNS_TRADDR=$(ip -4 -o addr show "${IFACE}" | awk '{print $4}' \
+		| cut -d/ -f1 | head -n1)
+	if [ -z "${MDNS_TRADDR}" ]; then
+		echo "${IFACE} has no IPv4 address" >&2
+		exit 1
+	fi
+	# The connect request logged for the mDNS DC, whatever its transport.
+	MDNS_DC_REQUESTED="${MDNS_TRADDR}, ${MDNS_PORT}, .*requested DC unit"
+	nvmet_add_subsystem "${MDNS_NQN}"
+	resolved_mdns_enable
+}
+
+# Open the mDNS DC's port, if not open yet.
+mdns_port_open() {
+	local port_dir="/sys/kernel/config/nvmet/ports/${MDNS_PORT_ID}"
+
+	[ -e "${port_dir}/subsystems/${MDNS_NQN}" ] && return 0
+	log "nvmet: port ${MDNS_PORT} on ${MDNS_TRADDR} serves ${MDNS_NQN}"
+	mkdir -p "${port_dir}"
+	echo "${MDNS_TRADDR}" > "${port_dir}/addr_traddr"
+	echo tcp > "${port_dir}/addr_trtype"
+	echo "${MDNS_PORT}" > "${port_dir}/addr_trsvcid"
+	echo ipv4 > "${port_dir}/addr_adrfam"
+	ln -sf "/sys/kernel/config/nvmet/subsystems/${MDNS_NQN}" \
+	       "${port_dir}/subsystems/${MDNS_NQN}"
+}
+
+# Close the mDNS DC's port: a TCP connect to it is refused.
+mdns_port_close() {
+	local port_dir="/sys/kernel/config/nvmet/ports/${MDNS_PORT_ID}"
+
+	log "nvmet: close port ${MDNS_PORT}"
+	rm -f "${port_dir}/subsystems/${MDNS_NQN}"
+	rmdir "${port_dir}" 2>/dev/null
+}
+
+# Advertise the mDNS DC. Arguments are TXT record strings, e.g. "p=tcp".
+publish_start() {
+	log "avahi-publish: _nvme-disc._tcp ${MDNS_PORT} $*"
+	systemctl reset-failed "${PUBLISHER_UNIT}" >/dev/null 2>&1
+	systemd-run --unit="${PUBLISHER_UNIT}" --collect \
+		avahi-publish -s WRINGER _nvme-disc._tcp "${MDNS_PORT}" "$@" \
+		>"${SCRATCH}" 2>&1 || cat "${SCRATCH}"
+	sleep 1
+}
+
+publish_stop() {
+	if systemctl is-active "${PUBLISHER_UNIT}" >/dev/null 2>&1; then
+		log "avahi-publish: stop"
+		systemctl stop "${PUBLISHER_UNIT}" >/dev/null 2>&1
+	fi
+	systemctl reset-failed "${PUBLISHER_UNIT}" >/dev/null 2>&1
+}
+
+zeroconf_enable() {
+	printf '[Discovery]\nzeroconf = true\n' \
+		> "${ETC_NVME_DIR}/nvme-discoverd.conf"
+	chmod a+r "${ETC_NVME_DIR}/nvme-discoverd.conf"
+}
+
+# Start each mDNS phase from the same state: no advertisement, no
+# connection to the mDNS subsystem, nvme-discoverd running.
+mdns_phase_reset() {
+	publish_stop
+	discoverd_stop
+	mdns_port_close
+	discoverd_start
+}
+
+assert_not_connected() {
+	local desc="$1" nqn="$2"
+
+	if is_connected "${nqn}"; then
+		fail "${desc}"
+	else
+		pass "${desc}"
+	fi
+}
+
 # Disconnect every connection made by hand as ${FOREIGN_OWNER}. stdin is
 # /dev/null because disconnect-all --owner asks for confirmation on a
 # terminal.
@@ -439,9 +625,15 @@ disconnect_foreign() {
 
 cleanup() {
 	log "Cleanup"
+	if [ -n "${IFACE}" ]; then
+		publish_stop
+	fi
 	discoverd_stop
 	disconnect_foreign
 	nvmet_teardown
+	if [ -n "${IFACE}" ]; then
+		resolved_mdns_restore
+	fi
 	rm -rf "${ETC_NVME_DIR}" "${BACKING_DIR}"
 	rm -f "${SCRATCH}"
 	if [ "${NVME_CONF_DIR_CREATED}" = true ]; then
@@ -459,6 +651,7 @@ trap cleanup EXIT
 "${NVME_BIN}" disconnect -n "${TARGET_NQN}" >/dev/null 2>&1 || true
 disconnect_foreign
 "${NVME_BIN}" disconnect -n "${CONF_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${MDNS_NQN}" >/dev/null 2>&1 || true
 
 etc_nvme_populate
 nvmet_setup
@@ -570,6 +763,107 @@ assert_dev_stable "restart adopts the configured IOC" \
 	"${CONF_NQN}" "${PHASE6_DEV}"
 assert_journal_has "the adoption path was taken" \
 	"${PHASE6_START}" "${PHASE6_DEV} - adopted"
+
+if [ -z "${IFACE}" ]; then
+	log "No <iface> given: mDNS phases not run"
+	printf "\n"
+	log "Results: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped"
+	[ "${FAIL}" -eq 0 ]
+	exit
+fi
+
+mdns_setup
+
+log ">>>>> Phase 7: SIGHUP enables mDNS; an advertised DC is connected <<<<<"
+mdns_port_open
+zeroconf_enable
+PHASE7_START=$(date +%H:%M:%S)
+if timeout 20 systemctl reload "${DISCOVERD_UNIT}"; then
+	pass "systemctl reload completes"
+else
+	fail "systemctl reload completes"
+fi
+sleep 2
+assert_journal_has "the reload started mDNS on ${IFACE}" \
+	"${PHASE7_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp"
+publish_start "p=tcp"
+assert_connected "connects the subsystem behind the advertised DC" \
+	"${MDNS_NQN}" 30
+
+log ">>>>> Phase 8: a withdrawn advertisement disconnects nothing <<<<<"
+PHASE8_DEV=$(connected_dev "${MDNS_NQN}")
+publish_stop
+assert_dev_stable "stays connected after the advertisement is withdrawn" \
+	"${MDNS_NQN}" "${PHASE8_DEV}" 5
+
+log ">>>>> Phase 9: a DC advertised before its port is open <<<<<"
+#
+# A real DC was seen to advertise before its TCP listener was up. A plain
+# TCP connect is retried silently until the port opens. No NVMe connect is
+# attempted before then.
+mdns_phase_reset
+PHASE9_START=$(date +%H:%M:%S)
+publish_start "p=tcp"
+sleep 3
+assert_not_connected "does not connect while the port is closed" \
+	"${MDNS_NQN}"
+assert_journal_lacks "no NVMe connect attempted while the port is closed" \
+	"${PHASE9_START}" "${MDNS_DC_REQUESTED}"
+mdns_port_open
+assert_connected "connects once the port opens" "${MDNS_NQN}" 30
+
+log ">>>>> Phase 10: an unusable TXT record <<<<<"
+mdns_phase_reset
+mdns_port_open
+PHASE10_START=$(date +%H:%M:%S)
+publish_start "p=bogus"
+sleep 3
+assert_not_connected "unknown p= value: not connected" "${MDNS_NQN}"
+assert_journal_has "unknown p= value: logged" \
+	"${PHASE10_START}" "missing/invalid transport in TXT record"
+publish_stop
+publish_start
+sleep 3
+assert_not_connected "no TXT record: not connected" "${MDNS_NQN}"
+
+log ">>>>> Phase 11: an rdma DC is not checked first <<<<<"
+#
+# No RDMA hardware is needed: the test only checks that the connect is
+# requested at once, without a TCP check.
+mdns_phase_reset
+PHASE11_START=$(date +%H:%M:%S)
+publish_start "p=roce"
+sleep 3
+assert_journal_has "rdma: connect requested at once" \
+	"${PHASE11_START}" "${MDNS_DC_REQUESTED}"
+
+log ">>>>> Phase 12: mDNS still works after 45 seconds <<<<<"
+#
+# sd-varlink's default call timeout is 45 s, and it also applies to the
+# BrowseServices call. The browse must outlive it.
+mdns_phase_reset
+mdns_port_open
+log "wait 50 s"
+sleep 50
+publish_start "p=tcp"
+assert_connected "connects a DC advertised 50 s after startup" \
+	"${MDNS_NQN}" 30
+
+log ">>>>> Phase 13: mDNS recovers from a systemd-resolved restart <<<<<"
+mdns_phase_reset
+mdns_port_open
+PHASE13_START=$(date +%H:%M:%S)
+systemctl restart systemd-resolved
+sleep 1
+resolved_mdns_link_enable
+sleep 5
+assert_journal_has "the browse failed when systemd-resolved restarted" \
+	"${PHASE13_START}" "browsing _nvme-disc._tcp failed"
+assert_journal_has "the browse restarted" \
+	"${PHASE13_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp again"
+publish_start "p=tcp"
+assert_connected "connects a DC advertised after the restart" \
+	"${MDNS_NQN}" 30
 
 printf "\n"
 log "Results: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped"
