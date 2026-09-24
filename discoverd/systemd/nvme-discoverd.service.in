@@ -3,6 +3,7 @@
 Description=NVMe-oF Discovery Daemon
 Documentation=man:nvme-discoverd(8)
 Before=remote-fs.target
+@DISCOVERD_AFTER_RESOLVED@
 
 [Service]
 Type=notify-reload

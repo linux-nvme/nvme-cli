@@ -58,6 +58,14 @@ static const unsigned int tcp_check_retry_sec[] = {
 	2, 5, 10, 30, 60, 300, 600,
 };
 
+/*
+ * Restart delay, in seconds, after a browse call fails, e.g. because
+ * systemd-resolved restarted. Doubles on each failed attempt, up to the
+ * maximum.
+ */
+#define BROWSE_RESTART_MIN_SEC	1
+#define BROWSE_RESTART_MAX_SEC	60
+
 /* One resolved connect endpoint for a discovered mDNS service instance. */
 struct mdns_endpoint {
 	struct list_node entry;
@@ -106,7 +114,9 @@ struct mdns_browse {
 	int ifindex;
 	char *ifname;
 	const char *type; // one of mdns_service_types[], static duration
-	sd_varlink *link;
+	sd_varlink *link; // NULL while waiting to restart
+	sd_event_source *restart_timer;
+	unsigned int restart_sec; // next restart delay
 	struct list_head services; // struct mdns_service, resolved instances
 	struct list_head pending;  // struct resolve_req, in-flight resolves
 };
@@ -707,33 +717,144 @@ static void handle_service_data(struct mdns_browse *br, sd_json_variant *item)
 		service_removed(br, name);
 }
 
+static void browse_schedule_restart(struct mdns_browse *br);
+
+/*
+ * Close the browse call. Every service found through it is reported as
+ * removed. It is found again when the browse restarts.
+ */
+static void browse_disconnect(struct mdns_browse *br)
+{
+	struct mdns_service *svc, *next_svc;
+	struct resolve_req *req, *next_req;
+
+	list_for_each_safe(&br->pending, req, next_req, entry)
+		resolve_req_free(req);
+
+	list_for_each_safe(&br->services, svc, next_svc, entry)
+		service_free(br, svc);
+
+	br->link = sd_varlink_flush_close_unref(br->link);
+}
+
 static int browse_reply_cb(sd_varlink *link __attribute__((unused)),
 			   sd_json_variant *parameters, const char *error_id,
-			   sd_varlink_reply_flags_t flags
-				   __attribute__((unused)),
-			   void *userdata)
+			   sd_varlink_reply_flags_t flags, void *userdata)
 {
 	struct mdns_browse *br = userdata;
 	sd_json_variant *arr;
 	size_t i, n;
 
 	if (error_id) {
-		disc_warn("mdns: %s: BrowseServices: %s", br->ifname, error_id);
-		return 0;
+		disc_warn("mdns: %s: browsing %s failed: %s, restarting",
+			  br->ifname, br->type, error_id);
+		goto restart;
 	}
 
 	arr = json_array(parameters, "browserServiceData");
-	if (!arr) {
+	if (!arr)
 		disc_warn("mdns: %s: BrowseServices reply without browserServiceData",
 			  br->ifname);
-		return 0;
-	}
-
-	n = sd_json_variant_elements(arr);
+	n = arr ? sd_json_variant_elements(arr) : 0;
 	for (i = 0; i < n; i++)
 		handle_service_data(br, sd_json_variant_by_index(arr, i));
 
+	if (flags & SD_VARLINK_REPLY_CONTINUES)
+		return 0;
+
+	disc_warn("mdns: %s: browsing %s ended, restarting", br->ifname,
+		  br->type);
+restart:
+	browse_disconnect(br);
+	browse_schedule_restart(br);
+
 	return 0;
+}
+
+/* Open a link to systemd-resolved and start the BrowseServices call. */
+static int browse_connect(struct mdns_browse *br)
+{
+	int r;
+
+	r = sd_varlink_connect_address(&br->link, RESOLVE_VARLINK_ADDRESS);
+	if (r < 0)
+		return r;
+
+	/*
+	 * The default 45 s timeout also applies to an observe call, counted
+	 * from when it was sent. Browsing must run until stopped.
+	 */
+	r = sd_varlink_set_relative_timeout(br->link, SHR_USEC_INFINITY);
+	if (r < 0)
+		goto err;
+
+	r = sd_varlink_attach_event(br->link, br->mctx->event,
+				    SD_EVENT_PRIORITY_NORMAL);
+	if (r < 0)
+		goto err;
+
+	sd_varlink_set_userdata(br->link, br);
+	r = sd_varlink_bind_reply(br->link, browse_reply_cb);
+	if (r < 0)
+		goto err;
+
+	r = sd_varlink_observebo(br->link, VARLINK_BROWSE_SERVICES,
+				 SD_JSON_BUILD_PAIR_STRING("type", br->type),
+				 SD_JSON_BUILD_PAIR_INTEGER("ifindex",
+							    br->ifindex));
+	if (r < 0)
+		goto err;
+
+	return 0;
+err:
+	br->link = sd_varlink_flush_close_unref(br->link);
+
+	return r;
+}
+
+static int browse_restart_cback(sd_event_source *s __attribute__((unused)),
+				uint64_t usec __attribute__((unused)),
+				void *userdata)
+{
+	struct mdns_browse *br = userdata;
+	int r;
+
+	br->restart_timer = sd_event_source_unref(br->restart_timer);
+
+	r = browse_connect(br);
+	if (r < 0) {
+		disc_dbg("mdns: %s: browsing %s: %s", br->ifname, br->type,
+			 strerror(-r));
+		browse_schedule_restart(br);
+		return 0;
+	}
+
+	br->restart_sec = BROWSE_RESTART_MIN_SEC;
+	disc_info("mdns: browsing %s for %s again", br->ifname, br->type);
+
+	return 0;
+}
+
+static void browse_schedule_restart(struct mdns_browse *br)
+{
+	uint64_t now;
+	int r;
+
+	r = sd_event_now(br->mctx->event, CLOCK_BOOTTIME, &now);
+	if (r >= 0)
+		r = sd_event_add_time(br->mctx->event, &br->restart_timer,
+				      CLOCK_BOOTTIME,
+				      now + br->restart_sec * UINT64_C(1000000),
+				      0, browse_restart_cback, br);
+	if (r < 0) {
+		disc_err("mdns: %s: browsing %s: cannot arm restart timer: %s",
+			 br->ifname, br->type, strerror(-r));
+		return;
+	}
+
+	br->restart_sec *= 2;
+	if (br->restart_sec > BROWSE_RESTART_MAX_SEC)
+		br->restart_sec = BROWSE_RESTART_MAX_SEC;
 }
 
 static struct mdns_browse *browse_find(struct mdns_ctx *mctx, int ifindex,
@@ -748,27 +869,22 @@ static struct mdns_browse *browse_find(struct mdns_ctx *mctx, int ifindex,
 	return NULL;
 }
 
-/* Report every cached service as removed, close the link, free @br. */
 static void browse_free(struct mdns_browse *br)
 {
-	struct mdns_service *svc, *next_svc;
-	struct resolve_req *req, *next_req;
-
 	if (!br)
 		return;
 
-	list_for_each_safe(&br->pending, req, next_req, entry)
-		resolve_req_free(req);
-
-	list_for_each_safe(&br->services, svc, next_svc, entry)
-		service_free(br, svc);
-
+	browse_disconnect(br);
+	sd_event_source_unref(br->restart_timer);
 	list_del_init(&br->entry);
-	sd_varlink_flush_close_unref(br->link);
 	free(br->ifname);
 	free(br);
 }
 
+/*
+ * Start browsing @ifname for @type. If systemd-resolved is not reachable,
+ * the browse is retried later.
+ */
 static void browse_start(struct mdns_ctx *mctx, int ifindex,
 			 const char *ifname, const char *type)
 {
@@ -784,57 +900,23 @@ static void browse_start(struct mdns_ctx *mctx, int ifindex,
 	br->mctx = mctx;
 	br->ifindex = ifindex;
 	br->type = type;
+	br->restart_sec = BROWSE_RESTART_MIN_SEC;
 	br->ifname = strdup(ifname);
-	if (!br->ifname)
-		goto err;
-
-	r = sd_varlink_connect_address(&br->link, RESOLVE_VARLINK_ADDRESS);
-	if (r < 0) {
-		disc_warn("mdns: %s: connect: %s", ifname, strerror(-r));
-		goto err;
+	if (!br->ifname) {
+		browse_free(br);
+		return;
 	}
-
-	/*
-	 * The default 45 s timeout also applies to an observe call, counted
-	 * from when it was sent. Browsing must run until stopped.
-	 */
-	r = sd_varlink_set_relative_timeout(br->link, SHR_USEC_INFINITY);
-	if (r < 0) {
-		disc_err("mdns: %s: sd_varlink_set_relative_timeout: %s",
-			 ifname, strerror(-r));
-		goto err;
-	}
-
-	r = sd_varlink_attach_event(br->link, mctx->event,
-				    SD_EVENT_PRIORITY_NORMAL);
-	if (r < 0) {
-		disc_err("mdns: %s: sd_varlink_attach_event: %s", ifname,
-			 strerror(-r));
-		goto err;
-	}
-
-	sd_varlink_set_userdata(br->link, br);
-	r = sd_varlink_bind_reply(br->link, browse_reply_cb);
-	if (r < 0) {
-		disc_err("mdns: %s: sd_varlink_bind_reply: %s", ifname,
-			 strerror(-r));
-		goto err;
-	}
-
-	r = sd_varlink_observebo(br->link, VARLINK_BROWSE_SERVICES,
-				SD_JSON_BUILD_PAIR_STRING("type", type),
-				SD_JSON_BUILD_PAIR_INTEGER("ifindex", ifindex));
-	if (r < 0) {
-		disc_warn("mdns: %s: BrowseServices: %s", ifname, strerror(-r));
-		goto err;
-	}
-
 	list_add(&mctx->browses, &br->entry);
-	disc_info("mdns: browsing %s for %s", ifname, type);
-	return;
 
-err:
-	browse_free(br);
+	r = browse_connect(br);
+	if (r < 0) {
+		disc_warn("mdns: %s: browsing %s: %s, retrying", ifname, type,
+			  strerror(-r));
+		browse_schedule_restart(br);
+		return;
+	}
+
+	disc_info("mdns: browsing %s for %s", ifname, type);
 }
 
 static void on_iface_add(int ifindex, const char *ifname, void *user_data)
