@@ -25,7 +25,7 @@ int nvme_get_pci_ids(struct libnvme_global_ctx *ctx,
 	const char *name;
 
 	__cleanup_free char *ctrl_name = NULL;
-	__cleanup_free char *sysfs_dir = NULL;
+	__cleanup_free char *source = NULL;
 
 	name = libnvme_transport_handle_get_name(hdl);
 	if (libnvme_transport_handle_is_ctrl(hdl)) {
@@ -40,10 +40,10 @@ int nvme_get_pci_ids(struct libnvme_global_ctx *ctx,
 	if (!ctrl_name)
 		return -ENOMEM;
 
-	ret = __nvme_get_sysfs_dir(ctx, ctrl_name, &sysfs_dir);
+	ret = __nvme_get_pci_id_source(ctx, ctrl_name, &source);
 	if (ret != 0)
 		return ret;
 
-	return __nvme_get_pci_ids(sysfs_dir, vid, did, subsys_vid, subsys_did,
+	return __nvme_get_pci_ids(source, vid, did, subsys_vid, subsys_did,
 		class_code);
 }

@@ -14,8 +14,8 @@
 
 #include "nvme-print.h"
 
-int __nvme_get_sysfs_dir(struct libnvme_global_ctx *ctx,
-		const char *ctrl_name, char **sysfs_dir)
+int __nvme_get_pci_id_source(struct libnvme_global_ctx *ctx,
+		const char *ctrl_name, char **source)
 {
 	struct libnvme_ctrl *c = NULL;
 	const char *path;
@@ -34,12 +34,12 @@ int __nvme_get_sysfs_dir(struct libnvme_global_ctx *ctx,
 		return -ENOENT;
 	}
 
-	*sysfs_dir = strdup(path);
+	*source = strdup(path);
 	libnvme_free_ctrl(c);
-	return *sysfs_dir ? 0 : -ENOMEM;
+	return *source ? 0 : -ENOMEM;
 }
 
-int __nvme_get_pci_ids(const char *sysfs_dir,
+int __nvme_get_pci_ids(const char *source,
 		__u32 *vid, __u32 *did,
 		__u32 *subsys_vid, __u32 *subsys_did,
 		__u32 *class_code)
@@ -49,14 +49,14 @@ int __nvme_get_pci_ids(const char *sysfs_dir,
 	int ret = 0;
 
 	/*
-	 * On Windows, sysfs_dir is the SetupDI device interface path, e.g.:
+	 * On Windows, source is the SetupDI device interface path, e.g.:
 	 *   \\?\pci#ven_1344&dev_5196&subsys_51961344&rev_02#...
 	 * VID, DID, and subsystem IDs are embedded as tokens in the path.
 	 * Class code is not available from the path string.
 	 */
 
 	if (vid) {
-		p = strstr(sysfs_dir, "ven_");
+		p = strstr(source, "ven_");
 		if (p && sscanf(p, "ven_%x", &val) == 1)
 			*vid = val;
 		else
@@ -64,7 +64,7 @@ int __nvme_get_pci_ids(const char *sysfs_dir,
 	}
 
 	if (did) {
-		p = strstr(sysfs_dir, "dev_");
+		p = strstr(source, "dev_");
 		if (p && sscanf(p, "dev_%x", &val) == 1)
 			*did = val;
 		else
@@ -76,7 +76,7 @@ int __nvme_get_pci_ids(const char *sysfs_dir,
 	 * high 16 bits = subsystem DID, low 16 bits = subsystem VID
 	 */
 	if (subsys_vid || subsys_did) {
-		p = strstr(sysfs_dir, "subsys_");
+		p = strstr(source, "subsys_");
 		if (p && sscanf(p, "subsys_%8x", &val) == 1) {
 			if (subsys_did)
 				*subsys_did = val >> 16;

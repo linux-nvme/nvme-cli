@@ -32,10 +32,18 @@ int nvme_get_pci_ids(struct libnvme_global_ctx *ctx,
 		__u32 *class_code);
 
 
-int __nvme_get_pci_ids(const char *sysfs_dir,
+/*
+ * @source is an opaque, platform-specific string identifying where a
+ * controller's PCI IDs come from -- a sysfs directory on Linux, a
+ * SetupDI device interface path on Windows, a controller name on
+ * FreeBSD (see each platform's __nvme_get_pci_id_source()). Callers
+ * outside this file's platform implementations must treat it as
+ * opaque, not assume it is a filesystem path.
+ */
+int __nvme_get_pci_ids(const char *source,
 		__u32 *vid, __u32 *did,
 		__u32 *subsys_vid, __u32 *subsys_did,
 		__u32 *class_code);
 
-int __nvme_get_sysfs_dir(struct libnvme_global_ctx *ctx,
-		const char *ctrl_name, char **sysfs_dir);
+int __nvme_get_pci_id_source(struct libnvme_global_ctx *ctx,
+		const char *ctrl_name, char **source);
