@@ -5173,6 +5173,70 @@ static char *stdout_power_and_scale_str(__u16 power, __u8 scale)
 	return s;
 }
 
+/*
+ * Only for &struct nvme_id_psd's idlp/actp: unlike
+ * stdout_power_and_scale_str()'s other callers (Power Limit/Threshold
+ * features, Interval Power Measurement, power-meas-log), the Power State
+ * Descriptor spec text says a raw value of 0 means "not reported"
+ * independent of the scale field.
+ */
+static char *stdout_psd_power_str(__u16 power, __u8 scale)
+{
+	char *s = NULL;
+
+	if (!power) {
+		if (asprintf(&s, "-") < 0)
+			s = NULL;
+		return s;
+	}
+
+	return stdout_power_and_scale_str(power, scale);
+}
+
+static char *stdout_bandwidth_and_scale_str(__u8 bw, __u8 scale)
+{
+	char *s = NULL;
+
+	if (!bw) {
+		if (asprintf(&s, "-") < 0)
+			s = NULL;
+		return s;
+	}
+
+	switch (scale & 0x7) {
+	case NVME_PSD_MBWS_1_MIB_S:
+		if (asprintf(&s, "%uMiB/s", bw) < 0)
+			s = NULL;
+		break;
+	case NVME_PSD_MBWS_10_MIB_S:
+		if (asprintf(&s, "%uMiB/s", bw * 10) < 0)
+			s = NULL;
+		break;
+	case NVME_PSD_MBWS_100_MIB_S:
+		if (asprintf(&s, "%uMiB/s", bw * 100) < 0)
+			s = NULL;
+		break;
+	case NVME_PSD_MBWS_1_GIB_S:
+		if (asprintf(&s, "%uGiB/s", bw) < 0)
+			s = NULL;
+		break;
+	case NVME_PSD_MBWS_10_GIB_S:
+		if (asprintf(&s, "%uGiB/s", bw * 10) < 0)
+			s = NULL;
+		break;
+	case NVME_PSD_MBWS_100_GIB_S:
+		if (asprintf(&s, "%uGiB/s", bw * 100) < 0)
+			s = NULL;
+		break;
+	default:
+		if (asprintf(&s, "reserved") < 0)
+			s = NULL;
+		break;
+	}
+
+	return s;
+}
+
 static char *stdout_psd_workload_str(__u8 apw)
 {
 	const char *s;
@@ -5237,6 +5301,104 @@ static char *stdout_psd_time_str(__u8 time, __u8 ts)
 	return s;
 }
 
+/* @lat is in microseconds; a value of 0 means "not reported". */
+static char *stdout_psd_latency_str(__u32 lat)
+{
+	char *s = NULL;
+
+	if (!lat) {
+		if (asprintf(&s, "-") < 0)
+			s = NULL;
+	} else if (asprintf(&s, "%uus", lat) < 0) {
+		s = NULL;
+	}
+
+	return s;
+}
+
+struct stdout_id_ctrl_ps_table_support {
+	bool iiellss;
+	bool plsepf;
+	bool plsfq;
+	bool idle_power_used;
+	bool active_power_used;
+	bool workload_used;
+	bool max_bandwidth_used;
+	bool verbose;
+};
+
+static bool stdout_id_ctrl_ps_table_filter(const char *name, void *arg)
+{
+	const struct stdout_id_ctrl_ps_table_support *sup = arg;
+
+	if (sup->verbose)
+		return true;
+	if (!sup->iiellss && !strcmp(name, "miiell"))
+		return false;
+	if (!sup->plsepf && (!strcmp(name, "epfrt") || !strcmp(name, "epfvt")))
+		return false;
+	if (!sup->plsfq && !strcmp(name, "fqvt"))
+		return false;
+	if (!sup->idle_power_used && !strcmp(name, "idle_power"))
+		return false;
+	if (!sup->active_power_used && !strcmp(name, "active_power"))
+		return false;
+	if (!sup->workload_used && !strcmp(name, "workload"))
+		return false;
+	if (!sup->max_bandwidth_used && !strcmp(name, "max_bandwidth"))
+		return false;
+
+	return true;
+}
+
+static bool stdout_id_ctrl_ps_idlp_used(struct nvme_id_ctrl *ctrl)
+{
+	int i;
+
+	for (i = 0; i <= ctrl->npss; i++) {
+		if (le16_to_cpu(ctrl->psd[i].idlp))
+			return true;
+	}
+
+	return false;
+}
+
+static bool stdout_id_ctrl_ps_actp_used(struct nvme_id_ctrl *ctrl)
+{
+	int i;
+
+	for (i = 0; i <= ctrl->npss; i++) {
+		if (le16_to_cpu(ctrl->psd[i].actp))
+			return true;
+	}
+
+	return false;
+}
+
+static bool stdout_id_ctrl_ps_apw_used(struct nvme_id_ctrl *ctrl)
+{
+	int i;
+
+	for (i = 0; i <= ctrl->npss; i++) {
+		if (ctrl->psd[i].apws & 0x7)
+			return true;
+	}
+
+	return false;
+}
+
+static bool stdout_id_ctrl_ps_mbw_used(struct nvme_id_ctrl *ctrl)
+{
+	int i;
+
+	for (i = 0; i <= ctrl->npss; i++) {
+		if (ctrl->psd[i].mbw)
+			return true;
+	}
+
+	return false;
+}
+
 /*
  * One row per power state, one column per sub-field -- unlike the bit-decode
  * subtables, which are one row per bit range -- since every power state
@@ -5268,30 +5430,53 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		{ "epfrt", LEFT, AUTO_WIDTH },
 		{ "fqvt", LEFT, AUTO_WIDTH },
 		{ "epfvt", LEFT, AUTO_WIDTH },
+		{ "max_bandwidth", RIGHT, AUTO_WIDTH },
 		{ "miiell", RIGHT, AUTO_WIDTH },
 	};
 	struct shr_table *t;
-	bool iiellss = NVME_CTRL_CTRATT_IIELLSS(le32_to_cpu(ctrl->ctratt));
+	struct stdout_id_ctrl_ps_table_support sup = {
+		.iiellss = NVME_CTRL_CTRATT_IIELLSS(le32_to_cpu(ctrl->ctratt)),
+		.plsepf = NVME_CTRL_PLSI_PLSEPF(ctrl->plsi),
+		.plsfq = NVME_CTRL_PLSI_PLSFQ(ctrl->plsi),
+		.idle_power_used = stdout_id_ctrl_ps_idlp_used(ctrl),
+		.active_power_used = stdout_id_ctrl_ps_actp_used(ctrl),
+		.workload_used = stdout_id_ctrl_ps_apw_used(ctrl),
+		.max_bandwidth_used = stdout_id_ctrl_ps_mbw_used(ctrl),
+		.verbose = stdout_print_ops.flags & VERBOSE,
+	};
 	int i;
 
-	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
+	t = shr_table_create();
 	if (!t)
 		return NULL;
+
+	if (shr_table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
+			stdout_id_ctrl_ps_table_filter, &sup) < 0) {
+		shr_table_free(t);
+		return NULL;
+	}
 
 	for (i = 0; i <= ctrl->npss; i++) {
 		struct nvme_id_psd *psd = &ctrl->psd[i];
 		__u16 max_power = le16_to_cpu(psd->mp);
 		__cleanup_free char *mp = NULL;
+		__cleanup_free char *enlat = NULL;
+		__cleanup_free char *exlat = NULL;
 		__cleanup_free char *idle_power = NULL;
 		__cleanup_free char *active_power = NULL;
 		__cleanup_free char *workload = NULL;
 		__cleanup_free char *epfrt = NULL;
 		__cleanup_free char *fqvt = NULL;
 		__cleanup_free char *epfvt = NULL;
+		__cleanup_free char *max_bandwidth = NULL;
 		__cleanup_free char *miiell = NULL;
 		int row = shr_table_get_row_id(t);
+		int col = -1;
 
-		if (psd->flags & NVME_PSD_FLAGS_MXPS) {
+		if (!max_power) {
+			if (asprintf(&mp, "-") < 0)
+				mp = NULL;
+		} else if (psd->flags & NVME_PSD_FLAGS_MXPS) {
 			if (asprintf(&mp, "%01u.%04uW",
 				     max_power / 10000, max_power % 10000) < 0)
 				mp = NULL;
@@ -5301,18 +5486,28 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 				mp = NULL;
 		}
 
-		idle_power = stdout_power_and_scale_str(
+		idle_power = stdout_psd_power_str(
 				le16_to_cpu(psd->idlp),
 				nvme_psd_power_scale(psd->ips));
-		active_power = stdout_power_and_scale_str(
+		active_power = stdout_psd_power_str(
 				le16_to_cpu(psd->actp),
 				nvme_psd_power_scale(psd->apws));
 		workload = stdout_psd_workload_str(psd->apws);
-		epfrt = stdout_psd_time_str(psd->epfrt, psd->epfr_fqv_ts & 0xf);
-		fqvt = stdout_psd_time_str(psd->fqvt, psd->epfr_fqv_ts >> 4);
-		epfvt = stdout_psd_time_str(psd->epfvt, psd->epfvts & 0xf);
+		if (sup.plsepf) {
+			epfrt = stdout_psd_time_str(psd->epfrt,
+						     psd->epfr_fqv_ts & 0xf);
+			epfvt = stdout_psd_time_str(psd->epfvt,
+						     psd->epfvts & 0xf);
+		}
+		if (sup.plsfq)
+			fqvt = stdout_psd_time_str(psd->fqvt,
+						    psd->epfr_fqv_ts >> 4);
+		max_bandwidth = stdout_bandwidth_and_scale_str(psd->mbw,
+								psd->mbws);
+		enlat = stdout_psd_latency_str(le32_to_cpu(psd->enlat));
+		exlat = stdout_psd_latency_str(le32_to_cpu(psd->exlat));
 
-		if (iiellss) {
+		if (sup.iiellss) {
 			__u16 miiell_val = le16_to_cpu(psd->miiell);
 
 			if (miiell_val) {
@@ -5325,27 +5520,42 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 			}
 		}
 
-		shr_table_set_value_int(t, 0, row, i, RIGHT);
-		shr_table_set_value_str(t, 1, row, mp ?: "-", RIGHT);
-		shr_table_set_value_str(t, 2, row,
+		shr_table_set_value_int(t, ++col, row, i, RIGHT);
+		shr_table_set_value_str(t, ++col, row, mp ?: "-", RIGHT);
+		shr_table_set_value_str(t, ++col, row,
 				psd->flags & NVME_PSD_FLAGS_NOPS ?
 				"non-operational" : "operational",
 				LEFT);
-		shr_table_set_value_unsigned(t, 3, row,
-					      le32_to_cpu(psd->enlat), RIGHT);
-		shr_table_set_value_unsigned(t, 4, row,
-					      le32_to_cpu(psd->exlat), RIGHT);
-		shr_table_set_value_unsigned(t, 5, row, psd->rrt, RIGHT);
-		shr_table_set_value_unsigned(t, 6, row, psd->rrl, RIGHT);
-		shr_table_set_value_unsigned(t, 7, row, psd->rwt, RIGHT);
-		shr_table_set_value_unsigned(t, 8, row, psd->rwl, RIGHT);
-		shr_table_set_value_str(t, 9, row, idle_power ?: "-", RIGHT);
-		shr_table_set_value_str(t, 10, row, active_power ?: "-", RIGHT);
-		shr_table_set_value_str(t, 11, row, workload ?: "-", LEFT);
-		shr_table_set_value_str(t, 12, row, epfrt ?: "-", LEFT);
-		shr_table_set_value_str(t, 13, row, fqvt ?: "-", LEFT);
-		shr_table_set_value_str(t, 14, row, epfvt ?: "-", LEFT);
-		shr_table_set_value_str(t, 15, row, miiell ?: "-", RIGHT);
+		shr_table_set_value_str(t, ++col, row, enlat ?: "-", RIGHT);
+		shr_table_set_value_str(t, ++col, row, exlat ?: "-", RIGHT);
+		shr_table_set_value_unsigned(t, ++col, row, psd->rrt, RIGHT);
+		shr_table_set_value_unsigned(t, ++col, row, psd->rrl, RIGHT);
+		shr_table_set_value_unsigned(t, ++col, row, psd->rwt, RIGHT);
+		shr_table_set_value_unsigned(t, ++col, row, psd->rwl, RIGHT);
+		if (sup.idle_power_used || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					idle_power ?: "-", RIGHT);
+		if (sup.active_power_used || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					active_power ?: "-", RIGHT);
+		if (sup.workload_used || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					workload ?: "-", LEFT);
+		if (sup.plsepf || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					epfrt ?: "-", LEFT);
+		if (sup.plsfq || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					fqvt ?: "-", LEFT);
+		if (sup.plsepf || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					epfvt ?: "-", LEFT);
+		if (sup.max_bandwidth_used || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					max_bandwidth ?: "-", RIGHT);
+		if (sup.iiellss || sup.verbose)
+			shr_table_set_value_str(t, ++col, row,
+					miiell ?: "-", RIGHT);
 
 		shr_table_add_row(t, row);
 	}
