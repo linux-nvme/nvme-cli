@@ -20,6 +20,12 @@ discoverd_sources = files(
     'src/units.c',
 )
 
+if want_mdns
+    discoverd_sources += files('src/mdns.c')
+else
+    discoverd_sources += files('src/no-mdns.c')
+endif
+
 discoverd_inc = include_directories('src')
 
 # Absolute path to the nvme binary that the transient units exec (units.c).

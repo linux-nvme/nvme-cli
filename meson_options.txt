@@ -30,6 +30,12 @@ option(
   description : 'nvme-discoverd daemon (technology preview; requires fabrics and libsystemd >=253)'
 )
 option(
+  'mdns',
+  type : 'feature',
+  value: 'auto',
+  description : 'mDNS (TP8009) discovery in nvme-discoverd (requires libsystemd >=257)'
+)
+option(
   'nvmf-autoconnect',
   type : 'feature',
   value: 'enabled',
