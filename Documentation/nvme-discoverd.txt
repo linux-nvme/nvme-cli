@@ -86,6 +86,7 @@ section and a '[Discovery]' section:
 	epcsd-poll-interval-minutes = 15
 	fc-kickstart-interval-minutes = 0
 	dc-giveup-timeout = 72hours
+	zeroconf = false
 
 'nbft' (boolean, default true) adopts and connects controllers listed
 in the NBFT ACPI table. 'debug-level' (err, warn, info, or debug;
@@ -101,6 +102,11 @@ startup and on every FC controller drop. 'dc-giveup-timeout' (default
 72hours) is the give-up horizon described above. It takes a systemd
 time span ("72hours", "3 days 5 hours") or a unit-less value in
 seconds; "infinity" = never give up, 0 = give up on the first failure.
+
+'zeroconf' (boolean, default false) connects to and manages Discovery
+Controllers found through mDNS (TP8009). It requires systemd-resolved
+v258 or later with mDNS enabled ('MulticastDNS=yes'), and an
+nvme-discoverd built with mDNS support. It is re-read on SIGHUP.
 
 The connections nvme-discoverd manages come entirely from the shared
 fabrics configuration, not from this file: which Discovery Controllers

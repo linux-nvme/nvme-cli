@@ -44,3 +44,7 @@
 # "infinity" = never give up.
 # 0 = give up after the first failure.
 #dc-giveup-timeout = 72hours
+
+# Connect to and manage Discovery Controllers found through mDNS (TP8009).
+# Disabled by default.
+#zeroconf = false

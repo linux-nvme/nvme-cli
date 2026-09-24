@@ -23,6 +23,7 @@
  *   epcsd-poll-interval-minutes = 15
  *   fc-kickstart-interval-minutes = 0
  *   dc-giveup-timeout = 72hours
+ *   zeroconf = false
  *
  * [Global] holds daemon-wide settings. [Discovery] holds the settings for
  * dynamically discovered DCs. The [Discovery] keys are still accepted in
@@ -62,6 +63,13 @@ struct discoverd_config {
 	 * static/NBFT-sourced DC; 0 = give up on the first failure.
 	 */
 	uint64_t dc_giveup_timeout_usec;
+
+	/*
+	 * Connect to and manage DCs found through mDNS (TP8009). Default
+	 * false: nvme-discoverd must not act on mDNS without an explicit
+	 * opt-in.
+	 */
+	bool zeroconf;
 };
 
 /*

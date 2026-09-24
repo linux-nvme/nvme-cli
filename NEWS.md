@@ -32,6 +32,12 @@
   section in `nvme-discoverd.conf`. In `[Global]`, they are now
   ignored with an "unknown key" warning. See `nvme-discoverd(8)`.
 
+* nvme-discoverd can discover Discovery Controllers through mDNS
+  (TP8009), using systemd-resolved. It is off by default. Enable it
+  with `zeroconf = true` in the `[Discovery]` section. The new `mdns`
+  build option (`auto` by default) controls whether mDNS support is
+  built. It requires libsystemd v257 or later.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
