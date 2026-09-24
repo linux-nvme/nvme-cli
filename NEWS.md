@@ -15,6 +15,16 @@
   `--output-format=json` (`-o json`), which this change does not
   affect.
 
+* `nvme discover`, `nvme connect-all` and `nvme config create
+  --discovery` now default `--persistent` to `auto` instead of `no`.
+  With this, the discovery controller stays connected after the log
+  page fetch wherever the target reports EPCSD for that discovery log
+  page entry. That lets the host automatically react to discovery AENs
+  received on that discovery connection. Targets without EPCSD enabled
+  remain unaffected. Opt out with `--persistent=no`. `config create
+  --discovery` and converted `discovery.conf` lines now record
+  `persistent = auto`. See `nvme-discover(1)` and `nvme-config-create(1)`.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
