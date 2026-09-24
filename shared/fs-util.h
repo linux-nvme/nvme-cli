@@ -7,9 +7,14 @@
  */
 #pragma once
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <sys/types.h>
+
+#if !NVME_HAVE_ENODATA
+#define ENODATA ENOMSG
+#endif
 
 /*
  * Create a single directory.
