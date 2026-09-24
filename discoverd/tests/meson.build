@@ -41,3 +41,17 @@ test_config = executable(
 )
 
 test('nvme-discoverd - config', test_config)
+
+test_netif = executable(
+    'test-netif',
+    ['test-netif.c', '../src/netif.c', '../src/log.c'],
+    include_directories: discoverd_inc,
+    dependencies: [
+        ccan_dep,
+        libnvme_dep,
+        libsystemd_dep,
+        shared_dep,
+    ],
+)
+
+test('nvme-discoverd - netif', test_netif)
