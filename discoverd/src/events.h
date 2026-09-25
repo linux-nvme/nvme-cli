@@ -20,12 +20,9 @@
 struct events_callbacks {
 	/*
 	 * nvmeX device appeared with cntrltype=="discovery".
-	 * Called after the ~1 s sysfs soak. t contains the TID read from
-	 * sysfs; caller must not free t (it is freed by the events layer
-	 * after the callback returns).
+	 * Called after the ~1 s sysfs soak.
 	 */
-	void (*dc_add)(const char *devname, const struct libnvmf_tid *t,
-		       void *user_data);
+	void (*dc_add)(const char *devname, void *user_data);
 
 	/*
 	 * DC sent NVME_AEN=="0x70f002" (DLP changed) or was rediscovered

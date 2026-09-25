@@ -734,6 +734,27 @@ static int fc_kickstart_timeout(sd_event_source *src,
 	return 0;
 }
 
+/*
+ * Link a newly connected DC to its device and fetch its DLP. Both the
+ * device's add event and the unit's job completion call this, in either
+ * order. Only the first call does the work.
+ */
+static void dc_connected(struct active_ctrl *e, const char *devname)
+{
+	if (e->devname)
+		return;
+
+	e->devname = strdup(devname);
+
+	/*
+	 * DLP entries inherit host-side fields from the DC's TID. Use the
+	 * candidate TID, not one read from sysfs: sysfs reports the source
+	 * address the kernel selected, which the configuration did not ask
+	 * for.
+	 */
+	fetch_and_process_dlp(devname, e->tid);
+}
+
 static void on_job_done(const char *unit_name, bool success,
 			void *user_data __attribute__((unused)))
 {
@@ -749,6 +770,19 @@ static void on_job_done(const char *unit_name, bool success,
 	if (success) {
 		e->attempts = 0;
 		e->giveup_at_usec = 0;
+
+		/*
+		 * The device's add event is soaked for about a second and
+		 * can be processed before ExecStartPost= wrote the state
+		 * file. The job completes only after ExecStartPost=.
+		 */
+		if (e->is_dc) {
+			__cleanup_free char *devname =
+				unit_read_devid(unit_name);
+
+			if (devname)
+				dc_connected(e, devname);
+		}
 		return;
 	}
 
@@ -758,28 +792,21 @@ static void on_job_done(const char *unit_name, bool success,
 			 libnvmf_tid_str(e->tid));
 }
 
-static void on_dc_add(const char *devname, const struct libnvmf_tid *t,
+static void on_dc_add(const char *devname,
 		      void *user_data __attribute__((unused)))
 {
-	struct active_ctrl *e = NULL;
+	struct active_ctrl *e;
 	char *unit_name;
 
-	// Link devname to the in-memory entry via state file.
+	// Only a DC that nvme-discoverd connected has a state file.
 	unit_name = state_read_unit(devname);
-	if (unit_name) {
-		e = ctrl_find_by_unit(unit_name);
-		if (e && !e->devname)
-			e->devname = strdup(devname);
-		free(unit_name);
-	}
+	if (!unit_name)
+		return;
 
-	/*
-	 * DLP entries inherit host-side fields from the DC's TID. Use the
-	 * candidate, not @t: @t is read from sysfs and carries the source
-	 * address the kernel selected, which the configuration did not ask
-	 * for.
-	 */
-	fetch_and_process_dlp(devname, e && e->tid ? e->tid : t);
+	e = ctrl_find_by_unit(unit_name);
+	free(unit_name);
+	if (e)
+		dc_connected(e, devname);
 }
 
 static void on_dc_changed(const char *devname,

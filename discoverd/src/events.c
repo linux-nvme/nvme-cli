@@ -149,7 +149,6 @@ static int soak_timeout(sd_event_source *src __attribute__((unused)),
 	struct events_ctx *ctx = e->ctx;
 	sd_device *dev = NULL;
 	const char *cntrltype = NULL;
-	struct libnvmf_tid *t;
 
 	if (sd_device_new_from_syspath(&dev, e->syspath) < 0) {
 		// Device disappeared during soak — treat as removal.
@@ -161,13 +160,8 @@ static int soak_timeout(sd_event_source *src __attribute__((unused)),
 	sd_device_get_sysattr_value(dev, "cntrltype", &cntrltype);
 
 	if (shr_streq0(cntrltype, "discovery")) {
-		t = tid_from_sysfs(dev, NULL);
-		if (t) {
-			if (ctx->callbacks.dc_add)
-				ctx->callbacks.dc_add(e->devname, t,
-						   ctx->user_data);
-			tid_free(t);
-		}
+		if (ctx->callbacks.dc_add)
+			ctx->callbacks.dc_add(e->devname, ctx->user_data);
 	} else if (shr_streq0(cntrltype, "io")) {
 		if (ctx->callbacks.ioc_add)
 			ctx->callbacks.ioc_add(e->devname, ctx->user_data);
