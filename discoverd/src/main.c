@@ -435,6 +435,7 @@ struct dlp_fetch_ctx {
 	const struct conn_scan *scan; // shared by every entry's connect check
 	struct tid_list iocs;      // for the inventory
 	struct tid_list referrals; // for the inventory
+	int hops; // the DC's referral hops from its source, -1 if none
 	bool self_seen;
 	bool epcsd; // meaningful only if self_seen
 };
@@ -486,6 +487,19 @@ static void dlp_dc_callback(const struct libnvmf_tid *t, bool epcsd,
 	if (!dup || tid_list_append(&fctx->referrals, dup) < 0)
 		tid_free(dup);
 
+	/*
+	 * Follow a referral only within the hop limit, as the libnvme
+	 * discovery walk does. The referrals of a DC that is no longer
+	 * desired are not followed either.
+	 */
+	if (fctx->hops < 0)
+		return;
+	if (fctx->hops >= INVENTORY_MAX_REFERRAL_HOPS) {
+		disc_info("%s - referral %d hops from its source, not followed",
+			  libnvmf_tid_str(t), fctx->hops + 1);
+		return;
+	}
+
 	if (should_connect(fctx->scan, t, NULL)) {
 		start_ctrl(t, true, fctx->via_dc);
 		record_parent_epcsd(t, epcsd);
@@ -523,6 +537,7 @@ static void fetch_and_process_dlp(const char *devname,
 	__cleanup_conn_scan struct conn_scan scan = { 0 };
 	struct dlp_fetch_ctx fctx = {
 		.via_dc = inventory_config_conn_for(ctx.inventory, dc_tid),
+		.hops = inventory_referral_hops(ctx.inventory, dc_tid),
 	};
 	struct active_ctrl *e = ctrl_find_by_devname(devname);
 	bool epcsd;
