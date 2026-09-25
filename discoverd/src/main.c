@@ -302,6 +302,21 @@ static void fetch_and_process_dlp(const char *devname,
 static bool devname_matches_tid(const char *devname,
 				const struct libnvmf_tid *tid);
 
+/* Fetch the DLP of an adopted DC. Runs once, from the event loop. */
+static int adopted_dc_fetch(sd_event_source *src, void *user_data)
+{
+	char *unit_name = user_data;
+	struct active_ctrl *e = ctrl_find_by_unit(unit_name);
+
+	if (e && e->devname)
+		fetch_and_process_dlp(e->devname, e->tid);
+
+	free(unit_name);
+	sd_event_source_disable_unref(src);
+
+	return 0;
+}
+
 /*
  * Track a unit this daemon started before it restarted. The connection is
  * already up and @devname names it. Takes ownership of @devname.
@@ -326,10 +341,25 @@ static void adopt_ctrl(const char *unit_name, const struct libnvmf_tid *tid,
 	/*
 	 * An adopted DC produces no device-add event, so fetch its DLP here.
 	 * Otherwise its DLP-sourced IOCs never enter the desired set and are
-	 * not reconnected if they drop.
+	 * not reconnected if they drop. Defer the fetch: a referral DC is
+	 * adopted while its parent's DLP is being processed, and the parent's
+	 * entries reach the inventory only when that is done.
 	 */
-	if (is_dc)
-		fetch_and_process_dlp(devname, tid);
+	if (is_dc) {
+		sd_event_source *src;
+		char *name = strdup(unit_name);
+		int r = -ENOMEM;
+
+		if (name)
+			r = sd_event_add_defer(ctx.event, &src,
+					       adopted_dc_fetch, name);
+		if (r < 0) {
+			disc_warn("%s - cannot defer DLP fetch: %s",
+				  libnvmf_tid_str(tid), strerror(-r));
+			free(name);
+			fetch_and_process_dlp(devname, tid);
+		}
+	}
 }
 
 /*
