@@ -120,7 +120,7 @@ __shr_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 #ifdef CONFIG_FABRICS
 	freeifaddrs(ctx->ifaddrs_cache); /* NULL-safe */
 	ctx->ifaddrs_cache = NULL;
-	free(ctx->options);
+	_libnvmf_free_kernel_options(ctx);
 #endif
 	free(ctx->hostnqn);
 	free(ctx->hostid);

@@ -436,6 +436,7 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=l
 
 #ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
+	char **kernel_options; /* NULL-terminated, from /dev/nvme-fabrics */
 	struct ifaddrs *ifaddrs_cache; /* init with libnvmf_getifaddrs() */
 #endif
 	char *hostnqn;		// !access:read=none,write=generated
@@ -534,6 +535,8 @@ int __libnvmf_import_keys_from_config(struct libnvme_host *h,
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2);
 
 #ifdef CONFIG_FABRICS
+void _libnvmf_free_kernel_options(struct libnvme_global_ctx *ctx);
+
 /**
  * libnvme_iface_matching_addr - Get interface matching @addr
  * @iface_list: Interface list returned by getifaddrs()

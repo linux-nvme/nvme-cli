@@ -255,6 +255,39 @@ int libnvmf_add_ctrl(struct libnvme_host *h, struct libnvme_ctrl *c);
  */
 int libnvmf_connect_ctrl(struct libnvme_ctrl *c);
 
+/**
+ * libnvmf_kernel_option_supported() - Check if the kernel supports an option
+ * @ctx:	libnvme global context
+ * @name:	Option name as the kernel lists it in /dev/nvme-fabrics,
+ *		e.g. "discovery", "tls", "ctrl_loss_tmo"
+ * @supported:	Set to true if the kernel supports @name
+ *
+ * The options are read from /dev/nvme-fabrics once per @ctx. The read
+ * blocks while another process connects a controller.
+ *
+ * Return: 0 on success, -EINVAL if an argument is NULL, -EOPNOTSUPP if
+ * the kernel does not list its options (Linux < 5.17), or another
+ * negative error code.
+ */
+int libnvmf_kernel_option_supported(struct libnvme_global_ctx *ctx,
+		const char *name, bool *supported);
+
+/**
+ * libnvmf_kernel_options_for_each() - Iterate over the kernel's options
+ * @ctx:	libnvme global context
+ * @callback:	Called once per option name
+ * @user_data:	Caller context passed to @callback, may be NULL
+ *
+ * See libnvmf_kernel_option_supported() for how the options are read.
+ *
+ * Return: 0 on success, -EINVAL if @ctx or @callback is NULL, -EOPNOTSUPP
+ * if the kernel does not list its options (Linux < 5.17), or another
+ * negative error code.
+ */
+int libnvmf_kernel_options_for_each(struct libnvme_global_ctx *ctx,
+		void (*callback)(const char *name, void *user_data),
+		void *user_data);
+
 /*
  * struct libnvmf_discovery_args - Opaque arguments for libnvmf_get_discovery_log()
  *
