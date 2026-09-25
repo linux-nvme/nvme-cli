@@ -20,6 +20,14 @@
 bool shr_ipaddrs_eq(const char *addr1, const char *addr2);
 
 /*
+ * shr_ipv6_is_link_local - Check if an address is an IPv6 link-local address.
+ * @addr: IP address, with or without a scope suffix ("fe80::1%eth0")
+ *
+ * Return: true if @addr is an IPv6 link-local address. false otherwise.
+ */
+bool shr_ipv6_is_link_local(const char *addr);
+
+/*
  * shr_iface_matching_addr - Get interface matching @addr
  * @iface_list: Interface list returned by getifaddrs()
  * @addr: Address to match
