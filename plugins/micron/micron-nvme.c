@@ -775,7 +775,7 @@ static int micron_smbus_option(int argc, char **argv,
 
 	if (model != M5407 && model != M5411 && model != M6003 && model != M6004) {
 		nvme_show_error("This option is not supported for specified drive");
-		return err;
+		return -ENOTSUP;
 	}
 
 	if (!strcmp(opt.option, "enable")) {
@@ -3456,7 +3456,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 	if ((model != M51CX) && (model != M51BY) && (model != M51CY)
 				&& (model != M6003) && (model != M6004)) {
 		nvme_show_error("This option is not supported for specified drive");
-		return err;
+		return -ENOTSUP;
 	}
 
 	err = nvme_set_features_simple(hdl, 1 << 31, fid, 0, 0, &result);
@@ -4176,6 +4176,7 @@ static int micron_cloud_boot_SSD_version(int argc, char **argv,
 	if (err == 0) {
 		if (ctrl.vs[536] != MICRON_CUST_ID_GG) {
 			nvme_show_error("cloud-boot-SSD-version option is not supported for specified drive");
+			err = -ENOTSUP;
 			goto out;
 		}
 	} else {
@@ -4227,6 +4228,7 @@ static int micron_device_waf(int argc, char **argv, struct command *acmd,
 	if (err == 0) {
 		if (ctrl.vs[536] != MICRON_CUST_ID_GG) {
 			nvme_show_error("vs-device-waf option is not supported for specified drive");
+			err = -ENOTSUP;
 			goto out;
 		}
 	} else {
@@ -4296,6 +4298,7 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 	if (err == 0) {
 		if (ctrl.vs[536] != MICRON_CUST_ID_GG) {
 			nvme_show_error("vs-cloud-log option is not supported for specified drive");
+			err = -ENOTSUP;
 			goto out;
 		}
 	} else {
