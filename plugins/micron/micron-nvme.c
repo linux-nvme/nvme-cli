@@ -4545,20 +4545,6 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
  */
 #define CTRATT_PMS_BIT           21
 
-static inline __u16 get_id_ctrl_ipmsr(struct nvme_id_ctrl *ctrl)
-{
-	__le16 *p = (__le16 *)&ctrl->ipmsr;
-
-	return le16_to_cpu(*p);
-}
-
-static inline __u16 get_id_ctrl_msmt(struct nvme_id_ctrl *ctrl)
-{
-	__le16 *p = (__le16 *)&ctrl->msmt;
-
-	return le16_to_cpu(*p);
-}
-
 static inline bool get_id_ctrl_pms(struct nvme_id_ctrl *ctrl)
 {
 	return (le32_to_cpu(ctrl->ctratt) >> CTRATT_PMS_BIT) & 0x1;
@@ -4570,21 +4556,14 @@ static void micron_id_ctrl_vs(__u8 *vs, struct json_object *root)
 	/* Cast back to get full ctrl structure for our extended fields */
 	struct nvme_id_ctrl *ctrl =
 		(struct nvme_id_ctrl *)(vs - offsetof(struct nvme_id_ctrl, vs));
-	__u16 ipmsr = get_id_ctrl_ipmsr(ctrl);
-	__u16 msmt = get_id_ctrl_msmt(ctrl);
 	bool pms = get_id_ctrl_pms(ctrl);
 
-	if (root) {
+	if (root)
 		/* JSON output */
 		json_object_add_value_int(root, "pms", pms ? 1 : 0);
-		json_object_add_value_uint(root, "ipmsr", ipmsr);
-		json_object_add_value_uint(root, "msmt", msmt);
-	} else {
+	else
 		/* Normal output */
 		printf("pms       : %u\n", pms ? 1 : 0);
-		printf("ipmsr     : %u\n", ipmsr);
-		printf("msmt      : %u\n", msmt);
-	}
 }
 
 static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
