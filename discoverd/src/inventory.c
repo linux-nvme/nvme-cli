@@ -19,7 +19,6 @@
 
 #include <ccan/list/list.h>
 
-#include <shared/array-util.h>
 #include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/nbft.h>
@@ -28,9 +27,6 @@
 #include "ctx.h"
 #include "inventory.h"
 #include "log.h"
-
-/* Simple growable TID array, backed by struct shr_ptrarray. */
-SHR_PTRARRAY_DEFINE(tid_list, struct libnvmf_tid);
 
 /* Per-DC DLP cache entry. */
 struct dlp_entry {
@@ -61,19 +57,9 @@ struct inventory {
 	struct list_head cfg_conns;
 };
 
-/* Free every TID in l, then the backing array, leaving l empty. */
-static void tlist_free_items(struct tid_list *l)
-{
-	size_t i;
-
-	for (i = 0; i < l->len; i++)
-		tid_free(l->items[i]);
-	tid_list_free(l);
-}
-
 /*
  * The four flat TID sets (nbft_dcs/nbft_iocs/cfg_dcs/cfg_iocs) have no key —
- * membership is a linear scan (tlist_contains()). dlp_cache is a map keyed
+ * membership is a linear scan (tid_list_contains()). dlp_cache is a map keyed
  * by DC TID, each entry holding that DC's last-fetched IOC set; lookups
  * (inventory_update_dlp(), inventory_remove_dlp(), inventory_is_desired())
  * walk it with tid_same(), not a hash or tree — fine given how few DCs are
@@ -118,13 +104,13 @@ void inventory_free(struct inventory *inv)
 
 	if (!inv)
 		return;
-	tlist_free_items(&inv->nbft_dcs);
-	tlist_free_items(&inv->nbft_iocs);
-	tlist_free_items(&inv->cfg_dcs);
-	tlist_free_items(&inv->cfg_iocs);
+	tid_list_free_items(&inv->nbft_dcs);
+	tid_list_free_items(&inv->nbft_iocs);
+	tid_list_free_items(&inv->cfg_dcs);
+	tid_list_free_items(&inv->cfg_iocs);
 	list_for_each_safe(&inv->dlp_cache, e, next, entry) {
 		tid_free(e->dc_tid);
-		tlist_free_items(&e->iocs);
+		tid_list_free_items(&e->iocs);
 		free(e);
 	}
 	list_for_each_safe(&inv->cfg_conns, ce, cnext, entry) {
@@ -174,7 +160,7 @@ void inventory_update_dlp(struct inventory *inv,
 		 * DLP refresh for a DC we already track: drop the
 		 * previous IOC set before repopulating it below.
 		 */
-		tlist_free_items(&e->iocs);
+		tid_list_free_items(&e->iocs);
 	}
 
 	/*
@@ -204,7 +190,7 @@ void inventory_remove_dlp(struct inventory *inv,
 		if (tid_same(e->dc_tid, dc_tid)) {
 			list_del_init(&e->entry);
 			tid_free(e->dc_tid);
-			tlist_free_items(&e->iocs);
+			tid_list_free_items(&e->iocs);
 			free(e);
 			return;
 		}
@@ -215,8 +201,8 @@ void inventory_remove_dlp(struct inventory *inv,
  * Linear membership test: is t the same (per tid_same()) as any item
  * already in l?
  */
-static bool tlist_contains(const struct tid_list *l,
-			    const struct libnvmf_tid *t)
+static bool tid_list_contains(const struct tid_list *l,
+			      const struct libnvmf_tid *t)
 {
 	size_t i;
 
@@ -240,16 +226,16 @@ bool inventory_is_desired(const struct inventory *inv,
 {
 	struct dlp_entry *e;
 
-	if (tlist_contains(&inv->nbft_dcs, t) ||
-	    tlist_contains(&inv->nbft_iocs, t) ||
-	    tlist_contains(&inv->cfg_dcs, t) ||
-	    tlist_contains(&inv->cfg_iocs, t))
+	if (tid_list_contains(&inv->nbft_dcs, t) ||
+	    tid_list_contains(&inv->nbft_iocs, t) ||
+	    tid_list_contains(&inv->cfg_dcs, t) ||
+	    tid_list_contains(&inv->cfg_iocs, t))
 		return true;
 
 	list_for_each(&inv->dlp_cache, e, entry) {
 		if (tid_same(e->dc_tid, t))
 			return true;
-		if (tlist_contains(&e->iocs, t))
+		if (tid_list_contains(&e->iocs, t))
 			return true;
 	}
 	return false;
@@ -262,8 +248,8 @@ bool inventory_is_desired(const struct inventory *inv,
  */
 bool inventory_is_nbft(const struct inventory *inv, const struct libnvmf_tid *t)
 {
-	return tlist_contains(&inv->nbft_dcs, t) ||
-	       tlist_contains(&inv->nbft_iocs, t);
+	return tid_list_contains(&inv->nbft_dcs, t) ||
+	       tid_list_contains(&inv->nbft_iocs, t);
 }
 
 /*
@@ -287,7 +273,7 @@ struct libnvmf_tid **inventory_desired_dcs(const struct inventory *inv)
 			tid_list_append(&combined, t);
 	}
 	for (i = 0; i < inv->cfg_dcs.len; i++) {
-		if (!tlist_contains(&combined, inv->cfg_dcs.items[i])) {
+		if (!tid_list_contains(&combined, inv->cfg_dcs.items[i])) {
 			struct libnvmf_tid *t =
 				libnvmf_tid_dup(inv->cfg_dcs.items[i]);
 
@@ -298,7 +284,7 @@ struct libnvmf_tid **inventory_desired_dcs(const struct inventory *inv)
 
 	arr = malloc((combined.len + 1) * sizeof(*arr));
 	if (!arr) {
-		tlist_free_items(&combined);
+		tid_list_free_items(&combined);
 		return NULL;
 	}
 	for (i = 0; i < combined.len; i++)
@@ -595,8 +581,8 @@ void inventory_load_config(struct inventory *inv,
 	struct load_config_args args = { .inv = inv, .dctx = dctx };
 	struct cfg_conn_entry *ce, *next;
 
-	tlist_free_items(&inv->cfg_dcs);
-	tlist_free_items(&inv->cfg_iocs);
+	tid_list_free_items(&inv->cfg_dcs);
+	tid_list_free_items(&inv->cfg_iocs);
 	list_for_each_safe(&inv->cfg_conns, ce, next, entry) {
 		tid_free(ce->tid);
 		free(ce);
@@ -644,7 +630,7 @@ struct libnvmf_tid **inventory_desired_iocs(const struct inventory *inv)
 			tid_list_append(&combined, t);
 	}
 	for (i = 0; i < inv->cfg_iocs.len; i++) {
-		if (!tlist_contains(&combined, inv->cfg_iocs.items[i])) {
+		if (!tid_list_contains(&combined, inv->cfg_iocs.items[i])) {
 			struct libnvmf_tid *t =
 				libnvmf_tid_dup(inv->cfg_iocs.items[i]);
 
@@ -655,7 +641,7 @@ struct libnvmf_tid **inventory_desired_iocs(const struct inventory *inv)
 
 	arr = malloc((combined.len + 1) * sizeof(*arr));
 	if (!arr) {
-		tlist_free_items(&combined);
+		tid_list_free_items(&combined);
 		return NULL;
 	}
 	for (i = 0; i < combined.len; i++)
