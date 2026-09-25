@@ -908,7 +908,7 @@ struct {
 	const char *err;
 	int  bit;
 	int  val;
-} pcie_correctable_errors[] = {
+} pcie_uncorrectable_errors[] = {
 		{ (char *)"Unsupported Request Error Status (URES)", 20,
 		offsetof(struct pcie_error_counters, unsupported_request_error)},
 		{ (char *)"ECRC Error Status (ECRCES)", 19,
@@ -930,7 +930,7 @@ struct {
 		{ (char *)"Data Link Protocol Error Status (DLPES)", 4,
 		offsetof(struct pcie_error_counters, DLPES)},
 	},
-	pcie_uncorrectable_errors[] = {
+	pcie_correctable_errors[] = {
 		{ (char *)"Advisory Non-Fatal Error Status (ANFES)", 13,
 		offsetof(struct pcie_error_counters, advisory_non_fatal_error)},
 		{ (char *)"Replay Timer Timeout Status (RTS)",	12,
@@ -1008,16 +1008,16 @@ print_stats:
 		__u8 *pcounter = (__u8 *)&pcie_error_counters;
 
 		json_object_add_value_array(root, "PCIE Stats", pcieErrors);
-		for (i = 0; i < ARRAY_SIZE(pcie_correctable_errors); i++) {
-			__u16 val = counters ? *(__u16 *)(pcounter + pcie_correctable_errors[i].val) :
-					(correctable_errors >> pcie_correctable_errors[i].bit) & 1;
-			json_object_add_value_int(stats, pcie_correctable_errors[i].err, val);
-		}
 		for (i = 0; i < ARRAY_SIZE(pcie_uncorrectable_errors); i++) {
 			__u16 val = counters ? *(__u16 *)(pcounter + pcie_uncorrectable_errors[i].val) :
 					(uncorrectable_errors >>
 					pcie_uncorrectable_errors[i].bit) & 1;
 			json_object_add_value_int(stats, pcie_uncorrectable_errors[i].err, val);
+		}
+		for (i = 0; i < ARRAY_SIZE(pcie_correctable_errors); i++) {
+			__u16 val = counters ? *(__u16 *)(pcounter + pcie_correctable_errors[i].val) :
+					(correctable_errors >> pcie_correctable_errors[i].bit) & 1;
+			json_object_add_value_int(stats, pcie_correctable_errors[i].err, val);
 		}
 		json_array_add_value_object(pcieErrors, stats);
 		json_print_object(root, NULL);
@@ -1026,21 +1026,21 @@ print_stats:
 	} else if (counters == true) {
 		__u8 *pcounter = (__u8 *)&pcie_error_counters;
 
-		for (i = 0; i < ARRAY_SIZE(pcie_correctable_errors); i++)
-			printf("%-42s : %-1hu\n", pcie_correctable_errors[i].err,
-				   *(__u16 *)(pcounter + pcie_correctable_errors[i].val));
 		for (i = 0; i < ARRAY_SIZE(pcie_uncorrectable_errors); i++)
 			printf("%-42s : %-1hu\n", pcie_uncorrectable_errors[i].err,
 				   *(__u16 *)(pcounter + pcie_uncorrectable_errors[i].val));
-	} else if (eModel == M5407 || eModel == M5410) {
 		for (i = 0; i < ARRAY_SIZE(pcie_correctable_errors); i++)
-			printf("%-42s : %-1d\n", pcie_correctable_errors[i].err,
-				   ((correctable_errors >>
-				   pcie_correctable_errors[i].bit) & 1));
+			printf("%-42s : %-1hu\n", pcie_correctable_errors[i].err,
+				   *(__u16 *)(pcounter + pcie_correctable_errors[i].val));
+	} else if (eModel == M5407 || eModel == M5410) {
 		for (i = 0; i < ARRAY_SIZE(pcie_uncorrectable_errors); i++)
 			printf("%-42s : %-1d\n", pcie_uncorrectable_errors[i].err,
 				   ((uncorrectable_errors >>
 				   pcie_uncorrectable_errors[i].bit) & 1));
+		for (i = 0; i < ARRAY_SIZE(pcie_correctable_errors); i++)
+			printf("%-42s : %-1d\n", pcie_correctable_errors[i].err,
+				   ((correctable_errors >>
+				   pcie_correctable_errors[i].bit) & 1));
 	} else {
 		printf("PCIE Stats:\n");
 		printf("Device correctable errors detected: 0x%x\n",
