@@ -14,14 +14,25 @@
  *   RUNDIR/nvme/discoverd/
  *     units/<unit-name>.devid      — kernel device name written by nvme connect
  *     controllers/<devid>/unit     — transient unit name for this controller
+ *     controllers/<devid>/ino      — inode of /sys/class/nvme/<devid>
  */
 
 #define STATE_RUN_DIR    RUNDIR "/nvme/discoverd"
 #define STATE_UNITS_DIR  STATE_RUN_DIR "/units"
 #define STATE_CTRLS_DIR  STATE_RUN_DIR "/controllers"
 
+#define SYSFS_NVME_DIR   "/sys/class/nvme"
+
 /* Ensure the runtime directories exist. Call once at startup. */
 int state_init(void);
+
+/*
+ * Remove the state of controllers that no longer exist. The kernel reuses
+ * device names, so a device with the same name but another inode is a
+ * different controller. State without an inode is left alone. This never
+ * disconnects anything. Call once at startup.
+ */
+void state_gc(void);
 
 /*
  * Read the unit name from a controller's state directory.
