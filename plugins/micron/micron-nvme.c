@@ -4110,7 +4110,7 @@ static int micron_logpage_dir(int argc, char **argv, struct command *acmd,
 		uint8_t supported;
 		char	*desc;
 	} log_list[] = {
-		{0x00, 0, "Support Log Pages"},
+		{0x00, 0, "Supported Log Pages"},
 		{0x01, 0, "Error Information"},
 		{0x02, 0, "SMART / Health Information"},
 		{0x03, 0, "Firmware Slot Information"},
@@ -4124,7 +4124,7 @@ static int micron_logpage_dir(int argc, char **argv, struct command *acmd,
 		{0x0B, 0, "Predictable Latency Event Aggregate"},
 		{0x0C, 0, "Asymmetric Namespace Access"},
 		{0x0D, 0, "Persistent Event Log"},
-		{0x0E, 0, "Predictable Latency Event Aggregate"},
+		{0x0E, 0, "LBA Status Information"},
 		{0x0F, 0, "Endurance Group Event Aggregate"},
 		{0x10, 0, "Media Unit Status"},
 		{0x11, 0, "Supported Capacity Configuration List"},
@@ -4150,7 +4150,7 @@ static int micron_logpage_dir(int argc, char **argv, struct command *acmd,
 		printf("%02Xh    : %s\n", log_list[i].log_id, log_list[i].desc);
 	}
 
-	return err;
+	return 0;
 }
 
 static int micron_cloud_boot_SSD_version(int argc, char **argv,
