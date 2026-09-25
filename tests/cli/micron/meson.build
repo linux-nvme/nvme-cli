@@ -6,6 +6,7 @@
 
 micron_mock_tests = [
     'micron_drive_model_mock_test.py',
+    'micron_options_mock_test.py',
 ]
 
 if json_c_dep.found()
