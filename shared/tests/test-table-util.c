@@ -16,6 +16,7 @@
 #include <shared/fs-util.h>
 #include <shared/assert-util.h>
 #include <shared/table-util.h>
+#include <shared/string-util.h>
 
 static bool check_bool(const char *name, bool got)
 {
@@ -36,6 +37,7 @@ static bool test_basic_table(void)
 	bool pass = true;
 	long size;
 	int row, fd;
+	char *last_col;
 
 	printf("test_basic_table:\n");
 
@@ -73,6 +75,12 @@ static bool test_basic_table(void)
 			    strstr(buf, "widgets") != NULL);
 	pass &= check_bool("output contains the row int value",
 			    strstr(buf, "42") != NULL);
+	last_col = strstr(buf, "Count");
+	pass &= check_bool("header output does not contain trailing whitespace",
+			   shr_linelen(last_col) == strlen("Count"));
+	last_col = strstr(buf, "42");
+	pass &= check_bool("row 1 output does not contain trailing whitespace",
+			   shr_linelen(last_col) == strlen("42"));
 	free(buf);
 
 	shr_table_free(t);
@@ -252,6 +260,7 @@ static bool test_multi_type_and_centered(void)
 	bool pass = true;
 	long size;
 	int ra, rb, fd;
+	char *last_col;
 
 	printf("test_multi_type_and_centered:\n");
 
@@ -317,6 +326,15 @@ static bool test_multi_type_and_centered(void)
 			    strstr(buf, "42") != NULL);
 	pass &= check_bool("output contains the double value",
 			    strstr(buf, "9.99") != NULL);
+	last_col = strstr(buf, "Double");
+	pass &= check_bool("header output does not contain trailing whitespace",
+			   shr_linelen(last_col) == strlen("Double"));
+	last_col = strstr(buf, "2.71");
+	pass &= check_bool("row 1 output does not contain trailing whitespace",
+			   shr_linelen(last_col) == strlen("2.71"));
+	last_col = strstr(buf, "9.99");
+	pass &= check_bool("row 2 output does not contain trailing whitespace",
+			   shr_linelen(last_col) == strlen("9.99"));
 	free(buf);
 
 	shr_table_free(t);
