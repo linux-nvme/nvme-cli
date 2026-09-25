@@ -766,7 +766,7 @@ static void on_job_done(const char *unit_name, bool success,
 static void on_dc_add(const char *devname, const struct libnvmf_tid *t,
 		      void *user_data __attribute__((unused)))
 {
-	struct active_ctrl *e;
+	struct active_ctrl *e = NULL;
 	char *unit_name;
 
 	// Link devname to the in-memory entry via state file.
@@ -778,7 +778,13 @@ static void on_dc_add(const char *devname, const struct libnvmf_tid *t,
 		free(unit_name);
 	}
 
-	fetch_and_process_dlp(devname, t);
+	/*
+	 * DLP entries inherit host-side fields from the DC's TID. Use the
+	 * candidate, not @t: @t is read from sysfs and carries the source
+	 * address the kernel selected, which the configuration did not ask
+	 * for.
+	 */
+	fetch_and_process_dlp(devname, e && e->tid ? e->tid : t);
 }
 
 static void on_dc_changed(const char *devname,
