@@ -15,11 +15,13 @@
  *     units/<unit-name>.devid      — kernel device name written by nvme connect
  *     controllers/<devid>/unit     — transient unit name for this controller
  *     controllers/<devid>/ino      — inode of /sys/class/nvme/<devid>
+ *     desired                      — last known desired controllers
  */
 
 #define STATE_RUN_DIR    RUNDIR "/nvme/discoverd"
 #define STATE_UNITS_DIR  STATE_RUN_DIR "/units"
 #define STATE_CTRLS_DIR  STATE_RUN_DIR "/controllers"
+#define STATE_DESIRED    STATE_RUN_DIR "/desired"
 
 #define SYSFS_NVME_DIR   "/sys/class/nvme"
 
@@ -33,6 +35,18 @@ int state_init(void);
  * disconnects anything. Call once at startup.
  */
 void state_gc(void);
+
+/*
+ * Replace the file of last known desired controllers with @content.
+ * Returns 0 or a negative errno.
+ */
+int state_write_desired(const char *content);
+
+/*
+ * The content of the file of last known desired controllers, or NULL if
+ * there is none. Caller must free.
+ */
+char *state_read_desired(void);
 
 /*
  * Read the unit name from a controller's state directory.

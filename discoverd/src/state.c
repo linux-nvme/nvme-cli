@@ -95,6 +95,48 @@ void state_gc(void)
 	closedir(d);
 }
 
+int state_write_desired(const char *content)
+{
+	char tmp[] = STATE_DESIRED ".XXXXXX";
+	size_t len = strlen(content);
+	ssize_t n;
+	int fd;
+
+	fd = shr_mkstemp(tmp);
+	if (fd < 0)
+		return -errno;
+
+	n = write(fd, content, len);
+	close(fd);
+	if (n < 0 || (size_t)n != len || rename(tmp, STATE_DESIRED) < 0) {
+		int r = n < 0 ? -errno : -EIO;
+
+		unlink(tmp);
+		return r;
+	}
+
+	return 0;
+}
+
+char *state_read_desired(void)
+{
+	char *content = NULL;
+	size_t size = 0;
+	FILE *f;
+
+	f = fopen(STATE_DESIRED, "r");
+	if (!f)
+		return NULL;
+
+	if (getdelim(&content, &size, '\0', f) < 0) {
+		free(content);
+		content = NULL;
+	}
+	fclose(f);
+
+	return content;
+}
+
 char *state_read_unit(const char *devid)
 {
 	char path[512];

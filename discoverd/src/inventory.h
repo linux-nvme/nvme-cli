@@ -96,6 +96,15 @@ int inventory_referral_hops(const struct inventory *inv,
 			    const struct libnvmf_tid *dc_tid);
 
 /*
+ * Where @tid comes from: "nbft", "config", "discovered", or "dlp" with
+ * *@parent set to the desired DC whose cached DLP lists it. NULL if @tid
+ * is not desired. *@parent is borrowed from @inv.
+ */
+const char *inventory_source(const struct inventory *inv,
+			     const struct libnvmf_tid *tid,
+			     const struct libnvmf_tid **parent);
+
+/*
  * Query: is tid in the desired connection set?
  * Returns true if tid appears in the NBFT set, the config set, or the
  * discovered DCs, or in the cached DLP of a DC that is itself desired.
@@ -115,7 +124,7 @@ bool inventory_is_nbft(const struct inventory *inv,
 
 /*
  * Iterate over all DC TIDs that should be connected at startup.
- * (NBFT DCs + config DCs.)
+ * (NBFT DCs + config DCs + discovered DCs.)
  * Returns a NULL-terminated array; caller must free each element and the array.
  */
 struct libnvmf_tid **inventory_desired_dcs(const struct inventory *inv);
