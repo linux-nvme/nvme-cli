@@ -40,3 +40,6 @@ void nvme_mi_submit_exit(struct libnvme_mi_ep *ep, __u8 type,
 
 bool is_printable_at_level(int level);
 int map_log_level(int verbose, bool quiet);
+
+int nvme_install_crash_handler(void);
+void nvme_show_crash_backtrace(void);

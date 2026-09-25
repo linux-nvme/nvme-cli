@@ -17,6 +17,7 @@ sources = [
 if host_system == 'linux'
     sources += [
         'nvme/attr-accessors-custom-linux.c',
+        'nvme/crash-handler.c',
         'nvme/ioctl-linux.c',
         'nvme/lib-linux.c',
         'nvme/mem-linux.c',
