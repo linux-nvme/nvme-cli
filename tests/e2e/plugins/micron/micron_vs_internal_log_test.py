@@ -18,14 +18,20 @@ The vs-internal-log command has two operating modes:
     Extracts a single binary telemetry log file.  Requires both --type
     and --data_area (1-4).
 
+Argument validation, the per-model log page sets, the archive handling and
+the descriptor file contents are covered without hardware in
+micron_vs_internal_log_mock_test.py.  The tests here collect a real drive's
+package and check it against that drive.
+
 Tests in this module verify:
   * Archive generation for each supported format (.zip, .tgz, .tar.gz).
   * Temporary directory cleanup after successful collection.
-  * Error detection in stdout/stderr for every known failure path.
-  * Argument validation: missing package, unsafe paths, telemetry
-    mis-use, and out-of-range data_area.
-  * The debug-data package metadata contract required by the offline parser:
-  * logpull_metadata_info.json and Controller/logpull_cmd_status_info.csv.
+  * Telemetry extraction, and the extracted file matching the size its own
+    header claims.
+  * The debug-data package metadata matching the drive it came from.
+  * The cmd status CSV naming files that were actually collected, once each.
+  * The text descriptors carrying LF line endings on every platform.
+  * The common-format vendor logs being framed as their headers claim.
 """
 
 import csv
@@ -61,6 +67,7 @@ _TELEMETRY_UNSUPPORTED_MSG = "telemetry option is not supported for specified dr
 # Descriptor files the offline parser requires, relative to the package root.
 _METADATA_FILE = "logpull_metadata_info.json"
 _CMD_STATUS_FILE = "Controller/logpull_cmd_status_info.csv"
+_DRIVE_INFO_FILE = "drive-info.txt"
 
 # Column order of the cmd status CSV.  The parser reads cmd_info and
 # mse_status by name, but the full header is written for compatibility.
@@ -326,138 +333,7 @@ class TestMicronVsInternalLog(TestMicron):
         self._test_archive_format(".tar.gz")
 
     # ------------------------------------------------------------------
-    # Missing / invalid --package argument
-    # ------------------------------------------------------------------
-
-    def test_no_package_argument(self):
-        """vs-internal-log fails with a descriptive message when --package is omitted.
-
-        Covers both the debug-package and telemetry code paths: each branch
-        emits a mode-specific example path in the error message.
-        """
-        cases = [
-            ("debug-package mode", "",                        "logfile.zip"),
-            ("telemetry mode",     "--type=host --data_area=1", "logfile.bin"),
-        ]
-        for label, args, hint in cases:
-            with self.subTest(mode=label):
-                result = self._run_log(args=args)
-
-                self.assertNotEqual(
-                    result.returncode, 0,
-                    f"Expected non-zero exit when --package is omitted ({label})",
-                )
-                self.assertIn(
-                    "Log data file must be specified", result.stderr,
-                    f"Expected usage hint about missing package in stderr ({label}), "
-                    f"got: {result.stderr!r}",
-                )
-                self.assertIn(
-                    hint, result.stderr,
-                    f"Expected mode-specific hint '{hint}' in stderr ({label}), "
-                    f"got: {result.stderr!r}",
-                )
-
-    def test_unsafe_package_path_leading_dash(self):
-        """vs-internal-log rejects a --package path that starts with '-'.
-
-        A path starting with '-' could be mis-interpreted as a flag by the
-        tar or zip tool that archives the output.  is_safe_path() rejects
-        it before any I/O is attempted.
-        """
-        result = self._run_log(args="--package=-output.zip")
-
-        self.assertNotEqual(
-            result.returncode, 0,
-            "Expected non-zero exit for --package path starting with '-'",
-        )
-        self.assertIn(
-            "Invalid package path", result.stderr,
-            f"Expected unsafe-path message in stderr, got: {result.stderr!r}",
-        )
-
-    def test_unsafe_package_path_special_chars(self):
-        """vs-internal-log rejects a --package path containing unsafe characters.
-
-        The glob character '*' is in the rejected-character table of
-        is_safe_path().  It is safe to embed in a double-quoted shell argument
-        in both POSIX shells (bash suppresses glob expansion inside double
-        quotes) and cmd.exe (where '*' is not a shell metachar in argument
-        strings).
-        """
-        result = self._run_log(args='--package="file*name.zip"')
-
-        self.assertNotEqual(
-            result.returncode, 0,
-            "Expected non-zero exit for --package path containing '*'",
-        )
-        self.assertIn(
-            "Invalid package path", result.stderr,
-            f"Expected unsafe-path message in stderr, got: {result.stderr!r}",
-        )
-
-    # ------------------------------------------------------------------
-    # Telemetry mode argument validation
-    # ------------------------------------------------------------------
-
-    def test_telemetry_invalid_type(self):
-        """vs-internal-log rejects an unrecognised value for --type.
-
-        Only "host" and "controller" are valid telemetry types.
-        """
-        output_path = self._archive_path("telemetry_invalid.bin")
-        result = self._run_log(
-            args=f"--type=invalid --data_area=1 --package={output_path}"
-        )
-
-        self.assertNotEqual(
-            result.returncode, 0,
-            "Expected non-zero exit for unrecognised --type value",
-        )
-        self.assertIn(
-            "host or controller", result.stderr,
-            f"Expected message naming valid telemetry types, "
-            f"got stderr={result.stderr!r}",
-        )
-
-    def test_telemetry_missing_data_area(self):
-        """vs-internal-log requires --data_area."""
-        output_path = self._archive_path("telemetry_host.bin")
-        result = self._run_log(args=f"--type=host --package={output_path}")
-
-        self.assertNotEqual(
-            result.returncode, 0,
-            "Expected non-zero exit when --data_area is omitted",
-        )
-        self.assertIn(
-            "data area", result.stderr.lower(),
-            f"Expected message about missing data area, got stderr={result.stderr!r}",
-        )
-
-    def test_telemetry_data_area_out_of_range(self):
-        """vs-internal-log rejects --data_area values outside the 1-4 range.
-
-        The implementation checks cfg.data_area <= 0 || cfg.data_area > 4.
-        Both bounds are exercised: 0 (lower) and 5 (upper).
-        """
-        output_path = self._archive_path("telemetry_oor.bin")
-        for value in (0, 5):
-            with self.subTest(data_area=value):
-                result = self._run_log(
-                    args=f"--type=host --data_area={value} --package={output_path}"
-                )
-
-                self.assertNotEqual(
-                    result.returncode, 0,
-                    f"Expected non-zero exit for --data_area={value} (valid range is 1-4)",
-                )
-                self.assertIn(
-                    "data area", result.stderr.lower(),
-                    f"Expected message about data area range, got stderr={result.stderr!r}",
-                )
-
-    # ------------------------------------------------------------------
-    # Telemetry mode happy paths
+    # Telemetry mode
     # ------------------------------------------------------------------
 
     def test_telemetry_success(self):
@@ -534,43 +410,6 @@ class TestMicronVsInternalLog(TestMicron):
             f"(dalb + 1) * {_TELEMETRY_BLOCK_SIZE} = {expected_size} bytes",
         )
 
-    def test_data_area_without_type(self):
-        """vs-internal-log rejects --data_area when --type is not specified.
-
-        --data_area is only meaningful in telemetry mode; the implementation
-        prints an explicit error when it appears without --type.
-        """
-        output_path = self._archive_path("data_area_notype.zip")
-        result = self._run_log(
-            args=f"--data_area=1 --package={output_path}"
-        )
-
-        self.assertNotEqual(
-            result.returncode, 0,
-            "Expected non-zero exit for --data_area without --type",
-        )
-        self.assertIn(
-            "data area option is valid only for telemetry", result.stderr,
-            f"Expected telemetry-only message, got stderr={result.stderr!r}",
-        )
-
-    def test_text_metadata_files_are_lf_only(self):
-        """The generated text files use LF endings on every platform.
-
-        The metadata files must contain LF-only line endings, not CRLF.
-        csv.reader normalizes line endings, so perform a byte-level check.
-        """
-        zf, entries = self._collect_zip()
-
-        for name in (_CMD_STATUS_FILE, _METADATA_FILE, "drive-info.txt"):
-            self.assertIn(name, entries, f"{name} is missing from the package")
-            raw = zf.read(entries[name])
-            self.assertEqual(
-                raw.count(b"\r\n"), 0,
-                f"{name} contains CRLF line endings; open it with a \"b\" mode "
-                f"fopen so output is byte-identical across platforms",
-            )
-
     def test_metadata_json_present_and_valid(self):
         """The package root holds a logpull_metadata_info.json with all read keys.
 
@@ -605,21 +444,48 @@ class TestMicronVsInternalLog(TestMicron):
             )
 
         self.assertIn(
-            "drive-info.txt", entries,
-            "drive-info.txt is needed to cross-check the reported PCI IDs",
+            _DRIVE_INFO_FILE, entries,
+            f"{_DRIVE_INFO_FILE} is needed to cross-check the PCI IDs",
         )
-        drive_info = zf.read(entries["drive-info.txt"]).decode("utf-8")
+        drive_info = zf.read(entries[_DRIVE_INFO_FILE]).decode("utf-8")
 
         for key, label in (("vendor_id", "VendorId"), ("device_id", "DeviceId")):
             match = re.search(rf"{label}\s*:\s*([0-9A-Fa-f]{{4}})", drive_info)
             self.assertIsNotNone(
-                match, f"Could not find {label} in drive-info.txt:\n{drive_info}"
+                match,
+                f"Could not find {label} in {_DRIVE_INFO_FILE}:\n{drive_info}",
             )
             self.assertEqual(
                 int(metadata[key], 16), int(match.group(1), 16),
                 f"Metadata {key}={metadata[key]} disagrees with {label} "
-                f"0x{match.group(1)} in drive-info.txt",
+                f"0x{match.group(1)} in {_DRIVE_INFO_FILE}",
             )
+
+    def test_text_descriptors_use_lf_endings(self):
+        """The text descriptors are byte-identical across platforms.
+
+        Some consumers of the text descriptors expect LF-only line endings,
+        so the collection paths open them with a "b" mode fopen to suppress the
+        CRLF translation a Windows text-mode stream would apply.  Since the
+        mock tests only run on Linux, this hardware test is the only place a
+        problem with line endings would be noticed.  Keep it here.
+
+        csv.reader and text-mode open() both normalise line endings, so the
+        check has to be made on the raw bytes.
+        """
+        zf, entries = self._collect_zip()
+
+        for name in (_CMD_STATUS_FILE, _METADATA_FILE, _DRIVE_INFO_FILE):
+            with self.subTest(descriptor=name):
+                self.assertIn(
+                    name, entries, f"{name} is missing from the package"
+                )
+                raw = zf.read(entries[name])
+                self.assertEqual(
+                    raw.count(b"\r\n"), 0,
+                    f"{name} contains CRLF line endings; open it with a \"b\" "
+                    f"mode fopen so output is byte-identical across platforms",
+                )
 
     def test_metadata_identify_fields_are_trimmed(self):
         """Metadata identity fields match id-ctrl and carry no padding.
@@ -647,25 +513,6 @@ class TestMicronVsInternalLog(TestMicron):
                 got, want.strip(),
                 f"{key}={got!r} does not match id-ctrl value {want.strip()!r}",
             )
-
-    def test_cmd_status_csv_header(self):
-        """The cmd status CSV leads with the 9-column header the parser expects.
-
-        The parser locates cmd_info and mse_status by column name, so the
-        header must be present and correctly spelled.
-        """
-        zf, entries = self._collect_zip()
-        header, rows = self._read_cmd_status_rows(zf, entries)
-
-        self.assertEqual(
-            header, _CMD_STATUS_COLUMNS,
-            "cmd status CSV header does not match the expected column list",
-        )
-        self.assertTrue(
-            rows,
-            "cmd status CSV has no data rows; the parser would decode nothing "
-            "while still reporting success",
-        )
 
     def test_cmd_status_rows_reference_collected_files(self):
         """Every successful CSV row names a binary that exists in the package.

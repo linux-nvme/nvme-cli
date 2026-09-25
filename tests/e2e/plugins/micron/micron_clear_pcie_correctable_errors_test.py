@@ -26,6 +26,9 @@ Which path runs depends on the drive model present in the test
 environment, so the tests probe for support and assert only the
 behaviour common to whichever path is exercised.
 
+The route each drive model takes, the AER failure paths and the argument
+surface are covered without hardware in micron_pcie_errors_mock_test.py.
+
 Tests in this module verify:
   * Successful exit for controller and namespace device paths.
   * The verbose success message across every path (on stdout or stderr;
@@ -33,13 +36,15 @@ Tests in this module verify:
     AER/sysfs read-back value on stdout.
   * A read-back correctable error count of zero after an AER clear.
   * Idempotency: clearing an already-cleared register still succeeds.
-  * Error detection for a non-existent device (parse_and_open failure).
+  * Windows never reaching the AER registers.
   * Graceful skipping when the platform does not support the command.
 """
 
 import re
 
 from .micron_test import TestMicron
+
+_COMMAND = "clear-pcie-correctable-errors"
 
 _WINDOWS_AER_UNSUPPORTED_MSG = "register writes not supported on the current platform"
 _AER_CLEAR_FAILED_MSG = "Failed to clear error count"
@@ -60,9 +65,7 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
 
     def _run_clear(self, device=None, args=""):
         """Run clear-pcie-correctable-errors and return the CompletedProcess result."""
-        return self.run_plugin_cmd(
-            "clear-pcie-correctable-errors", device=device, args=args
-        )
+        return self.run_plugin_cmd(_COMMAND, device=device, args=args)
 
     def _is_clear_supported(self):
         """Return True if clear-pcie-correctable-errors can succeed on this
@@ -89,23 +92,47 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
                 "clear-pcie-correctable-errors is not supported on this drive/platform"
             )
 
-    def test_bad_device_returns_error(self):
-        """clear-pcie-correctable-errors fails with a message when the device does not exist.
+    def test_windows_cannot_write_the_aer_registers(self):
+        """On Windows no drive reaches the AER registers.
 
-        Exercises the parse_and_open failure branch.
+        micron_clear_pcie_aer_correctable_errors() is a stub returning -ENOTSUP
+        on Windows (plugins/micron/micron-utils-win.c).  Mock tests are not
+        supported on Windows, so this path needs to be exercised on hardware.
+
+        Only two outcomes are possible here: a vendor clear route
+        (set-features 0xC3, or the M5407 0xD6 command) succeeds without
+        touching the registers, or the command fails naming the platform
+        limitation.
         """
-        device = "/dev/nvme-nonexistent-test-device"
-        result = self._run_clear(device=device)
+        if not self.is_windows():
+            self.skipTest(
+                "micron_clear_pcie_aer_correctable_errors() only stubs out "
+                "register writes on Windows; Linux writes them via setpci"
+            )
 
-        self.assertNotEqual(
-            result.returncode, 0,
-            "Expected non-zero exit code for a non-existent device",
+        result = self._run_clear(args="--verbose")
+        combined = result.stdout + result.stderr
+
+        self.assertNotIn(
+            _AER_STDOUT_MARKER, combined,
+            f"Reported an AER register read-back on a platform that cannot "
+            f"reach the registers, so the value is fabricated; "
+            f"stdout={result.stdout!r} stderr={result.stderr!r}",
         )
-        self.assertTrue(
-            device in result.stderr,
-            f"Expected {device!r} in stderr, "
-            f"got: {result.stderr!r}",
-        )
+
+        if result.returncode != 0:
+            self.assertNotIn(
+                _VERBOSE_CLEARED_MSG, combined,
+                f"Claimed the errors were cleared while failing, so a caller "
+                f"cannot tell the clear did not happen; "
+                f"stdout={result.stdout!r} stderr={result.stderr!r}",
+            )
+            self.assertIn(
+                _WINDOWS_AER_UNSUPPORTED_MSG, result.stderr,
+                f"Failed without naming the platform limitation, so the "
+                f"reason is indistinguishable from a drive or I/O error: "
+                f"{result.stderr!r}",
+            )
 
     def test_command_exits_zero_on_success(self):
         """clear-pcie-correctable-errors exits 0 when the drive is reachable.
@@ -114,7 +141,7 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
         the drive model present in the test environment.
         """
         self._skip_if_clear_unavailable()
-        result = self.run_plugin_cmd_check("clear-pcie-correctable-errors")
+        result = self.run_plugin_cmd_check(_COMMAND)
 
         self.assertEqual(
             result.returncode, 0,
@@ -132,9 +159,7 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
         correctable value to stdout.
         """
         self._skip_if_clear_unavailable()
-        result = self.run_plugin_cmd_check(
-            "clear-pcie-correctable-errors", args="--verbose"
-        )
+        result = self.run_plugin_cmd_check(_COMMAND, args="--verbose")
         stdout = result.stdout
         stderr = result.stderr
 
@@ -169,7 +194,7 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
         by test_verbose_output_reports_cleared instead.
         """
         self._skip_if_clear_unavailable()
-        result = self.run_plugin_cmd_check("clear-pcie-correctable-errors")
+        result = self.run_plugin_cmd_check(_COMMAND)
         stdout = result.stdout
 
         if _AER_STDOUT_MARKER not in stdout:
@@ -198,8 +223,8 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
         idempotently.
         """
         self._skip_if_clear_unavailable()
-        result1 = self.run_plugin_cmd_check("clear-pcie-correctable-errors")
-        result2 = self.run_plugin_cmd_check("clear-pcie-correctable-errors")
+        result1 = self.run_plugin_cmd_check(_COMMAND)
+        result2 = self.run_plugin_cmd_check(_COMMAND)
 
         self.assertEqual(
             result1.returncode, 0,
@@ -221,11 +246,10 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
         the shared ctrl-based support probe applies here too.
         """
         self._skip_if_clear_unavailable()
-        result = self.run_plugin_cmd_check(
-            "clear-pcie-correctable-errors", device=self.ns1
-        )
+        result = self.run_plugin_cmd_check(_COMMAND, device=self.ns1)
+
         self.assertEqual(
             result.returncode, 0,
             f"Expected exit code 0 for namespace device, "
             f"got {result.returncode}; stderr={result.stderr!r}",
-            )
+        )
