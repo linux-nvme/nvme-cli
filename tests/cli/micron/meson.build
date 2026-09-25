@@ -11,6 +11,7 @@ micron_mock_tests = [
     'micron_latency_mock_test.py',
     'micron_log_page_directory_mock_test.py',
     'micron_options_mock_test.py',
+    'micron_pcie_errors_mock_test.py',
     'micron_smart_log_mock_test.py',
     'micron_temperature_stats_mock_test.py',
     'micron_vs_drive_info_mock_test.py',
