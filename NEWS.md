@@ -38,6 +38,9 @@
   build option (`auto` by default) controls whether mDNS support is
   built. It requires libsystemd v257 or later.
 
+* nvme-discoverd also compares the host ID, not only the host NQN, when
+  it matches a desired connection with an existing one.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

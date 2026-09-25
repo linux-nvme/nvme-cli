@@ -126,6 +126,54 @@ static bool test_tcp_host_iface_vs_src_addr(void)
 	return pass;
 }
 
+/* The host ID is compared only when both sides have one. */
+static bool test_hostid(void)
+{
+	static const char *nqn = "nqn.2014-08.com.example:host1";
+	static const char *id = "c0ffee00-0000-0000-0000-000000000001";
+	static const char *id_upper = "C0FFEE00-0000-0000-0000-000000000001";
+	static const char *other_id = "c0ffee00-0000-0000-0000-000000000002";
+	__cleanup_tid struct libnvmf_tid *candidate = NULL;
+	__cleanup_tid struct libnvmf_tid *no_id = NULL;
+	__cleanup_tid struct libnvmf_tid *same = NULL;
+	__cleanup_tid struct libnvmf_tid *upper = NULL;
+	__cleanup_tid struct libnvmf_tid *other = NULL;
+	bool pass = true;
+
+	printf("test_hostid:\n");
+
+	candidate = tid_new("tcp", "10.0.0.200", "4420", IOC_NQN, NULL, NULL,
+			    nqn, id, false);
+	no_id = tid_new("tcp", "10.0.0.200", "4420", IOC_NQN, NULL, NULL,
+			nqn, NULL, false);
+	same = tid_new("tcp", "10.0.0.200", "4420", IOC_NQN, NULL, NULL,
+		       nqn, id, false);
+	upper = tid_new("tcp", "10.0.0.200", "4420", IOC_NQN, NULL, NULL,
+			nqn, id_upper, false);
+	other = tid_new("tcp", "10.0.0.200", "4420", IOC_NQN, NULL, NULL,
+			nqn, other_id, false);
+	if (!candidate || !no_id || !same || !upper || !other) {
+		printf(" - tid_new() returned NULL [FAIL]\n");
+		return false;
+	}
+
+	pass &= check("same host ID matches",
+		      tid_matches_existing(candidate, same, false, NULL), true);
+	pass &= check("host ID compared without case",
+		      tid_matches_existing(candidate, upper, false, NULL),
+		      true);
+	pass &= check("different host ID does not match",
+		      tid_matches_existing(candidate, other, false, NULL),
+		      false);
+	pass &= check("candidate without host ID matches",
+		      tid_matches_existing(no_id, other, false, NULL), true);
+	pass &= check("existing without host ID matches",
+		      tid_matches_existing(candidate, no_id, false, NULL),
+		      true);
+
+	return pass;
+}
+
 /* A candidate that names no host-side field accepts either connection. */
 static bool test_tcp_no_host_side_requested(void)
 {
@@ -419,6 +467,7 @@ int main(void)
 	pass &= test_tcp_no_src_addr();
 	pass &= test_transport();
 	pass &= test_hostless_candidate();
+	pass &= test_hostid();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

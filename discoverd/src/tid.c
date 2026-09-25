@@ -10,6 +10,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 #include <nvme/fabrics.h>
 #include <nvme/nvme-types-fabrics.h>
@@ -102,6 +103,20 @@ static bool tcp_host_side_matches(const char *candidate_host_traddr,
 	return true;
 }
 
+/*
+ * A host NQN may use several host IDs (Base Spec, Connect command), so the
+ * host ID is part of the host identity. Compare it only when both sides
+ * have one. A host ID is a UUID: sysfs prints it in lowercase, and a
+ * configuration file may use uppercase.
+ */
+static bool hostid_matches(const char *candidate, const char *existing)
+{
+	if (!candidate || !existing)
+		return true;
+
+	return !strcasecmp(candidate, existing);
+}
+
 bool tid_matches_existing(const struct libnvmf_tid *candidate,
 		      const struct libnvmf_tid *existing, bool existing_is_dc,
 		      const struct ifaddrs *iface_list)
@@ -125,6 +140,10 @@ bool tid_matches_existing(const struct libnvmf_tid *candidate,
 
 	if (!shr_streq0(libnvmf_tid_get_hostnqn(candidate),
 			libnvmf_tid_get_hostnqn(existing)))
+		return false;
+
+	if (!hostid_matches(libnvmf_tid_get_hostid(candidate),
+			    libnvmf_tid_get_hostid(existing)))
 		return false;
 
 	if (shr_streq0(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
