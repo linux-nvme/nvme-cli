@@ -85,6 +85,9 @@ struct active_ctrl {
 	bool force_persistent_logged; // disc_info_once() marker
 
 	sd_event_source *epcsd_poll_timer; // NULL when not EPCSD-parked
+
+	// Desired at the last release_undesired() pass, see there.
+	bool desired;
 };
 
 static LIST_HEAD(g_ctrls);
@@ -139,6 +142,7 @@ static int ctrl_add(const char *unit_name, const struct libnvmf_tid *t,
 	e->unit_name = strdup(unit_name);
 	e->tid = libnvmf_tid_dup(t);
 	e->is_dc = is_dc;
+	e->desired = inventory_is_desired(ctx.inventory, t);
 	e->force_persistent = params &&
 		shr_streqcase0(libnvmf_params_get(params, "persistent"),
 			       "force");
@@ -155,6 +159,119 @@ static void ctrl_remove(struct active_ctrl *entry)
 {
 	list_del_init(&entry->entry);
 	ctrl_free(entry);
+}
+
+/*
+ * Release a controller that nvme-discoverd no longer wants, and leave its
+ * connection up. The state goes first, so that the unit's ExecStop= has
+ * nothing to disconnect. Then the unit is stopped, the registry owner is
+ * cleared, and the controller is no longer tracked.
+ */
+static void ctrl_release(struct active_ctrl *e, const char *reason)
+{
+	__cleanup_free char *read_devname = NULL;
+	const char *devname = e->devname;
+
+	if (!devname)
+		devname = read_devname = unit_read_devid(e->unit_name);
+
+	state_remove_devid(e->unit_name);
+	if (devname) {
+		__cleanup_free char *owner_unit = state_read_unit(devname);
+
+		if (shr_streq0(owner_unit, e->unit_name))
+			state_remove_ctrl(devname);
+	}
+
+	unit_stop(ctx.umgr, e->unit_name);
+
+	/* Only clear an owner that is still ours. */
+	if (devname &&
+	    !libnvmf_registry_attr_equal(ctx.nvme_ctx, devname, "owner",
+					 "discoverd"))
+		libnvmf_registry_update(ctx.nvme_ctx, devname, "owner", NULL);
+
+	disc_info("%s | %s - %s, released", libnvmf_tid_str(e->tid),
+		  devname ? devname : "-", reason);
+	ctrl_remove(e);
+}
+
+static bool release_pending;
+static bool release_check_exclusions;
+
+/*
+ * Release the controllers that are no longer desired: desired at the last
+ * pass, and not desired now. A controller that was never desired, such as
+ * an mDNS DC whose DLP is not fetched yet, is never released here. With
+ * @release_check_exclusions, also release the controllers that the
+ * exclusion list now matches. NBFT controllers are never released.
+ */
+static int release_undesired(sd_event_source *src,
+			     void *user_data __attribute__((unused)))
+{
+	bool check_exclusions = release_check_exclusions;
+	struct active_ctrl *e, *next;
+
+	release_pending = false;
+	release_check_exclusions = false;
+	sd_event_source_disable_unref(src);
+
+	list_for_each_safe(&g_ctrls, e, next, entry) {
+		bool desired = inventory_is_desired(ctx.inventory, e->tid);
+
+		if (inventory_is_nbft(ctx.inventory, e->tid))
+			continue;
+
+		if (check_exclusions &&
+		    libnvmf_exclusion_match(ctx.nvme_ctx, e->tid)) {
+			ctrl_release(e, "excluded");
+			continue;
+		}
+
+		if (e->desired && !desired) {
+			ctrl_release(e, "no longer desired");
+			continue;
+		}
+
+		e->desired = desired;
+	}
+
+	return 0;
+}
+
+/*
+ * Run release_undesired() from the event loop, after the change that
+ * called this is complete. Several changes before the pass share it.
+ */
+static void schedule_release(bool check_exclusions)
+{
+	sd_event_source *src;
+	int r;
+
+	release_check_exclusions |= check_exclusions;
+	if (release_pending)
+		return;
+
+	r = sd_event_add_defer(ctx.event, &src, release_undesired, NULL);
+	if (r < 0) {
+		disc_warn("cannot schedule the release check: %s",
+			  strerror(-r));
+		return;
+	}
+	release_pending = true;
+}
+
+/*
+ * Take the current desired state as the new reference, without releasing
+ * anything. For inventory changes that must not release, such as giving up
+ * on a DC.
+ */
+static void refresh_desired(void)
+{
+	struct active_ctrl *e;
+
+	list_for_each(&g_ctrls, e, entry)
+		e->desired = inventory_is_desired(ctx.inventory, e->tid);
 }
 
 /* One connected controller, as sysfs reports it. */
@@ -573,6 +690,7 @@ static void fetch_and_process_dlp(const char *devname,
 	    tid_list_append(&fctx.referrals, NULL) == 0) {
 		inventory_update_dlp(ctx.inventory, dc_tid, fctx.iocs.items,
 				     fctx.referrals.items);
+		schedule_release(false);
 	} else {
 		tid_list_free_items(&fctx.iocs);
 		tid_list_free_items(&fctx.referrals);
@@ -693,8 +811,10 @@ static int retry_timeout(sd_event_source *src,
 	    now >= e->giveup_at_usec) {
 		disc_warn("%s - giving up after repeated failures",
 			  libnvmf_tid_str(e->tid));
-		if (e->is_dc)
+		if (e->is_dc) {
 			inventory_forget_dc(ctx.inventory, e->tid);
+			refresh_desired(); // giving up releases nothing
+		}
 		ctrl_remove(e);
 		return 0;
 	}
@@ -1292,8 +1412,13 @@ static int sighup_handler(sd_event_source *src __attribute__((unused)),
 	}
 	inventory_load_config(ctx.inventory, &ctx);
 
-	// Connect any newly added desired controllers (no disconnects).
+	/*
+	 * Connect any newly added desired controllers. Release those the
+	 * configuration or the exclusion list removed, without disconnecting
+	 * them.
+	 */
 	connect_desired();
+	schedule_release(true);
 	apply_zeroconf();
 
 	sd_notify(0, "READY=1");
