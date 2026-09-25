@@ -1350,6 +1350,20 @@ free_desc:
 	return ret;
 }
 
+/*
+ * Data Area 1 always begins with the mandatory OCP DA1 header (which in
+ * turn carries the DA1/DA2 statistics and event FIFO offsets/sizes). A
+ * controller that has never captured a telemetry log for this type
+ * reports Data Area 1 as empty (da1_size == 0); reading the DA1 header,
+ * SMART blocks, statistics, or event FIFOs out of the telemetry buffer in
+ * that case would run past the end of what was actually fetched/read.
+ */
+static bool telemetry_da1_header_present(
+		struct nvme_ocp_telemetry_offsets *poffsets)
+{
+	return poffsets->da1_size >= sizeof(struct nvme_ocp_header_in_da1);
+}
+
 int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offsets *poffsets,
 	FILE *fp)
 {
@@ -1357,6 +1371,9 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 		nvme_show_error("Input buffer was NULL");
 		return -1;
 	}
+
+	if (!telemetry_da1_header_present(poffsets))
+		return 0;
 
 	struct json_object *pevent_fifos_object = NULL;
 
@@ -1596,6 +1613,9 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 		return -1;
 	}
 
+	if (!telemetry_da1_header_present(poffsets))
+		return 0;
+
 	__u8 *pda1_ocp_header_offset = ptelemetry_buffer + poffsets->header_size;//512
 	__u32 statistics_size = 0;
 	__u32 stats_da_1_start_dw = 0, stats_da_1_size_dw = 0;
@@ -1719,28 +1739,38 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			__u8 *pda1_header_offset = ptelemetry_buffer +
 				offsets.da1_start_offset;//512
 
-			generic_structure_parser(pda1_header_offset, ocp_header_in_da1,
-				 ARRAY_SIZE(ocp_header_in_da1), NULL, 0, fp);
+			if (telemetry_da1_header_present(&offsets)) {
+				generic_structure_parser(
+					pda1_header_offset, ocp_header_in_da1,
+					ARRAY_SIZE(ocp_header_in_da1),
+					NULL, 0, fp);
 
-			fprintf(fp, STR_LINE);
-			fprintf(fp, "%s\n", STR_SMART_HEALTH_INFO);
-			fprintf(fp, STR_LINE);
-			__u8 *pda1_smart_offset = pda1_header_offset +
-				offsetof(struct nvme_ocp_header_in_da1, smart_health_info);
-			//512+512 =1024
+				fprintf(fp, STR_LINE);
+				fprintf(fp, "%s\n", STR_SMART_HEALTH_INFO);
+				fprintf(fp, STR_LINE);
+				__u8 *pda1_smart_offset = pda1_header_offset +
+					offsetof(struct nvme_ocp_header_in_da1,
+						 smart_health_info);
+				//512+512 =1024
 
-			generic_structure_parser(pda1_smart_offset, smart, ARRAY_SIZE(smart),
-				NULL, 0, fp);
+				generic_structure_parser(
+					pda1_smart_offset, smart,
+					ARRAY_SIZE(smart), NULL, 0, fp);
 
-			fprintf(fp, STR_LINE);
-			fprintf(fp, "%s\n", STR_SMART_HEALTH_INTO_EXTENDED);
-			fprintf(fp, STR_LINE);
-			__u8 *pda1_smart_ext_offset = pda1_header_offset +
-							offsetof(struct nvme_ocp_header_in_da1,
-								 smart_health_info_extended);
+				fprintf(fp, STR_LINE);
+				fprintf(fp, "%s\n",
+					STR_SMART_HEALTH_INTO_EXTENDED);
+				fprintf(fp, STR_LINE);
+				__u8 *pda1_smart_ext_offset =
+					pda1_header_offset +
+					offsetof(struct nvme_ocp_header_in_da1,
+						 smart_health_info_extended);
 
-			generic_structure_parser(pda1_smart_ext_offset, smart_extended,
-					     ARRAY_SIZE(smart_extended), NULL, 0, fp);
+				generic_structure_parser(
+					pda1_smart_ext_offset, smart_extended,
+					ARRAY_SIZE(smart_extended),
+					NULL, 0, fp);
+			}
 
 			fprintf(fp, STR_LINE);
 			fprintf(fp, "%s\n", STR_DA_1_STATS);
@@ -1833,26 +1863,32 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 
 		__u8 *pda1_header_offset = ptelemetry_buffer + offsets.da1_start_offset;//512
 
-		generic_structure_parser(pda1_header_offset, ocp_header_in_da1,
-			ARRAY_SIZE(ocp_header_in_da1), NULL, 0, NULL);
+		if (telemetry_da1_header_present(&offsets)) {
+			generic_structure_parser(
+				pda1_header_offset, ocp_header_in_da1,
+				ARRAY_SIZE(ocp_header_in_da1), NULL, 0, NULL);
 
-		printf(STR_LINE);
-		printf("%s\n", STR_SMART_HEALTH_INFO);
-		printf(STR_LINE);
-		__u8 *pda1_smart_offset = pda1_header_offset +
-			offsetof(struct nvme_ocp_header_in_da1, smart_health_info);
+			printf(STR_LINE);
+			printf("%s\n", STR_SMART_HEALTH_INFO);
+			printf(STR_LINE);
+			__u8 *pda1_smart_offset = pda1_header_offset +
+				offsetof(struct nvme_ocp_header_in_da1,
+					 smart_health_info);
 
-		generic_structure_parser(pda1_smart_offset, smart, ARRAY_SIZE(smart), NULL, 0,
-			NULL);
+			generic_structure_parser(pda1_smart_offset, smart,
+				ARRAY_SIZE(smart), NULL, 0, NULL);
 
-		printf(STR_LINE);
-		printf("%s\n", STR_SMART_HEALTH_INTO_EXTENDED);
-		printf(STR_LINE);
-		__u8 *pda1_smart_ext_offset = pda1_header_offset +
-			offsetof(struct nvme_ocp_header_in_da1, smart_health_info_extended);
+			printf(STR_LINE);
+			printf("%s\n", STR_SMART_HEALTH_INTO_EXTENDED);
+			printf(STR_LINE);
+			__u8 *pda1_smart_ext_offset = pda1_header_offset +
+				offsetof(struct nvme_ocp_header_in_da1,
+					 smart_health_info_extended);
 
-		generic_structure_parser(pda1_smart_ext_offset, smart_extended,
-			ARRAY_SIZE(smart_extended), NULL, 0, NULL);
+			generic_structure_parser(
+				pda1_smart_ext_offset, smart_extended,
+				ARRAY_SIZE(smart_extended), NULL, 0, NULL);
+		}
 
 		printf(STR_LINE);
 		printf("%s\n", STR_DA_1_STATS);
@@ -1938,28 +1974,41 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	//"Telemetry Host-Initiated Data Block 1"
 	__u8 *pda1_header_offset = ptelemetry_buffer + offsets.da1_start_offset;//512
 
-	da1_header = json_create_object();
+	if (telemetry_da1_header_present(&offsets)) {
+		da1_header = json_create_object();
 
-	generic_structure_parser(pda1_header_offset, ocp_header_in_da1,
-				 ARRAY_SIZE(ocp_header_in_da1), da1_header, 0, NULL);
-	json_object_add_value_object(root, STR_TELEMETRY_HOST_DATA_BLOCK_1, da1_header);
+		generic_structure_parser(
+			pda1_header_offset, ocp_header_in_da1,
+			ARRAY_SIZE(ocp_header_in_da1), da1_header, 0, NULL);
+		json_object_add_value_object(root,
+					      STR_TELEMETRY_HOST_DATA_BLOCK_1,
+					      da1_header);
 
-	//"SMART / Health Information Log(LID-02h)"
-	__u8 *pda1_smart_offset = pda1_header_offset + offsetof(struct nvme_ocp_header_in_da1,
-								smart_health_info);
-	smart_obj = json_create_object();
+		//"SMART / Health Information Log(LID-02h)"
+		__u8 *pda1_smart_offset = pda1_header_offset +
+			offsetof(struct nvme_ocp_header_in_da1,
+				 smart_health_info);
+		smart_obj = json_create_object();
 
-	generic_structure_parser(pda1_smart_offset, smart, ARRAY_SIZE(smart), smart_obj, 0, NULL);
-	json_object_add_value_object(da1_header, STR_SMART_HEALTH_INFO, smart_obj);
+		generic_structure_parser(pda1_smart_offset, smart,
+					  ARRAY_SIZE(smart), smart_obj, 0,
+					  NULL);
+		json_object_add_value_object(da1_header, STR_SMART_HEALTH_INFO,
+					      smart_obj);
 
-	//"SMART / Health Information Extended(LID-C0h)"
-	__u8 *pda1_smart_ext_offset = pda1_header_offset + offsetof(struct nvme_ocp_header_in_da1,
-								    smart_health_info_extended);
-	ext_smart_obj = json_create_object();
+		//"SMART / Health Information Extended(LID-C0h)"
+		__u8 *pda1_smart_ext_offset = pda1_header_offset +
+			offsetof(struct nvme_ocp_header_in_da1,
+				 smart_health_info_extended);
+		ext_smart_obj = json_create_object();
 
-	generic_structure_parser(pda1_smart_ext_offset, smart_extended, ARRAY_SIZE(smart_extended),
-			     ext_smart_obj, 0, NULL);
-	json_object_add_value_object(da1_header, STR_SMART_HEALTH_INTO_EXTENDED, ext_smart_obj);
+		generic_structure_parser(
+			pda1_smart_ext_offset, smart_extended,
+			ARRAY_SIZE(smart_extended), ext_smart_obj, 0, NULL);
+		json_object_add_value_object(da1_header,
+					      STR_SMART_HEALTH_INTO_EXTENDED,
+					      ext_smart_obj);
+	}
 
 	//Data Area 1 Statistics
 	status = parse_statistics(root, &offsets, NULL);
