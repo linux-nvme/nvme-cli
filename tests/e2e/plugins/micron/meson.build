@@ -4,10 +4,21 @@
 
 micron_tests = [
     'micron_clear_pcie_correctable_errors_test.py',
+    'micron_cloud_commands_test.py',
+    'micron_id_ctrl_test.py',
+    'micron_latency_logs_test.py',
+    'micron_latency_stats_test.py',
+    'micron_log_page_directory_test.py',
+    'micron_smart_log_test.py',
     'micron_vs_drive_info_test.py',
+    'micron_vs_fw_activate_history_test.py',
     'micron_vs_internal_log_test.py',
+    'micron_vs_nand_stats_test.py',
     'micron_vs_pcie_stats_test.py',
+    'micron_vs_smart_logs_test.py',
     'micron_vs_temperature_stats_test.py',
+    'micron_vs_vendor_telemetry_log_test.py',
+    'micron_vs_work_load_log_test.py',
 ]
 
 test_env = environment()
