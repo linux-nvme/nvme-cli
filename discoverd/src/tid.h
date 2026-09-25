@@ -96,7 +96,7 @@ struct ifaddrs;
  * literally, because a connection made with host_iface alone reports a
  * source address the candidate never named. A candidate requesting the
  * well-known discovery NQN accepts any DC, since a DC may answer with a
- * unique NQN.
+ * unique NQN. The host ID is compared only when both TIDs have one.
  *
  * Return: true if @existing satisfies @candidate.
  */
