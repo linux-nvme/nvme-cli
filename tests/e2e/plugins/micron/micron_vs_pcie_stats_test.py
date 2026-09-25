@@ -38,7 +38,7 @@ _UNSUPPORTED_MSGS = (
 
 # Expected PCIe error field names, in the order the command emits them.
 
-CORRECTABLE_FIELDS = [
+UNCORRECTABLE_FIELDS = [
     "Unsupported Request Error Status (URES)",
     "ECRC Error Status (ECRCES)",
     "Malformed TLP Status (MTS)",
@@ -51,7 +51,7 @@ CORRECTABLE_FIELDS = [
     "Data Link Protocol Error Status (DLPES)",
 ]
 
-UNCORRECTABLE_FIELDS = [
+CORRECTABLE_FIELDS = [
     "Advisory Non-Fatal Error Status (ANFES)",
     "Replay Timer Timeout Status (RTS)",
     "REPLAY_NUM Rollover Status (RRS)",
@@ -60,7 +60,7 @@ UNCORRECTABLE_FIELDS = [
     "Receiver Error Status (RES)",
 ]
 
-ALL_FIELDS = CORRECTABLE_FIELDS + UNCORRECTABLE_FIELDS
+ALL_FIELDS = UNCORRECTABLE_FIELDS + CORRECTABLE_FIELDS
 
 
 class TestMicronVsPcieStats(TestMicron):
