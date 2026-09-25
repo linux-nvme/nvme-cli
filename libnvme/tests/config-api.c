@@ -585,6 +585,24 @@ static bool test_emit(struct libnvme_global_ctx *ctx, const struct fixture *fx)
 		printf(" - TID-only emission (NULL params) [PASS]\n");
 	}
 
+	/* A discovery controller setting is not emitted. */
+	{
+		struct libnvmf_params *dc = libnvmf_params_new();
+
+		memset(&args, 0, sizeof(args));
+		shr_assert(dc &&
+			   !libnvmf_params_set(dc, "persistent", "force") &&
+			   !libnvmf_params_set(dc, "keep-alive-tmo", "5"));
+		if (libnvmf_connect_args_emit(NULL, dc, collect_arg, &args) ||
+		    !args_match(&args, &mv_expect[5], 1)) {
+			printf(" - persistent not emitted [FAIL]\n");
+			pass = false;
+		} else {
+			printf(" - persistent not emitted [PASS]\n");
+		}
+		libnvmf_params_free(dc);
+	}
+
 	if (libnvmf_connect_args_emit(NULL, NULL, NULL, NULL) != -EINVAL) {
 		printf(" - NULL callback [FAIL]\n");
 		pass = false;
