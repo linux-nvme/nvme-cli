@@ -38,6 +38,13 @@
   build option (`auto` by default) controls whether mDNS support is
   built. It requires libsystemd v257 or later.
 
+* nvme-discoverd releases a controller it no longer wants, for example
+  one removed from the configuration or from a DC's log page, or one the
+  exclusion list now matches. It clears the registry owner and leaves the
+  connection up. It no longer connects the IOCs of a DC that another
+  orchestrator connected. After a restart, it reconnects the DCs it found
+  through mDNS. A DC configured with a `persistent` setting now connects.
+
 * nvme-discoverd also compares the host ID, not only the host NQN, when
   it matches a desired connection with an existing one.
 
