@@ -673,6 +673,7 @@ enum ocp_telemetry_statistic_identifiers {
  * @MEDIA_CLASS_TYPE:	           Media class
  * @MEDIA_WEAR_CLASS_TYPE:	       Media wear class
  * @STATISTIC_SNAPSHOT_CLASS_TYPE: Statistic snapshot class
+ * @VIRTUAL_FIFO_EVENT_CLASS_TYPE: Virtual FIFO event class
  * @RESERVED:	                   Reserved class
  * @VENDOR_UNIQUE_CLASS_TYPE:	   Vendor Unique class
  */
@@ -688,7 +689,8 @@ enum ocp_telemetry_debug_event_class_types {
 	MEDIA_CLASS_TYPE = 0x08,
 	MEDIA_WEAR_CLASS_TYPE = 0x09,
 	STATISTIC_SNAPSHOT_CLASS_TYPE = 0x0A,
-	//RESERVED = 7Fh-0Bh,
+	VIRTUAL_FIFO_EVENT_CLASS_TYPE = 0x0B,
+	//RESERVED = 7Fh-0Ch,
 	//VENDOR_UNIQUE_CLASS_TYPE = FFh-80h,
 };
 
@@ -1406,6 +1408,24 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
  * @return 0 success
  */
 int parse_media_wear_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
+
+/**
+ * @brief parses a virtual FIFO event fifo data to text or json formats
+ *
+ * @param pevent_descriptor, input event descriptor data
+ * @param pevent_descriptor_obj, event descriptor json object pointer
+ * @param pevent_specific_data, input event specific data
+ * @param pevent_fifos_object, event fifos json object pointer
+ * @param fp, input file pointer
+ *
+ * @return 0 success
+ */
+int parse_virtual_fifo_event(
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,

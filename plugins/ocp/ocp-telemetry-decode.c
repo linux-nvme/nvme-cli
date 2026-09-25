@@ -1097,6 +1097,70 @@ int parse_media_wear_event(
 	return 0;
 }
 
+/*
+ * Unlike the other debug event classes, the Virtual FIFO Event class (0Bh)
+ * has no fixed "class specific data" fields of its own: the VU event
+ * identifier and any trailing VU data start immediately at the event's
+ * data offset.
+ */
+int parse_virtual_fifo_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
+{
+	struct nvme_ocp_common_dbg_evt_class_vu_data *pvu_data =
+		(struct nvme_ocp_common_dbg_evt_class_vu_data *)
+		pevent_specific_data;
+	__u16 vu_event_id = 0;
+	__u8 *pdata = NULL;
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
+	unsigned int vu_data_size = 0;
+
+	if ((pevent_descriptor->event_data_size * SIZE_OF_DWORD) <
+			SIZE_OF_VU_EVENT_ID)
+		return -1;
+
+	vu_data_size = (pevent_descriptor->event_data_size * SIZE_OF_DWORD) -
+			SIZE_OF_VU_EVENT_ID;
+	vu_event_id = le16_to_cpu(pvu_data->vu_event_identifier);
+	pdata = (__u8 *)&(pvu_data->data);
+
+	parse_ocp_telemetry_string_log(0, vu_event_id,
+		pevent_descriptor->debug_event_class_type,
+		VU_EVENT_STRING, description_str);
+
+	if (pevent_fifos_object != NULL) {
+		json_add_formatted_u32_str(pevent_descriptor_obj,
+					   STR_VU_EVENT_ID_STRING, vu_event_id);
+		json_object_add_value_string(pevent_descriptor_obj,
+					      STR_VU_EVENT_STRING,
+					      description_str);
+		if (vu_data_size)
+			json_add_formatted_var_size_str(pevent_descriptor_obj,
+							STR_VU_DATA, pdata,
+							vu_data_size);
+	} else {
+		if (fp) {
+			fprintf(fp, "%s: 0x%x\n", STR_VU_EVENT_ID_STRING,
+				vu_event_id);
+			fprintf(fp, "%s: %s\n", STR_VU_EVENT_STRING,
+				description_str);
+		} else {
+			printf("%s: 0x%x\n", STR_VU_EVENT_ID_STRING,
+			       vu_event_id);
+			printf("%s: %s\n", STR_VU_EVENT_STRING,
+			       description_str);
+		}
+		if (vu_data_size)
+			print_formatted_var_size_str(STR_VU_DATA, pdata,
+						      vu_data_size, fp);
+	}
+
+	return 0;
+}
+
 int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 	struct json_object *pevent_fifos_object, unsigned char *pstring_buffer,
 	struct nvme_ocp_telemetry_offsets *poffsets, __u64 fifo_size, FILE *fp)
@@ -1252,6 +1316,14 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				break;
 			case MEDIA_WEAR_CLASS_TYPE:
 				ret = parse_media_wear_event(pevent_descriptor,
+					pevent_descriptor_obj,
+					pevent_specific_data,
+					pevent_fifos_object,
+					fp);
+				break;
+			case VIRTUAL_FIFO_EVENT_CLASS_TYPE:
+				ret = parse_virtual_fifo_event(
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
