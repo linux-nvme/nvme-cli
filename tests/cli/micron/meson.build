@@ -20,4 +20,11 @@ if json_c_dep.found()
                 suite: ['micron', 'micron-cli'])
         endforeach
     endif
+
+    test('nvme-cli - micron-plugin-version',
+         python3,
+         args: [files('micron_plugin_version_test.py'), nvme_exe],
+         env: cli_test_env,
+         depends: nvme_exe,
+         suite: ['micron', 'micron-cli'])
 endif
