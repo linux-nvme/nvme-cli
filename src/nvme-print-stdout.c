@@ -5644,8 +5644,15 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 {
 	bool verbose = stdout_print_ops.flags & VERBOSE;
 	bool vs = stdout_print_ops.flags & VS;
+	char sn[sizeof(ctrl->sn) + 1];
+	char mn[sizeof(ctrl->mn) + 1];
+	char fr[sizeof(ctrl->fr) + 1];
 	struct shr_table *t;
 	int row;
+
+	snprintf(sn, sizeof(sn), "%-.*s", (int)sizeof(ctrl->sn), ctrl->sn);
+	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
+	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
 
 	if (verbose && product_name)
 		printf("%s\n\n", product_name);
@@ -5657,9 +5664,9 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 
 	stdout_kv_add(t, "vid", "%#x", le16_to_cpu(ctrl->vid));
 	stdout_kv_add(t, "ssvid", "%#x", le16_to_cpu(ctrl->ssvid));
-	stdout_kv_add(t, "sn", "%-.*s", (int)sizeof(ctrl->sn), ctrl->sn);
-	stdout_kv_add(t, "mn", "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
-	stdout_kv_add(t, "fr", "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
+	stdout_kv_add(t, "sn", "%s", shr_rtrim(sn));
+	stdout_kv_add(t, "mn", "%s", shr_rtrim(mn));
+	stdout_kv_add(t, "fr", "%s", shr_rtrim(fr));
 	stdout_kv_add(t, "rab", "%d", ctrl->rab);
 	stdout_kv_add(t, "ieee", "%02x%02x%02x",
 		      ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
