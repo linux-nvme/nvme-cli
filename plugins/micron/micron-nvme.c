@@ -726,8 +726,8 @@ static int micron_selective_download(int argc, char **argv,
 
 	if (err == 0x10B || err == 0x20B) {
 		err = 0;
-		nvme_show_error(
-			"Update successful! Power cycle for changes to take effect\n");
+		nvme_show_result(
+			"Update successful! Power cycle for changes to take effect");
 	}
 
 out:
