@@ -103,6 +103,30 @@ static bool tcp_host_side_matches(const char *candidate_host_traddr,
 	return true;
 }
 
+const char *tid_link_local_scope(const struct libnvmf_tid *t)
+{
+	const char *traddr = libnvmf_tid_get_traddr(t);
+	const char *scope = traddr ? strchr(traddr, '%') : NULL;
+
+	if (!scope || !shr_ipv6_is_link_local(traddr))
+		return NULL;
+
+	return scope + 1;
+}
+
+char *tid_scope_link_local(const char *traddr, const char *scope)
+{
+	char *out;
+
+	if (!scope || strchr(traddr, '%') || !shr_ipv6_is_link_local(traddr))
+		return strdup(traddr);
+
+	if (asprintf(&out, "%s%%%s", traddr, scope) < 0)
+		return NULL;
+
+	return out;
+}
+
 /*
  * A host NQN may use several host IDs (Base Spec, Connect command), so the
  * host ID is part of the host identity. Compare it only when both sides
