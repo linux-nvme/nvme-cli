@@ -224,6 +224,10 @@ static void emit_param(const char *key, const char *value, void *user_data)
 	if (!k)
 		return;
 
+	/* A discovery controller setting is not an "nvme connect" option. */
+	if (k->class == LIBNVMF_KEY_DC_TUNABLE)
+		return;
+
 	if (k->type == LIBNVMF_KEY_BOOL) {
 		bool set;
 
