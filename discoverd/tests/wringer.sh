@@ -116,6 +116,8 @@ NVME_CONF_DIR="${SYSCONFDIR}/nvme"
 # nvme-discoverd's state files, e.g. /run/nvme/discoverd/controllers.
 RUNDIR=$(sed -n 's/^#define RUNDIR "\(.*\)"$/\1/p' "${BUILD_DIR}/nvme-config.h")
 STATE_CTRLS_DIR="${RUNDIR}/nvme/discoverd/controllers"
+REGISTRY_DIR="${RUNDIR}/nvme/registry"
+DESIRED_FILE="${RUNDIR}/nvme/discoverd/desired"
 NVME_CONF_DIR_CREATED=false
 
 DISCOVERD_UNIT=discoverd-wringer.service
@@ -151,6 +153,13 @@ LL_PORT=8013
 LL_PORT_ID=6
 LL_IFACE=wringer0
 LL_IFACE_CREATED=false
+
+# Release phases. A DC kept connected with persistent=force, so that the
+# kernel reports its log page changes.
+REL_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:release
+REL2_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:release2
+REL_PORT=8014
+REL_PORT_ID=7
 
 # mDNS phases only. Advertised through mDNS, on ${IFACE}'s address. The
 # port is opened and closed per phase, so a phase can advertise a DC whose
@@ -246,12 +255,14 @@ nvmet_teardown() {
 
 	log "nvmet: tear down"
 	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}" \
-		  "${V6_PORT_ID}" "${LL_PORT_ID}" "${MDNS_PORT_ID}"; do
+		  "${V6_PORT_ID}" "${LL_PORT_ID}" "${REL_PORT_ID}" \
+		  "${MDNS_PORT_ID}"; do
 		rm -f /sys/kernel/config/nvmet/ports/"${id}"/subsystems/*
 		rmdir "/sys/kernel/config/nvmet/ports/${id}" 2>/dev/null
 	done
 	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}" \
-		   "${V6_NQN}" "${LL_NQN}" "${MDNS_NQN}"; do
+		   "${V6_NQN}" "${LL_NQN}" "${REL_NQN}" "${REL2_NQN}" \
+		   "${MDNS_NQN}"; do
 		local subsys_dir="/sys/kernel/config/nvmet/subsystems/${nqn}"
 
 		if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
@@ -343,6 +354,8 @@ discoverd_stop() {
 	"${NVME_BIN}" disconnect -n "${MDNS_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${V6_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${LL_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -486,6 +499,41 @@ assert_journal_has() {
 	fi
 }
 
+# The unit that owns device $1, as nvme-discoverd recorded it.
+dev_unit() {
+	cat "${STATE_CTRLS_DIR}/$1/unit" 2>/dev/null
+}
+
+# Check that nvme-discoverd released subsystem $2 on device $3, owned by
+# unit $4: the connection stays up, the unit stops, and the registry
+# owner is cleared. The release runs from the event loop, so wait for it.
+assert_released() {
+	local desc="$1" nqn="$2" dev="$3" unit="$4" waited=0
+
+	while [ "${waited}" -lt 10 ]; do
+		if ! systemctl is-active --quiet "${unit}" &&
+		   [ "$(cat "${REGISTRY_DIR}/${dev}/owner" 2>/dev/null)" != \
+		     discoverd ]; then
+			break
+		fi
+		sleep 1
+		waited=$((waited + 1))
+	done
+
+	if systemctl is-active --quiet "${unit}"; then
+		fail "${desc}: its unit is stopped"
+	else
+		pass "${desc}: its unit is stopped"
+	fi
+	if [ "$(cat "${REGISTRY_DIR}/${dev}/owner" 2>/dev/null)" = \
+	     discoverd ]; then
+		fail "${desc}: its registry owner is cleared"
+	else
+		pass "${desc}: its registry owner is cleared"
+	fi
+	assert_dev_holds "${desc}: it stays connected" "${nqn}" "${dev}" 5
+}
+
 assert_journal_lacks() {
 	local desc="$1" since="$2" pattern="$3"
 
@@ -610,6 +658,9 @@ mdns_phase_reset() {
 	publish_stop
 	discoverd_stop
 	mdns_port_close
+	# A restart restores the mDNS DCs saved by the last run. Each phase
+	# starts from none.
+	rm -f "${DESIRED_FILE}"
 	discoverd_start
 }
 
@@ -659,7 +710,7 @@ cleanup() {
 		resolved_mdns_restore
 	fi
 	rm -rf "${ETC_NVME_DIR}" "${BACKING_DIR}"
-	rm -f "${SCRATCH}"
+	rm -f "${SCRATCH}" "${DESIRED_FILE}"
 	if [ "${NVME_CONF_DIR_CREATED}" = true ]; then
 		rmdir "${NVME_CONF_DIR}" 2>/dev/null
 	fi
@@ -678,6 +729,10 @@ disconnect_foreign
 "${NVME_BIN}" disconnect -n "${MDNS_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${V6_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${LL_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
+# ... and left its desired controllers saved.
+rm -f "${DESIRED_FILE}"
 
 etc_nvme_populate
 nvmet_setup
@@ -868,6 +923,85 @@ EOF
 	fi
 fi
 
+log ">>>>> Phase 10: a reload releases a removed configured IOC <<<<<"
+#
+# Phase 6 configured this IOC. Without it in the configuration, it is not
+# desired anymore. nvme-discoverd releases it and leaves it connected.
+PHASE10_DEV=$(connected_dev "${CONF_NQN}")
+PHASE10_UNIT=$(dev_unit "${PHASE10_DEV}")
+sed -i "/^\[Subsystem\]\$/,/trsvcid=${CONF_PORT}\$/d" \
+	"${ETC_NVME_DIR}/nvme-fabrics.conf"
+PHASE10_START=$(date +%H:%M:%S)
+systemctl reload "${DISCOVERD_UNIT}"
+assert_released "the configured IOC" "${CONF_NQN}" "${PHASE10_DEV}" \
+	"${PHASE10_UNIT}"
+assert_journal_has "the release was logged" \
+	"${PHASE10_START}" "${PHASE10_DEV} - no longer desired, released"
+
+log ">>>>> Phase 11: a changed log page releases the entry it dropped <<<<<"
+#
+# persistent=force keeps the DC connected, so the kernel reports log page
+# changes. Unlinking a subsystem from a port would also delete its
+# controllers, so the entry is removed from the log page by disallowing
+# the host instead. nvmet sends that change only to allowed hosts, so a
+# second subsystem, linked to the same port, triggers the fetch.
+nvmet_add_subsystem "${REL_NQN}"
+nvmet_add_port "${REL_PORT_ID}" "${REL_PORT}" "${REL_NQN}"
+discoverd_stop_daemon_only
+cat >> "${ETC_NVME_DIR}/nvme-fabrics.conf" <<EOF
+
+[Discovery Controller]
+persistent = force
+controller = transport=tcp;traddr=${TRADDR};trsvcid=${REL_PORT}
+EOF
+discoverd_start
+assert_connected "connects the subsystem listed in the DC's DLP" \
+	"${REL_NQN}" 30
+PHASE11_DEV=$(connected_dev "${REL_NQN}")
+PHASE11_UNIT=$(dev_unit "${PHASE11_DEV}")
+log "nvmet: ${REL_NQN} no longer allows any host"
+echo 0 > "/sys/kernel/config/nvmet/subsystems/${REL_NQN}/attr_allow_any_host"
+nvmet_add_subsystem "${REL2_NQN}"
+PHASE11_START=$(date +%H:%M:%S)
+log "nvmet: port ${REL_PORT} also serves ${REL2_NQN}"
+ln -s "/sys/kernel/config/nvmet/subsystems/${REL2_NQN}" \
+	"/sys/kernel/config/nvmet/ports/${REL_PORT_ID}/subsystems/${REL2_NQN}"
+assert_connected "connects the subsystem added to the DLP" "${REL2_NQN}" 30
+assert_released "the dropped entry" "${REL_NQN}" "${PHASE11_DEV}" \
+	"${PHASE11_UNIT}"
+assert_journal_has "the release was logged" \
+	"${PHASE11_START}" "${PHASE11_DEV} - no longer desired, released"
+
+log ">>>>> Phase 12: a restart releases what was removed while down <<<<<"
+#
+# Phase 8's DC is removed from the configuration while nvme-discoverd is
+# down. The IOC it listed is in the saved desired set, and its DC is gone,
+# so the restart releases it at once.
+PHASE12_DEV=$(connected_dev "${V6_NQN}")
+PHASE12_UNIT=$(dev_unit "${PHASE12_DEV}")
+discoverd_stop_daemon_only
+sed -i "/traddr=::1;trsvcid=${V6_PORT}\$/d" \
+	"${ETC_NVME_DIR}/nvme-fabrics.conf"
+PHASE12_START=$(date +%H:%M:%S)
+discoverd_start
+assert_released "the IOC of the removed DC" "${V6_NQN}" \
+	"${PHASE12_DEV}" "${PHASE12_UNIT}"
+assert_journal_has "the release was logged" "${PHASE12_START}" \
+	"${PHASE12_DEV} - no longer desired since the last run, released"
+
+log ">>>>> Phase 13: a reload releases a newly excluded IOC <<<<<"
+PHASE13_DEV=$(connected_dev "${TARGET_NQN}")
+PHASE13_UNIT=$(dev_unit "${PHASE13_DEV}")
+printf '[exclusions]\nexclusion = nqn=%s\n' "${TARGET_NQN}" \
+	> "${ETC_NVME_DIR}/exclusions.conf"
+PHASE13_START=$(date +%H:%M:%S)
+systemctl reload "${DISCOVERD_UNIT}"
+assert_released "the excluded IOC" "${TARGET_NQN}" "${PHASE13_DEV}" \
+	"${PHASE13_UNIT}"
+assert_journal_has "the release was logged" \
+	"${PHASE13_START}" "${PHASE13_DEV} - excluded, released"
+: > "${ETC_NVME_DIR}/exclusions.conf"
+
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"
 	printf "\n"
@@ -878,10 +1012,10 @@ fi
 
 mdns_setup
 
-log ">>>>> Phase 10: SIGHUP enables mDNS; an advertised DC is connected <<<<<"
+log ">>>>> Phase 14: SIGHUP enables mDNS; an advertised DC is connected <<<<<"
 mdns_port_open
 zeroconf_enable
-PHASE10_START=$(date +%H:%M:%S)
+PHASE14_START=$(date +%H:%M:%S)
 if timeout 20 systemctl reload "${DISCOVERD_UNIT}"; then
 	pass "systemctl reload completes"
 else
@@ -889,59 +1023,59 @@ else
 fi
 sleep 2
 assert_journal_has "the reload started mDNS on ${IFACE}" \
-	"${PHASE10_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp"
+	"${PHASE14_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp"
 publish_start "p=tcp"
 assert_connected "connects the subsystem behind the advertised DC" \
 	"${MDNS_NQN}" 30
 
-log ">>>>> Phase 11: a withdrawn advertisement disconnects nothing <<<<<"
-PHASE11_DEV=$(connected_dev "${MDNS_NQN}")
+log ">>>>> Phase 15: a withdrawn advertisement disconnects nothing <<<<<"
+PHASE15_DEV=$(connected_dev "${MDNS_NQN}")
 publish_stop
 assert_dev_stable "stays connected after the advertisement is withdrawn" \
-	"${MDNS_NQN}" "${PHASE11_DEV}" 5
+	"${MDNS_NQN}" "${PHASE15_DEV}" 5
 
-log ">>>>> Phase 12: a DC advertised before its port is open <<<<<"
+log ">>>>> Phase 16: a DC advertised before its port is open <<<<<"
 #
 # A real DC was seen to advertise before its TCP listener was up. A plain
 # TCP connect is retried silently until the port opens. No NVMe connect is
 # attempted before then.
 mdns_phase_reset
-PHASE12_START=$(date +%H:%M:%S)
+PHASE16_START=$(date +%H:%M:%S)
 publish_start "p=tcp"
 sleep 3
 assert_not_connected "does not connect while the port is closed" \
 	"${MDNS_NQN}"
 assert_journal_lacks "no NVMe connect attempted while the port is closed" \
-	"${PHASE12_START}" "${MDNS_DC_REQUESTED}"
+	"${PHASE16_START}" "${MDNS_DC_REQUESTED}"
 mdns_port_open
 assert_connected "connects once the port opens" "${MDNS_NQN}" 30
 
-log ">>>>> Phase 13: an unusable TXT record <<<<<"
+log ">>>>> Phase 17: an unusable TXT record <<<<<"
 mdns_phase_reset
 mdns_port_open
-PHASE13_START=$(date +%H:%M:%S)
+PHASE17_START=$(date +%H:%M:%S)
 publish_start "p=bogus"
 sleep 3
 assert_not_connected "unknown p= value: not connected" "${MDNS_NQN}"
 assert_journal_has "unknown p= value: logged" \
-	"${PHASE13_START}" "missing/invalid transport in TXT record"
+	"${PHASE17_START}" "missing/invalid transport in TXT record"
 publish_stop
 publish_start
 sleep 3
 assert_not_connected "no TXT record: not connected" "${MDNS_NQN}"
 
-log ">>>>> Phase 14: an rdma DC is not checked first <<<<<"
+log ">>>>> Phase 18: an rdma DC is not checked first <<<<<"
 #
 # No RDMA hardware is needed: the test only checks that the connect is
 # requested at once, without a TCP check.
 mdns_phase_reset
-PHASE14_START=$(date +%H:%M:%S)
+PHASE18_START=$(date +%H:%M:%S)
 publish_start "p=roce"
 sleep 3
 assert_journal_has "rdma: connect requested at once" \
-	"${PHASE14_START}" "${MDNS_DC_REQUESTED}"
+	"${PHASE18_START}" "${MDNS_DC_REQUESTED}"
 
-log ">>>>> Phase 15: mDNS still works after 45 seconds <<<<<"
+log ">>>>> Phase 19: mDNS still works after 45 seconds <<<<<"
 #
 # sd-varlink's default call timeout is 45 s, and it also applies to the
 # BrowseServices call. The browse must outlive it.
@@ -953,18 +1087,18 @@ publish_start "p=tcp"
 assert_connected "connects a DC advertised 50 s after startup" \
 	"${MDNS_NQN}" 30
 
-log ">>>>> Phase 16: mDNS recovers from a systemd-resolved restart <<<<<"
+log ">>>>> Phase 20: mDNS recovers from a systemd-resolved restart <<<<<"
 mdns_phase_reset
 mdns_port_open
-PHASE16_START=$(date +%H:%M:%S)
+PHASE20_START=$(date +%H:%M:%S)
 systemctl restart systemd-resolved
 sleep 1
 resolved_mdns_link_enable
 sleep 5
 assert_journal_has "the browse failed when systemd-resolved restarted" \
-	"${PHASE16_START}" "browsing _nvme-disc._tcp failed"
+	"${PHASE20_START}" "browsing _nvme-disc._tcp failed"
 assert_journal_has "the browse restarted" \
-	"${PHASE16_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp again"
+	"${PHASE20_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp again"
 publish_start "p=tcp"
 assert_connected "connects a DC advertised after the restart" \
 	"${MDNS_NQN}" 30
