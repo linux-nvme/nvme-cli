@@ -126,6 +126,25 @@ bool shr_ipaddrs_eq(const char *addr1, const char *addr2)
 	return sockaddrs_eq((struct sockaddr *)&ss1, (struct sockaddr *)&ss2);
 }
 
+bool shr_ipv6_is_link_local(const char *addr)
+{
+	char host[INET6_ADDRSTRLEN];
+	struct in6_addr in6;
+	size_t len;
+
+	if (!addr)
+		return false;
+
+	len = strcspn(addr, "%");
+	if (len >= sizeof(host))
+		return false;
+	memcpy(host, addr, len);
+	host[len] = '\0';
+
+	return inet_pton(AF_INET6, host, &in6) == 1 &&
+	       IN6_IS_ADDR_LINKLOCAL(&in6);
+}
+
 const char *shr_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {

@@ -38,6 +38,7 @@
 #include <shared/array-util.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/machine-id-util.h>
+#include <shared/net-util.h>
 #include <shared/nqn-util.h>
 #include <shared/string-util.h>
 #include <shared/uuid-util.h>
@@ -3207,20 +3208,6 @@ static void dc_walk_referral(struct libnvme_global_ctx *ctx,
 		libnvme_free_ctrl(d.c);
 }
 
-static bool ipv6_link_local(const char *addr, size_t len)
-{
-	char host[INET6_ADDRSTRLEN];
-	struct in6_addr in6;
-
-	if (len >= sizeof(host))
-		return false;
-	memcpy(host, addr, len);
-	host[len] = '\0';
-
-	return inet_pton(AF_INET6, host, &in6) == 1 &&
-	       IN6_IS_ADDR_LINKLOCAL(&in6);
-}
-
 /*
  * A Discovery Log Page entry never carries an IPv6 scope, but a link-local
  * address is only meaningful together with the link it was learned on.
@@ -3244,8 +3231,8 @@ static void dc_scope_link_local_entry(const struct libnvme_ctrl *c,
 	if (!scope)
 		return;
 	/* A scope on anything but a link-local address names no link. */
-	if (!ipv6_link_local(c->traddr, scope - c->traddr) ||
-	    !ipv6_link_local(e->traddr, strlen(e->traddr)))
+	if (!shr_ipv6_is_link_local(c->traddr) ||
+	    !shr_ipv6_is_link_local(e->traddr))
 		return;
 
 	len = strlen(e->traddr);

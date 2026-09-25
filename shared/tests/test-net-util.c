@@ -118,6 +118,28 @@ static struct ifaddrs *build_fake_ifaddrs(struct fake_iface *nodes, int n)
 	return &nodes[0].pub;
 }
 
+static bool test_ipv6_is_link_local(void)
+{
+	bool pass = true;
+
+	printf("test_ipv6_is_link_local:\n");
+
+	pass &= check_bool("fe80:: is link-local",
+			   shr_ipv6_is_link_local("fe80::1"), true);
+	pass &= check_bool("a scope suffix is ignored",
+			   shr_ipv6_is_link_local("fe80::1%eth0"), true);
+	pass &= check_bool("a global IPv6 address is not link-local",
+			   shr_ipv6_is_link_local("2001:db8::1"), false);
+	pass &= check_bool("an IPv4 address is not link-local",
+			   shr_ipv6_is_link_local("169.254.1.1"), false);
+	pass &= check_bool("a hostname is not link-local",
+			   shr_ipv6_is_link_local("fe80.example.com"), false);
+	pass &= check_bool("NULL is not link-local",
+			   shr_ipv6_is_link_local(NULL), false);
+
+	return pass;
+}
+
 static bool test_iface_matching_addr(void)
 {
 	struct fake_iface nodes[3] = { 0 };
@@ -183,6 +205,7 @@ int main(void)
 	bool pass = true;
 
 	pass &= test_ipaddrs_eq();
+	pass &= test_ipv6_is_link_local();
 	pass &= test_iface_matching_addr();
 	pass &= test_iface_primary_addr_matches();
 
