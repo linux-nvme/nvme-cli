@@ -294,6 +294,33 @@ int inventory_referral_hops(const struct inventory *inv,
  * A cached DLP counts only while its DC is desired. So removing a DC from
  * its source also removes everything learned through it.
  */
+const char *inventory_source(const struct inventory *inv,
+			     const struct libnvmf_tid *tid,
+			     const struct libnvmf_tid **parent)
+{
+	struct dlp_entry *e;
+
+	*parent = NULL;
+	if (tid_list_contains(&inv->nbft_dcs, tid) ||
+	    tid_list_contains(&inv->nbft_iocs, tid))
+		return "nbft";
+	if (tid_list_contains(&inv->cfg_dcs, tid) ||
+	    tid_list_contains(&inv->cfg_iocs, tid))
+		return "config";
+	if (tid_list_contains(&inv->discovered_dcs, tid))
+		return "discovered";
+
+	list_for_each(&inv->dlp_cache, e, entry) {
+		if ((tid_list_contains(&e->iocs, tid) ||
+		     tid_list_contains(&e->referrals, tid)) &&
+		    inventory_referral_hops(inv, e->dc_tid) >= 0) {
+			*parent = e->dc_tid;
+			return "dlp";
+		}
+	}
+	return NULL;
+}
+
 bool inventory_is_desired(const struct inventory *inv,
 			  const struct libnvmf_tid *t)
 {
@@ -325,9 +352,9 @@ bool inventory_is_nbft(const struct inventory *inv, const struct libnvmf_tid *t)
 
 /*
  * Build the NULL-terminated, deduplicated list of every DC that
- * should be connected at startup: nbft_dcs union cfg_dcs. Does not
- * include DCs only known via dlp_cache (those are reconnected via
- * unit RestartUnit, not from this startup list). Caller owns the
+ * should be connected at startup: nbft_dcs, cfg_dcs and discovered_dcs.
+ * Does not include DCs only known via dlp_cache (those are reconnected
+ * via unit RestartUnit, not from this startup list). Caller owns the
  * returned array and every TID in it.
  */
 struct libnvmf_tid **inventory_desired_dcs(const struct inventory *inv)
@@ -351,6 +378,16 @@ struct libnvmf_tid **inventory_desired_dcs(const struct inventory *inv)
 			if (t)
 				tid_list_append(&combined, t);
 		}
+	}
+	for (i = 0; i < inv->discovered_dcs.len; i++) {
+		const struct libnvmf_tid *dc = inv->discovered_dcs.items[i];
+		struct libnvmf_tid *tid;
+
+		if (tid_list_contains(&combined, dc))
+			continue;
+		tid = libnvmf_tid_dup(dc);
+		if (tid)
+			tid_list_append(&combined, tid);
 	}
 
 	arr = malloc((combined.len + 1) * sizeof(*arr));
