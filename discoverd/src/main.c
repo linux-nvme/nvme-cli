@@ -8,7 +8,6 @@
 
 #include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <getopt.h>
 #include <inttypes.h>
 #include <signal.h>
@@ -16,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ifaddrs.h>
-#include <unistd.h>
 
 #include <systemd/sd-bus.h>
 #include <systemd/sd-daemon.h>
@@ -35,6 +33,7 @@
 #include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/registry.h>
+#include <nvme/util.h>
 
 #include "inventory.h"
 #include "config.h"
@@ -903,39 +902,18 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 
 /*
  * Whether the kernel accepts a discovery connect to a DC's own NQN (TP8013).
- * libnvme does not export this check, so read /dev/nvme-fabrics directly.
  * On any error, answer no: the well-known discovery NQN always works.
  */
 static bool kernel_supports_discovery_nqn(void)
 {
-	static bool checked, supported;
-	char buf[0x1000];
-	char *p, *options;
-	ssize_t len;
-	int fd;
+	bool supported;
+	int r;
 
-	if (checked)
-		return supported;
-	checked = true;
-
-	fd = open("/dev/nvme-fabrics", O_RDONLY);
-	if (fd < 0)
-		return supported;
-
-	len = read(fd, buf, sizeof(buf) - 1);
-	close(fd);
-	if (len < 0)
-		return supported;
-
-	buf[len] = '\0';
-	options = buf;
-	while ((p = strsep(&options, ",\n"))) {
-		char *v = strsep(&p, "= ");
-
-		if (v && streq(v, "discovery")) {
-			supported = true;
-			break;
-		}
+	r = libnvmf_kernel_option_supported(ctx.nvme_ctx, "discovery",
+					    &supported);
+	if (r < 0) {
+		disc_dbg("kernel fabrics options: %s", libnvme_strerror(-r));
+		return false;
 	}
 
 	return supported;
