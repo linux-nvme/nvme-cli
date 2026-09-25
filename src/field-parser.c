@@ -9,6 +9,7 @@
 
 #include <ccan/endian/endian.h>
 #include <shared/hex-util.h>
+#include <shared/int-util.h>
 #include <shared/time-util.h>
 
 #include "cleanup.h"
@@ -87,10 +88,16 @@ char *process_field_size_8(int offset, char *sfield, __u8 *buf)
 		datastr = shr_hex_to_ascii(buffer);
 	} else if (strstr(sfield, "Timestamp")) {
 		char ts_buf[128];
+		/*
+		 * TELDF-4 is defined by OCP to hold the NVMe Timestamp
+		 * (Feature Identifier 0Eh) Get Features structure, not a
+		 * flat 64-bit value; reinterpret it as such rather than
+		 * mask it by hand.
+		 */
+		struct nvme_timestamp *ts =
+			(struct nvme_timestamp *)&buf[offset];
 
-		lval_lo = *((__u64 *)(&buf[offset]));
-
-		shr_format_ts(le64_to_cpu(lval_lo), ts_buf);
+		shr_format_ts(int48_to_long(ts->timestamp), ts_buf);
 		datastr = strdup(ts_buf);
 	} else {
 		lval_lo = *((__u64 *)(&buf[offset]));

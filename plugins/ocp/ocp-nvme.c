@@ -21,6 +21,7 @@
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/int-util.h>
 #include <shared/io-util.h>
 
 #include "cleanup.h"
@@ -674,6 +675,14 @@ static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
 {
 	if (da1) {
 		int i = 0;
+		/*
+		 * TELDF-4 is defined by OCP to hold the NVMe Timestamp
+		 * (Feature Identifier 0Eh) Get Features structure, not a
+		 * flat 64-bit value; reinterpret it as such rather than
+		 * mask it by hand.
+		 */
+		struct nvme_timestamp *ts =
+			(struct nvme_timestamp *)&da1->timestamp;
 
 		if (tele_type == TELEMETRY_TYPE_HOST)
 			printf("============ Telemetry Host Data area 1 ============\n");
@@ -681,7 +690,8 @@ static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
 			printf("========= Telemetry Controller Data area 1 =========\n");
 		printf("Major Version     : 0x%x\n", le16_to_cpu(da1->major_version));
 		printf("Minor Version     : 0x%x\n", le16_to_cpu(da1->minor_version));
-		printf("Timestamp         : %"PRIu64"\n", le64_to_cpu(da1->timestamp));
+		printf("Timestamp         : %"PRIu64"\n",
+				int48_to_long(ts->timestamp));
 		printf("Log Page GUID     : 0x");
 		for (int j = 15; j >= 0; j--)
 			printf("%02x", da1->log_page_guid[j]);
