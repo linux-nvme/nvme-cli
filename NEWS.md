@@ -52,6 +52,11 @@
   still matches. At startup, nvme-discoverd removes the state of
   controllers that are gone.
 
+### libnvme
+
+* A failed read of `/dev/nvme-fabrics` is no longer cached for the
+  life of the global context, so a later connect retries it.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

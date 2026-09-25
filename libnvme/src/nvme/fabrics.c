@@ -1546,11 +1546,16 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 		continue;		   		\
 	}
 
+/*
+ * Read the options the kernel accepts from /dev/nvme-fabrics, once per
+ * @ctx. A failed read is not cached, so the next call retries it.
+ */
 static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 {
 	char buf[0x1000], *options, *p, *v;
 	__cleanup_fd int fd = -1;
 	ssize_t len;
+	int err;
 
 	if (ctx->options)
 		return 0;
@@ -1563,7 +1568,8 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 	if (fd < 0) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to open %s: %s\n",
 			 nvmf_dev, libnvme_strerror(errno));
-		return -ENVME_CONNECT_OPEN;
+		err = -ENVME_CONNECT_OPEN;
+		goto out_free;
 	}
 
 	memset(buf, 0x0, sizeof(buf));
@@ -1583,7 +1589,8 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, libnvme_strerror(errno));
-		return -ENVME_CONNECT_READ;
+		err = -ENVME_CONNECT_READ;
+		goto out_free;
 	}
 
 	buf[len] = '\0';
@@ -1631,7 +1638,13 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 		parse_option(ctx, v, trsvcid);
 	}
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "\n");
+
 	return 0;
+out_free:
+	free(ctx->options);
+	ctx->options = NULL;
+
+	return err;
 }
 
 /* Parse the kernel instance number out of a ctrl's name ("nvme3" -> 3). */
