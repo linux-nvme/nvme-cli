@@ -3035,7 +3035,6 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 		goto out;
 	}
 
-	/* check if we have at least one entry to print */
 	struct micron_fw_activation_history_table *table =
 			   (struct micron_fw_activation_history_table *)logC2;
 
@@ -3043,11 +3042,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 	if (table->log_page != 0xC2 || (table->version != 2 && table->version != 1)) {
 		nvme_show_error("Unsupported fw activation history page: %x, version: %x",
 				table->log_page, table->version);
-		goto out;
-	}
-
-	if (!table->num_entries) {
-		nvme_show_error("No entries were found in fw activation history log");
+		err = -EINVAL;
 		goto out;
 	}
 
@@ -3074,6 +3069,10 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 			printf("\n");
 			json_free_object(root);
 	} else {
+		if (!table->num_entries) {
+			nvme_show_result("No entries were found in fw activation history log");
+			goto out;
+		}
 		micron_fw_activation_history_header_print();
 		for (count = 0; count < table->num_entries; count++) {
 			memset(formatted_output, '\0', 100);
