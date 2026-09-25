@@ -28,6 +28,7 @@ struct counters {
 	bool dc_epcsd;
 	bool self_epcsd;
 	char last_ioc_subnqn[NVME_NQN_LENGTH];
+	char last_ioc_traddr[NVMF_TRADDR_SIZE];
 };
 
 static void ioc_cb(const struct libnvmf_tid *t, void *user_data)
@@ -35,9 +36,13 @@ static void ioc_cb(const struct libnvmf_tid *t, void *user_data)
 	struct counters *c = user_data;
 	const char *nqn = libnvmf_tid_get_subsysnqn(t);
 
+	const char *traddr = libnvmf_tid_get_traddr(t);
+
 	c->ioc++;
 	snprintf(c->last_ioc_subnqn, sizeof(c->last_ioc_subnqn), "%s",
 		 nqn ? nqn : "");
+	snprintf(c->last_ioc_traddr, sizeof(c->last_ioc_traddr), "%s",
+		 traddr ? traddr : "");
 }
 
 static void dc_cb(const struct libnvmf_tid *t, bool epcsd, void *user_data)
@@ -287,6 +292,44 @@ static bool test_self_entry_other_interface_skipped(void)
 	return pass;
 }
 
+/*
+ * A DLP entry has no IPv6 scope. A DC reached through a scoped link-local
+ * address passes its scope to link-local entries. RDMA has no host_iface,
+ * so the scope is the only way to select the link.
+ */
+static bool test_link_local_scope_inherited(void)
+{
+	struct nvmf_discovery_log *log;
+	struct counters c = { 0 };
+	struct libnvmf_tid *dc_tid;
+	bool pass = true;
+
+	printf("test_link_local_scope_inherited:\n");
+
+	dc_tid = tid_new("rdma", "fe80::1%eth0", "8009", DC_NQN, NULL, NULL,
+			 NULL, NULL, true);
+
+	log = make_log(2);
+	set_entry(log, 0, NVME_NQN_CURR, 0, "fe80::1", "8009", DC_NQN);
+	set_entry(log, 1, NVME_NQN_NVME, 0, "fe80::2", "4420", IOC_NQN);
+	log->entries[0].trtype = NVMF_TRTYPE_RDMA;
+	log->entries[1].trtype = NVMF_TRTYPE_RDMA;
+	log->entries[0].adrfam = NVMF_ADDR_FAMILY_IP6;
+	log->entries[1].adrfam = NVMF_ADDR_FAMILY_IP6;
+
+	dlp_process_log(log, dc_tid, ioc_cb, dc_cb, self_cb, &c);
+
+	pass &= check(c.self == 1, "unscoped self entry matches the DC");
+	pass &= check(c.ioc == 1 &&
+		      !strcmp(c.last_ioc_traddr, "fe80::2%eth0"),
+		      "link-local I/O entry gets the DC's scope");
+
+	free(log);
+	tid_free(dc_tid);
+
+	return pass;
+}
+
 /* An empty log page dispatches nothing. */
 static bool test_no_entries(void)
 {
@@ -339,6 +382,7 @@ int main(void)
 	pass &= test_multiple_self_entries();
 	pass &= test_cross_transport_skipped();
 	pass &= test_self_entry_other_interface_skipped();
+	pass &= test_link_local_scope_inherited();
 	pass &= test_no_entries();
 	pass &= test_null_callbacks();
 

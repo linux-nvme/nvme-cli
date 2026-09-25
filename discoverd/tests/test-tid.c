@@ -15,6 +15,8 @@
 #include <string.h>
 #include <sys/socket.h>
 
+#include <ccan/array_size/array_size.h>
+
 #include "tid.h"
 
 #define DC_NQN		"nqn.2014-08.org.nvmexpress.discovery"
@@ -170,6 +172,49 @@ static bool test_hostid(void)
 	pass &= check("existing without host ID matches",
 		      tid_matches_existing(candidate, no_id, false, NULL),
 		      true);
+
+	return pass;
+}
+
+/* Only an unscoped IPv6 link-local traddr gets a scope. */
+static bool test_scope_link_local(void)
+{
+	static const struct {
+		const char *traddr, *scope, *want;
+	} vectors[] = {
+		{ "fe80::2",      "eth0", "fe80::2%eth0" },
+		{ "fe80::2%eth1", "eth0", "fe80::2%eth1" },
+		{ "fe80::2",      NULL,   "fe80::2" },
+		{ "2001:db8::2",  "eth0", "2001:db8::2" },
+		{ "10.0.0.2",     "eth0", "10.0.0.2" },
+	};
+	__cleanup_tid struct libnvmf_tid *scoped = NULL;
+	__cleanup_tid struct libnvmf_tid *global = NULL;
+	bool pass = true;
+	size_t i;
+
+	printf("test_scope_link_local:\n");
+
+	for (i = 0; i < ARRAY_SIZE(vectors); i++) {
+		char *got = tid_scope_link_local(vectors[i].traddr,
+						 vectors[i].scope);
+		char name[96];
+
+		snprintf(name, sizeof(name), "%s + %s -> %s", vectors[i].traddr,
+			 vectors[i].scope ? vectors[i].scope : "(null)",
+			 vectors[i].want);
+		pass &= check(name, got && !strcmp(got, vectors[i].want), true);
+		free(got);
+	}
+
+	scoped = mk("rdma", "fe80::1%eth0", "8009", DC_NQN, NULL, NULL,
+		    HOST_NQN, true);
+	global = mk("rdma", "2001:db8::1", "8009", DC_NQN, NULL, NULL,
+		    HOST_NQN, true);
+	pass &= check("scope of a scoped link-local traddr",
+		      shr_streq0(tid_link_local_scope(scoped), "eth0"), true);
+	pass &= check("no scope for a global traddr",
+		      tid_link_local_scope(global) == NULL, true);
 
 	return pass;
 }
@@ -468,6 +513,7 @@ int main(void)
 	pass &= test_transport();
 	pass &= test_hostless_candidate();
 	pass &= test_hostid();
+	pass &= test_scope_link_local();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

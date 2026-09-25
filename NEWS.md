@@ -41,6 +41,11 @@
 * nvme-discoverd also compares the host ID, not only the host NQN, when
   it matches a desired connection with an existing one.
 
+* nvme-discoverd adds the IPv6 scope to link-local addresses. For a
+  Discovery Log Page entry, the scope comes from the Discovery
+  Controller's own address. For an mDNS result, it is the interface.
+  RDMA needs this, because it has no `host_iface` to select the link.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

@@ -938,7 +938,8 @@ static bool kernel_supports_discovery_nqn(void)
 /*
  * mDNS found a DC. Connect with its advertised NQN if the kernel allows
  * it, else with the well-known discovery NQN. The DLP gives the real NQN
- * either way. host_iface is only valid for tcp.
+ * either way. host_iface is only valid for tcp. A link-local traddr gets
+ * the interface as its scope, because rdma has no host_iface.
  */
 static void on_mdns_add(const char *traddr, const char *trsvcid,
 			const char *transport, const char *nqn,
@@ -949,11 +950,16 @@ static void on_mdns_add(const char *traddr, const char *trsvcid,
 	const char *subsysnqn = NVME_DISC_SUBSYS_NAME;
 	__cleanup_tid struct libnvmf_tid *tid = NULL;
 	bool is_tcp = shr_streq0(transport, "tcp");
+	__cleanup_free char *scoped = NULL;
 
 	if (nqn && kernel_supports_discovery_nqn())
 		subsysnqn = nqn;
 
-	tid = tid_new(transport, traddr, trsvcid, subsysnqn, NULL,
+	scoped = tid_scope_link_local(traddr, ifname);
+	if (!scoped)
+		return;
+
+	tid = tid_new(transport, scoped, trsvcid, subsysnqn, NULL,
 		      is_tcp ? ifname : NULL, NULL, NULL, true);
 	if (!tid ||
 	    tid_set_default_host_if_unset(tid, ctx.hostnqn, ctx.hostid) < 0)

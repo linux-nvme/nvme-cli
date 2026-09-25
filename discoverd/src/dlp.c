@@ -27,14 +27,24 @@
 static struct libnvmf_tid *tid_from_dlpe(const struct nvmf_disc_log_entry *e,
 					 const struct libnvmf_tid *dc_tid)
 {
+	const char *scope = dc_tid ? tid_link_local_scope(dc_tid) : NULL;
+	__cleanup_free char *traddr = NULL;
 	const char *transport;
 
 	transport = libnvmf_trtype_str(e->trtype);
 	if (!transport)
 		return NULL;
 
+	/*
+	 * A DC reached through a scoped link-local address can only report
+	 * link-local addresses on that same link.
+	 */
+	traddr = tid_scope_link_local(e->traddr, scope);
+	if (!traddr)
+		return NULL;
+
 	return tid_new(transport,
-		       e->traddr,
+		       traddr,
 		       e->trsvcid[0] ? e->trsvcid : NULL,
 		       e->subnqn,
 		       dc_tid ? libnvmf_tid_get_host_traddr(dc_tid) : NULL,
