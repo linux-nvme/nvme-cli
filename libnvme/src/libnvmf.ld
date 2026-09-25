@@ -86,6 +86,8 @@ LIBNVMF_3 {
 		libnvmf_insert_tls_key_compat;
 		libnvmf_insert_tls_key_versioned;
 		libnvmf_is_registration_supported;
+		libnvmf_kernel_option_supported;
+		libnvmf_kernel_options_for_each;
 		libnvmf_lookup_key;
 		libnvmf_lookup_keyring;
 		libnvmf_nbft_free;

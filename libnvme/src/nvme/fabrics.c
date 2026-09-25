@@ -1546,6 +1546,38 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 		continue;		   		\
 	}
 
+void _libnvmf_free_kernel_options(struct libnvme_global_ctx *ctx)
+{
+	char **name;
+
+	if (ctx->kernel_options) {
+		for (name = ctx->kernel_options; *name; name++)
+			free(*name);
+		free(ctx->kernel_options);
+		ctx->kernel_options = NULL;
+	}
+	free(ctx->options);
+	ctx->options = NULL;
+}
+
+static int add_kernel_option(struct libnvme_global_ctx *ctx, size_t *count,
+		const char *name)
+{
+	char **names;
+
+	names = realloc(ctx->kernel_options, (*count + 2) * sizeof(*names));
+	if (!names)
+		return -ENOMEM;
+	ctx->kernel_options = names;
+
+	names[*count] = strdup(name);
+	if (!names[*count])
+		return -ENOMEM;
+	names[++*count] = NULL;
+
+	return 0;
+}
+
 /*
  * Read the options the kernel accepts from /dev/nvme-fabrics, once per
  * @ctx. A failed read is not cached, so the next call retries it.
@@ -1554,6 +1586,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 {
 	char buf[0x1000], *options, *p, *v;
 	__cleanup_fd int fd = -1;
+	size_t count = 0;
 	ssize_t len;
 	int err;
 
@@ -1606,6 +1639,13 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 			continue;
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "%s ", v);
 
+		/* "instance" & "cntlid" are returned values, not options. */
+		if (strcmp(v, "instance") && strcmp(v, "cntlid")) {
+			err = add_kernel_option(ctx, &count, v);
+			if (err)
+				goto out_free;
+		}
+
 		parse_option(ctx, v, cntlid);
 		parse_option(ctx, v, concat);
 		parse_option(ctx, v, ctrl_loss_tmo);
@@ -1641,10 +1681,71 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 
 	return 0;
 out_free:
-	free(ctx->options);
-	ctx->options = NULL;
+	_libnvmf_free_kernel_options(ctx);
 
 	return err;
+}
+
+/*
+ * The kernel lists its options since Linux 5.17. For an older kernel,
+ * connect uses the default set above. That set is a guess, so the public
+ * API does not report it.
+ */
+static int kernel_options(struct libnvme_global_ctx *ctx)
+{
+	int err;
+
+	err = __nvmf_supported_options(ctx);
+	if (err)
+		return err;
+
+	return ctx->kernel_options ? 0 : -EOPNOTSUPP;
+}
+
+__shr_public int libnvmf_kernel_option_supported(
+		struct libnvme_global_ctx *ctx, const char *name,
+		bool *supported)
+{
+	char **opt;
+	int err;
+
+	if (!ctx || !name || !supported)
+		return -EINVAL;
+
+	err = kernel_options(ctx);
+	if (err)
+		return err;
+
+	*supported = false;
+	for (opt = ctx->kernel_options; *opt; opt++) {
+		if (!strcmp(*opt, name)) {
+			*supported = true;
+			break;
+		}
+	}
+
+	return 0;
+}
+
+__shr_public int libnvmf_kernel_options_for_each(
+		struct libnvme_global_ctx *ctx,
+		void (*callback)(const char *name, void *user_data),
+		void *user_data)
+{
+	char **opt;
+	int err;
+
+	if (!ctx || !callback)
+		return -EINVAL;
+
+	err = kernel_options(ctx);
+	if (err)
+		return err;
+
+	for (opt = ctx->kernel_options; *opt; opt++)
+		callback(*opt, user_data);
+
+	return 0;
 }
 
 /* Parse the kernel instance number out of a ctrl's name ("nvme3" -> 3). */

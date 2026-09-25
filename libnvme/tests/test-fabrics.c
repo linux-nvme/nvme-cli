@@ -1110,6 +1110,95 @@ static bool test_generate_hostid(struct libnvme_global_ctx *ctx)
  * main
  * -------------------------------------------------------------------------
  */
+/* -------------------------------------------------------------------------
+ * libnvmf_kernel_option_supported / libnvmf_kernel_options_for_each
+ * -------------------------------------------------------------------------
+ */
+static void collect_option(const char *name, void *user_data)
+{
+	char *list = user_data;
+
+	strcat(list, name);
+	strcat(list, " ");
+}
+
+static bool test_kernel_options(void)
+{
+	static const char options[] =
+		"instance=-1,cntlid=-1,transport=%s,traddr=%s,discovery,tls\n";
+	char dir[] = "/tmp/nvme-fabrics-test-XXXXXX";
+	const char *saved_dev = nvmf_dev;
+	struct libnvme_global_ctx *ctx;
+	char path[PATH_MAX], list[256] = "";
+	bool supported, pass = true;
+	FILE *f;
+	int r;
+
+	printf("test_kernel_options:\n");
+
+	if (!mkdtemp(dir)) {
+		CHECK(false, "mkdtemp");
+		return false;
+	}
+	snprintf(path, sizeof(path), "%s/nvme-fabrics", dir);
+	nvmf_dev = path;
+
+	ctx = libnvme_create_global_ctx();
+	if (!ctx) {
+		CHECK(false, "create ctx");
+		pass = false;
+		goto out;
+	}
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	r = libnvmf_kernel_option_supported(NULL, "tls", &supported);
+	CHECK(r == -EINVAL, "NULL ctx rejected");
+	r = libnvmf_kernel_option_supported(ctx, NULL, &supported);
+	CHECK(r == -EINVAL, "NULL name rejected");
+	r = libnvmf_kernel_option_supported(ctx, "tls", NULL);
+	CHECK(r == -EINVAL, "NULL supported rejected");
+	r = libnvmf_kernel_options_for_each(NULL, collect_option, list);
+	CHECK(r == -EINVAL, "for_each: NULL ctx rejected");
+	r = libnvmf_kernel_options_for_each(ctx, NULL, list);
+	CHECK(r == -EINVAL, "for_each: NULL callback rejected");
+
+	r = libnvmf_kernel_option_supported(ctx, "discovery", &supported);
+	CHECK(r == -ENVME_CONNECT_OPEN, "missing device fails (r=%d)", r);
+	CHECK(!ctx->options, "failure is not cached");
+
+	f = fopen(path, "w");
+	if (!f) {
+		CHECK(false, "create %s", path);
+		pass = false;
+		goto out;
+	}
+	fputs(options, f);
+	fclose(f);
+
+	r = libnvmf_kernel_option_supported(ctx, "discovery", &supported);
+	CHECK(r == 0 && supported, "retry after failure: discovery supported");
+	r = libnvmf_kernel_option_supported(ctx, "concat", &supported);
+	CHECK(r == 0 && !supported, "concat not supported");
+	r = libnvmf_kernel_option_supported(ctx, "instance", &supported);
+	CHECK(r == 0 && !supported, "instance placeholder not an option");
+
+	r = libnvmf_kernel_options_for_each(ctx, collect_option, list);
+	CHECK(r == 0 && !strcmp(list, "transport traddr discovery tls "),
+	      "for_each lists the options in order ('%s')", list);
+
+	unlink(path);
+	r = libnvmf_kernel_option_supported(ctx, "tls", &supported);
+	CHECK(r == 0 && supported, "success is cached");
+
+out:
+	libnvme_free_global_ctx(ctx);
+	unlink(path);
+	rmdir(dir);
+	nvmf_dev = saved_dev;
+
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	struct libnvme_global_ctx *ctx;
@@ -1145,6 +1234,7 @@ int main(int argc, char *argv[])
 	test_registry_action_on_connect();
 	test_create_ctrl_credentials(ctx);
 	test_generate_hostid(ctx);
+	test_kernel_options();
 
 	libnvme_free_global_ctx(ctx);
 

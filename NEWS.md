@@ -57,6 +57,10 @@
 * A failed read of `/dev/nvme-fabrics` is no longer cached for the
   life of the global context, so a later connect retries it.
 
+* New `libnvmf_kernel_option_supported()` and
+  `libnvmf_kernel_options_for_each()` report the fabrics options the
+  kernel lists in `/dev/nvme-fabrics`.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
