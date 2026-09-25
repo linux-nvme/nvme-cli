@@ -1032,6 +1032,7 @@ static bool wdc_nvme_parse_dev_status_log_entry(void *log_data,
 static bool wdc_nvme_parse_dev_status_log_str(void *log_data,
 		__u32 entry_id,
 		char *ret_data,
+		size_t ret_data_size,
 		__u32 *ret_data_len);
 
 /* Drive log data size */
@@ -2119,6 +2120,7 @@ static __u64 wdc_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 		if (!wdc_nvme_parse_dev_status_log_str(dev_mng_log,
 				WDC_C2_MARKETING_NAME_ID,
 				(char *)marketing_name,
+				sizeof(marketing_name),
 				&market_name_len))
 			nvme_show_error("ERROR: SNDK: Get Marketing Name Failed");
 
@@ -2912,18 +2914,34 @@ static bool wdc_nvme_parse_dev_status_log_entry(void *log_data, __u32 *ret_data,
 static bool wdc_nvme_parse_dev_status_log_str(void *log_data,
 		__u32 entry_id,
 		char *ret_data,
+		size_t ret_data_size,
 		__u32 *ret_data_len)
 {
 	struct wdc_c2_log_subpage_header *entry_data = NULL;
 	struct wdc_c2_cbs_data *entry_str_data = NULL;
+	__u32 entry_len, entry_total_len, max_payload_len;
+
+	if (!ret_data || !ret_data_len || ret_data_size == 0)
+		return false;
 
 	if (wdc_parse_dev_mng_log_entry(log_data, entry_id, &entry_data)) {
 		if (entry_data) {
 			entry_str_data = (struct wdc_c2_cbs_data *)&entry_data->data;
+			entry_len = le32_to_cpu(entry_str_data->length);
+			entry_total_len = le32_to_cpu(entry_data->length);
+			if (entry_total_len <
+			    sizeof(struct wdc_c2_log_subpage_header))
+				return false;
+			max_payload_len = entry_total_len -
+				sizeof(struct wdc_c2_log_subpage_header);
+			if (entry_len > max_payload_len ||
+			    entry_len >= ret_data_size)
+				return false;
 			memcpy(ret_data,
-				(void *)&entry_str_data->data,
-				le32_to_cpu(entry_str_data->length));
-			*ret_data_len = le32_to_cpu(entry_str_data->length);
+			       (void *)&entry_str_data->data,
+			       entry_len);
+			ret_data[entry_len] = '\0';
+			*ret_data_len = entry_len;
 			return true;
 		}
 	}
@@ -7299,6 +7317,7 @@ static int wdc_get_c0_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 		if (!wdc_nvme_parse_dev_status_log_str(dev_mng_log,
 				WDC_C2_MARKETING_NAME_ID,
 				(char *)marketing_name,
+				sizeof(marketing_name),
 				&market_name_len)) {
 			nvme_show_error("ERROR: SNDK: Get Marketing Name Failed");
 			ret = -1;
