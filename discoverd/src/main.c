@@ -400,12 +400,10 @@ static void start_ctrl(const struct libnvmf_tid *tid, bool is_dc,
 	}
 }
 
-SHR_PTRARRAY_DEFINE(ioc_list, struct libnvmf_tid);
-
 struct dlp_fetch_ctx {
 	const struct libnvmf_config_conn *via_dc; // dc_tid's own conn, if any
 	const struct conn_scan *scan; // shared by every entry's connect check
-	struct ioc_list iocs;
+	struct tid_list iocs;
 	bool self_seen;
 	bool epcsd; // meaningful only if self_seen
 };
@@ -417,7 +415,7 @@ static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
 
 	// Accumulate IOC TIDs for inventory_update_dlp().
 	dup = libnvmf_tid_dup(t);
-	if (!dup || ioc_list_append(&fctx->iocs, dup) < 0) {
+	if (!dup || tid_list_append(&fctx->iocs, dup) < 0) {
 		tid_free(dup);
 		return;
 	}
@@ -516,15 +514,11 @@ static void fetch_and_process_dlp(const char *devname,
 	}
 
 	if (fctx.iocs.len) {
-		if (ioc_list_append(&fctx.iocs, NULL) == 0) {
+		if (tid_list_append(&fctx.iocs, NULL) == 0) {
 			inventory_update_dlp(ctx.inventory, dc_tid,
 					     fctx.iocs.items);
 		} else {
-			size_t i;
-
-			for (i = 0; i < fctx.iocs.len; i++)
-				tid_free(fctx.iocs.items[i]);
-			ioc_list_free(&fctx.iocs);
+			tid_list_free_items(&fctx.iocs);
 		}
 	}
 }

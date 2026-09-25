@@ -12,6 +12,7 @@
 #include <nvme/generated/accessors-fabrics.h>
 #include <nvme/tid.h>
 
+#include <shared/array-util.h>
 #include <shared/cleanup-util.h>
 #include <shared/string-util.h>
 
@@ -60,6 +61,19 @@ int tid_set_default_host_if_unset(struct libnvmf_tid *tid,
 static inline void tid_free(struct libnvmf_tid *t)
 {
 	libnvmf_tid_free(t);
+}
+
+/* Growable TID array, backed by struct shr_ptrarray. */
+SHR_PTRARRAY_DEFINE(tid_list, struct libnvmf_tid);
+
+/* Free every TID in @l, then the array itself, leaving @l empty. */
+static inline void tid_list_free_items(struct tid_list *l)
+{
+	size_t i;
+
+	for (i = 0; i < l->len; i++)
+		tid_free(l->items[i]);
+	tid_list_free(l);
 }
 
 /*
