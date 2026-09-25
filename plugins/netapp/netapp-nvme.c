@@ -159,9 +159,11 @@ static void netapp_get_ns_attrs(char *size, char *used, char *blk_size,
 }
 
 static void ontap_get_subsysname(char *subnqn, char *subsysname,
+		 size_t subsysname_len,
 		 struct nvme_id_ctrl *ctrl)
 {
 	char *subname;
+	size_t n;
 	int i, len = sizeof(ctrl->subnqn);
 
 	/* get the target NQN */
@@ -176,11 +178,16 @@ static void ontap_get_subsysname(char *subnqn, char *subsysname,
 	subname = strrchr(subnqn, '.');
 	if (subname) {
 		subname++;
-		len = strlen(subname);
-		memcpy(subsysname, subname, len);
-		subsysname[len] = '\0';
+		n = strnlen(subname, sizeof(ctrl->subnqn));
+		if (subsysname_len) {
+			if (n >= subsysname_len)
+				n = subsysname_len - 1;
+			memcpy(subsysname, subname, n);
+			subsysname[n] = '\0';
+		}
 	} else
-		nvme_show_error("Unable to fetch ONTAP subsystem name");
+		nvme_show_error(
+			"Unable to fetch ONTAP subsystem name");
 }
 
 static void ontap_labels_to_str(char *dst, const char *src, size_t count)
@@ -599,6 +606,7 @@ static void netapp_ontapdevices_print_verbose(struct ontapdevice_info *devices,
 			netapp_get_ns_attrs(size, used, blk_size, version,
 					&lba, &devices[i].ctrl, &devices[i].ns);
 			ontap_get_subsysname(subnqn, subsysname,
+					sizeof(subsysname),
 					&devices[i].ctrl);
 			libnvme_uuid_to_string(devices[i].uuid, uuid_str);
 			netapp_get_ontap_labels(vsname, nspath,
@@ -616,6 +624,7 @@ static void netapp_ontapdevices_print_verbose(struct ontapdevice_info *devices,
 		netapp_get_ns_attrs(size, used, blk_size, version,
 				&lba, &devices[i].ctrl, &devices[i].ns);
 		ontap_get_subsysname(subnqn, subsysname,
+					sizeof(subsysname),
 				&devices[i].ctrl);
 		libnvme_uuid_to_string(devices[i].uuid, uuid_str);
 		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
@@ -667,6 +676,7 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 			netapp_get_ontap_labels(vsname, nspath,
 					devices[i].log_data);
 			ontap_get_subsysname(subnqn, subsysname,
+					sizeof(subsysname),
 					&devices[i].ctrl);
 
 			printf(formatstr, devices[i].dev, vsname, subsysname,
@@ -680,7 +690,9 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 		netapp_get_ns_size(size, &lba, &devices[i].ns);
 		libnvme_uuid_to_string(devices[i].uuid, uuid_str);
 		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
-		ontap_get_subsysname(subnqn, subsysname, &devices[i].ctrl);
+		ontap_get_subsysname(subnqn, subsysname,
+				sizeof(subsysname),
+				&devices[i].ctrl);
 
 		printf(formatstr, devices[i].dev, vsname, subsysname,
 				nspath, devices[i].nsid, uuid_str, size);
@@ -711,6 +723,7 @@ static void netapp_ontapdevices_print_json(struct ontapdevice_info *devices,
 			netapp_get_ns_attrs(size, used, blk_size, version,
 					&lba, &devices[i].ctrl, &devices[i].ns);
 			ontap_get_subsysname(subnqn, subsysname,
+					sizeof(subsysname),
 					&devices[i].ctrl);
 			libnvme_uuid_to_string(devices[i].uuid, uuid_str);
 			netapp_get_ontap_labels(vsname, nspath,
@@ -730,6 +743,7 @@ static void netapp_ontapdevices_print_json(struct ontapdevice_info *devices,
 		netapp_get_ns_attrs(size, used, blk_size, version,
 				&lba, &devices[i].ctrl, &devices[i].ns);
 		ontap_get_subsysname(subnqn, subsysname,
+					sizeof(subsysname),
 				&devices[i].ctrl);
 		libnvme_uuid_to_string(devices[i].uuid, uuid_str);
 		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
