@@ -523,33 +523,11 @@ static const char * const telemetry_virtual_fifo_event_id_str[] = {
 /*****************************************************************************
  * Telemetry Data Structures
  *****************************************************************************/
-#define TELEMETRY_HEADER_SIZE 512
-#define TELEMETRY_DATA_SIZE 1536
-#define TELEMETRY_BYTE_PER_BLOCK 512
-#define TELEMETRY_TRANSFER_SIZE 1024
-#define FILE_NAME_SIZE 2048
-
 enum TELEMETRY_TYPE {
 	TELEMETRY_TYPE_HOST       = 7,
 	TELEMETRY_TYPE_CONTROLLER = 8,
 	TELEMETRY_TYPE_HOST_0     = 9,
 	TELEMETRY_TYPE_HOST_1     = 10,
-};
-
-struct telemetry_initiated_log {
-	__u8  LogIdentifier;
-	__u8  Reserved1[4];
-	__u8  IEEE[3];
-	__le16 DataArea1LastBlock;
-	__le16 DataArea2LastBlock;
-	__le16 DataArea3LastBlock;
-	__u8  Reserved2[2];
-	__le32 DataArea4LastBlock;
-	__u8  Reserved3[361];
-	__u8  DataHostGenerationNumber;
-	__u8  CtlrDataAvailable;
-	__u8  DataCtlrGenerationNumber;
-	__u8  ReasonIdentifier[128];
 };
 
 struct telemetry_stats_desc {
@@ -559,43 +537,6 @@ struct telemetry_stats_desc {
 	__le16 size;
 	__le16 nsid;
 	__u8 data[];
-};
-
-struct __packed telemetry_event_desc {
-	__u8 class;
-	__le16 id;
-	__u8 size;
-	__u8 data[];
-};
-
-struct event_fifo {
-	__le64	start;
-	__le64	size;
-};
-
-struct telemetry_data_area_1 {
-	__le16 major_version;
-	__le16 minor_version;
-	__u8   reserved1[4];
-	__le64 timestamp;
-	__u8   log_page_guid[GUID_LEN];
-	__u8   no_of_tps_supp;
-	__u8   tps;
-	__u8   reserved2[6];
-	__le64 sls;
-	__u8   reserved3[8];
-	__u8   fw_revision[8];
-	__u8   reserved4[32];
-	__le64 da1_stat_start;
-	__le64 da1_stat_size;
-	__le64 da2_stat_start;
-	__le64 da2_stat_size;
-	__u8   reserved5[32];
-	__u8   event_fifo_da[16];
-	struct event_fifo event_fifos[16];
-	__u8   reserved6[80];
-	__u8   smart_health_info[512];
-	__u8   smart_health_info_extended[512];
 };
 
 #define DATA_SIZE_12   12

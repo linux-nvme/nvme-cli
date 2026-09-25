@@ -595,585 +595,6 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 __u8 *ptelemetry_buffer;
 __u8 *pstring_buffer;
 
-static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
-{
-	int i;
-
-	/* Remove trailing spaces from the name */
-	for (i = 0; i < sizeof(ctrl->sn); i++) {
-		if (ctrl->sn[i] == ' ')
-			break;
-		sn[i] = ctrl->sn[i];
-	}
-}
-
-static void print_telemetry_header(struct telemetry_initiated_log *logheader, int tele_type)
-{
-	if (logheader) {
-		unsigned int i = 0, j = 0;
-		__u8 dataGenNum;
-
-		if (tele_type == TELEMETRY_TYPE_HOST) {
-			printf("============ Telemetry Host Header ============\n");
-			dataGenNum = logheader->DataHostGenerationNumber;
-		} else {
-			printf("========= Telemetry Controller Header =========\n");
-			dataGenNum = logheader->DataCtlrGenerationNumber;
-		}
-
-		printf("Log Identifier         : 0x%02X\n", logheader->LogIdentifier);
-		printf("IEEE                   : 0x%02X%02X%02X\n",
-			logheader->IEEE[0], logheader->IEEE[1], logheader->IEEE[2]);
-		printf("Data Area 1 Last Block : 0x%04X\n",
-			le16_to_cpu(logheader->DataArea1LastBlock));
-		printf("Data Area 2 Last Block : 0x%04X\n",
-			le16_to_cpu(logheader->DataArea2LastBlock));
-		printf("Data Area 3 Last Block : 0x%04X\n",
-			le16_to_cpu(logheader->DataArea3LastBlock));
-		printf("Data Available         : 0x%02X\n",
-			logheader->CtlrDataAvailable);
-		printf("Data Generation Number : 0x%02X\n",
-			dataGenNum);
-		printf("Reason Identifier      :\n");
-
-		for (i = 0; i < 8; i++) {
-			for (j = 0; j < 16; j++)
-				printf("%02X ",	logheader->ReasonIdentifier[127 - ((i * 16) + j)]);
-			printf("\n");
-		}
-		printf("===============================================\n\n");
-	}
-}
-
-static int get_telemetry_data(struct libnvme_transport_handle *hdl, __u32 ns, __u8 tele_type,
-							  __u32 data_len, void *data, __u8 nLSP, __u8 nRAE,
-							  __u64 offset)
-{
-	struct libnvme_passthru_cmd cmd = {
-		.opcode = nvme_admin_get_log_page,
-		.nsid = ns,
-		.addr = (__u64)(uintptr_t) data,
-		.data_len = data_len,
-	};
-	__u32 numd = (data_len >> 2) - 1;
-	__u16 numdu = numd >> 16;
-	__u16 numdl = numd & 0xffff;
-
-	cmd.cdw10 = tele_type | (nLSP & 0x0F) << 8 | (nRAE & 0x01) << 15 | (numdl & 0xFFFF) << 16;
-	cmd.cdw11 = numdu;
-	cmd.cdw12 = (__u32)(0x00000000FFFFFFFF & offset);
-	cmd.cdw13 = (__u32)((0xFFFFFFFF00000000 & offset) >> 8);
-	cmd.cdw14 = 0;
-	return libnvme_exec_admin_passthru(hdl, &cmd);
-}
-
-static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
-										int tele_type)
-{
-	if (da1) {
-		int i = 0;
-
-		if (tele_type == TELEMETRY_TYPE_HOST)
-			printf("============ Telemetry Host Data area 1 ============\n");
-		else
-			printf("========= Telemetry Controller Data area 1 =========\n");
-		printf("Major Version     : 0x%x\n", le16_to_cpu(da1->major_version));
-		printf("Minor Version     : 0x%x\n", le16_to_cpu(da1->minor_version));
-		printf("Timestamp         : %"PRIu64"\n", le64_to_cpu(da1->timestamp));
-		printf("Log Page GUID     : 0x");
-		for (int j = 15; j >= 0; j--)
-			printf("%02x", da1->log_page_guid[j]);
-		printf("\n");
-		printf("Number Telemetry Profiles Supported   : 0x%x\n",
-				da1->no_of_tps_supp);
-		printf("Telemetry Profile Selected (TPS)      : 0x%x\n",
-				da1->tps);
-		printf("Telemetry String Log Size (SLS)       : 0x%"PRIx64"\n",
-		       le64_to_cpu(da1->sls));
-		printf("Firmware Revision                     : ");
-		for (i = 0; i < 8; i++)
-			printf("%c", (char)da1->fw_revision[i]);
-		printf("\n");
-		printf("Data Area 1 Statistic Start           : 0x%"PRIx64"\n",
-				le64_to_cpu(da1->da1_stat_start));
-		printf("Data Area 1 Statistic Size            : 0x%"PRIx64"\n",
-				le64_to_cpu(da1->da1_stat_size));
-		printf("Data Area 2 Statistic Start           : 0x%"PRIx64"\n",
-				le64_to_cpu(da1->da2_stat_start));
-		printf("Data Area 2 Statistic Size            : 0x%"PRIx64"\n",
-				le64_to_cpu(da1->da2_stat_size));
-		for (i = 0; i < 16; i++) {
-			printf("Event FIFO %d Data Area                : 0x%x\n",
-					i, da1->event_fifo_da[i]);
-			printf("Event FIFO %d Start                    : 0x%"PRIx64"\n",
-					i, le64_to_cpu(da1->event_fifos[i].start));
-			printf("Event FIFO %d Size                     : 0x%"PRIx64"\n",
-					i, le64_to_cpu(da1->event_fifos[i].size));
-		}
-		printf("SMART / Health Information     :\n");
-		printf("0x");
-		for (i = 0; i < 512; i++)
-			printf("%02x", da1->smart_health_info[i]);
-		printf("\n");
-
-		printf("SMART / Health Information Extended     :\n");
-		printf("0x");
-		for (i = 0; i < 512; i++)
-			printf("%02x", da1->smart_health_info_extended[i]);
-		printf("\n");
-
-		printf("===============================================\n\n");
-	}
-}
-
-static void print_telemetry_da_stat(struct telemetry_stats_desc *da_stat, int tele_type,
-				    __u16 buf_size, __u8 data_area)
-{
-	if (da_stat) {
-		unsigned int i = 0;
-		struct telemetry_stats_desc *next_da_stat = da_stat;
-
-		if (tele_type == TELEMETRY_TYPE_HOST)
-			printf("============ Telemetry Host Data Area %d Statistics ============\n",
-			       data_area);
-		else
-			printf("========= Telemetry Controller Data Area %d Statistics =========\n",
-			       data_area);
-		while ((i + 8) < buf_size) {
-			print_stats_desc(next_da_stat);
-			i += 8 + ((next_da_stat->size) * 4);
-			next_da_stat = (struct telemetry_stats_desc *)((void *)da_stat + i);
-
-			if ((next_da_stat->id == 0) && (next_da_stat->size == 0))
-				break;
-		}
-		printf("===============================================\n\n");
-	}
-}
-static void print_telemetry_da_fifo(struct telemetry_event_desc *da_fifo,
-		__u64 buf_size,
-		int tele_type,
-		int da,
-		int index)
-{
-	if (da_fifo) {
-		__u64 i = 0;
-		struct telemetry_event_desc *next_da_fifo = da_fifo;
-
-		if (tele_type == TELEMETRY_TYPE_HOST)
-			printf("========= Telemetry Host Data area %d Event FIFO %d =========\n",
-				da, index);
-		else
-			printf("====== Telemetry Controller Data area %d Event FIFO %d ======\n",
-				da, index);
-
-		while ((i + 4) < buf_size) {
-			/* break if last entry  */
-			if (next_da_fifo->class == 0)
-				break;
-
-			/* Print Event Data */
-			print_telemetry_fifo_event(next_da_fifo->class, /* Event class type */
-				next_da_fifo->id,                           /* Event ID         */
-				next_da_fifo->size,                         /* Event data size  */
-				(__u8 *)&next_da_fifo->data);               /* Event data       */
-
-			i += (4 + (next_da_fifo->size * 4));
-			next_da_fifo = (struct telemetry_event_desc *)((void *)da_fifo + i);
-		}
-		printf("===============================================\n\n");
-	}
-}
-static int extract_dump_get_log(struct libnvme_transport_handle *hdl, char *featurename, char *filename, char *sn,
-				int dumpsize, int transfersize, __u32 nsid, __u8 log_id,
-				__u8 lsp, __u64 offset, bool rae)
-{
-	int i = 0, err = 0;
-
-	char *data = libnvme_alloc(transfersize);
-	char filepath[FILE_NAME_SIZE] = {0,};
-	int output = 0;
-	int total_loop_cnt = dumpsize / transfersize;
-	int last_xfer_size = dumpsize % transfersize;
-	struct libnvme_passthru_cmd cmd;
-
-	if (!data) {
-		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
-		return -ENOMEM;
-	}
-
-	if (last_xfer_size)
-		total_loop_cnt++;
-	else
-		last_xfer_size = transfersize;
-
-	if (filename == 0)
-		snprintf(filepath, FILE_NAME_SIZE, "%s_%s.bin", featurename, sn);
-	else
-		snprintf(filepath, FILE_NAME_SIZE, "%s%s_%s.bin", filename, featurename, sn);
-
-	for (i = 0; i < total_loop_cnt; i++) {
-		memset(data, 0, transfersize);
-
-		nvme_init_get_log(&cmd, nsid, log_id, NVME_CSI_NVM,
-				  data, transfersize);
-		nvme_init_get_log_lpo(&cmd, offset);
-		err = libnvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
-		if (err) {
-			if (i > 0)
-				goto close_output;
-			else
-				goto end;
-		}
-
-		if (i != total_loop_cnt - 1) {
-			if (!i) {
-				output = shr_open_rawdata(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-				if (output < 0) {
-					err = -13;
-					goto end;
-				}
-			}
-			if (write(output, data, transfersize) < 0) {
-				err = -10;
-				goto close_output;
-			}
-		} else {
-			if (write(output, data, last_xfer_size) < 0) {
-				err = -10;
-				goto close_output;
-			}
-		}
-		offset += transfersize;
-		printf("%d%%\r", (i + 1) * 100 / total_loop_cnt);
-	}
-	printf("100%%\nThe log file was saved at \"%s\"\n", filepath);
-
-close_output:
-	close(output);
-
-end:
-	libnvme_free(data);
-	return err;
-}
-
-static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filename, char *sn,
-			      enum TELEMETRY_TYPE tele_type, int data_area, bool header_print)
-{
-	__u32 err = 0, nsid = 0;
-	__u64 da1_sz = 512, m_512_sz = 0, da1_off = 0, m_512_off = 0, diff = 0, temp_sz = 0,
-		temp_ofst = 0;
-	__u8 lsp = 0, rae = 0, flag = 0;
-	__u8 data[TELEMETRY_HEADER_SIZE] = { 0 };
-	unsigned int i = 0;
-	char data1[TELEMETRY_DATA_SIZE] = { 0 };
-	char *featurename = 0;
-	struct telemetry_initiated_log *logheader = (struct telemetry_initiated_log *)data;
-	struct telemetry_data_area_1 *da1 = (struct telemetry_data_area_1 *)data1;
-	__u64 offset = 0, size = 0;
-	char dumpname[FILE_NAME_SIZE] = { 0 };
-
-	if (tele_type == TELEMETRY_TYPE_HOST_0) {
-		featurename = "Host(0)";
-		lsp = 0;
-		rae = 0;
-		tele_type = TELEMETRY_TYPE_HOST;
-	} else if (tele_type == TELEMETRY_TYPE_HOST_1) {
-		featurename = "Host(1)";
-		lsp = 1;
-		rae = 0;
-		tele_type = TELEMETRY_TYPE_HOST;
-	} else {
-		featurename = "Controller";
-		lsp = 0;
-		rae = 1;
-	}
-
-	/* Get the telemetry header */
-	err = get_telemetry_data(hdl, nsid, tele_type, TELEMETRY_HEADER_SIZE, (void *)data, lsp,
-				 rae, 0);
-	if (err) {
-		printf("get_telemetry_header failed, err: %d.\n", err);
-		return err;
-	}
-
-	if (header_print)
-		print_telemetry_header(logheader, tele_type);
-
-	/* Get the telemetry data */
-	err = get_telemetry_data(hdl, nsid, tele_type, TELEMETRY_DATA_SIZE, (void *)data1, lsp,
-				 rae, 512);
-	if (err) {
-		printf("get_telemetry_data failed for type: 0x%x, err: %d.\n", tele_type, err);
-		return err;
-	}
-
-	print_telemetry_data_area_1(da1, tele_type);
-
-	/* Print the Data Area 1 Stats */
-	if (da1->da1_stat_size != 0) {
-		diff = 0;
-		da1_sz = le64_to_cpu(da1->da1_stat_size) * 4;
-		da1_off = le64_to_cpu(da1->da1_stat_start) * 4;
-		temp_sz = le64_to_cpu(da1->da1_stat_size) * 4;
-		temp_ofst = le64_to_cpu(da1->da1_stat_start) * 4;
-		flag = 0;
-
-		if ((da1_off % 512) > 0) {
-			m_512_off = (da1_off / 512);
-			da1_off = m_512_off * 512;
-			diff = temp_ofst - da1_off;
-			flag = 1;
-		}
-
-		if (da1_sz < 512) {
-			da1_sz = 512;
-		} else if ((da1_sz % 512) > 0) {
-			if (flag == 0) {
-				m_512_sz = (da1_sz / 512) + 1;
-				da1_sz = m_512_sz * 512;
-			} else {
-				if (diff < 512)
-					diff = 1;
-				else
-					diff = (diff / 512) * 512;
-
-				m_512_sz = (da1_sz / 512) + 1 + diff + 1;
-				da1_sz = m_512_sz * 512;
-			}
-		}
-
-		__cleanup_libnvme_free char *da1_stat = libnvme_alloc(da1_sz);
-
-		if (!da1_stat) {
-			nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
-			return -ENOMEM;
-		}
-
-		err = get_telemetry_data(hdl, nsid, tele_type, da1_sz, (void *)da1_stat, lsp, rae,
-					 da1_off);
-		if (err) {
-			printf("get_telemetry_data da1 stats failed, err: %d.\n", err);
-			return err;
-		}
-
-		print_telemetry_da_stat((void *)(da1_stat + (temp_ofst - da1_off)), tele_type,
-					temp_sz, 1);
-	}
-
-	/* Print the Data Area 1 Event FIFO's */
-	for (i = 0; i < 16 ; i++) {
-		if ((da1->event_fifo_da[i] == 1) && (da1->event_fifos[i].size != 0)) {
-			diff = 0;
-			da1_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
-			da1_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
-			temp_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
-			temp_ofst = le64_to_cpu(da1->event_fifos[i].start) * 4;
-			flag = 0;
-
-			if ((da1_off % 512) > 0) {
-				m_512_off = ((da1_off / 512));
-				da1_off = m_512_off * 512;
-				diff = temp_ofst - da1_off;
-				flag = 1;
-			}
-
-			if (da1_sz < 512) {
-				da1_sz = 512;
-			} else if ((da1_sz % 512) > 0) {
-				if (flag == 0) {
-					m_512_sz = (da1_sz / 512) + 1;
-					da1_sz = m_512_sz * 512;
-				} else {
-					if (diff < 512)
-						diff = 1;
-					else
-						diff = (diff / 512) * 512;
-
-					m_512_sz = (da1_sz / 512) + 1 + diff + 1;
-					da1_sz = m_512_sz * 512;
-				}
-			}
-
-			__cleanup_libnvme_free char *da1_fifo = libnvme_alloc(da1_sz);
-
-			if (!da1_fifo) {
-				nvme_show_error("ERROR : OCP : libnvme_alloc : %s",
-						libnvme_strerror(errno));
-				return -ENOMEM;
-			}
-
-			printf("Get DA 1 FIFO addr: %p, offset 0x%"PRIx64"\n", da1_fifo,
-			       (uint64_t)da1_off);
-			err = get_telemetry_data(hdl, nsid, tele_type,
-						 le64_to_cpu(da1->event_fifos[i].size) * 4,
-						 (void *)da1_fifo, lsp, rae, da1_off);
-			if (err) {
-				printf("get_telemetry_data da1 event fifos failed, err: %d.\n",
-				       err);
-				return err;
-			}
-			print_telemetry_da_fifo((void *)(da1_fifo + (temp_ofst - da1_off)), temp_sz,
-						tele_type, le64_to_cpu(da1->event_fifo_da[i]), i);
-		}
-	}
-
-	/* Print the Data Area 2 Stats */
-	if (da1->da2_stat_size != 0) {
-		da1_off = le64_to_cpu(da1->da2_stat_start) * 4;
-		temp_ofst = le64_to_cpu(da1->da2_stat_start) * 4;
-		da1_sz = le64_to_cpu(da1->da2_stat_size) * 4;
-		diff = 0;
-		flag = 0;
-
-		if (da1->da2_stat_start == 0) {
-			da1_off = 512 + (le16_to_cpu(logheader->DataArea1LastBlock) * 512);
-			temp_ofst = 512 + (le16_to_cpu(logheader->DataArea1LastBlock) * 512);
-			if ((da1_off % 512) == 0) {
-				m_512_off = ((da1_off) / 512);
-				da1_off = m_512_off * 512;
-				diff = temp_ofst - da1_off;
-				flag = 1;
-			}
-		} else {
-			if (((da1_off * 4) % 512) > 0) {
-				m_512_off =  ((le64_to_cpu(da1->da2_stat_start) * 4) / 512);
-				da1_off = m_512_off * 512;
-				diff = (le64_to_cpu(da1->da2_stat_start) * 4) - da1_off;
-				flag = 1;
-			}
-		}
-
-		if (da1_sz < 512) {
-			da1_sz = 512;
-		} else if ((da1_sz % 512) > 0) {
-			if (flag == 0) {
-				m_512_sz = (le64_to_cpu(da1->da2_stat_size) / 512) + 1;
-				da1_sz = m_512_sz * 512;
-			} else {
-				if (diff < 512)
-					diff = 1;
-				else
-					diff = (diff / 512) * 512;
-				m_512_sz =  (le64_to_cpu(da1->da2_stat_size) / 512) + 1 + diff + 1;
-				da1_sz = m_512_sz * 512;
-			}
-		}
-
-		__cleanup_libnvme_free char *da2_stat = libnvme_alloc(da1_sz);
-
-		if (!da2_stat) {
-			nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
-			return -ENOMEM;
-		}
-
-		err = get_telemetry_data(hdl, nsid, tele_type, da1_sz, (void *)da2_stat, lsp, rae,
-					 da1_off);
-		if (err) {
-			printf("get_telemetry_data da2 stats failed, err: %d.\n", err);
-			return err;
-		}
-
-		print_telemetry_da_stat((void *)(da2_stat + (temp_ofst - da1_off)), tele_type,
-					le64_to_cpu(da1->da2_stat_size) * 4, 2);
-	}
-
-	/* Print the Data Area 2 Event FIFO's */
-	for (i = 0; i < 16 ; i++) {
-		if ((da1->event_fifo_da[i] == 2) && (da1->event_fifos[i].size != 0)) {
-			diff = 0;
-			da1_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
-			da1_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
-			temp_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
-			temp_ofst = le64_to_cpu(da1->event_fifos[i].start) * 4;
-			flag = 0;
-
-			if ((da1_off % 512) > 0) {
-				m_512_off = ((da1_off / 512));
-				da1_off = m_512_off * 512;
-				diff = temp_ofst - da1_off;
-				flag = 1;
-			}
-
-			if (da1_sz < 512) {
-				da1_sz = 512;
-			} else if ((da1_sz % 512) > 0) {
-				if (flag == 0) {
-					m_512_sz = (da1_sz / 512) + 1;
-					da1_sz = m_512_sz * 512;
-				} else {
-					if (diff < 512)
-						diff = 1;
-					else
-						diff = (diff / 512) * 512;
-
-					m_512_sz = (da1_sz / 512) + 1 + diff + 1;
-					da1_sz = m_512_sz * 512;
-				}
-			}
-
-			__cleanup_libnvme_free char *da1_fifo = libnvme_alloc(da1_sz);
-
-			if (!da1_fifo) {
-				nvme_show_error("ERROR : OCP : libnvme_alloc : %s",
-						libnvme_strerror(errno));
-				return -ENOMEM;
-			}
-
-			err = get_telemetry_data(hdl, nsid, tele_type,
-						 le64_to_cpu(da1->event_fifos[i].size) * 4,
-						 (void *)da1_fifo, lsp, rae, da1_off);
-			if (err) {
-				printf("get_telemetry_data da2 event fifos failed, err: %d.\n",
-				       err);
-				return err;
-			}
-			print_telemetry_da_fifo((void *)(da1_fifo + (temp_ofst - da1_off)), temp_sz,
-						tele_type, le64_to_cpu(da1->event_fifo_da[i]), i);
-		}
-	}
-
-	printf("------------------------------FIFO End---------------------------\n");
-
-	switch (data_area) {
-	case 1:
-		offset = TELEMETRY_HEADER_SIZE;
-		size = le16_to_cpu(logheader->DataArea1LastBlock);
-		break;
-	case 2:
-		offset = TELEMETRY_HEADER_SIZE +
-			 (le16_to_cpu(logheader->DataArea1LastBlock) * TELEMETRY_BYTE_PER_BLOCK);
-		size = le16_to_cpu(logheader->DataArea2LastBlock) -
-		       le16_to_cpu(logheader->DataArea1LastBlock);
-		break;
-	case 3:
-		offset = TELEMETRY_HEADER_SIZE +
-			 (le16_to_cpu(logheader->DataArea2LastBlock) * TELEMETRY_BYTE_PER_BLOCK);
-		size = le16_to_cpu(logheader->DataArea3LastBlock) -
-		       le16_to_cpu(logheader->DataArea2LastBlock);
-		break;
-	case 4:
-		offset = TELEMETRY_HEADER_SIZE +
-			 (le16_to_cpu(logheader->DataArea3LastBlock) * TELEMETRY_BYTE_PER_BLOCK);
-		size = le16_to_cpu(logheader->DataArea4LastBlock) -
-			   le16_to_cpu(logheader->DataArea3LastBlock);
-		break;
-	default:
-		break;
-	}
-
-	if (!size) {
-		printf("Telemetry %s Area %d is empty.\n", featurename, data_area);
-		return err;
-	}
-
-	snprintf(dumpname, FILE_NAME_SIZE, "Telemetry_%s_Area_%d", featurename, data_area);
-	err = extract_dump_get_log(hdl, dumpname, filename, sn, size * TELEMETRY_BYTE_PER_BLOCK,
-				   TELEMETRY_TRANSFER_SIZE, nsid, tele_type, 0, offset, rae);
-
-	return err;
-}
-
 static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		int tele_type,
 		int tele_area,
@@ -1185,6 +606,12 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd cmd;
 	size_t full_size = 0, offset = bs, chunk_size;
 	int err, fd;
+	/*
+	 * Host-Initiated type "host0" retrieves the existing (retained)
+	 * telemetry capture, while "host1" (and plain "host") force the
+	 * controller to create a new capture before reading it back.
+	 */
+	bool retain_existing = (tele_type == TELEMETRY_TYPE_HOST_0);
 
 	if ((tele_type == TELEMETRY_TYPE_HOST_0) || (tele_type == TELEMETRY_TYPE_HOST_1))
 		tele_type = TELEMETRY_TYPE_HOST;
@@ -1205,10 +632,14 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		goto exit_status;
 	}
 
-	if (tele_type == TELEMETRY_TYPE_HOST)
-		nvme_init_get_log_create_telemetry_host(&cmd, hdr);
-	else
+	if (tele_type == TELEMETRY_TYPE_HOST) {
+		if (retain_existing)
+			nvme_init_get_log_telemetry_host(&cmd, 0, hdr, bs);
+		else
+			nvme_init_get_log_create_telemetry_host(&cmd, hdr);
+	} else {
 		nvme_init_get_log_telemetry_ctrl(&cmd, 0, hdr, bs);
+	}
 	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err < 0) {
 		nvme_show_err(err, "Failed to fetch telemetry-header.");
@@ -1487,7 +918,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 	__u32  nsid = NVME_NSID_ALL;
-	char sn[21] = {0,};
 	struct nvme_id_ctrl ctrl;
 	struct libnvme_passthru_cmd cmd;
 	bool is_support_telemetry_controller;
@@ -1523,8 +953,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
-
-	get_serial_number(&ctrl, sn);
 
 	is_support_telemetry_controller = ((ctrl.lpa & 0x8) >> 3);
 
@@ -1642,14 +1070,19 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		break;
 	case TELEMETRY_TYPE_HOST_0:
 	case TELEMETRY_TYPE_HOST_1:
-	default:
 		printf("Extracting Telemetry Host(%d) Dump (Data Area %d)...\n",
 				(tele_type == TELEMETRY_TYPE_HOST_0) ? 0 : 1, tele_area);
 
-		err = get_telemetry_dump(hdl, opt.output_file, sn, tele_type, tele_area, true);
+		/*
+		 * host0/host1 use the same Telemetry Host-Initiated (07h) log
+		 * layout as plain "host"; normalize the type string so the
+		 * parser selects the correct field table.
+		 */
+		opt.telemetry_type = "host";
+
+		err = parse_ocp_telemetry_log(&opt);
 		if (err)
-			nvme_show_error("NVMe Status: %s(%x)", libnvme_status_to_string(err, false),
-				err);
+			nvme_show_result("Status:(%x)\n", err);
 		break;
 	}
 
