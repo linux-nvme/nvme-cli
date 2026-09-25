@@ -111,6 +111,10 @@ if [ -z "${SYSCONFDIR}" ]; then
 	exit 1
 fi
 NVME_CONF_DIR="${SYSCONFDIR}/nvme"
+
+# nvme-discoverd's state files, e.g. /run/nvme/discoverd/controllers.
+RUNDIR=$(sed -n 's/^#define RUNDIR "\(.*\)"$/\1/p' "${BUILD_DIR}/nvme-config.h")
+STATE_CTRLS_DIR="${RUNDIR}/nvme/discoverd/controllers"
 NVME_CONF_DIR_CREATED=false
 
 DISCOVERD_UNIT=discoverd-wringer.service
@@ -715,6 +719,8 @@ assert_connected "replaces the stale unit and reconnects" \
 	"${TARGET_NQN}" 30
 assert_journal_has "the stale-unit collision was hit" \
 	"${PHASE4_START}" "held by a stale unit"
+assert_journal_has "startup removes the state of the gone device" \
+	"${PHASE4_START}" "device gone, removing stale state"
 
 log ">>>>> Phase 5: a stale unit's device name was reused <<<<<"
 #
@@ -736,6 +742,8 @@ else
 		"${FOREIGN_NQN}" "${PHASE5_DEV}"
 	assert_journal_lacks "does not adopt the other connection" \
 		"${PHASE5_START}" "${PHASE5_DEV} - adopted"
+	assert_journal_has "startup removes the reused name's state" \
+		"${PHASE5_START}" "${PHASE5_DEV}: device name reused"
 fi
 
 log ">>>>> Phase 6: restart over a configured IOC without [Host] <<<<<"
@@ -764,6 +772,30 @@ assert_dev_stable "restart adopts the configured IOC" \
 assert_journal_has "the adoption path was taken" \
 	"${PHASE6_START}" "${PHASE6_DEV} - adopted"
 
+log ">>>>> Phase 7: stopping a stale unit spares a reused device name <<<<<"
+#
+# As in phase 5, but the stale unit is stopped while the daemon is down.
+# Its ExecStop= finds its state for the device name. Only the inode
+# recorded at connect time shows that the name now belongs to another
+# connection.
+discoverd_stop_daemon_only
+PHASE7_DEV=$(connected_dev "${TARGET_NQN}")
+PHASE7_UNIT=$(cat "${STATE_CTRLS_DIR}/${PHASE7_DEV}/unit" 2>/dev/null)
+disconnect_out_of_band "${TARGET_NQN}"
+
+if [ -z "${PHASE7_UNIT}" ]; then
+	fail "phase 7 setup: no unit recorded for ${PHASE7_DEV}"
+elif ! connect_onto_dev "${FOREIGN_NQN}" "${PHASE7_DEV}"; then
+	skip "phase 7: could not get ${FOREIGN_NQN} onto ${PHASE7_DEV}"
+else
+	log "Stop ${PHASE7_UNIT}"
+	systemctl stop "${PHASE7_UNIT}" >/dev/null 2>&1
+	assert_dev_holds "the stale unit's ExecStop= spares the reused name" \
+		"${FOREIGN_NQN}" "${PHASE7_DEV}"
+fi
+discoverd_start
+assert_connected "reconnects its own controller" "${TARGET_NQN}" 30
+
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"
 	printf "\n"
@@ -774,10 +806,10 @@ fi
 
 mdns_setup
 
-log ">>>>> Phase 7: SIGHUP enables mDNS; an advertised DC is connected <<<<<"
+log ">>>>> Phase 8: SIGHUP enables mDNS; an advertised DC is connected <<<<<"
 mdns_port_open
 zeroconf_enable
-PHASE7_START=$(date +%H:%M:%S)
+PHASE8_START=$(date +%H:%M:%S)
 if timeout 20 systemctl reload "${DISCOVERD_UNIT}"; then
 	pass "systemctl reload completes"
 else
@@ -785,59 +817,59 @@ else
 fi
 sleep 2
 assert_journal_has "the reload started mDNS on ${IFACE}" \
-	"${PHASE7_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp"
+	"${PHASE8_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp"
 publish_start "p=tcp"
 assert_connected "connects the subsystem behind the advertised DC" \
 	"${MDNS_NQN}" 30
 
-log ">>>>> Phase 8: a withdrawn advertisement disconnects nothing <<<<<"
-PHASE8_DEV=$(connected_dev "${MDNS_NQN}")
+log ">>>>> Phase 9: a withdrawn advertisement disconnects nothing <<<<<"
+PHASE9_DEV=$(connected_dev "${MDNS_NQN}")
 publish_stop
 assert_dev_stable "stays connected after the advertisement is withdrawn" \
-	"${MDNS_NQN}" "${PHASE8_DEV}" 5
+	"${MDNS_NQN}" "${PHASE9_DEV}" 5
 
-log ">>>>> Phase 9: a DC advertised before its port is open <<<<<"
+log ">>>>> Phase 10: a DC advertised before its port is open <<<<<"
 #
 # A real DC was seen to advertise before its TCP listener was up. A plain
 # TCP connect is retried silently until the port opens. No NVMe connect is
 # attempted before then.
 mdns_phase_reset
-PHASE9_START=$(date +%H:%M:%S)
+PHASE10_START=$(date +%H:%M:%S)
 publish_start "p=tcp"
 sleep 3
 assert_not_connected "does not connect while the port is closed" \
 	"${MDNS_NQN}"
 assert_journal_lacks "no NVMe connect attempted while the port is closed" \
-	"${PHASE9_START}" "${MDNS_DC_REQUESTED}"
+	"${PHASE10_START}" "${MDNS_DC_REQUESTED}"
 mdns_port_open
 assert_connected "connects once the port opens" "${MDNS_NQN}" 30
 
-log ">>>>> Phase 10: an unusable TXT record <<<<<"
+log ">>>>> Phase 11: an unusable TXT record <<<<<"
 mdns_phase_reset
 mdns_port_open
-PHASE10_START=$(date +%H:%M:%S)
+PHASE11_START=$(date +%H:%M:%S)
 publish_start "p=bogus"
 sleep 3
 assert_not_connected "unknown p= value: not connected" "${MDNS_NQN}"
 assert_journal_has "unknown p= value: logged" \
-	"${PHASE10_START}" "missing/invalid transport in TXT record"
+	"${PHASE11_START}" "missing/invalid transport in TXT record"
 publish_stop
 publish_start
 sleep 3
 assert_not_connected "no TXT record: not connected" "${MDNS_NQN}"
 
-log ">>>>> Phase 11: an rdma DC is not checked first <<<<<"
+log ">>>>> Phase 12: an rdma DC is not checked first <<<<<"
 #
 # No RDMA hardware is needed: the test only checks that the connect is
 # requested at once, without a TCP check.
 mdns_phase_reset
-PHASE11_START=$(date +%H:%M:%S)
+PHASE12_START=$(date +%H:%M:%S)
 publish_start "p=roce"
 sleep 3
 assert_journal_has "rdma: connect requested at once" \
-	"${PHASE11_START}" "${MDNS_DC_REQUESTED}"
+	"${PHASE12_START}" "${MDNS_DC_REQUESTED}"
 
-log ">>>>> Phase 12: mDNS still works after 45 seconds <<<<<"
+log ">>>>> Phase 13: mDNS still works after 45 seconds <<<<<"
 #
 # sd-varlink's default call timeout is 45 s, and it also applies to the
 # BrowseServices call. The browse must outlive it.
@@ -849,18 +881,18 @@ publish_start "p=tcp"
 assert_connected "connects a DC advertised 50 s after startup" \
 	"${MDNS_NQN}" 30
 
-log ">>>>> Phase 13: mDNS recovers from a systemd-resolved restart <<<<<"
+log ">>>>> Phase 14: mDNS recovers from a systemd-resolved restart <<<<<"
 mdns_phase_reset
 mdns_port_open
-PHASE13_START=$(date +%H:%M:%S)
+PHASE14_START=$(date +%H:%M:%S)
 systemctl restart systemd-resolved
 sleep 1
 resolved_mdns_link_enable
 sleep 5
 assert_journal_has "the browse failed when systemd-resolved restarted" \
-	"${PHASE13_START}" "browsing _nvme-disc._tcp failed"
+	"${PHASE14_START}" "browsing _nvme-disc._tcp failed"
 assert_journal_has "the browse restarted" \
-	"${PHASE13_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp again"
+	"${PHASE14_START}" "mdns: browsing ${IFACE} for _nvme-disc._tcp again"
 publish_start "p=tcp"
 assert_connected "connects a DC advertised after the restart" \
 	"${MDNS_NQN}" 30

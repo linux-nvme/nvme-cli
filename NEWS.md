@@ -46,6 +46,12 @@
   Controller's own address. For an mDNS result, it is the interface.
   RDMA needs this, because it has no `host_iface` to select the link.
 
+* A connection unit of nvme-discoverd no longer disconnects another
+  controller that reuses its device name. The unit records the sysfs
+  inode of its device at connect time and disconnects only if the inode
+  still matches. At startup, nvme-discoverd removes the state of
+  controllers that are gone.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

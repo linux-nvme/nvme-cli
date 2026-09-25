@@ -556,17 +556,25 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 		n1 = snprintf(exec_start_post, sizeof(exec_start_post),
 			      "DEV=$(cat %s 2>/dev/null) && "
 			      "mkdir -p %s/$DEV && "
-			      "echo %s > %s/$DEV/unit",
+			      "echo %s > %s/$DEV/unit && "
+			      "stat -Lc %%i %s/$DEV > %s/$DEV/ino",
 			      devid_path, STATE_CTRLS_DIR,
-			      unit_name, STATE_CTRLS_DIR);
+			      unit_name, STATE_CTRLS_DIR,
+			      SYSFS_NVME_DIR, STATE_CTRLS_DIR);
 
+		/*
+		 * The kernel reuses device names. The inode check makes sure
+		 * $DEV is still the controller this unit connected.
+		 */
 		n2 = snprintf(exec_stop, sizeof(exec_stop),
 			      "DEV=$(cat %s 2>/dev/null); "
 			      "[ -n \"$DEV\" ] && "
 			      "[ \"$(cat %s/$DEV/unit 2>/dev/null)\" = \"%s\" ] && "
+			      "[ \"$(stat -Lc %%i %s/$DEV 2>/dev/null)\" = "
+			      "\"$(cat %s/$DEV/ino 2>/dev/null)\" ] && "
 			      "\"%s\" disconnect -d $DEV",
 			      devid_path, STATE_CTRLS_DIR, unit_name,
-			      mgr->nvme_path);
+			      SYSFS_NVME_DIR, STATE_CTRLS_DIR, mgr->nvme_path);
 
 		n3 = snprintf(exec_stop_post, sizeof(exec_stop_post),
 			      "DEV=$(cat %s 2>/dev/null); "

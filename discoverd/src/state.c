@@ -6,7 +6,10 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
+#include <dirent.h>
 #include <errno.h>
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +18,7 @@
 
 #include <shared/fs-util.h>
 
+#include "log.h"
 #include "state.h"
 
 /*
@@ -35,6 +39,60 @@ int state_init(void)
 		return ret;
 
 	return shr_mkdir_p(STATE_CTRLS_DIR, 0755);
+}
+
+/* Read the inode recorded for @devid. Returns false if there is none. */
+static bool state_read_ino(const char *devid, uint64_t *ino)
+{
+	char path[512];
+	FILE *f;
+	bool ok;
+
+	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s/ino", devid);
+	f = fopen(path, "r");
+	if (!f)
+		return false;
+
+	ok = fscanf(f, "%" SCNu64, ino) == 1;
+	fclose(f);
+
+	return ok;
+}
+
+void state_gc(void)
+{
+	struct dirent *de;
+	DIR *d;
+
+	d = opendir(STATE_CTRLS_DIR);
+	if (!d)
+		return;
+
+	while ((de = readdir(d))) {
+		char syspath[512];
+		struct stat st;
+		uint64_t ino;
+
+		if (de->d_name[0] == '.')
+			continue;
+
+		snprintf(syspath, sizeof(syspath), SYSFS_NVME_DIR "/%s",
+			 de->d_name);
+		if (!stat(syspath, &st)) {
+			if (!state_read_ino(de->d_name, &ino) ||
+			    ino == (uint64_t)st.st_ino)
+				continue;
+			disc_info("%s: device name reused, removing stale state",
+				  de->d_name);
+		} else {
+			disc_info("%s: device gone, removing stale state",
+				  de->d_name);
+		}
+
+		state_remove_ctrl(de->d_name);
+	}
+
+	closedir(d);
 }
 
 char *state_read_unit(const char *devid)
@@ -70,6 +128,8 @@ void state_remove_ctrl(const char *devid)
 	char path[512];
 
 	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s/unit", devid);
+	unlink(path);
+	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s/ino", devid);
 	unlink(path);
 	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s", devid);
 	rmdir(path);

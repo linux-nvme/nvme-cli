@@ -1354,6 +1354,7 @@ int main(int argc, char **argv)
 		disc_err("state_init: %s", strerror(-r));
 		return 1;
 	}
+	state_gc();
 
 	ctx.nvme_ctx = libnvme_create_global_ctx();
 	if (!ctx.nvme_ctx) {
