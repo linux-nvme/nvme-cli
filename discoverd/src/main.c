@@ -404,7 +404,8 @@ static void start_ctrl(const struct libnvmf_tid *tid, bool is_dc,
 struct dlp_fetch_ctx {
 	const struct libnvmf_config_conn *via_dc; // dc_tid's own conn, if any
 	const struct conn_scan *scan; // shared by every entry's connect check
-	struct tid_list iocs;
+	struct tid_list iocs;      // for the inventory
+	struct tid_list referrals; // for the inventory
 	bool self_seen;
 	bool epcsd; // meaningful only if self_seen
 };
@@ -414,7 +415,6 @@ static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
 	struct dlp_fetch_ctx *fctx = user_data;
 	struct libnvmf_tid *dup;
 
-	// Accumulate IOC TIDs for inventory_update_dlp().
 	dup = libnvmf_tid_dup(t);
 	if (!dup || tid_list_append(&fctx->iocs, dup) < 0) {
 		tid_free(dup);
@@ -451,6 +451,11 @@ static void dlp_dc_callback(const struct libnvmf_tid *t, bool epcsd,
 			    void *user_data)
 {
 	struct dlp_fetch_ctx *fctx = user_data;
+	struct libnvmf_tid *dup;
+
+	dup = libnvmf_tid_dup(t);
+	if (!dup || tid_list_append(&fctx->referrals, dup) < 0)
+		tid_free(dup);
 
 	if (should_connect(fctx->scan, t, NULL)) {
 		start_ctrl(t, true, fctx->via_dc);
@@ -519,10 +524,14 @@ static void fetch_and_process_dlp(const char *devname,
 	 * A failed fetch tells nothing about the DC's entries, so keep the
 	 * last list. A log page without IOC entries replaces it.
 	 */
-	if (r == 0 && tid_list_append(&fctx.iocs, NULL) == 0)
-		inventory_update_dlp(ctx.inventory, dc_tid, fctx.iocs.items);
-	else
+	if (r == 0 && tid_list_append(&fctx.iocs, NULL) == 0 &&
+	    tid_list_append(&fctx.referrals, NULL) == 0) {
+		inventory_update_dlp(ctx.inventory, dc_tid, fctx.iocs.items,
+				     fctx.referrals.items);
+	} else {
 		tid_list_free_items(&fctx.iocs);
+		tid_list_free_items(&fctx.referrals);
+	}
 }
 
 /*
@@ -640,7 +649,7 @@ static int retry_timeout(sd_event_source *src,
 		disc_warn("%s - giving up after repeated failures",
 			  libnvmf_tid_str(e->tid));
 		if (e->is_dc)
-			inventory_remove_dlp(ctx.inventory, e->tid);
+			inventory_forget_dc(ctx.inventory, e->tid);
 		ctrl_remove(e);
 		return 0;
 	}
@@ -919,6 +928,7 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 	 * always a DC here, never an IOC. Connect as a DC; we fetch its
 	 * DLP (and discover any IOCs behind it) once the device appears.
 	 */
+	inventory_add_discovered_dc(ctx.inventory, tid);
 	if (should_connect(NULL, tid, NULL))
 		start_ctrl(tid, true, NULL);
 }
@@ -993,6 +1003,7 @@ static void on_mdns_add(const char *traddr, const char *trsvcid,
 	    tid_set_default_host_if_unset(tid, ctx.hostnqn, ctx.hostid) < 0)
 		return;
 
+	inventory_add_discovered_dc(ctx.inventory, tid);
 	if (should_connect(NULL, tid, NULL))
 		start_ctrl(tid, true, NULL);
 }

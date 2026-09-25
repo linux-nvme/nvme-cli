@@ -57,26 +57,51 @@ const struct libnvmf_config_conn *inventory_config_conn_for(
 		const struct inventory *inv, const struct libnvmf_tid *t);
 
 /*
+ * Same limit as the discovery walk in libnvme (NVMF_MAX_REFERRAL_DEPTH):
+ * a DC is followed up to 8 referral hops past a DC with a source.
+ */
+#define INVENTORY_MAX_REFERRAL_HOPS	8
+
+/*
  * Update the per-DC entry in the DLP cache when a DC's log page is
- * refreshed. ioc_tids is a NULL-terminated array of TIDs from the new
- * DLP. The cache takes ownership of each TID in the array; the array
- * itself is freed by this function.
+ * refreshed. iocs and referrals are NULL-terminated arrays of the IOC and
+ * referral TIDs from the new DLP. The cache takes ownership of each TID in
+ * the arrays; the arrays themselves are freed by this function.
  */
 void inventory_update_dlp(struct inventory *inv,
 			  const struct libnvmf_tid *dc_tid,
-			  struct libnvmf_tid **ioc_tids);
+			  struct libnvmf_tid **iocs,
+			  struct libnvmf_tid **referrals);
 
-/* Remove the DLP cache entry for dc_tid (e.g. when DC disconnects). */
-void inventory_remove_dlp(struct inventory *inv,
-			  const struct libnvmf_tid *dc_tid);
+/*
+ * Record a DC found through mDNS or FC kickstart. It stays desired until
+ * inventory_forget_dc().
+ */
+void inventory_add_discovered_dc(struct inventory *inv,
+				 const struct libnvmf_tid *tid);
+
+/*
+ * Forget a DC that nvme-discoverd gave up on: its DLP cache entry and its
+ * place among the discovered DCs.
+ */
+void inventory_forget_dc(struct inventory *inv,
+			 const struct libnvmf_tid *dc_tid);
+
+/*
+ * Referral hops from a DC with a source (NBFT, the configuration, or
+ * discovered) to dc_tid: 0 for such a DC, or -1 if dc_tid is not reached
+ * within INVENTORY_MAX_REFERRAL_HOPS.
+ */
+int inventory_referral_hops(const struct inventory *inv,
+			    const struct libnvmf_tid *dc_tid);
 
 /*
  * Query: is tid in the desired connection set?
- * Returns true if tid appears in the NBFT set, the config set, or any
- * per-DC entry in the DLP cache. tid must be a candidate TID: one built
- * from NBFT, config, a Discovery Log Page, or mDNS. A TID read from sysfs
- * seldom compares equal to the candidate that produced it. Match those
- * with tid_matches_existing().
+ * Returns true if tid appears in the NBFT set, the config set, or the
+ * discovered DCs, or in the cached DLP of a DC that is itself desired.
+ * tid must be a candidate TID: one built from NBFT, config, a Discovery
+ * Log Page, or mDNS. A TID read from sysfs seldom compares equal to the
+ * candidate that produced it. Match those with tid_matches_existing().
  */
 bool inventory_is_desired(const struct inventory *inv,
 			  const struct libnvmf_tid *tid);
