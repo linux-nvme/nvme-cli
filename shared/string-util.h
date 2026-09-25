@@ -222,3 +222,19 @@ static inline char *shr_kv_keymatch(const char *kv, const char *key)
 
 	return NULL;
 }
+
+/*
+ * Return string line length.
+ */
+static inline size_t shr_linelen(char *s)
+{
+	size_t len = s ? strlen(s) : 0;
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		if (s[i] == '\n')
+			break;
+	}
+
+	return i;
+}
