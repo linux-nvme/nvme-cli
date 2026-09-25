@@ -491,13 +491,14 @@ static void fetch_and_process_dlp(const char *devname,
 	};
 	struct active_ctrl *e = ctrl_find_by_devname(devname);
 	bool epcsd;
+	int r;
 
 	// One snapshot for every entry this log page turns out to hold.
 	conn_scan_load(&scan);
 	fctx.scan = &scan;
 
-	dlp_fetch(&ctx, devname, dc_tid, dlp_ioc_callback, dlp_dc_callback,
-		  dlp_self_callback, &fctx);
+	r = dlp_fetch(&ctx, devname, dc_tid, dlp_ioc_callback,
+		      dlp_dc_callback, dlp_self_callback, &fctx);
 
 	epcsd = dc_effective_epcsd(&fctx, e);
 	disc_dbg("%s: self entry %s, effective EPCSD=%d",
@@ -513,14 +514,14 @@ static void fetch_and_process_dlp(const char *devname,
 			epcsd_park(e);
 	}
 
-	if (fctx.iocs.len) {
-		if (tid_list_append(&fctx.iocs, NULL) == 0) {
-			inventory_update_dlp(ctx.inventory, dc_tid,
-					     fctx.iocs.items);
-		} else {
-			tid_list_free_items(&fctx.iocs);
-		}
-	}
+	/*
+	 * A failed fetch tells nothing about the DC's entries, so keep the
+	 * last list. A log page without IOC entries replaces it.
+	 */
+	if (r == 0 && tid_list_append(&fctx.iocs, NULL) == 0)
+		inventory_update_dlp(ctx.inventory, dc_tid, fctx.iocs.items);
+	else
+		tid_list_free_items(&fctx.iocs);
 }
 
 /*
