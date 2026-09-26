@@ -1659,7 +1659,7 @@ static void stdout_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 	for (int i = 0; i < nruh; i++) {
 		struct nvme_fdp_ruhu_desc *ruhu = &log->ruhus[i];
 		const char *ruha_str;
-		char name[40];
+		char name[48];
 
 		switch (ruhu->ruha) {
 		case 0x0:
