@@ -3075,10 +3075,10 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	__u32 rsvd18 = (oaes >> 18) & 0x1;
 	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
 	__u32 tthr = NVME_CTRL_OAES_TTHR(oaes);
-	__u32 normal_shn = NVME_CTRL_OAES_NNVMSS(oaes);
-	__u32 egealpcn = NVME_CTRL_OAES_EGEALPCN(oaes);
-	__u32 lbasin = NVME_CTRL_OAES_LBASIAN(oaes);
-	__u32 plealcn = NVME_CTRL_OAES_PLEALCN(oaes);
+	__u32 normal_shn = NVME_CTRL_OAES_NNSS(oaes);
+	__u32 egealpcn = NVME_CTRL_OAES_EGEAN(oaes);
+	__u32 lbasin = NVME_CTRL_OAES_LSIAN(oaes);
+	__u32 plealcn = NVME_CTRL_OAES_PLEAN(oaes);
 	__u32 anacn = NVME_CTRL_OAES_ANACN(oaes);
 	__u32 rsvd10 = (oaes >> 10) & 0x1;
 	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
@@ -3248,8 +3248,8 @@ static struct shr_table *stdout_id_ctrl_bpcap_table(__u8 ctrl_bpcap)
 {
 	struct shr_table *t;
 	__u8 rsvd3 = (ctrl_bpcap >> 3);
-	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_SFBPWPS);
-	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_RPMBBPWPS);
+	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_SFBPWPS);
+	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_RPMBBPWPS);
 	static const char * const rpmbbpwps_def[] = {
 		"Support Not Specified",
 		"Not Supported",
@@ -3460,11 +3460,11 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 	__u16 lock = NVME_CTRL_OACS_CFLS(oacs);
 	__u16 glbas = NVME_CTRL_OACS_GLSS(oacs);
 	__u16 dbc = NVME_CTRL_OACS_DBCS(oacs);
-	__u16 vir = NVME_CTRL_OACS_VMS_M(oacs);
+	__u16 vir = NVME_CTRL_OACS_VMS(oacs);
 	__u16 nmi = NVME_CTRL_OACS_NSRS(oacs);
 	__u16 dir = NVME_CTRL_OACS_DIRS(oacs);
 	__u16 sft = NVME_CTRL_OACS_DSTS(oacs);
-	__u16 nsm = NVME_CTRL_OACS_NMS_M(oacs);
+	__u16 nsm = NVME_CTRL_OACS_NMS(oacs);
 	__u16 fwc = NVME_CTRL_OACS_FWDS(oacs);
 	__u16 fmt = NVME_CTRL_OACS_FNVMS(oacs);
 	__u16 sec = NVME_CTRL_OACS_SSRS(oacs);

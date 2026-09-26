@@ -106,6 +106,28 @@
  */
 #define NVME_VAL(name) (NVME_##name##_MASK << NVME_##name##_SHIFT)
 
+#ifdef NVME_HAVE_FFSLL
+#define nvme_ffs ffsll
+#else /* NVME_HAVE_FFSLL */
+static inline int nvme_ffs(long long i)
+{
+	int j;
+
+	for (j = 1; !(i & 1); i >>= 1)
+		j++;
+
+	return j;
+}
+#endif /* NVME_HAVE_FFSLL */
+
+/**
+ * NVME_BIT() - get mask bit width
+ * @name: The name of the sub-field within an nvme value
+ *
+ * Return: The mask bit number
+ */
+#define NVME_BIT(name) (nvme_ffs(NVME_##name##_MASK + 1) - 1)
+
 /**
  * enum nvme_constants - A place to stash various constant nvme values
  * @NVME_NSID_ALL:		A broadcast value that is used to specify all
@@ -1827,110 +1849,129 @@ enum nvme_id_ctrl_cmic {
 /**
  * enum nvme_id_ctrl_oaes - Optional Asynchronous Events Supported
  * @NVME_CTRL_OAES_NSAN_SHIFT: Shift amount to get the Attached Namespace Attribute Notices event supported
- * @NVME_CTRL_OAES_FA_SHIFT: Shift amount to get the Firmware Activation Notices event supported
- * @NVME_CTRL_OAES_ANA_SHIFT: Shift amount to get the ANA Change Notices supported
- * @NVME_CTRL_OAES_PLEA_SHIFT: Shift amount to get the Predictable Latency Event Aggregate Log
+ * @NVME_CTRL_OAES_FAN_SHIFT: Shift amount to get the Firmware Activation
+ *			      Notices event supported
+ * @NVME_CTRL_OAES_ANACN_SHIFT: Shift amount to get the ANA Change Notices
+ *				supported
+ * @NVME_CTRL_OAES_PLEAN_SHIFT: Shift amount to get the Predictable Latency
+ *				Event Aggregate Log
  *                             Change Notices event supported
- * @NVME_CTRL_OAES_LBAS_SHIFT: Shift amount to get the LBA Status Information Notices event
+ * @NVME_CTRL_OAES_LSIAN_SHIFT: Shift amount to get the LBA Status Information
+ *				Notices event
  *                             supported
- * @NVME_CTRL_OAES_EGE_SHIFT: Shift amount to get the Endurance Group Events Aggregate Log Change
+ * @NVME_CTRL_OAES_EGEAN_SHIFT: Shift amount to get the Endurance Group Events
+ *				Aggregate Log Change
  *                            Notices event supported
- * @NVME_CTRL_OAES_NS_SHIFT: Shift amount to get the Normal NVM Subsystem Shutdown event supported
- * @NVME_CTRL_OAES_TTH_SHIFT: Shift amount to get the Temperature Threshold Hysteresis Recovery
+ * @NVME_CTRL_OAES_NNSS_SHIFT: Shift amount to get the Normal NVM Subsystem
+ *			       Shutdown event supported
+ * @NVME_CTRL_OAES_TTHR_SHIFT: Shift amount to get the Temperature Threshold
+ *			       Hysteresis Recovery
  *                            event supported
  * @NVME_CTRL_OAES_RGCNS_SHIFT: Shift amount to get the Reachability Groups Change Notices supported
  * @NVME_CTRL_OAES_ANSAN_SHIFT: Shift amount to get the Allocated Namespace Attribute Notices
  *                              supported
  * @NVME_CTRL_OAES_RLCC_SHIFT: Shift amount to get the Rate Limiting Configuration Change event
  *                             supported
- * @NVME_CTRL_OAES_ZD_SHIFT: Shift amount to get the Zone Descriptor Change Notifications supported
- * @NVME_CTRL_OAES_DL_SHIFT: Shift amount to get the Discover Log Page Change Notifications
- *                           supported
+ * @NVME_CTRL_OAES_ZDCN_SHIFT: Shift amount to get the Zone Descriptor Change
+ *			       Notifications supported
+ * @NVME_CTRL_OAES_DLPCN_SHIFT: Shift amount to get the Discover Log Page Change
+ *				Notificationssupported
  * @NVME_CTRL_OAES_NSAN_MASK: Mask to get the Attached Namespace Attribute Notices event supported
- * @NVME_CTRL_OAES_FA_MASK: Mask to get the Firmware Activation Notices event supported
- * @NVME_CTRL_OAES_ANA_MASK: Mask to get the ANA Change Notices supported
- * @NVME_CTRL_OAES_PLEA_MASK: Mask to get the Predictable Latency Event Aggregate Log Change Notices
+ * @NVME_CTRL_OAES_FAN_MASK: Mask to get the Firmware Activation Notices event
+ *			     supported
+ * @NVME_CTRL_OAES_ANACN_MASK: Mask to get the ANA Change Notices supported
+ * @NVME_CTRL_OAES_PLEAN_MASK: Mask to get the Predictable Latency Event
+ *			       Aggregate Log Change Notices
  *                            event supported
- * @NVME_CTRL_OAES_LBAS_MASK: Mask to get the LBA Status Information Notices event supported
- * @NVME_CTRL_OAES_EGE_MASK: Mask to get the Endurance Group Events Aggregate Log Change Notices
+ * @NVME_CTRL_OAES_LSIAN_MASK: Mask to get the LBA Status Information Notices
+ *			       event supported
+ * @NVME_CTRL_OAES_EGEAN_MASK: Mask to get the Endurance Group Events Aggregate
+ *			       Log Change Notices
  *                           event supported
- * @NVME_CTRL_OAES_NS_MASK: Mask to get the Normal NVM Subsystem Shutdown event supported
- * @NVME_CTRL_OAES_TTH_MASK: Mask to get the Temperature Threshold Hysteresis Recovery event
+ * @NVME_CTRL_OAES_NNSS_MASK: Mask to get the Normal NVM Subsystem Shutdown
+ *			      event supported
+ * @NVME_CTRL_OAES_TTHR_MASK: Mask to get the Temperature Threshold Hysteresis
+ *			      Recovery event
  *                           supported
  * @NVME_CTRL_OAES_RGCNS_MASK: Mask to get the Reachability Groups Change Notices supported
  * @NVME_CTRL_OAES_ANSAN_MASK: Mask to get the Allocated Namespace Attribute Notices supported
  * @NVME_CTRL_OAES_RLCC_MASK: Mask to get the Rate Limiting Configuration Change event supported
- * @NVME_CTRL_OAES_ZD_MASK: Mask to get the Zone Descriptor Change Notifications supported
- * @NVME_CTRL_OAES_DL_MASK: Mask to get the Discover Log Page Change Notifications supported
+ * @NVME_CTRL_OAES_ZDCN_MASK: Mask to get the Zone Descriptor Change
+ *			      Notifications supported
+ * @NVME_CTRL_OAES_DLPCN_MASK: Mask to get the Discover Log Page Change
+ *			       Notifications supported
  * @NVME_CTRL_OAES_NSAN: Attached Namespace Attribute Notices event supported
- * @NVME_CTRL_OAES_FA: Firmware Activation Notices event supported
- * @NVME_CTRL_OAES_ANA: ANA Change Notices supported
- * @NVME_CTRL_OAES_PLEA: Predictable Latency Event Aggregate Log Change Notices event supported
- * @NVME_CTRL_OAES_LBAS: LBA Status Information Notices event supported
- * @NVME_CTRL_OAES_EGE: Endurance Group Events Aggregate Log Change Notices event supported
- * @NVME_CTRL_OAES_NS: Normal NVM Subsystem Shutdown event supported
- * @NVME_CTRL_OAES_TTH: Temperature Threshold Hysteresis Recovery event supported
+ * @NVME_CTRL_OAES_FAN: Firmware Activation Notices event supported
+ * @NVME_CTRL_OAES_ANACN: ANA Change Notices supported
+ * @NVME_CTRL_OAES_PLEAN: Predictable Latency Event Aggregate Log Change Notices
+ *			  event supported
+ * @NVME_CTRL_OAES_LSIAN: LBA Status Information Notices event supported
+ * @NVME_CTRL_OAES_EGEAN: Endurance Group Events Aggregate Log Change Notices
+ *			  event supported
+ * @NVME_CTRL_OAES_NNSS: Normal NVM Subsystem Shutdown event supported
+ * @NVME_CTRL_OAES_TTHR: Temperature Threshold Hysteresis Recovery event
+ *			 supported
  * @NVME_CTRL_OAES_RGCNS: Reachability Groups Change Notices supported
  * @NVME_CTRL_OAES_ANSAN: Allocated Namespace Attribute Notices supported
  * @NVME_CTRL_OAES_RLCC: Rate Limiting Configuration Change event supported
- * @NVME_CTRL_OAES_ZD: Zone Descriptor Change Notifications supported
- * @NVME_CTRL_OAES_DL: Discover Log Page Change Notifications supported
+ * @NVME_CTRL_OAES_ZDCN: Zone Descriptor Change Notifications supported
+ * @NVME_CTRL_OAES_DLPCN: Discover Log Page Change Notifications supported
  */
 enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_NSAN_SHIFT	= 8,
-	NVME_CTRL_OAES_FA_SHIFT		= 9,
-	NVME_CTRL_OAES_ANA_SHIFT	= 11,
-	NVME_CTRL_OAES_PLEA_SHIFT	= 12,
-	NVME_CTRL_OAES_LBAS_SHIFT	= 13,
-	NVME_CTRL_OAES_EGE_SHIFT	= 14,
-	NVME_CTRL_OAES_NS_SHIFT		= 15,
-	NVME_CTRL_OAES_TTH_SHIFT	= 16,
+	NVME_CTRL_OAES_FAN_SHIFT	= 9,
+	NVME_CTRL_OAES_ANACN_SHIFT	= 11,
+	NVME_CTRL_OAES_PLEAN_SHIFT	= 12,
+	NVME_CTRL_OAES_LSIAN_SHIFT	= 13,
+	NVME_CTRL_OAES_EGEAN_SHIFT	= 14,
+	NVME_CTRL_OAES_NNSS_SHIFT	= 15,
+	NVME_CTRL_OAES_TTHR_SHIFT	= 16,
 	NVME_CTRL_OAES_RGCNS_SHIFT	= 17,
 	NVME_CTRL_OAES_ANSAN_SHIFT	= 19,
 	NVME_CTRL_OAES_RLCC_SHIFT	= 22,
-	NVME_CTRL_OAES_ZD_SHIFT		= 27,
-	NVME_CTRL_OAES_DL_SHIFT		= 31,
+	NVME_CTRL_OAES_ZDCN_SHIFT	= 27,
+	NVME_CTRL_OAES_DLPCN_SHIFT	= 31,
 	NVME_CTRL_OAES_NSAN_MASK	= 0x1,
-	NVME_CTRL_OAES_FA_MASK		= 0x1,
-	NVME_CTRL_OAES_ANA_MASK		= 0x1,
-	NVME_CTRL_OAES_PLEA_MASK	= 0x1,
-	NVME_CTRL_OAES_LBAS_MASK	= 0x1,
-	NVME_CTRL_OAES_EGE_MASK		= 0x1,
-	NVME_CTRL_OAES_NS_MASK		= 0x1,
-	NVME_CTRL_OAES_TTH_MASK		= 0x1,
+	NVME_CTRL_OAES_FAN_MASK		= 0x1,
+	NVME_CTRL_OAES_ANACN_MASK	= 0x1,
+	NVME_CTRL_OAES_PLEAN_MASK	= 0x1,
+	NVME_CTRL_OAES_LSIAN_MASK	= 0x1,
+	NVME_CTRL_OAES_EGEAN_MASK	= 0x1,
+	NVME_CTRL_OAES_NNSS_MASK	= 0x1,
+	NVME_CTRL_OAES_TTHR_MASK	= 0x1,
 	NVME_CTRL_OAES_RGCNS_MASK	= 0x1,
 	NVME_CTRL_OAES_ANSAN_MASK	= 0x1,
 	NVME_CTRL_OAES_RLCC_MASK	= 0x1,
-	NVME_CTRL_OAES_ZD_MASK		= 0x1,
-	NVME_CTRL_OAES_DL_MASK		= 0x1,
+	NVME_CTRL_OAES_ZDCN_MASK	= 0x1,
+	NVME_CTRL_OAES_DLPCN_MASK	= 0x1,
 	NVME_CTRL_OAES_NSAN		= NVME_VAL(CTRL_OAES_NSAN),
-	NVME_CTRL_OAES_FA		= NVME_VAL(CTRL_OAES_FA),
-	NVME_CTRL_OAES_ANA		= NVME_VAL(CTRL_OAES_ANA),
-	NVME_CTRL_OAES_PLEA		= NVME_VAL(CTRL_OAES_PLEA),
-	NVME_CTRL_OAES_LBAS		= NVME_VAL(CTRL_OAES_LBAS),
-	NVME_CTRL_OAES_EGE		= NVME_VAL(CTRL_OAES_EGE),
-	NVME_CTRL_OAES_NS		= NVME_VAL(CTRL_OAES_NS),
-	NVME_CTRL_OAES_TTH		= NVME_VAL(CTRL_OAES_TTH),
+	NVME_CTRL_OAES_FAN		= NVME_VAL(CTRL_OAES_FAN),
+	NVME_CTRL_OAES_ANACN		= NVME_VAL(CTRL_OAES_ANACN),
+	NVME_CTRL_OAES_PLEAN		= NVME_VAL(CTRL_OAES_PLEAN),
+	NVME_CTRL_OAES_LSIAN		= NVME_VAL(CTRL_OAES_LSIAN),
+	NVME_CTRL_OAES_EGEAN		= NVME_VAL(CTRL_OAES_EGEAN),
+	NVME_CTRL_OAES_NNSS		= NVME_VAL(CTRL_OAES_NNSS),
+	NVME_CTRL_OAES_TTHR		= NVME_VAL(CTRL_OAES_TTHR),
 	NVME_CTRL_OAES_RGCNS		= NVME_VAL(CTRL_OAES_RGCNS),
 	NVME_CTRL_OAES_ANSAN		= NVME_VAL(CTRL_OAES_ANSAN),
 	NVME_CTRL_OAES_RLCC		= NVME_VAL(CTRL_OAES_RLCC),
-	NVME_CTRL_OAES_ZD		= NVME_VAL(CTRL_OAES_ZD),
-	NVME_CTRL_OAES_DL		= NVME_VAL(CTRL_OAES_DL),
+	NVME_CTRL_OAES_ZDCN		= NVME_VAL(CTRL_OAES_ZDCN),
+	NVME_CTRL_OAES_DLPCN		= NVME_VAL(CTRL_OAES_DLPCN),
 };
 
 #define NVME_CTRL_OAES_NSAN(oaes)	NVME_GET(oaes, CTRL_OAES_NSAN)
-#define NVME_CTRL_OAES_FAN(oaes)	NVME_GET(oaes, CTRL_OAES_FA)
-#define NVME_CTRL_OAES_ANACN(oaes)	NVME_GET(oaes, CTRL_OAES_ANA)
-#define NVME_CTRL_OAES_PLEALCN(oaes)	NVME_GET(oaes, CTRL_OAES_PLEA)
-#define NVME_CTRL_OAES_LBASIAN(oaes)	NVME_GET(oaes, CTRL_OAES_LBAS)
-#define NVME_CTRL_OAES_EGEALPCN(oaes)	NVME_GET(oaes, CTRL_OAES_EGE)
-#define NVME_CTRL_OAES_NNVMSS(oaes)	NVME_GET(oaes, CTRL_OAES_NS)
-#define NVME_CTRL_OAES_TTHR(oaes)	NVME_GET(oaes, CTRL_OAES_TTH)
+#define NVME_CTRL_OAES_FAN(oaes)	NVME_GET(oaes, CTRL_OAES_FAN)
+#define NVME_CTRL_OAES_ANACN(oaes)	NVME_GET(oaes, CTRL_OAES_ANACN)
+#define NVME_CTRL_OAES_PLEAN(oaes)	NVME_GET(oaes, CTRL_OAES_PLEAN)
+#define NVME_CTRL_OAES_LSIAN(oaes)	NVME_GET(oaes, CTRL_OAES_LSIAN)
+#define NVME_CTRL_OAES_EGEAN(oaes)	NVME_GET(oaes, CTRL_OAES_EGEAN)
+#define NVME_CTRL_OAES_NNSS(oaes)	NVME_GET(oaes, CTRL_OAES_NNSS)
+#define NVME_CTRL_OAES_TTHR(oaes)	NVME_GET(oaes, CTRL_OAES_TTHR)
 #define NVME_CTRL_OAES_RGCNS(oaes)	NVME_GET(oaes, CTRL_OAES_RGCNS)
 #define NVME_CTRL_OAES_ANSAN(oaes)	NVME_GET(oaes, CTRL_OAES_ANSAN)
 #define NVME_CTRL_OAES_RLCC(oaes)	NVME_GET(oaes, CTRL_OAES_RLCC)
-#define NVME_CTRL_OAES_ZDCN(oaes)	NVME_GET(oaes, CTRL_OAES_ZD)
-#define NVME_CTRL_OAES_DLPCN(oaes)	NVME_GET(oaes, CTRL_OAES_DL)
+#define NVME_CTRL_OAES_ZDCN(oaes)	NVME_GET(oaes, CTRL_OAES_ZDCN)
+#define NVME_CTRL_OAES_DLPCN(oaes)	NVME_GET(oaes, CTRL_OAES_DLPCN)
 
 /**
  * enum nvme_id_ctrl_ctratt - Controller attributes
@@ -2115,34 +2156,45 @@ enum nvme_id_ctrl_ctratt {
 
 /**
  * enum nvme_id_ctrl_bpcap - Boot Partition Capabilities
- * @NVME_CTRL_BACAP_RPMBBPWPS_SHIFT:		Shift amount to get the RPMB Boot Partition Write
- *						Protection Support from the &struct
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_SHIFT:		Shift amount to get the RPMB
+ *						Boot Partition Write Protection
+ *						Support from the &struct
  *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_SFBPWPS_SHIFT:		Shift amount to get the Set Features Boot Partition
- *						Write Protection Support from the &struct
+ * @NVME_CTRL_BPCAP_SFBPWPS_SHIFT:		Shift amount to get the Set
+ *						Features Boot Partition Write
+ *						Protection Support from the
+ *						&struct nvme_id_ctrl.bpcap
+ *						field.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_MASK:		Mask to get the RPMB Boot
+ *						Partition Write Protection
+ *						Support from the &struct
  *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_RPMBBPWPS_MASK:		Mask to get the RPMB Boot Partition Write
- *						Protection Support from the &struct
+ * @NVME_CTRL_BPCAP_SFBPWPS_MASK:		Mask to get the Set Features
+ *						Boot Partition Write Protection
+ *						Support from the &struct
  *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_SFBPWPS_MASK:		Mask to get the Set Features Boot Partition Write
- *						Protection Support from the &struct
- *						nvme_id_ctrl.bpcap field.
- * @NVME_CTRL_BACAP_RPMBBPWPS_NOT_SPECIFIED:	Support for RPMB Boot Partition Write Protection
- *						is not specified.
- * @NVME_CTRL_BACAP_RPMBBPWPS_NOT_SUPPORTED:	RPMB Boot Partition Write Protection is not
- *						supported by this controller.
- * @NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED:	RPMB Boot Partition Write Protection is supported
- *						by this controller.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SPECIFIED:	Support for RPMB Boot Partition
+ *						Write Protection is not
+ *						specified.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SUPPORTED:	RPMB Boot Partition Write
+ *						Protection is not supported by
+ *						this controller.
+ * @NVME_CTRL_BPCAP_RPMBBPWPS_SUPPORTED:	RPMB Boot Partition Write
+ *						Protection is supported by this
+ *						controller.
  */
 enum nvme_id_ctrl_bpcap {
-	NVME_CTRL_BACAP_RPMBBPWPS_SHIFT		= 0,
-	NVME_CTRL_BACAP_SFBPWPS_SHIFT		= 2,
-	NVME_CTRL_BACAP_RPMBBPWPS_MASK		= 0x3,
-	NVME_CTRL_BACAP_SFBPWPS_MASK		= 0x1,
-	NVME_CTRL_BACAP_RPMBBPWPS_NOT_SPECIFIED	= 0,
-	NVME_CTRL_BACAP_RPMBBPWPS_NOT_SUPPORTED	= 1,
-	NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED	= 2,
+	NVME_CTRL_BPCAP_RPMBBPWPS_SHIFT		= 0,
+	NVME_CTRL_BPCAP_SFBPWPS_SHIFT		= 2,
+	NVME_CTRL_BPCAP_RPMBBPWPS_MASK		= 0x3,
+	NVME_CTRL_BPCAP_SFBPWPS_MASK		= 0x1,
+	NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SPECIFIED	= 0,
+	NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SUPPORTED	= 1,
+	NVME_CTRL_BPCAP_RPMBBPWPS_SUPPORTED	= 2,
 };
+
+#define NVME_CTRL_BPCAP_RPMBBPWPS(bpcap) NVME_GET(bpcap, CTRL_BPCAP_RPMBBPWPS)
+#define NVME_CTRL_BPCAP_SFBPWPS(bpcap)   NVME_GET(bpcap, CTRL_BPCAP_SFBPWPS)
 
 /**
  * enum nvme_id_ctrl_chsi - CXL HDM Support Information
@@ -2185,9 +2237,6 @@ enum nvme_id_ctrl_rmdca {
 #define NVME_CTRL_RMDCA_RDSCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDSCS)
 #define NVME_CTRL_RMDCA_RDNCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDNCS)
 #define NVME_CTRL_RMDCA_RDCCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDCCS)
-
-#define NVME_CTRL_BACAP_RPMBBPWPS(bpcap)	NVME_GET(bpcap, CTRL_BACAP_RPMBBPWPS)
-#define NVME_CTRL_BACAP_SFBPWPS(bpcap)		NVME_GET(bpcap, CTRL_BACAP_SFBPWPS)
 
 /**
  * enum nvme_id_ctrl_plsi - Power Loss Signaling Information
@@ -2318,15 +2367,26 @@ enum nvme_id_ctrl_vwci {
 /**
  * enum nvme_id_ctrl_mec - Flags indicating the capabilities of the Management
  *			   Endpoint in the Controller, &struct nvme_id_ctrl.mec.
- * @NVME_CTRL_MEC_SMBUSME: If set, then the NVM Subsystem contains a Management
- *			   Endpoint on an SMBus/I2C port.
- * @NVME_CTRL_MEC_PCIEME:  If set, then the NVM Subsystem contains a Management
- *			   Endpoint on a PCIe port.
+ * @NVME_CTRL_MEC_TWPME_SHIFT: TWPME shift
+ * @NVME_CTRL_MEC_PCIEME_SHIFT: PCIEME shift
+ * @NVME_CTRL_MEC_TWPME_MASK: TWPME mask
+ * @NVME_CTRL_MEC_PCIEME_MASK: PCIEME mask
+ * @NVME_CTRL_MEC_TWPME: If set, then the NVM Subsystem one or more Management
+ *			 Endpoints on the 2-Wire port.
+ * @NVME_CTRL_MEC_PCIEME: If set, then the NVM Subsystem contains one or more
+ *			  Management Endpoints on one or more PCIe ports.
  */
 enum nvme_id_ctrl_mec {
-	NVME_CTRL_MEC_SMBUSME			= 1 << 0,
-	NVME_CTRL_MEC_PCIEME			= 1 << 1,
+	NVME_CTRL_MEC_TWPME_SHIFT		= 0,
+	NVME_CTRL_MEC_PCIEME_SHIFT		= 1,
+	NVME_CTRL_MEC_TWPME_MASK		= 0x1,
+	NVME_CTRL_MEC_PCIEME_MASK		= 0x1,
+	NVME_CTRL_MEC_TWPME			= NVME_VAL(CTRL_MEC_TWPME),
+	NVME_CTRL_MEC_PCIEME			= NVME_VAL(CTRL_MEC_PCIEME),
 };
+
+#define NVME_CTRL_MEC_TWPME(mec)	NVME_GET(mec, CTRL_MEC_TWPME)
+#define NVME_CTRL_MEC_PCIEME(mec)	NVME_GET(mec, CTRL_MEC_PCIEME)
 
 /**
  * enum nvme_id_ctrl_oacs - Flags indicating the optional Admin commands and
@@ -2360,28 +2420,28 @@ enum nvme_id_ctrl_mec {
  * @NVME_CTRL_OACS_HMLMS_MASK: Mask to get the Host Managed Live Migration support
  * @NVME_CTRL_OACS_CCFLS_MASK: Mask to get the Controller-scoped Command and
  *			       Feature Lockdown supported
- * @NVME_CTRL_OACS_SECURITY:   If set, then the controller supports the
+ * @NVME_CTRL_OACS_SSRS:       If set, then the controller supports the
  *			       Security Send and Security Receive commands.
- * @NVME_CTRL_OACS_FORMAT:     If set then the controller supports the Format
+ * @NVME_CTRL_OACS_FNVMS:      If set then the controller supports the Format
  *			       NVM command.
- * @NVME_CTRL_OACS_FW:	       If set, then the controller supports the
+ * @NVME_CTRL_OACS_FWDS:       If set, then the controller supports the
  *			       Firmware Commit and Firmware Image Download commands.
- * @NVME_CTRL_OACS_NS_MGMT:    If set, then the controller supports the
+ * @NVME_CTRL_OACS_NMS:	       If set, then the controller supports the
  *			       Namespace Management capability
- * @NVME_CTRL_OACS_SELF_TEST:  If set, then the controller supports the Device
+ * @NVME_CTRL_OACS_DSTS:       If set, then the controller supports the Device
  *			       Self-test command.
- * @NVME_CTRL_OACS_DIRECTIVES: If set, then the controller supports Directives
+ * @NVME_CTRL_OACS_DIRS:       If set, then the controller supports Directives
  *			       and the Directive Send and Directive Receive
  *			       commands.
- * @NVME_CTRL_OACS_NVME_MI:    If set, then the controller supports the NVMe-MI
+ * @NVME_CTRL_OACS_NSRS:       If set, then the controller supports the NVMe-MI
  *			       Send and NVMe-MI Receive commands.
- * @NVME_CTRL_OACS_VIRT_MGMT:  If set, then the controller supports the
+ * @NVME_CTRL_OACS_VMS:	       If set, then the controller supports the
  *			       Virtualization Management command.
- * @NVME_CTRL_OACS_DBBUF_CFG:  If set, then the controller supports the
+ * @NVME_CTRL_OACS_DBCS:       If set, then the controller supports the
  *			       Doorbell Buffer Config command.
- * @NVME_CTRL_OACS_LBA_STATUS: If set, then the controller supports the Get LBA
+ * @NVME_CTRL_OACS_GLSS:       If set, then the controller supports the Get LBA
  *			       Status capability.
- * @NVME_CTRL_OACS_CMD_FEAT_LD:If set, then the controller supports the command
+ * @NVME_CTRL_OACS_CFLS:       If set, then the controller supports the command
  *			       and feature lockdown capability.
  * @NVME_CTRL_OACS_HMLM:       If set, then the controller supports the command
  *			       and Host Managed Live Migration capability.
@@ -2418,17 +2478,17 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_CFLS_MASK		= 1,
 	NVME_CTRL_OACS_HMLMS_MASK		= 1,
 	NVME_CTRL_OACS_CCFLS_MASK		= 1,
-	NVME_CTRL_OACS_SECURITY			= NVME_VAL(CTRL_OACS_SSRS),
-	NVME_CTRL_OACS_FORMAT			= NVME_VAL(CTRL_OACS_FNVMS),
-	NVME_CTRL_OACS_FW			= NVME_VAL(CTRL_OACS_FWDS),
-	NVME_CTRL_OACS_NS_MGMT			= NVME_VAL(CTRL_OACS_NMS),
-	NVME_CTRL_OACS_SELF_TEST		= NVME_VAL(CTRL_OACS_DSTS),
-	NVME_CTRL_OACS_DIRECTIVES		= NVME_VAL(CTRL_OACS_DIRS),
-	NVME_CTRL_OACS_NVME_MI			= NVME_VAL(CTRL_OACS_NSRS),
-	NVME_CTRL_OACS_VIRT_MGMT		= NVME_VAL(CTRL_OACS_VMS),
-	NVME_CTRL_OACS_DBBUF_CFG		= NVME_VAL(CTRL_OACS_DBCS),
-	NVME_CTRL_OACS_LBA_STATUS		= NVME_VAL(CTRL_OACS_GLSS),
-	NVME_CTRL_OACS_CMD_FEAT_LD		= NVME_VAL(CTRL_OACS_CFLS),
+	NVME_CTRL_OACS_SSRS			= NVME_VAL(CTRL_OACS_SSRS),
+	NVME_CTRL_OACS_FNVMS			= NVME_VAL(CTRL_OACS_FNVMS),
+	NVME_CTRL_OACS_FWDS			= NVME_VAL(CTRL_OACS_FWDS),
+	NVME_CTRL_OACS_NMS			= NVME_VAL(CTRL_OACS_NMS),
+	NVME_CTRL_OACS_DSTS			= NVME_VAL(CTRL_OACS_DSTS),
+	NVME_CTRL_OACS_DIRS			= NVME_VAL(CTRL_OACS_DIRS),
+	NVME_CTRL_OACS_NSRS			= NVME_VAL(CTRL_OACS_NSRS),
+	NVME_CTRL_OACS_VMS			= NVME_VAL(CTRL_OACS_VMS),
+	NVME_CTRL_OACS_DBCS			= NVME_VAL(CTRL_OACS_DBCS),
+	NVME_CTRL_OACS_GLSS			= NVME_VAL(CTRL_OACS_GLSS),
+	NVME_CTRL_OACS_CFLS			= NVME_VAL(CTRL_OACS_CFLS),
 	NVME_CTRL_OACS_HMLM			= NVME_VAL(CTRL_OACS_HMLMS),
 	NVME_CTRL_OACS_CTRL_SCOPED_CMD_FEAT_LD	= NVME_VAL(CTRL_OACS_CCFLS),
 };
@@ -2436,11 +2496,11 @@ enum nvme_id_ctrl_oacs {
 #define NVME_CTRL_OACS_SSRS(oacs)	NVME_GET(oacs, CTRL_OACS_SSRS)
 #define NVME_CTRL_OACS_FNVMS(oacs)	NVME_GET(oacs, CTRL_OACS_FNVMS)
 #define NVME_CTRL_OACS_FWDS(oacs)	NVME_GET(oacs, CTRL_OACS_FWDS)
-#define NVME_CTRL_OACS_NMS_M(oacs)	NVME_GET(oacs, CTRL_OACS_NMS)
+#define NVME_CTRL_OACS_NMS(oacs)	NVME_GET(oacs, CTRL_OACS_NMS)
 #define NVME_CTRL_OACS_DSTS(oacs)	NVME_GET(oacs, CTRL_OACS_DSTS)
 #define NVME_CTRL_OACS_DIRS(oacs)	NVME_GET(oacs, CTRL_OACS_DIRS)
 #define NVME_CTRL_OACS_NSRS(oacs)	NVME_GET(oacs, CTRL_OACS_NSRS)
-#define NVME_CTRL_OACS_VMS_M(oacs)	NVME_GET(oacs, CTRL_OACS_VMS)
+#define NVME_CTRL_OACS_VMS(oacs)	NVME_GET(oacs, CTRL_OACS_VMS)
 #define NVME_CTRL_OACS_DBCS(oacs)	NVME_GET(oacs, CTRL_OACS_DBCS)
 #define NVME_CTRL_OACS_GLSS(oacs)	NVME_GET(oacs, CTRL_OACS_GLSS)
 #define NVME_CTRL_OACS_CFLS(oacs)	NVME_GET(oacs, CTRL_OACS_CFLS)
@@ -2450,70 +2510,132 @@ enum nvme_id_ctrl_oacs {
 /**
  * enum nvme_id_ctrl_frmw - Flags and values indicates capabilities regarding
  *			    firmware updates from &struct nvme_id_ctrl.frmw.
- * @NVME_CTRL_FRMW_1ST_RO:	    If set, the first firmware slot is readonly
- * @NVME_CTRL_FRMW_NR_SLOTS:	    Mask to get the value of the number of
- *				    firmware slots that the controller supports.
- * @NVME_CTRL_FRMW_FW_ACT_NO_RESET: If set, the controller supports firmware
- *				    activation without a reset.
- * @NVME_CTRL_FRMW_MP_UP_DETECTION: If set, the controller is able to detect
- *				    overlapping firmware/boot partition
- *				    image update.
+ * @NVME_CTRL_FRMW_FFSRO_SHIFT:	FFSRO shift
+ * @NVME_CTRL_FRMW_NOFS_SHIFT:	NOFS shift
+ * @NVME_CTRL_FRMW_FAWR_SHIFT:	FAWR shift
+ * @NVME_CTRL_FRMW_SMUD_SHIFT:	SMUD shift
+ * @NVME_CTRL_FRMW_FFSRO_MASK:	FFSRO mask
+ * @NVME_CTRL_FRMW_NOFS_MASK:	NOFS mask
+ * @NVME_CTRL_FRMW_FAWR_MASK:	FAWR mask
+ * @NVME_CTRL_FRMW_SMUD_MASK:	SMUD mask
+ * @NVME_CTRL_FRMW_FFSRO:	If set, the first firmware slot is readonly
+ * @NVME_CTRL_FRMW_NOFS:	Mask to get the value of the number of
+ *				firmware slots that the controller supports.
+ * @NVME_CTRL_FRMW_FAWR:	If set, the controller supports firmware
+ *				activation without a reset.
+ * @NVME_CTRL_FRMW_SMUD:	If set, the controller is able to detect
+ *				overlapping firmware/boot partition
+ *				image update.
  */
 enum nvme_id_ctrl_frmw {
-	NVME_CTRL_FRMW_1ST_RO			= 1 << 0,
-	NVME_CTRL_FRMW_NR_SLOTS			= 3 << 1,
-	NVME_CTRL_FRMW_FW_ACT_NO_RESET		= 1 << 4,
-	NVME_CTRL_FRMW_MP_UP_DETECTION		= 1 << 5,
+	NVME_CTRL_FRMW_FFSRO_SHIFT	= 0,
+	NVME_CTRL_FRMW_NOFS_SHIFT	= 1,
+	NVME_CTRL_FRMW_FAWR_SHIFT	= 4,
+	NVME_CTRL_FRMW_SMUD_SHIFT	= 5,
+	NVME_CTRL_FRMW_FFSRO_MASK	= 0x1,
+	NVME_CTRL_FRMW_NOFS_MASK	= 0x7,
+	NVME_CTRL_FRMW_FAWR_MASK	= 0x1,
+	NVME_CTRL_FRMW_SMUD_MASK	= 0x1,
+	NVME_CTRL_FRMW_FFSRO		= NVME_VAL(CTRL_FRMW_FFSRO),
+	NVME_CTRL_FRMW_NOFS		= NVME_VAL(CTRL_FRMW_NOFS),
+	NVME_CTRL_FRMW_FAWR		= NVME_VAL(CTRL_FRMW_FAWR),
+	NVME_CTRL_FRMW_SMUD		= NVME_VAL(CTRL_FRMW_SMUD),
 };
+
+#define NVME_CTRL_FRMW_FFSRO(frmw)	NVME_GET(frmw, CTRL_FRMW_FFSRO)
+#define NVME_CTRL_FRMW_NOFS(frmw)	NVME_GET(frmw, CTRL_FRMW_NOFS)
+#define NVME_CTRL_FRMW_FAWR(frmw)	NVME_GET(frmw, CTRL_FRMW_FAWR)
+#define NVME_CTRL_FRMW_SMUD(frmw)	NVME_GET(frmw, CTRL_FRMW_SMUD)
 
 /**
  * enum nvme_id_ctrl_lpa - Flags indicating optional attributes for log pages
  *			   that are accessed via the Get Log Page command.
- * @NVME_CTRL_LPA_SMART_PER_NS: If set, controller supports SMART/Health log
- *				page on a per namespace basis.
- * @NVME_CTRL_LPA_CMD_EFFECTS:	If Set, the controller supports the commands
+ * @NVME_CTRL_LPA_SMARTS_SHIFT:	SMARTS shift
+ * @NVME_CTRL_LPA_CSES_SHIFT:	CSES shift
+ * @NVME_CTRL_LPA_LPEDS_SHIFT:	LPEDS shift
+ * @NVME_CTRL_LPA_TS_SHIFT:	TS shift
+ * @NVME_CTRL_LPA_PES_SHIFT:	PES shift
+ * @NVME_CTRL_LPA_MLPS_SHIFT:	MLPS shift
+ * @NVME_CTRL_LPA_DA4S_SHIFT:	DA4S shift
+ * @NVME_CTRL_LPA_SMARTS_MASK:	SMARTS mask
+ * @NVME_CTRL_LPA_CSES_MASK:	CSES mask
+ * @NVME_CTRL_LPA_LPEDS_MASK:	LPEDS mask
+ * @NVME_CTRL_LPA_TS_MASK:	TS mask
+ * @NVME_CTRL_LPA_PES_MASK:	PES mask
+ * @NVME_CTRL_LPA_MLPS_MASK:	MLPS mask
+ * @NVME_CTRL_LPA_DA4S_MASK:	DA4S mask
+ * @NVME_CTRL_LPA_SMARTS:	If set, controller supports SMART/Health log
+ * @NVME_CTRL_LPA_CSES:		If Set, the controller supports the commands
  *				supported and effects log page.
- * @NVME_CTRL_LPA_EXTENDED:	If set, the controller supports extended data
+ * @NVME_CTRL_LPA_LPEDS:	If set, the controller supports extended data
  *				for log page command including extended number
  *				of dwords and log page offset fields.
- * @NVME_CTRL_LPA_TELEMETRY:	If set, the controller supports the telemetry
+ * @NVME_CTRL_LPA_TS:		If set, the controller supports the telemetry
  *				host-initiated and telemetry controller-initiated
  *				log pages and sending telemetry log notices.
- * @NVME_CTRL_LPA_PERSETENT_EVENT:	If set, the controller supports
- *					persistent event log.
- * @NVME_CTRL_LPA_LI0_LI5_LI12_LI13:	If set, the controller supports
- *					- log pages log page.
- *					- returning scope of each command in
- *					  commands supported and effects log
- *					  page.
- *					- feature identifiers supported and
- *					  effects log page.
- *					- NVMe-MI commands supported and
- *					  effects log page.
- * @NVME_CTRL_LPA_DA4_TELEMETRY:	If set, the controller supports data
- *					area 4 for telemetry host-initiated and
- *					telemetry.
+ * @NVME_CTRL_LPA_PES:		If set, the controller supports
+ *				persistent event log.
+ * @NVME_CTRL_LPA_MLPS:		If set, the controller supports
+ *				- log pages log page.
+ *				- returning scope of each command in
+ *				  commands supported and effects log
+ *				  page.
+ *				- feature identifiers supported and
+ *				  effects log page.
+ *				- NVMe-MI commands supported and
+ *				  effects log page.
+ * @NVME_CTRL_LPA_DA4S:		If set, the controller supports data
+ *				area 4 for telemetry host-initiated and
+ *				telemetry.
  */
 enum nvme_id_ctrl_lpa {
-	NVME_CTRL_LPA_SMART_PER_NS		= 1 << 0,
-	NVME_CTRL_LPA_CMD_EFFECTS		= 1 << 1,
-	NVME_CTRL_LPA_EXTENDED			= 1 << 2,
-	NVME_CTRL_LPA_TELEMETRY			= 1 << 3,
-	NVME_CTRL_LPA_PERSETENT_EVENT		= 1 << 4,
-	NVME_CTRL_LPA_LI0_LI5_LI12_LI13		= 1 << 5,
-	NVME_CTRL_LPA_DA4_TELEMETRY		= 1 << 6,
+	NVME_CTRL_LPA_SMARTS_SHIFT	= 0,
+	NVME_CTRL_LPA_CSES_SHIFT	= 1,
+	NVME_CTRL_LPA_LPEDS_SHIFT	= 2,
+	NVME_CTRL_LPA_TS_SHIFT		= 3,
+	NVME_CTRL_LPA_PES_SHIFT		= 4,
+	NVME_CTRL_LPA_MLPS_SHIFT	= 5,
+	NVME_CTRL_LPA_DA4S_SHIFT	= 6,
+	NVME_CTRL_LPA_SMARTS_MASK	= 0x1,
+	NVME_CTRL_LPA_CSES_MASK		= 0x1,
+	NVME_CTRL_LPA_LPEDS_MASK	= 0x1,
+	NVME_CTRL_LPA_TS_MASK		= 0x1,
+	NVME_CTRL_LPA_PES_MASK		= 0x1,
+	NVME_CTRL_LPA_MLPS_MASK		= 0x1,
+	NVME_CTRL_LPA_DA4S_MASK		= 0x1,
+	NVME_CTRL_LPA_SMARTS		= NVME_VAL(CTRL_LPA_SMARTS),
+	NVME_CTRL_LPA_CSES		= NVME_VAL(CTRL_LPA_CSES),
+	NVME_CTRL_LPA_LPEDS		= NVME_VAL(CTRL_LPA_LPEDS),
+	NVME_CTRL_LPA_TS		= NVME_VAL(CTRL_LPA_TS),
+	NVME_CTRL_LPA_PES		= NVME_VAL(CTRL_LPA_PES),
+	NVME_CTRL_LPA_MLPS		= NVME_VAL(CTRL_LPA_MLPS),
+	NVME_CTRL_LPA_DA4S		= NVME_VAL(CTRL_LPA_DA4S),
 };
+
+#define NVME_CTRL_LPA_SMARTS(lpa)	NVME_GET(lpa, CTRL_LPA_SMARTS)
+#define NVME_CTRL_LPA_CSES(lpa)		NVME_GET(lpa, CTRL_LPA_CSES)
+#define NVME_CTRL_LPA_LPEDS(lpa)	NVME_GET(lpa, CTRL_LPA_LPEDS)
+#define NVME_CTRL_LPA_TS(lpa)		NVME_GET(lpa, CTRL_LPA_TS)
+#define NVME_CTRL_LPA_PES(lpa)		NVME_GET(lpa, CTRL_LPA_PES)
+#define NVME_CTRL_LPA_MLPS(lpa)		NVME_GET(lpa, CTRL_LPA_MLPS)
+#define NVME_CTRL_LPA_DA4S(lpa)		NVME_GET(lpa, CTRL_LPA_DA4S)
 
 /**
  * enum nvme_id_ctrl_avscc - Flags indicating the configuration settings for
  *			     Admin Vendor Specific command handling.
- * @NVME_CTRL_AVSCC_AVS: If set, all Admin Vendor Specific Commands use the
- *			 optional vendor specific command format with NDT and
- *			 NDM fields.
+ * @NVME_CTRL_AVSCC_VSCF_SHIFT:	VSCF shift
+ * @NVME_CTRL_AVSCC_VSCF_MASK:	VSCF mask
+ * @NVME_CTRL_AVSCC_VSCF:	If set, all Admin Vendor Specific Commands use
+ *				the optional vendor specific command format with
+ *				NDT and NDM fields.
  */
 enum nvme_id_ctrl_avscc {
-	NVME_CTRL_AVSCC_AVS			= 1 << 0,
+	NVME_CTRL_AVSCC_VSCF_SHIFT	= 0,
+	NVME_CTRL_AVSCC_VSCF_MASK	= 0x1,
+	NVME_CTRL_AVSCC_VSCF		= NVME_VAL(CTRL_AVSCC_VSCF),
 };
+
+#define NVME_CTRL_AVSCC_VSCF(avscc)	NVME_GET(avscc, CTRL_AVSCC_VSCF)
 
 /**
  * enum nvme_id_ctrl_apsta - Flags indicating the attributes of the autonomous
