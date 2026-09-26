@@ -13,6 +13,8 @@
 
 #include <libnvme.h>
 
+#include <shared/compiler-attributes-util.h>
+
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
@@ -61,28 +63,30 @@ static int read_pci_attr(const char *dir, const char *attr, __u32 *out)
 	return 0;
 }
 
-int __nvme_get_sysfs_dir(__attribute__((__unused__)) struct libnvme_global_ctx *ctx,
-		const char *ctrl_name, char **sysfs_dir)
+int __nvme_get_pci_id_source(__shr_unused struct libnvme_global_ctx *ctx,
+		const char *ctrl_name, char **source)
 {
-	return nvme_sysfs_ctrl_path(ctrl_name, sysfs_dir);
+	return nvme_sysfs_ctrl_path(ctrl_name, source);
 }
 
-int __nvme_get_pci_ids(const char *sysfs_dir,
+int __nvme_get_pci_ids(const char *source,
 		__u32 *vid, __u32 *did,
 		__u32 *subsys_vid, __u32 *subsys_did,
 		__u32 *class_code)
 {
 	int res, ret = 0;
 
+	/* On Linux, source is the controller's sysfs directory. */
+
 	/* Attempt all reads. Return the first error encountered, if any. */
-	ret = read_pci_attr(sysfs_dir, "vendor", vid);
-	res = read_pci_attr(sysfs_dir, "device", did);
+	ret = read_pci_attr(source, "vendor", vid);
+	res = read_pci_attr(source, "device", did);
 	ret = ret ? ret : res;
-	res = read_pci_attr(sysfs_dir, "subsystem_vendor", subsys_vid);
+	res = read_pci_attr(source, "subsystem_vendor", subsys_vid);
 	ret = ret ? ret : res;
-	res = read_pci_attr(sysfs_dir, "subsystem_device", subsys_did);
+	res = read_pci_attr(source, "subsystem_device", subsys_did);
 	ret = ret ? ret : res;
-	res = read_pci_attr(sysfs_dir, "class", class_code);
+	res = read_pci_attr(source, "class", class_code);
 	ret = ret ? ret : res;
 
 	return ret;
