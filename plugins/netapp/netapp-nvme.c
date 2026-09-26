@@ -777,7 +777,6 @@ out:
 static int nvme_get_ontap_c2_log(struct libnvme_transport_handle *hdl, __u32 nsid, void *buf, __u32 buflen)
 {
 	struct libnvme_passthru_cmd get_log;
-	int err;
 
 	memset(buf, 0, buflen);
 	memset(&get_log, 0, sizeof(struct libnvme_passthru_cmd));
@@ -795,13 +794,7 @@ static int nvme_get_ontap_c2_log(struct libnvme_transport_handle *hdl, __u32 nsi
 	get_log.cdw10 |= ONTAP_C2_LOG_NSINFO_LSP << 8;
 	get_log.cdw11 = numdu;
 
-	err = libnvme_exec_admin_passthru(hdl, &get_log);
-	if (err) {
-		nvme_show_error("ioctl error %0x", err);
-		return 1;
-	}
-
-	return 0;
+	return libnvme_exec_admin_passthru(hdl, &get_log);
 }
 
 static int netapp_smdevices_get_info(struct libnvme_transport_handle *hdl,
