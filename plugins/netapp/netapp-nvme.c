@@ -221,6 +221,10 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	bool nspath_tlv_available = false;
 	const char *ontap_vol = "/vol/";
 
+	/* the caller reuses these buffers for every device */
+	snprintf(vsname, ONTAP_LABEL_LEN, " ");
+	snprintf(nspath, ONTAP_NS_PATHLEN, " ");
+
 	/* get the lsp */
 	lsp = (*(__u8 *)&log_data[16]) & 0x0F;
 	if (lsp != ONTAP_C2_LOG_NSINFO_LSP)
@@ -232,7 +236,7 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	if (tlv == ONTAP_VSERVER_NAME_TLV) {
 		label_len = (size_t)(*(__u16 *)&log_data[34]) * 4;
 		if (36 + label_len > log_len)
-			return;
+			goto bad_log;
 		vserver_name = (char *)&log_data[36];
 		ontap_labels_to_str(vsname, vserver_name, label_len);
 	} else {
@@ -244,13 +248,13 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	i = 36 + label_len;
 	j = i + 2;
 	if (j + 2 > log_len)
-		return;
+		goto bad_log;
 	/* get the volume name tlv */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_VOLUME_NAME_TLV) {
 		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
 		if (j + 2 + label_len > log_len)
-			return;
+			goto bad_log;
 		volume_name = (char *)&log_data[j + 2];
 		ontap_labels_to_str(vol_name, volume_name, label_len);
 	} else {
@@ -262,13 +266,13 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	i += 4 + label_len;
 	j += 4 + label_len;
 	if (j + 2 > log_len)
-		return;
+		goto bad_log;
 	/* get the namespace name tlv */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_NS_NAME_TLV) {
 		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
 		if (j + 2 + label_len > log_len)
-			return;
+			goto bad_log;
 		namespace_name = (char *)&log_data[j + 2];
 		ontap_labels_to_str(ns_name, namespace_name, label_len);
 	} else {
@@ -280,14 +284,14 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	i += 4 + label_len;
 	j += 4 + label_len;
 	if (j + 2 > log_len)
-		return;
+		goto bad_log;
 	/* get the namespace path tlv if available */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_NS_PATH_TLV) {
 		nspath_tlv_available = true;
 		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
 		if (j + 2 + label_len > log_len)
-			return;
+			goto bad_log;
 		namespace_path = (char *)&log_data[j + 2];
 		ontap_labels_to_str(ns_path, namespace_path, label_len);
 	}
@@ -300,6 +304,11 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 		snprintf(nspath, ONTAP_NS_PATHLEN, "%s%s%s%s", ontap_vol,
 			vol_name, "/", ns_name);
 	}
+
+	return;
+
+bad_log:
+	nvme_show_error("Truncated ONTAP nsinfo log data");
 }
 
 static void netapp_smdevice_json(struct json_object *devices, char *devname,
