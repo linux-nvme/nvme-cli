@@ -109,4 +109,8 @@ if python3.found()
     if 'ocp' in selected_plugins
         subdir('ocp')
     endif
+
+    if 'micron' in selected_plugins
+        subdir('micron')
+    endif
 endif

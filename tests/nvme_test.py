@@ -53,6 +53,7 @@ _LEGACY_COMMANDS = {
     "log error": "error-log",
     "log fw": "fw-log",
     "log lba-status": "lba-status-log",
+    "log supported-pages": "supported-log-pages",
 }
 _command_cache = {}
 
@@ -150,6 +151,34 @@ class TestNVMeBase(unittest.TestCase):
             see _probe_command() for the detection/fallback logic.
         """
         return _probe_command(self.nvme_bin, command)
+
+    def parse_json_output(self, output, context, expected_type=dict):
+        """Parse JSON output and fail test clearly on malformed or wrong-typed data.
+
+        context should identify the command/action that produced output.
+        Pass expected_type=None to skip type validation.
+        """
+        try:
+            data = json.loads(output)
+        except (TypeError, json.JSONDecodeError) as exc:
+            self.fail(f"ERROR : invalid JSON from {context}: {exc}; output={output!r}")
+
+        if expected_type is not None and not isinstance(data, expected_type):
+            self.fail(
+                "ERROR : unexpected JSON type from "
+                f"{context}: expected {expected_type.__name__}, got {type(data).__name__}"
+            )
+        return data
+
+    def json_get(self, data, key, default=None, context="JSON output", required=False):
+        """Return key from JSON dict and optionally fail if key is missing."""
+        if not isinstance(data, dict):
+            self.fail(
+                f"ERROR : expected JSON object for {context}, got {type(data).__name__}"
+            )
+        if required and key not in data:
+            self.fail(f"ERROR : missing key '{key}' in {context}: {data!r}")
+        return data.get(key, default)
 
     def _record_device_data(self, cmd, result):
         """ Record a command's parsed JSON output for the device-data log.
@@ -371,34 +400,6 @@ class TestNVMe(TestNVMeBase):
                 'metadata': self.device_metadata or {},
                 'commands': self.device_data,
             }, f, indent=2)
-
-    def parse_json_output(self, output, context, expected_type=dict):
-        """Parse JSON output and fail test clearly on malformed or wrong-typed data.
-
-        context should identify the command/action that produced output.
-        Pass expected_type=None to skip type validation.
-        """
-        try:
-            data = json.loads(output)
-        except (TypeError, json.JSONDecodeError) as exc:
-            self.fail(f"ERROR : invalid JSON from {context}: {exc}; output={output!r}")
-
-        if expected_type is not None and not isinstance(data, expected_type):
-            self.fail(
-                "ERROR : unexpected JSON type from "
-                f"{context}: expected {expected_type.__name__}, got {type(data).__name__}"
-            )
-        return data
-
-    def json_get(self, data, key, default=None, context="JSON output", required=False):
-        """Return key from JSON dict and optionally fail if key is missing."""
-        if not isinstance(data, dict):
-            self.fail(
-                f"ERROR : expected JSON object for {context}, got {type(data).__name__}"
-            )
-        if required and key not in data:
-            self.fail(f"ERROR : missing key '{key}' in {context}: {data!r}")
-        return data.get(key, default)
 
     def exec_cmd(self, cmd, quiet=False):
         """ Wrapper for executing a shell command and return the result. """
