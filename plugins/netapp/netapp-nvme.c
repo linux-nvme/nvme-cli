@@ -166,6 +166,11 @@ static void ontap_get_subsysname(char *subnqn, char *subsysname,
 	size_t n;
 	int i, len = sizeof(ctrl->subnqn);
 
+	if (!subsysname_len)
+		return;
+
+	subsysname[0] = '\0';
+
 	/* get the target NQN */
 	memcpy(subnqn, ctrl->subnqn, len);
 	subnqn[len] = '\0';
@@ -176,18 +181,15 @@ static void ontap_get_subsysname(char *subnqn, char *subsysname,
 
 	/* get the subsysname from the target NQN */
 	subname = strrchr(subnqn, '.');
-	if (subname) {
-		subname++;
-		n = strnlen(subname, sizeof(ctrl->subnqn));
-		if (subsysname_len) {
-			if (n >= subsysname_len)
-				n = subsysname_len - 1;
-			memcpy(subsysname, subname, n);
-			subsysname[n] = '\0';
-		}
-	} else
-		nvme_show_error(
-			"Unable to fetch ONTAP subsystem name");
+	if (!subname) {
+		nvme_show_error("Unable to fetch ONTAP subsystem name");
+		return;
+	}
+
+	subname++;
+	n = strnlen(subname, subsysname_len - 1);
+	memcpy(subsysname, subname, n);
+	subsysname[n] = '\0';
 }
 
 static void ontap_labels_to_str(char *dst, const char *src, size_t count)
