@@ -1006,7 +1006,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 			return -EINVAL;
 		}
 
-		sprintf(path, "/dev/%s", devname);
+		snprintf(path, sizeof(path), "/dev/%s", devname);
 		if (stat(path, &st) != 0) {
 			nvme_show_error("%s does not exist", path);
 			return -EINVAL;
@@ -1097,7 +1097,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 			return -EINVAL;
 		}
 
-		sprintf(path, "/dev/%s", devname);
+		snprintf(path, sizeof(path), "/dev/%s", devname);
 		if (stat(path, &st) != 0) {
 			nvme_show_error("%s does not exist", path);
 			return -EINVAL;
