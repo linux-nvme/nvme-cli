@@ -11,6 +11,7 @@ sources = [
     'src/nvme-print-binary.c',
     'src/nvme-print-stdout.c',
     'src/nvme-print-stdout-id.c',
+    'src/nvme-print-stdout-log.c',
     'src/nvme-print.c',
     'src/nvme-regs.c',
     'src/nvme.c',
