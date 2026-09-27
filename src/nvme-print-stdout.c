@@ -5639,28 +5639,21 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 	return t;
 }
 
-static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
-			   void (*vendor_show)(__u8 *vs, struct json_object *root))
+static void stdout_id_ctrl_cap_feat(struct nvme_id_ctrl *ctrl,
+				    struct shr_table *t, bool verbose)
 {
-	bool verbose = stdout_print_ops.flags & VERBOSE;
-	bool vs = stdout_print_ops.flags & VS;
 	char sn[sizeof(ctrl->sn) + 1];
 	char mn[sizeof(ctrl->mn) + 1];
 	char fr[sizeof(ctrl->fr) + 1];
-	struct shr_table *t;
 	int row;
 
 	snprintf(sn, sizeof(sn), "%-.*s", (int)sizeof(ctrl->sn), ctrl->sn);
 	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
 	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
 
-	if (verbose && product_name)
-		printf("%s\n\n", product_name);
-	printf("NVME Identify Controller:\n");
-
-	t = stdout_kv_table_create();
-	if (!t)
-		return;
+	if (verbose)
+		stdout_kv_add(t, "255:00",
+			      "Controller Capabilities and Features");
 
 	stdout_kv_add(t, "vid", "%#x", le16_to_cpu(ctrl->vid));
 	stdout_kv_add(t, "ssvid", "%#x", le16_to_cpu(ctrl->ssvid));
@@ -5744,6 +5737,16 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	if (verbose)
 		shr_table_set_row_subtable(t, row,
 				stdout_id_ctrl_mec_table(ctrl->mec));
+}
+
+static void stdout_id_ctrl_admin_option(struct nvme_id_ctrl *ctrl,
+					struct shr_table *t, bool verbose)
+{
+	int row;
+
+	if (verbose)
+		stdout_kv_add(t, "511:256",
+		    "Admin Command Set Attributes & Optional Controller Capabilities");
 
 	row = stdout_kv_add(t, "oacs", "%#x", le16_to_cpu(ctrl->oacs));
 	if (verbose)
@@ -5943,6 +5946,15 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 
 		stdout_kv_add(t, "msvmt", "%u", le16_to_cpu(ctrl->msvmt));
 	}
+}
+
+static void stdout_id_ctrl_nvm_attr(struct nvme_id_ctrl *ctrl,
+			       struct shr_table *t, bool verbose)
+{
+	int row;
+
+	if (verbose)
+		stdout_kv_add(t, "1971:512", "NVM Command Set Attributes");
 
 	row = stdout_kv_add(t, "sqes", "%#x", ctrl->sqes);
 	if (verbose)
@@ -6026,6 +6038,16 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	stdout_kv_add(t, "mcdqpc", "%d", le16_to_cpu(ctrl->mcdqpc));
 	stdout_kv_add(t, "subnqn", "%-.*s",
 		      (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+}
+
+static void stdout_id_ctrl_fabric(struct nvme_id_ctrl *ctrl,
+				  struct shr_table *t, bool verbose)
+{
+	int row;
+
+	if (verbose)
+		stdout_kv_add(t, "2047:1972", "Fabric Specific");
+
 	stdout_kv_add(t, "ioccsz", "%u", le32_to_cpu(ctrl->ioccsz));
 	stdout_kv_add(t, "iorcsz", "%u", le32_to_cpu(ctrl->iorcsz));
 	stdout_kv_add(t, "icdoff", "%d", le16_to_cpu(ctrl->icdoff));
@@ -6048,12 +6070,40 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 				stdout_id_ctrl_dctype_table(ctrl->dctype));
 
 	stdout_kv_add(t, "ccrl", "%d", ctrl->ccrl);
+}
+
+static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
+	void (*vendor_show)(__u8 *vs, struct json_object *root))
+{
+	bool verbose = stdout_print_ops.flags & VERBOSE;
+	bool vs = stdout_print_ops.flags & VS;
+	struct shr_table *t;
+	int row;
+
+	if (verbose && product_name)
+		printf("%s\n\n", product_name);
+	printf("NVME Identify Controller:\n");
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_id_ctrl_cap_feat(ctrl, t, verbose);
+	stdout_id_ctrl_admin_option(ctrl, t, verbose);
+	stdout_id_ctrl_nvm_attr(ctrl, t, verbose);
+	stdout_id_ctrl_fabric(ctrl, t, verbose);
+
+	if (verbose)
+		stdout_kv_add(t, "3071:2048", "Power State Descriptors");
 
 	row = stdout_kv_add(t, "ps", "%d states", ctrl->npss + 1);
 	/* Unlike the fields above, shown regardless of @verbose. */
 	shr_table_set_row_subtable(t, row, stdout_id_ctrl_ps_table(ctrl));
 
 	stdout_kv_table_finish(t, "identify-controller");
+
+	if (verbose)
+		printf("4095:3072 : Vendor Specific\n");
 
 	if (vendor_show)
 		vendor_show(ctrl->vs, NULL);
