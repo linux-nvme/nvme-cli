@@ -3,11 +3,18 @@
 Description=NVMe TLS Key Provisioning Daemon
 Documentation=man:nvme-keysd(8)
 Before=remote-fs.target
+Wants=systemd-creds.socket
+After=systemd-creds.socket
 
 [Service]
 Type=notify-reload
 ExecStart=@SBINDIR@/nvme-keysd
 Restart=on-failure
+
+# Recreate the credential directory if it was removed. systemd puts it
+# under /etc, which is SYSCONFDIR in a distribution build.
+ConfigurationDirectory=nvme/creds
+ConfigurationDirectoryMode=0700
 
 # Hardening. The daemon needs uid 0 to write the .nvme keyring, but no
 # capabilities, no network, and no writable files.

@@ -409,6 +409,22 @@ else
 endif
 want_discoverd = want_discoverd and libsystemd_dep.found()
 want_keysd = want_keysd and libsystemd_dep.found()
+
+# nvme-keysd decrypts credentials through sd_varlink (libsystemd v257).
+if want_keysd and libsystemd_dep.version().version_compare('<257')
+    if get_option('nvme-keysd').enabled()
+        error('nvme-keysd requires libsystemd >=257')
+    endif
+    want_keysd = false
+endif
+
+# nvme-keysd derives the PSKs (OpenSSL) and writes the keyring (libkeyutils).
+if want_keysd and not (openssl_dep.found() and keyutils_dep.found())
+    if get_option('nvme-keysd').enabled()
+        error('nvme-keysd requires OpenSSL and libkeyutils')
+    endif
+    want_keysd = false
+endif
 conf.set('CONFIG_DISCOVERD', want_discoverd, description: 'Is nvme-discoverd enabled')
 conf.set('CONFIG_KEYSD', want_keysd, description: 'Is nvme-keysd enabled')
 

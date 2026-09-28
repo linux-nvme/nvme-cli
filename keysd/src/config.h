@@ -29,3 +29,4 @@ struct keysd_config *config_load(const char *conf_path);
 void config_free(struct keysd_config *cfg);
 
 #define KEYSD_CONF_PATH SYSCONFDIR "/nvme/nvme-keysd.conf"
+#define KEYSD_CREDS_DIR SYSCONFDIR "/nvme/creds"

@@ -39,7 +39,7 @@ option(
   'nvme-keysd',
   type : 'feature',
   value: 'disabled',
-  description : 'nvme-keysd daemon, provisions TLS PSKs into the kernel keyring (technology preview; requires fabrics and libsystemd >=253)'
+  description : 'nvme-keysd daemon, provisions TLS PSKs into the kernel keyring (technology preview; requires fabrics, OpenSSL, libkeyutils and libsystemd >=257)'
 )
 option(
   'nvmf-autoconnect',
