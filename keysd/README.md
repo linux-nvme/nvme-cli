@@ -2,7 +2,7 @@
 
 A daemon that puts NVMe/TCP TLS pre-shared keys (PSKs) into the kernel's `.nvme` keyring before a connection needs them. The kernel finds the key there when `nvme connect` or `nvme-discoverd` connects with TLS.
 
-> Technology preview. The `nvme-keysd` meson option defaults to `disabled`. The daemon's main loop and configuration exist; importing keys does not yet.
+> Technology preview. The `nvme-keysd` meson option defaults to `disabled`. Keys come from systemd credentials only (`key-source = systemd-creds`).
 
 ## Design
 
@@ -16,12 +16,14 @@ A daemon that puts NVMe/TCP TLS pre-shared keys (PSKs) into the kernel's `.nvme`
 |---|---|
 | `main.c` | Startup, signal handling, the main loop |
 | `config.c` | The daemon's own settings (`nvme-keysd.conf`) |
+| `import.c` | Imports the credentials named in the fabrics configuration and puts the PSKs in the keyring |
+| `creds.c` | Decrypts one credential through systemd-creds (`io.systemd.Credentials.Decrypt`) |
 
-Logging comes from `daemon-util/`, shared with the other nvme-cli daemons.
+Logging and signal handling come from `daemon-util/`, shared with the other nvme-cli daemons.
 
 ## Configuration
 
 - **`nvme-keysd.conf`**: the daemon's own settings (`debug-level`). Optional; a missing file or key keeps its default.
 - **The shared NVMe-oF fabrics configuration** (`nvme-fabrics.conf(5)`): which key belongs to which host and subsystem.
 
-`nvme-keysd.conf` is reloaded on `SIGHUP`.
+Both are reloaded on `SIGHUP`, and the keys are imported again. The credentials are decrypted again at the same time, so a reload (`systemctl reload nvme-keysd`) also picks up a new or changed credential.

@@ -8,6 +8,8 @@
 
 keysd_sources = files(
     'src/config.c',
+    'src/creds.c',
+    'src/import.c',
     'src/main.c',
 )
 
@@ -39,6 +41,9 @@ configure_file(
     install: true,
     install_dir: systemddir,
 )
+
+# The encrypted credentials. Only root reads them.
+install_emptydir(sysconfdir / 'nvme' / 'creds', install_mode: 'rwx------')
 
 configure_file(
     input: 'etc/nvme/nvme-keysd.conf.in',

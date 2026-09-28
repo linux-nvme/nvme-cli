@@ -22,10 +22,13 @@
 #include <nvme/lib.h>
 
 #include "config.h"
+#include "import.h"
 
 struct keysd_ctx {
 	struct libnvme_global_ctx *nvme_ctx; // libnvme logging
 	const char *conf_path;               // nvme-keysd's conf path
+	const char *fabrics_conf;            // NULL: libnvme's default
+	const char *creds_dir;               // encrypted credentials
 	struct keysd_config *cfg;            // parsed @conf_path
 	sd_event *event;                     // sd_event main loop
 	bool force_debug;                    // --debug forces DEBUG
@@ -53,6 +56,8 @@ static void reload_config(void *user_data __attribute__((unused)))
 	config_free(ctx.cfg);
 	ctx.cfg = new_cfg;
 	apply_log_level();
+
+	import_keys(ctx.nvme_ctx, ctx.fabrics_conf, ctx.creds_dir);
 }
 
 static void usage(const char *prog)
@@ -61,6 +66,10 @@ static void usage(const char *prog)
 	       "\n"
 	       "  --config FILE, -c FILE  nvme-keysd configuration file\n"
 	       "                          (default: " KEYSD_CONF_PATH ")\n"
+	       "  --fabrics-config FILE   NVMe-oF configuration file\n"
+	       "                          (default: libnvme's default)\n"
+	       "  --creds-dir DIR         encrypted credentials\n"
+	       "                          (default: " KEYSD_CREDS_DIR ")\n"
 	       "  --debug, -d             enable debug logging (journal + libnvme)\n"
 	       "  --help, -h              show this help and exit\n",
 	       prog);
@@ -69,15 +78,20 @@ static void usage(const char *prog)
 int main(int argc, char **argv)
 {
 	static const struct option long_opts[] = {
-		{ "config", required_argument, NULL, 'c' },
-		{ "debug",  no_argument,       NULL, 'd' },
-		{ "help",   no_argument,       NULL, 'h' },
-		{ NULL, 0, NULL, 0 },
+		{ "config",         required_argument, NULL, 'c' },
+		{ "fabrics-config", required_argument, NULL, 'J' },
+		{ "creds-dir",      required_argument, NULL, 'C' },
+		{ "debug",          no_argument,       NULL, 'd' },
+		{ "help",           no_argument,       NULL, 'h' },
+		{ NULL, 0,          NULL, 0 },
 	};
 	char *config_path_abs = NULL;
+	char *fabrics_path_abs = NULL;
+	char *creds_path_abs = NULL;
 	int r, c;
 
-	while ((c = getopt_long(argc, argv, "c:dh", long_opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "c:dh", long_opts,
+				NULL)) != -1) {
 		switch (c) {
 		case 'c':
 			free(config_path_abs);
@@ -89,8 +103,28 @@ int main(int argc, char **argv)
 				return 1;
 			}
 			break;
+		case 'C':
+			free(creds_path_abs);
+			creds_path_abs = realpath(optarg, NULL);
+			if (!creds_path_abs) {
+				fprintf(stderr,
+					"--creds-dir: cannot resolve '%s': %s\n",
+					optarg, strerror(errno));
+				return 1;
+			}
+			break;
 		case 'd':
 			ctx.force_debug = true;
+			break;
+		case 'J':
+			free(fabrics_path_abs);
+			fabrics_path_abs = realpath(optarg, NULL);
+			if (!fabrics_path_abs) {
+				fprintf(stderr,
+					"--fabrics-config: cannot resolve '%s': %s\n",
+					optarg, strerror(errno));
+				return 1;
+			}
 			break;
 		case 'h':
 			usage(argv[0]);
@@ -101,6 +135,8 @@ int main(int argc, char **argv)
 		}
 	}
 	ctx.conf_path = config_path_abs ? config_path_abs : KEYSD_CONF_PATH;
+	ctx.fabrics_conf = fabrics_path_abs;
+	ctx.creds_dir = creds_path_abs ? creds_path_abs : KEYSD_CREDS_DIR;
 
 	// Key material must never end up in a core dump.
 	if (prctl(PR_SET_DUMPABLE, 0) < 0) {
@@ -134,6 +170,8 @@ int main(int argc, char **argv)
 	if (dmn_add_signal_handlers(ctx.event, reload_config, NULL) < 0)
 		return 1;
 
+	import_keys(ctx.nvme_ctx, ctx.fabrics_conf, ctx.creds_dir);
+
 	sd_notify(0, "READY=1");
 	log_info("started");
 
@@ -145,6 +183,8 @@ int main(int argc, char **argv)
 	libnvme_free_global_ctx(ctx.nvme_ctx);
 	sd_event_unref(ctx.event);
 	free(config_path_abs);
+	free(fabrics_path_abs);
+	free(creds_path_abs);
 
 	return r < 0 ? 1 : 0;
 }

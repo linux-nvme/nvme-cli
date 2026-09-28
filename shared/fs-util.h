@@ -111,6 +111,9 @@ char *shr_dirname(char *path);
 /*
  * Read an entire file into a newly allocated buffer.
  *
+ * Not for secrets: stdio and realloc() leave copies of the contents in
+ * memory that is freed without being cleared.
+ *
  * If dir is non-NULL, the file opened is dir + "/" + path (or just dir, if
  * path is empty). Otherwise, path is used as-is.
  *

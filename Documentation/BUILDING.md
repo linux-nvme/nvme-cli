@@ -55,6 +55,7 @@ the default is `auto` (use if found) unless noted otherwise.
 | `python` | `auto` | 3.6 | Python bindings for libnvme |
 | `nvme-discoverd` | `auto` | libsystemd 253 | The nvme-discoverd daemon; see [Daemons and systemd](#daemons-and-systemd) |
 | `mdns` | `auto` | libsystemd 258 | mDNS discovery in nvme-discoverd; see [Daemons and systemd](#daemons-and-systemd) |
+| `nvme-keysd` | `disabled` | libsystemd 257, OpenSSL, libkeyutils | The nvme-keysd daemon; see [Daemons and systemd](#daemons-and-systemd) |
 
 nvme-cli calls `printbuf_memappend()` in a serializer installed with
 `json_object_set_serializer()` (`src/nvme-json.c`). json-c's `printbuf.h`
@@ -85,6 +86,7 @@ the same for both.
 |---------|-------------------------|--------|
 | nvme-discoverd | 253 | `Type=notify-reload` |
 | mDNS in nvme-discoverd | 258 | The `BrowseServices` method of systemd-resolved |
+| nvme-keysd | 257 | The `io.systemd.Credentials.Decrypt` Varlink method |
 
 At startup, nvme-discoverd checks that systemd-resolved provides
 `BrowseServices`. If it does not, the daemon logs a warning and runs
