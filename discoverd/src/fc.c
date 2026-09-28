@@ -11,8 +11,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <daemon-util/log.h>
+
 #include "fc.h"
-#include "log.h"
 
 #define FC_NVME_DISCOVERY_PATH \
 	"/sys/class/fc/fc_udev_device/nvme_discovery"
@@ -25,14 +26,14 @@ int fc_kickstart(void)
 	if (fd < 0) {
 		if (errno == ENOENT)
 			return 0; // no FC HBA present — not an error
-		disc_err("%s: open(%s): %s", __func__,
-			 FC_NVME_DISCOVERY_PATH, strerror(errno));
+		log_err("%s: open(%s): %s", __func__,
+			FC_NVME_DISCOVERY_PATH, strerror(errno));
 		return -errno;
 	}
 
 	ret = write(fd, "add", 3);
 	if (ret < 0) {
-		disc_err("%s: write: %s", __func__, strerror(errno));
+		log_err("%s: write: %s", __func__, strerror(errno));
 		close(fd);
 		return -errno;
 	}

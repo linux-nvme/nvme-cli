@@ -15,8 +15,9 @@
 #include <systemd/sd-device.h>
 #include <systemd/sd-event.h>
 
+#include <daemon-util/log.h>
+
 #include "events.h"
-#include "log.h"
 #include "tid.h"
 
 /* Sysfs soak delay: kernel sysfs attributes settle ~1 s after the add uevent. */
@@ -362,7 +363,7 @@ struct events_ctx *events_start(sd_event *event,
 
 	return ctx;
 err:
-	disc_err("%s: %s", __func__, strerror(-r));
+	log_err("%s: %s", __func__, strerror(-r));
 	events_stop(ctx);
 	return NULL;
 }

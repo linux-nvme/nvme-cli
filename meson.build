@@ -718,6 +718,7 @@ if want_nvme
     subdir('tests')
 
     if want_discoverd
+        subdir('daemon-util')
         subdir('discoverd')
     endif
 

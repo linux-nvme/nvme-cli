@@ -10,13 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <daemon-util/log.h>
 #include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/nvme-types-fabrics.h>
 #include <nvme/tree.h>
 
 #include "dlp.h"
-#include "log.h"
 #include "tid.h"
 
 /*
@@ -95,16 +95,16 @@ void dlp_process_log(const struct nvmf_discovery_log *log,
 		 */
 		if (dc_tid && e->subtype == NVME_NQN_CURR) {
 			if (!tid_target_same(dc_tid, t)) {
-				disc_warn("%s | skipping %s - other-interface self entry",
-					  libnvmf_tid_str(dc_tid),
-					  libnvmf_tid_str(t));
+				log_warn("%s | skipping %s - other-interface self entry",
+					 libnvmf_tid_str(dc_tid),
+					 libnvmf_tid_str(t));
 				continue;
 			}
 		} else if (dc_tid &&
 			   strcmp(libnvmf_tid_get_transport(dc_tid),
 				  libnvmf_tid_get_transport(t))) {
-			disc_warn("%s | skipping %s - transport mismatch",
-				  libnvmf_tid_str(dc_tid), libnvmf_tid_str(t));
+			log_warn("%s | skipping %s - transport mismatch",
+				 libnvmf_tid_str(dc_tid), libnvmf_tid_str(t));
 			continue;
 		}
 
@@ -144,15 +144,15 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 
 	ret = libnvme_scan_ctrl(ctx->nvme_ctx, devname, &ctrl);
 	if (ret < 0) {
-		disc_warn("%s | %s - scan_ctrl failed: %s",
-			  libnvmf_tid_str(dc_tid), devname, strerror(-ret));
+		log_warn("%s | %s - scan_ctrl failed: %s",
+			 libnvmf_tid_str(dc_tid), devname, strerror(-ret));
 		goto out;
 	}
 
 	ret = libnvmf_get_discovery_log(ctrl, NULL, &log);
 	if (ret < 0) {
-		disc_warn("%s | %s - get_discovery_log failed: %s",
-			  libnvmf_tid_str(dc_tid), devname, strerror(-ret));
+		log_warn("%s | %s - get_discovery_log failed: %s",
+			 libnvmf_tid_str(dc_tid), devname, strerror(-ret));
 		goto out;
 	}
 

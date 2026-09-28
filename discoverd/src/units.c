@@ -19,7 +19,8 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 
-#include "log.h"
+#include <daemon-util/log.h>
+
 #include "state.h"
 #include "units.h"
 
@@ -327,7 +328,7 @@ struct unit_mgr *unit_mgr_new(sd_bus *bus, sd_event *event,
 				SYSTEMD_MGR_IFACE, "JobRemoved",
 				job_removed_handler, mgr);
 	if (r < 0) {
-		disc_err("sd_bus_match_signal(JobRemoved): %s", strerror(-r));
+		log_err("sd_bus_match_signal(JobRemoved): %s", strerror(-r));
 		free(mgr);
 		return NULL;
 	}
@@ -443,18 +444,18 @@ static int do_start_transient(struct unit_mgr *mgr, sd_bus_message *msg,
 		 */
 		sd_bus_error_free(&err);
 		err = SD_BUS_ERROR_NULL;
-		disc_info("%s - name held by a stale unit, replacing it",
-			  unit_name);
+		log_info("%s - name held by a stale unit, replacing it",
+			 unit_name);
 		unit_stop(mgr, unit_name);
 		if (unit_wait_gone(mgr, unit_name))
 			r = sd_bus_call(mgr->bus, msg, 0, &err, &reply);
 		else
-			disc_warn("%s - still loaded after stop, giving up",
-				  unit_name);
+			log_warn("%s - still loaded after stop, giving up",
+				 unit_name);
 	}
 	if (r < 0) {
-		disc_err("StartTransientUnit(%s): %s",
-			 unit_name, err.message ?: strerror(-r));
+		log_err("StartTransientUnit(%s): %s",
+			unit_name, err.message ?: strerror(-r));
 		sd_bus_error_free(&err);
 		return r;
 	}
@@ -795,8 +796,8 @@ int unit_restart(struct unit_mgr *mgr, const char *unit_name)
 			       SYSTEMD_MGR_IFACE, "RestartUnit",
 			       &err, &reply, "ss", unit_name, "replace");
 	if (r < 0) {
-		disc_err("RestartUnit(%s): %s",
-			 unit_name, err.message ?: strerror(-r));
+		log_err("RestartUnit(%s): %s",
+			unit_name, err.message ?: strerror(-r));
 		sd_bus_error_free(&err);
 		return r;
 	}
@@ -819,8 +820,8 @@ int unit_stop(struct unit_mgr *mgr, const char *unit_name)
 			       SYSTEMD_MGR_IFACE, "StopUnit",
 			       &err, NULL, "ss", unit_name, "replace");
 	if (r < 0) {
-		disc_err("StopUnit(%s): %s",
-			 unit_name, err.message ?: strerror(-r));
+		log_err("StopUnit(%s): %s",
+			unit_name, err.message ?: strerror(-r));
 		sd_bus_error_free(&err);
 	}
 	return r;
@@ -836,8 +837,8 @@ int unit_reset_failed(struct unit_mgr *mgr, const char *unit_name)
 			       SYSTEMD_MGR_IFACE, "ResetFailedUnit",
 			       &err, NULL, "s", unit_name);
 	if (r < 0) {
-		disc_err("ResetFailedUnit(%s): %s",
-			 unit_name, err.message ?: strerror(-r));
+		log_err("ResetFailedUnit(%s): %s",
+			unit_name, err.message ?: strerror(-r));
 		sd_bus_error_free(&err);
 	}
 	return r;
