@@ -88,6 +88,7 @@ static:
 		-Dliburing=disabled \
 		-Dpython=disabled \
 		-Dopenssl=disabled \
+		-Dnvme-discoverd=disabled \
 		-Dtests=false \
 		-Dexamples=false
 
