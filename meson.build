@@ -55,7 +55,6 @@ want_fabrics = get_option('fabrics').disabled() == false and host_system == 'lin
 want_mi = get_option('mi').disabled() == false and host_system == 'linux'
 want_top = get_option('top').disabled() == false and host_system == 'linux'
 want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system == 'linux'
-want_nvmf_autoconnect = get_option('nvmf-autoconnect').disabled() == false
 want_deprecated_cmds = get_option('deprecated-cmds').disabled() == false
 want_json_c = get_option('json-c').disabled() == false
 want_libkmod = get_option('libkmod').disabled() == false and host_system == 'linux'
@@ -408,6 +407,14 @@ else
 endif
 want_discoverd = want_discoverd and libsystemd_dep.found()
 conf.set('CONFIG_DISCOVERD', want_discoverd, description: 'Is nvme-discoverd enabled')
+
+# -Dnvmf-autoconnect=auto builds the legacy autoconnect only when
+# nvme-discoverd is not built.
+nvmf_autoconnect_opt = get_option('nvmf-autoconnect')
+want_nvmf_autoconnect = (
+    nvmf_autoconnect_opt.enabled() or
+    (nvmf_autoconnect_opt.auto() and want_fabrics and not want_discoverd)
+)
 
 # The sd_varlink client API used by mDNS exists since libsystemd v257.
 want_mdns = false
