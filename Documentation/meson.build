@@ -407,6 +407,12 @@ if want_discoverd
     ]
 endif
 
+if want_keysd
+    adoc_sources_man8 += [
+        'nvme-keysd',
+    ]
+endif
+
 adoc_includes = [
     'cmd-plugins.txt',
     'cmds-main.txt',

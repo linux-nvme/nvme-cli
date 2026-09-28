@@ -96,6 +96,14 @@
   `libnvmf_kernel_options_for_each()` report the fabrics options the
   kernel lists in `/dev/nvme-fabrics`.
 
+### nvme-keysd
+
+* New daemon, nvme-keysd, a technology preview: it will put NVMe/TCP
+  TLS pre-shared keys into the kernel's .nvme keyring before a
+  connection needs them. Built with the new `nvme-keysd` meson option,
+  `disabled` by default. This release has the daemon's main loop and
+  configuration only. See `nvme-keysd(8)`.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes

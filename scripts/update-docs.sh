@@ -14,6 +14,7 @@ doc_setup() {
 		-Dnvme=enabled                      \
 		-Dlibnvme=enabled                   \
 		-Dnvme-discoverd=enabled            \
+		-Dnvme-keysd=enabled                \
 		-Ddocs=all                          \
 		"$@"
 }
