@@ -160,6 +160,65 @@ jobs:
 
             exit $podman_exit
 
+      #The nvme-discoverd integration test drives the daemon through
+      #systemd-run/systemctl, so it runs directly in the VM, not in a
+      #container. It only uses nvmet-tcp on loopback and a local veth
+      #pair for the mDNS phases, no host devices.
+      - name: Run nvme-discoverd tests in VM
+        if: success() || failure()
+        uses: ./.github/actions/kubevirt-action
+        with:
+          kernel_version: linus-master
+          vm_artifact_upload_dir: nvme-cli/discoverd-results/
+          run_cmds: |
+            set -e
+            set -x
+            uname -a
+
+            sudo dnf remove -y nvme-cli libnvme
+
+            sudo dnf install -y gcc meson git kmod iproute systemd \
+            systemd-devel json-c-devel openssl-devel keyutils-libs-devel \
+            dbus-devel gcovr avahi avahi-tools
+
+            git clone https://github.com/${{ github.repository }} nvme-cli
+            cd nvme-cli
+            git checkout ${{ github.sha }}
+
+            # Enable explicitly so a missing or too old libsystemd fails
+            # the build instead of silently skipping nvme-discoverd or
+            # its mDNS support.
+            meson setup .build-ci --buildtype=release \
+                -Dnvme-discoverd=enabled -Dmdns=enabled -Db_coverage=true
+            meson compile -C .build-ci
+
+            # Test link for the mDNS phases. The mDNS traffic stays on
+            # this host: avahi and systemd-resolved both run here.
+            # 192.0.2.0/24 is TEST-NET-1 (RFC 5737), which real networks
+            # do not use, so it does not overlap the VM's own network.
+            sudo ip link add wmd0 type veth peer name wmd1
+            sudo ip addr add 192.0.2.1/24 dev wmd0
+            sudo ip link set wmd1 up
+            sudo ip link set wmd0 up
+            # avahi-publish needs avahi-daemon; the wringer needs
+            # systemd-resolved.
+            sudo systemctl start avahi-daemon systemd-resolved
+
+            mkdir -p discoverd-results
+            set +e
+            set -o pipefail
+            sudo env BUILD_DIR="$PWD/.build-ci" \
+                discoverd/tests/wringer.sh -y wmd0 2>&1 |
+                tee discoverd-results/wringer.log
+            wringer_status=$?
+            set -e
+
+            sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
+            gcovr -r . --object-directory .build-ci --xml-pretty \
+                -o discoverd-results/coverage-discoverd.xml
+
+            exit "${wringer_status}"
+
   codecov-upload:
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
     needs: nightly-tests
