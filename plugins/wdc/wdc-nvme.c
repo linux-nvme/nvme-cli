@@ -41,6 +41,7 @@
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
 #include <shared/parse-util.h>
+#include <shared/string-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
 
@@ -2179,33 +2180,29 @@ out:
 static int wdc_get_serial_name(struct libnvme_transport_handle *hdl, char *file, size_t len,
 			       const char *suffix)
 {
-	int i;
 	int ret;
 	int res_len = 0;
 	char orig[PATH_MAX] = {0};
 	struct libnvme_passthru_cmd cmd;
 	struct nvme_id_ctrl ctrl;
-	int ctrl_sn_len = sizeof(ctrl.sn);
+	char sn[sizeof(ctrl.sn) + 1] = {0};
 
-	i = sizeof(ctrl.sn) - 1;
 	strncpy(orig, file, PATH_MAX - 1);
 	memset(file, 0, len);
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	nvme_init_identify_ctrl(&cmd, &ctrl);
 	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (ret) {
-		nvme_show_error("ERROR: WDC: nvme_identify_ctrl() failed 0x%x", ret);
+		nvme_show_error("ERROR: WDC: nvme_identify_ctrl() failed 0x%x",
+				ret);
 		return -1;
 	}
-	/* Remove trailing spaces from the name */
-	while (i && ctrl.sn[i] == ' ') {
-		ctrl.sn[i] = '\0';
-		i--;
-	}
-	if (ctrl.sn[sizeof(ctrl.sn) - 1] == '\0')
-		ctrl_sn_len = strlen(ctrl.sn);
 
-	res_len = snprintf(file, len, "%s%.*s%s", orig, ctrl_sn_len, ctrl.sn, suffix);
+	snprintf(sn, sizeof(sn), "%-.*s",
+		 (int)sizeof(ctrl.sn), ctrl.sn);
+	shr_sanitize_name(shr_rtrim(sn));
+
+	res_len = snprintf(file, len, "%s%s%s", orig, sn, suffix);
 	if (len <= res_len) {
 		nvme_show_error(
 			"ERROR: WDC: cannot format serial number due to data of unexpected length\n");
@@ -11053,32 +11050,31 @@ static int wdc_get_drive_reason_id(struct libnvme_transport_handle *hdl, char *d
 	const char *reason_id_str = "reason_id";
 	struct libnvme_passthru_cmd cmd;
 	struct nvme_id_ctrl ctrl;
+	char sn[sizeof(ctrl.sn) + 1] = {0};
+	char mn[sizeof(ctrl.mn) + 1] = {0};
 	int res_len = 0;
-	int i, j;
 	int ret;
 
-	i = sizeof(ctrl.sn) - 1;
-	j = sizeof(ctrl.mn) - 1;
 	memset(drive_reason_id, 0, len);
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	nvme_init_identify_ctrl(&cmd, &ctrl);
 	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (ret) {
-		nvme_show_error("ERROR: WDC: nvme_identify_ctrl() failed 0x%x", ret);
+		nvme_show_error(
+			"ERROR: WDC: nvme_identify_ctrl() failed 0x%x",
+			ret);
 		return -1;
 	}
-	/* Remove trailing spaces from the sn and mn */
-	while (i && ctrl.sn[i] == ' ') {
-		ctrl.sn[i] = '\0';
-		i--;
-	}
 
-	while (j && ctrl.mn[j] == ' ') {
-		ctrl.mn[j] = '\0';
-		j--;
-	}
+	snprintf(sn, sizeof(sn), "%-.*s",
+		 (int)sizeof(ctrl.sn), ctrl.sn);
+	snprintf(mn, sizeof(mn), "%-.*s",
+		 (int)sizeof(ctrl.mn), ctrl.mn);
+	shr_sanitize_name(shr_rtrim(sn));
+	shr_sanitize_name(shr_rtrim(mn));
 
-	res_len = snprintf(drive_reason_id, len, "%s_%s_%s", ctrl.sn, ctrl.mn, reason_id_str);
+	res_len = snprintf(drive_reason_id, len,
+			   "%s_%s_%s", sn, mn, reason_id_str);
 	if (len <= res_len) {
 		nvme_show_error(
 			"ERROR: WDC: cannot format serial number due to data of unexpected length\n");
