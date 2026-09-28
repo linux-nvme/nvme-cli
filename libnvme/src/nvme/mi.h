@@ -519,6 +519,101 @@ int libnvme_mi_mi_subsystem_health_status_poll(struct libnvme_mi_ep *ep, bool cl
 					    struct nvme_mi_nvm_ss_health_status *nshds);
 
 /**
+ * struct libnvme_mi_ctrl_health_poll_args - Controller Health Poll arguments
+ * @args_size:     Size of &struct libnvme_mi_ctrl_health_poll_args (for ABI
+ *                 extensibility)
+ * @start_ctrl_id: Starting Controller ID (SCTLID)
+ * @clear:         Clear Changed Flags (CCF): clear CHSCF and NAC/FA/TCIDA on
+ *                 returned controllers
+ * @all:           Report All (ALL): ignore error selection filter bits
+ * @inc_pci:       Include non-SR-IOV PCI Functions (INCF)
+ * @inc_sriov_pf:  Include SR-IOV Physical Functions (INCPF)
+ * @inc_sriov_vf:  Include SR-IOV Virtual Functions (INCVF)
+ * @filter_csts:   Filter by Controller Status Changes (CSTS)
+ * @filter_ctemp:  Filter by Composite Temperature Changes (CTEMP)
+ * @filter_pdlu:   Filter by Percentage Used (PDLU)
+ * @filter_spare:  Filter by Available Spare (SPARE)
+ * @filter_cwarn:  Filter by Critical Warning (CWARN)
+ * @entries:       Caller-allocated buffer to store Controller Health Data
+ *                 Structures
+ * @num_entries:   In/Out: on input, maximum entries to return; on output,
+ *                 actual entries returned
+ */
+struct libnvme_mi_ctrl_health_poll_args {
+	__u32 args_size;
+	__u16 start_ctrl_id;
+	bool clear;
+	bool all;
+	bool inc_pci;
+	bool inc_sriov_pf;
+	bool inc_sriov_vf;
+	bool filter_csts;
+	bool filter_ctemp;
+	bool filter_pdlu;
+	bool filter_spare;
+	bool filter_cwarn;
+	struct nvme_mi_ctrl_health_status *entries;
+	unsigned int *num_entries;
+};
+
+#define nvme_mi_ctrl_health_poll_args libnvme_mi_ctrl_health_poll_args
+
+/**
+ * libnvme_mi_mi_controller_health_status_poll() - Read Controller Health Data
+ * Structure entries from the NVM subsystem
+ * @ep:   Endpoint for MI communication
+ * @args: Arguments structure controlling query parameters and output buffers
+ *
+ * Retrieves one or more Controller Health Data Structures into @args->entries
+ * according to NVMe-MI 2.0 section 5.3. When @args->num_entries specifies
+ * more than 255 entries, multiple requests will be issued sequentially to
+ * fulfill the query.
+ *
+ * See &struct libnvme_mi_ctrl_health_poll_args,
+ * &struct nvme_mi_ctrl_health_status.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or negative error code otherwise.
+ */
+int libnvme_mi_mi_controller_health_status_poll(struct libnvme_mi_ep *ep,
+		struct libnvme_mi_ctrl_health_poll_args *args);
+
+/**
+ * libnvme_mi_mi_controller_health_status_poll_all() - Read Controller Health
+ * Data Structure for all controllers from the NVM subsystem
+ * @ep:          Endpoint for MI communication
+ * @clear:       Flag to clear changed flags for returned controllers
+ * @entries:     Buffer to receive health data structures
+ * @num_entries: In/Out: on input, maximum entries to return; on output, actual
+ *               entries returned
+ *
+ * Convenience helper to query all controller types starting from ID 0 with
+ * Report All enabled.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or negative error code otherwise.
+ */
+static inline int libnvme_mi_mi_controller_health_status_poll_all(
+	struct libnvme_mi_ep *ep, bool clear,
+	struct nvme_mi_ctrl_health_status *entries,
+	unsigned int *num_entries)
+{
+	struct libnvme_mi_ctrl_health_poll_args args = {
+		.args_size = sizeof(args),
+		.start_ctrl_id = 0,
+		.clear = clear,
+		.all = true,
+		.inc_pci = true,
+		.inc_sriov_pf = true,
+		.inc_sriov_vf = true,
+		.entries = entries,
+		.num_entries = num_entries,
+	};
+
+	return libnvme_mi_mi_controller_health_status_poll(ep, &args);
+}
+
+/**
  * libnvme_mi_mi_pda_read() - Read the NVMe-MI Persistent Data Area (PDA)
  * @ep: endpoint for MI communication
  * @dformat: data format to use for @dofst and @dlen, see
