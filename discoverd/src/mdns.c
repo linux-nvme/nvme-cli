@@ -21,11 +21,11 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 #include <ccan/str/str.h>
+#include <daemon-util/log.h>
 #include <shared/time-util.h>
 #include <systemd/sd-json.h>
 #include <systemd/sd-varlink.h>
 
-#include "log.h"
 #include "mdns.h"
 #include "netif.h"
 
@@ -86,7 +86,7 @@ struct tcp_check {
 	sd_event_source *io_source;
 	sd_event_source *retry_timer;
 	size_t retry_idx; // into tcp_check_retry_sec[]
-	bool ceiling_logged; // for disc_info_once()
+	bool ceiling_logged; // for log_info_once()
 };
 
 /* One discovered mDNS service instance, keyed by name within its browse. */
@@ -344,9 +344,9 @@ static void tcp_check_schedule_retry(struct tcp_check *tc)
 	if (tc->retry_idx < last)
 		tc->retry_idx++;
 	else
-		disc_info_once(&tc->ceiling_logged,
-			       "mdns: %s: %s:%s still unreachable, retrying every %us",
-			       tc->br->ifname, tc->traddr, tc->trsvcid, sec);
+		log_info_once(&tc->ceiling_logged,
+			      "mdns: %s: %s:%s still unreachable, retrying every %us",
+			      tc->br->ifname, tc->traddr, tc->trsvcid, sec);
 
 	r = sd_event_now(tc->br->mctx->event, CLOCK_BOOTTIME, &now);
 	if (r >= 0)
@@ -355,9 +355,9 @@ static void tcp_check_schedule_retry(struct tcp_check *tc)
 				      now + sec * UINT64_C(1000000), 0,
 				      tcp_check_retry_cback, tc);
 	if (r < 0)
-		disc_err("mdns: %s: %s:%s: cannot arm retry timer: %s",
-			 tc->br->ifname, tc->traddr, tc->trsvcid,
-			 strerror(-r));
+		log_err("mdns: %s: %s:%s: cannot arm retry timer: %s",
+			tc->br->ifname, tc->traddr, tc->trsvcid,
+			strerror(-r));
 }
 
 /* Reachable: report the endpoint and free @tc. */
@@ -492,7 +492,7 @@ static void add_endpoints(struct mdns_browse *br, struct mdns_service *svc,
 
 	port = (int)sd_json_variant_integer(port_v);
 	if (port < 1 || port > 65535) {
-		disc_warn("mdns: %s: '%s': bad port %d, ignoring",
+		log_warn("mdns: %s: '%s': bad port %d, ignoring",
 			 br->ifname, svc->name, port);
 		return;
 	}
@@ -576,7 +576,7 @@ static int resolve_reply_cb(sd_varlink *link __attribute__((unused)),
 	size_t i, n;
 
 	if (error_id) {
-		disc_warn("mdns: %s: resolve '%s': %s", br->ifname, req->name,
+		log_warn("mdns: %s: resolve '%s': %s", br->ifname, req->name,
 			 error_id);
 		goto out;
 	}
@@ -586,7 +586,7 @@ static int resolve_reply_cb(sd_varlink *link __attribute__((unused)),
 		goto out;
 
 	if (resolve_txt(parameters, &transport, &nqn) < 0) {
-		disc_warn("mdns: %s: resolve '%s': missing/invalid transport in TXT record",
+		log_warn("mdns: %s: resolve '%s': missing/invalid transport in TXT record",
 			 br->ifname, req->name);
 		goto out;
 	}
@@ -632,7 +632,7 @@ static void resolve_service(struct mdns_browse *br, const char *name,
 
 	r = sd_varlink_connect_address(&req->link, RESOLVE_VARLINK_ADDRESS);
 	if (r < 0) {
-		disc_warn("mdns: %s: resolve '%s': connect: %s", br->ifname,
+		log_warn("mdns: %s: resolve '%s': connect: %s", br->ifname,
 			 name, strerror(-r));
 		goto err_name;
 	}
@@ -746,15 +746,15 @@ static int browse_reply_cb(sd_varlink *link __attribute__((unused)),
 	size_t i, n;
 
 	if (error_id) {
-		disc_warn("mdns: %s: browsing %s failed: %s, restarting",
-			  br->ifname, br->type, error_id);
+		log_warn("mdns: %s: browsing %s failed: %s, restarting",
+			 br->ifname, br->type, error_id);
 		goto restart;
 	}
 
 	arr = json_array(parameters, "browserServiceData");
 	if (!arr)
-		disc_warn("mdns: %s: BrowseServices reply without browserServiceData",
-			  br->ifname);
+		log_warn("mdns: %s: BrowseServices reply without browserServiceData",
+			 br->ifname);
 	n = arr ? sd_json_variant_elements(arr) : 0;
 	for (i = 0; i < n; i++)
 		handle_service_data(br, sd_json_variant_by_index(arr, i));
@@ -762,8 +762,8 @@ static int browse_reply_cb(sd_varlink *link __attribute__((unused)),
 	if (flags & SD_VARLINK_REPLY_CONTINUES)
 		return 0;
 
-	disc_warn("mdns: %s: browsing %s ended, restarting", br->ifname,
-		  br->type);
+	log_warn("mdns: %s: browsing %s ended, restarting", br->ifname,
+		 br->type);
 restart:
 	browse_disconnect(br);
 	browse_schedule_restart(br);
@@ -823,14 +823,14 @@ static int browse_restart_cback(sd_event_source *s __attribute__((unused)),
 
 	r = browse_connect(br);
 	if (r < 0) {
-		disc_dbg("mdns: %s: browsing %s: %s", br->ifname, br->type,
-			 strerror(-r));
+		log_dbg("mdns: %s: browsing %s: %s", br->ifname, br->type,
+			strerror(-r));
 		browse_schedule_restart(br);
 		return 0;
 	}
 
 	br->restart_sec = BROWSE_RESTART_MIN_SEC;
-	disc_info("mdns: browsing %s for %s again", br->ifname, br->type);
+	log_info("mdns: browsing %s for %s again", br->ifname, br->type);
 
 	return 0;
 }
@@ -847,8 +847,8 @@ static void browse_schedule_restart(struct mdns_browse *br)
 				      now + br->restart_sec * UINT64_C(1000000),
 				      0, browse_restart_cback, br);
 	if (r < 0) {
-		disc_err("mdns: %s: browsing %s: cannot arm restart timer: %s",
-			 br->ifname, br->type, strerror(-r));
+		log_err("mdns: %s: browsing %s: cannot arm restart timer: %s",
+			br->ifname, br->type, strerror(-r));
 		return;
 	}
 
@@ -910,13 +910,13 @@ static void browse_start(struct mdns_ctx *mctx, int ifindex,
 
 	r = browse_connect(br);
 	if (r < 0) {
-		disc_warn("mdns: %s: browsing %s: %s, retrying", ifname, type,
-			  strerror(-r));
+		log_warn("mdns: %s: browsing %s: %s, retrying", ifname, type,
+			 strerror(-r));
 		browse_schedule_restart(br);
 		return;
 	}
 
-	disc_info("mdns: browsing %s for %s", ifname, type);
+	log_info("mdns: browsing %s for %s", ifname, type);
 }
 
 static void on_iface_add(int ifindex, const char *ifname, void *user_data)

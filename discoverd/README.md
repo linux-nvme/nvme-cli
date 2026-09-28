@@ -32,7 +32,6 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 | `netif.c` | Network interface tracking for mDNS |
 | `config.c` | The daemon's own knobs (`nvme-discoverd.conf`) — not the connections it manages, see below |
 | `state.c` | Runtime state under `$RUNDIR/nvme/discoverd/`, linking a kernel device to the unit that owns it |
-| `log.c` | Journal logging wrapper |
 
 ## Configuration
 

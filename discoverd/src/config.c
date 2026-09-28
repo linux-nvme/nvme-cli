@@ -10,44 +10,23 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 
-#include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
+#include <daemon-util/log.h>
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
 #include <shared/time-util.h>
 
 #include "config.h"
-#include "log.h"
 
 static void config_set_defaults(struct discoverd_config *cfg)
 {
 	cfg->nbft = true;
-	cfg->debug_level = DISC_LOG_INFO;
+	cfg->debug_level = DMN_LOG_INFO;
 	cfg->fc_kickstart_interval_minutes = 0;
 	cfg->epcsd_poll_interval_minutes = 15;
 	cfg->dc_giveup_timeout_usec = 72 * SHR_USEC_PER_HOUR;
 	cfg->zeroconf = false;
-}
-
-static int parse_debug_level(const char *val, int *out)
-{
-	static const char * const names[] = {
-		[DISC_LOG_ERR]   = "err",
-		[DISC_LOG_WARN]  = "warn",
-		[DISC_LOG_INFO]  = "info",
-		[DISC_LOG_DEBUG] = "debug",
-	};
-	size_t i;
-
-	for (i = 0; i < ARRAY_SIZE(names); i++) {
-		if (!strcasecmp(val, names[i])) {
-			*out = (int)i;
-			return 0;
-		}
-	}
-	return -EINVAL;
 }
 
 static int parse_uint(const char *val, unsigned int *out)
@@ -86,7 +65,7 @@ static bool apply_global_key(struct discoverd_config *cfg, const char *key,
 	if (streq(key, "nbft"))
 		*r = shr_parse_bool(val, &cfg->nbft);
 	else if (streq(key, "debug-level"))
-		*r = parse_debug_level(val, &cfg->debug_level);
+		*r = dmn_parse_log_level(val, &cfg->debug_level);
 	else
 		return false;
 
@@ -130,14 +109,14 @@ static void apply_key(struct discoverd_config *cfg, bool global,
 		known = apply_discovery_key(cfg, key, val, &r);
 
 	if (!known) {
-		disc_warn("%s:%u: unknown key '%s', ignored", conf_path, lineno,
-			  key);
+		log_warn("%s:%u: unknown key '%s', ignored", conf_path, lineno,
+			 key);
 		return;
 	}
 
 	if (r < 0)
-		disc_warn("%s:%u: invalid value for '%s', ignored", conf_path,
-			  lineno, key);
+		log_warn("%s:%u: invalid value for '%s', ignored", conf_path,
+			 lineno, key);
 }
 
 struct config_parse_ctx {
@@ -160,12 +139,12 @@ static int config_event(enum shr_ini_event event, const char *section,
 			apply_key(pc->cfg, streq(section, "Global"), key,
 				  value, pc->conf_path, line);
 		else
-			disc_warn("%s:%u: key outside a known section, ignored",
-				  pc->conf_path, line);
+			log_warn("%s:%u: key outside a known section, ignored",
+				 pc->conf_path, line);
 		break;
 	case SHR_INI_JUNK:
-		disc_warn("%s:%u: malformed line, ignored", pc->conf_path,
-			  line);
+		log_warn("%s:%u: malformed line, ignored", pc->conf_path,
+			 line);
 		break;
 	}
 	return 0;
@@ -191,7 +170,7 @@ struct discoverd_config *config_load(const char *conf_path)
 	/* A missing config file is not an error — defaults apply. */
 	ret = shr_ini_parse_file(conf_path, config_event, &pc);
 	if (ret && ret != -ENOENT)
-		disc_warn("%s: %s, using defaults", conf_path,
+		log_warn("%s: %s, using defaults", conf_path,
 			 strerror(-ret));
 
 	return cfg;

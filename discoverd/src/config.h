@@ -34,7 +34,7 @@ struct discoverd_config {
 
 	/*
 	 * Log threshold for discoverd and its in-process libnvme context, as
-	 * a DISC_LOG_* value (see log.h); default DISC_LOG_INFO. A
+	 * a DMN_LOG_* value (see daemon-util/log.h); default DMN_LOG_INFO. A
 	 * command-line --debug overrides this.
 	 */
 	int debug_level;

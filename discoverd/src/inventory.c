@@ -19,6 +19,7 @@
 
 #include <ccan/list/list.h>
 
+#include <daemon-util/log.h>
 #include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/nbft.h>
@@ -26,7 +27,6 @@
 
 #include "ctx.h"
 #include "inventory.h"
-#include "log.h"
 
 /* Per-DC DLP cache entry. */
 struct dlp_entry {
@@ -597,8 +597,8 @@ static char *resolve_traddr(const char *transport, const char *traddr)
 
 	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
 	if (ret) {
-		disc_warn("failed to resolve host '%s': %s",
-			  traddr, gai_strerror(ret));
+		log_warn("failed to resolve host '%s': %s",
+			 traddr, gai_strerror(ret));
 		return NULL;
 	}
 
@@ -622,8 +622,8 @@ static char *resolve_traddr(const char *transport, const char *traddr)
 	freeaddrinfo(host_info);
 	return resolved;
 #else
-	disc_warn("cannot resolve host '%s': hostname resolution not available "
-		  "in this build", traddr);
+	log_warn("cannot resolve host '%s': hostname resolution not available "
+		 "in this build", traddr);
 	return NULL;
 #endif
 }
@@ -647,7 +647,7 @@ static void load_config_conn_callback(const struct libnvmf_config_conn *conn,
 
 	traddr = resolve_traddr(transport, raw_traddr);
 	if (!traddr) {
-		disc_warn("%s - failed to resolve, skipping", raw_traddr);
+		log_warn("%s - failed to resolve, skipping", raw_traddr);
 		return;
 	}
 
@@ -701,8 +701,8 @@ void inventory_load_config(struct inventory *inv,
 		libnvmf_config_conn_for_each(dctx->fabrics_cfg,
 					     load_config_conn_callback, &args);
 
-	disc_dbg("loaded %zu DC(s), %zu IOC(s) from the fabrics config",
-		 inv->cfg_dcs.len, inv->cfg_iocs.len);
+	log_dbg("loaded %zu DC(s), %zu IOC(s) from the fabrics config",
+		inv->cfg_dcs.len, inv->cfg_iocs.len);
 }
 
 const struct libnvmf_config_conn *inventory_config_conn_for(

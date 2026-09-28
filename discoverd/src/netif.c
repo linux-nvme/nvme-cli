@@ -13,7 +13,8 @@
 
 #include <ccan/list/list.h>
 
-#include "log.h"
+#include <daemon-util/log.h>
+
 #include "netif.h"
 
 struct tracked_iface {
@@ -67,7 +68,7 @@ static void reconcile(struct netif_ctx *nctx, int ifindex, const char *ifname,
 	if (candidate && !e) {
 		e = calloc(1, sizeof(*e));
 		if (!e) {
-			disc_err("%s: out of memory", ifname);
+			log_err("%s: out of memory", ifname);
 			return;
 		}
 		e->ifindex = ifindex;

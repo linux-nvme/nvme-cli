@@ -24,6 +24,7 @@
 #include <ccan/list/list.h>
 #include <ccan/str/str.h>
 
+#include <daemon-util/log.h>
 #include <shared/array-util.h>
 #include <shared/cleanup-util.h>
 #include <shared/string-util.h>
@@ -41,7 +42,6 @@
 #include "dlp.h"
 #include "events.h"
 #include "fc.h"
-#include "log.h"
 #include "mdns.h"
 #include "state.h"
 #include "tid.h"
@@ -81,7 +81,7 @@ struct active_ctrl {
 	// This DC's resolved "persistent" setting is "force": keep it
 	// connected regardless of what its own EPCSD bit reports.
 	bool force_persistent;
-	bool force_persistent_logged; // disc_info_once() marker
+	bool force_persistent_logged; // log_info_once() marker
 
 	sd_event_source *epcsd_poll_timer; // NULL when not EPCSD-parked
 
@@ -206,8 +206,8 @@ static void release_unit(const char *unit_name, const char *devname,
 					 "discoverd"))
 		libnvmf_registry_update(ctx.nvme_ctx, devname, "owner", NULL);
 
-	disc_info("%s | %s - %s, released", libnvmf_tid_str(tid),
-		  devname ? devname : "-", reason);
+	log_info("%s | %s - %s, released", libnvmf_tid_str(tid),
+		 devname ? devname : "-", reason);
 }
 
 /* Release a tracked controller, and stop tracking it. */
@@ -315,8 +315,8 @@ static void save_desired(void)
 
 	r = state_write_desired(content);
 	if (r < 0)
-		disc_warn("cannot save the desired controllers: %s",
-			  strerror(-r));
+		log_warn("cannot save the desired controllers: %s",
+			 strerror(-r));
 }
 
 /*
@@ -433,8 +433,8 @@ static void schedule_release(bool check_exclusions)
 
 	r = sd_event_add_defer(ctx.event, &src, release_undesired, NULL);
 	if (r < 0) {
-		disc_warn("cannot schedule the release check: %s",
-			  strerror(-r));
+		log_warn("cannot schedule the release check: %s",
+			 strerror(-r));
 		return;
 	}
 	release_pending = true;
@@ -537,7 +537,7 @@ static bool should_connect(const struct conn_scan *scan,
 	int r;
 
 	if (libnvmf_exclusion_match(ctx.nvme_ctx, tid)) {
-		disc_info("%s - excluded, skipping", libnvmf_tid_str(tid));
+		log_info("%s - excluded, skipping", libnvmf_tid_str(tid));
 		return false;
 	}
 
@@ -559,13 +559,13 @@ static bool should_connect(const struct conn_scan *scan,
 	}
 
 	if (r < 0) {
-		disc_warn("%s - failed to check registry owner: %s",
-			  libnvmf_tid_str(tid), strerror(-r));
+		log_warn("%s - failed to check registry owner: %s",
+			 libnvmf_tid_str(tid), strerror(-r));
 		return false;
 	}
 	if (owner && !streq(owner, "discoverd") && !streq(owner, "nbft")) {
-		disc_info("%s - owned by '%s', skipping",
-			  libnvmf_tid_str(tid), owner);
+		log_info("%s - owned by '%s', skipping",
+			 libnvmf_tid_str(tid), owner);
 		return false;
 	}
 
@@ -632,8 +632,8 @@ static void adopt_ctrl(const char *unit_name, const struct libnvmf_tid *tid,
 	}
 	e->devname = devname;
 
-	disc_info("%s | %s - adopted, already connected",
-		  libnvmf_tid_str(tid), devname);
+	log_info("%s | %s - adopted, already connected",
+		 libnvmf_tid_str(tid), devname);
 
 	/*
 	 * An adopted DC produces no device-add event, so fetch its DLP here.
@@ -651,8 +651,8 @@ static void adopt_ctrl(const char *unit_name, const struct libnvmf_tid *tid,
 			r = sd_event_add_defer(ctx.event, &src,
 					       adopted_dc_fetch, name);
 		if (r < 0) {
-			disc_warn("%s - cannot defer DLP fetch: %s",
-				  libnvmf_tid_str(tid), strerror(-r));
+			log_warn("%s - cannot defer DLP fetch: %s",
+				 libnvmf_tid_str(tid), strerror(-r));
 			free(name);
 			fetch_and_process_dlp(devname, tid);
 		}
@@ -718,12 +718,12 @@ static void start_ctrl(const struct libnvmf_tid *tid, bool is_dc,
 		  : unit_start_ioc(ctx.umgr, tid, params, is_nbft);
 	if (r >= 0) {
 		ctrl_add(unit_name, tid, is_dc, params);
-		disc_dbg("%s: requested %s unit", libnvmf_tid_str(tid),
-			 is_dc ? "DC" : "IOC");
+		log_dbg("%s: requested %s unit", libnvmf_tid_str(tid),
+			is_dc ? "DC" : "IOC");
 	} else {
-		disc_warn("%s - failed to start %s unit: %s",
-			  libnvmf_tid_str(tid), is_dc ? "DC" : "IOC",
-			  strerror(-r));
+		log_warn("%s - failed to start %s unit: %s",
+			 libnvmf_tid_str(tid), is_dc ? "DC" : "IOC",
+			 strerror(-r));
 	}
 }
 
@@ -792,8 +792,8 @@ static void dlp_dc_callback(const struct libnvmf_tid *t, bool epcsd,
 	if (fctx->hops < 0)
 		return;
 	if (fctx->hops >= INVENTORY_MAX_REFERRAL_HOPS) {
-		disc_info("%s - referral %d hops from its source, not followed",
-			  libnvmf_tid_str(t), fctx->hops + 1);
+		log_info("%s - referral %d hops from its source, not followed",
+			 libnvmf_tid_str(t), fctx->hops + 1);
 		return;
 	}
 
@@ -848,13 +848,13 @@ static void fetch_and_process_dlp(const char *devname,
 		      dlp_dc_callback, dlp_self_callback, &fctx);
 
 	epcsd = dc_effective_epcsd(&fctx, e);
-	disc_dbg("%s: self entry %s, effective EPCSD=%d",
-		 libnvmf_tid_str(dc_tid), fctx.self_seen ? "seen" : "absent",
-		 epcsd);
+	log_dbg("%s: self entry %s, effective EPCSD=%d",
+		libnvmf_tid_str(dc_tid), fctx.self_seen ? "seen" : "absent",
+		epcsd);
 
 	if (e && e->is_dc && !epcsd) {
 		if (e->force_persistent)
-			disc_info_once(&e->force_persistent_logged,
+			log_info_once(&e->force_persistent_logged,
 					"%s - EPCSD=0, but persistent=force: staying connected",
 					libnvmf_tid_str(dc_tid));
 		else
@@ -981,8 +981,8 @@ static int retry_timeout(sd_event_source *src,
 	e->retry_timer = NULL;
 
 	if (!inventory_is_desired(ctx.inventory, e->tid)) {
-		disc_info("%s - no longer desired, not retrying",
-			  libnvmf_tid_str(e->tid));
+		log_info("%s - no longer desired, not retrying",
+			 libnvmf_tid_str(e->tid));
 		ctrl_remove(e);
 		return 0;
 	}
@@ -990,8 +990,8 @@ static int retry_timeout(sd_event_source *src,
 	if (e->giveup_at_usec &&
 	    sd_event_now(ctx.event, CLOCK_BOOTTIME, &now) >= 0 &&
 	    now >= e->giveup_at_usec) {
-		disc_warn("%s - giving up after repeated failures",
-			  libnvmf_tid_str(e->tid));
+		log_warn("%s - giving up after repeated failures",
+			 libnvmf_tid_str(e->tid));
 		if (e->is_dc) {
 			inventory_forget_dc(ctx.inventory, e->tid);
 			refresh_desired(); // giving up releases nothing
@@ -1002,8 +1002,8 @@ static int retry_timeout(sd_event_source *src,
 
 	r = restart_or_start(e);
 	if (r < 0) {
-		disc_err("%s - retry failed: %s",
-			 libnvmf_tid_str(e->tid), strerror(-r));
+		log_err("%s - retry failed: %s",
+			libnvmf_tid_str(e->tid), strerror(-r));
 		schedule_retry(e);
 	}
 	return 0;
@@ -1020,18 +1020,18 @@ static int epcsd_poll_timeout(sd_event_source *src,
 	e->epcsd_poll_timer = NULL;
 
 	if (!inventory_is_desired(ctx.inventory, e->tid)) {
-		disc_info("%s - no longer desired, dropping",
-			  libnvmf_tid_str(e->tid));
+		log_info("%s - no longer desired, dropping",
+			 libnvmf_tid_str(e->tid));
 		ctrl_remove(e);
 		return 0;
 	}
 
-	disc_dbg("%s - EPCSD poll: reconnecting to re-check",
-		 libnvmf_tid_str(e->tid));
+	log_dbg("%s - EPCSD poll: reconnecting to re-check",
+		libnvmf_tid_str(e->tid));
 	r = restart_or_start(e);
 	if (r < 0) {
-		disc_err("%s - EPCSD poll reconnect failed: %s",
-			 libnvmf_tid_str(e->tid), strerror(-r));
+		log_err("%s - EPCSD poll reconnect failed: %s",
+			libnvmf_tid_str(e->tid), strerror(-r));
 		schedule_retry(e);
 	}
 	return 0;
@@ -1060,12 +1060,12 @@ static void epcsd_park(struct active_ctrl *e)
 
 	if (sd_event_add_time(ctx.event, &e->epcsd_poll_timer, CLOCK_BOOTTIME,
 			      now + interval, 0, epcsd_poll_timeout, e) < 0) {
-		disc_warn("%s - failed to arm EPCSD poll timer",
-			  libnvmf_tid_str(e->tid));
+		log_warn("%s - failed to arm EPCSD poll timer",
+			 libnvmf_tid_str(e->tid));
 		return;
 	}
 
-	disc_info("%s - EPCSD=0, disconnecting; re-checking in %u min",
+	log_info("%s - EPCSD=0, disconnecting; re-checking in %u min",
 		 libnvmf_tid_str(e->tid), ctx.cfg->epcsd_poll_interval_minutes);
 }
 
@@ -1118,7 +1118,7 @@ static void on_job_done(const char *unit_name, bool success,
 	e = ctrl_find_by_unit(unit_name);
 	if (!e) {
 		if (!success)
-			disc_warn("unit %s failed (untracked)", unit_name);
+			log_warn("unit %s failed (untracked)", unit_name);
 		return;
 	}
 
@@ -1141,10 +1141,10 @@ static void on_job_done(const char *unit_name, bool success,
 		return;
 	}
 
-	disc_warn("%s - connection unit failed", libnvmf_tid_str(e->tid));
+	log_warn("%s - connection unit failed", libnvmf_tid_str(e->tid));
 	if (schedule_retry(e) < 0)
-		disc_err("%s - failed to schedule retry",
-			 libnvmf_tid_str(e->tid));
+		log_err("%s - failed to schedule retry",
+			libnvmf_tid_str(e->tid));
 }
 
 static void on_dc_add(const char *devname,
@@ -1171,12 +1171,12 @@ static void on_dc_changed(const char *devname,
 
 	e = ctrl_find_by_devname(devname);
 	if (!e || !e->tid) {
-		disc_warn("%s - dc_changed for untracked device", devname);
+		log_warn("%s - dc_changed for untracked device", devname);
 		return;
 	}
 
-	disc_dbg("%s | %s: discovery log changed, re-fetching",
-		 libnvmf_tid_str(e->tid), devname);
+	log_dbg("%s | %s: discovery log changed, re-fetching",
+		libnvmf_tid_str(e->tid), devname);
 	fetch_and_process_dlp(devname, e->tid);
 }
 
@@ -1234,14 +1234,14 @@ static void on_nvme_remove(const char *devname,
 		return;
 
 	if (!inventory_is_desired(ctx.inventory, e->tid)) {
-		disc_info("%s | %s - removed, not desired, dropping",
-			  libnvmf_tid_str(e->tid), devname);
+		log_info("%s | %s - removed, not desired, dropping",
+			 libnvmf_tid_str(e->tid), devname);
 		ctrl_remove(e);
 		return;
 	}
 
-	disc_info("%s | %s - removed but still desired, reconnecting",
-		  libnvmf_tid_str(e->tid), devname);
+	log_info("%s | %s - removed but still desired, reconnecting",
+		 libnvmf_tid_str(e->tid), devname);
 
 	is_fc = shr_streq0(libnvmf_tid_get_transport(e->tid), "fc");
 
@@ -1252,8 +1252,8 @@ static void on_nvme_remove(const char *devname,
 		fc_kickstart();
 	} else if (restart_or_start(e) < 0) {
 		if (schedule_retry(e) < 0)
-			disc_err("%s - failed to schedule retry",
-				 libnvmf_tid_str(e->tid));
+			log_err("%s - failed to schedule retry",
+				libnvmf_tid_str(e->tid));
 	}
 }
 
@@ -1291,7 +1291,7 @@ static bool kernel_supports_discovery_nqn(void)
 	r = libnvmf_kernel_option_supported(ctx.nvme_ctx, "discovery",
 					    &supported);
 	if (r < 0) {
-		disc_dbg("kernel fabrics options: %s", libnvme_strerror(-r));
+		log_dbg("kernel fabrics options: %s", libnvme_strerror(-r));
 		return false;
 	}
 
@@ -1350,12 +1350,12 @@ static void apply_zeroconf(void)
 	if (ctx.cfg->zeroconf && !ctx.mdns) {
 		r = mdns_start(ctx.event, &mdns_callbacks, NULL, &ctx.mdns);
 		if (r == -ENOSYS)
-			disc_warn("mdns: zeroconf is enabled, but nvme-discoverd was built without mDNS support");
+			log_warn("mdns: zeroconf is enabled, but nvme-discoverd was built without mDNS support");
 		else if (r == -EOPNOTSUPP)
-			disc_warn("mdns: zeroconf is enabled, but systemd-resolved has no BrowseServices (needs >= v258)");
+			log_warn("mdns: zeroconf is enabled, but systemd-resolved has no BrowseServices (needs >= v258)");
 		else if (r < 0)
-			disc_warn("mdns: zeroconf is enabled, but mDNS cannot start: %s",
-				  strerror(-r));
+			log_warn("mdns: zeroconf is enabled, but mDNS cannot start: %s",
+				 strerror(-r));
 	} else if (!ctx.cfg->zeroconf && ctx.mdns) {
 		mdns_stop(ctx.mdns);
 		ctx.mdns = NULL;
@@ -1396,7 +1396,7 @@ static bool devname_matches_tid(const char *devname,
 		return false;
 
 	if (getifaddrs(&iface_list) < 0) {
-		disc_warn("getifaddrs: %s", strerror(errno));
+		log_warn("getifaddrs: %s", strerror(errno));
 		iface_list = NULL;
 	}
 
@@ -1431,15 +1431,15 @@ static void conn_scan_load(struct conn_scan *scan)
 	memset(scan, 0, sizeof(*scan));
 
 	if (getifaddrs(&scan->iface_list) < 0) {
-		disc_warn("getifaddrs: %s", strerror(errno));
+		log_warn("getifaddrs: %s", strerror(errno));
 		scan->iface_list = NULL;
 	}
 
 	d = opendir("/sys/class/nvme");
 	if (!d) {
 		if (errno != ENOENT)
-			disc_warn("opendir /sys/class/nvme: %s",
-				  strerror(errno));
+			log_warn("opendir /sys/class/nvme: %s",
+				 strerror(errno));
 		return;
 	}
 
@@ -1451,7 +1451,7 @@ static void conn_scan_load(struct conn_scan *scan)
 
 		sc = calloc(1, sizeof(*sc));
 		if (!sc) {
-			disc_warn("connection scan: out of memory");
+			log_warn("connection scan: out of memory");
 			break;
 		}
 
@@ -1463,7 +1463,7 @@ static void conn_scan_load(struct conn_scan *scan)
 		}
 
 		if (scanned_ctrl_list_append(&scan->ctrls, sc) < 0) {
-			disc_warn("connection scan: out of memory");
+			log_warn("connection scan: out of memory");
 			scanned_ctrl_free(sc);
 			break;
 		}
@@ -1531,9 +1531,9 @@ static void connect_desired(void)
  */
 static void apply_log_level(void)
 {
-	int level = ctx.force_debug ? DISC_LOG_DEBUG : ctx.cfg->debug_level;
+	int level = ctx.force_debug ? DMN_LOG_DEBUG : ctx.cfg->debug_level;
 
-	log_set_level(level);
+	dmn_log_set_level(level);
 	libnvme_set_logging_level(ctx.nvme_ctx, level, false, false);
 }
 
@@ -1556,7 +1556,7 @@ static int sighup_handler(sd_event_source *src __attribute__((unused)),
 
 	new_cfg = config_load(ctx.conf_path);
 	if (!new_cfg) {
-		disc_err("failed to reload config");
+		log_err("failed to reload config");
 		sd_notify(0, "READY=1");
 		return 0;
 	}
@@ -1568,7 +1568,7 @@ static int sighup_handler(sd_event_source *src __attribute__((unused)),
 		libnvmf_config_free(ctx.fabrics_cfg);
 		ctx.fabrics_cfg = new_fabrics_cfg;
 	} else {
-		disc_err("failed to reload fabrics config, keeping last-good");
+		log_err("failed to reload fabrics config, keeping last-good");
 	}
 	inventory_load_config(ctx.inventory, &ctx);
 
@@ -1608,7 +1608,7 @@ static int resolve_default_host(void)
 	if (r < 0)
 		return r;
 
-	disc_dbg("default host identity: %s, %s", ctx.hostnqn, ctx.hostid);
+	log_dbg("default host identity: %s, %s", ctx.hostnqn, ctx.hostid);
 
 	return 0;
 }
@@ -1665,7 +1665,7 @@ int main(int argc, char **argv)
 	}
 
 	if (debug)
-		log_set_level(DISC_LOG_DEBUG);
+		dmn_log_set_level(DMN_LOG_DEBUG);
 	ctx.force_debug = debug;
 
 	/*
@@ -1696,32 +1696,32 @@ int main(int argc, char **argv)
 
 	r = sd_event_default(&ctx.event);
 	if (r < 0) {
-		disc_err("sd_event_default: %s", strerror(-r));
+		log_err("sd_event_default: %s", strerror(-r));
 		return 1;
 	}
 
 	r = sd_bus_open_system(&ctx.bus);
 	if (r < 0) {
-		disc_err("sd_bus_open_system: %s", strerror(-r));
+		log_err("sd_bus_open_system: %s", strerror(-r));
 		return 1;
 	}
 
 	r = sd_bus_attach_event(ctx.bus, ctx.event, SD_EVENT_PRIORITY_NORMAL);
 	if (r < 0) {
-		disc_err("sd_bus_attach_event: %s", strerror(-r));
+		log_err("sd_bus_attach_event: %s", strerror(-r));
 		return 1;
 	}
 
 	r = state_init();
 	if (r < 0) {
-		disc_err("state_init: %s", strerror(-r));
+		log_err("state_init: %s", strerror(-r));
 		return 1;
 	}
 	state_gc();
 
 	ctx.nvme_ctx = libnvme_create_global_ctx();
 	if (!ctx.nvme_ctx) {
-		disc_err("libnvme_create_global_ctx: failed");
+		log_err("libnvme_create_global_ctx: failed");
 		return 1;
 	}
 	libnvme_set_logging_level(ctx.nvme_ctx,
@@ -1730,21 +1730,21 @@ int main(int argc, char **argv)
 
 	ctx.cfg = config_load(ctx.conf_path);
 	if (!ctx.cfg) {
-		disc_err("config_load: failed");
+		log_err("config_load: failed");
 		return 1;
 	}
 	apply_log_level();
 
 	r = libnvmf_config_read(ctx.nvme_ctx, NULL, &ctx.fabrics_cfg);
 	if (r < 0) {
-		disc_err("libnvmf_config_read: %s", strerror(-r));
+		log_err("libnvmf_config_read: %s", strerror(-r));
 		return 1;
 	}
 
 	r = resolve_default_host();
 	if (r < 0) {
-		disc_err("failed to resolve the host identity: %s",
-			 strerror(-r));
+		log_err("failed to resolve the host identity: %s",
+			strerror(-r));
 		return 1;
 	}
 
@@ -1775,19 +1775,19 @@ int main(int argc, char **argv)
 
 	r = sd_event_add_signal(ctx.event, NULL, SIGHUP, sighup_handler, NULL);
 	if (r < 0) {
-		disc_err("sd_event_add_signal(SIGHUP): %s", strerror(-r));
+		log_err("sd_event_add_signal(SIGHUP): %s", strerror(-r));
 		return 1;
 	}
 
 	// SIGTERM (systemctl stop) and SIGINT (Ctrl-C) → graceful shutdown.
 	r = sd_event_add_signal(ctx.event, NULL, SIGTERM, sigterm_handler, NULL);
 	if (r < 0) {
-		disc_err("sd_event_add_signal(SIGTERM): %s", strerror(-r));
+		log_err("sd_event_add_signal(SIGTERM): %s", strerror(-r));
 		return 1;
 	}
 	r = sd_event_add_signal(ctx.event, NULL, SIGINT, sigterm_handler, NULL);
 	if (r < 0) {
-		disc_err("sd_event_add_signal(SIGINT): %s", strerror(-r));
+		log_err("sd_event_add_signal(SIGINT): %s", strerror(-r));
 		return 1;
 	}
 
@@ -1822,15 +1822,15 @@ int main(int argc, char **argv)
 					      now + interval, 0,
 					      fc_kickstart_timeout, NULL);
 		if (r < 0)
-			disc_err("failed to arm FC kickstart timer: %s",
-				 strerror(-r));
+			log_err("failed to arm FC kickstart timer: %s",
+				strerror(-r));
 	}
 
 	sd_notify(0, "READY=1");
 
 	r = sd_event_loop(ctx.event);
 	if (r < 0)
-		disc_err("sd_event_loop: %s", strerror(-r));
+		log_err("sd_event_loop: %s", strerror(-r));
 
 	mdns_stop(ctx.mdns);
 	events_stop(ctx.evts);

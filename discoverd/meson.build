@@ -12,7 +12,6 @@ discoverd_sources = files(
     'src/events.c',
     'src/fc.c',
     'src/inventory.c',
-    'src/log.c',
     'src/main.c',
     'src/netif.c',
     'src/state.c',
@@ -40,6 +39,7 @@ executable(
     ],
     dependencies: [
         ccan_dep,
+        daemon_util_dep,
         libnvme_dep,
         libsystemd_dep,
         shared_dep,

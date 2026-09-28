@@ -16,9 +16,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <daemon-util/log.h>
 #include <shared/fs-util.h>
 
-#include "log.h"
 #include "state.h"
 
 /*
@@ -82,11 +82,11 @@ void state_gc(void)
 			if (!state_read_ino(de->d_name, &ino) ||
 			    ino == (uint64_t)st.st_ino)
 				continue;
-			disc_info("%s: device name reused, removing stale state",
-				  de->d_name);
+			log_info("%s: device name reused, removing stale state",
+				 de->d_name);
 		} else {
-			disc_info("%s: device gone, removing stale state",
-				  de->d_name);
+			log_info("%s: device gone, removing stale state",
+				 de->d_name);
 		}
 
 		state_remove_ctrl(de->d_name);
