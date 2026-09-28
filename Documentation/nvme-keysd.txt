@@ -1,0 +1,74 @@
+nvme-keysd(8)
+=============
+
+NAME
+----
+nvme-keysd - NVMe/TCP TLS key provisioning daemon
+
+SYNOPSIS
+--------
+[verse]
+'nvme-keysd' [--config=<FILE>] [--debug] [--help]
+
+DESCRIPTION
+-----------
+nvme-keysd puts the TLS pre-shared keys (PSKs) used by NVMe/TCP into the
+kernel's .nvme keyring, before a connection needs them. The kernel then
+finds the key there when 'nvme connect' or nvme-discoverd connects with
+TLS.
+
+Which key belongs to which host and subsystem is configured in the
+shared NVMe-oF fabrics configuration, see nvme-fabrics.conf(5).
+
+This is a technology preview. The daemon does not import keys yet.
+
+OPTIONS
+-------
+-c <FILE>::
+--config=<FILE>::
+	Use <FILE> instead of @SYSCONFDIR@/nvme/nvme-keysd.conf.
+
+-d::
+--debug::
+	Enable debug-level logging for both nvme-keysd and the libnvme
+	calls it makes, overriding the configured debug-level.
+
+-h::
+--help::
+	Print usage and exit.
+
+CONFIGURATION
+-------------
+nvme-keysd.conf holds the daemon's own settings, in a '[Global]'
+section:
+
+	[Global]
+	debug-level = info
+
+'debug-level' (err, warn, info, or debug; default info) sets the log
+threshold. '--debug' on the command line overrides it.
+
+A missing file, or a missing key, keeps the default.
+
+SIGNALS
+-------
+SIGHUP;;
+	Reload nvme-keysd.conf.
+
+SIGTERM, SIGINT;;
+	Shut down.
+
+FILES
+-----
+@SYSCONFDIR@/nvme/nvme-keysd.conf::
+	The daemon's own configuration; see CONFIGURATION.
+
+SEE ALSO
+--------
+nvme-fabrics.conf(5)
+nvme-discoverd(8)
+nvme-connect(1)
+
+NVME
+----
+Part of the nvme-user suite

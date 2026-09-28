@@ -193,6 +193,10 @@ config_meson_default() {
     if [ "${use_asan:-0}" -eq 1 ]; then
         extra_args+=(-Db_sanitize=address,undefined)
     fi
+    # Build nvme-keysd in CI. "enabled" fails without libsystemd >= 253.
+    if pkg-config --atleast-version=253 libsystemd 2>/dev/null; then
+        extra_args+=(-Dnvme-keysd=enabled)
+    fi
 
     CC="${CC}" ${SCAN_BUILD} "${MESON}" setup \
         --werror                                \
