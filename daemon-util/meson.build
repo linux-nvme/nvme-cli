@@ -10,7 +10,10 @@
 
 daemon_util_lib = static_library(
     'daemon-util',
-    files('log.c'),
+    files(
+        'log.c',
+        'signals.c',
+    ),
     dependencies: [
         ccan_dep,
         libsystemd_dep,
