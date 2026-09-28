@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +24,7 @@
 #include <ccan/str/str.h>
 
 #include <daemon-util/log.h>
+#include <daemon-util/signals.h>
 #include <shared/array-util.h>
 #include <shared/cleanup-util.h>
 #include <shared/string-util.h>
@@ -1537,28 +1537,15 @@ static void apply_log_level(void)
 	libnvme_set_logging_level(ctx.nvme_ctx, level, false, false);
 }
 
-static int sighup_handler(sd_event_source *src __attribute__((unused)),
-			  const struct signalfd_siginfo *si __attribute__((unused)),
-			  void *user_data __attribute__((unused)))
+static void reload_config(void *user_data __attribute__((unused)))
 {
 	struct discoverd_config *new_cfg;
 	struct libnvmf_config *new_fabrics_cfg;
-	uint64_t now = 0;
-
-	/*
-	 * Type=notify-reload: systemd ignores RELOADING=1 without
-	 * MONOTONIC_USEC=, and the reload job times out.
-	 */
-	sd_event_now(ctx.event, CLOCK_MONOTONIC, &now);
-	sd_notifyf(0, "RELOADING=1\n"
-		      "MONOTONIC_USEC=%" PRIu64 "\n"
-		      "STATUS=Reloading configuration...", now);
 
 	new_cfg = config_load(ctx.conf_path);
 	if (!new_cfg) {
 		log_err("failed to reload config");
-		sd_notify(0, "READY=1");
-		return 0;
+		return;
 	}
 	config_free(ctx.cfg);
 	ctx.cfg = new_cfg;
@@ -1580,18 +1567,6 @@ static int sighup_handler(sd_event_source *src __attribute__((unused)),
 	connect_desired();
 	schedule_release(true);
 	apply_zeroconf();
-
-	sd_notify(0, "READY=1");
-	return 0;
-}
-
-// Graceful shutdown: leave the event loop so main()'s cleanup runs.
-static int sigterm_handler(sd_event_source *src __attribute__((unused)),
-			   const struct signalfd_siginfo *si __attribute__((unused)),
-			   void *user_data __attribute__((unused)))
-{
-	sd_event_exit(ctx.event, 0);
-	return 0;
 }
 
 /*
@@ -1632,7 +1607,6 @@ int main(int argc, char **argv)
 	const char *nvme_path = NULL, *config_path = NULL;
 	char *nvme_path_abs = NULL, *config_path_abs = NULL;
 	bool debug = false;
-	sigset_t mask;
 	int r, c;
 
 	while ((c = getopt_long(argc, argv, "c:dh", long_opts, NULL)) != -1) {
@@ -1766,30 +1740,8 @@ int main(int argc, char **argv)
 	if (!ctx.evts)
 		return 1;
 
-	// Block these from normal delivery; handle them via sd_event.
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGHUP);
-	sigaddset(&mask, SIGTERM);
-	sigaddset(&mask, SIGINT);
-	sigprocmask(SIG_BLOCK, &mask, NULL);
-
-	r = sd_event_add_signal(ctx.event, NULL, SIGHUP, sighup_handler, NULL);
-	if (r < 0) {
-		log_err("sd_event_add_signal(SIGHUP): %s", strerror(-r));
+	if (dmn_add_signal_handlers(ctx.event, reload_config, NULL) < 0)
 		return 1;
-	}
-
-	// SIGTERM (systemctl stop) and SIGINT (Ctrl-C) → graceful shutdown.
-	r = sd_event_add_signal(ctx.event, NULL, SIGTERM, sigterm_handler, NULL);
-	if (r < 0) {
-		log_err("sd_event_add_signal(SIGTERM): %s", strerror(-r));
-		return 1;
-	}
-	r = sd_event_add_signal(ctx.event, NULL, SIGINT, sigterm_handler, NULL);
-	if (r < 0) {
-		log_err("sd_event_add_signal(SIGINT): %s", strerror(-r));
-		return 1;
-	}
 
 	/*
 	 * Connect the desired set. start_ctrl() adopts anything a previous
