@@ -8,7 +8,7 @@ A persistent daemon that connects the host's desired NVMe-oF controllers and kee
 
 The host's alternative today is a udev-rule-triggered swarm of systemd units (`70-nvmf-autoconnect.rules`, `nvmf-connect@.service`, and friends — built only when nvme-discoverd is not, or when `-Dnvmf-autoconnect=enabled`). That mechanism has no retry. If a connect attempt fails because the target is momentarily unreachable, nothing reconnects it until the next fabric event fires — and that event may never come. nvme-discoverd is a real daemon with its own retry loop, so a transient failure recovers on its own.
 
-**nvme-discoverd replaces the legacy autoconnect mechanism.** Both meson options default to `auto`. nvme-discoverd is built when libsystemd v253 or later is available. The legacy autoconnect is built only when nvme-discoverd is not. `-Dnvmf-autoconnect=enabled` installs both. The legacy udev rules are active as soon as they are installed. nvme-discoverd runs only when the administrator enables `nvme-discoverd.service`. Running both on the same host is not recommended. Both would try to connect and manage the same controllers.
+**nvme-discoverd replaces the legacy autoconnect mechanism.** Both meson options default to `auto`. nvme-discoverd is built when libsystemd v253 or later is available. The legacy autoconnect is built only when nvme-discoverd is not. `-Dnvmf-autoconnect=enabled` installs both. The legacy udev rules are active as soon as they are installed. nvme-discoverd runs only when the administrator enables `nvme-discoverd.service`. While nvme-discoverd is active, `nvmf-autoconnect.service` and the FC kickstart skip their connect step.
 
 ## Design
 
