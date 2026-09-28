@@ -767,6 +767,15 @@ __shr_public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
+/* The TLS key may be the PSK itself, in the interchange format. */
+static void free_tls_key(char *tls_key)
+{
+	if (!tls_key)
+		return;
+	explicit_bzero(tls_key, strlen(tls_key));
+	free(tls_key);
+}
+
 __shr_public void libnvmf_context_free(struct libnvmf_context *fctx)
 {
 	if (!fctx)
@@ -775,7 +784,7 @@ __shr_public void libnvmf_context_free(struct libnvmf_context *fctx)
 	free(fctx->nbft_path);
 	free(fctx->hostnqn);
 	free(fctx->hostid);
-	free(fctx->tls_key);
+	free_tls_key(fctx->tls_key);
 	free(fctx);
 }
 
@@ -888,8 +897,8 @@ __shr_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		return 0;
 
 	if (!strncmp(tls_key, "pin:", 4)) {
-		__cleanup_free unsigned char *raw_secret = NULL;
-		__cleanup_free char *encoded_key = NULL;
+		unsigned char *raw_secret = NULL;
+		char *encoded_key = NULL;
 		int key_len = 32;
 
 		err = libnvmf_create_raw_secret(fctx->ctx, tls_key,
@@ -899,15 +908,17 @@ __shr_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 
 		err = libnvmf_export_tls_key(fctx->ctx, raw_secret,
 			key_len, &encoded_key);
+		explicit_bzero(raw_secret, key_len);
+		free(raw_secret);
 		if (err)
 			return err;
 
+		free_tls_key(fctx->tls_key);
 		fctx->tls_key = encoded_key;
-		encoded_key = NULL;
 		return 0;
 	}
 
-	free(fctx->tls_key);
+	free_tls_key(fctx->tls_key);
 	fctx->tls_key = strdup(tls_key);
 	return 0;
 }

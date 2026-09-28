@@ -48,6 +48,17 @@
 #include "cleanup-linux.h"
 #include "private.h"
 
+/*
+ * A buffer for key material: any PSK, derived key or hash handled here
+ * fits. The cleanup clears it on every return path.
+ */
+#define KEY_BUF_LEN 128
+
+static void clear_key_buf(unsigned char (*buf)[KEY_BUF_LEN])
+{
+	explicit_bzero(*buf, sizeof(*buf));
+}
+#define __cleanup_key_buf __cleanup(clear_key_buf)
 
 #ifndef CONFIG_OPENSSL
 static unsigned char default_hmac(size_t key_len)
@@ -683,7 +694,7 @@ static ssize_t getrandom_bytes(void *buf, size_t buflen)
 static ssize_t getswordfish(struct libnvme_global_ctx *ctx,
 		const char *seed, void *buf, size_t buflen)
 {
-	unsigned char hash[EVP_MAX_MD_SIZE];
+	__cleanup_key_buf unsigned char hash[KEY_BUF_LEN];
 	unsigned int counter = 0;
 	EVP_MD_CTX *md_ctx;
 	size_t copied = 0;
@@ -728,7 +739,7 @@ err:
 __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret)
 {
-	__cleanup_free unsigned char *buf = NULL;
+	__cleanup_key_buf unsigned char buf[KEY_BUF_LEN];
 	int secret_len = 0, i, err;
 
 	if (key_len != 32 && key_len != 48 && key_len != 64) {
@@ -736,10 +747,6 @@ __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 			"Invalid key length %zu", key_len);
 		return -EINVAL;
 	}
-
-	buf = malloc(key_len);
-	if (!buf)
-		return -ENOMEM;
 
 	if (!secret) {
 		err = getrandom_bytes(buf, key_len);
@@ -785,8 +792,11 @@ __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 	}
 
 out:
-	*raw_secret = buf;
-	buf = NULL;
+	*raw_secret = malloc(key_len);
+	if (!*raw_secret)
+		return -ENOMEM;
+	memcpy(*raw_secret, buf, key_len);
+
 	return 0;
 }
 
@@ -815,7 +825,7 @@ static int derive_nvme_keys(struct libnvme_global_ctx *ctx,
 		int hmac, unsigned char *configured,
 		unsigned char *psk, int key_len, bool compat)
 {
-	__cleanup_free unsigned char *retained = NULL;
+	__cleanup_key_buf unsigned char retained[KEY_BUF_LEN];
 	__cleanup_free char *digest = NULL;
 	char *context = identity;
 	unsigned char cipher;
@@ -823,10 +833,8 @@ static int derive_nvme_keys(struct libnvme_global_ctx *ctx,
 
 	if (!hostnqn || !subsysnqn || !identity || !psk)
 		return -EINVAL;
-
-	retained = malloc(key_len);
-	if (!retained)
-		return -ENOMEM;
+	if (key_len <= 0 || key_len > KEY_BUF_LEN)
+		return -EINVAL;
 
 	if (compat)
 		ret = derive_retained_key_compat(ctx, hmac, hostnqn, configured,
@@ -891,7 +899,7 @@ __shr_public int libnvmf_generate_tls_key_identity(
 		const char *subsysnqn, int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len, char **ident)
 {
-	__cleanup_free unsigned char *psk = NULL;
+	__cleanup_key_buf unsigned char psk[KEY_BUF_LEN];
 	__cleanup_free char *identity = NULL;
 	ssize_t identity_len;
 	int ret;
@@ -904,9 +912,8 @@ __shr_public int libnvmf_generate_tls_key_identity(
 	if (!identity)
 		return -ENOMEM;
 
-	psk = malloc(key_len);
-	if (!psk)
-		return -ENOMEM;
+	if (key_len <= 0 || key_len > KEY_BUF_LEN)
+		return -EINVAL;
 
 	memset(psk, 0, key_len);
 	ret = derive_nvme_keys(ctx, hostnqn, subsysnqn, identity, version, hmac,
@@ -928,7 +935,7 @@ __shr_public int libnvmf_generate_tls_key_identity_compat(
 		const char *subsysnqn, int version, enum libnvmf_hmac_alg hmac,
 		unsigned char *configured_key, int key_len, char **ident)
 {
-	__cleanup_free unsigned char *psk = NULL;
+	__cleanup_key_buf unsigned char psk[KEY_BUF_LEN];
 	__cleanup_free char *identity = NULL;
 	ssize_t identity_len;
 	int ret;
@@ -941,9 +948,8 @@ __shr_public int libnvmf_generate_tls_key_identity_compat(
 	if (!identity)
 		return -ENOMEM;
 
-	psk = malloc(key_len);
-	if (!psk)
-		return -ENOMEM;
+	if (key_len <= 0 || key_len > KEY_BUF_LEN)
+		return -EINVAL;
 
 	memset(psk, 0, key_len);
 	ret = derive_nvme_keys(ctx, hostnqn, subsysnqn, identity, version, hmac,
@@ -1140,7 +1146,7 @@ static int __nvme_insert_tls_key(struct libnvme_global_ctx *ctx,
 		int version, int hmac, unsigned char *configured_key,
 		int key_len, bool compat, long *keyp)
 {
-	__cleanup_free unsigned char *psk = NULL;
+	__cleanup_key_buf unsigned char psk[KEY_BUF_LEN];
 	__cleanup_free char *identity = NULL;
 	ssize_t identity_len;
 	long key = 0;
@@ -1155,9 +1161,8 @@ static int __nvme_insert_tls_key(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 	memset(identity, 0, identity_len);
 
-	psk = malloc(key_len);
-	if (!psk)
-		return -ENOMEM;
+	if (key_len <= 0 || key_len > KEY_BUF_LEN)
+		return -EINVAL;
 	memset(psk, 0, key_len);
 	ret = derive_nvme_keys(ctx, hostnqn, subsysnqn, identity, version, hmac,
 			       configured_key, psk, key_len, compat);
@@ -1251,7 +1256,7 @@ static int __nvme_import_tls_key(struct libnvme_global_ctx *ctx, long keyring_id
 		const char *identity, const char *key,
 		long *keyp)
 {
-	__cleanup_free unsigned char *key_data = NULL;
+	unsigned char *key_data = NULL;
 	unsigned char version;
 	enum libnvmf_hmac_alg hmac;
 	size_t key_len;
@@ -1269,13 +1274,18 @@ static int __nvme_import_tls_key(struct libnvme_global_ctx *ctx, long keyring_id
 		 * configured PSK. Derive a TLS PSK from it and load the
 		 * newly created key into the keystore.
 		 */
-		return __nvme_insert_tls_key(ctx, keyring_id, "psk",
+		ret = __nvme_insert_tls_key(ctx, keyring_id, "psk",
 			hostnqn, subsysnqn, version, hmac,
 			key_data, key_len, false, keyp);
+	} else {
+		ret = libnvmf_update_key(ctx, keyring_id, "psk", identity,
+				      key_data, key_len, keyp);
 	}
 
-	return libnvmf_update_key(ctx, keyring_id, "psk", identity,
-			      key_data, key_len, keyp);
+	explicit_bzero(key_data, key_len);
+	free(key_data);
+
+	return ret;
 }
 
 int __libnvmf_import_keys_from_config(struct libnvme_host *h, struct libnvme_ctrl *c,
@@ -1486,7 +1496,7 @@ __shr_public int libnvmf_export_tls_key_versioned(
 {
 	unsigned int raw_len, encoded_len, len;
 	unsigned long crc = shr_crc32(0L, NULL, 0);
-	unsigned char raw_secret[52];
+	__cleanup_key_buf unsigned char raw_secret[KEY_BUF_LEN];
 	char *encoded_key;
 
 	switch (hmac) {
@@ -1548,7 +1558,8 @@ __shr_public int libnvmf_import_tls_key_versioned(
 		unsigned char *version, enum libnvmf_hmac_alg *hmac,
 		size_t *key_len, unsigned char **keyp)
 {
-	unsigned char decoded_key[128], *key_data;
+	__cleanup_key_buf unsigned char decoded_key[KEY_BUF_LEN];
+	unsigned char *key_data;
 	unsigned int crc = shr_crc32(0L, NULL, 0);
 	unsigned int key_crc;
 	int err, _version, _hmac, decoded_len;
