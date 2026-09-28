@@ -170,7 +170,7 @@ MDNS_PORT_ID=4
 MDNS_TRADDR=
 MDNS_DC_REQUESTED=
 PUBLISHER_UNIT=discoverd-wringer-mdns-publisher.service
-RESOLVED_DROPIN=/etc/systemd/resolved.conf.d/99-discoverd-wringer.conf
+RESOLVED_DROPIN=/run/systemd/resolved.conf.d/99-discoverd-wringer.conf
 RESOLVED_MDNS_WAS=
 
 confirm
