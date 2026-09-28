@@ -7,6 +7,7 @@ ConditionDirectoryNotEmpty=|@SYSCONFDIR@/nvme/nvme-fabrics.conf.d
 Wants=modprobe@nvme_fabrics.service
 After=modprobe@nvme_fabrics.service
 After=network-online.target
+After=nvme-discoverd.service
 Before=remote-fs-pre.target
 
 [Service]
@@ -23,6 +24,8 @@ MemoryDenyWriteExecute=yes
 RemoveIPC=yes
 RestrictAddressFamilies=AF_INET AF_INET6
 Type=oneshot
+# '+' runs systemctl outside RestrictAddressFamilies, which blocks AF_UNIX.
+ExecCondition=+/bin/sh -c "! @SYSTEMCTL@ -q is-active nvme-discoverd.service"
 ExecStart=@SBINDIR@/nvme connect-all --owner=autoconnect
 
 [Install]

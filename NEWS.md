@@ -49,9 +49,9 @@
 
   `-Dnvmf-autoconnect=enabled` installs both. The legacy udev rules
   are active as soon as they are installed. nvme-discoverd runs only
-  when `nvme-discoverd.service` is enabled. Running both on the same
-  host is not recommended. Both would try to connect and manage the
-  same controllers.
+  when `nvme-discoverd.service` is enabled. While nvme-discoverd is
+  active, `nvmf-autoconnect.service` and the FC kickstart skip their
+  connect step.
 
 ### nvme-discoverd
 
