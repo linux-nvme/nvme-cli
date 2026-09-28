@@ -177,9 +177,32 @@ __shr_public const char *libnvmf_config_get_hostsymname(
 	return config ? config->top_hostsymname : NULL;
 }
 
+/* Same "an explicit reset is left unapplied" rule apply_param() uses for
+ * the tunable keys, applied here to a direct libnvmf_params_get() lookup.
+ */
+static const char *get_param_nonempty(const struct libnvmf_params *params,
+		const char *key)
+{
+	const char *value = libnvmf_params_get(params, key);
+
+	return (value && *value) ? value : NULL;
+}
+
+/*
+ * With a key-source other than "inline", tls-key is the name nvme-keysd
+ * uses to find the key. The key itself is in the keyring.
+ */
+static bool tls_key_is_inline(const struct libnvmf_params *params)
+{
+	const char *src = get_param_nonempty(params, "key-source");
+
+	return !src || !strcmp(src, "inline");
+}
+
 struct emit_state {
 	void (*callback)(const char *arg, void *user_data);
 	void *user_data;
+	bool tls_key_inline;
 	int err;
 };
 
@@ -228,6 +251,12 @@ static void emit_param(const char *key, const char *value, void *user_data)
 	if (k->class == LIBNVMF_KEY_DC_TUNABLE)
 		return;
 
+	/* key-source is for nvme-keysd, not an "nvme connect" option. */
+	if (!strcmp(key, "key-source"))
+		return;
+	if (!strcmp(key, "tls-key") && !state->tls_key_inline)
+		return;
+
 	if (k->type == LIBNVMF_KEY_BOOL) {
 		bool set;
 
@@ -266,8 +295,10 @@ __shr_public int libnvmf_connect_args_emit(const struct libnvmf_tid *tid,
 		emit_tid_arg(&state, "hostnqn", libnvmf_tid_get_hostnqn(tid));
 		emit_tid_arg(&state, "hostid", libnvmf_tid_get_hostid(tid));
 	}
-	if (params)
+	if (params) {
+		state.tls_key_inline = tls_key_is_inline(params);
 		libnvmf_params_for_each(params, emit_param, &state);
+	}
 
 	return state.err;
 }
@@ -342,17 +373,6 @@ static void apply_param(const char *key, const char *value, void *user_data)
 	 */
 }
 
-/* Same "an explicit reset is left unapplied" rule apply_param() uses for
- * the tunable keys, applied here to a direct libnvmf_params_get() lookup.
- */
-static const char *get_param_nonempty(const struct libnvmf_params *params,
-		const char *key)
-{
-	const char *value = libnvmf_params_get(params, key);
-
-	return (value && *value) ? value : NULL;
-}
-
 __shr_public int libnvmf_context_apply_params(struct libnvmf_context *fctx,
 		const struct libnvmf_params *params)
 {
@@ -367,7 +387,8 @@ __shr_public int libnvmf_context_apply_params(struct libnvmf_context *fctx,
 	hostkey = get_param_nonempty(params, "kxchap-secret");
 	ctrlkey = get_param_nonempty(params, "kxchap-ctrl-secret");
 	keyring = get_param_nonempty(params, "keyring");
-	tls_key = get_param_nonempty(params, "tls-key");
+	tls_key = tls_key_is_inline(params) ?
+		get_param_nonempty(params, "tls-key") : NULL;
 	tls_key_identity = get_param_nonempty(params, "tls-key-identity");
 
 	if (hostkey || ctrlkey || keyring || tls_key || tls_key_identity)

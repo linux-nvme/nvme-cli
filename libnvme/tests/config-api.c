@@ -716,6 +716,87 @@ out:
 	return pass;
 }
 
+static bool has_arg(const struct arg_list *list, const char *arg)
+{
+	size_t i;
+
+	for (i = 0; i < list->n; i++) {
+		if (!strcmp(list->args[i], arg))
+			return true;
+	}
+
+	return false;
+}
+
+/*
+ * With key-source other than "inline", tls-key is a name for nvme-keysd.
+ * Neither connect path may use it as the key. key-source itself is never
+ * an "nvme connect" option.
+ */
+static bool test_key_source(struct libnvme_global_ctx *ctx)
+{
+	struct libnvmf_context *fctx;
+	struct libnvmf_params *params;
+	struct arg_list args = { 0 };
+	bool pass = true;
+
+	printf("test_key_source:\n");
+
+	params = libnvmf_params_new();
+	shr_assert(params);
+
+	shr_assert(!libnvmf_params_set(params, "tls", "true"));
+	shr_assert(!libnvmf_params_set(params, "tls-key", "cred_vol1-psk"));
+	shr_assert(!libnvmf_params_set(params, "key-source", "systemd-creds"));
+
+	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+	shr_assert(!libnvmf_context_apply_params(fctx, params));
+	if (libnvmf_context_get_tls_key(fctx) ||
+	    !libnvmf_context_get_tls(fctx)) {
+		printf(" - systemd-creds: apply drops tls-key [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - systemd-creds: apply drops tls-key [PASS]\n");
+	}
+	libnvmf_context_free(fctx);
+
+	shr_assert(!libnvmf_connect_args_emit(NULL, params, collect_arg,
+					      &args));
+	if (args.n != 1 || !has_arg(&args, "--tls")) {
+		printf(" - systemd-creds: emit has --tls only [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - systemd-creds: emit has --tls only [PASS]\n");
+	}
+
+	shr_assert(!libnvmf_params_set(params, "key-source", "inline"));
+
+	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+	shr_assert(!libnvmf_context_apply_params(fctx, params));
+	if (!shr_streq0(libnvmf_context_get_tls_key(fctx), "cred_vol1-psk")) {
+		printf(" - inline: apply keeps tls-key [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - inline: apply keeps tls-key [PASS]\n");
+	}
+	libnvmf_context_free(fctx);
+
+	args.n = 0;
+	shr_assert(!libnvmf_connect_args_emit(NULL, params, collect_arg,
+					      &args));
+	if (args.n != 2 || !has_arg(&args, "--tls") ||
+	    !has_arg(&args, "--tls-key=cred_vol1-psk")) {
+		printf(" - inline: emit has --tls and --tls-key [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - inline: emit has --tls and --tls-key [PASS]\n");
+	}
+
+	libnvmf_params_free(params);
+
+	return pass;
+}
+
 /*
  * persistent must distinguish "not configured" (UNSET, the library default
  * derived elsewhere, e.g. from the discovery log page) from an explicit
@@ -987,6 +1068,7 @@ int main(void)
 	pass &= test_hostnqn_precedence(ctx, &fx);
 	pass &= test_apply_params(ctx);
 	pass &= test_persistent_tristate(ctx);
+	pass &= test_key_source(ctx);
 	pass &= test_set_connection_from_tid(ctx);
 	pass &= test_edge_cases(ctx, &fx);
 

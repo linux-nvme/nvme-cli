@@ -118,6 +118,12 @@
   `disabled` by default. This release has the daemon's main loop and
   configuration only. See `nvme-keysd(8)`.
 
+* New `key-source` key in `nvme-fabrics.conf`. With
+  `key-source = systemd-creds`, `tls-key` is the name of a systemd
+  credential, not the key. `nvme connect-all` and nvme-discoverd then
+  connect with TLS and let the kernel find the PSK in the keyring. The
+  default, `inline`, keeps today's behavior. See `nvme-fabrics.conf(5)`.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
