@@ -42,13 +42,14 @@ NBFT-sourced controller) in the NVMe-oF ownership registry. See
 nvme-registry-list(1) and nvme-exclusion-add(1).
 
 nvme-discoverd is still experimental. It is meant to replace the
-older udev-rule/systemd-unit autoconnect mechanism (built when the
-'nvmf-autoconnect' meson option is enabled). For now, nvme-discoverd
-can run alongside the legacy udev rules -- the goal is to eventually
-eliminate them completely. Switching a host over is a deliberate
-administrator choice ('systemctl enable --now nvme-discoverd',
-alongside disabling the legacy units), not something either
-mechanism decides automatically.
+older udev-rule/systemd-unit autoconnect mechanism. By default, the
+legacy mechanism is built only when nvme-discoverd is not. Building
+with '-Dnvmf-autoconnect=enabled' installs both. The legacy udev
+rules are active as soon as they are installed. nvme-discoverd runs
+only when the administrator enables it with
+'systemctl enable --now nvme-discoverd'. Running both on the same
+host is not recommended. Both would try to connect and manage the
+same controllers.
 
 OPTIONS
 -------

@@ -26,23 +26,32 @@
   `persistent = auto`. See `nvme-discover(1)` and `nvme-config-create(1)`.
 
 * nvme-discoverd is now built and installed by default, and it replaces
-  the legacy udev/systemd NVMe-oF autoconnect. The `nvme-discoverd`
-  build option now defaults to `enabled` and `nvmf-autoconnect` to
-  `disabled`. The daemon connects the controllers from the NBFT, from
-  the fabrics configuration (`nvme-fabrics.conf(5)`) and from the
-  Discovery Log Pages of the Discovery Controllers it connects to,
-  including FC kickstart. It also keeps them connected and retries
-  failed connections with backoff. The legacy files are no longer
-  installed by default: `70-nvmf-autoconnect.rules`,
-  `nvmf-connect@.service`, `nvmf-connect.target`,
-  `nvmf-autoconnect.service`, `nvmefc-boot-connections.service`,
-  `nvmf-connect-nbft.service`, the dracut config and the
-  NetworkManager dispatcher script. The key provisioning and vendor
-  tuning udev rules are still installed. nvme-discoverd needs
-  libsystemd v253 or later. To keep the old behaviour, build with
-  `-Dnvme-discoverd=disabled -Dnvmf-autoconnect=enabled`. Both can be
-  installed side by side, but only one of them should be active on a
-  host. See `nvme-discoverd(8)`.
+  the legacy udev/systemd NVMe-oF autoconnect. The daemon connects the
+  controllers from the NBFT, from the fabrics configuration
+  (`nvme-fabrics.conf(5)`) and from the Discovery Log Pages of the
+  Discovery Controllers it connects to, including FC kickstart. It
+  also keeps them connected and retries failed connections with
+  backoff. See `nvme-discoverd(8)`.
+
+  The `nvme-discoverd` and `nvmf-autoconnect` build options now both
+  default to `auto`. nvme-discoverd is built when libsystemd v253 or
+  later is available. The legacy autoconnect is built only when
+  nvme-discoverd is not. To keep the old behavior, build with
+  `-Dnvme-discoverd=disabled`.
+
+  When nvme-discoverd is built, these legacy files are not installed:
+  `70-nvmf-autoconnect.rules`, `nvmf-connect@.service`,
+  `nvmf-connect.target`, `nvmf-autoconnect.service`,
+  `nvmefc-boot-connections.service`, `nvmf-connect-nbft.service`, the
+  dracut config `70-nvmf-autoconnect.conf` and the NetworkManager
+  dispatcher script `80-nvmf-connect-nbft.sh`. The key provisioning
+  and vendor tuning udev rules are still installed.
+
+  `-Dnvmf-autoconnect=enabled` installs both. The legacy udev rules
+  are active as soon as they are installed. nvme-discoverd runs only
+  when `nvme-discoverd.service` is enabled. Running both on the same
+  host is not recommended. Both would try to connect and manage the
+  same controllers.
 
 ### nvme-discoverd
 
