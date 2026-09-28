@@ -218,6 +218,7 @@ config_meson_musl() {
         -Dopenssl=disabled                      \
         -Dkeyutils=disabled                     \
         -Dpython=disabled                       \
+        -Dnvme-discoverd=disabled               \
         "${BUILDDIR}"
 }
 
@@ -320,6 +321,7 @@ config_meson_static() {
         -Dliburing=disabled                     \
         -Dpython=disabled                       \
         -Dopenssl=disabled                      \
+        -Dnvme-discoverd=disabled               \
         -Dtests=false                           \
         -Dexamples=false                        \
         "${BUILDDIR}"
@@ -537,11 +539,12 @@ config_muon_default() {
         -Ddefault_library=static                        \
         -Dc_link_args="-static"                         \
         -Dwrap_mode=forcefallback                       \
-        -Djson-c=disabled                       \
-        -Dpython=disabled                       \
-        -Dopenssl=disabled                      \
-        -Dkeyutils=disabled                     \
         -Djson-c=disabled                               \
+        -Dpython=disabled                               \
+        -Dopenssl=disabled                              \
+        -Dkeyutils=disabled                             \
+        -Djson-c=disabled                               \
+        -Dnvme-discoverd=disabled                       \
         "${BUILDDIR}"
 }
 

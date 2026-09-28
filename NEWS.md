@@ -25,6 +25,25 @@
   --discovery` and converted `discovery.conf` lines now record
   `persistent = auto`. See `nvme-discover(1)` and `nvme-config-create(1)`.
 
+* nvme-discoverd is now built and installed by default, and it replaces
+  the legacy udev/systemd NVMe-oF autoconnect. The `nvme-discoverd`
+  build option now defaults to `enabled` and `nvmf-autoconnect` to
+  `disabled`. The daemon connects the controllers from the NBFT, from
+  the fabrics configuration (`nvme-fabrics.conf(5)`) and from the
+  Discovery Log Pages of the Discovery Controllers it connects to,
+  including FC kickstart. It also keeps them connected and retries
+  failed connections with backoff. The legacy files are no longer
+  installed by default: `70-nvmf-autoconnect.rules`,
+  `nvmf-connect@.service`, `nvmf-connect.target`,
+  `nvmf-autoconnect.service`, `nvmefc-boot-connections.service`,
+  `nvmf-connect-nbft.service`, the dracut config and the
+  NetworkManager dispatcher script. The key provisioning and vendor
+  tuning udev rules are still installed. nvme-discoverd needs
+  libsystemd v253 or later. To keep the old behaviour, build with
+  `-Dnvme-discoverd=disabled -Dnvmf-autoconnect=enabled`. Both can be
+  installed side by side, but only one of them should be active on a
+  host. See `nvme-discoverd(8)`.
+
 ### nvme-discoverd
 
 * `epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes` and
