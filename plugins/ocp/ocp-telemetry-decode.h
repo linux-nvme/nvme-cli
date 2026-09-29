@@ -609,6 +609,10 @@ struct telemetry_data_area_1 {
 #define DEFAULT_ASCII_STRING_SIZE     16
 #define SIZE_OF_VU_EVENT_ID           2
 
+/* VU Virtual FIFO Identifier: 15:11 physical FIFO, 10:0 virtual FIFO */
+#define VU_VIRTUAL_FIFO_PHY_NUM_SHIFT 11
+#define VU_VIRTUAL_FIFO_NUM_MASK      0x07ff
+
 #define DEFAULT_TELEMETRY_LOG "telemetry-log"
 #define DEFAULT_STRING_BIN "string.bin"
 #define DEFAULT_OUTPUT_FORMAT_JSON "json"
@@ -649,6 +653,11 @@ struct telemetry_data_area_1 {
 #define STR_VU_EVENT_STRING "VU Event String"
 #define STR_VU_EVENT_ID_STRING "VU Event Identifier"
 #define STR_VU_DATA "VU Data"
+#define STR_VU_VIRTUAL_FIFO_ID "VU Virtual FIFO Identifier"
+#define STR_VU_VIRTUAL_FIFO_STRING "VU Virtual FIFO String"
+#define STR_PHYSICAL_EVENT_FIFO_NUM "Physical Event FIFO Number"
+#define STR_PHYSICAL_EVENT_FIFO_STRING "Physical Event FIFO String"
+#define STR_VIRTUAL_FIFO_NUM "Virtual FIFO Number"
 #define STR_LINE "==============================================================================\n"
 #define STR_LINE2 "-----------------------------------------------------------------------------\n"
 
@@ -732,6 +741,7 @@ enum ocp_telemetry_statistic_identifiers {
  * @MEDIA_CLASS_TYPE:	           Media class
  * @MEDIA_WEAR_CLASS_TYPE:	       Media wear class
  * @STATISTIC_SNAPSHOT_CLASS_TYPE: Statistic snapshot class
+ * @VIRTUAL_FIFO_EVENT_CLASS_TYPE: Virtual FIFO event class
  * @RESERVED:	                   Reserved class
  * @VENDOR_UNIQUE_CLASS_TYPE:	   Vendor Unique class
  */
@@ -747,7 +757,8 @@ enum ocp_telemetry_debug_event_class_types {
 	MEDIA_CLASS_TYPE = 0x08,
 	MEDIA_WEAR_CLASS_TYPE = 0x09,
 	STATISTIC_SNAPSHOT_CLASS_TYPE = 0x0A,
-	//RESERVED = 7Fh-0Bh,
+	VIRTUAL_FIFO_EVENT_CLASS_TYPE = 0x0B,
+	//RESERVED = 7Fh-0Ch,
 	//VENDOR_UNIQUE_CLASS_TYPE = FFh-80h,
 };
 
@@ -1097,6 +1108,12 @@ struct __packed nvme_ocp_media_wear_dbg_evt_class_format
 {
 	__u8 currentMediaWear[DATA_SIZE_12];         // Bytes 15:4
 
+};
+
+struct __packed nvme_ocp_virtual_fifo_dbg_evt_class_format
+{
+	__le16 vu_virtual_fifo_identifier;        // Bytes 5:4
+	__le16 reserved;                          // Bytes 7:6
 };
 
 struct __packed nvme_ocp_common_dbg_evt_class_vu_data
@@ -1465,6 +1482,24 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
  * @return 0 success
  */
 int parse_media_wear_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
+
+/**
+ * @brief parses a virtual FIFO event fifo data to text or json formats
+ *
+ * @param pevent_descriptor, input event descriptor data
+ * @param pevent_descriptor_obj, event descriptor json object pointer
+ * @param pevent_specific_data, input event specific data
+ * @param pevent_fifos_object, event fifos json object pointer
+ * @param fp, input file pointer
+ *
+ * @return 0 success
+ */
+int parse_virtual_fifo_event(
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
