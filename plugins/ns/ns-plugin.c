@@ -44,7 +44,7 @@ static bool is_ns_mgmt_support(struct libnvme_transport_handle *hdl)
 	if (err)
 		return false;
 
-	return le16_to_cpu(ctrl->oacs) & NVME_CTRL_OACS_NS_MGMT;
+	return le16_to_cpu(ctrl->oacs) & NVME_CTRL_OACS_NMS;
 }
 
 static void ns_mgmt_show_status(struct libnvme_transport_handle *hdl, int err, char *cmd, __u32 nsid)
