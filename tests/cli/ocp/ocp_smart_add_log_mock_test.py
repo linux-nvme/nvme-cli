@@ -43,33 +43,14 @@ Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 Usage: python3 ocp_smart_add_log_mock_test.py <nvme-binary> <mock-lib>
 """
 import json
-import os
 import subprocess
-import sys
-import tempfile
-import unittest
 
-from tests.cli.nvme_mock_ipc import (MockIPCServer, make_mock_env,
-                                     resolve_mock_lib_path, run_nvme)
+from tests.cli.ocp.ocp_mock_test import (CNS_UUID_LIST, NSID_ALL, NVME_BIN,
+                                         OPC_GET_LOG_PAGE, OPC_IDENTIFY,
+                                         OCPMockServer, OCPMockTestBase, main)
 from tests.e2e.plugins.ocp import ocp_c0_layout as layout
 
-_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-_OPC_GET_LOG_PAGE = 0x02
-_OPC_IDENTIFY = 0x06
-
-_CNS_UUID_LIST = 0x17
 _OCP_LID_SMART = 0xC0
-
-_NSID_ALL = 0xFFFFFFFF
-
-# struct nvme_id_uuid_list: 32 reserved bytes, then 127 entries of
-# {header, rsvd1[15], uuid[16]}.
-_UUID_LIST_SIZE = 4096
-_UUID_LIST_HEADER = 32
-_UUID_ENTRY_SIZE = 32
-_UUID_ENTRY_UUID_OFFSET = 16
 
 # Only these two JSON layouts exist; --output-format-version selects
 # between them and the default is 2 (nvme_args in src/args.c).
@@ -87,110 +68,47 @@ _SC_INVALID_LOG_PAGE = 0x09
 MAX_TESTED_VERSION = layout.MAX_LOG_PAGE_VERSION + 1
 
 
-def pack_uuid_list(slot=0, filler_count=0):
-    """Build an Identify UUID List holding the OCP UUID at @slot.
-
-    libnvme_find_uuid() stops at the first all-zero entry, so the slots
-    ahead of @slot have to be occupied: @slot implies that many distinct
-    filler UUIDs before it. Pass slot=None for a list with no OCP UUID
-    at all (@filler_count entries, none of them OCP's)."""
-    buf = bytearray(_UUID_LIST_SIZE)
-
-    def put(index, uuid):
-        base = (_UUID_LIST_HEADER + index * _UUID_ENTRY_SIZE
-                + _UUID_ENTRY_UUID_OFFSET)
-        buf[base:base + 16] = uuid
-
-    occupied = slot if slot is not None else filler_count
-    for i in range(occupied):
-        # Distinct, non-zero, and not the OCP UUID.
-        put(i, bytes([0xA0 + i] * 16))
-    if slot is not None:
-        put(slot, layout.OCP_UUID)
-    return bytes(buf)
-
-
-class OCPMockServer(MockIPCServer):
-    """Serves the two commands smart-add-log issues, and records how it
-    asked for each: the UUID list lookups in @uuid_requests and the log
-    page reads in @log_requests. Anything else succeeds with zeroes."""
+class OCPSmartAddLogMockServer(OCPMockServer):
+    """Serves the C0 page smart-add-log reads, and records how it asked
+    for it: the UUID list lookups in @uuid_requests and the log page reads
+    in @log_requests."""
 
     def __init__(self, sock_path):
         super().__init__(sock_path)
         self.page = layout.pack(version=layout.MAX_LOG_PAGE_VERSION)
-        # None: no OCP UUID in the list. The plugin refuses such a
-        # controller unless --no-uuid tells it to skip the lookup.
-        self.uuid_slot = 0
-        self.uuid_filler_count = 0
         self.log_sc_status = 0
-        # Serve fewer bytes than asked for, to model a short transfer.
-        self.truncate_to = None
+        self.truncate_to = None  # Default to no truncation.
         self.uuid_requests = []
         self.log_requests = []
 
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        if opcode == _OPC_IDENTIFY and (cdw10 & 0xFF) == _CNS_UUID_LIST:
-            self.uuid_requests.append({'len': req_len})
-            payload = pack_uuid_list(self.uuid_slot, self.uuid_filler_count)
-            self.send_response(conn, 0, payload=payload[:req_len])
-            return
-
-        if opcode == _OPC_GET_LOG_PAGE and (cdw10 & 0xFF) == _OCP_LID_SMART:
+    def respond(self, conn, cmd):
+        if cmd['opcode'] == OPC_IDENTIFY and cmd['cns'] == CNS_UUID_LIST:
+            self.uuid_requests.append({'len': cmd['len']})
+        elif (cmd['opcode'] == OPC_GET_LOG_PAGE
+              and cmd['lid'] == _OCP_LID_SMART):
             self.log_requests.append({
-                'nsid': nsid, 'cdw14': cdw14, 'len': req_len, 'lpo': lpo,
+                'nsid': cmd['nsid'], 'cdw14': cmd['cdw14'],
+                'len': cmd['len'], 'lpo': cmd['lpo'],
             })
             if self.log_sc_status:
                 self.send_response(conn, 0, sc_status=self.log_sc_status)
                 return
-            payload = self.page[:req_len]
+            payload = self.page[:cmd['len']]
             if self.truncate_to is not None:
                 payload = payload[:self.truncate_to]
             self.send_response(conn, 0, payload=payload)
             return
+        super().respond(conn, cmd)
 
-        self.send_response(conn, 0, payload=bytes(req_len))
 
+class OCPSmartAddLogTestBase(OCPMockTestBase):
+    """The run/parse helpers the smart-add-log tests share."""
 
-class OCPSmartAddLogTestBase(unittest.TestCase):
-    """Mock lifecycle and the run/parse helpers the tests share."""
-
-    DEVICE = '/dev/nvme0'
-
-    def setUp(self):
-        """Everything here is torn down through addCleanup(), so a failure
-        part way in still releases what was set up before it."""
-        self.sysfs_dir = self._temp_dir('nvme-ocp-sysfs-')
-        self.base_dir = self._temp_dir('nvme-ocp-base-')
-        self.ipc_dir = self._temp_dir('nvme-ocp-ipc-')
-        self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
-
-        self.server = OCPMockServer(self.ipc_sock_path)
-        self.server.start()
-        # Cleanups run last-registered-first, so the server stops accepting
-        # before join() waits on its thread, and before the socket's
-        # directory goes away.
-        self.addCleanup(self.server.join)
-        self.addCleanup(self.server.shutdown)
-        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-
-    def _temp_dir(self, prefix):
-        tmp = tempfile.TemporaryDirectory(prefix=prefix, dir='/tmp')
-        self.addCleanup(tmp.cleanup)
-        return tmp.name
+    server_class = OCPSmartAddLogMockServer
 
     def run_smart(self, *args, device=None, encoding='utf-8'):
-        return run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                        'ocp', 'smart-add-log',
-                        device if device is not None else self.DEVICE,
-                        *args, encoding=encoding)
-
-    def assertOk(self, result):
-        self.assertEqual(
-            result.returncode, 0,
-            f'command failed:\nstdout:\n{result.stdout}\n'
-            f'stderr:\n{result.stderr}')
-        return result
+        return self.run_ocp('smart-add-log', *args, device=device,
+                            encoding=encoding)
 
     def json_log(self, format_version=None, device=None):
         """Run with JSON output and return the parsed log page."""
@@ -475,7 +393,7 @@ class TestOCPSmartAddLogCommand(OCPSmartAddLogTestBase):
 
     def test_log_is_requested_for_all_namespaces(self):
         self.assertOk(self.run_smart('-o', 'json'))
-        self.assertEqual(self.server.log_requests[-1]['nsid'], _NSID_ALL)
+        self.assertEqual(self.server.log_requests[-1]['nsid'], NSID_ALL)
 
     def test_whole_log_page_is_requested_from_offset_zero(self):
         self.assertOk(self.run_smart('-o', 'json'))
@@ -566,7 +484,7 @@ class TestOCPSmartAddLogNoUuid(OCPSmartAddLogTestBase):
         """show_option() in src/argconfig.c renders an option with a short
         form as "--long, -s", so the pair appears verbatim."""
         result = subprocess.run(
-            [_NVME_BIN, 'ocp', 'smart-add-log', '--help'],
+            [NVME_BIN, 'ocp', 'smart-add-log', '--help'],
             capture_output=True, text=True)
         self.assertIn('--no-uuid, -n', result.stdout + result.stderr)
 
@@ -644,11 +562,11 @@ class TestOCPSmartAddLogErrors(OCPSmartAddLogTestBase):
 
     def test_help_is_available_without_a_device(self):
         result = subprocess.run(
-            [_NVME_BIN, 'ocp', 'smart-add-log', '--help'],
+            [NVME_BIN, 'ocp', 'smart-add-log', '--help'],
             capture_output=True, text=True)
         out = result.stdout + result.stderr
         self.assertIn('--output-format', out)
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[sys.argv[0]], verbosity=2)
+    main()

@@ -3,6 +3,7 @@
 # OCP plugin tests
 
 ocp_tests = [
+    'ocp_internal_log_test.py',
     'ocp_smart_add_log_test.py',
 ]
 
