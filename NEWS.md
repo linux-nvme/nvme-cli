@@ -100,6 +100,8 @@
   Since the identify controller data structure MEC field bit name was
   changed by the spec then the API name followed this.
 
+* The NVME_CTRL_OAES API bit field names changed to follow the spec.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
