@@ -416,12 +416,13 @@ want_nvmf_autoconnect = (
     (nvmf_autoconnect_opt.auto() and want_fabrics and not want_discoverd)
 )
 
-# The sd_varlink client API used by mDNS exists since libsystemd v257.
+# mDNS needs the sd_varlink client API (libsystemd v257) and the
+# BrowseServices method of systemd-resolved (v258).
 want_mdns = false
 if want_discoverd and not get_option('mdns').disabled()
-    want_mdns = libsystemd_dep.version().version_compare('>=257')
+    want_mdns = libsystemd_dep.version().version_compare('>=258')
     if get_option('mdns').enabled() and not want_mdns
-        error('mdns requires libsystemd >=257')
+        error('mdns requires libsystemd >=258')
     endif
 endif
 

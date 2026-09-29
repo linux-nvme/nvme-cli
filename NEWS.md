@@ -64,7 +64,7 @@
   (TP8009), using systemd-resolved. It is off by default. Enable it
   with `zeroconf = true` in the `[Discovery]` section. The new `mdns`
   build option (`auto` by default) controls whether mDNS support is
-  built. It requires libsystemd v257 or later.
+  built. It requires libsystemd v258 or later.
 
 * nvme-discoverd releases a controller it no longer wants, for example
   one removed from the configuration or from a DC's log page, or one the

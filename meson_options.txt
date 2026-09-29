@@ -33,7 +33,7 @@ option(
   'mdns',
   type : 'feature',
   value: 'auto',
-  description : 'mDNS (TP8009) discovery in nvme-discoverd (requires libsystemd >=257)'
+  description : 'mDNS (TP8009) discovery in nvme-discoverd (requires libsystemd >=258)'
 )
 option(
   'nvmf-autoconnect',
