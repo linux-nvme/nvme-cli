@@ -15,8 +15,9 @@
  *
  * Two version requirements apply:
  *
- *   - Build time: the sd_varlink client API exists since libsystemd v257.
- *     An older libsystemd, or -Dmdns=disabled, builds no-mdns.c instead.
+ *   - Build time: libsystemd v258. The sd_varlink client API exists since
+ *     v257, but mDNS cannot work before v258 (see below). An older
+ *     libsystemd, or -Dmdns=disabled, builds no-mdns.c instead.
  *   - Run time: the BrowseServices and ResolveService methods exist since
  *     systemd-resolved v258. mdns_start() asks the running
  *     systemd-resolved whether it has BrowseServices, because distributions
