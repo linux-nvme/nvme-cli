@@ -102,6 +102,8 @@
 
 * The NVME_CTRL_OAES API bit field names changed to follow the spec.
 
+* The NVME_CTRL_BACAP name fixed to NVME_CTRL_BPCAP since not correct.
+
 ## Changes in 3.1 (2026-09-18)
 
 ### Feature removals and incompatible changes
