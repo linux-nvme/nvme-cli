@@ -585,7 +585,8 @@ void nvme_json_pel_timestamp(void *pevent_log_info, __u32 offset,
 			     struct json_object *valid_attrs);
 void nvme_json_pel_power_on_reset(void *pevent_log_info, __u32 offset,
 				  struct json_object *valid_attrs,
-				  __le16 vsil, __le16 el);
+				  __le16 vsil, __le16 el,
+				  __u32 size);
 void nvme_json_pel_nss_hw_error(void *pevent_log_info, __u32 offset,
 				struct json_object *valid_attrs);
 void nvme_json_pel_change_ns(void *pevent_log_info, __u32 offset,
@@ -599,9 +600,11 @@ void nvme_json_pel_sanitize_start(void *pevent_log_info, __u32 offset,
 void nvme_json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
 				       struct json_object *valid_attrs);
 void nvme_json_pel_set_feature(void *pevent_log_info, __u32 offset,
-			       struct json_object *valid_attrs);
+			       struct json_object *valid_attrs,
+			       __le16 el, __u32 size);
 void nvme_json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
-				 struct json_object *valid_attrs);
+				 struct json_object *valid_attrs,
+				 __le16 el, __u32 size);
 void nvme_json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
 				     struct json_object *valid_attrs);
 void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
