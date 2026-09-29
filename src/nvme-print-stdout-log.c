@@ -311,11 +311,16 @@ void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
 	struct nvme_persistent_event_entry *pevent_entry_head)
 {
 	__u64 *fw_rev;
-	__u32 por_info_len = le16_to_cpu(pevent_entry_head->el) -
-			     le16_to_cpu(pevent_entry_head->vsil) -
-			     sizeof(*fw_rev);
+	__u32 ev_len = le16_to_cpu(pevent_entry_head->el);
+	__u32 vlen = le16_to_cpu(pevent_entry_head->vsil);
 	struct nvme_power_on_reset_info_list *por_event;
-	__u32 por_info_list = por_info_len / sizeof(*por_event);
+	__u32 por_info_len, por_info_list;
+
+	if (ev_len < vlen + sizeof(*fw_rev))
+		return;
+
+	por_info_len = ev_len - vlen - sizeof(*fw_rev);
+	por_info_list = por_info_len / sizeof(*por_event);
 	struct shr_table *t;
 
 	printf("Power On Reset Event Entry:\n");
@@ -727,7 +732,10 @@ void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u32 size,
 							offset);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			d(pevent_log_info + offset, 512, 16, 1);
+			if (el >= 512 &&
+			    offset + 512 <= size)
+				d(pevent_log_info + offset,
+				  512, 16, 1);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			nvme_show_pel_thermal_excursion_event(pevent_log_info,

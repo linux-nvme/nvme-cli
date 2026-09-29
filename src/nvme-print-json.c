@@ -1773,14 +1773,23 @@ void nvme_json_pel_timestamp(void *pevent_log_info, __u32 offset,
 
 void nvme_json_pel_power_on_reset(void *pevent_log_info, __u32 offset,
 				  struct json_object *valid_attrs,
-				  __le16 vsil, __le16 el)
+				  __le16 vsil, __le16 el,
+				  __u32 size)
 {
 	__u64 *fw_rev;
 	char fw_str[50];
 	struct nvme_power_on_reset_info_list *por_event;
-	__u32 por_info_len = le16_to_cpu(el) - le16_to_cpu(vsil) - sizeof(*fw_rev);
-	__u32 por_info_list = por_info_len / sizeof(*por_event);
+	__u32 ev_len = le16_to_cpu(el);
+	__u32 vlen = le16_to_cpu(vsil);
+	__u32 por_info_len, por_info_list;
 	int i;
+
+	if (ev_len < vlen + sizeof(*fw_rev) ||
+	    offset > size - sizeof(*fw_rev))
+		return;
+
+	por_info_len = ev_len - vlen - sizeof(*fw_rev);
+	por_info_list = por_info_len / sizeof(*por_event);
 
 	fw_rev = pevent_log_info + offset;
 	snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)", le64_to_cpu(*fw_rev),
@@ -1788,7 +1797,12 @@ void nvme_json_pel_power_on_reset(void *pevent_log_info, __u32 offset,
 	obj_add_str(valid_attrs, "fw_rev", fw_str);
 
 	for (i = 0; i < por_info_list; i++) {
-		por_event = pevent_log_info + offset + sizeof(*fw_rev) + i * sizeof(*por_event);
+		__u32 poff = offset + sizeof(*fw_rev) +
+			     i * sizeof(*por_event);
+
+		if (poff > size - sizeof(*por_event))
+			break;
+		por_event = pevent_log_info + poff;
 		obj_add_uint(valid_attrs, "ctrl_id", le16_to_cpu(por_event->cid));
 		obj_add_uint(valid_attrs, "fw_act", por_event->fw_act);
 		obj_add_uint(valid_attrs, "op_in_prog", por_event->op_in_prog);
@@ -1869,27 +1883,36 @@ void nvme_json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
 }
 
 void nvme_json_pel_set_feature(void *pevent_log_info, __u32 offset,
-			       struct json_object *valid_attrs)
+			       struct json_object *valid_attrs,
+			       __le16 el, __u32 size)
 {
 	struct nvme_set_feature_event *set_feat_event = pevent_log_info + offset;
 	int fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), SET_FEATURES_CDW10_FID);
 	int cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 	int dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
 	unsigned char *mem_buf;
+	__u32 rel;
 
 	obj_add_uint_02x(valid_attrs, "feature", fid);
 	obj_add_str(valid_attrs, "name", nvme_feature_to_string(fid));
 	obj_add_uint_0nx(valid_attrs, "value", cdw11, 8);
 
 	if (NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout)) {
-		mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
+		rel = 4 + dword_cnt * 4;
+		if (rel >= le16_to_cpu(el) ||
+		    offset + rel >= size)
+			return;
+		mem_buf = (unsigned char *)set_feat_event + rel;
 		json_feature_show_fields(fid, cdw11, mem_buf);
 	}
 }
 
 void nvme_json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
-				 struct json_object *valid_attrs)
+				 struct json_object *valid_attrs,
+				 __le16 el, __u32 size)
 {
+	if (le16_to_cpu(el) < 512 || offset > size - 512)
+		return;
 	obj_d(valid_attrs, "create", pevent_log_info + offset, 512, 16, 1);
 }
 
@@ -2026,9 +2049,11 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			nvme_json_pel_timestamp(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
-			nvme_json_pel_power_on_reset(pevent_log_info, offset, valid_attrs,
+			nvme_json_pel_power_on_reset(pevent_log_info,
+						     offset, valid_attrs,
 						     pevent_entry_head->vsil,
-						     pevent_entry_head->el);
+						     pevent_entry_head->el,
+						     size);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
 			nvme_json_pel_nss_hw_error(pevent_log_info, offset, valid_attrs);
@@ -2049,10 +2074,16 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			nvme_json_pel_sanitize_completion(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_json_pel_set_feature(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_set_feature(pevent_log_info,
+						  offset, valid_attrs,
+						  pevent_entry_head->el,
+						  size);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			nvme_json_pel_telemetry_crt(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_telemetry_crt(pevent_log_info,
+						    offset, valid_attrs,
+						    pevent_entry_head->el,
+						    size);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			nvme_json_pel_thermal_excursion(pevent_log_info, offset, valid_attrs);
