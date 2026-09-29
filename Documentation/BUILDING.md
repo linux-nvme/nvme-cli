@@ -7,7 +7,7 @@ build the project to accommodate environments with an older version of meson.
 A minimal build requires:
 - gcc (or clang)
 - ninja
-- meson
+- meson 1.0.0 or later
 
 If you build on a relatively modern system, either use meson directly or the
 Makefile wrapper.
@@ -44,14 +44,23 @@ The following optional libraries unlock additional features. Each can be
 explicitly enabled (`-Doption=enabled`) or disabled (`-Doption=disabled`);
 the default is `auto` (use if found) unless noted otherwise.
 
-| Option | Default | Feature unlocked |
-|--------|---------|-----------------|
-| `json-c` | `auto` | `/etc/nvme/config.json` parsing; all vendor plugins; JSON output format |
-| `openssl` | `auto` | TLS over NVMe-TCP; host authentication |
-| `keyutils` | `auto` | Key management for NVMe-oF authentication |
-| `libdbus` | `disabled` | End-point discovery for NVMe-MI |
-| `liburing` | `disabled` | Get-log-page via io_uring passthrough |
-| `python` | `auto` | Python bindings for libnvme |
+| Option | Default | Minimum version | Feature unlocked |
+|--------|---------|-----------------|-----------------|
+| `json-c` | `auto` | 0.13 | `/etc/nvme/config.json` parsing; all vendor plugins; JSON output format |
+| `openssl` | `auto` | 3.0 | TLS over NVMe-TCP; host authentication. LibreSSL works if it provides `openssl/core_names.h` |
+| `keyutils` | `auto` | 1.5 | Key management for NVMe-oF authentication |
+| `libkmod` | `auto` | 5 | Loading the nvme-fabrics module when needed |
+| `libdbus` | `disabled` | | End-point discovery for NVMe-MI |
+| `liburing` | `disabled` | 2.2 | Asynchronous admin and I/O passthrough commands through io_uring |
+| `python` | `auto` | 3.6 | Python bindings for libnvme |
+| `nvme-discoverd` | `auto` | libsystemd 253 | The nvme-discoverd daemon; see [Daemons and systemd](#daemons-and-systemd) |
+| `mdns` | `auto` | libsystemd 258 | mDNS discovery in nvme-discoverd; see [Daemons and systemd](#daemons-and-systemd) |
+
+nvme-cli calls `printbuf_memappend()` in a serializer installed with
+`json_object_set_serializer()` (`src/nvme-json.c`). json-c's `printbuf.h`
+allows this use, but json-c exports the function under its private symbol
+version, `JSONC_PRIVATE`. json-c therefore does not promise that its ABI
+stays stable.
 
 Example: explicitly disable Python bindings:
 
@@ -65,6 +74,21 @@ To see the full list of available options, including meson built-ins:
 ```shell
 $ meson configure .build
 ```
+
+## Daemons and systemd
+
+The daemons need systemd both at build time (libsystemd) and at run time
+(the service manager and other systemd services). The minimum version is
+the same for both.
+
+| Feature | Minimum systemd version | Reason |
+|---------|-------------------------|--------|
+| nvme-discoverd | 253 | `Type=notify-reload` |
+| mDNS in nvme-discoverd | 258 | The `BrowseServices` method of systemd-resolved |
+
+At startup, nvme-discoverd checks that systemd-resolved provides
+`BrowseServices`. If it does not, the daemon logs a warning and runs
+without mDNS.
 
 ## Build with meson
 
