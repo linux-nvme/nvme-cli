@@ -5,6 +5,8 @@
 # Hardware-free ocp plugin tests.
 
 ocp_mock_tests = [
+    'ocp_internal_log_event_fifo_mock_test.py',
+    'ocp_internal_log_mock_test.py',
     'ocp_smart_add_log_mock_test.py',
 ]
 
