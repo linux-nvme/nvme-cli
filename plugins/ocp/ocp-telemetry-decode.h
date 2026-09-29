@@ -99,15 +99,6 @@ enum TELEMETRY_TYPE {
 	TELEMETRY_TYPE_HOST_1     = 10,
 };
 
-struct telemetry_stats_desc {
-	__le16 id;
-	__u8 info;
-	__u8 ns_info;
-	__le16 size;
-	__le16 nsid;
-	__u8 data[];
-};
-
 #define DATA_SIZE_12   12
 #define DATA_SIZE_8    8
 #define DATA_SIZE_4    4
