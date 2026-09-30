@@ -3,6 +3,7 @@
  * Copyright (c) 2024
  */
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 
 #include <libnvme.h>
@@ -220,7 +221,13 @@ static int get_hwcomp_log_data(struct libnvme_transport_handle *hdl, struct hwco
 		return -EINVAL;
 	}
 
+	if (log_bytes - desc_offset > UINT_MAX) {
+		print_info_error("error: ocp: hwcomp log too large: %.0Lf\n", log_bytes);
+		return -EOVERFLOW;
+	}
+
 	len = log_bytes - desc_offset;
+	log->desc_len = len;
 
 	print_info("args.len: %u\n", len);
 
