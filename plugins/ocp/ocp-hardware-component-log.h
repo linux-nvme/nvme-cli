@@ -30,6 +30,7 @@ struct __packed hwcomp_log {
 	__u8 size[HWCOMP_SIZE_LEN];
 	__u8 rsvd48[HWCOMP_RSVD48_LEN];
 	struct hwcomp_desc *desc;
+	__u32 desc_len;
 };
 
 struct hwcomp_desc_entry {
