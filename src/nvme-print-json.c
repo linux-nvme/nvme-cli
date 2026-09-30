@@ -2194,11 +2194,16 @@ static void json_lba_status_log(void *lba_status, __u32 size, const char *devnam
 	struct nvme_lba_status_log *hdr = lba_status;
 	struct nvme_lbas_ns_element *ns_element;
 	struct nvme_lba_rd *range_desc;
-	int offset = sizeof(*hdr);
+	size_t offset = sizeof(*hdr);
 	__u32 num_lba_desc;
-	__u32 num_elements = le32_to_cpu(hdr->nlslne);
+	__u32 num_elements;
 	int ele;
 	int i;
+
+	if (size < sizeof(*hdr))
+		return;
+
+	num_elements = le32_to_cpu(hdr->nlslne);
 
 	obj_add_uint(r, "lslplen", le32_to_cpu(hdr->lslplen));
 	obj_add_uint(r, "nlslne", num_elements);
@@ -2206,6 +2211,8 @@ static void json_lba_status_log(void *lba_status, __u32 size, const char *devnam
 	obj_add_uint(r, "lsgc", le16_to_cpu(hdr->lsgc));
 
 	for (ele = 0; ele < num_elements; ele++) {
+		if (offset + sizeof(*ns_element) > size)
+			break;
 		ns_element = lba_status + offset;
 		element = json_create_object();
 		obj_add_uint(element, "neid", le32_to_cpu(ns_element->neid));
@@ -2217,6 +2224,9 @@ static void json_lba_status_log(void *lba_status, __u32 size, const char *devnam
 		desc_list = json_create_array();
 
 		if (num_lba_desc != 0xffffffff) {
+			if (num_lba_desc >
+			    (size - offset) / sizeof(*range_desc))
+				break;
 			for (i = 0; i < num_lba_desc; i++) {
 				range_desc = lba_status + offset;
 				desc = json_create_object();
