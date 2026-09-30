@@ -788,9 +788,12 @@ void stdout_lba_status_log(void *lba_status, __u32 size, const char *devname)
 	struct nvme_lba_status_log *hdr;
 	struct nvme_lbas_ns_element *ns_element;
 	struct nvme_lba_rd *range_desc;
-	int offset = sizeof(*hdr);
+	size_t offset = sizeof(*hdr);
 	__u32 num_lba_desc, num_elements;
 	struct shr_table *t;
+
+	if (size < sizeof(*hdr))
+		return;
 
 	hdr = lba_status;
 	printf("LBA Status Log for device: %s\n", devname);
@@ -811,6 +814,8 @@ void stdout_lba_status_log(void *lba_status, __u32 size, const char *devname)
 	stdout_kv_table_finish(t, "lba-status-log");
 
 	for (int ele = 0; ele < num_elements; ele++) {
+		if (offset + sizeof(*ns_element) > size)
+			break;
 		ns_element = lba_status + offset;
 		num_lba_desc = le32_to_cpu(ns_element->nlrd);
 
@@ -829,6 +834,9 @@ void stdout_lba_status_log(void *lba_status, __u32 size, const char *devname)
 
 		offset += sizeof(*ns_element);
 		if (num_lba_desc != 0xffffffff) {
+			if (num_lba_desc >
+			    (size - offset) / sizeof(*range_desc))
+				break;
 			t = stdout_kv_table_create();
 			if (!t)
 				return;
