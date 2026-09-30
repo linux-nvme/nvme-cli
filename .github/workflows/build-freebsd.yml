@@ -41,11 +41,11 @@ jobs:
             set -x
             uname -a
 
+            sudo pkg install -y git meson ninja pkgconf json-c openssl
+
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
             git checkout ${{ github.sha }}
-
-            sudo pkg install -y git meson ninja pkgconf json-c openssl
 
             meson setup .build
             ninja -C .build
