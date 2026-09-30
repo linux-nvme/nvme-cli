@@ -140,6 +140,17 @@ VIRTUAL_FIFO_PHY_SHIFT = 11
 VIRTUAL_FIFO_PHY_MAX = 0x1F
 VIRTUAL_FIFO_MASK = 0x7FF
 
+# Fixed records of the SMBUS/I2C/I3C (0Ch) and MCTP (0Dh) classes, ahead of
+# their optional VU fields.
+SMBUS_EVENT_SIZE = 4
+MCTP_EVENT_SIZE = 8
+
+# SMBUS/I2C/I3C Event ID whose Event Data values are defined.
+SMBUS_NACK_ERROR = 0x0003
+
+# MCTP Event Flags bit 7: MCTP Transport Header Valid.
+MCTP_HEADER_VALID = 0x80
+
 # Statistic Information (descriptor byte 2) bit 6: set only in a Context
 # Statistic Descriptor.
 STAT_INFO_CONTEXT_INDEX = 0x40
@@ -201,6 +212,36 @@ def virtual_fifo_event(fifo_id: int, event_id: int = 0, reserved: int = 0,
     @extra bytes beyond the one Dword the class defines."""
     return event(CLASS_VIRTUAL_FIFO, event_id,
                  struct.pack('<HH', fifo_id, reserved) + extra, size_dw)
+
+
+def smbus_event(event_id: int = 0, event_data: int = 0, reserved: int = 0,
+                vu: bytes = b'', size_dw: Optional[int] = None) -> bytes:
+    """A SMBUS/I2C/I3C event (0Ch):
+
+      Bytes 5:4   SMBUS Debug Event Data
+      Bytes 7:6   Reserved
+      Bytes 9:8   VU Event Identifier  } present when Event Data Size > 1,
+      Bytes 10..  VU Data              } as @vu (see vu_part())"""
+    return event(CLASS_SMBUS_I2C_I3C, event_id,
+                 struct.pack('<HH', event_data, reserved) + vu, size_dw)
+
+
+def mctp_event(event_id: int = 0, event_data: int = 0, protocol: int = 0,
+               flags: int = 0, header: bytes = bytes(4), vu: bytes = b'',
+               size_dw: Optional[int] = None) -> bytes:
+    """An MCTP event (0Dh):
+
+      Bytes 5:4   MCTP Debug Event Data
+      Byte  6     MCTP Transport Protocol Information
+      Byte  7     MCTP Event Flags (bit 7 Transport Header Valid)
+      Bytes 11:8  MCTP Transport Header, @header as captured
+      Bytes 13:12 VU Event Identifier  } present when Event Data Size > 2,
+      Bytes 14..  VU Data              } as @vu (see vu_part())"""
+    if len(header) != 4:
+        raise ValueError('the MCTP Transport Header is 4 bytes')
+    return event(CLASS_MCTP, event_id,
+                 struct.pack('<HBB', event_data, protocol, flags) + header
+                 + vu, size_dw)
 
 
 def statistic(stat_id: int, data: bytes = b'', behavior: int = 0,

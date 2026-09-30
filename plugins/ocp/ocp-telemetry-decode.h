@@ -519,6 +519,74 @@ static const char * const telemetry_virtual_fifo_event_id_str[] = {
 	[VIRTUAL_FIFO_END]				= "Virtual FIFO End",
 };
 
+/*****************************************************************************
+ * Telemetry SMBUS/I2C/I3C (0Ch) Event ID's and Event Data Strings
+ *****************************************************************************/
+enum TELEMETRY_SMBUS_EVENT_ID {
+	SMBUS_TIMEOUT_ERRORS			= 0x0000,
+	SMBUS_PEC_ERRORS			= 0x0001,
+	SMBUS_ARBITRATION_LOSS			= 0x0002,
+	SMBUS_NACK_ERROR			= 0x0003,
+};
+
+static const char * const telemetry_smbus_nack_event_data_str[] = {
+	[0x0000]	= "Received invalid command or data",
+	[0x0001]	= "Device is busy",
+	[0x0002]	= "Requested data is not available",
+};
+
+/*****************************************************************************
+ * Telemetry MCTP (0Dh) Event ID's, Event Data and Transport Protocol Strings
+ *****************************************************************************/
+enum TELEMETRY_MCTP_EVENT_ID {
+	MCTP_DROPPED_PACKET			= 0x0000,
+	MCTP_DROPPED_MESSAGE			= 0x0001,
+	MCTP_DISCOVERY_ADDRESSING_ERRORS	= 0x0002,
+	MCTP_ERROR_STATUS			= 0x0003,
+};
+
+static const char * const telemetry_mctp_dropped_packet_data_str[] = {
+	[0x0000]	= "Unexpected middle or end packet",
+	[0x0001]	= "Bad packet data integrity or other physical layer error: Framing errors",
+	[0x0002]	= "Bad packet data integrity or other physical layer error: Byte alignment errors",
+	[0x0003]	= "Bad packet data integrity or other physical layer error: Invalid packet size",
+	[0x0004]	= "Unexpected or expired message tag",
+	[0x0005]	= "Unknown destination EID",
+	[0x0006]	= "Unsupported MCTP header version",
+	[0x0007]	= "Unsupported transmission unit size",
+};
+
+static const char * const telemetry_mctp_dropped_message_data_str[] = {
+	[0x0000]	= "Receipt of a new start packet",
+	[0x0001]	= "Timeout waiting for a packet + threshold",
+	[0x0002]	= "Out-of-sequence packet sequence number",
+	[0x0003]	= "Incorrect transmission unit",
+	[0x0004]	= "Bad message integrity check",
+	[0x0005]	= "Invalid message type received",
+};
+
+static const char * const telemetry_mctp_discovery_data_str[] = {
+	[0x0000]	= "Transport Binding specific bus enumeration errors",
+	[0x0001]	= "Transport Binding specific bus address assignment errors",
+};
+
+static const char * const telemetry_mctp_error_status_data_str[] = {
+	[0x0000]	= "Reserved",
+	[0x0001]	= "ERROR",
+	[0x0002]	= "ERROR_INVALID_DATA",
+	[0x0003]	= "ERROR_INVALID_LENGTH",
+	[0x0004]	= "ERROR_NOT_READY",
+	[0x0005]	= "ERROR_UNSUPPORTED_CMD",
+	[0x0006]	= "COMMAND_SPECIFIC",
+};
+
+static const char * const telemetry_mctp_transport_protocol_str[] = {
+	[0x00]		= "PCIe VDM on device PCIe port 0",
+	[0x01]		= "PCIe VDM on device PCIe port 1",
+	[0x04]		= "I2C/SMBus",
+	[0x05]		= "I3C",
+};
+
 
 /*****************************************************************************
  * Telemetry Data Structures
@@ -613,6 +681,9 @@ struct telemetry_data_area_1 {
 #define VU_VIRTUAL_FIFO_PHY_NUM_SHIFT 11
 #define VU_VIRTUAL_FIFO_NUM_MASK      0x07ff
 
+/* MCTP Event Flags bit 7: the MCTP Transport Header field is valid */
+#define MCTP_EVENT_FLAG_TRANSPORT_HEADER_VALID 0x80
+
 #define DEFAULT_TELEMETRY_LOG "telemetry-log"
 #define DEFAULT_STRING_BIN "string.bin"
 #define DEFAULT_OUTPUT_FORMAT_JSON "json"
@@ -658,6 +729,14 @@ struct telemetry_data_area_1 {
 #define STR_PHYSICAL_EVENT_FIFO_NUM "Physical Event FIFO Number"
 #define STR_PHYSICAL_EVENT_FIFO_STRING "Physical Event FIFO String"
 #define STR_VIRTUAL_FIFO_NUM "Virtual FIFO Number"
+#define STR_SMBUS_DEBUG_EVENT_DATA "SMBUS Debug Event Data"
+#define STR_SMBUS_DEBUG_EVENT_DATA_STRING "SMBUS Debug Event Data String"
+#define STR_MCTP_DEBUG_EVENT_DATA "MCTP Debug Event Data"
+#define STR_MCTP_DEBUG_EVENT_DATA_STRING "MCTP Debug Event Data String"
+#define STR_MCTP_TRANSPORT_PROTOCOL "MCTP Transport Protocol Information"
+#define STR_MCTP_TRANSPORT_PROTOCOL_STRING "MCTP Transport Protocol String"
+#define STR_MCTP_TRANSPORT_HEADER_VALID "MCTP Transport Header Valid"
+#define STR_MCTP_TRANSPORT_HEADER "MCTP Transport Header"
 #define STR_LINE "==============================================================================\n"
 #define STR_LINE2 "-----------------------------------------------------------------------------\n"
 
@@ -742,6 +821,8 @@ enum ocp_telemetry_statistic_identifiers {
  * @MEDIA_WEAR_CLASS_TYPE:	       Media wear class
  * @STATISTIC_SNAPSHOT_CLASS_TYPE: Statistic snapshot class
  * @VIRTUAL_FIFO_EVENT_CLASS_TYPE: Virtual FIFO event class
+ * @SMBUS_I2C_I3C_EVENT_CLASS_TYPE: SMBUS/I2C/I3C event class
+ * @MCTP_EVENT_CLASS_TYPE:	       MCTP event class
  * @RESERVED:	                   Reserved class
  * @VENDOR_UNIQUE_CLASS_TYPE:	   Vendor Unique class
  */
@@ -758,7 +839,9 @@ enum ocp_telemetry_debug_event_class_types {
 	MEDIA_WEAR_CLASS_TYPE = 0x09,
 	STATISTIC_SNAPSHOT_CLASS_TYPE = 0x0A,
 	VIRTUAL_FIFO_EVENT_CLASS_TYPE = 0x0B,
-	//RESERVED = 7Fh-0Ch,
+	SMBUS_I2C_I3C_EVENT_CLASS_TYPE = 0x0C,
+	MCTP_EVENT_CLASS_TYPE = 0x0D,
+	//RESERVED = 7Fh-0Eh,
 	//VENDOR_UNIQUE_CLASS_TYPE = FFh-80h,
 };
 
@@ -1116,6 +1199,20 @@ struct __packed nvme_ocp_virtual_fifo_dbg_evt_class_format
 	__le16 reserved;                          // Bytes 7:6
 };
 
+struct __packed nvme_ocp_smbus_dbg_evt_class_format
+{
+	__le16 smbus_debug_event_data;            // Bytes 5:4
+	__le16 reserved;                          // Bytes 7:6
+};
+
+struct __packed nvme_ocp_mctp_dbg_evt_class_format
+{
+	__le16 mctp_debug_event_data;             // Bytes 5:4
+	__u8 transport_protocol;                  // Byte  6
+	__u8 event_flags;                         // Byte  7
+	__u8 transport_header[DATA_SIZE_4];       // Bytes 11:8
+};
+
 struct __packed nvme_ocp_common_dbg_evt_class_vu_data
 {
 	__le16 vu_event_identifier;         // Bytes 5:4
@@ -1265,6 +1362,36 @@ static inline const char *telemetry_media_wear_event_id_to_string(int event_id)
 static inline const char *telemetry_virtual_fifo_event_id_to_string(int event_id)
 {
 	return ARGSTR(telemetry_virtual_fifo_event_id_str, event_id);
+}
+
+/* Event Data is defined for the NACK error Event ID only */
+static inline const char *telemetry_smbus_event_data_to_string(int event_id, int data)
+{
+	if (event_id != SMBUS_NACK_ERROR)
+		return "";
+	return ARGSTR(telemetry_smbus_nack_event_data_str, data);
+}
+
+/* Each MCTP Event ID has its own Event Data values */
+static inline const char *telemetry_mctp_event_data_to_string(int event_id, int data)
+{
+	switch (event_id) {
+	case MCTP_DROPPED_PACKET:
+		return ARGSTR(telemetry_mctp_dropped_packet_data_str, data);
+	case MCTP_DROPPED_MESSAGE:
+		return ARGSTR(telemetry_mctp_dropped_message_data_str, data);
+	case MCTP_DISCOVERY_ADDRESSING_ERRORS:
+		return ARGSTR(telemetry_mctp_discovery_data_str, data);
+	case MCTP_ERROR_STATUS:
+		return ARGSTR(telemetry_mctp_error_status_data_str, data);
+	default:
+		return "";
+	}
+}
+
+static inline const char *telemetry_mctp_transport_protocol_to_string(int protocol)
+{
+	return ARGSTR(telemetry_mctp_transport_protocol_str, protocol);
 }
 
 /**
@@ -1500,6 +1627,42 @@ int parse_media_wear_event(
  * @return 0 success
  */
 int parse_virtual_fifo_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
+
+/**
+ * @brief parses a SMBUS/I2C/I3C event fifo data to text or json formats
+ *
+ * @param pevent_descriptor, input event descriptor data
+ * @param pevent_descriptor_obj, event descriptor json object pointer
+ * @param pevent_specific_data, input event specific data
+ * @param pevent_fifos_object, event fifos json object pointer
+ * @param fp, input file pointer
+ *
+ * @return 0 success
+ */
+int parse_smbus_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
+
+/**
+ * @brief parses a MCTP event fifo data to text or json formats
+ *
+ * @param pevent_descriptor, input event descriptor data
+ * @param pevent_descriptor_obj, event descriptor json object pointer
+ * @param pevent_specific_data, input event specific data
+ * @param pevent_fifos_object, event fifos json object pointer
+ * @param fp, input file pointer
+ *
+ * @return 0 success
+ */
+int parse_mctp_event(
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
