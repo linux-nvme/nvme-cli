@@ -1120,7 +1120,8 @@ static int try_get_telemetry(struct libnvme_transport_handle *hdl,
 {
 	int err = 0;
 	int get_log_lid;
-	int tele_xfer_size = UNIT_DATA_SIZE_127KB;
+	int tele_xfer_size = libnvme_transport_handle_is_mi(hdl) ?
+		NVME_LOG_PAGE_PDU_SIZE : UNIT_DATA_SIZE_127KB;
 
 	if (tele_type == DUMP_TYPE_CTLR)
 		get_log_lid = 0x08;
