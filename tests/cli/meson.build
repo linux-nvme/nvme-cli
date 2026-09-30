@@ -103,6 +103,20 @@ if python3.found()
                  args: [files('nvme_samsung_test.py'), nvme_exe, mock_nvme_lib],
                  env: cli_test_env,
                  depends: [nvme_exe, mock_nvme_lib])
+
+            if want_mi
+                mock_mctp_lib = shared_library(
+                    'mock_mctp',
+                    'libmock_mctp.c',
+                    dependencies: dl_dep,
+                    install: false
+                )
+                test('nvme-cli - samsung-mctp-cli',
+                     python3,
+                     args: [files('nvme_samsung_mctp_test.py'), nvme_exe, mock_mctp_lib],
+                     env: cli_test_env,
+                     depends: [nvme_exe, mock_mctp_lib])
+            endif
         endif
     endif
 
