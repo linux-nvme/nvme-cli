@@ -30,7 +30,8 @@ Tests in this module verify:
     VU Event Identifier/String/Data from one Dword beyond it up to the
     largest Event Data Size, rejection at every size below it, the common
     classes' optional VU data, reserved classes, vendor unique classes,
-    and Statistic Snapshot events of different statistic sizes.
+    and Statistic Snapshot events of different statistic sizes and of a
+    Context Statistic Descriptor.
   * Event String and VU Event String lookups match on (class,
     identifier), not identifier alone, for every class, and come from the
     VU table from class 80h up.
@@ -49,6 +50,7 @@ Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_internal_log_event_fifo_mock_test.py <nvme-binary> <mock-lib>
 """
+import struct
 import unittest
 
 from tests.cli.ocp.ocp_mock_test import (MODES, STR_DA_EVENT_FIFO_INFO,
@@ -415,18 +417,39 @@ class TestEventClassDecode(EventFifoTestBase):
     def test_reserved_classes_print_the_descriptor_only(self):
         """A class the parser has no decoder for is still stepped over by
         its declared size. Up to 7Fh its Event String comes from the Event
-        String Table; the VU table entries for the same pairs are decoys."""
-        telemetry = one_fifo(layout.event(0x0C, 0x0C, b'\x01\x02\x03\x04'),
-                             layout.event(0x7F, 0x7F, bytes(8)),
+        String Table; the VU table entries for the same pairs are decoys.
+
+        OCP 2.7 defines 0Ch (SMBUS/I2C/I3C) and 0Dh (MCTP), which this
+        parser still treats as reserved. Their events here are laid out
+        the way 2.7 defines them, with and without the optional VU fields.
+        0Eh is the first class 2.7 leaves reserved."""
+        smbus, mctp = layout.CLASS_SMBUS_I2C_I3C, layout.CLASS_MCTP
+        events = [
+            # NACK error, Device is busy; then Timeout with VU fields.
+            (smbus, 0x0003, struct.pack('<HH', 0x0001, 0)),
+            (smbus, 0x0000, struct.pack('<HH', 0, 0)
+             + layout.vu_part(0x8001, bytes.fromhex('C1C2C3C4C5C6'))),
+            # Dropped Packet on I2C/SMBus with a valid transport header;
+            # then Error Status with VU fields.
+            (mctp, 0x0000, struct.pack('<HBBI', 0x0005, 0x04, 0x80,
+                                       0x01020304)),
+            (mctp, 0x0003, struct.pack('<HBBI', 0x0002, 0, 0, 0)
+             + layout.vu_part(0x8002, bytes.fromhex('D1D2D3D4D5D6'))),
+            (0x0E, 0x0E, b'\x01\x02\x03\x04'),
+            (0x7F, 0x7F, bytes(8)),
+            (0x7F, 0x80, b''),
+        ]
+        named = {(cls, event_id): f'RESERVED {cls:02X} {event_id:X}'
+                 for cls, event_id, _ in events[:-1]}
+        telemetry = one_fifo(*(layout.event(cls, event_id, data)
+                               for cls, event_id, data in events),
                              PCIE_EVENT)
-        log = strings(
-            event_strings={(0x0C, 0x0C): 'RESERVED 0C',
-                           (0x7F, 0x7F): 'RESERVED 7F'},
-            vu_event_strings={(0x0C, 0x0C): 'VU DECOY',
-                              (0x7F, 0x7F): 'VU DECOY'})
+        log = strings(event_strings=named,
+                      vu_event_strings={pair: 'VU DECOY' for pair in named})
         self.assert_events(telemetry, log, [
-            common(0x0C, 0x0C, 1, 'RESERVED 0C'),
-            common(0x7F, 0x7F, 2, 'RESERVED 7F'),
+            *(common(cls, event_id, len(data) // layout.DWORD,
+                     named.get((cls, event_id), ''))
+              for cls, event_id, data in events),
             PCIE_EXPECTED])
 
     def test_vendor_unique_classes(self):
@@ -522,6 +545,27 @@ class TestEventClassDecode(EventFifoTestBase):
         self.assertEqual(events, [
             self._snapshot(0x01, 'Outstanding Admin Commands', small),
             self._snapshot(0x04, 'Active Namespaces', large),
+            PCIE_EXPECTED])
+
+    def test_statistic_snapshot_of_a_context_descriptor_in_text(self):
+        """A snapshot may carry a Context Statistic Descriptor like any
+        other statistic. Its context data and encapsulated statistics come
+        out as undecoded Statistic Specific Data, and the snapshot spans
+        all of it, so the next event decodes."""
+        context = layout.queue_id_context(0x0102, 0x0304)
+        inner = [layout.statistic(0x01, bytes.fromhex('0A0B0C0D')),
+                 layout.statistic(0x02, bytes(8))]
+        stat = layout.context_statistic(layout.STAT_QUEUE_ID_CONTEXT,
+                                        context, inner)
+        telemetry = one_fifo(layout.statistic_snapshot_event(stat),
+                             PCIE_EVENT)
+        events = self.fifo_events(telemetry, strings(), mode='text')
+        self.assertEqual(events, [
+            {**self._snapshot(layout.STAT_QUEUE_ID_CONTEXT,
+                              'Queue ID Context Statistic Descriptor',
+                              context + b''.join(inner)),
+             'Statistics Info Reserved':
+                 f'0x{layout.STAT_INFO_CONTEXT_INDEX >> 4:x}'},
             PCIE_EXPECTED])
 
     def _empty_snapshot_fifo(self):

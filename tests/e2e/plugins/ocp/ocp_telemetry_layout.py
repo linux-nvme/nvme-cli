@@ -120,6 +120,8 @@ CLASS_MEDIA = 0x08
 CLASS_MEDIA_WEAR = 0x09
 CLASS_STATISTIC_SNAPSHOT = 0x0A
 CLASS_VIRTUAL_FIFO = 0x0B
+CLASS_SMBUS_I2C_I3C = 0x0C
+CLASS_MCTP = 0x0D
 CLASS_VU_FIRST = 0x80
 
 # Bytes of class specific data ahead of any VU Event Identifier.
@@ -137,6 +139,18 @@ COMMON_CLASSES = (CLASS_RESET, CLASS_BOOT_SEQUENCE, CLASS_FIRMWARE_ASSERT,
 VIRTUAL_FIFO_PHY_SHIFT = 11
 VIRTUAL_FIFO_PHY_MAX = 0x1F
 VIRTUAL_FIFO_MASK = 0x7FF
+
+# Statistic Information (descriptor byte 2) bit 6: set only in a Context
+# Statistic Descriptor.
+STAT_INFO_CONTEXT_INDEX = 0x40
+
+# Context Statistic Descriptors: Statistic Specific Data opens with a
+# Context Data Size Dword count and the context fields, then the
+# encapsulated Statistic Descriptors.
+STAT_NAMESPACE_ID_CONTEXT = 0x6D
+STAT_CONTROLLER_ID_CONTEXT = 0x6E
+STAT_QUEUE_ID_CONTEXT = 0x6F
+CONTEXT_DATA_DWORDS = 2
 
 Name = Union[str, bytes]
 EventStrings = Mapping[Tuple[int, int], Name]
@@ -191,13 +205,47 @@ def virtual_fifo_event(fifo_id: int, event_id: int = 0, reserved: int = 0,
 
 def statistic(stat_id: int, data: bytes = b'', behavior: int = 0,
               info_reserved: int = 0, nsid: int = 0, ns_valid: bool = False,
-              reserved: int = 0) -> bytes:
-    """One statistic: the 8-byte descriptor, then @data padded to Dwords."""
+              reserved: int = 0, context_index: bool = False) -> bytes:
+    """One statistic: the 8-byte descriptor, then @data padded to Dwords.
+
+    @info_reserved fills Statistic Information bits 7:4 and
+    @context_index sets bit 6 on top of it."""
     data = _pad(data)
-    return struct.pack(_STAT_DESCRIPTOR, stat_id,
-                       (behavior & 0xF) | ((info_reserved & 0xF) << 4),
+    info = (behavior & 0xF) | ((info_reserved & 0xF) << 4)
+    if context_index:
+        info |= STAT_INFO_CONTEXT_INDEX
+    return struct.pack(_STAT_DESCRIPTOR, stat_id, info,
                        (nsid & 0x7F) | (0x80 if ns_valid else 0),
                        len(data) // DWORD, reserved) + data
+
+
+def namespace_id_context(nsid: int,
+                         context_data_size: int = CONTEXT_DATA_DWORDS
+                         ) -> bytes:
+    """Namespace ID Context (6Dh) data: size, reserved, 32-bit NSID."""
+    return struct.pack('<HHI', context_data_size, 0, nsid)
+
+
+def controller_id_context(cntlid: int,
+                          context_data_size: int = CONTEXT_DATA_DWORDS
+                          ) -> bytes:
+    """Controller ID Context (6Eh) data: size, 4 reserved bytes, CNTLID."""
+    return struct.pack('<HIH', context_data_size, 0, cntlid)
+
+
+def queue_id_context(cntlid: int, qid: int,
+                     context_data_size: int = CONTEXT_DATA_DWORDS) -> bytes:
+    """Queue ID Context (6Fh) data: size, reserved, CNTLID, queue ID."""
+    return struct.pack('<HHHH', context_data_size, 0, cntlid, qid)
+
+
+def context_statistic(stat_id: int, context: bytes,
+                      encapsulated: Iterable[bytes] = ()) -> bytes:
+    """A Context Statistic Descriptor: @context data, then the
+    @encapsulated Statistic Descriptors. Its own Statistic Data Size spans
+    both, and its namespace fields stay cleared."""
+    return statistic(stat_id, context + b''.join(encapsulated),
+                     context_index=True)
 
 
 def statistic_snapshot_event(stat: bytes, event_id: int = 0) -> bytes:

@@ -30,6 +30,10 @@ Tests in this module verify:
   * Data Area 1 and 2 statistics: every descriptor field, names from the
     string log and the built-in table, the bad block statistics, and the
     end-of-list identifier.
+  * The statistics walk: statistics of different sizes and of none, the
+    statistics size bounding it, and Context Statistic Descriptors (6Dh,
+    6Eh, 6Fh) stepped over whole, their context data and encapsulated
+    statistics left undecoded.
   * Option handling: the controller telemetry support gate, the log ID
     check, invalid -a, -t and -o values, and -o json.
 
@@ -435,6 +439,31 @@ def stat_expected(stat_id, name, size_dw, behavior=0, info_reserved=0,
     }
 
 
+# One context per Context Statistic Descriptor type. The NSID needs the
+# 32 bits only 6Dh's context field has.
+CONTEXTS = {
+    layout.STAT_NAMESPACE_ID_CONTEXT: layout.namespace_id_context(0x12345678),
+    layout.STAT_CONTROLLER_ID_CONTEXT: layout.controller_id_context(0x0102),
+    layout.STAT_QUEUE_ID_CONTEXT: layout.queue_id_context(0x0304, 0x0506),
+}
+CONTEXT_NAMES = {
+    layout.STAT_NAMESPACE_ID_CONTEXT:
+        'Namespace ID Context Statistic Descriptor',
+    layout.STAT_CONTROLLER_ID_CONTEXT:
+        'Controller ID Context Statistic Descriptor',
+    layout.STAT_QUEUE_ID_CONTEXT: 'Queue ID Context Statistic Descriptor',
+}
+
+
+def context_expected(stat_id, name, payload):
+    """A Context Statistic Descriptor the decoder does not look into: the
+    Context Index flag shows in the Statistic Information bits it reports
+    as reserved, and @payload as undecoded Statistic Specific Data."""
+    return {**stat_expected(stat_id, name, len(payload) // layout.DWORD,
+                            info_reserved=layout.STAT_INFO_CONTEXT_INDEX >> 4),
+            'Statistic Specific Data': layout.hex_upper(payload)}
+
+
 class TestInternalLogStatistics(OCPInternalLogTestBase):
     """parse_statistics() and parse_statistic()."""
 
@@ -443,8 +472,8 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
         section = self.section(report, STR_DA_STATS.format(da))
         return section if mode == 'json' else text_records(section)
 
-    def assert_statistics(self, da1_stats, expected, strings=None):
-        telemetry = layout.pack_telemetry(da1_stats=da1_stats)
+    def assert_statistics(self, da1_stats, expected, strings=None, **kwargs):
+        telemetry = layout.pack_telemetry(da1_stats=da1_stats, **kwargs)
         for mode in MODES:
             with self.subTest(mode=mode):
                 got = self.statistics(telemetry,
@@ -511,6 +540,90 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
                         self.assertNotIn('Statistic Specific Data', stat)
                         self.assertEqual(int(stat[percent], 16), stat_id)
                         self.assertEqual(int(stat[raw], 16), 0x1200 + stat_id)
+
+    def test_context_descriptor_names(self):
+        """Context Statistic Descriptors are named like any statistic: by
+        the string log first, else by the spec's names."""
+        custom = 'CUSTOM CNTLID CONTEXT'
+        string_logs = (
+            (None, {}),
+            (layout.pack_string_log(stat_strings={
+                layout.STAT_CONTROLLER_ID_CONTEXT: custom}),
+             {layout.STAT_CONTROLLER_ID_CONTEXT: custom}),
+        )
+        for strings, overrides in string_logs:
+            with self.subTest(string_log=bool(overrides)):
+                names = {**CONTEXT_NAMES, **overrides}
+                self.assert_statistics(
+                    [layout.context_statistic(i, c)
+                     for i, c in CONTEXTS.items()],
+                    [context_expected(i, names[i], c)
+                     for i, c in CONTEXTS.items()],
+                    strings)
+
+    def test_context_descriptors_are_stepped_over_whole(self):
+        """A container's Statistic Data Size spans its context data and
+        every statistic it encapsulates, so the walk steps over it in one
+        stride: no encapsulated descriptor surfaces as a statistic of its
+        own, and the statistic after the last container decodes. The
+        container's payload comes out as undecoded Statistic Specific Data;
+        decoding it is OCP 2.7 work, and only that expectation should
+        change with it."""
+        inner = [layout.statistic(0x01, bytes.fromhex('0A0B0C0D')),
+                 layout.statistic(0x04, bytes(range(12)), behavior=1,
+                                  nsid=5, ns_valid=True)]
+        inner_dw = sum(len(s) for s in inner) // layout.DWORD
+        stats, expected = [], []
+        for stat_id, context in CONTEXTS.items():
+            stats.append(layout.context_statistic(stat_id, context, inner))
+            fields = context_expected(stat_id, CONTEXT_NAMES[stat_id],
+                                      context + b''.join(inner))
+            self.assertEqual(fields['Statistic Data Size'],
+                             f'0x{layout.CONTEXT_DATA_DWORDS + inner_dw:x}')
+            expected.append(fields)
+        stats.append(layout.statistic(0x22, b'12345678'))
+        expected.append({**stat_expected(0x22, 'XOR Recovery Count', 2),
+                         'Statistic Specific Data': '3132333435363738'})
+        self.assert_statistics(stats, expected)
+
+    def test_statistic_without_data(self):
+        """A Statistic Data Size of 0 leaves just the descriptor, and the
+        next statistic starts right after it."""
+        self.assert_statistics(
+            [layout.statistic(0x01, bytes(4)), layout.statistic(0x02),
+             layout.statistic(0x03, bytes.fromhex('0A0B0C0D'))],
+            [{**stat_expected(0x01, 'Outstanding Admin Commands', 1),
+              'Statistic Specific Data': '00000000'},
+             {**stat_expected(0x02, 'Host Write Bandwidth', 0),
+              'Statistic Specific Data': ''},
+             {**stat_expected(0x03, 'GC Write Bandwidth', 1),
+              'Statistic Specific Data': '0A0B0C0D'}])
+
+    def test_statistics_of_different_sizes(self):
+        sizes = {
+            0x05: ('Internal Write Workload', 1),
+            0x06: ('Internal Read Workload', 3),
+            0x07: ('Internal Write Queue Depth', 8),
+        }
+        data = {i: bytes((i * 0x10 + n) & 0xFF for n in range(size * 4))
+                for i, (_, size) in sizes.items()}
+        self.assert_statistics(
+            [layout.statistic(i, data[i]) for i in sizes],
+            [{**stat_expected(i, name, size),
+              'Statistic Specific Data': layout.hex_upper(data[i])}
+             for i, (name, size) in sizes.items()])
+
+    def test_statistics_end_at_the_statistics_size(self):
+        """The walk stops at the size the OCP header declares, even with
+        another statistic right after it."""
+        first = layout.statistic(0x01, bytes(4))
+        size_field = layout.DA1_START + layout.DA1_STAT_SIZE
+        self.assert_statistics(
+            [first, layout.statistic(0x02, bytes(4))],
+            [{**stat_expected(0x01, 'Outstanding Admin Commands', 1),
+              'Statistic Specific Data': '00000000'}],
+            overlay={size_field: struct.pack('<Q',
+                                             len(first) // layout.DWORD)})
 
     def test_identifier_zero_ends_the_list(self):
         self.assert_statistics(
