@@ -77,6 +77,15 @@ if python3.found()
         )
         # cli_test_env.prepend('MOCK_DEBUG', '1')
 
+        if want_mi
+            mock_mctp_lib = shared_library(
+                'mock_mctp',
+                'libmock_mctp.c',
+                dependencies: dl_dep,
+                install: false
+            )
+        endif
+
         if want_fabrics
             test('nvme-cli - fabrics-mock-cli',
                  python3,
@@ -96,28 +105,6 @@ if python3.found()
              args: [files('nvme_init_pi_tags_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
-
-        if 'samsung' in selected_plugins
-            test('nvme-cli - samsung-cli',
-                 python3,
-                 args: [files('nvme_samsung_test.py'), nvme_exe, mock_nvme_lib],
-                 env: cli_test_env,
-                 depends: [nvme_exe, mock_nvme_lib])
-
-            if want_mi
-                mock_mctp_lib = shared_library(
-                    'mock_mctp',
-                    'libmock_mctp.c',
-                    dependencies: dl_dep,
-                    install: false
-                )
-                test('nvme-cli - samsung-mctp-cli',
-                     python3,
-                     args: [files('nvme_samsung_mctp_test.py'), nvme_exe, mock_mctp_lib],
-                     env: cli_test_env,
-                     depends: [nvme_exe, mock_mctp_lib])
-            endif
-        endif
     endif
 
     if 'ocp' in selected_plugins
@@ -126,5 +113,9 @@ if python3.found()
 
     if 'micron' in selected_plugins
         subdir('micron')
+    endif
+
+    if 'samsung' in selected_plugins
+        subdir('samsung')
     endif
 endif
