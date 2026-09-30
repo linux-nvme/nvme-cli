@@ -34,6 +34,8 @@ Tests in this module verify:
   * Event String and VU Event String lookups match on (class,
     identifier), not identifier alone, for every class, and come from the
     VU table from class 80h up.
+  * An event of any class that runs past the end of its FIFO being
+    rejected, and one that ends exactly at the end being decoded.
   * FIFO layout: FIFO naming and numbering, the data area each FIFO is
     decoded in, the end-of-list entry, FIFO bounds, and a bad FIFO
     aborting the whole decode.
@@ -65,6 +67,10 @@ def strings(fifo_names=None, **tables):
     return layout.pack_string_log(
         fifo_names=PHYS_NAMES if fifo_names is None else fifo_names,
         **tables)
+
+
+def invalid_entry(offset, reason, fifo=1):
+    return f'Invalid entry at offset 0x{offset:x} of Event FIFO {fifo}: {reason}'
 
 
 def one_fifo(*events, da=1, **kwargs):
@@ -267,6 +273,7 @@ class TestVirtualFifoEvent(EventFifoTestBase):
         telemetry = one_fifo(layout.virtual_fifo_event(fifo_id, 0x21,
                                                        size_dw=0))
         self.assert_rejected(telemetry, strings(), INVALID_EVENT_MSG,
+                             'FIFO: 1, offset: 0x0',
                              'Type: 0xb, ID: 0x21, Size: 0x0',
                              FIFO_PARSE_FAILED_MSG)
 
@@ -317,6 +324,7 @@ class TestEventClassDecode(EventFifoTestBase):
                                                       bytes(size_dw * 4)))
                     self.assert_rejected(telemetry, strings(),
                                          INVALID_EVENT_MSG,
+                                         'FIFO: 1, offset: 0x0',
                                          f'Type: 0x{cls:x}, ID: 0x40, '
                                          f'Size: 0x{size_dw:x}',
                                          FIFO_PARSE_FAILED_MSG)
@@ -536,6 +544,78 @@ class TestEventClassDecode(EventFifoTestBase):
                                   mode='text')
         self.assertEqual(events, [
             self._snapshot(0x02, 'Host Write Bandwidth', b''), PCIE_EXPECTED])
+
+
+class TestTruncatedEvent(EventFifoTestBase):
+    """An event whose declared length runs past the end of its FIFO is
+    rejected, whatever its class, rather than decoded from the bytes that
+    follow the FIFO. Each event here follows a PCIe event that fits, in a
+    FIFO that ends short of it, with the rest of the event still in the
+    log just past the FIFO."""
+
+    def truncated(self, event, cut_dw):
+        size_dw = (len(PCIE_EVENT) + len(event)) // layout.DWORD - cut_dw
+        return layout.pack_telemetry(fifos={
+            1: layout.Fifo(1, [PCIE_EVENT, event], size_dw=size_dw)})
+
+    def assert_truncated_rejected(self, event, reason, cut_dw=1):
+        self.assert_rejected(self.truncated(event, cut_dw), strings(),
+                             invalid_entry(len(PCIE_EVENT), reason),
+                             FIFO_PARSE_FAILED_MSG)
+
+    def assert_event_one_dword_short(self, cls, event_id, event):
+        data = len(event) - layout.EVENT_DESCRIPTOR_SIZE
+        self.assert_truncated_rejected(
+            event, f'class 0x{cls:x}, Event ID 0x{event_id:x} declares '
+                   f'{data} data bytes, {data - layout.DWORD} left in FIFO')
+
+    def test_virtual_fifo_descriptor_at_the_fifo_end(self):
+        """The FIFO holds the descriptor of a size-1 class 0Bh event but
+        not the Dword carrying its identifier."""
+        self.assert_event_one_dword_short(
+            layout.CLASS_VIRTUAL_FIFO, 0x21,
+            layout.virtual_fifo_event(layout.virtual_fifo_id(1, 1), 0x21))
+
+    def test_every_class_one_dword_short(self):
+        events = {cls: layout.event(cls, 0x40, bytes(range(size)))
+                  for cls, size in layout.CLASS_SPECIFIC_SIZE.items()}
+        events.update({cls: layout.event(cls, 0x40, layout.vu_part(0x100))
+                       for cls in layout.COMMON_CLASSES})
+        events[layout.CLASS_VIRTUAL_FIFO] = layout.virtual_fifo_event(
+            layout.virtual_fifo_id(1, 1), 0x40)
+        events[0x0C] = layout.event(0x0C, 0x40, bytes(4))
+        events[0x80] = layout.event(0x80, 0x40, bytes(8))
+        for cls, event in sorted(events.items()):
+            with self.subTest(cls=cls):
+                self.assert_event_one_dword_short(cls, 0x40, event)
+
+    def test_largest_event_one_dword_short(self):
+        self.assert_event_one_dword_short(
+            0x80, 0x40, layout.event(0x80, 0x40, bytes(0xFF * 4)))
+
+    # A snapshot's Event ID and Event Data Size bytes are reserved; these
+    # give them values that differ from the statistic's own fields.
+    SNAPSHOT = layout.statistic_snapshot_event(
+        layout.statistic(0x22, b'1234'), event_id=0x77)
+
+    def test_statistic_snapshot_cut_in_its_header(self):
+        """The FIFO ends before the statistic's data size field."""
+        self.assert_truncated_rejected(
+            self.SNAPSHOT,
+            'class 0xa needs a 12-byte header, 8 bytes left in FIFO',
+            cut_dw=2)
+
+    def test_statistic_snapshot_cut_in_its_data(self):
+        self.assert_truncated_rejected(
+            self.SNAPSHOT,
+            'class 0xa, Statistic ID 0x22 declares 4 data bytes, '
+            '0 left in FIFO')
+
+    def test_event_ending_at_the_fifo_end_is_decoded(self):
+        fifo_id = layout.virtual_fifo_id(1, 1)
+        telemetry = self.truncated(layout.virtual_fifo_event(fifo_id), 0)
+        self.assert_events(telemetry, strings(), [
+            PCIE_EXPECTED, virtual_fifo(fifo_id, phys_string='PHYS FIFO 01')])
 
 
 class TestEventFifoLayout(EventFifoTestBase):
