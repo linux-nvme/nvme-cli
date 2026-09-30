@@ -1189,6 +1189,197 @@ int parse_virtual_fifo_event(
 	return 0;
 }
 
+/*
+ * A VU Event Identifier and VU Data follow a class's fixed record when its
+ * Event Data Size reaches past it. @vu_data_size excludes the identifier.
+ */
+static void parse_class_vu_fields(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pvu_fields, unsigned int vu_data_size,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
+{
+	struct nvme_ocp_common_dbg_evt_class_vu_data *pvu_data =
+		(struct nvme_ocp_common_dbg_evt_class_vu_data *)pvu_fields;
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
+	__u16 vu_event_id = le16_to_cpu(pvu_data->vu_event_identifier);
+
+	parse_ocp_telemetry_string_log(0, vu_event_id,
+		pevent_descriptor->debug_event_class_type,
+		VU_EVENT_STRING, description_str);
+
+	if (pevent_fifos_object != NULL) {
+		json_add_formatted_u32_str(pevent_descriptor_obj,
+					   STR_VU_EVENT_ID_STRING, vu_event_id);
+		json_object_add_value_string(pevent_descriptor_obj,
+					      STR_VU_EVENT_STRING,
+					      description_str);
+		json_add_formatted_var_size_str(pevent_descriptor_obj,
+						STR_VU_DATA, pvu_data->data,
+						vu_data_size);
+	} else if (fp) {
+		fprintf(fp, "%s: 0x%x\n", STR_VU_EVENT_ID_STRING, vu_event_id);
+		fprintf(fp, "%s: %s\n", STR_VU_EVENT_STRING, description_str);
+		print_formatted_var_size_str(STR_VU_DATA, pvu_data->data,
+					     vu_data_size, fp);
+	} else {
+		printf("%s: 0x%x\n", STR_VU_EVENT_ID_STRING, vu_event_id);
+		printf("%s: %s\n", STR_VU_EVENT_STRING, description_str);
+		print_formatted_var_size_str(STR_VU_DATA, pvu_data->data,
+					     vu_data_size, NULL);
+	}
+}
+
+/*
+ * The SMBUS/I2C/I3C Debug Event class (0Ch) carries one Dword of class
+ * specific data: the SMBUS Debug Event Data and a reserved half-word. The
+ * Event Data values are defined only for the NACK error Event ID.
+ */
+int parse_smbus_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
+{
+	struct nvme_ocp_smbus_dbg_evt_class_format *psmbus_event =
+		(struct nvme_ocp_smbus_dbg_evt_class_format *)
+		pevent_specific_data;
+	unsigned int event_size =
+		pevent_descriptor->event_data_size * SIZE_OF_DWORD;
+	__u16 event_id = le16_to_cpu(pevent_descriptor->event_id);
+	const char *event_data_str = NULL;
+	__u16 event_data = 0;
+
+	if (event_size < sizeof(*psmbus_event))
+		return -1;
+
+	event_data = le16_to_cpu(psmbus_event->smbus_debug_event_data);
+	event_data_str = telemetry_smbus_event_data_to_string(event_id,
+							      event_data);
+
+	if (pevent_fifos_object != NULL) {
+		json_add_formatted_u32_str(pevent_descriptor_obj,
+					   STR_SMBUS_DEBUG_EVENT_DATA,
+					   event_data);
+		json_object_add_value_string(pevent_descriptor_obj,
+					      STR_SMBUS_DEBUG_EVENT_DATA_STRING,
+					      event_data_str);
+	} else if (fp) {
+		fprintf(fp, "%s: 0x%x\n", STR_SMBUS_DEBUG_EVENT_DATA,
+			event_data);
+		fprintf(fp, "%s: %s\n", STR_SMBUS_DEBUG_EVENT_DATA_STRING,
+			event_data_str);
+	} else {
+		printf("%s: 0x%x\n", STR_SMBUS_DEBUG_EVENT_DATA, event_data);
+		printf("%s: %s\n", STR_SMBUS_DEBUG_EVENT_DATA_STRING,
+		       event_data_str);
+	}
+
+	if (event_size > sizeof(*psmbus_event))
+		parse_class_vu_fields(pevent_descriptor, pevent_descriptor_obj,
+			pevent_specific_data + sizeof(*psmbus_event),
+			event_size - sizeof(*psmbus_event) - SIZE_OF_VU_EVENT_ID,
+			pevent_fifos_object, fp);
+
+	return 0;
+}
+
+/*
+ * The MCTP Debug Event class (0Dh) carries two Dwords of class specific
+ * data: the MCTP Debug Event Data, whose values depend on the Event ID, the
+ * Transport Protocol Information, the Event Flags and the MCTP Transport
+ * Header. The header holds captured packet bytes only when the Transport
+ * Header Valid flag is set, so it is left out otherwise.
+ */
+int parse_mctp_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
+{
+	struct nvme_ocp_mctp_dbg_evt_class_format *pmctp_event =
+		(struct nvme_ocp_mctp_dbg_evt_class_format *)
+		pevent_specific_data;
+	unsigned int event_size =
+		pevent_descriptor->event_data_size * SIZE_OF_DWORD;
+	__u16 event_id = le16_to_cpu(pevent_descriptor->event_id);
+	const char *event_data_str = NULL;
+	const char *protocol_str = NULL;
+	bool header_valid = false;
+	__u16 event_data = 0;
+
+	if (event_size < sizeof(*pmctp_event))
+		return -1;
+
+	event_data = le16_to_cpu(pmctp_event->mctp_debug_event_data);
+	event_data_str = telemetry_mctp_event_data_to_string(event_id,
+							     event_data);
+	protocol_str = telemetry_mctp_transport_protocol_to_string(
+		pmctp_event->transport_protocol);
+	header_valid = pmctp_event->event_flags &
+		MCTP_EVENT_FLAG_TRANSPORT_HEADER_VALID;
+
+	if (pevent_fifos_object != NULL) {
+		json_add_formatted_u32_str(pevent_descriptor_obj,
+					   STR_MCTP_DEBUG_EVENT_DATA,
+					   event_data);
+		json_object_add_value_string(pevent_descriptor_obj,
+					      STR_MCTP_DEBUG_EVENT_DATA_STRING,
+					      event_data_str);
+		json_add_formatted_u32_str(pevent_descriptor_obj,
+					   STR_MCTP_TRANSPORT_PROTOCOL,
+					   pmctp_event->transport_protocol);
+		json_object_add_value_string(pevent_descriptor_obj,
+					      STR_MCTP_TRANSPORT_PROTOCOL_STRING,
+					      protocol_str);
+		json_add_formatted_u32_str(pevent_descriptor_obj,
+					   STR_MCTP_TRANSPORT_HEADER_VALID,
+					   header_valid);
+		if (header_valid)
+			json_add_formatted_var_size_str(pevent_descriptor_obj,
+				STR_MCTP_TRANSPORT_HEADER,
+				pmctp_event->transport_header, DATA_SIZE_4);
+	} else if (fp) {
+		fprintf(fp, "%s: 0x%x\n", STR_MCTP_DEBUG_EVENT_DATA,
+			event_data);
+		fprintf(fp, "%s: %s\n", STR_MCTP_DEBUG_EVENT_DATA_STRING,
+			event_data_str);
+		fprintf(fp, "%s: 0x%x\n", STR_MCTP_TRANSPORT_PROTOCOL,
+			pmctp_event->transport_protocol);
+		fprintf(fp, "%s: %s\n", STR_MCTP_TRANSPORT_PROTOCOL_STRING,
+			protocol_str);
+		fprintf(fp, "%s: 0x%x\n", STR_MCTP_TRANSPORT_HEADER_VALID,
+			header_valid);
+		if (header_valid)
+			print_formatted_var_size_str(STR_MCTP_TRANSPORT_HEADER,
+				pmctp_event->transport_header, DATA_SIZE_4, fp);
+	} else {
+		printf("%s: 0x%x\n", STR_MCTP_DEBUG_EVENT_DATA, event_data);
+		printf("%s: %s\n", STR_MCTP_DEBUG_EVENT_DATA_STRING,
+		       event_data_str);
+		printf("%s: 0x%x\n", STR_MCTP_TRANSPORT_PROTOCOL,
+		       pmctp_event->transport_protocol);
+		printf("%s: %s\n", STR_MCTP_TRANSPORT_PROTOCOL_STRING,
+		       protocol_str);
+		printf("%s: 0x%x\n", STR_MCTP_TRANSPORT_HEADER_VALID,
+		       header_valid);
+		if (header_valid)
+			print_formatted_var_size_str(STR_MCTP_TRANSPORT_HEADER,
+				pmctp_event->transport_header, DATA_SIZE_4, NULL);
+	}
+
+	if (event_size > sizeof(*pmctp_event))
+		parse_class_vu_fields(pevent_descriptor, pevent_descriptor_obj,
+			pevent_specific_data + sizeof(*pmctp_event),
+			event_size - sizeof(*pmctp_event) - SIZE_OF_VU_EVENT_ID,
+			pevent_fifos_object, fp);
+
+	return 0;
+}
+
 int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 	struct json_object *pevent_fifos_object, unsigned char *pstring_buffer,
 	struct nvme_ocp_telemetry_offsets *poffsets, __u64 fifo_size, FILE *fp)
@@ -1401,8 +1592,40 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					pevent_fifos_object,
 					fp);
 				break;
+			case SMBUS_I2C_I3C_EVENT_CLASS_TYPE:
+				ret = parse_smbus_event(pevent_descriptor,
+					pevent_descriptor_obj,
+					pevent_specific_data,
+					pevent_fifos_object,
+					fp);
+				break;
+			case MCTP_EVENT_CLASS_TYPE:
+				ret = parse_mctp_event(pevent_descriptor,
+					pevent_descriptor_obj,
+					pevent_specific_data,
+					pevent_fifos_object,
+					fp);
+				break;
 			case RESERVED_CLASS_TYPE:
+				break;
 			default:
+				/*
+				 * Keep the payload of a class with no decoder
+				 * visible; vendor unique classes already print
+				 * theirs as VU Data.
+				 */
+				if (pevent_descriptor->debug_event_class_type >= 0x80)
+					break;
+				if (pevent_descriptor_obj != NULL)
+					json_add_formatted_var_size_str(
+						pevent_descriptor_obj,
+						STR_CLASS_SPECIFIC_DATA,
+						pevent_specific_data, data_size);
+				else
+					print_formatted_var_size_str(
+						STR_CLASS_SPECIFIC_DATA,
+						pevent_specific_data, data_size,
+						fp);
 				break;
 			}
 

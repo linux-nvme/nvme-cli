@@ -26,12 +26,22 @@ Tests in this module verify:
     class, the physical FIFO name from the string log's FIFO name array
     for FIFOs 1..16 only, the reserved half-word and any extra Dwords
     being ignored, and a zero-size event being rejected.
+  * SMBUS/I2C/I3C events (0Ch): the Event Data and its name, defined for
+    the NACK error Event ID only, the reserved half-word being ignored,
+    the optional VU fields from one Dword past the fixed record up to the
+    largest Event Data Size, and a zero-size event being rejected.
+  * MCTP events (0Dh): the Event Data named from each of Event IDs 0-3's
+    own tables, the Transport Protocol Information and its name, the
+    Transport Header printed only with the Transport Header Valid flag
+    set, the optional VU fields, and events short of the two-Dword record
+    being rejected.
   * Every other class: class specific data at each class's minimum size,
     VU Event Identifier/String/Data from one Dword beyond it up to the
     largest Event Data Size, rejection at every size below it, the common
-    classes' optional VU data, reserved classes, vendor unique classes,
-    and Statistic Snapshot events of different statistic sizes and of a
-    Context Statistic Descriptor.
+    classes' optional VU data, reserved classes with their payload dumped
+    as Class Specific Data, vendor unique classes, and Statistic Snapshot
+    events of different statistic sizes and of a Context Statistic
+    Descriptor.
   * Event String and VU Event String lookups match on (class,
     identifier), not identifier alone, for every class, and come from the
     VU table from class 80h up.
@@ -50,7 +60,6 @@ Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_internal_log_event_fifo_mock_test.py <nvme-binary> <mock-lib>
 """
-import struct
 import unittest
 
 from tests.cli.ocp.ocp_mock_test import (MODES, STR_DA_EVENT_FIFO_INFO,
@@ -100,6 +109,77 @@ def virtual_fifo(fifo_id, event_id=0, size_dw=1, event_string='',
         'Physical Event FIFO String': phys_string,
         'Virtual FIFO Number': f'0x{virtual:x}',
     }
+
+
+UNRECOGNIZED = 'unrecognized'
+
+# OCP 2.7 Event Data names: SMBUS/I2C/I3C NACK error (EVC-SMBUS-4) and the
+# four MCTP Event IDs (EVC-MCTP-4), indexed by Event Data value.
+SMBUS_NACK_DATA = ['Received invalid command or data', 'Device is busy',
+                   'Requested data is not available']
+_PHY_ERROR = 'Bad packet data integrity or other physical layer error: '
+MCTP_EVENT_DATA = {
+    0x0000: ['Unexpected middle or end packet',
+             _PHY_ERROR + 'Framing errors',
+             _PHY_ERROR + 'Byte alignment errors',
+             _PHY_ERROR + 'Invalid packet size',
+             'Unexpected or expired message tag',
+             'Unknown destination EID',
+             'Unsupported MCTP header version',
+             'Unsupported transmission unit size'],
+    0x0001: ['Receipt of a new start packet',
+             'Timeout waiting for a packet + threshold',
+             'Out-of-sequence packet sequence number',
+             'Incorrect transmission unit',
+             'Bad message integrity check',
+             'Invalid message type received'],
+    0x0002: ['Transport Binding specific bus enumeration errors',
+             'Transport Binding specific bus address assignment errors'],
+    0x0003: ['Reserved', 'ERROR', 'ERROR_INVALID_DATA',
+             'ERROR_INVALID_LENGTH', 'ERROR_NOT_READY',
+             'ERROR_UNSUPPORTED_CMD', 'COMMAND_SPECIFIC'],
+}
+# EVC-MCTP-5; 02h-03h and 06h-FFh are reserved.
+MCTP_PROTOCOLS = {0x00: 'PCIe VDM on device PCIe port 0',
+                  0x01: 'PCIe VDM on device PCIe port 1',
+                  0x04: 'I2C/SMBus',
+                  0x05: 'I3C'}
+
+
+def vu_fields(vu_id, data, string=''):
+    return {
+        'VU Event Identifier': f'0x{vu_id:x}',
+        'VU Event String': string,
+        'VU Data': layout.hex_upper(data),
+    }
+
+
+def smbus(event_id, event_data, data_string='', size_dw=1, event_string='',
+          vu=None):
+    return {
+        **common(layout.CLASS_SMBUS_I2C_I3C, event_id, size_dw, event_string),
+        'SMBUS Debug Event Data': f'0x{event_data:x}',
+        'SMBUS Debug Event Data String': data_string,
+        **(vu or {}),
+    }
+
+
+def mctp(event_id, event_data, data_string='', protocol=0,
+         protocol_string=MCTP_PROTOCOLS[0], header=None, size_dw=2,
+         event_string='', vu=None):
+    """@header is the expected MCTP Transport Header, or None when the
+    Transport Header Valid flag is clear and no header is printed."""
+    fields = {
+        **common(layout.CLASS_MCTP, event_id, size_dw, event_string),
+        'MCTP Debug Event Data': f'0x{event_data:x}',
+        'MCTP Debug Event Data String': data_string,
+        'MCTP Transport Protocol Information': f'0x{protocol:x}',
+        'MCTP Transport Protocol String': protocol_string,
+        'MCTP Transport Header Valid': '0x0' if header is None else '0x1',
+    }
+    if header is not None:
+        fields['MCTP Transport Header'] = layout.hex_upper(header)
+    return {**fields, **(vu or {})}
 
 
 PCIE_DATA = bytes.fromhex('A1A2A3A4')
@@ -280,6 +360,184 @@ class TestVirtualFifoEvent(EventFifoTestBase):
                              FIFO_PARSE_FAILED_MSG)
 
 
+class TestSmbusEvent(EventFifoTestBase):
+    """Debug event class 0Ch (SMBUS/I2C/I3C)."""
+
+    def test_nack_error_event_data(self):
+        """Event Data is named for the NACK error Event ID. Values past
+        the defined ones are unrecognized, and the events that follow
+        still decode."""
+        nack = layout.SMBUS_NACK_ERROR
+        values = [*range(len(SMBUS_NACK_DATA)), len(SMBUS_NACK_DATA), 0xFFFF]
+        telemetry = one_fifo(*(layout.smbus_event(nack, value)
+                               for value in values), PCIE_EVENT)
+        self.assert_events(telemetry, strings(), [
+            *(smbus(nack, value, (SMBUS_NACK_DATA + [UNRECOGNIZED] * 2)[i])
+              for i, value in enumerate(values)),
+            PCIE_EXPECTED])
+
+    def test_event_data_is_unnamed_for_other_event_ids(self):
+        """Only NACK error defines Event Data values, so every other Event
+        ID, reserved and vendor unique ones included, prints the value
+        with an empty name."""
+        ids = (0x0000, 0x0001, 0x0002, 0x0004, 0x7FFF, 0x8000, 0xFFFF)
+        telemetry = one_fifo(*(layout.smbus_event(i, 0x0001) for i in ids))
+        self.assert_events(telemetry, strings(),
+                           [smbus(i, 0x0001) for i in ids])
+
+    def test_event_data_is_little_endian(self):
+        """0002h read big-endian would be 0200h, which is unrecognized."""
+        nack = layout.SMBUS_NACK_ERROR
+        self.assert_events(one_fifo(layout.smbus_event(nack, 0x0002)),
+                           strings(), [smbus(nack, 0x0002, SMBUS_NACK_DATA[2])])
+
+    def test_reserved_half_word_is_ignored(self):
+        nack = layout.SMBUS_NACK_ERROR
+        self.assert_events(
+            one_fifo(layout.smbus_event(nack, 0x0001, reserved=0xFFFF)),
+            strings(), [smbus(nack, 0x0001, SMBUS_NACK_DATA[1])])
+
+    def test_vu_fields_follow_the_fixed_record(self):
+        """One Dword past the record holds the VU Event Identifier and two
+        bytes of VU data. Both strings are looked up on class 0Ch: the
+        Event String in the Event String Table and the VU Event String in
+        the VU table, whose entries under another class and whose Event
+        String Table entry for the VU identifier are decoys."""
+        cls, nack, vu_id = layout.CLASS_SMBUS_I2C_I3C, 0x0003, 0x8001
+        telemetry = one_fifo(
+            layout.smbus_event(nack, 0x0000,
+                               vu=layout.vu_part(vu_id, b'\xAA\xBB')),
+            PCIE_EVENT)
+        log = strings(
+            event_strings={(cls, nack): 'SMBUS NACK',
+                           (layout.CLASS_MCTP, nack): 'MCTP DECOY',
+                           (cls, vu_id): 'EST DECOY'},
+            vu_event_strings={(cls, vu_id): 'SMBUS VU',
+                              (layout.CLASS_MCTP, vu_id): 'MCTP DECOY'})
+        self.assert_events(telemetry, log, [
+            smbus(nack, 0x0000, SMBUS_NACK_DATA[0], size_dw=2,
+                  event_string='SMBUS NACK',
+                  vu=vu_fields(vu_id, b'\xAA\xBB', 'SMBUS VU')),
+            PCIE_EXPECTED])
+
+    def test_largest_event_size(self):
+        """VU Data is (Event Data Size * 4) - 6 bytes."""
+        vu_data = bytes(i & 0xFF for i in range(0xFF * 4 - 6))
+        telemetry = one_fifo(
+            layout.smbus_event(0x8000, 0x1234,
+                               vu=layout.vu_part(0x9001, vu_data)),
+            PCIE_EVENT)
+        self.assert_events(telemetry, strings(), [
+            smbus(0x8000, 0x1234, size_dw=0xFF,
+                  vu=vu_fields(0x9001, vu_data)),
+            PCIE_EXPECTED])
+
+    def test_zero_size_event_is_rejected(self):
+        """The class carries one Dword, so an event declaring none has no
+        Event Data to decode."""
+        telemetry = one_fifo(layout.smbus_event(0x0003, 0x0001, size_dw=0))
+        self.assert_rejected(telemetry, strings(), INVALID_EVENT_MSG,
+                             'FIFO: 1, offset: 0x0',
+                             'Type: 0xc, ID: 0x3, Size: 0x0',
+                             FIFO_PARSE_FAILED_MSG)
+
+
+class TestMctpEvent(EventFifoTestBase):
+    """Debug event class 0Dh (MCTP)."""
+
+    def test_event_data_per_event_id(self):
+        """Each of Event IDs 0-3 names its Event Data from its own table;
+        a value one past the end of a table is unrecognized, as is
+        FFFFh."""
+        events, expected = [], []
+        for event_id, names in MCTP_EVENT_DATA.items():
+            for value, name in [*enumerate(names), (len(names), UNRECOGNIZED),
+                                (0xFFFF, UNRECOGNIZED)]:
+                events.append(layout.mctp_event(event_id, value))
+                expected.append(mctp(event_id, value, name))
+        self.assert_events(one_fifo(*events, PCIE_EVENT), strings(),
+                           [*expected, PCIE_EXPECTED])
+
+    def test_event_data_is_unnamed_for_other_event_ids(self):
+        ids = (0x0004, 0x7FFF, 0x8000, 0xFFFF)
+        telemetry = one_fifo(*(layout.mctp_event(i, 0x0001) for i in ids))
+        self.assert_events(telemetry, strings(),
+                           [mctp(i, 0x0001) for i in ids])
+
+    def test_transport_protocols(self):
+        """00h, 01h, 04h and 05h are named; the reserved values around and
+        after them are unrecognized."""
+        protocols = (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0xFF)
+        telemetry = one_fifo(*(layout.mctp_event(0x0003, 0x0001, protocol=p)
+                               for p in protocols))
+        self.assert_events(telemetry, strings(), [
+            mctp(0x0003, 0x0001, MCTP_EVENT_DATA[3][1], protocol=p,
+                 protocol_string=MCTP_PROTOCOLS.get(p, UNRECOGNIZED))
+            for p in protocols])
+
+    def test_transport_header_only_when_valid(self):
+        """The header prints, bytes in log order, only with Event Flags
+        bit 7 set; the reserved bits 6:0 neither set nor hide it."""
+        header = bytes.fromhex('01020304')
+        cases = ((0x80, header), (0xFF, header), (0x7F, None), (0x00, None))
+        telemetry = one_fifo(*(layout.mctp_event(0x0000, 0x0005,
+                                                 protocol=0x04, flags=flags,
+                                                 header=header)
+                               for flags, _ in cases), PCIE_EVENT)
+        self.assert_events(telemetry, strings(), [
+            *(mctp(0x0000, 0x0005, MCTP_EVENT_DATA[0][5], protocol=0x04,
+                   protocol_string='I2C/SMBus', header=shown)
+              for _, shown in cases),
+            PCIE_EXPECTED])
+
+    def test_vu_fields_follow_the_fixed_record(self):
+        """One Dword past the two-Dword record holds the VU Event
+        Identifier and two bytes of VU data, named on class 0Dh."""
+        cls, vu_id = layout.CLASS_MCTP, 0x8002
+        header = bytes.fromhex('0A0B0C0D')
+        telemetry = one_fifo(
+            layout.mctp_event(0x0003, 0x0002, protocol=0x05,
+                              flags=layout.MCTP_HEADER_VALID, header=header,
+                              vu=layout.vu_part(vu_id, b'\xD1\xD2')),
+            PCIE_EVENT)
+        log = strings(
+            event_strings={(cls, 0x0003): 'MCTP ERROR STATUS',
+                           (cls, vu_id): 'EST DECOY'},
+            vu_event_strings={(cls, vu_id): 'MCTP VU',
+                              (layout.CLASS_SMBUS_I2C_I3C, vu_id): 'DECOY'})
+        self.assert_events(telemetry, log, [
+            mctp(0x0003, 0x0002, MCTP_EVENT_DATA[3][2], protocol=0x05,
+                 protocol_string='I3C', header=header, size_dw=3,
+                 event_string='MCTP ERROR STATUS',
+                 vu=vu_fields(vu_id, b'\xD1\xD2', 'MCTP VU')),
+            PCIE_EXPECTED])
+
+    def test_largest_event_size(self):
+        """VU Data is (Event Data Size * 4) - 10 bytes."""
+        vu_data = bytes((i * 5) & 0xFF for i in range(0xFF * 4 - 10))
+        telemetry = one_fifo(
+            layout.mctp_event(0x8000, 0x1234, protocol=0x01,
+                              vu=layout.vu_part(0x9002, vu_data)),
+            PCIE_EVENT)
+        self.assert_events(telemetry, strings(), [
+            mctp(0x8000, 0x1234, protocol=0x01,
+                 protocol_string=MCTP_PROTOCOLS[1], size_dw=0xFF,
+                 vu=vu_fields(0x9002, vu_data)),
+            PCIE_EXPECTED])
+
+    def test_event_short_of_the_fixed_record_is_rejected(self):
+        """The class carries two Dwords; an event declaring fewer would
+        have its protocol, flags or header read from past its end."""
+        for size_dw in (0, 1):
+            with self.subTest(size_dw=size_dw):
+                telemetry = one_fifo(layout.mctp_event(0x0001, 0x0002,
+                                                       size_dw=size_dw))
+                self.assert_rejected(telemetry, strings(), INVALID_EVENT_MSG,
+                                     'FIFO: 1, offset: 0x0',
+                                     f'Type: 0xd, ID: 0x1, Size: 0x{size_dw:x}',
+                                     FIFO_PARSE_FAILED_MSG)
+
+
 class TestEventClassDecode(EventFifoTestBase):
     """Every other debug event class parse_event_fifo() dispatches."""
 
@@ -414,28 +672,15 @@ class TestEventClassDecode(EventFifoTestBase):
             PCIE_EXPECTED,
         ])
 
-    def test_reserved_classes_print_the_descriptor_only(self):
+    def test_reserved_classes_dump_class_specific_data(self):
         """A class the parser has no decoder for is still stepped over by
-        its declared size. Up to 7Fh its Event String comes from the Event
+        its declared size, and its payload is printed undecoded as Class
+        Specific Data. Up to 7Fh its Event String comes from the Event
         String Table; the VU table entries for the same pairs are decoys.
-
-        OCP 2.7 defines 0Ch (SMBUS/I2C/I3C) and 0Dh (MCTP), which this
-        parser still treats as reserved. Their events here are laid out
-        the way 2.7 defines them, with and without the optional VU fields.
-        0Eh is the first class 2.7 leaves reserved."""
-        smbus, mctp = layout.CLASS_SMBUS_I2C_I3C, layout.CLASS_MCTP
+        0Eh is the first class OCP 2.7 leaves reserved."""
         events = [
-            # NACK error, Device is busy; then Timeout with VU fields.
-            (smbus, 0x0003, struct.pack('<HH', 0x0001, 0)),
-            (smbus, 0x0000, struct.pack('<HH', 0, 0)
-             + layout.vu_part(0x8001, bytes.fromhex('C1C2C3C4C5C6'))),
-            # Dropped Packet on I2C/SMBus with a valid transport header;
-            # then Error Status with VU fields.
-            (mctp, 0x0000, struct.pack('<HBBI', 0x0005, 0x04, 0x80,
-                                       0x01020304)),
-            (mctp, 0x0003, struct.pack('<HBBI', 0x0002, 0, 0, 0)
-             + layout.vu_part(0x8002, bytes.fromhex('D1D2D3D4D5D6'))),
             (0x0E, 0x0E, b'\x01\x02\x03\x04'),
+            (0x0E, 0x8000, bytes.fromhex('C1C2C3C4C5C6C7C8')),
             (0x7F, 0x7F, bytes(8)),
             (0x7F, 0x80, b''),
         ]
@@ -447,8 +692,9 @@ class TestEventClassDecode(EventFifoTestBase):
         log = strings(event_strings=named,
                       vu_event_strings={pair: 'VU DECOY' for pair in named})
         self.assert_events(telemetry, log, [
-            *(common(cls, event_id, len(data) // layout.DWORD,
-                     named.get((cls, event_id), ''))
+            *({**common(cls, event_id, len(data) // layout.DWORD,
+                        named.get((cls, event_id), '')),
+               'Class Specific Data': layout.hex_upper(data)}
               for cls, event_id, data in events),
             PCIE_EXPECTED])
 
@@ -627,7 +873,11 @@ class TestTruncatedEvent(EventFifoTestBase):
                        for cls in layout.COMMON_CLASSES})
         events[layout.CLASS_VIRTUAL_FIFO] = layout.virtual_fifo_event(
             layout.virtual_fifo_id(1, 1), 0x40)
-        events[0x0C] = layout.event(0x0C, 0x40, bytes(4))
+        events[layout.CLASS_SMBUS_I2C_I3C] = layout.smbus_event(
+            0x40, vu=layout.vu_part(0x100, b'\x01\x02'))
+        events[layout.CLASS_MCTP] = layout.mctp_event(
+            0x40, vu=layout.vu_part(0x100, b'\x01\x02'))
+        events[0x0E] = layout.event(0x0E, 0x40, bytes(4))
         events[0x80] = layout.event(0x80, 0x40, bytes(8))
         for cls, event in sorted(events.items()):
             with self.subTest(cls=cls):
