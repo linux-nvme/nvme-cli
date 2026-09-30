@@ -1253,16 +1253,55 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 		__u16 event_id = 0;
 		char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 		unsigned int data_size = 0;
+		__u64 remaining = fifo_size - offset_to_move;
+		bool is_snapshot = pevent_descriptor->debug_event_class_type ==
+				STATISTIC_SNAPSHOT_CLASS_TYPE;
+		struct nvme_ocp_statistic_snapshot_evt_class_format *psnapshot =
+			(struct nvme_ocp_statistic_snapshot_evt_class_format *)
+			pevent_descriptor;
 
-		if (pevent_descriptor->debug_event_class_type !=
-				STATISTIC_SNAPSHOT_CLASS_TYPE) {
-			event_des_size = sizeof(struct nvme_ocp_telemetry_event_descriptor);
-			/* Data is present in the form of DWORDS,
-			 * So multiplying with sizeof(DWORD)
-			 */
+		/*
+		 * Bound the whole entry by what is left of the FIFO before its
+		 * size field or any class specific data is read. A snapshot's
+		 * Event ID and Event Data Size bytes are reserved, so its
+		 * statistic's identifier and size are reported instead.
+		 */
+		event_des_size = is_snapshot ? sizeof(*psnapshot) :
+			sizeof(struct nvme_ocp_telemetry_event_descriptor);
+		if (remaining < event_des_size) {
+			nvme_show_error(
+				"Invalid entry at offset 0x%x of Event FIFO %u: "
+				"class 0x%x needs a %u-byte header, %llu bytes left in FIFO",
+				offset_to_move, event_fifo_number,
+				pevent_descriptor->debug_event_class_type,
+				event_des_size, (unsigned long long)remaining);
+			ret = -1;
+			goto free_desc;
+		}
+
+		/* Data sizes are in Dwords */
+		if (is_snapshot)
+			data_size = le16_to_cpu(psnapshot->stat_data_size) *
+				SIZE_OF_DWORD;
+		else
 			data_size = pevent_descriptor->event_data_size *
-							SIZE_OF_DWORD;
+				SIZE_OF_DWORD;
+		if (remaining - event_des_size < data_size) {
+			nvme_show_error(
+				"Invalid entry at offset 0x%x of Event FIFO %u: "
+				"class 0x%x, %s 0x%x declares %u data bytes, %llu left in FIFO",
+				offset_to_move, event_fifo_number,
+				pevent_descriptor->debug_event_class_type,
+				is_snapshot ? "Statistic ID" : "Event ID",
+				le16_to_cpu(is_snapshot ? psnapshot->stat_id :
+					    pevent_descriptor->event_id),
+				data_size,
+				(unsigned long long)(remaining - event_des_size));
+			ret = -1;
+			goto free_desc;
+		}
 
+		if (!is_snapshot) {
 			if (pevent_descriptor->event_data_size > 0)
 				pevent_specific_data = (__u8 *)pevent_descriptor + event_des_size;
 
@@ -1372,11 +1411,11 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					"ERROR : OCP : Invalid NVMe Event FIFO entry\n");
 				nvme_show_error(
 					"FIFO: %d, offset: 0x%x\n",
-					fifo_num, offset_to_move);
+					event_fifo_number, offset_to_move);
 				nvme_show_error(
 					"Type: 0x%x, ID: 0x%x, Size: 0x%x\n",
 					pevent_descriptor->debug_event_class_type,
-					pevent_descriptor->event_id,
+					event_id,
 					pevent_descriptor->event_data_size);
 				goto free_desc;
 			}
@@ -1421,19 +1460,12 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					(struct nvme_ocp_statistic_snapshot_evt_class_format *)
 					pevent_descriptor;
 
-			event_des_size =
-				sizeof(struct nvme_ocp_statistic_snapshot_evt_class_format);
-
 			struct json_object *pstats_array =
 				((pevent_fifos_object != NULL) ? json_create_array() : NULL);
 
 			if (pStaticSnapshotEvent != NULL &&
 				pStaticSnapshotEvent->stat_data_size > 0) {
 				__u8 *pstatistic_entry;
-
-				data_size =
-					(le16_to_cpu((unsigned int)pStaticSnapshotEvent->stat_data_size) *
-						SIZE_OF_DWORD);
 
 				pstatistic_entry =
 					(__u8 *)pStaticSnapshotEvent +
