@@ -121,6 +121,7 @@ class SamsungMockServer(MockIPCServer):
         self.etdas = 0
         self.set_features_calls = 0
         self.log_lsps = []
+        self.log_transfers = []
 
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
@@ -149,6 +150,7 @@ class SamsungMockServer(MockIPCServer):
         if opcode == _OPC_GET_LOG_PAGE:
             lid = cdw10 & 0xFF
             self.log_lsps.append((lid, (cdw10 >> 8) & 0x7F))
+            self.log_transfers.append((lid, lpo, req_len))
             if lid == 0:
                 payload = pack_supported_log_pages(self.mcdas)
             elif lid in (0x07, 0x08):
@@ -583,6 +585,20 @@ class SamsungCLITest(unittest.TestCase):
         out = result.stdout + result.stderr
         self.assertIn('--output-file=<FILE>, -O <FILE>', out)
         self.assertIn('--output-format=<FMT>, -o <FMT>', out)
+
+    def test_direct_telemetry_keeps_127k_transfers(self):
+        self.server.last_blocks = (260, 260, 260, 260)
+        result = self.run_cmd('-t', 'ctlr', '-a', '1', '-H')
+        self.assertOk(result)
+        self.assertIn('(Xfer 127K)', result.stdout)
+        self.assertEqual(self.server.log_transfers, [
+            (0x08, 0, 512), (0x08, 0, 512),
+            (0x08, 512, 127 * 1024), (0x08, 512 + 127 * 1024, 3 * 1024),
+        ])
+        path = os.path.join(self.out_dir,
+                            f'{SERIAL}_Telemetry_Controller_Area_1.bin')
+        with open(path, 'rb') as f:
+            self.assertEqual(f.read(), bytes([0x08]) * 260 * _BYTES_PER_BLOCK)
 
     # ---------------------------------------------------------------- #
     # Data Area 4: DA4S / MCDAS negotiation and the ETDAS round trip    #
