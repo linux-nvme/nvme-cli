@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Samsung telemetry tests through the real NVMe-MI/MCTP command path.
 
-Usage: python3 nvme_samsung_mctp_test.py <nvme> <libmock_mctp.so>
+Run from the repository root with PYTHONPATH=.
+Usage: python3 <test-script> <nvme> <mock-lib>
 The preload library redirects AF_MCTP sockets to this Unix socket peer,
 so the tests need no MCTP kernel support, root or NVMe hardware.
 """
@@ -14,7 +15,7 @@ import tempfile
 import threading
 import unittest
 
-from nvme_mock_ipc import make_mock_env, run_nvme
+from tests.cli.nvme_mock_ipc import make_mock_env, run_nvme
 from nvme_samsung_test import SERIAL, pack_id_ctrl, pack_telemetry_header
 
 NVME_BIN = os.path.abspath(sys.argv[1])

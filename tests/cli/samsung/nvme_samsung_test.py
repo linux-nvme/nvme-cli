@@ -11,7 +11,8 @@ and the exit status. The device itself is a mock that returns
 well-formed synthetic dumps, so a failure below is a bug in the plugin
 rather than in a drive.
 
-Usage: python3 nvme_samsung_test.py <path-to-nvme-binary> <path-to-mock-lib>
+Run from the repository root with PYTHONPATH=.
+Usage: python3 <test-script> <nvme> <mock-lib>
 """
 import os
 import shutil
@@ -23,7 +24,9 @@ import tarfile
 import tempfile
 import unittest
 
-from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
+from tests.cli.nvme_mock_ipc import (
+    MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme,
+)
 
 _NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
 _MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
