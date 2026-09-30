@@ -10344,12 +10344,15 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 			timeInfo.year, timeInfo.month, timeInfo.dayOfMonth,
 			timeInfo.hour, timeInfo.minute, timeInfo.second);
 
-	wdc_UtilsSnprintf((char *)serialNo, WDC_SERIAL_NO_LEN, (char *)idSerialNo);
+	wdc_UtilsSnprintf((char *)serialNo, WDC_SERIAL_NO_LEN,
+			  "%s", (char *)idSerialNo);
 	/* Remove any space form serialNo */
 	wdc_UtilsDeleteCharFromString((char *)serialNo, WDC_SERIAL_NO_LEN, ' ');
 
 	memset(firmwareRevision, 0, sizeof(firmwareRevision));
-	wdc_UtilsSnprintf((char *)firmwareRevision, WDC_NVME_FIRMWARE_REV_LEN, (char *)idFwRev);
+	wdc_UtilsSnprintf((char *)firmwareRevision,
+			  WDC_NVME_FIRMWARE_REV_LEN,
+			  "%s", (char *)idFwRev);
 	/* Remove any space form FirmwareRevision */
 	wdc_UtilsDeleteCharFromString((char *)firmwareRevision, WDC_NVME_FIRMWARE_REV_LEN, ' ');
 
