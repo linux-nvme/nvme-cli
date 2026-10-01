@@ -646,6 +646,7 @@ struct connect_scratch {
 struct emit_ctx {
 	struct connect_scratch *s;
 	int *argc;
+	bool skip_kato; // the caller emits --keep-alive-tmo itself
 };
 
 static void emit_arg(const char *arg, void *user_data)
@@ -653,6 +654,8 @@ static void emit_arg(const char *arg, void *user_data)
 	struct emit_ctx *e = user_data;
 	struct connect_scratch *s = e->s;
 
+	if (e->skip_kato && shr_startswith(arg, "--keep-alive-tmo="))
+		return;
 	if (s->n_extra >= MAX_EXTRA_ARGS ||
 	    *e->argc >= (int)ARRAY_SIZE(s->argv) - 4)
 		return; // leave room for --idempotent, owner, devid-file, NULL
@@ -660,11 +663,37 @@ static void emit_arg(const char *arg, void *user_data)
 	s->argv[(*e->argc)++] = s->extra[s->n_extra++];
 }
 
+/*
+ * The keep-alive timeout a DC connects with. A non-zero KATO asks the DC
+ * for a persistent connection and for AENs (Base Spec, Discovery Service).
+ * Without one, the kernel sets none for a DC.
+ *
+ * persistent=no: none, even if keep-alive-tmo is configured.
+ * Otherwise: the configured keep-alive-tmo, or DC_DEFAULT_KATO.
+ *
+ * Return: the value to emit, or NULL to emit none.
+ */
+#define DC_DEFAULT_KATO "30"
+
+static const char *dc_keep_alive_tmo(const struct libnvmf_params *params)
+{
+	const char *kato = libnvmf_params_get(params, "keep-alive-tmo");
+
+	if (shr_streqcase0(libnvmf_params_get(params, "persistent"), "no"))
+		return NULL;
+	if (kato && *kato)
+		return kato;
+
+	return DC_DEFAULT_KATO;
+}
+
 static int build_connect_argv(const char *nvme_bin, const char *devid_path,
 			       const struct libnvmf_tid *t,
 			       const struct libnvmf_params *params,
-			       bool is_nbft, struct connect_scratch *s)
+			       bool is_dc, bool is_nbft,
+			       struct connect_scratch *s)
 {
+	char kato_arg[32];
 	struct emit_ctx ec;
 	int i = 0;
 	int r;
@@ -680,9 +709,26 @@ static int build_connect_argv(const char *nvme_bin, const char *devid_path,
 	 */
 	ec.s = s;
 	ec.argc = &i;
+	ec.skip_kato = is_dc;
 	r = libnvmf_connect_args_emit(t, params, emit_arg, &ec);
 	if (r < 0)
 		return r;
+
+	if (is_dc) {
+		const char *kato = dc_keep_alive_tmo(params);
+
+		/*
+		 * Without --discovery, the kernel sees a DC with a unique
+		 * NQN as an I/O controller.
+		 */
+		ec.skip_kato = false;
+		emit_arg("--discovery", &ec);
+		if (kato) {
+			snprintf(kato_arg, sizeof(kato_arg),
+				 "--keep-alive-tmo=%s", kato);
+			emit_arg(kato_arg, &ec);
+		}
+	}
 
 	s->argv[i++] = "--idempotent";
 	snprintf(s->owner, sizeof(s->owner), "--owner=%s",
@@ -717,8 +763,8 @@ int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 
 	unit_devid_path(devid_path, sizeof(devid_path), unit_name);
 
-	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, is_nbft,
-			       &scratch);
+	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, true,
+			       is_nbft, &scratch);
 	if (r < 0)
 		goto out;
 
@@ -761,8 +807,8 @@ int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 
 	unit_devid_path(devid_path, sizeof(devid_path), unit_name);
 
-	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, is_nbft,
-			       &scratch);
+	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, false,
+			       is_nbft, &scratch);
 	if (r < 0)
 		goto out;
 
