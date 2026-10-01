@@ -108,7 +108,12 @@ class TestMicron(MicronChecksMixin, TestPlugin):
             return None
 
         supported = self.supported_log_pages()
-        if supported is None or supported.intersection(lids):
+        if supported is None:
+            # Drives older than NVMe 2.0 have no Supported Log Pages log, so
+            # the Invalid Log Page status is the only answer available.
+            return (f"drive rejects log page {self._lid_list(lids)} and "
+                    f"does not report its supported log pages")
+        if supported.intersection(lids):
             return None
 
         return f"drive does not support log page {self._lid_list(lids)}"
