@@ -203,8 +203,14 @@ static void release_unit(const char *unit_name, const char *devname,
 	/* Only clear an owner that is still ours. */
 	if (devname &&
 	    !libnvmf_registry_attr_equal(ctx.nvme_ctx, devname, "owner",
-					 "discoverd"))
-		libnvmf_registry_update(ctx.nvme_ctx, devname, "owner", NULL);
+					 "discoverd")) {
+		int r = libnvmf_registry_update(ctx.nvme_ctx, devname,
+						"owner", NULL);
+
+		if (r < 0)
+			disc_warn("%s | %s - failed to clear registry owner: %s",
+				  libnvmf_tid_str(tid), devname, strerror(-r));
+	}
 
 	disc_info("%s | %s - %s, released", libnvmf_tid_str(tid),
 		  devname ? devname : "-", reason);
