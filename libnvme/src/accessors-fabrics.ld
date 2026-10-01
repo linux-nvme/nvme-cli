@@ -27,6 +27,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_device;
 		libnvmf_context_get_devid_file;
 		libnvmf_context_get_disable_sqflow;
+		libnvmf_context_get_discovery_ctrl;
 		libnvmf_context_get_duplicate_connect;
 		libnvmf_context_get_fast_io_fail_tmo;
 		libnvmf_context_get_hdr_digest;
@@ -62,6 +63,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_set_default_keep_alive_timeout;
 		libnvmf_context_set_default_max_discovery_retries;
 		libnvmf_context_set_disable_sqflow;
+		libnvmf_context_set_discovery_ctrl;
 		libnvmf_context_set_duplicate_connect;
 		libnvmf_context_set_fast_io_fail_tmo;
 		libnvmf_context_set_hdr_digest;

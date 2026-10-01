@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'connect' [--config=<filename>]
 			[--devid-file=<filename>]
+			[--discovery]
 			[--idempotent]
 			[--owner=<NAME>]
 			[<fabrics-options>]
@@ -40,6 +41,13 @@ OPTIONS
 	the file cannot be created, for example because the parent
 	directory does not exist, the command fails without attempting
 	the connection.
+
+--discovery::
+	The target is a Discovery Controller. The kernel recognizes the
+	well-known discovery NQN by itself, but sees a Discovery
+	Controller with a unique NQN as an I/O controller without this
+	option. That gives it a keep-alive timeout of 5 seconds when none
+	is given, and creates I/O queues for it.
 
 --idempotent::
 	Exit with status 0 if the requested controller is already

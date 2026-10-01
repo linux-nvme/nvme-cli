@@ -331,6 +331,19 @@ __shr_public const char *libnvmf_context_get_devid_file(
 	return p->devid_file;
 }
 
+__shr_public void libnvmf_context_set_discovery_ctrl(
+		struct libnvmf_context *p,
+		bool discovery_ctrl)
+{
+	p->discovery_ctrl = discovery_ctrl;
+}
+
+__shr_public bool libnvmf_context_get_discovery_ctrl(
+		const struct libnvmf_context *p)
+{
+	return p->discovery_ctrl;
+}
+
 __shr_public void libnvmf_context_set_connect(
 		struct libnvmf_context *p,
 		bool connect)
