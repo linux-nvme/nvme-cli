@@ -113,10 +113,13 @@ class FabricsMockIPCServer(MockIPCServer):
             return
 
         opts = {}
+        flags = set()
         for part in payload.decode('utf-8', errors='ignore').split(','):
             if '=' in part:
                 k, v = part.split('=', 1)
                 opts[k.strip()] = v.strip()
+            else:
+                flags.add(part.strip())
 
         subsysnqn = opts.get('nqn', opts.get('subsysnqn', ''))
         transport = opts.get('transport', 'tcp')
@@ -146,6 +149,7 @@ class FabricsMockIPCServer(MockIPCServer):
             'traddr': traddr,
             'trsvcid': trsvcid,
             'keep_alive_tmo': opts.get('keep_alive_tmo'),
+            'discovery': 'discovery' in flags,
         }
 
         if self.sysfs_dir:
@@ -781,6 +785,27 @@ class FabricsMockCLITest(unittest.TestCase):
                 self._run('connect', '-t', 'tcp', '-a', '192.168.12.2',
                           '-s', DISCOVERY_PORT, '-n', DISCOVERY_NQN, *args)
                 self.assertEqual(self._kato(0), kato)
+
+    def test_connect_discovery_flag(self):
+        """--discovery marks a unique-NQN DC as a DC for the kernel."""
+        dc = "nqn.2014-08.org.nvmexpress:dc-unique"
+        cases = (
+            (dc, (), False),
+            (dc, ('--discovery',), True),
+            # The kernel recognizes the well-known NQN by itself.
+            (DISCOVERY_NQN, ('--discovery',), False),
+        )
+        for nqn, args, discovery in cases:
+            with self.subTest(nqn=nqn, args=args):
+                self.server.controllers.clear()
+                self.server.next_instance = 0
+                shutil.rmtree(Path(self.sysfs_dir) / "sys/class/nvme")
+                Path(self.sysfs_dir, "sys/class/nvme").mkdir()
+
+                self._run('connect', '-t', 'tcp', '-a', '192.168.12.6',
+                          '-s', DISCOVERY_PORT, '-n', nqn, *args)
+                self.assertEqual(
+                    self.server.controllers[0]['discovery'], discovery)
 
     def test_connect_all_referral_kato(self):
         """A referred DC gets 30 s; the IOC it lists does not inherit it."""

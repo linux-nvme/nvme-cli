@@ -1929,6 +1929,14 @@ __shr_public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
 	if (ret)
 		return ret;
 
+	/* libnvmf_add_ctrl() then passes "discovery" to the kernel. */
+	if (fctx->discovery_ctrl) {
+		libnvme_ctrl_set_discovery_ctrl(c, true);
+		libnvme_ctrl_set_unique_discovery_ctrl(c,
+			strcmp(fctx->ctrl_params.subsysnqn,
+			       NVME_DISC_SUBSYS_NAME));
+	}
+
 	/*
 	 * The credentials live on @fctx next to, not inside, ctrl_params,
 	 * so libnvme_create_ctrl() cannot carry them over. Apply them here

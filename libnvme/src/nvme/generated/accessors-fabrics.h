@@ -431,6 +431,23 @@ const char *libnvmf_context_get_device(const struct libnvmf_context *p);
 const char *libnvmf_context_get_devid_file(const struct libnvmf_context *p);
 
 /**
+ * libnvmf_context_set_discovery_ctrl() - Set discovery_ctrl.
+ * @p: The &struct libnvmf_context instance to update.
+ * @discovery_ctrl: Value to assign to the discovery_ctrl field.
+ */
+void libnvmf_context_set_discovery_ctrl(
+		struct libnvmf_context *p,
+		bool discovery_ctrl);
+
+/**
+ * libnvmf_context_get_discovery_ctrl() - Get discovery_ctrl.
+ * @p: The &struct libnvmf_context instance to query.
+ *
+ * Return: The value of the discovery_ctrl field.
+ */
+bool libnvmf_context_get_discovery_ctrl(const struct libnvmf_context *p);
+
+/**
  * libnvmf_context_set_connect() - Set connect.
  * @p: The &struct libnvmf_context instance to update.
  * @connect: Value to assign to the connect field.

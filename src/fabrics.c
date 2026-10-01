@@ -1001,6 +1001,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	char *owner = NULL;
 	char *devid_file = NULL;
 	bool idempotent = false;
+	bool discovery = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_nvme_ctrl struct libnvme_ctrl *c = NULL;
@@ -1015,7 +1016,9 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		  OPT_STRING("devid-file", 0, "FILE", &devid_file,
 			     "write connected device name to FILE"),
 		  OPT_FLAG("idempotent", 0, &idempotent,
-			   "exit 0 if already connected"));
+			   "exit 0 if already connected"),
+		  OPT_FLAG("discovery", 0, &discovery,
+			   "the target is a discovery controller"));
 
 	nvmf_default_args(&fa);
 
@@ -1103,6 +1106,7 @@ do_connect:
 
 	if (devid_file)
 		libnvmf_context_set_devid_file(fctx, devid_file);
+	libnvmf_context_set_discovery_ctrl(fctx, discovery);
 
 	/*
 	 * The exclusion list governs auto-connecting orchestrators, not an

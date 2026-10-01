@@ -83,6 +83,7 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 	const char *device;
 	enum libnvmf_persistent persistent; // !access:read=custom,write=custom
 	const char *devid_file;		// !access:write=custom
+	bool discovery_ctrl;
 
 	/* discovery invocation options */
 	bool connect;			// !access
