@@ -4514,8 +4514,9 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
+	/* Not an error: keep it off stdout so JSON output stays parseable */
 	if (eModel == UNKNOWN_MODEL)
-		nvme_show_error("WARNING: Unknown drive model");
+		fprintf(stderr, "WARNING: Unknown drive model\n");
 
 	err = validate_output_format(nvme_args.output_format, &format);
 	if (err) {
@@ -4584,10 +4585,10 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (eModel == UNKNOWN_MODEL) {
-		nvme_show_error(
+	/* Not an error: keep it out of the id-ctrl JSON object */
+	if (eModel == UNKNOWN_MODEL)
+		fprintf(stderr,
 			"WARNING: Drive not recognized as Micron, proceeding anyway\n");
-	}
 
 	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err) {
