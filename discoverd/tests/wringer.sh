@@ -79,7 +79,7 @@ EOF
 	fi
 }
 
-TOOLS="nvme systemd-run modprobe"
+TOOLS="systemd-run modprobe"
 [ -n "${IFACE}" ] && TOOLS="${TOOLS} avahi-publish resolvectl"
 for tool in ${TOOLS}; do
 	if ! command -v "${tool}" >/dev/null 2>&1; then
@@ -94,14 +94,15 @@ BUILD_DIR="${BUILD_DIR:-${REPO_ROOT}/.build}"
 DISCOVERD_BIN="${BUILD_DIR}/discoverd/nvme-discoverd"
 NVME_BIN="${BUILD_DIR}/nvme"
 
-if [ ! -x "${DISCOVERD_BIN}" ]; then
+for bin in "${DISCOVERD_BIN}" "${NVME_BIN}"; do
+	[ -x "${bin}" ] && continue
 	cat >&2 <<EOF
-${DISCOVERD_BIN} not found. Build first:
+${bin} not found. Build first:
   meson setup ${BUILD_DIR} -Dnvme-discoverd=enabled
   meson compile -C ${BUILD_DIR}
 EOF
 	exit 1
-fi
+done
 
 # The config directory this build reads, e.g. /usr/local/etc/nvme for the
 # default /usr/local prefix. The isolated copy is bind-mounted over it.
