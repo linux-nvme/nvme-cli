@@ -2257,9 +2257,11 @@ static int nvme_discovery_log(struct libnvme_ctrl *ctrl,
 	const char *name = libnvme_ctrl_get_name(ctrl);
 	uint64_t genctr, numrec;
 	struct libnvme_transport_handle *hdl;
+	struct libnvme_passthru_cmd cmd;
 
 	hdl = libnvme_ctrl_get_transport_handle(ctrl);
-	struct libnvme_passthru_cmd cmd;
+	if (!hdl)
+		return -ENODEV;
 
 	log = libnvme_alloc(sizeof(*log));
 	if (!log) {
@@ -2401,6 +2403,9 @@ __shr_public int libnvmf_get_discovery_log(struct libnvme_ctrl *ctrl,
 	};
 	struct nvmf_discovery_log *log;
 	int err;
+
+	if (!ctrl || !logp)
+		return -EINVAL;
 
 	if (!args)
 		args = &defaults;
