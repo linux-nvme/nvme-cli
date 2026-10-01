@@ -117,6 +117,7 @@ static struct test_data test_data[] = {
 	  "nvme", "h", .path = { "p1" }, .frag = "fragment?query" },
 	{ "nvme://h/p1/x#fragment?query",
 	  "nvme", "h", .path = { "p1", "x" }, .frag = "fragment?query" },
+	{ "nvme://@h",  "nvme", "h" },
 	{ "nvme://user@h",  "nvme", "h", .user = "user" },
 	{ "nvme://user@h/", "nvme", "h", .user = "user" },
 	{ "nvme://user:pass@h/", "nvme", "h", .user = "user:pass" },
@@ -196,6 +197,14 @@ static void test_uriparser(void)
 			}
 			/* trailing NULL element */
 			shr_assert(d->path[j] == segments[j]);
+		}
+
+		str = libnvmf_uri_get_userinfo(parsed_data);
+		if (d->user) {
+			shr_assert(str != NULL);
+			shr_assert(strcmp(d->user, str) == 0);
+		} else {
+			shr_assert(d->user == str);
 		}
 
 		str = libnvmf_uri_get_query(parsed_data);
