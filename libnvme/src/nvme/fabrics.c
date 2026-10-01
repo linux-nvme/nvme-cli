@@ -2726,6 +2726,9 @@ static char *unescape_uri(const char *str, int len)
 
 	l = len > 0 ? len : strlen(str);
 	dst = malloc(l + 1);
+	if (!dst)
+		return NULL;
+
 	for (i = 0, j = 0; i < l; i++, j++) {
 		if (str[i] == '%' && i + 2 < l &&
 		    IS_XDIGIT(str[i + 1]) && IS_XDIGIT(str[i + 2])) {
@@ -2791,9 +2794,12 @@ __shr_public int libnvmf_uri_parse(
 	/* split userinfo */
 	host = strrchr(authority, '@');
 	if (host) {
-		if (host > authority)
+		if (host > authority) {
 			uri->userinfo = unescape_uri(authority,
 						     host - authority);
+			if (!uri->userinfo)
+				return -ENOMEM;
+		}
 		host++;
 	} else
 		host = authority;
@@ -2806,6 +2812,8 @@ __shr_public int libnvmf_uri_parse(
 			   &h, &uri->port) < 1)
 			return -EINVAL;
 		uri->host = unescape_uri(h, 0);
+		if (!uri->host)
+			return -ENOMEM;
 	}
 
 	/* split path into elements */
@@ -2816,12 +2824,16 @@ __shr_public int libnvmf_uri_parse(
 		e = strrchr(path, '#');
 		if (e) {
 			uri->fragment = unescape_uri(e + 1, 0);
+			if (!uri->fragment)
+				return -ENOMEM;
 			*e = '\0';
 		}
 		/* separate the query string */
 		e = strrchr(path, '?');
 		if (e) {
 			uri->query = unescape_uri(e + 1, 0);
+			if (!uri->query)
+				return -ENOMEM;
 			*e = '\0';
 		}
 
