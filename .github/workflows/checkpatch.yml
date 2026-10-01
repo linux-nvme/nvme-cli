@@ -23,7 +23,9 @@ jobs:
           https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl \
           -o checkpatch.pl
 
+    # --git checks each commit on its own. Piping a whole series in as
+    # one patch makes the author's Signed-off-by in every commit after
+    # the first a "Duplicate signature".
     - name: Run checkpatch review
       run: |
-        git format-patch --stdout origin/${{ github.base_ref }}..HEAD \
-          | perl checkpatch.pl -
+        perl checkpatch.pl --git origin/${{ github.base_ref }}..HEAD
