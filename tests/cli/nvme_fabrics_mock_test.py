@@ -769,6 +769,19 @@ class FabricsMockCLITest(unittest.TestCase):
                 self._run('discover', '-t', 'tcp', '-a', addr, *args)
                 self.assertEqual(self._kato(self._DISCOVERY_INSTANCE), kato)
 
+    def test_connect_discovery_nqn_kato(self):
+        """nvme connect to the well-known NQN applies no KATO default."""
+        for args, kato in (((), None), (('--keep-alive-tmo=15',), '15')):
+            with self.subTest(args=args):
+                self.server.controllers.clear()
+                self.server.next_instance = 0
+                shutil.rmtree(Path(self.sysfs_dir) / "sys/class/nvme")
+                Path(self.sysfs_dir, "sys/class/nvme").mkdir()
+
+                self._run('connect', '-t', 'tcp', '-a', '192.168.12.2',
+                          '-s', DISCOVERY_PORT, '-n', DISCOVERY_NQN, *args)
+                self.assertEqual(self._kato(0), kato)
+
     def test_connect_all_referral_kato(self):
         """A referred DC gets 30 s; the IOC it lists does not inherit it."""
         dc_a = "nqn.2014-08.org.nvmexpress:dc-kato-A"
