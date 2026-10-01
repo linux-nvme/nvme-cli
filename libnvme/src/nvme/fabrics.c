@@ -2791,8 +2791,10 @@ __shr_public int libnvmf_uri_parse(
 	/* split userinfo */
 	host = strrchr(authority, '@');
 	if (host) {
+		if (host > authority)
+			uri->userinfo = unescape_uri(authority,
+						     host - authority);
 		host++;
-		uri->userinfo = unescape_uri(authority, host - authority);
 	} else
 		host = authority;
 
