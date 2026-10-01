@@ -145,6 +145,7 @@ class FabricsMockIPCServer(MockIPCServer):
             'transport': transport,
             'traddr': traddr,
             'trsvcid': trsvcid,
+            'keep_alive_tmo': opts.get('keep_alive_tmo'),
         }
 
         if self.sysfs_dir:
@@ -734,6 +735,61 @@ class FabricsMockCLITest(unittest.TestCase):
         self.assertEqual(self._subsysnqn(2), dc_c)
         self._assert_persisted(1, "dc-epcsd-B (EPCSD set) should have stayed connected")
         self._assert_disconnected(2, "dc-epcsd-C (EPCSD unset) should have been disconnected")
+
+    # ------------------------------------------------------------------ #
+    # Keep-alive timeout (KATO) of discovery connections                 #
+    # ------------------------------------------------------------------ #
+    #
+    # A non-zero KATO in the Connect command asks a DC for a persistent
+    # connection and for AENs. nvme discover and connect-all ask for 30 s
+    # unless --persistent=no; nvme connect sends only what it is given.
+
+    def _kato(self, instance):
+        return self.server.controllers[instance]['keep_alive_tmo']
+
+    def test_discover_kato(self):
+        """nvme discover: 30 s by default, the configured value, or none."""
+        cases = (
+            ((), '30'),
+            (('--persistent=force',), '30'),
+            (('--keep-alive-tmo=15',), '15'),
+            (('--persistent=no',), None),
+            (('--persistent=no', '--keep-alive-tmo=15'), None),
+        )
+        addr = '192.168.12.1'
+        self.server.discovery_entries = [
+            self._self_entry(addr, eflags=NVMF_DISC_EFLAGS_EPCSD)]
+        for args, kato in cases:
+            with self.subTest(args=args):
+                self.server.controllers.clear()
+                self.server.next_instance = 0
+                shutil.rmtree(Path(self.sysfs_dir) / "sys/class/nvme")
+                Path(self.sysfs_dir, "sys/class/nvme").mkdir()
+
+                self._run('discover', '-t', 'tcp', '-a', addr, *args)
+                self.assertEqual(self._kato(self._DISCOVERY_INSTANCE), kato)
+
+    def test_connect_all_referral_kato(self):
+        """A referred DC gets 30 s; the IOC it lists does not inherit it."""
+        dc_a = "nqn.2014-08.org.nvmexpress:dc-kato-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:dc-kato-B"
+        io_b = "nqn.2014-08.org.nvmexpress:io-kato-B"
+        self.server.discovery_map = {
+            dc_a: [{'transport': 'tcp', 'traddr': '192.168.12.4',
+                    'trsvcid': '4420', 'subsysnqn': dc_b}],
+            dc_b: [{'transport': 'tcp', 'traddr': '192.168.12.5',
+                    'trsvcid': '4420', 'subsysnqn': io_b}],
+        }
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.12.3',
+                  '-n', dc_a)
+
+        self.assertEqual(self._subsysnqn(0), dc_a)
+        self.assertEqual(self._subsysnqn(1), dc_b)
+        self.assertEqual(self._subsysnqn(2), io_b)
+        self.assertEqual(self._kato(0), '30')
+        self.assertEqual(self._kato(1), '30')
+        self.assertIsNone(self._kato(2))
 
     # ------------------------------------------------------------------ #
     # Discovery-walk mechanics: depth cap, visited-set, referral-vs-self #
