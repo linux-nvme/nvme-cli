@@ -84,6 +84,10 @@ OPTIONS
 * 'force': persist regardless of what EPCSD reports, for a target whose
   self-reported EPCSD cannot be trusted.
 --
++
+'auto' and 'force' ask each discovery controller for a keep-alive
+timeout of 30 seconds, or the --keep-alive-tmo value when it is given.
+'no' asks for none, even when --keep-alive-tmo is given.
 
 --quiet::
 	Suppress error messages.

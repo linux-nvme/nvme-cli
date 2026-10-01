@@ -3278,7 +3278,7 @@ static void dc_walk_referral(struct libnvme_global_ctx *ctx,
 	enum dc_ownership child_own;
 	bool child_disconnected = false;
 	struct libnvme_ctrl *cl;
-	int err;
+	int err, tmo;
 
 	if (depth >= NVMF_MAX_REFERRAL_DEPTH) {
 		dc_log_decision(fctx, e, &d,
@@ -3305,8 +3305,10 @@ static void dc_walk_referral(struct libnvme_global_ctx *ctx,
 		d.already_connected = true;
 		child_own = DC_BORROWED;
 	} else {
-		set_discovery_kato(fctx, params);
+		/* params also serves as the child DC's entries' parent. */
+		tmo = set_discovery_kato(fctx, params);
 		err = nvmf_connect_disc_entry(h, e, params, &d.c);
+		params->cfg.keep_alive_tmo = tmo;
 		if (!d.c) {
 			if (err == -ENVME_CONNECT_ALREADY)
 				dc_already_connected(fctx, h, e);
@@ -3647,14 +3649,16 @@ static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	struct libnvme_ctrl *c;
 	int tmo, ret;
 
+	/* libnvme_create_ctrl() copies params->cfg into the controller. */
+	tmo = set_discovery_kato(fctx, params);
 	ret = libnvme_create_ctrl(ctx, params, &c);
+	params->cfg.keep_alive_tmo = tmo;
 	if (ret)
 		return ret;
 
 	libnvme_ctrl_set_discovery_ctrl(c, true);
 	libnvme_ctrl_set_unique_discovery_ctrl(c,
 		strcmp(params->subsysnqn, NVME_DISC_SUBSYS_NAME));
-	tmo = set_discovery_kato(fctx, params);
 
 	if (libnvme_ctrl_get_unique_discovery_ctrl(c) && fctx->hostkey) {
 		libnvme_ctrl_set_kxchap_host_key(c, fctx->hostkey);
@@ -3663,7 +3667,6 @@ static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	}
 
 	ret = libnvme_add_ctrl(fctx, h, c);
-	params->cfg.keep_alive_tmo = tmo;
 	if (ret) {
 		libnvme_free_ctrl(c);
 		return ret;
