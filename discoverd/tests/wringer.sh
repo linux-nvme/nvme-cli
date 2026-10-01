@@ -162,6 +162,12 @@ REL2_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:release2
 REL_PORT=8014
 REL_PORT_ID=7
 
+# Not-live phase. A DC kept connected with persistent=force. Its port is
+# removed, so the DC is held in the CONNECTING state.
+NL_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:not-live
+NL_PORT=8015
+NL_PORT_ID=8
+
 # mDNS phases only. Advertised through mDNS, on ${IFACE}'s address. The
 # port is opened and closed per phase, so a phase can advertise a DC whose
 # port is not open yet.
@@ -297,13 +303,13 @@ nvmet_teardown() {
 	log "nvmet: tear down"
 	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}" \
 		  "${V6_PORT_ID}" "${LL_PORT_ID}" "${REL_PORT_ID}" \
-		  "${MDNS_PORT_ID}"; do
+		  "${MDNS_PORT_ID}" "${NL_PORT_ID}"; do
 		rm -f /sys/kernel/config/nvmet/ports/"${id}"/subsystems/*
 		rmdir "/sys/kernel/config/nvmet/ports/${id}" 2>/dev/null
 	done
 	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}" \
 		   "${V6_NQN}" "${LL_NQN}" "${REL_NQN}" "${REL2_NQN}" \
-		   "${MDNS_NQN}"; do
+		   "${MDNS_NQN}" "${NL_NQN}"; do
 		local subsys_dir="/sys/kernel/config/nvmet/subsystems/${nqn}"
 
 		if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
@@ -397,6 +403,7 @@ discoverd_stop() {
 	"${NVME_BIN}" disconnect -n "${LL_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -485,6 +492,35 @@ dev_nqn() {
 	cat "/sys/class/nvme/$1/subsysnqn" 2>/dev/null
 }
 
+# Device name of the DC connected on port $1, or non-zero if there is none.
+dc_dev() {
+	local port="$1" d
+
+	for d in /sys/class/nvme/nvme*; do
+		[ "$(cat "${d}/subsysnqn" 2>/dev/null)" = \
+		  nqn.2014-08.org.nvmexpress.discovery ] || continue
+		if grep -qE "trsvcid=${port}(,|$)" "${d}/address" \
+			2>/dev/null; then
+			basename "${d}"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Poll for up to $3 seconds for device $1 to reach controller state $2.
+wait_for_state() {
+	local dev="$1" want="$2" timeout="$3" waited=0
+
+	while [ "${waited}" -lt "${timeout}" ]; do
+		[ "$(cat "/sys/class/nvme/${dev}/state" 2>/dev/null)" = \
+		  "${want}" ] && return 0
+		sleep 1
+		waited=$((waited + 1))
+	done
+	return 1
+}
+
 # Watch for $4 seconds (default 10) that device $3 stays connected to
 # subsystem $2.
 assert_dev_holds() {
@@ -530,14 +566,19 @@ journal_has() {
 	journalctl -t nvme-discoverd --since "$1" 2>/dev/null | grep -q -- "$2"
 }
 
+# Poll for up to $4 seconds (default 0) for the journal line.
 assert_journal_has() {
-	local desc="$1" since="$2" pattern="$3"
+	local desc="$1" since="$2" pattern="$3" timeout="${4:-0}" waited=0
 
-	if journal_has "${since}" "${pattern}"; then
-		pass "${desc}"
-	else
-		fail "${desc}"
-	fi
+	until journal_has "${since}" "${pattern}"; do
+		if [ "${waited}" -ge "${timeout}" ]; then
+			fail "${desc}"
+			return
+		fi
+		sleep 1
+		waited=$((waited + 1))
+	done
+	pass "${desc}"
 }
 
 # The unit that owns device $1, as nvme-discoverd recorded it.
@@ -772,6 +813,7 @@ disconnect_foreign
 "${NVME_BIN}" disconnect -n "${LL_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
 # ... and left its desired controllers saved.
 rm -f "${DESIRED_FILE}"
 
@@ -1044,6 +1086,57 @@ assert_released "the excluded IOC" "${TARGET_NQN}" "${P_DEV}" \
 assert_journal_has "the release was logged" \
 	"${P_START}" "${P_DEV} - excluded, released"
 : > "${ETC_NVME_DIR}/exclusions.conf"
+
+phase "a restart adopts a DC that is not live"
+#
+# The kernel refuses to open a controller that is not LIVE (EWOULDBLOCK).
+# An adopted DC has its DLP fetched at once, so a restart while a DC
+# reconnects fetches from a device that cannot be opened. The fetch must
+# fail without crashing the daemon.
+nvmet_add_subsystem "${NL_NQN}"
+nvmet_add_port "${NL_PORT_ID}" "${NL_PORT}" "${NL_NQN}"
+discoverd_stop_daemon_only
+cat >> "${ETC_NVME_DIR}/nvme-fabrics.conf" <<EOF
+
+[Discovery Controller]
+persistent = force
+controller = transport=tcp;traddr=${TRADDR};trsvcid=${NL_PORT}
+EOF
+discoverd_start
+assert_connected "connects the subsystem listed in the DC's DLP" \
+	"${NL_NQN}" 30
+P_DEV=$(dc_dev "${NL_PORT}")
+log "DC connected as ${P_DEV:-<none>}"
+
+discoverd_stop_daemon_only
+log "nvmet: remove port ${NL_PORT}"
+rm -f "/sys/kernel/config/nvmet/ports/${NL_PORT_ID}/subsystems/${NL_NQN}"
+rmdir "/sys/kernel/config/nvmet/ports/${NL_PORT_ID}"
+if [ -n "${P_DEV}" ] && wait_for_state "${P_DEV}" connecting 30; then
+	pass "setup: the DC is connecting"
+else
+	fail "setup: the DC is connecting"
+fi
+
+P_START=$(date +%H:%M:%S)
+discoverd_start
+assert_journal_has "the DC was adopted" \
+	"${P_START}" "${P_DEV} - adopted" 10
+assert_journal_has "the DLP fetch failed" \
+	"${P_START}" "${P_DEV} - get_discovery_log failed" 10
+if systemctl is-active --quiet "${DISCOVERD_UNIT}"; then
+	pass "nvme-discoverd is still running"
+else
+	fail "nvme-discoverd is still running"
+fi
+
+nvmet_add_port "${NL_PORT_ID}" "${NL_PORT}" "${NL_NQN}"
+if wait_for_state "${P_DEV}" live 30; then
+	pass "the DC is live again once its port returns"
+else
+	fail "the DC is live again once its port returns"
+fi
+assert_connected "the IOC is connected" "${NL_NQN}" 30
 
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"
