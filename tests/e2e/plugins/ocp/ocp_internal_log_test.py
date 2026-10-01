@@ -29,6 +29,9 @@ Tests in this module verify:
     their Event Strings match the string log, and any Virtual FIFO events
     (class 0Bh) carry the identifier, subfields and names the raw bytes
     and string log call for.
+  * Each data area's statistics match the raw descriptors by identifier,
+    size and Context Index flag, down to the descriptors a Context
+    Statistic Descriptor encapsulates.
   * Decoding the saved files with -l/-s reproduces the report byte for
     byte, and the text report carries every section and FIFO in order.
   * A controller-initiated log, where the drive has one, is saved and
@@ -213,6 +216,23 @@ class TestOCPInternalLog(TestOCP):
                 for key, value in expected.items()
                 if decoded.get(key) != value]
 
+    @staticmethod
+    def _statistic_summary(decoded):
+        """Identifier, size, Context Index flag and encapsulated
+        identifiers of a reported statistic."""
+        return (decoded.get("Statistics Identifier"),
+                decoded.get("Statistic Data Size"),
+                decoded.get("Statistics Info Context Index"),
+                [inner.get("Statistics Identifier") for inner in
+                 decoded.get("Encapsulated Statistic Descriptors", [])])
+
+    @staticmethod
+    def _raw_statistic_summary(stat):
+        """_statistic_summary() of a layout.Statistic."""
+        return (f"0x{stat.stat_id:x}", f"0x{stat.size_dw:x}",
+                f"0x{int(stat.context_index):x}",
+                [f"0x{inner.stat_id:x}" for inner in stat.encapsulated])
+
     # ------------------------------------------------------------------
     # Tests
     # ------------------------------------------------------------------
@@ -265,6 +285,18 @@ class TestOCPInternalLog(TestOCP):
                         mismatches[:_MAX_REPORTED], [],
                         f"{len(mismatches)} fields disagree with the raw "
                         f"FIFO, as (byte offset, field, reported, expected)")
+
+    def test_statistics_match_the_raw_descriptors(self):
+        telemetry, _ = self._logs(self._capture())
+        report = self._report()
+        for da in (1, 2):
+            raw = list(layout.iter_statistics(telemetry, da))
+            reported = report[_stats(da)]
+            with self.subTest(data_area=da):
+                self.assertEqual([self._statistic_summary(s)
+                                  for s in reported],
+                                 [self._raw_statistic_summary(s)
+                                  for s in raw])
 
     def test_decoding_the_saved_logs_reproduces_the_report(self):
         prefix = self._capture()

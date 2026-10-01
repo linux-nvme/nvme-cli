@@ -198,6 +198,8 @@ class OCPMockTestBase(unittest.TestCase):
 # plugins/ocp/ocp-telemetry-decode.h).
 TEXT_RULE = '=' * 78
 TEXT_RULE2 = '-' * 77
+# Indent of the records in a nested list (STAT_NESTED_INDENT).
+TEXT_INDENT = ' ' * 4
 
 MODES = ('json', 'text')
 
@@ -237,13 +239,27 @@ def text_fields(lines):
 
 def text_records(lines):
     """Parse "key: value" lines into one dict per TEXT_RULE2-terminated
-    record, keeping line order. A value may be empty ("key: ")."""
+    record, keeping line order. A value may be empty ("key: ").
+
+    A "key:" line opens a list: the TEXT_INDENT-indented lines after it
+    are its records, parsed the same way, so the result has the shape of
+    the JSON report."""
     records = []
     current = {}
-    for line in lines:
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        i += 1
         if line == TEXT_RULE2:
             records.append(current)
             current = {}
+            continue
+        if line.endswith(':') and not line.startswith(TEXT_INDENT):
+            nested = []
+            while i < len(lines) and lines[i].startswith(TEXT_INDENT):
+                nested.append(lines[i][len(TEXT_INDENT):])
+                i += 1
+            current[line[:-1]] = text_records(nested)
             continue
         key, sep, value = line.partition(': ')
         if sep:
@@ -294,18 +310,26 @@ class OCPInternalLogTestBase(OCPMockTestBase):
     def decode(self, telemetry, strings, *args, mode='json', prefix=None):
         """Decode the fixtures and return the parsed report: a dict for
         JSON, [(title, [lines])] for text."""
+        return self.decode_with_output(telemetry, strings, *args, mode=mode,
+                                       prefix=prefix)[0]
+
+    def decode_with_output(self, telemetry, strings, *args, mode='json',
+                           prefix=None):
+        """decode(), also returning the run's combined output, where the
+        decoder reports what it could not decode."""
         if mode == 'text':
             args = ('-o', 'normal') + args
-        self.assertOk(self.run_internal_log(*args, telemetry=telemetry,
-                                            strings=strings, prefix=prefix))
+        result = self.assertOk(self.run_internal_log(
+            *args, telemetry=telemetry, strings=strings, prefix=prefix))
+        output = result.stdout + result.stderr
         path = self.report_path(mode, prefix)
         self.assertTrue(os.path.exists(path), f'{path} was not written')
         with open(path, encoding='utf-8') as f:
             content = f.read()
         if mode == 'text':
-            return parse_text_report(content)
+            return parse_text_report(content), output
         try:
-            return json.loads(content)
+            return json.loads(content), output
         except json.JSONDecodeError as exc:
             self.fail(f'{path} is not valid JSON ({exc}): {content!r}')
 

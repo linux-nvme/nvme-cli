@@ -704,12 +704,26 @@ struct telemetry_data_area_1 {
 #define STR_STATISTICS_IDENTIFIER "Statistics Identifier"
 #define STR_STATISTICS_IDENTIFIER_STR "Statistic Identifier String"
 #define STR_STATISTICS_INFO_BEHAVIOUR_TYPE "Statistics Info Behavior Type"
+#define STR_STATISTICS_INFO_CONTEXT_INDEX "Statistics Info Context Index"
+#define STR_STATISTICS_INFO_HOST_HINT_TYPE "Statistics Info Host Hint Type"
 #define STR_STATISTICS_INFO_RESERVED "Statistics Info Reserved"
 #define STR_NAMESPACE_IDENTIFIER "Namespace Identifier"
 #define STR_NAMESPACE_INFO_VALID "Namespace Information Valid"
 #define STR_STATISTICS_DATA_SIZE "Statistic Data Size"
-#define STR_RESERVED "Reserved"
+#define STR_NAMESPACE_IDENTIFIER_15_0 "Namespace Identifier[15:0]"
 #define STR_STATISTICS_SPECIFIC_DATA "Statistic Specific Data"
+#define STR_CONTEXT_DATA_SIZE "Context Data Size"
+#define STR_CONTEXT_DATA_RESERVED "Context Data Reserved"
+#define STR_CONTEXT_SCOPE "Context Scope"
+#define STR_CONTEXT_SCOPE_FIELDS "Context Scope Fields"
+#define STR_SCOPE_FIELD_STRING "Scope Field String"
+#define STR_SCOPE_FIELD_OFFSET "Scope Field Offset"
+#define STR_SCOPE_FIELD_SIZE "Scope Field Size"
+#define STR_SCOPE_FIELD_VALUE "Scope Field Value"
+#define STR_ENCAPSULATED_STATISTICS "Encapsulated Statistic Descriptors"
+#define STR_CONTEXT_NAMESPACE_ID "Namespace ID"
+#define STR_CONTEXT_CONTROLLER_ID "Controller ID"
+#define STR_CONTEXT_QUEUE_ID "Queue ID"
 #define STR_STATISTICS_WORST_DIE_PERCENT "Worst die % of bad blocks"
 #define STR_STATISTICS_WORST_DIE_RAW "Worst die raw number of bad blocks"
 #define STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT "Worst NAND channel % of bad blocks"
@@ -802,7 +816,11 @@ enum ocp_telemetry_statistic_identifiers {
 	MAX_NAND_CHANNEL_BAD_BLOCK_ID = 0x1C,
 	MIN_NAND_CHANNEL_BAD_BLOCK_ID = 0x1D,
 
-	//RESERVED = 7FFFh-1Eh,
+	NAMESPACE_ID_CONTEXT_ID = 0x6D,
+	CONTROLLER_ID_CONTEXT_ID = 0x6E,
+	QUEUE_ID_CONTEXT_ID = 0x6F,
+
+	//RESERVED = 7FFFh-70h,
 	//VENDOR_UNIQUE_CLASS_TYPE = FFFFh-8000h,
 };
 
@@ -1158,11 +1176,23 @@ struct __packed nvme_ocp_telemetry_statistic_descriptor
 {
 	__le16 statistic_id;                    // Bytes 1:0
 	__u8 statistic_info_behaviour_type : 4; // Byte  2(3:0)
-	__u8 statistic_info_reserved : 4;       // Byte  2(7:4)
+	__u8 statistic_info_host_hint_type : 2; // Byte  2(5:4)
+	__u8 statistic_info_context_index : 1;  // Byte  2(6)
+	__u8 statistic_info_reserved : 1;       // Byte  2(7)
 	__u8 ns_info_nsid : 7;                  // Bytes 3(6:0)
 	__u8 ns_info_ns_info_valid : 1;         // Bytes 3(7)
 	__le16 statistic_data_size;             // Bytes 5:4
-	__le16 reserved;                        // Bytes 7:6
+	__le16 ns_identifier_15_0;              // Bytes 7:6
+};
+
+/* Context data at the start of a Context Statistic Descriptor's data */
+#define CONTEXT_DATA_DWORDS 2
+
+struct __packed nvme_ocp_statistic_context_data
+{
+	__le16 context_data_size; // Bytes 1:0
+	__le16 reserved;          // Bytes 3:2
+	__u8 scope[4];            // Bytes 7:4
 };
 
 struct __packed nvme_ocp_telemetry_event_descriptor
