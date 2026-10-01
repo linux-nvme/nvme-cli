@@ -45,12 +45,12 @@ Tests in this module verify:
     end-of-list identifier inside one. Two containers are checked
     against a customer's example report, field for field.
   * Option handling: the controller telemetry support gate, the log ID
-    check, invalid -a, -t and -o values, and -o json.
+    check, -a 3 and -a 4 decoding Data Area 2, invalid -a, -t and -o
+    values, and -o json.
 
 Known defects are covered by expectedFailure tests asserting the correct
 behavior: a controller log's JSON header is decoded with the host
-header's layout, -a 3 and -a 4 decode only Data Area 1, and invalid -a
-and -t values exit 0.
+header's layout, and invalid -a and -t values exit 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -1098,10 +1098,9 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
         self.assertNotEqual(self._invalid_option('-t', 'bogus').returncode,
                             0)
 
-    @unittest.expectedFailure
     def test_data_areas_3_and_4_include_data_area_2(self):
-        """Defect: -a documents "Data Areas 1, 2, and 3" for 3 (and 1..4
-        for 4), but the printers decode Data Area 2 only for -a 2."""
+        """-a 3 and -a 4 decode Data Areas 1 and 2; Data Areas 3 and 4
+        have no OCP layout to decode."""
         for value in ('3', '4'):
             with self.subTest(data_area=value):
                 report = self.decode(telemetry_log(), string_log(),

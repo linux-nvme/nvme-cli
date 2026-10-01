@@ -979,7 +979,7 @@ class TestEventFifoLayout(EventFifoTestBase):
                          [f'EVENT FIFO {n} - {PHYS_NAMES[n]}'
                           for n in (1, 5, 16)])
 
-    def test_data_area_2_fifos_are_decoded_only_with_data_area_2(self):
+    def test_data_area_2_fifos_are_decoded_from_data_area_2_up(self):
         nvme_event = layout.event(layout.CLASS_NVME, 0x32, bytes(8))
         telemetry = layout.pack_telemetry(fifos={
             1: layout.Fifo(1, [PCIE_EVENT]), 2: layout.Fifo(2, [nvme_event])})
@@ -1002,6 +1002,12 @@ class TestEventFifoLayout(EventFifoTestBase):
                 {**common(layout.CLASS_NVME, 0x32, 2),
                  'Class Specific Data': '0000000000000000'},
             ], '-a', '2', number=2, da=2)
+        for value in ('3', '4'):
+            with self.subTest(data_area=value):
+                self.assertEqual(
+                    self.fifo_titles_for(telemetry, strings(), '-a', value,
+                                         da=2),
+                    [f'EVENT FIFO 2 - {PHYS_NAMES[2]}'])
 
     def test_fifos_outside_data_areas_1_and_2_are_skipped(self):
         telemetry = layout.pack_telemetry(fifos={

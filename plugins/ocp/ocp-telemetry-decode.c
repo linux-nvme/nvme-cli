@@ -2042,7 +2042,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	}
 
 	//Set the DA to 2
-	if (options->data_area == 2) {
+	if (options->data_area >= DATA_AREA_2) {
 		offsets.data_area = 2;
 		fprintf(fp, STR_LINE);
 		fprintf(fp, "%s\n", STR_DA_2_STATS);
@@ -2165,7 +2165,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 		goto out;
 	}
 
-	if (options->data_area == 2) {
+	if (options->data_area >= DATA_AREA_2) {
 		//Set the DA to 2
 		offsets.data_area = 2;
 		//Data Area 2 Statistics
