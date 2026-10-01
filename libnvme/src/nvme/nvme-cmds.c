@@ -53,17 +53,24 @@ __shr_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, bool rae,
 		__u32 xfer_len)
 {
-	__u64 offset = 0, xfer, data_len = cmd->data_len;
-	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
-	__u64 lpo;
-	void *ptr = (void *)(uintptr_t)cmd->addr;
-	int ret;
-	bool _rae;
-	__u32 numd;
+	__u64 offset = 0, xfer, data_len, start, lpo;
+	__u32 numd, cdw10, cdw11;
 	__u16 numdu, numdl;
-	__u32 cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
-				    NVME_VAL(LOG_CDW10_LSP));
-	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
+	bool _rae;
+	void *ptr;
+	int ret;
+
+	if (!hdl)
+		return -ENODEV;
+	if (!cmd || xfer_len < 4)
+		return -EINVAL;
+
+	data_len = cmd->data_len;
+	start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
+	ptr = (void *)(uintptr_t)cmd->addr;
+	cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
+			      NVME_VAL(LOG_CDW10_LSP));
+	cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
 
 	if (hdl->ctx->force_4k)
 		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
@@ -118,18 +125,24 @@ __shr_public int libnvme_get_log_dynamic_chunk(
 			      struct libnvme_passthru_cmd *cmd, bool rae,
 			      __u32 xfer_len)
 {
-	__u64 offset = 0, xfer, data_len = cmd->data_len;
-	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
-	__u64 lpo;
-	void *ptr = (void *)(uintptr_t)cmd->addr;
-	int ret;
-	bool _rae;
-	__u32 numd;
+	__u64 offset = 0, xfer, data_len, start, lpo;
+	__u32 numd, cdw10, cdw11;
 	__u16 numdu, numdl;
-	__u32 cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
-				    NVME_VAL(LOG_CDW10_LSP));
-	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
+	bool _rae;
+	void *ptr;
+	int ret;
 
+	if (!hdl)
+		return -ENODEV;
+	if (!cmd || xfer_len < 4)
+		return -EINVAL;
+
+	data_len = cmd->data_len;
+	start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
+	ptr = (void *)(uintptr_t)cmd->addr;
+	cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
+			      NVME_VAL(LOG_CDW10_LSP));
+	cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
 
 	if (hdl->ctx->force_4k)
 		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
@@ -378,6 +391,11 @@ __shr_public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd cmd;
 	struct nvme_id_ctrl ctrl;
 	int err;
+
+	if (!hdl)
+		return -ENODEV;
+	if (!uuid_list)
+		return -EINVAL;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	nvme_init_identify_ctrl(&cmd, &ctrl);

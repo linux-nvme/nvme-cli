@@ -1199,6 +1199,106 @@ out:
 	return pass;
 }
 
+/* -------------------------------------------------------------------------
+ * A NULL transport handle — the controller device could not be opened
+ * -------------------------------------------------------------------------
+ */
+static bool test_null_transport_handle(struct libnvme_global_ctx *ctx)
+{
+	struct libnvme_ctrl_params params = {
+		.transport = "tcp",
+		.subsysnqn = NVME_DISC_SUBSYS_NAME,
+		.traddr = "192.168.1.10",
+	};
+	struct nvmf_discovery_log *log = NULL;
+	struct nvme_id_uuid_list uuids;
+	struct libnvme_passthru_cmd cmd;
+	struct libnvme_transport_handle *hdl;
+	struct libnvme_ctrl *c = NULL;
+	__u8 buf[64];
+	bool pass = true, p;
+	int ret;
+
+	printf("\ntest_null_transport_handle:\n");
+
+	nvme_init_get_log_discovery(&cmd, 0, buf, sizeof(buf));
+	ret = libnvme_get_log(NULL, &cmd, false, sizeof(buf));
+	p = ret == -ENODEV;
+	CHECK(p, "libnvme_get_log() returns -ENODEV: %d", ret);
+	pass &= p;
+
+	ret = libnvme_get_log_dynamic_chunk(NULL, &cmd, false, sizeof(buf));
+	p = ret == -ENODEV;
+	CHECK(p, "libnvme_get_log_dynamic_chunk() returns -ENODEV: %d", ret);
+	pass &= p;
+
+	ret = libnvme_get_uuid_list(NULL, &uuids);
+	p = ret == -ENODEV;
+	CHECK(p, "libnvme_get_uuid_list() returns -ENODEV: %d", ret);
+	pass &= p;
+
+	/* Any non-NULL pointer: the handle is never used. */
+	hdl = (struct libnvme_transport_handle *)buf;
+
+	ret = libnvme_get_log(hdl, NULL, false, sizeof(buf));
+	p = ret == -EINVAL;
+	CHECK(p, "libnvme_get_log() rejects a NULL cmd: %d", ret);
+	pass &= p;
+
+	ret = libnvme_get_log_dynamic_chunk(hdl, NULL, false, sizeof(buf));
+	p = ret == -EINVAL;
+	CHECK(p, "libnvme_get_log_dynamic_chunk() rejects a NULL cmd: %d",
+	      ret);
+	pass &= p;
+
+	ret = libnvme_get_log(hdl, &cmd, false, 0);
+	p = ret == -EINVAL;
+	CHECK(p, "libnvme_get_log() rejects xfer_len 0: %d", ret);
+	pass &= p;
+
+	ret = libnvme_get_log(hdl, &cmd, false, 3);
+	p = ret == -EINVAL;
+	CHECK(p, "libnvme_get_log() rejects xfer_len 3: %d", ret);
+	pass &= p;
+
+	ret = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, 0);
+	p = ret == -EINVAL;
+	CHECK(p, "libnvme_get_log_dynamic_chunk() rejects xfer_len 0: %d",
+	      ret);
+	pass &= p;
+
+	ret = libnvme_get_uuid_list(hdl, NULL);
+	p = ret == -EINVAL;
+	CHECK(p, "libnvme_get_uuid_list() rejects a NULL list: %d", ret);
+	pass &= p;
+
+	ret = libnvmf_get_discovery_log(NULL, NULL, &log);
+	p = ret == -EINVAL;
+	CHECK(p, "libnvmf_get_discovery_log() rejects a NULL ctrl: %d", ret);
+	pass &= p;
+
+	libnvme_create_ctrl(ctx, &params, &c);
+	CHECK(c, "ctrl created");
+	if (!c)
+		return false;
+
+	ret = libnvmf_get_discovery_log(c, NULL, NULL);
+	p = ret == -EINVAL;
+	CHECK(p, "libnvmf_get_discovery_log() rejects a NULL logp: %d", ret);
+	pass &= p;
+
+	/* Not an nvme device name, so libnvme_open() fails. */
+	c->name = strdup("nvme-null-hdl");
+	ret = libnvmf_get_discovery_log(c, NULL, &log);
+	p = ret == -ENODEV && !log;
+	CHECK(p, "libnvmf_get_discovery_log() returns -ENODEV: %d", ret);
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	struct libnvme_global_ctx *ctx;
@@ -1235,6 +1335,7 @@ int main(int argc, char *argv[])
 	test_create_ctrl_credentials(ctx);
 	test_generate_hostid(ctx);
 	test_kernel_options();
+	test_null_transport_handle(ctx);
 
 	libnvme_free_global_ctx(ctx);
 
