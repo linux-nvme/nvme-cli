@@ -44,7 +44,17 @@ int shr_mkdir(const char *path, mode_t mode)
 
 int shr_mkstemp(char *template)
 {
+	size_t len = strlen(template);
 	int fd;
+
+	/*
+	 * glibc rejects a template without a trailing "XXXXXX", but FreeBSD
+	 * replaces however many X's there are, even none, and then simply
+	 * creates the template as given. Reject it everywhere, like
+	 * fs-util-win.c does.
+	 */
+	if (len < 6 || strcmp(&template[len - 6], "XXXXXX"))
+		return -EINVAL;
 
 	/*
 	 * mkostemp() sets O_CLOEXEC atomically but its glibc declaration is
