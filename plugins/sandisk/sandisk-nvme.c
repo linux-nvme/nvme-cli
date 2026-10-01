@@ -21,6 +21,7 @@
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
 #include <shared/parse-util.h>
+#include <shared/proc-util.h>
 
 #include "global-ctx.h"
 #include "nvme-cmds.h"
@@ -31,7 +32,7 @@
 #include "sandisk-utils.h"
 #include "src/cleanup.h"
 
-#define SANDISK_PLUGIN_VERSION   "3.1.5"
+#define SANDISK_PLUGIN_VERSION   "3.1.6"
 
 static __u8 ocp_C2_guid[SNDK_GUID_LENGTH] = {
 	0x6D, 0x79, 0x9A, 0x76, 0xB4, 0xDA, 0xF6, 0xA3,
@@ -168,9 +169,22 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 {
 	char host_file[PATH_MAX] = {0};
 	char controller_file[PATH_MAX] = {0};
-	__cleanup_free char *tar_cmd = NULL;
+	/* Run tar without a shell so paths can never become syntax. */
+	const char *const tar_argv[] = {
+		"tar", "-cf", tar_file, host_file, controller_file, NULL
+	};
+	shr_proc_t proc;
+	bool exited;
+	int code;
 	char *base_name;
 	int ret = 0;
+
+	/* tar would parse a leading '-' in the file names as an option. */
+	if (tar_file[0] == '-') {
+		nvme_show_error("%s: File name must not start with '-'",
+				__func__);
+		return -EINVAL;
+	}
 
 	base_name = strdup(tar_file);
 	if (!base_name) {
@@ -213,14 +227,11 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 	
 	/* Create tar file containing both telemetry files */
 	nvme_show_error("%s: Creating tar file %s", __func__, tar_file);
-	if (asprintf(&tar_cmd, "tar -cf \"%s\" \"%s\" \"%s\"",
-		     tar_file, host_file, controller_file) < 0) {
-		ret = -ENOMEM;
-		goto cleanup_host;
-	}
-
-	ret = system(tar_cmd);
-	if (ret) {
+	fflush(stdout);
+	ret = shr_spawnp(tar_argv, -1, -1, &proc);
+	if (!ret)
+		ret = shr_wait_proc(proc, &exited, &code);
+	if (ret || !exited || code) {
 		nvme_show_error("%s: Failed to create tar file: %s",
 			__func__, tar_file);
 		ret = -1;
