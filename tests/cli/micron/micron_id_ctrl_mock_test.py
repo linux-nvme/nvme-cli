@@ -181,6 +181,16 @@ class TestMicronIdCtrl(TestMicronMock):
         self.assertIn(_UNKNOWN_MODEL_WARNING, result.stderr)
         self.assertIn(_IDENTIFY_HEADER, result.stdout)
 
+    def test_unrecognised_drive_warning_stays_out_of_json(self):
+        """In JSON mode the warning goes to stderr, not into the output."""
+        self.select_model(None)
+        result = self.run_plugin_cmd_check(_COMMAND, args="-o json")
+        data = self.parse_json_output(result.stdout,
+                                      f"micron {_COMMAND} -o json")
+
+        self.assertIn(_UNKNOWN_MODEL_WARNING, result.stderr)
+        self.assertNotIn("error", data)
+
     def test_recognised_drive_does_not_warn(self):
         result = self.run_plugin_cmd_check(_COMMAND)
 
