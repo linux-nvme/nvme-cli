@@ -30,7 +30,6 @@ struct config {
 	__u8  data_area;
 	char *cfg_file;
 	char *binary_file;
-	char *jq_filter;
 };
 
 static void cleanup_json_object(struct json_object **jobj_ptr)
@@ -47,7 +46,6 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 	const char *dgen = "Pick which telemetry data area to report. Default is 3 to fetch areas 1-3. Valid options are 1, 2, 3, 4.";
 	const char *cfile = "JSON configuration file";
 	const char *sfile = "binary file containing log dump";
-	const char *jqfilt = "JSON config entry name containing jq filter";
 	bool has_binary_file = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -72,8 +70,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
 		OPT_BYTE("data-area",       'd', &cfg.data_area, dgen),
 		OPT_FILE("config-file",     'j', &cfg.cfg_file, cfile),
-		OPT_FILE("source-file",     's', &cfg.binary_file, sfile),
-		OPT_STR("jq-filter",        'q', &cfg.jq_filter, jqfilt));
+		OPT_FILE("source-file",     's', &cfg.binary_file, sfile));
 
 	int err = parse_args(argc, argv, desc, opts);
 
@@ -166,57 +163,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 	tl.log = tlog;
 	solidigm_telemetry_log_data_areas_parse(&tl, cfg.data_area);
 
-	/* Check if jq filter is requested and available */
-	if (cfg.jq_filter && configuration) {
-		struct json_object *jq_filter_obj = NULL;
-
-		if (json_object_object_get_ex(configuration, cfg.jq_filter,
-					      &jq_filter_obj)) {
-			const char *jq_filter_str;
-
-			jq_filter_str = json_object_get_string(jq_filter_obj);
-			if (jq_filter_str) {
-				/* Get JSON string representation */
-				const char *json_str;
-				char cmd[1024];
-				FILE *jq_pipe;
-
-				json_str = json_object_to_json_string(tl.root);
-
-				/* Create jq command and pipe JSON through it */
-				snprintf(cmd, sizeof(cmd), "jq -r '%s'",
-					 jq_filter_str);
-				jq_pipe = popen(cmd, "w");
-				if (jq_pipe) {
-					fprintf(jq_pipe, "%s", json_str);
-					err = pclose(jq_pipe);
-					if (err != 0)
-						err = -EINVAL;
-				} else {
-					errno = ENOENT;
-					nvme_show_perror(
-						"Failed to execute jq command");
-					err = -ENOENT;
-				}
-			} else {
-				nvme_show_error(
-					"jq filter entry '%s' is not a valid string",
-					cfg.jq_filter);
-				err = -EINVAL;
-			}
-		} else {
-			nvme_show_error(
-				"jq filter entry '%s' not found in configuration file",
-				cfg.jq_filter);
-			err = -ENOENT;
-		}
-	} else {
-		/*
-		 * No jq filter requested or no config file,
-		 * use normal JSON output
-		 */
-		json_print_object(tl.root, NULL);
-	}
+	json_print_object(tl.root, NULL);
 	printf("\n");
 
 	return err;
