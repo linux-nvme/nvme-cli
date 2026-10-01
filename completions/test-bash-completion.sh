@@ -22,7 +22,7 @@ shopt -s progcomp
 _here="$(cd "$(dirname "$0")" && pwd)"
 _generated="$(mktemp)"
 trap 'rm -f "$_generated"' EXIT
-if ! python3 "$_here/generate-completions.py" --bash "$_generated" \
+if ! "${PYTHON3:-python3}" "$_here/generate-completions.py" --bash "$_generated" \
         < "$_here/test-command-metadata.json"; then
     echo "failed to generate bash completion from fixture" >&2
     exit 1

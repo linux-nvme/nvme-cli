@@ -57,24 +57,29 @@ endif
 
 # ---------------------------------------------------------------------------
 # Shell test suites: each drives the real completion entry point and exits
-# non-zero on failure.  They need the matching interpreter installed.
+# non-zero on failure.  They need the matching interpreter installed, and
+# bash/zsh run the generator via $PYTHON3: find_program() falls back to the
+# Python running meson, so this works where there is no python3 on PATH (e.g.
+# FreeBSD only ships python3.X).
 # ---------------------------------------------------------------------------
 _bash = find_program('bash', required: false)
-if want_tests and _bash.found()
+if want_tests and _bash.found() and _py3.found()
     test(
         'nvme-cli - bash-completion',
         _bash,
         args: [files('test-bash-completion.sh')],
+        env: {'PYTHON3': _py3.full_path()},
         timeout: 120,
     )
 endif
 
 _zsh = find_program('zsh', required: false)
-if want_tests and _zsh.found()
+if want_tests and _zsh.found() and _py3.found()
     test(
         'nvme-cli - zsh-completion',
         _zsh,
         args: [files('test-zsh-completion.sh')],
+        env: {'PYTHON3': _py3.full_path()},
         timeout: 120,
     )
 endif
