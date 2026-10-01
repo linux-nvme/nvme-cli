@@ -1788,6 +1788,277 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 	return 0;
 }
 
+#define STAT_NESTED_INDENT "    "
+
+/* Where a statistic is printed: a JSON object, or text lines to fp */
+struct stat_sink {
+	struct json_object *obj;
+	FILE *fp;
+	const char *indent;
+};
+
+static FILE *stat_stream(struct stat_sink *s)
+{
+	return s->fp ? s->fp : stdout;
+}
+
+static void stat_add_hex(struct stat_sink *s, const char *key, __u32 value, int width)
+{
+	if (s->obj)
+		json_add_formatted_u32_str(s->obj, key, value);
+	else
+		fprintf(stat_stream(s), "%s%s: 0x%0*x\n", s->indent, key, width, value);
+}
+
+static void stat_add_str(struct stat_sink *s, const char *key, const char *value)
+{
+	if (s->obj)
+		json_object_add_value_string(s->obj, key, value);
+	else
+		fprintf(stat_stream(s), "%s%s: %s\n", s->indent, key, value);
+}
+
+static void stat_add_data(struct stat_sink *s, const char *key, __u8 *data, unsigned int size)
+{
+	if (s->obj) {
+		json_add_formatted_var_size_str(s->obj, key, data, size);
+	} else {
+		fputs(s->indent, stat_stream(s));
+		print_formatted_var_size_str(key, data, size, stat_stream(s));
+	}
+}
+
+/* Returns the JSON array to add items to, NULL in text mode */
+static struct json_object *stat_list_begin(struct stat_sink *s, const char *key)
+{
+	struct json_object *array = NULL;
+
+	if (s->obj) {
+		array = json_create_array();
+		json_object_add_value_array(s->obj, key, array);
+	} else {
+		fprintf(stat_stream(s), "%s%s:\n", s->indent, key);
+	}
+	return array;
+}
+
+static void stat_item_begin(struct stat_sink *item, struct json_object *array, FILE *fp,
+			    const char *indent)
+{
+	item->obj = array ? json_create_object() : NULL;
+	item->fp = fp;
+	item->indent = indent;
+}
+
+static void stat_item_end(struct stat_sink *item, struct json_object *array)
+{
+	if (array)
+		json_array_add_value_object(array, item->obj);
+	else
+		fprintf(stat_stream(item), "%s%s", item->indent, STR_LINE2);
+}
+
+static __u32 get_le_field(const __u8 *p, unsigned int size)
+{
+	__u32 value = 0;
+
+	while (size--)
+		value = (value << 8) | p[size];
+	return value;
+}
+
+/* Scope fields by offset into the context data (OCP 2.7 section 4.9.12) */
+static const struct {
+	__u16 stat_id;
+	const char *name;
+	__u8 offset;
+	__u8 size;
+} context_scope_fields[] = {
+	{ NAMESPACE_ID_CONTEXT_ID,  STR_CONTEXT_NAMESPACE_ID,  4, 4 },
+	{ CONTROLLER_ID_CONTEXT_ID, STR_CONTEXT_CONTROLLER_ID, 6, 2 },
+	{ QUEUE_ID_CONTEXT_ID,      STR_CONTEXT_CONTROLLER_ID, 4, 2 },
+	{ QUEUE_ID_CONTEXT_ID,      STR_CONTEXT_QUEUE_ID,      6, 2 },
+};
+
+static const struct {
+	__u16 stat_id;
+	const char *percent;
+	const char *raw;
+} bad_block_statistics[] = {
+	{ MAX_DIE_BAD_BLOCK_ID, STR_STATISTICS_WORST_DIE_PERCENT,
+	  STR_STATISTICS_WORST_DIE_RAW },
+	{ MAX_NAND_CHANNEL_BAD_BLOCK_ID, STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT,
+	  STR_STATISTICS_WORST_NAND_CHANNEL_RAW },
+	{ MIN_NAND_CHANNEL_BAD_BLOCK_ID, STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT,
+	  STR_STATISTICS_BEST_NAND_CHANNEL_RAW },
+};
+
+static bool is_context_scope_id(__u16 id)
+{
+	return id >= NAMESPACE_ID_CONTEXT_ID && id <= QUEUE_ID_CONTEXT_ID;
+}
+
+static bool is_context_statistic(struct nvme_ocp_telemetry_statistic_descriptor *d)
+{
+	return d->statistic_info_context_index ||
+		is_context_scope_id(le16_to_cpu(d->statistic_id));
+}
+
+static void print_statistics(__u8 *pstats, unsigned int size, struct json_object *array,
+			     FILE *fp, bool encapsulated, const char *where);
+
+static void parse_context_statistic(__u16 id, __u8 *pdata, unsigned int data_size,
+				    struct stat_sink *s)
+{
+	struct nvme_ocp_statistic_context_data *context =
+		(struct nvme_ocp_statistic_context_data *)pdata;
+	__u16 context_size = le16_to_cpu(context->context_data_size);
+	char where[64];
+	struct json_object *array;
+	struct stat_sink item;
+	size_t i;
+
+	/*
+	 * The encapsulated descriptors follow the context data whatever its
+	 * declared size, so an invalid Context Data Size is only reported.
+	 */
+	if (!context_size || context_size > data_size / SIZE_OF_DWORD)
+		nvme_show_error("Context Statistic 0x%x: "
+				"Context Data Size 0x%x is outside 1 to 0x%x",
+				id, context_size, data_size / SIZE_OF_DWORD);
+
+	stat_add_hex(s, STR_CONTEXT_DATA_SIZE, context_size, 0);
+	stat_add_hex(s, STR_CONTEXT_DATA_RESERVED, le16_to_cpu(context->reserved), 0);
+	stat_add_data(s, STR_CONTEXT_SCOPE, context->scope, sizeof(context->scope));
+
+	if (is_context_scope_id(id)) {
+		array = stat_list_begin(s, STR_CONTEXT_SCOPE_FIELDS);
+		for (i = 0; i < ARRAY_SIZE(context_scope_fields); i++) {
+			__u8 offset = context_scope_fields[i].offset;
+			__u8 size = context_scope_fields[i].size;
+
+			if (context_scope_fields[i].stat_id != id)
+				continue;
+			stat_item_begin(&item, array, s->fp, STAT_NESTED_INDENT);
+			stat_add_str(&item, STR_SCOPE_FIELD_STRING, context_scope_fields[i].name);
+			stat_add_hex(&item, STR_SCOPE_FIELD_OFFSET, offset, 0);
+			stat_add_hex(&item, STR_SCOPE_FIELD_SIZE, size, 0);
+			stat_add_hex(&item, STR_SCOPE_FIELD_VALUE,
+				     get_le_field(pdata + offset, size), 0);
+			stat_item_end(&item, array);
+		}
+	}
+
+	snprintf(where, sizeof(where),
+		 "Encapsulated Statistic Descriptors of Context Statistic 0x%x", id);
+	array = stat_list_begin(s, STR_ENCAPSULATED_STATISTICS);
+	print_statistics(pdata + sizeof(*context), data_size - sizeof(*context), array, s->fp,
+			 true, where);
+}
+
+static void print_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
+			    struct json_object *pstats_array, FILE *fp, bool encapsulated)
+{
+	__u16 id = le16_to_cpu(pstatistic_entry->statistic_id);
+	__u16 data_dwords = le16_to_cpu(pstatistic_entry->statistic_data_size);
+	unsigned int data_size = data_dwords * SIZE_OF_DWORD;
+	__u8 *pdata = (__u8 *)pstatistic_entry + sizeof(*pstatistic_entry);
+	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
+	bool context = is_context_statistic(pstatistic_entry);
+	struct stat_sink s;
+	size_t i;
+
+	parse_ocp_telemetry_string_log(0, id, 0, STATISTICS_IDENTIFIER_STRING, description_str);
+
+	stat_item_begin(&s, pstats_array, fp, encapsulated ? STAT_NESTED_INDENT : "");
+	stat_add_hex(&s, STR_STATISTICS_IDENTIFIER, id, 0);
+	stat_add_str(&s, STR_STATISTICS_IDENTIFIER_STR, description_str);
+	stat_add_hex(&s, STR_STATISTICS_INFO_BEHAVIOUR_TYPE,
+		     pstatistic_entry->statistic_info_behaviour_type, 0);
+	stat_add_hex(&s, STR_STATISTICS_INFO_CONTEXT_INDEX,
+		     pstatistic_entry->statistic_info_context_index, 0);
+	stat_add_hex(&s, STR_STATISTICS_INFO_HOST_HINT_TYPE,
+		     pstatistic_entry->statistic_info_host_hint_type, 0);
+	stat_add_hex(&s, STR_STATISTICS_INFO_RESERVED,
+		     pstatistic_entry->statistic_info_reserved, 0);
+	stat_add_hex(&s, STR_NAMESPACE_IDENTIFIER, pstatistic_entry->ns_info_nsid, 0);
+	stat_add_hex(&s, STR_NAMESPACE_INFO_VALID, pstatistic_entry->ns_info_ns_info_valid, 0);
+	stat_add_hex(&s, STR_STATISTICS_DATA_SIZE, data_dwords, 0);
+	stat_add_hex(&s, STR_NAMESPACE_IDENTIFIER_15_0,
+		     le16_to_cpu(pstatistic_entry->ns_identifier_15_0), 0);
+
+	/* Context Statistic Descriptors do not nest; the walk reports one that does */
+	if (context && !encapsulated) {
+		if (data_dwords >= CONTEXT_DATA_DWORDS) {
+			parse_context_statistic(id, pdata, data_size, &s);
+			goto out;
+		}
+		nvme_show_error("Context Statistic 0x%x: %u data bytes cannot hold "
+				"its context data", id, data_size);
+	}
+
+	for (i = 0; !context && data_size >= 4 && i < ARRAY_SIZE(bad_block_statistics); i++) {
+		if (bad_block_statistics[i].stat_id != id)
+			continue;
+		stat_add_hex(&s, bad_block_statistics[i].percent, pdata[0], 2);
+		stat_add_hex(&s, bad_block_statistics[i].raw, get_le_field(pdata + 2, 2), 4);
+		goto out;
+	}
+
+	stat_add_data(&s, STR_STATISTICS_SPECIFIC_DATA, pdata, data_size);
+out:
+	stat_item_end(&s, pstats_array);
+}
+
+/*
+ * Prints the statistic descriptors in the @size bytes at @pstats, up to the
+ * first reserved identifier or the first descriptor that does not fit.
+ */
+static void print_statistics(__u8 *pstats, unsigned int size, struct json_object *array,
+			     FILE *fp, bool encapsulated, const char *where)
+{
+	struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry;
+	unsigned int offset = 0, left, data_size;
+	__u16 id;
+
+	/* Sizes are in Dwords, so the identifier always fits */
+	while (offset < size) {
+		pstatistic_entry = (struct nvme_ocp_telemetry_statistic_descriptor *)
+			(pstats + offset);
+		id = le16_to_cpu(pstatistic_entry->statistic_id);
+		left = size - offset;
+
+		if (id == STATISTICS_RESERVED_ID)
+			break;
+		if (left < sizeof(*pstatistic_entry)) {
+			nvme_show_error("Invalid statistic at offset 0x%x of %s: "
+					"descriptor needs %zu bytes, %u left",
+					offset, where, sizeof(*pstatistic_entry), left);
+			break;
+		}
+		data_size = le16_to_cpu(pstatistic_entry->statistic_data_size) * SIZE_OF_DWORD;
+		if (left - sizeof(*pstatistic_entry) < data_size) {
+			nvme_show_error("Invalid statistic at offset 0x%x of %s: "
+					"Statistic ID 0x%x declares %u data bytes, %zu left",
+					offset, where, id, data_size,
+					left - sizeof(*pstatistic_entry));
+			break;
+		}
+		if (encapsulated && is_context_statistic(pstatistic_entry))
+			nvme_show_error("Invalid statistic at offset 0x%x of %s: "
+					"Context Statistic Descriptor 0x%x does not nest",
+					offset, where, id);
+
+		print_statistic(pstatistic_entry, array, fp, encapsulated);
+
+		/*
+		 * A Context Statistic Descriptor's data size spans its context
+		 * data and its encapsulated descriptors.
+		 */
+		offset += sizeof(*pstatistic_entry) + data_size;
+	}
+}
+
 int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
 		    struct json_object *pstats_array, FILE *fp)
 {
@@ -1800,154 +2071,7 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 		/* End of statistics entries, return -1 to stop processing the buffer */
 		return -1;
 
-	unsigned int data_size = pstatistic_entry->statistic_data_size * SIZE_OF_DWORD;
-	__u8 *pdata = (__u8 *)pstatistic_entry +
-		sizeof(struct nvme_ocp_telemetry_statistic_descriptor);
-	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
-
-	parse_ocp_telemetry_string_log(0, pstatistic_entry->statistic_id, 0,
-		STATISTICS_IDENTIFIER_STRING, description_str);
-
-	if (pstats_array != NULL) {
-		struct json_object *pstatistics_object = json_create_object();
-
-		json_add_formatted_u32_str(pstatistics_object, STR_STATISTICS_IDENTIFIER,
-			pstatistic_entry->statistic_id);
-		json_object_add_value_string(pstatistics_object, STR_STATISTICS_IDENTIFIER_STR,
-			description_str);
-		json_add_formatted_u32_str(pstatistics_object,
-			STR_STATISTICS_INFO_BEHAVIOUR_TYPE,
-			pstatistic_entry->statistic_info_behaviour_type);
-		json_add_formatted_u32_str(pstatistics_object, STR_STATISTICS_INFO_RESERVED,
-			pstatistic_entry->statistic_info_reserved);
-		json_add_formatted_u32_str(pstatistics_object, STR_NAMESPACE_IDENTIFIER,
-			pstatistic_entry->ns_info_nsid);
-		json_add_formatted_u32_str(pstatistics_object, STR_NAMESPACE_INFO_VALID,
-			pstatistic_entry->ns_info_ns_info_valid);
-		json_add_formatted_u32_str(pstatistics_object, STR_STATISTICS_DATA_SIZE,
-			pstatistic_entry->statistic_data_size);
-		json_add_formatted_u32_str(pstatistics_object, STR_RESERVED,
-			pstatistic_entry->reserved);
-		if (pstatistic_entry->statistic_id == MAX_DIE_BAD_BLOCK_ID) {
-			json_add_formatted_u32_str(pstatistics_object,
-					STR_STATISTICS_WORST_DIE_PERCENT,
-					pdata[0]);
-			json_add_formatted_u32_str(pstatistics_object,
-					STR_STATISTICS_WORST_DIE_RAW,
-					*(__u16 *)&pdata[2]);
-		} else if (pstatistic_entry->statistic_id == MAX_NAND_CHANNEL_BAD_BLOCK_ID) {
-			json_add_formatted_u32_str(pstatistics_object,
-					STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT,
-					pdata[0]);
-			json_add_formatted_u32_str(pstatistics_object,
-					STR_STATISTICS_WORST_NAND_CHANNEL_RAW,
-					*(__u16 *)&pdata[2]);
-		} else if (pstatistic_entry->statistic_id == MIN_NAND_CHANNEL_BAD_BLOCK_ID) {
-			json_add_formatted_u32_str(pstatistics_object,
-					STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT,
-					pdata[0]);
-			json_add_formatted_u32_str(pstatistics_object,
-					STR_STATISTICS_BEST_NAND_CHANNEL_RAW,
-					*(__u16 *)&pdata[2]);
-		} else {
-			json_add_formatted_var_size_str(pstatistics_object,
-					STR_STATISTICS_SPECIFIC_DATA,
-					pdata,
-					data_size);
-		}
-
-		if (pstatistics_object != NULL)
-			json_array_add_value_object(pstats_array, pstatistics_object);
-	} else {
-		if (fp) {
-			fprintf(fp, "%s: 0x%x\n", STR_STATISTICS_IDENTIFIER,
-				pstatistic_entry->statistic_id);
-			fprintf(fp, "%s: %s\n", STR_STATISTICS_IDENTIFIER_STR, description_str);
-			fprintf(fp, "%s: 0x%x\n", STR_STATISTICS_INFO_BEHAVIOUR_TYPE,
-				pstatistic_entry->statistic_info_behaviour_type);
-			fprintf(fp, "%s: 0x%x\n", STR_STATISTICS_INFO_RESERVED,
-				pstatistic_entry->statistic_info_reserved);
-			fprintf(fp, "%s: 0x%x\n", STR_NAMESPACE_IDENTIFIER,
-				pstatistic_entry->ns_info_nsid);
-			fprintf(fp, "%s: 0x%x\n", STR_NAMESPACE_INFO_VALID,
-				pstatistic_entry->ns_info_ns_info_valid);
-			fprintf(fp, "%s: 0x%x\n", STR_STATISTICS_DATA_SIZE,
-				pstatistic_entry->statistic_data_size);
-			fprintf(fp, "%s: 0x%x\n", STR_RESERVED, pstatistic_entry->reserved);
-			if (pstatistic_entry->statistic_id == MAX_DIE_BAD_BLOCK_ID) {
-				fprintf(fp, "%s: 0x%02x\n", STR_STATISTICS_WORST_DIE_PERCENT,
-						pdata[0]);
-				fprintf(fp, "%s: 0x%04x\n", STR_STATISTICS_WORST_DIE_RAW,
-						*(__u16 *)&pdata[2]);
-			} else if (pstatistic_entry->statistic_id ==
-					MAX_NAND_CHANNEL_BAD_BLOCK_ID) {
-				fprintf(fp, "%s: 0x%02x\n",
-						STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT,
-						pdata[0]);
-				fprintf(fp, "%s: 0x%04x\n",
-						STR_STATISTICS_WORST_NAND_CHANNEL_RAW,
-						*(__u16 *)&pdata[2]);
-			} else if (pstatistic_entry->statistic_id ==
-					MIN_NAND_CHANNEL_BAD_BLOCK_ID) {
-				fprintf(fp, "%s: 0x%02x\n",
-						STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT,
-						pdata[0]);
-				fprintf(fp, "%s: 0x%04x\n",
-						STR_STATISTICS_BEST_NAND_CHANNEL_RAW,
-						*(__u16 *)&pdata[2]);
-			} else {
-				print_formatted_var_size_str(STR_STATISTICS_SPECIFIC_DATA,
-						pdata,
-						data_size,
-						fp);
-			}
-			fprintf(fp, STR_LINE2);
-		} else {
-			printf("%s: 0x%x\n", STR_STATISTICS_IDENTIFIER,
-			       pstatistic_entry->statistic_id);
-			printf("%s: %s\n", STR_STATISTICS_IDENTIFIER_STR, description_str);
-			printf("%s: 0x%x\n", STR_STATISTICS_INFO_BEHAVIOUR_TYPE,
-			       pstatistic_entry->statistic_info_behaviour_type);
-			printf("%s: 0x%x\n", STR_STATISTICS_INFO_RESERVED,
-			       pstatistic_entry->statistic_info_reserved);
-			printf("%s: 0x%x\n", STR_NAMESPACE_IDENTIFIER,
-			       pstatistic_entry->ns_info_nsid);
-			printf("%s: 0x%x\n", STR_NAMESPACE_INFO_VALID,
-			       pstatistic_entry->ns_info_ns_info_valid);
-			printf("%s: 0x%x\n", STR_STATISTICS_DATA_SIZE,
-			       pstatistic_entry->statistic_data_size);
-			printf("%s: 0x%x\n", STR_RESERVED, pstatistic_entry->reserved);
-			if (pstatistic_entry->statistic_id == MAX_DIE_BAD_BLOCK_ID) {
-				printf("%s: 0x%02x\n", STR_STATISTICS_WORST_DIE_PERCENT,
-						pdata[0]);
-				printf("%s: 0x%04x\n", STR_STATISTICS_WORST_DIE_RAW,
-						*(__u16 *)&pdata[2]);
-			} else if (pstatistic_entry->statistic_id ==
-					MAX_NAND_CHANNEL_BAD_BLOCK_ID) {
-				printf("%s: 0x%02x\n",
-						STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT,
-						pdata[0]);
-				printf("%s: 0x%04x\n",
-						STR_STATISTICS_WORST_NAND_CHANNEL_RAW,
-						*(__u16 *)&pdata[2]);
-			} else if (pstatistic_entry->statistic_id ==
-					MIN_NAND_CHANNEL_BAD_BLOCK_ID) {
-				printf("%s: 0x%02x\n",
-						STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT,
-						pdata[0]);
-				printf("%s: 0x%04x\n",
-						STR_STATISTICS_BEST_NAND_CHANNEL_RAW,
-						*(__u16 *)&pdata[2]);
-			} else {
-				print_formatted_var_size_str(STR_STATISTICS_SPECIFIC_DATA,
-						pdata,
-						data_size,
-						fp);
-			}
-			printf(STR_LINE2);
-		}
-	}
-
+	print_statistic(pstatistic_entry, pstats_array, fp, false);
 	return 0;
 }
 
@@ -1964,7 +2088,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	__u32 stats_da_1_start_dw = 0, stats_da_1_size_dw = 0;
 	__u32 stats_da_2_start_dw = 0, stats_da_2_size_dw = 0;
 	__u8 *pstats_offset = NULL;
-	int parse_rc = 0;
+	char where[16];
 
 	if (poffsets->data_area == 1) {
 		__u32 stats_da_1_start = *(__u32 *)(pda1_ocp_header_offset +
@@ -1996,22 +2120,8 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 
 	struct json_object *pstats_array = ((root != NULL) ? json_create_array() : NULL);
 
-	__u32 stat_des_size = sizeof(struct nvme_ocp_telemetry_statistic_descriptor);//8
-	__u32 offset_to_move = 0;
-
-	while (((statistics_size > 0) && (offset_to_move < statistics_size))) {
-		struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry =
-			(struct nvme_ocp_telemetry_statistic_descriptor *)
-			(pstats_offset + offset_to_move);
-
-		parse_rc = parse_statistic(pstatistic_entry, pstats_array, fp);
-		if (parse_rc < 0)
-			/* end of stats entries or null pointer, so break */
-			break;
-
-		offset_to_move += (pstatistic_entry->statistic_data_size * SIZE_OF_DWORD +
-			stat_des_size);
-	}
+	snprintf(where, sizeof(where), "Data Area %d", poffsets->data_area);
+	print_statistics(pstats_offset, statistics_size, pstats_array, fp, false, where);
 
 	if (root != NULL && pstats_array != NULL) {
 		const char *pdata_area =

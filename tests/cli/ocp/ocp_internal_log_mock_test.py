@@ -27,13 +27,21 @@ Tests in this module verify:
   * The telemetry header, Reason Identifier, Data Area 1 header and SMART
     sections decode to the values in the log, for host and controller
     logs.
-  * Data Area 1 and 2 statistics: every descriptor field, names from the
-    string log and the built-in table, the bad block statistics, and the
-    end-of-list identifier.
+  * Data Area 1 and 2 statistics: every descriptor field, each
+    Statistic Information field from its own bits, names from the string
+    log and the built-in table, the bad block statistics and one too
+    short for its fields, and the end-of-list identifier.
   * The statistics walk: statistics of different sizes and of none, the
-    statistics size bounding it, and Context Statistic Descriptors (6Dh,
-    6Eh, 6Fh) stepped over whole, their context data and encapsulated
-    statistics left undecoded.
+    statistics size bounding it, and a statistic running past that size
+    being reported.
+  * Context Statistic Descriptors (6Dh, 6Eh, 6Fh, and any statistic with
+    the Context Index flag): the context data and each type's scope
+    fields, the encapsulated statistics as records of their own, an
+    invalid Context Data Size reported without changing where they
+    start, a container too small for its context data, containers that
+    nest, encapsulated statistics running past their container, and the
+    end-of-list identifier inside one. Two containers are checked
+    against a customer's example report, field for field.
   * Option handling: the controller telemetry support gate, the log ID
     check, invalid -a, -t and -o values, and -o json.
 
@@ -46,6 +54,7 @@ Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_internal_log_mock_test.py <nvme-binary> <mock-lib>
 """
+import json
 import os
 import struct
 import unittest
@@ -425,18 +434,26 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
         self.assertNotIn('Telemetry Host-Initiated Scope', header)
 
 
-def stat_expected(stat_id, name, size_dw, behavior=0, info_reserved=0,
-                  nsid=0, valid=0, reserved=0):
+def stat_expected(stat_id, name, size_dw, behavior=0, context_index=0,
+                  host_hint=0, info_reserved=0, nsid=0, valid=0, nsid_15_0=0):
     return {
         'Statistics Identifier': f'0x{stat_id:x}',
         'Statistic Identifier String': name,
         'Statistics Info Behavior Type': f'0x{behavior:x}',
+        'Statistics Info Context Index': f'0x{context_index:x}',
+        'Statistics Info Host Hint Type': f'0x{host_hint:x}',
         'Statistics Info Reserved': f'0x{info_reserved:x}',
         'Namespace Identifier': f'0x{nsid:x}',
         'Namespace Information Valid': f'0x{valid:x}',
         'Statistic Data Size': f'0x{size_dw:x}',
-        'Reserved': f'0x{reserved:x}',
+        'Namespace Identifier[15:0]': f'0x{nsid_15_0:x}',
     }
+
+
+def leaf_expected(stat_id, name, data=b'', **stat):
+    """A statistic whose data is printed undecoded."""
+    return {**stat_expected(stat_id, name, len(data) // layout.DWORD, **stat),
+            'Statistic Specific Data': layout.hex_upper(data)}
 
 
 # One context per Context Statistic Descriptor type. The NSID needs the
@@ -453,47 +470,120 @@ CONTEXT_NAMES = {
         'Controller ID Context Statistic Descriptor',
     layout.STAT_QUEUE_ID_CONTEXT: 'Queue ID Context Statistic Descriptor',
 }
+# (name, offset, size) of each scope field, offsets into the context data.
+SCOPE_FIELDS = {
+    layout.STAT_NAMESPACE_ID_CONTEXT: [('Namespace ID', 4, 4)],
+    layout.STAT_CONTROLLER_ID_CONTEXT: [('Controller ID', 6, 2)],
+    layout.STAT_QUEUE_ID_CONTEXT: [('Controller ID', 4, 2),
+                                   ('Queue ID', 6, 2)],
+}
+
+# What the decoder reports on statistics it cannot decode as laid out.
+STAT_ERRORS = ('Invalid statistic', 'Context Statistic 0x')
 
 
-def context_expected(stat_id, name, payload):
-    """A Context Statistic Descriptor the decoder does not look into: the
-    Context Index flag shows in the Statistic Information bits it reports
-    as reserved, and @payload as undecoded Statistic Specific Data."""
-    return {**stat_expected(stat_id, name, len(payload) // layout.DWORD,
-                            info_reserved=layout.STAT_INFO_CONTEXT_INDEX >> 4),
-            'Statistic Specific Data': layout.hex_upper(payload)}
+def context_expected(stat_id, name, context, encapsulated=(),
+                     context_index=1, **stat):
+    """A decoded Context Statistic Descriptor: its @context data, the
+    scope fields of the three defined types, and the @encapsulated
+    statistics' expected records. Its data size spans the context data
+    and every encapsulated descriptor."""
+    size_dw = len(context) // layout.DWORD + sum(
+        layout.STAT_DESCRIPTOR_SIZE // layout.DWORD
+        + int(e['Statistic Data Size'], 16) for e in encapsulated)
+    context_size, reserved = struct.unpack_from('<HH', context)
+    expected = {
+        **stat_expected(stat_id, name, size_dw, context_index=context_index,
+                        **stat),
+        'Context Data Size': f'0x{context_size:x}',
+        'Context Data Reserved': f'0x{reserved:x}',
+        'Context Scope': layout.hex_upper(context[4:8]),
+    }
+    if stat_id in SCOPE_FIELDS:
+        expected['Context Scope Fields'] = [
+            scope_field_expected(context, *field)
+            for field in SCOPE_FIELDS[stat_id]]
+    expected['Encapsulated Statistic Descriptors'] = list(encapsulated)
+    return expected
+
+
+def scope_field_expected(context, name, offset, size):
+    value = int.from_bytes(context[offset:offset + size], 'little')
+    return {
+        'Scope Field String': name,
+        'Scope Field Offset': f'0x{offset:x}',
+        'Scope Field Size': f'0x{size:x}',
+        'Scope Field Value': f'0x{value:x}',
+    }
+
+
+XOR_RECOVERY = layout.statistic(0x22, b'12345678')
+XOR_RECOVERY_EXPECTED = leaf_expected(0x22, 'XOR Recovery Count', b'12345678')
+
+INNER = [layout.statistic(0x01, bytes.fromhex('0A0B0C0D')),
+         layout.statistic(0x04, bytes(range(12)), behavior=1, nsid=5,
+                          ns_valid=True)]
+INNER_EXPECTED = [
+    leaf_expected(0x01, 'Outstanding Admin Commands',
+                  bytes.fromhex('0A0B0C0D')),
+    leaf_expected(0x04, 'Active Namespaces', bytes(range(12)), behavior=1,
+                  nsid=5, valid=1),
+]
 
 
 class TestInternalLogStatistics(OCPInternalLogTestBase):
     """parse_statistics() and parse_statistic()."""
 
     def statistics(self, telemetry, strings, *args, mode='json', da=1):
-        report = self.decode(telemetry, strings, *args, mode=mode)
-        section = self.section(report, STR_DA_STATS.format(da))
-        return section if mode == 'json' else text_records(section)
+        return self.statistics_with_output(telemetry, strings, *args,
+                                           mode=mode, da=da)[0]
 
-    def assert_statistics(self, da1_stats, expected, strings=None, **kwargs):
+    def statistics_with_output(self, telemetry, strings, *args, mode='json',
+                               da=1):
+        report, output = self.decode_with_output(telemetry, strings, *args,
+                                                 mode=mode)
+        section = self.section(report, STR_DA_STATS.format(da))
+        return (section if mode == 'json' else text_records(section)), output
+
+    def assert_statistics(self, da1_stats, expected, strings=None,
+                          errors=(), **kwargs):
+        """Decode @da1_stats in both modes, expecting the records in
+        @expected, and each of @errors reported, or no error at all."""
         telemetry = layout.pack_telemetry(da1_stats=da1_stats, **kwargs)
         for mode in MODES:
             with self.subTest(mode=mode):
-                got = self.statistics(telemetry,
-                                      strings or layout.pack_string_log(),
-                                      mode=mode)
+                got, output = self.statistics_with_output(
+                    telemetry, strings or layout.pack_string_log(),
+                    mode=mode)
                 self.assertEqual(got, expected)
-                self.assertEqual([list(s) for s in got],
-                                 [list(s) for s in expected],
+                self.assertEqual(json.dumps(got), json.dumps(expected),
                                  'fields are out of order')
+                for error in errors:
+                    self.assertIn(error, output)
+                if not errors:
+                    for marker in STAT_ERRORS:
+                        self.assertNotIn(marker, output)
 
     def test_descriptor_fields(self):
         stat = layout.statistic(0x01, bytes.fromhex('0102030405060708'),
-                                behavior=3, info_reserved=0xA, nsid=0x45,
-                                ns_valid=True, reserved=0x1234)
+                                behavior=3, host_hint=2, info_reserved=1,
+                                nsid=0x45, ns_valid=True, nsid_15_0=0x1234)
         self.assert_statistics([stat], [{
             **stat_expected(0x01, 'Outstanding Admin Commands', 2,
-                            behavior=3, info_reserved=0xA, nsid=0x45,
-                            valid=1, reserved=0x1234),
+                            behavior=3, host_hint=2, info_reserved=1,
+                            nsid=0x45, valid=1, nsid_15_0=0x1234),
             'Statistic Specific Data': '0102030405060708',
         }])
+
+    def test_statistic_information_fields(self):
+        """Behavior Type, Host Hint Type and the reserved bit each come
+        from their own bits of Statistic Information, with every other
+        field left clear."""
+        fields = [{'behavior': 0xF}, {'host_hint': 3}, {'info_reserved': 1}]
+        self.assert_statistics(
+            [layout.statistic(0x01, bytes(4), **f) for f in fields],
+            [leaf_expected(0x01, 'Outstanding Admin Commands', bytes(4), **f)
+             for f in fields])
 
     def test_names_from_the_string_log_and_the_built_in_table(self):
         """The string log names a statistic first; identifiers up to 6Fh
@@ -501,7 +591,7 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
         ids = {
             0x0022: 'XOR Recovery Count',
             0x0023: 'CUSTOM UREC',
-            0x006F: 'Queue ID Context Statistic Descriptor',
+            0x006C: 'Proactive Bad Die Retirement',
             0x0070: '',
             0x8001: 'VENDOR STAT',
             0x8002: '',
@@ -541,6 +631,102 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
                         self.assertEqual(int(stat[percent], 16), stat_id)
                         self.assertEqual(int(stat[raw], 16), 0x1200 + stat_id)
 
+    def test_bad_block_statistic_without_data(self):
+        """A bad block statistic too short for its fields is printed as
+        undecoded data rather than read past its end."""
+        self.assert_statistics(
+            [layout.statistic(0x1B), XOR_RECOVERY],
+            [leaf_expected(0x1B, 'Max Die Bad Block'),
+             XOR_RECOVERY_EXPECTED])
+
+    def test_customer_queue_id_context(self):
+        """A Queue ID Context Statistic Descriptor as a drive reports it,
+        with a Context Data Size equal to its Statistic Data Size. The
+        encapsulated descriptors still start after the two Dwords of
+        context data."""
+        inner = layout.statistic(0x07, bytes.fromhex('08000000'), behavior=5)
+        stat = layout.context_statistic(
+            layout.STAT_QUEUE_ID_CONTEXT,
+            layout.queue_id_context(1, 3, context_data_size=5), [inner],
+            behavior=2)
+        self.assert_statistics([stat], [{
+            'Statistics Identifier': '0x6f',
+            'Statistic Identifier String':
+                'Queue ID Context Statistic Descriptor',
+            'Statistics Info Behavior Type': '0x2',
+            'Statistics Info Context Index': '0x1',
+            'Statistics Info Host Hint Type': '0x0',
+            'Statistics Info Reserved': '0x0',
+            'Namespace Identifier': '0x0',
+            'Namespace Information Valid': '0x0',
+            'Statistic Data Size': '0x5',
+            'Namespace Identifier[15:0]': '0x0',
+            'Context Data Size': '0x5',
+            'Context Data Reserved': '0x0',
+            'Context Scope': '01000300',
+            'Context Scope Fields': [
+                {'Scope Field String': 'Controller ID',
+                 'Scope Field Offset': '0x4',
+                 'Scope Field Size': '0x2',
+                 'Scope Field Value': '0x1'},
+                {'Scope Field String': 'Queue ID',
+                 'Scope Field Offset': '0x6',
+                 'Scope Field Size': '0x2',
+                 'Scope Field Value': '0x3'},
+            ],
+            'Encapsulated Statistic Descriptors': [{
+                'Statistics Identifier': '0x7',
+                'Statistic Identifier String': 'Internal Write Queue Depth',
+                'Statistics Info Behavior Type': '0x5',
+                'Statistics Info Context Index': '0x0',
+                'Statistics Info Host Hint Type': '0x0',
+                'Statistics Info Reserved': '0x0',
+                'Namespace Identifier': '0x0',
+                'Namespace Information Valid': '0x0',
+                'Statistic Data Size': '0x1',
+                'Namespace Identifier[15:0]': '0x0',
+                'Statistic Specific Data': '08000000',
+            }],
+        }])
+
+    def test_customer_vendor_context(self):
+        """A vendor unique statistic with the Context Index flag set is a
+        Context Statistic Descriptor too. Its scope has no defined fields,
+        so only the raw scope is printed."""
+        inner = layout.statistic(0x9005, bytes.fromhex('2A000000'),
+                                 behavior=4)
+        stat = layout.context_statistic(
+            0x9100, layout.context_data(bytes.fromhex('03000000'), 5),
+            [inner], behavior=1)
+        self.assert_statistics([stat], [{
+            'Statistics Identifier': '0x9100',
+            'Statistic Identifier String': '',
+            'Statistics Info Behavior Type': '0x1',
+            'Statistics Info Context Index': '0x1',
+            'Statistics Info Host Hint Type': '0x0',
+            'Statistics Info Reserved': '0x0',
+            'Namespace Identifier': '0x0',
+            'Namespace Information Valid': '0x0',
+            'Statistic Data Size': '0x5',
+            'Namespace Identifier[15:0]': '0x0',
+            'Context Data Size': '0x5',
+            'Context Data Reserved': '0x0',
+            'Context Scope': '03000000',
+            'Encapsulated Statistic Descriptors': [{
+                'Statistics Identifier': '0x9005',
+                'Statistic Identifier String': '',
+                'Statistics Info Behavior Type': '0x4',
+                'Statistics Info Context Index': '0x0',
+                'Statistics Info Host Hint Type': '0x0',
+                'Statistics Info Reserved': '0x0',
+                'Namespace Identifier': '0x0',
+                'Namespace Information Valid': '0x0',
+                'Statistic Data Size': '0x1',
+                'Namespace Identifier[15:0]': '0x0',
+                'Statistic Specific Data': '2A000000',
+            }],
+        }])
+
     def test_context_descriptor_names(self):
         """Context Statistic Descriptors are named like any statistic: by
         the string log first, else by the spec's names."""
@@ -561,30 +747,143 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
                      for i, c in CONTEXTS.items()],
                     strings)
 
-    def test_context_descriptors_are_stepped_over_whole(self):
-        """A container's Statistic Data Size spans its context data and
-        every statistic it encapsulates, so the walk steps over it in one
-        stride: no encapsulated descriptor surfaces as a statistic of its
-        own, and the statistic after the last container decodes. The
-        container's payload comes out as undecoded Statistic Specific Data;
-        decoding it is OCP 2.7 work, and only that expectation should
-        change with it."""
-        inner = [layout.statistic(0x01, bytes.fromhex('0A0B0C0D')),
-                 layout.statistic(0x04, bytes(range(12)), behavior=1,
-                                  nsid=5, ns_valid=True)]
-        inner_dw = sum(len(s) for s in inner) // layout.DWORD
+    def test_context_descriptors_decode(self):
+        """Each type's context data comes out with its scope fields, and
+        the statistics it encapsulates as records of their own under it.
+        The container's Statistic Data Size spans all of that, so the
+        statistic after the last container decodes."""
+        values = {
+            layout.STAT_NAMESPACE_ID_CONTEXT: ['0x12345678'],
+            layout.STAT_CONTROLLER_ID_CONTEXT: ['0x102'],
+            layout.STAT_QUEUE_ID_CONTEXT: ['0x304', '0x506'],
+        }
         stats, expected = [], []
         for stat_id, context in CONTEXTS.items():
-            stats.append(layout.context_statistic(stat_id, context, inner))
+            stats.append(layout.context_statistic(stat_id, context, INNER))
             fields = context_expected(stat_id, CONTEXT_NAMES[stat_id],
-                                      context + b''.join(inner))
-            self.assertEqual(fields['Statistic Data Size'],
-                             f'0x{layout.CONTEXT_DATA_DWORDS + inner_dw:x}')
+                                      context, INNER_EXPECTED)
+            self.assertEqual([f['Scope Field Value']
+                              for f in fields['Context Scope Fields']],
+                             values[stat_id])
+            self.assertEqual(len(fields['Encapsulated Statistic Descriptors']),
+                             len(INNER))
             expected.append(fields)
-        stats.append(layout.statistic(0x22, b'12345678'))
-        expected.append({**stat_expected(0x22, 'XOR Recovery Count', 2),
-                         'Statistic Specific Data': '3132333435363738'})
+        stats.append(XOR_RECOVERY)
+        expected.append(XOR_RECOVERY_EXPECTED)
         self.assert_statistics(stats, expected)
+
+    def test_context_identifier_without_the_flag(self):
+        """6Dh-6Fh are Context Statistic Descriptors even with the Context
+        Index flag clear."""
+        stat_id = layout.STAT_QUEUE_ID_CONTEXT
+        self.assert_statistics(
+            [layout.context_statistic(stat_id, CONTEXTS[stat_id], INNER,
+                                      context_index=False)],
+            [context_expected(stat_id, CONTEXT_NAMES[stat_id],
+                              CONTEXTS[stat_id], INNER_EXPECTED,
+                              context_index=0)])
+
+    def test_invalid_context_data_size(self):
+        """A Context Data Size of 0, or one larger than the Statistic Data
+        Size, is reported; the encapsulated descriptors still follow the
+        two Dwords of context data."""
+        stat_id = layout.STAT_CONTROLLER_ID_CONTEXT
+        for size in (0, 0x40, 0xFFFF):
+            with self.subTest(context_data_size=size):
+                context = layout.controller_id_context(0x0102, size)
+                self.assert_statistics(
+                    [layout.context_statistic(stat_id, context, INNER),
+                     XOR_RECOVERY],
+                    [context_expected(stat_id, CONTEXT_NAMES[stat_id],
+                                      context, INNER_EXPECTED),
+                     XOR_RECOVERY_EXPECTED],
+                    errors=[f'Context Statistic 0x6e: Context Data Size '
+                            f'0x{size:x} is outside 1 to 0xa'])
+
+    def test_context_statistic_too_small_for_its_context(self):
+        """A Context Statistic Descriptor of fewer than two Dwords cannot
+        hold its context data: that is reported, its data printed
+        undecoded, and the walk goes on after it."""
+        stat_id = layout.STAT_NAMESPACE_ID_CONTEXT
+        for data in (b'', bytes.fromhex('01000000')):
+            with self.subTest(size_dw=len(data) // layout.DWORD):
+                self.assert_statistics(
+                    [layout.context_statistic(stat_id, data), XOR_RECOVERY],
+                    [leaf_expected(stat_id, CONTEXT_NAMES[stat_id], data,
+                                   context_index=1),
+                     XOR_RECOVERY_EXPECTED],
+                    errors=[f'Context Statistic 0x6d: {len(data)} data bytes '
+                            'cannot hold its context data'])
+
+    def test_context_statistics_do_not_nest(self):
+        """An encapsulated descriptor flagged as a Context Statistic
+        Descriptor, or with a 6Dh-6Fh identifier, is reported and printed
+        with its data undecoded; its siblings still decode."""
+        flagged = layout.statistic(0x01, bytes(4), context_index=True)
+        typed = layout.context_statistic(layout.STAT_NAMESPACE_ID_CONTEXT,
+                                         layout.namespace_id_context(7),
+                                         context_index=False)
+        stat_id = layout.STAT_QUEUE_ID_CONTEXT
+        where = ('Encapsulated Statistic Descriptors of Context Statistic '
+                 '0x6f')
+        self.assert_statistics(
+            [layout.context_statistic(stat_id, CONTEXTS[stat_id],
+                                      [flagged, typed, INNER[0]])],
+            [context_expected(stat_id, CONTEXT_NAMES[stat_id],
+                              CONTEXTS[stat_id], [
+                leaf_expected(0x01, 'Outstanding Admin Commands', bytes(4),
+                              context_index=1),
+                leaf_expected(layout.STAT_NAMESPACE_ID_CONTEXT,
+                              CONTEXT_NAMES[layout.STAT_NAMESPACE_ID_CONTEXT],
+                              layout.namespace_id_context(7)),
+                INNER_EXPECTED[0]])],
+            errors=[f'Invalid statistic at offset 0x0 of {where}: Context '
+                    'Statistic Descriptor 0x1 does not nest',
+                    f'Invalid statistic at offset 0xc of {where}: Context '
+                    'Statistic Descriptor 0x6d does not nest'])
+
+    def test_encapsulated_statistic_past_its_container(self):
+        """An encapsulated descriptor that runs past the end of its
+        container, in its descriptor or its data, is reported and ends the
+        container's list; the statistic after the container still
+        decodes."""
+        stat_id = layout.STAT_CONTROLLER_ID_CONTEXT
+        where = ('Encapsulated Statistic Descriptors of Context Statistic '
+                 '0x6e')
+        long_data = bytearray(layout.statistic(0x02, bytes(8)))
+        struct.pack_into('<H', long_data, 4, 4)
+        cases = {
+            'descriptor': (bytes.fromhex('03000000'),
+                           f'Invalid statistic at offset 0xc of {where}: '
+                           'descriptor needs 8 bytes, 4 left'),
+            'data': (bytes(long_data),
+                     f'Invalid statistic at offset 0xc of {where}: '
+                     'Statistic ID 0x2 declares 16 data bytes, 8 left'),
+        }
+        for cut, (tail, error) in cases.items():
+            with self.subTest(cut=cut):
+                stat = layout.context_statistic(
+                    stat_id, CONTEXTS[stat_id], [INNER[0], tail])
+                expected = context_expected(stat_id, CONTEXT_NAMES[stat_id],
+                                            CONTEXTS[stat_id],
+                                            [INNER_EXPECTED[0]])
+                expected['Statistic Data Size'] = \
+                    f'0x{(len(stat) - layout.STAT_DESCRIPTOR_SIZE) // 4:x}'
+                self.assert_statistics([stat, XOR_RECOVERY],
+                                       [expected, XOR_RECOVERY_EXPECTED],
+                                       errors=[error])
+
+    def test_identifier_zero_ends_the_encapsulated_list(self):
+        stat_id = layout.STAT_QUEUE_ID_CONTEXT
+        stat = layout.context_statistic(
+            stat_id, CONTEXTS[stat_id],
+            [INNER[0], layout.statistic(0), INNER[1]])
+        expected = context_expected(stat_id, CONTEXT_NAMES[stat_id],
+                                    CONTEXTS[stat_id], [INNER_EXPECTED[0]])
+        expected['Statistic Data Size'] = \
+            f'0x{(len(stat) - layout.STAT_DESCRIPTOR_SIZE) // 4:x}'
+        self.assert_statistics([stat, XOR_RECOVERY],
+                               [expected, XOR_RECOVERY_EXPECTED])
 
     def test_statistic_without_data(self):
         """A Statistic Data Size of 0 leaves just the descriptor, and the
@@ -624,6 +923,28 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
               'Statistic Specific Data': '00000000'}],
             overlay={size_field: struct.pack('<Q',
                                              len(first) // layout.DWORD)})
+
+    def test_statistic_past_the_statistics_size(self):
+        """A statistic that runs past the size the OCP header declares, in
+        its descriptor or its data, is reported and ends the walk; the
+        statistics before it are kept."""
+        first = layout.statistic(0x01, bytes(4))
+        size_field = layout.DA1_START + layout.DA1_STAT_SIZE
+        cases = {
+            'descriptor': (1, 'Invalid statistic at offset 0xc of Data Area '
+                              '1: descriptor needs 8 bytes, 4 left'),
+            'data': (3, 'Invalid statistic at offset 0xc of Data Area 1: '
+                        'Statistic ID 0x2 declares 8 data bytes, 4 left'),
+        }
+        for cut, (extra_dw, error) in cases.items():
+            with self.subTest(cut=cut):
+                size_dw = len(first) // layout.DWORD + extra_dw
+                self.assert_statistics(
+                    [first, layout.statistic(0x02, bytes(8))],
+                    [leaf_expected(0x01, 'Outstanding Admin Commands',
+                                   bytes(4))],
+                    errors=[error],
+                    overlay={size_field: struct.pack('<Q', size_dw)})
 
     def test_identifier_zero_ends_the_list(self):
         self.assert_statistics(

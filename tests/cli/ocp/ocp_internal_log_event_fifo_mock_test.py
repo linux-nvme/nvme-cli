@@ -40,8 +40,9 @@ Tests in this module verify:
     largest Event Data Size, rejection at every size below it, the common
     classes' optional VU data, reserved classes with their payload dumped
     as Class Specific Data, vendor unique classes, and Statistic Snapshot
-    events of different statistic sizes and of a Context Statistic
-    Descriptor.
+    events of different statistic sizes, with the statistic's Namespace
+    Identifier[15:0], and of a Context Statistic Descriptor decoded down
+    to its encapsulated statistics.
   * Event String and VU Event String lookups match on (class,
     identifier), not identifier alone, for every class, and come from the
     VU table from class 80h up.
@@ -744,11 +745,13 @@ class TestEventClassDecode(EventFifoTestBase):
         'Statistics Identifier': '0x22',
         'Statistic Identifier String': 'XOR Recovery Count',
         'Statistics Info Behavior Type': '0x2',
+        'Statistics Info Context Index': '0x0',
+        'Statistics Info Host Hint Type': '0x0',
         'Statistics Info Reserved': '0x0',
         'Namespace Identifier': '0x3',
         'Namespace Information Valid': '0x1',
         'Statistic Data Size': '0x2',
-        'Reserved': '0x0',
+        'Namespace Identifier[15:0]': '0x0',
         'Statistic Specific Data': '3132333435363738',
     }
 
@@ -793,26 +796,62 @@ class TestEventClassDecode(EventFifoTestBase):
             self._snapshot(0x04, 'Active Namespaces', large),
             PCIE_EXPECTED])
 
+    def test_statistic_snapshot_namespace_identifier_15_0_in_text(self):
+        """Snapshot bytes 11:10 are the statistic's Namespace
+        Identifier[15:0]."""
+        stat = layout.statistic(0x22, b'12345678', behavior=2, nsid=3,
+                                ns_valid=True, nsid_15_0=0xBEEF)
+        telemetry = one_fifo(layout.statistic_snapshot_event(stat),
+                             PCIE_EVENT)
+        events = self.fifo_events(telemetry, strings(), mode='text')
+        self.assertEqual(events, [
+            {**self._SNAPSHOT_EXPECTED,
+             'Namespace Identifier[15:0]': '0xbeef'},
+            PCIE_EXPECTED])
+
     def test_statistic_snapshot_of_a_context_descriptor_in_text(self):
         """A snapshot may carry a Context Statistic Descriptor like any
-        other statistic. Its context data and encapsulated statistics come
-        out as undecoded Statistic Specific Data, and the snapshot spans
-        all of it, so the next event decodes."""
+        other statistic. It decodes as it does in the statistics area,
+        with its context data and encapsulated statistics, and the
+        snapshot spans all of it, so the next event decodes."""
         context = layout.queue_id_context(0x0102, 0x0304)
-        inner = [layout.statistic(0x01, bytes.fromhex('0A0B0C0D')),
+        small = bytes.fromhex('0A0B0C0D')
+        inner = [layout.statistic(0x01, small),
                  layout.statistic(0x02, bytes(8))]
         stat = layout.context_statistic(layout.STAT_QUEUE_ID_CONTEXT,
                                         context, inner)
         telemetry = one_fifo(layout.statistic_snapshot_event(stat),
                              PCIE_EVENT)
         events = self.fifo_events(telemetry, strings(), mode='text')
-        self.assertEqual(events, [
-            {**self._snapshot(layout.STAT_QUEUE_ID_CONTEXT,
-                              'Queue ID Context Statistic Descriptor',
-                              context + b''.join(inner)),
-             'Statistics Info Reserved':
-                 f'0x{layout.STAT_INFO_CONTEXT_INDEX >> 4:x}'},
-            PCIE_EXPECTED])
+
+        def encapsulated(stat_id, name, data):
+            return {k: v for k, v in self._snapshot(stat_id, name,
+                                                    data).items()
+                    if k not in ('Debug Event Class type', 'Event String')}
+
+        container = self._snapshot(layout.STAT_QUEUE_ID_CONTEXT,
+                                   'Queue ID Context Statistic Descriptor',
+                                   context + b''.join(inner))
+        del container['Statistic Specific Data']
+        container.update({
+            'Statistics Info Context Index': '0x1',
+            'Context Data Size': '0x2',
+            'Context Data Reserved': '0x0',
+            'Context Scope': '02010403',
+            'Context Scope Fields': [
+                {'Scope Field String': 'Controller ID',
+                 'Scope Field Offset': '0x4', 'Scope Field Size': '0x2',
+                 'Scope Field Value': '0x102'},
+                {'Scope Field String': 'Queue ID',
+                 'Scope Field Offset': '0x6', 'Scope Field Size': '0x2',
+                 'Scope Field Value': '0x304'},
+            ],
+            'Encapsulated Statistic Descriptors': [
+                encapsulated(0x01, 'Outstanding Admin Commands', small),
+                encapsulated(0x02, 'Host Write Bandwidth', bytes(8)),
+            ],
+        })
+        self.assertEqual(events, [container, PCIE_EXPECTED])
 
     def _empty_snapshot_fifo(self):
         return one_fifo(
