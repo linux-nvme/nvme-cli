@@ -4205,8 +4205,8 @@ plugin_solidigm_opts () {
 			;;
 
 		"parse-telemetry-log")
-			opts+=" --config-file= -j --controller-init -c --data-area= -d --dry-run --host-generate= -g --jq-filter= -q --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --source-file= -s --timeout= --verbose -v"
-			valopts+=" --config-file -j --data-area -d --host-generate -g --jq-filter -q --output-format -o --output-format-version --set-options --source-file -s --timeout"
+			opts+=" --config-file= -j --controller-init -c --data-area= -d --dry-run --host-generate= -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --source-file= -s --timeout= --verbose -v"
+			valopts+=" --config-file -j --data-area -d --host-generate -g --output-format -o --output-format-version --set-options --source-file -s --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
 			               "--output-format-version" "1 2"

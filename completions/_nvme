@@ -9771,8 +9771,6 @@ _nvme () {
 						--dry-run':show command instead of executing'
 						--host-generate=':Controls when to generate new host initiated report. Default value '\''1'\'' generates new host initiated report, value '\''0'\'' causes retrieval of existing log.'
 						-g':alias for --host-generate'
-						--jq-filter=':JSON config entry name containing jq filter'
-						-q':alias for --jq-filter'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
 						--output-format=':Output format: normal|json|binary'
