@@ -11,12 +11,17 @@ name: Build FreeBSD
 # containerdisk) on the same ARC/KubeVirt infrastructure as run-nightly-
 # tests.yml, via linux-blktests/blktests-ci's kubevirt-action.
 #
-# workflow_dispatch only for now: vm-init.sh.j2 in blktests-ci has no
-# "freebsd" case yet (it only knows ubuntu/debian/opensuse/dnf-based
-# distros), so provisioning the VM currently fails before run_cmds ever
-# executes. Fold this into a schedule/push trigger once that lands upstream.
+# The VM build is slow, so it only runs when master is updated rather than
+# on every pull request.
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   actions: read
