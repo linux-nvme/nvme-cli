@@ -20,6 +20,8 @@ micron_mock_tests = [
     'micron_vs_smart_logs_mock_test.py',
 ]
 
+# Each test runs the nvme binary hundreds of times; on a slow CI VM with
+# coverage enabled that exceeds meson's 30 s default.
 if json_c_dep.found()
     if have_mock_nvme
         foreach t : micron_mock_tests
@@ -28,7 +30,8 @@ if json_c_dep.found()
                 args: [files(t), nvme_exe, mock_nvme_lib],
                 env: cli_test_env,
                 depends: [nvme_exe, mock_nvme_lib],
-                suite: ['micron', 'micron-cli'])
+                suite: ['micron', 'micron-cli'],
+                timeout: 120)
         endforeach
     endif
 
