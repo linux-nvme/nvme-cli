@@ -1939,6 +1939,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;
 	char file_path[PATH_MAX];
+	FILE *fp = stdout;
 
 	if (ptelemetry_buffer == NULL) {
 		nvme_show_error("No telemetry data to parse.");
@@ -1947,242 +1948,126 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 
 	if (options->output_file != NULL) {
 		sprintf(file_path, "%s.%s", options->output_file, "txt");
-		FILE *fp = fopen(file_path, "w");
-
-		if (fp) {
-			fprintf(fp, STR_LINE);
-			fprintf(fp, "%s\n", STR_LOG_PAGE_HEADER);
-			fprintf(fp, STR_LINE);
-			if (!strcmp(options->telemetry_type, "host")) {
-				if ((ptelemetry_buffer == NULL) ||
-					(ARRAY_SIZE(host_log_page_header) == 0))
-					printf("skip generic_structure_parser\n");
-				else
-					generic_structure_parser(ptelemetry_buffer,
-						host_log_page_header,
-						ARRAY_SIZE(host_log_page_header),
-						NULL, 0, fp);
-			}
-			else if (!strcmp(options->telemetry_type, "controller"))
-				generic_structure_parser(ptelemetry_buffer,
-					controller_log_page_header,
-					ARRAY_SIZE(controller_log_page_header), NULL, 0, fp);
-			fprintf(fp, STR_LINE);
-			fprintf(fp, "%s\n", STR_REASON_IDENTIFIER);
-			fprintf(fp, STR_LINE);
-			__u8 *preason_identifier_offset = ptelemetry_buffer +
-				offsetof(struct nvme_ocp_telemetry_host_initiated_header,
-				reason_id);
-
-			generic_structure_parser(preason_identifier_offset, reason_identifier,
-				ARRAY_SIZE(reason_identifier), NULL, 0, fp);
-
-			fprintf(fp, STR_LINE);
-			fprintf(fp, "%s\n", STR_TELEMETRY_HOST_DATA_BLOCK_1);
-			fprintf(fp, STR_LINE);
-
-			//Set DA to 1 and get offsets
-			struct nvme_ocp_telemetry_offsets offsets = { 0 };
-
-			offsets.data_area = 1;// Default DA - DA1
-
-			struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
-				(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
-
-			get_telemetry_das_offset_and_size(ptelemetry_common_header, &offsets);
-
-			__u8 *pda1_header_offset = ptelemetry_buffer +
-				offsets.da1_start_offset;//512
-
-			if (telemetry_da1_header_present(&offsets)) {
-				generic_structure_parser(
-					pda1_header_offset, ocp_header_in_da1,
-					ARRAY_SIZE(ocp_header_in_da1),
-					NULL, 0, fp);
-
-				fprintf(fp, STR_LINE);
-				fprintf(fp, "%s\n", STR_SMART_HEALTH_INFO);
-				fprintf(fp, STR_LINE);
-				__u8 *pda1_smart_offset = pda1_header_offset +
-					offsetof(struct nvme_ocp_header_in_da1,
-						 smart_health_info);
-				//512+512 =1024
-
-				generic_structure_parser(
-					pda1_smart_offset, smart,
-					ARRAY_SIZE(smart), NULL, 0, fp);
-
-				fprintf(fp, STR_LINE);
-				fprintf(fp, "%s\n",
-					STR_SMART_HEALTH_INTO_EXTENDED);
-				fprintf(fp, STR_LINE);
-				__u8 *pda1_smart_ext_offset =
-					pda1_header_offset +
-					offsetof(struct nvme_ocp_header_in_da1,
-						 smart_health_info_extended);
-
-				generic_structure_parser(
-					pda1_smart_ext_offset, smart_extended,
-					ARRAY_SIZE(smart_extended),
-					NULL, 0, fp);
-			}
-
-			fprintf(fp, STR_LINE);
-			fprintf(fp, "%s\n", STR_DA_1_STATS);
-			fprintf(fp, STR_LINE);
-
-			status = parse_statistics(NULL, &offsets, fp);
-			if (status != 0) {
-				nvme_show_error("status: %d", status);
-				fclose(fp);
-				return -1;
-			}
-
-			fprintf(fp, STR_LINE);
-			fprintf(fp, "%s\n", STR_DA_1_EVENT_FIFO_INFO);
-			fprintf(fp, STR_LINE);
-			status = parse_event_fifos(NULL, &offsets, fp);
-			if (status != 0) {
-				fclose(fp);
-				return -1;
-			}
-
-			//Set the DA to 2
-			if (options->data_area == 2) {
-				offsets.data_area = 2;
-				fprintf(fp, STR_LINE);
-				fprintf(fp, "%s\n", STR_DA_2_STATS);
-				fprintf(fp, STR_LINE);
-				status = parse_statistics(NULL, &offsets, fp);
-
-				if (status != 0) {
-					nvme_show_error("status: %d", status);
-					fclose(fp);
-					return -1;
-				}
-
-				fprintf(fp, STR_LINE);
-				fprintf(fp, "%s\n", STR_DA_2_EVENT_FIFO_INFO);
-				fprintf(fp, STR_LINE);
-				status = parse_event_fifos(NULL, &offsets, fp);
-				if (status != 0) {
-					fclose(fp);
-					return -1;
-				}
-			}
-
-			fprintf(fp, STR_LINE);
-			fclose(fp);
-		} else {
+		fp = fopen(file_path, "w");
+		if (!fp) {
 			nvme_show_error("Failed to open %s file.", file_path);
 			return -1;
 		}
-	} else {
-		printf(STR_LINE);
-		printf("%s\n", STR_LOG_PAGE_HEADER);
-		printf(STR_LINE);
-		if (!strcmp(options->telemetry_type, "host")) {
-			if ((ptelemetry_buffer == NULL) ||
-				(ARRAY_SIZE(host_log_page_header) == 0))
-				printf("skip generic_structure_parser\n");
-			else {
-				generic_structure_parser(ptelemetry_buffer, host_log_page_header,
-					ARRAY_SIZE(host_log_page_header), NULL, 0, NULL);
-			}
-		}
-		else if (!strcmp(options->telemetry_type, "controller"))
-			generic_structure_parser(ptelemetry_buffer, controller_log_page_header,
-				     ARRAY_SIZE(controller_log_page_header), NULL, 0, NULL);
+	}
 
-		printf(STR_LINE);
-		printf("%s\n", STR_REASON_IDENTIFIER);
-		printf(STR_LINE);
-		__u8 *preason_identifier_offset = ptelemetry_buffer +
-			offsetof(struct nvme_ocp_telemetry_host_initiated_header, reason_id);
-		generic_structure_parser(preason_identifier_offset, reason_identifier,
-			ARRAY_SIZE(reason_identifier), NULL, 0, NULL);
+	fprintf(fp, STR_LINE);
+	fprintf(fp, "%s\n", STR_LOG_PAGE_HEADER);
+	fprintf(fp, STR_LINE);
+	if (!strcmp(options->telemetry_type, "host"))
+		generic_structure_parser(ptelemetry_buffer,
+			host_log_page_header,
+			ARRAY_SIZE(host_log_page_header), NULL, 0, fp);
+	else if (!strcmp(options->telemetry_type, "controller"))
+		generic_structure_parser(ptelemetry_buffer,
+			controller_log_page_header,
+			ARRAY_SIZE(controller_log_page_header), NULL, 0, fp);
+	fprintf(fp, STR_LINE);
+	fprintf(fp, "%s\n", STR_REASON_IDENTIFIER);
+	fprintf(fp, STR_LINE);
+	__u8 *preason_identifier_offset = ptelemetry_buffer +
+		offsetof(struct nvme_ocp_telemetry_host_initiated_header,
+			 reason_id);
 
-		printf(STR_LINE);
-		printf("%s\n", STR_TELEMETRY_HOST_DATA_BLOCK_1);
-		printf(STR_LINE);
+	generic_structure_parser(preason_identifier_offset, reason_identifier,
+		ARRAY_SIZE(reason_identifier), NULL, 0, fp);
 
-		//Set DA to 1 and get offsets
-		struct nvme_ocp_telemetry_offsets offsets = { 0 };
+	fprintf(fp, STR_LINE);
+	fprintf(fp, "%s\n", STR_TELEMETRY_HOST_DATA_BLOCK_1);
+	fprintf(fp, STR_LINE);
 
-		offsets.data_area = 1;
+	//Set DA to 1 and get offsets
+	struct nvme_ocp_telemetry_offsets offsets = { 0 };
 
-		struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
-			(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
+	offsets.data_area = 1;// Default DA - DA1
 
-		get_telemetry_das_offset_and_size(ptelemetry_common_header, &offsets);
+	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
+		(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
 
-		__u8 *pda1_header_offset = ptelemetry_buffer + offsets.da1_start_offset;//512
+	get_telemetry_das_offset_and_size(ptelemetry_common_header, &offsets);
 
-		if (telemetry_da1_header_present(&offsets)) {
-			generic_structure_parser(
-				pda1_header_offset, ocp_header_in_da1,
-				ARRAY_SIZE(ocp_header_in_da1), NULL, 0, NULL);
+	__u8 *pda1_header_offset = ptelemetry_buffer +
+		offsets.da1_start_offset;//512
 
-			printf(STR_LINE);
-			printf("%s\n", STR_SMART_HEALTH_INFO);
-			printf(STR_LINE);
-			__u8 *pda1_smart_offset = pda1_header_offset +
-				offsetof(struct nvme_ocp_header_in_da1,
-					 smart_health_info);
+	if (telemetry_da1_header_present(&offsets)) {
+		generic_structure_parser(
+			pda1_header_offset, ocp_header_in_da1,
+			ARRAY_SIZE(ocp_header_in_da1), NULL, 0, fp);
 
-			generic_structure_parser(pda1_smart_offset, smart,
-				ARRAY_SIZE(smart), NULL, 0, NULL);
+		fprintf(fp, STR_LINE);
+		fprintf(fp, "%s\n", STR_SMART_HEALTH_INFO);
+		fprintf(fp, STR_LINE);
+		__u8 *pda1_smart_offset = pda1_header_offset +
+			offsetof(struct nvme_ocp_header_in_da1,
+				 smart_health_info);
+		//512+512 =1024
 
-			printf(STR_LINE);
-			printf("%s\n", STR_SMART_HEALTH_INTO_EXTENDED);
-			printf(STR_LINE);
-			__u8 *pda1_smart_ext_offset = pda1_header_offset +
-				offsetof(struct nvme_ocp_header_in_da1,
-					 smart_health_info_extended);
+		generic_structure_parser(pda1_smart_offset, smart,
+			ARRAY_SIZE(smart), NULL, 0, fp);
 
-			generic_structure_parser(
-				pda1_smart_ext_offset, smart_extended,
-				ARRAY_SIZE(smart_extended), NULL, 0, NULL);
-		}
+		fprintf(fp, STR_LINE);
+		fprintf(fp, "%s\n", STR_SMART_HEALTH_INTO_EXTENDED);
+		fprintf(fp, STR_LINE);
+		__u8 *pda1_smart_ext_offset = pda1_header_offset +
+			offsetof(struct nvme_ocp_header_in_da1,
+				 smart_health_info_extended);
 
-		printf(STR_LINE);
-		printf("%s\n", STR_DA_1_STATS);
-		printf(STR_LINE);
-		status = parse_statistics(NULL, &offsets, NULL);
+		generic_structure_parser(
+			pda1_smart_ext_offset, smart_extended,
+			ARRAY_SIZE(smart_extended), NULL, 0, fp);
+	}
+
+	fprintf(fp, STR_LINE);
+	fprintf(fp, "%s\n", STR_DA_1_STATS);
+	fprintf(fp, STR_LINE);
+
+	status = parse_statistics(NULL, &offsets, fp);
+	if (status != 0) {
+		nvme_show_error("status: %d", status);
+		status = -1;
+		goto out;
+	}
+
+	fprintf(fp, STR_LINE);
+	fprintf(fp, "%s\n", STR_DA_1_EVENT_FIFO_INFO);
+	fprintf(fp, STR_LINE);
+	status = parse_event_fifos(NULL, &offsets, fp);
+	if (status != 0) {
+		status = -1;
+		goto out;
+	}
+
+	//Set the DA to 2
+	if (options->data_area == 2) {
+		offsets.data_area = 2;
+		fprintf(fp, STR_LINE);
+		fprintf(fp, "%s\n", STR_DA_2_STATS);
+		fprintf(fp, STR_LINE);
+		status = parse_statistics(NULL, &offsets, fp);
 		if (status != 0) {
 			nvme_show_error("status: %d", status);
-			return -1;
+			status = -1;
+			goto out;
 		}
 
-		printf(STR_LINE);
-		printf("%s\n", STR_DA_1_EVENT_FIFO_INFO);
-		printf(STR_LINE);
-		status = parse_event_fifos(NULL, &offsets, NULL);
-		if (status != 0)
-			return -1;
-
-		//Set the DA to 2
-		if (options->data_area == 2) {
-			offsets.data_area = 2;
-			printf(STR_LINE);
-			printf("%s\n", STR_DA_2_STATS);
-			printf(STR_LINE);
-			status = parse_statistics(NULL, &offsets, NULL);
-			if (status != 0) {
-				nvme_show_error("status: %d", status);
-				return -1;
-			}
-
-			printf(STR_LINE);
-			printf("%s\n", STR_DA_2_EVENT_FIFO_INFO);
-			printf(STR_LINE);
-			status = parse_event_fifos(NULL, &offsets, NULL);
-			if (status != 0)
-				return -1;
+		fprintf(fp, STR_LINE);
+		fprintf(fp, "%s\n", STR_DA_2_EVENT_FIFO_INFO);
+		fprintf(fp, STR_LINE);
+		status = parse_event_fifos(NULL, &offsets, fp);
+		if (status != 0) {
+			status = -1;
+			goto out;
 		}
-
-		printf(STR_LINE);
 	}
+
+	fprintf(fp, STR_LINE);
+out:
+	if (fp != stdout)
+		fclose(fp);
 
 	return status;
 }
@@ -2269,13 +2154,16 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	status = parse_statistics(root, &offsets, NULL);
 	if (status != 0) {
 		nvme_show_error("status: %d", status);
-		return -1;
+		status = -1;
+		goto out;
 	}
 
 	//Data Area 1 Event FIFOs
 	status = parse_event_fifos(root, &offsets, NULL);
-	if (status != 0)
-		return -1;
+	if (status != 0) {
+		status = -1;
+		goto out;
+	}
 
 	if (options->data_area == 2) {
 		//Set the DA to 2
@@ -2284,13 +2172,16 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 		status = parse_statistics(root, &offsets, NULL);
 		if (status != 0) {
 			nvme_show_error("status: %d", status);
-			return -1;
+			status = -1;
+			goto out;
 		}
 
 		//Data Area 2 Event FIFOs
 		status = parse_event_fifos(root, &offsets, NULL);
-		if (status != 0)
-			return -1;
+		if (status != 0) {
+			status = -1;
+			goto out;
+		}
 	}
 
 	if (options->output_file != NULL) {
@@ -2303,14 +2194,16 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 			fclose(fp);
 		} else {
 			nvme_show_error("Failed to open %s file.", file_path);
-			return -1;
+			status = -1;
 		}
 	} else {
 		//Print root json object
 		json_print_object(root, NULL);
 		nvme_show_result("\n");
-		json_free_object(root);
 	}
+
+out:
+	json_free_object(root);
 
 	return status;
 }
