@@ -23,7 +23,7 @@ compinit -u 2>/dev/null
 _here="${0:A:h}"
 _generated="$(mktemp)"
 trap 'rm -f "$_generated"' EXIT
-if ! python3 "$_here/generate-completions.py" --zsh "$_generated" \
+if ! "${PYTHON3:-python3}" "$_here/generate-completions.py" --zsh "$_generated" \
         < "$_here/test-command-metadata.json"; then
     print -u2 "failed to generate zsh completion from fixture"
     exit 1
