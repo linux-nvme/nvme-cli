@@ -208,8 +208,8 @@ static void release_unit(const char *unit_name, const char *devname,
 						"owner", NULL);
 
 		if (r < 0)
-			disc_warn("%s | %s - failed to clear registry owner: %s",
-				  libnvmf_tid_str(tid), devname, strerror(-r));
+			log_warn("%s | %s - failed to clear registry owner: %s",
+				 libnvmf_tid_str(tid), devname, strerror(-r));
 	}
 
 	log_info("%s | %s - %s, released", libnvmf_tid_str(tid),
