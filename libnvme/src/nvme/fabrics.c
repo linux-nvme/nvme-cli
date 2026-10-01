@@ -4514,16 +4514,6 @@ __shr_public int libnvmf_connect(
 	if (err)
 		return err;
 
-	/*
-	 * We are connecting to a discovery controller, so let's treat
-	 * this as a persistent connection and specify a KATO.
-	 */
-	if (!strcmp(fctx->ctrl_params.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
-		fctx->persistent = LIBNVMF_PERSISTENT_FORCE;
-
-		set_discovery_kato(fctx, &fctx->ctrl_params);
-	}
-
 	err = libnvme_add_ctrl(fctx, h, c);
 	if (err) {
 		/*
