@@ -95,8 +95,6 @@ static const char * const telemetry_mctp_transport_protocol_str[] = {
 enum TELEMETRY_TYPE {
 	TELEMETRY_TYPE_HOST       = 7,
 	TELEMETRY_TYPE_CONTROLLER = 8,
-	TELEMETRY_TYPE_HOST_0     = 9,
-	TELEMETRY_TYPE_HOST_1     = 10,
 };
 
 #define DATA_SIZE_12   12

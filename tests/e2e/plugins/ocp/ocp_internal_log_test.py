@@ -34,6 +34,8 @@ Tests in this module verify:
     Statistic Descriptor encapsulates.
   * Decoding the saved files with -l/-s reproduces the report byte for
     byte, and the text report carries every section and FIFO in order.
+  * --host-generate=0 reads back the existing host-initiated snapshot
+    without creating a new one.
   * A controller-initiated log, where the drive has one, is saved and
     decoded.
 """
@@ -331,6 +333,28 @@ class TestOCPInternalLog(TestOCP):
         finally:
             os.remove(f"{out}.txt")
         self.assertEqual(titles, expected)
+
+    def test_host_generate_0_reads_the_existing_capture(self):
+        """With --host-generate=0 the drive returns the snapshot the shared
+        capture created rather than taking a new one, so the generation
+        number and data areas are unchanged."""
+        prefix = self._capture()
+        captured, _ = self._logs(prefix)
+        out = os.path.join(os.path.dirname(prefix), "retained")
+        result = self.run_ocp_cmd(
+            "internal-log",
+            args=(f'-t host -g 0 -a {_DATA_AREAS["host"]} '
+                  f'-s "{prefix}-string.bin" -f "{out}"'))
+        self.assertEqual(result.returncode, 0,
+                         f"ocp internal-log -t host -g 0 failed: "
+                         f"stderr={result.stderr!r}")
+        retained = self._read(f"{out}-telemetry.bin")
+        self.assertEqual(retained[layout.HDR_BYTE_381],
+                         captured[layout.HDR_BYTE_381],
+                         "Host-Initiated Data Generation Number changed")
+        self.assertTrue(retained[layout.HEADER_SIZE:]
+                        == captured[layout.HEADER_SIZE:],
+                        "the retained data areas differ from the capture")
 
     def test_controller_log(self):
         """A controller that has no controller-initiated data to report
