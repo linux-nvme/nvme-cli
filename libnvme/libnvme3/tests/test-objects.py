@@ -5,7 +5,9 @@
 These tests cover object creation, property access, and error handling.
 They do not require real NVMe hardware to run.
 """
+import errno
 import gc
+import os
 import unittest
 from libnvme3 import nvme
 
@@ -311,6 +313,18 @@ class TestCtrlErrorHandling(unittest.TestCase):
     def test_discover_unconnected_raises_not_connected_error(self):
         with self.assertRaises(nvme.NotConnectedError):
             self.ctrl.discover()
+
+    def test_error_message_is_the_errno_text(self):
+        # A hostid without a hostnqn fails with -EINVAL from libnvme.
+        ctx = nvme.GlobalCtx()
+        with self.assertRaises(nvme.NvmeError) as cm:
+            nvme.Ctrl(ctx, {
+                'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
+                'transport': 'pcie',
+                'hostid': 'c3d4e5f6-0000-4000-8000-000000000003',
+            })
+        self.assertEqual(cm.exception.errno, -errno.EINVAL)
+        self.assertEqual(cm.exception.message, os.strerror(errno.EINVAL))
 
 
 class TestHelperFunctions(unittest.TestCase):
