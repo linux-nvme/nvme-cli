@@ -1108,6 +1108,11 @@ assert_connected "connects the subsystem listed in the DC's DLP" \
 	"${NL_NQN}" 30
 P_DEV=$(dc_dev "${NL_PORT}")
 log "DC connected as ${P_DEV:-<none>}"
+if [ "$(cat "/sys/class/nvme/${P_DEV}/kato" 2>/dev/null)" = 30 ]; then
+	pass "the DC connected with a 30 s keep-alive timeout"
+else
+	fail "the DC connected with a 30 s keep-alive timeout"
+fi
 
 discoverd_stop_daemon_only
 log "nvmet: remove port ${NL_PORT}"

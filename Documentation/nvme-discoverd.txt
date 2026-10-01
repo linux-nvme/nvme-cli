@@ -104,6 +104,10 @@ startup and on every FC controller drop. 'dc-giveup-timeout' (default
 time span ("72hours", "3 days 5 hours") or a unit-less value in
 seconds; "infinity" = never give up, 0 = give up on the first failure.
 
+A DC connects with a keep-alive timeout of 30 seconds, or with its
+configured 'keep-alive-tmo' (see nvme-fabrics.conf(5)). A DC
+configured with 'persistent = no' connects with none.
+
 'zeroconf' (boolean, default false) connects to and manages Discovery
 Controllers found through mDNS (TP8009). It requires systemd-resolved
 v258 or later with mDNS enabled ('MulticastDNS=yes'), and an
