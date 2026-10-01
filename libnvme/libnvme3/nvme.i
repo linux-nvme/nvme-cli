@@ -113,10 +113,17 @@ static PyObject *NvmeDiscoverError     = NULL;
 static PyObject *NvmeNotConnectedError = NULL;
 static PyObject *fctx_known_keys       = NULL;
 
+/* @err is a negative errno or a positive NVMe status. */
 static void raise_nvme(PyObject *cls, int err)
 {
-	const char *s = libnvme_errno_to_string(err < 0 ? -err : err);
-	PyObject *args = Py_BuildValue("(is)", err, s ? s : "unknown");
+	const char *s;
+	PyObject *args;
+
+	if (err < 0)
+		s = libnvme_strerror(-err);
+	else
+		s = libnvme_status_to_string(err, false);
+	args = Py_BuildValue("(is)", err, s);
 	PyErr_SetObject(cls, args);
 	Py_DECREF(args);
 }

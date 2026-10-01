@@ -9,7 +9,8 @@ class NvmeError(Exception):
 
     Attributes:
         errno:   OS error number (negative values are stored as-is).
-        message: Human-readable description from libnvme_errno_to_string().
+        message: Human-readable description: the errno text for a negative
+                 value, the NVMe status text for a positive one.
     """
     def __init__(self, errno, message):
         self.errno = errno
