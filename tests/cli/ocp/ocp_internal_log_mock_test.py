@@ -17,10 +17,12 @@ decoded. Event FIFO decoding has its own suite,
 ocp_internal_log_event_fifo_mock_test.py.
 
 Tests in this module verify:
-  * Fetching: the host log's header read creates a new snapshot and the
-    body reads retain it, the controller log is read from LID 08h, both
-    cover exactly the requested data areas, the string log is read with
-    the OCP UUID index (or index 0 under --no-uuid), the saved files
+  * Fetching: the host log's header read creates a new snapshot unless
+    --host-generate=0 asks for the existing one, the body reads retain
+    it, the deprecated host0 and host1 types warn and map onto
+    --host-generate, the controller log is read from LID 08h and ignores
+    --host-generate, both cover exactly the requested data areas, the
+    string log is read with the OCP UUID index (or index 0 under --no-uuid), the saved files
     match what the drive returned, and fetch failures are reported.
   * Decoding a fetched log gives the same report as decoding the same
     bytes from files.
@@ -152,6 +154,60 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
                                    data_area_end(self.host, da))
                 self.assertEqual(self.saved('telemetry'),
                                  self.host[:data_area_end(self.host, da)])
+
+    def host_header_lsp(self, *args):
+        result = self.assertOk(self.run_internal_log(*args))
+        reads = self.server.log_reads(layout.LID_TELEMETRY_HOST)
+        self.assertEqual((reads[0]['lpo'], reads[0]['len']),
+                         (0, layout.HEADER_SIZE))
+        self.assertEqual({r['lsp'] for r in reads[1:]}, {LSP_RETAIN})
+        self.assertEqual(self.saved('telemetry'),
+                         self.host[:data_area_end(self.host, 1)])
+        return reads[0]['lsp'], result
+
+    def test_host_generate_selects_create_or_retain(self):
+        for args, lsp in ((('--host-generate=0',), LSP_RETAIN),
+                          (('-g', '0'), LSP_RETAIN),
+                          (('-t', 'host', '-g', '0'), LSP_RETAIN),
+                          (('--host-generate=1',), LSP_CREATE),
+                          (('-g', '1'), LSP_CREATE),
+                          (('-t', 'host'), LSP_CREATE)):
+            with self.subTest(args=args):
+                got, result = self.host_header_lsp(*args)
+                self.assertEqual(got, lsp)
+                self.assertNotIn('deprecated', result.stderr)
+
+    def test_deprecated_host_types_warn_and_map_to_host_generate(self):
+        for value, lsp, use in (
+                ('host0', LSP_RETAIN,
+                 "'--telemetry-type host --host-generate=0'"),
+                ('host1', LSP_CREATE, "'--telemetry-type host'")):
+            with self.subTest(telemetry_type=value):
+                got, result = self.host_header_lsp('-t', value)
+                self.assertEqual(got, lsp)
+                self.assertIn(
+                    f"WARNING: '--telemetry-type {value}' is deprecated and "
+                    'will be removed in the next major version. Use '
+                    f'{use} instead.', result.stderr)
+
+    def test_deprecated_host_types_decode_like_host(self):
+        host = self.decode(self.host, self.strings, '-a', '2')
+        for value in ('host0', 'host1'):
+            with self.subTest(telemetry_type=value):
+                self.assertEqual(
+                    self.decode(self.host, self.strings, '-a', '2',
+                                '-t', value), host)
+
+    def test_controller_log_ignores_host_generate(self):
+        for value in ('0', '1'):
+            with self.subTest(host_generate=value):
+                self.assertOk(self.run_internal_log('-t', 'controller',
+                                                    '-g', value))
+                self.assertEqual(
+                    self.server.log_reads(layout.LID_TELEMETRY_HOST), [])
+                reads = self.server.log_reads(layout.LID_TELEMETRY_CTRL)
+                self.assertEqual({r['lsp'] for r in reads}, {0})
+                self.assert_covers(reads, 0, data_area_end(self.ctrl, 1))
 
     def test_controller_log_is_read_from_lid_08h(self):
         self.assertOk(self.run_internal_log('-t', 'controller', '-a', '2'))

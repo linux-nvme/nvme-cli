@@ -599,6 +599,7 @@ __u8 *pstring_buffer;
 
 static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		int tele_type,
+		bool create,
 		int tele_area,
 		const char *output_file)
 {
@@ -608,15 +609,6 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd cmd;
 	size_t full_size = 0, offset = bs, chunk_size;
 	int err, fd;
-	/*
-	 * Host-Initiated type "host0" retrieves the existing (retained)
-	 * telemetry capture, while "host1" (and plain "host") force the
-	 * controller to create a new capture before reading it back.
-	 */
-	bool retain_existing = (tele_type == TELEMETRY_TYPE_HOST_0);
-
-	if ((tele_type == TELEMETRY_TYPE_HOST_0) || (tele_type == TELEMETRY_TYPE_HOST_1))
-		tele_type = TELEMETRY_TYPE_HOST;
 
 	hdr = libnvme_alloc(bs);
 	if (!hdr) {
@@ -635,10 +627,10 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 	}
 
 	if (tele_type == TELEMETRY_TYPE_HOST) {
-		if (retain_existing)
-			nvme_init_get_log_telemetry_host(&cmd, 0, hdr, bs);
-		else
+		if (create)
 			nvme_init_get_log_create_telemetry_host(&cmd, hdr);
+		else
+			nvme_init_get_log_telemetry_host(&cmd, 0, hdr, bs);
 	} else {
 		nvme_init_get_log_telemetry_ctrl(&cmd, 0, hdr, bs);
 	}
@@ -917,7 +909,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			"e.g. '-a 3 for Data Areas 1, 2, and 3.'\n"
 			"e.g. '-a 4 for Data Areas 1, 2, 3, and 4.';\n";
 
-	const char *telemetry_type = "Telemetry Type; 'host', 'host0', 'host1' or 'controller'";
+	const char *telemetry_type = "Telemetry Type; 'host' or 'controller'\n"
+			"('host0' and 'host1' are deprecated)";
+	const char *hgen = "Have the host tell the controller to generate the report (default 1)";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -929,6 +923,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	struct ocp_telemetry_parse_options opt = {0};
 	int tele_type = 0;
 	int tele_area = 0;
+	__u32 host_gen = 1;
 	char file_path_telemetry[PATH_MAX], file_path_string[PATH_MAX];
 	const char *string_suffix = "string.bin";
 	const char *tele_log_suffix = "telemetry.bin";
@@ -940,6 +935,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		OPT_FILE("output-file", 'f', &opt.output_file, output_file),
 		OPT_INT("data-area", 'a', &opt.data_area, data_area),
 		OPT_STR("telemetry-type", 't', &opt.telemetry_type, telemetry_type),
+		OPT_UINT("host-generate", 'g', &host_gen, hgen),
 		OPT_FLAG("no-uuid", 'n', NULL, no_uuid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -977,11 +973,17 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	tele_area = opt.data_area;
 
 	if (opt.telemetry_type) {
-		if (!strcmp(opt.telemetry_type, "host0"))
-			tele_type = TELEMETRY_TYPE_HOST_0;
-		else if (!strcmp(opt.telemetry_type, "host1"))
-			tele_type = TELEMETRY_TYPE_HOST_1;
-		else if (!strcmp(opt.telemetry_type, "host"))
+		if (!strcmp(opt.telemetry_type, "host0")) {
+			fprintf(stderr, "WARNING: '--telemetry-type host0' is deprecated and will be removed in the next major version. Use '--telemetry-type host --host-generate=0' instead.\n");
+			opt.telemetry_type = "host";
+			tele_type = TELEMETRY_TYPE_HOST;
+			host_gen = 0;
+		} else if (!strcmp(opt.telemetry_type, "host1")) {
+			fprintf(stderr, "WARNING: '--telemetry-type host1' is deprecated and will be removed in the next major version. Use '--telemetry-type host' instead.\n");
+			opt.telemetry_type = "host";
+			tele_type = TELEMETRY_TYPE_HOST;
+			host_gen = 1;
+		} else if (!strcmp(opt.telemetry_type, "host"))
 			tele_type = TELEMETRY_TYPE_HOST;
 		else if (!strcmp(opt.telemetry_type, "controller"))
 			tele_type = TELEMETRY_TYPE_CONTROLLER;
@@ -1016,6 +1018,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		sprintf(file_path_telemetry, "%s-%s", opt.output_file, tele_log_suffix);
 		err = get_telemetry_log_page_data(hdl,
 				tele_type,
+				!!host_gen,
 				tele_area,
 				(const char *)file_path_telemetry);
 		if (err) {
@@ -1074,22 +1077,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			if (err)
 				nvme_show_result("Status:(%x)\n", err);
 		}
-		break;
-	case TELEMETRY_TYPE_HOST_0:
-	case TELEMETRY_TYPE_HOST_1:
-		printf("Extracting Telemetry Host(%d) Dump (Data Area %d)...\n",
-				(tele_type == TELEMETRY_TYPE_HOST_0) ? 0 : 1, tele_area);
-
-		/*
-		 * host0/host1 use the same Telemetry Host-Initiated (07h) log
-		 * layout as plain "host"; normalize the type string so the
-		 * parser selects the correct field table.
-		 */
-		opt.telemetry_type = "host";
-
-		err = parse_ocp_telemetry_log(&opt);
-		if (err)
-			nvme_show_result("Status:(%x)\n", err);
 		break;
 	}
 
