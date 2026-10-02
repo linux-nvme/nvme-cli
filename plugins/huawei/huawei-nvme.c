@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include <libnvme.h>
@@ -67,7 +66,6 @@ struct huawei_list_element_len {
 static int huawei_get_nvme_info(struct libnvme_transport_handle *hdl,
 				struct huawei_list_item *item, const char *node)
 {
-	struct stat nvme_stat_info;
 	struct libnvme_passthru_cmd cmd;
 	int err;
 	int len;
@@ -95,13 +93,9 @@ static int huawei_get_nvme_info(struct libnvme_transport_handle *hdl,
 	if (err)
 		return err;
 
-	err = fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat_info);
-	if (err < 0)
-		return err;
-
 	strncpy(item->node, node, sizeof(item->node));
 	item->node[sizeof(item->node) - 1] = '\0';
-	item->block = S_ISBLK(nvme_stat_info.st_mode);
+	item->block = libnvme_transport_handle_is_ns(hdl);
 
 	if (item->ns.vs[0] == 0) {
 		len = snprintf(item->ns_name, NS_NAME_LEN, "%s", "----");
