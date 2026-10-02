@@ -69,11 +69,14 @@ static bool tid_addr_eq(bool ip, const char *a, const char *b)
  * than 6.1 report no source address, so fall back to the interface the
  * connection recorded and, for a candidate host_traddr, to that
  * interface's primary address. That fallback cannot distinguish a
- * connection that overrode the primary address.
+ * connection that overrode the primary address. The kernel also reports
+ * no source address for a connection that is not live, so such a
+ * connection without a recorded interface does not match.
  */
 static bool tcp_host_side_matches(const char *candidate_host_traddr,
 				  const char *candidate_host_iface,
 				  const struct libnvmf_tid *existing,
+				  bool existing_live,
 				  const struct ifaddrs *iface_list)
 {
 	const char *src = libnvmf_tid_get_host_traddr(existing);
@@ -88,7 +91,7 @@ static bool tcp_host_side_matches(const char *candidate_host_traddr,
 						    candidate_host_traddr))
 			return false;
 
-		return true;
+		return existing_live || existing_iface;
 	}
 
 	if (candidate_host_traddr &&
@@ -143,7 +146,7 @@ static bool hostid_matches(const char *candidate, const char *existing)
 
 bool tid_matches_existing(const struct libnvmf_tid *candidate,
 		      const struct libnvmf_tid *existing, bool existing_is_dc,
-		      const struct ifaddrs *iface_list)
+		      bool existing_live, const struct ifaddrs *iface_list)
 {
 	const char *transport = libnvmf_tid_get_transport(candidate);
 	const char *subsysnqn = libnvmf_tid_get_subsysnqn(candidate);
@@ -181,7 +184,7 @@ bool tid_matches_existing(const struct libnvmf_tid *candidate,
 	if (shr_streq0(transport, "tcp")) {
 		if ((host_traddr || host_iface) &&
 		    !tcp_host_side_matches(host_traddr, host_iface, existing,
-					   iface_list))
+					   existing_live, iface_list))
 			return false;
 	} else {
 		const char *existing_traddr =
