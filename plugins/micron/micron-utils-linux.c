@@ -10,15 +10,18 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/klog.h>
 #include <sys/utsname.h>
 
 #include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
 
+#include <shared/fs-util.h>
 #include <shared/io-util.h>
 #include <shared/proc-util.h>
 
@@ -269,61 +272,143 @@ int micron_clear_pcie_aer_correctable_errors(
 	return 0;
 }
 
+/* Generous but bounded: this is a human-readable support dump, not a
+ * guarantee of capturing every byte of a possibly huge /proc file or log.
+ */
+#define OS_CONFIG_CAPTURE_MAX (1 << 20)
+
+static int append_file_contents(int out_fd, const char *path)
+{
+	__cleanup_fd int fd = open(path, O_RDONLY);
+	__cleanup_free char *buf = NULL;
+	int ret;
+
+	if (fd < 0)
+		return -errno;
+
+	buf = malloc(OS_CONFIG_CAPTURE_MAX);
+	if (!buf)
+		return -ENOMEM;
+
+	ret = shr_read_all(fd, buf, OS_CONFIG_CAPTURE_MAX);
+	if (ret)
+		return ret;
+
+	return shr_write_all(out_fd, buf, strlen(buf));
+}
+
+static int append_uname(int out_fd)
+{
+	struct utsname uts;
+	char line[512];
+	int n;
+
+	if (uname(&uts))
+		return -errno;
+
+	n = snprintf(line, sizeof(line), "%s %s %s %s %s\n",
+		     uts.sysname, uts.nodename, uts.release, uts.version,
+		     uts.machine);
+	if (n < 0)
+		return -errno;
+	if ((size_t)n >= sizeof(line))
+		n = sizeof(line) - 1;
+
+	return shr_write_all(out_fd, line, (size_t)n);
+}
+
+/*
+ * man 2 syslog documents these action numbers; <sys/klog.h> declares
+ * klogctl() but, oddly, not the actions it takes.
+ */
+#define SYSLOG_ACTION_READ_ALL     3
+#define SYSLOG_ACTION_SIZE_BUFFER 10
+
+static int append_dmesg(int out_fd)
+{
+	__cleanup_free char *buf = NULL;
+	int len;
+
+	len = klogctl(SYSLOG_ACTION_SIZE_BUFFER, NULL, 0);
+	if (len <= 0 || len > OS_CONFIG_CAPTURE_MAX)
+		len = OS_CONFIG_CAPTURE_MAX;
+
+	buf = malloc(len);
+	if (!buf)
+		return -ENOMEM;
+
+	len = klogctl(SYSLOG_ACTION_READ_ALL, buf, len);
+	if (len < 0)
+		return -errno;
+
+	return shr_write_all(out_fd, buf, (size_t)len);
+}
+
+enum os_config_kind {
+	OS_CONFIG_FILE,
+	OS_CONFIG_UNAME,
+	OS_CONFIG_DMESG,
+};
+
+struct os_config_item {
+	const char *header;
+	enum os_config_kind kind;
+	const char *path;
+};
+
+static const struct os_config_item os_config_items[] = {
+	{ "SYSTEM INFORMATION", OS_CONFIG_UNAME, NULL },
+	{ "LINUX KERNEL MODULE INFORMATION", OS_CONFIG_FILE, "/proc/modules" },
+	{ "LINUX SYSTEM MEMORY INFORMATION", OS_CONFIG_FILE, "/proc/meminfo" },
+	{ "SYSTEM INTERRUPT INFORMATION", OS_CONFIG_FILE, "/proc/interrupts" },
+	{ "CPU INFORMATION", OS_CONFIG_FILE, "/proc/cpuinfo" },
+	{ "IO MEMORY MAP INFORMATION", OS_CONFIG_FILE, "/proc/iomem" },
+	{ "MAJOR NUMBER AND DEVICE GROUP", OS_CONFIG_FILE, "/proc/devices" },
+	{ "KERNEL DMESG", OS_CONFIG_DMESG, NULL },
+	{ "/VAR/LOG/MESSAGES", OS_CONFIG_FILE, "/var/log/messages" },
+};
+
 void micron_write_os_config_to_file(const char *file_name)
 {
-	FILE *fpOSConfig = NULL;
-	int ret;
-	int i;
+	size_t i;
 
-	struct {
-		const char *header;
-		char *const *argv;
-	} cmds[] = {
-		{ "SYSTEM INFORMATION",
-			(char *const []){"uname", "-a", NULL} },
-		{ "LINUX KERNEL MODULE INFORMATION",
-			(char *const []){"lsmod", NULL} },
-		{ "LINUX SYSTEM MEMORY INFORMATION",
-			(char *const []){"cat", "/proc/meminfo", NULL} },
-		{ "SYSTEM INTERRUPT INFORMATION",
-			(char *const []){"cat", "/proc/interrupts", NULL} },
-		{ "CPU INFORMATION",
-			(char *const []){"cat", "/proc/cpuinfo", NULL} },
-		{ "IO MEMORY MAP INFORMATION",
-			(char *const []){"cat", "/proc/iomem", NULL} },
-		{ "MAJOR NUMBER AND DEVICE GROUP",
-			(char *const []){"cat", "/proc/devices", NULL} },
-		{ "KERNEL DMESG",
-			(char *const []){"dmesg", NULL} },
-		{ "/VAR/LOG/MESSAGES",
-			(char *const []){"cat", "/var/log/messages", NULL} },
-	};
+	for (i = 0; i < ARRAY_SIZE(os_config_items); i++) {
+		const struct os_config_item *item = &os_config_items[i];
+		__cleanup_fd int out_fd = -1;
+		FILE *header_file;
+		int ret;
 
-	for (i = 0; i < (int)(ARRAY_SIZE(cmds)); i++) {
-		fpOSConfig = fopen(file_name, "a+");
-		if (fpOSConfig) {
-			fprintf(fpOSConfig,
+		header_file = fopen(file_name, "a+");
+		if (header_file) {
+			fprintf(header_file,
 				"\n\n\n\n%s\n-----------------------------------------------\n",
-				cmds[i].header);
-			fclose(fpOSConfig);
+				item->header);
+			fclose(header_file);
 		}
-		ret = micron_run_spawn(cmds[i].argv, file_name, true);
-		if (ret) {
-			char cmdline[512] = "";
-			int pos = 0;
 
-			for (int j = 0; cmds[i].argv[j] && pos < (int)sizeof(cmdline); j++) {
-				int n = snprintf(cmdline + pos,
-						 sizeof(cmdline) - pos, "%s%s",
-						 j ? " " : "", cmds[i].argv[j]);
-
-				if (n < 0 || n >= (int)(sizeof(cmdline) - pos))
-					break;
-				pos += n;
-			}
-			nvme_show_error("Failed to run \"%s\": %s",
-				cmdline, strerror(-ret));
+		out_fd = shr_open_rawdata(file_name,
+					   O_WRONLY | O_CREAT | O_APPEND, 0644);
+		if (out_fd < 0) {
+			nvme_show_error("Failed to open \"%s\": %s",
+				file_name, strerror(errno));
+			continue;
 		}
+
+		switch (item->kind) {
+		case OS_CONFIG_UNAME:
+			ret = append_uname(out_fd);
+			break;
+		case OS_CONFIG_DMESG:
+			ret = append_dmesg(out_fd);
+			break;
+		case OS_CONFIG_FILE:
+		default:
+			ret = append_file_contents(out_fd, item->path);
+			break;
+		}
+		if (ret)
+			nvme_show_error("Failed to capture \"%s\": %s",
+				item->header, strerror(-ret));
 	}
 }
 
