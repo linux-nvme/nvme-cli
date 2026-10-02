@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Samsung Electronics Co., Ltd.
+//
+// Authors: Hyuntae Kim <h1219.kim@samsung.com>
+//          Jinmin Hwang <jinmin.hwang@samsung.com>
+
 nvme-samsung-vs-internal-log(1)
 ===============================
 

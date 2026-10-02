@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (c) 2026 Samsung Electronics Co., Ltd.
+ *
+ * Authors: Hyuntae Kim <h1219.kim@samsung.com>
+ *          Jinmin Hwang <jinmin.hwang@samsung.com>
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

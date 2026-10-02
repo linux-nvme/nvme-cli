@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
+ * This file is part of nvme-cli.
+ *
+ * Copyright (c) 2026 Samsung Electronics Co., Ltd.
+ *
+ * Authors: Hyuntae Kim <h1219.kim@samsung.com>
+ */
+
+/*
  * Redirect an MCTP command socket to a Unix seqpacket peer. The real
  * libnvme MCTP transport still builds and validates the NVMe-MI messages.
  * Only the socket boundary is mocked; no libnvme API is interposed.

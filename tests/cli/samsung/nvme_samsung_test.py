@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 # This file is part of nvme-cli.
+# Copyright (c) 2026 Samsung Electronics Co., Ltd.
+#
+# Authors: Hyuntae Kim <h1219.kim@samsung.com>
+#          Jinmin Hwang <jinmin.hwang@samsung.com>
 """Tests for "nvme samsung vs-internal-log".
 
 Everything that does not touch the device is exercised here: option
