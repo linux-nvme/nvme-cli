@@ -842,8 +842,12 @@ int unit_restart(struct unit_mgr *mgr, const char *unit_name)
 			       SYSTEMD_MGR_IFACE, "RestartUnit",
 			       &err, &reply, "ss", unit_name, "replace");
 	if (r < 0) {
-		log_err("RestartUnit(%s): %s",
-			unit_name, err.message ?: strerror(-r));
+		// A failed transient unit is collected. The caller starts it.
+		if (sd_bus_error_has_name(&err, SYSTEMD_NO_SUCH_UNIT))
+			log_dbg("RestartUnit(%s): %s", unit_name, err.message);
+		else
+			log_err("RestartUnit(%s): %s",
+				unit_name, err.message ?: strerror(-r));
 		sd_bus_error_free(&err);
 		return r;
 	}
