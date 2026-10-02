@@ -67,6 +67,11 @@
 * New option `nvme connect --discovery`. It tells the kernel that the
   controller is a Discovery Controller, also when it has a unique NQN.
 
+* `nvme sed revert` now prints an extra `revert LSP` error when the
+  kernel cannot revert the Locking SP. `nvme sed password` checks at
+  run time, not at build time, whether the kernel can set the SID
+  password, and skips that step if it cannot.
+
 ### nvme-discoverd
 
 * Discovery Controllers are now connected with `--discovery` and a
