@@ -1210,11 +1210,41 @@ static void on_ioc_add(const char *devname,
 	free(unit_name);
 }
 
+static bool sysfs_ctrl_deleting(const char *devname)
+{
+	sd_device *dev = NULL;
+	const char *state = NULL;
+	char syspath[256];
+	bool deleting;
+
+	snprintf(syspath, sizeof(syspath), SYSFS_NVME_DIR "/%s", devname);
+	if (sd_device_new_from_syspath(&dev, syspath) < 0)
+		return true;
+
+	sd_device_get_sysattr_value(dev, "state", &state);
+	deleting = !state || !strncmp(state, "deleting", 8);
+	sd_device_unref(dev);
+
+	return deleting;
+}
+
 static void on_nvme_remove(const char *devname,
 			   void *user_data __attribute__((unused)))
 {
 	struct active_ctrl *e;
 	bool is_fc;
+
+	/*
+	 * The kernel reuses a device name as soon as it is free. A "remove"
+	 * can arrive after a new device took the name, and the new device
+	 * must be kept. The kernel sends "remove" before it deletes the
+	 * sysfs directory, so a device that is being deleted is not new.
+	 */
+	if (state_ctrl_present(devname) && !sysfs_ctrl_deleting(devname)) {
+		log_dbg("%s - remove for an earlier device of this name, ignored",
+			devname);
+		return;
+	}
 
 	e = ctrl_find_by_devname(devname);
 	state_remove_ctrl(devname);

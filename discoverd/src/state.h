@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <stdbool.h>
+
 /*
  * State file management.
  *
@@ -35,6 +37,13 @@ int state_init(void);
  * disconnects anything. Call once at startup.
  */
 void state_gc(void);
+
+/*
+ * Is the device that the state of @devid records still present? True only
+ * when /sys/class/nvme/@devid exists and has the recorded inode. A device
+ * with the same name but another inode is a different controller.
+ */
+bool state_ctrl_present(const char *devid);
 
 /*
  * Replace the file of last known desired controllers with @content.
