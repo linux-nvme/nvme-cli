@@ -105,6 +105,23 @@ if python3.found()
              args: [files('nvme_init_pi_tags_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
+
+        if 'sed' in selected_plugins and want_sed and \
+                conf.get('NVME_HAVE_SED_OPAL') != 0
+            sed_ioctls = []
+            foreach ioc : ['PSID_REVERT_TPR', 'REVERT_LSP', 'SET_SID_PW']
+                if cc.has_header_symbol('linux/sed-opal.h', 'IOC_OPAL_' + ioc)
+                    sed_ioctls += ioc
+                endif
+            endforeach
+            sed_test_env = cli_test_env
+            sed_test_env.set('NVME_SED_IOCTLS', ','.join(sed_ioctls))
+            test('nvme-cli - sed-cli',
+                 python3,
+                 args: [files('nvme_sed_test.py'), nvme_exe, mock_nvme_lib],
+                 env: sed_test_env,
+                 depends: [nvme_exe, mock_nvme_lib])
+        endif
     endif
 
     if 'ocp' in selected_plugins
