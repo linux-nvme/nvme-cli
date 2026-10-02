@@ -45,7 +45,7 @@ static int canon_ip(const char *in, char **out)
 {
 	char host[INET6_ADDRSTRLEN];
 	char canon[INET6_ADDRSTRLEN];
-	unsigned char addr6[16];
+	struct in6_addr addr6;
 	struct in_addr addr4;
 	const char *scope;
 	size_t hostlen;
@@ -66,8 +66,16 @@ static int canon_ip(const char *in, char **out)
 		return *out ? 0 : -ENOMEM;
 	}
 
-	if (inet_pton(AF_INET6, host, addr6) == 1) {
-		if (!inet_ntop(AF_INET6, addr6, canon, sizeof(canon)))
+	if (inet_pton(AF_INET6, host, &addr6) == 1) {
+		// An IPv4-mapped address is the IPv4 address.
+		if (IN6_IS_ADDR_V4MAPPED(&addr6) && !scope) {
+			if (!inet_ntop(AF_INET, &addr6.s6_addr[12], canon,
+				       sizeof(canon)))
+				return -EINVAL;
+			*out = strdup(canon);
+			return *out ? 0 : -ENOMEM;
+		}
+		if (!inet_ntop(AF_INET6, &addr6, canon, sizeof(canon)))
 			return -EINVAL;
 		if (asprintf(out, "%s%s", canon, scope ? scope : "") < 0) {
 			*out = NULL;

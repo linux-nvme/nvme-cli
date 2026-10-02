@@ -587,6 +587,15 @@ static bool test_tid_sanitize(void)
 	pass &= p;
 	libnvmf_tid_free(t);
 
+	/* An IPv4-mapped traddr and host_traddr become IPv4. */
+	libnvmf_tid_from_fields("tcp", "::ffff:127.0.0.1", "4420", "nqn.t",
+				"::FFFF:7f00:2", NULL, NULL, NULL, &t);
+	p = t && streq(libnvmf_tid_get_traddr(t), "127.0.0.1") &&
+		streq(libnvmf_tid_get_host_traddr(t), "127.0.0.2");
+	CHECK(p, "IPv4-mapped traddr and host_traddr → IPv4");
+	pass &= p;
+	libnvmf_tid_free(t);
+
 	/* A numeric host_traddr is canonicalized too. */
 	libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", "nqn.t",
 				"2001:db8:0:0:0:0:0:2", NULL, NULL, NULL, &t);
