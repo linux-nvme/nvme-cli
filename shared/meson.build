@@ -40,6 +40,7 @@ if host_system == 'windows'
     ]
 else
     sources += [
+        'crash-util-linux.c',
         'fs-util-linux.c',
         'machine-id-util-linux.c',
         'net-util-linux.c',
