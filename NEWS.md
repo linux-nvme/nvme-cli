@@ -15,6 +15,10 @@
   `--output-format=json` (`-o json`), which this change does not
   affect.
 
+* The ScaleFlux plugin no longer supports the proprietary ScaleFlux
+  kernel driver used with CSD 2000 drives. nvme-cli does not support
+  proprietary kernel modules. The clean card feature is removed.
+
 * `nvme discover`, `nvme connect-all` and `nvme config create
   --discovery` now default `--persistent` to `auto` instead of `no`.
   With this, the discovery controller stays connected after the log
