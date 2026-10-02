@@ -12,9 +12,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -24,8 +24,8 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <shared/archive-util.h>
 #include <shared/fs-util.h>
-#include <shared/proc-util.h>
 #include <shared/string-util.h>
 
 #include "cleanup.h"
@@ -224,45 +224,6 @@ static int read_header(struct libnvme_passthru_cmd *cmd, struct libnvme_transpor
 {
 	memset((void *)(uintptr_t)cmd->addr, 0, INTERNAL_LOG_MAX_BYTE_TRANSFER);
 	return cmd_dump_repeat(cmd, INTERNAL_LOG_MAX_DWORD_TRANSFER, -1, hdl, false);
-}
-
-/*
- * run_cmd - run argv without a shell and wait for it to finish. No command
- * string is built, so there is no shell to interpret metacharacters in a
- * device-supplied serial number or a user-supplied path.
- * Return: 0 on success, -1 with errno set on failure.
- */
-static int run_cmd(const char *const argv[])
-{
-	shr_proc_t proc;
-	bool exited;
-	int code, ret;
-
-	/*
-	 * The child writes to this process's stdout, so flush what is still
-	 * buffered here or it lands after the child's output.
-	 */
-	fflush(stdout);
-
-	ret = shr_spawnp(argv, -1, -1, &proc);
-	if (!ret)
-		ret = shr_wait_proc(proc, &exited, &code);
-	if (ret) {
-		errno = -ret;
-		return -1;
-	}
-
-	if (!exited) {
-		errno = EINTR;
-		return -1;
-	}
-
-	if (code != 0) {
-		errno = EIO;
-		return -1;
-	}
-
-	return 0;
 }
 
 static int get_serial_number(char *str, size_t str_size,
@@ -1022,56 +983,31 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	if (ilog.count > 0) {
 		int ret_cmd;
 		__cleanup_free char *zip_path = NULL;
-		char saved_cwd[PATH_MAX];
 
 		if (asprintf(&zip_name, "%s.zip", unique_folder) < 0)
 			return -errno;
 
 		/*
-		 * zip runs with cfg.out_dir (initial_folder/unique_folder) as
-		 * its cwd, so the target has to be relative to that directory,
-		 * not to the cwd this process started in: initial_folder may
-		 * be "." (the default), and resolving zip_path against it
-		 * before the chdir() below would put the archive inside the
-		 * very directory being archived -- and then shr_rmdir_recursive()
-		 * would delete it right back out again. cfg.out_dir is always
-		 * exactly one level under initial_folder, so ".." always lands
-		 * back there regardless of what initial_folder is.
+		 * initial_folder is cfg.out_dir as given on the command line,
+		 * before it was extended to initial_folder/unique_folder
+		 * below; the archive is written there, next to unique_folder,
+		 * not inside it (shr_rmdir_recursive() removes cfg.out_dir
+		 * right after, which would delete the archive too).
 		 */
-		if (asprintf(&zip_path, "../%s", zip_name) < 0)
+		if (asprintf(&zip_path, "%s/%s", initial_folder, zip_name) < 0)
 			return -errno;
 
 		printf("Compressing logs to %s\n", zip_name);
 
-		/* no shell: run zip with an explicit argv */
-		const char *zip_argv_quiet[] = {
-			"zip", "-MM", "-r", "-q", zip_path, ".", NULL
-		};
-		const char *zip_argv_verbose[] = {
-			"zip", "-MM", "-r", zip_path, ".", NULL
-		};
-		const char **zip_argv = nvme_args.verbose ? zip_argv_verbose
-							   : zip_argv_quiet;
+		/* no external process: archive cfg.out_dir directly */
+		ret_cmd = shr_archive_create_dir(zip_path, cfg.out_dir, "",
+						  SHR_ARCHIVE_ZIP);
 
-		/* zip needs to run from inside the log directory */
-		if (!getcwd(saved_cwd, sizeof(saved_cwd))) {
-			nvme_show_perror("getcwd");
-			goto out;
-		}
-
-		if (chdir(cfg.out_dir) < 0) {
-			nvme_show_perror("chdir to log directory");
-			goto out;
-		}
-
-		ret_cmd = run_cmd(zip_argv);
-
-		if (chdir(saved_cwd) < 0)
-			nvme_show_perror("chdir back");
-
-		if (ret_cmd)
-			nvme_show_perror("zip");
-		else {
+		if (ret_cmd) {
+			nvme_show_error("Failed to create \"%s\": %s", zip_path,
+					 strerror(-ret_cmd));
+			err = ret_cmd;
+		} else {
 			output_path = zip_name;
 			ret_cmd = shr_rmdir_recursive(cfg.out_dir);
 			if (ret_cmd) {
@@ -1081,7 +1017,6 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-out:
 	if (ilog.count == 0) {
 		if (err > 0)
 			nvme_show_status(err);
