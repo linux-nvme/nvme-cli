@@ -16,6 +16,8 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
+#include <shared/time-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-pci-ids.h"
 #include "nvme-print.h"
@@ -877,11 +879,7 @@ void sndk_UtilsGetTime(struct SNDK_UtilsTimeInfo *timeInfo)
 	timeInfo->second		=  currTimeInfo.tm_sec;
 	timeInfo->msecs			=  0;
 	timeInfo->isDST			=  currTimeInfo.tm_isdst;
-#ifdef NVME_HAVE_TM_GMTOFF
-	timeInfo->zone			= -currTimeInfo.tm_gmtoff / 60;
-#else /* NVME_HAVE_TM_GMTOFF */
-	timeInfo->zone			= -1 * (timezone / 60);
-#endif /* NVME_HAVE_TM_GMTOFF */
+	timeInfo->zone			= -shr_tm_gmtoff(&currTimeInfo) / 60;
 }
 
 int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
