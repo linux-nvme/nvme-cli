@@ -5,12 +5,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/mount.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <libnvme.h>
 #include <libnvme-sed.h>
+
+#include <shared/term-util.h>
 
 #include "nvme-print.h"
 #include "sedopal_cmd.h"
@@ -148,7 +149,7 @@ char *sedopal_get_password(char *prompt)
 	char *pass;
 	int len;
 
-	pass = getpass(prompt);
+	pass = shr_getpass(prompt);
 	if (pass == NULL)
 		return NULL;
 
