@@ -59,6 +59,19 @@ static bool state_read_ino(const char *devid, uint64_t *ino)
 	return ok;
 }
 
+bool state_ctrl_present(const char *devid)
+{
+	char syspath[512];
+	struct stat st;
+	uint64_t ino;
+
+	snprintf(syspath, sizeof(syspath), SYSFS_NVME_DIR "/%s", devid);
+	if (stat(syspath, &st))
+		return false;
+
+	return state_read_ino(devid, &ino) && ino == (uint64_t)st.st_ino;
+}
+
 void state_gc(void)
 {
 	struct dirent *de;
