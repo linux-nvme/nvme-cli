@@ -151,14 +151,10 @@ bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid);
  * caller that wants a compact hash (e.g. for a systemd unit name) derives it
  * from this string itself -- libnvme does not hash it.
  *
- * IMPORTANT -- address text is a known foot-gun here.  This function does no
- * normalization beyond what the constructors already applied: the address is
- * numeric (constructors reject a hostname), but a compressed vs.
- * fully-expanded IPv6 address, or an IPv4-mapped IPv6 address
- * ("::ffff:1.2.3.4") vs. dotted IPv4 ("1.2.3.4"), can still spell the same
- * endpoint differently and yield different canonical strings.  Two producers
- * only agree on a TID's canonical form if they build the TID from
- * byte-identical field values.
+ * The constructors store numeric addresses in one form: IPv6 is compressed,
+ * and an IPv4-mapped IPv6 address ("::ffff:1.2.3.4") becomes the IPv4
+ * address ("1.2.3.4").  So two spellings of one numeric address yield the
+ * same canonical string.
  *
  * Return: Cached canonical string, or NULL on allocation failure.
  */
