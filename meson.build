@@ -53,6 +53,7 @@ want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
 want_fabrics = get_option('fabrics').disabled() == false and host_system == 'linux'
 want_mi = get_option('mi').disabled() == false and host_system == 'linux'
+want_sed = get_option('sed').disabled() == false
 want_top = get_option('top').disabled() == false and host_system == 'linux'
 want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system == 'linux'
 want_deprecated_cmds = get_option('deprecated-cmds').disabled() == false
@@ -166,6 +167,7 @@ conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
 conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
+conf.set('CONFIG_SED', want_sed, description: 'Is SED enabled')
 conf.set('CONFIG_LOOPBACK', want_ioctl_tests,
     description: 'Is the ioctl loopback test transport enabled')
 conf.set('CONFIG_TOP', want_top, description: 'Is nvme top enabled')

@@ -371,6 +371,7 @@ foreach hdr : [
     'util',
 ]
     hdr_conf = configuration_data()
+    hdr_conf.set('DIR', 'nvme')
     hdr_conf.set('HDR', hdr)
     src = configure_file(
         input: 'test-header.c.in',
@@ -384,3 +385,25 @@ foreach hdr : [
     )
     test('libnvme - header/' + hdr, exe)
 endforeach
+
+if want_sed
+    foreach hdr : [
+        'sed',
+        'tcg-types',
+    ]
+        hdr_conf = configuration_data()
+        hdr_conf.set('DIR', 'sed')
+        hdr_conf.set('HDR', hdr)
+        src = configure_file(
+            input: 'test-header.c.in',
+            output: 'test-header-sed-' + hdr + '.c',
+            configuration: hdr_conf,
+        )
+        exe = executable(
+            'test-header-sed-' + hdr,
+            src,
+            dependencies: [libnvme_dep],
+        )
+        test('libnvme - header/sed/' + hdr, exe)
+    endforeach
+endif
