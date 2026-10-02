@@ -101,6 +101,7 @@ struct ifaddrs;
  * @candidate:      candidate TID (from NBFT, config, a DLPE, or mDNS)
  * @existing:       TID read from sysfs for a currently-connected controller
  * @existing_is_dc: is @existing a Discovery Controller?
+ * @existing_live:  is @existing in the "live" state?
  * @iface_list:     interface list from getifaddrs(), or NULL
  *
  * Unlike tid_same(), this is asymmetric: @candidate states what the connection
@@ -140,7 +141,7 @@ char *tid_scope_link_local(const char *traddr, const char *scope);
 
 bool tid_matches_existing(const struct libnvmf_tid *candidate,
 			  const struct libnvmf_tid *existing,
-			  bool existing_is_dc,
+			  bool existing_is_dc, bool existing_live,
 			  const struct ifaddrs *iface_list);
 
 /*

@@ -464,6 +464,7 @@ struct scanned_ctrl {
 	char *devname;
 	struct libnvmf_tid *tid;
 	bool is_dc;
+	bool live;
 };
 
 SHR_PTRARRAY_DEFINE(scanned_ctrl_list, struct scanned_ctrl);
@@ -1375,20 +1376,25 @@ static void apply_zeroconf(void)
 	}
 }
 
-static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc)
+static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc,
+					   bool *live)
 {
 	sd_device *dev = NULL;
+	const char *state = NULL;
 	char syspath[256];
 	struct libnvmf_tid *t;
 
 	if (is_dc)
 		*is_dc = false;
+	*live = false;
 
 	snprintf(syspath, sizeof(syspath), "/sys/class/nvme/%s", devname);
 	if (sd_device_new_from_syspath(&dev, syspath) < 0)
 		return NULL;
 
 	t = tid_from_sysfs(dev, is_dc);
+	sd_device_get_sysattr_value(dev, "state", &state);
+	*live = shr_streq0(state, "live");
 	sd_device_unref(dev);
 	return t;
 }
@@ -1402,9 +1408,9 @@ static bool devname_matches_tid(const char *devname,
 {
 	__cleanup_tid struct libnvmf_tid *existing = NULL;
 	struct ifaddrs *iface_list = NULL;
-	bool is_dc, match;
+	bool is_dc, live, match;
 
-	existing = sysfs_read_tid(devname, &is_dc);
+	existing = sysfs_read_tid(devname, &is_dc, &live);
 	if (!existing)
 		return false;
 
@@ -1413,7 +1419,7 @@ static bool devname_matches_tid(const char *devname,
 		iface_list = NULL;
 	}
 
-	match = tid_matches_existing(tid, existing, is_dc, iface_list);
+	match = tid_matches_existing(tid, existing, is_dc, live, iface_list);
 	freeifaddrs(iface_list);
 
 	return match;
@@ -1468,7 +1474,7 @@ static void conn_scan_load(struct conn_scan *scan)
 			break;
 		}
 
-		sc->tid = sysfs_read_tid(ent->d_name, &sc->is_dc);
+		sc->tid = sysfs_read_tid(ent->d_name, &sc->is_dc, &sc->live);
 		sc->devname = shr_xstrdup(ent->d_name);
 		if (!sc->tid || !sc->devname) {
 			scanned_ctrl_free(sc);
@@ -1499,7 +1505,7 @@ static const char *find_devname_for_tid(const struct conn_scan *scan,
 	for (i = 0; i < scan->ctrls.len; i++) {
 		const struct scanned_ctrl *sc = scan->ctrls.items[i];
 
-		if (tid_matches_existing(tid, sc->tid, sc->is_dc,
+		if (tid_matches_existing(tid, sc->tid, sc->is_dc, sc->live,
 					 scan->iface_list))
 			return sc->devname;
 	}

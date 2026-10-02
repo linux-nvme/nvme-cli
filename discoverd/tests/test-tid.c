@@ -117,10 +117,10 @@ static bool test_tcp_host_iface_vs_src_addr(void)
 			HOST_NQN, true);
 
 	pass &= check("source address on the requested interface matches",
-		      tid_matches_existing(candidate, existing, true,
+		      tid_matches_existing(candidate, existing, true, true,
 					   iface_list), true);
 	pass &= check("source address on another interface does not match",
-		      tid_matches_existing(candidate, other, true,
+		      tid_matches_existing(candidate, other, true, true,
 					   iface_list), false);
 	pass &= check("tid_same() misses the same pair",
 		      tid_same(candidate, existing), false);
@@ -160,17 +160,19 @@ static bool test_hostid(void)
 	}
 
 	pass &= check("same host ID matches",
-		      tid_matches_existing(candidate, same, false, NULL), true);
+		      tid_matches_existing(candidate, same, false, true,
+					   NULL), true);
 	pass &= check("host ID compared without case",
-		      tid_matches_existing(candidate, upper, false, NULL),
+		      tid_matches_existing(candidate, upper, false, true, NULL),
 		      true);
 	pass &= check("different host ID does not match",
-		      tid_matches_existing(candidate, other, false, NULL),
+		      tid_matches_existing(candidate, other, false, true, NULL),
 		      false);
 	pass &= check("candidate without host ID matches",
-		      tid_matches_existing(no_id, other, false, NULL), true);
+		      tid_matches_existing(no_id, other, false, true,
+					   NULL), true);
 	pass &= check("existing without host ID matches",
-		      tid_matches_existing(candidate, no_id, false, NULL),
+		      tid_matches_existing(candidate, no_id, false, true, NULL),
 		      true);
 
 	return pass;
@@ -236,7 +238,7 @@ static bool test_tcp_no_host_side_requested(void)
 		       HOST_NQN, false);
 
 	pass &= check("host-side fields ignored when unrequested",
-		      tid_matches_existing(candidate, existing, false,
+		      tid_matches_existing(candidate, existing, false, true,
 					   iface_list), true);
 
 	return pass;
@@ -262,10 +264,10 @@ static bool test_tcp_host_traddr(void)
 			HOST_NQN, false);
 
 	pass &= check("same source address matches",
-		      tid_matches_existing(candidate, existing, false,
+		      tid_matches_existing(candidate, existing, false, true,
 					   iface_list), true);
 	pass &= check("different source address does not match",
-		      tid_matches_existing(candidate, other, false,
+		      tid_matches_existing(candidate, other, false, true,
 					   iface_list), false);
 
 	return pass;
@@ -292,10 +294,10 @@ static bool test_well_known_nqn(void)
 		       HOST_NQN, true);
 
 	pass &= check("unique NQN accepted from a DC",
-		      tid_matches_existing(candidate, existing, true,
+		      tid_matches_existing(candidate, existing, true, true,
 					   iface_list), true);
 	pass &= check("unique NQN rejected from an IOC",
-		      tid_matches_existing(candidate, existing, false,
+		      tid_matches_existing(candidate, existing, false, true,
 					   iface_list), false);
 
 	return pass;
@@ -318,7 +320,7 @@ static bool test_unique_nqn_must_match(void)
 		       HOST_NQN, false);
 
 	pass &= check("a different subsystem NQN does not match",
-		      tid_matches_existing(candidate, existing, false,
+		      tid_matches_existing(candidate, existing, false, true,
 					   iface_list), false);
 
 	return pass;
@@ -348,13 +350,13 @@ static bool test_target_side_mandatory(void)
 			  false);
 
 	pass &= check("traddr must match",
-		      tid_matches_existing(candidate, traddr, false,
+		      tid_matches_existing(candidate, traddr, false, true,
 					   iface_list), false);
 	pass &= check("trsvcid must match",
-		      tid_matches_existing(candidate, trsvcid, false,
+		      tid_matches_existing(candidate, trsvcid, false, true,
 					   iface_list), false);
 	pass &= check("hostnqn must match",
-		      tid_matches_existing(candidate, hostnqn, false,
+		      tid_matches_existing(candidate, hostnqn, false, true,
 					   iface_list), false);
 
 	return pass;
@@ -383,7 +385,7 @@ static bool test_address_forms(void)
 		       HOST_NQN, false);
 
 	pass &= check("an IPv4-mapped IPv6 traddr matches its IPv4 form",
-		      tid_matches_existing(candidate, existing, false,
+		      tid_matches_existing(candidate, existing, false, true,
 					   iface_list), true);
 
 	return pass;
@@ -416,13 +418,24 @@ static bool test_tcp_no_src_addr(void)
 		       HOST_NQN, true);
 
 	pass &= check("same recorded interface matches",
-		      tid_matches_existing(candidate, existing, true,
+		      tid_matches_existing(candidate, existing, true, true,
 					   iface_list), true);
 	pass &= check("different recorded interface does not match",
-		      tid_matches_existing(candidate, other, true,
+		      tid_matches_existing(candidate, other, true, true,
 					   iface_list), false);
 	pass &= check("no interface recorded: assumed to match",
-		      tid_matches_existing(candidate, bare, true,
+		      tid_matches_existing(candidate, bare, true, true,
+					   iface_list), true);
+
+	/*
+	 * A connection that is not live reports no source address on any
+	 * kernel, so the missing address proves nothing about its interface.
+	 */
+	pass &= check("not live, no interface recorded: no match",
+		      tid_matches_existing(candidate, bare, true, false,
+					   iface_list), false);
+	pass &= check("not live, same recorded interface matches",
+		      tid_matches_existing(candidate, existing, true, false,
 					   iface_list), true);
 
 	return pass;
@@ -462,13 +475,13 @@ static bool test_transport(void)
 		      HOST_NQN, false);
 
 	pass &= check("tcp does not match rdma",
-		      tid_matches_existing(tcp, rdma, false,
+		      tid_matches_existing(tcp, rdma, false, true,
 					   iface_list), false);
 	pass &= check("same FC WWNs match",
-		      tid_matches_existing(fc, fc_same, false,
+		      tid_matches_existing(fc, fc_same, false, true,
 					   iface_list), true);
 	pass &= check("a different FC host WWN does not match",
-		      tid_matches_existing(fc, fc_other, false,
+		      tid_matches_existing(fc, fc_other, false, true,
 					   iface_list), false);
 
 	return pass;
@@ -492,7 +505,8 @@ static bool test_hostless_candidate(void)
 		      HOST_NQN, false);
 
 	pass &= check("a hostless candidate does not match",
-		      tid_matches_existing(candidate, existing, false, NULL),
+		      tid_matches_existing(candidate, existing, false, true,
+					   NULL),
 		      false);
 
 	return pass;
