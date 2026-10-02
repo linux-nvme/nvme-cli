@@ -22,6 +22,7 @@
  *           Jeff Lien <jeff.lien@wdc.com>
  *           Brandon Paupore <brandon.paupore@wdc.com>
  */
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -36,6 +37,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <shared/archive-util.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/crypto-util.h>
 #include <shared/fs-util.h>
@@ -480,9 +482,7 @@ static __u8 wdc_lat_mon_guid[WDC_C3_GUID_LENGTH] = {
 #define WDC_DE_GLOBAL_NSID				0xFFFFFFFF
 #define WDC_DE_DEFAULT_NAMESPACE_ID			0x01
 #define WDC_DE_PATH_SEPARATOR				"/"
-#define WDC_DE_TAR_FILES				"*.bin"
 #define WDC_DE_TAR_FILE_EXTN				".tar.gz"
-#define WDC_DE_TAR_CMD					"tar -czf"
 
 /* VS NAND Stats */
 #define WDC_NVME_NAND_STATS_LOG_ID			0xFB
@@ -881,8 +881,6 @@ struct tarfile_metadata {
 	int8_t bufferFolderPath[MAX_PATH_LEN];
 	char bufferFolderName[MAX_PATH_LEN];
 	char tarFileName[MAX_PATH_LEN];
-	char tarFiles[MAX_PATH_LEN];
-	char tarCmd[MAX_PATH_LEN+MAX_PATH_LEN];
 	char currDir[MAX_PATH_LEN];
 	UtilsTimeInfo timeInfo;
 	uint8_t *timeString[MAX_PATH_LEN];
@@ -4015,6 +4013,138 @@ out:
 	return ret;
 }
 
+/* scandir() filter: regular ".bin" log files, skipping dotfiles. */
+static int wdc_is_bin_file(const struct dirent *ent)
+{
+	size_t len = strlen(ent->d_name);
+
+	return ent->d_name[0] != '.' && len > 4 &&
+	       !strcmp(ent->d_name + len - 4, ".bin");
+}
+
+/* scandir() filter: any entry, skipping dotfiles. */
+static int wdc_is_log_file(const struct dirent *ent)
+{
+	return ent->d_name[0] != '.';
+}
+
+static int wdc_dirent_cmp(const void *a, const void *b)
+{
+	const struct dirent *const *da = a;
+	const struct dirent *const *db = b;
+
+	return strcmp((*da)->d_name, (*db)->d_name);
+}
+
+/*
+ * scandir() + alphasort() equivalent built on opendir()/readdir(): mingw's
+ * dirent.h provides the latter but not the former.
+ */
+static int wdc_scandir(const char *dir, struct dirent ***namelist,
+			int (*filter)(const struct dirent *))
+{
+	struct dirent *ent, **list = NULL, **tmp;
+	DIR *d;
+	int n = 0;
+
+	d = opendir(dir);
+	if (!d)
+		return -1;
+
+	while ((ent = readdir(d))) {
+		if (filter && !filter(ent))
+			continue;
+
+		tmp = realloc(list, (n + 1) * sizeof(*list));
+		if (!tmp)
+			goto err;
+		list = tmp;
+
+		list[n] = malloc(sizeof(*list[n]));
+		if (!list[n])
+			goto err;
+		*list[n] = *ent;
+		n++;
+	}
+
+	closedir(d);
+
+	if (n > 0)
+		qsort(list, n, sizeof(*list), wdc_dirent_cmp);
+
+	*namelist = list;
+	return n;
+
+err:
+	closedir(d);
+	while (n > 0)
+		free(list[--n]);
+	free(list);
+	return -1;
+}
+
+/*
+ * Archive dir's entries matching filter into tar_file (gzip), without
+ * spawning an external process. If remove_after, delete the archived files
+ * and dir itself once the archive is written, mirroring "tar --remove-files".
+ */
+static int wdc_tar_dir_files(const char *tar_file, const char *dir,
+			      int (*filter)(const struct dirent *),
+			      bool remove_after)
+{
+	__cleanup_dirents struct dirents d = {};
+	char **paths;
+	int i, ret;
+
+	d.num = wdc_scandir(dir, &d.ents, filter);
+	if (d.num <= 0) {
+		nvme_show_error("ERROR: WDC: no log files found to archive");
+		return -ENOENT;
+	}
+
+	paths = calloc(d.num, sizeof(*paths));
+	if (!paths)
+		return -ENOMEM;
+
+	ret = 0;
+	for (i = 0; i < d.num; i++) {
+		if (asprintf(&paths[i], "%s%s%s", dir, WDC_DE_PATH_SEPARATOR,
+			     d.ents[i]->d_name) < 0) {
+			ret = -ENOMEM;
+			break;
+		}
+	}
+
+	if (!ret) {
+		ret = shr_tar_gz_create(tar_file,
+					 (const char *const *)paths, d.num);
+		if (ret == -ENOTSUP)
+			nvme_show_error(
+				"ERROR: WDC: nvme-cli was built without libarchive, archive creation is unavailable");
+	}
+
+	if (!ret && remove_after) {
+		/*
+		 * Keep removing the rest even once something fails, but
+		 * report that first failure instead of the success the old
+		 * "tar --remove-files" exit status would no longer be here
+		 * to catch.
+		 */
+		for (i = 0; i < d.num; i++) {
+			if (unlink(paths[i]) && !ret)
+				ret = -errno;
+		}
+		if (rmdir(dir) && !ret)
+			ret = -errno;
+	}
+
+	for (i = 0; i < d.num; i++)
+		free(paths[i]);
+	free(paths);
+
+	return ret;
+}
+
 static int wdc_do_sn730_get_and_tar(struct libnvme_transport_handle *hdl, char *outputName)
 {
 	int ret = 0;
@@ -4143,10 +4273,9 @@ static int wdc_do_sn730_get_and_tar(struct libnvme_transport_handle *hdl, char *
 
 	/* Tar the log directory */
 	wdc_UtilsSnprintf(tarInfo->tarFileName, sizeof(tarInfo->tarFileName), "%s%s", (char *)tarInfo->bufferFolderPath, WDC_DE_TAR_FILE_EXTN);
-	wdc_UtilsSnprintf(tarInfo->tarFiles, sizeof(tarInfo->tarFiles), "%s%s%s", (char *)tarInfo->bufferFolderName, WDC_DE_PATH_SEPARATOR, WDC_DE_TAR_FILES);
-	wdc_UtilsSnprintf(tarInfo->tarCmd, sizeof(tarInfo->tarCmd), "%s %s %s", WDC_DE_TAR_CMD, (char *)tarInfo->tarFileName, (char *)tarInfo->tarFiles);
-
-	ret = system(tarInfo->tarCmd);
+	ret = wdc_tar_dir_files(tarInfo->tarFileName,
+				 (char *)tarInfo->bufferFolderName,
+				 wdc_is_bin_file, false);
 
 	if (ret)
 		nvme_show_error("ERROR: WDC: Tar of log data failed, ret = %d", ret);
@@ -4297,7 +4426,6 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	__u64 capabilities = 0;
 	__u32 device_id, read_vendor_id;
 	char file_path[PATH_MAX/2] = {0};
-	char cmd_buf[PATH_MAX] = {0};
 	int ret = -1;
 
 	struct config {
@@ -4479,15 +4607,8 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 			if (nvme_args.verbose)
 				printf("Archiving...\n");
 
-			if (snprintf(cmd_buf, PATH_MAX,
-				     "tar --remove-files -czf %s %s",
-				     file_path, fb) >= PATH_MAX) {
-				nvme_show_error("Command buffer is too long!");
-				ret = -1;
-				goto out;
-			}
-
-			ret = system(cmd_buf);
+			ret = wdc_tar_dir_files(file_path, fb,
+						 wdc_is_log_file, true);
 			if (ret)
 				nvme_show_error("Failed to create an archive file!");
 		}
@@ -10179,8 +10300,7 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 	__s8 bufferFolderPath[MAX_PATH_LEN];
 	char bufferFolderName[MAX_PATH_LEN];
 	char tarFileName[MAX_PATH_LEN];
-	char tarFiles[MAX_PATH_LEN];
-	char tarCmd[MAX_PATH_LEN+MAX_PATH_LEN];
+	char tarDir[MAX_PATH_LEN];
 	UtilsTimeInfo timeInfo;
 	__u8 timeString[MAX_PATH_LEN];
 	__u8 serialNo[WDC_SERIAL_NO_LEN];
@@ -10206,8 +10326,7 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 	memset(bufferFolderPath, 0, sizeof(bufferFolderPath));
 	memset(bufferFolderName, 0, sizeof(bufferFolderName));
 	memset(tarFileName, 0, sizeof(tarFileName));
-	memset(tarFiles, 0, sizeof(tarFiles));
-	memset(tarCmd, 0, sizeof(tarCmd));
+	memset(tarDir, 0, sizeof(tarDir));
 	memset(&timeInfo, 0, sizeof(timeInfo));
 
 	if (wdc_get_serial_and_fw_rev(hdl, (char *)idSerialNo, (char *)idFwRev)) {
@@ -10390,15 +10509,13 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 	/* Tar the Drive Essentials directory */
 	wdc_UtilsSnprintf(tarFileName, sizeof(tarFileName), "%s%s", (char *)bufferFolderPath, WDC_DE_TAR_FILE_EXTN);
 	if (dir)
-		wdc_UtilsSnprintf(tarFiles, sizeof(tarFiles), "%s%s%s%s%s", (char *)dir,
-				  WDC_DE_PATH_SEPARATOR, (char *)bufferFolderName,
-				  WDC_DE_PATH_SEPARATOR, WDC_DE_TAR_FILES);
+		wdc_UtilsSnprintf(tarDir, sizeof(tarDir), "%s%s%s",
+				  (char *)dir, WDC_DE_PATH_SEPARATOR,
+				  (char *)bufferFolderName);
 	else
-		wdc_UtilsSnprintf(tarFiles, sizeof(tarFiles), "%s%s%s", (char *)bufferFolderName,
-				  WDC_DE_PATH_SEPARATOR, WDC_DE_TAR_FILES);
-	wdc_UtilsSnprintf(tarCmd, sizeof(tarCmd), "%s %s %s", WDC_DE_TAR_CMD, (char *)tarFileName, (char *)tarFiles);
-
-	ret = system(tarCmd);
+		wdc_UtilsSnprintf(tarDir, sizeof(tarDir), "%s",
+				  (char *)bufferFolderName);
+	ret = wdc_tar_dir_files(tarFileName, tarDir, wdc_is_bin_file, false);
 
 	if (ret)
 		nvme_show_error("ERROR: WDC: Tar of Drive Essentials data failed, ret = %d",
