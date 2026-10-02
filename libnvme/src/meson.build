@@ -142,6 +142,12 @@ else
     ]
 endif
 
+if want_sed and conf.get('NVME_HAVE_SED_OPAL') != 0
+    sources += 'sed/sed-linux.c'
+else
+    sources += 'sed/no-sed-opal.c'
+endif
+
 if liburing_dep.found()
     sources += 'nvme/uring.c'
 else

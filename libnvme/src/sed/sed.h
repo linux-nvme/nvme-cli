@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include <nvme/lib.h>
@@ -16,6 +17,46 @@
 /**
  * DOC: sed.h - TCG Storage (Self-Encrypting Drive) support
  */
+
+/**
+ * LIBNVME_SED_KEY_MAX - Maximum size of a SED key
+ */
+#define LIBNVME_SED_KEY_MAX	256
+
+/**
+ * enum libnvme_sed_key_type - Source of a SED key
+ * @LIBNVME_SED_KEY_INCLUDED:	The key is stored in &struct libnvme_sed_key
+ * @LIBNVME_SED_KEY_KEYRING:	The kernel looks up the key in its keyring
+ */
+enum libnvme_sed_key_type {
+	LIBNVME_SED_KEY_INCLUDED	= 0,
+	LIBNVME_SED_KEY_KEYRING		= 1,
+};
+
+/**
+ * struct libnvme_sed_key - SED key (password or PSID)
+ * @type:	Key source, see &enum libnvme_sed_key_type
+ * @len:	Length of @key in bytes, ignored for
+ *		%LIBNVME_SED_KEY_KEYRING
+ * @key:	Key data
+ */
+struct libnvme_sed_key {
+	__u8	type;
+	__u8	len;
+	__u8	key[LIBNVME_SED_KEY_MAX];
+};
+
+/**
+ * enum libnvme_sed_lock_state - Locking range lock state
+ * @LIBNVME_SED_LOCK_RO:	Read-only, writes are locked
+ * @LIBNVME_SED_LOCK_RW:	Read-write, the range is unlocked
+ * @LIBNVME_SED_LOCK_LK:	Reads and writes are locked
+ */
+enum libnvme_sed_lock_state {
+	LIBNVME_SED_LOCK_RO		= 1 << 0,
+	LIBNVME_SED_LOCK_RW		= 1 << 1,
+	LIBNVME_SED_LOCK_LK		= 1 << 2,
+};
 
 /**
  * libnvme_sed_discover() - Retrieve the TCG Level 0 Discovery data
@@ -80,3 +121,117 @@ static inline void *libnvme_sed_l0_data(struct tcg_l0_desc *desc)
 {
 	return desc + 1;
 }
+
+/*
+ * The functions below operate on the Admin1 authority and the global
+ * locking range of the Locking SP. They must be issued on a namespace
+ * handle.
+ *
+ * Unless stated otherwise they return 0 on success, the TCG method
+ * status (see &enum tcg_method_status) if the TPer rejected the
+ * operation or a negative error code otherwise.
+ */
+
+/**
+ * libnvme_sed_take_ownership() - Take ownership of the TPer
+ * @hdl:	Transport handle
+ * @key:	New SID password
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_take_ownership(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key);
+
+/**
+ * libnvme_sed_activate_lsp() - Activate the Locking SP
+ * @hdl:	Transport handle
+ * @key:	SID password
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_activate_lsp(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key);
+
+/**
+ * libnvme_sed_setup_range() - Configure the global locking range
+ * @hdl:	Transport handle
+ * @key:	Admin1 password
+ * @read_lock:	Enable read locking
+ * @write_lock:	Enable write locking
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_setup_range(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key, bool read_lock,
+		bool write_lock);
+
+/**
+ * libnvme_sed_lock_unlock() - Change the lock state of the global range
+ * @hdl:	Transport handle
+ * @key:	Admin1 password
+ * @state:	New lock state, see &enum libnvme_sed_lock_state
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_lock_unlock(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key,
+		enum libnvme_sed_lock_state state);
+
+/**
+ * libnvme_sed_set_password() - Change the Admin1 password
+ * @hdl:	Transport handle
+ * @key:	Current Admin1 password
+ * @new_key:	New Admin1 password
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_set_password(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key,
+		const struct libnvme_sed_key *new_key);
+
+/**
+ * libnvme_sed_set_sid_password() - Change the SID password
+ * @hdl:	Transport handle
+ * @key:	Current SID password
+ * @new_key:	New SID password
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_set_sid_password(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key,
+		const struct libnvme_sed_key *new_key);
+
+/**
+ * libnvme_sed_revert_tper() - Revert the TPer to its factory state
+ * @hdl:	Transport handle
+ * @key:	SID password
+ *
+ * This erases all user data.
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_revert_tper(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key);
+
+/**
+ * libnvme_sed_revert_psid() - Revert the TPer using the PSID
+ * @hdl:	Transport handle
+ * @psid:	Physical Security ID printed on the drive label
+ *
+ * This erases all user data.
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_revert_psid(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *psid);
+
+/**
+ * libnvme_sed_revert_lsp() - Revert the Locking SP
+ * @hdl:	Transport handle
+ * @key:	Admin1 password
+ * @keep_data:	Preserve the user data
+ *
+ * Return: See the return value convention above.
+ */
+int libnvme_sed_revert_lsp(struct libnvme_transport_handle *hdl,
+		const struct libnvme_sed_key *key, bool keep_data);
