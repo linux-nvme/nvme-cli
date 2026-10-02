@@ -201,10 +201,6 @@ class SamsungCLITest(unittest.TestCase):
         self.server = SamsungMockServer(self.ipc_sock_path)
         self.server.start()
         self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-        self.tool_dir = os.path.join(self.ipc_dir, 'bin')
-        os.makedirs(self.tool_dir)
-        self.env['PATH'] = (self.tool_dir + os.pathsep
-                            + self.env.get('PATH', os.defpath))
         self.cwd = os.getcwd()
         os.chdir(self.out_dir)
 
@@ -239,12 +235,6 @@ class SamsungCLITest(unittest.TestCase):
         return {os.path.basename(member.name)
                 for member in self._archive_members(relative_path)
                 if member.isfile()}
-
-    def _fail_command(self, name):
-        """Shadow a tool on PATH with one that always fails."""
-        path = os.path.join(self.tool_dir, name)
-        os.symlink(shutil.which('false') or '/bin/false', path)
-        return path
 
     # ---------------------------------------------------------------- #
     # Output path handling: -O is a file name prefix, so directories    #
@@ -482,35 +472,28 @@ class SamsungCLITest(unittest.TestCase):
                 self.assertFalse(os.path.exists(os.path.join(
                     parent, f'Samsung_Dump_{SERIAL}.tar.gz')))
 
-    def test_compress_reports_tool_failures_and_keeps_staging(self):
-        for command in ('tar', 'rm'):
-            with self.subTest(command=command):
-                parent = f'{command}-failure'
-                archive = os.path.join(parent, f'Samsung_Dump_{SERIAL}.tar.gz')
-                failed_tool = self._fail_command(command)
-                try:
-                    result = self.run_cmd('-t', 'ctlr', '-O', f'./{parent}/',
-                                          '-z')
-                finally:
-                    os.unlink(failed_tool)
+    def test_compress_failure_is_reported_and_keeps_staging(self):
+        """A drive is collected but the archive cannot be written.
 
-                self.assertNotEqual(result.returncode, 0)
-                staging = os.path.join(self.out_dir, parent,
-                                       'temp_samsung_dumps')
-                self.assertTrue(os.path.isdir(staging),
-                                'the staged dumps were discarded')
-                self.assertEqual(stat.S_IMODE(os.stat(staging).st_mode), 0o700,
-                                 'the staging directory is not private')
-                staged = set(os.listdir(staging))
-                self.assertTrue(staged, 'the staged dumps were discarded')
+        Archiving goes through libarchive in-process now, not a spawned tar,
+        so there is no external tool left to fail; a directory already
+        sitting at the archive's target path makes
+        archive_write_open_filename() fail the same way (EISDIR), regardless
+        of privilege.
+        """
+        parent = 'archive-failure'
+        archive = os.path.join(parent, f'Samsung_Dump_{SERIAL}.tar.gz')
+        os.makedirs(os.path.join(self.out_dir, archive))
 
-                if command == 'tar':
-                    self.assertFalse(os.path.exists(os.path.join(self.out_dir,
-                                                                 archive)))
-                else:
-                    self.assertTrue(os.path.isfile(os.path.join(self.out_dir,
-                                                                archive)))
-                    self.assertEqual(self._archive_files(archive), staged)
+        result = self.run_cmd('-t', 'ctlr', '-O', f'./{parent}/', '-z')
+
+        self.assertNotEqual(result.returncode, 0)
+        staging = os.path.join(self.out_dir, parent, 'temp_samsung_dumps')
+        self.assertTrue(os.path.isdir(staging),
+                        'the staged dumps were discarded')
+        self.assertEqual(stat.S_IMODE(os.stat(staging).st_mode), 0o700,
+                         'the staging directory is not private')
+        self.assertTrue(os.listdir(staging), 'the staged dumps were discarded')
 
     # ---------------------------------------------------------------- #
     # Dump type selection                                               #
