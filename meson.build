@@ -398,6 +398,13 @@ else
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
+if host_system == 'windows' or get_option('libarchive').disabled()
+    libarchive_dep = dependency('', required: false)
+else
+    libarchive_dep = dependency('libarchive', required: get_option('libarchive'))
+endif
+conf.set('CONFIG_LIBARCHIVE', libarchive_dep.found(), description: 'Is libarchive available?')
+
 if not want_discoverd
     libsystemd_dep = dependency('', required: false)
 else
@@ -871,6 +878,7 @@ dep_dict = {
     'json-c':           json_c_dep.found(),
     'OpenSSL':          openssl_dep.found(),
     'keyutils':         keyutils_dep.found(),
+    'libarchive':       libarchive_dep.found(),
     'libdbus':          libdbus_dep.found(),
     'python3':          py3_dep.found(),
     'liburing':         liburing_dep.found(),
