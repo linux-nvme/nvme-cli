@@ -117,6 +117,7 @@ NVME_CONF_DIR="${SYSCONFDIR}/nvme"
 # nvme-discoverd's state files, e.g. /run/nvme/discoverd/controllers.
 RUNDIR=$(sed -n 's/^#define RUNDIR "\(.*\)"$/\1/p' "${BUILD_DIR}/nvme-config.h")
 STATE_CTRLS_DIR="${RUNDIR}/nvme/discoverd/controllers"
+STATE_UNITS_DIR="${RUNDIR}/nvme/discoverd/units"
 REGISTRY_DIR="${RUNDIR}/nvme/registry"
 DESIRED_FILE="${RUNDIR}/nvme/discoverd/desired"
 NVME_CONF_DIR_CREATED=false
@@ -168,6 +169,12 @@ REL_PORT_ID=7
 NL_NQN=nqn.2026-09.org.nvmexpress.discoverd-wringer:not-live
 NL_PORT=8015
 NL_PORT_ID=8
+
+# IPv4-mapped phase. The port listens on "::", so the DLP reports the IOC
+# as ::ffff:127.0.0.1 to a host that connects over IPv4.
+MAP_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:mapped
+MAP_PORT=8016
+MAP_PORT_ID=9
 
 # mDNS phases only. Advertised through mDNS, on ${IFACE}'s address. The
 # port is opened and closed per phase, so a phase can advertise a DC whose
@@ -304,13 +311,13 @@ nvmet_teardown() {
 	log "nvmet: tear down"
 	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}" \
 		  "${V6_PORT_ID}" "${LL_PORT_ID}" "${REL_PORT_ID}" \
-		  "${MDNS_PORT_ID}" "${NL_PORT_ID}"; do
+		  "${MDNS_PORT_ID}" "${NL_PORT_ID}" "${MAP_PORT_ID}"; do
 		rm -f /sys/kernel/config/nvmet/ports/"${id}"/subsystems/*
 		rmdir "/sys/kernel/config/nvmet/ports/${id}" 2>/dev/null
 	done
 	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}" \
 		   "${V6_NQN}" "${LL_NQN}" "${REL_NQN}" "${REL2_NQN}" \
-		   "${MDNS_NQN}" "${NL_NQN}"; do
+		   "${MDNS_NQN}" "${NL_NQN}" "${MAP_NQN}"; do
 		local subsys_dir="/sys/kernel/config/nvmet/subsystems/${nqn}"
 
 		if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
@@ -405,6 +412,7 @@ discoverd_stop() {
 	"${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -458,6 +466,31 @@ wait_for_disconnected() {
 		waited=$((waited + 1))
 	done
 	return 1
+}
+
+# Number of controllers connected to subsystem $1.
+count_connected() {
+	local nqn="$1" d n=0
+
+	for d in /sys/class/nvme/nvme*; do
+		[ "$(cat "${d}/subsysnqn" 2>/dev/null)" = "${nqn}" ] &&
+			n=$((n + 1))
+	done
+	echo "${n}"
+}
+
+# No device may be recorded by more than one unit. Two units on one device
+# means that stopping one of them disconnects the other's connection.
+assert_one_unit_per_device() {
+	local desc="$1" dups
+
+	dups=$(cat "${STATE_UNITS_DIR}"/*.devid 2>/dev/null | grep . |
+	       sort | uniq -d | tr '\n' ' ')
+	if [ -z "${dups}" ]; then
+		pass "${desc}"
+	else
+		fail "${desc} (shared: ${dups})"
+	fi
 }
 
 assert_connected() {
@@ -815,6 +848,7 @@ disconnect_foreign
 "${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
 # ... and left its desired controllers saved.
 rm -f "${DESIRED_FILE}"
 
@@ -851,6 +885,7 @@ assert_journal_has "the adoption path was taken" \
 	"${P_START}" "adopted, already connected"
 assert_journal_lacks "no stale-unit collision on a live connection" \
 	"${P_START}" "held by a stale unit"
+assert_one_unit_per_device "every device has one unit"
 
 phase "an adopted controller that drops is reconnected"
 #
@@ -970,6 +1005,36 @@ EOF
 discoverd_start
 assert_connected "connects the subsystem listed in the DC's DLP" \
 	"${V6_NQN}" 30
+
+phase "an IPv4-mapped DLP entry is the configured IPv4 IOC"
+#
+# A port on "::" reports the IOC as ::ffff:127.0.0.1 to a host connected
+# over IPv4. The same IOC is also configured as 127.0.0.1. Both spellings
+# are one address, so they must give one unit and one connection.
+nvmet_add_subsystem "${MAP_NQN}"
+nvmet_add_port "${MAP_PORT_ID}" "${MAP_PORT}" "${MAP_NQN}" "::" ipv6
+discoverd_stop_daemon_only
+cat >> "${ETC_NVME_DIR}/nvme-fabrics.conf" <<EOF
+
+[Discovery Controller]
+controller = transport=tcp;traddr=${TRADDR};trsvcid=${MAP_PORT}
+
+[Subsystem]
+nqn        = ${MAP_NQN}
+controller = transport=tcp;traddr=${TRADDR};trsvcid=${MAP_PORT}
+EOF
+P_START=$(date +%H:%M:%S)
+discoverd_start
+assert_connected "connects the subsystem" "${MAP_NQN}" 30
+countdown 5 "let both sources of the IOC settle"
+if [ "$(count_connected "${MAP_NQN}")" = 1 ]; then
+	pass "one connection for both spellings"
+else
+	fail "one connection for both spellings"
+fi
+assert_journal_lacks "the mapped spelling is not used" \
+	"${P_START}" "::ffff:${TRADDR}"
+assert_one_unit_per_device "every device has one unit"
 
 phase "a DC reached over a scoped IPv6 link-local address"
 #
@@ -1145,6 +1210,7 @@ else
 	fail "the DC is live again once its port returns"
 fi
 assert_connected "the IOC is connected" "${NL_NQN}" 30
+assert_one_unit_per_device "every device has one unit"
 
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"
