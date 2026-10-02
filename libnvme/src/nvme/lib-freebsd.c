@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -22,16 +24,28 @@
 #include "private.h"
 
 /*
+ * NVME_GET_NSID from <dev/nvme/nvme.h>, which can't be included next to
+ * the libnvme headers because both define the same NVMe enums. It works
+ * on every nvme(4) node and returns nsid 0 for the controller.
+ */
+struct freebsd_nvme_get_nsid {
+	char		cdev[SPECNAMELEN + 1];
+	__u32		nsid;
+};
+
+#define FREEBSD_NVME_GET_NSID	_IOR('n', 2, struct freebsd_nvme_get_nsid)
+
+/*
  * FreeBSD's nvme(4) driver exposes both the controller (/dev/nvmeX) and
  * its namespaces (/dev/nvmeXnY) as character devices -- there is no
  * separate block device node the way Linux has /dev/nvmeXnY as a block
  * device, so only S_ISCHR is checked here.
  */
-
 static int __libnvme_transport_handle_open_direct(
 		struct libnvme_transport_handle *hdl, const char *devname,
 		int flags)
 {
+	struct freebsd_nvme_get_nsid gnsid = {};
 	__cleanup_free char *path = NULL;
 	char *name;
 	int ret;
@@ -58,6 +72,13 @@ static int __libnvme_transport_handle_open_direct(
 		close(hdl->fd);
 		return -EINVAL;
 	}
+
+	/*
+	 * libnvme_transport_handle_is_ns() looks for a block device, as on
+	 * Linux. Mark a namespace as one, like lib-win.c does.
+	 */
+	if (!ioctl(hdl->fd, FREEBSD_NVME_GET_NSID, &gnsid) && gnsid.nsid)
+		hdl->stat.st_mode = (hdl->stat.st_mode & ~S_IFMT) | S_IFBLK;
 
 	return 0;
 }
