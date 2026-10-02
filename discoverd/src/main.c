@@ -853,6 +853,16 @@ static void fetch_and_process_dlp(const char *devname,
 	r = dlp_fetch(&ctx, devname, dc_tid, dlp_ioc_callback,
 		      dlp_dc_callback, dlp_self_callback, &fctx);
 
+	/*
+	 * A failed fetch tells nothing about EPCSD or the DC's entries, so
+	 * keep the DC and its last list.
+	 */
+	if (r < 0) {
+		tid_list_free_items(&fctx.iocs);
+		tid_list_free_items(&fctx.referrals);
+		return;
+	}
+
 	epcsd = dc_effective_epcsd(&fctx, e);
 	log_dbg("%s: self entry %s, effective EPCSD=%d",
 		libnvmf_tid_str(dc_tid), fctx.self_seen ? "seen" : "absent",
@@ -867,11 +877,8 @@ static void fetch_and_process_dlp(const char *devname,
 			epcsd_park(e);
 	}
 
-	/*
-	 * A failed fetch tells nothing about the DC's entries, so keep the
-	 * last list. A log page without IOC entries replaces it.
-	 */
-	if (r == 0 && tid_list_append(&fctx.iocs, NULL) == 0 &&
+	// A log page without IOC entries replaces the last list.
+	if (tid_list_append(&fctx.iocs, NULL) == 0 &&
 	    tid_list_append(&fctx.referrals, NULL) == 0) {
 		inventory_update_dlp(ctx.inventory, dc_tid, fctx.iocs.items,
 				     fctx.referrals.items);
