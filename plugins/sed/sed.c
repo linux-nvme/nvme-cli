@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <errno.h>
-#include <fcntl.h>
-#include <inttypes.h>
-#include <linux/fs.h>
-#include <linux/sed-opal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include <libnvme.h>
