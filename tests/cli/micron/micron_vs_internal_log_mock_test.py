@@ -379,10 +379,17 @@ class TestMicronInternalLogPackage(InternalLogTestBase):
         self.assertIn(_CMD_STATUS_FILE, entries)
 
     def test_archive_tool_failure_is_reported(self):
-        """A drive is collected but the archive cannot be built."""
-        self.fake_tool('zip')
-        self.fake_tool('tar')
+        """A drive is collected but the archive cannot be built.
+
+        Archiving is done in-process via libarchive, not by spawning tar/zip,
+        so there is no external tool left to fake; a directory already
+        sitting at the --package path makes archive_write_open_filename()
+        fail the same way (EISDIR), regardless of privilege. (A missing
+        parent directory won't do: that is rejected earlier, before any log
+        is collected, with a different error.)
+        """
         path = self.package_path("failed.zip")
+        os.makedirs(path)
         result = self.run_log(f"--package={path}")
 
         self.assertNotEqual(result.returncode, 0)
@@ -390,9 +397,9 @@ class TestMicronInternalLogPackage(InternalLogTestBase):
 
     def test_staging_directory_is_removed_after_a_tool_failure(self):
         """A failed archive must not leave the staging tree behind."""
-        self.fake_tool('zip')
-        self.fake_tool('tar')
-        self.run_log(f"--package={self.package_path('failed.zip')}")
+        path = self.package_path("failed.zip")
+        os.makedirs(path)
+        self.run_log(f"--package={path}")
 
         self.assertNotIn(_SERIAL, os.listdir(self.out_dir))
 
