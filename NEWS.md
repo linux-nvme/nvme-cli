@@ -85,6 +85,23 @@
 * The wdc plugin no longer creates its dump directories with a broken
   mode that only root could write to.
 
+### Plugins
+
+* Fixed root command injection in WDC (`vs-internal-log`,
+  `drive-essentials`, SN730 capture) and SanDisk (telemetry capture):
+  a caller-controlled string reached a shell (`system()`), so a
+  crafted input could run arbitrary commands as root.
+
+* WDC, SanDisk, Micron, Solidigm and Samsung plugins no longer spawn
+  external `tar`, `zip`, `cat`, `lsmod`, `uname` or `dmesg` processes;
+  they use libarchive or direct syscalls instead.
+
+* New optional build dependency: `libarchive` (WDC, SanDisk, Micron,
+  Samsung and Solidigm archiving), `auto` by default. Without it, the
+  affected subcommands fail with a clear error instead of depending
+  on whatever `tar`/`zip` happens to be on `PATH`. See
+  [BUILDING.md](Documentation/BUILDING.md).
+
 ### nvme-discoverd
 
 * Discovery Controllers are now connected with `--discovery` and a
