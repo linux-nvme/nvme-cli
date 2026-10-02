@@ -39,7 +39,6 @@ import csv
 import io
 import json
 import os
-import shutil
 import struct
 import tarfile
 import zipfile
@@ -50,13 +49,19 @@ from micron_mock_test import (
     LPA_TELEMETRY,
     MICRON_MODELS,
     MICRON_VENDOR_ID,
+    NVME_BIN,
     TestMicronMock,
+    built_with_library,
     main,
     pack_id_ctrl,
     pack_telemetry_log,
 )
 
 _COMMAND = "vs-internal-log"
+
+# Package-mode archiving needs nvme-cli built with libarchive; see
+# built_with_library().
+_HAS_LIBARCHIVE = built_with_library(NVME_BIN, 'libarchive')
 
 _TELEMETRY_BLOCK = 512
 
@@ -117,8 +122,11 @@ class InternalLogTestBase(TestMicronMock):
         return self.run_plugin_cmd(_COMMAND, args=args)
 
     def require_tool(self, name):
-        if not shutil.which(name):
-            self.skipTest(f"{name} is not installed on this host")
+        """Archiving goes through libarchive, not a spawned zip/tar, so
+        name is no longer which() checked; every caller needs the same
+        thing regardless of the extension it passes."""
+        if not _HAS_LIBARCHIVE:
+            self.skipTest("nvme-cli was built without libarchive")
 
 
 class TestMicronInternalLogArguments(InternalLogTestBase):
