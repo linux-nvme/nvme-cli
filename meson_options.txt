@@ -240,6 +240,12 @@ option(
   description : 'liburing support'
 )
 option(
+  'libarchive',
+  type : 'feature',
+  value: 'auto',
+  description : 'libarchive support (vendor plugin log archiving)'
+)
+option(
   'pypi',
   type : 'boolean',
   value : false,
