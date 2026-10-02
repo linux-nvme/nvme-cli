@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme-cli.
+# Copyright (c) 2026 Samsung Electronics Co., Ltd.
+#
+# Authors: Hyuntae Kim <h1219.kim@samsung.com>
 """Samsung telemetry tests through the real NVMe-MI/MCTP command path.
 
 Run from the repository root with PYTHONPATH=.

@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
+# Copyright (c) 2026 Samsung Electronics Co., Ltd.
+#
+# Authors: Hyuntae Kim <h1219.kim@samsung.com>
+#
 # Hardware-free Samsung plugin tests.
 
 if have_mock_nvme
