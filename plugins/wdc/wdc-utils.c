@@ -27,6 +27,9 @@
 
 #include <libnvme.h>
 
+#include <shared/fs-util.h>
+#include <shared/time-util.h>
+
 #include "nvme-print.h"
 #include "wdc-utils.h"
 
@@ -82,11 +85,7 @@ int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo)
 	timeInfo->second		=  currTimeInfo.tm_sec;
 	timeInfo->msecs			=  0;
 	timeInfo->isDST			=  currTimeInfo.tm_isdst;
-#ifdef NVME_HAVE_TM_GMTOFF
-	timeInfo->zone			= -currTimeInfo.tm_gmtoff / 60;
-#else /* NVME_HAVE_TM_GMTOFF */
-	timeInfo->zone			= -1 * (timezone / SECONDS_IN_MIN);
-#endif /* NVME_HAVE_TM_GMTOFF */
+	timeInfo->zone			= -shr_tm_gmtoff(&currTimeInfo) / 60;
 
 	return WDC_STATUS_SUCCESS;
 }
@@ -99,11 +98,11 @@ int wdc_UtilsCreateDir(const char *path)
 	if (!path)
 		return WDC_STATUS_INVALID_PARAMETER;
 
-	retStatus = mkdir(path, 0x999);
+	retStatus = shr_mkdir(path, 0x999);
 	if (retStatus < 0) {
-		if (errno == EEXIST)
+		if (retStatus == -EEXIST)
 			status = WDC_STATUS_DIR_ALREADY_EXISTS;
-		else if (errno == ENOENT)
+		else if (retStatus == -ENOENT)
 			status = WDC_STATUS_PATH_NOT_FOUND;
 		else
 			status = WDC_STATUS_CREATE_DIRECTORY_FAILED;
