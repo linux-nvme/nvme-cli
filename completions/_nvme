@@ -12341,6 +12341,7 @@ _nvme () {
 				-G':alias for --data-digest'
 				--devid-file=':write connected device name to FILE'
 				--disable-sqflow':disable controller sq flow control (default false)'
+				--discovery':the target is a discovery controller'
 				--dry-run':show command instead of executing'
 				--duplicate-connect':allow duplicate connections between same transport host and subsystem port'
 				-D':alias for --duplicate-connect'
