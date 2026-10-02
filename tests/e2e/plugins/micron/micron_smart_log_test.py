@@ -24,8 +24,12 @@ Tests in this module verify:
     paths, and matches the JSON "device" field.
 """
 
+import logging
+
 from .micron_test import TestMicron
 from ....nvme_test import to_decimal
+
+logger = logging.getLogger(__name__)
 
 _COMMAND = "smart-log"
 
@@ -147,9 +151,20 @@ class TestMicronSmartLog(TestMicron):
             )
 
     def test_json_renamed_fields_agree_with_core(self):
-        """Differently named SMART counters still carry the core value."""
+        """Differently named SMART counters still carry the core value.
+
+        host_reads/host_writes/ctrl_busy_time are live counters, and
+        setUp() recreates and reattaches the namespace before every test
+        method, which can still be generating background I/O (e.g. udev
+        probing the freshly attached block device) when this test starts.
+        Bracket the micron read with two core reads: a counter that holds
+        steady across the bracket was not touched by I/O outside this
+        test's control and is safe to compare strictly; one that moved was
+        raced by real I/O, so warn instead of failing on it.
+        """
+        core_before = self._core_json()
         micron = self._micron_json()
-        core = self._core_json()
+        core_after = self._core_json()
 
         for micron_key, core_key in sorted(_RENAMED_KEYS.items()):
             self.assertIn(
@@ -158,14 +173,27 @@ class TestMicronSmartLog(TestMicron):
                 f"got keys: {sorted(micron)}",
             )
             self.assertIn(
-                core_key, core,
+                core_key, core_after,
                 f"Expected {core_key!r} in core log smart JSON, "
-                f"got keys: {sorted(core)}",
+                f"got keys: {sorted(core_after)}",
             )
+
+            before_val = to_decimal(core_before[core_key])
+            after_val = to_decimal(core_after[core_key])
+            if before_val != after_val:
+                logger.warning(
+                    "core %r moved from %s to %s while this test ran "
+                    "(background I/O on %s); skipping the strict "
+                    "comparison against micron %r (%r)",
+                    core_key, before_val, after_val, self.ctrl,
+                    micron_key, micron[micron_key],
+                )
+                continue
+
             self.assertEqual(
-                to_decimal(micron[micron_key]), to_decimal(core[core_key]),
+                to_decimal(micron[micron_key]), before_val,
                 f"micron {micron_key!r} ({micron[micron_key]!r}) does not "
-                f"match core {core_key!r} ({core[core_key]!r})",
+                f"match core {core_key!r} ({before_val})",
             )
 
     def test_json_temperature_matches_core(self):
