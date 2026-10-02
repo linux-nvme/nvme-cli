@@ -91,6 +91,13 @@
   still matches. At startup, nvme-discoverd removes the state of
   controllers that are gone.
 
+### nvme-cli
+
+* `nvme sed revert` now prints an extra `revert LSP` error when the
+  kernel cannot revert the Locking SP. `nvme sed password` checks at
+  run time, not at build time, whether the kernel can set the SID
+  password, and skips that step if it cannot.
+
 ### libnvme
 
 * A failed read of `/dev/nvme-fabrics` is no longer cached for the
