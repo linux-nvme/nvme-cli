@@ -328,6 +328,15 @@ class SEDCLITest(unittest.TestCase):
         self.assertIn("passwords don't match", res.stderr)
         self.assertEqual(self.server.ioctls, [])
 
+    def test_initialize_bad_reentered_password_fails(self):
+        """The re-entered password fails the length check. That must be
+        an error, not a crash."""
+        self.server.passwords = [_PASSWORD, "short"]
+        res = self._sed('initialize', expect_fail=True)
+        self.assertGreater(res.returncode, 0)
+        self.assertIn("password is not long enough", res.stderr)
+        self.assertEqual(self.server.ioctls, [])
+
     def test_initialize_take_ownership_status_fails(self):
         self.server.passwords = [_PASSWORD, _PASSWORD]
         self.server.ioctl_status['TAKE_OWNERSHIP'] = _TCG_NOT_AUTHORIZED
