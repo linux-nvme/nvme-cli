@@ -1303,17 +1303,20 @@ int __libnvmf_import_keys_from_config(struct libnvme_host *h, struct libnvme_ctr
 		return -EINVAL;
 	}
 
-	/* If we don't have a key avoid all keyring operations */
-	key = libnvme_ctrl_get_tls_key(c);
-	if (!key)
-		goto out;
-
 	if (libnvme_ctrl_get_keyring(c, &keyring, NULL) == 0) {
 		ret = libnvmf_lookup_keyring(h->ctx, keyring, &kr_id);
 		if (ret)
 			return ret;
 	} else
 		kr_id = c->cfg.keyring_id;
+
+	/*
+	 * Without a key, the kernel looks up the PSK in the keyring, so the
+	 * keyring is still passed on.
+	 */
+	key = libnvme_ctrl_get_tls_key(c);
+	if (!key)
+		goto out;
 
 	/*
 	 * Fallback to the default keyring. This makes the keyring
