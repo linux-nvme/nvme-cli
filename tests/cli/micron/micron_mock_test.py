@@ -30,6 +30,7 @@ from pathlib import Path
 
 from tests.cli.nvme_mock_ipc import (
     MockIPCServer,
+    built_with_library,
     make_mock_env,
     resolve_mock_lib_path,
     run_nvme,
