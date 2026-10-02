@@ -254,6 +254,16 @@ __shr_public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 	return 0;
 }
 
+__shr_public int libnvme_reread_partitions(struct libnvme_transport_handle *hdl)
+{
+	if (!DeviceIoControl(hdl->fd, IOCTL_DISK_UPDATE_PROPERTIES,
+			NULL, 0, NULL, 0, NULL, NULL)) {
+		errno = get_errno_from_error(GetLastError());
+		return -errno;
+	}
+	return 0;
+}
+
 /*
  * IOCTL_STORAGE_PROTOCOL_COMMAND supports a maximum transfer size of 512 pages.
  * However, the driver does not correctly enforce this limit and larger

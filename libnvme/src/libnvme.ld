@@ -106,6 +106,7 @@ LIBNVME_3 {
 		libnvme_realloc;
 		libnvme_reap_passthru;
 		libnvme_refresh_topology;
+		libnvme_reread_partitions;
 		libnvme_rescan_ctrl;
 		libnvme_rescan_ns;
 		libnvme_reset_ctrl;
