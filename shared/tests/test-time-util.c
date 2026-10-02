@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include <shared/time-util.h>
 
@@ -71,6 +72,51 @@ static bool test_elapsed_utime(void)
 	return pass;
 }
 
+static void set_tz(const char *tz)
+{
+#ifdef _WIN32
+	char buf[32];
+
+	snprintf(buf, sizeof(buf), "TZ=%s", tz);
+	_putenv(buf);
+#else
+	setenv("TZ", tz, 1);
+#endif
+	tzset();
+}
+
+static bool check_gmtoff(const char *tz, long want)
+{
+	/* 2024-01-02T03:24:05Z, so standard time in the northern hemisphere */
+	time_t t = 1704165845;
+	struct tm tm;
+	long got;
+
+	set_tz(tz);
+	localtime_r(&t, &tm);
+	got = shr_tm_gmtoff(&tm);
+	if (got == want) {
+		printf(" - offset for TZ=%s [PASS]\n", tz);
+		return true;
+	}
+
+	printf(" - offset for TZ=%s: got %ld, want %ld [FAIL]\n",
+	       tz, got, want);
+	return false;
+}
+
+static bool test_tm_gmtoff(void)
+{
+	bool pass = true;
+
+	printf("test_tm_gmtoff:\n");
+
+	pass &= check_gmtoff("UTC0", 0);
+	pass &= check_gmtoff("EST5", -5 * 3600);
+	pass &= check_gmtoff("JST-9", 9 * 3600);
+
+	return pass;
+}
 
 static bool check_time(const char *str, uint64_t default_unit, uint64_t want)
 {
@@ -220,6 +266,7 @@ int main(void)
 
 	pass &= test_format_ts();
 	pass &= test_elapsed_utime();
+	pass &= test_tm_gmtoff();
 	pass &= test_parse_time_units();
 	pass &= test_parse_time();
 	pass &= test_parse_time_rejects();

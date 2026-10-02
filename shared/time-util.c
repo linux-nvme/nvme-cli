@@ -43,6 +43,36 @@ unsigned long long shr_elapsed_utime(struct timeval start_time,
 		(end_time.tv_usec - start_time.tv_usec);
 }
 
+long shr_tm_gmtoff(const struct tm *tm)
+{
+#if defined(NVME_HAVE_TM_GMTOFF)
+	return tm->tm_gmtoff;
+#elif defined(_WIN32)
+	long west, dst = 0;
+
+	/* both are in seconds west of UTC */
+	_get_timezone(&west);
+	if (tm->tm_isdst > 0)
+		_get_dstbias(&dst);
+
+	return -(west + dst);
+#else
+	struct tm local = *tm, utc;
+	time_t t;
+	long days;
+
+	t = mktime(&local);
+	gmtime_r(&t, &utc);
+
+	days = local.tm_yday - utc.tm_yday;
+	if (local.tm_year != utc.tm_year)
+		days = local.tm_year > utc.tm_year ? 1 : -1;
+
+	return ((days * 24 + local.tm_hour - utc.tm_hour) * 60 +
+		local.tm_min - utc.tm_min) * 60 + local.tm_sec - utc.tm_sec;
+#endif
+}
+
 /*
  * Copied from systemd's src/basic/time-util.c at commit 21de611f695b
  * Same LGPL-2.1-or-later license as nvme-cli; no copyright notice in systemd
