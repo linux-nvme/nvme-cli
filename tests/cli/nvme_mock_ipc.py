@@ -7,15 +7,17 @@
 # Authors: Daniel Wagner <dwagner@suse.com>
 """libmock_nvme.c intercepts open()/write()/ioctl()/close() on
 /dev/nvme-fabrics, /dev/nvme<N>, and /dev/nvme<N>n<M>. It forwards every
-intercepted write() (fabrics connect args) and ioctl() (admin or I/O
-passthru command) over a Unix socket to a MockIPCServer instance running in
-this process. This lets nvme-cli run against a fake target, with no real
-hardware and no root.
+intercepted write() (fabrics connect args), ioctl() and getpass() over a
+Unix socket to a MockIPCServer instance running in this process. This lets
+nvme-cli run against a fake target, with no real hardware and no root.
 
 Test files subclass MockIPCServer and override handle_write()/
-handle_ioctl() to steer responses for their own scenario. run_nvme()
-provides the common subprocess-invocation mechanics.
+handle_ioctl()/handle_raw_ioctl()/handle_getpass() to steer responses for
+their own scenario. run_nvme() provides the common subprocess-invocation
+mechanics.
 """
+import collections
+import errno
 import os
 import shlex
 import socket
@@ -25,13 +27,26 @@ import sys
 import threading
 from pathlib import Path
 
-IPC_REQUEST_FMT = "<IIII B3x I IIIIII QI"
+IPC_REQUEST_FMT = "<IIII B3x I IIIIII QI BBBBI"
 IPC_REQUEST_LEN = struct.calcsize(IPC_REQUEST_FMT)
 # status, errno_val, sc_status, result, data_len -- see struct ipc_response.
 IPC_RESPONSE_FMT = "<iiiII"
 
 IPC_TYPE_WRITE = 1  # write() on /dev/nvme-fabrics (connect args)
 IPC_TYPE_IOCTL = 2  # ioctl() admin or I/O passthru command
+IPC_TYPE_RAW_IOCTL = 3  # any other ioctl() on a mocked device
+IPC_TYPE_GETPASS = 4  # getpass(), payload is the prompt
+
+IOC_WRITE = 1 << 0  # the caller passes data in
+IOC_READ = 1 << 1  # the caller gets data back
+
+RawIoctl = collections.namedtuple(
+    'RawIoctl', ['request', 'dir', 'type', 'nr', 'size', 'big_endian'])
+RawIoctl.__doc__ = """A raw ioctl() request, decoded by libmock_nvme.c
+with the target's _IOC_* macros, so it is the same on every arch.
+@big_endian is the byte order of the payload. Use byte_order() to pick
+the struct module prefix for it."""
+RawIoctl.byte_order = lambda self: '>' if self.big_endian else '<'
 
 
 def resolve_mock_lib_path(default="./libmock_nvme.so"):
@@ -100,6 +115,21 @@ class MockIPCServer(threading.Thread):
         no payload."""
         self.send_response(conn, 0)
 
+    def handle_raw_ioctl(self, conn, fd, ioc, payload):
+        """Override for IPC_TYPE_RAW_IOCTL. @fd is the controller instance,
+        @ioc the RawIoctl request and @payload the argument bytes the
+        caller passed in. For an IOC_READ ioctl, the response payload is
+        copied back into the argument. sc_status is the ioctl() return
+        value. Default: fail with ENOTTY, like a device that doesn't
+        support the ioctl."""
+        self.send_response(conn, -1, errno_val=errno.ENOTTY)
+
+    def handle_getpass(self, conn, prompt):
+        """Override for IPC_TYPE_GETPASS. The response payload is the
+        password getpass() returns. Default: fail with ENOTTY, so
+        getpass() returns NULL."""
+        self.send_response(conn, -1, errno_val=errno.ENOTTY)
+
     def handle_client(self, conn):
         try:
             req_header = conn.recv(IPC_REQUEST_LEN, socket.MSG_WAITALL)
@@ -107,7 +137,8 @@ class MockIPCServer(threading.Thread):
                 return
 
             req_type, fd, data_len, ioctl_request, opcode, nsid, \
-                cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len = \
+                cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len, \
+                ioc_dir, ioc_type, ioc_nr, big_endian, ioc_size = \
                 struct.unpack(IPC_REQUEST_FMT, req_header)
 
             payload = (conn.recv(data_len, socket.MSG_WAITALL)
@@ -118,6 +149,12 @@ class MockIPCServer(threading.Thread):
             elif req_type == IPC_TYPE_IOCTL:
                 self.handle_ioctl(conn, fd, ioctl_request, opcode, nsid,
                                    cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len)
+            elif req_type == IPC_TYPE_RAW_IOCTL:
+                ioc = RawIoctl(ioctl_request, ioc_dir, ioc_type, ioc_nr,
+                               ioc_size, bool(big_endian))
+                self.handle_raw_ioctl(conn, fd, ioc, payload)
+            elif req_type == IPC_TYPE_GETPASS:
+                self.handle_getpass(conn, payload.decode('utf-8', 'replace'))
         except OSError as e:
             print(f"Exception handling IPC client: {e}", file=sys.stderr)
         finally:
@@ -149,13 +186,16 @@ def make_mock_env(mock_lib, ipc_sock_path):
     return env
 
 
-def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8'):
+def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
+             stdin_data=None):
     """Runs `nvme_bin *args` under libmock_nvme.c. Returns the completed
     subprocess.Popen result, with stdout/stderr captured as text. Callers
     check .returncode/.stdout/.stderr themselves.
 
     Pass encoding=None to capture stdout/stderr as bytes instead, for
-    commands whose output is not text ('-o binary')."""
+    commands whose output is not text ('-o binary'). Pass @stdin_data to
+    feed it to stdin, e.g. to answer a confirmation prompt. Otherwise
+    stdin is /dev/null."""
     cmd = [
         nvme_bin,
         '--set-options', f'test-sysfs-dir={sysfs_dir},test-base-dir={base_dir}',
@@ -176,8 +216,10 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8'):
         'nvme-mock-wrapper',
     ] + cmd
 
+    stdin_args = ({'input': stdin_data} if stdin_data is not None
+                  else {'stdin': subprocess.DEVNULL})
     result = subprocess.run(wrapped_cmd, env=env,
-                            stdin=subprocess.DEVNULL,
+                            **stdin_args,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             encoding=encoding)
