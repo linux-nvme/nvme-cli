@@ -30,6 +30,7 @@
 #define SYSTEMD_BUS_NAME  "org.freedesktop.systemd1"
 #define SYSTEMD_OBJ_PATH  "/org/freedesktop/systemd1"
 #define SYSTEMD_MGR_IFACE "org.freedesktop.systemd1.Manager"
+#define SYSTEMD_NO_SUCH_UNIT "org.freedesktop.systemd1.NoSuchUnit"
 
 /* Result of a StartTransient / RestartUnit / StopUnit job. */
 typedef void (*unit_job_callback)(const char *unit_name,
@@ -65,7 +66,10 @@ int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 		   const struct libnvmf_params *params, bool is_nbft);
 
-/* Restart an existing unit (reconnect with baked-in parameters). */
+/*
+ * Restart an existing unit (reconnect with baked-in parameters). Fails if
+ * systemd no longer has the unit.
+ */
 int unit_restart(struct unit_mgr *mgr, const char *unit_name);
 
 /* Stop a unit (triggers ExecStop= disconnect). */
