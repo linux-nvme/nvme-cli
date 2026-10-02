@@ -29,6 +29,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <shared/archive-util.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/string-util.h>
@@ -255,74 +256,28 @@ static bool is_safe_path(const char *path)
 	return true;
 }
 
-/*
- * bsdtar-based versions of tar support creating zip archives when -a is used
- * with a .zip extension. Check if bsdtar is available and use it to create the
- * requested zip archive.
- *
- * Returns 0 on success, or a negative errno value if tar is not bsdtar
- * or if the command fails.
- */
-static int ZipWithBsdTar(char *strDirName, char *strFileName)
-{
-	FILE *fpVersion = NULL;
-	char version_buf[256] = { 0 };
-	bool is_bsdtar = false;
-
-	fpVersion = popen("tar --version 2>&1", "r");
-	if (!fpVersion)
-		return -EINVAL;
-
-	while (fgets(version_buf, sizeof(version_buf), fpVersion)) {
-		if (strstr(version_buf, "bsdtar")) {
-			is_bsdtar = true;
-			break;
-		}
-	}
-
-	if (pclose(fpVersion))
-		return -EINVAL;
-	fpVersion = NULL;
-
-	if (!is_bsdtar)
-		return -EINVAL;
-
-	char *argv[] = {"tar", "-caf", strFileName, "--", strDirName, NULL};
-
-	return micron_run_spawn(argv, NULL, false);
-}
-
 static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 {
-	int  err = 0;
-	int  nRet;
-	bool is_tgz = false;
+	enum shr_archive_format fmt;
+	int err = 0;
+	int nRet;
 	struct stat sb;
 
-	if (strstr(strFileName, ".tar.gz") || strstr(strFileName, ".tgz")) {
-		char *argv[] = {"tar", "-zcf", strFileName, "--", strDirName, NULL};
+	if (strstr(strFileName, ".tar.gz") || strstr(strFileName, ".tgz"))
+		fmt = SHR_ARCHIVE_TAR_GZ;
+	else
+		fmt = SHR_ARCHIVE_ZIP;
 
-		is_tgz = true;
-		nRet = micron_run_spawn(argv, NULL, false);
-	} else {
-		char *argv[] = {"zip", "-q", "-r", strFileName, "--", strDirName, NULL};
-
-		nRet = micron_run_spawn(argv, NULL, false);
-	}
-
-	if (nRet && !is_tgz)
-		/* if zip is not available, see if tar can be used instead */
-		nRet = ZipWithBsdTar(strDirName, strFileName);
+	nRet = shr_archive_create_dir(strFileName, strDirName, strDirName, fmt);
 
 	/* check if log file is created, if not print error message */
 	if (nRet || (stat(strFileName, &sb) == -1)) {
 		err = -EINVAL;
-		if (is_tgz)
-			nvme_show_error("Failed to create log data package, "
-				"check if tar and gzip commands are installed!\n");
+		if (nRet == -ENOTSUP)
+			nvme_show_error(
+				"Failed to create log data package, nvme-cli was built without libarchive support!\n");
 		else
-			nvme_show_error("Failed to create log data package, "
-				"check if zip command is installed!\n");
+			nvme_show_error("Failed to create log data package!\n");
 	}
 
 	if (shr_rmdir_recursive(strDirName) < 0)
