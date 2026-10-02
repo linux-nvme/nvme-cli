@@ -4,12 +4,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <linux/fs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <time.h>
@@ -36,9 +33,6 @@
 #define SFX_PAGE_SHIFT						12
 #define SECTOR_SHIFT						9
 
-#define SFX_GET_FREESPACE			_IOWR('N', 0x240, struct sfx_freespace_ctx)
-#define NVME_IOCTL_CLR_CARD			_IO('N', 0x47)
-
 //See IDEMA LBA1-03
 #define IDEMA_CAP(exp_GB)			(((__u64)exp_GB - 50ULL) * 1953504ULL + 97696368ULL)
 #define IDEMA_CAP2GB(exp_sector)	(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
@@ -54,7 +48,6 @@
 
 int nvme_query_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 data_len, void *data)
 {
-	int rc = 0;
 	struct libnvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_query_cap_info,
 		.nsid		= nsid,
@@ -62,8 +55,7 @@ int nvme_query_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 data_
 		.data_len	= data_len,
 	};
 
-	rc = ioctl(libnvme_transport_handle_get_fd(hdl), SFX_GET_FREESPACE, data);
-	return rc ? libnvme_exec_admin_passthru(hdl, &cmd) : 0;
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 int nvme_change_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u64 capacity)
@@ -585,7 +577,7 @@ int sfx_nvme_get_log(struct libnvme_transport_handle *hdl, __u32 nsid, __u8 log_
  */
 static int get_bb_table(struct libnvme_transport_handle *hdl, __u32 nsid, unsigned char *buf, __u64 size)
 {
-	if (libnvme_transport_handle_get_fd(hdl) < 0 || !buf || size != 256*4096*sizeof(unsigned char)) {
+	if (!buf || size != 256*4096*sizeof(unsigned char)) {
 		nvme_show_error("Invalid Param");
 		return -EINVAL;
 	}
@@ -874,42 +866,9 @@ static int change_cap(int argc, char **argv, struct command *acmd, struct plugin
 		nvme_show_err(err, "sfx-change-cap");
 	} else {
 		nvme_show_verbose_result("ScaleFlux change-capacity: success");
-		ioctl(libnvme_transport_handle_get_fd(hdl), BLKRRPART);
+		libnvme_rescan_ns(hdl);
 	}
 	return err;
-}
-
-static int sfx_verify_chr(struct libnvme_transport_handle *hdl)
-{
-	static struct stat nvme_stat;
-	int err = fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
-
-	if (err < 0) {
-		nvme_show_perror("fstat");
-		return errno;
-	}
-	if (!S_ISCHR(nvme_stat.st_mode)) {
-		nvme_show_error(
-			"Error: requesting clean card on non-controller handle\n");
-		return -ENOTBLK;
-	}
-	return 0;
-}
-
-static int sfx_clean_card(struct libnvme_transport_handle *hdl)
-{
-	int ret;
-
-	ret = sfx_verify_chr(hdl);
-	if (ret)
-		return ret;
-	ret = ioctl(libnvme_transport_handle_get_fd(hdl), NVME_IOCTL_CLR_CARD);
-	if (ret)
-		nvme_show_perror("Ioctl Fail.");
-	else
-		nvme_show_verbose_result("ScaleFlux clean card success");
-
-	return ret;
 }
 
 char *sfx_feature_to_string(int feature)
@@ -968,13 +927,8 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 	}
 
 	if (cfg.feature_id == SFX_FEAT_CLR_CARD) {
-		/*Warning for clean card*/
-		if (!cfg.force && !sfx_confirm_change("Going to clean device's data, confirm umount fs and try again")) {
-					return 0;
-		} else {
-			return sfx_clean_card(hdl);
-		}
-
+		nvme_show_error("clean card is not supported");
+		return -EOPNOTSUPP;
 	}
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value) {
@@ -1566,6 +1520,9 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	struct nvme_smart_log smart_log = { 0 };
 	struct nvme_additional_smart_log additional_smart_log = { 0 };
 	struct sfx_freespace_ctx sfx_freespace = { 0 };
+	struct nvme_id_ns id_ns = { 0 };
+	__u8 lbaf_index;
+	__u32 nsid;
 	unsigned int pcie_correctable, pcie_fatal, pcie_nonfatal;
 	unsigned long long capacity = 0;
 	bool capacity_valid = false;
@@ -1600,15 +1557,16 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	//Calculate formatted capacity, not concerned with errors, we may have a char device
-	memset(&path, 0, 512);
-	snprintf(path, 512, "/dev/%s", libnvme_transport_handle_get_name(hdl));
-	fd = open(path, O_RDONLY | O_NONBLOCK);
-	if (fd >= 0) {
-		err = ioctl(fd, BLKSSZGET, &sector_size);
-		if (!err)
-			err = ioctl(fd, BLKGETSIZE64, &capacity);
-		capacity_valid = (!err);
-		close(fd);
+	if (libnvme_transport_handle_is_ns(hdl) &&
+	    !libnvme_get_nsid(hdl, &nsid)) {
+		nvme_init_identify_ns(&cmd, nsid, &id_ns);
+		if (!libnvme_exec_admin_passthru(hdl, &cmd)) {
+			nvme_id_ns_flbas_to_lbaf_inuse(id_ns.flbas,
+						       &lbaf_index);
+			sector_size = 1 << id_ns.lbaf[lbaf_index].ds;
+			capacity = le64_to_cpu(id_ns.nsze) * sector_size;
+			capacity_valid = true;
+		}
 	}
 
 	if (capacity_valid && sector_size == 512)
