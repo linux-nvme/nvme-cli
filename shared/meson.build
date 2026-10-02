@@ -37,6 +37,7 @@ if host_system == 'windows'
         'crypto-util-win.c',
         'proc-util-win.c',
         'sig-util-win.c',
+        'term-util-win.c',
     ]
 else
     sources += [
@@ -46,6 +47,7 @@ else
         'crypto-util-linux.c',
         'proc-util-linux.c',
         'sig-util-linux.c',
+        'term-util-linux.c',
     ]
 endif
 
