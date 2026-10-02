@@ -98,7 +98,7 @@ int wdc_UtilsCreateDir(const char *path)
 	if (!path)
 		return WDC_STATUS_INVALID_PARAMETER;
 
-	retStatus = shr_mkdir(path, 0x999);
+	retStatus = shr_mkdir(path, 0777);
 	if (retStatus < 0) {
 		if (retStatus == -EEXIST)
 			status = WDC_STATUS_DIR_ALREADY_EXISTS;
