@@ -1130,6 +1130,8 @@ assert_journal_has "the DC was adopted" \
 	"${P_START}" "${P_DEV} - adopted" 10
 assert_journal_has "the DLP fetch failed" \
 	"${P_START}" "${P_DEV} - get_discovery_log failed" 10
+assert_journal_lacks "no EPCSD decision after a failed fetch" \
+	"${P_START}" "${TRADDR}, ${NL_PORT}, .*EPCSD="
 if systemctl is-active --quiet "${DISCOVERD_UNIT}"; then
 	pass "nvme-discoverd is still running"
 else
