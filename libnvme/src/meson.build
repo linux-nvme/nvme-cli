@@ -127,6 +127,21 @@ else
     ]
 endif
 
+sed_headers = []
+if want_sed
+    sources += [
+        'sed/sed.c',
+    ]
+    sed_headers += [
+        'sed/sed.h',
+        'sed/tcg-types.h',
+    ]
+else
+    sources += [
+        'sed/no-sed.c',
+    ]
+endif
+
 if liburing_dep.found()
     sources += 'nvme/uring.c'
 else
@@ -161,6 +176,7 @@ endif
 nvme_ld = meson.current_source_dir() / 'libnvme.ld'
 nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
 mi_ld = meson.current_source_dir() / 'libnvme-mi.ld'
+sed_ld = meson.current_source_dir() / 'libnvme-sed.ld'
 accessors_ld = meson.current_source_dir() / 'accessors.ld'
 nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
 attr_accessors_ld = meson.current_source_dir() / 'attr-accessors.ld'
@@ -204,6 +220,12 @@ endif
 if want_mi and want_version_scripts
     link_args += [
         '-Wl,--version-script=@0@'.format(mi_ld),
+    ]
+endif
+
+if want_sed and want_version_scripts
+    link_args += [
+        '-Wl,--version-script=@0@'.format(sed_ld),
     ]
 endif
 
@@ -271,6 +293,20 @@ if want_mi
     install_headers(
         [
            'libnvme-mi.h',
+        ],
+        subdir: libnvme_api_name,
+        install_mode: mode,
+    )
+endif
+if want_sed
+    install_headers(
+        sed_headers,
+        subdir: libnvme_api_name / 'sed',
+        install_mode: mode,
+    )
+    install_headers(
+        [
+           'libnvme-sed.h',
         ],
         subdir: libnvme_api_name,
         install_mode: mode,
