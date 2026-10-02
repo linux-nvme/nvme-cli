@@ -94,3 +94,16 @@ misc = executable(
     ],
 )
 test('libnvme - misc', misc)
+
+if want_sed
+    sed = executable(
+        'test-sed',
+        ['sed.c', 'util.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+    test('libnvme - sed', sed)
+endif
