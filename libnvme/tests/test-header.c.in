@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /*
- * Verify that <nvme/@HDR@.h> is self-sufficient: it can be included
+ * Verify that <@DIR@/@HDR@.h> is self-sufficient: it can be included
  * as the very first (and only) header without any prior includes.
  */
-#include <nvme/@HDR@.h>
+#include <@DIR@/@HDR@.h>
 
 int main(void)
 {

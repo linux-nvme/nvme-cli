@@ -24,6 +24,12 @@ option(
   description : 'MI support'
 )
 option(
+  'sed',
+  type : 'feature',
+  value: 'enabled',
+  description : 'TCG Storage (SED) support'
+)
+option(
   'nvme-discoverd',
   type : 'feature',
   value: 'auto',
