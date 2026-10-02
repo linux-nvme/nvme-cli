@@ -211,6 +211,8 @@ int sedopal_set_key(struct libnvme_sed_key *key)
 		 */
 		if (sedopal_ask_new_key) {
 			pass = sedopal_get_password(SEDOPAL_REENTER_PW_PROMPT);
+			if (pass == NULL)
+				return -EINVAL;
 			if (strncmp((char *)key->key, pass, key->len)) {
 				nvme_show_error(
 					"Error: passwords don't match\n");
