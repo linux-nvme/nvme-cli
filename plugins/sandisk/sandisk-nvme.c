@@ -16,7 +16,9 @@
 
 #include <libnvme.h>
 
+#include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
+#include <shared/archive-util.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
@@ -168,7 +170,7 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 {
 	char host_file[PATH_MAX] = {0};
 	char controller_file[PATH_MAX] = {0};
-	__cleanup_free char *tar_cmd = NULL;
+	const char *const tar_files[] = { host_file, controller_file };
 	char *base_name;
 	int ret = 0;
 
@@ -213,16 +215,15 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 	
 	/* Create tar file containing both telemetry files */
 	nvme_show_error("%s: Creating tar file %s", __func__, tar_file);
-	if (asprintf(&tar_cmd, "tar -cf \"%s\" \"%s\" \"%s\"",
-		     tar_file, host_file, controller_file) < 0) {
-		ret = -ENOMEM;
-		goto cleanup_host;
-	}
-
-	ret = system(tar_cmd);
+	ret = shr_tar_create(tar_file, tar_files, ARRAY_SIZE(tar_files));
 	if (ret) {
-		nvme_show_error("%s: Failed to create tar file: %s",
-			__func__, tar_file);
+		if (ret == -ENOTSUP)
+			nvme_show_error(
+				"%s: nvme-cli was built without libarchive, archive creation is unavailable",
+				__func__);
+		else
+			nvme_show_error("%s: Failed to create tar file: %s",
+				__func__, tar_file);
 		ret = -1;
 	} else {
 		nvme_show_verbose_result("%s: Successfully created tar file: %s",
