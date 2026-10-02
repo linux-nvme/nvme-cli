@@ -218,9 +218,11 @@ int sedopal_cmd_initialize(int fd)
 	struct opal_lr_act lr_act = {};
 	struct opal_user_lr_setup lr_setup = {};
 	struct opal_new_pw new_pw = {};
-	uint8_t locking_state;
+	int locking_state;
 
 	locking_state = sedopal_locking_state(fd);
+	if (locking_state < 0)
+		return locking_state;
 
 	if (locking_state & OPAL_FEATURE_LOCKING_ENABLED) {
 		nvme_show_error(
@@ -341,9 +343,11 @@ int sedopal_lock_unlock(int fd, int lock_state)
 {
 	int rc;
 	struct opal_lock_unlock opal_lu = {};
-	uint8_t locking_state;
+	int locking_state;
 
 	locking_state = sedopal_locking_state(fd);
+	if (locking_state < 0)
+		return locking_state;
 
 	if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
 		nvme_show_error(
@@ -468,10 +472,12 @@ int sedopal_cmd_revert(int fd)
 	} else {
 #ifdef IOC_OPAL_REVERT_LSP
 		struct opal_revert_lsp revert_lsp;
-		uint8_t locking_state;
+		int locking_state;
 		char *revert = "LSP";
 
 		locking_state = sedopal_locking_state(fd);
+		if (locking_state < 0)
+			return locking_state;
 
 		if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
 			nvme_show_error(
