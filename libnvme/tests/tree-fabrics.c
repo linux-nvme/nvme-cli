@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 
 #include <ccan/array_size/array_size.h>
@@ -368,6 +369,7 @@ static bool test_src_addr(void)
 struct ctrl_args {
 	struct libnvmf_context f;
 	const char *address;
+	const char *sysfs_dir;
 };
 
 static void set_ctrl_args(struct ctrl_args *args,
@@ -424,6 +426,8 @@ static bool ctrl_match(const char *tag,
 	reference_ctrl->name = "nvme1";  /* fake the device name */
 	if (reference->address)
 		reference_ctrl->address = (char *)reference->address;
+	if (reference->sysfs_dir)
+		reference_ctrl->sysfs_dir = (char *)reference->sysfs_dir;
 
 	/* libnvme_ctrl_find() MUST BE RUN BEFORE libnvme_lookup_ctrl() */
 	found_ctrl = libnvme_ctrl_find(s, &candidate->f.ctrl_params, NULL);
@@ -481,6 +485,7 @@ static bool ctrl_match(const char *tag,
 	/* Set the faked data back to NULL before freeing the tree */
 	reference_ctrl->name = NULL;
 	reference_ctrl->address = NULL;
+	reference_ctrl->sysfs_dir = NULL;
 
 	libnvme_free_global_ctx(ctx);
 
@@ -1273,6 +1278,66 @@ static bool ctrl_config_match(const char *tag,
 	return true;
 }
 
+/**
+ * test_ctrl_match_tcp_not_live - Do not match a controller that is not live
+ *
+ * The kernel reports src_addr only once a controller is live. A controller
+ * that connects without host_traddr or host_iface gives no proof of its
+ * interface until then, so a candidate that names one must not match it.
+ *
+ * @return true when all tests have passed. false otherwise.
+ */
+static bool test_ctrl_match_tcp_not_live(void)
+{
+	char dir[] = "/tmp/tree-fabrics-XXXXXX";
+	struct ctrl_args reference = {0};
+	struct ctrl_args candidate = {0};
+	char path[sizeof(dir) + 8];
+	bool pass = true;
+	FILE *f;
+
+	printf("\ntest_ctrl_match_tcp_not_live:\n");
+
+	shr_assert(mkdtemp(dir));
+	snprintf(path, sizeof(path), "%s/state", dir);
+
+	set_ctrl_args(&reference, "tcp", "123.123.123.123", "8009",
+		      NULL, NULL, "traddr=123.123.123.123,trsvcid=8009", NULL);
+	reference.sysfs_dir = dir;
+
+	f = fopen(path, "w");
+	shr_assert(f);
+	fputs("connecting\n", f);
+	fclose(f);
+
+	set_ctrl_args(&candidate, "tcp", "123.123.123.123", "8009",
+		      NULL, NULL, NULL, NULL);
+	pass &= ctrl_match("not-live", 0, 0, &reference, &candidate, true);
+	set_ctrl_args(&candidate, "tcp", "123.123.123.123", "8009",
+		      NULL, "eth0", NULL, NULL);
+	pass &= ctrl_match("not-live", 0, 1, &reference, &candidate, false);
+	set_ctrl_args(&candidate, "tcp", "123.123.123.123", "8009",
+		      "192.168.1.20", NULL, NULL, NULL);
+	pass &= ctrl_match("not-live", 0, 2, &reference, &candidate, false);
+
+	/* A live controller without src_addr: a kernel older than 6.1. */
+	f = fopen(path, "w");
+	shr_assert(f);
+	fputs("live\n", f);
+	fclose(f);
+
+	set_ctrl_args(&candidate, "tcp", "123.123.123.123", "8009",
+		      NULL, "eth0", NULL, NULL);
+	pass &= ctrl_match("not-live", 1, 1, &reference, &candidate, true);
+
+	unlink(path);
+	rmdir(dir);
+
+	printf("  %s\n", pass ? "[PASS]" : "[FAIL]");
+
+	return pass;
+}
+
 static bool test_ctrl_config_match(void)
 {
 	bool pass = true;
@@ -1730,6 +1795,7 @@ int main(int argc, char *argv[])
 	pass &= test_ctrl_match_fc();
 	pass &= test_ctrl_match_rdma();
 	pass &= test_ctrl_match_tcp();
+	pass &= test_ctrl_match_tcp_not_live();
 	pass &= test_ctrl_config_match();
 	pass &= test_ctrl_match_pcie();
 	pass &= test_ctrl_match_loop();

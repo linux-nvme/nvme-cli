@@ -8,6 +8,7 @@
 
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <shared/compiler-attributes-util.h>
 
@@ -16,6 +17,22 @@
 #include "cleanup.h"
 #include "private.h"
 #include "private-fabrics.h"
+
+/*
+ * The kernel reports src_addr only for a live controller. Without it, a
+ * controller that is not live gives no proof of the interface it uses.
+ */
+static bool _tcp_ctrl_not_live(struct libnvme_ctrl *c)
+{
+	const char *state;
+
+	if (!libnvme_ctrl_get_sysfs_dir(c))
+		return false;
+
+	state = libnvme_ctrl_get_state(c);
+
+	return state && strcmp(state, "live");
+}
 
 /**
  * _tcp_ctrl_match_host_traddr_no_src_addr() - Match host_traddr w/o src_addr
@@ -47,6 +64,9 @@ static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct libnvme_ctrl *c,
 	if (c->host_iface)
 		return libnvme_iface_primary_addr_matches(candidate->iface_list,
 			c->host_iface, candidate->host_traddr);
+
+	if (_tcp_ctrl_not_live(c))
+		return false;
 
 	/* If both c->cfg.host_traddr and c->cfg.host_iface are
 	 * NULL, we don't have enough information to make a
@@ -91,6 +111,9 @@ static bool _tcp_ctrl_match_host_iface_no_src_addr(struct libnvme_ctrl *c,
 				c->host_traddr);
 		return shr_streq0(candidate->host_iface, c_host_iface);
 	}
+
+	if (_tcp_ctrl_not_live(c))
+		return false;
 
 	/* If both c->cfg.host_traddr and c->cfg.host_iface are
 	 * NULL, we don't have enough information to make a
