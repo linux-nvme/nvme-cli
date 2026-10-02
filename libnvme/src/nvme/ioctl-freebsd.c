@@ -100,6 +100,15 @@ __shr_public int libnvme_update_block_size(
 	return -ENOTSUP;
 }
 
+__shr_public int libnvme_reread_partitions(struct libnvme_transport_handle *hdl)
+{
+	if (!libnvme_transport_handle_is_ns(hdl))
+		return -EINVAL;
+
+	/* GEOM retastes the partition table on its own. */
+	return 0;
+}
+
 /*
  * The 64 bit version is the preferred version to use, but for backwards
  * compatibility keep a 32 version.

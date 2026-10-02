@@ -180,3 +180,16 @@ int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid);
  */
 int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 		int block_size);
+
+/**
+ * libnvme_reread_partitions() - Reread the partition table
+ * @hdl:	Transport handle
+ *
+ * Ask the kernel to reread the partition table of a namespace, e.g. after
+ * the namespace has become readable again. This should only be used for
+ * namespace handles, not controllers.
+ *
+ * Return: 0 if the partition table was reread or a negative error code
+ * otherwise.
+ */
+int libnvme_reread_partitions(struct libnvme_transport_handle *hdl);
