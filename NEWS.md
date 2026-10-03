@@ -15,6 +15,10 @@
   `--output-format=json` (`-o json`), which this change does not
   affect.
 
+* The ScaleFlux plugin no longer supports the proprietary ScaleFlux
+  kernel driver used with CSD 2000 drives. nvme-cli does not support
+  proprietary kernel modules. The clean card feature is removed.
+
 * `nvme discover`, `nvme connect-all` and `nvme config create
   --discovery` now default `--persistent` to `auto` instead of `no`.
   With this, the discovery controller stays connected after the log
@@ -53,6 +57,13 @@
   active, `nvmf-autoconnect.service` and the FC kickstart skip their
   connect step.
 
+### New: FreeBSD support
+
+* nvme-cli and libnvme now build and run on FreeBSD. NVMe PCIe devices
+  are supported through the nvme(4) driver; NVMe-oF fabrics, MI,
+  nvme-discoverd, and `nvme top` are not yet available on this
+  platform.
+
 ### nvme-discoverd
 
 * `epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes` and
@@ -86,6 +97,19 @@
   inode of its device at connect time and disconnects only if the inode
   still matches. At startup, nvme-discoverd removes the state of
   controllers that are gone.
+
+### nvme-cli
+
+* `nvme sed revert` now prints an extra `revert LSP` error when the
+  kernel cannot revert the Locking SP. `nvme sed password` checks at
+  run time, not at build time, whether the kernel can set the SID
+  password, and skips that step if it cannot.
+
+* The lm, sandisk, sed, wdc and zns plugins are now built on Windows.
+  Without kernel Opal support, `nvme sed` only supports `discover`.
+
+* The wdc plugin no longer creates its dump directories with a broken
+  mode that only root could write to.
 
 ### libnvme
 

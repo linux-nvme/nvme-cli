@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <sys/time.h>
+#include <time.h>
 
 #define SHR_USEC_PER_MSEC	UINT64_C(1000)
 #define SHR_USEC_PER_SEC	UINT64_C(1000000)
@@ -27,6 +28,13 @@ int shr_format_ts(int64_t time_ms, char *ts_buf);
 
 unsigned long long shr_elapsed_utime(struct timeval start_time,
 				      struct timeval end_time);
+
+/*
+ * The offset from UTC of tm, which must come from localtime_r(), like the
+ * BSD/glibc tm_gmtoff field. Works where struct tm has no tm_gmtoff.
+ * Return: the offset in seconds east of UTC.
+ */
+long shr_tm_gmtoff(const struct tm *tm);
 
 /*
  * Parse a time span using the systemd parse_time() convention: one or more

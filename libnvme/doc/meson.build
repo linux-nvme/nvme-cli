@@ -31,6 +31,11 @@ foreach f: api_files
     api_paths += files('../src/nvme/' + f)
 endforeach
 
+sed_api_paths = files(
+    '../src/sed/sed.h',
+    '../src/sed/tcg-types.h',
+)
+
 sphinx_sources = [
     'conf.py',
     'api.rst',
@@ -58,7 +63,7 @@ kernel_doc_check = files(top_source_dir + 'scripts/kernel-doc-check')
 
 bash_prog = find_program('bash', required: false)
 if bash_prog.found()
-    test('libnvme - kdoc', bash_prog, args: [kernel_doc_check] + api_paths)
+    test('libnvme - kdoc', bash_prog, args: [kernel_doc_check] + api_paths + sed_api_paths)
 endif
 
 if want_docs != 'false'

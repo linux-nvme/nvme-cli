@@ -15,10 +15,13 @@
  * char device). This lets any nvme-cli command run against a fake target,
  * with no kernel nvme-fabrics module, no real hardware, and no root.
  *
- * Every intercepted write() (fabrics connect args) or ioctl() (admin or
- * I/O passthru command) goes over a Unix socket to a Python IPC server.
- * The server sends back the response. This way, the Python test file
- * controls the whole scenario, not this shim.
+ * Every intercepted write() (fabrics connect args) or ioctl() goes over a
+ * Unix socket to a Python IPC server. Admin and I/O passthru commands are
+ * decoded here, so the server sees the command fields. Any other ioctl()
+ * is forwarded raw: its decoded request number and argument bytes. So is
+ * getpass(), so a test can answer password prompts. The server sends back
+ * the response. This way, the Python test file controls the whole
+ * scenario, not this shim.
  */
 
 /*
@@ -107,9 +110,22 @@ struct linux_passthru_cmd64 {
 #define LIBNVME_IOCTL_ADMIN64_CMD	_IOWR('N', 0x47, struct linux_passthru_cmd64)
 #define LIBNVME_IOCTL_IO64_CMD		_IOWR('N', 0x48, struct linux_passthru_cmd64)
 
+enum ipc_type {
+	IPC_TYPE_WRITE		= 1,	/* write() on /dev/nvme-fabrics */
+	IPC_TYPE_IOCTL		= 2,	/* admin or I/O passthru ioctl() */
+	IPC_TYPE_RAW_IOCTL	= 3,	/* other ioctl() on a mocked device */
+	IPC_TYPE_GETPASS	= 4,	/* getpass(), payload is the prompt */
+};
+
+/* Direction of a raw ioctl, independent of the arch's _IOC_* values. */
+enum ipc_ioc_dir {
+	IPC_IOC_WRITE		= 1 << 0,	/* the caller passes data in */
+	IPC_IOC_READ		= 1 << 1,	/* the caller gets data back */
+};
+
 /* Wire format shared with the Python IPC server -- keep both sides in sync. */
 struct __attribute__((packed)) ipc_request {
-	uint32_t type;		/* 1 == WRITE, 2 == IOCTL */
+	uint32_t type;		/* enum ipc_type */
 	uint32_t fd;		/* instance number for IOCTL */
 	uint32_t data_len;	/* payload length (follows immediately) */
 	uint32_t request;	/* ioctl request code */
@@ -124,6 +140,12 @@ struct __attribute__((packed)) ipc_request {
 	uint32_t cdw15;
 	uint64_t lpo;
 	uint32_t req_len;	/* command data length */
+	/* raw ioctl only: the decoded request number */
+	uint8_t  ioc_dir;	/* enum ipc_ioc_dir */
+	uint8_t  ioc_type;
+	uint8_t  ioc_nr;
+	uint8_t  big_endian;	/* byte order of the payload */
+	uint32_t ioc_size;
 };
 
 struct __attribute__((packed)) ipc_response {
@@ -157,6 +179,7 @@ static void ipc_request_encode(struct ipc_request *r)
 	r->cdw15    = htole32(r->cdw15);
 	r->lpo      = htole64(r->lpo);
 	r->req_len  = htole32(r->req_len);
+	r->ioc_size = htole32(r->ioc_size);
 }
 
 static void ipc_response_decode(struct ipc_response *r)
@@ -179,6 +202,7 @@ typedef int (*orig_close_t)(int fd);
 typedef int (*orig_fstat_t)(int fd, struct stat *buf);
 typedef int (*orig_fstat64_t)(int fd, struct stat64 *buf);
 typedef int (*orig_fstat64_time64_t)(int fd, void *buf);
+typedef char *(*orig_getpass_t)(const char *prompt);
 
 static orig_open_t orig_open;
 static orig_open64_t orig_open64;
@@ -192,6 +216,7 @@ static orig_close_t orig_close;
 static orig_fstat_t orig_fstat;
 static orig_fstat64_t orig_fstat64;
 static orig_fstat64_time64_t orig_fstat64_time64;
+static orig_getpass_t orig_getpass;
 
 static int mock_fabrics_fd = -1;
 static int mock_fabrics_manager_fd = -1;
@@ -235,6 +260,7 @@ static void init_orig_functions(void)
 	orig_fstat = (orig_fstat_t)dlsym(RTLD_NEXT, "fstat");
 	orig_fstat64 = (orig_fstat64_t)dlsym(RTLD_NEXT, "fstat64");
 	orig_fstat64_time64 = (orig_fstat64_time64_t)dlsym(RTLD_NEXT, "__fstat64_time64");
+	orig_getpass = (orig_getpass_t)dlsym(RTLD_NEXT, "getpass");
 }
 
 static int connect_ipc_socket(void)
@@ -475,9 +501,28 @@ static bool read_full(int fd, void *buf, size_t len)
 	while (total_read < len) {
 		ssize_t n = orig_read(fd, (char *)buf + total_read,
 				       len - total_read);
+		if (n < 0 && errno == EINTR)
+			continue;
 		if (n <= 0)
 			return false;
 		total_read += n;
+	}
+
+	return true;
+}
+
+static bool write_full(int fd, const void *buf, size_t len)
+{
+	size_t total_written = 0;
+
+	while (total_written < len) {
+		ssize_t n = orig_write(fd, (const char *)buf + total_written,
+					len - total_written);
+		if (n < 0 && errno == EINTR)
+			continue;
+		if (n <= 0)
+			return false;
+		total_written += n;
 	}
 
 	return true;
@@ -514,6 +559,28 @@ static void *read_ipc_response(int ipc_fd, struct ipc_response *resp)
 	return payload;
 }
 
+/*
+ * Send a request and its data_len bytes of data, and read the response.
+ * A failed send is reported like a failed read.
+ */
+static void *ipc_call(int ipc_fd, struct ipc_request *req, const void *data,
+		      struct ipc_response *resp)
+{
+	size_t len = req->data_len;
+
+	ipc_request_encode(req);
+	if (!write_full(ipc_fd, req, sizeof(*req)) ||
+	    (len && !write_full(ipc_fd, data, len))) {
+		mock_dbg("failed to send IPC request\n");
+		memset(resp, 0, sizeof(*resp));
+		resp->status = -1;
+		resp->errno_val = EIO;
+		return NULL;
+	}
+
+	return read_ipc_response(ipc_fd, resp);
+}
+
 ssize_t write(int fd, const void *buf, size_t count)
 {
 	struct ipc_response resp;
@@ -534,16 +601,12 @@ ssize_t write(int fd, const void *buf, size_t count)
 	}
 
 	struct ipc_request req = {
-		.type = 1, /* WRITE */
+		.type = IPC_TYPE_WRITE,
 		.fd = fd,
 		.data_len = count,
 	};
 
-	ipc_request_encode(&req);
-	orig_write(ipc_fd, &req, sizeof(req));
-	orig_write(ipc_fd, buf, count);
-
-	resp_data = read_ipc_response(ipc_fd, &resp);
+	resp_data = ipc_call(ipc_fd, &req, buf, &resp);
 	mock_dbg("connect IPC response status %d, data_len %u\n",
 		 resp.status, resp.data_len);
 
@@ -600,7 +663,7 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 	}
 
 	struct ipc_request req = {
-		.type = 2, /* IOCTL */
+		.type = IPC_TYPE_IOCTL,
 		.fd = instance, /* controller instance, not a real fd */
 		.request = request,
 		.opcode = cmd->opcode,
@@ -615,10 +678,7 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 		.req_len = cmd->data_len,
 	};
 
-	ipc_request_encode(&req);
-	orig_write(ipc_fd, &req, sizeof(req));
-
-	resp_data = read_ipc_response(ipc_fd, &resp);
+	resp_data = ipc_call(ipc_fd, &req, NULL, &resp);
 	mock_dbg("ioctl received IPC response status %d, sc_status %d, result %u, data_len %u\n",
 		 resp.status, resp.sc_status, resp.result, resp.data_len);
 
@@ -653,20 +713,84 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 	return resp.sc_status;
 }
 
+/*
+ * Forward an ioctl() the shim doesn't decode itself. The argument bytes
+ * are sent as they are, in this process's byte order, and are copied
+ * back for an ioctl that returns data. The server answers an ioctl it
+ * doesn't handle with ENOTTY, like the /dev/null fallback used to.
+ */
+static int handle_raw_ioctl(int instance, unsigned long request, void *argp)
+{
+	uint32_t size = _IOC_SIZE(request);
+	struct ipc_response resp;
+	void *resp_data;
+	uint8_t dir = 0;
+	int ipc_fd;
+
+	if (_IOC_DIR(request) & _IOC_WRITE)
+		dir |= IPC_IOC_WRITE;
+	if (_IOC_DIR(request) & _IOC_READ)
+		dir |= IPC_IOC_READ;
+	if (!dir || !argp)
+		size = 0;
+
+	mock_dbg("raw ioctl intercepted on instance %d (request 0x%lx)\n",
+		instance, request);
+
+	ipc_fd = connect_ipc_socket();
+	if (ipc_fd < 0) {
+		mock_dbg("raw ioctl could not connect to IPC socket\n");
+		return -2;
+	}
+
+	struct ipc_request req = {
+		.type = IPC_TYPE_RAW_IOCTL,
+		.fd = instance, /* controller instance, not a real fd */
+		.data_len = (dir & IPC_IOC_WRITE) ? size : 0,
+		.request = request,
+		.ioc_dir = dir,
+		.ioc_type = _IOC_TYPE(request),
+		.ioc_nr = _IOC_NR(request),
+		.big_endian = __BYTE_ORDER == __BIG_ENDIAN,
+		.ioc_size = size,
+	};
+
+	resp_data = ipc_call(ipc_fd, &req, argp, &resp);
+	mock_dbg("raw ioctl received IPC response status %d, errno %d, sc_status %d, data_len %u\n",
+		 resp.status, resp.errno_val, resp.sc_status, resp.data_len);
+	orig_close(ipc_fd);
+
+	if (resp.status == -1) {
+		free(resp_data);
+		errno = resp.errno_val;
+		return -1;
+	}
+
+	if (resp_data && dir & IPC_IOC_READ)
+		memcpy(argp, resp_data, resp.data_len < size ?
+		       resp.data_len : size);
+	free(resp_data);
+
+	return resp.sc_status;
+}
+
 static int mock_ioctl(int fd, unsigned long request, void *argp, orig_ioctl_t fallback)
 {
 	int instance = mock_ctrl_instance(fd);
 	int ret;
 
-	if (instance >= 0 &&
-			(request == LIBNVME_IOCTL_ADMIN_CMD ||
+	if (instance < 0)
+		return fallback(fd, request, argp);
+
+	if (request == LIBNVME_IOCTL_ADMIN_CMD ||
 			request == LIBNVME_IOCTL_ADMIN64_CMD ||
 			request == LIBNVME_IOCTL_IO_CMD ||
-			request == LIBNVME_IOCTL_IO64_CMD)) {
+			request == LIBNVME_IOCTL_IO64_CMD)
 		ret = handle_passthru_ioctl(instance, request, argp);
-		if (ret != -2)
-			return ret;
-	}
+	else
+		ret = handle_raw_ioctl(instance, request, argp);
+	if (ret != -2)
+		return ret;
 
 	return fallback(fd, request, argp);
 }
@@ -781,4 +905,47 @@ int __fstat64_time64(int fd, void *buf)
 		((struct stat *)buf)->st_mode = (is_block ? S_IFBLK : S_IFCHR) | 0600;
 
 	return ret;
+}
+
+/*
+ * Ask the IPC server for the answer to a password prompt, instead of
+ * reading the terminal. Without an IPC server, fall back to the real
+ * getpass().
+ */
+char *getpass(const char *prompt)
+{
+	static char pass[128];
+	struct ipc_response resp;
+	char *resp_data;
+	size_t len;
+	int ipc_fd;
+
+	init_orig_functions();
+
+	ipc_fd = connect_ipc_socket();
+	if (ipc_fd < 0)
+		return orig_getpass(prompt);
+
+	struct ipc_request req = {
+		.type = IPC_TYPE_GETPASS,
+		.data_len = strlen(prompt),
+	};
+
+	resp_data = ipc_call(ipc_fd, &req, prompt, &resp);
+	orig_close(ipc_fd);
+
+	if (resp.status == -1) {
+		free(resp_data);
+		errno = resp.errno_val;
+		return NULL;
+	}
+
+	len = resp.data_len < sizeof(pass) - 1 ?
+		resp.data_len : sizeof(pass) - 1;
+	if (resp_data)
+		memcpy(pass, resp_data, len);
+	pass[len] = '\0';
+	free(resp_data);
+
+	return pass;
 }

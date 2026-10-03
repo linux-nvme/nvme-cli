@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <linux/fs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>

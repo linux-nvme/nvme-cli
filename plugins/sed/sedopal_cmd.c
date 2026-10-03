@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <ctype.h>
 #include <errno.h>
-#include <linux/sed-opal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <sys/mount.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <libnvme.h>
+#include <libnvme-sed.h>
+
+#include <shared/term-util.h>
 
 #include "nvme-print.h"
 #include "sedopal_cmd.h"
-#include "sedopal_spec.h"
 
 /*
  * ask user for key rather than obtaining it from kernel keyring
@@ -54,9 +52,34 @@ bool sedopal_discovery_verbose;
 bool sedopal_discovery_udev;
 
 /*
- * level 0 discovery buffer
+ * level 0 feature flags
  */
-char level0_discovery_buf[4096];
+#define OPAL_FEATURE_TPER                       0x0001
+#define OPAL_FEATURE_LOCKING                    0x0002
+#define OPAL_FEATURE_GEOMETRY                   0x0004
+#define OPAL_FEATURE_OPALV1                     0x0008
+#define OPAL_FEATURE_SINGLE_USER_MODE           0x0010
+#define OPAL_FEATURE_DATA_STORE                 0x0020
+#define OPAL_FEATURE_OPALV2                     0x0040
+#define OPAL_FEATURE_OPALITE                    0x0080
+#define OPAL_FEATURE_PYRITE_V1                  0x0100
+#define OPAL_FEATURE_PYRITE_V2                  0x0200
+#define OPAL_FEATURE_RUBY                       0x0400
+#define OPAL_FEATURE_LOCKING_LBA                0x0800
+#define OPAL_FEATURE_BLOCK_SID_AUTH             0x1000
+#define OPAL_FEATURE_CONFIG_NS_LOCKING          0x2000
+#define OPAL_FEATURE_DATA_REMOVAL               0x4000
+#define OPAL_FEATURE_NS_GEOMETRY                0x8000
+
+#define OPAL_SED_LOCKING_SUPPORT \
+		(OPAL_FEATURE_OPALV1 | OPAL_FEATURE_OPALV2 |  \
+		OPAL_FEATURE_RUBY | OPAL_FEATURE_PYRITE_V1 | \
+		OPAL_FEATURE_PYRITE_V2 | OPAL_FEATURE_LOCKING)
+
+/*
+ * level 0 discovery buffer size
+ */
+#define SEDOPAL_DISCOVERY_BUF_SIZE		4096
 
 struct sedopal_feature_parser {
 	uint32_t	features;
@@ -82,37 +105,37 @@ struct sedopal_feature_parser {
  * Map method status codes to error text
  */
 static const char * const sedopal_errors[] = {
-	[SED_STATUS_SUCCESS] =			"Success",
-	[SED_STATUS_NOT_AUTHORIZED] =		"Host Not Authorized",
-	[SED_STATUS_OBSOLETE_1] =		"Obsolete",
-	[SED_STATUS_SP_BUSY] =			"SP Session Busy",
-	[SED_STATUS_SP_FAILED] =		"SP Failed",
-	[SED_STATUS_SP_DISABLED] =		"SP Disabled",
-	[SED_STATUS_SP_FROZEN] =		"SP Frozen",
-	[SED_STATUS_NO_SESSIONS_AVAILABLE] =	"No Sessions Available",
-	[SED_STATUS_UNIQUENESS_CONFLICT] =	"Uniqueness Conflict",
-	[SED_STATUS_INSUFFICIENT_SPACE] =	"Insufficient Space",
-	[SED_STATUS_INSUFFICIENT_ROWS] =	"Insufficient Rows",
-	[SED_STATUS_OBSOLETE_2] =		"Obsolete",
-	[SED_STATUS_INVALID_PARAMETER] =	"Invalid Parameter",
-	[SED_STATUS_OBSOLETE_3] =		"Obsolete",
-	[SED_STATUS_OBSOLETE_4] =		"Obsolete",
-	[SED_STATUS_TPER_MALFUNCTION] =		"TPER Malfunction",
-	[SED_STATUS_TRANSACTION_FAILURE] =	"Transaction Failure",
-	[SED_STATUS_RESPONSE_OVERFLOW] =	"Response Overflow",
-	[SED_STATUS_AUTHORITY_LOCKED_OUT] =	"Authority Locked Out",
+	[TCG_METHOD_STATUS_SUCCESS] =			"Success",
+	[TCG_METHOD_STATUS_NOT_AUTHORIZED] =		"Host Not Authorized",
+	[TCG_METHOD_STATUS_OBSOLETE_1] =		"Obsolete",
+	[TCG_METHOD_STATUS_SP_BUSY] =			"SP Session Busy",
+	[TCG_METHOD_STATUS_SP_FAILED] =			"SP Failed",
+	[TCG_METHOD_STATUS_SP_DISABLED] =		"SP Disabled",
+	[TCG_METHOD_STATUS_SP_FROZEN] =			"SP Frozen",
+	[TCG_METHOD_STATUS_NO_SESSIONS_AVAILABLE] =	"No Sessions Available",
+	[TCG_METHOD_STATUS_UNIQUENESS_CONFLICT] =	"Uniqueness Conflict",
+	[TCG_METHOD_STATUS_INSUFFICIENT_SPACE] =	"Insufficient Space",
+	[TCG_METHOD_STATUS_INSUFFICIENT_ROWS] =		"Insufficient Rows",
+	[TCG_METHOD_STATUS_OBSOLETE_2] =		"Obsolete",
+	[TCG_METHOD_STATUS_INVALID_PARAMETER] =		"Invalid Parameter",
+	[TCG_METHOD_STATUS_OBSOLETE_3] =		"Obsolete",
+	[TCG_METHOD_STATUS_OBSOLETE_4] =		"Obsolete",
+	[TCG_METHOD_STATUS_TPER_MALFUNCTION] =		"TPER Malfunction",
+	[TCG_METHOD_STATUS_TRANSACTION_FAILURE] =	"Transaction Failure",
+	[TCG_METHOD_STATUS_RESPONSE_OVERFLOW] =		"Response Overflow",
+	[TCG_METHOD_STATUS_AUTHORITY_LOCKED_OUT] =	"Authority Locked Out",
 };
 
 const char *sedopal_error_to_text(int code)
 {
-	if (code == SED_STATUS_FAIL)
+	if (code == TCG_METHOD_STATUS_FAIL)
 		return "Failed";
 
-	if (code == SED_STATUS_NO_METHOD_STATUS)
+	if (code == TCG_METHOD_STATUS_NO_METHOD_STATUS)
 		return "Method returned no status";
 
-	if (code < SED_STATUS_SUCCESS ||
-	    code > SED_STATUS_AUTHORITY_LOCKED_OUT)
+	if (code < TCG_METHOD_STATUS_SUCCESS ||
+	    code > TCG_METHOD_STATUS_AUTHORITY_LOCKED_OUT)
 		return("Unknown Error");
 
 	return sedopal_errors[code];
@@ -126,7 +149,7 @@ char *sedopal_get_password(char *prompt)
 	char *pass;
 	int len;
 
-	pass = getpass(prompt);
+	pass = shr_getpass(prompt);
 	if (pass == NULL)
 		return NULL;
 
@@ -149,7 +172,7 @@ char *sedopal_get_password(char *prompt)
  * key should be looked up in the kernel keyring, or it should be
  * populated in the key by prompting the user.
  */
-int sedopal_set_key(struct opal_key *key)
+int sedopal_set_key(struct libnvme_sed_key *key)
 {
 #if !NVME_HAVE_KEY_TYPE
 	/*
@@ -178,11 +201,9 @@ int sedopal_set_key(struct opal_key *key)
 		if (pass == NULL)
 			return -EINVAL;
 
-#if NVME_HAVE_KEY_TYPE
-		key->key_type = OPAL_INCLUDED;
-#endif
-		key->key_len = strlen(pass);
-		memcpy(key->key, pass, key->key_len + 1);
+		key->type = LIBNVME_SED_KEY_INCLUDED;
+		key->len = strlen(pass);
+		memcpy(key->key, pass, key->len + 1);
 
 		/*
 		 * If getting a new key, ask for it to be re-entered
@@ -190,20 +211,18 @@ int sedopal_set_key(struct opal_key *key)
 		 */
 		if (sedopal_ask_new_key) {
 			pass = sedopal_get_password(SEDOPAL_REENTER_PW_PROMPT);
-			if (strncmp((char *)key->key, pass, key->key_len)) {
+			if (pass == NULL)
+				return -EINVAL;
+			if (strcmp((char *)key->key, pass)) {
 				nvme_show_error(
 					"Error: passwords don't match\n");
 				return -EINVAL;
 			}
 		}
 	} else {
-#if NVME_HAVE_KEY_TYPE
-		key->key_type = OPAL_KEYRING;
-#endif
-		key->key_len = 0;
+		key->type = LIBNVME_SED_KEY_KEYRING;
+		key->len = 0;
 	}
-
-	key->lr = 0;
 
 	return 0;
 }
@@ -211,18 +230,17 @@ int sedopal_set_key(struct opal_key *key)
 /*
  * Prepare a drive for SED Opal locking.
  */
-int sedopal_cmd_initialize(int fd)
+int sedopal_cmd_initialize(struct libnvme_transport_handle *hdl)
 {
 	int rc;
-	struct opal_key key;
-	struct opal_lr_act lr_act = {};
-	struct opal_user_lr_setup lr_setup = {};
-	struct opal_new_pw new_pw = {};
-	uint8_t locking_state;
+	struct libnvme_sed_key key;
+	int locking_state;
 
-	locking_state = sedopal_locking_state(fd);
+	locking_state = sedopal_locking_state(hdl);
+	if (locking_state < 0)
+		return locking_state;
 
-	if (locking_state & OPAL_FEATURE_LOCKING_ENABLED) {
+	if (locking_state & TCG_L0_LOCKING_ENABLED) {
 		nvme_show_error(
 			"Error: cannot initialize an initialized drive\n");
 		return -EOPNOTSUPP;
@@ -237,7 +255,7 @@ int sedopal_cmd_initialize(int fd)
 	/*
 	 * take ownership of the device
 	 */
-	rc = ioctl(fd, IOC_OPAL_TAKE_OWNERSHIP, &key);
+	rc = libnvme_sed_take_ownership(hdl, &key);
 	if (rc != 0) {
 		nvme_show_error(
 			"Error: failed to take device ownership - %d\n", rc);
@@ -247,11 +265,7 @@ int sedopal_cmd_initialize(int fd)
 	/*
 	 * activate lsp
 	 */
-	lr_act.num_lrs = 1;
-	lr_act.sum = false;
-	lr_act.key = key;
-
-	rc = ioctl(fd, IOC_OPAL_ACTIVATE_LSP, &lr_act);
+	rc = libnvme_sed_activate_lsp(hdl, &key);
 	if (rc != 0) {
 		nvme_show_error("Error: failed to activate LSP - %d", rc);
 		return rc;
@@ -260,17 +274,7 @@ int sedopal_cmd_initialize(int fd)
 	/*
 	 * setup global locking range
 	 */
-	lr_setup.range_start = 0;
-	lr_setup.range_length = 0;
-	lr_setup.RLE = true;
-	if (!sedopal_lock_ro)
-		lr_setup.WLE = true;
-
-	lr_setup.session.opal_key = key;
-	lr_setup.session.sum = 0;
-	lr_setup.session.who = OPAL_ADMIN1;
-
-	rc = ioctl(fd, IOC_OPAL_LR_SETUP, &lr_setup);
+	rc = libnvme_sed_setup_range(hdl, &key, true, !sedopal_lock_ro);
 	if (rc != 0) {
 		nvme_show_error(
 			"Error: failed to setup locking range - %d\n", rc);
@@ -280,15 +284,7 @@ int sedopal_cmd_initialize(int fd)
 	/*
 	 * set password
 	 */
-	new_pw.new_user_pw.who = OPAL_ADMIN1;
-	new_pw.new_user_pw.opal_key.lr = 0;
-	new_pw.session.who = OPAL_ADMIN1;
-	new_pw.session.sum = 0;
-	new_pw.session.opal_key.lr = 0;
-	new_pw.session.opal_key = key;
-	new_pw.new_user_pw.opal_key = key;
-
-	rc = ioctl(fd, IOC_OPAL_SET_PW, &new_pw);
+	rc = libnvme_sed_set_password(hdl, &key, &key);
 	if (rc != 0)
 		nvme_show_error("Error: failed setting password - %d", rc);
 
@@ -298,35 +294,35 @@ int sedopal_cmd_initialize(int fd)
 /*
  * Lock a SED Opal drive
  */
-int sedopal_cmd_lock(int fd)
+int sedopal_cmd_lock(struct libnvme_transport_handle *hdl)
 {
-	int lock_state = OPAL_LK;
+	int lock_state = LIBNVME_SED_LOCK_LK;
 
 	if (sedopal_lock_ro)
-		lock_state = OPAL_RO;
+		lock_state = LIBNVME_SED_LOCK_RO;
 
-	return sedopal_lock_unlock(fd, lock_state);
+	return sedopal_lock_unlock(hdl, lock_state);
 }
 
 /*
  * Unlock a SED Opal drive
  */
-int sedopal_cmd_unlock(int fd)
+int sedopal_cmd_unlock(struct libnvme_transport_handle *hdl)
 {
 	int rc;
-	int lock_state = OPAL_RW;
+	int lock_state = LIBNVME_SED_LOCK_RW;
 
 	if (sedopal_lock_ro)
-		lock_state = OPAL_RO;
+		lock_state = LIBNVME_SED_LOCK_RO;
 
-	rc = sedopal_lock_unlock(fd, lock_state);
+	rc = sedopal_lock_unlock(hdl, lock_state);
 
 	/*
 	 * If the unlock was successful, force a re-read of the
 	 * partition table. Return rc of unlock operation.
 	 */
 	if (rc == 0) {
-		if (ioctl(fd, BLKRRPART, 0) != 0)
+		if (libnvme_reread_partitions(hdl) != 0)
 			nvme_show_error(
 				"Warning: failed re-reading partition\n");
 	}
@@ -335,31 +331,29 @@ int sedopal_cmd_unlock(int fd)
 }
 
 /*
- * Prepare and issue an ioctl to lock/unlock a drive
+ * Lock or unlock a drive
  */
-int sedopal_lock_unlock(int fd, int lock_state)
+int sedopal_lock_unlock(struct libnvme_transport_handle *hdl, int lock_state)
 {
 	int rc;
-	struct opal_lock_unlock opal_lu = {};
-	uint8_t locking_state;
+	struct libnvme_sed_key key;
+	int locking_state;
 
-	locking_state = sedopal_locking_state(fd);
+	locking_state = sedopal_locking_state(hdl);
+	if (locking_state < 0)
+		return locking_state;
 
-	if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
+	if (!(locking_state & TCG_L0_LOCKING_ENABLED)) {
 		nvme_show_error(
 			"Error: cannot lock/unlock an uninitialized drive\n");
 		return -EOPNOTSUPP;
 	}
 
-	rc = sedopal_set_key(&opal_lu.session.opal_key);
+	rc = sedopal_set_key(&key);
 	if (rc != 0)
 		return rc;
 
-	opal_lu.session.sum = 0;
-	opal_lu.session.who = OPAL_ADMIN1;
-	opal_lu.l_state = lock_state;
-
-	rc = ioctl(fd, IOC_OPAL_LOCK_UNLOCK, &opal_lu);
+	rc = libnvme_sed_lock_unlock(hdl, &key, lock_state);
 	if (rc != 0)
 		nvme_show_error(
 			"Error: failed locking or unlocking - %d\n", rc);
@@ -394,9 +388,9 @@ static bool sedopal_confirm_revert(void)
 /*
  * perform a destructive drive revert
  */
-static int sedopal_revert_destructive(int fd)
+static int sedopal_revert_destructive(struct libnvme_transport_handle *hdl)
 {
-	struct opal_key key;
+	struct libnvme_sed_key key;
 	int rc;
 
 	if (!sedopal_confirm_revert()) {
@@ -411,7 +405,7 @@ static int sedopal_revert_destructive(int fd)
 
 	rc = sedopal_set_key(&key);
 	if (rc == 0)
-		rc = ioctl(fd, IOC_OPAL_REVERT_TPR, &key);
+		rc = libnvme_sed_revert_tper(hdl, &key);
 
 	return rc;
 }
@@ -419,10 +413,9 @@ static int sedopal_revert_destructive(int fd)
 /*
  * perform a PSID drive revert
  */
-static int sedopal_revert_psid(int fd)
+static int sedopal_revert_psid(struct libnvme_transport_handle *hdl)
 {
-#ifdef IOC_OPAL_PSID_REVERT_TPR
-	struct opal_key key;
+	struct libnvme_sed_key key;
 	int rc;
 
 	if (!sedopal_confirm_revert()) {
@@ -432,27 +425,23 @@ static int sedopal_revert_psid(int fd)
 
 	rc = sedopal_set_key(&key);
 	if (rc == 0) {
-		rc = ioctl(fd, IOC_OPAL_PSID_REVERT_TPR, &key);
-		if (rc != 0) {
-			if (rc == EPERM)
-				nvme_show_error("Error: incorrect password");
-			else
-				nvme_show_error("PSID_REVERT_TPR rc %d", rc);
-		}
+		rc = libnvme_sed_revert_psid(hdl, &key);
+		if (rc == -ENOTSUP)
+			nvme_show_error("ERROR : PSID revert is not supported");
+		else if (rc == EPERM)
+			nvme_show_error("Error: incorrect password");
+		else if (rc != 0)
+			nvme_show_error("PSID_REVERT_TPR rc %d", rc);
 	}
 
 	return rc;
-#else
-	nvme_show_error("ERROR : PSID revert is not supported");
-	return -EOPNOTSUPP;
-#endif /* IOC_OPAL_PSID_REVERT_TPR */
 }
 
 /*
  * revert a drive from the provisioned state to a state where locking
  * is disabled.
  */
-int sedopal_cmd_revert(int fd)
+int sedopal_cmd_revert(struct libnvme_transport_handle *hdl)
 {
 	int rc;
 
@@ -462,43 +451,41 @@ int sedopal_cmd_revert(int fd)
 	sedopal_ask_key = true;
 
 	if (sedopal_psid_revert) {
-		rc = sedopal_revert_psid(fd);
+		rc = sedopal_revert_psid(hdl);
 	} else if (sedopal_destructive_revert) {
-		rc = sedopal_revert_destructive(fd);
+		rc = sedopal_revert_destructive(hdl);
 	} else {
-#ifdef IOC_OPAL_REVERT_LSP
-		struct opal_revert_lsp revert_lsp;
-		uint8_t locking_state;
+		struct libnvme_sed_key key;
+		int locking_state;
 		char *revert = "LSP";
 
-		locking_state = sedopal_locking_state(fd);
+		locking_state = sedopal_locking_state(hdl);
+		if (locking_state < 0)
+			return locking_state;
 
-		if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
+		if (!(locking_state & TCG_L0_LOCKING_ENABLED)) {
 			nvme_show_error(
 				"Error: can't revert an uninitialized drive\n");
 			return -EOPNOTSUPP;
 		}
 
-		if (locking_state & OPAL_FEATURE_LOCKED) {
+		if (locking_state & TCG_L0_LOCKING_LOCKED) {
 			nvme_show_error(
 				"Error: cannot revert drive while locked\n");
 			return -EOPNOTSUPP;
 		}
 
-		rc = sedopal_set_key(&revert_lsp.key);
+		rc = sedopal_set_key(&key);
 		if (rc != 0)
 			return rc;
 
-		revert_lsp.options = OPAL_PRESERVE;
-		revert_lsp.__pad = 0;
-
-		rc = ioctl(fd, IOC_OPAL_REVERT_LSP, &revert_lsp);
+		rc = libnvme_sed_revert_lsp(hdl, &key, true);
 		if (rc == 0) {
 			revert = "TPER";
 			/*
 			 * TPER must also be reverted.
 			 */
-			rc = ioctl(fd, IOC_OPAL_REVERT_TPR, &revert_lsp.key);
+			rc = libnvme_sed_revert_tper(hdl, &key);
 			if (rc != 0)
 				nvme_show_error("Error: revert TPR - %d", rc);
 		}
@@ -510,9 +497,6 @@ int sedopal_cmd_revert(int fd)
 				nvme_show_error("Error: revert %s - %d",
 					revert, rc);
 		}
-#else
-		rc = -EOPNOTSUPP;
-#endif
 	}
 
 	if ((rc != 0) && (rc != EPERM))
@@ -525,35 +509,29 @@ int sedopal_cmd_revert(int fd)
  * Change the password of a drive. The existing password must be
  * provided and the new password is confirmed by re-entry.
  */
-int sedopal_cmd_password(int fd)
+int sedopal_cmd_password(struct libnvme_transport_handle *hdl)
 {
 	int rc;
-	struct opal_new_pw new_pw = {};
-
-	new_pw.new_user_pw.who = OPAL_ADMIN1;
-	new_pw.new_user_pw.opal_key.lr = 0;
-	new_pw.session.who = OPAL_ADMIN1;
-	new_pw.session.sum = 0;
-	new_pw.session.opal_key.lr = 0;
+	struct libnvme_sed_key key, new_key;
 
 	/*
 	 * get current key
 	 */
 	sedopal_ask_key = true;
-	if (sedopal_set_key(&new_pw.session.opal_key) != 0)
+	if (sedopal_set_key(&key) != 0)
 		return -EINVAL;
 
 	/*
 	 * get new key
 	 */
 	sedopal_ask_new_key = true;
-	if (sedopal_set_key(&new_pw.new_user_pw.opal_key) != 0)
+	if (sedopal_set_key(&new_key) != 0)
 		return -EINVAL;
 
 	/*
 	 * set admin1 password
 	 */
-	rc = ioctl(fd, IOC_OPAL_SET_PW, &new_pw);
+	rc = libnvme_sed_set_password(hdl, &key, &new_key);
 	if (rc != 0) {
 		if (rc == EPERM)
 			nvme_show_error("Error: incorrect password");
@@ -562,18 +540,16 @@ int sedopal_cmd_password(int fd)
 		return rc;
 	}
 
-#ifdef IOC_OPAL_SET_SID_PW
 	/*
-	 * set sid password
+	 * set sid password, if supported by the kernel
 	 */
-	rc = ioctl(fd, IOC_OPAL_SET_SID_PW, &new_pw);
-	if (rc != 0) {
-		if (rc == EPERM)
-			nvme_show_error("Error: incorrect password");
-		else
-			nvme_show_error("Error: setting SID pw - %d", rc);
-	}
-#endif
+	rc = libnvme_sed_set_sid_password(hdl, &key, &new_key);
+	if (rc == -ENOTSUP)
+		rc = 0;
+	else if (rc == EPERM)
+		nvme_show_error("Error: incorrect password");
+	else if (rc != 0)
+		nvme_show_error("Error: setting SID pw - %d", rc);
 
 	return rc;
 }
@@ -583,7 +559,7 @@ int sedopal_cmd_password(int fd)
  */
 void sedopal_print_locking_features(void *data)
 {
-	struct locking_desc *ld = (struct locking_desc *)data;
+	struct tcg_l0_locking *ld = (struct tcg_l0_locking *)data;
 	uint8_t features;
 
 	if (!ld) {
@@ -596,31 +572,32 @@ void sedopal_print_locking_features(void *data)
 	if (!sedopal_discovery_udev) {
 		printf("Locking Features:\n");
 		printf("\tLocking Supported               : %s\n",
-			(features & OPAL_FEATURE_LOCKING_SUPPORTED) ?
+			(features & TCG_L0_LOCKING_SUPPORTED) ?
 			"yes" : "no");
 		printf("\tLocking Feature Enabled         : %s\n",
-			(features & OPAL_FEATURE_LOCKING_ENABLED) ?
+			(features & TCG_L0_LOCKING_ENABLED) ?
 			"yes" : "no");
 		printf("\tLocked                          : %s\n",
-			(features & OPAL_FEATURE_LOCKED) ? "yes" : "no");
+			(features & TCG_L0_LOCKING_LOCKED) ? "yes" : "no");
 		printf("\tMedia Encryption                : %s\n",
-			(features & OPAL_FEATURE_MEDIA_ENCRYPT) ? "yes" : "no");
+			(features & TCG_L0_LOCKING_MEDIA_ENCRYPT) ?
+			"yes" : "no");
 		printf("\tMBR Enabled                     : %s\n",
-			(features & OPAL_FEATURE_MBR_ENABLED) ? "yes" : "no");
+			(features & TCG_L0_LOCKING_MBR_ENABLED) ? "yes" : "no");
 		printf("\tMBR Done                        : %s\n",
-			(features & OPAL_FEATURE_MBR_DONE) ? "yes" : "no");
+			(features & TCG_L0_LOCKING_MBR_DONE) ? "yes" : "no");
 	} else {
 		printf("DEV_SED_LOCKED=%s\n",
-			(features & OPAL_FEATURE_LOCKING_ENABLED) ?
+			(features & TCG_L0_LOCKING_ENABLED) ?
 			"ENABLED" : "DISABLED");
 		printf("DEV_SED_LOCKING=%s\n",
-			(features & OPAL_FEATURE_LOCKING_ENABLED) ?
+			(features & TCG_L0_LOCKING_ENABLED) ?
 			"ENABLED" : "DISABLED");
 		printf("DEV_SED_LOCKING_SUPP=%s\n",
-			(features & OPAL_FEATURE_LOCKING_SUPPORTED) ?
+			(features & TCG_L0_LOCKING_SUPPORTED) ?
 			"ENABLED" : "DISABLED");
 		printf("DEV_SED_LOCKING_LOCKED=%s\n",
-			(features & OPAL_FEATURE_LOCKED) ?
+			(features & TCG_L0_LOCKING_LOCKED) ?
 			"ENABLED" : "DISABLED");
 	}
 }
@@ -630,21 +607,21 @@ void sedopal_print_locking_features(void *data)
  */
 void sedopal_print_tper(void *data)
 {
-	struct tper_desc *td = (struct tper_desc *)data;
+	struct tcg_l0_tper *td = (struct tcg_l0_tper *)data;
 
 	printf("\nSED TPER:\n");
 	printf("\tSync Supported                  : %s\n",
-		(td->feature & TPER_FEATURE_SYNC) ? "yes" : "no");
+		(td->features & TCG_L0_TPER_SYNC) ? "yes" : "no");
 	printf("\tAsync Supported                 : %s\n",
-		(td->feature & TPER_FEATURE_ASYNC) ? "yes" : "no");
+		(td->features & TCG_L0_TPER_ASYNC) ? "yes" : "no");
 	printf("\tACK/NAK Supported               : %s\n",
-		(td->feature & TPER_FEATURE_ACKNAK) ? "yes" : "no");
+		(td->features & TCG_L0_TPER_ACKNAK) ? "yes" : "no");
 	printf("\tBuffer Management Supported     : %s\n",
-		(td->feature & TPER_FEATURE_BUF_MGMT) ? "yes" : "no");
+		(td->features & TCG_L0_TPER_BUF_MGMT) ? "yes" : "no");
 	printf("\tStreaming Supported             : %s\n",
-		(td->feature & TPER_FEATURE_STREAMING) ? "yes" : "no");
+		(td->features & TCG_L0_TPER_STREAMING) ? "yes" : "no");
 	printf("\tComID Management Supported      : %s\n",
-		(td->feature & TPER_FEATURE_COMID_MGMT) ? "yes" : "no");
+		(td->features & TCG_L0_TPER_COMID_MGMT) ? "yes" : "no");
 }
 
 /*
@@ -652,13 +629,13 @@ void sedopal_print_tper(void *data)
  */
 void sedopal_print_geometry(void *data)
 {
-	struct geometry_reporting_desc *gd;
+	struct tcg_l0_geometry *gd;
 
-	gd = (struct geometry_reporting_desc *)data;
+	gd = (struct tcg_l0_geometry *)data;
 
 	printf("\nSED Geometry:\n");
 	printf("\tAlignment Required              : %s\n",
-		(gd->align & GEOMETRY_ALIGNMENT_REQUIRED) ? "yes" : "no");
+		(gd->align & TCG_L0_GEOMETRY_ALIGN) ? "yes" : "no");
 	printf("\tLogical Block Size              : %u\n",
 		be32toh(gd->logical_block_size));
 	printf("\tAlignment Granularity           : %llx\n",
@@ -672,7 +649,7 @@ void sedopal_print_geometry(void *data)
  */
 void sedopal_print_opal_v1(void *data)
 {
-	struct opalv1_desc *v1d = (struct opalv1_desc *)data;
+	struct tcg_l0_opal_v1 *v1d = (struct tcg_l0_opal_v1 *)data;
 
 	printf("\nSED OPAL V1.0:\n");
 	printf("\tBase Comid                      : %d\n",
@@ -686,11 +663,11 @@ void sedopal_print_opal_v1(void *data)
  */
 void sedopal_print_opal_v2(void *data)
 {
-	struct opalv2_desc *v2d = (struct opalv2_desc *)data;
+	struct tcg_l0_opal_v2 *v2d = (struct tcg_l0_opal_v2 *)data;
 
 	printf("\nSED OPAL V2.0:\n");
 	printf("\tRange Crossing                  : %d\n",
-		!(v2d->flags & OPAL_V2_RANGE_CROSSING));
+		!(v2d->flags & TCG_L0_OPAL_V2_RANGE_CROSSING));
 	printf("\tBase Comid                      : %d\n",
 		be16toh(v2d->base_comid));
 	printf("\tNumber of Comids                : %d\n",
@@ -710,11 +687,11 @@ void sedopal_print_opal_v2(void *data)
  */
 void sedopal_print_ruby(void *data)
 {
-	struct ruby_desc *rd = (struct ruby_desc *)data;
+	struct tcg_l0_ruby *rd = (struct tcg_l0_ruby *)data;
 
 	printf("\nRuby:\n");
 	printf("\tRange Crossing                  : %d\n",
-		!(rd->flags & RUBY_RANGE_CROSSING));
+		!(rd->flags & TCG_L0_RUBY_RANGE_CROSSING));
 	printf("\tBase Comid                      : %d\n",
 		be16toh(rd->base_comid));
 	printf("\tNumber of Comids                : %d\n",
@@ -734,7 +711,7 @@ void sedopal_print_ruby(void *data)
  */
 void sedopal_print_opalite(void *data)
 {
-	struct opalite_desc *old = (struct opalite_desc *)data;
+	struct tcg_l0_opalite *old = (struct tcg_l0_opalite *)data;
 
 	printf("\nSED Opalite:\n");
 	printf("\tBase Comid                      : %d\n",
@@ -752,7 +729,7 @@ void sedopal_print_opalite(void *data)
  */
 void sedopal_print_pyrite_v1(void *data)
 {
-	struct pyrite_v1_desc *p1d = (struct pyrite_v1_desc *)data;
+	struct tcg_l0_pyrite_v1 *p1d = (struct tcg_l0_pyrite_v1 *)data;
 
 	printf("\nPyrite V1:\n");
 	printf("\tBase Comid                      : %d\n",
@@ -770,7 +747,7 @@ void sedopal_print_pyrite_v1(void *data)
  */
 void sedopal_print_pyrite_v2(void *data)
 {
-	struct pyrite_v2_desc *p2d = (struct pyrite_v2_desc *)data;
+	struct tcg_l0_pyrite_v2 *p2d = (struct tcg_l0_pyrite_v2 *)data;
 
 	printf("\nPyrite V2:\n");
 	printf("\tBase Comid                      : %d\n",
@@ -788,19 +765,19 @@ void sedopal_print_pyrite_v2(void *data)
  */
 void sedopal_print_sum(void *data)
 {
-	struct single_user_mode_desc *sumd;
+	struct tcg_l0_sum *sumd;
 
-	sumd = (struct single_user_mode_desc *)data;
+	sumd = (struct tcg_l0_sum *)data;
 
 	printf("\nSingle User Mode (SUM):\n");
 	printf("\tNumber of Locking Objects       : %u\n",
 		be32toh(sumd->num_locking_objects));
 	printf("\tAny Locking Objects in SUM?     : %s\n",
-		(sumd->flags & SUM_FEATURE_ANY) ? "yes" : "no");
+		(sumd->flags & TCG_L0_SUM_ANY) ? "yes" : "no");
 	printf("\tAll Locking Objects in SUM?     : %s\n",
-		(sumd->flags & SUM_FEATURE_ALL) ? "yes" : "no");
+		(sumd->flags & TCG_L0_SUM_ALL) ? "yes" : "no");
 	printf("\tUser Controls Locking Range     : %s\n",
-		(sumd->flags & SUM_FEATURE_POLICY) ? "no" : "yes");
+		(sumd->flags & TCG_L0_SUM_POLICY) ? "no" : "yes");
 }
 
 /*
@@ -808,7 +785,7 @@ void sedopal_print_sum(void *data)
  */
 void sedopal_print_datastore(void *data)
 {
-	struct datastore_desc *dsd = (struct datastore_desc *)data;
+	struct tcg_l0_datastore *dsd = (struct tcg_l0_datastore *)data;
 
 	printf("\nData Store Table:\n");
 	printf("\tNumber of Tables Supported      : %u\n",
@@ -824,17 +801,20 @@ void sedopal_print_datastore(void *data)
  */
 void sedopal_print_sid_auth(void *data)
 {
-	struct block_sid_auth_desc *sid_auth_d;
+	struct tcg_l0_block_sid_auth *sid_auth_d;
 
-	sid_auth_d = (struct block_sid_auth_desc *)data;
+	sid_auth_d = (struct tcg_l0_block_sid_auth *)data;
 
 	printf("\nSED Block SID Authentication:\n");
 	printf("\tSID value equal MSID            : %s\n",
-		(sid_auth_d->states & BLOCK_SID_VALUE_STATE) ? "no" : "yes");
+		(sid_auth_d->states & TCG_L0_BLOCK_SID_VALUE_STATE) ?
+		"no" : "yes");
 	printf("\tSID auth blocked                : %s\n",
-		(sid_auth_d->states & BLOCK_SID_BLOCKED_STATE) ? "yes" : "no");
+		(sid_auth_d->states & TCG_L0_BLOCK_SID_BLOCKED_STATE) ?
+		"yes" : "no");
 	printf("\tHW reset selected               : %s\n",
-		(sid_auth_d->hw_reset & BLOCK_SID_HW_RESET) ? "yes" : "no");
+		(sid_auth_d->hw_reset & TCG_L0_BLOCK_SID_HW_RESET) ?
+		"yes" : "no");
 }
 
 /*
@@ -853,13 +833,13 @@ void sedopal_print_locking_lba(void *data)
  */
 void sedopal_print_config_ns(void *data)
 {
-	struct config_ns_desc *nsd = (struct config_ns_desc *)data;
+	struct tcg_l0_cnl *nsd = (struct tcg_l0_cnl *)data;
 
 	printf("\nSED Configurable Namespace Locking:\n");
 	printf("\tNon-global Locking Support      : %s\n",
-		(nsd->flags & CONFIG_NS_RANGE_C) ? "yes" : "no");
+		(nsd->flags & TCG_L0_CNL_RANGE_C) ? "yes" : "no");
 	printf("\tNon-global Lock objects exist   : %s\n",
-		(nsd->flags & CONFIG_NS_RANGE_P) ? "yes" : "no");
+		(nsd->flags & TCG_L0_CNL_RANGE_P) ? "yes" : "no");
 	printf("\tMaximum Key Count               : %d\n",
 		be32toh(nsd->max_key_count));
 	printf("\tUnused Key Count                : %d\n",
@@ -871,13 +851,13 @@ void sedopal_print_config_ns(void *data)
  */
 void sedopal_print_data_removal(void *data)
 {
-	struct data_removal_desc *drd = (struct data_removal_desc *)data;
+	struct tcg_l0_data_removal *drd = (struct tcg_l0_data_removal *)data;
 
 	printf("\nSED Data Removal Mechanism:\n");
 	printf("\tRemoval Operation Processing    : %s\n",
-		(drd->flags & DATA_REMOVAL_OPER_PROCESSING) ? "yes" : "no");
+		(drd->flags & TCG_L0_DATA_REMOVAL_PROCESSING) ? "yes" : "no");
 	printf("\tRemoval Operation Interrupted   : %s\n",
-		(drd->flags & DATA_REMOVAL_OPER_INTERRUPTED) ? "yes" : "no");
+		(drd->flags & TCG_L0_DATA_REMOVAL_INTERRUPTED) ? "yes" : "no");
 	printf("\tData Removal Mechanism          : %x\n",
 		drd->removal_mechanism);
 	printf("\tData Removal Format             : %x\n",
@@ -897,11 +877,11 @@ void sedopal_print_data_removal(void *data)
  */
 void sedopal_print_ns_geometry(void *data)
 {
-	struct ns_geometry_desc *nsgd = (struct ns_geometry_desc *)data;
+	struct tcg_l0_ns_geometry *nsgd = (struct tcg_l0_ns_geometry *)data;
 
 	printf("\nSED Namespace Geometry:\n");
 	printf("\tAlignment Required              : %s\n",
-		(nsgd->align & NS_GEOMETRY_ALIGNMENT_REQUIRED) ? "yes" : "no");
+		(nsgd->align & TCG_L0_NS_GEOMETRY_ALIGN) ? "yes" : "no");
 	printf("\tLogical Block Size              : %x\n",
 		be32toh(nsgd->logical_block_size));
 	printf("\tAlignment Granularity           : %llx\n",
@@ -910,80 +890,103 @@ void sedopal_print_ns_geometry(void *data)
 		(unsigned long long)(be64toh(nsgd->lowest_aligned_lba)));
 }
 
-void sedopal_parse_features(struct level_0_discovery_features *feat,
+void sedopal_parse_features(struct tcg_l0_desc *feat,
 		struct sedopal_feature_parser *sfp)
 {
-	uint16_t code = be16toh(feat->code);
+	uint32_t feature;
+	size_t size;
+	void **desc;
 
-	switch (code) {
-	case OPAL_FEATURE_CODE_LOCKING:
-		sfp->features |= OPAL_FEATURE_LOCKING;
-		sfp->locking_desc = (void *)(feat + 1);
+	switch (be16toh(feat->code)) {
+	case TCG_L0_CODE_LOCKING:
+		feature = OPAL_FEATURE_LOCKING;
+		desc = &sfp->locking_desc;
+		size = sizeof(struct tcg_l0_locking);
 		break;
-	case OPAL_FEATURE_CODE_OPALV1:
-		sfp->features |= OPAL_FEATURE_OPALV1;
-		sfp->opalv1_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_OPAL_V1:
+		feature = OPAL_FEATURE_OPALV1;
+		desc = &sfp->opalv1_desc;
+		size = sizeof(struct tcg_l0_opal_v1);
 		break;
-	case OPAL_FEATURE_CODE_OPALV2:
-		sfp->features |= OPAL_FEATURE_OPALV2;
-		sfp->opalv2_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_OPAL_V2:
+		feature = OPAL_FEATURE_OPALV2;
+		desc = &sfp->opalv2_desc;
+		size = sizeof(struct tcg_l0_opal_v2);
 		break;
-	case OPAL_FEATURE_CODE_TPER:
-		sfp->features |= OPAL_FEATURE_TPER;
-		sfp->tper_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_TPER:
+		feature = OPAL_FEATURE_TPER;
+		desc = &sfp->tper_desc;
+		size = sizeof(struct tcg_l0_tper);
 		break;
-	case OPAL_FEATURE_CODE_GEOMETRY:
-		sfp->features |= OPAL_FEATURE_GEOMETRY;
-		sfp->geometry_reporting_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_GEOMETRY:
+		feature = OPAL_FEATURE_GEOMETRY;
+		desc = &sfp->geometry_reporting_desc;
+		size = sizeof(struct tcg_l0_geometry);
 		break;
-	case OPAL_FEATURE_CODE_SINGLE_USER_MODE:
-		sfp->features |= OPAL_FEATURE_SINGLE_USER_MODE;
-		sfp->single_user_mode_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_SUM:
+		feature = OPAL_FEATURE_SINGLE_USER_MODE;
+		desc = &sfp->single_user_mode_desc;
+		size = sizeof(struct tcg_l0_sum);
 		break;
-	case OPAL_FEATURE_CODE_DATA_STORE:
-		sfp->features |= OPAL_FEATURE_DATA_STORE;
-		sfp->datastore_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_DATASTORE:
+		feature = OPAL_FEATURE_DATA_STORE;
+		desc = &sfp->datastore_desc;
+		size = sizeof(struct tcg_l0_datastore);
 		break;
-	case OPAL_FEATURE_CODE_OPALITE:
-		sfp->features |= OPAL_FEATURE_OPALITE;
-		sfp->opalite_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_OPALITE:
+		feature = OPAL_FEATURE_OPALITE;
+		desc = &sfp->opalite_desc;
+		size = sizeof(struct tcg_l0_opalite);
 		break;
-	case OPAL_FEATURE_CODE_PYRITE_V1:
-		sfp->features |= OPAL_FEATURE_PYRITE_V1;
-		sfp->pyrite_v1_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_PYRITE_V1:
+		feature = OPAL_FEATURE_PYRITE_V1;
+		desc = &sfp->pyrite_v1_desc;
+		size = sizeof(struct tcg_l0_pyrite_v1);
 		break;
-	case OPAL_FEATURE_CODE_PYRITE_V2:
-		sfp->features |= OPAL_FEATURE_PYRITE_V2;
-		sfp->pyrite_v2_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_PYRITE_V2:
+		feature = OPAL_FEATURE_PYRITE_V2;
+		desc = &sfp->pyrite_v2_desc;
+		size = sizeof(struct tcg_l0_pyrite_v2);
 		break;
-	case OPAL_FEATURE_CODE_RUBY:
-		sfp->features |= OPAL_FEATURE_RUBY;
-		sfp->ruby_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_RUBY:
+		feature = OPAL_FEATURE_RUBY;
+		desc = &sfp->ruby_desc;
+		size = sizeof(struct tcg_l0_ruby);
 		break;
-	case OPAL_FEATURE_CODE_LOCKING_LBA:
-		sfp->features |= OPAL_FEATURE_LOCKING_LBA;
-		sfp->locking_lba_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_LOCKING_LBA:
+		feature = OPAL_FEATURE_LOCKING_LBA;
+		desc = &sfp->locking_lba_desc;
+		size = sizeof(struct tcg_l0_locking_lba);
 		break;
-	case OPAL_FEATURE_CODE_BLOCK_SID_AUTH:
-		sfp->features |= OPAL_FEATURE_BLOCK_SID_AUTH;
-		sfp->block_sid_auth_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_BLOCK_SID_AUTH:
+		feature = OPAL_FEATURE_BLOCK_SID_AUTH;
+		desc = &sfp->block_sid_auth_desc;
+		size = sizeof(struct tcg_l0_block_sid_auth);
 		break;
-	case OPAL_FEATURE_CODE_CONFIG_NS_LOCKING:
-		sfp->features |= OPAL_FEATURE_CONFIG_NS_LOCKING;
-		sfp->config_ns_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_CNL:
+		feature = OPAL_FEATURE_CONFIG_NS_LOCKING;
+		desc = &sfp->config_ns_desc;
+		size = sizeof(struct tcg_l0_cnl);
 		break;
-	case OPAL_FEATURE_CODE_DATA_REMOVAL:
-		sfp->features |= OPAL_FEATURE_DATA_REMOVAL;
-		sfp->data_removal_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_DATA_REMOVAL:
+		feature = OPAL_FEATURE_DATA_REMOVAL;
+		desc = &sfp->data_removal_desc;
+		size = sizeof(struct tcg_l0_data_removal);
 		break;
-	case OPAL_FEATURE_CODE_NS_GEOMETRY:
-		sfp->features |= OPAL_FEATURE_NS_GEOMETRY;
-		sfp->ns_geometry_desc = (void *)(feat + 1);
+	case TCG_L0_CODE_NS_GEOMETRY:
+		feature = OPAL_FEATURE_NS_GEOMETRY;
+		desc = &sfp->ns_geometry_desc;
+		size = sizeof(struct tcg_l0_ns_geometry);
 		break;
-
 	default:
-		break;
+		return;
 	}
+
+	if (feat->length < size)
+		return;
+
+	sfp->features |= feature;
+	*desc = libnvme_sed_l0_data(feat);
 }
 
 void sedopal_print_features(struct sedopal_feature_parser *sfp)
@@ -1034,66 +1037,41 @@ void sedopal_print_features(struct sedopal_feature_parser *sfp)
 /*
  * Query a drive to retrieve it's level 0 features.
  */
-int sedopal_discover_device(int fd, struct level_0_discovery_features **feat,
-		struct level_0_discovery_features **feat_end)
+static int sedopal_discover_device(struct libnvme_transport_handle *hdl,
+		void *buf, size_t len)
 {
-#ifdef IOC_OPAL_DISCOVERY
 	int rc;
-	struct opal_discovery discover;
-	struct level_0_discovery_header *dh;
 
-	discover.data = (uintptr_t)level0_discovery_buf;
-	discover.size = sizeof(level0_discovery_buf);
-
-	rc = ioctl(fd, IOC_OPAL_DISCOVERY, &discover);
-	if (rc < 0) {
-		nvme_show_error("Error: ioctl IOC_OPAL_DISCOVERY failed");
-		return rc;
+	rc = libnvme_sed_discover(hdl, buf, len);
+	if (rc) {
+		nvme_show_err(rc, "level 0 discovery");
+		/*
+		 * Callers interpret positive values as TCG method status,
+		 * don't leak the NVMe status.
+		 */
+		return rc > 0 ? -EIO : rc;
 	}
 
-	/*
-	 * The returned buffer contains a level 0 discovery header
-	 * folowed by an array of level 0 feature records.
-	 *
-	 * TCG Opal Specification v2.0.2 section 3.1.1
-	 */
-	dh = (struct level_0_discovery_header *)level0_discovery_buf;
-	*feat = (struct level_0_discovery_features *)(dh + 1);
-	*feat_end = (struct level_0_discovery_features *)
-		(level0_discovery_buf + be32toh(dh->parameter_length));
-
-	return 0
-		;
-#else /* IOC_OPAL_DISCOVERY */
-	nvme_show_error("ERROR : NVMe device discovery is not supported");
-	return -EOPNOTSUPP;
-#endif
+	return 0;
 }
 
 /*
  * Query a drive to determine if it's SED Opal capable and
  * it's current locking status.
  */
-int sedopal_cmd_discover(int fd)
+int sedopal_cmd_discover(struct libnvme_transport_handle *hdl)
 {
-	int rc, feat_length;
-	struct level_0_discovery_features *feat;
-	struct level_0_discovery_features *feat_end;
+	char buf[SEDOPAL_DISCOVERY_BUF_SIZE];
 	struct sedopal_feature_parser sfp = {};
+	struct tcg_l0_desc *feat;
+	int rc;
 
-	rc = sedopal_discover_device(fd, &feat, &feat_end);
+	rc = sedopal_discover_device(hdl, buf, sizeof(buf));
 	if (rc != 0)
 		return rc;
 
-	/*
-	 * iterate through all the features that were returned
-	 */
-	while (feat < feat_end) {
+	libnvme_sed_l0_for_each(feat, buf, sizeof(buf))
 		sedopal_parse_features(feat, &sfp);
-		feat_length = feat->length + 4 /* hdr */;
-		feat = (struct level_0_discovery_features *)
-			((char *)feat + feat_length);
-	}
 
 	rc = 0;
 	if (!(sfp.features & OPAL_SED_LOCKING_SUPPORT)) {
@@ -1114,32 +1092,21 @@ int sedopal_cmd_discover(int fd)
 /*
  * Query a drive to determine its locking state
  */
-int sedopal_locking_state(int fd)
+int sedopal_locking_state(struct libnvme_transport_handle *hdl)
 {
-	int rc, feat_length;
-	struct level_0_discovery_features *feat;
-	struct level_0_discovery_features *feat_end;
+	char buf[SEDOPAL_DISCOVERY_BUF_SIZE];
+	struct tcg_l0_locking *ld;
+	struct tcg_l0_desc *feat;
+	int rc;
 
-	rc = sedopal_discover_device(fd, &feat, &feat_end);
+	rc = sedopal_discover_device(hdl, buf, sizeof(buf));
 	if (rc != 0)
 		return rc;
 
-	/*
-	 * iterate through all the features that were returned
-	 */
-	while (feat < feat_end) {
-		uint16_t code = be16toh(feat->code);
+	feat = libnvme_sed_l0_find(buf, sizeof(buf), TCG_L0_CODE_LOCKING);
+	if (!feat || feat->length < sizeof(*ld))
+		return 0;
 
-		if (code == OPAL_FEATURE_CODE_LOCKING) {
-			struct locking_desc *ld = (struct locking_desc *) (feat + 1);
-
-			return ld->features;
-		}
-
-		feat_length = feat->length + 4 /* hdr */;
-		feat = (struct level_0_discovery_features *)
-			((char *)feat + feat_length);
-	}
-
-	return 0;
+	ld = libnvme_sed_l0_data(feat);
+	return ld->features;
 }
