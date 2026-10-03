@@ -89,14 +89,29 @@ TUNABLE (type default, '[Host]', endpoint section, or 'controller =' line):
 SECURITY ('[Host]' or endpoint section only, never a 'controller =' line):
 
 	tls, tls-key, tls-key-identity, keyring, concat, kxchap-secret,
-	kxchap-ctrl-secret
+	kxchap-ctrl-secret, key-source
 
 IDENTITY ('[Host]' only):
 
 	hostnqn, hostid, hostsymname
 
-Every key here is the same name as its 'nvme connect' long option
-(hyphenated). See linknvme:nvme-connect[1] for what each one means.
+Every key here except 'key-source' is the same name as its
+'nvme connect' long option (hyphenated). See linknvme:nvme-connect[1]
+for what each one means.
+
+'key-source' says where the TLS PSK comes from:
+
+'inline'::
+	The default. 'tls-key' is the key itself.
+
+'systemd-creds'::
+	'tls-key' is the name of a systemd credential. nvme-keysd reads the
+	credential and puts the PSK in the keyring. The connection does not
+	use 'tls-key': the kernel finds the PSK in the keyring by the host
+	NQN and the subsystem NQN. See linknvme:nvme-keysd[8].
+
+Any other value also means that 'tls-key' is not the key. libnvme does
+not check the value: nvme-keysd does.
 
 RESETTING A KEY
 ----------------

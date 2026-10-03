@@ -38,6 +38,8 @@ static inline int shr_write_all(int fd, const void *buf, size_t len)
  * (NUL-terminated) and discarding any excess. Always reads to EOF so a writer
  * on the other end of a pipe never blocks on a full buffer. An out_len of 0
  * keeps nothing but still drains to EOF.
+ * Not for secrets: the excess passes through a stack buffer that is not
+ * cleared.
  * Return: 0 on success, -errno on a read failure.
  */
 static inline int shr_read_all(int fd, char *out, size_t out_len)

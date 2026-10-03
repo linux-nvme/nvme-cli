@@ -1,0 +1,500 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme-cli.
+# Copyright (c) 2026 Dell Technologies Inc. or its subsidiaries.
+#
+# Authors: Martin Belanger <martin.belanger@dell.com>
+#
+# Manual, root-required integration test for nvme-keysd. Runs the unit as
+# built, with its hardening, loads a PSK from an encrypted systemd
+# credential, and connects to an nvmet-tcp target over TLS on loopback
+# with the key that nvme-keysd put in the .nvme keyring.
+#
+# Not part of `meson test`: needs root, systemd-creds, tlshd (ktls-utils)
+# and real kernel modules (nvmet, nvmet-tcp, nvme-tcp, tls). Invoke
+# directly, after building with -Dnvme-keysd=enabled:
+#
+#   sudo [TLSHD=/path/to/tlshd] "$0" [-y]
+#
+# It asks for confirmation first. -y skips the question.
+#
+# tlshd.service is used if it is installed. Otherwise TLSHD must name a
+# tlshd binary, which the test runs as a transient unit.
+#
+# On loopback, the host and the target share the .nvme keyring, so one key
+# serves both ends of the connection.
+
+set -u
+
+if [ "$(id -u)" -ne 0 ]; then
+	echo "This script must be run as root." >&2
+	exit 1
+fi
+
+ASSUME_YES=false
+if [ "${1:-}" = "-y" ]; then
+	ASSUME_YES=true
+	shift
+fi
+
+for tool in systemctl systemd-run systemd-creds modprobe; do
+	if ! command -v "${tool}" >/dev/null 2>&1; then
+		echo "Missing required tool: ${tool}" >&2
+		exit 1
+	fi
+done
+
+REPO_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+# Override to run against another build, e.g. a sanitizer-enabled one.
+BUILD_DIR="${BUILD_DIR:-${REPO_ROOT}/.build}"
+KEYSD_BIN="${BUILD_DIR}/keysd/nvme-keysd"
+KEYSD_UNIT_FILE="${BUILD_DIR}/keysd/nvme-keysd.service"
+LIBNVME_SO="${BUILD_DIR}/libnvme/src/libnvme3.so.1"
+NVME_BIN="${BUILD_DIR}/nvme"
+
+if [ ! -x "${KEYSD_BIN}" ]; then
+	cat >&2 <<EOF
+${KEYSD_BIN} not found. Build first:
+  meson setup ${BUILD_DIR} -Dnvme-keysd=enabled
+  meson compile -C ${BUILD_DIR}
+EOF
+	exit 1
+fi
+
+TLSHD_UNIT=tlshd.service
+TLSHD_WAS_ACTIVE=false
+if ! systemctl cat "${TLSHD_UNIT}" >/dev/null 2>&1; then
+	if [ ! -x "${TLSHD:-}" ]; then
+		echo "tlshd.service is not installed:" \
+		     "set TLSHD to a tlshd binary" >&2
+		exit 1
+	fi
+	TLSHD_UNIT=keysd-wringer-tlshd.service
+fi
+
+# The build is copied here, because the unit's ProtectHome= hides a build
+# under /home. The layout keeps the binary's RUNPATH ($ORIGIN/../libnvme/src).
+WORK_DIR=/run/keysd-wringer
+FABRICS_CONF="${WORK_DIR}/nvme-fabrics.conf"
+CRED_DIR="${WORK_DIR}/creds"
+CRED_NAME=keysd-wringer-vol1
+CRED_FILE="${CRED_DIR}/${CRED_NAME}"
+UNIT=keysd-wringer.service
+UNIT_FILE="/run/systemd/system/${UNIT}"
+
+HOSTID=c3d4e5f6-0000-4000-8000-000000000003
+HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:${HOSTID}"
+SUBSYS_NQN=nqn.2026-09.org.nvmexpress.keysd-wringer:vol1
+TRADDR=127.0.0.1
+TRSVCID=4430
+PORT_ID=30
+
+# Test-only PSKs, never used anywhere else.
+KEY_A='NVMeTLSkey-1:01:FJeRbUOvWkhSbfjCKeQYjPqtZpGO+OthuIsXjWIItWlnUfzl:'
+KEY_B='NVMeTLSkey-1:01:yyMDXyYiAi6eDt01wprARTn+XEhk9DQgFweyGFLfvJfSuD3o:'
+
+confirm() {
+	cat <<EOF
+This test changes the state of this machine:
+  - It installs and runs ${UNIT} from ${BUILD_DIR}.
+  - It adds and revokes TLS PSKs for ${HOSTNQN}
+    in the .nvme keyring.
+  - It creates an nvmet-tcp subsystem and a TLS port on ${TRADDR}:${TRSVCID}.
+  - It starts ${TLSHD_UNIT}.
+Run it on a test machine only.
+EOF
+
+	if [ "${ASSUME_YES}" = true ]; then
+		return
+	fi
+	if [ ! -t 0 ]; then
+		echo "stdin is not a terminal: use -y to continue" >&2
+		exit 1
+	fi
+
+	local answer
+	read -r -p "Continue? [y/N] " answer
+	if [ "${answer}" != y ] && [ "${answer}" != Y ]; then
+		exit 1
+	fi
+}
+
+confirm
+
+BACKING_FILE=$(mktemp /tmp/keysd-wringer-ns.XXXXXX)
+SCRATCH=$(mktemp /tmp/keysd-wringer-out.XXXXXX)
+
+CYAN="\033[1;36m"
+RED="\033[1;31m"
+NORMAL="\033[0m"
+PASS=0
+FAIL=0
+PHASE=0
+
+log() {
+	printf "%b%s%b\n" "${CYAN}" "$1" "${NORMAL}"
+}
+
+pass() {
+	printf "  PASS: %s\n" "$1"
+	PASS=$((PASS + 1))
+}
+
+fail() {
+	printf "%b  FAIL: %s%b\n" "${RED}" "$1" "${NORMAL}"
+	FAIL=$((FAIL + 1))
+}
+
+check() {
+	local desc="$1"
+
+	shift
+	if "$@"; then
+		pass "${desc}"
+	else
+		fail "${desc}"
+	fi
+}
+
+# Start the next phase, numbered in order. Under GitHub Actions, each phase
+# is a collapsible group in the log.
+phase() {
+	PHASE=$((PHASE + 1))
+	if [ -n "${GITHUB_ACTIONS:-}" ]; then
+		[ "${PHASE}" -gt 1 ] && echo "::endgroup::"
+		echo "::group::Phase ${PHASE}: $1"
+	fi
+	log ">>>>> Phase ${PHASE}: $1 <<<<<"
+}
+
+# ---------------------------------------------------------------------------
+# Keys
+# ---------------------------------------------------------------------------
+
+# The identity that nvme connect derives for PSK $1.
+identity_of() {
+	"${NVME_BIN}" keys check-tls-psk --hostnqn="${HOSTNQN}" \
+		--subsysnqn="${SUBSYS_NQN}" --keydata="$1" --identity=1 \
+		2>/dev/null | tail -n 1
+}
+
+# The serial, in hex, of the valid psk key with identity $1. A revoked (R)
+# or dead (D) key is not valid.
+key_serial() {
+	awk -v id="$1" '$8 == "psk" {
+		desc = $0
+		sub(/^([^ ]+ +){8}/, "", desc)
+		sub(/: [0-9]+$/, "", desc)
+		if (desc == id && $2 !~ /[RD]/)
+			print $1
+	}' /proc/keys
+}
+
+key_present() {
+	[ -n "$(key_serial "$1")" ]
+}
+
+key_absent() {
+	! key_present "$1"
+}
+
+# Encrypt PSK $2 into credential file $1 under name $3.
+write_cred() {
+	printf '%s' "$2" | systemd-creds encrypt --name="$3" - "$1"
+}
+
+revoke_test_keys() {
+	local id
+
+	for id in "${ID_A:-}" "${ID_B:-}"; do
+		[ -n "${id}" ] || continue
+		"${NVME_BIN}" keys revoke --identity="${id}" >/dev/null 2>&1
+	done
+}
+
+# ---------------------------------------------------------------------------
+# tlshd and the nvmet-tcp target
+# ---------------------------------------------------------------------------
+
+tlshd_start() {
+	if [ "${TLSHD_UNIT}" = tlshd.service ]; then
+		if systemctl is-active --quiet tlshd.service; then
+			TLSHD_WAS_ACTIVE=true
+		fi
+		systemctl start tlshd.service
+		return
+	fi
+
+	cat > "${WORK_DIR}/tlshd.conf" <<EOF
+[authenticate]
+keyrings = .nvme
+EOF
+	systemd-run --unit="${TLSHD_UNIT}" --collect \
+		"${TLSHD}" -s -c "${WORK_DIR}/tlshd.conf" >/dev/null
+}
+
+tlshd_stop() {
+	if [ "${TLSHD_UNIT}" = tlshd.service ]; then
+		[ "${TLSHD_WAS_ACTIVE}" = true ] || systemctl stop tlshd.service
+		return
+	fi
+	systemctl stop "${TLSHD_UNIT}" 2>/dev/null
+}
+
+nvmet_setup() {
+	local subsys_dir="/sys/kernel/config/nvmet/subsystems/${SUBSYS_NQN}"
+	local port_dir="/sys/kernel/config/nvmet/ports/${PORT_ID}"
+
+	log "nvmet: TLS port ${TRSVCID} on ${TRADDR} serves ${SUBSYS_NQN}"
+	modprobe -a nvmet nvmet-tcp nvme-tcp tls
+	truncate -s 64M "${BACKING_FILE}"
+	mkdir -p "${subsys_dir}"
+	echo 1 > "${subsys_dir}/attr_allow_any_host"
+	mkdir -p "${subsys_dir}/namespaces/1"
+	echo -n "${BACKING_FILE}" > "${subsys_dir}/namespaces/1/device_path"
+	echo 1 > "${subsys_dir}/namespaces/1/enable"
+
+	mkdir -p "${port_dir}"
+	echo ipv4 > "${port_dir}/addr_adrfam"
+	echo tcp > "${port_dir}/addr_trtype"
+	echo "${TRADDR}" > "${port_dir}/addr_traddr"
+	echo "${TRSVCID}" > "${port_dir}/addr_trsvcid"
+	echo tls1.3 > "${port_dir}/addr_tsas"
+	ln -sf "${subsys_dir}" "${port_dir}/subsystems/${SUBSYS_NQN}"
+}
+
+nvmet_teardown() {
+	local subsys_dir="/sys/kernel/config/nvmet/subsystems/${SUBSYS_NQN}"
+
+	rm -f /sys/kernel/config/nvmet/ports/"${PORT_ID}"/subsystems/*
+	rmdir "/sys/kernel/config/nvmet/ports/${PORT_ID}" 2>/dev/null
+	if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
+		echo 0 > "${subsys_dir}/namespaces/1/enable"
+	fi
+	rmdir "${subsys_dir}/namespaces/1" 2>/dev/null
+	rmdir "${subsys_dir}" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# Host connection
+# ---------------------------------------------------------------------------
+
+# The nvmeX device connected to the test subsystem, if any.
+test_ctrl() {
+	local d
+
+	for d in /sys/class/nvme/nvme*; do
+		[ -e "${d}/subsysnqn" ] || continue
+		if [ "$(cat "${d}/subsysnqn")" = "${SUBSYS_NQN}" ]; then
+			basename "${d}"
+			return
+		fi
+	done
+}
+
+# Connect through the fabrics configuration, as nvme connect-all does.
+connect_from_config() {
+	"${NVME_BIN}" connect -J "${FABRICS_CONF}" >"${SCRATCH}" 2>&1
+	sleep 1
+	[ -n "$(test_ctrl)" ]
+}
+
+disconnect() {
+	"${NVME_BIN}" disconnect -n "${SUBSYS_NQN}" >/dev/null 2>&1
+}
+
+# The key serial, in hex, that the live controller's TLS session uses.
+ctrl_key_serial() {
+	local dev
+
+	dev=$(test_ctrl)
+	[ -n "${dev}" ] || return
+	cat "/sys/class/nvme/${dev}/tls_key" 2>/dev/null
+}
+
+ctrl_uses_key() {
+	local want have
+
+	want=$(key_serial "$1")
+	have=$(ctrl_key_serial)
+	[ -n "${want}" ] && [ "$((16#${have:-0}))" -eq "$((16#${want}))" ]
+}
+
+ctrl_live() {
+	local dev
+
+	dev=$(test_ctrl)
+	[ -n "${dev}" ] && [ "$(cat "/sys/class/nvme/${dev}/state")" = live ]
+}
+
+# ---------------------------------------------------------------------------
+# nvme-keysd
+# ---------------------------------------------------------------------------
+
+keysd_install() {
+	log "Install ${UNIT}"
+	mkdir -p "${WORK_DIR}/keysd" "${WORK_DIR}/libnvme/src"
+	mkdir -m 0700 -p "${CRED_DIR}"
+	cp "${KEYSD_BIN}" "${WORK_DIR}/keysd/"
+	cp "${LIBNVME_SO}" "${WORK_DIR}/libnvme/src/"
+
+	cat > "${FABRICS_CONF}" <<EOF
+[Host]
+hostnqn    = ${HOSTNQN}
+hostid     = ${HOSTID}
+key-source = systemd-creds
+
+[Subsystem]
+nqn        = ${SUBSYS_NQN}
+controller = transport=tcp;traddr=${TRADDR};trsvcid=${TRSVCID}
+tls        = true
+tls-key    = ${CRED_NAME}
+EOF
+
+	# The unit as built, with the binary and its arguments replaced. The
+	# credentials are in ${CRED_DIR}, so the unit must not create
+	# /etc/nvme/creds.
+	local exec_start="${WORK_DIR}/keysd/nvme-keysd"
+
+	exec_start+=" --fabrics-config ${FABRICS_CONF}"
+	exec_start+=" --creds-dir ${CRED_DIR} --debug"
+	sed -e "s|^ExecStart=.*|ExecStart=${exec_start}|" \
+	    -e "/^ConfigurationDirectory/d" \
+		"${KEYSD_UNIT_FILE}" > "${UNIT_FILE}"
+	systemctl daemon-reload
+}
+
+keysd_uninstall() {
+	systemctl stop "${UNIT}" 2>/dev/null
+	systemctl reset-failed "${UNIT}" 2>/dev/null
+	rm -f "${UNIT_FILE}"
+	systemctl daemon-reload
+}
+
+keysd_restart() {
+	systemctl reset-failed "${UNIT}" 2>/dev/null
+	systemctl restart "${UNIT}" >"${SCRATCH}" 2>&1
+}
+
+keysd_active() {
+	systemctl is-active --quiet "${UNIT}"
+}
+
+journal_has() {
+	journalctl -t nvme-keysd --since "$1" 2>/dev/null | grep -q -- "$2"
+}
+
+# ---------------------------------------------------------------------------
+# Cleanup: always runs, even on Ctrl-C or an assertion failing partway.
+# ---------------------------------------------------------------------------
+
+cleanup() {
+	log "Cleanup"
+	disconnect
+	keysd_uninstall
+	revoke_test_keys
+	nvmet_teardown
+	tlshd_stop
+	rm -rf "${WORK_DIR}"
+	rm -f "${BACKING_FILE}" "${SCRATCH}"
+}
+
+trap cleanup EXIT
+
+# ---------------------------------------------------------------------------
+# Run
+# ---------------------------------------------------------------------------
+
+mkdir -p "${WORK_DIR}"
+ID_A=$(identity_of "${KEY_A}")
+ID_B=$(identity_of "${KEY_B}")
+if [ -z "${ID_A}" ] || [ -z "${ID_B}" ]; then
+	echo "cannot derive the test identities with ${NVME_BIN}" >&2
+	exit 1
+fi
+
+# A prior run killed before cleanup() could have left these behind.
+disconnect
+revoke_test_keys
+
+nvmet_setup
+tlshd_start
+keysd_install
+
+phase "a missing credential is reported"
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+keysd_restart
+check "the unit starts with no credential" keysd_active
+check "the missing credential was logged" \
+	journal_has "${PHASE_START}" "cannot decrypt credential '${CRED_NAME}'"
+
+phase "a credential is imported at startup"
+write_cred "${CRED_FILE}" "${KEY_A}" "${CRED_NAME}"
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+keysd_restart
+check "the unit is active" keysd_active
+check "key A is in .nvme with the expected identity" key_present "${ID_A}"
+check "the import was logged" journal_has "${PHASE_START}" "imported '${ID_A}'"
+
+phase "a TLS connection finds the key without --tls-key"
+check "nvme connect -J connects" connect_from_config
+check "the controller is live" ctrl_live
+check "the connection uses key A" ctrl_uses_key "${ID_A}"
+
+phase "a reload with nothing changed changes nothing"
+SERIAL_A=$(key_serial "${ID_A}")
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+systemctl reload "${UNIT}"
+check "the unit is active" keysd_active
+check "key A keeps its serial" test "$(key_serial "${ID_A}")" = "${SERIAL_A}"
+check "'already present' was logged" \
+	journal_has "${PHASE_START}" "'${ID_A}' already present"
+
+phase "a new credential and a reload replace the key"
+write_cred "${CRED_FILE}" "${KEY_B}" "${CRED_NAME}"
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+systemctl reload "${UNIT}"
+check "the unit is active" keysd_active
+check "key B is in .nvme" key_present "${ID_B}"
+check "key A is revoked" key_absent "${ID_A}"
+check "the revocation was logged" \
+	journal_has "${PHASE_START}" "revoked '${ID_A}'"
+check "the existing connection stays live" ctrl_live
+disconnect
+check "a new connection succeeds" connect_from_config
+check "the new connection uses key B" ctrl_uses_key "${ID_B}"
+disconnect
+SERIAL_B=$(key_serial "${ID_B}")
+
+phase "the keys outlive nvme-keysd"
+systemctl stop "${UNIT}"
+# The key garbage collector runs asynchronously.
+sleep 2
+check "key B is still in .nvme" key_present "${ID_B}"
+check "a new connection succeeds" connect_from_config
+check "the new connection uses key B" ctrl_uses_key "${ID_B}"
+disconnect
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+keysd_restart
+check "the unit is active" keysd_active
+check "key B keeps its serial" test "$(key_serial "${ID_B}")" = "${SERIAL_B}"
+check "'already present' was logged" \
+	journal_has "${PHASE_START}" "'${ID_B}' already present"
+
+phase "a credential with the wrong name is rejected"
+write_cred "${CRED_FILE}" "${KEY_A}" wrong-name
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+systemctl reload "${UNIT}"
+check "the unit is active" keysd_active
+check "the name mismatch was logged" \
+	journal_has "${PHASE_START}" "io.systemd.Credentials.NameMismatch"
+check "key B is still in .nvme" key_present "${ID_B}"
+check "key A is not imported" key_absent "${ID_A}"
+
+if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${PHASE}" -gt 0 ]; then
+	echo "::endgroup::"
+fi
+printf "\n"
+log "Results: ${PASS} passed, ${FAIL} failed"
+[ "${FAIL}" -eq 0 ]

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+[Unit]
+Description=NVMe TLS Key Provisioning Daemon
+Documentation=man:nvme-keysd(8)
+Before=remote-fs.target
+Wants=systemd-creds.socket
+After=systemd-creds.socket
+
+[Service]
+Type=notify-reload
+ExecStart=@SBINDIR@/nvme-keysd
+Restart=on-failure
+
+# Recreate the credential directory if it was removed. systemd puts it
+# under /etc, which is SYSCONFDIR in a distribution build.
+ConfigurationDirectory=nvme/creds
+ConfigurationDirectoryMode=0700
+
+# Hardening. The daemon needs uid 0 to write the .nvme keyring, but no
+# capabilities, no network, and no writable files.
+# No PrivateNetwork=: a PSK belongs to the network namespace of the process
+# that adds it, and the kernel deletes it when that namespace goes away. In
+# a private namespace, every key would be deleted when the daemon stops.
+CapabilityBoundingSet=
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service @keyring
+SystemCallArchitectures=native
+LimitCORE=0
+
+[Install]
+WantedBy=multi-user.target

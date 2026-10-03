@@ -55,6 +55,7 @@ want_fabrics = get_option('fabrics').disabled() == false and host_system == 'lin
 want_mi = get_option('mi').disabled() == false and host_system == 'linux'
 want_top = get_option('top').disabled() == false and host_system == 'linux'
 want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system == 'linux'
+want_keysd = get_option('nvme-keysd').disabled() == false and want_fabrics and host_system == 'linux'
 want_deprecated_cmds = get_option('deprecated-cmds').disabled() == false
 want_json_c = get_option('json-c').disabled() == false
 want_libkmod = get_option('libkmod').disabled() == false and host_system == 'linux'
@@ -398,15 +399,34 @@ else
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
-if not want_discoverd
+if not want_discoverd and not want_keysd
     libsystemd_dep = dependency('', required: false)
 else
-    # v253 for Type=notify-reload (nvme-discoverd.service).
+    # v253 for Type=notify-reload (nvme-discoverd.service, nvme-keysd.service).
     libsystemd_dep = dependency('libsystemd', version: '>=253',
-                                 required: get_option('nvme-discoverd'))
+                                 required: get_option('nvme-discoverd').enabled() or
+                                           get_option('nvme-keysd').enabled())
 endif
 want_discoverd = want_discoverd and libsystemd_dep.found()
+want_keysd = want_keysd and libsystemd_dep.found()
+
+# nvme-keysd decrypts credentials through sd_varlink (libsystemd v257).
+if want_keysd and libsystemd_dep.version().version_compare('<257')
+    if get_option('nvme-keysd').enabled()
+        error('nvme-keysd requires libsystemd >=257')
+    endif
+    want_keysd = false
+endif
+
+# nvme-keysd derives the PSKs (OpenSSL) and writes the keyring (libkeyutils).
+if want_keysd and not (openssl_dep.found() and keyutils_dep.found())
+    if get_option('nvme-keysd').enabled()
+        error('nvme-keysd requires OpenSSL and libkeyutils')
+    endif
+    want_keysd = false
+endif
 conf.set('CONFIG_DISCOVERD', want_discoverd, description: 'Is nvme-discoverd enabled')
+conf.set('CONFIG_KEYSD', want_keysd, description: 'Is nvme-keysd enabled')
 
 # -Dnvmf-autoconnect=auto builds the legacy autoconnect only when
 # nvme-discoverd is not built.
@@ -718,9 +738,16 @@ if want_nvme
 
     subdir('tests')
 
-    if want_discoverd
+    if want_discoverd or want_keysd
         subdir('daemon-util')
+    endif
+
+    if want_discoverd
         subdir('discoverd')
+    endif
+
+    if want_keysd
+        subdir('keysd')
     endif
 
     configure_file(
@@ -893,6 +920,7 @@ wanted_dict = {
     'fabrics':          want_fabrics,
     'nvme-discoverd':   want_discoverd,
     'mdns':             want_mdns,
+    'nvme-keysd':       want_keysd,
     'nvmf-autoconnect': want_nvmf_autoconnect,
     'deprecated-cmds':  want_deprecated_cmds,
     'python bindings ': want_python,

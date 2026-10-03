@@ -1,0 +1,134 @@
+nvme-keysd(8)
+=============
+
+NAME
+----
+nvme-keysd - NVMe/TCP TLS key provisioning daemon
+
+SYNOPSIS
+--------
+[verse]
+'nvme-keysd' [--config=<FILE>] [--fabrics-config=<FILE>]
+		[--creds-dir=<DIR>] [--debug] [--help]
+
+DESCRIPTION
+-----------
+nvme-keysd puts the TLS pre-shared keys (PSKs) used by NVMe/TCP into the
+kernel's .nvme keyring, before a connection needs them. The kernel then
+finds the key there when 'nvme connect' or nvme-discoverd connects with
+TLS.
+
+Which key belongs to which host and subsystem is configured in the
+shared NVMe-oF fabrics configuration, see nvme-fabrics.conf(5).
+
+This is a technology preview.
+
+KEYS
+----
+nvme-keysd imports every entry of the fabrics configuration that has
+'key-source = systemd-creds'. For such an entry, 'tls-key' is the name
+of a systemd credential. The credential holds the PSK in the PSK
+interchange format ('NVMeTLSkey-1:<hmac>:<base64>:'), as created by
+'nvme keys gen-tls-psk'.
+
+nvme-keysd puts the PSK in the keyring named by 'keyring' (default
+'.nvme'). The key identity is built from the host NQN and the subsystem
+NQN, as 'nvme connect' does. A key that is already there is not written
+again. Any other key for the same host NQN and subsystem NQN is revoked,
+so that the kernel finds only one key for the pair.
+
+nvme-keysd imports the keys at startup and on SIGHUP. It never revokes
+a key because its entry was removed from the configuration.
+
+CREDENTIALS
+-----------
+Each credential is a file in @SYSCONFDIR@/nvme/creds/, encrypted with
+systemd-creds(1). The directory is installed with mode 0700. The file
+name is the credential name. nvme-keysd decrypts the file through
+systemd-creds, which checks that the name in the credential is the file
+name. When '--name' is not given, systemd-creds takes the name from the
+output file name:
+
+	# systemd-creds encrypt psk.txt @SYSCONFDIR@/nvme/creds/vol1-psk
+
+and in nvme-fabrics.conf:
+
+	[Subsystem]
+	nqn        = nqn.2024-01.com.example:storage.vol1
+	controller = transport=tcp;traddr=192.0.2.10;trsvcid=4420
+	tls        = true
+	key-source = systemd-creds
+	tls-key    = vol1-psk
+
+After adding or changing a credential, reload nvme-keysd:
+
+	# systemctl reload nvme-keysd
+
+nvme-keysd logs an error for a credential that it cannot decrypt, and
+imports the other keys.
+
+nvme-keysd needs systemd 257 or later.
+
+OPTIONS
+-------
+-c <FILE>::
+--config=<FILE>::
+	Use <FILE> instead of @SYSCONFDIR@/nvme/nvme-keysd.conf.
+
+--fabrics-config=<FILE>::
+	Read the fabrics configuration from <FILE> instead of
+	@SYSCONFDIR@/nvme/nvme-fabrics.conf.
+
+--creds-dir=<DIR>::
+	Read the encrypted credentials from <DIR> instead of
+	@SYSCONFDIR@/nvme/creds.
+
+-d::
+--debug::
+	Enable debug-level logging for both nvme-keysd and the libnvme
+	calls it makes, overriding the configured debug-level.
+
+-h::
+--help::
+	Print usage and exit.
+
+CONFIGURATION
+-------------
+nvme-keysd.conf holds the daemon's own settings, in a '[Global]'
+section:
+
+	[Global]
+	debug-level = info
+
+'debug-level' (err, warn, info, or debug; default info) sets the log
+threshold. '--debug' on the command line overrides it.
+
+A missing file, or a missing key, keeps the default.
+
+SIGNALS
+-------
+SIGHUP;;
+	Reload nvme-keysd.conf and the fabrics configuration, and import
+	the keys again.
+
+SIGTERM, SIGINT;;
+	Shut down.
+
+FILES
+-----
+@SYSCONFDIR@/nvme/nvme-keysd.conf::
+	The daemon's own configuration; see CONFIGURATION.
+
+@SYSCONFDIR@/nvme/creds/::
+	The encrypted credentials; see CREDENTIALS.
+
+SEE ALSO
+--------
+nvme-fabrics.conf(5)
+systemd-creds(1)
+nvme-discoverd(8)
+nvme-connect(1)
+
+NVME
+----
+Part of the nvme-user suite

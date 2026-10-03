@@ -1,0 +1,13 @@
+# nvme-keysd configuration
+# @SYSCONFDIR@/nvme/nvme-keysd.conf
+#
+# All options are optional and have the defaults shown below.
+# Which key belongs to which host and subsystem is configured in the shared
+# NVMe-oF fabrics configuration (nvme-fabrics.conf(5)), never here.
+
+[Global]
+
+# Log verbosity: err, warn, info, or debug (case-insensitive).
+# The --debug command-line option overrides this setting and enables debug
+# logging.
+#debug-level = info

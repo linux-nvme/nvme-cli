@@ -995,6 +995,67 @@ static bool test_create_ctrl_credentials(struct libnvme_global_ctx *ctx)
 }
 
 /* -------------------------------------------------------------------------
+ * __libnvmf_import_keys_from_config — without a TLS key, the kernel looks up
+ * the PSK in the keyring.  Regression: the keyring was dropped when there was
+ * no key, so the kernel searched .nvme instead of the configured keyring.
+ * -------------------------------------------------------------------------
+ */
+static bool test_import_keys_keyring_without_key(
+		struct libnvme_global_ctx *ctx)
+{
+#ifdef CONFIG_KEYUTILS
+	struct libnvmf_context fctx = { .ctx = ctx };
+	struct libnvme_ctrl *c = NULL;
+	struct libnvme_host *h = NULL;
+	long keyring_id = 0, key_id = 0;
+	bool pass = true, p;
+	int ret;
+
+	printf("\ntest_import_keys_keyring_without_key:\n");
+
+	ret = libnvme_get_host(ctx, "nqn.2014-08.org.nvmexpress:host",
+			       NULL, &h);
+	p = ret == 0 && h;
+	CHECK(p, "get host: ret=%d", ret);
+	pass &= p;
+	if (!p)
+		return pass;
+
+	fctx.ctrl_params.subsysnqn = "nqn.2014-08.org.nvmexpress:subsys";
+	fctx.ctrl_params.transport = "tcp";
+	fctx.ctrl_params.traddr = "192.168.1.100";
+	fctx.ctrl_params.cfg.tls = true;
+	fctx.keyring = "0x2a";
+
+	ret = libnvmf_create_ctrl(ctx, &fctx, &c);
+	p = ret == 0 && c;
+	CHECK(p, "create: ret=%d", ret);
+	pass &= p;
+	if (!p)
+		return pass;
+
+	ret = __libnvmf_import_keys_from_config(h, c, &keyring_id, &key_id);
+	p = ret == 0;
+	CHECK(p, "import: ret=%d", ret);
+	pass &= p;
+
+	p = keyring_id == 0x2a;
+	CHECK(p, "keyring passed on: %#lx", keyring_id);
+	pass &= p;
+
+	p = key_id == 0;
+	CHECK(p, "no key: %ld", key_id);
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	return pass;
+#else
+	return true;
+#endif
+}
+
+/* -------------------------------------------------------------------------
  * libnvmf_generate_hostid — the machine identifier comes from sysfs, so a
  * test sandbox must be able to redirect it.  Regression: the generators took
  * no context and always read the real machine.
@@ -1333,6 +1394,7 @@ int main(int argc, char *argv[])
 	test_dc_entry_is_self();
 	test_registry_action_on_connect();
 	test_create_ctrl_credentials(ctx);
+	test_import_keys_keyring_without_key(ctx);
 	test_generate_hostid(ctx);
 	test_kernel_options();
 	test_null_transport_handle(ctx);
