@@ -1,0 +1,134 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
+name: ABI Check
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+  workflow_dispatch:
+
+jobs:
+  libnvme-abi:
+    # Starting with the 3.0 release, libnvme's exported symbols must not
+    # change in an incompatible way (removed or renamed functions/variables,
+    # or a changed symbol version) once they have shipped in a release --
+    # including symbols added after 3.0: once a symbol ships, it stays.
+    #
+    # It is fine to add and remove symbols freely between two releases
+    # (e.g. an experimental accessor added and renamed before it ships), so
+    # the baseline for comparison is always the latest released tag, not
+    # the previous commit. New struct/enum fields and new accessors driven
+    # by NVMe spec updates are expected and fine; only the exported symbol
+    # table is checked here, not struct layouts.
+    name: libnvme exported symbols
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    # Container jobs default to "sh" rather than bash; the comparison step
+    # below relies on bash's PIPESTATUS array.
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory '*'
+
+      - name: Install libabigail
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends abigail-tools
+
+      - name: Determine ABI baseline
+        id: baseline
+        run: |
+          baseline=""
+          for tag in $(git tag --list 'v*' | grep -E '^v([3-9][0-9]*)\.[0-9]+(\.[0-9]+)?$' | sort -rV); do
+            if git merge-base --is-ancestor "${tag}" HEAD 2>/dev/null; then
+              baseline="${tag}"
+              break
+            fi
+          done
+
+          if [ -z "${baseline}" ]; then
+            echo "No released >=3.0 tag reachable from HEAD; skipping ABI check."
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          elif [ "$(git rev-parse "${baseline}")" = "$(git rev-parse HEAD)" ]; then
+            echo "HEAD is the ${baseline} release itself; skipping ABI check."
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "Comparing libnvme ABI against ${baseline}"
+            echo "skip=0" >> "$GITHUB_OUTPUT"
+            echo "tag=${baseline}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Uses the baseline tag's own scripts/build.sh, which predates the
+      # libnvme_abi config below -- so it still builds and runs the test
+      # suite via the "libnvme" config. Only the symbol table is needed,
+      # not the test results.
+      - name: Build baseline libnvme (${{ steps.baseline.outputs.tag }})
+        if: steps.baseline.outputs.skip == '0'
+        run: |
+          git worktree add /tmp/abi-baseline "${{ steps.baseline.outputs.tag }}"
+          ( cd /tmp/abi-baseline && scripts/build.sh -c gcc libnvme )
+
+      - name: Build current libnvme
+        if: steps.baseline.outputs.skip == '0'
+        run: scripts/build.sh -c gcc libnvme_abi
+
+      - name: Compare exported symbols with abidiff
+        if: steps.baseline.outputs.skip == '0'
+        run: |
+          old_so=$(find /tmp/abi-baseline/.build-ci -name 'libnvme3.so.*' -type f ! -path '*.p/*' | sort -V | tail -1)
+          new_so=$(find .build-ci -name 'libnvme3.so.*' -type f ! -path '*.p/*' | sort -V | tail -1)
+
+          if [ -z "${old_so}" ] || [ -z "${new_so}" ]; then
+            echo "::error::could not locate a built libnvme3.so to compare"
+            exit 1
+          fi
+
+          echo "baseline (${{ steps.baseline.outputs.tag }}): ${old_so}"
+          echo "current:                      ${new_so}"
+
+          # Built without debug info (release buildtype), so abidiff falls
+          # back to comparing the ELF dynamic symbol tables -- i.e. exactly
+          # the exported symbols/versions, not struct layouts. Exit status
+          # is a bitmask; bit 0x08 means an incompatible ABI change was
+          # found (e.g. a removed or changed exported symbol). Bit 0x04
+          # (any change at all, including purely additive ones such as new
+          # symbols added for spec updates) is expected and must not fail
+          # the build.
+          set +e
+          abidiff "${old_so}" "${new_so}" | tee abidiff.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          # Bits 0x01 (error) and 0x02 (usage error) mean abidiff itself
+          # failed to run the comparison at all -- treat that as a failure
+          # too, not as "no incompatible change found".
+          if [ $((status & 3)) -ne 0 ]; then
+            echo "::error::abidiff failed to run (exit status ${status})"
+            exit 1
+          fi
+
+          if [ $((status & 8)) -ne 0 ]; then
+            echo "::error::libnvme exported symbols changed incompatibly since ${{ steps.baseline.outputs.tag }}"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: failure()
+        with:
+          name: abidiff-report
+          path: abidiff.log
