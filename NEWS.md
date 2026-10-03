@@ -53,7 +53,21 @@
   active, `nvmf-autoconnect.service` and the FC kickstart skip their
   connect step.
 
+### nvme-cli
+
+* `nvme discover` and `nvme connect-all` now send the keep-alive
+  timeout to a persistent Discovery Controller. Before, the value was
+  set too late. The DC got no keep-alive timeout, so it was never
+  asked for a persistent connection or for AENs.
+
+* New option `nvme connect --discovery`. It tells the kernel that the
+  controller is a Discovery Controller, also when it has a unique NQN.
+
 ### nvme-discoverd
+
+* Discovery Controllers are now connected with `--discovery` and a
+  keep-alive timeout of 30 s, or the configured `keep-alive-tmo`. No
+  keep-alive timeout is used for `persistent = no`.
 
 * `epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes` and
   `dc-giveup-timeout` move from `[Global]` to a new `[Discovery]`
