@@ -103,7 +103,7 @@ BASE ?= master
 .PHONY: checkpatch
 checkpatch:
 	@[ -f ${CHECKPATCH} ] || curl -sSf ${CHECKPATCH_URL} -o ${CHECKPATCH}
-	git format-patch --stdout ${BASE}..HEAD | perl ${CHECKPATCH} -
+	perl ${CHECKPATCH} --git ${BASE}..HEAD
 
 # make checkpatch-diff  → check staged/unstaged changes + untracked files
 .PHONY: checkpatch-diff
