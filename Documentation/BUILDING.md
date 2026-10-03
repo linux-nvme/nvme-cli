@@ -52,6 +52,7 @@ the default is `auto` (use if found) unless noted otherwise.
 | `libkmod` | `auto` | 5 | Loading the nvme-fabrics module when needed |
 | `libdbus` | `disabled` | | End-point discovery for NVMe-MI |
 | `liburing` | `disabled` | 2.2 | Asynchronous admin and I/O passthrough commands through io_uring |
+| `libarchive` | `auto` | | Archiving vendor plugin log captures (WDC, SanDisk, Micron, Samsung, Solidigm) as `.tar`/`.tar.gz`/`.zip`, without spawning an external `tar`/`zip` process. Without it, those capture subcommands fail with a clear error instead |
 | `python` | `auto` | 3.6 | Python bindings for libnvme |
 | `nvme-discoverd` | `auto` | libsystemd 253 | The nvme-discoverd daemon; see [Daemons and systemd](#daemons-and-systemd) |
 | `mdns` | `auto` | libsystemd 258 | mDNS discovery in nvme-discoverd; see [Daemons and systemd](#daemons-and-systemd) |

@@ -45,8 +45,8 @@ char *micron_get_ns_name(struct libnvme_transport_handle *hdl);
  * @uncorrectable_errors:	Output uncorrectable error register value
  *
  * Reads the PCIe Advanced Error Reporting (AER) correctable and
- * uncorrectable error registers for the device associated with @hdl using
- * setpci.
+ * uncorrectable error registers for the device associated with @hdl
+ * directly from its PCI config space (no setpci process involved).
  *
  * Return: 0 on success, negative errno on failure.
  */
@@ -58,26 +58,13 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
  * @hdl:	Transport handle
  *
  * Clears the PCIe AER correctable error register for the device
- * associated with @hdl by writing all ones to the register via setpci.
+ * associated with @hdl by writing all ones directly to the register in
+ * its PCI config space.
  *
  * Return: 0 on success, negative error code on failure.
  */
 int micron_clear_pcie_aer_correctable_errors(
 		struct libnvme_transport_handle *hdl);
-
-/**
- * micron_run_spawn() - Run a command without invoking a shell
- * @argv:	NULL-terminated argument vector (argv[0] is the program)
- * @outfile:	If non-NULL, redirect stdout and stderr to this file
- * @append:	If true, append to outfile; if false, truncate it
- *
- * Executes the program specified by argv[0] with the given arguments.
- * The program is searched in PATH. No shell is invoked, preventing
- * command injection via metacharacters in arguments.
- *
- * Return: 0 on success, negative errno on failure.
- */
-int micron_run_spawn(char *const argv[], const char *outfile, bool append);
 
 /**
  * micron_write_os_config_to_file() - Dump OS configuration to a file

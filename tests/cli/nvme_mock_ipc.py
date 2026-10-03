@@ -52,6 +52,35 @@ def resolve_mock_lib_path(default="./libmock_nvme.so"):
     return default
 
 
+def built_with_library(nvme_bin, soname_fragment):
+    """True if nvme_bin is dynamically linked against a library whose
+    soname contains soname_fragment, e.g. "libarchive".
+
+    Some vendor plugin features (archiving) compile to a disabled-feature
+    stub when their optional library isn't found at build time, rather
+    than failing the build. A test for one of those features checks this,
+    not whether some unrelated CLI tool happens to be on PATH: nvme-cli
+    links the library directly and no longer spawns a tar/zip process for
+    it.
+
+    A statically linked nvme has no shared libraries at all -- ldd reports
+    "not a dynamic executable" on stdout and exits non-zero for one -- so
+    that case is treated the same as the library not being linked in,
+    which matches reality: a static build always builds with every such
+    optional library disabled (see scripts/build.sh), so the feature
+    really is unavailable.
+    """
+    try:
+        result = subprocess.run(['ldd', nvme_bin], stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, encoding='utf-8',
+                                check=False)
+    except FileNotFoundError:
+        return False
+    if result.returncode != 0:
+        return False
+    return soname_fragment in result.stdout
+
+
 class MockIPCServer(threading.Thread):
     """Generic Unix-socket IPC server for libmock_nvme.c.
 

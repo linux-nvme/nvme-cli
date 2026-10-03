@@ -89,6 +89,7 @@ static:
 		-Dpython=disabled \
 		-Dopenssl=disabled \
 		-Dnvme-discoverd=disabled \
+		-Dlibarchive=disabled \
 		-Dtests=false \
 		-Dexamples=false
 

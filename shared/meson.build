@@ -43,15 +43,25 @@ else
         'fs-util-linux.c',
         'machine-id-util-linux.c',
         'net-util-linux.c',
+        'pci-util-linux.c',
         'crypto-util-linux.c',
         'proc-util-linux.c',
         'sig-util-linux.c',
     ]
 endif
 
+if libarchive_dep.found()
+    sources += ['archive-util.c']
+else
+    sources += ['archive-util-stub.c']
+endif
+
 shared_deps = [ccan_dep]
 if host_system != 'windows'
     shared_deps += [openssl_dep]
+endif
+if libarchive_dep.found()
+    shared_deps += [libarchive_dep]
 endif
 
 libshared = static_library(
