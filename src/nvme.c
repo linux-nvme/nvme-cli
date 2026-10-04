@@ -49,6 +49,7 @@
 #include "cleanup.h"
 #include "global-config.h"
 #include "global-ctx.h"
+#include "logging.h"
 #include "nvme-print.h"
 #include "plugin.h"
 
@@ -191,6 +192,10 @@ int main(int argc, char **argv)
 		return err;
 
 	err = shr_install_sigint_handler();
+	if (err)
+		return err;
+
+	err = nvme_install_crash_handler();
 	if (err)
 		return err;
 

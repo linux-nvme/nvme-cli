@@ -6,11 +6,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include <libnvme-mi.h>
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+#include <shared/crash-util.h>
 #include <shared/sig-util.h>
 
 #include "logging.h"
@@ -23,6 +25,16 @@ struct submit_data {
 
 int log_level;
 static struct submit_data sb;
+
+int nvme_install_crash_handler(void)
+{
+	return shr_install_crash_handler();
+}
+
+void nvme_show_crash_backtrace(void)
+{
+	shr_print_backtrace(STDERR_FILENO);
+}
 
 bool is_printable_at_level(int level)
 {
