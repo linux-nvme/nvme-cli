@@ -1058,8 +1058,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		opt.output_format = nvme_args.output_format;
 
 	if (!opt.output_format) {
-		nvme_show_result("Missing output format. Using default format - JSON.\n");
-		opt.output_format = DEFAULT_OUTPUT_FORMAT_JSON;
+		nvme_show_result("Missing output format. Using default format - %s.\n",
+				 DEFAULT_OUTPUT_FORMAT);
+		opt.output_format = DEFAULT_OUTPUT_FORMAT;
 	}
 
 	switch (tele_type) {

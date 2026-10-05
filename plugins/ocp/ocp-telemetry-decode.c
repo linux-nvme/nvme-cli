@@ -313,7 +313,6 @@ struct request_data smart_extended[] = {
 	{ "Log page GUID", GUID_LEN }
 };
 
-#ifdef CONFIG_JSONC
 void json_add_formatted_u32_str(struct json_object *pobject, const char *msg, unsigned int pdata)
 {
 	char data_str[70] = { 0 };
@@ -343,7 +342,6 @@ void json_add_formatted_var_size_str(struct json_object *pobject, const char *ms
 	json_object_add_value_string(pobject, msg, description_str);
 	free(description_str);
 }
-#endif /* CONFIG_JSONC */
 
 int get_telemetry_das_offset_and_size(
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header,
@@ -559,7 +557,6 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 	return 0;
 }
 
-#ifdef CONFIG_JSONC
 int parse_time_stamp_event(
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
@@ -1577,12 +1574,11 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 		}
 	}
 
-	if (pevent_fifos_object != NULL && root != NULL) {
-		const char *data_area = (poffsets->data_area == 1 ? STR_DA_1_EVENT_FIFO_INFO :
-					STR_DA_2_EVENT_FIFO_INFO);
-
-		json_object_add_value_array(root, data_area, pevent_fifos_object);
-	}
+	if (pevent_fifos_object != NULL && root != NULL)
+		json_object_add_value_array(root,
+			poffsets->data_area == 1 ? STR_DA_1_EVENT_FIFO_INFO :
+						   STR_DA_2_EVENT_FIFO_INFO,
+			pevent_fifos_object);
 
 	return 0;
 }
@@ -1925,12 +1921,10 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	snprintf(where, sizeof(where), "Data Area %d", poffsets->data_area);
 	print_statistics(pstats_offset, statistics_size, pstats_array, fp, false, where);
 
-	if (root != NULL && pstats_array != NULL) {
-		const char *pdata_area =
-			(poffsets->data_area == 1 ? STR_DA_1_STATS : STR_DA_2_STATS);
-
-		json_object_add_value_array(root, pdata_area, pstats_array);
-	}
+	if (root != NULL && pstats_array != NULL)
+		json_object_add_value_array(root,
+			poffsets->data_area == 1 ? STR_DA_1_STATS : STR_DA_2_STATS,
+			pstats_array);
 
 	return 0;
 }
@@ -2072,6 +2066,7 @@ out:
 	return status;
 }
 
+#ifdef CONFIG_JSONC
 int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;

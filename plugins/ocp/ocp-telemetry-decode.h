@@ -117,7 +117,11 @@ enum TELEMETRY_TYPE {
 
 #define DEFAULT_TELEMETRY_LOG "telemetry-log"
 #define DEFAULT_STRING_BIN "string.bin"
-#define DEFAULT_OUTPUT_FORMAT_JSON "json"
+#ifdef CONFIG_JSONC
+#define DEFAULT_OUTPUT_FORMAT "json"
+#else /* CONFIG_JSONC */
+#define DEFAULT_OUTPUT_FORMAT "normal"
+#endif /* CONFIG_JSONC */
 
 /* C9 Telemetry String Log Format Log Page */
 #define C9_TELEMETRY_STR_LOG_LEN                 432

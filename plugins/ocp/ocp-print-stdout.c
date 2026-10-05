@@ -253,9 +253,7 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 
 static void stdout_telemetry_log(struct ocp_telemetry_parse_options *options)
 {
-#ifdef CONFIG_JSONC
 	print_ocp_telemetry_normal(options);
-#endif /* CONFIG_JSONC */
 }
 
 static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data)

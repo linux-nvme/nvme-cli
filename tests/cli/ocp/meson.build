@@ -4,15 +4,22 @@
 #
 # Hardware-free ocp plugin tests.
 
-ocp_mock_tests = [
-    'ocp_internal_log_event_fifo_mock_test.py',
-    'ocp_internal_log_mock_test.py',
-    'ocp_smart_add_log_mock_test.py',
-]
-
 # Most of these suites go through -o json, and the ocp JSON printer
-# (ocp-print-json.c) is only built with json-c.
-if json_c_dep.found() and have_mock_nvme
+# (ocp-print-json.c) is only built with json-c. Without it, internal-log
+# decodes to normal text by default, which has a suite of its own.
+if json_c_dep.found()
+    ocp_mock_tests = [
+        'ocp_internal_log_event_fifo_mock_test.py',
+        'ocp_internal_log_mock_test.py',
+        'ocp_smart_add_log_mock_test.py',
+    ]
+else
+    ocp_mock_tests = [
+        'ocp_internal_log_no_json_mock_test.py',
+    ]
+endif
+
+if have_mock_nvme
     foreach t : ocp_mock_tests
         test('nvme-cli - @0@'.format(t.split('.')[0]),
              python3,
