@@ -359,8 +359,19 @@ EOF
 
 	exec_start+=" --fabrics-config ${FABRICS_CONF}"
 	exec_start+=" --creds-dir ${CRED_DIR} --debug"
+	local coverage=()
+
+	# A coverage build writes its .gcda files into ${BUILD_DIR}, which
+	# the unit's hardening makes inaccessible. ${BUILD_DIR} belongs to
+	# the user who built it, so root also needs CAP_DAC_OVERRIDE.
+	if compgen -G "${BUILD_DIR}/keysd/nvme-keysd.p/*.gcno" >/dev/null; then
+		coverage=(-e "s|^ProtectHome=.*|ProtectHome=read-only|"
+			  -e "s|^CapabilityBoundingSet=.*|CapabilityBoundingSet=CAP_DAC_OVERRIDE|"
+			  -e "/^ExecStart=/a ReadWritePaths=${BUILD_DIR}")
+	fi
 	sed -e "s|^ExecStart=.*|ExecStart=${exec_start}|" \
 	    -e "/^ConfigurationDirectory/d" \
+	    "${coverage[@]}" \
 		"${KEYSD_UNIT_FILE}" > "${UNIT_FILE}"
 	systemctl daemon-reload
 }
