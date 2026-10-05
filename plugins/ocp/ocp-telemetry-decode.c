@@ -361,27 +361,28 @@ int get_telemetry_das_offset_and_size(
 	else
 		return -1;
 
+	__u16 da1_last_block = le16_to_cpu(ptelemetry_common_header->da1_last_block);
+	__u16 da2_last_block = le16_to_cpu(ptelemetry_common_header->da2_last_block);
+	__u16 da3_last_block = le16_to_cpu(ptelemetry_common_header->da3_last_block);
+	__u32 da4_last_block = le32_to_cpu(ptelemetry_common_header->da4_last_block);
+
 	ptelemetry_das_offset->da1_start_offset = ptelemetry_das_offset->header_size;
-	ptelemetry_das_offset->da1_size = ptelemetry_common_header->da1_last_block *
-		OCP_TELEMETRY_DATA_BLOCK_SIZE;
+	ptelemetry_das_offset->da1_size = da1_last_block * OCP_TELEMETRY_DATA_BLOCK_SIZE;
 
 	ptelemetry_das_offset->da2_start_offset = ptelemetry_das_offset->da1_start_offset +
 		ptelemetry_das_offset->da1_size;
 	ptelemetry_das_offset->da2_size =
-		(ptelemetry_common_header->da2_last_block -
-		ptelemetry_common_header->da1_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
+		(da2_last_block - da1_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
 
 	ptelemetry_das_offset->da3_start_offset = ptelemetry_das_offset->da2_start_offset +
 		ptelemetry_das_offset->da2_size;
 	ptelemetry_das_offset->da3_size =
-		(ptelemetry_common_header->da3_last_block -
-		ptelemetry_common_header->da2_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
+		(da3_last_block - da2_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
 
 	ptelemetry_das_offset->da4_start_offset = ptelemetry_das_offset->da3_start_offset +
 		ptelemetry_das_offset->da3_size;
 	ptelemetry_das_offset->da4_size =
-		(ptelemetry_common_header->da4_last_block -
-		ptelemetry_common_header->da3_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
+		(da4_last_block - da3_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
 
 	return 0;
 }
@@ -411,7 +412,7 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 
 	//Calculating the sizes of the tables. Note: Data is present in the form of DWORDS,
 	//So multiplying with sizeof(DWORD)
-	unsigned long long sits_table_size = (pocp_ts_header->sitsz) * SIZE_OF_DWORD;
+	unsigned long long sits_table_size = le64_to_cpu(pocp_ts_header->sitsz) * SIZE_OF_DWORD;
 
 	//Calculating number of entries present in all 3 tables
 	int sits_entries = (int)sits_table_size /
@@ -421,14 +422,15 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 		struct nvme_ocp_statistics_identifier_string_table
 			*peach_statistic_entry =
 			(struct nvme_ocp_statistics_identifier_string_table *)
-			(pstring_buffer + (pocp_ts_header->sits * SIZE_OF_DWORD) +
+			(pstring_buffer + (le64_to_cpu(pocp_ts_header->sits) * SIZE_OF_DWORD) +
 			(sits_entry *
 			sizeof(struct nvme_ocp_statistics_identifier_string_table)));
 
-		if (identifier == (int)peach_statistic_entry->vs_statistic_identifier) {
+		if (identifier ==
+		    (int)le16_to_cpu(peach_statistic_entry->vs_statistic_identifier)) {
 			char *pdescription = (char *)(pstring_buffer +
-				(pocp_ts_header->ascts * SIZE_OF_DWORD) +
-				(peach_statistic_entry->ascii_id_offset *
+				(le64_to_cpu(pocp_ts_header->ascts) * SIZE_OF_DWORD) +
+				(le64_to_cpu(peach_statistic_entry->ascii_id_offset) *
 				SIZE_OF_DWORD));
 			size_t copy_len = ocp_ascii_id_copy_len(
 				peach_statistic_entry->ascii_id_length);
@@ -460,7 +462,7 @@ int get_event_id_ascii_string(int identifier, int debug_event_class, char *descr
 
 	//Calculating the sizes of the tables. Note: Data is present in the form of DWORDS,
 	//So multiplying with sizeof(DWORD)
-	unsigned long long ests_table_size = (pocp_ts_header->estsz) * SIZE_OF_DWORD;
+	unsigned long long ests_table_size = le64_to_cpu(pocp_ts_header->estsz) * SIZE_OF_DWORD;
 
 	//Calculating number of entries present in all 3 tables
 	int ests_entries = (int)ests_table_size / sizeof(struct nvme_ocp_event_string_table);
@@ -468,14 +470,14 @@ int get_event_id_ascii_string(int identifier, int debug_event_class, char *descr
 	for (int ests_entry = 0; ests_entry < ests_entries; ests_entry++) {
 		struct nvme_ocp_event_string_table *peach_event_entry =
 			(struct nvme_ocp_event_string_table *)
-			(pstring_buffer + (pocp_ts_header->ests * SIZE_OF_DWORD) +
+			(pstring_buffer + (le64_to_cpu(pocp_ts_header->ests) * SIZE_OF_DWORD) +
 			(ests_entry * sizeof(struct nvme_ocp_event_string_table)));
 
-		if (identifier == (int)peach_event_entry->event_identifier &&
+		if (identifier == (int)le16_to_cpu(peach_event_entry->event_identifier) &&
 			debug_event_class == (int)peach_event_entry->debug_event_class) {
 			char *pdescription = (char *)(pstring_buffer +
-				(pocp_ts_header->ascts * SIZE_OF_DWORD) +
-				(peach_event_entry->ascii_id_offset * SIZE_OF_DWORD));
+				(le64_to_cpu(pocp_ts_header->ascts) * SIZE_OF_DWORD) +
+				(le64_to_cpu(peach_event_entry->ascii_id_offset) * SIZE_OF_DWORD));
 			size_t copy_len = ocp_ascii_id_copy_len(
 				peach_event_entry->ascii_id_length);
 
@@ -498,7 +500,8 @@ int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *de
 
 	//Calculating the sizes of the tables. Note: Data is present in the form of DWORDS,
 	//So multiplying with sizeof(DWORD)
-	unsigned long long vuests_table_size = (pocp_ts_header->vu_estsz) * SIZE_OF_DWORD;
+	unsigned long long vuests_table_size =
+		le64_to_cpu(pocp_ts_header->vu_estsz) * SIZE_OF_DWORD;
 
 	//Calculating number of entries present in all 3 tables
 	int vu_ests_entries = (int)vuests_table_size /
@@ -507,15 +510,16 @@ int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *de
 	for (int vu_ests_entry = 0; vu_ests_entry < vu_ests_entries; vu_ests_entry++) {
 		struct nvme_ocp_vu_event_string_table *peach_vu_event_entry =
 			(struct nvme_ocp_vu_event_string_table *)
-			(pstring_buffer + (pocp_ts_header->vu_ests * SIZE_OF_DWORD) +
+			(pstring_buffer + (le64_to_cpu(pocp_ts_header->vu_ests) * SIZE_OF_DWORD) +
 			(vu_ests_entry * sizeof(struct nvme_ocp_vu_event_string_table)));
 
-		if (identifier == (int)peach_vu_event_entry->vu_event_identifier &&
+		if (identifier == (int)le16_to_cpu(peach_vu_event_entry->vu_event_identifier) &&
 			debug_event_class ==
 				(int)peach_vu_event_entry->debug_event_class) {
 			char *pdescription = (char *)(pstring_buffer +
-				(pocp_ts_header->ascts * SIZE_OF_DWORD) +
-				(peach_vu_event_entry->ascii_id_offset * SIZE_OF_DWORD));
+				(le64_to_cpu(pocp_ts_header->ascts) * SIZE_OF_DWORD) +
+				(le64_to_cpu(peach_vu_event_entry->ascii_id_offset) *
+				SIZE_OF_DWORD));
 			size_t copy_len = ocp_ascii_id_copy_len(
 				peach_vu_event_entry->ascii_id_length);
 
@@ -1532,9 +1536,9 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 		event_fifo[fifo_num].event_fifo_num = fifo_num;
 		event_fifo[fifo_num].event_fifo_da = pda1_header->event_fifo_da[fifo_num];
 		event_fifo[fifo_num].event_fifo_start =
-			pda1_header->fifo_offsets[fifo_num].event_fifo_start;
+			le64_to_cpu(pda1_header->fifo_offsets[fifo_num].event_fifo_start);
 		event_fifo[fifo_num].event_fifo_size =
-			pda1_header->fifo_offsets[fifo_num].event_fifo_size;
+			le64_to_cpu(pda1_header->fifo_offsets[fifo_num].event_fifo_size);
 	}
 
 	//Parse all the FIFOs DA wise
@@ -1882,6 +1886,8 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 		return 0;
 
 	__u8 *pda1_ocp_header_offset = ptelemetry_buffer + poffsets->header_size;//512
+	struct nvme_ocp_header_in_da1 *pda1_header =
+		(struct nvme_ocp_header_in_da1 *)pda1_ocp_header_offset;
 	__u32 statistics_size = 0;
 	__u32 stats_da_1_start_dw = 0, stats_da_1_size_dw = 0;
 	__u32 stats_da_2_start_dw = 0, stats_da_2_size_dw = 0;
@@ -1889,10 +1895,8 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	char where[16];
 
 	if (poffsets->data_area == 1) {
-		__u32 stats_da_1_start = *(__u32 *)(pda1_ocp_header_offset +
-			offsetof(struct nvme_ocp_header_in_da1, da1_statistic_start));
-		__u32 stats_da_1_size = *(__u32 *)(pda1_ocp_header_offset +
-			offsetof(struct nvme_ocp_header_in_da1, da1_statistic_size));
+		__u32 stats_da_1_start = le64_to_cpu(pda1_header->da1_statistic_start);
+		__u32 stats_da_1_size = le64_to_cpu(pda1_header->da1_statistic_size);
 
 		//Data is present in the form of DWORDS, So multiplying with sizeof(DWORD)
 		stats_da_1_start_dw = (stats_da_1_start * SIZE_OF_DWORD);
@@ -1901,10 +1905,8 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 		pstats_offset = pda1_ocp_header_offset + stats_da_1_start_dw;
 		statistics_size = stats_da_1_size_dw;
 	} else if (poffsets->data_area == 2) {
-		__u32 stats_da_2_start = *(__u32 *)(pda1_ocp_header_offset +
-			offsetof(struct nvme_ocp_header_in_da1, da2_statistic_start));
-		__u32 stats_da_2_size = *(__u32 *)(pda1_ocp_header_offset +
-			offsetof(struct nvme_ocp_header_in_da1, da2_statistic_size));
+		__u32 stats_da_2_start = le64_to_cpu(pda1_header->da2_statistic_start);
+		__u32 stats_da_2_size = le64_to_cpu(pda1_header->da2_statistic_size);
 
 		stats_da_2_start_dw = (stats_da_2_start * SIZE_OF_DWORD);
 		stats_da_2_size_dw = (stats_da_2_size * SIZE_OF_DWORD);
