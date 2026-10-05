@@ -69,7 +69,12 @@ jobs:
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
             git checkout ${{ github.sha }}
-            scripts/build.sh -b release -c gcc -p
+            # A unit test failure must not skip blktests or the report.
+            build_status=0
+            scripts/build.sh -b release -c gcc -p || build_status=$?
+            if [ ! -x .build-ci/nvme ]; then
+              exit "${build_status}"
+            fi
 
             # IMPORTANT: do NOT install for coverage run
             export PATH="$PWD/.build-ci:$PATH"
@@ -99,6 +104,9 @@ jobs:
             gcovr -r . --object-directory .build-ci --xml-pretty -o coverage.xml
             cp coverage.xml ../blktests/results/coverage-blktests.xml
 
+            if [ "${build_status}" -ne 0 ]; then
+              exit "${build_status}"
+            fi
             exit "${blktests_status}"
 
       - name: Run nvme-cli tests in VM
@@ -122,6 +130,8 @@ jobs:
             git checkout ${{ github.sha }}
             CONTROLLER=$(echo "${BDEV0}" | sed 's/n[0-9]*$//')
 
+            # Copy the report also when a test fails.
+            build_status=0
             scripts/build.sh -b release -c gcc -p \
                 --e2e-controller "${CONTROLLER}" \
                 --e2e-ns1 "${BDEV0}" \
@@ -129,9 +139,12 @@ jobs:
                 --e2e-log-level "DEBUG" \
                 --e2e-nvme-bin "/nvme-cli/.build-ci/nvme" \
                 --plugin-tests ocp,micron \
-                tests
+                tests || build_status=$?
 
-            cp coverage.xml tests/nvmetests/coverage-nvmetests.xml
+            if [ -f coverage.xml ]; then
+              cp coverage.xml tests/nvmetests/coverage-nvmetests.xml
+            fi
+            exit "${build_status}"
 
             EOF
 
