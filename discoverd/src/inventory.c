@@ -131,8 +131,22 @@ static void tid_list_take(struct tid_list *l, struct libnvmf_tid **tids)
 
 	if (!tids)
 		return;
+	for (i = 0; tids[i]; i++) {
+		if (tid_list_append(l, tids[i]) < 0)
+			tid_free(tids[i]);
+	}
+	free(tids);
+}
+
+/* Free the NULL-terminated @tids and every TID in it. */
+static void tids_free(struct libnvmf_tid **tids)
+{
+	size_t i;
+
+	if (!tids)
+		return;
 	for (i = 0; tids[i]; i++)
-		tid_list_append(l, tids[i]);
+		tid_free(tids[i]);
 	free(tids);
 }
 
@@ -164,11 +178,11 @@ void inventory_update_dlp(struct inventory *inv,
 		 */
 		e = calloc(1, sizeof(*e));
 		if (!e)
-			return;
+			goto free_tids;
 		e->dc_tid = libnvmf_tid_dup(dc_tid);
 		if (!e->dc_tid) {
 			free(e);
-			return;
+			goto free_tids;
 		}
 		list_add(&inv->dlp_cache, &e->entry);
 	} else {
@@ -183,6 +197,11 @@ void inventory_update_dlp(struct inventory *inv,
 	/* Take ownership of both arrays (per inventory.h contract). */
 	tid_list_take(&e->iocs, iocs);
 	tid_list_take(&e->referrals, referrals);
+	return;
+
+free_tids:
+	tids_free(iocs);
+	tids_free(referrals);
 }
 
 /*
