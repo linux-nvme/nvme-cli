@@ -9,10 +9,13 @@
 ignore:
   - 'subprojects'
   - 'ccan'
+  - '.build-ci'
   - 'tests'
-  - 'libnvme/test'
-  - 'libnvme/libnvme/tests'
+  - 'libnvme/tests'
   - 'libnvme/examples'
+  - 'shared/tests'
+  - 'discoverd/tests'
+  - 'keysd/tests'
 
 coverage:
   status:
