@@ -173,16 +173,16 @@ jobs:
 
             exit $podman_exit
 
-      #The nvme-discoverd integration test drives the daemon through
-      #systemd-run/systemctl, so it runs directly in the VM, not in a
-      #container. It only uses nvmet-tcp on loopback and a local veth
-      #pair for the mDNS phases, no host devices.
-      - name: Run nvme-discoverd tests in VM
+      #The nvme-discoverd and nvme-keysd integration tests drive the
+      #daemons through systemd-run/systemctl, so they run directly in the
+      #VM, not in a container. They only use nvmet-tcp on loopback and a
+      #local veth pair for the mDNS phases, no host devices.
+      - name: Run daemon tests in VM
         if: success() || failure()
         uses: ./.github/actions/kubevirt-action
         with:
           kernel_version: linus-master
-          vm_artifact_upload_dir: nvme-cli/discoverd-results/
+          vm_artifact_upload_dir: nvme-cli/daemon-results/
           run_cmds: |
             set -e
             set -x
@@ -192,17 +192,18 @@ jobs:
 
             sudo dnf install -y gcc meson git kmod iproute systemd \
             systemd-devel json-c-devel openssl-devel keyutils-libs-devel \
-            dbus-devel gcovr avahi avahi-tools
+            dbus-devel gcovr avahi avahi-tools ktls-utils
 
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
             git checkout ${{ github.sha }}
 
             # Enable explicitly so a missing or too old libsystemd fails
-            # the build instead of silently skipping nvme-discoverd or
-            # its mDNS support.
+            # the build instead of silently skipping a daemon or the mDNS
+            # support of nvme-discoverd.
             meson setup .build-ci --buildtype=release \
-                -Dnvme-discoverd=enabled -Dmdns=enabled -Db_coverage=true
+                -Dnvme-discoverd=enabled -Dmdns=enabled \
+                -Dnvme-keysd=enabled -Db_coverage=true
             meson compile -C .build-ci
 
             # Test link for the mDNS phases. The mDNS traffic stays on
@@ -217,20 +218,27 @@ jobs:
             # systemd-resolved.
             sudo systemctl start avahi-daemon systemd-resolved
 
-            mkdir -p discoverd-results
+            mkdir -p daemon-results
             set +e
             set -o pipefail
             sudo env BUILD_DIR="$PWD/.build-ci" \
                 discoverd/tests/wringer.sh -y wmd0 2>&1 |
-                tee discoverd-results/wringer.log
-            wringer_status=$?
+                tee daemon-results/discoverd-wringer.log
+            discoverd_status=$?
+            sudo env BUILD_DIR="$PWD/.build-ci" \
+                keysd/tests/wringer.sh -y 2>&1 |
+                tee daemon-results/keysd-wringer.log
+            keysd_status=$?
             set -e
 
             sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
             gcovr -r . --object-directory .build-ci --xml-pretty \
-                -o discoverd-results/coverage-discoverd.xml
+                -o daemon-results/coverage-daemons.xml
 
-            exit "${wringer_status}"
+            if [ "${discoverd_status}" -ne 0 ]; then
+              exit "${discoverd_status}"
+            fi
+            exit "${keysd_status}"
 
   codecov-upload:
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
