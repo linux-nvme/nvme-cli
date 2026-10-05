@@ -967,6 +967,11 @@ static int nvme_connect_config(nvme_root_t r, const char *hostnqn, const char *h
 				    strcmp(transport, "fc"))
 					continue;
 
+				/* Are duplicate connections allowed on existing controller */
+				if (nvme_ctrl_get_name(c) &&
+				    !nvme_ctrl_get_config(c)->duplicate_connect)
+					continue;
+
 				err = nvmf_connect_ctrl(c);
 				if (err) {
 					if (errno == ENVME_CONNECT_ALREADY)
