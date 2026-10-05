@@ -25,6 +25,8 @@ DESCRIPTION
 Conditionally retrieves 07h Telemetry Host-Initiated log, C9h OCP Strings Log
 from an NVMe device or from user-specified file path. Takes retrieved logs and
 decodes (or) parses into human-readable output format specified by user.
+Without --output-format, the report is written as JSON to <file>.json, or as
+normal text to <file>.txt when nvme-cli is built without json-c.
 
 The <device> parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
