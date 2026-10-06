@@ -103,11 +103,14 @@ BASE ?= master
 .PHONY: checkpatch
 checkpatch:
 	@[ -f ${CHECKPATCH} ] || curl -sSf ${CHECKPATCH_URL} -o ${CHECKPATCH}
-	perl ${CHECKPATCH} --git ${BASE}..HEAD
+	perl ${CHECKPATCH} --git ${BASE}..HEAD 2>&1 | \
+		perl scripts/checkpatch-filter.pl
 
 # make checkpatch-diff  → check staged/unstaged changes + untracked files
 .PHONY: checkpatch-diff
 checkpatch-diff:
 	@[ -f ${CHECKPATCH} ] || curl -sSf ${CHECKPATCH_URL} -o ${CHECKPATCH}
-	git diff HEAD | perl ${CHECKPATCH} -
-	@git ls-files --others --exclude-standard | xargs -r -I{} perl ${CHECKPATCH} --file {}
+	{ git diff HEAD | perl ${CHECKPATCH} - ; \
+	  git ls-files --others --exclude-standard | \
+		xargs -r -I{} perl ${CHECKPATCH} --file {} ; } 2>&1 | \
+		perl scripts/checkpatch-filter.pl

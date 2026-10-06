@@ -27,28 +27,10 @@ jobs:
     # one patch makes the author's Signed-off-by in every commit after
     # the first a "Duplicate signature".
     #
-    # checkpatch doesn't recognize __cleanup_* declarations (e.g.
-    # __cleanup_free, __cleanup_fd) as variable declarations, so it
-    # misreports "Missing a blank line after declarations" whenever one
-    # sits next to another declaration. Known false positive: drop it
-    # before deciding pass/fail. checkpatch's own exit code is ignored
-    # in favor of checking the filtered output for anything real left.
+    # scripts/checkpatch-filter.pl drops known false positives and sets
+    # the exit status. The shell does not use pipefail, so checkpatch's
+    # own exit status is ignored.
     - name: Run checkpatch review
       run: |
-        perl checkpatch.pl --git origin/${{ github.base_ref }}..HEAD \
-          > checkpatch.log 2>&1 || true
-        perl -ne '
-          if (/^WARNING: Missing a blank line after declarations/) {
-            $warning = $_;
-            $context = <>;
-            $prev = <>;
-            $cur = <>;
-            if ($prev =~ /__cleanup/ || $cur =~ /__cleanup/) {
-              next;
-            }
-            print $warning, $context, $prev, $cur;
-            next;
-          }
-          print;
-        ' checkpatch.log | tee checkpatch-filtered.log
-        ! grep -qE '^(ERROR|WARNING):' checkpatch-filtered.log
+        perl checkpatch.pl --git origin/${{ github.base_ref }}..HEAD 2>&1 |
+          perl scripts/checkpatch-filter.pl
