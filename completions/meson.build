@@ -18,10 +18,12 @@ install_data(
     'bash-nvme-completion.sh',
     rename: 'nvme',
     install_dir: datadir / 'bash-completion/completions',
+    install_tag: 'runtime',
 )
 install_data(
     '_nvme',
     install_dir: datadir / 'zsh/site-functions',
+    install_tag: 'runtime',
 )
 
 # The metadata dump lives in the "utils" plugin and needs json-c, and the

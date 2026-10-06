@@ -46,6 +46,7 @@ executable(
     ],
     install: true,
     install_dir: sbindir,
+    install_tag: 'nvme-discoverd',
 )
 
 if get_option('tests')
@@ -58,6 +59,7 @@ configure_file(
     configuration: substs,
     install: true,
     install_dir: systemddir,
+    install_tag: 'nvme-discoverd',
 )
 
 # Unlike nvme-fabrics.conf (re-read on every connect/connect-all/discover,
@@ -71,4 +73,5 @@ configure_file(
     configuration: substs,
     install: true,
     install_dir: sysconfdir / 'nvme',
+    install_tag: 'nvme-discoverd',
 )

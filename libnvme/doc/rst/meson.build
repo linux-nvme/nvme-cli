@@ -28,6 +28,7 @@ if want_docs != 'false'
                     ],
                     install: true,
                     install_dir: rstdir,
+                    install_tag: 'doc',
                 )
                 doc_tgts += rst
             endforeach
