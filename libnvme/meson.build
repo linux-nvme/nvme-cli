@@ -46,7 +46,9 @@ if want_libnvme
             input:         'sysfiles/udev/rules.d/70-nvmf-registry.rules.in',
             output:        '70-nvmf-registry.rules',
             configuration: substs,
+            install:       true,
             install_dir:   udevrulesdir,
+            install_tag:   'nvmf',
         )
     endif
 

@@ -771,6 +771,7 @@ if want_nvme
         configuration: substs,
         install: true,
         install_dir: join_paths(sysconfdir, 'nvme'),
+        install_tag: 'nvmf',
     )
 
     if want_nvmf_autoconnect
@@ -785,6 +786,7 @@ if want_nvme
                 configuration: substs,
                 install: true,
                 install_dir: dracutrulesdir,
+                install_tag: 'nvmf-autoconnect',
             )
         endforeach
 
@@ -803,30 +805,32 @@ if want_nvme
                 configuration: substs,
                 install: true,
                 install_dir: systemddir,
+                install_tag: 'nvmf-autoconnect',
             )
         endforeach
     endif
 
     # These rules provision keys and tune vendor devices; kept regardless of
     # which NVMe-oF autoconnect mechanism (if any) is in use.
-    udev_files = [
-        '65-persistent-net-nbft.rules',
-        '70-nvmf-keys.rules',
-        '71-nvmf-hpe.rules',
-        '71-nvmf-netapp.rules',
-        '71-nvmf-vastdata.rules',
-    ]
+    udev_files = {
+        '65-persistent-net-nbft.rules': 'nvmf',
+        '70-nvmf-keys.rules':           'nvmf-autoconnect',
+        '71-nvmf-hpe.rules':            'nvmf',
+        '71-nvmf-netapp.rules':         'nvmf',
+        '71-nvmf-vastdata.rules':       'nvmf',
+    }
     if want_nvmf_autoconnect
-        udev_files += '70-nvmf-autoconnect.rules'
+        udev_files += {'70-nvmf-autoconnect.rules': 'nvmf-autoconnect'}
     endif
 
-    foreach file : udev_files
+    foreach file, tag : udev_files
         configure_file(
             input: 'nvmf-autoconnect/udev-rules/' + file + '.in',
             output: file,
             configuration: substs,
             install: true,
-            install_dir: udevrulesdir
+            install_dir: udevrulesdir,
+            install_tag: tag,
         )
     endforeach
 
@@ -842,7 +846,8 @@ if want_nvme
                 configuration: substs,
                 install: true,
                 install_mode: 'rwxr-xr-x',
-                install_dir: nmdispatchdir
+                install_dir: nmdispatchdir,
+                install_tag: 'nvmf-autoconnect',
             )
         endforeach
     endif
@@ -885,6 +890,19 @@ if doc_tgts.length() == 0
 endif
 
 alias_target('docs', doc_tgts)
+
+# Every installed file needs an install tag; see Documentation/BUILDING.md.
+py3_prog = find_program('python3', required: false)
+if want_tests and py3_prog.found()
+    test(
+        'nvme-cli - install-tags',
+        py3_prog,
+        args: [
+            files('scripts/check-install-tags.py'),
+            meson.project_build_root(),
+        ],
+    )
+endif
 
 
 ################################################################################

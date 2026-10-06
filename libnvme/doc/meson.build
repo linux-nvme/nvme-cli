@@ -90,6 +90,7 @@ if want_docs != 'false'
                         ],
                         install: true,
                         install_dir: mandir,
+                        install_tag: 'man',
                     )
                 endforeach
             endforeach
@@ -98,7 +99,7 @@ if want_docs != 'false'
                 list_pre_compiled = find_program(top_source_dir + 'scripts/list-pre-compiled.sh')
                 m = run_command(list_pre_compiled, check: true)
                 man_pages = m.stdout().strip().split('\n')
-                install_data(man_pages, install_dir: mandir)
+                install_data(man_pages, install_dir: mandir, install_tag: 'man')
             endif
         endif
     endif
@@ -118,7 +119,8 @@ if want_docs != 'false'
                     '@OUTDIR@' + '/html',
                 ],
                 install: true,
-                install_dir: htmldir
+                install_dir: htmldir,
+                install_tag: 'doc',
             )
         else
             # The HTML doc is not ready yet.

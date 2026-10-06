@@ -32,6 +32,7 @@ if want_python
         ],
         install: true,
         install_dir: [python3.get_install_dir(pure: false, subdir: libnvme_api_name), false],
+        install_tag: ['python-runtime', 'python-runtime'],
     )
     nvme_py = pymod_swig[0]
     nvme_wrap_c = pymod_swig[1]
@@ -42,6 +43,7 @@ if want_python
         dependencies: [config_dep, ccan_dep, libnvme_dep, py3_dep],
         include_directories: include_directories('.'),
         install: true,
+        install_tag: 'python-runtime',
         subdir: libnvme_api_name,
     )
 
@@ -63,23 +65,21 @@ if want_python
         },
     )
 
-    # Little hack to copy a list of files [__init__.py, etc.] to the build
-    # directory. This is needed to create the proper directory layout to run the
-    # tests. It's a hack because we don't really "configure" files and we could
-    # simply install directly from the source tree with:
-    #   python3.install_sources(files, pure:false, subdir:'libnvme')
-    # However, since we need these files in the build directory to run the tests
-    # we resort to this hack to copy them.
-    files = ['__init__.py', '_exceptions.py']
-    foreach file: files
+    # The tests import libnvme3 from the build directory, so the package
+    # files must be there next to _nvme.so.
+    py_sources = [
         configure_file(
-            input:  file,
-            output: file,
+            input:  '__init__.py',
+            output: '__init__.py',
             configuration: conf,
-            install_dir: python3.get_install_dir(pure: false,
-                                                 subdir: libnvme_api_name),
-        )
-    endforeach
+        ),
+        configure_file(
+            input:  '_exceptions.py',
+            output: '_exceptions.py',
+            copy:   true,
+        ),
+    ]
+    python3.install_sources(py_sources, pure: false, subdir: libnvme_api_name)
 
     # Set the PYTHONPATH so that we can run the 
     # tests directly from the build directory.
