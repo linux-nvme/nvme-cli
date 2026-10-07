@@ -20,16 +20,18 @@ struct inventory;
 struct inventory *inventory_new(void);
 void inventory_free(struct inventory *inv);
 
+#define NBFT_SYSFS_PATH "/sys/firmware/acpi/tables"
+
 /*
- * Populate the NBFT DC/IOC sets from the firmware NBFT ACPI table. Call
- * once at startup; the NBFT itself does not change at runtime, so unlike
- * inventory_load_config() this never needs a rebuild. A missing/absent
- * NBFT is not an error. A candidate that names no host gets @dctx's default
- * identity.
+ * Populate the NBFT DC/IOC sets from the NBFT ACPI tables in @path,
+ * normally NBFT_SYSFS_PATH. Call once at startup; the NBFT itself does
+ * not change at runtime, so unlike inventory_load_config() this never
+ * needs a rebuild. A missing/absent NBFT is not an error. A candidate
+ * that names no host gets @dctx's default identity.
  * Returns 0 on success, negative errno on failure.
  */
 int inventory_load_nbft(struct inventory *inv,
-			const struct discoverd_ctx *dctx);
+			const struct discoverd_ctx *dctx, char *path);
 
 /*
  * Rebuild the config DC/IOC sets from the resolved fabrics configuration

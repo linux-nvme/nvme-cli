@@ -62,6 +62,10 @@ test('nvme-discoverd - netif', test_netif)
 test_inventory = executable(
     'test-inventory',
     ['test-inventory.c', '../src/inventory.c', '../src/tid.c'],
+    c_args: [
+        '-DNBFT_TABLES="@0@"'.format(
+            meson.project_source_root() / 'libnvme/tests/nbft/tables'),
+    ],
     include_directories: discoverd_inc,
     dependencies: [
         ccan_dep,

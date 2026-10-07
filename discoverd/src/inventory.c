@@ -478,8 +478,6 @@ static char *uri_transport(const char *uri)
 	return end ? strndup(plus, (size_t)(end - plus)) : strdup(plus);
 }
 
-#define NBFT_SYSFS_PATH "/sys/firmware/acpi/tables"
-
 static bool uuid_is_null(const unsigned char uuid[NVME_UUID_LEN])
 {
 	static const unsigned char null_uuid[NVME_UUID_LEN];
@@ -569,14 +567,13 @@ static void load_one_nbft(struct inventory *inv,
 }
 
 int inventory_load_nbft(struct inventory *inv,
-			const struct discoverd_ctx *dctx)
+			const struct discoverd_ctx *dctx, char *path)
 {
-	char *nbft_path = NBFT_SYSFS_PATH;
 	struct nbft_file_entry *head = NULL;
 	struct nbft_file_entry *e;
 	int ret;
 
-	ret = libnvmf_nbft_read_files(dctx->nvme_ctx, nbft_path, &head);
+	ret = libnvmf_nbft_read_files(dctx->nvme_ctx, path, &head);
 	if (ret)
 		return 0; // no NBFT is not an error
 

@@ -1776,7 +1776,7 @@ int main(int argc, char **argv)
 		return 1;
 
 	if (ctx.cfg->nbft)
-		inventory_load_nbft(ctx.inventory, &ctx);
+		inventory_load_nbft(ctx.inventory, &ctx, NBFT_SYSFS_PATH);
 	inventory_load_config(ctx.inventory, &ctx);
 	load_saved();
 
