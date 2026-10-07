@@ -1337,6 +1337,16 @@ publish_start
 sleep 3
 assert_not_connected "no TXT record: not connected" "${MDNS_NQN}"
 
+phase "an advertised discovery NQN is used"
+#
+# The TXT record's nqn= key names the DC's discovery NQN. nvme-discoverd
+# connects with it when the kernel accepts the "discovery" option.
+mdns_phase_reset
+mdns_port_open
+publish_start "p=tcp" "nqn=nqn.2014-08.org.nvmexpress.discovery"
+assert_connected "connects the subsystem behind the advertised DC" \
+	"${MDNS_NQN}" 30
+
 phase "an rdma DC is not checked first"
 #
 # No RDMA hardware is needed: the test only checks that the connect is
