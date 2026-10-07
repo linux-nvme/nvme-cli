@@ -175,6 +175,9 @@ NL_PORT_ID=8
 MAP_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:mapped
 MAP_PORT=8016
 MAP_PORT_ID=9
+REF_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:referral
+REF_PORT=8017
+REF_PORT_ID=10
 
 # mDNS phases only. Advertised through mDNS, on ${IFACE}'s address. The
 # port is opened and closed per phase, so a phase can advertise a DC whose
@@ -295,6 +298,21 @@ nvmet_add_port() {
 	       "${port_dir}/subsystems/${nqn}"
 }
 
+# Port $1 lists a referral to the discovery port $2, whose port ID is $3.
+nvmet_add_referral() {
+	local id="$1" trsvcid="$2" portid="$3"
+	local ref_dir="/sys/kernel/config/nvmet/ports/${id}/referrals/${trsvcid}"
+
+	log "nvmet: port ID ${id} refers to ${TRADDR}:${trsvcid}"
+	mkdir -p "${ref_dir}"
+	echo "${TRADDR}" > "${ref_dir}/addr_traddr"
+	echo tcp > "${ref_dir}/addr_trtype"
+	echo "${trsvcid}" > "${ref_dir}/addr_trsvcid"
+	echo ipv4 > "${ref_dir}/addr_adrfam"
+	echo "${portid}" > "${ref_dir}/addr_portid"
+	echo 1 > "${ref_dir}/enable"
+}
+
 nvmet_setup() {
 	modprobe -a nvmet nvmet-tcp nvme-tcp
 	nvmet_add_subsystem "${TARGET_NQN}"
@@ -309,15 +327,17 @@ nvmet_teardown() {
 	local id nqn
 
 	log "nvmet: tear down"
+	rmdir /sys/kernel/config/nvmet/ports/*/referrals/* 2>/dev/null
 	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}" \
 		  "${V6_PORT_ID}" "${LL_PORT_ID}" "${REL_PORT_ID}" \
-		  "${MDNS_PORT_ID}" "${NL_PORT_ID}" "${MAP_PORT_ID}"; do
+		  "${MDNS_PORT_ID}" "${NL_PORT_ID}" "${MAP_PORT_ID}" \
+		  "${REF_PORT_ID}"; do
 		rm -f /sys/kernel/config/nvmet/ports/"${id}"/subsystems/*
 		rmdir "/sys/kernel/config/nvmet/ports/${id}" 2>/dev/null
 	done
 	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}" \
 		   "${V6_NQN}" "${LL_NQN}" "${REL_NQN}" "${REL2_NQN}" \
-		   "${MDNS_NQN}" "${NL_NQN}" "${MAP_NQN}"; do
+		   "${MDNS_NQN}" "${NL_NQN}" "${MAP_NQN}" "${REF_NQN}"; do
 		local subsys_dir="/sys/kernel/config/nvmet/subsystems/${nqn}"
 
 		if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
@@ -413,6 +433,7 @@ discoverd_stop() {
 	"${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -849,6 +870,7 @@ disconnect_foreign
 "${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
 # ... and left its desired controllers saved.
 rm -f "${DESIRED_FILE}"
 
@@ -1211,6 +1233,49 @@ else
 fi
 assert_connected "the IOC is connected" "${NL_NQN}" 30
 assert_one_unit_per_device "every device has one unit"
+
+phase "a referral is followed"
+#
+# The configured DC's log page refers to a second DC. nvme-discoverd
+# connects that DC and the subsystem it lists.
+nvmet_add_subsystem "${REF_NQN}"
+nvmet_add_port "${REF_PORT_ID}" "${REF_PORT}" "${REF_NQN}"
+nvmet_add_referral "${DISC_PORT_ID}" "${REF_PORT}" "${REF_PORT_ID}"
+discoverd_stop_daemon_only
+discoverd_start
+assert_connected "connects the subsystem the referred DC lists" \
+	"${REF_NQN}" 30
+
+phase "an unreachable referred DC is given up"
+#
+# dc-giveup-timeout applies to a DC with no source of its own, such as a
+# referred DC. The poll interval is for the next phase.
+discoverd_stop_daemon_only
+printf '[Discovery]\nepcsd-poll-interval-minutes = 1\ndc-giveup-timeout = 3s\n' \
+	> "${ETC_NVME_DIR}/nvme-discoverd.conf"
+chmod a+r "${ETC_NVME_DIR}/nvme-discoverd.conf"
+log "nvmet: remove port ${REF_PORT}"
+rm -f "/sys/kernel/config/nvmet/ports/${REF_PORT_ID}/subsystems/${REF_NQN}"
+rmdir "/sys/kernel/config/nvmet/ports/${REF_PORT_ID}"
+P_START=$(date +%H:%M:%S)
+discoverd_start
+assert_journal_has "the referred DC was given up" "${P_START}" \
+	"${TRADDR}, ${REF_PORT}, .* - giving up after repeated failures" 30
+
+phase "a parked DC is polled"
+#
+# nvmet reports EPCSD=0, so the configured DC is disconnected after each
+# fetch. nvme-discoverd connects it again after
+# epcsd-poll-interval-minutes to check whether that changed.
+log "Wait up to 90 s for the poll"
+assert_journal_has "the parked DC was polled" "${P_START}" \
+	"${TRADDR}, ${DISC_PORT}, .* - EPCSD poll: reconnecting to re-check" 90
+
+log "Remove the referral and restore nvme-discoverd.conf"
+rmdir "/sys/kernel/config/nvmet/ports/${DISC_PORT_ID}/referrals/${REF_PORT}"
+rm -f "${ETC_NVME_DIR}/nvme-discoverd.conf"
+discoverd_stop_daemon_only
+discoverd_start
 
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"
