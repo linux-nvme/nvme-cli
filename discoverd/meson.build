@@ -30,7 +30,7 @@ discoverd_inc = include_directories('src')
 # Absolute path to the nvme binary that the transient units exec (units.c).
 nvme_bin_path = sbindir / 'nvme'
 
-executable(
+nvme_discoverd = executable(
     'nvme-discoverd',
     discoverd_sources,
     include_directories: discoverd_inc,
