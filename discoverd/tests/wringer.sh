@@ -621,18 +621,26 @@ journal_has() {
 	journalctl -t nvme-discoverd --since "$1" 2>/dev/null | grep -q -- "$2"
 }
 
-# Poll for up to $4 seconds (default 0) for the journal line.
+# Poll for up to $4 seconds (default 0) for the journal line. On a
+# terminal, a wait of 30 s or more shows the time left, as countdown()
+# does.
 assert_journal_has() {
 	local desc="$1" since="$2" pattern="$3" timeout="${4:-0}" waited=0
+	local show=false
 
+	[ -t 1 ] && [ "${timeout}" -ge 30 ] && show=true
 	until journal_has "${since}" "${pattern}"; do
 		if [ "${waited}" -ge "${timeout}" ]; then
+			[ "${show}" = true ] && printf "\r%*s\r" 24 ""
 			fail "${desc}"
 			return
 		fi
+		[ "${show}" = true ] &&
+			printf "\r    %3d s remaining " $((timeout - waited))
 		sleep 1
 		waited=$((waited + 1))
 	done
+	[ "${show}" = true ] && printf "\r%*s\r" 24 ""
 	pass "${desc}"
 }
 
