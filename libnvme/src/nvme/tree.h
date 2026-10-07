@@ -917,7 +917,8 @@ void libnvme_host_unref_at(struct libnvme_host *h, const char *file, int line);
  * libnvme_host_ref() - Take a reference on a host
  * @h:	struct libnvme_host object
  *
- * Pair with libnvme_host_unref().
+ * Pair with libnvme_host_unref(). LIBNVME_REF_DEBUG logs each call's
+ * file:line to stderr, independent of libnvme_set_logging_level().
  */
 #define libnvme_host_ref(h) libnvme_host_ref_at(h, __FILE__, __LINE__)
 

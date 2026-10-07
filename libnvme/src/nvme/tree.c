@@ -427,15 +427,28 @@ void __libnvme_free_host(struct libnvme_host *h)
 	free(h);
 }
 
+static void __libnvme_ref_debug_log(const char *obj, const char *action,
+		void *ptr, int refcount, const char *file, int line)
+{
+	if (!getenv("LIBNVME_REF_DEBUG"))
+		return;
+
+	fprintf(stderr, "%s:%d %s %s=%p count=%d\n",
+		file, line, action, obj, ptr, refcount);
+}
+
 __shr_public void libnvme_host_ref_at(struct libnvme_host *h,
 		const char *file, int line)
 {
 	h->refcount++;
+	__libnvme_ref_debug_log("host", "ref", h, h->refcount, file, line);
 }
 
 __shr_public void libnvme_host_unref_at(struct libnvme_host *h,
 		const char *file, int line)
 {
+	__libnvme_ref_debug_log("host", "unref", h, h->refcount - 1,
+			file, line);
 	__libnvme_free_host(h);
 }
 
