@@ -6,10 +6,16 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
+#include <nvme/lib.h>
+
+#include "ctx.h"
 #include "inventory.h"
 #include "tid.h"
 
@@ -218,8 +224,124 @@ static bool test_referral_hop_limit(void)
 	return pass;
 }
 
+/* The TID in @tids with @traddr and @subsysnqn, or NULL. */
+static const struct libnvmf_tid *find(struct libnvmf_tid **tids,
+				      const char *traddr,
+				      const char *subsysnqn)
+{
+	int i;
+
+	for (i = 0; tids && tids[i]; i++) {
+		if (shr_streq0(libnvmf_tid_get_traddr(tids[i]), traddr) &&
+		    shr_streq0(libnvmf_tid_get_subsysnqn(tids[i]), subsysnqn))
+			return tids[i];
+	}
+
+	return NULL;
+}
+
+static void free_tids(struct libnvmf_tid **tids)
+{
+	int i;
+
+	for (i = 0; tids && tids[i]; i++)
+		tid_free(tids[i]);
+	free(tids);
+}
+
+static bool check_tid(const char *name, const struct libnvmf_tid *t,
+		      const char *trsvcid, const char *host_traddr,
+		      const char *hostnqn, const char *hostid)
+{
+	bool pass = t &&
+		shr_streq0(libnvmf_tid_get_transport(t), "tcp") &&
+		shr_streq0(libnvmf_tid_get_trsvcid(t), trsvcid) &&
+		shr_streq0(libnvmf_tid_get_host_traddr(t), host_traddr) &&
+		shr_streq0(libnvmf_tid_get_hostnqn(t), hostnqn) &&
+		shr_streq0(libnvmf_tid_get_hostid(t), hostid);
+
+	printf(" - %s [%s]\n", name, pass ? "PASS" : "FAIL");
+	if (t && !pass)
+		printf("   got %s %s:%s host_traddr=%s hostnqn=%s hostid=%s\n",
+		       libnvmf_tid_get_transport(t),
+		       libnvmf_tid_get_traddr(t),
+		       libnvmf_tid_get_trsvcid(t),
+		       libnvmf_tid_get_host_traddr(t),
+		       libnvmf_tid_get_hostnqn(t),
+		       libnvmf_tid_get_hostid(t));
+	return pass;
+}
+
+/*
+ * Load the NBFT test table @name from libnvme's test data. The loader reads
+ * every NBFT* file in a directory, so the table is linked alone into a
+ * temporary one.
+ */
+static struct inventory *load_nbft(struct discoverd_ctx *dctx,
+				   const char *name)
+{
+	char dir[] = "test-nbft-XXXXXX";
+	char table[PATH_MAX], link[PATH_MAX + 8];
+	struct inventory *inv = inventory_new();
+
+	snprintf(table, sizeof(table), "%s/%s", NBFT_TABLES, name);
+	if (!inv || !mkdtemp(dir)) {
+		printf(" - setup for %s [FAIL]\n", name);
+		exit(EXIT_FAILURE);
+	}
+	snprintf(link, sizeof(link), "%s/NBFT", dir);
+	if (symlink(table, link) < 0 ||
+	    inventory_load_nbft(inv, dctx, dir) < 0) {
+		printf(" - load %s [FAIL]\n", name);
+		exit(EXIT_FAILURE);
+	}
+	unlink(link);
+	rmdir(dir);
+
+	return inv;
+}
+
+#define R660_HOSTNQN "nqn.2014-08.org.nvmexpress:uuid:4c4c4544-0044-4410-8030-b8c04f445833"
+#define R660_HOSTID  "44454c4c-4400-1044-8030-b8c04f445833"
+#define POWERSTORE   "nqn.1988-11.com.dell:powerstore:00:88b402df2d762AA7AF94"
+
+/* NBFT DCs and IOCs, with the Host Descriptor's identity and each HFI. */
+static bool test_nbft_ipv4(struct discoverd_ctx *dctx)
+{
+	struct inventory *inv = load_nbft(dctx,
+		"NBFT-Dell.PowerEdge.R660-fw1.5.5-mpath+discovery");
+	struct libnvmf_tid **dcs = inventory_desired_dcs(inv);
+	struct libnvmf_tid **iocs = inventory_desired_iocs(inv);
+	const struct libnvmf_tid *t;
+	bool pass = true;
+
+	printf("test_nbft_ipv4:\n");
+	t = find(dcs, "172.18.240.70", DISC_NQN);
+	pass &= check_tid("DC on HFI 1", t, "8009", "172.18.240.1",
+			  R660_HOSTNQN, R660_HOSTID);
+	pass &= check("DC on HFI 1 comes from the NBFT",
+		      t && inventory_is_nbft(inv, t), true);
+	t = find(dcs, "172.18.230.70", DISC_NQN);
+	pass &= check_tid("DC on HFI 2", t, "8009", "172.18.230.2",
+			  R660_HOSTNQN, R660_HOSTID);
+	t = find(iocs, "172.18.240.60", POWERSTORE);
+	pass &= check_tid("IOC on HFI 1", t, "4420", "172.18.240.1",
+			  R660_HOSTNQN, R660_HOSTID);
+	t = find(iocs, "172.18.230.61", POWERSTORE);
+	pass &= check_tid("IOC on HFI 2", t, "4420", "172.18.230.2",
+			  R660_HOSTNQN, R660_HOSTID);
+
+	free_tids(dcs);
+	free_tids(iocs);
+	inventory_free(inv);
+	return pass;
+}
+
 int main(void)
 {
+	struct discoverd_ctx dctx = {
+		.hostnqn = HOST_NQN,
+	};
 	bool pass = true;
 
 	pass &= test_discovered_dc();
@@ -227,6 +349,12 @@ int main(void)
 	pass &= test_referral_chain();
 	pass &= test_referral_loop();
 	pass &= test_referral_hop_limit();
+
+	dctx.nvme_ctx = libnvme_create_global_ctx();
+	if (!dctx.nvme_ctx)
+		exit(EXIT_FAILURE);
+	pass &= test_nbft_ipv4(&dctx);
+	libnvme_free_global_ctx(dctx.nvme_ctx);
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
