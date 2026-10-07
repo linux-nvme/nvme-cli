@@ -77,3 +77,12 @@ test_inventory = executable(
 )
 
 test('nvme-discoverd - inventory', test_inventory)
+
+test('nvme-discoverd - --help', nvme_discoverd, args: ['--help'])
+test('nvme-discoverd - unknown option', nvme_discoverd,
+     args: ['--bogus'], should_fail: true)
+test('nvme-discoverd - missing --nvme-path', nvme_discoverd,
+     args: ['--nvme-path', '/nonexistent/nvme'], should_fail: true)
+test('nvme-discoverd - missing --config', nvme_discoverd,
+     args: ['--config', '/nonexistent/nvme-discoverd.conf'],
+     should_fail: true)
