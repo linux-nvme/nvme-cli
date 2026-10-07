@@ -421,63 +421,6 @@ struct libnvmf_tid **inventory_desired_dcs(const struct inventory *inv)
 	return arr;
 }
 
-/*
- * Extract the host address from an NVMe URI of the form
- * "nvme+transport://host:port/..." or "nvme+transport://host/...".
- * Returns an allocated string or NULL.
- */
-static char *uri_host(const char *uri)
-{
-	const char *p, *end;
-
-	if (!uri)
-		return NULL;
-	p = strstr(uri, "://");
-	if (!p)
-		return NULL;
-	p += 3;
-	end = strpbrk(p, ":/");
-	return end ? strndup(p, (size_t)(end - p)) : strdup(p);
-}
-
-static char *uri_port(const char *uri)
-{
-	const char *p, *end;
-
-	if (!uri)
-		return NULL;
-	p = strstr(uri, "://");
-	if (!p)
-		return NULL;
-	p += 3;
-	p = strchr(p, ':');
-	if (!p)
-		return NULL;
-	p++;
-	end = strchr(p, '/');
-	return end ? strndup(p, (size_t)(end - p)) : strdup(p);
-}
-
-/*
- * Boot Spec 1.5.7 / Figure 20: <PROTOCOL> (the "+<trtype>" part of the
- * scheme) is mandatory in an NVMe-oF URI. Returns NULL if uri is NULL or
- * the "+<trtype>" segment is missing — callers must treat a present-but-
- * malformed URI as invalid, not default the transport.
- */
-static char *uri_transport(const char *uri)
-{
-	const char *plus, *end;
-
-	if (!uri)
-		return NULL;
-	plus = strchr(uri, '+');
-	if (!plus)
-		return NULL;
-	plus++;
-	end = strstr(plus, "://");
-	return end ? strndup(plus, (size_t)(end - plus)) : strdup(plus);
-}
-
 static bool uuid_is_null(const unsigned char uuid[NVME_UUID_LEN])
 {
 	static const unsigned char null_uuid[NVME_UUID_LEN];
@@ -512,34 +455,32 @@ static void load_one_nbft(struct inventory *inv,
 	if (nbft->discovery_list) {
 		for (i = 0; nbft->discovery_list[i]; i++) {
 			struct libnbft_discovery *d = nbft->discovery_list[i];
+			struct libnvmf_uri *uri = NULL;
+			__cleanup_free char *trsvcid = NULL;
+			const char *transport, *traddr;
 			struct libnvmf_tid *t;
-			char *traddr, *trsvcid, *transport;
-			const char *host_traddr = NULL;
+			int port;
 
 			if (!d->hfi || !d->nqn)
 				continue;
-
-			// Reject a malformed or incomplete URI.
-			transport = uri_transport(d->uri);
-			if (!transport)
+			if (libnvmf_uri_parse(d->uri, &uri) < 0)
 				continue;
 
-			traddr = uri_host(d->uri);
-			if (!traddr) {
-				free(transport);
+			// The Boot Specification requires the transport.
+			transport = libnvmf_uri_get_protocol(uri);
+			traddr = libnvmf_uri_get_host(uri);
+			port = libnvmf_uri_get_port(uri);
+			if (!transport || !traddr ||
+			    (port > 0 && asprintf(&trsvcid, "%d", port) < 0)) {
+				libnvmf_uri_free(uri);
 				continue;
 			}
 
-			trsvcid = uri_port(d->uri); // optional: NULL ok
-			host_traddr = d->hfi->tcp_info.ipaddr;
-
 			t = tid_new(transport, traddr, trsvcid, d->nqn,
-				    host_traddr, NULL, nbft->host.nqn, hostid,
-				    true);
+				    d->hfi->tcp_info.ipaddr, NULL,
+				    nbft->host.nqn, hostid, true);
 			t = with_default_host(dctx, t);
-			free(traddr);
-			free(trsvcid);
-			free(transport);
+			libnvmf_uri_free(uri);
 			if (t)
 				tid_list_append(&inv->nbft_dcs, t);
 		}
