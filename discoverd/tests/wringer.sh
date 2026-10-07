@@ -1285,6 +1285,44 @@ rm -f "${ETC_NVME_DIR}/nvme-discoverd.conf"
 discoverd_stop_daemon_only
 discoverd_start
 
+phase "a damaged desired file is read"
+#
+# nvme-discoverd skips the lines of its saved desired set that it cannot
+# parse. A "discovered" line restores a DC found by mDNS or FC. The file
+# ends without a newline.
+discoverd_stop_daemon_only
+P_CANON=$(awk -F'\t' -v port="${DISC_PORT}" \
+	'$1 == "config" && index($2, port) { print $2; exit }' \
+	"${DESIRED_FILE}")
+if [ -n "${P_CANON}" ]; then
+	pass "setup: the configured DC is in the desired file"
+else
+	fail "setup: the configured DC is in the desired file"
+fi
+printf 'garbage\ndlp\tnot-a-tid\t-\ndiscovered\t%s\t-' "${P_CANON}" \
+	>> "${DESIRED_FILE}"
+discoverd_start
+if systemctl is-active --quiet "${DISCOVERD_UNIT}"; then
+	pass "nvme-discoverd is running"
+else
+	fail "nvme-discoverd is running"
+fi
+assert_one_unit_per_device "every device has one unit"
+
+phase "an excluded controller that drops is not reconnected"
+#
+# The exclusion is added without a reload, so nvme-discoverd still tracks
+# the IOC. When the IOC drops, the exclusion list is checked again.
+printf '[exclusions]\nexclusion = nqn=%s\n' "${NL_NQN}" \
+	> "${ETC_NVME_DIR}/exclusions.conf"
+P_START=$(date +%H:%M:%S)
+disconnect_out_of_band "${NL_NQN}"
+assert_journal_has "the drop was checked against the exclusions" \
+	"${P_START}" "${NL_NQN}.* - excluded, skipping" 10
+countdown 3 "give a reconnect time to start"
+assert_not_connected "the excluded IOC is not reconnected" "${NL_NQN}"
+: > "${ETC_NVME_DIR}/exclusions.conf"
+
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"
 	results
