@@ -337,6 +337,28 @@ static bool test_nbft_ipv4(struct discoverd_ctx *dctx)
 	return pass;
 }
 
+/* An IPv6 address in a discovery URI is in brackets. */
+static bool test_nbft_ipv6_uri(struct discoverd_ctx *dctx)
+{
+	struct inventory *inv = load_nbft(dctx,
+		"NBFT-mpath+disc-ipv4+6_half");
+	struct libnvmf_tid **dcs = inventory_desired_dcs(inv);
+	const struct libnvmf_tid *t;
+	bool pass = true;
+
+	printf("test_nbft_ipv6_uri:\n");
+	t = find(dcs, "192.168.122.1", DISC_NQN);
+	pass &= check("IPv4 DC", t != NULL, true);
+	t = find(dcs, "4321::bbbb:1", DISC_NQN);
+	pass &= check("IPv6 DC", t != NULL, true);
+	pass &= check("IPv6 DC port", t &&
+		      shr_streq0(libnvmf_tid_get_trsvcid(t), "4420"), true);
+
+	free_tids(dcs);
+	inventory_free(inv);
+	return pass;
+}
+
 int main(void)
 {
 	struct discoverd_ctx dctx = {
@@ -354,6 +376,7 @@ int main(void)
 	if (!dctx.nvme_ctx)
 		exit(EXIT_FAILURE);
 	pass &= test_nbft_ipv4(&dctx);
+	pass &= test_nbft_ipv6_uri(&dctx);
 	libnvme_free_global_ctx(dctx.nvme_ctx);
 
 	fflush(stdout);
