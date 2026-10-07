@@ -1371,14 +1371,6 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *ac
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	NVME_ARGS(opts,
 		OPT_FLAG("no-uuid", 'n', NULL, no_uuid));
 
@@ -1386,7 +1378,7 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *ac
 	if (ret)
 		return ret;
 
-	ret = get_c4_log_page(hdl, cfg.output_format,
+	ret = get_c4_log_page(hdl, nvme_args.output_format,
 			      !argconfig_parse_seen(opts, "no-uuid"));
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C4h Log Page, ret = %d", ret);
