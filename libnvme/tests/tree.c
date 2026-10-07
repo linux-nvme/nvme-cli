@@ -383,6 +383,95 @@ static bool test_subsystem_iteration(void)
 	return pass;
 }
 
+/**
+ * test_host_ref_unref - libnvme_host_ref() must increment h->refcount,
+ * and libnvme_host_unref() must decrement it back down. A freshly
+ * created host starts at refcount 1 (the tree's own reference).
+ */
+static bool test_host_ref_unref(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	bool pass = true;
+
+	printf("test_host_ref_unref:\n");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	if (h->refcount != 1) {
+		printf(" - new host refcount 1, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - new host refcount 1 [PASS]\n");
+	}
+
+	libnvme_host_ref(h);
+	if (h->refcount != 2) {
+		printf(" - ref() refcount 2, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - ref() refcount 2 [PASS]\n");
+	}
+
+	libnvme_host_unref(h);
+	if (h->refcount != 1) {
+		printf(" - unref() refcount 1, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - unref() refcount 1 [PASS]\n");
+	}
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
+/**
+ * test_host_ref_survives_refresh_topology - a host with an outstanding
+ * ref must not be freed by libnvme_refresh_topology()'s unconditional
+ * free-every-host pass; it should only drop back to its pre-refresh
+ * refcount (the reference taken here is released, not the tree's own).
+ */
+static bool test_host_ref_survives_refresh_topology(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	bool pass = true;
+
+	printf("test_host_ref_survives_refresh_topology:\n");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	libnvme_host_ref(h);
+
+	libnvme_refresh_topology(ctx);
+
+	if (h->refcount != 1) {
+		printf(" - survives refresh, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - host survives refresh [PASS]\n");
+	}
+
+	libnvme_host_unref(h);
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	bool pass = true;
@@ -395,6 +484,8 @@ int main(int argc, char *argv[])
 	pass &= test_subsystem_attrs();
 	pass &= test_ns_attr_not_null();
 	pass &= test_subsystem_iteration();
+	pass &= test_host_ref_unref();
+	pass &= test_host_ref_survives_refresh_topology();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

@@ -898,6 +898,39 @@ void libnvme_host_release_fds(struct libnvme_host *h);
 void libnvme_free_host(struct libnvme_host *h);
 
 /**
+ * libnvme_host_ref_at() - libnvme_host_ref() backing function
+ * @h:		struct libnvme_host object
+ * @file:	Caller file
+ * @line:	Caller line
+ */
+void libnvme_host_ref_at(struct libnvme_host *h, const char *file, int line);
+
+/**
+ * libnvme_host_unref_at() - libnvme_host_unref() backing function
+ * @h:		struct libnvme_host object
+ * @file:	Caller file
+ * @line:	Caller line
+ */
+void libnvme_host_unref_at(struct libnvme_host *h, const char *file, int line);
+
+/**
+ * libnvme_host_ref() - Take a reference on a host
+ * @h:	struct libnvme_host object
+ *
+ * Pair with libnvme_host_unref().
+ */
+#define libnvme_host_ref(h) libnvme_host_ref_at(h, __FILE__, __LINE__)
+
+/**
+ * libnvme_host_unref() - Release a reference on a host
+ * @h:	struct libnvme_host object
+ *
+ * Frees @h once the count reaches zero. Must match every
+ * libnvme_host_ref() and the reference from libnvme_get_host().
+ */
+#define libnvme_host_unref(h) libnvme_host_unref_at(h, __FILE__, __LINE__)
+
+/**
  * libnvme_refresh_topology() - Refresh libnvme_root_t object contents
  * @ctx:		&struct libnvme_global_ctx object
  *

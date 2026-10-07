@@ -414,6 +414,9 @@ void __libnvme_free_host(struct libnvme_host *h)
 {
 	struct libnvme_subsystem *s, *_s;
 
+	if (--h->refcount > 0)
+		return;
+
 	list_del_init(&h->entry);
 	libnvme_for_each_subsystem_safe(h, s, _s)
 		__nvme_free_subsystem(s);
@@ -422,6 +425,18 @@ void __libnvme_free_host(struct libnvme_host *h)
 	free(h->kxchap_host_key);
 	libnvme_host_set_hostsymname(h, NULL);
 	free(h);
+}
+
+__shr_public void libnvme_host_ref_at(struct libnvme_host *h,
+		const char *file, int line)
+{
+	h->refcount++;
+}
+
+__shr_public void libnvme_host_unref_at(struct libnvme_host *h,
+		const char *file, int line)
+{
+	__libnvme_free_host(h);
 }
 
 __shr_public void libnvme_host_release_fds(struct libnvme_host *h)
@@ -471,6 +486,7 @@ int libnvme_create_host(struct libnvme_global_ctx *ctx,
 
 	h->hostnqn = hnqn;
 	h->hostid = hid;
+	h->refcount = 1;
 
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
