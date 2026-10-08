@@ -15,6 +15,8 @@ Tests in this module verify:
   * The page is read as LID C4h, 4096 bytes, with the OCP UUID index.
   * The fixed fields, log page version and GUID decode to the values in
     the page in text and JSON, and -o binary writes the page unchanged.
+  * FIPS 140 Validation and its status names (version 2 up), and its
+    absence below version 2.
   * A page with a different GUID is rejected.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
@@ -86,7 +88,7 @@ class TestDeviceCapabilityLog(DeviceCapabilityLogTestBase):
             with self.subTest(field=label):
                 self.assertEqual(fields[label],
                                  f'0x{layout.FIXED_FIELDS[offset]:x}')
-        self.assertEqual(fields['Log Page Version'], '0x1')
+        self.assertEqual(fields['Log Page Version'], '0x2')
         self.assertEqual(fields['Log page GUID'], GUID_TEXT)
 
     def test_fixed_fields_in_json(self):
@@ -94,15 +96,53 @@ class TestDeviceCapabilityLog(DeviceCapabilityLogTestBase):
         for offset, label in FIXED_LABELS.items():
             with self.subTest(field=label):
                 self.assertEqual(log[label], layout.FIXED_FIELDS[offset])
-        self.assertEqual(log['Log Page Version'], 1)
+        self.assertEqual(log['Log Page Version'], 2)
         self.assertEqual(log['Log page GUID'], GUID_TEXT)
 
     def test_binary_is_the_page(self):
-        page = layout.pack()
+        page = layout.pack(version=2, fips=0x0004)
         self.serve(page)
         result = self.run_c4('-o', 'binary', encoding=None)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, page)
+
+    def reports(self, page):
+        """The text and JSON reports of @page, values as strings."""
+        self.serve(page)
+        text = self.text_log()
+        log = {k: v if isinstance(v, str) else f'0x{v:x}'
+               for k, v in self.json_log().items()}
+        return {'text': text, 'json': log}
+
+    def test_fields_are_gated_on_the_log_page_version(self):
+        """FIPS 140 Validation is defined from version 2."""
+        for version in (0, 1, 2, 3):
+            page = layout.pack(version=version, fips=0x0003)
+            for mode, fields in self.reports(page).items():
+                with self.subTest(version=version, mode=mode):
+                    self.assertEqual('FIPS 140 Validation' in fields,
+                                     version >= layout.FIPS_140_MIN_VERSION)
+
+    def test_fips_140_validation_status(self):
+        """Bits 3:0 select the status; bits 15:4 are reserved."""
+        names = {
+            0x0: 'Not FIPS 140 validated and not intended to be',
+            0x1: 'Intended to be FIPS 140 validated, not yet submitted',
+            0x2: 'Submitted for FIPS 140 validation, not yet validated',
+            0x3: 'Interim FIPS 140 validation',
+            0x4: 'Full FIPS 140 validation',
+            0x5: 'Reserved',
+            0xF: 'Reserved',
+            0xFFF2: 'Submitted for FIPS 140 validation, not yet validated',
+        }
+        for fips, name in names.items():
+            for mode, fields in self.reports(
+                    layout.pack(version=2, fips=fips)).items():
+                with self.subTest(fips=fips, mode=mode):
+                    self.assertEqual(fields['FIPS 140 Validation'],
+                                     f'0x{fips:x}')
+                    self.assertEqual(fields['FIPS 140 Validation Status'],
+                                     name)
 
     def test_unknown_guid_is_rejected(self):
         """With -o json errors are reported as one JSON object, which

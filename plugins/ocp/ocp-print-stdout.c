@@ -455,6 +455,7 @@ static void stdout_c1_log(struct ocp_error_recovery_log_page *log_data)
 
 static void stdout_c4_log(struct ocp_device_capabilities_log_page *log_data)
 {
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 	int i;
 
 	printf("  Device Capability/C4 Log Page Data\n");
@@ -478,8 +479,15 @@ static void stdout_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	for (i = 0; i <= 127; i++)
 		printf("%x", log_data->dssd_pwr_state_desc[i]);
 	printf("\n");
+	if (log_page_version >= 0x2) {
+		__u16 fips = le16_to_cpu(log_data->fips_140_validation);
+
+		printf("  FIPS 140 Validation					: 0x%x\n", fips);
+		printf("    FIPS 140 Validation Status			: %s\n",
+		       ocp_c4_fips_140_status(fips));
+	}
 	printf("  Log Page Version						: 0x%x\n",
-	       le16_to_cpu(log_data->log_page_version));
+	       log_page_version);
 	printf("  Log page GUID							: 0x");
 	for (i = GUID_LEN - 1; i >= 0; i--)
 		printf("%02x", log_data->log_page_guid[i]);

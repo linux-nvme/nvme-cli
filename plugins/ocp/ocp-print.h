@@ -49,6 +49,7 @@ void ocp_c5_log(struct libnvme_transport_handle *hdl, struct unsupported_require
 		nvme_print_flags_t flags);
 void ocp_c1_log(struct ocp_error_recovery_log_page *log_data, nvme_print_flags_t flags);
 void ocp_c4_log(struct ocp_device_capabilities_log_page *log_data, nvme_print_flags_t flags);
+const char *ocp_c4_fips_140_status(__u16 fips_140_validation);
 void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
 		int total_log_page_size, nvme_print_flags_t flags);
 void ocp_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data,

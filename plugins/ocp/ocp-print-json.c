@@ -812,6 +812,7 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 {
 	struct json_object *root = json_create_object();
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 	char guid[64];
 	int i;
 
@@ -833,8 +834,14 @@ static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	for (i = 0; i <= 127; i++)
 		json_object_add_value_int(root, "DSSD Power State Descriptors",
 					  log_data->dssd_pwr_state_desc[i]);
-	json_object_add_value_int(root, "Log Page Version",
-				  le16_to_cpu(log_data->log_page_version));
+	if (log_page_version >= 0x2) {
+		__u16 fips = le16_to_cpu(log_data->fips_140_validation);
+
+		json_object_add_value_int(root, "FIPS 140 Validation", fips);
+		json_object_add_value_string(root, "FIPS 140 Validation Status",
+					     ocp_c4_fips_140_status(fips));
+	}
+	json_object_add_value_int(root, "Log Page Version", log_page_version);
 
 	memset((void *)guid, 0, 64);
 	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
