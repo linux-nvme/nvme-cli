@@ -863,7 +863,7 @@ static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 #define FIFO_ARRAY_LEN 17
 
 static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
-			int total_log_page_size)
+			size_t total_log_page_size)
 {
 	struct json_object *root = json_create_object();
 	char res_arr[RESERVED_ARRAY_LEN];
@@ -873,22 +873,21 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	char fifo_arr[FIFO_ARRAY_LEN];
 	char *fifo = fifo_arr;
 	char buf[128];
-	//calculating the index value for array
-	__le64 stat_id_index = (log_data->sitsz * 4) / 16;
-	__le64 eve_id_index = (log_data->estsz * 4) / 16;
-	__le64 vu_eve_index = (log_data->vu_eve_st_sz * 4) / 16;
-	__le64 ascii_table_index = (log_data->asctsz * 4);
-	//Calculating the offset for dynamic fields.
-	__le64 stat_id_str_table_ofst = log_data->sits * 4;
-	__le64 event_str_table_ofst = log_data->ests * 4;
-	__le64 vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
-	__le64 ascii_table_ofst = log_data->ascts * 4;
-	struct statistics_id_str_table_entry stat_id_str_table_arr[stat_id_index];
-	struct event_id_str_table_entry event_id_str_table_arr[eve_id_index];
-	struct vu_event_id_str_table_entry vu_event_id_str_table_arr[vu_eve_index];
-	__u8 ascii_table_info_arr[(2*ascii_table_index) + 2];
-	char ascii_buf[(2*ascii_table_index) + 2];
-	char *ascii = ascii_buf;
+	__u64 sits = le64_to_cpu(log_data->sits);
+	__u64 sitsz = le64_to_cpu(log_data->sitsz);
+	__u64 ests = le64_to_cpu(log_data->ests);
+	__u64 estsz = le64_to_cpu(log_data->estsz);
+	__u64 vu_eve_sts = le64_to_cpu(log_data->vu_eve_sts);
+	__u64 vu_eve_st_sz = le64_to_cpu(log_data->vu_eve_st_sz);
+	__u64 ascts = le64_to_cpu(log_data->ascts);
+	__u64 asctsz = le64_to_cpu(log_data->asctsz);
+	struct statistics_id_str_table_entry stat_entry;
+	struct event_id_str_table_entry eve_entry;
+	struct vu_event_id_str_table_entry vu_eve_entry;
+	/* nvme_show_error() would emit a second JSON document, so errors go in this one */
+	struct json_object *errors = json_create_array();
+	__u64 entries = 0, i;
+	__u8 *table;
 	int j;
 
 	json_object_add_value_int(root, "Log Page Version",
@@ -1028,97 +1027,105 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 		res += sprintf(res, "%x", log_data->reserved3[j]);
 	json_object_add_value_string(root, "Reserved 3", res_arr);
 
-	if (log_data->sitsz != 0) {
-
-		memcpy(stat_id_str_table_arr,
-		(__u8 *)log_data_buf + stat_id_str_table_ofst,
-		stat_id_index * sizeof(struct statistics_id_str_table_entry));
+	table = ocp_string_table(log_data_buf, total_log_page_size, sits, sitsz,
+				 sizeof(stat_entry), &entries);
+	if (sitsz && !table) {
+		array_add_str(errors, "Statistics Identifier String Table exceeds the log page");
+	} else if (sitsz) {
 		struct json_object *stat_table = json_create_object();
 
-		for (j = 0; j < stat_id_index; j++) {
+		for (i = 0; i < entries; i++) {
 			struct json_object *entry = json_create_object();
 
+			memcpy(&stat_entry, table + i * sizeof(stat_entry), sizeof(stat_entry));
 			json_object_add_value_uint(entry, "Vendor Specific Statistic Identifier",
-			le16_to_cpu(stat_id_str_table_arr[j].vs_si));
-			json_object_add_value_uint(entry, "Reserved",
-			le64_to_cpu(stat_id_str_table_arr[j].reserved1));
+						   le16_to_cpu(stat_entry.vs_si));
+			json_object_add_value_uint(entry, "Reserved", stat_entry.reserved1);
 			json_object_add_value_uint(entry, "ASCII ID Length",
-			le64_to_cpu(stat_id_str_table_arr[j].ascii_id_len));
+						   stat_entry.ascii_id_len);
 			json_object_add_value_uint(entry, "ASCII ID offset",
-			le64_to_cpu(stat_id_str_table_arr[j].ascii_id_ofst));
+						   le64_to_cpu(stat_entry.ascii_id_ofst));
 			json_object_add_value_uint(entry, "Reserved2",
-			le64_to_cpu(stat_id_str_table_arr[j].reserved2));
-			sprintf(buf, "Statistics Identifier String Table %d", j);
+						   le32_to_cpu(stat_entry.reserved2));
+			sprintf(buf, "Statistics Identifier String Table %"PRIu64, (uint64_t)i);
 			json_object_add_value_object(stat_table, buf, entry);
 		}
 
-		json_object_add_value_object(root,
-		"Statistics Identifier String Table", stat_table);
+		json_object_add_value_object(root, "Statistics Identifier String Table",
+					     stat_table);
 	}
 
-	if (log_data->estsz != 0) {
+	table = ocp_string_table(log_data_buf, total_log_page_size, ests, estsz,
+				 sizeof(eve_entry), &entries);
+	if (estsz && !table) {
+		array_add_str(errors, "Event String Table exceeds the log page");
+	} else if (estsz) {
 		struct json_object *eve_table = json_create_object();
 
-		memcpy(event_id_str_table_arr,
-		(__u8 *)log_data_buf + event_str_table_ofst,
-		eve_id_index * sizeof(struct event_id_str_table_entry));
-		for (j = 0; j < eve_id_index; j++) {
+		for (i = 0; i < entries; i++) {
 			struct json_object *entry = json_create_object();
 
+			memcpy(&eve_entry, table + i * sizeof(eve_entry), sizeof(eve_entry));
 			json_object_add_value_int(entry, "Debug Event Class",
-			le16_to_cpu(event_id_str_table_arr[j].deb_eve_class));
+						  eve_entry.deb_eve_class);
 			json_object_add_value_int(entry, "Event Identifier",
-			le16_to_cpu(event_id_str_table_arr[j].ei));
+						  le16_to_cpu(eve_entry.ei));
 			json_object_add_value_int(entry, "ASCII ID Length",
-			le64_to_cpu(event_id_str_table_arr[j].ascii_id_len));
+						  eve_entry.ascii_id_len);
 			json_object_add_value_int(entry, "ASCII ID offset",
-			le64_to_cpu(event_id_str_table_arr[j].ascii_id_ofst));
+						  le64_to_cpu(eve_entry.ascii_id_ofst));
 			json_object_add_value_int(entry, "Reserved",
-			le64_to_cpu(event_id_str_table_arr[j].reserved2));
-			sprintf(buf, "Event Identifier String Table Entry %d", j);
+						  le32_to_cpu(eve_entry.reserved2));
+			sprintf(buf, "Event Identifier String Table Entry %"PRIu64, (uint64_t)i);
 			json_object_add_value_object(eve_table, buf, entry);
 		}
-		json_object_add_value_object(root,
-		"Event Identifier String Table Entry",
-		eve_table);
+		json_object_add_value_object(root, "Event Identifier String Table Entry",
+					     eve_table);
 	}
 
-	if (log_data->vu_eve_st_sz != 0) {
+	table = ocp_string_table(log_data_buf, total_log_page_size, vu_eve_sts, vu_eve_st_sz,
+				 sizeof(vu_eve_entry), &entries);
+	if (vu_eve_st_sz && !table) {
+		array_add_str(errors, "VU Event String Table exceeds the log page");
+	} else if (vu_eve_st_sz) {
 		struct json_object *vu_eve_table = json_create_object();
 
-		memcpy(vu_event_id_str_table_arr,
-		(__u8 *)log_data_buf + vu_event_str_table_ofst,
-		vu_eve_index * sizeof(struct vu_event_id_str_table_entry));
-		for (j = 0; j < vu_eve_index; j++) {
+		for (i = 0; i < entries; i++) {
 			struct json_object *entry = json_create_object();
 
+			memcpy(&vu_eve_entry, table + i * sizeof(vu_eve_entry),
+			       sizeof(vu_eve_entry));
 			json_object_add_value_int(entry, "Debug Event Class",
-			le16_to_cpu(vu_event_id_str_table_arr[j].deb_eve_class));
+						  vu_eve_entry.deb_eve_class);
 			json_object_add_value_int(entry, "VU Event Identifier",
-			le16_to_cpu(vu_event_id_str_table_arr[j].vu_ei));
+						  le16_to_cpu(vu_eve_entry.vu_ei));
 			json_object_add_value_int(entry, "ASCII ID Length",
-			le64_to_cpu(vu_event_id_str_table_arr[j].ascii_id_len));
+						  vu_eve_entry.ascii_id_len);
 			json_object_add_value_int(entry, "ASCII ID offset",
-			le64_to_cpu(vu_event_id_str_table_arr[j].ascii_id_ofst));
+						  le64_to_cpu(vu_eve_entry.ascii_id_ofst));
 			json_object_add_value_int(entry, "Reserved",
-			le64_to_cpu(vu_event_id_str_table_arr[j].reserved));
-			sprintf(buf, "VU Event Identifier String Table Entry %d", j);
+						  le32_to_cpu(vu_eve_entry.reserved));
+			sprintf(buf, "VU Event Identifier String Table Entry %"PRIu64,
+				(uint64_t)i);
 			json_object_add_value_object(vu_eve_table, buf, entry);
 		}
-		json_object_add_value_object(root,
-		"VU Event Identifier String Table Entry",
-		vu_eve_table);
+		json_object_add_value_object(root, "VU Event Identifier String Table Entry",
+					     vu_eve_table);
 	}
 
-	if (log_data->asctsz != 0) {
-		memcpy(ascii_table_info_arr,
-		(__u8 *)log_data_buf + ascii_table_ofst,
-		(log_data->asctsz * 4));
-		memset((void *)ascii, 0, ascii_table_index);
-		for (j = 0; j < ascii_table_index; j++)
-			ascii += sprintf(ascii, "%c", ascii_table_info_arr[j]);
-		json_object_add_value_string(root, "ASCII Table", ascii_buf);
+	if (asctsz && !ocp_c9_table_fits(ascts, asctsz, total_log_page_size)) {
+		array_add_str(errors, "ASCII Table exceeds the log page");
+	} else if (asctsz) {
+		/* Sized, not NUL-terminated: padding between strings is part of the table. */
+		json_object_add_value_object(root, "ASCII Table",
+			json_object_new_string_len((const char *)log_data_buf + ascts * 4,
+						   (int)(asctsz * 4)));
 	}
+
+	if (json_object_array_length(errors))
+		json_object_add_value_array(root, "Errors", errors);
+	else
+		json_free_object(errors);
 
 	json_print_object(root, NULL);
 	printf("\n");

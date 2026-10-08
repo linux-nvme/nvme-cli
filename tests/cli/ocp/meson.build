@@ -13,6 +13,7 @@ if json_c_dep.found()
         'ocp_internal_log_event_fifo_mock_test.py',
         'ocp_internal_log_mock_test.py',
         'ocp_smart_add_log_mock_test.py',
+        'ocp_telemetry_string_log_mock_test.py',
     ]
 else
     ocp_mock_tests = [

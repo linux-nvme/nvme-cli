@@ -46,9 +46,9 @@ static void binary_c4_log(struct ocp_device_capabilities_log_page *log_data)
 }
 
 static void binary_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
-			  int total_log_page_size)
+			  size_t total_log_page_size)
 {
-	d_raw((unsigned char *)log_data_buf, total_log_page_size);
+	d_raw((unsigned char *)log_data_buf, (unsigned int)total_log_page_size);
 }
 
 static void binary_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
