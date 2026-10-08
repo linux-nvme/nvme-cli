@@ -46,6 +46,8 @@ Tests in this module verify:
   * Event String and VU Event String lookups match on (class,
     identifier), not identifier alone, for every class, and come from the
     VU table from class 80h up.
+  * A string log table or ASCII string that does not lie within the
+    string log leaves the event unnamed rather than being read.
   * An event of any class that runs past the end of its FIFO being
     rejected, and one that ends exactly at the end being decoded.
   * FIFO layout: FIFO naming and numbering, the data area each FIFO is
@@ -61,6 +63,7 @@ Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_internal_log_event_fifo_mock_test.py <nvme-binary> <mock-lib>
 """
+import struct
 import unittest
 
 from tests.cli.ocp.ocp_mock_test import (MODES, STR_DA_EVENT_FIFO_INFO,
@@ -1093,6 +1096,79 @@ class TestDecodeFailureExitStatus(EventFifoTestBase):
         """Defect: parse_ocp_telemetry_log() returns 0 whatever the
         printer reported."""
         self._assert_fails(layout.pack_telemetry(fifos={1: layout.Fifo(1)}))
+
+
+# Far enough past any fixture that reading there faults rather than
+# landing in some other heap allocation.
+FAR_DW = 1 << 28
+# Scaled to bytes, this wraps to 16: a size that looks small once
+# multiplied out but cannot be held by the log.
+WRAPPING_DW = (1 << 62) + 4
+
+
+class TestStringLogBounds(EventFifoTestBase):
+    """String log table starts, sizes and ASCII offsets are checked
+    against the string log file, so a bad one leaves the event unnamed
+    instead of reading past the file."""
+
+    FIFO_ID = layout.virtual_fifo_id(3, 0x12)
+
+    def _log(self, overlay=None):
+        return strings(
+            event_strings={(layout.CLASS_VIRTUAL_FIFO, 0x21): 'VFIFO EVT'},
+            vu_event_strings={(layout.CLASS_VIRTUAL_FIFO, self.FIFO_ID):
+                              'VF3.18'},
+            overlay=overlay)
+
+    def _assert_names(self, overlay, event_string='VFIFO EVT',
+                      vfifo_string='VF3.18'):
+        telemetry = one_fifo(layout.virtual_fifo_event(self.FIFO_ID, 0x21))
+        self.assert_events(telemetry, self._log(overlay), [
+            virtual_fifo(self.FIFO_ID, event_id=0x21,
+                         event_string=event_string,
+                         vfifo_string=vfifo_string,
+                         phys_string='PHYS FIFO 03'),
+        ])
+
+    def _header(self, field):
+        """The value the header field at @field holds in the unpatched
+        string log."""
+        return struct.unpack_from('<Q', self._log(), field)[0]
+
+    def test_unpatched_log_names_every_event(self):
+        self._assert_names(None)
+
+    def test_event_table_out_of_bounds(self):
+        for overlay in ({layout.STR_ESTS: struct.pack('<Q', FAR_DW)},
+                        {layout.STR_ESTSZ: struct.pack('<Q', WRAPPING_DW)}):
+            with self.subTest(overlay=overlay):
+                self._assert_names(overlay, event_string='')
+
+    def test_vu_event_table_out_of_bounds(self):
+        for overlay in ({layout.STR_VU_ESTS: struct.pack('<Q', FAR_DW)},
+                        {layout.STR_VU_ESTSZ: struct.pack('<Q', WRAPPING_DW)}):
+            with self.subTest(overlay=overlay):
+                self._assert_names(overlay, vfifo_string='')
+
+    def test_ascii_table_out_of_bounds(self):
+        for overlay in ({layout.STR_ASCTS: struct.pack('<Q', FAR_DW)},
+                        {layout.STR_ASCTSZ: struct.pack('<Q', WRAPPING_DW)}):
+            with self.subTest(overlay=overlay):
+                self._assert_names(overlay, event_string='', vfifo_string='')
+
+    def test_ascii_offset_past_the_ascii_table(self):
+        """Only the entry with the bad offset loses its name."""
+        ests = self._header(layout.STR_ESTS)
+        entry_offset = ests * layout.DWORD + 4
+        self._assert_names({entry_offset: struct.pack('<Q', FAR_DW)},
+                           event_string='')
+
+    def test_ascii_string_running_past_the_ascii_table(self):
+        """'VF3.18' is the last string in the ASCII table, so a longer
+        length runs off the end of the table and the file."""
+        vu_ests = self._header(layout.STR_VU_ESTS)
+        length_offset = vu_ests * layout.DWORD + 3
+        self._assert_names({length_offset: bytes([200])}, vfifo_string='')
 
 
 if __name__ == '__main__':

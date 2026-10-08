@@ -596,6 +596,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 //global buffers
 __u8 *ptelemetry_buffer;
 __u8 *pstring_buffer;
+size_t pstring_buffer_size;
 
 static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		int tele_type,
@@ -878,6 +879,18 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 				nvme_show_error("Failed to read string-log.");
 				return status;
 			}
+
+			/* All lookups rely on a valid string log header. */
+			if (string_buffer_size <
+			    (long)sizeof(struct nvme_ocp_telemetry_string_header)) {
+				nvme_show_error("string-log is smaller than its %zu-byte header.",
+						sizeof(struct nvme_ocp_telemetry_string_header));
+				free(pstring_buffer);
+				pstring_buffer = NULL;
+				return -EINVAL;
+			}
+
+			pstring_buffer_size = string_buffer_size;
 		}
 	} else {
 		nvme_show_error("string-log is empty.");
