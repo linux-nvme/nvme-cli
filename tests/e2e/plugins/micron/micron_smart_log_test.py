@@ -133,6 +133,12 @@ class TestMicronSmartLog(TestMicron):
         micron renders the 128-bit counters as JSON strings where core
         renders numbers, so the comparison is on decimal values rather than
         on the raw JSON.
+
+        Only the fields enumerated in _SHARED_KEYS are compared. Other
+        identically-named fields can exist on both sides too (e.g.
+        data_units_read), but those are live counters that background I/O
+        can bump between the two separate command invocations, so comparing
+        them here would be racy; they are not part of this test's contract.
         """
         micron = self._micron_json()
         core = self._core_json()
@@ -143,7 +149,7 @@ class TestMicronSmartLog(TestMicron):
             f"Expected {list(_SHARED_KEYS)} to be shared with core "
             f"log smart, got: {sorted(shared)}",
         )
-        for key in sorted(shared):
+        for key in sorted(_SHARED_KEYS):
             self.assertEqual(
                 to_decimal(micron[key]), to_decimal(core[key]),
                 f"SMART field {key!r} differs: core={core[key]!r}, "
