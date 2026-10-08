@@ -45,8 +45,8 @@ char *micron_get_ns_name(struct libnvme_transport_handle *hdl);
  * @uncorrectable_errors:	Output uncorrectable error register value
  *
  * Reads the PCIe Advanced Error Reporting (AER) correctable and
- * uncorrectable error registers for the device associated with @hdl using
- * setpci.
+ * uncorrectable error registers for the device associated with @hdl
+ * directly from its PCI config space (no setpci process involved).
  *
  * Return: 0 on success, negative errno on failure.
  */
@@ -58,7 +58,8 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
  * @hdl:	Transport handle
  *
  * Clears the PCIe AER correctable error register for the device
- * associated with @hdl by writing all ones to the register via setpci.
+ * associated with @hdl by writing all ones directly to the register in
+ * its PCI config space.
  *
  * Return: 0 on success, negative error code on failure.
  */

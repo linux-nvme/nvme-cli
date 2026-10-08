@@ -14,14 +14,17 @@ error state, and both pick their route from the drive model:
                     error counters for vs-pcie-stats and clears them for
                     clear-pcie-correctable-errors.
   M51CX/BY/CY       a vendor 0xC3 feature, for the clear command only.
-  anything else     the PCIe AER status registers, read and written with
-                    setpci, which the plugin locates through the controller's
-                    sysfs PCI address.
+  anything else     the PCIe AER status registers, read and written
+                    directly in the device's PCI config space (the
+                    "config" sysfs attribute the controller's "device"
+                    symlink resolves to), which the plugin locates by
+                    walking the PCI Express Extended Capability list.
 
 On hardware only the attached drive's route runs, and the AER route needs a
-device that exposes the AER capability.  Here the model is an input and
-setpci is shadowed on PATH by a stand-in that models the AER status
-registers, so all three routes and their failure modes are covered.
+device that exposes the AER capability. Here the model is an input and the
+fake sysfs tree's PCI device directory gets a synthetic "config" file
+modeling the AER capability and its two status registers, so all three
+routes and their failure modes are covered.
 
 Tests in this module verify:
   * Which route each model takes, and the fall-back to AER when the vendor
@@ -30,8 +33,8 @@ Tests in this module verify:
     from the AER registers, the three text layouts and the JSON form.
   * clear-pcie-correctable-errors writing all ones to the correctable status
     register, reading back zero, and staying idempotent.
-  * The failure paths: no setpci, a setpci that fails, and a controller whose
-    PCI address cannot be read.
+  * The failure paths: no AER capability at all, and a device with no PCI
+    config space to read.
   * Error handling for a non-existent device and a bad --output-format.
 
 Usage: python3 micron_pcie_errors_mock_test.py <nvme-binary> <mock-lib>
@@ -40,7 +43,6 @@ Usage: python3 micron_pcie_errors_mock_test.py <nvme-binary> <mock-lib>
 import json
 import os
 import re
-import shutil
 import struct
 from pathlib import Path
 
@@ -58,9 +60,14 @@ _FID_CLEAR_PCI_CORRECTABLE = 0xC3
 
 _JSON_KEY = "PCIE Stats"
 
-# AER registers the plugin reads, as setpci names them.
-_REG_CORRECTABLE = "ECAP_AER+0x10.L"
-_REG_UNCORRECTABLE = "ECAP_AER+0x4.L"
+# Where the plugin finds the AER capability and its status registers, per
+# the PCIe Base Specification -- the same offsets setpci used to name as
+# "ECAP_AER+0x10.L" (correctable) and "ECAP_AER+0x4.L" (uncorrectable).
+_PCI_EXT_CAP_ID_AER = 0x0001
+_AER_CAP_OFFSET = 0x100
+_AER_UNCORRECTABLE_OFFSET = _AER_CAP_OFFSET + 0x04
+_AER_CORRECTABLE_OFFSET = _AER_CAP_OFFSET + 0x10
+_CONFIG_SIZE = _AER_CORRECTABLE_OFFSET + 4
 
 # Uncorrectable fields, in the order the command emits them, with the bit each
 # occupies in the register it is decoded from and its offset in the counter
@@ -100,41 +107,6 @@ _BIT_DECODE_MODELS = ('M5407', 'M5410')
 # A model that takes the AER route and prints the raw register values.
 _GENERIC_MODEL = 'M51BX'
 
-# Stand-in for setpci. Models the AER status registers as files, so a read
-# after a clear observes the write, which is what makes the clear command's
-# read-back meaningful.
-_SETPCI = '''#!/usr/bin/env python3
-import os
-import sys
-
-STATE = {state!r}
-DEFAULTS = {defaults!r}
-
-# setpci -s <bdf> <REG>[=<VALUE>]
-request = sys.argv[3]
-with open(os.path.join(STATE, "calls"), "a") as f:
-    f.write(" ".join(sys.argv[1:]) + "\\n")
-
-if "=" in request:
-    register, value = request.split("=", 1)
-    # Writing ones to an AER status register clears the corresponding bits.
-    written = int(value, 16)
-    current = DEFAULTS.get(register, 0)
-    path = os.path.join(STATE, register)
-    if os.path.exists(path):
-        with open(path) as f:
-            current = int(f.read().strip(), 16)
-    with open(path, "w") as f:
-        f.write("%08x" % (current & ~written & 0xffffffff))
-else:
-    path = os.path.join(STATE, request)
-    if os.path.exists(path):
-        with open(path) as f:
-            print(f.read().strip())
-    else:
-        print("%08x" % DEFAULTS.get(request, 0))
-'''
-
 
 def pack_error_counters(values=()):
     """Build a struct pcie_error_counters. @values maps a field name to its
@@ -146,55 +118,51 @@ def pack_error_counters(values=()):
     return bytes(buf)
 
 
+def build_pci_config(correctable=0, uncorrectable=0):
+    """Build a minimal PCI config-space blob exposing a single PCI Express
+    Extended Capability -- Advanced Error Reporting, immediately ending the
+    list -- with its two status registers set to @correctable/@uncorrectable.
+    """
+    buf = bytearray(_CONFIG_SIZE)
+    header = _PCI_EXT_CAP_ID_AER | (1 << 16)  # version 1, next = 0 (end)
+    struct.pack_into('<I', buf, _AER_CAP_OFFSET, header)
+    struct.pack_into('<I', buf, _AER_UNCORRECTABLE_OFFSET, uncorrectable)
+    struct.pack_into('<I', buf, _AER_CORRECTABLE_OFFSET, correctable)
+    return bytes(buf)
+
+
 class PcieTestBase(TestMicronMock):
-    """Shared setpci stand-in and field decoding."""
+    """Fake PCI config space exposing (or not) the AER capability."""
 
-    def setUp(self):
-        super().setUp()
-        self.setpci_state = os.path.join(self.ipc_dir, 'setpci')
-        os.makedirs(self.setpci_state)
+    def config_path(self):
+        """Path to the fake PCI device's "config" sysfs attribute, reached
+        the same way the plugin reaches it: through the controller's
+        "device" symlink."""
+        device_link = self.sysfs_path_ctrl() / "device"
+        return Path(os.path.realpath(device_link)) / "config"
 
-    def install_setpci(self, correctable=0, uncorrectable=0):
-        """Shadow setpci with a stand-in holding these register values."""
-        defaults = {_REG_CORRECTABLE: correctable,
-                    _REG_UNCORRECTABLE: uncorrectable}
-        self.fake_tool('setpci', _SETPCI.format(state=self.setpci_state,
-                                                defaults=defaults))
+    def install_aer(self, correctable=0, uncorrectable=0):
+        """Give the fake PCI device an AER capability with these register
+        values."""
+        self.config_path().write_bytes(
+            build_pci_config(correctable, uncorrectable))
 
-    def setpci_calls(self):
-        """Return the setpci invocations the plugin made."""
-        path = os.path.join(self.setpci_state, 'calls')
-        if not os.path.exists(path):
-            return []
-        with open(path, encoding='utf-8') as f:
-            return [line.strip() for line in f if line.strip()]
+    def install_config_without_aer(self):
+        """A device with config space, but no AER capability in it."""
+        self.config_path().write_bytes(bytes(_AER_CAP_OFFSET))
 
-    def register_value(self, register, default=0):
-        """Return a register's value as the stand-in currently holds it."""
-        path = os.path.join(self.setpci_state, register)
-        if not os.path.exists(path):
+    def register_value(self, offset, default=0):
+        """Return a register's current value out of the fake config file."""
+        if not self.config_path().exists():
             return default
-        with open(path, encoding='utf-8') as f:
-            return int(f.read().strip(), 16)
+        data = self.config_path().read_bytes()
+        return struct.unpack_from('<I', data, offset)[0]
 
-    def break_pci_address(self):
-        """Leave the PCI IDs readable but the BDF unrecoverable.
+    def correctable_value(self, default=0):
+        return self.register_value(_AER_CORRECTABLE_OFFSET, default)
 
-        The model still has to be detected, so the PCI attributes have to
-        stay reachable through <ctrl>/device -- they are moved into a real
-        directory there.  get_pcie_bdf() then finds neither the address
-        attribute nor a symlink to resolve.
-        """
-        ctrl = self.sysfs_path_ctrl()
-        (ctrl / "address").unlink()
-
-        link = ctrl / "device"
-        target = Path(os.path.realpath(link))
-        link.unlink()
-        link.mkdir()
-        for attr in ("vendor", "device", "subsystem_vendor",
-                     "subsystem_device", "class"):
-            shutil.copy(target / attr, link / attr)
+    def uncorrectable_value(self, default=0):
+        return self.register_value(_AER_UNCORRECTABLE_OFFSET, default)
 
     @staticmethod
     def expected_bits(correctable, uncorrectable):
@@ -235,30 +203,35 @@ class TestMicronVsPcieStats(PcieTestBase):
     # ---------------------------------------------------------------- #
 
     def test_m5407_reads_the_vendor_counters(self):
-        """M5407 gets per-field counters from the 0xD6 command."""
+        """M5407 gets per-field counters from the 0xD6 command.
+
+        No AER capability is installed at all: if the plugin fell back to
+        it regardless, the command would fail with no config space to
+        read, and this would catch that instead of silently passing.
+        """
         self.select_model('M5407')
         self.server.vendor[OPC_VENDOR_D6] = pack_error_counters()
         self.run_plugin_cmd_check(_STATS)
 
         self.assertIn(OPC_VENDOR_D6, self.server.opcodes())
-        self.assertEqual(self.setpci_calls(), [],
-                         "the AER registers were read despite 0xD6 working")
 
     def test_other_models_read_the_aer_registers(self):
         """Off M5407 the values come from the AER registers."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
-        self.run_plugin_cmd_check(_STATS)
+        self.install_aer(correctable=0x1234, uncorrectable=0xabcd)
+        result = self.run_plugin_cmd_check(_STATS)
 
         self.assertNotIn(OPC_VENDOR_D6, self.server.opcodes())
-        self.assertEqual(len(self.setpci_calls()), 2,
-                         "expected one read of each AER status register")
+        self.assertIn("Device correctable errors detected: 0x1234",
+                      result.stdout)
+        self.assertIn("Device uncorrectable errors detected: 0xabcd",
+                      result.stdout)
 
     def test_vendor_failure_falls_back_to_the_aer_registers(self):
         """A M5407 drive rejecting 0xD6 still reports what AER knows."""
         self.select_model('M5407')
         self.server.vendor[OPC_VENDOR_D6] = SC_INVALID_FIELD
-        self.install_setpci(correctable=1 << 12)
+        self.install_aer(correctable=1 << 12)
         result = self.run_plugin_cmd_check(_STATS)
 
         self.assertIn(OPC_VENDOR_D6, self.server.opcodes())
@@ -313,8 +286,8 @@ class TestMicronVsPcieStats(PcieTestBase):
         for model in _BIT_DECODE_MODELS:
             with self.subTest(model=model):
                 self.select_model(model)
-                self.install_setpci(correctable=correctable,
-                                    uncorrectable=uncorrectable)
+                self.install_aer(correctable=correctable,
+                                  uncorrectable=uncorrectable)
                 result = self.run_plugin_cmd_check(_STATS)
 
                 self.assertEqual(self.text_fields(result.stdout), expected)
@@ -324,7 +297,7 @@ class TestMicronVsPcieStats(PcieTestBase):
         for name, bit, _ in _CORRECTABLE_FIELDS:
             with self.subTest(field=name):
                 self.select_model('M5410')
-                self.install_setpci(correctable=1 << bit)
+                self.install_aer(correctable=1 << bit)
                 stats = self.json_stats()
 
                 self.assertEqual(stats[name], 1)
@@ -337,7 +310,7 @@ class TestMicronVsPcieStats(PcieTestBase):
         for name, bit, _ in _UNCORRECTABLE_FIELDS:
             with self.subTest(field=name):
                 self.select_model('M5410')
-                self.install_setpci(uncorrectable=1 << bit)
+                self.install_aer(uncorrectable=1 << bit)
                 stats = self.json_stats()
 
                 self.assertEqual(stats[name], 1)
@@ -345,7 +318,7 @@ class TestMicronVsPcieStats(PcieTestBase):
     def test_json_always_reports_every_field(self):
         """All 16 fields appear whichever route produced the values."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
+        self.install_aer()
 
         self.assertEqual(sorted(self.json_stats()), sorted(_ALL_NAMES))
 
@@ -356,7 +329,7 @@ class TestMicronVsPcieStats(PcieTestBase):
     def test_generic_model_prints_the_raw_register_values(self):
         """A model with neither route prints the two registers in hex."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci(correctable=0x1234, uncorrectable=0xABCD)
+        self.install_aer(correctable=0x1234, uncorrectable=0xABCD)
         result = self.run_plugin_cmd_check(_STATS)
 
         self.assertIn("PCIE Stats:", result.stdout)
@@ -368,7 +341,7 @@ class TestMicronVsPcieStats(PcieTestBase):
     def test_generic_model_prints_no_named_fields(self):
         """The raw layout and the named layout are alternatives."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci(correctable=0x1234)
+        self.install_aer(correctable=0x1234)
         result = self.run_plugin_cmd_check(_STATS)
 
         self.assertEqual(self.text_fields(result.stdout), {})
@@ -378,7 +351,7 @@ class TestMicronVsPcieStats(PcieTestBase):
         for model in _BIT_DECODE_MODELS:
             with self.subTest(model=model):
                 self.select_model(model)
-                self.install_setpci(correctable=0x1234)
+                self.install_aer(correctable=0x1234)
                 result = self.run_plugin_cmd_check(_STATS)
 
                 self.assertNotIn("PCIE Stats:", result.stdout)
@@ -392,13 +365,13 @@ class TestMicronVsPcieStats(PcieTestBase):
         counter_keys = sorted(self.json_stats())
 
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
+        self.install_aer()
 
         self.assertEqual(sorted(self.json_stats()), counter_keys)
 
     def test_default_output_is_text(self):
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
+        self.install_aer()
         result = self.run_plugin_cmd_check(_STATS)
 
         with self.assertRaises(ValueError,
@@ -409,43 +382,28 @@ class TestMicronVsPcieStats(PcieTestBase):
     # Failure paths                                                    #
     # ---------------------------------------------------------------- #
 
-    def test_missing_setpci_is_reported(self):
-        """Without a working setpci the AER route cannot report anything."""
+    def test_missing_config_space_is_reported(self):
+        """With no PCI config space to read, the AER route cannot report
+        anything."""
         self.select_model(_GENERIC_MODEL)
-        self.fake_tool('setpci')
         result = self.run_plugin_cmd(_STATS)
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Failed to retrieve error count", result.stderr)
+        self.assertIn("config", result.stderr)
 
-    def test_unreadable_pci_address_is_reported(self):
-        """A controller with no PCI address has no AER registers to read."""
+    def test_missing_aer_capability_is_reported(self):
+        """Config space without an AER capability is reported, not decoded
+        as all-zero registers."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
-        self.break_pci_address()
+        self.install_config_without_aer()
         result = self.run_plugin_cmd(_STATS)
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Failed to get PCI address", result.stderr)
-
-    def test_pci_address_falls_back_to_the_device_link(self):
-        """Without the address attribute the BDF comes from the device link.
-
-        The attribute only exists on newer kernels, so the link is the
-        fallback for older ones.
-        """
-        self.select_model(_GENERIC_MODEL)
-        self.install_setpci(correctable=0x40)
-        (self.sysfs_path_ctrl() / "address").unlink()
-        result = self.run_plugin_cmd_check(_STATS)
-
-        self.assertIn("0000:03:00.0", "\n".join(self.setpci_calls()))
-        self.assertIn("Device correctable errors detected: 0x40",
-                      result.stdout)
+        self.assertIn("Device has no PCIe AER capability", result.stderr)
 
     def test_invalid_output_format_returns_error(self):
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
+        self.install_aer()
         self.check_output_format_rejected(_STATS, "notaformat")
 
     def test_bad_device_returns_error(self):
@@ -456,26 +414,26 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
     """clear-pcie-correctable-errors across its three routes."""
 
     def test_hyperscale_models_use_the_vendor_feature(self):
-        """M51CX/BY/CY clear through the 0xC3 feature, not setpci."""
+        """M51CX/BY/CY clear through the 0xC3 feature, not the AER route.
+
+        No AER capability is installed: a wrongful fall back to it would
+        fail outright instead of silently passing this test.
+        """
         for model in ('M51CX', 'M51BY', 'M51CY'):
             with self.subTest(model=model):
                 self.select_model(model)
-                self.install_setpci()
                 self.server.commands.clear()
                 result = self.run_plugin_cmd_check(_CLEAR, args="--verbose")
 
                 written = [c for c in self.server.commands
                            if c['fid'] == _FID_CLEAR_PCI_CORRECTABLE]
                 self.assertTrue(written, "the 0xC3 feature was never written")
-                self.assertEqual(self.setpci_calls(), [],
-                                 "setpci was used although 0xC3 succeeded")
                 self.assertIn("Device correctable errors cleared!",
                               result.stdout + result.stderr)
 
     def test_vendor_feature_sets_the_clear_bit(self):
         """The clear request is the top bit of the feature value."""
         self.select_model('M51CX')
-        self.install_setpci()
         self.run_plugin_cmd_check(_CLEAR)
         written = [c for c in self.server.commands
                    if c['fid'] == _FID_CLEAR_PCI_CORRECTABLE]
@@ -486,24 +444,25 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
         """M5407 clears with the 0xD6 command."""
         self.select_model('M5407')
         self.server.vendor[OPC_VENDOR_D6] = b""
-        self.install_setpci()
         result = self.run_plugin_cmd_check(_CLEAR, args="--verbose")
 
         self.assertIn(OPC_VENDOR_D6, self.server.opcodes())
-        self.assertEqual(self.setpci_calls(), [])
         self.assertIn("Device correctable errors cleared!",
                       result.stdout + result.stderr)
 
     def test_vendor_feature_failure_falls_back_to_aer(self):
-        """A drive rejecting 0xC3 still gets cleared through setpci."""
+        """A drive rejecting 0xC3 still gets cleared through the AER route."""
         self.select_model('M51CX')
         self.server.feature_status[_FID_CLEAR_PCI_CORRECTABLE] = \
             SC_INVALID_FIELD
-        self.install_setpci(correctable=0xFF)
+        self.install_aer(correctable=0xFF)
         result = self.run_plugin_cmd_check(_CLEAR)
 
-        self.assertIn(f"{_REG_CORRECTABLE}=0xffffffff",
-                      "\n".join(self.setpci_calls()))
+        # Real AER hardware clears on a write of all ones (write-1-to-clear);
+        # the fake config file is a plain file with no such behavior, so it
+        # just keeps whatever was last written -- that is enough to confirm
+        # the write happened at all, and at the right offset.
+        self.assertEqual(self.correctable_value(), 0xffffffff)
         self.assertIn("Device correctable errors detected:", result.stdout)
 
     def test_non_zero_feature_result_falls_back_to_aer(self):
@@ -515,91 +474,90 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
         """
         self.select_model('M51CX')
         self.server.features[_FID_CLEAR_PCI_CORRECTABLE] = 1
-        self.install_setpci(correctable=0xFF)
+        self.install_aer(correctable=0xFF)
         self.run_plugin_cmd_check(_CLEAR)
 
-        self.assertIn(f"{_REG_CORRECTABLE}=0xffffffff",
-                      "\n".join(self.setpci_calls()))
+        self.assertEqual(self.correctable_value(), 0xffffffff)
 
-    def test_aer_route_writes_all_ones_then_reads_back(self):
-        """Clearing writes ones to every bit, then reports what remains."""
+    def test_aer_route_writes_all_ones_to_the_correctable_register(self):
+        """Clearing writes ones to every bit of the correctable register,
+        then reports back whatever is at that offset.
+
+        Real AER hardware clears on such a write (write-1-to-clear), making
+        a real readback come back 0; the fake config file is a plain file
+        with no such behavior, so it just echoes back what was written.
+        """
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci(correctable=0x1234)
+        self.install_aer(correctable=0x1234)
         result = self.run_plugin_cmd_check(_CLEAR)
-        calls = self.setpci_calls()
 
-        self.assertEqual(len(calls), 2, f"unexpected setpci calls: {calls}")
-        self.assertIn(f"{_REG_CORRECTABLE}=0xffffffff", calls[0])
-        self.assertTrue(calls[1].endswith(_REG_CORRECTABLE),
-                        f"the register was not read back: {calls[1]}")
-        self.assertEqual(self.register_value(_REG_CORRECTABLE), 0)
-        self.assertIn("Device correctable errors detected: 00000000",
+        self.assertEqual(self.correctable_value(), 0xffffffff)
+        self.assertIn("Device correctable errors detected: ffffffff",
                       result.stdout)
 
     def test_aer_route_leaves_the_uncorrectable_register_alone(self):
         """Only the correctable status register is cleared."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci(correctable=0xFF, uncorrectable=0xAA)
+        self.install_aer(correctable=0xFF, uncorrectable=0xAA)
         self.run_plugin_cmd_check(_CLEAR)
 
-        self.assertNotIn(_REG_UNCORRECTABLE, "\n".join(self.setpci_calls()))
-        self.assertEqual(self.register_value(_REG_UNCORRECTABLE, 0xAA), 0xAA)
+        self.assertEqual(self.uncorrectable_value(), 0xAA)
 
     def test_clearing_twice_succeeds(self):
         """Clearing an already-cleared register is not an error."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci(correctable=0xFF)
+        self.install_aer(correctable=0xFF)
 
         first = self.run_plugin_cmd_check(_CLEAR)
         second = self.run_plugin_cmd_check(_CLEAR)
 
-        self.assertIn("Device correctable errors detected: 00000000",
+        self.assertIn("Device correctable errors detected: ffffffff",
                       first.stdout)
         self.assertEqual(first.stdout, second.stdout)
 
     def test_verbose_message_on_the_aer_route(self):
         """Every route reports the same success message."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
+        self.install_aer()
         result = self.run_plugin_cmd_check(_CLEAR, args="--verbose")
 
         self.assertIn("Device correctable errors cleared!",
                       result.stdout + result.stderr)
 
-    def test_failing_write_is_reported(self):
-        """A setpci that cannot write reports the clear failure."""
+    def test_missing_config_space_is_reported(self):
+        """With no PCI config space to read, the AER route cannot clear
+        anything."""
         self.select_model(_GENERIC_MODEL)
-        self.fake_tool('setpci')
         result = self.run_plugin_cmd(_CLEAR)
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Failed to clear error count", result.stderr)
+        self.assertIn("config", result.stderr)
 
-    def test_unreadable_pci_address_is_reported(self):
+    def test_missing_aer_capability_is_reported(self):
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
-        self.break_pci_address()
+        self.install_config_without_aer()
         result = self.run_plugin_cmd(_CLEAR)
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Failed to get PCI address", result.stderr)
+        self.assertIn("Device has no PCIe AER capability", result.stderr)
 
     def test_unknown_model_still_takes_the_aer_route(self):
         """The command has no model gate; an unrecognised drive uses AER."""
         self.select_model(None)
-        self.install_setpci(correctable=0x10)
+        self.install_aer(correctable=0x10)
         result = self.run_plugin_cmd_check(_CLEAR)
 
-        self.assertIn("Device correctable errors detected: 00000000",
+        self.assertIn("Device correctable errors detected: ffffffff",
                       result.stdout)
 
     def test_namespace_path_succeeds(self):
         """A namespace path resolves to its parent controller."""
         self.select_model(_GENERIC_MODEL)
-        self.install_setpci()
-        self.run_plugin_cmd_check(_CLEAR, device=self.ns1)
+        self.install_aer(correctable=0x10)
+        result = self.run_plugin_cmd_check(_CLEAR, device=self.ns1)
 
-        self.assertIn("0000:03:00.0", "\n".join(self.setpci_calls()))
+        self.assertIn("Device correctable errors detected: ffffffff",
+                      result.stdout)
 
     def test_bad_device_returns_error(self):
         self.check_bad_device_name(_CLEAR)
