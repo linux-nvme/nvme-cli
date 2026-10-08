@@ -19,6 +19,7 @@
 
 #include "archive-util.h"
 #include "cleanup-util.h"
+#include "fs-util.h"
 
 static inline void cleanup_archive_write(struct archive **a)
 {
@@ -51,7 +52,7 @@ static const char *entry_name_of(const char *path)
 
 static int add_file(struct archive *a, const char *path, const char *entry_name)
 {
-	__cleanup_fd int fd = open(path, O_RDONLY);
+	__cleanup_fd int fd = shr_open_rawdata(path, O_RDONLY);
 	__cleanup_archive_entry struct archive_entry *entry = NULL;
 	struct stat st;
 	char buf[64 * 1024];
@@ -102,7 +103,6 @@ static int add_dir_recursive(struct archive *a, const char *dir_path,
 	for (;;) {
 		__cleanup_free char *child_path = NULL;
 		__cleanup_free char *child_name = NULL;
-		struct stat st;
 
 		errno = 0;
 		ent = readdir(d);
@@ -121,14 +121,9 @@ static int add_dir_recursive(struct archive *a, const char *dir_path,
 			break;
 		}
 
-		if (lstat(child_path, &st)) {
-			ret = -errno;
-			break;
-		}
-
-		if (S_ISDIR(st.st_mode))
+		if (shr_isdir(child_path))
 			ret = add_dir_recursive(a, child_path, child_name);
-		else if (S_ISREG(st.st_mode))
+		else if (shr_isreg(child_path))
 			ret = add_file(a, child_path, child_name);
 
 		if (ret)
