@@ -7,6 +7,8 @@ ConditionPathExists=|/sys/firmware/acpi/tables/NBFT1
 Wants=modprobe@nvme_fabrics.service
 After=modprobe@nvme_fabrics.service
 After=network-online.target
+# A TLS connection fails at once if tlshd is not running.
+After=tlshd.service
 Before=remote-fs-pre.target
 
 [Service]

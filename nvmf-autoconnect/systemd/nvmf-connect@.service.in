@@ -6,6 +6,8 @@
 Description=NVMf auto-connect scan upon nvme discovery controller Events
 DefaultDependencies=no
 After=systemd-udevd.service
+# A TLS connection fails at once if tlshd is not running.
+After=tlshd.service
 Before=local-fs-pre.target
 PartOf=nvmf-connect.target
 Requires=nvmf-connect.target
