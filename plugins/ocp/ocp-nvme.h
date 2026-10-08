@@ -7,6 +7,8 @@
  */
 #ifndef OCP_NVME_H
 #define OCP_NVME_H
+#include <stddef.h>
+
 #include <shared/compiler-attributes-util.h>
 
 struct __packed ssd_latency_monitor_log {
@@ -132,7 +134,7 @@ struct __packed ocp_error_recovery_log_page {
  * @fused_operation_support:			Fused Operation Support
  * @min_valid_dssd_pwr_state:			Minimum Valid DSSD Power State
  * @dssd_pwr_state_desc:				DSSD Power State Descriptors
- * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
+ * @fips_140_validation:				FIPS 140 Validation (version 2 up)
  * @reserved:							Reserved
  * @log_page_version:					Log Page Version
  * @log_page_guid:						Log Page GUID
@@ -147,10 +149,18 @@ struct __packed ocp_device_capabilities_log_page {
 	__le16  fused_operation_support;
 	__le16  min_valid_dssd_pwr_state;
 	__u8    dssd_pwr_state_desc[128];
-	__u8    reserved[3934];
+	__le16  fips_140_validation;
+	__u8    reserved[3932];
 	__le16  log_page_version;
 	__u8    log_page_guid[GUID_LEN];
 };
+
+_Static_assert(sizeof(struct ocp_device_capabilities_log_page) == 4096,
+	"ocp_device_capabilities_log_page is not 4096 bytes");
+_Static_assert(offsetof(struct ocp_device_capabilities_log_page, log_page_version) == 4078,
+	"log_page_version is not at byte 4078");
+
+#define C4_FIPS_140_STATUS_MASK		0xf
 
 /*
  * struct tcg_configuration_log - TCG Configuration Log Page Structure

@@ -14,6 +14,9 @@ DESCRIPTION
 -----------
 For the NVMe device given, retrieves OCP Device Capability Log Page
 
+Fields are decoded as the page's Log Page Version defines them: FIPS 140
+Validation and its status from version 2 (OCP 2.7).
+
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
 

@@ -9,6 +9,9 @@ and decode against. It is transcribed from the OCP Datacenter NVMe SSD
 specification's DCLP field table, deliberately *not* from
 `struct ocp_device_capabilities_log_page`, so a disagreement between the
 two shows up as a test failure.
+
+DCLP-13 (FIPS 140 Validation) is defined from log page version 2
+(OCP 2.7).
 """
 
 from __future__ import annotations
@@ -29,9 +32,12 @@ FUSED_OPERATION_SUPPORT = 12
 MIN_VALID_DSSD_PWR_STATE = 14
 DSSD_PWR_STATE_DESC = 16
 DSSD_PWR_STATE_DESC_LEN = 128
-RESERVED = 144
+FIPS_140_VALIDATION = 144
+RESERVED = 146
 LOG_PAGE_VERSION = 4078
 LOG_PAGE_GUID = 4080
+
+FIPS_140_MIN_VERSION = 2
 
 # dev_cap_req_guid in plugins/ocp/ocp-nvme.c, on the wire.
 GUID_BYTES = bytes.fromhex('9742050dd1e1c9985d49584b913c05b7')
@@ -50,12 +56,14 @@ FIXED_FIELDS = {
 }
 
 
-def pack(version: int = 1, guid: bytes = GUID_BYTES) -> bytes:
-    """A C4h page reporting log page @version."""
+def pack(version: int = 2, fips: int = 0, guid: bytes = GUID_BYTES) -> bytes:
+    """A C4h page reporting log page @version, with the DCLP-13 word
+    @fips."""
     page = bytearray(LOG_PAGE_SIZE)
     for offset, value in FIXED_FIELDS.items():
         struct.pack_into('<H', page, offset, value)
     page[DSSD_PWR_STATE_DESC + 1:DSSD_PWR_STATE_DESC + 4] = b'\x11\x22\x33'
+    struct.pack_into('<H', page, FIPS_140_VALIDATION, fips)
     struct.pack_into('<H', page, LOG_PAGE_VERSION, version)
     page[LOG_PAGE_GUID:LOG_PAGE_GUID + len(guid)] = guid
     return bytes(page)
