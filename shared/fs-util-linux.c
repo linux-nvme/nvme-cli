@@ -113,6 +113,15 @@ bool shr_isdir(const char *path)
 	return S_ISDIR(st.st_mode);
 }
 
+bool shr_isreg(const char *path)
+{
+	struct stat st;
+
+	if (lstat(path, &st) < 0)
+		return false;
+	return S_ISREG(st.st_mode);
+}
+
 bool shr_fd_is_open(int fd)
 {
 	return fcntl(fd, F_GETFD) != -1;

@@ -111,6 +111,18 @@ bool shr_isdir(const char *path)
 	return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
+bool shr_isreg(const char *path)
+{
+	DWORD attrs = GetFileAttributesA(path);
+
+	if (attrs == INVALID_FILE_ATTRIBUTES)
+		return false;
+	/* As in shr_isdir(), a symlink or junction is reported as itself. */
+	return !(attrs & (FILE_ATTRIBUTE_REPARSE_POINT |
+			  FILE_ATTRIBUTE_DIRECTORY |
+			  FILE_ATTRIBUTE_DEVICE));
+}
+
 bool shr_fd_is_open(int fd)
 {
 	return _get_osfhandle(fd) != -1;
