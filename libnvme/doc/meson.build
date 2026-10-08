@@ -114,7 +114,7 @@ endif
 
 if want_docs != 'false'
     if want_docs == 'all' or want_docs == 'man'
-        mandir = join_paths(get_option('mandir'), 'man2')
+        mandir = get_option('mandir') / 'man2'
         list_man_pages = find_program(top_source_dir + 'scripts/list-man-pages.sh')
         if want_docs_build
             foreach apif : doc_paths
@@ -151,7 +151,7 @@ if want_docs != 'false'
     endif
 
     if want_docs == 'all' or want_docs == 'html'
-        htmldir = join_paths(get_option('htmldir'), libnvme_api_name, 'nvme')
+        htmldir = get_option('htmldir') / libnvme_api_name / 'nvme'
         if want_docs_build
             sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
             doc_tgts += custom_target(

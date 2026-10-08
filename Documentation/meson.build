@@ -421,10 +421,10 @@ adoc_includes = [
 ]
 
 if want_docs != 'false'
-    man1dir = join_paths(prefixdir, get_option('mandir'), 'man1')
-    man5dir = join_paths(prefixdir, get_option('mandir'), 'man5')
-    man8dir = join_paths(prefixdir, get_option('mandir'), 'man8')
-    htmldir = join_paths(prefixdir, get_option('htmldir'), 'nvme')
+    man1dir = prefixdir / get_option('mandir') / 'man1'
+    man5dir = prefixdir / get_option('mandir') / 'man5'
+    man8dir = prefixdir / get_option('mandir') / 'man8'
+    htmldir = prefixdir / get_option('htmldir') / 'nvme'
 
     man_sets = [
         {'sources': adoc_sources_man1,

@@ -126,14 +126,14 @@ libnvme_link_name = 'nvme3'
 
 ################################################################################
 prefixdir      = get_option('prefix')
-datadir        = join_paths(prefixdir, get_option('datadir'))
-mandir         = join_paths(prefixdir, get_option('mandir'))
-sbindir        = join_paths(prefixdir, get_option('sbindir'))
-sysconfdir     = join_paths(prefixdir, get_option('sysconfdir'))
-udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
-dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
-systemddir     = join_paths(prefixdir, get_option('systemddir'))
-nmdispatchdir  = join_paths(prefixdir, get_option('nmdispatchdir'))
+datadir        = prefixdir / get_option('datadir')
+mandir         = prefixdir / get_option('mandir')
+sbindir        = prefixdir / get_option('sbindir')
+sysconfdir     = prefixdir / get_option('sysconfdir')
+udevrulesdir   = prefixdir / get_option('udevrulesdir')
+dracutrulesdir = prefixdir / get_option('dracutrulesdir')
+systemddir     = prefixdir / get_option('systemddir')
+nmdispatchdir  = prefixdir / get_option('nmdispatchdir')
 
 # /run's location is fixed by the FHS -- unlike the dirs above, it must
 # never scale with --prefix.
@@ -776,7 +776,7 @@ if want_nvme
         output: 'nvme-fabrics.conf.sample',
         configuration: substs,
         install: true,
-        install_dir: join_paths(sysconfdir, 'nvme'),
+        install_dir: sysconfdir / 'nvme',
         install_tag: 'nvmf',
     )
 
