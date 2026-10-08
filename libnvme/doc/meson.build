@@ -105,8 +105,8 @@ if want_docs != 'false'
 
     if want_docs == 'all' or want_docs == 'html'
         htmldir = join_paths(get_option('htmldir'), libnvme_api_name, 'nvme')
-        sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
-        if sphinx_build.found() and want_docs_build
+        if want_docs_build
+            sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
             doc_tgts += custom_target(
                 'generate_doc_html',
                 input: [static_sources, rst],
