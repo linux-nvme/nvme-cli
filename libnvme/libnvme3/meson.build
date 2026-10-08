@@ -85,7 +85,7 @@ if want_python
     # tests directly from the build directory.
     test_env = environment()
     test_env.set('MALLOC_PERTURB_', '90')
-    test_env.prepend('PYTHONPATH', join_paths(meson.current_build_dir(), '..'))
+    test_env.prepend('PYTHONPATH', meson.current_build_dir() / '..')
     test_env.set('PYTHONMALLOC', 'malloc')
 
     # Test section
@@ -94,7 +94,7 @@ if want_python
     py_tests = [
         [ 'create-ctrl-object', [ files('tests/create-ctrl-obj.py'), ] ],
         [ 'sigsegv-during-gc', [ files('tests/gc.py'), ] ],
-        [ 'read-nbft-file', [ files('tests/test-nbft.py'), '--filename', join_paths(meson.current_source_dir(), 'tests', 'NBFT') ] ],
+        [ 'read-nbft-file', [ files('tests/test-nbft.py'), '--filename', meson.current_source_dir() / 'tests' / 'NBFT' ] ],
         [ 'object-properties-and-errors', [ files('tests/test-objects.py'), ] ],
         [ 'registry', [ files('tests/test-registry.py'), ] ],
         [ 'config', [ files('tests/test-config.py'), ] ],
