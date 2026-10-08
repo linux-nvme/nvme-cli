@@ -401,7 +401,7 @@ else
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
-if host_system == 'windows' or get_option('libarchive').disabled()
+if get_option('libarchive').disabled()
     libarchive_dep = dependency('', required: false)
 else
     libarchive_dep = dependency('libarchive', required: get_option('libarchive'))
