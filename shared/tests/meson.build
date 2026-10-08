@@ -260,6 +260,17 @@ if host_system != 'windows'
     )
 
     test('shared - net-util', test_net_util)
+
+    test_pci_util = executable(
+        'test-pci-util',
+        ['test-pci-util.c'],
+        dependencies: [
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - pci-util', test_pci_util)
 endif
 
 test_crypto_util_deps = [
