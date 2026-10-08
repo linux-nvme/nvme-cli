@@ -9,15 +9,15 @@ if want_docs != 'false'
                 }
             )
             rstdir = get_option('rstdir')
-            foreach apif : api_files
-                afile = files(top_source_dir + 'src/nvme/' + apif)
+            foreach docf : doc_files
+                afile = files(top_source_dir + 'src/' + docf)
                 subst = configure_file(
                     input: afile,
                     output: '@BASENAME@.subst',
                     configuration: rst_conf,
                 )
                 rst = custom_target(
-                    apif.underscorify() + '_rst',
+                    docf.underscorify() + '_rst',
                     input: subst,
                     output: '@BASENAME@.rst',
                     capture: true,
@@ -31,6 +31,7 @@ if want_docs != 'false'
                     install_tag: 'doc',
                 )
                 doc_tgts += rst
+                rst_tgts += rst
             endforeach
         endif
     else
