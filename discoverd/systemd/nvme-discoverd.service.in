@@ -4,6 +4,8 @@ Description=NVMe-oF Discovery Daemon
 Documentation=man:nvme-discoverd(8)
 Before=remote-fs.target
 After=nvme-keysd.service
+# A TLS connection fails at once if tlshd is not running.
+After=tlshd.service
 @DISCOVERD_AFTER_RESOLVED@
 
 [Service]

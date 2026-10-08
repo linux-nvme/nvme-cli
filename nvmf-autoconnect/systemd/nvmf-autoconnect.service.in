@@ -8,6 +8,8 @@ Wants=modprobe@nvme_fabrics.service
 After=modprobe@nvme_fabrics.service
 After=network-online.target
 After=nvme-discoverd.service
+# A TLS connection fails at once if tlshd is not running.
+After=tlshd.service
 Before=remote-fs-pre.target
 
 [Service]

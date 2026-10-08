@@ -35,6 +35,10 @@ through a referral or FC kickstart is different: it gives up after
 'dc-giveup-timeout' (default 72hours) of unbroken failure and is
 dropped from tracking.
 
+A TLS connection needs tlshd(8) from ktls-utils. Enable it with
+'systemctl enable --now tlshd'. When both are enabled, nvme-discoverd
+starts after tlshd.
+
 Before connecting or reconnecting anything, nvme-discoverd checks the
 system-wide exclusion list. It also registers ownership of every
 controller it connects (--owner discoverd, or --owner nbft for an
@@ -145,6 +149,7 @@ FILES
 SEE ALSO
 --------
 nvme-fabrics.conf(5)
+tlshd(8)
 nvme-connect(1)
 nvme-registry-list(1)
 nvme-exclusion-add(1)
