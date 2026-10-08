@@ -34,7 +34,7 @@ struct libnvmf_tid;
  * support is enabled.
  */
 
-/**
+/*
  * struct libnvmf_config - a resolved connection configuration.
  *
  * Opaque handle owning the resolved connection list.  Obtained from
@@ -42,7 +42,7 @@ struct libnvmf_tid;
  */
 struct libnvmf_config;
 
-/**
+/*
  * struct libnvmf_config_conn - one resolved connection.
  *
  * Opaque; one future "nvme connect".  Only valid while the owning
@@ -50,7 +50,7 @@ struct libnvmf_config;
  */
 struct libnvmf_config_conn;
 
-/**
+/*
  * struct libnvmf_params - a resolved connection-parameter set.
  *
  * Opaque map of connection parameters, keyed by the configuration key
@@ -364,7 +364,7 @@ int libnvmf_connect_args_emit(const struct libnvmf_tid *tid,
 int libnvmf_context_apply_params(struct libnvmf_context *fctx,
 		const struct libnvmf_params *params);
 
-/**
+/*
  * struct libnvmf_config_emitter - Configuration emitter.
  *
  * Opaque type used to build and write an NVMe Fabrics configuration.
