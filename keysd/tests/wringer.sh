@@ -396,6 +396,10 @@ journal_has() {
 	journalctl -t nvme-keysd --since "$1" 2>/dev/null | grep -q -- "$2"
 }
 
+journal_count() {
+	journalctl -t nvme-keysd --since "$1" 2>/dev/null | grep -c -- "$2"
+}
+
 # ---------------------------------------------------------------------------
 # Cleanup: always runs, even on Ctrl-C or an assertion failing partway.
 # ---------------------------------------------------------------------------
@@ -502,6 +506,77 @@ check "the name mismatch was logged" \
 	journal_has "${PHASE_START}" "io.systemd.Credentials.NameMismatch"
 check "key B is still in .nvme" key_present "${ID_B}"
 check "key A is not imported" key_absent "${ID_A}"
+
+phase "every path of a subsystem imports the key once"
+write_cred "${CRED_FILE}" "${KEY_B}" "${CRED_NAME}"
+sed -i "/^controller/a controller = transport=tcp;traddr=${TRADDR};trsvcid=$((TRSVCID + 1))" \
+	"${FABRICS_CONF}"
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+systemctl reload "${UNIT}"
+check "the unit is active" keysd_active
+check "'already present' was logged once" \
+	test "$(journal_count "${PHASE_START}" "'${ID_B}' already present")" -eq 1
+
+# A drop-in without [Host] uses the system host NQN. Every entry fails
+# before a key is inserted, so the keyring of the real host is untouched.
+phase "entries that cannot be imported are skipped"
+DROPIN_DIR="${FABRICS_CONF}.d"
+DROPIN="${DROPIN_DIR}/errors.conf"
+NQN_BASE=nqn.2026-09.org.nvmexpress.keysd-wringer
+mkdir -p "${DROPIN_DIR}"
+write_cred "${CRED_DIR}/keysd-wringer-notpsk" "not-a-psk" keysd-wringer-notpsk
+write_cred "${CRED_DIR}/keysd-wringer-big" "$(printf '%0200d' 0)" \
+	keysd-wringer-big
+write_cred "${CRED_DIR}/keysd-wringer-keyring" "${KEY_A}" \
+	keysd-wringer-keyring
+{
+	entry() {
+		printf '[Subsystem]\nnqn        = %s:%s\n' "${NQN_BASE}" "$1"
+		printf 'controller = transport=tcp;traddr=%s;trsvcid=%s\n' \
+			"${TRADDR}" "${TRSVCID}"
+		shift
+		printf '%s\n' "$@" ""
+	}
+	entry inline "key-source = inline" "tls-key = ${KEY_A}"
+	entry kmip "key-source = kmip" "tls-key = ${CRED_NAME}"
+	entry notlskey "key-source = systemd-creds"
+	entry badname "key-source = systemd-creds" "tls-key = ../x"
+	entry notpsk "key-source = systemd-creds" \
+		"tls-key = keysd-wringer-notpsk"
+	entry big "key-source = systemd-creds" "tls-key = keysd-wringer-big"
+	entry keyring "key-source = systemd-creds" \
+		"tls-key = keysd-wringer-keyring" \
+		"keyring = keysd-wringer-nosuch"
+} > "${DROPIN}"
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+systemctl reload "${UNIT}"
+check "the unit is active" keysd_active
+check "the inline entry is ignored" \
+	test "$(journal_count "${PHASE_START}" "${NQN_BASE}:inline")" -eq 0
+check "an unsupported key-source was logged" \
+	journal_has "${PHASE_START}" "key-source 'kmip' is not supported"
+check "a missing tls-key was logged" \
+	journal_has "${PHASE_START}" "${NQN_BASE}:notlskey: key-source is systemd-creds but tls-key is not set"
+check "an invalid credential name was logged" \
+	journal_has "${PHASE_START}" "invalid credential name '../x'"
+check "a credential that is not a PSK was logged" \
+	journal_has "${PHASE_START}" "credential 'keysd-wringer-notpsk' is not a valid PSK"
+check "a credential that is too large was logged" \
+	journal_has "${PHASE_START}" "cannot decrypt credential 'keysd-wringer-big': File too large"
+check "a missing keyring was logged" \
+	journal_has "${PHASE_START}" "keyring 'keysd-wringer-nosuch' not available"
+check "key B is still in .nvme" key_present "${ID_B}"
+check "the main file is still imported" \
+	journal_has "${PHASE_START}" "'${ID_B}' already present"
+
+phase "a fabrics configuration that does not parse is reported"
+printf '[Subsystem]\nnqn = not-an-nqn\n' > "${DROPIN}"
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+systemctl reload "${UNIT}"
+check "the unit is active" keysd_active
+check "the read failure was logged" \
+	journal_has "${PHASE_START}" "cannot read the fabrics configuration"
+check "key B is still in .nvme" key_present "${ID_B}"
 
 if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${PHASE}" -gt 0 ]; then
 	echo "::endgroup::"
