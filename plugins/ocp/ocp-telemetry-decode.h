@@ -17,6 +17,7 @@
 
 extern __u8 *ptelemetry_buffer;
 extern __u8 *pstring_buffer;
+extern size_t pstring_buffer_size;
 
 #define OCP_TELEMETRY_DESCRIPTION_MAX 256
 

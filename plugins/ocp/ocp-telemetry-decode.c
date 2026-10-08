@@ -402,44 +402,49 @@ static size_t ocp_ascii_id_copy_len(__u8 ascii_id_length)
 	return copy_len;
 }
 
+static int ocp_copy_ascii_id(__le64 ascii_id_offset, __u8 ascii_id_length, char *description)
+{
+	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
+		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+	__u64 ascts = le64_to_cpu(pocp_ts_header->ascts);
+	__u64 asctsz = le64_to_cpu(pocp_ts_header->asctsz);
+	__u64 offset = le64_to_cpu(ascii_id_offset);
+	size_t copy_len = ocp_ascii_id_copy_len(ascii_id_length);
+
+	/* With the ASCII table inside the log, neither product can overflow. */
+	if (!ocp_c9_table_fits(ascts, asctsz, pstring_buffer_size) || offset > asctsz ||
+	    copy_len > (asctsz - offset) * SIZE_OF_DWORD)
+		return -1;
+
+	memcpy(description, pstring_buffer + (ascts + offset) * SIZE_OF_DWORD, copy_len);
+	description[copy_len] = '\0';
+
+	return 0;
+}
+
 int get_statistic_id_ascii_string(int identifier, char *description)
 {
+	struct nvme_ocp_telemetry_string_header *pocp_ts_header;
+	struct nvme_ocp_statistics_identifier_string_table *entry;
+	__u64 entries = 0, i;
+	__u8 *table;
+
 	if (!pstring_buffer || !description)
 		return -1;
 
-	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
-		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+	pocp_ts_header = (struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+	table = ocp_string_table(pstring_buffer, pstring_buffer_size,
+				 le64_to_cpu(pocp_ts_header->sits),
+				 le64_to_cpu(pocp_ts_header->sitsz), sizeof(*entry), &entries);
 
-	//Calculating the sizes of the tables. Note: Data is present in the form of DWORDS,
-	//So multiplying with sizeof(DWORD)
-	unsigned long long sits_table_size = le64_to_cpu(pocp_ts_header->sitsz) * SIZE_OF_DWORD;
+	for (i = 0; table && i < entries; i++) {
+		entry = (struct nvme_ocp_statistics_identifier_string_table *)
+			(table + i * sizeof(*entry));
 
-	//Calculating number of entries present in all 3 tables
-	int sits_entries = (int)sits_table_size /
-		sizeof(struct nvme_ocp_statistics_identifier_string_table);
-
-	for (int sits_entry = 0; sits_entry < sits_entries; sits_entry++) {
-		struct nvme_ocp_statistics_identifier_string_table
-			*peach_statistic_entry =
-			(struct nvme_ocp_statistics_identifier_string_table *)
-			(pstring_buffer + (le64_to_cpu(pocp_ts_header->sits) * SIZE_OF_DWORD) +
-			(sits_entry *
-			sizeof(struct nvme_ocp_statistics_identifier_string_table)));
-
-		if (identifier ==
-		    (int)le16_to_cpu(peach_statistic_entry->vs_statistic_identifier)) {
-			char *pdescription = (char *)(pstring_buffer +
-				(le64_to_cpu(pocp_ts_header->ascts) * SIZE_OF_DWORD) +
-				(le64_to_cpu(peach_statistic_entry->ascii_id_offset) *
-				SIZE_OF_DWORD));
-			size_t copy_len = ocp_ascii_id_copy_len(
-				peach_statistic_entry->ascii_id_length);
-
-			memcpy(description, pdescription, copy_len);
-			description[copy_len] = '\0';
-
+		if (identifier == (int)le16_to_cpu(entry->vs_statistic_identifier) &&
+		    !ocp_copy_ascii_id(entry->ascii_id_offset, entry->ascii_id_length,
+				       description))
 			return 0;
-		}
 	}
 
 	// If ASCII string isn't found, see in our internal Map
@@ -452,90 +457,61 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 	return -1;
 }
 
-int get_event_id_ascii_string(int identifier, int debug_event_class, char *description)
+/* Event and VU event string table entries share one layout. */
+static int ocp_event_ascii_string(__le64 start, __le64 size, int identifier,
+				  int debug_event_class, char *description)
 {
-	if (pstring_buffer == NULL)
-		return -1;
+	struct nvme_ocp_event_string_table *entry;
+	__u64 entries = 0, i;
+	__u8 *table;
 
-	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
-		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+	table = ocp_string_table(pstring_buffer, pstring_buffer_size, le64_to_cpu(start),
+				 le64_to_cpu(size), sizeof(*entry), &entries);
 
-	//Calculating the sizes of the tables. Note: Data is present in the form of DWORDS,
-	//So multiplying with sizeof(DWORD)
-	unsigned long long ests_table_size = le64_to_cpu(pocp_ts_header->estsz) * SIZE_OF_DWORD;
+	for (i = 0; table && i < entries; i++) {
+		entry = (struct nvme_ocp_event_string_table *)(table + i * sizeof(*entry));
 
-	//Calculating number of entries present in all 3 tables
-	int ests_entries = (int)ests_table_size / sizeof(struct nvme_ocp_event_string_table);
-
-	for (int ests_entry = 0; ests_entry < ests_entries; ests_entry++) {
-		struct nvme_ocp_event_string_table *peach_event_entry =
-			(struct nvme_ocp_event_string_table *)
-			(pstring_buffer + (le64_to_cpu(pocp_ts_header->ests) * SIZE_OF_DWORD) +
-			(ests_entry * sizeof(struct nvme_ocp_event_string_table)));
-
-		if (identifier == (int)le16_to_cpu(peach_event_entry->event_identifier) &&
-			debug_event_class == (int)peach_event_entry->debug_event_class) {
-			char *pdescription = (char *)(pstring_buffer +
-				(le64_to_cpu(pocp_ts_header->ascts) * SIZE_OF_DWORD) +
-				(le64_to_cpu(peach_event_entry->ascii_id_offset) * SIZE_OF_DWORD));
-			size_t copy_len = ocp_ascii_id_copy_len(
-				peach_event_entry->ascii_id_length);
-
-			memcpy(description, pdescription, copy_len);
-			description[copy_len] = '\0';
+		if (identifier == (int)le16_to_cpu(entry->event_identifier) &&
+		    debug_event_class == (int)entry->debug_event_class &&
+		    !ocp_copy_ascii_id(entry->ascii_id_offset, entry->ascii_id_length,
+				       description))
 			return 0;
-		}
 	}
 
 	return -1;
 }
 
-int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *description)
+int get_event_id_ascii_string(int identifier, int debug_event_class, char *description)
 {
-	if (pstring_buffer == NULL)
-		return -1;
-
 	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
 		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
 
-	//Calculating the sizes of the tables. Note: Data is present in the form of DWORDS,
-	//So multiplying with sizeof(DWORD)
-	unsigned long long vuests_table_size =
-		le64_to_cpu(pocp_ts_header->vu_estsz) * SIZE_OF_DWORD;
+	if (!pstring_buffer)
+		return -1;
 
-	//Calculating number of entries present in all 3 tables
-	int vu_ests_entries = (int)vuests_table_size /
-		sizeof(struct nvme_ocp_vu_event_string_table);
+	return ocp_event_ascii_string(pocp_ts_header->ests, pocp_ts_header->estsz, identifier,
+				      debug_event_class, description);
+}
 
-	for (int vu_ests_entry = 0; vu_ests_entry < vu_ests_entries; vu_ests_entry++) {
-		struct nvme_ocp_vu_event_string_table *peach_vu_event_entry =
-			(struct nvme_ocp_vu_event_string_table *)
-			(pstring_buffer + (le64_to_cpu(pocp_ts_header->vu_ests) * SIZE_OF_DWORD) +
-			(vu_ests_entry * sizeof(struct nvme_ocp_vu_event_string_table)));
+int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *description)
+{
+	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
+		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
 
-		if (identifier == (int)le16_to_cpu(peach_vu_event_entry->vu_event_identifier) &&
-			debug_event_class ==
-				(int)peach_vu_event_entry->debug_event_class) {
-			char *pdescription = (char *)(pstring_buffer +
-				(le64_to_cpu(pocp_ts_header->ascts) * SIZE_OF_DWORD) +
-				(le64_to_cpu(peach_vu_event_entry->ascii_id_offset) *
-				SIZE_OF_DWORD));
-			size_t copy_len = ocp_ascii_id_copy_len(
-				peach_vu_event_entry->ascii_id_length);
+	if (!pstring_buffer)
+		return -1;
 
-			memcpy(description, pdescription, copy_len);
-			description[copy_len] = '\0';
-			return 0;
-		}
-	}
-
-	return -1;
+	return ocp_event_ascii_string(pocp_ts_header->vu_ests, pocp_ts_header->vu_estsz,
+				      identifier, debug_event_class, description);
 }
 
 int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug_event_class,
 	enum ocp_telemetry_string_tables string_table, char *description)
 {
 	if (pstring_buffer == NULL)
+		return -1;
+
+	if (event_fifo_num < 0 || event_fifo_num > MAX_NUM_FIFOS)
 		return -1;
 
 	if (event_fifo_num != 0) {
