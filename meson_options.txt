@@ -14,13 +14,13 @@ option(
 option(
   'fabrics',
   type : 'feature',
-  value: 'enabled',
+  value: 'auto',
   description : 'NVMeoF support'
 )
 option(
   'mi',
   type : 'feature',
-  value: 'enabled',
+  value: 'auto',
   description : 'MI support'
 )
 option(
@@ -56,7 +56,7 @@ option(
 option(
   'top',
   type : 'feature',
-  value: 'enabled',
+  value: 'auto',
   description : 'nvme top support'
 )
 option(
