@@ -9,19 +9,36 @@
 #
 
 api_files = [
+    'config.h',
+    'crypto.h',
+    'exclusion.h',
+    'fabrics.h',
     'generated/accessors-fabrics.h',
     'generated/accessors.h',
-    'fabrics.h',
+    'generated/attr-accessors.h',
     'ioctl.h',
     'lib-types.h',
     'lib.h',
+    'mem.h',
     'mi-types.h',
     'mi.h',
     'nbft.h',
+    'nvme-cmds-base.h',
+    'nvme-cmds-fabrics.h',
+    'nvme-cmds-mi.h',
+    'nvme-cmds-nvm.h',
+    'nvme-cmds-zns.h',
     'nvme-cmds.h',
+    'nvme-types-base.h',
+    'nvme-types-fabrics.h',
+    'nvme-types-mi.h',
     'nvme-types-nbft.h',
-    'nvme-types.h',
+    'nvme-types-nvm.h',
+    'nvme-types-slm.h',
+    'nvme-types-zns.h',
+    'registry.h',
     'scan.h',
+    'tid.h',
     'tree.h',
     'util.h',
 ]
@@ -31,14 +48,42 @@ foreach f: api_files
     api_paths += files('../src/nvme/' + f)
 endforeach
 
-sed_api_paths = files(
-    '../src/sed/sed.h',
-    '../src/sed/tcg-types.h',
+sed_api_files = [
+    'sed.h',
+    'tcg-types.h',
+]
+
+sed_api_paths = []
+foreach f: sed_api_files
+    sed_api_paths += files('../src/sed/' + f)
+endforeach
+
+# The headers to document, relative to src/.
+doc_files = []
+foreach f: api_files
+    doc_files += 'nvme/' + f
+endforeach
+doc_paths = api_paths
+if want_sed
+    foreach f: sed_api_files
+        doc_files += 'sed/' + f
+    endforeach
+    doc_paths += sed_api_paths
+endif
+
+api_includes = []
+foreach f: doc_files
+    api_includes += '.. include::   rst/@0@.rst'.format(
+        f.split('/')[-1].replace('.h', ''))
+endforeach
+configure_file(
+    input: 'api.rst.in',
+    output: 'api.rst',
+    configuration: {'API_INCLUDES': '\n'.join(api_includes)},
 )
 
 sphinx_sources = [
     'conf.py',
-    'api.rst',
     'index.rst',
     'quickstart.rst',
     'installation.rst',
@@ -54,6 +99,7 @@ foreach file : sphinx_sources
     )
 endforeach
 
+rst_tgts = []
 subdir('rst')
 
 top_source_dir = meson.current_source_dir() + '/../'
@@ -71,7 +117,7 @@ if want_docs != 'false'
         mandir = join_paths(get_option('mandir'), 'man2')
         list_man_pages = find_program(top_source_dir + 'scripts/list-man-pages.sh')
         if want_docs_build
-            foreach apif : api_paths
+            foreach apif : doc_paths
                 c = run_command(list_man_pages, apif, check: true)
                 man_pages = c.stdout().split()
                 foreach page : man_pages
@@ -109,7 +155,7 @@ if want_docs != 'false'
         if sphinx_build.found() and want_docs_build
             doc_tgts += custom_target(
                 'generate_doc_html',
-                input: [static_sources, rst],
+                input: [static_sources, rst_tgts],
                 output: 'html',
                 command: [
                     sphinx_build,
