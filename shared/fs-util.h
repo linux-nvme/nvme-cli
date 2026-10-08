@@ -51,6 +51,13 @@ int shr_rmdir(const char *path);
 bool shr_isdir(const char *path);
 
 /*
+ * True if path exists and is a regular file, without following a symlink
+ * (or, on Windows, a reparse point) at path itself, the same as lstat() +
+ * S_ISREG() would report it on Linux. False if path does not exist.
+ */
+bool shr_isreg(const char *path);
+
+/*
  * Remove a directory and everything in it, like "rm -rf", without invoking
  * a shell or an external "rm" -- so a path never becomes syntax and no
  * "rm" executable needs to be on PATH. A path that is already missing is

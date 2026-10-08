@@ -303,6 +303,49 @@ static bool test_isdir(void)
 	return pass;
 }
 
+static bool test_isreg(void)
+{
+	static const char *dir = "shr-test-isreg-dir";
+	static const char *file = "shr-test-isreg-file";
+	bool pass = true;
+	FILE *f;
+
+	printf("test_isreg:\n");
+
+	/* Clean up if left over from a previous crashed run */
+	shr_rmdir(dir);
+	shr_unlink(file);
+
+	f = fopen(file, "w");
+	if (f)
+		fclose(f);
+	pass &= check_bool("a regular file is a regular file", shr_isreg(file));
+
+	shr_mkdir(dir, 0755);
+	pass &= check_bool("a directory is not a regular file", !shr_isreg(dir));
+
+	pass &= check_bool("a missing path is not a regular file",
+			    !shr_isreg("shr-test-isreg-never-existed"));
+
+#if !defined(_WIN32)
+	{
+		static const char *link = "shr-test-isreg-link";
+
+		shr_unlink(link);
+		pass &= check_bool("symlink to the file created",
+				    symlink(file, link) == 0);
+		pass &= check_bool("a symlink to a file is not reported as one, unlike stat()",
+				    !shr_isreg(link));
+		unlink(link);
+	}
+#endif
+
+	shr_rmdir(dir);
+	shr_unlink(file);
+
+	return pass;
+}
+
 static bool test_rmdir_recursive(void)
 {
 	static const char *base = "shr-test-rmdir-recursive-dir";
@@ -827,6 +870,7 @@ int main(void)
 	pass &= test_mkdir_p();
 	pass &= test_rmdir();
 	pass &= test_isdir();
+	pass &= test_isreg();
 	pass &= test_rmdir_recursive();
 	pass &= test_mkdir_from_fname();
 	pass &= test_mkstemp();
