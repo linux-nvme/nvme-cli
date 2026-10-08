@@ -15,7 +15,7 @@ keysd_sources = files(
 
 keysd_inc = include_directories('src')
 
-executable(
+nvme_keysd = executable(
     'nvme-keysd',
     keysd_sources,
     include_directories: keysd_inc,

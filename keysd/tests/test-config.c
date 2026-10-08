@@ -119,6 +119,41 @@ static bool test_unknown_key_and_section_ignored(void)
 	return pass;
 }
 
+static bool test_malformed_line_ignored(void)
+{
+	struct keysd_config *cfg;
+	bool pass = true;
+
+	printf("test_malformed_line_ignored:\n");
+
+	cfg = load_text("[Global]\n"
+			"not a key value line\n"
+			"debug-level = warn\n");
+	pass &= check(cfg->debug_level == DMN_LOG_WARN,
+		      "malformed line skipped, next line applies");
+
+	config_free(cfg);
+
+	return pass;
+}
+
+static bool test_unreadable_file_defaults(void)
+{
+	struct keysd_config *cfg;
+	bool pass = true;
+
+	printf("test_unreadable_file_defaults:\n");
+
+	cfg = config_load("/");
+	pass &= check(cfg != NULL, "a directory as config file");
+	pass &= check(cfg->debug_level == DMN_LOG_INFO,
+		      "debug-level defaults to info");
+
+	config_free(cfg);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -127,6 +162,8 @@ int main(void)
 	pass &= test_global_parsed();
 	pass &= test_invalid_values_ignored();
 	pass &= test_unknown_key_and_section_ignored();
+	pass &= test_malformed_line_ignored();
+	pass &= test_unreadable_file_defaults();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
