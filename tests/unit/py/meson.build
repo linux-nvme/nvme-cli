@@ -10,7 +10,7 @@ if python3.found()
     # without json-c, so its test only makes sense when both are present.
     # Tests added here that don't depend on json-c/utils belong outside this
     # inner guard.
-    if want_json_c and 'utils' in selected_plugins
+    if json_c_dep.found() and 'utils' in selected_plugins
         test(
             'nvme-cli - command-metadata-schema',
             python3,

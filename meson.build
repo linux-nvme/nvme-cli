@@ -49,17 +49,22 @@ host_system = host_machine.system()
 #
 # -Dpython=auto means build the python bindings if all the required
 # dependencies are present. Also, -Dpython=enabled forces -Dlibnvme=enabled.
-want_nvme = get_option('nvme').disabled() == false
-want_libnvme = get_option('libnvme').disabled() == false
-want_fabrics = get_option('fabrics').disabled() == false and host_system == 'linux'
-want_mi = get_option('mi').disabled() == false and host_system == 'linux'
-want_sed = get_option('sed').disabled() == false
-want_top = get_option('top').disabled() == false and host_system == 'linux'
-want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system == 'linux'
-want_keysd = get_option('nvme-keysd').disabled() == false and want_fabrics and host_system == 'linux'
-want_deprecated_cmds = get_option('deprecated-cmds').disabled() == false
-want_json_c = get_option('json-c').disabled() == false
-want_libkmod = get_option('libkmod').disabled() == false and host_system == 'linux'
+want_nvme = get_option('nvme').allowed()
+want_libnvme = get_option('libnvme').allowed()
+# require() fails the setup when an enabled option cannot be built, and
+# turns an auto option off.
+want_fabrics = get_option('fabrics').require(host_system == 'linux',
+    error_message: 'fabrics requires Linux').allowed()
+want_mi = get_option('mi').require(host_system == 'linux',
+    error_message: 'mi requires Linux').allowed()
+want_sed = get_option('sed').allowed()
+want_top = get_option('top').require(host_system == 'linux',
+    error_message: 'top requires Linux').allowed()
+discoverd_opt = get_option('nvme-discoverd').require(want_fabrics,
+    error_message: 'nvme-discoverd requires fabrics')
+keysd_opt = get_option('nvme-keysd').require(want_fabrics,
+    error_message: 'nvme-keysd requires fabrics')
+want_deprecated_cmds = get_option('deprecated-cmds').allowed()
 want_tests = get_option('tests')
 want_ioctl_tests = want_tests and get_option('ioctl-tests')
 want_examples = get_option('examples') and host_system == 'linux'
@@ -69,8 +74,9 @@ want_docs_build = get_option('docs-build')
 is_static = get_option('default_library') == 'static'
 is_cross = meson.is_cross_build()
 
-feature_python = get_option('python')
-if not want_fabrics or feature_python.disabled()
+feature_python = get_option('python').require(want_fabrics,
+    error_message: 'python requires fabrics')
+if feature_python.disabled()
     py3_dep = dependency('', required: false)  # Needed for muon
     want_python = false
 else
@@ -190,7 +196,7 @@ conf.set10(
 )
 
 # Check for libjson-c availability
-if not want_json_c
+if get_option('json-c').disabled()
     json_c_dep = dependency('', required: false)
 else
     json_c_dep = dependency(
@@ -351,27 +357,33 @@ else
 endif
 
 
-if not want_fabrics or get_option('liburing').disabled()
+liburing_opt = get_option('liburing').require(want_fabrics,
+    error_message: 'liburing requires fabrics')
+if liburing_opt.disabled()
     liburing_dep = dependency('', required: false)
 else
-    liburing_dep = dependency('liburing', version: '>=2.2', required: get_option('liburing'))
+    liburing_dep = dependency('liburing', version: '>=2.2', required: liburing_opt)
 endif
 conf.set('CONFIG_LIBURING', liburing_dep.found(), description: 'Is liburing available?')
 
-if not want_libkmod
+libkmod_opt = get_option('libkmod').require(host_system == 'linux',
+    error_message: 'libkmod requires Linux')
+if libkmod_opt.disabled()
     libkmod_dep = dependency('', required: false)
 else
-    libkmod_dep = dependency('libkmod', required: get_option('libkmod'))
+    libkmod_dep = dependency('libkmod', required: libkmod_opt)
 endif
 conf.set('NVME_HAVE_LIBKMOD', libkmod_dep.found(), description: 'Is libkmod available?')
 
-if host_system != 'linux' or get_option('openssl').disabled()
+openssl_opt = get_option('openssl').require(host_system == 'linux',
+    error_message: 'openssl requires Linux')
+if openssl_opt.disabled()
     openssl_dep = dependency('', required: false)
 else
     openssl_dep = dependency(
         'openssl',
         version: '>=3.0.0',
-        required: get_option('openssl'),
+        required: openssl_opt,
         fallback : ['openssl', 'libssl_dep'],
     )
 endif
@@ -394,10 +406,12 @@ if openssl_dep.found()
 endif
 conf.set('CONFIG_OPENSSL', openssl_dep.found(), description: 'Is OpenSSL/LibreSSL available?')
 
-if not want_fabrics or get_option('keyutils').disabled()
+keyutils_opt = get_option('keyutils').require(want_fabrics,
+    error_message: 'keyutils requires fabrics')
+if keyutils_opt.disabled()
     keyutils_dep = dependency('', required: false)
 else
-    keyutils_dep = dependency('libkeyutils', required : get_option('keyutils'))
+    keyutils_dep = dependency('libkeyutils', required : keyutils_opt)
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
@@ -408,60 +422,52 @@ else
 endif
 conf.set('CONFIG_LIBARCHIVE', libarchive_dep.found(), description: 'Is libarchive available?')
 
-if not want_discoverd and not want_keysd
+if not discoverd_opt.allowed() and not keysd_opt.allowed()
     libsystemd_dep = dependency('', required: false)
 else
     # v253 for Type=notify-reload (nvme-discoverd.service, nvme-keysd.service).
     libsystemd_dep = dependency('libsystemd', version: '>=253',
-                                 required: get_option('nvme-discoverd').enabled() or
-                                           get_option('nvme-keysd').enabled())
+                                 required: discoverd_opt.enabled() or
+                                           keysd_opt.enabled())
 endif
-want_discoverd = want_discoverd and libsystemd_dep.found()
-want_keysd = want_keysd and libsystemd_dep.found()
+want_discoverd = discoverd_opt.require(libsystemd_dep.found(),
+    error_message: 'nvme-discoverd requires libsystemd >=253').allowed()
 
 # nvme-keysd decrypts credentials through sd_varlink (libsystemd v257).
-if want_keysd and libsystemd_dep.version().version_compare('<257')
-    if get_option('nvme-keysd').enabled()
-        error('nvme-keysd requires libsystemd >=257')
-    endif
-    want_keysd = false
-endif
-
+keysd_opt = keysd_opt.require(
+    libsystemd_dep.found() and libsystemd_dep.version().version_compare('>=257'),
+    error_message: 'nvme-keysd requires libsystemd >=257')
 # nvme-keysd derives the PSKs (OpenSSL) and writes the keyring (libkeyutils).
-if want_keysd and not (openssl_dep.found() and keyutils_dep.found())
-    if get_option('nvme-keysd').enabled()
-        error('nvme-keysd requires OpenSSL and libkeyutils')
-    endif
-    want_keysd = false
-endif
+keysd_opt = keysd_opt.require(openssl_dep.found() and keyutils_dep.found(),
+    error_message: 'nvme-keysd requires OpenSSL and libkeyutils')
+want_keysd = keysd_opt.allowed()
 conf.set('CONFIG_DISCOVERD', want_discoverd, description: 'Is nvme-discoverd enabled')
 conf.set('CONFIG_KEYSD', want_keysd, description: 'Is nvme-keysd enabled')
 
 # -Dnvmf-autoconnect=auto builds the legacy autoconnect only when
 # nvme-discoverd is not built.
-nvmf_autoconnect_opt = get_option('nvmf-autoconnect')
+nvmf_autoconnect_opt = get_option('nvmf-autoconnect').require(want_fabrics,
+    error_message: 'nvmf-autoconnect requires fabrics')
 want_nvmf_autoconnect = (
     nvmf_autoconnect_opt.enabled() or
-    (nvmf_autoconnect_opt.auto() and want_fabrics and not want_discoverd)
+    (nvmf_autoconnect_opt.auto() and not want_discoverd)
 )
 
 # mDNS needs the sd_varlink client API (libsystemd v257) and the
 # BrowseServices method of systemd-resolved (v258).
-want_mdns = false
-if want_discoverd and not get_option('mdns').disabled()
-    want_mdns = libsystemd_dep.version().version_compare('>=258')
-    if get_option('mdns').enabled() and not want_mdns
-        error('mdns requires libsystemd >=258')
-    endif
-endif
+mdns_opt = get_option('mdns').require(want_discoverd, error_message: 'mdns requires nvme-discoverd')
+want_mdns = mdns_opt.require(
+    want_discoverd and libsystemd_dep.version().version_compare('>=258'),
+    error_message: 'mdns requires libsystemd >=258').allowed()
 
-if not want_mi or get_option('libdbus').disabled()
+libdbus_opt = get_option('libdbus').require(want_mi, error_message: 'libdbus requires mi')
+if libdbus_opt.disabled()
     libdbus_dep = dependency('', required: false)
 else
     # Check for libdbus availability. Optional, only required for MCTP dbus scan
     libdbus_dep = dependency(
         'dbus-1',
-        required: get_option('libdbus'),
+        required: libdbus_opt,
         fallback: ['dbus', 'libdbus_dep'],
         default_options: [
             'default_library=static',
