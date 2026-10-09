@@ -19,8 +19,8 @@
 #
 # It asks for confirmation first. -y skips the question.
 #
-# tlshd.service is used if it is installed. Otherwise TLSHD must name a
-# tlshd binary, which the test runs as a transient unit.
+# tlshd.service is used if it is installed. Otherwise the test runs a
+# tlshd binary as a transient unit: TLSHD, or tlshd in PATH.
 #
 # On loopback, the host and the target share the .nvme keyring, so one key
 # serves both ends of the connection.
@@ -64,12 +64,14 @@ fi
 
 TLSHD_UNIT=tlshd.service
 TLSHD_WAS_ACTIVE=false
-if ! systemctl cat "${TLSHD_UNIT}" >/dev/null 2>&1; then
-	if [ ! -x "${TLSHD:-}" ]; then
-		echo "tlshd.service is not installed:" \
-		     "set TLSHD to a tlshd binary" >&2
+if ! err=$(systemctl cat "${TLSHD_UNIT}" 2>&1 >/dev/null); then
+	echo "${TLSHD_UNIT}: ${err}"
+	TLSHD="${TLSHD:-$(command -v tlshd)}"
+	if [ ! -x "${TLSHD}" ]; then
+		echo "No tlshd binary: set TLSHD to a tlshd binary" >&2
 		exit 1
 	fi
+	echo "Using ${TLSHD}"
 	TLSHD_UNIT=keysd-wringer-tlshd.service
 fi
 
