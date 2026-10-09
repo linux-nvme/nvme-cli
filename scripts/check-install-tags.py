@@ -11,6 +11,9 @@
 nvme-cli with tags would then lose that file. See the "Install tags"
 section in Documentation/BUILDING.md.
 
+Files of subprojects (meson wraps) are not checked: their tags are set
+by the subproject, not by nvme-cli.
+
 Usage: check-install-tags.py BUILDDIR
 
 Exits with 77 (skipped, for meson test) when BUILDDIR has no meson
@@ -42,7 +45,7 @@ def main():
         info['destination']
         for files in plan.values()
         for info in files.values()
-        if not info.get('tag')
+        if not info.get('tag') and not info.get('subproject')
     )
     for dest in untagged:
         print(f'no install tag: {dest}', file=sys.stderr)
