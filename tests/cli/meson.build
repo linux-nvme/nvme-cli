@@ -106,6 +106,20 @@ if python3.found()
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
 
+        # Not on big-endian hosts yet: the test times out on s390x.
+        if 'id' in selected_plugins and 'log' in selected_plugins and \
+           'feat' in selected_plugins and host_machine.endian() == 'little'
+            print_test_env = environment()
+            print_test_env.prepend('PYTHONPATH', meson.project_source_root())
+            print_test_env.set('NVME_TEST_JSON', json_c_dep.found() ? '1' : '0')
+            test('nvme-cli - print-cli',
+                 python3,
+                 args: [files('nvme_print_test.py'), nvme_exe, mock_nvme_lib],
+                 env: print_test_env,
+                 depends: [nvme_exe, mock_nvme_lib],
+                 timeout: 300)
+        endif
+
         if 'sed' in selected_plugins and want_sed and \
                 conf.get('NVME_HAVE_SED_OPAL') != 0
             sed_ioctls = []
