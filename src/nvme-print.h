@@ -176,7 +176,7 @@ struct print_ops {
 	void (*self_test_log)(struct nvme_self_test_log *self_test, __u8 dst_entries, __u32 size, const char *devname);
 	void (*single_property)(int offset, uint64_t value64);
 	void (*smart_log)(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
-	void (*supported_cap_config_list_log)(struct nvme_supported_cap_config_list_log *cap_log);
+	void (*supported_cap_config_list_log)(struct nvme_supported_cap_config_list_log *cap_log, size_t len);
 	void (*supported_log_pages)(struct nvme_supported_log_pages *support_log, const char *devname);
 	void (*zns_start_zone_list)(__u64 nr_zones, struct json_object **zone_list);
 	void (*zns_changed_zone_log)(struct nvme_zns_changed_zone_log *log);
@@ -395,7 +395,7 @@ void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_l
 void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
 	nvme_print_flags_t flags);
 void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_log *caplog,
-				nvme_print_flags_t flags);
+				size_t len, nvme_print_flags_t flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, nvme_print_flags_t flags);
 void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_flags_t flags);
 void nvme_show_single_property(int offset, uint64_t prop, nvme_print_flags_t flags);

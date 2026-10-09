@@ -104,9 +104,9 @@ static void binary_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len
 }
 
 static void binary_supported_cap_config_log(
-	struct nvme_supported_cap_config_list_log *cap)
+	struct nvme_supported_cap_config_list_log *cap, size_t len)
 {
-	d_raw((unsigned char *)cap, sizeof(*cap));
+	d_raw((unsigned char *)cap, len);
 }
 
 static void binary_ctrl_registers(void *bar, bool fabrics)

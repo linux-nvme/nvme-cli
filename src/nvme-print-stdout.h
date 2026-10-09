@@ -83,7 +83,7 @@ void stdout_self_test_log(struct nvme_self_test_log *self_test,
 void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		      const char *devname);
 void stdout_supported_cap_config_log(
-		struct nvme_supported_cap_config_list_log *cap);
+		struct nvme_supported_cap_config_list_log *cap, size_t len);
 void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 			  const char *devname);
 void stdout_zns_changed(struct nvme_zns_changed_zone_log *log);
