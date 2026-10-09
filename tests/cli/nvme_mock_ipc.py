@@ -20,6 +20,7 @@ import collections
 import errno
 import os
 import shlex
+import shutil
 import socket
 import struct
 import subprocess
@@ -215,6 +216,24 @@ def make_mock_env(mock_lib, ipc_sock_path):
     return env
 
 
+# Limits for one nvme run. Bad data from the mock device can make nvme
+# allocate without bound or loop forever. Without a limit, it can use all
+# the memory of the machine.
+_NVME_MEM_LIMIT_MB = 1024
+_NVME_TIMEOUT_S = 60
+
+
+def _is_asan_binary(nvme_bin):
+    """ASan reserves terabytes of address space, so RLIMIT_AS cannot be
+    used. Use ASan's own RSS limit instead."""
+    path = shutil.which(nvme_bin) or nvme_bin
+    try:
+        with open(path, 'rb') as f:
+            return b'__asan_init' in f.read()
+    except OSError:
+        return False
+
+
 def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
              stdin_data=None):
     """Runs `nvme_bin *args` under libmock_nvme.c. Returns the completed
@@ -240,8 +259,20 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
     # intact.
     env = dict(env)
     ld_preload = env.pop("LD_PRELOAD", "")
+    if os.environ.get('MESON_EXE_WRAPPER'):
+        # A cross build runs nvme under qemu-user, which needs the whole
+        # guest address space.
+        ulimit = ''
+    elif _is_asan_binary(nvme_bin):
+        env['ASAN_OPTIONS'] = ':'.join(filter(None, [
+            env.get('ASAN_OPTIONS'),
+            f'hard_rss_limit_mb={_NVME_MEM_LIMIT_MB}']))
+        ulimit = ''
+    else:
+        ulimit = f'ulimit -v {_NVME_MEM_LIMIT_MB * 1024}; '
     wrapped_cmd = [
-        '/bin/sh', '-c', f'export LD_PRELOAD={shlex.quote(ld_preload)}; exec "$@"',
+        '/bin/sh', '-c',
+        f'{ulimit}export LD_PRELOAD={shlex.quote(ld_preload)}; exec "$@"',
         'nvme-mock-wrapper',
     ] + cmd
 
@@ -251,7 +282,9 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
                             **stdin_args,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
-                            encoding=encoding)
+                            encoding=encoding,
+                            errors='replace' if encoding else None,
+                            timeout=_NVME_TIMEOUT_S)
 
     # Print outputs to sys.stderr so they are displayed by unittest on
     # failure. With encoding=None these are bytes, so summarise stdout
