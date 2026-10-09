@@ -27,3 +27,5 @@ Logging and signal handling come from `daemon-util/`, shared with the other nvme
 - **The shared NVMe-oF fabrics configuration** (`nvme-fabrics.conf(5)`): which key belongs to which host and subsystem.
 
 Both are reloaded on `SIGHUP`, and the keys are imported again. The credentials are decrypted again at the same time, so a reload (`systemctl reload nvme-keysd`) also picks up a new or changed credential.
+
+The unit runs `nvme-keysd --should-start` as `ExecCondition=`. When no entry of the fabrics configuration has a key source, the unit is skipped: the daemon does not start, and `nvme_keyring` is not loaded.

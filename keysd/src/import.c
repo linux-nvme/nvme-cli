@@ -316,6 +316,36 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 		   name);
 }
 
+static void find_key_source(const struct libnvmf_config_conn *conn,
+			    void *user_data)
+{
+	const char *src;
+	bool *found = user_data;
+
+	src = param(libnvmf_config_conn_get_params(conn), "key-source");
+	if (src && !streq(src, "inline"))
+		*found = true;
+}
+
+bool import_needed(struct libnvme_global_ctx *ctx, const char *fabrics_conf)
+{
+	struct libnvmf_config *cfg;
+	bool found = false;
+	int r;
+
+	r = libnvmf_config_read(ctx, fabrics_conf, &cfg);
+	if (r < 0) {
+		log_err("cannot read the fabrics configuration: %s",
+			strerror(-r));
+		return false;
+	}
+
+	libnvmf_config_conn_for_each(cfg, find_key_source, &found);
+	libnvmf_config_free(cfg);
+
+	return found;
+}
+
 void import_keys(struct libnvme_global_ctx *ctx, const char *fabrics_conf,
 		 const char *creds_dir)
 {

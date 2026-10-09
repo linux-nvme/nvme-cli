@@ -32,6 +32,7 @@ struct keysd_ctx {
 	struct keysd_config *cfg;            // parsed @conf_path
 	sd_event *event;                     // sd_event main loop
 	bool force_debug;                    // --debug forces DEBUG
+	bool should_start;                   // --should-start: test, exit
 };
 
 static struct keysd_ctx ctx;
@@ -60,6 +61,16 @@ static void reload_config(void *user_data __attribute__((unused)))
 	import_keys(ctx.nvme_ctx, ctx.fabrics_conf, ctx.creds_dir);
 }
 
+static bool should_start(void)
+{
+	if (import_needed(ctx.nvme_ctx, ctx.fabrics_conf))
+		return true;
+
+	log_info("no entry with a key source, nothing to do");
+
+	return false;
+}
+
 static void usage(const char *prog)
 {
 	printf("Usage: %s [OPTIONS]\n"
@@ -70,6 +81,8 @@ static void usage(const char *prog)
 	       "                          (default: libnvme's default)\n"
 	       "  --creds-dir DIR         encrypted credentials\n"
 	       "                          (default: " KEYSD_CREDS_DIR ")\n"
+	       "  --should-start          exit 0 if there is work to do,\n"
+	       "                          1 otherwise\n"
 	       "  --debug, -d             enable debug logging (journal + libnvme)\n"
 	       "  --help, -h              show this help and exit\n",
 	       prog);
@@ -81,6 +94,7 @@ int main(int argc, char **argv)
 		{ "config",         required_argument, NULL, 'c' },
 		{ "fabrics-config", required_argument, NULL, 'J' },
 		{ "creds-dir",      required_argument, NULL, 'C' },
+		{ "should-start",   no_argument,       NULL, 'S' },
 		{ "debug",          no_argument,       NULL, 'd' },
 		{ "help",           no_argument,       NULL, 'h' },
 		{ NULL, 0,          NULL, 0 },
@@ -116,6 +130,9 @@ int main(int argc, char **argv)
 		case 'd':
 			ctx.force_debug = true;
 			break;
+		case 'S':
+			ctx.should_start = true;
+			break;
 		case 'J':
 			free(fabrics_path_abs);
 			fabrics_path_abs = realpath(optarg, NULL);
@@ -148,12 +165,6 @@ int main(int argc, char **argv)
 	if (ctx.force_debug)
 		dmn_log_set_level(DMN_LOG_DEBUG);
 
-	r = sd_event_default(&ctx.event);
-	if (r < 0) {
-		log_err("sd_event_default: %s", strerror(-r));
-		return 1;
-	}
-
 	ctx.nvme_ctx = libnvme_create_global_ctx();
 	if (!ctx.nvme_ctx) {
 		log_err("libnvme_create_global_ctx: failed");
@@ -166,6 +177,24 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	apply_log_level();
+
+	// Exit 1, never 255: systemd skips the unit on 1, but fails it on 255.
+	if (ctx.should_start) {
+		r = should_start() ? 0 : 1;
+		config_free(ctx.cfg);
+		libnvme_free_global_ctx(ctx.nvme_ctx);
+		free(config_path_abs);
+		free(fabrics_path_abs);
+		free(creds_path_abs);
+
+		return r;
+	}
+
+	r = sd_event_default(&ctx.event);
+	if (r < 0) {
+		log_err("sd_event_default: %s", strerror(-r));
+		return 1;
+	}
 
 	if (dmn_add_signal_handlers(ctx.event, reload_config, NULL) < 0)
 		return 1;
