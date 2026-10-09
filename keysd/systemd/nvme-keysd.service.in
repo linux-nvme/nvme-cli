@@ -8,6 +8,10 @@ After=systemd-creds.socket
 
 [Service]
 Type=notify-reload
+# nvme_keyring creates the .nvme keyring. nvme_core loads it only with
+# CONFIG_NVME_HOST_AUTH, and nvme_tcp only at the first connection.
+# "+" runs modprobe outside the sandbox below.
+ExecStartPre=-+/sbin/modprobe -q nvme_keyring
 ExecStart=@SBINDIR@/nvme-keysd
 Restart=on-failure
 
