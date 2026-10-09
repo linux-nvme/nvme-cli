@@ -446,10 +446,10 @@ void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 }
 
 void nvme_show_supported_cap_config_log(
-	struct nvme_supported_cap_config_list_log *cap,
+	struct nvme_supported_cap_config_list_log *cap, size_t len,
 	nvme_print_flags_t flags)
 {
-	nvme_print(supported_cap_config_list_log, flags, cap);
+	nvme_print(supported_cap_config_list_log, flags, cap, len);
 }
 
 void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
@@ -2040,7 +2040,7 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		nvme_show_media_unit_stat_log(log, flags);
 		break;
 	case NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:
-		nvme_show_supported_cap_config_log(log, flags);
+		nvme_show_supported_cap_config_log(log, len, flags);
 		break;
 	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
 		nvme_show_fid_support_effects_log(log, devname, flags);

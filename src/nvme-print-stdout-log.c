@@ -1520,94 +1520,133 @@ void stdout_fdp_events(struct nvme_fdp_events_log *log)
 	}
 }
 
-static void stdout_supported_cap_config_add_channels(struct shr_table *t,
-		struct nvme_end_grp_chan_desc *chan_desc)
+/*
+ * An odd Media Unit Descriptor Length leaves the next descriptors
+ * unaligned, so they are copied before they are read.
+ */
+static bool stdout_supported_cap_config_add_channel(struct shr_table *t,
+		unsigned char **p, unsigned char *end)
 {
-	int egchans = le16_to_cpu(chan_desc->egchans);
+	struct nvme_channel_config_desc chd;
+	int chmus;
+
+	if (!shr_buf_has_room(*p, end, sizeof(chd)))
+		return false;
+
+	memcpy(&chd, *p, sizeof(chd));
+	chmus = le16_to_cpu(chd.chmus);
+	*p += sizeof(chd);
+
+	stdout_kv_add(t, "Channel Identifier", "%u", le16_to_cpu(chd.chanid));
+	stdout_kv_add(t, "Number of Channel Media Units", "%u", chmus);
+
+	for (int m = 0; m < chmus; m++) {
+		struct nvme_media_unit_config_desc mu;
+		size_t size;
+
+		if (!shr_buf_has_room(*p, end, sizeof(mu)))
+			return false;
+
+		memcpy(&mu, *p, sizeof(mu));
+		size = sizeof(mu) + le16_to_cpu(mu.mudl);
+		if (!shr_buf_has_room(*p, end, size))
+			return false;
+
+		stdout_kv_add(t, "Media Unit Identifier", "%u",
+			      le16_to_cpu(mu.muid));
+		stdout_kv_add(t, "Media Unit Descriptor Length", "%u",
+			      le16_to_cpu(mu.mudl));
+		*p += size;
+	}
+
+	return true;
+}
+
+static bool stdout_supported_cap_config_add_egcd(struct shr_table *t,
+		unsigned char **p, unsigned char *end)
+{
+	struct nvme_end_grp_config_desc egcd;
+	struct nvme_end_grp_chan_desc chan_desc;
+	unsigned char *sets;
+	int egsets, egchans;
+
+	if (!shr_buf_has_room(*p, end, sizeof(egcd)))
+		return false;
+
+	memcpy(&egcd, *p, sizeof(egcd));
+	egsets = le16_to_cpu(egcd.egsets);
+	sets = *p + sizeof(egcd);
+	*p = sets + egsets * sizeof(__le16);
+	if (!shr_buf_has_room(sets, end, egsets * sizeof(__le16) +
+			      sizeof(chan_desc)))
+		return false;
+
+	memcpy(&chan_desc, *p, sizeof(chan_desc));
+	egchans = le16_to_cpu(chan_desc.egchans);
+	*p += sizeof(chan_desc);
+
+	stdout_kv_add(t, "Endurance Group Identifier", "%u",
+		      le16_to_cpu(egcd.endgid));
+	stdout_kv_add(t, "Capacity Adjustment Factor", "%u",
+		      le16_to_cpu(egcd.cap_adj_factor));
+	stdout_kv_add(t, "Total Endurance Group Capacity", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(egcd.tegcap)));
+	stdout_kv_add(t, "Spare Endurance Group Capacity", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(egcd.segcap)));
+	stdout_kv_add(t, "Endurance Estimate", "%s",
+		      uint128_t_to_l10n_string(le128_to_cpu(egcd.end_est)));
+	stdout_kv_add(t, "Number of NVM Sets", "%u", egsets);
+
+	for (int k = 0; k < egsets; k++) {
+		char name[32];
+		__le16 id;
+
+		memcpy(&id, sets + k * sizeof(id), sizeof(id));
+		snprintf(name, sizeof(name), "NVM Set %d Identifier", k);
+		stdout_kv_add(t, name, "%u", le16_to_cpu(id));
+	}
 
 	stdout_kv_add(t, "Number of Channels", "%u", egchans);
 
 	for (int l = 0; l < egchans; l++) {
-		struct nvme_channel_config_desc *chd =
-			&chan_desc->chan_config_desc[l];
-		int chmus = le16_to_cpu(chd->chmus);
-
-		stdout_kv_add(t, "Channel Identifier", "%u",
-			      le16_to_cpu(chd->chanid));
-		stdout_kv_add(t, "Number of Channel Media Units", "%u", chmus);
-
-		for (int m = 0; m < chmus; m++) {
-			struct nvme_media_unit_config_desc *mu =
-				&chd->mu_config_desc[m];
-
-			stdout_kv_add(t, "Media Unit Identifier", "%u",
-				      le16_to_cpu(mu->muid));
-			stdout_kv_add(t, "Media Unit Descriptor Length", "%u",
-				      le16_to_cpu(mu->mudl));
-		}
+		if (!stdout_supported_cap_config_add_channel(t, p, end))
+			return false;
 	}
-}
 
-static void stdout_supported_cap_config_add_egcd(struct shr_table *t,
-		struct nvme_supported_cap_config_list_log *cap, int i)
-{
-	struct nvme_end_grp_chan_desc *chan_desc;
-	int egcn = le16_to_cpu(cap->cap_config_desc[i].egcn);
-
-	stdout_kv_add(t, "Number of Endurance Group Configuration Descriptors",
-		      "%u", egcn);
-
-	for (int j = 0; j < egcn; j++) {
-		struct nvme_end_grp_config_desc *egcd =
-			&cap->cap_config_desc[i].egcd[j];
-		int egsets = le16_to_cpu(egcd->egsets);
-
-		stdout_kv_add(t, "Endurance Group Identifier", "%u",
-			      le16_to_cpu(egcd->endgid));
-		stdout_kv_add(t, "Capacity Adjustment Factor", "%u",
-			      le16_to_cpu(egcd->cap_adj_factor));
-		stdout_kv_add(t, "Total Endurance Group Capacity", "%s",
-			      uint128_t_to_l10n_string(
-				      le128_to_cpu(egcd->tegcap)));
-		stdout_kv_add(t, "Spare Endurance Group Capacity", "%s",
-			      uint128_t_to_l10n_string(
-				      le128_to_cpu(egcd->segcap)));
-		stdout_kv_add(t, "Endurance Estimate", "%s",
-			      uint128_t_to_l10n_string(
-				      le128_to_cpu(egcd->end_est)));
-		stdout_kv_add(t, "Number of NVM Sets", "%u", egsets);
-
-		for (int k = 0; k < egsets; k++) {
-			char name[32];
-
-			snprintf(name, sizeof(name),
-				 "NVM Set %d Identifier", i);
-			stdout_kv_add(t, name, "%u",
-				      le16_to_cpu(egcd->nvmsetid[k]));
-		}
-
-		chan_desc = (struct nvme_end_grp_chan_desc *)
-			&egcd->nvmsetid[egsets];
-		stdout_supported_cap_config_add_channels(t, chan_desc);
-	}
+	return true;
 }
 
 void stdout_supported_cap_config_log(
-		struct nvme_supported_cap_config_list_log *cap)
+		struct nvme_supported_cap_config_list_log *cap, size_t len)
 {
-	int sccn = cap->sccn;
+	unsigned char *p = (unsigned char *)cap->cap_config_desc;
+	unsigned char *end = (unsigned char *)cap + len;
 	struct shr_table *t;
+	bool more = true;
+
+	if (len < sizeof(*cap))
+		return;
 
 	t = stdout_kv_table_create();
 	if (!t)
 		return;
 
 	stdout_kv_add(t, "Number of Supported Capacity Configurations", "%u",
-		      sccn);
+		      cap->sccn);
 
 	stdout_kv_table_finish(t, "supported-cap-config");
 
-	for (int i = 0; i < sccn; i++) {
+	for (int i = 0; more && i < cap->sccn; i++) {
+		struct nvme_capacity_config_desc desc;
+		int egcn;
+
+		if (!shr_buf_has_room(p, end, sizeof(desc)))
+			break;
+
+		memcpy(&desc, p, sizeof(desc));
+		egcn = le16_to_cpu(desc.egcn);
+		p += sizeof(desc);
+
 		printf("Capacity Configuration Descriptor: %u\n", i);
 
 		t = stdout_kv_table_create();
@@ -1615,12 +1654,15 @@ void stdout_supported_cap_config_log(
 			return;
 
 		stdout_kv_add(t, "Capacity Configuration Identifier", "%u",
-			      le16_to_cpu(
-				      cap->cap_config_desc[i].cap_config_id));
+			      le16_to_cpu(desc.cap_config_id));
 		stdout_kv_add(t, "Domain Identifier", "%u",
-			      le16_to_cpu(cap->cap_config_desc[i].domainid));
+			      le16_to_cpu(desc.domainid));
+		stdout_kv_add(t,
+			      "Number of Endurance Group Configuration Descriptors",
+			      "%u", egcn);
 
-		stdout_supported_cap_config_add_egcd(t, cap, i);
+		for (int j = 0; more && j < egcn; j++)
+			more = stdout_supported_cap_config_add_egcd(t, &p, end);
 
 		stdout_kv_table_finish(t, "supported-cap-config");
 	}

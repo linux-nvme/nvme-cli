@@ -2527,87 +2527,148 @@ static void json_media_unit_stat_log(struct nvme_media_unit_stat_log *mus)
 	obj_add_array(r, "mus_list", entries);
 }
 
+/*
+ * An odd Media Unit Descriptor Length leaves the next descriptors
+ * unaligned, so they are copied before they are read.
+ */
+static bool json_cap_config_chan(struct json_object *chan_list,
+		unsigned char **p, unsigned char *end)
+{
+	struct nvme_channel_config_desc chd;
+	struct json_object *channel, *media_list;
+	int chmus;
+
+	if (!shr_buf_has_room(*p, end, sizeof(chd)))
+		return false;
+
+	memcpy(&chd, *p, sizeof(chd));
+	chmus = le16_to_cpu(chd.chmus);
+	*p += sizeof(chd);
+
+	channel = json_create_object();
+	obj_add_uint(channel, "chanid", le16_to_cpu(chd.chanid));
+	obj_add_uint(channel, "chmus", chmus);
+	media_list = json_create_array();
+	obj_add_array(channel, "Media Descriptor", media_list);
+	array_add_obj(chan_list, channel);
+
+	for (int m = 0; m < chmus; m++) {
+		struct nvme_media_unit_config_desc mu;
+		struct json_object *media;
+		size_t size;
+
+		if (!shr_buf_has_room(*p, end, sizeof(mu)))
+			return false;
+
+		memcpy(&mu, *p, sizeof(mu));
+		size = sizeof(mu) + le16_to_cpu(mu.mudl);
+		if (!shr_buf_has_room(*p, end, size))
+			return false;
+
+		media = json_create_object();
+		obj_add_uint(media, "muid", le16_to_cpu(mu.muid));
+		obj_add_uint(media, "mudl", le16_to_cpu(mu.mudl));
+		array_add_obj(media_list, media);
+		*p += size;
+	}
+
+	return true;
+}
+
+static bool json_cap_config_egcd(struct json_object *end_list,
+		unsigned char **p, unsigned char *end)
+{
+	struct nvme_end_grp_config_desc egcd;
+	struct nvme_end_grp_chan_desc chan_desc;
+	struct json_object *endurance, *set_list, *chan_list;
+	unsigned char *sets;
+	int egsets, egchans;
+
+	if (!shr_buf_has_room(*p, end, sizeof(egcd)))
+		return false;
+
+	memcpy(&egcd, *p, sizeof(egcd));
+	egsets = le16_to_cpu(egcd.egsets);
+	sets = *p + sizeof(egcd);
+	*p = sets + egsets * sizeof(__le16);
+	if (!shr_buf_has_room(sets, end, egsets * sizeof(__le16) +
+			      sizeof(chan_desc)))
+		return false;
+
+	memcpy(&chan_desc, *p, sizeof(chan_desc));
+	egchans = le16_to_cpu(chan_desc.egchans);
+	*p += sizeof(chan_desc);
+
+	endurance = json_create_object();
+	obj_add_uint(endurance, "endgid", le16_to_cpu(egcd.endgid));
+	obj_add_uint(endurance, "cap_adj_factor",
+		     le16_to_cpu(egcd.cap_adj_factor));
+	obj_add_uint128(endurance, "tegcap", le128_to_cpu(egcd.tegcap));
+	obj_add_uint128(endurance, "segcap", le128_to_cpu(egcd.segcap));
+	obj_add_uint(endurance, "egsets", egsets);
+	obj_add_uint(endurance, "egchans", egchans);
+
+	set_list = json_create_array();
+	for (int k = 0; k < egsets; k++) {
+		struct json_object *set = json_create_object();
+		__le16 id;
+
+		memcpy(&id, sets + k * sizeof(id), sizeof(id));
+		obj_add_uint(set, "nvmsetid", le16_to_cpu(id));
+		array_add_obj(set_list, set);
+	}
+
+	chan_list = json_create_array();
+	obj_add_array(endurance, "Channel Descriptor", chan_list);
+	obj_add_array(endurance, "NVM Set IDs", set_list);
+	array_add_obj(end_list, endurance);
+
+	for (int l = 0; l < egchans; l++) {
+		if (!json_cap_config_chan(chan_list, p, end))
+			return false;
+	}
+
+	return true;
+}
+
 static void json_supported_cap_config_log(
-		struct nvme_supported_cap_config_list_log *cap_log)
+		struct nvme_supported_cap_config_list_log *cap_log, size_t len)
 {
 	struct json_object *r = json_r;
 	struct json_object *cap_list = json_create_array();
-	struct json_object *capacity;
-	struct json_object *end_list;
-	struct json_object *set_list;
-	struct json_object *set;
-	struct json_object *chan_list;
-	struct json_object *channel;
-	struct json_object *media_list;
-	struct json_object *media;
-	struct json_object *endurance;
-	struct nvme_end_grp_chan_desc *chan_desc;
-	int i, j, k, l, m, egcn, egsets, egchans, chmus;
-	int sccn = cap_log->sccn;
-
-	obj_add_uint(r, "sccn", cap_log->sccn);
-	for (i = 0; i < sccn; i++) {
-		capacity = json_create_object();
-		obj_add_uint(capacity, "cap_config_id",
-			     le16_to_cpu(cap_log->cap_config_desc[i].cap_config_id));
-		obj_add_uint(capacity, "domainid",
-			     le16_to_cpu(cap_log->cap_config_desc[i].domainid));
-		obj_add_uint(capacity, "egcn", le16_to_cpu(cap_log->cap_config_desc[i].egcn));
-		end_list = json_create_array();
-		egcn = le16_to_cpu(cap_log->cap_config_desc[i].egcn);
-		for (j = 0; j < egcn; j++) {
-			endurance = json_create_object();
-			obj_add_uint(endurance, "endgid",
-				     le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].endgid));
-			obj_add_uint(endurance, "cap_adj_factor",
-				     le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].cap_adj_factor));
-			obj_add_uint128(endurance, "tegcap",
-					le128_to_cpu(cap_log->cap_config_desc[i].egcd[j].tegcap));
-			obj_add_uint128(endurance, "segcap",
-					le128_to_cpu(cap_log->cap_config_desc[i].egcd[j].segcap));
-			obj_add_uint(endurance, "egsets",
-				     le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].egsets));
-			egsets = le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].egsets);
-			set_list = json_create_array();
-			for (k = 0; k < egsets; k++) {
-				set = json_create_object();
-				obj_add_uint(set, "nvmsetid",
-				    le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].nvmsetid[k]));
-				array_add_obj(set_list, set);
-			}
-			chan_desc = (struct nvme_end_grp_chan_desc *)
-			    &cap_log->cap_config_desc[i].egcd[j].nvmsetid[egsets];
-			egchans = le16_to_cpu(chan_desc->egchans);
-			obj_add_uint(endurance, "egchans", le16_to_cpu(chan_desc->egchans));
-			chan_list = json_create_array();
-			for (l = 0; l < egchans; l++) {
-				channel = json_create_object();
-				obj_add_uint(channel, "chanid",
-					     le16_to_cpu(chan_desc->chan_config_desc[l].chanid));
-				obj_add_uint(channel, "chmus",
-					     le16_to_cpu(chan_desc->chan_config_desc[l].chmus));
-				chmus = le16_to_cpu(chan_desc->chan_config_desc[l].chmus);
-				media_list = json_create_array();
-				for (m = 0; m < chmus; m++) {
-					media = json_create_object();
-					obj_add_uint(media, "chanid",
-					    le16_to_cpu(chan_desc->chan_config_desc[l].mu_config_desc[m].muid));
-					obj_add_uint(media, "chmus",
-					    le16_to_cpu(chan_desc->chan_config_desc[l].mu_config_desc[m].mudl));
-					array_add_obj(media_list, media);
-				}
-				obj_add_array(channel, "Media Descriptor", media_list);
-				array_add_obj(chan_list, channel);
-			}
-			obj_add_array(endurance, "Channel Descriptor", chan_list);
-			obj_add_array(endurance, "NVM Set IDs", set_list);
-			array_add_obj(end_list, endurance);
-		}
-		obj_add_array(capacity, "Endurance Descriptor", end_list);
-		array_add_obj(cap_list, capacity);
-	}
+	unsigned char *p = (unsigned char *)cap_log->cap_config_desc;
+	unsigned char *end = (unsigned char *)cap_log + len;
+	bool more = true;
 
 	obj_add_array(r, "Capacity Descriptor", cap_list);
+	if (len < sizeof(*cap_log))
+		return;
+
+	obj_add_uint(r, "sccn", cap_log->sccn);
+	for (int i = 0; more && i < cap_log->sccn; i++) {
+		struct nvme_capacity_config_desc desc;
+		struct json_object *capacity, *end_list;
+		int egcn;
+
+		if (!shr_buf_has_room(p, end, sizeof(desc)))
+			break;
+
+		memcpy(&desc, p, sizeof(desc));
+		egcn = le16_to_cpu(desc.egcn);
+		p += sizeof(desc);
+
+		capacity = json_create_object();
+		obj_add_uint(capacity, "cap_config_id",
+			     le16_to_cpu(desc.cap_config_id));
+		obj_add_uint(capacity, "domainid", le16_to_cpu(desc.domainid));
+		obj_add_uint(capacity, "egcn", egcn);
+		end_list = json_create_array();
+		obj_add_array(capacity, "Endurance Descriptor", end_list);
+		array_add_obj(cap_list, capacity);
+
+		for (int j = 0; more && j < egcn; j++)
+			more = json_cap_config_egcd(end_list, &p, end);
+	}
 }
 
 static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
