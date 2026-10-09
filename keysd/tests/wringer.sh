@@ -394,8 +394,9 @@ keysd_restart() {
 	systemctl restart "${UNIT}" >"${SCRATCH}" 2>&1
 }
 
-keysd_active() {
-	systemctl is-active --quiet "${UNIT}"
+# nvme-keysd ran since $1, and exited with status 0.
+keysd_ran() {
+	unit_journal_has "$1" "Finished ${UNIT}"
 }
 
 journal_has() {
@@ -464,7 +465,7 @@ write_fabrics_conf systemd-creds
 phase "a missing credential is reported"
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
 keysd_restart
-check "the unit starts with no credential" keysd_active
+check "nvme-keysd runs without its credential" keysd_ran "${PHASE_START}"
 check "the missing credential was logged" \
 	journal_has "${PHASE_START}" "cannot decrypt credential '${CRED_NAME}'"
 
@@ -472,29 +473,30 @@ phase "a credential is imported at startup"
 write_cred "${CRED_FILE}" "${KEY_A}" "${CRED_NAME}"
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
 keysd_restart
-check "the unit is active" keysd_active
+check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "key A is in .nvme with the expected identity" key_present "${ID_A}"
 check "the import was logged" journal_has "${PHASE_START}" "imported '${ID_A}'"
+check "the exit was logged" journal_has "${PHASE_START}" "keys imported, exiting"
 
 phase "a TLS connection finds the key without --tls-key"
 check "nvme connect -J connects" connect_from_config
 check "the controller is live" ctrl_live
 check "the connection uses key A" ctrl_uses_key "${ID_A}"
 
-phase "a reload with nothing changed changes nothing"
+phase "a restart with nothing changed changes nothing"
 SERIAL_A=$(key_serial "${ID_A}")
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
-systemctl reload "${UNIT}"
-check "the unit is active" keysd_active
+keysd_restart
+check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "key A keeps its serial" test "$(key_serial "${ID_A}")" = "${SERIAL_A}"
 check "'already present' was logged" \
 	journal_has "${PHASE_START}" "'${ID_A}' already present"
 
-phase "a new credential and a reload replace the key"
+phase "a new credential and a restart replace the key"
 write_cred "${CRED_FILE}" "${KEY_B}" "${CRED_NAME}"
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
-systemctl reload "${UNIT}"
-check "the unit is active" keysd_active
+keysd_restart
+check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "key B is in .nvme" key_present "${ID_B}"
 check "key A is revoked" key_absent "${ID_A}"
 check "the revocation was logged" \
@@ -504,28 +506,21 @@ disconnect
 check "a new connection succeeds" connect_from_config
 check "the new connection uses key B" ctrl_uses_key "${ID_B}"
 disconnect
-SERIAL_B=$(key_serial "${ID_B}")
 
 phase "the keys outlive nvme-keysd"
-systemctl stop "${UNIT}"
+check "the unit is not active" test "$(systemctl is-active "${UNIT}")" = inactive
 # The key garbage collector runs asynchronously.
 sleep 2
 check "key B is still in .nvme" key_present "${ID_B}"
 check "a new connection succeeds" connect_from_config
 check "the new connection uses key B" ctrl_uses_key "${ID_B}"
 disconnect
-PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
-keysd_restart
-check "the unit is active" keysd_active
-check "key B keeps its serial" test "$(key_serial "${ID_B}")" = "${SERIAL_B}"
-check "'already present' was logged" \
-	journal_has "${PHASE_START}" "'${ID_B}' already present"
 
 phase "a credential with the wrong name is rejected"
 write_cred "${CRED_FILE}" "${KEY_A}" wrong-name
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
-systemctl reload "${UNIT}"
-check "the unit is active" keysd_active
+keysd_restart
+check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "the name mismatch was logged" \
 	journal_has "${PHASE_START}" "io.systemd.Credentials.NameMismatch"
 check "key B is still in .nvme" key_present "${ID_B}"
@@ -536,8 +531,8 @@ write_cred "${CRED_FILE}" "${KEY_B}" "${CRED_NAME}"
 sed -i "/^controller/a controller = transport=tcp;traddr=${TRADDR};trsvcid=$((TRSVCID + 1))" \
 	"${FABRICS_CONF}"
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
-systemctl reload "${UNIT}"
-check "the unit is active" keysd_active
+keysd_restart
+check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "'already present' was logged once" \
 	test "$(journal_count "${PHASE_START}" "'${ID_B}' already present")" -eq 1
 
@@ -573,8 +568,8 @@ write_cred "${CRED_DIR}/keysd-wringer-keyring" "${KEY_A}" \
 		"keyring = keysd-wringer-nosuch"
 } > "${DROPIN}"
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
-systemctl reload "${UNIT}"
-check "the unit is active" keysd_active
+keysd_restart
+check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "the inline entry is ignored" \
 	test "$(journal_count "${PHASE_START}" "${NQN_BASE}:inline")" -eq 0
 check "an unsupported key-source was logged" \
@@ -596,8 +591,9 @@ check "the main file is still imported" \
 phase "a fabrics configuration that does not parse is reported"
 printf '[Subsystem]\nnqn = not-an-nqn\n' > "${DROPIN}"
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
-systemctl reload "${UNIT}"
-check "the unit is active" keysd_active
+keysd_restart
+check "the unit is skipped" \
+	unit_journal_has "${PHASE_START}" "Skipped due to 'exec-condition'"
 check "the read failure was logged" \
 	journal_has "${PHASE_START}" "cannot read the fabrics configuration"
 check "key B is still in .nvme" key_present "${ID_B}"

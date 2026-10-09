@@ -7,7 +7,7 @@ Wants=systemd-creds.socket
 After=systemd-creds.socket
 
 [Service]
-Type=notify-reload
+Type=oneshot
 # Skip the unit, and the module load, when there is nothing to do.
 ExecCondition=@SBINDIR@/nvme-keysd --should-start
 # nvme_keyring creates the .nvme keyring. nvme_core loads it only with

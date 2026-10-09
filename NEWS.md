@@ -156,7 +156,9 @@
   connection needs them. Built with the new `nvme-keysd` meson option,
   `disabled` by default. It imports the PSKs of the entries with
   `key-source = systemd-creds` from encrypted systemd credentials in
-  `/etc/nvme/creds`. It needs systemd 257 or later. See `nvme-keysd(8)`.
+  `/etc/nvme/creds` at boot, and exits. It does not start when no
+  entry has a key source. It needs systemd 257 or later. See
+  `nvme-keysd(8)`.
 
 * New `key-source` key in `nvme-fabrics.conf`. With
   `key-source = systemd-creds`, `tls-key` is the name of a systemd
