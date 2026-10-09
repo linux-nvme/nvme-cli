@@ -14,11 +14,7 @@
 #include <string.h>
 #include <sys/prctl.h>
 
-#include <systemd/sd-daemon.h>
-#include <systemd/sd-event.h>
-
 #include <daemon-util/log.h>
-#include <daemon-util/signals.h>
 #include <nvme/lib.h>
 
 #include "config.h"
@@ -30,7 +26,6 @@ struct keysd_ctx {
 	const char *fabrics_conf;            // NULL: libnvme's default
 	const char *creds_dir;               // encrypted credentials
 	struct keysd_config *cfg;            // parsed @conf_path
-	sd_event *event;                     // sd_event main loop
 	bool force_debug;                    // --debug forces DEBUG
 	bool should_start;                   // --should-start: test, exit
 };
@@ -43,22 +38,6 @@ static void apply_log_level(void)
 
 	dmn_log_set_level(level);
 	libnvme_set_logging_level(ctx.nvme_ctx, level, false, false);
-}
-
-static void reload_config(void *user_data __attribute__((unused)))
-{
-	struct keysd_config *new_cfg;
-
-	new_cfg = config_load(ctx.conf_path);
-	if (!new_cfg) {
-		log_err("failed to reload config");
-		return;
-	}
-	config_free(ctx.cfg);
-	ctx.cfg = new_cfg;
-	apply_log_level();
-
-	import_keys(ctx.nvme_ctx, ctx.fabrics_conf, ctx.creds_dir);
 }
 
 static bool should_start(void)
@@ -190,30 +169,14 @@ int main(int argc, char **argv)
 		return r;
 	}
 
-	r = sd_event_default(&ctx.event);
-	if (r < 0) {
-		log_err("sd_event_default: %s", strerror(-r));
-		return 1;
-	}
-
-	if (dmn_add_signal_handlers(ctx.event, reload_config, NULL) < 0)
-		return 1;
-
 	import_keys(ctx.nvme_ctx, ctx.fabrics_conf, ctx.creds_dir);
-
-	sd_notify(0, "READY=1");
-	log_info("started");
-
-	r = sd_event_loop(ctx.event);
-	if (r < 0)
-		log_err("sd_event_loop: %s", strerror(-r));
+	log_info("keys imported, exiting");
 
 	config_free(ctx.cfg);
 	libnvme_free_global_ctx(ctx.nvme_ctx);
-	sd_event_unref(ctx.event);
 	free(config_path_abs);
 	free(fabrics_path_abs);
 	free(creds_path_abs);
 
-	return r < 0 ? 1 : 0;
+	return 0;
 }

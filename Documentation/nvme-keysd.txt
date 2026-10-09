@@ -37,8 +37,8 @@ NQN, as 'nvme connect' does. A key that is already there is not written
 again. Any other key for the same host NQN and subsystem NQN is revoked,
 so that the kernel finds only one key for the pair.
 
-nvme-keysd imports the keys at startup and on SIGHUP. It never revokes
-a key because its entry was removed from the configuration.
+nvme-keysd imports the keys and exits. It never revokes a key because
+its entry was removed from the configuration.
 
 The unit does not start when no entry of the fabrics configuration has
 a 'key-source' other than 'inline'. In that case, nvme-keysd does not
@@ -64,9 +64,10 @@ and in nvme-fabrics.conf:
 	key-source = systemd-creds
 	tls-key    = vol1-psk
 
-After adding or changing a credential, reload nvme-keysd:
+After adding or changing credentials, restart nvme-keysd to import
+them:
 
-	# systemctl reload nvme-keysd
+	# systemctl restart nvme-keysd
 
 nvme-keysd logs an error for a credential that it cannot decrypt, and
 imports the other keys.
@@ -113,15 +114,6 @@ section:
 threshold. '--debug' on the command line overrides it.
 
 A missing file, or a missing key, keeps the default.
-
-SIGNALS
--------
-SIGHUP;;
-	Reload nvme-keysd.conf and the fabrics configuration, and import
-	the keys again.
-
-SIGTERM, SIGINT;;
-	Shut down.
 
 FILES
 -----
