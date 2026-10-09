@@ -2854,7 +2854,7 @@ static unsigned int json_print_nvme_subsystem_multipath(struct libnvme_subsystem
 		struct libnvme_ctrl *c = libnvme_path_get_ctrl(p);
 		const char *ana_state;
 
-		libnvme_path_get_ana_state(p, &ana_state, NULL);
+		libnvme_path_get_ana_state(p, &ana_state, "");
 		path_attrs = json_create_object();
 		obj_add_str(path_attrs, "Name", libnvme_ctrl_get_name(c));
 		obj_add_str(path_attrs, "Transport", libnvme_ctrl_get_transport(c));
@@ -2924,12 +2924,12 @@ static void json_print_nvme_subsystem_list(struct libnvme_global_ctx *ctx,
 				const char *firmware;
 				const char *iopolicy;
 
-				libnvme_subsystem_get_model(s, &model, NULL);
-				libnvme_subsystem_get_serial(s, &serial, NULL);
+				libnvme_subsystem_get_model(s, &model, "");
+				libnvme_subsystem_get_serial(s, &serial, "");
 				libnvme_subsystem_get_firmware(s, &firmware,
-								NULL);
+								"");
 				libnvme_subsystem_get_iopolicy(s, &iopolicy,
-								NULL);
+								"");
 
 				obj_add_str(subsystem_attrs, "Model", model);
 				obj_add_str(subsystem_attrs, "Serial", serial);
@@ -4868,7 +4868,7 @@ static void json_print_detail_list_multipath(struct libnvme_subsystem *s,
 			const char *firmware;
 			const char *ana_state;
 
-			libnvme_path_get_ana_state(p, &ana_state, NULL);
+			libnvme_path_get_ana_state(p, &ana_state, "");
 			obj_add_str(jpath, "Path", libnvme_path_get_name(p));
 			obj_add_str(jpath, "ANAState", ana_state);
 
@@ -4878,11 +4878,11 @@ static void json_print_detail_list_multipath(struct libnvme_subsystem *s,
 			 * controller  attributes.
 			 */
 			c = libnvme_path_get_ctrl(p);
-			libnvme_ctrl_get_phy_slot(c, &slot, NULL);
-			libnvme_ctrl_get_cntlid(c, &cntlid, NULL);
-			libnvme_ctrl_get_serial(c, &serial, NULL);
-			libnvme_ctrl_get_model(c, &model, NULL);
-			libnvme_ctrl_get_firmware(c, &firmware, NULL);
+			libnvme_ctrl_get_phy_slot(c, &slot, "");
+			libnvme_ctrl_get_cntlid(c, &cntlid, "");
+			libnvme_ctrl_get_serial(c, &serial, "");
+			libnvme_ctrl_get_model(c, &model, "");
+			libnvme_ctrl_get_firmware(c, &firmware, "");
 			obj_add_str(jpath, "Controller", libnvme_ctrl_get_name(c));
 			obj_add_str(jpath, "Cntlid", cntlid);
 			obj_add_str(jpath, "SerialNumber", serial);
@@ -4917,11 +4917,11 @@ static void json_print_detail_list(struct libnvme_subsystem *s, struct json_obje
 		const char *model;
 		const char *firmware;
 
-		libnvme_ctrl_get_phy_slot(c, &slot, NULL);
-		libnvme_ctrl_get_cntlid(c, &cntlid, NULL);
-		libnvme_ctrl_get_serial(c, &serial, NULL);
-		libnvme_ctrl_get_model(c, &model, NULL);
-		libnvme_ctrl_get_firmware(c, &firmware, NULL);
+		libnvme_ctrl_get_phy_slot(c, &slot, "");
+		libnvme_ctrl_get_cntlid(c, &cntlid, "");
+		libnvme_ctrl_get_serial(c, &serial, "");
+		libnvme_ctrl_get_model(c, &model, "");
+		libnvme_ctrl_get_firmware(c, &firmware, "");
 
 		obj_add_str(jctrl, "Controller", libnvme_ctrl_get_name(c));
 		obj_add_str(jctrl, "Cntlid", cntlid);
@@ -5040,11 +5040,11 @@ static void json_detail_list(struct libnvme_global_ctx *ctx)
 				const char *firmware;
 				const char *slot;
 
-				libnvme_ctrl_get_cntlid(c, &cntlid, NULL);
-				libnvme_ctrl_get_serial(c, &serial, NULL);
-				libnvme_ctrl_get_model(c, &model, NULL);
-				libnvme_ctrl_get_firmware(c, &firmware, NULL);
-				libnvme_ctrl_get_phy_slot(c, &slot, NULL);
+				libnvme_ctrl_get_cntlid(c, &cntlid, "");
+				libnvme_ctrl_get_serial(c, &serial, "");
+				libnvme_ctrl_get_model(c, &model, "");
+				libnvme_ctrl_get_firmware(c, &firmware, "");
+				libnvme_ctrl_get_phy_slot(c, &slot, "");
 
 				obj_add_str(jctrl, "Controller", libnvme_ctrl_get_name(c));
 				obj_add_str(jctrl, "Cntlid", cntlid);
@@ -5086,7 +5086,7 @@ static void json_detail_list(struct libnvme_global_ctx *ctx)
 					const char *ana_state;
 
 					libnvme_path_get_ana_state(p,
-							&ana_state, NULL);
+							&ana_state, "");
 					obj_add_str(jpath, "Path", libnvme_path_get_name(p));
 					obj_add_str(jpath, "ANAState",
 							ana_state);
@@ -5231,7 +5231,7 @@ static unsigned int json_subsystem_topology_multipath(struct libnvme_subsystem *
 			struct libnvme_ctrl *c;
 			const char *ana_state;
 
-			libnvme_path_get_ana_state(p, &ana_state, NULL);
+			libnvme_path_get_ana_state(p, &ana_state, "");
 			path_attrs = json_create_object();
 			obj_add_str(path_attrs, "Path", libnvme_path_get_name(p));
 			obj_add_str(path_attrs, "ANAState", ana_state);
@@ -5245,7 +5245,7 @@ static unsigned int json_subsystem_topology_multipath(struct libnvme_subsystem *
 				const char *numa_nodes;
 
 				libnvme_path_get_numa_nodes(p, &numa_nodes,
-							     NULL);
+							     "");
 				obj_add_str(path_attrs, "NUMANodes",
 						numa_nodes);
 			} else if (!strcmp(iopolicy, "queue-depth")) {
@@ -5335,7 +5335,7 @@ static void json_simple_topology(struct libnvme_global_ctx *ctx)
 			subsystem_attrs = json_create_object();
 			obj_add_str(subsystem_attrs, "Name", libnvme_subsystem_get_name(s));
 			obj_add_str(subsystem_attrs, "NQN", libnvme_subsystem_get_subsysnqn(s));
-			libnvme_subsystem_get_iopolicy(s, &iopolicy, NULL);
+			libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
 			obj_add_str(subsystem_attrs, "IOPolicy", iopolicy);
 
 			if (verbose_mode()) {
@@ -5343,10 +5343,10 @@ static void json_simple_topology(struct libnvme_global_ctx *ctx)
 				const char *serial;
 				const char *firmware;
 
-				libnvme_subsystem_get_model(s, &model, NULL);
-				libnvme_subsystem_get_serial(s, &serial, NULL);
+				libnvme_subsystem_get_model(s, &model, "");
+				libnvme_subsystem_get_serial(s, &serial, "");
 				libnvme_subsystem_get_firmware(s, &firmware,
-								NULL);
+								"");
 
 				obj_add_str(subsystem_attrs, "Model", model);
 				obj_add_str(subsystem_attrs, "Serial", serial);
