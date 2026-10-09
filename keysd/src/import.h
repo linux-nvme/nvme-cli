@@ -7,7 +7,16 @@
  */
 #pragma once
 
+#include <stdbool.h>
+
 struct libnvme_global_ctx;
+
+/*
+ * Return true if an entry of the fabrics configuration @fabrics_conf (NULL
+ * for the default) has a key source other than "inline". Without such an
+ * entry, import_keys() has nothing to do.
+ */
+bool import_needed(struct libnvme_global_ctx *ctx, const char *fabrics_conf);
 
 /*
  * Put every TLS PSK that the fabrics configuration @fabrics_conf (NULL for

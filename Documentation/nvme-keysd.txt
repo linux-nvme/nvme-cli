@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme-keysd' [--config=<FILE>] [--fabrics-config=<FILE>]
-		[--creds-dir=<DIR>] [--debug] [--help]
+		[--creds-dir=<DIR>] [--should-start] [--debug] [--help]
 
 DESCRIPTION
 -----------
@@ -39,6 +39,10 @@ so that the kernel finds only one key for the pair.
 
 nvme-keysd imports the keys at startup and on SIGHUP. It never revokes
 a key because its entry was removed from the configuration.
+
+The unit does not start when no entry of the fabrics configuration has
+a 'key-source' other than 'inline'. In that case, nvme-keysd does not
+run, and the unit does not load the nvme_keyring module.
 
 CREDENTIALS
 -----------
@@ -82,6 +86,11 @@ OPTIONS
 --creds-dir=<DIR>::
 	Read the encrypted credentials from <DIR> instead of
 	@SYSCONFDIR@/nvme/creds.
+
+--should-start::
+	Exit with status 0 if an entry of the fabrics configuration has a
+	'key-source' other than 'inline', and with status 1 otherwise.
+	The unit runs this check before it starts nvme-keysd.
 
 -d::
 --debug::

@@ -339,18 +339,7 @@ keysd_install() {
 	cp "${KEYSD_BIN}" "${WORK_DIR}/keysd/"
 	cp "${LIBNVME_SO}" "${WORK_DIR}/libnvme/src/"
 
-	cat > "${FABRICS_CONF}" <<EOF
-[Host]
-hostnqn    = ${HOSTNQN}
-hostid     = ${HOSTID}
-key-source = systemd-creds
-
-[Subsystem]
-nqn        = ${SUBSYS_NQN}
-controller = transport=tcp;traddr=${TRADDR};trsvcid=${TRSVCID}
-tls        = true
-tls-key    = ${CRED_NAME}
-EOF
+	write_fabrics_conf systemd-creds
 
 	# The unit as built, with the binary and its arguments replaced. The
 	# credentials are in ${CRED_DIR}, so the unit must not create
@@ -370,10 +359,27 @@ EOF
 			  -e "/^ExecStart=/a ReadWritePaths=${BUILD_DIR}")
 	fi
 	sed -e "s|^ExecStart=.*|ExecStart=${exec_start}|" \
+	    -e "s|^ExecCondition=.*|ExecCondition=${exec_start} --should-start|" \
 	    -e "/^ConfigurationDirectory/d" \
 	    "${coverage[@]}" \
 		"${KEYSD_UNIT_FILE}" > "${UNIT_FILE}"
 	systemctl daemon-reload
+}
+
+# $1: the key source of the subsystem entry, or "inline".
+write_fabrics_conf() {
+	cat > "${FABRICS_CONF}" <<EOF
+[Host]
+hostnqn    = ${HOSTNQN}
+hostid     = ${HOSTID}
+key-source = $1
+
+[Subsystem]
+nqn        = ${SUBSYS_NQN}
+controller = transport=tcp;traddr=${TRADDR};trsvcid=${TRSVCID}
+tls        = true
+tls-key    = ${CRED_NAME}
+EOF
 }
 
 keysd_uninstall() {
@@ -394,6 +400,12 @@ keysd_active() {
 
 journal_has() {
 	journalctl -t nvme-keysd --since "$1" 2>/dev/null | grep -q -- "$2"
+}
+
+# systemd unloads an inactive unit, and "systemctl show" then returns
+# default values. The unit's journal keeps what happened.
+unit_journal_has() {
+	journalctl -u "${UNIT}" --since "$1" 2>/dev/null | grep -q -- "$2"
 }
 
 journal_count() {
@@ -436,6 +448,18 @@ revoke_test_keys
 nvmet_setup
 tlshd_start
 keysd_install
+
+phase "the unit does not start without a key source"
+write_fabrics_conf inline
+PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
+keysd_restart
+check "the unit is not active" test "$(systemctl is-active "${UNIT}")" = inactive
+check "the unit is not failed" \
+	test "$(systemctl is-failed "${UNIT}")" != failed
+check "ExecCondition= skipped the unit" \
+	unit_journal_has "${PHASE_START}" "Skipped due to 'exec-condition'"
+check "the check was logged" journal_has "${PHASE_START}" "nothing to do"
+write_fabrics_conf systemd-creds
 
 phase "a missing credential is reported"
 PHASE_START=$(date '+%Y-%m-%d %H:%M:%S')
