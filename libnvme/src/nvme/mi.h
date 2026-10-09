@@ -74,10 +74,11 @@
  * Management Interface ("NVMe-MI") or the NVM Express Base specification
  * ("NVMe"). At the time of writing, the versions we're referencing here
  * are:
- *  - NVMe-MI 1.2b
- *  - NVMe 2.0b
- * with a couple of accommodations for older spec types, particularly NVMe-MI
- * 1.1, where possible.
+ *
+ * - NVMe-MI 1.2b
+ * - NVMe 2.0b
+ *
+ * Older versions, in particular NVMe-MI 1.1, are supported where possible.
  *
  */
 #pragma once
@@ -175,7 +176,7 @@ int libnvme_mi_ep_set_timeout(struct libnvme_mi_ep *ep, unsigned int timeout_ms)
  * This function provides a way to limit the maximum time we're prepared to
  * wait for the final response. Specify zero in @mprt_max_ms for no limit.
  * This should be larger than the command/response timeout set in
- * &libnvme_mi_ep_set_timeout().
+ * libnvme_mi_ep_set_timeout().
  */
 void libnvme_mi_ep_set_mprt_max(struct libnvme_mi_ep *ep, unsigned int mprt_max_ms);
 
@@ -218,9 +219,9 @@ struct libnvme_transport_handle *libnvme_mi_next_transport_handle(struct libnvme
  *
  * Allows iteration of the list of controllers behind an endpoint. Unless the
  * controllers have already been created explicitly, you'll probably want to
- * call &libnvme_mi_scan_ep() to scan for the controllers first.
+ * call libnvme_mi_scan_ep() to scan for the controllers first.
  *
- * See: &libnvme_mi_scan_ep()
+ * See: libnvme_mi_scan_ep()
  */
 #define libnvme_mi_for_each_transport_handle(ep, hdl)			\
 	for (hdl = libnvme_mi_first_transport_handle(ep); hdl != NULL;	\
@@ -236,9 +237,9 @@ struct libnvme_transport_handle *libnvme_mi_next_transport_handle(struct libnvme
  * Allows iteration of the list of controllers behind an endpoint, safe against
  * deletion during iteration. Unless the controllers have already been created
  * explicitly (or you're just iterating to destroy controllers) you'll probably
- * want to call &libnvme_mi_scan_ep() to scan for the controllers first.
+ * want to call libnvme_mi_scan_ep() to scan for the controllers first.
  *
- * See: &libnvme_mi_scan_ep()
+ * See: libnvme_mi_scan_ep()
  */
 #define libnvme_mi_for_each_transport_handle_safe(ep, hdl, _hdl)		\
 	for (hdl = libnvme_mi_first_transport_handle(ep),			\
@@ -683,7 +684,7 @@ static inline int libnvme_mi_mi_config_set_smbus_freq(struct libnvme_mi_ep *ep, 
  * be cleared from future health status poll data, and may be re-triggered by
  * a future health change event.
  *
- * See &libnvme_mi_mi_subsystem_health_status_poll(), &enum nvme_mi_ccsf for
+ * See libnvme_mi_mi_subsystem_health_status_poll(), &enum nvme_mi_ccsf for
  * values in @mask.
  *
  * Return: The nvme command status if a response was received (see

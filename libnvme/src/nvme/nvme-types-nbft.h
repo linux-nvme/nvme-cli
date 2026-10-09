@@ -27,7 +27,7 @@
  * - Security descriptors for boot
  * - Discovery service descriptors
  *
- * This file is part of the nvme-types-*.h family following the established
+ * This file is part of the ``nvme-types-*.h`` family following the established
  * naming pattern for NVMe specification type definitions.
  */
 

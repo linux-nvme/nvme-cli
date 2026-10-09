@@ -2056,7 +2056,7 @@ def emit_hdr_lifecycle(f, prefix, sname, type_name, lc_members):
     f.write(
         f'/**\n'
         f'{kdoc_summary(new_fn, f"Allocate and initialise a {type_name} object.", "Allocate and initialise a new instance.", "Constructor.")}\n'
-        f' * @pp: On success, *pp is set to the newly allocated object.\n'
+        f' * @pp: On success, ``*pp`` is set to the newly allocated object.\n'
         f' *\n'
         f' * Allocates a zeroed &struct {type_name} on the heap.\n'
         f' * The caller must release it with {_free_name(prefix, sname)}().\n'

@@ -26,6 +26,7 @@
  * Revision 1.3
  *
  * This file is organized into functional groups:
+ *
  * - NVM Namespace Identification: Extended LBA formats and namespace-specific data
  * - I/O Command Set Support: Command set identification and capabilities
  * - Reservation Notifications: Log pages for reservation events
