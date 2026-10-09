@@ -232,7 +232,7 @@ enum nvme_mi_dtyp {
  * @NVME_MI_CONFIG_AE: Asynchronous Events configuration
  * Configuration parameters for the MI Get/Set Configuration commands.
  *
- * See &nvme_mi_mi_config_get() and &nvme_mi_config_set().
+ * See libnvme_mi_mi_config_get() and libnvme_mi_mi_config_set().
  */
 enum nvme_mi_config_id {
 	NVME_MI_CONFIG_SMBUS_FREQ = 0x1,
@@ -248,7 +248,8 @@ enum nvme_mi_config_id {
  * @NVME_MI_CONFIG_SMBUS_FREQ_1MHz: 1MHz
  *
  * Values used in the SMBus Frequency device configuration. See
- * &nvme_mi_mi_config_get_smbus_freq() and &nvme_mi_mi_config_set_smbus_freq().
+ * libnvme_mi_mi_config_get_smbus_freq() and
+ * libnvme_mi_mi_config_set_smbus_freq().
  */
 enum nvme_mi_config_smbus_freq {
 	NVME_MI_CONFIG_SMBUS_FREQ_100kHz = 0x1,

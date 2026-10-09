@@ -2482,14 +2482,13 @@ enum nvme_id_ctrl_frmw {
  * @NVME_CTRL_LPA_PERSETENT_EVENT:	If set, the controller supports
  *					persistent event log.
  * @NVME_CTRL_LPA_LI0_LI5_LI12_LI13:	If set, the controller supports
- *					- log pages log page.
- *					- returning scope of each command in
- *					  commands supported and effects log
- *					  page.
- *					- feature identifiers supported and
- *					  effects log page.
- *					- NVMe-MI commands supported and
- *					  effects log page.
+ *					the log pages log page, the scope of
+ *					each command in the commands
+ *					supported and effects log page, the
+ *					feature identifiers supported and
+ *					effects log page, and the NVMe-MI
+ *					commands supported and effects log
+ *					page.
  * @NVME_CTRL_LPA_DA4_TELEMETRY:	If set, the controller supports data
  *					area 4 for telemetry host-initiated and
  *					telemetry.

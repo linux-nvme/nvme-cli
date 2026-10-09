@@ -557,7 +557,7 @@ const char *libnvmf_context_get_tls_key_identity(
 
 /**
  * libnvmf_tid_new() - Allocate and initialise a libnvmf_tid object.
- * @pp: On success, *pp is set to the newly allocated object.
+ * @pp: On success, ``*pp`` is set to the newly allocated object.
  *
  * Allocates a zeroed &struct libnvmf_tid on the heap.
  * The caller must release it with libnvmf_tid_free().
@@ -644,7 +644,7 @@ const char *libnvmf_tid_get_hostid(const struct libnvmf_tid *p);
 
 /**
  * libnvmf_discovery_args_new() - Allocate and initialise a new instance.
- * @pp: On success, *pp is set to the newly allocated object.
+ * @pp: On success, ``*pp`` is set to the newly allocated object.
  *
  * Allocates a zeroed &struct libnvmf_discovery_args on the heap.
  * The caller must release it with libnvmf_discovery_args_free().

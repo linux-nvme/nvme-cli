@@ -211,7 +211,8 @@ size_t libnvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
  *
  * See &struct nvme_ana_log for the definition of the returned structure.
  *
- * Return: If successful, returns 0 and sets *len to the actual log page length.
+ * Return: If successful, returns 0 and sets ``*len`` to the actual log page
+ * length.
  * If unsuccessful, returns the nvme command status if a response was received
  * (see &enum nvme_status_field) or negative error code otherwise.
  * Sets errno = EINVAL if retries == 0.
