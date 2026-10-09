@@ -21,3 +21,34 @@ coverage:
   status:
     project: off
     patch: off
+
+# One coverage number per part of the tree. The plugins need vendor
+# hardware and hold more than half of all lines. A separate number keeps
+# the progress in the other parts visible.
+component_management:
+  individual_components:
+    - component_id: cli
+      name: nvme CLI
+      paths:
+        - src/
+    - component_id: libnvme
+      name: libnvme
+      paths:
+        - libnvme/src/
+    - component_id: plugins
+      name: plugins
+      paths:
+        - plugins/
+    - component_id: discoverd
+      name: nvme-discoverd
+      paths:
+        - discoverd/src/
+    - component_id: keysd
+      name: nvme-keysd
+      paths:
+        - keysd/src/
+    - component_id: common
+      name: common code
+      paths:
+        - shared/
+        - daemon-util/
