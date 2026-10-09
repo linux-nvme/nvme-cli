@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <stdatomic.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
@@ -379,6 +380,7 @@ struct libnvme_host {  // !generate-accessors:read=generated,write=none !generat
 	char *hostid;
 	char *kxchap_host_key;		// !access:write=generated
 	char *hostsymname;		// !access:write=generated
+	atomic_int refcount;		// !access:read=none
 };
 
 struct libnvme_fabric_options { // !generate-accessors
