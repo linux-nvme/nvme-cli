@@ -74,25 +74,6 @@ static char *registry_path(struct libnvme_global_ctx *ctx, const char *device,
 	return n < 0 ? NULL : path;
 }
 
-static int ensure_device_dir(struct libnvme_global_ctx *ctx, const char *device)
-{
-	__cleanup_free char *path = NULL;
-	int ret;
-
-	ret = shr_mkdir_p(registry_dir(ctx), 0755);
-	if (ret)
-		return ret;
-
-	path = registry_path(ctx, device, NULL);
-	if (!path)
-		return -ENOMEM;
-
-	/* EEXIST is success: two concurrent creates race to the same result. */
-	if (mkdir(path, 0755) < 0 && errno != EEXIST)
-		return -errno;
-	return 0;
-}
-
 static bool valid_device(const char *device)
 {
 	const char *p;
@@ -254,33 +235,6 @@ err:
 }
 
 /*
- * Open the directory for @device (creating it if needed) and write @attr=@value
- * atomically.  Shared by the create and update paths.
- */
-static int write_device_attr(struct libnvme_global_ctx *ctx, const char *device,
-			     const char *attr, const char *value)
-{
-	__cleanup_free char *dir_path = NULL;
-	int dir_fd, ret;
-
-	ret = ensure_device_dir(ctx, device);
-	if (ret)
-		return ret;
-
-	dir_path = registry_path(ctx, device, NULL);
-	if (!dir_path)
-		return -ENOMEM;
-
-	dir_fd = open(dir_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-	if (dir_fd < 0)
-		return -errno;
-
-	ret = write_attr_atomic(dir_fd, dir_path, attr, value);
-	close(dir_fd);
-	return ret;
-}
-
-/*
  * Read the kernel's global uevent sequence number from
  * /sys/kernel/uevent_seqnum.  This monotonic counter is used to stamp a
  * registry entry at connect time so the udev REMOVE rule can tell a stale
@@ -386,28 +340,25 @@ static int delete_dir_atomic(struct libnvme_global_ctx *ctx, const char *path)
 }
 
 /*
- * libnvmf_registry_create_instance - Write a registry entry for a freshly
- * connected controller.  Internal; called from the connect path in fabrics.c
- * once the kernel returns instance=N.  Always overwrites any pre-existing
- * entry: instance recycling means an old nvmeN/ directory is stale by
- * definition.
+ * Create the registry entry for @device holding the seqnum stamp and
+ * @attr=@value.
  *
  * The entry is built in a temporary directory and rename()'d into place, so it
  * is only ever observed complete or absent — never as a directory that exists
  * but is missing its seqnum stamp.  Without this, the udev REMOVE rule could
  * read a just-created entry between the mkdir and the seqnum write, see no
  * stamp, and delete the live entry the library is still populating.
+ *
+ * With @replace, any pre-existing entry is removed first.  Otherwise -EEXIST
+ * is returned if an entry already exists.
  */
-int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
-				     int instance, const char *owner)
+static int create_entry(struct libnvme_global_ctx *ctx, const char *device,
+			const char *attr, const char *value, bool replace)
 {
 	__cleanup_free char *tmp_dir = NULL;
 	__cleanup_free char *final_path = NULL;
 	__cleanup_free char *seqnum = NULL;
-	char device[32];
 	int dir_fd, ret;
-
-	snprintf(device, sizeof(device), "nvme%d", instance);
 
 	final_path = registry_path(ctx, device, NULL);
 	if (!final_path)
@@ -446,19 +397,21 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 	if (seqnum)
 		write_attr_atomic(dir_fd, tmp_dir, "seqnum", seqnum);
 
-	ret = write_attr_atomic(dir_fd, tmp_dir, "owner", owner);
+	ret = write_attr_atomic(dir_fd, tmp_dir, attr, value);
 	close(dir_fd);
 	if (ret)
 		goto err;
 
 	/*
-	 * Reveal the fully-populated entry atomically.  Instance recycling
-	 * means any pre-existing nvmeN/ is stale, so remove it first: rename()
-	 * onto a non-empty directory fails.
+	 * Reveal the fully-populated entry atomically.  rename() onto a
+	 * non-empty directory fails, so a stale entry has to be removed first.
 	 */
-	delete_dir_atomic(ctx, final_path);
+	if (replace)
+		delete_dir_atomic(ctx, final_path);
 	if (rename(tmp_dir, final_path) < 0) {
 		ret = -errno;
+		if (ret == -ENOTEMPTY)
+			ret = -EEXIST;
 		goto err;
 	}
 	return 0;
@@ -466,6 +419,23 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 err:
 	delete_dir(tmp_dir);	/* best-effort: don't leak the temp directory */
 	return ret;
+}
+
+/*
+ * libnvmf_registry_create_instance - Write a registry entry for a freshly
+ * connected controller.  Internal; called from the connect path in fabrics.c
+ * once the kernel returns instance=N.  Always overwrites any pre-existing
+ * entry: instance recycling means an old nvmeN/ directory is stale by
+ * definition.
+ */
+int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
+				     int instance, const char *owner)
+{
+	char device[32];
+
+	snprintf(device, sizeof(device), "nvme%d", instance);
+
+	return create_entry(ctx, device, "owner", owner, true);
 }
 
 int libnvmf_registry_delete_instance(struct libnvme_global_ctx *ctx,
@@ -532,12 +502,43 @@ __shr_public int libnvmf_registry_update(struct libnvme_global_ctx *ctx,
 					     const char *device,
 					     const char *attr, const char *value)
 {
+	__cleanup_free char *dir_path = NULL;
+	int dir_fd, ret;
+
 	if (!ctx)
 		return -EINVAL;
 	if (!device || !valid_device(device))
 		return -EINVAL;
+	if (!valid_attr(attr))
+		return -EINVAL;
 
-	return write_device_attr(ctx, device, attr, value);
+	dir_path = registry_path(ctx, device, NULL);
+	if (!dir_path)
+		return -ENOMEM;
+
+	dir_fd = open(dir_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+	if (dir_fd < 0 && errno == ENOENT) {
+		/* Nothing to remove from an entry that does not exist. */
+		if (!value)
+			return 0;
+
+		/*
+		 * A new entry needs its seqnum stamp for the udev REMOVE rule,
+		 * so create it the same way as on connect.
+		 */
+		ret = create_entry(ctx, device, attr, value, false);
+		if (ret != -EEXIST)
+			return ret;
+
+		/* A concurrent writer created the entry first; update it. */
+		dir_fd = open(dir_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+	}
+	if (dir_fd < 0)
+		return -errno;
+
+	ret = write_attr_atomic(dir_fd, dir_path, attr, value);
+	close(dir_fd);
+	return ret;
 }
 
 __shr_public int libnvmf_registry_delete(struct libnvme_global_ctx *ctx,

@@ -191,6 +191,90 @@ out:
 	return pass;
 }
 
+/*
+ * An entry created by libnvmf_registry_update() must look like one created on
+ * connect: it carries the seqnum stamp for the udev cleanup rule and appears
+ * atomically.  Removing an attribute of a missing entry must not create one.
+ */
+static bool test_update_creates_entry(struct libnvme_global_ctx *ctx)
+{
+	char *value = NULL;
+	char path[512];
+	struct stat st;
+	bool pass = true;
+	int ret;
+
+	printf("test_update_creates_entry:\n");
+
+	ret = libnvmf_registry_update(ctx, "nvme6", "owner", NULL);
+	snprintf(path, sizeof(path), "%s/nvme6", regdir);
+	if (ret || stat(path, &st) == 0) {
+		printf(" - removing from a missing entry returned %d or created it [FAIL]\n",
+		       ret);
+		pass = false;
+	} else {
+		printf(" - removing from a missing entry is a no-op [PASS]\n");
+	}
+
+	ret = libnvmf_registry_update(ctx, "nvme6", "owner", "udisks");
+	if (ret) {
+		printf(" - update returned %d [FAIL]\n", ret);
+		return false;
+	}
+
+	/* best-effort, see test_create() */
+	if (access("/sys/kernel/uevent_seqnum", R_OK) == 0) {
+		ret = libnvmf_registry_retrieve(ctx, "nvme6", "seqnum", &value);
+		if (ret || !value || !*value) {
+			printf(" - no seqnum stamp, ret=%d [FAIL]\n", ret);
+			pass = false;
+		} else {
+			printf(" - seqnum='%s' [PASS]\n", value);
+		}
+		free(value);
+		value = NULL;
+	}
+
+	/* updating an existing entry keeps the stamp */
+	ret = libnvmf_registry_update(ctx, "nvme6", "note", "hello");
+	if (ret) {
+		printf(" - second update returned %d [FAIL]\n", ret);
+		pass = false;
+	}
+	ret = libnvmf_registry_retrieve(ctx, "nvme6", "owner", &value);
+	if (ret || !value || strcmp(value, "udisks") != 0) {
+		printf(" - owner lost after second update [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - owner='%s' kept [PASS]\n", value);
+	}
+	free(value);
+
+	{
+		struct dirent *de;
+		bool leftover = false;
+		DIR *d = opendir(regdir);
+
+		if (d) {
+			while ((de = readdir(d)) != NULL) {
+				if (strstr(de->d_name, ".tmp.")) {
+					printf(" - leftover '%s' [FAIL]\n",
+					       de->d_name);
+					leftover = true;
+				}
+			}
+			closedir(d);
+		}
+		if (leftover)
+			pass = false;
+		else
+			printf(" - no leftover temp dir [PASS]\n");
+	}
+
+	libnvmf_registry_delete(ctx, "nvme6");
+	return pass;
+}
+
 static bool test_special_chars(struct libnvme_global_ctx *ctx)
 {
 	/*
@@ -343,6 +427,10 @@ struct attr_result {
 static void collect_attr(const char *attr, const char *value, void *user_data)
 {
 	struct attr_result *r = user_data;
+
+	/* the best-effort seqnum stamp, see test_create() */
+	if (!strcmp(attr, "seqnum"))
+		return;
 
 	if (r->count < 8) {
 		snprintf(r->keys[r->count], sizeof(r->keys[0]), "%s", attr);
@@ -539,6 +627,7 @@ int main(int argc, char *argv[])
 
 	pass &= test_create(ctx);
 	pass &= test_update_and_retrieve(ctx);
+	pass &= test_update_creates_entry(ctx);
 	pass &= test_special_chars(ctx);
 	pass &= test_delete(ctx);
 	pass &= test_retrieve_missing(ctx);
