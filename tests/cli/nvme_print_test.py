@@ -289,6 +289,36 @@ class PrintCLITest(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(json.loads(result.stdout)['mn'], mn)
 
+    def test_persistent_event_entries(self):
+        # Three Timestamp Change events. The first one has Vendor Specific
+        # Information, which EL includes. The last one ends at TLL.
+        vsi = b'\xaa' * 4
+        events = b''
+        for i, info in enumerate((vsi, b'', b'')):
+            data = info + struct.pack('<QQ', 0x1000 + i, 0)
+            # etype, etype_rev, ehl, ehai, cntlid, ets, pelpid, vsil, el
+            events += struct.pack('<BBBBHQH4xHH', 0x03, 0, 21, 0, 1, 0, 0,
+                                  len(info), len(data))
+            events += data
+        header = bytearray(512)
+        struct.pack_into('<B3xIQ', header, 0, _LID_PERSISTENT_EVENT, 3,
+                         len(header) + len(events))
+        self.server.logs[_LID_PERSISTENT_EVENT] = bytes(header) + events
+
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'persistent-event', self.CTRL)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.count('Event Number'), 3)
+
+        if not _HAVE_JSON:
+            return
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'persistent-event', self.CTRL, '-o', 'json')
+        self.assertEqual(result.returncode, 0)
+        entries = json.loads(result.stdout)['list_of_event_entries']
+        self.assertEqual([e['prev_ts'] for e in entries],
+                         [0x1000, 0x1001, 0x1002])
+
     def test_supported_cap_config(self):
         def media_units(*muids):
             return b''.join(struct.pack('<H4xH', m, 0) for m in muids)

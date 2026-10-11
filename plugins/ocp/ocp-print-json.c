@@ -1261,7 +1261,7 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 	struct json_object *valid_attrs;
 
 	for (i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
-		if (offset + sizeof(*pevent_entry_head) >= size)
+		if (offset + sizeof(*pevent_entry_head) > size)
 			break;
 
 		pevent_entry_head = pevent_log_info + offset;
@@ -1269,7 +1269,7 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 		el = le16_to_cpu(pevent_entry_head->el);
 
 		if (vsil > el ||
-		    offset + pevent_entry_head->ehl + 3 + el >= size)
+		    offset + pevent_entry_head->ehl + 3 + el > size)
 			break;
 
 		valid_attrs = json_create_object();
