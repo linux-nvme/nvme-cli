@@ -838,7 +838,8 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 		vsil = le16_to_cpu(pevent_entry_head->vsil);
 		el = le16_to_cpu(pevent_entry_head->el);
 
-		if ((offset + pevent_entry_head->ehl + 3 + el) >= size)
+		if (vsil > el ||
+		    offset + pevent_entry_head->ehl + 3 + el >= size)
 			break;
 
 		nvme_show_pel_event_header(i, pevent_entry_head, human);
@@ -912,7 +913,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 			printf("Reserved Event\n\n");
 			break;
 		}
-		offset += el;
+		offset += el - vsil;
 		printf("\n");
 	}
 }
