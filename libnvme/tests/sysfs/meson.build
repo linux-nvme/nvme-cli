@@ -17,6 +17,7 @@ if diff.found() and bash_prog.found()
     tree_data = [
         'tree-pcie',
         'tree-apple-nvme',
+        'tree-loop-duplicate',
     ]
 
     tree_diff = files('tree-diff.sh')
