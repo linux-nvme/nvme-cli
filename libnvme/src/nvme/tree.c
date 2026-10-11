@@ -1457,9 +1457,6 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, struct libnvme_subsystem 
 		}
 	} while (c);
 
-	if (!c)
-		c = p;
-
 	if (!c) {
 		ret = libnvme_subsystem_create_ctrl(s, &params, &c);
 		if (ret) {
