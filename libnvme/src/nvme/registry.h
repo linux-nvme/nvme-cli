@@ -64,8 +64,10 @@ int libnvmf_registry_attr_equal(struct libnvme_global_ctx *ctx,
  * @value:	New attribute value, or NULL to remove the attribute file
  *
  * Writes the attribute value to the controller's registry entry using an
- * atomic tmp-file rename.  Creates the entry directory if it does not exist.
- * If @value is NULL, the attribute file is removed instead.
+ * atomic tmp-file rename.  If the entry does not exist, it is created
+ * atomically the same way as on connect, including the best-effort seqnum
+ * stamp for the udev cleanup rule.  If @value is NULL, the attribute file is
+ * removed instead; a missing entry is left alone in this case.
  *
  * Return: 0 on success, negative errno from underlying system calls otherwise.
  */
