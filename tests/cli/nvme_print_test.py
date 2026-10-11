@@ -101,6 +101,7 @@ class PrintMockIPCServer(MockIPCServer):
         self.seed = 0
         self.header_len = {}
         self.logs = {}
+        self.id_ctrl = {}
 
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
@@ -120,6 +121,8 @@ class PrintMockIPCServer(MockIPCServer):
         elif opcode == _OPC_IDENTIFY and cdw10 & 0xff == _CNS_CTRL:
             for fmt, offset, value in _ID_CTRL_FIXUPS:
                 _put(buf, fmt, offset, value)
+            for offset, value in self.id_ctrl.items():
+                buf[offset:offset + len(value)] = value
         elif opcode == _OPC_IO_MGMT_RECV:
             _put(buf, '<H', 14, 2)      # reclaim unit handle status: nruhsd
         elif opcode == _OPC_RESV_REPORT:
@@ -269,6 +272,22 @@ class PrintCLITest(unittest.TestCase):
 
         for fmt in _FORMATS:
             self._run(['log', 'persistent-event', self.CTRL] + fmt)
+
+    def test_id_ctrl_strings(self):
+        # A '%' in a device string is not a format directive.
+        mn = '%s%s%s%s%s%s%s%s'
+        self.server.id_ctrl[24] = mn.encode().ljust(40)
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'id-ctrl', self.CTRL)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn(mn, result.stdout)
+
+        if not _HAVE_JSON:
+            return
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'id-ctrl', self.CTRL, '-o', 'json')
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stdout)['mn'], mn)
 
     def test_supported_cap_config(self):
         def media_units(*muids):
