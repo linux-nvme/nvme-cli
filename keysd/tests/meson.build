@@ -13,6 +13,14 @@ test_config = executable(
 
 test('nvme-keysd - config', test_config)
 
+test_ttlv = executable(
+    'test-keysd-ttlv',
+    ['test-ttlv.c', '../src/ttlv.c'],
+    include_directories: keysd_inc,
+)
+
+test('nvme-keysd - ttlv', test_ttlv)
+
 test('nvme-keysd - --help', nvme_keysd, args: ['--help'])
 test('nvme-keysd - unknown option', nvme_keysd,
      args: ['--bogus'], should_fail: true)
