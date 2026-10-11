@@ -459,12 +459,12 @@ void nvme_show_ibm_persistent_event_log(void *pevent_log_info,
 	printf("\n");
 	printf(" i=%d tnev=%d\n", i, le32_to_cpu(pevent_log_head->tnev));
 	for (i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
-		if (offset + sizeof(*pevent_entry_head) >= size)
+		if (offset + sizeof(*pevent_entry_head) > size)
 			break;
 
 		pevent_entry_head = pevent_log_info + offset;
 		if ((offset + pevent_entry_head->ehl + 3 +
-			le16_to_cpu(pevent_entry_head->el)) >= size)
+			le16_to_cpu(pevent_entry_head->el)) > size)
 			break;
 
 		offset += pevent_entry_head->ehl + 3;
