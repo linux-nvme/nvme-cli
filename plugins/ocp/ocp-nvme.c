@@ -872,6 +872,16 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 			nvme_show_error("Failed to read telemetry-log.");
 			return status;
 		}
+
+		/* Host and controller headers are both 512 bytes. */
+		if (telemetry_buffer_size <
+		    (long)sizeof(struct nvme_ocp_telemetry_host_initiated_header)) {
+			nvme_show_error("telemetry-log is smaller than its %zu-byte header.",
+					sizeof(struct nvme_ocp_telemetry_host_initiated_header));
+			free(ptelemetry_buffer);
+			ptelemetry_buffer = NULL;
+			return -EINVAL;
+		}
 	} else {
 		nvme_show_error("telemetry-log is empty.");
 		return -1;

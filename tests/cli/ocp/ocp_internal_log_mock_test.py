@@ -48,8 +48,8 @@ Tests in this module verify:
     end-of-list identifier inside one. Two containers are checked
     against a customer's example report, field for field.
   * Option handling: the controller telemetry support gate, the log ID
-    check, a string log shorter than its header, files read whatever
-    their names, -a 3 and -a 4 decoding
+    check, telemetry and string logs shorter than their headers, files
+    read whatever their names, -a 3 and -a 4 decoding
     Data Area 2, invalid -a, -t and -o values, and -o json.
 
 Known defects are covered by expectedFailure tests asserting the correct
@@ -1114,6 +1114,18 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn('string-log is smaller than its 432-byte header',
                               result.stderr)
+                self.assertFalse(os.path.exists(self.report_path('json')))
+
+    def test_telemetry_log_shorter_than_its_header_is_rejected(self):
+        """The log ID and data area offsets come from the 512-byte
+        header, so a shorter telemetry log cannot be decoded."""
+        for size in (1, layout.HEADER_SIZE - 1):
+            with self.subTest(size=size):
+                result = self.run_internal_log(
+                    telemetry=telemetry_log()[:size], strings=string_log())
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('telemetry-log is smaller than its 512-byte '
+                              'header', result.stderr)
                 self.assertFalse(os.path.exists(self.report_path('json')))
 
     def test_files_are_read_whatever_their_names(self):
