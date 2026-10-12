@@ -450,6 +450,7 @@ keysd_opt = keysd_opt.require(openssl_dep.found() and keyutils_dep.found(),
 want_keysd = keysd_opt.allowed()
 want_kmip = get_option('kmip').require(want_keysd,
     error_message: 'kmip requires nvme-keysd').allowed()
+conf.set('CONFIG_KMIP', want_kmip, description: 'Is the KMIP key source enabled')
 conf.set('CONFIG_DISCOVERD', want_discoverd, description: 'Is nvme-discoverd enabled')
 conf.set('CONFIG_KEYSD', want_keysd, description: 'Is nvme-keysd enabled')
 
@@ -672,6 +673,11 @@ substs.set('SYSTEMCTL', get_option('systemctl'))
 # mDNS uses systemd-resolved, so nvme-discoverd must start after it.
 substs.set('DISCOVERD_AFTER_RESOLVED',
            want_mdns ? 'After=systemd-resolved.service' : '')
+# nvme-keysd calls nvme-keysd-kmip through its socket.
+substs.set('KEYSD_WANTS_KMIP',
+           want_kmip ? 'Wants=nvme-keysd-kmip.socket' : '')
+substs.set('KEYSD_AFTER_KMIP',
+           want_kmip ? 'After=nvme-keysd-kmip.socket' : '')
 substs.set('PREFIX', prefixdir)
 substs.set('URL', 'https://github.com/linux-nvme/nvme-cli/')
 substs.set('LIBNVME_API_NAME', libnvme_api_name)

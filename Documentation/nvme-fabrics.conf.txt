@@ -110,6 +110,12 @@ for what each one means.
 	use 'tls-key': the kernel finds the PSK in the keyring by the host
 	NQN and the subsystem NQN. See linknvme:nvme-keysd[8].
 
+'kmip:<name>'::
+	'tls-key' is the Name of a key on the key management server
+	(KMS) '<name>', configured in nvme-keysd.conf. nvme-keysd gets the
+	key and puts it in the keyring. 'kmip' alone is enough when only
+	one KMS is configured. See linknvme:nvme-keysd[8].
+
 Any other value also means that 'tls-key' is not the key. libnvme does
 not check the value: nvme-keysd does.
 

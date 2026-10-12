@@ -26,10 +26,11 @@ This is a technology preview.
 KEYS
 ----
 nvme-keysd imports every entry of the fabrics configuration that has
-'tls-key-source = systemd-creds'. For such an entry, 'tls-key' is the name
-of a systemd credential. The credential holds the PSK in the PSK
-interchange format ('NVMeTLSkey-1:<hmac>:<base64>:'), as created by
-'nvme keys gen-tls-psk'.
+'tls-key-source = systemd-creds' or 'tls-key-source = kmip'. With
+'systemd-creds', 'tls-key' is the name of a systemd credential. The
+credential holds the PSK in the PSK interchange format
+('NVMeTLSkey-1:<hmac>:<base64>:'), as created by 'nvme keys
+gen-tls-psk'.
 
 nvme-keysd puts the PSK in the keyring named by 'keyring' (default
 '.nvme'). The key identity is built from the host NQN and the subsystem
@@ -37,8 +38,9 @@ NQN, as 'nvme connect' does. A key that is already there is not written
 again. Any other key for the same host NQN and subsystem NQN is revoked,
 so that the kernel finds only one key for the pair.
 
-nvme-keysd imports the keys and exits. It never revokes a key because
-its entry was removed from the configuration.
+Without a 'kmip' entry, nvme-keysd imports the keys and exits. With a
+'kmip' entry, it keeps running: see KMIP. nvme-keysd never revokes a key
+because its entry was removed from the configuration.
 
 The unit does not start when no entry of the fabrics configuration has
 a 'tls-key-source' other than 'inline'. In that case, nvme-keysd does not
@@ -74,6 +76,68 @@ imports the other keys.
 
 nvme-keysd needs systemd 257 or later.
 
+KMIP
+----
+With 'tls-key-source = kmip:<name>', nvme-keysd gets the PSK from a key
+management server (KMS) that supports KMIP 1.4. '<name>' is a
+'[kmip:<name>]' section of nvme-keysd.conf. When only one KMS is
+configured, 'tls-key-source = kmip' is enough. 'tls-key' is the Name of
+the key on the KMS.
+
+The key on the KMS is one of:
+
+- Secret Data that holds the PSK in the PSK interchange format.
+- A Symmetric Key of 32 bytes (SHA-256) or 48 bytes (SHA-384).
+
+Only a key in the Active state is used. Two Active keys with the same
+Name are an error.
+
+nvme-keysd itself has no network access. For privilege separation, a
+helper process with no privileges handles all communication with the
+KMS, over TLS. A client certificate is used when one is configured.
+The helper logs its errors in the journal, under the identifier
+nvme-keysd-kmip.
+
+The servers of a KMS are nodes of one cluster, and hold the same keys.
+They are tried in order, until one answers. Different KMSes are asked
+in parallel.
+
+nvme-keysd does not delay the boot for a KMS. The services that start
+after nvme-keysd find the keys from systemd credentials in the keyring,
+but a KMIP key can come later. nvme-keysd keeps running and gets the
+KMIP keys in the background. When it cannot get a key, it tries again
+after 5 seconds, then after twice the previous delay, up to 5 minutes.
+A connection that needs a KMIP key can therefore start before the key
+is in the keyring. nvme-discoverd connects again later. A single 'nvme
+connect' does not.
+
+Setup example. The client private key is a systemd credential in
+@SYSCONFDIR@/nvme/creds/kmip/. systemd gives it to the helper as
+'kmip_<file>', so '--name' must be 'kmip_' and the file name:
+
+	# systemd-creds encrypt --name=kmip_my-client-key client-key.pem \
+		@SYSCONFDIR@/nvme/creds/kmip/my-client-key
+
+The CA and the client certificate are not secret. They must be readable
+by any user, because the helper runs without privileges. In
+nvme-keysd.conf:
+
+	[kmip:my-kms]
+	server      = kms1.example.com
+	server      = kms2.example.com
+	ca          = @SYSCONFDIR@/nvme/kmip/ca.pem
+	client-cert = @SYSCONFDIR@/nvme/kmip/client.pem
+	client-key  = my-client-key
+
+and in nvme-fabrics.conf:
+
+	[Subsystem]
+	nqn        = nqn.2024-01.com.example:storage.vol1
+	controller = transport=tcp;traddr=192.0.2.10;trsvcid=4420
+	tls        = true
+	tls-key-source = kmip:my-kms
+	tls-key    = my-vol1-psk
+
 OPTIONS
 -------
 -c <FILE>::
@@ -105,13 +169,32 @@ OPTIONS
 CONFIGURATION
 -------------
 nvme-keysd.conf holds the daemon's own settings, in a '[Global]'
-section:
+section, and the KMSes, in '[kmip:<name>]' sections:
 
 	[Global]
 	debug-level = info
 
 'debug-level' (err, warn, info, or debug; default info) sets the log
 threshold. '--debug' on the command line overrides it.
+
+Each '[kmip:<name>]' section describes a KMS:
+
+'server'::
+	Host name or IP address. Required. Repeat it for each server of
+	the cluster.
+'port'::
+	TCP port of the servers. Default 5696.
+'ca'::
+	CA certificate that signed the server certificates (PEM). Default:
+	the system CAs.
+'client-cert'::
+	Client certificate (PEM). Requires 'client-key'.
+'client-key'::
+	File name of the client private key in
+	@SYSCONFDIR@/nvme/creds/kmip/. Requires 'client-cert'.
+'timeout'::
+	Time limit for one server: connect, TLS handshake and requests.
+	Default 10s. Each TCP connect fails after 3 seconds at most.
 
 A missing file, or a missing key, keeps the default.
 
@@ -122,6 +205,9 @@ FILES
 
 @SYSCONFDIR@/nvme/creds/::
 	The encrypted credentials; see CREDENTIALS.
+
+@SYSCONFDIR@/nvme/creds/kmip/::
+	The encrypted client private keys for the KMSes; see KMIP.
 
 SEE ALSO
 --------

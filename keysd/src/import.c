@@ -17,13 +17,18 @@
 #include <nvme/crypto.h>
 #include <nvme/fabrics.h>
 #include <shared/cleanup-util.h>
+#include <shared/string-util.h>
 
+#include "config.h"
 #include "creds.h"
 #include "import.h"
 
 struct import_ctx {
 	struct libnvme_global_ctx *ctx;
 	const char *creds_dir;
+	const struct keysd_config *cfg;
+	struct kmip_job *jobs;
+	size_t n_jobs;
 	char *default_hostnqn; // system identity, for entries without one
 	bool default_read;     // default_hostnqn was looked up
 	char **done;           // "<hostnqn> <subsysnqn>" already handled
@@ -298,6 +303,97 @@ static int import_cred(struct import_ctx *ic, const char *source,
 	return r;
 }
 
+static void free_job(struct kmip_job *job)
+{
+	free(job->source);
+	free(job->keyring);
+	free(job->hostnqn);
+	free(job->subsysnqn);
+	free(job->name);
+}
+
+/* Find the KMS of "kmip:<name>", or of "kmip" when there is only one. */
+static const struct keysd_kmip *find_kms(struct import_ctx *ic,
+		const char *source, const char *subsysnqn, const char *src)
+{
+	const char *name = shr_startswith(src, "kmip:");
+	const struct keysd_kmip *kms;
+
+	if (!name) {
+		if (ic->cfg->nr_kmip == 1)
+			return &ic->cfg->kmip[0];
+		if (ic->cfg->nr_kmip)
+			log_err("%s: %s: several KMSes: use tls-key-source = kmip:<name>",
+				source, subsysnqn);
+		else
+			log_err("%s: %s: tls-key-source is kmip but no KMS is configured, skipped",
+				source, subsysnqn);
+		return NULL;
+	}
+
+	kms = config_find_kmip(ic->cfg, name);
+	if (!kms)
+		log_err("%s: %s: KMS '%s' is not configured", source,
+			subsysnqn, name);
+
+	return kms;
+}
+
+/* Collect a key to get from a KMS. */
+static void add_kmip_job(struct import_ctx *ic, const char *source,
+			 const char *keyring, const char *hostnqn,
+			 const char *subsysnqn, const char *src,
+			 const char *name)
+{
+	const struct keysd_kmip *kms;
+	struct kmip_job *jobs, *job;
+
+#ifndef CONFIG_KMIP
+	log_warn("%s: %s: this build does not support tls-key-source '%s', skipped",
+		 source, subsysnqn, src);
+	return;
+#endif
+
+	kms = find_kms(ic, source, subsysnqn, src);
+	if (!kms)
+		return;
+
+	jobs = realloc(ic->jobs, (ic->n_jobs + 1) * sizeof(*jobs));
+	if (!jobs) {
+		log_err("%s: %s: out of memory", source, subsysnqn);
+		return;
+	}
+	ic->jobs = jobs;
+
+	job = &ic->jobs[ic->n_jobs];
+	job->kms = kms;
+	job->source = strdup(source);
+	job->keyring = shr_xstrdup(keyring);
+	job->hostnqn = strdup(hostnqn);
+	job->subsysnqn = strdup(subsysnqn);
+	job->name = strdup(name);
+	if (!job->source || (keyring && !job->keyring) || !job->hostnqn ||
+	    !job->subsysnqn || !job->name) {
+		log_err("%s: %s: out of memory", source, subsysnqn);
+		free_job(job);
+		return;
+	}
+	ic->n_jobs++;
+}
+
+int import_kmip_psk(struct import_ctx *ic, const struct kmip_job *job,
+		const char *encoded)
+{
+	__cleanup_free char *origin = NULL;
+
+	if (asprintf(&origin, "KMS '%s', key '%s'", job->kms->name,
+		     job->name) < 0)
+		return -ENOMEM;
+
+	return import_psk(ic, job->source, job->keyring, job->hostnqn,
+			  job->subsysnqn, origin, encoded);
+}
+
 static void import_conn(const struct libnvmf_config_conn *conn,
 			void *user_data)
 {
@@ -320,21 +416,22 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 	if (!first_time(ic, hostnqn, subsysnqn))
 		return;
 
-	if (!streq(src, "systemd-creds")) {
-		log_warn("%s: %s: tls-key-source '%s' is not supported, skipped",
+	name = param(params, "tls-key");
+	if (!name) {
+		log_warn("%s: %s: tls-key-source is %s but tls-key is not set, skipped",
 			 source, subsysnqn, src);
 		return;
 	}
 
-	name = param(params, "tls-key");
-	if (!name) {
-		log_warn("%s: %s: tls-key-source is systemd-creds but tls-key is not set, skipped",
-			 source, subsysnqn);
-		return;
-	}
-
-	import_cred(ic, source, param(params, "keyring"), hostnqn, subsysnqn,
-		    name);
+	if (streq(src, "kmip") || shr_startswith(src, "kmip:"))
+		add_kmip_job(ic, source, param(params, "keyring"), hostnqn,
+			     subsysnqn, src, name);
+	else if (streq(src, "systemd-creds"))
+		import_cred(ic, source, param(params, "keyring"), hostnqn,
+			    subsysnqn, name);
+	else
+		log_warn("%s: %s: tls-key-source '%s' is not supported, skipped",
+			 source, subsysnqn, src);
 }
 
 static void find_tls_key_source(const struct libnvmf_config_conn *conn,
@@ -367,29 +464,57 @@ bool import_needed(struct libnvme_global_ctx *ctx, const char *fabrics_conf)
 	return found;
 }
 
-void import_keys(struct libnvme_global_ctx *ctx, const char *fabrics_conf,
-		 const char *creds_dir)
+struct import_ctx *import_new(struct libnvme_global_ctx *ctx,
+		const char *creds_dir, const struct keysd_config *cfg)
 {
-	struct import_ctx ic = {
-		.ctx = ctx,
-		.creds_dir = creds_dir,
-	};
-	struct libnvmf_config *cfg;
+	struct import_ctx *ic;
+
+	ic = calloc(1, sizeof(*ic));
+	if (!ic)
+		return NULL;
+	ic->ctx = ctx;
+	ic->creds_dir = creds_dir;
+	ic->cfg = cfg;
+
+	return ic;
+}
+
+void import_free(struct import_ctx *ic)
+{
 	size_t i;
+
+	if (!ic)
+		return;
+
+	for (i = 0; i < ic->n_jobs; i++)
+		free_job(&ic->jobs[i]);
+	free(ic->jobs);
+	for (i = 0; i < ic->n_done; i++)
+		free(ic->done[i]);
+	free(ic->done);
+	free(ic->default_hostnqn);
+	free(ic);
+}
+
+void import_keys(struct import_ctx *ic, const char *fabrics_conf)
+{
+	struct libnvmf_config *cfg;
 	int r;
 
-	r = libnvmf_config_read(ctx, fabrics_conf, &cfg);
+	r = libnvmf_config_read(ic->ctx, fabrics_conf, &cfg);
 	if (r < 0) {
 		log_err("cannot read the fabrics configuration: %s",
 			strerror(-r));
 		return;
 	}
 
-	libnvmf_config_conn_for_each(cfg, import_conn, &ic);
-
-	for (i = 0; i < ic.n_done; i++)
-		free(ic.done[i]);
-	free(ic.done);
-	free(ic.default_hostnqn);
+	libnvmf_config_conn_for_each(cfg, import_conn, ic);
 	libnvmf_config_free(cfg);
+}
+
+size_t import_kmip_jobs(struct import_ctx *ic, const struct kmip_job **jobs)
+{
+	*jobs = ic->jobs;
+
+	return ic->n_jobs;
 }

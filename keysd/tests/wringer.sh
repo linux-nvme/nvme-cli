@@ -396,9 +396,17 @@ keysd_restart() {
 	systemctl restart "${UNIT}" >"${SCRATCH}" 2>&1
 }
 
-# nvme-keysd ran since $1, and exited with status 0.
+# nvme-keysd ran since $1, and exited with status 0. With Type=notify,
+# systemctl returns at READY=1, before the exit: wait for it.
 keysd_ran() {
-	unit_journal_has "$1" "Finished ${UNIT}"
+	local i
+
+	for i in $(seq 20); do
+		unit_journal_has "$1" "Deactivated successfully" && return 0
+		sleep 0.5
+	done
+
+	return 1
 }
 
 journal_has() {
@@ -559,6 +567,7 @@ write_cred "${CRED_DIR}/keysd-wringer-keyring" "${KEY_A}" \
 		printf '%s\n' "$@" ""
 	}
 	entry inline "tls-key-source = inline" "tls-key = ${KEY_A}"
+	entry nosuch "tls-key-source = nosuch" "tls-key = ${CRED_NAME}"
 	entry kmip "tls-key-source = kmip" "tls-key = ${CRED_NAME}"
 	entry notlskey "tls-key-source = systemd-creds"
 	entry badname "tls-key-source = systemd-creds" "tls-key = ../x"
@@ -575,7 +584,9 @@ check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "the inline entry is ignored" \
 	test "$(journal_count "${PHASE_START}" "${NQN_BASE}:inline")" -eq 0
 check "an unsupported tls-key-source was logged" \
-	journal_has "${PHASE_START}" "tls-key-source 'kmip' is not supported"
+	journal_has "${PHASE_START}" "${NQN_BASE}:nosuch: tls-key-source 'nosuch' is not supported"
+check "kmip without a KMS was logged" \
+	journal_has "${PHASE_START}" "${NQN_BASE}:kmip: tls-key-source is kmip but no KMS is configured"
 check "a missing tls-key was logged" \
 	journal_has "${PHASE_START}" "${NQN_BASE}:notlskey: tls-key-source is systemd-creds but tls-key is not set"
 check "an invalid credential name was logged" \

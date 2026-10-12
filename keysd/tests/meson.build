@@ -66,6 +66,20 @@ if want_kmip
 
     test('nvme-keysd - kmip psk', test_kmip_psk)
 
+    test_kmip_client = executable(
+        'test-keysd-kmip-client',
+        ['test-kmip-client.c', '../src/config.c', '../src/kmip-client.c'],
+        include_directories: keysd_inc,
+        dependencies: [
+            ccan_dep,
+            daemon_util_dep,
+            libsystemd_dep,
+            shared_dep,
+        ],
+    )
+
+    test('nvme-keysd - kmip client', test_kmip_client)
+
     test('nvme-keysd-kmip - --help', nvme_keysd_kmip, args: ['--help'])
     test('nvme-keysd-kmip - not socket activated', nvme_keysd_kmip,
          should_fail: true)
