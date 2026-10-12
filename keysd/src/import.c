@@ -193,41 +193,29 @@ static void revoke_other_keys(struct libnvme_global_ctx *ctx,
 	free(rc.identities);
 }
 
-static int import_one(struct import_ctx *ic, const char *source,
+/*
+ * Put the PSK @encoded, in the interchange format, in @keyring for
+ * @hostnqn and @subsysnqn. @origin says where the PSK comes from, for the
+ * log.
+ */
+static int import_psk(struct import_ctx *ic, const char *source,
 		      const char *keyring, const char *hostnqn,
-		      const char *subsysnqn, const char *name)
+		      const char *subsysnqn, const char *origin,
+		      const char *encoded)
 {
 	__cleanup_free char *identity = NULL;
-	__cleanup_free char *error = NULL;
 	enum libnvmf_hmac_alg hmac;
 	unsigned char version;
 	unsigned char *psk = NULL;
-	char encoded[CRED_MAX + 1];
 	size_t psk_len = 0;
 	long keyring_id, key;
 	int r;
 
-	if (!cred_name_valid(name)) {
-		log_err("%s: %s: invalid credential name '%s'", source,
-			subsysnqn, name);
-		return -EINVAL;
-	}
-
-	r = creds_decrypt(ic->creds_dir, name, encoded, sizeof(encoded),
-			  &error);
-	if (r < 0) {
-		explicit_bzero(encoded, sizeof(encoded));
-		log_err("%s: %s: cannot decrypt credential '%s': %s", source,
-			subsysnqn, name, error ?: strerror(-r));
-		return r;
-	}
-
 	r = libnvmf_import_tls_key_versioned(ic->ctx, encoded, &version,
 					     &hmac, &psk_len, &psk);
-	explicit_bzero(encoded, sizeof(encoded));
 	if (r < 0) {
-		log_err("%s: %s: credential '%s' is not a valid PSK: %s",
-			source, subsysnqn, name, strerror(-r));
+		log_err("%s: %s: %s is not a valid PSK: %s", source,
+			subsysnqn, origin, strerror(-r));
 		return r;
 	}
 
@@ -264,8 +252,7 @@ static int import_one(struct import_ctx *ic, const char *source,
 				subsysnqn, strerror(-r));
 			goto out;
 		}
-		log_info("imported '%s' from credential '%s'", identity,
-			 name);
+		log_info("imported '%s' from %s", identity, origin);
 	}
 
 	revoke_other_keys(ic->ctx, source, keyring, hostnqn, subsysnqn,
@@ -273,6 +260,40 @@ static int import_one(struct import_ctx *ic, const char *source,
 
 out:
 	free_secret(psk, psk_len);
+
+	return r;
+}
+
+static int import_cred(struct import_ctx *ic, const char *source,
+		       const char *keyring, const char *hostnqn,
+		       const char *subsysnqn, const char *name)
+{
+	__cleanup_free char *origin = NULL;
+	__cleanup_free char *error = NULL;
+	char encoded[CRED_MAX + 1];
+	int r;
+
+	if (!cred_name_valid(name)) {
+		log_err("%s: %s: invalid credential name '%s'", source,
+			subsysnqn, name);
+		return -EINVAL;
+	}
+
+	r = creds_decrypt(ic->creds_dir, name, encoded, sizeof(encoded),
+			  &error);
+	if (r < 0) {
+		explicit_bzero(encoded, sizeof(encoded));
+		log_err("%s: %s: cannot decrypt credential '%s': %s", source,
+			subsysnqn, name, error ?: strerror(-r));
+		return r;
+	}
+
+	if (asprintf(&origin, "credential '%s'", name) < 0)
+		r = -ENOMEM;
+	else
+		r = import_psk(ic, source, keyring, hostnqn, subsysnqn, origin,
+			       encoded);
+	explicit_bzero(encoded, sizeof(encoded));
 
 	return r;
 }
@@ -312,8 +333,8 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 		return;
 	}
 
-	import_one(ic, source, param(params, "keyring"), hostnqn, subsysnqn,
-		   name);
+	import_cred(ic, source, param(params, "keyring"), hostnqn, subsysnqn,
+		    name);
 }
 
 static void find_tls_key_source(const struct libnvmf_config_conn *conn,
