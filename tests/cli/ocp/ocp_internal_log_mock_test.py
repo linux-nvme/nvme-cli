@@ -73,6 +73,7 @@ LSP_RETAIN = 0
 LSP_CREATE = 1
 
 LPA_TELEMETRY_DA4 = 0x40
+DA1_TIMESTAMP_MS = 1700000000123
 
 OPC_SET_FEATURES = 0x09
 OPC_GET_FEATURES = 0x0A
@@ -367,6 +368,8 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
             reason + layout.REASON_VALID_FLAGS: b'\x07',
             reason + layout.REASON_VU_EXTENSION: bytes(range(0x80, 0xA0)),
             da1 + layout.DA1_MAJOR_VERSION: struct.pack('<HH', 5, 2),
+            da1 + layout.DA1_TIMESTAMP: DA1_TIMESTAMP_MS.to_bytes(
+                6, 'little') + b'\xA5\x5A',
             da1 + layout.DA1_PROFILES_SUPPORTED: b'\x03\x01',
             da1 + layout.DA1_STRING_LOG_SIZE: struct.pack('<Q', 0x1234),
             da1 + layout.DA1_SMART: b'\x05\x40\x01',
@@ -411,6 +414,7 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
         return {
             'Major Version': '0x0005',
             'Minor Version': '0x0002',
+            'Timestamp': '2023-11-14D|22:13:20:123',
             'Number Telemetry Profiles Supported': '0x03',
             'Telemetry Profile Selected': '0x01',
             'Telemetry String Log Size': '0x1234',
