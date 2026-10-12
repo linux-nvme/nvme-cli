@@ -194,6 +194,9 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 __shr_public libnvme_fd_t libnvme_transport_handle_get_fd(
 		struct libnvme_transport_handle *hdl)
 {
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+		return LIBNVME_INVALID_FD;
+
 	return hdl->fd;
 }
 
