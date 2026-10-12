@@ -29,6 +29,18 @@ test_kmip = executable(
 
 test('nvme-keysd - kmip', test_kmip)
 
+test_kmip_tls = executable(
+    'test-keysd-kmip-tls',
+    ['test-kmip-tls.c', 'tls-server.c', '../src/kmip-tls.c'],
+    include_directories: keysd_inc,
+    dependencies: [
+        daemon_util_dep,
+        openssl_dep,
+    ],
+)
+
+test('nvme-keysd - kmip tls', test_kmip_tls)
+
 test('nvme-keysd - --help', nvme_keysd, args: ['--help'])
 test('nvme-keysd - unknown option', nvme_keysd,
      args: ['--bogus'], should_fail: true)
