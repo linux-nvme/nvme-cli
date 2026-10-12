@@ -343,9 +343,21 @@ void json_add_formatted_var_size_str(struct json_object *pobject, const char *ms
 	free(description_str);
 }
 
+/*
+ * A log can hold fewer data areas than its header describes, so each data
+ * area is cut to the bytes actually read.
+ */
+static __u64 telemetry_da_size(__u64 start, __u64 end, size_t buf_len)
+{
+	if (end > buf_len)
+		end = buf_len;
+
+	return end > start ? end - start : 0;
+}
+
 int get_telemetry_das_offset_and_size(
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header,
-	struct nvme_ocp_telemetry_offsets *ptelemetry_das_offset)
+	size_t buf_len, struct nvme_ocp_telemetry_offsets *ptelemetry_das_offset)
 {
 	if (NULL == ptelemetry_common_header || NULL == ptelemetry_das_offset) {
 		nvme_show_error("Invalid input arguments.");
@@ -361,28 +373,34 @@ int get_telemetry_das_offset_and_size(
 	else
 		return -1;
 
-	__u16 da1_last_block = le16_to_cpu(ptelemetry_common_header->da1_last_block);
-	__u16 da2_last_block = le16_to_cpu(ptelemetry_common_header->da2_last_block);
-	__u16 da3_last_block = le16_to_cpu(ptelemetry_common_header->da3_last_block);
-	__u32 da4_last_block = le32_to_cpu(ptelemetry_common_header->da4_last_block);
+	__u64 header_size = ptelemetry_das_offset->header_size;
+	__u64 da1_end = header_size + (__u64)le16_to_cpu(ptelemetry_common_header->da1_last_block) *
+		OCP_TELEMETRY_DATA_BLOCK_SIZE;
+	__u64 da2_end = header_size + (__u64)le16_to_cpu(ptelemetry_common_header->da2_last_block) *
+		OCP_TELEMETRY_DATA_BLOCK_SIZE;
+	__u64 da3_end = header_size + (__u64)le16_to_cpu(ptelemetry_common_header->da3_last_block) *
+		OCP_TELEMETRY_DATA_BLOCK_SIZE;
+	__u64 da4_end = header_size + (__u64)le32_to_cpu(ptelemetry_common_header->da4_last_block) *
+		OCP_TELEMETRY_DATA_BLOCK_SIZE;
 
-	ptelemetry_das_offset->da1_start_offset = ptelemetry_das_offset->header_size;
-	ptelemetry_das_offset->da1_size = da1_last_block * OCP_TELEMETRY_DATA_BLOCK_SIZE;
+	ptelemetry_das_offset->da1_start_offset = header_size;
+	ptelemetry_das_offset->da1_size =
+		telemetry_da_size(ptelemetry_das_offset->da1_start_offset, da1_end, buf_len);
 
 	ptelemetry_das_offset->da2_start_offset = ptelemetry_das_offset->da1_start_offset +
 		ptelemetry_das_offset->da1_size;
 	ptelemetry_das_offset->da2_size =
-		(da2_last_block - da1_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
+		telemetry_da_size(ptelemetry_das_offset->da2_start_offset, da2_end, buf_len);
 
 	ptelemetry_das_offset->da3_start_offset = ptelemetry_das_offset->da2_start_offset +
 		ptelemetry_das_offset->da2_size;
 	ptelemetry_das_offset->da3_size =
-		(da3_last_block - da2_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
+		telemetry_da_size(ptelemetry_das_offset->da3_start_offset, da3_end, buf_len);
 
 	ptelemetry_das_offset->da4_start_offset = ptelemetry_das_offset->da3_start_offset +
 		ptelemetry_das_offset->da3_size;
 	ptelemetry_das_offset->da4_size =
-		(da4_last_block - da3_last_block) * OCP_TELEMETRY_DATA_BLOCK_SIZE;
+		telemetry_da_size(ptelemetry_das_offset->da4_start_offset, da4_end, buf_len);
 
 	return 0;
 }
@@ -1519,20 +1537,21 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 	//Parse all the FIFOs DA wise
 	for (int fifo_no = 0; fifo_no < MAX_NUM_FIFOS; fifo_no++) {
 		if (event_fifo[fifo_no].event_fifo_da == poffsets->data_area) {
-			__u64 fifo_offset =
-				(event_fifo[fifo_no].event_fifo_start  * SIZE_OF_DWORD);
-			__u64 fifo_size =
-				(event_fifo[fifo_no].event_fifo_size  * SIZE_OF_DWORD);
-			__u64 da_size = (poffsets->data_area == 1) ?
-				poffsets->da1_size : poffsets->da2_size;
+			__u64 start_dw = event_fifo[fifo_no].event_fifo_start;
+			__u64 size_dw = event_fifo[fifo_no].event_fifo_size;
+			__u64 da_dw = ((poffsets->data_area == 1) ?
+				poffsets->da1_size : poffsets->da2_size) / SIZE_OF_DWORD;
+			__u64 fifo_offset, fifo_size;
 			__u8 *pfifo_start = NULL;
 
-			if (!fifo_size || fifo_offset + fifo_size > da_size) {
+			if (!size_dw || start_dw > da_dw || size_dw > da_dw - start_dw) {
 				nvme_show_error(
 					"Invalid FIFO bounds for FIFO %d",
 					fifo_no);
 				return -1;
 			}
+			fifo_offset = start_dw * SIZE_OF_DWORD;
+			fifo_size = size_dw * SIZE_OF_DWORD;
 
 			if (event_fifo[fifo_no].event_fifo_da == 1)
 				pfifo_start = pda1_header_offset + fifo_offset;
@@ -1863,40 +1882,40 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	__u8 *pda1_ocp_header_offset = ptelemetry_buffer + poffsets->header_size;//512
 	struct nvme_ocp_header_in_da1 *pda1_header =
 		(struct nvme_ocp_header_in_da1 *)pda1_ocp_header_offset;
-	__u32 statistics_size = 0;
-	__u32 stats_da_1_start_dw = 0, stats_da_1_size_dw = 0;
-	__u32 stats_da_2_start_dw = 0, stats_da_2_size_dw = 0;
-	__u8 *pstats_offset = NULL;
+	__u64 start_dw, size_dw, da_dw;
+	__u8 *pda_offset = NULL;
 	char where[16];
 
+	//Data is present in the form of DWORDS, So multiplying with sizeof(DWORD)
 	if (poffsets->data_area == 1) {
-		__u32 stats_da_1_start = le64_to_cpu(pda1_header->da1_statistic_start);
-		__u32 stats_da_1_size = le64_to_cpu(pda1_header->da1_statistic_size);
-
-		//Data is present in the form of DWORDS, So multiplying with sizeof(DWORD)
-		stats_da_1_start_dw = (stats_da_1_start * SIZE_OF_DWORD);
-		stats_da_1_size_dw = (stats_da_1_size * SIZE_OF_DWORD);
-
-		pstats_offset = pda1_ocp_header_offset + stats_da_1_start_dw;
-		statistics_size = stats_da_1_size_dw;
+		start_dw = le64_to_cpu(pda1_header->da1_statistic_start);
+		size_dw = le64_to_cpu(pda1_header->da1_statistic_size);
+		da_dw = poffsets->da1_size / SIZE_OF_DWORD;
+		pda_offset = pda1_ocp_header_offset;
 	} else if (poffsets->data_area == 2) {
-		__u32 stats_da_2_start = le64_to_cpu(pda1_header->da2_statistic_start);
-		__u32 stats_da_2_size = le64_to_cpu(pda1_header->da2_statistic_size);
-
-		stats_da_2_start_dw = (stats_da_2_start * SIZE_OF_DWORD);
-		stats_da_2_size_dw = (stats_da_2_size * SIZE_OF_DWORD);
-
-		pstats_offset = pda1_ocp_header_offset + poffsets->da1_size + stats_da_2_start_dw;
-		statistics_size = stats_da_2_size_dw;
+		start_dw = le64_to_cpu(pda1_header->da2_statistic_start);
+		size_dw = le64_to_cpu(pda1_header->da2_statistic_size);
+		da_dw = poffsets->da2_size / SIZE_OF_DWORD;
+		pda_offset = ptelemetry_buffer + poffsets->da2_start_offset;
 	} else {
 		nvme_show_error("Unsupported Data Area:[%d]", poffsets->data_area);
+		return -1;
+	}
+
+	/* With no statistics, the start is never used */
+	if (!size_dw) {
+		start_dw = 0;
+	} else if (start_dw > da_dw || size_dw > da_dw - start_dw) {
+		nvme_show_error("Invalid statistics bounds for Data Area %d",
+				poffsets->data_area);
 		return -1;
 	}
 
 	struct json_object *pstats_array = ((root != NULL) ? json_create_array() : NULL);
 
 	snprintf(where, sizeof(where), "Data Area %d", poffsets->data_area);
-	print_statistics(pstats_offset, statistics_size, pstats_array, fp, false, where);
+	print_statistics(pda_offset + start_dw * SIZE_OF_DWORD, size_dw * SIZE_OF_DWORD,
+			 pstats_array, fp, false, where);
 
 	if (root != NULL && pstats_array != NULL)
 		json_object_add_value_array(root,
@@ -1959,7 +1978,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
 		(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
 
-	get_telemetry_das_offset_and_size(ptelemetry_common_header, &offsets);
+	get_telemetry_das_offset_and_size(ptelemetry_common_header, ptelemetry_buffer_size,
+					  &offsets);
 
 	__u8 *pda1_header_offset = ptelemetry_buffer +
 		offsets.da1_start_offset;//512
@@ -2081,7 +2101,8 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
 		(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
 
-	get_telemetry_das_offset_and_size(ptelemetry_common_header, &offsets);
+	get_telemetry_das_offset_and_size(ptelemetry_common_header, ptelemetry_buffer_size,
+					  &offsets);
 
 	//"Telemetry Host-Initiated Data Block 1"
 	__u8 *pda1_header_offset = ptelemetry_buffer + offsets.da1_start_offset;//512

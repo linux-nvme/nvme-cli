@@ -596,6 +596,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 /// Telemetry Log
 //global buffers
 __u8 *ptelemetry_buffer;
+size_t ptelemetry_buffer_size;
 __u8 *pstring_buffer;
 size_t pstring_buffer_size;
 
@@ -882,6 +883,8 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 			ptelemetry_buffer = NULL;
 			return -EINVAL;
 		}
+
+		ptelemetry_buffer_size = telemetry_buffer_size;
 	} else {
 		nvme_show_error("telemetry-log is empty.");
 		return -1;
