@@ -401,6 +401,8 @@ no_uring:
 		return libnvme_mi_admin_admin_passthru(hdl, cmd);
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
 		return __libnvme_loopback_admin_passthru(hdl, cmd);
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP:
+		return __libnvme_privsep_admin_passthru(hdl, cmd);
 	default:
 		break;
 	}
@@ -450,6 +452,8 @@ no_uring:
 		return ioctl_io_passthru(hdl, cmd);
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
 		return __libnvme_loopback_io_passthru(hdl, cmd);
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP:
+		return __libnvme_privsep_io_passthru(hdl, cmd);
 	default:
 		break;
 	}
