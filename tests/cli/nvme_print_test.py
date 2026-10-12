@@ -319,6 +319,31 @@ class PrintCLITest(unittest.TestCase):
         self.assertEqual([e['prev_ts'] for e in entries],
                          [0x1000, 0x1001, 0x1002])
 
+    def test_persistent_event_vendor_specific(self):
+        # An Event Name with an odd length leaves the next descriptor
+        # and its signed integer unaligned.
+        descs = (struct.pack('<HBBH', 0x10, 1, 0, 3) + b'abc' +
+                 struct.pack('<HBBHq', 0x11, 4, 0, 8, -2))
+        # etype, etype_rev, ehl, ehai, cntlid, ets, pelpid, vsil, el
+        events = struct.pack('<BBBBHQH4xHH', 0xde, 0, 21, 0, 1, 0, 0, 0,
+                             len(descs)) + descs
+        header = bytearray(512)
+        struct.pack_into('<B3xIQ', header, 0, _LID_PERSISTENT_EVENT, 1,
+                         len(header) + len(events))
+        self.server.logs[_LID_PERSISTENT_EVENT] = bytes(header) + events
+
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'persistent-event', self.CTRL)
+        self.assertEqual(result.returncode, 0)
+        self.assertRegex(result.stdout, r'Signed Integer Data\s*:?\s*-2\b')
+
+        if not _HAVE_JSON:
+            return
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'persistent-event', self.CTRL, '-o', 'json')
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('"signed_integer_data":-2', result.stdout.replace(' ', ''))
+
     def test_supported_cap_config(self):
         def media_units(*muids):
             return b''.join(struct.pack('<H4xH', m, 0) for m in muids)

@@ -19,6 +19,7 @@
 #include <ccan/minmax/minmax.h>
 #include <shared/mmio-util.h>
 #include <shared/string-util.h>
+#include <shared/unaligned-util.h>
 
 #include "cleanup.h"
 #include "nvme-json.h"
@@ -1963,7 +1964,13 @@ static void json_pel_vs_event_data(struct json_object *valid_attrs, void *vsed,
 		obj_d(vs_data, "binary_data", (unsigned char *)vsed, vsedl, 16, 1);
 		break;
 	case NVME_PEL_VSEDT_SIGNED_INT:
-		obj_add_int(vs_data, "signed_integer_data", *(int64_t *)vsed);
+		if (vsedl < sizeof(__le64)) {
+			obj_d(vs_data, "binary_data", (unsigned char *)vsed,
+			      vsedl, 16, 1);
+			break;
+		}
+		obj_add_int(vs_data, "signed_integer_data",
+			    (int64_t)shr_get_unaligned_le64(vsed));
 		break;
 	default:
 		obj_d(vs_data, "reserved_data_type_bin", (unsigned char *)vsed, vsedl, 16, 1);
@@ -1980,26 +1987,34 @@ void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 	__u32 progress = 0;
 	__u16 vsedl;
 	__u32 i;
-	struct nvme_vs_event_desc *vs_desc;
+	struct nvme_vs_event_desc vs_desc;
 	struct json_object *vs_events = json_create_array();
 
-	for (i = 0; progress < event_data_len; i++) {
-		struct json_object *vs_event = json_create_object();
+	for (i = 0; progress + sizeof(vs_desc) <= event_data_len; i++) {
+		void *p = pevent_log_info + offset + progress;
+		struct json_object *vs_event;
 
-		vs_desc = pevent_log_info + offset + progress;
-		vsedl = le16_to_cpu(vs_desc->vsedl);
+		/* The descriptors are not aligned. */
+		memcpy(&vs_desc, p, sizeof(vs_desc));
+		vsedl = le16_to_cpu(vs_desc.vsedl);
+		if (vsedl > event_data_len - progress - sizeof(vs_desc))
+			break;
+
+		vs_event = json_create_object();
 
 		obj_add_uint(vs_event, "vs_event_descriptor_number", i);
-		obj_add_uint(vs_event, "vs_event_code", le16_to_cpu(vs_desc->vsec));
-		obj_add_uint(vs_event, "vs_event_data_type", vs_desc->vsedt);
-		obj_add_uint(vs_event, "vs_event_uuid_index", vs_desc->uidx);
+		obj_add_uint(vs_event, "vs_event_code",
+			     le16_to_cpu(vs_desc.vsec));
+		obj_add_uint(vs_event, "vs_event_data_type", vs_desc.vsedt);
+		obj_add_uint(vs_event, "vs_event_uuid_index", vs_desc.uidx);
 		obj_add_uint(vs_event, "vs_event_data_len", vsedl);
 
 		if (vsedl)
-			json_pel_vs_event_data(vs_event, vs_desc + 1, vs_desc->vsedt, vsedl);
+			json_pel_vs_event_data(vs_event, p + sizeof(vs_desc),
+					       vs_desc.vsedt, vsedl);
 
 		array_add_obj(vs_events, vs_event);
-		progress += sizeof(*vs_desc) + vsedl;
+		progress += sizeof(vs_desc) + vsedl;
 	}
 
 	obj_add_array(valid_attrs, "vs_event_entry", vs_events);
