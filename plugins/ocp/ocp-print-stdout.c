@@ -626,7 +626,7 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 	printf("  FIFO 15 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo15[j], log_data->fifo16[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo15[j], log_data->fifo15[j]);
 
 	printf("  FIFO 16 ASCII String\n");
 	printf("   index    value    ascii_val\n");
