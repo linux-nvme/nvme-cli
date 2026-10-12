@@ -1452,6 +1452,12 @@ static void test_lm_migration_recv(void)
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
+static void test_get_fd_non_direct(void)
+{
+	check(libnvme_transport_handle_get_fd(test_hdl) == LIBNVME_INVALID_FD,
+	      "expected LIBNVME_INVALID_FD for a non-direct handle");
+}
+
 static void run_test(const char *test_name, void (*test_fn)(void))
 {
 	printf("Running test %s...", test_name);
@@ -1521,6 +1527,7 @@ int main(void)
 	RUN_TEST(lm_track_send);
 	RUN_TEST(lm_migration_send);
 	RUN_TEST(lm_migration_recv);
+	RUN_TEST(get_fd_non_direct);
 
 	libnvme_free_global_ctx(ctx);
 }
