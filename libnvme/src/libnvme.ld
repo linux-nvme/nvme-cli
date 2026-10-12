@@ -103,6 +103,7 @@ LIBNVME_3 {
 		libnvme_path_reset_stat;
 		libnvme_path_update_stat;
 		libnvme_random_uuid;
+		libnvme_read_regs;
 		libnvme_realloc;
 		libnvme_reap_passthru;
 		libnvme_refresh_topology;
@@ -156,6 +157,8 @@ LIBNVME_3 {
 		libnvme_uuid_from_string;
 		libnvme_uuid_to_string;
 		libnvme_wait_passthru;
+		libnvme_write_reg32;
+		libnvme_write_reg64;
 	local:
 		*;
 };

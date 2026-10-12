@@ -331,6 +331,18 @@ endif
 
 if host_system == 'linux'
     subdir('sysfs')
+
+    regs = executable(
+        'test-regs',
+        ['regs.c', 'ioctl/util.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+    test('libnvme - regs', regs)
+
     if want_fabrics
         subdir('nbft')
     endif

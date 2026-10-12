@@ -109,6 +109,29 @@ __shr_public int libnvme_reread_partitions(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
+__shr_public int libnvme_read_regs(
+		__shr_unused struct libnvme_transport_handle *hdl,
+		__shr_unused __u32 offset, __shr_unused void *buf,
+		__shr_unused __u32 len)
+{
+	return -ENOTSUP;
+}
+
+__shr_public int libnvme_write_reg32(
+		__shr_unused struct libnvme_transport_handle *hdl,
+		__shr_unused __u32 offset, __shr_unused __u32 value)
+{
+	return -ENOTSUP;
+}
+
+__shr_public int libnvme_write_reg64(
+		__shr_unused struct libnvme_transport_handle *hdl,
+		__shr_unused __u32 offset, __shr_unused __u64 value,
+		__shr_unused bool mmio32)
+{
+	return -ENOTSUP;
+}
+
 /*
  * The 64 bit version is the preferred version to use, but for backwards
  * compatibility keep a 32 version.
