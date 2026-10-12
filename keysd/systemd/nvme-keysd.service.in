@@ -5,9 +5,13 @@ Documentation=man:nvme-keysd(8)
 Before=remote-fs.target
 Wants=systemd-creds.socket
 After=systemd-creds.socket
+@KEYSD_WANTS_KMIP@
+@KEYSD_AFTER_KMIP@
 
 [Service]
-Type=oneshot
+# READY=1 comes after the local keys are imported. With KMIP keys,
+# nvme-keysd keeps running and gets them in the background.
+Type=notify
 # Skip the unit, and the module load, when there is nothing to do.
 ExecCondition=@SBINDIR@/nvme-keysd --should-start
 # nvme_keyring creates the .nvme keyring. nvme_core loads it only with

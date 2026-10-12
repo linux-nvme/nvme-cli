@@ -10,6 +10,7 @@ keysd_sources = files(
     'src/config.c',
     'src/creds.c',
     'src/import.c',
+    'src/kmip-client.c',
     'src/main.c',
 )
 
