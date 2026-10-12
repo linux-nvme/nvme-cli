@@ -448,6 +448,8 @@ keysd_opt = keysd_opt.require(
 keysd_opt = keysd_opt.require(openssl_dep.found() and keyutils_dep.found(),
     error_message: 'nvme-keysd requires OpenSSL and libkeyutils')
 want_keysd = keysd_opt.allowed()
+want_kmip = get_option('kmip').require(want_keysd,
+    error_message: 'kmip requires nvme-keysd').allowed()
 conf.set('CONFIG_DISCOVERD', want_discoverd, description: 'Is nvme-discoverd enabled')
 conf.set('CONFIG_KEYSD', want_keysd, description: 'Is nvme-keysd enabled')
 
@@ -964,6 +966,7 @@ wanted_dict = {
     'nvme-discoverd':   want_discoverd,
     'mdns':             want_mdns,
     'nvme-keysd':       want_keysd,
+    'kmip':             want_kmip,
     'nvmf-autoconnect': want_nvmf_autoconnect,
     'deprecated-cmds':  want_deprecated_cmds,
     'python bindings ': want_python,

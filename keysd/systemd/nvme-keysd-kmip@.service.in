@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+[Unit]
+Description=NVMe TLS Key Provisioning KMIP Helper
+Documentation=man:nvme-keysd(8)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=@SBINDIR@/nvme-keysd-kmip
+# The client private keys. systemd decrypts each file of the directory
+# into $CREDENTIALS_DIRECTORY/kmip_<file>, readable only by this instance.
+LoadCredentialEncrypted=kmip:@SYSCONFDIR@/nvme/creds/kmip
+
+# Hardening. The helper needs the network, but no privileges and no
+# writable files. The CA and client certificates must be readable by any
+# user.
+DynamicUser=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ProtectHome=yes
+PrivateDevices=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallArchitectures=native
+UMask=0077
+LimitCORE=0

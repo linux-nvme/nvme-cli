@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+[Unit]
+Description=NVMe TLS Key Provisioning KMIP Helper Socket
+Documentation=man:nvme-keysd(8)
+
+[Socket]
+ListenStream=@RUNDIR@/nvme/keysd/kmip
+FileDescriptorName=varlink
+SocketMode=0600
+# One helper instance per connection.
+Accept=yes
+MaxConnections=16
