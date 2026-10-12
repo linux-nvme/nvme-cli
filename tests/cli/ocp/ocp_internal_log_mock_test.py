@@ -48,7 +48,8 @@ Tests in this module verify:
     end-of-list identifier inside one. Two containers are checked
     against a customer's example report, field for field.
   * Option handling: the controller telemetry support gate, the log ID
-    check, a string log shorter than its header, -a 3 and -a 4 decoding
+    check, a string log shorter than its header, files read whatever
+    their names, -a 3 and -a 4 decoding
     Data Area 2, invalid -a, -t and -o values, and -o json.
 
 Known defects are covered by expectedFailure tests asserting the correct
@@ -1114,6 +1115,18 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
                 self.assertIn('string-log is smaller than its 432-byte header',
                               result.stderr)
                 self.assertFalse(os.path.exists(self.report_path('json')))
+
+    def test_files_are_read_whatever_their_names(self):
+        """Neither file has to be named *.bin to be read."""
+        self.assertOk(self.run_ocp(
+            'internal-log', '-a', '2', '-f', self.out_prefix,
+            '-l', self.write_file('telemetry.dat', telemetry_log()),
+            '-s', self.write_file('strings.dat', string_log())))
+        with open(self.report_path('json'), encoding='utf-8') as f:
+            report = json.load(f)
+        fifo = report['Data Area 1 Event FIFO info'][
+            'EVENT FIFO 1 - HOST FIFO']
+        self.assertEqual(fifo[0]['VU Virtual FIFO String'], 'VFIFO 2.33')
 
     def test_invalid_output_format_is_rejected(self):
         result = self.run_internal_log('-o', 'bogus',
