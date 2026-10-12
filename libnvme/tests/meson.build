@@ -329,6 +329,10 @@ if want_ioctl_tests
     subdir('ioctl')
 endif
 
+if want_privsep
+    subdir('privsep')
+endif
+
 if host_system == 'linux'
     subdir('sysfs')
 
