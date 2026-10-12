@@ -537,6 +537,8 @@ conf.set(
 )
 
 conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
+conf.set('NVME_HAVE_CLOSE_RANGE', cc.has_function('close_range',
+    prefix: '#include <unistd.h>', args: '-D_GNU_SOURCE'))
 
 conf.set10(
     'NVME_HAVE_REALLOCARRAY',

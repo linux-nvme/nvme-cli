@@ -19,8 +19,11 @@ if python3_prog.found()
     if want_fabrics
         _ld_args += ['--ld', nvmf_ld, '--ld', nvmf_accessors_ld]
     endif
+    if want_privsep
+        _ld_args += ['--ld', privsep_ld]
+    endif
     _hdr_args = []
-    foreach hdr : headers + generated_headers
+    foreach hdr : headers + generated_headers + privsep_headers
         _hdr_args += ['--header', meson.project_source_root() / 'libnvme' / 'src' / hdr]
     endforeach
     test(
@@ -422,4 +425,21 @@ if want_sed
         )
         test('libnvme - header/sed/' + hdr, exe)
     endforeach
+endif
+
+if want_privsep
+    hdr_conf = configuration_data()
+    hdr_conf.set('DIR', 'privsep')
+    hdr_conf.set('HDR', 'privsep')
+    src = configure_file(
+        input: 'test-header.c.in',
+        output: 'test-header-privsep.c',
+        configuration: hdr_conf,
+    )
+    exe = executable(
+        'test-header-privsep',
+        src,
+        dependencies: [libnvme_dep],
+    )
+    test('libnvme - header/privsep', exe)
 endif

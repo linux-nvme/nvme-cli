@@ -70,6 +70,10 @@ if want_sed
     endforeach
     doc_paths += sed_api_paths
 endif
+if want_privsep
+    doc_files += 'privsep/privsep.h'
+    doc_paths += files('../src/privsep/privsep.h')
+endif
 
 api_includes = []
 foreach f: doc_files

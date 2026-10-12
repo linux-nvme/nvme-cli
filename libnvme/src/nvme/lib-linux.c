@@ -91,7 +91,7 @@ __shr_public int libnvme_open(
 		return -ENOMEM;
 	}
 
-	if (!strncmp(name, "NVME_TEST_FD", 12)) {
+	if (!ctx->privsep && !strncmp(name, "NVME_TEST_FD", 12)) {
 		hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 		hdl->fd = LIBNVME_TEST_FD;
 
@@ -104,6 +104,8 @@ __shr_public int libnvme_open(
 
 	if (!strncmp(name, "mctp:", strlen("mctp:")))
 		ret = __libnvme_transport_handle_open_mi(hdl, name);
+	else if (ctx->privsep)
+		ret = __libnvme_transport_handle_open_privsep(hdl, name, flags);
 	else
 		ret = __libnvme_transport_handle_open_direct(hdl, name, flags);
 
@@ -130,6 +132,9 @@ __shr_public void libnvme_close(struct libnvme_transport_handle *hdl)
 		break;
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_MI:
 		__libnvme_transport_handle_close_mi(hdl);
+		break;
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP:
+		__libnvme_transport_handle_close_privsep(hdl);
 		break;
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_UNKNOWN:
