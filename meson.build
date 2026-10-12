@@ -531,8 +531,6 @@ conf.set(
 
 conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
 
-conf.set('NVME_HAVE_MMAP', cc.has_function('mmap'))
-
 conf.set10(
     'NVME_HAVE_REALLOCARRAY',
     cc.has_function(

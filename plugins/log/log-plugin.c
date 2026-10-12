@@ -24,9 +24,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef NVME_HAVE_MMAP
-#include <sys/mman.h>
-#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -39,7 +36,6 @@
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
-#include <shared/mmio-util.h>
 #include <shared/parse-util.h>
 #include <shared/sig-util.h>
 #include <shared/suffix-util.h>
@@ -50,7 +46,6 @@
 #include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "nvme-regs.h"
 #include "plugin.h"
 
 struct nvme_get_log_args {
@@ -691,8 +686,6 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	struct list_head log_pages;
 	nvme_effects_log_node_t *node;
 
-	void *bar = NULL;
-
 	int err = -1;
 	nvme_print_flags_t flags;
 
@@ -735,11 +728,9 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 			nvme_show_error("Namespace device isn't allowed without csi");
 			return -EINVAL;
 		}
-		bar = mmap_registers(hdl, false);
-
-		if (bar) {
-			cap = shr_mmio_read64(bar + NVME_REG_CAP);
-			munmap_registers(bar);
+		if (!libnvme_read_regs(hdl, NVME_REG_CAP, &cap,
+				       sizeof(cap))) {
+			cap = le64_to_cpu(cap);
 		} else {
 			nvme_init_get_property(&cmd, NVME_REG_CAP);
 			err = libnvme_exec_admin_passthru(hdl, &cmd);

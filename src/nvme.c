@@ -26,9 +26,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef NVME_HAVE_MMAP
-#include <sys/mman.h>
-#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 
