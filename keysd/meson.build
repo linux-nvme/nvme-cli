@@ -31,6 +31,50 @@ nvme_keysd = executable(
     install_tag: 'nvme-keysd',
 )
 
+if want_kmip
+    nvme_keysd_kmip = executable(
+        'nvme-keysd-kmip',
+        files(
+            'src/config.c',
+            'src/kmip.c',
+            'src/kmip-main.c',
+            'src/kmip-psk.c',
+            'src/kmip-tls.c',
+            'src/ttlv.c',
+        ),
+        include_directories: keysd_inc,
+        dependencies: [
+            ccan_dep,
+            daemon_util_dep,
+            libnvme_dep,
+            libsystemd_dep,
+            openssl_dep,
+            shared_dep,
+        ],
+        install: true,
+        install_dir: sbindir,
+        install_tag: 'nvme-keysd',
+    )
+
+    foreach unit : ['nvme-keysd-kmip.socket', 'nvme-keysd-kmip@.service']
+        configure_file(
+            input: 'systemd' / unit + '.in',
+            output: unit,
+            configuration: substs,
+            install: true,
+            install_dir: systemddir,
+            install_tag: 'nvme-keysd',
+        )
+    endforeach
+
+    # The encrypted client private keys. Only root reads them.
+    install_emptydir(
+        sysconfdir / 'nvme' / 'creds' / 'kmip',
+        install_mode: 'rwx------',
+        install_tag: 'nvme-keysd',
+    )
+endif
+
 if get_option('tests')
     subdir('tests')
 endif

@@ -41,6 +41,36 @@ test_kmip_tls = executable(
 
 test('nvme-keysd - kmip tls', test_kmip_tls)
 
+if want_kmip
+    test_kmip_psk = executable(
+        'test-keysd-kmip-psk',
+        [
+            'test-kmip-psk.c',
+            'kmip-responses.c',
+            'tls-server.c',
+            '../src/config.c',
+            '../src/kmip.c',
+            '../src/kmip-psk.c',
+            '../src/kmip-tls.c',
+            '../src/ttlv.c',
+        ],
+        include_directories: keysd_inc,
+        dependencies: [
+            ccan_dep,
+            daemon_util_dep,
+            libnvme_dep,
+            openssl_dep,
+            shared_dep,
+        ],
+    )
+
+    test('nvme-keysd - kmip psk', test_kmip_psk)
+
+    test('nvme-keysd-kmip - --help', nvme_keysd_kmip, args: ['--help'])
+    test('nvme-keysd-kmip - not socket activated', nvme_keysd_kmip,
+         should_fail: true)
+endif
+
 test('nvme-keysd - --help', nvme_keysd, args: ['--help'])
 test('nvme-keysd - unknown option', nvme_keysd,
      args: ['--bogus'], should_fail: true)
