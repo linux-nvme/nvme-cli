@@ -261,8 +261,6 @@ static int ioctl_passthru32(struct libnvme_transport_handle *hdl,
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
-	if (hdl->ctx->dry_run)
-		goto out;
 
 	memcpy(&cmd32, cmd, offsetof(struct linux_passthru_cmd32, result));
 	cmd32.result = 0;
@@ -274,7 +272,6 @@ static int ioctl_passthru32(struct libnvme_transport_handle *hdl,
 		err = -errno;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-out:
 	cmd->result = cmd32.result;
 	hdl->submit_exit(hdl, cmd, err, user_data);
 	return err;
@@ -291,8 +288,6 @@ static int ioctl_passthru64(struct libnvme_transport_handle *hdl,
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
-	if (hdl->ctx->dry_run)
-		goto out;
 
 	do {
 		/*
@@ -305,7 +300,6 @@ static int ioctl_passthru64(struct libnvme_transport_handle *hdl,
 		err = -errno;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-out:
 	hdl->submit_exit(hdl, cmd, err, user_data);
 	return err;
 }
@@ -376,6 +370,9 @@ __shr_public int libnvme_exec_admin_passthru(
 	if (!cmd->timeout_ms && hdl->timeout)
 		cmd->timeout_ms = hdl->timeout;
 
+	if (hdl->ctx->dry_run)
+		return __libnvme_exec_dry_run(hdl, cmd);
+
 	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
 		goto no_uring;
 
@@ -423,6 +420,9 @@ __shr_public int libnvme_exec_io_passthru(
 
 	if (!cmd->timeout_ms && hdl->timeout)
 		cmd->timeout_ms = hdl->timeout;
+
+	if (hdl->ctx->dry_run)
+		return __libnvme_exec_dry_run(hdl, cmd);
 
 	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
 		goto no_uring;
