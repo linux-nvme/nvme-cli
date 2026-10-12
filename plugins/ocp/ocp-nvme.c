@@ -18,6 +18,7 @@
 
 #include <libnvme.h>
 
+#include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
@@ -744,7 +745,9 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	__u64 event_str_table_ofst = 0;
 	__u64 vu_event_str_table_ofst = 0;
 	__u64 ascii_table_ofst = 0;
+	__u64 table_sz[4];
 	size_t log_page_sz = 0;
+	size_t i;
 	__cleanup_libnvme_free struct telemetry_str_log_format *log_data = NULL;
 	__cleanup_libnvme_free __u8 *string_buffer = NULL;
 
@@ -762,6 +765,11 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 		return ret;
 	}
 
+	table_sz[0] = le64_to_cpu(log_data->sitsz);
+	table_sz[1] = le64_to_cpu(log_data->estsz);
+	table_sz[2] = le64_to_cpu(log_data->vu_eve_st_sz);
+	table_sz[3] = le64_to_cpu(log_data->asctsz);
+
 	if (print_data) {
 		printf("Statistics Identifier String Table Size = %"PRIu64"\n",
 		       le64_to_cpu(log_data->sitsz));
@@ -778,9 +786,18 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	event_str_table_ofst = le64_to_cpu(log_data->ests) * 4;
 	vu_event_str_table_ofst = le64_to_cpu(log_data->vu_eve_sts) * 4;
 	ascii_table_ofst = le64_to_cpu(log_data->ascts) * 4;
-	log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
-	    (le64_to_cpu(log_data->sitsz) * 4) + (le64_to_cpu(log_data->estsz) * 4) +
-	    (le64_to_cpu(log_data->vu_eve_st_sz) * 4) + (le64_to_cpu(log_data->asctsz) * 4);
+	/*
+	 * The log stays within INT_MAX bytes, the most d_raw and the JSON
+	 * ASCII table take.
+	 */
+	log_page_sz = C9_TELEMETRY_STR_LOG_LEN;
+	for (i = 0; i < ARRAY_SIZE(table_sz); i++) {
+		if (table_sz[i] > (INT_MAX - log_page_sz) / 4) {
+			nvme_show_error("ERROR : OCP : C9 log is too large");
+			return -EINVAL;
+		}
+		log_page_sz += table_sz[i] * 4;
+	}
 
 	if (print_data) {
 		printf("stat_id_str_table_ofst = %"PRIu64"\n",

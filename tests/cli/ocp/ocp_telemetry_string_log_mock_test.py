@@ -18,11 +18,11 @@ Tests in this module verify:
   * Every entry of every table, and the ASCII table, decodes to the
     values the page carries, in text and JSON output; NUL bytes inside
     the ASCII table are kept in JSON.
+  * Table sizes too large to fetch, even ones that wrap, are refused.
   * A table far larger than the stack decodes in full, so no copy of it
     lives on the stack.
-  * A table that starts past the end of the log, or whose size wraps
-    when scaled to bytes, is reported and skipped while the other tables
-    still decode.
+  * A table that starts past the end of the log, or runs past it, is
+    reported and skipped while the other tables still decode.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -185,6 +185,22 @@ class TestOCPTelemetryStringLog(OCPMockTestBase):
         self.assertEqual(self.json_log()['ASCII Table'],
                          'OCP\0STRINGS\0LOG!')
 
+    def test_table_sizes_too_large_to_fetch_are_refused(self):
+        """Table sizes adding up past INT_MAX bytes are refused before
+        the fetch, including a sum that wraps to a size that looks
+        fetchable."""
+        for sitsz in (1 << 29, (1 << 62) + 8):
+            with self.subTest(sitsz=sitsz):
+                self.server.logs[_OCP_LID_TELSLG] = pack_page(
+                    overrides={'sitsz': sitsz})
+                self.server.commands.clear()
+                result = self.run_c9()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('C9 log is too large', result.stderr)
+                self.assertEqual(
+                    [c['len'] for c in self.server.log_reads(_OCP_LID_TELSLG)],
+                    [_HEADER_LEN])
+
     def test_table_larger_than_the_stack_decodes(self):
         """A table copied onto the stack overruns @_SMALL_STACK_KB and
         kills nvme with SIGSEGV instead of decoding."""
@@ -220,12 +236,6 @@ class TestOCPTelemetryStringLog(OCPMockTestBase):
         """The fetch sizes the log from the table sizes alone, so a table
         that starts in its last DWORD still runs off the end."""
         self._assert_stat_table_refused({'sits': len(pack_page()) // 4 - 1})
-
-    def test_size_that_wraps_when_scaled_is_refused(self):
-        """2^62 + 8 DWORDs is 32 bytes modulo 2^64 -- the size of the two
-        entries actually there -- so the fetch reads exactly the page,
-        which must not then be taken to hold a 2^62-DWORD table."""
-        self._assert_stat_table_refused({'sitsz': (1 << 62) + 8})
 
     def test_every_table_is_bounds_checked(self):
         cases = {
