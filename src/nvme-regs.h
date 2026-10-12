@@ -10,9 +10,10 @@
  */
 #pragma once
 
-#include <stdbool.h>
-
 #include <libnvme.h>
 
-void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable);
-int munmap_registers(void *addr);
+/*
+ * Returns a copy of the controller registers in a page-sized buffer, which
+ * the caller must free(), or NULL if they cannot be read.
+ */
+void *read_registers(struct libnvme_transport_handle *hdl);

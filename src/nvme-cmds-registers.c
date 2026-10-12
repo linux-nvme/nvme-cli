@@ -25,9 +25,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef NVME_HAVE_MMAP
-#include <sys/mman.h>
-#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -39,7 +36,6 @@
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
-#include <shared/mmio-util.h>
 #include <shared/parse-util.h>
 #include <shared/sig-util.h>
 #include <shared/suffix-util.h>
@@ -175,7 +171,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	bar = mmap_registers(hdl, false);
+	bar = read_registers(hdl);
 	if (!bar) {
 		cfg.fabrics = true;
 		err = nvme_get_properties(hdl, &bar, &cfg);
@@ -184,10 +180,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 	}
 
 	nvme_show_ctrl_registers(bar, cfg.fabrics, flags);
-	if (cfg.fabrics)
-		free(bar);
-	else
-		munmap_registers(bar);
+	free(bar);
 
 	return 0;
 }
@@ -450,7 +443,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	bar = mmap_registers(hdl, false);
+	bar = read_registers(hdl);
 	if (!bar) {
 		err = get_register_properties(hdl, &bar, &cfg);
 		if (err)
@@ -463,10 +456,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		err = -EINVAL;
 	}
 
-	if (fabrics)
-		free(bar);
-	else
-		munmap_registers(bar);
+	free(bar);
 
 	return err;
 }
@@ -500,15 +490,17 @@ static int set_register_property(struct libnvme_transport_handle *hdl, int offse
 	return nvme_set_single_property(hdl, offset, value);
 }
 
-static int nvme_set_register(struct libnvme_transport_handle *hdl, void *bar, int offset, uint64_t value, bool mmio32)
+static int nvme_set_register(struct libnvme_transport_handle *hdl, int offset,
+			     uint64_t value, bool mmio32)
 {
-	if (!bar)
-		return set_register_property(hdl, offset, value);
+	int err;
 
 	if (nvme_is_64bit_reg(offset))
-		shr_mmio_write64(bar + offset, value, mmio32);
+		err = libnvme_write_reg64(hdl, offset, value, mmio32);
 	else
-		shr_mmio_write32(bar + offset, value);
+		err = libnvme_write_reg32(hdl, offset, value);
+	if (err)
+		return set_register_property(hdl, offset, value);
 
 	nvme_show_result("set-register: %#02x (%s), value: %#"PRIx64, offset,
 	                 nvme_register_to_string(offset), value);
@@ -582,7 +574,8 @@ static inline int set_register_names_check(struct argconfig_commandline_options 
 	return 0;
 }
 
-static int set_register_offset(struct libnvme_transport_handle *hdl, void *bar, struct argconfig_commandline_options *opts,
+static int set_register_offset(struct libnvme_transport_handle *hdl,
+			       struct argconfig_commandline_options *opts,
 			       struct set_reg_config *cfg)
 {
 	int err;
@@ -598,98 +591,113 @@ static int set_register_offset(struct libnvme_transport_handle *hdl, void *bar, 
 		return err;
 	}
 
-	err = nvme_set_register(hdl, bar, cfg->offset, cfg->value, cfg->mmio32);
+	err = nvme_set_register(hdl, cfg->offset, cfg->value, cfg->mmio32);
 	if (err)
 		return err;
 
 	return 0;
 }
 
-static int set_register_names(struct libnvme_transport_handle *hdl, void *bar, struct argconfig_commandline_options *opts,
+static int set_register_names(struct libnvme_transport_handle *hdl,
+			      struct argconfig_commandline_options *opts,
 			      struct set_reg_config *cfg)
 {
 	int err;
 
 	if (argconfig_parse_seen(opts, "intms")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_INTMS, cfg->intms, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_INTMS, cfg->intms,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "intmc")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_INTMC, cfg->intmc, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_INTMC, cfg->intmc,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "cc")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_CC, cfg->cc, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_CC, cfg->cc,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "csts")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_CSTS, cfg->csts, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_CSTS, cfg->csts,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "nssr")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_NSSR, cfg->nssr, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_NSSR, cfg->nssr,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "aqa")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_AQA, cfg->aqa, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_AQA, cfg->aqa,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "asq")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_ASQ, cfg->asq, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_ASQ, cfg->asq,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "acq")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_ACQ, cfg->acq, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_ACQ, cfg->acq,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "bprsel")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_BPRSEL, cfg->bprsel, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_BPRSEL, cfg->bprsel,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "cmbmsc")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_CMBMSC, cfg->cmbmsc, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_CMBMSC, cfg->cmbmsc,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "nssd")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_NSSD, cfg->nssd, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_NSSD, cfg->nssd,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "pmrctl")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_PMRCTL, cfg->pmrctl, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_PMRCTL, cfg->pmrctl,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "pmrmscl")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_PMRMSCL, cfg->pmrmscl, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_PMRMSCL, cfg->pmrmscl,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
 
 	if (argconfig_parse_seen(opts, "pmrmscu")) {
-		err = nvme_set_register(hdl, bar, NVME_REG_PMRMSCU, cfg->pmrmscu, cfg->mmio32);
+		err = nvme_set_register(hdl, NVME_REG_PMRMSCU, cfg->pmrmscu,
+					cfg->mmio32);
 		if (err)
 			return err;
 	}
@@ -706,7 +714,6 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
-	void *bar;
 
 	struct set_reg_config cfg = {
 		.offset = -1,
@@ -741,16 +748,11 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	bar = mmap_registers(hdl, true);
-
 	if (argconfig_parse_seen(opts, "offset"))
-		err = set_register_offset(hdl, bar, opts, &cfg);
+		err = set_register_offset(hdl, opts, &cfg);
 
 	if (!err)
-		err = set_register_names(hdl, bar, opts, &cfg);
-
-	if (bar)
-		munmap_registers(bar);
+		err = set_register_names(hdl, opts, &cfg);
 
 	return err;
 }
