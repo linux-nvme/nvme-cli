@@ -518,11 +518,10 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 		struct nvme_ocp_telemetry_string_header *pocp_ts_header =
 			(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
 
-		if (*pocp_ts_header->fifo_ascii_string[event_fifo_num-1] != '\0')
-			memcpy(description, pocp_ts_header->fifo_ascii_string[event_fifo_num-1],
-			       16);
-		else
-			description[0] = '\0';
+		/* A name that fills all 16 bytes carries no terminator. */
+		memcpy(description, pocp_ts_header->fifo_ascii_string[event_fifo_num - 1],
+		       sizeof(pocp_ts_header->fifo_ascii_string[0]));
+		description[sizeof(pocp_ts_header->fifo_ascii_string[0])] = '\0';
 
 		return 0;
 	}
