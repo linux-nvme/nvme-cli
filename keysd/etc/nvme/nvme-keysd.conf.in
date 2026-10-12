@@ -11,3 +11,23 @@
 # The --debug command-line option overrides this setting and enables debug
 # logging.
 #debug-level = info
+
+# KMIP key management servers (KMS), for connections with
+# "tls-key-source = kmip:<name>". One section per KMS. The name after "kmip:"
+# is yours to choose.
+#
+#[kmip:my-kms]
+# Host name or IP address. Required. Repeat the key for each server of a
+# cluster: they must hold the same keys. They are tried in order.
+#server = kms1.example.com
+#server = kms2.example.com
+#port = 5696
+# CA certificate that signed the server certificate (PEM). Default: the
+# system CAs.
+#ca = @SYSCONFDIR@/nvme/kmip/ca.pem
+# Client certificate (PEM), and the name of its private key in
+# @SYSCONFDIR@/nvme/creds/kmip/, encrypted with systemd-creds(1).
+#client-cert = @SYSCONFDIR@/nvme/kmip/client.pem
+#client-key = my-client-key
+# Time limit for the connection and the requests, per server.
+#timeout = 10s
