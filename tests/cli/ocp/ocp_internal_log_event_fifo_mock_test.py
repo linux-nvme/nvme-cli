@@ -51,7 +51,8 @@ Tests in this module verify:
   * An event of any class that runs past the end of its FIFO being
     rejected, and one that ends exactly at the end being decoded.
   * FIFO layout: FIFO naming and numbering, the data area each FIFO is
-    decoded in, the end-of-list entry, FIFO bounds, and a bad FIFO
+    decoded in, the end-of-list entry, FIFO bounds, including a log cut
+    short and a Data Area 2 ending before Data Area 1, and a bad FIFO
     aborting the whole decode.
 
 Known defects are covered by expectedFailure tests asserting the correct
@@ -1062,6 +1063,21 @@ class TestEventFifoLayout(EventFifoTestBase):
             fifos={1: layout.Fifo(1, start_dw=last_dw, size_dw=2)},
             da1_blocks=blocks, da2_blocks=1)
         self.assert_rejected(telemetry, strings(), INVALID_BOUNDS_MSG)
+
+    def test_fifo_past_the_end_of_the_log_is_rejected(self):
+        """A log cut short inside a FIFO does not hold the FIFO its OCP
+        header declares."""
+        telemetry = one_fifo(PCIE_EVENT, PCIE_EVENT)
+        cut = layout.DA1_START + layout.DA1_HEADER_SIZE + layout.DWORD
+        self.assert_rejected(telemetry[:cut], strings(), INVALID_BOUNDS_MSG)
+
+    def test_data_area_2_ending_before_data_area_1_is_empty(self):
+        """A Data Area 2 last block below Data Area 1's leaves Data Area 2
+        with nothing in it, so a FIFO placed there is out of bounds."""
+        telemetry = one_fifo(PCIE_EVENT, da=2,
+                             overlay={layout.HDR_DALB2: struct.pack('<H', 0)})
+        self.assert_rejected(telemetry, strings(), INVALID_BOUNDS_MSG,
+                             args=('-a', '2'))
 
     def test_zero_size_fifo_is_rejected(self):
         """A FIFO assigned to a data area has to hold something."""

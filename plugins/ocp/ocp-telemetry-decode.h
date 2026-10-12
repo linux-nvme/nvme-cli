@@ -16,6 +16,7 @@
 #include "ocp-nvme.h"
 
 extern __u8 *ptelemetry_buffer;
+extern size_t ptelemetry_buffer_size;
 extern __u8 *pstring_buffer;
 extern size_t pstring_buffer_size;
 
@@ -564,16 +565,16 @@ struct __packed nvme_ocp_event_fifo_data
 
 struct __packed nvme_ocp_telemetry_offsets
 {
-	__le32 data_area;
-	__le32 header_size;
-	__le32 da1_start_offset;
-	__le32 da1_size;
-	__le32 da2_start_offset;
-	__le32 da2_size;
-	__le32 da3_start_offset;
-	__le32 da3_size;
-	__le32 da4_start_offset;
-	__le32 da4_size;
+	__u32 data_area;
+	__u32 header_size;
+	__u64 da1_start_offset;
+	__u64 da1_size;
+	__u64 da2_start_offset;
+	__u64 da2_size;
+	__u64 da3_start_offset;
+	__u64 da3_size;
+	__u64 da4_start_offset;
+	__u64 da4_size;
 };
 
 struct __packed nvme_ocp_event_fifo_offsets
@@ -856,13 +857,14 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
  * @brief gets the telemetry datas areas, offsets and sizes information
  *
  * @param ptelemetry_common_header, input telemetry common header pointer
+ * @param buf_len, input telemetry log length, in bytes
  * @param ptelemetry_das_offset, input telemetry offsets pointer
  *
  * @return 0 success
  */
 int get_telemetry_das_offset_and_size(
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header,
-	struct nvme_ocp_telemetry_offsets *ptelemetry_das_offset);
+	size_t buf_len, struct nvme_ocp_telemetry_offsets *ptelemetry_das_offset);
 
 /**
  * @brief parses statistics data to text or json formats

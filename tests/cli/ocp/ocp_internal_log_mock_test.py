@@ -28,7 +28,8 @@ Tests in this module verify:
     bytes from files.
   * The telemetry header, Reason Identifier, Data Area 1 header and SMART
     sections decode to the values in the log, for host and controller
-    logs.
+    logs, and a log ending inside the Data Area 1 header decodes no
+    further.
   * Data Area 1 and 2 statistics: every descriptor field, each
     Statistic Information field from its own bits, names from the string
     log and the built-in table, string log tables and ASCII strings that
@@ -37,8 +38,9 @@ Tests in this module verify:
     statistics and one too short for its fields, and the end-of-list
     identifier.
   * The statistics walk: statistics of different sizes and of none, the
-    statistics size bounding it, and a statistic running past that size
-    being reported.
+    statistics size bounding it, a statistic running past that size
+    being reported, and statistics running past the end of the log being
+    rejected.
   * Context Statistic Descriptors (6Dh, 6Eh, 6Fh, and any statistic with
     the Context Index flag): the context data and each type's scope
     fields, the encapsulated statistics as records of their own, an
@@ -67,7 +69,8 @@ import unittest
 
 from tests.cli.ocp.ocp_mock_test import (CNS_UUID_LIST, LPA_TELEMETRY,
                                          MODES, NSID_ALL, SC_INVALID_FIELD,
-                                         STR_DA_STATS, OCPInternalLogTestBase,
+                                         STR_DA_EVENT_FIFO_INFO, STR_DA_STATS,
+                                         OCPInternalLogTestBase,
                                          OCPMockServer, main, pack_id_ctrl,
                                          text_fields, text_records)
 from tests.e2e.plugins.ocp import ocp_telemetry_layout as layout
@@ -481,6 +484,24 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
         self.assertNotIn('Telemetry Host-Initiated Scope', header)
         self.assertSubset(self._REASON_EXPECTED, reason)
         self.assertSubset(self._da1_expected(telemetry), da1)
+
+    def test_log_cut_inside_the_data_area_1_header(self):
+        """A log that ends inside the Data Area 1 header decodes as far as
+        its own header; the Data Area 1 sections it declares are not in
+        the file."""
+        telemetry = telemetry_log()[:layout.DA1_START +
+                                    layout.DA1_HEADER_SIZE - 1]
+        report = self.decode(telemetry, string_log())
+        self.assertIn('Log Page Header', report)
+        for title in ('Telemetry Host-Initiated Data Block 1',
+                      STR_DA_STATS.format(1),
+                      STR_DA_EVENT_FIFO_INFO.format(1)):
+            self.assertNotIn(title, report)
+        titles = [name for name, _ in self.decode(telemetry, string_log(),
+                                                  mode='text')]
+        self.assertIn('Reason Identifier', titles)
+        self.assertNotIn('SMART / Health Information Log(LID-02h)', titles)
+        self.assertFalse([t for t in titles if t.startswith('EVENT FIFO ')])
 
     @unittest.expectedFailure
     def test_controller_log_in_json(self):
@@ -1049,6 +1070,19 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
                                    bytes(4))],
                     errors=[error],
                     overlay={size_field: struct.pack('<Q', size_dw)})
+
+    def test_statistics_past_the_end_of_the_log_are_rejected(self):
+        """A log cut short inside the statistics does not hold the
+        statistics size the OCP header declares."""
+        telemetry = layout.pack_telemetry(
+            da1_stats=[layout.statistic(0x01, bytes(64))])
+        cut = layout.DA1_START + layout.DA1_HEADER_SIZE + 8
+        for mode in MODES:
+            with self.subTest(mode=mode):
+                self.assertIn('Invalid statistics bounds for Data Area 1',
+                              self.decode_fails(telemetry[:cut],
+                                                layout.pack_string_log(),
+                                                mode=mode))
 
     def test_identifier_zero_ends_the_list(self):
         self.assert_statistics(
