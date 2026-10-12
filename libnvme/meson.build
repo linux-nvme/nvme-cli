@@ -33,6 +33,9 @@ if want_libnvme
     libnvme_srcroot = meson.current_source_dir() # needed by tools/generator
     subdir('tools/generator')  # generate code needed by src below
     subdir('src')              # declares: libnvme_dep
+    if want_privsep
+        subdir('privsep')      # declares: privsep_helper
+    endif
     subdir('libnvme3')
     if want_tests
         subdir('tests')
