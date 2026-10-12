@@ -863,16 +863,14 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 	unsigned char log_id;
 
 	if (options->telemetry_log) {
-		if (strstr((const char *)options->telemetry_log, "bin")) {
-			/* Read the data from the telemetry binary file */
-			status = shr_read_file(NULL,
-					(const char *)options->telemetry_log,
-					&telemetry_buffer_size,
-					&ptelemetry_buffer);
-			if (status) {
-				nvme_show_error("Failed to read telemetry-log.");
-				return status;
-			}
+		/* Read the data from the telemetry binary file */
+		status = shr_read_file(NULL,
+				(const char *)options->telemetry_log,
+				&telemetry_buffer_size,
+				&ptelemetry_buffer);
+		if (status) {
+			nvme_show_error("Failed to read telemetry-log.");
+			return status;
 		}
 	} else {
 		nvme_show_error("telemetry-log is empty.");
@@ -887,28 +885,26 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 
 	if (options->string_log) {
 		/* Read the data from the string binary file */
-		if (strstr((const char *)options->string_log, "bin")) {
-			status = shr_read_file(NULL,
-					(const char *)options->string_log,
-					&string_buffer_size,
-					&pstring_buffer);
-			if (status) {
-				nvme_show_error("Failed to read string-log.");
-				return status;
-			}
-
-			/* All lookups rely on a valid string log header. */
-			if (string_buffer_size <
-			    (long)sizeof(struct nvme_ocp_telemetry_string_header)) {
-				nvme_show_error("string-log is smaller than its %zu-byte header.",
-						sizeof(struct nvme_ocp_telemetry_string_header));
-				free(pstring_buffer);
-				pstring_buffer = NULL;
-				return -EINVAL;
-			}
-
-			pstring_buffer_size = string_buffer_size;
+		status = shr_read_file(NULL,
+				(const char *)options->string_log,
+				&string_buffer_size,
+				&pstring_buffer);
+		if (status) {
+			nvme_show_error("Failed to read string-log.");
+			return status;
 		}
+
+		/* All lookups rely on a valid string log header. */
+		if (string_buffer_size <
+		    (long)sizeof(struct nvme_ocp_telemetry_string_header)) {
+			nvme_show_error("string-log is smaller than its %zu-byte header.",
+					sizeof(struct nvme_ocp_telemetry_string_header));
+			free(pstring_buffer);
+			pstring_buffer = NULL;
+			return -EINVAL;
+		}
+
+		pstring_buffer_size = string_buffer_size;
 	} else {
 		nvme_show_error("string-log is empty.");
 		return -1;

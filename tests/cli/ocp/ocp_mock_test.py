@@ -275,7 +275,7 @@ class OCPInternalLogTestBase(OCPMockTestBase):
     """Runs `ocp internal-log` on fixture files and reads back its report.
 
     The decoder writes its report to <-f>.json or <-f>.txt rather than to
-    stdout, and reads -l/-s only when their paths contain "bin"."""
+    stdout."""
 
     def setUp(self):
         super().setUp()
