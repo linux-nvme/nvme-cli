@@ -21,6 +21,14 @@ test_ttlv = executable(
 
 test('nvme-keysd - ttlv', test_ttlv)
 
+test_kmip = executable(
+    'test-keysd-kmip',
+    ['test-kmip.c', 'kmip-responses.c', '../src/kmip.c', '../src/ttlv.c'],
+    include_directories: keysd_inc,
+)
+
+test('nvme-keysd - kmip', test_kmip)
+
 test('nvme-keysd - --help', nvme_keysd, args: ['--help'])
 test('nvme-keysd - unknown option', nvme_keysd,
      args: ['--bogus'], should_fail: true)
