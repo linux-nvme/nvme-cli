@@ -8,6 +8,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/minmax/minmax.h>
 #include <shared/string-util.h>
+#include <shared/unaligned-util.h>
 
 #include "cleanup.h"
 #include "logging.h"
@@ -588,12 +589,16 @@ static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
 		d(vsed, vsedl, 16, 1);
 		break;
 	case NVME_PEL_VSEDT_SIGNED_INT:
+		if (vsedl < sizeof(__le64)) {
+			d(vsed, vsedl, 16, 1);
+			break;
+		}
 		t = stdout_kv_table_create();
 		if (!t)
 			return;
 
 		stdout_kv_add(t, "Signed Integer Data", "%"PRId64,
-			      (int64_t)le64_to_cpu(*(__le64 *)vsed));
+			      (int64_t)shr_get_unaligned_le64(vsed));
 
 		stdout_kv_table_finish(t, "pel-vs-event-data");
 		break;
@@ -609,13 +614,18 @@ void nvme_show_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 	__u32 progress = 0;
 	__u16 vsedl;
 	int i;
-	struct nvme_vs_event_desc *vs_desc;
+	struct nvme_vs_event_desc vs_desc;
 	struct shr_table *t;
+	void *p;
 
 	printf("Vendor Specific Event Entry:\n");
-	for (i = 0; progress < event_data_len; i++) {
-		vs_desc = pevent_log_info + offset + progress;
-		vsedl = le16_to_cpu(vs_desc->vsedl);
+	for (i = 0; progress + sizeof(vs_desc) <= event_data_len; i++) {
+		p = pevent_log_info + offset + progress;
+		/* The descriptors are not aligned. */
+		memcpy(&vs_desc, p, sizeof(vs_desc));
+		vsedl = le16_to_cpu(vs_desc.vsedl);
+		if (vsedl > event_data_len - progress - sizeof(vs_desc))
+			break;
 
 		printf("Vendor Specific Event Descriptor %u:\n", i);
 
@@ -624,20 +634,20 @@ void nvme_show_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 			return;
 
 		stdout_kv_add(t, "Vendor Specific Event Code", "%u",
-			      le16_to_cpu(vs_desc->vsec));
+			      le16_to_cpu(vs_desc.vsec));
 		stdout_kv_add(t, "Vendor Specific Event Data Type", "%u",
-			      vs_desc->vsedt);
+			      vs_desc.vsedt);
 		stdout_kv_add(t, "Vendor Specific Event UIndex", "%u",
-			      vs_desc->uidx);
+			      vs_desc.uidx);
 		stdout_kv_add(t, "Vendor Specific Event Data Length", "%u",
 			      vsedl);
 
 		stdout_kv_table_finish(t, "pel-vendor-specific-event");
 
 		if (vsedl)
-			pel_vs_event_data(vs_desc + 1, vs_desc->vsedt,
+			pel_vs_event_data(p + sizeof(vs_desc), vs_desc.vsedt,
 					  vsedl);
-		progress += sizeof(*vs_desc) + vsedl;
+		progress += sizeof(vs_desc) + vsedl;
 	}
 }
 
