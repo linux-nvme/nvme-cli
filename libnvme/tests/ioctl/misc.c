@@ -12,6 +12,7 @@
 #define TEST_CSI NVME_CSI_KV
 #define TEST_COPY_NR 0x12
 
+static struct libnvme_global_ctx *test_ctx;
 static struct libnvme_transport_handle *test_hdl;
 
 static void test_format_nvm(void)
@@ -1458,6 +1459,21 @@ static void test_get_fd_non_direct(void)
 	      "expected LIBNVME_INVALID_FD for a non-direct handle");
 }
 
+static void test_dry_run(void)
+{
+	struct libnvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_identify,
+	};
+
+	libnvme_set_dry_run(test_ctx, true);
+	check(!libnvme_exec_admin_passthru(test_hdl, &cmd),
+	      "admin command failed in dry-run mode");
+	cmd.opcode = nvme_cmd_flush;
+	check(!libnvme_exec_io_passthru(test_hdl, &cmd),
+	      "IO command failed in dry-run mode");
+	libnvme_set_dry_run(test_ctx, false);
+}
+
 static void run_test(const char *test_name, void (*test_fn)(void))
 {
 	printf("Running test %s...", test_name);
@@ -1472,6 +1488,7 @@ int main(void)
 {
 	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
 	libnvme_set_logging_file(ctx, stdout);
+	test_ctx = ctx;
 
 	check(!libnvme_open_loopback(ctx, &test_hdl),
 	      "opening test link failed");
@@ -1528,6 +1545,7 @@ int main(void)
 	RUN_TEST(lm_migration_send);
 	RUN_TEST(lm_migration_recv);
 	RUN_TEST(get_fd_non_direct);
+	RUN_TEST(dry_run);
 
 	libnvme_free_global_ctx(ctx);
 }

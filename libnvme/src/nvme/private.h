@@ -450,6 +450,8 @@ void __libnvme_submit_exit(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, int err, void *user_data);
 bool __libnvme_decide_retry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, int err);
+int __libnvme_exec_dry_run(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd);
 
 #ifdef CONFIG_MI
 struct nvme_mi_msg_hdr;

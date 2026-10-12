@@ -24,3 +24,14 @@ bool __libnvme_decide_retry(struct libnvme_transport_handle *hdl,
 {
 	return false;
 }
+
+int __libnvme_exec_dry_run(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	void *user_data;
+
+	user_data = hdl->submit_entry(hdl, cmd);
+	hdl->submit_exit(hdl, cmd, 0, user_data);
+
+	return 0;
+}

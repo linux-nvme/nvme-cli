@@ -2480,8 +2480,11 @@ __shr_public int libnvme_exec_io_passthru(
 
 	cmd->result = 0;
 
-	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK)
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK) {
+		if (hdl->ctx->dry_run)
+			return __libnvme_exec_dry_run(hdl, cmd);
 		return __libnvme_loopback_io_passthru(hdl, cmd);
+	}
 
 	switch (cmd->opcode) {
 	case nvme_cmd_flush:
@@ -2524,8 +2527,11 @@ __shr_public int libnvme_exec_admin_passthru(
 	if (!hdl || !cmd)
 		return -EINVAL;
 
-	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK)
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK) {
+		if (hdl->ctx->dry_run)
+			return __libnvme_exec_dry_run(hdl, cmd);
 		return __libnvme_loopback_admin_passthru(hdl, cmd);
+	}
 
 	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
 		return -ENOTSUP;
