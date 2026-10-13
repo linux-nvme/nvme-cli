@@ -292,8 +292,8 @@ static void json_nvme_id_ns_lbaf(struct nvme_id_ns *ns, int i, struct json_objec
 		obj_add_int(lbaf, "LBA Format", i);
 		json_object_add_string(lbaf, "Metadata Size", "%d bytes",
 				       le16_to_cpu(ns->lbaf[i].ms));
-		json_object_add_string(lbaf, "Data Size", "%d bytes",
-				       1 << ns->lbaf[i].ds);
+		json_object_add_string(lbaf, "Data Size", "%u bytes",
+				       nvme_lbaf_data_size(ns->lbaf[i].ds));
 		json_object_add_string(lbaf, "Relative Performance", "0x%x %s",
 				       ns->lbaf[i].rp,
 				       ns->lbaf[i].rp == 3 ? "Degraded" :
@@ -393,7 +393,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 	obj_add_array(r, "lbafs", lbafs);
 
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++)
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++)
 		json_nvme_id_ns_lbaf(ns, i, lbafs);
 
 	d_json(ns->vs, strnlen((const char *)ns->vs, sizeof(ns->vs)), 16, 1, vs);
@@ -3567,7 +3567,7 @@ static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
 
 	obj_add_array(r, "elbafs", elbafs);
 
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		struct json_object *elbaf = json_create_object();
 		unsigned int elbaf_val = le32_to_cpu(nvm_ns->elbaf[i]);
 
@@ -3621,7 +3621,7 @@ static void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	obj_add_array(r, "lbafe", lbafs);
 
-	for (i = 0; i <= id_ns->nlbaf; i++) {
+	for (i = 0; i <= id_ns->nlbaf && i < ARRAY_SIZE(ns->lbafe); i++) {
 		struct json_object *lbaf = json_create_object();
 
 		obj_add_uint64(lbaf, "zsze", le64_to_cpu(ns->lbafe[i].zsze));

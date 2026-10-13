@@ -251,7 +251,7 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	unsigned int remainder;
 	char *endptr;
 	int err = -EINVAL;
-	int lbas;
+	unsigned int data_size, lbas;
 
 	if (!val)
 		return 0;
@@ -302,7 +302,12 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(flbas, &lbaf);
-	lbas = (1 << ns->lbaf[lbaf].ds) + le16_to_cpu(ns->lbaf[lbaf].ms);
+	data_size = nvme_lbaf_data_size(ns->lbaf[lbaf].ds);
+	if (!data_size) {
+		nvme_show_error("invalid LBA format %u", lbaf);
+		return -EINVAL;
+	}
+	lbas = data_size + le16_to_cpu(ns->lbaf[lbaf].ms);
 
 	err = shr_suffix_si_parse(val, &endptr, (uint64_t *)num);
 	if (err) {
@@ -469,8 +474,9 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 			nvme_show_err(err, "identify-namespace");
 			return err;
 		}
-		for (i = 0; i <= ns->nlbaf; ++i) {
-			if ((1 << ns->lbaf[i].ds) == cfg.bs && ns->lbaf[i].ms == 0) {
+		for (i = 0; i < nvme_id_ns_nr_lbaf(ns); ++i) {
+			if (nvme_lbaf_data_size(ns->lbaf[i].ds) == cfg.bs &&
+			    ns->lbaf[i].ms == 0) {
 				cfg.flbas = i;
 				break;
 			}
