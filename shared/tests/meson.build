@@ -249,6 +249,18 @@ test_mmio_util = executable(
 
 test('shared - mmio-util', test_mmio_util)
 
+test_unaligned_util = executable(
+    'test-unaligned-util',
+    ['test-unaligned-util.c'],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - unaligned-util', test_unaligned_util)
+
 if host_system != 'windows'
     test_net_util = executable(
         'test-net-util',
