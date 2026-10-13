@@ -2954,7 +2954,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	bool is_json = false;
-	struct json_object *root, *fw_act, *element;
+	struct json_object *root, *fw_act;
 	struct json_object *entry;
 
 	const char *fmt = "Output format: normal|json";
@@ -3011,11 +3011,16 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 			entry = json_create_array();
 			json_object_add_value_array(fw_act, "Entry", entry);
 			for (count = 0; count < table->num_entries; count++) {
-				element = json_create_object();
+				__cleanup_json_object
+				struct json_object *element =
+					json_create_object();
+
 				if (!display_fw_activate_entry(count, &table->entries[count],
 						formatted_output, sizeof(formatted_output),
-						element))
+						element)) {
 					json_array_add_value_object(entry, element);
+					element = NULL;
+				}
 			}
 			json_print_object(root, NULL);
 			printf("\n");
