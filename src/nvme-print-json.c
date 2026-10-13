@@ -4797,7 +4797,8 @@ static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
 
 	obj_add_uint(r, "num_dom_entries", id_dom->num);
 
-	for (i = 0; i < id_dom->num; i++) {
+	for (i = 0; i < id_dom->num && i < ARRAY_SIZE(id_dom->domain_attr);
+	     i++) {
 		entry = json_create_object();
 		dom_cap = le128_to_cpu(id_dom->domain_attr[i].dom_cap);
 		unalloc_dom_cap = le128_to_cpu(id_dom->domain_attr[i].unalloc_dom_cap);

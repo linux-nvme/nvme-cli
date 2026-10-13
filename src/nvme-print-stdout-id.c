@@ -3661,7 +3661,8 @@ void stdout_id_domain_list(struct nvme_id_domain_list *id_dom)
 
 	stdout_kv_add(t, "Number of Domain Entries", "%u", id_dom->num);
 
-	for (i = 0; i < id_dom->num; i++) {
+	for (i = 0; i < id_dom->num && i < ARRAY_SIZE(id_dom->domain_attr);
+	     i++) {
 		struct nvme_id_domain_attr *attr = &id_dom->domain_attr[i];
 		char name[64];
 
