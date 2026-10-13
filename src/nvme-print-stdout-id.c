@@ -2379,7 +2379,7 @@ static bool stdout_id_ctrl_ps_idlp_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (le16_to_cpu(ctrl->psd[i].idlp))
 			return true;
 	}
@@ -2391,7 +2391,7 @@ static bool stdout_id_ctrl_ps_actp_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (le16_to_cpu(ctrl->psd[i].actp))
 			return true;
 	}
@@ -2403,7 +2403,7 @@ static bool stdout_id_ctrl_ps_apw_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (ctrl->psd[i].apws & 0x7)
 			return true;
 	}
@@ -2415,7 +2415,7 @@ static bool stdout_id_ctrl_ps_mbw_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (ctrl->psd[i].mbw)
 			return true;
 	}
@@ -2480,7 +2480,7 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		return NULL;
 	}
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		struct nvme_id_psd *psd = &ctrl->psd[i];
 		__u16 max_power = le16_to_cpu(psd->mp);
 		__cleanup_free char *mp = NULL;

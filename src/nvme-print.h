@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
@@ -64,6 +65,17 @@ enum prop_cap {
 	PROP_CAP_NSSES,
 	PROP_CAP_NONE,
 };
+
+/*
+ * NPSS is a 0's based value. A device can report more power states than
+ * the power state descriptor table holds.
+ */
+static inline int nvme_id_ctrl_nr_psd(struct nvme_id_ctrl *ctrl)
+{
+	int max = ARRAY_SIZE(ctrl->psd);
+
+	return ctrl->npss < max ? ctrl->npss + 1 : max;
+}
 
 static inline bool nvme_is_multipath(struct libnvme_subsystem *s)
 {
