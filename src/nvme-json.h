@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <shared/cleanup-util.h>
+
 #ifdef CONFIG_JSONC
 #include <json.h>
 #include <shared/uint128-util.h>
@@ -73,6 +75,13 @@ struct json_object;
 
 #define json_create_array(a) json_object_new_array(a)
 #define json_object_add_value_array(o, k, v) json_object_object_add(o, k, v)
+
+static inline void json_free_objectp(struct json_object **o)
+{
+	if (*o)
+		json_free_object(*o);
+}
+#define __cleanup_json_object __cleanup(json_free_objectp)
 #define json_object_add_value_object(o, k, v) json_object_object_add(o, k, v)
 
 void json_object_add_uint_02x(struct json_object *o, const char *k, uint32_t v);
