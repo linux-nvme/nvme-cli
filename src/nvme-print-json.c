@@ -2815,7 +2815,8 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 		obj_add_uint(obj_event, "type", event->type);
 		obj_add_uint(obj_event, "fdpef", event->flags);
 		obj_add_uint(obj_event, "pid", le16_to_cpu(event->pid));
-		obj_add_uint64(obj_event, "timestamp", le64_to_cpu(*(uint64_t *)&event->ts));
+		obj_add_uint64(obj_event, "timestamp",
+			       int48_to_long(event->ts.timestamp));
 		obj_add_uint(obj_event, "nsid", le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
