@@ -3647,14 +3647,14 @@ struct nvme_id_ns_granularity_desc {
  * @num_descriptors:	Number of Descriptors
  * @rsvd5:		reserved
  * @entry:		Namespace Granularity Descriptor
- * @rsvd288:		reserved
+ * @rsvd1056:		reserved
  */
 struct nvme_id_ns_granularity_list {
 	__le32			attributes;
 	__u8			num_descriptors;
 	__u8			rsvd5[27];
 	struct nvme_id_ns_granularity_desc entry[NVME_ID_ND_DESCRIPTOR_MAX];
-	__u8			rsvd288[3040];
+	__u8			rsvd1056[3040];
 };
 
 /**
