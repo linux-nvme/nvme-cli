@@ -553,7 +553,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 
 	obj_add_array(r, "psds", psds);
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		struct json_object *psd = json_create_object();
 
 		obj_add_int(psd, "max_power", le16_to_cpu(ctrl->psd[i].mp));
