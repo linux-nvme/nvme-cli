@@ -2760,6 +2760,7 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 			array_add_obj(obj_ruhs, obj_ruh);
 		}
 
+		obj_add_array(obj_config, "ruhs", obj_ruhs);
 		array_add_obj(obj_configs, obj_config);
 
 		p += size;
