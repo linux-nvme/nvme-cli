@@ -1102,11 +1102,13 @@ enum libnvme_mi_aem_handler_next_action aem_handler(struct libnvme_mi_ep *ep, si
 			shr_assert(fn_data->events[idx]->aessi == e->aessi);
 			shr_assert(fn_data->events[idx]->spec_info_len ==
 				e->spec_info_len);
-			shr_assert(memcmp(fn_data->events[idx]->spec_info,
+			shr_assert(!e->spec_info_len ||
+				memcmp(fn_data->events[idx]->spec_info,
 				e->spec_info, e->spec_info_len) == 0);
 			shr_assert(fn_data->events[idx]->vend_spec_info_len ==
 				e->vend_spec_info_len);
-			shr_assert(memcmp(fn_data->events[idx]->vend_spec_info,
+			shr_assert(!e->vend_spec_info_len ||
+				memcmp(fn_data->events[idx]->vend_spec_info,
 				e->vend_spec_info, e->vend_spec_info_len) == 0);
 		}
 
