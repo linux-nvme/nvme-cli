@@ -1621,6 +1621,52 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 	return err;
 }
 
+#define LOG_NO_LEN_MAX_LEN	(4 * 1024 * 1024)
+
+/*
+ * Read a log page that has no length field. @log_len returns the length
+ * of the log in a buffer of @len bytes, or a larger value if the buffer is
+ * too short. Read the log again with a larger buffer until it holds the
+ * whole log, up to LOG_NO_LEN_MAX_LEN bytes. The data beyond the end of
+ * the log page is undefined and is not used.
+ */
+static int get_log_no_len(struct libnvme_transport_handle *hdl,
+		const struct libnvme_passthru_cmd *init, void **log,
+		size_t *len, size_t (*log_len)(void *log, size_t len))
+{
+	struct libnvme_passthru_cmd cmd;
+	size_t need;
+	int err;
+
+	*len = NVME_LOG_PAGE_PDU_SIZE;
+	for (;;) {
+		void *p = libnvme_realloc(*log, *len);
+
+		if (!p)
+			return -ENOMEM;
+		*log = p;
+
+		cmd = *init;
+		cmd.addr = (__u64)(uintptr_t)p;
+		cmd.data_len = *len;
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, *len);
+		if (err)
+			return err;
+
+		need = log_len(p, *len);
+		if (need <= *len)
+			return 0;
+		if (*len == LOG_NO_LEN_MAX_LEN) {
+			nvme_show_error("log longer than %d bytes, truncated",
+					LOG_NO_LEN_MAX_LEN);
+			return 0;
+		}
+		need = (need + NVME_LOG_PAGE_PDU_SIZE - 1) &
+		       ~(size_t)(NVME_LOG_PAGE_PDU_SIZE - 1);
+		*len = min_t(size_t, max(need, 2 * *len), LOG_NO_LEN_MAX_LEN);
+	}
+}
+
 static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 				   struct plugin *plugin)
 {
@@ -1676,8 +1722,6 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 	return err;
 }
 
-#define SUPP_CAP_CONFIG_LOG_MAX_LEN	(256 * 1024)
-
 /*
  * The functions below return the offset after a descriptor that starts
  * at @off. A value larger than @len means that the buffer is too short.
@@ -1731,11 +1775,10 @@ static size_t cap_config_egcd_end(const unsigned char *buf, size_t off,
 	return off;
 }
 
-/* The log page has no length field. */
-static size_t supp_cap_config_log_len(
-		struct nvme_supported_cap_config_list_log *log, size_t len)
+static size_t supp_cap_config_log_len(void *p, size_t len)
 {
-	const unsigned char *buf = (const unsigned char *)log;
+	struct nvme_supported_cap_config_list_log *log = p;
+	const unsigned char *buf = p;
 	struct nvme_capacity_config_desc desc;
 	size_t off = sizeof(*log);
 
@@ -1758,10 +1801,10 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieve the list of Supported Capacity Configuration Descriptors";
 
-	__cleanup_libnvme_free struct nvme_supported_cap_config_list_log *cap_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	size_t len = NVME_LOG_PAGE_PDU_SIZE, need;
+	__cleanup_libnvme_free void *cap_log = NULL;
+	size_t len;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err = -1;
@@ -1793,40 +1836,12 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	/*
-	 * Read the log again with a larger buffer until it holds all the
-	 * descriptors. The data beyond the end of the log page is undefined
-	 * and is not used.
-	 */
-	for (;;) {
-		void *p = libnvme_realloc(cap_log, len);
-
-		if (!p)
-			return -ENOMEM;
-		cap_log = p;
-
-		nvme_init_get_log_support_cap_config_list(&cmd, cfg.domainid,
-							  cap_log);
-		cmd.data_len = len;
-		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
-		if (err) {
-			nvme_show_err(err,
-				      "supported capacity configuration list log");
-			return err;
-		}
-
-		need = supp_cap_config_log_len(cap_log, len);
-		if (need <= len)
-			break;
-		if (len == SUPP_CAP_CONFIG_LOG_MAX_LEN) {
-			nvme_show_error("log longer than %d bytes, truncated",
-					SUPP_CAP_CONFIG_LOG_MAX_LEN);
-			break;
-		}
-		need = (need + NVME_LOG_PAGE_PDU_SIZE - 1) &
-		       ~(size_t)(NVME_LOG_PAGE_PDU_SIZE - 1);
-		len = min_t(size_t, max(need, 2 * len),
-			    SUPP_CAP_CONFIG_LOG_MAX_LEN);
+	nvme_init_get_log_support_cap_config_list(&cmd, cfg.domainid, NULL);
+	err = get_log_no_len(hdl, &cmd, &cap_log, &len,
+			     supp_cap_config_log_len);
+	if (err) {
+		nvme_show_err(err, "supported capacity configuration list log");
+		return err;
 	}
 
 	nvme_show_supported_cap_config_log(cap_log, len, flags);
