@@ -321,6 +321,18 @@ class TestMicronVsNandStats(SmartLogsTestBase):
         self.setup_drive(model='M51BX')
         self.assert_values_follow_the_log(_NAND_STATS, 0xD0, self._JSON_KEYS)
 
+    def test_six_byte_field_is_little_endian(self):
+        """The raw bad user NAND block count, bytes 39:34 of the 0xC0
+        log, is a 48-bit little endian value."""
+        self.setup_drive(model='M51CX', cust_id=CUST_ID_GG)
+        log = bytearray(log_payload(0xC0, fill=0x00))
+        log[34:40] = bytes((0x01, 0x02, 0x03, 0x04, 0x05, 0x06))
+        self.server.logs[0xC0] = bytes(log)
+        fields = self.json_fields(_NAND_STATS, self._JSON_KEYS)
+
+        self.assertEqual(fields["Bad User NAND Block Count (Raw)"],
+                         "0x60504030201")
+
     def test_identify_failure_is_reported(self):
         """The customer ID comes from identify, which can fail."""
         self.setup_drive()
