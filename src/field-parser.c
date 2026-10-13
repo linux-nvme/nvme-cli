@@ -10,6 +10,7 @@
 #include <ccan/endian/endian.h>
 #include <shared/hex-util.h>
 #include <shared/time-util.h>
+#include <shared/unaligned-util.h>
 
 #include "cleanup.h"
 #include "field-parser.h"
@@ -42,24 +43,24 @@ void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t dat
 
 char *process_field_size_16(int offset, char *sfield, __u8 *buf)
 {
-	__u64 lval_lo, lval_hi;
+	uint64_t lval_lo, lval_hi;
 	char *datastr = NULL;
 
 	if (strstr(sfield, "GUID")) {
 		if (asprintf(&datastr, "0x%"PRIx64"%"PRIx64"",
-			     le64_to_cpu(*(__u64 *)(&buf[offset + 8])),
-			     le64_to_cpu(*(__u64 *)(&buf[offset]))) < 0)
+			     shr_get_unaligned_le64(&buf[offset + 8]),
+			     shr_get_unaligned_le64(&buf[offset])) < 0)
 			return NULL;
 	} else {
-		lval_lo = *((__u64 *)(&buf[offset]));
-		lval_hi = *((__u64 *)(&buf[offset + 8]));
+		lval_lo = shr_get_unaligned_le64(&buf[offset]);
+		lval_hi = shr_get_unaligned_le64(&buf[offset + 8]);
 
 		if (lval_hi) {
 			if (asprintf(&datastr, "0x%"PRIx64"%016"PRIx64"",
-				     le64_to_cpu(lval_hi), le64_to_cpu(lval_lo)) < 0)
+				     lval_hi, lval_lo) < 0)
 				return NULL;
 		} else {
-			if (asprintf(&datastr, "0x%"PRIx64"", le64_to_cpu(lval_lo)) < 0)
+			if (asprintf(&datastr, "0x%"PRIx64"", lval_lo) < 0)
 				return NULL;
 		}
 	}
@@ -68,34 +69,31 @@ char *process_field_size_16(int offset, char *sfield, __u8 *buf)
 
 char *process_field_size_8(int offset, char *sfield, __u8 *buf)
 {
-	__u64 lval_lo;
+	uint64_t lval_lo;
 	char *datastr = NULL;
 
 	if (strstr(sfield, "Boot SSD Spec Version")) {
 		if (asprintf(&datastr, "%x.%x.%x.%x",
-			     le16_to_cpu(*((__u16 *)(&buf[300]))),
-			     le16_to_cpu(*((__u16 *)(&buf[302]))),
-			     le16_to_cpu(*((__u16 *)(&buf[304]))),
-			     le16_to_cpu(*((__u16 *)(&buf[306])))) < 0)
+			     shr_get_unaligned_le16(&buf[300]),
+			     shr_get_unaligned_le16(&buf[302]),
+			     shr_get_unaligned_le16(&buf[304]),
+			     shr_get_unaligned_le16(&buf[306])) < 0)
 			return NULL;
 	} else if (strstr(sfield, "Firmware Revision")) {
 		char buffer[30] = {'\0'};
 
-		lval_lo = *((__u64 *)(&buf[offset]));
+		lval_lo = shr_get_unaligned_le64(&buf[offset]);
 
 		sprintf(buffer, "%"PRIx64, __builtin_bswap64(lval_lo));
 		datastr = shr_hex_to_ascii(buffer);
 	} else if (strstr(sfield, "Timestamp")) {
 		char ts_buf[128];
 
-		lval_lo = *((__u64 *)(&buf[offset]));
-
-		shr_format_ts(le64_to_cpu(lval_lo), ts_buf);
+		shr_format_ts(shr_get_unaligned_le64(&buf[offset]), ts_buf);
 		datastr = strdup(ts_buf);
 	} else {
-		lval_lo = *((__u64 *)(&buf[offset]));
-
-		if (asprintf(&datastr, "0x%"PRIx64"", le64_to_cpu(lval_lo)) < 0)
+		if (asprintf(&datastr, "0x%"PRIx64"",
+			     shr_get_unaligned_le64(&buf[offset])) < 0)
 			return NULL;
 	}
 	return datastr;
@@ -119,20 +117,20 @@ char *process_field_size_6(int offset, char *sfield, __u8 *buf)
 {
 	__u32 ival;
 	__u16 sval;
-	__u64 lval_lo;
+	uint64_t lval_lo;
 	char *datastr = NULL;
 
 	if (strstr(sfield, "DSSD Spec Version")) {
 		if (asprintf(&datastr, "%x.%x.%x.%x", buf[103],
-			     le16_to_cpu(*((__u16 *)(&buf[101]))),
-			     le16_to_cpu(*((__u16 *)(&buf[99]))), buf[98]) < 0)
+			     shr_get_unaligned_le16(&buf[101]),
+			     shr_get_unaligned_le16(&buf[99]), buf[98]) < 0)
 			return NULL;
 	} else {
-		ival = *((__u32 *)(&buf[offset]));
-		sval = *((__u16 *)(&buf[offset + 4]));
+		ival = shr_get_unaligned_le32(&buf[offset]);
+		sval = shr_get_unaligned_le16(&buf[offset + 4]);
 		lval_lo = (((__u64)sval << 32) | ival);
 
-		if (asprintf(&datastr, "0x%"PRIx64"", le64_to_cpu(lval_lo)) < 0)
+		if (asprintf(&datastr, "0x%"PRIx64"", lval_lo) < 0)
 			return NULL;
 	}
 	return datastr;
@@ -182,7 +180,7 @@ void generic_structure_parser(__u8 *buf, struct request_data *req_data, int fiel
 			break;
 		case FIELD_SIZE_4:
 			if (asprintf(&datastr, "0x%x",
-				     le32_to_cpu(*((__u32 *)(&buf[offset])))) < 0)
+				     shr_get_unaligned_le32(&buf[offset])) < 0)
 				datastr = NULL;
 			break;
 		case FIELD_SIZE_3:
@@ -193,7 +191,7 @@ void generic_structure_parser(__u8 *buf, struct request_data *req_data, int fiel
 			break;
 		case FIELD_SIZE_2:
 			if (asprintf(&datastr, "0x%04x",
-				     le16_to_cpu(*((__u16 *)(&buf[offset])))) < 0)
+				     shr_get_unaligned_le16(&buf[offset])) < 0)
 				datastr = NULL;
 			break;
 		case FIELD_SIZE_1:
