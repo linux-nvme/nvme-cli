@@ -34,6 +34,7 @@
 #include <shared/fs-util.h>
 #include <shared/string-util.h>
 #include <shared/uint128-util.h>
+#include <shared/unaligned-util.h>
 
 #include "field-parser.h"
 #include "global-ctx.h"
@@ -1133,42 +1134,38 @@ static struct nand_stats {
 
 static void micron_readFixedBytesFromBuffer(__u8 *buf, int offset, int numBytes, char *datastr)
 {
-	__u16 u16Val;
-	__u32 u32Val;
-	__u64 count_lo, count_hi, count;
+	uint64_t count_lo, count_hi, count;
 
 	switch (numBytes) {
 	case 16:
 	{
-		count_lo = *((__u64 *)(&buf[offset]));
-		count_hi = *((__u64 *)(&buf[offset + 8]));
+		count_lo = shr_get_unaligned_le64(&buf[offset]);
+		count_hi = shr_get_unaligned_le64(&buf[offset + 8]);
 		if (count_hi)
 			sprintf(datastr, "0x%"PRIx64"%016"PRIx64"",
-				le64_to_cpu(count_hi),
-				le64_to_cpu(count_lo));
+				count_hi, count_lo);
 		else
-			sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(count_lo));
+			sprintf(datastr, "0x%"PRIx64"", count_lo);
 
 	}
 	break;
 	case 8:
 	{
-		count = *((__u64 *)(&buf[offset]));
-		sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(count));
+		count = shr_get_unaligned_le64(&buf[offset]);
+		sprintf(datastr, "0x%"PRIx64"", count);
 	}
 	break;
 	case 6:
 	{
-		u32Val    = *((__u32 *)(&buf[offset]));
-		u16Val    = *((__u16 *)(&buf[offset + 4]));
-		count = (((__u64)u32Val << 32) | u16Val);
-		sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(count));
+		count = ((uint64_t)shr_get_unaligned_le32(&buf[offset]) << 32) |
+			shr_get_unaligned_le16(&buf[offset + 4]);
+		sprintf(datastr, "0x%"PRIx64"", count);
 	}
 	break;
 	case 2:
 	{
-		u16Val = *((__u16 *)(&buf[offset]));
-		sprintf(datastr, "0x%04x", le16_to_cpu(u16Val));
+		sprintf(datastr, "0x%04x",
+			shr_get_unaligned_le16(&buf[offset]));
 	}
 	break;
 	}
