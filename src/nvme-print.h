@@ -587,6 +587,8 @@ void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u16 lsi,
 		   __u8 lsp, void *log, __u32 len, nvme_print_flags_t flags);
 void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head, int human);
+void *nvme_pel_event_data(void *pevent_log_info, __u32 offset, __u32 len,
+		__u32 *buf_len);
 void nvme_show_pel_event_header(int i, struct nvme_persistent_event_entry *pevent_entry_head,
 				int human);
 void nvme_show_pel_smart_health_event(void *pevent_log_info, __u32 offset,
