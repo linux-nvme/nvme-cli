@@ -419,9 +419,10 @@ void nvme_show_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller,
 }
 
 void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
+	size_t len,
 				   nvme_print_flags_t flags)
 {
-	nvme_print(media_unit_stat_log, flags, mus_log);
+	nvme_print(media_unit_stat_log, flags, mus_log, len);
 }
 
 void nvme_show_fdp_configs(struct nvme_fdp_config_log *log, size_t len,
@@ -2060,7 +2061,7 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		break;
 	}
 	case NVME_LOG_LID_MEDIA_UNIT_STATUS:
-		nvme_show_media_unit_stat_log(log, flags);
+		nvme_show_media_unit_stat_log(log, len, flags);
 		break;
 	case NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:
 		nvme_show_supported_cap_config_log(log, len, flags);

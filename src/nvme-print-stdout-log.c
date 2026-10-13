@@ -1239,17 +1239,22 @@ void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller,
 		stdout_phy_rx_eom_descs(log, len);
 }
 
-void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
+void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
+		size_t len)
 {
-	int i;
-	int nmu = le16_to_cpu(mus_log->nmu);
+	struct nvme_media_unit_stat_desc desc;
+	struct mus_desc_iter it;
 	struct shr_table *t;
+
+	if (len < sizeof(*mus_log))
+		return;
 
 	t = stdout_kv_table_create();
 	if (!t)
 		return;
 
-	stdout_kv_add(t, "Number of Media Unit Status Descriptors", "%u", nmu);
+	stdout_kv_add(t, "Number of Media Unit Status Descriptors", "%u",
+		      le16_to_cpu(mus_log->nmu));
 	stdout_kv_add(t, "Number of Channels", "%u",
 		      le16_to_cpu(mus_log->cchans));
 	stdout_kv_add(t, "Selected Configuration", "%u",
@@ -1257,7 +1262,8 @@ void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 
 	stdout_kv_table_finish(t, "media-unit-stat-log");
 
-	for (i = 0; i < nmu; i++) {
+	mus_desc_iter_init(&it, mus_log, len);
+	for (int i = 0; mus_desc_iter_next(&it, &desc); i++) {
 		printf("Media Unit Status Descriptor: %u\n", i);
 
 		t = stdout_kv_table_create();
@@ -1265,23 +1271,28 @@ void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 			return;
 
 		stdout_kv_add(t, "Media Unit Identifier", "%u",
-			      le16_to_cpu(mus_log->mus_desc[i].muid));
+			      le16_to_cpu(desc.muid));
 		stdout_kv_add(t, "Domain Identifier", "%u",
-			      le16_to_cpu(mus_log->mus_desc[i].domainid));
+			      le16_to_cpu(desc.domainid));
 		stdout_kv_add(t, "Endurance Group Identifier", "%u",
-			      le16_to_cpu(mus_log->mus_desc[i].endgid));
+			      le16_to_cpu(desc.endgid));
 		stdout_kv_add(t, "NVM Set Identifier", "%u",
-			      le16_to_cpu(mus_log->mus_desc[i].nvmsetid));
+			      le16_to_cpu(desc.nvmsetid));
 		stdout_kv_add(t, "Capacity Adjustment Factor", "%u",
-			      le16_to_cpu(mus_log->mus_desc[i].cap_adj_fctr));
-		stdout_kv_add(t, "Available Spare", "%u",
-			      mus_log->mus_desc[i].avl_spare);
-		stdout_kv_add(t, "Percentage Used", "%u",
-			      mus_log->mus_desc[i].percent_used);
-		stdout_kv_add(t, "Number of Channels", "%u",
-			      mus_log->mus_desc[i].mucs);
-		stdout_kv_add(t, "Channel Identifiers Offset", "%u",
-			      mus_log->mus_desc[i].cio);
+			      le16_to_cpu(desc.cap_adj_fctr));
+		stdout_kv_add(t, "Available Spare", "%u", desc.avl_spare);
+		stdout_kv_add(t, "Percentage Used", "%u", desc.percent_used);
+		stdout_kv_add(t, "Number of Channels", "%u", desc.mucs);
+		stdout_kv_add(t, "Channel Identifiers Offset", "%u", desc.cio);
+
+		for (int k = 0; k < desc.mucs; k++) {
+			char name[32];
+
+			snprintf(name, sizeof(name), "Channel %d Identifier",
+				 k);
+			stdout_kv_add(t, name, "%u",
+				      mus_desc_iter_chan(&it, k));
+		}
 
 		stdout_kv_table_finish(t, "media-unit-stat-log");
 	}

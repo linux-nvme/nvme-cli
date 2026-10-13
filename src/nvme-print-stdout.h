@@ -60,7 +60,8 @@ void stdout_fid_support_effects_log(
 	struct nvme_fid_supported_effects_log *fid_log, const char *devname);
 void stdout_fw_log(struct nvme_firmware_slot *fw_log, const char *devname);
 void stdout_lba_status_log(void *lba_status, __u32 size, const char *devname);
-void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log);
+void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
+		size_t len);
 void stdout_mi_cmd_support_effects_log(
 	struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,
 	const char *devname);

@@ -1667,15 +1667,28 @@ static int get_log_no_len(struct libnvme_transport_handle *hdl,
 	}
 }
 
+static size_t media_unit_stat_log_len(void *p, size_t len)
+{
+	struct nvme_media_unit_stat_desc desc;
+	struct mus_desc_iter it;
+
+	mus_desc_iter_init(&it, p, len);
+	while (mus_desc_iter_next(&it, &desc))
+		;
+
+	return it.need ? it.need : len;
+}
+
 static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 				   struct plugin *plugin)
 {
 	const char *desc = "Retrieve the configuration and wear of media units and print it";
 
-	__cleanup_libnvme_free struct nvme_media_unit_stat_log *mus = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_libnvme_free void *mus = NULL;
 	struct libnvme_passthru_cmd cmd;
+	size_t len;
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -1706,18 +1719,14 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	mus = libnvme_alloc(sizeof(*mus));
-	if (!mus)
-		return -ENOMEM;
-
-	nvme_init_get_log_media_unit_stat(&cmd, cfg.domainid, mus);
-	err = libnvme_get_log(hdl, &cmd, false, sizeof(*mus));
+	nvme_init_get_log_media_unit_stat(&cmd, cfg.domainid, NULL);
+	err = get_log_no_len(hdl, &cmd, &mus, &len, media_unit_stat_log_len);
 	if (err) {
 		nvme_show_err(err, "media unit status log");
 		return err;
 	}
 
-	nvme_show_media_unit_stat_log(mus, flags);
+	nvme_show_media_unit_stat_log(mus, len, flags);
 
 	return err;
 }
