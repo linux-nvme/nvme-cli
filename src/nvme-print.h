@@ -77,6 +77,24 @@ static inline int nvme_id_ctrl_nr_psd(struct nvme_id_ctrl *ctrl)
 	return ctrl->npss < max ? ctrl->npss + 1 : max;
 }
 
+/*
+ * NLBAF and NULBAF are 0's based values. A device can report more LBA
+ * formats than the LBA format table holds.
+ */
+static inline int nvme_id_ns_nr_lbaf(struct nvme_id_ns *ns)
+{
+	int max = ARRAY_SIZE(ns->lbaf);
+	int n = ns->nlbaf + ns->nulbaf + 1;
+
+	return n < max ? n : max;
+}
+
+/* Return: the LBA data size in bytes, or 0 if it is not representable. */
+static inline unsigned int nvme_lbaf_data_size(__u8 ds)
+{
+	return ds < 32 ? 1U << ds : 0;
+}
+
 static inline bool nvme_is_multipath(struct libnvme_subsystem *s)
 {
 	struct libnvme_ns *n;

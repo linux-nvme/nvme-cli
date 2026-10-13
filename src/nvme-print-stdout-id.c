@@ -1819,7 +1819,7 @@ static struct shr_table *stdout_id_ns_lbaf_table(struct nvme_id_ns *ns,
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		struct nvme_lbaf *lbaf = &ns->lbaf[i];
 		int row = shr_table_get_row_id(t);
 		int col = -1;
@@ -1830,7 +1830,7 @@ static struct shr_table *stdout_id_ns_lbaf_table(struct nvme_id_ns *ns,
 		shr_table_set_value_unsigned(t, ++col, row, lbaf->ds, RIGHT);
 		if (sup.verbose)
 			shr_table_set_value_unsigned(t, ++col, row,
-					1U << lbaf->ds, RIGHT);
+					nvme_lbaf_data_size(lbaf->ds), RIGHT);
 		shr_table_set_value_unsigned(t, ++col, row, lbaf->rp, RIGHT);
 		if (sup.verbose)
 			shr_table_set_value_str(t, ++col, row,
@@ -3276,7 +3276,7 @@ void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 
 	stdout_kv_table_finish(t, "nvm-id-ns");
 
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
 		qpif = (elbaf >> 9) & 0xF;
 		pif = (elbaf >> 7) & 0x3;
@@ -3484,7 +3484,7 @@ void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	stdout_kv_table_finish(t, "zns-id-ns");
 
-	for (i = 0; i <= id_ns->nlbaf; i++) {
+	for (i = 0; i <= id_ns->nlbaf && i < ARRAY_SIZE(ns->lbafe); i++) {
 		if (verbose)
 			printf("LBA Format Extension %2d : Zone Size: %#"PRIx64
 			       " LBAs - Zone Descriptor Extension Size: %-1d "
