@@ -748,10 +748,15 @@ static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported
 				  le16_to_cpu(log_data->unsupported_count));
 
 	memset((void *)unsup_req_list_str, 0, 40);
-	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
-		sprintf((char *)unsup_req_list_str, "Unsupported Requirement List %d", j);
-		json_object_add_value_string(root, unsup_req_list_str,
-					     (char *)log_data->unsupported_req_list[j]);
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count) &&
+		    j < ARRAY_SIZE(log_data->unsupported_req_list); j++) {
+		char req[sizeof(log_data->unsupported_req_list[j]) + 1] = {};
+
+		memcpy(req, log_data->unsupported_req_list[j],
+		       sizeof(log_data->unsupported_req_list[j]));
+		snprintf(unsup_req_list_str, sizeof(unsup_req_list_str),
+			 "Unsupported Requirement List %d", j);
+		json_object_add_value_string(root, unsup_req_list_str, req);
 	}
 
 	json_object_add_value_int(root, "Log Page Version",

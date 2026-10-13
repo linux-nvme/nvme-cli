@@ -405,9 +405,11 @@ static void stdout_c5_log(struct libnvme_transport_handle *hdl, struct unsupport
 	printf("  Number Unsupported Req IDs		: 0x%x\n",
 	       le16_to_cpu(log_data->unsupported_count));
 
-	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++)
-		printf("  Unsupported Requirement List %d	: %s\n", j,
-		       log_data->unsupported_req_list[j]);
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count) &&
+		    j < ARRAY_SIZE(log_data->unsupported_req_list); j++)
+		printf("  Unsupported Requirement List %d	: %.*s\n", j,
+		       (int)sizeof(log_data->unsupported_req_list[j]),
+		       (char *)log_data->unsupported_req_list[j]);
 
 	printf("  Log Page Version			: 0x%x\n",
 	       le16_to_cpu(log_data->log_page_version));
