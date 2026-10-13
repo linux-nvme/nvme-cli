@@ -1157,8 +1157,8 @@ static void micron_readFixedBytesFromBuffer(__u8 *buf, int offset, int numBytes,
 	break;
 	case 6:
 	{
-		count = ((uint64_t)shr_get_unaligned_le32(&buf[offset]) << 32) |
-			shr_get_unaligned_le16(&buf[offset + 4]);
+		count = shr_get_unaligned_le16(&buf[offset + 4]);
+		count = (count << 32) | shr_get_unaligned_le32(&buf[offset]);
 		sprintf(datastr, "0x%"PRIx64"", count);
 	}
 	break;
