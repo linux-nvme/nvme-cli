@@ -3520,7 +3520,7 @@ void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 	stdout_kv_table_finish(t, "id-nvmset");
 
 	printf(".................\n");
-	for (i = 0; i < nvmset->nid; i++) {
+	for (i = 0; i < nvmset->nid && i < ARRAY_SIZE(nvmset->ent); i++) {
 		printf(" NVM Set Attribute Entry[%2d]\n", i);
 		printf(".................\n");
 

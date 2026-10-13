@@ -4674,7 +4674,7 @@ static void json_nvme_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 
 	obj_add_int(r, "nid", nent);
 
-	for (i = 0; i < nent; i++) {
+	for (i = 0; i < nent && i < ARRAY_SIZE(nvmset->ent); i++) {
 		struct json_object *entry = json_create_object();
 
 		obj_add_int(entry, "nvmset_id", le16_to_cpu(nvmset->ent[i].nvmsetid));
