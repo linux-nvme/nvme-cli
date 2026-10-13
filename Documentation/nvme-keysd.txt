@@ -26,7 +26,7 @@ This is a technology preview.
 KEYS
 ----
 nvme-keysd imports every entry of the fabrics configuration that has
-'key-source = systemd-creds'. For such an entry, 'tls-key' is the name
+'tls-key-source = systemd-creds'. For such an entry, 'tls-key' is the name
 of a systemd credential. The credential holds the PSK in the PSK
 interchange format ('NVMeTLSkey-1:<hmac>:<base64>:'), as created by
 'nvme keys gen-tls-psk'.
@@ -41,7 +41,7 @@ nvme-keysd imports the keys and exits. It never revokes a key because
 its entry was removed from the configuration.
 
 The unit does not start when no entry of the fabrics configuration has
-a 'key-source' other than 'inline'. In that case, nvme-keysd does not
+a 'tls-key-source' other than 'inline'. In that case, nvme-keysd does not
 run, and the unit does not load the nvme_keyring module.
 
 CREDENTIALS
@@ -61,7 +61,7 @@ and in nvme-fabrics.conf:
 	nqn        = nqn.2024-01.com.example:storage.vol1
 	controller = transport=tcp;traddr=192.0.2.10;trsvcid=4420
 	tls        = true
-	key-source = systemd-creds
+	tls-key-source = systemd-creds
 	tls-key    = vol1-psk
 
 After adding or changing credentials, restart nvme-keysd to import
@@ -90,7 +90,7 @@ OPTIONS
 
 --should-start::
 	Exit with status 0 if an entry of the fabrics configuration has a
-	'key-source' other than 'inline', and with status 1 otherwise.
+	'tls-key-source' other than 'inline', and with status 1 otherwise.
 	The unit runs this check before it starts nvme-keysd.
 
 -d::
