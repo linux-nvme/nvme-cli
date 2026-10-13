@@ -392,5 +392,27 @@ class TestMicronVsFwActivateHistory(TestMicronMock):
         self.check_bad_device_name(_COMMAND)
 
 
+
+_CLEAR = "clear-fw-activate-history"
+_FID_CLEAR_FW_ACTIVATION_HISTORY = 0xC1
+
+
+class TestMicronClearFwActivateHistory(TestMicronMock):
+    """clear-fw-activate-history sets the clear bit of feature 0xC1."""
+
+    def test_clear_bit_is_the_feature_value(self):
+        """The clear request is the top bit of the feature value, sent
+        to no particular namespace."""
+        self.select_model(_SUPPORTED_MODEL)
+        self.server.commands.clear()
+        self.run_plugin_cmd_check(_CLEAR)
+        written = [c for c in self.server.commands
+                   if c['fid'] == _FID_CLEAR_FW_ACTIVATION_HISTORY]
+
+        self.assertTrue(written, "the 0xC1 feature was never written")
+        self.assertEqual(written[0]['cdw11'], 1 << 31)
+        self.assertEqual(written[0]['nsid'], 0)
+
+
 if __name__ == '__main__':
     main()

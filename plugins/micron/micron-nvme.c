@@ -3415,7 +3415,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 		return -ENOTSUP;
 	}
 
-	err = nvme_set_features_simple(hdl, 1U << 31, fid, 0, 0, &result);
+	err = nvme_set_features_simple(hdl, 0, fid, false, 1U << 31, &result);
 	if (!err)
 		err = (int)result;
 	else
