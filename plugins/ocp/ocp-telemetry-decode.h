@@ -423,7 +423,7 @@ struct __packed vu_event_id_str_table_entry {
 };
 
 
-struct __packed ocp_telemetry_parse_options {
+struct ocp_telemetry_parse_options {
 	char *telemetry_log;
 	char *string_log;
 	char *output_file;
