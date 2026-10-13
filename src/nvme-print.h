@@ -187,7 +187,7 @@ struct print_ops {
 	void (*id_uuid_list)(const struct nvme_id_uuid_list  *uuid_list);
 	void (*lba_status)(struct nvme_lba_status *list, unsigned long len);
 	void (*lba_status_log)(void *lba_status, __u32 size, const char *devname);
-	void (*media_unit_stat_log)(struct nvme_media_unit_stat_log *mus);
+	void (*media_unit_stat_log)(struct nvme_media_unit_stat_log *mus, size_t len);
 	void (*mi_cmd_support_effects_log)(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log, const char *devname);
 	void (*ns_list)(struct nvme_ns_list *ns_list);
 	void (*ns_list_log)(struct nvme_ns_list *log, const char *devname, bool alloc);
@@ -418,12 +418,89 @@ static inline unsigned char *eom_desc_iter_vsdata(struct eom_desc_iter *it,
 	*vsdatalen = edlen;
 	return it->cur + vsdataoffset;
 }
+
+/*
+ * Walks the Media Unit Status Descriptors. A descriptor is CIO + 2 * MUCS
+ * bytes long. CIO shall be a multiple of 16, but a device may report
+ * another value, so each descriptor is copied before it is read.
+ */
+struct mus_desc_iter {
+	unsigned char *start;
+	unsigned char *p;
+	unsigned char *end;
+	unsigned char *chans;	// Channel Identifiers of the last descriptor
+	uint16_t remaining;
+	size_t need;		// log length needed if the buffer is short
+};
+
+static inline void mus_desc_iter_init(struct mus_desc_iter *it,
+		struct nvme_media_unit_stat_log *log, size_t len)
+{
+	it->start = (unsigned char *)log;
+	it->p = (unsigned char *)log->mus_desc;
+	it->end = it->start + len;
+	it->chans = NULL;
+	it->remaining = len < sizeof(*log) ? 0 : le16_to_cpu(log->nmu);
+	it->need = 0;
+}
+
+static inline bool mus_desc_iter_short(struct mus_desc_iter *it, size_t size)
+{
+	it->need = it->p - it->start + size;
+	it->remaining = 0;
+
+	return false;
+}
+
+/*
+ * Copies the next descriptor to @desc. Returns false at the end of the
+ * list, at the end of the buffer, or at a descriptor whose CIO points
+ * into its own header: the next descriptors cannot be located then.
+ */
+static inline bool mus_desc_iter_next(struct mus_desc_iter *it,
+		struct nvme_media_unit_stat_desc *desc)
+{
+	size_t size;
+
+	if (!it->remaining)
+		return false;
+
+	if (!shr_buf_has_room(it->p, it->end, sizeof(*desc)))
+		return mus_desc_iter_short(it, sizeof(*desc));
+
+	memcpy(desc, it->p, sizeof(*desc));
+	if (desc->cio < sizeof(*desc)) {
+		it->remaining = 0;
+		return false;
+	}
+
+	size = desc->cio + desc->mucs * sizeof(__le16);
+	if (!shr_buf_has_room(it->p, it->end, size))
+		return mus_desc_iter_short(it, size);
+
+	it->chans = it->p + desc->cio;
+	it->p += size;
+	it->remaining--;
+
+	return true;
+}
+
+/* Channel Identifier @i of the descriptor most recently returned. */
+static inline uint16_t mus_desc_iter_chan(const struct mus_desc_iter *it,
+		int i)
+{
+	__le16 id;
+
+	memcpy(&id, it->chans + i * sizeof(id), sizeof(id));
+
+	return le16_to_cpu(id);
+}
 void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fid_log,
 	const char *devname, nvme_print_flags_t flags);
 void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,
 	const char *devname, nvme_print_flags_t flags);
 void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
-	nvme_print_flags_t flags);
+	size_t len, nvme_print_flags_t flags);
 void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_log *caplog,
 				size_t len, nvme_print_flags_t flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, nvme_print_flags_t flags);

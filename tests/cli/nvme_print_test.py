@@ -52,6 +52,7 @@ _DIR_STREAMS_STATUS = 0x0102     # directive type 1, operation 2
 _OPC_GET_FEATURES = 0x0a
 _FID_FDP_EVENTS = 0x1e
 _LID_PERSISTENT_EVENT = 0x0d
+_LID_MEDIA_UNIT_STATUS = 0x10
 _LID_SUPPORTED_CAP_CONFIG = 0x11
 _CNS_CTRL = 0x01
 _NVME_IOCTL_ID = 0x40
@@ -68,7 +69,7 @@ _FIXUPS = {
     0x0c: [('<H', 8, 1), ('<I', 20, 2)],        # ANA: ngrps, nnsids
     0x0d: [('<I', 4, 0), ('<Q', 8, None)],      # persistent event: tnev, tll
     0x0e: [('<I', 0, 16), ('<I', 4, 0)],        # LBA status: lslplen, nlslne
-    0x10: [('<H', 0, 0)],                       # media unit status: nmu
+    0x10: [('<H', 0, 2)],                       # media unit status: nmu
     0x11: [('<B', 0, 1), ('<H', 20, 1),         # capacity config: sccn,
            ('<H', 128, 1), ('<H', 132, 1),      # egcn, egsets, egchans,
            ('<H', 136, 1), ('<H', 144, 0)],     # chmus, mudl
@@ -400,6 +401,47 @@ class PrintCLITest(unittest.TestCase):
         chans = caps[0]['Endurance Descriptor'][0]['Channel Descriptor']
         self.assertEqual(len(chans), 1000)
         self.assertEqual(chans[999]['Media Descriptor'][0]['muid'], 999)
+
+    def test_media_unit_stat(self):
+        def desc(muid, cio, chans):
+            return (struct.pack('<5H4B', muid, 0, 1, 1, 0, 90, 5,
+                                len(chans), cio).ljust(cio, b'\0') +
+                    b''.join(struct.pack('<H', c) for c in chans))
+
+        def media_units(log):
+            self.server.logs[_LID_MEDIA_UNIT_STATUS] = log
+            result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir,
+                              self.base_dir, 'log', 'media-unit-stat',
+                              self.CTRL, '-o', 'json')
+            self.assertEqual(result.returncode, 0)
+            return json.loads(result.stdout)['mus_list']
+
+        log = (struct.pack('<3H10x', 3, 4, 1) + desc(0, 16, [0, 1]) +
+               desc(1, 32, []) + desc(2, 16, [2, 3, 1]))
+        self.server.logs[_LID_MEDIA_UNIT_STATUS] = log
+
+        for fmt in _FORMATS:
+            self._run(['log', 'media-unit-stat', self.CTRL] + fmt)
+
+        # The checks below read the JSON output.
+        if not _HAVE_JSON:
+            return
+
+        mus = media_units(log)
+        self.assertEqual([m['muid'] for m in mus], [0, 1, 2])
+        self.assertEqual([[c['chanid'] for c in m['chanids']] for m in mus],
+                         [[0, 1], [], [2, 3, 1]])
+
+        # Longer than the first read of 4 KiB.
+        mus = media_units(struct.pack('<H14x', 300) +
+                          b''.join(desc(m, 16, range(8)) for m in range(300)))
+        self.assertEqual(len(mus), 300)
+        self.assertEqual(mus[299]['muid'], 299)
+
+        # A CIO inside the descriptor header ends the list.
+        mus = media_units(struct.pack('<H14x', 3) + desc(0, 16, [0]) +
+                          desc(1, 8, []) + desc(2, 16, []))
+        self.assertEqual([m['muid'] for m in mus], [0])
 
     def test_get_feature(self):
         self._run_all([['get-feature', self.CTRL, '-f', str(fid)]

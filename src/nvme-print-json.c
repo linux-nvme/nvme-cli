@@ -2530,28 +2530,47 @@ static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controlle
 	}
 }
 
-static void json_media_unit_stat_log(struct nvme_media_unit_stat_log *mus)
+static void json_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
+		size_t len)
 {
 	struct json_object *r = json_r;
 	struct json_object *entries = json_create_array();
-	struct json_object *entry;
-	int i;
+	struct nvme_media_unit_stat_desc desc;
+	struct mus_desc_iter it;
+
+	if (len < sizeof(*mus)) {
+		obj_add_array(r, "mus_list", entries);
+		return;
+	}
 
 	obj_add_uint(r, "nmu", le16_to_cpu(mus->nmu));
 	obj_add_uint(r, "cchans", le16_to_cpu(mus->cchans));
 	obj_add_uint(r, "sel_config", le16_to_cpu(mus->sel_config));
 
-	for (i = 0; i < mus->nmu; i++) {
-		entry = json_create_object();
-		obj_add_uint(entry, "muid", le16_to_cpu(mus->mus_desc[i].muid));
-		obj_add_uint(entry, "domainid", le16_to_cpu(mus->mus_desc[i].domainid));
-		obj_add_uint(entry, "endgid", le16_to_cpu(mus->mus_desc[i].endgid));
-		obj_add_uint(entry, "nvmsetid", le16_to_cpu(mus->mus_desc[i].nvmsetid));
-		obj_add_uint(entry, "cap_adj_fctr", le16_to_cpu(mus->mus_desc[i].cap_adj_fctr));
-		obj_add_uint(entry, "avl_spare", mus->mus_desc[i].avl_spare);
-		obj_add_uint(entry, "percent_used", mus->mus_desc[i].percent_used);
-		obj_add_uint(entry, "mucs", mus->mus_desc[i].mucs);
-		obj_add_uint(entry, "cio", mus->mus_desc[i].cio);
+	mus_desc_iter_init(&it, mus, len);
+	while (mus_desc_iter_next(&it, &desc)) {
+		struct json_object *entry = json_create_object();
+		struct json_object *chans = json_create_array();
+
+		obj_add_uint(entry, "muid", le16_to_cpu(desc.muid));
+		obj_add_uint(entry, "domainid", le16_to_cpu(desc.domainid));
+		obj_add_uint(entry, "endgid", le16_to_cpu(desc.endgid));
+		obj_add_uint(entry, "nvmsetid", le16_to_cpu(desc.nvmsetid));
+		obj_add_uint(entry, "cap_adj_fctr",
+			     le16_to_cpu(desc.cap_adj_fctr));
+		obj_add_uint(entry, "avl_spare", desc.avl_spare);
+		obj_add_uint(entry, "percent_used", desc.percent_used);
+		obj_add_uint(entry, "mucs", desc.mucs);
+		obj_add_uint(entry, "cio", desc.cio);
+
+		for (int k = 0; k < desc.mucs; k++) {
+			struct json_object *chan = json_create_object();
+
+			obj_add_uint(chan, "chanid",
+				     mus_desc_iter_chan(&it, k));
+			array_add_obj(chans, chan);
+		}
+		obj_add_array(entry, "chanids", chans);
 		array_add_obj(entries, entry);
 	}
 

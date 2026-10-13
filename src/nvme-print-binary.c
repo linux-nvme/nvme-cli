@@ -72,9 +72,10 @@ static void binary_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 control
 	d_raw((unsigned char *)log, len);
 }
 
-static void binary_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
+static void binary_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
+		size_t len)
 {
-	 d_raw((unsigned char *)mus_log, sizeof(*mus_log));
+	d_raw((unsigned char *)mus_log, len);
 }
 
 static void binary_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
