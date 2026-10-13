@@ -8,6 +8,7 @@
 #include <shared/uint128-util.h>
 #include <shared/uuid-util.h>
 
+#include "cleanup.h"
 #include "nvme-print.h"
 #include "ocp-fw-activation-history.h"
 #include "ocp-hardware-component-log.h"
@@ -822,6 +823,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 	struct nvme_persistent_event_log *pevent_log_head;
 	__u32 offset = sizeof(*pevent_log_head);
 	__u16 vsil, el;
+	__u32 data_len;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	int human = stdout_print_ops.flags & VERBOSE;
 
@@ -857,55 +859,53 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 
 		offset += pevent_entry_head->ehl + vsil + 3;
 
+		__cleanup_free void *data =
+			nvme_pel_event_data(pevent_log_info, offset,
+					    el - vsil, &data_len);
+
+		if (!data)
+			break;
+
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
-			nvme_show_pel_smart_health_event(pevent_log_info,
-							 offset, devname);
+			nvme_show_pel_smart_health_event(data, 0, devname);
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
-			nvme_show_pel_fw_commit_event(pevent_log_info, offset);
+			nvme_show_pel_fw_commit_event(data, 0);
 			break;
 		case NVME_PEL_TIMESTAMP_EVENT:
-			nvme_show_pel_timestamp_event(pevent_log_info, offset);
+			nvme_show_pel_timestamp_event(data, 0);
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
-			nvme_show_pel_power_on_reset_event(pevent_log_info,
-							   offset,
+			nvme_show_pel_power_on_reset_event(data, 0,
 							   pevent_entry_head);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
-			nvme_show_pel_nss_hw_error_event(pevent_log_info,
-							 offset);
+			nvme_show_pel_nss_hw_error_event(data, 0);
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
-			nvme_show_pel_change_ns_event(pevent_log_info, offset);
+			nvme_show_pel_change_ns_event(data, 0);
 			break;
 		case NVME_PEL_FORMAT_START_EVENT:
-			nvme_show_pel_format_start_event(pevent_log_info,
-							 offset);
+			nvme_show_pel_format_start_event(data, 0);
 			break;
 		case NVME_PEL_FORMAT_COMPLETION_EVENT:
-			nvme_show_pel_format_completion_event(pevent_log_info,
-							      offset);
+			nvme_show_pel_format_completion_event(data, 0);
 			break;
 		case NVME_PEL_SANITIZE_START_EVENT:
-			nvme_show_pel_sanitize_start_event(pevent_log_info,
-							   offset);
+			nvme_show_pel_sanitize_start_event(data, 0);
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
-			nvme_show_pel_sanitize_completion_event(pevent_log_info,
-								offset);
+			nvme_show_pel_sanitize_completion_event(data, 0);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_show_pel_set_feature_event(pevent_log_info,
-							offset);
+			nvme_show_pel_set_feature_event(data, 0);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			d(pevent_log_info + offset, 512, 16, 1);
+			d(data, 512, 16, 1);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
-			nvme_show_pel_thermal_excursion_event(pevent_log_info,
-							      offset);
+			nvme_show_pel_thermal_excursion_event(data, 0);
 			break;
 		case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
 			printf("Sanitize Media Verification Event\n");
@@ -913,11 +913,9 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
 			if (ocp_is_tcg_activity_event(pevent_entry_head, el,
 						      vsil))
-				pel_tcg_activity_event(pevent_log_info,
-						       offset);
+				pel_tcg_activity_event(data, 0);
 			else
-				nvme_show_pel_vendor_specific_event(pevent_log_info,
-								    offset,
+				nvme_show_pel_vendor_specific_event(data, 0,
 								    el - vsil);
 			break;
 		default:

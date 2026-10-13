@@ -1263,6 +1263,7 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 {
 	int i;
 	__u16 vsil, el;
+	__u32 data_len;
 	struct nvme_persistent_event_log *pevent_log_head = pevent_log_info;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	struct json_object *valid_attrs;
@@ -1300,71 +1301,74 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 
 		offset += pevent_entry_head->ehl + vsil + 3;
 
+		__cleanup_free void *data =
+			nvme_pel_event_data(pevent_log_info, offset,
+					    el - vsil, &data_len);
+
+		if (!data) {
+			array_add_obj(valid, valid_attrs);
+			break;
+		}
+
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
-			nvme_json_pel_smart_health(pevent_log_info, offset,
+			nvme_json_pel_smart_health(data, 0,
 						   valid_attrs);
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
-			nvme_json_pel_fw_commit(pevent_log_info, offset,
+			nvme_json_pel_fw_commit(data, 0,
 						valid_attrs);
 			break;
 		case NVME_PEL_TIMESTAMP_EVENT:
-			nvme_json_pel_timestamp(pevent_log_info, offset,
+			nvme_json_pel_timestamp(data, 0,
 						valid_attrs);
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
-			nvme_json_pel_power_on_reset(pevent_log_info,
-						     offset, valid_attrs,
+			nvme_json_pel_power_on_reset(data, 0, valid_attrs,
 						     pevent_entry_head->vsil,
 						     pevent_entry_head->el,
-						     size);
+						     data_len);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
-			nvme_json_pel_nss_hw_error(pevent_log_info, offset,
+			nvme_json_pel_nss_hw_error(data, 0,
 						   valid_attrs);
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
-			nvme_json_pel_change_ns(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_change_ns(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_FORMAT_START_EVENT:
-			nvme_json_pel_format_start(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_format_start(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_FORMAT_COMPLETION_EVENT:
-			nvme_json_pel_format_completion(pevent_log_info,
-							offset, valid_attrs);
+			nvme_json_pel_format_completion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SANITIZE_START_EVENT:
-			nvme_json_pel_sanitize_start(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_sanitize_start(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
-			nvme_json_pel_sanitize_completion(pevent_log_info,
-							  offset, valid_attrs);
+			nvme_json_pel_sanitize_completion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_json_pel_set_feature(pevent_log_info,
-						  offset, valid_attrs,
+			nvme_json_pel_set_feature(data, 0, valid_attrs,
 						  pevent_entry_head->el,
-						  size);
+						  data_len);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			nvme_json_pel_telemetry_crt(pevent_log_info,
-						    offset, valid_attrs,
+			nvme_json_pel_telemetry_crt(data, 0, valid_attrs,
 						    pevent_entry_head->el,
-						    size);
+						    data_len);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
-			nvme_json_pel_thermal_excursion(pevent_log_info,
-							offset, valid_attrs);
+			nvme_json_pel_thermal_excursion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
 			if (ocp_is_tcg_activity_event(pevent_entry_head, el,
 						      vsil))
-				pel_tcg_activity_event(pevent_log_info, offset,
+				pel_tcg_activity_event(data, 0,
 						       valid_attrs);
 			else
-				nvme_json_pel_vendor_specific_event(pevent_log_info,
-							    offset, el - vsil,
+				nvme_json_pel_vendor_specific_event(data,
+							    0, el - vsil,
 							    valid_attrs);
 			break;
 		default:
