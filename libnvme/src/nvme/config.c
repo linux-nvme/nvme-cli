@@ -189,12 +189,12 @@ static const char *get_param_nonempty(const struct libnvmf_params *params,
 }
 
 /*
- * With a key-source other than "inline", tls-key is the name nvme-keysd
+ * With a tls-key-source other than "inline", tls-key is the name nvme-keysd
  * uses to find the key. The key itself is in the keyring.
  */
 static bool tls_key_is_inline(const struct libnvmf_params *params)
 {
-	const char *src = get_param_nonempty(params, "key-source");
+	const char *src = get_param_nonempty(params, "tls-key-source");
 
 	return !src || !strcmp(src, "inline");
 }
@@ -251,8 +251,8 @@ static void emit_param(const char *key, const char *value, void *user_data)
 	if (k->class == LIBNVMF_KEY_DC_TUNABLE)
 		return;
 
-	/* key-source is for nvme-keysd, not an "nvme connect" option. */
-	if (!strcmp(key, "key-source"))
+	/* tls-key-source is for nvme-keysd, not an "nvme connect" option. */
+	if (!strcmp(key, "tls-key-source"))
 		return;
 	if (!strcmp(key, "tls-key") && !state->tls_key_inline)
 		return;

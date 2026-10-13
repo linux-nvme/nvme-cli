@@ -374,7 +374,7 @@ write_fabrics_conf() {
 [Host]
 hostnqn    = ${HOSTNQN}
 hostid     = ${HOSTID}
-key-source = $1
+tls-key-source = $1
 
 [Subsystem]
 nqn        = ${SUBSYS_NQN}
@@ -558,14 +558,14 @@ write_cred "${CRED_DIR}/keysd-wringer-keyring" "${KEY_A}" \
 		shift
 		printf '%s\n' "$@" ""
 	}
-	entry inline "key-source = inline" "tls-key = ${KEY_A}"
-	entry kmip "key-source = kmip" "tls-key = ${CRED_NAME}"
-	entry notlskey "key-source = systemd-creds"
-	entry badname "key-source = systemd-creds" "tls-key = ../x"
-	entry notpsk "key-source = systemd-creds" \
+	entry inline "tls-key-source = inline" "tls-key = ${KEY_A}"
+	entry kmip "tls-key-source = kmip" "tls-key = ${CRED_NAME}"
+	entry notlskey "tls-key-source = systemd-creds"
+	entry badname "tls-key-source = systemd-creds" "tls-key = ../x"
+	entry notpsk "tls-key-source = systemd-creds" \
 		"tls-key = keysd-wringer-notpsk"
-	entry big "key-source = systemd-creds" "tls-key = keysd-wringer-big"
-	entry keyring "key-source = systemd-creds" \
+	entry big "tls-key-source = systemd-creds" "tls-key = keysd-wringer-big"
+	entry keyring "tls-key-source = systemd-creds" \
 		"tls-key = keysd-wringer-keyring" \
 		"keyring = keysd-wringer-nosuch"
 } > "${DROPIN}"
@@ -574,10 +574,10 @@ keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "the inline entry is ignored" \
 	test "$(journal_count "${PHASE_START}" "${NQN_BASE}:inline")" -eq 0
-check "an unsupported key-source was logged" \
-	journal_has "${PHASE_START}" "key-source 'kmip' is not supported"
+check "an unsupported tls-key-source was logged" \
+	journal_has "${PHASE_START}" "tls-key-source 'kmip' is not supported"
 check "a missing tls-key was logged" \
-	journal_has "${PHASE_START}" "${NQN_BASE}:notlskey: key-source is systemd-creds but tls-key is not set"
+	journal_has "${PHASE_START}" "${NQN_BASE}:notlskey: tls-key-source is systemd-creds but tls-key is not set"
 check "an invalid credential name was logged" \
 	journal_has "${PHASE_START}" "invalid credential name '../x'"
 check "a credential that is not a PSK was logged" \
