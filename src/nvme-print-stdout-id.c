@@ -3569,7 +3569,8 @@ void stdout_id_ns_granularity_list(
 	stdout_kv_table_finish(t, "id-ns-granularity-list");
 
 	/* Number of Descriptors is a 0's based value */
-	for (i = 0; i <= glist->num_descriptors; i++) {
+	for (i = 0; i <= glist->num_descriptors && i < ARRAY_SIZE(glist->entry);
+	     i++) {
 		printf("\n     Entry[%2d] :\n", i);
 		printf("................\n");
 
