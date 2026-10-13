@@ -260,7 +260,12 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - fabrics', test_fabrics)
+    # test-fabrics.c includes fabrics.c, so its globals are defined in the
+    # test and in libnvme. This is intended, see the comment in the test.
+    test_fabrics_env = environment()
+    test_fabrics_env.set('ASAN_OPTIONS', 'detect_odr_violation=0')
+
+    test('libnvme - fabrics', test_fabrics, env: test_fabrics_env)
 
     psk = executable(
         'test-psk',
