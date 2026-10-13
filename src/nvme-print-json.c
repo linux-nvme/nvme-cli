@@ -4750,7 +4750,8 @@ static void json_nvme_id_ns_granularity_list(
 	obj_add_int(r, "attributes", glist->attributes);
 	obj_add_int(r, "num-descriptors", glist->num_descriptors);
 
-	for (i = 0; i <= glist->num_descriptors; i++) {
+	for (i = 0; i <= glist->num_descriptors && i < ARRAY_SIZE(glist->entry);
+	     i++) {
 		struct json_object *entry = json_create_object();
 
 		obj_add_uint64(entry, "namespace-size-granularity",
