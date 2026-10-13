@@ -353,7 +353,6 @@ __shr_public int libnvme_scan_ctrl(
 	__cleanup_free char *subsysnqn = NULL, *subsysname = NULL;
 	__cleanup_free char *hostnqn = NULL, *hostid = NULL;
 	__cleanup_free char *path = NULL;
-	char *host_key;
 	struct libnvme_host *h;
 	struct libnvme_subsystem *s;
 	struct libnvme_ctrl *c;
@@ -373,14 +372,6 @@ __shr_public int libnvme_scan_ctrl(
 	ret = libnvme_get_host(ctx, hostnqn, hostid, &h);
 	if (ret)
 		return ret;
-
-	host_key = libnvme_get_attr(path, "dhchap_secret");
-	if (host_key && strcmp(host_key, "none")) {
-		free(h->kxchap_host_key);
-		h->kxchap_host_key = host_key;
-		host_key = NULL;
-	}
-	free(host_key);
 
 	subsysnqn = libnvme_get_attr(path, "subsysnqn");
 	if (!subsysnqn)

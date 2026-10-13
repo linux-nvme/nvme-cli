@@ -150,11 +150,14 @@ class FabricsMockIPCServer(MockIPCServer):
             'trsvcid': trsvcid,
             'keep_alive_tmo': opts.get('keep_alive_tmo'),
             'discovery': 'discovery' in flags,
+            'dhchap_secret': opts.get('dhchap_secret'),
+            'dhchap_ctrl_secret': opts.get('dhchap_ctrl_secret'),
         }
 
         if self.sysfs_dir:
             self._write_sysfs_ctrl(inst, subsysnqn, transport, traddr, trsvcid,
                                     host_traddr, host_iface, hostnqn, hostid)
+            self._write_sysfs_secrets(inst, self.controllers[inst])
 
         resp_payload = f"instance={inst}\n".encode('utf-8')
         self.send_response(conn, 0, payload=resp_payload)
@@ -186,6 +189,12 @@ class FabricsMockIPCServer(MockIPCServer):
         sub_path.mkdir(parents=True, exist_ok=True)
         (sub_path / "subsysnqn").write_text(f"{subsysnqn}\n")
         (sub_path / f"nvme{inst}").mkdir(exist_ok=True)
+
+    def _write_sysfs_secrets(self, inst, ctrl):
+        # Like the kernel: the secret, or "none" when the connect had none.
+        ctrl_path = Path(self.sysfs_dir) / f"sys/class/nvme/nvme{inst}"
+        for attr in ('dhchap_secret', 'dhchap_ctrl_secret'):
+            (ctrl_path / attr).write_text(f"{ctrl[attr] or 'none'}\n")
 
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                       cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
@@ -1012,6 +1021,104 @@ class FabricsMockCLITest(unittest.TestCase):
                              "the ring; the visited-set should have "
                              "short-circuited every back-reference")
 
+
+    # ------------------------------------------------------------------ #
+    # DH-HMAC-CHAP secrets (#4165)                                       #
+    # ------------------------------------------------------------------ #
+
+    _HOSTNQN = "nqn.2014-08.org.nvmexpress:uuid:22222222-2222-2222-2222-222222222222"
+    _KEY_A = "DHHC-1:00:EKN5fkA4mibMctEW+jyGddCJQZ/iNI1HXvsreK3ZypSStJiw:"
+    _KEY_B = "DHHC-1:00:lDJWs+pfI8j9StQqRBr8Q1tMF0H+dzRGrGQjTukguPNHnCV/:"
+    _KEY_C = "DHHC-1:00:xXMTILl3fA020aIzIbYpXQwF4hBR38zJXhQKRXgEHs/b9kvY:"
+
+    def _ctrls_for(self, subsysnqn):
+        return [c for c in self.server.controllers.values()
+                if c['subsysnqn'] == subsysnqn]
+
+    def _only_ctrl_for(self, subsysnqn):
+        ctrls = self._ctrls_for(subsysnqn)
+        self.assertEqual(len(ctrls), 1, f"expected one connect to {subsysnqn}")
+        return ctrls[0]
+
+    def test_connect_does_not_send_secret_of_other_subsystem(self):
+        """The scan must not hand a live controller's secret to a connect
+        to another subsystem."""
+        subsys_a = "nqn.2014-08.org.nvmexpress:secret-subsys-A"
+        subsys_b = "nqn.2014-08.org.nvmexpress:secret-subsys-B"
+
+        self._run('connect', '-t', 'tcp', '-a', '192.168.170.1', '-s', '4420',
+                  '-n', subsys_b, '--hostnqn', self._HOSTNQN, '-S', self._KEY_B)
+        self._run('connect', '-t', 'tcp', '-a', '192.168.170.2', '-s', '4420',
+                  '-n', subsys_a, '--hostnqn', self._HOSTNQN)
+
+        self.assertEqual(self._only_ctrl_for(subsys_b)['dhchap_secret'], self._KEY_B)
+        self.assertIsNone(self._only_ctrl_for(subsys_a)['dhchap_secret'],
+                          "subsys A received the secret of subsys B")
+
+    def test_connect_all_discovered_ctrls_inherit_host_secret_only(self):
+        """Discovered controllers get the DC's host secret, never its
+        controller secret. The well-known DC gets no controller secret
+        either (TP8017)."""
+        io_a = "nqn.2014-08.org.nvmexpress:secret-io-A"
+        io_b = "nqn.2014-08.org.nvmexpress:secret-io-B"
+        self.server.discovery_entries = [
+            {'transport': 'tcp', 'traddr': '192.168.171.2', 'trsvcid': '4420',
+             'subsysnqn': io_a},
+            {'transport': 'tcp', 'traddr': '192.168.171.3', 'trsvcid': '4420',
+             'subsysnqn': io_b},
+        ]
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.171.1',
+                  '--hostnqn', self._HOSTNQN, '-S', self._KEY_A, '-C', self._KEY_B)
+
+        for ctrl in self._ctrls_for(DISCOVERY_NQN):
+            self.assertEqual(ctrl['dhchap_secret'], self._KEY_A)
+            self.assertIsNone(ctrl['dhchap_ctrl_secret'])
+        for nqn in (io_a, io_b):
+            ctrl = self._only_ctrl_for(nqn)
+            self.assertEqual(ctrl['dhchap_secret'], self._KEY_A)
+            self.assertIsNone(ctrl['dhchap_ctrl_secret'])
+
+    def test_connect_all_device_inherits_live_dc_secret(self):
+        """connect-all --device on a live DC, without -S: discovered
+        controllers get that DC's secret, not one of another live
+        controller."""
+        dc = "nqn.2014-08.org.nvmexpress:dc-secret"
+        other_1 = "nqn.2014-08.org.nvmexpress:secret-other-1"
+        other_2 = "nqn.2014-08.org.nvmexpress:secret-other-2"
+        io_c = "nqn.2014-08.org.nvmexpress:secret-io-C"
+
+        # The DC is nvme1, between two other controllers, so it is not the
+        # last one scanned in either scan order.
+        self._run('connect', '-t', 'tcp', '-a', '192.168.172.1', '-s', '4420',
+                  '-n', other_1, '--hostnqn', self._HOSTNQN, '-S', self._KEY_B)
+        self._run('connect', '-t', 'tcp', '-a', '192.168.172.2', '-s', '4420',
+                  '-n', dc, '--hostnqn', self._HOSTNQN, '-S', self._KEY_A)
+        self._run('connect', '-t', 'tcp', '-a', '192.168.172.3', '-s', '4420',
+                  '-n', other_2, '--hostnqn', self._HOSTNQN, '-S', self._KEY_C)
+        sub_path = Path(self.sysfs_dir) / "sys/class/nvme-subsystem/nvme-subsys1"
+        (sub_path / "subsystype").write_text("discovery\n")
+        self.server.discovery_map = {
+            dc: [{'transport': 'tcp', 'traddr': '192.168.172.4', 'trsvcid': '4420',
+                  'subsysnqn': io_c}],
+        }
+
+        self._run('connect-all', '--device', 'nvme1', '--hostnqn', self._HOSTNQN)
+
+        self.assertEqual(self._only_ctrl_for(io_c)['dhchap_secret'], self._KEY_A)
+
+    def test_duplicate_connect_keeps_new_secret(self):
+        """A duplicate connect on a live path sends its own secret, not the
+        one of the live controller."""
+        subsys = "nqn.2014-08.org.nvmexpress:secret-dup"
+        args = ('connect', '-t', 'tcp', '-a', '192.168.173.1', '-s', '4420',
+                '-n', subsys, '--hostnqn', self._HOSTNQN)
+
+        self._run(*args, '-S', self._KEY_A)
+        self._run(*args, '-S', self._KEY_C, '--duplicate-connect')
+
+        secrets = sorted(c['dhchap_secret'] for c in self._ctrls_for(subsys))
+        self.assertEqual(secrets, sorted([self._KEY_A, self._KEY_C]))
 
 if __name__ == '__main__':
     # If called standalone, strip the arguments parsed by FabricsMockCLITest
