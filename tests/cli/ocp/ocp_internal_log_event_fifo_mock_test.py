@@ -56,9 +56,9 @@ Tests in this module verify:
     aborting the whole decode.
 
 Known defects are covered by expectedFailure tests asserting the correct
-behavior: Statistic Snapshot events are left out of the JSON report, a
-snapshot of a statistic with no data is left out of the text report and
-runs into the next event, and a log the decoder rejects still exits 0.
+behavior: a snapshot of a statistic with no data is left out of the text
+report and runs into the next event, and a log the decoder rejects still
+exits 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -770,10 +770,8 @@ class TestEventClassDecode(EventFifoTestBase):
         events = self.fifo_events(self._snapshot_fifo(), strings())
         self.assertEqual(events[-1], PCIE_EXPECTED)
 
-    @unittest.expectedFailure
     def test_statistic_snapshot_in_json(self):
-        """Defect: the JSON printer builds the snapshot's object but never
-        adds it to the FIFO's event array."""
+        """The snapshot reports its class and the statistic it carries."""
         events = self.fifo_events(self._snapshot_fifo(), strings())
         self.assertEqual(events, [self._SNAPSHOT_EXPECTED, PCIE_EXPECTED])
 

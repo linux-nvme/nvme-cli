@@ -1167,22 +1167,19 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 
 	int status = 0, ret = 0;
 	unsigned int event_fifo_number = fifo_num + 1;
-	char *description = (char *)malloc((40 + 1) * sizeof(char));
+	__cleanup_free char *description = calloc(1, 40 + 1);
 
 	if (!description) {
 		nvme_show_error("Failed to allocate description buffer");
 		return -1;
 	}
 
-	memset(description, 0, 40 + 1);
-
 	status =
 		parse_ocp_telemetry_string_log(event_fifo_number, 0, 0, EVENT_STRING, description);
 
 	if (status != 0) {
 		nvme_show_error("Failed to get C9 String. status: %d", status);
-		ret = -1;
-		goto free_desc;
+		return -1;
 	}
 
 	char event_fifo_name[100] = {0};
@@ -1190,7 +1187,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 	snprintf(event_fifo_name, sizeof(event_fifo_name), "%s%d%s%s", "EVENT FIFO ",
 		 event_fifo_number, " - ", description);
 
-	struct json_object *pevent_fifo_array = NULL;
+	__cleanup_json_object struct json_object *pevent_fifo_array = NULL;
 
 	if (pevent_fifos_object != NULL)
 		pevent_fifo_array = json_create_array();
@@ -1242,8 +1239,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				offset_to_move, event_fifo_number,
 				pevent_descriptor->debug_event_class_type,
 				event_des_size, (unsigned long long)remaining);
-			ret = -1;
-			goto free_desc;
+			return -1;
 		}
 
 		/* Data sizes are in Dwords */
@@ -1264,8 +1260,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					    pevent_descriptor->event_id),
 				data_size,
 				(unsigned long long)(remaining - event_des_size));
-			ret = -1;
-			goto free_desc;
+			return -1;
 		}
 
 		if (!is_snapshot) {
@@ -1278,6 +1273,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				pevent_descriptor->debug_event_class_type, EVENT_STRING,
 				description_str);
 
+			__cleanup_json_object
 			struct json_object *pevent_descriptor_obj =
 				((pevent_fifos_object != NULL)?json_create_object():NULL);
 
@@ -1416,13 +1412,15 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					pevent_descriptor->debug_event_class_type,
 					event_id,
 					pevent_descriptor->event_data_size);
-				goto free_desc;
+				return ret;
 			}
 
-			if (pevent_descriptor_obj != NULL && pevent_fifo_array != NULL)
+			if (pevent_descriptor_obj != NULL &&
+			    pevent_fifo_array != NULL) {
 				json_array_add_value_object(pevent_fifo_array,
 					pevent_descriptor_obj);
-			else {
+				pevent_descriptor_obj = NULL;
+			} else {
 				if (fp)
 					fprintf(fp, STR_LINE2);
 				else
@@ -1433,6 +1431,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				pevent_descriptor->debug_event_class_type, EVENT_STRING,
 				description_str);
 
+			__cleanup_json_object
 			struct json_object *pevent_descriptor_obj =
 				((pevent_fifos_object != NULL) ? json_create_object() : NULL);
 
@@ -1459,9 +1458,6 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					(struct nvme_ocp_statistic_snapshot_evt_class_format *)
 					pevent_descriptor;
 
-			struct json_object *pstats_array =
-				((pevent_fifos_object != NULL) ? json_create_array() : NULL);
-
 			if (pStaticSnapshotEvent != NULL &&
 				pStaticSnapshotEvent->stat_data_size > 0) {
 				__u8 *pstatistic_entry;
@@ -1473,19 +1469,26 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				parse_statistic(
 					(struct nvme_ocp_telemetry_statistic_descriptor *)
 						pstatistic_entry,
-					pstats_array,
+					pevent_descriptor_obj,
 					fp);
+			}
+
+			if (pevent_descriptor_obj != NULL &&
+			    pevent_fifo_array != NULL) {
+				json_array_add_value_object(pevent_fifo_array,
+					pevent_descriptor_obj);
+				pevent_descriptor_obj = NULL;
 			}
 		}
 		offset_to_move += (data_size + event_des_size);
 	}
 
-	if (pevent_fifos_object != NULL && pevent_fifo_array != NULL)
+	if (pevent_fifos_object != NULL && pevent_fifo_array != NULL) {
 		json_object_add_value_array(pevent_fifos_object, event_fifo_name,
 			pevent_fifo_array);
+		pevent_fifo_array = NULL;
+	}
 
-free_desc:
-	free(description);
 	return ret;
 }
 
@@ -1514,7 +1517,7 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 	if (!telemetry_da1_header_present(poffsets))
 		return 0;
 
-	struct json_object *pevent_fifos_object = NULL;
+	__cleanup_json_object struct json_object *pevent_fifos_object = NULL;
 
 	if (root != NULL)
 		pevent_fifos_object = json_create_object();
@@ -1572,11 +1575,13 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 		}
 	}
 
-	if (pevent_fifos_object != NULL && root != NULL)
+	if (pevent_fifos_object != NULL && root != NULL) {
 		json_object_add_value_array(root,
 			poffsets->data_area == 1 ? STR_DA_1_EVENT_FIFO_INFO :
 						   STR_DA_2_EVENT_FIFO_INFO,
 			pevent_fifos_object);
+		pevent_fifos_object = NULL;
+	}
 
 	return 0;
 }
@@ -1749,8 +1754,14 @@ static void parse_context_statistic(__u16 id, __u8 *pdata, unsigned int data_siz
 			 true, where);
 }
 
+/*
+ * Prints a statistic as a new object of @pstats_array, into the existing
+ * object @pstat_obj, or as text.
+ */
 static void print_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
-			    struct json_object *pstats_array, FILE *fp, bool encapsulated)
+			    struct json_object *pstats_array,
+			    struct json_object *pstat_obj, FILE *fp,
+			    bool encapsulated)
 {
 	__u16 id = le16_to_cpu(pstatistic_entry->statistic_id);
 	__u16 data_dwords = le16_to_cpu(pstatistic_entry->statistic_data_size);
@@ -1764,6 +1775,8 @@ static void print_statistic(struct nvme_ocp_telemetry_statistic_descriptor *psta
 	parse_ocp_telemetry_string_log(0, id, 0, STATISTICS_IDENTIFIER_STRING, description_str);
 
 	stat_item_begin(&s, pstats_array, fp, encapsulated ? STAT_NESTED_INDENT : "");
+	if (pstat_obj)
+		s.obj = pstat_obj;
 	stat_add_hex(&s, STR_STATISTICS_IDENTIFIER, id, 0);
 	stat_add_str(&s, STR_STATISTICS_IDENTIFIER_STR, description_str);
 	stat_add_hex(&s, STR_STATISTICS_INFO_BEHAVIOUR_TYPE,
@@ -1800,7 +1813,8 @@ static void print_statistic(struct nvme_ocp_telemetry_statistic_descriptor *psta
 
 	stat_add_data(&s, STR_STATISTICS_SPECIFIC_DATA, pdata, data_size);
 out:
-	stat_item_end(&s, pstats_array);
+	if (!pstat_obj)
+		stat_item_end(&s, pstats_array);
 }
 
 /*
@@ -1842,7 +1856,8 @@ static void print_statistics(__u8 *pstats, unsigned int size, struct json_object
 					"Context Statistic Descriptor 0x%x does not nest",
 					offset, where, id);
 
-		print_statistic(pstatistic_entry, array, fp, encapsulated);
+		print_statistic(pstatistic_entry, array, NULL, fp,
+				encapsulated);
 
 		/*
 		 * A Context Statistic Descriptor's data size spans its context
@@ -1853,7 +1868,7 @@ static void print_statistics(__u8 *pstats, unsigned int size, struct json_object
 }
 
 int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
-		    struct json_object *pstats_array, FILE *fp)
+		    struct json_object *pstat_obj, FILE *fp)
 {
 	if (pstatistic_entry == NULL) {
 		nvme_show_error("Statistics Input buffer was NULL");
@@ -1864,7 +1879,7 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 		/* End of statistics entries, return -1 to stop processing the buffer */
 		return -1;
 
-	print_statistic(pstatistic_entry, pstats_array, fp, false);
+	print_statistic(pstatistic_entry, NULL, pstat_obj, fp, false);
 	return 0;
 }
 
