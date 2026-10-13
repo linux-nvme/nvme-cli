@@ -35,6 +35,7 @@ struct keysd_ctx {
 	const char *conf_path;               // nvme-keysd's conf path
 	const char *fabrics_conf;            // NULL: libnvme's default
 	const char *creds_dir;               // encrypted credentials
+	const char *kmip_address;            // Varlink socket of the helper
 	struct keysd_config *cfg;            // parsed @conf_path
 	bool force_debug;                    // --debug forces DEBUG
 	bool should_start;                   // --should-start: test, exit
@@ -74,7 +75,7 @@ static int run_kmip(struct import_ctx *ic, const struct kmip_job *jobs,
 		    size_t nr_jobs)
 {
 	const struct kmip_client_cfg cfg = {
-		.address = KMIP_VARLINK_ADDRESS,
+		.address = ctx.kmip_address,
 		.retry_usec = KMIP_RETRY_USEC,
 		.retry_max_usec = KMIP_RETRY_MAX_USEC,
 		.import = import_kmip,
@@ -116,6 +117,8 @@ static void usage(const char *prog)
 	       "                          (default: libnvme's default)\n"
 	       "  --creds-dir DIR         encrypted credentials\n"
 	       "                          (default: " KEYSD_CREDS_DIR ")\n"
+	       "  --kmip-test-addr PATH   Varlink socket of nvme-keysd-kmip\n"
+	       "                          (default: " KMIP_VARLINK_ADDRESS ")\n"
 	       "  --should-start          exit 0 if there is work to do,\n"
 	       "                          1 otherwise\n"
 	       "  --debug, -d             enable debug logging (journal + libnvme)\n"
@@ -129,6 +132,7 @@ int main(int argc, char **argv)
 		{ "config",         required_argument, NULL, 'c' },
 		{ "fabrics-config", required_argument, NULL, 'J' },
 		{ "creds-dir",      required_argument, NULL, 'C' },
+		{ "kmip-test-addr", required_argument, NULL, 'K' },
 		{ "should-start",   no_argument,       NULL, 'S' },
 		{ "debug",          no_argument,       NULL, 'd' },
 		{ "help",           no_argument,       NULL, 'h' },
@@ -168,6 +172,9 @@ int main(int argc, char **argv)
 		case 'd':
 			ctx.force_debug = true;
 			break;
+		case 'K':
+			ctx.kmip_address = optarg;
+			break;
 		case 'S':
 			ctx.should_start = true;
 			break;
@@ -192,6 +199,8 @@ int main(int argc, char **argv)
 	ctx.conf_path = config_path_abs ? config_path_abs : KEYSD_CONF_PATH;
 	ctx.fabrics_conf = fabrics_path_abs;
 	ctx.creds_dir = creds_path_abs ? creds_path_abs : KEYSD_CREDS_DIR;
+	if (!ctx.kmip_address)
+		ctx.kmip_address = KMIP_VARLINK_ADDRESS;
 
 	// Key material must never end up in a core dump.
 	if (prctl(PR_SET_DUMPABLE, 0) < 0) {

@@ -9,7 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme-keysd' [--config=<FILE>] [--fabrics-config=<FILE>]
-		[--creds-dir=<DIR>] [--should-start] [--debug] [--help]
+		[--creds-dir=<DIR>] [--kmip-test-addr=<PATH>]
+		[--should-start] [--debug] [--help]
 
 DESCRIPTION
 -----------
@@ -151,6 +152,10 @@ OPTIONS
 --creds-dir=<DIR>::
 	Read the encrypted credentials from <DIR> instead of
 	@SYSCONFDIR@/nvme/creds.
+
+--kmip-test-addr=<PATH>::
+	Connect to the nvme-keysd-kmip Varlink socket at <PATH> instead of
+	@RUNDIR@/nvme/keysd/kmip. For tests.
 
 --should-start::
 	Exit with status 0 if an entry of the fabrics configuration has a

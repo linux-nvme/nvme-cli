@@ -192,18 +192,22 @@ jobs:
 
             sudo dnf install -y gcc meson git kmod iproute systemd \
             systemd-devel json-c-devel openssl-devel keyutils-libs-devel \
-            dbus-devel gcovr avahi avahi-tools ktls-utils
+            dbus-devel gcovr avahi avahi-tools ktls-utils python3
+
+            # The KMS for the KMIP phases of the nvme-keysd wringer.
+            python3 -m venv "$HOME/pykmip"
+            "$HOME/pykmip/bin/pip" install pykmip
 
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
             git checkout ${{ github.sha }}
 
             # Enable explicitly so a missing or too old libsystemd fails
-            # the build instead of silently skipping a daemon or the mDNS
-            # support of nvme-discoverd.
+            # the build instead of silently skipping a daemon, the mDNS
+            # support of nvme-discoverd, or the KMIP support of nvme-keysd.
             meson setup .build-ci --buildtype=release \
                 -Dnvme-discoverd=enabled -Dmdns=enabled \
-                -Dnvme-keysd=enabled -Db_coverage=true
+                -Dnvme-keysd=enabled -Dkmip=enabled -Db_coverage=true
             meson compile -C .build-ci
 
             # Test link for the mDNS phases. The mDNS traffic stays on
@@ -226,6 +230,7 @@ jobs:
                 tee daemon-results/discoverd-wringer.log
             discoverd_status=$?
             sudo env BUILD_DIR="$PWD/.build-ci" \
+                PYKMIP_PYTHON="$HOME/pykmip/bin/python" \
                 keysd/tests/wringer.sh -y 2>&1 |
                 tee daemon-results/keysd-wringer.log
             keysd_status=$?
