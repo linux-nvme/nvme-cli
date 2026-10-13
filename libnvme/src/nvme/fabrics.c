@@ -1057,6 +1057,37 @@ static void merge_config(struct libnvme_ctrl *c,
 	MERGE_CFG_OPTION(&c->cfg, cfg, concat, false);
 }
 
+/*
+ * Like merge_config(): fill in only what @c does not have. The host and
+ * controller keys are one pair, so a host key on @c keeps fc's
+ * controller key out.
+ */
+static void ctrl_merge_keys(struct libnvme_ctrl *c,
+		const struct libnvme_ctrl *fc)
+{
+	const char *key;
+
+	if (libnvme_ctrl_get_kxchap_host_key(c, &key, NULL) &&
+	    !libnvme_ctrl_get_kxchap_host_key(fc, &key, NULL)) {
+		libnvme_ctrl_set_kxchap_host_key(c, key);
+		if (!libnvme_ctrl_get_kxchap_ctrl_key(fc, &key, NULL))
+			libnvme_ctrl_set_kxchap_ctrl_key(c, key);
+	}
+	if (libnvme_ctrl_get_keyring(c, &key, NULL) &&
+	    !libnvme_ctrl_get_keyring(fc, &key, NULL))
+		libnvme_ctrl_set_keyring(c, key);
+	if (!libnvme_ctrl_get_tls_key_identity(c)) {
+		key = libnvme_ctrl_get_tls_key_identity(fc);
+		if (key)
+			libnvme_ctrl_set_tls_key_identity(c, key);
+	}
+	if (!libnvme_ctrl_get_tls_key(c)) {
+		key = libnvme_ctrl_get_tls_key(fc);
+		if (key)
+			libnvme_ctrl_set_tls_key(c, key);
+	}
+}
+
 #define UPDATE_CFG_OPTION(c, n, o, d)			\
 	if ((n)->o != d) (c)->o = (n)->o
 static void update_config(struct libnvme_ctrl *c,
@@ -1993,28 +2024,8 @@ __shr_public int libnvmf_add_ctrl(struct libnvme_host *h, struct libnvme_ctrl *c
 
 		fc = libnvme_ctrl_find(s, &params, NULL);
 		if (fc) {
-			const char *key;
-
 			merge_config(c, &fc->cfg);
-			/*
-			 * An authentication key might already been set
-			 * in @cfg, so ensure to update @c with the correct
-			 * controller key.
-			 */
-			if (libnvme_ctrl_get_kxchap_host_key(fc, &key,
-							      NULL) == 0)
-				libnvme_ctrl_set_kxchap_host_key(c, key);
-			if (libnvme_ctrl_get_kxchap_ctrl_key(fc, &key,
-							      NULL) == 0)
-				libnvme_ctrl_set_kxchap_ctrl_key(c, key);
-			if (libnvme_ctrl_get_keyring(fc, &key, NULL) == 0)
-				libnvme_ctrl_set_keyring(c, key);
-			key = libnvme_ctrl_get_tls_key_identity(fc);
-			if (key)
-				libnvme_ctrl_set_tls_key_identity(c, key);
-			key = libnvme_ctrl_get_tls_key(fc);
-			if (key)
-				libnvme_ctrl_set_tls_key(c, key);
+			ctrl_merge_keys(c, fc);
 		}
 
 	}
