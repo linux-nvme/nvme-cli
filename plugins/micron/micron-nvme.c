@@ -1033,7 +1033,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 	 * If these fail, proceed with sysfs interface to set/clear bits
 	 */
 	if (model == M51CX || model == M51BY || model == M51CY) {
-		err = nvme_set_features_simple(hdl, 0, fid, false, (1 << 31),
+		err = nvme_set_features_simple(hdl, 0, fid, false, 1U << 31,
 				&result);
 		if (!err)
 			err = (int)result;
@@ -3410,7 +3410,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 		return -ENOTSUP;
 	}
 
-	err = nvme_set_features_simple(hdl, 1 << 31, fid, 0, 0, &result);
+	err = nvme_set_features_simple(hdl, 1U << 31, fid, 0, 0, &result);
 	if (!err)
 		err = (int)result;
 	else
