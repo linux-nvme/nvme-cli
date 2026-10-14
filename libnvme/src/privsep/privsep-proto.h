@@ -45,6 +45,7 @@
 #define LIBNVME_PRIVSEP_FD		3
 
 #define LIBNVME_PRIVSEP_MAX_NAME	64
+#define LIBNVME_PRIVSEP_MAX_REGS	4096
 #define LIBNVME_PRIVSEP_MAX_DATA	(8 * 1024 * 1024)
 #define LIBNVME_PRIVSEP_MAX_PAYLOAD	(LIBNVME_PRIVSEP_MAX_DATA + 4096)
 
@@ -60,6 +61,9 @@ enum libnvme_privsep_op {
 	LIBNVME_PRIVSEP_OP_GET_NSID	= 9,	/* result: nsid */
 	LIBNVME_PRIVSEP_OP_REREAD_PARTITIONS = 10,
 	LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE = 11,
+	LIBNVME_PRIVSEP_OP_READ_REGS	= 12,	/* response: the registers */
+	LIBNVME_PRIVSEP_OP_WRITE_REG32	= 13,
+	LIBNVME_PRIVSEP_OP_WRITE_REG64	= 14,
 };
 
 struct libnvme_privsep_req {
@@ -90,6 +94,15 @@ struct libnvme_privsep_open_resp {
 /* UPDATE_BLOCK_SIZE payload. */
 struct libnvme_privsep_block_size {
 	__s32 block_size;
+	__u32 rsvd;
+};
+
+/* READ_REGS, WRITE_REG32 and WRITE_REG64 payload. */
+struct libnvme_privsep_reg {
+	__u64 value;	/* WRITE_REG32 and WRITE_REG64 */
+	__u32 offset;
+	__u32 len;	/* READ_REGS, at most LIBNVME_PRIVSEP_MAX_REGS */
+	__u32 mmio32;	/* WRITE_REG64 */
 	__u32 rsvd;
 };
 

@@ -8,6 +8,7 @@
  * Runs nvme-privsep-helper with mock-ioctl preloaded. Usage:
  * test-privsep HELPER MOCK_LIBRARY
  */
+#include <endian.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
@@ -19,6 +20,8 @@
 #include <sys/wait.h>
 
 #include <ccan/array_size/array_size.h>
+
+#include <shared/io-util.h>
 
 #include <libnvme.h>
 #include <libnvme-privsep.h>
@@ -269,6 +272,78 @@ static void test_dry_run(struct libnvme_transport_handle *hdl)
 	check(!data[1], "dry-run reached the helper");
 }
 
+static char resource0[64];
+
+/* Fills the BAR with the dwords 0x10000000 + byte offset. */
+static void create_resource0(void)
+{
+	__le32 bar[1024];
+	size_t i;
+	int fd;
+
+	for (i = 0; i < ARRAY_SIZE(bar); i++)
+		bar[i] = htole32(0x10000000 + i * 4);
+
+	snprintf(resource0, sizeof(resource0), "/tmp/test-privsep-XXXXXX");
+	fd = mkstemp(resource0);
+	check(fd >= 0, "mkstemp: %m");
+	check(!shr_write_all(fd, bar, sizeof(bar)), "write: %m");
+	close(fd);
+	check(!setenv("MOCK_RESOURCE0", resource0, 1), "setenv");
+}
+
+static __u64 bar_read(__u32 offset, size_t len)
+{
+	__le64 val = 0;
+	int fd;
+
+	fd = open(resource0, O_RDONLY);
+	check(fd >= 0, "open: %m");
+	check(pread(fd, &val, len, offset) == (ssize_t)len, "pread: %m");
+	close(fd);
+
+	return le64toh(val);
+}
+
+static void test_regs(void)
+{
+	struct libnvme_transport_handle *c, *n;
+	__le32 regs[4];
+	size_t i;
+
+	check(!libnvme_open(ctx, "nvme0", O_RDWR, &c), "open nvme0");
+	check(!libnvme_open(ctx, "nvme0n1", O_RDONLY, &n), "open nvme0n1");
+
+	memset(regs, 0, sizeof(regs));
+	check(!libnvme_read_regs(c, 0x20, regs, sizeof(regs)),
+	      "read regs failed");
+	for (i = 0; i < ARRAY_SIZE(regs); i++)
+		check(le32toh(regs[i]) == 0x10000020 + i * 4,
+		      "reg %#zx = %#x", 0x20 + i * 4, le32toh(regs[i]));
+
+	check(!libnvme_write_reg32(c, 0x14, 0xdeadbeef),
+	      "write reg32 failed");
+	check(bar_read(0x14, 4) == 0xdeadbeef, "reg32 not written");
+	check(bar_read(0x18, 4) == 0x10000018, "reg32 overwrote 0x18");
+
+	check(!libnvme_write_reg64(c, 0x28, 0x1122334455667788ULL, false),
+	      "write reg64 failed");
+	check(bar_read(0x28, 8) == 0x1122334455667788ULL,
+	      "reg64 not written");
+	check(!libnvme_write_reg64(c, 0x30, 0x8877665544332211ULL, true),
+	      "write reg64 as 2 x 32 bit failed");
+	check(bar_read(0x30, 8) == 0x8877665544332211ULL,
+	      "reg64 not written as 2 x 32 bit");
+
+	check(libnvme_read_regs(n, 0, regs, sizeof(regs)) == -EINVAL,
+	      "read regs of a namespace");
+	check(libnvme_write_reg32(n, 0x14, 0) == -EINVAL,
+	      "write reg32 of a namespace");
+
+	libnvme_close(c);
+	libnvme_close(n);
+}
+
 static int retries;
 
 static bool retry_always(struct libnvme_transport_handle *hdl,
@@ -311,6 +386,7 @@ int main(int argc, char **argv)
 
 	check(argc == 3, "usage: %s HELPER MOCK_LIBRARY", argv[0]);
 	check(!setenv("LD_PRELOAD", argv[2], 1), "setenv");
+	create_resource0();
 
 	test_spawn_failure();
 	test_closed_stdio(argv[1]);
@@ -334,10 +410,12 @@ int main(int argc, char **argv)
 
 	test_handles();
 	test_device_ops();
+	test_regs();
 	test_retry_broken();
 
 	libnvme_free_global_ctx(ctx);
 	libnvme_privsep_free(ps);
+	unlink(resource0);
 	printf("privsep tests passed\n");
 
 	return EXIT_SUCCESS;
