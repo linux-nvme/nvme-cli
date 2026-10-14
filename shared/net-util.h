@@ -70,7 +70,12 @@ bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
  * Lookup route table using specified saddr and daddr and find the egress
  * interface. The saddr is optional however daddr is mandatory.
  *
- * Return: 0 on success and negative errno on failure.
+ * For an IPv6 link-local daddr, the egress interface is the one its
+ * "%scope" suffix names: an interface name or index. The route table is
+ * not used.
+ *
+ * Return: 0 on success and negative errno on failure. -EINVAL for a
+ * link-local daddr without a valid scope.
  */
 int shr_route_get_egress_iface(const char *saddr, const char *daddr,
 		char *ifname, size_t iflen);

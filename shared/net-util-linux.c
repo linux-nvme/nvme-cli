@@ -8,6 +8,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <limits.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -26,6 +27,27 @@
 #endif
 
 #include "net-util.h"
+
+/*
+ * Return the interface index that @scope names: an interface name or, as
+ * the kernel accepts too, an interface index. Return 0 if there is none.
+ */
+static unsigned int scope_to_index(const char *scope)
+{
+	unsigned int index = if_nametoindex(scope);
+	unsigned long val;
+	char *end;
+
+	if (index)
+		return index;
+
+	errno = 0;
+	val = strtoul(scope, &end, 10);
+	if (errno || end == scope || *end || val > UINT_MAX)
+		return 0;
+
+	return val;
+}
 
 /*
  * The members share their storage. Read a member that was written as
@@ -73,7 +95,7 @@ static int parse_numeric_addr(const char *addr, union sockaddr_any *sa)
 
 	sa->in6.sin6_family = AF_INET6;
 	if (scope && IN6_IS_ADDR_LINKLOCAL(&sa->in6.sin6_addr))
-		sa->in6.sin6_scope_id = if_nametoindex(scope);
+		sa->in6.sin6_scope_id = scope_to_index(scope);
 
 out:
 	free(tmp);
@@ -272,6 +294,20 @@ int shr_route_get_egress_iface(const char *saddr, const char *daddr,
 
 	if (iflen < IF_NAMESIZE)
 		return -EINVAL;
+
+	/*
+	 * Every interface has a route to the link-local prefix, so the route
+	 * table cannot tell which one to use. The scope names it.
+	 */
+	if (dst.sa.sa_family == AF_INET6 &&
+	    IN6_IS_ADDR_LINKLOCAL(&dst.in6.sin6_addr)) {
+		if (!dst.in6.sin6_scope_id)
+			return -EINVAL;
+		if (!if_indextoname(dst.in6.sin6_scope_id, ifname))
+			return -errno;
+
+		return 0;
+	}
 
 	fd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
 	if (fd < 0)
