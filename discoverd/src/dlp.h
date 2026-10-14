@@ -7,13 +7,37 @@
  */
 #pragma once
 
+#include <stdbool.h>
+
 #include <nvme/nvme-types-fabrics.h>
 
-#include "ctx.h"
 #include "tid.h"
 
+struct dmn_work_pool;
+struct dmn_work;
+
 /*
- * Fetch the Discovery Log Page from a connected DC and parse all entries.
+ * Called from the event loop when dlp_read() ends. @ret is 0 on success, a
+ * negative errno otherwise. @log is valid only during the call.
+ */
+typedef void (*dlp_read_callback)(int ret,
+				  const struct nvmf_discovery_log *log,
+				  void *user_data);
+
+/*
+ * Read the Discovery Log Page of the connected DC @devname, e.g. "nvme0".
+ * The read blocks until the DC answers, so it runs in a worker of @pool,
+ * with a libnvme global context of its own. @log_level is the libnvme
+ * logging level of that context. *@ret, if @ret is not NULL, is valid
+ * until @cb is called or the read is cancelled with dmn_work_cancel().
+ *
+ * Return: 0 on success, a negative errno otherwise.
+ */
+int dlp_read(struct dmn_work_pool *pool, const char *devname, int log_level,
+	     dlp_read_callback cb, void *user_data, struct dmn_work **ret);
+
+/*
+ * Parse all the entries of a Discovery Log Page.
  *
  * For each DLPE:
  *   subtype == NVME_NQN_NVME (I/O controller):       ioc_callback is called.
@@ -30,26 +54,8 @@
  * The caller can keep it as a fallback for when that DC is later connected
  * to and its own self entry turns out to be absent.
  *
- * devname: kernel device name, e.g. "nvme0".
- * dc_tid: TID of the DC (used as the cache key in the caller).
- *
- * Returns 0 on success, negative errno on failure.
- */
-int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
-	      const struct libnvmf_tid *dc_tid,
-	      void (*ioc_callback)(const struct libnvmf_tid *t,
-				   void *user_data),
-	      void (*dc_callback)(const struct libnvmf_tid *t, bool epcsd,
-				 void *user_data),
-	      void (*self_callback)(bool epcsd, void *user_data),
-	      void *user_data);
-
-/*
- * Dispatch an already-fetched Discovery Log Page, the second half of
- * dlp_fetch(). Split out so the entry dispatch can be unit tested against a
- * synthetic log page, without a device or a fabrics connection.
- *
  * log: a Discovery Log Page; numrec is read from its own header.
+ * dc_tid: TID of the DC; the entries inherit its host-side fields.
  */
 void dlp_process_log(const struct nvmf_discovery_log *log,
 		     const struct libnvmf_tid *dc_tid,
