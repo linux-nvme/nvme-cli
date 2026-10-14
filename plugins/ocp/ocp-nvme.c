@@ -1060,21 +1060,20 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 				!!host_gen,
 				tele_area,
 				(const char *)file_path_telemetry);
+
+		if (host_behavior_changed) {
+			host_behavior_changed = false;
+			/* Not fatal; continue on failure */
+			if (libnvme_clear_etdas(hdl, &host_behavior_changed))
+				nvme_show_error("Failed to clear ETDAS bit.");
+		}
+
 		if (err) {
 			nvme_show_error("Failed to fetch telemetry-log from the drive.");
 			goto out;
 		}
 		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
 		opt.telemetry_log = file_path_telemetry;
-
-		if (host_behavior_changed) {
-			host_behavior_changed = false;
-			err = libnvme_clear_etdas(hdl, &host_behavior_changed);
-			if (err) {
-				/* Continue on if this fails, it's not a fatal condition */
-				nvme_show_error("Failed to clear ETDAS bit.");
-			}
-		}
 	}
 
 	if (!opt.string_log) {
