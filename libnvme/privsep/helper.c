@@ -372,6 +372,57 @@ static int handle_sed(__u32 id, void *payload, __u32 len,
 }
 #endif
 
+static int handle_fabrics(__u32 id, const void *payload, __u32 len,
+		struct reply *reply, struct xfer *xfer)
+{
+	int fd, step;
+	ssize_t n;
+
+	if (id || len >= LIBNVME_PRIVSEP_MAX_FABRICS ||
+	    (len && memchr(payload, '\0', len)))
+		return -EINVAL;
+
+	xfer->data = libnvme_alloc(LIBNVME_PRIVSEP_MAX_FABRICS);
+	if (!xfer->data)
+		return -ENOMEM;
+
+	step = LIBNVME_PRIVSEP_FABRICS_OPEN;
+	fd = open("/dev/nvme-fabrics", (len ? O_RDWR : O_RDONLY) | O_CLOEXEC);
+	if (fd < 0)
+		goto err;
+
+	if (len) {
+		step = LIBNVME_PRIVSEP_FABRICS_WRITE;
+		n = write(fd, payload, len);
+		if (n < 0)
+			goto err_close;
+		if (n != len) {
+			errno = EIO;
+			goto err_close;
+		}
+	}
+
+	step = LIBNVME_PRIVSEP_FABRICS_READ;
+	n = read(fd, xfer->data, LIBNVME_PRIVSEP_MAX_FABRICS - 1);
+	if (n < 0)
+		goto err_close;
+	close(fd);
+
+	reply->len = n;
+	reply->payload = xfer->data;
+	return 0;
+
+err_close:
+	reply->status = -errno;
+	close(fd);
+	reply->result = step;
+	return 0;
+err:
+	reply->status = -errno;
+	reply->result = step;
+	return 0;
+}
+
 static void close_handles(void)
 {
 	int i;
@@ -449,6 +500,9 @@ static int serve_one(struct libnvme_global_ctx *ctx, int sock, bool *hello)
 		break;
 	case LIBNVME_PRIVSEP_OP_SED:
 		ret = handle_sed(id, payload, len, &reply);
+		break;
+	case LIBNVME_PRIVSEP_OP_FABRICS:
+		ret = handle_fabrics(id, payload, len, &reply, &xfer);
 		break;
 	default:
 		ret = -EOPNOTSUPP;

@@ -21,6 +21,7 @@
 
 #include <ccan/array_size/array_size.h>
 
+#include <shared/fs-util.h>
 #include <shared/io-util.h>
 
 #include <libnvme.h>
@@ -381,6 +382,125 @@ static void test_sed(void)
 }
 #endif
 
+#ifdef TEST_FABRICS
+static char sysfs[64], connect_log[64];
+
+static void write_file(const char *dir, const char *name, const char *text)
+{
+	char path[256];
+	int fd;
+
+	snprintf(path, sizeof(path), "%s/%s", dir, name);
+	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	check(fd >= 0, "create %s: %m", path);
+	check(!shr_write_all(fd, text, strlen(text)), "write %s: %m", path);
+	close(fd);
+}
+
+/*
+ * The sysfs entries which libnvme_init_ctrl() reads for the controller
+ * the mock connects. The client process reads them, not the helper.
+ */
+static void create_sysfs(void)
+{
+	char path[256];
+	int fd;
+
+	snprintf(sysfs, sizeof(sysfs), "/tmp/test-privsep-sysfs-XXXXXX");
+	check(mkdtemp(sysfs), "mkdtemp: %m");
+
+	snprintf(path, sizeof(path), "%s/sys/class/nvme/nvme%d", sysfs,
+		 MOCK_INSTANCE);
+	check(!shr_mkdir_p(path, 0755), "mkdir %s", path);
+	write_file(path, "address", "traddr=192.168.1.1,trsvcid=4420\n");
+	write_file(path, "state", "live\n");
+	write_file(path, "subsysnqn", MOCK_NQN "\n");
+	write_file(path, "transport", "tcp\n");
+
+	snprintf(path, sizeof(path),
+		 "%s/sys/class/nvme-subsystem/nvme-subsys%d/nvme%d", sysfs,
+		 MOCK_INSTANCE, MOCK_INSTANCE);
+	check(!shr_mkdir_p(path, 0755), "mkdir %s", path);
+	snprintf(path, sizeof(path),
+		 "%s/sys/class/nvme-subsystem/nvme-subsys%d", sysfs,
+		 MOCK_INSTANCE);
+	write_file(path, "subsysnqn", MOCK_NQN "\n");
+
+	snprintf(connect_log, sizeof(connect_log),
+		 "/tmp/test-privsep-connect-XXXXXX");
+	fd = mkstemp(connect_log);
+	check(fd >= 0, "mkstemp: %m");
+	close(fd);
+	check(!setenv("MOCK_CONNECT_LOG", connect_log, 1), "setenv");
+}
+
+static int connect_ctrl(struct libnvme_host *h, const char *nqn,
+		struct libnvme_ctrl **cp)
+{
+	struct libnvmf_context *fctx;
+	int ret;
+
+	check(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx),
+	      "create fabrics context");
+	check(!libnvmf_context_set_connection(fctx, nqn, "tcp",
+					      "192.168.1.1", "4420", NULL,
+					      NULL), "set connection");
+	check(!libnvmf_create_ctrl(ctx, fctx, cp), "create ctrl");
+	ret = libnvmf_add_ctrl(h, *cp);
+	libnvmf_context_free(fctx);
+
+	return ret;
+}
+
+static void test_fabrics(void)
+{
+	static const char hostnqn[] = "nqn.2026-10.io.example:host";
+	static const char hostid[] = "12345678-1234-1234-1234-123456789abc";
+	struct libnvme_ctrl *c, *refused;
+	struct libnvme_host *h;
+	char args[1024] = {};
+	bool supported;
+	ssize_t len;
+	int fd, ret;
+
+	/* The mock does not list tos, unlike current kernels. */
+	check(!libnvmf_kernel_option_supported(ctx, "ctrl_loss_tmo",
+					       &supported) && supported,
+	      "ctrl_loss_tmo not supported");
+	check(!libnvmf_kernel_option_supported(ctx, "tos", &supported) &&
+	      !supported, "options not read through the helper");
+
+	check(!libnvme_get_host(ctx, hostnqn, hostid, &h), "get host");
+
+	ret = connect_ctrl(h, MOCK_NQN, &c);
+	check(!ret, "connect failed: %d", ret);
+	check(!strcmp(libnvme_ctrl_get_name(c), "nvme5"), "ctrl name %s",
+	      libnvme_ctrl_get_name(c));
+
+	fd = open(connect_log, O_RDONLY);
+	check(fd >= 0, "open %s: %m", connect_log);
+	len = read(fd, args, sizeof(args) - 1);
+	close(fd);
+	check(len > 0, "connect arguments not written");
+	check(strstr(args, "nqn=" MOCK_NQN) &&
+	      strstr(args, "transport=tcp") &&
+	      strstr(args, "traddr=192.168.1.1"),
+	      "connect arguments '%s'", args);
+
+	ret = connect_ctrl(h, MOCK_NQN_REFUSED, &refused);
+	check(ret == -ENVME_CONNECT_CONNREFUSED, "refused connect: %d", ret);
+	libnvme_free_ctrl(refused);
+}
+#else
+static void create_sysfs(void)
+{
+}
+
+static void test_fabrics(void)
+{
+}
+#endif
+
 static int retries;
 
 static bool retry_always(struct libnvme_transport_handle *hdl,
@@ -424,6 +544,7 @@ int main(int argc, char **argv)
 	check(argc == 3, "usage: %s HELPER MOCK_LIBRARY", argv[0]);
 	check(!setenv("LD_PRELOAD", argv[2], 1), "setenv");
 	create_resource0();
+	create_sysfs();
 
 	test_spawn_failure();
 	test_closed_stdio(argv[1]);
@@ -432,6 +553,9 @@ int main(int argc, char **argv)
 	ctx = libnvme_create_global_ctx();
 	check(ctx, "create ctx");
 	libnvme_set_privsep(ctx, ps);
+#ifdef TEST_FABRICS
+	check(!libnvme_set_test_sysfs_dir(ctx, sysfs), "set sysfs dir");
+#endif
 
 	test_open_invalid();
 
@@ -449,11 +573,16 @@ int main(int argc, char **argv)
 	test_device_ops();
 	test_regs();
 	test_sed();
+	test_fabrics();
 	test_retry_broken();
 
 	libnvme_free_global_ctx(ctx);
 	libnvme_privsep_free(ps);
 	unlink(resource0);
+#ifdef TEST_FABRICS
+	shr_rmdir_recursive(sysfs);
+	unlink(connect_log);
+#endif
 	printf("privsep tests passed\n");
 
 	return EXIT_SUCCESS;

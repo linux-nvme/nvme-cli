@@ -9,6 +9,9 @@ privsep_test_args = []
 if want_sed and conf.get('NVME_HAVE_SED_OPAL') != 0
     privsep_test_args += '-DTEST_SED'
 endif
+if want_fabrics
+    privsep_test_args += '-DTEST_FABRICS'
+endif
 
 mock_ioctl = library(
     'mock-ioctl',

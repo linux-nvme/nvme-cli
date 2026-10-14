@@ -41,6 +41,12 @@
  * SED requests carry a struct libnvme_privsep_sed. The helper issues only
  * the IOC_OPAL_* ioctls which libnvme uses. All of them pass a fixed size
  * argument to the kernel and return nothing but the status.
+ *
+ * FABRICS is a transfer on /dev/nvme-fabrics and uses the handle id 0.
+ * The payload is the connect argument string without the terminating NUL,
+ * or empty to read the options the kernel accepts. The response payload
+ * is the text the kernel returned, shorter than LIBNVME_PRIVSEP_MAX_FABRICS.
+ * On failure, result is the step which failed.
  */
 
 #define LIBNVME_PRIVSEP_VERSION		1
@@ -50,6 +56,7 @@
 
 #define LIBNVME_PRIVSEP_MAX_NAME	64
 #define LIBNVME_PRIVSEP_MAX_REGS	4096
+#define LIBNVME_PRIVSEP_MAX_FABRICS	4096
 #define LIBNVME_PRIVSEP_MAX_DATA	(8 * 1024 * 1024)
 #define LIBNVME_PRIVSEP_MAX_PAYLOAD	(LIBNVME_PRIVSEP_MAX_DATA + 4096)
 
@@ -69,6 +76,7 @@ enum libnvme_privsep_op {
 	LIBNVME_PRIVSEP_OP_WRITE_REG32	= 13,
 	LIBNVME_PRIVSEP_OP_WRITE_REG64	= 14,
 	LIBNVME_PRIVSEP_OP_SED		= 15,
+	LIBNVME_PRIVSEP_OP_FABRICS	= 16,
 };
 
 struct libnvme_privsep_req {
@@ -100,6 +108,13 @@ struct libnvme_privsep_open_resp {
 struct libnvme_privsep_block_size {
 	__s32 block_size;
 	__u32 rsvd;
+};
+
+/* FABRICS result: the step which failed. */
+enum libnvme_privsep_fabrics_step {
+	LIBNVME_PRIVSEP_FABRICS_OPEN	= 0,
+	LIBNVME_PRIVSEP_FABRICS_WRITE	= 1,
+	LIBNVME_PRIVSEP_FABRICS_READ	= 2,
 };
 
 /* READ_REGS, WRITE_REG32 and WRITE_REG64 payload. */
