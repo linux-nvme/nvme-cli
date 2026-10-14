@@ -194,6 +194,13 @@
   still matches. At startup, nvme-discoverd removes the state of
   controllers that are gone.
 
+* nvme-discoverd resolves the host names in `nvme-fabrics.conf` in
+  parallel, without blocking. Before, it resolved them one at a time,
+  and a slow DNS server stopped the daemon. A failed lookup is tried
+  again, first after 1 s, then less often, up to every 5 minutes.
+  Before, the connection was skipped until the next reload. While the
+  first lookups run, nvme-discoverd does not release any controller.
+
 ### libnvme
 
 * A failed read of `/dev/nvme-fabrics` is no longer cached for the

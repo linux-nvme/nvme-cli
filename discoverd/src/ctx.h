@@ -20,6 +20,7 @@ struct inventory;
 struct unit_mgr;
 struct events_ctx;
 struct mdns_ctx;
+struct dmn_resolver;
 
 /*
  * Top-level discoverd application context. Created once at startup and
@@ -40,5 +41,6 @@ struct discoverd_ctx {
 	struct unit_mgr           *umgr;         // transient unit manager
 	struct events_ctx         *evts;         // udev event monitor
 	struct mdns_ctx           *mdns;         // mDNS discovery, or NULL
+	struct dmn_resolver       *resolver;     // config host name lookups
 	bool                       force_debug;  // --debug forces DEBUG
 };

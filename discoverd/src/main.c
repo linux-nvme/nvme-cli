@@ -24,6 +24,7 @@
 #include <ccan/str/str.h>
 
 #include <daemon-util/log.h>
+#include <daemon-util/resolve.h>
 #include <daemon-util/signals.h>
 #include <shared/array-util.h>
 #include <shared/cleanup-util.h>
@@ -56,6 +57,9 @@
 // and always retry forever.
 #define RETRY_INITIAL_DELAY_SEC 1
 #define RETRY_MAX_DELAY_SEC     300
+
+// Name lookups of the fabrics configuration that run at the same time.
+#define RESOLVE_WORKERS		8
 
 struct active_ctrl {
 	struct list_node entry;
@@ -382,17 +386,24 @@ static bool release_check_exclusions;
  * an mDNS DC whose DLP is not fetched yet, is never released here. With
  * @release_check_exclusions, also release the controllers that the
  * exclusion list now matches. NBFT controllers are never released.
+ * While a host name of the fabrics configuration is not resolved yet, its
+ * controller looks not desired, so the pass waits for on_config_lookup().
  */
 static int release_undesired(sd_event_source *src,
 			     void *user_data __attribute__((unused)))
 {
-	bool check_exclusions = release_check_exclusions;
 	struct active_ctrl *e, *next;
 	struct saved_ctrl *s, *snext;
+	bool check_exclusions;
 
 	release_pending = false;
-	release_check_exclusions = false;
 	sd_event_source_disable_unref(src);
+
+	if (inventory_config_pending(ctx.inventory))
+		return 0;
+
+	check_exclusions = release_check_exclusions;
+	release_check_exclusions = false;
 
 	list_for_each_safe(&g_ctrls, e, next, entry) {
 		bool desired = inventory_is_desired(ctx.inventory, e->tid);
@@ -1578,6 +1589,18 @@ static void connect_desired(void)
  * is used. Called at startup after config_load() and again after a SIGHUP
  * reload, since the libnvme context outlives any single config.
  */
+/*
+ * A name lookup of the fabrics configuration ended. Connect what it added,
+ * and run the release pass that waited for it.
+ */
+static void on_config_lookup(bool added,
+			     void *user_data __attribute__((unused)))
+{
+	if (added)
+		connect_desired();
+	schedule_release(false);
+}
+
 static void apply_log_level(void)
 {
 	int level = ctx.force_debug ? DMN_LOG_DEBUG : ctx.cfg->debug_level;
@@ -1771,9 +1794,16 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	r = dmn_resolver_new(ctx.event, RESOLVE_WORKERS, &ctx.resolver);
+	if (r < 0) {
+		log_err("failed to create the resolver: %s", strerror(-r));
+		return 1;
+	}
+
 	ctx.inventory = inventory_new();
 	if (!ctx.inventory)
 		return 1;
+	inventory_set_lookup_callback(ctx.inventory, on_config_lookup, NULL);
 
 	if (ctx.cfg->nbft)
 		inventory_load_nbft(ctx.inventory, &ctx, NBFT_SYSFS_PATH);
@@ -1839,6 +1869,7 @@ int main(int argc, char **argv)
 	free(nvme_path_abs);
 	free(config_path_abs);
 	inventory_free(ctx.inventory);
+	dmn_resolver_free(ctx.resolver);
 	free(ctx.hostnqn);
 	free(ctx.hostid);
 	config_free(ctx.cfg);

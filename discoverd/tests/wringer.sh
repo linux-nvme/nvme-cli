@@ -179,6 +179,13 @@ REF_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:referral
 REF_PORT=8017
 REF_PORT_ID=10
 
+# Host name phases. nvme-discoverd reads a copy of /etc/hosts, so that a
+# phase can add a name without changing the real file.
+HN_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:host-name
+HN2_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:host-name-late
+HN_PORT=8018
+HN_PORT_ID=11
+
 # mDNS phases only. Advertised through mDNS, on ${IFACE}'s address. The
 # port is opened and closed per phase, so a phase can advertise a DC whose
 # port is not open yet.
@@ -196,6 +203,9 @@ confirm
 ETC_NVME_DIR=$(mktemp -d /tmp/discoverd-wringer-etc-nvme.XXXXXX)
 BACKING_DIR=$(mktemp -d /tmp/discoverd-wringer-ns.XXXXXX)
 SCRATCH=$(mktemp /tmp/discoverd-wringer-out.XXXXXX)
+HOSTS_FILE=$(mktemp /tmp/discoverd-wringer-hosts.XXXXXX)
+cp /etc/hosts "${HOSTS_FILE}"
+chmod a+r "${HOSTS_FILE}"
 
 CYAN="\033[1;36m"
 RED="\033[1;31m"
@@ -393,6 +403,7 @@ discoverd_start() {
 	systemctl reset-failed "${DISCOVERD_UNIT}" >/dev/null 2>&1
 	systemd-run --unit="${DISCOVERD_UNIT}" --collect \
 		--property="BindPaths=${ETC_NVME_DIR}:${NVME_CONF_DIR}" \
+		--property="BindReadOnlyPaths=${HOSTS_FILE}:/etc/hosts" \
 		--property=Type=notify-reload \
 		--property="SyslogIdentifier=nvme-discoverd" \
 		"${DISCOVERD_BIN}" --nvme-path "${NVME_BIN}" --debug \
@@ -434,6 +445,8 @@ discoverd_stop() {
 	"${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${HN_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${HN2_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -855,7 +868,7 @@ cleanup() {
 		resolved_mdns_restore
 	fi
 	rm -rf "${ETC_NVME_DIR}" "${BACKING_DIR}"
-	rm -f "${SCRATCH}" "${DESIRED_FILE}"
+	rm -f "${SCRATCH}" "${DESIRED_FILE}" "${HOSTS_FILE}"
 	if [ "${NVME_CONF_DIR_CREATED}" = true ]; then
 		rmdir "${NVME_CONF_DIR}" 2>/dev/null
 	fi
@@ -879,6 +892,8 @@ disconnect_foreign
 "${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${HN_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect -n "${HN2_NQN}" >/dev/null 2>&1 || true
 # ... and left its desired controllers saved.
 rm -f "${DESIRED_FILE}"
 
@@ -1322,6 +1337,58 @@ assert_journal_has "the drop was checked against the exclusions" \
 countdown 3 "give a reconnect time to start"
 assert_not_connected "the excluded IOC is not reconnected" "${NL_NQN}"
 : > "${ETC_NVME_DIR}/exclusions.conf"
+
+phase "a configured host name is resolved"
+nvmet_add_subsystem "${HN_NQN}"
+nvmet_add_subsystem "${HN2_NQN}"
+nvmet_add_port "${HN_PORT_ID}" "${HN_PORT}" "${HN_NQN}"
+ln -sf "/sys/kernel/config/nvmet/subsystems/${HN2_NQN}" \
+       "/sys/kernel/config/nvmet/ports/${HN_PORT_ID}/subsystems/${HN2_NQN}"
+echo "${TRADDR} wringer-ioc.test" >> "${HOSTS_FILE}"
+cat >> "${ETC_NVME_DIR}/nvme-fabrics.conf" <<EOF
+
+[Subsystem]
+nqn        = ${HN_NQN}
+controller = transport=tcp;traddr=wringer-ioc.test;trsvcid=${HN_PORT}
+EOF
+P_START=$(date +%H:%M:%S)
+systemctl reload "${DISCOVERD_UNIT}"
+assert_journal_has "the host name was resolved" \
+	"${P_START}" "wringer-ioc.test - resolved to ${TRADDR}" 15
+assert_connected "connects the IOC configured by host name" \
+	"${HN_NQN}" 30
+
+phase "a host name that does not resolve yet is tried again"
+#
+# The name is not in the hosts file at first. The lookup fails, and
+# nvme-discoverd tries again later. Once the name is added, the IOC
+# connects without a reload.
+cat >> "${ETC_NVME_DIR}/nvme-fabrics.conf" <<EOF
+
+[Subsystem]
+nqn        = ${HN2_NQN}
+controller = transport=tcp;traddr=wringer-late.test;trsvcid=${HN_PORT}
+EOF
+P_START=$(date +%H:%M:%S)
+systemctl reload "${DISCOVERD_UNIT}"
+assert_journal_has "the failed lookup was logged" \
+	"${P_START}" "wringer-late.test - failed to resolve" 30
+echo "${TRADDR} wringer-late.test" >> "${HOSTS_FILE}"
+assert_connected "connects once the name resolves" "${HN2_NQN}" 60
+
+phase "a restart adopts a controller configured by host name"
+#
+# At startup, the release pass waits for the lookups. Without the wait,
+# the pass could run before the lookup ends and release the IOC.
+P_DEV=$(connected_dev "${HN_NQN}")
+discoverd_stop_daemon_only
+P_START=$(date +%H:%M:%S)
+discoverd_start
+assert_dev_stable "restart adopts the IOC configured by host name" \
+	"${HN_NQN}" "${P_DEV}"
+countdown 3 "give a release pass time to run"
+assert_journal_lacks "the IOC was not released" \
+	"${P_START}" "${P_DEV} - .*released"
 
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"

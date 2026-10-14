@@ -7,12 +7,15 @@
  */
 
 #include <limits.h>
+#include <netdb.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include <daemon-util/resolve.h>
+#include <nvme/config.h>
 #include <nvme/lib.h>
 
 #include "ctx.h"
@@ -359,6 +362,234 @@ static bool test_nbft_ipv6_uri(struct discoverd_ctx *dctx)
 	return pass;
 }
 
+/*
+ * Fake name lookups. "slow.example" answers after SLOW_MS, "fail.example"
+ * never resolves, and any other name is 192.0.2.<n>, with <n> taken from
+ * the name ("ioc20.example" is 192.0.2.20).
+ */
+#define SLOW_MS 300
+
+static int nr_fail_lookups;
+
+static int fake_lookup(const char *host, const char *service,
+		       const struct addrinfo *hints __attribute__((unused)),
+		       struct addrinfo **res)
+{
+	static const struct addrinfo numeric = {
+		.ai_flags = AI_NUMERICHOST,
+		.ai_family = AF_INET,
+		.ai_socktype = SOCK_STREAM,
+	};
+	char addr[32];
+	int n = 0;
+
+	if (!strcmp(host, "fail.example")) {
+		__atomic_add_fetch(&nr_fail_lookups, 1, __ATOMIC_SEQ_CST);
+		return EAI_AGAIN;
+	}
+	if (!strcmp(host, "slow.example")) {
+		usleep(SLOW_MS * 1000);
+		n = 30;
+	} else {
+		if (sscanf(host, "%*[a-z]%d", &n) != 1)
+			n = 0;
+	}
+	snprintf(addr, sizeof(addr), "192.0.2.%d", n);
+
+	return getaddrinfo(addr, service, &numeric, res);
+}
+
+static int nr_callbacks, nr_added;
+
+static void on_lookup(bool added, void *user_data __attribute__((unused)))
+{
+	nr_callbacks++;
+	nr_added += added;
+}
+
+// The hostid that the default host identity derives from HOST_NQN.
+#define HOST_ID "c0ffee00-0000-0000-0000-000000000001"
+
+/* Is the configured connection to @traddr desired? */
+static bool cfg_desired(struct inventory *inv, const char *traddr,
+			bool is_dc)
+{
+	struct libnvmf_tid *t;
+	bool desired;
+
+	t = tid_new("tcp", traddr, is_dc ? "8009" : "4420",
+		    is_dc ? DISC_NQN : IOC_NQN, NULL, NULL, HOST_NQN, HOST_ID,
+		    is_dc);
+	if (!t) {
+		printf(" - tid_new(%s) returned NULL [FAIL]\n", traddr);
+		exit(EXIT_FAILURE);
+	}
+	desired = inventory_is_desired(inv, t);
+	tid_free(t);
+
+	return desired;
+}
+
+/* Run the event loop until @done() or @limit_ms. */
+static void run_until(sd_event *event, bool (*done)(void *), void *arg,
+		      unsigned int limit_ms)
+{
+	unsigned int waited;
+
+	for (waited = 0; !done(arg) && waited < limit_ms; waited += 20)
+		sd_event_run(event, 20 * 1000);
+}
+
+static bool lookups_ended(void *arg)
+{
+	return !inventory_config_pending(arg);
+}
+
+static bool ioc20_added(void *arg)
+{
+	return cfg_desired(arg, "192.0.2.20", false);
+}
+
+static bool fail_retried(void *arg __attribute__((unused)))
+{
+	return __atomic_load_n(&nr_fail_lookups, __ATOMIC_SEQ_CST) >= 2;
+}
+
+/* Write @text to a new nvme-fabrics.conf and read it. */
+static struct libnvmf_config *read_config(struct discoverd_ctx *dctx,
+					  const char *text)
+{
+	char path[] = "/tmp/discoverd-inventory-XXXXXX";
+	struct libnvmf_config *cfg = NULL;
+	int fd;
+
+	fd = mkstemp(path);
+	if (fd < 0 || write(fd, text, strlen(text)) != (ssize_t)strlen(text) ||
+	    libnvmf_config_read(dctx->nvme_ctx, path, &cfg) < 0) {
+		printf(" - read the configuration [FAIL]\n");
+		exit(EXIT_FAILURE);
+	}
+	close(fd);
+	unlink(path);
+
+	return cfg;
+}
+
+#define CFG_DC(addr)							\
+	"[Discovery Controller]\n"					\
+	"controller = transport=tcp;traddr=" addr ";trsvcid=8009\n"
+#define CFG_IOC(addr)							\
+	"[Subsystem]\n"							\
+	"nqn = " IOC_NQN "\n"						\
+	"controller = transport=tcp;traddr=" addr ";trsvcid=4420\n"
+
+/*
+ * A numeric traddr is added at once. Host names are resolved in parallel,
+ * without blocking, and the connections are added when the lookups end.
+ */
+static bool test_config_lookup(struct discoverd_ctx *dctx)
+{
+	struct libnvmf_config *cfg;
+	struct inventory *inv;
+	bool pass = true;
+
+	printf("test_config_lookup:\n");
+	inv = inventory_new();
+	if (!inv)
+		exit(EXIT_FAILURE);
+	inventory_set_lookup_callback(inv, on_lookup, NULL);
+	nr_callbacks = nr_added = 0;
+	nr_fail_lookups = 0;
+
+	cfg = read_config(dctx, CFG_DC("192.0.2.1") CFG_DC("slow.example")
+			  CFG_IOC("ioc20.example") CFG_IOC("fail.example"));
+	dctx->fabrics_cfg = cfg;
+	inventory_load_config(inv, dctx);
+
+	pass &= check("numeric DC added at once",
+		      cfg_desired(inv, "192.0.2.1", true), true);
+	pass &= check("host name not added before its lookup",
+		      cfg_desired(inv, "192.0.2.20", false), false);
+	pass &= check("lookups pending", inventory_config_pending(inv), true);
+
+	run_until(dctx->event, ioc20_added, inv, 5000);
+	pass &= check("fast lookup does not wait for the slow one",
+		      cfg_desired(inv, "192.0.2.30", true), false);
+
+	run_until(dctx->event, lookups_ended, inv, 5000);
+	pass &= check("lookups ended", inventory_config_pending(inv), false);
+	pass &= check("IOC added after its lookup",
+		      cfg_desired(inv, "192.0.2.20", false), true);
+	pass &= check("slow DC added after its lookup",
+		      cfg_desired(inv, "192.0.2.30", true), true);
+	pass &= check("one callback per lookup", nr_callbacks == 3, true);
+	pass &= check("two connections added", nr_added == 2, true);
+
+	run_until(dctx->event, fail_retried, NULL, 3000);
+	pass &= check("failed lookup tried again", fail_retried(NULL), true);
+
+	inventory_free(inv);
+	libnvmf_config_free(cfg);
+	dctx->fabrics_cfg = NULL;
+
+	return pass;
+}
+
+/*
+ * Loading the configuration again cancels the lookups of the previous
+ * one: their callbacks never run, and the previous configuration can be
+ * freed while a lookup is still in a worker.
+ */
+static bool test_config_reload(struct discoverd_ctx *dctx)
+{
+	struct libnvmf_config *cfg;
+	struct inventory *inv;
+	bool pass = true;
+
+	printf("test_config_reload:\n");
+	inv = inventory_new();
+	if (!inv)
+		exit(EXIT_FAILURE);
+	inventory_set_lookup_callback(inv, on_lookup, NULL);
+	nr_callbacks = nr_added = 0;
+
+	cfg = read_config(dctx, CFG_DC("slow.example"));
+	dctx->fabrics_cfg = cfg;
+	inventory_load_config(inv, dctx);
+
+	// As reload_config() does: free the old configuration, then load.
+	libnvmf_config_free(cfg);
+	cfg = read_config(dctx, CFG_IOC("ioc21.example"));
+	dctx->fabrics_cfg = cfg;
+	inventory_load_config(inv, dctx);
+
+	run_until(dctx->event, lookups_ended, inv, 5000);
+	usleep(2 * SLOW_MS * 1000);
+	sd_event_run(dctx->event, 0);
+	pass &= check("new host name added",
+		      cfg_desired(inv, "192.0.2.21", false), true);
+	pass &= check("old host name not added",
+		      cfg_desired(inv, "192.0.2.30", true), false);
+	pass &= check("no callback for the old lookup", nr_callbacks == 1,
+		      true);
+
+	// Freed while a lookup runs: no callback, no access to @inv.
+	cfg = read_config(dctx, CFG_DC("slow.example"));
+	libnvmf_config_free(dctx->fabrics_cfg);
+	dctx->fabrics_cfg = cfg;
+	inventory_load_config(inv, dctx);
+	inventory_free(inv);
+	usleep(2 * SLOW_MS * 1000);
+	sd_event_run(dctx->event, 0);
+	pass &= check("no callback after inventory_free()", nr_callbacks == 1,
+		      true);
+
+	libnvmf_config_free(cfg);
+	dctx->fabrics_cfg = NULL;
+
+	return pass;
+}
+
 int main(void)
 {
 	struct discoverd_ctx dctx = {
@@ -377,6 +608,18 @@ int main(void)
 		exit(EXIT_FAILURE);
 	pass &= test_nbft_ipv4(&dctx);
 	pass &= test_nbft_ipv6_uri(&dctx);
+
+	if (sd_event_new(&dctx.event) < 0 ||
+	    dmn_resolver_new(dctx.event, 8, &dctx.resolver) < 0)
+		exit(EXIT_FAILURE);
+	dmn_resolver_set_lookup(dctx.resolver, fake_lookup);
+	pass &= test_config_lookup(&dctx);
+	pass &= test_config_reload(&dctx);
+	dmn_resolver_free(dctx.resolver);
+	sd_event_unref(dctx.event);
+	// Let the idle workers exit, so that valgrind finds no thread left.
+	usleep(2 * SLOW_MS * 1000);
+
 	libnvme_free_global_ctx(dctx.nvme_ctx);
 
 	fflush(stdout);

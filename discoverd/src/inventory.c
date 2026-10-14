@@ -7,19 +7,17 @@
  */
 
 #include <errno.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef NVME_HAVE_NETDB
-#include <netdb.h>
-
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#endif
 
 #include <ccan/list/list.h>
 
 #include <daemon-util/log.h>
+#include <daemon-util/resolve.h>
 #include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/nbft.h>
@@ -49,6 +47,26 @@ struct cfg_conn_entry {
 	const struct libnvmf_config_conn *conn;
 };
 
+// The name lookup of a configured traddr: first try, then each retry.
+#define LOOKUP_TIMEOUT_USEC	(10 * 1000000ULL)
+#define LOOKUP_RETRY_MIN_SEC	1
+#define LOOKUP_RETRY_MAX_SEC	300
+
+/*
+ * A configured connection whose traddr is a host name, until the name
+ * resolves. conn is borrowed, as in cfg_conn_entry.
+ */
+struct cfg_lookup {
+	struct list_node entry;
+	struct inventory *inv;
+	const struct discoverd_ctx *dctx;
+	const struct libnvmf_config_conn *conn;
+	struct dmn_resolve_query *query;
+	sd_event_source *retry_timer;
+	unsigned int retry_sec;
+	bool first;	// the first lookup since the configuration was loaded
+};
+
 struct inventory {
 	struct tid_list nbft_dcs;
 	struct tid_list nbft_iocs;
@@ -57,6 +75,10 @@ struct inventory {
 	struct tid_list discovered_dcs; // found through mDNS or FC kickstart
 	struct list_head dlp_cache;
 	struct list_head cfg_conns;
+	struct list_head lookups;
+	unsigned int nr_first_lookups;	// first lookups not ended yet
+	inventory_lookup_callback lookup_cb;
+	void *lookup_data;
 };
 
 /*
@@ -75,7 +97,34 @@ struct inventory *inventory_new(void)
 		return NULL;
 	list_head_init(&inv->dlp_cache);
 	list_head_init(&inv->cfg_conns);
+	list_head_init(&inv->lookups);
 	return inv;
+}
+
+void inventory_set_lookup_callback(struct inventory *inv,
+				   inventory_lookup_callback cb,
+				   void *user_data)
+{
+	inv->lookup_cb = cb;
+	inv->lookup_data = user_data;
+}
+
+static void lookup_free(struct cfg_lookup *l)
+{
+	list_del(&l->entry);
+	dmn_resolve_cancel(l->query);
+	sd_event_source_disable_unref(l->retry_timer);
+	free(l);
+}
+
+// Stop every lookup, without calling the callback.
+static void lookups_free(struct inventory *inv)
+{
+	struct cfg_lookup *l, *next;
+
+	list_for_each_safe(&inv->lookups, l, next, entry)
+		lookup_free(l);
+	inv->nr_first_lookups = 0;
 }
 
 /*
@@ -106,6 +155,7 @@ void inventory_free(struct inventory *inv)
 
 	if (!inv)
 		return;
+	lookups_free(inv);
 	tid_list_free_items(&inv->nbft_dcs);
 	tid_list_free_items(&inv->nbft_iocs);
 	tid_list_free_items(&inv->cfg_dcs);
@@ -526,63 +576,187 @@ int inventory_load_nbft(struct inventory *inv,
 }
 
 /*
- * Resolve traddr to a numeric address if it names a tcp/rdma hostname.
- * libnvmf_config_conn_get_traddr() never returns a hostname for FC (no
- * hostname concept there), and an already-numeric address is returned
- * unchanged. Deliberately blocking and sequential, one getaddrinfo() call
- * at a time, no worker thread: config load runs once at startup and, more
- * rarely, on SIGHUP — a rare, small path, not the daemon's steady-state
- * event loop, so a blocking resolve here is acceptable.
- * Returns an allocated numeric-address string, or NULL if traddr is not
- * numeric and cannot be resolved.
+ * Add the configured connection @conn, with @traddr as its numeric
+ * address. Returns false if the connection cannot be added.
  */
-static char *resolve_traddr(const char *transport, const char *traddr)
+static bool add_config_conn(struct inventory *inv,
+		const struct discoverd_ctx *dctx,
+		const struct libnvmf_config_conn *conn, const char *traddr)
 {
-	if (libnvmf_traddr_is_numeric(traddr))
-		return strdup(traddr);
+	bool is_dc = libnvmf_config_conn_is_dc(conn);
+	struct libnvmf_tid *t, *t2;
+	struct cfg_conn_entry *ce;
 
-#ifdef NVME_HAVE_NETDB
-	struct addrinfo hints = { .ai_family = AF_UNSPEC };
-	struct addrinfo *host_info = NULL;
-	char addrstr[NVMF_TRADDR_SIZE];
-	const char *p = NULL;
-	char *resolved = NULL;
-	int ret;
+	t = tid_new(libnvmf_config_conn_get_transport(conn), traddr,
+		   libnvmf_config_conn_get_trsvcid(conn),
+		   libnvmf_config_conn_get_subsysnqn(conn),
+		   libnvmf_config_conn_get_host_traddr(conn),
+		   libnvmf_config_conn_get_host_iface(conn),
+		   libnvmf_config_conn_get_hostnqn(conn),
+		   libnvmf_config_conn_get_hostid(conn), is_dc);
+	t = with_default_host(dctx, t);
+	if (!t)
+		return false;
 
-	if (strcmp(transport, "tcp") && strcmp(transport, "rdma"))
-		return NULL;
-
-	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
-	if (ret) {
-		log_warn("failed to resolve host '%s': %s",
-			 traddr, gai_strerror(ret));
-		return NULL;
+	// t2 feeds the plain membership set; t is kept (paired with conn)
+	// for inventory_config_conn_for() lookups — each list owns its copy.
+	t2 = libnvmf_tid_dup(t);
+	if (!t2 ||
+	    tid_list_append(is_dc ? &inv->cfg_dcs : &inv->cfg_iocs, t2) < 0) {
+		tid_free(t2);
+		tid_free(t);
+		return false;
 	}
 
-	switch (host_info->ai_family) {
-	case AF_INET:
-		p = inet_ntop(AF_INET,
-			&((struct sockaddr_in *)host_info->ai_addr)->sin_addr,
-			addrstr, sizeof(addrstr));
-		break;
-	case AF_INET6:
-		p = inet_ntop(AF_INET6,
-			&((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr,
-			addrstr, sizeof(addrstr));
-		break;
-	default:
-		break;
+	ce = calloc(1, sizeof(*ce));
+	if (!ce) {
+		tid_free(t);
+		return false;
 	}
-	if (p)
-		resolved = strdup(addrstr);
+	ce->tid = t;
+	ce->conn = conn;
+	list_add(&inv->cfg_conns, &ce->entry);
 
-	freeaddrinfo(host_info);
-	return resolved;
-#else
-	log_warn("cannot resolve host '%s': hostname resolution not available "
-		 "in this build", traddr);
+	return true;
+}
+
+static int start_lookup(struct cfg_lookup *l);
+
+static int retry_lookup(sd_event_source *src __attribute__((unused)),
+			uint64_t usec __attribute__((unused)), void *user_data)
+{
+	struct cfg_lookup *l = user_data;
+
+	l->retry_timer = sd_event_source_disable_unref(l->retry_timer);
+	start_lookup(l);
+
+	return 0;
+}
+
+static void schedule_lookup_retry(struct cfg_lookup *l)
+{
+	int r;
+
+	r = sd_event_add_time_relative(l->dctx->event, &l->retry_timer,
+				       CLOCK_MONOTONIC,
+				       l->retry_sec * 1000000ULL, 0,
+				       retry_lookup, l);
+	if (r < 0) {
+		log_warn("%s - cannot schedule a new lookup: %s",
+			 libnvmf_config_conn_get_traddr(l->conn),
+			 strerror(-r));
+		return;
+	}
+	if (l->retry_sec < LOOKUP_RETRY_MAX_SEC)
+		l->retry_sec *= 2;
+	if (l->retry_sec > LOOKUP_RETRY_MAX_SEC)
+		l->retry_sec = LOOKUP_RETRY_MAX_SEC;
+}
+
+/* The first address of @res, as a numeric string in @buf. */
+static const char *first_addr(const struct addrinfo *res, char *buf,
+			      size_t size)
+{
+	const struct sockaddr_in6 *sin6;
+	const struct sockaddr_in *sin;
+
+	for (; res; res = res->ai_next) {
+		if (res->ai_family == AF_INET) {
+			sin = (const struct sockaddr_in *)res->ai_addr;
+			return inet_ntop(AF_INET, &sin->sin_addr, buf, size);
+		}
+		if (res->ai_family == AF_INET6) {
+			sin6 = (const struct sockaddr_in6 *)res->ai_addr;
+			return inet_ntop(AF_INET6, &sin6->sin6_addr, buf, size);
+		}
+	}
+
 	return NULL;
-#endif
+}
+
+static void on_lookup(int gai, const struct addrinfo *res, void *user_data)
+{
+	struct cfg_lookup *l = user_data;
+	struct inventory *inv = l->inv;
+	const char *name = libnvmf_config_conn_get_traddr(l->conn);
+	char addrstr[INET6_ADDRSTRLEN];
+	int err = errno;	// for EAI_SYSTEM
+	bool first = l->first;
+	bool added = false;
+	const char *addr;
+
+	l->query = NULL;
+	if (first) {
+		l->first = false;
+		inv->nr_first_lookups--;
+	}
+
+	addr = gai ? NULL : first_addr(res, addrstr, sizeof(addrstr));
+	if (addr) {
+		log_info("%s - resolved to %s", name, addr);
+		added = add_config_conn(inv, l->dctx, l->conn, addr);
+		lookup_free(l);
+	} else {
+		const char *why = gai == EAI_SYSTEM ? strerror(err) :
+				  gai ? gai_strerror(gai) : "no IP address";
+
+		if (first)
+			log_warn("%s - failed to resolve: %s, trying again",
+				 name, why);
+		else
+			log_dbg("%s - failed to resolve: %s", name, why);
+		schedule_lookup_retry(l);
+	}
+
+	if (inv->lookup_cb)
+		inv->lookup_cb(added, inv->lookup_data);
+}
+
+static int start_lookup(struct cfg_lookup *l)
+{
+	static const struct addrinfo hints = {
+		.ai_family = AF_UNSPEC,
+		.ai_socktype = SOCK_STREAM,
+	};
+	const char *name = libnvmf_config_conn_get_traddr(l->conn);
+	int r;
+
+	r = dmn_resolve(l->dctx->resolver, name, NULL, &hints,
+			LOOKUP_TIMEOUT_USEC, on_lookup, l, &l->query);
+	if (r < 0) {
+		log_warn("%s - cannot start the lookup: %s", name,
+			 strerror(-r));
+		schedule_lookup_retry(l);
+	}
+
+	return r;
+}
+
+/* Resolve the host name of @conn without blocking. */
+static void add_lookup(struct inventory *inv, const struct discoverd_ctx *dctx,
+		       const struct libnvmf_config_conn *conn)
+{
+	struct cfg_lookup *l;
+
+	if (!dctx->resolver) {
+		log_warn("%s - cannot resolve, skipping",
+			 libnvmf_config_conn_get_traddr(conn));
+		return;
+	}
+
+	l = calloc(1, sizeof(*l));
+	if (!l)
+		return;
+	l->inv = inv;
+	l->dctx = dctx;
+	l->conn = conn;
+	l->retry_sec = LOOKUP_RETRY_MIN_SEC;
+	list_add_tail(&inv->lookups, &l->entry);
+
+	if (!start_lookup(l)) {
+		l->first = true;
+		inv->nr_first_lookups++;
+	}
 }
 
 struct load_config_args {
@@ -594,50 +768,21 @@ static void load_config_conn_callback(const struct libnvmf_config_conn *conn,
 				   void *user_data)
 {
 	struct load_config_args *args = user_data;
-	struct inventory *inv = args->inv;
 	const char *transport = libnvmf_config_conn_get_transport(conn);
-	const char *raw_traddr = libnvmf_config_conn_get_traddr(conn);
-	bool is_dc = libnvmf_config_conn_is_dc(conn);
-	char *traddr;
-	struct libnvmf_tid *t, *t2;
-	struct cfg_conn_entry *ce;
+	const char *traddr = libnvmf_config_conn_get_traddr(conn);
 
-	traddr = resolve_traddr(transport, raw_traddr);
-	if (!traddr) {
-		log_warn("%s - failed to resolve, skipping", raw_traddr);
+	if (libnvmf_traddr_is_numeric(traddr)) {
+		add_config_conn(args->inv, args->dctx, conn, traddr);
 		return;
 	}
 
-	t = tid_new(transport, traddr,
-		   libnvmf_config_conn_get_trsvcid(conn),
-		   libnvmf_config_conn_get_subsysnqn(conn),
-		   libnvmf_config_conn_get_host_traddr(conn),
-		   libnvmf_config_conn_get_host_iface(conn),
-		   libnvmf_config_conn_get_hostnqn(conn),
-		   libnvmf_config_conn_get_hostid(conn), is_dc);
-	t = with_default_host(args->dctx, t);
-	free(traddr);
-	if (!t)
-		return;
-
-	// t2 feeds the plain membership set; t is kept (paired with conn)
-	// for inventory_config_conn_for() lookups — each list owns its copy.
-	t2 = libnvmf_tid_dup(t);
-	if (!t2 ||
-	    tid_list_append(is_dc ? &inv->cfg_dcs : &inv->cfg_iocs, t2) < 0) {
-		tid_free(t2);
-		tid_free(t);
+	// A host name exists only for tcp and rdma.
+	if (strcmp(transport, "tcp") && strcmp(transport, "rdma")) {
+		log_warn("%s - failed to resolve, skipping", traddr);
 		return;
 	}
 
-	ce = calloc(1, sizeof(*ce));
-	if (!ce) {
-		tid_free(t);
-		return;
-	}
-	ce->tid = t;
-	ce->conn = conn;
-	list_add(&inv->cfg_conns, &ce->entry);
+	add_lookup(args->inv, args->dctx, conn);
 }
 
 void inventory_load_config(struct inventory *inv,
@@ -646,6 +791,7 @@ void inventory_load_config(struct inventory *inv,
 	struct load_config_args args = { .inv = inv, .dctx = dctx };
 	struct cfg_conn_entry *ce, *next;
 
+	lookups_free(inv);
 	tid_list_free_items(&inv->cfg_dcs);
 	tid_list_free_items(&inv->cfg_iocs);
 	list_for_each_safe(&inv->cfg_conns, ce, next, entry) {
@@ -658,8 +804,13 @@ void inventory_load_config(struct inventory *inv,
 		libnvmf_config_conn_for_each(dctx->fabrics_cfg,
 					     load_config_conn_callback, &args);
 
-	log_dbg("loaded %zu DC(s), %zu IOC(s) from the fabrics config",
-		inv->cfg_dcs.len, inv->cfg_iocs.len);
+	log_dbg("fabrics config: %zu DC(s), %zu IOC(s), %u name lookup(s)",
+		inv->cfg_dcs.len, inv->cfg_iocs.len, inv->nr_first_lookups);
+}
+
+bool inventory_config_pending(const struct inventory *inv)
+{
+	return inv->nr_first_lookups > 0;
 }
 
 const struct libnvmf_config_conn *inventory_config_conn_for(
