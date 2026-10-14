@@ -37,6 +37,10 @@
  * The other per-handle ops mirror the libnvme function of the same name.
  * The helper calls the function on its handle and returns the return
  * value as status.
+ *
+ * SED requests carry a struct libnvme_privsep_sed. The helper issues only
+ * the IOC_OPAL_* ioctls which libnvme uses. All of them pass a fixed size
+ * argument to the kernel and return nothing but the status.
  */
 
 #define LIBNVME_PRIVSEP_VERSION		1
@@ -64,6 +68,7 @@ enum libnvme_privsep_op {
 	LIBNVME_PRIVSEP_OP_READ_REGS	= 12,	/* response: the registers */
 	LIBNVME_PRIVSEP_OP_WRITE_REG32	= 13,
 	LIBNVME_PRIVSEP_OP_WRITE_REG64	= 14,
+	LIBNVME_PRIVSEP_OP_SED		= 15,
 };
 
 struct libnvme_privsep_req {
@@ -103,6 +108,12 @@ struct libnvme_privsep_reg {
 	__u32 offset;
 	__u32 len;	/* READ_REGS, at most LIBNVME_PRIVSEP_MAX_REGS */
 	__u32 mmio32;	/* WRITE_REG64 */
+	__u32 rsvd;
+};
+
+/* SED payload: followed by the argument of the ioctl request. */
+struct libnvme_privsep_sed {
+	__u32 request;
 	__u32 rsvd;
 };
 

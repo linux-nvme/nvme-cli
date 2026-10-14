@@ -18,6 +18,8 @@
 #include <libnvme.h>
 #include <libnvme-sed.h>
 
+#include "nvme/private.h"
+
 _Static_assert(sizeof(((struct opal_key *)0)->key) >= LIBNVME_SED_KEY_MAX,
 	"opal_key too small for libnvme_sed_key");
 
@@ -57,12 +59,15 @@ static int sed_opal_session(struct opal_session_info *session,
  * positive TCG method status if the TPer rejected the method.
  */
 static int sed_opal_ioctl(struct libnvme_transport_handle *hdl,
-		unsigned long req, void *arg)
+		unsigned long req, void *arg, size_t size)
 {
 	int ret;
 
 	if (!libnvme_transport_handle_is_ns(hdl))
 		return -EINVAL;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_sed_ioctl(hdl, req, arg, size);
 
 	ret = ioctl(libnvme_transport_handle_get_fd(hdl), req, arg);
 	if (ret < 0)
@@ -82,7 +87,8 @@ __shr_public int libnvme_sed_take_ownership(
 	if (ret)
 		return ret;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_TAKE_OWNERSHIP, &okey);
+	return sed_opal_ioctl(hdl, IOC_OPAL_TAKE_OWNERSHIP,
+			      &okey, sizeof(okey));
 }
 
 __shr_public int libnvme_sed_activate_lsp(struct libnvme_transport_handle *hdl,
@@ -98,7 +104,7 @@ __shr_public int libnvme_sed_activate_lsp(struct libnvme_transport_handle *hdl,
 	/* lr[0] is zero, which selects the global locking range */
 	act.num_lrs = 1;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_ACTIVATE_LSP, &act);
+	return sed_opal_ioctl(hdl, IOC_OPAL_ACTIVATE_LSP, &act, sizeof(act));
 }
 
 __shr_public int libnvme_sed_setup_range(struct libnvme_transport_handle *hdl,
@@ -115,7 +121,7 @@ __shr_public int libnvme_sed_setup_range(struct libnvme_transport_handle *hdl,
 	setup.RLE = read_lock;
 	setup.WLE = write_lock;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_LR_SETUP, &setup);
+	return sed_opal_ioctl(hdl, IOC_OPAL_LR_SETUP, &setup, sizeof(setup));
 }
 
 __shr_public int libnvme_sed_lock_unlock(struct libnvme_transport_handle *hdl,
@@ -143,7 +149,7 @@ __shr_public int libnvme_sed_lock_unlock(struct libnvme_transport_handle *hdl,
 	if (ret)
 		return ret;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_LOCK_UNLOCK, &lu);
+	return sed_opal_ioctl(hdl, IOC_OPAL_LOCK_UNLOCK, &lu, sizeof(lu));
 }
 
 static int sed_opal_new_pw(struct opal_new_pw *pw,
@@ -172,7 +178,7 @@ __shr_public int libnvme_sed_set_password(struct libnvme_transport_handle *hdl,
 	if (ret)
 		return ret;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_SET_PW, &pw);
+	return sed_opal_ioctl(hdl, IOC_OPAL_SET_PW, &pw, sizeof(pw));
 }
 
 __shr_public int libnvme_sed_set_sid_password(
@@ -188,7 +194,7 @@ __shr_public int libnvme_sed_set_sid_password(
 	if (ret)
 		return ret;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_SET_SID_PW, &pw);
+	return sed_opal_ioctl(hdl, IOC_OPAL_SET_SID_PW, &pw, sizeof(pw));
 #else
 	return -ENOTSUP;
 #endif
@@ -204,7 +210,7 @@ __shr_public int libnvme_sed_revert_tper(struct libnvme_transport_handle *hdl,
 	if (ret)
 		return ret;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_REVERT_TPR, &okey);
+	return sed_opal_ioctl(hdl, IOC_OPAL_REVERT_TPR, &okey, sizeof(okey));
 }
 
 __shr_public int libnvme_sed_revert_psid(struct libnvme_transport_handle *hdl,
@@ -218,7 +224,8 @@ __shr_public int libnvme_sed_revert_psid(struct libnvme_transport_handle *hdl,
 	if (ret)
 		return ret;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_PSID_REVERT_TPR, &okey);
+	return sed_opal_ioctl(hdl, IOC_OPAL_PSID_REVERT_TPR,
+			      &okey, sizeof(okey));
 #else
 	return -ENOTSUP;
 #endif
@@ -238,7 +245,8 @@ __shr_public int libnvme_sed_revert_lsp(struct libnvme_transport_handle *hdl,
 	if (keep_data)
 		revert.options = OPAL_PRESERVE;
 
-	return sed_opal_ioctl(hdl, IOC_OPAL_REVERT_LSP, &revert);
+	return sed_opal_ioctl(hdl, IOC_OPAL_REVERT_LSP,
+			      &revert, sizeof(revert));
 #else
 	return -ENOTSUP;
 #endif

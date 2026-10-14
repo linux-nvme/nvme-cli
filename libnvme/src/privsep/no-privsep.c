@@ -41,3 +41,9 @@ int __libnvme_privsep_op(struct libnvme_transport_handle *hdl, __u32 op,
 {
 	return -ENOTSUP;
 }
+
+int __libnvme_privsep_sed_ioctl(struct libnvme_transport_handle *hdl,
+		__u32 request, const void *arg, size_t size)
+{
+	return -ENOTSUP;
+}

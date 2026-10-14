@@ -5,9 +5,15 @@
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
 
+privsep_test_args = []
+if want_sed and conf.get('NVME_HAVE_SED_OPAL') != 0
+    privsep_test_args += '-DTEST_SED'
+endif
+
 mock_ioctl = library(
     'mock-ioctl',
     ['mock-ioctl.c'],
+    c_args: privsep_test_args,
     dependencies: [
         cc.find_library('dl', required: false),
     ],
@@ -17,6 +23,7 @@ mock_ioctl = library(
 privsep_test = executable(
     'test-privsep',
     ['privsep.c', '../ioctl/util.c'],
+    c_args: privsep_test_args,
     dependencies: [
         ccan_dep,
         config_dep,
@@ -38,6 +45,7 @@ test(
 privsep_proto_test = executable(
     'test-privsep-proto',
     ['proto.c', '../ioctl/util.c'],
+    c_args: privsep_test_args,
     dependencies: [
         config_dep,
         libnvme_dep,
@@ -48,6 +56,7 @@ privsep_proto_test = executable(
 test(
     'libnvme - privsep-proto',
     privsep_proto_test,
-    args: [privsep_helper.full_path()],
-    depends: [privsep_helper],
+    args: [privsep_helper.full_path(), mock_ioctl.full_path()],
+    depends: [privsep_helper, mock_ioctl],
+    env: privsep_env,
 )
