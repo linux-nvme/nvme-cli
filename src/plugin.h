@@ -67,6 +67,12 @@ struct command {
 	 */
 	uint32_t output_formats;
 	const char *output_format_desc;
+	/*
+	 * Set for commands that keep the root privileges when nvme-cli runs
+	 * with privilege separation. All other commands drop them before
+	 * parsing their options and open devices through the helper.
+	 */
+	bool needs_root;
 };
 
 /*

@@ -1950,6 +1950,7 @@ static struct command seagate_plugin_version_cmd = {
 	.help = "Shows Seagate plugin's version information ",
 	.fn = seagate_plugin_version,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command stx_ocp_plugin_version_cmd = {
@@ -1957,6 +1958,7 @@ static struct command stx_ocp_plugin_version_cmd = {
 	.help = "Shows OCP Seagate plugin's version information ",
 	.fn = stx_ocp_plugin_version,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command *commands[] = {

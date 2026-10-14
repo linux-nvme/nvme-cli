@@ -4613,18 +4613,21 @@ static struct command vs_pcie_stats_cmd = {
 	.help = "Retrieve Micron PCIe error stats",
 	.fn = micron_pcie_stats,
 	.output_formats = NORMAL | JSON,
+	.needs_root = true,
 };
 
 static struct command clear_pcie_correctable_errors_cmd = {
 	.name = "clear-pcie-correctable-errors",
 	.help = "Clear correctable PCIe errors",
 	.fn = micron_clear_pcie_correctable_errors,
+	.needs_root = true,
 };
 
 static struct command vs_internal_log_cmd = {
 	.name = "vs-internal-log",
 	.help = "Retrieve Micron logs",
 	.fn = micron_internal_logs,
+	.needs_root = true,
 };
 
 static struct command vs_telemetry_controller_option_cmd = {
@@ -4659,6 +4662,7 @@ static struct command plugin_version_cmd = {
 	.help = "Display plugin version info",
 	.fn = micron_plugin_version,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command cloud_ssd_plugin_version_cmd = {
@@ -4666,6 +4670,7 @@ static struct command cloud_ssd_plugin_version_cmd = {
 	.help = "Display plugin version info",
 	.fn = micron_cloud_ssd_plugin_version,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command log_page_directory_cmd = {
