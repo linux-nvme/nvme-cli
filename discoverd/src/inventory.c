@@ -771,14 +771,11 @@ static void load_config_conn_callback(const struct libnvmf_config_conn *conn,
 	const char *transport = libnvmf_config_conn_get_transport(conn);
 	const char *traddr = libnvmf_config_conn_get_traddr(conn);
 
-	if (libnvmf_traddr_is_numeric(traddr)) {
-		add_config_conn(args->inv, args->dctx, conn, traddr);
-		return;
-	}
-
-	// A host name exists only for tcp and rdma.
-	if (strcmp(transport, "tcp") && strcmp(transport, "rdma")) {
-		log_warn("%s - failed to resolve, skipping", traddr);
+	// Only tcp and rdma have host names. An FC address is used as it is.
+	if (libnvmf_traddr_is_numeric(traddr) ||
+	    (strcmp(transport, "tcp") && strcmp(transport, "rdma"))) {
+		if (!add_config_conn(args->inv, args->dctx, conn, traddr))
+			log_warn("%s - cannot add, skipping", traddr);
 		return;
 	}
 

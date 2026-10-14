@@ -590,6 +590,46 @@ static bool test_config_reload(struct discoverd_ctx *dctx)
 	return pass;
 }
 
+#define FC_TRADDR      "nn-0x20000090fae0b5f5:pn-0x10000090fae0b5f5"
+#define FC_HOST_TRADDR "nn-0x20000090fa979f2b:pn-0x10000090fa979f2b"
+
+/* An FC address is not a host name: it is added as it is. */
+static bool test_config_fc(struct discoverd_ctx *dctx)
+{
+	struct libnvmf_config *cfg;
+	struct inventory *inv;
+	struct libnvmf_tid *fc;
+	bool pass = true;
+
+	printf("test_config_fc:\n");
+	inv = inventory_new();
+	if (!inv)
+		exit(EXIT_FAILURE);
+
+	cfg = read_config(dctx,
+		"[Discovery Controller]\n"
+		"controller = transport=fc;traddr=" FC_TRADDR
+		";host-traddr=" FC_HOST_TRADDR "\n");
+	dctx->fabrics_cfg = cfg;
+	inventory_load_config(inv, dctx);
+
+	fc = tid_new("fc", FC_TRADDR, NULL, DISC_NQN, FC_HOST_TRADDR, NULL,
+		     HOST_NQN, HOST_ID, true);
+	if (!fc) {
+		printf(" - tid_new(%s) returned NULL [FAIL]\n", FC_TRADDR);
+		exit(EXIT_FAILURE);
+	}
+	pass &= check("FC DC added", inventory_is_desired(inv, fc), true);
+	pass &= check("no lookup", inventory_config_pending(inv), false);
+
+	tid_free(fc);
+	inventory_free(inv);
+	libnvmf_config_free(cfg);
+	dctx->fabrics_cfg = NULL;
+
+	return pass;
+}
+
 int main(void)
 {
 	struct discoverd_ctx dctx = {
@@ -615,6 +655,7 @@ int main(void)
 	dmn_resolver_set_lookup(dctx.resolver, fake_lookup);
 	pass &= test_config_lookup(&dctx);
 	pass &= test_config_reload(&dctx);
+	pass &= test_config_fc(&dctx);
 	dmn_resolver_free(dctx.resolver);
 	sd_event_unref(dctx.event);
 	// Let the idle workers exit, so that valgrind finds no thread left.
