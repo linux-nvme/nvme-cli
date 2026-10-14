@@ -1621,13 +1621,50 @@ static int add_kernel_option(struct libnvme_global_ctx *ctx, size_t *count,
 }
 
 /*
+ * Writes @args, unless NULL, to /dev/nvme-fabrics and reads the response
+ * into @buf, which is NUL-terminated.
+ *
+ * Return: the length of the response or a negative errno. On failure,
+ * @step is the step which failed.
+ */
+static ssize_t nvmf_dev_xfer(struct libnvme_global_ctx *ctx,
+		const char *args, char *buf, size_t size,
+		enum libnvmf_dev_step *step)
+{
+	__cleanup_fd int fd = -1;
+	ssize_t len;
+
+	*step = LIBNVMF_DEV_OPEN;
+	fd = open(nvmf_dev, args ? O_RDWR : O_RDONLY);
+	if (fd < 0)
+		return -errno;
+
+	if (args) {
+		*step = LIBNVMF_DEV_WRITE;
+		len = write(fd, args, strlen(args));
+		if (len < 0)
+			return -errno;
+		if ((size_t)len != strlen(args))
+			return -EIO;
+	}
+
+	*step = LIBNVMF_DEV_READ;
+	len = read(fd, buf, size - 1);
+	if (len < 0)
+		return -errno;
+	buf[len] = '\0';
+
+	return len;
+}
+
+/*
  * Read the options the kernel accepts from /dev/nvme-fabrics, once per
  * @ctx. A failed read is not cached, so the next call retries it.
  */
 static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 {
 	char buf[0x1000], *options, *p, *v;
-	__cleanup_fd int fd = -1;
+	enum libnvmf_dev_step step;
 	size_t count = 0;
 	ssize_t len;
 	int err;
@@ -1639,18 +1676,16 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 	if (!ctx->options)
 		return -ENOMEM;
 
-	fd = open(nvmf_dev, O_RDONLY);
-	if (fd < 0) {
+	len = nvmf_dev_xfer(ctx, NULL, buf, sizeof(buf), &step);
+	if (len < 0 && step == LIBNVMF_DEV_OPEN) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to open %s: %s\n",
-			 nvmf_dev, libnvme_strerror(errno));
+			 nvmf_dev, libnvme_strerror(-len));
 		err = -ENVME_CONNECT_OPEN;
 		goto out_free;
 	}
 
-	memset(buf, 0x0, sizeof(buf));
-	len = read(fd, buf, sizeof(buf) - 1);
 	if (len < 0) {
-		if (errno == EINVAL) {
+		if (len == -EINVAL) {
 			/*
 			 * Older Linux kernels don't allow reading from nvmf_dev
 			 * to get supported options, so use a default set
@@ -1663,12 +1698,11 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 		}
 
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to read from %s: %s\n",
-			 nvmf_dev, libnvme_strerror(errno));
+			 nvmf_dev, libnvme_strerror(-len));
 		err = -ENVME_CONNECT_READ;
 		goto out_free;
 	}
 
-	buf[len] = '\0';
 	options = buf;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "kernel supports: ");
@@ -1868,25 +1902,24 @@ static void registry_update_on_connect(struct libnvme_global_ctx *ctx,
 
 static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 {
-	__cleanup_fd int fd = -1;
-	int ret, len = strlen(argstr);
-	int instance;
 	char buf[0x1000], *options, *p;
+	enum libnvmf_dev_step step;
+	ssize_t len;
+	int instance;
 
-	fd = open(nvmf_dev, O_RDWR);
-	if (fd < 0) {
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "connect ctrl, '%.*s'\n",
+		 (int)strcspn(argstr, "\n"), argstr);
+	len = nvmf_dev_xfer(ctx, argstr, buf, sizeof(buf), &step);
+	if (len < 0 && step == LIBNVMF_DEV_OPEN) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to open %s: %s\n",
-			 nvmf_dev, libnvme_strerror(errno));
+			 nvmf_dev, libnvme_strerror(-len));
 		return -ENVME_CONNECT_OPEN;
 	}
 
-	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "connect ctrl, '%.*s'\n",
-		 (int)strcspn(argstr,"\n"), argstr);
-	ret = write(fd, argstr, len);
-	if (ret != len) {
+	if (len < 0 && step == LIBNVMF_DEV_WRITE) {
 		libnvme_msg(ctx, LIBNVME_LOG_INFO, "Failed to write to %s: %s\n",
-			 nvmf_dev, libnvme_strerror(errno));
-		switch (errno) {
+			 nvmf_dev, libnvme_strerror(-len));
+		switch (-len) {
 		case EALREADY:
 			return -ENVME_CONNECT_ALREADY;
 		case EINVAL:
@@ -1908,16 +1941,13 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 		}
 	}
 
-	memset(buf, 0x0, sizeof(buf));
-	len = read(fd, buf, sizeof(buf) - 1);
 	if (len < 0) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to read from %s: %s\n",
-			 nvmf_dev, libnvme_strerror(errno));
+			 nvmf_dev, libnvme_strerror(-len));
 		return -ENVME_CONNECT_READ;
 	}
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "connect ctrl, response '%.*s'\n",
 		 (int)strcspn(buf, "\n"), buf);
-	buf[len] = '\0';
 	options = buf;
 	while ((p = strsep(&options, ",\n")) != NULL) {
 		if (!*p)
