@@ -1402,7 +1402,7 @@ struct nvme_id_psd {
  * @rpmbs:	Replay Protected Memory Block Support, see
  *	       &enum nvme_id_ctrl_rpmbs.
  * @edstt:	Extended Device Self-test Time, if Device Self-test command is
- *	       supported (see &struct nvme_id_ctrl.oacs, %NVME_CTRL_OACS_SELF_TEST),
+ *	       supported (see &struct nvme_id_ctrl.oacs, %NVME_CTRL_OACS_DSTS),
  *	       then this field indicates the nominal amount of time in one
  *	       minute units that the controller takes to complete an extended
  *	       device self-test operation when in power state 0.
@@ -1826,74 +1826,88 @@ enum nvme_id_ctrl_cmic {
 
 /**
  * enum nvme_id_ctrl_oaes - Optional Asynchronous Events Supported
- * @NVME_CTRL_OAES_NSAN_SHIFT: Shift amount to get the Attached Namespace Attribute Notices event supported
- * @NVME_CTRL_OAES_FAN_SHIFT: Shift amount to get the Firmware Activation
- *			      Notices event supported
- * @NVME_CTRL_OAES_ANACN_SHIFT: Shift amount to get the ANA Change Notices
- *				supported
- * @NVME_CTRL_OAES_PLEAN_SHIFT: Shift amount to get the Predictable Latency
- *				Event Aggregate Log
- *                             Change Notices event supported
- * @NVME_CTRL_OAES_LSIAN_SHIFT: Shift amount to get the LBA Status Information
- *				Notices event
- *                             supported
- * @NVME_CTRL_OAES_EGEAN_SHIFT: Shift amount to get the Endurance Group Events
- *				Aggregate Log Change
- *                            Notices event supported
- * @NVME_CTRL_OAES_NNSS_SHIFT: Shift amount to get the Normal NVM Subsystem
- *			       Shutdown event supported
- * @NVME_CTRL_OAES_TTHR_SHIFT: Shift amount to get the Temperature Threshold
- *			       Hysteresis Recovery
- *                            event supported
- * @NVME_CTRL_OAES_RGCNS_SHIFT: Shift amount to get the Reachability Groups Change Notices supported
- * @NVME_CTRL_OAES_ANSAN_SHIFT: Shift amount to get the Allocated Namespace Attribute Notices
- *                              supported
- * @NVME_CTRL_OAES_RLCC_SHIFT: Shift amount to get the Rate Limiting Configuration Change event
- *                             supported
- * @NVME_CTRL_OAES_ZDCN_SHIFT: Shift amount to get the Zone Descriptor Change
- *			       Notifications supported
- * @NVME_CTRL_OAES_DLPCN_SHIFT: Shift amount to get the Discover Log Page Change
- *				Notificationssupported
- * @NVME_CTRL_OAES_NSAN_MASK: Mask to get the Attached Namespace Attribute Notices event supported
- * @NVME_CTRL_OAES_FAN_MASK: Mask to get the Firmware Activation Notices event
- *			     supported
- * @NVME_CTRL_OAES_ANACN_MASK: Mask to get the ANA Change Notices supported
- * @NVME_CTRL_OAES_PLEAN_MASK: Mask to get the Predictable Latency Event
- *			       Aggregate Log Change Notices
- *                            event supported
- * @NVME_CTRL_OAES_LSIAN_MASK: Mask to get the LBA Status Information Notices
- *			       event supported
- * @NVME_CTRL_OAES_EGEAN_MASK: Mask to get the Endurance Group Events Aggregate
- *			       Log Change Notices
- *                           event supported
- * @NVME_CTRL_OAES_NNSS_MASK: Mask to get the Normal NVM Subsystem Shutdown
- *			      event supported
- * @NVME_CTRL_OAES_TTHR_MASK: Mask to get the Temperature Threshold Hysteresis
- *			      Recovery event
- *                           supported
- * @NVME_CTRL_OAES_RGCNS_MASK: Mask to get the Reachability Groups Change Notices supported
- * @NVME_CTRL_OAES_ANSAN_MASK: Mask to get the Allocated Namespace Attribute Notices supported
- * @NVME_CTRL_OAES_RLCC_MASK: Mask to get the Rate Limiting Configuration Change event supported
- * @NVME_CTRL_OAES_ZDCN_MASK: Mask to get the Zone Descriptor Change
- *			      Notifications supported
- * @NVME_CTRL_OAES_DLPCN_MASK: Mask to get the Discover Log Page Change
- *			       Notifications supported
- * @NVME_CTRL_OAES_NSAN: Attached Namespace Attribute Notices event supported
- * @NVME_CTRL_OAES_FAN: Firmware Activation Notices event supported
- * @NVME_CTRL_OAES_ANACN: ANA Change Notices supported
- * @NVME_CTRL_OAES_PLEAN: Predictable Latency Event Aggregate Log Change Notices
- *			  event supported
- * @NVME_CTRL_OAES_LSIAN: LBA Status Information Notices event supported
- * @NVME_CTRL_OAES_EGEAN: Endurance Group Events Aggregate Log Change Notices
- *			  event supported
- * @NVME_CTRL_OAES_NNSS: Normal NVM Subsystem Shutdown event supported
- * @NVME_CTRL_OAES_TTHR: Temperature Threshold Hysteresis Recovery event
- *			 supported
- * @NVME_CTRL_OAES_RGCNS: Reachability Groups Change Notices supported
- * @NVME_CTRL_OAES_ANSAN: Allocated Namespace Attribute Notices supported
- * @NVME_CTRL_OAES_RLCC: Rate Limiting Configuration Change event supported
- * @NVME_CTRL_OAES_ZDCN: Zone Descriptor Change Notifications supported
- * @NVME_CTRL_OAES_DLPCN: Discover Log Page Change Notifications supported
+ * @NVME_CTRL_OAES_NSAN_SHIFT:	Shift amount to get the Attached Namespace
+ *				Attribute Notices event supported bit
+ * @NVME_CTRL_OAES_FAN_SHIFT:	Shift amount to get the Firmware Activation
+ *				Notices event supported bit
+ * @NVME_CTRL_OAES_ANACN_SHIFT:	Shift amount to get the Asymmetric Namespace
+ *				Access Change Notices event supported bit
+ * @NVME_CTRL_OAES_PLEAN_SHIFT:	Shift amount to get the Predictable Latency
+ *				Event Aggregate Log Change Notices event
+ *				supported bit
+ * @NVME_CTRL_OAES_LSIAN_SHIFT:	Shift amount to get the LBA Status Information
+ *				Alert Notices event supported bit
+ * @NVME_CTRL_OAES_EGEAN_SHIFT:	Shift amount to get the Endurance Group Event
+ *				Aggregate Log Page Change Notices event
+ *				supported bit
+ * @NVME_CTRL_OAES_NNSS_SHIFT:	Shift amount to get the Normal NVM Subsystem
+ *				Shutdown event supported bit
+ * @NVME_CTRL_OAES_TTHR_SHIFT:	Shift amount to get the Temperature Threshold
+ *				Hysteresis Recovery event supported bit
+ * @NVME_CTRL_OAES_RGCNS_SHIFT:	Shift amount to get the Reachability Groups
+ *				Change Notices event supported bit
+ * @NVME_CTRL_OAES_ANSAN_SHIFT:	Shift amount to get the Allocated Namespace
+ *				Attribute Notices event supported bit
+ * @NVME_CTRL_OAES_RLCC_SHIFT:	Shift amount to get the Rate Limiting
+ *				Configuration Change event supported bit
+ * @NVME_CTRL_OAES_ZDCN_SHIFT:	Shift amount to get the Zone Descriptor Changed
+ *				Notices event supported bit
+ * @NVME_CTRL_OAES_DLPCN_SHIFT:	Shift amount to get the Discovery Log Page
+ *				Change Notification event supported bit
+ * @NVME_CTRL_OAES_NSAN_MASK:	Mask to get the Attached Namespace Attribute
+ *				Notices event supported bit
+ * @NVME_CTRL_OAES_FAN_MASK:	Mask to get the Firmware Activation Notices
+ *				event supported bit
+ * @NVME_CTRL_OAES_ANACN_MASK:	Mask to get the Asymmetric Namespace Access
+ *				Change Notices event supported bit
+ * @NVME_CTRL_OAES_PLEAN_MASK:	Mask to get the Predictable Latency Event
+ *				Aggregate Log Change Notices event supported bit
+ * @NVME_CTRL_OAES_LSIAN_MASK:	Mask to get the LBA Status Information Alert
+ *				Notices event supported bit
+ * @NVME_CTRL_OAES_EGEAN_MASK:	Mask to get the Endurance Group Event Aggregate
+ *				Log Page Change Notices event supported bit
+ * @NVME_CTRL_OAES_NNSS_MASK:	Mask to get the Normal NVM Subsystem Shutdown
+ *				event supported bit
+ * @NVME_CTRL_OAES_TTHR_MASK:	Mask to get the Temperature Threshold Hysteresis
+ *				Recovery event supported bit
+ * @NVME_CTRL_OAES_RGCNS_MASK:	Mask to get the Reachability Groups Change
+ *				Notices event supported bit
+ * @NVME_CTRL_OAES_ANSAN_MASK:	Mask to get the Allocated Namespace Attribute
+ *				Notices event supported bit
+ * @NVME_CTRL_OAES_RLCC_MASK:	Mask to get the Rate Limiting Configuration
+ *				Change event supported bit
+ * @NVME_CTRL_OAES_ZDCN_MASK:	Mask to get the Zone Descriptor Changed Notices
+ *				event supported bit
+ * @NVME_CTRL_OAES_DLPCN_MASK:	Mask to get the Discovery Log Page Change
+ *				Notification event supported bit
+ * @NVME_CTRL_OAES_NSAN:	If set, the controller supports the Attached
+ *				Namespace Attribute Notices event.
+ * @NVME_CTRL_OAES_FAN:		If set, the controller supports the Firmware
+ *				Activation Notices event.
+ * @NVME_CTRL_OAES_ANACN:	If set, the controller supports the Asymmetric
+ *				Namespace Access Change Notices event.
+ * @NVME_CTRL_OAES_PLEAN:	If set, the controller supports the Predictable
+ *				Latency Event Aggregate Log Change Notices
+ *				event.
+ * @NVME_CTRL_OAES_LSIAN:	If set, the controller supports the LBA Status
+ *				Information Alert Notices event.
+ * @NVME_CTRL_OAES_EGEAN:	If set, the controller supports the Endurance
+ *				Group Event Aggregate Log Page Change Notices
+ *				event.
+ * @NVME_CTRL_OAES_NNSS:	If set, the controller supports the Normal NVM
+ *				Subsystem Shutdown event.
+ * @NVME_CTRL_OAES_TTHR:	If set, the controller supports the Temperature
+ *				Threshold Hysteresis Recovery event.
+ * @NVME_CTRL_OAES_RGCNS:	If set, the controller supports the Reachability
+ *				Groups Change Notices event.
+ * @NVME_CTRL_OAES_ANSAN:	If set, the controller supports the Allocated
+ *				Namespace Attribute Notices event.
+ * @NVME_CTRL_OAES_RLCC:	If set, the controller supports the Rate
+ *				Limiting Configuration Change event.
+ * @NVME_CTRL_OAES_ZDCN:	If set, the controller supports the Zone
+ *				Descriptor Changed Notices event.
+ * @NVME_CTRL_OAES_DLPCN:	If set, the controller supports the Discovery
+ *				Log Page Change Notification event.
  */
 enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_NSAN_SHIFT	= 8,
@@ -2349,8 +2363,8 @@ enum nvme_id_ctrl_vwci {
  * @NVME_CTRL_MEC_PCIEME_SHIFT: PCIEME shift
  * @NVME_CTRL_MEC_TWPME_MASK: TWPME mask
  * @NVME_CTRL_MEC_PCIEME_MASK: PCIEME mask
- * @NVME_CTRL_MEC_TWPME: If set, then the NVM Subsystem one or more Management
- *			 Endpoints on the 2-Wire port.
+ * @NVME_CTRL_MEC_TWPME: If set, then the NVM Subsystem contains one or more
+ *			 Management Endpoints on the 2-Wire port.
  * @NVME_CTRL_MEC_PCIEME: If set, then the NVM Subsystem contains one or more
  *			  Management Endpoints on one or more PCIe ports.
  */
@@ -2543,6 +2557,7 @@ enum nvme_id_ctrl_frmw {
  * @NVME_CTRL_LPA_MLPS_MASK:	MLPS mask
  * @NVME_CTRL_LPA_DA4S_MASK:	DA4S mask
  * @NVME_CTRL_LPA_SMARTS:	If set, controller supports SMART/Health log
+ *				page on a per namespace basis.
  * @NVME_CTRL_LPA_CSES:		If Set, the controller supports the commands
  *				supported and effects log page.
  * @NVME_CTRL_LPA_LPEDS:	If set, the controller supports extended data
