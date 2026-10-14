@@ -272,7 +272,7 @@ pkg = import('pkgconfig')
 pkg.generate(libnvme,
     filebase: libnvme_api_name,
     name: libnvme_api_name,
-    version: libnvme_so_version,
+    version: meson.project_version(),
     description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
     url: 'https://github.com/linux-nvme/nvme-cli/',
     subdirs: libnvme_api_name,
