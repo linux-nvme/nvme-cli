@@ -2517,7 +2517,8 @@ int sndk_get_ca_log_page(struct libnvme_global_ctx *ctx,
 	}
 
 	if (cust_id == SNDK_CUSTOMER_ID_GN || cust_id == SNDK_CUSTOMER_ID_GD ||
-	    cust_id == SNDK_CUSTOMER_ID_BD || cust_id == SNDK_CUSTOMER_ID_0x100B) {
+	    cust_id == SNDK_CUSTOMER_ID_BD || cust_id == SNDK_CUSTOMER_ID_0x100B ||
+	    cust_id == SNDK_CUSTOMER_ID_0x100F) {
 		data = calloc(1, SNDK_BD_CA_LOG_BUF_LEN);
 		if (!data) {
 			nvme_show_error("ERROR: SNDK: calloc: %s", libnvme_strerror(errno));
