@@ -1848,6 +1848,10 @@ enum nvme_id_ctrl_cmic {
  *				Change Notices event supported bit
  * @NVME_CTRL_OAES_ANSAN_SHIFT:	Shift amount to get the Allocated Namespace
  *				Attribute Notices event supported bit
+ * @NVME_CTRL_OAES_CCRCN_SHIFT:	Shift amount to get the Cross-Controller Reset
+ *				Completed Notices event supported bit
+ * @NVME_CTRL_OAES_LHCN_SHIFT:	Shift amount to get the Lost Host Communication
+ *				Notices event supported bit
  * @NVME_CTRL_OAES_RLCC_SHIFT:	Shift amount to get the Rate Limiting
  *				Configuration Change event supported bit
  * @NVME_CTRL_OAES_ZDCN_SHIFT:	Shift amount to get the Zone Descriptor Changed
@@ -1874,6 +1878,10 @@ enum nvme_id_ctrl_cmic {
  *				Notices event supported bit
  * @NVME_CTRL_OAES_ANSAN_MASK:	Mask to get the Allocated Namespace Attribute
  *				Notices event supported bit
+ * @NVME_CTRL_OAES_CCRCN_MASK:	Mask to get the Cross-Controller Reset Completed
+ *				Notices event supported bit
+ * @NVME_CTRL_OAES_LHCN_MASK:	Mask to get the Lost Host Communication Notices
+ *				event supported bit
  * @NVME_CTRL_OAES_RLCC_MASK:	Mask to get the Rate Limiting Configuration
  *				Change event supported bit
  * @NVME_CTRL_OAES_ZDCN_MASK:	Mask to get the Zone Descriptor Changed Notices
@@ -1902,6 +1910,10 @@ enum nvme_id_ctrl_cmic {
  *				Groups Change Notices event.
  * @NVME_CTRL_OAES_ANSAN:	If set, the controller supports the Allocated
  *				Namespace Attribute Notices event.
+ * @NVME_CTRL_OAES_CCRCN:	If set, the controller supports the
+ *				Cross-Controller Reset Completed Notices event.
+ * @NVME_CTRL_OAES_LHCN:	If set, the controller supports the Lost Host
+ *				Communication Notices event.
  * @NVME_CTRL_OAES_RLCC:	If set, the controller supports the Rate
  *				Limiting Configuration Change event.
  * @NVME_CTRL_OAES_ZDCN:	If set, the controller supports the Zone
@@ -1920,6 +1932,8 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_TTHR_SHIFT	= 16,
 	NVME_CTRL_OAES_RGCNS_SHIFT	= 17,
 	NVME_CTRL_OAES_ANSAN_SHIFT	= 19,
+	NVME_CTRL_OAES_CCRCN_SHIFT	= 20,
+	NVME_CTRL_OAES_LHCN_SHIFT	= 21,
 	NVME_CTRL_OAES_RLCC_SHIFT	= 22,
 	NVME_CTRL_OAES_ZDCN_SHIFT	= 27,
 	NVME_CTRL_OAES_DLPCN_SHIFT	= 31,
@@ -1933,6 +1947,8 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_TTHR_MASK	= 0x1,
 	NVME_CTRL_OAES_RGCNS_MASK	= 0x1,
 	NVME_CTRL_OAES_ANSAN_MASK	= 0x1,
+	NVME_CTRL_OAES_CCRCN_MASK	= 0x1,
+	NVME_CTRL_OAES_LHCN_MASK	= 0x1,
 	NVME_CTRL_OAES_RLCC_MASK	= 0x1,
 	NVME_CTRL_OAES_ZDCN_MASK	= 0x1,
 	NVME_CTRL_OAES_DLPCN_MASK	= 0x1,
@@ -1946,6 +1962,8 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_TTHR		= NVME_VAL(CTRL_OAES_TTHR),
 	NVME_CTRL_OAES_RGCNS		= NVME_VAL(CTRL_OAES_RGCNS),
 	NVME_CTRL_OAES_ANSAN		= NVME_VAL(CTRL_OAES_ANSAN),
+	NVME_CTRL_OAES_CCRCN		= NVME_VAL(CTRL_OAES_CCRCN),
+	NVME_CTRL_OAES_LHCN		= NVME_VAL(CTRL_OAES_LHCN),
 	NVME_CTRL_OAES_RLCC		= NVME_VAL(CTRL_OAES_RLCC),
 	NVME_CTRL_OAES_ZDCN		= NVME_VAL(CTRL_OAES_ZDCN),
 	NVME_CTRL_OAES_DLPCN		= NVME_VAL(CTRL_OAES_DLPCN),
@@ -1961,6 +1979,8 @@ enum nvme_id_ctrl_oaes {
 #define NVME_CTRL_OAES_TTHR(oaes)	NVME_GET(oaes, CTRL_OAES_TTHR)
 #define NVME_CTRL_OAES_RGCNS(oaes)	NVME_GET(oaes, CTRL_OAES_RGCNS)
 #define NVME_CTRL_OAES_ANSAN(oaes)	NVME_GET(oaes, CTRL_OAES_ANSAN)
+#define NVME_CTRL_OAES_CCRCN(oaes)	NVME_GET(oaes, CTRL_OAES_CCRCN)
+#define NVME_CTRL_OAES_LHCN(oaes)	NVME_GET(oaes, CTRL_OAES_LHCN)
 #define NVME_CTRL_OAES_RLCC(oaes)	NVME_GET(oaes, CTRL_OAES_RLCC)
 #define NVME_CTRL_OAES_ZDCN(oaes)	NVME_GET(oaes, CTRL_OAES_ZDCN)
 #define NVME_CTRL_OAES_DLPCN(oaes)	NVME_GET(oaes, CTRL_OAES_DLPCN)
