@@ -43,7 +43,8 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	__u32 zdcn = NVME_CTRL_OAES_ZDCN(oaes);
 	__u32 rsvd23 = (oaes >> 23) & 0xf;
 	__u32 rlcc = NVME_CTRL_OAES_RLCC(oaes);
-	__u32 rsvd20 = (oaes >> 20) & 0x3;
+	__u32 lhcn = NVME_CTRL_OAES_LHCN(oaes);
+	__u32 ccrcn = NVME_CTRL_OAES_CCRCN(oaes);
 	__u32 ansan = NVME_CTRL_OAES_ANSAN(oaes);
 	__u32 rsvd18 = (oaes >> 18) & 0x1;
 	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
@@ -75,8 +76,12 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	stdout_bits_add(t, "[22:22]", rlcc,
 			"Rate Limiting Configuration Change Notices %sSupported",
 			rlcc ? "" : "Not ");
-	if (rsvd20)
-		stdout_bits_add(t, "[21:20]", rsvd20, "Reserved");
+	stdout_bits_add(t, "[21:21]", lhcn,
+			"Lost Host Communication Notices %sSupported",
+			lhcn ? "" : "Not ");
+	stdout_bits_add(t, "[20:20]", ccrcn,
+			"Cross-Controller Reset Completed Notices %sSupported",
+			ccrcn ? "" : "Not ");
 	stdout_bits_add(t, "[19:19]", ansan,
 			"Allocated Namespace Attribute Notices %sSupported",
 			ansan ? "" : "Not ");
@@ -427,8 +432,8 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 	struct shr_table *t;
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
 	__u16 rsvd = (oacs & 0xC000) >> 14;
-	__u16 rsvd12 = (oacs & 0x1000) >> 12;
 	__u16 ccfls = NVME_CTRL_OACS_CCFLS(oacs);
+	__u16 enss = NVME_CTRL_OACS_ENSS(oacs);
 	__u16 hmlms = NVME_CTRL_OACS_HMLMS(oacs);
 	__u16 lock = NVME_CTRL_OACS_CFLS(oacs);
 	__u16 glbas = NVME_CTRL_OACS_GLSS(oacs);
@@ -451,8 +456,9 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 	stdout_bits_add(t, "[13:13]", ccfls,
 			 "Ctrl-scoped Command/Feature Lockdown %sSupported",
 			 ccfls ? "" : "Not ");
-	if (rsvd12)
-		stdout_bits_add(t, "[12:12]", rsvd12, "Reserved");
+	stdout_bits_add(t, "[12:12]", enss,
+			 "Exported NVM Subsystem %sSupported",
+			 enss ? "" : "Not ");
 	stdout_bits_add(t, "[11:11]", hmlms,
 			 "Host Managed Live Migration %sSupported",
 			 hmlms ? "" : "Not ");
