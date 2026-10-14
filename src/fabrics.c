@@ -19,7 +19,6 @@
  * Fabrics specification standard.
  */
 
-#include <ccan/minmax/minmax.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -50,6 +49,7 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
 #include <ccan/str/str.h>
 #include <shared/io-util.h>
 #include <shared/net-util.h>
