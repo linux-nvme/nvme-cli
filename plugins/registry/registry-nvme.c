@@ -265,6 +265,7 @@ static struct command registry_list_cmd = {
 	.help = "List live registry entries",
 	.fn = registry_list,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command registry_retrieve_cmd = {
@@ -277,12 +278,14 @@ static struct command registry_update_cmd = {
 	.name = "update",
 	.help = "Write an attribute to a controller's entry",
 	.fn = registry_update,
+	.needs_root = true,
 };
 
 static struct command registry_delete_cmd = {
 	.name = "delete",
 	.help = "Remove a controller's registry entry",
 	.fn = registry_delete,
+	.needs_root = true,
 };
 
 static struct command *commands[] = {

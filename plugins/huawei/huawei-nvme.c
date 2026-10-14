@@ -408,6 +408,7 @@ static struct command huawei_list_cmd = {
 	.fn = huawei_list,
 	.output_formats = NORMAL | JSON,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command huawei_id_ctrl_cmd = {

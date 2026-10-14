@@ -1144,6 +1144,7 @@ static struct command list_cmd = {
 	.fn = list,
 	.output_formats = OUTPUT_FORMATS_NORMAL,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command id_ctrl_cmd = {

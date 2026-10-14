@@ -207,6 +207,7 @@ static struct command get_cloud_SSDplugin_version_cmd = {
 	.help = "Prints plug-in OCP version",
 	.fn = get_cloud_SSDplugin_version,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command get_workload_tracker_cmd = {

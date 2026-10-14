@@ -1114,6 +1114,7 @@ static struct command gen_kxchap_cmd = {
 	.help = "Generate NVMeoF KX-HMAC-CHAP host secret",
 	.fn = gen_kxchap,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command check_kxchap_cmd = {
@@ -1121,6 +1122,7 @@ static struct command check_kxchap_cmd = {
 	.help = "Validate NVMeoF KX-HMAC-CHAP host secret format or check if loaded",
 	.fn = check_kxchap,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command gen_tls_cmd = {
@@ -1128,6 +1130,7 @@ static struct command gen_tls_cmd = {
 	.help = "Generate NVMeoF TLS PSK",
 	.fn = gen_tls,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command check_tls_cmd = {
@@ -1135,6 +1138,7 @@ static struct command check_tls_cmd = {
 	.help = "Validate NVMeoF TLS PSK format or check if loaded",
 	.fn = check_tls,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command insert_tls_cmd = {
@@ -1142,6 +1146,7 @@ static struct command insert_tls_cmd = {
 	.help = "Insert NVMeoF TLS PSK into a keyring",
 	.fn = insert_tls,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command key_import_cmd = {
@@ -1149,6 +1154,7 @@ static struct command key_import_cmd = {
 	.help = "Import NVMeoF TLS PSKs and KX-HMAC-CHAP secrets into a keyring",
 	.fn = key_import,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command key_export_cmd = {
@@ -1156,6 +1162,7 @@ static struct command key_export_cmd = {
 	.help = "Export NVMeoF TLS PSKs from a keyring",
 	.fn = key_export,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command key_revoke_cmd = {
@@ -1163,6 +1170,7 @@ static struct command key_revoke_cmd = {
 	.help = "Revoke an NVMeoF TLS PSK from a keyring",
 	.fn = key_revoke,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command *commands[] = {

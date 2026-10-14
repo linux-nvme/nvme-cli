@@ -1166,6 +1166,7 @@ static struct command netapp_smdevices_cmd = {
 	.output_formats = OUTPUT_FORMATS_CUSTOM,
 	.output_format_desc = NETAPP_OUTPUT_FORMAT_DESC,
 	.device = COMMAND_DEVICE_OPTIONAL,
+	.needs_root = true,
 };
 
 static struct command netapp_ontapdevices_cmd = {
@@ -1175,6 +1176,7 @@ static struct command netapp_ontapdevices_cmd = {
 	.output_formats = OUTPUT_FORMATS_CUSTOM,
 	.output_format_desc = NETAPP_OUTPUT_FORMAT_DESC,
 	.device = COMMAND_DEVICE_OPTIONAL,
+	.needs_root = true,
 };
 
 static struct command *commands[] = {
