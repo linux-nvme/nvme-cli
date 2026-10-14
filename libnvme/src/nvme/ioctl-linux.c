@@ -234,6 +234,16 @@ __shr_public int libnvme_read_regs(struct libnvme_transport_handle *hdl,
 	if (!nvme_reg_range_valid(offset, len))
 		return -EINVAL;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		struct libnvme_privsep_reg reg = {
+			.offset = offset,
+			.len = len,
+		};
+
+		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_READ_REGS,
+					    &reg, sizeof(reg), buf, len, NULL);
+	}
+
 	ret = nvme_map_regs(hdl, false, &regs);
 	if (ret)
 		return ret;
@@ -256,6 +266,17 @@ __shr_public int libnvme_write_reg32(struct libnvme_transport_handle *hdl,
 	if (!nvme_reg_range_valid(offset, sizeof(value)))
 		return -EINVAL;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		struct libnvme_privsep_reg reg = {
+			.value = value,
+			.offset = offset,
+		};
+
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_WRITE_REG32,
+				&reg, sizeof(reg), NULL, 0, NULL);
+	}
+
 	ret = nvme_map_regs(hdl, true, &regs);
 	if (ret)
 		return ret;
@@ -275,6 +296,18 @@ __shr_public int libnvme_write_reg64(struct libnvme_transport_handle *hdl,
 	if (offset % sizeof(value) ||
 	    !nvme_reg_range_valid(offset, sizeof(value)))
 		return -EINVAL;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		struct libnvme_privsep_reg reg = {
+			.value = value,
+			.offset = offset,
+			.mmio32 = mmio32,
+		};
+
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_WRITE_REG64,
+				&reg, sizeof(reg), NULL, 0, NULL);
+	}
 
 	ret = nvme_map_regs(hdl, true, &regs);
 	if (ret)

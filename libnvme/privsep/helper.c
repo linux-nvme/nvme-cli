@@ -266,6 +266,44 @@ static int handle_device_op(__u32 op, __u32 id, const void *payload,
 	return 0;
 }
 
+static int handle_regs(__u32 op, __u32 id, const void *payload, __u32 len,
+		struct reply *reply, struct xfer *xfer)
+{
+	struct libnvme_transport_handle *hdl = lookup(id);
+	const struct libnvme_privsep_reg *reg = payload;
+
+	if (!hdl || len != sizeof(*reg))
+		return -EINVAL;
+
+	switch (op) {
+	case LIBNVME_PRIVSEP_OP_READ_REGS:
+		if (!reg->len || reg->len > LIBNVME_PRIVSEP_MAX_REGS)
+			return -EINVAL;
+		xfer->data = libnvme_alloc(reg->len);
+		if (!xfer->data)
+			return -ENOMEM;
+		reply->status = libnvme_read_regs(hdl, reg->offset,
+						  xfer->data, reg->len);
+		if (!reply->status) {
+			reply->len = reg->len;
+			reply->payload = xfer->data;
+		}
+		break;
+	case LIBNVME_PRIVSEP_OP_WRITE_REG32:
+		if (reg->value > UINT32_MAX)
+			return -EINVAL;
+		reply->status = libnvme_write_reg32(hdl, reg->offset,
+						    reg->value);
+		break;
+	case LIBNVME_PRIVSEP_OP_WRITE_REG64:
+		reply->status = libnvme_write_reg64(hdl, reg->offset,
+						    reg->value, reg->mmio32);
+		break;
+	}
+
+	return 0;
+}
+
 static void close_handles(void)
 {
 	int i;
@@ -335,6 +373,11 @@ static int serve_one(struct libnvme_global_ctx *ctx, int sock, bool *hello)
 	case LIBNVME_PRIVSEP_OP_REREAD_PARTITIONS:
 	case LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE:
 		ret = handle_device_op(op, id, payload, len, &reply);
+		break;
+	case LIBNVME_PRIVSEP_OP_READ_REGS:
+	case LIBNVME_PRIVSEP_OP_WRITE_REG32:
+	case LIBNVME_PRIVSEP_OP_WRITE_REG64:
+		ret = handle_regs(op, id, payload, len, &reply, &xfer);
 		break;
 	default:
 		ret = -EOPNOTSUPP;

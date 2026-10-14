@@ -23,6 +23,8 @@
  * - reset and rescan succeed, subsystem reset fails with EBUSY
  * - the namespace has the nsid MOCK_NSID
  * - BLKRRPART succeeds, BLKBSZSET accepts only MOCK_BLOCK_SIZE
+ * - the BAR of nvme0 is the file named by the MOCK_RESOURCE0 environment
+ *   variable
  */
 /*
  * This file defines both open() and open64(), and both fstat() and
@@ -41,6 +43,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -143,6 +146,9 @@ static int mock_open(const char *path, int flags, mode_t mode,
 	}
 	if (ctrl || ns)
 		path = "/dev/null";
+	else if (!strcmp(path, "/sys/class/nvme/nvme0/device/resource0") &&
+		 getenv("MOCK_RESOURCE0"))
+		path = getenv("MOCK_RESOURCE0");
 
 	fd = real_open(path, flags, mode);
 	if (fd >= 0 && ctrl)

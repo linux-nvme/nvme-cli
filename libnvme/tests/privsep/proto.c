@@ -246,6 +246,38 @@ static void test_device_op_len(void)
 	check(!stop(&h), "helper failed");
 }
 
+static void test_regs_len(void)
+{
+	struct libnvme_privsep_reg reg = {
+		.len = LIBNVME_PRIVSEP_MAX_REGS + 4,
+	};
+	struct libnvme_privsep_resp resp;
+	struct helper h = start();
+	__u32 id;
+
+	hello(&h);
+	id = open_test_fd(&h);
+
+	request(&h, LIBNVME_PRIVSEP_OP_READ_REGS, id, &reg, sizeof(reg));
+	check(response(&h, &resp) == -EINVAL && !resp.len,
+	      "oversized register read accepted");
+
+	reg.len = 0;
+	request(&h, LIBNVME_PRIVSEP_OP_READ_REGS, id, &reg, sizeof(reg));
+	check(response(&h, &resp) == -EINVAL, "empty register read accepted");
+
+	request(&h, LIBNVME_PRIVSEP_OP_READ_REGS, id, &reg, sizeof(reg) - 1);
+	check(response(&h, &resp) == -EINVAL,
+	      "truncated register request accepted");
+
+	reg.value = 1ULL << 32;
+	request(&h, LIBNVME_PRIVSEP_OP_WRITE_REG32, id, &reg, sizeof(reg));
+	check(response(&h, &resp) == -EINVAL,
+	      "64 bit value for a 32 bit register accepted");
+
+	check(!stop(&h), "helper failed");
+}
+
 int main(int argc, char **argv)
 {
 	check(argc == 2, "usage: %s HELPER", argv[0]);
@@ -257,6 +289,7 @@ int main(int argc, char **argv)
 	test_errors();
 	test_write_len();
 	test_device_op_len();
+	test_regs_len();
 
 	printf("privsep protocol tests passed\n");
 
