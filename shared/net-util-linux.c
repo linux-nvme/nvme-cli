@@ -28,25 +28,33 @@
 #include "net-util.h"
 
 /*
+ * The members share their storage. Read a member that was written as
+ * another only through the union: other accesses break strict aliasing.
+ */
+union sockaddr_any {
+	struct sockaddr sa;
+	struct sockaddr_in in4;
+	struct sockaddr_in6 in6;
+};
+
+/*
  * Parse @addr (IPv4, or IPv6 with an optional "%scope" suffix on a
- * link-local address) into @ss. @addr is never a hostname -- resolving one
+ * link-local address) into @sa. @addr is never a hostname -- resolving one
  * is the caller's job, done before this is reached.
  *
  * Return: 0 on success; -EINVAL if @addr is not numeric; -ENOMEM on
  * allocation failure.
  */
-static int parse_numeric_addr(const char *addr, struct sockaddr_storage *ss)
+static int parse_numeric_addr(const char *addr, union sockaddr_any *sa)
 {
-	struct sockaddr_in *addr4 = (struct sockaddr_in *)ss;
-	struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)ss;
 	char *tmp;
 	char *scope;
 	int ret = 0;
 
-	memset(ss, 0, sizeof(*ss));
+	memset(sa, 0, sizeof(*sa));
 
-	if (inet_pton(AF_INET, addr, &addr4->sin_addr) == 1) {
-		addr4->sin_family = AF_INET;
+	if (inet_pton(AF_INET, addr, &sa->in4.sin_addr) == 1) {
+		sa->in4.sin_family = AF_INET;
 		return 0;
 	}
 
@@ -58,69 +66,66 @@ static int parse_numeric_addr(const char *addr, struct sockaddr_storage *ss)
 	if (scope)
 		*scope++ = '\0';
 
-	if (inet_pton(AF_INET6, tmp, &addr6->sin6_addr) != 1) {
+	if (inet_pton(AF_INET6, tmp, &sa->in6.sin6_addr) != 1) {
 		ret = -EINVAL;
 		goto out;
 	}
 
-	addr6->sin6_family = AF_INET6;
-	if (scope && IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr))
-		addr6->sin6_scope_id = if_nametoindex(scope);
+	sa->in6.sin6_family = AF_INET6;
+	if (scope && IN6_IS_ADDR_LINKLOCAL(&sa->in6.sin6_addr))
+		sa->in6.sin6_scope_id = if_nametoindex(scope);
 
 out:
 	free(tmp);
 	return ret;
 }
 
-static bool sockaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
+/* Copy @addr, from libc, into @sa. Return false if it is not IP. */
+static bool sockaddr_copy(const struct sockaddr *addr, union sockaddr_any *sa)
 {
-	struct sockaddr_in *sockaddr_v4;
-	struct sockaddr_in6 *sockaddr_v6;
+	memset(sa, 0, sizeof(*sa));
 
-	if (addr1->sa_family == AF_INET && addr2->sa_family == AF_INET) {
-		struct sockaddr_in *sockaddr1 = (struct sockaddr_in *)addr1;
-		struct sockaddr_in *sockaddr2 = (struct sockaddr_in *)addr2;
-
-		return sockaddr1->sin_addr.s_addr == sockaddr2->sin_addr.s_addr;
-	}
-
-	if (addr1->sa_family == AF_INET6 && addr2->sa_family == AF_INET6) {
-		struct sockaddr_in6 *sockaddr1 = (struct sockaddr_in6 *)addr1;
-		struct sockaddr_in6 *sockaddr2 = (struct sockaddr_in6 *)addr2;
-
-		return !memcmp(&sockaddr1->sin6_addr, &sockaddr2->sin6_addr,
-			       sizeof(struct in6_addr));
-	}
-
-	switch (addr1->sa_family) {
+	switch (addr->sa_family) {
 	case AF_INET:
-		sockaddr_v6 = (struct sockaddr_in6 *)addr2;
-		if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
-			sockaddr_v4 = (struct sockaddr_in *)addr1;
-			return sockaddr_v4->sin_addr.s_addr ==
-				sockaddr_v6->sin6_addr.s6_addr32[3];
-		}
-		break;
-
+		memcpy(&sa->in4, addr, sizeof(sa->in4));
+		return true;
 	case AF_INET6:
-		sockaddr_v6 = (struct sockaddr_in6 *)addr1;
-		if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
-			sockaddr_v4 = (struct sockaddr_in *)addr2;
-			return sockaddr_v4->sin_addr.s_addr ==
-				sockaddr_v6->sin6_addr.s6_addr32[3];
-		}
-		break;
-
+		memcpy(&sa->in6, addr, sizeof(sa->in6));
+		return true;
 	default:
-		break;
+		return false;
 	}
+}
+
+static bool sockaddrs_eq(const union sockaddr_any *a1,
+		const union sockaddr_any *a2)
+{
+	sa_family_t f1 = a1->sa.sa_family;
+	sa_family_t f2 = a2->sa.sa_family;
+
+	if (f1 == AF_INET && f2 == AF_INET)
+		return a1->in4.sin_addr.s_addr == a2->in4.sin_addr.s_addr;
+
+	if (f1 == AF_INET6 && f2 == AF_INET6)
+		return !memcmp(&a1->in6.sin6_addr, &a2->in6.sin6_addr,
+			       sizeof(struct in6_addr));
+
+	if (f1 == AF_INET && f2 == AF_INET6)
+		return IN6_IS_ADDR_V4MAPPED(&a2->in6.sin6_addr) &&
+		       a1->in4.sin_addr.s_addr ==
+		       a2->in6.sin6_addr.s6_addr32[3];
+
+	if (f1 == AF_INET6 && f2 == AF_INET)
+		return IN6_IS_ADDR_V4MAPPED(&a1->in6.sin6_addr) &&
+		       a2->in4.sin_addr.s_addr ==
+		       a1->in6.sin6_addr.s6_addr32[3];
 
 	return false;
 }
 
 bool shr_ipaddrs_eq(const char *addr1, const char *addr2)
 {
-	struct sockaddr_storage ss1, ss2;
+	union sockaddr_any sa1, sa2;
 
 	if (addr1 == addr2)
 		return true;
@@ -128,13 +133,13 @@ bool shr_ipaddrs_eq(const char *addr1, const char *addr2)
 	if (!addr1 || !addr2)
 		return false;
 
-	if (parse_numeric_addr(addr1, &ss1))
+	if (parse_numeric_addr(addr1, &sa1))
 		return false;
 
-	if (parse_numeric_addr(addr2, &ss2))
+	if (parse_numeric_addr(addr2, &sa2))
 		return false;
 
-	return sockaddrs_eq((struct sockaddr *)&ss1, (struct sockaddr *)&ss2);
+	return sockaddrs_eq(&sa1, &sa2);
 }
 
 bool shr_ipv6_is_link_local(const char *addr)
@@ -160,19 +165,17 @@ const char *shr_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {
 	const struct ifaddrs *iface_it;
-	struct sockaddr_storage ss;
+	union sockaddr_any sa, ifaddr;
 	const char *iface_name = NULL;
 
-	if (!iface_list || !addr || parse_numeric_addr(addr, &ss))
+	if (!iface_list || !addr || parse_numeric_addr(addr, &sa))
 		return NULL;
 
 	/* Walk through the linked list */
 	for (iface_it = iface_list; iface_it; iface_it = iface_it->ifa_next) {
-		struct sockaddr *ifaddr = iface_it->ifa_addr;
-		bool is_inet = ifaddr && (ifaddr->sa_family == AF_INET ||
-					  ifaddr->sa_family == AF_INET6);
-
-		if (is_inet && sockaddrs_eq((struct sockaddr *)&ss, ifaddr)) {
+		if (iface_it->ifa_addr &&
+		    sockaddr_copy(iface_it->ifa_addr, &ifaddr) &&
+		    sockaddrs_eq(&sa, &ifaddr)) {
 			iface_name = iface_it->ifa_name;
 			break;
 		}
@@ -185,10 +188,10 @@ bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr)
 {
 	const struct ifaddrs *iface_it;
-	struct sockaddr_storage ss;
+	union sockaddr_any sa, ifaddr;
 	bool match_found = false;
 
-	if (!iface_list || !addr || parse_numeric_addr(addr, &ss))
+	if (!iface_list || !addr || parse_numeric_addr(addr, &sa))
 		return false;
 
 	/* Walk through the linked list */
@@ -202,9 +205,10 @@ bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		 * have found the primary address for that family.
 		 */
 		if (iface_it->ifa_addr &&
-		    (iface_it->ifa_addr->sa_family == ss.ss_family)) {
-			match_found = sockaddrs_eq((struct sockaddr *)&ss,
-					iface_it->ifa_addr);
+		    iface_it->ifa_addr->sa_family == sa.sa.sa_family) {
+			match_found = sockaddr_copy(iface_it->ifa_addr,
+						    &ifaddr) &&
+				      sockaddrs_eq(&sa, &ifaddr);
 			break;
 		}
 	}
@@ -240,10 +244,8 @@ int shr_route_get_egress_iface(const char *saddr, const char *daddr,
 		char *ifname, size_t iflen)
 {
 	struct sockaddr_nl nl = {.nl_family = AF_NETLINK};
-	struct sockaddr_storage ss_src, ss_dst;
 	char buf[NETLINK_BUFFER_SIZE] = {};
-	struct sockaddr_in6 *src6, *dst6;
-	struct sockaddr_in *src, *dst;
+	union sockaddr_any src, dst;
 	struct msghdr msg = {};
 	struct nlmsghdr *nlh;
 	struct rtmsg *rtmsg;
@@ -255,16 +257,16 @@ int shr_route_get_egress_iface(const char *saddr, const char *daddr,
 	if (!daddr || !ifname)
 		return -EINVAL;
 
-	ret = parse_numeric_addr(daddr, &ss_dst);
+	ret = parse_numeric_addr(daddr, &dst);
 	if (ret < 0)
 		return ret;
 
 	if (saddr) {
-		ret = parse_numeric_addr(saddr, &ss_src);
+		ret = parse_numeric_addr(saddr, &src);
 		if (ret < 0)
 			return ret;
 
-		if (ss_src.ss_family != ss_dst.ss_family)
+		if (src.sa.sa_family != dst.sa.sa_family)
 			return -EINVAL;
 	}
 
@@ -288,42 +290,34 @@ int shr_route_get_egress_iface(const char *saddr, const char *daddr,
 	nlh->nlmsg_len = NLMSG_ALIGN(nlh->nlmsg_len);
 
 	rtmsg = (struct rtmsg *)(buf + nlh->nlmsg_len);
-	rtmsg->rtm_family = ss_dst.ss_family;
-	rtmsg->rtm_dst_len = (ss_dst.ss_family == AF_INET) ? 32 : 128;
+	rtmsg->rtm_family = dst.sa.sa_family;
+	rtmsg->rtm_dst_len = (dst.sa.sa_family == AF_INET) ? 32 : 128;
 
 	nlh->nlmsg_len += sizeof(struct rtmsg);
 
 	/* append attribute RTA_DST */
-	if (ss_dst.ss_family == AF_INET) {
-		dst = (struct sockaddr_in *)&ss_dst;
-
+	if (dst.sa.sa_family == AF_INET) {
 		ret = rtattr_append(nlh, buf, sizeof(buf), RTA_DST,
-				&dst->sin_addr, sizeof(struct in_addr));
+				&dst.in4.sin_addr, sizeof(struct in_addr));
 		if (ret)
 			goto out;
 	} else {
-		dst6 = (struct sockaddr_in6 *)&ss_dst;
-
 		ret = rtattr_append(nlh, buf, sizeof(buf), RTA_DST,
-				&dst6->sin6_addr, sizeof(struct in6_addr));
+				&dst.in6.sin6_addr, sizeof(struct in6_addr));
 		if (ret)
 			goto out;
 	}
 
 	if (saddr) {
 		/* append attribute RTA_SRC */
-		if (ss_src.ss_family == AF_INET) {
-			src = (struct sockaddr_in *)&ss_src;
-
+		if (src.sa.sa_family == AF_INET) {
 			ret = rtattr_append(nlh, buf, sizeof(buf), RTA_SRC,
-				&src->sin_addr, sizeof(struct in_addr));
+				&src.in4.sin_addr, sizeof(struct in_addr));
 			if (ret)
 				goto out;
 		} else {
-			src6 = (struct sockaddr_in6 *)&ss_src;
-
 			ret = rtattr_append(nlh, buf, sizeof(buf), RTA_SRC,
-				&src6->sin6_addr, sizeof(struct in6_addr));
+				&src.in6.sin6_addr, sizeof(struct in6_addr));
 			if (ret)
 				goto out;
 		}
