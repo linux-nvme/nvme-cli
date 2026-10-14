@@ -57,6 +57,40 @@
   active, `nvmf-autoconnect.service` and the FC kickstart skip their
   connect step.
 
+* libnvme: the Identify Controller bit field constants for the OAES,
+  BPCAP, MEC, OACS, FRMW, LPA and AVSCC fields now use the field names
+  from the NVM Express Base Specification, Revision 2.4. The old names
+  are removed. Code that uses them must be changed:
+
+  - `NVME_CTRL_OAES_*`: `FA` is now `FAN`, `ANA` is `ANACN`, `PLEA`
+    is `PLEAN`, `LBAS` is `LSIAN`, `EGE` is `EGEAN`, `NS` is `NNSS`,
+    `TTH` is `TTHR`, `ZD` is `ZDCN` and `DL` is `DLPCN`. This also
+    applies to the `_SHIFT` and `_MASK` values. The accessor macros
+    `NVME_CTRL_OAES_PLEALCN()`, `NVME_CTRL_OAES_LBASIAN()`,
+    `NVME_CTRL_OAES_EGEALPCN()` and `NVME_CTRL_OAES_NNVMSS()` are now
+    `NVME_CTRL_OAES_PLEAN()`, `NVME_CTRL_OAES_LSIAN()`,
+    `NVME_CTRL_OAES_EGEAN()` and `NVME_CTRL_OAES_NNSS()`.
+  - `NVME_CTRL_BACAP_*` is now `NVME_CTRL_BPCAP_*`.
+  - `NVME_CTRL_MEC_SMBUSME` is now `NVME_CTRL_MEC_TWPME`. The spec
+    renamed the bit to 2-Wire Port Management Endpoint.
+  - `NVME_CTRL_OACS_*`: `SECURITY` is now `SSRS`, `FORMAT` is
+    `FNVMS`, `FW` is `FWDS`, `NS_MGMT` is `NMS`, `SELF_TEST` is
+    `DSTS`, `DIRECTIVES` is `DIRS`, `NVME_MI` is `NSRS`, `VIRT_MGMT`
+    is `VMS`, `DBBUF_CFG` is `DBCS`, `LBA_STATUS` is `GLSS`,
+    `CMD_FEAT_LD` is `CFLS`, `HMLM` is `HMLMS` and
+    `CTRL_SCOPED_CMD_FEAT_LD` is `CCFLS`. The accessor macros
+    `NVME_CTRL_OACS_NMS_M()` and `NVME_CTRL_OACS_VMS_M()` are now
+    `NVME_CTRL_OACS_NMS()` and `NVME_CTRL_OACS_VMS()`.
+  - `NVME_CTRL_FRMW_*`: `1ST_RO` is now `FFSRO`, `NR_SLOTS` is `NOFS`,
+    `FW_ACT_NO_RESET` is `FAWR` and `MP_UP_DETECTION` is `SMUD`.
+    `NVME_CTRL_FRMW_NOFS` also covers bit 3 of the Number Of Firmware
+    Slots field, which `NVME_CTRL_FRMW_NR_SLOTS` missed.
+  - `NVME_CTRL_LPA_*`: `SMART_PER_NS` is now `SMARTS`, `CMD_EFFECTS`
+    is `CSES`, `EXTENDED` is `LPEDS`, `TELEMETRY` is `TS`,
+    `PERSETENT_EVENT` is `PES`, `LI0_LI5_LI12_LI13` is `MLPS` and
+    `DA4_TELEMETRY` is `DA4S`.
+  - `NVME_CTRL_AVSCC_AVS` is now `NVME_CTRL_AVSCC_VSCF`.
+
 ### New: FreeBSD support
 
 * nvme-cli and libnvme now build and run on FreeBSD. NVMe PCIe devices
