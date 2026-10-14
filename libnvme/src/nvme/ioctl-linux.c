@@ -32,6 +32,7 @@
 #include "cleanup.h"
 #include "private.h"
 #include "loopback.h"
+#include "privsep/privsep-proto.h"
 
 static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 {
@@ -51,6 +52,11 @@ __shr_public int libnvme_reset_subsystem(
 {
 	int ret;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_RESET_SUBSYSTEM,
+				NULL, 0, NULL, 0, NULL);
+
 	ret = nvme_verify_chr(hdl);
 	if (ret)
 		return ret;
@@ -64,6 +70,10 @@ __shr_public int libnvme_reset_subsystem(
 __shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	int ret;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_RESET_CTRL,
+					    NULL, 0, NULL, 0, NULL);
 
 	ret = nvme_verify_chr(hdl);
 	if (ret)
@@ -79,6 +89,10 @@ __shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_RESCAN_NS,
+					    NULL, 0, NULL, 0, NULL);
+
 	ret = nvme_verify_chr(hdl);
 	if (ret)
 		return ret;
@@ -92,7 +106,17 @@ __shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 __shr_public int libnvme_get_nsid(
 		struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
+	__u64 result;
 	__u32 tmp;
+	int ret;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		ret = __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_GET_NSID,
+					   NULL, 0, NULL, 0, &result);
+		if (!ret)
+			*nsid = result;
+		return ret;
+	}
 
 	errno = 0;
 	tmp = ioctl(hdl->fd, LIBNVME_IOCTL_ID);
@@ -106,8 +130,16 @@ __shr_public int libnvme_get_nsid(
 __shr_public int libnvme_update_block_size(
 		struct libnvme_transport_handle *hdl, int block_size)
 {
+	struct libnvme_privsep_block_size bs = {
+		.block_size = block_size,
+	};
 	int ret;
 	libnvme_fd_t fd = libnvme_transport_handle_get_fd(hdl);
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE,
+				&bs, sizeof(bs), NULL, 0, NULL);
 
 	ret = ioctl(fd, BLKBSZSET, &block_size);
 	if (ret < 0)
@@ -124,6 +156,11 @@ __shr_public int libnvme_reread_partitions(struct libnvme_transport_handle *hdl)
 {
 	if (!libnvme_transport_handle_is_ns(hdl))
 		return -EINVAL;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_REREAD_PARTITIONS,
+				NULL, 0, NULL, 0, NULL);
 
 	if (ioctl(hdl->fd, BLKRRPART) < 0)
 		return -errno;

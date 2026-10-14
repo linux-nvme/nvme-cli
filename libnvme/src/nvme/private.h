@@ -468,6 +468,9 @@ int __libnvme_privsep_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 int __libnvme_privsep_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
+int __libnvme_privsep_op(struct libnvme_transport_handle *hdl, __u32 op,
+		const void *arg, size_t arg_len, void *out, size_t out_len,
+		__u64 *result);
 
 #ifdef CONFIG_MI
 struct nvme_mi_msg_hdr;

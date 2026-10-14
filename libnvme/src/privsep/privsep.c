@@ -337,3 +337,30 @@ int __libnvme_privsep_io_passthru(struct libnvme_transport_handle *hdl,
 {
 	return privsep_passthru(hdl, LIBNVME_PRIVSEP_OP_IO, cmd);
 }
+
+int __libnvme_privsep_op(struct libnvme_transport_handle *hdl, __u32 op,
+		const void *arg, size_t arg_len, void *out, size_t out_len,
+		__u64 *result)
+{
+	struct libnvme_privsep *ps = hdl->privsep;
+	struct privsep_reply reply;
+	int ret;
+
+	ret = privsep_call(ps, op, hdl->privsep_id, arg, arg_len, NULL, 0,
+			   NULL, 0, &reply);
+	if (ret)
+		return ret;
+
+	/* The output is only returned on success. */
+	if (reply.status)
+		out_len = 0;
+	ret = privsep_check_len(ps, &reply, out_len);
+	if (!ret)
+		ret = privsep_recv_payload(ps, out, out_len);
+	if (ret)
+		return ret;
+
+	if (result)
+		*result = reply.result;
+	return reply.status;
+}

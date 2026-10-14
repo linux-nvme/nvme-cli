@@ -174,37 +174,75 @@ static void test_errors(void)
 	check(!stop(&h), "helper failed after error responses");
 }
 
-static void test_write_len(void)
+/* Return: the handle id. */
+static __u32 open_test_fd(struct helper *h)
 {
 	struct libnvme_privsep_open open_req = {
 		.flags = O_RDONLY,
 	};
+	struct libnvme_privsep_open_resp open_resp;
+	struct libnvme_privsep_resp resp;
+	char payload[sizeof(open_req) + sizeof("NVME_TEST_FD")];
+
+	memcpy(payload, &open_req, sizeof(open_req));
+	memcpy(payload + sizeof(open_req), "NVME_TEST_FD",
+	       sizeof("NVME_TEST_FD"));
+	request(h, LIBNVME_PRIVSEP_OP_OPEN, 0, payload, sizeof(payload));
+	check(!response(h, &resp) && resp.result, "open failed");
+	check(resp.len == sizeof(open_resp), "open response length");
+	check(!libnvme_privsep_recv(h->sock, &open_resp, resp.len),
+	      "open payload");
+
+	return resp.result;
+}
+
+static void test_write_len(void)
+{
 	struct libnvme_privsep_cmd pcmd = {
 		.opcode = 0x09,
 		.data_len = 32,
 	};
 	struct libnvme_privsep_resp resp;
 	struct helper h = start();
-	char payload[sizeof(open_req) + sizeof("NVME_TEST_FD")];
 	char data[sizeof(pcmd) + 16];
 	__u32 id;
 
 	hello(&h);
-	memcpy(payload, &open_req, sizeof(open_req));
-	memcpy(payload + sizeof(open_req), "NVME_TEST_FD",
-	       sizeof("NVME_TEST_FD"));
-	request(&h, LIBNVME_PRIVSEP_OP_OPEN, 0, payload, sizeof(payload));
-	check(!response(&h, &resp) && resp.result, "open failed");
-	id = resp.result;
-	check(resp.len == sizeof(struct libnvme_privsep_open_resp),
-	      "open response length");
-	check(!libnvme_privsep_recv(h.sock, data, resp.len),
-	      "open payload");
+	id = open_test_fd(&h);
 
 	/* A write command with less data than data_len. */
 	memcpy(data, &pcmd, sizeof(pcmd));
 	request(&h, LIBNVME_PRIVSEP_OP_ADMIN, id, data, sizeof(data));
 	check(response(&h, &resp) == -EINVAL, "short write data accepted");
+	check(!stop(&h), "helper failed");
+}
+
+static void test_device_op_len(void)
+{
+	struct libnvme_privsep_block_size bs = {
+		.block_size = 4096,
+	};
+	struct libnvme_privsep_resp resp;
+	struct helper h = start();
+	__u32 id;
+
+	hello(&h);
+
+	request(&h, LIBNVME_PRIVSEP_OP_RESET_CTRL, 1, NULL, 0);
+	check(response(&h, &resp) == -EINVAL, "reset of an unknown handle");
+
+	id = open_test_fd(&h);
+	request(&h, LIBNVME_PRIVSEP_OP_RESET_CTRL, id, &bs, sizeof(bs));
+	check(response(&h, &resp) == -EINVAL, "reset with payload accepted");
+
+	request(&h, LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE, id, &bs,
+		sizeof(bs) - 1);
+	check(response(&h, &resp) == -EINVAL,
+	      "truncated block size accepted");
+
+	request(&h, LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE, id, NULL, 0);
+	check(response(&h, &resp) == -EINVAL, "missing block size accepted");
+
 	check(!stop(&h), "helper failed");
 }
 
@@ -218,6 +256,7 @@ int main(int argc, char **argv)
 	test_oversized();
 	test_errors();
 	test_write_len();
+	test_device_op_len();
 
 	printf("privsep protocol tests passed\n");
 
