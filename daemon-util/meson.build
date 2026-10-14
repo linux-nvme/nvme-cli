@@ -12,16 +12,22 @@ daemon_util_lib = static_library(
     'daemon-util',
     files(
         'log.c',
+        'resolve.c',
         'signals.c',
     ),
     dependencies: [
         ccan_dep,
         libsystemd_dep,
+        threads_dep,
     ],
 )
 
 daemon_util_dep = declare_dependency(
     link_with: daemon_util_lib,
     include_directories: '..',
-    dependencies: libsystemd_dep,
+    dependencies: [libsystemd_dep, threads_dep],
 )
+
+if get_option('tests')
+    subdir('tests')
+endif
