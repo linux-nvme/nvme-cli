@@ -34,18 +34,35 @@ int inventory_load_nbft(struct inventory *inv,
 			const struct discoverd_ctx *dctx, char *path);
 
 /*
+ * Called from the event loop when the name lookup of a configured traddr
+ * ends. @added is true if the lookup added a connection to the config sets.
+ */
+typedef void (*inventory_lookup_callback)(bool added, void *user_data);
+
+void inventory_set_lookup_callback(struct inventory *inv,
+				   inventory_lookup_callback cb,
+				   void *user_data);
+
+/*
  * Rebuild the config DC/IOC sets from the resolved fabrics configuration
  * (libnvmf_config_read()). Call at startup and again on every SIGHUP —
- * this always fully replaces the previous sets, never merges. A hostname
- * traddr is resolved here, blocking, one connection at a time — this is a
- * rare, small, startup/SIGHUP-only path, not the daemon's steady-state
- * event loop, so no worker thread is warranted. A connection whose traddr
- * cannot be resolved is skipped and logged. A candidate that names no host
- * gets @dctx's default identity. @dctx->fabrics_cfg may be NULL (equivalent
- * to an empty configuration).
+ * this always fully replaces the previous sets, never merges. A numeric
+ * traddr is added at once. A host name is resolved through
+ * @dctx->resolver, without blocking: the connection is added when its
+ * lookup ends, and a failed lookup is tried again later. Loading the
+ * configuration again cancels the lookups of the previous one. A
+ * candidate that names no host gets @dctx's default identity.
+ * @dctx->fabrics_cfg may be NULL (equivalent to an empty configuration).
  */
 void inventory_load_config(struct inventory *inv,
 			   const struct discoverd_ctx *dctx);
+
+/*
+ * True until the first lookup of each host name of the last
+ * inventory_load_config() has ended. Until then, the config sets are not
+ * complete.
+ */
+bool inventory_config_pending(const struct inventory *inv);
 
 /*
  * The libnvmf_config_conn that produced @t via inventory_load_config(), or
