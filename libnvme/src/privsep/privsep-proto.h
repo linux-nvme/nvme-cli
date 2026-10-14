@@ -33,6 +33,10 @@
  * kernel, the opcode bit 0 selects the data direction: host to controller
  * commands send the data and metadata buffers with the request, all other
  * commands get them back with the response.
+ *
+ * The other per-handle ops mirror the libnvme function of the same name.
+ * The helper calls the function on its handle and returns the return
+ * value as status.
  */
 
 #define LIBNVME_PRIVSEP_VERSION		1
@@ -50,6 +54,12 @@ enum libnvme_privsep_op {
 	LIBNVME_PRIVSEP_OP_CLOSE	= 3,
 	LIBNVME_PRIVSEP_OP_ADMIN	= 4,
 	LIBNVME_PRIVSEP_OP_IO		= 5,
+	LIBNVME_PRIVSEP_OP_RESET_CTRL	= 6,
+	LIBNVME_PRIVSEP_OP_RESET_SUBSYSTEM = 7,
+	LIBNVME_PRIVSEP_OP_RESCAN_NS	= 8,
+	LIBNVME_PRIVSEP_OP_GET_NSID	= 9,	/* result: nsid */
+	LIBNVME_PRIVSEP_OP_REREAD_PARTITIONS = 10,
+	LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE = 11,
 };
 
 struct libnvme_privsep_req {
@@ -74,6 +84,12 @@ struct libnvme_privsep_open {
 /* OPEN response payload. */
 struct libnvme_privsep_open_resp {
 	__u32 mode;	/* S_IFCHR, S_IFBLK or 0 */
+	__u32 rsvd;
+};
+
+/* UPDATE_BLOCK_SIZE payload. */
+struct libnvme_privsep_block_size {
+	__s32 block_size;
 	__u32 rsvd;
 };
 

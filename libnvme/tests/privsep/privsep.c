@@ -218,7 +218,40 @@ static void test_no_fd(struct libnvme_transport_handle *hdl)
 {
 	check(libnvme_transport_handle_get_fd(hdl) == LIBNVME_INVALID_FD,
 	      "privsep handle exposes a file descriptor");
-	check(libnvme_reset_ctrl(hdl) < 0, "reset on a privsep handle");
+}
+
+static void test_device_ops(void)
+{
+	struct libnvme_transport_handle *c, *n;
+	__u32 nsid = 0;
+
+	check(!libnvme_open(ctx, "nvme0", O_RDONLY, &c), "open nvme0");
+	check(!libnvme_open(ctx, "/dev/nvme0n1", O_RDONLY, &n),
+	      "open nvme0n1");
+	check(libnvme_transport_handle_is_ctrl(c), "nvme0 is no controller");
+	check(libnvme_transport_handle_is_ns(n), "nvme0n1 is no namespace");
+
+	check(!libnvme_reset_ctrl(c), "reset failed");
+	check(libnvme_reset_ctrl(n) == -EINVAL, "reset on a namespace");
+	check(libnvme_reset_subsystem(c) == -EBUSY,
+	      "subsystem reset error not returned");
+	check(!libnvme_rescan_ns(c), "rescan failed");
+
+	check(!libnvme_get_nsid(n, &nsid), "get nsid failed");
+	check(nsid == MOCK_NSID, "nsid %u", nsid);
+	check(libnvme_get_nsid(c, &nsid) == -ENOTTY,
+	      "nsid of a controller");
+
+	check(!libnvme_reread_partitions(n), "reread partitions failed");
+	check(libnvme_reread_partitions(c) == -EINVAL,
+	      "reread partitions on a controller");
+	check(!libnvme_update_block_size(n, MOCK_BLOCK_SIZE),
+	      "update block size failed");
+	check(libnvme_update_block_size(n, 512) == -EINVAL,
+	      "invalid block size accepted");
+
+	libnvme_close(c);
+	libnvme_close(n);
 }
 
 static void test_dry_run(struct libnvme_transport_handle *hdl)
@@ -300,6 +333,7 @@ int main(int argc, char **argv)
 	libnvme_close(hdl);
 
 	test_handles();
+	test_device_ops();
 	test_retry_broken();
 
 	libnvme_free_global_ctx(ctx);

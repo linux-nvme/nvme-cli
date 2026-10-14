@@ -226,6 +226,46 @@ static int handle_passthru(__u32 op, __u32 id, void *payload, __u32 len,
 	return 0;
 }
 
+static int handle_device_op(__u32 op, __u32 id, const void *payload,
+		__u32 len, struct reply *reply)
+{
+	struct libnvme_transport_handle *hdl = lookup(id);
+	const struct libnvme_privsep_block_size *bs = payload;
+	__u32 nsid;
+
+	if (!hdl)
+		return -EINVAL;
+	if (len != (op == LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE ?
+		    sizeof(*bs) : 0))
+		return -EINVAL;
+
+	switch (op) {
+	case LIBNVME_PRIVSEP_OP_RESET_CTRL:
+		reply->status = libnvme_reset_ctrl(hdl);
+		break;
+	case LIBNVME_PRIVSEP_OP_RESET_SUBSYSTEM:
+		reply->status = libnvme_reset_subsystem(hdl);
+		break;
+	case LIBNVME_PRIVSEP_OP_RESCAN_NS:
+		reply->status = libnvme_rescan_ns(hdl);
+		break;
+	case LIBNVME_PRIVSEP_OP_GET_NSID:
+		reply->status = libnvme_get_nsid(hdl, &nsid);
+		if (!reply->status)
+			reply->result = nsid;
+		break;
+	case LIBNVME_PRIVSEP_OP_REREAD_PARTITIONS:
+		reply->status = libnvme_reread_partitions(hdl);
+		break;
+	case LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE:
+		reply->status = libnvme_update_block_size(hdl,
+							  bs->block_size);
+		break;
+	}
+
+	return 0;
+}
+
 static void close_handles(void)
 {
 	int i;
@@ -287,6 +327,14 @@ static int serve_one(struct libnvme_global_ctx *ctx, int sock, bool *hello)
 	case LIBNVME_PRIVSEP_OP_ADMIN:
 	case LIBNVME_PRIVSEP_OP_IO:
 		ret = handle_passthru(op, id, payload, len, &reply, &xfer);
+		break;
+	case LIBNVME_PRIVSEP_OP_RESET_CTRL:
+	case LIBNVME_PRIVSEP_OP_RESET_SUBSYSTEM:
+	case LIBNVME_PRIVSEP_OP_RESCAN_NS:
+	case LIBNVME_PRIVSEP_OP_GET_NSID:
+	case LIBNVME_PRIVSEP_OP_REREAD_PARTITIONS:
+	case LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE:
+		ret = handle_device_op(op, id, payload, len, &reply);
 		break;
 	default:
 		ret = -EOPNOTSUPP;

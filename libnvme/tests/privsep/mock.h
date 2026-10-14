@@ -6,3 +6,5 @@
 #define MOCK_OPC_ERROR	0xc2
 #define MOCK_STATUS	0x4002
 #define MOCK_OPC_EXIT	0xc6
+#define MOCK_NSID	7
+#define MOCK_BLOCK_SIZE	4096
