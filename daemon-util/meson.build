@@ -14,6 +14,7 @@ daemon_util_lib = static_library(
         'log.c',
         'resolve.c',
         'signals.c',
+        'work.c',
     ),
     dependencies: [
         ccan_dep,
