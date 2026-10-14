@@ -581,6 +581,7 @@ struct libnvme_ns_attrs {
 	uint8_t *eui64;
 	uint8_t *nguid;
 	unsigned char *uuid;
+	char *wwid;
 	long command_retry_count;
 	long command_error_count;
 	long io_requeue_no_usable_path_count;
@@ -615,7 +616,30 @@ void libnvme_ns_attrs_free(
 	ATTR_FREE(attrs->eui64);
 	ATTR_FREE(attrs->nguid);
 	ATTR_FREE(attrs->uuid);
+	ATTR_FREE(attrs->wwid);
 	free(attrs);
+}
+
+__shr_public int libnvme_ns_get_wwid(
+		const struct libnvme_ns *p,
+		const char **val,
+		const char *dflt)
+{
+	struct libnvme_ns *c = (struct libnvme_ns *)p;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->wwid))) {
+		c->attrs->wwid = libnvme_get_ns_attr(c, "wwid");
+		if (!c->attrs->wwid)
+			c->attrs->wwid = NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(c->attrs->wwid))
+		return -ENOENT;
+
+	*val = c->attrs->wwid;
+	return 0;
 }
 
 __shr_public int libnvme_ns_get_command_retry_count(

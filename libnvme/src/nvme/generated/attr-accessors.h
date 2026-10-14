@@ -590,6 +590,20 @@ int libnvme_ns_get_uuid(
 		const unsigned char *dflt);
 
 /**
+ * libnvme_ns_get_wwid() - Get wwid.
+ * @p: The &struct libnvme_ns instance to query.
+ * @wwid: Where to store the value on success.
+ * @dflt: Value to store in @wwid on failure.
+ *
+ * Return: 0 on success, -ENOENT if the attribute does not
+ *	   exist, or a negative errno on failure.
+ */
+int libnvme_ns_get_wwid(
+		const struct libnvme_ns *p,
+		const char **wwid,
+		const char *dflt);
+
+/**
  * libnvme_ns_get_command_retry_count() - Get command_retry_count.
  * @p: The &struct libnvme_ns instance to query.
  * @command_retry_count: Where to store the value on success.

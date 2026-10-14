@@ -574,6 +574,19 @@
 
 		return PyLong_FromLong(val);
 	}
+	static const char *libnvme_ns_wwid_get(const struct libnvme_ns *p)
+	{
+		const char *val;
+		int ret = libnvme_ns_get_wwid(p, &val, NULL);
+
+		if (ret == 0)
+			return val;
+		if (ret == -ENOENT)
+			return NULL;
+
+		raise_nvme(NvmeError, ret);
+		return NULL;
+	}
 	static PyObject *libnvme_ns_command_retry_count_get(const struct libnvme_ns *p)
 	{
 		long val;
@@ -656,6 +669,10 @@
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
+%exception libnvme_ns::wwid {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
 %exception libnvme_ns::command_retry_count {
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
@@ -686,6 +703,8 @@
 	PyObject * meta_size;
 	%immutable csi;
 	PyObject * csi;
+	%immutable wwid;
+	const char * wwid;
 	%immutable command_retry_count;
 	PyObject * command_retry_count;
 	%immutable command_error_count;
