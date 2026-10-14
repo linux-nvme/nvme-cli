@@ -74,6 +74,26 @@
 * New option `nvme connect --discovery`. It tells the kernel that the
   controller is a Discovery Controller, also when it has a unique NQN.
 
+* `nvme connect`: When connecting to a target over TCP, automatically
+  calculates `--nr-io-queues` if the option is not explicitly specified. The
+  number of I/O queues is derived using the following formula:
+
+    ```c
+    if (num_hw_queues > 1)
+      nr_io_queues = min(num_online_cpus, num_hw_queues);
+    ```
+  Here, `num_hw_queues` represents the number of hardware TX/RX queue
+  pair,  and  combined queues currently configured on the NIC, and
+  `num_online_cpus` represents the number of online CPUs. The number of
+  I/O queues is set to the minimum of these two values when `num_hw_queues`
+  is greater than 1. Otherwise, the default number of I/O queues is used.
+
+  If the user explicitly specifies `--nr-io-queues`, the specified value takes
+  precedence over the automatic calculation.
+
+  This behavior also applies when connecting to a TCP target using a config.INI
+  file.
+
 * `nvme sed revert` now prints an extra `revert LSP` error when the
   kernel cannot revert the Locking SP. `nvme sed password` checks at
   run time, not at build time, whether the kernel can set the SID
