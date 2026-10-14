@@ -303,7 +303,7 @@ with `meson install --tags`.
 
 | Tag | Files |
 |-----|-------|
-| `runtime` | `nvme`, the libnvme shared library, shell completions |
+| `runtime` | `nvme`, the libnvme shared library, `nvme-privsep-helper`, shell completions |
 | `devel` | libnvme headers, `libnvme3.so` link, pkg-config file |
 | `python-runtime` | libnvme Python bindings |
 | `man` | man pages |

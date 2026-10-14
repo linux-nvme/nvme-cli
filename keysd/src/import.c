@@ -285,7 +285,7 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 	const char *source, *src, *name, *hostnqn, *subsysnqn;
 
 	params = libnvmf_config_conn_get_params(conn);
-	src = param(params, "key-source");
+	src = param(params, "tls-key-source");
 	if (!src || streq(src, "inline"))
 		return;
 
@@ -300,14 +300,14 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 		return;
 
 	if (!streq(src, "systemd-creds")) {
-		log_warn("%s: %s: key-source '%s' is not supported, skipped",
+		log_warn("%s: %s: tls-key-source '%s' is not supported, skipped",
 			 source, subsysnqn, src);
 		return;
 	}
 
 	name = param(params, "tls-key");
 	if (!name) {
-		log_warn("%s: %s: key-source is systemd-creds but tls-key is not set, skipped",
+		log_warn("%s: %s: tls-key-source is systemd-creds but tls-key is not set, skipped",
 			 source, subsysnqn);
 		return;
 	}
@@ -316,13 +316,13 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 		   name);
 }
 
-static void find_key_source(const struct libnvmf_config_conn *conn,
+static void find_tls_key_source(const struct libnvmf_config_conn *conn,
 			    void *user_data)
 {
 	const char *src;
 	bool *found = user_data;
 
-	src = param(libnvmf_config_conn_get_params(conn), "key-source");
+	src = param(libnvmf_config_conn_get_params(conn), "tls-key-source");
 	if (src && !streq(src, "inline"))
 		*found = true;
 }
@@ -340,7 +340,7 @@ bool import_needed(struct libnvme_global_ctx *ctx, const char *fabrics_conf)
 		return false;
 	}
 
-	libnvmf_config_conn_for_each(cfg, find_key_source, &found);
+	libnvmf_config_conn_for_each(cfg, find_tls_key_source, &found);
 	libnvmf_config_free(cfg);
 
 	return found;

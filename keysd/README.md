@@ -2,7 +2,7 @@
 
 A daemon that puts NVMe/TCP TLS pre-shared keys (PSKs) into the kernel's `.nvme` keyring before a connection needs them. The kernel finds the key there when `nvme connect` or `nvme-discoverd` connects with TLS.
 
-> Technology preview. The `nvme-keysd` meson option defaults to `disabled`. Keys come from systemd credentials only (`key-source = systemd-creds`).
+> Technology preview. The `nvme-keysd` meson option defaults to `disabled`. Keys come from systemd credentials only (`tls-key-source = systemd-creds`).
 
 ## Design
 

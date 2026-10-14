@@ -23,7 +23,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
+from nvme_mock_ipc import (NIC_QUEUES_FMT, MockIPCServer, make_mock_env,
+                           resolve_mock_lib_path, run_nvme)
 
 # Capture the nvme binary path and preload library path from argv before
 # unittest.main() strips them.
@@ -105,6 +106,14 @@ class FabricsMockIPCServer(MockIPCServer):
         self.sysfs_dir = None
         self.controllers = {}        # maps instance (int) -> dict of connect options
         self.log_page_fetch_count = {}  # maps subsysnqn (str) -> completed-fetch count
+        # Host network and CPU setup for the default --nr-io-queues. An
+        # unknown daddr has no route and an unknown ifname has no ethtool
+        # channel support, so by default nvme-cli sets no nr_io_queues.
+        self.egress_ifaces = {}      # maps daddr (str) -> egress ifname
+        self.nic_queues = {}         # maps ifname -> (combined, tx, rx)
+        self.nprocs = None           # online CPUs, None for the real count
+        self.route_lookups = []      # (daddr, saddr) of every route lookup
+        self.nic_queue_queries = []  # ifname of every h/w queue query
 
     def handle_write(self, conn, payload):
         """A write() on /dev/nvme-fabrics: fabrics connect args."""
@@ -149,12 +158,16 @@ class FabricsMockIPCServer(MockIPCServer):
             'traddr': traddr,
             'trsvcid': trsvcid,
             'keep_alive_tmo': opts.get('keep_alive_tmo'),
+            'nr_io_queues': opts.get('nr_io_queues'),
             'discovery': 'discovery' in flags,
+            'dhchap_secret': opts.get('dhchap_secret'),
+            'dhchap_ctrl_secret': opts.get('dhchap_ctrl_secret'),
         }
 
         if self.sysfs_dir:
             self._write_sysfs_ctrl(inst, subsysnqn, transport, traddr, trsvcid,
                                     host_traddr, host_iface, hostnqn, hostid)
+            self._write_sysfs_secrets(inst, self.controllers[inst])
 
         resp_payload = f"instance={inst}\n".encode('utf-8')
         self.send_response(conn, 0, payload=resp_payload)
@@ -186,6 +199,34 @@ class FabricsMockIPCServer(MockIPCServer):
         sub_path.mkdir(parents=True, exist_ok=True)
         (sub_path / "subsysnqn").write_text(f"{subsysnqn}\n")
         (sub_path / f"nvme{inst}").mkdir(exist_ok=True)
+
+    def _write_sysfs_secrets(self, inst, ctrl):
+        # Like the kernel: the secret, or "none" when the connect had none.
+        ctrl_path = Path(self.sysfs_dir) / f"sys/class/nvme/nvme{inst}"
+        for attr in ('dhchap_secret', 'dhchap_ctrl_secret'):
+            (ctrl_path / attr).write_text(f"{ctrl[attr] or 'none'}\n")
+
+    def handle_route(self, conn, daddr, saddr):
+        self.route_lookups.append((daddr, saddr))
+        ifname = self.egress_ifaces.get(daddr)
+        if ifname is None:
+            super().handle_route(conn, daddr, saddr)
+            return
+        self.send_response(conn, 0, payload=ifname.encode('utf-8'))
+
+    def handle_nic_queues(self, conn, ifname):
+        self.nic_queue_queries.append(ifname)
+        queues = self.nic_queues.get(ifname)
+        if queues is None:
+            super().handle_nic_queues(conn, ifname)
+            return
+        self.send_response(conn, 0, payload=struct.pack(NIC_QUEUES_FMT, *queues))
+
+    def handle_nprocs(self, conn):
+        if self.nprocs is None:
+            super().handle_nprocs(conn)
+            return
+        self.send_response(conn, 0, result=self.nprocs)
 
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                       cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
@@ -1012,6 +1053,217 @@ class FabricsMockCLITest(unittest.TestCase):
                              "the ring; the visited-set should have "
                              "short-circuited every back-reference")
 
+    # ------------------------------------------------------------------ #
+    # Default --nr-io-queues                                             #
+    # ------------------------------------------------------------------ #
+
+    _NR_IO_QUEUES_NQN = "nqn.2014-08.org.nvmexpress:nr-io-queues-subsys"
+
+    def _connect_nr_io_queues(self, traddr='192.168.30.10', *extra,
+                              transport='tcp'):
+        """Connects to @traddr. Returns the nr_io_queues connect option,
+        or None if nvme-cli did not set one."""
+        self._run('connect', '-t', transport, '-a', traddr, '-s', '4420',
+                  '-n', self._NR_IO_QUEUES_NQN, *extra)
+        return self.server.controllers[0]['nr_io_queues']
+
+    def _setup_nic(self, traddr='192.168.30.10', ifname='eth0',
+                   queues=(8, 0, 0), nprocs=4):
+        self.server.egress_ifaces[traddr] = ifname
+        self.server.nic_queues[ifname] = queues
+        self.server.nprocs = nprocs
+
+    def test_connect_nr_io_queues_limited_by_cpus(self):
+        """More NIC h/w queues than CPUs: use one I/O queue per CPU."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertEqual(self._connect_nr_io_queues(), '4')
+        self.assertEqual(self.server.route_lookups, [('192.168.30.10', '')])
+        self.assertEqual(self.server.nic_queue_queries, ['eth0'])
+
+    def test_connect_nr_io_queues_limited_by_hw_queues(self):
+        """Fewer NIC h/w queues than CPUs: use one I/O queue per h/w
+        queue. Count combined queues plus the paired tx/rx ones."""
+        self._setup_nic(queues=(2, 3, 1), nprocs=16)
+        self.assertEqual(self._connect_nr_io_queues(), '3')
+
+    def test_connect_nr_io_queues_single_hw_queue(self):
+        """A NIC with a single h/w queue: let the kernel decide."""
+        self._setup_nic(queues=(1, 0, 0), nprocs=4)
+        self.assertIsNone(self._connect_nr_io_queues())
+
+    def test_connect_nr_io_queues_no_route(self):
+        """No route to the target: let the kernel decide."""
+        self.server.nprocs = 4
+        self.assertIsNone(self._connect_nr_io_queues())
+        self.assertEqual(self.server.route_lookups, [('192.168.30.10', '')])
+        self.assertEqual(self.server.nic_queue_queries, [])
+
+    def test_connect_nr_io_queues_no_ethtool_channels(self):
+        """The NIC does not report its h/w queues: let the kernel decide."""
+        self._setup_nic(nprocs=4)
+        del self.server.nic_queues['eth0']
+        self.assertIsNone(self._connect_nr_io_queues())
+        self.assertEqual(self.server.nic_queue_queries, ['eth0'])
+
+    def test_connect_nr_io_queues_ipv6(self):
+        """The route lookup works for an IPv6 target and source too."""
+        self._setup_nic(traddr='fd00::10', queues=(6, 0, 0), nprocs=8)
+        self.assertEqual(
+            self._connect_nr_io_queues('fd00::10', '-w', 'fd00::1'), '6')
+        self.assertEqual(self.server.route_lookups, [('fd00::10', 'fd00::1')])
+
+    def test_connect_nr_io_queues_host_traddr(self):
+        """--host-traddr is the source address of the route lookup."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertEqual(
+            self._connect_nr_io_queues('192.168.30.10', '-w', '192.168.30.1'),
+            '4')
+        self.assertEqual(self.server.route_lookups,
+                         [('192.168.30.10', '192.168.30.1')])
+
+    def test_connect_nr_io_queues_host_iface(self):
+        """--host-iface names the NIC, so no route lookup is needed."""
+        self.server.nic_queues['eth7'] = (3, 0, 0)
+        self.server.nprocs = 4
+        self.assertEqual(self._connect_nr_io_queues('192.168.30.10',
+                                                    '-f', 'eth7'), '3')
+        self.assertEqual(self.server.route_lookups, [])
+        self.assertEqual(self.server.nic_queue_queries, ['eth7'])
+
+    def test_connect_nr_io_queues_explicit(self):
+        """An explicit --nr-io-queues wins, without any NIC query."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertEqual(self._connect_nr_io_queues('192.168.30.10',
+                                                    '-i', '2'), '2')
+        self.assertEqual(self.server.route_lookups, [])
+        self.assertEqual(self.server.nic_queue_queries, [])
+
+    def test_connect_nr_io_queues_rdma(self):
+        """Only tcp gets a default nr_io_queues."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertIsNone(self._connect_nr_io_queues(transport='rdma'))
+        self.assertEqual(self.server.route_lookups, [])
+
+    def _write_config(self, subsys_extra=''):
+        config = Path(self.base_dir) / 'nvme-fabrics.conf'
+        config.write_text(
+            "[Subsystem]\n"
+            f"nqn        = {self._NR_IO_QUEUES_NQN}\n"
+            f"{subsys_extra}"
+            "controller = transport=tcp;traddr=192.168.30.10;trsvcid=4420\n")
+        return str(config)
+
+    def test_connect_config_nr_io_queues(self):
+        """A config file connection gets the same default."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self._run('connect', '-J', self._write_config())
+        self.assertEqual(self.server.controllers[0]['nr_io_queues'], '4')
+
+    def test_connect_config_nr_io_queues_explicit(self):
+        """nr-io-queues in the config file wins, without any NIC query."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self._run('connect', '-J', self._write_config('nr-io-queues = 2\n'))
+        self.assertEqual(self.server.controllers[0]['nr_io_queues'], '2')
+        self.assertEqual(self.server.route_lookups, [])
+
+
+    # ------------------------------------------------------------------ #
+    # DH-HMAC-CHAP secrets (#4165)                                       #
+    # ------------------------------------------------------------------ #
+
+    _HOSTNQN = "nqn.2014-08.org.nvmexpress:uuid:22222222-2222-2222-2222-222222222222"
+    _KEY_A = "DHHC-1:00:EKN5fkA4mibMctEW+jyGddCJQZ/iNI1HXvsreK3ZypSStJiw:"
+    _KEY_B = "DHHC-1:00:lDJWs+pfI8j9StQqRBr8Q1tMF0H+dzRGrGQjTukguPNHnCV/:"
+    _KEY_C = "DHHC-1:00:xXMTILl3fA020aIzIbYpXQwF4hBR38zJXhQKRXgEHs/b9kvY:"
+
+    def _ctrls_for(self, subsysnqn):
+        return [c for c in self.server.controllers.values()
+                if c['subsysnqn'] == subsysnqn]
+
+    def _only_ctrl_for(self, subsysnqn):
+        ctrls = self._ctrls_for(subsysnqn)
+        self.assertEqual(len(ctrls), 1, f"expected one connect to {subsysnqn}")
+        return ctrls[0]
+
+    def test_connect_does_not_send_secret_of_other_subsystem(self):
+        """The scan must not hand a live controller's secret to a connect
+        to another subsystem."""
+        subsys_a = "nqn.2014-08.org.nvmexpress:secret-subsys-A"
+        subsys_b = "nqn.2014-08.org.nvmexpress:secret-subsys-B"
+
+        self._run('connect', '-t', 'tcp', '-a', '192.168.170.1', '-s', '4420',
+                  '-n', subsys_b, '--hostnqn', self._HOSTNQN, '-S', self._KEY_B)
+        self._run('connect', '-t', 'tcp', '-a', '192.168.170.2', '-s', '4420',
+                  '-n', subsys_a, '--hostnqn', self._HOSTNQN)
+
+        self.assertEqual(self._only_ctrl_for(subsys_b)['dhchap_secret'], self._KEY_B)
+        self.assertIsNone(self._only_ctrl_for(subsys_a)['dhchap_secret'],
+                          "subsys A received the secret of subsys B")
+
+    def test_connect_all_discovered_ctrls_inherit_host_secret_only(self):
+        """Discovered controllers get the DC's host secret, never its
+        controller secret. The well-known DC gets no controller secret
+        either (TP8017)."""
+        io_a = "nqn.2014-08.org.nvmexpress:secret-io-A"
+        io_b = "nqn.2014-08.org.nvmexpress:secret-io-B"
+        self.server.discovery_entries = [
+            {'transport': 'tcp', 'traddr': '192.168.171.2', 'trsvcid': '4420',
+             'subsysnqn': io_a},
+            {'transport': 'tcp', 'traddr': '192.168.171.3', 'trsvcid': '4420',
+             'subsysnqn': io_b},
+        ]
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.171.1',
+                  '--hostnqn', self._HOSTNQN, '-S', self._KEY_A, '-C', self._KEY_B)
+
+        for ctrl in self._ctrls_for(DISCOVERY_NQN):
+            self.assertEqual(ctrl['dhchap_secret'], self._KEY_A)
+            self.assertIsNone(ctrl['dhchap_ctrl_secret'])
+        for nqn in (io_a, io_b):
+            ctrl = self._only_ctrl_for(nqn)
+            self.assertEqual(ctrl['dhchap_secret'], self._KEY_A)
+            self.assertIsNone(ctrl['dhchap_ctrl_secret'])
+
+    def test_connect_all_device_inherits_live_dc_secret(self):
+        """connect-all --device on a live DC, without -S: discovered
+        controllers get that DC's secret, not one of another live
+        controller."""
+        dc = "nqn.2014-08.org.nvmexpress:dc-secret"
+        other_1 = "nqn.2014-08.org.nvmexpress:secret-other-1"
+        other_2 = "nqn.2014-08.org.nvmexpress:secret-other-2"
+        io_c = "nqn.2014-08.org.nvmexpress:secret-io-C"
+
+        # The DC is nvme1, between two other controllers, so it is not the
+        # last one scanned in either scan order.
+        self._run('connect', '-t', 'tcp', '-a', '192.168.172.1', '-s', '4420',
+                  '-n', other_1, '--hostnqn', self._HOSTNQN, '-S', self._KEY_B)
+        self._run('connect', '-t', 'tcp', '-a', '192.168.172.2', '-s', '4420',
+                  '-n', dc, '--hostnqn', self._HOSTNQN, '-S', self._KEY_A)
+        self._run('connect', '-t', 'tcp', '-a', '192.168.172.3', '-s', '4420',
+                  '-n', other_2, '--hostnqn', self._HOSTNQN, '-S', self._KEY_C)
+        sub_path = Path(self.sysfs_dir) / "sys/class/nvme-subsystem/nvme-subsys1"
+        (sub_path / "subsystype").write_text("discovery\n")
+        self.server.discovery_map = {
+            dc: [{'transport': 'tcp', 'traddr': '192.168.172.4', 'trsvcid': '4420',
+                  'subsysnqn': io_c}],
+        }
+
+        self._run('connect-all', '--device', 'nvme1', '--hostnqn', self._HOSTNQN)
+
+        self.assertEqual(self._only_ctrl_for(io_c)['dhchap_secret'], self._KEY_A)
+
+    def test_duplicate_connect_keeps_new_secret(self):
+        """A duplicate connect on a live path sends its own secret, not the
+        one of the live controller."""
+        subsys = "nqn.2014-08.org.nvmexpress:secret-dup"
+        args = ('connect', '-t', 'tcp', '-a', '192.168.173.1', '-s', '4420',
+                '-n', subsys, '--hostnqn', self._HOSTNQN)
+
+        self._run(*args, '-S', self._KEY_A)
+        self._run(*args, '-S', self._KEY_C, '--duplicate-connect')
+
+        secrets = sorted(c['dhchap_secret'] for c in self._ctrls_for(subsys))
+        self.assertEqual(secrets, sorted([self._KEY_A, self._KEY_C]))
 
 if __name__ == '__main__':
     # If called standalone, strip the arguments parsed by FabricsMockCLITest

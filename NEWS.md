@@ -57,6 +57,40 @@
   active, `nvmf-autoconnect.service` and the FC kickstart skip their
   connect step.
 
+* libnvme: the Identify Controller bit field constants for the OAES,
+  BPCAP, MEC, OACS, FRMW, LPA and AVSCC fields now use the field names
+  from the NVM Express Base Specification, Revision 2.4. The old names
+  are removed. Code that uses them must be changed:
+
+  - `NVME_CTRL_OAES_*`: `FA` is now `FAN`, `ANA` is `ANACN`, `PLEA`
+    is `PLEAN`, `LBAS` is `LSIAN`, `EGE` is `EGEAN`, `NS` is `NNSS`,
+    `TTH` is `TTHR`, `ZD` is `ZDCN` and `DL` is `DLPCN`. This also
+    applies to the `_SHIFT` and `_MASK` values. The accessor macros
+    `NVME_CTRL_OAES_PLEALCN()`, `NVME_CTRL_OAES_LBASIAN()`,
+    `NVME_CTRL_OAES_EGEALPCN()` and `NVME_CTRL_OAES_NNVMSS()` are now
+    `NVME_CTRL_OAES_PLEAN()`, `NVME_CTRL_OAES_LSIAN()`,
+    `NVME_CTRL_OAES_EGEAN()` and `NVME_CTRL_OAES_NNSS()`.
+  - `NVME_CTRL_BACAP_*` is now `NVME_CTRL_BPCAP_*`.
+  - `NVME_CTRL_MEC_SMBUSME` is now `NVME_CTRL_MEC_TWPME`. The spec
+    renamed the bit to 2-Wire Port Management Endpoint.
+  - `NVME_CTRL_OACS_*`: `SECURITY` is now `SSRS`, `FORMAT` is
+    `FNVMS`, `FW` is `FWDS`, `NS_MGMT` is `NMS`, `SELF_TEST` is
+    `DSTS`, `DIRECTIVES` is `DIRS`, `NVME_MI` is `NSRS`, `VIRT_MGMT`
+    is `VMS`, `DBBUF_CFG` is `DBCS`, `LBA_STATUS` is `GLSS`,
+    `CMD_FEAT_LD` is `CFLS`, `HMLM` is `HMLMS` and
+    `CTRL_SCOPED_CMD_FEAT_LD` is `CCFLS`. The accessor macros
+    `NVME_CTRL_OACS_NMS_M()` and `NVME_CTRL_OACS_VMS_M()` are now
+    `NVME_CTRL_OACS_NMS()` and `NVME_CTRL_OACS_VMS()`.
+  - `NVME_CTRL_FRMW_*`: `1ST_RO` is now `FFSRO`, `NR_SLOTS` is `NOFS`,
+    `FW_ACT_NO_RESET` is `FAWR` and `MP_UP_DETECTION` is `SMUD`.
+    `NVME_CTRL_FRMW_NOFS` also covers bit 3 of the Number Of Firmware
+    Slots field, which `NVME_CTRL_FRMW_NR_SLOTS` missed.
+  - `NVME_CTRL_LPA_*`: `SMART_PER_NS` is now `SMARTS`, `CMD_EFFECTS`
+    is `CSES`, `EXTENDED` is `LPEDS`, `TELEMETRY` is `TS`,
+    `PERSETENT_EVENT` is `PES`, `LI0_LI5_LI12_LI13` is `MLPS` and
+    `DA4_TELEMETRY` is `DA4S`.
+  - `NVME_CTRL_AVSCC_AVS` is now `NVME_CTRL_AVSCC_VSCF`.
+
 ### New: FreeBSD support
 
 * nvme-cli and libnvme now build and run on FreeBSD. NVMe PCIe devices
@@ -73,6 +107,26 @@
 
 * New option `nvme connect --discovery`. It tells the kernel that the
   controller is a Discovery Controller, also when it has a unique NQN.
+
+* `nvme connect`: When connecting to a target over TCP, automatically
+  calculates `--nr-io-queues` if the option is not explicitly specified. The
+  number of I/O queues is derived using the following formula:
+
+    ```c
+    if (num_hw_queues > 1)
+      nr_io_queues = min(num_online_cpus, num_hw_queues);
+    ```
+  Here, `num_hw_queues` represents the number of hardware TX/RX queue
+  pair,  and  combined queues currently configured on the NIC, and
+  `num_online_cpus` represents the number of online CPUs. The number of
+  I/O queues is set to the minimum of these two values when `num_hw_queues`
+  is greater than 1. Otherwise, the default number of I/O queues is used.
+
+  If the user explicitly specifies `--nr-io-queues`, the specified value takes
+  precedence over the automatic calculation.
+
+  This behavior also applies when connecting to a TCP target using a config.INI
+  file.
 
 * `nvme sed revert` now prints an extra `revert LSP` error when the
   kernel cannot revert the Locking SP. `nvme sed password` checks at
@@ -149,19 +203,25 @@
   `libnvmf_kernel_options_for_each()` report the fabrics options the
   kernel lists in `/dev/nvme-fabrics`.
 
+* The `libnvme3.pc` pkg-config file now reports the nvme-cli release
+  version, e.g. 3.2. Before, it reported the library ABI version, 1.0.0
+  in every release. A project can now require a release with, for
+  example, `libnvme3 >= 3.2`. The ABI version and the soname
+  (`libnvme3.so.1`) do not change.
+
 ### nvme-keysd
 
 * New daemon, nvme-keysd, a technology preview: it will put NVMe/TCP
   TLS pre-shared keys into the kernel's .nvme keyring before a
   connection needs them. Built with the new `nvme-keysd` meson option,
   `disabled` by default. It imports the PSKs of the entries with
-  `key-source = systemd-creds` from encrypted systemd credentials in
+  `tls-key-source = systemd-creds` from encrypted systemd credentials in
   `/etc/nvme/creds` at boot, and exits. It does not start when no
   entry has a key source. It needs systemd 257 or later. See
   `nvme-keysd(8)`.
 
-* New `key-source` key in `nvme-fabrics.conf`. With
-  `key-source = systemd-creds`, `tls-key` is the name of a systemd
+* New `tls-key-source` key in `nvme-fabrics.conf`. With
+  `tls-key-source = systemd-creds`, `tls-key` is the name of a systemd
   credential, not the key. `nvme connect-all` and nvme-discoverd then
   connect with TLS and let the kernel find the PSK in the keyring. The
   default, `inline`, keeps today's behavior. See `nvme-fabrics.conf(5)`.

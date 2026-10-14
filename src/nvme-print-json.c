@@ -19,6 +19,7 @@
 #include <ccan/minmax/minmax.h>
 #include <shared/mmio-util.h>
 #include <shared/string-util.h>
+#include <shared/unaligned-util.h>
 
 #include "cleanup.h"
 #include "nvme-json.h"
@@ -291,8 +292,8 @@ static void json_nvme_id_ns_lbaf(struct nvme_id_ns *ns, int i, struct json_objec
 		obj_add_int(lbaf, "LBA Format", i);
 		json_object_add_string(lbaf, "Metadata Size", "%d bytes",
 				       le16_to_cpu(ns->lbaf[i].ms));
-		json_object_add_string(lbaf, "Data Size", "%d bytes",
-				       1 << ns->lbaf[i].ds);
+		json_object_add_string(lbaf, "Data Size", "%u bytes",
+				       nvme_lbaf_data_size(ns->lbaf[i].ds));
 		json_object_add_string(lbaf, "Relative Performance", "0x%x %s",
 				       ns->lbaf[i].rp,
 				       ns->lbaf[i].rp == 3 ? "Degraded" :
@@ -392,7 +393,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 	obj_add_array(r, "lbafs", lbafs);
 
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++)
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++)
 		json_nvme_id_ns_lbaf(ns, i, lbafs);
 
 	d_json(ns->vs, strnlen((const char *)ns->vs, sizeof(ns->vs)), 16, 1, vs);
@@ -552,7 +553,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 
 	obj_add_array(r, "psds", psds);
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		struct json_object *psd = json_create_object();
 
 		obj_add_int(psd, "max_power", le16_to_cpu(ctrl->psd[i].mp));
@@ -1963,7 +1964,13 @@ static void json_pel_vs_event_data(struct json_object *valid_attrs, void *vsed,
 		obj_d(vs_data, "binary_data", (unsigned char *)vsed, vsedl, 16, 1);
 		break;
 	case NVME_PEL_VSEDT_SIGNED_INT:
-		obj_add_int(vs_data, "signed_integer_data", *(int64_t *)vsed);
+		if (vsedl < sizeof(__le64)) {
+			obj_d(vs_data, "binary_data", (unsigned char *)vsed,
+			      vsedl, 16, 1);
+			break;
+		}
+		obj_add_int(vs_data, "signed_integer_data",
+			    (int64_t)shr_get_unaligned_le64(vsed));
 		break;
 	default:
 		obj_d(vs_data, "reserved_data_type_bin", (unsigned char *)vsed, vsedl, 16, 1);
@@ -1980,26 +1987,34 @@ void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 	__u32 progress = 0;
 	__u16 vsedl;
 	__u32 i;
-	struct nvme_vs_event_desc *vs_desc;
+	struct nvme_vs_event_desc vs_desc;
 	struct json_object *vs_events = json_create_array();
 
-	for (i = 0; progress < event_data_len; i++) {
-		struct json_object *vs_event = json_create_object();
+	for (i = 0; progress + sizeof(vs_desc) <= event_data_len; i++) {
+		void *p = pevent_log_info + offset + progress;
+		struct json_object *vs_event;
 
-		vs_desc = pevent_log_info + offset + progress;
-		vsedl = le16_to_cpu(vs_desc->vsedl);
+		/* The descriptors are not aligned. */
+		memcpy(&vs_desc, p, sizeof(vs_desc));
+		vsedl = le16_to_cpu(vs_desc.vsedl);
+		if (vsedl > event_data_len - progress - sizeof(vs_desc))
+			break;
+
+		vs_event = json_create_object();
 
 		obj_add_uint(vs_event, "vs_event_descriptor_number", i);
-		obj_add_uint(vs_event, "vs_event_code", le16_to_cpu(vs_desc->vsec));
-		obj_add_uint(vs_event, "vs_event_data_type", vs_desc->vsedt);
-		obj_add_uint(vs_event, "vs_event_uuid_index", vs_desc->uidx);
+		obj_add_uint(vs_event, "vs_event_code",
+			     le16_to_cpu(vs_desc.vsec));
+		obj_add_uint(vs_event, "vs_event_data_type", vs_desc.vsedt);
+		obj_add_uint(vs_event, "vs_event_uuid_index", vs_desc.uidx);
 		obj_add_uint(vs_event, "vs_event_data_len", vsedl);
 
 		if (vsedl)
-			json_pel_vs_event_data(vs_event, vs_desc + 1, vs_desc->vsedt, vsedl);
+			json_pel_vs_event_data(vs_event, p + sizeof(vs_desc),
+					       vs_desc.vsedt, vsedl);
 
 		array_add_obj(vs_events, vs_event);
-		progress += sizeof(*vs_desc) + vsedl;
+		progress += sizeof(vs_desc) + vsedl;
 	}
 
 	obj_add_array(valid_attrs, "vs_event_entry", vs_events);
@@ -2010,6 +2025,7 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 {
 	int i;
 	__u16 vsil, el;
+	__u32 data_len;
 	struct nvme_persistent_event_log *pevent_log_head = pevent_log_info;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	struct json_object *valid_attrs;
@@ -2047,58 +2063,64 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 
 		offset += pevent_entry_head->ehl + vsil + 3;
 
+		__cleanup_free void *data =
+			nvme_pel_event_data(pevent_log_info, offset,
+					    el - vsil, &data_len);
+
+		if (!data) {
+			array_add_obj(valid, valid_attrs);
+			break;
+		}
+
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
-			nvme_json_pel_smart_health(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_smart_health(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
-			nvme_json_pel_fw_commit(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_fw_commit(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_TIMESTAMP_EVENT:
-			nvme_json_pel_timestamp(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_timestamp(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
-			nvme_json_pel_power_on_reset(pevent_log_info,
-						     offset, valid_attrs,
+			nvme_json_pel_power_on_reset(data, 0, valid_attrs,
 						     pevent_entry_head->vsil,
 						     pevent_entry_head->el,
-						     size);
+						     data_len);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
-			nvme_json_pel_nss_hw_error(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_nss_hw_error(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
-			nvme_json_pel_change_ns(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_change_ns(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_FORMAT_START_EVENT:
-			nvme_json_pel_format_start(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_format_start(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_FORMAT_COMPLETION_EVENT:
-			nvme_json_pel_format_completion(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_format_completion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SANITIZE_START_EVENT:
-			nvme_json_pel_sanitize_start(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_sanitize_start(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
-			nvme_json_pel_sanitize_completion(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_sanitize_completion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_json_pel_set_feature(pevent_log_info,
-						  offset, valid_attrs,
+			nvme_json_pel_set_feature(data, 0, valid_attrs,
 						  pevent_entry_head->el,
-						  size);
+						  data_len);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			nvme_json_pel_telemetry_crt(pevent_log_info,
-						    offset, valid_attrs,
+			nvme_json_pel_telemetry_crt(data, 0, valid_attrs,
 						    pevent_entry_head->el,
-						    size);
+						    data_len);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
-			nvme_json_pel_thermal_excursion(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_thermal_excursion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
-			nvme_json_pel_vendor_specific_event(pevent_log_info, offset, el - vsil,
+			nvme_json_pel_vendor_specific_event(data, 0, el - vsil,
 							    valid_attrs);
 			break;
 		default:
@@ -2738,6 +2760,7 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 			array_add_obj(obj_ruhs, obj_ruh);
 		}
 
+		obj_add_array(obj_config, "ruhs", obj_ruhs);
 		array_add_obj(obj_configs, obj_config);
 
 		p += size;
@@ -2800,7 +2823,8 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 		obj_add_uint(obj_event, "type", event->type);
 		obj_add_uint(obj_event, "fdpef", event->flags);
 		obj_add_uint(obj_event, "pid", le16_to_cpu(event->pid));
-		obj_add_uint64(obj_event, "timestamp", le64_to_cpu(*(uint64_t *)&event->ts));
+		obj_add_uint64(obj_event, "timestamp",
+			       int48_to_long(event->ts.timestamp));
 		obj_add_uint(obj_event, "nsid", le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
@@ -3552,7 +3576,7 @@ static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
 
 	obj_add_array(r, "elbafs", elbafs);
 
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		struct json_object *elbaf = json_create_object();
 		unsigned int elbaf_val = le32_to_cpu(nvm_ns->elbaf[i]);
 
@@ -3606,7 +3630,7 @@ static void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	obj_add_array(r, "lbafe", lbafs);
 
-	for (i = 0; i <= id_ns->nlbaf; i++) {
+	for (i = 0; i <= id_ns->nlbaf && i < ARRAY_SIZE(ns->lbafe); i++) {
 		struct json_object *lbaf = json_create_object();
 
 		obj_add_uint64(lbaf, "zsze", le64_to_cpu(ns->lbafe[i].zsze));
@@ -4659,7 +4683,7 @@ static void json_nvme_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 
 	obj_add_int(r, "nid", nent);
 
-	for (i = 0; i < nent; i++) {
+	for (i = 0; i < nent && i < ARRAY_SIZE(nvmset->ent); i++) {
 		struct json_object *entry = json_create_object();
 
 		obj_add_int(entry, "nvmset_id", le16_to_cpu(nvmset->ent[i].nvmsetid));
@@ -4735,7 +4759,8 @@ static void json_nvme_id_ns_granularity_list(
 	obj_add_int(r, "attributes", glist->attributes);
 	obj_add_int(r, "num-descriptors", glist->num_descriptors);
 
-	for (i = 0; i <= glist->num_descriptors; i++) {
+	for (i = 0; i <= glist->num_descriptors && i < ARRAY_SIZE(glist->entry);
+	     i++) {
 		struct json_object *entry = json_create_object();
 
 		obj_add_uint64(entry, "namespace-size-granularity",
@@ -4782,7 +4807,8 @@ static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
 
 	obj_add_uint(r, "num_dom_entries", id_dom->num);
 
-	for (i = 0; i < id_dom->num; i++) {
+	for (i = 0; i < id_dom->num && i < ARRAY_SIZE(id_dom->domain_attr);
+	     i++) {
 		entry = json_create_object();
 		dom_cap = le128_to_cpu(id_dom->domain_attr[i].dom_cap);
 		unalloc_dom_cap = le128_to_cpu(id_dom->domain_attr[i].unalloc_dom_cap);

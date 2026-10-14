@@ -43,15 +43,16 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	__u32 zdcn = NVME_CTRL_OAES_ZDCN(oaes);
 	__u32 rsvd23 = (oaes >> 23) & 0xf;
 	__u32 rlcc = NVME_CTRL_OAES_RLCC(oaes);
-	__u32 rsvd20 = (oaes >> 20) & 0x3;
+	__u32 lhcn = NVME_CTRL_OAES_LHCN(oaes);
+	__u32 ccrcn = NVME_CTRL_OAES_CCRCN(oaes);
 	__u32 ansan = NVME_CTRL_OAES_ANSAN(oaes);
 	__u32 rsvd18 = (oaes >> 18) & 0x1;
 	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
 	__u32 tthr = NVME_CTRL_OAES_TTHR(oaes);
-	__u32 normal_shn = NVME_CTRL_OAES_NNVMSS(oaes);
-	__u32 egealpcn = NVME_CTRL_OAES_EGEALPCN(oaes);
-	__u32 lbasin = NVME_CTRL_OAES_LBASIAN(oaes);
-	__u32 plealcn = NVME_CTRL_OAES_PLEALCN(oaes);
+	__u32 normal_shn = NVME_CTRL_OAES_NNSS(oaes);
+	__u32 egealpcn = NVME_CTRL_OAES_EGEAN(oaes);
+	__u32 lbasin = NVME_CTRL_OAES_LSIAN(oaes);
+	__u32 plealcn = NVME_CTRL_OAES_PLEAN(oaes);
 	__u32 anacn = NVME_CTRL_OAES_ANACN(oaes);
 	__u32 rsvd10 = (oaes >> 10) & 0x1;
 	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
@@ -75,8 +76,12 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	stdout_bits_add(t, "[22:22]", rlcc,
 			"Rate Limiting Configuration Change Notices %sSupported",
 			rlcc ? "" : "Not ");
-	if (rsvd20)
-		stdout_bits_add(t, "[21:20]", rsvd20, "Reserved");
+	stdout_bits_add(t, "[21:21]", lhcn,
+			"Lost Host Communication Notices %sSupported",
+			lhcn ? "" : "Not ");
+	stdout_bits_add(t, "[20:20]", ccrcn,
+			"Cross-Controller Reset Completed Notices %sSupported",
+			ccrcn ? "" : "Not ");
 	stdout_bits_add(t, "[19:19]", ansan,
 			"Allocated Namespace Attribute Notices %sSupported",
 			ansan ? "" : "Not ");
@@ -221,8 +226,8 @@ static struct shr_table *stdout_id_ctrl_bpcap_table(__u8 ctrl_bpcap)
 {
 	struct shr_table *t;
 	__u8 rsvd3 = (ctrl_bpcap >> 3);
-	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_SFBPWPS);
-	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_RPMBBPWPS);
+	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_SFBPWPS);
+	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_RPMBBPWPS);
 	static const char * const rpmbbpwps_def[] = {
 		"Support Not Specified",
 		"Not Supported",
@@ -427,17 +432,17 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 	struct shr_table *t;
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
 	__u16 rsvd = (oacs & 0xC000) >> 14;
-	__u16 rsvd12 = (oacs & 0x1000) >> 12;
 	__u16 ccfls = NVME_CTRL_OACS_CCFLS(oacs);
+	__u16 enss = NVME_CTRL_OACS_ENSS(oacs);
 	__u16 hmlms = NVME_CTRL_OACS_HMLMS(oacs);
 	__u16 lock = NVME_CTRL_OACS_CFLS(oacs);
 	__u16 glbas = NVME_CTRL_OACS_GLSS(oacs);
 	__u16 dbc = NVME_CTRL_OACS_DBCS(oacs);
-	__u16 vir = NVME_CTRL_OACS_VMS_M(oacs);
+	__u16 vir = NVME_CTRL_OACS_VMS(oacs);
 	__u16 nmi = NVME_CTRL_OACS_NSRS(oacs);
 	__u16 dir = NVME_CTRL_OACS_DIRS(oacs);
 	__u16 sft = NVME_CTRL_OACS_DSTS(oacs);
-	__u16 nsm = NVME_CTRL_OACS_NMS_M(oacs);
+	__u16 nsm = NVME_CTRL_OACS_NMS(oacs);
 	__u16 fwc = NVME_CTRL_OACS_FWDS(oacs);
 	__u16 fmt = NVME_CTRL_OACS_FNVMS(oacs);
 	__u16 sec = NVME_CTRL_OACS_SSRS(oacs);
@@ -451,8 +456,9 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 	stdout_bits_add(t, "[13:13]", ccfls,
 			 "Ctrl-scoped Command/Feature Lockdown %sSupported",
 			 ccfls ? "" : "Not ");
-	if (rsvd12)
-		stdout_bits_add(t, "[12:12]", rsvd12, "Reserved");
+	stdout_bits_add(t, "[12:12]", enss,
+			 "Exported NVM Subsystem %sSupported",
+			 enss ? "" : "Not ");
 	stdout_bits_add(t, "[11:11]", hmlms,
 			 "Host Managed Live Migration %sSupported",
 			 hmlms ? "" : "Not ");
@@ -1819,7 +1825,7 @@ static struct shr_table *stdout_id_ns_lbaf_table(struct nvme_id_ns *ns,
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		struct nvme_lbaf *lbaf = &ns->lbaf[i];
 		int row = shr_table_get_row_id(t);
 		int col = -1;
@@ -1830,7 +1836,7 @@ static struct shr_table *stdout_id_ns_lbaf_table(struct nvme_id_ns *ns,
 		shr_table_set_value_unsigned(t, ++col, row, lbaf->ds, RIGHT);
 		if (sup.verbose)
 			shr_table_set_value_unsigned(t, ++col, row,
-					1U << lbaf->ds, RIGHT);
+					nvme_lbaf_data_size(lbaf->ds), RIGHT);
 		shr_table_set_value_unsigned(t, ++col, row, lbaf->rp, RIGHT);
 		if (sup.verbose)
 			shr_table_set_value_str(t, ++col, row,
@@ -2379,7 +2385,7 @@ static bool stdout_id_ctrl_ps_idlp_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (le16_to_cpu(ctrl->psd[i].idlp))
 			return true;
 	}
@@ -2391,7 +2397,7 @@ static bool stdout_id_ctrl_ps_actp_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (le16_to_cpu(ctrl->psd[i].actp))
 			return true;
 	}
@@ -2403,7 +2409,7 @@ static bool stdout_id_ctrl_ps_apw_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (ctrl->psd[i].apws & 0x7)
 			return true;
 	}
@@ -2415,7 +2421,7 @@ static bool stdout_id_ctrl_ps_mbw_used(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		if (ctrl->psd[i].mbw)
 			return true;
 	}
@@ -2480,7 +2486,7 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		return NULL;
 	}
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	for (i = 0; i < nvme_id_ctrl_nr_psd(ctrl); i++) {
 		struct nvme_id_psd *psd = &ctrl->psd[i];
 		__u16 max_power = le16_to_cpu(psd->mp);
 		__cleanup_free char *mp = NULL;
@@ -3276,7 +3282,7 @@ void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 
 	stdout_kv_table_finish(t, "nvm-id-ns");
 
-	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
 		qpif = (elbaf >> 9) & 0xF;
 		pif = (elbaf >> 7) & 0x3;
@@ -3484,7 +3490,7 @@ void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	stdout_kv_table_finish(t, "zns-id-ns");
 
-	for (i = 0; i <= id_ns->nlbaf; i++) {
+	for (i = 0; i <= id_ns->nlbaf && i < ARRAY_SIZE(ns->lbafe); i++) {
 		if (verbose)
 			printf("LBA Format Extension %2d : Zone Size: %#"PRIx64
 			       " LBAs - Zone Descriptor Extension Size: %-1d "
@@ -3520,7 +3526,7 @@ void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,
 	stdout_kv_table_finish(t, "id-nvmset");
 
 	printf(".................\n");
-	for (i = 0; i < nvmset->nid; i++) {
+	for (i = 0; i < nvmset->nid && i < ARRAY_SIZE(nvmset->ent); i++) {
 		printf(" NVM Set Attribute Entry[%2d]\n", i);
 		printf(".................\n");
 
@@ -3569,7 +3575,8 @@ void stdout_id_ns_granularity_list(
 	stdout_kv_table_finish(t, "id-ns-granularity-list");
 
 	/* Number of Descriptors is a 0's based value */
-	for (i = 0; i <= glist->num_descriptors; i++) {
+	for (i = 0; i <= glist->num_descriptors && i < ARRAY_SIZE(glist->entry);
+	     i++) {
 		printf("\n     Entry[%2d] :\n", i);
 		printf("................\n");
 
@@ -3661,7 +3668,8 @@ void stdout_id_domain_list(struct nvme_id_domain_list *id_dom)
 
 	stdout_kv_add(t, "Number of Domain Entries", "%u", id_dom->num);
 
-	for (i = 0; i < id_dom->num; i++) {
+	for (i = 0; i < id_dom->num && i < ARRAY_SIZE(id_dom->domain_attr);
+	     i++) {
 		struct nvme_id_domain_attr *attr = &id_dom->domain_attr[i];
 		char name[64];
 

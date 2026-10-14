@@ -16,7 +16,9 @@
 #include "ocp-nvme.h"
 
 extern __u8 *ptelemetry_buffer;
+extern size_t ptelemetry_buffer_size;
 extern __u8 *pstring_buffer;
+extern size_t pstring_buffer_size;
 
 #define OCP_TELEMETRY_DESCRIPTION_MAX 256
 
@@ -421,7 +423,7 @@ struct __packed vu_event_id_str_table_entry {
 };
 
 
-struct __packed ocp_telemetry_parse_options {
+struct ocp_telemetry_parse_options {
 	char *telemetry_log;
 	char *string_log;
 	char *output_file;
@@ -563,16 +565,16 @@ struct __packed nvme_ocp_event_fifo_data
 
 struct __packed nvme_ocp_telemetry_offsets
 {
-	__le32 data_area;
-	__le32 header_size;
-	__le32 da1_start_offset;
-	__le32 da1_size;
-	__le32 da2_start_offset;
-	__le32 da2_size;
-	__le32 da3_start_offset;
-	__le32 da3_size;
-	__le32 da4_start_offset;
-	__le32 da4_size;
+	__u32 data_area;
+	__u32 header_size;
+	__u64 da1_start_offset;
+	__u64 da1_size;
+	__u64 da2_start_offset;
+	__u64 da2_size;
+	__u64 da3_start_offset;
+	__u64 da3_size;
+	__u64 da4_start_offset;
+	__u64 da4_size;
 };
 
 struct __packed nvme_ocp_event_fifo_offsets
@@ -790,6 +792,44 @@ static inline const char *telemetry_mctp_transport_protocol_to_string(int protoc
 }
 
 /**
+ * @brief checks that a string log table lies within the log buffer
+ *
+ * @param ofst_dw, input table start, in DWORDs from the start of the log
+ * @param size_dw, input table size, in DWORDs
+ * @param buf_len, input log buffer length, in bytes
+ *
+ * @return true if the whole table is inside the buffer
+ */
+static inline bool ocp_c9_table_fits(__u64 ofst_dw, __u64 size_dw, size_t buf_len)
+{
+	__u64 dwords = buf_len / SIZE_OF_DWORD;
+
+	return ofst_dw <= dwords && size_dw <= dwords - ofst_dw;
+}
+
+/**
+ * @brief locates a string log table
+ *
+ * @param buf, input log buffer
+ * @param buf_len, input log buffer length, in bytes
+ * @param ofst_dw, input table start, in DWORDs from the start of the log
+ * @param size_dw, input table size, in DWORDs
+ * @param entry_size, input size of one table entry, in bytes
+ * @param entries, output number of whole entries in the table
+ *
+ * @return the first entry, or NULL if the table is not inside the buffer
+ */
+static inline __u8 *ocp_string_table(__u8 *buf, size_t buf_len, __u64 ofst_dw,
+				     __u64 size_dw, size_t entry_size, __u64 *entries)
+{
+	if (!ocp_c9_table_fits(ofst_dw, size_dw, buf_len))
+		return NULL;
+
+	*entries = size_dw * SIZE_OF_DWORD / entry_size;
+	return buf + ofst_dw * SIZE_OF_DWORD;
+}
+
+/**
  * @brief parse the ocp telemetry host or controller log binary file
  *        into json or text
  *
@@ -817,13 +857,14 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
  * @brief gets the telemetry datas areas, offsets and sizes information
  *
  * @param ptelemetry_common_header, input telemetry common header pointer
+ * @param buf_len, input telemetry log length, in bytes
  * @param ptelemetry_das_offset, input telemetry offsets pointer
  *
  * @return 0 success
  */
 int get_telemetry_das_offset_and_size(
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header,
-	struct nvme_ocp_telemetry_offsets *ptelemetry_das_offset);
+	size_t buf_len, struct nvme_ocp_telemetry_offsets *ptelemetry_das_offset);
 
 /**
  * @brief parses statistics data to text or json formats
@@ -841,13 +882,13 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
  * @brief parses a single statistic data to text or json formats
  *
  * @param pstatistic_entry, statistic entry pointer
- * @param pstats_array, stats array pointer
+ * @param pstat_obj, JSON object which receives the statistic, or NULL
  * @param fp, input file pointer
  *
  * @return 0 success
  */
 int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
-	struct json_object *pstats_array, FILE *fp);
+	struct json_object *pstat_obj, FILE *fp);
 
 /**
  * @brief parses event fifos data to text or json formats

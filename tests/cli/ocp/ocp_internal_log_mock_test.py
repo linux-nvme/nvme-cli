@@ -28,14 +28,19 @@ Tests in this module verify:
     bytes from files.
   * The telemetry header, Reason Identifier, Data Area 1 header and SMART
     sections decode to the values in the log, for host and controller
-    logs.
+    logs, and a log ending inside the Data Area 1 header decodes no
+    further.
   * Data Area 1 and 2 statistics: every descriptor field, each
     Statistic Information field from its own bits, names from the string
-    log and the built-in table, the bad block statistics and one too
-    short for its fields, and the end-of-list identifier.
+    log and the built-in table, string log tables and ASCII strings that
+    do not lie within the string log left unread, a later entry naming
+    an identifier whose first entry cannot be read, the bad block
+    statistics and one too short for its fields, and the end-of-list
+    identifier.
   * The statistics walk: statistics of different sizes and of none, the
-    statistics size bounding it, and a statistic running past that size
-    being reported.
+    statistics size bounding it, a statistic running past that size
+    being reported, and statistics running past the end of the log being
+    rejected.
   * Context Statistic Descriptors (6Dh, 6Eh, 6Fh, and any statistic with
     the Context Index flag): the context data and each type's scope
     fields, the encapsulated statistics as records of their own, an
@@ -45,8 +50,9 @@ Tests in this module verify:
     end-of-list identifier inside one. Two containers are checked
     against a customer's example report, field for field.
   * Option handling: the controller telemetry support gate, the log ID
-    check, -a 3 and -a 4 decoding Data Area 2, invalid -a, -t and -o
-    values, and -o json.
+    check, telemetry and string logs shorter than their headers, files
+    read whatever their names, -a 3 and -a 4 decoding
+    Data Area 2, invalid -a, -t and -o values, and -o json.
 
 Known defects are covered by expectedFailure tests asserting the correct
 behavior: a controller log's JSON header is decoded with the host
@@ -63,7 +69,8 @@ import unittest
 
 from tests.cli.ocp.ocp_mock_test import (CNS_UUID_LIST, LPA_TELEMETRY,
                                          MODES, NSID_ALL, SC_INVALID_FIELD,
-                                         STR_DA_STATS, OCPInternalLogTestBase,
+                                         STR_DA_EVENT_FIFO_INFO, STR_DA_STATS,
+                                         OCPInternalLogTestBase,
                                          OCPMockServer, main, pack_id_ctrl,
                                          text_fields, text_records)
 from tests.e2e.plugins.ocp import ocp_telemetry_layout as layout
@@ -482,6 +489,24 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
         self.assertSubset(self._REASON_EXPECTED, reason)
         self.assertSubset(self._da1_expected(telemetry), da1)
 
+    def test_log_cut_inside_the_data_area_1_header(self):
+        """A log that ends inside the Data Area 1 header decodes as far as
+        its own header; the Data Area 1 sections it declares are not in
+        the file."""
+        telemetry = telemetry_log()[:layout.DA1_START +
+                                    layout.DA1_HEADER_SIZE - 1]
+        report = self.decode(telemetry, string_log())
+        self.assertIn('Log Page Header', report)
+        for title in ('Telemetry Host-Initiated Data Block 1',
+                      STR_DA_STATS.format(1),
+                      STR_DA_EVENT_FIFO_INFO.format(1)):
+            self.assertNotIn(title, report)
+        titles = [name for name, _ in self.decode(telemetry, string_log(),
+                                                  mode='text')]
+        self.assertIn('Reason Identifier', titles)
+        self.assertNotIn('SMART / Health Information Log(LID-02h)', titles)
+        self.assertFalse([t for t in titles if t.startswith('EVENT FIFO ')])
+
     @unittest.expectedFailure
     def test_controller_log_in_json(self):
         """Defect: the JSON printer decodes every log with the host
@@ -663,6 +688,50 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
             [{**stat_expected(i, name, 1),
               'Statistic Specific Data': 'ABCDEF01'}
              for i, name in ids.items()], strings)
+
+    def _assert_stat_names(self, overlay, names):
+        strings = layout.pack_string_log(
+            stat_strings={0x0023: 'CUSTOM UREC', 0x8001: 'VENDOR STAT'},
+            overlay=overlay)
+        self.assert_statistics(
+            [layout.statistic(i, bytes(4)) for i in names],
+            [{**stat_expected(i, name, 1), 'Statistic Specific Data': '00000000'}
+             for i, name in names.items()], strings)
+
+    def test_out_of_bounds_string_table_falls_back_to_the_spec_names(self):
+        """A Statistics Identifier String Table or ASCII table that does
+        not lie within the string log is not read: identifiers up to 6Fh
+        keep the spec's names and the rest stay unnamed. 2^28 DWORDs is
+        far enough past the file to fault, and 2^62 + 4 DWORDs wraps to
+        16 bytes when scaled."""
+        names = {0x0022: 'XOR Recovery Count',
+                 0x0023: 'Uncorrectable Read Error Count',
+                 0x8001: ''}
+        for field, value in ((layout.STR_SITS, 1 << 28),
+                             (layout.STR_SITSZ, (1 << 62) + 4),
+                             (layout.STR_ASCTS, 1 << 28),
+                             (layout.STR_ASCTSZ, (1 << 62) + 4)):
+            with self.subTest(field=field, value=value):
+                self._assert_stat_names({field: struct.pack('<Q', value)},
+                                        names)
+
+    def test_ascii_offset_past_the_ascii_table(self):
+        """Only the entry with the bad offset loses its string-log name;
+        its table neighbour keeps its own."""
+        second_entry = layout.STR_HEADER_SIZE + layout.STR_ENTRY_SIZE
+        self._assert_stat_names(
+            {second_entry + 4: struct.pack('<Q', 1 << 28)},
+            {0x0023: 'CUSTOM UREC', 0x8001: ''})
+
+    def test_unreadable_entry_defers_to_a_later_one(self):
+        """An identifier listed twice whose first entry's ASCII string is
+        not readable takes its name from the second entry."""
+        first_entry = layout.STR_HEADER_SIZE
+        self._assert_stat_names(
+            {first_entry: struct.pack('<H', 0x8001),
+             first_entry + 4: struct.pack('<Q', 1 << 28)},
+            {0x0023: 'Uncorrectable Read Error Count',
+             0x8001: 'VENDOR STAT'})
 
     def test_bad_block_statistics(self):
         """Max die, max NAND channel and min NAND channel bad blocks carry
@@ -1006,6 +1075,19 @@ class TestInternalLogStatistics(OCPInternalLogTestBase):
                     errors=[error],
                     overlay={size_field: struct.pack('<Q', size_dw)})
 
+    def test_statistics_past_the_end_of_the_log_are_rejected(self):
+        """A log cut short inside the statistics does not hold the
+        statistics size the OCP header declares."""
+        telemetry = layout.pack_telemetry(
+            da1_stats=[layout.statistic(0x01, bytes(64))])
+        cut = layout.DA1_START + layout.DA1_HEADER_SIZE + 8
+        for mode in MODES:
+            with self.subTest(mode=mode):
+                self.assertIn('Invalid statistics bounds for Data Area 1',
+                              self.decode_fails(telemetry[:cut],
+                                                layout.pack_string_log(),
+                                                mode=mode))
+
     def test_identifier_zero_ends_the_list(self):
         self.assert_statistics(
             [layout.statistic(0x01, bytes(4)), layout.statistic(0),
@@ -1057,6 +1139,44 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Invalid LogPageId [0x05]', result.stderr)
         self.assertFalse(os.path.exists(self.report_path('json')))
+
+    def test_string_log_shorter_than_its_header_is_rejected(self):
+        """Every name lookup reads the 432-byte header, FIFO names
+        included, so a shorter string log cannot be used at all. An empty
+        file already fails to read."""
+        for size in (100, layout.STR_HEADER_SIZE - 1):
+            with self.subTest(size=size):
+                result = self.run_internal_log(
+                    telemetry=telemetry_log(),
+                    strings=string_log()[:size])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('string-log is smaller than its 432-byte header',
+                              result.stderr)
+                self.assertFalse(os.path.exists(self.report_path('json')))
+
+    def test_telemetry_log_shorter_than_its_header_is_rejected(self):
+        """The log ID and data area offsets come from the 512-byte
+        header, so a shorter telemetry log cannot be decoded."""
+        for size in (1, layout.HEADER_SIZE - 1):
+            with self.subTest(size=size):
+                result = self.run_internal_log(
+                    telemetry=telemetry_log()[:size], strings=string_log())
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('telemetry-log is smaller than its 512-byte '
+                              'header', result.stderr)
+                self.assertFalse(os.path.exists(self.report_path('json')))
+
+    def test_files_are_read_whatever_their_names(self):
+        """Neither file has to be named *.bin to be read."""
+        self.assertOk(self.run_ocp(
+            'internal-log', '-a', '2', '-f', self.out_prefix,
+            '-l', self.write_file('telemetry.dat', telemetry_log()),
+            '-s', self.write_file('strings.dat', string_log())))
+        with open(self.report_path('json'), encoding='utf-8') as f:
+            report = json.load(f)
+        fifo = report['Data Area 1 Event FIFO info'][
+            'EVENT FIFO 1 - HOST FIFO']
+        self.assertEqual(fifo[0]['VU Virtual FIFO String'], 'VFIFO 2.33')
 
     def test_invalid_output_format_is_rejected(self):
         result = self.run_internal_log('-o', 'bogus',

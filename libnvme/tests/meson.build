@@ -19,8 +19,11 @@ if python3_prog.found()
     if want_fabrics
         _ld_args += ['--ld', nvmf_ld, '--ld', nvmf_accessors_ld]
     endif
+    if want_privsep
+        _ld_args += ['--ld', privsep_ld]
+    endif
     _hdr_args = []
-    foreach hdr : headers + generated_headers
+    foreach hdr : headers + generated_headers + privsep_headers
         _hdr_args += ['--header', meson.project_source_root() / 'libnvme' / 'src' / hdr]
     endforeach
     test(
@@ -260,7 +263,12 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - fabrics', test_fabrics)
+    # test-fabrics.c includes fabrics.c, so its globals are defined in the
+    # test and in libnvme. This is intended, see the comment in the test.
+    test_fabrics_env = environment()
+    test_fabrics_env.set('ASAN_OPTIONS', 'detect_odr_violation=0')
+
+    test('libnvme - fabrics', test_fabrics, env: test_fabrics_env)
 
     psk = executable(
         'test-psk',
@@ -327,6 +335,10 @@ endif
 
 if want_ioctl_tests
     subdir('ioctl')
+endif
+
+if want_privsep
+    subdir('privsep')
 endif
 
 if host_system == 'linux'
@@ -418,4 +430,21 @@ if want_sed
         )
         test('libnvme - header/sed/' + hdr, exe)
     endforeach
+endif
+
+if want_privsep
+    hdr_conf = configuration_data()
+    hdr_conf.set('DIR', 'privsep')
+    hdr_conf.set('HDR', 'privsep')
+    src = configure_file(
+        input: 'test-header.c.in',
+        output: 'test-header-privsep.c',
+        configuration: hdr_conf,
+    )
+    exe = executable(
+        'test-header-privsep',
+        src,
+        dependencies: [libnvme_dep],
+    )
+    test('libnvme - header/privsep', exe)
 endif

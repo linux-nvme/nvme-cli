@@ -32,6 +32,7 @@
 #include "cleanup.h"
 #include "private.h"
 #include "loopback.h"
+#include "privsep/privsep-proto.h"
 
 static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 {
@@ -51,6 +52,11 @@ __shr_public int libnvme_reset_subsystem(
 {
 	int ret;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_RESET_SUBSYSTEM,
+				NULL, 0, NULL, 0, NULL);
+
 	ret = nvme_verify_chr(hdl);
 	if (ret)
 		return ret;
@@ -64,6 +70,10 @@ __shr_public int libnvme_reset_subsystem(
 __shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	int ret;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_RESET_CTRL,
+					    NULL, 0, NULL, 0, NULL);
 
 	ret = nvme_verify_chr(hdl);
 	if (ret)
@@ -79,6 +89,10 @@ __shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_RESCAN_NS,
+					    NULL, 0, NULL, 0, NULL);
+
 	ret = nvme_verify_chr(hdl);
 	if (ret)
 		return ret;
@@ -92,7 +106,17 @@ __shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 __shr_public int libnvme_get_nsid(
 		struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
+	__u64 result;
 	__u32 tmp;
+	int ret;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		ret = __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_GET_NSID,
+					   NULL, 0, NULL, 0, &result);
+		if (!ret)
+			*nsid = result;
+		return ret;
+	}
 
 	errno = 0;
 	tmp = ioctl(hdl->fd, LIBNVME_IOCTL_ID);
@@ -106,8 +130,16 @@ __shr_public int libnvme_get_nsid(
 __shr_public int libnvme_update_block_size(
 		struct libnvme_transport_handle *hdl, int block_size)
 {
+	struct libnvme_privsep_block_size bs = {
+		.block_size = block_size,
+	};
 	int ret;
 	libnvme_fd_t fd = libnvme_transport_handle_get_fd(hdl);
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_UPDATE_BLOCK_SIZE,
+				&bs, sizeof(bs), NULL, 0, NULL);
 
 	ret = ioctl(fd, BLKBSZSET, &block_size);
 	if (ret < 0)
@@ -124,6 +156,11 @@ __shr_public int libnvme_reread_partitions(struct libnvme_transport_handle *hdl)
 {
 	if (!libnvme_transport_handle_is_ns(hdl))
 		return -EINVAL;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_REREAD_PARTITIONS,
+				NULL, 0, NULL, 0, NULL);
 
 	if (ioctl(hdl->fd, BLKRRPART) < 0)
 		return -errno;
@@ -197,6 +234,16 @@ __shr_public int libnvme_read_regs(struct libnvme_transport_handle *hdl,
 	if (!nvme_reg_range_valid(offset, len))
 		return -EINVAL;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		struct libnvme_privsep_reg reg = {
+			.offset = offset,
+			.len = len,
+		};
+
+		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_READ_REGS,
+					    &reg, sizeof(reg), buf, len, NULL);
+	}
+
 	ret = nvme_map_regs(hdl, false, &regs);
 	if (ret)
 		return ret;
@@ -219,6 +266,17 @@ __shr_public int libnvme_write_reg32(struct libnvme_transport_handle *hdl,
 	if (!nvme_reg_range_valid(offset, sizeof(value)))
 		return -EINVAL;
 
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		struct libnvme_privsep_reg reg = {
+			.value = value,
+			.offset = offset,
+		};
+
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_WRITE_REG32,
+				&reg, sizeof(reg), NULL, 0, NULL);
+	}
+
 	ret = nvme_map_regs(hdl, true, &regs);
 	if (ret)
 		return ret;
@@ -238,6 +296,18 @@ __shr_public int libnvme_write_reg64(struct libnvme_transport_handle *hdl,
 	if (offset % sizeof(value) ||
 	    !nvme_reg_range_valid(offset, sizeof(value)))
 		return -EINVAL;
+
+	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP) {
+		struct libnvme_privsep_reg reg = {
+			.value = value,
+			.offset = offset,
+			.mmio32 = mmio32,
+		};
+
+		return __libnvme_privsep_op(hdl,
+				LIBNVME_PRIVSEP_OP_WRITE_REG64,
+				&reg, sizeof(reg), NULL, 0, NULL);
+	}
 
 	ret = nvme_map_regs(hdl, true, &regs);
 	if (ret)
@@ -401,6 +471,8 @@ no_uring:
 		return libnvme_mi_admin_admin_passthru(hdl, cmd);
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
 		return __libnvme_loopback_admin_passthru(hdl, cmd);
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP:
+		return __libnvme_privsep_admin_passthru(hdl, cmd);
 	default:
 		break;
 	}
@@ -450,6 +522,8 @@ no_uring:
 		return ioctl_io_passthru(hdl, cmd);
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
 		return __libnvme_loopback_io_passthru(hdl, cmd);
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP:
+		return __libnvme_privsep_io_passthru(hdl, cmd);
 	default:
 		break;
 	}

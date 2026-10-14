@@ -729,25 +729,26 @@ static bool has_arg(const struct arg_list *list, const char *arg)
 }
 
 /*
- * With key-source other than "inline", tls-key is a name for nvme-keysd.
- * Neither connect path may use it as the key. key-source itself is never
+ * With tls-key-source other than "inline", tls-key is a name for nvme-keysd.
+ * Neither connect path may use it as the key. tls-key-source itself is never
  * an "nvme connect" option.
  */
-static bool test_key_source(struct libnvme_global_ctx *ctx)
+static bool test_tls_key_source(struct libnvme_global_ctx *ctx)
 {
 	struct libnvmf_context *fctx;
 	struct libnvmf_params *params;
 	struct arg_list args = { 0 };
 	bool pass = true;
 
-	printf("test_key_source:\n");
+	printf("test_tls_key_source:\n");
 
 	params = libnvmf_params_new();
 	shr_assert(params);
 
 	shr_assert(!libnvmf_params_set(params, "tls", "true"));
 	shr_assert(!libnvmf_params_set(params, "tls-key", "cred_vol1-psk"));
-	shr_assert(!libnvmf_params_set(params, "key-source", "systemd-creds"));
+	shr_assert(!libnvmf_params_set(params, "tls-key-source",
+				       "systemd-creds"));
 
 	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
 	shr_assert(!libnvmf_context_apply_params(fctx, params));
@@ -769,7 +770,7 @@ static bool test_key_source(struct libnvme_global_ctx *ctx)
 		printf(" - systemd-creds: emit has --tls only [PASS]\n");
 	}
 
-	shr_assert(!libnvmf_params_set(params, "key-source", "inline"));
+	shr_assert(!libnvmf_params_set(params, "tls-key-source", "inline"));
 
 	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
 	shr_assert(!libnvmf_context_apply_params(fctx, params));
@@ -1068,7 +1069,7 @@ int main(void)
 	pass &= test_hostnqn_precedence(ctx, &fx);
 	pass &= test_apply_params(ctx);
 	pass &= test_persistent_tristate(ctx);
-	pass &= test_key_source(ctx);
+	pass &= test_tls_key_source(ctx);
 	pass &= test_set_connection_from_tid(ctx);
 	pass &= test_edge_cases(ctx, &fx);
 

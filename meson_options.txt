@@ -30,6 +30,12 @@ option(
   description : 'TCG Storage (SED) support'
 )
 option(
+  'privsep',
+  type : 'feature',
+  value: 'disabled',
+  description : 'privilege separation helper (technology preview; Linux only)'
+)
+option(
   'nvme-discoverd',
   type : 'feature',
   value: 'auto',

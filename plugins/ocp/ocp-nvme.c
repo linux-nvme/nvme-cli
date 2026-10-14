@@ -18,6 +18,7 @@
 
 #include <libnvme.h>
 
+#include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
@@ -595,7 +596,9 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 /// Telemetry Log
 //global buffers
 __u8 *ptelemetry_buffer;
+size_t ptelemetry_buffer_size;
 __u8 *pstring_buffer;
+size_t pstring_buffer_size;
 
 static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		int tele_type,
@@ -743,7 +746,9 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	__u64 event_str_table_ofst = 0;
 	__u64 vu_event_str_table_ofst = 0;
 	__u64 ascii_table_ofst = 0;
+	__u64 table_sz[4];
 	size_t log_page_sz = 0;
+	size_t i;
 	__cleanup_libnvme_free struct telemetry_str_log_format *log_data = NULL;
 	__cleanup_libnvme_free __u8 *string_buffer = NULL;
 
@@ -761,6 +766,11 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 		return ret;
 	}
 
+	table_sz[0] = le64_to_cpu(log_data->sitsz);
+	table_sz[1] = le64_to_cpu(log_data->estsz);
+	table_sz[2] = le64_to_cpu(log_data->vu_eve_st_sz);
+	table_sz[3] = le64_to_cpu(log_data->asctsz);
+
 	if (print_data) {
 		printf("Statistics Identifier String Table Size = %"PRIu64"\n",
 		       le64_to_cpu(log_data->sitsz));
@@ -777,9 +787,18 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	event_str_table_ofst = le64_to_cpu(log_data->ests) * 4;
 	vu_event_str_table_ofst = le64_to_cpu(log_data->vu_eve_sts) * 4;
 	ascii_table_ofst = le64_to_cpu(log_data->ascts) * 4;
-	log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
-	    (le64_to_cpu(log_data->sitsz) * 4) + (le64_to_cpu(log_data->estsz) * 4) +
-	    (le64_to_cpu(log_data->vu_eve_st_sz) * 4) + (le64_to_cpu(log_data->asctsz) * 4);
+	/*
+	 * The log stays within INT_MAX bytes, the most d_raw and the JSON
+	 * ASCII table take.
+	 */
+	log_page_sz = C9_TELEMETRY_STR_LOG_LEN;
+	for (i = 0; i < ARRAY_SIZE(table_sz); i++) {
+		if (table_sz[i] > (INT_MAX - log_page_sz) / 4) {
+			nvme_show_error("ERROR : OCP : C9 log is too large");
+			return -EINVAL;
+		}
+		log_page_sz += table_sz[i] * 4;
+	}
 
 	if (print_data) {
 		printf("stat_id_str_table_ofst = %"PRIu64"\n",
@@ -845,17 +864,27 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 	unsigned char log_id;
 
 	if (options->telemetry_log) {
-		if (strstr((const char *)options->telemetry_log, "bin")) {
-			/* Read the data from the telemetry binary file */
-			status = shr_read_file(NULL,
-					(const char *)options->telemetry_log,
-					&telemetry_buffer_size,
-					&ptelemetry_buffer);
-			if (status) {
-				nvme_show_error("Failed to read telemetry-log.");
-				return status;
-			}
+		/* Read the data from the telemetry binary file */
+		status = shr_read_file(NULL,
+				(const char *)options->telemetry_log,
+				&telemetry_buffer_size,
+				&ptelemetry_buffer);
+		if (status) {
+			nvme_show_error("Failed to read telemetry-log.");
+			return status;
 		}
+
+		/* Host and controller headers are both 512 bytes. */
+		if (telemetry_buffer_size <
+		    (long)sizeof(struct nvme_ocp_telemetry_host_initiated_header)) {
+			nvme_show_error("telemetry-log is smaller than its %zu-byte header.",
+					sizeof(struct nvme_ocp_telemetry_host_initiated_header));
+			free(ptelemetry_buffer);
+			ptelemetry_buffer = NULL;
+			return -EINVAL;
+		}
+
+		ptelemetry_buffer_size = telemetry_buffer_size;
 	} else {
 		nvme_show_error("telemetry-log is empty.");
 		return -1;
@@ -869,16 +898,26 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 
 	if (options->string_log) {
 		/* Read the data from the string binary file */
-		if (strstr((const char *)options->string_log, "bin")) {
-			status = shr_read_file(NULL,
-					(const char *)options->string_log,
-					&string_buffer_size,
-					&pstring_buffer);
-			if (status) {
-				nvme_show_error("Failed to read string-log.");
-				return status;
-			}
+		status = shr_read_file(NULL,
+				(const char *)options->string_log,
+				&string_buffer_size,
+				&pstring_buffer);
+		if (status) {
+			nvme_show_error("Failed to read string-log.");
+			return status;
 		}
+
+		/* All lookups rely on a valid string log header. */
+		if (string_buffer_size <
+		    (long)sizeof(struct nvme_ocp_telemetry_string_header)) {
+			nvme_show_error("string-log is smaller than its %zu-byte header.",
+					sizeof(struct nvme_ocp_telemetry_string_header));
+			free(pstring_buffer);
+			pstring_buffer = NULL;
+			return -EINVAL;
+		}
+
+		pstring_buffer_size = string_buffer_size;
 	} else {
 		nvme_show_error("string-log is empty.");
 		return -1;
@@ -1021,21 +1060,20 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 				!!host_gen,
 				tele_area,
 				(const char *)file_path_telemetry);
+
+		if (host_behavior_changed) {
+			host_behavior_changed = false;
+			/* Not fatal; continue on failure */
+			if (libnvme_clear_etdas(hdl, &host_behavior_changed))
+				nvme_show_error("Failed to clear ETDAS bit.");
+		}
+
 		if (err) {
 			nvme_show_error("Failed to fetch telemetry-log from the drive.");
 			goto out;
 		}
 		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
 		opt.telemetry_log = file_path_telemetry;
-
-		if (host_behavior_changed) {
-			host_behavior_changed = false;
-			err = libnvme_clear_etdas(hdl, &host_behavior_changed);
-			if (err) {
-				/* Continue on if this fails, it's not a fatal condition */
-				nvme_show_error("Failed to clear ETDAS bit.");
-			}
-		}
 	}
 
 	if (!opt.string_log) {

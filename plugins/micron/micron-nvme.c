@@ -34,6 +34,7 @@
 #include <shared/fs-util.h>
 #include <shared/string-util.h>
 #include <shared/uint128-util.h>
+#include <shared/unaligned-util.h>
 
 #include "field-parser.h"
 #include "global-ctx.h"
@@ -1032,7 +1033,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 	 * If these fail, proceed with sysfs interface to set/clear bits
 	 */
 	if (model == M51CX || model == M51BY || model == M51CY) {
-		err = nvme_set_features_simple(hdl, 0, fid, false, (1 << 31),
+		err = nvme_set_features_simple(hdl, 0, fid, false, 1U << 31,
 				&result);
 		if (!err)
 			err = (int)result;
@@ -1133,42 +1134,38 @@ static struct nand_stats {
 
 static void micron_readFixedBytesFromBuffer(__u8 *buf, int offset, int numBytes, char *datastr)
 {
-	__u16 u16Val;
-	__u32 u32Val;
-	__u64 count_lo, count_hi, count;
+	uint64_t count_lo, count_hi, count;
 
 	switch (numBytes) {
 	case 16:
 	{
-		count_lo = *((__u64 *)(&buf[offset]));
-		count_hi = *((__u64 *)(&buf[offset + 8]));
+		count_lo = shr_get_unaligned_le64(&buf[offset]);
+		count_hi = shr_get_unaligned_le64(&buf[offset + 8]);
 		if (count_hi)
 			sprintf(datastr, "0x%"PRIx64"%016"PRIx64"",
-				le64_to_cpu(count_hi),
-				le64_to_cpu(count_lo));
+				count_hi, count_lo);
 		else
-			sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(count_lo));
+			sprintf(datastr, "0x%"PRIx64"", count_lo);
 
 	}
 	break;
 	case 8:
 	{
-		count = *((__u64 *)(&buf[offset]));
-		sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(count));
+		count = shr_get_unaligned_le64(&buf[offset]);
+		sprintf(datastr, "0x%"PRIx64"", count);
 	}
 	break;
 	case 6:
 	{
-		u32Val    = *((__u32 *)(&buf[offset]));
-		u16Val    = *((__u16 *)(&buf[offset + 4]));
-		count = (((__u64)u32Val << 32) | u16Val);
-		sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(count));
+		count = shr_get_unaligned_le16(&buf[offset + 4]);
+		count = (count << 32) | shr_get_unaligned_le32(&buf[offset]);
+		sprintf(datastr, "0x%"PRIx64"", count);
 	}
 	break;
 	case 2:
 	{
-		u16Val = *((__u16 *)(&buf[offset]));
-		sprintf(datastr, "0x%04x", le16_to_cpu(u16Val));
+		sprintf(datastr, "0x%04x",
+			shr_get_unaligned_le16(&buf[offset]));
 	}
 	break;
 	}
@@ -2957,7 +2954,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	bool is_json = false;
-	struct json_object *root, *fw_act, *element;
+	struct json_object *root, *fw_act;
 	struct json_object *entry;
 
 	const char *fmt = "Output format: normal|json";
@@ -3014,11 +3011,16 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 			entry = json_create_array();
 			json_object_add_value_array(fw_act, "Entry", entry);
 			for (count = 0; count < table->num_entries; count++) {
-				element = json_create_object();
+				__cleanup_json_object
+				struct json_object *element =
+					json_create_object();
+
 				if (!display_fw_activate_entry(count, &table->entries[count],
 						formatted_output, sizeof(formatted_output),
-						element))
+						element)) {
 					json_array_add_value_object(entry, element);
+					element = NULL;
+				}
 			}
 			json_print_object(root, NULL);
 			printf("\n");
@@ -3413,7 +3415,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 		return -ENOTSUP;
 	}
 
-	err = nvme_set_features_simple(hdl, 1 << 31, fid, 0, 0, &result);
+	err = nvme_set_features_simple(hdl, 0, fid, false, 1U << 31, &result);
 	if (!err)
 		err = (int)result;
 	else

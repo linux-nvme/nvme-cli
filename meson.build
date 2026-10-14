@@ -58,6 +58,8 @@ want_fabrics = get_option('fabrics').require(host_system == 'linux',
 want_mi = get_option('mi').require(host_system == 'linux',
     error_message: 'mi requires Linux').allowed()
 want_sed = get_option('sed').allowed()
+want_privsep = get_option('privsep').require(host_system == 'linux',
+    error_message: 'privsep requires Linux').allowed()
 want_top = get_option('top').require(host_system == 'linux',
     error_message: 'top requires Linux').allowed()
 discoverd_opt = get_option('nvme-discoverd').require(want_fabrics,
@@ -129,6 +131,7 @@ prefixdir      = get_option('prefix')
 datadir        = prefixdir / get_option('datadir')
 mandir         = prefixdir / get_option('mandir')
 sbindir        = prefixdir / get_option('sbindir')
+libexecdir     = prefixdir / get_option('libexecdir')
 sysconfdir     = prefixdir / get_option('sysconfdir')
 udevrulesdir   = prefixdir / get_option('udevrulesdir')
 dracutrulesdir = prefixdir / get_option('dracutrulesdir')
@@ -175,6 +178,10 @@ conf.set('RUNDIR', '"@0@"'.format(rundir))
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
 conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 conf.set('CONFIG_SED', want_sed, description: 'Is SED enabled')
+conf.set('CONFIG_PRIVSEP', want_privsep,
+    description: 'Is the privilege separation helper enabled')
+conf.set('LIBNVME_PRIVSEP_HELPER',
+    '"@0@"'.format(libexecdir / 'nvme-privsep-helper'))
 conf.set('CONFIG_LOOPBACK', want_ioctl_tests,
     description: 'Is the ioctl loopback test transport enabled')
 conf.set('CONFIG_TOP', want_top, description: 'Is nvme top enabled')
@@ -530,6 +537,8 @@ conf.set(
 )
 
 conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
+conf.set('NVME_HAVE_CLOSE_RANGE', cc.has_function('close_range',
+    prefix: '#include <unistd.h>', args: '-D_GNU_SOURCE'))
 
 conf.set10(
     'NVME_HAVE_REALLOCARRAY',
@@ -914,6 +923,7 @@ path_dict = {
     'prefixdir':        prefixdir,
     'sysconfdir':       sysconfdir,
     'sbindir':          sbindir,
+    'libexecdir':       libexecdir,
     'datadir':          datadir,
     'mandir':           mandir,
     'udevrulesdir':     udevrulesdir,
@@ -950,6 +960,7 @@ wanted_dict = {
     'nvme':             want_nvme,
     'libnvme':          want_libnvme,
     'fabrics':          want_fabrics,
+    'privsep':          want_privsep,
     'nvme-discoverd':   want_discoverd,
     'mdns':             want_mdns,
     'nvme-keysd':       want_keysd,

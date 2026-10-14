@@ -182,6 +182,7 @@ enum libnvme_transport_handle_type {
 	LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT,
 	LIBNVME_TRANSPORT_HANDLE_TYPE_MI,
 	LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK,
+	LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP,
 };
 
 enum ioctl_state {
@@ -239,6 +240,10 @@ struct libnvme_transport_handle {
 	const struct libnvme_loopback_cmd *loopback_io_cmds;
 	size_t loopback_io_remaining;
 #endif
+
+	/* privsep */
+	struct libnvme_privsep *privsep;
+	__u32 privsep_id;
 
 	struct libnvme_log *log;
 };
@@ -426,6 +431,7 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=l
 	struct libnvme_log log;
 	bool create_only;
 	bool dry_run;		// !access:read=generated,write=generated
+	struct libnvme_privsep *privsep;
 
 	/* global options to steer libnvme behavior or overwrite defaults */
 	bool force_4k;		// !access:read=generated,write=generated
@@ -452,6 +458,21 @@ bool __libnvme_decide_retry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, int err);
 int __libnvme_exec_dry_run(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
+
+int __libnvme_transport_handle_open_privsep(
+		struct libnvme_transport_handle *hdl, const char *name,
+		int flags);
+void __libnvme_transport_handle_close_privsep(
+		struct libnvme_transport_handle *hdl);
+int __libnvme_privsep_admin_passthru(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd);
+int __libnvme_privsep_io_passthru(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd);
+int __libnvme_privsep_op(struct libnvme_transport_handle *hdl, __u32 op,
+		const void *arg, size_t arg_len, void *out, size_t out_len,
+		__u64 *result);
+int __libnvme_privsep_sed_ioctl(struct libnvme_transport_handle *hdl,
+		__u32 request, const void *arg, size_t size);
 
 #ifdef CONFIG_MI
 struct nvme_mi_msg_hdr;

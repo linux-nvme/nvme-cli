@@ -8,6 +8,7 @@
 #include <shared/uint128-util.h>
 #include <shared/uuid-util.h>
 
+#include "cleanup.h"
 #include "nvme-print.h"
 #include "ocp-fw-activation-history.h"
 #include "ocp-hardware-component-log.h"
@@ -404,9 +405,11 @@ static void stdout_c5_log(struct libnvme_transport_handle *hdl, struct unsupport
 	printf("  Number Unsupported Req IDs		: 0x%x\n",
 	       le16_to_cpu(log_data->unsupported_count));
 
-	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++)
-		printf("  Unsupported Requirement List %d	: %s\n", j,
-		       log_data->unsupported_req_list[j]);
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count) &&
+		    j < ARRAY_SIZE(log_data->unsupported_req_list); j++)
+		printf("  Unsupported Requirement List %d	: %.*s\n", j,
+		       (int)sizeof(log_data->unsupported_req_list[j]),
+		       (char *)log_data->unsupported_req_list[j]);
 
 	printf("  Log Page Version			: 0x%x\n",
 	       le16_to_cpu(log_data->log_page_version));
@@ -495,21 +498,21 @@ static void stdout_c4_log(struct ocp_device_capabilities_log_page *log_data)
 }
 
 static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
-			  int total_log_page_size)
+			  size_t total_log_page_size)
 {
-	//calculating the index value for array
-	__le64 stat_id_index = (log_data->sitsz * 4) / 16;
-	__le64 eve_id_index = (log_data->estsz * 4) / 16;
-	__le64 vu_eve_index = (log_data->vu_eve_st_sz * 4) / 16;
-	__le64 ascii_table_index = (log_data->asctsz * 4);
-	//Calculating the offset for dynamic fields.
-	__le64 stat_id_str_table_ofst = log_data->sits * 4;
-	__le64 event_str_table_ofst = log_data->ests * 4;
-	__le64 vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
-	__le64 ascii_table_ofst = log_data->ascts * 4;
-	struct statistics_id_str_table_entry stat_id_str_table_arr[stat_id_index];
-	struct event_id_str_table_entry event_id_str_table_arr[eve_id_index];
-	struct vu_event_id_str_table_entry vu_event_id_str_table_arr[vu_eve_index];
+	__u64 sits = le64_to_cpu(log_data->sits);
+	__u64 sitsz = le64_to_cpu(log_data->sitsz);
+	__u64 ests = le64_to_cpu(log_data->ests);
+	__u64 estsz = le64_to_cpu(log_data->estsz);
+	__u64 vu_eve_sts = le64_to_cpu(log_data->vu_eve_sts);
+	__u64 vu_eve_st_sz = le64_to_cpu(log_data->vu_eve_st_sz);
+	__u64 ascts = le64_to_cpu(log_data->ascts);
+	__u64 asctsz = le64_to_cpu(log_data->asctsz);
+	struct statistics_id_str_table_entry stat_entry;
+	struct event_id_str_table_entry eve_entry;
+	struct vu_event_id_str_table_entry vu_eve_entry;
+	__u64 entries = 0, i;
+	__u8 *table;
 	int j;
 
 	printf("  Log Page Version                                : 0x%x\n",
@@ -626,7 +629,7 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 	printf("  FIFO 15 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo15[j], log_data->fifo16[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo15[j], log_data->fifo15[j]);
 
 	printf("  FIFO 16 ASCII String\n");
 	printf("   index    value    ascii_val\n");
@@ -638,69 +641,80 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 		printf("%d", log_data->reserved3[j]);
 	printf("\n");
 
-	if (log_data->sitsz != 0) {
-		memcpy(stat_id_str_table_arr, (__u8 *)log_data_buf + stat_id_str_table_ofst,
-		       stat_id_index * sizeof(struct statistics_id_str_table_entry));
+	table = ocp_string_table(log_data_buf, total_log_page_size, sits, sitsz,
+				 sizeof(stat_entry), &entries);
+	if (sitsz && !table) {
+		nvme_show_error("Statistics Identifier String Table exceeds the log page");
+	} else if (sitsz) {
 		printf("  Statistics Identifier String Table\n");
-		for (j = 0; j < stat_id_index; j++) {
+		for (i = 0; i < entries; i++) {
+			memcpy(&stat_entry, table + i * sizeof(stat_entry), sizeof(stat_entry));
 			printf("   Vendor Specific Statistic Identifier : 0x%x\n",
-			       le16_to_cpu(stat_id_str_table_arr[j].vs_si));
+			       le16_to_cpu(stat_entry.vs_si));
 			printf("   Reserved                             : 0x%x\n",
-			       stat_id_str_table_arr[j].reserved1);
+			       stat_entry.reserved1);
 			printf("   ASCII ID Length                      : 0x%x\n",
-			       stat_id_str_table_arr[j].ascii_id_len);
+			       stat_entry.ascii_id_len);
 			printf("   ASCII ID offset                      : 0x%"PRIx64"\n",
-			       le64_to_cpu(stat_id_str_table_arr[j].ascii_id_ofst));
+			       le64_to_cpu(stat_entry.ascii_id_ofst));
 			printf("   Reserved                             : 0x%x\n",
-			       stat_id_str_table_arr[j].reserved2);
+			       le32_to_cpu(stat_entry.reserved2));
 		}
 	}
 
-	if (log_data->estsz != 0) {
-		memcpy(event_id_str_table_arr, (__u8 *)log_data_buf + event_str_table_ofst,
-		       eve_id_index * sizeof(struct event_id_str_table_entry));
+	table = ocp_string_table(log_data_buf, total_log_page_size, ests, estsz,
+				 sizeof(eve_entry), &entries);
+	if (estsz && !table) {
+		nvme_show_error("Event String Table exceeds the log page");
+	} else if (estsz) {
 		printf("  Event Identifier String Table Entry\n");
-		for (j = 0; j < eve_id_index; j++) {
+		for (i = 0; i < entries; i++) {
+			memcpy(&eve_entry, table + i * sizeof(eve_entry), sizeof(eve_entry));
 			printf("   Debug Event Class        : 0x%x\n",
-			       event_id_str_table_arr[j].deb_eve_class);
+			       eve_entry.deb_eve_class);
 			printf("   Event Identifier         : 0x%x\n",
-			       le16_to_cpu(event_id_str_table_arr[j].ei));
+			       le16_to_cpu(eve_entry.ei));
 			printf("   ASCII ID Length          : 0x%x\n",
-			       event_id_str_table_arr[j].ascii_id_len);
+			       eve_entry.ascii_id_len);
 			printf("   ASCII ID offset          : 0x%"PRIx64"\n",
-			       le64_to_cpu(event_id_str_table_arr[j].ascii_id_ofst));
+			       le64_to_cpu(eve_entry.ascii_id_ofst));
 			printf("   Reserved                 : 0x%x\n",
-			       event_id_str_table_arr[j].reserved2);
-
+			       le32_to_cpu(eve_entry.reserved2));
 		}
 	}
 
-	if (log_data->vu_eve_st_sz != 0) {
-		memcpy(vu_event_id_str_table_arr, (__u8 *)log_data_buf + vu_event_str_table_ofst,
-		       vu_eve_index * sizeof(struct vu_event_id_str_table_entry));
+	table = ocp_string_table(log_data_buf, total_log_page_size, vu_eve_sts, vu_eve_st_sz,
+				 sizeof(vu_eve_entry), &entries);
+	if (vu_eve_st_sz && !table) {
+		nvme_show_error("VU Event String Table exceeds the log page");
+	} else if (vu_eve_st_sz) {
 		printf("  VU Event Identifier String Table Entry\n");
-		for (j = 0; j < vu_eve_index; j++) {
+		for (i = 0; i < entries; i++) {
+			memcpy(&vu_eve_entry, table + i * sizeof(vu_eve_entry),
+			       sizeof(vu_eve_entry));
 			printf("   Debug Event Class        : 0x%x\n",
-			       vu_event_id_str_table_arr[j].deb_eve_class);
+			       vu_eve_entry.deb_eve_class);
 			printf("   VU Event Identifier      : 0x%x\n",
-			       le16_to_cpu(vu_event_id_str_table_arr[j].vu_ei));
+			       le16_to_cpu(vu_eve_entry.vu_ei));
 			printf("   ASCII ID Length          : 0x%x\n",
-			       vu_event_id_str_table_arr[j].ascii_id_len);
+			       vu_eve_entry.ascii_id_len);
 			printf("   ASCII ID offset          : 0x%"PRIx64"\n",
-			       le64_to_cpu(vu_event_id_str_table_arr[j].ascii_id_ofst));
+			       le64_to_cpu(vu_eve_entry.ascii_id_ofst));
 			printf("   Reserved                 : 0x%x\n",
-			       vu_event_id_str_table_arr[j].reserved);
+			       le32_to_cpu(vu_eve_entry.reserved));
 		}
 	}
 
-	if (log_data->asctsz != 0) {
+	if (asctsz && !ocp_c9_table_fits(ascts, asctsz, total_log_page_size)) {
+		nvme_show_error("ASCII Table exceeds the log page");
+	} else if (asctsz) {
 		printf("  ASCII Table\n");
 		printf("   Byte    Data_Byte    ASCII_Character\n");
-		for (j = 0; j < ascii_table_index; j++)
+		for (i = 0; i < asctsz * 4; i++)
 			printf("    %"PRIu64"        %d             %c\n",
-			       le64_to_cpu(ascii_table_ofst + j),
-			       log_data_buf[ascii_table_ofst + j],
-			       (char)log_data_buf[ascii_table_ofst + j]);
+			       (uint64_t)(ascts * 4 + i),
+			       log_data_buf[ascts * 4 + i],
+			       (char)log_data_buf[ascts * 4 + i]);
 	}
 }
 
@@ -811,6 +825,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 	struct nvme_persistent_event_log *pevent_log_head;
 	__u32 offset = sizeof(*pevent_log_head);
 	__u16 vsil, el;
+	__u32 data_len;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	int human = stdout_print_ops.flags & VERBOSE;
 
@@ -846,55 +861,53 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 
 		offset += pevent_entry_head->ehl + vsil + 3;
 
+		__cleanup_free void *data =
+			nvme_pel_event_data(pevent_log_info, offset,
+					    el - vsil, &data_len);
+
+		if (!data)
+			break;
+
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
-			nvme_show_pel_smart_health_event(pevent_log_info,
-							 offset, devname);
+			nvme_show_pel_smart_health_event(data, 0, devname);
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
-			nvme_show_pel_fw_commit_event(pevent_log_info, offset);
+			nvme_show_pel_fw_commit_event(data, 0);
 			break;
 		case NVME_PEL_TIMESTAMP_EVENT:
-			nvme_show_pel_timestamp_event(pevent_log_info, offset);
+			nvme_show_pel_timestamp_event(data, 0);
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
-			nvme_show_pel_power_on_reset_event(pevent_log_info,
-							   offset,
+			nvme_show_pel_power_on_reset_event(data, 0,
 							   pevent_entry_head);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
-			nvme_show_pel_nss_hw_error_event(pevent_log_info,
-							 offset);
+			nvme_show_pel_nss_hw_error_event(data, 0);
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
-			nvme_show_pel_change_ns_event(pevent_log_info, offset);
+			nvme_show_pel_change_ns_event(data, 0);
 			break;
 		case NVME_PEL_FORMAT_START_EVENT:
-			nvme_show_pel_format_start_event(pevent_log_info,
-							 offset);
+			nvme_show_pel_format_start_event(data, 0);
 			break;
 		case NVME_PEL_FORMAT_COMPLETION_EVENT:
-			nvme_show_pel_format_completion_event(pevent_log_info,
-							      offset);
+			nvme_show_pel_format_completion_event(data, 0);
 			break;
 		case NVME_PEL_SANITIZE_START_EVENT:
-			nvme_show_pel_sanitize_start_event(pevent_log_info,
-							   offset);
+			nvme_show_pel_sanitize_start_event(data, 0);
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
-			nvme_show_pel_sanitize_completion_event(pevent_log_info,
-								offset);
+			nvme_show_pel_sanitize_completion_event(data, 0);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_show_pel_set_feature_event(pevent_log_info,
-							offset);
+			nvme_show_pel_set_feature_event(data, 0);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			d(pevent_log_info + offset, 512, 16, 1);
+			d(data, 512, 16, 1);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
-			nvme_show_pel_thermal_excursion_event(pevent_log_info,
-							      offset);
+			nvme_show_pel_thermal_excursion_event(data, 0);
 			break;
 		case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
 			printf("Sanitize Media Verification Event\n");
@@ -902,11 +915,9 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
 			if (ocp_is_tcg_activity_event(pevent_entry_head, el,
 						      vsil))
-				pel_tcg_activity_event(pevent_log_info,
-						       offset);
+				pel_tcg_activity_event(data, 0);
 			else
-				nvme_show_pel_vendor_specific_event(pevent_log_info,
-								    offset,
+				nvme_show_pel_vendor_specific_event(data, 0,
 								    el - vsil);
 			break;
 		default:

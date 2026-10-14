@@ -100,7 +100,7 @@ const char *ocp_c4_fips_140_status(__u16 fips_140_validation)
 }
 
 void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
-		int total_log_page_size, nvme_print_flags_t flags)
+		size_t total_log_page_size, nvme_print_flags_t flags)
 {
 	ocp_print(c9_log, flags, log_data, log_data_buf, total_log_page_size);
 }

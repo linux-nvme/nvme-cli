@@ -148,6 +148,14 @@ else
     sources += 'sed/no-sed-opal.c'
 endif
 
+privsep_headers = []
+if want_privsep
+    sources += 'privsep/privsep.c'
+    privsep_headers += 'privsep/privsep.h'
+else
+    sources += 'privsep/no-privsep.c'
+endif
+
 if liburing_dep.found()
     sources += 'nvme/uring.c'
 else
@@ -183,6 +191,7 @@ nvme_ld = meson.current_source_dir() / 'libnvme.ld'
 nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
 mi_ld = meson.current_source_dir() / 'libnvme-mi.ld'
 sed_ld = meson.current_source_dir() / 'libnvme-sed.ld'
+privsep_ld = meson.current_source_dir() / 'libnvme-privsep.ld'
 accessors_ld = meson.current_source_dir() / 'accessors.ld'
 nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
 attr_accessors_ld = meson.current_source_dir() / 'attr-accessors.ld'
@@ -235,6 +244,12 @@ if want_sed and want_version_scripts
     ]
 endif
 
+if want_privsep and want_version_scripts
+    link_args += [
+        '-Wl,--version-script=@0@'.format(privsep_ld),
+    ]
+endif
+
 libnvme_header = configure_file(
     input: 'libnvme.h.in',
     output: 'libnvme.h',
@@ -257,7 +272,7 @@ pkg = import('pkgconfig')
 pkg.generate(libnvme,
     filebase: libnvme_api_name,
     name: libnvme_api_name,
-    version: libnvme_so_version,
+    version: meson.project_version(),
     description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
     url: 'https://github.com/linux-nvme/nvme-cli/',
     subdirs: libnvme_api_name,
@@ -313,6 +328,20 @@ if want_sed
     install_headers(
         [
            'libnvme-sed.h',
+        ],
+        subdir: libnvme_api_name,
+        install_mode: mode,
+    )
+endif
+if want_privsep
+    install_headers(
+        privsep_headers,
+        subdir: libnvme_api_name / 'privsep',
+        install_mode: mode,
+    )
+    install_headers(
+        [
+           'libnvme-privsep.h',
         ],
         subdir: libnvme_api_name,
         install_mode: mode,
