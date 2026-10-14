@@ -8,3 +8,6 @@
 #define MOCK_OPC_EXIT	0xc6
 #define MOCK_NSID	7
 #define MOCK_BLOCK_SIZE	4096
+#define MOCK_SED_PASSWORD	"password"
+#define MOCK_TCG_NOT_AUTHORIZED	0x01
+#define MOCK_TCG_INVALID_PARAM	0x0c

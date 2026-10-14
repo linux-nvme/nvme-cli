@@ -364,3 +364,21 @@ int __libnvme_privsep_op(struct libnvme_transport_handle *hdl, __u32 op,
 		*result = reply.result;
 	return reply.status;
 }
+
+int __libnvme_privsep_sed_ioctl(struct libnvme_transport_handle *hdl,
+		__u32 request, const void *arg, size_t size)
+{
+	struct libnvme_privsep *ps = hdl->privsep;
+	struct libnvme_privsep_sed sed = {
+		.request = request,
+	};
+	struct privsep_reply reply;
+	int ret;
+
+	ret = privsep_call(ps, LIBNVME_PRIVSEP_OP_SED, hdl->privsep_id,
+			   &sed, sizeof(sed), arg, size, NULL, 0, &reply);
+	if (!ret)
+		ret = privsep_check_len(ps, &reply, 0);
+
+	return ret ? ret : reply.status;
+}

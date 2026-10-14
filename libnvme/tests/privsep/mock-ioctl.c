@@ -25,6 +25,9 @@
  * - BLKRRPART succeeds, BLKBSZSET accepts only MOCK_BLOCK_SIZE
  * - the BAR of nvme0 is the file named by the MOCK_RESOURCE0 environment
  *   variable
+ * - IOC_OPAL_TAKE_OWNERSHIP and IOC_OPAL_LOCK_UNLOCK on the namespace
+ *   return the TCG status MOCK_TCG_NOT_AUTHORIZED unless the key is
+ *   MOCK_SED_PASSWORD; IOC_OPAL_LOCK_UNLOCK unlocks only to read-write
  */
 /*
  * This file defines both open() and open64(), and both fstat() and
@@ -52,6 +55,9 @@
 
 #include <linux/fs.h>
 #include <linux/nvme_ioctl.h>
+#ifdef TEST_SED
+#include <linux/sed-opal.h>
+#endif
 
 #include "mock.h"
 
@@ -118,9 +124,31 @@ static int mock_ctrl_ioctl(unsigned long request)
 	return mock_ret(ENOTTY);
 }
 
+#ifdef TEST_SED
+static bool mock_sed_key_valid(const struct opal_key *key)
+{
+	return key->key_len == strlen(MOCK_SED_PASSWORD) &&
+		!memcmp(key->key, MOCK_SED_PASSWORD, key->key_len);
+}
+
+static int mock_lock_unlock(const struct opal_lock_unlock *lu)
+{
+	if (!mock_sed_key_valid(&lu->session.opal_key))
+		return MOCK_TCG_NOT_AUTHORIZED;
+
+	return lu->l_state == OPAL_RW ? 0 : MOCK_TCG_INVALID_PARAM;
+}
+#endif
+
 static int mock_ns_ioctl(unsigned long request, void *arg)
 {
 	switch (request) {
+#ifdef TEST_SED
+	case IOC_OPAL_TAKE_OWNERSHIP:
+		return mock_sed_key_valid(arg) ? 0 : MOCK_TCG_NOT_AUTHORIZED;
+	case IOC_OPAL_LOCK_UNLOCK:
+		return mock_lock_unlock(arg);
+#endif
 	case NVME_IOCTL_ID:
 		return MOCK_NSID;
 	case BLKRRPART:

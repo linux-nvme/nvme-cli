@@ -9,6 +9,7 @@ privsep_helper = executable(
     'nvme-privsep-helper',
     ['helper.c'],
     dependencies: [
+        ccan_dep,
         config_dep,
         libnvme_dep,
     ],

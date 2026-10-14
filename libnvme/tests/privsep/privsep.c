@@ -25,6 +25,9 @@
 
 #include <libnvme.h>
 #include <libnvme-privsep.h>
+#ifdef TEST_SED
+#include <libnvme-sed.h>
+#endif
 
 #include "../ioctl/util.h"
 #include "mock.h"
@@ -344,6 +347,40 @@ static void test_regs(void)
 	libnvme_close(n);
 }
 
+#ifdef TEST_SED
+static void test_sed(void)
+{
+	struct libnvme_sed_key key = {
+		.type = LIBNVME_SED_KEY_INCLUDED,
+		.len = strlen(MOCK_SED_PASSWORD),
+	};
+	struct libnvme_transport_handle *c, *n;
+
+	memcpy(key.key, MOCK_SED_PASSWORD, key.len);
+	check(!libnvme_open(ctx, "nvme0", O_RDONLY, &c), "open nvme0");
+	check(!libnvme_open(ctx, "nvme0n1", O_RDWR, &n), "open nvme0n1");
+
+	check(!libnvme_sed_take_ownership(n, &key), "take ownership failed");
+	check(!libnvme_sed_lock_unlock(n, &key, LIBNVME_SED_LOCK_RW),
+	      "unlock failed");
+	check(libnvme_sed_lock_unlock(n, &key, LIBNVME_SED_LOCK_LK) ==
+	      MOCK_TCG_INVALID_PARAM, "lock state not passed");
+	check(libnvme_sed_take_ownership(c, &key) == -EINVAL,
+	      "take ownership of a controller");
+
+	key.key[0] = 'P';
+	check(libnvme_sed_take_ownership(n, &key) == MOCK_TCG_NOT_AUTHORIZED,
+	      "TCG status not returned");
+
+	libnvme_close(c);
+	libnvme_close(n);
+}
+#else
+static void test_sed(void)
+{
+}
+#endif
+
 static int retries;
 
 static bool retry_always(struct libnvme_transport_handle *hdl,
@@ -411,6 +448,7 @@ int main(int argc, char **argv)
 	test_handles();
 	test_device_ops();
 	test_regs();
+	test_sed();
 	test_retry_broken();
 
 	libnvme_free_global_ctx(ctx);
