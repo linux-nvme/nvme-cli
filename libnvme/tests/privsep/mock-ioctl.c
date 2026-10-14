@@ -29,6 +29,9 @@
  *   write MOCK_FABRICS_RESPONSE. A connect to MOCK_NQN_REFUSED fails with
  *   ECONNREFUSED. The connect arguments are copied to the file named by the
  *   MOCK_CONNECT_LOG environment variable.
+ * - the delete_controller attribute of nvme5 is the file named by the
+ *   MOCK_DELETE_CTRL environment variable; writes to the one of nvme6
+ *   return 0
  * - IOC_OPAL_TAKE_OWNERSHIP and IOC_OPAL_LOCK_UNLOCK on the namespace
  *   return the TCG status MOCK_TCG_NOT_AUTHORIZED unless the key is
  *   MOCK_SED_PASSWORD; IOC_OPAL_LOCK_UNLOCK unlocks only to read-write
@@ -107,7 +110,7 @@ typedef ssize_t (*read_fn)(int fd, void *buf, size_t count);
 typedef ssize_t (*write_fn)(int fd, const void *buf, size_t count);
 
 /* The descriptors of the emulated devices, -1 if not open. */
-static int ctrl_fd = -1, ns_fd = -1, fabrics_fd = -1;
+static int ctrl_fd = -1, ns_fd = -1, fabrics_fd = -1, short_fd = -1;
 static bool fabrics_connected;
 
 static int mock_ret(int err)
@@ -174,17 +177,22 @@ static int mock_open(const char *path, int flags, mode_t mode,
 	bool ctrl = !strcmp(path, "/dev/nvme0");
 	bool ns = !strcmp(path, "/dev/nvme0n1");
 	bool fabrics = !strcmp(path, "/dev/nvme-fabrics");
+	bool short_write =
+		!strcmp(path, "/sys/class/nvme/nvme6/delete_controller");
 	int fd;
 
 	if (!real_open) {
 		errno = EIO;
 		return -1;
 	}
-	if (ctrl || ns || fabrics)
+	if (ctrl || ns || fabrics || short_write)
 		path = "/dev/null";
 	else if (!strcmp(path, "/sys/class/nvme/nvme0/device/resource0") &&
 		 getenv("MOCK_RESOURCE0"))
 		path = getenv("MOCK_RESOURCE0");
+	else if (!strcmp(path, "/sys/class/nvme/nvme5/delete_controller") &&
+		 getenv("MOCK_DELETE_CTRL"))
+		path = getenv("MOCK_DELETE_CTRL");
 
 	fd = real_open(path, flags, mode);
 	if (fd >= 0 && ctrl)
@@ -194,7 +202,8 @@ static int mock_open(const char *path, int flags, mode_t mode,
 	else if (fd >= 0 && fabrics) {
 		fabrics_fd = fd;
 		fabrics_connected = false;
-	}
+	} else if (fd >= 0 && short_write)
+		short_fd = fd;
 
 	return fd;
 }
@@ -237,6 +246,8 @@ int close(int fd)
 		ns_fd = -1;
 	else if (fd == fabrics_fd)
 		fabrics_fd = -1;
+	else if (fd == short_fd)
+		short_fd = -1;
 
 	if (!real_close)
 		real_close = dlsym(RTLD_NEXT, "close");
@@ -297,6 +308,8 @@ ssize_t write(int fd, const void *buf, size_t count)
 		errno = EIO;
 		return -1;
 	}
+	if (fd >= 0 && fd == short_fd)
+		return 0;
 	if (fd < 0 || fd != fabrics_fd)
 		return real_write(fd, buf, count);
 

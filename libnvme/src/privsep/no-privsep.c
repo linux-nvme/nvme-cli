@@ -55,3 +55,9 @@ ssize_t __libnvme_privsep_fabrics(struct libnvme_privsep *ps,
 	*step = LIBNVMF_DEV_OPEN;
 	return -ENOTSUP;
 }
+
+int __libnvme_privsep_delete_ctrl(struct libnvme_privsep *ps,
+		const char *name)
+{
+	return -ENOTSUP;
+}

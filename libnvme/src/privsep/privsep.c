@@ -442,3 +442,24 @@ ssize_t __libnvme_privsep_fabrics(struct libnvme_privsep *ps,
 
 	return reply.len;
 }
+
+int __libnvme_privsep_delete_ctrl(struct libnvme_privsep *ps,
+		const char *name)
+{
+	struct privsep_reply reply;
+	size_t len;
+	int ret;
+
+	if (!name)
+		return -EINVAL;
+	len = strlen(name) + 1;
+	if (len > LIBNVME_PRIVSEP_MAX_NAME)
+		return -ENAMETOOLONG;
+
+	ret = privsep_call(ps, LIBNVME_PRIVSEP_OP_DELETE_CTRL, 0, name, len,
+			   NULL, 0, NULL, 0, &reply);
+	if (!ret)
+		ret = privsep_check_len(ps, &reply, 0);
+
+	return ret ? ret : reply.status;
+}

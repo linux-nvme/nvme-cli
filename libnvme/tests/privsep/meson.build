@@ -50,6 +50,7 @@ privsep_proto_test = executable(
     ['proto.c', '../ioctl/util.c'],
     c_args: privsep_test_args,
     dependencies: [
+        ccan_dep,
         config_dep,
         libnvme_dep,
     ],

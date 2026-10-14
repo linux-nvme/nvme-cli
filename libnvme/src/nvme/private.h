@@ -483,6 +483,8 @@ int __libnvme_privsep_sed_ioctl(struct libnvme_transport_handle *hdl,
 ssize_t __libnvme_privsep_fabrics(struct libnvme_privsep *ps,
 		const char *args, char *buf, size_t size,
 		enum libnvmf_dev_step *step);
+int __libnvme_privsep_delete_ctrl(struct libnvme_privsep *ps,
+		const char *name);
 
 #ifdef CONFIG_MI
 struct nvme_mi_msg_hdr;
