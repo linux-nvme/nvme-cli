@@ -7,10 +7,12 @@
  */
 
 #include <endian.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <daemon-util/log.h>
+#include <daemon-util/work.h>
 #include <nvme/fabrics.h>
 #include <nvme/lib.h>
 #include <nvme/nvme-types-fabrics.h>
@@ -129,39 +131,91 @@ void dlp_process_log(const struct nvmf_discovery_log *log,
 	}
 }
 
-int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
-	      const struct libnvmf_tid *dc_tid,
-	      void (*ioc_callback)(const struct libnvmf_tid *t,
-				   void *user_data),
-	      void (*dc_callback)(const struct libnvmf_tid *t, bool epcsd,
-				 void *user_data),
-	      void (*self_callback)(bool epcsd, void *user_data),
-	      void *user_data)
-{
-	struct libnvme_ctrl *ctrl = NULL;
-	struct nvmf_discovery_log *log = NULL;
+struct dlp_read_job {
+	char *devname;
+	int log_level;
+	dlp_read_callback cb;
+	void *user_data;
+	// Written by the worker.
+	struct nvmf_discovery_log *log;
+	const char *failed;	// the step that failed
 	int ret;
+};
 
-	ret = libnvme_scan_ctrl(ctx->nvme_ctx, devname, &ctrl);
-	if (ret < 0) {
-		log_warn("%s | %s - scan_ctrl failed: %s",
-			 libnvmf_tid_str(dc_tid), devname, strerror(-ret));
-		goto out;
+static void read_job_free(void *data)
+{
+	struct dlp_read_job *j = data;
+
+	free(j->log);
+	free(j->devname);
+	free(j);
+}
+
+/*
+ * Runs in a worker. The global context is its own: libnvme objects are not
+ * shared with the event loop.
+ */
+static void read_log(void *data)
+{
+	struct dlp_read_job *j = data;
+	struct libnvme_global_ctx *nctx;
+	struct libnvme_ctrl *ctrl = NULL;
+
+	nctx = libnvme_create_global_ctx();
+	if (!nctx) {
+		j->failed = "create_global_ctx";
+		j->ret = -ENOMEM;
+		return;
 	}
+	libnvme_set_logging_level(nctx, j->log_level, false, false);
 
-	ret = libnvmf_get_discovery_log(ctrl, NULL, &log);
-	if (ret < 0) {
-		log_warn("%s | %s - get_discovery_log failed: %s",
-			 libnvmf_tid_str(dc_tid), devname, strerror(-ret));
-		goto out;
+	j->ret = libnvme_scan_ctrl(nctx, j->devname, &ctrl);
+	if (j->ret < 0)
+		j->failed = "scan_ctrl";
+	else
+		j->ret = libnvmf_get_discovery_log(ctrl, NULL, &j->log);
+	if (j->ret < 0 && !j->failed)
+		j->failed = "get_discovery_log";
+
+	libnvme_free_ctrl(ctrl);
+	libnvme_free_global_ctx(nctx);
+}
+
+static void read_done(void *data, bool timed_out __attribute__((unused)))
+{
+	struct dlp_read_job *j = data;
+
+	if (j->ret < 0)
+		log_dbg("%s - %s failed: %s", j->devname, j->failed,
+			strerror(-j->ret));
+	j->cb(j->ret < 0 ? j->ret : 0, j->log, j->user_data);
+}
+
+int dlp_read(struct dmn_work_pool *pool, const char *devname, int log_level,
+	     dlp_read_callback cb, void *user_data, struct dmn_work **ret)
+{
+	struct dlp_read_job *j;
+	int err;
+
+	if (!pool || !devname || !cb)
+		return -EINVAL;
+
+	j = calloc(1, sizeof(*j));
+	if (!j)
+		return -ENOMEM;
+	j->devname = strdup(devname);
+	if (!j->devname) {
+		free(j);
+		return -ENOMEM;
 	}
+	j->log_level = log_level;
+	j->cb = cb;
+	j->user_data = user_data;
 
-	dlp_process_log(log, dc_tid, ioc_callback, dc_callback, self_callback,
-			user_data);
+	err = dmn_work_submit(pool, read_log, read_done, read_job_free, j, 0,
+			      ret);
+	if (err < 0)
+		read_job_free(j);
 
-	ret = 0;
-out:
-	free(log);
-	libnvme_free_ctrl(ctrl); // detach from the global-ctx tree; NULL-safe
-	return ret;
+	return err;
 }
