@@ -2435,13 +2435,13 @@ enum nvme_id_ctrl_mec {
  *			       Status capability.
  * @NVME_CTRL_OACS_CFLS:       If set, then the controller supports the command
  *			       and feature lockdown capability.
- * @NVME_CTRL_OACS_HMLM:       If set, then the controller supports the command
- *			       and Host Managed Live Migration capability.
- * @NVME_CTRL_OACS_CTRL_SCOPED_CMD_FEAT_LD: If set, then the controller
- *			       supports the Controller-scoped Command and
- *			       Feature Lockdown capability. Cleared to '0' if
- *			       the Command and Feature Lockdown Supported
- *			       (CFLS) bit is cleared to '0'.
+ * @NVME_CTRL_OACS_HMLMS:      If set, then the controller supports the
+ *			       Host Managed Live Migration capability.
+ * @NVME_CTRL_OACS_CCFLS:      If set, then the controller supports the
+ *			       Controller-scoped Command and Feature Lockdown
+ *			       capability. Cleared to '0' if the Command and
+ *			       Feature Lockdown Supported (CFLS) bit is cleared
+ *			       to '0'.
  */
 enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_SSRS_SHIFT		= 0,
@@ -2481,8 +2481,8 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_DBCS			= NVME_VAL(CTRL_OACS_DBCS),
 	NVME_CTRL_OACS_GLSS			= NVME_VAL(CTRL_OACS_GLSS),
 	NVME_CTRL_OACS_CFLS			= NVME_VAL(CTRL_OACS_CFLS),
-	NVME_CTRL_OACS_HMLM			= NVME_VAL(CTRL_OACS_HMLMS),
-	NVME_CTRL_OACS_CTRL_SCOPED_CMD_FEAT_LD	= NVME_VAL(CTRL_OACS_CCFLS),
+	NVME_CTRL_OACS_HMLMS			= NVME_VAL(CTRL_OACS_HMLMS),
+	NVME_CTRL_OACS_CCFLS			= NVME_VAL(CTRL_OACS_CCFLS),
 };
 
 #define NVME_CTRL_OACS_SSRS(oacs)	NVME_GET(oacs, CTRL_OACS_SSRS)
