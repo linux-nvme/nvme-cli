@@ -245,6 +245,7 @@
 #define SNDK_CUSTOMER_ID_0x1005         0x1005
 #define SNDK_CUSTOMER_ID_0x1008         0x1008
 #define SNDK_CUSTOMER_ID_0x100B         0x100B
+#define SNDK_CUSTOMER_ID_0x100F         0x100F
 #define SNDK_CUSTOMER_ID_0x1304         0x1304
 #define SNDK_INVALID_CUSTOMER_ID            -1
 
