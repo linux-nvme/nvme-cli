@@ -2416,6 +2416,8 @@ enum nvme_id_ctrl_mec {
  * @NVME_CTRL_OACS_GLSS_SHIFT: Shift amount to get the Get LBA Status supported
  * @NVME_CTRL_OACS_CFLS_SHIFT: Shift amount to get the Command and Feature Lockdown supported
  * @NVME_CTRL_OACS_HMLMS_SHIFT:Shift amount to get the Host Managed Live Migration support
+ * @NVME_CTRL_OACS_ENSS_SHIFT: Shift amount to get the Exported NVM Subsystem
+ *			       Support
  * @NVME_CTRL_OACS_CCFLS_SHIFT: Shift amount to get the Controller-scoped
  *			       Command and Feature Lockdown supported
  * @NVME_CTRL_OACS_SSRS_MASK:  Mask to get the Security Send Receive supported
@@ -2430,6 +2432,7 @@ enum nvme_id_ctrl_mec {
  * @NVME_CTRL_OACS_GLSS_MASK:  Mask to get the Get LBA Status supported
  * @NVME_CTRL_OACS_CFLS_MASK:  Mask to get the Command and Feature Lockdown supported
  * @NVME_CTRL_OACS_HMLMS_MASK: Mask to get the Host Managed Live Migration support
+ * @NVME_CTRL_OACS_ENSS_MASK:  Mask to get the Exported NVM Subsystem Support
  * @NVME_CTRL_OACS_CCFLS_MASK: Mask to get the Controller-scoped Command and
  *			       Feature Lockdown supported
  * @NVME_CTRL_OACS_SSRS:       If set, then the controller supports the
@@ -2457,6 +2460,8 @@ enum nvme_id_ctrl_mec {
  *			       and feature lockdown capability.
  * @NVME_CTRL_OACS_HMLMS:      If set, then the controller supports the
  *			       Host Managed Live Migration capability.
+ * @NVME_CTRL_OACS_ENSS:       If set, then the controller supports the
+ *			       Exported Resource Management capability.
  * @NVME_CTRL_OACS_CCFLS:      If set, then the controller supports the
  *			       Controller-scoped Command and Feature Lockdown
  *			       capability. Cleared to '0' if the Command and
@@ -2476,6 +2481,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_GLSS_SHIFT		= 9,
 	NVME_CTRL_OACS_CFLS_SHIFT		= 10,
 	NVME_CTRL_OACS_HMLMS_SHIFT		= 11,
+	NVME_CTRL_OACS_ENSS_SHIFT		= 12,
 	NVME_CTRL_OACS_CCFLS_SHIFT		= 13,
 	NVME_CTRL_OACS_SSRS_MASK		= 1,
 	NVME_CTRL_OACS_FNVMS_MASK		= 1,
@@ -2489,6 +2495,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_GLSS_MASK		= 1,
 	NVME_CTRL_OACS_CFLS_MASK		= 1,
 	NVME_CTRL_OACS_HMLMS_MASK		= 1,
+	NVME_CTRL_OACS_ENSS_MASK		= 1,
 	NVME_CTRL_OACS_CCFLS_MASK		= 1,
 	NVME_CTRL_OACS_SSRS			= NVME_VAL(CTRL_OACS_SSRS),
 	NVME_CTRL_OACS_FNVMS			= NVME_VAL(CTRL_OACS_FNVMS),
@@ -2502,6 +2509,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_GLSS			= NVME_VAL(CTRL_OACS_GLSS),
 	NVME_CTRL_OACS_CFLS			= NVME_VAL(CTRL_OACS_CFLS),
 	NVME_CTRL_OACS_HMLMS			= NVME_VAL(CTRL_OACS_HMLMS),
+	NVME_CTRL_OACS_ENSS			= NVME_VAL(CTRL_OACS_ENSS),
 	NVME_CTRL_OACS_CCFLS			= NVME_VAL(CTRL_OACS_CCFLS),
 };
 
@@ -2517,6 +2525,7 @@ enum nvme_id_ctrl_oacs {
 #define NVME_CTRL_OACS_GLSS(oacs)	NVME_GET(oacs, CTRL_OACS_GLSS)
 #define NVME_CTRL_OACS_CFLS(oacs)	NVME_GET(oacs, CTRL_OACS_CFLS)
 #define NVME_CTRL_OACS_HMLMS(oacs)	NVME_GET(oacs, CTRL_OACS_HMLMS)
+#define NVME_CTRL_OACS_ENSS(oacs)	NVME_GET(oacs, CTRL_OACS_ENSS)
 #define NVME_CTRL_OACS_CCFLS(oacs)	NVME_GET(oacs, CTRL_OACS_CCFLS)
 
 /**
