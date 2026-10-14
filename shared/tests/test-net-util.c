@@ -217,6 +217,7 @@ static bool check_ret(const char *name, int got, int want)
 static bool test_route_get_egress_iface(void)
 {
 	char ifname[IF_NAMESIZE];
+	char scoped[INET6_ADDRSTRLEN + IF_NAMESIZE];
 	char small_buf[8];
 	bool pass = true;
 	int ret;
@@ -273,6 +274,28 @@ static bool test_route_get_egress_iface(void)
 	pass &= check_ret("IPv6 loopback src and dst lookup returns 0", ret, 0);
 	pass &= check_str("IPv6 loopback src/dst egress interface is lo",
 			ifname, "lo");
+
+	/* Link-local: the scope names the interface */
+	memset(ifname, 0, sizeof(ifname));
+	ret = shr_route_get_egress_iface(NULL, "fe80::1%lo", ifname,
+			sizeof(ifname));
+	pass &= check_ret("link-local with a scope name returns 0", ret, 0);
+	pass &= check_str("link-local scope name gives lo", ifname, "lo");
+
+	snprintf(scoped, sizeof(scoped), "fe80::1%%%u", if_nametoindex("lo"));
+	memset(ifname, 0, sizeof(ifname));
+	ret = shr_route_get_egress_iface(NULL, scoped, ifname, sizeof(ifname));
+	pass &= check_ret("link-local with a scope index returns 0", ret, 0);
+	pass &= check_str("link-local scope index gives lo", ifname, "lo");
+
+	pass &= check_ret("link-local without a scope fails with -EINVAL",
+			  shr_route_get_egress_iface(NULL, "fe80::1",
+					  ifname, sizeof(ifname)),
+			  -EINVAL);
+	pass &= check_ret("link-local with an unknown scope fails with -EINVAL",
+			  shr_route_get_egress_iface(NULL, "fe80::1%nosuchif0",
+					  ifname, sizeof(ifname)),
+			  -EINVAL);
 
 	return pass;
 }
