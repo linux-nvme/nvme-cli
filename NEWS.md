@@ -203,6 +203,12 @@
   `libnvmf_kernel_options_for_each()` report the fabrics options the
   kernel lists in `/dev/nvme-fabrics`.
 
+* The `libnvme3.pc` pkg-config file now reports the nvme-cli release
+  version, e.g. 3.2. Before, it reported the library ABI version, 1.0.0
+  in every release. A project can now require a release with, for
+  example, `libnvme3 >= 3.2`. The ABI version and the soname
+  (`libnvme3.so.1`) do not change.
+
 ### nvme-keysd
 
 * New daemon, nvme-keysd, a technology preview: it will put NVMe/TCP
