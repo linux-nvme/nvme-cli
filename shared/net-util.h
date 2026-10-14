@@ -58,6 +58,7 @@ const char *shr_iface_matching_addr(const struct ifaddrs *iface_list,
 bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr);
 
+#ifdef __linux__
 /*
  * shr_route_get_egress_iface - Lookup route table and find egress interface
  *
@@ -88,3 +89,4 @@ int shr_route_get_egress_iface(const char *saddr, const char *daddr,
  */
 int shr_netdev_get_hw_queues(const char *ifname, uint32_t *combined_count,
 		uint32_t *tx_count, uint32_t *rx_count);
+#endif /* __linux__ */
