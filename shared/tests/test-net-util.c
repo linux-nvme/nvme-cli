@@ -44,17 +44,6 @@ static bool check_str(const char *name, const char *got, const char *want)
 	return false;
 }
 
-static bool check_ret(const char *name, int got, int want)
-{
-	if (got == want) {
-		printf(" - %s [PASS]\n", name);
-		return true;
-	}
-
-	printf(" - %s: got %d, want %d [FAIL]\n", name, got, want);
-	return false;
-}
-
 static bool test_ipaddrs_eq(void)
 {
 	/*
@@ -213,6 +202,18 @@ static bool test_iface_primary_addr_matches(void)
 	return pass;
 }
 
+#ifdef __linux__
+static bool check_ret(const char *name, int got, int want)
+{
+	if (got == want) {
+		printf(" - %s [PASS]\n", name);
+		return true;
+	}
+
+	printf(" - %s: got %d, want %d [FAIL]\n", name, got, want);
+	return false;
+}
+
 static bool test_route_get_egress_iface(void)
 {
 	char ifname[IF_NAMESIZE];
@@ -314,6 +315,7 @@ static bool test_netdev_get_hw_queues(void)
 			  true);
 	return pass;
 }
+#endif /* __linux__ */
 
 int main(void)
 {
@@ -323,8 +325,10 @@ int main(void)
 	pass &= test_ipv6_is_link_local();
 	pass &= test_iface_matching_addr();
 	pass &= test_iface_primary_addr_matches();
+#ifdef __linux__
 	pass &= test_route_get_egress_iface();
 	pass &= test_netdev_get_hw_queues();
+#endif
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

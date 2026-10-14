@@ -7,12 +7,7 @@
  */
 
 #include <arpa/inet.h>
-#include <asm/types.h>
 #include <errno.h>
-#include <linux/ethtool.h>
-#include <linux/netlink.h>
-#include <linux/rtnetlink.h>
-#include <linux/sockios.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -22,10 +17,15 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "net-util.h"
+#ifdef __linux__
+#include <asm/types.h>
+#include <linux/ethtool.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#include <linux/sockios.h>
+#endif
 
-#define NETLINK_BUFFER_SIZE	4096
-#define NETLINK_SEQ_NUM	1
+#include "net-util.h"
 
 /*
  * Parse @addr (IPv4, or IPv6 with an optional "%scope" suffix on a
@@ -211,6 +211,10 @@ bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 
 	return match_found;
 }
+
+#ifdef __linux__
+#define NETLINK_BUFFER_SIZE	4096
+#define NETLINK_SEQ_NUM	1
 
 static int rtattr_append(struct nlmsghdr *nlh, char *buf, size_t buflen,
 		unsigned short type, void *attrval, int attrlen)
@@ -447,3 +451,4 @@ out:
 	close(fd);
 	return ret;
 }
+#endif /* __linux__ */
