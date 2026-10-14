@@ -378,10 +378,9 @@ static void print_hex(const uint8_t *x, int len)
 		printf("%02x", x[i]);
 }
 
-/* Safe display fallbacks for the lazy eui64/nguid/uuid getters below. */
+/* Safe display fallbacks for the lazy eui64/nguid getters below. */
 static const uint8_t zero_eui64[8];
 static const uint8_t zero_nguid[16];
-static const unsigned char zero_uuid[NVME_UUID_LEN];
 
 int main(int argc, char **argv)
 {
@@ -448,8 +447,7 @@ int main(int argc, char **argv)
 				       libnvme_ctrl_get_state(c));
 
 				libnvme_ctrl_for_each_ns(c, n) {
-					char uuid_str[NVME_UUID_LEN_STRING];
-					const unsigned char *uuid;
+					const char *wwid;
 					const uint8_t *eui64;
 					const uint8_t *nguid;
 					int lba_size;
@@ -471,15 +469,11 @@ int main(int argc, char **argv)
 					libnvme_ns_get_nguid(n, &nguid,
 							zero_nguid);
 					print_hex(nguid, 16);
-					libnvme_ns_get_uuid(n, &uuid,
-							zero_uuid);
-					libnvme_uuid_to_string(
-							(unsigned char *)uuid,
-							uuid_str);
+					libnvme_ns_get_wwid(n, &wwid, "");
 					libnvme_ns_get_csi(n, &csi,
 							NVME_CSI_NVM);
-					printf(" uuid:%s csi:%d\n",
-					       uuid_str, csi);
+					printf(" wwid:%s csi:%d\n",
+					       wwid, csi);
 				}
 
 				libnvme_ctrl_for_each_path(c, p) {

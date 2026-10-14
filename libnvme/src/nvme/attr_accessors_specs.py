@@ -290,6 +290,11 @@ NS_ATTRS = {
             'type': 'unsigned char *',
             'custom': True,
         },
+        {
+            'name': 'wwid',
+            'attr': 'wwid',
+            'type': 'char *',
+        },
         # The four diag/* counters need no per-OS override: like most
         # CTRL_ATTRS members, Windows absence falls out of the existing
         # libnvme_get_ns_attr() stub (unconditionally NULL) for free --
