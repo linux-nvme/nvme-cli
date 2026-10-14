@@ -23,7 +23,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
+from nvme_mock_ipc import (NIC_QUEUES_FMT, MockIPCServer, make_mock_env,
+                           resolve_mock_lib_path, run_nvme)
 
 # Capture the nvme binary path and preload library path from argv before
 # unittest.main() strips them.
@@ -105,6 +106,14 @@ class FabricsMockIPCServer(MockIPCServer):
         self.sysfs_dir = None
         self.controllers = {}        # maps instance (int) -> dict of connect options
         self.log_page_fetch_count = {}  # maps subsysnqn (str) -> completed-fetch count
+        # Host network and CPU setup for the default --nr-io-queues. An
+        # unknown daddr has no route and an unknown ifname has no ethtool
+        # channel support, so by default nvme-cli sets no nr_io_queues.
+        self.egress_ifaces = {}      # maps daddr (str) -> egress ifname
+        self.nic_queues = {}         # maps ifname -> (combined, tx, rx)
+        self.nprocs = None           # online CPUs, None for the real count
+        self.route_lookups = []      # (daddr, saddr) of every route lookup
+        self.nic_queue_queries = []  # ifname of every h/w queue query
 
     def handle_write(self, conn, payload):
         """A write() on /dev/nvme-fabrics: fabrics connect args."""
@@ -149,6 +158,7 @@ class FabricsMockIPCServer(MockIPCServer):
             'traddr': traddr,
             'trsvcid': trsvcid,
             'keep_alive_tmo': opts.get('keep_alive_tmo'),
+            'nr_io_queues': opts.get('nr_io_queues'),
             'discovery': 'discovery' in flags,
             'dhchap_secret': opts.get('dhchap_secret'),
             'dhchap_ctrl_secret': opts.get('dhchap_ctrl_secret'),
@@ -195,6 +205,28 @@ class FabricsMockIPCServer(MockIPCServer):
         ctrl_path = Path(self.sysfs_dir) / f"sys/class/nvme/nvme{inst}"
         for attr in ('dhchap_secret', 'dhchap_ctrl_secret'):
             (ctrl_path / attr).write_text(f"{ctrl[attr] or 'none'}\n")
+
+    def handle_route(self, conn, daddr, saddr):
+        self.route_lookups.append((daddr, saddr))
+        ifname = self.egress_ifaces.get(daddr)
+        if ifname is None:
+            super().handle_route(conn, daddr, saddr)
+            return
+        self.send_response(conn, 0, payload=ifname.encode('utf-8'))
+
+    def handle_nic_queues(self, conn, ifname):
+        self.nic_queue_queries.append(ifname)
+        queues = self.nic_queues.get(ifname)
+        if queues is None:
+            super().handle_nic_queues(conn, ifname)
+            return
+        self.send_response(conn, 0, payload=struct.pack(NIC_QUEUES_FMT, *queues))
+
+    def handle_nprocs(self, conn):
+        if self.nprocs is None:
+            super().handle_nprocs(conn)
+            return
+        self.send_response(conn, 0, result=self.nprocs)
 
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                       cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
@@ -1020,6 +1052,119 @@ class FabricsMockCLITest(unittest.TestCase):
                              f"{nqn}'s Discovery Log Page was re-fetched via "
                              "the ring; the visited-set should have "
                              "short-circuited every back-reference")
+
+    # ------------------------------------------------------------------ #
+    # Default --nr-io-queues                                             #
+    # ------------------------------------------------------------------ #
+
+    _NR_IO_QUEUES_NQN = "nqn.2014-08.org.nvmexpress:nr-io-queues-subsys"
+
+    def _connect_nr_io_queues(self, traddr='192.168.30.10', *extra,
+                              transport='tcp'):
+        """Connects to @traddr. Returns the nr_io_queues connect option,
+        or None if nvme-cli did not set one."""
+        self._run('connect', '-t', transport, '-a', traddr, '-s', '4420',
+                  '-n', self._NR_IO_QUEUES_NQN, *extra)
+        return self.server.controllers[0]['nr_io_queues']
+
+    def _setup_nic(self, traddr='192.168.30.10', ifname='eth0',
+                   queues=(8, 0, 0), nprocs=4):
+        self.server.egress_ifaces[traddr] = ifname
+        self.server.nic_queues[ifname] = queues
+        self.server.nprocs = nprocs
+
+    def test_connect_nr_io_queues_limited_by_cpus(self):
+        """More NIC h/w queues than CPUs: use one I/O queue per CPU."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertEqual(self._connect_nr_io_queues(), '4')
+        self.assertEqual(self.server.route_lookups, [('192.168.30.10', '')])
+        self.assertEqual(self.server.nic_queue_queries, ['eth0'])
+
+    def test_connect_nr_io_queues_limited_by_hw_queues(self):
+        """Fewer NIC h/w queues than CPUs: use one I/O queue per h/w
+        queue. Count combined queues plus the paired tx/rx ones."""
+        self._setup_nic(queues=(2, 3, 1), nprocs=16)
+        self.assertEqual(self._connect_nr_io_queues(), '3')
+
+    def test_connect_nr_io_queues_single_hw_queue(self):
+        """A NIC with a single h/w queue: let the kernel decide."""
+        self._setup_nic(queues=(1, 0, 0), nprocs=4)
+        self.assertIsNone(self._connect_nr_io_queues())
+
+    def test_connect_nr_io_queues_no_route(self):
+        """No route to the target: let the kernel decide."""
+        self.server.nprocs = 4
+        self.assertIsNone(self._connect_nr_io_queues())
+        self.assertEqual(self.server.route_lookups, [('192.168.30.10', '')])
+        self.assertEqual(self.server.nic_queue_queries, [])
+
+    def test_connect_nr_io_queues_no_ethtool_channels(self):
+        """The NIC does not report its h/w queues: let the kernel decide."""
+        self._setup_nic(nprocs=4)
+        del self.server.nic_queues['eth0']
+        self.assertIsNone(self._connect_nr_io_queues())
+        self.assertEqual(self.server.nic_queue_queries, ['eth0'])
+
+    def test_connect_nr_io_queues_ipv6(self):
+        """The route lookup works for an IPv6 target and source too."""
+        self._setup_nic(traddr='fd00::10', queues=(6, 0, 0), nprocs=8)
+        self.assertEqual(
+            self._connect_nr_io_queues('fd00::10', '-w', 'fd00::1'), '6')
+        self.assertEqual(self.server.route_lookups, [('fd00::10', 'fd00::1')])
+
+    def test_connect_nr_io_queues_host_traddr(self):
+        """--host-traddr is the source address of the route lookup."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertEqual(
+            self._connect_nr_io_queues('192.168.30.10', '-w', '192.168.30.1'),
+            '4')
+        self.assertEqual(self.server.route_lookups,
+                         [('192.168.30.10', '192.168.30.1')])
+
+    def test_connect_nr_io_queues_host_iface(self):
+        """--host-iface names the NIC, so no route lookup is needed."""
+        self.server.nic_queues['eth7'] = (3, 0, 0)
+        self.server.nprocs = 4
+        self.assertEqual(self._connect_nr_io_queues('192.168.30.10',
+                                                    '-f', 'eth7'), '3')
+        self.assertEqual(self.server.route_lookups, [])
+        self.assertEqual(self.server.nic_queue_queries, ['eth7'])
+
+    def test_connect_nr_io_queues_explicit(self):
+        """An explicit --nr-io-queues wins, without any NIC query."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertEqual(self._connect_nr_io_queues('192.168.30.10',
+                                                    '-i', '2'), '2')
+        self.assertEqual(self.server.route_lookups, [])
+        self.assertEqual(self.server.nic_queue_queries, [])
+
+    def test_connect_nr_io_queues_rdma(self):
+        """Only tcp gets a default nr_io_queues."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self.assertIsNone(self._connect_nr_io_queues(transport='rdma'))
+        self.assertEqual(self.server.route_lookups, [])
+
+    def _write_config(self, subsys_extra=''):
+        config = Path(self.base_dir) / 'nvme-fabrics.conf'
+        config.write_text(
+            "[Subsystem]\n"
+            f"nqn        = {self._NR_IO_QUEUES_NQN}\n"
+            f"{subsys_extra}"
+            "controller = transport=tcp;traddr=192.168.30.10;trsvcid=4420\n")
+        return str(config)
+
+    def test_connect_config_nr_io_queues(self):
+        """A config file connection gets the same default."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self._run('connect', '-J', self._write_config())
+        self.assertEqual(self.server.controllers[0]['nr_io_queues'], '4')
+
+    def test_connect_config_nr_io_queues_explicit(self):
+        """nr-io-queues in the config file wins, without any NIC query."""
+        self._setup_nic(queues=(8, 0, 0), nprocs=4)
+        self._run('connect', '-J', self._write_config('nr-io-queues = 2\n'))
+        self.assertEqual(self.server.controllers[0]['nr_io_queues'], '2')
+        self.assertEqual(self.server.route_lookups, [])
 
 
     # ------------------------------------------------------------------ #

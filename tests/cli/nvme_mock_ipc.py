@@ -10,10 +10,13 @@
 intercepted write() (fabrics connect args), ioctl() and getpass() over a
 Unix socket to a MockIPCServer instance running in this process. This lets
 nvme-cli run against a fake target, with no real hardware and no root.
+It also forwards the egress route lookup, the NIC h/w queue query and
+get_nprocs(), so the test decides the host's network and CPU setup.
 
 Test files subclass MockIPCServer and override handle_write()/
-handle_ioctl()/handle_raw_ioctl()/handle_getpass() to steer responses for
-their own scenario. run_nvme() provides the common subprocess-invocation
+handle_ioctl()/handle_raw_ioctl()/handle_getpass()/handle_route()/
+handle_nic_queues()/handle_nprocs() to steer responses for their own
+scenario. run_nvme() provides the common subprocess-invocation
 mechanics.
 """
 import collections
@@ -37,6 +40,11 @@ IPC_TYPE_WRITE = 1  # write() on /dev/nvme-fabrics (connect args)
 IPC_TYPE_IOCTL = 2  # ioctl() admin or I/O passthru command
 IPC_TYPE_RAW_IOCTL = 3  # any other ioctl() on a mocked device
 IPC_TYPE_GETPASS = 4  # getpass(), payload is the prompt
+IPC_TYPE_ROUTE = 5  # egress route lookup, payload is "daddr\0saddr"
+IPC_TYPE_NIC_QUEUES = 6  # ETHTOOL_GCHANNELS, payload is the ifname
+IPC_TYPE_NPROCS = 7  # get_nprocs()
+# combined_count, tx_count, rx_count -- the handle_nic_queues() payload.
+NIC_QUEUES_FMT = "<III"
 
 IOC_WRITE = 1 << 0  # the caller passes data in
 IOC_READ = 1 << 1  # the caller gets data back
@@ -160,6 +168,25 @@ class MockIPCServer(threading.Thread):
         getpass() returns NULL."""
         self.send_response(conn, -1, errno_val=errno.ENOTTY)
 
+    def handle_route(self, conn, daddr, saddr):
+        """Override for IPC_TYPE_ROUTE. @saddr is '' if the caller did
+        not pass one. The response payload is the egress interface name.
+        Default: fail with ENETUNREACH, so nvme-cli lets the kernel pick
+        the number of I/O queues."""
+        self.send_response(conn, -1, errno_val=errno.ENETUNREACH)
+
+    def handle_nic_queues(self, conn, ifname):
+        """Override for IPC_TYPE_NIC_QUEUES. The response payload is
+        packed with NIC_QUEUES_FMT. Default: fail with EOPNOTSUPP, like a
+        NIC without ethtool channel support."""
+        self.send_response(conn, -1, errno_val=errno.EOPNOTSUPP)
+
+    def handle_nprocs(self, conn):
+        """Override for IPC_TYPE_NPROCS. The response result is the
+        number of online CPUs. Default: fail, so get_nprocs() returns
+        the real value."""
+        self.send_response(conn, -1, errno_val=errno.ENOSYS)
+
     def handle_client(self, conn):
         try:
             req_header = conn.recv(IPC_REQUEST_LEN, socket.MSG_WAITALL)
@@ -185,6 +212,13 @@ class MockIPCServer(threading.Thread):
                 self.handle_raw_ioctl(conn, fd, ioc, payload)
             elif req_type == IPC_TYPE_GETPASS:
                 self.handle_getpass(conn, payload.decode('utf-8', 'replace'))
+            elif req_type == IPC_TYPE_ROUTE:
+                daddr, _, saddr = payload.decode('utf-8', 'replace').partition('\0')
+                self.handle_route(conn, daddr, saddr)
+            elif req_type == IPC_TYPE_NIC_QUEUES:
+                self.handle_nic_queues(conn, payload.decode('utf-8', 'replace'))
+            elif req_type == IPC_TYPE_NPROCS:
+                self.handle_nprocs(conn)
         except OSError as e:
             print(f"Exception handling IPC client: {e}", file=sys.stderr)
         finally:
