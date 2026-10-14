@@ -47,6 +47,10 @@
  * or empty to read the options the kernel accepts. The response payload
  * is the text the kernel returned, shorter than LIBNVME_PRIVSEP_MAX_FABRICS.
  * On failure, result is the step which failed.
+ *
+ * DELETE_CTRL disconnects a fabrics controller like
+ * libnvmf_disconnect_ctrl() and uses the handle id 0. The payload is the
+ * NUL-terminated controller name, nvmeX.
  */
 
 #define LIBNVME_PRIVSEP_VERSION		1
@@ -77,6 +81,7 @@ enum libnvme_privsep_op {
 	LIBNVME_PRIVSEP_OP_WRITE_REG64	= 14,
 	LIBNVME_PRIVSEP_OP_SED		= 15,
 	LIBNVME_PRIVSEP_OP_FABRICS	= 16,
+	LIBNVME_PRIVSEP_OP_DELETE_CTRL	= 17,
 };
 
 struct libnvme_privsep_req {

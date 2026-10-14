@@ -383,7 +383,7 @@ static void test_sed(void)
 #endif
 
 #ifdef TEST_FABRICS
-static char sysfs[64], connect_log[64];
+static char sysfs[64], connect_log[64], delete_ctrl[64];
 
 static void write_file(const char *dir, const char *name, const char *text)
 {
@@ -432,6 +432,26 @@ static void create_sysfs(void)
 	check(fd >= 0, "mkstemp: %m");
 	close(fd);
 	check(!setenv("MOCK_CONNECT_LOG", connect_log, 1), "setenv");
+
+	snprintf(delete_ctrl, sizeof(delete_ctrl),
+		 "/tmp/test-privsep-delete-XXXXXX");
+	fd = mkstemp(delete_ctrl);
+	check(fd >= 0, "mkstemp: %m");
+	close(fd);
+	check(!setenv("MOCK_DELETE_CTRL", delete_ctrl, 1), "setenv");
+}
+
+static void read_file(const char *path, char *buf, size_t size)
+{
+	ssize_t len;
+	int fd;
+
+	fd = open(path, O_RDONLY);
+	check(fd >= 0, "open %s: %m", path);
+	len = read(fd, buf, size - 1);
+	check(len >= 0, "read %s: %m", path);
+	buf[len] = '\0';
+	close(fd);
 }
 
 static int connect_ctrl(struct libnvme_host *h, const char *nqn,
@@ -458,10 +478,9 @@ static void test_fabrics(void)
 	static const char hostid[] = "12345678-1234-1234-1234-123456789abc";
 	struct libnvme_ctrl *c, *refused;
 	struct libnvme_host *h;
-	char args[1024] = {};
+	char args[1024];
 	bool supported;
-	ssize_t len;
-	int fd, ret;
+	int ret;
 
 	/* The mock does not list tos, unlike current kernels. */
 	check(!libnvmf_kernel_option_supported(ctx, "ctrl_loss_tmo",
@@ -477,11 +496,7 @@ static void test_fabrics(void)
 	check(!strcmp(libnvme_ctrl_get_name(c), "nvme5"), "ctrl name %s",
 	      libnvme_ctrl_get_name(c));
 
-	fd = open(connect_log, O_RDONLY);
-	check(fd >= 0, "open %s: %m", connect_log);
-	len = read(fd, args, sizeof(args) - 1);
-	close(fd);
-	check(len > 0, "connect arguments not written");
+	read_file(connect_log, args, sizeof(args));
 	check(strstr(args, "nqn=" MOCK_NQN) &&
 	      strstr(args, "transport=tcp") &&
 	      strstr(args, "traddr=192.168.1.1"),
@@ -490,6 +505,10 @@ static void test_fabrics(void)
 	ret = connect_ctrl(h, MOCK_NQN_REFUSED, &refused);
 	check(ret == -ENVME_CONNECT_CONNREFUSED, "refused connect: %d", ret);
 	libnvme_free_ctrl(refused);
+
+	check(!libnvmf_disconnect_ctrl(c), "disconnect failed");
+	read_file(delete_ctrl, args, sizeof(args));
+	check(!strcmp(args, "1"), "delete_controller '%s'", args);
 }
 #else
 static void create_sysfs(void)
@@ -582,6 +601,7 @@ int main(int argc, char **argv)
 #ifdef TEST_FABRICS
 	shr_rmdir_recursive(sysfs);
 	unlink(connect_log);
+	unlink(delete_ctrl);
 #endif
 	printf("privsep tests passed\n");
 

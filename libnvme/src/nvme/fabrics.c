@@ -2107,11 +2107,14 @@ __shr_public int libnvmf_disconnect_ctrl(struct libnvme_ctrl *c)
 	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
 	int ret;
 
-	ret = libnvme_set_attr(libnvme_ctrl_get_sysfs_dir(c),
-			    "delete_controller", "1");
+	if (ctx && ctx->privsep)
+		ret = __libnvme_privsep_delete_ctrl(ctx->privsep, c->name);
+	else
+		ret = libnvme_set_attr(libnvme_ctrl_get_sysfs_dir(c),
+				       "delete_controller", "1");
 	if (ret < 0) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
-			"%s: failed to disconnect, error %d\n", c->name, errno);
+			"%s: failed to disconnect, error %d\n", c->name, -ret);
 		return ret;
 	}
 	libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: %s disconnected\n",
