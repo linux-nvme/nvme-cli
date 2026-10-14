@@ -47,3 +47,11 @@ int __libnvme_privsep_sed_ioctl(struct libnvme_transport_handle *hdl,
 {
 	return -ENOTSUP;
 }
+
+ssize_t __libnvme_privsep_fabrics(struct libnvme_privsep *ps,
+		const char *args, char *buf, size_t size,
+		enum libnvmf_dev_step *step)
+{
+	*step = LIBNVMF_DEV_OPEN;
+	return -ENOTSUP;
+}

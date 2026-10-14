@@ -480,6 +480,9 @@ int __libnvme_privsep_op(struct libnvme_transport_handle *hdl, __u32 op,
 		__u64 *result);
 int __libnvme_privsep_sed_ioctl(struct libnvme_transport_handle *hdl,
 		__u32 request, const void *arg, size_t size);
+ssize_t __libnvme_privsep_fabrics(struct libnvme_privsep *ps,
+		const char *args, char *buf, size_t size,
+		enum libnvmf_dev_step *step);
 
 #ifdef CONFIG_MI
 struct nvme_mi_msg_hdr;

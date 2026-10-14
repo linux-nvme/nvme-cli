@@ -1634,6 +1634,10 @@ static ssize_t nvmf_dev_xfer(struct libnvme_global_ctx *ctx,
 	__cleanup_fd int fd = -1;
 	ssize_t len;
 
+	if (ctx->privsep)
+		return __libnvme_privsep_fabrics(ctx->privsep, args, buf, size,
+						 step);
+
 	*step = LIBNVMF_DEV_OPEN;
 	fd = open(nvmf_dev, args ? O_RDWR : O_RDONLY);
 	if (fd < 0)

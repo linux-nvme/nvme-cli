@@ -25,6 +25,10 @@
  * - BLKRRPART succeeds, BLKBSZSET accepts only MOCK_BLOCK_SIZE
  * - the BAR of nvme0 is the file named by the MOCK_RESOURCE0 environment
  *   variable
+ * - /dev/nvme-fabrics returns MOCK_FABRICS_OPTIONS, or after a connect
+ *   write MOCK_FABRICS_RESPONSE. A connect to MOCK_NQN_REFUSED fails with
+ *   ECONNREFUSED. The connect arguments are copied to the file named by the
+ *   MOCK_CONNECT_LOG environment variable.
  * - IOC_OPAL_TAKE_OWNERSHIP and IOC_OPAL_LOCK_UNLOCK on the namespace
  *   return the TCG status MOCK_TCG_NOT_AUTHORIZED unless the key is
  *   MOCK_SED_PASSWORD; IOC_OPAL_LOCK_UNLOCK unlocks only to read-write
@@ -99,9 +103,12 @@ typedef int (*open_fn)(const char *path, int flags, ...);
 typedef int (*close_fn)(int fd);
 typedef int (*fstat_fn)(int fd, void *buf);
 typedef int (*ioctl_fn)(int fd, unsigned long request, ...);
+typedef ssize_t (*read_fn)(int fd, void *buf, size_t count);
+typedef ssize_t (*write_fn)(int fd, const void *buf, size_t count);
 
 /* The descriptors of the emulated devices, -1 if not open. */
-static int ctrl_fd = -1, ns_fd = -1;
+static int ctrl_fd = -1, ns_fd = -1, fabrics_fd = -1;
+static bool fabrics_connected;
 
 static int mock_ret(int err)
 {
@@ -166,13 +173,14 @@ static int mock_open(const char *path, int flags, mode_t mode,
 	open_fn real_open = dlsym(RTLD_NEXT, sym);
 	bool ctrl = !strcmp(path, "/dev/nvme0");
 	bool ns = !strcmp(path, "/dev/nvme0n1");
+	bool fabrics = !strcmp(path, "/dev/nvme-fabrics");
 	int fd;
 
 	if (!real_open) {
 		errno = EIO;
 		return -1;
 	}
-	if (ctrl || ns)
+	if (ctrl || ns || fabrics)
 		path = "/dev/null";
 	else if (!strcmp(path, "/sys/class/nvme/nvme0/device/resource0") &&
 		 getenv("MOCK_RESOURCE0"))
@@ -183,6 +191,10 @@ static int mock_open(const char *path, int flags, mode_t mode,
 		ctrl_fd = fd;
 	else if (fd >= 0 && ns)
 		ns_fd = fd;
+	else if (fd >= 0 && fabrics) {
+		fabrics_fd = fd;
+		fabrics_connected = false;
+	}
 
 	return fd;
 }
@@ -223,6 +235,8 @@ int close(int fd)
 		ctrl_fd = -1;
 	else if (fd == ns_fd)
 		ns_fd = -1;
+	else if (fd == fabrics_fd)
+		fabrics_fd = -1;
 
 	if (!real_close)
 		real_close = dlsym(RTLD_NEXT, "close");
@@ -232,6 +246,67 @@ int close(int fd)
 	}
 
 	return real_close(fd);
+}
+
+ssize_t read(int fd, void *buf, size_t count)
+{
+	read_fn real_read = dlsym(RTLD_NEXT, "read");
+	const char *text;
+	size_t len;
+
+	if (fd < 0 || fd != fabrics_fd) {
+		if (!real_read) {
+			errno = EIO;
+			return -1;
+		}
+		return real_read(fd, buf, count);
+	}
+
+	text = fabrics_connected ? MOCK_FABRICS_RESPONSE : MOCK_FABRICS_OPTIONS;
+	len = strlen(text);
+	if (len > count)
+		len = count;
+	memcpy(buf, text, len);
+
+	return len;
+}
+
+static void mock_log_connect(write_fn real_write, const void *buf,
+		size_t count)
+{
+	const char *log = getenv("MOCK_CONNECT_LOG");
+	open_fn real_open = dlsym(RTLD_NEXT, "open");
+	int fd;
+
+	if (!log || !real_open)
+		return;
+	fd = real_open(log, O_WRONLY | O_TRUNC | O_CLOEXEC);
+	if (fd < 0)
+		return;
+	/* A truncated log fails the test. */
+	if (real_write(fd, buf, count) != (ssize_t)count)
+		unlink(log);
+	close(fd);
+}
+
+ssize_t write(int fd, const void *buf, size_t count)
+{
+	write_fn real_write = dlsym(RTLD_NEXT, "write");
+
+	if (!real_write) {
+		errno = EIO;
+		return -1;
+	}
+	if (fd < 0 || fd != fabrics_fd)
+		return real_write(fd, buf, count);
+
+	mock_log_connect(real_write, buf, count);
+	if (memmem(buf, count, "nqn=" MOCK_NQN_REFUSED,
+		   strlen("nqn=" MOCK_NQN_REFUSED)))
+		return mock_ret(ECONNREFUSED);
+	fabrics_connected = true;
+
+	return count;
 }
 
 /* Patches only st_mode, which works for every struct stat variant. */
