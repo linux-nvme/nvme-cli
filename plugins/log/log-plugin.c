@@ -1342,6 +1342,7 @@ static int get_lba_status_log(int argc, char **argv,
 	__cleanup_libnvme_free void *lba_status = NULL;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	__le32 lslplen_le;
 	__u32 lslplen;
 	int err;
 
@@ -1366,12 +1367,13 @@ static int get_lba_status_log(int argc, char **argv,
 		return err;
 	}
 
-	nvme_init_get_log_lba_status(&cmd, 0, &lslplen, sizeof(__u32));
-	err = libnvme_get_log(hdl, &cmd, false, sizeof(__u32));
+	nvme_init_get_log_lba_status(&cmd, 0, &lslplen_le, sizeof(lslplen_le));
+	err = libnvme_get_log(hdl, &cmd, false, sizeof(lslplen_le));
 	if (err) {
 		nvme_show_err(err, "lba status log page");
 		return err;
 	}
+	lslplen = le32_to_cpu(lslplen_le);
 
 	lba_status = libnvme_alloc(lslplen);
 	if (!lba_status)
