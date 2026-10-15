@@ -312,6 +312,20 @@ test_sig_util = executable(
 
 test('shared - sig-util', test_sig_util)
 
+if host_system != 'windows'
+    test_sandbox_util = executable(
+        'test-sandbox-util',
+        ['test-sandbox-util.c'],
+        dependencies: [
+            ccan_dep,
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - sandbox-util', test_sandbox_util)
+endif
+
 test_assert_util = executable(
     'test-assert-util',
     ['test-assert-util.c'],
