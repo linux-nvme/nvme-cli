@@ -198,6 +198,9 @@ class PrintCLITest(unittest.TestCase):
         self.server.shutdown()
         self.server.join()
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
+        if self.server.errors:
+            self.fail('the mock server failed:\n' +
+                      ''.join(self.server.errors))
 
     def _run_all(self, commands):
         for seed in _SEEDS:
@@ -212,6 +215,9 @@ class PrintCLITest(unittest.TestCase):
         result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir,
                           self.base_dir, *args,
                           encoding=None if binary else 'utf-8')
+        errors, self.server.errors = self.server.errors, []
+        if errors:
+            self.fail('the mock server failed:\n' + ''.join(errors))
         # A signal or a sanitizer abort, not an NVMe error status.
         self.assertGreaterEqual(result.returncode, 0)
         self.assertLess(result.returncode, 128)
