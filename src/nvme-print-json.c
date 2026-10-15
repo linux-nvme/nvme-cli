@@ -5465,32 +5465,41 @@ static void json_directive_show_fields_identify(__u8 doper, __u8 *field, struct 
 	}
 }
 
-static void json_directive_show_fields_streams(__u8 doper, unsigned int result, __u16 *field,
+static void json_directive_show_fields_streams(__u8 doper,
+					       unsigned int result, __u8 *field,
 					       struct json_object *r)
 {
+	struct nvme_streams_directive_params *params = (void *)field;
+	struct nvme_streams_directive_status *status = (void *)field;
 	int count;
 	int i;
 	char json_str[STR_LEN];
 
 	switch (doper) {
 	case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
-		obj_add_uint(r, "Max Streams Limit (MSL)", le16_to_cpu(*field));
-		obj_add_uint(r, "NVM Subsystem Streams Available (NSSA)", le16_to_cpu(*(field + 2)));
-		obj_add_uint(r, "NVM Subsystem Streams Open (NSSO)", le16_to_cpu(*(field + 4)));
-		obj_add_uint(r, "NVM Subsystem Stream Capability (NSSC)", le16_to_cpu(*(field + 6)));
+		obj_add_uint(r, "Max Streams Limit (MSL)",
+			     le16_to_cpu(params->msl));
+		obj_add_uint(r, "NVM Subsystem Streams Available (NSSA)",
+			     le16_to_cpu(params->nssa));
+		obj_add_uint(r, "NVM Subsystem Streams Open (NSSO)",
+			     le16_to_cpu(params->nsso));
+		obj_add_uint(r, "NVM Subsystem Stream Capability (NSSC)",
+			     params->nssc);
 		obj_add_uint(r, "Stream Write Size (in unit of LB size) (SWS)",
-			     le16_to_cpu(*(__u32 *)(field + 16)));
+			     le32_to_cpu(params->sws));
 		obj_add_uint(r, "Stream Granularity Size (in unit of SWS) (SGS)",
-			     le16_to_cpu(*(field + 20)));
-		obj_add_uint(r, "Namespace Streams Allocated (NSA)", le16_to_cpu(*(field + 22)));
-		obj_add_uint(r, "Namespace Streams Open (NSO)", le16_to_cpu(*(field + 24)));
+			     le16_to_cpu(params->sgs));
+		obj_add_uint(r, "Namespace Streams Allocated (NSA)",
+			     le16_to_cpu(params->nsa));
+		obj_add_uint(r, "Namespace Streams Open (NSO)",
+			     le16_to_cpu(params->nso));
 		break;
 	case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
-		count = *field;
-		obj_add_uint(r, "Open Stream Count", le16_to_cpu(*field));
+		count = le16_to_cpu(status->osc);
+		obj_add_uint(r, "Open Stream Count", count);
 		for (i = 0; i < count; i++) {
 			sprintf(json_str, "Stream Identifier %.6u", i + 1);
-			obj_add_uint(r, json_str, le16_to_cpu(*(field + (i + 1) * 2)));
+			obj_add_uint(r, json_str, le16_to_cpu(status->sid[i]));
 		}
 		break;
 	case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE:
@@ -5511,7 +5520,7 @@ static void json_directive_show_fields(__u8 dtype, __u8 doper, unsigned int resu
 		json_directive_show_fields_identify(doper, field, r);
 		break;
 	case NVME_DIRECTIVE_DTYPE_STREAMS:
-		json_directive_show_fields_streams(doper, result, (__u16 *)field, r);
+		json_directive_show_fields_streams(doper, result, field, r);
 		break;
 	default:
 		obj_add_str(r, "Error", "invalid directive type");
