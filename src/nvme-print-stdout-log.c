@@ -1706,7 +1706,7 @@ void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 		return;
 
 	stdout_kv_add(t, "nrzid", "%u", nrzid);
-	for (i = 0; i < nrzid; i++) {
+	for (i = 0; i < nrzid && i < ARRAY_SIZE(log->zid); i++) {
 		char name[16];
 
 		snprintf(name, sizeof(name), "zid %03d", i);

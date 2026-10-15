@@ -83,7 +83,6 @@ _FIXUPS = {
     0x71: [('<Q', 8, 0), ('<I', 20, 1024)],     # host discovery: numrec, thdlpl
     0x72: [('<Q', 8, 0), ('<I', 20, 1024)],     # AVE discovery: numrec, tadlpl
     0x73: [('<I', 4, 8)],                       # pull model DDC: tpdrpl
-    0xbf: [('<H', 0, 2)],                       # changed zones: nrzid
 }
 
 
