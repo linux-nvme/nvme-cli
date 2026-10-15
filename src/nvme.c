@@ -194,5 +194,9 @@ int main(int argc, char **argv)
 
 	nvme_show_finish();
 
+	/* the command stopped after printing the help it was asked for */
+	if (argconfig_help_requested())
+		return 0;
+
 	return err ? 1 : 0;
 }

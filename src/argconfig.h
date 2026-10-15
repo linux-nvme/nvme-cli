@@ -223,6 +223,7 @@ struct argconfig_commandline_options {
 void argconfig_append_usage(const char *str);
 void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *options);
+bool argconfig_help_requested(void);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
 /* argconfig_parse_global(): -h or --help, -V or --version was given */

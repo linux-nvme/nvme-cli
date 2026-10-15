@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
@@ -81,7 +82,8 @@ void argconfig_append_usage(const char *str)
 	append_usage_str = str;
 }
 
-static void show_option(const struct argconfig_commandline_options *option)
+static void show_option(FILE *out,
+			const struct argconfig_commandline_options *option)
 {
 	char buffer[0x1000];
 	char *b = buffer;
@@ -105,16 +107,26 @@ static void show_option(const struct argconfig_commandline_options *option)
 	}
 	b += sprintf(b, " ] ");
 
-	fprintf(stderr, "%s", buffer);
+	fprintf(out, "%s", buffer);
 	if (option->help) {
-		shr_print_word_wrapped("--- ", 40, b - buffer, stderr);
-		shr_print_word_wrapped(option->help, 44, 44, stderr);
+		shr_print_word_wrapped("--- ", 40, b - buffer, out);
+		shr_print_word_wrapped(option->help, 44, 44, out);
 	}
-	fprintf(stderr, "\n");
+	fprintf(out, "\n");
+}
+
+/* A heading, in bold on a terminal */
+static void print_heading(FILE *out, const char *fmt, const char *text)
+{
+	bool tty = isatty(fileno(out));
+
+	fputs(tty ? "\033[1m" : "", out);
+	fprintf(out, fmt, text);
+	fputs(tty ? "\033[0m" : "", out);
 }
 
 /* A group header is printed before the first option which follows it */
-static void print_options(struct argconfig_commandline_options *s,
+static void print_options(FILE *out, struct argconfig_commandline_options *s,
 			  const char *header)
 {
 	bool header_printed = false;
@@ -126,25 +138,42 @@ static void print_options(struct argconfig_commandline_options *s,
 			continue;
 		}
 		if (!header_printed) {
-			fprintf(stderr, "\n\033[1m%s:\033[0m\n", header);
+			fputc('\n', out);
+			print_heading(out, "%s:", header);
+			fputc('\n', out);
 			header_printed = true;
 		}
 		if (!s->hidden)
-			show_option(s);
+			show_option(out, s);
 	}
 }
 
+static void show_help(FILE *out, const char *program_desc,
+		      struct argconfig_commandline_options *s)
+{
+	print_heading(out, "Usage: %s", append_usage_str);
+	fputs("\n\n", out);
+
+	shr_print_word_wrapped(program_desc, 0, 0, out);
+	fputc('\n', out);
+
+	print_options(out, s, "Options");
+	print_options(out, argconfig_globals(s), "Global options");
+}
+
+/* The help after a usage error, on stderr */
 void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *s)
 {
-	fprintf(stderr, "\033[1mUsage: %s\033[0m\n\n",
-		append_usage_str);
+	show_help(stderr, program_desc, s);
+}
 
-	shr_print_word_wrapped(program_desc, 0, 0, stderr);
-	fprintf(stderr, "\n");
+static bool help_requested;
 
-	print_options(s, "Options");
-	print_options(argconfig_globals(s), "Global options");
+/* True once argconfig_parse() printed the help -h or --help asked for */
+bool argconfig_help_requested(void)
+{
+	return help_requested;
 }
 
 static int argconfig_error(char *type, const char *opt, const char *arg)
@@ -630,8 +659,16 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 	ret = argconfig_parse_args(&p);
 	if (ret) {
-		/* A malformed option prints the help, a bad value does not */
-		if (ret > 0) {
+		/*
+		 * The help that was asked for goes to stdout, the one after a
+		 * malformed option to stderr. A bad value prints no help.
+		 * The command stops either way: it gets ARGCONFIG_HELP or an
+		 * error.
+		 */
+		if (ret == ARGCONFIG_HELP) {
+			show_help(stdout, program_desc, options);
+			help_requested = true;
+		} else if (ret > 0) {
 			argconfig_print_help(program_desc, options);
 			ret = -EINVAL;
 		}

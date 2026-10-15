@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <time.h>
 
 #include <ccan/array_size/array_size.h>
@@ -57,6 +58,9 @@ struct global_cfg {
 	char *format;
 	uint32_t timeout;
 };
+
+/* The report; stdout gets the help argconfig prints */
+static FILE *report;
 
 #define MAX_OPTS 32
 #define MAX_ARGS 8
@@ -227,8 +231,8 @@ static bool filter_test(void)
 		if (unsupported(tests[i].arg, tests[i].global) ==
 		    tests[i].unsupported)
 			continue;
-		printf("ERROR: filter: '%s' %s taken as unsupported\n",
-		       tests[i].arg, tests[i].unsupported ? "not" : "wrongly");
+		fprintf(report, "ERROR: filter: '%s' %s taken as unsupported\n",
+			tests[i].arg, tests[i].unsupported ? "not" : "wrongly");
 		ok = false;
 	}
 
@@ -280,6 +284,9 @@ static void run(char **args, int nargs, bool ref, bool global,
 			r->operands[i] = operands[i];
 	} else {
 		r->ret = argconfig_parse(nargs + 1, argv, "diff", opts);
+		/* the getopt parser reported the help as an error */
+		if (r->ret == ARGCONFIG_HELP)
+			r->ret = -EINVAL;
 		r->nr_operands = argconfig_nr_operands();
 		for (i = 0; !r->ret && i < r->nr_operands; i++)
 			r->operands[i] = argconfig_operand(i);
@@ -310,12 +317,13 @@ static bool compare(char **args, int nargs, bool global)
 	if (!memcmp(&ref, &cur, sizeof(ref)))
 		return true;
 
-	printf("ERROR: %s parse differs for:", global ? "global" : "command");
+	fprintf(report, "ERROR: %s parse differs for:",
+		global ? "global" : "command");
 	for (i = 0; i < nargs; i++)
-		printf(" '%s'", args[i]);
-	printf("\n  ret %d/%d argind %d/%d operands %d/%d\n",
-	       ref.ret, cur.ret, ref.argind, cur.argind,
-	       ref.nr_operands, cur.nr_operands);
+		fprintf(report, " '%s'", args[i]);
+	fprintf(report, "\n  ret %d/%d argind %d/%d operands %d/%d\n",
+		ref.ret, cur.ret, ref.argind, cur.argind,
+		ref.nr_operands, cur.nr_operands);
 
 	return false;
 }
@@ -417,10 +425,16 @@ int main(void)
 
 	setlocale(LC_NUMERIC, "C");
 	unsetenv("POSIXLY_CORRECT");
+	report = fdopen(dup(STDOUT_FILENO), "w");
+	if (!report || !freopen(shr_dev_null(), "w", stdout)) {
+		printf("ERROR: redirecting stdout failed: %s\n",
+		       libnvme_strerror(errno));
+		return EXIT_FAILURE;
+	}
 	f = freopen(shr_dev_null(), "w", stderr);
 	if (!f) {
-		printf("ERROR: reopening stderr failed: %s\n",
-		       libnvme_strerror(errno));
+		fprintf(report, "ERROR: reopening stderr failed: %s\n",
+			libnvme_strerror(errno));
 		return EXIT_FAILURE;
 	}
 
@@ -432,10 +446,12 @@ int main(void)
 	ok &= random_cases(false, &nr_random);
 	ok &= random_cases(true, &nr_random);
 
-	printf("%lu cases compared, %lu skipped\n", nr_cases, nr_skipped);
-	printf("three words: %lu of %u, random: %lu\n",
-	       nr_three, 2 * n * n * n, nr_random);
+	fprintf(report, "%lu cases compared, %lu skipped\n", nr_cases,
+		nr_skipped);
+	fprintf(report, "three words: %lu of %u, random: %lu\n",
+		nr_three, 2 * n * n * n, nr_random);
 	fclose(f);
+	fclose(report);
 
 	return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }
