@@ -28,7 +28,7 @@ struct nvmf_args {
 	int nr_poll_queues;
 	int tos;
 	long keyring_id;
-	long tls_key_id;
+	int tls_key_id;
 	long tls_configured_key_id;
 	bool duplicate_connect;
 	bool disable_sqflow;
