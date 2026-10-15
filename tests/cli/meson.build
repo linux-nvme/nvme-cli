@@ -65,6 +65,14 @@ if python3.found()
              depends: nvme_exe)
     endif
 
+    if host_system == 'linux' or host_system == 'freebsd'
+        test('nvme-cli - sandbox-cli',
+             python3,
+             args: [files('nvme_sandbox_test.py'), nvme_exe],
+             env: cli_test_env,
+             depends: nvme_exe)
+    endif
+
     have_mock_nvme = (not is_static) and (host_system == 'linux')
 
     if have_mock_nvme
@@ -150,6 +158,15 @@ if python3.found()
                  python3,
                  args: [files(t[1]), nvme_exe, mock_nvme_lib],
                  env: t[2],
+                 depends: [nvme_exe, mock_nvme_lib],
+                 timeout: t[3])
+
+            sandbox_env = t[2]
+            sandbox_env.set('NVME_SANDBOX', '1')
+            test('nvme-cli - ' + t[0] + '-sandbox',
+                 python3,
+                 args: [files(t[1]), nvme_exe, mock_nvme_lib],
+                 env: sandbox_env,
                  depends: [nvme_exe, mock_nvme_lib],
                  timeout: t[3])
         endforeach
