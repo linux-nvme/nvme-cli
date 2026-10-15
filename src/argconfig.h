@@ -56,40 +56,73 @@ enum argconfig_types {
 #define OPT_ARGS(n) \
 	struct argconfig_commandline_options n[]
 
+/*
+ * The option macros check the type of the variable they store to, so a
+ * mismatch is a compile error instead of a write of the wrong size. The
+ * signed variant of a type is accepted as well. NULL is accepted for
+ * options which are only checked with argconfig_parse_seen().
+ */
+#define OPT_CHECK(v, T, S)	_Generic(v, T : (v), S : (v), void * : (v))
+/*
+ * uint64_t is unsigned long long on some ABIs only, and listing a type
+ * twice is an error. The inner selection falls back to a void expression,
+ * which only fails if it is selected.
+ */
+#define OPT_CHECK_64(v)							\
+	_Generic(v, uint64_t * : (v), int64_t * : (v), void * : (v),	\
+		default :						\
+		_Generic(v, unsigned long long * : (v),			\
+			long long * : (v),				\
+			default :					\
+			(void)0))
+#define OPT_CHECK_STR(v)	OPT_CHECK(v, char **, const char **)
+#define OPT_CHECK_BOOL(v)	_Generic(v, bool * : (v), void * : (v))
+#define OPT_CHECK_DOUBLE(v)	_Generic(v, double * : (v), void * : (v))
+
 #define OPT_END() { NULL }
 
 #define OPT_GROUP(d) \
 	{"", 0, NULL, CFG_GROUP_SEPARATOR, NULL, no_argument, d, false, NULL}
 
 #define OPT_FLAG(l, s, v, d, ...) \
-	{l, s, NULL, CFG_FLAG, v, no_argument, d, false, __VA_ARGS__}
+	{l, s, NULL, CFG_FLAG, OPT_CHECK_BOOL(v), \
+	 no_argument, d, false, __VA_ARGS__}
 
 #define OPT_SUFFIX(l, s, v, d, ...) \
-	{l, s, "IONUM", CFG_LONG_SUFFIX, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, "IONUM", CFG_LONG_SUFFIX, OPT_CHECK_64(v), \
+	 required_argument, d, false, __VA_ARGS__}
 
 #define OPT_UINT(l, s, v, d, ...) \
-	{l, s, "NUM", CFG_POSITIVE, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, "NUM", CFG_POSITIVE, OPT_CHECK(v, uint32_t *, int32_t *), \
+	 required_argument, d, false, __VA_ARGS__}
 
 #define OPT_INT(l, s, v, d, ...) \
-	{l, s, "NUM", CFG_INT, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, "NUM", CFG_INT, OPT_CHECK(v, int *, unsigned int *), \
+	 required_argument, d, false, __VA_ARGS__}
 
 #define OPT_LONG(l, s, v, d, ...) \
-	{l, s, "NUM", CFG_LONG, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, "NUM", CFG_LONG, OPT_CHECK_64(v), \
+	 required_argument, d, false, __VA_ARGS__}
 
 #define OPT_DOUBLE(l, s, v, d, ...) \
-	{l, s, "NUM", CFG_DOUBLE, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, "NUM", CFG_DOUBLE, OPT_CHECK_DOUBLE(v), \
+	 required_argument, d, false, __VA_ARGS__}
 
 #define OPT_BYTE(l, s, v, d, ...) \
-	{l, s, "NUM", CFG_BYTE, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, "NUM", CFG_BYTE, OPT_CHECK(v, uint8_t *, int8_t *), \
+	 required_argument, d, false, __VA_ARGS__}
 
 #define OPT_SHRT(l, s, v, d, ...) \
-	{l, s, "NUM", CFG_SHORT, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, "NUM", CFG_SHORT, OPT_CHECK(v, uint16_t *, int16_t *), \
+	 required_argument, d, false, __VA_ARGS__}
 
 #define OPT_INCR(l, s, v, d, ...) \
-	{l, s, "NUM", CFG_INCREMENT, v, no_argument, d, false, __VA_ARGS__}
+	{l, s, "NUM", CFG_INCREMENT, OPT_CHECK(v, int *, unsigned int *), \
+	 no_argument, d, false, __VA_ARGS__}
 
 #define OPT_STRING(l, s, m, v, d, ...) \
-	{l, s, m, CFG_STRING, v, required_argument, d, false, __VA_ARGS__}
+	{l, s, m, CFG_STRING, OPT_CHECK_STR(v), \
+	 required_argument, d, false, __VA_ARGS__}
 
 /*
  * Like OPT_STRING(), but the value is optional. getopt_long() only
@@ -99,7 +132,8 @@ enum argconfig_types {
  * "given with no value" (optarg is NULL).
  */
 #define OPT_STRING_OPTIONAL(l, s, m, v, d, ...) \
-	{l, s, m, CFG_STRING, v, optional_argument, d, false, __VA_ARGS__}
+	{l, s, m, CFG_STRING, OPT_CHECK_STR(v), \
+	 optional_argument, d, false, __VA_ARGS__}
 
 #define OPT_FMT(l, s, v, d, ...)  OPT_STRING(l, s, "FMT", v, d, __VA_ARGS__)
 #define OPT_FILE(l, s, v, d, ...) OPT_STRING(l, s, "FILE", v, d, __VA_ARGS__)
