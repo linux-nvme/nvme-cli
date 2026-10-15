@@ -367,20 +367,22 @@ struct argconfig_parser {
 	int ind;
 	struct argconfig_commandline_options *options;
 	/*
-	 * Global options stop at the first operand, the subcommand, and
-	 * have no implicit help option.
+	 * Global options stop at the first operand, the subcommand. Their
+	 * implicit -h, --help, -V and --version are recorded and the parse
+	 * goes on.
 	 */
 	bool global;
+	bool help;
+	bool version;
 	char **operands;
 	int nr_operands;
 };
 
 /*
- * Internal results of argconfig_parse_args(): the help was requested, or
- * an option was malformed. Both print the help.
+ * Internal result of argconfig_parse_args(): an option was malformed. Like
+ * ARGCONFIG_HELP, it prints the help of a command.
  */
-#define ARGCONFIG_HELP	1
-#define ARGCONFIG_USAGE	2
+#define ARGCONFIG_USAGE	4
 
 /*
  * The parse errors use the wording of glibc's getopt, which printed them
@@ -461,10 +463,21 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 		s = argconfig_find_long(argconfig_globals(p->options), name,
 					len);
 	if (!s) {
-		if (!p->global && len == 4 && !strncmp(name, "help", 4))
+		bool help = len == 4 && !strncmp(name, "help", 4);
+		bool version = len == 7 && !strncmp(name, "version", 7);
+
+		if (help && !p->global)
 			return ARGCONFIG_HELP;
-		return argconfig_parse_error(p, "unrecognized option '%s'",
-					     arg);
+		if (!p->global || (!help && !version))
+			return argconfig_parse_error(p,
+				"unrecognized option '%s'", arg);
+		if (eq)
+			return argconfig_parse_error(p,
+				"option '--%.*s' doesn't allow an argument",
+				(int)len, name);
+		p->help |= help;
+		p->version |= version;
+		return 0;
 	}
 
 	switch (s->argument_type) {
@@ -506,6 +519,11 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
 		if (!s && argconfig_globals(p->options))
 			s = argconfig_find_short(argconfig_globals(p->options),
 						 *c);
+		if (!s && p->global && (*c == 'h' || *c == 'V')) {
+			p->help |= *c == 'h';
+			p->version |= *c == 'V';
+			continue;
+		}
 		if (!s)
 			return argconfig_parse_error(p,
 				"invalid option -- '%c'", *c);
@@ -637,24 +655,32 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
  * call, *argind is the index of the first non-option argument (the
  * subcommand), or argc if there is none.
  *
- * Returns 0 on success, negative errno on failure.
+ * Unless the table has its own, -h, --help, -V and --version are accepted
+ * like a global option. Returns ARGCONFIG_HELP and ARGCONFIG_VERSION for
+ * them, 0 otherwise, or a negative errno on failure. @options may be NULL.
  */
 int argconfig_parse_global(int argc, char *argv[],
 			   struct argconfig_commandline_options *options,
 			   int *argind)
 {
+	static struct argconfig_commandline_options no_options[] = {
+		OPT_END()
+	};
 	struct argconfig_parser p = {
 		.argc = argc,
 		.argv = argv,
-		.options = options,
+		.options = options ? options : no_options,
 		.global = true,
 	};
 	int ret;
 
 	ret = argconfig_parse_args(&p);
 	*argind = p.ind;
+	if (ret)
+		return ret > 0 ? -EINVAL : ret;
 
-	return ret > 0 ? -EINVAL : ret;
+	return (p.help ? ARGCONFIG_HELP : 0) |
+	       (p.version ? ARGCONFIG_VERSION : 0);
 }
 
 bool argconfig_parse_seen(struct argconfig_commandline_options *s,
