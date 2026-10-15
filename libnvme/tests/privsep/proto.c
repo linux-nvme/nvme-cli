@@ -205,6 +205,25 @@ static __u32 open_dev(struct helper *h, const char *name)
 	return resp.result;
 }
 
+static void test_open_options(void)
+{
+	struct libnvme_privsep_open open_req = {
+		.flags = O_RDONLY,
+		.options = LIBNVME_PRIVSEP_OPEN_NO_IOCTL_PROBING << 1,
+	};
+	char payload[sizeof(open_req) + sizeof("NVME_TEST_FD")];
+	struct libnvme_privsep_resp resp;
+	struct helper h = start();
+
+	hello(&h);
+	memcpy(payload, &open_req, sizeof(open_req));
+	memcpy(payload + sizeof(open_req), "NVME_TEST_FD",
+	       sizeof("NVME_TEST_FD"));
+	request(&h, LIBNVME_PRIVSEP_OP_OPEN, 0, payload, sizeof(payload));
+	check(response(&h, &resp) == -EINVAL, "unknown open option accepted");
+	check(!stop(&h), "helper failed");
+}
+
 static void test_write_len(void)
 {
 	struct libnvme_privsep_cmd pcmd = {
@@ -428,6 +447,7 @@ int main(int argc, char **argv)
 	test_no_hello();
 	test_oversized();
 	test_errors();
+	test_open_options();
 	test_write_len();
 	test_device_op_len();
 	test_regs_len();
