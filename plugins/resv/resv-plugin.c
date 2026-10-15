@@ -211,7 +211,7 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 		__u64	crkey;
 		__u8	rtype;
 		__u8	rrela;
-		__u8	iekey;
+		bool	iekey;
 	};
 
 	struct config cfg = {
@@ -219,7 +219,7 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 		.crkey		= 0,
 		.rtype		= 0,
 		.rrela		= 0,
-		.iekey		= 0,
+		.iekey		= false,
 	};
 
 	NVME_ARGS(opts,
@@ -308,7 +308,7 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	struct config {
 		__u32	nsid;
 		__u32	numd;
-		__u8	eds;
+		bool	eds;
 		bool	raw_binary;
 	};
 
