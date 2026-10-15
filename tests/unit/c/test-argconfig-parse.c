@@ -155,6 +155,18 @@ static struct toval_test toval_tests[] = {
 
 	/* Unrecognized long option. */
 	{ "--bogus", &cfg.flag, { .flag = false }, 0, -EINVAL },
+
+	/*
+	 * Long options need two dashes and their full name: "-flag" is
+	 * the short options -f -l with "ag" as value of -l, which is not a
+	 * number.
+	 */
+	{ "--fla", &cfg.flag, { .flag = false }, 0, -EINVAL },
+	{ "--stri=x", &cfg.string, { .string = NULL }, 0, -EINVAL },
+	{ "-flag", &cfg.flag, { .flag = false }, 0, -EINVAL },
+	{ "-string=x", &cfg.string, { .string = NULL }, 0, -EINVAL },
+	/* An exact name wins over a longer name it is a prefix of. */
+	VAL_TEST("--str=exact", str, "exact", false, 0),
 };
 
 void toval_test(struct toval_test *test)
@@ -481,6 +493,22 @@ static const struct global_parse_test global_parse_tests[] = {
  		{"prog", "--no-such-opt", "list"},
  		3, 0, -EINVAL, 0, false,
  	},
+	{
+		"abbreviated long option fails",
+		{"prog", "--verb", "list"},
+		3, 0, -EINVAL, 0, false,
+	},
+	{
+		/* -v is applied before 'e' is rejected, as with getopt */
+		"single-dash long option fails",
+		{"prog", "-verbose", "list"},
+		3, 0, -EINVAL, 1, false,
+	},
+	{
+		"-- ends the global options",
+		{"prog", "--", "-v"},
+		3, 2, 0, 0, false,
+	},
 };
 
 static int parse_global_capture_stderr(int argc, char *argv[],

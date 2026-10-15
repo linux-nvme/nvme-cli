@@ -170,17 +170,13 @@ class KeysCLITest(unittest.TestCase):
 
     @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
     def test_gen_dhchap_key_alias_drops_nqn(self):
-        # Every spelling nvme-cli 2.x accepted for the host NQN: one or two
-        # dashes before a prefix of 'nqn' that stayed unambiguous against
-        # the global --no-retries, with the value as the next argument,
-        # attached by '=', or attached bare to the short option. The
-        # trailing '--hmac=1' must survive, so a consumed value cannot
-        # have swallowed the option after it.
-        forms = [(s, _HOST_NQN)
-                 for s in ('-n', '-nq', '-nqn', '--nq', '--nqn')]
-        forms += [(f'{s}={_HOST_NQN}',)
-                  for s in ('-nq', '-nqn', '--nq', '--nqn')]
-        forms += [(f'-n{_HOST_NQN}',)]      # short option, value attached
+        # The spellings of the host NQN option: the short option with the
+        # value as the next argument or attached, the long option with the
+        # value as the next argument or attached by '='. The trailing
+        # '--hmac=1' must survive, so a consumed value cannot have
+        # swallowed the option after it.
+        forms = [('-n', _HOST_NQN), (f'-n{_HOST_NQN}',),
+                 ('--nqn', _HOST_NQN), (f'--nqn={_HOST_NQN}',)]
 
         expected = self._run_alias('gen-dhchap-key', '--secret=pin:1234',
                                    '--hmac=1')
@@ -193,12 +189,11 @@ class KeysCLITest(unittest.TestCase):
                 self.assertIn(_NQN_IGNORED, result.stderr)
 
     @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
-    def test_gen_dhchap_key_alias_keeps_2x_rejections(self):
-        # '--n' was ambiguous with --no-retries even in 2.x, and so were
-        # '-n=<nqn>' and '--n=<nqn>'. Keep rejecting them rather than
-        # accepting more than the command ever did.
-        for form in (('--n', _HOST_NQN), (f'-n={_HOST_NQN}',),
-                     (f'--n={_HOST_NQN}',)):
+    def test_gen_dhchap_key_alias_rejects_abbreviations(self):
+        # Long options are only accepted with their full name; 2.x also
+        # took unambiguous prefixes such as '--nq'.
+        for form in (('--n', _HOST_NQN), (f'--n={_HOST_NQN}',),
+                     ('--nq', _HOST_NQN), (f'--nq={_HOST_NQN}',)):
             with self.subTest(form=form):
                 result = self._run_alias('gen-dhchap-key',
                                          '--secret=pin:1234', *form,
@@ -221,9 +216,8 @@ class KeysCLITest(unittest.TestCase):
     @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
     def test_gen_dhchap_key_alias_keeps_other_options(self):
         # Dropping '--nqn' must not swallow the global options that also
-        # start with an 'n', which getopt_long_only() accepts with a
-        # single dash.
-        for opt in ('-no-retries', '--no-retries', '--no-ioctl-probing'):
+        # start with an 'n'.
+        for opt in ('--no-retries', '--no-ioctl-probing'):
             with self.subTest(opt=opt):
                 result = self._run_alias('gen-dhchap-key',
                                          '--secret=pin:1234', opt)
