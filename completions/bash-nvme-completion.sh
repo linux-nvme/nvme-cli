@@ -160,7 +160,7 @@ nvme_list_opts () {
 			opts+=" --cdw10= -4 --cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 --cdw15= -9 --cdw2= -2 --cdw3= -3 --data-len= -l --dry-run --flags= -f --input-file= -i --latency -T --metadata= -M --metadata-len= -m --namespace-id= -n --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --prefill= -p --quiet --raw-binary -b --read -r --rsvd= -R --set-options= --show-command -s --timeout= --verbose -v --write -w"
 			valopts+=" --cdw10 -4 --cdw11 -5 --cdw12 -6 --cdw13 -7 --cdw14 -8 --cdw15 -9 --cdw2 -2 --cdw3 -3 --data-len -l --flags -f --input-file -i --metadata -M --metadata-len -m --namespace-id -n --opcode -O --output-format -o --output-format-version --prefill -p --rsvd -R --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i" "--metadata -M"
 			;;
@@ -169,7 +169,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --groups -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -177,7 +177,7 @@ nvme_list_opts () {
 			opts+=" --controllers= -c --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controllers -c --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -185,7 +185,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -193,7 +193,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --lsp= -s --no-ioctl-probing --no-retries --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --lsp -s --output-file -f --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -f"
 			;;
@@ -202,7 +202,7 @@ nvme_list_opts () {
 			opts+=" --cap-lower= -l --cap-upper= -u --dry-run --element-id= -i --ish -I --no-ioctl-probing --no-retries --operation= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cap-lower -l --cap-upper -u --element-id -i --operation -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -210,7 +210,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -218,7 +218,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -226,7 +226,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --key= -k --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --key -k --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -234,7 +234,7 @@ nvme_list_opts () {
 			opts+=" --compat -C --dry-run --hostnqn= -n --identity= -I --keydata= -d --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --subsysnqn= -c --timeout= --verbose -v"
 			valopts+=" --hostnqn -n --identity -I --keydata -d --keyring -k --keytype -t --output-format -o --output-format-version --set-options --subsysnqn -c --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -242,7 +242,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -250,7 +250,7 @@ nvme_list_opts () {
 			opts+=" --app-tag= -a --app-tag-mask= -m --block-count= -c --block-size= -b --data= -d --data-size= -z --dir-spec= -S --dir-type= -T --dry-run --dsm= -D --force --force-unit-access -f --latency -t --limited-retry -l --metadata= -M --metadata-size= -y --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prinfo= -p --quiet --ref-tag= -r --set-options= --show-command -V --start-block= -s --storage-tag= -g --storage-tag-check -C --timeout= --verbose -v"
 			valopts+=" --app-tag -a --app-tag-mask -m --block-count -c --block-size -b --data -d --data-size -z --dir-spec -S --dir-type -T --dsm -D --metadata -M --metadata-size -y --namespace-id -n --output-format -o --output-format-version --prinfo -p --ref-tag -r --set-options --start-block -s --storage-tag -g --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d" "--metadata -M"
 			;;
@@ -259,7 +259,7 @@ nvme_list_opts () {
 			opts+=" --concat --config= -J --ctrl-loss-tmo= -l --data-digest -G --devid-file= --disable-sqflow --discovery --dry-run --duplicate-connect -D --fast-io-fail-tmo= -F --hdr-digest -g --host-iface= -f --host-traddr= -w --hostid= -I --hostnqn= -q --idempotent --keep-alive-tmo= -k --keyring= --kxchap-ctrl-secret= -C --kxchap-secret= -S --no-ioctl-probing --no-retries --nqn= -n --nr-io-queues= -i --nr-poll-queues= -P --nr-write-queues= -W --output-format= -o --output-format-version= --owner= --queue-size= -Q --quiet --reconnect-delay= -c --set-options= --timeout= --tls --tls-key= --tls-key-identity= --tls_key= --tos= -T --traddr= -a --transport= -t --trsvcid= -s --verbose -v"
 			valopts+=" --config -J --ctrl-loss-tmo -l --devid-file --fast-io-fail-tmo -F --host-iface -f --host-traddr -w --hostid -I --hostnqn -q --keep-alive-tmo -k --keyring --kxchap-ctrl-secret -C --kxchap-secret -S --nqn -n --nr-io-queues -i --nr-poll-queues -P --nr-write-queues -W --output-format -o --output-format-version --owner --queue-size -Q --reconnect-delay -c --set-options --timeout --tls-key --tls-key-identity --tls_key --tos -T --traddr -a --transport -t --trsvcid -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--devid-file"
 			;;
@@ -268,7 +268,7 @@ nvme_list_opts () {
 			opts+=" --concat --config= -J --ctrl-loss-tmo= -l --data-digest -G --device= -d --disable-sqflow --dry-run --duplicate-connect -D --fast-io-fail-tmo= -F --force --hdr-digest -g --host-iface= -f --host-traddr= -w --hostid= -I --hostnqn= -q --keep-alive-tmo= -k --keyring= --kxchap-ctrl-secret= -C --kxchap-secret= -S --nbft --nbft-path= --no-ioctl-probing --no-nbft --no-retries --no-reuse --nqn= -n --nr-io-queues= -i --nr-poll-queues= -P --nr-write-queues= -W --output-format= -o --output-format-version= --owner= --persistent= -p --queue-size= -Q --quiet --raw= -r --reconnect-delay= -c --set-options= --timeout= --tls --tls-key= --tls-key-identity= --tls_key= --tos= -T --traddr= -a --transport= -t --trsvcid= -s --verbose -v"
 			valopts+=" --config -J --ctrl-loss-tmo -l --device -d --fast-io-fail-tmo -F --host-iface -f --host-traddr -w --hostid -I --hostnqn -q --keep-alive-tmo -k --keyring --kxchap-ctrl-secret -C --kxchap-secret -S --nbft-path --nqn -n --nr-io-queues -i --nr-poll-queues -P --nr-write-queues -W --output-format -o --output-format-version --owner --persistent -p --queue-size -Q --raw -r --reconnect-delay -c --set-options --timeout --tls-key --tls-key-identity --tls_key --tos -T --traddr -a --transport -t --trsvcid -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--raw -r"
 			;;
@@ -277,7 +277,7 @@ nvme_list_opts () {
 			opts+=" --app-tag= -a --app-tag-mask= -m --blocks= -b --dir-spec= -S --dir-type= -T --dry-run --expected-app-tag-masks= -M --expected-app-tags= -A --expected-ref-tags= -R --force-unit-access -f --format= -F --limited-retry -l --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prinfor= -P --prinfow= -p --quiet --ref-tag= -r --sdlba= -d --set-options= --slbs= -s --snsids= -N --sopts= -O --storage-tag= -t --storage-tag-check -c --timeout= --verbose -v"
 			valopts+=" --app-tag -a --app-tag-mask -m --blocks -b --dir-spec -S --dir-type -T --expected-app-tag-masks -M --expected-app-tags -A --expected-ref-tags -R --format -F --namespace-id -n --output-format -o --output-format-version --prinfor -P --prinfow -p --ref-tag -r --sdlba -d --set-options --slbs -s --snsids -N --sopts -O --storage-tag -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -285,7 +285,7 @@ nvme_list_opts () {
 			opts+=" --anagrp-id= -a --azr -z --block-size= -b --csi= -y --dps= -d --dry-run --endg-id= -e --flbas= -f --ish -I --lbstm= -l --ncap= -c --ncap-si= -C --nmic= -m --no-ioctl-probing --no-retries --nphndls= -n --nsze= -s --nsze-si= -S --nvmset-id= -i --output-format= -o --output-format-version= --phndls= -p --quiet --rar= -r --rnumzrwa= -u --ror= -O --set-options= --timeout= --verbose -v"
 			valopts+=" --anagrp-id -a --block-size -b --csi -y --dps -d --endg-id -e --flbas -f --lbstm -l --ncap -c --ncap-si -C --nmic -m --nphndls -n --nsze -s --nsze-si -S --nvmset-id -i --output-format -o --output-format-version --phndls -p --rar -r --rnumzrwa -u --ror -O --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -293,7 +293,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -301,7 +301,7 @@ nvme_list_opts () {
 			opts+=" --controllers= -c --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controllers -c --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -309,7 +309,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --self-test-code= -s --set-options= --timeout= --verbose -v --wait -w"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --self-test-code -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -317,7 +317,7 @@ nvme_list_opts () {
 			opts+=" --device= -d --dry-run --no-ioctl-probing --no-retries --nqn= -n --output-format= -o --output-format-version= --quiet --set-options= --task= -t --timeout= --verbose -v"
 			valopts+=" --device -d --nqn -n --output-format -o --output-format-version --set-options --task -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -325,7 +325,7 @@ nvme_list_opts () {
 			opts+=" --data-len= -l --dir-oper= -O --dir-spec= -S --dir-type= -D --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --req-resource= -r --set-options= --timeout= --verbose -v"
 			valopts+=" --data-len -l --dir-oper -O --dir-spec -S --dir-type -D --namespace-id -n --output-format -o --output-format-version --req-resource -r --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -333,7 +333,7 @@ nvme_list_opts () {
 			opts+=" --data-len= -l --dir-oper= -O --dir-spec= -S --dir-type= -D --dry-run --endir= -e --input-file= -i --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --target-dir= -T --timeout= --verbose -v"
 			valopts+=" --data-len -l --dir-oper -O --dir-spec -S --dir-type -D --endir -e --input-file -i --namespace-id -n --output-format -o --output-format-version --set-options --target-dir -T --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i"
 			;;
@@ -342,7 +342,7 @@ nvme_list_opts () {
 			opts+=" --concat --ctrl-loss-tmo= -l --data-digest -G --device= -d --disable-sqflow --dry-run --duplicate-connect -D --exclude -x --fast-io-fail-tmo= -F --hdr-digest -g --host-iface= -f --host-traddr= -w --hostid= -I --hostnqn= -q --keep-alive-tmo= -k --keyring= --kxchap-ctrl-secret= -C --kxchap-secret= -S --no-ioctl-probing --no-retries --nqn= -n --nr-io-queues= -i --nr-poll-queues= -P --nr-write-queues= -W --output-format= -o --output-format-version= --queue-size= -Q --quiet --reconnect-delay= -c --set-options= --timeout= --tls --tls-key= --tls-key-identity= --tls_key= --tos= -T --traddr= -a --transport= -t --trsvcid= -s --verbose -v"
 			valopts+=" --ctrl-loss-tmo -l --device -d --fast-io-fail-tmo -F --host-iface -f --host-traddr -w --hostid -I --hostnqn -q --keep-alive-tmo -k --keyring --kxchap-ctrl-secret -C --kxchap-secret -S --nqn -n --nr-io-queues -i --nr-poll-queues -P --nr-write-queues -W --output-format -o --output-format-version --queue-size -Q --reconnect-delay -c --set-options --timeout --tls-key --tls-key-identity --tls_key --tos -T --traddr -a --transport -t --trsvcid -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -350,7 +350,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --force --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --owner= --quiet --set-options= --timeout= --transport= -t --verbose -v"
 			valopts+=" --output-format -o --output-format-version --owner --set-options --timeout --transport -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -358,7 +358,7 @@ nvme_list_opts () {
 			opts+=" --concat --config= -J --ctrl-loss-tmo= -l --data-digest -G --device= -d --disable-sqflow --dry-run --duplicate-connect -D --fast-io-fail-tmo= -F --force --hdr-digest -g --host-iface= -f --host-traddr= -w --hostid= -I --hostnqn= -q --keep-alive-tmo= -k --keyring= --kxchap-ctrl-secret= -C --kxchap-secret= -S --nbft --nbft-path= --no-ioctl-probing --no-nbft --no-retries --no-reuse --nqn= -n --nr-io-queues= -i --nr-poll-queues= -P --nr-write-queues= -W --output-format= -o --output-format-version= --owner= --persistent= -p --queue-size= -Q --quiet --raw= -r --reconnect-delay= -c --set-options= --timeout= --tls --tls-key= --tls-key-identity= --tls_key= --tos= -T --traddr= -a --transport= -t --trsvcid= -s --verbose -v"
 			valopts+=" --config -J --ctrl-loss-tmo -l --device -d --fast-io-fail-tmo -F --host-iface -f --host-traddr -w --hostid -I --hostnqn -q --keep-alive-tmo -k --keyring --kxchap-ctrl-secret -C --kxchap-secret -S --nbft-path --nqn -n --nr-io-queues -i --nr-poll-queues -P --nr-write-queues -W --output-format -o --output-format-version --owner --persistent -p --queue-size -Q --raw -r --reconnect-delay -c --set-options --timeout --tls-key --tls-key-identity --tls_key --tos -T --traddr -a --transport -t --trsvcid -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--raw -r"
 			;;
@@ -367,7 +367,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -375,7 +375,7 @@ nvme_list_opts () {
 			opts+=" --ad -d --blocks= -b --cdw11= -c --ctx-attrs= -a --dry-run --idr -r --idw -w --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --slbs= -s --timeout= --verbose -v"
 			valopts+=" --blocks -b --cdw11 -c --ctx-attrs -a --namespace-id -n --output-format -o --output-format-version --set-options --slbs -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -383,7 +383,7 @@ nvme_list_opts () {
 			opts+=" --csi= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --csi -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -391,7 +391,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --log-entries= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --log-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -399,7 +399,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --group-id= -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --group-id -g --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -407,7 +407,7 @@ nvme_list_opts () {
 			opts+=" --csi= -c --dry-run --lba= -l --log-entries= -e --namespace-id= -n --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --sqid= -S --status= -s --timeout= --trtype= -t --valid-entry -V --verbose -v"
 			valopts+=" --csi -c --lba -l --log-entries -e --namespace-id -n --opcode -O --output-format -o --output-format-version --set-options --sqid -S --status -s --timeout --trtype -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -415,7 +415,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -423,7 +423,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -431,7 +431,7 @@ nvme_list_opts () {
 			opts+=" --block-size= -b --dry-run --force --ish -I --lbaf= -l --ms= -m --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --pi= -i --pil= -p --quiet --reset -r --ses= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --block-size -b --lbaf -l --ms -m --namespace-id -n --output-format -o --output-format-version --pi -i --pil -p --ses -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -440,7 +440,7 @@ nvme_list_opts () {
 			valopts+=" --action -a --bpid -b --output-format -o --output-format-version --set-options --slot -s --timeout"
 
 			_nvme_opt_vals "--action -a" "replace replace-and-activate set-active replace-and-activate-immediate replace-boot-partition activate-boot-partition" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -448,7 +448,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --fw= -f --ignore-ovr -i --ish -I --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --progress -p --quiet --set-options= --stream --timeout= --verbose -v --xfer= -x"
 			valopts+=" --fw -f --offset -O --output-format -o --output-format-version --set-options --timeout --xfer -x"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--fw -f"
 			;;
@@ -457,7 +457,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -465,7 +465,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --hmac= -m --key-length= -l --no-ioctl-probing --no-retries --nqn= -n --output-format= -o --output-format-version= --quiet --secret= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --hmac -m --key-length -l --nqn -n --output-format -o --output-format-version --secret -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -473,7 +473,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -481,7 +481,7 @@ nvme_list_opts () {
 			opts+=" --compat -C --dry-run --hmac= -m --hostnqn= -n --identity= -I --insert -i --keyfile= -f --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --secret= -s --set-options= --subsysnqn= -c --timeout= --verbose -v"
 			valopts+=" --hmac -m --hostnqn -n --identity -I --keyfile -f --keyring -k --keytype -t --output-format -o --output-format-version --secret -s --set-options --subsysnqn -c --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -490,7 +490,7 @@ nvme_list_opts () {
 			valopts+=" --cdw11 -c --data-len -l --feature-id -f --namespace-id -n --output-format -o --output-format-version --sel -s --set-options --timeout --uuid-index -U"
 
 			_nvme_opt_vals "--feature-id -f" "arbitration power-mgmt lba-range temp-thresh err-recovery volatile-wc num-queues irq-coalesce irq-config write-atomic async-event auto-pst host-mem-buf timestamp kato hctm nopsc rrl plm-config plm-window lba-sts-interval host-behavior sanitize endurance-evt-cfg iocs-profile spinup-control power-loss-signal perf-characteristics fdp fdp-events ns-admin-label key-value ctrl-data-queue emb-mgmt-ctrl-addr host-mgmt-agent-addr enh-ctrl-metadata ctrl-metadata ns-metadata sw-progress host-id resv-nf-mask resv-persist write-protect bp-write-protect" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -499,7 +499,7 @@ nvme_list_opts () {
 			opts+=" --action= -a --dry-run --ish -I --max-dw= -m --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --range-len= -l --set-options= --start-lba= -s --timeout= --verbose -v"
 			valopts+=" --action -a --max-dw -m --namespace-id -n --output-format -o --output-format-version --range-len -l --set-options --start-lba -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -508,7 +508,7 @@ nvme_list_opts () {
 			valopts+=" --aen -a --csi -y --log-id -i --log-len -l --lpo -L --lsi -S --lsp -s --namespace-id -n --output-format -o --output-format-version --set-options --timeout --uuid-index -U --xfer-len -x"
 
 			_nvme_opt_vals "--log-id -i" "supported-log-pages error smart fw-slot changed-attached-ns changed-ns cmd-effects device-self-test telemetry-host telemetry-ctrl endurance-group predictable-lat-nvmset predictable-lat-agg ana persistent-event lba-status endurance-grp-evt media-unit-status supported-cap-config-list fid-supported-effects mi-cmd-supported-effects cmd-and-feat-lockdown boot-partition rotational-media-info dispersed-ns-participating-ns mgmt-addr-list phy-rx-eom reachability-groups reachability-associations changed-alloc-ns-list fdp-configs fdp-ruh-usage fdp-stats fdp-events discover host-discover ave-discover pull-model-ddc-req reservation sanitize zns-changed-zones" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -516,7 +516,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -524,7 +524,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --offset -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -532,7 +532,7 @@ nvme_list_opts () {
 			opts+=" --acq --aqa --asq --bpinfo --bpmbl --bprsel --cap --cc --cmbebs --cmbloc --cmbmsc --cmbsts --cmbswtp --cmbsz --crto --csts --dry-run --intmc --intms --no-ioctl-probing --no-retries --nssd --nssr --offset= -O --output-format= -o --output-format-version= --pmrcap --pmrctl --pmrebs --pmrmscl --pmrmscu --pmrsts --pmrswtp --quiet --set-options= --timeout= --verbose -v --vs"
 			valopts+=" --offset -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -540,7 +540,7 @@ nvme_list_opts () {
 			opts+=" --all-host-entries -a --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -548,7 +548,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -556,7 +556,7 @@ nvme_list_opts () {
 			opts+=" --dom-id= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --dom-id -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -564,7 +564,7 @@ nvme_list_opts () {
 			opts+=" --controller-id= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controller-id -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -572,7 +572,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --force --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -580,7 +580,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -588,7 +588,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --lba-format-index= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -U --verbose -v"
 			valopts+=" --lba-format-index -i --output-format -o --output-format-version --set-options --timeout --uuid-index -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -596,7 +596,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --nvmset_id= -i --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --nvmset_id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -604,7 +604,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -612,7 +612,7 @@ nvme_list_opts () {
 			opts+=" --data= -d --data-len= -l --dry-run --mo= -m --mos= -s --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data -d --data-len -l --mo -m --mos -s --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -621,7 +621,7 @@ nvme_list_opts () {
 			opts+=" --data= -d --data-len= -l --dry-run --mo= -m --mos= -s --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data -d --data-len -l --mo -m --mos -s --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -630,7 +630,7 @@ nvme_list_opts () {
 			opts+=" --cdw10= -4 --cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 --cdw15= -9 --cdw2= -2 --cdw3= -3 --data-len= -l --dry-run --flags= -f --input-file= -i --latency -T --metadata= -M --metadata-len= -m --namespace-id= -n --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --prefill= -p --quiet --raw-binary -b --read -r --rsvd= -R --set-options= --show-command -s --timeout= --verbose -v --write -w"
 			valopts+=" --cdw10 -4 --cdw11 -5 --cdw12 -6 --cdw13 -7 --cdw14 -8 --cdw15 -9 --cdw2 -2 --cdw3 -3 --data-len -l --flags -f --input-file -i --metadata -M --metadata-len -m --namespace-id -n --opcode -O --output-format -o --output-format-version --prefill -p --rsvd -R --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i" "--metadata -M"
 			;;
@@ -639,7 +639,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -647,7 +647,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -655,7 +655,7 @@ nvme_list_opts () {
 			opts+=" --cntid= -c --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cntid -c --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -663,7 +663,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --endgrp-id= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --endgrp-id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -671,7 +671,7 @@ nvme_list_opts () {
 			opts+=" --all -a --csi= -y --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --csi -y --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -679,7 +679,7 @@ nvme_list_opts () {
 			opts+=" --cntid= -c --dry-run --no-ioctl-probing --no-retries --num-entries= -e --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cntid -c --num-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -687,7 +687,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -695,7 +695,7 @@ nvme_list_opts () {
 			opts+=" --csel= -c --css= -C --dry-run --ifc= -f --no-ioctl-probing --no-retries --ofi= -O --output-format= -o --output-format-version= --prhbt= -p --quiet --scp= -s --set-options= --timeout= --uuid= -U --verbose -v"
 			valopts+=" --csel -c --css -C --ifc -f --ofi -O --output-format -o --output-format-version --prhbt -p --scp -s --set-options --timeout --uuid -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -703,7 +703,7 @@ nvme_list_opts () {
 			opts+=" --domain-id= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --domain-id -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -711,7 +711,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -719,7 +719,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -727,7 +727,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -735,7 +735,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -743,7 +743,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -751,7 +751,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -U --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout --uuid-index -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -759,7 +759,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --lba-format-index= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -U --verbose -v"
 			valopts+=" --lba-format-index -i --output-format -o --output-format-version --set-options --timeout --uuid-index -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -767,7 +767,7 @@ nvme_list_opts () {
 			opts+=" --data-len= -l --dry-run --input-file= -i --namespace-id= -n --nmd0= -0 --nmd1= -1 --nmimt= -m --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data-len -l --input-file -i --namespace-id -n --nmd0 -0 --nmd1 -1 --nmimt -m --opcode -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i"
 			;;
@@ -776,7 +776,7 @@ nvme_list_opts () {
 			opts+=" --data-len= -l --dry-run --input-file= -i --namespace-id= -n --nmd0= -0 --nmd1= -1 --nmimt= -m --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data-len -l --input-file -i --namespace-id -n --nmd0 -0 --nmd1 -1 --nmimt -m --opcode -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i"
 			;;
@@ -785,7 +785,7 @@ nvme_list_opts () {
 			opts+=" --action= -a --dry-run --log_len= -l --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --action -a --log_len -l --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -793,7 +793,7 @@ nvme_list_opts () {
 			opts+=" --controller= -c --dry-run --lsp= -s --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controller -c --lsp -s --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -801,7 +801,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -809,7 +809,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --log-entries= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --log-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -817,7 +817,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --nvmset-id= -i --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --nvmset-id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -825,7 +825,7 @@ nvme_list_opts () {
 			opts+=" --cntlid= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cntlid -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -833,7 +833,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -841,7 +841,7 @@ nvme_list_opts () {
 			opts+=" --associations-only -a --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -849,7 +849,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --groups-only -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -857,7 +857,7 @@ nvme_list_opts () {
 			opts+=" --app-tag= -a --app-tag-mask= -m --block-count= -c --block-size= -b --data= -d --data-size= -z --dir-spec= -S --dir-type= -T --dry-run --dsm= -D --force --force-unit-access -f --latency -t --limited-retry -l --metadata= -M --metadata-size= -y --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prinfo= -p --quiet --ref-tag= -r --set-options= --show-command -V --start-block= -s --storage-tag= -g --storage-tag-check -C --timeout= --verbose -v"
 			valopts+=" --app-tag -a --app-tag-mask -m --block-count -c --block-size -b --data -d --data-size -z --dir-spec -S --dir-type -T --dsm -D --metadata -M --metadata-size -y --namespace-id -n --output-format -o --output-format-version --prinfo -p --ref-tag -r --set-options --start-block -s --storage-tag -g --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d" "--metadata -M"
 			;;
@@ -866,7 +866,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -874,7 +874,7 @@ nvme_list_opts () {
 			opts+=" --crkey= -c --dry-run --iekey -i --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prkey= -p --quiet --racqa= -a --rtype= -t --set-options= --timeout= --verbose -v"
 			valopts+=" --crkey -c --namespace-id -n --output-format -o --output-format-version --prkey -p --racqa -a --rtype -t --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -882,7 +882,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -890,7 +890,7 @@ nvme_list_opts () {
 			opts+=" --cptpl= -p --crkey= -c --dry-run --iekey -i --namespace-id= -n --no-ioctl-probing --no-retries --nrkey= -k --output-format= -o --output-format-version= --quiet --rrega= -r --set-options= --timeout= --verbose -v"
 			valopts+=" --cptpl -p --crkey -c --namespace-id -n --nrkey -k --output-format -o --output-format-version --rrega -r --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -898,7 +898,7 @@ nvme_list_opts () {
 			opts+=" --crkey= -c --dry-run --iekey -i --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rrela= -a --rtype= -t --set-options= --timeout= --verbose -v"
 			valopts+=" --crkey -c --namespace-id -n --output-format -o --output-format-version --rrela -a --rtype -t --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -906,7 +906,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --eds -e --namespace-id= -n --no-ioctl-probing --no-retries --numd= -d --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --numd -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -914,7 +914,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --endg-id= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --endg-id -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -922,7 +922,7 @@ nvme_list_opts () {
 			opts+=" --ause -u --dry-run --emvs -e --ish -I --no-dealloc -d --no-ioctl-probing --no-retries --oipbp -i --output-format= -o --output-format-version= --ovrpat= -p --owpass= -n --preq -q --quiet --repeat= -r --sanact= -a --set-options= --timeout= --verbose -v --wait -w"
 			valopts+=" --output-format -o --output-format-version --ovrpat -p --owpass -n --repeat -r --sanact -a --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sanact -a" "exit-failure start-block-erase start-overwrite start-crypto-erase exit-media-verification"
 			;;
@@ -931,7 +931,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -939,7 +939,7 @@ nvme_list_opts () {
 			opts+=" --ause -u --dry-run --emvs -e --ish -I --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --preq -q --quiet --sanact= -a --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sanact -a --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sanact -a" "exit-failure start-crypto-erase exit-media-verification"
 			;;
@@ -948,7 +948,7 @@ nvme_list_opts () {
 			opts+=" --al= -t --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --nssf= -N --output-format= -o --output-format-version= --quiet --raw-binary -b --secp= -p --set-options= --size= -x --spsp= -s --timeout= --verbose -v"
 			valopts+=" --al -t --namespace-id -n --nssf -N --output-format -o --output-format-version --secp -p --set-options --size -x --spsp -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -956,7 +956,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --file= -f --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --nssf= -N --output-format= -o --output-format-version= --quiet --secp= -p --set-options= --spsp= -s --timeout= --tl= -t --verbose -v"
 			valopts+=" --file -f --namespace-id -n --nssf -N --output-format -o --output-format-version --secp -p --set-options --spsp -s --timeout --tl -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--file -f"
 			;;
@@ -965,7 +965,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --dst-entries= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --dst-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -974,7 +974,7 @@ nvme_list_opts () {
 			valopts+=" --cdw12 -c --data -d --data-len -l --feature-id -f --namespace-id -n --output-format -o --output-format-version --set-options --timeout --uuid-index -U --value -V"
 
 			_nvme_opt_vals "--feature-id -f" "arbitration power-mgmt lba-range temp-thresh err-recovery volatile-wc num-queues irq-coalesce irq-config write-atomic async-event auto-pst host-mem-buf timestamp kato hctm nopsc rrl plm-config plm-window lba-sts-interval host-behavior sanitize endurance-evt-cfg iocs-profile spinup-control power-loss-signal perf-characteristics fdp fdp-events ns-admin-label key-value ctrl-data-queue emb-mgmt-ctrl-addr host-mgmt-agent-addr enh-ctrl-metadata ctrl-metadata ns-metadata sw-progress host-id resv-nf-mask resv-persist write-protect bp-write-protect" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -983,7 +983,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --offset -O --output-format -o --output-format-version --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -991,7 +991,7 @@ nvme_list_opts () {
 			opts+=" --acq= --aqa= --asq= --bpmbl= --bprsel= --cc= --cmbmsc= --csts= --dry-run --intmc= --intms= --mmio32 -m --no-ioctl-probing --no-retries --nssd= --nssr= --offset= -O --output-format= -o --output-format-version= --pmrctl= --pmrmscl= --pmrmscu= --quiet --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --acq --aqa --asq --bpmbl --bprsel --cc --cmbmsc --csts --intmc --intms --nssd --nssr --offset -O --output-format -o --output-format-version --pmrctl --pmrmscl --pmrmscu --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -999,7 +999,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1007,7 +1007,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1015,7 +1015,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --ranking= -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --ranking -r --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json tabular" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1023,7 +1023,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1031,7 +1031,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1039,7 +1039,7 @@ nvme_list_opts () {
 			opts+=" --domain-id= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --domain-id -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1047,7 +1047,7 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1055,7 +1055,7 @@ nvme_list_opts () {
 			opts+=" --controller-init -c --data-area= -d --dry-run --force --host-generate= -g --mcda= -m --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --data-area -d --host-generate -g --mcda -m --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -1064,7 +1064,7 @@ nvme_list_opts () {
 			opts+=" --delay= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --delay -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1072,7 +1072,7 @@ nvme_list_opts () {
 			opts+=" --app-tag= -a --app-tag-mask= -m --block-count= -c --dry-run --force-unit-access -f --limited-retry -l --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prinfo= -p --quiet --ref-tag= -r --set-options= --start-block= -s --storage-tag= -S --storage-tag-check -C --timeout= --verbose -v"
 			valopts+=" --app-tag -a --app-tag-mask -m --block-count -c --namespace-id -n --output-format -o --output-format-version --prinfo -p --ref-tag -r --set-options --start-block -s --storage-tag -S --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1080,7 +1080,7 @@ nvme_list_opts () {
 			opts+=" --act= -a --cntlid= -c --dry-run --no-ioctl-probing --no-retries --nr= -n --output-format= -o --output-format-version= --quiet --rt= -r --set-options= --timeout= --verbose -v"
 			valopts+=" --act -a --cntlid -c --nr -n --output-format -o --output-format-version --rt -r --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1088,7 +1088,7 @@ nvme_list_opts () {
 			opts+=" --app-tag= -a --app-tag-mask= -m --block-count= -c --block-size= -b --data= -d --data-size= -z --dir-spec= -S --dir-type= -T --dry-run --dsm= -D --force --force-unit-access -f --latency -t --limited-retry -l --metadata= -M --metadata-size= -y --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prinfo= -p --quiet --ref-tag= -r --set-options= --show-command -V --start-block= -s --storage-tag= -g --storage-tag-check -C --timeout= --verbose -v"
 			valopts+=" --app-tag -a --app-tag-mask -m --block-count -c --block-size -b --data -d --data-size -z --dir-spec -S --dir-type -T --dsm -D --metadata -M --metadata-size -y --namespace-id -n --output-format -o --output-format-version --prinfo -p --ref-tag -r --set-options --start-block -s --storage-tag -g --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d" "--metadata -M"
 			;;
@@ -1097,7 +1097,7 @@ nvme_list_opts () {
 			opts+=" --block-count= -c --dir-spec= -S --dir-type= -T --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --start-block= -s --timeout= --verbose -v"
 			valopts+=" --block-count -c --dir-spec -S --dir-type -T --namespace-id -n --output-format -o --output-format-version --set-options --start-block -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1105,7 +1105,7 @@ nvme_list_opts () {
 			opts+=" --app-tag= -a --app-tag-mask= -m --block-count= -c --deac -d --dir-spec= -D --dir-type= -T --dry-run --force-unit-access -f --limited-retry -l --namespace-id= -n --namespace-zeroes -Z --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prinfo= -p --quiet --ref-tag= -r --set-options= --start-block= -s --storage-tag= -S --storage-tag-check -C --timeout= --verbose -v"
 			valopts+=" --app-tag -a --app-tag-mask -m --block-count -c --dir-spec -D --dir-type -T --namespace-id -n --output-format -o --output-format-version --prinfo -p --ref-tag -r --set-options --start-block -s --storage-tag -S --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1130,7 +1130,7 @@ plugin_amzn_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1138,7 +1138,7 @@ plugin_amzn_opts () {
 			opts+=" --details -d --dry-run --interval= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --interval -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1160,9 +1160,11 @@ plugin_config_opts () {
 	_nvme_detect_value_completion
 	case "$1" in
 		"convert")
-			opts+=" --config= -J --force --output= -o"
-			valopts+=" --config -J --output -o"
+			opts+=" --config= -J --dry-run --force --no-ioctl-probing --no-retries --output= -o --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			valopts+=" --config -J --output -o --output-format -o --output-format-version --set-options --timeout"
 
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--output -o"
 			;;
 
@@ -1170,7 +1172,7 @@ plugin_config_opts () {
 			opts+=" --concat --ctrl-loss-tmo= -l --data-digest -G --disable-sqflow --discovery --dry-run --duplicate-connect -D --fast-io-fail-tmo= -F --hdr-digest -g --host-iface= -f --host-symname= --host-traddr= -w --hostid= -I --hostnqn= -q --keep-alive-tmo= -k --keyring= --kxchap-ctrl-secret= -C --kxchap-secret= -S --no-ioctl-probing --no-retries --nqn= -n --nr-io-queues= -i --nr-poll-queues= -P --nr-write-queues= -W --output= --output-format= -o --output-format-version= --persistent= --queue-size= -Q --quiet --reconnect-delay= -c --set-options= --timeout= --tls --tls-key= --tls-key-identity= --tls_key= --tos= -T --traddr= -a --transport= -t --trsvcid= -s --verbose -v"
 			valopts+=" --ctrl-loss-tmo -l --fast-io-fail-tmo -F --host-iface -f --host-symname --host-traddr -w --hostid -I --hostnqn -q --keep-alive-tmo -k --keyring --kxchap-ctrl-secret -C --kxchap-secret -S --nqn -n --nr-io-queues -i --nr-poll-queues -P --nr-write-queues -W --output --output-format -o --output-format-version --persistent --queue-size -Q --reconnect-delay -c --set-options --timeout --tls-key --tls-key-identity --tls_key --tos -T --traddr -a --transport -t --trsvcid -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output"
 			;;
@@ -1179,15 +1181,25 @@ plugin_config_opts () {
 			opts+=" --config= -J --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --config -J --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J"
 			;;
 
-		"validate")
-			opts+=" --config= -J"
-			valopts+=" --config -J"
+		"status")
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
+			;;
+
+		"validate")
+			opts+=" --config= -J --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			valopts+=" --config -J --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J"
 			;;
 	esac
@@ -1212,7 +1224,7 @@ plugin_dapustor_opts () {
 			opts+=" --dry-run --json -j --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1237,7 +1249,7 @@ plugin_dell_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1262,7 +1274,7 @@ plugin_dera_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1287,7 +1299,7 @@ plugin_dir_opts () {
 			opts+=" --data-len= -l --dir-oper= -O --dir-spec= -S --dir-type= -D --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --req-resource= -r --set-options= --timeout= --verbose -v"
 			valopts+=" --data-len -l --dir-oper -O --dir-spec -S --dir-type -D --namespace-id -n --output-format -o --output-format-version --req-resource -r --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1295,7 +1307,7 @@ plugin_dir_opts () {
 			opts+=" --data-len= -l --dir-oper= -O --dir-spec= -S --dir-type= -D --dry-run --endir= -e --input-file= -i --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --target-dir= -T --timeout= --verbose -v"
 			valopts+=" --data-len -l --dir-oper -O --dir-spec -S --dir-type -D --endir -e --input-file -i --namespace-id -n --output-format -o --output-format-version --set-options --target-dir -T --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i"
 			;;
@@ -1321,7 +1333,7 @@ plugin_exclusion_opts () {
 			opts+=" --dry-run --entry= -e --name= -N --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --entry -e --name -N --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1329,7 +1341,7 @@ plugin_exclusion_opts () {
 			opts+=" --dry-run --name= -N --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --name -N --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1337,7 +1349,7 @@ plugin_exclusion_opts () {
 			opts+=" --dry-run --name= -N --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --name -N --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1345,7 +1357,7 @@ plugin_exclusion_opts () {
 			opts+=" --dry-run --name= -N --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --name -N --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1353,7 +1365,7 @@ plugin_exclusion_opts () {
 			opts+=" --dry-run --name= -N --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --name -N --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1361,7 +1373,7 @@ plugin_exclusion_opts () {
 			opts+=" --dry-run --name= -N --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --name -N --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1386,7 +1398,7 @@ plugin_fdp_opts () {
 			opts+=" --dry-run --endgrp-id= -e --human-readable -H --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --endgrp-id -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1394,7 +1406,7 @@ plugin_fdp_opts () {
 			opts+=" --dry-run --endgrp-id= -e --host-events -E --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --endgrp-id -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1402,7 +1414,7 @@ plugin_fdp_opts () {
 			opts+=" --disable -d --dry-run --enable-conf-idx= -c --endgrp-id= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --enable-conf-idx -c --endgrp-id -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1410,7 +1422,7 @@ plugin_fdp_opts () {
 			opts+=" --dry-run --enable -e --event-types= -t --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --placement-handle= -p --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --event-types -t --namespace-id -n --output-format -o --output-format-version --placement-handle -p --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1418,7 +1430,7 @@ plugin_fdp_opts () {
 			opts+=" --dry-run --endgrp-id= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --endgrp-id -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1426,7 +1438,7 @@ plugin_fdp_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1434,7 +1446,7 @@ plugin_fdp_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --pids= -p --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --pids -p --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1442,7 +1454,7 @@ plugin_fdp_opts () {
 			opts+=" --dry-run --endgrp-id= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --endgrp-id -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1467,7 +1479,7 @@ plugin_feat_opts () {
 			opts+=" --ab= -a --dry-run --hpw= -H --lpw= -l --mpw= -m --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --ab -a --hpw -H --lpw -l --mpw -m --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1476,7 +1488,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --result= -r --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --result -r --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1485,7 +1497,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --dulbe -d --no-ioctl-probing --no-retries --nsid= -n --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --tler= -t --verbose -v"
 			valopts+=" --nsid -n --output-format -o --output-format-version --sel -S --set-options --timeout --tler -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1494,7 +1506,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --tmt1= -t --tmt2= -T --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout --tmt1 -t --tmt2 -T"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1503,7 +1515,7 @@ plugin_feat_opts () {
 			opts+=" --acre= -a --cdfe= -c --dry-run --etdas= -e --hdisns= -H --lbafee= -l --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --acre -a --cdfe -c --etdas -e --hdisns -H --lbafee -l --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1512,7 +1524,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --thr= -t --time= -T --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --thr -t --time -T --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1521,7 +1533,7 @@ plugin_feat_opts () {
 			opts+=" --cd -c --dry-run --iv= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --iv -i --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1530,7 +1542,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --kato= -k --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --kato -k --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1539,7 +1551,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --guids= -g --hlbars= --lbaros= -l --nlbs= -b --no-ioctl-probing --no-retries --nsid= -n --num= -N --output-format= -o --output-format-version= --quiet --save --sel= -S --set-options= --slbas= -s --timeout= --types= -t --verbose -v"
 			valopts+=" --guids -g --hlbars --lbaros -l --nlbs -b --nsid -n --num -N --output-format -o --output-format-version --sel -S --set-options --slbas -s --timeout --types -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1548,7 +1560,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --ncqr= -c --no-ioctl-probing --no-retries --nsqr= -n --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --ncqr -c --nsqr -n --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1557,7 +1569,7 @@ plugin_feat_opts () {
 			opts+=" --attri= -a --attrl= -A --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --paid= -p --quiet --r4karl= -R --rvspa -r --save -s --sel= -S --set-options= --timeout= --verbose -v --vs-data= -V"
 			valopts+=" --attri -a --attrl -A --namespace-id -n --output-format -o --output-format-version --paid -p --r4karl -R --sel -S --set-options --timeout --vs-data -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			_nvme_opt_files "--vs-data -V"
@@ -1567,7 +1579,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --pls= -l --plv= -p --quiet --save -s --sel= -S --set-options= --timeout= --uuid-index= -u --verbose -v"
 			valopts+=" --output-format -o --output-format-version --pls -l --plv -p --sel -S --set-options --timeout --uuid-index -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1576,7 +1588,7 @@ plugin_feat_opts () {
 			opts+=" --act= --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --pmts= --quiet --save -s --sel= -S --set-options= --smt= --timeout= --uuid-index= -u --verbose -v"
 			valopts+=" --act --output-format -o --output-format-version --pmts --sel -S --set-options --smt --timeout --uuid-index -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1585,7 +1597,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --ps= -p --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v --wh= -w"
 			valopts+=" --output-format -o --output-format-version --ps -p --sel -S --set-options --timeout --wh -w"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1594,7 +1606,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --ept= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --pmts= -m --pts= -t --ptv= -p --quiet --save -s --sel= -S --set-options= --timeout= --uuid-index= -u --verbose -v"
 			valopts+=" --ept -e --output-format -o --output-format-version --pmts -m --pts -t --ptv -p --sel -S --set-options --timeout --uuid-index -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1603,7 +1615,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --thsel= -H --timeout= --tmpsel= -m --tmpth= -T --tmpthh= -M --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --thsel -H --timeout --tmpsel -m --tmpth -T --tmpthh -M"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1612,7 +1624,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --tstmp= -t --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout --tstmp -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1621,7 +1633,7 @@ plugin_feat_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v --wce -w"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1630,7 +1642,7 @@ plugin_feat_opts () {
 			opts+=" --dn -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -1657,7 +1669,7 @@ plugin_fw_opts () {
 			valopts+=" --action -a --bpid -b --output-format -o --output-format-version --set-options --slot -s --timeout"
 
 			_nvme_opt_vals "--action -a" "replace replace-and-activate set-active replace-and-activate-immediate replace-boot-partition activate-boot-partition" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1665,7 +1677,7 @@ plugin_fw_opts () {
 			opts+=" --dry-run --fw= -f --ignore-ovr -i --ish -I --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --progress -p --quiet --set-options= --stream --timeout= --verbose -v --xfer= -x"
 			valopts+=" --fw -f --offset -O --output-format -o --output-format-version --set-options --timeout --xfer -x"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--fw -f"
 			;;
@@ -1691,7 +1703,7 @@ plugin_huawei_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1699,7 +1711,7 @@ plugin_huawei_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1724,7 +1736,7 @@ plugin_ibm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1732,7 +1744,7 @@ plugin_ibm_opts () {
 			opts+=" --action= -a --dry-run --log_len= -l --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --action -a --log_len -l --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1740,7 +1752,7 @@ plugin_ibm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1765,7 +1777,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1773,7 +1785,7 @@ plugin_id_opts () {
 			opts+=" --cntid= -c --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cntid -c --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1781,7 +1793,7 @@ plugin_id_opts () {
 			opts+=" --dom-id= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --dom-id -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1789,7 +1801,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --endgrp-id= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --endgrp-id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1797,7 +1809,7 @@ plugin_id_opts () {
 			opts+=" --controller-id= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controller-id -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1805,7 +1817,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --force --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1813,7 +1825,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1821,7 +1833,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1829,7 +1841,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1837,7 +1849,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --lba-format-index= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -U --verbose -v"
 			valopts+=" --lba-format-index -i --output-format -o --output-format-version --set-options --timeout --uuid-index -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1845,7 +1857,7 @@ plugin_id_opts () {
 			opts+=" --all -a --csi= -y --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --csi -y --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1853,7 +1865,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1861,7 +1873,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -U --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout --uuid-index -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1869,7 +1881,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --lba-format-index= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -U --verbose -v"
 			valopts+=" --lba-format-index -i --output-format -o --output-format-version --set-options --timeout --uuid-index -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1877,7 +1889,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --nvmset_id= -i --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --nvmset_id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1885,7 +1897,7 @@ plugin_id_opts () {
 			opts+=" --cntlid= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cntlid -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1893,7 +1905,7 @@ plugin_id_opts () {
 			opts+=" --cntid= -c --dry-run --no-ioctl-probing --no-retries --num-entries= -e --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cntid -c --num-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1901,7 +1913,7 @@ plugin_id_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1926,7 +1938,7 @@ plugin_innogrit_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1934,7 +1946,7 @@ plugin_innogrit_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1959,7 +1971,7 @@ plugin_inspur_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -1984,7 +1996,7 @@ plugin_intel_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -1992,7 +2004,7 @@ plugin_intel_opts () {
 			opts+=" --dry-run --log= -l --namespace-id= -n --nlognum= -m --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --region= -r --set-options= --timeout= --verbose -v --verbose-nlog -V"
 			valopts+=" --log -l --namespace-id -n --nlognum -m --output-file -O --output-format -o --output-format-version --region -r --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -2001,19 +2013,23 @@ plugin_intel_opts () {
 			opts+=" --dry-run --json -j --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v --write -w"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
 		"lat-stats-tracking")
-			opts+=" --disable -d --enable -e"
+			opts+=" --disable -d --dry-run --enable -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 
 		"market-name")
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2021,7 +2037,7 @@ plugin_intel_opts () {
 			opts+=" --bucket-thresholds= -t --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v --write -w"
 			valopts+=" --bucket-thresholds -t --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2029,7 +2045,7 @@ plugin_intel_opts () {
 			opts+=" --dry-run --json -j --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2037,7 +2053,7 @@ plugin_intel_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -2062,7 +2078,7 @@ plugin_io_mgmt_opts () {
 			opts+=" --data= -d --data-len= -l --dry-run --mo= -m --mos= -s --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data -d --data-len -l --mo -m --mos -s --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -2071,7 +2087,7 @@ plugin_io_mgmt_opts () {
 			opts+=" --data= -d --data-len= -l --dry-run --mo= -m --mos= -s --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data -d --data-len -l --mo -m --mos -s --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -2097,7 +2113,7 @@ plugin_keys_opts () {
 			opts+=" --dry-run --identity= -i --keydata= -d --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --identity -i --keydata -d --keyring -k --keytype -t --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2105,7 +2121,7 @@ plugin_keys_opts () {
 			opts+=" --compat -C --dry-run --hostnqn= -n --identity= -I --keydata= -d --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --subsysnqn= -c --timeout= --verbose -v"
 			valopts+=" --hostnqn -n --identity -I --keydata -d --keyring -k --keytype -t --output-format -o --output-format-version --set-options --subsysnqn -c --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2113,7 +2129,7 @@ plugin_keys_opts () {
 			opts+=" --dry-run --keyfile= -f --keyring= -k --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --keyfile -f --keyring -k --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2121,7 +2137,7 @@ plugin_keys_opts () {
 			opts+=" --dry-run --hmac= -m --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --secret= -s --secret-length= -l --set-options= --timeout= --verbose -v"
 			valopts+=" --hmac -m --output-format -o --output-format-version --secret -s --secret-length -l --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2129,7 +2145,7 @@ plugin_keys_opts () {
 			opts+=" --compat -C --dry-run --hmac= -m --hostnqn= -n --identity= -I --insert -i --keyfile= -f --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --secret= -s --set-options= --subsysnqn= -c --timeout= --verbose -v"
 			valopts+=" --hmac -m --hostnqn -n --identity -I --keyfile -f --keyring -k --keytype -t --output-format -o --output-format-version --secret -s --set-options --subsysnqn -c --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2137,7 +2153,7 @@ plugin_keys_opts () {
 			opts+=" --dry-run --identity= -i --keydata= -d --keyfile= -f --keyring= -k --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --identity -i --keydata -d --keyfile -f --keyring -k --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2145,7 +2161,7 @@ plugin_keys_opts () {
 			opts+=" --compat -C --dry-run --hostnqn= -n --identity= -I --keydata= -d --keyfile= -f --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --subsysnqn= -c --timeout= --verbose -v"
 			valopts+=" --hostnqn -n --identity -I --keydata -d --keyfile -f --keyring -k --keytype -t --output-format -o --output-format-version --set-options --subsysnqn -c --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2153,7 +2169,7 @@ plugin_keys_opts () {
 			opts+=" --dry-run --identity= -i --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --identity -i --keyring -k --keytype -t --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -2178,7 +2194,7 @@ plugin_lm_opts () {
 			opts+=" --cntlid= -c --consent --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --queue-type= -q --quiet --set-options= --size= -s --timeout= --verbose -v"
 			valopts+=" --cntlid -c --output-format -o --output-format-version --queue-type -q --set-options --size -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2186,7 +2202,7 @@ plugin_lm_opts () {
 			opts+=" --cdqid= -C --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cdqid -C --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2194,7 +2210,7 @@ plugin_lm_opts () {
 			opts+=" --cdqid= -C --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cdqid -C --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2202,7 +2218,7 @@ plugin_lm_opts () {
 			opts+=" --cntlid= -c --csuuidi= -U --csvi= -V --dry-run --human-readable -H --no-ioctl-probing --no-retries --numd= -n --offset= -O --output-file= -f --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --timeout= --uidx= -u --verbose -v"
 			valopts+=" --cntlid -c --csuuidi -U --csvi -V --numd -n --offset -O --output-file -f --output-format -o --output-format-version --sel -s --set-options --timeout --uidx -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			_nvme_opt_files "--output-file -f"
@@ -2212,7 +2228,7 @@ plugin_lm_opts () {
 			opts+=" --cntlid= -c --csuuidi= -U --csvi= -V --dry-run --dudmq -d --input-file= -f --no-ioctl-probing --no-retries --numd= -n --offset= -O --output-format= -o --output-format-version= --quiet --sel= -s --seq-ind= -S --set-options= --stype= -t --timeout= --uidx= -u --verbose -v"
 			valopts+=" --cntlid -c --csuuidi -U --csvi -V --input-file -f --numd -n --offset -O --output-format -o --output-format-version --sel -s --seq-ind -S --set-options --stype -t --timeout --uidx -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			_nvme_opt_files "--input-file -f"
@@ -2222,7 +2238,7 @@ plugin_lm_opts () {
 			opts+=" --cdqid= -C --dry-run --hp= -H --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --tpt= -T --verbose -v"
 			valopts+=" --cdqid -C --hp -H --output-format -o --output-format-version --set-options --timeout --tpt -T"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2230,7 +2246,7 @@ plugin_lm_opts () {
 			opts+=" --cdqid= -C --dry-run --mos= -m --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --start --stop --timeout= --verbose -v"
 			valopts+=" --cdqid -C --mos -m --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -2256,7 +2272,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --groups -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2264,7 +2280,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2272,7 +2288,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --lsp= -s --no-ioctl-probing --no-retries --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --lsp -s --output-file -f --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -f"
 			;;
@@ -2281,7 +2297,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2289,7 +2305,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2297,7 +2313,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2305,7 +2321,7 @@ plugin_log_opts () {
 			opts+=" --csi= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --csi -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2313,7 +2329,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --group-id= -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --group-id -g --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2321,7 +2337,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --log-entries= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --log-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2329,7 +2345,7 @@ plugin_log_opts () {
 			opts+=" --csi= -c --dry-run --lba= -l --log-entries= -e --namespace-id= -n --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --sqid= -S --status= -s --timeout= --trtype= -t --valid-entry -V --verbose -v"
 			valopts+=" --csi -c --lba -l --log-entries -e --namespace-id -n --opcode -O --output-format -o --output-format-version --set-options --sqid -S --status -s --timeout --trtype -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2337,7 +2353,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2345,7 +2361,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2353,7 +2369,7 @@ plugin_log_opts () {
 			opts+=" --all-host-entries -a --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2361,7 +2377,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2369,7 +2385,7 @@ plugin_log_opts () {
 			opts+=" --domain-id= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --domain-id -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2377,7 +2393,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2385,7 +2401,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2393,7 +2409,7 @@ plugin_log_opts () {
 			opts+=" --action= -a --dry-run --log_len= -l --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --action -a --log_len -l --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2401,7 +2417,7 @@ plugin_log_opts () {
 			opts+=" --controller= -c --dry-run --lsp= -s --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controller -c --lsp -s --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2409,7 +2425,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2417,7 +2433,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --log-entries= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --log-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2425,7 +2441,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --nvmset-id= -i --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --nvmset-id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2433,7 +2449,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2441,7 +2457,7 @@ plugin_log_opts () {
 			opts+=" --associations-only -a --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2449,7 +2465,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --groups-only -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2457,7 +2473,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2465,7 +2481,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --endg-id= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --endg-id -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2473,7 +2489,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2481,7 +2497,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --dst-entries= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --dst-entries -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2489,7 +2505,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2497,7 +2513,7 @@ plugin_log_opts () {
 			opts+=" --domain-id= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --domain-id -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2505,7 +2521,7 @@ plugin_log_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2513,7 +2529,7 @@ plugin_log_opts () {
 			opts+=" --controller-init -c --data-area= -d --dry-run --force --host-generate= -g --mcda= -m --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --data-area -d --host-generate -g --mcda -m --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -2539,7 +2555,7 @@ plugin_mangoboost_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -2564,7 +2580,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2572,7 +2588,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2580,7 +2596,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2588,7 +2604,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --param= -p --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --param -p --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2596,7 +2612,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2604,7 +2620,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2612,19 +2628,23 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --sel-perf-log= -s --set-commands-mask= -m --set-options= --set-read-threshold= -r --set-trim-threshold= -t --set-write-threshold= -w --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel-perf-log -s --set-commands-mask -m --set-options --set-read-threshold -r --set-trim-threshold -t --set-write-threshold -w --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
 		"lat-stats")
-			opts+=" --disable -d --enable -e"
+			opts+=" --disable -d --dry-run --enable -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 
 		"lat-stats-print")
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v --write -w"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2632,7 +2652,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2640,7 +2660,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --duration= -d --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --duration -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2648,7 +2668,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --fw= -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --fw -f --output-format -o --output-format-version --select -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--fw -f"
 			;;
@@ -2657,7 +2677,7 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2665,12 +2685,16 @@ plugin_memblaze_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
 		"smart-log-add-x")
-			opts+=" --raw-binary -b"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 	esac
 	_nvme_finish_completion "$1" 3
@@ -2694,7 +2718,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2702,7 +2726,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2710,7 +2734,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2718,7 +2742,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2726,7 +2750,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2734,7 +2758,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2742,7 +2766,7 @@ plugin_micron_opts () {
 			opts+=" --command= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --command -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2750,7 +2774,7 @@ plugin_micron_opts () {
 			opts+=" --command= -c --dry-run --no-ioctl-probing --no-retries --option= -O --output-format= -o --output-format-version= --quiet --set-options= --threshold= -t --timeout= --verbose -v"
 			valopts+=" --command -c --option -O --output-format -o --output-format-version --set-options --threshold -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2758,7 +2782,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2766,7 +2790,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2774,7 +2798,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --fw= -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --fw -f --output-format -o --output-format-version --select -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--fw -f"
 			;;
@@ -2783,7 +2807,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2791,7 +2815,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2799,7 +2823,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2807,7 +2831,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2815,7 +2839,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2823,7 +2847,7 @@ plugin_micron_opts () {
 			opts+=" --data_area= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --package= -p --quiet --set-options= --timeout= --type= -t --verbose -v"
 			valopts+=" --data_area -d --output-format -o --output-format-version --package -p --set-options --timeout --type -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--package -p"
 			;;
@@ -2832,7 +2856,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2840,7 +2864,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2848,7 +2872,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2856,7 +2880,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2864,7 +2888,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --option= -O --output-format= -o --output-format-version= --quiet --save= -s --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --option -O --output-format -o --output-format-version --save -s --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2872,7 +2896,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --option= -O --output-format= -o --output-format-version= --quiet --select= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --option -O --output-format -o --output-format-version --select -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2880,7 +2904,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2888,7 +2912,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2896,7 +2920,7 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -2921,7 +2945,7 @@ plugin_nbft_opts () {
 			opts+=" --discovery -d --dry-run --hfi -H --nbft-path= --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --subsystem -s --timeout= --verbose -v"
 			valopts+=" --nbft-path --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -2946,7 +2970,7 @@ plugin_netapp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal column json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2954,7 +2978,7 @@ plugin_netapp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal column json" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -2979,7 +3003,7 @@ plugin_ns_opts () {
 			opts+=" --controllers= -c --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controllers -c --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2987,7 +3011,7 @@ plugin_ns_opts () {
 			opts+=" --anagrp-id= -a --azr -z --block-size= -b --csi= -y --dps= -d --dry-run --endg-id= -e --flbas= -f --ish -I --lbstm= -l --ncap= -c --ncap-si= -C --nmic= -m --no-ioctl-probing --no-retries --nphndls= -n --nsze= -s --nsze-si= -S --nvmset-id= -i --output-format= -o --output-format-version= --phndls= -p --quiet --rar= -r --rnumzrwa= -u --ror= -O --set-options= --timeout= --verbose -v"
 			valopts+=" --anagrp-id -a --block-size -b --csi -y --dps -d --endg-id -e --flbas -f --lbstm -l --ncap -c --ncap-si -C --nmic -m --nphndls -n --nsze -s --nsze-si -S --nvmset-id -i --output-format -o --output-format-version --phndls -p --rar -r --rnumzrwa -u --ror -O --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -2995,7 +3019,7 @@ plugin_ns_opts () {
 			opts+=" --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3003,7 +3027,7 @@ plugin_ns_opts () {
 			opts+=" --controllers= -c --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --controllers -c --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3011,7 +3035,7 @@ plugin_ns_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3036,7 +3060,7 @@ plugin_nvidia_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3061,7 +3085,7 @@ plugin_nvme_mi_opts () {
 			opts+=" --data-len= -l --dry-run --input-file= -i --namespace-id= -n --nmd0= -0 --nmd1= -1 --nmimt= -m --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data-len -l --input-file -i --namespace-id -n --nmd0 -0 --nmd1 -1 --nmimt -m --opcode -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i"
 			;;
@@ -3070,7 +3094,7 @@ plugin_nvme_mi_opts () {
 			opts+=" --data-len= -l --dry-run --input-file= -i --namespace-id= -n --nmd0= -0 --nmd1= -1 --nmimt= -m --no-ioctl-probing --no-retries --opcode= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --data-len -l --input-file -i --namespace-id -n --nmd0 -0 --nmd1 -1 --nmimt -m --opcode -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--input-file -i"
 			;;
@@ -3096,7 +3120,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3104,7 +3128,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3112,7 +3136,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3120,7 +3144,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --mode= -m --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --mode -m --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -3129,7 +3153,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3137,7 +3161,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3145,7 +3169,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --no-uuid -u --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -3154,7 +3178,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -3163,7 +3187,7 @@ plugin_ocp_opts () {
 			opts+=" --all -a --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -3172,7 +3196,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -3181,7 +3205,7 @@ plugin_ocp_opts () {
 			opts+=" --all-ns -a --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -3190,7 +3214,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --no-uuid -u --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -3199,7 +3223,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --no-uuid -u --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -3208,7 +3232,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3"
 			;;
@@ -3217,7 +3241,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --no-uuid -u --output-format= -o --output-format-version= --quiet --sel= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -3227,7 +3251,7 @@ plugin_ocp_opts () {
 			valopts+=" --comp-id -i --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--comp-id -i" "asic nand dram pmic pcb cap reg case sn country hw-rev born-on-date vendor" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3235,7 +3259,7 @@ plugin_ocp_opts () {
 			opts+=" --data-area= -a --dry-run --host-generate= -g --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --string-log= -s --telemetry-log= -l --telemetry-type= -t --timeout= --verbose -v"
 			valopts+=" --data-area -a --host-generate -g --output-file -f --output-format -o --output-format-version --set-options --string-log -s --telemetry-log -l --telemetry-type -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -f"
 			;;
@@ -3244,7 +3268,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3252,7 +3276,7 @@ plugin_ocp_opts () {
 			opts+=" --action= -a --dry-run --log_len= -l --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --action -a --log_len -l --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3260,7 +3284,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --enable-panic-notices -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3268,7 +3292,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --power-state= -p --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --power-state -p --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3276,7 +3300,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --enable -e --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3284,7 +3308,7 @@ plugin_ocp_opts () {
 			opts+=" --all-ns -a --data= -d --dry-run --no-ioctl-probing --no-retries --no-uuid -N --nrtdp= -r --number= -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --type= -t --verbose -v"
 			valopts+=" --data -d --nrtdp -r --number -n --output-format -o --output-format-version --set-options --timeout --type -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -3293,7 +3317,7 @@ plugin_ocp_opts () {
 			opts+=" --active_bucket_timer_threshold= -t --active_latency_config= -f --active_latency_minimum_window= -w --active_threshold_a= -a --active_threshold_b= -b --active_threshold_c= -c --active_threshold_d= -d --debug_log_trigger_enable= -r --discard_debug_log= -l --dry-run --latency_monitor_feature_enable= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --active_bucket_timer_threshold -t --active_latency_config -f --active_latency_minimum_window -w --active_threshold_a -a --active_threshold_b -b --active_threshold_c -c --active_threshold_d -d --debug_log_trigger_enable -r --discard_debug_log -l --latency_monitor_feature_enable -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3301,7 +3325,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --plp_health_interval= -p --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --plp_health_interval -p --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3309,7 +3333,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --telemetry-profile-select= -t --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --telemetry-profile-select -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3317,7 +3341,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3325,7 +3349,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3333,7 +3357,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-file -f --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -f"
 			;;
@@ -3342,7 +3366,7 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3367,7 +3391,7 @@ plugin_registry_opts () {
 			opts+=" --attr= -a --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --attr -a --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3375,7 +3399,7 @@ plugin_registry_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3383,7 +3407,7 @@ plugin_registry_opts () {
 			opts+=" --attr= -a --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --attr -a --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3391,7 +3415,7 @@ plugin_registry_opts () {
 			opts+=" --attr= -a --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --attr -a --output-format -o --output-format-version --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3416,7 +3440,7 @@ plugin_resv_opts () {
 			opts+=" --crkey= -c --dry-run --iekey -i --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --prkey= -p --quiet --racqa= -a --rtype= -t --set-options= --timeout= --verbose -v"
 			valopts+=" --crkey -c --namespace-id -n --output-format -o --output-format-version --prkey -p --racqa -a --rtype -t --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3424,7 +3448,7 @@ plugin_resv_opts () {
 			opts+=" --cptpl= -p --crkey= -c --dry-run --iekey -i --namespace-id= -n --no-ioctl-probing --no-retries --nrkey= -k --output-format= -o --output-format-version= --quiet --rrega= -r --set-options= --timeout= --verbose -v"
 			valopts+=" --cptpl -p --crkey -c --namespace-id -n --nrkey -k --output-format -o --output-format-version --rrega -r --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3432,7 +3456,7 @@ plugin_resv_opts () {
 			opts+=" --crkey= -c --dry-run --iekey -i --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rrela= -a --rtype= -t --set-options= --timeout= --verbose -v"
 			valopts+=" --crkey -c --namespace-id -n --output-format -o --output-format-version --rrela -a --rtype -t --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3440,7 +3464,7 @@ plugin_resv_opts () {
 			opts+=" --dry-run --eds -e --namespace-id= -n --no-ioctl-probing --no-retries --numd= -d --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --numd -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3465,7 +3489,7 @@ plugin_rpmb_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3473,7 +3497,7 @@ plugin_rpmb_opts () {
 			opts+=" --dry-run --key= -k --keyfile= -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --target= -t --timeout= --verbose -v"
 			valopts+=" --key -k --keyfile -g --output-format -o --output-format-version --set-options --target -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--keyfile -g"
 			;;
@@ -3482,7 +3506,7 @@ plugin_rpmb_opts () {
 			opts+=" --dry-run --msgfile= -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --msgfile -f --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--msgfile -f"
 			;;
@@ -3491,7 +3515,7 @@ plugin_rpmb_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --target= -t --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --target -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3499,7 +3523,7 @@ plugin_rpmb_opts () {
 			opts+=" --address= -o --blocks= -b --dry-run --msgfile= -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --target= -t --timeout= --verbose -v"
 			valopts+=" --address -o --blocks -b --msgfile -f --output-format -o --output-format-version --set-options --target -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--msgfile -f"
 			;;
@@ -3508,7 +3532,7 @@ plugin_rpmb_opts () {
 			opts+=" --dry-run --key= -k --keyfile= -g --msg= -d --msgfile= -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --key -k --keyfile -g --msg -d --msgfile -f --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--keyfile -g" "--msgfile -f"
 			;;
@@ -3517,7 +3541,7 @@ plugin_rpmb_opts () {
 			opts+=" --address= -o --blocks= -b --dry-run --key= -k --keyfile= -g --msg= -d --msgfile= -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --target= -t --timeout= --verbose -v"
 			valopts+=" --address -o --blocks -b --key -k --keyfile -g --msg -d --msgfile -f --output-format -o --output-format-version --set-options --target -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--keyfile -g" "--msgfile -f"
 			;;
@@ -3543,7 +3567,7 @@ plugin_samsung_opts () {
 			opts+=" --compress -z --dry-run --dump-type= -t --hide-progress -H --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --telemetry-data-area= -a --timeout= --verbose -v"
 			valopts+=" --dump-type -t --output-file -O --output-format -o --output-format-version --set-options --telemetry-data-area -a --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -3569,7 +3593,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3577,7 +3601,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3585,7 +3609,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3593,7 +3617,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3601,7 +3625,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --log_specific= -i --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --log_specific -i --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3609,7 +3633,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3617,7 +3641,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3625,7 +3649,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --dump-file= -f --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --dump-file -f --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--dump-file -f"
 			;;
@@ -3634,7 +3658,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3642,7 +3666,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3650,7 +3674,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3658,7 +3682,7 @@ plugin_seagate_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3683,7 +3707,7 @@ plugin_security_opts () {
 			opts+=" --al= -t --dry-run --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --nssf= -N --output-format= -o --output-format-version= --quiet --raw-binary -b --secp= -p --set-options= --size= -x --spsp= -s --timeout= --verbose -v"
 			valopts+=" --al -t --namespace-id -n --nssf -N --output-format -o --output-format-version --secp -p --set-options --size -x --spsp -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3691,7 +3715,7 @@ plugin_security_opts () {
 			opts+=" --dry-run --file= -f --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --nssf= -N --output-format= -o --output-format-version= --quiet --secp= -p --set-options= --spsp= -s --timeout= --tl= -t --verbose -v"
 			valopts+=" --file -f --namespace-id -n --nssf -N --output-format -o --output-format-version --secp -p --set-options --spsp -s --timeout --tl -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--file -f"
 			;;
@@ -3714,23 +3738,51 @@ plugin_sed_opts () {
 	_nvme_detect_value_completion
 	case "$1" in
 		"discover"|"1")
-			opts+=" --udev -u --verbose -V"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --udev -u --verbose -V --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 
 		"initialize")
-			opts+=" --read-only -r"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --read-only -r --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 
 		"lock")
-			opts+=" --ask-key -k --read-only -r"
+			opts+=" --ask-key -k --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --read-only -r --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
+			;;
+
+		"password")
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 
 		"revert")
-			opts+=" --destructive -e --psid -p"
+			opts+=" --destructive -e --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --psid -p --quiet --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 
 		"unlock")
-			opts+=" --ask-key -k --read-only -r"
+			opts+=" --ask-key -k --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --read-only -r --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			;;
 	esac
 	_nvme_finish_completion "$1" 3
@@ -3754,7 +3806,7 @@ plugin_sfx_opts () {
 			opts+=" --cap= -c --cap-byte= -z --dry-run --force -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --cap -c --cap-byte -z --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3762,7 +3814,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --file= -f --namespace_id= -n --no-ioctl-probing --no-retries --output= -O --output-format= -o --output-format-version= --parse -p --quiet --set-options= --storage_medium= -s --timeout= --verbose -v"
 			valopts+=" --file -f --namespace_id -n --output -O --output-format -o --output-format-version --set-options --storage_medium -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--file -f" "--output -O"
 			;;
@@ -3771,7 +3823,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --lbaf= -l --namespace_cap= -c --namespace_id= -n --namespace_size= -s --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --units= -u --verbose -v"
 			valopts+=" --lbaf -l --namespace_cap -c --namespace_id -n --namespace_size -s --output-format -o --output-format-version --set-options --timeout --units -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3779,7 +3831,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3787,7 +3839,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --feature-id= -f --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --feature-id -f --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3795,7 +3847,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v --write -w"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3803,7 +3855,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3811,7 +3863,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --feature-id= -f --force -s --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --feature-id -f --namespace-id -n --output-format -o --output-format-version --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3819,7 +3871,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --json -j --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3827,7 +3879,7 @@ plugin_sfx_opts () {
 			opts+=" --dry-run --json-print -j --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3852,7 +3904,7 @@ plugin_shannon_opts () {
 			opts+=" --cdw11= -c --data-len= -l --dry-run --feature-id= -f --human-readable -H --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --sel= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --cdw11 -c --data-len -l --feature-id -f --namespace-id -n --output-format -o --output-format-version --sel -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3"
 			;;
@@ -3861,7 +3913,7 @@ plugin_shannon_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3869,7 +3921,7 @@ plugin_shannon_opts () {
 			opts+=" --data= -d --data-len= -l --dry-run --feature-id= -f --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --data -d --data-len -l --feature-id -f --namespace-id -n --output-format -o --output-format-version --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -3878,7 +3930,7 @@ plugin_shannon_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -3903,7 +3955,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3911,7 +3963,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3919,7 +3971,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3927,7 +3979,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3935,7 +3987,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3943,7 +3995,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3951,7 +4003,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -u --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout --uuid-index -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3959,7 +4011,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --size= -s --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --size -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3967,7 +4019,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3975,7 +4027,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3983,7 +4035,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3991,7 +4043,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -3999,7 +4051,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4007,7 +4059,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4015,7 +4067,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --op-option= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --op-option -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4023,7 +4075,7 @@ plugin_sndk_opts () {
 			opts+=" --active_bucket_timer_threshold= -t --active_latency_config= -f --active_latency_minimum_window= -w --active_threshold_a= -a --active_threshold_b= -b --active_threshold_c= -c --active_threshold_d= -d --debug_log_trigger_enable= -r --discard_debug_log= -l --dry-run --latency_monitor_feature_enable= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --active_bucket_timer_threshold -t --active_latency_config -f --active_latency_minimum_window -w --active_threshold_a -a --active_threshold_b -b --active_threshold_c -c --active_threshold_d -d --debug_log_trigger_enable -r --discard_debug_log -l --latency_monitor_feature_enable -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4031,7 +4083,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4039,7 +4091,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4047,7 +4099,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4055,7 +4107,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --file= -O --log-id= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --file -O --log-id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--file -O"
 			;;
@@ -4064,7 +4116,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4072,14 +4124,16 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
 		"vs-internal-log")
-			opts+=" --data-area= -d --file-size= -f --offset= -e --output-file= -O --transfer-size= -s --type= -t --verbose -V"
-			valopts+=" --data-area -d --file-size -f --offset -e --output-file -O --transfer-size -s --type -t"
+			opts+=" --data-area= -d --dry-run --file-size= -f --no-ioctl-probing --no-retries --offset= -e --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --transfer-size= -s --type= -t --verbose -V --verbose -v"
+			valopts+=" --data-area -d --file-size -f --offset -e --output-file -O --output-format -o --output-format-version --set-options --timeout --transfer-size -s --type -t"
 
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O" "--type -t"
 			;;
 
@@ -4087,7 +4141,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4095,7 +4149,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4103,7 +4157,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --interval= -i --log-page-mask= -p --log-page-version= -l --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --interval -i --log-page-mask -p --log-page-version -l --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4111,7 +4165,7 @@ plugin_sndk_opts () {
 			opts+=" --disable -d --dry-run --enable -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --status -s --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4119,7 +4173,7 @@ plugin_sndk_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -4144,7 +4198,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4152,7 +4206,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4160,7 +4214,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4168,7 +4222,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4176,7 +4230,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4184,7 +4238,7 @@ plugin_solidigm_opts () {
 			opts+=" --disable -d --dry-run --enable -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --read -r --set-options= --timeout= --type= -t --verbose -v --write -w"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout --type -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4192,7 +4246,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4200,7 +4254,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4208,7 +4262,7 @@ plugin_solidigm_opts () {
 			opts+=" --config-file= -j --controller-init -c --data-area= -d --dry-run --host-generate= -g --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --source-file= -s --timeout= --verbose -v"
 			valopts+=" --config-file -j --data-area -d --host-generate -g --output-format -o --output-format-version --set-options --source-file -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config-file -j" "--source-file -s"
 			;;
@@ -4217,7 +4271,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4225,7 +4279,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4233,7 +4287,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4241,7 +4295,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4249,7 +4303,7 @@ plugin_solidigm_opts () {
 			opts+=" --dir-name= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --type= -t --verbose -v"
 			valopts+=" --dir-name -d --output-format -o --output-format-version --set-options --timeout --type -t"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--dir-name -d"
 			;;
@@ -4258,7 +4312,7 @@ plugin_solidigm_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4266,7 +4320,7 @@ plugin_solidigm_opts () {
 			opts+=" --disable -d --dry-run --enable -e --flush-freq= -f --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --run-time= -r --sample-time= -s --set-options= --timeout= --trigger-field= -T --trigger-on-delta -D --trigger-on-latency -L --trigger-threshold= -V --type= -t --uuid-index= -U --verbose -v --wall-clock -w"
 			valopts+=" --flush-freq -f --output-format -o --output-format-version --run-time -r --sample-time -s --set-options --timeout --trigger-field -T --trigger-threshold -V --type -t --uuid-index -U"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -4291,7 +4345,7 @@ plugin_ssstc_opts () {
 			opts+=" --dry-run --json -j --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -4316,7 +4370,7 @@ plugin_toshiba_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4324,7 +4378,7 @@ plugin_toshiba_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --prev-log -p --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4333,7 +4387,7 @@ plugin_toshiba_opts () {
 			opts+=" --dry-run --log= -l --namespace-id= -n --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --log -l --namespace-id -n --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4359,7 +4413,7 @@ plugin_transcend_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4367,7 +4421,7 @@ plugin_transcend_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -4408,7 +4462,7 @@ plugin_virtium_opts () {
 			opts+=" --dry-run --freq= -f --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --run-time= -r --set-options= --test-name= -n --timeout= --verbose -v"
 			valopts+=" --freq -f --output-file -O --output-format -o --output-format-version --run-time -r --set-options --test-name -n --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4417,7 +4471,7 @@ plugin_virtium_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -4442,7 +4496,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --transfer-size= -s --verbose -v"
 			valopts+=" --output-file -O --output-format -o --output-format-version --set-options --timeout --transfer-size -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4451,7 +4505,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4459,7 +4513,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4467,7 +4521,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4475,7 +4529,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4483,7 +4537,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4491,7 +4545,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4499,7 +4553,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --uuid-index= -u --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout --uuid-index -u"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4507,7 +4561,7 @@ plugin_wdc_opts () {
 			opts+=" --dir-name= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --dir-name -d --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--dir-name -d"
 			;;
@@ -4516,7 +4570,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4525,7 +4579,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --size= -s --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --size -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4533,7 +4587,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --log-id= -l --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --transfer-size= -s --verbose -v"
 			valopts+=" --log-id -l --output-file -O --output-format -o --output-format-version --set-options --timeout --transfer-size -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4542,7 +4596,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4551,7 +4605,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4559,7 +4613,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4567,7 +4621,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4575,7 +4629,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4583,7 +4637,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-file -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O"
 			;;
@@ -4592,7 +4646,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4600,7 +4654,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4608,7 +4662,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4616,7 +4670,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --op-option= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --op-option -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4624,7 +4678,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4632,7 +4686,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4640,7 +4694,7 @@ plugin_wdc_opts () {
 			opts+=" --active_bucket_timer_threshold= -t --active_latency_config= -f --active_latency_minimum_window= -w --active_threshold_a= -a --active_threshold_b= -b --active_threshold_c= -c --active_threshold_d= -d --debug_log_trigger_enable= -r --discard_debug_log= -l --dry-run --latency_monitor_feature_enable= -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --active_bucket_timer_threshold -t --active_latency_config -f --active_latency_minimum_window -w --active_threshold_a -a --active_threshold_b -b --active_threshold_c -c --active_threshold_d -d --debug_log_trigger_enable -r --discard_debug_log -l --latency_monitor_feature_enable -e --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4648,7 +4702,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4656,7 +4710,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4664,7 +4718,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4672,7 +4726,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --file= -O --log-id= -i --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --file -O --log-id -i --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--file -O"
 			;;
@@ -4681,7 +4735,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4689,14 +4743,16 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
 		"vs-internal-log")
-			opts+=" --data-area= -d --file-size= -f --offset= -e --output-file= -O --transfer-size= -s --type= -t --verbose -V"
-			valopts+=" --data-area -d --file-size -f --offset -e --output-file -O --transfer-size -s --type -t"
+			opts+=" --data-area= -d --dry-run --file-size= -f --no-ioctl-probing --no-retries --offset= -e --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --transfer-size= -s --type= -t --verbose -V --verbose -v"
+			valopts+=" --data-area -d --file-size -f --offset -e --output-file -O --output-format -o --output-format-version --set-options --timeout --transfer-size -s --type -t"
 
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output-file -O" "--type -t"
 			;;
 
@@ -4704,7 +4760,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4712,7 +4768,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4720,7 +4776,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --interval= -i --log-page-mask= -p --log-page-version= -l --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --interval -i --log-page-mask -p --log-page-version -l --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4728,7 +4784,7 @@ plugin_wdc_opts () {
 			opts+=" --disable -d --dry-run --enable -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --status -s --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4736,7 +4792,7 @@ plugin_wdc_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -4761,7 +4817,7 @@ plugin_ymtc_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
@@ -4786,7 +4842,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --rae -r --set-options= --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4794,7 +4850,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select-all -a --set-options= --start-lba= -s --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4802,7 +4858,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select-all -a --set-options= --start-lba= -s --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4810,7 +4866,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4818,7 +4874,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --human-readable -H --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --vendor-specific -V --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4826,7 +4882,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4834,7 +4890,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select-all -a --set-options= --start-lba= -s --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4842,7 +4898,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select-all -a --set-options= --start-lba= -s --timeout= --verbose -v --zrwaa -r"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4850,7 +4906,7 @@ plugin_zns_opts () {
 			opts+=" --descs= -d --dry-run --extended -e --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --partial -p --quiet --set-options= --start-lba= -s --state= -S --timeout= --verbose -V --verbose -v"
 			valopts+=" --descs -d --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --state -S --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4858,7 +4914,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select-all -a --set-options= --start-lba= -s --timeout= --verbose -v"
 			valopts+=" --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4866,7 +4922,7 @@ plugin_zns_opts () {
 			opts+=" --data= -d --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --start-lba= -s --timeout= --verbose -v --zrwaa -r"
 			valopts+=" --data -d --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -4875,7 +4931,7 @@ plugin_zns_opts () {
 			opts+=" --data= -d --data-size= -z --dry-run --force-unit-access -f --latency -t --limited-retry -l --metadata= -M --metadata-size= -y --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --piremap -P --prinfo= -p --quiet --set-options= --timeout= --verbose -v --zslba= -s"
 			valopts+=" --data -d --data-size -z --metadata -M --metadata-size -y --namespace-id -n --output-format -o --output-format-version --prinfo -p --set-options --timeout --zslba -s"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d" "--metadata -M"
 			;;
@@ -4884,7 +4940,7 @@ plugin_zns_opts () {
 			opts+=" --data-len= -l --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --partial -p --quiet --set-options= --start-lba= -s --timeout= --verbose -v --zra= -z --zrasf= -S"
 			valopts+=" --data-len -l --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout --zra -z --zrasf -S"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 
@@ -4892,7 +4948,7 @@ plugin_zns_opts () {
 			opts+=" --data= -d --data-len= -l --dry-run --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --select-all -a --set-options= --start-lba= -s --timeout= --verbose -v --zsa= -z --zsaso -O"
 			valopts+=" --data -d --data-len -l --namespace-id -n --output-format -o --output-format-version --set-options --start-lba -s --timeout --zsa -z"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--data -d"
 			;;
@@ -4901,7 +4957,7 @@ plugin_zns_opts () {
 			opts+=" --dry-run --lba= -l --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --lba -l --namespace-id -n --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			;;
 	esac
