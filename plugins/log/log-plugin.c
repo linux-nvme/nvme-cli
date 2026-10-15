@@ -1066,7 +1066,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	int err;
 
 	struct config {
-		__u64	log_entries;
+		__u32	log_entries;
 		bool	rae;
 		bool	raw_binary;
 	};
@@ -1263,7 +1263,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	int err;
 
 	struct config {
-		__u64	log_entries;
+		__u32	log_entries;
 		bool	rae;
 		bool	raw_binary;
 	};
@@ -1703,7 +1703,7 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("domain-id",     'd', &cfg.domainid, domainid),
+		  OPT_SHRT("domain-id",     'd', &cfg.domainid, domainid),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_use));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -1829,7 +1829,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("domain-id",     'd', &cfg.domainid,       domainid),
+		  OPT_SHRT("domain-id",     'd', &cfg.domainid,       domainid),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_use));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -2119,7 +2119,7 @@ static int get_rotational_media_info_log(int argc, char **argv, struct command *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("endg-id", 'e', &cfg.endgid, endgid));
+		  OPT_SHRT("endg-id", 'e', &cfg.endgid, endgid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
