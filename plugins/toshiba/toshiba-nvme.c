@@ -434,10 +434,8 @@ static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin
 		OPT_UINT("log",          'l', &cfg.log,          log));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("%s: failed to parse arguments", __func__);
-		return -EINVAL;
-	}
+	if (err)
+		return err;
 
 	if ((cfg.log != 0xC0) && (cfg.log != 0xCA)) {
 		nvme_show_error("%s: invalid log page 0x%x - should be 0xC0 or 0xCA", __func__, cfg.log);
@@ -480,10 +478,8 @@ static int internal_log(int argc, char **argv, struct command *acmd, struct plug
 		OPT_FLAG("prev-log", 'p', &cfg.prev_log, prev_log));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("%s: failed to parse arguments", __func__);
-		return -EINVAL;
-	}
+	if (err)
+		return err;
 
 	if (cfg.prev_log)
 		printf("Getting previous log\n");
@@ -517,10 +513,8 @@ static int clear_correctable_errors(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("%s: failed to parse arguments", __func__);
-		return -EINVAL;
-	}
+	if (err)
+		return err;
 
 	/* Check device supported */
 	err = nvme_get_sct_status(hdl, MASK_0 | MASK_1);

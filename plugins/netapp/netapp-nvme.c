@@ -972,7 +972,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts);
 
 	ret = parse_args(argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	ret = nvme_create_global_ctx(&ctx);
@@ -1069,7 +1069,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts);
 
 	ret = parse_args(argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	ret = nvme_create_global_ctx(&ctx);

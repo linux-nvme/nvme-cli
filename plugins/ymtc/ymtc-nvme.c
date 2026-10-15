@@ -132,10 +132,8 @@ static int ymtc_parse_options(struct libnvme_global_ctx **ctx,
 	int err;
 
 	err = parse_and_open(ctx, hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("open");
+	if (err)
 		return err;
-	}
 
 	if (model) {
 		if (sscanf(argconfig_operand(0), "/dev/nvme%d", &idx) != 1)

@@ -910,10 +910,8 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (err)
+		return err;
 
 	flags = nvme_args.output_flags;
 
@@ -1086,10 +1084,8 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (err)
+		return err;
 
 	flags = nvme_args.output_flags;
 
@@ -1245,10 +1241,8 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (err)
+		return err;
 
 	flags = nvme_args.output_flags;
 
@@ -1378,10 +1372,8 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err < 0) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (err)
+		return err;
 
 	flags = nvme_args.output_flags;
 
@@ -1435,10 +1427,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 		OPT_FLAG("save", 's', &cfg.save, save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err < 0) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (err)
+		return err;
 
 	nvme_init_identify_ctrl(&cmd, &ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
@@ -1495,10 +1485,8 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 		OPT_FLAG("save", 's', &cfg.save, save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (err)
+		return err;
 
 
 	nvme_init_identify_ctrl(&cmd, &ctrl);
