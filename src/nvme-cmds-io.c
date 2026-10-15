@@ -577,7 +577,6 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	__u32 ctx_attrs[NVME_DSM_MAX_RANGES] = {0,};
 	__u32 nlbs[NVME_DSM_MAX_RANGES] = {0,};
 	__u64 slbas[NVME_DSM_MAX_RANGES] = {0,};
-	nvme_print_flags_t flags;
 	uint16_t nc, nb, ns;
 	int err;
 
@@ -620,12 +619,6 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	err = open_fallback_chardev(ctx, cfg.namespace_id, &hdl);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	nc = shr_parse_csv_u32(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
 	nb = shr_parse_csv_u32(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
@@ -1458,11 +1451,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (!cfg.atype) {
 		nvme_show_error("action type (--action) has to be given");
@@ -1510,7 +1499,6 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
-	nvme_print_flags_t flags;
 
 	struct config {
 		bool	ish;
@@ -1538,12 +1526,6 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (cfg.operation > 0xf) {
 		nvme_show_error("invalid operation field: %u", cfg.operation);

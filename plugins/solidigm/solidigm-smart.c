@@ -277,12 +277,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format '%s'",
-			nvme_args.output_format);
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	sldgm_get_uuid_index(hdl, &uuid_index);
 

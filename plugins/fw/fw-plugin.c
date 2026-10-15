@@ -170,7 +170,6 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	void *fw_buf;
 	struct nvme_id_ctrl ctrl = { 0 };
 	struct libnvme_passthru_cmd cmd;
-	nvme_print_flags_t flags;
 
 	struct config {
 		char	*fw;
@@ -204,12 +203,6 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	fw_fd = shr_open_rawdata(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
@@ -399,7 +392,6 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err;
-	nvme_print_flags_t flags;
 	bool mud_supported;
 
 	struct config {
@@ -439,12 +431,6 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (cfg.slot > 7) {
 		nvme_show_error("invalid slot:%d", cfg.slot);

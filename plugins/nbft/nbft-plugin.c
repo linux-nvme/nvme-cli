@@ -674,9 +674,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (ret)
 		return ret;
 
-	ret = validate_output_format(nvme_args.output_format, &flags);
-	if (ret < 0)
-		return ret;
+	flags = nvme_args.output_flags;
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)

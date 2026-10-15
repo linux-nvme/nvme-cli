@@ -899,11 +899,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 
 	load_nvme_fabrics_module();
 
-	ret = validate_output_format(nvme_args.output_format, &flags);
-	if (ret < 0) {
-		nvme_show_error("Invalid output format");
-		return ret;
-	}
+	flags = nvme_args.output_flags;
 
 	persistent = nvmf_resolve_persistent_arg(opts, persistent_arg);
 
@@ -1098,11 +1094,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	load_nvme_fabrics_module();
 
-	ret = validate_output_format(nvme_args.output_format, &flags);
-	if (ret < 0) {
-		nvme_show_error("Invalid output format");
-		return ret;
-	}
+	flags = nvme_args.output_flags;
 
 	if (config_file && !strcmp(config_file, "none"))
 		config_file = NULL;
@@ -1677,11 +1669,7 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	ret = validate_output_format(nvme_args.output_format, &flags);
-	if (ret < 0) {
-		nvme_show_error("Invalid output format");
-		return ret;
-	}
+	flags = nvme_args.output_flags;
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)

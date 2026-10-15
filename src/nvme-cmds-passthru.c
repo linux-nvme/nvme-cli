@@ -113,7 +113,6 @@ static int passthru(int argc, char **argv, bool admin,
 	int err = 0;
 	const char *cmd_name = NULL;
 	struct timeval start_time, end_time;
-	nvme_print_flags_t flags_t;
 
 	struct passthru_config cfg = {
 		.opcode		= 0,
@@ -167,12 +166,6 @@ static int passthru(int argc, char **argv, bool admin,
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags_t);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (!argconfig_parse_seen(opts, "opcode")) {
 		nvme_show_error("%s: opcode parameter required", acmd->name);

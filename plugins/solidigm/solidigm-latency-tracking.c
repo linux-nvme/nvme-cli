@@ -376,12 +376,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 
 	lt.hdl = hdl;
 
-	err = validate_output_format(nvme_args.output_format, &lt.print_flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format '%s'",
-			nvme_args.output_format);
-		return -EINVAL;
-	}
+	lt.print_flags = nvme_args.output_flags;
 
 	if (lt.cfg.type > 0xf) {
 		nvme_show_error("Invalid Log type value '%d'", lt.cfg.type);

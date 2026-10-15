@@ -53,7 +53,6 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	__cleanup_libnvme_free unsigned char *log = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err;
-	nvme_print_flags_t flags;
 
 	struct config {
 		bool	ish;
@@ -155,12 +154,6 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (cfg.aen) {
 		cfg.log_len = 4096;

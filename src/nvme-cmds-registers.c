@@ -162,11 +162,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 		return -EINVAL;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
@@ -434,11 +430,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
@@ -782,11 +774,7 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (cfg.offset == -1) {
 		nvme_show_error("offset required param");
@@ -813,7 +801,6 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
-	nvme_print_flags_t flags;
 
 	struct set_reg_config cfg = {
 		.offset	= -1,
@@ -827,12 +814,6 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (cfg.offset == -1) {
 		nvme_show_error("offset required param");

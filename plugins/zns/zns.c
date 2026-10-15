@@ -154,9 +154,7 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return errno;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0)
-		return err;
+	flags = nvme_args.output_flags;
 
 	nvme_init_zns_identify_ctrl(&cmd, &ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
@@ -201,9 +199,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	if (err)
 		return errno;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0)
-		return err;
+	flags = nvme_args.output_flags;
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
@@ -653,7 +649,6 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
-	nvme_print_flags_t flags;
 	void *data = NULL;
 	int err = -1;
 
@@ -679,10 +674,6 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return errno;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0)
-		return err;
 
 	if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
@@ -776,9 +767,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return errno;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0)
-		return err;
+	flags = nvme_args.output_flags;
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
@@ -1097,9 +1086,7 @@ static int changed_zone_list(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return errno;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0)
-		return err;
+	flags = nvme_args.output_flags;
 
 	if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);

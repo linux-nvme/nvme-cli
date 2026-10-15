@@ -275,11 +275,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (!argconfig_parse_seen(opts, "namespace-id")) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
@@ -336,7 +332,6 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	__cleanup_fd int ffd = STDIN_FILENO;
 	int err;
 	__u64 result;
-	nvme_print_flags_t flags;
 
 	struct config {
 		__u32	nsid;
@@ -372,12 +367,6 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (!argconfig_parse_seen(opts, "namespace-id")) {
 		err = libnvme_get_nsid(hdl, &cfg.nsid);
