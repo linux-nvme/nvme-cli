@@ -15,6 +15,8 @@
 #include <libnvme-mi.h>
 #include <libnvme.h>
 
+#include <ccan/array_size/array_size.h>
+#include <shared/sandbox-util.h>
 #include <shared/string-util.h>
 
 #include "argconfig.h"
@@ -150,8 +152,9 @@ static bool is_true(const char *val)
 }
 
 /* Splits @so->buf into @so->opts up to the first invalid option. */
-static void parse_set_options(struct set_options *so)
+static int parse_set_options(void *arg)
 {
+	struct set_options *so = arg;
 	char *p = so->buf, *kv, *val;
 	int key;
 
@@ -162,7 +165,7 @@ static void parse_set_options(struct set_options *so)
 		val = strchr(kv, '=');
 		if (!val) {
 			so->missing_eq = kv;
-			return;
+			return 0;
 		}
 		*val++ = '\0';
 
@@ -171,13 +174,41 @@ static void parse_set_options(struct set_options *so)
 				break;
 		if (key == SET_KEYS) {
 			so->unknown_key = kv;
-			return;
+			return 0;
 		}
 
 		so->opts[so->count].key = key;
 		so->opts[so->count].val = val;
 		so->count++;
 	}
+
+	return 0;
+}
+
+static bool in_buf(const struct set_options *so, size_t size, const char *p)
+{
+	return p >= so->buf && p < so->buf + size;
+}
+
+/* What a sandboxed parser wrote can only point into the buffer. */
+static bool valid_set_options(const struct set_options *so,
+			      const struct set_options *orig, size_t size,
+			      unsigned int max)
+{
+	unsigned int i;
+
+	if (so->buf != orig->buf || so->opts != orig->opts ||
+	    so->count > max ||
+	    (so->missing_eq && !in_buf(so, size, so->missing_eq)) ||
+	    (so->unknown_key && !in_buf(so, size, so->unknown_key)))
+		return false;
+
+	for (i = 0; i < so->count; i++)
+		if (so->opts[i].key >= SET_KEYS ||
+		    !in_buf(so, size, so->opts[i].val))
+			return false;
+
+	return true;
 }
 
 static int apply_set_option(struct libnvme_global_ctx *ctx,
@@ -222,7 +253,9 @@ static int nvme_apply_set_options(struct libnvme_global_ctx *ctx,
 {
 	__cleanup_free struct set_option *opts = NULL;
 	__cleanup_free char *buf = strdup(str);
-	struct set_options so = { .buf = buf };
+	struct set_options so = { .buf = buf }, orig;
+	struct shr_sandbox_region regions[3];
+	size_t size = strlen(str) + 1;
 	unsigned int i, n = 1;
 	int ret;
 
@@ -232,8 +265,20 @@ static int nvme_apply_set_options(struct libnvme_global_ctx *ctx,
 	if (!buf || !opts)
 		return -ENOMEM;
 	so.opts = opts;
+	orig = so;
 
-	parse_set_options(&so);
+	regions[0] = (struct shr_sandbox_region) { &so, sizeof(so) };
+	regions[1] = (struct shr_sandbox_region) { buf, size };
+	regions[2] = (struct shr_sandbox_region) {
+		opts, n * sizeof(*opts) };
+	ret = shr_sandbox_run(parse_set_options, &so, regions,
+			      ARRAY_SIZE(regions));
+	if (ret)
+		return ret;
+	if (!valid_set_options(&so, &orig, size, n)) {
+		nvme_show_error("--set-options: invalid result of the parser");
+		return -EPROTO;
+	}
 
 	for (i = 0; i < so.count; i++) {
 		ret = apply_set_option(ctx, &so.opts[i]);
