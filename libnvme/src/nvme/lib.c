@@ -221,7 +221,8 @@ __shr_public bool libnvme_transport_handle_is_ns(
 __shr_public bool libnvme_transport_handle_is_direct(
 		struct libnvme_transport_handle *hdl)
 {
-	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
+	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT ||
+		hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP;
 }
 
 __shr_public bool libnvme_transport_handle_is_mi(
