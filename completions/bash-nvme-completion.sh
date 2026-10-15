@@ -1536,8 +1536,8 @@ plugin_feat_opts () {
 			;;
 
 		"lba-range-type")
-			opts+=" --dry-run --guids= -g --hlbars= -h --lbaros= -l --nlbs= -b --no-ioctl-probing --no-retries --nsid= -n --num= -N --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --slbas= -s --timeout= --types= -t --verbose -v"
-			valopts+=" --guids -g --hlbars -h --lbaros -l --nlbs -b --nsid -n --num -N --output-format -o --output-format-version --sel -S --set-options --slbas -s --timeout --types -t"
+			opts+=" --dry-run --guids= -g --hlbars= --lbaros= -l --nlbs= -b --no-ioctl-probing --no-retries --nsid= -n --num= -N --output-format= -o --output-format-version= --quiet --save --sel= -S --set-options= --slbas= -s --timeout= --types= -t --verbose -v"
+			valopts+=" --guids -g --hlbars --lbaros -l --nlbs -b --nsid -n --num -N --output-format -o --output-format-version --sel -S --set-options --slbas -s --timeout --types -t"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
 			               "--output-format-version" "1 2" \
