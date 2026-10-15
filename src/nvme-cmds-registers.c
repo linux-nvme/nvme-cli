@@ -822,7 +822,7 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 
 	NVME_ARGS(opts,
 		  OPT_UINT("offset", 'O', &cfg.offset, offset),
-		  OPT_UINT("value",  'V', &cfg.value,  value));
+		  OPT_SUFFIX("value",  'V', &cfg.value,  value));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
