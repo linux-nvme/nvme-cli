@@ -5,6 +5,14 @@
 
 ### Feature removals and incompatible changes
 
+* nvme-cli parses its command line itself instead of with getopt, so
+  it behaves the same with every C library. Long options now need two
+  dashes and their full name: single-dash long options such as
+  `-verbose` and abbreviations such as `--namespace` for
+  `--namespace-id` are no longer accepted. A single dash always starts
+  short options, so `-verbose` is read as `-v -e -r -b -o -s -e`.
+  Options and arguments can still be given in any order.
+
 * The human-readable stdout output of `id-ctrl`, `id-ns`, and most
   other identify/log-page/feature commands is now rendered through a
   computed-width table instead of hand-aligned `printf()` calls.
