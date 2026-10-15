@@ -78,7 +78,6 @@ _FIXUPS = {
     0x20: [('<H', 0, 0), ('<I', 4, 88),         # FDP configs: n, size,
            ('<H', 16, 72), ('<H', 24, 2)],      # config size, nruh
     0x21: [('<H', 0, 2)],                       # FDP RUH usage: nruh
-    0x23: [('<I', 0, 2)],                       # FDP events: n
     0x1b: [('<H', 8, 0)],                       # reachability assoc.: nrad
     0x25: [('<I', 4, None), ('<H', 12, 0)],     # power measurement: sze, nphd
     0x71: [('<Q', 8, 0), ('<I', 20, 1024)],     # host discovery: numrec, thdlpl
