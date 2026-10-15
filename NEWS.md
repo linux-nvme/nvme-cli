@@ -13,6 +13,10 @@
   short options, so `-verbose` is read as `-v -e -r -b -o -s -e`.
   Options and arguments can still be given in any order.
 
+* Every command rejects an invalid `--output-format` value now, before
+  it opens the device. Before, the commands which don't use the output
+  format accepted any value.
+
 * The human-readable stdout output of `id-ctrl`, `id-ns`, and most
   other identify/log-page/feature commands is now rendered through a
   computed-width table instead of hand-aligned `printf()` calls.
@@ -107,6 +111,16 @@
   platform.
 
 ### nvme-cli
+
+* The global options (`--verbose`, `--output-format`, `--dry-run`, ...)
+  are accepted by every command. `config validate`, `config status`,
+  `config convert`, `intel lat-stats-tracking`, `memblaze lat-stats`,
+  `memblaze smart-log-add-x`, `sndk vs-internal-log`,
+  `wdc vs-internal-log` and the `sed` commands did not accept them.
+
+* The help and the shell completions of `--output-format` list the
+  formats the command supports. Before, the completions offered
+  `tabular` everywhere, and some commands listed formats they rejected.
 
 * `--dry-run` now also skips `nvme reset`, `nvme subsystem-reset`,
   `nvme ns-rescan`, the `nvme sed` operations which change the drive,
