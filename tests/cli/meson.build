@@ -106,6 +106,12 @@ if python3.found()
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
 
+        test('nvme-cli - dry-run-cli',
+             python3,
+             args: [files('nvme_dry_run_test.py'), nvme_exe, mock_nvme_lib],
+             env: cli_test_env,
+             depends: [nvme_exe, mock_nvme_lib])
+
         # Not on big-endian hosts yet: the test times out on s390x.
         if 'id' in selected_plugins and 'log' in selected_plugins and \
            'feat' in selected_plugins and host_machine.endian() == 'little'

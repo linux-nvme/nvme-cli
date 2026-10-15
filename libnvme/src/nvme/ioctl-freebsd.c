@@ -62,6 +62,9 @@ __shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
+	if (__libnvme_dry_run(hdl, "controller reset"))
+		return 0;
+
 	ret = nvme_verify_chr(hdl);
 	if (ret)
 		return ret;

@@ -458,6 +458,7 @@ bool __libnvme_decide_retry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, int err);
 int __libnvme_exec_dry_run(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
+bool __libnvme_dry_run(struct libnvme_transport_handle *hdl, const char *op);
 
 /* The steps of a /dev/nvme-fabrics transfer. */
 enum libnvmf_dev_step {
