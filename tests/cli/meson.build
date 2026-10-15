@@ -106,6 +106,13 @@ if python3.found()
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
 
+        if 'id' in selected_plugins
+            test('nvme-cli - usage-cli',
+                 python3,
+                 args: [files('nvme_usage_test.py'), nvme_exe],
+                 depends: nvme_exe)
+        endif
+
         test('nvme-cli - dry-run-cli',
              python3,
              args: [files('nvme_dry_run_test.py'), nvme_exe, mock_nvme_lib],

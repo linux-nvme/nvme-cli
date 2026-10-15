@@ -69,8 +69,9 @@ def _probe_command(nvme_bin, command):
         probe = subprocess.run(f"{nvme_bin} {command} --help", shell=True,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT)
-        # --help always exits non-zero whether or not the command exists,
-        # so check for the error message instead of returncode. nvme-cli
+        # Before 3.2, --help exited non-zero whether or not the command
+        # existed, so check for the error message instead of returncode.
+        # nvme-cli
         # prints it to stderr on current builds but to stdout on 2.16 and
         # earlier, so capture both into one stream rather than picking one.
         supported = b"Invalid sub-command" not in probe.stdout

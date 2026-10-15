@@ -141,12 +141,12 @@ static struct toval_test toval_tests[] = {
 	VAL_TEST("-b7", byte, 7, true, 0),
 	VAL_TEST("-tstr", string, "str", false, 0),
 
-	/* Help requests short-circuit parsing and report failure so the
-	 * caller doesn't proceed as if real options were parsed.
+	/* Help requests short-circuit parsing and return ARGCONFIG_HELP so
+	 * the caller doesn't proceed as if real options were parsed.
 	 */
-	{ "--help", &cfg.flag, { .flag = false }, 0, -EINVAL },
-	{ "-h", &cfg.flag, { .flag = false }, 0, -EINVAL },
-	{ "-?", &cfg.flag, { .flag = false }, 0, -EINVAL },
+	{ "--help", &cfg.flag, { .flag = false }, 0, ARGCONFIG_HELP },
+	{ "-h", &cfg.flag, { .flag = false }, 0, ARGCONFIG_HELP },
+	{ "-?", &cfg.flag, { .flag = false }, 0, ARGCONFIG_HELP },
 
 	/* required_argument option with no value attached and no further
 	 * argv token to supply one.
