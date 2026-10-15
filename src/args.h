@@ -47,36 +47,19 @@ enum nvme_print_flags {
 #endif /* CONFIG_JSONC */
 
 /*
- * the ordering of the arguments matters, as the argument parser uses the first
- * match, thus any command which defines -t shorthand will match first.
+ * The command's options. The global options are registered once with
+ * argconfig (nvme_args_register()) and accepted by every command; a
+ * command's own option with the same short or long name takes precedence.
+ * The supported output formats select the values accepted by
+ * --output-format and its help text.
  */
-#define NVME_ARGS_OUTPUT_FORMATS(n, of_mask, of_desc, ...)                             \
-	nvme_args.supported_output_formats = of_mask;                                  \
-	struct argconfig_commandline_options n[] = {                                   \
-		OPT_GROUP("Options"),                                                  \
-		##__VA_ARGS__,                                                         \
-		OPT_GROUP("Global options"),                                           \
-		OPT_INCR("verbose",      'v', &nvme_args.verbose,                      \
-                         "Increase output verbosity"),                                 \
-		OPT_FLAG("quiet",        0, &nvme_args.quiet,                          \
-			 "suppress informational output"),                             \
-		OPT_FMT("output-format", 'o', &nvme_args.output_format, of_desc),      \
-		OPT_UINT("timeout",        0, &nvme_args.timeout,                      \
-                         "timeout value, in milliseconds"),                            \
-		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,                      \
-                         "show command instead of executing"),                         \
-		OPT_FLAG("no-retries",     0, &nvme_args.no_retries,                   \
-			 "disable retry logic on errors"),                             \
-		OPT_FLAG("no-ioctl-probing", 0, &nvme_args.no_ioctl_probing,           \
-			 "disable 64-bit IOCTL support probing"),                      \
-		OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,     \
-			 "output format version: 1|2"),                                \
-		OPT_INCR("human-readable", 'H', &nvme_args.verbose,	       \
-			 NULL, NULL, true),				       \
-		OPT_STRING("set-options",    0, "KEY=VALUE",                           \
-			 &nvme_args.set_options,                                       \
-			 "set a libnvme library option (key=value[,key=value,...]);"), \
-		OPT_END()                                                              \
+#define NVME_ARGS_OUTPUT_FORMATS(n, of_mask, of_desc, ...)	\
+	(void)(of_desc);					\
+	nvme_args_set_output_formats(of_mask);			\
+	struct argconfig_commandline_options n[] = {		\
+		OPT_GROUP("Options"),				\
+		##__VA_ARGS__,					\
+		OPT_END()					\
 	}
 
 #define NVME_ARGS(n, ...)                   \
@@ -88,6 +71,8 @@ enum nvme_print_flags {
 extern const char *uuid_index;
 extern const char *namespace_id_desired;
 
+void nvme_args_register(void);
+void nvme_args_set_output_formats(nvme_print_flags_t formats);
 int parse_args(int argc, char *argv[], const char *desc,
 	       struct argconfig_commandline_options *opts);
 int validate_output_format(const char *format, nvme_print_flags_t *flags);

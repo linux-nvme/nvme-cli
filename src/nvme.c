@@ -182,6 +182,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	setlocale(LC_ALL, "");
+	nvme_args_register();
 
 	err = nvme_load_global_config();
 	if (err)
