@@ -48,6 +48,14 @@ struct command {
 	bool deprecated;
 	/* Set for commands that don't take a positional <device> argument. */
 	bool no_device;
+	/*
+	 * The values --output-format accepts (enum nvme_print_flags), 0 for
+	 * the default ones, OUTPUT_FORMATS_NORMAL for only the normal output.
+	 * With OUTPUT_FORMATS_CUSTOM the command parses --output-format
+	 * itself, and output_format_desc is its help text.
+	 */
+	uint32_t output_formats;
+	const char *output_format_desc;
 };
 
 /*
@@ -60,6 +68,7 @@ struct command {
 extern struct plugin builtin;
 
 void general_help(struct plugin *plugin, char *str);
+void command_set_output_formats(struct command *cmd);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
 
 void register_extension(struct plugin *plugin);

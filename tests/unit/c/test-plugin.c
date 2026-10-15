@@ -37,6 +37,14 @@ struct nvme_args nvme_args = {
 	.supported_output_formats = NORMAL,
 };
 
+/* plugin.c applies the output formats of a command before it runs */
+void nvme_args_set_output_formats(nvme_print_flags_t formats,
+				  const char *custom_desc)
+{
+	(void)formats;
+	(void)custom_desc;
+}
+
 static int test_rc;
 
 struct last_call_info {

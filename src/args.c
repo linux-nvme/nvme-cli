@@ -64,6 +64,7 @@ void nvme_args_register(void)
 void nvme_args_set_output_formats(nvme_print_flags_t formats,
 				  const char *custom_desc)
 {
+	formats &= ~OUTPUT_FORMATS_NORMAL;
 	nvme_args.supported_output_formats = formats;
 	if (formats & OUTPUT_FORMATS_CUSTOM) {
 		snprintf(output_format_help, sizeof(output_format_help), "%s",

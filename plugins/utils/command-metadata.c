@@ -31,6 +31,7 @@
 #endif
 
 #include <shared/fs-util.h>
+#include <shared/string-util.h>
 
 #include "command-metadata.h"
 #include "nvme-json.h"
@@ -418,6 +419,7 @@ static int capture_command(struct command_metadata_command *mc, struct command *
 	command_metadata_capture_error = 0;
 	command_metadata_cur_command = mc;
 	capture_current_command = cmd->name;
+	command_set_output_formats(cmd);
 	(void)cmd->fn(2, argv, cmd, plugin);
 	capture_current_command = NULL;
 	command_metadata_cur_command = NULL;
@@ -603,24 +605,30 @@ static bool opt_is_emittable(const struct command_metadata_option *o)
  * caller owns the returned array.
  *
  * output-format is special-cased because its values are not represented via an
- * opt_val table; keep the hard-coded list below in sync with
- * validate_output_format() / DESC_OUTPUT_FORMAT. Since the whole command is
- * compiled out without json-c, "json" is always a valid value here. Every
+ * opt_val table. Its help text lists the formats the command supports
+ * ("Output format: normal|json"), see nvme_args_set_output_formats(). Every
  * other value set comes from the option's opt_val table, which is the set the
  * parser actually enforces; options whose value is unconstrained (e.g. any
  * OPT_UINT such as output-format-version) have no values array.
  */
 static struct json_object *json_option_values(const struct command_metadata_option *o)
 {
+	static const char prefix[] = "Output format: ";
 	const struct argconfig_opt_val *v;
 	struct json_object *vals;
 
-	if (!strcmp(o->option, "output-format")) {
+	if (!strcmp(o->option, "output-format") && o->help &&
+	    !strncmp(o->help, prefix, strlen(prefix))) {
+		__cleanup_free char *formats = strdup(o->help + strlen(prefix));
+		char *p, *name;
+
+		if (!formats)
+			return NULL;
+
 		vals = json_create_array();
-		json_array_add_value_string(vals, "normal");
-		json_array_add_value_string(vals, "json");
-		json_array_add_value_string(vals, "binary");
-		json_array_add_value_string(vals, "tabular");
+		p = formats;
+		while ((name = shr_strsep(&p, "|")) != NULL)
+			json_array_add_value_string(vals, name);
 		return vals;
 	}
 	if (!o->opt_val)

@@ -7,6 +7,7 @@
 
 #include <shared/compiler-attributes-util.h>
 
+#include "args.h"
 #include "plugin.h"
 
 #define SOLIDIGM_PLUGIN_VERSION "1.26"
@@ -197,6 +198,7 @@ static struct command get_drive_info_cmd = {
 	.name = "vs-drive-info",
 	.help = "Retrieve drive information",
 	.fn = get_drive_info,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command get_cloud_SSDplugin_version_cmd = {

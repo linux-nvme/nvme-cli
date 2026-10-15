@@ -1335,7 +1335,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 		.hide_progress = false,
 	};
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, NORMAL, "Output format: normal",
+	NVME_ARGS(opts,
 		OPT_STRING("dump-type", 't', "TYPE", &cfg.type, type),
 		OPT_INT("telemetry-data-area", 'a', &cfg.area, area),
 		OPT_FILE("output-file", 'O', &cfg.file, file),
@@ -1510,6 +1510,7 @@ static struct command vs_internal_log_cmd = {
 	.name = "vs-internal-log",
 	.help = "Retrieve and save internal firmware log",
 	.fn = vs_internal_log,
+	.output_formats = OUTPUT_FORMATS_NORMAL,
 };
 
 static struct command *commands[] = {
