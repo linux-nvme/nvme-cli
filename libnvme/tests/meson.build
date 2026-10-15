@@ -155,6 +155,7 @@ tree = executable(
         config_dep,
         ccan_dep,
         libnvme_test_dep,
+        threads_dep,
     ],
 )
 
