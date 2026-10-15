@@ -108,6 +108,17 @@
 
 ### nvme-cli
 
+* `--dry-run` now also skips `nvme reset`, `nvme subsystem-reset`,
+  `nvme ns-rescan`, the `nvme sed` operations which change the drive,
+  and the fabrics connects and disconnects. Before, only NVMe commands
+  were skipped: these still reset the controller or subsystem,
+  rescanned the namespaces, connected and disconnected controllers, and
+  with `dry-run` set in nvme-cli.conf the sed operations still ran.
+  `nvme connect --dry-run -vv` shows the connect arguments instead.
+  `nvme discover` and `nvme connect-all` stop before connecting the
+  Discovery Controller, as there is nothing to discover without a
+  connection.
+
 * `nvme discover` and `nvme connect-all` now send the keep-alive
   timeout to a persistent Discovery Controller. Before, the value was
   set too late. The DC got no keep-alive timeout, so it was never
