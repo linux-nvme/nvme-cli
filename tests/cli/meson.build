@@ -100,19 +100,16 @@ if python3.found()
                  suite: 'mock')
         endif
 
-        test('nvme-cli - pif-sts',
-             python3,
-             args: [files('nvme_pif_sts_test.py'), nvme_exe, mock_nvme_lib],
-             env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib],
-             suite: 'mock')
-
-        test('nvme-cli - init-pi-tags',
-             python3,
-             args: [files('nvme_init_pi_tags_test.py'), nvme_exe, mock_nvme_lib],
-             env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib],
-             suite: 'mock')
+        # [name, script, env, timeout]. With privsep, each also runs with
+        # the commands going through the helper.
+        mock_cli_tests = [
+            ['pif-sts', 'nvme_pif_sts_test.py', cli_test_env, 30],
+            ['init-pi-tags', 'nvme_init_pi_tags_test.py', cli_test_env, 30],
+            ['dry-run', 'nvme_dry_run_test.py', cli_test_env, 30],
+            ['sel', 'nvme_sel_test.py', cli_test_env, 30],
+            ['host-metadata', 'nvme_host_metadata_test.py', cli_test_env,
+             30],
+        ]
 
         if 'id' in selected_plugins
             test('nvme-cli - usage',
@@ -122,37 +119,12 @@ if python3.found()
                  suite: 'mock')
         endif
 
-        test('nvme-cli - dry-run',
-             python3,
-             args: [files('nvme_dry_run_test.py'), nvme_exe, mock_nvme_lib],
-             env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib],
-             suite: 'mock')
-
-        test('nvme-cli - sel',
-             python3,
-             args: [files('nvme_sel_test.py'), nvme_exe, mock_nvme_lib],
-             env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib],
-             suite: 'mock')
-
-        test('nvme-cli - host-metadata',
-             python3,
-             args: [files('nvme_host_metadata_test.py'), nvme_exe,
-                    mock_nvme_lib],
-             env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib],
-             suite: 'mock')
-
         # The host and AVE discovery printers need the fabrics code.
         if want_fabrics and json_c_dep.found() and 'log' in selected_plugins
-            test('nvme-cli - discovery-logs',
-                 python3,
-                 args: [files('nvme_discovery_logs_test.py'), nvme_exe,
-                        mock_nvme_lib],
-                 env: cli_test_env,
-                 depends: [nvme_exe, mock_nvme_lib],
-                 suite: 'mock')
+            mock_cli_tests += [
+                ['discovery-logs', 'nvme_discovery_logs_test.py',
+                 cli_test_env, 30],
+            ]
         endif
 
         if 'id' in selected_plugins and 'log' in selected_plugins and \
@@ -160,13 +132,9 @@ if python3.found()
             print_test_env = environment()
             print_test_env.prepend('PYTHONPATH', meson.project_source_root())
             print_test_env.set('NVME_TEST_JSON', json_c_dep.found() ? '1' : '0')
-            test('nvme-cli - print',
-                 python3,
-                 args: [files('nvme_print_test.py'), nvme_exe, mock_nvme_lib],
-                 env: print_test_env,
-                 depends: [nvme_exe, mock_nvme_lib],
-                 timeout: 300,
-                 suite: 'mock')
+            mock_cli_tests += [
+                ['print', 'nvme_print_test.py', print_test_env, 300],
+            ]
         endif
 
         if 'sed' in selected_plugins and want_sed and \
@@ -179,12 +147,45 @@ if python3.found()
             endforeach
             sed_test_env = cli_test_env
             sed_test_env.set('NVME_SED_IOCTLS', ','.join(sed_ioctls))
-            test('nvme-cli - sed',
+            mock_cli_tests += [
+                ['sed', 'nvme_sed_test.py', sed_test_env, 30],
+            ]
+        endif
+
+        foreach t : mock_cli_tests
+            test('nvme-cli - ' + t[0],
                  python3,
-                 args: [files('nvme_sed_test.py'), nvme_exe, mock_nvme_lib],
-                 env: sed_test_env,
+                 args: [files(t[1]), nvme_exe, mock_nvme_lib],
+                 env: t[2],
                  depends: [nvme_exe, mock_nvme_lib],
+                 timeout: t[3],
                  suite: 'mock')
+        endforeach
+
+        if want_privsep
+            # it runs the commands of the id plugin
+            if 'id' in selected_plugins
+                test('nvme-cli - privsep',
+                     python3,
+                     args: [files('nvme_privsep_test.py'), nvme_exe,
+                            mock_nvme_lib, privsep_helper],
+                     env: cli_test_env,
+                     depends: [nvme_exe, mock_nvme_lib, privsep_helper],
+                     suite: 'mock')
+            endif
+
+            foreach t : mock_cli_tests
+                privsep_env = t[2]
+                privsep_env.set('NVME_PRIVSEP_TEST_HELPER',
+                                privsep_helper.full_path())
+                test('nvme-cli - ' + t[0] + '-privsep',
+                     python3,
+                     args: [files(t[1]), nvme_exe, mock_nvme_lib],
+                     env: privsep_env,
+                     depends: [nvme_exe, mock_nvme_lib, privsep_helper],
+                     timeout: t[3],
+                     suite: 'mock')
+            endforeach
         endif
     endif
 
