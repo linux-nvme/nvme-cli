@@ -338,16 +338,31 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("active_bucket_timer_threshold", 't', &cfg.active_bucket_timer_threshold, active_bucket_timer_threshold),
-		OPT_UINT("active_threshold_a", 'a', &cfg.active_threshold_a, active_threshold_a),
-		OPT_UINT("active_threshold_b", 'b', &cfg.active_threshold_b, active_threshold_b),
-		OPT_UINT("active_threshold_c", 'c', &cfg.active_threshold_c, active_threshold_c),
-		OPT_UINT("active_threshold_d", 'd', &cfg.active_threshold_d, active_threshold_d),
-		OPT_UINT("active_latency_config", 'f', &cfg.active_latency_config, active_latency_config),
-		OPT_UINT("active_latency_minimum_window", 'w', &cfg.active_latency_minimum_window, active_latency_minimum_window),
-		OPT_UINT("debug_log_trigger_enable", 'r', &cfg.debug_log_trigger_enable, debug_log_trigger_enable),
-		OPT_UINT("discard_debug_log", 'l', &cfg.discard_debug_log, discard_debug_log),
-		OPT_UINT("latency_monitor_feature_enable", 'e', &cfg.latency_monitor_feature_enable, latency_monitor_feature_enable));
+		OPT_SHRT("active_bucket_timer_threshold", 't',
+			 &cfg.active_bucket_timer_threshold,
+			 active_bucket_timer_threshold),
+		OPT_BYTE("active_threshold_a", 'a', &cfg.active_threshold_a,
+			 active_threshold_a),
+		OPT_BYTE("active_threshold_b", 'b', &cfg.active_threshold_b,
+			 active_threshold_b),
+		OPT_BYTE("active_threshold_c", 'c', &cfg.active_threshold_c,
+			 active_threshold_c),
+		OPT_BYTE("active_threshold_d", 'd', &cfg.active_threshold_d,
+			 active_threshold_d),
+		OPT_SHRT("active_latency_config", 'f',
+			 &cfg.active_latency_config,
+			 active_latency_config),
+		OPT_BYTE("active_latency_minimum_window", 'w',
+			 &cfg.active_latency_minimum_window,
+			 active_latency_minimum_window),
+		OPT_SHRT("debug_log_trigger_enable", 'r',
+			 &cfg.debug_log_trigger_enable,
+			 debug_log_trigger_enable),
+		OPT_BYTE("discard_debug_log", 'l', &cfg.discard_debug_log,
+			 discard_debug_log),
+		OPT_BYTE("latency_monitor_feature_enable", 'e',
+			 &cfg.latency_monitor_feature_enable,
+			 latency_monitor_feature_enable));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1731,7 +1746,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	__u8 uidx = 0;
 
 	struct config {
-		__le16 plp_health_interval;
+		__u16 plp_health_interval;
 		bool sv;
 	};
 
@@ -1741,7 +1756,8 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	};
 
 	NVME_ARGS(opts,
-		OPT_BYTE("plp_health_interval", 'p', &cfg.plp_health_interval, plp_health_interval),
+		OPT_SHRT("plp_health_interval", 'p', &cfg.plp_health_interval,
+			 plp_health_interval),
 		OPT_FLAG("save", 's', &cfg.sv, sv),
 		OPT_FLAG("no-uuid", 'n', NULL, no_uuid));
 
