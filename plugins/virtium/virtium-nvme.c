@@ -984,10 +984,8 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 	}
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Error parse and open (err = %d)", err);
+	if (err)
 		return err;
-	}
 
 	nvme_show_verbose_info("Running...");
 	nvme_show_verbose_info("Collecting data for device %s", path);
@@ -1043,10 +1041,8 @@ static int vt_show_identify(int argc, char **argv, struct command *acmd, struct 
 	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Error parse and open (err = %d)", err);
+	if (err)
 		return err;
-	}
 
 	nvme_init_identify_ctrl(&cmd, &ctrl);
 	ret = libnvme_exec_admin_passthru(hdl, &cmd);

@@ -32,10 +32,8 @@ static int getHealthValue(int argc, char **argv, struct command *acmd, struct pl
 	NVME_ARGS(opts);
 
 	result = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (result) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (result)
+		return result;
 	result = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (!result) {
 		printf("Transcend NVME heath value: ");
@@ -65,10 +63,8 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 	NVME_ARGS(opts);
 
 	result = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (result) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (result)
+		return result;
 
 	memset(&nvmecmd, 0, sizeof(nvmecmd));
 	nvmecmd.opcode = OP_BAD_BLOCK;

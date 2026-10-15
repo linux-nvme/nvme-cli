@@ -12835,7 +12835,7 @@ int wdc_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	/* get capabilities */

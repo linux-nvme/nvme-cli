@@ -152,7 +152,7 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	flags = nvme_args.output_flags;
 
@@ -197,7 +197,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	flags = nvme_args.output_flags;
 	if (cfg.vendor_specific)
@@ -354,7 +354,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
@@ -467,7 +467,7 @@ static int open_zone(int argc, char **argv, struct command *acmd, struct plugin 
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
@@ -535,7 +535,7 @@ static int set_zone_desc(int argc, char **argv, struct command *acmd, struct plu
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
@@ -615,7 +615,7 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *acmd, struct p
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
@@ -673,7 +673,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
@@ -765,7 +765,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	flags = nvme_args.output_flags;
 	if (cfg.verbose)
@@ -934,7 +934,7 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	if (!cfg.data_size) {
 		nvme_show_error("Append size not provided");
@@ -1084,7 +1084,7 @@ static int changed_zone_list(int argc, char **argv, struct command *acmd, struct
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
-		return errno;
+		return err;
 
 	flags = nvme_args.output_flags;
 

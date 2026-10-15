@@ -375,7 +375,7 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	memset(&vpd_log, 0, sizeof(vpd_log));
