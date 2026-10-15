@@ -1323,16 +1323,16 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 		char *type;
 		int area;
 		char *file;
-		int compress;
-		int hide_progress;
+		bool compress;
+		bool hide_progress;
 	};
 
 	struct config cfg = {
 		.type = NULL,
 		.area = 0,
 		.file = NULL,
-		.compress = 0,
-		.hide_progress = 0,
+		.compress = false,
+		.hide_progress = false,
 	};
 
 	NVME_ARGS_OUTPUT_FORMATS(opts, NORMAL, "Output format: normal",
