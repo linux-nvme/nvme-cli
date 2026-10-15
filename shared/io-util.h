@@ -34,6 +34,31 @@ static inline int shr_write_all(int fd, const void *buf, size_t len)
 }
 
 /*
+ * Read up to len bytes, stopping early only at EOF, for binary data.
+ * Return: the number of bytes read, or -errno on a read failure.
+ */
+static inline ssize_t shr_read_full(int fd, void *buf, size_t len)
+{
+	char *p = buf;
+	size_t total = 0;
+	ssize_t n;
+
+	while (total < len) {
+		n = read(fd, p + total, len - total);
+		if (n < 0) {
+			if (errno == EINTR)
+				continue;
+			return -errno;
+		}
+		if (n == 0)
+			break;
+		total += (size_t)n;
+	}
+
+	return total;
+}
+
+/*
  * Read fd into out until EOF, keeping at most out_len - 1 bytes
  * (NUL-terminated) and discarding any excess. Always reads to EOF so a writer
  * on the other end of a pipe never blocks on a full buffer. An out_len of 0
