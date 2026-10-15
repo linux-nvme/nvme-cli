@@ -107,6 +107,8 @@ static struct toval_test toval_tests[] = {
 	VAL_TEST("--uint=1", uint, 1, true, 0),
 	VAL_TEST("--int=1", int_val, 1, true, 0),
 	VAL_TEST("--long=1", long_val, 1, true, 0),
+	VAL_TEST("--long=0x123456789abcdef0", long_val, 0x123456789abcdef0,
+		 true, 0),
 	VAL_TEST("--double=1", double_val, 1, true, 0),
 	VAL_TEST("--byte=1", byte, 1, true, 0),
 	VAL_TEST("--byte=256", byte, 0, true, -EINVAL),

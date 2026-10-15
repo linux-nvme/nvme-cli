@@ -156,7 +156,7 @@ union argconfig_val {
 	uint16_t short_val;
 	uint32_t positive;
 	int increment;
-	unsigned long long_val;
+	uint64_t long_val;
 	uint64_t long_suffix;
 	double double_val;
 	bool flag;
