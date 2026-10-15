@@ -37,9 +37,12 @@
 #define ASYNC_EVENT_CONF_DESC "Get and set async event configuration feature"
 #define KEEP_ALIVE_TIMER_DESC "Get and set keep alive timer feature"
 
-#define FEAT_ARGS(n, ...)                                              \
-	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
+#define FEAT_ARGS_SAVE(n, save_short, ...)                             \
+	NVME_ARGS(n, ##__VA_ARGS__,                                    \
+		  OPT_FLAG("save", save_short, NULL, save),            \
 		  OPT_BYTE("sel", 'S', &cfg.sel, sel))
+
+#define FEAT_ARGS(n, ...) FEAT_ARGS_SAVE(n, 's', ##__VA_ARGS__)
 
 #define STR(x) #x
 #define TMT(n) "thermal management temperature " STR(n)
@@ -1223,12 +1226,13 @@ static int feat_lba_range_type(int argc, char **argv, struct command *acmd,
 	struct lba_range_type_config cfg = { 0 };
 	int err;
 
-	FEAT_ARGS(opts,
+	/* -s is --slbas and -h is help, --save and --hlbars are long only */
+	FEAT_ARGS_SAVE(opts, 0,
 		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired),
 		  OPT_BYTE("num", 'N', &cfg.num, num_desc),
 		  OPT_LIST("types", 't', &cfg.types, types_desc),
 		  OPT_LIST("lbaros", 'l', &cfg.lbaros, lbaros_desc),
-		  OPT_LIST("hlbars", 'h', &cfg.hlbars, hlbars_desc),
+		  OPT_LIST("hlbars", 0, &cfg.hlbars, hlbars_desc),
 		  OPT_LIST("slbas", 's', &cfg.slbas, slbas_desc),
 		  OPT_LIST("nlbs", 'b', &cfg.nlbs, nlbs_desc),
 		  OPT_LIST("guids", 'g', &cfg.guids, guids_desc));
