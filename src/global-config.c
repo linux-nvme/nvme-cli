@@ -14,6 +14,7 @@
  */
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -55,7 +56,7 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 
 	if (!strcmp(key, "verbose")) {
 		err = parse_uint(value, &uval);
-		if (err)
+		if (err || uval > INT_MAX)
 			goto bad_value;
 		nvme_args.verbose = uval;
 	} else if (!strcmp(key, "quiet")) {
