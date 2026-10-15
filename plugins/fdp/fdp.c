@@ -35,6 +35,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 	struct nvme_fdp_config_log hdr;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	__u32 size;
 	int err;
 
 	struct config {
@@ -79,18 +80,19 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	log = malloc(hdr.size);
+	size = le32_to_cpu(hdr.size);
+	log = malloc(size);
 	if (!log)
 		return -ENOMEM;
 
-	nvme_init_get_log_fdp_configurations(&cmd, cfg.egid, 0, log, hdr.size);
-	err = libnvme_get_log(hdl, &cmd, false, hdr.size);
+	nvme_init_get_log_fdp_configurations(&cmd, cfg.egid, 0, log, size);
+	err = libnvme_get_log(hdl, &cmd, false, size);
 	if (err) {
 		nvme_show_status(errno);
 		return err;
 	}
 
-	nvme_show_fdp_configs(log, hdr.size, flags);
+	nvme_show_fdp_configs(log, size, flags);
 
 	return 0;
 }
