@@ -29,6 +29,7 @@ import struct
 import subprocess
 import sys
 import threading
+import traceback
 from pathlib import Path
 
 IPC_REQUEST_FMT = "<IIII B3x I IIIIII QI BBBBI"
@@ -111,12 +112,16 @@ class MockIPCServer(threading.Thread):
     Subclasses hold their own test-scenario state and override
     handle_write()/handle_ioctl() to fabricate responses for it. Socket
     setup, request framing, and thread lifecycle are shared here.
+
+    An exception in a handler fails only that request, with EIO. The
+    traceback is added to @errors, so a test can report it.
     """
 
     def __init__(self, sock_path):
         super().__init__()
         self.sock_path = sock_path
         self.running = True
+        self.errors = []
         self.server_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.server_sock.bind(self.sock_path)
         self.server_sock.listen(5)
@@ -221,6 +226,13 @@ class MockIPCServer(threading.Thread):
                 self.handle_nprocs(conn)
         except OSError as e:
             print(f"Exception handling IPC client: {e}", file=sys.stderr)
+        except Exception:
+            self.errors.append(traceback.format_exc())
+            print(self.errors[-1], file=sys.stderr)
+            try:
+                self.send_response(conn, -1, errno_val=errno.EIO)
+            except OSError:
+                pass
         finally:
             conn.close()
 
