@@ -24,6 +24,15 @@ and are available to this subcommand:
 	field naming, while version '2' (default) provides more consistent
 	and script-friendly field names.
 
+--quiet::
+	Suppress informational messages. Errors are still reported, and
+	--quiet cancels any --verbose for the library log level.
+
+--set-options=<key=value>[,<key=value>...]::
+	Set libnvme library options for this invocation. Supported keys are
+	'force-4k', 'mi-probe-enabled', 'test-base-dir' and
+	'test-sysfs-dir'.
+
 --timeout=<ms>::
 	Set the timeout for the command in milliseconds.
 
