@@ -2123,6 +2123,8 @@ static void stdout_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
 static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 					 unsigned int result, unsigned char *buf)
 {
+	struct nvme_streams_directive_params *params = (void *)buf;
+	struct nvme_streams_directive_status *status = (void *)buf;
 	__u8 *field = buf;
 	int count, i;
 	struct shr_table *t;
@@ -2202,47 +2204,45 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 				return;
 
 			stdout_kv_add(t, "Max Streams Limit (MSL)", "%u",
-				      *(__u16 *)field);
+				      le16_to_cpu(params->msl));
 			stdout_kv_add(t,
 				      "NVM Subsystem Streams Available (NSSA)",
-				      "%u", *(__u16 *)(field + 2));
+				      "%u", le16_to_cpu(params->nssa));
 			stdout_kv_add(t,
 				      "NVM Subsystem Streams Open (NSSO)",
-				      "%u", *(__u16 *)(field + 4));
+				      "%u", le16_to_cpu(params->nsso));
 			stdout_kv_add(t,
 				      "NVM Subsystem Stream Capability (NSSC)",
-				      "%u", *(__u16 *)(field + 6));
+				      "%u", params->nssc);
 			stdout_kv_add(t,
 				      "Stream Write Size (in unit of LB size) (SWS)",
-				      "%u", *(__u32 *)(field + 16));
+				      "%u", le32_to_cpu(params->sws));
 			stdout_kv_add(t,
 				      "Stream Granularity Size (in unit of SWS) (SGS)",
-				      "%u", *(__u16 *)(field + 20));
+				      "%u", le16_to_cpu(params->sgs));
 			stdout_kv_add(t,
 				      "Namespace Streams Allocated (NSA)",
-				      "%u", *(__u16 *)(field + 22));
+				      "%u", le16_to_cpu(params->nsa));
 			stdout_kv_add(t, "Namespace Streams Open (NSO)", "%u",
-				      *(__u16 *)(field + 24));
+				      le16_to_cpu(params->nso));
 
 			stdout_kv_table_finish(t, "directive-show");
 			break;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
-			count = *(__u16 *)field;
+			count = le16_to_cpu(status->osc);
 
 			t = stdout_kv_table_create();
 			if (!t)
 				return;
 
-			stdout_kv_add(t, "Open Stream Count", "%u",
-				      *(__u16 *)field);
+			stdout_kv_add(t, "Open Stream Count", "%u", count);
 			for (i = 0; i < count; i++) {
 				char name[32];
 
 				snprintf(name, sizeof(name),
 					 "Stream Identifier %.6u", i + 1);
 				stdout_kv_add(t, name, "%u",
-					      *(__u16 *)(field +
-							 (i + 1) * 2));
+					      le16_to_cpu(status->sid[i]));
 			}
 
 			stdout_kv_table_finish(t, "directive-show");
