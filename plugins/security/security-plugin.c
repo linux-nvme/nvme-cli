@@ -50,7 +50,6 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	__cleanup_fd int sec_fd = -1;
 	unsigned int sec_size;
 	int err;
-	nvme_print_flags_t flags;
 
 	struct config {
 		bool	ish;
@@ -84,12 +83,6 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (cfg.tl == 0) {
 		nvme_show_error("--tl unspecified or zero");
@@ -173,7 +166,6 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_libnvme_free void *sec_buf = NULL;
 	struct libnvme_passthru_cmd cmd;
-	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -211,12 +203,6 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
 
 	if (cfg.size) {
 		sec_buf = libnvme_alloc(cfg.size);

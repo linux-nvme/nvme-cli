@@ -247,12 +247,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 	if (!err) {
 		nvme_print_flags_t print_flag;
 
-		err = validate_output_format(nvme_args.output_format, &print_flag);
-		if (err) {
-			nvme_show_error("Error: Invalid output format specified: %s.",
-					nvme_args.output_format);
-			return err;
-		}
+		print_flag = nvme_args.output_flags;
 
 		if (print_flag == NORMAL) {
 			supported_log_pages_normal(lid_dirs);

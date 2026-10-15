@@ -442,11 +442,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (nvme_args.output_format && cfg.offset != 0 && !(flags & BINARY)) {
 		nvme_show_error("cannot parse non-zero offset");
@@ -576,11 +572,7 @@ static int lm_get_cdq(int argc, char **argv, struct command *acmd, struct plugin
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	struct nvme_lm_ctrl_data_queue_fid_data data;
 

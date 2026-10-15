@@ -172,11 +172,7 @@ static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 		return err;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (nvme_args.verbose)
 		flags |= VERBOSE;

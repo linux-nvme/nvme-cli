@@ -164,11 +164,7 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	err = nvme_get_log_simple(hdl, 0xc5, &logPageMap, sizeof(logPageMap));
 	if (!err) {
@@ -919,11 +915,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		return -1;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (flags & JSON)
 		printf("Seagate Extended SMART Information :\n");
@@ -1099,11 +1091,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 		return -1;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (!(flags & JSON))
 		printf("Seagate Temperature Stats Information :\n");
@@ -1262,11 +1250,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 		return -1;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (!(flags & JSON))
 		printf("Seagate PCIe error counters Information :\n");
@@ -1399,11 +1383,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 		return -1;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	if (!(flags & JSON))
 		printf("Seagate FW Activation History Information :\n");

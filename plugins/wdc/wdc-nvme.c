@@ -8525,13 +8525,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *acmd,
 					"ERROR: WDC: Failure reading the C0 Log Page, ret = %d\n",
 					ret);
 		} else {
-			ret = validate_output_format(nvme_args.output_format,
-				&fmt);
-			if (ret < 0) {
-				nvme_show_error("Invalid output format: %s",
-					nvme_args.output_format);
-				goto out;
-			}
+			fmt = nvme_args.output_flags;
 
 			ret = nvme_get_print_ocp_cloud_smart_log(hdl,
 					0,
@@ -8611,12 +8605,7 @@ static int wdc_cu_smart_log(int argc, char **argv, struct command *acmd,
 		if (!wdc_check_device(ctx, hdl))
 			return -1;
 
-		ret = validate_output_format(nvme_args.output_format, &fmt);
-
-		if (ret < 0) {
-			nvme_show_error("ERROR: WDC: invalid output format");
-			return ret;
-		}
+		fmt = nvme_args.output_flags;
 
 		/* verify the 0xCA log page is supported */
 		if (wdc_nvme_check_supported_log_page(ctx, hdl,
