@@ -54,6 +54,7 @@
 #include <shared/io-util.h>
 #include <shared/net-util.h>
 #include <shared/sig-util.h>
+#include <shared/string-util.h>
 
 #include "cleanup.h"
 #include "config-convert.h"
@@ -567,7 +568,8 @@ const char *nvmf_resolve_persistent_arg(
  * Parse one discovery.conf line -- the same argv-style syntax 'nvme
  * discover'/'connect-all' accept, reusing NVMF_ARGS so every short and long
  * form works identically to real usage -- and hand the parsed arguments to
- * nvme_config_convert_discovery_args(). @line is modified in place (strsep()).
+ * nvme_config_convert_discovery_args(). @line is modified in place
+ * (shr_strsep()).
  *
  * A blank line, a comment, or one with neither transport nor traddr is
  * silently skipped (0, nothing added), tolerating a discovery.conf that
@@ -606,7 +608,8 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	 * getopt_long() parses '=' within a single token natively for
 	 * every option shape, so splitting it out here is never required.
 	 */
-	while ((ptr = strsep(&p, "\n ")) != NULL && argc < MAX_DISC_ARGS - 1)
+	while ((ptr = shr_strsep(&p, "\n ")) != NULL &&
+	       argc < MAX_DISC_ARGS - 1)
 		argv[argc++] = ptr;
 	argv[argc] = NULL;
 
@@ -1262,7 +1265,7 @@ static int nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 	struct libnvme_subsystem *s;
 	struct libnvme_ctrl *c;
 
-	while ((p = strsep(&n, ",")) != NULL) {
+	while ((p = shr_strsep(&n, ",")) != NULL) {
 		if (!strlen(p))
 			continue;
 		libnvme_for_each_host(ctx, h) {
@@ -1352,7 +1355,7 @@ static int disconnect_by_device(struct libnvme_global_ctx *ctx,
 	char *p;
 	int err;
 
-	while ((p = strsep(&device, ",")) != NULL) {
+	while ((p = shr_strsep(&device, ",")) != NULL) {
 		if (!strncmp(p, "/dev/", 5))
 			p += 5;
 
@@ -1427,7 +1430,7 @@ static int disconnect_by_nqn(struct libnvme_global_ctx *ctx, const char *nqn,
 			return -ENOMEM;
 
 		t = excl;
-		while ((p = strsep(&t, ",")) != NULL) {
+		while ((p = shr_strsep(&t, ",")) != NULL) {
 			if (!*p)
 				continue;
 
@@ -1784,7 +1787,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		struct libnvme_subsystem *s;
 		char *n = cfg.nqn;
 
-		while ((p = strsep(&n, ",")) != NULL) {
+		while ((p = shr_strsep(&n, ",")) != NULL) {
 			if (!strlen(p))
 				continue;
 			libnvme_for_each_host(ctx, h) {
@@ -1801,7 +1804,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 	if (cfg.device) {
 		char *d = cfg.device;
 
-		while ((p = strsep(&d, ",")) != NULL) {
+		while ((p = shr_strsep(&d, ",")) != NULL) {
 			if (!strncmp(p, "/dev/", 5))
 				p += 5;
 			ret = libnvme_scan_ctrl(ctx, p, &c);

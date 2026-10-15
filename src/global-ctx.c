@@ -189,7 +189,7 @@ static int __nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
 		return -ENOMEM;
 
 	p = buf;
-	while ((opt = strsep(&p, ",")) != NULL) {
+	while ((opt = shr_strsep(&p, ",")) != NULL) {
 		if (!*opt)
 			continue;
 		err = nvme_apply_option(ctx, opt);

@@ -13,10 +13,17 @@
 #include <string.h>
 #include <strings.h>
 
-#ifndef HAVE_STRSEP
-/* strsep() is missing on some platforms (e.g. mingw/MSVC runtimes). */
-static inline char *strsep(char **stringp, const char *delim)
+/*
+ * strsep() of the C library, with a fallback for those which don't have
+ * it (e.g. mingw/MSVC runtimes). Splits *stringp at the first character of
+ * @delim and advances it past that, or sets it to NULL at the end. Returns
+ * the token, or NULL once *stringp is NULL.
+ */
+static inline char *shr_strsep(char **stringp, const char *delim)
 {
+#ifdef HAVE_STRSEP
+	return strsep(stringp, delim);
+#else
 	char *s, *end;
 
 	if (!stringp || !*stringp)
@@ -32,8 +39,8 @@ static inline char *strsep(char **stringp, const char *delim)
 
 	*stringp = end;
 	return s;
-}
 #endif
+}
 
 /*
  * NULL-safe string equality: two NULLs are equal, one NULL and one

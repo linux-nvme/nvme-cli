@@ -1711,10 +1711,10 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "kernel supports: ");
 
-	while ((p = strsep(&options, ",\n")) != NULL) {
+	while ((p = shr_strsep(&options, ",\n")) != NULL) {
 		if (!*p)
 			continue;
-		v = strsep(&p, "= ");
+		v = shr_strsep(&p, "= ");
 		if (!v)
 			continue;
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "%s ", v);
@@ -1958,7 +1958,7 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "connect ctrl, response '%.*s'\n",
 		 (int)strcspn(buf, "\n"), buf);
 	options = buf;
-	while ((p = strsep(&options, ",\n")) != NULL) {
+	while ((p = shr_strsep(&options, ",\n")) != NULL) {
 		if (!*p)
 			continue;
 		if (sscanf(p, "instance=%d", &instance) == 1) {
