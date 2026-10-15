@@ -235,6 +235,8 @@ static void test_device_ops(void)
 	check(!libnvme_open(ctx, "nvme0", O_RDONLY, &c), "open nvme0");
 	check(!libnvme_open(ctx, "/dev/nvme0n1", O_RDONLY, &n),
 	      "open nvme0n1");
+	check(libnvme_transport_handle_is_direct(c),
+	      "helper handle not direct");
 	check(libnvme_transport_handle_is_ctrl(c), "nvme0 is no controller");
 	check(libnvme_transport_handle_is_ns(n), "nvme0n1 is no namespace");
 
