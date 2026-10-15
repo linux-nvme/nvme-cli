@@ -388,8 +388,8 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	struct command *cr = NULL;
 	bool opt_help = false, opt_version = false;
 	bool cr_valid = false;
+	int err, argind;
 	char *str;
-	int err;
 
 	if (!argc) {
 		general_help(plugin, NULL);
@@ -403,14 +403,14 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	NVME_ARGS(global_opts,
 		OPT_FLAG("help",     'h', &opt_help,     "show help text"),
 		OPT_FLAG("version",  'V', &opt_version,  "show version"));
-	err = argconfig_parse_global(argc, argv, global_opts);
+	err = argconfig_parse_global(argc, argv, global_opts, &argind);
 	if (err) {
 		general_help(plugin, NULL);
 		return err;
 	}
 
-	argc -= optind;
-	argv += optind;
+	argc -= argind;
+	argv += argind;
 
 	if (opt_help) {
 		__cleanup_free char **help_argv = NULL;

@@ -138,7 +138,7 @@ static int ymtc_parse_options(struct libnvme_global_ctx **ctx,
 	}
 
 	if (model) {
-		if (sscanf(argv[optind], "/dev/nvme%d", &idx) != 1)
+		if (sscanf(argconfig_operand(0), "/dev/nvme%d", &idx) != 1)
 			idx = 0;
 		*model = GetSSDModel(idx);
 	}

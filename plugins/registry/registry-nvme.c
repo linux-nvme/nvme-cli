@@ -37,10 +37,10 @@ static char *get_device(int argc, char **argv)
 {
 	char *device;
 
-	if (optind >= argc)
+	if (!argconfig_nr_operands())
 		return NULL;
 
-	device = argv[optind];
+	device = argconfig_operand(0);
 	strip_dev_prefix(&device);
 	return device;
 }

@@ -226,7 +226,10 @@ void argconfig_print_help(const char *program_desc,
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
 int argconfig_parse_global(int argc, char *argv[],
-			   struct argconfig_commandline_options *options);
+			   struct argconfig_commandline_options *options,
+			   int *argind);
+int argconfig_nr_operands(void);
+char *argconfig_operand(int i);
 
 typedef int (*argconfig_parse_hook_fn)(int argc, char *argv[],
 				       const char *program_desc,

@@ -50,8 +50,8 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 		return err;
 
 	devname = NULL;
-	if (optind < argc)
-		devname = basename(argv[optind++]);
+	if (argconfig_nr_operands())
+		devname = basename(argconfig_operand(0));
 
 	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0 || (flags != JSON && flags != NORMAL)) {
@@ -149,8 +149,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	if (optind < argc)
-		devname = basename(argv[optind++]);
+	if (argconfig_nr_operands())
+		devname = basename(argconfig_operand(0));
 
 	if (devname) {
 		int subsys_id, nsid;

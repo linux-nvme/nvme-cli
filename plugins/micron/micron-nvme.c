@@ -4490,9 +4490,11 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	}
 
 	if (is_json)
-		print_micron_health_log_json(&smart_log, argv[optind]);
+		print_micron_health_log_json(&smart_log,
+					     argconfig_operand(0));
 	else
-		print_micron_health_log_normal(&smart_log, argv[optind]);
+		print_micron_health_log_normal(&smart_log,
+					       argconfig_operand(0));
 
 	return 0;
 }
