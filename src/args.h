@@ -17,7 +17,7 @@ typedef uint32_t nvme_print_flags_t;
 
 struct nvme_args {
 	char *output_format;
-	unsigned int verbose;
+	int verbose;
 	bool quiet;
 	uint32_t timeout;
 	bool dry_run;
@@ -71,7 +71,8 @@ enum nvme_print_flags {
 			 "disable 64-bit IOCTL support probing"),                      \
 		OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,     \
 			 "output format version: 1|2"),                                \
-		OPT_FLAG("human-readable", 'H', &nvme_args.verbose, NULL, NULL, true), \
+		OPT_INCR("human-readable", 'H', &nvme_args.verbose,	       \
+			 NULL, NULL, true),				       \
 		OPT_STRING("set-options",    0, "KEY=VALUE",                           \
 			 &nvme_args.set_options,                                       \
 			 "set a libnvme library option (key=value[,key=value,...]);"), \
