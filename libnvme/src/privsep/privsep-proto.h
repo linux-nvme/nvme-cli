@@ -100,8 +100,11 @@ struct libnvme_privsep_resp {
 /* OPEN payload: followed by the NUL-terminated device name. */
 struct libnvme_privsep_open {
 	__u32 flags;
-	__u32 rsvd;
+	__u32 options;	/* LIBNVME_PRIVSEP_OPEN_* */
 };
+
+/* The context of the client does not probe for the 64 bit ioctls. */
+#define LIBNVME_PRIVSEP_OPEN_NO_IOCTL_PROBING	(1U << 0)
 
 /* OPEN response payload. */
 struct libnvme_privsep_open_resp {

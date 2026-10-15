@@ -38,6 +38,9 @@
 
 static struct libnvme_transport_handle *handles[MAX_HANDLES];
 
+/* Opens the handles of clients whose context does not probe ioctls. */
+static struct libnvme_global_ctx *ctx_no_probing;
+
 /* libnvme_open() parses the numbers as int. */
 static bool parse_number(const char **p)
 {
@@ -139,8 +142,19 @@ static int handle_open(struct libnvme_global_ctx *ctx, const void *payload,
 		return -EINVAL;
 
 	flags = req->flags;
-	if (flags & ~(__u32)(O_ACCMODE | O_EXCL))
+	if (flags & ~(__u32)(O_ACCMODE | O_EXCL) ||
+	    req->options & ~LIBNVME_PRIVSEP_OPEN_NO_IOCTL_PROBING)
 		return -EINVAL;
+
+	if (req->options & LIBNVME_PRIVSEP_OPEN_NO_IOCTL_PROBING) {
+		if (!ctx_no_probing) {
+			ctx_no_probing = libnvme_create_global_ctx();
+			if (!ctx_no_probing)
+				return -ENOMEM;
+			libnvme_set_ioctl_probing(ctx_no_probing, false);
+		}
+		ctx = ctx_no_probing;
+	}
 
 	if (!valid_name(name))
 		return -EINVAL;
@@ -616,6 +630,7 @@ int main(int argc, char **argv)
 	} while (!ret);
 
 	close_handles();
+	libnvme_free_global_ctx(ctx_no_probing);
 	libnvme_free_global_ctx(ctx);
 
 	return ret == -EPIPE ? EXIT_SUCCESS : EXIT_FAILURE;
