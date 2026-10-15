@@ -49,7 +49,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("endgrp-id",      'e', &cfg.egid,           egid),
+		OPT_SHRT("endgrp-id",      'e', &cfg.egid,           egid),
 		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
 		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
@@ -122,7 +122,7 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("endgrp-id",    'e', &cfg.egid,          egid),
+		OPT_SHRT("endgrp-id",    'e', &cfg.egid,          egid),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -186,7 +186,7 @@ static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("endgrp-id",    'e', &cfg.egid,          egid),
+		OPT_SHRT("endgrp-id",    'e', &cfg.egid,          egid),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -246,7 +246,7 @@ static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("endgrp-id",    'e', &cfg.egid,          egid),
+		OPT_SHRT("endgrp-id",    'e', &cfg.egid,          egid),
 		OPT_FLAG("host-events",  'E', &cfg.host_events,   host_events),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
