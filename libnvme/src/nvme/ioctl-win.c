@@ -190,6 +190,9 @@ __shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 	if (!libnvme_transport_handle_is_ctrl(hdl))
 		return -EINVAL;
 
+	if (__libnvme_dry_run(hdl, "controller reset"))
+		return 0;
+
 	entry = libnvme_ctrl_map_lookup(hdl->ctx,
 					libnvme_transport_handle_get_name(hdl));
 	if (!entry)
@@ -212,6 +215,9 @@ __shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 	 * but we can cause the system to invalidate its cached partition table
 	 * and re-enumerate the device.
 	 */
+	if (__libnvme_dry_run(hdl, "namespace rescan"))
+		return 0;
+
 	if (!DeviceIoControl(hdl->fd, IOCTL_DISK_UPDATE_PROPERTIES,
 			NULL, 0, NULL, 0, NULL, NULL)) {
 		errno = get_errno_from_error(GetLastError());

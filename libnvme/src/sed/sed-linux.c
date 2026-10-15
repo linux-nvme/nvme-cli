@@ -66,6 +66,10 @@ static int sed_opal_ioctl(struct libnvme_transport_handle *hdl,
 	if (!libnvme_transport_handle_is_ns(hdl))
 		return -EINVAL;
 
+	/* all of the Opal ioctls change the state of the device */
+	if (__libnvme_dry_run(hdl, "Opal ioctl"))
+		return 0;
+
 	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
 		return __libnvme_privsep_sed_ioctl(hdl, req, arg, size);
 

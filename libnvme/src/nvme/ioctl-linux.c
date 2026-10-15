@@ -52,6 +52,9 @@ __shr_public int libnvme_reset_subsystem(
 {
 	int ret;
 
+	if (__libnvme_dry_run(hdl, "subsystem reset"))
+		return 0;
+
 	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
 		return __libnvme_privsep_op(hdl,
 				LIBNVME_PRIVSEP_OP_RESET_SUBSYSTEM,
@@ -71,6 +74,9 @@ __shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
+	if (__libnvme_dry_run(hdl, "controller reset"))
+		return 0;
+
 	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
 		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_RESET_CTRL,
 					    NULL, 0, NULL, 0, NULL);
@@ -88,6 +94,9 @@ __shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 __shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	int ret;
+
+	if (__libnvme_dry_run(hdl, "namespace rescan"))
+		return 0;
 
 	if (hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_PRIVSEP)
 		return __libnvme_privsep_op(hdl, LIBNVME_PRIVSEP_OP_RESCAN_NS,
