@@ -225,6 +225,10 @@ void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
+/* argconfig_parse_global(): -h or --help, -V or --version was given */
+#define ARGCONFIG_HELP		1
+#define ARGCONFIG_VERSION	2
+
 int argconfig_parse_global(int argc, char *argv[],
 			   struct argconfig_commandline_options *options,
 			   int *argind);

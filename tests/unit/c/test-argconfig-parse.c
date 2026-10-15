@@ -736,6 +736,84 @@ static void global_parse_missing_arg_test(void)
 	}
 }
 
+/*
+ * The global parse accepts -h, --help, -V and --version unless the table
+ * has its own, reports them with ARGCONFIG_HELP and ARGCONFIG_VERSION and
+ * still parses the other options up to the subcommand.
+ */
+static void global_parse_help_test(void)
+{
+	bool own_help = false;
+	int verbose = 0, argind, ret;
+
+	OPT_ARGS(opts) = {
+		OPT_INCR("verbose", 'v', &verbose, "increase verbosity"),
+		OPT_END()
+	};
+	OPT_ARGS(help_opts) = {
+		OPT_FLAG("help", 'h', &own_help, "help"),
+		OPT_END()
+	};
+
+	{
+		char **argv = (char *[]){ "prog", "-h", "-v", "list", NULL };
+
+		ret = argconfig_parse_global(argv_len(argv), argv, opts,
+					     &argind);
+		if (ret != ARGCONFIG_HELP || argind != 3 || verbose != 1) {
+			printf("ERROR: global help: -h -v list\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char **argv = (char *[]){ "prog", "-vh", "--help", NULL };
+
+		verbose = 0;
+		ret = argconfig_parse_global(argv_len(argv), argv, opts,
+					     &argind);
+		if (ret != ARGCONFIG_HELP || argind != 3 || verbose != 1) {
+			printf("ERROR: global help: -vh --help\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char **argv = (char *[]){ "prog", "-h", "list", NULL };
+
+		ret = argconfig_parse_global(argv_len(argv), argv, help_opts,
+					     &argind);
+		if (ret || argind != 2 || !own_help) {
+			printf("ERROR: global help: own -h of the table\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char **argv = (char *[]){ "prog", "-vV", "list", NULL };
+
+		verbose = 0;
+		ret = argconfig_parse_global(argv_len(argv), argv, opts,
+					     &argind);
+		if (ret != ARGCONFIG_VERSION || argind != 2 || verbose != 1) {
+			printf("ERROR: global version: -vV list\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char **argv = (char *[]){ "prog", "--help", "--version", NULL };
+
+		ret = argconfig_parse_global(argv_len(argv), argv, NULL,
+					     &argind);
+		if (ret != (ARGCONFIG_HELP | ARGCONFIG_VERSION) ||
+		    argind != 3) {
+			printf("ERROR: global version: --help --version\n");
+			test_rc = 1;
+		}
+	}
+}
+
 int main(void)
 {
 	unsigned int i;
@@ -764,6 +842,7 @@ int main(void)
 		do_global_parse_test(&global_parse_tests[i]);
 
 	global_parse_missing_arg_test();
+	global_parse_help_test();
 
 	if (f)
 		fclose(f);
