@@ -2834,7 +2834,7 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 
 	obj_add_uint(r, "n", n);
 
-	for (unsigned int i = 0; i < n; i++) {
+	for (unsigned int i = 0; i < n && i < ARRAY_SIZE(log->events); i++) {
 		struct nvme_fdp_event *event = &log->events[i];
 
 		struct json_object *obj_event = json_create_object();

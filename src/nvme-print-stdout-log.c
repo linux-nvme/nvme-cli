@@ -1481,7 +1481,7 @@ void stdout_fdp_events(struct nvme_fdp_events_log *log)
 	uint32_t n = le32_to_cpu(log->n);
 	struct shr_table *t;
 
-	for (unsigned int i = 0; i < n; i++) {
+	for (unsigned int i = 0; i < n && i < ARRAY_SIZE(log->events); i++) {
 		struct nvme_fdp_event *event = &log->events[i];
 
 		ts = int48_to_long(event->ts.timestamp) / 1000;
