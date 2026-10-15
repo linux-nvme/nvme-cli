@@ -186,7 +186,8 @@ static int id_ns_lba_format(int argc, char **argv, struct command *acmd, struct 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
+		  OPT_SHRT("lba-format-index", 'i', &cfg.lba_format_index,
+			   lba_format_index),
 		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -425,7 +426,8 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
+		  OPT_SHRT("lba-format-index", 'i', &cfg.lba_format_index,
+			   lba_format_index),
 		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -976,7 +978,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid));
+		  OPT_SHRT("cntlid",         'c', &cfg.cntlid, cntlid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
