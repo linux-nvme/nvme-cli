@@ -362,6 +362,87 @@ static void operands_test(void)
 	}
 }
 
+/*
+ * Options registered with argconfig_set_global_options() are accepted by
+ * every command after the command's own options, which take precedence.
+ * Their seen flags are kept across parses: the global options may already
+ * have been given before the command name.
+ */
+static void global_options_test(void)
+{
+	const char *desc = "Test global options";
+	int verbose = 0;
+	bool dry_run = false;
+	char *format = NULL;
+	int argind, ret;
+
+	OPT_ARGS(globals) = {
+		OPT_INCR("verbose", 'v', &verbose, "verbose"),
+		OPT_FLAG("dry-run", 'd', &dry_run, "dry run"),
+		OPT_FMT("output-format", 'o', &format, "format"),
+		OPT_END()
+	};
+	OPT_ARGS(opts) = {
+		OPT_FLAG("flag", 'f', &cfg.flag, "flag"),
+		/* shadows -d of the global options */
+		OPT_UINT("uint", 'd', &cfg.uint, "uint"),
+		OPT_END()
+	};
+	OPT_ARGS(local) = {
+		OPT_FLAG("flag", 'f', &cfg.flag, "flag"),
+		OPT_END()
+	};
+
+	argconfig_set_global_options(globals);
+
+	{
+		char **argv = (char *[]){ "prog", "-v", "list", NULL };
+
+		ret = argconfig_parse_global(argv_len(argv), argv, local,
+					     &argind);
+		if (ret || argind != 2 || verbose != 1) {
+			printf("ERROR: global options: global parse failed\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char **argv = (char *[]){ "list", "-f", "--verbose", "-d", "7",
+					  "-o", "json", "dev", NULL };
+
+		cfg.flag = false;
+		cfg.uint = 0;
+		ret = argconfig_parse(argv_len(argv), argv, desc, opts);
+		if (ret || !cfg.flag || cfg.uint != 7 || verbose != 2 ||
+		    dry_run || !format || strcmp(format, "json") ||
+		    argconfig_nr_operands() != 1) {
+			printf("ERROR: global options: command parse failed\n");
+			test_rc = 1;
+		}
+		if (!argconfig_parse_seen(opts, "output-format") ||
+		    !argconfig_parse_seen(opts, "verbose") ||
+		    argconfig_parse_seen(opts, "dry-run")) {
+			printf("ERROR: global options: seen mismatch\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		/* a later parse keeps the seen flags of the global options */
+		char **argv = (char *[]){ "list", "--dry-run", NULL };
+
+		ret = argconfig_parse(argv_len(argv), argv, desc, local);
+		if (ret || !dry_run ||
+		    !argconfig_parse_seen(local, "output-format") ||
+		    !argconfig_parse_seen(local, "dry-run")) {
+			printf("ERROR: global options: seen not kept\n");
+			test_rc = 1;
+		}
+	}
+
+	argconfig_set_global_options(NULL);
+}
+
 #define COMMA_SEP_ARRAY_MAX_VALUES 4
 
 struct comma_sep_array_test {
@@ -674,6 +755,7 @@ int main(void)
 	optional_string_test();
 	combined_opts_test();
 	operands_test();
+	global_options_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
 		comma_sep_array_test(&comma_sep_array_tests[i]);

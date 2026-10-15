@@ -52,6 +52,30 @@ static bool is_null_or_empty(const char *s)
 
 static const char *append_usage_str = "";
 
+/*
+ * Options every command accepts, registered once instead of being added to
+ * each command's table. The command's own options are looked up first, so
+ * a command can still use a short or long name of a global option.
+ */
+static struct argconfig_commandline_options *global_options;
+
+void argconfig_set_global_options(struct argconfig_commandline_options *options)
+{
+	global_options = options;
+}
+
+struct argconfig_commandline_options *argconfig_get_global_options(void)
+{
+	return global_options;
+}
+
+/* The global options, unless they are the table itself */
+static struct argconfig_commandline_options *
+argconfig_globals(struct argconfig_commandline_options *options)
+{
+	return options == global_options ? NULL : global_options;
+}
+
 void argconfig_append_usage(const char *str)
 {
 	append_usage_str = str;
@@ -89,34 +113,38 @@ static void show_option(const struct argconfig_commandline_options *option)
 	fprintf(stderr, "\n");
 }
 
+/* A group header is printed before the first option which follows it */
+static void print_options(struct argconfig_commandline_options *s,
+			  const char *header)
+{
+	bool header_printed = false;
+
+	for (; s && s->option; s++) {
+		if (s->config_type == CFG_GROUP_SEPARATOR) {
+			header = s->help;
+			header_printed = false;
+			continue;
+		}
+		if (!header_printed) {
+			fprintf(stderr, "\n\033[1m%s:\033[0m\n", header);
+			header_printed = true;
+		}
+		if (!s->hidden)
+			show_option(s);
+	}
+}
+
 void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *s)
 {
-	const char *pending_header = "Options";
-	bool header_printed = false;
-
 	fprintf(stderr, "\033[1mUsage: %s\033[0m\n\n",
 		append_usage_str);
 
 	shr_print_word_wrapped(program_desc, 0, 0, stderr);
 	fprintf(stderr, "\n");
 
-	if (!s || !s->option)
-		return;
-
-	for (; s->option; s++) {
-		if (s->config_type == CFG_GROUP_SEPARATOR) {
-			pending_header = s->help;
-			header_printed = false;
-			continue;
-		}
-		if (!header_printed) {
-			fprintf(stderr, "\n\033[1m%s:\033[0m\n", pending_header);
-			header_printed = true;
-		}
-		if (!s->hidden)
-			show_option(s);
-	}
+	print_options(s, "Options");
+	print_options(argconfig_globals(s), "Global options");
 }
 
 static int argconfig_error(char *type, const char *opt, const char *arg)
@@ -273,12 +301,38 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s,
 	return 0;
 }
 
+static struct argconfig_commandline_options *
+argconfig_find_option(struct argconfig_commandline_options *s,
+		      const char *option)
+{
+	struct argconfig_commandline_options *g = argconfig_globals(s);
+
+	for (; s && s->option; s++) {
+		if (!strcmp(s->option, option))
+			return s;
+	}
+	for (; g && g->option; g++) {
+		if (!strcmp(g->option, option))
+			return g;
+	}
+
+	return NULL;
+}
+
+/* --verbose counts, a command may have a flag of the same name */
 static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
 {
+	struct argconfig_commandline_options *g = argconfig_globals(s);
+
 	for (; s && s->option; s++) {
 		if (!strcmp(s->option, "verbose") &&
 		    s->config_type == CFG_INCREMENT)
 			return s->seen;
+	}
+	for (; g && g->option; g++) {
+		if (!strcmp(g->option, "verbose") &&
+		    g->config_type == CFG_INCREMENT)
+			return g->seen;
 	}
 
 	return false;
@@ -403,6 +457,9 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 	size_t len = eq ? (size_t)(eq - name) : strlen(name);
 
 	s = argconfig_find_long(p->options, name, len);
+	if (!s && argconfig_globals(p->options))
+		s = argconfig_find_long(argconfig_globals(p->options), name,
+					len);
 	if (!s) {
 		if (!p->global && len == 4 && !strncmp(name, "help", 4))
 			return ARGCONFIG_HELP;
@@ -446,6 +503,9 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
 			return ARGCONFIG_HELP;
 
 		s = argconfig_find_short(p->options, *c);
+		if (!s && argconfig_globals(p->options))
+			s = argconfig_find_short(argconfig_globals(p->options),
+						 *c);
 		if (!s)
 			return argconfig_parse_error(p,
 				"invalid option -- '%c'", *c);
@@ -600,10 +660,7 @@ int argconfig_parse_global(int argc, char *argv[],
 bool argconfig_parse_seen(struct argconfig_commandline_options *s,
 			  const char *option)
 {
-	for (; s && s->option; s++) {
-		if (!strcmp(s->option, option))
-			return s->seen;
-	}
+	s = argconfig_find_option(s, option);
 
-	return false;
+	return s && s->seen;
 }

@@ -334,6 +334,40 @@ static int copy_options(const struct argconfig_commandline_options *opts,
  * command's options into the model, then returns the sentinel so the parser
  * unwinds before the command opens a device.
  */
+/*
+ * The command's options followed by the registered global options, behind a
+ * "Global options" separator as json_command() expects. The caller frees
+ * the returned array; the entries alias the original tables.
+ */
+static struct argconfig_commandline_options *
+with_global_options(struct argconfig_commandline_options *options)
+{
+	struct argconfig_commandline_options *g, *all;
+	size_t n = 0, ng = 0, i;
+
+	g = argconfig_get_global_options();
+	while (options[n].option)
+		n++;
+	while (g && g[ng].option)
+		ng++;
+
+	all = calloc(n + ng + 2, sizeof(*all));
+	if (!all)
+		return NULL;
+
+	memcpy(all, options, n * sizeof(*all));
+	if (ng) {
+		struct argconfig_commandline_options sep =
+			OPT_GROUP("Global options");
+
+		memcpy(&all[n], &sep, sizeof(sep));
+		for (i = 0; i < ng; i++)
+			memcpy(&all[n + 1 + i], &g[i], sizeof(*all));
+	}
+
+	return all;
+}
+
 static int metadata_capture_hook(int argc, char **argv, const char *program_desc,
 				 struct argconfig_commandline_options *options)
 {
@@ -342,7 +376,12 @@ static int metadata_capture_hook(int argc, char **argv, const char *program_desc
 	(void)program_desc;
 
 	if (command_metadata_cur_command && !command_metadata_cur_command->captured) {
-		int err = copy_options(options,
+		__cleanup_free struct argconfig_commandline_options *all =
+			with_global_options(options);
+		int err = -ENOMEM;
+
+		if (all)
+			err = copy_options(all,
 				&command_metadata_cur_command->options,
 				&command_metadata_cur_command->num_options);
 		if (err)
