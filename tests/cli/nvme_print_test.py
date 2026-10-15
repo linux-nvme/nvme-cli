@@ -49,8 +49,6 @@ _OPC_IO_MGMT_RECV = 0x12
 _OPC_RESV_REPORT = 0x0e
 _OPC_DIR_RECV = 0x1a
 _DIR_STREAMS_STATUS = 0x0102     # directive type 1, operation 2
-_OPC_GET_FEATURES = 0x0a
-_FID_FDP_EVENTS = 0x1e
 _LID_PERSISTENT_EVENT = 0x0d
 _LID_MEDIA_UNIT_STATUS = 0x10
 _LID_SUPPORTED_CAP_CONFIG = 0x11
@@ -129,8 +127,6 @@ class PrintMockIPCServer(MockIPCServer):
         elif (opcode == _OPC_DIR_RECV and
               cdw11 & 0xffff == _DIR_STREAMS_STATUS):
             _put(buf, '<H', 0, 2)       # open stream count
-        elif opcode == _OPC_GET_FEATURES and cdw10 & 0xff == _FID_FDP_EVENTS:
-            result &= 0xff  # bits 31:8 are reserved
 
         self.send_response(conn, 0, result=result, payload=bytes(buf))
 

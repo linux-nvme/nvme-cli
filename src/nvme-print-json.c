@@ -4303,7 +4303,8 @@ static void json_feature_show_fields_fdp_events(struct json_object *r, unsigned 
 	struct nvme_fdp_supported_event_desc *d;
 	char json_str[STR_LEN];
 
-	for (i = 0; i < result; i++) {
+	// NOET is in bits 7:0; bits 31:8 are reserved.
+	for (i = 0; i < (result & 0xff); i++) {
 		d = &((struct nvme_fdp_supported_event_desc *)buf)[i];
 		sprintf(json_str, "%s", d->evta & 0x1 ? "Enabled" : "Not enabled");
 		obj_add_str(r, nvme_fdp_event_to_string(d->evt), json_str);

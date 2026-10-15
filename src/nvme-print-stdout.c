@@ -3093,7 +3093,8 @@ void stdout_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 		if (!t)
 			return;
 
-		for (unsigned int i = 0; i < result; i++) {
+		// NOET is in bits 7:0; bits 31:8 are reserved.
+		for (unsigned int i = 0; i < (result & 0xff); i++) {
 			struct nvme_fdp_supported_event_desc *d;
 
 			d = &((struct nvme_fdp_supported_event_desc *)buf)[i];
