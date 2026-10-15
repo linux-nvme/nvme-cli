@@ -1913,6 +1913,11 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "connect ctrl, '%.*s'\n",
 		 (int)strcspn(argstr, "\n"), argstr);
+	if (ctx->dry_run) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			    "dry-run: connect skipped\n");
+		return -ENVME_CONNECT_DRY_RUN;
+	}
 	len = nvmf_dev_xfer(ctx, argstr, buf, sizeof(buf), &step);
 	if (len < 0 && step == LIBNVMF_DEV_OPEN) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to open %s: %s\n",
@@ -2106,6 +2111,12 @@ __shr_public int libnvmf_disconnect_ctrl(struct libnvme_ctrl *c)
 {
 	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
 	int ret;
+
+	if (ctx && ctx->dry_run) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			    "dry-run: disconnect of %s skipped\n", c->name);
+		return 0;
+	}
 
 	if (ctx && ctx->privsep)
 		ret = __libnvme_privsep_delete_ctrl(ctx->privsep, c->name);
@@ -4543,7 +4554,8 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 
 	err = dc_open(ctx, fctx, h, &fctx->ctrl_params, true, &own, &c);
 	if (err) {
-		if (err != -ENVME_CONNECT_IGNORED)
+		if (err != -ENVME_CONNECT_IGNORED &&
+		    err != -ENVME_CONNECT_DRY_RUN)
 			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				"failed to add controller, error %s\n",
 				libnvme_strerror(-err));
@@ -4629,7 +4641,7 @@ __shr_public int libnvmf_connect(
 					fctx->ctrl_params.traddr,
 					fctx->ctrl_params.trsvcid,
 					fctx->hooks.user_data);
-		} else {
+		} else if (err != -ENVME_CONNECT_DRY_RUN) {
 			libnvme_msg(ctx, LIBNVME_LOG_ERR, "could not add new controller: %s\n",
 				libnvme_strerror(-err));
 		}

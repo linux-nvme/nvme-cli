@@ -457,7 +457,8 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_CONNREFUSED] = "connection refused",
 	[ENVME_CONNECT_ADDRNOTAVAIL] = "cannot assign requested address",
 	[ENVME_CONNECT_IGNORED] = "connection ignored",
-	[ENVME_CONNECT_NOKEY] = "TLS PSK or KX-HMAC-CHAP secret not available"
+	[ENVME_CONNECT_NOKEY] = "TLS PSK or KX-HMAC-CHAP secret not available",
+	[ENVME_CONNECT_DRY_RUN] = "not connected in dry-run mode",
 };
 
 __shr_public const char *libnvme_errno_to_string(int status)

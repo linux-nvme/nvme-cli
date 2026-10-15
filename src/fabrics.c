@@ -542,7 +542,7 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 	} else {
 		err = libnvmf_connect(st->ctx, fctx);
 	}
-	if (err == -ENVME_CONNECT_ALREADY)
+	if (err == -ENVME_CONNECT_ALREADY || err == -ENVME_CONNECT_DRY_RUN)
 		err = 0;
 
 record_err:
@@ -994,6 +994,11 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 			return 0;
 
 		ret = libnvmf_discover(ctx, fctx);
+		if (ret == -ENVME_CONNECT_DRY_RUN) {
+			nvme_show_error(
+				"dry-run: the discovery needs a connection to the discovery controller, nothing discovered");
+			ret = 0;
+		}
 	}
 
 	return ret;
@@ -1195,6 +1200,8 @@ do_connect:
 
 	ret = libnvmf_connect(ctx, fctx);
 	if (ret == -ENVME_CONNECT_ALREADY && idempotent)
+		ret = 0;
+	if (ret == -ENVME_CONNECT_DRY_RUN)
 		ret = 0;
 	if (ret) {
 		/*

@@ -39,6 +39,7 @@
  * @ENVME_CONNECT_ADDRNOTAVAIL:	cannot assign requested address
  * @ENVME_CONNECT_IGNORED:	connect attempt is ignored due to configuration
  * @ENVME_CONNECT_NOKEY:	TLS PSK or KX-HMAC-CHAP secret not available
+ * @ENVME_CONNECT_DRY_RUN:	not connected, the context is in dry-run mode
  */
 enum libnvme_connect_err {
 	ENVME_CONNECT_RESOLVE	= 1000,
@@ -62,6 +63,7 @@ enum libnvme_connect_err {
 	ENVME_CONNECT_ADDRNOTAVAIL,
 	ENVME_CONNECT_IGNORED,
 	ENVME_CONNECT_NOKEY,
+	ENVME_CONNECT_DRY_RUN,
 };
 
 /**

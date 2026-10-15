@@ -437,6 +437,40 @@ class FabricsMockCLITest(unittest.TestCase):
         by_nqn = {c['subsysnqn']: c['traddr'] for c in self.server.controllers.values()}
         self.assertEqual(by_nqn.get(io_subsys), 'fe80::2')
 
+    def test_connect_dry_run(self):
+        """--dry-run does not write the connect arguments to the kernel."""
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
+        self._run('connect', '-t', 'tcp', '-a', '192.168.1.10', '-s', '4420',
+                  '-n', subsysnqn, '--dry-run')
+        self.assertEqual(self.server.controllers, {})
+        self.assertFalse(self._ctrl_path(0).exists())
+
+    def test_connect_all_dry_run(self):
+        """Discovery needs a connection to the Discovery Controller, so
+        --dry-run stops before connecting it and says so."""
+        self.server.discovery_entries = [
+            {
+                'transport': 'tcp',
+                'traddr': '192.168.1.200',
+                'trsvcid': '4420',
+                'subsysnqn': 'nqn.2014-08.org.nvmexpress:mock-target-nvm-subsystem',
+            },
+        ]
+        res = self._run('connect-all', '-t', 'tcp', '-a', '192.168.1.1',
+                        '--dry-run')
+        self.assertEqual(self.server.controllers, {})
+        self.assertIn("dry-run", res.stderr)
+
+    def test_disconnect_dry_run(self):
+        """--dry-run does not delete the controller."""
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
+        self._run('connect', '-t', 'tcp', '-a', '192.168.1.10', '-s', '4420',
+                  '-n', subsysnqn)
+        self._run('disconnect', '-n', subsysnqn, '--dry-run')
+        self._assert_persisted(0)
+        self._run('disconnect', '-n', subsysnqn)
+        self._assert_disconnected(0)
+
     def test_connect_already_connected(self):
         """Test how connect handles EALREADY (already connected) error gracefully."""
         self.server.connect_errno = 114  # EALREADY
