@@ -3693,7 +3693,7 @@ static void json_zns_changed(struct nvme_zns_changed_zone_log *log)
 		obj_add_result(r, "Too many zones have changed to fit into the log. Use report zones for changes.");
 	} else {
 		obj_add_uint(r, "nrzid", nrzid);
-		for (i = 0; i < nrzid; i++) {
+		for (i = 0; i < nrzid && i < ARRAY_SIZE(log->zid); i++) {
 			sprintf(json_str, "zid %03d", i);
 			obj_add_uint64(r, json_str, (uint64_t)le64_to_cpu(log->zid[i]));
 		}
