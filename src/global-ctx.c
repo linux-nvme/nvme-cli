@@ -27,7 +27,7 @@
 
 static int check_arg_dev(int argc, char **argv)
 {
-	if (optind >= argc) {
+	if (!argconfig_nr_operands()) {
 		errno = EINVAL;
 		nvme_show_perror(argv[0]);
 		return -EINVAL;
@@ -46,7 +46,7 @@ static int get_transport_handle(struct libnvme_global_ctx *ctx, int argc,
 	if (ret)
 		return ret;
 
-	devname = argv[optind];
+	devname = argconfig_operand(0);
 
 	ret = libnvme_open(ctx, devname, flags, hdl);
 	if (ret)

@@ -285,6 +285,31 @@ static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
 	return false;
 }
 
+/* The non-option arguments of the last successful argconfig_parse() */
+static struct {
+	char **argv;
+	int argc;
+} operands;
+
+static void argconfig_set_operands(char **argv, int argc)
+{
+	operands.argv = argv;
+	operands.argc = argc;
+}
+
+int argconfig_nr_operands(void)
+{
+	return operands.argc;
+}
+
+char *argconfig_operand(int i)
+{
+	if (i < 0 || i >= operands.argc)
+		return NULL;
+
+	return operands.argv[i];
+}
+
 static argconfig_parse_hook_fn argconfig_parse_hook;
 
 void argconfig_set_parse_hook(argconfig_parse_hook_fn hook)
@@ -301,6 +326,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	struct argconfig_commandline_options *s;
 	int c, long_opt_index = 0, opt_index = 0, short_index = 0, options_count = 0;
 	int ret = 0;
+
+	argconfig_set_operands(NULL, 0);
 
 	if (argconfig_parse_hook)
 		return argconfig_parse_hook(argc, argv, program_desc, options);
@@ -373,6 +400,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			break;
 	}
 
+	if (!ret)
+		argconfig_set_operands(&argv[optind], argc - optind);
+
 	if (!argconfig_check_verbose(options))
 		setlocale(LC_ALL, "C");
 
@@ -383,12 +413,14 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
  * Parse global (pre-subcommand) options from argc/argv. Stops at the first
  * non-option argument (i.e. the subcommand name) so that subcommand-specific
  * options are left in place for the subcommand dispatcher. After a successful
- * call, optind points to the first non-option argument (the subcommand).
+ * call, *argind is the index of the first non-option argument (the
+ * subcommand), or argc if there is none.
  *
  * Returns 0 on success, negative errno on failure.
  */
 int argconfig_parse_global(int argc, char *argv[],
-			   struct argconfig_commandline_options *options)
+			   struct argconfig_commandline_options *options,
+			   int *argind)
 {
 	__cleanup_free char *short_opts = NULL;
 	__cleanup_free struct option *long_opts = NULL;
@@ -466,6 +498,8 @@ int argconfig_parse_global(int argc, char *argv[],
 		if (ret)
 			break;
 	}
+
+	*argind = optind;
 
 	return ret;
 }

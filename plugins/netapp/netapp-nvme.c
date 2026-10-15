@@ -986,8 +986,8 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		return devs.num;
 	}
 
-	if (optind < argc)
-		devname = basename(argv[optind++]);
+	if (argconfig_nr_operands())
+		devname = basename(argconfig_operand(0));
 
 	if (devname) {
 		int subsys_num, nsid;
@@ -1077,8 +1077,8 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	if (optind < argc)
-		devname = basename(argv[optind++]);
+	if (argconfig_nr_operands())
+		devname = basename(argconfig_operand(0));
 
 	if (devname) {
 		int subsys_num, nsid;

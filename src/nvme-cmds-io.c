@@ -1061,7 +1061,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		err = open_exclusive(&ctx, &hdl, argc, argv, cfg.force, opts);
 		if (err) {
 			if (err == -EBUSY) {
-				nvme_show_error("Failed to open %s.", basename(argv[optind]));
+				nvme_show_error("Failed to open %s.",
+						basename(argconfig_operand(0)));
 				nvme_show_error("Namespace is currently busy.");
 				if (!cfg.force)
 					nvme_show_error(

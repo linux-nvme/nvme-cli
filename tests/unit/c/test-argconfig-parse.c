@@ -298,6 +298,58 @@ static void combined_opts_test(void)
 	}
 }
 
+/* Number of arguments in a NULL terminated argument vector */
+static int argv_len(char **argv)
+{
+	int argc = 0;
+
+	while (argv[argc])
+		argc++;
+
+	return argc;
+}
+
+/*
+ * The non-option arguments are available through argconfig_operand(), in
+ * the order they were given, wherever they appear between the options.
+ */
+static void operands_test(void)
+{
+	const char *desc = "Test operands";
+	char **argv = (char *[]){ "test-argconfig", "dev0", "--flag", "dev1",
+				  "--uint", "3", "dev2", "--", "--flag",
+				  NULL };
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("flag", 'f', &cfg.flag, "flag"),
+		OPT_UINT("uint", 'u', &cfg.uint, "uint"),
+		OPT_END()
+	};
+
+	ret = argconfig_parse(argv_len(argv), argv, desc, opts);
+	if (ret || argconfig_nr_operands() != 4 ||
+	    strcmp(argconfig_operand(0), "dev0") ||
+	    strcmp(argconfig_operand(1), "dev1") ||
+	    strcmp(argconfig_operand(2), "dev2") ||
+	    strcmp(argconfig_operand(3), "--flag") ||
+	    argconfig_operand(4) || argconfig_operand(-1)) {
+		printf("ERROR: operands: unexpected operands\n");
+		test_rc = 1;
+	}
+
+	{
+		char **bad = (char *[]){ "test-argconfig", "dev0", "--bogus",
+					 NULL };
+
+		ret = argconfig_parse(argv_len(bad), bad, desc, opts);
+		if (!ret || argconfig_nr_operands()) {
+			printf("ERROR: operands: kept after a failed parse\n");
+			test_rc = 1;
+		}
+	}
+}
+
 #define COMMA_SEP_ARRAY_MAX_VALUES 4
 
 struct comma_sep_array_test {
@@ -356,12 +408,11 @@ struct global_parse_test {
 	char *argv[8];
 	int argc;
 	/*
-	 * Expected optind value after argconfig_parse_global() returns.
+	 * Expected argind value after argconfig_parse_global() returns.
 	 * This is the index of the first non-option argument (the subcommand)
-	 * in argv, as seen by getopt – i.e. 1-based because getopt always
-	 * skips argv[0] as the program name.
+	 * in argv, i.e. 1-based because argv[0] is the program name.
 	 */
-	int expected_optind;
+	int expected_argind;
 	int expected_ret;
 	int expected_verbose;
 	bool expected_dry_run;
@@ -434,7 +485,7 @@ static const struct global_parse_test global_parse_tests[] = {
 
 static int parse_global_capture_stderr(int argc, char *argv[],
 				       struct argconfig_commandline_options *opts,
-				       char *buf, size_t buf_size)
+				       int *argind, char *buf, size_t buf_size)
 {
 	FILE *tmp = NULL;
 	int ret;
@@ -465,7 +516,7 @@ static int parse_global_capture_stderr(int argc, char *argv[],
 		return -errno;
 	}
 
-	ret = argconfig_parse_global(argc, argv, opts);
+	ret = argconfig_parse_global(argc, argv, opts, argind);
 	fflush(stderr);
 
 	if (fseek(tmp, 0, SEEK_SET) != 0) {
@@ -495,7 +546,7 @@ static int parse_global_capture_stderr(int argc, char *argv[],
 
 static void do_global_parse_test(const struct global_parse_test *test)
 {
-	int ret;
+	int ret, argind = -1;
 	char stderr_buf[512] = "";
 
 	OPT_ARGS(opts) = {
@@ -509,9 +560,11 @@ static void do_global_parse_test(const struct global_parse_test *test)
 
 	if (test->stderr_must_not_contain)
 		ret = parse_global_capture_stderr(test->argc, (char **)test->argv,
-						  opts, stderr_buf, sizeof(stderr_buf));
+						  opts, &argind, stderr_buf,
+						  sizeof(stderr_buf));
 	else
-		ret = argconfig_parse_global(test->argc, (char **)test->argv, opts);
+		ret = argconfig_parse_global(test->argc, (char **)test->argv,
+					     opts, &argind);
 
 	if (ret != test->expected_ret) {
 		printf("ERROR: global_parse {%s}: ret=%d expected=%d\n",
@@ -520,9 +573,9 @@ static void do_global_parse_test(const struct global_parse_test *test)
 		return;
 	}
 
-	if (test->expected_ret == 0 && optind != test->expected_optind) {
-		printf("ERROR: global_parse {%s}: optind=%d expected=%d\n",
-		       test->desc, optind, test->expected_optind);
+	if (test->expected_ret == 0 && argind != test->expected_argind) {
+		printf("ERROR: global_parse {%s}: argind=%d expected=%d\n",
+		       test->desc, argind, test->expected_argind);
 		test_rc = 1;
 		return;
 	}
@@ -559,14 +612,14 @@ static void global_parse_missing_arg_test(void)
 {
 	char *argv[] = { "prog", "--count" };
 	unsigned int count = 0;
-	int ret;
+	int ret, argind;
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("count", 'c', &count, "count"),
 		OPT_END()
 	};
 
-	ret = argconfig_parse_global(ARRAY_SIZE(argv), argv, opts);
+	ret = argconfig_parse_global(ARRAY_SIZE(argv), argv, opts, &argind);
 	if (ret != -EINVAL) {
 		printf("ERROR: global_parse: '--count' with no value: ret=%d expected=%d\n",
 		       ret, -EINVAL);
@@ -592,6 +645,7 @@ int main(void)
 
 	optional_string_test();
 	combined_opts_test();
+	operands_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
 		comma_sep_array_test(&comma_sep_array_tests[i]);
