@@ -26,9 +26,10 @@ Tests in this module verify:
   * The report names every event FIFO the Data Area 1 header assigns to
     Data Area 1 or 2, using the string log's FIFO names.
   * Each FIFO's events match the raw FIFO by class, identifier and size,
-    their Event Strings match the string log, and any Virtual FIFO events
-    (class 0Bh) carry the identifier, subfields and names the raw bytes
-    and string log call for.
+    their Event Strings match the string log or, for an Event ID the
+    spec defines and the string log omits, the spec's name, and any
+    Virtual FIFO events (class 0Bh) carry the identifier, subfields and
+    names the raw bytes and string log call for.
   * Each data area's statistics match the raw descriptors by identifier,
     size and Context Index flag, down to the descriptors a Context
     Statistic Descriptor encapsulates.
@@ -84,6 +85,15 @@ def _fifo_info(da):
 
 def _stats(da):
     return f"Data Area {da} Statistics"
+
+
+def _expected_event_string(event, tables):
+    """The string log's name for @event, else the spec's name for a
+    non-vendor-unique class (TELSLG-14), else empty."""
+    key = (event.cls, event.event_id)
+    if event.cls >= layout.CLASS_VU_FIRST:
+        return tables.vu_events.get(key, "")
+    return tables.events.get(key, layout.SPEC_EVENT_NAMES.get(key, ""))
 
 
 class TestOCPInternalLog(TestOCP):
@@ -196,10 +206,7 @@ class TestOCPInternalLog(TestOCP):
             "Debug Event Class type": f"0x{event.cls:x}",
             "Event Identifier": f"0x{event.event_id:x}",
             "Event Data Size": f"0x{event.size_dw:x}",
-            "Event String": (tables.vu_events
-                             if event.cls >= layout.CLASS_VU_FIRST
-                             else tables.events).get(
-                                 (event.cls, event.event_id), ""),
+            "Event String": _expected_event_string(event, tables),
         }
         if event.cls == layout.CLASS_VIRTUAL_FIFO and len(event.data) >= 2:
             fifo_id, = struct.unpack_from("<H", event.data)

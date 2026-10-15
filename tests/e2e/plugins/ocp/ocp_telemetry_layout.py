@@ -151,6 +151,77 @@ SMBUS_NACK_ERROR = 0x0003
 # MCTP Event Flags bit 7: MCTP Transport Header Valid.
 MCTP_HEADER_VALID = 0x80
 
+# Event ID names, indexed by Event ID, for each class that defines them
+# (OCP 2.7 Section 4.9.15.2), without their trailing period; Boot Sequence
+# names are the first sentence of each description. None marks a reserved or
+# obsolete ID. TELSLG-14 lets the string log omit these, so the decoder
+# names them itself.
+_SPEC_EVENT_ID_NAMES = {
+    CLASS_TIMESTAMP: [
+        'Host issued a Timestamp Set Feature Command (Feature ID Eh)',
+        'Firmware initiated Timestamp Snapshot'],
+    CLASS_PCIE: [
+        'Link Up', 'Link Down', 'PCIe Error Detected', 'PERST# Asserted',
+        'PERST# De-asserted', 'Refclk Stable', 'Vmain Stable',
+        'Link Speed and Width Negotiated'],
+    CLASS_NVME: [
+        'CC.EN transitions from 0b to 1b',
+        'CC.EN transitions from 1b to 0b',
+        'CSTS.RDY transitions from 0b to 1b',
+        'CSTS.RDY transitions from 1b to 0b',
+        None,
+        'Create I/O Submission Queue Command or Create I/O Completion Queue '
+        'Command Processed successfully',
+        'In-band Admin Command Processed other than Create I/O Submission '
+        'Queue Command or Create I/O Completion Queue Command Processed '
+        'successfully',
+        'An Admin command returned a non-zero Status Code',
+        'An I/O Command Returned a Non-zero Status Code',
+        'CSTS.CFS transitioned from 0b to 1b',
+        'Admin Submission Queue Base Address Written (AQA) or Admin '
+        'Completion Queue Based Address (ACQ) written',
+        'Controller Configuration Register (CC) Changed except for the cases '
+        'that are covered in 0000h and 0001h',
+        'Controller Status Register (CSTS) Changed except for the cases that '
+        'are covered in 0002h, 0003h, and 0009h',
+        'Delete I/O Completion Queue Command or Delete I/O Submission Queue '
+        'Command Processed',
+        'Out-of-band Command Processed',
+        'Out-of-band Asynchronous Event Message Transmitted',
+        'Error Reporting AEN was sent (see EREC-5)'],
+    CLASS_RESET: [
+        'PCIe Conventional Hot Reset', 'Main Power Cycle', 'PERST#',
+        'PCIe Function Level Reset', 'NVM Subsystem Reset'],
+    CLASS_BOOT_SEQUENCE: [
+        'Main Firmware Boot Complete', 'FTL Load from NVM Complete',
+        'FTL Rebuild Started', 'FTL Rebuild Complete'],
+    CLASS_FIRMWARE_ASSERT: [
+        'Assert in NVMe Processing Code', 'Assert in Media Code',
+        'Assert in Security Code', 'Assert in Background Services Code',
+        'FTL Rebuild Failed', 'FTL Data Mismatch', 'Assert in Other Code'],
+    CLASS_TEMPERATURE: [
+        'Composite Temperature decreases to (WCTEMP - 2)',
+        'Composite Temperature increases to WCTEMP',
+        'Composite Temperature increases to reach CCTEMP'],
+    CLASS_MEDIA: [
+        'XOR (or equivalent) Recovery Invoked', 'Uncorrectable Media Error',
+        'Block Marked Bad Due to Program Error',
+        'Block Marked Bad Due to Erase Error',
+        'Block Marked Bad Due to Read Error', 'Plane Failure Event'],
+    CLASS_MEDIA_WEAR: ['Media Wear'],
+    CLASS_VIRTUAL_FIFO: ['Virtual FIFO Start', 'Virtual FIFO End'],
+    CLASS_SMBUS_I2C_I3C: [
+        'Timeout Errors', 'PEC Errors', 'Arbitration loss', 'NACK error'],
+    CLASS_MCTP: [
+        'Dropped Packet', 'Dropped Message',
+        'Discovery and addressing errors', 'Error Status'],
+}
+SPEC_EVENT_NAMES: Dict[Tuple[int, int], str] = {
+    (cls, event_id): name
+    for cls, names in _SPEC_EVENT_ID_NAMES.items()
+    for event_id, name in enumerate(names) if name is not None
+}
+
 # Statistic Information (descriptor byte 2) bit 6: set only in a Context
 # Statistic Descriptor.
 STAT_INFO_CONTEXT_INDEX = 0x40
@@ -619,32 +690,43 @@ class StringTables(NamedTuple):
 
 def string_tables(strings: bytes) -> StringTables:
     """Decode the three identifier tables. Where an identifier repeats,
-    the first entry wins, matching a front-to-back table search."""
-    ascii_start = _u(strings, STR_ASCTS, 8) * DWORD
+    the first usable entry wins, matching a front-to-back table search;
+    an entry whose string falls outside the ASCII table, or whose ASCII
+    table falls outside the log, is skipped as the decoder skips it."""
+    ascts = _u(strings, STR_ASCTS, 8)
+    asctsz = _u(strings, STR_ASCTSZ, 8)
+    log_dw = len(strings) // DWORD
+    ascii_fits = ascts <= log_dw and asctsz <= log_dw - ascts
 
-    def text(length: int, offset_dw: int) -> str:
-        start = ascii_start + offset_dw * DWORD
-        raw = strings[start:start + min(length + 1, MAX_ASCII_LEN)]
+    def text(length: int, offset_dw: int) -> Optional[str]:
+        copy_len = min(length + 1, MAX_ASCII_LEN)
+        if (not ascii_fits or offset_dw > asctsz
+                or copy_len > (asctsz - offset_dw) * DWORD):
+            return None
+        start = (ascts + offset_dw) * DWORD
+        raw = strings[start:start + copy_len]
         return raw.split(b'\0', 1)[0].decode('ascii', 'replace')
 
     def entries(start_field, size_field, fmt):
+        """(first field, second field, string) of each usable entry."""
         start = _u(strings, start_field, 8) * DWORD
         count = _u(strings, size_field, 8) * DWORD // STR_ENTRY_SIZE
         for i in range(count):
-            yield struct.unpack_from(fmt, strings, start + i * STR_ENTRY_SIZE)
+            first, second, length, offset_dw, _ = struct.unpack_from(
+                fmt, strings, start + i * STR_ENTRY_SIZE)
+            name = text(length, offset_dw)
+            if name is not None:
+                yield first, second, name
 
     stats: Dict[int, str] = {}
-    for stat_id, _, length, offset_dw, _ in entries(STR_SITS, STR_SITSZ,
-                                                    _SITS_ENTRY):
-        stats.setdefault(stat_id, text(length, offset_dw))
+    for stat_id, _, name in entries(STR_SITS, STR_SITSZ, _SITS_ENTRY):
+        stats.setdefault(stat_id, name)
     events: Dict[Tuple[int, int], str] = {}
-    for cls, ident, length, offset_dw, _ in entries(STR_ESTS, STR_ESTSZ,
-                                                    _EST_ENTRY):
-        events.setdefault((cls, ident), text(length, offset_dw))
+    for cls, ident, name in entries(STR_ESTS, STR_ESTSZ, _EST_ENTRY):
+        events.setdefault((cls, ident), name)
     vu_events: Dict[Tuple[int, int], str] = {}
-    for cls, ident, length, offset_dw, _ in entries(STR_VU_ESTS, STR_VU_ESTSZ,
-                                                    _EST_ENTRY):
-        vu_events.setdefault((cls, ident), text(length, offset_dw))
+    for cls, ident, name in entries(STR_VU_ESTS, STR_VU_ESTSZ, _EST_ENTRY):
+        vu_events.setdefault((cls, ident), name)
     return StringTables(stats, events, vu_events)
 
 
