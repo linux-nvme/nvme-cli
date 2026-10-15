@@ -364,7 +364,7 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 	const char *raw = "dump output in binary format";
 
 	struct config {
-		int   raw_binary;
+		bool  raw_binary;
 	};
 
 	struct config cfg = {
