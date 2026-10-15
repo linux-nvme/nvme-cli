@@ -416,6 +416,19 @@ class SEDCLITest(unittest.TestCase):
         self.assertEqual(revert_lsp['options'], _OPAL_PRESERVE)
         self._assert_key(revert_tpr, _PASSWORD)
 
+    def test_dry_run(self):
+        """--dry-run issues none of the Opal ioctls which change the drive.
+        initialize and password do not depend on Level 0 Discovery, which
+        is skipped in dry-run mode as well, so they reach the ioctls."""
+        for cmd, passwords in (
+                ('initialize', [_PASSWORD, _PASSWORD]),
+                ('password', [_PASSWORD, _NEW_PASSWORD, _NEW_PASSWORD])):
+            with self.subTest(cmd=cmd):
+                self.server.ioctls.clear()
+                self.server.passwords = passwords
+                self._sed(cmd, '--dry-run')
+                self.assertEqual(self.server.ioctls, [])
+
     def test_revert_locked_drive_fails(self):
         self.server.l0 = _pack_l0(_LOCKING_SUPPORTED | _LOCKING_ENABLED |
                                   _LOCKING_LOCKED)

@@ -400,9 +400,11 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	 * look for global options before the sub command parser and
 	 * pre-fill the global nvme_args variable.
 	 */
-	NVME_ARGS(global_opts,
+	OPT_ARGS(global_opts) = {
 		OPT_FLAG("help",     'h', &opt_help,     "show help text"),
-		OPT_FLAG("version",  'V', &opt_version,  "show version"));
+		OPT_FLAG("version",  'V', &opt_version,  "show version"),
+		OPT_END()
+	};
 	err = argconfig_parse_global(argc, argv, global_opts, &argind);
 	if (err) {
 		general_help(plugin, NULL);
