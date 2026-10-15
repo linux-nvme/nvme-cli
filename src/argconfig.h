@@ -109,7 +109,12 @@ enum argconfig_types {
 #ifdef CONFIG_JSONC
 #define OPT_FLAG_JSON(l, s, v, d, ...) OPT_FLAG(l, s, v, d, __VA_ARGS__)
 #else /* CONFIG_JSONC */
-#define OPT_FLAG_JSON(l, s, v, d, ...) OPT_END()
+/*
+ * A placeholder which does not end the table, the global options are
+ * appended after the command options. A separator is invisible in the
+ * help output unless options follow it.
+ */
+#define OPT_FLAG_JSON(...) OPT_GROUP("Options")
 #endif /* CONFIG_JSONC */
 
 #define OPT_VALS(n) \
