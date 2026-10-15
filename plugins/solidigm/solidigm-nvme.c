@@ -10,7 +10,7 @@
 #include "args.h"
 #include "plugin.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "1.26"
+#define SOLIDIGM_PLUGIN_VERSION "1.27"
 
 #include "plugins/ocp/ocp-clear-features.h"
 #include "plugins/ocp/ocp-fw-activation-history.h"

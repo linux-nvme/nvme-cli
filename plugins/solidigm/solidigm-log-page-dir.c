@@ -112,8 +112,8 @@ static struct lid_dir *get_solidigm_lids(struct nvme_supported_log_pages *suppor
 	solidigm_dir.lid[0xF5].str = "Nand Defects Count Log Page";
 	solidigm_dir.lid[0xF6].str = "Vt Histo Get Log Page";
 	solidigm_dir.lid[0xF9].str = "Workload Tracker Get Log Page";
-	solidigm_dir.lid[0xFD].str = "Garbage Control Collection  Log Page";
-	solidigm_dir.lid[0xFE].str = "Latency Outlier / SK SMART Log Page";
+	solidigm_dir.lid[0xFD].str = "Garbage Control Collection Log Page";
+	solidigm_dir.lid[0xFE].str = "Latency Outlier";
 
 	update_vendor_lid_supported(supported, &solidigm_dir);
 
@@ -191,6 +191,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 {
 	const int NO_UUID_INDEX = 0;
 	const char *description = "Retrieves list of supported log pages for each UUID index.";
+	const char *FE_alt_log_name = "Latency Outlier or SK SMART Log Page";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -233,8 +234,13 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 
 			if (sldgm_idx && (sldgm_idx <= SOLIDIGM_MAX_UUID)) {
 				err = get_supported_log_pages_log(hdl, sldgm_idx, &supported);
-				if (!err)
-					lid_dirs[sldgm_idx] = get_solidigm_lids(&supported);
+				if (!err) {
+					struct lid_dir *dir =
+						get_solidigm_lids(&supported);
+
+					dir->lid[0xFE].str = FE_alt_log_name;
+					lid_dirs[sldgm_idx] = dir;
+				}
 			}
 			if (ocp_idx && (ocp_idx <= SOLIDIGM_MAX_UUID)) {
 				err = get_supported_log_pages_log(hdl, ocp_idx, &supported);
