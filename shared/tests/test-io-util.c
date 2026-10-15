@@ -157,6 +157,40 @@ static bool test_read_all(void)
 	return pass;
 }
 
+static bool test_read_full(void)
+{
+	static const char *path = "shr-test-io-util-full";
+	static const char msg[] = "binary\0data";
+	char buf[32];
+	bool pass = true;
+	ssize_t n;
+	int fd;
+
+	printf("shr_read_full:\n");
+
+	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0)
+		return check_bool("temp file opened for writing", false);
+	pass &= check_bool("write", !shr_write_all(fd, msg, sizeof(msg)));
+	close(fd);
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0)
+		return check_bool("temp file reopened for reading", false);
+	n = shr_read_full(fd, buf, 4);
+	pass &= check_bool("reads as much as asked", n == 4);
+	n = shr_read_full(fd, buf, sizeof(buf));
+	pass &= check_bool("stops at EOF with the length",
+			   n == sizeof(msg) - 4 &&
+			   !memcmp(buf, msg + 4, sizeof(msg) - 4));
+	n = shr_read_full(fd, buf, sizeof(buf));
+	pass &= check_bool("returns 0 at EOF", n == 0);
+	close(fd);
+	unlink(path);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -165,6 +199,7 @@ int main(void)
 	pass &= test_zero_length();
 	pass &= test_bad_fd();
 	pass &= test_read_all();
+	pass &= test_read_full();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
