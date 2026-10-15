@@ -174,7 +174,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s)
 		*(int *)value += 1;
 		break;
 	case CFG_LONG:
-		*(unsigned long *)value = strtoul(optarg, &endptr, 0);
+		*(uint64_t *)value = strtoull(optarg, &endptr, 0);
 		if (errno || optarg == endptr)
 			ret = argconfig_error("long integer", s->option, optarg);
 		break;
@@ -214,7 +214,7 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 		*(int *)val = opt_val->int_val;
 		break;
 	case CFG_LONG:
-		*(unsigned long *)val = opt_val->long_val;
+		*(uint64_t *)val = opt_val->long_val;
 		break;
 	case CFG_DOUBLE:
 		*(double *)val = opt_val->double_val;
