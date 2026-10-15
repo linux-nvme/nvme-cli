@@ -7,18 +7,50 @@
 # Authors: Daniel Wagner <dwagner@suse.de>
 
 name: Checkpatch Review
-on: [pull_request]
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 02 * * *'
+
+# A pull request reads only the caches of its own branch and of the
+# default branch. So only a run on the default branch saves the copy of
+# checkpatch.pl. A scheduled run always runs there.
 jobs:
+  refresh:
+    name: refresh checkpatch.pl
+    if: ${{ github.event_name != 'pull_request' &&
+            github.ref_name == github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Fetch checkpatch.pl
+      run: |
+        curl -sSf \
+          https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl \
+          -o checkpatch.pl
+    - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: checkpatch.pl
+        key: checkpatch-${{ github.run_id }}
+
   checkpatch:
     name: checkpatch review
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
-    - name: Fetch checkpatch.pl
+    # The newest saved copy. No key is an exact match.
+    - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: checkpatch.pl
+        key: checkpatch-
+        restore-keys: checkpatch-
+    - name: Fetch checkpatch.pl if no copy was saved
       run: |
+        [ -f checkpatch.pl ] && exit 0
         curl -sSf \
           https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl \
           -o checkpatch.pl
