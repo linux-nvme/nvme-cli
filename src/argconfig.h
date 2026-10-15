@@ -228,6 +228,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 int argconfig_parse_global(int argc, char *argv[],
 			   struct argconfig_commandline_options *options,
 			   int *argind);
+void argconfig_set_global_options(
+		struct argconfig_commandline_options *options);
+struct argconfig_commandline_options *argconfig_get_global_options(void);
 int argconfig_nr_operands(void);
 char *argconfig_operand(int i);
 
