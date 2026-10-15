@@ -296,7 +296,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _amzn_id_ctrl
 					_amzn_id_ctrl=(
@@ -324,7 +324,7 @@ _nvme () {
 					;;
 
 				(stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _amzn_stats
 					_amzn_stats=(
@@ -373,15 +373,28 @@ _nvme () {
 
 			case ${words[2]} in
 				(convert)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--config -J" \
 					                "--output -o" && return
 					local _config_convert
 					_config_convert=(
 						--config=':convert this JSON file (default: config.json)'
 						-J':alias for --config'
+						--dry-run':show command instead of executing'
 						--force':overwrite an existing target'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
 						--output=':write result here (default: nvme-fabrics.conf)'
 						-o':alias for --output'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -391,7 +404,7 @@ _nvme () {
 					;;
 
 				(create)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output" && return
 					local _config_create
@@ -471,7 +484,7 @@ _nvme () {
 					;;
 
 				(show)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--config -J" && return
 					local _config_show
@@ -498,15 +511,48 @@ _nvme () {
 					;;
 
 				(status)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
+					local _config_status
+					_config_status=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme config status options" _config_status
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(validate)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--config -J" && return
 					local _config_validate
 					_config_validate=(
 						--config=':INI configuration file (default: /usr/local/etc/nvme/nvme-fabrics.conf)'
 						-J':alias for --config'
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -533,7 +579,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _dapustor_smart_log_add
 					_dapustor_smart_log_add=(
@@ -580,7 +626,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _dell_id_ctrl
 					_dell_id_ctrl=(
@@ -626,7 +672,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(smart-log-add|stat)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _dera_smart_log_add
 					_dera_smart_log_add=(
@@ -668,7 +714,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(receive)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _dir_receive
 					_dir_receive=(
@@ -706,7 +752,7 @@ _nvme () {
 					;;
 
 				(send)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--input-file -i" && return
 					local _dir_send
@@ -771,7 +817,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _exclusion_add
 					_exclusion_add=(
@@ -799,7 +845,7 @@ _nvme () {
 					;;
 
 				(create)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _exclusion_create
 					_exclusion_create=(
@@ -825,7 +871,7 @@ _nvme () {
 					;;
 
 				(delete)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _exclusion_delete
 					_exclusion_delete=(
@@ -851,7 +897,7 @@ _nvme () {
 					;;
 
 				(edit)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _exclusion_edit
 					_exclusion_edit=(
@@ -877,7 +923,7 @@ _nvme () {
 					;;
 
 				(list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _exclusion_list
 					_exclusion_list=(
@@ -903,7 +949,7 @@ _nvme () {
 					;;
 
 				(remove)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _exclusion_remove
 					_exclusion_remove=(
@@ -953,7 +999,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(configs)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_configs
 					_fdp_configs=(
@@ -983,7 +1029,7 @@ _nvme () {
 					;;
 
 				(events)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_events
 					_fdp_events=(
@@ -1013,7 +1059,7 @@ _nvme () {
 					;;
 
 				(feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_feature
 					_fdp_feature=(
@@ -1043,7 +1089,7 @@ _nvme () {
 					;;
 
 				(set-events)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_set_events
 					_fdp_set_events=(
@@ -1077,7 +1123,7 @@ _nvme () {
 					;;
 
 				(stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_stats
 					_fdp_stats=(
@@ -1105,7 +1151,7 @@ _nvme () {
 					;;
 
 				(status)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_status
 					_fdp_status=(
@@ -1133,7 +1179,7 @@ _nvme () {
 					;;
 
 				(update)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_update
 					_fdp_update=(
@@ -1161,7 +1207,7 @@ _nvme () {
 					;;
 
 				(usage)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fdp_usage
 					_fdp_usage=(
@@ -1224,7 +1270,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(arbitration)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_arbitration
@@ -1261,7 +1307,7 @@ _nvme () {
 					;;
 
 				(async-event-conf)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_async_event_conf
@@ -1292,7 +1338,7 @@ _nvme () {
 					;;
 
 				(err-recovery)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_err_recovery
@@ -1327,7 +1373,7 @@ _nvme () {
 					;;
 
 				(hctm)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_hctm
@@ -1360,7 +1406,7 @@ _nvme () {
 					;;
 
 				(host-behavior-support)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_host_behavior_support
@@ -1399,7 +1445,7 @@ _nvme () {
 					;;
 
 				(int-coalesce)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_int_coalesce
@@ -1432,7 +1478,7 @@ _nvme () {
 					;;
 
 				(int-vector-config)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_int_vector_config
@@ -1465,7 +1511,7 @@ _nvme () {
 					;;
 
 				(keep-alive-timer)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_keep_alive_timer
@@ -1496,7 +1542,7 @@ _nvme () {
 					;;
 
 				(lba-range-type)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_lba_range_type
@@ -1539,7 +1585,7 @@ _nvme () {
 					;;
 
 				(num-queues)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_num_queues
@@ -1572,7 +1618,7 @@ _nvme () {
 					;;
 
 				(perf-characteristics)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					_nvme_opt_files "--vs-data -V" && return
@@ -1616,7 +1662,7 @@ _nvme () {
 					;;
 
 				(power-limit)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_power_limit
@@ -1651,7 +1697,7 @@ _nvme () {
 					;;
 
 				(power-meas)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_power_meas
@@ -1685,7 +1731,7 @@ _nvme () {
 					;;
 
 				(power-mgmt)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_power_mgmt
@@ -1718,7 +1764,7 @@ _nvme () {
 					;;
 
 				(power-thresh)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_power_thresh
@@ -1757,7 +1803,7 @@ _nvme () {
 					;;
 
 				(temp-thresh)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_temp_thresh
@@ -1794,7 +1840,7 @@ _nvme () {
 					;;
 
 				(timestamp)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_timestamp
@@ -1825,7 +1871,7 @@ _nvme () {
 					;;
 
 				(volatile-wc)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_volatile_wc
@@ -1856,7 +1902,7 @@ _nvme () {
 					;;
 
 				(write-atom-normal)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _feat_write_atom_normal
@@ -1907,7 +1953,7 @@ _nvme () {
 			case ${words[2]} in
 				(commit|activate)
 					_nvme_opt_vals "--action -a" "replace replace-and-activate set-active replace-and-activate-immediate replace-boot-partition activate-boot-partition" \
-					               "--output-format -o" "normal json binary tabular" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _fw_commit
 					_fw_commit=(
@@ -1939,7 +1985,7 @@ _nvme () {
 					;;
 
 				(download)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--fw -f" && return
 					local _fw_download
@@ -1995,7 +2041,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _huawei_id_ctrl
 					_huawei_id_ctrl=(
@@ -2023,14 +2069,14 @@ _nvme () {
 					;;
 
 				(list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _huawei_list
 					_huawei_list=(
 						--dry-run':show command instead of executing'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-format=':Output format: normal|json|binary'
+						--output-format=':Output format: normal|json'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
 						--quiet':suppress informational output'
@@ -2066,7 +2112,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(crit-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ibm_crit_log
 					_ibm_crit_log=(
@@ -2092,7 +2138,7 @@ _nvme () {
 					;;
 
 				(persist-event-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ibm_persist_event_log
 					_ibm_persist_event_log=(
@@ -2122,7 +2168,7 @@ _nvme () {
 					;;
 
 				(vpd)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ibm_vpd
 					_ibm_vpd=(
@@ -2182,7 +2228,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_ctrl
 					_id_ctrl=(
@@ -2210,7 +2256,7 @@ _nvme () {
 					;;
 
 				(ctrl-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _id_ctrl_list
 					_id_ctrl_list=(
@@ -2221,7 +2267,7 @@ _nvme () {
 						-n':alias for --namespace-id'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-format=':Output format: normal|json|binary'
+						--output-format=':Output format: normal|json'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
 						--quiet':suppress informational output'
@@ -2238,7 +2284,7 @@ _nvme () {
 					;;
 
 				(domain)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_domain
 					_id_domain=(
@@ -2264,7 +2310,7 @@ _nvme () {
 					;;
 
 				(endgrp-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _id_endgrp_list
 					_id_endgrp_list=(
@@ -2273,7 +2319,7 @@ _nvme () {
 						-i':alias for --endgrp-id'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-format=':Output format: normal|json|binary'
+						--output-format=':Output format: normal|json'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
 						--quiet':suppress informational output'
@@ -2290,7 +2336,7 @@ _nvme () {
 					;;
 
 				(iocs)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_iocs
 					_id_iocs=(
@@ -2316,7 +2362,7 @@ _nvme () {
 					;;
 
 				(ns)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_ns
 					_id_ns=(
@@ -2347,7 +2393,7 @@ _nvme () {
 					;;
 
 				(ns-descs)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_ns_descs
 					_id_ns_descs=(
@@ -2375,7 +2421,7 @@ _nvme () {
 					;;
 
 				(ns-granularity)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_ns_granularity
 					_id_ns_granularity=(
@@ -2399,7 +2445,7 @@ _nvme () {
 					;;
 
 				(ns-ind)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_ns_ind
 					_id_ns_ind=(
@@ -2427,7 +2473,7 @@ _nvme () {
 					;;
 
 				(ns-lba-format)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_ns_lba_format
 					_id_ns_lba_format=(
@@ -2455,7 +2501,7 @@ _nvme () {
 					;;
 
 				(ns-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _id_ns_list
 					_id_ns_list=(
@@ -2468,7 +2514,7 @@ _nvme () {
 						-n':alias for --namespace-id'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-format=':Output format: normal|json|binary'
+						--output-format=':Output format: normal|json'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
 						--quiet':suppress informational output'
@@ -2485,7 +2531,7 @@ _nvme () {
 					;;
 
 				(nvm-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_nvm_ctrl
 					_id_nvm_ctrl=(
@@ -2509,7 +2555,7 @@ _nvme () {
 					;;
 
 				(nvm-ns)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_nvm_ns
 					_id_nvm_ns=(
@@ -2537,7 +2583,7 @@ _nvme () {
 					;;
 
 				(nvm-ns-lba-format)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_nvm_ns_lba_format
 					_id_nvm_ns_lba_format=(
@@ -2565,7 +2611,7 @@ _nvme () {
 					;;
 
 				(nvmset)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_nvmset
 					_id_nvmset=(
@@ -2591,7 +2637,7 @@ _nvme () {
 					;;
 
 				(primary-ctrl-caps)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_primary_ctrl_caps
 					_id_primary_ctrl_caps=(
@@ -2617,7 +2663,7 @@ _nvme () {
 					;;
 
 				(secondary-ctrl-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_secondary_ctrl_list
 					_id_secondary_ctrl_list=(
@@ -2645,7 +2691,7 @@ _nvme () {
 					;;
 
 				(uuid)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _id_uuid
 					_id_uuid=(
@@ -2689,7 +2735,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(get-cdump)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _innogrit_get_cdump
 					_innogrit_get_cdump=(
@@ -2713,7 +2759,7 @@ _nvme () {
 					;;
 
 				(get-eventlog)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _innogrit_get_eventlog
 					_innogrit_get_eventlog=(
@@ -2754,7 +2800,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(nvme-vendor-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _inspur_nvme_vendor_log
 					_inspur_nvme_vendor_log=(
@@ -2802,7 +2848,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _intel_id_ctrl
 					_intel_id_ctrl=(
@@ -2830,7 +2876,7 @@ _nvme () {
 					;;
 
 				(internal-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _intel_internal_log
@@ -2867,7 +2913,7 @@ _nvme () {
 					;;
 
 				(lat-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _intel_lat_stats
 					_intel_lat_stats=(
@@ -2897,12 +2943,25 @@ _nvme () {
 					;;
 
 				(lat-stats-tracking)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _intel_lat_stats_tracking
 					_intel_lat_stats_tracking=(
 						--disable':Disable LST'
 						-d':alias for --disable'
+						--dry-run':show command instead of executing'
 						--enable':Enable LST'
 						-e':alias for --enable'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -2912,7 +2971,7 @@ _nvme () {
 					;;
 
 				(market-name)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _intel_market_name
 					_intel_market_name=(
@@ -2938,7 +2997,7 @@ _nvme () {
 					;;
 
 				(set-bucket-thresholds)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _intel_set_bucket_thresholds
 					_intel_set_bucket_thresholds=(
@@ -2966,7 +3025,7 @@ _nvme () {
 					;;
 
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _intel_smart_log_add
 					_intel_smart_log_add=(
@@ -2996,7 +3055,7 @@ _nvme () {
 					;;
 
 				(temp-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _intel_temp_stats
 					_intel_temp_stats=(
@@ -3040,7 +3099,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(recv)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--data -d" && return
 					local _io_mgmt_recv
@@ -3075,7 +3134,7 @@ _nvme () {
 					;;
 
 				(send)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--data -d" && return
 					local _io_mgmt_send
@@ -3134,7 +3193,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(check-kxchap-secret)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_check_kxchap_secret
 					_keys_check_kxchap_secret=(
@@ -3166,7 +3225,7 @@ _nvme () {
 					;;
 
 				(check-tls-psk)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_check_tls_psk
 					_keys_check_tls_psk=(
@@ -3204,7 +3263,7 @@ _nvme () {
 					;;
 
 				(export)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_export
 					_keys_export=(
@@ -3232,7 +3291,7 @@ _nvme () {
 					;;
 
 				(gen-kxchap-secret)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_gen_kxchap_secret
 					_keys_gen_kxchap_secret=(
@@ -3262,7 +3321,7 @@ _nvme () {
 					;;
 
 				(gen-tls-psk)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_gen_tls_psk
 					_keys_gen_tls_psk=(
@@ -3306,7 +3365,7 @@ _nvme () {
 					;;
 
 				(import)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_import
 					_keys_import=(
@@ -3338,7 +3397,7 @@ _nvme () {
 					;;
 
 				(insert-tls-psk)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_insert_tls_psk
 					_keys_insert_tls_psk=(
@@ -3378,7 +3437,7 @@ _nvme () {
 					;;
 
 				(revoke)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _keys_revoke
 					_keys_revoke=(
@@ -3431,7 +3490,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(create-cdq)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _lm_create_cdq
 					_lm_create_cdq=(
@@ -3462,7 +3521,7 @@ _nvme () {
 					;;
 
 				(delete-cdq)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _lm_delete_cdq
 					_lm_delete_cdq=(
@@ -3488,7 +3547,7 @@ _nvme () {
 					;;
 
 				(get-cdq)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _lm_get_cdq
 					_lm_get_cdq=(
@@ -3514,7 +3573,7 @@ _nvme () {
 					;;
 
 				(migration-recv)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					_nvme_opt_files "--output-file -f" && return
@@ -3558,7 +3617,7 @@ _nvme () {
 					;;
 
 				(migration-send)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					_nvme_opt_files "--input-file -f" && return
@@ -3606,7 +3665,7 @@ _nvme () {
 					;;
 
 				(set-cdq)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _lm_set_cdq
 					_lm_set_cdq=(
@@ -3636,7 +3695,7 @@ _nvme () {
 					;;
 
 				(track-send)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _lm_track_send
@@ -3718,7 +3777,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(ana)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_ana
 					_log_ana=(
@@ -3744,7 +3803,7 @@ _nvme () {
 					;;
 
 				(ave-discovery)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_ave_discovery
 					_log_ave_discovery=(
@@ -3770,7 +3829,7 @@ _nvme () {
 					;;
 
 				(boot-part)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -f" && return
 					local _log_boot_part
@@ -3799,7 +3858,7 @@ _nvme () {
 					;;
 
 				(changed-alloc-ns-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_changed_alloc_ns_list
 					_log_changed_alloc_ns_list=(
@@ -3825,7 +3884,7 @@ _nvme () {
 					;;
 
 				(changed-ns-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_changed_ns_list
 					_log_changed_ns_list=(
@@ -3851,7 +3910,7 @@ _nvme () {
 					;;
 
 				(dispersed-ns-participating-nss)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_dispersed_ns_participating_nss
 					_log_dispersed_ns_participating_nss=(
@@ -3877,7 +3936,7 @@ _nvme () {
 					;;
 
 				(effects)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_effects
 					_log_effects=(
@@ -3905,7 +3964,7 @@ _nvme () {
 					;;
 
 				(endurance)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_endurance
 					_log_endurance=(
@@ -3931,7 +3990,7 @@ _nvme () {
 					;;
 
 				(endurance-event-agg)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_endurance_event_agg
 					_log_endurance_event_agg=(
@@ -3961,7 +4020,7 @@ _nvme () {
 					;;
 
 				(error)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_error
 					_log_error=(
@@ -4005,7 +4064,7 @@ _nvme () {
 					;;
 
 				(fid-support-effects)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_fid_support_effects
 					_log_fid_support_effects=(
@@ -4029,7 +4088,7 @@ _nvme () {
 					;;
 
 				(fw)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_fw
 					_log_fw=(
@@ -4055,7 +4114,7 @@ _nvme () {
 					;;
 
 				(host-discovery)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_host_discovery
 					_log_host_discovery=(
@@ -4083,7 +4142,7 @@ _nvme () {
 					;;
 
 				(lba-status)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_lba_status
 					_log_lba_status=(
@@ -4109,7 +4168,7 @@ _nvme () {
 					;;
 
 				(media-unit-stat)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_media_unit_stat
 					_log_media_unit_stat=(
@@ -4137,7 +4196,7 @@ _nvme () {
 					;;
 
 				(mgmt-addr-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_mgmt_addr_list
 					_log_mgmt_addr_list=(
@@ -4161,7 +4220,7 @@ _nvme () {
 					;;
 
 				(mi-cmd-support-effects)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_mi_cmd_support_effects
 					_log_mi_cmd_support_effects=(
@@ -4185,7 +4244,7 @@ _nvme () {
 					;;
 
 				(persistent-event)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_persistent_event
 					_log_persistent_event=(
@@ -4215,7 +4274,7 @@ _nvme () {
 					;;
 
 				(phy-rx-eom)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_phy_rx_eom
 					_log_phy_rx_eom=(
@@ -4243,7 +4302,7 @@ _nvme () {
 					;;
 
 				(power-measurement)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_power_measurement
 					_log_power_measurement=(
@@ -4269,7 +4328,7 @@ _nvme () {
 					;;
 
 				(pred-lat-event-agg)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_pred_lat_event_agg
 					_log_pred_lat_event_agg=(
@@ -4299,7 +4358,7 @@ _nvme () {
 					;;
 
 				(predictable-lat)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_predictable_lat
 					_log_predictable_lat=(
@@ -4327,7 +4386,7 @@ _nvme () {
 					;;
 
 				(pull-model-ddc-req)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_pull_model_ddc_req
 					_log_pull_model_ddc_req=(
@@ -4353,7 +4412,7 @@ _nvme () {
 					;;
 
 				(reachability-associations)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_reachability_associations
 					_log_reachability_associations=(
@@ -4381,7 +4440,7 @@ _nvme () {
 					;;
 
 				(reachability-groups)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_reachability_groups
 					_log_reachability_groups=(
@@ -4409,7 +4468,7 @@ _nvme () {
 					;;
 
 				(resv-notif)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_resv_notif
 					_log_resv_notif=(
@@ -4433,7 +4492,7 @@ _nvme () {
 					;;
 
 				(rotational-media-info)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_rotational_media_info
 					_log_rotational_media_info=(
@@ -4459,7 +4518,7 @@ _nvme () {
 					;;
 
 				(sanitize)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_sanitize
 					_log_sanitize=(
@@ -4487,7 +4546,7 @@ _nvme () {
 					;;
 
 				(self-test)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_self_test
 					_log_self_test=(
@@ -4513,7 +4572,7 @@ _nvme () {
 					;;
 
 				(smart)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_smart
 					_log_smart=(
@@ -4541,7 +4600,7 @@ _nvme () {
 					;;
 
 				(supported-cap-config)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_supported_cap_config
 					_log_supported_cap_config=(
@@ -4569,7 +4628,7 @@ _nvme () {
 					;;
 
 				(supported-pages)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _log_supported_pages
 					_log_supported_pages=(
@@ -4593,7 +4652,7 @@ _nvme () {
 					;;
 
 				(telemetry)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _log_telemetry
@@ -4648,7 +4707,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _mangoboost_id_ctrl
 					_mangoboost_id_ctrl=(
@@ -4707,7 +4766,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(clear-error-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_clear_error_log
 					_memblaze_clear_error_log=(
@@ -4731,7 +4790,7 @@ _nvme () {
 					;;
 
 				(get-pm-status)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_get_pm_status
 					_memblaze_get_pm_status=(
@@ -4755,7 +4814,7 @@ _nvme () {
 					;;
 
 				(lat-get-feature-x)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_get_feature_x
 					_memblaze_lat_get_feature_x=(
@@ -4779,7 +4838,7 @@ _nvme () {
 					;;
 
 				(lat-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_log
 					_memblaze_lat_log=(
@@ -4805,7 +4864,7 @@ _nvme () {
 					;;
 
 				(lat-log-print)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_log_print
 					_memblaze_lat_log_print=(
@@ -4829,7 +4888,7 @@ _nvme () {
 					;;
 
 				(lat-log-print-x)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_log_print_x
 					_memblaze_lat_log_print_x=(
@@ -4855,7 +4914,7 @@ _nvme () {
 					;;
 
 				(lat-set-feature-x)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_set_feature_x
 					_memblaze_lat_set_feature_x=(
@@ -4889,12 +4948,25 @@ _nvme () {
 					;;
 
 				(lat-stats)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_stats
 					_memblaze_lat_stats=(
 						--disable':Disable LST'
 						-d':alias for --disable'
+						--dry-run':show command instead of executing'
 						--enable':Enable LST'
 						-e':alias for --enable'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -4904,7 +4976,7 @@ _nvme () {
 					;;
 
 				(lat-stats-print)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_stats_print
 					_memblaze_lat_stats_print=(
@@ -4930,7 +5002,7 @@ _nvme () {
 					;;
 
 				(lat-stats-print-x)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_lat_stats_print_x
 					_memblaze_lat_stats_print_x=(
@@ -4956,7 +5028,7 @@ _nvme () {
 					;;
 
 				(perf-stats-print-x)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_perf_stats_print_x
 					_memblaze_perf_stats_print_x=(
@@ -4984,7 +5056,7 @@ _nvme () {
 					;;
 
 				(select-download)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--fw -f" && return
 					local _memblaze_select_download
@@ -5013,7 +5085,7 @@ _nvme () {
 					;;
 
 				(set-pm-status)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_set_pm_status
 					_memblaze_set_pm_status=(
@@ -5041,7 +5113,7 @@ _nvme () {
 					;;
 
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _memblaze_smart_log_add
 					_memblaze_smart_log_add=(
@@ -5069,10 +5141,23 @@ _nvme () {
 					;;
 
 				(smart-log-add-x)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _memblaze_smart_log_add_x
 					_memblaze_smart_log_add_x=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
 						--raw-binary':dump the whole log buffer in binary format'
 						-b':alias for --raw-binary'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -5124,7 +5209,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(clear-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_clear_fw_activate_history
 					_micron_clear_fw_activate_history=(
@@ -5148,7 +5233,7 @@ _nvme () {
 					;;
 
 				(clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_clear_pcie_correctable_errors
 					_micron_clear_pcie_correctable_errors=(
@@ -5172,7 +5257,7 @@ _nvme () {
 					;;
 
 				(cloud-SSD-plugin-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_cloud_SSD_plugin_version
 					_micron_cloud_SSD_plugin_version=(
@@ -5196,7 +5281,7 @@ _nvme () {
 					;;
 
 				(cloud-boot-SSD-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_cloud_boot_SSD_version
 					_micron_cloud_boot_SSD_version=(
@@ -5220,7 +5305,7 @@ _nvme () {
 					;;
 
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_id_ctrl
 					_micron_id_ctrl=(
@@ -5244,7 +5329,7 @@ _nvme () {
 					;;
 
 				(latency-logs)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_latency_logs
 					_micron_latency_logs=(
@@ -5268,7 +5353,7 @@ _nvme () {
 					;;
 
 				(latency-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_latency_stats
 					_micron_latency_stats=(
@@ -5294,7 +5379,7 @@ _nvme () {
 					;;
 
 				(latency-tracking)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_latency_tracking
 					_micron_latency_tracking=(
@@ -5324,7 +5409,7 @@ _nvme () {
 					;;
 
 				(log-page-directory)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_log_page_directory
 					_micron_log_page_directory=(
@@ -5348,7 +5433,7 @@ _nvme () {
 					;;
 
 				(plugin-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_plugin_version
 					_micron_plugin_version=(
@@ -5372,7 +5457,7 @@ _nvme () {
 					;;
 
 				(select-download)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--fw -f" && return
 					local _micron_select_download
@@ -5401,7 +5486,7 @@ _nvme () {
 					;;
 
 				(smart-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_smart_log
 					_micron_smart_log=(
@@ -5425,7 +5510,7 @@ _nvme () {
 					;;
 
 				(vs-cloud-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_cloud_log
 					_micron_vs_cloud_log=(
@@ -5449,7 +5534,7 @@ _nvme () {
 					;;
 
 				(vs-device-waf)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_device_waf
 					_micron_vs_device_waf=(
@@ -5473,7 +5558,7 @@ _nvme () {
 					;;
 
 				(vs-drive-info)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_drive_info
 					_micron_vs_drive_info=(
@@ -5497,7 +5582,7 @@ _nvme () {
 					;;
 
 				(vs-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_fw_activate_history
 					_micron_vs_fw_activate_history=(
@@ -5521,7 +5606,7 @@ _nvme () {
 					;;
 
 				(vs-internal-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--package -p" && return
 					local _micron_vs_internal_log
@@ -5552,7 +5637,7 @@ _nvme () {
 					;;
 
 				(vs-nand-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_nand_stats
 					_micron_vs_nand_stats=(
@@ -5576,7 +5661,7 @@ _nvme () {
 					;;
 
 				(vs-pcie-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_pcie_stats
 					_micron_vs_pcie_stats=(
@@ -5600,7 +5685,7 @@ _nvme () {
 					;;
 
 				(vs-smart-add-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_smart_add_log
 					_micron_vs_smart_add_log=(
@@ -5624,7 +5709,7 @@ _nvme () {
 					;;
 
 				(vs-smart-ext-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_smart_ext_log
 					_micron_vs_smart_ext_log=(
@@ -5648,7 +5733,7 @@ _nvme () {
 					;;
 
 				(vs-smbus-option)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_smbus_option
 					_micron_vs_smbus_option=(
@@ -5678,7 +5763,7 @@ _nvme () {
 					;;
 
 				(vs-telemetry-controller-option)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_telemetry_controller_option
 					_micron_vs_telemetry_controller_option=(
@@ -5706,7 +5791,7 @@ _nvme () {
 					;;
 
 				(vs-temperature-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_temperature_stats
 					_micron_vs_temperature_stats=(
@@ -5730,7 +5815,7 @@ _nvme () {
 					;;
 
 				(vs-vendor-telemetry-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_vendor_telemetry_log
 					_micron_vs_vendor_telemetry_log=(
@@ -5754,7 +5839,7 @@ _nvme () {
 					;;
 
 				(vs-work-load-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _micron_vs_work_load_log
 					_micron_vs_work_load_log=(
@@ -5795,7 +5880,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(show)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _nbft_show
 					_nbft_show=(
@@ -5844,14 +5929,14 @@ _nvme () {
 
 			case ${words[2]} in
 				(ontapdevices)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal column json" \
 					               "--output-format-version" "1 2" && return
 					local _netapp_ontapdevices
 					_netapp_ontapdevices=(
 						--dry-run':show command instead of executing'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-format=':Output format: normal|json|binary'
+						--output-format=':Output format: normal|column|json'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
 						--quiet':suppress informational output'
@@ -5868,14 +5953,14 @@ _nvme () {
 					;;
 
 				(smdevices)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal column json" \
 					               "--output-format-version" "1 2" && return
 					local _netapp_smdevices
 					_netapp_smdevices=(
 						--dry-run':show command instead of executing'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-format=':Output format: normal|json|binary'
+						--output-format=':Output format: normal|column|json'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
 						--quiet':suppress informational output'
@@ -5913,7 +5998,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(attach)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ns_attach
 					_ns_attach=(
@@ -5943,7 +6028,7 @@ _nvme () {
 					;;
 
 				(create)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ns_create
 					_ns_create=(
@@ -6007,7 +6092,7 @@ _nvme () {
 					;;
 
 				(delete)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ns_delete
 					_ns_delete=(
@@ -6035,7 +6120,7 @@ _nvme () {
 					;;
 
 				(detach)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ns_detach
 					_ns_detach=(
@@ -6065,7 +6150,7 @@ _nvme () {
 					;;
 
 				(get-id)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ns_get_id
 					_ns_get_id=(
@@ -6106,7 +6191,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _nvidia_id_ctrl
 					_nvidia_id_ctrl=(
@@ -6152,7 +6237,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(recv)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--input-file -i" && return
 					local _nvme_mi_recv
@@ -6191,7 +6276,7 @@ _nvme () {
 					;;
 
 				(send)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--input-file -i" && return
 					local _nvme_mi_send
@@ -6276,7 +6361,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(clear-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_clear_fw_activate_history
 					_ocp_clear_fw_activate_history=(
@@ -6302,7 +6387,7 @@ _nvme () {
 					;;
 
 				(clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_clear_pcie_correctable_errors
 					_ocp_clear_pcie_correctable_errors=(
@@ -6328,7 +6413,7 @@ _nvme () {
 					;;
 
 				(device-capability-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_device_capability_log
 					_ocp_device_capability_log=(
@@ -6354,7 +6439,7 @@ _nvme () {
 					;;
 
 				(eol-plp-failure-mode)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _ocp_eol_plp_failure_mode
@@ -6387,7 +6472,7 @@ _nvme () {
 					;;
 
 				(error-recovery-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_error_recovery_log
 					_ocp_error_recovery_log=(
@@ -6413,7 +6498,7 @@ _nvme () {
 					;;
 
 				(fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_fw_activate_history
 					_ocp_fw_activate_history=(
@@ -6437,7 +6522,7 @@ _nvme () {
 					;;
 
 				(get-clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _ocp_get_clear_pcie_correctable_errors
@@ -6468,7 +6553,7 @@ _nvme () {
 					;;
 
 				(get-dssd-async-event-config)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _ocp_get_dssd_async_event_config
@@ -6495,7 +6580,7 @@ _nvme () {
 					;;
 
 				(get-dssd-power-state-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _ocp_get_dssd_power_state_feature
@@ -6526,7 +6611,7 @@ _nvme () {
 					;;
 
 				(get-enable-ieee1667-silo)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _ocp_get_enable_ieee1667_silo
@@ -6555,7 +6640,7 @@ _nvme () {
 					;;
 
 				(get-error-injection)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _ocp_get_error_injection
@@ -6586,7 +6671,7 @@ _nvme () {
 					;;
 
 				(get-idle-wakeup-time)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _ocp_get_idle_wakeup_time
@@ -6617,7 +6702,7 @@ _nvme () {
 					;;
 
 				(get-latency-monitor)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _ocp_get_latency_monitor
@@ -6648,7 +6733,7 @@ _nvme () {
 					;;
 
 				(get-plp-health-check-interval)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3" && return
 					local _ocp_get_plp_health_check_interval
@@ -6675,7 +6760,7 @@ _nvme () {
 					;;
 
 				(get-telemetry-profile)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _ocp_get_telemetry_profile
@@ -6707,7 +6792,7 @@ _nvme () {
 
 				(hardware-component-log)
 					_nvme_opt_vals "--comp-id -i" "asic nand dram pmic pcb cap reg case sn country hw-rev born-on-date vendor" \
-					               "--output-format -o" "normal json binary tabular" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_hardware_component_log
 					_ocp_hardware_component_log=(
@@ -6735,7 +6820,7 @@ _nvme () {
 					;;
 
 				(internal-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -f" && return
 					local _ocp_internal_log
@@ -6774,7 +6859,7 @@ _nvme () {
 					;;
 
 				(latency-monitor-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_latency_monitor_log
 					_ocp_latency_monitor_log=(
@@ -6800,7 +6885,7 @@ _nvme () {
 					;;
 
 				(persistent-event-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_persistent_event_log
 					_ocp_persistent_event_log=(
@@ -6830,7 +6915,7 @@ _nvme () {
 					;;
 
 				(set-dssd-async-event-config)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_set_dssd_async_event_config
 					_ocp_set_dssd_async_event_config=(
@@ -6858,7 +6943,7 @@ _nvme () {
 					;;
 
 				(set-dssd-power-state-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_set_dssd_power_state_feature
 					_ocp_set_dssd_power_state_feature=(
@@ -6888,7 +6973,7 @@ _nvme () {
 					;;
 
 				(set-enable-ieee1667-silo)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_set_enable_ieee1667_silo
 					_ocp_set_enable_ieee1667_silo=(
@@ -6918,7 +7003,7 @@ _nvme () {
 					;;
 
 				(set-error-injection)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--data -d" && return
 					local _ocp_set_error_injection
@@ -6955,7 +7040,7 @@ _nvme () {
 					;;
 
 				(set-latency-monitor-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_set_latency_monitor_feature
 					_ocp_set_latency_monitor_feature=(
@@ -6999,7 +7084,7 @@ _nvme () {
 					;;
 
 				(set-plp-health-check-interval)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_set_plp_health_check_interval
 					_ocp_set_plp_health_check_interval=(
@@ -7029,7 +7114,7 @@ _nvme () {
 					;;
 
 				(set-telemetry-profile)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_set_telemetry_profile
 					_ocp_set_telemetry_profile=(
@@ -7055,7 +7140,7 @@ _nvme () {
 					;;
 
 				(smart-add-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_smart_add_log
 					_ocp_smart_add_log=(
@@ -7081,7 +7166,7 @@ _nvme () {
 					;;
 
 				(tcg-configuration-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_tcg_configuration_log
 					_ocp_tcg_configuration_log=(
@@ -7107,7 +7192,7 @@ _nvme () {
 					;;
 
 				(telemetry-string-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -f" && return
 					local _ocp_telemetry_string_log
@@ -7136,7 +7221,7 @@ _nvme () {
 					;;
 
 				(unsupported-reqs-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ocp_unsupported_reqs_log
 					_ocp_unsupported_reqs_log=(
@@ -7182,7 +7267,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(delete)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _registry_delete
 					_registry_delete=(
@@ -7208,7 +7293,7 @@ _nvme () {
 					;;
 
 				(list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _registry_list
 					_registry_list=(
@@ -7232,7 +7317,7 @@ _nvme () {
 					;;
 
 				(retrieve)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _registry_retrieve
 					_registry_retrieve=(
@@ -7258,7 +7343,7 @@ _nvme () {
 					;;
 
 				(update)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _registry_update
 					_registry_update=(
@@ -7306,7 +7391,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(acquire)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _resv_acquire
 					_resv_acquire=(
@@ -7342,7 +7427,7 @@ _nvme () {
 					;;
 
 				(register)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _resv_register
 					_resv_register=(
@@ -7378,7 +7463,7 @@ _nvme () {
 					;;
 
 				(release)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _resv_release
 					_resv_release=(
@@ -7412,7 +7497,7 @@ _nvme () {
 					;;
 
 				(report)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _resv_report
 					_resv_report=(
@@ -7467,7 +7552,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(info)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _rpmb_info
 					_rpmb_info=(
@@ -7491,7 +7576,7 @@ _nvme () {
 					;;
 
 				(program-key)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--keyfile -g" && return
 					local _rpmb_program_key
@@ -7522,7 +7607,7 @@ _nvme () {
 					;;
 
 				(read-config)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--msgfile -f" && return
 					local _rpmb_read_config
@@ -7549,7 +7634,7 @@ _nvme () {
 					;;
 
 				(read-counter)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _rpmb_read_counter
 					_rpmb_read_counter=(
@@ -7575,7 +7660,7 @@ _nvme () {
 					;;
 
 				(read-data)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--msgfile -f" && return
 					local _rpmb_read_data
@@ -7608,7 +7693,7 @@ _nvme () {
 					;;
 
 				(write-config)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--keyfile -g" \
 					                "--msgfile -f" && return
@@ -7642,7 +7727,7 @@ _nvme () {
 					;;
 
 				(write-data)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--keyfile -g" \
 					                "--msgfile -f" && return
@@ -7699,7 +7784,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(vs-internal-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _samsung_vs_internal_log
@@ -7762,7 +7847,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(clear-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_clear_fw_activate_history
 					_seagate_clear_fw_activate_history=(
@@ -7788,7 +7873,7 @@ _nvme () {
 					;;
 
 				(clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_clear_pcie_correctable_errors
 					_seagate_clear_pcie_correctable_errors=(
@@ -7814,7 +7899,7 @@ _nvme () {
 					;;
 
 				(cloud-SSD-plugin-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_cloud_SSD_plugin_version
 					_seagate_cloud_SSD_plugin_version=(
@@ -7838,7 +7923,7 @@ _nvme () {
 					;;
 
 				(get-ctrl-tele)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_get_ctrl_tele
 					_seagate_get_ctrl_tele=(
@@ -7866,7 +7951,7 @@ _nvme () {
 					;;
 
 				(get-host-tele)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_get_host_tele
 					_seagate_get_host_tele=(
@@ -7896,7 +7981,7 @@ _nvme () {
 					;;
 
 				(plugin-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_plugin_version
 					_seagate_plugin_version=(
@@ -7920,7 +8005,7 @@ _nvme () {
 					;;
 
 				(vs-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_vs_fw_activate_history
 					_seagate_vs_fw_activate_history=(
@@ -7944,7 +8029,7 @@ _nvme () {
 					;;
 
 				(vs-internal-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--dump-file -f" && return
 					local _seagate_vs_internal_log
@@ -7973,7 +8058,7 @@ _nvme () {
 					;;
 
 				(vs-log-page-sup)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_vs_log_page_sup
 					_seagate_vs_log_page_sup=(
@@ -7997,7 +8082,7 @@ _nvme () {
 					;;
 
 				(vs-pcie-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_vs_pcie_stats
 					_seagate_vs_pcie_stats=(
@@ -8021,7 +8106,7 @@ _nvme () {
 					;;
 
 				(vs-smart-add-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_vs_smart_add_log
 					_seagate_vs_smart_add_log=(
@@ -8045,7 +8130,7 @@ _nvme () {
 					;;
 
 				(vs-temperature-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _seagate_vs_temperature_stats
 					_seagate_vs_temperature_stats=(
@@ -8087,7 +8172,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(recv)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _security_recv
 					_security_recv=(
@@ -8127,7 +8212,7 @@ _nvme () {
 					;;
 
 				(send)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--file -f" && return
 					local _security_send
@@ -8189,12 +8274,25 @@ _nvme () {
 
 			case ${words[2]} in
 				(discover|1)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _sed_discover
 					_sed_discover=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
 						--udev':Print locking information in form suitable for udev rules'
 						-u':alias for --udev'
 						--verbose':Print extended discovery information'
 						-V':alias for --verbose'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -8204,10 +8302,23 @@ _nvme () {
 					;;
 
 				(initialize)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _sed_initialize
 					_sed_initialize=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
 						--read-only':Set locking range to read-only'
 						-r':alias for --read-only'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -8217,12 +8328,25 @@ _nvme () {
 					;;
 
 				(lock)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _sed_lock
 					_sed_lock=(
 						--ask-key':prompt for SED authentication key'
 						-k':alias for --ask-key'
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
 						--read-only':Set locking range to read-only'
 						-r':alias for --read-only'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -8232,16 +8356,49 @@ _nvme () {
 					;;
 
 				(password)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
+					local _sed_password
+					_sed_password=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme sed password options" _sed_password
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(revert)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _sed_revert
 					_sed_revert=(
 						--destructive':destructive revert'
 						-e':alias for --destructive'
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
 						--psid':PSID revert'
 						-p':alias for --psid'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -8251,12 +8408,25 @@ _nvme () {
 					;;
 
 				(unlock)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					local _sed_unlock
 					_sed_unlock=(
 						--ask-key':prompt for SED authentication key'
 						-k':alias for --ask-key'
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
 						--read-only':Set locking range to read-only'
 						-r':alias for --read-only'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -8292,7 +8462,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(change-cap)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_change_cap
 					_sfx_change_cap=(
@@ -8322,7 +8492,7 @@ _nvme () {
 					;;
 
 				(dump-evtlog)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--file -f" \
 					                "--output -O" && return
@@ -8358,7 +8528,7 @@ _nvme () {
 					;;
 
 				(expand-cap)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_expand_cap
 					_sfx_expand_cap=(
@@ -8392,7 +8562,7 @@ _nvme () {
 					;;
 
 				(get-bad-block)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_get_bad_block
 					_sfx_get_bad_block=(
@@ -8416,7 +8586,7 @@ _nvme () {
 					;;
 
 				(get-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_get_feature
 					_sfx_get_feature=(
@@ -8444,7 +8614,7 @@ _nvme () {
 					;;
 
 				(lat-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_lat_stats
 					_sfx_lat_stats=(
@@ -8472,7 +8642,7 @@ _nvme () {
 					;;
 
 				(query-cap)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_query_cap
 					_sfx_query_cap=(
@@ -8498,7 +8668,7 @@ _nvme () {
 					;;
 
 				(set-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_set_feature
 					_sfx_set_feature=(
@@ -8530,7 +8700,7 @@ _nvme () {
 					;;
 
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_smart_log_add
 					_sfx_smart_log_add=(
@@ -8560,7 +8730,7 @@ _nvme () {
 					;;
 
 				(status)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sfx_status
 					_sfx_status=(
@@ -8606,7 +8776,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(get-additional-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -s" "0 1 2 3" && return
 					local _shannon_get_additional_feature
@@ -8645,7 +8815,7 @@ _nvme () {
 					;;
 
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _shannon_id_ctrl
 					_shannon_id_ctrl=(
@@ -8673,7 +8843,7 @@ _nvme () {
 					;;
 
 				(set-additioal-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--data -d" && return
 					local _shannon_set_additioal_feature
@@ -8710,7 +8880,7 @@ _nvme () {
 					;;
 
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _shannon_smart_log_add
 					_shannon_smart_log_add=(
@@ -8782,7 +8952,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(capabilities)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_capabilities
 					_sndk_capabilities=(
@@ -8806,7 +8976,7 @@ _nvme () {
 					;;
 
 				(clear-assert-dump)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_clear_assert_dump
 					_sndk_clear_assert_dump=(
@@ -8830,7 +9000,7 @@ _nvme () {
 					;;
 
 				(clear-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_clear_fw_activate_history
 					_sndk_clear_fw_activate_history=(
@@ -8854,7 +9024,7 @@ _nvme () {
 					;;
 
 				(clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_clear_pcie_correctable_errors
 					_sndk_clear_pcie_correctable_errors=(
@@ -8878,7 +9048,7 @@ _nvme () {
 					;;
 
 				(cloud-SSD-plugin-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_cloud_SSD_plugin_version
 					_sndk_cloud_SSD_plugin_version=(
@@ -8902,7 +9072,7 @@ _nvme () {
 					;;
 
 				(cloud-boot-SSD-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_cloud_boot_SSD_version
 					_sndk_cloud_boot_SSD_version=(
@@ -8928,7 +9098,7 @@ _nvme () {
 					;;
 
 				(cu-smart-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_cu_smart_log
 					_sndk_cu_smart_log=(
@@ -8954,7 +9124,7 @@ _nvme () {
 					;;
 
 				(drive-resize)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_drive_resize
 					_sndk_drive_resize=(
@@ -8980,7 +9150,7 @@ _nvme () {
 					;;
 
 				(get-dev-capabilities-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_get_dev_capabilities_log
 					_sndk_get_dev_capabilities_log=(
@@ -9004,7 +9174,7 @@ _nvme () {
 					;;
 
 				(get-drive-status)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_get_drive_status
 					_sndk_get_drive_status=(
@@ -9028,7 +9198,7 @@ _nvme () {
 					;;
 
 				(get-error-recovery-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_get_error_recovery_log
 					_sndk_get_error_recovery_log=(
@@ -9052,7 +9222,7 @@ _nvme () {
 					;;
 
 				(get-latency-monitor-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_get_latency_monitor_log
 					_sndk_get_latency_monitor_log=(
@@ -9076,7 +9246,7 @@ _nvme () {
 					;;
 
 				(get-unsupported-reqs-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_get_unsupported_reqs_log
 					_sndk_get_unsupported_reqs_log=(
@@ -9100,7 +9270,7 @@ _nvme () {
 					;;
 
 				(log-page-directory)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_log_page_directory
 					_sndk_log_page_directory=(
@@ -9124,7 +9294,7 @@ _nvme () {
 					;;
 
 				(namespace-resize)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_namespace_resize
 					_sndk_namespace_resize=(
@@ -9152,7 +9322,7 @@ _nvme () {
 					;;
 
 				(set-latency-monitor-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_set_latency_monitor_feature
 					_sndk_set_latency_monitor_feature=(
@@ -9196,7 +9366,7 @@ _nvme () {
 					;;
 
 				(vs-cloud-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_cloud_log
 					_sndk_vs_cloud_log=(
@@ -9222,7 +9392,7 @@ _nvme () {
 					;;
 
 				(vs-device-waf)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_device_waf
 					_sndk_vs_device_waf=(
@@ -9248,7 +9418,7 @@ _nvme () {
 					;;
 
 				(vs-drive-info)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_drive_info
 					_sndk_vs_drive_info=(
@@ -9272,7 +9442,7 @@ _nvme () {
 					;;
 
 				(vs-error-reason-identifier)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--file -O" && return
 					local _sndk_vs_error_reason_identifier
@@ -9301,7 +9471,7 @@ _nvme () {
 					;;
 
 				(vs-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_fw_activate_history
 					_sndk_vs_fw_activate_history=(
@@ -9325,7 +9495,7 @@ _nvme () {
 					;;
 
 				(vs-hw-rev-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_hw_rev_log
 					_sndk_vs_hw_rev_log=(
@@ -9351,24 +9521,37 @@ _nvme () {
 					;;
 
 				(vs-internal-log)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" \
 					                "--type -t" && return
 					local _sndk_vs_internal_log
 					_sndk_vs_internal_log=(
 						--data-area=':Data area to retrieve up to. Supported for telemetry, see man page for other use cases.'
 						-d':alias for --data-area'
+						--dry-run':show command instead of executing'
 						--file-size=':Output file size. Deprecated, see man page for supported devices.'
 						-f':alias for --file-size'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
 						--offset=':Output file data offset. Deprecated, see man page for supported devices.'
 						-e':alias for --offset'
 						--output-file=':Output file pathname.'
 						-O':alias for --output-file'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
 						--transfer-size=':Data retrieval transfer size.'
 						-s':alias for --transfer-size'
 						--type=':Telemetry type - NONE, HOST, CONTROLLER, or BOTH: NONE - Default, capture without using NVMe telemetry. HOST - Host-initiated telemetry. CONTROLLER - Controller-initiated telemetry. BOTH - Both HOST and CONTROLLER telemetry packaged in tar file.'
 						-t':alias for --type'
 						--verbose':Display more debug messages.'
 						-V':alias for --verbose'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -9378,7 +9561,7 @@ _nvme () {
 					;;
 
 				(vs-nand-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_nand_stats
 					_sndk_vs_nand_stats=(
@@ -9402,7 +9585,7 @@ _nvme () {
 					;;
 
 				(vs-pcie-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_pcie_stats
 					_sndk_vs_pcie_stats=(
@@ -9426,7 +9609,7 @@ _nvme () {
 					;;
 
 				(vs-smart-add-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_smart_add_log
 					_sndk_vs_smart_add_log=(
@@ -9458,7 +9641,7 @@ _nvme () {
 					;;
 
 				(vs-telemetry-controller-option)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_telemetry_controller_option
 					_sndk_vs_telemetry_controller_option=(
@@ -9488,7 +9671,7 @@ _nvme () {
 					;;
 
 				(vs-temperature-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _sndk_vs_temperature_stats
 					_sndk_vs_temperature_stats=(
@@ -9544,7 +9727,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(clear-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_clear_fw_activate_history
 					_solidigm_clear_fw_activate_history=(
@@ -9570,7 +9753,7 @@ _nvme () {
 					;;
 
 				(clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_clear_pcie_correctable_errors
 					_solidigm_clear_pcie_correctable_errors=(
@@ -9596,7 +9779,7 @@ _nvme () {
 					;;
 
 				(cloud-SSDplugin-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_cloud_SSDplugin_version
 					_solidigm_cloud_SSDplugin_version=(
@@ -9620,7 +9803,7 @@ _nvme () {
 					;;
 
 				(garbage-collect-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_garbage_collect_log
 					_solidigm_garbage_collect_log=(
@@ -9644,7 +9827,7 @@ _nvme () {
 					;;
 
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_id_ctrl
 					_solidigm_id_ctrl=(
@@ -9672,7 +9855,7 @@ _nvme () {
 					;;
 
 				(latency-tracking-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_latency_tracking_log
 					_solidigm_latency_tracking_log=(
@@ -9706,7 +9889,7 @@ _nvme () {
 					;;
 
 				(log-page-directory)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_log_page_directory
 					_solidigm_log_page_directory=(
@@ -9730,7 +9913,7 @@ _nvme () {
 					;;
 
 				(market-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_market_log
 					_solidigm_market_log=(
@@ -9756,7 +9939,7 @@ _nvme () {
 					;;
 
 				(parse-telemetry-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--config-file -j" \
 					                "--source-file -s" && return
@@ -9792,7 +9975,7 @@ _nvme () {
 					;;
 
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_smart_log_add
 					_solidigm_smart_log_add=(
@@ -9818,7 +10001,7 @@ _nvme () {
 					;;
 
 				(temp-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_temp_stats
 					_solidigm_temp_stats=(
@@ -9844,14 +10027,14 @@ _nvme () {
 					;;
 
 				(vs-drive-info)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_vs_drive_info
 					_solidigm_vs_drive_info=(
 						--dry-run':show command instead of executing'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-format=':Output format: normal|json|binary'
+						--output-format=':Output format: normal|json'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
 						--quiet':suppress informational output'
@@ -9868,7 +10051,7 @@ _nvme () {
 					;;
 
 				(vs-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_vs_fw_activate_history
 					_solidigm_vs_fw_activate_history=(
@@ -9892,7 +10075,7 @@ _nvme () {
 					;;
 
 				(vs-internal-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--dir-name -d" && return
 					local _solidigm_vs_internal_log
@@ -9921,7 +10104,7 @@ _nvme () {
 					;;
 
 				(vs-smart-add-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_vs_smart_add_log
 					_solidigm_vs_smart_add_log=(
@@ -9947,7 +10130,7 @@ _nvme () {
 					;;
 
 				(workload-tracker)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _solidigm_workload_tracker
 					_solidigm_workload_tracker=(
@@ -10012,7 +10195,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ssstc_smart_log_add
 					_ssstc_smart_log_add=(
@@ -10061,7 +10244,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _toshiba_clear_pcie_correctable_errors
 					_toshiba_clear_pcie_correctable_errors=(
@@ -10085,7 +10268,7 @@ _nvme () {
 					;;
 
 				(vs-internal-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _toshiba_vs_internal_log
@@ -10114,7 +10297,7 @@ _nvme () {
 					;;
 
 				(vs-smart-add-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _toshiba_vs_smart_add_log
@@ -10163,7 +10346,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(badblock)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _transcend_badblock
 					_transcend_badblock=(
@@ -10187,7 +10370,7 @@ _nvme () {
 					;;
 
 				(healthvalue)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _transcend_healthvalue
 					_transcend_healthvalue=(
@@ -10250,7 +10433,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(save-smart-to-vtview-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _virtium_save_smart_to_vtview_log
@@ -10283,7 +10466,7 @@ _nvme () {
 					;;
 
 				(show-identify)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _virtium_show_identify
 					_virtium_show_identify=(
@@ -10360,7 +10543,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(cap-diag)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _wdc_cap_diag
@@ -10389,7 +10572,7 @@ _nvme () {
 					;;
 
 				(capabilities)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_capabilities
 					_wdc_capabilities=(
@@ -10413,7 +10596,7 @@ _nvme () {
 					;;
 
 				(clear-assert-dump)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_clear_assert_dump
 					_wdc_clear_assert_dump=(
@@ -10437,7 +10620,7 @@ _nvme () {
 					;;
 
 				(clear-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_clear_fw_activate_history
 					_wdc_clear_fw_activate_history=(
@@ -10461,7 +10644,7 @@ _nvme () {
 					;;
 
 				(clear-pcie-correctable-errors)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_clear_pcie_correctable_errors
 					_wdc_clear_pcie_correctable_errors=(
@@ -10485,7 +10668,7 @@ _nvme () {
 					;;
 
 				(cloud-SSD-plugin-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_cloud_SSD_plugin_version
 					_wdc_cloud_SSD_plugin_version=(
@@ -10509,7 +10692,7 @@ _nvme () {
 					;;
 
 				(cloud-boot-SSD-version)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_cloud_boot_SSD_version
 					_wdc_cloud_boot_SSD_version=(
@@ -10535,7 +10718,7 @@ _nvme () {
 					;;
 
 				(cu-smart-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_cu_smart_log
 					_wdc_cu_smart_log=(
@@ -10561,7 +10744,7 @@ _nvme () {
 					;;
 
 				(drive-essentials)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--dir-name -d" && return
 					local _wdc_drive_essentials
@@ -10588,7 +10771,7 @@ _nvme () {
 					;;
 
 				(drive-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _wdc_drive_log
@@ -10615,7 +10798,7 @@ _nvme () {
 					;;
 
 				(drive-resize)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_drive_resize
 					_wdc_drive_resize=(
@@ -10641,7 +10824,7 @@ _nvme () {
 					;;
 
 				(enc-get-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _wdc_enc_get_log
@@ -10672,7 +10855,7 @@ _nvme () {
 					;;
 
 				(get-crash-dump)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _wdc_get_crash_dump
@@ -10699,7 +10882,7 @@ _nvme () {
 					;;
 
 				(get-dev-capabilities-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_get_dev_capabilities_log
 					_wdc_get_dev_capabilities_log=(
@@ -10723,7 +10906,7 @@ _nvme () {
 					;;
 
 				(get-drive-status)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_get_drive_status
 					_wdc_get_drive_status=(
@@ -10747,7 +10930,7 @@ _nvme () {
 					;;
 
 				(get-error-recovery-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_get_error_recovery_log
 					_wdc_get_error_recovery_log=(
@@ -10771,7 +10954,7 @@ _nvme () {
 					;;
 
 				(get-latency-monitor-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_get_latency_monitor_log
 					_wdc_get_latency_monitor_log=(
@@ -10795,7 +10978,7 @@ _nvme () {
 					;;
 
 				(get-pfail-dump)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _wdc_get_pfail_dump
@@ -10822,7 +11005,7 @@ _nvme () {
 					;;
 
 				(get-unsupported-reqs-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_get_unsupported_reqs_log
 					_wdc_get_unsupported_reqs_log=(
@@ -10846,7 +11029,7 @@ _nvme () {
 					;;
 
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_id_ctrl
 					_wdc_id_ctrl=(
@@ -10874,7 +11057,7 @@ _nvme () {
 					;;
 
 				(log-page-directory)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_log_page_directory
 					_wdc_log_page_directory=(
@@ -10898,7 +11081,7 @@ _nvme () {
 					;;
 
 				(namespace-resize)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_namespace_resize
 					_wdc_namespace_resize=(
@@ -10926,7 +11109,7 @@ _nvme () {
 					;;
 
 				(purge)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_purge
 					_wdc_purge=(
@@ -10950,7 +11133,7 @@ _nvme () {
 					;;
 
 				(purge-monitor)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_purge_monitor
 					_wdc_purge_monitor=(
@@ -10974,7 +11157,7 @@ _nvme () {
 					;;
 
 				(set-latency-monitor-feature)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_set_latency_monitor_feature
 					_wdc_set_latency_monitor_feature=(
@@ -11018,7 +11201,7 @@ _nvme () {
 					;;
 
 				(vs-cloud-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_cloud_log
 					_wdc_vs_cloud_log=(
@@ -11044,7 +11227,7 @@ _nvme () {
 					;;
 
 				(vs-device-waf)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_device_waf
 					_wdc_vs_device_waf=(
@@ -11070,7 +11253,7 @@ _nvme () {
 					;;
 
 				(vs-drive-info)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_drive_info
 					_wdc_vs_drive_info=(
@@ -11094,7 +11277,7 @@ _nvme () {
 					;;
 
 				(vs-error-reason-identifier)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--file -O" && return
 					local _wdc_vs_error_reason_identifier
@@ -11123,7 +11306,7 @@ _nvme () {
 					;;
 
 				(vs-fw-activate-history)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_fw_activate_history
 					_wdc_vs_fw_activate_history=(
@@ -11147,7 +11330,7 @@ _nvme () {
 					;;
 
 				(vs-hw-rev-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_hw_rev_log
 					_wdc_vs_hw_rev_log=(
@@ -11173,24 +11356,37 @@ _nvme () {
 					;;
 
 				(vs-internal-log)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--output-file -O" \
 					                "--type -t" && return
 					local _wdc_vs_internal_log
 					_wdc_vs_internal_log=(
 						--data-area=':Data area to retrieve up to. Supported for telemetry, see man page for other use cases.'
 						-d':alias for --data-area'
+						--dry-run':show command instead of executing'
 						--file-size=':Output file size. Deprecated, see man page for supported devices.'
 						-f':alias for --file-size'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
 						--offset=':Output file data offset. Deprecated, see man page for supported devices.'
 						-e':alias for --offset'
 						--output-file=':Output file pathname.'
 						-O':alias for --output-file'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
 						--transfer-size=':Data retrieval transfer size.'
 						-s':alias for --transfer-size'
 						--type=':Telemetry type - NONE, HOST, or CONTROLLER: NONE - Default, capture without using NVMe telemetry. HOST - Host-initiated telemetry. CONTROLLER - Controller-initiated telemetry.'
 						-t':alias for --type'
 						--verbose':Display more debug messages.'
 						-V':alias for --verbose'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
 						--help':show help'
 						-h':alias for --help'
 					)
@@ -11200,7 +11396,7 @@ _nvme () {
 					;;
 
 				(vs-nand-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_nand_stats
 					_wdc_vs_nand_stats=(
@@ -11224,7 +11420,7 @@ _nvme () {
 					;;
 
 				(vs-pcie-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_pcie_stats
 					_wdc_vs_pcie_stats=(
@@ -11248,7 +11444,7 @@ _nvme () {
 					;;
 
 				(vs-smart-add-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_smart_add_log
 					_wdc_vs_smart_add_log=(
@@ -11280,7 +11476,7 @@ _nvme () {
 					;;
 
 				(vs-telemetry-controller-option)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_telemetry_controller_option
 					_wdc_vs_telemetry_controller_option=(
@@ -11310,7 +11506,7 @@ _nvme () {
 					;;
 
 				(vs-temperature-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _wdc_vs_temperature_stats
 					_wdc_vs_temperature_stats=(
@@ -11351,7 +11547,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(smart-log-add)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _ymtc_smart_log_add
 					_ymtc_smart_log_add=(
@@ -11410,7 +11606,7 @@ _nvme () {
 
 			case ${words[2]} in
 				(changed-zone-list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_changed_zone_list
 					_zns_changed_zone_list=(
@@ -11438,7 +11634,7 @@ _nvme () {
 					;;
 
 				(close-zone)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_close_zone
 					_zns_close_zone=(
@@ -11468,7 +11664,7 @@ _nvme () {
 					;;
 
 				(finish-zone)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_finish_zone
 					_zns_finish_zone=(
@@ -11498,7 +11694,7 @@ _nvme () {
 					;;
 
 				(id-ctrl)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_id_ctrl
 					_zns_id_ctrl=(
@@ -11522,7 +11718,7 @@ _nvme () {
 					;;
 
 				(id-ns)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_id_ns
 					_zns_id_ns=(
@@ -11552,7 +11748,7 @@ _nvme () {
 					;;
 
 				(list)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal" \
 					               "--output-format-version" "1 2" && return
 					local _zns_list
 					_zns_list=(
@@ -11576,7 +11772,7 @@ _nvme () {
 					;;
 
 				(offline-zone)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_offline_zone
 					_zns_offline_zone=(
@@ -11606,7 +11802,7 @@ _nvme () {
 					;;
 
 				(open-zone)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_open_zone
 					_zns_open_zone=(
@@ -11638,7 +11834,7 @@ _nvme () {
 					;;
 
 				(report-zones)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_report_zones
 					_zns_report_zones=(
@@ -11676,7 +11872,7 @@ _nvme () {
 					;;
 
 				(reset-zone)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_reset_zone
 					_zns_reset_zone=(
@@ -11706,7 +11902,7 @@ _nvme () {
 					;;
 
 				(set-zone-desc)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--data -d" && return
 					local _zns_set_zone_desc
@@ -11739,7 +11935,7 @@ _nvme () {
 					;;
 
 				(zone-append)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--data -d" \
 					                "--metadata -M" && return
@@ -11787,7 +11983,7 @@ _nvme () {
 					;;
 
 				(zone-mgmt-recv)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_zone_mgmt_recv
 					_zns_zone_mgmt_recv=(
@@ -11823,7 +12019,7 @@ _nvme () {
 					;;
 
 				(zone-mgmt-send)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					_nvme_opt_files "--data -d" && return
 					local _zns_zone_mgmt_send
@@ -11862,7 +12058,7 @@ _nvme () {
 					;;
 
 				(zrwa-flush-zone)
-					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" && return
 					local _zns_zrwa_flush_zone
 					_zns_zrwa_flush_zone=(
@@ -11896,7 +12092,7 @@ _nvme () {
 			;;
 
 		(admin-passthru)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--input-file -i" \
 			                "--metadata -M" && return
@@ -11966,7 +12162,7 @@ _nvme () {
 			;;
 
 		(ana-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _ana_log
 			_ana_log=(
@@ -11992,7 +12188,7 @@ _nvme () {
 			;;
 
 		(attach-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _attach_ns
 			_attach_ns=(
@@ -12022,7 +12218,7 @@ _nvme () {
 			;;
 
 		(ave-discovery-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _ave_discovery_log
 			_ave_discovery_log=(
@@ -12048,7 +12244,7 @@ _nvme () {
 			;;
 
 		(boot-part-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--output-file -f" && return
 			local _boot_part_log
@@ -12077,7 +12273,7 @@ _nvme () {
 			;;
 
 		(capacity-mgmt)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _capacity_mgmt
 			_capacity_mgmt=(
@@ -12111,7 +12307,7 @@ _nvme () {
 			;;
 
 		(changed-alloc-ns-list-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _changed_alloc_ns_list_log
 			_changed_alloc_ns_list_log=(
@@ -12137,7 +12333,7 @@ _nvme () {
 			;;
 
 		(changed-ns-list-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _changed_ns_list_log
 			_changed_ns_list_log=(
@@ -12163,7 +12359,7 @@ _nvme () {
 			;;
 
 		(check-dhchap-key)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _check_dhchap_key
 			_check_dhchap_key=(
@@ -12189,7 +12385,7 @@ _nvme () {
 			;;
 
 		(check-tls-key)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _check_tls_key
 			_check_tls_key=(
@@ -12227,7 +12423,7 @@ _nvme () {
 			;;
 
 		(cmdset-ind-id-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _cmdset_ind_id_ns
 			_cmdset_ind_id_ns=(
@@ -12255,7 +12451,7 @@ _nvme () {
 			;;
 
 		(compare)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--data -d" \
 			                "--metadata -M" && return
@@ -12324,7 +12520,7 @@ _nvme () {
 			;;
 
 		(connect)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--config -J" \
 			                "--devid-file" && return
@@ -12407,7 +12603,7 @@ _nvme () {
 			;;
 
 		(connect-all)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--config -J" \
 			                "--raw -r" && return
@@ -12498,7 +12694,7 @@ _nvme () {
 			;;
 
 		(copy)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _copy
 			_copy=(
@@ -12564,7 +12760,7 @@ _nvme () {
 			;;
 
 		(create-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _create_ns
 			_create_ns=(
@@ -12628,7 +12824,7 @@ _nvme () {
 			;;
 
 		(delete-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _delete_ns
 			_delete_ns=(
@@ -12656,7 +12852,7 @@ _nvme () {
 			;;
 
 		(detach-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _detach_ns
 			_detach_ns=(
@@ -12686,7 +12882,7 @@ _nvme () {
 			;;
 
 		(device-self-test)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _device_self_test
 			_device_self_test=(
@@ -12718,7 +12914,7 @@ _nvme () {
 			;;
 
 		(dim)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _dim
 			_dim=(
@@ -12748,7 +12944,7 @@ _nvme () {
 			;;
 
 		(dir-receive)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _dir_receive
 			_dir_receive=(
@@ -12786,7 +12982,7 @@ _nvme () {
 			;;
 
 		(dir-send)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--input-file -i" && return
 			local _dir_send
@@ -12829,7 +13025,7 @@ _nvme () {
 			;;
 
 		(disconnect)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _disconnect
 			_disconnect=(
@@ -12908,7 +13104,7 @@ _nvme () {
 			;;
 
 		(disconnect-all)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _disconnect_all
 			_disconnect_all=(
@@ -12936,7 +13132,7 @@ _nvme () {
 			;;
 
 		(discover)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--config -J" \
 			                "--raw -r" && return
@@ -13027,7 +13223,7 @@ _nvme () {
 			;;
 
 		(dispersed-ns-participating-nss-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _dispersed_ns_participating_nss_log
 			_dispersed_ns_participating_nss_log=(
@@ -13053,7 +13249,7 @@ _nvme () {
 			;;
 
 		(dsm)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _dsm
 			_dsm=(
@@ -13093,7 +13289,7 @@ _nvme () {
 			;;
 
 		(effects-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _effects_log
 			_effects_log=(
@@ -13121,7 +13317,7 @@ _nvme () {
 			;;
 
 		(endurance-event-agg-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _endurance_event_agg_log
 			_endurance_event_agg_log=(
@@ -13151,7 +13347,7 @@ _nvme () {
 			;;
 
 		(endurance-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _endurance_log
 			_endurance_log=(
@@ -13177,7 +13373,7 @@ _nvme () {
 			;;
 
 		(error-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _error_log
 			_error_log=(
@@ -13221,7 +13417,7 @@ _nvme () {
 			;;
 
 		(fid-support-effects-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _fid_support_effects_log
 			_fid_support_effects_log=(
@@ -13245,7 +13441,7 @@ _nvme () {
 			;;
 
 		(flush)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _flush
 			_flush=(
@@ -13271,7 +13467,7 @@ _nvme () {
 			;;
 
 		(format)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _format
 			_format=(
@@ -13315,7 +13511,7 @@ _nvme () {
 
 		(fw-commit|fw-activate)
 			_nvme_opt_vals "--action -a" "replace replace-and-activate set-active replace-and-activate-immediate replace-boot-partition activate-boot-partition" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _fw_commit
 			_fw_commit=(
@@ -13347,7 +13543,7 @@ _nvme () {
 			;;
 
 		(fw-download)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--fw -f" && return
 			local _fw_download
@@ -13385,7 +13581,7 @@ _nvme () {
 			;;
 
 		(fw-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _fw_log
 			_fw_log=(
@@ -13411,7 +13607,7 @@ _nvme () {
 			;;
 
 		(gen-dhchap-key)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _gen_dhchap_key
 			_gen_dhchap_key=(
@@ -13443,7 +13639,7 @@ _nvme () {
 			;;
 
 		(gen-hostnqn)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _gen_hostnqn
 			_gen_hostnqn=(
@@ -13467,7 +13663,7 @@ _nvme () {
 			;;
 
 		(gen-tls-key)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _gen_tls_key
 			_gen_tls_key=(
@@ -13512,7 +13708,7 @@ _nvme () {
 
 		(get-feature)
 			_nvme_opt_vals "--feature-id -f" "arbitration power-mgmt lba-range temp-thresh err-recovery volatile-wc num-queues irq-coalesce irq-config write-atomic async-event auto-pst host-mem-buf timestamp kato hctm nopsc rrl plm-config plm-window lba-sts-interval host-behavior sanitize endurance-evt-cfg iocs-profile spinup-control power-loss-signal perf-characteristics fdp fdp-events ns-admin-label key-value ctrl-data-queue emb-mgmt-ctrl-addr host-mgmt-agent-addr enh-ctrl-metadata ctrl-metadata ns-metadata sw-progress host-id resv-nf-mask resv-persist write-protect bp-write-protect" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -s" "0 1 2 3" && return
 			local _get_feature
@@ -13553,7 +13749,7 @@ _nvme () {
 			;;
 
 		(get-lba-status)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _get_lba_status
 			_get_lba_status=(
@@ -13590,7 +13786,7 @@ _nvme () {
 
 		(get-log)
 			_nvme_opt_vals "--log-id -i" "supported-log-pages error smart fw-slot changed-attached-ns changed-ns cmd-effects device-self-test telemetry-host telemetry-ctrl endurance-group predictable-lat-nvmset predictable-lat-agg ana persistent-event lba-status endurance-grp-evt media-unit-status supported-cap-config-list fid-supported-effects mi-cmd-supported-effects cmd-and-feat-lockdown boot-partition rotational-media-info dispersed-ns-participating-ns mgmt-addr-list phy-rx-eom reachability-groups reachability-associations changed-alloc-ns-list fdp-configs fdp-ruh-usage fdp-stats fdp-events discover host-discover ave-discover pull-model-ddc-req reservation sanitize zns-changed-zones" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _get_log
 			_get_log=(
@@ -13642,7 +13838,7 @@ _nvme () {
 			;;
 
 		(get-ns-id)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _get_ns_id
 			_get_ns_id=(
@@ -13666,7 +13862,7 @@ _nvme () {
 			;;
 
 		(get-property)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _get_property
 			_get_property=(
@@ -13692,7 +13888,7 @@ _nvme () {
 			;;
 
 		(get-reg)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _get_reg
 			_get_reg=(
@@ -13746,7 +13942,7 @@ _nvme () {
 			;;
 
 		(host-discovery-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _host_discovery_log
 			_host_discovery_log=(
@@ -13774,7 +13970,7 @@ _nvme () {
 			;;
 
 		(id-ctrl)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_ctrl
 			_id_ctrl=(
@@ -13802,7 +13998,7 @@ _nvme () {
 			;;
 
 		(id-domain)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_domain
 			_id_domain=(
@@ -13828,7 +14024,7 @@ _nvme () {
 			;;
 
 		(id-iocs)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_iocs
 			_id_iocs=(
@@ -13854,7 +14050,7 @@ _nvme () {
 			;;
 
 		(id-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_ns
 			_id_ns=(
@@ -13885,7 +14081,7 @@ _nvme () {
 			;;
 
 		(id-ns-granularity)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_ns_granularity
 			_id_ns_granularity=(
@@ -13909,7 +14105,7 @@ _nvme () {
 			;;
 
 		(id-ns-lba-format)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_ns_lba_format
 			_id_ns_lba_format=(
@@ -13937,7 +14133,7 @@ _nvme () {
 			;;
 
 		(id-nvmset)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_nvmset
 			_id_nvmset=(
@@ -13963,7 +14159,7 @@ _nvme () {
 			;;
 
 		(id-uuid)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _id_uuid
 			_id_uuid=(
@@ -13989,7 +14185,7 @@ _nvme () {
 			;;
 
 		(io-mgmt-recv)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--data -d" && return
 			local _io_mgmt_recv
@@ -14024,7 +14220,7 @@ _nvme () {
 			;;
 
 		(io-mgmt-send)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--data -d" && return
 			local _io_mgmt_send
@@ -14059,7 +14255,7 @@ _nvme () {
 			;;
 
 		(io-passthru)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--input-file -i" \
 			                "--metadata -M" && return
@@ -14129,7 +14325,7 @@ _nvme () {
 			;;
 
 		(lba-status-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _lba_status_log
 			_lba_status_log=(
@@ -14155,14 +14351,14 @@ _nvme () {
 			;;
 
 		(list)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2" && return
 			local _list
 			_list=(
 				--dry-run':show command instead of executing'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--output-format=':Output format: normal|json|binary'
+				--output-format=':Output format: normal|json'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
@@ -14179,7 +14375,7 @@ _nvme () {
 			;;
 
 		(list-ctrl)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2" && return
 			local _list_ctrl
 			_list_ctrl=(
@@ -14190,7 +14386,7 @@ _nvme () {
 				-n':alias for --namespace-id'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--output-format=':Output format: normal|json|binary'
+				--output-format=':Output format: normal|json'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
@@ -14207,7 +14403,7 @@ _nvme () {
 			;;
 
 		(list-endgrp)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2" && return
 			local _list_endgrp
 			_list_endgrp=(
@@ -14216,7 +14412,7 @@ _nvme () {
 				-i':alias for --endgrp-id'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--output-format=':Output format: normal|json|binary'
+				--output-format=':Output format: normal|json'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
@@ -14233,7 +14429,7 @@ _nvme () {
 			;;
 
 		(list-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2" && return
 			local _list_ns
 			_list_ns=(
@@ -14246,7 +14442,7 @@ _nvme () {
 				-n':alias for --namespace-id'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--output-format=':Output format: normal|json|binary'
+				--output-format=':Output format: normal|json'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
@@ -14263,7 +14459,7 @@ _nvme () {
 			;;
 
 		(list-secondary)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _list_secondary
 			_list_secondary=(
@@ -14291,14 +14487,14 @@ _nvme () {
 			;;
 
 		(list-subsys)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2" && return
 			local _list_subsys
 			_list_subsys=(
 				--dry-run':show command instead of executing'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--output-format=':Output format: normal|json|binary'
+				--output-format=':Output format: normal|json'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
@@ -14315,7 +14511,7 @@ _nvme () {
 			;;
 
 		(lockdown)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _lockdown
 			_lockdown=(
@@ -14353,7 +14549,7 @@ _nvme () {
 			;;
 
 		(media-unit-stat-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _media_unit_stat_log
 			_media_unit_stat_log=(
@@ -14381,7 +14577,7 @@ _nvme () {
 			;;
 
 		(mgmt-addr-list-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _mgmt_addr_list_log
 			_mgmt_addr_list_log=(
@@ -14405,7 +14601,7 @@ _nvme () {
 			;;
 
 		(mi-cmd-support-effects-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _mi_cmd_support_effects_log
 			_mi_cmd_support_effects_log=(
@@ -14429,7 +14625,7 @@ _nvme () {
 			;;
 
 		(ns-descs)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _ns_descs
 			_ns_descs=(
@@ -14457,7 +14653,7 @@ _nvme () {
 			;;
 
 		(ns-rescan)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _ns_rescan
 			_ns_rescan=(
@@ -14481,7 +14677,7 @@ _nvme () {
 			;;
 
 		(nvm-id-ctrl)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _nvm_id_ctrl
 			_nvm_id_ctrl=(
@@ -14505,7 +14701,7 @@ _nvme () {
 			;;
 
 		(nvm-id-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _nvm_id_ns
 			_nvm_id_ns=(
@@ -14533,7 +14729,7 @@ _nvme () {
 			;;
 
 		(nvm-id-ns-lba-format)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _nvm_id_ns_lba_format
 			_nvm_id_ns_lba_format=(
@@ -14561,7 +14757,7 @@ _nvme () {
 			;;
 
 		(nvme-mi-recv)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--input-file -i" && return
 			local _nvme_mi_recv
@@ -14600,7 +14796,7 @@ _nvme () {
 			;;
 
 		(nvme-mi-send)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--input-file -i" && return
 			local _nvme_mi_send
@@ -14639,7 +14835,7 @@ _nvme () {
 			;;
 
 		(persistent-event-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _persistent_event_log
 			_persistent_event_log=(
@@ -14669,7 +14865,7 @@ _nvme () {
 			;;
 
 		(phy-rx-eom-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _phy_rx_eom_log
 			_phy_rx_eom_log=(
@@ -14697,7 +14893,7 @@ _nvme () {
 			;;
 
 		(power-measurement-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _power_measurement_log
 			_power_measurement_log=(
@@ -14723,7 +14919,7 @@ _nvme () {
 			;;
 
 		(pred-lat-event-agg-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _pred_lat_event_agg_log
 			_pred_lat_event_agg_log=(
@@ -14753,7 +14949,7 @@ _nvme () {
 			;;
 
 		(predictable-lat-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _predictable_lat_log
 			_predictable_lat_log=(
@@ -14781,7 +14977,7 @@ _nvme () {
 			;;
 
 		(primary-ctrl-caps)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _primary_ctrl_caps
 			_primary_ctrl_caps=(
@@ -14807,7 +15003,7 @@ _nvme () {
 			;;
 
 		(pull-model-ddc-req-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _pull_model_ddc_req_log
 			_pull_model_ddc_req_log=(
@@ -14833,7 +15029,7 @@ _nvme () {
 			;;
 
 		(reachability-associations-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _reachability_associations_log
 			_reachability_associations_log=(
@@ -14861,7 +15057,7 @@ _nvme () {
 			;;
 
 		(reachability-groups-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _reachability_groups_log
 			_reachability_groups_log=(
@@ -14889,7 +15085,7 @@ _nvme () {
 			;;
 
 		(read)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--data -d" \
 			                "--metadata -M" && return
@@ -14958,7 +15154,7 @@ _nvme () {
 			;;
 
 		(reset)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _reset
 			_reset=(
@@ -14982,7 +15178,7 @@ _nvme () {
 			;;
 
 		(resv-acquire)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _resv_acquire
 			_resv_acquire=(
@@ -15018,7 +15214,7 @@ _nvme () {
 			;;
 
 		(resv-notif-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _resv_notif_log
 			_resv_notif_log=(
@@ -15042,7 +15238,7 @@ _nvme () {
 			;;
 
 		(resv-register)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _resv_register
 			_resv_register=(
@@ -15078,7 +15274,7 @@ _nvme () {
 			;;
 
 		(resv-release)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _resv_release
 			_resv_release=(
@@ -15112,7 +15308,7 @@ _nvme () {
 			;;
 
 		(resv-report)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _resv_report
 			_resv_report=(
@@ -15144,7 +15340,7 @@ _nvme () {
 			;;
 
 		(rotational-media-info-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _rotational_media_info_log
 			_rotational_media_info_log=(
@@ -15170,7 +15366,7 @@ _nvme () {
 			;;
 
 		(sanitize)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sanact -a" "exit-failure start-block-erase start-overwrite start-crypto-erase exit-media-verification" && return
 			local _sanitize
@@ -15217,7 +15413,7 @@ _nvme () {
 			;;
 
 		(sanitize-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _sanitize_log
 			_sanitize_log=(
@@ -15245,7 +15441,7 @@ _nvme () {
 			;;
 
 		(sanitize-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sanact -a" "exit-failure start-crypto-erase exit-media-verification" && return
 			local _sanitize_ns
@@ -15280,7 +15476,7 @@ _nvme () {
 			;;
 
 		(security-recv)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _security_recv
 			_security_recv=(
@@ -15320,7 +15516,7 @@ _nvme () {
 			;;
 
 		(security-send)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--file -f" && return
 			local _security_send
@@ -15359,7 +15555,7 @@ _nvme () {
 			;;
 
 		(self-test-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _self_test_log
 			_self_test_log=(
@@ -15386,7 +15582,7 @@ _nvme () {
 
 		(set-feature)
 			_nvme_opt_vals "--feature-id -f" "arbitration power-mgmt lba-range temp-thresh err-recovery volatile-wc num-queues irq-coalesce irq-config write-atomic async-event auto-pst host-mem-buf timestamp kato hctm nopsc rrl plm-config plm-window lba-sts-interval host-behavior sanitize endurance-evt-cfg iocs-profile spinup-control power-loss-signal perf-characteristics fdp fdp-events ns-admin-label key-value ctrl-data-queue emb-mgmt-ctrl-addr host-mgmt-agent-addr enh-ctrl-metadata ctrl-metadata ns-metadata sw-progress host-id resv-nf-mask resv-persist write-protect bp-write-protect" \
-			               "--output-format -o" "normal json binary tabular" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--data -d" && return
 			local _set_feature
@@ -15427,7 +15623,7 @@ _nvme () {
 			;;
 
 		(set-property)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _set_property
 			_set_property=(
@@ -15455,7 +15651,7 @@ _nvme () {
 			;;
 
 		(set-reg)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _set_reg
 			_set_reg=(
@@ -15500,7 +15696,7 @@ _nvme () {
 			;;
 
 		(show-hostnqn)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _show_hostnqn
 			_show_hostnqn=(
@@ -15524,7 +15720,7 @@ _nvme () {
 			;;
 
 		(show-regs)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _show_regs
 			_show_regs=(
@@ -15548,7 +15744,7 @@ _nvme () {
 			;;
 
 		(show-topology)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json tabular" \
 			               "--output-format-version" "1 2" && return
 			local _show_topology
 			_show_topology=(
@@ -15574,7 +15770,7 @@ _nvme () {
 			;;
 
 		(smart-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _smart_log
 			_smart_log=(
@@ -15602,7 +15798,7 @@ _nvme () {
 			;;
 
 		(subsystem-reset)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _subsystem_reset
 			_subsystem_reset=(
@@ -15626,7 +15822,7 @@ _nvme () {
 			;;
 
 		(supported-cap-config-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _supported_cap_config_log
 			_supported_cap_config_log=(
@@ -15654,7 +15850,7 @@ _nvme () {
 			;;
 
 		(supported-log-pages)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _supported_log_pages
 			_supported_log_pages=(
@@ -15678,7 +15874,7 @@ _nvme () {
 			;;
 
 		(telemetry-log)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--output-file -O" && return
 			local _telemetry_log
@@ -15720,7 +15916,7 @@ _nvme () {
 			;;
 
 		(top)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal" \
 			               "--output-format-version" "1 2" && return
 			local _top
 			_top=(
@@ -15729,7 +15925,7 @@ _nvme () {
 				--dry-run':show command instead of executing'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--output-format=':Output format: normal|json|binary'
+				--output-format=':Output format: normal'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
@@ -15746,7 +15942,7 @@ _nvme () {
 			;;
 
 		(verify)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _verify
 			_verify=(
@@ -15792,7 +15988,7 @@ _nvme () {
 			;;
 
 		(virt-mgmt)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _virt_mgmt
 			_virt_mgmt=(
@@ -15824,7 +16020,7 @@ _nvme () {
 			;;
 
 		(write)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			_nvme_opt_files "--data -d" \
 			                "--metadata -M" && return
@@ -15893,7 +16089,7 @@ _nvme () {
 			;;
 
 		(write-uncor)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _write_uncor
 			_write_uncor=(
@@ -15927,7 +16123,7 @@ _nvme () {
 			;;
 
 		(write-zeroes)
-			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" && return
 			local _write_zeroes
 			_write_zeroes=(
