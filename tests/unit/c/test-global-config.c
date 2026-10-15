@@ -140,6 +140,37 @@ static bool test_malformed_value_skipped(void)
 	return pass;
 }
 
+/*
+ * The keys are the global options the help shows; the hidden
+ * human-readable is none. A verbose count beyond INT_MAX is rejected.
+ */
+static bool test_hidden_and_out_of_range(void)
+{
+	char *path;
+	bool pass = true;
+
+	nvme_args.verbose = 1;
+	path = write_temp(
+		"[Global]\n"
+		"human-readable = 5\n"
+		"verbose = 4294967295\n");
+
+	printf("test_hidden_and_out_of_range:\n");
+
+	nvme_load_global_config_from(path);
+	unlink(path);
+	free(path);
+
+	if (nvme_args.verbose != 1) {
+		printf(" - hidden key and huge verbose ignored [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - hidden key and huge verbose ignored [PASS]\n");
+	}
+
+	return pass;
+}
+
 static bool test_keys_outside_global_ignored(void)
 {
 	char *path;
@@ -191,9 +222,12 @@ int main(void)
 {
 	bool pass = true;
 
+	nvme_args_register();
+
 	pass &= test_valid_keys();
 	pass &= test_unknown_key_ignored();
 	pass &= test_malformed_value_skipped();
+	pass &= test_hidden_and_out_of_range();
 	pass &= test_keys_outside_global_ignored();
 	pass &= test_missing_file_is_noop();
 
