@@ -32,10 +32,16 @@ test('nvme-cli - argconfig_diff', test_argconfig_diff)
 
 test_global_config = executable(
     'test-global-config',
-    ['test-global-config.c', '../../../src/global-config.c'],
+    [
+        'test-global-config.c',
+        '../../../src/argconfig.c',
+        '../../../src/global-config.c',
+        '../../../src/global-options.c',
+    ],
     dependencies: [
         config_dep,
         ccan_dep,
+        libnvme_dep,
         shared_dep,
     ],
 )

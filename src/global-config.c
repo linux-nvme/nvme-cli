@@ -7,10 +7,10 @@
  */
 
 /*
- * /etc/nvme/nvme-cli.conf: a global INI config file for the options
- * defined by NVME_ARGS() in nvme.h (struct nvme_args). Values from this
- * file become the new defaults; any command-line flag still overrides
- * them, since this is loaded before argument parsing runs.
+ * /etc/nvme/nvme-cli.conf: a global INI config file for the global options
+ * (global-options.c, struct nvme_args). Its keys are their long names.
+ * Values from this file become the new defaults; any command-line flag
+ * still overrides them, since this is loaded before argument parsing runs.
  */
 
 #include <errno.h>
@@ -22,7 +22,7 @@
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
 
-#include "args.h"
+#include "argconfig.h"
 #include "global-config.h"
 
 struct global_config_ctx {
@@ -46,62 +46,68 @@ static int parse_uint(const char *value, unsigned int *out)
 	return 0;
 }
 
+/* The keys are the global options which the help shows */
+static struct argconfig_commandline_options *find_key(const char *key)
+{
+	struct argconfig_commandline_options *s;
+
+	for (s = argconfig_get_global_options(); s && s->option; s++) {
+		if (s->config_type == CFG_GROUP_SEPARATOR || s->hidden)
+			continue;
+		if (!strcmp(s->option, key))
+			return s;
+	}
+
+	return NULL;
+}
+
 static int apply_kv(struct global_config_ctx *gc, const char *key,
 		     const char *value, unsigned int line)
 {
+	struct argconfig_commandline_options *s = find_key(key);
 	unsigned int uval;
 	bool bval;
 	char *dup;
 	int err;
 
-	if (!strcmp(key, "verbose")) {
-		err = parse_uint(value, &uval);
-		if (err || uval > INT_MAX)
-			goto bad_value;
-		nvme_args.verbose = uval;
-	} else if (!strcmp(key, "quiet")) {
-		err = shr_parse_bool(value, &bval);
-		if (err)
-			goto bad_value;
-		nvme_args.quiet = bval;
-	} else if (!strcmp(key, "output-format")) {
-		dup = strdup(value);
-		if (!dup)
-			return -ENOMEM;
-		nvme_args.output_format = dup;
-	} else if (!strcmp(key, "timeout")) {
-		err = parse_uint(value, &uval);
-		if (err)
-			goto bad_value;
-		nvme_args.timeout = uval;
-	} else if (!strcmp(key, "dry-run")) {
-		err = shr_parse_bool(value, &bval);
-		if (err)
-			goto bad_value;
-		nvme_args.dry_run = bval;
-	} else if (!strcmp(key, "no-retries")) {
-		err = shr_parse_bool(value, &bval);
-		if (err)
-			goto bad_value;
-		nvme_args.no_retries = bval;
-	} else if (!strcmp(key, "no-ioctl-probing")) {
-		err = shr_parse_bool(value, &bval);
-		if (err)
-			goto bad_value;
-		nvme_args.no_ioctl_probing = bval;
-	} else if (!strcmp(key, "output-format-version")) {
-		err = parse_uint(value, &uval);
-		if (err)
-			goto bad_value;
-		nvme_args.output_format_ver = uval;
-	} else if (!strcmp(key, "set-options")) {
-		dup = strdup(value);
-		if (!dup)
-			return -ENOMEM;
-		nvme_args.set_options = dup;
-	} else {
+	if (!s || !s->default_value) {
 		fprintf(stderr, "%s:%u: unknown key \"%s\", ignoring\n",
 			gc->path, line, key);
+		return 0;
+	}
+
+	switch (s->config_type) {
+	case CFG_FLAG:
+		err = shr_parse_bool(value, &bval);
+		if (err)
+			goto bad_value;
+		*(bool *)s->default_value = bval;
+		break;
+	case CFG_INCREMENT:
+		/* the number of times the option is given */
+		err = parse_uint(value, &uval);
+		if (!err && uval > INT_MAX)
+			err = -EINVAL;
+		if (err)
+			goto bad_value;
+		*(int *)s->default_value = uval;
+		break;
+	case CFG_POSITIVE:
+		err = parse_uint(value, &uval);
+		if (err)
+			goto bad_value;
+		*(uint32_t *)s->default_value = uval;
+		break;
+	case CFG_STRING:
+		dup = strdup(value);
+		if (!dup)
+			return -ENOMEM;
+		*(char **)s->default_value = dup;
+		break;
+	default:
+		fprintf(stderr, "%s:%u: key \"%s\" can't be set, ignoring\n",
+			gc->path, line, key);
+		break;
 	}
 
 	return 0;

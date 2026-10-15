@@ -22,6 +22,20 @@ if python3.found()
             depends: nvme_exe,
             timeout: 120,
         )
+
+        # The global options are one table; the documentation has to list
+        # each of them, also as a key of nvme-cli.conf.
+        test(
+            'nvme-cli - global-options-doc',
+            python3,
+            args: [
+                files('test_global_options_doc.py'),
+                nvme_exe,
+                meson.project_source_root() / 'Documentation',
+            ],
+            depends: nvme_exe,
+            timeout: 60,
+        )
     endif
 
     # Argument handling of the completion generator; needs no nvme binary or
