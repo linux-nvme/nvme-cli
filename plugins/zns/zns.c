@@ -104,7 +104,7 @@ static int list(int argc, char **argv, struct command *acmd,
 	};
 	struct shr_table *t;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, NORMAL, "Output format: normal");
+	NVME_ARGS(opts);
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -1111,6 +1111,7 @@ static struct command list_cmd = {
 	.name = "list",
 	.help = "List all NVMe devices with Zoned Namespace Command Set support",
 	.fn = list,
+	.output_formats = OUTPUT_FORMATS_NORMAL,
 	.no_device = true,
 };
 

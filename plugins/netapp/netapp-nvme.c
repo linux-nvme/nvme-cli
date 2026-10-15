@@ -969,8 +969,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	int num_smdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, OUTPUT_FORMATS_CUSTOM,
-				 NETAPP_OUTPUT_FORMAT_DESC);
+	NVME_ARGS(opts);
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)
@@ -1067,8 +1066,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	int num_ontapdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, OUTPUT_FORMATS_CUSTOM,
-				 NETAPP_OUTPUT_FORMAT_DESC);
+	NVME_ARGS(opts);
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)
@@ -1156,6 +1154,8 @@ static struct command netapp_smdevices_cmd = {
 	.name = "smdevices",
 	.help = "NetApp SMdevices",
 	.fn = netapp_smdevices,
+	.output_formats = OUTPUT_FORMATS_CUSTOM,
+	.output_format_desc = NETAPP_OUTPUT_FORMAT_DESC,
 	.no_device = true,
 };
 
@@ -1163,6 +1163,8 @@ static struct command netapp_ontapdevices_cmd = {
 	.name = "ontapdevices",
 	.help = "NetApp ONTAPdevices",
 	.fn = netapp_ontapdevices,
+	.output_formats = OUTPUT_FORMATS_CUSTOM,
+	.output_format_desc = NETAPP_OUTPUT_FORMAT_DESC,
 	.no_device = true,
 };
 

@@ -58,11 +58,7 @@ static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0 || (flags != JSON && flags != NORMAL)) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	cntlist = libnvme_alloc(sizeof(*cntlist));
 	if (!cntlist)
@@ -122,11 +118,7 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0 || (flags != JSON && flags != NORMAL)) {
-		nvme_show_error("Invalid output format");
-		return -EINVAL;
-	}
+	flags = nvme_args.output_flags;
 
 	if (!cfg.namespace_id) {
 		nvme_show_error("invalid nsid parameter");
@@ -246,11 +238,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0 || (flags != JSON && flags != NORMAL)) {
-		nvme_show_error("invalid output format");
-		return -EINVAL;
-	}
+	flags = nvme_args.output_flags;
 
 	endgrp_list = libnvme_alloc(sizeof(*endgrp_list));
 	if (!endgrp_list)
@@ -1041,12 +1029,14 @@ static struct command list_ns_cmd = {
 	.name = "ns-list",
 	.help = "Send NVMe Identify List, display structure",
 	.fn = list_ns,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command list_ctrl_cmd = {
 	.name = "ctrl-list",
 	.help = "Send NVMe Identify Controller List, display structure",
 	.fn = list_ctrl,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command nvm_id_ctrl_cmd = {
@@ -1120,6 +1110,7 @@ static struct command id_endurance_grp_list_cmd = {
 	.name = "endgrp-list",
 	.help = "Send NVMe Identify Endurance Group List, display structure",
 	.fn = id_endurance_grp_list,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command *commands[] = {

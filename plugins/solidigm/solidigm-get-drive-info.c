@@ -37,11 +37,7 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if ((err < 0) || !(flags == NORMAL || flags == JSON)) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
+	flags = nvme_args.output_flags;
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err)

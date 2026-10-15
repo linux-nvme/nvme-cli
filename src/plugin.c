@@ -379,6 +379,15 @@ void general_help(struct plugin *plugin, char *str)
 	}
 }
 
+/* Apply the output formats a command supports before it runs */
+void command_set_output_formats(struct command *cmd)
+{
+	nvme_args_set_output_formats(cmd->output_formats ?
+				     cmd->output_formats :
+				     DEFAULT_OUTPUT_FORMATS,
+				     cmd->output_format_desc);
+}
+
 int handle_plugin(int argc, char **argv, struct plugin *plugin)
 {
 	char use[0x100];
@@ -457,6 +466,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 		    ((*cmd)->alias && !strcmp(str, (*cmd)->alias))) {
 			build_command_usage(use, sizeof(use), prog, plugin, *cmd);
 			argconfig_append_usage(use);
+			command_set_output_formats(*cmd);
 			return (*cmd)->fn(argc, argv, *cmd, plugin);
 		}
 		if (!strncmp(str, (*cmd)->name, strlen(str))) {
@@ -473,6 +483,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	if (cr && cr_valid) {
 		build_command_usage(use, sizeof(use), prog, plugin, cr);
 		argconfig_append_usage(use);
+		command_set_output_formats(cr);
 		return cr->fn(argc, argv, cr, plugin);
 	}
 

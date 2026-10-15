@@ -45,6 +45,11 @@ enum nvme_print_flags {
  * ones above. parse_args() does not check it then.
  */
 #define OUTPUT_FORMATS_CUSTOM	(1U << 31)
+/*
+ * Only the normal output. NORMAL is 0 and a struct command without output
+ * formats gets the default ones.
+ */
+#define OUTPUT_FORMATS_NORMAL	(1U << 30)
 
 #ifdef CONFIG_JSONC
 #define DEFAULT_OUTPUT_FORMATS (NORMAL | JSON | BINARY)
@@ -58,22 +63,15 @@ enum nvme_print_flags {
  * The command's options. The global options are registered once with
  * argconfig (nvme_args_register()) and accepted by every command; a
  * command's own option with the same short or long name takes precedence.
- * The supported output formats select the values accepted by
- * --output-format and its help text.
+ * The output formats a command supports are declared in its struct
+ * command.
  */
-#define NVME_ARGS_OUTPUT_FORMATS(n, of_mask, of_desc, ...)	\
-	nvme_args_set_output_formats(of_mask, of_desc);		\
+#define NVME_ARGS(n, ...)					\
 	struct argconfig_commandline_options n[] = {		\
 		OPT_GROUP("Options"),				\
 		##__VA_ARGS__,					\
 		OPT_END()					\
 	}
-
-#define NVME_ARGS(n, ...)                   \
-	NVME_ARGS_OUTPUT_FORMATS(n,         \
-		DEFAULT_OUTPUT_FORMATS,     \
-		DEFAULT_OUTPUT_FORMAT_DESC, \
-		##__VA_ARGS__)
 
 extern const char *uuid_index;
 extern const char *namespace_id_desired;

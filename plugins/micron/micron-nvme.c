@@ -776,7 +776,6 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	unsigned int temperature = 0, i = 0;
 	unsigned int tempSensors[SensorCount] = { 0 };
 	const char *desc = "Retrieve Micron temperature info for the given device ";
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 	bool is_json = false;
 	struct json_object *root;
@@ -784,7 +783,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -909,12 +908,11 @@ static int micron_pcie_stats(int argc, char **argv,
 	bool is_json = false;
 	bool counters = false;
 	const char *desc = "Retrieve PCIe event counters";
-	const char *fmt = "Output format: normal|json";
 
 	__u32 correctable_errors = 0;
 	__u32 uncorrectable_errors = 0;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1650,10 +1648,9 @@ static int micron_nand_stats(int argc, char **argv,
 	bool has_fb_log = false;
 	bool is_json = false;
 	nsze_from_oacs = false;
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1775,10 +1772,9 @@ static int micron_smart_ext_log(int argc, char **argv,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	bool is_json = false;
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1817,10 +1813,9 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 
 	int err = 0;
 	bool is_json = false;
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1857,10 +1852,9 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -2594,10 +2588,9 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -2929,10 +2922,9 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 	struct json_object *root, *fw_act;
 	struct json_object *entry;
 
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -3304,11 +3296,10 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *a
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	bool is_json = false;
 	nsze_from_oacs = false;
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 	int err = 0;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4190,10 +4181,9 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	bool is_json = false;
-	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4418,14 +4408,13 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	const char *desc = "Retrieve SMART/Health log for Micron drives";
-	const char *fmt = "Output format: normal|json";
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	struct nvme_smart_log smart_log = { 0 };
 	bool is_json = false;
 	nvme_print_flags_t format;
 	int err = 0;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4530,12 +4519,14 @@ static struct command vs_temperature_stats_cmd = {
 	.name = "vs-temperature-stats",
 	.help = "Retrieve Micron temperature statistics ",
 	.fn = micron_temp_stats,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command vs_pcie_stats_cmd = {
 	.name = "vs-pcie-stats",
 	.help = "Retrieve Micron PCIe error stats",
 	.fn = micron_pcie_stats,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command clear_pcie_correctable_errors_cmd = {
@@ -4560,18 +4551,21 @@ static struct command vs_nand_stats_cmd = {
 	.name = "vs-nand-stats",
 	.help = "Retrieve NAND Stats",
 	.fn = micron_nand_stats,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command vs_smart_ext_log_cmd = {
 	.name = "vs-smart-ext-log",
 	.help = "Retrieve extended SMART logs",
 	.fn = micron_smart_ext_log,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command vs_drive_info_cmd = {
 	.name = "vs-drive-info",
 	.help = "Retrieve Drive information",
 	.fn = micron_drive_info,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command plugin_version_cmd = {
@@ -4598,6 +4592,7 @@ static struct command vs_fw_activate_history_cmd = {
 	.name = "vs-fw-activate-history",
 	.help = "Display FW activation history",
 	.fn = micron_fw_activation_history,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command latency_tracking_cmd = {
@@ -4622,6 +4617,7 @@ static struct command vs_smart_add_log_cmd = {
 	.name = "vs-smart-add-log",
 	.help = "Retrieve extended SMART data",
 	.fn = micron_ocp_smart_health_logs,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command clear_fw_activate_history_cmd = {
@@ -4652,24 +4648,28 @@ static struct command vs_cloud_log_cmd = {
 	.name = "vs-cloud-log",
 	.help = "Retrieve Extended Health Information of Hyperscale NVMe Boot SSD",
 	.fn = micron_cloud_log,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command vs_work_load_log_cmd = {
 	.name = "vs-work-load-log",
 	.help = "Retrieve Workload logs",
 	.fn = micron_work_load_log,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command vs_vendor_telemetry_log_cmd = {
 	.name = "vs-vendor-telemetry-log",
 	.help = "Retrieve Vendor Telemetry logs",
 	.fn = micron_vendor_telemetry_log,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command smart_log_cmd = {
 	.name = "smart-log",
 	.help = "Retrieve SMART/Health Log",
 	.fn = micron_health_info,
+	.output_formats = NORMAL | JSON,
 };
 
 static struct command id_ctrl_cmd = {

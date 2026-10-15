@@ -327,17 +327,12 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	struct huawei_list_item *list_items;
 	unsigned int i, n;
 	unsigned int huawei_num = 0;
-	nvme_print_flags_t fmt;
 	int ret;
 
 	NVME_ARGS(opts);
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
-		return ret;
-
-	ret = validate_output_format(nvme_args.output_format, &fmt);
-	if (ret < 0 || (fmt != JSON && fmt != NORMAL))
 		return ret;
 
 	ret = nvme_create_global_ctx(&ctx);
@@ -375,7 +370,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 
 	if (huawei_num > 0) {
 #ifdef CONFIG_JSONC
-		if (fmt == JSON)
+		if (nvme_args.output_flags == JSON)
 			huawei_json_print_list_items(list_items, huawei_num);
 		else
 #endif /* CONFIG_JSONC */
@@ -411,6 +406,7 @@ static struct command huawei_list_cmd = {
 	.name = "list",
 	.help = "List all Huawei NVMe devices and namespaces on machine",
 	.fn = huawei_list,
+	.output_formats = NORMAL | JSON,
 	.no_device = true,
 };
 
