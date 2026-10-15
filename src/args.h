@@ -25,6 +25,8 @@ struct nvme_args {
 	bool no_ioctl_probing;
 	unsigned int output_format_ver;
 	nvme_print_flags_t supported_output_formats;
+	/* --output-format of the current command, set by parse_args() */
+	nvme_print_flags_t output_flags;
 	const char *set_options;
 };
 extern struct nvme_args nvme_args;
@@ -37,6 +39,12 @@ enum nvme_print_flags {
 	BINARY		= 1 << 3,	/* binary dump raw bytes */
 	TABULAR		= 1 << 4,	/* prints aligned columns for easy reading */
 };
+
+/*
+ * The command parses --output-format itself, for names other than the
+ * ones above. parse_args() does not check it then.
+ */
+#define OUTPUT_FORMATS_CUSTOM	(1U << 31)
 
 #ifdef CONFIG_JSONC
 #define DEFAULT_OUTPUT_FORMATS (NORMAL | JSON | BINARY)
@@ -54,8 +62,7 @@ enum nvme_print_flags {
  * --output-format and its help text.
  */
 #define NVME_ARGS_OUTPUT_FORMATS(n, of_mask, of_desc, ...)	\
-	(void)(of_desc);					\
-	nvme_args_set_output_formats(of_mask);			\
+	nvme_args_set_output_formats(of_mask, of_desc);		\
 	struct argconfig_commandline_options n[] = {		\
 		OPT_GROUP("Options"),				\
 		##__VA_ARGS__,					\
@@ -72,7 +79,8 @@ extern const char *uuid_index;
 extern const char *namespace_id_desired;
 
 void nvme_args_register(void);
-void nvme_args_set_output_formats(nvme_print_flags_t formats);
+void nvme_args_set_output_formats(nvme_print_flags_t formats,
+				  const char *custom_desc);
 int parse_args(int argc, char *argv[], const char *desc,
 	       struct argconfig_commandline_options *opts);
 int validate_output_format(const char *format, nvme_print_flags_t *flags);

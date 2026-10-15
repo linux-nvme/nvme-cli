@@ -53,14 +53,23 @@ static struct argconfig_commandline_options global_options[] = {
 /* Register the options every command accepts */
 void nvme_args_register(void)
 {
-	nvme_args_set_output_formats(DEFAULT_OUTPUT_FORMATS);
+	nvme_args_set_output_formats(DEFAULT_OUTPUT_FORMATS, NULL);
 	argconfig_set_global_options(global_options);
 }
 
-/* The output formats the current command supports */
-void nvme_args_set_output_formats(nvme_print_flags_t formats)
+/*
+ * The output formats the current command supports. The help text lists
+ * them, a command which parses --output-format itself describes its own.
+ */
+void nvme_args_set_output_formats(nvme_print_flags_t formats,
+				  const char *custom_desc)
 {
 	nvme_args.supported_output_formats = formats;
+	if (formats & OUTPUT_FORMATS_CUSTOM) {
+		snprintf(output_format_help, sizeof(output_format_help), "%s",
+			 custom_desc);
+		return;
+	}
 	snprintf(output_format_help, sizeof(output_format_help),
 		 "Output format: normal%s%s%s",
 		 formats & JSON ? "|json" : "",
@@ -79,6 +88,17 @@ int parse_args(int argc, char *argv[], const char *desc,
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	if (nvme_args.supported_output_formats & OUTPUT_FORMATS_CUSTOM) {
+		nvme_args.output_flags = NORMAL;
+	} else {
+		ret = validate_output_format(nvme_args.output_format,
+					     &nvme_args.output_flags);
+		if (ret < 0) {
+			nvme_show_error("Invalid output format");
+			return ret;
+		}
+	}
 
 	nvme_show_init();
 
