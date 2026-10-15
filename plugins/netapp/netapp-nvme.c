@@ -934,6 +934,12 @@ static int netapp_nvme_filter(const struct dirent *d)
 	return 0;
 }
 
+#ifdef CONFIG_JSONC
+#define NETAPP_OUTPUT_FORMAT_DESC "Output format: normal|column|json"
+#else /* CONFIG_JSONC */
+#define NETAPP_OUTPUT_FORMAT_DESC "Output format: normal|column"
+#endif /* CONFIG_JSONC */
+
 static int netapp_output_format(char *format)
 {
 	if (!format)
@@ -963,7 +969,8 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	int num_smdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
-	NVME_ARGS(opts);
+	NVME_ARGS_OUTPUT_FORMATS(opts, OUTPUT_FORMATS_CUSTOM,
+				 NETAPP_OUTPUT_FORMAT_DESC);
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)
@@ -1060,7 +1067,8 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	int num_ontapdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
-	NVME_ARGS(opts);
+	NVME_ARGS_OUTPUT_FORMATS(opts, OUTPUT_FORMATS_CUSTOM,
+				 NETAPP_OUTPUT_FORMAT_DESC);
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)

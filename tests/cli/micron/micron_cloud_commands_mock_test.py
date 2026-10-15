@@ -104,21 +104,18 @@ class CloudTestBase(TestMicronMock):
                       result.stderr)
 
     def assert_output_format_ignored(self, command):
-        """A command declaring no output formats must ignore the flag."""
+        """A command without format-dependent output ignores a valid
+        --output-format. An invalid one is rejected like everywhere."""
         baseline = self.run_plugin_cmd_check(command)
-        for value in ("binary", "notaformat"):
-            with self.subTest(value=value):
-                result = self.run_plugin_cmd(command,
-                                             args=f"--output-format={value}")
+        result = self.run_plugin_cmd(command, args="--output-format=binary")
+        self.assertNotIn(
+            "Invalid output format", result.stderr + result.stdout,
+            f"micron {command} rejected --output-format=binary")
+        self.assertEqual(
+            result.stdout, baseline.stdout,
+            f"micron {command} output changed for --output-format=binary")
 
-                self.assertNotIn(
-                    "Invalid output format", result.stderr + result.stdout,
-                    f"micron {command} does not validate --output-format but "
-                    f"rejected {value!r}")
-                self.assertEqual(
-                    result.stdout, baseline.stdout,
-                    f"micron {command} output changed for "
-                    f"--output-format={value}")
+        self.check_output_format_rejected(command, "notaformat")
 
 
 class TestMicronCloudBootVersion(CloudTestBase):
