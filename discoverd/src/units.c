@@ -20,6 +20,7 @@
 #include <ccan/list/list.h>
 
 #include <daemon-util/log.h>
+#include <shared/cleanup-util.h>
 
 #include "state.h"
 #include "units.h"
@@ -827,6 +828,116 @@ int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 	sd_bus_message_unref(m);
 out:
 	free(unit_name);
+	return r;
+}
+
+static int build_connect_all(struct unit_mgr *mgr, const char *unit_name,
+			     const char *devname, const char **argv,
+			     sd_bus_message **out)
+{
+	sd_bus_message *m = NULL;
+	char desc[128];
+	int r;
+
+	snprintf(desc, sizeof(desc),
+		 "NVMe connect-all for Discovery Controller %s", devname);
+
+	r = sd_bus_message_new_method_call(mgr->bus, &m,
+					   SYSTEMD_BUS_NAME,
+					   SYSTEMD_OBJ_PATH,
+					   SYSTEMD_MGR_IFACE,
+					   "StartTransientUnit");
+	if (r < 0)
+		return r;
+
+	r = sd_bus_message_append(m, "ss", unit_name, "replace");
+	if (r < 0)
+		goto err;
+	r = sd_bus_message_open_container(m, 'a', "(sv)");
+	if (r < 0)
+		goto err;
+	r = append_string_prop(m, "Type", "oneshot");
+	if (r < 0)
+		goto err;
+	r = append_string_prop(m, "Description", desc);
+	if (r < 0)
+		goto err;
+	r = append_string_prop(m, "CollectMode", "inactive-or-failed");
+	if (r < 0)
+		goto err;
+	r = append_exec_prop(m, "ExecStart", argv, false);
+	if (r < 0)
+		goto err;
+	r = sd_bus_message_close_container(m); // a(sv)
+	if (r < 0)
+		goto err;
+
+	/* Empty auxiliary units array. */
+	r = sd_bus_message_open_container(m, 'a', "(sa(sv))");
+	if (r < 0)
+		goto err;
+	r = sd_bus_message_close_container(m);
+	if (r < 0)
+		goto err;
+
+	*out = m;
+	return 0;
+err:
+	sd_bus_message_unref(m);
+	return r;
+}
+
+int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
+			   const struct dc_addr *addr)
+{
+	static const char *const names[] = {
+		"transport", "traddr", "trsvcid", "host-traddr", "host-iface",
+	};
+	const char *const vals[] = {
+		addr->transport, addr->traddr, addr->trsvcid,
+		addr->host_traddr, addr->host_iface,
+	};
+	char opts[ARRAY_SIZE(names) + 1][320];
+	const char *argv[ARRAY_SIZE(names) + 5];
+	__cleanup_free char *unit_name = NULL;
+	sd_bus_message *m = NULL;
+	int argc = 0, n, r;
+	size_t i;
+
+	if (asprintf(&unit_name, "nvme-discoverd-connect-all-%s.service",
+		     devname) < 0)
+		return -ENOMEM;
+
+	argv[argc++] = mgr->nvme_path;
+	argv[argc++] = "connect-all";
+
+	n = snprintf(opts[0], sizeof(opts[0]), "--device=%s", devname);
+	if (n < 0 || n >= (int)sizeof(opts[0]))
+		return -ENAMETOOLONG;
+	argv[argc++] = opts[0];
+
+	// The kernel reports a missing value as "none".
+	for (i = 0; i < ARRAY_SIZE(names); i++) {
+		if (!vals[i] || !*vals[i] || streq(vals[i], "none"))
+			continue;
+
+		n = snprintf(opts[i + 1], sizeof(opts[i + 1]), "--%s=%s",
+			     names[i], vals[i]);
+		if (n < 0 || n >= (int)sizeof(opts[i + 1]))
+			return -ENAMETOOLONG;
+		argv[argc++] = opts[i + 1];
+	}
+
+	argv[argc++] = "--quiet";
+	argv[argc] = NULL;
+
+	r = build_connect_all(mgr, unit_name, devname, argv, &m);
+	if (r < 0)
+		return r;
+
+	r = do_start_transient(mgr, m, unit_name);
+	sd_bus_message_unref(m);
+
 	return r;
 }
 

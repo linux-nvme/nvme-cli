@@ -16,6 +16,7 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 - **Connect-only.** nvme-discoverd never disconnects a live controller because of a discovery change. That's TP8010 fabric-zoning territory, out of scope here. The only disconnects it causes are its own transient units' `ExecStop=`, at shutdown or on request.
 - **Retry with backoff and a give-up horizon.** A failed (re)connect retries with exponential backoff, capped at 5 minutes. NBFT and fabrics-config controllers represent explicit intent, so they always retry forever. A Discovery Controller found only through a referral, FC kickstart, or mDNS is different: it gives up after `dc-giveup-timeout` (default 72hours) of unbroken failure and is dropped from tracking; `infinity` makes it retry forever too.
 - **Cooperative, not exclusive.** Before connecting or reconnecting anything, nvme-discoverd checks the system-wide exclusion list and registers ownership in the ownership registry (`--owner discoverd`, or `--owner nbft` for an NBFT-sourced controller). See `libnvme/design/REGISTRY.md` and `EXCLUSIONS.md`.
+- **Unowned Discovery Controllers.** A DC that has no owner, e.g. from `nvme discover --persistent`, is not tracked. On its log page change AEN or rediscover event, nvme-discoverd runs `nvme connect-all --device=nvmeX` once in a transient unit, as `70-nvmf-autoconnect.rules` does. It passes no `--owner`, so the new connections have no owner either. Events from a DC with another owner are ignored.
 
 ## Source layout
 

@@ -260,6 +260,13 @@
   Before, the connection was skipped until the next reload. While the
   first lookups run, nvme-discoverd does not release any controller.
 
+* nvme-discoverd handles the events of a Discovery Controller that has
+  no owner, for example one connected with
+  `nvme discover --persistent`. It runs `nvme connect-all` for it, as
+  `70-nvmf-autoconnect.rules` does. The new connections have no owner
+  either. Before, nothing handled these events when the legacy udev
+  rules were not installed.
+
 ### libnvme
 
 * A failed read of `/dev/nvme-fabrics` is no longer cached for the

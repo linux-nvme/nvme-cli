@@ -186,6 +186,13 @@ HN2_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:host-name-late
 HN_PORT=8018
 HN_PORT_ID=11
 
+# A DC connected by hand, not tracked by nvme-discoverd.
+UO_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:unowned
+UO2_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:unowned2
+UO3_NQN=nqn.2026-10.org.nvmexpress.discoverd-wringer:unowned3
+UO_PORT=8019
+UO_PORT_ID=12
+
 # mDNS phases only. Advertised through mDNS, on ${IFACE}'s address. The
 # port is opened and closed per phase, so a phase can advertise a DC whose
 # port is not open yet.
@@ -341,14 +348,15 @@ nvmet_teardown() {
 	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}" \
 		  "${V6_PORT_ID}" "${LL_PORT_ID}" "${REL_PORT_ID}" \
 		  "${MDNS_PORT_ID}" "${NL_PORT_ID}" "${MAP_PORT_ID}" \
-		  "${REF_PORT_ID}" "${HN_PORT_ID}"; do
+		  "${REF_PORT_ID}" "${HN_PORT_ID}" "${UO_PORT_ID}"; do
 		rm -f /sys/kernel/config/nvmet/ports/"${id}"/subsystems/*
 		rmdir "/sys/kernel/config/nvmet/ports/${id}" 2>/dev/null
 	done
 	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}" \
 		   "${V6_NQN}" "${LL_NQN}" "${REL_NQN}" "${REL2_NQN}" \
 		   "${MDNS_NQN}" "${NL_NQN}" "${MAP_NQN}" "${REF_NQN}" \
-		   "${HN_NQN}" "${HN2_NQN}"; do
+		   "${HN_NQN}" "${HN2_NQN}" "${UO_NQN}" "${UO2_NQN}" \
+		   "${UO3_NQN}"; do
 		local subsys_dir="/sys/kernel/config/nvmet/subsystems/${nqn}"
 
 		if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
@@ -448,6 +456,35 @@ discoverd_stop() {
 	"${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${HN_NQN}" >/dev/null 2>&1 || true
 	"${NVME_BIN}" disconnect -n "${HN2_NQN}" >/dev/null 2>&1 || true
+	disconnect_unowned
+}
+
+# Discovery controller connected to port $1, or non-zero if there is none.
+port_dc_dev() {
+	local port="$1" d
+
+	for d in /sys/class/nvme/nvme*; do
+		[ "$(cat "${d}/cntrltype" 2>/dev/null)" = discovery ] ||
+			continue
+		if grep -q "trsvcid=${port}\(,\|$\)" "${d}/address" \
+			2>/dev/null; then
+			basename "${d}"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Disconnect what the unowned DC phases connected by hand.
+disconnect_unowned() {
+	local dev
+
+	while dev=$(port_dc_dev "${UO_PORT}"); do
+		"${NVME_BIN}" disconnect -d "${dev}" >/dev/null 2>&1 || break
+	done
+	"${NVME_BIN}" disconnect -n "${UO_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${UO2_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect -n "${UO3_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -895,6 +932,7 @@ disconnect_foreign
 "${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${HN_NQN}" >/dev/null 2>&1 || true
 "${NVME_BIN}" disconnect -n "${HN2_NQN}" >/dev/null 2>&1 || true
+disconnect_unowned
 # ... and left its desired controllers saved.
 rm -f "${DESIRED_FILE}"
 
@@ -1390,6 +1428,59 @@ assert_dev_stable "restart adopts the IOC configured by host name" \
 countdown 3 "give a release pass time to run"
 assert_journal_lacks "the IOC was not released" \
 	"${P_START}" "${P_DEV} - .*released"
+
+phase "an AEN from an unowned DC runs connect-all"
+#
+# A DC connected by hand without --owner is not tracked. nvme-discoverd
+# runs connect-all for it, as the legacy udev rules do. The connections
+# stay unowned. nvme discover connects no IOC, so the AEN is what
+# connects both subsystems.
+nvmet_add_subsystem "${UO_NQN}"
+nvmet_add_port "${UO_PORT_ID}" "${UO_PORT}" "${UO_NQN}"
+"${NVME_BIN}" discover -t tcp -a "${TRADDR}" -s "${UO_PORT}" \
+	--persistent=force >/dev/null 2>&1
+P_DC=$(port_dc_dev "${UO_PORT}")
+if [ -z "${P_DC}" ]; then
+	fail "the DC is connected by hand"
+else
+	pass "the DC is connected by hand"
+fi
+nvmet_add_subsystem "${UO2_NQN}"
+P_START=$(date +%H:%M:%S)
+log "nvmet: port ${UO_PORT} also serves ${UO2_NQN}"
+ln -s "/sys/kernel/config/nvmet/subsystems/${UO2_NQN}" \
+	"/sys/kernel/config/nvmet/ports/${UO_PORT_ID}/subsystems/${UO2_NQN}"
+assert_journal_has "connect-all was started" "${P_START}" \
+	"${P_DC} - discovery log changed on an unowned DC" 10
+assert_connected "connects the subsystem added to the DLP" "${UO2_NQN}" 30
+assert_connected "connects the subsystem already in the DLP" "${UO_NQN}" 30
+P_DEV=$(connected_dev "${UO2_NQN}")
+if [ -e "${REGISTRY_DIR}/${P_DEV}/owner" ]; then
+	fail "the new IOC has no owner"
+else
+	pass "the new IOC has no owner"
+fi
+if [ -e "${REGISTRY_DIR}/${P_DC}/owner" ]; then
+	fail "the DC still has no owner"
+else
+	pass "the DC still has no owner"
+fi
+disconnect_unowned
+
+phase "an AEN from a DC owned by another orchestrator is ignored"
+"${NVME_BIN}" discover -t tcp -a "${TRADDR}" -s "${UO_PORT}" \
+	--persistent=force --owner "${FOREIGN_OWNER}" >/dev/null 2>&1
+P_DC=$(port_dc_dev "${UO_PORT}")
+nvmet_add_subsystem "${UO3_NQN}"
+P_START=$(date +%H:%M:%S)
+log "nvmet: port ${UO_PORT} also serves ${UO3_NQN}"
+ln -s "/sys/kernel/config/nvmet/subsystems/${UO3_NQN}" \
+	"/sys/kernel/config/nvmet/ports/${UO_PORT_ID}/subsystems/${UO3_NQN}"
+assert_journal_has "the AEN was skipped" "${P_START}" \
+	"${P_DC} - discovery log changed, owned by '${FOREIGN_OWNER}'" 10
+countdown 5 "give a connect-all time to run"
+assert_not_connected "does not connect the subsystem" "${UO3_NQN}"
+disconnect_unowned
 
 if [ -z "${IFACE}" ]; then
 	log "No <iface> given: mDNS phases not run"
