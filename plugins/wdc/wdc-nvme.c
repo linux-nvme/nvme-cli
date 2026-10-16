@@ -4431,7 +4431,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	struct config {
 		char *file;
 		__u32 xfer_size;
-		int data_area;
+		__u32 data_area;
 		__u64 file_size;
 		__u64 offset;
 		char *type;
@@ -8577,7 +8577,7 @@ static int wdc_cu_smart_log(int argc, char **argv, struct command *acmd,
 	__u8 *data;
 
 	struct config {
-		int uuid_index;
+		__u32 uuid_index;
 	};
 
 	struct config cfg = {
@@ -10740,7 +10740,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 
 
 	struct config {
-		int log_id;
+		__u32 log_id;
 		char *file;
 	};
 	struct config cfg = {

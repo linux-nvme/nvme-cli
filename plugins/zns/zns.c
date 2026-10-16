@@ -339,7 +339,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 		bool	zsaso;
 		bool	select_all;
 		__u8	zsa;
-		int	data_len;
+		__u32	data_len;
 		char	*file;
 	};
 

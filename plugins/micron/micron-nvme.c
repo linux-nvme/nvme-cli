@@ -710,8 +710,8 @@ static int micron_smbus_option(int argc, char **argv,
 
 	struct {
 		char *option;
-		int  value;
-		int  save;
+		__u32 value;
+		__u32 save;
 		int  status;
 	} opt = {
 		.option = "disable",
@@ -3399,7 +3399,7 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 
 	struct {
 		char *option;
-		int  select;
+		__u32 select;
 	} opt = {
 		.option = "disable",
 		.select = 0,

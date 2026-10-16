@@ -419,7 +419,7 @@ static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin
 	struct config {
 		__u32 namespace_id;
 		const char *output_file;
-		int log;
+		__u32 log;
 	};
 
 	struct config cfg = {
