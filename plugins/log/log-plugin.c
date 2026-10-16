@@ -2307,16 +2307,29 @@ static int get_reachability_group_desc(struct libnvme_transport_handle *hdl, str
 {
 	int err;
 	struct nvme_reachability_groups_log *log = *logp;
+	struct nvme_reachability_group_desc rgd;
+	__u64 desc;
+	__u32 nnid;
 	__u16 i;
-	__u32 len;
 
+	/* each descriptor is followed by its list of namespace IDs */
 	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
-		len = sizeof(*log->rgd);
-		err = get_log_offset(hdl, args, offset, len, (void **)&log);
+		desc = *offset;
+		err = get_log_offset(hdl, args, offset, sizeof(rgd),
+				     (void **)&log);
 		if (err)
 			goto err_free;
-		len = le32_to_cpu(log->rgd[i].nnid) * sizeof(*log->rgd[i].nsid);
-		err = get_log_offset(hdl, args, offset, len, (void **)&log);
+		/* the descriptors are only 4 byte aligned */
+		memcpy(&rgd, (void *)log + desc, sizeof(rgd));
+		nnid = le32_to_cpu(rgd.nnid);
+		if (!nnid)
+			continue;
+		if (nnid > UINT32_MAX / sizeof(*rgd.nsid)) {
+			err = -EINVAL;
+			goto err_free;
+		}
+		err = get_log_offset(hdl, args, offset,
+				     nnid * sizeof(*rgd.nsid), (void **)&log);
 		if (err)
 			goto err_free;
 	}
@@ -2350,7 +2363,7 @@ static int get_reachability_groups(struct libnvme_transport_handle *hdl, bool rg
 		return -ENOMEM;
 
 	nvme_init_get_log_reachability_groups(&cmd, rgo, log, log_len);
-	err = libnvme_get_log(hdl, &cmd, false, log_len);
+	err = libnvme_get_log(hdl, &cmd, rae, log_len);
 	if (err)
 		goto err_free;
 
@@ -2418,16 +2431,29 @@ static int get_reachability_association_desc(struct libnvme_transport_handle *hd
 {
 	int err;
 	struct nvme_reachability_associations_log *log = *logp;
+	struct nvme_reachability_association_desc rad;
+	__u64 desc;
+	__u32 nrid;
 	__u16 i;
-	__u32 len;
 
+	/* each descriptor is followed by its list of reachability group IDs */
 	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
-		len = sizeof(*log->rad);
-		err = get_log_offset(hdl, args, offset, len, (void **)&log);
+		desc = *offset;
+		err = get_log_offset(hdl, args, offset, sizeof(rad),
+				     (void **)&log);
 		if (err)
 			goto err_free;
-		len = le32_to_cpu(log->rad[i].nrid) * sizeof(*log->rad[i].rgid);
-		err = get_log_offset(hdl, args, offset, len, (void **)&log);
+		/* the descriptors are only 4 byte aligned */
+		memcpy(&rad, (void *)log + desc, sizeof(rad));
+		nrid = le32_to_cpu(rad.nrid);
+		if (!nrid)
+			continue;
+		if (nrid > UINT32_MAX / sizeof(*rad.rgid)) {
+			err = -EINVAL;
+			goto err_free;
+		}
+		err = get_log_offset(hdl, args, offset,
+				     nrid * sizeof(*rad.rgid), (void **)&log);
 		if (err)
 			goto err_free;
 	}

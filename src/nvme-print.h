@@ -188,6 +188,67 @@ nvme_pull_model_ddc_req_osp_len(struct nvme_pull_model_ddc_req_log *log,
 	return end - offsetof(struct nvme_pull_model_ddc_req_log, osp);
 }
 
+/*
+ * Copy the fixed part of the reachability group descriptor at offset @off
+ * of a log of @len bytes to @rgd. The descriptors differ in length, so
+ * they are only 4 byte aligned. Return: false if the descriptor doesn't
+ * fit with its namespace ID list, which nvme_reachability_ids() returns.
+ * The next descriptor is at nvme_reachability_group_next().
+ */
+static inline bool
+nvme_reachability_group(struct nvme_reachability_groups_log *log, __u64 len,
+			__u64 off, struct nvme_reachability_group_desc *rgd)
+{
+	if (off > len || len - off < sizeof(*rgd))
+		return false;
+
+	memcpy(rgd, (void *)log + off, sizeof(*rgd));
+	return le32_to_cpu(rgd->nnid) <=
+		(len - off - sizeof(*rgd)) / sizeof(rgd->nsid[0]);
+}
+
+static inline __u64
+nvme_reachability_group_next(struct nvme_reachability_group_desc *rgd,
+			     __u64 off)
+{
+	return off + sizeof(*rgd) +
+		(__u64)le32_to_cpu(rgd->nnid) * sizeof(rgd->nsid[0]);
+}
+
+/*
+ * The reachability association descriptor at offset @off of a log of @len
+ * bytes, as nvme_reachability_group().
+ */
+static inline bool
+nvme_reachability_association(struct nvme_reachability_associations_log *log,
+			      __u64 len, __u64 off,
+			      struct nvme_reachability_association_desc *rad)
+{
+	if (off > len || len - off < sizeof(*rad))
+		return false;
+
+	memcpy(rad, (void *)log + off, sizeof(*rad));
+	return le32_to_cpu(rad->nrid) <=
+		(len - off - sizeof(*rad)) / sizeof(rad->rgid[0]);
+}
+
+static inline __u64
+nvme_reachability_association_next(
+		struct nvme_reachability_association_desc *rad, __u64 off)
+{
+	return off + sizeof(*rad) +
+		(__u64)le32_to_cpu(rad->nrid) * sizeof(rad->rgid[0]);
+}
+
+/*
+ * The IDs which follow the reachability descriptor at offset @off, whose
+ * fixed part is @size bytes long. They are 4 byte aligned, as they need.
+ */
+static inline __le32 *nvme_reachability_ids(void *log, __u64 off, size_t size)
+{
+	return log + off + size;
+}
+
 /* Return: the LBA data size in bytes, or 0 if it is not representable. */
 static inline unsigned int nvme_lbaf_data_size(__u8 ds)
 {
