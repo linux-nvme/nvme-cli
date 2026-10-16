@@ -939,6 +939,39 @@ static bool test_align_column_subtables_only(void)
 	return pass;
 }
 
+static bool test_many_rows(void)
+{
+	struct shr_table_column columns[] = {
+		{ "Row", RIGHT, AUTO_WIDTH },
+	};
+	struct shr_table *t;
+	bool pass = true;
+	int i, row = 0;
+
+	printf("test_many_rows:\n");
+
+	t = shr_table_init_with_columns(columns, 1);
+	pass &= check_bool("table allocated", t != NULL);
+	if (!t)
+		return pass;
+
+	for (i = 0; i < 100000 && row >= 0; i++) {
+		row = shr_table_get_row_id(t);
+		if (row >= 0)
+			shr_table_set_value_int(t, 0, row, i, RIGHT);
+	}
+	pass &= check_bool("every row gets the next id", row == 100000 - 1);
+	pass &= check_bool("the table has all rows", t->num_rows == 100000);
+	pass &= check_bool("the first row kept its value",
+			   t->rows[0].val[0].i == 0);
+	pass &= check_bool("the last row has its value",
+			   t->rows[99999].val[0].i == 99999);
+
+	shr_table_free(t);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -957,6 +990,7 @@ int main(void)
 	pass &= test_align_column_including_outer();
 	pass &= test_align_column_subtables_only();
 	pass &= test_shr_table_print();
+	pass &= test_many_rows();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
