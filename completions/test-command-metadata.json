@@ -1,11 +1,12 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "nvme",
   "version": "0.0-fixture",
   "description": "Synthetic fixture for the completion generator tests.",
   "commands": [
     {
       "name": "zulu-cmd",
+      "device": "required",
       "alias": "alpha-alias",
       "description": "zulu builtin command",
       "options": [
@@ -47,11 +48,13 @@
     },
     {
       "name": "no-opt-cmd",
+      "device": "required",
       "description": "builtin command with no options",
       "options": []
     },
     {
       "name": "alpha-cmd",
+      "device": "optional",
       "description": "alpha builtin command",
       "options": [
         {
@@ -100,6 +103,7 @@
       "commands": [
         {
           "name": "report",
+          "device": "required",
           "alias": "rpt",
           "description": "report a thing",
           "options": [
@@ -136,6 +140,7 @@
         },
         {
           "name": "no-opt-sub",
+          "device": "required",
           "description": "sub-command with no options",
           "options": []
         }
@@ -147,6 +152,7 @@
       "commands": [
         {
           "name": "local-sub",
+          "device": "none",
           "description": "sub-command with local options but no globals",
           "options": [
             {

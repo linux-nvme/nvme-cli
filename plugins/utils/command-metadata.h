@@ -37,6 +37,7 @@ struct command_metadata_command {
 	struct command_metadata_option *options;	/* heap array */
 	size_t num_options;
 	bool captured;			/* hook fired -> options valid */
+	int device;			/* enum command_device */
 };
 
 struct command_metadata_plugin {

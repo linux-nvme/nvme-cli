@@ -27,7 +27,7 @@ import unittest
 
 # A model that passes the schema-version check; with no commands or plugins the
 # generator still emits a valid (if command-less) script.
-MINIMAL_MODEL = json.dumps({"schema_version": 1})
+MINIMAL_MODEL = json.dumps({"schema_version": 2})
 
 
 class GenerateCompletionsArgsTest(unittest.TestCase):

@@ -399,6 +399,11 @@ expect_device \
     "nvme zeta-plug no-opt-sub "
 
 # help and version never offer a device.
+# A command whose metadata says it takes no device offers none.
+expect_no_device \
+    "a command without a device operand offers none" \
+    "nvme beta-plug local-sub "
+
 expect_no_device \
     "help takes no device" \
     "nvme help "

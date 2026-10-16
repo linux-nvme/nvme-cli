@@ -95,6 +95,8 @@ class TestCommandMetadataSchema(unittest.TestCase):
             lambda d: d["commands"][0]["options"][0].pop("long"),
             lambda d: d["commands"][0]["options"][0].update(argument="bogus"),
             lambda d: d["commands"][0]["options"][0].update(surprise=1),
+            lambda d: d["commands"][0].pop("device"),
+            lambda d: d["commands"][0].update(device="bogus"),
         ]
         for mutate in cases:
             bad = copy.deepcopy(self.data)
@@ -138,8 +140,15 @@ class TestCommandMetadataSchema(unittest.TestCase):
         self.assertEqual(runs[0], runs[1])
 
     def test_schema_version(self):
-        """schema_version is the expected 1; a change must be conscious."""
-        self.assertEqual(self.data["schema_version"], 1)
+        """schema_version is the expected 2; a change must be conscious."""
+        self.assertEqual(self.data["schema_version"], 2)
+
+    def test_device_operand(self):
+        """Each command reports whether it takes a device."""
+        device = {c["name"]: c["device"] for c in self.data["commands"]}
+        self.assertEqual(device["list"], "none")
+        self.assertEqual(device["list-subsys"], "optional")
+        self.assertEqual(device["format"], "required")
 
     def test_global_output_format_option(self):
         """The shared output-format option carries its constrained value set."""

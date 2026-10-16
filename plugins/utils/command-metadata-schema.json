@@ -58,11 +58,16 @@
     "command": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "options"],
+      "required": ["name", "device", "options"],
       "properties": {
         "name": {
           "type": "string",
           "description": "Command name as typed on the command line."
+        },
+        "device": {
+          "type": "string",
+          "enum": ["required", "optional", "none"],
+          "description": "Whether the command takes a device operand (since schema version 2)."
         },
         "alias": {
           "type": "string",
