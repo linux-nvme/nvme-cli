@@ -328,6 +328,18 @@ class DiscoveryLogsTest(unittest.TestCase):
         self.assertEqual([v for k, v in kv if k.startswith('rgid')],
                          ['10', '11', '20'])
 
+    def test_reachability_json_lists_all_ids(self):
+        self.server.logs[_LID_REACHABILITY_GROUPS] = \
+            _reachability_log([(1, [10, 11]), (2, [20])])
+        out = self._run_json('reachability-groups')
+        self.assertEqual(out['rgid: 1']['nsid'], [10, 11])
+        self.assertEqual(out['rgid: 2']['nsid'], [20])
+        self.assertEqual(out['rgid: 2']['nnid'], 1)
+        self.server.logs[_LID_REACHABILITY_ASSOCIATIONS] = \
+            _reachability_log([(1, [10, 11])])
+        out = self._run_json('reachability-associations')
+        self.assertEqual(out['rasid: 1']['rgid'], [10, 11])
+
 
 if __name__ == '__main__':
     unittest.main(argv=[sys.argv[0]])
