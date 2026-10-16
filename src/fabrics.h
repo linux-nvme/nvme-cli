@@ -38,7 +38,7 @@ struct nvmf_args {
 	bool concat;
 };
 
-/* Helper text for NVMF_ARGS */
+/* Helper text for the fabrics options */
 #define DESC_NVMF_TPORT			"transport type"
 #define DESC_NVMF_TRADDR		"transport address"
 #define DESC_NVMF_NQN			"subsystem nqn"
@@ -70,51 +70,15 @@ struct nvmf_args {
 #define DESC_NVMF_CONCAT		"enable secure concatenation"
 
 /*
- * Common "nvme connect"/"discover"/"connect-all" options, shared by every
- * command that builds a struct nvmf_args from the command line -- including
- * config-create.c, which adds an entry to the INI configuration instead of
- * connecting.
+ * The options which every command shares that builds a struct nvmf_args
+ * from the command line -- connect, discover, connect-all, disconnect and
+ * config create, which adds an entry to the INI configuration instead of
+ * connecting. nvmf_options() returns them bound to @fa, which the
+ * command includes with OPT_INCLUDE() and frees. Start @fa with
+ * nvmf_args_defaults().
  */
-#define NVMF_ARGS(n, f, ...)						\
-	struct argconfig_commandline_options n[] = {			\
-		OPT_STRING("transport",       't', "STR", &f.transport,     DESC_NVMF_TPORT),         \
-		OPT_STRING("nqn",             'n', "STR", &f.subsysnqn,     DESC_NVMF_NQN),           \
-		OPT_STRING("traddr",          'a', "STR", &f.traddr,        DESC_NVMF_TRADDR),        \
-		OPT_STRING("trsvcid",         's', "STR", &f.trsvcid,       DESC_NVMF_TRSVCID),       \
-		OPT_STRING("host-traddr",     'w', "STR", &f.host_traddr,   DESC_NVMF_HTRADDR),       \
-		OPT_STRING("host-iface",      'f', "STR", &f.host_iface,    DESC_NVMF_HIFACE),        \
-		OPT_STRING("hostnqn",         'q', "STR", &f.hostnqn,       DESC_NVMF_HOSTNQN),       \
-		OPT_STRING("hostid",          'I', "STR", &f.hostid,        DESC_NVMF_HOSTID),        \
-		OPT_STRING("kxchap-secret", 'S', "STR", &f.hostkey,	\
-			   DESC_NVMF_HOSTKEY,				\
-			   .old_name = "dhchap-secret"),		\
-		OPT_STRING("kxchap-ctrl-secret", 'C', "STR", &f.ctrlkey, \
-			   DESC_NVMF_CTRLKEY,				\
-			   .old_name = "dhchap-ctrl-secret"),		\
-		OPT_STRING("keyring",          0,  "STR", &f.keyring,       DESC_NVMF_KEYRING),       \
-		OPT_STRING("tls-key",          0,  "STR", &f.tls_key,       DESC_NVMF_TLS_KEY),       \
-		OPT_STRING("tls-key-identity", 0,  "STR", &f.tls_key_identity, DESC_NVMF_TLS_KEY_IDENTITY), \
-		OPT_INT("nr-io-queues",       'i', &f.nr_io_queues,       DESC_NVMF_NR_IO_QUEUES),    \
-		OPT_INT("nr-write-queues",    'W', &f.nr_write_queues,    DESC_NVMF_NR_WRITE_QUEUES), \
-		OPT_INT("nr-poll-queues",     'P', &f.nr_poll_queues,     DESC_NVMF_NR_POLL_QUEUES),  \
-		OPT_INT("queue-size",         'Q', &f.queue_size,         DESC_NVMF_QUEUE_SIZE),      \
-		OPT_INT("keep-alive-tmo",     'k', &f.keep_alive_tmo,     DESC_NVMF_KEEP_ALIVE_TMO),  \
-		OPT_INT("reconnect-delay",    'c', &f.reconnect_delay,    DESC_NVMF_RECONNECT_DELAY), \
-		OPT_INT("ctrl-loss-tmo",      'l', &f.ctrl_loss_tmo,      DESC_NVMF_CTRL_LOSS_TMO),   \
-		OPT_INT("fast-io-fail-tmo", 'F', &f.fast_io_fail_tmo,	\
-			DESC_NVMF_FAST_IO_FAIL_TMO,			\
-			.old_name = "fast_io_fail_tmo"),		\
-		OPT_INT("tos",                'T', &f.tos,                DESC_NVMF_TOS),             \
-		OPT_INT("tls_key",              0, &f.tls_key_id,         DESC_NVMF_TLS_KEY_LEGACY),  \
-		OPT_FLAG("duplicate-connect", 'D', &f.duplicate_connect,  DESC_NVMF_DUP_CONNECT),     \
-		OPT_FLAG("disable-sqflow",      0, &f.disable_sqflow,     DESC_NVMF_DISABLE_SQFLOW),  \
-		OPT_FLAG("hdr-digest",        'g', &f.hdr_digest,         DESC_NVMF_HDR_DIGEST),      \
-		OPT_FLAG("data-digest",       'G', &f.data_digest,        DESC_NVMF_DATA_DIGEST),     \
-		OPT_FLAG("tls",                 0, &f.tls,                DESC_NVMF_TLS),             \
-		OPT_FLAG("concat",              0, &f.concat,             DESC_NVMF_CONCAT),          \
-		##__VA_ARGS__,						\
-		OPT_END()						\
-	}
+struct argconfig_commandline_options *nvmf_options(struct nvmf_args *fa);
+struct nvmf_args nvmf_args_defaults(void);
 
 /*
  * Resolve an OPT_STRING_OPTIONAL() "--persistent[=no|auto|force]" argument
@@ -135,8 +99,6 @@ int fabrics_config_validate(const char *desc, int argc, char **argv);
 int fabrics_config_show(const char *desc, int argc, char **argv);
 int fabrics_dim(const char *desc, int argc, char **argv);
 
-/* Apply NVMF_ARGS's defaults (tos, ctrl_loss_tmo) before parse_args(). */
-void nvmf_default_args(struct nvmf_args *fa);
 
 struct libnvmf_params;
 
