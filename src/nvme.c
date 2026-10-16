@@ -163,7 +163,7 @@ static void __shr_destructor free_plugins(void)
 	}
 }
 
-int main(int argc, char **argv)
+int nvme_main(int argc, char **argv)
 {
 	int err;
 
