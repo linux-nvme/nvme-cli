@@ -45,6 +45,14 @@ controller it connects (--owner discoverd, or --owner nbft for an
 NBFT-sourced controller) in the NVMe-oF ownership registry. See
 nvme-registry-list(1) and nvme-exclusion-add(1).
 
+A Discovery Controller that has no owner, for example one connected
+with 'nvme discover --persistent', is not tracked. When its discovery
+log changes, or when it reconnects, nvme-discoverd runs
+'nvme connect-all' for it in a transient unit, as the legacy udev
+rules do. The connections it makes have no owner, and
+'nvme disconnect-all' removes them. Events from a Discovery
+Controller with another owner are ignored.
+
 nvme-discoverd is still experimental. It is meant to replace the
 older udev-rule/systemd-unit autoconnect mechanism. By default, the
 legacy mechanism is built only when nvme-discoverd is not. Building

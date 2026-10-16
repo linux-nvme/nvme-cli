@@ -818,9 +818,10 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 /*
  * A controller's ownership extends to everything done through it, so the
  * caller's operation may not proceed unless the invoking owner matches
- * (mirrors disconnect_all_match()'s registry check). No ownerless
- * exemption -- a mismatched or missing --owner is skipped the same way;
- * the escape hatch is passing the owner's own identity.
+ * (mirrors disconnect_all_match()'s registry check). A controller with
+ * no owner proceeds for any caller. A controller with an owner is
+ * skipped unless --owner names that owner; a missing --owner does not
+ * match.
  *
  * --no-reuse skips the check entirely: it means the caller will never
  * reuse an existing controller, so there is nothing to check ownership

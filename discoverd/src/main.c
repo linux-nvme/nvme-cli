@@ -1236,13 +1236,57 @@ static void on_dc_add(const char *devname,
 		dc_connected(e, devname);
 }
 
-static void on_dc_changed(const char *devname,
+/*
+ * A DC that nobody owns, e.g. from a manual "nvme discover --persistent".
+ * Without the legacy udev rules, nothing else handles its events. Run
+ * connect-all for it, as those rules do. The connections it makes stay
+ * unowned, like the DC.
+ */
+static void dc_changed_unowned(const char *devname, sd_device *dev)
+{
+	__cleanup_free char *owner = NULL;
+	struct dc_addr addr = { };
+	int r;
+
+	r = libnvmf_registry_retrieve(ctx.nvme_ctx, devname, "owner", &owner);
+	if (r < 0 && r != -ENOENT) {
+		log_warn("%s - failed to check registry owner: %s",
+			 devname, strerror(-r));
+		return;
+	}
+	if (owner) {
+		log_dbg("%s - discovery log changed, owned by '%s', skipping",
+			devname, owner);
+		return;
+	}
+
+	sd_device_get_property_value(dev, "NVME_TRTYPE", &addr.transport);
+	sd_device_get_property_value(dev, "NVME_TRADDR", &addr.traddr);
+	sd_device_get_property_value(dev, "NVME_TRSVCID", &addr.trsvcid);
+	sd_device_get_property_value(dev, "NVME_HOST_TRADDR",
+				     &addr.host_traddr);
+	sd_device_get_property_value(dev, "NVME_HOST_IFACE",
+				     &addr.host_iface);
+
+	log_info("%s - discovery log changed on an unowned DC, running connect-all",
+		 devname);
+	r = unit_start_connect_all(ctx.umgr, devname, &addr);
+	if (r < 0)
+		log_err("%s - failed to start connect-all: %s",
+			devname, strerror(-r));
+}
+
+static void on_dc_changed(const char *devname, sd_device *dev,
 			  void *user_data __attribute__((unused)))
 {
 	struct active_ctrl *e;
 
 	e = ctrl_find_by_devname(devname);
-	if (!e || !e->tid) {
+	if (!e) {
+		dc_changed_unowned(devname, dev);
+		return;
+	}
+	if (!e->tid) {
 		log_warn("%s - dc_changed for untracked device", devname);
 		return;
 	}

@@ -66,6 +66,24 @@ int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 		   const struct libnvmf_params *params, bool is_nbft);
 
+/* Address of a connected DC, as its uevent reports it. */
+struct dc_addr {
+	const char *transport;
+	const char *traddr;
+	const char *trsvcid;
+	const char *host_traddr;
+	const char *host_iface;
+};
+
+/*
+ * Run "nvme connect-all" once over the existing connection to DC
+ * @devname, as 70-nvmf-autoconnect.rules does. No --owner is given.
+ * The unit goes away when the command exits. Starting it again while it
+ * runs replaces the running instance.
+ */
+int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
+			   const struct dc_addr *addr);
+
 /*
  * Restart an existing unit (reconnect with baked-in parameters). Fails if
  * systemd no longer has the unit.

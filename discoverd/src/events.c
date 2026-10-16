@@ -258,7 +258,7 @@ static int nvme_monitor_handler(sd_device_monitor *monitor __attribute__((unused
 		    (shr_streq0(nvme_event, "rediscover") &&
 		     shr_streq0(cntrltype, "discovery"))) {
 			if (ctx->callbacks.dc_changed)
-				ctx->callbacks.dc_changed(devname,
+				ctx->callbacks.dc_changed(devname, dev,
 							  ctx->user_data);
 		}
 		break;

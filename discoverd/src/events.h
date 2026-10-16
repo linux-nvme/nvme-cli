@@ -27,9 +27,10 @@ struct events_callbacks {
 	/*
 	 * DC sent NVME_AEN=="0x70f002" (DLP changed) or was rediscovered
 	 * after a ctrl-loss (NVME_EVENT=="rediscover"). Caller should
-	 * re-fetch the DLP for the named device.
+	 * re-fetch the DLP for the named device. @dev is the uevent.
 	 */
-	void (*dc_changed)(const char *devname, void *user_data);
+	void (*dc_changed)(const char *devname, sd_device *dev,
+			   void *user_data);
 
 	/*
 	 * nvmeX device appeared with cntrltype=="io".
