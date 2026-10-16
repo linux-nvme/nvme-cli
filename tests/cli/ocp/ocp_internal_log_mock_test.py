@@ -55,8 +55,7 @@ Tests in this module verify:
     Data Area 2, invalid -a, -t and -o values, and -o json.
 
 Known defects are covered by expectedFailure tests asserting the correct
-behavior: a controller log's JSON header is decoded with the host
-header's layout, and an invalid -a value exits 0.
+behavior: an invalid -a value exits 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -382,7 +381,9 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
 
     def _header_expected(self, telemetry):
         dalb = layout.data_area_last_blocks(telemetry)
-        label = 'Telemetry Host-Initiated Data Area {} Last Block'
+        initiator = ('Controller' if telemetry[0] == layout.LID_TELEMETRY_CTRL
+                     else 'Host')
+        label = f'Telemetry {initiator}-Initiated Data Area {{}} Last Block'
         return {
             'LogIdentifier': f'0x{telemetry[0]:02x}',
             'IEEE OUI Identifier': '0x123456',
@@ -394,8 +395,8 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
 
     _HOST_BYTES_380_383 = {
         'Telemetry Host-Initiated Scope': '0x11',
-        'Telemetry Host Initiated Generation Number': '0x22',
-        'Telemetry Host-Initiated Data Available': '0x33',
+        'Telemetry Host-Initiated Data Generation Number': '0x22',
+        'Telemetry Controller-Initiated Data Available': '0x33',
         'Telemetry Controller-Initiated Data Generation Number': '0x44',
     }
     _CTRL_BYTES_381_383 = {
@@ -475,15 +476,17 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
                     self.assertEqual(
                         [k for k in fields if 'Reserved' in k], [])
 
-    def test_controller_log_in_text(self):
+    def test_controller_log_sections(self):
         telemetry = self._telemetry(layout.LID_TELEMETRY_CTRL)
-        header, reason, da1, _, _ = self._sections(self.decode(
-            telemetry, string_log(), '-t', 'controller', mode='text'))
-        self.assertSubset({**self._header_expected(telemetry),
-                           **self._CTRL_BYTES_381_383}, header)
-        self.assertNotIn('Telemetry Host-Initiated Scope', header)
-        self.assertSubset(self._REASON_EXPECTED, reason)
-        self.assertSubset(self._da1_expected(telemetry), da1)
+        for mode in MODES:
+            with self.subTest(mode=mode):
+                header, reason, da1, _, _ = self._sections(self.decode(
+                    telemetry, string_log(), '-t', 'controller', mode=mode))
+                self.assertSubset({**self._header_expected(telemetry),
+                                   **self._CTRL_BYTES_381_383}, header)
+                self.assertNotIn('Telemetry Host-Initiated Scope', header)
+                self.assertSubset(self._REASON_EXPECTED, reason)
+                self.assertSubset(self._da1_expected(telemetry), da1)
 
     def test_log_cut_inside_the_data_area_1_header(self):
         """A log that ends inside the Data Area 1 header decodes as far as
@@ -503,16 +506,22 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
         self.assertNotIn('SMART / Health Information Log(LID-02h)', titles)
         self.assertFalse([t for t in titles if t.startswith('EVENT FIFO ')])
 
-    @unittest.expectedFailure
-    def test_controller_log_in_json(self):
-        """Defect: the JSON printer decodes every log with the host
-        header's layout, so a controller log's scope, data available and
-        generation number come out under host labels, one byte off."""
-        telemetry = self._telemetry(layout.LID_TELEMETRY_CTRL)
-        header, _, _, _, _ = self._sections(self.decode(
-            telemetry, string_log(), '-t', 'controller'))
-        self.assertSubset(self._CTRL_BYTES_381_383, header)
-        self.assertNotIn('Telemetry Host-Initiated Scope', header)
+    def test_header_layout_follows_the_log_identifier(self):
+        """A log file's header is decoded by its own Log Identifier,
+        whatever -t names."""
+        for lid, args, expected, absent in (
+                (layout.LID_TELEMETRY_CTRL, (), self._CTRL_BYTES_381_383,
+                 'Telemetry Host-Initiated Scope'),
+                (layout.LID_TELEMETRY_HOST, ('-t', 'controller'),
+                 self._HOST_BYTES_380_383,
+                 'Telemetry Controller-Initiated Scope')):
+            for mode in MODES:
+                with self.subTest(lid=lid, mode=mode):
+                    header = self._sections(self.decode(
+                        self._telemetry(lid), string_log(), *args,
+                        mode=mode))[0]
+                    self.assertSubset(expected, header)
+                    self.assertNotIn(absent, header)
 
 
 def stat_expected(stat_id, name, size_dw, behavior=0, context_index=0,
