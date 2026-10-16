@@ -88,6 +88,9 @@ int run_replacement_command(struct plugin *plugin, struct command *cmd,
 
 void register_extension(struct plugin *plugin);
 
+/* The program: main() in main.c, and the fuzz tests, call it */
+int nvme_main(int argc, char **argv);
+
 /*
  * Attach one file's worth of commands to a plugin (built-in or named).
  * commands must be a NULL-terminated array with static storage duration

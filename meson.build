@@ -738,7 +738,7 @@ if want_nvme
 
     nvme_exe = executable(
         'nvme',
-        sources,
+        sources + ['src/main.c'],
         include_directories: 'src',
         dependencies: link_deps,
         link_args: link_args_list,
