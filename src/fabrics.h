@@ -75,8 +75,8 @@ struct nvmf_args {
  * config-create.c, which adds an entry to the INI configuration instead of
  * connecting.
  */
-#define NVMF_ARGS(n, f, ...)                                                                  \
-	NVME_ARGS(n,                                                                              \
+#define NVMF_ARGS(n, f, ...)						\
+	struct argconfig_commandline_options n[] = {			\
 		OPT_STRING("transport",       't', "STR", &f.transport,     DESC_NVMF_TPORT),         \
 		OPT_STRING("nqn",             'n', "STR", &f.subsysnqn,     DESC_NVMF_NQN),           \
 		OPT_STRING("traddr",          'a', "STR", &f.traddr,        DESC_NVMF_TRADDR),        \
@@ -112,8 +112,9 @@ struct nvmf_args {
 		OPT_FLAG("data-digest",       'G', &f.data_digest,        DESC_NVMF_DATA_DIGEST),     \
 		OPT_FLAG("tls",                 0, &f.tls,                DESC_NVMF_TLS),             \
 		OPT_FLAG("concat",              0, &f.concat,             DESC_NVMF_CONCAT),          \
-		##__VA_ARGS__                                                                    \
-	)
+		##__VA_ARGS__,						\
+		OPT_END()						\
+	}
 
 /*
  * Resolve an OPT_STRING_OPTIONAL() "--persistent[=no|auto|force]" argument
