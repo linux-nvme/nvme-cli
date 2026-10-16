@@ -18,6 +18,7 @@
  */
 
 #include <dirent.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -55,18 +56,27 @@ static uint64_t rng(void)
 	return rng_state;
 }
 
-/* Keep the input which crashed the target */
+static char crash_path[256];
+
+/*
+ * Keep the input which crashed the target. Without stdio: the crash may
+ * come from a corrupted heap, which malloc() would trip over again.
+ */
 static void crash(int sig)
 {
-	char path[256];
-	FILE *f;
+	size_t done = 0;
+	ssize_t n;
+	int fd;
 
-	snprintf(path, sizeof(path), "fuzz-crash-%s", target);
-	f = fopen(path, "wb");
-	if (f) {
-		fwrite(input, 1, input_size, f);
-		fclose(f);
+	fd = open(crash_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	while (fd >= 0 && done < input_size) {
+		n = write(fd, input + done, input_size - done);
+		if (n <= 0)
+			break;
+		done += n;
 	}
+	if (fd >= 0)
+		close(fd);
 	signal(sig, SIG_DFL);
 	raise(sig);
 }
@@ -192,6 +202,7 @@ int main(int argc, char **argv)
 	target = strrchr(argv[0], '/') ? strrchr(argv[0], '/') + 1 : argv[0];
 	if (!strncmp(target, "fuzz-", 5))
 		target += 5;
+	snprintf(crash_path, sizeof(crash_path), "fuzz-crash-%s", target);
 
 	rng_state = seed ? strtoull(seed, NULL, 0) : 1;
 	if (!rng_state)
