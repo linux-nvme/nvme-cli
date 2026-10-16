@@ -1012,7 +1012,7 @@ static void json_temp_stats(__u32 temperature, __u32 PcbTemp, __u32 SocTemp,
 			    __u32 maxTemperature, __u32 MaxSocTemp,
 			    __u32 cf_err, __u32 scCurrentTemp, __u32 scMaxTem)
 {
-	struct json_object *root = json_create_object();
+	__cleanup_json_object struct json_object *root = json_create_object();
 
 	json_object_add_value_int(root, "Current temperature", temperature);
 	json_object_add_value_int(root, "Current PCB temperature", PcbTemp);
@@ -1156,7 +1156,7 @@ static void print_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 
 static void json_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 {
-	struct json_object *root = json_create_object();
+	__cleanup_json_object struct json_object *root = json_create_object();
 	__u32 correctPcieEc = pcieErrorLog.BadDllpErrCnt + pcieErrorLog.BadTlpErrCnt +
 			      pcieErrorLog.RcvrErrCnt + pcieErrorLog.ReplayTOErrCnt +
 			      pcieErrorLog.ReplayNumRolloverErrCnt;
