@@ -76,6 +76,10 @@ class HelpTest(unittest.TestCase):
                                  r"information\.")
                 self.assertNotIn('Options:', result.stderr)
 
+    def test_error_labelled_with_the_command(self):
+        result = run('id', 'ns', '/dev/nvme-does-not-exist')
+        self.assertIn('id ns: /dev/nvme-does-not-exist', result.stderr)
+
     def test_open_failure_is_no_usage_error(self):
         result = run('id', 'ns', '/dev/nvme-does-not-exist')
         self.assertEqual(result.returncode, 1)
@@ -114,8 +118,8 @@ class ColorTest(unittest.TestCase):
 
     def test_error_in_red(self):
         out = run_tty('id', 'ctrl', '--bogus', env=self.env)
-        self.assertIn("\033[31mid ctrl: unrecognized option '--bogus'",
-                      out)
+        self.assertIn("\033[31mid ctrl:\033[0m unrecognized option "
+                      "'--bogus'", out)
 
     def test_warning_in_yellow(self):
         out = run_tty('list', '-H', env=self.env)

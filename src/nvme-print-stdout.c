@@ -32,6 +32,7 @@
 #include <shared/uuid-util.h>
 #include <shared/string-util.h>
 
+#include "argconfig.h"
 #include "cleanup.h"
 #include "logging.h"
 #include "nvme-print.h"
@@ -1397,7 +1398,8 @@ static void stdout_single_property(int offset, uint64_t value)
 	stdout_ctrl_register_common(offset, value, true);
 }
 
-static void stdout_status(int status)
+/* The status line, which may follow other text */
+static void stdout_status_line(int status)
 {
 	int val;
 	int type;
@@ -1437,6 +1439,7 @@ static void stdout_opcode_status(int status, bool admin, __u8 opcode)
 	int val = nvme_status_get_value(status);
 	int type = nvme_status_get_type(status);
 
+	argconfig_print_error_label();
 	if (status >= 0 && type == NVME_STATUS_TYPE_NVME) {
 		fprintf(stderr, "NVMe status: %s(0x%x)\n",
 			libnvme_opcode_status_to_string(val, admin, opcode),
@@ -1444,14 +1447,21 @@ static void stdout_opcode_status(int status, bool admin, __u8 opcode)
 		return;
 	}
 
-	stdout_status(status);
+	stdout_status_line(status);
+}
+
+static void stdout_status(int status)
+{
+	argconfig_print_error_label();
+	stdout_status_line(status);
 }
 
 static void stdout_error_status(int status, const char *msg, va_list ap)
 {
+	argconfig_print_error_label();
 	vfprintf(stderr, msg, ap);
 	fprintf(stderr, ": ");
-	stdout_status(status);
+	stdout_status_line(status);
 }
 
 char *stdout_power_and_scale_str(__u16 power, __u8 scale)
@@ -4193,6 +4203,8 @@ static void stdout_topology_multipath(struct libnvme_global_ctx *ctx)
 
 static void stdout_message(bool error, const char *msg, va_list ap)
 {
+	if (error)
+		argconfig_print_error_label();
 	vfprintf(error ? stderr : stdout, msg, ap);
 
 	fprintf(error ? stderr : stdout, "\n");
@@ -4201,11 +4213,14 @@ static void stdout_message(bool error, const char *msg, va_list ap)
 static void stdout_perror(const char *msg, va_list ap)
 {
 	__cleanup_free char *error = NULL;
+	int err = errno;
 
 	if (vasprintf(&error, msg, ap) < 0)
 		error = NULL;
 
-	perror(error ? error : alloc_error);
+	argconfig_print_error_label();
+	fprintf(stderr, "%s: %s\n", error ? error : alloc_error,
+		strerror(err));
 }
 
 static void stdout_key_value(const char *key, const char *val, va_list ap)

@@ -101,6 +101,19 @@ static const char *command_name(void)
 	return command_path ? command_path : parse_argv0;
 }
 
+static void print_label(const char *name)
+{
+	fprintf(stderr, "%s%s:%s ", argconfig_esc(stderr, ARGCONFIG_RED), name,
+		argconfig_esc(stderr, ARGCONFIG_RESET));
+}
+
+/* "<command>: " before an error of the current command, if one runs */
+void argconfig_print_error_label(void)
+{
+	if (command_path)
+		print_label(command_path);
+}
+
 /* The synopsis and where to find the help, after a usage error */
 void argconfig_print_usage(void)
 {
@@ -115,12 +128,11 @@ int argconfig_usage_error(const char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf(stderr, "%s%s: ", argconfig_esc(stderr, ARGCONFIG_RED),
-		command_name());
+	print_label(command_name());
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
-	fprintf(stderr, "%s\n", argconfig_esc(stderr, ARGCONFIG_RESET));
+	fprintf(stderr, "\n");
 	argconfig_print_usage();
 
 	return -EINVAL;
@@ -496,12 +508,11 @@ static int argconfig_parse_error(struct argconfig_parser *p,
 {
 	va_list ap;
 
-	fprintf(stderr, "%s%s: ", argconfig_esc(stderr, ARGCONFIG_RED),
-		command_name());
+	print_label(command_name());
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
-	fprintf(stderr, "%s\n", argconfig_esc(stderr, ARGCONFIG_RESET));
+	fprintf(stderr, "\n");
 
 	return ARGCONFIG_USAGE;
 }
@@ -593,8 +604,8 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 	const struct argconfig_opt_val *v;
 	int n = 0;
 
-	fprintf(stderr, "%s%s: invalid value '%s' for ",
-		argconfig_esc(stderr, ARGCONFIG_RED), command_name(), arg);
+	print_label(command_name());
+	fprintf(stderr, "invalid value '%s' for ", arg);
 	if (c)
 		fprintf(stderr, "-%c", c);
 	else
@@ -609,7 +620,7 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 	for (v = s->opt_val; n <= 8 && v && v->str; v++)
 		fprintf(stderr, "%s%s", v == s->opt_val ? " or one of: " : ", ",
 			v->str);
-	fprintf(stderr, "%s\n", argconfig_esc(stderr, ARGCONFIG_RESET));
+	fprintf(stderr, "\n");
 
 	return ARGCONFIG_USAGE;
 }
