@@ -589,10 +589,8 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 			   "persistent discovery connection mode "
 			   "(default: auto; use =no to disable)"),
 		  OPT_FLAG("no-reuse",     0, &no_reuse,
-			   "always create a new connection, never reuse "
-			   "an existing one"),
-		  OPT_FLAG("force",        0, &no_reuse,
-			   "deprecated, see --no-reuse"));
+			   "always create a new connection, never reuse an existing one",
+			   .old_name = "force"));
 
 	if (line[0] == '#' || line[0] == '\n' || line[0] == '\0')
 		return 0;
@@ -883,10 +881,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 			   "(default: auto; use =no to disable)"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_FLAG("no-reuse",       0, &no_reuse,
-			   "always create a new connection, never reuse "
-			   "an existing one"),
-		  OPT_FLAG("force",          0, &no_reuse,
-			   "deprecated, see --no-reuse"),
+			   "always create a new connection, never reuse an existing one",
+			   .old_name = "force"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
 		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
 		  OPT_STRING("owner",        0, "NAME", &owner,       "record this owner in the registry"),

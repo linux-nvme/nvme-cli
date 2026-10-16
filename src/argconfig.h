@@ -227,6 +227,8 @@ struct argconfig_commandline_options {
 	bool hidden;
 	/* the option which replaces a deprecated one, warned about on use */
 	const char *deprecated;
+	/* the long name of earlier versions, accepted with a warning */
+	const char *old_name;
 };
 
 void argconfig_append_usage(const char *str);

@@ -471,6 +471,9 @@ argconfig_find_long(struct argconfig_commandline_options *s,
 			continue;
 		if (strlen(s->option) == len && !strncmp(s->option, name, len))
 			return s;
+		if (s->old_name && strlen(s->old_name) == len &&
+		    !strncmp(s->old_name, name, len))
+			return s;
 	}
 
 	return NULL;
@@ -595,6 +598,12 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 			value = eq + 1;
 		break;
 	}
+
+	if (s->old_name && !s->seen &&
+	    (strlen(s->option) != len || strncmp(s->option, name, len)))
+		fprintf(stderr,
+			"WARNING: '--%s' is deprecated and will be removed in the next major version, use '--%s' instead\n",
+			s->old_name, s->option);
 
 	return argconfig_apply(s, 0, value);
 }

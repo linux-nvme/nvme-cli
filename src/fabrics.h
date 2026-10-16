@@ -85,10 +85,12 @@ struct nvmf_args {
 		OPT_STRING("host-iface",      'f', "STR", &f.host_iface,    DESC_NVMF_HIFACE),        \
 		OPT_STRING("hostnqn",         'q', "STR", &f.hostnqn,       DESC_NVMF_HOSTNQN),       \
 		OPT_STRING("hostid",          'I', "STR", &f.hostid,        DESC_NVMF_HOSTID),        \
-		OPT_STRING("kxchap-secret",   'S', "STR", &f.hostkey,       DESC_NVMF_HOSTKEY),       \
-		OPT_STRING("kxchap-ctrl-secret", 'C', "STR", &f.ctrlkey,    DESC_NVMF_CTRLKEY),       \
-		OPT_STRING("dhchap-secret",   'S', "STR", &f.hostkey,       DESC_NVMF_HOSTKEY, NULL, true), \
-		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &f.ctrlkey,    DESC_NVMF_CTRLKEY, NULL, true), \
+		OPT_STRING("kxchap-secret", 'S', "STR", &f.hostkey,	\
+			   DESC_NVMF_HOSTKEY,				\
+			   .old_name = "dhchap-secret"),		\
+		OPT_STRING("kxchap-ctrl-secret", 'C', "STR", &f.ctrlkey, \
+			   DESC_NVMF_CTRLKEY,				\
+			   .old_name = "dhchap-ctrl-secret"),		\
 		OPT_STRING("keyring",          0,  "STR", &f.keyring,       DESC_NVMF_KEYRING),       \
 		OPT_STRING("tls-key",          0,  "STR", &f.tls_key,       DESC_NVMF_TLS_KEY),       \
 		OPT_STRING("tls-key-identity", 0,  "STR", &f.tls_key_identity, DESC_NVMF_TLS_KEY_IDENTITY), \
@@ -99,8 +101,9 @@ struct nvmf_args {
 		OPT_INT("keep-alive-tmo",     'k', &f.keep_alive_tmo,     DESC_NVMF_KEEP_ALIVE_TMO),  \
 		OPT_INT("reconnect-delay",    'c', &f.reconnect_delay,    DESC_NVMF_RECONNECT_DELAY), \
 		OPT_INT("ctrl-loss-tmo",      'l', &f.ctrl_loss_tmo,      DESC_NVMF_CTRL_LOSS_TMO),   \
-		OPT_INT("fast-io-fail-tmo",   'F', &f.fast_io_fail_tmo,   DESC_NVMF_FAST_IO_FAIL_TMO),\
-		OPT_INT("fast_io_fail_tmo",   'F', &f.fast_io_fail_tmo,   DESC_NVMF_FAST_IO_FAIL_TMO, NULL, true), \
+		OPT_INT("fast-io-fail-tmo", 'F', &f.fast_io_fail_tmo,	\
+			DESC_NVMF_FAST_IO_FAIL_TMO,			\
+			.old_name = "fast_io_fail_tmo"),		\
 		OPT_INT("tos",                'T', &f.tos,                DESC_NVMF_TOS),             \
 		OPT_INT("tls_key",              0, &f.tls_key_id,         DESC_NVMF_TLS_KEY_LEGACY),  \
 		OPT_FLAG("duplicate-connect", 'D', &f.duplicate_connect,  DESC_NVMF_DUP_CONNECT),     \
