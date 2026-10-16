@@ -8,6 +8,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <ccan/build_assert/build_assert.h>
 
@@ -24,6 +25,22 @@ typedef unsigned __int128 uint128_t;
  * Return: 0 on success (*out set), -EINVAL if value matches neither list.
  */
 int shr_parse_bool(const char *value, bool *out);
+
+/*
+ * Parse the whole string @s as an unsigned number: decimal, hexadecimal
+ * with a 0x prefix or octal with a leading 0, like strtoull() with base 0,
+ * but no whitespace, no sign and nothing after the digits.
+ * Return: 0 on success (*out set), -EINVAL if @s is no number, -ERANGE if
+ * it is larger than @max.
+ */
+int shr_parse_u64(const char *s, uint64_t max, uint64_t *out);
+
+/*
+ * The same for a signed number, with an optional '-' in front.
+ * Return: 0 on success (*out set), -EINVAL if @s is no number, -ERANGE if
+ * it is outside of @min and @max.
+ */
+int shr_parse_s64(const char *s, int64_t min, int64_t max, int64_t *out);
 
 /*
  * Parse a comma-separated list of numbers from string (modified in place by
