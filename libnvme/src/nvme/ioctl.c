@@ -6,6 +6,9 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
+#include <stdint.h>
+#include <string.h>
+
 #include <libnvme.h>
 
 #include "private.h"
@@ -45,6 +48,15 @@ int __libnvme_exec_dry_run(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	void *user_data;
+
+	/* The caller reads the data of a skipped read command. */
+	if ((cmd->opcode & 0x3) == NVME_DATA_TFR_CTRL_TO_HOST) {
+		if (cmd->addr)
+			memset((void *)(uintptr_t)cmd->addr, 0, cmd->data_len);
+		if (cmd->metadata)
+			memset((void *)(uintptr_t)cmd->metadata, 0,
+			       cmd->metadata_len);
+	}
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	hdl->submit_exit(hdl, cmd, 0, user_data);
