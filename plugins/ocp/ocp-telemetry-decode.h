@@ -429,7 +429,6 @@ struct ocp_telemetry_parse_options {
 	char *output_file;
 	char *output_format;
 	int data_area;
-	char *telemetry_type;
 };
 
 struct __packed nvme_ocp_telemetry_reason_id

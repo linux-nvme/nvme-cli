@@ -2085,6 +2085,18 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	return 0;
 }
 
+static void parse_log_page_header(struct json_object *pobject, FILE *fp)
+{
+	if (ptelemetry_buffer[0] == NVME_LOG_LID_TELEMETRY_CTRL)
+		generic_structure_parser(ptelemetry_buffer,
+			controller_log_page_header,
+			ARRAY_SIZE(controller_log_page_header), pobject, 0, fp);
+	else
+		generic_structure_parser(ptelemetry_buffer,
+			host_log_page_header,
+			ARRAY_SIZE(host_log_page_header), pobject, 0, fp);
+}
+
 int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;
@@ -2109,14 +2121,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	fprintf(fp, STR_LINE);
 	fprintf(fp, "%s\n", STR_LOG_PAGE_HEADER);
 	fprintf(fp, STR_LINE);
-	if (!strcmp(options->telemetry_type, "host"))
-		generic_structure_parser(ptelemetry_buffer,
-			host_log_page_header,
-			ARRAY_SIZE(host_log_page_header), NULL, 0, fp);
-	else if (!strcmp(options->telemetry_type, "controller"))
-		generic_structure_parser(ptelemetry_buffer,
-			controller_log_page_header,
-			ARRAY_SIZE(controller_log_page_header), NULL, 0, fp);
+	parse_log_page_header(NULL, fp);
 	fprintf(fp, STR_LINE);
 	fprintf(fp, "%s\n", STR_REASON_IDENTIFIER);
 	fprintf(fp, STR_LINE);
@@ -2241,8 +2246,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	//"Log Page Header"
 	pheader = json_create_object();
 
-	generic_structure_parser(ptelemetry_buffer, host_log_page_header,
-			     ARRAY_SIZE(host_log_page_header), pheader, 0, NULL);
+	parse_log_page_header(pheader, NULL);
 	json_object_add_value_object(root, STR_LOG_PAGE_HEADER, pheader);
 
 	//"Reason Identifier"
