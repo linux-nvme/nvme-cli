@@ -66,7 +66,6 @@ OPTIONS
 	that path: one left behind by an interrupted run has to be removed
 	before retrying.
 
--H::
 --hide-progress::
 	Do not print the incremental progress of an extraction. Useful
 	where the output is captured line by line and a carriage return
@@ -104,7 +103,7 @@ Extract data area 2 of the host-initiated telemetry using Log Specific
 Parameter 1, store the result compressed and keep the output quiet.
 
 ------------
-# nvme samsung vs-internal-log /dev/nvme0 -t host1 -a 2 -z -H
+# nvme samsung vs-internal-log /dev/nvme0 -t host1 -a 2 -z --hide-progress
 ------------
 
 NVME

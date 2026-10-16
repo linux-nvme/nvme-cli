@@ -905,7 +905,7 @@ static int rpmb_read_data(int argc, char **argv, struct command *acmd, struct pl
 
 	NVME_ARGS(opts,
 		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
-		  OPT_UINT("address",   'o', &cfg.address,          address),
+		  OPT_UINT("address",     0, &cfg.address,          address),
 		  OPT_UINT("blocks",    'b', &cfg.blocks,           blocks),
 		  OPT_BYTE("target",    't', &cfg.target,           target));
 
@@ -974,7 +974,7 @@ static int rpmb_write_data(int argc, char **argv, struct command *acmd, struct p
 		  OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
 		  OPT_STRING("key",     'k', "key",  &cfg.key,     key),
 		  OPT_STRING("msg",     'd', "data", &cfg.msg,     msg),
-		  OPT_UINT("address",   'o', &cfg.address,          address),
+		  OPT_UINT("address",     0, &cfg.address,          address),
 		  OPT_UINT("blocks",    'b', &cfg.blocks,           blocks),
 		  OPT_BYTE("target",    't', &cfg.target,           target));
 

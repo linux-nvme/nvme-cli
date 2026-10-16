@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'feat temp-thresh' <device>
-			[--tmpth=<tmpth> | -t <tmpth>] [--thsel=<thsel> | -T <thsel>]
+			[--tmpth=<tmpth> | -t <tmpth>] [--thsel=<thsel>]
 			[--sel=<select> | -S <select>] [--save | -s]
 
 DESCRIPTION
@@ -31,7 +31,6 @@ OPTIONS
 --tmpth=<tmpth>::
 	Temperature Threshold. Specifies the threshold temperature value in Kelvin.
 
--T <thsel>::
 --thsel=<thsel>::
 	Threshold Type Select. Specifies the type of threshold (e.g., over-temperature
 	threshold or under-temperature threshold).

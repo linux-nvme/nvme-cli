@@ -13,7 +13,7 @@ SYNOPSIS
 			[--msg=<data> | -d <data>]
 			[--keyfile=<key-file> | -g <key-file>]
 			[--key=<key> | -k <key>]
-			[--address=<offset> | -o <offset>]
+			[--address=<offset>]
 			[--blocks=<512 byte sectors> | -b <sectors>]
 			[--target=<target-id> | -t <target-id>]
 
@@ -37,7 +37,6 @@ OPTIONS
 	reported by 'nvme rpmb info'. If nothing is given, the default of 0
 	is used as the RPMB target.
 
--o <offset>::
 --address=<offset>::
 	The address (in 512 byte sector offset from 0) to write to on the
 	specified RPMB target.

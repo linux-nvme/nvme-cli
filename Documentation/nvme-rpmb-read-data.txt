@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'rpmb read-data' <device>
 			[--msgfile=<data-file> | -f <data-file>]
-			[--address=<offset> | -o <offset>]
+			[--address=<offset>]
 			[--blocks=<512 byte sectors> | -b <sectors>]
 			[--target=<target-id> | -t <target-id>]
 
@@ -34,7 +34,6 @@ OPTIONS
 	reported by 'nvme rpmb info'. If nothing is given, the default of 0
 	is used as the RPMB target.
 
--o <offset>::
 --address=<offset>::
 	The address (in 512 byte sector offset from 0) to read from on the
 	specified RPMB target.
@@ -57,7 +56,7 @@ EXAMPLES
 * the data onto output.bin
 +
 ------------
-# nvme rpmb read-data /dev/nvme0 -t 2 -f output.bin -b 200 -o 0x100
+# nvme rpmb read-data /dev/nvme0 -t 2 -f output.bin -b 200 --address=0x100
 ------------
 
 NVME

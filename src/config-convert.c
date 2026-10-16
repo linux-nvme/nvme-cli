@@ -554,7 +554,7 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 	OPT_ARGS(opts) = {
 		OPT_STRING("config", 'J', "FILE", &config_file,
 			   "convert this JSON file (default: config.json)"),
-		OPT_STRING("output", 'o', "FILE", &output_file,
+		OPT_STRING("output", 0, "FILE", &output_file,
 			   "write result here (default: nvme-fabrics.conf)"),
 		OPT_FLAG("force", 0, &force,
 			 "overwrite an existing target"),

@@ -527,7 +527,7 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 
 	NVME_ARGS(opts,
 		OPT_SHRT("cdqid",	'C', &cfg.cdqid, cdqid),
-		OPT_UINT("hp",		'H', &cfg.hp, hp),
+		OPT_UINT("hp",		  0, &cfg.hp, hp),
 		OPT_UINT("tpt",		'T', &cfg.tpt, tpt));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
