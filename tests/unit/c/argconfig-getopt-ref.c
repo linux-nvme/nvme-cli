@@ -74,13 +74,13 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		break;
 	case CFG_INT:
 		*(int *)value = strtol(arg, &endptr, 0);
-		if (errno || arg == endptr)
+		if (errno || arg == endptr || *endptr)
 			ret = argconfig_error("integer", s->option, arg);
 		break;
 	case CFG_BYTE: {
 		unsigned long tmp = strtoul(arg, &endptr, 0);
 
-		if (errno || tmp >= 1 << 8 || arg == endptr)
+		if (errno || tmp >= 1 << 8 || arg == endptr || *endptr)
 			ret = argconfig_error("byte", s->option, arg);
 		else
 			*(uint8_t *)value = tmp;
@@ -89,7 +89,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	case CFG_SHORT: {
 		unsigned long tmp = strtoul(arg, &endptr, 0);
 
-		if (errno || tmp >= 1 << 16 || arg == endptr)
+		if (errno || tmp >= 1 << 16 || arg == endptr || *endptr)
 			ret = argconfig_error("short", s->option, arg);
 		else
 			*(uint16_t *)value = tmp;
@@ -98,7 +98,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	case CFG_POSITIVE: {
 		unsigned long long tmp = strtoull(arg, &endptr, 0);
 
-		if (errno || tmp > UINT32_MAX || arg == endptr)
+		if (errno || tmp > UINT32_MAX || arg == endptr || *endptr)
 			ret = argconfig_error("word", s->option, arg);
 		else
 			*(uint32_t *)value = tmp;
@@ -109,7 +109,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		break;
 	case CFG_LONG:
 		*(uint64_t *)value = strtoull(arg, &endptr, 0);
-		if (errno || arg == endptr)
+		if (errno || arg == endptr || *endptr)
 			ret = argconfig_error("long integer", s->option, arg);
 		break;
 	case CFG_LONG_SUFFIX:
@@ -120,7 +120,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		break;
 	case CFG_DOUBLE:
 		*(double *)value = strtod(arg, &endptr);
-		if (errno || arg == endptr)
+		if (errno || arg == endptr || *endptr)
 			ret = argconfig_error("float", s->option, arg);
 		break;
 	case CFG_FLAG:
