@@ -9,6 +9,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <locale.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -81,6 +83,41 @@ int shr_parse_s64(const char *s, int64_t min, int64_t max, int64_t *out)
 	if (end == s || *end)
 		return -EINVAL;
 	if (errno == ERANGE || v < min || v > max)
+		return -ERANGE;
+
+	*out = v;
+	return 0;
+}
+
+int shr_parse_double(const char *s, double *out)
+{
+	char *old, *end;
+	double v;
+	int err;
+
+	/* a digit, a sign or the point must lead, no whitespace */
+	if (!s || !(isdigit((unsigned char)*s) || *s == '-' || *s == '+' ||
+		    *s == '.'))
+		return -EINVAL;
+
+	/* strtod() takes the decimal point of LC_NUMERIC */
+	old = setlocale(LC_NUMERIC, NULL);
+	old = old ? strdup(old) : NULL;
+	setlocale(LC_NUMERIC, "C");
+
+	errno = 0;
+	v = strtod(s, &end);
+	err = errno;
+
+	if (old) {
+		setlocale(LC_NUMERIC, old);
+		free(old);
+	}
+
+	/* NaN, +inf or -inf, without isfinite() from libm */
+	if (end == s || *end || v != v || v > DBL_MAX || v < -DBL_MAX)
+		return -EINVAL;
+	if (err == ERANGE)
 		return -ERANGE;
 
 	*out = v;
