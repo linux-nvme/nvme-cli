@@ -24,8 +24,14 @@
 * Every command checks its operand: a command which takes a device
   fails without one, and an extra operand is an error. Before, extra
   operands were silently ignored, e.g. a device given to a command which
-  takes none, or the value of `--persistent force`, which has to be
-  given as `--persistent=force`.
+  takes none.
+
+* `--persistent force` fails now. The value of an option which takes an
+  optional value has to be attached to it: `--persistent=force` or
+  `-pforce`. A separate value was never applied: `--persistent force`
+  connected in mode `auto` and dropped `force` without a word, as the
+  man pages of `discover`, `connect-all` and `config create` said.
+  Now it is an extra argument, which is an error.
 
 * Options which take an unsigned number reject negative numbers now.
   Before, `-1` wrapped around to the largest value. The values which
@@ -55,6 +61,27 @@
     (`-H`).
   - `--human-readable` and `-H`, the old spelling of `--verbose`, print
     a deprecation warning.
+
+* A usage error prints the error, the synopsis and where to find the
+  help instead of the whole help, which buried the error. A bad value
+  names the option as it was given and the values it takes:
+
+      fw commit: invalid value 'x' for -s: expected a number from 0 to 255
+      Usage: nvme fw commit <device> [OPTIONS]
+      Try 'nvme fw commit --help' for more information.
+
+  The other errors of a command start with its name as well, e.g.
+  `id ns: /dev/nvme0: Permission denied`, and a device which can't be
+  opened prints no help any more. An unknown command and a bad global
+  option point to `nvme --help` instead of printing the general help,
+  which also followed a command that failed with ENOTTY. On a terminal,
+  that name is red and the WARNING of a warning yellow. Set `NO_COLOR`
+  to a non-empty value to turn colors off (https://no-color.org/).
+
+* The old option names `--dhchap-secret`, `--dhchap-ctrl-secret` and
+  `--fast_io_fail_tmo` of the fabrics commands and `--force` of
+  `discover` and `connect-all` print a deprecation warning which names
+  the option to use instead.
 
 * The deprecated `tls-key` command parses its options like every other
   command: it has a help, and abbreviated options such as `--keyr` are
