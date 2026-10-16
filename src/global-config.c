@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/array_size/array_size.h>
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
@@ -30,6 +31,44 @@
 struct global_config_ctx {
 	const char *path;
 };
+
+/* The strings the config set, for a later key of the same name to free */
+static char *owned[16];
+static unsigned int nr_owned;
+
+/* Set the string option @s to a copy of @value */
+static int set_string(struct argconfig_commandline_options *s,
+		      const char *value)
+{
+	char **var = s->default_value;
+	unsigned int i;
+	char *dup;
+
+	if (nr_owned == ARRAY_SIZE(owned))
+		return -ENOMEM;
+
+	dup = strdup(value);
+	if (!dup)
+		return -ENOMEM;
+
+	for (i = 0; i < nr_owned; i++) {
+		if (owned[i] == *var) {
+			free(owned[i]);
+			owned[i] = owned[--nr_owned];
+			break;
+		}
+	}
+	owned[nr_owned++] = dup;
+	*var = dup;
+
+	return 0;
+}
+
+void nvme_global_config_free(void)
+{
+	while (nr_owned)
+		free(owned[--nr_owned]);
+}
 
 /* A number of the config file up to @max, -EINVAL if it is none */
 static int parse_uint(const char *value, uint64_t max, uint64_t *out)
@@ -59,7 +98,6 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 	__cleanup_free char *k = shr_escape(key);
 	uint64_t uval;
 	bool bval;
-	char *dup;
 	int err;
 
 	if (!s || !s->default_value) {
@@ -93,10 +131,9 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 		*(uint32_t *)s->default_value = uval;
 		break;
 	case CFG_STRING:
-		dup = strdup(value);
-		if (!dup)
-			return -ENOMEM;
-		*(char **)s->default_value = dup;
+		err = set_string(s, value);
+		if (err)
+			return err;
 		break;
 	default:
 		fprintf(stderr, "%s:%u: key \"%s\" can't be set, ignoring\n",

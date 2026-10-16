@@ -22,3 +22,9 @@ int nvme_load_global_config_from(const char *path);
 
 /* The same for the text of a config file, @name names it in warnings */
 int nvme_load_global_config_buf(const char *text, const char *name);
+
+/*
+ * Free the strings the config set. The options which point to them must
+ * be set anew before they are used.
+ */
+void nvme_global_config_free(void);
