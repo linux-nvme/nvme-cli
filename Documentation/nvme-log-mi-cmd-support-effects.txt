@@ -30,7 +30,7 @@ include::global-options.txt[]
 
 EXAMPLES
 --------
-nvme log mi-cmd-support-effects /dev/nvme0 -H
+nvme log mi-cmd-support-effects /dev/nvme0 -v
 
 NVME
 ----

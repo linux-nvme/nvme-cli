@@ -44,7 +44,7 @@ fields in a human readable format:
 * show the fields in human readable format
 +
 ------------
-# nvme id iocs /dev/nvme0 -H
+# nvme id iocs /dev/nvme0 -v
 ------------
 NVME
 ----

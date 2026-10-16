@@ -507,9 +507,19 @@ argconfig_find_short(struct argconfig_commandline_options *s, char c)
 	return NULL;
 }
 
-static int argconfig_apply(struct argconfig_commandline_options *s,
+/* @s given by its short name @c, or by its long name without, and @arg */
+static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 			   char *arg)
 {
+	if (s->deprecated && !s->seen) {
+		if (c)
+			fprintf(stderr, "WARNING: '-%c'", c);
+		else
+			fprintf(stderr, "WARNING: '--%s'", s->option);
+		fprintf(stderr,
+			" is deprecated and will be removed in the next major version, use '%s' instead\n",
+			s->deprecated);
+	}
 	s->seen = true;
 
 	if (!s->default_value)
@@ -578,7 +588,7 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 		break;
 	}
 
-	return argconfig_apply(s, value);
+	return argconfig_apply(s, 0, value);
 }
 
 /* "-a", "-abc", "-ovalue", "-o value" */
@@ -622,7 +632,7 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
 			break;
 		}
 
-		ret = argconfig_apply(s, value);
+		ret = argconfig_apply(s, *c, value);
 		if (ret || s->argument_type != ARGCONFIG_ARG_NONE)
 			return ret;
 	}

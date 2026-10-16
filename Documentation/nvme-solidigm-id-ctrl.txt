@@ -62,7 +62,7 @@ EXAMPLES
 +
 ------------
 # nvme solidigm id-ctrl /dev/nvme0 --human-readable
-# nvme solidigm id-ctrl /dev/nvme0 -H
+# nvme solidigm id-ctrl /dev/nvme0 -v
 ------------
 
 SEE ALSO

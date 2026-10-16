@@ -46,6 +46,25 @@ class HelpTest(unittest.TestCase):
         self.assertNotIn('\033[', result.stdout)
 
 
+class DeprecatedOptionTest(unittest.TestCase):
+    """--human-readable and -H still raise the verbose level, with a
+    warning which names the replacement."""
+
+    def test_human_readable(self):
+        for opt in ('-H', '--human-readable'):
+            with self.subTest(opt=opt):
+                result = run('list', opt)
+                self.assertIn(f"WARNING: '{opt}' is deprecated", result.stderr)
+                self.assertIn("use '--verbose/-v' instead", result.stderr)
+
+    def test_warns_once(self):
+        result = run('list', '-HH')
+        self.assertEqual(result.stderr.count('WARNING'), 1)
+
+    def test_verbose_does_not_warn(self):
+        self.assertNotIn('WARNING', run('list', '-v').stderr)
+
+
 class SpecialValuesTest(unittest.TestCase):
 
     def test_help_lists_the_names(self):
