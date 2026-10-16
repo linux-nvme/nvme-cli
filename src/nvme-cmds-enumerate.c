@@ -95,24 +95,29 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Show the topology\n";
-	const char *ranking = "Ranking order: namespace|ctrl|multipath";
+	const char *ranking = "Ranking order";
+	struct argconfig_opt_val rankings[] = {
+		VAL_ENUM("namespace", NVME_CLI_TOPO_NAMESPACE),
+		VAL_ENUM("ctrl", NVME_CLI_TOPO_CTRL),
+		VAL_ENUM("multipath", NVME_CLI_TOPO_MULTIPATH),
+		VAL_END()
+	};
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *devname = NULL;
 	libnvme_scan_filter_t filter = NULL;
-	enum nvme_cli_topo_ranking rank;
 	int err;
 
 	struct config {
-		char	*ranking;
+		int	ranking;
 	};
 
 	struct config cfg = {
-		.ranking	= "namespace",
+		.ranking	= NVME_CLI_TOPO_NAMESPACE,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
+		  OPT_ENUM("ranking", 'r', &cfg.ranking, ranking, rankings));
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -122,17 +127,6 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
-
-	if (!strcmp(cfg.ranking, "namespace")) {
-		rank = NVME_CLI_TOPO_NAMESPACE;
-	} else if (!strcmp(cfg.ranking, "ctrl")) {
-		rank = NVME_CLI_TOPO_CTRL;
-	} else if (!strcmp(cfg.ranking, "multipath")) {
-		rank = NVME_CLI_TOPO_MULTIPATH;
-	} else {
-		nvme_show_error("Invalid ranking argument: %s", cfg.ranking);
-		return -EINVAL;
-	}
 
 	err = nvme_create_global_ctx(&ctx);
 	if (err)
@@ -159,7 +153,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	if (flags & TABULAR)
 		nvme_show_topology_tabular(ctx, flags);
 	else
-		nvme_show_topology(ctx, rank, flags);
+		nvme_show_topology(ctx, cfg.ranking, flags);
 
 	return err;
 }
