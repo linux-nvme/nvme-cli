@@ -14,7 +14,8 @@
  *
  * Usage: fuzz-<target> <corpus-dir>
  * FUZZ_SECONDS sets the time for the mutations (default 2), FUZZ_SEED the
- * seed (default 1).
+ * seed (default 1). An input which takes longer than FUZZ_TIMEOUT seconds
+ * (default 10) counts as a crash.
  */
 
 #include <dirent.h>
@@ -81,13 +82,24 @@ static void crash(int sig)
 	raise(sig);
 }
 
+static unsigned int timeout = 10;
+
+/* An input which hangs the target is a crash too */
+static void hang(int sig)
+{
+	(void)sig;
+	crash(SIGABRT);
+}
+
 static void run(const uint8_t *data, size_t size)
 {
 	if (size > FUZZ_MAX_INPUT)
 		size = FUZZ_MAX_INPUT;
 	memcpy(input, data, size);
 	input_size = size;
+	alarm(timeout);
 	LLVMFuzzerTestOneInput(input, input_size);
+	alarm(0);
 }
 
 static void load_seeds(const char *dir)
@@ -190,6 +202,7 @@ int main(int argc, char **argv)
 {
 	const char *secs = getenv("FUZZ_SECONDS");
 	const char *seed = getenv("FUZZ_SEED");
+	const char *tmo = getenv("FUZZ_TIMEOUT");
 	unsigned long runs = 0;
 	uint8_t buf[FUZZ_MAX_INPUT];
 	time_t end;
@@ -218,6 +231,9 @@ int main(int argc, char **argv)
 	signal(SIGBUS, crash);
 	signal(SIGFPE, crash);
 	signal(SIGILL, crash);
+	signal(SIGALRM, hang);
+	if (tmo)
+		timeout = strtoul(tmo, NULL, 0);
 
 	if (LLVMFuzzerInitialize)
 		LLVMFuzzerInitialize(&argc, &argv);
