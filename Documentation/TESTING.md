@@ -202,6 +202,13 @@ The parsers of untrusted input have fuzz targets in `tests/fuzz`: the
 command line parser (`argconfig`), the INI parser (`ini`), `nvme-cli.conf`
 (`global-config`) and `nvme-fabrics.conf` (`fabrics-conf`).
 
+The `device` target fuzzes what nvme-cli does with the data a device
+returns. It runs one of the commands which read and print something, from
+the table in `tests/fuzz/fuzz-device.c`, against the device mock of
+`tests/cli/libmock_nvme.c`, which answers every command from the input.
+It needs a dynamically linked Linux build. Its seeds named `regress-*` are
+inputs which found a bug.
+
 Every build runs them as tests of the `fuzz` suite: each target replays its
 seeds in `tests/fuzz/corpus/<target>` and then a few seconds of random
 mutations of them. The mutations come from a fixed seed, so a failure can be
@@ -226,7 +233,15 @@ mkdir corpus && cp tests/fuzz/corpus/argconfig/* corpus/
     -dict=tests/fuzz/argconfig.dict corpus
 ```
 
-The config targets use `tests/fuzz/config.dict`. The targets use the
+The config targets use `tests/fuzz/config.dict`. The `device` target
+reads log pages, so give it longer inputs, and let allocations of the sizes
+a device reports fail instead of aborting:
+
+```bash
+ASAN_OPTIONS=allocator_may_return_null=1 .build-fuzz/tests/fuzz/fuzz-device \
+    -close_fd_mask=3 -max_len=16384 -timeout=10 corpus
+```
+ The targets use the
 libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
 `-fsanitize=fuzzer`). Add an input which found a bug to the seeds of its
 target.

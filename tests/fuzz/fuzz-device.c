@@ -1,0 +1,232 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * This file is part of nvme-cli.
+ * Copyright (c) 2026 SUSE Software Solutions
+ *
+ * Authors: Daniel Wagner <dwagner@suse.de>
+ */
+
+/*
+ * Fuzz what nvme-cli does with the data a device returns: run a command
+ * which reads and prints something against a mocked controller whose
+ * every answer comes from the fuzz input. The device mock is
+ * tests/cli/libmock_nvme.c built with MOCK_FUZZ, linked into this
+ * program, so its open()/ioctl() replace the libc ones.
+ *
+ * The input is the command (one byte, an index into the table below),
+ * the variant (one byte: output format, verbose, controller or namespace
+ * device) and then the answers of the device, see ipc_call() in the
+ * mock.
+ */
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/resource.h>
+
+#include <ccan/array_size/array_size.h>
+
+#include "args.h"
+#include "fuzz.h"
+#include "plugin.h"
+
+/* the fuzz backend of libmock_nvme.c */
+void mock_fuzz_input(const uint8_t *data, size_t size);
+
+#define MAX_ARGS 8
+
+/*
+ * Commands which read from the device and print what they got. Nothing
+ * which writes a file, waits or loops on the device, or needs a value
+ * which can't have a default. The seeds select a command by its index:
+ * add new commands at the end.
+ */
+static const char *const commands[][3] = {
+	{ "id", "ctrl" },
+	{ "id", "ns" },
+	{ "id", "ns-granularity" },
+	{ "id", "ns-list" },
+	{ "id", "ctrl-list" },
+	{ "id", "nvm-ctrl" },
+	{ "id", "nvm-ns" },
+	{ "id", "primary-ctrl-caps" },
+	{ "id", "secondary-ctrl-list" },
+	{ "id", "ns-ind" },
+	{ "id", "ns-descs" },
+	{ "id", "nvmset" },
+	{ "id", "uuid" },
+	{ "id", "iocs" },
+	{ "id", "domain" },
+	{ "id", "endgrp-list" },
+	{ "log", "supported-pages" },
+	{ "log", "smart" },
+	{ "log", "ana" },
+	{ "log", "fw" },
+	{ "log", "endurance" },
+	{ "log", "effects" },
+	{ "log", "error" },
+	{ "log", "changed-ns-list" },
+	{ "log", "changed-alloc-ns-list" },
+	{ "log", "predictable-lat" },
+	{ "log", "pred-lat-event-agg" },
+	{ "log", "persistent-event" },
+	{ "log", "endurance-event-agg" },
+	{ "log", "lba-status" },
+	{ "log", "resv-notif" },
+	{ "log", "phy-rx-eom" },
+	{ "log", "self-test" },
+	{ "log", "fid-support-effects" },
+	{ "log", "mi-cmd-support-effects" },
+	{ "log", "media-unit-stat" },
+	{ "log", "supported-cap-config" },
+	{ "log", "mgmt-addr-list" },
+	{ "log", "rotational-media-info" },
+	{ "log", "dispersed-ns-participating-nss" },
+	{ "log", "reachability-groups" },
+	{ "log", "reachability-associations" },
+	{ "log", "host-discovery" },
+	{ "log", "ave-discovery" },
+	{ "log", "pull-model-ddc-req" },
+	{ "log", "power-measurement" },
+	{ "log", "sanitize" },
+	{ "get-feature" },
+	{ "zns", "id-ctrl" },
+	{ "zns", "id-ns" },
+	{ "zns", "changed-zone-list" },
+	{ "fdp", "configs" },
+	{ "fdp", "usage" },
+	{ "fdp", "stats" },
+	{ "fdp", "events" },
+	{ "fdp", "status" },
+	{ "ocp", "smart-add-log" },
+	{ "ocp", "latency-monitor-log" },
+	{ "ocp", "fw-activate-history" },
+	{ "ocp", "unsupported-reqs-log" },
+	{ "ocp", "error-recovery-log" },
+	{ "ocp", "device-capability-log" },
+	{ "ocp", "tcg-configuration-log" },
+	{ "ocp", "hardware-component-log" },
+	{ "ocp", "persistent-event-log" },
+	{ "solidigm", "smart-log-add" },
+	{ "solidigm", "vs-smart-add-log" },
+	{ "solidigm", "garbage-collect-log" },
+	{ "solidigm", "market-log" },
+	{ "solidigm", "latency-tracking-log" },
+	{ "solidigm", "vs-fw-activate-history" },
+	{ "solidigm", "log-page-directory" },
+	{ "solidigm", "temp-stats" },
+	{ "solidigm", "vs-drive-info" },
+	{ "wdc", "vs-smart-add-log" },
+	{ "wdc", "vs-nand-stats" },
+	{ "wdc", "vs-fw-activate-history" },
+	{ "wdc", "log-page-directory" },
+	{ "wdc", "vs-drive-info" },
+	{ "wdc", "vs-temperature-stats" },
+	{ "wdc", "capabilities" },
+	{ "wdc", "vs-pcie-stats" },
+	{ "wdc", "get-latency-monitor-log" },
+	{ "wdc", "get-error-recovery-log" },
+	{ "wdc", "get-dev-capabilities-log" },
+	{ "wdc", "get-unsupported-reqs-log" },
+	{ "wdc", "vs-cloud-log" },
+	{ "wdc", "vs-hw-rev-log" },
+	{ "wdc", "vs-device-waf" },
+	{ "wdc", "cu-smart-log" },
+	{ "micron", "vs-temperature-stats" },
+	{ "micron", "vs-pcie-stats" },
+	{ "micron", "vs-nand-stats" },
+	{ "micron", "vs-smart-ext-log" },
+	{ "micron", "vs-drive-info" },
+	{ "micron", "log-page-directory" },
+	{ "micron", "vs-fw-activate-history" },
+	{ "micron", "vs-smart-add-log" },
+	{ "micron", "vs-device-waf" },
+	{ "micron", "smart-log" },
+	{ "intel", "id-ctrl" },
+	{ "intel", "lat-stats" },
+	{ "intel", "market-name" },
+	{ "intel", "smart-log-add" },
+	{ "intel", "temp-stats" },
+	{ "seagate", "vs-temperature-stats" },
+	{ "seagate", "vs-log-page-sup" },
+	{ "seagate", "vs-smart-add-log" },
+	{ "seagate", "vs-pcie-stats" },
+	{ "seagate", "vs-fw-activate-history" },
+	{ "memblaze", "smart-log-add" },
+	{ "memblaze", "get-pm-status" },
+	{ "sfx", "smart-log-add" },
+	{ "sfx", "lat-stats" },
+	{ "sfx", "query-cap" },
+	{ "ibm", "crit-log" },
+	{ "ibm", "vpd" },
+	{ "ibm", "persist-event-log" },
+	{ "amzn", "stats" },
+	{ "dapustor", "smart-log-add" },
+	{ "dera", "smart-log-add" },
+	{ "huawei", "id-ctrl" },
+	{ "shannon", "smart-log-add" },
+	{ "ssstc", "smart-log-add" },
+	{ "toshiba", "vs-smart-add-log" },
+	{ "transcend", "healthvalue" },
+	{ "virtium", "show-identify" },
+	{ "ymtc", "smart-log-add" },
+	{ "resv", "report" },
+};
+
+#define NR_COMMANDS ARRAY_SIZE(commands)
+
+static struct nvme_args defaults;
+
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define __SANITIZE_ADDRESS__ 1
+#endif
+#endif
+
+int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+#ifndef __SANITIZE_ADDRESS__
+	/*
+	 * nvme-cli allocates what a log length from the device says. Let a
+	 * gigabyte allocation fail instead of spending the time on clearing
+	 * it. ASan reserves terabytes of address space, so not with ASan.
+	 */
+	struct rlimit rl = { 1024UL << 20, 1024UL << 20 };
+
+	setrlimit(RLIMIT_AS, &rl);
+#endif
+	(void)argc;
+	(void)argv;
+	defaults = nvme_args;
+	return 0;
+}
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+	char *argv[MAX_ARGS + 1];
+	uint8_t variant;
+	int argc = 0, i;
+
+	if (size < 2)
+		return 0;
+
+	argv[argc++] = "nvme";
+	for (i = 0; i < 3 && commands[data[0] % NR_COMMANDS][i]; i++)
+		argv[argc++] = (char *)commands[data[0] % NR_COMMANDS][i];
+
+	variant = data[1];
+	argv[argc++] = variant & 4 ? "/dev/nvme0n1" : "/dev/nvme0";
+	if (variant & 1)
+		argv[argc++] = "--output-format=json";
+	if (variant & 2)
+		argv[argc++] = "--verbose";
+	argv[argc] = NULL;
+
+	nvme_args = defaults;
+	mock_fuzz_input(data + 2, size - 2);
+	nvme_main(argc, argv);
+	mock_fuzz_input(NULL, 0);
+
+	return 0;
+}

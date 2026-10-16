@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Fuzz targets for the parsers of untrusted input: the command line and
-# the config files. Without -Dfuzzing=true each target runs as a test,
-# with the seeds in corpus/<target> and a few seconds of mutations of
-# them (FUZZ_SECONDS, FUZZ_SEED). With -Dfuzzing=true and clang, the
-# targets are built for libFuzzer:
+# Fuzz targets for the parsers of untrusted input: the command line, the
+# config files and the data from the device. Without -Dfuzzing=true each
+# target runs as a test, with the seeds in corpus/<target> and a few
+# seconds of mutations of them (FUZZ_SECONDS, FUZZ_SEED). With
+# -Dfuzzing=true and clang, the targets are built for libFuzzer:
 #
 #   CC=clang meson setup fuzz -Dfuzzing=true -Db_sanitize=address,undefined
 #   ninja -C fuzz
@@ -43,21 +43,40 @@ if want_fabrics
     }
 endif
 
+# The device mock answers every command with the fuzz input. It needs
+# dlsym(RTLD_NEXT), so a dynamic Linux build.
+if want_nvme and have_mock_nvme
+    fuzz_targets += {
+        'device': {
+            'sources': ['fuzz-device.c', '../cli/libmock_nvme.c'],
+            'objects': nvme_exe.extract_objects(sources),
+            'c_args': ['-DMOCK_FUZZ'],
+            'deps': link_deps,
+            'link_args': link_args_list,
+        },
+    }
+endif
+
 foreach name, t : fuzz_targets
     if get_option('fuzzing')
         executable(
             'fuzz-' + name,
             t['sources'],
+            objects: t.get('objects', []),
+            c_args: t.get('c_args', []),
             include_directories: include_directories('../../src'),
             dependencies: t['deps'],
-            link_args: ['-fsanitize=fuzzer'],
+            link_args: t.get('link_args', []) + ['-fsanitize=fuzzer'],
         )
     else
         exe = executable(
             'fuzz-' + name,
             t['sources'] + ['fuzz-driver.c'],
+            objects: t.get('objects', []),
+            c_args: t.get('c_args', []),
             include_directories: include_directories('../../src'),
             dependencies: t['deps'],
+            link_args: t.get('link_args', []),
         )
         test(
             'nvme-cli - fuzz-' + name,
