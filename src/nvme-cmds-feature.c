@@ -277,7 +277,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 
 	flags = nvme_args.output_flags;
 
-	if (!argconfig_parse_seen(opts, "namespace-id")) {
+	if (!argconfig_given(opts, &cfg.namespace_id)) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
 		if (err < 0) {
 			if (errno != ENOTTY) {
@@ -368,7 +368,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	if (err)
 		return err;
 
-	if (!argconfig_parse_seen(opts, "namespace-id")) {
+	if (!argconfig_given(opts, &cfg.nsid)) {
 		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			if (errno != ENOTTY) {
@@ -408,7 +408,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		 * length.
 		 */
 		if (cfg.fid == NVME_FEAT_FID_TIMESTAMP &&
-		    argconfig_parse_seen(opts, "value")) {
+		    argconfig_given(opts, &cfg.value)) {
 			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 		} else {
 			if (strlen(cfg.file))

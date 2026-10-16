@@ -82,7 +82,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	if (err)
 		return err;
 
-	if (!argconfig_parse_seen(opts, "opcode")) {
+	if (!argconfig_given(opts, &cfg.opcode)) {
 		nvme_show_error("%s: opcode parameter required", *argv);
 		return -EINVAL;
 	}

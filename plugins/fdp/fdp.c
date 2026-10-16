@@ -525,7 +525,7 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 	if (err)
 		return err;
 
-	enabling_conf_idx = argconfig_parse_seen(opts, "enable-conf-idx");
+	enabling_conf_idx = argconfig_given(opts, &cfg.fdpcidx);
 	if (enabling_conf_idx && cfg.disable) {
 		nvme_show_error("Cannot enable and disable at the same time");
 		return -EINVAL;

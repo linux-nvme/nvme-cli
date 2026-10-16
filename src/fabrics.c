@@ -555,10 +555,9 @@ record_err:
 	}
 }
 
-const char *nvmf_resolve_persistent_arg(
-		struct argconfig_commandline_options *opts, const char *arg)
+const char *nvmf_resolve_persistent_arg(bool given, const char *arg)
 {
-	if (!argconfig_parse_seen(opts, "persistent"))
+	if (!given)
 		return "auto";
 
 	return arg ? arg : "auto";
@@ -621,7 +620,9 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 		return 0;
 
 	return nvme_config_convert_discovery_args(emitter, &fa,
-		nvmf_resolve_persistent_arg(opts, persistent_arg));
+		nvmf_resolve_persistent_arg(
+			argconfig_given(opts, &persistent_arg),
+			persistent_arg));
 }
 
 static int setup_common_context(struct libnvmf_context *fctx,
@@ -901,7 +902,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 
 	flags = nvme_args.output_flags;
 
-	persistent = nvmf_resolve_persistent_arg(opts, persistent_arg);
+	persistent = nvmf_resolve_persistent_arg(
+			argconfig_given(opts, &persistent_arg), persistent_arg);
 
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;

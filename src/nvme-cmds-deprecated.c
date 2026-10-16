@@ -138,20 +138,20 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "nqn"))
+	if (argconfig_given(opts, &cfg.nqn))
 		fprintf(stderr,
 			"WARNING: '--nqn' is ignored, the DHHC-1 string carries the secret itself, which no NQN takes part in deriving\n");
 
-	if (argconfig_parse_seen(opts, "secret")) {
+	if (argconfig_given(opts, &cfg.secret)) {
 		args[nargs++] = "--secret";
 		args[nargs++] = cfg.secret;
 	}
-	if (argconfig_parse_seen(opts, "key-length")) {
+	if (argconfig_given(opts, &cfg.key_len)) {
 		snprintf(key_len_buf, sizeof(key_len_buf), "%u", cfg.key_len);
 		args[nargs++] = "--secret-length";
 		args[nargs++] = key_len_buf;
 	}
-	if (argconfig_parse_seen(opts, "hmac")) {
+	if (argconfig_given(opts, &cfg.hmac)) {
 		snprintf(hmac_buf, sizeof(hmac_buf), "%u", cfg.hmac);
 		args[nargs++] = "--hmac";
 		args[nargs++] = hmac_buf;
@@ -190,7 +190,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "key")) {
+	if (argconfig_given(opts, &cfg.key)) {
 		args[nargs++] = "--keydata";
 		args[nargs++] = cfg.key;
 	}
