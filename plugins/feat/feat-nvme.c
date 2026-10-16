@@ -37,10 +37,18 @@
 #define ASYNC_EVENT_CONF_DESC "Get and set async event configuration feature"
 #define KEEP_ALIVE_TIMER_DESC "Get and set keep alive timer feature"
 
-#define FEAT_ARGS_SAVE(n, save_short, ...)                             \
-	NVME_ARGS(n, ##__VA_ARGS__,                                    \
-		  OPT_FLAG("save", save_short, &cfg.save, save),            \
-		  OPT_BYTE("sel", 'S', &cfg.sel, sel))
+/*
+ * The options of the command first: an option of the same short name
+ * comes before --save. The group in front lets an empty argument list
+ * drop its comma.
+ */
+#define FEAT_ARGS_SAVE(n, save_short, ...)				\
+	struct argconfig_commandline_options n[] = {			\
+		OPT_GROUP("Options"), ##__VA_ARGS__,			\
+		OPT_FLAG("save", save_short, &cfg.save, save),		\
+		OPT_BYTE("sel", 'S', &cfg.sel, sel),			\
+		OPT_END()						\
+	}
 
 #define FEAT_ARGS(n, ...) FEAT_ARGS_SAVE(n, 's', ##__VA_ARGS__)
 
