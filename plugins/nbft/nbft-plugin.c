@@ -701,7 +701,7 @@ static struct command show_nbft_cmd = {
 	.name = "show",
 	.help = "Show contents of ACPI NBFT tables",
 	.fn = show_nbft,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command *commands[] = {

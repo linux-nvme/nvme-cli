@@ -773,7 +773,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	if (err) {
 		if (-err == EBUSY) {
 			nvme_show_error("Failed to open %s.",
-						basename(argconfig_operand(0)));
+						basename(nvme_args.device));
 			nvme_show_error("Namespace is currently busy.");
 			if (!cfg.force)
 				nvme_show_error("Use the force [--force] option to ignore that.");

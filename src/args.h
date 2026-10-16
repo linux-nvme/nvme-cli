@@ -28,6 +28,10 @@ struct nvme_args {
 	/* --output-format of the current command, set by parse_args() */
 	nvme_print_flags_t output_flags;
 	const char *set_options;
+	/* the operand of the current command, enum command_device */
+	int device_operand;
+	/* the device it was given, set by parse_args(), or NULL */
+	char *device;
 };
 extern struct nvme_args nvme_args;
 

@@ -40,14 +40,20 @@ struct plugin {
 	const char *group;
 };
 
+/* The operand of a command */
+enum command_device {
+	COMMAND_DEVICE,			/* <device>, the default */
+	COMMAND_DEVICE_OPTIONAL,	/* [<device>] */
+	COMMAND_NO_DEVICE,		/* no operand */
+};
+
 struct command {
 	char *name;
 	char *help;
 	int (*fn)(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 	char *alias;
 	bool deprecated;
-	/* Set for commands that don't take a positional <device> argument. */
-	bool no_device;
+	enum command_device device;
 	/*
 	 * The values --output-format accepts (enum nvme_print_flags), 0 for
 	 * the default ones, OUTPUT_FORMATS_NORMAL for only the normal output.
@@ -68,7 +74,7 @@ struct command {
 extern struct plugin builtin;
 
 void general_help(struct plugin *plugin, char *str);
-void command_set_output_formats(struct command *cmd);
+void command_prepare(struct command *cmd);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
 
 void register_extension(struct plugin *plugin);

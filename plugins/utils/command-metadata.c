@@ -419,7 +419,7 @@ static int capture_command(struct command_metadata_command *mc, struct command *
 	command_metadata_capture_error = 0;
 	command_metadata_cur_command = mc;
 	capture_current_command = cmd->name;
-	command_set_output_formats(cmd);
+	command_prepare(cmd);
 	(void)cmd->fn(2, argv, cmd, plugin);
 	capture_current_command = NULL;
 	command_metadata_cur_command = NULL;

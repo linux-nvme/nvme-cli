@@ -1112,7 +1112,7 @@ static struct command list_cmd = {
 	.help = "List all NVMe devices with Zoned Namespace Command Set support",
 	.fn = list,
 	.output_formats = OUTPUT_FORMATS_NORMAL,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command id_ctrl_cmd = {

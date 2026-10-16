@@ -1055,7 +1055,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (err) {
 			if (err == -EBUSY) {
 				nvme_show_error("Failed to open %s.",
-						basename(argconfig_operand(0)));
+						basename(nvme_args.device));
 				nvme_show_error("Namespace is currently busy.");
 				if (!cfg.force)
 					nvme_show_error(

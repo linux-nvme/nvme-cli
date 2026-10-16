@@ -44,5 +44,35 @@ class HelpTest(unittest.TestCase):
         self.assertNotIn('\033[', result.stdout)
 
 
+class OperandTest(unittest.TestCase):
+    """A command takes a device, an optional one or none. A missing
+    device and extra operands are usage errors."""
+
+    def assert_usage_error(self, result, message):
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(message, result.stderr)
+        self.assertIn('Usage:', result.stderr)
+
+    def test_missing_device(self):
+        self.assert_usage_error(run('id', 'ctrl'), 'missing <device>')
+
+    def test_extra_operand(self):
+        self.assert_usage_error(run('id', 'ctrl', '/dev/nvme0', 'extra'),
+                                "unexpected argument 'extra'")
+
+    def test_no_device_command(self):
+        result = run('list', '--help')
+        self.assertIn('Usage: nvme list [OPTIONS]', result.stdout)
+        self.assert_usage_error(run('list', 'extra'),
+                                "unexpected argument 'extra'")
+
+    def test_optional_device_command(self):
+        result = run('list-subsys', '--help')
+        self.assertIn('Usage: nvme list-subsys [<device>] [OPTIONS]',
+                      result.stdout)
+        self.assert_usage_error(run('list-subsys', 'nvme0', 'extra'),
+                                "unexpected argument 'extra'")
+
+
 if __name__ == '__main__':
     unittest.main(argv=[sys.argv[0]])
