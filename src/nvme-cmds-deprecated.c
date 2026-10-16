@@ -61,11 +61,13 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		.hmac		= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("secret",		's', &cfg.secret,	secret),
-		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
-		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
-		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
+	OPT_ARGS(opts) = {
+		OPT_STR("secret",      's', &cfg.secret,  secret),
+		OPT_UINT("key-length", 'l', &cfg.key_len, key_len),
+		OPT_STR("nqn",         'n', &cfg.nqn,     nqn),
+		OPT_UINT("hmac",       'm', &cfg.hmac,    hmac),
+		OPT_END()
+	};
 
 	err = parse_cmdline(argc, argv, desc, opts);
 	if (err)
@@ -117,8 +119,10 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 		.key	= NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("key", 'k', &cfg.key, key));
+	OPT_ARGS(opts) = {
+		OPT_STR("key", 'k', &cfg.key, key),
+		OPT_END()
+	};
 
 	err = parse_cmdline(argc, argv, desc, opts);
 	if (err)
@@ -167,13 +171,15 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	struct config cfg = { 0 };
 
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_FLAG("import",	'i', &cfg.import,	import),
-		  OPT_FLAG("export",	'e', &cfg.export,	export),
-		  OPT_STR("revoke",	'r', &cfg.revoke,	revoke));
+	OPT_ARGS(opts) = {
+		OPT_STR("keyring", 'k', &cfg.keyring, keyring),
+		OPT_STR("keytype", 't', &cfg.keytype, keytype),
+		OPT_STR("keyfile", 'f', &cfg.keyfile, keyfile),
+		OPT_FLAG("import", 'i', &cfg.import,  import),
+		OPT_FLAG("export", 'e', &cfg.export,  export),
+		OPT_STR("revoke",  'r', &cfg.revoke,  revoke),
+		OPT_END()
+	};
 
 	err = parse_cmdline(argc, argv, desc, opts);
 	if (err)

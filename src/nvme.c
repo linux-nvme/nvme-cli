@@ -95,9 +95,12 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		.raw_binary		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
-		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific,
+			 vendor_specific),
+		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary, raw_identify),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

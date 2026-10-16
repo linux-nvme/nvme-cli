@@ -1544,10 +1544,13 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	struct config cfg = { 0 };
 
-	NVME_ARGS(opts,
-		OPT_STRING("transport", 't', "STR", &cfg.transport, DESC_NVMF_TPORT),
-		OPT_STRING("owner", 0, "NAME", &cfg.owner, owner_help),
-		OPT_FLAG("force", 0, &cfg.force, force_help));
+	OPT_ARGS(opts) = {
+		OPT_STRING("transport", 't', "STR", &cfg.transport,
+			   DESC_NVMF_TPORT),
+		OPT_STRING("owner", 0, "NAME",     &cfg.owner, owner_help),
+		OPT_FLAG("force",   0, &cfg.force, force_help),
+		OPT_END()
+	};
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
@@ -1659,9 +1662,11 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 	nvme_print_flags_t flags;
 	int ret;
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_STRING("config", 'J', "FILE", &config_file,
-			   nvmf_config_file_ro));
+			   nvmf_config_file_ro),
+		OPT_END()
+	};
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
@@ -1725,10 +1730,15 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		char *tas;
 	} cfg = { 0 };
 
-	NVME_ARGS(opts,
-		OPT_STRING("nqn",    'n', "NAME", &cfg.nqn,    "Comma-separated list of DC nqn"),
-		OPT_STRING("device", 'd', "DEV",  &cfg.device, "Comma-separated list of DC nvme device handle."),
-		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"));
+	OPT_ARGS(opts) = {
+		OPT_STRING("nqn", 'n', "NAME", &cfg.nqn,
+			   "Comma-separated list of DC nqn"),
+		OPT_STRING("device", 'd', "DEV", &cfg.device,
+			   "Comma-separated list of DC nvme device handle."),
+		OPT_STRING("task", 't', "TASK", &cfg.tas,
+			   "[register|deregister]"),
+		OPT_END()
+	};
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)

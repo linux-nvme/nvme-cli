@@ -57,7 +57,9 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 	__cleanup_free char *hostnqn = NULL;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -97,7 +99,9 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 	__cleanup_free char *hostnqn = NULL;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
