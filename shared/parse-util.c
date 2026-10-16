@@ -6,6 +6,7 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -41,6 +42,49 @@ int shr_parse_bool(const char *value, bool *out)
 	}
 
 	return -EINVAL;
+}
+
+int shr_parse_u64(const char *s, uint64_t max, uint64_t *out)
+{
+	unsigned long long v;
+	char *end;
+
+	/* strtoull() skips whitespace and takes a sign, a digit must lead */
+	if (!s || !isdigit((unsigned char)*s))
+		return -EINVAL;
+
+	errno = 0;
+	v = strtoull(s, &end, 0);
+	if (end == s || *end)
+		return -EINVAL;
+	if (errno == ERANGE || v > max)
+		return -ERANGE;
+
+	*out = v;
+	return 0;
+}
+
+int shr_parse_s64(const char *s, int64_t min, int64_t max, int64_t *out)
+{
+	const char *digits;
+	long long v;
+	char *end;
+
+	if (!s)
+		return -EINVAL;
+	digits = *s == '-' ? s + 1 : s;
+	if (!isdigit((unsigned char)*digits))
+		return -EINVAL;
+
+	errno = 0;
+	v = strtoll(s, &end, 0);
+	if (end == s || *end)
+		return -EINVAL;
+	if (errno == ERANGE || v < min || v > max)
+		return -ERANGE;
+
+	*out = v;
+	return 0;
 }
 
 #define DEFINE_SHR_PARSE_CSV_FUNC(name, ret_t)				\
