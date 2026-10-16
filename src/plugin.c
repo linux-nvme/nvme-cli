@@ -432,6 +432,17 @@ void general_help(struct plugin *plugin, char *str)
 	}
 }
 
+/* Where the commands of @plugin are listed, after an error */
+static void commands_hint(struct plugin *plugin)
+{
+	if (plugin->name)
+		fprintf(stderr, "See '%s %s --help' for the commands.\n",
+			plugin->parent->name, plugin->name);
+	else
+		fprintf(stderr, "See '%s --help' for the commands.\n",
+			plugin->parent->name);
+}
+
 /* Apply the output formats and the operand of a command before it runs */
 void command_prepare(struct command *cmd)
 {
@@ -482,6 +493,7 @@ static int run_joined_command(int argc, char **argv, struct plugin *plugin)
 	}
 	if (!extension) {
 		fprintf(stderr, "ERROR: Invalid sub-command '%s'\n", argv[0]);
+		commands_hint(plugin);
 		return -ENOTTY;
 	}
 
@@ -591,7 +603,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	 */
 	err = argconfig_parse_global(argc, argv, NULL, &argind);
 	if (err < 0) {
-		general_help(plugin, NULL);
+		commands_hint(plugin);
 		return err;
 	}
 
@@ -622,6 +634,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 		fprintf(stderr,
 			"ERROR: Invalid sub-command '%s' for plugin %s\n",
 			argv[0], plugin->name);
+		commands_hint(plugin);
 		return -ENOTTY;
 	}
 
