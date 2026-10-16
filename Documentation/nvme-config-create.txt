@@ -44,9 +44,8 @@ OPTIONS
 	Record this discovery controller's persistence mode. Requires
 	--discovery. Because the value is optional, it must be attached
 	directly to the option (--persistent=force). A value given as a
-	separate argument (--persistent force) is silently NOT applied
-	-- it's dropped, and --persistent is treated as if given bare
-	(mode "auto"), with no error.
+	separate argument (--persistent force) is no value of the
+	option but an extra argument, and the command fails.
 +
 --
 * 'auto' (the default for every --discovery entry, whether or not

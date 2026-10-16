@@ -69,9 +69,8 @@ OPTIONS
 	Because the value is optional, it must be attached directly to
 	the option: --persistent=force for the long form, -pforce for
 	the short form. A value given as a separate argument (--persistent
-	force, -p force) is silently NOT applied -- it's dropped, and
-	--persistent/-p is treated as if given bare (mode "auto"), with
-	no error.
+	force, -p force) is no value of the option but an extra argument,
+	and the command fails.
 +
 --
 * 'no': never persist. Use this to opt out of the default.
