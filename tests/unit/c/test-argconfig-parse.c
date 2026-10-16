@@ -463,6 +463,55 @@ static void global_options_test(void)
 	argconfig_set_global_options(NULL);
 }
 
+/* An enum takes only its names, in any case and as a unique prefix */
+static void enum_test(void)
+{
+	const char *desc = "Test enum";
+	struct argconfig_opt_val names[] = {
+		VAL_ENUM("host", 1),
+		VAL_ENUM("controller", 2),
+		VAL_ENUM("ctrl-init", 3),
+		VAL_END()
+	};
+	static const struct {
+		const char *arg;
+		int ret;
+		int val;
+	} tests[] = {
+		{ "--type=host", 0, 1 },
+		{ "--type=HOST", 0, 1 },
+		{ "--type=controller", 0, 2 },
+		{ "--type=ctrl-", 0, 3 },
+		{ "--type=c", -EINVAL, 0 },
+		{ "--type=1", -EINVAL, 0 },
+		{ "--type=bogus", -EINVAL, 0 },
+	};
+	unsigned int i;
+	int type, ret;
+
+	OPT_ARGS(opts) = {
+		OPT_ENUM("type", 't', &type, "type", names),
+		OPT_END()
+	};
+
+	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+		char *argv[3] = { "prog", (char *)tests[i].arg, NULL };
+
+		type = 0;
+		ret = argconfig_parse(2, argv, desc, opts);
+		if (ret != tests[i].ret || type != tests[i].val) {
+			printf("ERROR: enum: {%s} gave %d/%d\n", tests[i].arg,
+			       ret, type);
+			test_rc = 1;
+		}
+	}
+	if (strcmp(argconfig_value_name(names, 2), "controller") ||
+	    argconfig_value_name(names, 4)) {
+		printf("ERROR: enum: value names\n");
+		test_rc = 1;
+	}
+}
+
 /* An option also takes its old name, the option itself is given then */
 static void old_name_test(void)
 {
@@ -957,6 +1006,7 @@ int main(void)
 	global_options_test();
 	given_test();
 	old_name_test();
+	enum_test();
 	special_values_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)

@@ -343,6 +343,10 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	case CFG_INCREMENT:
 		*(int *)value += 1;
 		break;
+	case CFG_ENUM:
+		/* only the names, which argconfig_parse_val() looked up */
+		ret = -EINVAL;
+		break;
 	case CFG_LONG:
 		*(uint64_t *)value = strtoull(arg, &endptr, 0);
 		if (errno || arg == endptr || *endptr)
@@ -379,6 +383,7 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 		*(uint32_t *)val = opt_val->positive;
 		break;
 	case CFG_INT:
+	case CFG_ENUM:
 		*(int *)val = opt_val->int_val;
 		break;
 	case CFG_LONG:
@@ -610,15 +615,18 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 		fprintf(stderr, "-%c", c);
 	else
 		fprintf(stderr, "--%s", s->option);
-	fprintf(stderr, ": expected %s", argconfig_expected(s));
+	fprintf(stderr, ": expected ");
+	if (s->config_type != CFG_ENUM)
+		fprintf(stderr, "%s%s", argconfig_expected(s),
+			s->opt_val ? " or " : "");
 
 	/* A long list of names would drown the error, the help has them */
 	for (v = s->opt_val; v && v->str; v++)
 		n++;
 	if (n > 8)
-		fprintf(stderr, " or one of the names in the help");
+		fprintf(stderr, "one of the names in the help");
 	for (v = s->opt_val; n <= 8 && v && v->str; v++)
-		fprintf(stderr, "%s%s", v == s->opt_val ? " or one of: " : ", ",
+		fprintf(stderr, "%s%s", v == s->opt_val ? "one of: " : ", ",
 			v->str);
 	fprintf(stderr, "\n");
 
@@ -650,6 +658,17 @@ static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 		return argconfig_value_error(s, c, arg);
 
 	return ret;
+}
+
+/* The name of the enum value @val in the value table @v, or NULL */
+const char *argconfig_value_name(const struct argconfig_opt_val *v, int val)
+{
+	for (; v && v->str; v++) {
+		if (v->type == CFG_ENUM && v->val.int_val == val)
+			return v->str;
+	}
+
+	return NULL;
 }
 
 /* The value of a required argument which is not attached to the option */
