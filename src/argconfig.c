@@ -330,24 +330,6 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s,
 	return 0;
 }
 
-static struct argconfig_commandline_options *
-argconfig_find_option(struct argconfig_commandline_options *s,
-		      const char *option)
-{
-	struct argconfig_commandline_options *g = argconfig_globals(s);
-
-	for (; s && s->option; s++) {
-		if (!strcmp(s->option, option))
-			return s;
-	}
-	for (; g && g->option; g++) {
-		if (!strcmp(g->option, option))
-			return g;
-	}
-
-	return NULL;
-}
-
 /* --verbose counts, a command may have a flag of the same name */
 static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
 {
@@ -739,12 +721,4 @@ bool argconfig_given(struct argconfig_commandline_options *s,
 		given |= g->default_value == value && g->seen;
 
 	return given;
-}
-
-bool argconfig_parse_seen(struct argconfig_commandline_options *s,
-			  const char *option)
-{
-	s = argconfig_find_option(s, option);
-
-	return s && s->seen;
 }

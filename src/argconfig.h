@@ -59,25 +59,25 @@ enum argconfig_types {
 /*
  * The option macros check the type of the variable they store to, so a
  * mismatch is a compile error instead of a write of the wrong size. The
- * signed variant of a type is accepted as well. NULL is accepted for
- * options which are only checked with argconfig_parse_seen().
+ * signed variant of a type is accepted as well. Every option needs a
+ * variable, which argconfig_given() takes.
  */
-#define OPT_CHECK(v, T, S)	_Generic(v, T : (v), S : (v), void * : (v))
+#define OPT_CHECK(v, T, S)	_Generic(v, T : (v), S : (v))
 /*
  * uint64_t is unsigned long long on some ABIs only, and listing a type
  * twice is an error. The inner selection falls back to a void expression,
  * which only fails if it is selected.
  */
 #define OPT_CHECK_64(v)							\
-	_Generic(v, uint64_t * : (v), int64_t * : (v), void * : (v),	\
+	_Generic(v, uint64_t * : (v), int64_t * : (v),			\
 		default :						\
 		_Generic(v, unsigned long long * : (v),			\
 			long long * : (v),				\
 			default :					\
 			(void)0))
 #define OPT_CHECK_STR(v)	OPT_CHECK(v, char **, const char **)
-#define OPT_CHECK_BOOL(v)	_Generic(v, bool * : (v), void * : (v))
-#define OPT_CHECK_DOUBLE(v)	_Generic(v, double * : (v), void * : (v))
+#define OPT_CHECK_BOOL(v)	_Generic(v, bool * : (v))
+#define OPT_CHECK_DOUBLE(v)	_Generic(v, double * : (v))
 
 #define OPT_END() { NULL }
 
@@ -246,5 +246,3 @@ void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
 
 bool argconfig_given(struct argconfig_commandline_options *options,
 		     const void *value);
-bool argconfig_parse_seen(struct argconfig_commandline_options *options,
-			  const char *option);
