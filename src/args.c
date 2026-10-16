@@ -11,8 +11,11 @@
 
 #include <libnvme.h>
 
+#include <shared/string-util.h>
+
 #include "argconfig.h"
 #include "args.h"
+#include "cleanup.h"
 #include "nvme-print.h"
 #include "plugin.h"
 
@@ -34,12 +37,15 @@ static int check_device(void)
 {
 	int max = nvme_args.device_operand == COMMAND_NO_DEVICE ? 0 : 1;
 	int nr = argconfig_nr_operands();
+	__cleanup_free char *e = NULL;
 
 	if (nvme_args.device_operand == COMMAND_DEVICE && !nr)
 		return argconfig_usage_error("missing <device>");
-	if (nr > max)
+	if (nr > max) {
+		e = shr_escape(argconfig_operand(max));
 		return argconfig_usage_error("unexpected argument '%s'",
-					     argconfig_operand(max));
+					     e ? e : "");
+	}
 
 	nvme_args.device = argconfig_operand(0);
 	return 0;

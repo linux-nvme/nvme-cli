@@ -172,6 +172,28 @@ class SpecialValuesTest(unittest.TestCase):
         self.assertIn('Names: infinite, -1', result.stdout)
 
 
+class EchoTest(unittest.TestCase):
+    """Input which is echoed in an error can't drive the terminal: its
+    control characters are written as \\xNN."""
+
+    def assert_escaped(self, result):
+        self.assertNotIn('\033', result.stderr)
+        self.assertIn('\\x1b', result.stderr)
+
+    def test_unknown_option(self):
+        self.assert_escaped(run('id', 'ctrl', '--bo\033[31mgus'))
+
+    def test_bad_value(self):
+        self.assert_escaped(run('id', 'ns', '/dev/nvme0', '-n', '1\033[2J'))
+
+    def test_extra_argument(self):
+        self.assert_escaped(run('list', '\033]0;title\007'))
+
+    def test_unknown_command(self):
+        self.assert_escaped(run('bo\033[31mgus'))
+        self.assert_escaped(run('id', 'bo\033[31mgus'))
+
+
 class UnknownCommandTest(unittest.TestCase):
     """An unknown command or plugin command and a bad global option
     print the error and where the commands are listed, not the whole
