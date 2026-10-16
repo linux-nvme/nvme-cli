@@ -291,3 +291,6 @@ bool argconfig_set_value_name(struct argconfig_commandline_options *option,
 			      const char *str);
 const char *argconfig_value_name(const struct argconfig_opt_val *values,
 				 int val);
+struct argconfig_commandline_options *
+argconfig_bind(const struct argconfig_commandline_options *tmpl,
+	       const void *tmpl_base, size_t size, void *base);

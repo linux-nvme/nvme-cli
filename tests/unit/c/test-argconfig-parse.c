@@ -521,6 +521,49 @@ static void include_test(void)
 	}
 }
 
+/* A template table bound to another struct stores into that one */
+static void bind_test(void)
+{
+	const char *desc = "Test bind";
+	struct pair {
+		bool flag;
+		__u32 uint;
+	};
+	static struct pair tmpl_pair;
+	static struct argconfig_commandline_options tmpl[] = {
+		OPT_FLAG("flag", 'f', &tmpl_pair.flag, "flag"),
+		OPT_UINT("uint", 'u', &tmpl_pair.uint, "uint"),
+		OPT_END()
+	};
+	struct pair local = { 0 };
+	struct argconfig_commandline_options *bound;
+	char *argv[4] = { "prog", "-f", "--uint=5", NULL };
+	int ret;
+
+	bound = argconfig_bind(tmpl, &tmpl_pair, sizeof(tmpl_pair), &local);
+	if (!bound) {
+		printf("ERROR: bind: no table\n");
+		test_rc = 1;
+		return;
+	}
+
+	{
+		OPT_ARGS(opts) = {
+			OPT_INCLUDE(bound, "Bound options"),
+			OPT_END()
+		};
+
+		ret = argconfig_parse(3, argv, desc, opts);
+		if (ret || !local.flag || local.uint != 5 ||
+		    tmpl_pair.flag || tmpl_pair.uint ||
+		    !argconfig_given(opts, &local.uint)) {
+			printf("ERROR: bind: values not in the bound struct\n");
+			test_rc = 1;
+		}
+	}
+	free(bound);
+}
+
 /* An enum takes only its names, in any case and as a unique prefix */
 static void enum_test(void)
 {
@@ -1066,6 +1109,7 @@ int main(void)
 	old_name_test();
 	enum_test();
 	include_test();
+	bind_test();
 	special_values_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
