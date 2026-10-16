@@ -338,60 +338,59 @@ adoc_sources_man1 = [
     'nvme-zns-zone-mgmt-send',
 ]
 
-if want_deprecated_cmds
-    adoc_sources_man1 += [
-        'nvme-ana-log',
-        'nvme-attach-ns',
-        'nvme-ave-discovery-log',
-        'nvme-boot-part-log',
-        'nvme-changed-alloc-ns-list-log',
-        'nvme-changed-ns-list-log',
-        'nvme-check-dhchap-key',
-        'nvme-check-tls-key',
-        'nvme-cmdset-ind-id-ns',
-        'nvme-create-ns',
-        'nvme-delete-ns',
-        'nvme-detach-ns',
-        'nvme-dispersed-ns-participating-nss-log',
-        'nvme-effects-log',
-        'nvme-endurance-event-agg-log',
-        'nvme-endurance-log',
-        'nvme-error-log',
-        'nvme-fid-support-effects-log',
-        'nvme-fw-log',
-        'nvme-gen-dhchap-key',
-        'nvme-gen-tls-key',
-        'nvme-get-ns-id',
-        'nvme-host-discovery-log',
-        'nvme-lba-status-log',
-        'nvme-list-ctrl',
-        'nvme-list-endgrp',
-        'nvme-list-ns',
-        'nvme-list-secondary',
-        'nvme-media-unit-stat-log',
-        'nvme-mgmt-addr-list-log',
-        'nvme-mi-cmd-support-effects-log',
-        'nvme-ns-descs',
-        'nvme-nvm-id-ctrl',
-        'nvme-nvm-id-ns',
-        'nvme-nvm-id-ns-lba-format',
-        'nvme-persistent-event-log',
-        'nvme-phy-rx-eom-log',
-        'nvme-pred-lat-event-agg-log',
-        'nvme-predictable-lat-log',
-        'nvme-primary-ctrl-caps',
-        'nvme-reachability-associations-log',
-        'nvme-reachability-groups-log',
-        'nvme-resv-notif-log',
-        'nvme-rotational-media-info-log',
-        'nvme-sanitize-log',
-        'nvme-self-test-log',
-        'nvme-smart-log',
-        'nvme-supported-cap-config-log',
-        'nvme-telemetry-log',
-        'nvme-tls-key',
-    ]
-endif
+adoc_sources_deprecated = [
+    'nvme-ana-log',
+    'nvme-attach-ns',
+    'nvme-ave-discovery-log',
+    'nvme-boot-part-log',
+    'nvme-changed-alloc-ns-list-log',
+    'nvme-changed-ns-list-log',
+    'nvme-check-dhchap-key',
+    'nvme-check-tls-key',
+    'nvme-cmdset-ind-id-ns',
+    'nvme-create-ns',
+    'nvme-delete-ns',
+    'nvme-detach-ns',
+    'nvme-dispersed-ns-participating-nss-log',
+    'nvme-effects-log',
+    'nvme-endurance-event-agg-log',
+    'nvme-endurance-log',
+    'nvme-error-log',
+    'nvme-fid-support-effects-log',
+    'nvme-fw-log',
+    'nvme-gen-dhchap-key',
+    'nvme-gen-tls-key',
+    'nvme-get-ns-id',
+    'nvme-host-discovery-log',
+    'nvme-lba-status-log',
+    'nvme-list-ctrl',
+    'nvme-list-endgrp',
+    'nvme-list-ns',
+    'nvme-list-secondary',
+    'nvme-media-unit-stat-log',
+    'nvme-mgmt-addr-list-log',
+    'nvme-mi-cmd-support-effects-log',
+    'nvme-ns-descs',
+    'nvme-nvm-id-ctrl',
+    'nvme-nvm-id-ns',
+    'nvme-nvm-id-ns-lba-format',
+    'nvme-persistent-event-log',
+    'nvme-phy-rx-eom-log',
+    'nvme-pred-lat-event-agg-log',
+    'nvme-predictable-lat-log',
+    'nvme-primary-ctrl-caps',
+    'nvme-reachability-associations-log',
+    'nvme-reachability-groups-log',
+    'nvme-resv-notif-log',
+    'nvme-rotational-media-info-log',
+    'nvme-sanitize-log',
+    'nvme-self-test-log',
+    'nvme-smart-log',
+    'nvme-supported-cap-config-log',
+    'nvme-telemetry-log',
+    'nvme-tls-key',
+]
+adoc_sources_man1 += adoc_sources_deprecated
 
 adoc_sources_man5 = [
     'nvme-cli.conf',
@@ -399,18 +398,21 @@ adoc_sources_man5 = [
 ]
 
 adoc_sources_man8 = [
+    'nvme-discoverd',
+    'nvme-keysd',
 ]
 
-if want_discoverd
-    adoc_sources_man8 += [
-        'nvme-discoverd',
-    ]
+# Generate the pages of all features. Install only the pages of the
+# features that are built.
+adoc_no_install = []
+if not want_deprecated_cmds
+    adoc_no_install += adoc_sources_deprecated
 endif
-
-if want_keysd
-    adoc_sources_man8 += [
-        'nvme-keysd',
-    ]
+if not want_discoverd
+    adoc_no_install += 'nvme-discoverd'
+endif
+if not want_keysd
+    adoc_no_install += 'nvme-keysd'
 endif
 
 adoc_includes = [
@@ -420,120 +422,102 @@ adoc_includes = [
     'fabrics-options.txt',
 ]
 
-if want_docs != 'false'
-    man1dir = prefixdir / get_option('mandir') / 'man1'
-    man5dir = prefixdir / get_option('mandir') / 'man5'
-    man8dir = prefixdir / get_option('mandir') / 'man8'
-    htmldir = prefixdir / get_option('htmldir') / 'nvme'
+man1dir = prefixdir / get_option('mandir') / 'man1'
+man5dir = prefixdir / get_option('mandir') / 'man5'
+man8dir = prefixdir / get_option('mandir') / 'man8'
+htmldir = prefixdir / get_option('htmldir') / 'nvme'
 
-    man_sets = [
-        {'sources': adoc_sources_man1,
-         'section': '1',
-         'dir': man1dir},
-        {'sources': adoc_sources_man5,
-         'section': '5',
-         'dir': man5dir},
-        {'sources': adoc_sources_man8,
-         'section': '8',
-         'dir': man8dir},
-    ]
+man_sets = [
+    {'sources': adoc_sources_man1,
+     'section': '1',
+     'dir': man1dir},
+    {'sources': adoc_sources_man5,
+     'section': '5',
+     'dir': man5dir},
+    {'sources': adoc_sources_man8,
+     'section': '8',
+     'dir': man8dir},
+]
 
-    asciidoctor = find_program('asciidoc', required: want_docs_build)
-    if want_docs_build and asciidoctor.found()
-        # Build documentation before installing
-        foreach file : adoc_includes
-            configure_file(input: file, output: file, copy: true)
+if docs_tools_found
+    foreach file : adoc_includes
+        configure_file(input: file, output: file, copy: true)
+    endforeach
+
+    foreach man_set : man_sets
+        section = man_set['section']
+        foreach adoc : man_set['sources']
+            subst = configure_file(
+                input: adoc + '.txt',
+                output: adoc + '.m' + section + 'subst',
+                configuration: substs
+            )
+            xml = custom_target(
+                adoc.underscorify() + '_xml' + section,
+                input: subst,
+                output: '@BASENAME@.xml',
+                command: [
+                    asciidoc,
+                    '-f', files('asciidoc.conf'),
+                    '-b', 'docbook',
+                    '-d', 'manpage',
+                    '-o', '@OUTPUT@',
+                    '@INPUT@',
+                ],
+            )
+            doc_tgts += custom_target(
+                adoc.underscorify() + '_man' + section,
+                input: xml,
+                output: '@BASENAME@.' + section,
+                command: [
+                    xmlto,
+                    '-m', files('manpage-normal.xsl'),
+                    '-o', '@OUTDIR@',
+                    '--skip-validation',
+                    'man',
+                    '@INPUT@',
+                ],
+            )
         endforeach
+    endforeach
 
-        # man pages
-        if want_docs == 'all' or want_docs == 'man'
-            xmlto = find_program('xmlto', required: true)
-            if xmlto.found()
-                foreach man_set : man_sets
-                    section = man_set['section']
-                    foreach adoc : man_set['sources']
-                        input = adoc + '.txt'
-                        subst = configure_file(
-                            input: adoc + '.txt',
-                            output: adoc + '.m' + section + 'subst',
-                            configuration: substs
-                        )
-                        xml = custom_target(
-                            adoc.underscorify() + '_xml' + section,
-                            input: subst,
-                            output: '@BASENAME@.xml',
-                            command: [
-                                asciidoctor,
-                                '-f', files('asciidoc.conf'),
-                                '-b', 'docbook',
-                                '-d', 'manpage',
-                                '-o', '@OUTPUT@',
-                                '@INPUT@',
-                            ],
-                        )
-                        doc_tgts += custom_target(
-                            adoc.underscorify() + '_man' + section,
-                            input: xml,
-                            output: '@BASENAME@.' + section,
-                            command: [
-                                xmlto,
-                                '-m', files('manpage-normal.xsl'),
-                                '-o', '@OUTDIR@',
-                                '--skip-validation',
-                                'man',
-                                '@INPUT@',
-                            ],
-                            install: true,
-                            install_dir: man_set['dir'],
-                            install_tag: 'man',
-                        )
-                    endforeach
-                endforeach
+    foreach adoc : adoc_sources_man1 + adoc_sources_man5 + adoc_sources_man8
+        subst = configure_file(
+            input: adoc + '.txt',
+            output: adoc + '.hsubst',
+            configuration: substs,
+        )
+        doc_tgts += custom_target(
+            adoc.underscorify() + '_html',
+            input: subst,
+            output: '@BASENAME@.html',
+            command: [
+                asciidoc,
+                '-f', files('asciidoc.conf'),
+                '-b', 'xhtml11',
+                '-d', 'manpage',
+                '-o', '@OUTPUT@',
+                '@INPUT@'],
+        )
+    endforeach
+endif
+
+# Install the pages committed in the tree.
+if want_nvme
+    foreach man_set : man_sets
+        section = man_set['section']
+        foreach adoc : man_set['sources']
+            if adoc in adoc_no_install
+                continue
             endif
-        endif
-
-        # html
-        if want_docs == 'all' or want_docs == 'html'
-          foreach adoc : ( adoc_sources_man1 +
-                           adoc_sources_man5 +
-                           adoc_sources_man8 )
-                input = adoc + '.txt'
-                subst = configure_file(
-                    input: adoc + '.txt',
-                    output: adoc + '.hsubst',
-                    configuration: substs,
-                )
-                doc_tgts += custom_target(
-                    adoc.underscorify() + '_html',
-                    input: subst,
-                    output: '@BASENAME@.html',
-                    command: [
-                        asciidoctor,
-                        '-f', files('asciidoc.conf'),
-                        '-b', 'xhtml11',
-                        '-d', 'manpage',
-                        '-o', '@OUTPUT@',
-                        '@INPUT@'],
-                    install: true,
-                    install_dir: htmldir,
-                    install_tag: 'doc',
-                )
-            endforeach
-        endif
-    else
-        # asciidoctor not found, install pre compiled documetationx
-        foreach man_set : man_sets
-            section = man_set['section']
-            foreach adoc : man_set['sources']
-                if want_docs == 'all' or want_docs == 'man'
-                    man = files(adoc + '.' + section)
-                    install_data(man, install_dir: man_set['dir'], install_tag: 'man')
-                endif
-                if want_docs == 'all' or want_docs == 'html'
-                    html = files(adoc + '.html')
-                    install_data(html, install_dir: htmldir, install_tag: 'doc')
-                endif
-            endforeach
+            if want_docs == 'all' or want_docs == 'man'
+                man = files(adoc + '.' + section)
+                install_data(man, install_dir: man_set['dir'], install_tag: 'man')
+            endif
+            if want_docs == 'all' or want_docs == 'html'
+                html = files(adoc + '.html')
+                install_data(html, install_dir: htmldir, install_tag: 'doc')
+            endif
         endforeach
-    endif
+    endforeach
 endif
