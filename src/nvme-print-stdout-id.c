@@ -231,7 +231,8 @@ static struct shr_table *stdout_id_ctrl_bpcap_table(__u8 ctrl_bpcap)
 	static const char * const rpmbbpwps_def[] = {
 		"Support Not Specified",
 		"Not Supported",
-		"Supported"
+		"Supported",
+		"Reserved"
 	};
 
 	t = stdout_bits_table_create();
