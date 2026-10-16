@@ -720,6 +720,27 @@ int argconfig_parse_global(int argc, char *argv[],
 	       (p.version ? ARGCONFIG_VERSION : 0);
 }
 
+/*
+ * True if an option which stores to @value was given, in the table or in
+ * the global options. Aliases share the variable, so any of them counts.
+ */
+bool argconfig_given(struct argconfig_commandline_options *s,
+		     const void *value)
+{
+	struct argconfig_commandline_options *g = argconfig_globals(s);
+	bool given = false;
+
+	if (!value)
+		return false;
+
+	for (; s && s->option; s++)
+		given |= s->default_value == value && s->seen;
+	for (; g && g->option; g++)
+		given |= g->default_value == value && g->seen;
+
+	return given;
+}
+
 bool argconfig_parse_seen(struct argconfig_commandline_options *s,
 			  const char *option)
 {
