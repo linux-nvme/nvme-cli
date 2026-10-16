@@ -8760,10 +8760,11 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *acmd,
 	const char *namespace_id = "desired namespace id";
 	nvme_print_flags_t fmt;
 	__u64 capabilities = 0;
-	struct libnvme_transport_handle *hdl;
+	__cleanup_nvme_transport_handle
+		struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_free __u8 *data = NULL;
 	int ret;
-	__u8 *data = NULL;
-	struct libnvme_global_ctx *ctx;
 
 	struct config {
 		char *output_format;
@@ -8808,7 +8809,7 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *acmd,
 		ret = validate_output_format(cfg.output_format, &fmt);
 		if (ret < 0) {
 			nvme_show_error("ERROR: WDC %s: invalid output format", __func__);
-			goto free_buf;
+			goto out;
 		}
 
 		if (!data) {
@@ -8830,9 +8831,6 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *acmd,
 		nvme_show_error("ERROR: WDC: Unable to read Hardware Revision Log Page data");
 		ret = -1;
 	}
-
-free_buf:
-	free(data);
 
 out:
 	return ret;
