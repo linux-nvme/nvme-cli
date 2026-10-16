@@ -410,13 +410,21 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
+	struct argconfig_opt_val types[] = {
+		VAL_ENUM("NONE", SNDK_TELEMETRY_TYPE_NONE),
+		VAL_ENUM("HOST", SNDK_TELEMETRY_TYPE_HOST),
+		VAL_ENUM("CONTROLLER", SNDK_TELEMETRY_TYPE_CONTROLLER),
+		VAL_ENUM("BOTH", SNDK_TELEMETRY_TYPE_BOTH),
+		VAL_END()
+	};
+
 	struct config {
 		char *file;
 		__u32 xfer_size;
 		__u32 data_area;
 		__u64 file_size;
 		__u64 offset;
-		char *type;
+		int type;
 	};
 
 	struct config cfg = {
@@ -425,14 +433,14 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		.data_area = 0,
 		.file_size = 0,
 		.offset = 0,
-		.type = NULL,
+		.type = SNDK_TELEMETRY_TYPE_NONE,
 	};
 
 	NVME_ARGS(opts,
 		OPT_FILE("output-file",   'O', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
-		OPT_FILE("type",          't', &cfg.type,      type),
+		OPT_ENUM("type",          't', &cfg.type,      type, types),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
 		OPT_END());
@@ -502,24 +510,11 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		}
 	}
 
-	if (!cfg.type || !strcmp(cfg.type, "NONE") || !strcmp(cfg.type, "none")) {
-		telemetry_type = SNDK_TELEMETRY_TYPE_NONE;
+	telemetry_type = cfg.type;
+	if (telemetry_type == SNDK_TELEMETRY_TYPE_NONE)
 		telemetry_data_area = 0;
-	} else if (!strcmp(cfg.type, "HOST") || !strcmp(cfg.type, "host")) {
-		telemetry_type = SNDK_TELEMETRY_TYPE_HOST;
+	else
 		telemetry_data_area = cfg.data_area;
-	} else if (!strcmp(cfg.type, "CONTROLLER") || !strcmp(cfg.type, "controller")) {
-		telemetry_type = SNDK_TELEMETRY_TYPE_CONTROLLER;
-		telemetry_data_area = cfg.data_area;
-	} else if (!strcmp(cfg.type, "BOTH") || !strcmp(cfg.type, "both")) {
-		telemetry_type = SNDK_TELEMETRY_TYPE_BOTH;
-		telemetry_data_area = cfg.data_area;
-	} else {
-		nvme_show_error(
-			"ERROR: SNDK: Invalid type - Must be NONE, HOST, CONTROLLER, or BOTH\n");
-		ret = -1;
-		goto out;
-	}
 
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 
