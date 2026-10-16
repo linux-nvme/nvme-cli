@@ -4805,11 +4805,12 @@ static void json_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 
 	for (i = 0; i < NVME_ID_UUID_LIST_MAX; i++) {
 		__u8 uuid[NVME_UUID_LEN];
-		struct json_object *entry = json_create_object();
+		struct json_object *entry;
 
 		/* The list is terminated by a zero UUID value */
 		if (memcmp(uuid_list->entry[i].uuid, zero_uuid, sizeof(zero_uuid)) == 0)
 			break;
+		entry = json_create_object();
 		memcpy(&uuid, uuid_list->entry[i].uuid, sizeof(uuid));
 		obj_add_int(entry, "association",
 			uuid_list->entry[i].header & 0x3);
