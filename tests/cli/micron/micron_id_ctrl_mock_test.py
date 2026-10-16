@@ -8,8 +8,8 @@
 """Tests for the micron id-ctrl command, hardware-free.
 
 micron id-ctrl extends the core id-ctrl rendering with one vendor field: pms,
-the Power Measurement Support bit of CTRATT.  It is declared with plain
-NVME_ARGS, so unlike most micron commands it also honours binary output.
+the Power Measurement Support bit of CTRATT.  It takes the default output
+formats, so unlike most micron commands it also honours binary output.
 
 The command warns about an unrecognised drive but proceeds, so it is not
 gated on the model.  With the identify buffer as an input, pms can be checked

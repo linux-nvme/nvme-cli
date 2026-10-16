@@ -10,7 +10,7 @@
  * shell-completion generators, documentation, and drift checks.
  *
  * The model is captured by walking the live plugin/command tree and, for each
- * command, intercepting the options array it builds on its stack via NVME_ARGS.
+ * command, intercepting the options array it builds on its stack.
  * Capture installs a hook in argconfig_parse() (see argconfig_set_parse_hook):
  * when a command calls into the parser, the hook copies the options array into
  * the model and returns a sentinel so the command unwinds before opening any
@@ -716,8 +716,8 @@ static struct json_object *json_command(const struct command_metadata_command *c
 	opts = json_create_array();
 	for (i = 0; i < c->num_options; i++) {
 		/*
-		 * Options after the "Global options" separator are the shared
-		 * NVME_ARGS globals; flag them so generators can group them.
+		 * Options after the "Global options" separator are the
+		 * global options; flag them so generators can group them.
 		 */
 		if (opt_is_global_separator(&c->options[i])) {
 			global = true;
