@@ -267,6 +267,8 @@ static void free_option_fields(struct command_metadata_option *o)
 	free((char *)o->option);
 	free((char *)o->meta);
 	free((char *)o->help);
+	free((char *)o->deprecated);
+	free((char *)o->old_name);
 	if (o->opt_val) {
 		const struct argconfig_opt_val *v;
 
@@ -310,6 +312,8 @@ static int copy_options(const struct argconfig_commandline_options *opts,
 		if (dup_field(opts[i].option, &dst[i].option) ||
 		    dup_field(opts[i].meta, &dst[i].meta) ||
 		    dup_field(opts[i].help, &dst[i].help) ||
+		    dup_field(opts[i].deprecated, &dst[i].deprecated) ||
+		    dup_field(opts[i].old_name, &dst[i].old_name) ||
 		    copy_opt_val(opts[i].opt_val, &dst[i].opt_val)) {
 			size_t j;
 
@@ -406,6 +410,9 @@ static int capture_command(struct command_metadata_command *mc, struct command *
 	mc->alias = cmd->alias;
 	mc->help = cmd->help;
 	mc->device = cmd->device;
+	mc->deprecated = cmd->deprecated;
+	mc->replacement_plugin = cmd->replacement.plugin;
+	mc->replacement_command = cmd->replacement.command;
 	mc->captured = false;
 
 	/*
@@ -663,6 +670,10 @@ static void json_option(struct json_object *arr, const struct command_metadata_o
 		json_object_add_value_bool(jo, "global", true);
 	if (o->hidden)
 		json_object_add_value_bool(jo, "hidden", true);
+	if (o->deprecated)
+		json_object_add_value_string(jo, "deprecated", o->deprecated);
+	if (o->old_name)
+		json_object_add_value_string(jo, "old_name", o->old_name);
 
 	vals = json_option_values(o);
 	if (vals)
@@ -692,6 +703,15 @@ static struct json_object *json_command(const struct command_metadata_command *c
 	if (c->help)
 		json_object_add_value_string(jc, "description", c->help);
 	json_object_add_value_string(jc, "device", device_names[c->device]);
+	if (c->deprecated)
+		json_object_add_value_bool(jc, "deprecated", true);
+	if (c->replacement_plugin && c->replacement_command) {
+		char replacement[0x80];
+
+		snprintf(replacement, sizeof(replacement), "%s %s",
+			 c->replacement_plugin, c->replacement_command);
+		json_object_add_value_string(jc, "replacement", replacement);
+	}
 
 	opts = json_create_array();
 	for (i = 0; i < c->num_options; i++) {

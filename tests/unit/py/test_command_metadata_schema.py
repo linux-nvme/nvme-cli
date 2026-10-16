@@ -158,6 +158,22 @@ class TestCommandMetadataSchema(unittest.TestCase):
         self.assertEqual(opt["argument"], "required")
         self.assertIn("json", opt["values"])
 
+    def test_deprecated(self):
+        """Deprecated commands name their replacement, deprecated options
+        theirs, and renamed options their old name."""
+        cmds = {c["name"]: c for c in self.data["commands"]}
+        self.assertTrue(cmds["smart-log"].get("deprecated"))
+        self.assertEqual(cmds["smart-log"].get("replacement"), "log smart")
+        self.assertNotIn("deprecated", cmds["list"])
+        opt = next(o for o in cmds["list"]["options"]
+                   if o["long"] == "human-readable")
+        self.assertEqual(opt.get("deprecated"), "--verbose/-v")
+        self.assertTrue(opt.get("hidden"))
+        if "discover" in cmds:
+            opt = next(o for o in cmds["discover"]["options"]
+                       if o["long"] == "no-reuse")
+            self.assertEqual(opt.get("old_name"), "force")
+
 
 if __name__ == "__main__":
     # argv[1:3] are consumed above; hand unittest only its own args.

@@ -28,6 +28,8 @@ struct command_metadata_option {
 	const char *help;
 	const struct argconfig_opt_val *opt_val; /* NULL or .str==NULL terminated */
 	bool hidden;			/* not shown in help/completion */
+	const char *deprecated;		/* the replacement, or NULL */
+	const char *old_name;		/* the long name it replaced, or NULL */
 };
 
 struct command_metadata_command {
@@ -38,6 +40,10 @@ struct command_metadata_command {
 	size_t num_options;
 	bool captured;			/* hook fired -> options valid */
 	int device;			/* enum command_device */
+	bool deprecated;
+	/* "nvme <plugin> <command>" which replaces it, or NULL */
+	const char *replacement_plugin;
+	const char *replacement_command;
 };
 
 struct command_metadata_plugin {
