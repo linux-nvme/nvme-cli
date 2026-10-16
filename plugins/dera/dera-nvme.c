@@ -158,13 +158,17 @@ static int get_status(int argc, char **argv, struct command *acmd, struct plugin
 	if (!err) {
 		if (state > 0 && state < 4)
 			printf("device_status                       : %s %d%% completed\n", dev_status[state], log.rebuild_percent);
-		else
+		else if (state < ARRAY_SIZE(dev_status))
 			printf("device_status                       : %s\n", dev_status[state]);
+		else
+			puts("device_status                       : Unknown");
 	} else {
 		goto exit;
 	}
 
-	printf("dev_status_up                       : %s\n", dev_status[log.dev_status_up]);
+	printf("dev_status_up                       : %s\n",
+	       log.dev_status_up < ARRAY_SIZE(dev_status) ?
+	       dev_status[log.dev_status_up] : "Unknown");
 	printf("cap_aged                            : %s\n", log.cap_aged == 1 ? "True" : "False");
 	printf("cap_aged_ratio                      : %d%%\n", log.cap_aged_ratio < 100 ? log.cap_aged_ratio : 100);
 	printf("cap_status                          : %s\n", log.cap_status == 0 ? "Normal" : (log.cap_status == 1 ? "Warning" : "Critical"));
