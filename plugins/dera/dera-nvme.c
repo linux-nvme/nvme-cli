@@ -20,10 +20,10 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-static int char4_to_int(__u8 *data)
+static __u32 char4_to_int(__u8 *data)
 {
 	int i;
-	int result = 0;
+	__u32 result = 0;
 
 	for (i = 0; i < 4; i++) {
 		result = result << 8;
@@ -172,9 +172,12 @@ static int get_status(int argc, char **argv, struct command *acmd, struct plugin
 	printf("cap_aged                            : %s\n", log.cap_aged == 1 ? "True" : "False");
 	printf("cap_aged_ratio                      : %d%%\n", log.cap_aged_ratio < 100 ? log.cap_aged_ratio : 100);
 	printf("cap_status                          : %s\n", log.cap_status == 0 ? "Normal" : (log.cap_status == 1 ? "Warning" : "Critical"));
-	printf("cap_voltage                         : %d mV\n", char4_to_int(log.cap_voltage));
-	printf("nand_erase_err_cnt                  : %d\n", char4_to_int(log.nand_erase_err_cnt));
-	printf("nand_program_err_cnt                : %d\n", char4_to_int(log.nand_program_err_cnt));
+	printf("cap_voltage                         : %u mV\n",
+	       char4_to_int(log.cap_voltage));
+	printf("nand_erase_err_cnt                  : %u\n",
+	       char4_to_int(log.nand_erase_err_cnt));
+	printf("nand_program_err_cnt                : %u\n",
+	       char4_to_int(log.nand_program_err_cnt));
 	printf("power_level                         : %d W\n", log.power_level);
 	printf("current_power                       : %d mW\n", log.current_power[1] << 8 | log.current_power[0]);
 	printf("nand_init_fail                      : %d\n", log.nand_init_fail[1] << 8 | log.nand_init_fail[0]);
@@ -188,7 +191,8 @@ static int get_status(int argc, char **argv, struct command *acmd, struct plugin
 	printf("init_pcie_volt_low_cnt              : %d\n", log.init_pcie_volt_low[1] << 8 | log.init_pcie_volt_low[0]);
 	printf("rt_pcie_volt_low_cnt                : %d\n", log.rt_pcie_volt_low[1] << 8 | log.rt_pcie_volt_low[0]);
 	printf("temp_sensor_abnormal_cnt            : %d\n", log.temp_sensor_abnormal[1] << 8 | log.temp_sensor_abnormal[0]);
-	printf("nand_read_retry_fail_cnt            : %d\n", char4_to_int(log.nand_read_retry_fail_cnt));
+	printf("nand_read_retry_fail_cnt            : %u\n",
+	       char4_to_int(log.nand_read_retry_fail_cnt));
 	printf("fw_slot_version                     : %.*s\n", 8, log.fw_slot_version);
 
 exit:
