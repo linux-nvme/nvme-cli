@@ -420,7 +420,11 @@ int parse_params(char *str, int number, ...)
 static int mb_get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	struct nvme_memblaze_smart_log smart_log;
+	/* the new format is printed with the larger struct */
+	union {
+		struct nvme_memblaze_smart_log old;
+		struct nvme_p4_smart_log p4;
+	} smart_log = {};
 	char *desc =
 	    "Get Memblaze vendor specific additional smart log, and show it.";
 	const char *namespace = "(optional) desired namespace";
@@ -450,15 +454,16 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *ac
 		return err;
 
 	nvme_init_get_log(&cmd, cfg.namespace_id, 0xca, NVME_CSI_NVM,
-			  &smart_log, sizeof(smart_log));
+			  &smart_log.old, sizeof(smart_log.old));
 	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (!err) {
 		if (!cfg.raw_binary)
 			err = show_memblaze_smart_log(hdl, cfg.namespace_id,
 						      libnvme_transport_handle_get_name(hdl),
-						      &smart_log);
+						      &smart_log.old);
 		else
-			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
+			d_raw((unsigned char *)&smart_log.old,
+			      sizeof(smart_log.old));
 	}
 	if (err > 0)
 		nvme_show_status(err);
