@@ -24,7 +24,7 @@ struct command_metadata_option {
 	char short_option;		/* 0 if none */
 	const char *meta;		/* metavar / value placeholder ("NUM"/"FMT"/...) or NULL */
 	enum argconfig_types config_type;
-	int argument_type;		/* no_/required_/optional_argument */
+	enum argconfig_argument argument_type;
 	const char *help;
 	const struct argconfig_opt_val *opt_val; /* NULL or .str==NULL terminated */
 	bool hidden;			/* not shown in help/completion */

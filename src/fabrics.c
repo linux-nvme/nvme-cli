@@ -21,7 +21,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
 #include <net/if.h>

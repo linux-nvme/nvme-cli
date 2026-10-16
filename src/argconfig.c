@@ -117,18 +117,18 @@ static void show_option(FILE *out,
 	b += sprintf(b, "  [ ");
 	if (option->option) {
 		b += sprintf(b, " --%s", option->option);
-		if (option->argument_type == optional_argument)
+		if (option->argument_type == ARGCONFIG_ARG_OPTIONAL)
 			b += sprintf(b, "[=<%s>]", option->meta ? option->meta : "arg");
-		if (option->argument_type == required_argument)
+		if (option->argument_type == ARGCONFIG_ARG_REQUIRED)
 			b += sprintf(b, "=<%s>", option->meta ? option->meta : "arg");
 		if (option->short_option)
 			b += sprintf(b, ",");
 	}
 	if (option->short_option) {
 		b += sprintf(b, " -%c", option->short_option);
-		if (option->argument_type == optional_argument)
+		if (option->argument_type == ARGCONFIG_ARG_OPTIONAL)
 			b += sprintf(b, " [<%s>]", option->meta ? option->meta : "arg");
-		if (option->argument_type == required_argument)
+		if (option->argument_type == ARGCONFIG_ARG_REQUIRED)
 			b += sprintf(b, " <%s>", option->meta ? option->meta : "arg");
 	}
 	b += sprintf(b, " ] ");
@@ -558,20 +558,20 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 	}
 
 	switch (s->argument_type) {
-	case no_argument:
+	case ARGCONFIG_ARG_NONE:
 		if (eq)
 			return argconfig_parse_error(p,
 				"option '--%s' doesn't allow an argument",
 				s->option);
 		break;
-	case required_argument:
+	case ARGCONFIG_ARG_REQUIRED:
 		value = eq ? eq + 1 : argconfig_next_arg(p);
 		if (!value)
 			return argconfig_parse_error(p,
 				"option '--%s' requires an argument",
 				s->option);
 		break;
-	case optional_argument:
+	case ARGCONFIG_ARG_OPTIONAL:
 		/* Only an attached value, "--name value" is an operand */
 		if (eq)
 			value = eq + 1;
@@ -607,23 +607,23 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
 
 		value = NULL;
 		switch (s->argument_type) {
-		case no_argument:
+		case ARGCONFIG_ARG_NONE:
 			break;
-		case required_argument:
+		case ARGCONFIG_ARG_REQUIRED:
 			value = c[1] ? c + 1 : argconfig_next_arg(p);
 			if (!value)
 				return argconfig_parse_error(p,
 					"option requires an argument -- '%c'",
 					*c);
 			break;
-		case optional_argument:
+		case ARGCONFIG_ARG_OPTIONAL:
 			if (c[1])
 				value = c + 1;
 			break;
 		}
 
 		ret = argconfig_apply(s, value);
-		if (ret || s->argument_type != no_argument)
+		if (ret || s->argument_type != ARGCONFIG_ARG_NONE)
 			return ret;
 	}
 

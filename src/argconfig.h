@@ -32,7 +32,6 @@
  */
 #pragma once
 
-#include <getopt.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -82,47 +81,48 @@ enum argconfig_types {
 #define OPT_END() { NULL }
 
 #define OPT_GROUP(d) \
-	{"", 0, NULL, CFG_GROUP_SEPARATOR, NULL, no_argument, d, false, NULL}
+	{"", 0, NULL, CFG_GROUP_SEPARATOR, NULL, ARGCONFIG_ARG_NONE, d, false, \
+	 NULL}
 
 #define OPT_FLAG(l, s, v, d, ...) \
 	{l, s, NULL, CFG_FLAG, OPT_CHECK_BOOL(v), \
-	 no_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_NONE, d, false, __VA_ARGS__}
 
 #define OPT_SUFFIX(l, s, v, d, ...) \
 	{l, s, "IONUM", CFG_LONG_SUFFIX, OPT_CHECK_64(v), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 #define OPT_UINT(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_POSITIVE, OPT_CHECK(v, uint32_t *), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 #define OPT_INT(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_INT, OPT_CHECK(v, int *), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 #define OPT_LONG(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_LONG, OPT_CHECK_64(v), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 #define OPT_DOUBLE(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_DOUBLE, OPT_CHECK_DOUBLE(v), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 #define OPT_BYTE(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_BYTE, OPT_CHECK(v, uint8_t *), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 #define OPT_SHRT(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_SHORT, OPT_CHECK(v, uint16_t *), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 #define OPT_INCR(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_INCREMENT, OPT_CHECK(v, int *), \
-	 no_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_NONE, d, false, __VA_ARGS__}
 
 #define OPT_STRING(l, s, m, v, d, ...) \
 	{l, s, m, CFG_STRING, OPT_CHECK_STR(v), \
-	 required_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
 
 /*
  * Like OPT_STRING(), but the value is optional. getopt_long() only
@@ -133,7 +133,7 @@ enum argconfig_types {
  */
 #define OPT_STRING_OPTIONAL(l, s, m, v, d, ...) \
 	{l, s, m, CFG_STRING, OPT_CHECK_STR(v), \
-	 optional_argument, d, false, __VA_ARGS__}
+	 ARGCONFIG_ARG_OPTIONAL, d, false, __VA_ARGS__}
 
 #define OPT_FMT(l, s, v, d, ...)  OPT_STRING(l, s, "FMT", v, d, __VA_ARGS__)
 #define OPT_FILE(l, s, v, d, ...) OPT_STRING(l, s, "FILE", v, d, __VA_ARGS__)
@@ -207,13 +207,20 @@ struct argconfig_opt_val {
 	union argconfig_val val;
 };
 
+/* Whether an option takes a value */
+enum argconfig_argument {
+	ARGCONFIG_ARG_NONE,
+	ARGCONFIG_ARG_REQUIRED,
+	ARGCONFIG_ARG_OPTIONAL,
+};
+
 struct argconfig_commandline_options {
 	const char *option;
 	const char short_option;
 	const char *meta;
 	enum argconfig_types config_type;
 	void *default_value;
-	int argument_type;
+	enum argconfig_argument argument_type;
 	const char *help;
 	bool seen;
 	struct argconfig_opt_val *opt_val;

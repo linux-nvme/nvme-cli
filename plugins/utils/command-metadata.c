@@ -20,7 +20,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -571,9 +570,9 @@ static bool opt_is_global_separator(const struct command_metadata_option *o)
 static const char *opt_argument(const struct command_metadata_option *o)
 {
 	switch (o->argument_type) {
-	case optional_argument:
+	case ARGCONFIG_ARG_OPTIONAL:
 		return "optional";
-	case no_argument:
+	case ARGCONFIG_ARG_NONE:
 		return "none";
 	default:
 		return "required";
@@ -582,7 +581,7 @@ static const char *opt_argument(const struct command_metadata_option *o)
 
 static bool opt_takes_value(const struct command_metadata_option *o)
 {
-	return o->argument_type != no_argument;
+	return o->argument_type != ARGCONFIG_ARG_NONE;
 }
 
 /*

@@ -24,6 +24,19 @@
 #include "../../../src/cleanup.h"
 #include "argconfig-getopt-ref.h"
 
+/* getopt's has_arg for an option */
+static int has_arg(struct argconfig_commandline_options *s)
+{
+	switch (s->argument_type) {
+	case ARGCONFIG_ARG_REQUIRED:
+		return required_argument;
+	case ARGCONFIG_ARG_OPTIONAL:
+		return optional_argument;
+	default:
+		return no_argument;
+	}
+}
+
 static bool is_null_or_empty(const char *s)
 {
 	return !s || !*s;
@@ -240,15 +253,15 @@ int ref_argconfig_parse(int argc, char *argv[],
 			continue;
 		if (s->short_option) {
 			short_opts[short_index++] = s->short_option;
-			if (s->argument_type == required_argument ||
-			    s->argument_type == optional_argument)
+			if (s->argument_type == ARGCONFIG_ARG_REQUIRED ||
+			    s->argument_type == ARGCONFIG_ARG_OPTIONAL)
 				short_opts[short_index++] = ':';
-			if (s->argument_type == optional_argument)
+			if (s->argument_type == ARGCONFIG_ARG_OPTIONAL)
 				short_opts[short_index++] = ':';
 		}
 		if (!is_null_or_empty(s->option)) {
 			long_opts[long_opt_index].name = s->option;
-			long_opts[long_opt_index].has_arg = s->argument_type;
+			long_opts[long_opt_index].has_arg = has_arg(s);
 			long_opt_map[long_opt_index] = opt_index;
 			long_opt_index++;
 		}
@@ -332,15 +345,15 @@ int ref_argconfig_parse_global(int argc, char *argv[],
 			continue;
 		if (s->short_option) {
 			short_opts[short_index++] = s->short_option;
-			if (s->argument_type == required_argument ||
-			    s->argument_type == optional_argument)
+			if (s->argument_type == ARGCONFIG_ARG_REQUIRED ||
+			    s->argument_type == ARGCONFIG_ARG_OPTIONAL)
 				short_opts[short_index++] = ':';
-			if (s->argument_type == optional_argument)
+			if (s->argument_type == ARGCONFIG_ARG_OPTIONAL)
 				short_opts[short_index++] = ':';
 		}
 		if (!is_null_or_empty(s->option)) {
 			long_opts[long_opt_index].name = s->option;
-			long_opts[long_opt_index].has_arg = s->argument_type;
+			long_opts[long_opt_index].has_arg = has_arg(s);
 			long_opt_map[long_opt_index] = opt_index;
 			long_opt_index++;
 		}
