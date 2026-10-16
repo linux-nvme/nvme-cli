@@ -245,3 +245,11 @@ static inline size_t shr_linelen(char *s)
 
 	return i;
 }
+
+/*
+ * A copy of @s with each control character written as \xNN, so that a
+ * string from the user can't drive the terminal when it is echoed, e.g.
+ * in an error message. Other bytes, also those of UTF-8 characters, stay.
+ * The caller frees it. NULL if out of memory.
+ */
+char *shr_escape(const char *s);
