@@ -89,6 +89,20 @@ static inline int nvme_id_ns_nr_lbaf(struct nvme_id_ns *ns)
 	return n < max ? n : max;
 }
 
+/*
+ * A log page counts its entries, but the count comes from the device and
+ * the page may be shorter: a later read can report more entries than the
+ * buffer was sized for. Return: @nr, but at most the number of @size byte
+ * entries @len bytes hold after a @hdr byte header.
+ */
+static inline size_t nvme_log_nr_entries(size_t nr, size_t len, size_t hdr,
+					 size_t size)
+{
+	size_t max = len > hdr ? (len - hdr) / size : 0;
+
+	return nr < max ? nr : max;
+}
+
 /* Return: the LBA data size in bytes, or 0 if it is not representable. */
 static inline unsigned int nvme_lbaf_data_size(__u8 ds)
 {
