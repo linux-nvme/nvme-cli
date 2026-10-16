@@ -62,5 +62,12 @@ int main(void)
 	shr_assert(!mh.p);
 	shr_assert(!mh.len);
 
+	/* a zero length allocation must be freed as well */
+	buf = libnvme_alloc_huge(0, &mh);
+	shr_assert(buf);
+	shr_assert(mh.len);
+	libnvme_free_huge(&mh);
+	shr_assert(!mh.p);
+
 	return 0;
 }
