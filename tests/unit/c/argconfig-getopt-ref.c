@@ -143,6 +143,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		*(bool *)value = true;
 		break;
 	case CFG_GROUP_SEPARATOR:
+	case CFG_INCLUDE:
 		break;
 	}
 
@@ -185,6 +186,7 @@ static void argconfig_set_opt_val(enum argconfig_types type,
 		*(char **)val = opt_val->string;
 		break;
 	case CFG_GROUP_SEPARATOR:
+	case CFG_INCLUDE:
 		break;
 	}
 }
