@@ -63,15 +63,16 @@ def _host_discovery_log(hostnqns, tel=_HEDLPE_LEN):
     return bytes(hdr) + records
 
 
-def _ave_discovery_log(avenqns):
+def _ave_discovery_log(avenqns, tel=None, numatr=1):
     """An AVE discovery log page with one record of one IPv4 transport
-    record for each of @avenqns."""
+    record for each of @avenqns. @tel and @numatr default to the record
+    length and the number of transport records which match."""
     records = b''
     for nqn in avenqns:
         rec = bytearray(_ADLPE_LEN + _ATR_LEN)
-        struct.pack_into('<I', rec, 0, len(rec))
+        struct.pack_into('<I', rec, 0, len(rec) if tel is None else tel)
         rec[4:4 + len(nqn)] = nqn.encode()
-        rec[228] = 1  # numatr
+        rec[228] = numatr
         rec[_ADLPE_LEN] = _NVMF_ADDR_FAMILY_IP4
         struct.pack_into('<H', rec, _ADLPE_LEN + 2, 4420)
         rec[_ADLPE_LEN + 4:_ADLPE_LEN + 8] = bytes([192, 0, 2, 7])
@@ -192,6 +193,29 @@ class DiscoveryLogsTest(unittest.TestCase):
                          'nqn.2014-08.org.example:ave1')
         self.assertEqual(out['adlpe: 0']['atr: 0']['avetraddr'], '192.0.2.7')
         self.assertEqual(out['adlpe: 0']['atr: 0']['avetrsvcid'], 4420)
+
+    def test_ave_discovery_zero_record_length(self):
+        self.server.logs[_LID_AVE_DISCOVERY] = \
+            _ave_discovery_log(['nqn.2014-08.org.example:ave1'], tel=0)
+        out = self._run_both('ave-discovery')
+        self.assertFalse([k for k in out if k.startswith('adlpe')])
+
+    def test_ave_discovery_transport_records_past_the_record(self):
+        """More transport records than the record holds: only those in it
+        are printed."""
+        self.server.logs[_LID_AVE_DISCOVERY] = \
+            _ave_discovery_log(['nqn.2014-08.org.example:ave1'], numatr=200)
+        out = self._run_both('ave-discovery')
+        self.assertEqual(out['adlpe: 0']['numatr'], 200)
+        self.assertIn('atr: 0', out['adlpe: 0'])
+        self.assertNotIn('atr: 1', out['adlpe: 0'])
+
+    def test_ave_discovery_nqn_fills_its_field(self):
+        """An NQN without a NUL ends at the end of its field."""
+        nqn = 'nqn.2014-08.org.example:' + 'a' * 200
+        self.server.logs[_LID_AVE_DISCOVERY] = _ave_discovery_log([nqn])
+        out = self._run_both('ave-discovery')
+        self.assertEqual(out['adlpe: 0']['avenqn'], nqn[:224])
 
     def test_pull_model_ddc_req_osp_is_read(self):
         self.server.logs[_LID_PULL_MODEL_DDC_REQ] = \
