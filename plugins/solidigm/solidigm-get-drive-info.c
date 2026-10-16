@@ -34,8 +34,8 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 	struct libnvme_ns *n;
 	struct nvme_id_ns ns = { 0 };
 	__u8 flbaf_inUse;
-	__u16 lba_size;
-	__u16 ftl_unit_size;
+	unsigned int lba_size;
+	uint64_t ftl_unit_size;
 	int err;
 
 	OPT_ARGS(opts) = {
@@ -81,18 +81,23 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &flbaf_inUse);
-	lba_size = 1 << ns.lbaf[flbaf_inUse].ds;
-	ftl_unit_size = (le16_to_cpu(ns.npwg) + 1) * lba_size / 1024;
+	lba_size = nvme_lbaf_data_size(ns.lbaf[flbaf_inUse].ds);
+	if (!lba_size) {
+		nvme_show_error("solidigm-vs-drive-info: bad LBA data size");
+		return -EINVAL;
+	}
+	ftl_unit_size = (le16_to_cpu(ns.npwg) + 1ULL) * lba_size / 1024;
 
 	if (flags == JSON) {
 		struct json_object *root = json_create_object();
 
-		json_object_add_value_int(root, FTL_unit_size_str, ftl_unit_size);
+		json_object_add_value_uint64(root, FTL_unit_size_str,
+					     ftl_unit_size);
 		json_print_object(root, NULL);
 		printf("\n");
 		json_free_object(root);
 	} else {
-		printf("%s: %d\n", FTL_unit_size_str, ftl_unit_size);
+		printf("%s: %"PRIu64"\n", FTL_unit_size_str, ftl_unit_size);
 	}
 
 	return err;
