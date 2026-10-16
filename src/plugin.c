@@ -520,8 +520,9 @@ int run_replacement_command(struct plugin *plugin, struct command *cmd,
 		return -ENOTTY;
 	}
 
+	argconfig_print_warning();
 	fprintf(stderr,
-		"WARNING: '%s' is deprecated and will be removed in the next major version, use 'nvme %s %s' instead\n",
+		" '%s' is deprecated and will be removed in the next major version, use 'nvme %s %s' instead\n",
 		cmd->name, name, command);
 
 	/*

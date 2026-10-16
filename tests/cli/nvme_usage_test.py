@@ -19,6 +19,28 @@ import unittest
 _NVME_BIN = sys.argv[1] if len(sys.argv) > 1 else 'nvme'
 
 
+def run_tty(*args, env=None):
+    """Run nvme with stderr on a terminal and return what it wrote
+    there."""
+    import pty
+    master, slave = pty.openpty()
+    subprocess.run([_NVME_BIN] + list(args), stdin=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL, stderr=slave, env=env,
+                   check=False)
+    os.close(slave)
+    out = b''
+    try:
+        while True:
+            data = os.read(master, 4096)
+            if not data:
+                break
+            out += data
+    except OSError:
+        pass
+    os.close(master)
+    return out.decode()
+
+
 def run(*args):
     return subprocess.run([_NVME_BIN] + list(args), capture_output=True,
                           text=True, stdin=subprocess.DEVNULL, check=False)
@@ -76,6 +98,36 @@ class HelpTest(unittest.TestCase):
             with self.subTest(args=args):
                 result = run(*args)
                 self.assertNotIn('\033[', result.stdout + result.stderr)
+
+
+class ColorTest(unittest.TestCase):
+    """Errors are red and warnings yellow on a terminal, unless NO_COLOR
+    is set to a non-empty value (https://no-color.org/)."""
+
+    def setUp(self):
+        try:
+            import pty  # noqa: F401
+        except ImportError:
+            self.skipTest('no pty on this platform')
+        self.env = dict(os.environ)
+        self.env.pop('NO_COLOR', None)
+
+    def test_error_in_red(self):
+        out = run_tty('id', 'ctrl', '--bogus', env=self.env)
+        self.assertIn("\033[31mid ctrl: unrecognized option '--bogus'",
+                      out)
+
+    def test_warning_in_yellow(self):
+        out = run_tty('list', '-H', env=self.env)
+        self.assertIn('\033[33mWARNING:\033[0m', out)
+
+    def test_no_color(self):
+        self.env['NO_COLOR'] = '1'
+        self.assertNotIn('\033[', run_tty('id', 'ctrl', '--bogus',
+                                           env=self.env))
+        self.env['NO_COLOR'] = ''
+        self.assertIn('\033[31m', run_tty('id', 'ctrl', '--bogus',
+                                           env=self.env))
 
 
 class DeprecatedOptionTest(unittest.TestCase):

@@ -52,6 +52,13 @@ RETURNS
 All commands will behave the same, they will return 0 on success and 1 on
 failure.
 
+ENVIRONMENT
+-----------
+NO_COLOR::
+	When set to a non-empty value, nvme prints no colors or bold text,
+	see https://no-color.org/. Without it, errors, warnings and
+	headings are highlighted when they go to a terminal.
+
 FURTHER DOCUMENTATION
 ---------------------
 See the freely available references on the http://nvmexpress.org[Official
