@@ -38,6 +38,24 @@
 * Number options reject text after the number. Before, the rest was
   ignored: `--timeout=10s` set a timeout of 10 milliseconds.
 
+* Global options mean the same for every command now: they are looked
+  up before the options of a command, and no command uses their names
+  any more.
+  - The own `--human-readable` (`-H`) of `fdp configs`,
+    `lm migration-recv`, `shannon get-additional-feature` and
+    `zns id-ns`, and the own `--verbose` (`-V`) of `sndk` and
+    `wdc vs-internal-log`, `sed discover` and `zns report-zones` are
+    gone; the global `--verbose` (`-v`) does their job. `-V` is no
+    longer accepted by these commands.
+  - These options lost their short name, which a global option uses:
+    `config convert --output` and `rpmb read-data`/`write-data
+    --address` (`-o`), `feat arbitration --hpw`, `feat temp-thresh
+    --thsel`, `feat host-behavior-support --hdisns`, `lm set-cdq --hp`,
+    `nbft show --hfi` and `samsung vs-internal-log --hide-progress`
+    (`-H`).
+  - `--human-readable` and `-H`, the old spelling of `--verbose`, print
+    a deprecation warning.
+
 * The deprecated `tls-key` command parses its options like every other
   command: it has a help, and abbreviated options such as `--keyr` are
   no longer accepted. It, `gen-dhchap-key` and `check-dhchap-key`
