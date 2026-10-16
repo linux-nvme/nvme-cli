@@ -41,6 +41,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	Retrieve the feature for the given nsid. This is optional and
 	most features do not use this value.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -D <dtype>::
 --dir-type=<dtype>::

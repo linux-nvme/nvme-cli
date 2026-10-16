@@ -327,7 +327,8 @@ static int feat_perfc(int argc, char **argv, struct command *acmd, struct plugin
 	struct perfc_config cfg = { 0 };
 
 	FEAT_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_optional),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_optional, nvme_nsid_values),
 		  OPT_BYTE("attri", 'a', &cfg.attri, attri),
 		  OPT_FLAG("rvspa", 'r', &cfg.rvspa, rvspa),
 		  OPT_BYTE("r4karl", 'R', &cfg.r4karl, r4karl),
@@ -936,7 +937,8 @@ static int feat_err_recovery(int argc, char **argv, struct command *acmd,
 	struct config cfg = { 0 };
 
 	FEAT_ARGS(opts,
-		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired),
+		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired,
+			   nvme_nsid_values),
 		  OPT_SHRT("tler", 't', &cfg.tler, tler),
 		  OPT_FLAG("dulbe", 'd', &cfg.dulbe, dulbe));
 
@@ -1245,7 +1247,8 @@ static int feat_lba_range_type(int argc, char **argv, struct command *acmd,
 
 	/* -s is --slbas and -h is help, --save and --hlbars are long only */
 	FEAT_ARGS_SAVE(opts, 0,
-		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired),
+		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired,
+			   nvme_nsid_values),
 		  OPT_BYTE("num", 'N', &cfg.num, num_desc),
 		  OPT_LIST("types", 't', &cfg.types, types_desc),
 		  OPT_LIST("lbaros", 'l', &cfg.lbaros, lbaros_desc),

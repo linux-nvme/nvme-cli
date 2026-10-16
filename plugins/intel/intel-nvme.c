@@ -363,7 +363,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace,
+			 nvme_nsid_values),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
 		OPT_FLAG_JSON("json",    'j', &cfg.json,         json));
 
@@ -1379,7 +1380,8 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 		OPT_UINT("log",          'l', &cfg.log,          log),
 		OPT_INT("region",        'r', &cfg.core,         core),
 		OPT_INT("nlognum",       'm', &cfg.lnum,         nlognum),
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
 		OPT_FILE("output-file",  'O', &cfg.file,         file),
 		OPT_FLAG("verbose-nlog", 'V', &cfg.verbose,      verbose));
 

@@ -73,7 +73,8 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_FILE("file",         'f', &cfg.file,         file),
 		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
 		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),
@@ -192,7 +193,8 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_UINT("size",         'x', &cfg.size,         size),
 		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
 		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),

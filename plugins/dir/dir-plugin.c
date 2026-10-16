@@ -72,7 +72,8 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
 		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
 		  OPT_BYTE("target-dir",     'T', &cfg.ttype,          ttype),
@@ -198,7 +199,8 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
 		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),

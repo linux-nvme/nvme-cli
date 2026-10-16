@@ -30,6 +30,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	Override the nsid field. If using the admin character device,
 	this parameter is required.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -c <crkey>::
 --crkey=<crkey>::

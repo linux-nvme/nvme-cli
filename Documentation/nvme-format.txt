@@ -51,6 +51,7 @@ OPTIONS
 	Send the format command for the specified nsid. This can be
 	used to override the default value for either character device
 	(unspecified) or the block device (result from NVME_IOCTL_ID).
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -l <lbaf>::
 --lbaf=<lbaf>::

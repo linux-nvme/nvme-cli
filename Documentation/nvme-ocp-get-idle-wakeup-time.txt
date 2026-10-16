@@ -47,6 +47,7 @@ OPTIONS
 |3|Supported capabilities
 |4-7|Reserved
 |==================
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 include::global-options.txt[]
 

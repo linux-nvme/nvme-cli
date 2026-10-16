@@ -444,7 +444,8 @@ static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command
 
 	NVME_ARGS(opts,
 		OPT_BYTE("sel", 's', &cfg.sel, sel),
-		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid,
+			 nvme_nsid_values),
 		OPT_FLAG("no-uuid", 'u', &no_uuid_flag, no_uuid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -1542,7 +1543,8 @@ static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct comma
 
 	NVME_ARGS(opts,
 		OPT_BYTE("sel", 's', &cfg.sel, sel),
-		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid,
+			 nvme_nsid_values),
 		OPT_FLAG("no-uuid", 'u', &no_uuid_flag, no_uuid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -2622,7 +2624,8 @@ static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
 
 	NVME_ARGS(opts,
 		OPT_BYTE("sel", 's', &cfg.sel, sel),
-		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid,
+			 nvme_nsid_values),
 		OPT_FLAG("no-uuid", 'u', &no_uuid_flag, no_uuid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);

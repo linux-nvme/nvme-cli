@@ -27,6 +27,7 @@ OPTIONS
 	The namespace identifier to delete.
 	Retrieve the dispersed namespace participating NVM subsystems log for
 	the given nsid.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 include::global-options.txt[]
 

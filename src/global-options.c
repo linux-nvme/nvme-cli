@@ -10,8 +10,24 @@
 
 #include <stdio.h>
 
+#include <libnvme.h>
+
 #include "argconfig.h"
 #include "args.h"
+
+/* The broadcast namespace identifier, see the NVM Express specification */
+struct argconfig_opt_val nvme_nsid_values[] = {
+	VAL_UINT("all", NVME_NSID_ALL),
+	VAL_UINT("-1", NVME_NSID_ALL),
+	VAL_END()
+};
+
+/* No timeout: the largest timeout the kernel takes */
+struct argconfig_opt_val nvme_timeout_values[] = {
+	VAL_UINT("infinite", UINT32_MAX),
+	VAL_UINT("-1", UINT32_MAX),
+	VAL_END()
+};
 
 static char output_format_help[64];
 
@@ -23,7 +39,7 @@ static struct argconfig_commandline_options global_options[] = {
 	OPT_FMT("output-format", 'o', &nvme_args.output_format,
 		output_format_help),
 	OPT_UINT("timeout", 0, &nvme_args.timeout,
-		 "timeout value, in milliseconds"),
+		 "timeout value, in milliseconds", nvme_timeout_values),
 	OPT_FLAG("dry-run", 0, &nvme_args.dry_run,
 		 "show command instead of executing"),
 	OPT_FLAG("no-retries", 0, &nvme_args.no_retries,

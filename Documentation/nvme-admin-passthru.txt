@@ -64,6 +64,7 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	The value for the ns-id in the command.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -[2-9] <cdw>::
 --cdw[2-3,10-15]=<cdw>::

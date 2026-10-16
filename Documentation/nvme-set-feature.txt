@@ -35,6 +35,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	Sets the feature for the given nsid. This is optional and
 	most features do not use this value.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -f <fid>::
 --feature-id=<fid>::

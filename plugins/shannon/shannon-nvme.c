@@ -135,7 +135,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace,
+			 nvme_nsid_values),
 		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	  raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -203,7 +204,8 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,	namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values),
 		OPT_UINT("feature-id",	   'f', &cfg.feature_id,	feature_id),
 		OPT_BYTE("sel",		   's', &cfg.sel,		sel),
 		OPT_UINT("data-len",	   'l', &cfg.data_len,		data_len),
@@ -282,7 +284,8 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
 		OPT_UINT("feature-id",	 'f', &cfg.feature_id,	 feature_id),
 		OPT_UINT("value",	 'V', &cfg.value,	 value),
 		OPT_UINT("data-len",	 'l', &cfg.data_len,	 data_len),

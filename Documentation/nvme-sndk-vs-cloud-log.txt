@@ -32,6 +32,7 @@ OPTIONS
 	0xffffffff if not given. This option may not affect anything
 	depending on the log page, which may or may not be specific to
 	a namespace.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 include::global-options.txt[]
 

@@ -489,6 +489,49 @@ static void given_test(void)
 	argconfig_set_global_options(NULL);
 }
 
+/*
+ * A value table names special values of a numeric option, also negative
+ * ones, while other negative numbers are rejected.
+ */
+static void special_values_test(void)
+{
+	static const struct {
+		const char *arg;
+		int ret;
+		__u32 value;
+	} tests[] = {
+		{ "--nsid=all", 0, 0xffffffff },
+		{ "--nsid=-1", 0, 0xffffffff },
+		{ "--nsid=a", 0, 0xffffffff },
+		{ "--nsid=7", 0, 7 },
+		{ "--nsid=-2", -EINVAL, 0 },
+	};
+	OPT_VALS(nsid_values) = {
+		VAL_UINT("all", 0xffffffff),
+		VAL_UINT("-1", 0xffffffff),
+		VAL_END()
+	};
+	__u32 nsid;
+	unsigned int i;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("nsid", 'n', &nsid, "nsid", nsid_values),
+		OPT_END()
+	};
+
+	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+		char **argv = (char *[]){ "prog", (char *)tests[i].arg, NULL };
+
+		nsid = 0;
+		ret = argconfig_parse(argv_len(argv), argv, "test", opts);
+		if (ret != tests[i].ret || (!ret && nsid != tests[i].value)) {
+			printf("ERROR: special values: %s\n", tests[i].arg);
+			test_rc = 1;
+		}
+	}
+}
+
 #define COMMA_SEP_ARRAY_MAX_VALUES 4
 
 struct comma_sep_array_test {
@@ -881,6 +924,7 @@ int main(void)
 	operands_test();
 	global_options_test();
 	given_test();
+	special_values_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
 		comma_sep_array_test(&comma_sep_array_tests[i]);

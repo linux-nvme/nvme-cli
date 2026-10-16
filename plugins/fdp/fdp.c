@@ -302,7 +302,8 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.nsid,	namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid,	namespace_id,
+			 nvme_nsid_values),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,	raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -372,7 +373,8 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",  'n', &cfg.nsid,	namespace_id),
+		OPT_UINT("namespace-id",  'n', &cfg.nsid,	namespace_id,
+			 nvme_nsid_values),
 		OPT_LIST("pids",          'p', &cfg.pids,	_pids));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -441,7 +443,8 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",     'n', &cfg.nsid,         nsid),
+		OPT_UINT("namespace-id",     'n', &cfg.nsid,         nsid,
+			 nvme_nsid_values),
 		OPT_SHRT("placement-handle", 'p', &cfg.ph,           ph),
 		OPT_FLAG("enable",           'e', &cfg.enable,       enable),
 		OPT_FLAG("save",             's', &cfg.sv,		     sv),

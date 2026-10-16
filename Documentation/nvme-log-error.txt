@@ -65,6 +65,7 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	Output specified NSID entry only.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -t <trtype>::
 --trtype=<trtype>::

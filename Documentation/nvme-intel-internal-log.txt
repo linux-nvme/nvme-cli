@@ -38,6 +38,7 @@ OPTIONS
 -n <NUM>::
 --namespace-id=<NUM>::
 	Namespace to use.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -O <FILE>::
 --output-file=<FILE>::

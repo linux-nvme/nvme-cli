@@ -41,6 +41,7 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	Target a specific namespace for this security command.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -N <nssf>::
 --nssf=<nssf>::
