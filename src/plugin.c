@@ -480,6 +480,53 @@ static int run_joined_command(int argc, char **argv, struct plugin *plugin)
 	return handle_plugin(argc + 1, sub_argv, extension);
 }
 
+/*
+ * Warn that @cmd of @plugin is deprecated and run "nvme <extension>
+ * @command" with the arguments after argv[0] instead, the extension of
+ * @cmd's replacement.
+ */
+int run_replacement_command(struct plugin *plugin, struct command *cmd,
+			    const char *command, int argc, char **argv)
+{
+	const char *name = cmd->replacement.plugin;
+	__cleanup_free char **sub_argv = NULL;
+	struct plugin *extension;
+
+	extension = find_extension(plugin, name);
+	if (!extension) {
+		fprintf(stderr,
+			"ERROR: '%s' is deprecated and requires the '%s' plugin, which is not available in this build; use 'nvme %s %s'\n",
+			cmd->name, name, name, command);
+		return -ENOTTY;
+	}
+
+	fprintf(stderr,
+		"WARNING: '%s' is deprecated and will be removed in the next major version, use 'nvme %s %s' instead\n",
+		cmd->name, name, command);
+
+	/*
+	 * handle_plugin() skips argv[0] like a program name and dispatches
+	 * on argv[1], so the arguments move one slot to the right.
+	 */
+	sub_argv = calloc(argc + 2, sizeof(*sub_argv));
+	if (!sub_argv)
+		return -ENOMEM;
+
+	sub_argv[0] = (char *)extension->name;
+	sub_argv[1] = (char *)command;
+	memcpy(&sub_argv[2], &argv[1], (argc - 1) * sizeof(*argv));
+
+	return handle_plugin(argc + 1, sub_argv, extension);
+}
+
+/* The function of a deprecated command which only forwards */
+int run_replacement(int argc, char **argv, struct command *cmd,
+		    struct plugin *plugin)
+{
+	return run_replacement_command(plugin, cmd, cmd->replacement.command,
+				       argc, argv);
+}
+
 /* "nvme --help <command>" is "nvme help <command>" */
 static int run_help(int argc, char **argv, struct plugin *plugin)
 {
