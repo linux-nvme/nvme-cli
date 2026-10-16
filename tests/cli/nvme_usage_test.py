@@ -76,6 +76,15 @@ class OperandTest(unittest.TestCase):
         self.assert_usage_error(run('list', 'extra'),
                                 "unexpected argument 'extra'")
 
+    def test_deprecated_command_which_translates(self):
+        # gen-dhchap-key rebuilds the arguments for its replacement
+        if run('gen-dhchap-key', '--help').returncode:
+            self.skipTest('no deprecated fabrics commands in this build')
+        self.assert_usage_error(run('gen-dhchap-key', 'extra'),
+                                "unexpected argument 'extra'")
+        self.assert_usage_error(run('check-dhchap-key', 'extra'),
+                                "unexpected argument 'extra'")
+
     def test_optional_device_command(self):
         result = run('list-subsys', '--help')
         self.assertIn('Usage: nvme list-subsys [<device>] [OPTIONS]',

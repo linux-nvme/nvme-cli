@@ -54,8 +54,8 @@ usage:
 	return -EINVAL;
 }
 
-int parse_args(int argc, char *argv[], const char *desc,
-	       struct argconfig_commandline_options *opts)
+int parse_cmdline(int argc, char *argv[], const char *desc,
+		  struct argconfig_commandline_options *opts)
 {
 	int ret;
 
@@ -63,7 +63,15 @@ int parse_args(int argc, char *argv[], const char *desc,
 	if (ret)
 		return ret;
 
-	ret = check_device(argv, desc, opts);
+	return check_device(argv, desc, opts);
+}
+
+int parse_args(int argc, char *argv[], const char *desc,
+	       struct argconfig_commandline_options *opts)
+{
+	int ret;
+
+	ret = parse_cmdline(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 

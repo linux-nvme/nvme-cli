@@ -85,6 +85,13 @@ extern const char *namespace_id_desired;
 void nvme_args_register(void);
 void nvme_args_set_output_formats(nvme_print_flags_t formats,
 				  const char *custom_desc);
+/*
+ * The options and the operand of a command. parse_args() also applies
+ * the output format, parse_cmdline() is for a command which passes its
+ * arguments on to another one.
+ */
+int parse_cmdline(int argc, char *argv[], const char *desc,
+		  struct argconfig_commandline_options *opts);
 int parse_args(int argc, char *argv[], const char *desc,
 	       struct argconfig_commandline_options *opts);
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
