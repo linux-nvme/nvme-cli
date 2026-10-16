@@ -171,6 +171,7 @@ struct __attribute__((packed)) ipc_response {
 	uint32_t data_len;	/* payload length (follows immediately) */
 };
 
+#ifndef MOCK_FUZZ
 /*
  * This process may be running as real target-arch code (a cross build
  * under qemu-user), while nvme_mock_ipc.py on the other end of the socket
@@ -205,6 +206,7 @@ static void ipc_response_decode(struct ipc_response *r)
 	r->result    = le32toh(r->result);
 	r->data_len  = le32toh(r->data_len);
 }
+#endif
 
 typedef int (*orig_open_t)(const char *pathname, int flags, ...);
 typedef int (*orig_open64_t)(const char *pathname, int flags, ...);
@@ -229,7 +231,9 @@ static orig_open64_t orig_open64;
 static orig_openat_t orig_openat;
 static orig_openat64_t orig_openat64;
 static orig_write_t orig_write;
+#ifndef MOCK_FUZZ
 static orig_read_t orig_read;
+#endif
 static orig_ioctl_t orig_ioctl;
 static orig_ioctl_t orig_ioctl_time64;
 static orig_close_t orig_close;
@@ -295,7 +299,9 @@ static void init_orig_functions(void)
 	orig_openat = (orig_openat_t)dlsym(RTLD_NEXT, "openat");
 	orig_openat64 = (orig_openat64_t)dlsym(RTLD_NEXT, "openat64");
 	orig_write = (orig_write_t)dlsym(RTLD_NEXT, "write");
+#ifndef MOCK_FUZZ
 	orig_read = (orig_read_t)dlsym(RTLD_NEXT, "read");
+#endif
 	orig_ioctl = (orig_ioctl_t)dlsym(RTLD_NEXT, "ioctl");
 	orig_ioctl_time64 = (orig_ioctl_t)dlsym(RTLD_NEXT, "__ioctl_time64");
 	orig_close = (orig_close_t)dlsym(RTLD_NEXT, "close");
@@ -313,6 +319,17 @@ static void init_orig_functions(void)
 	orig_get_nprocs = (orig_get_nprocs_t)dlsym(RTLD_NEXT, "get_nprocs");
 }
 
+#ifdef MOCK_FUZZ
+/*
+ * Built into a fuzz target (tests/fuzz/fuzz-device.c), the shim has no
+ * IPC server: the fuzz input answers every command instead. A "socket"
+ * is a /dev/null fd, so the callers can close it as usual.
+ */
+static int connect_ipc_socket(void)
+{
+	return orig_open("/dev/null", O_RDWR);
+}
+#else
 static int connect_ipc_socket(void)
 {
 	const char *sock_path = getenv("MOCK_IPC_SOCK");
@@ -342,6 +359,7 @@ static int connect_ipc_socket(void)
 
 	return fd;
 }
+#endif
 
 const char *default_opts =
 	"instance,cntlid,concat,ctrl_loss_tmo,data_digest,"
@@ -544,6 +562,109 @@ int __openat64_2(int dirfd, const char *pathname, int flags)
 	return orig_openat64(dirfd, pathname, flags, 0);
 }
 
+#ifdef MOCK_FUZZ
+/*
+ * The kernel rejects a transfer larger than the controller takes. And a
+ * fuzzed log length must not have the mock serve, and nvme-cli print,
+ * gigabytes: the data of all commands of a run is limited too.
+ */
+#define FUZZ_MAX_TRANSFER	(2 * 1024 * 1024)
+#define FUZZ_MAX_TOTAL		(8 * 1024 * 1024)
+
+static const uint8_t *fuzz_data;
+static size_t fuzz_size;
+static size_t fuzz_total;
+
+/* The bytes the following commands get their answers from */
+void mock_fuzz_input(const uint8_t *data, size_t size)
+{
+	fuzz_data = data;
+	fuzz_size = size;
+	fuzz_total = 0;
+}
+
+/* The next bytes of the input, zeros once it is used up */
+static void fuzz_read(void *buf, size_t len)
+{
+	size_t n = len < fuzz_size ? len : fuzz_size;
+
+	memcpy(buf, fuzz_data, n);
+	memset((uint8_t *)buf + n, 0, len - n);
+	fuzz_data += n;
+	fuzz_size -= n;
+}
+
+/*
+ * Answer a command from the fuzz input: a control byte, the result
+ * dword, and then the data the command reads. Most control bytes mean
+ * success, the rest an NVMe status (from the next two bytes) or a
+ * failed ioctl(). Everything that is no device command fails, so the
+ * real function takes over where there is one.
+ */
+static void *ipc_call(int ipc_fd, struct ipc_request *req, const void *data,
+		      struct ipc_response *resp)
+{
+	uint8_t ctl;
+	uint16_t sc;
+	void *buf;
+
+	(void)ipc_fd;
+	(void)data;
+	memset(resp, 0, sizeof(*resp));
+
+	switch (req->type) {
+	case IPC_TYPE_IOCTL:
+		resp->data_len = req->req_len;
+		break;
+	case IPC_TYPE_RAW_IOCTL:
+		if (req->ioc_dir & IPC_IOC_READ)
+			resp->data_len = req->ioc_size;
+		break;
+	default:
+		resp->status = -1;
+		resp->errno_val = EOPNOTSUPP;
+		return NULL;
+	}
+
+	if (resp->data_len > FUZZ_MAX_TRANSFER) {
+		resp->status = -1;
+		resp->errno_val = EINVAL;
+		return NULL;
+	}
+	if (resp->data_len > FUZZ_MAX_TOTAL - fuzz_total) {
+		resp->status = -1;
+		resp->errno_val = EIO;
+		return NULL;
+	}
+	fuzz_total += resp->data_len;
+
+	fuzz_read(&ctl, sizeof(ctl));
+	fuzz_read(&resp->result, sizeof(resp->result));
+	resp->result = le32toh(resp->result);
+	if (ctl >= 0xf8) {
+		resp->status = -1;
+		resp->errno_val = EIO;
+		return NULL;
+	}
+	if (ctl >= 0xe0) {
+		fuzz_read(&sc, sizeof(sc));
+		resp->sc_status = le16toh(sc) & 0x7fff;
+		return NULL;
+	}
+
+	if (!resp->data_len)
+		return NULL;
+	buf = malloc(resp->data_len);
+	if (!buf) {
+		resp->status = -1;
+		resp->errno_val = ENOMEM;
+		return NULL;
+	}
+	fuzz_read(buf, resp->data_len);
+
+	return buf;
+}
+#else
 static bool read_full(int fd, void *buf, size_t len)
 {
 	size_t total_read = 0;
@@ -630,6 +751,7 @@ static void *ipc_call(int ipc_fd, struct ipc_request *req, const void *data,
 
 	return read_ipc_response(ipc_fd, resp);
 }
+#endif
 
 ssize_t write(int fd, const void *buf, size_t count)
 {
@@ -705,6 +827,7 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 
 	mock_dbg("ioctl intercepted on instance %d (request 0x%lx)\n",
 		instance, request);
+
 
 	ipc_fd = connect_ipc_socket();
 	if (ipc_fd < 0) {
