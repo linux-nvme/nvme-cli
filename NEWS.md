@@ -35,6 +35,9 @@
   help lists the names of an option. `lm migration-recv` requires
   `--sel` now, like the other lm commands.
 
+* Number options reject text after the number. Before, the rest was
+  ignored: `--timeout=10s` set a timeout of 10 milliseconds.
+
 * The human-readable stdout output of `id-ctrl`, `id-ns`, and most
   other identify/log-page/feature commands is now rendered through a
   computed-width table instead of hand-aligned `printf()` calls.
