@@ -943,7 +943,6 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 	long remain_time = 0;
 	long start_time = 0;
 	long end_time = 0;
-	char path[256] = "";
 	char *desc = "Save SMART data into log file with format that is easy to analyze (comma delimited). Maximum log file will be 4K.\n\n"
 		"Typical usages:\n\n"
 		"Temperature characterization:\n"
@@ -975,24 +974,17 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 
 	vt_generate_vtview_log_file_name(vt_default_log_file_name);
 
-	if (argc >= 2) {
-		if (strlen(argv[1]) > sizeof(path) - 1) {
-			nvme_show_error("Filename too long");
-			return -1;
-		}
-		strcpy(path, argv[1]);
-	}
-
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
 	nvme_show_verbose_info("Running...");
-	nvme_show_verbose_info("Collecting data for device %s", path);
+	nvme_show_verbose_info("Collecting data for device %s",
+			       nvme_args.device);
 	nvme_show_verbose_info("Running for %lf hour(s)", cfg.run_time_hrs);
 	nvme_show_verbose_info("Logging SMART data for every %lf hour(s)", cfg.log_record_frequency_hrs);
 
-	ret = vt_update_vtview_log_header(hdl, path, &cfg);
+	ret = vt_update_vtview_log_header(hdl, nvme_args.device, &cfg);
 	if (ret)
 		return ret;
 
@@ -1012,7 +1004,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 		if (cur_time >= end_time)
 			break;
 
-		ret = vt_add_entry_to_log(hdl, path, &cfg);
+		ret = vt_add_entry_to_log(hdl, nvme_args.device, &cfg);
 		if (ret) {
 			nvme_show_error("Cannot update driver log");
 			break;
