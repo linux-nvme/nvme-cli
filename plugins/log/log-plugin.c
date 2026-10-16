@@ -2284,22 +2284,34 @@ static int get_power_measurement_log(int argc, char **argv, struct command *acmd
 	return err;
 }
 
+/*
+ * Read @len bytes of a log at @offset into the buffer @log of @size bytes,
+ * and advance @offset past them. The buffer grows as needed, at least to
+ * twice its size, so reading a log in many small parts doesn't copy it
+ * over and over.
+ */
 static int get_log_offset(struct libnvme_transport_handle *hdl,
 			  struct nvme_get_log_args *args, __u64 *offset,
-			  __u32 len, void **log)
+			  __u32 len, void **log, __u64 *size)
 {
 	struct libnvme_passthru_cmd cmd;
+	__u64 need = *offset + len;
 	void *p;
 	int err;
 
+	if (need > *size) {
+		__u64 grow = *size * 2 > need ? *size * 2 : need;
+
+		p = libnvme_realloc(*log, grow);
+		if (!p)
+			return -ENOMEM;
+		*log = p;
+		*size = grow;
+	}
+
 	args->lpo = *offset;
 	args->len = len;
-	*offset += args->len;
-
-	p = libnvme_realloc(*log, *offset);
-	if (!p)
-		return -ENOMEM;
-	*log = p;
+	*offset = need;
 
 	args->log = (char *)*log + args->lpo;
 
@@ -2326,8 +2338,9 @@ static int get_log_offset(struct libnvme_transport_handle *hdl,
 	return err;
 }
 
-static int get_reachability_group_desc(struct libnvme_transport_handle *hdl, struct nvme_get_log_args *args,
-				       __u64 *offset, struct nvme_reachability_groups_log **logp)
+static int get_reachability_group_desc(struct libnvme_transport_handle *hdl,
+		struct nvme_get_log_args *args, __u64 *offset,
+		struct nvme_reachability_groups_log **logp, __u64 *size)
 {
 	int err;
 	struct nvme_reachability_groups_log *log = *logp;
@@ -2340,7 +2353,7 @@ static int get_reachability_group_desc(struct libnvme_transport_handle *hdl, str
 	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
 		desc = *offset;
 		err = get_log_offset(hdl, args, offset, sizeof(rgd),
-				     (void **)&log);
+				     (void **)&log, size);
 		if (err)
 			goto err_free;
 		/* the descriptors are only 4 byte aligned */
@@ -2353,7 +2366,8 @@ static int get_reachability_group_desc(struct libnvme_transport_handle *hdl, str
 			goto err_free;
 		}
 		err = get_log_offset(hdl, args, offset,
-				     nnid * sizeof(*rgd.nsid), (void **)&log);
+				     nnid * sizeof(*rgd.nsid), (void **)&log,
+				     size);
 		if (err)
 			goto err_free;
 	}
@@ -2375,6 +2389,7 @@ static int get_reachability_groups(struct libnvme_transport_handle *hdl, bool rg
 	struct nvme_reachability_groups_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u64 size = log_len;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_REACHABILITY_GROUPS,
 		.nsid = NVME_NSID_ALL,
@@ -2391,7 +2406,7 @@ static int get_reachability_groups(struct libnvme_transport_handle *hdl, bool rg
 	if (err)
 		goto err_free;
 
-	err = get_reachability_group_desc(hdl, &args, &log_len, &log);
+	err = get_reachability_group_desc(hdl, &args, &log_len, &log, &size);
 	if (err)
 		goto err_free;
 
@@ -2449,9 +2464,10 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *ac
 	return err;
 }
 
-static int get_reachability_association_desc(struct libnvme_transport_handle *hdl, struct nvme_get_log_args *args,
-					     __u64 *offset,
-					     struct nvme_reachability_associations_log **logp)
+static int get_reachability_association_desc(
+		struct libnvme_transport_handle *hdl,
+		struct nvme_get_log_args *args, __u64 *offset,
+		struct nvme_reachability_associations_log **logp, __u64 *size)
 {
 	int err;
 	struct nvme_reachability_associations_log *log = *logp;
@@ -2464,7 +2480,7 @@ static int get_reachability_association_desc(struct libnvme_transport_handle *hd
 	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
 		desc = *offset;
 		err = get_log_offset(hdl, args, offset, sizeof(rad),
-				     (void **)&log);
+				     (void **)&log, size);
 		if (err)
 			goto err_free;
 		/* the descriptors are only 4 byte aligned */
@@ -2477,7 +2493,8 @@ static int get_reachability_association_desc(struct libnvme_transport_handle *hd
 			goto err_free;
 		}
 		err = get_log_offset(hdl, args, offset,
-				     nrid * sizeof(*rad.rgid), (void **)&log);
+				     nrid * sizeof(*rad.rgid), (void **)&log,
+				     size);
 		if (err)
 			goto err_free;
 	}
@@ -2499,6 +2516,7 @@ static int get_reachability_associations(struct libnvme_transport_handle *hdl, b
 	struct nvme_reachability_associations_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u64 size = log_len;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_REACHABILITY_ASSOCIATIONS,
 		.nsid = NVME_NSID_ALL,
@@ -2515,7 +2533,8 @@ static int get_reachability_associations(struct libnvme_transport_handle *hdl, b
 	if (err)
 		goto err_free;
 
-	err = get_reachability_association_desc(hdl, &args, &log_len, &log);
+	err = get_reachability_association_desc(hdl, &args, &log_len, &log,
+						&size);
 	if (err)
 		goto err_free;
 
@@ -2581,6 +2600,7 @@ static int get_host_discovery(struct libnvme_transport_handle *hdl, bool allhost
 	struct nvme_host_discovery_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u64 size = log_len;
 	__u32 thdlpl;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_HOST_DISCOVERY,
@@ -2602,7 +2622,7 @@ static int get_host_discovery(struct libnvme_transport_handle *hdl, bool allhost
 	thdlpl = le32_to_cpu(log->thdlpl);
 	if (thdlpl > log_len) {
 		err = get_log_offset(hdl, &args, &log_len, thdlpl - log_len,
-				     (void **)&log);
+				     (void **)&log, &size);
 		if (err)
 			goto err_free;
 	}
@@ -2668,6 +2688,7 @@ static int get_ave_discovery(struct libnvme_transport_handle *hdl, bool rae,
 	struct nvme_ave_discovery_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u64 size = log_len;
 	__u32 tadlpl;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_AVE_DISCOVERY,
@@ -2688,7 +2709,7 @@ static int get_ave_discovery(struct libnvme_transport_handle *hdl, bool rae,
 	tadlpl = le32_to_cpu(log->tadlpl);
 	if (tadlpl > log_len) {
 		err = get_log_offset(hdl, &args, &log_len, tadlpl - log_len,
-				     (void **)&log);
+				     (void **)&log, &size);
 		if (err)
 			goto err_free;
 	}
@@ -2752,6 +2773,7 @@ static int get_pull_model_ddc_req(struct libnvme_transport_handle *hdl,
 	struct nvme_pull_model_ddc_req_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u64 size = log_len;
 	__u32 tpdrpl;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_PULL_MODEL_DDC_REQ,
@@ -2772,7 +2794,7 @@ static int get_pull_model_ddc_req(struct libnvme_transport_handle *hdl,
 	tpdrpl = le32_to_cpu(log->tpdrpl);
 	if (tpdrpl > log_len) {
 		err = get_log_offset(hdl, &args, &log_len, tpdrpl - log_len,
-				     (void **)&log);
+				     (void **)&log, &size);
 		if (err)
 			goto err_free;
 	}
