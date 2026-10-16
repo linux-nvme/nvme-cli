@@ -394,7 +394,6 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		"  HOST - Host-initiated telemetry.\n" \
 		"  CONTROLLER - Controller-initiated telemetry.\n" \
 		"  BOTH - Both HOST and CONTROLLER telemetry packaged in tar file.";
-	const char *verbose = "Display more debug messages.";
 	const char *file_size =
 		"Output file size. Deprecated, see man page for supported devices.";
 	const char *offset =
@@ -418,7 +417,6 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		__u64 file_size;
 		__u64 offset;
 		char *type;
-		bool verbose;
 	};
 
 	struct config cfg = {
@@ -428,7 +426,6 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		.file_size = 0,
 		.offset = 0,
 		.type = NULL,
-		.verbose = false,
 	};
 
 	NVME_ARGS(opts,
@@ -436,7 +433,6 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
 		OPT_FILE("type",          't', &cfg.type,      type),
-		OPT_FLAG("verbose",       'V', &cfg.verbose,   verbose),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
 		OPT_END());
@@ -569,7 +565,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 			ret = -1;
 			goto out;
 		}
-		ret = sndk_do_cap_udui(hdl, f, xfer_size, cfg.verbose);
+		ret = sndk_do_cap_udui(hdl, f, xfer_size, nvme_args.verbose);
 		goto out;
 	}
 

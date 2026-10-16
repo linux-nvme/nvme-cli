@@ -4409,7 +4409,6 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 		"  NONE - Default, capture without using NVMe telemetry.\n" \
 		"  HOST - Host-initiated telemetry.\n" \
 		"  CONTROLLER - Controller-initiated telemetry.";
-	const char *verbose = "Display more debug messages.";
 	const char *file_size =
 		"Output file size. Deprecated, see man page for supported devices.";
 	const char *offset =
@@ -4435,7 +4434,6 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 		__u64 file_size;
 		__u64 offset;
 		char *type;
-		bool verbose;
 	};
 
 	struct config cfg = {
@@ -4445,7 +4443,6 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 		.file_size = 0,
 		.offset = 0,
 		.type = NULL,
-		.verbose = false,
 	};
 
 	NVME_ARGS(opts,
@@ -4453,7 +4450,6 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
 		OPT_FILE("type",          't', &cfg.type,      type),
-		OPT_FLAG("verbose",       'V', &cfg.verbose,   verbose),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
 		OPT_END());
