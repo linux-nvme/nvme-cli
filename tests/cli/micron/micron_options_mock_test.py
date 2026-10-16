@@ -214,7 +214,8 @@ class TestMicronSmbusOption(FeatureTestBase):
         result = self.run_plugin_cmd(_SMBUS, args="-O bogus")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Invalid option bogus", result.stderr)
+        self.assertIn("invalid value 'bogus' for -O: expected one of: "
+                      "enable, disable, status", result.stderr)
         self.assertEqual(self.writes(_FID_SMBUS), [],
                          "an unrecognised option must not write the feature")
 
@@ -323,7 +324,8 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
         result = self.run_plugin_cmd(_TELEMETRY, args="-O bogus")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("invalid option bogus", result.stderr)
+        self.assertIn("invalid value 'bogus' for -O: expected one of: "
+                      "enable, disable, status", result.stderr)
         self.assertEqual(self.writes(_FID_TELEMETRY), [])
 
     def test_write_failure_is_reported(self):
@@ -398,24 +400,34 @@ class TestMicronSelectDownload(TestMicronMock):
         result = self.run_plugin_cmd(_DOWNLOAD, args=f"-f {path} -s XYZ")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Invalid select flag", result.stderr)
+        self.assertIn("invalid value 'XYZ' for -s: expected one of: OOB, "
+                      "EEP, ALL", result.stderr)
         self.assertEqual(self.downloads(), [],
                          "an unrecognised selection must not send the image")
 
-    def test_selection_length_is_checked_first(self):
-        """A selection of the wrong length is refused before it is matched.
+    def test_selection_prefix(self):
+        """A selection may be abbreviated to a unique prefix, like every
+        value name."""
+        path = self.firmware()
+        self.run_plugin_cmd_check(_DOWNLOAD, args=f"-f {path} --select=oo")
+
+        self.assertEqual(self.commits()[0]['cdw12'], _SELECTIONS['OOB'])
+
+    def test_selection_no_name(self):
+        """An empty or too long selection names no selection.
 
         The long form is used so an empty selection survives argument
         splitting.
         """
         path = self.firmware()
-        for value in ("", "OO", "OOBB"):
+        for value in ("", "OOBB"):
             with self.subTest(select=value):
                 result = self.run_plugin_cmd(
                     _DOWNLOAD, args=f"-f {path} --select={value}")
 
                 self.assertNotEqual(result.returncode, 0)
-                self.assertIn("Invalid select flag", result.stderr)
+                self.assertIn(f"invalid value '{value}' for --select",
+                              result.stderr)
 
     def test_missing_selection_is_rejected(self):
         """The selection has no default, so omitting it is an error."""

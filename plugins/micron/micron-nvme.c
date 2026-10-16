@@ -75,6 +75,36 @@ static const char *__version_major = "3";
 static const char *__version_minor = "0";
 static const char *__version_patch = "0";
 
+/* --option of the commands which enable, disable or show a feature */
+enum micron_option {
+	MICRON_OPTION_DISABLE,
+	MICRON_OPTION_ENABLE,
+	MICRON_OPTION_STATUS,
+};
+
+static struct argconfig_opt_val micron_options[] = {
+	VAL_ENUM("enable", MICRON_OPTION_ENABLE),
+	VAL_ENUM("disable", MICRON_OPTION_DISABLE),
+	VAL_ENUM("status", MICRON_OPTION_STATUS),
+	VAL_END()
+};
+
+/* --command of the latency commands */
+enum micron_command {
+	MICRON_COMMAND_ALL,
+	MICRON_COMMAND_READ,
+	MICRON_COMMAND_WRITE,
+	MICRON_COMMAND_TRIM,
+};
+
+static struct argconfig_opt_val micron_commands[] = {
+	VAL_ENUM("all", MICRON_COMMAND_ALL),
+	VAL_ENUM("read", MICRON_COMMAND_READ),
+	VAL_ENUM("write", MICRON_COMMAND_WRITE),
+	VAL_ENUM("trim", MICRON_COMMAND_TRIM),
+	VAL_END()
+};
+
 /*
  * supported models of micron plugin; new models should be added at the end
  * before UNKNOWN_MODEL. Make sure M5410 is first in the list !
@@ -590,42 +620,36 @@ static int micron_selective_download(int argc, char **argv,
 	__cleanup_libnvme_free void *fw_buf = NULL;
 	unsigned char *fw_ptr;
 
+	struct argconfig_opt_val selects[] = {
+		VAL_ENUM("OOB", 18),
+		VAL_ENUM("EEP", 10),
+		VAL_ENUM("ALL", 26),
+		VAL_END()
+	};
+
 	struct config {
 		char *fw;
-		char *select;
+		int select;
 	};
 
 	struct config cfg = {
 		.fw = "",
-		.select = "\0",
+		.select = 0,
 	};
 
 	NVME_ARGS(opts,
 		OPT_STRING("fw", 'f', "FILE", &cfg.fw, fw),
-		OPT_STRING("select", 's', "flag", &cfg.select, select));
+		OPT_ENUM("select", 's', &cfg.select, select, selects));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	if (strlen(cfg.select) != 3) {
+	if (!argconfig_given(opts, &cfg.select)) {
 		nvme_show_error("Invalid select flag");
 		return -EINVAL;
 	}
-
-	for (int i = 0; i < 3; i++)
-		cfg.select[i] = toupper(cfg.select[i]);
-
-	if (!strncmp(cfg.select, "OOB", 3)) {
-		selectNo = 18;
-	} else if (!strncmp(cfg.select, "EEP", 3)) {
-		selectNo = 10;
-	} else if (!strncmp(cfg.select, "ALL", 3)) {
-		selectNo = 26;
-	} else {
-		nvme_show_error("Invalid select flag");
-		return -EINVAL;
-	}
+	selectNo = cfg.select;
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	if (fw_fd < 0) {
@@ -709,19 +733,19 @@ static int micron_smbus_option(int argc, char **argv,
 	int err = 0;
 
 	struct {
-		char *option;
+		int option;
 		__u32 value;
 		__u32 save;
 		int  status;
 	} opt = {
-		.option = "disable",
+		.option = MICRON_OPTION_DISABLE,
 		.value = 0,
 		.save = 0,
 		.status = 0,
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("option", 'O', "option", &opt.option, option),
+		OPT_ENUM("option", 'O', &opt.option, option, micron_options),
 		OPT_UINT("value", 'V',	&opt.value, value),
 		OPT_UINT("save", 's', &opt.save, save));
 
@@ -734,7 +758,7 @@ static int micron_smbus_option(int argc, char **argv,
 		return -ENOTSUP;
 	}
 
-	if (!strcmp(opt.option, "enable")) {
+	if (opt.option == MICRON_OPTION_ENABLE) {
 		cdw11 = opt.value << 1 | 1;
 		err = nvme_set_features_simple(hdl, 1, fid, opt.save, cdw11,
 				&result);
@@ -742,7 +766,7 @@ static int micron_smbus_option(int argc, char **argv,
 			nvme_show_verbose_result("successfully enabled SMBus on drive");
 		else
 			nvme_show_error("Failed to enabled SMBus on drive");
-	} else if (!strcmp(opt.option, "status")) {
+	} else if (opt.option == MICRON_OPTION_STATUS) {
 		err = nvme_get_features(hdl, 1, fid, opt.value, 0, 0, NULL, 0, &result);
 		if (!err)
 			printf("SMBus status on the drive: %s (returns %s temperature)\n",
@@ -750,7 +774,7 @@ static int micron_smbus_option(int argc, char **argv,
 				   (result & 2) ? "hottest component" : "composite");
 		else
 			nvme_show_error("Failed to retrieve SMBus status on the drive");
-	} else if (!strcmp(opt.option, "disable")) {
+	} else {
 		cdw11 = opt.value << 1 | 0;
 		err = nvme_set_features_simple(hdl, 1, fid, opt.save, cdw11,
 				&result);
@@ -758,10 +782,6 @@ static int micron_smbus_option(int argc, char **argv,
 			nvme_show_verbose_result("Successfully disabled SMBus on drive");
 		else
 			nvme_show_error("Failed to disable SMBus on drive");
-	} else {
-		nvme_show_error("Invalid option %s, valid values are enable, disable or status",
-			   opt.option);
-		return -1;
 	}
 
 	return err;
@@ -3028,18 +3048,18 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct {
-		char *option;
-		char *command;
+		int option;
+		int command;
 		uint32_t threshold;
 	} opt = {
-		.option = "status",
-		.command = "all",
+		.option = MICRON_OPTION_STATUS,
+		.command = MICRON_COMMAND_ALL,
 		.threshold = 0
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("option", 'O', "option", &opt.option, option),
-		OPT_STRING("command", 'c', "command", &opt.command, cmdstr),
+		OPT_ENUM("option", 'O', &opt.option, option, micron_options),
+		OPT_ENUM("command", 'c', &opt.command, cmdstr, micron_commands),
 		OPT_UINT("threshold", 't', &opt.threshold, thrtime));
 
 
@@ -3047,14 +3067,10 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	if (err)
 		return err;
 
-	if (!strcmp(opt.option, "enable")) {
+	if (opt.option == MICRON_OPTION_ENABLE)
 		enable = 1;
-	} else if (!strcmp(opt.option, "disable")) {
+	else if (opt.option == MICRON_OPTION_DISABLE)
 		enable = 0;
-	} else if (strcmp(opt.option, "status")) {
-		nvme_show_error("Invalid control option %s specified", opt.option);
-		return -1;
-	}
 
 	err = nvme_get_features(hdl, 0, fid, 0, 0, 0, NULL, 0, &result);
 	if (err) {
@@ -3097,29 +3113,33 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	}
 
 	/* read-in command(s) to be monitored */
-	if (!strcmp(opt.command, "read")) {
+	if (opt.command == MICRON_COMMAND_READ) {
 		command_mask = 0x1;
 		timing_mask = (opt.threshold << 24);
-	} else if (!strcmp(opt.command, "write")) {
+	} else if (opt.command == MICRON_COMMAND_WRITE) {
 		command_mask = 0x2;
 		timing_mask = (opt.threshold << 16);
-	} else if (!strcmp(opt.command, "trim")) {
+	} else if (opt.command == MICRON_COMMAND_TRIM) {
 		command_mask = 0x4;
 		timing_mask = (opt.threshold << 8);
-	} else if (strcmp(opt.command, "all")) {
-		nvme_show_error("Invalid command %s specified for option %s",
-		opt.command, opt.option);
-		return -1;
 	}
 
 	err = nvme_set_features(hdl, 0, MICRON_FID_LATENCY_MONITOR, 1, enable,
 			command_mask, timing_mask, 0, 0, NULL, 0, &result);
 	if (!err) {
 		nvme_show_verbose_result("Successfully %sd latency monitoring for %s commands with %dms threshold",
-				opt.option, opt.command, !opt.threshold ? 800 : opt.threshold * 10);
+				argconfig_value_name(micron_options,
+						     opt.option),
+				argconfig_value_name(micron_commands,
+						     opt.command),
+				!opt.threshold ? 800 : opt.threshold * 10);
 	} else {
 		nvme_show_error("Failed to %s latency monitoring for %s commands with %dms threshold",
-				opt.option, opt.command, !opt.threshold ? 800 : opt.threshold * 10);
+				argconfig_value_name(micron_options,
+						     opt.option),
+				argconfig_value_name(micron_commands,
+						     opt.command),
+				!opt.threshold ? 800 : opt.threshold * 10);
 	}
 
 	return err;
@@ -3228,32 +3248,30 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *acmd
 	};
 
 	struct {
-		char *command;
+		int command;
 	} opt = {
-		.command = "all"
+		.command = MICRON_COMMAND_ALL
 	};
 
 	uint64_t *cmd_stats = &log.all_cmds[0];
 	char *cmd_str = "All";
 
 	NVME_ARGS(opts,
-		OPT_STRING("command", 'c', "command", &opt.command, cmdstr));
+		OPT_ENUM("command", 'c', &opt.command, cmdstr,
+			 micron_commands));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
 		return err;
-	if (!strcmp(opt.command, "read")) {
+	if (opt.command == MICRON_COMMAND_READ) {
 		cmd_stats = &log.read_cmds[0];
-	cmd_str = "Read";
-	} else if (!strcmp(opt.command, "write")) {
+		cmd_str = "Read";
+	} else if (opt.command == MICRON_COMMAND_WRITE) {
 		cmd_stats = &log.write_cmds[0];
-	cmd_str = "Write";
-	} else if (!strcmp(opt.command, "trim")) {
+		cmd_str = "Write";
+	} else if (opt.command == MICRON_COMMAND_TRIM) {
 		cmd_stats = &log.trim_cmds[0];
-	cmd_str = "Trim";
-	} else if (strcmp(opt.command, "all")) {
-		nvme_show_error("Invalid command option %s to display latency stats", opt.command);
-		return -1;
+		cmd_str = "Trim";
 	}
 
 	memset(&log, 0, sizeof(log));
@@ -3398,15 +3416,15 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	struct {
-		char *option;
+		int option;
 		__u32 select;
 	} opt = {
-		.option = "disable",
+		.option = MICRON_OPTION_DISABLE,
 		.select = 0,
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("option", 'O', "option", &opt.option, option),
+		OPT_ENUM("option", 'O', &opt.option, option, micron_options),
 		OPT_UINT("select", 's', &opt.select, select));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
@@ -3420,21 +3438,21 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 		return err;
 	}
 
-	if (!strcmp(opt.option, "enable")) {
+	if (opt.option == MICRON_OPTION_ENABLE) {
 		err = nvme_set_features(hdl, 1, fid, (opt.select & 0x1), 1, 0, 0, 0, 0,
 				NULL, 0, &result);
 		if (!err)
 			nvme_show_verbose_result("successfully set controller telemetry option");
 		else
 			nvme_show_error("Failed to set controller telemetry option");
-	} else if (!strcmp(opt.option, "disable")) {
+	} else if (opt.option == MICRON_OPTION_DISABLE) {
 		err = nvme_set_features(hdl, 1, fid, (opt.select & 0x1), 0, 0, 0, 0, 0,
 				NULL, 0, &result);
 		if (!err)
 			nvme_show_verbose_result("successfully disabled controller telemetry option");
 		else
 			nvme_show_error("Failed to disable controller telemetry option");
-	} else if (!strcmp(opt.option, "status")) {
+	} else {
 		err = nvme_get_features(hdl, 1, fid, opt.select & 0x3, 0, 0, NULL, 0,
 				&result);
 		if (!err)
@@ -3442,10 +3460,6 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 				   (result) ? "enabled" : "disabled");
 		else
 			nvme_show_error("Failed to retrieve controller telemetry option");
-	} else {
-		nvme_show_error("invalid option %s, valid values are enable,disable or status",
-			   opt.option);
-		return -1;
 	}
 
 	return err;
@@ -3689,22 +3703,28 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	int maxSize = 0;
 	struct MICRON_WORKLOAD_LOG_HDR stWllHdr = { 0 };
 
+	struct argconfig_opt_val types[] = {
+		VAL_ENUM("host", 0x07),
+		VAL_ENUM("controller", 0x08),
+		VAL_END()
+	};
+
 	struct config {
-		char *type;
+		int type;
 		char *package;
 		__u32 data_area;
 		int  log;
 	};
 
 	struct config cfg = {
-		.type = "",
+		.type = 0x07,
 		.package = "",
 		.data_area = 0,
 		.log = 0x07,
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("type", 't', "log type", &cfg.type, type),
+		OPT_ENUM("type", 't', &cfg.type, type, types),
 		OPT_STRING("package", 'p', "FILE", &cfg.package, package),
 		OPT_UINT("data_area", 'd', &cfg.data_area, data_area));
 
@@ -3714,13 +3734,8 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 
 	err = -EINVAL;
 	/* if telemetry type is specified, check for data area */
-	if (strlen(cfg.type)) {
-		if (!strcmp(cfg.type, "controller")) {
-			cfg.log = 0x08;
-		} else if (strcmp(cfg.type, "host")) {
-			nvme_show_error("telemetry type (host or controller) should be specified i.e. -t=host");
-			goto out;
-		}
+	if (argconfig_given(opts, &cfg.type)) {
+		cfg.log = cfg.type;
 
 		if (!cfg.data_area || cfg.data_area > 4) {
 			nvme_show_error("data area must be selected using -d option ie --d=1,2,3,4");
