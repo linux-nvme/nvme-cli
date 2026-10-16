@@ -92,6 +92,11 @@
   `ocp internal-log` with an unknown telemetry type failed with status
   0 before.
 
+* The help of `connect`, `discover`, `connect-all`, `disconnect` and
+  `config create` lists the fabrics options they share under "Fabrics
+  options", and the help of the `feat` commands `--save` and `--sel`
+  under "Feature options".
+
 * The command metadata (`nvme utils dump-command-metadata`) marks
   deprecated commands with the command which replaces them, deprecated
   options with the option which replaces them, and renamed options
