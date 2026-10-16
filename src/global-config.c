@@ -76,6 +76,10 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 		return 0;
 	}
 
+	/* 'timeout = infinite' like on the command line */
+	if (argconfig_set_value_name(s, value))
+		return 0;
+
 	switch (s->config_type) {
 	case CFG_FLAG:
 		err = shr_parse_bool(value, &bval);

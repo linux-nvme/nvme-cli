@@ -37,6 +37,7 @@ OPTIONS
 	specified namespace. If no namespace is given, or set to 0, the
 	command requests the controller list for the entire subsystem,
 	whether or not they are attached to namespace(s).
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 include::global-options.txt[]
 

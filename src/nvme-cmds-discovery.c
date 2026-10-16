@@ -137,7 +137,8 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id, log_name),
 		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
 		  OPT_UINT("aen",          'a', &cfg.aen,          aen),

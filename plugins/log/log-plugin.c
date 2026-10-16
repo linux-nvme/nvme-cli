@@ -137,7 +137,8 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace,
+			   nvme_nsid_values),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_output));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -780,7 +781,8 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 		  OPT_SHRT("sqid",         'S', &cfg.flt.sqid,    sqid),
 		  OPT_SHRT("status",       's', &cfg.flt.status,  status),
 		  OPT_SUFFIX("lba",        'l', &cfg.flt.lba,     lba),
-		  OPT_UINT("namespace-id", 'n', &cfg.flt.nsid,    nsid),
+		  OPT_UINT("namespace-id", 'n', &cfg.flt.nsid,    nsid,
+			   nvme_nsid_values),
 		  OPT_BYTE("trtype",       't', &cfg.flt.trtype,  trtype),
 		  OPT_BYTE("csi",          'c', &cfg.flt.csi,     csi),
 		  OPT_BYTE("opcode",       'O', &cfg.flt.opcode,  opcode));
@@ -2106,7 +2108,8 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 		.namespace_id = 1,
 	};
 
-	NVME_ARGS(opts, OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
+	NVME_ARGS(opts, OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+				 namespace_id_desired, nvme_nsid_values));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

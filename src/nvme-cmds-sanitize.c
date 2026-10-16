@@ -200,7 +200,8 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",            'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id, nvme_nsid_values),
 		  OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
 		  OPT_FLAG("wait",           'w', &cfg.wait,         wait));
 
@@ -752,7 +753,8 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
 		  OPT_BYTE("ses",          's', &cfg.ses,          ses),
 		  OPT_BYTE("pi",           'i', &cfg.pi,           pi),

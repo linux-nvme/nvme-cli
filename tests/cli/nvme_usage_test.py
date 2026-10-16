@@ -46,6 +46,14 @@ class HelpTest(unittest.TestCase):
         self.assertNotIn('\033[', result.stdout)
 
 
+class SpecialValuesTest(unittest.TestCase):
+
+    def test_help_lists_the_names(self):
+        result = run('id', 'ns', '--help')
+        self.assertIn('Names: all, -1', result.stdout)
+        self.assertIn('Names: infinite, -1', result.stdout)
+
+
 class OperandTest(unittest.TestCase):
     """A command takes a device, an optional one or none. A missing
     device and extra operands are usage errors."""

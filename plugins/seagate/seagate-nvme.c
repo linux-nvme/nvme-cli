@@ -1545,7 +1545,8 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
 		OPT_UINT("log_specific", 'i', &cfg.log_id,       log_specific),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
@@ -1650,7 +1651,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -1763,7 +1765,8 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
 		OPT_FILE("dump-file",    'f', &cfg.file,         file));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);

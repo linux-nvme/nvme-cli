@@ -38,6 +38,7 @@ OPTIONS
 	Use the provided namespace id for the command. If not provided, the
 	namespace id of the block device will be used. If the command is issued
 	to a non-block device, the parameter is required.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -s <IONUM>::
 --zslba=<IONUM>::

@@ -33,6 +33,7 @@ OPTIONS
 	provide this log on a per-namespace basis (see the NVMe Identify
 	Controller for this capability). The default nsid to use is
 	0xffffffff for the device global SMART log.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -b::
 --raw-binary::

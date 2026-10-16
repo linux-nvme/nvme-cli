@@ -90,7 +90,8 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			   nvme_nsid_values));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -144,7 +145,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",          'I', &cfg.ish,     ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,    namespace_id),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,    namespace_id,
+			   nvme_nsid_values),
 		  OPT_LIST("controllers",  'c', &cfg.cntlist, cont));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);

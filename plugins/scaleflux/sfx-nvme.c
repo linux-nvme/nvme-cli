@@ -348,7 +348,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace,
+			 nvme_nsid_values),
 		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	 raw),
 		OPT_FLAG_JSON("json",	 'j', &cfg.json,	 json));
 
@@ -908,7 +909,8 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values),
 		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
 		OPT_UINT("value",			'V',	&cfg.value,			value),
 		OPT_FLAG("force",			's',	&cfg.force,			force));
@@ -995,7 +997,8 @@ static int sfx_get_feature(int argc, char **argv, struct command *acmd, struct p
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values),
 		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);

@@ -8458,7 +8458,8 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *acmd,
 		OPT_BYTE("interval",          'i', &cfg.interval, interval),
 		OPT_BYTE("log-page-version",  'l', &cfg.log_page_version, log_page_version),
 		OPT_LIST("log-page-mask",     'p', &cfg.log_page_mask,    log_page_mask),
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id));
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -8691,7 +8692,8 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id));
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -8760,7 +8762,8 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id));
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -8850,7 +8853,8 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id));
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -10684,7 +10688,8 @@ static int wdc_namespace_resize(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
 		OPT_UINT("op-option", 'O', &cfg.op_option, op_option));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -12447,7 +12452,8 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *acm
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id));
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

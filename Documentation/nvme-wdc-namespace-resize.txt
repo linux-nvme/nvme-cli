@@ -28,6 +28,7 @@ OPTIONS
 -n <NAMESPACE ID>::
 --namespace-id=<NAMESPACE_ID>::
 	Namespace ID; ID of the namespace to resize
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -O <OP OPTION>::
 --op-option=<OP OPTION>::

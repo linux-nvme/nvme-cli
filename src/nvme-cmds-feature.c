@@ -263,7 +263,8 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts,
 		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id, feature_name),
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_BYTE("sel",            's', &cfg.sel,            sel),
 		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
@@ -355,7 +356,8 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,     namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_BYTE("feature-id",   'f', &cfg.fid,      fid, feature_name),
 		  OPT_SUFFIX("value",      'V', &cfg.value,    value),
 		  OPT_UINT("cdw12",        'c', &cfg.cdw12,    cdw12),

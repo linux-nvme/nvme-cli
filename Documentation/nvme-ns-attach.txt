@@ -26,6 +26,7 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	The namespace identifier to attach but not attached already.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -c <ctrl-list,>::
 --controllers=<ctrl-list,>::

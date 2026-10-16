@@ -25,6 +25,7 @@ OPTIONS
 -n <NUM>::
 --namespace-id=<NUM>::
 	Namespace identifier.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -b::
 --raw-binary::

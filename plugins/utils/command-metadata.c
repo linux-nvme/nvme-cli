@@ -608,9 +608,9 @@ static bool opt_is_emittable(const struct command_metadata_option *o)
  * output-format is special-cased because its values are not represented via an
  * opt_val table. Its help text lists the formats the command supports
  * ("Output format: normal|json"), see nvme_args_set_output_formats(). Every
- * other value set comes from the option's opt_val table, which is the set the
- * parser actually enforces; options whose value is unconstrained (e.g. any
- * OPT_UINT such as output-format-version) have no values array.
+ * other value set comes from the option's opt_val table: the names it
+ * accepts, a numeric option also takes a number. Options without names
+ * (e.g. output-format-version) have no values array.
  */
 static struct json_object *json_option_values(const struct command_metadata_option *o)
 {

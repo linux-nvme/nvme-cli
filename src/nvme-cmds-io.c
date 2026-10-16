@@ -128,7 +128,8 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
 		  OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
 		  OPT_BYTE("dir-type",      'T', &cfg.dtype,        dtype),
@@ -480,7 +481,8 @@ static int write_zeroes(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
@@ -603,7 +605,8 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    context_attrs),
 		  OPT_LIST("blocks",       'b', &cfg.blocks,       blocks),
 		  OPT_LIST("slbs",         's', &cfg.slbas,        starting_blocks),
@@ -762,7 +765,8 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",           'n', &cfg.nsid,		namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
 		  OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
 		  OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
@@ -900,7 +904,8 @@ static int flush_cmd(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1020,7 +1025,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block_addr),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		  OPT_SHRT("block-size",        'b', &cfg.block_size,        block_size),
@@ -1344,7 +1350,8 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
@@ -1441,7 +1448,8 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",          'I', &cfg.ish,           ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_desired, nvme_nsid_values),
 		  OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
 		  OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
 		  OPT_BYTE("action",       'a', &cfg.atype,         atype),

@@ -35,6 +35,7 @@ and are available to this subcommand:
 
 --timeout=<ms>::
 	Set the timeout for the command in milliseconds.
+	'infinite' or '-1' waits without a time limit (0xffffffff).
 
 -v::
 --verbose::

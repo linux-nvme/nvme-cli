@@ -271,7 +271,8 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,
-			 "(optional) desired namespace"));
+			 "(optional) desired namespace",
+			 nvme_nsid_values));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

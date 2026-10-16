@@ -25,6 +25,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	Retrieve the log for the given nsid. If not specified, the log
 	will be retrieved for all namespaces.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 include::global-options.txt[]
 

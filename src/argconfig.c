@@ -83,6 +83,31 @@ void argconfig_append_usage(const char *str)
 	append_usage_str = str;
 }
 
+/* The names an option accepts, below its description */
+static void show_value_names(FILE *out, const struct argconfig_opt_val *v)
+{
+	__cleanup_free char *names = NULL;
+	size_t len = sizeof("\nNames:");
+	const struct argconfig_opt_val *n;
+	char *p;
+
+	if (!v || !v->str)
+		return;
+
+	for (n = v; n->str; n++)
+		len += strlen(n->str) + 2;
+
+	names = malloc(len);
+	if (!names)
+		return;
+
+	p = names + sprintf(names, "\nNames:");
+	for (n = v; n->str; n++)
+		p += sprintf(p, " %s%s", n->str, n[1].str ? "," : "");
+
+	shr_print_word_wrapped(names, 44, 44, out);
+}
+
 static void show_option(FILE *out,
 			const struct argconfig_commandline_options *option)
 {
@@ -112,6 +137,7 @@ static void show_option(FILE *out,
 	if (option->help) {
 		shr_print_word_wrapped("--- ", 40, b - buffer, out);
 		shr_print_word_wrapped(option->help, 44, 44, out);
+		show_value_names(out, option->opt_val);
 	}
 	fprintf(out, "\n");
 }
@@ -343,18 +369,31 @@ argconfig_match_val(struct argconfig_opt_val *v, const char *str)
 	return match;
 }
 
-static int argconfig_parse_val(struct argconfig_commandline_options *s,
-			       char *arg)
+/*
+ * Store the value which @str names in the value table of @s. False if
+ * the option has no value of that name.
+ */
+bool argconfig_set_value_name(struct argconfig_commandline_options *s,
+			      const char *str)
 {
 	struct argconfig_opt_val *v = s->opt_val;
 
 	if (v)
-		v = argconfig_match_val(v, arg);
+		v = argconfig_match_val(v, str);
 	if (!v)
-		return argconfig_parse_type(s, arg);
+		return false;
 
 	argconfig_set_opt_val(v->type, &v->val, s->default_value);
-	return 0;
+	return true;
+}
+
+static int argconfig_parse_val(struct argconfig_commandline_options *s,
+			       char *arg)
+{
+	if (argconfig_set_value_name(s, arg))
+		return 0;
+
+	return argconfig_parse_type(s, arg);
 }
 
 /* --verbose counts, a command may have a flag of the same name */

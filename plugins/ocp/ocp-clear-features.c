@@ -90,7 +90,8 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts,
 		OPT_BYTE("sel", 's', &cfg.sel, sel),
-		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid,
+			 nvme_nsid_values),
 		OPT_FLAG("no-uuid", 'u', &no_uuid_flag, no_uuid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);

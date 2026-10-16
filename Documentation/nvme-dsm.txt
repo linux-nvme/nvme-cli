@@ -43,6 +43,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	Sends the command with the requested nsid. This is required for the
 	character devices, or overrides the block nsid if given.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -a <attribute-list,>::
 --ctx-attrs=<attribute-list>::

@@ -113,6 +113,31 @@ static bool test_unknown_key_ignored(void)
 	return pass;
 }
 
+static bool test_value_names(void)
+{
+	char *path = write_temp(
+		"[Global]\n"
+		"timeout = infinite\n");
+	bool pass = true;
+
+	printf("test_value_names:\n");
+
+	nvme_args.timeout = 5000;
+	nvme_load_global_config_from(path);
+	unlink(path);
+	free(path);
+
+	/* The names the command line takes work in the file too */
+	if (nvme_args.timeout != UINT32_MAX) {
+		printf(" - timeout = infinite [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - timeout = infinite [PASS]\n");
+	}
+
+	return pass;
+}
+
 static bool test_malformed_value_skipped(void)
 {
 	char *path;
@@ -226,6 +251,7 @@ int main(void)
 
 	pass &= test_valid_keys();
 	pass &= test_unknown_key_ignored();
+	pass &= test_value_names();
 	pass &= test_malformed_value_skipped();
 	pass &= test_hidden_and_out_of_range();
 	pass &= test_keys_outside_global_ignored();

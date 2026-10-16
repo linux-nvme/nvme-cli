@@ -35,6 +35,7 @@ OPTIONS
 	Retrieve the identify namespace structure for the given nsid. This
 	is required for the character devices, or overrides the block nsid
 	if given.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -b::
 --raw-binary::

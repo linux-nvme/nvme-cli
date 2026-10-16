@@ -429,7 +429,8 @@ static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace,
+			 nvme_nsid_values),
 		OPT_FILE("output-file",  'O', &cfg.output_file,  output_file),
 		OPT_UINT("log",          'l', &cfg.log,          log));
 

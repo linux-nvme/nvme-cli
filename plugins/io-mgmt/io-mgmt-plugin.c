@@ -57,7 +57,8 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_SHRT("mos",           's', &cfg.mos,		mos),
 		  OPT_BYTE("mo",            'm', &cfg.mo,       mo),
 		  OPT_FILE("data",          'd', &cfg.file,     data),
@@ -137,7 +138,8 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_SHRT("mos",           's', &cfg.mos,      mos),
 		  OPT_BYTE("mo",            'm', &cfg.mo,       mo),
 		  OPT_FILE("data",          'd', &cfg.file,     data),

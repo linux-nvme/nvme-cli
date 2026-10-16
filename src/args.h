@@ -77,6 +77,8 @@ enum nvme_print_flags {
 		OPT_END()					\
 	}
 
+extern struct argconfig_opt_val nvme_nsid_values[];
+extern struct argconfig_opt_val nvme_timeout_values[];
 extern const char *uuid_index;
 extern const char *namespace_id_desired;
 

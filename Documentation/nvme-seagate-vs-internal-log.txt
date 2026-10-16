@@ -24,6 +24,7 @@ OPTIONS
 -n <NUM>::
 --namespace-id=<NUM>::
 	Desired namespace
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -f <FILE>::
 --dump-file=<FILE>::

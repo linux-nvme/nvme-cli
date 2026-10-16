@@ -44,6 +44,7 @@ OPTIONS
 	and 0xFFFFFFFF is given, then the controller returns the identify
 	namespace structure that specifies common capabilities across
 	namespaces for the controller.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 --force::
 	Request controller return the identify namespace structure even

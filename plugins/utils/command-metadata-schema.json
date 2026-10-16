@@ -124,7 +124,7 @@
         },
         "values": {
           "type": "array",
-          "description": "The set of values the parser enforces for this option, when it constrains them to a fixed set. Absent when the value is unconstrained.",
+          "description": "The names the option accepts as values, e.g. the output formats or named special values such as \"all\" for a namespace identifier. A numeric option also takes a number. Absent when the option has no named values.",
           "items": { "type": "string" },
           "minItems": 1
         }

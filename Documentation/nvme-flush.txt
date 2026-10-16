@@ -24,6 +24,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	Specify the optional namespace id for this command. Defaults to
 	0xffffffff, indicating flush for all namespaces.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 include::global-options.txt[]
 

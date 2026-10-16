@@ -30,6 +30,7 @@ OPTIONS
 	NSID: Assign the different kind of nsid value(like
 	active, inactive and invalid nsids) and check
 	the get feature command response:
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -s <select>::
 --sel=<select>::

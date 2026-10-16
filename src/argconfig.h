@@ -163,7 +163,7 @@ enum argconfig_types {
 	{s, CFG_LONG_SUFFIX, .val.long_suffix = v}
 
 #define VAL_UINT(s, v) \
-	{s, CFG_POSITIVE, v}
+	{s, CFG_POSITIVE, .val.positive = v}
 
 #define VAL_INT(s, v) \
 	{s, CFG_INT, .val.int_val = v}
@@ -246,3 +246,5 @@ void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
 
 bool argconfig_given(struct argconfig_commandline_options *options,
 		     const void *value);
+bool argconfig_set_value_name(struct argconfig_commandline_options *option,
+			      const char *str);

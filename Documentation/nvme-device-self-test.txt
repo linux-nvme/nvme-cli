@@ -29,6 +29,7 @@ OPTIONS
 -n <NUM>::
 --namespace-id=<NUM>::
 	Indicate the namespace in which the device self-test has to be carried out
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -s <NUM>::
 --self-test-code=<NUM>::

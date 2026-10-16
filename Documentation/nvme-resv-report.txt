@@ -41,6 +41,7 @@ OPTIONS
 	Retrieve the reservation report structure for the given nsid. This
 	is required for the character devices, or overrides the block nsid
 	if given.
+	The broadcast value 0xffffffff can also be given as 'all' or '-1'.
 
 -d <num-dwords>::
 --numd=<num-dwords>::

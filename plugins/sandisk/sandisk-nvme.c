@@ -623,7 +623,8 @@ static int sndk_vs_smart_add_log(int argc, char **argv,
 		OPT_BYTE("interval",          'i', &cfg.interval, interval),
 		OPT_BYTE("log-page-version",  'l', &cfg.log_page_version, log_page_version),
 		OPT_LIST("log-page-mask",     'p', &cfg.log_page_mask,    log_page_mask),
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id));
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id, nvme_nsid_values));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

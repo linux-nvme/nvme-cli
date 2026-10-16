@@ -52,7 +52,8 @@ static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin 
 
 	NVME_ARGS(opts,
 		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_optional, nvme_nsid_values));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -110,7 +111,8 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id, nvme_nsid_values),
 		  OPT_INT("csi",           'y', &cfg.csi,           csi),
 		  OPT_FLAG("all",          'a', &cfg.all,           all));
 
@@ -329,7 +331,8 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -470,7 +473,8 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,  namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -540,7 +544,8 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_FLAG("force",             0, &cfg.force,           force),
 		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify));
@@ -615,7 +620,8 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			   namespace_id_desired, nvme_nsid_values),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_identify));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
