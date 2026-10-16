@@ -383,7 +383,7 @@ static void operands_test(void)
 
 /*
  * Options registered with argconfig_set_global_options() are accepted by
- * every command after the command's own options, which take precedence.
+ * every command and take precedence over its options of the same name.
  * Their seen flags are kept across parses: the global options may already
  * have been given before the command name.
  */
@@ -403,7 +403,7 @@ static void global_options_test(void)
 	};
 	OPT_ARGS(opts) = {
 		OPT_FLAG("flag", 'f', &cfg.flag, "flag"),
-		/* shadows -d of the global options */
+		/* -d is the global --dry-run */
 		OPT_UINT("uint", 'd', &cfg.uint, "uint"),
 		OPT_END()
 	};
@@ -426,21 +426,22 @@ static void global_options_test(void)
 	}
 
 	{
-		char **argv = (char *[]){ "list", "-f", "--verbose", "-d", "7",
-					  "-o", "json", "dev", NULL };
+		char **argv = (char *[]){ "list", "-f", "--verbose", "-d",
+					  "--uint=7", "-o", "json", "dev",
+					  NULL };
 
 		cfg.flag = false;
 		cfg.uint = 0;
 		ret = argconfig_parse(argv_len(argv), argv, desc, opts);
 		if (ret || !cfg.flag || cfg.uint != 7 || verbose != 2 ||
-		    dry_run || !format || strcmp(format, "json") ||
+		    !dry_run || !format || strcmp(format, "json") ||
 		    argconfig_nr_operands() != 1) {
 			printf("ERROR: global options: command parse failed\n");
 			test_rc = 1;
 		}
 		if (!argconfig_given(opts, &format) ||
 		    !argconfig_given(opts, &verbose) ||
-		    argconfig_given(opts, &dry_run)) {
+		    !argconfig_given(opts, &dry_run)) {
 			printf("ERROR: global options: seen mismatch\n");
 			test_rc = 1;
 		}

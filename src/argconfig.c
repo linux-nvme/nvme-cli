@@ -56,8 +56,9 @@ static const char *append_usage_str = "";
 
 /*
  * Options every command accepts, registered once instead of being added to
- * each command's table. The command's own options are looked up first, so
- * a command can still use a short or long name of a global option.
+ * each command's table. They are looked up before the command's own
+ * options, so a global option means the same for every command; a command
+ * must not use their names.
  */
 static struct argconfig_commandline_options *global_options;
 
@@ -396,25 +397,6 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s,
 	return argconfig_parse_type(s, arg);
 }
 
-/* --verbose counts, a command may have a flag of the same name */
-static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
-{
-	struct argconfig_commandline_options *g = argconfig_globals(s);
-
-	for (; s && s->option; s++) {
-		if (!strcmp(s->option, "verbose") &&
-		    s->config_type == CFG_INCREMENT)
-			return s->seen;
-	}
-	for (; g && g->option; g++) {
-		if (!strcmp(g->option, "verbose") &&
-		    g->config_type == CFG_INCREMENT)
-			return g->seen;
-	}
-
-	return false;
-}
-
 /* The non-option arguments of the last successful argconfig_parse() */
 static struct {
 	char **argv;
@@ -508,6 +490,35 @@ argconfig_find_short(struct argconfig_commandline_options *s, char c)
 }
 
 /* @s given by its short name @c, or by its long name without, and @arg */
+/*
+ * The option @s or the global options name, the global ones first: a
+ * global option is the same for every command.
+ */
+static struct argconfig_commandline_options *
+argconfig_find_long_any(struct argconfig_commandline_options *s,
+			const char *name, size_t len)
+{
+	struct argconfig_commandline_options *g = argconfig_globals(s);
+	struct argconfig_commandline_options *o = NULL;
+
+	if (g)
+		o = argconfig_find_long(g, name, len);
+
+	return o ? o : argconfig_find_long(s, name, len);
+}
+
+static struct argconfig_commandline_options *
+argconfig_find_short_any(struct argconfig_commandline_options *s, char c)
+{
+	struct argconfig_commandline_options *g = argconfig_globals(s);
+	struct argconfig_commandline_options *o = NULL;
+
+	if (g)
+		o = argconfig_find_short(g, c);
+
+	return o ? o : argconfig_find_short(s, c);
+}
+
 static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 			   char *arg)
 {
@@ -545,10 +556,7 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 	char *eq = strchr(name, '=');
 	size_t len = eq ? (size_t)(eq - name) : strlen(name);
 
-	s = argconfig_find_long(p->options, name, len);
-	if (!s && argconfig_globals(p->options))
-		s = argconfig_find_long(argconfig_globals(p->options), name,
-					len);
+	s = argconfig_find_long_any(p->options, name, len);
 	if (!s) {
 		bool help = len == 4 && !strncmp(name, "help", 4);
 		bool version = len == 7 && !strncmp(name, "version", 7);
@@ -602,10 +610,7 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
 		if (!p->global && (*c == 'h' || *c == '?'))
 			return ARGCONFIG_HELP;
 
-		s = argconfig_find_short(p->options, *c);
-		if (!s && argconfig_globals(p->options))
-			s = argconfig_find_short(argconfig_globals(p->options),
-						 *c);
+		s = argconfig_find_short_any(p->options, *c);
 		if (!s && p->global && (*c == 'h' || *c == 'V')) {
 			p->help |= *c == 'h';
 			p->version |= *c == 'V';
@@ -690,6 +695,18 @@ static argconfig_parse_hook_fn argconfig_parse_hook;
 void argconfig_set_parse_hook(argconfig_parse_hook_fn hook)
 {
 	argconfig_parse_hook = hook;
+}
+
+/* --verbose, or an alias of it such as --human-readable, was given */
+static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
+{
+	struct argconfig_commandline_options *v;
+
+	v = argconfig_find_long_any(s, "verbose", strlen("verbose"));
+	if (!v || v->config_type != CFG_INCREMENT)
+		return false;
+
+	return argconfig_given(s, v->default_value);
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,

@@ -65,8 +65,9 @@ enum nvme_print_flags {
 
 /*
  * The command's options. The global options are registered once with
- * argconfig (nvme_args_register()) and accepted by every command; a
- * command's own option with the same short or long name takes precedence.
+ * argconfig (nvme_args_register()) and accepted by every command. They
+ * take precedence over a command's own option of the same short or long
+ * name, so a command must not use their names.
  * The output formats a command supports are declared in its struct
  * command.
  */
