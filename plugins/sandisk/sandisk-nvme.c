@@ -414,7 +414,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	struct config {
 		char *file;
 		__u32 xfer_size;
-		int data_area;
+		__u32 data_area;
 		__u64 file_size;
 		__u64 offset;
 		char *type;

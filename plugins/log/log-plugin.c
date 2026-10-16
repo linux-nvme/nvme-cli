@@ -462,7 +462,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		char	*file_name;
 		__u32	host_gen;
 		bool	ctrl_init;
-		int	data_area;
+		__u32	data_area;
 		bool	rae;
 		__u8	mcda;
 		bool	force;

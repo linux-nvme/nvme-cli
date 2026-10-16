@@ -1796,7 +1796,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 	// Get the configuration
 
 	struct config {
-		int  duration;
+		__u32 duration;
 		bool raw_binary;
 	};
 
