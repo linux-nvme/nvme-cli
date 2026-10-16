@@ -36,6 +36,19 @@ if python3.found()
             depends: nvme_exe,
             timeout: 60,
         )
+
+        # The global options are looked up first, -h is the help; a
+        # command option must use neither, nor a name twice.
+        test(
+            'nvme-cli - option-names',
+            python3,
+            args: [
+                files('test_option_names.py'),
+                nvme_exe,
+            ],
+            depends: nvme_exe,
+            timeout: 60,
+        )
     endif
 
     # Argument handling of the completion generator; needs no nvme binary or
