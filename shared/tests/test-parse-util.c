@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/array_size/array_size.h>
 #include <shared/parse-util.h>
 
 static bool check_bool(const char *value, int want_ret, bool want_out)
@@ -466,6 +467,40 @@ static bool test_double(void)
 	return pass;
 }
 
+static bool test_csv_strict(void)
+{
+	static const struct {
+		const char *in;
+		int want;
+	} tests[] = {
+		{ "1, 2", 2 },
+		{ " 1 ,2 ", 2 },
+		{ "1,,2", 2 },
+		{ "1,2,", 2 },
+		{ ",1", 1 },
+		{ "1,-2", -1 },
+		{ "+1", -1 },
+		{ "4294967296", -1 },
+		{ "0x10,010", 2 },
+	};
+	unsigned int val[8];
+	bool pass = true;
+	unsigned int i;
+
+	printf("test_csv_strict:\n");
+
+	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+		char buf[64];
+
+		snprintf(buf, sizeof(buf), "%s", tests[i].in);
+		pass &= check_int_ret(tests[i].in,
+				      shr_parse_csv_uint(buf, val, 8),
+				      tests[i].want);
+	}
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -485,6 +520,7 @@ int main(void)
 	pass &= test_u64();
 	pass &= test_s64();
 	pass &= test_double();
+	pass &= test_csv_strict();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

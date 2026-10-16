@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <locale.h>
 #include <float.h>
 #include <stdio.h>
@@ -17,6 +18,9 @@
 #include <strings.h>
 
 #include <ccan/array_size/array_size.h>
+
+#include "cleanup-util.h"
+#include "string-util.h"
 
 #include "parse-util.h"
 
@@ -124,50 +128,51 @@ int shr_parse_double(const char *s, double *out)
 	return 0;
 }
 
-#define DEFINE_SHR_PARSE_CSV_FUNC(name, ret_t)				\
+/*
+ * Split @string at the commas, trim each entry and parse it with
+ * shr_parse_u64(), up to @max. Empty entries are skipped, like strtok()
+ * did before, but blank ones are no number.
+ */
+#define DEFINE_SHR_PARSE_CSV_FUNC(name, ret_t, max)			\
 int shr_parse_csv_ ## name(char *string, ret_t *val,			\
 			   unsigned int max_length)			\
 {									\
-	int ret = 0;							\
-	uintmax_t v;							\
-	char *tmp;							\
-	char *p;							\
+	char *rest = string, *tok;					\
+	unsigned int n = 0;						\
+	uint64_t v;							\
+	int err;							\
 									\
 	if (!string || !*string)					\
 		return 0;						\
 									\
-	tmp = strtok(string, ",");					\
-									\
-	while (tmp) {							\
-		if (ret >= max_length)					\
+	while ((tok = shr_strsep(&rest, ",")) != NULL) {		\
+		if (!*tok)						\
+			continue;					\
+		if (n >= max_length)					\
 			return -1;					\
 									\
-		if (tmp[strspn(tmp, " \t\n\r\f\v")] == '-')		\
-			return -1;					\
+		tok = shr_trim(tok);					\
 									\
-		errno = 0;						\
-		v = strtoumax(tmp, &p, 0);				\
-		if (*p != 0)						\
-			return -1;					\
-		if (errno == ERANGE ||					\
-			(ret_t)(v) != v) {				\
-			fprintf(stderr, "%s out of range\n", tmp);	\
-			return -1;					\
+		err = shr_parse_u64(tok, max, &v);			\
+		if (err == -ERANGE) {					\
+			__cleanup_free char *e = shr_escape(tok);	\
+									\
+			fprintf(stderr, "%s out of range\n",		\
+				e ? e : "");				\
 		}							\
-		val[ret] = v;						\
-		ret++;							\
-									\
-		tmp = strtok(NULL, ",");				\
+		if (err)						\
+			return -1;					\
+		val[n++] = v;						\
 	}								\
 									\
-	return ret;							\
+	return n;							\
 }
 
-DEFINE_SHR_PARSE_CSV_FUNC(int, int)
-DEFINE_SHR_PARSE_CSV_FUNC(ushort, unsigned short)
-DEFINE_SHR_PARSE_CSV_FUNC(uint, unsigned int)
-DEFINE_SHR_PARSE_CSV_FUNC(ulonglong, unsigned long long)
-DEFINE_SHR_PARSE_CSV_FUNC(uchar, unsigned char)
+DEFINE_SHR_PARSE_CSV_FUNC(int, int, INT_MAX)
+DEFINE_SHR_PARSE_CSV_FUNC(ushort, unsigned short, USHRT_MAX)
+DEFINE_SHR_PARSE_CSV_FUNC(uint, unsigned int, UINT_MAX)
+DEFINE_SHR_PARSE_CSV_FUNC(ulonglong, unsigned long long, ULLONG_MAX)
+DEFINE_SHR_PARSE_CSV_FUNC(uchar, unsigned char, UCHAR_MAX)
 
 #ifdef NVME_HAVE_INT128
 int shr_parse_csv_uint128(char *string, uint128_t *val, unsigned int max_length)
@@ -179,14 +184,18 @@ int shr_parse_csv_uint128(char *string, uint128_t *val, unsigned int max_length)
 	char *src;
 	int base;
 
+	char *rest = string;
+
 	if (!string || !*string)
 		return 0;
 
-	temp = strtok(string, ",");
-
-	while (temp) {
+	while ((temp = shr_strsep(&rest, ",")) != NULL) {
+		if (!*temp)
+			continue;
 		if (ret >= max_length)
 			return -EINVAL;
+
+		temp = shr_trim(temp);
 
 		errno = 0;
 		v = 0;
@@ -220,8 +229,6 @@ int shr_parse_csv_uint128(char *string, uint128_t *val, unsigned int max_length)
 
 		val[ret] = v;
 		ret++;
-
-		temp = strtok(NULL, ",");
 	}
 
 	return ret;
