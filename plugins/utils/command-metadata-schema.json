@@ -73,6 +73,15 @@
           "type": "string",
           "description": "Alternate name accepted for the command. Omitted if none."
         },
+        "deprecated": {
+          "type": "boolean",
+          "description": "True for a deprecated command. Absent otherwise.",
+          "const": true
+        },
+        "replacement": {
+          "type": "string",
+          "description": "The command which replaces a deprecated one, as \"<plugin> <command>\". Omitted if none."
+        },
         "description": {
           "type": "string",
           "description": "Command description (the command-list one-liner). Omitted if unset."
@@ -121,6 +130,14 @@
           "type": "boolean",
           "description": "True for options accepted on the command line but suppressed from --help. Absent otherwise.",
           "const": true
+        },
+        "deprecated": {
+          "type": "string",
+          "description": "The option which replaces a deprecated one, e.g. \"--verbose/-v\". A deprecated option is hidden as well. Omitted if not deprecated."
+        },
+        "old_name": {
+          "type": "string",
+          "description": "The long name of earlier versions, still accepted with a warning. Omitted if none."
         },
         "values": {
           "type": "array",
