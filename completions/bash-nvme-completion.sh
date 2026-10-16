@@ -1172,6 +1172,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json tabular" \
 			               "--output-format-version" "1 2" \
+			               "--ranking -r" "namespace ctrl multipath" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3060,6 +3061,7 @@ plugin_memblaze_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
+			               "--select -s" "OOB EEP ALL" \
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--fw -f"
 			;;
@@ -3169,7 +3171,8 @@ plugin_micron_opts () {
 			opts+=" --command= -c --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --command -c --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--command -c" "all read write trim" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
 			;;
@@ -3178,7 +3181,9 @@ plugin_micron_opts () {
 			opts+=" --command= -c --dry-run --no-ioctl-probing --no-retries --option= -O --output-format= -o --output-format-version= --quiet --set-options= --threshold= -t --timeout= --verbose -v"
 			valopts+=" --command -c --option -O --output-format -o --output-format-version --set-options --threshold -t --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--command -c" "all read write trim" \
+			               "--option -O" "enable disable status" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
 			;;
@@ -3208,6 +3213,7 @@ plugin_micron_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
+			               "--select -s" "OOB EEP ALL" \
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--fw -f"
 			;;
@@ -3263,7 +3269,8 @@ plugin_micron_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--timeout" "infinite -1"
+			               "--timeout" "infinite -1" \
+			               "--type -t" "host controller"
 			_nvme_opt_files "--package -p"
 			;;
 
@@ -3307,7 +3314,8 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --option= -O --output-format= -o --output-format-version= --quiet --save= -s --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --option -O --output-format -o --output-format-version --save -s --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--option -O" "enable disable status" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
 			;;
@@ -3316,7 +3324,8 @@ plugin_micron_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --option= -O --output-format= -o --output-format-version= --quiet --select= -s --set-options= --timeout= --verbose -v"
 			valopts+=" --option -O --output-format -o --output-format-version --select -s --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--option -O" "enable disable status" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
 			;;
@@ -3728,6 +3737,7 @@ plugin_ocp_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
+			               "--telemetry-type -t" "host controller host0 host1" \
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--output-file -f"
 			;;
@@ -4720,8 +4730,9 @@ plugin_sndk_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--timeout" "infinite -1"
-			_nvme_opt_files "--output-file -O" "--type -t"
+			               "--timeout" "infinite -1" \
+			               "--type -t" "NONE HOST CONTROLLER BOTH"
+			_nvme_opt_files "--output-file -O"
 			;;
 
 		"vs-nand-stats")
@@ -4914,7 +4925,8 @@ plugin_solidigm_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--timeout" "infinite -1"
+			               "--timeout" "infinite -1" \
+			               "--type -t" "ALL CIT HIT NLOG ASSERT EVENT EXTENDED"
 			_nvme_opt_files "--dir-name -d"
 			;;
 
@@ -5422,8 +5434,9 @@ plugin_wdc_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--timeout" "infinite -1"
-			_nvme_opt_files "--output-file -O" "--type -t"
+			               "--timeout" "infinite -1" \
+			               "--type -t" "NONE HOST CONTROLLER"
+			_nvme_opt_files "--output-file -O"
 			;;
 
 		"vs-nand-stats")
