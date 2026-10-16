@@ -244,5 +244,7 @@ typedef int (*argconfig_parse_hook_fn)(int argc, char *argv[],
 				       struct argconfig_commandline_options *options);
 void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
 
+bool argconfig_given(struct argconfig_commandline_options *options,
+		     const void *value);
 bool argconfig_parse_seen(struct argconfig_commandline_options *options,
 			  const char *option);

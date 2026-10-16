@@ -443,6 +443,43 @@ static void global_options_test(void)
 	argconfig_set_global_options(NULL);
 }
 
+/*
+ * argconfig_given() finds an option by the variable it stores to, also an
+ * alias of it or a global option, and NULL is never given.
+ */
+static void given_test(void)
+{
+	const char *desc = "Test given";
+	int verbose = 0;
+	bool alias = false, quiet = false;
+	char **argv = (char *[]){ "prog", "--old-flag", "-v", NULL };
+	int ret;
+
+	OPT_ARGS(globals) = {
+		OPT_INCR("verbose", 'v', &verbose, "verbose"),
+		OPT_FLAG("quiet", 'q', &quiet, "quiet"),
+		OPT_END()
+	};
+	OPT_ARGS(opts) = {
+		OPT_FLAG("flag", 'f', &alias, "flag"),
+		OPT_FLAG("old-flag", 0, &alias, NULL, NULL, true),
+		OPT_UINT("uint", 'u', &cfg.uint, "uint"),
+		OPT_FLAG("seen-only", 0, NULL, "seen only"),
+		OPT_END()
+	};
+
+	argconfig_set_global_options(globals);
+	ret = argconfig_parse(argv_len(argv), argv, desc, opts);
+	if (ret || !argconfig_given(opts, &alias) ||
+	    argconfig_given(opts, &cfg.uint) ||
+	    !argconfig_given(opts, &verbose) ||
+	    argconfig_given(opts, &quiet) || argconfig_given(opts, NULL)) {
+		printf("ERROR: given: unexpected result\n");
+		test_rc = 1;
+	}
+	argconfig_set_global_options(NULL);
+}
+
 #define COMMA_SEP_ARRAY_MAX_VALUES 4
 
 struct comma_sep_array_test {
@@ -834,6 +871,7 @@ int main(void)
 	combined_opts_test();
 	operands_test();
 	global_options_test();
+	given_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
 		comma_sep_array_test(&comma_sep_array_tests[i]);
