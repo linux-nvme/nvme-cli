@@ -79,6 +79,18 @@ static bool test_suffix_si_parse(void)
 		{ "800.0G", 800000000000ULL, 0 },
 		{ "800.G", 0, -EINVAL },
 		{ "800.", 0, -EINVAL },
+		{ "1.500k", 1500ULL, 0 },
+		{ "1.09k", 1090ULL, 0 },
+		{ "1.05k", 1050ULL, 0 },
+		{ "18E", 18000000000000000000ULL, 0 },
+		{ "19E", 0, -EINVAL },
+		{ "18446744073709551616", 0, -EINVAL },
+		{ "18446744073709551615", 18446744073709551615ULL, 0 },
+		{ "18446744073709551615.9k", 0, -EINVAL },
+		{ "-1k", 0, -EINVAL },
+		{ " 1k", 0, -EINVAL },
+		{ "+1k", 0, -EINVAL },
+		{ "", 0, -EINVAL },
 	};
 	bool pass = true;
 	unsigned int i;
@@ -110,6 +122,13 @@ static bool test_suffix_binary_parse(void)
 		{ "34Gi", 36507222016ULL, 0 },
 		{ "34.9Ki", 0, -EINVAL },
 		{ "32Gii", 0, -EINVAL },
+		{ "16777215Ti", 16777215ULL << 40, 0 },
+		{ "16777216Ti", 0, -EINVAL },
+		{ "18446744073709551616", 0, -EINVAL },
+		{ "-1Ki", 0, -EINVAL },
+		{ " 1Ki", 0, -EINVAL },
+		{ "1ki", 1024ULL, 0 },
+		{ "", 0, -EINVAL },
 	};
 	bool pass = true;
 	unsigned int i;
