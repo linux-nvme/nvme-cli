@@ -288,6 +288,27 @@
 * The wdc plugin no longer creates its dump directories with a broken
   mode that only root could write to.
 
+* A device, or a fabrics target, which returns log pages whose lengths
+  and counts don't add up no longer makes nvme-cli read past its
+  buffers, loop for minutes or leak memory. This covers id-ctrl and the
+  FDP, host and AVE discovery, pull model DDC request, power
+  measurement, reachability, dispersed namespace, LBA status, changed
+  namespace list and persistent event logs. Found by fuzzing the device
+  data.
+
+* `nvme log host-discovery`, `ave-discovery` and `pull-model-ddc-req`
+  read the records which follow the header now. Before, they printed
+  zeros instead. `host-discovery --all-host-entries` reads the header
+  of the right page as well.
+
+* `nvme log reachability-groups` and `reachability-associations` decode
+  every descriptor now. Before, only the first one was read from the
+  right place. Their JSON output lists the IDs of a descriptor in an
+  array, `nsid` and `rgid`. Before, all but the last ID were lost.
+
+* `nvme log persistent-event` fails for a log larger than 4 GiB, which
+  it can't read, instead of printing a part of it as the whole log.
+
 ### Plugins
 
 * `nvme feat num-queues --nsqr=N` without `--ncqr` keeps the current
@@ -298,6 +319,14 @@
   `drive-essentials`, SN730 capture) and SanDisk (telemetry capture):
   a caller-controlled string reached a shell (`system()`), so a
   crafted input could run arbitrary commands as root.
+
+* `nvme seagate vs-smart-add-log` prints the SMART logs of a drive
+  once. Before, it printed those of legacy drives twice and those of
+  other drives followed by logs which aren't theirs, and its JSON
+  output could crash.
+
+* The dera, ibm, memblaze, ocp, seagate, solidigm and wdc plugins handle
+  unexpected values from the device and free the memory they used.
 
 * WDC, SanDisk, Micron, Solidigm and Samsung plugins no longer spawn
   external `tar`, `zip`, `cat`, `lsmod`, `uname` or `dmesg` processes;
