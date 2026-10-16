@@ -1,0 +1,46 @@
+# Example NVMe-oF connection configuration.
+#
+# This file is NOT read by nvme-cli -- it is a reference only. The real
+# configuration file is @SYSCONFDIR@/nvme/nvme-fabrics.conf (plus an
+# optional @SYSCONFDIR@/nvme/nvme-fabrics.conf.d/ drop-in directory).
+#
+# See nvme-fabrics.conf(5) for the full key reference and precedence
+# rules, and https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+# for the complete design rationale.
+
+# Type defaults: applied unless a more specific scope below overrides them.
+[Discovery Controller Defaults]
+keep-alive-tmo = 30                  # DC keep-alive default
+ctrl-loss-tmo  = 600
+
+[I/O Controller Defaults]
+keep-alive-tmo = 5                   # IOC keep-alive default (kernel default)
+ctrl-loss-tmo  = 600
+
+# Optional: state this host's identity explicitly. Omit this whole
+# section to fall back to @SYSCONFDIR@/nvme/hostnqn and hostid.
+[Host]
+hostsymname = lab-host-01
+
+# A Discovery Controller with an explicit NQN.
+[Discovery Controller]
+nqn        = nqn.2014-08.org.example:cdc.main
+controller = transport=tcp;traddr=192.168.1.10;trsvcid=8009
+
+# A Discovery Controller with no nqn = : defaults to the well-known
+# discovery NQN.
+[Discovery Controller]
+controller = transport=tcp;traddr=192.168.1.11;trsvcid=8009
+
+# A subsystem reachable over a single path.
+[Subsystem]
+nqn        = nqn.2024-01.com.example:data.vol1
+controller = transport=tcp;traddr=192.168.1.20;trsvcid=4420
+
+# A subsystem reachable over two paths (multipath), overriding the
+# I/O Controller Defaults' ctrl-loss-tmo for this subsystem only.
+[Subsystem]
+nqn           = nqn.2024-01.com.example:data.vol2
+ctrl-loss-tmo = 1800
+controller    = transport=tcp;traddr=192.168.1.21;trsvcid=4420
+controller    = transport=tcp;traddr=192.168.1.22;trsvcid=4420

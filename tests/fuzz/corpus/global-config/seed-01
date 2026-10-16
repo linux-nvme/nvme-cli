@@ -1,0 +1,4 @@
+[Global]
+timeout = infinite
+output-format = normal
+output-format = binary

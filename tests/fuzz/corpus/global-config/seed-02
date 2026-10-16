@@ -1,0 +1,6 @@
+timeout = 1
+[Global]
+human-readable = 1
+verbose = 4294967296
+timeout = -1
+bogus = x

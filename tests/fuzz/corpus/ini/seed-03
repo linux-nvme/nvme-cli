@@ -1,0 +1,3 @@
+[Global]
+quiet = yes
+	dry-run=1 

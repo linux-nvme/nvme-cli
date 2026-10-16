@@ -195,3 +195,38 @@ when a violation is detected.
 
 The same known limitations apply as for Valgrind: Python tests and shell script
 tests may produce false positives. Focus triage on the `nvme-cli - *` unit tests.
+
+## Fuzzing
+
+The parsers of untrusted input have fuzz targets in `tests/fuzz`: the
+command line parser (`argconfig`), the INI parser (`ini`), `nvme-cli.conf`
+(`global-config`) and `nvme-fabrics.conf` (`fabrics-conf`).
+
+Every build runs them as tests of the `fuzz` suite: each target replays its
+seeds in `tests/fuzz/corpus/<target>` and then a few seconds of random
+mutations of them. The mutations come from a fixed seed, so a failure can be
+repeated, and the input which crashed a target is written to
+`fuzz-crash-<target>` in the build directory.
+
+```bash
+meson test -C .build --suite fuzz
+FUZZ_SECONDS=60 FUZZ_SEED=7 meson test -C .build --suite fuzz
+```
+
+Run in a sanitizer build (see above) they also catch memory errors which
+don't crash.
+
+For longer, coverage guided runs, build the targets for libFuzzer with clang:
+
+```bash
+CC=clang meson setup .build-fuzz -Dfuzzing=true -Db_sanitize=address,undefined
+meson compile -C .build-fuzz
+mkdir corpus && cp tests/fuzz/corpus/argconfig/* corpus/
+.build-fuzz/tests/fuzz/fuzz-argconfig -close_fd_mask=3 \
+    -dict=tests/fuzz/argconfig.dict corpus
+```
+
+The config targets use `tests/fuzz/config.dict`. The targets use the
+libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
+`-fsanitize=fuzzer`). Add an input which found a bug to the seeds of its
+target.

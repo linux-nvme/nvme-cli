@@ -1,0 +1,10 @@
+[Global]
+verbose = 2
+quiet = no
+output-format = json
+timeout = 5000
+dry-run = yes
+no-retries = 1
+no-ioctl-probing = off
+output-format-version = 2
+set-options = a=b

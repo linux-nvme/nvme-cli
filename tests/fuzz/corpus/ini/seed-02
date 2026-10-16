@@ -1,0 +1,9 @@
+# comment
+[a]
+k=v
+[ b ]
+ = x
+[c
+junk
+[d]]
+key = 
