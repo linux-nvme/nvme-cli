@@ -150,7 +150,9 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 		.fabrics = false,
 	};
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -398,36 +400,38 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		.offset = 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
-		  OPT_FLAG("cap",              0, &cfg.cap,            cap),
-		  OPT_FLAG("vs",               0, &cfg.vs,             vs),
-		  OPT_FLAG("cmbloc",           0, &cfg.cmbloc,         cmbloc),
-		  OPT_FLAG("cmbsz",            0, &cfg.cmbsz,          cmbsz),
-		  OPT_FLAG("bpinfo",           0, &cfg.bpinfo,         bpinfo),
-		  OPT_FLAG("cmbsts",           0, &cfg.cmbsts,         cmbsts),
-		  OPT_FLAG("cmbebs",           0, &cfg.cmbebs,         cmbebs),
-		  OPT_FLAG("cmbswtp",          0, &cfg.cmbswtp,        cmbswtp),
-		  OPT_FLAG("crto",             0, &cfg.crto,           crto),
-		  OPT_FLAG("pmrcap",           0, &cfg.pmrcap,         pmrcap),
-		  OPT_FLAG("pmrsts",           0, &cfg.pmrsts,         pmrsts),
-		  OPT_FLAG("pmrebs",           0, &cfg.pmrebs,         pmrebs),
-		  OPT_FLAG("pmrswtp",          0, &cfg.pmrswtp,        pmrswtp),
-		  OPT_FLAG("intms",            0, &cfg.intms,          intms),
-		  OPT_FLAG("intmc",            0, &cfg.intmc,          intmc),
-		  OPT_FLAG("cc",               0, &cfg.cc,             cc),
-		  OPT_FLAG("csts",             0, &cfg.csts,           csts),
-		  OPT_FLAG("nssr",             0, &cfg.nssr,           nssr),
-		  OPT_FLAG("aqa",              0, &cfg.aqa,            aqa),
-		  OPT_FLAG("asq",              0, &cfg.asq,            asq),
-		  OPT_FLAG("acq",              0, &cfg.acq,            acq),
-		  OPT_FLAG("bprsel",           0, &cfg.bprsel,         bprsel),
-		  OPT_FLAG("bpmbl",            0, &cfg.bpmbl,          bpmbl),
-		  OPT_FLAG("cmbmsc",           0, &cfg.cmbmsc,         cmbmsc),
-		  OPT_FLAG("nssd",             0, &cfg.nssd,           nssd),
-		  OPT_FLAG("pmrctl",           0, &cfg.pmrctl,         pmrctl),
-		  OPT_FLAG("pmrmscl",          0, &cfg.pmrmscl,        pmrmscl),
-		  OPT_FLAG("pmrmscu",          0, &cfg.pmrmscu,        pmrmscu));
+	OPT_ARGS(opts) = {
+		OPT_UINT("offset",  'O', &cfg.offset,  offset),
+		OPT_FLAG("cap",     0,   &cfg.cap,     cap),
+		OPT_FLAG("vs",      0,   &cfg.vs,      vs),
+		OPT_FLAG("cmbloc",  0,   &cfg.cmbloc,  cmbloc),
+		OPT_FLAG("cmbsz",   0,   &cfg.cmbsz,   cmbsz),
+		OPT_FLAG("bpinfo",  0,   &cfg.bpinfo,  bpinfo),
+		OPT_FLAG("cmbsts",  0,   &cfg.cmbsts,  cmbsts),
+		OPT_FLAG("cmbebs",  0,   &cfg.cmbebs,  cmbebs),
+		OPT_FLAG("cmbswtp", 0,   &cfg.cmbswtp, cmbswtp),
+		OPT_FLAG("crto",    0,   &cfg.crto,    crto),
+		OPT_FLAG("pmrcap",  0,   &cfg.pmrcap,  pmrcap),
+		OPT_FLAG("pmrsts",  0,   &cfg.pmrsts,  pmrsts),
+		OPT_FLAG("pmrebs",  0,   &cfg.pmrebs,  pmrebs),
+		OPT_FLAG("pmrswtp", 0,   &cfg.pmrswtp, pmrswtp),
+		OPT_FLAG("intms",   0,   &cfg.intms,   intms),
+		OPT_FLAG("intmc",   0,   &cfg.intmc,   intmc),
+		OPT_FLAG("cc",      0,   &cfg.cc,      cc),
+		OPT_FLAG("csts",    0,   &cfg.csts,    csts),
+		OPT_FLAG("nssr",    0,   &cfg.nssr,    nssr),
+		OPT_FLAG("aqa",     0,   &cfg.aqa,     aqa),
+		OPT_FLAG("asq",     0,   &cfg.asq,     asq),
+		OPT_FLAG("acq",     0,   &cfg.acq,     acq),
+		OPT_FLAG("bprsel",  0,   &cfg.bprsel,  bprsel),
+		OPT_FLAG("bpmbl",   0,   &cfg.bpmbl,   bpmbl),
+		OPT_FLAG("cmbmsc",  0,   &cfg.cmbmsc,  cmbmsc),
+		OPT_FLAG("nssd",    0,   &cfg.nssd,    nssd),
+		OPT_FLAG("pmrctl",  0,   &cfg.pmrctl,  pmrctl),
+		OPT_FLAG("pmrmscl", 0,   &cfg.pmrmscl, pmrmscl),
+		OPT_FLAG("pmrmscu", 0,   &cfg.pmrmscu, pmrmscu),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -721,25 +725,27 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 		.offset = 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("offset",  'O', &cfg.offset,  offset),
-		  OPT_SUFFIX("value", 'V', &cfg.value,   value),
-		  OPT_FLAG("mmio32",  'm', &cfg.mmio32,  mmio32),
-		  OPT_UINT("intms",     0, &cfg.intms,   intms),
-		  OPT_UINT("intmc",     0, &cfg.intmc,   intmc),
-		  OPT_UINT("cc",        0, &cfg.cc,      cc),
-		  OPT_UINT("csts",      0, &cfg.csts,    csts),
-		  OPT_UINT("nssr",      0, &cfg.nssr,    nssr),
-		  OPT_UINT("aqa",       0, &cfg.aqa,     aqa),
-		  OPT_SUFFIX("asq",     0, &cfg.asq,     asq),
-		  OPT_SUFFIX("acq",     0, &cfg.acq,     acq),
-		  OPT_UINT("bprsel",    0, &cfg.bprsel,  bprsel),
-		  OPT_SUFFIX("bpmbl",   0, &cfg.bpmbl,   bpmbl),
-		  OPT_SUFFIX("cmbmsc",  0, &cfg.cmbmsc,  cmbmsc),
-		  OPT_UINT("nssd",      0, &cfg.nssd,    nssd),
-		  OPT_UINT("pmrctl",    0, &cfg.pmrctl,  pmrctl),
-		  OPT_UINT("pmrmscl",   0, &cfg.pmrmscl, pmrmscl),
-		  OPT_UINT("pmrmscu",   0, &cfg.pmrmscu, pmrmscu));
+	OPT_ARGS(opts) = {
+		OPT_UINT("offset",   'O', &cfg.offset,  offset),
+		OPT_SUFFIX("value",  'V', &cfg.value,   value),
+		OPT_FLAG("mmio32",   'm', &cfg.mmio32,  mmio32),
+		OPT_UINT("intms",    0,   &cfg.intms,   intms),
+		OPT_UINT("intmc",    0,   &cfg.intmc,   intmc),
+		OPT_UINT("cc",       0,   &cfg.cc,      cc),
+		OPT_UINT("csts",     0,   &cfg.csts,    csts),
+		OPT_UINT("nssr",     0,   &cfg.nssr,    nssr),
+		OPT_UINT("aqa",      0,   &cfg.aqa,     aqa),
+		OPT_SUFFIX("asq",    0,   &cfg.asq,     asq),
+		OPT_SUFFIX("acq",    0,   &cfg.acq,     acq),
+		OPT_UINT("bprsel",   0,   &cfg.bprsel,  bprsel),
+		OPT_SUFFIX("bpmbl",  0,   &cfg.bpmbl,   bpmbl),
+		OPT_SUFFIX("cmbmsc", 0,   &cfg.cmbmsc,  cmbmsc),
+		OPT_UINT("nssd",     0,   &cfg.nssd,    nssd),
+		OPT_UINT("pmrctl",   0,   &cfg.pmrctl,  pmrctl),
+		OPT_UINT("pmrmscl",  0,   &cfg.pmrmscl, pmrmscl),
+		OPT_UINT("pmrmscu",  0,   &cfg.pmrmscu, pmrmscu),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -777,8 +783,10 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 		.fabrics	= true,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("offset",         'O', &cfg.offset,         offset));
+	OPT_ARGS(opts) = {
+		OPT_UINT("offset", 'O', &cfg.offset, offset),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -817,9 +825,11 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 		.value	= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("offset", 'O', &cfg.offset, offset),
-		  OPT_SUFFIX("value",  'V', &cfg.value,  value));
+	OPT_ARGS(opts) = {
+		OPT_UINT("offset",  'O', &cfg.offset, offset),
+		OPT_SUFFIX("value", 'V', &cfg.value,  value),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

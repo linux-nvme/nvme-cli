@@ -69,11 +69,13 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 		.nr	= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_SHRT("cntlid", 'c', &cfg.cntlid, cntlid),
-		  OPT_BYTE("rt",     'r', &cfg.rt,     rt),
-		  OPT_BYTE("act",    'a', &cfg.act,    act),
-		  OPT_SHRT("nr",     'n', &cfg.nr,     nr));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("cntlid", 'c', &cfg.cntlid, cntlid),
+		OPT_BYTE("rt",     'r', &cfg.rt,     rt),
+		OPT_BYTE("act",    'a', &cfg.act,    act),
+		OPT_SHRT("nr",     'n', &cfg.nr,     nr),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -101,7 +103,9 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -134,7 +138,9 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -163,7 +169,9 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

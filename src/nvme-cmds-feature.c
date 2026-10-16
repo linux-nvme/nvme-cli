@@ -260,16 +260,20 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 		.uuid_index	= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id, feature_name),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_id_desired, nvme_nsid_values),
-		  OPT_BYTE("sel",            's', &cfg.sel,            sel),
-		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		  OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
-		  OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     uuid_index_specify),
-		  OPT_FLAG("changed",        'C', &cfg.changed,        changed));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("feature-id", 'f', &cfg.feature_id, feature_id,
+			 feature_name),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id_desired, nvme_nsid_values),
+		OPT_BYTE("sel",          's', &cfg.sel,          sel),
+		OPT_UINT("data-len",     'l', &cfg.data_len,     buf_len),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11),
+		OPT_BYTE("uuid-index", 'U', &cfg.uuid_index,
+			 uuid_index_specify),
+		OPT_FLAG("changed",      'C', &cfg.changed,      changed),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -354,16 +358,18 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		.sv			= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
-			   namespace_desired, nvme_nsid_values),
-		  OPT_BYTE("feature-id",   'f', &cfg.fid,      fid, feature_name),
-		  OPT_SUFFIX("value",      'V', &cfg.value,    value),
-		  OPT_UINT("cdw12",        'c', &cfg.cdw12,    cdw12),
-		  OPT_BYTE("uuid-index",   'U', &cfg.uidx,     uuid_index_specify),
-		  OPT_UINT("data-len",     'l', &cfg.data_len, buf_len),
-		  OPT_FILE("data",         'd', &cfg.file,     data),
-		  OPT_FLAG("save",         's', &cfg.sv,       sv));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, namespace_desired,
+			 nvme_nsid_values),
+		OPT_BYTE("feature-id", 'f', &cfg.fid,      fid, feature_name),
+		OPT_SUFFIX("value",    'V', &cfg.value,    value),
+		OPT_UINT("cdw12",      'c', &cfg.cdw12,    cdw12),
+		OPT_BYTE("uuid-index", 'U', &cfg.uidx,     uuid_index_specify),
+		OPT_UINT("data-len",   'l', &cfg.data_len, buf_len),
+		OPT_FILE("data",       'd', &cfg.file,     data),
+		OPT_FLAG("save",       's', &cfg.sv,       sv),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

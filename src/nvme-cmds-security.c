@@ -69,14 +69,16 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		.css	= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("ofi",	'O', &cfg.ofi,      ofi_desc),
-		  OPT_BYTE("ifc",	'f', &cfg.ifc,      ifc_desc),
-		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
-		  OPT_BYTE("scp",	's', &cfg.scp,      scp_desc),
-		  OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc),
-		  OPT_BYTE("csel",	'c', &cfg.csel,     csel_desc),
-		  OPT_SHRT("css",	'C', &cfg.css,      css_desc));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("ofi",   'O', &cfg.ofi,   ofi_desc),
+		OPT_BYTE("ifc",   'f', &cfg.ifc,   ifc_desc),
+		OPT_BYTE("prhbt", 'p', &cfg.prhbt, prhbt_desc),
+		OPT_BYTE("scp",   's', &cfg.scp,   scp_desc),
+		OPT_BYTE("uuid",  'U', &cfg.uuid,  uuid_desc),
+		OPT_BYTE("csel",  'c', &cfg.csel,  csel_desc),
+		OPT_SHRT("css",   'C', &cfg.css,   css_desc),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

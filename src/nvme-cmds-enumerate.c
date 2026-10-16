@@ -48,7 +48,9 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	int err;
 	int nsid = NVME_NSID_ALL;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -116,8 +118,10 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 		.ranking	= NVME_CLI_TOPO_NAMESPACE,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_ENUM("ranking", 'r', &cfg.ranking, ranking, rankings));
+	OPT_ARGS(opts) = {
+		OPT_ENUM("ranking", 'r', &cfg.ranking, ranking, rankings),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -175,8 +179,10 @@ static int top(int argc, char **argv, struct command *acmd,
 		.delay = 1,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_INT("delay", 'd', &cfg.delay, delay));
+	OPT_ARGS(opts) = {
+		OPT_INT("delay", 'd', &cfg.delay, delay),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -208,7 +214,9 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err = 0;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)

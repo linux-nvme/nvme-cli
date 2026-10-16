@@ -135,22 +135,24 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 		VAL_END()
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_desired, nvme_nsid_values),
-		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id, log_name),
-		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
-		  OPT_UINT("aen",          'a', &cfg.aen,          aen),
-		  OPT_SUFFIX("lpo",        'L', &cfg.lpo,          lpo),
-		  OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
-		  OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
-		  OPT_FLAG("rae",          'r', &cfg.rae,          rae),
-		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		  OPT_BYTE("csi",          'y', &cfg.csi,          csi),
-		  OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
-		  OPT_UINT("xfer-len",     'x', &cfg.xfer_len,     xfer_len));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",        'I', &cfg.ish,        ish),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_desired, nvme_nsid_values),
+		OPT_BYTE("log-id",     'i', &cfg.log_id,     log_id, log_name),
+		OPT_UINT("log-len",    'l', &cfg.log_len,    log_len),
+		OPT_UINT("aen",        'a', &cfg.aen,        aen),
+		OPT_SUFFIX("lpo",      'L', &cfg.lpo,        lpo),
+		OPT_BYTE("lsp",        's', &cfg.lsp,        lsp),
+		OPT_SHRT("lsi",        'S', &cfg.lsi,        lsi),
+		OPT_FLAG("rae",        'r', &cfg.rae,        rae),
+		OPT_BYTE("uuid-index", 'U', &cfg.uuid_index, uuid_index),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_BYTE("csi",        'y', &cfg.csi,        csi),
+		OPT_FLAG("ot",         'O', &cfg.ot,         offset_type),
+		OPT_UINT("xfer-len",   'x', &cfg.xfer_len,   xfer_len),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

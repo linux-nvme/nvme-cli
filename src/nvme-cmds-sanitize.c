@@ -197,12 +197,14 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 		.wait		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",            'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_id, nvme_nsid_values),
-		  OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
-		  OPT_FLAG("wait",           'w', &cfg.wait,         wait));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",            'I', &cfg.ish,  ish),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
+		OPT_BYTE("self-test-code", 's', &cfg.stc,  self_test_code),
+		OPT_FLAG("wait",           'w', &cfg.wait, wait),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -480,18 +482,20 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		VAL_END()
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",        'I', &cfg.ish,        ish),
-		  OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, no_dealloc_desc),
-		  OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
-		  OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
-		  OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
-		  OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
-		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
-		  OPT_FLAG("emvs",       'e', &cfg.emvs,       emvs_desc),
-		  OPT_FLAG("preq",       'q', &cfg.preq,       preq_desc),
-		  OPT_FLAG("wait",       'w', &cfg.wait,       wait),
-		  OPT_UINT("repeat",     'r', &cfg.repeat,     repeat));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",    'I', &cfg.ish,    ish),
+		OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, no_dealloc_desc),
+		OPT_FLAG("oipbp",  'i', &cfg.oipbp,  oipbp_desc),
+		OPT_BYTE("owpass", 'n', &cfg.owpass, owpass_desc),
+		OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
+		OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
+		OPT_UINT("ovrpat", 'p', &cfg.ovrpat, ovrpat_desc),
+		OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc),
+		OPT_FLAG("preq",   'q', &cfg.preq,   preq_desc),
+		OPT_FLAG("wait",   'w', &cfg.wait,   wait),
+		OPT_UINT("repeat", 'r', &cfg.repeat, repeat),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -632,12 +636,14 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 		VAL_END()
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",    'I', &cfg.ish,    ish),
-		  OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
-		  OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
-		  OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc),
-		  OPT_FLAG("preq",   'q', &cfg.preq,   preq_desc));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",    'I', &cfg.ish,    ish),
+		OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
+		OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
+		OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc),
+		OPT_FLAG("preq",   'q', &cfg.preq,   preq_desc),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -750,18 +756,20 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		.bs		= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_id_desired, nvme_nsid_values),
-		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
-		  OPT_BYTE("ses",          's', &cfg.ses,          ses),
-		  OPT_BYTE("pi",           'i', &cfg.pi,           pi),
-		  OPT_BYTE("pil",          'p', &cfg.pil,          pil),
-		  OPT_BYTE("ms",           'm', &cfg.mset,         mset),
-		  OPT_FLAG("reset",        'r', &cfg.reset,        reset),
-		  OPT_FLAG("force",          0, &cfg.force,        force),
-		  OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",          'I', &cfg.ish,          ish),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id_desired, nvme_nsid_values),
+		OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
+		OPT_BYTE("ses",          's', &cfg.ses,          ses),
+		OPT_BYTE("pi",           'i', &cfg.pi,           pi),
+		OPT_BYTE("pil",          'p', &cfg.pil,          pil),
+		OPT_BYTE("ms",           'm', &cfg.mset,         mset),
+		OPT_FLAG("reset",        'r', &cfg.reset,        reset),
+		OPT_FLAG("force",        0,   &cfg.force,        force),
+		OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs),
+		OPT_END()
+	};
 
 	/* set default timeout for format to 60 seconds */
 	nvme_args.timeout = 600000;
