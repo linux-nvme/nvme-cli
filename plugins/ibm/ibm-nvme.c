@@ -535,9 +535,10 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_persistent_event_log pevent_log;
-	void *pevent_log_info = NULL;
+	__cleanup_libnvme_free void *pevent_log_info = NULL;
 	enum nvme_print_flags flags;
 	__u32 log_length = 0;
+	__u64 tll;
 	int err = 0;
 
 	struct config {
@@ -588,11 +589,18 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 		return err;
 	}
 
-	log_length = le64_to_cpu(pevent_log.tll);
+	/* the log is read with a 32 bit length */
+	tll = le64_to_cpu(pevent_log.tll);
+	if (tll > UINT32_MAX) {
+		nvme_show_error("persistent event log of %"PRIu64
+				" bytes is too large", (uint64_t)tll);
+		return -EINVAL;
+	}
+	log_length = tll;
 	pevent_log_info = libnvme_alloc(log_length);
 	if (!pevent_log_info) {
 		nvme_show_perror("could not alloc buffer for persistent event log page (ignored)!\n");
-		return err;
+		return -ENOMEM;
 	}
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
