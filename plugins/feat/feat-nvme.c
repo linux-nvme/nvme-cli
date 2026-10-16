@@ -986,7 +986,7 @@ static int num_queues_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		if (!nsqr_given)
 			cdw11 |= NVME_SET(nsqr, FEAT_NRQS_NSQR);
 		if (!ncqr_given)
-			cdw11 |= NVME_SET(ncqr, FEAT_NRQS_NSQR);
+			cdw11 |= NVME_SET(ncqr, FEAT_NRQS_NCQR);
 	}
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
