@@ -17,6 +17,16 @@
   it opens the device. Before, the commands which don't use the output
   format accepted any value.
 
+* `nvme <command> --help` (also `-h` and `-?`) prints the help to stdout
+  and exits with status 0. Before, it printed to stderr and exited
+  with 1, like a usage error, which still does.
+
+* Every command checks its operand: a command which takes a device
+  fails without one, and an extra operand is an error. Before, extra
+  operands were silently ignored, e.g. a device given to a command which
+  takes none, or the value of `--persistent force`, which has to be
+  given as `--persistent=force`.
+
 * The human-readable stdout output of `id-ctrl`, `id-ns`, and most
   other identify/log-page/feature commands is now rendered through a
   computed-width table instead of hand-aligned `printf()` calls.
@@ -111,6 +121,14 @@
   platform.
 
 ### nvme-cli
+
+* `nvme help <command>` finds the command like `nvme <command>` does,
+  also by a unique prefix, and `nvme help <plugin> <command>` shows the
+  man page of a plugin's command.
+
+* The shell completions offer a device only to commands which take
+  one. The command metadata (`nvme utils dump-command-metadata`) reports
+  the device operand of each command as schema version 2.
 
 * The global options (`--verbose`, `--output-format`, `--dry-run`, ...)
   are accepted by every command. `config validate`, `config status`,
