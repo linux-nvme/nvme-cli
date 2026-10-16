@@ -2241,9 +2241,11 @@ static int get_power_measurement_log(int argc, char **argv, struct command *acmd
 
 	/* If the log is larger, re-read with full size */
 	if (log_size > min_log_size) {
-		log = libnvme_realloc(log, log_size);
-		if (!log)
+		void *p = libnvme_realloc(log, log_size);
+
+		if (!p)
 			return -ENOMEM;
+		log = p;
 
 		nvme_init_get_log_power_measurement(&cmd, log, log_size);
 		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
@@ -2263,15 +2265,17 @@ static int get_log_offset(struct libnvme_transport_handle *hdl,
 			  __u32 len, void **log)
 {
 	struct libnvme_passthru_cmd cmd;
+	void *p;
 	int err;
 
 	args->lpo = *offset;
 	args->len = len;
 	*offset += args->len;
 
-	*log = libnvme_realloc(*log, *offset);
-	if (!*log)
+	p = libnvme_realloc(*log, *offset);
+	if (!p)
 		return -ENOMEM;
+	*log = p;
 
 	args->log = (char *)*log + args->lpo;
 
