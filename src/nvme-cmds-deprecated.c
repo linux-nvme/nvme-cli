@@ -68,7 +68,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
 		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_cmdline(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -121,7 +121,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 	NVME_ARGS(opts,
 		  OPT_STR("key", 'k', &cfg.key, key));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_cmdline(argc, argv, desc, opts);
 	if (err)
 		return err;
 
