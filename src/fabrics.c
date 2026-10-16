@@ -71,12 +71,90 @@
 static char *raw;
 
 static const char *nvmf_config_file	= "Use specified INI configuration file (auto-converts a legacy .json) or 'none' to disable";
+static const char *nvmf_persistent =
+	"persistent discovery connection (default: auto; =no disables)";
 static const char *nvmf_config_file_ro	= "INI configuration file (default: " PATH_NVMF_INI ")";
 
-void nvmf_default_args(struct nvmf_args *fa)
+/*
+ * The fabrics options, which store into nvmf_tmpl. nvmf_options() binds
+ * them to the struct nvmf_args of a command.
+ */
+static struct nvmf_args nvmf_tmpl;
+
+static struct argconfig_commandline_options nvmf_template[] = {
+	OPT_STRING("transport", 't', "STR", &nvmf_tmpl.transport,
+		   DESC_NVMF_TPORT),
+	OPT_STRING("nqn", 'n', "STR", &nvmf_tmpl.subsysnqn,
+		   DESC_NVMF_NQN),
+	OPT_STRING("traddr", 'a', "STR", &nvmf_tmpl.traddr,
+		   DESC_NVMF_TRADDR),
+	OPT_STRING("trsvcid", 's', "STR", &nvmf_tmpl.trsvcid,
+		   DESC_NVMF_TRSVCID),
+	OPT_STRING("host-traddr", 'w', "STR", &nvmf_tmpl.host_traddr,
+		   DESC_NVMF_HTRADDR),
+	OPT_STRING("host-iface", 'f', "STR", &nvmf_tmpl.host_iface,
+		   DESC_NVMF_HIFACE),
+	OPT_STRING("hostnqn", 'q', "STR", &nvmf_tmpl.hostnqn,
+		   DESC_NVMF_HOSTNQN),
+	OPT_STRING("hostid", 'I', "STR", &nvmf_tmpl.hostid,
+		   DESC_NVMF_HOSTID),
+	OPT_STRING("kxchap-secret", 'S', "STR", &nvmf_tmpl.hostkey,
+		   DESC_NVMF_HOSTKEY, .old_name = "dhchap-secret"),
+	OPT_STRING("kxchap-ctrl-secret", 'C', "STR", &nvmf_tmpl.ctrlkey,
+		   DESC_NVMF_CTRLKEY, .old_name = "dhchap-ctrl-secret"),
+	OPT_STRING("keyring", 0, "STR", &nvmf_tmpl.keyring,
+		   DESC_NVMF_KEYRING),
+	OPT_STRING("tls-key", 0, "STR", &nvmf_tmpl.tls_key,
+		   DESC_NVMF_TLS_KEY),
+	OPT_STRING("tls-key-identity", 0, "STR", &nvmf_tmpl.tls_key_identity,
+		   DESC_NVMF_TLS_KEY_IDENTITY),
+	OPT_INT("nr-io-queues", 'i', &nvmf_tmpl.nr_io_queues,
+		DESC_NVMF_NR_IO_QUEUES),
+	OPT_INT("nr-write-queues", 'W', &nvmf_tmpl.nr_write_queues,
+		DESC_NVMF_NR_WRITE_QUEUES),
+	OPT_INT("nr-poll-queues", 'P', &nvmf_tmpl.nr_poll_queues,
+		DESC_NVMF_NR_POLL_QUEUES),
+	OPT_INT("queue-size", 'Q', &nvmf_tmpl.queue_size,
+		DESC_NVMF_QUEUE_SIZE),
+	OPT_INT("keep-alive-tmo", 'k', &nvmf_tmpl.keep_alive_tmo,
+		DESC_NVMF_KEEP_ALIVE_TMO),
+	OPT_INT("reconnect-delay", 'c', &nvmf_tmpl.reconnect_delay,
+		DESC_NVMF_RECONNECT_DELAY),
+	OPT_INT("ctrl-loss-tmo", 'l', &nvmf_tmpl.ctrl_loss_tmo,
+		DESC_NVMF_CTRL_LOSS_TMO),
+	OPT_INT("fast-io-fail-tmo", 'F', &nvmf_tmpl.fast_io_fail_tmo,
+		DESC_NVMF_FAST_IO_FAIL_TMO, .old_name = "fast_io_fail_tmo"),
+	OPT_INT("tos", 'T', &nvmf_tmpl.tos,
+		DESC_NVMF_TOS),
+	OPT_INT("tls_key", 0, &nvmf_tmpl.tls_key_id,
+		DESC_NVMF_TLS_KEY_LEGACY),
+	OPT_FLAG("duplicate-connect", 'D', &nvmf_tmpl.duplicate_connect,
+		 DESC_NVMF_DUP_CONNECT),
+	OPT_FLAG("disable-sqflow", 0, &nvmf_tmpl.disable_sqflow,
+		 DESC_NVMF_DISABLE_SQFLOW),
+	OPT_FLAG("hdr-digest", 'g', &nvmf_tmpl.hdr_digest,
+		 DESC_NVMF_HDR_DIGEST),
+	OPT_FLAG("data-digest", 'G', &nvmf_tmpl.data_digest,
+		 DESC_NVMF_DATA_DIGEST),
+	OPT_FLAG("tls", 0, &nvmf_tmpl.tls,
+		 DESC_NVMF_TLS),
+	OPT_FLAG("concat", 0, &nvmf_tmpl.concat,
+		 DESC_NVMF_CONCAT),
+	OPT_END()
+};
+
+struct nvmf_args nvmf_args_defaults(void)
 {
-	fa->tos = -1;
-	fa->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+	return (struct nvmf_args) {
+		.tos = -1,
+		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
+	};
+}
+
+struct argconfig_commandline_options *nvmf_options(struct nvmf_args *fa)
+{
+	return argconfig_bind(nvmf_template, &nvmf_tmpl, sizeof(nvmf_tmpl),
+			      fa);
 }
 
 void nvmf_args_to_params(struct libnvmf_params *params,
@@ -564,10 +642,10 @@ const char *nvmf_resolve_persistent_arg(bool given, const char *arg)
 
 /*
  * Parse one discovery.conf line -- the same argv-style syntax 'nvme
- * discover'/'connect-all' accept, reusing NVMF_ARGS so every short and long
- * form works identically to real usage -- and hand the parsed arguments to
- * nvme_config_convert_discovery_args(). @line is modified in place
- * (shr_strsep()).
+ * discover'/'connect-all' accept, reusing nvmf_options() so every short
+ * and long form works identically to real usage -- and hand the parsed
+ * arguments to nvme_config_convert_discovery_args(). @line is modified in
+ * place (shr_strsep()).
  *
  * A blank line, a comment, or one with neither transport nor traddr is
  * silently skipped (0, nothing added), tolerating a discovery.conf that
@@ -576,27 +654,30 @@ const char *nvmf_resolve_persistent_arg(bool given, const char *arg)
 int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 		char *line)
 {
-	struct nvmf_args fa = { 0 };
+	struct nvmf_args fa = nvmf_args_defaults();
+	__cleanup_free struct argconfig_commandline_options *nvmf =
+		nvmf_options(&fa);
 	char *argv[MAX_DISC_ARGS] = { "discovery.conf" };
 	char *ptr, *p = line;
 	int argc = 1;
 	bool no_reuse = false;
 	char *persistent_arg = NULL;
 
-	NVMF_ARGS(opts, fa,
-		  OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
-			   &persistent_arg,
-			   "persistent discovery connection mode "
-			   "(default: auto; use =no to disable)"),
-		  OPT_FLAG("no-reuse",     0, &no_reuse,
-			   "always create a new connection, never reuse an existing one",
-			   .old_name = "force"));
+	OPT_ARGS(opts) = {
+		OPT_INCLUDE(nvmf, "Fabrics options"),
+		OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
+				    &persistent_arg, nvmf_persistent),
+		OPT_FLAG("no-reuse", 0, &no_reuse,
+			 "always create a new connection, never reuse an existing one",
+			 .old_name = "force"),
+		OPT_END()
+	};
 
 	if (line[0] == '#' || line[0] == '\n' || line[0] == '\0')
 		return 0;
 
-	fa.tos = -1;
-	fa.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+	if (!nvmf)
+		return -ENOMEM;
 
 	/*
 	 * Split on whitespace only, not '=' -- a glued "--opt=value" token
@@ -863,7 +944,9 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_free char *resolved_traddr = NULL;
 	int ret;
-	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
+	struct nvmf_args fa = nvmf_args_defaults();
+	__cleanup_free struct argconfig_commandline_options *nvmf =
+		nvmf_options(&fa);
 	char *device = NULL;
 	bool no_reuse = false;
 	char *persistent_arg = NULL;
@@ -872,23 +955,30 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	char *nbft_path = NBFT_SYSFS_PATH;
 	char *owner = NULL;
 
-	NVMF_ARGS(opts, fa,
-		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
-		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
-		  OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
-			   &persistent_arg,
-			   "persistent discovery connection mode "
-			   "(default: auto; use =no to disable)"),
-		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_FLAG("no-reuse",       0, &no_reuse,
-			   "always create a new connection, never reuse an existing one",
-			   .old_name = "force"),
-		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
-		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
-		  OPT_STRING("owner",        0, "NAME", &owner,       "record this owner in the registry"),
-		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"));
+	OPT_ARGS(opts) = {
+		OPT_INCLUDE(nvmf, "Fabrics options"),
+		OPT_STRING("device", 'd', "DEV", &device,
+			   "use existing discovery controller device"),
+		OPT_FILE("raw",     'r', &raw,    "save raw output to file"),
+		OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
+				    &persistent_arg, nvmf_persistent),
+		OPT_STRING("config", 'J', "FILE", &config_file,
+			   nvmf_config_file),
+		OPT_FLAG("no-reuse", 0, &no_reuse,
+			 "always create a new connection, never reuse an existing one",
+			 .old_name = "force"),
+		OPT_FLAG("nbft",    0,   &nbft,   "Only look at NBFT tables"),
+		OPT_FLAG("no-nbft", 0,   &nonbft, "Do not look at NBFT tables"),
+		OPT_STRING("owner", 0, "NAME", &owner,
+			   "record this owner in the registry"),
+		OPT_STRING("nbft-path", 0, "STR", &nbft_path,
+			   "user-defined path for NBFT tables"),
+		OPT_END()
+	};
 
-	nvmf_default_args(&fa);
+	fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
+	if (!nvmf)
+		return -ENOMEM;
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
@@ -1072,19 +1162,27 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_free char *resolved_traddr = NULL;
 	int ret;
 	nvme_print_flags_t flags;
-	struct nvmf_args fa = { 0 };
+	struct nvmf_args fa = nvmf_args_defaults();
+	__cleanup_free struct argconfig_commandline_options *nvmf =
+		nvmf_options(&fa);
 
-	NVMF_ARGS(opts, fa,
-		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_STRING("owner",                0, "NAME", &owner,           "record this owner in the registry"),
-		  OPT_STRING("devid-file", 0, "FILE", &devid_file,
-			     "write connected device name to FILE"),
-		  OPT_FLAG("idempotent", 0, &idempotent,
-			   "exit 0 if already connected"),
-		  OPT_FLAG("discovery", 0, &discovery,
-			   "the target is a discovery controller"));
+	OPT_ARGS(opts) = {
+		OPT_INCLUDE(nvmf, "Fabrics options"),
+		OPT_STRING("config", 'J', "FILE", &config_file,
+			   nvmf_config_file),
+		OPT_STRING("owner", 0, "NAME", &owner,
+			   "record this owner in the registry"),
+		OPT_STRING("devid-file", 0, "FILE", &devid_file,
+			   "write connected device name to FILE"),
+		OPT_FLAG("idempotent", 0, &idempotent,
+			 "exit 0 if already connected"),
+		OPT_FLAG("discovery", 0, &discovery,
+			 "the target is a discovery controller"),
+		OPT_END()
+	};
 
-	nvmf_default_args(&fa);
+	if (!nvmf)
+		return -ENOMEM;
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
@@ -1438,7 +1536,9 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *resolved_traddr = NULL;
-	struct nvmf_args fa = { 0 };
+	struct nvmf_args fa = nvmf_args_defaults();
+	__cleanup_free struct argconfig_commandline_options *nvmf =
+		nvmf_options(&fa);
 	bool match_args;
 	int err;
 
@@ -1449,11 +1549,15 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 	struct config cfg = { 0 };
 
-	NVMF_ARGS(opts, fa,
-		OPT_STRING("device",     'd', "DEV",  &cfg.device,  device),
-		OPT_FLAG("exclude", 'x', &cfg.exclude, exclude_help));
+	OPT_ARGS(opts) = {
+		OPT_INCLUDE(nvmf, "Fabrics options"),
+		OPT_STRING("device", 'd', "DEV",        &cfg.device, device),
+		OPT_FLAG("exclude",  'x', &cfg.exclude, exclude_help),
+		OPT_END()
+	};
 
-	nvmf_default_args(&fa);
+	if (!nvmf)
+		return -ENOMEM;
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
