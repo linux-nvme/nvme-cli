@@ -233,6 +233,14 @@ static void print_device_desc(void)
 #endif
 }
 
+/* The title of a command group, in bold on a terminal */
+static void print_group_title(const char *title)
+{
+	putchar('\n');
+	argconfig_print_heading(stdout, "%s:", title);
+	putchar('\n');
+}
+
 void general_help(struct plugin *plugin, char *str)
 {
 	struct program *prog = plugin->parent;
@@ -301,7 +309,7 @@ void general_help(struct plugin *plugin, char *str)
 				if (str && !strstr(command->name, str))
 					continue;
 				if (!header_printed && group->title) {
-					printf("\n\033[1m%s:\033[0m\n", group->title);
+					print_group_title(group->title);
 					header_printed = true;
 				}
 				printf("  %-*s %s\n", padding, command->name, command->help);
@@ -324,7 +332,7 @@ void general_help(struct plugin *plugin, char *str)
 					if (str && !strstr(extension->name, str))
 						continue;
 					if (!header_printed) {
-						printf("\n\033[1m%s:\033[0m\n", group->title);
+						print_group_title(group->title);
 						header_printed = true;
 					}
 					printf("  %-*s %s\n", padding, extension->name,

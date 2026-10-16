@@ -185,7 +185,7 @@ static void show_option(FILE *out,
 }
 
 /* A heading, in bold on a terminal */
-static void print_heading(FILE *out, const char *fmt, const char *text)
+void argconfig_print_heading(FILE *out, const char *fmt, const char *text)
 {
 	bool tty = isatty(fileno(out));
 
@@ -208,7 +208,7 @@ static void print_options(FILE *out, struct argconfig_commandline_options *s,
 		}
 		if (!header_printed) {
 			fputc('\n', out);
-			print_heading(out, "%s:", header);
+			argconfig_print_heading(out, "%s:", header);
 			fputc('\n', out);
 			header_printed = true;
 		}
@@ -220,7 +220,7 @@ static void print_options(FILE *out, struct argconfig_commandline_options *s,
 static void show_help(FILE *out, const char *program_desc,
 		      struct argconfig_commandline_options *s)
 {
-	print_heading(out, "Usage: %s", append_usage_str);
+	argconfig_print_heading(out, "Usage: %s", append_usage_str);
 	fputs("\n\n", out);
 
 	shr_print_word_wrapped(program_desc, 0, 0, out);
