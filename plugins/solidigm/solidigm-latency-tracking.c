@@ -363,12 +363,16 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 		.has_average_latency_field = false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_FLAG("enable", 'e', &lt.cfg.enable, "Enable Latency Tracking"),
-		OPT_FLAG("disable", 'd', &lt.cfg.disable, "Disable Latency Tracking"),
-		OPT_FLAG("read", 'r', &lt.cfg.read, "Get read statistics"),
-		OPT_FLAG("write", 'w', &lt.cfg.write, "Get write statistics"),
-		OPT_BYTE("type", 't', &lt.cfg.type, "Log type to get"));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("enable", 'e', &lt.cfg.enable,
+			 "Enable Latency Tracking"),
+		OPT_FLAG("disable", 'd', &lt.cfg.disable,
+			 "Disable Latency Tracking"),
+		OPT_FLAG("read",    'r', &lt.cfg.read,  "Get read statistics"),
+		OPT_FLAG("write",   'w', &lt.cfg.write, "Get write statistics"),
+		OPT_BYTE("type",    't', &lt.cfg.type,  "Log type to get"),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

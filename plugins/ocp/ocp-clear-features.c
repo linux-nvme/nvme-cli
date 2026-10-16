@@ -20,6 +20,8 @@
 
 static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid)
 {
+	const char *no_uuid =
+		"Skip UUID index search (UUID index not required for OCP 1.0)";
 	bool no_uuid_flag = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -29,9 +31,10 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 	bool uuid = true;
 	int err;
 
-	NVME_ARGS(opts,
-		OPT_FLAG("no-uuid", 'n', &no_uuid_flag,
-			 "Skip UUID index search (UUID index not required for OCP 1.0)"));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -88,11 +91,13 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 		.nsid = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_BYTE("sel", 's', &cfg.sel, sel),
+	OPT_ARGS(opts) = {
+		OPT_BYTE("sel",          's', &cfg.sel,      sel),
 		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid,
 			 nvme_nsid_values),
-		OPT_FLAG("no-uuid", 'u', &no_uuid_flag, no_uuid));
+		OPT_FLAG("no-uuid",      'u', &no_uuid_flag, no_uuid),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

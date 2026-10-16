@@ -121,8 +121,10 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	NVME_ARGS(opts,
-		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

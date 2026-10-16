@@ -436,14 +436,15 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		.type = SNDK_TELEMETRY_TYPE_NONE,
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_FILE("output-file",   'O', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
 		OPT_ENUM("type",          't', &cfg.type,      type, types),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
-		OPT_END());
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -610,12 +611,16 @@ static int sndk_vs_smart_add_log(int argc, char **argv,
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	NVME_ARGS(opts,
-		OPT_BYTE("interval",          'i', &cfg.interval, interval),
-		OPT_BYTE("log-page-version",  'l', &cfg.log_page_version, log_page_version),
-		OPT_LIST("log-page-mask",     'p', &cfg.log_page_mask,    log_page_mask),
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			 namespace_id, nvme_nsid_values));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("interval",         'i', &cfg.interval,     interval),
+		OPT_BYTE("log-page-version", 'l', &cfg.log_page_version,
+			 log_page_version),
+		OPT_LIST("log-page-mask", 'p', &cfg.log_page_mask,
+			 log_page_mask),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -780,8 +785,10 @@ static int sndk_drive_resize(int argc, char **argv,
 		.size = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_LONG("size", 's', &cfg.size, size));
+	OPT_ARGS(opts) = {
+		OPT_LONG("size", 's', &cfg.size, size),
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -1127,7 +1134,9 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 		.output_format = "normal",
 	};
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -1175,7 +1184,9 @@ static int sndk_clear_fw_activate_history(int argc, char **argv,
 	__u64 capabilities = 0;
 	int ret;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -1245,7 +1256,9 @@ static int sndk_capabilities(int argc, char **argv,
 	uint64_t capabilities = 0;
 	int ret;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

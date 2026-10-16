@@ -47,9 +47,11 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_SHRT("endgrp-id",      'e', &cfg.egid,           egid),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endgrp-id",  'e', &cfg.egid,       egid),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -118,9 +120,11 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_SHRT("endgrp-id",    'e', &cfg.egid,          egid),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endgrp-id",  'e', &cfg.egid,       egid),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -180,9 +184,11 @@ static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin 
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_SHRT("endgrp-id",    'e', &cfg.egid,          egid),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endgrp-id",  'e', &cfg.egid,       egid),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -240,10 +246,12 @@ static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_SHRT("endgrp-id",    'e', &cfg.egid,          egid),
-		OPT_FLAG("host-events",  'E', &cfg.host_events,   host_events),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endgrp-id",   'e', &cfg.egid,        egid),
+		OPT_FLAG("host-events", 'E', &cfg.host_events, host_events),
+		OPT_FLAG("raw-binary",  'b', &cfg.raw_binary,  raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -298,10 +306,12 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_UINT("namespace-id", 'n', &cfg.nsid,	namespace_id,
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, namespace_id,
 			 nvme_nsid_values),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,	raw));
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -369,10 +379,12 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 		.pids = "",
 	};
 
-	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",  'n', &cfg.nsid,	namespace_id,
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, namespace_id,
 			 nvme_nsid_values),
-		OPT_LIST("pids",          'p', &cfg.pids,	_pids));
+		OPT_LIST("pids",         'p', &cfg.pids, _pids),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -439,13 +451,15 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 		.sv	= false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_UINT("namespace-id",     'n', &cfg.nsid,         nsid,
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid,
 			 nvme_nsid_values),
-		OPT_SHRT("placement-handle", 'p', &cfg.ph,           ph),
-		OPT_FLAG("enable",           'e', &cfg.enable,       enable),
-		OPT_FLAG("save",             's', &cfg.sv,		     sv),
-		OPT_LIST("event-types",      't', &cfg.event_types,  event_types));
+		OPT_SHRT("placement-handle", 'p', &cfg.ph,     ph),
+		OPT_FLAG("enable",           'e', &cfg.enable, enable),
+		OPT_FLAG("save",             's', &cfg.sv,     sv),
+		OPT_LIST("event-types", 't', &cfg.event_types, event_types),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -516,10 +530,12 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 		.endgid = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_SHRT("endgrp-id", 'e', &cfg.endgid, endurance_group),
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endgrp-id",       'e', &cfg.endgid,  endurance_group),
 		OPT_BYTE("enable-conf-idx", 'c', &cfg.fdpcidx, enable_conf_idx),
-		OPT_FLAG("disable", 'd', &cfg.disable, disable));
+		OPT_FLAG("disable",         'd', &cfg.disable, disable),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

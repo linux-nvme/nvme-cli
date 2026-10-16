@@ -75,10 +75,12 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 		.hmac		= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("secret",		's', &cfg.secret,	secret),
-		  OPT_UINT("secret-length",	'l', &cfg.secret_len,	secret_len),
-		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
+	OPT_ARGS(opts) = {
+		OPT_STR("secret",         's', &cfg.secret,     secret),
+		OPT_UINT("secret-length", 'l', &cfg.secret_len, secret_len),
+		OPT_UINT("hmac",          'm', &cfg.hmac,       hmac),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -251,11 +253,13 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 		.identity	= NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("identity",	'i', &cfg.identity,	identity));
+	OPT_ARGS(opts) = {
+		OPT_STR("keydata",  'd', &cfg.keydata,  keydata),
+		OPT_STR("keyring",  'k', &cfg.keyring,  keyring),
+		OPT_STR("keytype",  't', &cfg.keytype,  keytype),
+		OPT_STR("identity", 'i', &cfg.identity, identity),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -480,17 +484,19 @@ static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *p
 		.compat		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("secret",	's', &cfg.secret,	secret),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_BYTE("hmac",	'm', &cfg.hmac,		hmac),
-		  OPT_BYTE("identity",	'I', &cfg.version,	version),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
-		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
+	OPT_ARGS(opts) = {
+		OPT_STR("keyring",   'k', &cfg.keyring,   keyring),
+		OPT_STR("keytype",   't', &cfg.keytype,   keytype),
+		OPT_STR("hostnqn",   'n', &cfg.hostnqn,   hostnqn),
+		OPT_STR("subsysnqn", 'c', &cfg.subsysnqn, subsysnqn),
+		OPT_STR("secret",    's', &cfg.secret,    secret),
+		OPT_STR("keyfile",   'f', &cfg.keyfile,   keyfile),
+		OPT_BYTE("hmac",     'm', &cfg.hmac,      hmac),
+		OPT_BYTE("identity", 'I', &cfg.version,   version),
+		OPT_FLAG("insert",   'i', &cfg.insert,    insert),
+		OPT_FLAG("compat",   'C', &cfg.compat,    compat),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -589,14 +595,16 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		.compat		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
-		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
-		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
+	OPT_ARGS(opts) = {
+		OPT_STR("keyring",   'k', &cfg.keyring,   keyring),
+		OPT_STR("keytype",   't', &cfg.keytype,   keytype),
+		OPT_STR("hostnqn",   'n', &cfg.hostnqn,   hostnqn),
+		OPT_STR("subsysnqn", 'c', &cfg.subsysnqn, subsysnqn),
+		OPT_STR("keydata",   'd', &cfg.keydata,   keydata),
+		OPT_BYTE("identity", 'I', &cfg.identity,  identity),
+		OPT_FLAG("compat",   'C', &cfg.compat,    compat),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -721,15 +729,17 @@ static int insert_tls(int argc, char **argv, struct command *acmd, struct plugin
 		.compat		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
-		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
+	OPT_ARGS(opts) = {
+		OPT_STR("keyring",   'k', &cfg.keyring,   keyring),
+		OPT_STR("keytype",   't', &cfg.keytype,   keytype),
+		OPT_STR("hostnqn",   'n', &cfg.hostnqn,   hostnqn),
+		OPT_STR("subsysnqn", 'c', &cfg.subsysnqn, subsysnqn),
+		OPT_STR("keydata",   'd', &cfg.keydata,   keydata),
+		OPT_STR("keyfile",   'f', &cfg.keyfile,   keyfile),
+		OPT_BYTE("identity", 'I', &cfg.identity,  identity),
+		OPT_FLAG("compat",   'C', &cfg.compat,    compat),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -823,9 +833,11 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 		.keyfile = NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("keyring", 'k', &cfg.keyring, keyring),
-		  OPT_STR("keyfile", 'f', &cfg.keyfile, keyfile));
+	OPT_ARGS(opts) = {
+		OPT_STR("keyring", 'k', &cfg.keyring, keyring),
+		OPT_STR("keyfile", 'f', &cfg.keyfile, keyfile),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -967,11 +979,13 @@ static int key_import(int argc, char **argv, struct command *acmd, struct plugin
 		.identity	= NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
-		  OPT_STR("identity",	'i', &cfg.identity,	identity));
+	OPT_ARGS(opts) = {
+		OPT_STR("keyring",  'k', &cfg.keyring,  keyring),
+		OPT_STR("keyfile",  'f', &cfg.keyfile,  keyfile),
+		OPT_STR("keydata",  'd', &cfg.keydata,  keydata),
+		OPT_STR("identity", 'i', &cfg.identity, identity),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -1060,10 +1074,12 @@ static int key_revoke(int argc, char **argv, struct command *acmd, struct plugin
 		.identity = NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STR("keyring", 'k', &cfg.keyring, keyring),
-		  OPT_STR("keytype", 't', &cfg.keytype, keytype),
-		  OPT_STR("identity", 'i', &cfg.identity, identity));
+	OPT_ARGS(opts) = {
+		OPT_STR("keyring",  'k', &cfg.keyring,  keyring),
+		OPT_STR("keytype",  't', &cfg.keytype,  keytype),
+		OPT_STR("identity", 'i', &cfg.identity, identity),
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)

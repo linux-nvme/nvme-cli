@@ -61,14 +61,16 @@ static int resv_acquire(int argc, char **argv, struct command *acmd, struct plug
 		.iekey		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_id_desired, nvme_nsid_values),
-		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		  OPT_SUFFIX("prkey",      'p', &cfg.prkey,        prkey),
-		  OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
-		  OPT_BYTE("racqa",        'a', &cfg.racqa,        racqa),
-		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id_desired, nvme_nsid_values),
+		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
+		OPT_SUFFIX("prkey",      'p', &cfg.prkey,        prkey),
+		OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
+		OPT_BYTE("racqa",        'a', &cfg.racqa,        racqa),
+		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -131,14 +133,16 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 		.cptpl		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_id_desired, nvme_nsid_values),
-		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		  OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        nrkey),
-		  OPT_BYTE("rrega",        'r', &cfg.rrega,        rrega),
-		  OPT_BYTE("cptpl",        'p', &cfg.cptpl,        cptpl),
-		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id_desired, nvme_nsid_values),
+		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
+		OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        nrkey),
+		OPT_BYTE("rrega",        'r', &cfg.rrega,        rrega),
+		OPT_BYTE("cptpl",        'p', &cfg.cptpl,        cptpl),
+		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -209,13 +213,15 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 		.iekey		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
-			   namespace_desired, nvme_nsid_values),
-		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,     crkey),
-		  OPT_BYTE("rtype",        't', &cfg.rtype,     rtype),
-		  OPT_BYTE("rrela",        'a', &cfg.rrela,     rrela),
-		  OPT_FLAG("iekey",        'i', &cfg.iekey,     iekey));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, namespace_desired,
+			 nvme_nsid_values),
+		OPT_SUFFIX("crkey",      'c', &cfg.crkey, crkey),
+		OPT_BYTE("rtype",        't', &cfg.rtype, rtype),
+		OPT_BYTE("rrela",        'a', &cfg.rrela, rrela),
+		OPT_FLAG("iekey",        'i', &cfg.iekey, iekey),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -301,12 +307,14 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,
-			   namespace_id_desired, nvme_nsid_values),
-		  OPT_UINT("numd",          'd', &cfg.numd,       numd),
-		  OPT_FLAG("eds",           'e', &cfg.eds,        eds),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_dump));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, namespace_id_desired,
+			 nvme_nsid_values),
+		OPT_UINT("numd",         'd', &cfg.numd,       numd),
+		OPT_FLAG("eds",          'e', &cfg.eds,        eds),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary, raw_dump),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

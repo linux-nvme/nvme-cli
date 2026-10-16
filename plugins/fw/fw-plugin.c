@@ -191,14 +191,16 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		.stream     = false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FILE("fw",         'f', &cfg.fw,         fw),
-		  OPT_FLAG("ish",        'I', &cfg.ish,        ish),
-		  OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
-		  OPT_UINT("offset",     'O', &cfg.offset,     offset),
-		  OPT_FLAG("progress",   'p', &cfg.progress,   progress),
-		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr),
-		  OPT_FLAG("stream",       0, &cfg.stream,      stream));
+	OPT_ARGS(opts) = {
+		OPT_FILE("fw",         'f', &cfg.fw,         fw),
+		OPT_FLAG("ish",        'I', &cfg.ish,        ish),
+		OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
+		OPT_UINT("offset",     'O', &cfg.offset,     offset),
+		OPT_FLAG("progress",   'p', &cfg.progress,   progress),
+		OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr),
+		OPT_FLAG("stream",     0,   &cfg.stream,     stream),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -422,11 +424,13 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		VAL_END()
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",    'I', &cfg.ish,    ish),
-		  OPT_BYTE("slot",   's', &cfg.slot,   slot),
-		  OPT_BYTE("action", 'a', &cfg.action, action, ca),
-		  OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",    'I', &cfg.ish,    ish),
+		OPT_BYTE("slot",   's', &cfg.slot,   slot),
+		OPT_BYTE("action", 'a', &cfg.action, action, ca),
+		OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

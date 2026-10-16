@@ -29,7 +29,9 @@ static int getHealthValue(int argc, char **argv, struct command *acmd, struct pl
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int result;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	result = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (result)
@@ -60,7 +62,9 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 	unsigned char data[1] = {0};
 	int result;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	result = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (result)

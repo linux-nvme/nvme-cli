@@ -83,7 +83,9 @@ static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -135,10 +137,12 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace,
-			   nvme_nsid_values),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_output));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace,
+			 nvme_nsid_values),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_output),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -193,8 +197,10 @@ static int get_ana_log(int argc, char **argv, struct command *acmd,
 		.groups = false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("groups", 'g', &cfg.groups, groups));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("groups", 'g', &cfg.groups, groups),
+		OPT_END()
+	};
 
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -475,14 +481,16 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		.mcda		= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FILE("output-file",     'O', &cfg.file_name, fname),
-		  OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
-		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
-		  OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
-		  OPT_FLAG("rae",             'r', &cfg.rae,       rae),
-		  OPT_BYTE("mcda",            'm', &cfg.mcda,      mcda),
-		  OPT_FLAG("force",             0, &cfg.force,     force));
+	OPT_ARGS(opts) = {
+		OPT_FILE("output-file",     'O', &cfg.file_name, fname),
+		OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
+		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
+		OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
+		OPT_FLAG("rae",             'r', &cfg.rae,       rae),
+		OPT_BYTE("mcda",            'm', &cfg.mcda,      mcda),
+		OPT_FLAG("force",           0,   &cfg.force,     force),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -601,8 +609,10 @@ static int get_endurance_log(int argc, char **argv, struct command *acmd, struct
 		.group_id	= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_SHRT("group-id",     'g', &cfg.group_id,      group_id));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("group-id", 'g', &cfg.group_id, group_id),
+		OPT_END()
+	};
 
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -676,9 +686,11 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 		.csi		= -1,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
-		  OPT_INT("csi",             'c', &cfg.csi,            csi));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_log),
+		OPT_INT("csi",         'c', &cfg.csi,        csi),
+		OPT_END()
+	};
 
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -773,18 +785,20 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("log-entries",  'e', &cfg.log_entries, log_entries),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,  raw),
-		  OPT_FLAG("valid-entry",  'V', &cfg.flt.valid,   valid_entry),
-		  OPT_SHRT("sqid",         'S', &cfg.flt.sqid,    sqid),
-		  OPT_SHRT("status",       's', &cfg.flt.status,  status),
-		  OPT_SUFFIX("lba",        'l', &cfg.flt.lba,     lba),
-		  OPT_UINT("namespace-id", 'n', &cfg.flt.nsid,    nsid,
-			   nvme_nsid_values),
-		  OPT_BYTE("trtype",       't', &cfg.flt.trtype,  trtype),
-		  OPT_BYTE("csi",          'c', &cfg.flt.csi,     csi),
-		  OPT_BYTE("opcode",       'O', &cfg.flt.opcode,  opcode));
+	OPT_ARGS(opts) = {
+		OPT_UINT("log-entries",  'e', &cfg.log_entries, log_entries),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,  raw),
+		OPT_FLAG("valid-entry",  'V', &cfg.flt.valid,   valid_entry),
+		OPT_SHRT("sqid",         'S', &cfg.flt.sqid,    sqid),
+		OPT_SHRT("status",       's', &cfg.flt.status,  status),
+		OPT_SUFFIX("lba",        'l', &cfg.flt.lba,     lba),
+		OPT_UINT("namespace-id", 'n', &cfg.flt.nsid, nsid,
+			 nvme_nsid_values),
+		OPT_BYTE("trtype",       't', &cfg.flt.trtype,  trtype),
+		OPT_BYTE("csi",          'c', &cfg.flt.csi,     csi),
+		OPT_BYTE("opcode",       'O', &cfg.flt.opcode,  opcode),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -849,8 +863,10 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -897,8 +913,10 @@ static int get_changed_ns_list_log(int argc, char **argv, bool alloc)
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_output));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_output),
+		OPT_END()
+	};
 
 	if (asprintf(&desc, "Retrieve Changed %s Namespaces log for the given device %s",
 		     alloc ? "Allocated" : "Attached",
@@ -976,9 +994,11 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_SHRT("nvmset-id",	   'i', &cfg.nvmset_id,     nvmset_id),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("nvmset-id",  'i', &cfg.nvmset_id,  nvmset_id),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1035,10 +1055,12 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+	OPT_ARGS(opts) = {
+		OPT_UINT("log-entries", 'e', &cfg.log_entries, log_entries),
+		OPT_FLAG("rae",         'r', &cfg.rae,         rae),
+		OPT_FLAG("raw-binary",  'b', &cfg.raw_binary,  raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1116,10 +1138,12 @@ static int get_persistent_event_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("action",       'a', &cfg.action,        action),
-		  OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("action",     'a', &cfg.action,     action),
+		OPT_UINT("log_len",    'l', &cfg.log_len,    log_len),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1224,10 +1248,12 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+	OPT_ARGS(opts) = {
+		OPT_UINT("log-entries", 'e', &cfg.log_entries, log_entries),
+		OPT_FLAG("rae",         'r', &cfg.rae,         rae),
+		OPT_FLAG("raw-binary",  'b', &cfg.raw_binary,  raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1300,8 +1326,10 @@ static int get_lba_status_log(int argc, char **argv,
 		.rae		= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("rae",          'r', &cfg.rae,           rae));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("rae", 'r', &cfg.rae, rae),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1349,7 +1377,9 @@ static int get_resv_notif_log(int argc, char **argv,
 	nvme_print_flags_t flags;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1402,9 +1432,11 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 		.file_name	= NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
-		  OPT_FILE("output-file",  'f', &cfg.file_name,     fname));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("lsp",         's', &cfg.lsp,       lsp),
+		OPT_FILE("output-file", 'f', &cfg.file_name, fname),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1491,9 +1523,11 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 		.controller	= NVME_LOG_LSI_NONE,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("lsp",        's', &cfg.lsp,        lsp),
-		  OPT_SHRT("controller", 'c', &cfg.controller, controller));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("lsp",        's', &cfg.lsp,        lsp),
+		OPT_SHRT("controller", 'c', &cfg.controller, controller),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1634,9 +1668,11 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_SHRT("domain-id",     'd', &cfg.domainid, domainid),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_use));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("domain-id",  'd', &cfg.domainid,   domainid),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1756,9 +1792,11 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_SHRT("domain-id",     'd', &cfg.domainid,       domainid),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_use));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("domain-id",  'd', &cfg.domainid,   domainid),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1803,9 +1841,11 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("rae",            'r', &cfg.rae,            rae),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("rae",        'r', &cfg.rae,        rae),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_log),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1848,7 +1888,9 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1889,7 +1931,9 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1938,8 +1982,10 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 		.dst_entries	= NVME_LOG_ST_MAX_RESULTS,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("dst-entries", 'e', &cfg.dst_entries, dst_entries),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1978,7 +2024,9 @@ static int get_mgmt_addr_list_log(int argc, char **argv, struct command *acmd, s
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2022,8 +2070,10 @@ static int get_rotational_media_info_log(int argc, char **argv, struct command *
 		.endgid = 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_SHRT("endg-id", 'e', &cfg.endgid, endgid));
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endg-id", 'e', &cfg.endgid, endgid),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2107,8 +2157,11 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 		.namespace_id = 1,
 	};
 
-	NVME_ARGS(opts, OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-				 namespace_id_desired, nvme_nsid_values));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id_desired, nvme_nsid_values),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2151,8 +2204,10 @@ static int get_power_measurement_log(int argc, char **argv, struct command *acmd
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_output));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_output),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2330,9 +2385,11 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *ac
 		.rae = false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("groups-only", 'g', &cfg.rgo, rgo),
-		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("groups-only", 'g', &cfg.rgo, rgo),
+		OPT_FLAG("rae",         'r', &cfg.rae, rae),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2439,9 +2496,11 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 		.rae = false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("associations-only", 'a', &cfg.rao, rao),
-		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("associations-only", 'a', &cfg.rao, rao),
+		OPT_FLAG("rae",               'r', &cfg.rae, rae),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2517,9 +2576,11 @@ static int get_host_discovery_log(int argc, char **argv, struct command *acmd, s
 		.rae = false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("all-host-entries", 'a', &cfg.allhoste, allhoste),
-		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("all-host-entries", 'a', &cfg.allhoste, allhoste),
+		OPT_FLAG("rae",              'r', &cfg.rae,      rae),
+		OPT_END()
+	};
 
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -2593,7 +2654,10 @@ static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, st
 		.rae = false,
 	};
 
-	NVME_ARGS(opts, OPT_FLAG("rae", 'r', &cfg.rae, rae));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("rae", 'r', &cfg.rae, rae),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2667,7 +2731,10 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 		.rae = false,
 	};
 
-	NVME_ARGS(opts, OPT_FLAG("rae", 'r', &cfg.rae, rae));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("rae", 'r', &cfg.rae, rae),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

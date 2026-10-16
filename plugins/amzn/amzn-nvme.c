@@ -593,11 +593,13 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		.output_format = "normal",
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_FLAG("details", 'd', &detail,
 			 "Detail IO histogram of each block size ranges"),
 		OPT_UINT("interval", 'i', &interval,
-			 "Polling interval in seconds"));
+			 "Polling interval in seconds"),
+		OPT_END()
+	};
 
 	rc = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (rc)

@@ -71,17 +71,19 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 		.file		= "",
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_id_desired, nvme_nsid_values),
-		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
-		  OPT_BYTE("target-dir",     'T', &cfg.ttype,          ttype),
-		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
-		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
-		  OPT_SHRT("endir",          'e', &cfg.endir,          endir),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
-		  OPT_FILE("input-file",     'i', &cfg.file,           input));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id_desired, nvme_nsid_values),
+		OPT_UINT("data-len",     'l', &cfg.data_len,     buf_len),
+		OPT_BYTE("dir-type",     'D', &cfg.dtype,        dtype),
+		OPT_BYTE("target-dir",   'T', &cfg.ttype,        ttype),
+		OPT_SHRT("dir-spec",     'S', &cfg.dspec,        dspec_w_dtype),
+		OPT_BYTE("dir-oper",     'O', &cfg.doper,        doper),
+		OPT_SHRT("endir",        'e', &cfg.endir,        endir),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_directive),
+		OPT_FILE("input-file",   'i', &cfg.file,         input),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -198,15 +200,17 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 		.nsr		= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_id_desired, nvme_nsid_values),
-		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
-		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
-		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
-		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
-		  OPT_SHRT("req-resource",   'r', &cfg.nsr,            nsr));
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_id_desired, nvme_nsid_values),
+		OPT_UINT("data-len",     'l', &cfg.data_len,     buf_len),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_directive),
+		OPT_BYTE("dir-type",     'D', &cfg.dtype,        dtype),
+		OPT_SHRT("dir-spec",     'S', &cfg.dspec,        dspec_w_dtype),
+		OPT_BYTE("dir-oper",     'O', &cfg.doper,        doper),
+		OPT_SHRT("req-resource", 'r', &cfg.nsr,          nsr),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

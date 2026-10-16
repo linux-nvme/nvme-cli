@@ -31,7 +31,9 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 	__u16 ftl_unit_size;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

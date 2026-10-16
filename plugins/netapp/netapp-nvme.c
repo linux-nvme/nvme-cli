@@ -969,7 +969,9 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	int num_smdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
@@ -1066,7 +1068,9 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	int num_ontapdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)

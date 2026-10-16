@@ -403,11 +403,13 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *acmd, struct 
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace,
 			 nvme_nsid_values),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_FLAG_JSON("json",    'j', &cfg.json,         json));
+		OPT_FLAG_JSON("json",    'j', &cfg.json,         json),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

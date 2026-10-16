@@ -778,7 +778,9 @@ static int rpmb_info(int argc, char **argv, struct command *acmd, struct plugin 
 	union ctrl_rpmbs_reg regs;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -812,10 +814,12 @@ static int rpmb_program_key(int argc, char **argv, struct command *acmd, struct 
 		.target = 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STRING("key",     'k', "key",  &cfg.key,     key),
-		  OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
-		  OPT_BYTE("target",    't', &cfg.target,           target));
+	OPT_ARGS(opts) = {
+		OPT_STRING("key",     'k', "key",       &cfg.key,     key),
+		OPT_STRING("keyfile", 'g', "FILE",      &cfg.keyfile, kfile),
+		OPT_BYTE("target",    't', &cfg.target, target),
+		OPT_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -857,8 +861,10 @@ static int rpmb_read_counter(int argc, char **argv, struct command *acmd,
 		.target = 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("target", 't', &cfg.target, target));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("target", 't', &cfg.target, target),
+		OPT_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -903,11 +909,13 @@ static int rpmb_read_data(int argc, char **argv, struct command *acmd, struct pl
 		.target = 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
-		  OPT_UINT("address",     0, &cfg.address,          address),
-		  OPT_UINT("blocks",    'b', &cfg.blocks,           blocks),
-		  OPT_BYTE("target",    't', &cfg.target,           target));
+	OPT_ARGS(opts) = {
+		OPT_STRING("msgfile", 'f', "FILE",       &cfg.msgfile, mfile),
+		OPT_UINT("address",   0,   &cfg.address, address),
+		OPT_UINT("blocks",    'b', &cfg.blocks,  blocks),
+		OPT_BYTE("target",    't', &cfg.target,  target),
+		OPT_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -969,14 +977,16 @@ static int rpmb_write_data(int argc, char **argv, struct command *acmd, struct p
 		.target = 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
-		  OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
-		  OPT_STRING("key",     'k', "key",  &cfg.key,     key),
-		  OPT_STRING("msg",     'd', "data", &cfg.msg,     msg),
-		  OPT_UINT("address",     0, &cfg.address,          address),
-		  OPT_UINT("blocks",    'b', &cfg.blocks,           blocks),
-		  OPT_BYTE("target",    't', &cfg.target,           target));
+	OPT_ARGS(opts) = {
+		OPT_STRING("msgfile", 'f', "FILE",       &cfg.msgfile, mfile),
+		OPT_STRING("keyfile", 'g', "FILE",       &cfg.keyfile, kfile),
+		OPT_STRING("key",     'k', "key",        &cfg.key,     key),
+		OPT_STRING("msg",     'd', "data",       &cfg.msg,     msg),
+		OPT_UINT("address",   0,   &cfg.address, address),
+		OPT_UINT("blocks",    'b', &cfg.blocks,  blocks),
+		OPT_BYTE("target",    't', &cfg.target,  target),
+		OPT_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1036,8 +1046,10 @@ static int rpmb_read_config(int argc, char **argv, struct command *acmd,
 		.msgfile = NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile));
+	OPT_ARGS(opts) = {
+		OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
+		OPT_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1101,11 +1113,13 @@ static int rpmb_write_config(int argc, char **argv, struct command *acmd,
 		.keyfile = NULL,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
-		  OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
-		  OPT_STRING("key",     'k', "key",  &cfg.key,     key),
-		  OPT_STRING("msg",     'd', "data", &cfg.msg,     msg));
+	OPT_ARGS(opts) = {
+		OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
+		OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
+		OPT_STRING("key",     'k', "key",  &cfg.key,     key),
+		OPT_STRING("msg",     'd', "data", &cfg.msg,     msg),
+		OPT_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
