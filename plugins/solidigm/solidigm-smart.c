@@ -182,11 +182,12 @@ static void smart_log_item_add_json(struct nvme_additional_smart_log_item *item,
 					    bool has_smart_id_e7_or_e8)
 {
 	struct smart_ref_clk *pll_item = (struct smart_ref_clk *)item;
-	struct json_object *entry_stats = json_create_object();
+	struct json_object *entry_stats;
 
 	if (!item->id)
 		return;
 
+	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", item->normalized);
 
 	switch (item->id) {
