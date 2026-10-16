@@ -288,7 +288,9 @@ static void stdout_kv_render(FILE *stream, struct shr_table *t);
 static void stdout_fdp_ruh_status(struct nvme_fdp_ruh_status *status,
 				  size_t len)
 {
-	uint16_t nruhsd = le16_to_cpu(status->nruhsd);
+	uint16_t nruhsd = nvme_log_nr_entries(le16_to_cpu(status->nruhsd),
+					      len, sizeof(*status),
+					      sizeof(status->ruhss[0]));
 	struct shr_table *t;
 
 	for (unsigned int i = 0; i < nruhsd; i++) {

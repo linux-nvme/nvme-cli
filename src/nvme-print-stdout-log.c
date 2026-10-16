@@ -1420,7 +1420,9 @@ void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 
 void stdout_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 {
-	uint16_t nruh = le16_to_cpu(log->nruh);
+	uint16_t nruh = nvme_log_nr_entries(le16_to_cpu(log->nruh), len,
+					    sizeof(*log),
+					    sizeof(log->ruhus[0]));
 	struct shr_table *t;
 
 	t = stdout_kv_table_create();

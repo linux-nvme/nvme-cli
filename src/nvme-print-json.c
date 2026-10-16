@@ -2800,6 +2800,8 @@ static void json_nvme_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 
 	obj_add_uint(r, "nruh", nruh);
 
+	nruh = nvme_log_nr_entries(nruh, len, sizeof(*log),
+				   sizeof(log->ruhus[0]));
 	for (int i = 0; i < nruh; i++) {
 		struct nvme_fdp_ruhu_desc *ruhu = &log->ruhus[i];
 
@@ -2875,6 +2877,8 @@ static void json_nvme_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t 
 
 	obj_add_uint(r, "nruhsd", nruhsd);
 
+	nruhsd = nvme_log_nr_entries(nruhsd, len, sizeof(*status),
+				     sizeof(status->ruhss[0]));
 	for (unsigned int i = 0; i < nruhsd; i++) {
 		struct nvme_fdp_ruh_status_desc *ruhs = &status->ruhss[i];
 
