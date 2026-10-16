@@ -115,11 +115,12 @@ int argconfig_usage_error(const char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf(stderr, "%s: ", command_name());
+	fprintf(stderr, "%s%s: ", argconfig_esc(stderr, ARGCONFIG_RED),
+		command_name());
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", argconfig_esc(stderr, ARGCONFIG_RESET));
 	argconfig_print_usage();
 
 	return -EINVAL;
@@ -184,14 +185,33 @@ static void show_option(FILE *out,
 	fprintf(out, "\n");
 }
 
+/*
+ * Escape sequences for bold and colors go only to a terminal, and not
+ * when NO_COLOR is set to a non-empty value (https://no-color.org/).
+ */
+const char *argconfig_esc(FILE *out, const char *seq)
+{
+	const char *no_color = getenv("NO_COLOR");
+
+	if (!isatty(fileno(out)) || (no_color && *no_color))
+		return "";
+
+	return seq;
+}
+
+/* "WARNING:" on stderr, in yellow on a terminal */
+void argconfig_print_warning(void)
+{
+	fprintf(stderr, "%sWARNING:%s", argconfig_esc(stderr, ARGCONFIG_YELLOW),
+		argconfig_esc(stderr, ARGCONFIG_RESET));
+}
+
 /* A heading, in bold on a terminal */
 void argconfig_print_heading(FILE *out, const char *fmt, const char *text)
 {
-	bool tty = isatty(fileno(out));
-
-	fputs(tty ? "\033[1m" : "", out);
+	fputs(argconfig_esc(out, ARGCONFIG_BOLD), out);
 	fprintf(out, fmt, text);
-	fputs(tty ? "\033[0m" : "", out);
+	fputs(argconfig_esc(out, ARGCONFIG_RESET), out);
 }
 
 /* A group header is printed before the first option which follows it */
@@ -476,11 +496,12 @@ static int argconfig_parse_error(struct argconfig_parser *p,
 {
 	va_list ap;
 
-	fprintf(stderr, "%s: ", command_name());
+	fprintf(stderr, "%s%s: ", argconfig_esc(stderr, ARGCONFIG_RED),
+		command_name());
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", argconfig_esc(stderr, ARGCONFIG_RESET));
 
 	return ARGCONFIG_USAGE;
 }
@@ -572,7 +593,8 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 	const struct argconfig_opt_val *v;
 	int n = 0;
 
-	fprintf(stderr, "%s: invalid value '%s' for ", command_name(), arg);
+	fprintf(stderr, "%s%s: invalid value '%s' for ",
+		argconfig_esc(stderr, ARGCONFIG_RED), command_name(), arg);
 	if (c)
 		fprintf(stderr, "-%c", c);
 	else
@@ -587,7 +609,7 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 	for (v = s->opt_val; n <= 8 && v && v->str; v++)
 		fprintf(stderr, "%s%s", v == s->opt_val ? " or one of: " : ", ",
 			v->str);
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", argconfig_esc(stderr, ARGCONFIG_RESET));
 
 	return ARGCONFIG_USAGE;
 }
@@ -598,10 +620,11 @@ static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 	int ret;
 
 	if (s->deprecated && !s->seen) {
+		argconfig_print_warning();
 		if (c)
-			fprintf(stderr, "WARNING: '-%c'", c);
+			fprintf(stderr, " '-%c'", c);
 		else
-			fprintf(stderr, "WARNING: '--%s'", s->option);
+			fprintf(stderr, " '--%s'", s->option);
 		fprintf(stderr,
 			" is deprecated and will be removed in the next major version, use '%s' instead\n",
 			s->deprecated);
@@ -676,10 +699,12 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 	}
 
 	if (s->old_name && !s->seen &&
-	    (strlen(s->option) != len || strncmp(s->option, name, len)))
+	    (strlen(s->option) != len || strncmp(s->option, name, len))) {
+		argconfig_print_warning();
 		fprintf(stderr,
-			"WARNING: '--%s' is deprecated and will be removed in the next major version, use '--%s' instead\n",
+			" '--%s' is deprecated and will be removed in the next major version, use '--%s' instead\n",
 			s->old_name, s->option);
+	}
 
 	return argconfig_apply(s, 0, value);
 }

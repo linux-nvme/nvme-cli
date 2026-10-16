@@ -234,6 +234,13 @@ struct argconfig_commandline_options {
 };
 
 void argconfig_append_usage(const char *str);
+#define ARGCONFIG_BOLD		"\033[1m"
+#define ARGCONFIG_RED		"\033[31m"
+#define ARGCONFIG_YELLOW	"\033[33m"
+#define ARGCONFIG_RESET		"\033[0m"
+
+const char *argconfig_esc(FILE *out, const char *seq);
+void argconfig_print_warning(void);
 void argconfig_print_heading(FILE *out, const char *fmt, const char *text);
 void argconfig_set_command(const char *prog, const char *path);
 void argconfig_print_usage(void);
