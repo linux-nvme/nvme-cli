@@ -5059,14 +5059,14 @@ _nvme () {
 						--quiet':suppress informational output'
 						--sel-perf-log=':Select features to turn on, default: Disable bit 0: latency statistics bit 1: high latency log bit 2: Performance stat'
 						-s':alias for --sel-perf-log'
-						--set-commands-mask=':Set Enable, default: Disable bit 0: Read commands bit 1: high Write commands bit 2: De-allocate/TRIM (this bit is not worked for Performance stat.)'
+						--set-commands-mask=':Set Enable, default: Disable bit 0: Read commands bit 1: high Write commands bit 2: Deallocate/TRIM (no Performance stat)'
 						-m':alias for --set-commands-mask'
 						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
-						--set-read-threshold=':set read high latency log threshold, it'\''s a 0-based value and unit is 10ms'
+						--set-read-threshold=':read high latency log threshold, 0-based, unit is 10ms'
 						-r':alias for --set-read-threshold'
-						--set-trim-threshold=':set trim high latency log threshold, it'\''s a 0-based value and unit is 10ms'
+						--set-trim-threshold=':trim high latency log threshold, 0-based, unit is 10ms'
 						-t':alias for --set-trim-threshold'
-						--set-write-threshold=':set write high latency log threshold, it'\''s a 0-based value and unit is 10ms'
+						--set-write-threshold=':write high latency log threshold, 0-based, unit is 10ms'
 						-w':alias for --set-write-threshold'
 						--timeout=':timeout value, in milliseconds'
 						--verbose':Increase output verbosity'
@@ -5169,7 +5169,7 @@ _nvme () {
 					local _memblaze_perf_stats_print_x
 					_memblaze_perf_stats_print_x=(
 						--dry-run':show command instead of executing'
-						--duration=':[1-24] hours: duration of the log to be printed, default is 1 hour'
+						--duration=':[1-24] hours: duration of the log to print, default 1 hour'
 						-d':alias for --duration'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
@@ -5194,6 +5194,7 @@ _nvme () {
 				(select-download)
 					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
+					               "--select -s" "OOB EEP ALL" \
 					               "--timeout" "infinite -1" && return
 					_nvme_opt_files "--fw -f" && return
 					local _memblaze_select_download
@@ -5499,7 +5500,8 @@ _nvme () {
 					;;
 
 				(latency-stats)
-					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					_nvme_opt_vals "--command -c" "all read write trim" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--timeout" "infinite -1" && return
 					local _micron_latency_stats
@@ -5526,7 +5528,9 @@ _nvme () {
 					;;
 
 				(latency-tracking)
-					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					_nvme_opt_vals "--command -c" "all read write trim" \
+					               "--option -O" "enable disable status" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--timeout" "infinite -1" && return
 					local _micron_latency_tracking
@@ -5608,6 +5612,7 @@ _nvme () {
 				(select-download)
 					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
+					               "--select -s" "OOB EEP ALL" \
 					               "--timeout" "infinite -1" && return
 					_nvme_opt_files "--fw -f" && return
 					local _micron_select_download
@@ -5763,7 +5768,8 @@ _nvme () {
 				(vs-internal-log)
 					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
-					               "--timeout" "infinite -1" && return
+					               "--timeout" "infinite -1" \
+					               "--type -t" "host controller" && return
 					_nvme_opt_files "--package -p" && return
 					local _micron_vs_internal_log
 					_micron_vs_internal_log=(
@@ -5893,7 +5899,8 @@ _nvme () {
 					;;
 
 				(vs-smbus-option)
-					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					_nvme_opt_vals "--option -O" "enable disable status" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--timeout" "infinite -1" && return
 					local _micron_vs_smbus_option
@@ -5924,7 +5931,8 @@ _nvme () {
 					;;
 
 				(vs-telemetry-controller-option)
-					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					_nvme_opt_vals "--option -O" "enable disable status" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--timeout" "infinite -1" && return
 					local _micron_vs_telemetry_controller_option
@@ -7021,6 +7029,7 @@ _nvme () {
 				(internal-log)
 					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
+					               "--telemetry-type -t" "host controller host0 host1" \
 					               "--timeout" "infinite -1" && return
 					_nvme_opt_files "--output-file -f" && return
 					local _ocp_internal_log
@@ -9818,9 +9827,9 @@ _nvme () {
 				(vs-internal-log)
 					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
-					               "--timeout" "infinite -1" && return
-					_nvme_opt_files "--output-file -O" \
-					                "--type -t" && return
+					               "--timeout" "infinite -1" \
+					               "--type -t" "NONE HOST CONTROLLER BOTH" && return
+					_nvme_opt_files "--output-file -O" && return
 					local _sndk_vs_internal_log
 					_sndk_vs_internal_log=(
 						--data-area=':Data area to retrieve up to. Supported for telemetry, see man page for other use cases.'
@@ -10390,7 +10399,8 @@ _nvme () {
 				(vs-internal-log)
 					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
-					               "--timeout" "infinite -1" && return
+					               "--timeout" "infinite -1" \
+					               "--type -t" "ALL CIT HIT NLOG ASSERT EVENT EXTENDED" && return
 					_nvme_opt_files "--dir-name -d" && return
 					local _solidigm_vs_internal_log
 					_solidigm_vs_internal_log=(
@@ -11719,9 +11729,9 @@ _nvme () {
 				(vs-internal-log)
 					_nvme_opt_vals "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
-					               "--timeout" "infinite -1" && return
-					_nvme_opt_files "--output-file -O" \
-					                "--type -t" && return
+					               "--timeout" "infinite -1" \
+					               "--type -t" "NONE HOST CONTROLLER" && return
+					_nvme_opt_files "--output-file -O" && return
 					local _wdc_vs_internal_log
 					_wdc_vs_internal_log=(
 						--data-area=':Data area to retrieve up to. Supported for telemetry, see man page for other use cases.'
@@ -16262,6 +16272,7 @@ _nvme () {
 		(show-topology)
 			_nvme_opt_vals "--output-format -o" "normal json tabular" \
 			               "--output-format-version" "1 2" \
+			               "--ranking -r" "namespace ctrl multipath" \
 			               "--timeout" "infinite -1" && return
 			local _show_topology
 			_show_topology=(
@@ -16272,7 +16283,7 @@ _nvme () {
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
-				--ranking=':Ranking order: namespace|ctrl|multipath'
+				--ranking=':Ranking order'
 				-r':alias for --ranking'
 				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
 				--timeout=':timeout value, in milliseconds'
