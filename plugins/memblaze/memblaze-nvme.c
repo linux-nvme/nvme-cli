@@ -761,46 +761,38 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 	struct stat sb;
 	__cleanup_libnvme_free void *fw_buf = NULL;
 	unsigned char *fw_ptr;
-	int i;
+
+	struct argconfig_opt_val selects[] = {
+		VAL_ENUM("OOB", 18),
+		VAL_ENUM("EEP", 10),
+		VAL_ENUM("ALL", 26),
+		VAL_END()
+	};
 
 	struct config {
 		char *fw;
-		char *select;
+		int select;
 	};
 
 	struct config cfg = {
 		.fw  = "",
-		.select = "\0",
+		.select = 0,
 	};
 
 	NVME_ARGS(opts,
 		OPT_STRING("fw", 'f', "FILE", &cfg.fw, fw),
-		OPT_STRING("select", 's', "flag", &cfg.select, select));
+		OPT_ENUM("select", 's', &cfg.select, select, selects));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	if (strlen(cfg.select) != 3) {
+	if (!argconfig_given(opts, &cfg.select)) {
 		nvme_show_error("Invalid select flag");
 		err = EINVAL;
 		goto out;
 	}
-
-	for (i = 0; i < 3; i++)
-		cfg.select[i] = toupper(cfg.select[i]);
-
-	if (!strncmp(cfg.select, "OOB", 3)) {
-		selectNo = 18;
-	} else if (!strncmp(cfg.select, "EEP", 3)) {
-		selectNo = 10;
-	} else if (!strncmp(cfg.select, "ALL", 3)) {
-		selectNo = 26;
-	} else {
-		nvme_show_error("Invalid select flag");
-		err = EINVAL;
-		goto out;
-	}
+	selectNo = cfg.select;
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	if (fw_fd < 0) {
