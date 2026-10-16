@@ -11,7 +11,6 @@
  * The deprecated commands, which run the commands that replace them.
  */
 #include <errno.h>
-#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,90 +142,78 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
  */
 static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	static const struct option opts[] = {
-		{ "keyring",	required_argument,	NULL, 'k' },
-		{ "keytype",	required_argument,	NULL, 't' },
-		{ "keyfile",	required_argument,	NULL, 'f' },
-		{ "import",	no_argument,		NULL, 'i' },
-		{ "export",	no_argument,		NULL, 'e' },
-		{ "revoke",	required_argument,	NULL, 'r' },
-		{ NULL, 0, NULL, 0 },
-	};
-	__cleanup_free char *keyring_opt = NULL;
-	__cleanup_free char *keytype_opt = NULL;
-	__cleanup_free char *keyfile_opt = NULL;
-	__cleanup_free char *identity_opt = NULL;
-	__cleanup_free char **sub_argv = NULL;
-	const char *keyring = NULL, *keytype = NULL, *keyfile = NULL, *revoke = NULL;
-	const char *subcmd = NULL;
-	int nsub = 0, c;
+	const char *desc =
+	    "Import, export or revoke NVMe TLS PSKs.\n"
+	    "Deprecated; use 'nvme keys import', 'export' or 'revoke' instead.";
+	const char *keyring = "Keyring of the PSKs.";
+	const char *keytype = "Key type of the PSK to revoke.";
+	const char *keyfile = "File to import the PSKs from or export them to.";
+	const char *import = "Import the PSKs from the file.";
+	const char *export = "Export the PSKs to the file.";
+	const char *revoke = "Revoke the PSK of this identity.";
 
-	optind = 1;
-	while ((c = getopt_long(argc, argv, "k:t:f:ier:", opts, NULL)) != -1) {
-		switch (c) {
-		case 'k':
-			keyring = optarg;
-			break;
-		case 't':
-			keytype = optarg;
-			break;
-		case 'f':
-			keyfile = optarg;
-			break;
-		case 'i':
-		case 'e':
-			if (subcmd) {
-				fprintf(stderr, "ERROR: only one of --import, --export, or --revoke may be given\n");
-				return -EINVAL;
-			}
-			subcmd = c == 'i' ? "import" : "export";
-			break;
-		case 'r':
-			if (subcmd) {
-				fprintf(stderr, "ERROR: only one of --import, --export, or --revoke may be given\n");
-				return -EINVAL;
-			}
-			subcmd = "revoke";
-			revoke = optarg;
-			break;
-		default:
-			return -EINVAL;
-		}
+	char *args[7] = { argv[0] };
+	const char *subcmd = NULL;
+	int nargs = 1, err;
+
+	struct config {
+		char	*keyring;
+		char	*keytype;
+		char	*keyfile;
+		bool	import;
+		bool	export;
+		char	*revoke;
+	};
+
+	struct config cfg = { 0 };
+
+	NVME_ARGS(opts,
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
+		  OPT_FLAG("import",	'i', &cfg.import,	import),
+		  OPT_FLAG("export",	'e', &cfg.export,	export),
+		  OPT_STR("revoke",	'r', &cfg.revoke,	revoke));
+
+	err = parse_cmdline(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (cfg.import + cfg.export + argconfig_given(opts, &cfg.revoke) > 1) {
+		fprintf(stderr,
+			"ERROR: only one of --import, --export, or --revoke may be given\n");
+		return -EINVAL;
 	}
+	if (cfg.import)
+		subcmd = "import";
+	else if (cfg.export)
+		subcmd = "export";
+	else if (argconfig_given(opts, &cfg.revoke))
+		subcmd = "revoke";
 
 	if (!subcmd) {
 		fprintf(stderr, "ERROR: 'tls-key' requires one of --import, --export, or --revoke\n");
 		return -EINVAL;
 	}
 
-	sub_argv = calloc(5, sizeof(*sub_argv));
-	if (!sub_argv)
-		return -ENOMEM;
-
-	sub_argv[nsub++] = argv[0];
-
-	if (keyring) {
-		if (asprintf(&keyring_opt, "--keyring=%s", keyring) < 0)
-			return -ENOMEM;
-		sub_argv[nsub++] = keyring_opt;
+	if (argconfig_given(opts, &cfg.keyring)) {
+		args[nargs++] = "--keyring";
+		args[nargs++] = cfg.keyring;
 	}
 
 	if (!strcmp(subcmd, "revoke")) {
-		if (keytype) {
-			if (asprintf(&keytype_opt, "--keytype=%s", keytype) < 0)
-				return -ENOMEM;
-			sub_argv[nsub++] = keytype_opt;
+		if (argconfig_given(opts, &cfg.keytype)) {
+			args[nargs++] = "--keytype";
+			args[nargs++] = cfg.keytype;
 		}
-		if (asprintf(&identity_opt, "--identity=%s", revoke) < 0)
-			return -ENOMEM;
-		sub_argv[nsub++] = identity_opt;
-	} else if (keyfile) {
-		if (asprintf(&keyfile_opt, "--keyfile=%s", keyfile) < 0)
-			return -ENOMEM;
-		sub_argv[nsub++] = keyfile_opt;
+		args[nargs++] = "--identity";
+		args[nargs++] = cfg.revoke;
+	} else if (argconfig_given(opts, &cfg.keyfile)) {
+		args[nargs++] = "--keyfile";
+		args[nargs++] = cfg.keyfile;
 	}
 
-	return run_replacement_command(plugin, acmd, subcmd, nsub, sub_argv);
+	return run_replacement_command(plugin, acmd, subcmd, nargs, args);
 }
 #endif /* CONFIG_FABRICS */
 

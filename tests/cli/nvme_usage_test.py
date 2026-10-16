@@ -84,6 +84,20 @@ class OperandTest(unittest.TestCase):
                                 "unexpected argument 'extra'")
         self.assert_usage_error(run('check-dhchap-key', 'extra'),
                                 "unexpected argument 'extra'")
+        self.assert_usage_error(run('tls-key', '--export', 'extra'),
+                                "unexpected argument 'extra'")
+
+    def test_tls_key(self):
+        # tls-key picks the command which replaces it from its options
+        if run('gen-dhchap-key', '--help').returncode:
+            self.skipTest('no deprecated fabrics commands in this build')
+        result = run('tls-key', '--help')
+        self.assertIn('Usage: nvme tls-key [OPTIONS]', result.stdout)
+        self.assertIn('--revoke', result.stdout)
+        result = run('tls-key', '--import', '--export')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('only one of --import, --export, or --revoke',
+                      result.stderr)
 
     def test_optional_device_command(self):
         result = run('list-subsys', '--help')
