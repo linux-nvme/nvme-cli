@@ -16,7 +16,6 @@ extern bool sedopal_ask_new_key;
 extern bool sedopal_destructive_revert;
 extern bool sedopal_psid_revert;
 extern bool sedopal_lock_ro;
-extern bool sedopal_discovery_verbose;
 extern bool sedopal_discovery_udev;
 
 /*

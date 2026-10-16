@@ -722,7 +722,6 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	const char *state = "state of zones to list";
 	const char *ext = "set to use the extended report zones";
 	const char *part = "set to use the partial report";
-	const char *verbose = "show report zones verbosity";
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -750,7 +749,6 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 		__u32 namespace_id;
 		__u32 num_descs;
 		__u32 state;
-		bool  verbose;
 		bool  extended;
 		bool  partial;
 	};
@@ -765,7 +763,6 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 		OPT_SUFFIX("start-lba",   's', &cfg.zslba,          zslba),
 		OPT_UINT("descs",         'd', &cfg.num_descs,      num_descs),
 		OPT_UINT("state",         'S', &cfg.state,          state),
-		OPT_FLAG("verbose",       'V', &cfg.verbose,        verbose),
 		OPT_FLAG("extended",      'e', &cfg.extended,       ext),
 		OPT_FLAG("partial",       'p', &cfg.partial,        part));
 
@@ -774,7 +771,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 
 	flags = nvme_args.output_flags;
-	if (cfg.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
