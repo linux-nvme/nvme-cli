@@ -53,6 +53,11 @@ struct command {
 	int (*fn)(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 	char *alias;
 	bool deprecated;
+	/* "nvme <plugin> <command>" which replaces a deprecated command */
+	struct {
+		const char *plugin;
+		const char *command;
+	} replacement;
 	enum command_device device;
 	/*
 	 * The values --output-format accepts (enum nvme_print_flags), 0 for
@@ -76,6 +81,10 @@ extern struct plugin builtin;
 void general_help(struct plugin *plugin, char *str);
 void command_prepare(struct command *cmd);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
+int run_replacement(int argc, char **argv, struct command *cmd,
+		    struct plugin *plugin);
+int run_replacement_command(struct plugin *plugin, struct command *cmd,
+			    const char *command, int argc, char **argv);
 
 void register_extension(struct plugin *plugin);
 
