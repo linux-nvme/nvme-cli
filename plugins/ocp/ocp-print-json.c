@@ -1389,10 +1389,11 @@ static void json_persistent_event_log(void *pevent_log_info, __u8 action,
 				      __u32 size, const char *devname)
 {
 	struct json_object *r = json_create_object();
-	struct json_object *valid = json_create_array();
+	struct json_object *valid;
 	__u32 offset = sizeof(struct nvme_persistent_event_log);
 
 	if (size >= offset) {
+		valid = json_create_array();
 		nvme_json_pevent_log_head(pevent_log_info, r);
 		json_pevent_entry(pevent_log_info, action, size, devname, offset, valid);
 		obj_add_array(r, "list_of_event_entries", valid);
