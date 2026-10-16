@@ -971,6 +971,13 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	const char *telemetry_type = "Telemetry Type; 'host' or 'controller'\n"
 			"('host0' and 'host1' are deprecated)";
 	const char *hgen = "Have the host tell the controller to generate the report (default 1)";
+	struct argconfig_opt_val tele_types[] = {
+		VAL_ENUM("host", TELEMETRY_TYPE_HOST),
+		VAL_ENUM("controller", TELEMETRY_TYPE_CONTROLLER),
+		VAL_ENUM("host0", 0),
+		VAL_ENUM("host1", 1),
+		VAL_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -980,7 +987,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	struct libnvme_passthru_cmd cmd;
 	bool is_support_telemetry_controller;
 	struct ocp_telemetry_parse_options opt = {0};
-	int tele_type = 0;
+	int tele_type = TELEMETRY_TYPE_HOST;
 	int tele_area = 0;
 	__u32 host_gen = 1;
 	char file_path_telemetry[PATH_MAX], file_path_string[PATH_MAX];
@@ -993,16 +1000,14 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		OPT_STR("string-log", 's', &opt.string_log, string_log),
 		OPT_FILE("output-file", 'f', &opt.output_file, output_file),
 		OPT_INT("data-area", 'a', &opt.data_area, data_area),
-		OPT_STR("telemetry-type", 't', &opt.telemetry_type, telemetry_type),
+		OPT_ENUM("telemetry-type", 't', &tele_type, telemetry_type,
+			 tele_types),
 		OPT_UINT("host-generate", 'g', &host_gen, hgen),
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	if (opt.telemetry_type == 0)
-		opt.telemetry_type = "host";
 
 	if (libnvme_transport_handle_is_ns(hdl)) {
 		err = libnvme_get_nsid(hdl, &nsid);
@@ -1031,31 +1036,19 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 
 	tele_area = opt.data_area;
 
-	if (opt.telemetry_type) {
-		if (!strcmp(opt.telemetry_type, "host0")) {
-			fprintf(stderr, "WARNING: '--telemetry-type host0' is deprecated and will be removed in the next major version. Use '--telemetry-type host --host-generate=0' instead.\n");
-			opt.telemetry_type = "host";
-			tele_type = TELEMETRY_TYPE_HOST;
-			host_gen = 0;
-		} else if (!strcmp(opt.telemetry_type, "host1")) {
-			fprintf(stderr, "WARNING: '--telemetry-type host1' is deprecated and will be removed in the next major version. Use '--telemetry-type host' instead.\n");
-			opt.telemetry_type = "host";
-			tele_type = TELEMETRY_TYPE_HOST;
-			host_gen = 1;
-		} else if (!strcmp(opt.telemetry_type, "host"))
-			tele_type = TELEMETRY_TYPE_HOST;
-		else if (!strcmp(opt.telemetry_type, "controller"))
-			tele_type = TELEMETRY_TYPE_CONTROLLER;
-		else {
-			nvme_show_error(
-			    "telemetry-type should be host, host0, host1 or controller.\n");
-			goto out;
-		}
-	} else {
-		tele_type = TELEMETRY_TYPE_HOST; //Default Type - Host
-		opt.telemetry_type = "host";
-		nvme_show_result("Missing telemetry-type. Using default - host.\n");
+	if (tele_type == 0) {
+		fprintf(stderr,
+			"WARNING: '--telemetry-type host0' is deprecated and will be removed in the next major version. Use '--telemetry-type host --host-generate=0' instead.\n");
+		tele_type = TELEMETRY_TYPE_HOST;
+		host_gen = 0;
+	} else if (tele_type == 1) {
+		fprintf(stderr,
+			"WARNING: '--telemetry-type host1' is deprecated and will be removed in the next major version. Use '--telemetry-type host' instead.\n");
+		tele_type = TELEMETRY_TYPE_HOST;
+		host_gen = 1;
 	}
+	opt.telemetry_type = tele_type == TELEMETRY_TYPE_CONTROLLER ?
+			     "controller" : "host";
 
 	if (!opt.telemetry_log) {
 		nvme_show_result("\nMissing telemetry-log. Fetching from drive...\n");

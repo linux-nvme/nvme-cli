@@ -56,7 +56,7 @@ Tests in this module verify:
 
 Known defects are covered by expectedFailure tests asserting the correct
 behavior: a controller log's JSON header is decoded with the host
-header's layout, and invalid -a and -t values exit 0.
+header's layout, and an invalid -a value exits 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -1204,17 +1204,15 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
 
     def test_invalid_telemetry_type_is_rejected(self):
         result = self._invalid_option('-t', 'bogus')
-        self.assertIn('telemetry-type should be host, host0, host1 or '
-                      'controller.', result.stderr)
+        self.assertIn("invalid value 'bogus' for -t: expected one of: host, "
+                      "controller, host0, host1", result.stderr)
 
     @unittest.expectedFailure
     def test_invalid_data_area_exits_nonzero(self):
         """Defect: the data area check jumps out with err still 0."""
         self.assertNotEqual(self._invalid_option('-a', '5').returncode, 0)
 
-    @unittest.expectedFailure
     def test_invalid_telemetry_type_exits_nonzero(self):
-        """Defect: the telemetry type check jumps out with err still 0."""
         self.assertNotEqual(self._invalid_option('-t', 'bogus').returncode,
                             0)
 
