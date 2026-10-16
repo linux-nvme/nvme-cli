@@ -4,12 +4,13 @@
  * argconfig got its own parser. test-argconfig-diff compares both, so any
  * change in behaviour shows up. Help output and the locale side effect
  * are left out. The test compares the parsing of the command line, so the
- * value conversion follows the rules of argconfig: unsigned options reject
- * negative numbers, and a word is at most UINT32_MAX.
+ * value conversion is the one of argconfig, which uses the strict number
+ * parsers of shared/parse-util.
  */
 
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -18,6 +19,7 @@
 
 #include <libnvme.h>
 
+#include <shared/parse-util.h>
 #include <shared/suffix-util.h>
 
 #include "../../../src/argconfig.h"
@@ -42,102 +44,67 @@ static bool is_null_or_empty(const char *s)
 	return !s || !*s;
 }
 
-static int argconfig_error(char *type, const char *opt, const char *arg)
-{
-	fprintf(stderr, "Expected %s argument for '%s' but got '%s'!\n",
-		type, opt, arg);
-	return -EINVAL;
-}
-
-static bool argconfig_negative(const char *arg)
-{
-	while (isspace((unsigned char)*arg))
-		arg++;
-
-	return *arg == '-';
-}
-
+/* The value conversion of argconfig, see argconfig_parse_type() */
 static int argconfig_parse_type(struct argconfig_commandline_options *s,
 				char *arg)
 {
 	void *value = s->default_value;
 	char *endptr;
+	uint64_t u;
+	int64_t i;
+	double d;
 	int ret = 0;
 
-	/* To distinguish success/failure after strtol/stroul call */
-	errno = 0;
-
-	switch (s->config_type) {
-	case CFG_BYTE:
-	case CFG_SHORT:
-	case CFG_POSITIVE:
-	case CFG_LONG:
-	case CFG_LONG_SUFFIX:
-		if (argconfig_negative(arg))
-			return argconfig_error("non-negative number", s->option,
-					       arg);
-		break;
-	default:
-		break;
-	}
+	if (!arg && s->config_type != CFG_STRING &&
+	    s->config_type != CFG_FLAG && s->config_type != CFG_INCREMENT)
+		return -EINVAL;
 
 	switch (s->config_type) {
 	case CFG_STRING:
 		*(char **)value = arg;
 		break;
 	case CFG_INT:
-		*(int *)value = strtol(arg, &endptr, 0);
-		if (errno || arg == endptr || *endptr)
-			ret = argconfig_error("integer", s->option, arg);
+		ret = shr_parse_s64(arg, INT_MIN, INT_MAX, &i);
+		if (!ret)
+			*(int *)value = i;
 		break;
-	case CFG_BYTE: {
-		unsigned long tmp = strtoul(arg, &endptr, 0);
-
-		if (errno || tmp >= 1 << 8 || arg == endptr || *endptr)
-			ret = argconfig_error("byte", s->option, arg);
-		else
-			*(uint8_t *)value = tmp;
+	case CFG_BYTE:
+		ret = shr_parse_u64(arg, UINT8_MAX, &u);
+		if (!ret)
+			*(uint8_t *)value = u;
 		break;
-	}
-	case CFG_SHORT: {
-		unsigned long tmp = strtoul(arg, &endptr, 0);
-
-		if (errno || tmp >= 1 << 16 || arg == endptr || *endptr)
-			ret = argconfig_error("short", s->option, arg);
-		else
-			*(uint16_t *)value = tmp;
+	case CFG_SHORT:
+		ret = shr_parse_u64(arg, UINT16_MAX, &u);
+		if (!ret)
+			*(uint16_t *)value = u;
 		break;
-	}
-	case CFG_POSITIVE: {
-		unsigned long long tmp = strtoull(arg, &endptr, 0);
-
-		if (errno || tmp > UINT32_MAX || arg == endptr || *endptr)
-			ret = argconfig_error("word", s->option, arg);
-		else
-			*(uint32_t *)value = tmp;
+	case CFG_POSITIVE:
+		ret = shr_parse_u64(arg, UINT32_MAX, &u);
+		if (!ret)
+			*(uint32_t *)value = u;
 		break;
-	}
 	case CFG_INCREMENT:
 		*(int *)value += 1;
 		break;
 	case CFG_ENUM:
-		ret = argconfig_error("name", s->option, arg);
+		ret = -EINVAL;
 		break;
 	case CFG_LONG:
-		*(uint64_t *)value = strtoull(arg, &endptr, 0);
-		if (errno || arg == endptr || *endptr)
-			ret = argconfig_error("long integer", s->option, arg);
+		ret = shr_parse_u64(arg, UINT64_MAX, &u);
+		if (!ret)
+			*(uint64_t *)value = u;
 		break;
 	case CFG_LONG_SUFFIX:
-		ret = shr_suffix_binary_parse(arg, &endptr, (uint64_t *)value);
-		if (ret)
-			argconfig_error("long suffixed integer", s->option,
-					arg);
+		if (!isdigit((unsigned char)*arg))
+			return -EINVAL;
+		ret = shr_suffix_binary_parse(arg, &endptr, &u);
+		if (!ret)
+			*(uint64_t *)value = u;
 		break;
 	case CFG_DOUBLE:
-		*(double *)value = strtod(arg, &endptr);
-		if (errno || arg == endptr || *endptr)
-			ret = argconfig_error("float", s->option, arg);
+		ret = shr_parse_double(arg, &d);
+		if (!ret)
+			*(double *)value = d;
 		break;
 	case CFG_FLAG:
 		*(bool *)value = true;
@@ -147,7 +114,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		break;
 	}
 
-	return ret;
+	return ret ? -EINVAL : 0;
 }
 
 static void argconfig_set_opt_val(enum argconfig_types type,

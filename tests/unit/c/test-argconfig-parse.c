@@ -122,6 +122,16 @@ static struct toval_test toval_tests[] = {
 	VAL_TEST("--int=1x", int_val, 0, true, -EINVAL),
 	VAL_TEST("--double=1.5x", double_val, 0, true, -EINVAL),
 	VAL_TEST("--double=1.5", double_val, 1.5, true, 0),
+	VAL_TEST("--int=4294967296", int_val, 0, true, -EINVAL),
+	VAL_TEST("--int=-2147483649", int_val, 0, true, -EINVAL),
+	VAL_TEST("--int=-2147483648", int_val, INT32_MIN, true, 0),
+	VAL_TEST("--int= 1", int_val, 0, true, -EINVAL),
+	VAL_TEST("--uint= 1", uint, 0, true, -EINVAL),
+	VAL_TEST("--uint=+1", uint, 0, true, -EINVAL),
+	VAL_TEST("--double=nan", double_val, 0, true, -EINVAL),
+	VAL_TEST("--double=inf", double_val, 0, true, -EINVAL),
+	VAL_TEST("--double=1e999", double_val, 0, true, -EINVAL),
+	VAL_TEST("--double= 1", double_val, 0, true, -EINVAL),
 	VAL_TEST("--val=12x", val, 0, true, -EINVAL),
 	VAL_TEST("--int=-1", int_val, -1, true, 0),
 	VAL_TEST("--int=1", int_val, 1, true, 0),
@@ -518,6 +528,53 @@ static void include_test(void)
 			printf("ERROR: include: unknown option accepted\n");
 			test_rc = 1;
 		}
+	}
+}
+
+/* A double takes a decimal point in any locale */
+static void double_locale_test(void)
+{
+	const char *desc = "Test double";
+	char *argv[3] = { "prog", "--d=1.5", NULL };
+	double d = 0;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_DOUBLE("d", 0, &d, "double"),
+		OPT_END()
+	};
+
+	if (!setlocale(LC_NUMERIC, "de_DE.UTF-8"))
+		return;	/* not installed */
+
+	ret = argconfig_parse(2, argv, desc, opts);
+	if (ret || d != 1.5) {
+		printf("ERROR: double: '1.5' in de_DE gave %d/%f\n", ret, d);
+		test_rc = 1;
+	}
+	setlocale(LC_NUMERIC, "C");
+}
+
+/* An empty value names nothing, even with a single name */
+static void empty_name_test(void)
+{
+	const char *desc = "Test empty name";
+	struct argconfig_opt_val only[] = {
+		VAL_ENUM("only", 7),
+		VAL_END()
+	};
+	char *argv[3] = { "prog", "--e=", NULL };
+	int e = 0, ret;
+
+	OPT_ARGS(opts) = {
+		OPT_ENUM("e", 0, &e, "enum", only),
+		OPT_END()
+	};
+
+	ret = argconfig_parse(2, argv, desc, opts);
+	if (ret != -EINVAL || e) {
+		printf("ERROR: empty name: gave %d/%d\n", ret, e);
+		test_rc = 1;
 	}
 }
 
@@ -1110,6 +1167,8 @@ int main(void)
 	enum_test();
 	include_test();
 	bind_test();
+	double_locale_test();
+	empty_name_test();
 	special_values_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
