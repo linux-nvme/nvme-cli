@@ -1171,7 +1171,15 @@ static int get_persistent_event_log(int argc, char **argv,
 	}
 
 	if (!cfg.log_len && cfg.action != NVME_PEVENT_LOG_EST_CTX_AND_READ) {
-		cfg.log_len = le64_to_cpu(pevent->tll);
+		__u64 tll = le64_to_cpu(pevent->tll);
+
+		/* the log is read with a 32 bit length */
+		if (tll > UINT32_MAX) {
+			nvme_show_error("persistent event log of %"PRIu64
+					" bytes is too large", (uint64_t)tll);
+			return -EINVAL;
+		}
+		cfg.log_len = tll;
 	} else if (!cfg.log_len && cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ) {
 		nvme_show_error("Establishing Persistent Event Log Context");
 		return 0;
