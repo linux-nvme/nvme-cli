@@ -2102,9 +2102,10 @@ static int get_dispersed_ns_psub(struct libnvme_transport_handle *hdl, __u32 nsi
 {
 	int err;
 	__u64 header_len = sizeof(**logp);
-	__u64 psub_list_len;
+	__u64 numpsub, psub_list_len;
 	struct nvme_dispersed_ns_participating_nss_log *log = libnvme_alloc(header_len);
 	struct libnvme_passthru_cmd cmd;
+	void *p;
 
 	if (!log)
 		return -ENOMEM;
@@ -2114,13 +2115,22 @@ static int get_dispersed_ns_psub(struct libnvme_transport_handle *hdl, __u32 nsi
 	if (err)
 		goto err_free;
 
-	psub_list_len = le64_to_cpu(log->numpsub) * NVME_NQN_LENGTH;
+	numpsub = le64_to_cpu(log->numpsub);
+	if (!numpsub)
+		goto out;
+	/* the command takes a 32 bit length */
+	if (numpsub > UINT32_MAX / NVME_NQN_LENGTH) {
+		err = -EINVAL;
+		goto err_free;
+	}
+	psub_list_len = numpsub * NVME_NQN_LENGTH;
 
-	log = libnvme_realloc(log, header_len + psub_list_len);
-	if (!log) {
+	p = libnvme_realloc(log, header_len + psub_list_len);
+	if (!p) {
 		err = -ENOMEM;
 		goto err_free;
 	}
+	log = p;
 
 	nvme_init_get_log_dispersed_ns_participating_nss(&cmd, nsid,
 		(void *)log->participating_nss, psub_list_len);
@@ -2130,6 +2140,7 @@ static int get_dispersed_ns_psub(struct libnvme_transport_handle *hdl, __u32 nsi
 	if (err)
 		goto err_free;
 
+out:
 	*logp = log;
 	return 0;
 

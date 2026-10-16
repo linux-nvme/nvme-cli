@@ -36,6 +36,7 @@ _LID_PULL_MODEL_DDC_REQ = 0x73
 _LID_POWER_MEASUREMENT = 0x25
 _LID_REACHABILITY_GROUPS = 0x1a
 _LID_REACHABILITY_ASSOCIATIONS = 0x1b
+_LID_DISPERSED_NS_PSUB = 0x17
 
 _HEADER_LEN = 1024        # host and AVE discovery log headers
 _HEDLPE_LEN = 1032        # struct nvme_host_ext_discovery_log
@@ -113,6 +114,16 @@ def _reachability_log(descs, fixed_len=32):
         struct.pack_into('<IIQ', d, 0, ident, len(ids), 1)
         out += bytes(d) + b''.join(struct.pack('<I', i) for i in ids)
     return out
+
+
+def _dispersed_ns_psub_log(nqns, numpsub=None):
+    """A dispersed namespace participating NVM subsystems log page with
+    @nqns, which says it has @numpsub of them (default: as many)."""
+    if numpsub is None:
+        numpsub = len(nqns)
+    hdr = bytearray(256)
+    struct.pack_into('<QQ', hdr, 0, 1, numpsub)
+    return bytes(hdr) + b''.join(n.encode().ljust(256, b'\0') for n in nqns)
 
 
 def _kv(text):
@@ -339,6 +350,29 @@ class DiscoveryLogsTest(unittest.TestCase):
             _reachability_log([(1, [10, 11])])
         out = self._run_json('reachability-associations')
         self.assertEqual(out['rasid: 1']['rgid'], [10, 11])
+
+    def test_dispersed_ns_psub_nqns_are_read(self):
+        self.server.logs[_LID_DISPERSED_NS_PSUB] = _dispersed_ns_psub_log(
+            ['nqn.2014-08.org.example:sub1', 'nqn.2014-08.org.example:sub2'])
+        out = self._run_json('dispersed-ns-participating-nss')
+        self.assertEqual(out['participating_nss 1'],
+                         'nqn.2014-08.org.example:sub2')
+
+    def test_dispersed_ns_psub_no_zero_length_read(self):
+        self.server.logs[_LID_DISPERSED_NS_PSUB] = _dispersed_ns_psub_log([])
+        self._run('dispersed-ns-participating-nss')
+        lengths = [r[3] for r in self.server.requests
+                   if r[0] == _LID_DISPERSED_NS_PSUB]
+        self.assertNotIn(0, lengths)
+
+    def test_dispersed_ns_psub_too_many_subsystems(self):
+        """A count whose list no command can read fails the command."""
+        self.server.logs[_LID_DISPERSED_NS_PSUB] = \
+            _dispersed_ns_psub_log([], numpsub=1 << 62)
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'dispersed-ns-participating-nss', self.DEVICE)
+        self.assertGreater(result.returncode, 0, 'not an error exit')
+        self.assertNotIn('participating_nss 0', result.stdout)
 
 
 if __name__ == '__main__':
