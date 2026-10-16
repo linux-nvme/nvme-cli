@@ -463,6 +463,28 @@ static void global_options_test(void)
 	argconfig_set_global_options(NULL);
 }
 
+/* An option also takes its old name, the option itself is given then */
+static void old_name_test(void)
+{
+	const char *desc = "Test old name";
+	bool flag = false;
+	__u32 val = 0;
+	char **argv = (char *[]){ "prog", "--old-flag", "--old-uint=7", NULL };
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("flag", 'f', &flag, "flag", .old_name = "old-flag"),
+		OPT_UINT("uint", 'u', &val, "uint", .old_name = "old-uint"),
+		OPT_END()
+	};
+
+	ret = argconfig_parse(argv_len(argv), argv, desc, opts);
+	if (ret || !flag || val != 7 || !argconfig_given(opts, &flag)) {
+		printf("ERROR: old name: unexpected result\n");
+		test_rc = 1;
+	}
+}
+
 /*
  * argconfig_given() finds an option by the variable it stores to, also an
  * alias of it or a global option, and NULL is never given.
@@ -934,6 +956,7 @@ int main(void)
 	operands_test();
 	global_options_test();
 	given_test();
+	old_name_test();
 	special_values_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)

@@ -57,6 +57,17 @@ class DeprecatedOptionTest(unittest.TestCase):
                 self.assertIn(f"WARNING: '{opt}' is deprecated", result.stderr)
                 self.assertIn("use '--verbose/-v' instead", result.stderr)
 
+    def test_old_option_name(self):
+        # discover takes the old spelling of --fast-io-fail-tmo
+        if run('discover', '--help').returncode:
+            self.skipTest('no fabrics commands in this build')
+        result = run('discover', '--fast_io_fail_tmo=1', '--help')
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("WARNING: '--fast_io_fail_tmo' is deprecated",
+                      result.stderr)
+        self.assertIn("use '--fast-io-fail-tmo' instead", result.stderr)
+        self.assertNotIn('fast_io_fail_tmo', result.stdout)
+
     def test_warns_once(self):
         result = run('list', '-HH')
         self.assertEqual(result.stderr.count('WARNING'), 1)
