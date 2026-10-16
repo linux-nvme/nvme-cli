@@ -10,8 +10,10 @@ device: the parsing stops before one would be opened.
 
 Usage: python3 nvme_usage_test.py <path-to-nvme-binary>
 """
+import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 _NVME_BIN = sys.argv[1] if len(sys.argv) > 1 else 'nvme'
@@ -72,6 +74,43 @@ class OperandTest(unittest.TestCase):
                       result.stdout)
         self.assert_usage_error(run('list-subsys', 'nvme0', 'extra'),
                                 "unexpected argument 'extra'")
+
+
+class HelpCommandTest(unittest.TestCase):
+    """'nvme help <command>' finds the command like the dispatcher does and
+    shows its man page. A fake man prints which page it was asked for."""
+
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        man = os.path.join(self.dir.name, 'man')
+        with open(man, 'w', encoding='utf-8') as f:
+            f.write('#!/bin/sh\necho "MAN: $1"\n')
+        os.chmod(man, 0o755)
+        self.env = dict(os.environ)
+        self.env['PATH'] = self.dir.name + os.pathsep + self.env['PATH']
+
+    def tearDown(self):
+        self.dir.cleanup()
+
+    def man_page(self, *args):
+        result = subprocess.run([_NVME_BIN] + list(args), capture_output=True,
+                                text=True, stdin=subprocess.DEVNULL,
+                                env=self.env, check=False)
+        return result.stdout.strip()
+
+    def test_builtin_command(self):
+        self.assertEqual(self.man_page('help', 'list-subsys'),
+                         'MAN: nvme-list-subsys')
+
+    def test_unique_prefix(self):
+        self.assertEqual(self.man_page('help', 'list-sub'),
+                         'MAN: nvme-list-subsys')
+
+    def test_plugin_command(self):
+        self.assertEqual(self.man_page('help', 'id', 'ctrl'),
+                         'MAN: nvme-id-ctrl')
+        self.assertEqual(self.man_page('--help', 'id', 'ctrl'),
+                         'MAN: nvme-id-ctrl')
 
 
 if __name__ == '__main__':
