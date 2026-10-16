@@ -188,8 +188,6 @@ int main(int argc, char **argv)
 		return err;
 
 	err = handle_plugin(argc, argv, nvme.extensions);
-	if (err == -ENOTTY)
-		general_help(&builtin, NULL);
 
 	nvme_show_finish();
 

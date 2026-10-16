@@ -172,6 +172,29 @@ class SpecialValuesTest(unittest.TestCase):
         self.assertIn('Names: infinite, -1', result.stdout)
 
 
+class UnknownCommandTest(unittest.TestCase):
+    """An unknown command or plugin command and a bad global option
+    print the error and where the commands are listed, not the whole
+    general help."""
+
+    def assert_hint(self, result, message, hint):
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(message, result.stderr)
+        self.assertIn(hint, result.stderr)
+        self.assertNotIn('usage:', result.stdout + result.stderr)
+
+    def test_unknown_command(self):
+        self.assert_hint(run('bogus-cmd'), "'bogus-cmd'",
+                         "See 'nvme --help'")
+
+    def test_unknown_plugin_command(self):
+        self.assert_hint(run('id', 'bogus'), "'bogus'",
+                         "See 'nvme id --help'")
+
+    def test_bad_global_option(self):
+        self.assert_hint(run('--bogus'), "'--bogus'", "See 'nvme --help'")
+
+
 class OperandTest(unittest.TestCase):
     """A command takes a device, an optional one or none. A missing
     device and extra operands are usage errors."""
