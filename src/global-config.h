@@ -19,3 +19,6 @@ int nvme_load_global_config(void);
 
 /* Exposed for unit testing; nvme_load_global_config() is the real entry point. */
 int nvme_load_global_config_from(const char *path);
+
+/* The same for the text of a config file, @name names it in warnings */
+int nvme_load_global_config_buf(const char *text, const char *name);
