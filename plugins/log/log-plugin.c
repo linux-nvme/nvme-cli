@@ -2520,7 +2520,8 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 }
 
 static int get_host_discovery(struct libnvme_transport_handle *hdl, bool allhoste, bool rae,
-			      struct nvme_host_discovery_log **logp)
+			      struct nvme_host_discovery_log **logp,
+			      __u64 *lenp)
 {
 	int err;
 	struct nvme_host_discovery_log *log;
@@ -2553,6 +2554,7 @@ static int get_host_discovery(struct libnvme_transport_handle *hdl, bool allhost
 	}
 
 	*logp = log;
+	*lenp = log_len;
 	return 0;
 
 err_free:
@@ -2567,6 +2569,7 @@ static int get_host_discovery_log(int argc, char **argv, struct command *acmd, s
 	nvme_print_flags_t flags;
 	int err;
 	__cleanup_libnvme_free struct nvme_host_discovery_log *log = NULL;
+	__u64 log_len;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -2593,19 +2596,19 @@ static int get_host_discovery_log(int argc, char **argv, struct command *acmd, s
 
 	flags = nvme_args.output_flags;
 
-	err = get_host_discovery(hdl, cfg.allhoste, cfg.rae, &log);
+	err = get_host_discovery(hdl, cfg.allhoste, cfg.rae, &log, &log_len);
 	if (err) {
 		nvme_show_err(err, "host discovery log");
 		return err;
 	}
 
-	nvme_show_host_discovery_log(log, flags);
+	nvme_show_host_discovery_log(log, log_len, flags);
 
 	return err;
 }
 
 static int get_ave_discovery(struct libnvme_transport_handle *hdl, bool rae,
-			     struct nvme_ave_discovery_log **logp)
+			     struct nvme_ave_discovery_log **logp, __u64 *lenp)
 {
 	int err;
 	struct nvme_ave_discovery_log *log;
@@ -2637,6 +2640,7 @@ static int get_ave_discovery(struct libnvme_transport_handle *hdl, bool rae,
 	}
 
 	*logp = log;
+	*lenp = log_len;
 	return 0;
 
 err_free:
@@ -2651,6 +2655,7 @@ static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, st
 	int err;
 
 	__cleanup_libnvme_free struct nvme_ave_discovery_log *log = NULL;
+	__u64 log_len;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -2673,19 +2678,21 @@ static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, st
 
 	flags = nvme_args.output_flags;
 
-	err = get_ave_discovery(hdl, cfg.rae, &log);
+	err = get_ave_discovery(hdl, cfg.rae, &log, &log_len);
 	if (err) {
 		nvme_show_err(err, "ave discovery log");
 		return err;
 	}
 
-	nvme_show_ave_discovery_log(log, flags);
+	nvme_show_ave_discovery_log(log, log_len, flags);
 
 	return err;
 }
 
 static int get_pull_model_ddc_req(struct libnvme_transport_handle *hdl,
-				  bool rae, struct nvme_pull_model_ddc_req_log **logp)
+				  bool rae,
+				  struct nvme_pull_model_ddc_req_log **logp,
+				  __u64 *lenp)
 {
 	int err;
 	struct nvme_pull_model_ddc_req_log *log;
@@ -2717,6 +2724,7 @@ static int get_pull_model_ddc_req(struct libnvme_transport_handle *hdl,
 	}
 
 	*logp = log;
+	*lenp = log_len;
 	return 0;
 
 err_free:
@@ -2732,6 +2740,7 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 	int err;
 
 	__cleanup_libnvme_free struct nvme_pull_model_ddc_req_log *log = NULL;
+	__u64 log_len;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -2754,13 +2763,13 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 
 	flags = nvme_args.output_flags;
 
-	err = get_pull_model_ddc_req(hdl, cfg.rae, &log);
+	err = get_pull_model_ddc_req(hdl, cfg.rae, &log, &log_len);
 	if (err) {
 		nvme_show_err(err, "pull model ddc req log");
 		return err;
 	}
 
-	nvme_show_pull_model_ddc_req_log(log, flags);
+	nvme_show_pull_model_ddc_req_log(log, log_len, flags);
 
 	return err;
 }

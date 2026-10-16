@@ -2714,7 +2714,7 @@ void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec)
 	}
 }
 
-void stdout_host_discovery_log(struct nvme_host_discovery_log *log)
+void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 {
 	__u32 i;
 	__u16 j;
@@ -2834,7 +2834,7 @@ static void stdout_kv_add_traddr(struct shr_table *t, const char *field,
 		stdout_kv_add(t, field, "%s", dst);
 }
 
-void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log)
+void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 {
 	__u32 i;
 	__u8 j;
@@ -3052,7 +3052,8 @@ void stdout_reachability_associations_log(
 	stdout_kv_table_finish(t, "reachability-associations");
 }
 
-void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
+void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
+				   __u64 len)
 {
 	__u32 tpdrpl = le32_to_cpu(log->tpdrpl);
 	__u32 osp_len =
