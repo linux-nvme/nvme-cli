@@ -56,7 +56,7 @@
  * changes that keep existing keys stable do not require a bump. Consumers
  * should reject a major version they do not understand.
  */
-#define COMMAND_METADATA_SCHEMA_VERSION 1
+#define COMMAND_METADATA_SCHEMA_VERSION 2
 
 /*
  * The command currently being captured; set by capture_command()
@@ -406,6 +406,7 @@ static int capture_command(struct command_metadata_command *mc, struct command *
 	mc->name = cmd->name;
 	mc->alias = cmd->alias;
 	mc->help = cmd->help;
+	mc->device = cmd->device;
 	mc->captured = false;
 
 	/*
@@ -672,6 +673,13 @@ static void json_option(struct json_object *arr, const struct command_metadata_o
 }
 
 /* Build one command as a json object: name, alias, description, and options. */
+/* The device operand of a command, see enum command_device */
+static const char * const device_names[] = {
+	[COMMAND_DEVICE] = "required",
+	[COMMAND_DEVICE_OPTIONAL] = "optional",
+	[COMMAND_NO_DEVICE] = "none",
+};
+
 static struct json_object *json_command(const struct command_metadata_command *c)
 {
 	struct json_object *jc, *opts;
@@ -684,6 +692,7 @@ static struct json_object *json_command(const struct command_metadata_command *c
 		json_object_add_value_string(jc, "alias", c->alias);
 	if (c->help)
 		json_object_add_value_string(jc, "description", c->help);
+	json_object_add_value_string(jc, "device", device_names[c->device]);
 
 	opts = json_create_array();
 	for (i = 0; i < c->num_options; i++) {

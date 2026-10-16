@@ -373,6 +373,11 @@ expect_device \
     "an option-less plugin sub-command still injects a device" \
     "nvme zeta-plug no-opt-sub "
 
+# A command whose metadata says it takes no device offers none.
+expect_no_device \
+    "a command without a device operand offers none" \
+    "nvme beta-plug local-sub "
+
 expect_no_device \
     "help takes no device" \
     "nvme help "

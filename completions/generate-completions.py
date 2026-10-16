@@ -20,7 +20,7 @@ import sys
 
 
 # Metadata schema version this generator understands; reject anything else.
-SUPPORTED_SCHEMA_VERSION = 1
+SUPPORTED_SCHEMA_VERSION = 2
 
 
 # ---------------------------------------------------------------------------
@@ -226,6 +226,7 @@ BASH_FUNC_PREAMBLE = '''\
 
 \tlocal completing_value=0
 \tlocal wantfiles=0
+\tlocal nodevice=0
 \t_nvme_detect_value_completion
 '''
 
@@ -269,6 +270,7 @@ _nvme_finish_completion () {
 \t\t\t[[ ${words[i]} == /dev/nvme* ]] && has_device=1
 \t\tdone
 \t\tif [[ $nonopt_args -ge $2 ]] && [[ $has_device -eq 0 ]] && \\
+\t\t   [[ $nodevice -eq 0 ]] && \\
 \t\t   [[ "$1" != "help" ]] && [[ "$1" != "version" ]]; then
 \t\t\topts="/dev/nvme* $opts"
 \t\tfi
@@ -389,6 +391,11 @@ def bash_option_body(opts):
     return out
 
 
+def takes_device(cmd):
+    """Whether the command takes a device operand, required or optional."""
+    return cmd.get("device", "required") != "none"
+
+
 def emit_bash_command_group(out, commands, func, device_argpos):
     out.write(BASH_FUNC_PREAMBLE.format(func=func))
 
@@ -403,6 +410,8 @@ def emit_bash_command_group(out, commands, func, device_argpos):
     clauses = []
     for c in sorted_commands(commands):
         clause_body = bash_option_body(sorted_options(command_options(c)))
+        if not takes_device(c):
+            clause_body += '\t\t\tnodevice=1\n'
         if not clause_body:
             continue
         label = "|".join(f'"{n}"' for n in cmd_names(c))
@@ -641,9 +650,12 @@ def emit_zsh_command_clause(out, tab, path, cmd):
     out.write(f'{tab}({"|".join(names)})\n')
 
     opts = sorted_options(command_options(cmd))
+    device = f"{body}_nvme_has_device || compadd -- /dev/nvme*(N)\n"
+    if not takes_device(cmd):
+        device = ""
     if not opts:
         # No options to offer, but still complete a device argument.
-        out.write(f"{body}_nvme_has_device || compadd -- /dev/nvme*(N)\n")
+        out.write(device)
         out.write(f"{body};;\n\n")
         return
 
@@ -665,7 +677,7 @@ def emit_zsh_command_clause(out, tab, path, cmd):
     out.write(f"{body}_arguments '*:: :->subcmds'\n")
     plabel = f"nvme {path + ' ' if path else ''}{name} options"
     out.write(f'{body}_nvme_describe "{plabel}" {var}\n')
-    out.write(f"{body}_nvme_has_device || compadd -- /dev/nvme*(N)\n")
+    out.write(device)
     out.write(f"{body};;\n\n")
 
 
@@ -858,8 +870,9 @@ Register-ArgumentCompleter -Native -CommandName nvme -ScriptBlock {
         $results = @($script:NvmeOptions[$key] | Where-Object { $_ -like "$wordToComplete*" } |
             ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterName', $_) })
         # Offer a device-path hint for commands that take a device argument
-        # (everything except help/version, which are handled above).
-        if ('/dev/nvme' -like "$wordToComplete*") {
+        # (help/version are handled above).
+        if ('/dev/nvme' -like "$wordToComplete*" -and
+            -not $script:NvmeNoDevice.ContainsKey($key)) {
             $results += [System.Management.Automation.CompletionResult]::new(
                 '/dev/nvme', '/dev/nvme', 'ParameterValue', 'NVMe device (e.g. /dev/nvme0, /dev/nvme0n1)')
         }
@@ -917,6 +930,16 @@ def generate_powershell(model, out):
                 opts_entries.append((ps_escape("%s %s" % (p["name"], n)), opts))
     for key, opts in sorted(opts_entries, key=lambda e: e[0]):
         out.write(f"    '{key}' = @({opts})\n")
+    out.write("}\n")
+
+    out.write("\n$script:NvmeNoDevice = @{\n")
+    no_device = [ps_escape(n) for c in builtin_commands(model)
+                 if not takes_device(c) for n in cmd_names(c)]
+    no_device += [ps_escape("%s %s" % (p["name"], n)) for p in plugins(model)
+                  for c in p["commands"] if not takes_device(c)
+                  for n in cmd_names(c)]
+    for key in sorted(no_device):
+        out.write(f"    '{key}' = $true\n")
     out.write("}\n")
 
     out.write("\n$script:NvmeFileOptions = @{\n")
