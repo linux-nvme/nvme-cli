@@ -13,7 +13,6 @@
  * than sending a specific NVMe command to a controller.
  */
 #include <errno.h>
-#include <getopt.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
