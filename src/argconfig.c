@@ -684,6 +684,38 @@ static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 	return ret;
 }
 
+/*
+ * A copy of the template table @tmpl, whose options store into the
+ * struct at @tmpl_base of @size bytes, bound to the struct of the same
+ * type at @base. Commands share the template and parse into their own
+ * struct. The caller frees the copy.
+ */
+struct argconfig_commandline_options *
+argconfig_bind(const struct argconfig_commandline_options *tmpl,
+	       const void *tmpl_base, size_t size, void *base)
+{
+	struct argconfig_commandline_options *dst;
+	uintptr_t start = (uintptr_t)tmpl_base;
+	uintptr_t v;
+	size_t n = 0, i;
+
+	while (tmpl[n].option)
+		n++;
+
+	dst = calloc(n + 1, sizeof(*dst));
+	if (!dst)
+		return NULL;
+	memcpy(dst, tmpl, (n + 1) * sizeof(*dst));
+
+	for (i = 0; i < n; i++) {
+		v = (uintptr_t)tmpl[i].default_value;
+		if (v >= start && v < start + size)
+			dst[i].default_value = (char *)base + (v - start);
+	}
+
+	return dst;
+}
+
 /* The name of the enum value @val in the value table @v, or NULL */
 const char *argconfig_value_name(const struct argconfig_opt_val *v, int val)
 {
