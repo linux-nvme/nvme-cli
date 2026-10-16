@@ -171,7 +171,7 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	int err = -1;
 
 	struct config {
-		__s8  sel;
+		__u8  sel;
 		__u8  mos;
 		__u16 cdqid;
 		bool  start;
@@ -179,7 +179,7 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	struct config cfg = {
-		.sel = -1,
+		.sel = 0,
 		.mos = 0,
 		.cdqid = 0,
 		.start = false,
@@ -197,7 +197,7 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	if (cfg.sel == -1) {
+	if (!argconfig_given(opts, &cfg.sel)) {
 		nvme_show_error("Select field required");
 		return -EINVAL;
 	}
@@ -272,7 +272,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 	int err = -1;
 
 	struct config {
-		__s8 sel;
+		__u8 sel;
 		__u16 cntlid;
 		__u8 stype;
 		__u8 seqind;
@@ -286,7 +286,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 	};
 
 	struct config cfg = {
-		.sel = -1,
+		.sel = 0,
 		.cntlid = 0,
 		.stype = 0,
 		.seqind = 0,
@@ -316,7 +316,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	if (cfg.sel == -1) {
+	if (!argconfig_given(opts, &cfg.sel)) {
 		nvme_show_error("Select field required");
 		return -EINVAL;
 	}
@@ -416,7 +416,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	};
 
 	struct config cfg = {
-		.sel = -1,
+		.sel = 0,
 		.cntlid = 0,
 		.csuuidi = 0,
 		.csvi = 0,
@@ -441,6 +441,11 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	if (!argconfig_given(opts, &cfg.sel)) {
+		nvme_show_error("Select field required");
+		return -EINVAL;
+	}
 
 	flags = nvme_args.output_flags;
 
@@ -515,13 +520,13 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 	struct config {
 		__u16 cdqid;
 		__u32 hp;
-		__s32 tpt;
+		__u32 tpt;
 	};
 
 	struct config cfg = {
 		.cdqid = 0,
 		.hp = 0,
-		.tpt = -1,
+		.tpt = 0,
 	};
 
 	NVME_ARGS(opts,
@@ -534,7 +539,8 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 
 	err = nvme_set_features(hdl, 0, lm_cdq_feature_id, 0, cfg.cdqid |
-			((cfg.tpt >= 0) ? NVME_SET(1, LM_CTRL_DATA_QUEUE_ETPT) : 0),
+			(argconfig_given(opts, &cfg.tpt) ?
+			 NVME_SET(1, LM_CTRL_DATA_QUEUE_ETPT) : 0),
 			cfg.hp, cfg.tpt, 0, 0, NULL, 0, NULL);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_set_features() failed %s", libnvme_strerror(errno));
