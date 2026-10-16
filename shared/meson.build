@@ -24,6 +24,7 @@ sources = [
     'progress-util.c',
     'sha256-util.c',
     'suffix-util.c',
+    'string-util.c',
     'table-util.c',
     'time-util.c',
     'uint128-util.c',

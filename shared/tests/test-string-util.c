@@ -256,6 +256,33 @@ static bool test_kv_keymatch(void)
 	return pass;
 }
 
+static bool check_escape(const char *in, const char *want)
+{
+	char *out = shr_escape(in);
+	bool ok = out && !strcmp(out, want);
+
+	printf(" - \"%s\" -> \"%s\" [%s]\n", want, out ? out : "(null)",
+	       ok ? "PASS" : "FAIL");
+	free(out);
+	return ok;
+}
+
+static bool test_escape(void)
+{
+	bool pass = true;
+
+	printf("test_escape:\n");
+
+	pass &= check_escape("plain", "plain");
+	pass &= check_escape("", "");
+	pass &= check_escape("a\033[31mb", "a\\x1b[31mb");
+	pass &= check_escape("tab\there", "tab\\x09here");
+	pass &= check_escape("del\x7f", "del\\x7f");
+	pass &= check_escape("\xc3\xa4", "\xc3\xa4");
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -271,6 +298,7 @@ int main(void)
 	pass &= test_sanitize_name();
 	pass &= test_kv_strip();
 	pass &= test_kv_keymatch();
+	pass &= test_escape();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
