@@ -7193,7 +7193,7 @@ _nvme () {
 					local _ocp_set_enable_ieee1667_silo
 					_ocp_set_enable_ieee1667_silo=(
 						--dry-run':show command instead of executing'
-						--enable':Skip UUID index search (UUID index not required for OCP 1.0)'
+						--enable':enable the silo, disable it if not given'
 						-e':alias for --enable'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
