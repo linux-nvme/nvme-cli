@@ -232,6 +232,7 @@ struct argconfig_commandline_options {
 };
 
 void argconfig_append_usage(const char *str);
+void argconfig_print_heading(FILE *out, const char *fmt, const char *text);
 void argconfig_set_command(const char *prog, const char *path);
 void argconfig_print_usage(void);
 int argconfig_usage_error(const char *fmt, ...)

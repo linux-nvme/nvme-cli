@@ -72,8 +72,10 @@ class HelpTest(unittest.TestCase):
                       result.stderr)
 
     def test_no_escape_sequences_when_not_a_terminal(self):
-        result = run('id', 'ctrl', '--help')
-        self.assertNotIn('\033[', result.stdout)
+        for args in (('id', 'ctrl', '--help'), ('help',), ('id', 'help')):
+            with self.subTest(args=args):
+                result = run(*args)
+                self.assertNotIn('\033[', result.stdout + result.stderr)
 
 
 class DeprecatedOptionTest(unittest.TestCase):
