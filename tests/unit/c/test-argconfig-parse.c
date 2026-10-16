@@ -504,7 +504,7 @@ static void given_test(void)
 	};
 	OPT_ARGS(opts) = {
 		OPT_FLAG("flag", 'f', &alias, "flag"),
-		OPT_FLAG("old-flag", 0, &alias, NULL, NULL, true),
+		OPT_FLAG("old-flag", 0, &alias, NULL),
 		OPT_UINT("uint", 'u', &cfg.uint, "uint"),
 		OPT_END()
 	};
