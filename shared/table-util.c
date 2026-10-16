@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
 
 #include "table-util.h"
@@ -374,14 +375,25 @@ int shr_table_get_row_id(struct shr_table *t)
 {
 	struct shr_table_row *new_rows;
 	int row = t->num_rows;
+	int alloc;
 
-	new_rows = reallocarray(t->rows, (row + 1), sizeof(struct shr_table_row));
-	if (!new_rows) {
-		t->error = true;
-		return -ENOMEM;
+	/* grow by doubling, a table can have very many rows */
+	if (row == t->rows_alloc) {
+		if (row > INT_MAX / 2) {
+			t->error = true;
+			return -ENOMEM;
+		}
+		alloc = row ? row * 2 : 16;
+		new_rows = reallocarray(t->rows, alloc,
+					sizeof(struct shr_table_row));
+		if (!new_rows) {
+			t->error = true;
+			return -ENOMEM;
+		}
+		t->rows = new_rows;
+		t->rows_alloc = alloc;
 	}
 
-	t->rows = new_rows;
 	t->rows[row] = (struct shr_table_row){ 0 };
 	t->rows[row].val = calloc(t->num_columns, sizeof(struct shr_table_value));
 	if (!t->rows[row].val) {

@@ -84,6 +84,7 @@ struct shr_table {
 	int num_columns;
 	struct shr_table_row *rows;
 	int num_rows;
+	int rows_alloc;
 	char *col_sep;
 	bool no_header;
 	int indent;
