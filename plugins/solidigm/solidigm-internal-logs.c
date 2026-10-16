@@ -142,7 +142,7 @@ struct nlog_dump_header4_1 {
 
 struct config {
 	char *out_dir;
-	char *type;
+	int type;
 	bool verbose;
 };
 
@@ -857,21 +857,30 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	struct ilog ilog = {0};
 	int err;
 	enum log_type log_type = ALL;
-	char type_ALL[] = "ALL";
 	time_t current_time;
 	DIR *dir;
 
 	const char *desc = "Get Debug Firmware Logs and save them.";
 	const char *type = "Log type; Defaults to ALL.";
 	const char *out_dir = "Output directory; defaults to current working directory.";
+	struct argconfig_opt_val types[] = {
+		VAL_ENUM("ALL", ALL),
+		VAL_ENUM("CIT", CIT),
+		VAL_ENUM("HIT", HIT),
+		VAL_ENUM("NLOG", NLOG),
+		VAL_ENUM("ASSERT", ASSERTLOG),
+		VAL_ENUM("EVENT", EVENTLOG),
+		VAL_ENUM("EXTENDED", EXTENDED),
+		VAL_END()
+	};
 
 	struct config cfg = {
 		.out_dir = ".",
-		.type = type_ALL,
+		.type = ALL,
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("type", 't', "ALL|CIT|HIT|NLOG|ASSERT|EVENT|EXTENDED", &cfg.type, type),
+		OPT_ENUM("type", 't', &cfg.type, type, types),
 		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -879,27 +888,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 		return err;
 	ilog.cfg = &cfg;
 
-	for (char *p = cfg.type; *p; ++p)
-		*p = toupper(*p);
-
-	if (!strcmp(cfg.type, "ALL"))
-		log_type = ALL;
-	else if (!strcmp(cfg.type, "HIT"))
-		log_type = HIT;
-	else if (!strcmp(cfg.type, "CIT"))
-		log_type = CIT;
-	else if (!strcmp(cfg.type, "NLOG"))
-		log_type = NLOG;
-	else if (!strcmp(cfg.type, "ASSERT"))
-		log_type = ASSERTLOG;
-	else if (!strcmp(cfg.type, "EVENT"))
-		log_type = EVENTLOG;
-	else if (!strcmp(cfg.type, "EXTENDED"))
-		log_type = EXTENDED;
-	else {
-		nvme_show_error("Invalid log type: %s", cfg.type);
-		return -EINVAL;
-	}
+	log_type = cfg.type;
 
 	dir = opendir(cfg.out_dir);
 	if (dir)
