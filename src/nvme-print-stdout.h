@@ -97,12 +97,13 @@ void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log,
 				    __u64 len);
 void stdout_reachability_associations_log(
 	struct nvme_reachability_associations_log *log, __u64 len);
-void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log);
+void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
+				   __u64 len);
 void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size);
 #ifdef CONFIG_FABRICS
 void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec);
-void stdout_host_discovery_log(struct nvme_host_discovery_log *log);
-void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log);
+void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len);
+void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len);
 #else /* CONFIG_FABRICS */
 #define stdout_discovery_log NULL
 #define stdout_host_discovery_log NULL
