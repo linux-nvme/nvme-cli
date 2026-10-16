@@ -12,6 +12,10 @@
 # suggests __func__. With __func__, checkpatch reports "Unnecessary
 # ftrace-like logging". No form passes, so drop the first warning for
 # files in a tests/ directory.
+#
+# The shell completions in completions/ are generated. Their lines are
+# as long as the generator makes them, so drop line length warnings for
+# them.
 
 use strict;
 use warnings;
@@ -33,6 +37,14 @@ while (my $line = <STDIN>) {
 		my $blank = <STDIN> // '';
 
 		next if $file =~ m{^#\d+: FILE: (?:.*/)?tests/};
+		$line .= $file . $code . $blank;
+	}
+	if ($line =~ /^WARNING: line length of \d+ exceeds/) {
+		my $file = <STDIN> // '';
+		my $code = <STDIN> // '';
+		my $blank = <STDIN> // '';
+
+		next if $file =~ m{^#\d+: FILE: completions/};
 		$line .= $file . $code . $blank;
 	}
 	$found = 1 if $line =~ /^(ERROR|WARNING):/;
