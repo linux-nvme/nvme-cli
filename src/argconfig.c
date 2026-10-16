@@ -84,6 +84,47 @@ void argconfig_append_usage(const char *str)
 	append_usage_str = str;
 }
 
+/* "nvme" and "id ctrl" of the current command, for the usage errors */
+static const char *command_prog;
+static const char *command_path;
+/* argv[0] of the current parse, if no command is set */
+static const char *parse_argv0 = "";
+
+void argconfig_set_command(const char *prog, const char *path)
+{
+	command_prog = prog;
+	command_path = path;
+}
+
+static const char *command_name(void)
+{
+	return command_path ? command_path : parse_argv0;
+}
+
+/* The synopsis and where to find the help, after a usage error */
+void argconfig_print_usage(void)
+{
+	fprintf(stderr, "Usage: %s\n", append_usage_str);
+	if (command_prog && command_path)
+		fprintf(stderr, "Try '%s %s --help' for more information.\n",
+			command_prog, command_path);
+}
+
+/* A usage error of the current command, followed by its usage */
+int argconfig_usage_error(const char *fmt, ...)
+{
+	va_list ap;
+
+	fprintf(stderr, "%s: ", command_name());
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fprintf(stderr, "\n");
+	argconfig_print_usage();
+
+	return -EINVAL;
+}
+
 /* The names an option accepts, below its description */
 static void show_value_names(FILE *out, const struct argconfig_opt_val *v)
 {
@@ -189,25 +230,12 @@ static void show_help(FILE *out, const char *program_desc,
 	print_options(out, argconfig_globals(s), "Global options");
 }
 
-/* The help after a usage error, on stderr */
-void argconfig_print_help(const char *program_desc,
-			  struct argconfig_commandline_options *s)
-{
-	show_help(stderr, program_desc, s);
-}
-
 static bool help_requested;
 
 /* True once argconfig_parse() printed the help -h or --help asked for */
 bool argconfig_help_requested(void)
 {
 	return help_requested;
-}
-
-static int argconfig_error(char *type, const char *opt, const char *arg)
-{
-	fprintf(stderr, "Expected %s argument for '%s' but got '%s'!\n", type, opt, arg);
-	return -EINVAL;
 }
 
 /*
@@ -238,8 +266,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	case CFG_LONG:
 	case CFG_LONG_SUFFIX:
 		if (argconfig_negative(arg))
-			return argconfig_error("non-negative number", s->option,
-					       arg);
+			return -EINVAL;
 		break;
 	default:
 		break;
@@ -252,13 +279,13 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	case CFG_INT:
 		*(int *)value = strtol(arg, &endptr, 0);
 		if (errno || arg == endptr || *endptr)
-			ret = argconfig_error("integer", s->option, arg);
+			ret = -EINVAL;
 		break;
 	case CFG_BYTE: {
 		unsigned long tmp = strtoul(arg, &endptr, 0);
 
 		if (errno || tmp >= 1 << 8 || arg == endptr || *endptr)
-			ret = argconfig_error("byte", s->option, arg);
+			ret = -EINVAL;
 		else
 			*(uint8_t *)value = tmp;
 		break;
@@ -267,7 +294,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		unsigned long tmp = strtoul(arg, &endptr, 0);
 
 		if (errno || tmp >= 1 << 16 || arg == endptr || *endptr)
-			ret = argconfig_error("short", s->option, arg);
+			ret = -EINVAL;
 		else
 			*(uint16_t *)value = tmp;
 		break;
@@ -276,7 +303,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		unsigned long long tmp = strtoull(arg, &endptr, 0);
 
 		if (errno || tmp > UINT32_MAX || arg == endptr || *endptr)
-			ret = argconfig_error("word", s->option, arg);
+			ret = -EINVAL;
 		else
 			*(uint32_t *)value = tmp;
 		break;
@@ -287,18 +314,15 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	case CFG_LONG:
 		*(uint64_t *)value = strtoull(arg, &endptr, 0);
 		if (errno || arg == endptr || *endptr)
-			ret = argconfig_error("long integer", s->option, arg);
+			ret = -EINVAL;
 		break;
 	case CFG_LONG_SUFFIX:
 		ret = shr_suffix_binary_parse(arg, &endptr, (uint64_t *)value);
-		if (ret)
-			argconfig_error("long suffixed integer", s->option,
-					arg);
 		break;
 	case CFG_DOUBLE:
 		*(double *)value = strtod(arg, &endptr);
 		if (errno || arg == endptr || *endptr)
-			ret = argconfig_error("float", s->option, arg);
+			ret = -EINVAL;
 		break;
 	case CFG_FLAG:
 		*(bool *)value = true;
@@ -452,7 +476,7 @@ static int argconfig_parse_error(struct argconfig_parser *p,
 {
 	va_list ap;
 
-	fprintf(stderr, "%s: ", p->argv[0]);
+	fprintf(stderr, "%s: ", command_name());
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
@@ -522,9 +546,57 @@ argconfig_find_short_any(struct argconfig_commandline_options *s, char c)
 	return o ? o : argconfig_find_short(s, c);
 }
 
+/* What a value of @s has to look like */
+static const char *argconfig_expected(struct argconfig_commandline_options *s)
+{
+	switch (s->config_type) {
+	case CFG_BYTE:
+		return "a number from 0 to 255";
+	case CFG_SHORT:
+		return "a number from 0 to 65535";
+	case CFG_POSITIVE:
+		return "a number from 0 to 4294967295";
+	case CFG_LONG:
+		return "a number from 0 to 18446744073709551615";
+	case CFG_LONG_SUFFIX:
+		return "a size such as 4096 or 4Ki";
+	default:
+		return "a number";
+	}
+}
+
+/* @arg is no value of @s, given by its short name @c or its long name */
+static int argconfig_value_error(struct argconfig_commandline_options *s,
+				 char c, const char *arg)
+{
+	const struct argconfig_opt_val *v;
+	int n = 0;
+
+	fprintf(stderr, "%s: invalid value '%s' for ", command_name(), arg);
+	if (c)
+		fprintf(stderr, "-%c", c);
+	else
+		fprintf(stderr, "--%s", s->option);
+	fprintf(stderr, ": expected %s", argconfig_expected(s));
+
+	/* A long list of names would drown the error, the help has them */
+	for (v = s->opt_val; v && v->str; v++)
+		n++;
+	if (n > 8)
+		fprintf(stderr, " or one of the names in the help");
+	for (v = s->opt_val; n <= 8 && v && v->str; v++)
+		fprintf(stderr, "%s%s", v == s->opt_val ? " or one of: " : ", ",
+			v->str);
+	fprintf(stderr, "\n");
+
+	return ARGCONFIG_USAGE;
+}
+
 static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 			   char *arg)
 {
+	int ret;
+
 	if (s->deprecated && !s->seen) {
 		if (c)
 			fprintf(stderr, "WARNING: '-%c'", c);
@@ -539,7 +611,11 @@ static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 	if (!s->default_value)
 		return 0;
 
-	return argconfig_parse_val(s, arg);
+	ret = argconfig_parse_val(s, arg);
+	if (ret == -EINVAL)
+		return argconfig_value_error(s, c, arg);
+
+	return ret;
 }
 
 /* The value of a required argument which is not attached to the option */
@@ -729,6 +805,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	};
 	int ret;
 
+	parse_argv0 = argc > 0 ? argv[0] : "";
 	free(operand_buf);
 	operand_buf = NULL;
 	operands.argv = NULL;
@@ -744,16 +821,15 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	ret = argconfig_parse_args(&p);
 	if (ret) {
 		/*
-		 * The help that was asked for goes to stdout, the one after a
-		 * malformed option to stderr. A bad value prints no help.
-		 * The command stops either way: it gets ARGCONFIG_HELP or an
-		 * error.
+		 * The help that was asked for goes to stdout, a usage error is
+		 * followed by the synopsis on stderr. The command stops
+		 * either way: it gets ARGCONFIG_HELP or an error.
 		 */
 		if (ret == ARGCONFIG_HELP) {
 			show_help(stdout, program_desc, options);
 			help_requested = true;
 		} else if (ret > 0) {
-			argconfig_print_help(program_desc, options);
+			argconfig_print_usage();
 			ret = -EINVAL;
 		}
 		free(p.operands);
@@ -795,6 +871,7 @@ int argconfig_parse_global(int argc, char *argv[],
 	};
 	int ret;
 
+	parse_argv0 = argc > 0 ? argv[0] : "";
 	ret = argconfig_parse_args(&p);
 	*argind = p.ind;
 	if (ret)

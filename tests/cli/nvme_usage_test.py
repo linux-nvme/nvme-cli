@@ -37,9 +37,39 @@ class HelpTest(unittest.TestCase):
     def test_usage_error_on_stderr_and_failure(self):
         result = run('id', 'ctrl', '--bogus')
         self.assertEqual(result.returncode, 1)
-        self.assertIn("unrecognized option '--bogus'", result.stderr)
-        self.assertIn('Usage: nvme id ctrl <device>', result.stderr)
+        self.assertIn("id ctrl: unrecognized option '--bogus'", result.stderr)
         self.assertEqual(result.stdout, '')
+
+    def test_usage_error_shows_synopsis_and_hint(self):
+        # the error must not drown in the full help
+        for args in (('id', 'ctrl', '--bogus'),
+                     ('id', 'ctrl'),
+                     ('id', 'ns', '/dev/nvme0', '-n', '1x')):
+            with self.subTest(args=args):
+                result = run(*args)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn('Usage: nvme id ', result.stderr)
+                self.assertRegex(result.stderr,
+                                 r"Try 'nvme id c?\w+ --help' for more "
+                                 r"information\.")
+                self.assertNotIn('Options:', result.stderr)
+
+    def test_open_failure_is_no_usage_error(self):
+        result = run('id', 'ns', '/dev/nvme-does-not-exist')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('/dev/nvme-does-not-exist', result.stderr)
+        self.assertNotIn('Usage:', result.stderr)
+        result = run('id', 'ns', '/dev/nvme-does-not-exist', '-o', 'json')
+        self.assertNotIn('Usage:', result.stdout + result.stderr)
+
+    def test_value_error_names_the_spelling(self):
+        result = run('id', 'ns', '/dev/nvme0', '-n', '1x')
+        self.assertIn("id ns: invalid value '1x' for -n: expected a number "
+                      "from 0 to 4294967295 or one of: all, -1",
+                      result.stderr)
+        result = run('id', 'ns', '/dev/nvme0', '--namespace-id=1x')
+        self.assertIn("invalid value '1x' for --namespace-id",
+                      result.stderr)
 
     def test_no_escape_sequences_when_not_a_terminal(self):
         result = run('id', 'ctrl', '--help')

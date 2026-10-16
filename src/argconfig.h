@@ -232,8 +232,10 @@ struct argconfig_commandline_options {
 };
 
 void argconfig_append_usage(const char *str);
-void argconfig_print_help(const char *program_desc,
-			  struct argconfig_commandline_options *options);
+void argconfig_set_command(const char *prog, const char *path);
+void argconfig_print_usage(void);
+int argconfig_usage_error(const char *fmt, ...)
+	__attribute__((format(printf, 1, 2)));
 bool argconfig_help_requested(void);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
