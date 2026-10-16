@@ -256,8 +256,8 @@ struct request_data host_log_page_header[] = {
 	{ "Telemetry Host-Initiated Data Area 4 Last Block", 4 },
 	{ "Reserved3", 360 },
 	{ "Telemetry Host-Initiated Scope", 1 },
-	{ "Telemetry Host Initiated Generation Number", 1 },
-	{ "Telemetry Host-Initiated Data Available", 1 },
+	{ "Telemetry Host-Initiated Data Generation Number", 1 },
+	{ "Telemetry Controller-Initiated Data Available", 1 },
 	{ "Telemetry Controller-Initiated Data Generation Number", 1 }
 };
 
@@ -265,11 +265,11 @@ struct request_data controller_log_page_header[] = {
 	{ "LogIdentifier", 1 },
 	{ "Reserved1", 4 },
 	{ "IEEE OUI Identifier", 3 },
-	{ "Telemetry Host-Initiated Data Area 1 Last Block", 2 },
-	{ "Telemetry Host-Initiated Data Area 2 Last Block", 2 },
-	{ "Telemetry Host-Initiated Data Area 3 Last Block", 2 },
+	{ "Telemetry Controller-Initiated Data Area 1 Last Block", 2 },
+	{ "Telemetry Controller-Initiated Data Area 2 Last Block", 2 },
+	{ "Telemetry Controller-Initiated Data Area 3 Last Block", 2 },
 	{ "Reserved2", 2 },
-	{ "Telemetry Host-Initiated Data Area 4 Last Block", 4 },
+	{ "Telemetry Controller-Initiated Data Area 4 Last Block", 4 },
 	{ "Reserved3", 361 },
 	{ "Telemetry Controller-Initiated Scope", 1 },
 	{ "Telemetry Controller-Initiated Data Available", 1 },

@@ -381,7 +381,9 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
 
     def _header_expected(self, telemetry):
         dalb = layout.data_area_last_blocks(telemetry)
-        label = 'Telemetry Host-Initiated Data Area {} Last Block'
+        initiator = ('Controller' if telemetry[0] == layout.LID_TELEMETRY_CTRL
+                     else 'Host')
+        label = f'Telemetry {initiator}-Initiated Data Area {{}} Last Block'
         return {
             'LogIdentifier': f'0x{telemetry[0]:02x}',
             'IEEE OUI Identifier': '0x123456',
@@ -393,8 +395,8 @@ class TestInternalLogHeaders(OCPInternalLogTestBase):
 
     _HOST_BYTES_380_383 = {
         'Telemetry Host-Initiated Scope': '0x11',
-        'Telemetry Host Initiated Generation Number': '0x22',
-        'Telemetry Host-Initiated Data Available': '0x33',
+        'Telemetry Host-Initiated Data Generation Number': '0x22',
+        'Telemetry Controller-Initiated Data Available': '0x33',
         'Telemetry Controller-Initiated Data Generation Number': '0x44',
     }
     _CTRL_BYTES_381_383 = {
