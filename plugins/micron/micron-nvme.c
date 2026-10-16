@@ -637,9 +637,11 @@ static int micron_selective_download(int argc, char **argv,
 		.select = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_STRING("fw", 'f', "FILE", &cfg.fw, fw),
-		OPT_ENUM("select", 's', &cfg.select, select, selects));
+	OPT_ARGS(opts) = {
+		OPT_STRING("fw",   'f', "FILE",      &cfg.fw, fw),
+		OPT_ENUM("select", 's', &cfg.select, select,  selects),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -744,10 +746,12 @@ static int micron_smbus_option(int argc, char **argv,
 		.status = 0,
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_ENUM("option", 'O', &opt.option, option, micron_options),
-		OPT_UINT("value", 'V',	&opt.value, value),
-		OPT_UINT("save", 's', &opt.save, save));
+		OPT_UINT("value",  'V', &opt.value,  value),
+		OPT_UINT("save",   's', &opt.save,   save),
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -803,7 +807,9 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -932,7 +938,9 @@ static int micron_pcie_stats(int argc, char **argv,
 	__u32 correctable_errors = 0;
 	__u32 uncorrectable_errors = 0;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1032,7 +1040,9 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 	__u64 result = 0;
 	__u8 fid = MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -1670,7 +1680,9 @@ static int micron_nand_stats(int argc, char **argv,
 	nsze_from_oacs = false;
 	nvme_print_flags_t format;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1794,7 +1806,9 @@ static int micron_smart_ext_log(int argc, char **argv,
 	bool is_json = false;
 	nvme_print_flags_t format;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1835,7 +1849,9 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 	bool is_json = false;
 	nvme_print_flags_t format;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -1874,7 +1890,9 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 
 	nvme_print_flags_t format;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -2610,7 +2628,9 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 
 	nvme_print_flags_t format;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -2755,7 +2775,9 @@ static int micron_cloud_ssd_plugin_version(int argc, char **argv,
 	const char *desc = "Prints the Micron cloud SSD plugin version.";
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -2772,7 +2794,9 @@ static int micron_plugin_version(int argc, char **argv, struct command *acmd,
 	const char *desc = "Prints the Micron plugin version.";
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -2944,7 +2968,9 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 
 	nvme_print_flags_t format;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -3057,10 +3083,12 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 		.threshold = 0
 	};
 
-	NVME_ARGS(opts,
-		OPT_ENUM("option", 'O', &opt.option, option, micron_options),
+	OPT_ARGS(opts) = {
+		OPT_ENUM("option",  'O', &opt.option,  option, micron_options),
 		OPT_ENUM("command", 'c', &opt.command, cmdstr, micron_commands),
-		OPT_UINT("threshold", 't', &opt.threshold, thrtime));
+		OPT_UINT("threshold", 't', &opt.threshold, thrtime),
+		OPT_END()
+	};
 
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
@@ -3187,7 +3215,9 @@ static int micron_latency_stats_logs(int argc, char **argv, struct command *acmd
 	int err = -1;
 	const char *desc = "Display Latency tracking log information";
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -3256,9 +3286,10 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *acmd
 	uint64_t *cmd_stats = &log.all_cmds[0];
 	char *cmd_str = "All";
 
-	NVME_ARGS(opts,
-		OPT_ENUM("command", 'c', &opt.command, cmdstr,
-			 micron_commands));
+	OPT_ARGS(opts) = {
+		OPT_ENUM("command", 'c', &opt.command, cmdstr, micron_commands),
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -3317,7 +3348,9 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *a
 	nvme_print_flags_t format;
 	int err = 0;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -3375,7 +3408,9 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 	int err = 0;
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
@@ -3423,9 +3458,11 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 		.select = 0,
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_ENUM("option", 'O', &opt.option, option, micron_options),
-		OPT_UINT("select", 's', &opt.select, select));
+		OPT_UINT("select", 's', &opt.select, select),
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -3723,10 +3760,12 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		.log = 0x07,
 	};
 
-	NVME_ARGS(opts,
-		OPT_ENUM("type", 't', &cfg.type, type, types),
+	OPT_ARGS(opts) = {
+		OPT_ENUM("type",      't', &cfg.type,      type, types),
 		OPT_STRING("package", 'p', "FILE", &cfg.package, package),
-		OPT_UINT("data_area", 'd', &cfg.data_area, data_area));
+		OPT_UINT("data_area", 'd', &cfg.data_area, data_area),
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4025,7 +4064,9 @@ static int micron_logpage_dir(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int i;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -4091,7 +4132,9 @@ static int micron_cloud_boot_SSD_version(int argc, char **argv,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4143,7 +4186,9 @@ static int micron_device_waf(int argc, char **argv, struct command *acmd,
 	long double tlc_units_written, slc_units_written;
 	long double data_units_written, write_amplification_factor;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4198,7 +4243,9 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 	bool is_json = false;
 	nvme_print_flags_t format;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4429,7 +4476,9 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	nvme_print_flags_t format;
 	int err = 0;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4496,7 +4545,9 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 	nvme_print_flags_t flags;
 	int err = 0;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)

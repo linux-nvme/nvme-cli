@@ -310,8 +310,11 @@ int ocp_hwcomp_log(int argc, char **argv, struct command *acmd, struct plugin *p
 		VAL_END()
 	};
 
-	NVME_ARGS(opts, OPT_LONG("comp-id", 'i', &cfg.id, id_desc, id),
-		  OPT_FLAG("list", 'l', &cfg.list, list_desc));
+	OPT_ARGS(opts) = {
+		OPT_LONG("comp-id", 'i', &cfg.id,   id_desc, id),
+		OPT_FLAG("list",    'l', &cfg.list, list_desc),
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

@@ -88,10 +88,12 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		.namespace_id	= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
-			   nvme_nsid_values));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",          'I', &cfg.ish,          ish),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
+			 nvme_nsid_values),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -143,11 +145,13 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		.cntlist	= "",
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,     ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,    namespace_id,
-			   nvme_nsid_values),
-		  OPT_LIST("controllers",  'c', &cfg.cntlist, cont));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",          'I', &cfg.ish,     ish),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, namespace_id,
+			 nvme_nsid_values),
+		OPT_LIST("controllers",  'c', &cfg.cntlist, cont),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -404,27 +408,29 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		.phndls		= "",
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,      ish),
-		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
-		  OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
-		  OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
-		  OPT_BYTE("dps",          'd', &cfg.dps,      dps),
-		  OPT_BYTE("nmic",         'm', &cfg.nmic,     nmic),
-		  OPT_UINT("anagrp-id",    'a', &cfg.anagrpid, anagrpid),
-		  OPT_SHRT("nvmset-id",    'i', &cfg.nvmsetid, nvmsetid),
-		  OPT_SHRT("endg-id",      'e', &cfg.endgid,   endgid),
-		  OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
-		  OPT_BYTE("csi",          'y', &cfg.csi,      csi),
-		  OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
-		  OPT_SHRT("nphndls",      'n', &cfg.nphndls,  nphndls),
-		  OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
-		  OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
-		  OPT_FLAG("azr",          'z', &cfg.azr,      azr),
-		  OPT_UINT("rar",          'r', &cfg.rar,      rar),
-		  OPT_UINT("ror",          'O', &cfg.ror,      ror),
-		  OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
-		  OPT_LIST("phndls",       'p', &cfg.phndls,   phndls));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",          'I', &cfg.ish,      ish),
+		OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
+		OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
+		OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
+		OPT_BYTE("dps",          'd', &cfg.dps,      dps),
+		OPT_BYTE("nmic",         'm', &cfg.nmic,     nmic),
+		OPT_UINT("anagrp-id",    'a', &cfg.anagrpid, anagrpid),
+		OPT_SHRT("nvmset-id",    'i', &cfg.nvmsetid, nvmsetid),
+		OPT_SHRT("endg-id",      'e', &cfg.endgid,   endgid),
+		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
+		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
+		OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
+		OPT_SHRT("nphndls",      'n', &cfg.nphndls,  nphndls),
+		OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
+		OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
+		OPT_FLAG("azr",          'z', &cfg.azr,      azr),
+		OPT_UINT("rar",          'r', &cfg.rar,      rar),
+		OPT_UINT("ror",          'O', &cfg.ror,      ror),
+		OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
+		OPT_LIST("phndls",       'p', &cfg.phndls,   phndls),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -588,7 +594,9 @@ static int get_ns_id(int argc, char **argv, struct command *acmd, struct plugin 
 	unsigned int nsid;
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

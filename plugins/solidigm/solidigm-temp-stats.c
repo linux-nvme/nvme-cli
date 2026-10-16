@@ -63,8 +63,10 @@ int sldgm_get_temp_stats_log(int argc, char **argv, struct command *acmd, struct
 		.raw_binary = false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

@@ -69,15 +69,17 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 		.input_file = "",
 	};
 
-	NVME_ARGS(opts,
-		  OPT_BYTE("opcode", 'O', &cfg.opcode, opcode),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_desired, nvme_nsid_values),
-		  OPT_UINT("data-len", 'l', &cfg.data_len, data_len),
-		  OPT_UINT("nmimt", 'm', &cfg.nmimt, nmimt),
-		  OPT_UINT("nmd0", '0', &cfg.nmd0, nmd0),
-		  OPT_UINT("nmd1", '1', &cfg.nmd1, nmd1),
-		  OPT_FILE("input-file", 'i', &cfg.input_file, input));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("opcode",       'O', &cfg.opcode,       opcode),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_desired, nvme_nsid_values),
+		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
+		OPT_UINT("nmimt",        'm', &cfg.nmimt,        nmimt),
+		OPT_UINT("nmd0",         '0', &cfg.nmd0,         nmd0),
+		OPT_UINT("nmd1",         '1', &cfg.nmd1,         nmd1),
+		OPT_FILE("input-file",   'i', &cfg.input_file,   input),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

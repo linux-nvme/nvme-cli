@@ -31,7 +31,9 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieves the OCP firmware activation history log.";
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;

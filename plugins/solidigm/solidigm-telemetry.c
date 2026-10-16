@@ -65,12 +65,14 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		.ctrl_init  = false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
-		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
-		OPT_BYTE("data-area",       'd', &cfg.data_area, dgen),
-		OPT_FILE("config-file",     'j', &cfg.cfg_file, cfile),
-		OPT_FILE("source-file",     's', &cfg.binary_file, sfile));
+	OPT_ARGS(opts) = {
+		OPT_UINT("host-generate",   'g', &cfg.host_gen,    hgen),
+		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init,   cgen),
+		OPT_BYTE("data-area",       'd', &cfg.data_area,   dgen),
+		OPT_FILE("config-file",     'j', &cfg.cfg_file,    cfile),
+		OPT_FILE("source-file",     's', &cfg.binary_file, sfile),
+		OPT_END()
+	};
 
 	int err = parse_args(argc, argv, desc, opts);
 

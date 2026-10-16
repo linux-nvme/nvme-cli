@@ -195,7 +195,9 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	NVME_ARGS(options);
+	OPT_ARGS(options) = {
+		OPT_END()
+	};
 
 	int err = parse_and_open(&ctx, &hdl, argc, argv, description, options);
 	if (err)

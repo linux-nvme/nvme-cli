@@ -879,9 +879,11 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 		.type = ALL,
 	};
 
-	NVME_ARGS(opts,
-		OPT_ENUM("type", 't', &cfg.type, type, types),
-		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir));
+	OPT_ARGS(opts) = {
+		OPT_ENUM("type",       't', &cfg.type,   type,         types),
+		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

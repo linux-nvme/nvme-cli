@@ -37,8 +37,10 @@ int sldgm_get_market_log(int argc, char **argv, struct command *acmd,
 	__u8 uuid_idx;
 	bool  raw_binary = false;
 
-	NVME_ARGS(opts,
-		OPT_FLAG("raw-binary", 'b', &raw_binary, raw));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

@@ -543,23 +543,30 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 	join_options(type_options, sizeof(type_options), trk_types, ARRAY_SIZE(trk_types));
 	join_options(sample_options, sizeof(sample_options), samplet, ARRAY_SIZE(samplet));
 
-	NVME_ARGS(opts,
-		OPT_BYTE("uuid-index",   'U', &wlt.uuid_index, "specify uuid index"),
-		OPT_FLAG("enable", 'e', &cfg.enable, "tracker enable"),
-		OPT_FLAG("disable", 'd', &cfg.disable, "tracker disable"),
-		OPT_STRING("sample-time", 's', sample_options, &cfg.sample_time, sample_interval),
-		OPT_STRING("type", 't', type_options, &cfg.tracker_type, "Tracker type"),
-		OPT_UINT("run-time", 'r', &cfg.run_time_s, run_time),
-		OPT_INT("flush-freq", 'f', &cfg.flush_frequency, flush_frequency),
+	OPT_ARGS(opts) = {
+		OPT_BYTE("uuid-index", 'U', &wlt.uuid_index,
+			 "specify uuid index"),
+		OPT_FLAG("enable",     'e', &cfg.enable,     "tracker enable"),
+		OPT_FLAG("disable",    'd', &cfg.disable,    "tracker disable"),
+		OPT_STRING("sample-time", 's', sample_options, &cfg.sample_time,
+			   sample_interval),
+		OPT_STRING("type", 't', type_options, &cfg.tracker_type,
+			   "Tracker type"),
+		OPT_UINT("run-time",   'r', &cfg.run_time_s, run_time),
+		OPT_INT("flush-freq", 'f', &cfg.flush_frequency,
+			flush_frequency),
 		OPT_FLAG("wall-clock", 'w', &wlt.show_wall_timestamp,
 			 "Logs current wall timestamp when entry was retrieved"),
-		OPT_STR("trigger-field", 'T', &cfg.trigger_field, "Field name to stop trigger on"),
+		OPT_STR("trigger-field", 'T', &cfg.trigger_field,
+			"Field name to stop trigger on"),
 		OPT_UINT("trigger-threshold", 'V', &cfg.trigger_treshold,
 			 "Field value to trigger stop sampling"),
 		OPT_FLAG("trigger-on-delta", 'D', &cfg.trigger_on_delta,
 			 "Trigger on delta to stop sampling"),
 		OPT_FLAG("trigger-on-latency", 'L', &cfg.trigger_on_latency,
-			 "Use latency tracker to trigger stop sampling"));
+			 "Use latency tracker to trigger stop sampling"),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

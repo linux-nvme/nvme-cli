@@ -664,11 +664,16 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	nvme_print_flags_t flags;
 	int ret;
 
-	NVME_ARGS(opts,
-		OPT_FLAG("subsystem", 's', &show_subsys, "show NBFT subsystems"),
-		OPT_FLAG("hfi", 0, &show_hfi, "show NBFT HFIs"),
-		OPT_FLAG("discovery", 'd', &show_discovery, "show NBFT discovery controllers"),
-		OPT_STRING("nbft-path", 0, "STR", &nbft_path, "user-defined path for NBFT tables"));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("subsystem", 's', &show_subsys,
+			 "show NBFT subsystems"),
+		OPT_FLAG("hfi",         0,   &show_hfi, "show NBFT HFIs"),
+		OPT_FLAG("discovery", 'd', &show_discovery,
+			 "show NBFT discovery controllers"),
+		OPT_STRING("nbft-path", 0, "STR", &nbft_path,
+			   "user-defined path for NBFT tables"),
+		OPT_END()
+	};
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)

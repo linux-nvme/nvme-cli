@@ -181,7 +181,9 @@ static int innogrit_geteventlog(int argc, char **argv,
 	time_t timep;
 	int ret = -1;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -227,7 +229,9 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 	time_t timep;
 	int ret = -1;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

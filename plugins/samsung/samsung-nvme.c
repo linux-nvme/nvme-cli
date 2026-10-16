@@ -1335,13 +1335,14 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 		.hide_progress = false,
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_STRING("dump-type", 't', "TYPE", &cfg.type, type),
-		OPT_INT("telemetry-data-area", 'a', &cfg.area, area),
-		OPT_FILE("output-file", 'O', &cfg.file, file),
-		OPT_FLAG("compress", 'z', &cfg.compress, compress),
-		OPT_FLAG("hide-progress", 0, &cfg.hide_progress,
-			 hide_progress));
+		OPT_INT("telemetry-data-area", 'a', &cfg.area,     area),
+		OPT_FILE("output-file",        'O', &cfg.file,     file),
+		OPT_FLAG("compress",           'z', &cfg.compress, compress),
+		OPT_FLAG("hide-progress", 0, &cfg.hide_progress, hide_progress),
+		OPT_END()
+	};
 
 	samsung_initialize();
 

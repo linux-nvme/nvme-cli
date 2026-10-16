@@ -241,8 +241,10 @@ static int get_ibm_addi_smart_log(int argc, char **argv, struct command *cmd, st
 		.raw_binary = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -371,8 +373,10 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 		.raw_binary = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -550,10 +554,12 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		OPT_BYTE("action",       'a', &cfg.action,        action),
-		OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+	OPT_ARGS(opts) = {
+		OPT_BYTE("action",     'a', &cfg.action,     action),
+		OPT_UINT("log_len",    'l', &cfg.log_len,    log_len),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

@@ -329,7 +329,9 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	unsigned int huawei_num = 0;
 	int ret;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	ret = parse_args(argc, argv, desc, opts);
 	if (ret)

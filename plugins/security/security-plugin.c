@@ -71,15 +71,17 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		.tl		= 0,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_desired, nvme_nsid_values),
-		  OPT_FILE("file",         'f', &cfg.file,         file),
-		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
-		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),
-		  OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
-		  OPT_UINT("tl",           't', &cfg.tl,           tl));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",          'I', &cfg.ish,          ish),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_desired, nvme_nsid_values),
+		OPT_FILE("file",         'f', &cfg.file,         file),
+		OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
+		OPT_BYTE("secp",         'p', &cfg.secp,         secp),
+		OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
+		OPT_UINT("tl",           't', &cfg.tl,           tl),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -191,16 +193,18 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
-			   namespace_desired, nvme_nsid_values),
-		  OPT_UINT("size",         'x', &cfg.size,         size),
-		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
-		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),
-		  OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
-		  OPT_UINT("al",           't', &cfg.al,           al),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("ish",          'I', &cfg.ish,          ish),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+			 namespace_desired, nvme_nsid_values),
+		OPT_UINT("size",         'x', &cfg.size,         size),
+		OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
+		OPT_BYTE("secp",         'p', &cfg.secp,         secp),
+		OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
+		OPT_UINT("al",           't', &cfg.al,           al),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

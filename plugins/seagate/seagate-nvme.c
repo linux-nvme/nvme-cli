@@ -158,7 +158,9 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 	nvme_print_flags_t flags;
 	int fmt;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -907,7 +909,9 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	nvme_print_flags_t flags;
 	int err, index = 0;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1081,7 +1085,9 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1238,7 +1244,9 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 	int err;
 	nvme_print_flags_t flags;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1369,7 +1377,9 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 	int err;
 	nvme_print_flags_t flags;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1423,8 +1433,10 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 		.save         = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_FLAG("save", 's', &cfg.save, save));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("save", 's', &cfg.save, save),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1481,8 +1493,10 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 		.save         = 0,
 	};
 
-	NVME_ARGS(opts,
-		OPT_FLAG("save", 's', &cfg.save, save));
+	OPT_ARGS(opts) = {
+		OPT_FLAG("save", 's', &cfg.save, save),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1544,11 +1558,13 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 		.log_id       = 0,
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
 			 nvme_nsid_values),
 		OPT_UINT("log_specific", 'i', &cfg.log_id,       log_specific),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1650,10 +1666,12 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 		.namespace_id = 0xffffffff,
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
 			 nvme_nsid_values),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1764,10 +1782,12 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		.file         = "",
 	};
 
-	NVME_ARGS(opts,
+	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id,
 			 nvme_nsid_values),
-		OPT_FILE("dump-file",    'f', &cfg.file,         file));
+		OPT_FILE("dump-file",    'f', &cfg.file,         file),
+		OPT_END()
+	};
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1847,7 +1867,9 @@ static int seagate_plugin_version(int argc, char **argv, struct command *acmd, s
 	const char *desc = "Prints the Seagate plugin version.";
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -1866,7 +1888,9 @@ static int stx_ocp_plugin_version(int argc, char **argv, struct command *acmd, s
 	const char *desc = "Prints the Seagate OCP plugin version.";
 	int err;
 
-	NVME_ARGS(opts);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
