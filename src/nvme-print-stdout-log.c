@@ -2996,7 +2996,10 @@ void stdout_dispersed_ns_psub_log(
 void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log,
 				    __u64 len)
 {
+	struct nvme_reachability_group_desc rgd;
+	__u64 off = sizeof(*log);
 	struct shr_table *t;
+	__le32 *nsid;
 	__u16 i;
 	__u32 j;
 
@@ -3009,18 +3012,19 @@ void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log,
 	stdout_kv_add(t, "chngc", "%"PRIu64, le64_to_cpu(log->chngc));
 	stdout_kv_add(t, "nrgd", "%u", le16_to_cpu(log->nrgd));
 
-	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
-		stdout_kv_add(t, "rgid", "%u", le32_to_cpu(log->rgd[i].rgid));
-		stdout_kv_add(t, "nnid", "%u", le32_to_cpu(log->rgd[i].nnid));
-		stdout_kv_add(t, "chngc", "%"PRIu64,
-			      le64_to_cpu(log->rgd[i].chngc));
-		for (j = 0; j < le32_to_cpu(log->rgd[i].nnid); j++) {
+	for (i = 0; i < le16_to_cpu(log->nrgd) &&
+	     nvme_reachability_group(log, len, off, &rgd); i++) {
+		stdout_kv_add(t, "rgid", "%u", le32_to_cpu(rgd.rgid));
+		stdout_kv_add(t, "nnid", "%u", le32_to_cpu(rgd.nnid));
+		stdout_kv_add(t, "chngc", "%"PRIu64, le64_to_cpu(rgd.chngc));
+		nsid = nvme_reachability_ids(log, off, sizeof(rgd));
+		for (j = 0; j < le32_to_cpu(rgd.nnid); j++) {
 			char name[16];
 
 			snprintf(name, sizeof(name), "nsid%u", j);
-			stdout_kv_add(t, name, "%u",
-				      le32_to_cpu(log->rgd[i].nsid[j]));
+			stdout_kv_add(t, name, "%u", le32_to_cpu(nsid[j]));
 		}
+		off = nvme_reachability_group_next(&rgd, off);
 	}
 
 	stdout_kv_table_finish(t, "reachability-groups");
@@ -3029,7 +3033,10 @@ void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log,
 void stdout_reachability_associations_log(
 	struct nvme_reachability_associations_log *log, __u64 len)
 {
+	struct nvme_reachability_association_desc rad;
+	__u64 off = sizeof(*log);
 	struct shr_table *t;
+	__le32 *rgid;
 	__u16 i;
 	__u32 j;
 
@@ -3042,19 +3049,20 @@ void stdout_reachability_associations_log(
 	stdout_kv_add(t, "chngc", "%"PRIu64, le64_to_cpu(log->chngc));
 	stdout_kv_add(t, "nrad", "%u", le16_to_cpu(log->nrad));
 
-	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
-		stdout_kv_add(t, "rasid", "%u", le32_to_cpu(log->rad[i].rasid));
-		stdout_kv_add(t, "nrid", "%u", le32_to_cpu(log->rad[i].nrid));
-		stdout_kv_add(t, "chngc", "%"PRIu64,
-			      le64_to_cpu(log->rad[i].chngc));
-		stdout_kv_add(t, "rac", "%u", log->rad[i].rac);
-		for (j = 0; j < le32_to_cpu(log->rad[i].nrid); j++) {
+	for (i = 0; i < le16_to_cpu(log->nrad) &&
+	     nvme_reachability_association(log, len, off, &rad); i++) {
+		stdout_kv_add(t, "rasid", "%u", le32_to_cpu(rad.rasid));
+		stdout_kv_add(t, "nrid", "%u", le32_to_cpu(rad.nrid));
+		stdout_kv_add(t, "chngc", "%"PRIu64, le64_to_cpu(rad.chngc));
+		stdout_kv_add(t, "rac", "%u", rad.rac);
+		rgid = nvme_reachability_ids(log, off, sizeof(rad));
+		for (j = 0; j < le32_to_cpu(rad.nrid); j++) {
 			char name[16];
 
 			snprintf(name, sizeof(name), "rgid%u", j);
-			stdout_kv_add(t, name, "%u",
-				      le32_to_cpu(log->rad[i].rgid[j]));
+			stdout_kv_add(t, name, "%u", le32_to_cpu(rgid[j]));
 		}
+		off = nvme_reachability_association_next(&rad, off);
 	}
 
 	stdout_kv_table_finish(t, "reachability-associations");

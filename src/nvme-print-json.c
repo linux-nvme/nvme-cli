@@ -5951,9 +5951,13 @@ static void json_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_ns
 	}
 }
 
-static void json_reachability_groups_log(struct nvme_reachability_groups_log *log, __u64 len UNUSED)
+static void json_reachability_groups_log(
+		struct nvme_reachability_groups_log *log, __u64 len)
 {
 	struct json_object *r = json_r;
+	struct nvme_reachability_group_desc desc;
+	__u64 off = sizeof(*log);
+	__le32 *nsid;
 	__u16 i;
 	__u32 j;
 	char json_str[STR_LEN];
@@ -5962,21 +5966,28 @@ static void json_reachability_groups_log(struct nvme_reachability_groups_log *lo
 	obj_add_uint64(r, "chngc", le64_to_cpu(log->chngc));
 	obj_add_uint(r, "nrgd", le16_to_cpu(log->nrgd));
 
-	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
-		snprintf(json_str, sizeof(json_str), "rgid: %u", le32_to_cpu(log->rgd[i].rgid));
+	for (i = 0; i < le16_to_cpu(log->nrgd) &&
+	     nvme_reachability_group(log, len, off, &desc); i++) {
+		snprintf(json_str, sizeof(json_str), "rgid: %u",
+			 le32_to_cpu(desc.rgid));
 		rgd = json_create_object();
-		obj_add_uint(rgd, "nnid", le32_to_cpu(log->rgd[i].nnid));
-		obj_add_uint64(rgd, "chngc", le64_to_cpu(log->rgd[i].chngc));
-		for (j = 0; j < le32_to_cpu(log->rgd[i].nnid); j++)
-			obj_add_uint(rgd, "nnid", le32_to_cpu(log->rgd[i].nsid[j]));
+		obj_add_uint(rgd, "nnid", le32_to_cpu(desc.nnid));
+		obj_add_uint64(rgd, "chngc", le64_to_cpu(desc.chngc));
+		nsid = nvme_reachability_ids(log, off, sizeof(desc));
+		for (j = 0; j < le32_to_cpu(desc.nnid); j++)
+			obj_add_uint(rgd, "nnid", le32_to_cpu(nsid[j]));
 		obj_add_obj(r, json_str, rgd);
+		off = nvme_reachability_group_next(&desc, off);
 	}
 }
 
 static void json_reachability_associations_log(struct nvme_reachability_associations_log *log,
-					       __u64 len UNUSED)
+					       __u64 len)
 {
 	struct json_object *r = json_r;
+	struct nvme_reachability_association_desc desc;
+	__u64 off = sizeof(*log);
+	__le32 *rgid;
 	__u16 i;
 	__u32 j;
 	char json_str[STR_LEN];
@@ -5985,15 +5996,19 @@ static void json_reachability_associations_log(struct nvme_reachability_associat
 	obj_add_uint64(r, "chngc", le64_to_cpu(log->chngc));
 	obj_add_uint(r, "nrad", le16_to_cpu(log->nrad));
 
-	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
-		snprintf(json_str, sizeof(json_str), "rasid: %u", le32_to_cpu(log->rad[i].rasid));
+	for (i = 0; i < le16_to_cpu(log->nrad) &&
+	     nvme_reachability_association(log, len, off, &desc); i++) {
+		snprintf(json_str, sizeof(json_str), "rasid: %u",
+			 le32_to_cpu(desc.rasid));
 		rad = json_create_object();
-		obj_add_uint(rad, "nrid", le32_to_cpu(log->rad[i].nrid));
-		obj_add_uint64(rad, "chngc", le64_to_cpu(log->rad[i].chngc));
-		obj_add_uint(rad, "rac", log->rad[i].rac);
-		for (j = 0; j < le32_to_cpu(log->rad[i].nrid); j++)
-			obj_add_uint(rad, "rgid", le32_to_cpu(log->rad[i].rgid[j]));
+		obj_add_uint(rad, "nrid", le32_to_cpu(desc.nrid));
+		obj_add_uint64(rad, "chngc", le64_to_cpu(desc.chngc));
+		obj_add_uint(rad, "rac", desc.rac);
+		rgid = nvme_reachability_ids(log, off, sizeof(desc));
+		for (j = 0; j < le32_to_cpu(desc.nrid); j++)
+			obj_add_uint(rad, "rgid", le32_to_cpu(rgid[j]));
 		obj_add_obj(r, json_str, rad);
+		off = nvme_reachability_association_next(&desc, off);
 	}
 }
 

@@ -34,6 +34,8 @@ _LID_HOST_DISCOVERY = 0x71
 _LID_AVE_DISCOVERY = 0x72
 _LID_PULL_MODEL_DDC_REQ = 0x73
 _LID_POWER_MEASUREMENT = 0x25
+_LID_REACHABILITY_GROUPS = 0x1a
+_LID_REACHABILITY_ASSOCIATIONS = 0x1b
 
 _HEADER_LEN = 1024        # host and AVE discovery log headers
 _HEDLPE_LEN = 1032        # struct nvme_host_ext_discovery_log
@@ -99,6 +101,28 @@ def _power_meas_log(nphd, ndescs):
     struct.pack_into('<BBHIIH', hdr, 0, 1, 0, 0, sze, 0, nphd)
     descs = b''.join(struct.pack('<II', i + 1, 0) for i in range(ndescs))
     return bytes(hdr) + descs
+
+
+def _reachability_log(descs, fixed_len=32):
+    """A reachability groups (or associations) log page with a descriptor
+    for each (id, [ids]) in @descs: the ID, the number of IDs, and the
+    IDs after the @fixed_len byte fixed part."""
+    out = struct.pack('<QH6x', 1, len(descs))
+    for ident, ids in descs:
+        d = bytearray(fixed_len)
+        struct.pack_into('<IIQ', d, 0, ident, len(ids), 1)
+        out += bytes(d) + b''.join(struct.pack('<I', i) for i in ids)
+    return out
+
+
+def _kv(text):
+    """The "key : value" lines of a text output as (key, value) pairs."""
+    pairs = []
+    for line in text.splitlines():
+        if ':' in line:
+            k, v = line.split(':', 1)
+            pairs.append((k.strip(), v.strip()))
+    return pairs
 
 
 class LogMockServer(MockIPCServer):
@@ -266,6 +290,43 @@ class DiscoveryLogsTest(unittest.TestCase):
         out = self._run_json('power-measurement')
         self.assertEqual(out['nphd'], 100)
         self.assertEqual(len(out['descs']), 1)
+
+    def test_reachability_groups_descriptors_at_their_offsets(self):
+        """The descriptors differ in length: the second follows the
+        namespace IDs of the first."""
+        self.server.logs[_LID_REACHABILITY_GROUPS] = \
+            _reachability_log([(1, [10, 11]), (2, [20])])
+        kv = _kv(self._run('reachability-groups'))
+        self.assertEqual([v for k, v in kv if k == 'rgid'], ['1', '2'])
+        self.assertEqual([v for k, v in kv if k.startswith('nsid')],
+                         ['10', '11', '20'])
+
+    def test_reachability_groups_no_zero_length_read(self):
+        self.server.logs[_LID_REACHABILITY_GROUPS] = \
+            _reachability_log([(1, []), (2, [])])
+        self._run('reachability-groups', '--groups-only')
+        lengths = [r[3] for r in self.server.requests
+                   if r[0] == _LID_REACHABILITY_GROUPS]
+        self.assertNotIn(0, lengths)
+
+    def test_reachability_groups_too_many_namespace_ids(self):
+        """A namespace ID count which no log can hold fails the command
+        instead of being read or printed."""
+        log = bytearray(_reachability_log([(1, [10])]))
+        struct.pack_into('<I', log, 16 + 4, 0xffffffff)
+        self.server.logs[_LID_REACHABILITY_GROUPS] = bytes(log)
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'reachability-groups', self.DEVICE)
+        self.assertGreater(result.returncode, 0, 'not an error exit')
+        self.assertNotIn('nsid', result.stdout)
+
+    def test_reachability_associations_descriptors_at_their_offsets(self):
+        self.server.logs[_LID_REACHABILITY_ASSOCIATIONS] = \
+            _reachability_log([(1, [10, 11]), (2, [20])])
+        kv = _kv(self._run('reachability-associations'))
+        self.assertEqual([v for k, v in kv if k == 'rasid'], ['1', '2'])
+        self.assertEqual([v for k, v in kv if k.startswith('rgid')],
+                         ['10', '11', '20'])
 
 
 if __name__ == '__main__':
