@@ -749,7 +749,8 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 		cmd->result = resp.result;
 	}
 
-	if (resp_data) {
+	/* like the kernel, which transfers no data without a buffer */
+	if (resp_data && cmd->addr) {
 		if (resp.data_len > cmd->data_len) {
 			mock_dbg("ioctl response data_len %u exceeds caller buffer %u, truncating\n",
 				 resp.data_len, cmd->data_len);
