@@ -78,6 +78,25 @@
   that name is red and the WARNING of a warning yellow. Set `NO_COLOR`
   to a non-empty value to turn colors off (https://no-color.org/).
 
+* Options which take one of a few words check the word while parsing
+  the command line, in any case and as a unique prefix like every
+  value name, and the help and the completions list the words:
+  `show-topology --ranking`, `memblaze select-download --select`,
+  `micron select-download --select`, the `--option` of the micron
+  `vs-smbus-option`, `latency-tracking` and
+  `vs-telemetry-controller-option`, the micron `--command` of
+  `latency-tracking` and `latency-stats`, `micron vs-internal-log
+  --type`, `ocp internal-log --telemetry-type`, the `--type` of the
+  `sndk` and `wdc` `vs-internal-log` and `solidigm internal-log
+  --type`. An unknown word is a usage error which lists the words.
+  `ocp internal-log` with an unknown telemetry type failed with status
+  0 before.
+
+* The command metadata (`nvme utils dump-command-metadata`) marks
+  deprecated commands with the command which replaces them, deprecated
+  options with the option which replaces them, and renamed options
+  with their old name.
+
 * The old option names `--dhchap-secret`, `--dhchap-ctrl-secret` and
   `--fast_io_fail_tmo` of the fabrics commands and `--force` of
   `discover` and `connect-all` print a deprecation warning which names
