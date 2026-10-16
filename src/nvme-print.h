@@ -103,6 +103,49 @@ static inline size_t nvme_log_nr_entries(size_t nr, size_t len, size_t hdr,
 	return nr < max ? nr : max;
 }
 
+/*
+ * The host discovery log record at offset @off of a page of @len bytes, or
+ * NULL if no whole record starts there. The page ends where its header
+ * says or where the buffer ends, whichever comes first. A record must hold
+ * at least its fixed part, and its length must not reach past the page.
+ */
+static inline struct nvme_host_ext_discovery_log *
+nvme_host_discovery_record(struct nvme_host_discovery_log *log, __u64 len,
+			   __u64 off)
+{
+	__u64 thdlpl = le32_to_cpu(log->thdlpl);
+	__u64 end = thdlpl < len ? thdlpl : len;
+	struct nvme_host_ext_discovery_log *rec;
+	__u32 tel;
+
+	if (off > end || end - off < sizeof(*rec))
+		return NULL;
+
+	rec = (void *)log + off;
+	tel = le32_to_cpu(rec->tel);
+	if (tel < sizeof(*rec) || tel > end - off)
+		return NULL;
+
+	return rec;
+}
+
+/*
+ * The extended attribute at @p of the host discovery log record @rec, or
+ * NULL if it, with its value, doesn't fit the record.
+ */
+static inline struct nvmf_ext_attr *
+nvme_host_discovery_exat(struct nvme_host_ext_discovery_log *rec, void *p)
+{
+	void *end = (void *)rec + le32_to_cpu(rec->tel);
+	struct nvmf_ext_attr *exat = p;
+
+	if (!shr_buf_has_room(p, end, sizeof(*exat)) ||
+	    !shr_buf_has_room(exat->exatval, end, le16_to_cpu(exat->exatlen)))
+		return NULL;
+
+	return exat;
+}
+
 /* Return: the LBA data size in bytes, or 0 if it is not representable. */
 static inline unsigned int nvme_lbaf_data_size(__u8 ds)
 {

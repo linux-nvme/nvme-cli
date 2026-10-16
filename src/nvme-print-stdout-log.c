@@ -2716,10 +2716,11 @@ void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec)
 
 void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 {
-	__u32 i;
+	__u64 i;
 	__u16 j;
 	struct nvme_host_ext_discovery_log *hedlpe;
 	struct nvmf_ext_attr *exat;
+	void *p;
 	__u32 thdlpl = le32_to_cpu(log->thdlpl);
 	__u32 tel;
 	__u16 numexat;
@@ -2738,9 +2739,9 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 
 	stdout_kv_table_finish(t, "host-discovery-log");
 
-	for (i = sizeof(*log); i < le32_to_cpu(log->thdlpl); i += tel) {
+	for (i = sizeof(*log);
+	     (hedlpe = nvme_host_discovery_record(log, len, i)); i += tel) {
 		printf("hedlpe: %d\n", n++);
-		hedlpe = (void *)log + i;
 		tel = le32_to_cpu(hedlpe->tel);
 		numexat = le16_to_cpu(hedlpe->numexat);
 
@@ -2751,12 +2752,14 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 		stdout_kv_add(t, "trtype", "%s",
 			      libnvmf_trtype_str(hedlpe->trtype));
 		stdout_kv_add(t, "adrfam", "%s",
-			      strlen(hedlpe->traddr) ?
+			      hedlpe->traddr[0] ?
 			      libnvmf_adrfam_str(hedlpe->adrfam) : "");
 		stdout_kv_add(t, "eflags", "%s",
 			      libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
-		stdout_kv_add(t, "hostnqn", "%s", hedlpe->hostnqn);
-		stdout_kv_add(t, "traddr", "%s", hedlpe->traddr);
+		stdout_kv_add(t, "hostnqn", "%-.*s",
+			      (int)sizeof(hedlpe->hostnqn), hedlpe->hostnqn);
+		stdout_kv_add(t, "traddr", "%-.*s",
+			      (int)sizeof(hedlpe->traddr), hedlpe->traddr);
 		switch (hedlpe->trtype) {
 		case NVMF_TRTYPE_RDMA:
 			stdout_kv_add(t, "tsas.prtype", "%s",
@@ -2789,8 +2792,9 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 			d((unsigned char *)hedlpe->tsas.common,
 			  sizeof(hedlpe->tsas.common), 16, 1);
 
-		exat = hedlpe->exat;
-		for (j = 0; j < numexat; j++) {
+		p = hedlpe->exat;
+		for (j = 0; j < numexat &&
+		     (exat = nvme_host_discovery_exat(hedlpe, p)); j++) {
 			printf("exat: %d\n", j);
 
 			t = stdout_kv_table_create();
@@ -2807,7 +2811,7 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 			printf("exatval:\n");
 			d((unsigned char *)exat->exatval,
 			  le16_to_cpu(exat->exatlen), 16, 1);
-			exat = libnvmf_exat_ptr_next(exat);
+			p = libnvmf_exat_ptr_next(exat);
 		}
 	}
 }
