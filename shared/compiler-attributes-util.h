@@ -52,6 +52,14 @@
  */
 #define __shr_constructor __attribute__((constructor))
 
+/**
+ * __shr_destructor - run a function automatically after main() returns.
+ *
+ * The counterpart of __shr_constructor, e.g. to release what a
+ * constructor allocated.
+ */
+#define __shr_destructor __attribute__((destructor))
+
 /*
  * __packed - mark a struct/union as having no padding between members.
  *
