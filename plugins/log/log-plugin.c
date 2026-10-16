@@ -473,7 +473,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		.ctrl_init	= false,
 		.data_area	= 3,
 		.rae		= false,
-		.mcda		= 0xff,
+		.mcda		= 0,
 	};
 
 	NVME_ARGS(opts,
@@ -496,7 +496,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 
 	cfg.host_gen = !!cfg.host_gen;
 
-	if (cfg.mcda != 0xff) {
+	if (argconfig_given(opts, &cfg.mcda)) {
 		if (cfg.ctrl_init || !cfg.host_gen) {
 			nvme_show_error("mcda allowed for Host-init Creation!");
 			return -EINVAL;

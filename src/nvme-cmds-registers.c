@@ -252,11 +252,14 @@ static bool is_reg_selected(struct get_reg_config *cfg, int offset)
 	return false;
 }
 
-static int get_register_properties(struct libnvme_transport_handle *hdl, void **pbar, struct get_reg_config *cfg)
+static int get_register_properties(struct libnvme_transport_handle *hdl,
+				   struct argconfig_commandline_options *opts,
+				   void **pbar, struct get_reg_config *cfg)
 {
 	struct libnvme_passthru_cmd cmd;
 	int offset = NVME_REG_CRTO;
 	__u64 value;
+	bool given = argconfig_given(opts, &cfg->offset);
 	int size;
 	int err;
 	void *bar;
@@ -267,7 +270,8 @@ static int get_register_properties(struct libnvme_transport_handle *hdl, void **
 		return -ENOMEM;
 
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CRTO; offset += get_reg_size(offset)) {
-		if ((cfg->offset != offset && !is_reg_selected(cfg, offset)) ||
+		if ((!(given && cfg->offset == offset) &&
+		     !is_reg_selected(cfg, offset)) ||
 		    !nvme_is_fabrics_reg(offset))
 			continue;
 
@@ -333,17 +337,22 @@ bool nvme_is_ctrl_reg(int offset)
 	return false;
 }
 
-static bool get_register_offset(void *bar, bool fabrics, struct get_reg_config *cfg,
+static bool get_register_offset(struct argconfig_commandline_options *opts,
+				void *bar, bool fabrics,
+				struct get_reg_config *cfg,
 				nvme_print_flags_t flags)
 {
-	bool offset_matched = cfg->offset >= 0;
+	bool given = argconfig_given(opts, &cfg->offset);
+	bool offset_matched = given;
 	int offset;
 
 	if (offset_matched)
 		nvme_show_ctrl_register(bar, fabrics, cfg->offset, flags);
 
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_PMRMSCU; offset += get_reg_size(offset)) {
-		if (!nvme_is_ctrl_reg(offset) || offset == cfg->offset || !is_reg_selected(cfg, offset))
+		if (!nvme_is_ctrl_reg(offset) ||
+		    (given && offset == cfg->offset) ||
+		    !is_reg_selected(cfg, offset))
 			continue;
 		nvme_show_ctrl_register(bar, fabrics, offset, flags);
 		if (!offset_matched)
@@ -387,7 +396,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 	void *bar;
 
 	struct get_reg_config cfg = {
-		.offset = -1,
+		.offset = 0,
 	};
 
 	NVME_ARGS(opts,
@@ -437,13 +446,13 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 
 	bar = read_registers(hdl);
 	if (!bar) {
-		err = get_register_properties(hdl, &bar, &cfg);
+		err = get_register_properties(hdl, opts, &bar, &cfg);
 		if (err)
 			return err;
 		fabrics = true;
 	}
 
-	if (!get_register_offset(bar, fabrics, &cfg, flags)) {
+	if (!get_register_offset(opts, bar, fabrics, &cfg, flags)) {
 		nvme_show_error("offset required param");
 		err = -EINVAL;
 	}
@@ -710,7 +719,7 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 	int err;
 
 	struct set_reg_config cfg = {
-		.offset = -1,
+		.offset = 0,
 	};
 
 	NVME_ARGS(opts,
@@ -765,7 +774,7 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 	nvme_print_flags_t flags = NORMAL;
 
 	struct get_reg_config cfg = {
-		.offset		= -1,
+		.offset		= 0,
 		.fabrics	= true,
 	};
 
@@ -778,7 +787,7 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 
 	flags = nvme_args.output_flags;
 
-	if (cfg.offset == -1) {
+	if (!argconfig_given(opts, &cfg.offset)) {
 		nvme_show_error("offset required param");
 		return -EINVAL;
 	}
@@ -805,8 +814,8 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 	int err;
 
 	struct set_reg_config cfg = {
-		.offset	= -1,
-		.value	= -1,
+		.offset	= 0,
+		.value	= 0,
 	};
 
 	NVME_ARGS(opts,
@@ -817,11 +826,11 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	if (cfg.offset == -1) {
+	if (!argconfig_given(opts, &cfg.offset)) {
 		nvme_show_error("offset required param");
 		return -EINVAL;
 	}
-	if (cfg.value == -1) {
+	if (!argconfig_given(opts, &cfg.value)) {
 		nvme_show_error("value required param");
 		return -EINVAL;
 	}

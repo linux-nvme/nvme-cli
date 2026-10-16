@@ -51,7 +51,7 @@ struct passthru_config {
 };
 
 struct get_reg_config {
-	int offset;
+	__u32 offset;
 	bool cap;
 	bool vs;
 	bool intms;
@@ -84,7 +84,7 @@ struct get_reg_config {
 };
 
 struct set_reg_config {
-	int offset;
+	__u32 offset;
 	bool mmio32;
 	__u64 value;
 	__u32 intms;

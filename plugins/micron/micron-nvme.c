@@ -3692,14 +3692,14 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	struct config {
 		char *type;
 		char *package;
-		int  data_area;
+		__u32 data_area;
 		int  log;
 	};
 
 	struct config cfg = {
 		.type = "",
 		.package = "",
-		.data_area = -1,
+		.data_area = 0,
 		.log = 0x07,
 	};
 
@@ -3722,12 +3722,12 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			goto out;
 		}
 
-		if (cfg.data_area <= 0 || cfg.data_area > 4) {
+		if (!cfg.data_area || cfg.data_area > 4) {
 			nvme_show_error("data area must be selected using -d option ie --d=1,2,3,4");
 			goto out;
 		}
 		telemetry_option = 1;
-	} else if (cfg.data_area >= 0) {
+	} else if (argconfig_given(opts, &cfg.data_area)) {
 		nvme_show_error(
 			"data area option is valid only for telemetry option (i.e --type=host|controller)");
 		goto out;

@@ -750,15 +750,15 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	struct config {
 		__u64 zslba;
 		__u32 namespace_id;
-		int   num_descs;
-		int   state;
+		__u32 num_descs;
+		__u32 state;
 		bool  verbose;
 		bool  extended;
 		bool  partial;
 	};
 
 	struct config cfg = {
-		.num_descs = -1,
+		.num_descs = 0,
 	};
 
 	NVME_ARGS(opts,
@@ -827,7 +827,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 
 	total_nr_zones = le64_to_cpu(buff->nr_zones);
 
-	if (cfg.num_descs == -1)
+	if (!argconfig_given(opts, &cfg.num_descs))
 		cfg.num_descs = total_nr_zones;
 
 	nr_zones = cfg.num_descs;
