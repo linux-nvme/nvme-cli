@@ -1969,9 +1969,9 @@ void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *
 }
 
 void nvme_show_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log,
-				     nvme_print_flags_t flags)
+				     __u64 len, nvme_print_flags_t flags)
 {
-	nvme_print(dispersed_ns_psub_log, flags, log);
+	nvme_print(dispersed_ns_psub_log, flags, log, len);
 }
 
 void nvme_show_reachability_groups_log(struct nvme_reachability_groups_log *log,
@@ -2081,7 +2081,7 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		nvme_show_rotational_media_info_log(log, flags);
 		break;
 	case NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS:
-		nvme_show_dispersed_ns_psub_log(log, flags);
+		nvme_show_dispersed_ns_psub_log(log, len, flags);
 		break;
 	case NVME_LOG_LID_MGMT_ADDR_LIST:
 		nvme_show_mgmt_addr_list_log(log, flags);

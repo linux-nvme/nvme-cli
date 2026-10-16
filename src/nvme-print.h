@@ -385,7 +385,8 @@ struct print_ops {
 	void (*show_finish)(void);
 	void (*mgmt_addr_list_log)(struct nvme_mgmt_addr_list_log *ma_log);
 	void (*rotational_media_info_log)(struct nvme_rotational_media_info_log *info);
-	void (*dispersed_ns_psub_log)(struct nvme_dispersed_ns_participating_nss_log *log);
+	void (*dispersed_ns_psub_log)(
+		struct nvme_dispersed_ns_participating_nss_log *log, __u64 len);
 	void (*reachability_groups_log)(struct nvme_reachability_groups_log *log, __u64 len);
 	void (*reachability_associations_log)(struct nvme_reachability_associations_log *log,
 					      __u64 len);
@@ -813,7 +814,7 @@ void nvme_show_power_meas_log(struct nvme_power_meas_log *log, __u32 size,
 void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *info,
 					 nvme_print_flags_t flags);
 void nvme_show_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log,
-				     nvme_print_flags_t flags);
+				     __u64 len, nvme_print_flags_t flags);
 void nvme_show_reachability_groups_log(struct nvme_reachability_groups_log *log,
 				       __u64 len, nvme_print_flags_t flags);
 void nvme_show_reachability_associations_log(struct nvme_reachability_associations_log *log,

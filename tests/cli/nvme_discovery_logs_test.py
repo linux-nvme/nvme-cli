@@ -374,6 +374,19 @@ class DiscoveryLogsTest(unittest.TestCase):
         self.assertGreater(result.returncode, 0, 'not an error exit')
         self.assertNotIn('participating_nss 0', result.stdout)
 
+    def test_dispersed_ns_psub_get_log_short_buffer(self):
+        """get-log --verbose prints no more NQNs than its buffer holds."""
+        self.server.logs[_LID_DISPERSED_NS_PSUB] = _dispersed_ns_psub_log(
+            ['nqn.2014-08.org.example:sub%d' % i for i in range(4)],
+            numpsub=100)
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'get-log', self.DEVICE, '--log-id=0x17',
+                          '--log-len=512', '--verbose')
+        self.assertEqual(result.returncode, 0,
+                         f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+        self.assertIn('participating_nss 0', result.stdout)
+        self.assertNotIn('participating_nss 1', result.stdout)
+
 
 if __name__ == '__main__':
     unittest.main(argv=[sys.argv[0]])

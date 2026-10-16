@@ -92,7 +92,7 @@ void stdout_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list);
 void stdout_rotational_media_info_log(
 	struct nvme_rotational_media_info_log *info);
 void stdout_dispersed_ns_psub_log(
-	struct nvme_dispersed_ns_participating_nss_log *log);
+	struct nvme_dispersed_ns_participating_nss_log *log, __u64 len);
 void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log,
 				    __u64 len);
 void stdout_reachability_associations_log(

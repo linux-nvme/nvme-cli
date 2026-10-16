@@ -5933,17 +5933,19 @@ static void json_rotational_media_info_log(struct nvme_rotational_media_info_log
 	obj_add_uint(r, "fldc", le32_to_cpu(info->fldc));
 }
 
-static void json_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
+static void json_dispersed_ns_psub_log(
+		struct nvme_dispersed_ns_participating_nss_log *log, __u64 len)
 {
 	struct json_object *r = json_r;
 	__u64 numpsub = le64_to_cpu(log->numpsub);
-	__u64 i;
+	__u64 i, n;
 	char json_str[STR_LEN];
 	char psub[NVME_NQN_LENGTH + 1];
 
 	obj_add_uint64(r, "genctr", le64_to_cpu(log->genctr));
 	obj_add_uint64(r, "numpsub", numpsub);
-	for (i = 0; i < numpsub; i++) {
+	n = nvme_log_nr_entries(numpsub, len, sizeof(*log), NVME_NQN_LENGTH);
+	for (i = 0; i < n; i++) {
 		snprintf(json_str, sizeof(json_str), "participating_nss %"PRIu64"", (uint64_t)i);
 		snprintf(psub, sizeof(psub), "%-.*s", NVME_NQN_LENGTH,
 			 &log->participating_nss[i * NVME_NQN_LENGTH]);

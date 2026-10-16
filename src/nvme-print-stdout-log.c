@@ -2968,11 +2968,11 @@ void stdout_rotational_media_info_log(
 }
 
 void stdout_dispersed_ns_psub_log(
-	struct nvme_dispersed_ns_participating_nss_log *log)
+	struct nvme_dispersed_ns_participating_nss_log *log, __u64 len)
 {
 	__u64 numpsub = le64_to_cpu(log->numpsub);
 	struct shr_table *t;
-	__u64 i;
+	__u64 i, n;
 
 	t = stdout_kv_table_create();
 	if (!t)
@@ -2981,7 +2981,8 @@ void stdout_dispersed_ns_psub_log(
 	stdout_kv_add(t, "genctr", "%"PRIu64, le64_to_cpu(log->genctr));
 	stdout_kv_add(t, "numpsub", "%"PRIu64, (uint64_t)numpsub);
 
-	for (i = 0; i < numpsub; i++) {
+	n = nvme_log_nr_entries(numpsub, len, sizeof(*log), NVME_NQN_LENGTH);
+	for (i = 0; i < n; i++) {
 		char name[40];
 
 		snprintf(name, sizeof(name), "participating_nss %"PRIu64,
