@@ -172,7 +172,6 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 			   "the given device and report information about the specified\n"
 			   "namespace in varios formats.";
 	const char *vendor_specific = "dump binary vendor fields";
-	const char *human_readable = "show identify in readable format";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -184,7 +183,6 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 
 	struct config {
 		__u32 namespace_id;
-		bool human_readable;
 		bool vendor_specific;
 	};
 
@@ -193,8 +191,8 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id,
 			 nvme_nsid_values),
-		OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific,
+			 vendor_specific));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -203,7 +201,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	flags = nvme_args.output_flags;
 	if (cfg.vendor_specific)
 		flags |= VS;
-	if (cfg.human_readable)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {

@@ -178,7 +178,6 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *sel = "[0-3]: curr./default/saved/supp.";
 	const char *data_len = "buffer len (if) data is returned";
 	const char *cdw11 = "dword 11 for interrupt vector config";
-	const char *human_readable = "show infos in readable format";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free void *buf = NULL;
@@ -192,7 +191,6 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 		__u32 cdw11;
 		__u32 data_len;
 		bool  raw_binary;
-		bool  human_readable;
 	};
 
 	struct config cfg = {
@@ -210,8 +208,7 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 		OPT_BYTE("sel",		   's', &cfg.sel,		sel),
 		OPT_UINT("data-len",	   'l', &cfg.data_len,		data_len),
 		OPT_FLAG("raw-binary",	   'b', &cfg.raw_binary,	raw),
-		OPT_UINT("cdw11",	   'c', &cfg.cdw11,		cdw11),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable,	human_readable));
+		OPT_UINT("cdw11",	   'c', &cfg.cdw11,		cdw11));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
