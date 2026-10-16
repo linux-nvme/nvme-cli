@@ -31,37 +31,77 @@ static int version_cmd(struct plugin *plugin)
 	return 0;
 }
 
+/*
+ * The command @name selects: an exact name or alias, otherwise the only
+ * command whose name starts with @name.
+ */
+static struct command *find_command(struct plugin *plugin, const char *name)
+{
+	struct command **cmd, *match = NULL;
+	size_t len = strlen(name);
+	bool unique = false;
+
+	for (cmd = plugin->commands; *cmd; cmd++) {
+		if (!strcmp(name, (*cmd)->name) ||
+		    ((*cmd)->alias && !strcmp(name, (*cmd)->alias)))
+			return *cmd;
+	}
+
+	for (cmd = plugin->commands; *cmd; cmd++) {
+		if (strncmp(name, (*cmd)->name, len))
+			continue;
+		unique = !match;
+		match = *cmd;
+	}
+
+	return unique ? match : NULL;
+}
+
+static struct plugin *find_extension(struct plugin *plugin, const char *name)
+{
+	struct plugin *extension;
+
+	for (extension = plugin->next; extension; extension = extension->next) {
+		if (!strcmp(name, extension->name))
+			return extension;
+	}
+
+	return NULL;
+}
+
+/*
+ * "nvme help <command>" shows the man page of the command "nvme <command>"
+ * would run, also for "nvme help <plugin> <command>".
+ */
 static int help(int argc, char **argv, struct plugin *plugin)
 {
 	char man[0x100];
 	struct program *prog = plugin->parent;
-	char *str;
-	int i;
+	struct plugin *extension;
+	struct command *cmd;
 
 	if (argc == 1) {
 		general_help(plugin, NULL);
 		return 0;
 	}
 
-	str = argv[1];
-	for (i = 0; plugin->commands[i]; i++) {
-		struct command *command = plugin->commands[i];
-
-		if (strcmp(str, command->name))
-			if (!command->alias ||
-			    (command->alias && strcmp(str, command->alias)))
-				continue;
-
+	cmd = find_command(plugin, argv[1]);
+	if (cmd) {
 		if (plugin->name)
 			snprintf(man, sizeof(man), "%s-%s-%s", prog->name,
-				plugin->name, command->name);
+				 plugin->name, cmd->name);
 		else
-			snprintf(man, sizeof(man), "%s-%s", prog->name, command->name);
+			snprintf(man, sizeof(man), "%s-%s", prog->name,
+				 cmd->name);
 		if (execlp("man", "man", man, (char *)NULL))
 			perror(argv[1]);
+	} else if (!plugin->name) {
+		extension = find_extension(plugin, argv[1]);
+		if (extension)
+			return help(argc - 1, argv + 1, extension);
 	}
 
-	general_help(plugin, str);
+	general_help(plugin, argv[1]);
 
 	return 0;
 }
@@ -394,32 +434,6 @@ void command_prepare(struct command *cmd)
 	nvme_args.device_operand = cmd->device;
 }
 
-/*
- * The command @name selects: an exact name or alias, otherwise the only
- * command whose name starts with @name.
- */
-static struct command *find_command(struct plugin *plugin, const char *name)
-{
-	struct command **cmd, *match = NULL;
-	size_t len = strlen(name);
-	bool unique = false;
-
-	for (cmd = plugin->commands; *cmd; cmd++) {
-		if (!strcmp(name, (*cmd)->name) ||
-		    ((*cmd)->alias && !strcmp(name, (*cmd)->alias)))
-			return *cmd;
-	}
-
-	for (cmd = plugin->commands; *cmd; cmd++) {
-		if (strncmp(name, (*cmd)->name, len))
-			continue;
-		unique = !match;
-		match = *cmd;
-	}
-
-	return unique ? match : NULL;
-}
-
 static int run_command(int argc, char **argv, struct plugin *plugin,
 		       struct command *cmd)
 {
@@ -430,18 +444,6 @@ static int run_command(int argc, char **argv, struct plugin *plugin,
 	command_prepare(cmd);
 
 	return cmd->fn(argc, argv, cmd, plugin);
-}
-
-static struct plugin *find_extension(struct plugin *plugin, const char *name)
-{
-	struct plugin *extension;
-
-	for (extension = plugin->next; extension; extension = extension->next) {
-		if (!strcmp(name, extension->name))
-			return extension;
-	}
-
-	return NULL;
 }
 
 /*
