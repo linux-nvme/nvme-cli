@@ -37,6 +37,7 @@ _LID_POWER_MEASUREMENT = 0x25
 _LID_REACHABILITY_GROUPS = 0x1a
 _LID_REACHABILITY_ASSOCIATIONS = 0x1b
 _LID_DISPERSED_NS_PSUB = 0x17
+_LID_PERSISTENT_EVENT = 0x0d
 
 _HEADER_LEN = 1024        # host and AVE discovery log headers
 _HEDLPE_LEN = 1032        # struct nvme_host_ext_discovery_log
@@ -386,6 +387,20 @@ class DiscoveryLogsTest(unittest.TestCase):
                          f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
         self.assertIn('participating_nss 0', result.stdout)
         self.assertNotIn('participating_nss 1', result.stdout)
+
+    def test_persistent_event_log_too_large(self):
+        """A total log length which doesn't fit the 32 bit length the log
+        is read with fails, instead of reading a truncated log."""
+        hdr = bytearray(512)
+        struct.pack_into('<Q', hdr, 8, (1 << 32) + 512)
+        self.server.logs[_LID_PERSISTENT_EVENT] = bytes(hdr)
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'persistent-event', self.DEVICE)
+        self.assertGreater(result.returncode, 0, 'not an error exit')
+        self.assertIn('too large', result.stderr)
+        lengths = [r[3] for r in self.server.requests
+                   if r[0] == _LID_PERSISTENT_EVENT]
+        self.assertEqual(lengths, [512])
 
 
 if __name__ == '__main__':
