@@ -22,6 +22,7 @@
 #include <libnvme.h>
 
 #include <shared/parse-util.h>
+#include <shared/string-util.h>
 #include <shared/suffix-util.h>
 #include <shared/wrap-util.h>
 
@@ -614,11 +615,12 @@ static const char *argconfig_expected(struct argconfig_commandline_options *s)
 static int argconfig_value_error(struct argconfig_commandline_options *s,
 				 char c, const char *arg)
 {
+	__cleanup_free char *e = arg ? shr_escape(arg) : NULL;
 	const struct argconfig_opt_val *v;
 	int n = 0;
 
 	print_label(command_name());
-	fprintf(stderr, "invalid value '%s' for ", arg ? arg : "");
+	fprintf(stderr, "invalid value '%s' for ", e ? e : "");
 	if (c)
 		fprintf(stderr, "-%c", c);
 	else
@@ -735,9 +737,12 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 
 		if (help && !p->global)
 			return ARGCONFIG_HELP;
-		if (!p->global || (!help && !version))
+		if (!p->global || (!help && !version)) {
+			__cleanup_free char *e = shr_escape(arg);
+
 			return argconfig_parse_error(p,
-				"unrecognized option '%s'", arg);
+				"unrecognized option '%s'", e ? e : "");
+		}
 		if (eq)
 			return argconfig_parse_error(p,
 				"option '--%.*s' doesn't allow an argument",
@@ -796,9 +801,13 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
 			p->version |= *c == 'V';
 			continue;
 		}
-		if (!s)
+		if (!s) {
+			char bad[2] = { *c, '\0' };
+			__cleanup_free char *e = shr_escape(bad);
+
 			return argconfig_parse_error(p,
-				"invalid option -- '%c'", *c);
+				"invalid option -- '%s'", e ? e : "");
+		}
 
 		value = NULL;
 		switch (s->argument_type) {

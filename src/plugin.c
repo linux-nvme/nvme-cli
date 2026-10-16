@@ -7,6 +7,7 @@
 
 #include <libnvme.h>
 
+#include <shared/string-util.h>
 #include <shared/wrap-util.h>
 
 #include "argconfig.h"
@@ -492,7 +493,10 @@ static int run_joined_command(int argc, char **argv, struct plugin *plugin)
 			break;
 	}
 	if (!extension) {
-		fprintf(stderr, "ERROR: Invalid sub-command '%s'\n", argv[0]);
+		__cleanup_free char *e = shr_escape(argv[0]);
+
+		fprintf(stderr, "ERROR: Invalid sub-command '%s'\n",
+			e ? e : "");
 		commands_hint(plugin);
 		return -ENOTTY;
 	}
@@ -631,9 +635,11 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 
 	/* Only the built-in plugin has extensions */
 	if (plugin->name) {
+		__cleanup_free char *e = shr_escape(argv[0]);
+
 		fprintf(stderr,
 			"ERROR: Invalid sub-command '%s' for plugin %s\n",
-			argv[0], plugin->name);
+			e ? e : "", plugin->name);
 		commands_hint(plugin);
 		return -ENOTTY;
 	}
