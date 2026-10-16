@@ -326,7 +326,7 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 	int ret = 0;
 
 	vt_initialize_header_buffer(&header);
-	if (strlen(path) > sizeof(header.path)) {
+	if (strlen(path) >= sizeof(header.path)) {
 		nvme_show_error("filename too long");
 		errno = EINVAL;
 		return -1;
@@ -336,7 +336,7 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 	if (!cfg->test_name) {
 		strcpy(header.test_name, DEFAULT_TEST_NAME);
 	} else {
-		if (strlen(cfg->test_name) > sizeof(header.test_name)) {
+		if (strlen(cfg->test_name) >= sizeof(header.test_name)) {
 			nvme_show_error("test name too long");
 			errno = EINVAL;
 			return -1;
