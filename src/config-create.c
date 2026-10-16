@@ -206,9 +206,10 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	if (err)
 		return err;
 
-	persistent = nvmf_resolve_persistent_arg(opts, persistent_arg);
+	persistent = nvmf_resolve_persistent_arg(
+			argconfig_given(opts, &persistent_arg), persistent_arg);
 
-	if (argconfig_parse_seen(opts, "persistent") && !discovery) {
+	if (argconfig_given(opts, &persistent_arg) && !discovery) {
 		nvme_show_error("--persistent requires --discovery");
 		return -EINVAL;
 	}

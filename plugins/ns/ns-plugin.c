@@ -172,7 +172,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (!cntlist)
 		return -ENOMEM;
 
-	if (argconfig_parse_seen(opts, "controllers")) {
+	if (argconfig_given(opts, &cfg.cntlist)) {
 		nvme_init_ctrl_list(cntlist, num, list);
 	} else {
 		struct nvme_id_ctrl ctrl = { 0 };

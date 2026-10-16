@@ -167,7 +167,7 @@ static int passthru(int argc, char **argv, bool admin,
 	if (err)
 		return err;
 
-	if (!argconfig_parse_seen(opts, "opcode")) {
+	if (!argconfig_given(opts, &cfg.opcode)) {
 		nvme_show_error("%s: opcode parameter required", acmd->name);
 		return -EINVAL;
 	}

@@ -624,7 +624,7 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	nb = shr_parse_csv_u32(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
 	ns = shr_parse_csv_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
 	if ((nb != ns) ||
-	    (argconfig_parse_seen(opts, "ctx-attrs") && nb != nc)) {
+	    (argconfig_given(opts, &cfg.ctx_attrs) && nb != nc)) {
 		nvme_show_error("No valid range definition provided");
 		return -EINVAL;
 	}
@@ -1158,7 +1158,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	else
 		buffer_size = cfg.data_size;
 
-	if (argconfig_parse_seen(opts, "block-count")) {
+	if (argconfig_given(opts, &cfg.block_count)) {
 		/* Use the value provided */
 		nblocks = cfg.block_count;
 	} else {

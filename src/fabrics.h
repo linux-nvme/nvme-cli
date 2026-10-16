@@ -117,11 +117,11 @@ struct nvmf_args {
  * to the string libnvmf_context_set_persistent()/libnvmf_params_set()
  * expect: "auto" when the option is absent or given bare, or the value as
  * typed otherwise. Never NULL -- persistence is on by default, and
- * "--persistent=no" is the opt-out. A caller that has to tell "absent"
- * from "given" apart needs argconfig_parse_seen() itself.
+ * "--persistent=no" is the opt-out. @given is whether the option was
+ * given, @arg its value. A caller that has to tell "absent" from "given"
+ * apart uses argconfig_given() itself.
  */
-const char *nvmf_resolve_persistent_arg(
-		struct argconfig_commandline_options *opts, const char *arg);
+const char *nvmf_resolve_persistent_arg(bool given, const char *arg);
 
 int fabrics_discover(const char *desc, int argc, char **argv, bool connect);
 int fabrics_connect(const char *desc, int argc, char **argv);

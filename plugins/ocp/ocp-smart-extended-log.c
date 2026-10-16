@@ -114,6 +114,7 @@ out:
 int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 		      struct plugin *plugin)
 {
+	bool no_uuid_flag = false;
 	const char *desc = "Retrieve the extended SMART health data.";
 	const char *no_uuid = "Skip UUID index search (UUID index not required for OCP 1.0)";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -121,7 +122,7 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	int ret = 0;
 
 	NVME_ARGS(opts,
-		OPT_FLAG("no-uuid", 'n', NULL, no_uuid));
+		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -129,7 +130,7 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 
 	ret = get_c0_log_page(hdl, nvme_args.output_format,
 			      nvme_args.output_format_ver,
-			      !argconfig_parse_seen(opts, "no-uuid"));
+			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C0 Log Page, ret = %d",
 			ret);

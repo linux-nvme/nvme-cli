@@ -39,7 +39,7 @@
 
 #define FEAT_ARGS_SAVE(n, save_short, ...)                             \
 	NVME_ARGS(n, ##__VA_ARGS__,                                    \
-		  OPT_FLAG("save", save_short, NULL, save),            \
+		  OPT_FLAG("save", save_short, &cfg.save, save),            \
 		  OPT_BYTE("sel", 'S', &cfg.sel, sel))
 
 #define FEAT_ARGS(n, ...) FEAT_ARGS_SAVE(n, 's', ##__VA_ARGS__)
@@ -56,6 +56,7 @@ struct perfc_config {
 	__u16 attrl;
 	char *vs_data;
 	__u8 sel;
+	bool save;
 };
 
 struct temp_thresh_config {
@@ -64,6 +65,7 @@ struct temp_thresh_config {
 	__u8 thsel;
 	__u8 tmpthh;
 	__u8 sel;
+	bool save;
 };
 
 struct arbitration_config {
@@ -72,12 +74,14 @@ struct arbitration_config {
 	__u8 mpw;
 	__u8 hpw;
 	__u8 sel;
+	bool save;
 };
 
 struct err_recovery_config {
 	__u8 tler;
 	__u8 dulbe;
 	__u8 sel;
+	bool save;
 };
 
 struct host_behavior_config {
@@ -87,6 +91,7 @@ struct host_behavior_config {
 	__u8 hdisns;
 	__u16 cdfe;
 	__u8 sel;
+	bool save;
 };
 
 struct lba_range_type_config {
@@ -99,28 +104,33 @@ struct lba_range_type_config {
 	char *nlbs;
 	char *guids;
 	__u8 sel;
+	bool save;
 };
 
 struct int_coalesce_config {
 	__u8 thr;
 	__u8 time;
 	__u8 sel;
+	bool save;
 };
 
 struct int_vec_conf {
 	__u16 iv;
 	bool cd;
 	__u8 sel;
+	bool save;
 };
 
 struct write_atom_normal_config {
 	bool dn;
 	__u8 sel;
+	bool save;
 };
 
 struct keep_alive_timer_config {
 	__u32 kato;
 	__u8 sel;
+	bool save;
 };
 
 static const char *power_mgmt_feat = "power management feature";
@@ -224,6 +234,7 @@ static int feat_power_mgmt(int argc, char **argv, struct command *acmd, struct p
 		__u8 ps;
 		__u8 wh;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -236,9 +247,9 @@ static int feat_power_mgmt(int argc, char **argv, struct command *acmd, struct p
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "ps"))
+	if (argconfig_given(opts, &cfg.ps))
 		err = power_mgmt_set(hdl, fid, cfg.ps, cfg.wh,
-				     argconfig_parse_seen(opts, "save"));
+				     cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, power_mgmt_feat);
 
@@ -330,11 +341,11 @@ static int feat_perfc(int argc, char **argv, struct command *acmd, struct plugin
 
 	cdw11 = NVME_SET(cfg.attri, FEAT_PERFC_ATTRI) | NVME_SET(cfg.rvspa, FEAT_PERFC_RVSPA);
 
-	if (argconfig_parse_seen(opts, "rvspa") ||
-	    argconfig_parse_seen(opts, "r4karl") ||
-	    argconfig_parse_seen(opts, "paid"))
+	if (argconfig_given(opts, &cfg.rvspa) ||
+	    argconfig_given(opts, &cfg.r4karl) ||
+	    argconfig_given(opts, &cfg.paid))
 		err = perfc_set(hdl, fid, cdw11, &cfg,
-				argconfig_parse_seen(opts, "save"));
+				cfg.save);
 	else
 		err = feat_get(hdl, fid, cdw11, cfg.sel, 0, perfc_feat);
 
@@ -375,6 +386,7 @@ static int feat_hctm(int argc, char **argv, struct command *acmd, struct plugin 
 		__u16 tmt1;
 		__u16 tmt2;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -387,10 +399,10 @@ static int feat_hctm(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "tmt1") ||
-	    argconfig_parse_seen(opts, "tmt2"))
+	if (argconfig_given(opts, &cfg.tmt1) ||
+	    argconfig_given(opts, &cfg.tmt2))
 		err = hctm_set(hdl, fid, cfg.tmt1, cfg.tmt2,
-			       argconfig_parse_seen(opts, "save"));
+			       cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, hctm_feat);
 
@@ -433,6 +445,7 @@ static int feat_timestamp(int argc, char **argv, struct command *acmd, struct pl
 	struct config {
 		__u64 tstmp;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -443,9 +456,9 @@ static int feat_timestamp(int argc, char **argv, struct command *acmd, struct pl
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "tstmp"))
+	if (argconfig_given(opts, &cfg.tstmp))
 		err = timestamp_set(hdl, fid, cfg.tstmp,
-				    argconfig_parse_seen(opts, "save"));
+				    cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, timestamp_feat);
 
@@ -465,7 +478,7 @@ static int temp_thresh_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 	int err;
 	bool sv;
 
-	sv = argconfig_parse_seen(opts, "save");
+	sv = cfg->save;
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
@@ -474,9 +487,9 @@ static int temp_thresh_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 	if (!err) {
 		nvme_feature_decode_temp_threshold(cmd.result, &tmpth,
 						   &tmpsel, &thsel, &tmpthh);
-		if (!argconfig_parse_seen(opts, "tmpth"))
+		if (!argconfig_given(opts, &cfg->tmpth))
 			cfg->tmpth = tmpth;
-		if (!argconfig_parse_seen(opts, "tmpthh"))
+		if (!argconfig_given(opts, &cfg->tmpthh))
 			cfg->tmpthh = tmpthh;
 	}
 
@@ -522,8 +535,8 @@ static int feat_temp_thresh(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "tmpth") ||
-	    argconfig_parse_seen(opts, "tmpthh"))
+	if (argconfig_given(opts, &cfg.tmpth) ||
+	    argconfig_given(opts, &cfg.tmpthh))
 		err = temp_thresh_set(hdl, fid, opts, &cfg);
 	else
 		err = feat_get(hdl, fid, NVME_SET(cfg.tmpsel, FEAT_TT_TMPSEL) |
@@ -543,7 +556,7 @@ static int arbitration_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 	bool sv;
 	int err;
 
-	sv = argconfig_parse_seen(opts, "save");
+	sv = cfg->save;
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
@@ -552,13 +565,13 @@ static int arbitration_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 	if (!err) {
 		nvme_feature_decode_arbitration(cmd.result, &ab,
 						&lpw, &mpw, &hpw);
-		if (!argconfig_parse_seen(opts, "ab"))
+		if (!argconfig_given(opts, &cfg->ab))
 			cfg->ab = ab;
-		if (!argconfig_parse_seen(opts, "lpw"))
+		if (!argconfig_given(opts, &cfg->lpw))
 			cfg->lpw = lpw;
-		if (!argconfig_parse_seen(opts, "mpw"))
+		if (!argconfig_given(opts, &cfg->mpw))
 			cfg->mpw = mpw;
-		if (!argconfig_parse_seen(opts, "hpw"))
+		if (!argconfig_given(opts, &cfg->hpw))
 			cfg->hpw = hpw;
 	}
 
@@ -606,7 +619,7 @@ static int feat_arbitration(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	if (argc == 2 || argconfig_parse_seen(opts, "sel"))
+	if (argc == 2 || argconfig_given(opts, &cfg.sel))
 		return feat_get(hdl, fid, 0, cfg.sel, 0, "arbitration feature");
 
 	return arbitration_set(hdl, fid, opts, &cfg);
@@ -645,6 +658,7 @@ static int feat_volatile_wc(int argc, char **argv, struct command *acmd, struct 
 	struct config {
 		bool wce;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -655,9 +669,9 @@ static int feat_volatile_wc(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "wce"))
+	if (argconfig_given(opts, &cfg.wce))
 		err = volatile_wc_set(hdl, fid, cfg.wce,
-				      argconfig_parse_seen(opts, "save"));
+				      cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, volatile_wc_feat);
 
@@ -704,6 +718,7 @@ static int feat_power_limit(int argc, char **argv, struct command *acmd,
 		__u8 pls;
 		__u8 uidx;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -717,9 +732,9 @@ static int feat_power_limit(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "plv"))
+	if (argconfig_given(opts, &cfg.plv))
 		err = power_limit_set(hdl, fid, cfg.plv, cfg.pls, cfg.uidx,
-				      argconfig_parse_seen(opts, "save"));
+				      cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, cfg.uidx,
 			       power_limit_feat);
@@ -774,6 +789,7 @@ static int feat_power_thresh(int argc, char **argv, struct command *acmd,
 		__u8 ept;
 		__u8 uidx;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -789,13 +805,13 @@ static int feat_power_thresh(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "ptv") ||
-	    argconfig_parse_seen(opts, "pts") ||
-	    argconfig_parse_seen(opts, "pmts") ||
-	    argconfig_parse_seen(opts, "ept"))
+	if (argconfig_given(opts, &cfg.ptv) ||
+	    argconfig_given(opts, &cfg.pts) ||
+	    argconfig_given(opts, &cfg.pmts) ||
+	    argconfig_given(opts, &cfg.ept))
 		err = power_thresh_set(hdl, fid, cfg.ptv, cfg.pts, cfg.pmts,
 				       cfg.ept, cfg.uidx,
-				       argconfig_parse_seen(opts, "save"));
+				       cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, cfg.uidx,
 			       power_thresh_feat);
@@ -846,6 +862,7 @@ static int feat_power_meas(int argc, char **argv, struct command *cmd,
 		__u16 smt;
 		__u8 uidx;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -860,12 +877,12 @@ static int feat_power_meas(int argc, char **argv, struct command *cmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "act") ||
-	    argconfig_parse_seen(opts, "pmts") ||
-	    argconfig_parse_seen(opts, "smt"))
+	if (argconfig_given(opts, &cfg.act) ||
+	    argconfig_given(opts, &cfg.pmts) ||
+	    argconfig_given(opts, &cfg.smt))
 		err = power_meas_set(hdl, fid, cfg.act, cfg.pmts, cfg.smt,
 				     cfg.uidx,
-				     argconfig_parse_seen(opts, "save"));
+				     cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, power_meas_feat);
 
@@ -913,6 +930,7 @@ static int feat_err_recovery(int argc, char **argv, struct command *acmd,
 		__u16 tler;
 		bool dulbe;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -934,10 +952,10 @@ static int feat_err_recovery(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	if (argconfig_parse_seen(opts, "tler") ||
-	    argconfig_parse_seen(opts, "dulbe"))
+	if (argconfig_given(opts, &cfg.tler) ||
+	    argconfig_given(opts, &cfg.dulbe))
 		err = err_recovery_set(hdl, fid, cfg.nsid, cfg.tler, cfg.dulbe,
-				       argconfig_parse_seen(opts, "save"));
+				       cfg.save);
 	else
 		err = feat_get_nsid(hdl, cfg.nsid, fid, 0, cfg.sel, 0,
 				    err_recovery_feat);
@@ -946,8 +964,8 @@ static int feat_err_recovery(int argc, char **argv, struct command *acmd,
 }
 
 static int num_queues_set(struct libnvme_transport_handle *hdl, const __u8 fid,
-			  __u16 nsqr, __u16 ncqr, bool sv,
-			  struct argconfig_commandline_options *opts)
+			  __u16 nsqr, __u16 ncqr, bool sv, bool nsqr_given,
+			  bool ncqr_given)
 {
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
 	__u32 cdw11 = NVME_SET(nsqr, FEAT_NRQS_NSQR) |
@@ -963,9 +981,9 @@ static int num_queues_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		nvme_feature_decode_number_of_queues(cmd.result, &nsqr, &ncqr);
-		if (!argconfig_parse_seen(opts, "nsqr"))
+		if (!nsqr_given)
 			cdw11 |= NVME_SET(nsqr, FEAT_NRQS_NSQR);
-		if (!argconfig_parse_seen(opts, "ncqr"))
+		if (!ncqr_given)
 			cdw11 |= NVME_SET(ncqr, FEAT_NRQS_NSQR);
 	}
 
@@ -999,6 +1017,7 @@ static int feat_num_queues(int argc, char **argv, struct command *acmd,
 		__u16 nsqr;
 		__u16 ncqr;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -1011,10 +1030,12 @@ static int feat_num_queues(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "nsqr") ||
-	    argconfig_parse_seen(opts, "ncqr"))
+	if (argconfig_given(opts, &cfg.nsqr) ||
+	    argconfig_given(opts, &cfg.ncqr))
 		err = num_queues_set(hdl, fid, cfg.nsqr, cfg.ncqr,
-				     argconfig_parse_seen(opts, "save"), opts);
+				     cfg.save,
+				     argconfig_given(opts, &cfg.nsqr),
+				     argconfig_given(opts, &cfg.ncqr));
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, num_queues_feat);
 
@@ -1040,15 +1061,15 @@ static int host_behavior_set(struct libnvme_transport_handle *hdl, __u8 fid,
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "acre"))
+	if (argconfig_given(opts, &cfg->acre))
 		data.acre = cfg->acre;
-	if (argconfig_parse_seen(opts, "etdas"))
+	if (argconfig_given(opts, &cfg->etdas))
 		data.etdas = cfg->etdas;
-	if (argconfig_parse_seen(opts, "lbafee"))
+	if (argconfig_given(opts, &cfg->lbafee))
 		data.lbafee = cfg->lbafee;
-	if (argconfig_parse_seen(opts, "hdisns"))
+	if (argconfig_given(opts, &cfg->hdisns))
 		data.hdisns = cfg->hdisns;
-	if (argconfig_parse_seen(opts, "cdfe"))
+	if (argconfig_given(opts, &cfg->cdfe))
 		data.cdfe = cpu_to_le16(cfg->cdfe);
 
 	nvme_init_set_features_host_behavior(&cmd, sv, &data);
@@ -1092,13 +1113,13 @@ static int feat_host_behavior_support(int argc, char **argv, struct command *acm
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "acre") ||
-	    argconfig_parse_seen(opts, "etdas") ||
-	    argconfig_parse_seen(opts, "lbafee") ||
-	    argconfig_parse_seen(opts, "hdisns") ||
-	    argconfig_parse_seen(opts, "cdfe"))
+	if (argconfig_given(opts, &cfg.acre) ||
+	    argconfig_given(opts, &cfg.etdas) ||
+	    argconfig_given(opts, &cfg.lbafee) ||
+	    argconfig_given(opts, &cfg.hdisns) ||
+	    argconfig_given(opts, &cfg.cdfe))
 		err = host_behavior_set(hdl, fid, opts, &cfg,
-					argconfig_parse_seen(opts, "save"));
+					cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, host_behavior_feat);
 
@@ -1172,7 +1193,7 @@ static int lba_range_type_set(struct libnvme_transport_handle *hdl, __u8 fid,
 		return -EINVAL;
 	}
 #else /* NVME_HAVE_INT128 */
-	if (argconfig_parse_seen(opts, "guids")) {
+	if (argconfig_given(opts, &cfg->guids)) {
 		nvme_show_error("guid unsupported without __int128 available");
 		return -EINVAL;
 	}
@@ -1245,9 +1266,9 @@ static int feat_lba_range_type(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	if (argconfig_parse_seen(opts, "num"))
+	if (argconfig_given(opts, &cfg.num))
 		err = lba_range_type_set(hdl, fid, opts, &cfg,
-					 argconfig_parse_seen(opts, "save"));
+					 cfg.save);
 	else
 		err = feat_get_nsid(hdl, cfg.nsid, fid, 0, cfg.sel, 0,
 				    lba_range_feat);
@@ -1298,10 +1319,10 @@ static int feat_int_coalesce(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "thr") ||
-	    argconfig_parse_seen(opts, "time"))
+	if (argconfig_given(opts, &cfg.thr) ||
+	    argconfig_given(opts, &cfg.time))
 		err = int_coalesce_set(hdl, fid, &cfg,
-				       argconfig_parse_seen(opts, "save"));
+				       cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, int_coalesce_feat);
 
@@ -1350,10 +1371,10 @@ static int feat_int_vec_conf(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "iv") ||
-	    argconfig_parse_seen(opts, "cd"))
+	if (argconfig_given(opts, &cfg.iv) ||
+	    argconfig_given(opts, &cfg.cd))
 		err = int_vec_conf_set(hdl, fid, &cfg,
-				       argconfig_parse_seen(opts, "save"));
+				       cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, int_vec_conf_feat);
 
@@ -1400,9 +1421,9 @@ static int feat_write_atom_normal(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "dn"))
+	if (argconfig_given(opts, &cfg.dn))
 		err = write_atom_normal_set(hdl, fid, &cfg,
-					    argconfig_parse_seen(opts, "save"));
+					    cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, write_atom_normal_feat);
 
@@ -1442,6 +1463,7 @@ static int feat_async_event_conf(int argc, char **argv, struct command *acmd,
 	struct config {
 		__u32 result;
 		__u8 sel;
+		bool save;
 	};
 
 	struct config cfg = { 0 };
@@ -1453,9 +1475,9 @@ static int feat_async_event_conf(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "result"))
+	if (argconfig_given(opts, &cfg.result))
 		err = async_event_conf_set(hdl, fid, cfg.result,
-					   argconfig_parse_seen(opts, "save"));
+					   cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, async_event_conf_feat);
 
@@ -1501,9 +1523,9 @@ static int feat_keep_alive_timer(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "kato"))
+	if (argconfig_given(opts, &cfg.kato))
 		err = keep_alive_timer_set(hdl, fid, &cfg,
-					   argconfig_parse_seen(opts, "save"));
+					   cfg.save);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, keep_alive_timer_feat);
 

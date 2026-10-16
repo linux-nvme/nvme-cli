@@ -593,7 +593,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		return -EINVAL;
 	}
 	we.contentGroup = opt;
-	if (argconfig_parse_seen(opts, "trigger-field")) {
+	if (argconfig_given(opts, &cfg.trigger_field)) {
 		int field_pos = find_field(group_fields[opt], cfg.trigger_field);
 		int field_offset = 0;
 
