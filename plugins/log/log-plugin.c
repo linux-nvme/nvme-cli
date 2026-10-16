@@ -2526,6 +2526,7 @@ static int get_host_discovery(struct libnvme_transport_handle *hdl, bool allhost
 	struct nvme_host_discovery_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u32 thdlpl;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_HOST_DISCOVERY,
 		.nsid = NVME_NSID_ALL,
@@ -2537,16 +2538,19 @@ static int get_host_discovery(struct libnvme_transport_handle *hdl, bool allhost
 	if (!log)
 		return -ENOMEM;
 
-	nvme_init_get_log_host_discovery(&cmd, rae, log, log_len);
-	err = libnvme_get_log(hdl, &cmd, false, log_len);
+	nvme_init_get_log_host_discovery(&cmd, allhoste, log, log_len);
+	err = libnvme_get_log(hdl, &cmd, rae, log_len);
 	if (err)
 		goto err_free;
 
-	log_len = le32_to_cpu(log->thdlpl);
-	err = get_log_offset(hdl, &args, &log_len, le32_to_cpu(log->thdlpl) - log_len,
-			     (void **)&log);
-	if (err)
-		goto err_free;
+	/* the records follow the header */
+	thdlpl = le32_to_cpu(log->thdlpl);
+	if (thdlpl > log_len) {
+		err = get_log_offset(hdl, &args, &log_len, thdlpl - log_len,
+				     (void **)&log);
+		if (err)
+			goto err_free;
+	}
 
 	*logp = log;
 	return 0;
@@ -2607,6 +2611,7 @@ static int get_ave_discovery(struct libnvme_transport_handle *hdl, bool rae,
 	struct nvme_ave_discovery_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u32 tadlpl;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_AVE_DISCOVERY,
 		.nsid = NVME_NSID_ALL,
@@ -2622,11 +2627,14 @@ static int get_ave_discovery(struct libnvme_transport_handle *hdl, bool rae,
 	if (err)
 		goto err_free;
 
-	log_len = le32_to_cpu(log->tadlpl);
-	err = get_log_offset(hdl, &args, &log_len, le32_to_cpu(log->tadlpl) - log_len,
-			     (void **)&log);
-	if (err)
-		goto err_free;
+	/* the records follow the header */
+	tadlpl = le32_to_cpu(log->tadlpl);
+	if (tadlpl > log_len) {
+		err = get_log_offset(hdl, &args, &log_len, tadlpl - log_len,
+				     (void **)&log);
+		if (err)
+			goto err_free;
+	}
 
 	*logp = log;
 	return 0;
@@ -2683,6 +2691,7 @@ static int get_pull_model_ddc_req(struct libnvme_transport_handle *hdl,
 	struct nvme_pull_model_ddc_req_log *log;
 	struct libnvme_passthru_cmd cmd;
 	__u64 log_len = sizeof(*log);
+	__u32 tpdrpl;
 	struct nvme_get_log_args args = {
 		.lid = NVME_LOG_LID_PULL_MODEL_DDC_REQ,
 		.nsid = NVME_NSID_ALL,
@@ -2698,11 +2707,14 @@ static int get_pull_model_ddc_req(struct libnvme_transport_handle *hdl,
 	if (err)
 		goto err_free;
 
-	log_len = le32_to_cpu(log->tpdrpl);
-	err = get_log_offset(hdl, &args, &log_len, le32_to_cpu(log->tpdrpl) - log_len,
-			     (void **)&log);
-	if (err)
-		goto err_free;
+	/* the operating system specific parameters follow the header */
+	tpdrpl = le32_to_cpu(log->tpdrpl);
+	if (tpdrpl > log_len) {
+		err = get_log_offset(hdl, &args, &log_len, tpdrpl - log_len,
+				     (void **)&log);
+		if (err)
+			goto err_free;
+	}
 
 	*logp = log;
 	return 0;
