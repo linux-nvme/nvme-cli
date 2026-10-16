@@ -379,7 +379,7 @@ _nvme () {
 					               "--output-format-version" "1 2" \
 					               "--timeout" "infinite -1" && return
 					_nvme_opt_files "--config -J" \
-					                "--output -o" && return
+					                "--output" && return
 					local _config_convert
 					_config_convert=(
 						--config=':convert this JSON file (default: config.json)'
@@ -389,7 +389,6 @@ _nvme () {
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
 						--output=':write result here (default: nvme-fabrics.conf)'
-						-o':alias for --output'
 						--output-format=':Output format: normal|json|binary'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
@@ -1017,8 +1016,6 @@ _nvme () {
 						--dry-run':show command instead of executing'
 						--endgrp-id=':Endurance group identifier'
 						-e':alias for --endgrp-id'
-						--human-readable':show log in readable format'
-						-H':alias for --human-readable'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
 						--output-format=':Output format: normal|json|binary'
@@ -1301,7 +1298,6 @@ _nvme () {
 						-a':alias for --ab'
 						--dry-run':show command instead of executing'
 						--hpw=':high priority weight'
-						-H':alias for --hpw'
 						--lpw=':low priority weight'
 						-l':alias for --lpw'
 						--mpw=':medium priority weight'
@@ -1446,7 +1442,6 @@ _nvme () {
 						--etdas=':Extended Telemetry Data Area 4 Supported (0 or 1)'
 						-e':alias for --etdas'
 						--hdisns=':Host Dispersed Namespace Support (0 or 1)'
-						-H':alias for --hdisns'
 						--lbafee=':LBA Format Extension Enable (0 or 1)'
 						-l':alias for --lbafee'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
@@ -1861,7 +1856,6 @@ _nvme () {
 						-S':alias for --sel'
 						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
 						--thsel=':threshold type select'
-						-H':alias for --thsel'
 						--timeout=':timeout value, in milliseconds'
 						--tmpsel=':threshold temperature select'
 						-m':alias for --tmpsel'
@@ -3680,8 +3674,6 @@ _nvme () {
 						--csvi=':Controller State Version Index (CSVI) (CDW11[7:0])'
 						-V':alias for --csvi'
 						--dry-run':show command instead of executing'
-						--human-readable':show info in readable format'
-						-H':alias for --human-readable'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
 						--numd=':Number of Dwords (NUMD)'
@@ -3769,7 +3761,6 @@ _nvme () {
 						-C':alias for --cdqid'
 						--dry-run':show command instead of executing'
 						--hp=':The slot of the head pointer for the specified CDQ'
-						-H':alias for --hp'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
 						--output-format=':Output format: normal|json|binary'
@@ -6063,7 +6054,6 @@ _nvme () {
 						-d':alias for --discovery'
 						--dry-run':show command instead of executing'
 						--hfi':show NBFT HFIs'
-						-H':alias for --hfi'
 						--nbft-path=':user-defined path for NBFT tables'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
@@ -7905,7 +7895,6 @@ _nvme () {
 					local _rpmb_read_data
 					_rpmb_read_data=(
 						--address=':Sector offset to read from for an RPMB target, default 0'
-						-o':alias for --address'
 						--blocks=':Number of 512 byte blocks to read'
 						-b':alias for --blocks'
 						--dry-run':show command instead of executing'
@@ -7975,7 +7964,6 @@ _nvme () {
 					local _rpmb_write_data
 					_rpmb_write_data=(
 						--address=':Sector offset to write to for an RPMB target, default 0'
-						-o':alias for --address'
 						--blocks=':Number of 512 byte blocks to write'
 						-b':alias for --blocks'
 						--dry-run':show command instead of executing'
@@ -8037,7 +8025,6 @@ _nvme () {
 						--dump-type=':Use this option if you want to extract a specific kind of dump. Comma-separate to extract several at once (no spaces). Example) -t host1 or -t host1,ctlr,vendor host0---Host_Initiated_Telemetry_Dump(LSP_0) host1---Host_Initiated_Telemetry_Dump(LSP_1) ctlr----Controller_Initiated_Telemetry_Dump vendor--Vendor_Dumps'
 						-t':alias for --dump-type'
 						--hide-progress':Hide the incremental extraction progress. The completion line of each dump is still printed.'
-						-H':alias for --hide-progress'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
 						--output-file=':Output file name with path; e.g. '\''-O ./path/name'\'' '\''-O ./path1/path2/'\''; If requested path does not exist, the directory will be newly created.'
@@ -8549,8 +8536,6 @@ _nvme () {
 						--timeout=':timeout value, in milliseconds'
 						--udev':Print locking information in form suitable for udev rules'
 						-u':alias for --udev'
-						--verbose':Print extended discovery information'
-						-V':alias for --verbose'
 						--verbose':Increase output verbosity'
 						-v':alias for --verbose'
 						--help':show help'
@@ -9068,8 +9053,6 @@ _nvme () {
 						--dry-run':show command instead of executing'
 						--feature-id=':hexadecimal feature name'
 						-f':alias for --feature-id'
-						--human-readable':show infos in readable format'
-						-H':alias for --human-readable'
 						--namespace-id=':identifier of desired namespace'
 						-n':alias for --namespace-id'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
@@ -9861,8 +9844,6 @@ _nvme () {
 						-s':alias for --transfer-size'
 						--type=':Telemetry type - NONE, HOST, CONTROLLER, or BOTH: NONE - Default, capture without using NVMe telemetry. HOST - Host-initiated telemetry. CONTROLLER - Controller-initiated telemetry. BOTH - Both HOST and CONTROLLER telemetry packaged in tar file.'
 						-t':alias for --type'
-						--verbose':Display more debug messages.'
-						-V':alias for --verbose'
 						--verbose':Increase output verbosity'
 						-v':alias for --verbose'
 						--help':show help'
@@ -11764,8 +11745,6 @@ _nvme () {
 						-s':alias for --transfer-size'
 						--type=':Telemetry type - NONE, HOST, or CONTROLLER: NONE - Default, capture without using NVMe telemetry. HOST - Host-initiated telemetry. CONTROLLER - Controller-initiated telemetry.'
 						-t':alias for --type'
-						--verbose':Display more debug messages.'
-						-V':alias for --verbose'
 						--verbose':Increase output verbosity'
 						-v':alias for --verbose'
 						--help':show help'
@@ -12121,8 +12100,6 @@ _nvme () {
 					local _zns_id_ns
 					_zns_id_ns=(
 						--dry-run':show command instead of executing'
-						--human-readable':show identify in readable format'
-						-H':alias for --human-readable'
 						--namespace-id=':Namespace identifier to use'
 						-n':alias for --namespace-id'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
@@ -12263,8 +12240,6 @@ _nvme () {
 						--state=':state of zones to list'
 						-S':alias for --state'
 						--timeout=':timeout value, in milliseconds'
-						--verbose':show report zones verbosity'
-						-V':alias for --verbose'
 						--verbose':Increase output verbosity'
 						-v':alias for --verbose'
 						--help':show help'
