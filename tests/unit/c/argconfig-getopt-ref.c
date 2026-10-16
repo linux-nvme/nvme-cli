@@ -120,6 +120,9 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	case CFG_INCREMENT:
 		*(int *)value += 1;
 		break;
+	case CFG_ENUM:
+		ret = argconfig_error("name", s->option, arg);
+		break;
 	case CFG_LONG:
 		*(uint64_t *)value = strtoull(arg, &endptr, 0);
 		if (errno || arg == endptr || *endptr)
@@ -160,6 +163,7 @@ static void argconfig_set_opt_val(enum argconfig_types type,
 		*(uint32_t *)val = opt_val->positive;
 		break;
 	case CFG_INT:
+	case CFG_ENUM:
 		*(int *)val = opt_val->int_val;
 		break;
 	case CFG_LONG:

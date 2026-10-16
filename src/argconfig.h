@@ -49,6 +49,7 @@ enum argconfig_types {
 	CFG_SHORT,
 	CFG_POSITIVE,
 	CFG_INCREMENT,
+	CFG_ENUM,
 	CFG_GROUP_SEPARATOR,
 };
 
@@ -99,6 +100,11 @@ enum argconfig_types {
 #define OPT_INT(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_INT, OPT_CHECK(v, int *), \
 	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
+
+/* One of the names of the value table @n, VAL_ENUM() entries */
+#define OPT_ENUM(l, s, v, d, n, ...) \
+	{l, s, "NAME", CFG_ENUM, OPT_CHECK(v, int *), \
+	 ARGCONFIG_ARG_REQUIRED, d, false, n, __VA_ARGS__}
 
 #define OPT_LONG(l, s, v, d, ...) \
 	{l, s, "NUM", CFG_LONG, OPT_CHECK_64(v), \
@@ -167,6 +173,9 @@ enum argconfig_types {
 
 #define VAL_INT(s, v) \
 	{s, CFG_INT, .val.int_val = v}
+
+#define VAL_ENUM(s, v) \
+	{s, CFG_ENUM, .val.int_val = v}
 
 #define VAL_LONG(s, v) \
 	{s, CFG_LONG, .val.long_val = v}
@@ -272,3 +281,5 @@ bool argconfig_given(struct argconfig_commandline_options *options,
 		     const void *value);
 bool argconfig_set_value_name(struct argconfig_commandline_options *option,
 			      const char *str);
+const char *argconfig_value_name(const struct argconfig_opt_val *values,
+				 int val);
