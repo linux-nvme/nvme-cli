@@ -224,8 +224,10 @@ struct argconfig_commandline_options {
 	const char *help;
 	bool seen;
 	struct argconfig_opt_val *opt_val;
-	bool hidden;
-	/* the option which replaces a deprecated one, warned about on use */
+	/*
+	 * The option which replaces a deprecated one. A deprecated option
+	 * is warned about on use and left out of the help.
+	 */
 	const char *deprecated;
 	/* the long name of earlier versions, accepted with a warning */
 	const char *old_name;

@@ -212,7 +212,7 @@ static void print_options(FILE *out, struct argconfig_commandline_options *s,
 			fputc('\n', out);
 			header_printed = true;
 		}
-		if (!s->hidden)
+		if (!s->deprecated)
 			show_option(out, s);
 	}
 }

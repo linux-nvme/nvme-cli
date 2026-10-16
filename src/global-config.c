@@ -52,7 +52,7 @@ static struct argconfig_commandline_options *find_key(const char *key)
 	struct argconfig_commandline_options *s;
 
 	for (s = argconfig_get_global_options(); s && s->option; s++) {
-		if (s->config_type == CFG_GROUP_SEPARATOR || s->hidden)
+		if (s->config_type == CFG_GROUP_SEPARATOR || s->deprecated)
 			continue;
 		if (!strcmp(s->option, key))
 			return s;

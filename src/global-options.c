@@ -49,8 +49,8 @@ static struct argconfig_commandline_options global_options[] = {
 	OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,
 		 "output format version: 1|2"),
 	/* the spelling of --verbose of older versions */
-	OPT_INCR("human-readable", 'H', &nvme_args.verbose, NULL, NULL,
-		 true, "--verbose/-v"),
+	OPT_INCR("human-readable", 'H', &nvme_args.verbose, NULL,
+		 .deprecated = "--verbose/-v"),
 	OPT_STRING("set-options", 0, "KEY=VALUE", &nvme_args.set_options,
 		   "set a libnvme library option (key=value[,key=value,...]);"),
 	OPT_END()

@@ -321,7 +321,7 @@ static int copy_options(const struct argconfig_commandline_options *opts,
 		dst[i].short_option = opts[i].short_option;
 		dst[i].config_type = opts[i].config_type;
 		dst[i].argument_type = opts[i].argument_type;
-		dst[i].hidden = opts[i].hidden;
+		dst[i].hidden = opts[i].deprecated;
 	}
 
 	*out = dst;
