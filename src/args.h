@@ -64,20 +64,12 @@ enum nvme_print_flags {
 #endif /* CONFIG_JSONC */
 
 /*
- * The command's options. The global options are registered once with
- * argconfig (nvme_args_register()) and accepted by every command. They
- * take precedence over a command's own option of the same short or long
- * name, so a command must not use their names.
- * The output formats a command supports are declared in its struct
- * command.
+ * The global options are registered once with argconfig
+ * (nvme_args_register()) and accepted by every command. They take
+ * precedence over a command's own option of the same short or long name,
+ * so a command must not use their names. The output formats a command
+ * supports are declared in its struct command.
  */
-#define NVME_ARGS(n, ...)					\
-	struct argconfig_commandline_options n[] = {		\
-		OPT_GROUP("Options"),				\
-		##__VA_ARGS__,					\
-		OPT_END()					\
-	}
-
 extern struct argconfig_opt_val nvme_nsid_values[];
 extern struct argconfig_opt_val nvme_timeout_values[];
 extern const char *uuid_index;

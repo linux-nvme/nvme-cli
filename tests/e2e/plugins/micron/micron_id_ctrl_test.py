@@ -159,8 +159,8 @@ class TestMicronIdCtrl(TestMicron):
     def test_binary_output_is_accepted(self):
         """--output-format=binary dumps the raw Identify Controller structure.
 
-        micron id-ctrl is declared with plain NVME_ARGS, so unlike the other
-        micron commands it honours binary output.  Binary stdout is
+        micron id-ctrl takes the default output formats, so unlike the
+        other micron commands it honours binary output.  Binary stdout is
         redirected to a file so the byte count is not perturbed by text
         decoding.
         """

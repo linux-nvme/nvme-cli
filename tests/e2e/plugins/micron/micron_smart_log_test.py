@@ -9,7 +9,7 @@
 The micron smart-log command reads the SMART/Health log page and
 prints its own rendering of it, adding the operational lifetime energy
 consumed (olec) and interval power measurement (ipm) fields.  It is
-declared NVME_ARGS_OUTPUT_FORMATS(JSON | NORMAL), so binary is rejected.
+declared with the output formats JSON | NORMAL, so binary is rejected.
 
 The added fields, the temperature conversion and the option surface are
 covered without hardware in micron_smart_log_mock_test.py.  The tests here
