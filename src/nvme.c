@@ -34,6 +34,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
@@ -142,9 +143,11 @@ void register_extension(struct plugin *plugin)
 
 /*
  * plugin_add_group() runs from constructors, before main(), and its
- * allocations live for the whole process. Release them at exit.
+ * allocations live for the whole process. Release them at exit. A
+ * destructor, not atexit(), so main() can run more than once in a
+ * process, as the fuzz tests do.
  */
-static void free_plugins(void)
+static void __shr_destructor free_plugins(void)
 {
 	struct plugin *plugin;
 
@@ -174,7 +177,6 @@ int main(int argc, char **argv)
 #endif
 
 	nvme.extensions->parent = &nvme;
-	atexit(free_plugins);
 	if (argc < 2) {
 		general_help(&builtin, NULL);
 		return 0;
