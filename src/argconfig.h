@@ -241,6 +241,7 @@ void argconfig_append_usage(const char *str);
 
 const char *argconfig_esc(FILE *out, const char *seq);
 void argconfig_print_warning(void);
+void argconfig_print_error_label(void);
 void argconfig_print_heading(FILE *out, const char *fmt, const char *text);
 void argconfig_set_command(const char *prog, const char *path);
 void argconfig_print_usage(void);
