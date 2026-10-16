@@ -26,7 +26,6 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Get Flexible Data Placement Configurations";
 	const char *egid = "Endurance group identifier";
-	const char *human_readable = "show log in readable format";
 	const char *raw = "use binary output";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -40,7 +39,6 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 
 	struct config {
 		__u16	egid;
-		bool	human_readable;
 		bool	raw_binary;
 	};
 
@@ -51,8 +49,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts,
 		OPT_SHRT("endgrp-id",      'e', &cfg.egid,           egid),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -63,7 +60,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.egid) {

@@ -9,7 +9,6 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'fdp configs' <device> [--endgrp-id=<NUM> | -e <NUM>]
-			[--human-readable | -H]
 			[--raw-binary | -b]
 
 DESCRIPTION
@@ -22,11 +21,6 @@ OPTIONS
 -e <NUM>::
 --endgrp-id=<NUM>::
 	The endurance group identifier to use when requesting the log page.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 -b::
 --raw-binary::

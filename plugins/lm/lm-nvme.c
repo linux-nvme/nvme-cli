@@ -391,7 +391,6 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	const char *offset = "Controller State Offset";
 	const char *numd = "Number of Dwords (NUMD)";
 	const char *output = "Controller State Data output file";
-	const char *human_readable_info = "show info in readable format";
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -412,7 +411,6 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		__u64 offset;
 		__u32 numd;
 		char  *output;
-		bool  human_readable;
 	};
 
 	struct config cfg = {
@@ -424,7 +422,6 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		.offset = 0,
 		.numd = 0,
 		.output = NULL,
-		.human_readable = false
 	};
 
 	NVME_ARGS(opts,
@@ -435,8 +432,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		OPT_BYTE("uidx",		'u', &cfg.uidx, uidx),
 		OPT_LONG("offset",		'O', &cfg.offset, offset),
 		OPT_UINT("numd",		'n', &cfg.numd, numd),
-		OPT_FILE("output-file",		'f', &cfg.output, output),
-		OPT_FLAG("human-readable",	'H', &cfg.human_readable, human_readable_info));
+		OPT_FILE("output-file",		'f', &cfg.output, output));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -454,7 +450,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		return -EINVAL;
 	}
 
-	if (cfg.human_readable)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (cfg.output && strlen(cfg.output)) {
