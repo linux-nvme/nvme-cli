@@ -37,10 +37,10 @@ static char *get_device(int argc, char **argv)
 {
 	char *device;
 
-	if (!argconfig_nr_operands())
+	if (!nvme_args.device)
 		return NULL;
 
-	device = argconfig_operand(0);
+	device = nvme_args.device;
 	strip_dev_prefix(&device);
 	return device;
 }
@@ -256,7 +256,7 @@ static struct command registry_list_cmd = {
 	.name = "list",
 	.help = "List live registry entries",
 	.fn = registry_list,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command registry_retrieve_cmd = {

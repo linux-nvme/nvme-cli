@@ -1482,7 +1482,7 @@ static struct command gen_dhchap_key_cmd = {
 	.help = "Generate NVMeoF DH-HMAC-CHAP host secret (deprecated, use 'nvme keys gen-kxchap-secret')",
 	.fn = gen_dhchap_key,
 	.deprecated = true,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command check_dhchap_key_cmd = {
@@ -1491,7 +1491,7 @@ static struct command check_dhchap_key_cmd = {
 		"check-kxchap-secret')",
 	.fn = check_dhchap_key,
 	.deprecated = true,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command gen_tls_key_cmd = {
@@ -1499,7 +1499,7 @@ static struct command gen_tls_key_cmd = {
 	.help = "Generate NVMeoF TLS PSK (deprecated, use 'nvme keys gen-tls-psk')",
 	.fn = gen_tls_key,
 	.deprecated = true,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command check_tls_key_cmd = {
@@ -1507,7 +1507,7 @@ static struct command check_tls_key_cmd = {
 	.help = "Validate NVMeoF TLS PSK (deprecated, use 'nvme keys check-tls-psk')",
 	.fn = check_tls_key,
 	.deprecated = true,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command tls_key_cmd = {
@@ -1515,7 +1515,7 @@ static struct command tls_key_cmd = {
 	.help = "Manage NVMeoF TLS PSKs (deprecated, use 'nvme keys import/export/revoke')",
 	.fn = tls_key,
 	.deprecated = true,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 #endif /* CONFIG_FABRICS */

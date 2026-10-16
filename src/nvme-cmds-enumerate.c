@@ -56,8 +56,8 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 		return err;
 
 	devname = NULL;
-	if (argconfig_nr_operands())
-		devname = basename(argconfig_operand(0));
+	if (nvme_args.device)
+		devname = basename(nvme_args.device);
 
 	flags = nvme_args.output_flags;
 
@@ -139,8 +139,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	if (argconfig_nr_operands())
-		devname = basename(argconfig_operand(0));
+	if (nvme_args.device)
+		devname = basename(nvme_args.device);
 
 	if (devname) {
 		int subsys_id, nsid;
@@ -244,7 +244,7 @@ static struct command list_cmd = {
 	.help = "List all NVMe devices and namespaces on machine",
 	.fn = list,
 	.output_formats = NORMAL | JSON,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command list_subsys_cmd = {
@@ -252,7 +252,7 @@ static struct command list_subsys_cmd = {
 	.help = "List nvme subsystems",
 	.fn = list_subsys,
 	.output_formats = NORMAL | JSON,
-	.no_device = true,
+	.device = COMMAND_DEVICE_OPTIONAL,
 };
 
 #ifdef CONFIG_TOP
@@ -262,7 +262,7 @@ static struct command top_cmd = {
 	.help = "nvme top",
 	.fn = top,
 	.output_formats = OUTPUT_FORMATS_NORMAL,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 #endif /* CONFIG_TOP */
@@ -272,7 +272,7 @@ static struct command show_topology_cmd_cmd = {
 	.help = "Show the topology",
 	.fn = show_topology_cmd,
 	.output_formats = TOPOLOGY_OUTPUT_FORMATS,
-	.no_device = true,
+	.device = COMMAND_DEVICE_OPTIONAL,
 };
 
 static struct command *commands[] = {

@@ -66,15 +66,13 @@ class TestMicronPluginVersion(TestNVMeBase):
                          f"stderr={result.stderr!r}")
         return result
 
-    def check_device_argument_ignored(self, command):
-        """A device argument must not change the output."""
-        without = self.run_version_check(command).stdout
-        with_device = self.run_version_check(command,
-                                             device="/dev/nvme0").stdout
+    def check_device_argument_rejected(self, command):
+        """The command takes no device, a device argument is an error."""
+        result = self.run_version(command, device="/dev/nvme0")
 
-        self.assertEqual(with_device, without,
-                         f"micron {command} output changed when a device was "
-                         f"supplied")
+        self.assertNotEqual(result.returncode, 0,
+                            f"micron {command} accepted a device argument")
+        self.assertIn("unexpected argument '/dev/nvme0'", result.stderr)
 
     def check_help_omits_device(self, command):
         """--help must advertise no <device> operand."""
@@ -118,11 +116,11 @@ class TestMicronPluginVersion(TestNVMeBase):
 
         self.assertEqual(cloud.group(1, 2), plugin.group(1, 2))
 
-    def test_plugin_version_ignores_a_device_argument(self):
-        self.check_device_argument_ignored(_PLUGIN_VERSION)
+    def test_plugin_version_rejects_a_device_argument(self):
+        self.check_device_argument_rejected(_PLUGIN_VERSION)
 
-    def test_cloud_plugin_version_ignores_a_device_argument(self):
-        self.check_device_argument_ignored(_CLOUD_VERSION)
+    def test_cloud_plugin_version_rejects_a_device_argument(self):
+        self.check_device_argument_rejected(_CLOUD_VERSION)
 
     def test_plugin_version_help_omits_the_device_operand(self):
         self.check_help_omits_device(_PLUGIN_VERSION)

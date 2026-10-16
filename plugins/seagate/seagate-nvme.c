@@ -1940,14 +1940,14 @@ static struct command seagate_plugin_version_cmd = {
 	.name = "plugin-version",
 	.help = "Shows Seagate plugin's version information ",
 	.fn = seagate_plugin_version,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command stx_ocp_plugin_version_cmd = {
 	.name = "cloud-SSD-plugin-version",
 	.help = "Shows OCP Seagate plugin's version information ",
 	.fn = stx_ocp_plugin_version,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command *commands[] = {

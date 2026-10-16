@@ -137,13 +137,18 @@ static void usage_cmd(struct plugin *plugin)
 static void build_command_usage(char *use, size_t size, struct program *prog,
 				struct plugin *plugin, struct command *cmd)
 {
-	const char *device = cmd->no_device ? "" : " <device>";
+	static const char * const device[] = {
+		[COMMAND_DEVICE] = " <device>",
+		[COMMAND_DEVICE_OPTIONAL] = " [<device>]",
+		[COMMAND_NO_DEVICE] = "",
+	};
 
 	if (!plugin->name)
-		snprintf(use, size, "%s %s%s [OPTIONS]", prog->name, cmd->name, device);
+		snprintf(use, size, "%s %s%s [OPTIONS]", prog->name, cmd->name,
+			 device[cmd->device]);
 	else
-		snprintf(use, size, "%s %s %s%s [OPTIONS]", prog->name, plugin->name,
-			cmd->name, device);
+		snprintf(use, size, "%s %s %s%s [OPTIONS]", prog->name,
+			 plugin->name, cmd->name, device[cmd->device]);
 }
 
 void plugin_add_group(struct plugin *plugin, const char *title,
@@ -199,7 +204,7 @@ void general_help(struct plugin *plugin, char *str)
 	bool needs_device = false;
 
 	for (i = 0; plugin->commands[i]; i++) {
-		if (!plugin->commands[i]->no_device) {
+		if (plugin->commands[i]->device != COMMAND_NO_DEVICE) {
 			needs_device = true;
 			break;
 		}
@@ -379,13 +384,14 @@ void general_help(struct plugin *plugin, char *str)
 	}
 }
 
-/* Apply the output formats a command supports before it runs */
-void command_set_output_formats(struct command *cmd)
+/* Apply the output formats and the operand of a command before it runs */
+void command_prepare(struct command *cmd)
 {
 	nvme_args_set_output_formats(cmd->output_formats ?
 				     cmd->output_formats :
 				     DEFAULT_OUTPUT_FORMATS,
 				     cmd->output_format_desc);
+	nvme_args.device_operand = cmd->device;
 }
 
 /*
@@ -421,7 +427,7 @@ static int run_command(int argc, char **argv, struct plugin *plugin,
 
 	build_command_usage(use, sizeof(use), plugin->parent, plugin, cmd);
 	argconfig_append_usage(use);
-	command_set_output_formats(cmd);
+	command_prepare(cmd);
 
 	return cmd->fn(argc, argv, cmd, plugin);
 }

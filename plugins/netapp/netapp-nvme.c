@@ -992,8 +992,8 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		return devs.num;
 	}
 
-	if (argconfig_nr_operands())
-		devname = basename(argconfig_operand(0));
+	if (nvme_args.device)
+		devname = basename(nvme_args.device);
 
 	if (devname) {
 		int subsys_num, nsid;
@@ -1083,8 +1083,8 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	if (argconfig_nr_operands())
-		devname = basename(argconfig_operand(0));
+	if (nvme_args.device)
+		devname = basename(nvme_args.device);
 
 	if (devname) {
 		int subsys_num, nsid;
@@ -1156,7 +1156,7 @@ static struct command netapp_smdevices_cmd = {
 	.fn = netapp_smdevices,
 	.output_formats = OUTPUT_FORMATS_CUSTOM,
 	.output_format_desc = NETAPP_OUTPUT_FORMAT_DESC,
-	.no_device = true,
+	.device = COMMAND_DEVICE_OPTIONAL,
 };
 
 static struct command netapp_ontapdevices_cmd = {
@@ -1165,7 +1165,7 @@ static struct command netapp_ontapdevices_cmd = {
 	.fn = netapp_ontapdevices,
 	.output_formats = OUTPUT_FORMATS_CUSTOM,
 	.output_format_desc = NETAPP_OUTPUT_FORMAT_DESC,
-	.no_device = true,
+	.device = COMMAND_DEVICE_OPTIONAL,
 };
 
 static struct command *commands[] = {

@@ -162,6 +162,7 @@ static struct command get_telemetry_log_cmd = {
 	.name = "parse-telemetry-log",
 	.help = "Parse Telemetry Log binary",
 	.fn = get_telemetry_log,
+	.device = COMMAND_DEVICE_OPTIONAL,
 };
 
 static struct command clear_pcie_correctable_error_counters_cmd = {
@@ -205,7 +206,7 @@ static struct command get_cloud_SSDplugin_version_cmd = {
 	.name = "cloud-SSDplugin-version",
 	.help = "Prints plug-in OCP version",
 	.fn = get_cloud_SSDplugin_version,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command get_workload_tracker_cmd = {

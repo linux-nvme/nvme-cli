@@ -89,7 +89,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 	has_binary_file = argconfig_parse_seen(opts, "source-file");
 	if (has_binary_file) {
 		// If a binary file is provided, we don't want to open a device.
-		if (argconfig_nr_operands()) {
+		if (nvme_args.device) {
 			nvme_show_error(
 			"Device path not allowed when using --source-file");
 			return -EINVAL;

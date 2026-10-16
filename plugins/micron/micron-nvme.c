@@ -4435,11 +4435,9 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	}
 
 	if (is_json)
-		print_micron_health_log_json(&smart_log,
-					     argconfig_operand(0));
+		print_micron_health_log_json(&smart_log, nvme_args.device);
 	else
-		print_micron_health_log_normal(&smart_log,
-					       argconfig_operand(0));
+		print_micron_health_log_normal(&smart_log, nvme_args.device);
 
 	return 0;
 }
@@ -4572,14 +4570,14 @@ static struct command plugin_version_cmd = {
 	.name = "plugin-version",
 	.help = "Display plugin version info",
 	.fn = micron_plugin_version,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command cloud_ssd_plugin_version_cmd = {
 	.name = "cloud-SSD-plugin-version",
 	.help = "Display plugin version info",
 	.fn = micron_cloud_ssd_plugin_version,
-	.no_device = true,
+	.device = COMMAND_NO_DEVICE,
 };
 
 static struct command log_page_directory_cmd = {

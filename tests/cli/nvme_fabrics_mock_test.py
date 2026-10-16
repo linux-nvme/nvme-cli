@@ -781,16 +781,17 @@ class FabricsMockCLITest(unittest.TestCase):
         self._run('discover', '-t', 'tcp', '-a', addr, '--persistent=force')
         self._assert_persisted(self._DISCOVERY_INSTANCE)
 
-    def test_discover_persistent_separate_value_arg_is_dropped(self):
-        """A value given as a separate argv token (not glued with '=') is silently
-        dropped; --persistent is treated as bare (mode "auto"), not "force"."""
+    def test_discover_persistent_separate_value_arg_is_rejected(self):
+        """The optional value of --persistent has to be glued with '='. A
+        separate argv token is an operand, which discover does not take, so
+        it fails instead of silently running with mode "auto"."""
         addr = '192.168.10.7'
         self.server.discovery_entries = [self._self_entry(addr, eflags=0)]
 
-        # If "force" were actually parsed as the option's value this would persist;
-        # since it's dropped and auto degrades on EPCSD=0, it must disconnect.
-        self._run('discover', '-t', 'tcp', '-a', addr, '--persistent', 'force')
-        self._assert_disconnected(self._DISCOVERY_INSTANCE)
+        res = self._run('discover', '-t', 'tcp', '-a', addr,
+                        '--persistent', 'force', expect_fail=True)
+        self.assertIn("unexpected argument 'force'", res.stderr)
+        self.assertEqual(self.server.controllers, {})
 
     def test_connect_all_persistent_auto_epcsd_referral_hop(self):
         """Referral (non-self) Discovery Controller entries decide persistence
