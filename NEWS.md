@@ -200,6 +200,10 @@
 
 ### Plugins
 
+* `nvme feat num-queues --nsqr=N` without `--ncqr` keeps the current
+  number of completion queues now. Before, it requested a single
+  completion queue and a wrong number of submission queues.
+
 * Fixed root command injection in WDC (`vs-internal-log`,
   `drive-essentials`, SN730 capture) and SanDisk (telemetry capture):
   a caller-controlled string reached a shell (`system()`), so a
