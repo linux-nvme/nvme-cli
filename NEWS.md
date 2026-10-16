@@ -174,6 +174,11 @@
     `DA4_TELEMETRY` is `DA4S`.
   - `NVME_CTRL_AVSCC_AVS` is now `NVME_CTRL_AVSCC_VSCF`.
 
+* The `docs-build` option is removed. `-Ddocs` always installs the
+  docs committed in the tree. The new `update-docs` target regenerates
+  them and copies them into the tree. Drop `-Ddocs-build=true` from
+  the meson arguments: meson rejects an unknown option.
+
 ### New: FreeBSD support
 
 * nvme-cli and libnvme now build and run on FreeBSD. NVMe PCIe devices

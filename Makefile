@@ -49,6 +49,10 @@ uninstall:
 update-accessors: ${BUILD-DIR}
 	meson compile -C ${BUILD-DIR} update-accessors
 
+.PHONY: update-docs
+update-docs: ${BUILD-DIR}
+	meson compile -C ${BUILD-DIR} update-docs
+
 .PHONY: dist
 dist: ${NAME}
 	meson dist -C ${BUILD-DIR} --formats gztar
@@ -67,7 +71,7 @@ rpm:
 	meson setup ${BUILD-DIR} ${MESON_ARGS} \
 		-Dudevrulesdir=$(shell rpm --eval '%{_udevrulesdir}') \
 		-Dsystemddir=$(shell rpm --eval '%{_unitdir}') \
-		-Ddocs=man -Ddocs-build=true
+		-Ddocs=man
 	rpmbuild -ba ${BUILD-DIR}/nvme.spec --define "_builddir ${BUILD-DIR}" -v
 
 .PHONY: debug

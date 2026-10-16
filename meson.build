@@ -71,7 +71,6 @@ want_tests = get_option('tests')
 want_ioctl_tests = want_tests and get_option('ioctl-tests')
 want_examples = get_option('examples') and host_system == 'linux'
 want_docs = get_option('docs')
-want_docs_build = get_option('docs-build')
 
 is_static = get_option('default_library') == 'static'
 is_cross = meson.is_cross_build()
@@ -685,7 +684,23 @@ substs.set('LIBNVME_SO_VERSION', libnvme_so_major)
 
 
 ################################################################################
+# The update-docs target needs all doc tools. Generate the docs only
+# when all are found.
 doc_tgts = []
+asciidoc = find_program('asciidoc', required: false)
+xmlto = find_program('xmlto', required: false)
+sphinx_build = find_program('sphinx-build-3', 'sphinx-build', required: false)
+docs_missing = []
+if not asciidoc.found()
+    docs_missing += 'asciidoc'
+endif
+if not xmlto.found()
+    docs_missing += 'xmlto'
+endif
+if not sphinx_build.found()
+    docs_missing += 'sphinx-build'
+endif
+docs_tools_found = docs_missing.length() == 0
 
 subdir('ccan')      # declares: ccan_dep
 subdir('shared')    # declares: shared_dep
@@ -874,9 +889,11 @@ if want_nvme
     endif
 
     subdir('completions')
-
-    subdir('Documentation')
 endif
+
+# Source generation for the docs does not depend on what is built.
+subdir('libnvme/doc')
+subdir('Documentation')
 
 if host_system == 'linux'
     valgrind_cmd = [
@@ -901,16 +918,18 @@ if host_system == 'linux'
     )
 endif
 
-if doc_tgts.length() == 0
-    doc_tgts += custom_target(
-        'docs-dummy',
-        output: 'docs.stamp',
-        command: ['true'],
-        build_by_default: false,
-    )
+# Regenerate the docs and copy them into the source tree.
+if docs_tools_found
+    update_docs_cmd = [find_program('scripts/copy-docs.sh')]
+else
+    update_docs_cmd = [find_program('sh'), '-c',
+        'echo "update-docs: not found: @0@" >&2; exit 1'.format(
+            ' '.join(docs_missing))]
 endif
-
-alias_target('docs', doc_tgts)
+run_target('update-docs',
+    command: update_docs_cmd,
+    depends: doc_tgts,
+)
 
 # Every installed file needs an install tag; see Documentation/BUILDING.md.
 py3_prog = find_program('python3', required: false)
@@ -976,7 +995,6 @@ wanted_dict = {
     'nvmf-autoconnect': want_nvmf_autoconnect,
     'deprecated-cmds':  want_deprecated_cmds,
     'python bindings ': want_python,
-    'build docs':       want_docs_build,
 }
 summary(wanted_dict, section: 'Features to build', bool_yn: true)
 

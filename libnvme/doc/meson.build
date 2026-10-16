@@ -63,17 +63,11 @@ doc_files = []
 foreach f: api_files
     doc_files += 'nvme/' + f
 endforeach
-doc_paths = api_paths
-if want_sed
-    foreach f: sed_api_files
-        doc_files += 'sed/' + f
-    endforeach
-    doc_paths += sed_api_paths
-endif
-if want_privsep
-    doc_files += 'privsep/privsep.h'
-    doc_paths += files('../src/privsep/privsep.h')
-endif
+foreach f: sed_api_files
+    doc_files += 'sed/' + f
+endforeach
+doc_files += 'privsep/privsep.h'
+doc_paths = api_paths + sed_api_paths + files('../src/privsep/privsep.h')
 
 api_includes = []
 foreach f: doc_files
@@ -104,7 +98,9 @@ foreach file : sphinx_sources
 endforeach
 
 rst_tgts = []
-subdir('rst')
+if docs_tools_found
+    subdir('rst')
+endif
 
 top_source_dir = meson.current_source_dir() + '/../'
 
@@ -112,71 +108,51 @@ kernel_doc = find_program(top_source_dir + 'scripts/kernel-doc')
 kernel_doc_check = files(top_source_dir + 'scripts/kernel-doc-check')
 
 bash_prog = find_program('bash', required: false)
-if bash_prog.found()
+if want_libnvme and bash_prog.found()
     test('libnvme - kdoc', bash_prog, args: [kernel_doc_check] + api_paths + sed_api_paths)
 endif
 
-if want_docs != 'false'
-    if want_docs == 'all' or want_docs == 'man'
-        mandir = get_option('mandir') / 'man2'
-        list_man_pages = find_program(top_source_dir + 'scripts/list-man-pages.sh')
-        if want_docs_build
-            foreach apif : doc_paths
-                c = run_command(list_man_pages, apif, check: true)
-                man_pages = c.stdout().split()
-                foreach page : man_pages
-                    doc_tgts += custom_target(
-                        page.underscorify() + '_man',
-                        input: apif,
-                        output: page + '-' + libnvme_api_name + '.2',
-                        capture: true,
-                        command: [
-                            kernel_doc,
-                            '-module', 'libnvme',
-                            '-man',
-                            '-function',
-                            page,
-                            apif,
-                        ],
-                        install: true,
-                        install_dir: mandir,
-                        install_tag: 'man',
-                    )
-                endforeach
-            endforeach
-        else
-            if want_docs == 'all' or want_docs == 'man'
-                list_pre_compiled = find_program(top_source_dir + 'scripts/list-pre-compiled.sh')
-                m = run_command(list_pre_compiled, check: true)
-                man_pages = m.stdout().strip().split('\n')
-                install_data(man_pages, install_dir: mandir, install_tag: 'man')
-            endif
-        endif
-    endif
-
-    if want_docs == 'all' or want_docs == 'html'
-        htmldir = get_option('htmldir') / libnvme_api_name / 'nvme'
-        if want_docs_build
-            sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
+if docs_tools_found
+    list_man_pages = find_program(top_source_dir + 'scripts/list-man-pages.sh')
+    foreach apif : doc_paths
+        c = run_command(list_man_pages, apif, check: true)
+        man_pages = c.stdout().split()
+        foreach page : man_pages
             doc_tgts += custom_target(
-                'generate_doc_html',
-                input: [static_sources, rst_tgts],
-                output: 'html',
+                page.underscorify() + '_man',
+                input: apif,
+                output: page + '-' + libnvme_api_name + '.2',
+                capture: true,
                 command: [
-                    sphinx_build,
-                    '-b', 'html',
-                    '@OUTDIR@',
-                    '@OUTDIR@' + '/html',
+                    kernel_doc,
+                    '-module', 'libnvme',
+                    '-man',
+                    '-function',
+                    page,
+                    apif,
                 ],
-                install: true,
-                install_dir: htmldir,
-                install_tag: 'doc',
             )
-        else
-            # The HTML doc is not ready yet.
-            # if want_docs == 'all' or want_docs == 'html'
-            #  install_subdir('html', install_dir: htmldir)
-            # endif
-        endif
-    endif
+        endforeach
+    endforeach
+
+    doc_tgts += custom_target(
+        'generate_doc_html',
+        input: [static_sources, rst_tgts],
+        output: 'html',
+        command: [
+            sphinx_build,
+            '-b', 'html',
+            '@OUTDIR@',
+            '@OUTDIR@' + '/html',
+        ],
+    )
+endif
+
+# Install the pages committed in the tree.
+if want_libnvme and (want_docs == 'all' or want_docs == 'man')
+    list_pre_compiled = find_program(top_source_dir + 'scripts/list-pre-compiled.sh')
+    m = run_command(list_pre_compiled, check: true)
+    man_pages = m.stdout().strip().split('\n')
+    install_data(man_pages, install_dir: get_option('mandir') / 'man2',
+                 install_tag: 'man')
 endif

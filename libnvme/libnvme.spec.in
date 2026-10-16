@@ -29,7 +29,7 @@ for Linux-native nvme device maangement.
 %autosetup -c
 
 %build
-meson .build -Ddocs=man -Ddocs-build=true -Ddefault_library=both
+meson .build -Ddocs=man -Ddefault_library=both
 
 %install
 cd .build

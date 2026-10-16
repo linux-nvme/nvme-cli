@@ -34,4 +34,4 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          scripts/build.sh docs
+          scripts/update-docs.sh

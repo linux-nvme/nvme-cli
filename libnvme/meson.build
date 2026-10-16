@@ -54,8 +54,6 @@ if want_libnvme
             install_tag:   'nvmf',
         )
     endif
-
-    subdir('doc')
 else
     # Fallback to using a pre-installed libnvme (if available)
     if std_prefix
