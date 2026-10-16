@@ -2,11 +2,13 @@
 /*
  * A frozen copy of the getopt based argconfig parser, as it was before
  * argconfig got its own parser. test-argconfig-diff compares both, so any
- * change in behaviour shows up. Only the value conversion is shared in
- * spirit: it is copied unchanged, help output and the locale side effect
- * are left out.
+ * change in behaviour shows up. Help output and the locale side effect
+ * are left out. The test compares the parsing of the command line, so the
+ * value conversion follows the rules of argconfig: unsigned options reject
+ * negative numbers, and a word is at most UINT32_MAX.
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <stdbool.h>
@@ -34,6 +36,14 @@ static int argconfig_error(char *type, const char *opt, const char *arg)
 	return -EINVAL;
 }
 
+static bool argconfig_negative(const char *arg)
+{
+	while (isspace((unsigned char)*arg))
+		arg++;
+
+	return *arg == '-';
+}
+
 static int argconfig_parse_type(struct argconfig_commandline_options *s,
 				char *arg)
 {
@@ -43,6 +53,20 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 
 	/* To distinguish success/failure after strtol/stroul call */
 	errno = 0;
+
+	switch (s->config_type) {
+	case CFG_BYTE:
+	case CFG_SHORT:
+	case CFG_POSITIVE:
+	case CFG_LONG:
+	case CFG_LONG_SUFFIX:
+		if (argconfig_negative(arg))
+			return argconfig_error("non-negative number", s->option,
+					       arg);
+		break;
+	default:
+		break;
+	}
 
 	switch (s->config_type) {
 	case CFG_STRING:
@@ -72,9 +96,9 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		break;
 	}
 	case CFG_POSITIVE: {
-		uint32_t tmp = strtoul(arg, &endptr, 0);
+		unsigned long long tmp = strtoull(arg, &endptr, 0);
 
-		if (errno || arg == endptr)
+		if (errno || tmp > UINT32_MAX || arg == endptr)
 			ret = argconfig_error("word", s->option, arg);
 		else
 			*(uint32_t *)value = tmp;
