@@ -1223,6 +1223,12 @@ nvme_list_opts () {
 			;;
 
 		"tls-key")
+			opts+=" --dry-run --export -e --import -i --keyfile= -f --keyring= -k --keytype= -t --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --revoke= -r --set-options= --timeout= --verbose -v"
+			valopts+=" --keyfile -f --keyring -k --keytype -t --output-format -o --output-format-version --revoke -r --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2" \
+			               "--timeout" "infinite -1"
 			nodevice=1
 			;;
 
