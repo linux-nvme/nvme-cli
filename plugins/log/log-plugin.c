@@ -2098,7 +2098,9 @@ static int get_rotational_media_info_log(int argc, char **argv, struct command *
 }
 
 static int get_dispersed_ns_psub(struct libnvme_transport_handle *hdl, __u32 nsid,
-				 struct nvme_dispersed_ns_participating_nss_log **logp)
+				 struct nvme_dispersed_ns_participating_nss_log
+					**logp,
+				 __u64 *lenp)
 {
 	int err;
 	__u64 header_len = sizeof(**logp);
@@ -2115,6 +2117,7 @@ static int get_dispersed_ns_psub(struct libnvme_transport_handle *hdl, __u32 nsi
 	if (err)
 		goto err_free;
 
+	*lenp = header_len;
 	numpsub = le64_to_cpu(log->numpsub);
 	if (!numpsub)
 		goto out;
@@ -2131,6 +2134,7 @@ static int get_dispersed_ns_psub(struct libnvme_transport_handle *hdl, __u32 nsi
 		goto err_free;
 	}
 	log = p;
+	*lenp = header_len + psub_list_len;
 
 	nvme_init_get_log_dispersed_ns_participating_nss(&cmd, nsid,
 		(void *)log->participating_nss, psub_list_len);
@@ -2159,6 +2163,7 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free struct nvme_dispersed_ns_participating_nss_log *log = NULL;
+	__u64 log_len;
 
 	struct config {
 		__u32 namespace_id;
@@ -2180,13 +2185,13 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 
 	flags = nvme_args.output_flags;
 
-	err = get_dispersed_ns_psub(hdl, cfg.namespace_id, &log);
+	err = get_dispersed_ns_psub(hdl, cfg.namespace_id, &log, &log_len);
 	if (err) {
 		nvme_show_err(err, "dispersed ns participating nss log");
 		return err;
 	}
 
-	nvme_show_dispersed_ns_psub_log(log, flags);
+	nvme_show_dispersed_ns_psub_log(log, log_len, flags);
 
 	return err;
 }
