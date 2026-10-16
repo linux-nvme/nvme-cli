@@ -6171,7 +6171,7 @@ static void json_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 	obj_d(r, "osp", (unsigned char *)log->osp, osp_len, 16, 1);
 }
 
-static void json_power_meas_log(struct nvme_power_meas_log *log, __u32 size UNUSED)
+static void json_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 {
 	struct json_object *r = json_r;
 	struct json_object *descs;
@@ -6215,6 +6215,9 @@ static void json_power_meas_log(struct nvme_power_meas_log *log, __u32 size UNUS
 
 	obj_add_uint(r, "ipwrpe", log->ipwrpe);
 
+	/* the descriptors the buffer holds */
+	nphd = nvme_log_nr_entries(nphd, size, sizeof(*log),
+				   sizeof(log->descs[0]));
 	descs = json_create_array();
 	for (i = 0; i < nphd; i++) {
 		struct json_object *desc = json_create_object();

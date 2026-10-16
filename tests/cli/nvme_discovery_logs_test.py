@@ -33,12 +33,14 @@ _OPC_GET_LOG_PAGE = 0x02
 _LID_HOST_DISCOVERY = 0x71
 _LID_AVE_DISCOVERY = 0x72
 _LID_PULL_MODEL_DDC_REQ = 0x73
+_LID_POWER_MEASUREMENT = 0x25
 
 _HEADER_LEN = 1024        # host and AVE discovery log headers
 _HEDLPE_LEN = 1032        # struct nvme_host_ext_discovery_log
 _ADLPE_LEN = 232          # struct nvme_ave_discovery_log_entry
 _ATR_LEN = 20             # struct nvme_ave_tr_record
 _PULL_HEADER_LEN = 8      # struct nvme_pull_model_ddc_req_log
+_POWER_MEAS_HEADER_LEN = 64  # struct nvme_power_meas_log
 
 _NVMF_TRTYPE_TCP = 3
 _NVMF_ADDR_FAMILY_IP4 = 1
@@ -87,6 +89,16 @@ def _pull_model_ddc_req_log(osp, tpdrpl=None):
     if tpdrpl is None:
         tpdrpl = _PULL_HEADER_LEN + len(osp)
     return struct.pack('<B3xI', 1, tpdrpl) + osp
+
+
+def _power_meas_log(nphd, ndescs):
+    """A power measurement log page which says it has @nphd histogram
+    descriptors and is as long as @ndescs of them."""
+    sze = _POWER_MEAS_HEADER_LEN + 8 * ndescs
+    hdr = bytearray(_POWER_MEAS_HEADER_LEN)
+    struct.pack_into('<BBHIIH', hdr, 0, 1, 0, 0, sze, 0, nphd)
+    descs = b''.join(struct.pack('<II', i + 1, 0) for i in range(ndescs))
+    return bytes(hdr) + descs
 
 
 class LogMockServer(MockIPCServer):
@@ -245,6 +257,15 @@ class DiscoveryLogsTest(unittest.TestCase):
         osp = result.stdout.split('osp:\n')[-1].splitlines()
         self.assertEqual(len(osp), 2, result.stdout)  # offset ruler, 8 bytes
         self.assertIn('OSPDATA!', osp[1])
+
+    def test_power_measurement_more_descriptors_than_the_page(self):
+        """More histogram descriptors than the page holds: only those in
+        it are printed."""
+        self.server.logs[_LID_POWER_MEASUREMENT] = _power_meas_log(100, 1)
+        self._run('power-measurement', '--verbose')
+        out = self._run_json('power-measurement')
+        self.assertEqual(out['nphd'], 100)
+        self.assertEqual(len(out['descs']), 1)
 
 
 if __name__ == '__main__':

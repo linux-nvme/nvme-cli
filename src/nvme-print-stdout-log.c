@@ -3188,6 +3188,9 @@ void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 
 	stdout_kv_table_finish(t, "power-meas-log");
 
+	/* the descriptors the buffer holds */
+	nphd = nvme_log_nr_entries(nphd, size, sizeof(*log),
+				   sizeof(log->descs[0]));
 	if (verbose) {
 		for (i = 0; i < nphd; i++) {
 			__u32 phblt = le32_to_cpu(log->descs[i].phblt);
