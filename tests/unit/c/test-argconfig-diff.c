@@ -50,6 +50,7 @@ struct diff_cfg {
 	uint32_t longonly;
 	bool dup1;
 	bool dup2;
+	bool noval;
 };
 
 struct global_cfg {
@@ -57,6 +58,7 @@ struct global_cfg {
 	bool dry_run;
 	char *format;
 	uint32_t timeout;
+	bool help;
 };
 
 /* The report; stdout gets the help argconfig prints */
@@ -124,7 +126,7 @@ static void diff_opts(struct argconfig_commandline_options *opts,
 		OPT_STR("str", 'r', &cfg->str, "str"),
 		OPT_STRING_OPTIONAL("optstr", 'O', "STR", &cfg->optstr,
 				    "optstr"),
-		OPT_FLAG("noval", 'n', NULL, "noval"),
+		OPT_FLAG("noval", 'n', &cfg->noval, "noval"),
 		OPT_UINT("longonly", 0, &cfg->longonly, "longonly"),
 		OPT_FLAG("dup1", 'D', &cfg->dup1, "dup1"),
 		OPT_FLAG("dup2", 'D', &cfg->dup2, "dup2"),
@@ -142,7 +144,7 @@ static void global_opts(struct argconfig_commandline_options *opts,
 		OPT_FLAG("dry-run", 0, &cfg->dry_run, "dry-run"),
 		OPT_FMT("format", 'o', &cfg->format, "format"),
 		OPT_UINT("timeout", 0, &cfg->timeout, "timeout"),
-		OPT_FLAG("help", 'h', NULL, "help"),
+		OPT_FLAG("help", 'h', &cfg->help, "help"),
 		OPT_END()
 	};
 

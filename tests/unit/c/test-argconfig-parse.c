@@ -266,7 +266,7 @@ static void optional_string_test(void)
  * Real command lines pass several options together; the per-option tests
  * above each parse exactly one token, so exercise a realistic multi-flag
  * invocation here, mixed with an OPT_GROUP() separator (as real commands
- * do) and a check of argconfig_parse_seen(), the public "was this option
+ * do) and a check of argconfig_given(), the public "was this option
  * given" query used throughout the plugins.
  */
 static void combined_opts_test(void)
@@ -301,11 +301,11 @@ static void combined_opts_test(void)
 		test_rc = 1;
 	}
 
-	if (!argconfig_parse_seen(opts, "flag") ||
-	    !argconfig_parse_seen(opts, "suffix") ||
-	    !argconfig_parse_seen(opts, "uint") ||
-	    argconfig_parse_seen(opts, "int")) {
-		printf("ERROR: combined options: argconfig_parse_seen() mismatch\n");
+	if (!argconfig_given(opts, &cfg.flag) ||
+	    !argconfig_given(opts, &cfg.suffix) ||
+	    !argconfig_given(opts, &cfg.uint) ||
+	    argconfig_given(opts, &cfg.int_val)) {
+		printf("ERROR: combined options: argconfig_given() mismatch\n");
 		test_rc = 1;
 	}
 }
@@ -419,9 +419,9 @@ static void global_options_test(void)
 			printf("ERROR: global options: command parse failed\n");
 			test_rc = 1;
 		}
-		if (!argconfig_parse_seen(opts, "output-format") ||
-		    !argconfig_parse_seen(opts, "verbose") ||
-		    argconfig_parse_seen(opts, "dry-run")) {
+		if (!argconfig_given(opts, &format) ||
+		    !argconfig_given(opts, &verbose) ||
+		    argconfig_given(opts, &dry_run)) {
 			printf("ERROR: global options: seen mismatch\n");
 			test_rc = 1;
 		}
@@ -433,8 +433,8 @@ static void global_options_test(void)
 
 		ret = argconfig_parse(argv_len(argv), argv, desc, local);
 		if (ret || !dry_run ||
-		    !argconfig_parse_seen(local, "output-format") ||
-		    !argconfig_parse_seen(local, "dry-run")) {
+		    !argconfig_given(local, &format) ||
+		    !argconfig_given(local, &dry_run)) {
 			printf("ERROR: global options: seen not kept\n");
 			test_rc = 1;
 		}
@@ -464,7 +464,6 @@ static void given_test(void)
 		OPT_FLAG("flag", 'f', &alias, "flag"),
 		OPT_FLAG("old-flag", 0, &alias, NULL, NULL, true),
 		OPT_UINT("uint", 'u', &cfg.uint, "uint"),
-		OPT_FLAG("seen-only", 0, NULL, "seen only"),
 		OPT_END()
 	};
 
