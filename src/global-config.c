@@ -21,29 +21,20 @@
 
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
+#include <shared/string-util.h>
 
 #include "argconfig.h"
+#include "cleanup.h"
 #include "global-config.h"
 
 struct global_config_ctx {
 	const char *path;
 };
 
-static int parse_uint(const char *value, unsigned int *out)
+/* A number of the config file up to @max, -EINVAL if it is none */
+static int parse_uint(const char *value, uint64_t max, uint64_t *out)
 {
-	unsigned long v;
-	char *end;
-
-	if (!value || !*value || *value == '-')
-		return -EINVAL;
-
-	errno = 0;
-	v = strtoul(value, &end, 0);
-	if (errno || *end || v > (unsigned long)~0U)
-		return -EINVAL;
-
-	*out = (unsigned int)v;
-	return 0;
+	return shr_parse_u64(value, max, out) ? -EINVAL : 0;
 }
 
 /* The keys are the global options which the help shows */
@@ -65,14 +56,15 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 		     const char *value, unsigned int line)
 {
 	struct argconfig_commandline_options *s = find_key(key);
-	unsigned int uval;
+	__cleanup_free char *k = shr_escape(key);
+	uint64_t uval;
 	bool bval;
 	char *dup;
 	int err;
 
 	if (!s || !s->default_value) {
 		fprintf(stderr, "%s:%u: unknown key \"%s\", ignoring\n",
-			gc->path, line, key);
+			gc->path, line, k ? k : "");
 		return 0;
 	}
 
@@ -89,15 +81,13 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 		break;
 	case CFG_INCREMENT:
 		/* the number of times the option is given */
-		err = parse_uint(value, &uval);
-		if (!err && uval > INT_MAX)
-			err = -EINVAL;
+		err = parse_uint(value, INT_MAX, &uval);
 		if (err)
 			goto bad_value;
 		*(int *)s->default_value = uval;
 		break;
 	case CFG_POSITIVE:
-		err = parse_uint(value, &uval);
+		err = parse_uint(value, UINT32_MAX, &uval);
 		if (err)
 			goto bad_value;
 		*(uint32_t *)s->default_value = uval;
@@ -110,7 +100,7 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 		break;
 	default:
 		fprintf(stderr, "%s:%u: key \"%s\" can't be set, ignoring\n",
-			gc->path, line, key);
+			gc->path, line, k ? k : "");
 		break;
 	}
 
@@ -118,9 +108,11 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 
 bad_value:
 	if (err == -EINVAL) {
+		__cleanup_free char *v = shr_escape(value);
+
 		fprintf(stderr,
 			"%s:%u: invalid value \"%s\" for \"%s\", ignoring\n",
-			gc->path, line, value, key);
+			gc->path, line, v ? v : "", k ? k : "");
 		err = 0;
 	}
 	return err;
@@ -131,6 +123,7 @@ static int global_config_event(enum shr_ini_event event, const char *section,
 				unsigned int line, void *user_data)
 {
 	struct global_config_ctx *gc = user_data;
+	__cleanup_free char *k = NULL;
 
 	switch (event) {
 	case SHR_INI_SECTION:
@@ -138,13 +131,15 @@ static int global_config_event(enum shr_ini_event event, const char *section,
 	case SHR_INI_KV:
 		if (section && !strcmp(section, "Global"))
 			return apply_kv(gc, key, value, line);
+		k = shr_escape(key);
 		fprintf(stderr,
 			"%s:%u: \"%s\" outside the [Global] section, ignoring\n",
-			gc->path, line, key);
+			gc->path, line, k ? k : "");
 		return 0;
 	case SHR_INI_JUNK:
+		k = shr_escape(key);
 		fprintf(stderr, "%s:%u: malformed line \"%s\", ignoring\n",
-			gc->path, line, key);
+			gc->path, line, k ? k : "");
 		return 0;
 	}
 
@@ -160,6 +155,13 @@ int nvme_load_global_config_from(const char *path)
 	if (err && err == -ENOENT)
 		err = 0;
 	return err;
+}
+
+int nvme_load_global_config_buf(const char *text, const char *name)
+{
+	struct global_config_ctx gc = { .path = name };
+
+	return shr_ini_parse_buf(text, global_config_event, &gc);
 }
 
 int nvme_load_global_config(void)
