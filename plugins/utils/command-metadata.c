@@ -338,6 +338,41 @@ static int copy_options(const struct argconfig_commandline_options *opts,
  * command's options into the model, then returns the sentinel so the parser
  * unwinds before the command opens a device.
  */
+/* The entries of @opts with the included tables in place, see flat_copy() */
+static size_t flat_count(struct argconfig_commandline_options *opts)
+{
+	size_t n = 0;
+
+	for (; opts->option; opts++) {
+		if (opts->config_type == CFG_INCLUDE)
+			n += flat_count(opts->default_value);
+		n++;
+	}
+
+	return n;
+}
+
+/* Copy @opts to @dst, an included table behind a group of its heading */
+static size_t flat_copy(struct argconfig_commandline_options *dst,
+			struct argconfig_commandline_options *opts)
+{
+	size_t n = 0;
+
+	for (; opts->option; opts++) {
+		if (opts->config_type == CFG_INCLUDE) {
+			struct argconfig_commandline_options sep =
+				OPT_GROUP(opts->help);
+
+			memcpy(&dst[n++], &sep, sizeof(sep));
+			n += flat_copy(&dst[n], opts->default_value);
+			continue;
+		}
+		memcpy(&dst[n++], opts, sizeof(*opts));
+	}
+
+	return n;
+}
+
 /*
  * The command's options followed by the registered global options, behind a
  * "Global options" separator as json_command() expects. The caller frees
@@ -347,11 +382,10 @@ static struct argconfig_commandline_options *
 with_global_options(struct argconfig_commandline_options *options)
 {
 	struct argconfig_commandline_options *g, *all;
-	size_t n = 0, ng = 0, i;
+	size_t n, ng = 0, i;
 
 	g = argconfig_get_global_options();
-	while (options[n].option)
-		n++;
+	n = flat_count(options);
 	while (g && g[ng].option)
 		ng++;
 
@@ -359,7 +393,7 @@ with_global_options(struct argconfig_commandline_options *options)
 	if (!all)
 		return NULL;
 
-	memcpy(all, options, n * sizeof(*all));
+	flat_copy(all, options);
 	if (ng) {
 		struct argconfig_commandline_options sep =
 			OPT_GROUP("Global options");

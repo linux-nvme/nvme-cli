@@ -233,6 +233,12 @@ static void print_options(FILE *out, struct argconfig_commandline_options *s,
 	bool header_printed = false;
 
 	for (; s && s->option; s++) {
+		if (s->config_type == CFG_INCLUDE) {
+			print_options(out, s->default_value, s->help);
+			/* the own options after it get their heading again */
+			header_printed = false;
+			continue;
+		}
 		if (s->config_type == CFG_GROUP_SEPARATOR) {
 			header = s->help;
 			header_printed = false;
@@ -364,6 +370,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		*(bool *)value = true;
 		break;
 	case CFG_GROUP_SEPARATOR:
+	case CFG_INCLUDE:
 		break;
 	}
 
@@ -405,6 +412,7 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 		*(char **)val = opt_val->string;
 		break;
 	case CFG_GROUP_SEPARATOR:
+	case CFG_INCLUDE:
 		break;
 	}
 }
@@ -526,7 +534,15 @@ static struct argconfig_commandline_options *
 argconfig_find_long(struct argconfig_commandline_options *s,
 		    const char *name, size_t len)
 {
+	struct argconfig_commandline_options *o;
+
 	for (; s->option; s++) {
+		if (s->config_type == CFG_INCLUDE) {
+			o = argconfig_find_long(s->default_value, name, len);
+			if (o)
+				return o;
+			continue;
+		}
 		if (s->config_type == CFG_GROUP_SEPARATOR ||
 		    is_null_or_empty(s->option))
 			continue;
@@ -543,7 +559,15 @@ argconfig_find_long(struct argconfig_commandline_options *s,
 static struct argconfig_commandline_options *
 argconfig_find_short(struct argconfig_commandline_options *s, char c)
 {
+	struct argconfig_commandline_options *o;
+
 	for (; s->option; s++) {
+		if (s->config_type == CFG_INCLUDE) {
+			o = argconfig_find_short(s->default_value, c);
+			if (o)
+				return o;
+			continue;
+		}
 		if (s->config_type == CFG_GROUP_SEPARATOR)
 			continue;
 		if (s->short_option == c)
@@ -790,14 +814,22 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
  * Returns 0, ARGCONFIG_HELP, ARGCONFIG_USAGE or a negative errno from the
  * value conversion.
  */
+/* Forget the options given before, also those of included tables */
+static void argconfig_reset_seen(struct argconfig_commandline_options *s)
+{
+	for (; s->option; s++) {
+		if (s->config_type == CFG_INCLUDE)
+			argconfig_reset_seen(s->default_value);
+		s->seen = false;
+	}
+}
+
 static int argconfig_parse_args(struct argconfig_parser *p)
 {
-	struct argconfig_commandline_options *s;
 	char *arg;
 	int ret;
 
-	for (s = p->options; s->option; s++)
-		s->seen = false;
+	argconfig_reset_seen(p->options);
 
 	for (p->ind = 1; p->ind < p->argc; p->ind++) {
 		arg = p->argv[p->ind];
@@ -936,6 +968,21 @@ int argconfig_parse_global(int argc, char *argv[],
 	       (p.version ? ARGCONFIG_VERSION : 0);
 }
 
+static bool given_in(struct argconfig_commandline_options *s,
+		     const void *value)
+{
+	bool given = false;
+
+	for (; s && s->option; s++) {
+		if (s->config_type == CFG_INCLUDE)
+			given |= given_in(s->default_value, value);
+		else
+			given |= s->default_value == value && s->seen;
+	}
+
+	return given;
+}
+
 /*
  * True if an option which stores to @value was given, in the table or in
  * the global options. Aliases share the variable, so any of them counts.
@@ -944,15 +991,9 @@ bool argconfig_given(struct argconfig_commandline_options *s,
 		     const void *value)
 {
 	struct argconfig_commandline_options *g = argconfig_globals(s);
-	bool given = false;
 
 	if (!value)
 		return false;
 
-	for (; s && s->option; s++)
-		given |= s->default_value == value && s->seen;
-	for (; g && g->option; g++)
-		given |= g->default_value == value && g->seen;
-
-	return given;
+	return given_in(s, value) || given_in(g, value);
 }

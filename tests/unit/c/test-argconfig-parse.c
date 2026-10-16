@@ -463,6 +463,64 @@ static void global_options_test(void)
 	argconfig_set_global_options(NULL);
 }
 
+/*
+ * A table includes another one: its options are found, reset for each
+ * parse and given like the own ones.
+ */
+static void include_test(void)
+{
+	const char *desc = "Test include";
+	static bool shared_flag;
+	static __u32 shared_uint;
+	static struct argconfig_commandline_options shared[] = {
+		OPT_FLAG("shared-flag", 'S', &shared_flag, "shared flag"),
+		OPT_UINT("shared-uint", 0, &shared_uint, "shared uint"),
+		OPT_END()
+	};
+	bool own = false;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_INCLUDE(shared, "Shared options"),
+		OPT_FLAG("own", 'o', &own, "own flag"),
+		OPT_END()
+	};
+
+	{
+		char *argv[5] = { "prog", "-S", "--shared-uint=3", "-o", NULL };
+
+		ret = argconfig_parse(4, argv, desc, opts);
+		if (ret || !shared_flag || shared_uint != 3 || !own ||
+		    !argconfig_given(opts, &shared_flag) ||
+		    !argconfig_given(opts, &shared_uint)) {
+			printf("ERROR: include: options not applied\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		/* a later parse starts over with the included options */
+		char *argv[2] = { "prog", NULL };
+
+		ret = argconfig_parse(1, argv, desc, opts);
+		if (ret || argconfig_given(opts, &shared_flag) ||
+		    argconfig_given(opts, &shared_uint)) {
+			printf("ERROR: include: seen not reset\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char *argv[3] = { "prog", "--bogus", NULL };
+
+		ret = argconfig_parse(2, argv, desc, opts);
+		if (ret != -EINVAL) {
+			printf("ERROR: include: unknown option accepted\n");
+			test_rc = 1;
+		}
+	}
+}
+
 /* An enum takes only its names, in any case and as a unique prefix */
 static void enum_test(void)
 {
@@ -1007,6 +1065,7 @@ int main(void)
 	given_test();
 	old_name_test();
 	enum_test();
+	include_test();
 	special_values_test();
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)

@@ -51,6 +51,7 @@ enum argconfig_types {
 	CFG_INCREMENT,
 	CFG_ENUM,
 	CFG_GROUP_SEPARATOR,
+	CFG_INCLUDE,
 };
 
 #define OPT_ARGS(n) \
@@ -80,6 +81,13 @@ enum argconfig_types {
 #define OPT_CHECK_DOUBLE(v)	_Generic(v, double * : (v))
 
 #define OPT_END() { NULL }
+
+/*
+ * The options of the table @t at this place, under the heading @d. They
+ * are parsed, reset and given like the own options of the table.
+ */
+#define OPT_INCLUDE(t, d) \
+	{"", 0, NULL, CFG_INCLUDE, t, ARGCONFIG_ARG_NONE, d, false, NULL}
 
 #define OPT_GROUP(d) \
 	{"", 0, NULL, CFG_GROUP_SEPARATOR, NULL, ARGCONFIG_ARG_NONE, d, false, \
