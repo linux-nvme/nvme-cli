@@ -43,6 +43,15 @@ int shr_parse_u64(const char *s, uint64_t max, uint64_t *out);
 int shr_parse_s64(const char *s, int64_t min, int64_t max, int64_t *out);
 
 /*
+ * Parse the whole string @s as a finite floating point number with a '.'
+ * as decimal point, whatever the locale: no whitespace, no nan or inf and
+ * nothing after the number.
+ * Return: 0 on success (*out set), -EINVAL if @s is no such number,
+ * -ERANGE if it is too large.
+ */
+int shr_parse_double(const char *s, double *out);
+
+/*
  * Parse a comma-separated list of numbers from string (modified in place by
  * strtok()) into val, up to max_length entries. Each number is parsed with
  * strtoumax() and range-checked against the destination type; an empty

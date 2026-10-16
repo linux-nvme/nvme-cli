@@ -430,6 +430,42 @@ static bool test_s64(void)
 	return pass;
 }
 
+static bool check_double(const char *value, int want_ret, double want)
+{
+	double out = 0;
+	int ret;
+
+	ret = shr_parse_double(value, &out);
+	if (ret != want_ret || (!ret && out != want)) {
+		printf(" - \"%s\": got ret=%d out=%f [FAIL]\n", value, ret,
+		       out);
+		return false;
+	}
+	printf(" - \"%s\" [PASS]\n", value);
+	return true;
+}
+
+static bool test_double(void)
+{
+	bool pass = true;
+
+	printf("test_double:\n");
+
+	pass &= check_double("1.5", 0, 1.5);
+	pass &= check_double("-0.25", 0, -0.25);
+	pass &= check_double("1e3", 0, 1000);
+	pass &= check_double(".5", 0, 0.5);
+	pass &= check_double("nan", -EINVAL, 0);
+	pass &= check_double("inf", -EINVAL, 0);
+	pass &= check_double("1e999", -EINVAL, 0);
+	pass &= check_double(" 1", -EINVAL, 0);
+	pass &= check_double("1 ", -EINVAL, 0);
+	pass &= check_double("1,5", -EINVAL, 0);
+	pass &= check_double("", -EINVAL, 0);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -448,6 +484,7 @@ int main(void)
 	pass &= test_csv_u128();
 	pass &= test_u64();
 	pass &= test_s64();
+	pass &= test_double();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
