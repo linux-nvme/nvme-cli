@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme-cli.
+# Copyright (c) 2026 SUSE Software Solutions
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+"""Tests for the host-discovery, ave-discovery and pull-model-ddc-req log
+commands against a mocked controller.
+
+Each of these log pages has a header which says how long the whole page
+is, and records or data behind it. The tests check that the commands read
+the part behind the header and print it, and that the header asks for
+the page the options select.
+
+Usage: python3 nvme_discovery_logs_test.py <nvme-binary> <mock-lib>
+"""
+import json
+import os
+import shutil
+import struct
+import sys
+import tempfile
+import unittest
+
+from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
+
+_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
+_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
+
+_OPC_GET_LOG_PAGE = 0x02
+_LID_HOST_DISCOVERY = 0x71
+_LID_AVE_DISCOVERY = 0x72
+_LID_PULL_MODEL_DDC_REQ = 0x73
+
+_HEADER_LEN = 1024        # host and AVE discovery log headers
+_HEDLPE_LEN = 1032        # struct nvme_host_ext_discovery_log
+_ADLPE_LEN = 232          # struct nvme_ave_discovery_log_entry
+_ATR_LEN = 20             # struct nvme_ave_tr_record
+_PULL_HEADER_LEN = 8      # struct nvme_pull_model_ddc_req_log
+
+_NVMF_TRTYPE_TCP = 3
+_NVMF_ADDR_FAMILY_IP4 = 1
+
+
+def _host_discovery_log(hostnqns):
+    """A host discovery log page with one record for each of @hostnqns."""
+    records = b''
+    for nqn in hostnqns:
+        rec = bytearray(_HEDLPE_LEN)
+        rec[0] = _NVMF_TRTYPE_TCP
+        rec[1] = _NVMF_ADDR_FAMILY_IP4
+        rec[256:256 + len(nqn)] = nqn.encode()
+        traddr = b'192.0.2.1'
+        rec[512:512 + len(traddr)] = traddr
+        struct.pack_into('<I', rec, 1024, _HEDLPE_LEN)
+        records += bytes(rec)
+    hdr = bytearray(_HEADER_LEN)
+    struct.pack_into('<QQHBxI', hdr, 0, 1, len(hostnqns), 0, 0,
+                     _HEADER_LEN + len(records))
+    return bytes(hdr) + records
+
+
+def _ave_discovery_log(avenqns):
+    """An AVE discovery log page with one record of one IPv4 transport
+    record for each of @avenqns."""
+    records = b''
+    for nqn in avenqns:
+        rec = bytearray(_ADLPE_LEN + _ATR_LEN)
+        struct.pack_into('<I', rec, 0, len(rec))
+        rec[4:4 + len(nqn)] = nqn.encode()
+        rec[228] = 1  # numatr
+        rec[_ADLPE_LEN] = _NVMF_ADDR_FAMILY_IP4
+        struct.pack_into('<H', rec, _ADLPE_LEN + 2, 4420)
+        rec[_ADLPE_LEN + 4:_ADLPE_LEN + 8] = bytes([192, 0, 2, 7])
+        records += bytes(rec)
+    hdr = bytearray(_HEADER_LEN)
+    struct.pack_into('<QQHxxI', hdr, 0, 1, len(avenqns), 0,
+                     _HEADER_LEN + len(records))
+    return bytes(hdr) + records
+
+
+def _pull_model_ddc_req_log(osp):
+    return struct.pack('<B3xI', 1, _PULL_HEADER_LEN + len(osp)) + osp
+
+
+class LogMockServer(MockIPCServer):
+    """Serves the log page in @logs[lid] by the offset and length a Get
+    Log Page asks for, and records (lid, lsp, offset, length) of each."""
+
+    def __init__(self, sock_path):
+        super().__init__(sock_path)
+        self.logs = {}
+        self.requests = []
+
+    def handle_ioctl(self, conn, fd, request, opcode, nsid,
+                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
+        if opcode != _OPC_GET_LOG_PAGE:
+            self.send_response(conn, 0, payload=b'\x00' * req_len)
+            return
+        lid = cdw10 & 0xff
+        lsp = (cdw10 >> 8) & 0x7f
+        self.requests.append((lid, lsp, lpo, req_len))
+        page = self.logs.get(lid, b'')
+        data = page[lpo:lpo + req_len]
+        self.send_response(conn, 0, payload=data + b'\x00' * (req_len - len(data)))
+
+
+class DiscoveryLogsTest(unittest.TestCase):
+
+    DEVICE = '/dev/nvme0'
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix='nvme-discovery-logs-', dir='/tmp')
+        self.sysfs_dir = os.path.join(self.tmp, 'sysfs')
+        self.base_dir = os.path.join(self.tmp, 'base')
+        os.mkdir(self.sysfs_dir)
+        os.mkdir(self.base_dir)
+        self.server = LogMockServer(os.path.join(self.tmp, 'ipc.sock'))
+        self.server.start()
+        self.env = make_mock_env(_MOCK_LIB, self.server.sock_path)
+
+    def tearDown(self):
+        self.server.shutdown()
+        self.server.join()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _run_json(self, *args):
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', *args, self.DEVICE, '-o', 'json')
+        self.assertEqual(result.returncode, 0,
+                         f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+        self.assertEqual(self.server.errors, [])
+        return json.loads(result.stdout)
+
+    def test_host_discovery_records_are_read(self):
+        self.server.logs[_LID_HOST_DISCOVERY] = \
+            _host_discovery_log(['nqn.2014-08.org.example:host1',
+                                 'nqn.2014-08.org.example:host2'])
+        out = self._run_json('host-discovery')
+        self.assertEqual(out['hedlpe: 0']['hostnqn'],
+                         'nqn.2014-08.org.example:host1')
+        self.assertEqual(out['hedlpe: 1']['hostnqn'],
+                         'nqn.2014-08.org.example:host2')
+        self.assertEqual(out['hedlpe: 1']['traddr'], '192.0.2.1')
+
+    def test_host_discovery_header_asks_for_all_host_entries(self):
+        self.server.logs[_LID_HOST_DISCOVERY] = \
+            _host_discovery_log(['nqn.2014-08.org.example:host1'])
+        self._run_json('host-discovery', '--all-host-entries')
+        reqs = [r for r in self.server.requests if r[0] == _LID_HOST_DISCOVERY]
+        self.assertTrue(reqs)
+        for lid, lsp, lpo, length in reqs:
+            self.assertEqual(lsp, 1, f'request at offset {lpo}')
+
+    def test_host_discovery_header_only(self):
+        self.server.logs[_LID_HOST_DISCOVERY] = _host_discovery_log([])
+        out = self._run_json('host-discovery')
+        self.assertEqual(out['thdlpl'], _HEADER_LEN)
+        self.assertFalse([k for k in out if k.startswith('hedlpe')])
+
+    def test_ave_discovery_records_are_read(self):
+        self.server.logs[_LID_AVE_DISCOVERY] = \
+            _ave_discovery_log(['nqn.2014-08.org.example:ave1'])
+        out = self._run_json('ave-discovery')
+        self.assertEqual(out['adlpe: 0']['avenqn'],
+                         'nqn.2014-08.org.example:ave1')
+        self.assertEqual(out['adlpe: 0']['atr: 0']['avetraddr'], '192.0.2.7')
+        self.assertEqual(out['adlpe: 0']['atr: 0']['avetrsvcid'], 4420)
+
+    def test_pull_model_ddc_req_osp_is_read(self):
+        self.server.logs[_LID_PULL_MODEL_DDC_REQ] = \
+            _pull_model_ddc_req_log(b'OSPDATA!')
+        out = self._run_json('pull-model-ddc-req')
+        self.assertEqual(out['osp'], ['OSPDATA!'])
+
+
+if __name__ == '__main__':
+    unittest.main(argv=[sys.argv[0]])
