@@ -728,6 +728,53 @@ $script:NvmeOptions = @{
     'zns zrwa-flush-zone' = @('--dry-run', '--lba', '-l', '--namespace-id', '-n', '--no-ioctl-probing', '--no-retries', '--output-format', '-o', '--output-format-version', '--quiet', '--set-options', '--timeout', '--verbose', '-v', '--help', '-h')
 }
 
+$script:NvmeNoDevice = @{
+    'check-dhchap-key' = $true
+    'check-tls-key' = $true
+    'config convert' = $true
+    'config create' = $true
+    'config show' = $true
+    'config status' = $true
+    'config validate' = $true
+    'connect' = $true
+    'connect-all' = $true
+    'dim' = $true
+    'disconnect' = $true
+    'disconnect-all' = $true
+    'discover' = $true
+    'exclusion add' = $true
+    'exclusion create' = $true
+    'exclusion delete' = $true
+    'exclusion edit' = $true
+    'exclusion list' = $true
+    'exclusion remove' = $true
+    'gen-dhchap-key' = $true
+    'gen-hostnqn' = $true
+    'gen-tls-key' = $true
+    'huawei list' = $true
+    'keys check-kxchap-secret' = $true
+    'keys check-tls-psk' = $true
+    'keys export' = $true
+    'keys gen-kxchap-secret' = $true
+    'keys gen-tls-psk' = $true
+    'keys import' = $true
+    'keys insert-tls-psk' = $true
+    'keys revoke' = $true
+    'list' = $true
+    'micron cloud-SSD-plugin-version' = $true
+    'micron plugin-version' = $true
+    'nbft show' = $true
+    'registry list' = $true
+    'seagate cloud-SSD-plugin-version' = $true
+    'seagate plugin-version' = $true
+    'show-hostnqn' = $true
+    'solidigm cloud-SSDplugin-version' = $true
+    'tls-key' = $true
+    'top' = $true
+    'utils dump-command-metadata' = $true
+    'zns list' = $true
+}
+
 $script:NvmeFileOptions = @{
     'admin-passthru --input-file' = $true
     'admin-passthru --metadata' = $true
@@ -2553,8 +2600,9 @@ Register-ArgumentCompleter -Native -CommandName nvme -ScriptBlock {
         $results = @($script:NvmeOptions[$key] | Where-Object { $_ -like "$wordToComplete*" } |
             ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterName', $_) })
         # Offer a device-path hint for commands that take a device argument
-        # (everything except help/version, which are handled above).
-        if ('/dev/nvme' -like "$wordToComplete*") {
+        # (help/version are handled above).
+        if ('/dev/nvme' -like "$wordToComplete*" -and
+            -not $script:NvmeNoDevice.ContainsKey($key)) {
             $results += [System.Management.Automation.CompletionResult]::new(
                 '/dev/nvme', '/dev/nvme', 'ParameterValue', 'NVMe device (e.g. /dev/nvme0, /dev/nvme0n1)')
         }

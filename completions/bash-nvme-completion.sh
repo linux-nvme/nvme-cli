@@ -116,6 +116,7 @@ _nvme_finish_completion () {
 			[[ ${words[i]} == /dev/nvme* ]] && has_device=1
 		done
 		if [[ $nonopt_args -ge $2 ]] && [[ $has_device -eq 0 ]] && \
+		   [[ $nodevice -eq 0 ]] && \
 		   [[ "$1" != "help" ]] && [[ "$1" != "version" ]]; then
 			opts="/dev/nvme* $opts"
 		fi
@@ -154,6 +155,7 @@ nvme_list_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"admin-passthru")
@@ -228,6 +230,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"check-tls-key")
@@ -236,6 +239,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"cmdset-ind-id-ns")
@@ -262,6 +266,7 @@ nvme_list_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--devid-file"
+			nodevice=1
 			;;
 
 		"connect-all")
@@ -271,6 +276,7 @@ nvme_list_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--raw -r"
+			nodevice=1
 			;;
 
 		"copy")
@@ -319,6 +325,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"dir-receive")
@@ -344,6 +351,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"disconnect-all")
@@ -352,6 +360,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"discover")
@@ -361,6 +370,7 @@ nvme_list_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--raw -r"
+			nodevice=1
 			;;
 
 		"dispersed-ns-participating-nss-log")
@@ -467,6 +477,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"gen-hostnqn")
@@ -475,6 +486,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"gen-tls-key")
@@ -483,6 +495,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"get-feature")
@@ -649,6 +662,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"list-ctrl")
@@ -1001,6 +1015,7 @@ nvme_list_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"show-regs")
@@ -1060,12 +1075,17 @@ nvme_list_opts () {
 			_nvme_opt_files "--output-file -O"
 			;;
 
+		"tls-key")
+			nodevice=1
+			;;
+
 		"top")
 			opts+=" --delay= -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --delay -d --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"verify")
@@ -1124,6 +1144,7 @@ plugin_amzn_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"id-ctrl")
@@ -1157,6 +1178,7 @@ plugin_config_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"convert")
@@ -1166,6 +1188,7 @@ plugin_config_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J" "--output -o"
+			nodevice=1
 			;;
 
 		"create")
@@ -1175,6 +1198,7 @@ plugin_config_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--output"
+			nodevice=1
 			;;
 
 		"show")
@@ -1184,6 +1208,7 @@ plugin_config_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J"
+			nodevice=1
 			;;
 
 		"status")
@@ -1192,6 +1217,7 @@ plugin_config_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"validate")
@@ -1201,6 +1227,7 @@ plugin_config_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
 			_nvme_opt_files "--config -J"
+			nodevice=1
 			;;
 	esac
 	_nvme_finish_completion "$1" 3
@@ -1218,6 +1245,7 @@ plugin_dapustor_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"smart-log-add")
@@ -1243,6 +1271,7 @@ plugin_dell_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"id-ctrl")
@@ -1268,6 +1297,7 @@ plugin_dera_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"smart-log-add"|"stat")
@@ -1293,6 +1323,7 @@ plugin_dir_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"receive")
@@ -1327,6 +1358,7 @@ plugin_exclusion_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"add")
@@ -1335,6 +1367,7 @@ plugin_exclusion_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"create")
@@ -1343,6 +1376,7 @@ plugin_exclusion_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"delete")
@@ -1351,6 +1385,7 @@ plugin_exclusion_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"edit")
@@ -1359,6 +1394,7 @@ plugin_exclusion_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"list")
@@ -1367,6 +1403,7 @@ plugin_exclusion_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"remove")
@@ -1375,6 +1412,7 @@ plugin_exclusion_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 	esac
 	_nvme_finish_completion "$1" 3
@@ -1392,6 +1430,7 @@ plugin_fdp_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"configs")
@@ -1473,6 +1512,7 @@ plugin_feat_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"arbitration")
@@ -1662,6 +1702,7 @@ plugin_fw_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"commit"|"activate")
@@ -1697,6 +1738,7 @@ plugin_huawei_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"id-ctrl")
@@ -1713,6 +1755,7 @@ plugin_huawei_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 	esac
 	_nvme_finish_completion "$1" 3
@@ -1730,6 +1773,7 @@ plugin_ibm_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"crit-log")
@@ -1771,6 +1815,7 @@ plugin_id_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"ctrl")
@@ -1932,6 +1977,7 @@ plugin_innogrit_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"get-cdump")
@@ -1965,6 +2011,7 @@ plugin_inspur_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"nvme-vendor-log")
@@ -1990,6 +2037,7 @@ plugin_intel_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"id-ctrl")
@@ -2072,6 +2120,7 @@ plugin_io_mgmt_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"recv")
@@ -2107,6 +2156,7 @@ plugin_keys_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"check-kxchap-secret")
@@ -2115,6 +2165,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"check-tls-psk")
@@ -2123,6 +2174,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"export")
@@ -2131,6 +2183,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"gen-kxchap-secret")
@@ -2139,6 +2192,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"gen-tls-psk")
@@ -2147,6 +2201,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"import")
@@ -2155,6 +2210,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"insert-tls-psk")
@@ -2163,6 +2219,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"revoke")
@@ -2171,6 +2228,7 @@ plugin_keys_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 	esac
 	_nvme_finish_completion "$1" 3
@@ -2188,6 +2246,7 @@ plugin_lm_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"create-cdq")
@@ -2266,6 +2325,7 @@ plugin_log_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"ana")
@@ -2549,6 +2609,7 @@ plugin_mangoboost_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"id-ctrl")
@@ -2574,6 +2635,7 @@ plugin_memblaze_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"clear-error-log")
@@ -2712,6 +2774,7 @@ plugin_micron_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"clear-fw-activate-history")
@@ -2736,6 +2799,7 @@ plugin_micron_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"cloud-boot-SSD-version")
@@ -2792,6 +2856,7 @@ plugin_micron_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"select-download")
@@ -2939,6 +3004,7 @@ plugin_nbft_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"show")
@@ -2947,6 +3013,7 @@ plugin_nbft_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 	esac
 	_nvme_finish_completion "$1" 3
@@ -2964,6 +3031,7 @@ plugin_netapp_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"ontapdevices")
@@ -2997,6 +3065,7 @@ plugin_ns_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"attach")
@@ -3054,6 +3123,7 @@ plugin_nvidia_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"id-ctrl")
@@ -3079,6 +3149,7 @@ plugin_nvme_mi_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"recv")
@@ -3114,6 +3185,7 @@ plugin_ocp_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"clear-fw-activate-history")
@@ -3385,6 +3457,7 @@ plugin_registry_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"delete")
@@ -3401,6 +3474,7 @@ plugin_registry_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"retrieve")
@@ -3434,6 +3508,7 @@ plugin_resv_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"acquire")
@@ -3483,6 +3558,7 @@ plugin_rpmb_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"info")
@@ -3561,6 +3637,7 @@ plugin_samsung_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"vs-internal-log")
@@ -3587,6 +3664,7 @@ plugin_seagate_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"clear-fw-activate-history")
@@ -3611,6 +3689,7 @@ plugin_seagate_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"get-ctrl-tele")
@@ -3635,6 +3714,7 @@ plugin_seagate_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"vs-fw-activate-history")
@@ -3701,6 +3781,7 @@ plugin_security_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"recv")
@@ -3735,6 +3816,7 @@ plugin_sed_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"discover"|"1")
@@ -3800,6 +3882,7 @@ plugin_sfx_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"change-cap")
@@ -3898,6 +3981,7 @@ plugin_shannon_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"get-additional-feature")
@@ -3949,6 +4033,7 @@ plugin_sndk_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"capabilities")
@@ -4192,6 +4277,7 @@ plugin_solidigm_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"clear-fw-activate-history")
@@ -4216,6 +4302,7 @@ plugin_solidigm_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"garbage-collect-log")
@@ -4339,6 +4426,7 @@ plugin_ssstc_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"smart-log-add")
@@ -4364,6 +4452,7 @@ plugin_toshiba_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"clear-pcie-correctable-errors")
@@ -4407,6 +4496,7 @@ plugin_transcend_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"badblock")
@@ -4440,7 +4530,13 @@ plugin_utils_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
+	case "$1" in
+		"dump-command-metadata")
+			nodevice=1
+			;;
+	esac
 	_nvme_finish_completion "$1" 3
 }
 
@@ -4456,6 +4552,7 @@ plugin_virtium_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"save-smart-to-vtview-log")
@@ -4490,6 +4587,7 @@ plugin_wdc_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"cap-diag")
@@ -4811,6 +4909,7 @@ plugin_ymtc_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"smart-log-add")
@@ -4836,6 +4935,7 @@ plugin_zns_opts () {
 
 	local completing_value=0
 	local wantfiles=0
+	local nodevice=0
 	_nvme_detect_value_completion
 	case "$1" in
 		"changed-zone-list")
@@ -4884,6 +4984,7 @@ plugin_zns_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal" \
 			               "--output-format-version" "1 2"
+			nodevice=1
 			;;
 
 		"offline-zone")

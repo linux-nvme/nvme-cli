@@ -400,7 +400,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme config convert options" _config_convert
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(create)
@@ -480,7 +479,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme config create options" _config_create
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(show)
@@ -507,7 +505,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme config show options" _config_show
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(status)
@@ -531,7 +528,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme config status options" _config_status
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(validate)
@@ -558,7 +554,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme config validate options" _config_validate
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(*)
@@ -841,7 +836,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme exclusion add options" _exclusion_add
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(create)
@@ -867,7 +861,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme exclusion create options" _exclusion_create
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(delete)
@@ -893,7 +886,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme exclusion delete options" _exclusion_delete
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(edit)
@@ -919,7 +911,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme exclusion edit options" _exclusion_edit
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(list)
@@ -945,7 +936,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme exclusion list options" _exclusion_list
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(remove)
@@ -971,7 +961,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme exclusion remove options" _exclusion_remove
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(*)
@@ -2089,7 +2078,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme huawei list options" _huawei_list
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(*)
@@ -3221,7 +3209,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys check-kxchap-secret options" _keys_check_kxchap_secret
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(check-tls-psk)
@@ -3259,7 +3246,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys check-tls-psk options" _keys_check_tls_psk
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(export)
@@ -3287,7 +3273,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys export options" _keys_export
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(gen-kxchap-secret)
@@ -3317,7 +3302,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys gen-kxchap-secret options" _keys_gen_kxchap_secret
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(gen-tls-psk)
@@ -3361,7 +3345,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys gen-tls-psk options" _keys_gen_tls_psk
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(import)
@@ -3393,7 +3376,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys import options" _keys_import
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(insert-tls-psk)
@@ -3433,7 +3415,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys insert-tls-psk options" _keys_insert_tls_psk
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(revoke)
@@ -3463,7 +3444,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme keys revoke options" _keys_revoke
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(*)
@@ -5277,7 +5257,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme micron cloud-SSD-plugin-version options" _micron_cloud_SSD_plugin_version
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(cloud-boot-SSD-version)
@@ -5453,7 +5432,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme micron plugin-version options" _micron_plugin_version
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(select-download)
@@ -5907,7 +5885,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme nbft show options" _nbft_show
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(*)
@@ -7313,7 +7290,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme registry list options" _registry_list
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(retrieve)
@@ -7919,7 +7895,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme seagate cloud-SSD-plugin-version options" _seagate_cloud_SSD_plugin_version
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(get-ctrl-tele)
@@ -8001,7 +7976,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme seagate plugin-version options" _seagate_plugin_version
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(vs-fw-activate-history)
@@ -9799,7 +9773,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme solidigm cloud-SSDplugin-version options" _solidigm_cloud_SSDplugin_version
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(garbage-collect-log)
@@ -10411,7 +10384,6 @@ _nvme () {
 
 			case ${words[2]} in
 				(dump-command-metadata)
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(*)
@@ -11768,7 +11740,6 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme zns list options" _zns_list
-					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
 				(offline-zone)
@@ -12381,7 +12352,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme check-dhchap-key options" _check_dhchap_key
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(check-tls-key)
@@ -12419,7 +12389,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme check-tls-key options" _check_tls_key
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(cmdset-ind-id-ns)
@@ -12599,7 +12568,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme connect options" _connect
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(connect-all)
@@ -12690,7 +12658,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme connect-all options" _connect_all
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(copy)
@@ -12940,7 +12907,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme dim options" _dim
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(dir-receive)
@@ -13100,7 +13066,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme disconnect options" _disconnect
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(disconnect-all)
@@ -13128,7 +13093,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme disconnect-all options" _disconnect_all
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(discover)
@@ -13219,7 +13183,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme discover options" _discover
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(dispersed-ns-participating-nss-log)
@@ -13635,7 +13598,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme gen-dhchap-key options" _gen_dhchap_key
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(gen-hostnqn)
@@ -13659,7 +13621,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme gen-hostnqn options" _gen_hostnqn
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(gen-tls-key)
@@ -13703,7 +13664,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme gen-tls-key options" _gen_tls_key
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(get-feature)
@@ -14371,7 +14331,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme list options" _list
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(list-ctrl)
@@ -15716,7 +15675,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme show-hostnqn options" _show_hostnqn
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(show-regs)
@@ -15912,7 +15870,6 @@ _nvme () {
 			;;
 
 		(tls-key)
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(top)
@@ -15938,7 +15895,6 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme top options" _top
-			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
 		(verify)
