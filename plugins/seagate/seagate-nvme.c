@@ -899,14 +899,15 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	STX_EXT_SMART_LOG_PAGE_C0   ehExtSmart;
 	EXTENDED_SMART_INFO_T   ExtdSMARTInfo;
 	vendor_log_page_CF      logPageCF;
-	struct json_object *root = json_create_object();
-	struct json_object *lbafs = json_create_array();
+	__cleanup_json_object struct json_object *root = NULL;
+	struct json_object *lbafs = NULL;
 	struct json_object *lbafs_ExtSmart, *lbafs_DramSmart;
 
 	const char *desc = "Retrieve the Firmware Activation History for Seagate NVMe drives";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
+	bool found = false;
 	int err, index = 0;
 
 	OPT_ARGS(opts) = {
@@ -919,9 +920,12 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 
 	flags = nvme_args.output_flags;
 
-	if (flags & JSON)
+	if (flags & JSON) {
 		printf("Seagate Extended SMART Information :\n");
-
+		root = json_create_object();
+		lbafs = json_create_array();
+		json_object_add_value_array(root, "SMART-Attributes", lbafs);
+	}
 
 	/**
 	 * Here we should identify if the drive is a Panthor or Jaguar.
@@ -941,6 +945,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	if (!stx_is_jag_pan(modelNo)) {
 		err = nvme_get_log_simple(hdl, 0xC4, &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 		if (!err) {
+			found = true;
 			if (!(flags & JSON)) {
 				printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
 				for (index = 0; index < 80; index++)
@@ -949,11 +954,9 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 				for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++)
 					print_smart_log(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index], index == (NUMBER_EXTENDED_SMART_ATTRIBUTES - 1));
 
-			} else if (flags & JSON){
+			} else {
 				lbafs_ExtSmart = json_create_object();
 				json_print_smart_log(lbafs_ExtSmart, &ExtdSMARTInfo);
-
-				json_object_add_value_array(root, "SMART-Attributes", lbafs);
 				json_array_add_value_object(lbafs, lbafs_ExtSmart);
 			}
 
@@ -965,16 +968,11 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 			if (!err) {
 				if (!(flags & JSON)) {
 					print_smart_log_CF(&logPageCF);
-				} else if (flags & JSON) {
+				} else {
 					lbafs_DramSmart = json_create_object();
 					json_print_smart_log_CF(lbafs_DramSmart, &logPageCF);
 					json_array_add_value_object(lbafs, lbafs_DramSmart);
-					json_print_object(root, NULL);
 				}
-			} else if (flags & JSON) {
-				json_print_object(root, NULL);
-				printf("\n");
-				json_free_object(root);
 			}
 		} else if (err > 0) {
 			nvme_show_status(err);
@@ -983,18 +981,13 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		err = nvme_get_log_simple(hdl, 0xC0, &ehExtSmart, sizeof(ehExtSmart));
 
 		if (!err) {
+			found = true;
 			if (!(flags & JSON)) {
 				print_stx_smart_log_C0(&ehExtSmart);
-			} else if (flags & JSON){
+			} else {
 				lbafs_ExtSmart = json_create_object();
 				json_print_stx_smart_log_C0(lbafs_ExtSmart, &ehExtSmart);
-
-				json_object_add_value_array(root, "SMART-Attributes", lbafs);
 				json_array_add_value_object(lbafs, lbafs_ExtSmart);
-
-				json_print_object(root, NULL);
-				printf("\n");
-				json_free_object(root);
 			}
 		}
 
@@ -1002,45 +995,9 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 			nvme_show_status(err);
 	}
 
-	err = nvme_get_log_simple(hdl, 0xC4,
-				  &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
-	if (!err) {
-		if (!(flags & JSON)) {
-			printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
-			for (index = 0; index < 80; index++)
-				printf("-");
-			printf("\n");
-			for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++)
-				print_smart_log(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index], index == (NUMBER_EXTENDED_SMART_ATTRIBUTES - 1));
-
-		} else if (flags & JSON) {
-			lbafs_ExtSmart = json_create_object();
-			json_print_smart_log(lbafs_ExtSmart, &ExtdSMARTInfo);
-
-			json_object_add_value_array(root, "SMART-Attributes", lbafs);
-			json_array_add_value_object(lbafs, lbafs_ExtSmart);
-		}
-
-		/**
-		 * Next get Log Page 0xCF
-		 */
-
-		err = nvme_get_log_simple(hdl, 0xCF,
-					  &logPageCF, sizeof(logPageCF));
-		if (!err) {
-			if (!(flags & JSON)) {
-				print_smart_log_CF(&logPageCF);
-			} else if (flags & JSON) {
-				lbafs_DramSmart = json_create_object();
-				json_print_smart_log_CF(lbafs_DramSmart, &logPageCF);
-				json_array_add_value_object(lbafs, lbafs_DramSmart);
-				json_print_object(root, NULL);
-			}
-		} else if (flags & JSON) {
-			json_print_object(root, NULL);
-		}
-	} else if (err > 0) {
-		nvme_show_status(err);
+	if (found && (flags & JSON)) {
+		json_print_object(root, NULL);
+		printf("\n");
 	}
 
 	return err;

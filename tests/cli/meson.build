@@ -171,4 +171,8 @@ if python3.found()
     if 'samsung' in selected_plugins
         subdir('samsung')
     endif
+
+    if 'seagate' in selected_plugins
+        subdir('seagate')
+    endif
 endif
