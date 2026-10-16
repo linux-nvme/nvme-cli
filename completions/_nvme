@@ -16462,6 +16462,39 @@ _nvme () {
 			;;
 
 		(tls-key)
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2" \
+			               "--timeout" "infinite -1" && return
+			local _tls_key
+			_tls_key=(
+				--dry-run':show command instead of executing'
+				--export':Export the PSKs to the file.'
+				-e':alias for --export'
+				--import':Import the PSKs from the file.'
+				-i':alias for --import'
+				--keyfile=':File to import the PSKs from or export them to.'
+				-f':alias for --keyfile'
+				--keyring=':Keyring of the PSKs.'
+				-k':alias for --keyring'
+				--keytype=':Key type of the PSK to revoke.'
+				-t':alias for --keytype'
+				--no-ioctl-probing':disable 64-bit IOCTL support probing'
+				--no-retries':disable retry logic on errors'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--output-format-version=':output format version: 1|2'
+				--quiet':suppress informational output'
+				--revoke=':Revoke the PSK of this identity.'
+				-r':alias for --revoke'
+				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+				--timeout=':timeout value, in milliseconds'
+				--verbose':Increase output verbosity'
+				-v':alias for --verbose'
+				--help':show help'
+				-h':alias for --help'
+			)
+			_arguments '*:: :->subcmds'
+			_nvme_describe "nvme tls-key options" _tls_key
 			;;
 
 		(top)
