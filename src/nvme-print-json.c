@@ -724,7 +724,7 @@ void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 void json_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, bool alloc)
 {
 	struct json_object *r = json_r;
-	struct json_object *nsi = json_create_object();
+	struct json_object *nsi;
 	char fmt[32];
 	char str[32];
 	__u32 nsid;
@@ -734,6 +734,8 @@ void json_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, boo
 
 	if (log->ns[0] == cpu_to_le32(0xffffffff))
 		return;
+
+	nsi = json_create_object();
 
 	if (asprintf(&k, "Changed %s Namespace List Log", alloc ? "Allocated" : "Attached") > 0)
 		obj_add_str(r, k, devname);
