@@ -12,7 +12,7 @@ SYNOPSIS
 			[--acre=<acre> | -a <acre>]
 			[--etdas=<etdas> | -e <etdas>]
 			[--lbafee=<lbafee> | -l <lbafee>]
-			[--hdisns=<hdisns> | -H <hdisns>]
+			[--hdisns=<hdisns>]
 			[--cdfe=<cdfe> | -c <cdfe>]
 			[--sel=<select> | -S <select>] [--save | -s]
 
@@ -44,7 +44,6 @@ OPTIONS
 --lbafee=<lbafee>::
 	LBA Format Extension Enable (0 or 1).
 
--H <hdisns>::
 --hdisns=<hdisns>::
 	Host Dispersed Namespace Support (0 or 1).
 

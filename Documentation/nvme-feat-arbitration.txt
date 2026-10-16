@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'feat arbitration' <device>
 			[--ab=<ab> | -a <ab>] [--lpw=<lpw> | -l <lpw>]
-			[--mpw=<mpw> | -m <mpw>] [--hpw=<hpw> | -h <hpw>]
+			[--mpw=<mpw> | -m <mpw>] [--hpw=<hpw>]
 			[--sel=<select> | -S <select>] [--save | -s]
 
 DESCRIPTION
@@ -41,7 +41,6 @@ OPTIONS
 --mpw=<mpw>::
 	Medium Priority Weight. Specifies the medium priority service weight.
 
--h <hpw>::
 --hpw=<hpw>::
 	High Priority Weight. Specifies the high priority service weight.
 

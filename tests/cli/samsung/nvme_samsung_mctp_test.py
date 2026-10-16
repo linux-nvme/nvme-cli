@@ -147,7 +147,7 @@ class SamsungMCTPTest(unittest.TestCase):
         prefix = os.path.join(self.tmp.name, dump_type) + '/'
         result = run_nvme(NVME_BIN, self.env, self.tmp.name, self.tmp.name,
                           'samsung', 'vs-internal-log', device,
-                          '-t', dump_type, '-a', str(area), '-O', prefix, '-H')
+                          '-t', dump_type, '-a', str(area), '-O', prefix, '--hide-progress')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.peer.errors, [])
         self.assertIn('(Xfer 4K)', result.stdout)

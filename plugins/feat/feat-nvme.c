@@ -529,7 +529,7 @@ static int feat_temp_thresh(int argc, char **argv, struct command *acmd, struct 
 	FEAT_ARGS(opts,
 		  OPT_SHRT("tmpth", 'T', &cfg.tmpth, tmpth),
 		  OPT_BYTE("tmpsel", 'm', &cfg.tmpsel, tmpsel),
-		  OPT_BYTE("thsel", 'H', &cfg.thsel, thsel),
+		  OPT_BYTE("thsel", 0, &cfg.thsel, thsel),
 		  OPT_BYTE("tmpthh", 'M', &cfg.tmpthh, tmpthh));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, TEMP_THRESH_DESC, opts);
@@ -614,7 +614,7 @@ static int feat_arbitration(int argc, char **argv, struct command *acmd, struct 
 		  OPT_BYTE("ab", 'a', &cfg.ab, ab),
 		  OPT_BYTE("lpw", 'l', &cfg.lpw, lpw),
 		  OPT_BYTE("mpw", 'm', &cfg.mpw, mpw),
-		  OPT_BYTE("hpw", 'H', &cfg.hpw, hpw));
+		  OPT_BYTE("hpw", 0, &cfg.hpw, hpw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, ARBITRATION_DESC, opts);
 	if (err)
@@ -1108,7 +1108,7 @@ static int feat_host_behavior_support(int argc, char **argv, struct command *acm
 		  OPT_BYTE("acre", 'a', &cfg.acre, acre_desc),
 		  OPT_BYTE("etdas", 'e', &cfg.etdas, etdas_desc),
 		  OPT_BYTE("lbafee", 'l', &cfg.lbafee, lbafee_desc),
-		  OPT_BYTE("hdisns", 'H', &cfg.hdisns, hdisns_desc),
+		  OPT_BYTE("hdisns", 0, &cfg.hdisns, hdisns_desc),
 		  OPT_SHRT("cdfe", 'c', &cfg.cdfe, cdfe_desc));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, HOST_BEHAVIOR_DESC, opts);

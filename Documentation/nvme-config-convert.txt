@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'config convert'
 			[--config=<file> | -J <file>]
-			[--output=<file> | -o <file>]
+			[--output=<file>]
 			[--force]
 			[--verbose | -v]
 
@@ -50,7 +50,6 @@ OPTIONS
 	Convert this JSON file instead of the default
 	@SYSCONFDIR@/nvme/config.json.
 
--o <file>::
 --output=<file>::
 	Write the converted configuration here instead of the default
 	@SYSCONFDIR@/nvme/nvme-fabrics.conf.
