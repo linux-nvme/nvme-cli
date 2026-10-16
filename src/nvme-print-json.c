@@ -6101,9 +6101,10 @@ static void json_ave_discovery_log(struct nvme_ave_discovery_log *log,
 				   __u64 len)
 {
 	struct json_object *r = json_r;
-	__u32 i;
+	__u64 i;
 	__u8 j;
 	struct nvme_ave_discovery_log_entry *adlpe;
+	char avenqn[sizeof(adlpe->avenqn) + 1];
 	struct nvme_ave_tr_record *atr;
 	__u32 tadlpl = le32_to_cpu(log->tadlpl);
 	__u32 tel;
@@ -6118,15 +6119,20 @@ static void json_ave_discovery_log(struct nvme_ave_discovery_log *log,
 	obj_add_uint(r, "recfmt", le16_to_cpu(log->recfmt));
 	obj_add_uint(r, "thdlpl", tadlpl);
 
-	for (i = sizeof(*log); i < le32_to_cpu(log->tadlpl); i += tel) {
+	for (i = sizeof(*log);
+	     (adlpe = nvme_ave_discovery_record(log, len, i)); i += tel) {
 		adlpe_o = json_create_object();
-		adlpe = (void *)log + i;
 		tel = le32_to_cpu(adlpe->tel);
 		numatr = adlpe->numatr;
+		snprintf(avenqn, sizeof(avenqn), "%-.*s",
+			 (int)sizeof(adlpe->avenqn), adlpe->avenqn);
 		obj_add_uint(adlpe_o, "tel", tel);
-		obj_add_str(adlpe_o, "avenqn", adlpe->avenqn);
+		obj_add_str(adlpe_o, "avenqn", avenqn);
 		obj_add_uint(adlpe_o, "numatr", numatr);
 
+		/* the transport records must fit the record */
+		numatr = nvme_log_nr_entries(numatr, tel, sizeof(*adlpe),
+					     sizeof(*atr));
 		atr = adlpe->atr;
 		for (j = 0; j < numatr; j++) {
 			atr_o = json_create_object();

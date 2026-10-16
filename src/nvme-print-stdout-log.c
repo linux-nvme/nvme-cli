@@ -2840,7 +2840,7 @@ static void stdout_kv_add_traddr(struct shr_table *t, const char *field,
 
 void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 {
-	__u32 i;
+	__u64 i;
 	__u8 j;
 	struct nvme_ave_discovery_log_entry *adlpe;
 	struct nvme_ave_tr_record *atr;
@@ -2861,9 +2861,9 @@ void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 
 	stdout_kv_table_finish(t, "ave-discovery-log");
 
-	for (i = sizeof(*log); i < le32_to_cpu(log->tadlpl); i += tel) {
+	for (i = sizeof(*log);
+	     (adlpe = nvme_ave_discovery_record(log, len, i)); i += tel) {
 		printf("adlpe: %d\n", n++);
-		adlpe = (void *)log + i;
 		tel = le32_to_cpu(adlpe->tel);
 		numatr = adlpe->numatr;
 
@@ -2872,11 +2872,15 @@ void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 			return;
 
 		stdout_kv_add(t, "tel", "%u", tel);
-		stdout_kv_add(t, "avenqn", "%s", adlpe->avenqn);
+		stdout_kv_add(t, "avenqn", "%-.*s",
+			      (int)sizeof(adlpe->avenqn), adlpe->avenqn);
 		stdout_kv_add(t, "numatr", "%u", numatr);
 
 		stdout_kv_table_finish(t, "ave-discovery-log");
 
+		/* the transport records must fit the record */
+		numatr = nvme_log_nr_entries(numatr, tel, sizeof(*adlpe),
+					     sizeof(*atr));
 		atr = adlpe->atr;
 		for (j = 0; j < numatr; j++) {
 			printf("atr: %d\n", j);
