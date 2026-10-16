@@ -27,6 +27,14 @@
   takes none, or the value of `--persistent force`, which has to be
   given as `--persistent=force`.
 
+* Options which take an unsigned number reject negative numbers now.
+  Before, `-1` wrapped around to the largest value. The values which
+  have a special meaning got names instead: every namespace id option
+  accepts `all` for 0xffffffff and `--timeout` (also in
+  `nvme-cli.conf`) accepts `infinite`. Both still accept `-1`. The
+  help lists the names of an option. `lm migration-recv` requires
+  `--sel` now, like the other lm commands.
+
 * The human-readable stdout output of `id-ctrl`, `id-ns`, and most
   other identify/log-page/feature commands is now rendered through a
   computed-width table instead of hand-aligned `printf()` calls.
