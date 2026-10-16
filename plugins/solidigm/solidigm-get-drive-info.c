@@ -16,6 +16,11 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
+static void free_nsp(struct libnvme_ns **n)
+{
+	libnvme_free_ns(*n);
+}
+
 int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get drive HW information";
@@ -24,6 +29,8 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	struct libnvme_ctrl *c;
+	/* a namespace scanned on its own isn't part of the tree */
+	__cleanup(free_nsp) struct libnvme_ns *scanned = NULL;
 	struct libnvme_ns *n;
 	struct nvme_id_ns ns = { 0 };
 	__u8 flbaf_inUse;
@@ -50,11 +57,16 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 		n = libnvme_ctrl_first_ns(c);
 	else {
 		err = libnvme_scan_namespace(ctx,
-			libnvme_transport_handle_get_name(hdl), &n);
+			libnvme_transport_handle_get_name(hdl), &scanned);
 		if (err) {
 			nvme_show_error("solidigm-vs-drive-info: drive missing namespace");
 			return err;
 		}
+		n = scanned;
+	}
+	if (!n) {
+		nvme_show_error("solidigm-vs-drive-info: no namespace");
+		return -ENODEV;
 	}
 
 	err = libnvme_ns_identify(n, &ns);
