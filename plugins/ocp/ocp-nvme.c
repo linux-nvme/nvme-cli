@@ -2445,6 +2445,7 @@ static int enable_ieee1667_silo_set(struct libnvme_transport_handle *hdl,
 static int set_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin)
 {
+	const char *enable = "enable the silo, disable it if not given";
 	bool enable_flag = false;
 	bool save_flag = false;
 	bool no_uuid_flag = false;
@@ -2454,7 +2455,7 @@ static int set_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts,
-		OPT_FLAG("enable", 'e', &enable_flag, no_uuid),
+		OPT_FLAG("enable", 'e', &enable_flag, enable),
 		OPT_FLAG("save", 's', &save_flag, save),
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid));
 
