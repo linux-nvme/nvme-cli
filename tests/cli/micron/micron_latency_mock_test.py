@@ -360,7 +360,8 @@ class TestMicronLatencyTracking(TestMicronMock):
         result = self.run_plugin_cmd(_TRACKING, args="-O bogus")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Invalid control option bogus specified", result.stderr)
+        self.assertIn("invalid value 'bogus' for -O: expected one of: "
+                      "enable, disable, status", result.stderr)
 
     def test_unrecognised_option_is_checked_before_the_feature_read(self):
         """-O is validated first, so a bad value reports only itself."""
@@ -377,7 +378,8 @@ class TestMicronLatencyTracking(TestMicronMock):
         result = self.run_plugin_cmd(_TRACKING, args="-O enable -c bogus")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Invalid command bogus specified", result.stderr)
+        self.assertIn("invalid value 'bogus' for -c: expected one of: all, "
+                      "read, write, trim", result.stderr)
 
     def test_bad_device_returns_error(self):
         self.check_bad_device_name(_TRACKING)
@@ -509,8 +511,8 @@ class TestMicronLatencyStats(TestMicronMock):
         result = self.run_plugin_cmd(_STATS, args="-c bogus")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Invalid command option bogus to display latency stats",
-                      result.stderr)
+        self.assertIn("invalid value 'bogus' for -c: expected one of: all, "
+                      "read, write, trim", result.stderr)
 
     def test_command_class_is_checked_before_the_log_read(self):
         """A bad -c reports only itself, on a drive with or without the log."""

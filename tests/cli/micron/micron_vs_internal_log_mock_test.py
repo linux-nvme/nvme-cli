@@ -169,7 +169,7 @@ class TestMicronInternalLogArguments(InternalLogTestBase):
                               f"--package={self.package_path('t.bin')}")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("host or controller", result.stderr)
+        self.assertIn("expected one of: host, controller", result.stderr)
 
     def test_data_area_is_required_in_telemetry_mode(self):
         result = self.run_log(
