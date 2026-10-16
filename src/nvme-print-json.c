@@ -6002,10 +6002,13 @@ static void json_host_discovery_log(struct nvme_host_discovery_log *log,
 				    __u64 len)
 {
 	struct json_object *r = json_r;
-	__u32 i;
+	__u64 i;
 	__u16 j;
 	struct nvme_host_ext_discovery_log *hedlpe;
 	struct nvmf_ext_attr *exat;
+	void *p;
+	char hostnqn[sizeof(hedlpe->hostnqn) + 1];
+	char traddr[sizeof(hedlpe->traddr) + 1];
 	__u32 thdlpl = le32_to_cpu(log->thdlpl);
 	__u32 tel;
 	__u16 numexat;
@@ -6021,17 +6024,21 @@ static void json_host_discovery_log(struct nvme_host_discovery_log *log,
 	obj_add_uint_02x(r, "hdlpf", log->hdlpf);
 	obj_add_uint(r, "thdlpl", thdlpl);
 
-	for (i = sizeof(*log); i < le32_to_cpu(log->thdlpl); i += tel) {
+	for (i = sizeof(*log);
+	     (hedlpe = nvme_host_discovery_record(log, len, i)); i += tel) {
 		hedlpe_o = json_create_object();
-		hedlpe = (void *)log + i;
 		tel = le32_to_cpu(hedlpe->tel);
 		numexat = le16_to_cpu(hedlpe->numexat);
+		snprintf(hostnqn, sizeof(hostnqn), "%-.*s",
+			 (int)sizeof(hedlpe->hostnqn), hedlpe->hostnqn);
+		snprintf(traddr, sizeof(traddr), "%-.*s",
+			 (int)sizeof(hedlpe->traddr), hedlpe->traddr);
 		obj_add_str(hedlpe_o, "trtype", libnvmf_trtype_str(hedlpe->trtype));
-		obj_add_str(hedlpe_o, "adrfam",
-			    strlen(hedlpe->traddr) ? libnvmf_adrfam_str(hedlpe->adrfam) : "");
+		obj_add_str(hedlpe_o, "adrfam", traddr[0] ?
+			    libnvmf_adrfam_str(hedlpe->adrfam) : "");
 		obj_add_str(hedlpe_o, "eflags", libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
-		obj_add_str(hedlpe_o, "hostnqn", hedlpe->hostnqn);
-		obj_add_str(hedlpe_o, "traddr", hedlpe->traddr);
+		obj_add_str(hedlpe_o, "hostnqn", hostnqn);
+		obj_add_str(hedlpe_o, "traddr", traddr);
 		tsas_o = json_create_object();
 		switch (hedlpe->trtype) {
 		case NVMF_TRTYPE_RDMA:
@@ -6052,8 +6059,9 @@ static void json_host_discovery_log(struct nvme_host_discovery_log *log,
 		obj_add_uint(hedlpe_o, "tel", tel);
 		obj_add_uint(hedlpe_o, "numexat", numexat);
 
-		exat = hedlpe->exat;
-		for (j = 0; j < numexat; j++) {
+		p = hedlpe->exat;
+		for (j = 0; j < numexat &&
+		     (exat = nvme_host_discovery_exat(hedlpe, p)); j++) {
 			exat_o = json_create_object();
 			snprintf(json_str, sizeof(json_str), "exat: %d", j);
 			obj_add_uint(exat_o, "exattype", le16_to_cpu(exat->exattype));
@@ -6061,7 +6069,7 @@ static void json_host_discovery_log(struct nvme_host_discovery_log *log,
 			obj_d(exat_o, "exatval", (unsigned char *)exat->exatval,
 			      le16_to_cpu(exat->exatlen), 16, 1);
 			obj_add_obj(hedlpe_o, json_str, exat_o);
-			exat = libnvmf_exat_ptr_next(exat);
+			p = libnvmf_exat_ptr_next(exat);
 		}
 		snprintf(json_str, sizeof(json_str), "hedlpe: %d", n++);
 		obj_add_obj(r, json_str, hedlpe_o);

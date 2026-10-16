@@ -10,8 +10,9 @@ commands against a mocked controller.
 
 Each of these log pages has a header which says how long the whole page
 is, and records or data behind it. The tests check that the commands read
-the part behind the header and print it, and that the header asks for
-the page the options select.
+the part behind the header and print it, that the header asks for the
+page the options select, and that a page whose lengths don't add up is
+printed only as far as it goes.
 
 Usage: python3 nvme_discovery_logs_test.py <nvme-binary> <mock-lib>
 """
@@ -43,8 +44,9 @@ _NVMF_TRTYPE_TCP = 3
 _NVMF_ADDR_FAMILY_IP4 = 1
 
 
-def _host_discovery_log(hostnqns):
-    """A host discovery log page with one record for each of @hostnqns."""
+def _host_discovery_log(hostnqns, tel=_HEDLPE_LEN):
+    """A host discovery log page with one record for each of @hostnqns,
+    whose record lengths say @tel."""
     records = b''
     for nqn in hostnqns:
         rec = bytearray(_HEDLPE_LEN)
@@ -53,7 +55,7 @@ def _host_discovery_log(hostnqns):
         rec[256:256 + len(nqn)] = nqn.encode()
         traddr = b'192.0.2.1'
         rec[512:512 + len(traddr)] = traddr
-        struct.pack_into('<I', rec, 1024, _HEDLPE_LEN)
+        struct.pack_into('<I', rec, 1024, tel)
         records += bytes(rec)
     hdr = bytearray(_HEADER_LEN)
     struct.pack_into('<QQHBxI', hdr, 0, 1, len(hostnqns), 0, 0,
@@ -125,13 +127,22 @@ class DiscoveryLogsTest(unittest.TestCase):
         self.server.join()
         shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def _run_json(self, *args):
+    def _run(self, *args):
         result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', *args, self.DEVICE, '-o', 'json')
+                          'log', *args, self.DEVICE)
         self.assertEqual(result.returncode, 0,
                          f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
         self.assertEqual(self.server.errors, [])
-        return json.loads(result.stdout)
+        return result.stdout
+
+    def _run_json(self, *args):
+        return json.loads(self._run(*args, '-o', 'json'))
+
+    def _run_both(self, *args):
+        """Runs the command with text and JSON output, for a page whose
+        lengths don't add up. Returns the JSON output."""
+        self._run(*args)
+        return self._run_json(*args)
 
     def test_host_discovery_records_are_read(self):
         self.server.logs[_LID_HOST_DISCOVERY] = \
@@ -157,6 +168,20 @@ class DiscoveryLogsTest(unittest.TestCase):
         self.server.logs[_LID_HOST_DISCOVERY] = _host_discovery_log([])
         out = self._run_json('host-discovery')
         self.assertEqual(out['thdlpl'], _HEADER_LEN)
+        self.assertFalse([k for k in out if k.startswith('hedlpe')])
+
+    def test_host_discovery_zero_record_length(self):
+        """A record length of 0 must not make the walk loop forever."""
+        self.server.logs[_LID_HOST_DISCOVERY] = \
+            _host_discovery_log(['nqn.2014-08.org.example:host1'], tel=0)
+        self._run_both('host-discovery')
+
+    def test_host_discovery_record_past_the_page(self):
+        """A record which says it is longer than the page is not printed."""
+        self.server.logs[_LID_HOST_DISCOVERY] = \
+            _host_discovery_log(['nqn.2014-08.org.example:host1'],
+                                tel=_HEDLPE_LEN * 4)
+        out = self._run_both('host-discovery')
         self.assertFalse([k for k in out if k.startswith('hedlpe')])
 
     def test_ave_discovery_records_are_read(self):
