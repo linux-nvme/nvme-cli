@@ -44,6 +44,19 @@
 * Number options reject text after the number. Before, the rest was
   ignored: `--timeout=10s` set a timeout of 10 milliseconds.
 
+* Numbers on the command line and in `nvme-cli.conf` are parsed
+  strictly: leading whitespace and a `+` are rejected, a signed option
+  rejects a value out of its range instead of wrapping around, and a
+  floating point option takes a `.` as decimal point in any locale and
+  rejects `nan` and `inf`. Sizes with a suffix (`4Ki`, `1.5G`) reject a
+  value which overflows, take the digits after a `.` in decimal
+  (`1.09k` was rejected as octal, `1.500k` was 1000), and use a `.` in
+  any locale as well. An empty value no longer selects a value name.
+
+* Errors and warnings which repeat a command line argument or a line of
+  a config file write its control characters as `\xNN`, so it can't
+  send escape sequences to the terminal.
+
 * Global options mean the same for every command now: they are looked
   up before the options of a command, and no command uses their names
   any more.
