@@ -170,6 +170,24 @@ nvme_ave_discovery_record(struct nvme_ave_discovery_log *log, __u64 len,
 	return rec;
 }
 
+/*
+ * Return: the length of the operating system specific parameters of a pull
+ * model DDC request log of @len bytes: what the header says, but no more
+ * than the buffer holds.
+ */
+static inline __u32
+nvme_pull_model_ddc_req_osp_len(struct nvme_pull_model_ddc_req_log *log,
+				__u64 len)
+{
+	__u64 tpdrpl = le32_to_cpu(log->tpdrpl);
+	__u64 end = tpdrpl < len ? tpdrpl : len;
+
+	if (end <= offsetof(struct nvme_pull_model_ddc_req_log, osp))
+		return 0;
+
+	return end - offsetof(struct nvme_pull_model_ddc_req_log, osp);
+}
+
 /* Return: the LBA data size in bytes, or 0 if it is not representable. */
 static inline unsigned int nvme_lbaf_data_size(__u8 ds)
 {

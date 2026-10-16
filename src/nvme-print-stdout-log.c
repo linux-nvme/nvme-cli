@@ -3064,8 +3064,7 @@ void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 				   __u64 len)
 {
 	__u32 tpdrpl = le32_to_cpu(log->tpdrpl);
-	__u32 osp_len =
-		tpdrpl - offsetof(struct nvme_pull_model_ddc_req_log, osp);
+	__u32 osp_len = nvme_pull_model_ddc_req_osp_len(log, len);
 	struct shr_table *t;
 
 	t = stdout_kv_table_create();

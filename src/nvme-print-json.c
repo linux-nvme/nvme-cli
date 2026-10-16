@@ -6164,7 +6164,7 @@ static void json_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 {
 	struct json_object *r = json_r;
 	__u32 tpdrpl = le32_to_cpu(log->tpdrpl);
-	__u32 osp_len = tpdrpl - offsetof(struct nvme_pull_model_ddc_req_log, osp);
+	__u32 osp_len = nvme_pull_model_ddc_req_osp_len(log, len);
 
 	obj_add_uint(r, "ori", log->ori);
 	obj_add_uint(r, "tpdrpl", tpdrpl);

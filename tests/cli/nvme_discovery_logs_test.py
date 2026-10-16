@@ -83,8 +83,10 @@ def _ave_discovery_log(avenqns, tel=None, numatr=1):
     return bytes(hdr) + records
 
 
-def _pull_model_ddc_req_log(osp):
-    return struct.pack('<B3xI', 1, _PULL_HEADER_LEN + len(osp)) + osp
+def _pull_model_ddc_req_log(osp, tpdrpl=None):
+    if tpdrpl is None:
+        tpdrpl = _PULL_HEADER_LEN + len(osp)
+    return struct.pack('<B3xI', 1, tpdrpl) + osp
 
 
 class LogMockServer(MockIPCServer):
@@ -222,6 +224,27 @@ class DiscoveryLogsTest(unittest.TestCase):
             _pull_model_ddc_req_log(b'OSPDATA!')
         out = self._run_json('pull-model-ddc-req')
         self.assertEqual(out['osp'], ['OSPDATA!'])
+
+    def test_pull_model_ddc_req_short_length(self):
+        """A length shorter than the header has no OSP to print."""
+        self.server.logs[_LID_PULL_MODEL_DDC_REQ] = \
+            _pull_model_ddc_req_log(b'', tpdrpl=4)
+        out = self._run_both('pull-model-ddc-req')
+        self.assertEqual(out['osp'], [])
+
+    def test_pull_model_ddc_req_get_log_short_buffer(self):
+        """get-log --verbose decodes the page in a buffer of the length
+        asked for, not of the length the page says."""
+        self.server.logs[_LID_PULL_MODEL_DDC_REQ] = \
+            _pull_model_ddc_req_log(b'OSPDATA!' * 8, tpdrpl=0x10000)
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'get-log', self.DEVICE, '--log-id=0x73',
+                          '--log-len=16', '--verbose')
+        self.assertEqual(result.returncode, 0,
+                         f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+        osp = result.stdout.split('osp:\n')[-1].splitlines()
+        self.assertEqual(len(osp), 2, result.stdout)  # offset ruler, 8 bytes
+        self.assertIn('OSPDATA!', osp[1])
 
 
 if __name__ == '__main__':
