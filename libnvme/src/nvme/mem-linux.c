@@ -92,6 +92,12 @@ __shr_public void *libnvme_alloc_huge(size_t len,
 {
 	memset(mh, 0, sizeof(*mh));
 
+	/*
+	 * Even a zero length gets memory, which libnvme_free_huge() only
+	 * frees with a length: allocate at least a page.
+	 */
+	if (!len)
+		len = 1;
 	if (!round_up_checked(len, 0x1000, &len))
 		return NULL;
 
