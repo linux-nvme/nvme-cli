@@ -24,6 +24,10 @@ if get_option('tests')
     subdir('cli')
 endif
 
+if (get_option('tests') or get_option('fuzzing')) and host_system != 'windows'
+    subdir('fuzz')
+endif
+
 if get_option('e2e-tests')
     subdir('e2e')
 endif

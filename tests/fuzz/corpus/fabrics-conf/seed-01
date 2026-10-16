@@ -1,0 +1,10 @@
+[Host]
+hostnqn = nqn.2014-08.org.nvmexpress:uuid:00000000-0000-0000-0000-000000000000
+hostid = 00000000-0000-0000-0000-000000000000
+[Subsystem]
+nqn = nqn.io-1
+controller = transport=tcp;traddr=10.0.0.1;trsvcid=4420;host-traddr=10.0.0.2;host-iface=eth0
+nr-io-queues = 4
+tls = yes
+kxchap-secret = DHHC-1:00:abc:
+persistent = force

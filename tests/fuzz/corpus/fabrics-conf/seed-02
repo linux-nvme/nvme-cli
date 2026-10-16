@@ -1,0 +1,4 @@
+[Discovery Controller]
+controller = transport=rdma;traddr=fe80::1
+[Subsystem]
+controller = transport=tcp

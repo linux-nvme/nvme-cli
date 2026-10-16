@@ -656,6 +656,14 @@ if host_system == 'windows'
     )
 endif
 
+# Coverage for the libFuzzer builds of the fuzz targets in tests/fuzz
+if get_option('fuzzing')
+    if cc.get_id() != 'clang'
+        error('-Dfuzzing=true needs clang')
+    endif
+    add_project_arguments('-fsanitize=fuzzer-no-link', language : 'c')
+endif
+
 substs = configuration_data()
 substs.set('VERSION', meson.project_version())
 substs.set('NVMECLI_LICENSE', meson.project_license()[0])

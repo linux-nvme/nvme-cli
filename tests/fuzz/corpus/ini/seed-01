@@ -1,0 +1,3 @@
+[Global]
+verbose = 2
+timeout = infinite

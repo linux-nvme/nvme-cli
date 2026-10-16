@@ -132,6 +132,12 @@ option(
   description: 'Run tests against real hardware'
 )
 option(
+  'fuzzing',
+  type : 'boolean',
+  value : false,
+  description: 'Build the fuzz targets for libFuzzer instead of the fuzz tests (needs clang)'
+)
+option(
   'e2e-controller',
   type : 'string',
   value : '',
