@@ -41,7 +41,7 @@ properties in a binary format:
 properties in a human readable format:
 +
 ------------
-# nvme show-regs /dev/nvme0 -H
+# nvme show-regs /dev/nvme0 -v
 ------------
 * Show the NVMe over PCIe controller registers or NVMe-oF controller properties
 in a json format:
