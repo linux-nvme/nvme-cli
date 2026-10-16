@@ -1065,8 +1065,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 				if (!cfg.force)
 					nvme_show_error(
 						"Use the force [--force] option to ignore that.");
-			} else {
-				argconfig_print_help(desc, opts);
 			}
 			return err;
 		}

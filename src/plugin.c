@@ -437,13 +437,25 @@ void command_prepare(struct command *cmd)
 static int run_command(int argc, char **argv, struct plugin *plugin,
 		       struct command *cmd)
 {
-	char use[0x100];
+	char use[0x100], path[0x80];
+	int err;
 
 	build_command_usage(use, sizeof(use), plugin->parent, plugin, cmd);
+	if (plugin->name)
+		snprintf(path, sizeof(path), "%s %s", plugin->name, cmd->name);
+	else
+		snprintf(path, sizeof(path), "%s", cmd->name);
 	argconfig_append_usage(use);
+	argconfig_set_command(plugin->parent->name, path);
 	command_prepare(cmd);
 
-	return cmd->fn(argc, argv, cmd, plugin);
+	err = cmd->fn(argc, argv, cmd, plugin);
+
+	/* use and path go out of scope */
+	argconfig_append_usage("");
+	argconfig_set_command(NULL, NULL);
+
+	return err;
 }
 
 /*

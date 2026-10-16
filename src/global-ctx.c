@@ -267,7 +267,6 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 	ret = get_transport_handle(ctx_new, argc, argv, O_RDONLY, &hdl_new);
 	if (ret) {
 		libnvme_free_global_ctx(ctx_new);
-		argconfig_print_help(desc, opts);
 		return -ENXIO;
 	}
 

@@ -778,8 +778,6 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			nvme_show_error("Namespace is currently busy.");
 			if (!cfg.force)
 				nvme_show_error("Use the force [--force] option to ignore that.");
-		} else {
-			argconfig_print_help(desc, opts);
 		}
 		return err;
 	}
