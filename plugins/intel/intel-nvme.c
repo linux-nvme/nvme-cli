@@ -1558,11 +1558,9 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		.disable = false,
 	};
 
-	struct argconfig_commandline_options opts[] = {
-		{"enable", 'e', "", CFG_FLAG, &cfg.enable, no_argument, enable_desc},
-		{"disable", 'd', "", CFG_FLAG, &cfg.disable, no_argument, disable_desc},
-		{NULL}
-	};
+	NVME_ARGS(opts,
+		  OPT_FLAG("enable",  'e', &cfg.enable,  enable_desc),
+		  OPT_FLAG("disable", 'd', &cfg.disable, disable_desc));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 
