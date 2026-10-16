@@ -341,13 +341,14 @@ nvmet_teardown() {
 	for id in "${DISC_PORT_ID}" "${FOREIGN_PORT_ID}" "${CONF_PORT_ID}" \
 		  "${V6_PORT_ID}" "${LL_PORT_ID}" "${REL_PORT_ID}" \
 		  "${MDNS_PORT_ID}" "${NL_PORT_ID}" "${MAP_PORT_ID}" \
-		  "${REF_PORT_ID}"; do
+		  "${REF_PORT_ID}" "${HN_PORT_ID}"; do
 		rm -f /sys/kernel/config/nvmet/ports/"${id}"/subsystems/*
 		rmdir "/sys/kernel/config/nvmet/ports/${id}" 2>/dev/null
 	done
 	for nqn in "${TARGET_NQN}" "${FOREIGN_NQN}" "${CONF_NQN}" \
 		   "${V6_NQN}" "${LL_NQN}" "${REL_NQN}" "${REL2_NQN}" \
-		   "${MDNS_NQN}" "${NL_NQN}" "${MAP_NQN}" "${REF_NQN}"; do
+		   "${MDNS_NQN}" "${NL_NQN}" "${MAP_NQN}" "${REF_NQN}" \
+		   "${HN_NQN}" "${HN2_NQN}"; do
 		local subsys_dir="/sys/kernel/config/nvmet/subsystems/${nqn}"
 
 		if [ -e "${subsys_dir}/namespaces/1/enable" ]; then
