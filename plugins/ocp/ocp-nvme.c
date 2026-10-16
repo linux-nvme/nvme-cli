@@ -1057,8 +1057,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		tele_type = TELEMETRY_TYPE_HOST;
 		host_gen = 1;
 	}
-	opt.telemetry_type = tele_type == TELEMETRY_TYPE_CONTROLLER ?
-			     "controller" : "host";
 
 	if (!opt.telemetry_log) {
 		nvme_show_result("\nMissing telemetry-log. Fetching from drive...\n");
