@@ -118,7 +118,7 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 
 	err = libnvme_reset_subsystem(hdl);
 	if (err < 0) {
-		if (errno == ENOTTY)
+		if (err == -ENOTTY)
 			nvme_show_error("Subsystem-reset: NVM Subsystem Reset not supported.");
 		else
 			nvme_show_error("Subsystem-reset: %s", libnvme_strerror(-err));

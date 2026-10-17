@@ -605,7 +605,7 @@ static int get_ns_id(int argc, char **argv, struct command *acmd, struct plugin 
 	err = libnvme_get_nsid(hdl, &nsid);
 	if (err < 0) {
 		nvme_show_error("get namespace ID: %s", libnvme_strerror(-err));
-		return -errno;
+		return err;
 	}
 
 	nvme_show_result("%s: namespace-id:%d", libnvme_transport_handle_get_name(hdl), nsid);
