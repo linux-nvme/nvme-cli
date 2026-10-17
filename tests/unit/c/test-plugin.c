@@ -25,6 +25,7 @@
 
 #include <ccan/array_size/array_size.h>
 
+#include "../src/argconfig.h"
 #include "../src/args.h"
 #include "../src/plugin.h"
 
@@ -459,6 +460,92 @@ static void test_extension_unknown_subcommand(void)
 	      "extension_unknown_subcommand: stderr names the extension");
 }
 
+/* The global options test_lookup() gives in front of a command */
+static struct argconfig_commandline_options global_options[] = {
+	OPT_INCR("verbose", 'v', &nvme_args.verbose, "verbose"),
+	OPT_FMT("output-format", 'o', &nvme_args.output_format, "format"),
+	OPT_END()
+};
+
+/*
+ * plugin_lookup() must find the command handle_plugin() runs for the
+ * same arguments, without running anything.
+ */
+static void test_lookup(void)
+{
+	static const struct {
+		const char *cmd;
+		const char *argv[6];
+	} cases[] = {
+		{ "bar", { "bar" } },
+		{ "foo", { "f" } },
+		{ "status", { "sta" } },
+		{ NULL, { "list" } },
+		{ "list-a", { "list-a" } },
+		{ NULL, { "zzz" } },
+		{ "sub", { "ext", "sub" } },
+		{ "sub", { "ext-sub" } },
+		{ "sub", { "ext--sub" } },
+		{ NULL, { "ext", "zzz" } },
+		{ "sub", { "ext", "-v", "sub" } },
+		{ "sub", { "-v", "ext", "-o", "json", "sub" } },
+		{ "bar", { "-o", "json", "bar" } },
+		{ "bar", { "--output-format=json", "bar" } },
+		{ "bar", { "--", "bar" } },
+		{ NULL, { "--bogus", "bar" } },
+		{ NULL, { "version" } },
+		{ NULL, { "-V", "bar" } },
+		{ NULL, { "help" } },
+	};
+	struct captured_output cap;
+	struct plugin_call call;
+	char *argv[8], *argv2[8];
+	const char *found, *expect;
+	char desc[128];
+	size_t i;
+	int argc, j;
+
+	argconfig_set_global_options(global_options);
+
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
+		argv[0] = argv2[0] = "test-prog";
+		for (argc = 1; argc <= 6 && cases[i].argv[argc - 1]; argc++)
+			argv[argc] = argv2[argc] =
+				(char *)cases[i].argv[argc - 1];
+		argv[argc] = argv2[argc] = NULL;
+
+		reset_last_call();
+		memset(&call, 0, sizeof(call));
+		check(!plugin_lookup(argc, argv, &builtin_plugin, &call),
+		      "lookup: no error");
+		for (j = 1; j < argc; j++)
+			check(argv[j] == cases[i].argv[j - 1],
+			      "lookup: arguments changed");
+		found = call.action == PLUGIN_RUN ? call.cmd->name : NULL;
+		plugin_call_free(&call);
+		check(!last_call.cmd_name, "lookup: nothing ran");
+
+		expect = cases[i].cmd;
+		snprintf(desc, sizeof(desc),
+			 "lookup: case %zu: found '%s', expected '%s'", i,
+			 found ? found : "(none)", expect ? expect : "(none)");
+		check(found && expect ? !strcmp(found, expect) :
+		      found == expect, desc);
+
+		run_handle_plugin(argv2, argc, &builtin_plugin, &cap);
+
+		snprintf(desc, sizeof(desc),
+			 "lookup: case %zu: found '%s', ran '%s'", i,
+			 found ? found : "(none)",
+			 last_call.cmd_name ? last_call.cmd_name : "(none)");
+		check(found ? last_call.cmd_name &&
+		      !strcmp(found, last_call.cmd_name) :
+		      !last_call.cmd_name, desc);
+	}
+
+	argconfig_set_global_options(NULL);
+}
+
 int main(void)
 {
 	test_rc = 0;
@@ -486,6 +573,7 @@ int main(void)
 	test_extension_dispatch_separate_token();
 	test_extension_dispatch_concatenated();
 	test_extension_unknown_subcommand();
+	test_lookup();
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
