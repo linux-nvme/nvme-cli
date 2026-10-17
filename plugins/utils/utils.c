@@ -23,6 +23,7 @@ static struct command dump_command_metadata_cmd_cmd = {
 	.help = "Dump all commands and their options as JSON",
 	.fn = dump_command_metadata_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 #endif /* CONFIG_JSONC */
 

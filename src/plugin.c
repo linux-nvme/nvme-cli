@@ -14,6 +14,7 @@
 #include "args.h"
 #include "cleanup.h"
 #include "plugin.h"
+#include "privsep.h"
 
 static int version_cmd(struct plugin *plugin)
 {
@@ -460,6 +461,10 @@ static int run_command(int argc, char **argv, struct plugin *plugin,
 	char use[0x100], path[0x80];
 	int err;
 
+	err = nvme_privsep_check(cmd);
+	if (err)
+		return err;
+
 	build_command_usage(use, sizeof(use), plugin->parent, plugin, cmd);
 	if (plugin->name)
 		snprintf(path, sizeof(path), "%s %s", plugin->name, cmd->name);
@@ -476,44 +481,6 @@ static int run_command(int argc, char **argv, struct plugin *plugin,
 	argconfig_set_command(NULL, NULL);
 
 	return err;
-}
-
-/*
- * "nvme <plugin>-<command>": argv[0] starts with the name of an extension.
- * Run the rest as a command of that extension.
- */
-static int run_joined_command(int argc, char **argv, struct plugin *plugin)
-{
-	__cleanup_free char **sub_argv = NULL;
-	__cleanup_free char *name = NULL;
-	struct plugin *extension;
-
-	for (extension = plugin->next; extension; extension = extension->next) {
-		if (!strncmp(argv[0], extension->name, strlen(extension->name)))
-			break;
-	}
-	if (!extension) {
-		__cleanup_free char *e = shr_escape(argv[0]);
-
-		fprintf(stderr, "ERROR: Invalid sub-command '%s'\n",
-			e ? e : "");
-		commands_hint(plugin);
-		return -ENOTTY;
-	}
-
-	sub_argv = malloc((argc + 1) * sizeof(*sub_argv));
-	name = strdup(extension->name);
-	if (!sub_argv || !name)
-		return -ENOMEM;
-
-	argv[0] += strlen(extension->name);
-	while (*argv[0] == '-')
-		argv[0]++;
-
-	sub_argv[0] = name;
-	memcpy(&sub_argv[1], argv, argc * sizeof(*argv));
-
-	return handle_plugin(argc + 1, sub_argv, extension);
 }
 
 /*
@@ -564,42 +531,77 @@ int run_replacement(int argc, char **argv, struct command *cmd,
 				       argc, argv);
 }
 
-/* "nvme --help <command>" is "nvme help <command>" */
-static int run_help(int argc, char **argv, struct plugin *plugin)
+/* Prepends @name to the @argc arguments @argv, for help and extensions */
+static int prepend_arg(struct plugin_call *call, const char *name, int argc,
+		       char **argv)
 {
-	__cleanup_free char **help_argv = NULL;
-	__cleanup_free char *help_name = NULL;
+	/* Once per command line, a second one would be a bug */
+	if (call->alloc_argv)
+		return -EINVAL;
 
-	if (argc <= 0) {
-		general_help(plugin, NULL);
+	call->alloc_argv = malloc((argc + 2) * sizeof(*call->alloc_argv));
+	call->alloc_name = strdup(name);
+	if (!call->alloc_argv || !call->alloc_name)
+		return -ENOMEM;
+
+	call->alloc_argv[0] = call->alloc_name;
+	memcpy(&call->alloc_argv[1], argv, argc * sizeof(*argv));
+	call->alloc_argv[argc + 1] = NULL;
+	call->argc = argc + 1;
+	call->argv = call->alloc_argv;
+
+	return 0;
+}
+
+/*
+ * "nvme <plugin>-<command>": argv[0] starts with the name of an extension.
+ * Look up the rest as a command of that extension. The arguments of the
+ * caller stay as they are.
+ */
+static int lookup_joined_command(int argc, char **argv, struct plugin *plugin,
+				 struct plugin_call *call)
+{
+	struct plugin *extension;
+	char *str;
+	int err;
+
+	for (extension = plugin->next; extension; extension = extension->next) {
+		if (!strncmp(argv[0], extension->name, strlen(extension->name)))
+			break;
+	}
+	if (!extension) {
+		call->action = PLUGIN_ERROR;
+		call->err = -ENOTTY;
+		call->str = argv[0];
 		return 0;
 	}
 
-	help_argv = malloc((argc + 1) * sizeof(*help_argv));
-	help_name = strdup("help");
-	if (!help_argv || !help_name)
-		return -ENOMEM;
+	err = prepend_arg(call, extension->name, argc, argv);
+	if (err)
+		return err;
 
-	help_argv[0] = help_name;
-	memcpy(&help_argv[1], argv, argc * sizeof(*argv));
+	str = argv[0] + strlen(extension->name);
+	while (*str == '-')
+		str++;
+	call->alloc_argv[1] = str;
 
-	return help(argc + 1, help_argv, plugin);
+	return plugin_lookup(call->argc, call->argv, extension, call);
 }
 
 /*
  * argv[0] is the program or plugin name. The global options come first,
  * then the command of @plugin, or an extension and its command.
  */
-int handle_plugin(int argc, char **argv, struct plugin *plugin)
+int plugin_lookup(int argc, char **argv, struct plugin *plugin,
+		  struct plugin_call *call)
 {
 	struct plugin *extension;
-	struct command *cmd;
 	int err, argind;
 
-	if (!argc) {
-		general_help(plugin, NULL);
+	call->plugin = plugin;
+	call->action = PLUGIN_GENERAL_HELP;
+	if (!argc)
 		return 0;
-	}
 
 	/*
 	 * -h and --help show the help of the command which follows, if any,
@@ -607,46 +609,110 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	 */
 	err = argconfig_parse_global(argc, argv, NULL, &argind);
 	if (err < 0) {
-		commands_hint(plugin);
-		return err;
+		call->action = PLUGIN_ERROR;
+		call->err = err;
+		return 0;
 	}
 
 	argc -= argind;
 	argv += argind;
 
-	if (err & ARGCONFIG_HELP)
-		return run_help(argc, argv, plugin);
-	if (err & ARGCONFIG_VERSION)
-		return version_cmd(plugin);
-
-	if (!argc) {
-		general_help(plugin, NULL);
-		return 0;
+	if (err & ARGCONFIG_HELP) {
+		/* "nvme --help <command>" is "nvme help <command>" */
+		if (argc <= 0)
+			return 0;
+		call->action = PLUGIN_HELP;
+		return prepend_arg(call, "help", argc, argv);
 	}
+	call->action = PLUGIN_VERSION;
+	if (err & ARGCONFIG_VERSION)
+		return 0;
 
+	call->action = PLUGIN_GENERAL_HELP;
+	if (!argc)
+		return 0;
+
+	call->argc = argc;
+	call->argv = argv;
+
+	call->action = PLUGIN_HELP;
 	if (!strcmp(argv[0], "help"))
-		return help(argc, argv, plugin);
+		return 0;
+	call->action = PLUGIN_VERSION;
 	if (!strcmp(argv[0], "version"))
-		return version_cmd(plugin);
+		return 0;
 
-	cmd = find_command(plugin, argv[0]);
-	if (cmd)
-		return run_command(argc, argv, plugin, cmd);
+	call->action = PLUGIN_RUN;
+	call->cmd = find_command(plugin, argv[0]);
+	if (call->cmd)
+		return 0;
 
 	/* Only the built-in plugin has extensions */
 	if (plugin->name) {
-		__cleanup_free char *e = shr_escape(argv[0]);
-
-		fprintf(stderr,
-			"ERROR: Invalid sub-command '%s' for plugin %s\n",
-			e ? e : "", plugin->name);
-		commands_hint(plugin);
-		return -ENOTTY;
+		call->action = PLUGIN_ERROR;
+		call->err = -ENOTTY;
+		call->str = argv[0];
+		return 0;
 	}
 
 	extension = find_extension(plugin, argv[0]);
 	if (extension)
-		return handle_plugin(argc, argv, extension);
+		return plugin_lookup(argc, argv, extension, call);
 
-	return run_joined_command(argc, argv, plugin);
+	return lookup_joined_command(argc, argv, plugin, call);
+}
+
+void plugin_call_free(struct plugin_call *call)
+{
+	free(call->alloc_argv);
+	free(call->alloc_name);
+	call->alloc_argv = NULL;
+	call->alloc_name = NULL;
+}
+
+int plugin_call_run(struct plugin_call *call)
+{
+	struct plugin *plugin = call->plugin;
+	__cleanup_free char *e = NULL;
+
+	switch (call->action) {
+	case PLUGIN_RUN:
+		return run_command(call->argc, call->argv, plugin, call->cmd);
+	case PLUGIN_HELP:
+		return help(call->argc, call->argv, plugin);
+	case PLUGIN_VERSION:
+		return version_cmd(plugin);
+	case PLUGIN_GENERAL_HELP:
+		general_help(plugin, NULL);
+		return 0;
+	case PLUGIN_ERROR:
+		if (call->str) {
+			e = shr_escape(call->str);
+			if (plugin->name)
+				fprintf(stderr,
+					"ERROR: Invalid sub-command '%s' for plugin %s\n",
+					e ? e : "", plugin->name);
+			else
+				fprintf(stderr,
+					"ERROR: Invalid sub-command '%s'\n",
+					e ? e : "");
+		}
+		commands_hint(plugin);
+		return call->err;
+	}
+
+	return -EINVAL;
+}
+
+int handle_plugin(int argc, char **argv, struct plugin *plugin)
+{
+	struct plugin_call call = {};
+	int err;
+
+	err = plugin_lookup(argc, argv, plugin, &call);
+	if (!err)
+		err = plugin_call_run(&call);
+	plugin_call_free(&call);
+
+	return err;
 }

@@ -28,6 +28,7 @@ sources = [
     'src/nvme-cmds-sanitize.c',
     'src/nvme-cmds-security.c',
     'src/plugin.c',
+    'src/privsep.c',
     'src/field-parser.c',
 ]
 

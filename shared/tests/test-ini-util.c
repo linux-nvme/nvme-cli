@@ -316,6 +316,73 @@ static bool test_embedded_nul(void)
 	return pass;
 }
 
+static bool test_read_file(void)
+{
+	char path[] = "nvme-ini-test-XXXXXX";
+	char *text = NULL;
+	bool pass = true;
+	int fd, ret;
+
+	printf("shr_ini_read_file:\n");
+
+	fd = shr_mkstemp(path);
+	shr_assert(fd >= 0);
+	shr_assert(write(fd, "[f]\nkey = val\n", 14) == 14);
+	close(fd);
+
+	ret = shr_ini_read_file(path, &text);
+	unlink(path);
+	if (ret || !text || strcmp(text, "[f]\nkey = val\n")) {
+		printf(" - read_file ret=%d [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - read_file returns the content [PASS]\n");
+	}
+	free(text);
+
+	if (shr_ini_read_file("/nonexistent/ini", &text) != -ENOENT ||
+	    shr_ini_read_file(".", &text) != -EISDIR ||
+	    shr_ini_read_file(NULL, &text) != -EINVAL) {
+		printf(" - read_file errors [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - read_file errors [PASS]\n");
+	}
+
+	return pass;
+}
+
+static const char *inplace_value;
+
+static int record_value(enum shr_ini_event event, const char *section,
+			const char *key, const char *value, unsigned int line,
+			void *user_data)
+{
+	if (event == SHR_INI_KV)
+		inplace_value = value;
+	return 0;
+}
+
+static bool test_inplace(void)
+{
+	char text[] = "[s]\nkey = value\n";
+	bool pass = true;
+
+	printf("shr_ini_parse_inplace:\n");
+
+	inplace_value = NULL;
+	if (shr_ini_parse_inplace(text, record_value, NULL) ||
+	    !inplace_value || strcmp(inplace_value, "value") ||
+	    inplace_value < text || inplace_value >= text + sizeof(text)) {
+		printf(" - value points into the text [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - value points into the text [PASS]\n");
+	}
+
+	return pass;
+}
+
 static bool test_null_args(void)
 {
 	bool pass = true;
@@ -345,6 +412,8 @@ int main(void)
 	pass &= test_file();
 	pass &= test_oversized_file();
 	pass &= test_embedded_nul();
+	pass &= test_read_file();
+	pass &= test_inplace();
 	pass &= test_null_args();
 
 	fflush(stdout);

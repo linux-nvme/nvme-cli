@@ -48,6 +48,7 @@
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "privsep.h"
 
 static const char nvme_version_string[] = NVME_VERSION;
 
@@ -165,6 +166,7 @@ static void __shr_destructor free_plugins(void)
 
 int nvme_main(int argc, char **argv)
 {
+	struct plugin_call call = {};
 	int err;
 
 #ifdef _WIN32
@@ -181,18 +183,27 @@ int nvme_main(int argc, char **argv)
 		general_help(&builtin, NULL);
 		return 0;
 	}
-	setlocale(LC_ALL, "");
 	nvme_args_register();
 
-	err = nvme_load_global_config();
-	if (err)
+	/* The command line comes first, nvme-cli.conf does not override it */
+	err = plugin_lookup(argc, argv, nvme.extensions, &call);
+	if (!err && nvme_privsep_init(&call)) {
+		plugin_call_free(&call);
+		return 1;
+	}
+	if (!err) {
+		setlocale(LC_ALL, "");
+		err = nvme_load_global_config();
+	}
+	if (!err)
+		err = shr_install_sigint_handler();
+	if (err) {
+		plugin_call_free(&call);
 		return err;
+	}
 
-	err = shr_install_sigint_handler();
-	if (err)
-		return err;
-
-	err = handle_plugin(argc, argv, nvme.extensions);
+	err = plugin_call_run(&call);
+	plugin_call_free(&call);
 
 	nvme_show_finish();
 

@@ -216,6 +216,8 @@ int __libnvme_transport_handle_open_privsep(
 	struct libnvme_privsep *ps = hdl->ctx->privsep;
 	struct libnvme_privsep_open open_req = {
 		.flags = flags,
+		.options = hdl->ctx->ioctl_probing ? 0 :
+			LIBNVME_PRIVSEP_OPEN_NO_IOCTL_PROBING,
 	};
 	struct libnvme_privsep_open_resp open_resp;
 	struct privsep_reply reply;

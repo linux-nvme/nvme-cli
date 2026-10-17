@@ -13,6 +13,7 @@
  * - other commands fill the data buffer with (index + cdw10) and the
  *   metadata buffer with 0xa5, and return nsid + 0x1000 as result
  * - opcode MOCK_OPC_ERROR additionally returns MOCK_STATUS
+ * - the 32 bit passthru ioctls return the result MOCK_RESULT_IOCTL32
  * - opcode MOCK_OPC_EXIT terminates the helper
  * - buffers which are not page aligned fail with EINVAL, as the nvmet file
  *   backend does with direct I/O
@@ -366,6 +367,13 @@ static int mock_ioctl(int fd, unsigned long request, void *arg,
 	if (fd == MOCK_FD && (request == NVME_IOCTL_ADMIN64_CMD ||
 			      request == NVME_IOCTL_IO64_CMD))
 		return mock_passthru(arg);
+	/* The 32 bit passthru only tells it was used. */
+	if (fd == MOCK_FD && (request == NVME_IOCTL_ADMIN_CMD ||
+			      request == NVME_IOCTL_IO_CMD)) {
+		((struct nvme_passthru_cmd *)arg)->result =
+			MOCK_RESULT_IOCTL32;
+		return 0;
+	}
 	if (fd >= 0 && fd == ctrl_fd)
 		return mock_ctrl_ioctl(request);
 	if (fd >= 0 && fd == ns_fd)
