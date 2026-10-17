@@ -34,7 +34,9 @@ fuzz_targets = {
     },
 }
 
-if want_fabrics
+# The target parses with the libnvme internals, so it needs the in-tree
+# libnvme.
+if want_fabrics and want_libnvme
     fuzz_targets += {
         'fabrics-conf': {
             'sources': ['fuzz-fabrics-conf.c'],
