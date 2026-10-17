@@ -53,6 +53,9 @@ __shr_public void *libnvme_alloc(size_t len)
 	size_t _len;
 	void *p;
 
+	/* a zero size is implementation-defined, get a page */
+	if (!len)
+		len = 1;
 	if (!round_up_checked(len, 0x1000, &_len))
 		return NULL;
 
