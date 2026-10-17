@@ -12,6 +12,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/string-util.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
@@ -224,8 +225,7 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
 	char fw_ver_local[STR_VER_SIZE + 1];
 	struct nvme_memblaze_smart_log_item *item;
 
-	strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
-	*(fw_ver_local + STR_VER_SIZE) = '\0';
+	shr_strscpy(fw_ver_local, fw_ver, sizeof(fw_ver_local));
 
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 
@@ -876,8 +876,9 @@ out:
 	return err;
 }
 
-static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, char *unit0,
-		char *unit1, unsigned int *pHistogram, int print)
+static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end,
+		const char *unit0, const char *unit1, unsigned int *pHistogram,
+		int print)
 {
 	int len;
 	char string[64], subString0[12], subString1[12];
@@ -900,7 +901,7 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
 	FILE *fdi = fopen(file, "w+");
 	int saved_errno = fdi ? 0 : errno;
 	int i, index;
-	char unit[2][3];
+	const char *unit[2];
 	unsigned int *revision = (unsigned int *)buf;
 
 	if (!fdi)
@@ -919,11 +920,11 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
 		fPRINT_PARAM1("Bucket      Start       End         Value\n");
 		fPRINT_PARAM1("--------------------------------------------------\n");
 		index = 0;
-		strcpy(unit[0], "us");
-		strcpy(unit[1], "us");
+		unit[0] = "us";
+		unit[1] = "us";
 		for (i = 0; i < 32; i++, index++) {
 			if (i == 31) {
-				strcpy(unit[1], "ms");
+				unit[1] = "ms";
 				ioLatencyHistogramOutput(fdi, index, i * 32, 1, unit[0], unit[1],
 							 (unsigned int *)buf, print);
 			} else {
@@ -932,15 +933,15 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
 			}
 		}
 
-		strcpy(unit[0], "ms");
-		strcpy(unit[1], "ms");
+		unit[0] = "ms";
+		unit[1] = "ms";
 		for (i = 1; i < 32; i++, index++)
 			ioLatencyHistogramOutput(fdi, index, i, i + 1, unit[0], unit[1],
 						 (unsigned int *)buf, print);
 
 		for (i = 1; i < 32; i++, index++) {
 			if (i == 31) {
-				strcpy(unit[1], "s");
+				unit[1] = "s";
 				ioLatencyHistogramOutput(fdi, index, i * 32, 1, unit[0], unit[1],
 							 (unsigned int *)buf, print);
 			} else {
@@ -949,8 +950,8 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
 			}
 		}
 
-		strcpy(unit[0], "s");
-		strcpy(unit[1], "s");
+		unit[0] = "s";
+		unit[1] = "s";
 		for (i = 1; i < 4; i++, index++)
 			ioLatencyHistogramOutput(fdi, index, i, i + 1, unit[0], unit[1],
 						 (unsigned int *)buf, print);
