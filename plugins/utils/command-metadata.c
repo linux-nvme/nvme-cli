@@ -333,11 +333,6 @@ static int copy_options(const struct argconfig_commandline_options *opts,
 	return 0;
 }
 
-/*
- * argconfig_parse() hook installed by build_model(): copies the current
- * command's options into the model, then returns the sentinel so the parser
- * unwinds before the command opens a device.
- */
 /* The entries of @opts with the included tables in place, see flat_copy() */
 static size_t flat_count(struct argconfig_commandline_options *opts)
 {
@@ -374,40 +369,31 @@ static size_t flat_copy(struct argconfig_commandline_options *dst,
 }
 
 /*
- * The command's options followed by the registered global options, behind a
- * "Global options" separator as json_command() expects. The caller frees
- * the returned array; the entries alias the original tables.
+ * The options of @root, the included tables behind a group of their
+ * heading: json_command() takes the options after "Global options" for the
+ * global ones. The caller frees the returned array; the entries alias the
+ * original tables.
  */
 static struct argconfig_commandline_options *
-with_global_options(struct argconfig_commandline_options *options)
+flatten(struct argconfig_commandline_options *root)
 {
-	struct argconfig_commandline_options *g, *all;
-	size_t n, ng = 0, i;
+	struct argconfig_commandline_options *all;
 
-	g = argconfig_get_global_options();
-	n = flat_count(options);
-	while (g && g[ng].option)
-		ng++;
-
-	all = calloc(n + ng + 2, sizeof(*all));
-	if (!all)
-		return NULL;
-
-	flat_copy(all, options);
-	if (ng) {
-		struct argconfig_commandline_options sep =
-			OPT_GROUP("Global options");
-
-		memcpy(&all[n], &sep, sizeof(sep));
-		for (i = 0; i < ng; i++)
-			memcpy(&all[n + 1 + i], &g[i], sizeof(*all));
-	}
+	all = calloc(flat_count(root) + 1, sizeof(*all));
+	if (all)
+		flat_copy(all, root);
 
 	return all;
 }
 
+/*
+ * argconfig_parse() hook installed by build_model(): copies the current
+ * command's options, the global ones included, into the model, then
+ * returns the sentinel so the parser unwinds before the command opens a
+ * device.
+ */
 static int metadata_capture_hook(int argc, char **argv, const char *program_desc,
-				 struct argconfig_commandline_options *options)
+				 struct argconfig_commandline_options *root)
 {
 	(void)argc;
 	(void)argv;
@@ -415,7 +401,7 @@ static int metadata_capture_hook(int argc, char **argv, const char *program_desc
 
 	if (command_metadata_cur_command && !command_metadata_cur_command->captured) {
 		__cleanup_free struct argconfig_commandline_options *all =
-			with_global_options(options);
+			flatten(root);
 		int err = -ENOMEM;
 
 		if (all)
