@@ -361,7 +361,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 				err = -1;
 				goto exit_status;
 			}
-			strncpy(fileLocation, strFilePath, length);
+			memcpy(fileLocation, strFilePath, length);
 			fileLocation[length] = '\0';
 
 			while (fileLocation[k] != '\0') {
@@ -833,7 +833,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 			root = json_create_object();
 			logPages = json_create_array();
 			json_object_add_value_array(root, "Micron temperature information", logPages);
-			sprintf(tempstr, "%u C", temperature);
+			snprintf(tempstr, sizeof(tempstr), "%u C", temperature);
 			json_object_add_value_string(stats, "Current Composite Temperature", tempstr);
 			for (i = 0; i < SensorCount; i++) {
 				char sensor_str[256] = { 0 };
@@ -841,8 +841,10 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 
 				if (!smart_log.temp_sensor[i])
 					continue;
-				sprintf(sensor_str, "Temperature Sensor #%d", (i + 1));
-				sprintf(datastr, "%u C", tempSensors[i]);
+				snprintf(sensor_str, sizeof(sensor_str),
+					 "Temperature Sensor #%d", (i + 1));
+				snprintf(datastr, sizeof(datastr), "%u C",
+					 tempSensors[i]);
 				json_object_add_value_string(stats, sensor_str, datastr);
 			}
 			json_array_add_value_object(logPages, stats);
@@ -1100,28 +1102,36 @@ static void init_d0_log_page(__u8 *buf, __u8 nsze)
 
 
 	count = ((__u64)logD0[45] << 32) | logD0[44];
-	sprintf(d0_log_page[0].datastr, "0x%"PRIx64, le64_to_cpu(count));
+	snprintf(d0_log_page[0].datastr, sizeof(d0_log_page[0].datastr),
+		 "0x%"PRIx64, le64_to_cpu(count));
 
 	count_hi = ((__u64)logD0[39] << 32) | logD0[38];
 	count_lo = ((__u64)logD0[37] << 32) | logD0[36];
 	if (count_hi)
-		sprintf(d0_log_page[1].datastr, "0x%"PRIx64"%016"PRIx64,
-			le64_to_cpu(count_hi), le64_to_cpu(count_lo));
+		snprintf(d0_log_page[1].datastr, sizeof(d0_log_page[1].datastr),
+			 "0x%"PRIx64"%016"PRIx64, le64_to_cpu(count_hi),
+			 le64_to_cpu(count_lo));
 	else
-		sprintf(d0_log_page[1].datastr, "0x%"PRIx64, le64_to_cpu(count_lo));
+		snprintf(d0_log_page[1].datastr, sizeof(d0_log_page[1].datastr),
+			 "0x%"PRIx64, le64_to_cpu(count_lo));
 
 	count = ((__u64)logD0[25] << 32) | logD0[24];
-	sprintf(d0_log_page[2].datastr, "0x%"PRIx64, le64_to_cpu(count));
+	snprintf(d0_log_page[2].datastr, sizeof(d0_log_page[2].datastr),
+		 "0x%"PRIx64, le64_to_cpu(count));
 
-	sprintf(d0_log_page[3].datastr, "0x%x", logD0[3]);
+	snprintf(d0_log_page[3].datastr, sizeof(d0_log_page[3].datastr), "0x%x",
+		 logD0[3]);
 
 	count_lo = ((__u64)logD0[37] << 32) | logD0[36];
 	count = ((__u64)logD0[25] << 32) | logD0[24];
 	count = (__u64)logD0[3] - (count_lo + count);
-	sprintf(d0_log_page[4].datastr, "0x%"PRIx64, le64_to_cpu(count));
+	snprintf(d0_log_page[4].datastr, sizeof(d0_log_page[4].datastr),
+		 "0x%"PRIx64, le64_to_cpu(count));
 
-	sprintf(d0_log_page[5].datastr, "0x%x", nsze);
-	sprintf(d0_log_page[6].datastr, "0x%x", logD0[1]);
+	snprintf(d0_log_page[5].datastr, sizeof(d0_log_page[5].datastr), "0x%x",
+		 nsze);
+	snprintf(d0_log_page[6].datastr, sizeof(d0_log_page[6].datastr), "0x%x",
+		 logD0[1]);
 }
 
 static struct nand_stats {
@@ -1152,8 +1162,10 @@ static struct nand_stats {
 		{"Boot SSD Spec Version", {0}},
 };
 
+/* @datastr is the datastr of an entry of hyperscale_BSSD_nand_stats */
 static void micron_readFixedBytesFromBuffer(__u8 *buf, int offset, int numBytes, char *datastr)
 {
+	size_t size = sizeof(hyperscale_BSSD_nand_stats[0].datastr);
 	uint64_t count_lo, count_hi, count;
 
 	switch (numBytes) {
@@ -1162,30 +1174,30 @@ static void micron_readFixedBytesFromBuffer(__u8 *buf, int offset, int numBytes,
 		count_lo = shr_get_unaligned_le64(&buf[offset]);
 		count_hi = shr_get_unaligned_le64(&buf[offset + 8]);
 		if (count_hi)
-			sprintf(datastr, "0x%"PRIx64"%016"PRIx64"",
-				count_hi, count_lo);
+			snprintf(datastr, size, "0x%"PRIx64"%016"PRIx64"",
+				 count_hi, count_lo);
 		else
-			sprintf(datastr, "0x%"PRIx64"", count_lo);
+			snprintf(datastr, size, "0x%"PRIx64"", count_lo);
 
 	}
 	break;
 	case 8:
 	{
 		count = shr_get_unaligned_le64(&buf[offset]);
-		sprintf(datastr, "0x%"PRIx64"", count);
+		snprintf(datastr, size, "0x%"PRIx64"", count);
 	}
 	break;
 	case 6:
 	{
 		count = shr_get_unaligned_le16(&buf[offset + 4]);
 		count = (count << 32) | shr_get_unaligned_le32(&buf[offset]);
-		sprintf(datastr, "0x%"PRIx64"", count);
+		snprintf(datastr, size, "0x%"PRIx64"", count);
 	}
 	break;
 	case 2:
 	{
-		sprintf(datastr, "0x%04x",
-			shr_get_unaligned_le16(&buf[offset]));
+		snprintf(datastr, size, "0x%04x",
+			 shr_get_unaligned_le16(&buf[offset]));
 	}
 	break;
 	}
@@ -1222,12 +1234,10 @@ static void init_hyperscale_BSSD_nand_stats(__u8 *buf)
 	minorVer = *((__u16 *)(&buf[302]));
 	pointVer = *((__u16 *)(&buf[304]));
 	errataVer = *((__u16 *)(&buf[306]));
-	sprintf(hyperscale_BSSD_nand_stats[21].datastr,
-					"%x.%x.%x.%x",
-					le16_to_cpu(majorVer),
-					le16_to_cpu(minorVer),
-					le16_to_cpu(pointVer),
-					le16_to_cpu(errataVer));
+	snprintf(hyperscale_BSSD_nand_stats[21].datastr,
+		 sizeof(hyperscale_BSSD_nand_stats[21].datastr), "%x.%x.%x.%x",
+		 le16_to_cpu(majorVer), le16_to_cpu(minorVer),
+		 le16_to_cpu(pointVer), le16_to_cpu(errataVer));
 }
 
 
@@ -1756,19 +1766,23 @@ static void print_log(__u8 *buf, bool is_json, unsigned char ucLogID)
 	if (ucLogID == 0xE1) {
 		log_pageID = e1_log_page;
 		field_count = ARRAY_SIZE(e1_log_page);
-		sprintf(tempStr, "SMART Extended Log:0x%X", ucLogID);
+		snprintf(tempStr, sizeof(tempStr), "SMART Extended Log:0x%X",
+			 ucLogID);
 	} else if (ucLogID == 0xD0) {
 		log_pageID = D0_log_page;
 		field_count = ARRAY_SIZE(D0_log_page);
-		sprintf(tempStr, "SMART Extended Log:0x%X", ucLogID);
+		snprintf(tempStr, sizeof(tempStr), "SMART Extended Log:0x%X",
+			 ucLogID);
 	} else if (ucLogID == 0xC5) {
 		log_pageID = C5_log_page;
 		field_count = ARRAY_SIZE(C5_log_page);
-		sprintf(tempStr, "Micron Workload Log:0x%X", ucLogID);
+		snprintf(tempStr, sizeof(tempStr), "Micron Workload Log:0x%X",
+			 ucLogID);
 	} else if (ucLogID == 0xC6)	{
 		log_pageID = C6_log_page;
 		field_count = ARRAY_SIZE(C6_log_page);
-		sprintf(tempStr, "Vendor Telemetry Log:0x%X", ucLogID);
+		snprintf(tempStr, sizeof(tempStr), "Vendor Telemetry Log:0x%X",
+			 ucLogID);
 	} else {
 		log_pageID = NULL;
 	}
@@ -2217,9 +2231,9 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 	FILE *fpOutFile = NULL;
 	__cleanup_free char *tempFile = NULL;
 	char strBuffer[1024] = { 0 };
-	char model[41] = { 0 };
-	char serial[21] = { 0 };
-	char fwrev[9] = { 0 };
+	char model[sizeof(ctrlp->mn) + 1] = { 0 };
+	char serial[sizeof(ctrlp->sn) + 1] = { 0 };
+	char fwrev[sizeof(ctrlp->fr) + 1] = { 0 };
 	__cleanup_free char *strPDir = NULL;
 	char *strDest = NULL;
 
@@ -2241,9 +2255,9 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 		return;
 	}
 
-	strncpy(model, ctrlp->mn, 40);
-	strncpy(serial, ctrlp->sn, 20);
-	strncpy(fwrev, ctrlp->fr, 8);
+	memcpy(model, ctrlp->mn, sizeof(ctrlp->mn));
+	memcpy(serial, ctrlp->sn, sizeof(ctrlp->sn));
+	memcpy(fwrev, ctrlp->fr, sizeof(ctrlp->fr));
 
 	snprintf(strBuffer, sizeof(strBuffer),
 			"********************\nDrive Info\n********************\n");
@@ -2686,42 +2700,45 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		driveInfo = json_create_array();
 		json_object_add_value_array(root, "Micron Drive HW Information", driveInfo);
 
-		sprintf(tempstr, "%hhu.%hhu", dinfo.hw_ver_major, dinfo.hw_ver_minor);
+		snprintf(tempstr, sizeof(tempstr), "%hhu.%hhu",
+			 dinfo.hw_ver_major, dinfo.hw_ver_minor);
 		json_object_add_value_string(pinfo, "Drive Hardware Version", tempstr);
 
 		if (custId == MICRON_CUST_ID_GG) {
 			if (dinfo.ftl_unit_size) {
-				sprintf(tempstr, "%u B",
-					(unsigned int)(dinfo.ftl_unit_size * 1024));
+				snprintf(tempstr, sizeof(tempstr), "%u B",
+					 dinfo.ftl_unit_size * 1024U);
 				json_object_add_value_string(pinfo, "FTL_unit_size", tempstr);
 			}
 
 			if (dinfo.bs_ver_major != 0 || dinfo.bs_ver_minor != 0) {
-				sprintf(tempstr,
-					"HyperScale Boot Version Spec.%hhu.%hhu"
-					, (unsigned char)dinfo.bs_ver_major,
-					(unsigned char)dinfo.bs_ver_minor);
+				snprintf(tempstr, sizeof(tempstr),
+					 "HyperScale Boot Version Spec.%hhu.%hhu",
+					 (unsigned char)dinfo.bs_ver_major,
+					 (unsigned char)dinfo.bs_ver_minor);
 				json_object_add_value_string(pinfo, "Boot Spec.Version", tempstr);
 			}
 
 			if (dinfo.ownership_status == 0)
-				sprintf(tempstr, "N/A");
+				snprintf(tempstr, sizeof(tempstr), "N/A");
 			else if (dinfo.ownership_status == 1)
-				sprintf(tempstr, "UNSET");
+				snprintf(tempstr, sizeof(tempstr), "UNSET");
 			else if (dinfo.ownership_status == 2)
-				sprintf(tempstr, "SET");
+				snprintf(tempstr, sizeof(tempstr), "SET");
 			else if (dinfo.ownership_status == 3)
-				sprintf(tempstr, "BLOCKED");
+				snprintf(tempstr, sizeof(tempstr), "BLOCKED");
 			json_object_add_value_string(pinfo, "Drive Ownership Status", tempstr);
 
 		} else {
 			if (dinfo.ftl_unit_size) {
-				sprintf(tempstr, "%hhu KB", dinfo.ftl_unit_size);
+				snprintf(tempstr, sizeof(tempstr), "%hhu KB",
+					 dinfo.ftl_unit_size);
 				json_object_add_value_string(pinfo, "FTL_unit_size", tempstr);
 			}
 			if (dinfo.bs_ver_major != 0 || dinfo.bs_ver_minor != 0) {
-				sprintf(tempstr, "%hhu.%hhu", (unsigned char)dinfo.bs_ver_major,
-							(unsigned char)dinfo.bs_ver_minor);
+				snprintf(tempstr, sizeof(tempstr), "%hhu.%hhu",
+					 (unsigned char)dinfo.bs_ver_major,
+					 (unsigned char)dinfo.bs_ver_minor);
 				json_object_add_value_string(pinfo, "Boot Spec.Version", tempstr);
 			}
 		}
@@ -3323,11 +3340,13 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *acmd
 		char start[32] = { 0 };
 		char end[32] = { 0 };
 
-		sprintf(start, "%u%s", thresholds[b].start, thresholds[b].unit);
+		snprintf(start, sizeof(start), "%u%s", thresholds[b].start,
+			 thresholds[b].unit);
 		if (thresholds[b].end == INT_MAX)
-			sprintf(end, "INF");
+			snprintf(end, sizeof(end), "INF");
 		else
-			sprintf(end, "%u%s", thresholds[b].end, thresholds[b].unit);
+			snprintf(end, sizeof(end), "%u%s", thresholds[b].end,
+				 thresholds[b].unit);
 		printf("%2d   %8s    %8s    %8"PRIu64"\n", bucket, start, end, cmd_stats[b]);
 	}
 	return err;
@@ -3837,7 +3856,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 
 	printf("Preparing log package. This will take a few seconds...\n");
 
-	strncpy(safe_sn, ctrl.sn, sizeof(safe_sn) - 1);
+	memcpy(safe_sn, ctrl.sn, sizeof(ctrl.sn));
 	shr_sanitize_name(shr_rtrim(safe_sn));
 	err = SetupDebugDataDirectories(safe_sn, cfg.package,
 			strMainDirName, sizeof(strMainDirName),
@@ -4441,7 +4460,7 @@ static void print_micron_health_log_json(struct nvme_smart_log *smart,
 		char key[32];
 
 		if (ts) {
-			sprintf(key, "temp_sensor_%d", i + 1);
+			snprintf(key, sizeof(key), "temp_sensor_%d", i + 1);
 			json_object_add_value_int(root, key, ts - 273);
 		}
 	}
