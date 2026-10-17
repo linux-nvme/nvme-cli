@@ -50,10 +50,6 @@ usage() {
     echo "                      and build them as shared libraries"
     echo "  cross               use cross toolchain to build"
     echo "  distro              build libnvme and nvme-cli separately"
-    echo "  docs                build all documentation"
-    echo "  man_docs            build man documentation only"
-    echo "  html_docs           build html documentation only"
-    echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
     echo "  minimal_static      build a static binary without fabrics support"
     echo "  nofabrics           build without fabrics support, run unit tests"
@@ -278,42 +274,6 @@ config_meson_cross() {
         "${BUILDDIR}"
 }
 
-config_meson_docs() {
-    CC="${CC}" "${MESON}" setup                 \
-        -Ddocs=all                              \
-        -Ddocs-build=true                       \
-		-Ddeprecated-cmds=enabled				\
-        --prefix=/tmp/usr                       \
-        "${BUILDDIR}"
-}
-
-config_meson_man_docs() {
-    CC="${CC}" "${MESON}" setup                 \
-        -Ddocs=man                              \
-        -Ddocs-build=true                       \
-		-Ddeprecated-cmds=enabled				\
-        --prefix=/tmp/usr                       \
-        "${BUILDDIR}"
-}
-
-config_meson_html_docs() {
-    CC="${CC}" "${MESON}" setup                 \
-        -Ddocs=html                             \
-        -Ddocs-build=true                       \
-		-Ddeprecated-cmds=enabled				\
-        --prefix=/tmp/usr                       \
-        "${BUILDDIR}"
-}
-
-config_meson_rst_docs() {
-    CC="${CC}" "${MESON}" setup                 \
-        -Ddocs=rst                              \
-        -Ddocs-build=true                       \
-		-Ddeprecated-cmds=enabled				\
-        --prefix=/tmp/usr                       \
-        "${BUILDDIR}"
-}
-
 config_meson_static() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
@@ -454,30 +414,6 @@ build_meson() {
     fi
 }
 
-build_meson_docs() {
-    "${MESON}" compile                          \
-        -C "${BUILDDIR}"                        \
-		docs
-}
-
-build_meson_man_docs() {
-    "${MESON}" compile                          \
-        -C "${BUILDDIR}"                        \
-		docs
-}
-
-build_meson_html_docs() {
-    "${MESON}" compile                          \
-        -C "${BUILDDIR}"                        \
-		docs
-}
-
-build_meson_rst_docs() {
-    "${MESON}" compile                          \
-        -C "${BUILDDIR}"                        \
-		docs
-}
-
 test_meson() {
     local args=(-C "${BUILDDIR}")
 
@@ -492,27 +428,6 @@ test_meson() {
     fi
 
     "${MESON}" test "${args[@]}"
-}
-
-test_meson_docs() {
-	true
-}
-
-test_meson_man_docs() {
-	true
-}
-
-test_meson_html_docs() {
-	true
-}
-
-test_meson_rst_docs() {
-	true
-}
-
-install_meson_docs() {
-    "${MESON}" install                          \
-        -C "${BUILDDIR}"
 }
 
 tools_build_samurai() {

@@ -5,13 +5,9 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.14"
-  apt_packages:
-    - meson
   jobs:
     install:
-      - pip install asciidoc sphinx
-    pre_build:
-      - scripts/build.sh rst_docs
+      - pip install sphinx
 
 sphinx:
-  configuration: .build-ci/libnvme/doc/conf.py
+  configuration: libnvme/doc/conf.py

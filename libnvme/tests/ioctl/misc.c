@@ -1461,16 +1461,37 @@ static void test_get_fd_non_direct(void)
 
 static void test_dry_run(void)
 {
+	__u8 data[16], metadata[8];
+	__u8 zero[sizeof(data)] = {};
 	struct libnvme_passthru_cmd cmd = {
 		.opcode = nvme_admin_identify,
+		.addr = (__u64)(uintptr_t)data,
+		.data_len = sizeof(data),
 	};
 
 	libnvme_set_dry_run(test_ctx, true);
+	memset(data, 0xff, sizeof(data));
 	check(!libnvme_exec_admin_passthru(test_hdl, &cmd),
 	      "admin command failed in dry-run mode");
-	cmd.opcode = nvme_cmd_flush;
+	check(!memcmp(data, zero, sizeof(data)),
+	      "dry-run did not clear the data of a read command");
+
+	cmd.opcode = nvme_cmd_read;
+	cmd.metadata = (__u64)(uintptr_t)metadata;
+	cmd.metadata_len = sizeof(metadata);
+	memset(data, 0xff, sizeof(data));
+	memset(metadata, 0xff, sizeof(metadata));
 	check(!libnvme_exec_io_passthru(test_hdl, &cmd),
 	      "IO command failed in dry-run mode");
+	check(!memcmp(data, zero, sizeof(data)) &&
+	      !memcmp(metadata, zero, sizeof(metadata)),
+	      "dry-run did not clear the buffers of a read command");
+
+	cmd.opcode = nvme_cmd_write;
+	memset(data, 0xff, sizeof(data));
+	check(!libnvme_exec_io_passthru(test_hdl, &cmd),
+	      "IO command failed in dry-run mode");
+	check(data[0] == 0xff, "dry-run changed the data of a write command");
 	libnvme_set_dry_run(test_ctx, false);
 }
 

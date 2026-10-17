@@ -90,12 +90,6 @@ option(
   description : 'install documentation'
 )
 option(
-  'docs-build',
-  type : 'boolean',
-  value : false,
-  description : 'build documentation'
-)
-option(
   'dracutrulesdir',
   type : 'string',
   value : 'lib/dracut/dracut.conf.d/',
