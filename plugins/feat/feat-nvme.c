@@ -138,14 +138,16 @@ static struct feat_args feat_tmpl;
 
 static struct argconfig_commandline_options feat_template[] = {
 	OPT_FLAG("save", 's', &feat_tmpl.save, save),
-	OPT_BYTE("sel",  'S', &feat_tmpl.sel,  sel),
+	OPT_BYTE("sel",  'S', &feat_tmpl.sel,  sel,
+		 nvme_sel_values, .max = NVME_SEL_MAX),
 	OPT_END()
 };
 
 /* For a command which uses -s itself */
 static struct argconfig_commandline_options feat_template_save_long[] = {
 	OPT_FLAG("save", 0,   &feat_tmpl.save, save),
-	OPT_BYTE("sel",  'S', &feat_tmpl.sel,  sel),
+	OPT_BYTE("sel",  'S', &feat_tmpl.sel,  sel,
+		 nvme_sel_values, .max = NVME_SEL_MAX),
 	OPT_END()
 };
 

@@ -92,7 +92,8 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("sel",          's', &cfg.sel,      sel),
+		OPT_BYTE("sel",          's', &cfg.sel,      sel,
+			 nvme_sel_values, .max = NVME_SEL_MAX),
 		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid,
 			 nvme_nsid_values),
 		OPT_FLAG("no-uuid",      'u', &no_uuid_flag, no_uuid),

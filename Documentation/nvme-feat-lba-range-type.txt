@@ -69,6 +69,15 @@ OPTIONS
 --sel=<select>::
 	Select (SEL): This field specifies which value of the attributes
 	to return in the provided data:
++
+[]
+|==================
+|Select|Name|Description
+|0|current|Current
+|1|default|Default
+|2|saved|Saved
+|3|supported|Supported capabilities
+|==================
 
 --save::
 	Save the attribute so that it persists through all power states and resets.

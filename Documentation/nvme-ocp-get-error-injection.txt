@@ -36,12 +36,11 @@ OPTIONS
 +
 []
 |==================
-|Select|Description
-|0|Current
-|1|Default
-|2|Saved
-|3|Supported capabilities
-|4-7|Reserved
+|Select|Name|Description
+|0|current|Current
+|1|default|Default
+|2|saved|Saved
+|3|supported|Supported capabilities
 |==================
 
 -a::
