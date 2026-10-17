@@ -113,6 +113,21 @@
           "description": "Whether the option consumes an argument.",
           "enum": ["none", "required", "optional"]
         },
+        "type": {
+          "type": "string",
+          "description": "The kind of value: flag (no value), count (no value, may be repeated), int, u8, u16, u32 and u64 (numbers of that size; the unsigned ones take no negative number), size (a number with an optional binary suffix such as Ki), double, string, enum (one of \"values\"), file or directory (a path).",
+          "enum": ["flag", "count", "int", "u8", "u16", "u32", "u64", "size", "double", "string", "enum", "file", "directory"]
+        },
+        "range": {
+          "type": "object",
+          "description": "The numbers an unsigned option accepts, if fewer than its type holds. The names in \"values\" are accepted besides. Absent otherwise.",
+          "properties": {
+            "min": { "type": "integer", "minimum": 0 },
+            "max": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["min", "max"],
+          "additionalProperties": false
+        },
         "metavar": {
           "type": "string",
           "description": "Placeholder name for the option's value (e.g. \"NUM\", \"FMT\"). Present only for options that take a value."

@@ -97,6 +97,9 @@ class TestCommandMetadataSchema(unittest.TestCase):
             lambda d: d["commands"][0]["options"][0].update(surprise=1),
             lambda d: d["commands"][0].pop("device"),
             lambda d: d["commands"][0].update(device="bogus"),
+            lambda d: d["commands"][0]["options"][0].update(type="bogus"),
+            lambda d: d["commands"][0]["options"][0].update(
+                range={"min": 0}),
         ]
         for mutate in cases:
             bad = copy.deepcopy(self.data)
@@ -173,6 +176,22 @@ class TestCommandMetadataSchema(unittest.TestCase):
             opt = next(o for o in cmds["discover"]["options"]
                        if o["long"] == "no-reuse")
             self.assertEqual(opt.get("old_name"), "force")
+
+    def test_value_types(self):
+        """Options carry the kind of value they take and a range if
+        they take fewer numbers than their type holds."""
+        cmds = {c["name"]: c for c in self.data["commands"]}
+        opts = {o["long"]: o for o in cmds["get-feature"]["options"]}
+        self.assertEqual(opts["sel"]["type"], "u8")
+        self.assertEqual(opts["sel"]["range"], {"min": 0, "max": 3})
+        self.assertIn("saved", opts["sel"]["values"])
+        self.assertEqual(opts["namespace-id"]["type"], "u32")
+        self.assertNotIn("range", opts["namespace-id"])
+        self.assertEqual(opts["output-format-version"]["range"],
+                         {"min": 1, "max": 2})
+        self.assertEqual(opts["verbose"]["type"], "count")
+        opts = {o["long"]: o for o in cmds["fw-download"]["options"]}
+        self.assertEqual(opts["fw"]["type"], "file")
 
 
 if __name__ == "__main__":
