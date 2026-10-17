@@ -14,6 +14,8 @@
 
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/hex-util.h>
+#include <shared/string-util.h>
 #include <shared/uint128-util.h>
 
 #include "cleanup.h"
@@ -61,59 +63,41 @@ static void vt_initialize_header_buffer(struct vtview_log_header *pbuff)
 	memset(pbuff->test_name, 0, sizeof(pbuff->test_name));
 }
 
-static void vt_convert_data_buffer_to_hex_string(const unsigned char *bufPtr,
-		const unsigned int size, const bool isReverted, char *output)
-{
-	unsigned int i, pos;
-	const char hextable[16] = {
-		'0', '1', '2', '3',
-		'4', '5', '6', '7',
-		'8', '9', 'A', 'B',
-		'C', 'D', 'E', 'F',
-	};
-
-	memset(output, 0, (size * 2) + 1);
-
-	for (i = 0; i < size; i++) {
-		if (isReverted)
-			pos = size - 1 - i;
-		else
-			pos = i;
-		output[2 * i] = hextable[(bufPtr[pos] & 0xF0) >> 4];
-		output[2 * i + 1] = hextable[(bufPtr[pos] & 0x0F)];
-	}
-}
-
 /*
  * Generate log file name.
  * Log file name will be generated automatically if user leave log file option blank.
  * Log file name will be generated as vtView-Smart-log-date-time.txt
  */
-static void vt_generate_vtview_log_file_name(char *fname)
+static void vt_generate_vtview_log_file_name(char *fname, size_t size)
 {
-	time_t     current;
-	struct tm  tstamp;
-	char       temp[256];
+	time_t current = time(NULL);
+	struct tm tstamp = *localtime(&current);
+	char date[32];
 
-	time(&current);
-
-	tstamp = *localtime(&current);
-	snprintf(temp, sizeof(temp), "./vtView-Smart-log-");
-	strcat(fname, temp);
-	strftime(temp, sizeof(temp), "%Y-%m-%d", &tstamp);
-	strcat(fname, temp);
-	snprintf(temp, sizeof(temp), ".txt");
-	strcat(fname, temp);
+	strftime(date, sizeof(date), "%Y-%m-%d", &tstamp);
+	snprintf(fname, size, "./vtView-Smart-log-%s.txt", date);
 }
 
-static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_log_entry *smart, char *text)
+/* A 128 bit counter of the SMART log as "name;value;" */
+static void vt_append_u128(char *text, size_t size, size_t *len,
+			   const char *name, __u8 *value)
 {
-	char tempbuff[1024] = "";
+	shr_snprintf_append(text, size, len, "%s;%s;", name,
+			    uint128_t_to_string(le128_to_cpu(value)));
+}
+
+static void vt_convert_smart_data_to_human_readable_format(
+		struct vtview_smart_log_entry *smart, char *text, size_t size)
+{
+	struct nvme_smart_log *log = &smart->raw_smart;
+	struct nvme_id_ctrl *ctrl = &smart->raw_ctrl;
 	int i;
-	int temperature = ((smart->raw_smart.temperature[1] << 8) | smart->raw_smart.temperature[0]) - 273;
+	int temperature = ((log->temperature[1] << 8) |
+			   log->temperature[0]) - 273;
 	double capacity;
 	char *curlocale;
 	char *templocale;
+	size_t len = 0;
 	__u8 lba_index;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(smart->raw_ns.flbas, &lba_index);
@@ -130,94 +114,101 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 
 	capacity = le64_to_cpu(smart->raw_ns.nsze) * lba;
 
-	snprintf(tempbuff, sizeof(tempbuff), "log;%s;%llu;%s;%s;%-.*s;", smart->raw_ctrl.sn,
-		 (unsigned long long)smart->time_stamp, smart->path,
-		 smart->raw_ctrl.mn, (int)sizeof(smart->raw_ctrl.fr),
-		 smart->raw_ctrl.fr);
-	strcpy(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Capacity;%lf;", capacity / 1000000000);
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Critical_Warning;%u;", smart->raw_smart.critical_warning);
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Temperature;%u;", temperature);
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Available_Spare;%u;", smart->raw_smart.avail_spare);
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Available_Spare_Threshold;%u;", smart->raw_smart.spare_thresh);
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Percentage_Used;%u;", smart->raw_smart.percent_used);
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Read;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.data_units_read)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Written;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.data_units_written)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Host_Read_Commands;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.host_reads)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Host_Write_Commands;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.host_writes)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Controller_Busy_Time;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.ctrl_busy_time)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Power_Cycles;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.power_cycles)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Power_On_Hours;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.power_on_hours)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Unsafe_Shutdowns;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.unsafe_shutdowns)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Media_Errors;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.media_errors)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Num_Err_Log_Entries;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.num_err_log_entries)));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Warning_Temperature_Time;%u;", le32_to_cpu(smart->raw_smart.warning_temp_time));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Critical_Composite_Temperature_Time;%u;", le32_to_cpu(smart->raw_smart.critical_comp_time));
-	strcat(text, tempbuff);
+	text[0] = '\0';
+	shr_snprintf_append(text, size, &len, "log;%-.*s;%llu;%s;%-.*s;%-.*s;",
+			    (int)sizeof(ctrl->sn), ctrl->sn,
+			    (unsigned long long)smart->time_stamp, smart->path,
+			    (int)sizeof(ctrl->mn), ctrl->mn,
+			    (int)sizeof(ctrl->fr), ctrl->fr);
+	shr_snprintf_append(text, size, &len, "Capacity;%lf;",
+			    capacity / 1000000000);
+	shr_snprintf_append(text, size, &len, "Critical_Warning;%u;",
+			    log->critical_warning);
+	shr_snprintf_append(text, size, &len, "Temperature;%u;", temperature);
+	shr_snprintf_append(text, size, &len, "Available_Spare;%u;",
+			    log->avail_spare);
+	shr_snprintf_append(text, size, &len, "Available_Spare_Threshold;%u;",
+			    log->spare_thresh);
+	shr_snprintf_append(text, size, &len, "Percentage_Used;%u;",
+			    log->percent_used);
+	vt_append_u128(text, size, &len, "Data_Units_Read",
+		       log->data_units_read);
+	vt_append_u128(text, size, &len, "Data_Units_Written",
+		       log->data_units_written);
+	vt_append_u128(text, size, &len, "Host_Read_Commands", log->host_reads);
+	vt_append_u128(text, size, &len, "Host_Write_Commands",
+		       log->host_writes);
+	vt_append_u128(text, size, &len, "Controller_Busy_Time",
+		       log->ctrl_busy_time);
+	vt_append_u128(text, size, &len, "Power_Cycles", log->power_cycles);
+	vt_append_u128(text, size, &len, "Power_On_Hours", log->power_on_hours);
+	vt_append_u128(text, size, &len, "Unsafe_Shutdowns",
+		       log->unsafe_shutdowns);
+	vt_append_u128(text, size, &len, "Media_Errors", log->media_errors);
+	vt_append_u128(text, size, &len, "Num_Err_Log_Entries",
+		       log->num_err_log_entries);
+	shr_snprintf_append(text, size, &len, "Warning_Temperature_Time;%u;",
+			    le32_to_cpu(log->warning_temp_time));
+	shr_snprintf_append(text, size, &len,
+			    "Critical_Composite_Temperature_Time;%u;",
+			    le32_to_cpu(log->critical_comp_time));
 
 	for (i = 0; i < 8; i++) {
-		__s32 temp = le16_to_cpu(smart->raw_smart.temp_sensor[i]);
+		__s32 temp = le16_to_cpu(log->temp_sensor[i]);
 
 		if (!temp) {
-			snprintf(tempbuff, sizeof(tempbuff), "Temperature_Sensor_%d;NC;", i);
-			strcat(text, tempbuff);
+			shr_snprintf_append(text, size, &len,
+					    "Temperature_Sensor_%d;NC;", i);
 			continue;
 		}
-		snprintf(tempbuff, sizeof(tempbuff), "Temperature_Sensor_%d;%d;", i, temp - 273);
-		strcat(text, tempbuff);
+		shr_snprintf_append(text, size, &len,
+				    "Temperature_Sensor_%d;%d;", i,
+				    temp - 273);
 	}
 
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T1_Trans_Count;%u;", le32_to_cpu(smart->raw_smart.thm_temp1_trans_count));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T2_Trans_Count;%u;", le32_to_cpu(smart->raw_smart.thm_temp2_trans_count));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T1_Total_Time;%u;", le32_to_cpu(smart->raw_smart.thm_temp1_total_time));
-	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T2_Total_Time;%u;", le32_to_cpu(smart->raw_smart.thm_temp2_total_time));
-	strcat(text, tempbuff);
+	shr_snprintf_append(text, size, &len,
+			    "Thermal_Management_T1_Trans_Count;%u;",
+			    le32_to_cpu(log->thm_temp1_trans_count));
+	shr_snprintf_append(text, size, &len,
+			    "Thermal_Management_T2_Trans_Count;%u;",
+			    le32_to_cpu(log->thm_temp2_trans_count));
+	shr_snprintf_append(text, size, &len,
+			    "Thermal_Management_T1_Total_Time;%u;",
+			    le32_to_cpu(log->thm_temp1_total_time));
+	shr_snprintf_append(text, size, &len,
+			    "Thermal_Management_T2_Total_Time;%u;",
+			    le32_to_cpu(log->thm_temp2_total_time));
 
-	snprintf(tempbuff, sizeof(tempbuff), "NandWrites;%d;\n", 0);
-	strcat(text, tempbuff);
+	shr_snprintf_append(text, size, &len, "NandWrites;%d;\n", 0);
 
 	setlocale(LC_ALL, templocale);
 	free(templocale);
 }
 
-static void vt_header_to_string(const struct vtview_log_header *header, char *text)
+static void vt_header_to_string(const struct vtview_log_header *header,
+			       char *text, size_t size)
 {
+	const struct nvme_id_ctrl *ctrl = &header->raw_ctrl;
 	char timebuff[50] = "";
-	char tempbuff[MAX_HEADER_BUFF] = "";
 	char identext[16384] = "";
 	char fwtext[2048] = "";
+	size_t len = 0;
 
-	strftime(timebuff, 50, "%Y-%m-%d %H:%M:%S", localtime(&(header->time_stamp)));
-	snprintf(tempbuff, MAX_HEADER_BUFF, "header;{\"session\":{\"testName\":\"%s\",\"dateTime\":\"%s\"},",
+	strftime(timebuff, sizeof(timebuff), "%Y-%m-%d %H:%M:%S",
+		 localtime(&(header->time_stamp)));
+	text[0] = '\0';
+	shr_snprintf_append(text, size, &len,
+		"header;{\"session\":{\"testName\":\"%s\",\"dateTime\":\"%s\"},",
 		header->test_name, timebuff);
-	strcpy(text, tempbuff);
 
-	vt_convert_data_buffer_to_hex_string((unsigned char *)&(header->raw_ctrl), sizeof(header->raw_ctrl), false, identext);
-	vt_convert_data_buffer_to_hex_string((unsigned char *)&(header->raw_fw), sizeof(header->raw_fw), false, fwtext);
-	snprintf(tempbuff, MAX_HEADER_BUFF,
-		"\"devices\":[{\"model\":\"%s\",\"port\":\"%s\",\"SN\":\"%s\",\"type\":\"NVMe\",\"identify\":\"%s\",\"firmwareSlot\":\"%s\"}]}\n",
-		header->raw_ctrl.mn, header->path, header->raw_ctrl.sn, identext, fwtext);
-	strcat(text, tempbuff);
+	shr_bin_to_hex(identext, sizeof(identext), ctrl, sizeof(*ctrl),
+		       SHR_HEX_UPPER);
+	shr_bin_to_hex(fwtext, sizeof(fwtext), &header->raw_fw,
+		       sizeof(header->raw_fw), SHR_HEX_UPPER);
+	shr_snprintf_append(text, size, &len,
+		"\"devices\":[{\"model\":\"%-.*s\",\"port\":\"%s\",\"SN\":\"%-.*s\",\"type\":\"NVMe\",\"identify\":\"%s\",\"firmwareSlot\":\"%s\"}]}\n",
+		(int)sizeof(ctrl->mn), ctrl->mn, header->path,
+		(int)sizeof(ctrl->sn), ctrl->sn, identext, fwtext);
 }
 
 static int vt_append_text_file(const char *text, const char *filename)
@@ -239,7 +230,8 @@ static int vt_append_log(struct vtview_smart_log_entry *smart, const char *filen
 {
 	char sm_log_text[MAX_LOG_BUFF] = "";
 
-	vt_convert_smart_data_to_human_readable_format(smart, sm_log_text);
+	vt_convert_smart_data_to_human_readable_format(smart, sm_log_text,
+						       sizeof(sm_log_text));
 	return vt_append_text_file(sm_log_text, filename);
 }
 
@@ -247,7 +239,7 @@ static int vt_append_header(const struct vtview_log_header *header, const char *
 {
 	char header_text[MAX_HEADER_BUFF] = "";
 
-	vt_header_to_string(header, header_text);
+	vt_header_to_string(header, header_text, sizeof(header_text));
 	return vt_append_text_file(header_text, filename);
 }
 
@@ -331,17 +323,19 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 		errno = EINVAL;
 		return -1;
 	}
-	strcpy(header.path, path);
+	shr_strscpy(header.path, path, sizeof(header.path));
 
 	if (!cfg->test_name) {
-		strcpy(header.test_name, DEFAULT_TEST_NAME);
+		shr_strscpy(header.test_name, DEFAULT_TEST_NAME,
+			    sizeof(header.test_name));
 	} else {
 		if (strlen(cfg->test_name) >= sizeof(header.test_name)) {
 			nvme_show_error("test name too long");
 			errno = EINVAL;
 			return -1;
 		}
-		strcpy(header.test_name, cfg->test_name);
+		shr_strscpy(header.test_name, cfg->test_name,
+			    sizeof(header.test_name));
 	}
 
 	if (!cfg->output_file)
@@ -438,39 +432,51 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 
 		printf("%6d", i);
 		buf = (unsigned char *) (&ctrl->psd[i]);
-		vt_convert_data_buffer_to_hex_string(&buf[0], 4, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[0], 4,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%9sh", s);
 
 		temp = ctrl->psd[i].flags;
 		printf("%4ub", ((unsigned char)temp & 0x02));
 		printf("%3ub", ((unsigned char)temp & 0x01));
-		vt_convert_data_buffer_to_hex_string(&buf[0], 2, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[0], 2,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%5sh", s);
 
-		vt_convert_data_buffer_to_hex_string(&buf[4], 4, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[4], 4,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%9sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[8], 4, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[8], 4,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%9sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[12], 4, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[12], 4,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%9sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[15], 1, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[15], 1,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%3sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[14], 1, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[14], 1,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%3sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[13], 1, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[13], 1,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%3sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[12], 1, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[12], 1,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%3sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[16], 4, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[16], 4,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%9sh", s);
 
 		temp = ctrl->psd[i].ips;
 		snprintf(s, sizeof(s), "%u%u", (((unsigned char)temp >> 6) & 0x01), (((unsigned char)temp >> 7) & 0x01));
 		printf("%3sb", s);
 
-		vt_convert_data_buffer_to_hex_string(&buf[16], 2, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[16], 2,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%5sh", s);
-		vt_convert_data_buffer_to_hex_string(&buf[20], 4, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[20], 4,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%9sh", s);
 
 		temp = ctrl->psd[i].apws;
@@ -479,7 +485,8 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 		snprintf(s, sizeof(s), "%u%u%u", (((unsigned char)temp) & 0x01), (((unsigned char)temp >> 1) & 0x01), (((unsigned char)temp >> 2) & 0x01));
 		printf("%4sb", s);
 
-		vt_convert_data_buffer_to_hex_string(&buf[20], 2, true, s);
+		shr_bin_to_hex(s, sizeof(s), &buf[20], 2,
+			       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 		printf("%5sh", s);
 		printf("\n");
 	}
@@ -705,113 +712,144 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	buf = (unsigned char *)(ctrl);
 
 	printf("{\n");
-	vt_convert_data_buffer_to_hex_string(buf, 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), buf, 2, SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"PCI Vendor ID\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[2], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[2], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"PCI Subsystem Vendor ID\":\"%sh\",\n",  s);
 	printf("    \"Serial Number\":\"%s\",\n", ctrl->sn);
 	printf("    \"Model Number\":\"%s\",\n", ctrl->mn);
 	printf("    \"Firmware Revision\":\"%-.*s\",\n", (int)sizeof(ctrl->fr), ctrl->fr);
-	vt_convert_data_buffer_to_hex_string(&buf[72], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[72], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Recommended Arbitration Burst\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[73], 3, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[73], 3,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"IEEE OUI Identifier\":\"%sh\",\n", s);
 
 	temp = ctrl->cmic;
 	printf("    \"Controller Multi-Path I/O and Namespace Sharing Capabilities\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[76], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[76], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 3, CMICtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[77], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[77], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Maximum Data Transfer Size\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[78], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[78], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Controller ID\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[80], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[80], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Version\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[84], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[84], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"RTD3 Resume Latency\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[88], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[88], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"RTD3 Entry Latency\":\"%sh\",\n", s);
 
 	temp = le32_to_cpu(ctrl->oaes);
 	printf("    \"Optional Asynchronous Events Supported\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[92], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[92], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 8, 2, OAEStable, true);
 
 	temp = le32_to_cpu(ctrl->ctratt);
 	printf("    \"Controller Attributes\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[96], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[96], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 2, CTRATTtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[122], 16, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[122], 16,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"FRU Globally Unique Identifier\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[240], 16, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[240], 16,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"NVMe Management Interface Specification\":\"%sh\",\n", s);
 
 	temp = le16_to_cpu(ctrl->oacs);
 	printf("    \"Optional Admin Command Support\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[256], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[256], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 9, OACStable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[258], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[258], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Abort Command Limit\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[259], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[259], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Asynchronous Event Request Limit\":\"%sh\",\n", s);
 
 	temp = ctrl->frmw;
 	printf("    \"Firmware Updates\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[260], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[260], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, FRMWtable, false);
-	vt_convert_data_buffer_to_hex_string(&buf[260], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[260], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Firmware Slot\":\"%uh\",\n", ((ctrl->frmw >> 1) & 0x07));
 	vt_build_identify_lv2(temp, 4, 1, FRMWtable, true);
 
 	temp = ctrl->lpa;
 	printf("    \"Log Page Attributes\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[261], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[261], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 4, LPAtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[262], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[262], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Error Log Page Entries\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[263], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[263], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Number of Power States Support\":\"%sh\",\n", s);
 
 	temp = ctrl->avscc;
 	printf("    \"Admin Vendor Specific Command Configuration\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[264], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[264], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, AVSCCtable, true);
 
 	temp = ctrl->apsta;
 	printf("    \"Autonomous Power State Transition Attributes\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[265], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[265], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, APSTAtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[266], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[266], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Warning Composite Temperature Threshold\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[268], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[268], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Critical Composite Temperature Threshold\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[270], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[270], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Maximum Time for Firmware Activation\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[272], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[272], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Host Memory Buffer Preferred Size\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[276], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[276], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Host Memory Buffer Minimum Size\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[280], 16, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[280], 16,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Total NVM Capacity\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[296], 16, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[296], 16,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Unallocated NVM Capacity\":\"%sh\",\n", s);
 
 	temp = le32_to_cpu(ctrl->rpmbs);
 	printf("    \"Replay Protected Memory Block Support\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[312], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[312], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	printf("        \"Number of RPMB Units\":\"%u\",\n", (temp & 0x00000003));
 	snprintf(s, sizeof(s), ((temp >> 3) & 0x00000007) ? "Reserved" : "HMAC SHA-256");
@@ -820,40 +858,49 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	printf("        \"Access Size\":\"%u\",\n", ((temp >> 24) & 0x000000FF));
 	printf("    },\n");
 
-	vt_convert_data_buffer_to_hex_string(&buf[316], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[316], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Extended Device Self-test Time\":\"%sh\",\n", s);
 
 	temp = ctrl->dsto;
 	printf("    \"Device Self-test Options\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[318], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[318], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, DSTOtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[319], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[319], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Firmware Update Granularity\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[320], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[320], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Keep Alive Support\":\"%sh\",\n", s);
 
 	temp = le16_to_cpu(ctrl->hctma);
 	printf("    \"Host Controlled Thermal Management Attributes\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[322], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[322], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, HCTMAtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[324], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[324], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Minimum Thermal Management Temperature\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[326], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[326], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Maximum Thermal Management Temperature\":\"%sh\",\n", s);
 
 	temp = le16_to_cpu(ctrl->sanicap);
 	printf("    \"Sanitize Capabilities\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[328], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[328], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 3, SANICAPtable, true);
 
 	temp = ctrl->sqes;
 	printf("    \"Submission Queue Entry Size\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[512], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[512], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	printf("        \"Maximum Size\":\"%u\",\n", (temp & 0x0000000F));
 	printf("        \"Required Size\":\"%u\",\n", ((temp >> 4) & 0x0000000F));
@@ -861,65 +908,77 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 
 	temp = ctrl->cqes;
 	printf("    \"Completion Queue Entry Size\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[513], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[513], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	printf("        \"Maximum Size\":\"%u\",\n", (temp & 0x0000000F));
 	printf("        \"Required Size\":\"%u\",\n", ((temp >> 4) & 0x0000000F));
 	printf("    }\n");
 
-	vt_convert_data_buffer_to_hex_string(&buf[514], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[514], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Maximum Outstanding Commands\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[516], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[516], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Number of Namespaces\":\"%sh\",\n", s);
 
 	temp = le16_to_cpu(ctrl->oncs);
 	printf("    \"Optional NVM Command Support\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[520], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[520], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 7, ONCStable, true);
 
 	temp = le16_to_cpu(ctrl->fuses);
 	printf("    \"Fused Operation Support\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[522], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[522], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, FUSEStable, true);
 
 	temp = ctrl->fna;
 	printf("    \"Format NVM Attributes\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[524], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[524], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 3, FNAtable, true);
 
 	temp = ctrl->vwc;
 	printf("    \"Volatile Write Cache\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[525], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[525], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, VWCtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[526], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[526], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Atomic Write Unit Normal\":\"%sh\",\n", s);
-	vt_convert_data_buffer_to_hex_string(&buf[528], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[528], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Atomic Write Unit Power Fail\":\"%sh\",\n", s);
 
 	temp = ctrl->icsvscc;
 	printf("    \"NVM Vendor Specific Command Configuration\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[530], 1, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[530], 1,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, ICSVSCCtable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[532], 2, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[532], 2,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"Atomic Compare 0 Write Unit\":\"%sh\",\n", s);
 
 	temp = le32_to_cpu(ctrl->sgls);
 	printf("    \"SGL Support\":{\n");
-	vt_convert_data_buffer_to_hex_string(&buf[536], 4, true, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[536], 4,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("        \"Value\":\"%sh\",\n", s);
 	pos = (temp & 0x00000003);
 	printf("        \"bit 1:0\":\"%s\",\n", SGLSSubtable[pos]);
 	vt_build_identify_lv2(temp, 2, 1, SGLStable, false);
 	vt_build_identify_lv2(temp, 16, 5, SGLStable, true);
 
-	vt_convert_data_buffer_to_hex_string(&buf[768], 256, false, s);
+	shr_bin_to_hex(s, sizeof(s), &buf[768], 256, SHR_HEX_UPPER);
 	printf("    \"NVM Subsystem NVMe Qualified Name\":\"%s\",\n", s);
 	printf("}\n\n");
 
@@ -974,7 +1033,8 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 		OPT_END()
 	};
 
-	vt_generate_vtview_log_file_name(vt_default_log_file_name);
+	vt_generate_vtview_log_file_name(vt_default_log_file_name,
+					 sizeof(vt_default_log_file_name));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
