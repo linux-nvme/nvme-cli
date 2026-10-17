@@ -1255,35 +1255,14 @@ static void run_vendor_dump(int (*get_dump)(struct libnvme_transport_handle *,
 		samsung_print_error(err);
 }
 
-/*
- * Translate one dump-type token (e.g. "host0") into a selection in @sel.
- * Called once per comma-separated token so -t accepts a list such as
- * "host0,ctlr,vendor". Returns 0 on success, or a SAMSUNG_GENERAL_* error
- * code if the token is not a recognized dump type.
- */
-static int vs_internal_log_select_type(const char *tok, bool *sel)
-{
-	if (!strcmp(tok, "host0"))
-		sel[DUMP_TYPE_HOST_0] = true;
-	else if (!strcmp(tok, "host1"))
-		sel[DUMP_TYPE_HOST_1] = true;
-	else if (!strcmp(tok, "ctlr") || !strcmp(tok, "controller"))
-		sel[DUMP_TYPE_CTLR] = true;
-	else if (!strcmp(tok, "vendor"))
-		sel[DUMP_TYPE_VENDOR] = true;
-	else {
-		printf("Invalid dump type: '%s'.\n", tok);
-		return SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR;
-	}
-
-	return 0;
-}
+/* The bit of a dump type in the --dump-type selection */
+#define DUMP_BIT(t) (1U << (t))
 
 /*
- * A dump type is extracted when either no -t was given (select_all, i.e.
- * extract everything) or it was explicitly named in sel[].
+ * A dump type is extracted when either no -t was given (extract
+ * everything) or it was named.
  */
-#define WANT_DUMP(t) (select_all || sel[(t)])
+#define WANT_DUMP(t) (!cfg.types || (cfg.types & DUMP_BIT(t)))
 
 static int vs_internal_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
@@ -1315,12 +1294,19 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	bool sel[DUMP_TYPE_MAX] = { false };
-	bool select_all = false;
 	int tele_data_area = 0;
 
+	OPT_VALS(types) = {
+		VAL_ENUM("host0", DUMP_BIT(DUMP_TYPE_HOST_0)),
+		VAL_ENUM("host1", DUMP_BIT(DUMP_TYPE_HOST_1)),
+		VAL_ENUM("ctlr", DUMP_BIT(DUMP_TYPE_CTLR)),
+		VAL_ENUM("controller", DUMP_BIT(DUMP_TYPE_CTLR)),
+		VAL_ENUM("vendor", DUMP_BIT(DUMP_TYPE_VENDOR)),
+		VAL_END()
+	};
+
 	struct config {
-		char *type;
+		__u32 types;
 		int area;
 		char *file;
 		bool compress;
@@ -1328,7 +1314,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	};
 
 	struct config cfg = {
-		.type = NULL,
+		.types = 0,
 		.area = 0,
 		.file = NULL,
 		.compress = false,
@@ -1336,7 +1322,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("dump-type", 't', "TYPE", &cfg.type, type),
+		OPT_ENUM_LIST("dump-type", 't', &cfg.types, type, types),
 		OPT_INT("telemetry-data-area", 'a', &cfg.area,     area),
 		OPT_FILE("output-file",        'O', &cfg.file,     file),
 		OPT_FLAG("compress",           'z', &cfg.compress, compress),
@@ -1375,31 +1361,6 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 				"Valid range: 0 to 4.\n");
 		samsung_print_error(SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR);
 		return SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR;
-	}
-
-	if (!cfg.type)
-		select_all = true;
-	else {
-		__cleanup_free char *type_buf = NULL;
-		char *tok, *saveptr = NULL;
-
-		/*
-		 * -t accepts a comma-separated list, e.g. "host0,ctlr,vendor".
-		 * strtok_r() mutates its input, so parse a copy of cfg.type
-		 * rather than the option string itself.
-		 */
-		type_buf = strdup(cfg.type);
-		if (!type_buf)
-			return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
-
-		for (tok = strtok_r(type_buf, ",", &saveptr); tok != NULL;
-				tok = strtok_r(NULL, ",", &saveptr)) {
-			err = vs_internal_log_select_type(tok, sel);
-			if (err != 0) {
-				samsung_print_error(err);
-				return err;
-			}
-		}
 	}
 
 	/*
@@ -1442,10 +1403,10 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 
 	/*
 	 * Host(0) is intentionally excluded from "all" dumps (only run when
-	 * explicitly selected), so it is gated on sel[] directly rather than
-	 * WANT_DUMP()/select_all.
+	 * explicitly selected), so it is gated on the selection directly
+	 * rather than WANT_DUMP().
 	 */
-	if (sel[DUMP_TYPE_HOST_0]) {
+	if (cfg.types & DUMP_BIT(DUMP_TYPE_HOST_0)) {
 		if (tele_data_area == 0)
 			try_get_telemetry_all(hdl, &ctrl, dump_save_dir, sn,
 					DUMP_TYPE_HOST_0);

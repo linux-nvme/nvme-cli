@@ -33,15 +33,17 @@ device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
--t <TYPE>::
---dump-type=<TYPE>::
+-t <NAME,...>::
+--dump-type=<NAME,...>::
 	Comma-separated list of dump types to extract, given without
 	spaces. The supported types are 'host0' and 'host1' for the
 	host-initiated telemetry dump using Log Specific Parameter 0 and
-	1 respectively, 'ctlr' for the controller-initiated telemetry
-	dump, and 'vendor' for the vendor dumps. When this option is
-	omitted, every dump type except 'host0' is extracted; 'host0'
-	is only collected when it is requested explicitly.
+	1 respectively, 'ctlr' (or 'controller') for the
+	controller-initiated telemetry dump, and 'vendor' for the vendor
+	dumps. The option may be given more than once to add more types.
+	When this option is omitted, every dump type except 'host0' is
+	extracted; 'host0' is only collected when it is requested
+	explicitly.
 
 -a <NUM>::
 --telemetry-data-area=<NUM>::
