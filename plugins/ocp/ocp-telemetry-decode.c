@@ -7,6 +7,8 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
+#include <shared/hex-util.h>
+#include <shared/string-util.h>
 
 #include "nvme-print.h"
 #include "ocp-telemetry-decode.h"
@@ -436,7 +438,7 @@ void json_add_formatted_u32_str(struct json_object *pobject, const char *msg, un
 {
 	char data_str[70] = { 0 };
 
-	sprintf(data_str, "0x%x", pdata);
+	snprintf(data_str, sizeof(data_str), "0x%x", pdata);
 	json_object_add_value_string(pobject, msg, data_str);
 }
 
@@ -444,19 +446,16 @@ void json_add_formatted_var_size_str(struct json_object *pobject, const char *ms
 	unsigned int data_size)
 {
 	char *description_str = NULL;
-	char temp_buffer[3] = { 0 };
+	size_t size = data_size * 2 + 1;
 
-	/* Allocate 2 chars for each value in the data + 2 bytes for the null terminator */
-	description_str = (char *) calloc(1, data_size*2 + 2);
+	/* 2 chars for each value in the data and the null terminator */
+	description_str = (char *) calloc(1, size);
 	if (!description_str) {
 		nvme_show_error("Failed to allocate description buffer");
 		return;
 	}
 
-	for (size_t i = 0; i < data_size; ++i) {
-		sprintf(temp_buffer, "%02X", pdata[i]);
-		strcat(description_str, temp_buffer);
-	}
+	shr_bin_to_hex(description_str, size, pdata, data_size, SHR_HEX_UPPER);
 
 	json_object_add_value_string(pobject, msg, description_str);
 	free(description_str);
@@ -587,7 +586,9 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 	// If ASCII string isn't found, see in our internal Map
 	// for 2.5 Spec defined strings
 	if (identifier <= 0x6F) {
-		strcpy(description, statistic_identifiers_map[identifier].description);
+		shr_strscpy(description,
+			    statistic_identifiers_map[identifier].description,
+			    OCP_TELEMETRY_DESCRIPTION_MAX);
 		return 0;
 	}
 
@@ -633,7 +634,7 @@ static int ocp_spec_event_id_string(int identifier, int debug_event_class,
 	if (!str)
 		return -1;
 
-	strcpy(description, str);
+	shr_strscpy(description, str, OCP_TELEMETRY_DESCRIPTION_MAX);
 	return 0;
 }
 
@@ -1337,7 +1338,8 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 	else {
 		char buffer[1024] = {0};
 
-		sprintf(buffer, "%s%s\n%s", STR_LINE, event_fifo_name, STR_LINE);
+		snprintf(buffer, sizeof(buffer), "%s%s\n%s", STR_LINE,
+			 event_fifo_name, STR_LINE);
 		if (fp)
 			fprintf(fp, "%s", buffer);
 		else
@@ -2095,7 +2097,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	}
 
 	if (options->output_file != NULL) {
-		sprintf(file_path, "%s.%s", options->output_file, "txt");
+		snprintf(file_path, sizeof(file_path), "%s.%s",
+			 options->output_file, "txt");
 		fp = fopen(file_path, "w");
 		if (!fp) {
 			nvme_show_error("Failed to open %s file.", file_path);
@@ -2337,7 +2340,8 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 
 	if (options->output_file != NULL) {
 		const char *json_string = json_object_to_json_string(root);
-		sprintf(file_path, "%s.%s", options->output_file, "json");
+		snprintf(file_path, sizeof(file_path), "%s.%s",
+			 options->output_file, "json");
 		FILE *fp = fopen(file_path, "w");
 
 		if (fp) {

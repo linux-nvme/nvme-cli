@@ -11,6 +11,8 @@
 
 #include <libnvme.h>
 
+#include <shared/hex-util.h>
+
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
@@ -32,10 +34,7 @@ static __u8 scao_guid[GUID_LEN] = {
 /* Render a log page GUID as GUID_LEN * 2 lower-case hex digits. */
 static void format_guid(char str[GUID_LEN * 2 + 1], const __u8 guid[GUID_LEN])
 {
-	int i;
-
-	for (i = 0; i < GUID_LEN; i++)
-		sprintf(&str[i * 2], "%02x", guid[i]);
+	shr_bin_to_hex(str, GUID_LEN * 2 + 1, guid, GUID_LEN, 0);
 }
 
 static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,

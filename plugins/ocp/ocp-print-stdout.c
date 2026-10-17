@@ -3,6 +3,7 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
+#include <shared/hex-util.h>
 #include <shared/int-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
@@ -325,10 +326,9 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 	printf("  Log Page Version                   %d\n", log_page_version);
 
 	char guid[(GUID_LEN * 2) + 1];
-	char *ptr = &guid[0];
 
-	for (i = GUID_LEN - 1; i >= 0; i--)
-		ptr += sprintf(ptr, "%02X", log_data->log_page_guid[i]);
+	shr_bin_to_hex(guid, sizeof(guid), log_data->log_page_guid, GUID_LEN,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 
 	printf("  Log Page GUID                      %s\n", guid);
 	printf("\n");

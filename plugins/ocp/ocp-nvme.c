@@ -1079,7 +1079,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		}
 
 		/* Pull the Telemetry log */
-		sprintf(file_path_telemetry, "%s-%s", opt.output_file, tele_log_suffix);
+		snprintf(file_path_telemetry, sizeof(file_path_telemetry),
+			 "%s-%s", opt.output_file, tele_log_suffix);
 		err = get_telemetry_log_page_data(hdl,
 				tele_type,
 				!!host_gen,
@@ -1105,7 +1106,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		nvme_show_result("Missing string-log. Fetching from drive...\n");
 
 		/* Pull String log */
-		sprintf(file_path_string, "%s-%s", opt.output_file, string_suffix);
+		snprintf(file_path_string, sizeof(file_path_string), "%s-%s",
+			 opt.output_file, string_suffix);
 		err = get_c9_log_page_data(hdl, 0, 1, (const char *)file_path_string,
 					   NULL, NULL, NULL,
 					   !no_uuid_flag);
@@ -2047,9 +2049,11 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 		return ret;
 
 	if (cfg.output_file != NULL)
-		sprintf(file_path, "%s-%s", cfg.output_file, string_suffix);
+		snprintf(file_path, sizeof(file_path), "%s-%s", cfg.output_file,
+			 string_suffix);
 	else
-		sprintf(file_path, "%s", DEFAULT_STRING_BIN);
+		snprintf(file_path, sizeof(file_path), "%s",
+			 DEFAULT_STRING_BIN);
 
 	ret = get_c9_log_page(hdl, cfg.output_format, file_path,
 			      !no_uuid_flag);

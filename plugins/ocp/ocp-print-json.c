@@ -3,9 +3,12 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
+#include <shared/hex-util.h>
 #include <shared/int-util.h>
+#include <shared/string-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
+#include <shared/unaligned-util.h>
 #include <shared/uuid-util.h>
 
 #include "cleanup.h"
@@ -198,9 +201,9 @@ static void json_fw_activation_history(const struct fw_activation_history *fw_hi
 
 	char guid[2 * sizeof(fw_history->log_page_guid) + 3] = { 0 };
 
-	sprintf(guid, "0x%016"PRIx64"%016"PRIx64"",
-		le64_to_cpu(fw_history->log_page_guid[1]),
-		le64_to_cpu(fw_history->log_page_guid[0]));
+	snprintf(guid, sizeof(guid), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(fw_history->log_page_guid[1]),
+		 le64_to_cpu(fw_history->log_page_guid[0]));
 	json_object_add_value_string(root, "log page guid", guid);
 
 	json_print_object(root, NULL);
@@ -286,9 +289,9 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	json_object_add_value_uint(root, "Log page version", smart_log_ver);
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
-		le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
-		le64_to_cpu(*(uint64_t *)&log->log_page_guid));
+	snprintf((char *)guid, sizeof(guid), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
+		 le64_to_cpu(*(uint64_t *)&log->log_page_guid));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	switch (smart_log_ver) {
@@ -455,9 +458,9 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 	json_object_add_value_uint(root, "log_page_version", smart_log_ver);
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
-		le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
-		le64_to_cpu(*(uint64_t *)&log->log_page_guid));
+	snprintf((char *)guid, sizeof(guid), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
+		 le64_to_cpu(*(uint64_t *)&log->log_page_guid));
 	json_object_add_value_string(root, "log_page_guid", guid);
 
 	switch (smart_log_ver) {
@@ -604,7 +607,8 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		struct json_object *bucket;
 
 		bucket = json_create_object();
-		sprintf(buf, "Active Bucket Counter: Bucket %d", i);
+		snprintf(buf, sizeof(buf), "Active Bucket Counter: Bucket %d",
+			 i);
 		for (j = 2; j >= 0; j--) {
 			json_object_add_value_uint(bucket, operation[j],
 				le32_to_cpu(log_data->active_bucket_counter[i][j+1]));
@@ -616,7 +620,8 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		struct json_object *bucket;
 
 		bucket = json_create_object();
-		sprintf(buf, "Active Latency Time Stamp: Bucket %d", i);
+		snprintf(buf, sizeof(buf),
+			 "Active Latency Time Stamp: Bucket %d", i);
 		for (j = 2; j >= 0; j--) {
 			if (le64_to_cpu(log_data->active_latency_timestamp[3-i][j]) == -1) {
 				json_object_add_value_string(bucket, operation[j], "NA");
@@ -633,7 +638,8 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		struct json_object *bucket;
 
 		bucket = json_create_object();
-		sprintf(buf, "Active Measured Latency: Bucket %d", i);
+		snprintf(buf, sizeof(buf), "Active Measured Latency: Bucket %d",
+			 i);
 		for (j = 2; j >= 0; j--) {
 			json_object_add_value_uint(bucket, operation[j],
 				le16_to_cpu(log_data->active_measured_latency[3-i][j]));
@@ -648,7 +654,8 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		struct json_object *bucket;
 
 		bucket = json_create_object();
-		sprintf(buf, "Static Bucket Counter: Bucket %d", i);
+		snprintf(buf, sizeof(buf), "Static Bucket Counter: Bucket %d",
+			 i);
 		for (j = 2; j >= 0; j--) {
 			json_object_add_value_uint(bucket, operation[j],
 				le32_to_cpu(log_data->static_bucket_counter[i][j+1]));
@@ -660,7 +667,8 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		struct json_object *bucket;
 
 		bucket = json_create_object();
-		sprintf(buf, "Static Latency Time Stamp: Bucket %d", i);
+		snprintf(buf, sizeof(buf),
+			 "Static Latency Time Stamp: Bucket %d", i);
 		for (j = 2; j >= 0; j--) {
 			if (le64_to_cpu(log_data->static_latency_timestamp[3-i][j]) == -1) {
 				json_object_add_value_string(bucket, operation[j], "NA");
@@ -677,7 +685,8 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		struct json_object *bucket;
 
 		bucket = json_create_object();
-		sprintf(buf, "Static Measured Latency: Bucket %d", i);
+		snprintf(buf, sizeof(buf), "Static Measured Latency: Bucket %d",
+			 i);
 		for (j = 2; j >= 0; j--) {
 			json_object_add_value_uint(bucket, operation[j],
 				le16_to_cpu(log_data->static_measured_latency[3-i][j]));
@@ -689,16 +698,13 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		le16_to_cpu(log_data->static_latency_stamp_units));
 
 	if (log_page_version >= 0x4) {
-		strcpy(buf, "0x");
 		for (i = ARRAY_SIZE(log_data->latency_monitor_debug_log_size) - 1;
 			i > 0 && (log_data->latency_monitor_debug_log_size[i] == 0); i--)
 			;
-		while (i >= 0) {
-			char hex_string[3];
-
-			sprintf(hex_string, "%02x", log_data->latency_monitor_debug_log_size[i--]);
-			strcat(buf, hex_string);
-		}
+		shr_strscpy(buf, "0x", sizeof(buf));
+		shr_bin_to_hex(buf + 2, sizeof(buf) - 2,
+			       log_data->latency_monitor_debug_log_size, i + 1,
+			       SHR_HEX_REVERSE);
 		json_object_add_value_string(root, "Debug Telemetry Log Size", buf);
 	}
 
@@ -721,10 +727,9 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 	json_object_add_value_uint(root, "Log Page Version", log_page_version);
 
 	char guid[(GUID_LEN * 2) + 1];
-	char *ptr = &guid[0];
 
-	for (i = GUID_LEN - 1; i >= 0; i--)
-		ptr += sprintf(ptr, "%02X", log_data->log_page_guid[i]);
+	shr_bin_to_hex(guid, sizeof(guid), log_data->log_page_guid, GUID_LEN,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 
 	json_object_add_value_string(root, "Log Page GUID", guid);
 
@@ -740,7 +745,6 @@ static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported
 	struct json_object *root;
 	char unsup_req_list_str[40];
 	char guid_buf[(GUID_LEN * 2) + 1];
-	char *guid = guid_buf;
 
 	root = json_create_object();
 
@@ -762,9 +766,8 @@ static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported
 	json_object_add_value_int(root, "Log Page Version",
 				  le16_to_cpu(log_data->log_page_version));
 
-	memset((void *)guid, 0, sizeof(guid_buf));
-	for (j = GUID_LEN - 1; j >= 0; j--)
-		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
+	shr_bin_to_hex(guid_buf, sizeof(guid_buf), log_data->log_page_guid,
+		       GUID_LEN, SHR_HEX_REVERSE);
 	json_object_add_value_string(root, "Log page GUID", guid_buf);
 
 	json_print_object(root, NULL);
@@ -804,9 +807,9 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 				  le16_to_cpu(log_data->log_page_version));
 
 	memset((void *)guid, 0, 64);
-	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	snprintf((char *)guid, sizeof(guid), "0x%016"PRIx64"%016"PRIx64"",
+		 shr_get_unaligned_le64(&log_data->log_page_guid[8]),
+		 shr_get_unaligned_le64(&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	json_print_object(root, NULL);
@@ -849,14 +852,29 @@ static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	json_object_add_value_int(root, "Log Page Version", log_page_version);
 
 	memset((void *)guid, 0, 64);
-	sprintf((char *)guid, "0x%016"PRIx64"%016"PRIx64"",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	snprintf((char *)guid, sizeof(guid), "0x%016"PRIx64"%016"PRIx64"",
+		 shr_get_unaligned_le64(&log_data->log_page_guid[8]),
+		 shr_get_unaligned_le64(&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
+}
+
+/*
+ * Append the @n bytes at @data to the string in @buf, each as a hex or
+ * decimal number without padding, as the reserved fields were printed.
+ */
+static void concat_bytes(char *buf, size_t size, const __u8 *data, int n,
+			 bool hex)
+{
+	size_t len = strnlen(buf, size);
+	int i;
+
+	for (i = 0; i < n; i++)
+		shr_snprintf_append(buf, size, &len, hex ? "%x" : "%d",
+				    data[i]);
 }
 
 /* Array lengths need to be doubled + 2 to handle
@@ -872,11 +890,8 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 {
 	struct json_object *root = json_create_object();
 	char res_arr[RESERVED_ARRAY_LEN];
-	char *res = res_arr;
 	char guid_buf[GUID_BUFFER_LEN];
-	char *guid = guid_buf;
 	char fifo_arr[FIFO_ARRAY_LEN];
-	char *fifo = fifo_arr;
 	char buf[128];
 	__u64 sits = le64_to_cpu(log_data->sits);
 	__u64 sitsz = le64_to_cpu(log_data->sitsz);
@@ -893,27 +908,22 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	struct json_object *errors = json_create_array();
 	__u64 entries = 0, i;
 	__u8 *table;
-	int j;
 
 	json_object_add_value_int(root, "Log Page Version",
 				  le16_to_cpu(log_data->log_page_version));
 
-	memset((__u8 *)res, 0, RESERVED_ARRAY_LEN);
-	for (j = 0; j < 15; j++)
-		res += sprintf(res, "%x", log_data->reserved1[j]);
+	res_arr[0] = '\0';
+	concat_bytes(res_arr, sizeof(res_arr), log_data->reserved1, 15, true);
 	json_object_add_value_string(root, "Reserved 1", res_arr);
 
-	memset((void *)guid, 0, GUID_BUFFER_LEN);
-	for (j = GUID_LEN - 1; j >= 0; j--)
-		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
+	shr_bin_to_hex(guid_buf, sizeof(guid_buf), log_data->log_page_guid,
+		       GUID_LEN, SHR_HEX_REVERSE);
 	json_object_add_value_string(root, "Log page GUID", guid_buf);
 
 	json_object_add_value_int(root, "Telemetry String Log Size", le64_to_cpu(log_data->sls));
 
-	res = res_arr;
-	memset((__u8 *)res, 0, RESERVED_ARRAY_LEN);
-	for (j = 0; j < 24; j++)
-		res += sprintf(res, "%x", log_data->reserved2[j]);
+	res_arr[0] = '\0';
+	concat_bytes(res_arr, sizeof(res_arr), log_data->reserved2, 24, true);
 	json_object_add_value_string(root, "Reserved 2", res_arr);
 
 	json_object_add_value_int(root, "Statistics Identifier String Table Start",
@@ -931,105 +941,72 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	json_object_add_value_int(root, "ASCII Table Size",
 				  le64_to_cpu(log_data->asctsz));
 
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo1[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo1, sizeof(log_data->fifo1));
 	json_object_add_value_string(root, "FIFO 1 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo2[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo2, sizeof(log_data->fifo2));
 	json_object_add_value_string(root, "FIFO 2 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo3[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo3, sizeof(log_data->fifo3));
 	json_object_add_value_string(root, "FIFO 3 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo4[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo4, sizeof(log_data->fifo4));
 	json_object_add_value_string(root, "FIFO 4 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo5[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo5, sizeof(log_data->fifo5));
 	json_object_add_value_string(root, "FIFO 5 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo6[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo6, sizeof(log_data->fifo6));
 	json_object_add_value_string(root, "FIFO 6 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo7[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo7, sizeof(log_data->fifo7));
 	json_object_add_value_string(root, "FIFO 7 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo8[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo8, sizeof(log_data->fifo8));
 	json_object_add_value_string(root, "FIFO 8 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo9[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo9, sizeof(log_data->fifo9));
 	json_object_add_value_string(root, "FIFO 9 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo10[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo10, sizeof(log_data->fifo10));
 	json_object_add_value_string(root, "FIFO 10 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo11[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo11, sizeof(log_data->fifo11));
 	json_object_add_value_string(root, "FIFO 11 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo12[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo12, sizeof(log_data->fifo12));
 	json_object_add_value_string(root, "FIFO 12 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo13[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo13, sizeof(log_data->fifo13));
 	json_object_add_value_string(root, "FIFO 13 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo14[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo14, sizeof(log_data->fifo14));
 	json_object_add_value_string(root, "FIFO 14 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo15[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo15, sizeof(log_data->fifo15));
 	json_object_add_value_string(root, "FIFO 15 ASCII String", fifo_arr);
 
-	fifo = fifo_arr;
-	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
-	for (j = 0; j < 16; j++)
-		fifo += sprintf(fifo, "%c", log_data->fifo16[j]);
+	memset(fifo_arr, 0, sizeof(fifo_arr));
+	memcpy(fifo_arr, log_data->fifo16, sizeof(log_data->fifo16));
 	json_object_add_value_string(root, "FIFO 16 ASCII String", fifo_arr);
 
-	res = res_arr;
-	memset((__u8 *)res, 0, RESERVED_ARRAY_LEN);
-	for (j = 0; j < 48; j++)
-		res += sprintf(res, "%x", log_data->reserved3[j]);
+	res_arr[0] = '\0';
+	concat_bytes(res_arr, sizeof(res_arr), log_data->reserved3, 48, true);
 	json_object_add_value_string(root, "Reserved 3", res_arr);
 
 	table = ocp_string_table(log_data_buf, total_log_page_size, sits, sitsz,
@@ -1052,7 +1029,9 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 						   le64_to_cpu(stat_entry.ascii_id_ofst));
 			json_object_add_value_uint(entry, "Reserved2",
 						   le32_to_cpu(stat_entry.reserved2));
-			sprintf(buf, "Statistics Identifier String Table %"PRIu64, (uint64_t)i);
+			snprintf(buf, sizeof(buf),
+				 "Statistics Identifier String Table %"PRIu64,
+				 (uint64_t)i);
 			json_object_add_value_object(stat_table, buf, entry);
 		}
 
@@ -1081,7 +1060,9 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 						  le64_to_cpu(eve_entry.ascii_id_ofst));
 			json_object_add_value_int(entry, "Reserved",
 						  le32_to_cpu(eve_entry.reserved2));
-			sprintf(buf, "Event Identifier String Table Entry %"PRIu64, (uint64_t)i);
+			snprintf(buf, sizeof(buf),
+				 "Event Identifier String Table Entry %"PRIu64,
+				 (uint64_t)i);
 			json_object_add_value_object(eve_table, buf, entry);
 		}
 		json_object_add_value_object(root, "Event Identifier String Table Entry",
@@ -1110,8 +1091,9 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 						  le64_to_cpu(vu_eve_entry.ascii_id_ofst));
 			json_object_add_value_int(entry, "Reserved",
 						  le32_to_cpu(vu_eve_entry.reserved));
-			sprintf(buf, "VU Event Identifier String Table Entry %"PRIu64,
-				(uint64_t)i);
+			snprintf(buf, sizeof(buf),
+				 "VU Event Identifier String Table Entry %llu",
+				 (unsigned long long)i);
 			json_object_add_value_object(vu_eve_table, buf, entry);
 		}
 		json_object_add_value_object(root, "VU Event Identifier String Table Entry",
@@ -1139,25 +1121,21 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 
 static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
 {
-	int j;
 	struct json_object *root;
 	char guid_buf[(GUID_LEN * 2) + 1];
-	char *guid = guid_buf;
 	/*
 	 * rsvd38 holds 456 __u8 values printed as decimal (up to 3 digits
 	 * each), preceded on log_page_version == 1 by two more __u8 values
 	 * (up to 3 digits each) from no_of_ns_prov_locking_obj_ext, plus NUL.
 	 */
 	char res_arr[456 * 3 + 2 * 3 + 1];
-	char *res = res_arr;
 	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 
 	root = json_create_object();
 
 	json_object_add_value_int(root, "State", log_data->state);
-	memset((__u8 *)res, 0, sizeof(res_arr));
-	for (j = 0; j < 3; j++)
-		res += sprintf(res, "%d", log_data->rsvd1[j]);
+	res_arr[0] = '\0';
+	concat_bytes(res_arr, sizeof(res_arr), log_data->rsvd1, 3, false);
 	json_object_add_value_string(root, "Reserved1", res_arr);
 	json_object_add_value_int(root, "Locking SP Activation Count",
 				  log_data->locking_sp_act_count);
@@ -1191,26 +1169,24 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 				  le32_to_cpu(log_data->pro_rlc));
 	json_object_add_value_int(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
 
-	res = res_arr;
-	memset((__u8 *)res, 0, sizeof(res_arr));
+	res_arr[0] = '\0';
 	if (log_page_version == 1) {
-		res += sprintf(res, "%d%d", *(__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
-			*((__u8 *)&log_data->no_of_ns_prov_locking_obj_ext + 1));
+		concat_bytes(res_arr, sizeof(res_arr),
+			     (__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
+			     2, false);
 	} else {
 		json_object_add_value_int(root,
 			"Number of Namespace Provisioned Locking Objects Extended",
 			log_data->no_of_ns_prov_locking_obj_ext);
 	}
 
-	for (j = 0; j < 456; j++)
-		res += sprintf(res, "%d", log_data->rsvd38[j]);
+	concat_bytes(res_arr, sizeof(res_arr), log_data->rsvd38, 456, false);
 	json_object_add_value_string(root, "Reserved3", res_arr);
 
 	json_object_add_value_int(root, "Log Page Version", log_page_version);
 
-	memset((void *)guid, 0, sizeof(guid_buf));
-	for (j = GUID_LEN - 1; j >= 0; j--)
-		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
+	shr_bin_to_hex(guid_buf, sizeof(guid_buf), log_data->log_page_guid,
+		       GUID_LEN, SHR_HEX_REVERSE);
 	json_object_add_value_string(root, "Log page GUID", guid_buf);
 
 	json_print_object(root, NULL);
