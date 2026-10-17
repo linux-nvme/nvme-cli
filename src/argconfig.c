@@ -310,6 +310,31 @@ bool argconfig_in_range(const struct argconfig_commandline_options *s,
 	return !s->max || (u >= s->min && u <= s->max);
 }
 
+static struct argconfig_opt_val *
+argconfig_match_val(struct argconfig_opt_val *v, const char *str);
+
+/* The bits the names in the comma-separated list @arg stand for */
+static int argconfig_parse_enum_list(struct argconfig_commandline_options *s,
+				     const char *arg, uint32_t *bits)
+{
+	__cleanup_free char *list = strdup(arg);
+	struct argconfig_opt_val *v;
+	char *p = list, *name;
+
+	if (!list)
+		return -ENOMEM;
+
+	*bits = 0;
+	while ((name = shr_strsep(&p, ",")) != NULL) {
+		v = s->opt_val ? argconfig_match_val(s->opt_val, name) : NULL;
+		if (!v)
+			return -EINVAL;
+		*bits |= (uint32_t)v->val.int_val;
+	}
+
+	return 0;
+}
+
 /* An unsigned number up to @max, in the range of @s */
 static int argconfig_parse_u64(struct argconfig_commandline_options *s,
 			       const char *arg, uint64_t max, uint64_t *u)
@@ -369,6 +394,14 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		/* only the names, which argconfig_parse_val() looked up */
 		ret = -EINVAL;
 		break;
+	case CFG_ENUM_LIST: {
+		uint32_t bits;
+
+		ret = argconfig_parse_enum_list(s, arg, &bits);
+		if (!ret)
+			*(uint32_t *)value |= bits;
+		break;
+	}
 	case CFG_LONG:
 		ret = argconfig_parse_u64(s, arg, UINT64_MAX, &u);
 		if (!ret)
@@ -439,6 +472,7 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 	case CFG_DIR:
 		*(char **)val = opt_val->string;
 		break;
+	case CFG_ENUM_LIST:
 	case CFG_GROUP_SEPARATOR:
 	case CFG_INCLUDE:
 		break;
@@ -492,7 +526,9 @@ bool argconfig_set_value_name(struct argconfig_commandline_options *s,
 static int argconfig_parse_val(struct argconfig_commandline_options *s,
 			       char *arg)
 {
-	if (arg && argconfig_set_value_name(s, arg))
+	/* the names of a list are looked up one by one */
+	if (arg && s->config_type != CFG_ENUM_LIST &&
+	    argconfig_set_value_name(s, arg))
 		return 0;
 
 	return argconfig_parse_type(s, arg);
@@ -668,6 +704,7 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 				 char c, const char *arg)
 {
 	__cleanup_free char *e = arg ? shr_escape(arg) : NULL;
+	bool list = s->config_type == CFG_ENUM_LIST;
 	const struct argconfig_opt_val *v;
 	int n = 0;
 
@@ -678,7 +715,9 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 	else
 		fprintf(stderr, "--%s", s->option);
 	fprintf(stderr, ": expected ");
-	if (s->config_type != CFG_ENUM)
+	if (list)
+		fprintf(stderr, "a comma-separated list of ");
+	else if (s->config_type != CFG_ENUM)
 		fprintf(stderr, "%s%s", argconfig_expected(s),
 			s->opt_val ? " or " : "");
 
@@ -686,10 +725,11 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 	for (v = s->opt_val; v && v->str; v++)
 		n++;
 	if (n > 8)
-		fprintf(stderr, "one of the names in the help");
+		fprintf(stderr, "%sthe names in the help",
+			list ? "" : "one of ");
 	for (v = s->opt_val; n <= 8 && v && v->str; v++)
-		fprintf(stderr, "%s%s", v == s->opt_val ? "one of: " : ", ",
-			v->str);
+		fprintf(stderr, "%s%s", v != s->opt_val ? ", " :
+			list ? "" : "one of: ", v->str);
 	fprintf(stderr, "\n");
 
 	return ARGCONFIG_USAGE;

@@ -777,6 +777,61 @@ static void special_values_test(void)
 }
 
 /*
+ * A list of names is ORed into a bitmask, also over several uses of the
+ * option. Every name of the list has to be known, an empty one too.
+ */
+static void enum_list_test(void)
+{
+	struct argconfig_opt_val names[] = {
+		VAL_ENUM("host0", 1 << 0),
+		VAL_ENUM("host1", 1 << 1),
+		VAL_ENUM("ctlr", 1 << 2),
+		VAL_ENUM("controller", 1 << 2),
+		VAL_END()
+	};
+	static const struct {
+		const char *arg1, *arg2;
+		int ret;
+		__u32 val;
+	} tests[] = {
+		{ "--types=host0", NULL, 0, 0x1 },
+		{ "--types=host1,ctlr", NULL, 0, 0x6 },
+		{ "--types=HOST0,co", NULL, 0, 0x5 },
+		{ "-thost0", "-tcontroller", 0, 0x5 },
+		{ "--types=ctlr,controller", NULL, 0, 0x4 },
+		{ "--types=host", NULL, -EINVAL, 0 },
+		{ "--types=host0,", NULL, -EINVAL, 0 },
+		{ "--types=,host0", NULL, -EINVAL, 0 },
+		{ "--types=host0,,ctlr", NULL, -EINVAL, 0 },
+		{ "--types=", NULL, -EINVAL, 0 },
+		{ "--types=1", NULL, -EINVAL, 0 },
+		{ "--types=host0,bogus", NULL, -EINVAL, 0 },
+	};
+	unsigned int i;
+	__u32 types;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_ENUM_LIST("types", 't', &types, "types", names),
+		OPT_END()
+	};
+
+	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+		char *argv[4] = { "prog", (char *)tests[i].arg1,
+				  (char *)tests[i].arg2, NULL };
+
+		types = 0;
+		ret = argconfig_parse(tests[i].arg2 ? 3 : 2, argv, "test",
+				      opts);
+		if (ret != tests[i].ret || (!ret && types != tests[i].val)) {
+			printf("ERROR: enum list: {%s} gave %d/%u\n",
+			       tests[i].arg1, ret, types);
+			test_rc = 1;
+		}
+	}
+}
+
+/*
  * A number outside the range of an option is rejected, a named value is
  * taken as it is.
  */
@@ -1220,6 +1275,7 @@ int main(void)
 	given_test();
 	old_name_test();
 	enum_test();
+	enum_list_test();
 	include_test();
 	bind_test();
 	double_locale_test();

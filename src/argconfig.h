@@ -27,6 +27,7 @@ enum argconfig_types {
 	CFG_POSITIVE,
 	CFG_INCREMENT,
 	CFG_ENUM,
+	CFG_ENUM_LIST,
 	/* strings which name a file or a directory */
 	CFG_FILE,
 	CFG_DIR,
@@ -92,6 +93,15 @@ enum argconfig_types {
 /* One of the names of the value table @n, VAL_ENUM() entries */
 #define OPT_ENUM(l, s, v, d, n, ...) \
 	{l, s, "NAME", CFG_ENUM, OPT_CHECK(v, int *), \
+	 ARGCONFIG_ARG_REQUIRED, d, false, n, __VA_ARGS__}
+
+/*
+ * Names of the value table @n separated by commas. The VAL_ENUM() entries
+ * are bits, which are ORed into the variable, also when the option is
+ * given more than once.
+ */
+#define OPT_ENUM_LIST(l, s, v, d, n, ...) \
+	{l, s, "NAME,...", CFG_ENUM_LIST, OPT_CHECK(v, uint32_t *), \
 	 ARGCONFIG_ARG_REQUIRED, d, false, n, __VA_ARGS__}
 
 #define OPT_LONG(l, s, v, d, ...) \

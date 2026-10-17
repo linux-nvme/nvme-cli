@@ -115,8 +115,8 @@
         },
         "type": {
           "type": "string",
-          "description": "The kind of value: flag (no value), count (no value, may be repeated), int, u8, u16, u32 and u64 (numbers of that size; the unsigned ones take no negative number), size (a number with an optional binary suffix such as Ki), double, string, enum (one of \"values\"), file or directory (a path).",
-          "enum": ["flag", "count", "int", "u8", "u16", "u32", "u64", "size", "double", "string", "enum", "file", "directory"]
+          "description": "The kind of value: flag (no value), count (no value, may be repeated), int, u8, u16, u32 and u64 (numbers of that size; the unsigned ones take no negative number), size (a number with an optional binary suffix such as Ki), double, string, enum (one of \"values\"), enum-list (\"values\" separated by commas), file or directory (a path).",
+          "enum": ["flag", "count", "int", "u8", "u16", "u32", "u64", "size", "double", "string", "enum", "enum-list", "file", "directory"]
         },
         "range": {
           "type": "object",
