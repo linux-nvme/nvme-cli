@@ -9,7 +9,8 @@
 /*
  * A sandboxed option parser hands back what it wrote, and the caller
  * keeps it only if a parser could have written it. Feed
- * argconfig_valid_result() states a parser can and cannot produce.
+ * argconfig_valid_result() states a parser of the command line or of a
+ * text can and cannot produce.
  */
 #include "../../../src/argconfig.c"
 
@@ -56,6 +57,7 @@ static struct argconfig_commandline_options opts[] = {
 };
 
 static char *argv[] = { "test", "--str=value", "dev", NULL };
+static const char text[] = "str=value\nbyte=3\n";
 static char *operands_buf[3];
 static struct argconfig_parser p = {
 	.argc = 3,
@@ -183,6 +185,20 @@ int main(void)
 	p.nr_operands = 1;
 	operands_buf[0] = (char *)foreign;
 	check(!argconfig_valid_result(&job), "foreign operand");
+
+	/* A parser of a text sets options without a command line */
+	job.p = NULL;
+	job.buf = (char *)text;
+	job.size = sizeof(text);
+	reset();
+	str = (char *)text + 4;
+	byte = 3;
+	check(argconfig_valid_result(&job), "values of a text");
+	str = argv[1];
+	check(!argconfig_valid_result(&job), "string outside the text");
+	reset();
+	byte = 9;
+	check(!argconfig_valid_result(&job), "number of a text out of range");
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

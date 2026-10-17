@@ -205,10 +205,28 @@ static int global_config_event(enum shr_ini_event event, const char *section,
 	return 0;
 }
 
-/* Parse @text in place and keep it */
+struct global_config_job {
+	struct global_config_ctx gc;
+	char *text;
+};
+
+static int global_config_parse(void *arg)
+{
+	struct global_config_job *job = arg;
+
+	return shr_ini_parse_inplace(job->text, global_config_event, &job->gc);
+}
+
+/*
+ * Parse @text in place and keep it. The parser runs in the sandbox, if
+ * enabled: it writes the global options and @text.
+ */
 static int load_text(char *text, const char *name)
 {
-	struct global_config_ctx gc = { .path = name };
+	struct global_config_job job = {
+		.gc = { .path = name },
+		.text = text,
+	};
 	struct config_file *file;
 
 	file = calloc(1, sizeof(*file));
@@ -220,7 +238,9 @@ static int load_text(char *text, const char *name)
 	file->next = config_files;
 	config_files = file;
 
-	return shr_ini_parse_inplace(text, global_config_event, &gc);
+	return argconfig_sandbox_run(argconfig_get_global_options(),
+				     global_config_parse, &job, text,
+				     strlen(text) + 1);
 }
 
 int nvme_load_global_config_from(const char *path)

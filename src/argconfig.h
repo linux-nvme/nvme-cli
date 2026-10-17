@@ -292,6 +292,9 @@ typedef int (*argconfig_parse_hook_fn)(int argc, char *argv[],
 		struct argconfig_commandline_options *root);
 void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
 
+int argconfig_sandbox_run(struct argconfig_commandline_options *options,
+			  int (*fn)(void *arg), void *arg, char *buf,
+			  size_t size);
 bool argconfig_given(struct argconfig_commandline_options *options,
 		     const void *value);
 bool argconfig_in_range(const struct argconfig_commandline_options *s,

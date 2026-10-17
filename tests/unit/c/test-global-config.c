@@ -22,6 +22,7 @@
 #include <ccan/array_size/array_size.h>
 #include <shared/assert-util.h>
 #include <shared/fs-util.h>
+#include <shared/sandbox-util.h>
 
 #include "../src/argconfig.h"
 #include "../src/args.h"
@@ -383,7 +384,7 @@ static bool test_command_line_wins(void)
 	return pass;
 }
 
-int main(void)
+static bool run_tests(void)
 {
 	bool pass = true;
 
@@ -399,6 +400,26 @@ int main(void)
 	pass &= test_keys_outside_global_ignored();
 	pass &= test_missing_file_is_noop();
 	pass &= test_command_line_wins();
+
+	return pass;
+}
+
+int main(void)
+{
+	struct nvme_args initial = nvme_args;
+	bool pass = true;
+
+	printf("in process:\n");
+	shr_sandbox_enable(false);
+	pass &= run_tests();
+
+	/* The same results when the file is parsed in the sandbox */
+	printf("sandboxed:\n");
+	nvme_global_config_free();
+	nvme_args = initial;
+	shr_sandbox_enable(true);
+	pass &= run_tests();
+	shr_sandbox_enable(false);
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
