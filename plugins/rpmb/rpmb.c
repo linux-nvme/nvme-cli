@@ -95,9 +95,9 @@ static void write_file(unsigned char *data, size_t len, const char *dir,
 	__cleanup_file FILE *fp = NULL;
 
 	if (dir)
-		sprintf(temp_folder, "%s/%s", dir, file);
+		snprintf(temp_folder, sizeof(temp_folder), "%s/%s", dir, file);
 	else
-		sprintf(temp_folder, "./%s", file);
+		snprintf(temp_folder, sizeof(temp_folder), "./%s", file);
 
 	fp = fopen(temp_folder, "ab+");
 	if (fp) {
@@ -298,7 +298,8 @@ rpmb_read_request(struct libnvme_transport_handle *hdl, struct rpmb_data_frame_t
 	unsigned char msg[1024] = { 0 };
 	int error;
 
-	sprintf((char *)msg, "RPMB request 0x%04x to target 0x%x", req->type, req->target);
+	snprintf((char *)msg, sizeof(msg), "RPMB request 0x%04x to target 0x%x",
+		 req->type, req->target);
 
 	error = send_rpmb_req(hdl, req->target, req_size, req);
 	if (error != 0) {
