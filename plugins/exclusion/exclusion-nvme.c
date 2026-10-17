@@ -21,6 +21,8 @@
 #include <shared/array-util.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/parse-util.h>
+#include <shared/string-util.h>
 
 #include "global-ctx.h"
 #include "nvme-print.h"
@@ -276,7 +278,8 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct entry_collection ec = { 0 };
 	char answer[32];
-	size_t i, choice;
+	size_t i;
+	uint64_t choice;
 	int ret;
 
 	struct config {
@@ -324,8 +327,7 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 	fflush(stdout);
 
 	if (!fgets(answer, sizeof(answer), stdin) ||
-	    sscanf(answer, "%zu", &choice) != 1 ||
-	    choice < 1 || choice > ec.len) {
+	    shr_parse_u64(shr_trim(answer), ec.len, &choice) || choice < 1) {
 		printf("cancelled\n");
 		ret = 0;
 		goto out;
