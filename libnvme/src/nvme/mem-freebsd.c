@@ -30,8 +30,13 @@
 
 __shr_public void *libnvme_alloc(size_t len)
 {
-	size_t _len = round_up(len, 0x1000);
+	size_t _len;
 	void *p;
+
+	/* a zero size is implementation-defined, get a page */
+	if (!len)
+		len = 1;
+	_len = round_up(len, 0x1000);
 
 	if (posix_memalign((void *)&p, getpagesize(), _len))
 		return NULL;
