@@ -164,24 +164,6 @@ static void show_value_names(FILE *out, const struct argconfig_opt_val *v)
 	shr_print_word_wrapped(names, 44, 44, out);
 }
 
-/* Append to @buf of @size, whose @len stays below @size when it is full */
-static void buf_add(char *buf, size_t size, size_t *len, const char *fmt, ...)
-{
-	va_list ap;
-	int n;
-
-	if (*len >= size - 1)
-		return;
-
-	va_start(ap, fmt);
-	n = vsnprintf(buf + *len, size - *len, fmt, ap);
-	va_end(ap);
-
-	if (n < 0)
-		return;
-	*len = *len + n < size ? *len + n : size - 1;
-}
-
 static void show_option(FILE *out,
 			const struct argconfig_commandline_options *option)
 {
@@ -191,25 +173,30 @@ static void show_option(FILE *out,
 	size_t len = 0;
 
 	buffer[0] = '\0';
-	buf_add(buffer, sizeof(buffer), &len, "  [ ");
+	shr_snprintf_append(buffer, sizeof(buffer), &len, "  [ ");
 	if (option->option) {
-		buf_add(buffer, sizeof(buffer), &len, " --%s", option->option);
+		shr_snprintf_append(buffer, sizeof(buffer), &len, " --%s",
+				    option->option);
 		if (arg == ARGCONFIG_ARG_OPTIONAL)
-			buf_add(buffer, sizeof(buffer), &len, "[=<%s>]", meta);
+			shr_snprintf_append(buffer, sizeof(buffer), &len,
+					    "[=<%s>]", meta);
 		if (arg == ARGCONFIG_ARG_REQUIRED)
-			buf_add(buffer, sizeof(buffer), &len, "=<%s>", meta);
+			shr_snprintf_append(buffer, sizeof(buffer), &len,
+					    "=<%s>", meta);
 		if (option->short_option)
-			buf_add(buffer, sizeof(buffer), &len, ",");
+			shr_snprintf_append(buffer, sizeof(buffer), &len, ",");
 	}
 	if (option->short_option) {
-		buf_add(buffer, sizeof(buffer), &len, " -%c",
-			option->short_option);
+		shr_snprintf_append(buffer, sizeof(buffer), &len, " -%c",
+				    option->short_option);
 		if (arg == ARGCONFIG_ARG_OPTIONAL)
-			buf_add(buffer, sizeof(buffer), &len, " [<%s>]", meta);
+			shr_snprintf_append(buffer, sizeof(buffer), &len,
+					    " [<%s>]", meta);
 		if (arg == ARGCONFIG_ARG_REQUIRED)
-			buf_add(buffer, sizeof(buffer), &len, " <%s>", meta);
+			shr_snprintf_append(buffer, sizeof(buffer), &len,
+					    " <%s>", meta);
 	}
-	buf_add(buffer, sizeof(buffer), &len, " ] ");
+	shr_snprintf_append(buffer, sizeof(buffer), &len, " ] ");
 
 	fprintf(out, "%s", buffer);
 	if (option->help) {
