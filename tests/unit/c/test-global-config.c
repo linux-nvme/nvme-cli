@@ -19,9 +19,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <ccan/array_size/array_size.h>
 #include <shared/assert-util.h>
 #include <shared/fs-util.h>
+#include <shared/sandbox-util.h>
 
+#include "../src/argconfig.h"
 #include "../src/args.h"
 #include "../src/global-config.h"
 
@@ -308,7 +311,80 @@ static bool test_missing_file_is_noop(void)
 	return pass;
 }
 
-int main(void)
+/* The global options in front of the command win over the file */
+static bool test_command_line_wins(void)
+{
+	static const char * const args[] = {
+		"nvme", "-o", "binary", "-v", "--timeout=7", "list",
+	};
+	char *argv[ARRAY_SIZE(args) + 1] = {};
+	bool pass = true;
+	int argind;
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(args); i++)
+		argv[i] = (char *)args[i];
+
+	printf("test_command_line_wins:\n");
+
+	nvme_args_register();
+	nvme_args.verbose = 0;
+	nvme_args.timeout = 42;
+	if (argconfig_parse_global(6, argv, NULL, &argind) || argind != 5) {
+		printf(" - global options parsed [FAIL]\n");
+		return false;
+	}
+
+	nvme_load_global_config_buf("[Global]\n"
+				    "output-format = json\n"
+				    "verbose = 2\n"
+				    "timeout = not-a-number\n"
+				    "timeout = 9\n"
+				    "quiet = true\n", "buf");
+	if (strcmp(nvme_args.output_format, "binary")) {
+		printf(" - the given string stays [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - the given string stays [PASS]\n");
+	}
+	if (nvme_args.timeout != 7) {
+		printf(" - the given number stays [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - the given number stays [PASS]\n");
+	}
+	if (nvme_args.verbose != 3) {
+		printf(" - the count adds up [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - the count adds up [PASS]\n");
+	}
+	if (!nvme_args.quiet) {
+		printf(" - an option not given is set [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - an option not given is set [PASS]\n");
+	}
+
+	/* registering the options again forgets what was given */
+	nvme_args_register();
+	nvme_load_global_config_buf("[Global]\ntimeout = 9\n", "buf");
+	if (nvme_args.timeout != 9) {
+		printf(" - a new register starts over [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - a new register starts over [PASS]\n");
+	}
+
+	nvme_global_config_free();
+	nvme_args.output_format = "normal";
+	nvme_args.verbose = 0;
+	nvme_args.quiet = false;
+
+	return pass;
+}
+
+static bool run_tests(void)
 {
 	bool pass = true;
 
@@ -323,6 +399,27 @@ int main(void)
 	pass &= test_hidden_and_out_of_range();
 	pass &= test_keys_outside_global_ignored();
 	pass &= test_missing_file_is_noop();
+	pass &= test_command_line_wins();
+
+	return pass;
+}
+
+int main(void)
+{
+	struct nvme_args initial = nvme_args;
+	bool pass = true;
+
+	printf("in process:\n");
+	shr_sandbox_enable(false);
+	pass &= run_tests();
+
+	/* The same results when the file is parsed in the sandbox */
+	printf("sandboxed:\n");
+	nvme_global_config_free();
+	nvme_args = initial;
+	shr_sandbox_enable(true);
+	pass &= run_tests();
+	shr_sandbox_enable(false);
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

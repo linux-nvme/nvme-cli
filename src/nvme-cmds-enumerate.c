@@ -246,6 +246,7 @@ static struct command list_cmd = {
 	.fn = list,
 	.output_formats = NORMAL | JSON,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command list_subsys_cmd = {
@@ -254,6 +255,7 @@ static struct command list_subsys_cmd = {
 	.fn = list_subsys,
 	.output_formats = NORMAL | JSON,
 	.device = COMMAND_DEVICE_OPTIONAL,
+	.needs_root = true,
 };
 
 #ifdef CONFIG_TOP
@@ -264,6 +266,7 @@ static struct command top_cmd = {
 	.fn = top,
 	.output_formats = OUTPUT_FORMATS_NORMAL,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 #endif /* CONFIG_TOP */
@@ -274,6 +277,7 @@ static struct command show_topology_cmd_cmd = {
 	.fn = show_topology_cmd,
 	.output_formats = TOPOLOGY_OUTPUT_FORMATS,
 	.device = COMMAND_DEVICE_OPTIONAL,
+	.needs_root = true,
 };
 
 static struct command *commands[] = {

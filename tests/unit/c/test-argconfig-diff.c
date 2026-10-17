@@ -26,6 +26,7 @@
 
 #include <ccan/array_size/array_size.h>
 #include <shared/fs-util.h>
+#include <shared/sandbox-util.h>
 
 #include "../../../src/argconfig.h"
 #include "argconfig-getopt-ref.h"
@@ -447,6 +448,12 @@ int main(void)
 	ok &= three_words(true, &nr_three);
 	ok &= random_cases(false, &nr_random);
 	ok &= random_cases(true, &nr_random);
+
+	/* The sandboxed parser too, a fork per parse is too slow for more */
+	shr_sandbox_enable(true);
+	ok &= two_words(false);
+	ok &= two_words(true);
+	shr_sandbox_enable(false);
 
 	fprintf(report, "%lu cases compared, %lu skipped\n", nr_cases,
 		nr_skipped);

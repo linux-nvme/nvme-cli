@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
+#include <shared/sandbox-util.h>
 
 #include "../src/args.h"
 #include "../src/plugin.h"
@@ -459,17 +460,72 @@ static void test_extension_unknown_subcommand(void)
 	      "extension_unknown_subcommand: stderr names the extension");
 }
 
-int main(void)
+/*
+ * plugin_lookup() must find the command handle_plugin() runs for the
+ * same arguments, without running anything.
+ */
+static void test_lookup(void)
 {
-	test_rc = 0;
+	static const char * const cases[][6] = {
+		{ "bar" },
+		{ "f" },
+		{ "sta" },
+		{ "list" },
+		{ "list-a" },
+		{ "zzz" },
+		{ "ext", "sub" },
+		{ "ext-sub" },
+		{ "ext--sub" },
+		{ "ext", "zzz" },
+		{ "ext", "-v", "sub" },
+		{ "-v", "ext", "-o", "json", "sub" },
+		{ "-o", "json", "bar" },
+		{ "--output=json", "bar" },
+		{ "--", "bar" },
+		{ "--bogus", "bar" },
+		{ "version" },
+		{ "-V", "bar" },
+		{ "help" },
+	};
+	struct captured_output cap;
+	struct plugin_call call;
+	char *argv[8], *argv2[8];
+	const char *found;
+	char desc[128];
+	size_t i;
+	int argc, j;
 
-	builtin_plugin.parent = &prog;
-	ext_plugin.parent = &prog;
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
+		argv[0] = argv2[0] = "test-prog";
+		for (argc = 1; argc <= 6 && cases[i][argc - 1]; argc++)
+			argv[argc] = argv2[argc] = (char *)cases[i][argc - 1];
+		argv[argc] = argv2[argc] = NULL;
 
-	plugin_add_group(&builtin_plugin, "Core Commands", core_commands);
-	plugin_add_group(&builtin_plugin, "List Commands", list_commands);
-	plugin_add_group(&ext_plugin, NULL, ext_commands);
+		reset_last_call();
+		memset(&call, 0, sizeof(call));
+		check(!plugin_lookup(argc, argv, &builtin_plugin, &call),
+		      "lookup: no error");
+		for (j = 1; j < argc; j++)
+			check(argv[j] == cases[i][j - 1],
+			      "lookup: arguments changed");
+		found = call.action == PLUGIN_RUN ? call.cmd->name : NULL;
+		plugin_call_free(&call);
+		check(!last_call.cmd_name, "lookup: nothing ran");
 
+		run_handle_plugin(argv2, argc, &builtin_plugin, &cap);
+
+		snprintf(desc, sizeof(desc),
+			 "lookup: case %zu: found '%s', ran '%s'", i,
+			 found ? found : "(none)",
+			 last_call.cmd_name ? last_call.cmd_name : "(none)");
+		check(found ? last_call.cmd_name &&
+		      !strcmp(found, last_call.cmd_name) :
+		      !last_call.cmd_name, desc);
+	}
+}
+
+static void run_tests(void)
+{
 	test_dispatch_exact();
 	test_dispatch_alias();
 	test_dispatch_prefix_unique();
@@ -486,6 +542,26 @@ int main(void)
 	test_extension_dispatch_separate_token();
 	test_extension_dispatch_concatenated();
 	test_extension_unknown_subcommand();
+	test_lookup();
+}
+
+int main(void)
+{
+	test_rc = 0;
+
+	builtin_plugin.parent = &prog;
+	ext_plugin.parent = &prog;
+
+	plugin_add_group(&builtin_plugin, "Core Commands", core_commands);
+	plugin_add_group(&builtin_plugin, "List Commands", list_commands);
+	plugin_add_group(&ext_plugin, NULL, ext_commands);
+
+	/* The global options are parsed in process, then sandboxed */
+	shr_sandbox_enable(false);
+	run_tests();
+	shr_sandbox_enable(true);
+	run_tests();
+	shr_sandbox_enable(false);
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

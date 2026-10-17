@@ -1494,12 +1494,14 @@ static struct command sndk_vs_telemetry_controller_option_cmd = {
 	.name = "vs-telemetry-controller-option",
 	.help = "Sandisk Enable/Disable Controller Initiated Telemetry Log",
 	.fn = sndk_vs_telemetry_controller_option,
+	.needs_root = true,
 };
 
 static struct command sndk_reason_identifier_cmd = {
 	.name = "vs-error-reason-identifier",
 	.help = "Sandisk Telemetry Reason Identifier",
 	.fn = sndk_reason_identifier,
+	.needs_root = true,
 };
 
 static struct command sndk_log_page_directory_cmd = {

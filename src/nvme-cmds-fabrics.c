@@ -46,6 +46,7 @@
 #include "fabrics.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "privsep.h"
 
 #ifdef CONFIG_FABRICS
 
@@ -78,6 +79,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
+	nvme_privsep_attach(ctx);
 
 	hostnqn = libnvmf_generate_hostnqn(ctx);
 	if (!hostnqn) {
@@ -110,6 +112,7 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
+	nvme_privsep_attach(ctx);
 
 	hostnqn = libnvmf_read_hostnqn(ctx);
 	if (!hostnqn)
@@ -174,6 +177,7 @@ static struct command discover_cmd_cmd = {
 	.help = "Discover NVMeoF subsystems",
 	.fn = discover_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command connect_all_cmd_cmd = {
@@ -181,6 +185,7 @@ static struct command connect_all_cmd_cmd = {
 	.help = "Discover and Connect to NVMeoF subsystems",
 	.fn = connect_all_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command connect_cmd_cmd = {
@@ -188,6 +193,7 @@ static struct command connect_cmd_cmd = {
 	.help = "Connect to NVMeoF subsystem",
 	.fn = connect_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command disconnect_cmd_cmd = {
@@ -195,6 +201,7 @@ static struct command disconnect_cmd_cmd = {
 	.help = "Disconnect from NVMeoF subsystem",
 	.fn = disconnect_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command disconnect_all_cmd_cmd = {
@@ -202,6 +209,7 @@ static struct command disconnect_all_cmd_cmd = {
 	.help = "Disconnect from all connected NVMeoF subsystems",
 	.fn = disconnect_all_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command dim_cmd_cmd = {
@@ -209,6 +217,7 @@ static struct command dim_cmd_cmd = {
 	.help = "Send Discovery Information Management command to a Discovery Controller",
 	.fn = dim_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command gen_hostnqn_cmd_cmd = {
@@ -216,6 +225,7 @@ static struct command gen_hostnqn_cmd_cmd = {
 	.help = "Generate NVMeoF host NQN",
 	.fn = gen_hostnqn_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command show_hostnqn_cmd_cmd = {
@@ -223,6 +233,7 @@ static struct command show_hostnqn_cmd_cmd = {
 	.help = "Show NVMeoF host NQN",
 	.fn = show_hostnqn_cmd,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command *commands[] = {

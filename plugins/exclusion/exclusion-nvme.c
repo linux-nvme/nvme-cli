@@ -628,6 +628,7 @@ static struct command excl_create_cmd = {
 	.help = "Create an exclusion list",
 	.fn = excl_create,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command excl_delete_cmd = {
@@ -635,6 +636,7 @@ static struct command excl_delete_cmd = {
 	.help = "Delete an exclusion list",
 	.fn = excl_delete,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command excl_edit_cmd = {
@@ -642,6 +644,7 @@ static struct command excl_edit_cmd = {
 	.help = "Edit an exclusion list interactively",
 	.fn = excl_edit,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command excl_list_cmd = {
@@ -649,6 +652,7 @@ static struct command excl_list_cmd = {
 	.help = "List exclusion lists or entries",
 	.fn = excl_list,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command excl_add_cmd = {
@@ -656,6 +660,7 @@ static struct command excl_add_cmd = {
 	.help = "Add an entry to an exclusion list",
 	.fn = excl_add,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command excl_remove_cmd = {
@@ -663,6 +668,7 @@ static struct command excl_remove_cmd = {
 	.help = "Remove an entry from an exclusion list",
 	.fn = excl_remove,
 	.device = COMMAND_NO_DEVICE,
+	.needs_root = true,
 };
 
 static struct command *commands[] = {

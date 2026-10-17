@@ -24,6 +24,7 @@
 
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
+#include <shared/sandbox-util.h>
 #include <shared/suffix-util.h>
 #include <shared/wrap-util.h>
 
@@ -45,9 +46,22 @@ static const char *append_usage_str = "";
  */
 static struct argconfig_commandline_options *global_options;
 
+/* Forget the options given before, also those of included tables */
+static void argconfig_reset_seen(struct argconfig_commandline_options *s)
+{
+	for (; s->option; s++) {
+		if (s->config_type == CFG_INCLUDE)
+			argconfig_reset_seen(s->default_value);
+		s->seen = false;
+	}
+}
+
+/* None of the global options counts as given yet */
 void argconfig_set_global_options(struct argconfig_commandline_options *options)
 {
 	global_options = options;
+	if (options)
+		argconfig_reset_seen(options);
 }
 
 struct argconfig_commandline_options *argconfig_get_global_options(void)
@@ -931,16 +945,6 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
  * Returns 0, ARGCONFIG_HELP, ARGCONFIG_USAGE or a negative errno from the
  * value conversion.
  */
-/* Forget the options given before, also those of included tables */
-static void argconfig_reset_seen(struct argconfig_commandline_options *s)
-{
-	for (; s->option; s++) {
-		if (s->config_type == CFG_INCLUDE)
-			argconfig_reset_seen(s->default_value);
-		s->seen = false;
-	}
-}
-
 static int argconfig_parse_args(struct argconfig_parser *p)
 {
 	char *arg;
@@ -982,6 +986,352 @@ static int argconfig_parse_args(struct argconfig_parser *p)
 	}
 
 	return 0;
+}
+
+/* The bytes a value of @type takes */
+static size_t argconfig_type_size(enum argconfig_types type)
+{
+	switch (type) {
+	case CFG_FLAG:
+		return sizeof(bool);
+	case CFG_STRING:
+	case CFG_FILE:
+	case CFG_DIR:
+		return sizeof(char *);
+	case CFG_INT:
+	case CFG_INCREMENT:
+	case CFG_ENUM:
+		return sizeof(int);
+	case CFG_LONG:
+	case CFG_LONG_SUFFIX:
+		return sizeof(uint64_t);
+	case CFG_DOUBLE:
+		return sizeof(double);
+	case CFG_BYTE:
+		return sizeof(uint8_t);
+	case CFG_SHORT:
+		return sizeof(uint16_t);
+	case CFG_POSITIVE:
+	case CFG_ENUM_LIST:
+		return sizeof(uint32_t);
+	case CFG_GROUP_SEPARATOR:
+	case CFG_INCLUDE:
+		break;
+	}
+
+	return 0;
+}
+
+/* The bytes the option or one of its named values writes */
+static size_t argconfig_value_size(struct argconfig_commandline_options *s)
+{
+	size_t size = argconfig_type_size(s->config_type);
+	struct argconfig_opt_val *v;
+
+	for (v = s->opt_val; v && v->str; v++)
+		if (argconfig_type_size(v->type) > size)
+			size = argconfig_type_size(v->type);
+
+	return size;
+}
+
+/* The options of @s and of the tables it includes, if @out, into @out */
+static unsigned int argconfig_leaves(struct argconfig_commandline_options *s,
+				     struct argconfig_commandline_options **out,
+				     unsigned int n)
+{
+	for (; s && s->option; s++) {
+		if (s->config_type == CFG_INCLUDE) {
+			n = argconfig_leaves(s->default_value, out, n);
+		} else if (s->config_type != CFG_GROUP_SEPARATOR) {
+			if (out)
+				out[n] = s;
+			n++;
+		}
+	}
+
+	return n;
+}
+
+/*
+ * A parse of the command line @p, or a parser @fn which sets values of
+ * options from the text @buf, and what it started with to check the
+ * result.
+ */
+struct argconfig_job {
+	struct argconfig_parser *p;
+	int (*fn)(void *arg);
+	void *arg;
+	char *buf;
+	size_t size;
+	struct argconfig_commandline_options **opts;
+	unsigned int nr;
+	/* the values before the parse, up to 8 bytes each */
+	uint64_t *orig;
+};
+
+static int argconfig_job_run(void *arg)
+{
+	struct argconfig_job *job = arg;
+
+	if (job->p)
+		return argconfig_parse_args(job->p);
+
+	return job->fn(job->arg);
+}
+
+/* @str points into one of the arguments of a parse */
+static bool argconfig_in_argv(struct argconfig_parser *p, const char *str)
+{
+	int i;
+
+	for (i = 1; i < p->argc && p->argv[i]; i++)
+		if (str >= p->argv[i] && str <= p->argv[i] + strlen(p->argv[i]))
+			return true;
+
+	return false;
+}
+
+/* @str is one of the arguments of a parse */
+static bool argconfig_is_arg(struct argconfig_parser *p, const char *str)
+{
+	int i;
+
+	for (i = 1; i < p->argc && p->argv[i]; i++)
+		if (str == p->argv[i])
+			return true;
+
+	return false;
+}
+
+/* The value of @s is the one of a name of its value table */
+static bool argconfig_is_named(struct argconfig_commandline_options *s)
+{
+	struct argconfig_opt_val *v;
+	uint64_t buf;
+
+	for (v = s->opt_val; v && v->str; v++) {
+		buf = 0;
+		argconfig_set_opt_val(v->type, &v->val, &buf);
+		if (!memcmp(&buf, s->default_value,
+			    argconfig_type_size(v->type)))
+			return true;
+	}
+
+	return false;
+}
+
+/* The bits of the value table of an OPT_ENUM_LIST() */
+static uint32_t argconfig_list_bits(struct argconfig_commandline_options *s)
+{
+	struct argconfig_opt_val *v;
+	uint32_t bits = 0;
+
+	for (v = s->opt_val; v && v->str; v++)
+		bits |= (uint32_t)v->val.int_val;
+
+	return bits;
+}
+
+/* A number in the range of @s */
+static bool argconfig_valid_number(struct argconfig_commandline_options *s)
+{
+	void *value = s->default_value;
+
+	switch (s->config_type) {
+	case CFG_BYTE:
+		return argconfig_in_range(s, *(uint8_t *)value);
+	case CFG_SHORT:
+		return argconfig_in_range(s, *(uint16_t *)value);
+	case CFG_POSITIVE:
+		return argconfig_in_range(s, *(uint32_t *)value);
+	case CFG_LONG:
+	case CFG_LONG_SUFFIX:
+		return argconfig_in_range(s, *(uint64_t *)value);
+	default:
+		return true;
+	}
+}
+
+/* A string a parser of @job can store */
+static bool argconfig_valid_string(struct argconfig_job *job, const char *str)
+{
+	if (!str)
+		return true;
+	if (job->p)
+		return argconfig_in_argv(job->p, str);
+
+	return str >= job->buf && str < job->buf + job->size;
+}
+
+/*
+ * The value option @i of @job holds is one the parse can write: on the
+ * command line one which an option of the same variable was given for.
+ * A string of the arguments, the text or the value table, a number in
+ * range, a name.
+ */
+static bool argconfig_valid_value(struct argconfig_job *job, unsigned int i)
+{
+	struct argconfig_commandline_options *s = job->opts[i];
+	size_t size = argconfig_value_size(s);
+	uint64_t orig = job->orig[i];
+	unsigned int j;
+	bool seen = false;
+
+	if (!s->default_value || !memcmp(&orig, s->default_value, size))
+		return true;
+	if (job->p) {
+		for (j = 0; j < job->nr; j++)
+			seen |= job->opts[j]->seen &&
+				job->opts[j]->default_value == s->default_value;
+		if (!seen)
+			return false;
+		if (!s->seen)
+			return true;
+	}
+	if (argconfig_is_named(s))
+		return true;
+
+	switch (s->config_type) {
+	case CFG_STRING:
+	case CFG_FILE:
+	case CFG_DIR:
+		return argconfig_valid_string(job, *(char **)s->default_value);
+	case CFG_FLAG:
+		return *(unsigned char *)s->default_value == 1;
+	case CFG_ENUM:
+		return false;
+	case CFG_ENUM_LIST:
+		return !(*(uint32_t *)s->default_value &
+			 ~(argconfig_list_bits(s) | (uint32_t)orig));
+	default:
+		return argconfig_valid_number(s);
+	}
+}
+
+/*
+ * What a sandboxed parse wrote is kept only if the parser can write it:
+ * a position and operands within the arguments, booleans, valid values.
+ * A parser which its input took over can thus not hand back pointers or
+ * numbers the commands do not expect.
+ */
+static bool argconfig_valid_result(struct argconfig_job *job)
+{
+	struct argconfig_parser *p = job->p;
+	unsigned int i;
+	int j;
+
+	if (!p)
+		goto options;
+	if (p->ind < 1 || p->ind > p->argc || p->nr_operands < 0 ||
+	    p->nr_operands > p->argc ||
+	    *(unsigned char *)&p->help > 1 ||
+	    *(unsigned char *)&p->version > 1)
+		return false;
+
+	for (j = 0; j < p->nr_operands; j++)
+		if (!argconfig_is_arg(p, p->operands[j]))
+			return false;
+
+options:
+	for (i = 0; i < job->nr; i++)
+		if (*(unsigned char *)&job->opts[i]->seen > 1)
+			return false;
+	for (i = 0; i < job->nr; i++)
+		if (!argconfig_valid_value(job, i))
+			return false;
+
+	return true;
+}
+
+/*
+ * Run @job, in the sandbox if it is enabled. The parse of a command line
+ * writes the position, the operands and the given help and version. Any
+ * parser writes the values and seen flags of the options @root includes,
+ * and the text it parses in place.
+ */
+static int argconfig_job_exec(struct argconfig_job *job,
+			      struct argconfig_commandline_options *root)
+{
+	__cleanup_free struct argconfig_commandline_options **opts = NULL;
+	__cleanup_free struct shr_sandbox_region *regions = NULL;
+	__cleanup_free uint64_t *orig = NULL;
+	struct argconfig_parser *p = job->p;
+	struct argconfig_commandline_options *s;
+	unsigned int nr = 0, i;
+	int ret;
+
+	job->nr = argconfig_leaves(root, NULL, 0);
+	opts = calloc(job->nr + 1, sizeof(*opts));
+	orig = calloc(job->nr + 1, sizeof(*orig));
+	regions = calloc(2 * job->nr + 6, sizeof(*regions));
+	if (!opts || !orig || !regions)
+		return -ENOMEM;
+	argconfig_leaves(root, opts, 0);
+	job->opts = opts;
+	job->orig = orig;
+
+	if (p) {
+		regions[nr++] = (struct shr_sandbox_region){
+			&p->ind, sizeof(p->ind) };
+		regions[nr++] = (struct shr_sandbox_region){
+			&p->help, sizeof(p->help) };
+		regions[nr++] = (struct shr_sandbox_region){
+			&p->version, sizeof(p->version) };
+		regions[nr++] = (struct shr_sandbox_region){
+			&p->nr_operands, sizeof(p->nr_operands) };
+		if (p->operands)
+			regions[nr++] = (struct shr_sandbox_region){
+				p->operands, p->argc * sizeof(*p->operands) };
+	}
+	if (job->buf)
+		regions[nr++] = (struct shr_sandbox_region){
+			job->buf, job->size };
+	for (i = 0; i < job->nr; i++) {
+		s = opts[i];
+		regions[nr++] = (struct shr_sandbox_region){
+			&s->seen, sizeof(s->seen) };
+		if (!s->default_value)
+			continue;
+		memcpy(&orig[i], s->default_value, argconfig_value_size(s));
+		regions[nr++] = (struct shr_sandbox_region){
+			s->default_value, argconfig_value_size(s) };
+	}
+
+	ret = shr_sandbox_run(argconfig_job_run, job, regions, nr);
+	if (!argconfig_valid_result(job)) {
+		fprintf(stderr, "invalid result of the option parser\n");
+		return -EPROTO;
+	}
+
+	return ret;
+}
+
+static int argconfig_run(struct argconfig_parser *p)
+{
+	struct argconfig_job job = { .p = p };
+
+	return argconfig_job_exec(&job, p->root);
+}
+
+/*
+ * A parser other than the one of the command line, e.g. of a
+ * configuration file, which sets values of @options from the text @buf.
+ * It runs in the sandbox, if enabled, and its result is checked like the
+ * one of the command line, except that strings point into @buf.
+ */
+int argconfig_sandbox_run(struct argconfig_commandline_options *options,
+			  int (*fn)(void *arg), void *arg, char *buf,
+			  size_t size)
+{
+	struct argconfig_job job = {
+		.fn = fn,
+		.arg = arg,
+		.buf = buf,
+		.size = size,
+	};
+
+	return argconfig_job_exec(&job, options);
 }
 
 static argconfig_parse_hook_fn argconfig_parse_hook;
@@ -1042,7 +1392,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	if (!p.operands)
 		return -ENOMEM;
 
-	ret = argconfig_parse_args(&p);
+	ret = argconfig_run(&p);
 	if (ret) {
 		/*
 		 * The help that was asked for goes to stdout, a usage error is
@@ -1097,7 +1447,7 @@ int argconfig_parse_global(int argc, char *argv[],
 	argconfig_root(p.root, options ? options : no_options);
 
 	parse_argv0 = argc > 0 ? argv[0] : "";
-	ret = argconfig_parse_args(&p);
+	ret = argconfig_run(&p);
 	*argind = p.ind;
 	if (ret)
 		return ret > 0 ? -EINVAL : ret;

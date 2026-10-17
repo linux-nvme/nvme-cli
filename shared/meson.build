@@ -37,6 +37,7 @@ if host_system == 'windows'
         'fs-util-win.c',
         'crypto-util-win.c',
         'proc-util-win.c',
+        'sandbox-util-win.c',
         'sig-util-win.c',
         'term-util-win.c',
     ]
@@ -48,6 +49,7 @@ else
         'pci-util-linux.c',
         'crypto-util-linux.c',
         'proc-util-linux.c',
+        'sandbox-util.c',
         'sig-util-linux.c',
         'term-util-linux.c',
     ]

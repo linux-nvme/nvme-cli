@@ -235,6 +235,8 @@ static void test_device_ops(void)
 	check(!libnvme_open(ctx, "nvme0", O_RDONLY, &c), "open nvme0");
 	check(!libnvme_open(ctx, "/dev/nvme0n1", O_RDONLY, &n),
 	      "open nvme0n1");
+	check(libnvme_transport_handle_is_direct(c),
+	      "helper handle not direct");
 	check(libnvme_transport_handle_is_ctrl(c), "nvme0 is no controller");
 	check(libnvme_transport_handle_is_ns(n), "nvme0n1 is no namespace");
 
@@ -555,6 +557,27 @@ static void test_handles(void)
 	libnvme_close(b);
 }
 
+/* A context without ioctl probing uses the 32 bit passthru in the helper. */
+static void test_no_ioctl_probing(struct libnvme_privsep *ps)
+{
+	struct libnvme_global_ctx *ctx32 = libnvme_create_global_ctx();
+	struct libnvme_transport_handle *hdl;
+	struct libnvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_get_log_page,
+	};
+
+	check(ctx32, "create ctx");
+	libnvme_set_ioctl_probing(ctx32, false);
+	libnvme_set_privsep(ctx32, ps);
+
+	check(!libnvme_open(ctx32, "NVME_TEST_FD", O_RDONLY, &hdl), "open");
+	check(!libnvme_exec_admin_passthru(hdl, &cmd), "admin failed");
+	check(cmd.result == MOCK_RESULT_IOCTL32,
+	      "64 bit passthru without ioctl probing");
+	libnvme_close(hdl);
+	libnvme_free_global_ctx(ctx32);
+}
+
 int main(int argc, char **argv)
 {
 	struct libnvme_transport_handle *hdl;
@@ -589,6 +612,7 @@ int main(int argc, char **argv)
 	libnvme_close(hdl);
 
 	test_handles();
+	test_no_ioctl_probing(ps);
 	test_device_ops();
 	test_regs();
 	test_sed();
