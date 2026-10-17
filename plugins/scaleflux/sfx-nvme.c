@@ -18,7 +18,9 @@
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/int-util.h>
+#include <shared/io-util.h>
 #include <shared/progress-util.h>
+#include <shared/string-util.h>
 #include <shared/temp-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
@@ -1120,7 +1122,8 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char *output)
 			shr_format_ts(fw_time, str_buffer + str_pos);
 			str_pos = strlen(str_buffer);
 
-			strcpy(str_buffer + str_pos, "]    event-log:\n");
+			shr_strscpy(str_buffer + str_pos, "]    event-log:\n",
+				    sizeof(str_buffer) - str_pos);
 			str_pos = strlen(str_buffer);
 
 			snprintf(str_buffer + str_pos, 128,
@@ -1550,7 +1553,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	int err, fd, len, sector_size;
 	char pci_vid[7], pci_did[7], pci_ssvid[7], link_speed[20], link_width[5], link_string[40];
 	char path[512], numa_node[5], vendor[10], form_factor[15], temperature[10], io_speed[15];
-	char chr_dev[8], serial_number[21], model_number[41], firmware_revision[9], pcie_status[9];
+	char chr_dev[32], serial_number[21], model_number[41];
+	char firmware_revision[9], pcie_status[9];
 	struct json_object *root, *dev_stats, *link_stats, *crit_stats;
 	nvme_print_flags_t flags;
 	__u64 get_feat_result;
@@ -1594,9 +1598,10 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	else
 		capacity = capacity / (1000 * 1000 * 1000); //B --> GB
 
-	memset(&chr_dev, 0, 8);
-	strcpy(chr_dev, libnvme_transport_handle_get_name(hdl));
-	for (len = 2; len < 8; len++) {
+	memset(&chr_dev, 0, sizeof(chr_dev));
+	shr_strscpy(chr_dev, libnvme_transport_handle_get_name(hdl),
+		    sizeof(chr_dev));
+	for (len = 2; len < sizeof(chr_dev); len++) {
 		if (chr_dev[len] == 'n')
 			chr_dev[len] = '\0';
 	}
@@ -1633,9 +1638,9 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	close(fd);
 
 	if (strncmp("0xcc53", pci_vid, 6) == 0)
-		strncpy(vendor, "ScaleFlux", 10);
+		shr_strscpy(vendor, "ScaleFlux", sizeof(vendor));
 	else if (strncmp("0x1dfd", pci_vid, 6) == 0)
-		strncpy(vendor, "DIGISTOR", 10);
+		shr_strscpy(vendor, "DIGISTOR", sizeof(vendor));
 	else {
 		nvme_show_error("Please use on a ScaleFlux device");
 		return -1;
@@ -1728,8 +1733,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	if (pcie_cor_valid) {
-		len = read(fd, path, 512);
-		if (len < 1) {
+		/* a terminated string for sscanf() */
+		if (shr_read_all(fd, path, sizeof(path)) || !path[0]) {
 			nvme_show_perror("Could not read PCIe AER Correctable errors in /sys/");
 			pcie_cor_valid = false;
 		}
@@ -1752,8 +1757,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	if (pcie_nonfatal_valid) {
-		len = read(fd, path, 512);
-		if (len < 1) {
+		/* a terminated string for sscanf() */
+		if (shr_read_all(fd, path, sizeof(path)) || !path[0]) {
 			nvme_show_perror("Could not read PCIe AER Non-Fatal errors in /sys/");
 			pcie_nonfatal_valid = false;
 		}
@@ -1775,8 +1780,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	if (pcie_fatal_valid) {
-		len = read(fd, path, 512);
-		if (len < 1) {
+		/* a terminated string for sscanf() */
+		if (shr_read_all(fd, path, sizeof(path)) || !path[0]) {
 			nvme_show_perror("Could not read PCIe AER Fatal errors in /sys/");
 			pcie_fatal_valid = false;
 		}
@@ -1786,7 +1791,6 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_FATAL %d", &pcie_fatal);
 		if (len < 1) {
 			nvme_show_perror("Could not parse PCIe AER Fatal errors in /sys/");
-			close(fd);
 			pcie_fatal_valid = false;
 		}
 	}
@@ -1873,21 +1877,21 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	switch (sfx_smart.io_speed) {
 	case '1':
 		if (strncmp("0x0020", pci_did, 6))
-			strncpy(io_speed, "2.5MB/s", 15);
+			shr_strscpy(io_speed, "2.5MB/s", sizeof(io_speed));
 		else
-			strncpy(io_speed, "10MB/s", 15);
+			shr_strscpy(io_speed, "10MB/s", sizeof(io_speed));
 		break;
 	case '2':
 		if (strncmp("0x0020", pci_did, 6))
-			strncpy(io_speed, "128KB/s", 15);
+			shr_strscpy(io_speed, "128KB/s", sizeof(io_speed));
 		else
-			strncpy(io_speed, "512KB/s", 15);
+			shr_strscpy(io_speed, "512KB/s", sizeof(io_speed));
 		break;
 	case '3':
-		strncpy(io_speed, "Write Reject", 15);
+		shr_strscpy(io_speed, "Write Reject", sizeof(io_speed));
 		break;
 	default:
-		strncpy(io_speed, "Normal", 15);
+		shr_strscpy(io_speed, "Normal", sizeof(io_speed));
 	}
 
 	if (sfx_smart.comp_ratio < 100)
@@ -1985,7 +1989,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		(sfx_smart.sfx_critical_warning & SFX_CRIT_RW_LOCK)	? "\tRead/Write lock mode\n"				: "" \
 		);
 		if (len < 11)
-			strcpy(path, "None");
+			shr_strscpy(path, "None", sizeof(path));
 
 		printf("%-35s%s%s\n",	"ScaleFlux Drive:",					"/dev/", libnvme_transport_handle_get_name(hdl));
 		printf("%-35s%s\n",		"PCIe Vendor ID:",				pci_vid);
