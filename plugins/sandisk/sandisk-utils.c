@@ -16,7 +16,10 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
+#include <shared/hex-util.h>
+#include <shared/string-util.h>
 #include <shared/time-util.h>
+#include <shared/unaligned-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-pci-ids.h"
@@ -117,35 +120,36 @@ __u32 sndk_get_fw_cust_id(struct libnvme_global_ctx *ctx,
 	return cust_id;
 }
 
-void sndk_get_commit_action_bin(__u8 commit_action_type, char *action_bin)
+void sndk_get_commit_action_bin(__u8 commit_action_type, char *action_bin,
+				size_t size)
 {
 	switch (commit_action_type) {
 	case 0:
-		strcpy(action_bin, "000b");
+		shr_strscpy(action_bin, "000b", size);
 		break;
 	case 1:
-		strcpy(action_bin, "001b");
+		shr_strscpy(action_bin, "001b", size);
 		break;
 	case 2:
-		strcpy(action_bin, "010b");
+		shr_strscpy(action_bin, "010b", size);
 		break;
 	case 3:
-		strcpy(action_bin, "011b");
+		shr_strscpy(action_bin, "011b", size);
 		break;
 	case 4:
-		strcpy(action_bin, "100b");
+		shr_strscpy(action_bin, "100b", size);
 		break;
 	case 5:
-		strcpy(action_bin, "101b");
+		shr_strscpy(action_bin, "101b", size);
 		break;
 	case 6:
-		strcpy(action_bin, "110b");
+		shr_strscpy(action_bin, "110b", size);
 		break;
 	case 7:
-		strcpy(action_bin, "111b");
+		shr_strscpy(action_bin, "111b", size);
 		break;
 	default:
-		strcpy(action_bin, "INVALID");
+		shr_strscpy(action_bin, "INVALID", size);
 	}
 }
 
@@ -834,7 +838,7 @@ int sndk_get_serial_name(struct libnvme_transport_handle *hdl, char *file,
 	int ctrl_sn_len = sizeof(ctrl.sn);
 
 	i = sizeof(ctrl.sn) - 1;
-	strncpy(orig, file, PATH_MAX - 1);
+	shr_strscpy(orig, file, sizeof(orig));
 	memset(file, 0, len);
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	nvme_init_identify_ctrl(&cmd, &ctrl);
@@ -934,16 +938,11 @@ static long double sndk_le_to_float(__u8 *data, int byte_len)
 	return result;
 }
 
-static void sndk_stringify_log_page_guid(__u8 *guid, char *buf)
+/* The GUID as "0x" and its bytes in hex, the most significant first */
+static void sndk_stringify_log_page_guid(__u8 *guid, char *buf, size_t size)
 {
-	char *ptr = buf;
-	int i;
-
-	memset(buf, 0, sizeof(char) * (2 * 16 + 1));
-
-	ptr += sprintf(ptr, "0x");
-	for (i = 0; i < 16; i++)
-		ptr += sprintf(ptr, "%x", guid[15 - i]);
+	shr_strscpy(buf, "0x", size);
+	shr_bin_to_hex(buf + 2, size - 2, guid, 16, SHR_HEX_REVERSE);
 }
 
 static const char *const sndk_cloud_smart_log_thermal_status[] = {
@@ -1053,12 +1052,15 @@ static void sndk_show_cloud_smart_log_json(struct sndk_ocp_cloud_smart_log *log)
 				   le16_to_cpu(log->capacitor_health));
 	if (smart_log_ver >= 3) {
 		if (smart_log_ver >= 4) {
-			sprintf(buf, "%c", log->nvme_base_errata_ver);
+			snprintf(buf, sizeof(buf), "%c",
+				 log->nvme_base_errata_ver);
 			json_object_add_value_string(root, "nvme_base_errata_version", buf);
-			sprintf(buf, "%c", log->nvme_cmd_set_errata_ver);
+			snprintf(buf, sizeof(buf), "%c",
+				 log->nvme_cmd_set_errata_ver);
 			json_object_add_value_string(root, "nvme_cmd_set_errata_version", buf);
 		} else {
-			sprintf(buf, "%c", log->nvme_base_errata_ver);
+			snprintf(buf, sizeof(buf), "%c",
+				 log->nvme_base_errata_ver);
 			json_object_add_value_string(root, "nvme_errata_version", buf);
 		}
 	}
@@ -1090,7 +1092,7 @@ static void sndk_show_cloud_smart_log_json(struct sndk_ocp_cloud_smart_log *log)
 	}
 	json_object_add_value_uint(root, "log_page_version",
 				   smart_log_ver);
-	sndk_stringify_log_page_guid(log->log_page_guid, buf);
+	sndk_stringify_log_page_guid(log->log_page_guid, buf, sizeof(buf));
 	json_object_add_value_string(root, "log_page_guid", buf);
 
 	json_print_object(root, NULL);
@@ -1195,7 +1197,7 @@ static void sndk_show_cloud_smart_log_normal(struct sndk_ocp_cloud_smart_log *lo
 	}
 	printf("Log Page Version                             : %" PRIu16 "\n",
 			smart_log_ver);
-	sndk_stringify_log_page_guid(log->log_page_guid, buf);
+	sndk_stringify_log_page_guid(log->log_page_guid, buf, sizeof(buf));
 	printf("Log Page GUID                                : %s\n", buf);
 	printf("\n\n");
 }
@@ -1522,18 +1524,19 @@ static void sndk_print_ext_smart_cloud_log_json(void *data, int mask)
 	}
 
 	memset((void *)vers_str, 0, sizeof(vers_str));
-	sprintf((char *)vers_str, "%d.%d.%d.%d",
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_maj),
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_min),
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_pt),
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_err));
+	snprintf((char *)vers_str, sizeof(vers_str), "%d.%d.%d.%d",
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_maj),
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_min),
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_pt),
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_err));
 	json_object_add_value_string(root, "cloud_boot_ssd_spec_ver", vers_str);
 	memset((void *)vers_str, 0, sizeof(vers_str));
-	sprintf((char *)vers_str, "%d.%d.%d.%d", 0, 0, 0, 0);
+	snprintf((char *)vers_str, sizeof(vers_str), "%d.%d.%d.%d", 0, 0, 0, 0);
 	json_object_add_value_string(root, "cloud_boot_ssd_hw_ver", vers_str);
 
 	if (mask == SNDK_SCA_V1_ALL) {
 		char guid[40];
+		__u8 *lpg;
 
 		json_object_add_value_uint(root, "ftl_unit_size",
 					   le32_to_cpu(ext_smart_log_ptr->ext_smart_ftlus));
@@ -1542,10 +1545,10 @@ static void sndk_print_ext_smart_cloud_log_json(void *data, int mask)
 		json_object_add_value_uint(root, "log_page_ver",
 					   le16_to_cpu(ext_smart_log_ptr->ext_smart_lpv));
 
-		memset((void *)guid, 0, sizeof(guid));
-		sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
-			le64_to_cpu(*(uint64_t *)&ext_smart_log_ptr->ext_smart_lpg[8]),
-			le64_to_cpu(*(uint64_t *)&ext_smart_log_ptr->ext_smart_lpg[0]));
+		lpg = ext_smart_log_ptr->ext_smart_lpg;
+		snprintf((char *)guid, sizeof(guid), "0x%"PRIx64"%"PRIx64"",
+			 shr_get_unaligned_le64(&lpg[8]),
+			 shr_get_unaligned_le64(&lpg[0]));
 		json_object_add_value_string(root, "log_page_guid", guid);
 	}
 

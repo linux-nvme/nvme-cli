@@ -531,7 +531,7 @@ __u32 sndk_get_fw_cust_id(struct libnvme_global_ctx *ctx,
 		struct libnvme_transport_handle *hdl);
 
 void sndk_get_commit_action_bin(__u8 commit_action_type,
-		char *action_bin);
+		char *action_bin, size_t size);
 
 bool sndk_parse_dev_mng_log_entry(void *data,
 		__u32 entry_id,
