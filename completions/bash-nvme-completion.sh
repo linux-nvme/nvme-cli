@@ -124,7 +124,12 @@ _nvme_finish_completion () {
 
 	if [[ $completing_value -eq 1 ]]; then
 		if [[ $vals != " " ]]; then
-			COMPREPLY+=( $( compgen -W "$vals" -- "$val" ) )
+			# A list of names completes the name after its last comma.
+			local pre=""
+			if [[ " $listopts " == *" $opt "* ]] && [[ $val == *,* ]]; then
+				pre="${val%,*},"
+			fi
+			COMPREPLY+=( $( compgen -P "$pre" -W "$vals" -- "${val#"$pre"}" ) )
 		elif [[ $wantfiles -eq 1 ]]; then
 			: # value is a filename; let 'complete -o default' offer files
 		else
@@ -146,6 +151,7 @@ _nvme_finish_completion () {
 nvme_list_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1301,6 +1307,7 @@ nvme_list_opts () {
 plugin_amzn_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1337,6 +1344,7 @@ plugin_amzn_opts () {
 plugin_config_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1409,6 +1417,7 @@ plugin_config_opts () {
 plugin_dapustor_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1437,6 +1446,7 @@ plugin_dapustor_opts () {
 plugin_dell_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1464,6 +1474,7 @@ plugin_dell_opts () {
 plugin_dera_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1491,6 +1502,7 @@ plugin_dera_opts () {
 plugin_dir_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1530,6 +1542,7 @@ plugin_dir_opts () {
 plugin_exclusion_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1608,6 +1621,7 @@ plugin_exclusion_opts () {
 plugin_fdp_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1701,6 +1715,7 @@ plugin_fdp_opts () {
 plugin_feat_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1913,6 +1928,7 @@ plugin_feat_opts () {
 plugin_fw_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1951,6 +1967,7 @@ plugin_fw_opts () {
 plugin_huawei_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -1988,6 +2005,7 @@ plugin_huawei_opts () {
 plugin_ibm_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2033,6 +2051,7 @@ plugin_ibm_opts () {
 plugin_id_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2219,6 +2238,7 @@ plugin_id_opts () {
 plugin_innogrit_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2255,6 +2275,7 @@ plugin_innogrit_opts () {
 plugin_inspur_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2282,6 +2303,7 @@ plugin_inspur_opts () {
 plugin_intel_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2375,6 +2397,7 @@ plugin_intel_opts () {
 plugin_io_mgmt_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2415,6 +2438,7 @@ plugin_io_mgmt_opts () {
 plugin_keys_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2517,6 +2541,7 @@ plugin_keys_opts () {
 plugin_lm_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2600,6 +2625,7 @@ plugin_lm_opts () {
 plugin_log_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2920,6 +2946,7 @@ plugin_log_opts () {
 plugin_mangoboost_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -2947,6 +2974,7 @@ plugin_mangoboost_opts () {
 plugin_memblaze_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3103,6 +3131,7 @@ plugin_memblaze_opts () {
 plugin_micron_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3366,6 +3395,7 @@ plugin_micron_opts () {
 plugin_nbft_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3395,6 +3425,7 @@ plugin_nbft_opts () {
 plugin_netapp_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3431,6 +3462,7 @@ plugin_netapp_opts () {
 plugin_ns_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3497,6 +3529,7 @@ plugin_ns_opts () {
 plugin_nvidia_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3524,6 +3557,7 @@ plugin_nvidia_opts () {
 plugin_nvme_mi_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3564,6 +3598,7 @@ plugin_nvme_mi_opts () {
 plugin_ocp_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3871,6 +3906,7 @@ plugin_ocp_opts () {
 plugin_registry_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3926,6 +3962,7 @@ plugin_registry_opts () {
 plugin_resv_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -3984,6 +4021,7 @@ plugin_resv_opts () {
 plugin_rpmb_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4070,6 +4108,7 @@ plugin_rpmb_opts () {
 plugin_samsung_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4085,8 +4124,10 @@ plugin_samsung_opts () {
 		"vs-internal-log")
 			opts+=" --compress -z --dry-run --dump-type= -t --hide-progress --no-ioctl-probing --no-retries --output-file= -O --output-format= -o --output-format-version= --quiet --set-options= --telemetry-data-area= -a --timeout= --verbose -v"
 			valopts+=" --dump-type -t --output-file -O --output-format -o --output-format-version --set-options --telemetry-data-area -a --timeout"
+			listopts+=" --dump-type -t"
 
-			_nvme_opt_vals "--output-format -o" "normal" \
+			_nvme_opt_vals "--dump-type -t" "host0 host1 ctlr controller vendor" \
+			               "--output-format -o" "normal" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--output-file -O"
@@ -4098,6 +4139,7 @@ plugin_samsung_opts () {
 plugin_seagate_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4230,6 +4272,7 @@ plugin_seagate_opts () {
 plugin_security_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4269,6 +4312,7 @@ plugin_security_opts () {
 plugin_sed_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4341,6 +4385,7 @@ plugin_sed_opts () {
 plugin_sfx_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4453,6 +4498,7 @@ plugin_sfx_opts () {
 plugin_shannon_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4512,6 +4558,7 @@ plugin_shannon_opts () {
 plugin_sndk_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4791,6 +4838,7 @@ plugin_sndk_opts () {
 plugin_solidigm_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4958,6 +5006,7 @@ plugin_solidigm_opts () {
 plugin_ssstc_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -4986,6 +5035,7 @@ plugin_ssstc_opts () {
 plugin_toshiba_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -5034,6 +5084,7 @@ plugin_toshiba_opts () {
 plugin_transcend_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -5070,6 +5121,7 @@ plugin_transcend_opts () {
 plugin_utils_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -5092,6 +5144,7 @@ plugin_utils_opts () {
 plugin_virtium_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -5129,6 +5182,7 @@ plugin_virtium_opts () {
 plugin_wdc_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -5495,6 +5549,7 @@ plugin_wdc_opts () {
 plugin_ymtc_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""
@@ -5523,6 +5578,7 @@ plugin_ymtc_opts () {
 plugin_zns_opts () {
 	local opts=""
 	local valopts=""
+	local listopts=""
 	local vals=""
 	local opt=""
 	local val=""

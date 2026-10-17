@@ -958,6 +958,11 @@ $script:NvmeFileOptions = @{
     'zns zone-mgmt-send -d' = $true
 }
 
+$script:NvmeListOptions = @{
+    'samsung vs-internal-log --dump-type' = $true
+    'samsung vs-internal-log -t' = $true
+}
+
 $script:NvmeOptionValues = @{
     'admin-passthru --namespace-id' = @('all', '-1')
     'admin-passthru --output-format' = @('normal', 'json', 'binary')
@@ -2489,10 +2494,12 @@ $script:NvmeOptionValues = @{
     'rpmb write-data --output-format-version' = @('1', '2')
     'rpmb write-data --timeout' = @('infinite', '-1')
     'rpmb write-data -o' = @('normal', 'json', 'binary')
+    'samsung vs-internal-log --dump-type' = @('host0', 'host1', 'ctlr', 'controller', 'vendor')
     'samsung vs-internal-log --output-format' = @('normal')
     'samsung vs-internal-log --output-format-version' = @('1', '2')
     'samsung vs-internal-log --timeout' = @('infinite', '-1')
     'samsung vs-internal-log -o' = @('normal')
+    'samsung vs-internal-log -t' = @('host0', 'host1', 'ctlr', 'controller', 'vendor')
     'sanitize --output-format' = @('normal', 'json', 'binary')
     'sanitize --output-format-version' = @('1', '2')
     'sanitize --sanact' = @('exit-failure', 'start-block-erase', 'start-overwrite', 'start-crypto-erase', 'exit-media-verification')
@@ -3319,9 +3326,16 @@ Register-ArgumentCompleter -Native -CommandName nvme -ScriptBlock {
         if ($prevToken -like '-*') {
             $valKey = "$key $prevToken"
             if ($script:NvmeOptionValues.ContainsKey($valKey)) {
+                # A list of names completes the name after its last comma.
+                $pre = ''
+                if ($script:NvmeListOptions.ContainsKey($valKey) -and
+                    $wordToComplete -match '^(.*,)') {
+                    $pre = $Matches[1]
+                }
+                $last = $wordToComplete.Substring($pre.Length)
                 return $script:NvmeOptionValues[$valKey] |
-                    Where-Object { $_ -like "$wordToComplete*" } |
-                    ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) }
+                    Where-Object { $_ -like "$last*" } |
+                    ForEach-Object { [System.Management.Automation.CompletionResult]::new("$pre$_", $_, 'ParameterValue', $_) }
             }
             if ($script:NvmeFileOptions.ContainsKey($valKey)) {
                 return Get-ChildItem -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
@@ -3341,9 +3355,15 @@ Register-ArgumentCompleter -Native -CommandName nvme -ScriptBlock {
         $valPrefix = $Matches[2]
         $valKey = "$key $optPart"
         if ($script:NvmeOptionValues.ContainsKey($valKey)) {
+            $pre = ''
+            if ($script:NvmeListOptions.ContainsKey($valKey) -and
+                $valPrefix -match '^(.*,)') {
+                $pre = $Matches[1]
+            }
+            $last = $valPrefix.Substring($pre.Length)
             return $script:NvmeOptionValues[$valKey] |
-                Where-Object { $_ -like "$valPrefix*" } |
-                ForEach-Object { [System.Management.Automation.CompletionResult]::new("$optPart=$_", $_, 'ParameterValue', $_) }
+                Where-Object { $_ -like "$last*" } |
+                ForEach-Object { [System.Management.Automation.CompletionResult]::new("$optPart=$pre$_", $_, 'ParameterValue', $_) }
         }
         if ($script:NvmeFileOptions.ContainsKey($valKey)) {
             return Get-ChildItem -Path "$valPrefix*" -ErrorAction SilentlyContinue |
