@@ -41,6 +41,14 @@
   help lists the names of an option. `lm migration-recv` requires
   `--sel` now, like the other lm commands.
 
+* `--sel` of `get-feature`, the `feat` commands and the `ocp` and
+  `shannon` commands which get a feature rejects numbers above 3 and
+  accepts the names `current`, `default`, `saved` and `supported`.
+  Before, it sent the reserved values 4 to 7 and truncated larger
+  values. `--output-format-version` (also in `nvme-cli.conf`) rejects
+  versions other than 1 and 2. Before, every version but 2 printed
+  version 1.
+
 * Number options reject text after the number. Before, the rest was
   ignored: `--timeout=10s` set a timeout of 10 milliseconds.
 
@@ -233,6 +241,14 @@
   `config convert`, `intel lat-stats-tracking`, `memblaze lat-stats`,
   `memblaze smart-log-add-x`, `sndk vs-internal-log`,
   `wdc vs-internal-log` and the `sed` commands did not accept them.
+
+* The command metadata reports the type of the value of each option and
+  the range of numbers an option takes. The shell completions use them:
+  they complete paths for every option which names a file or directory,
+  now also the `--keyfile` of the keys commands, `--nbft-path` and the
+  logs of `ocp internal-log`, and offer the values of `--sel`. They no
+  longer offer 0 to 3 for the `--sel` of the `lm` commands, which means
+  something else there.
 
 * The help and the shell completions of `--output-format` list the
   formats the command supports. Before, the completions offered
