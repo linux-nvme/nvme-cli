@@ -1290,7 +1290,8 @@ static int read_header(struct libnvme_passthru_cmd *cmd, __u8 *buf,
 	return read_entire_cmd(cmd, 0x400, 0x400, -1, hdl, buf);
 }
 
-static int setup_file(char *f, char *file, struct libnvme_transport_handle *hdl, int type)
+static int setup_file(char *f, size_t size, char *file,
+		      struct libnvme_transport_handle *hdl, int type)
 {
 	struct nvme_id_ctrl ctrl;
 	struct libnvme_passthru_cmd cmd;
@@ -1307,9 +1308,9 @@ static int setup_file(char *f, char *file, struct libnvme_transport_handle *hdl,
 		i--;
 	}
 
-	sprintf(f, "%s_%-.*s.bin", type == 0 ? "Nlog" :
-		type == 1 ? "EventLog" :  "AssertLog",
-		(int)sizeof(ctrl.sn), ctrl.sn);
+	snprintf(f, size, "%s_%-.*s.bin", type == 0 ? "Nlog" :
+		 type == 1 ? "EventLog" :  "AssertLog",
+		 (int)sizeof(ctrl.sn), ctrl.sn);
 	return err;
 }
 
@@ -1412,7 +1413,7 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	}
 
 	if (!cfg.file) {
-		err = setup_file(f, cfg.file, hdl, cfg.log);
+		err = setup_file(f, sizeof(f), cfg.file, hdl, cfg.log);
 		if (err)
 			goto out_free;
 		cfg.file = f;
