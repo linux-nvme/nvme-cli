@@ -10,6 +10,7 @@
 #include <ccan/array_size/array_size.h>
 #include <shared/fs-util.h>
 #include <shared/parse-util.h>
+#include <shared/sandbox-util.h>
 
 #include "../src/argconfig.h"
 #include "../src/cleanup.h"
@@ -1258,19 +1259,11 @@ static void global_parse_help_test(void)
 	}
 }
 
-int main(void)
+static void run_tests(void)
 {
 	unsigned int i;
-	FILE *f;
 
-	test_rc = 0;
-	setlocale(LC_NUMERIC, "C");
-	f = freopen(shr_dev_null(), "w", stderr);
-	if (!f) {
-		printf("ERROR: reopening stderr failed: %s\n", libnvme_strerror(errno));
-		test_rc = 1;
-	}
-
+	memset(&cfg, 0, sizeof(cfg));
 	for (i = 0; i < ARRAY_SIZE(toval_tests); i++)
 		toval_test(&toval_tests[i]);
 
@@ -1297,6 +1290,27 @@ int main(void)
 
 	global_parse_missing_arg_test();
 	global_parse_help_test();
+}
+
+int main(void)
+{
+	FILE *f;
+
+	test_rc = 0;
+	setlocale(LC_NUMERIC, "C");
+	f = freopen(shr_dev_null(), "w", stderr);
+	if (!f) {
+		printf("ERROR: reopening stderr failed: %s\n",
+		       libnvme_strerror(errno));
+		test_rc = 1;
+	}
+
+	/* The same results in process and in the sandbox */
+	shr_sandbox_enable(false);
+	run_tests();
+	shr_sandbox_enable(true);
+	run_tests();
+	shr_sandbox_enable(false);
 
 	if (f)
 		fclose(f);

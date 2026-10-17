@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
+#include <shared/sandbox-util.h>
 
 #include "../src/args.h"
 #include "../src/plugin.h"
@@ -523,17 +524,8 @@ static void test_lookup(void)
 	}
 }
 
-int main(void)
+static void run_tests(void)
 {
-	test_rc = 0;
-
-	builtin_plugin.parent = &prog;
-	ext_plugin.parent = &prog;
-
-	plugin_add_group(&builtin_plugin, "Core Commands", core_commands);
-	plugin_add_group(&builtin_plugin, "List Commands", list_commands);
-	plugin_add_group(&ext_plugin, NULL, ext_commands);
-
 	test_dispatch_exact();
 	test_dispatch_alias();
 	test_dispatch_prefix_unique();
@@ -551,6 +543,25 @@ int main(void)
 	test_extension_dispatch_concatenated();
 	test_extension_unknown_subcommand();
 	test_lookup();
+}
+
+int main(void)
+{
+	test_rc = 0;
+
+	builtin_plugin.parent = &prog;
+	ext_plugin.parent = &prog;
+
+	plugin_add_group(&builtin_plugin, "Core Commands", core_commands);
+	plugin_add_group(&builtin_plugin, "List Commands", list_commands);
+	plugin_add_group(&ext_plugin, NULL, ext_commands);
+
+	/* The global options are parsed in process, then sandboxed */
+	shr_sandbox_enable(false);
+	run_tests();
+	shr_sandbox_enable(true);
+	run_tests();
+	shr_sandbox_enable(false);
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
