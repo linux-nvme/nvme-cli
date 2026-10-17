@@ -14,6 +14,7 @@
           "long": "mode",
           "short": "m",
           "argument": "required",
+          "type": "enum",
           "metavar": "MODE",
           "description": "operating mode",
           "values": ["fast", "slow"]
@@ -22,12 +23,14 @@
           "long": "force",
           "short": "x",
           "argument": "none",
+          "type": "flag",
           "description": "don't    prompt for 'confirmation'"
         },
         {
           "long": "format",
           "short": "o",
           "argument": "required",
+          "type": "string",
           "metavar": "FMT",
           "description": "output format",
           "global": true,
@@ -36,12 +39,14 @@
         {
           "long": "secret",
           "argument": "none",
+          "type": "flag",
           "hidden": true,
           "description": "undocumented, hidden from help"
         },
         {
           "long": "verbose-level",
           "argument": "optional",
+          "type": "string",
           "description": "verbosity level"
         }
       ]
@@ -61,6 +66,7 @@
           "long": "wait-time",
           "short": "w",
           "argument": "required",
+          "type": "u32",
           "metavar": "NUM",
           "description": "milliseconds to wait"
         },
@@ -68,6 +74,7 @@
           "long": "format",
           "short": "o",
           "argument": "required",
+          "type": "string",
           "metavar": "FMT",
           "description": "output format",
           "global": true,
@@ -77,20 +84,23 @@
           "long": "in-file",
           "short": "f",
           "argument": "required",
+          "type": "file",
           "metavar": "FILE",
           "description": "input file path"
         },
         {
           "long": "format-version",
           "argument": "required",
+          "type": "u32",
+          "range": {"min": 1, "max": 2},
           "metavar": "VER",
           "description": "metadata format version",
-          "global": true,
-          "values": ["1", "2"]
+          "global": true
         },
         {
           "long": "dry-run",
           "argument": "none",
+          "type": "flag",
           "description": "print actions without running them"
         }
       ]
@@ -110,13 +120,15 @@
             {
               "long": "out-dir",
               "argument": "required",
-              "metavar": "DIRECTORY",
+              "type": "directory",
+              "metavar": "PATH",
               "description": "output directory"
             },
             {
               "long": "format",
               "short": "o",
               "argument": "required",
+              "type": "string",
               "metavar": "FMT",
               "description": "output format",
               "global": true,
@@ -126,13 +138,17 @@
               "long": "sel",
               "short": "S",
               "argument": "required",
+              "type": "u8",
+              "range": {"min": 0, "max": 3},
               "metavar": "SEL",
-              "description": "selection source"
+              "description": "selection source",
+              "values": ["current", "saved"]
             },
             {
               "long": "in-file",
               "short": "f",
               "argument": "required",
+              "type": "file",
               "metavar": "FILE",
               "description": "input file path"
             }
@@ -159,6 +175,7 @@
               "long": "mode",
               "short": "m",
               "argument": "required",
+              "type": "enum",
               "metavar": "MODE",
               "description": "operating mode",
               "values": ["fast", "slow"]
@@ -166,6 +183,7 @@
             {
               "long": "secret",
               "argument": "none",
+              "type": "flag",
               "hidden": true,
               "description": "undocumented, hidden from help"
             }

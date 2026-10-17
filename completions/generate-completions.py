@@ -53,15 +53,8 @@ def cmd_names(cmd):
     return [n for n in (s.strip() for s in names) if n]
 
 
-# Completion values for options the metadata carries none for. Keyed by long
-# option name, applied to every command with it, so only list values that are
-# uniform across all commands.
-# NOTE: This is a stopgap. These should probably be defined in the C option
-# definitions (OPT_VALS) so they flow through the metadata for all tooling.
-VALUE_HINTS = {
-    "output-format-version": ["1", "2"],
-    "sel": ["0", "1", "2", "3"],
-}
+# An option whose range holds at most this many numbers gets them offered.
+MAX_RANGE_VALUES = 16
 
 # help and version are matched as literal strings in the C dispatcher, not
 # registered in any command table, so dump-command-metadata never reports them.
@@ -75,14 +68,16 @@ def command_options(cmd):
     Hidden options are always skipped: they are accepted on the command line
     but suppressed from --help, so they should not be offered as completions.
 
-    Options that have no enforced value set but do have a completion hint (see
-    VALUE_HINTS) are yielded with that hint filled into "values".
+    An option with a small "range" is yielded with its numbers in "values",
+    ahead of its names.
     """
     for opt in cmd.get("options", []):
         if opt.get("hidden"):
             continue
-        if "values" not in opt and opt["long"] in VALUE_HINTS:
-            opt = dict(opt, values=VALUE_HINTS[opt["long"]])
+        rng = opt.get("range")
+        if rng and rng["max"] - rng["min"] < MAX_RANGE_VALUES:
+            numbers = [str(n) for n in range(rng["min"], rng["max"] + 1)]
+            opt = dict(opt, values=numbers + opt.get("values", []))
         yield opt
 
 
@@ -349,7 +344,7 @@ def bash_valopt_words(opts):
 
 def opt_is_file(opt):
     """True if the option's value is a filename/path we can file-complete."""
-    return opt.get("metavar") in ("FILE", "DIRECTORY")
+    return opt.get("type") in ("file", "directory")
 
 
 def opt_spellings(opt):
