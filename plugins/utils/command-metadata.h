@@ -30,6 +30,7 @@ struct command_metadata_option {
 	bool hidden;			/* not shown in help/completion */
 	const char *deprecated;		/* the replacement, or NULL */
 	const char *old_name;		/* the long name it replaced, or NULL */
+	uint64_t min, max;		/* the range of a number, if max */
 };
 
 struct command_metadata_command {

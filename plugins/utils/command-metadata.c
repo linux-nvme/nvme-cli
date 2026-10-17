@@ -326,6 +326,8 @@ static int copy_options(const struct argconfig_commandline_options *opts,
 		dst[i].config_type = opts[i].config_type;
 		dst[i].argument_type = opts[i].argument_type;
 		dst[i].hidden = opts[i].deprecated;
+		dst[i].min = opts[i].min;
+		dst[i].max = opts[i].max;
 	}
 
 	*out = dst;
@@ -667,6 +669,44 @@ static struct json_object *json_option_values(const struct command_metadata_opti
 	return vals;
 }
 
+/* The kind of value an option takes, see argconfig_parse_type() */
+static const char *opt_type(const struct command_metadata_option *o)
+{
+	switch (o->config_type) {
+	case CFG_FLAG:
+		return "flag";
+	case CFG_INCREMENT:
+		return "count";
+	case CFG_INT:
+		return "int";
+	case CFG_BYTE:
+		return "u8";
+	case CFG_SHORT:
+		return "u16";
+	case CFG_POSITIVE:
+		return "u32";
+	case CFG_LONG:
+		return "u64";
+	case CFG_LONG_SUFFIX:
+		return "size";
+	case CFG_DOUBLE:
+		return "double";
+	case CFG_STRING:
+		return "string";
+	case CFG_ENUM:
+		return "enum";
+	case CFG_FILE:
+		return "file";
+	case CFG_DIR:
+		return "directory";
+	case CFG_GROUP_SEPARATOR:
+	case CFG_INCLUDE:
+		break;
+	}
+
+	return NULL;
+}
+
 /* Build one option as a json object and add it to the given array. */
 static void json_option(struct json_object *arr, const struct command_metadata_option *o,
 			bool global)
@@ -682,6 +722,15 @@ static void json_option(struct json_object *arr, const struct command_metadata_o
 	if (o->short_option)
 		json_object_add_value_string(jo, "short", shortbuf);
 	json_object_add_value_string(jo, "argument", opt_argument(o));
+	if (opt_type(o))
+		json_object_add_value_string(jo, "type", opt_type(o));
+	if (o->max) {
+		struct json_object *range = json_create_object();
+
+		json_object_add_value_uint64(range, "min", o->min);
+		json_object_add_value_uint64(range, "max", o->max);
+		json_object_add_value_object(jo, "range", range);
+	}
 	if (o->meta && opt_takes_value(o))
 		json_object_add_value_string(jo, "metavar", o->meta);
 	if (o->help)
