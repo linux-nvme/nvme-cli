@@ -828,7 +828,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
 		if (err < 0) {
 			nvme_show_error("get-namespace-id: %s", libnvme_strerror(-err));
-			return -errno;
+			return err;
 		}
 	}
 
@@ -933,9 +933,10 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	nvme_show_verbose_result("Success formatting namespace:%x", cfg.namespace_id);
 	if (libnvme_transport_handle_is_direct(hdl) && cfg.lbaf != prev_lbaf) {
 		if (libnvme_transport_handle_is_ctrl(hdl)) {
-			if (libnvme_rescan_ns(hdl) < 0) {
+			err = libnvme_rescan_ns(hdl);
+			if (err < 0) {
 				nvme_show_error("failed to rescan namespaces");
-				return -errno;
+				return err;
 			}
 		} else if (cfg.namespace_id != NVME_NSID_ALL) {
 			block_size = 1 << ns->lbaf[cfg.lbaf].ds;
