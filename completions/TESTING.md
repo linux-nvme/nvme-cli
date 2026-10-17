@@ -71,6 +71,9 @@ These behaviors are identical in bash, zsh, and PowerShell.
       list `normal json binary tabular`.
 - [ ] **Value from a range** — `nvme feat power-meas --sel <tab>` lists
       `0 1 2 3 current default saved supported`.
+- [ ] **List of names** — `nvme samsung vs-internal-log -t host0,<tab>`
+      lists `host0,host1 host0,ctlr …`, completing the name after the
+      last comma.
 - [ ] **Command-local value** — `nvme fw commit --action <tab>` lists
       `replace … set-active …`.
 - [ ] **File-valued option** — `nvme fw download --fw <tab>` completes

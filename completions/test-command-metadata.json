@@ -151,6 +151,15 @@
               "type": "file",
               "metavar": "FILE",
               "description": "input file path"
+            },
+            {
+              "long": "kinds",
+              "short": "k",
+              "argument": "required",
+              "type": "enum-list",
+              "metavar": "NAME,...",
+              "description": "kinds to report",
+              "values": ["red", "green", "blue"]
             }
           ]
         },
