@@ -119,6 +119,12 @@ if python3.found()
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib])
 
+        test('nvme-cli - sel-cli',
+             python3,
+             args: [files('nvme_sel_test.py'), nvme_exe, mock_nvme_lib],
+             env: cli_test_env,
+             depends: [nvme_exe, mock_nvme_lib])
+
         # The host and AVE discovery printers need the fabrics code.
         if want_fabrics and json_c_dep.found() and 'log' in selected_plugins
             test('nvme-cli - discovery-logs-cli',

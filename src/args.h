@@ -72,6 +72,9 @@ enum nvme_print_flags {
  */
 extern struct argconfig_opt_val nvme_nsid_values[];
 extern struct argconfig_opt_val nvme_timeout_values[];
+extern struct argconfig_opt_val nvme_sel_values[];
+/* The largest value of the Select field, nvme_sel_values names them */
+#define NVME_SEL_MAX	NVME_GET_FEATURES_SEL_SUPPORTED
 extern const char *uuid_index;
 extern const char *namespace_id_desired;
 
