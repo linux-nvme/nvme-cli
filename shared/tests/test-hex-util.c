@@ -6,6 +6,7 @@
  * Authors: Daniel Wagner <dwagner@suse.de>
  */
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,12 +86,67 @@ static bool test_hex_to_ascii(void)
 	return pass;
 }
 
+static bool test_bin_to_hex(void)
+{
+	const unsigned char bin[] = { 0x00, 0x1f, 0xa0, 0xff };
+	char buf[9];
+	bool pass = true;
+	int ret;
+
+	printf("test_bin_to_hex:\n");
+
+	ret = shr_bin_to_hex(buf, sizeof(buf), bin, sizeof(bin), 0);
+	if (ret != 8 || strcmp(buf, "001fa0ff")) {
+		printf(" - lower case [FAIL] got %d '%s'\n", ret, buf);
+		pass = false;
+	} else {
+		printf(" - lower case [PASS]\n");
+	}
+
+	ret = shr_bin_to_hex(buf, sizeof(buf), bin, sizeof(bin),
+			     SHR_HEX_UPPER);
+	if (ret != 8 || strcmp(buf, "001FA0FF")) {
+		printf(" - upper case [FAIL] got %d '%s'\n", ret, buf);
+		pass = false;
+	} else {
+		printf(" - upper case [PASS]\n");
+	}
+
+	ret = shr_bin_to_hex(buf, sizeof(buf), bin, sizeof(bin),
+			     SHR_HEX_REVERSE);
+	if (ret != 8 || strcmp(buf, "ffa01f00")) {
+		printf(" - reverse [FAIL] got %d '%s'\n", ret, buf);
+		pass = false;
+	} else {
+		printf(" - reverse [PASS]\n");
+	}
+
+	ret = shr_bin_to_hex(buf, sizeof(buf) - 1, bin, sizeof(bin), 0);
+	if (ret != -E2BIG || buf[0]) {
+		printf(" - too small [FAIL] got %d\n", ret);
+		pass = false;
+	} else {
+		printf(" - too small [PASS]\n");
+	}
+
+	ret = shr_bin_to_hex(buf, 1, bin, 0, 0);
+	if (ret != 0 || buf[0]) {
+		printf(" - empty [FAIL] got %d\n", ret);
+		pass = false;
+	} else {
+		printf(" - empty [PASS]\n");
+	}
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
 
 	pass &= test_hex_to_int();
 	pass &= test_hex_to_ascii();
+	pass &= test_bin_to_hex();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

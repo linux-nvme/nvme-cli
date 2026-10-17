@@ -6,6 +6,7 @@
  * Authors: Chaithanya Shoba <ashoba@micron.com>
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -73,4 +74,29 @@ char *shr_hex_to_ascii(const char *hex)
 	}
 
 	return text;
+}
+
+int shr_bin_to_hex(char *dst, size_t size, const void *src, size_t len,
+		   unsigned int flags)
+{
+	const char *digits = flags & SHR_HEX_UPPER ?
+		"0123456789ABCDEF" : "0123456789abcdef";
+	const unsigned char *p = src;
+	unsigned char b;
+	size_t i;
+
+	if (size < 2 * len + 1) {
+		if (size)
+			dst[0] = '\0';
+		return -E2BIG;
+	}
+
+	for (i = 0; i < len; i++) {
+		b = flags & SHR_HEX_REVERSE ? p[len - 1 - i] : p[i];
+		dst[2 * i] = digits[b >> 4];
+		dst[2 * i + 1] = digits[b & 0xf];
+	}
+	dst[2 * len] = '\0';
+
+	return 2 * len;
 }
