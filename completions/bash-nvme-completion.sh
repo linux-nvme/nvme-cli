@@ -293,7 +293,7 @@ nvme_list_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
-			_nvme_opt_files "--config -J" "--raw -r"
+			_nvme_opt_files "--config -J" "--nbft-path" "--raw -r"
 			nodevice=1
 			;;
 
@@ -404,7 +404,7 @@ nvme_list_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
-			_nvme_opt_files "--config -J" "--raw -r"
+			_nvme_opt_files "--config -J" "--nbft-path" "--raw -r"
 			nodevice=1
 			;;
 
@@ -550,6 +550,7 @@ nvme_list_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
+			_nvme_opt_files "--keyfile -f"
 			nodevice=1
 			;;
 
@@ -561,7 +562,7 @@ nvme_list_opts () {
 			               "--namespace-id -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1230,6 +1231,7 @@ nvme_list_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
+			_nvme_opt_files "--keyfile -f"
 			nodevice=1
 			;;
 
@@ -1717,7 +1719,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1727,7 +1729,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1738,7 +1740,7 @@ plugin_feat_opts () {
 			_nvme_opt_vals "--nsid -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1748,7 +1750,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1758,7 +1760,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1768,7 +1770,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1778,7 +1780,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1788,7 +1790,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1799,7 +1801,7 @@ plugin_feat_opts () {
 			_nvme_opt_vals "--nsid -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1809,7 +1811,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1820,7 +1822,7 @@ plugin_feat_opts () {
 			_nvme_opt_vals "--namespace-id -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--vs-data -V"
 			;;
@@ -1831,7 +1833,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1841,7 +1843,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1851,7 +1853,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1861,7 +1863,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1871,7 +1873,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1881,7 +1883,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1891,7 +1893,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1901,7 +1903,7 @@ plugin_feat_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 	esac
@@ -2452,6 +2454,7 @@ plugin_keys_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
+			_nvme_opt_files "--keyfile -f"
 			nodevice=1
 			;;
 
@@ -2472,6 +2475,7 @@ plugin_keys_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
+			_nvme_opt_files "--keyfile -f"
 			nodevice=1
 			;;
 
@@ -2482,6 +2486,7 @@ plugin_keys_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
+			_nvme_opt_files "--keyfile -f"
 			nodevice=1
 			;;
 
@@ -2492,6 +2497,7 @@ plugin_keys_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
+			_nvme_opt_files "--keyfile -f"
 			nodevice=1
 			;;
 
@@ -2556,7 +2562,6 @@ plugin_lm_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--output-file -f"
 			;;
@@ -2567,7 +2572,6 @@ plugin_lm_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--input-file -f"
 			;;
@@ -2587,7 +2591,6 @@ plugin_lm_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
 			               "--timeout" "infinite -1"
 			;;
 	esac
@@ -3382,6 +3385,7 @@ plugin_nbft_opts () {
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
+			_nvme_opt_files "--nbft-path"
 			nodevice=1
 			;;
 	esac
@@ -3605,7 +3609,7 @@ plugin_ocp_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3634,7 +3638,7 @@ plugin_ocp_opts () {
 			_nvme_opt_vals "--namespace-id -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3644,7 +3648,7 @@ plugin_ocp_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3654,7 +3658,7 @@ plugin_ocp_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3664,7 +3668,7 @@ plugin_ocp_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3674,7 +3678,7 @@ plugin_ocp_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3685,7 +3689,7 @@ plugin_ocp_opts () {
 			_nvme_opt_vals "--namespace-id -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3696,7 +3700,7 @@ plugin_ocp_opts () {
 			_nvme_opt_vals "--namespace-id -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3706,7 +3710,7 @@ plugin_ocp_opts () {
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -S" "0 1 2 3" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3717,7 +3721,7 @@ plugin_ocp_opts () {
 			_nvme_opt_vals "--namespace-id -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -3739,7 +3743,7 @@ plugin_ocp_opts () {
 			               "--output-format-version" "1 2" \
 			               "--telemetry-type -t" "host controller host0 host1" \
 			               "--timeout" "infinite -1"
-			_nvme_opt_files "--output-file -f"
+			_nvme_opt_files "--output-file -f" "--string-log -s" "--telemetry-log -l"
 			;;
 
 		"latency-monitor-log")
@@ -4468,7 +4472,7 @@ plugin_shannon_opts () {
 			_nvme_opt_vals "--namespace-id -n" "all -1" \
 			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
-			               "--sel -s" "0 1 2 3" \
+			               "--sel -s" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
 			;;
 
