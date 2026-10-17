@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/types.h>
 
 /*
  * strsep() of the C library, with a fallback for those which don't have
@@ -253,3 +254,27 @@ static inline size_t shr_linelen(char *s)
  * The caller frees it. NULL if out of memory.
  */
 char *shr_escape(const char *s);
+
+/*
+ * Copy the string @src to @dst of @size bytes, cut off if it doesn't fit.
+ * @dst is always terminated, unless @size is 0.
+ * Return: the length of the copy, or -E2BIG if @src was cut off.
+ */
+ssize_t shr_strscpy(char *dst, const char *src, size_t size);
+
+/*
+ * Append the string @src to the string in @dst of @size bytes, cut off if
+ * it doesn't fit. @dst is always terminated, unless @size is 0.
+ * Return: the length of the result, or -E2BIG if @src was cut off.
+ */
+ssize_t shr_strscat(char *dst, const char *src, size_t size);
+
+/*
+ * Append the formatted text to @buf of @size bytes, which holds a string
+ * of *@len characters, and advance *@len. Text which doesn't fit is cut
+ * off, @buf stays terminated.
+ * Return: 0, or -E2BIG if the text was cut off.
+ */
+int shr_snprintf_append(char *buf, size_t size, size_t *len,
+			const char *fmt, ...)
+	__attribute__((format(printf, 4, 5)));

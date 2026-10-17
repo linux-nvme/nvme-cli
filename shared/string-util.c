@@ -6,6 +6,8 @@
  * Authors: Daniel Wagner <dwagner@suse.de>
  */
 
+#include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -33,4 +35,60 @@ char *shr_escape(const char *s)
 	*q = '\0';
 
 	return e;
+}
+
+ssize_t shr_strscpy(char *dst, const char *src, size_t size)
+{
+	size_t len;
+
+	if (!size)
+		return -E2BIG;
+
+	len = strnlen(src, size);
+	if (len == size) {
+		memcpy(dst, src, size - 1);
+		dst[size - 1] = '\0';
+		return -E2BIG;
+	}
+	memcpy(dst, src, len + 1);
+
+	return len;
+}
+
+ssize_t shr_strscat(char *dst, const char *src, size_t size)
+{
+	size_t len = strnlen(dst, size);
+	ssize_t n;
+
+	/* no terminated string in @dst to append to */
+	if (len == size)
+		return -E2BIG;
+
+	n = shr_strscpy(dst + len, src, size - len);
+
+	return n < 0 ? n : (ssize_t)(len + n);
+}
+
+int shr_snprintf_append(char *buf, size_t size, size_t *len,
+			const char *fmt, ...)
+{
+	va_list ap;
+	int n;
+
+	if (!size || *len >= size - 1)
+		return -E2BIG;
+
+	va_start(ap, fmt);
+	n = vsnprintf(buf + *len, size - *len, fmt, ap);
+	va_end(ap);
+
+	if (n < 0)
+		return -EINVAL;
+	if ((size_t)n >= size - *len) {
+		*len = size - 1;
+		return -E2BIG;
+	}
+	*len += n;
+
+	return 0;
 }
