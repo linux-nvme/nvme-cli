@@ -61,6 +61,12 @@
   (`1.09k` was rejected as octal, `1.500k` was 1000), and use a `.` in
   any locale as well. An empty value no longer selects a value name.
 
+* Numbers no longer take a leading zero, on the command line, in
+  `nvme-cli.conf` and in the lists of numbers. Before, a leading zero
+  made a number octal: `--namespace-id=010` was namespace 8 and `08`
+  was rejected. Write `10`, or `0x10` for hexadecimal; `0` itself is
+  fine.
+
 * Errors and warnings which repeat a command line argument or a line of
   a config file write its control characters as `\xNN`, so it can't
   send escape sequences to the terminal.
