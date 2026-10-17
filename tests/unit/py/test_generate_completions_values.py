@@ -9,7 +9,9 @@
 
 An option of the type file or directory completes paths, whatever its
 metavar. An option with a small range offers its numbers, followed by its
-names. Checked on the bash and PowerShell output for the fixture.
+names. An option which takes a list of names completes the name after the
+last comma. Checked on the bash, zsh and PowerShell output for the
+fixture.
 
 Usage: test_generate_completions_values.py <generate-completions.py> <fixture.json>
 """
@@ -35,6 +37,7 @@ class CompletionValuesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bash = generate("bash")
+        cls.zsh = generate("zsh")
         cls.powershell = generate("powershell")
 
     def test_paths(self):
@@ -49,6 +52,15 @@ class CompletionValuesTest(unittest.TestCase):
         self.assertIn("'zeta-plug report --sel' = "
                       "@('0', '1', '2', '3', 'current', 'saved')",
                       self.powershell)
+
+    def test_list(self):
+        self.assertIn('listopts+=" --kinds -k"', self.bash)
+        self.assertIn('"--kinds -k" "red green blue"', self.bash)
+        self.assertIn('_nvme_opt_list "--kinds -k" "red green blue"',
+                      self.zsh)
+        self.assertNotIn('_nvme_opt_vals "--kinds -k"', self.zsh)
+        self.assertIn("'zeta-plug report --kinds' = $true", self.powershell)
+        self.assertIn("'zeta-plug report -k' = $true", self.powershell)
 
     def test_no_guess_from_name(self):
         # a number without a range offers nothing
