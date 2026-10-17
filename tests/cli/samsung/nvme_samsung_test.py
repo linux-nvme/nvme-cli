@@ -527,10 +527,21 @@ class SamsungCLITest(unittest.TestCase):
         self.assertTrue(any('Host(0)' in f for f in self.files('h0')),
                         f'host0 was not collected when named: {self.files("h0")}')
 
+    def test_repeated_dump_types(self):
+        result = self.run_cmd('-t', 'CTLR', '-t', 'vendor', '-O', './dumps/')
+        self.assertOk(result)
+        names = self.files('dumps')
+        self.assertTrue(any('Telemetry_Controller' in f for f in names), names)
+        self.assertTrue(any('VendorCrashDump' in f for f in names), names)
+
     def test_unknown_dump_type_is_rejected(self):
-        result = self.run_cmd('-t', 'nosuchtype', '-O', './dumps/')
-        self.assertNotEqual(result.returncode, 0,
-                            'an unknown -t token must fail')
+        for types in ('nosuchtype', 'ctlr,nosuchtype', 'ctlr,', ''):
+            with self.subTest(types=types):
+                result = self.run_cmd('-t', types, '-O', './dumps/')
+                self.assertNotEqual(result.returncode, 0,
+                                    'an unknown -t token must fail')
+                self.assertIn('host0, host1, ctlr, controller, vendor',
+                              result.stderr)
 
     # ---------------------------------------------------------------- #
     # -a validation, which used to be skipped without -t                #
