@@ -14,6 +14,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <shared/string-util.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
@@ -473,10 +474,10 @@ static int find_option(char const *list[], int size, const char *val)
 
 static void join_options(char *dest, size_t dest_size, char const *list[], size_t list_size)
 {
-	strncat(dest, list[0], dest_size - strlen(dest) - 1);
+	shr_strscpy(dest, list[0], dest_size);
 	for (int i = 1; i < list_size; i++) {
-		strncat(dest, "|", dest_size - strlen(dest) - 1);
-		strncat(dest, list[i], dest_size - strlen(dest) - 1);
+		shr_strscat(dest, "|", dest_size);
+		shr_strscat(dest, list[i], dest_size);
 	}
 }
 
@@ -489,15 +490,15 @@ static int find_field(struct field *fields, const char *val)
 	return -EINVAL;
 }
 
-static void join_fields(char *dest, struct field *fields)
+static void join_fields(char *dest, size_t dest_size, struct field *fields)
 {
-	strcat(dest, fields[0].name);
+	shr_strscpy(dest, fields[0].name, dest_size);
 	for (int i = 1; i < MAX_FIELDS; i++) {
 		char *name = fields[i].name;
 
 		if (name) {
-			strcat(dest, "|");
-			strcat(dest, name);
+			shr_strscat(dest, "|", dest_size);
+			shr_strscat(dest, name, dest_size);
 		}
 	}
 }
@@ -607,7 +608,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		if (field_pos < 0) {
 			char field_options[256];
 
-			join_fields(field_options, group_fields[opt]);
+			join_fields(field_options, sizeof(field_options),
+				    group_fields[opt]);
 			nvme_show_error(
 				"Invalid field name: %s. For type: \"%s\", valid fields are: %s",
 				 cfg.trigger_field, cfg.tracker_type, field_options);
