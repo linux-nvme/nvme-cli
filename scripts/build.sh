@@ -55,6 +55,7 @@ usage() {
     echo "  html_docs           build html documentation only"
     echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
+    echo "  static_windows      build a static binary on MSYS2"
     echo "  minimal_static      build a static binary without fabrics support"
     echo "  nofabrics           build without fabrics support, run unit tests"
     echo "  libnvme             build only libnvme"
@@ -332,6 +333,26 @@ config_meson_static() {
         -Dtests=false                           \
         -Dexamples=false                        \
         "${BUILDDIR}"
+}
+
+config_meson_static_windows() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype=release                     \
+        --default-library=static                \
+        -Dc_link_args="-static"                 \
+        -Dlibarchive=disabled                   \
+        -Dpython=disabled                       \
+        -Dopenssl=disabled                      \
+        -Dtests=false                           \
+        -Dexamples=false                        \
+        "${BUILDDIR}"
+}
+
+test_meson_static_windows() {
+    # Fail if nvme.exe needs a DLL that is not part of Windows.
+    ldd "${BUILDDIR}/nvme.exe"
+    ! ldd "${BUILDDIR}/nvme.exe" | grep -v -i '/c/windows/'
 }
 
 config_meson_minimal_static() {
