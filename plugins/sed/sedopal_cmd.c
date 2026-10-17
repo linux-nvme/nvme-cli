@@ -1041,6 +1041,8 @@ static int sedopal_discover_device(struct libnvme_transport_handle *hdl,
 {
 	int rc;
 
+	/* --dry-run returns success without filling the buffer */
+	memset(buf, 0, len);
 	rc = libnvme_sed_discover(hdl, buf, len);
 	if (rc) {
 		nvme_show_err(rc, "level 0 discovery");
