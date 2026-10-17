@@ -297,6 +297,11 @@ bool argconfig_help_requested(void)
 	return help_requested;
 }
 
+static bool argconfig_is_string(enum argconfig_types type)
+{
+	return type == CFG_STRING || type == CFG_FILE || type == CFG_DIR;
+}
+
 static int argconfig_parse_type(struct argconfig_commandline_options *s,
 				char *arg)
 {
@@ -307,12 +312,14 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 	int ret = 0;
 
 	/* only a string option can do without a value */
-	if (!arg && s->config_type != CFG_STRING &&
+	if (!arg && !argconfig_is_string(s->config_type) &&
 	    s->config_type != CFG_FLAG && s->config_type != CFG_INCREMENT)
 		return -EINVAL;
 
 	switch (s->config_type) {
 	case CFG_STRING:
+	case CFG_FILE:
+	case CFG_DIR:
 		*(char **)value = arg;
 		break;
 	case CFG_INT:
@@ -406,6 +413,8 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 		*(int *)val = opt_val->increment;
 		break;
 	case CFG_STRING:
+	case CFG_FILE:
+	case CFG_DIR:
 		*(char **)val = opt_val->string;
 		break;
 	case CFG_GROUP_SEPARATOR:

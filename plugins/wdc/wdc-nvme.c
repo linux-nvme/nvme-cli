@@ -10579,7 +10579,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.dirName, dirName),
+		OPT_DIR("dir-name", 'd', &cfg.dirName, dirName),
 		OPT_END()
 	};
 

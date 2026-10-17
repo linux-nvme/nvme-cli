@@ -795,8 +795,8 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("fw",   'f', "FILE",      &cfg.fw, fw),
-		OPT_ENUM("select", 's', &cfg.select, select,  selects),
+		OPT_FILE("fw",     'f', &cfg.fw,     fw),
+		OPT_ENUM("select", 's', &cfg.select, select, selects),
 		OPT_END()
 	};
 

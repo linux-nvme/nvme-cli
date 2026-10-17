@@ -31,6 +31,7 @@ union val {
 	char *string;
 	char *fmt;
 	char *file;
+	char *dir;
 	char *list;
 	char *str;
 	__u8 val;
@@ -82,6 +83,7 @@ struct cfg {
 	char *string;
 	char *fmt;
 	char *file;
+	char *dir;
 	char *list;
 	char *str;
 	__u8 val;
@@ -147,6 +149,8 @@ static struct toval_test toval_tests[] = {
 	VAL_TEST("--string=string", string, "string", false, 0),
 	VAL_TEST("--fmt=fmt", fmt, "fmt", false, 0),
 	VAL_TEST("--file=file", file, "file", false, 0),
+	VAL_TEST("--dir=dir", dir, "dir", false, 0),
+	VAL_TEST("--file", file, NULL, false, -EINVAL),
 	VAL_TEST("--list=list", list, "list", false, 0),
 	VAL_TEST("--str=str", str, "str", false, 0),
 	VAL_TEST("--val=", val, 0, true, -EINVAL),
@@ -224,6 +228,7 @@ void toval_test(struct toval_test *test)
 		OPT_STRING("string", 't', "STRING", &cfg.string, "string"),
 		OPT_FMT("fmt", 'F', &cfg.fmt, "fmt"),
 		OPT_FILE("file", 'L', &cfg.file, "file"),
+		OPT_DIR("dir", 'D', &cfg.dir, "dir"),
 		OPT_LIST("list", 'T', &cfg.list, "list"),
 		OPT_STR("str", 'r', &cfg.str, "str"),
 		OPT_BYTE("val", 'v', &cfg.val, "val", opt_vals),

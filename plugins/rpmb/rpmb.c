@@ -816,7 +816,7 @@ static int rpmb_program_key(int argc, char **argv, struct command *acmd, struct 
 
 	OPT_ARGS(opts) = {
 		OPT_STRING("key",     'k', "key",       &cfg.key,     key),
-		OPT_STRING("keyfile", 'g', "FILE",      &cfg.keyfile, kfile),
+		OPT_FILE("keyfile",   'g', &cfg.keyfile, kfile),
 		OPT_BYTE("target",    't', &cfg.target, target),
 		OPT_END()
 	};
@@ -910,7 +910,7 @@ static int rpmb_read_data(int argc, char **argv, struct command *acmd, struct pl
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("msgfile", 'f', "FILE",       &cfg.msgfile, mfile),
+		OPT_FILE("msgfile",   'f', &cfg.msgfile, mfile),
 		OPT_UINT("address",   0,   &cfg.address, address),
 		OPT_UINT("blocks",    'b', &cfg.blocks,  blocks),
 		OPT_BYTE("target",    't', &cfg.target,  target),
@@ -978,8 +978,8 @@ static int rpmb_write_data(int argc, char **argv, struct command *acmd, struct p
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("msgfile", 'f', "FILE",       &cfg.msgfile, mfile),
-		OPT_STRING("keyfile", 'g', "FILE",       &cfg.keyfile, kfile),
+		OPT_FILE("msgfile",   'f', &cfg.msgfile, mfile),
+		OPT_FILE("keyfile",   'g', &cfg.keyfile, kfile),
 		OPT_STRING("key",     'k', "key",        &cfg.key,     key),
 		OPT_STRING("msg",     'd', "data",       &cfg.msg,     msg),
 		OPT_UINT("address",   0,   &cfg.address, address),
@@ -1047,7 +1047,7 @@ static int rpmb_read_config(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
+		OPT_FILE("msgfile", 'f', &cfg.msgfile, mfile),
 		OPT_END()
 	};
 
@@ -1114,8 +1114,8 @@ static int rpmb_write_config(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("msgfile", 'f', "FILE", &cfg.msgfile, mfile),
-		OPT_STRING("keyfile", 'g', "FILE", &cfg.keyfile, kfile),
+		OPT_FILE("msgfile",   'f', &cfg.msgfile, mfile),
+		OPT_FILE("keyfile",   'g', &cfg.keyfile, kfile),
 		OPT_STRING("key",     'k', "key",  &cfg.key,     key),
 		OPT_STRING("msg",     'd', "data", &cfg.msg,     msg),
 		OPT_END()

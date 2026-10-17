@@ -638,8 +638,8 @@ static int micron_selective_download(int argc, char **argv,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("fw",   'f', "FILE",      &cfg.fw, fw),
-		OPT_ENUM("select", 's', &cfg.select, select,  selects),
+		OPT_FILE("fw",     'f', &cfg.fw,     fw),
+		OPT_ENUM("select", 's', &cfg.select, select, selects),
 		OPT_END()
 	};
 
@@ -3762,7 +3762,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 
 	OPT_ARGS(opts) = {
 		OPT_ENUM("type",      't', &cfg.type,      type, types),
-		OPT_STRING("package", 'p', "FILE", &cfg.package, package),
+		OPT_FILE("package",   'p', &cfg.package,   package),
 		OPT_UINT("data_area", 'd', &cfg.data_area, data_area),
 		OPT_END()
 	};

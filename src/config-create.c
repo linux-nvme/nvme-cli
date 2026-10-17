@@ -202,7 +202,7 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 				    &persistent_arg, desc_persistent),
 		OPT_STRING("host-symname", 0, "STR", &hostsymname,
 			   desc_symname),
-		OPT_STRING("output",  0, "FILE",     &output_file, desc_output),
+		OPT_FILE("output", 0, &output_file, desc_output),
 		OPT_END()
 	};
 
