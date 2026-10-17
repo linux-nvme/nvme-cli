@@ -31,11 +31,6 @@
 #include "src/cleanup.h"
 #include "ymtc-utils.h"
 
- /* sysfs paths for vendor ID and device ID */
-static char *vendor_id_path1 = "/sys/class/nvme/nvme%d/device/vendor";
-static char *vendor_id_path2 = "/sys/class/misc/nvme%d/device/vendor";
-static char *device_id_path1 = "/sys/class/nvme/nvme%d/device/device";
-static char *device_id_path2 = "/sys/class/misc/nvme%d/device/device";
 static unsigned short vendor_id;
 static unsigned short device_id;
 
@@ -76,14 +71,18 @@ static enum ySSDModel GetSSDModel(int idx)
 	enum ySSDModel model = UNKNOWN_SSD;
 	char path[512];
 
-	sprintf(path, vendor_id_path1, idx);
+	snprintf(path, sizeof(path),
+		 "/sys/class/nvme/nvme%d/device/vendor", idx);
 	if (ReadSysFile(path, &vendor_id) < 0) {
-		sprintf(path, vendor_id_path2, idx);
+		snprintf(path, sizeof(path),
+			 "/sys/class/misc/nvme%d/device/vendor", idx);
 		ReadSysFile(path, &vendor_id);
 	}
-	sprintf(path, device_id_path1, idx);
+	snprintf(path, sizeof(path),
+		 "/sys/class/nvme/nvme%d/device/device", idx);
 	if (ReadSysFile(path, &device_id) < 0) {
-		sprintf(path, device_id_path2, idx);
+		snprintf(path, sizeof(path),
+			 "/sys/class/misc/nvme%d/device/device", idx);
 		ReadSysFile(path, &device_id);
 	}
 	if (vendor_id == YMTC_VENDOR_ID) {
