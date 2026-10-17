@@ -695,6 +695,8 @@ static const char *opt_type(const struct command_metadata_option *o)
 		return "string";
 	case CFG_ENUM:
 		return "enum";
+	case CFG_ENUM_LIST:
+		return "enum-list";
 	case CFG_FILE:
 		return "file";
 	case CFG_DIR:

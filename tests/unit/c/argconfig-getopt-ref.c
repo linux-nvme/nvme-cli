@@ -89,6 +89,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		*(int *)value += 1;
 		break;
 	case CFG_ENUM:
+	case CFG_ENUM_LIST:
 		ret = -EINVAL;
 		break;
 	case CFG_LONG:
@@ -156,6 +157,7 @@ static void argconfig_set_opt_val(enum argconfig_types type,
 	case CFG_DIR:
 		*(char **)val = opt_val->string;
 		break;
+	case CFG_ENUM_LIST:
 	case CFG_GROUP_SEPARATOR:
 	case CFG_INCLUDE:
 		break;
