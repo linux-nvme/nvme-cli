@@ -161,6 +161,16 @@ static bool test_strict_numbers_and_buf(void)
 		printf(" - '0x10' taken from a buffer [PASS]\n");
 	}
 
+	nvme_args.output_format_ver = 2;
+	nvme_load_global_config_buf("[Global]\noutput-format-version = 3\n",
+				    "buf");
+	if (nvme_args.output_format_ver != 2) {
+		printf(" - '3' out of range rejected [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - '3' out of range rejected [PASS]\n");
+	}
+
 	return pass;
 }
 

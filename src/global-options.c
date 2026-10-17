@@ -47,7 +47,7 @@ static struct argconfig_commandline_options global_options[] = {
 	OPT_FLAG("no-ioctl-probing", 0, &nvme_args.no_ioctl_probing,
 		 "disable 64-bit IOCTL support probing"),
 	OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,
-		 "output format version: 1|2"),
+		 "output format version: 1|2", .min = 1, .max = 2),
 	/* the spelling of --verbose of older versions */
 	OPT_INCR("human-readable", 'H', &nvme_args.verbose, NULL,
 		 .deprecated = "--verbose/-v"),

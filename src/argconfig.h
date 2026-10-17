@@ -235,6 +235,12 @@ struct argconfig_commandline_options {
 	const char *deprecated;
 	/* the long name of earlier versions, accepted with a warning */
 	const char *old_name;
+	/*
+	 * The range of an unsigned number, unless max is 0. The named values
+	 * are taken as they are.
+	 */
+	uint64_t min;
+	uint64_t max;
 };
 
 void argconfig_append_usage(const char *str);
@@ -278,6 +284,8 @@ void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
 
 bool argconfig_given(struct argconfig_commandline_options *options,
 		     const void *value);
+bool argconfig_in_range(const struct argconfig_commandline_options *s,
+			uint64_t u);
 bool argconfig_set_value_name(struct argconfig_commandline_options *option,
 			      const char *str);
 const char *argconfig_value_name(const struct argconfig_opt_val *values,
