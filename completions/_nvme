@@ -240,6 +240,25 @@ _nvme () {
 		return 1
 	}
 
+	# Like _nvme_opt_vals, for an option which takes a comma-separated list
+	# of its values.
+	_nvme_opt_list() {
+		local -a names
+		local name
+		while (( $# >= 2 )); do
+			names=(${=1})
+			for name in "${names[@]}"; do
+				if [[ ${words[CURRENT]} == ${name}=* ]] || \
+				   [[ ${words[CURRENT-1]} == "${name}" ]]; then
+					_values -s , '' ${=2}
+					return 0
+				fi
+			done
+			shift 2
+		done
+		return 1
+	}
+
 	# Complete an option's value as a filename, in both the attached
 	# ('--opt=path', '-o=path') and separate-word ('--opt path', '-o path') forms.
 	# Each argument is a space-separated spelling list ('--fw -f'); if the word
@@ -8029,6 +8048,7 @@ _nvme () {
 					_nvme_opt_vals "--output-format -o" "normal" \
 					               "--output-format-version" "1 2" \
 					               "--timeout" "infinite -1" && return
+					_nvme_opt_list "--dump-type -t" "host0 host1 ctlr controller vendor" && return
 					_nvme_opt_files "--output-file -O" && return
 					local _samsung_vs_internal_log
 					_samsung_vs_internal_log=(
