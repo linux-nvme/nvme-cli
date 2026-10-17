@@ -2613,7 +2613,7 @@ void stdout_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 	const char *async = "Send async event";
 	const char *no_async = "Do not send async event";
 	struct shr_table *t;
-	__u8 field;
+	__u16 field;
 
 	switch (fid) {
 	case NVME_FEAT_FID_ARBITRATION:
