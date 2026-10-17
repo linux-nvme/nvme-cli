@@ -46,6 +46,7 @@
 #include "fabrics.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "privsep.h"
 
 #ifdef CONFIG_FABRICS
 
@@ -78,6 +79,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
+	nvme_privsep_attach(ctx);
 
 	hostnqn = libnvmf_generate_hostnqn(ctx);
 	if (!hostnqn) {
@@ -110,6 +112,7 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
+	nvme_privsep_attach(ctx);
 
 	hostnqn = libnvmf_read_hostnqn(ctx);
 	if (!hostnqn)
