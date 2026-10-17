@@ -23,6 +23,7 @@
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
 #include <shared/parse-util.h>
+#include <shared/string-util.h>
 
 #include "global-ctx.h"
 #include "nvme-cmds.h"
@@ -475,7 +476,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		}
 		close(verify_file);
 		remove(cfg.file);
-		strncpy(f, cfg.file, PATH_MAX - 5);
+		shr_strscpy(f, cfg.file, sizeof(f));
 	} else {
 		sndk_UtilsGetTime(&timeInfo);
 		memset(timeStamp, 0, sizeof(timeStamp));
@@ -499,7 +500,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 			ret = -1;
 			goto out;
 		}
-		strcat(f, ".bin");
+		shr_strscat(f, ".bin", sizeof(f));
 	}
 	nvme_show_error("%s: filename = %s", __func__, f);
 
@@ -905,7 +906,7 @@ static void sndk_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 			printf("   ");
 			sndk_get_commit_action_bin(
 			    fw_act_hist_log->entry[entryIdx].commit_action_type,
-			    (char *)&commit_action_bin);
+			    commit_action_bin, sizeof(commit_action_bin));
 			printf("  %s", (char *)commit_action_bin);
 			printf("  ");
 			if (!le16_to_cpu(fw_act_hist_log->entry[entryIdx].result))
@@ -970,6 +971,9 @@ static void sndk_print_fw_act_history_log_json(__u8 *data, int num_entries)
 			entryIdx = oldestEntryIdx;
 
 		for (i = 0; i < num_entries; i++) {
+			struct sndk_fw_act_history_log_entry_c2 *e =
+				&fw_act_hist_log->entry[entryIdx];
+
 			memcpy(previous_fw,
 				(char *)&
 				(fw_act_hist_log->entry[entryIdx].previous_fw_version),
@@ -1004,15 +1008,15 @@ static void sndk_print_fw_act_history_log_json(__u8 *data, int num_entries)
 
 			sndk_get_commit_action_bin(
 			    fw_act_hist_log->entry[entryIdx].commit_action_type,
-			    (char *)&commit_action_bin);
+			    commit_action_bin, sizeof(commit_action_bin));
 			json_object_add_value_string(root, "Action", commit_action_bin);
 
 			if (!le16_to_cpu(fw_act_hist_log->entry[entryIdx].result)) {
 				json_object_add_value_string(root, "Result", "pass");
 			} else {
-				sprintf((char *)fail_str, "fail #%d",
-					(int)(le16_to_cpu(
-						fw_act_hist_log->entry[entryIdx].result)));
+				snprintf((char *)fail_str, sizeof(fail_str),
+					 "fail #%d",
+					 (int)(le16_to_cpu(e->result)));
 				json_object_add_value_string(root, "Result", fail_str);
 			}
 
