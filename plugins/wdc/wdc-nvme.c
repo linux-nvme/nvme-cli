@@ -41,11 +41,13 @@
 #include <shared/compiler-attributes-util.h>
 #include <shared/crypto-util.h>
 #include <shared/fs-util.h>
+#include <shared/hex-util.h>
 #include <shared/io-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
+#include <shared/unaligned-util.h>
 
 #include "global-ctx.h"
 #include "nvme-cmds.h"
@@ -2185,7 +2187,7 @@ static int wdc_get_serial_name(struct libnvme_transport_handle *hdl, char *file,
 	struct nvme_id_ctrl ctrl;
 	char sn[sizeof(ctrl.sn) + 1] = {0};
 
-	strncpy(orig, file, PATH_MAX - 1);
+	shr_strscpy(orig, file, sizeof(orig));
 	memset(file, 0, len);
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	nvme_init_identify_ctrl(&cmd, &ctrl);
@@ -3903,7 +3905,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *acmd,
 		return ret;
 
 	if (cfg.file)
-		strncpy(f, cfg.file, PATH_MAX - 1);
+		shr_strscpy(f, cfg.file, sizeof(f));
 	if (cfg.xfer_size)
 		xfer_size = cfg.xfer_size;
 	ret = wdc_get_serial_name(hdl, f, PATH_MAX, "cap_diag");
@@ -3916,7 +3918,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *acmd,
 			nvme_show_error("ERROR: WDC: file name overflow");
 			return -1;
 		}
-		strcat(f, ".bin");
+		shr_strscat(f, ".bin", sizeof(f));
 	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
@@ -4313,7 +4315,7 @@ static int dump_internal_logs(struct libnvme_transport_handle *hdl, const char *
 	}
 	memset(hdr, 0, bs);
 
-	sprintf(file_path, "%s/telemetry.bin", dir_name);
+	snprintf(file_path, sizeof(file_path), "%s/telemetry.bin", dir_name);
 	output = shr_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!", file_path, libnvme_strerror(errno));
@@ -4492,7 +4494,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 				goto out;
 			}
 			close(verify_file);
-			strncpy(f, cfg.file, PATH_MAX - 1);
+			shr_strscpy(f, cfg.file, sizeof(f));
 		} else {
 			wdc_UtilsGetTime(&timeInfo);
 			memset(timeStamp, 0, sizeof(timeStamp));
@@ -4516,7 +4518,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 				ret = -1;
 				goto out;
 			}
-			strcat(f, ".bin");
+			shr_strscat(f, ".bin", sizeof(f));
 		}
 		nvme_show_error("%s: filename = %s", __func__, f);
 
@@ -4535,7 +4537,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 			telemetry_data_area = cfg.data_area;
 	} else {
 		if (cfg.file) {
-			strncpy(fb, cfg.file, PATH_MAX/2 - 8);
+			shr_strscpy(fb, cfg.file, sizeof(fb));
 		} else {
 			wdc_UtilsGetTime(&timeInfo);
 			memset(timeStamp, 0, sizeof(timeStamp));
@@ -4743,7 +4745,7 @@ static int wdc_crash_dump(struct libnvme_transport_handle *hdl, const char *file
 	int ret;
 
 	if (file)
-		strncpy(f, file, PATH_MAX - 1);
+		shr_strscpy(f, file, sizeof(f));
 
 	if (type == WDC_NVME_PFAIL_DUMP_TYPE)
 		dump_type = "_pfail_dump";
@@ -4834,7 +4836,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *acmd,
 		ret = -1;
 	} else {
 		if (cfg.file)
-			strncpy(f, cfg.file, PATH_MAX - 1);
+			shr_strscpy(f, cfg.file, sizeof(f));
 		ret = wdc_get_serial_name(hdl, f, PATH_MAX, "drive_log");
 		if (ret)
 			nvme_show_error("ERROR: WDC: failed to generate file name");
@@ -5340,44 +5342,56 @@ static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_lo
 	char guid[40];
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	snprintf((char *)guid, sizeof(guid), "0x%"PRIx64"%"PRIx64"",
+		 shr_get_unaligned_le64(&log_data->log_page_guid[8]),
+		 shr_get_unaligned_le64(&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	for (i = 0; i <= 3; i++) {
 		for (j = 2; j >= 0; j--) {
-			sprintf(buf, "Active Bucket Counter: Bucket %d %s", i, operation[2-j]);
+			snprintf(buf, sizeof(buf),
+				 "Active Bucket Counter: Bucket %d %s", i,
+				 operation[2-j]);
 			json_object_add_value_int(root, buf, le32_to_cpu(log_data->active_bucket_counter[i][j+1]));
 		}
 	}
 	for (i = 3; i >= 0; i--) {
 		for (j = 2; j >= 0; j--) {
-			sprintf(buf, "Active Measured Latency: Bucket %d %s", 3-i, operation[2-j]);
+			snprintf(buf, sizeof(buf),
+				 "Active Measured Latency: Bucket %d %s", 3-i,
+				 operation[2-j]);
 			json_object_add_value_int(root, buf, le16_to_cpu(log_data->active_measured_latency[i][j]));
 		}
 	}
 	for (i = 3; i >= 0; i--) {
 		for (j = 2; j >= 0; j--) {
-			sprintf(buf, "Active Latency Time Stamp: Bucket %d %s", 3-i, operation[2-j]);
+			snprintf(buf, sizeof(buf),
+				 "Active Latency Time Stamp: Bucket %d %s", 3-i,
+				 operation[2-j]);
 			json_object_add_value_int(root, buf, le64_to_cpu(log_data->active_latency_timestamp[i][j]));
 		}
 	}
 	for (i = 0; i <= 3; i++) {
 		for (j = 2; j >= 0; j--) {
-			sprintf(buf, "Static Bucket Counter: Bucket %d %s", i, operation[2-j]);
+			snprintf(buf, sizeof(buf),
+				 "Static Bucket Counter: Bucket %d %s", i,
+				 operation[2-j]);
 			json_object_add_value_int(root, buf, le32_to_cpu(log_data->static_bucket_counter[i][j+1]));
 		}
 	}
 	for (i = 3; i >= 0; i--) {
 		for (j = 2; j >= 0; j--) {
-			sprintf(buf, "Static Measured Latency: Bucket %d %s", 3-i, operation[2-j]);
+			snprintf(buf, sizeof(buf),
+				 "Static Measured Latency: Bucket %d %s", 3-i,
+				 operation[2-j]);
 			json_object_add_value_int(root, buf, le16_to_cpu(log_data->static_measured_latency[i][j]));
 		}
 	}
 	for (i = 3; i >= 0; i--) {
 		for (j = 2; j >= 0; j--) {
-			sprintf(buf, "Static Latency Time Stamp: Bucket %d %s", 3-i, operation[2-j]);
+			snprintf(buf, sizeof(buf),
+				 "Static Latency Time Stamp: Bucket %d %s", 3-i,
+				 operation[2-j]);
 			json_object_add_value_int(root, buf, le64_to_cpu(log_data->static_latency_timestamp[i][j]));
 		}
 	}
@@ -5443,7 +5457,8 @@ static void wdc_print_error_rec_log_json(struct wdc_ocp_c1_error_recovery_log *l
 	if (le16_to_cpu(log_data->log_page_version) >= 3) {
 		json_object_add_value_int(root, "Panic Count", log_data->panic_count);
 		for (j = 0; j < 4; j++) {
-			sprintf(buf, "Previous Panic ID N-%d", j+1);
+			snprintf(buf, sizeof(buf), "Previous Panic ID N-%d",
+				 j+1);
 			json_object_add_value_int(root, buf,
 				le64_to_cpu(log_data->prev_panic_ids[j]));
 		}
@@ -5454,9 +5469,9 @@ static void wdc_print_error_rec_log_json(struct wdc_ocp_c1_error_recovery_log *l
 	char guid[40];
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	snprintf((char *)guid, sizeof(guid), "0x%"PRIx64"%"PRIx64"",
+		 shr_get_unaligned_le64(&log_data->log_page_guid[8]),
+		 shr_get_unaligned_le64(&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	json_print_object(root, NULL);
@@ -5508,7 +5523,8 @@ static void wdc_print_dev_cap_log_json(struct wdc_ocp_C4_dev_cap_log *log_data)
 
 	memset((void *)dssd_descr_str, 0, 40);
 	for (j = 0; j < WDC_OCP_C4_NUM_PS_DESCR; j++) {
-		sprintf((char *)dssd_descr_str, "DSSD Power State %d Descriptor", j);
+		snprintf((char *)dssd_descr_str, sizeof(dssd_descr_str),
+			 "DSSD Power State %d Descriptor", j);
 		json_object_add_value_int(root, dssd_descr_str, log_data->dssd_ps_descr[j]);
 	}
 
@@ -5516,9 +5532,9 @@ static void wdc_print_dev_cap_log_json(struct wdc_ocp_C4_dev_cap_log *log_data)
 	char guid[40];
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	snprintf((char *)guid, sizeof(guid), "0x%"PRIx64"%"PRIx64"",
+		 shr_get_unaligned_le64(&log_data->log_page_guid[8]),
+		 shr_get_unaligned_le64(&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	json_print_object(root, NULL);
@@ -5558,7 +5574,8 @@ static void wdc_print_unsupported_reqs_log_json(struct wdc_ocp_C5_unsupported_re
 
 	memset((void *)unsup_req_list_str, 0, 41);
 	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
-		sprintf((char *)unsup_req_list_str, "Unsupported Requirement List %d", j);
+		snprintf((char *)unsup_req_list_str, sizeof(unsup_req_list_str),
+			 "Unsupported Requirement List %d", j);
 		json_object_add_value_string(root, unsup_req_list_str, (char *)log_data->unsupported_req_list[j]);
 	}
 
@@ -5567,9 +5584,9 @@ static void wdc_print_unsupported_reqs_log_json(struct wdc_ocp_C5_unsupported_re
 	char guid[40];
 
 	memset((void *)guid, 0, 40);
-	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	snprintf((char *)guid, sizeof(guid), "0x%"PRIx64"%"PRIx64"",
+		 shr_get_unaligned_le64(&log_data->log_page_guid[8]),
+		 shr_get_unaligned_le64(&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	json_print_object(root, NULL);
@@ -6024,36 +6041,37 @@ static void wdc_print_d0_log_json(struct wdc_ssd_d0_smart_log *perf)
 	json_free_object(root);
 }
 
-static void wdc_get_commit_action_bin(__u8 commit_action_type, char *action_bin)
+static void wdc_get_commit_action_bin(__u8 commit_action_type,
+				      char *action_bin, size_t size)
 {
 
 	switch (commit_action_type) {
 	case 0:
-		strcpy(action_bin, "000b");
+		shr_strscpy(action_bin, "000b", size);
 		break;
 	case 1:
-		strcpy(action_bin, "001b");
+		shr_strscpy(action_bin, "001b", size);
 		break;
 	case 2:
-		strcpy(action_bin, "010b");
+		shr_strscpy(action_bin, "010b", size);
 		break;
 	case 3:
-		strcpy(action_bin, "011b");
+		shr_strscpy(action_bin, "011b", size);
 		break;
 	case 4:
-		strcpy(action_bin, "100b");
+		shr_strscpy(action_bin, "100b", size);
 		break;
 	case 5:
-		strcpy(action_bin, "101b");
+		shr_strscpy(action_bin, "101b", size);
 		break;
 	case 6:
-		strcpy(action_bin, "110b");
+		shr_strscpy(action_bin, "110b", size);
 		break;
 	case 7:
-		strcpy(action_bin, "111b");
+		shr_strscpy(action_bin, "111b", size);
 		break;
 	default:
-		strcpy(action_bin, "INVALID");
+		shr_strscpy(action_bin, "INVALID", size);
 	}
 
 }
@@ -6126,10 +6144,11 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 			if (cust_id == WDC_CUSTOMER_ID_0x1005) {
 				printf("       ");
 				memset((void *)time_str, 0, 9);
-				sprintf((char *)time_str, "%"PRIu32":%u:%u",
-						(__u32)(timestamp_sec/3600),
-						(__u8)(timestamp_sec%3600/60),
-						(__u8)(timestamp_sec%60));
+				snprintf((char *)time_str, sizeof(time_str),
+					 "%"PRIu32":%u:%u",
+					 (__u32)(timestamp_sec/3600),
+					 (__u8)(timestamp_sec%3600/60),
+					 (__u8)(timestamp_sec%60));
 
 				printf("%s", time_str);
 				printf("     ");
@@ -6137,10 +6156,11 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 				printf("       ");
 
 				memset((void *)time_str, 0, 9);
-				sprintf((char *)time_str, "%"PRIu32":%u:%u",
-						(__u32)((timestamp_sec/3600)%24),
-						(__u8)((timestamp_sec/60)%60),
-						(__u8)(timestamp_sec%60));
+				snprintf((char *)time_str, sizeof(time_str),
+					 "%"PRIu32":%u:%u",
+					 (__u32)((timestamp_sec/3600)%24),
+					 (__u8)((timestamp_sec/60)%60),
+					 (__u8)(timestamp_sec%60));
 				printf("%s", time_str);
 				printf("     ");
 			} else {
@@ -6159,7 +6179,7 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 			printf("   ");
 			wdc_get_commit_action_bin(
 			    fw_act_history_entry->entry[entryIdx].commit_action_type,
-			    (char *)&commit_action_bin);
+			    commit_action_bin, sizeof(commit_action_bin));
 			printf("  %s", (char *)commit_action_bin);
 			printf("  ");
 			if (!le16_to_cpu(fw_act_history_entry->entry[entryIdx].result))
@@ -6222,7 +6242,8 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 			printf("%2"PRIu8"", (uint8_t)fw_act_history_entry[entryIdx].slot_number);
 			printf("  ");
 			wdc_get_commit_action_bin(fw_act_history_entry[entryIdx].commit_action_type,
-						  (char *)&commit_action_bin);
+						  commit_action_bin,
+						  sizeof(commit_action_bin));
 			printf("  %s", (char *)commit_action_bin);
 			printf("   ");
 			if (!le16_to_cpu(fw_act_history_entry[entryIdx].result))
@@ -6284,6 +6305,9 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 			entryIdx = oldestEntryIdx;
 
 		for (i = 0; i < num_entries; i++) {
+			struct wdc_fw_act_history_log_entry_c2 *e =
+				&fw_act_history_entry->entry[entryIdx];
+
 			memcpy(previous_fw,
 			       (char *)&(fw_act_history_entry->entry[entryIdx].previous_fw_version),
 			       8);
@@ -6302,18 +6326,20 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 					fw_act_history_entry->entry[entryIdx].timestamp));
 			timestamp_sec = timestamp / 1000;
 			if (cust_id == WDC_CUSTOMER_ID_0x1005) {
-				sprintf((char *)time_str, "%"PRIu32":%u:%u",
-						(__u32)(timestamp_sec/3600),
-						(__u8)(timestamp_sec%3600/60),
-						(__u8)(timestamp_sec%60));
+				snprintf((char *)time_str, sizeof(time_str),
+					 "%"PRIu32":%u:%u",
+					 (__u32)(timestamp_sec/3600),
+					 (__u8)(timestamp_sec%3600/60),
+					 (__u8)(timestamp_sec%60));
 
 				json_object_add_value_string(root, "Power on Hour", time_str);
 
 			} else if (vendor_id == WDC_NVME_SNDK_VID) {
-				sprintf((char *)time_str, "%"PRIu32":%u:%u",
-						(__u32)((timestamp_sec/3600)%24),
-						(__u8)((timestamp_sec/60)%60),
-						(__u8)(timestamp_sec%60));
+				snprintf((char *)time_str, sizeof(time_str),
+					 "%"PRIu32":%u:%u",
+					 (__u32)((timestamp_sec/3600)%24),
+					 (__u8)((timestamp_sec/60)%60),
+					 (__u8)(timestamp_sec%60));
 				json_object_add_value_string(root, "Power on Hour", time_str);
 			} else {
 				json_object_add_value_uint64(root, "Timestamp", timestamp);
@@ -6330,13 +6356,15 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 
 			wdc_get_commit_action_bin(
 			    fw_act_history_entry->entry[entryIdx].commit_action_type,
-			    (char *)&commit_action_bin);
+			    commit_action_bin, sizeof(commit_action_bin));
 			json_object_add_value_string(root, "Action", commit_action_bin);
 
 			if (!le16_to_cpu(fw_act_history_entry->entry[entryIdx].result)) {
 				json_object_add_value_string(root, "Result", "pass");
 			} else {
-				sprintf((char *)fail_str, "fail #%d", (int)(le16_to_cpu(fw_act_history_entry->entry[entryIdx].result)));
+				snprintf((char *)fail_str, sizeof(fail_str),
+					 "fail #%d",
+					 (int)(le16_to_cpu(e->result)));
 				json_object_add_value_string(root, "Result", fail_str);
 			}
 
@@ -6366,6 +6394,10 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 			entryIdx = oldestEntryIdx;
 
 		for (i = 0; i < num_entries; i++) {
+			struct wdc_fw_act_history_log_entry *e =
+				&fw_act_history_entry[entryIdx];
+			__u64 secs = le64_to_cpu(e->power_on_seconds);
+
 			memcpy(previous_fw,
 			       (char *)&(fw_act_history_entry[entryIdx].previous_fw_version), 8);
 			if (strlen((char *)&(fw_act_history_entry[entryIdx].new_fw_version)) > 1)
@@ -6377,9 +6409,10 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 			json_object_add_value_int(root, "Entry",
 				le32_to_cpu(fw_act_history_entry[entryIdx].entry_num));
 
-			sprintf((char *)time_str, "%04d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)/3600),
-					(int)((le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)%3600)/60),
-					(int)(le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)%60));
+			snprintf((char *)time_str, sizeof(time_str),
+				 "%04d:%02d:%02d",
+				 (int)(secs / 3600), (int)((secs % 3600) / 60),
+				 (int)(secs % 60));
 			json_object_add_value_string(root, "Power on Hour", time_str);
 
 			json_object_add_value_int(root, "Power Cycle Count",
@@ -6392,13 +6425,16 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 				fw_act_history_entry[entryIdx].slot_number);
 
 			wdc_get_commit_action_bin(fw_act_history_entry[entryIdx].commit_action_type,
-						  (char *)&commit_action_bin);
+						  commit_action_bin,
+						  sizeof(commit_action_bin));
 			json_object_add_value_string(root, "Action", commit_action_bin);
 
 			if (!le16_to_cpu(fw_act_history_entry[entryIdx].result)) {
 				json_object_add_value_string(root, "Result", "pass");
 			} else {
-				sprintf((char *)fail_str, "fail #%d", (int)(le16_to_cpu(fw_act_history_entry[entryIdx].result)));
+				snprintf((char *)fail_str, sizeof(fail_str),
+					 "fail #%d",
+					 (int)(le16_to_cpu(e->result)));
 				json_object_add_value_string(root, "Result", fail_str);
 			}
 
@@ -6825,97 +6861,117 @@ static void wdc_print_hw_rev_log_json(void *data)
 			log_data->hw_rev_c9_mc);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dev_mdi[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dev_mdi[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dev_mdi[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dev_mdi[0]));
 	json_object_add_value_string(root, "Device Manf Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_asic_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_asic_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_asic_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_asic_di[0]));
 	json_object_add_value_string(root, "ASIC Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pcb_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pcb_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pcb_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pcb_di[0]));
 	json_object_add_value_string(root, "PCB Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dram_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dram_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dram_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_dram_di[0]));
 	json_object_add_value_string(root, "DRAM Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_nand_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_nand_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_nand_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_nand_di[0]));
 	json_object_add_value_string(root, "NAND Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic1_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic1_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic1_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic1_di[0]));
 	json_object_add_value_string(root, "PMIC 1 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic2_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic2_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic2_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_pmic2_di[0]));
 	json_object_add_value_string(root, "PMIC 2 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c1_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c1_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c1_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c1_di[0]));
 	json_object_add_value_string(root, "Component 1 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c2_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c2_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c2_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c2_di[0]));
 	json_object_add_value_string(root, "Component 2 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c3_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c3_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c3_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c3_di[0]));
 	json_object_add_value_string(root, "Component 3 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c4_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c4_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c4_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c4_di[0]));
 	json_object_add_value_string(root, "Component 4 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c5_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c5_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c5_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c5_di[0]));
 	json_object_add_value_string(root, "Component 5 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c6_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c6_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c6_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c6_di[0]));
 	json_object_add_value_string(root, "Component 6 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c7_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c7_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c7_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c7_di[0]));
 	json_object_add_value_string(root, "Component 7 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c8_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c8_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c8_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c8_di[0]));
 	json_object_add_value_string(root, "Component 8 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c9_di[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c9_di[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c9_di[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_c9_di[0]));
 	json_object_add_value_string(root, "Component 9 Detailed Info", json_data);
 
 	memset((void *)json_data, 0, 80);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"%"PRIx64"%"PRIx64"",
-			le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[0]), le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[8]),
-			le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[16]), le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[24]));
+	snprintf((char *)json_data, sizeof(json_data),
+		 "0x%"PRIx64"%"PRIx64"%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[0]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[16]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_sn[24]));
 	json_object_add_value_string(root, "Serial Number", json_data);
 
 	json_object_add_value_uint(root, "Log Page Version",
 			le16_to_cpu(log_data->hw_rev_version));
 
 	memset((void *)json_data, 0, 40);
-	sprintf((char *)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_guid[8]),
-		le64_to_cpu(*(uint64_t *)&log_data->hw_rev_guid[0]));
+	snprintf((char *)json_data, sizeof(json_data), "0x%"PRIx64"%"PRIx64"",
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_guid[8]),
+		 le64_to_cpu(*(uint64_t *)&log_data->hw_rev_guid[0]));
 	json_object_add_value_string(root, "Log Page GUID", json_data);
 
 	json_print_object(root, NULL);
@@ -7152,14 +7208,14 @@ static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 	char vers_str[40];
 
 	memset((void *)vers_str, 0, 40);
-	sprintf((char *)vers_str, "%d.%d.%d.%d",
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_maj),
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_min),
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_pt),
-		le16_to_cpu(ext_smart_log_ptr->ext_smart_err));
+	snprintf((char *)vers_str, sizeof(vers_str), "%d.%d.%d.%d",
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_maj),
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_min),
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_pt),
+		 le16_to_cpu(ext_smart_log_ptr->ext_smart_err));
 	json_object_add_value_string(root, "cloud_boot_ssd_spec_ver", vers_str);
 	memset((void *)vers_str, 0, 40);
-	sprintf((char *)vers_str, "%d.%d.%d.%d", 0, 0, 0, 0);
+	snprintf((char *)vers_str, sizeof(vers_str), "%d.%d.%d.%d", 0, 0, 0, 0);
 	json_object_add_value_string(root, "cloud_boot_ssd_hw_ver", vers_str);
 
 	if (mask == WDC_SCA_V1_ALL) {
@@ -7170,11 +7226,12 @@ static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 		json_object_add_value_uint(root, "log_page_ver",
 					   le16_to_cpu(ext_smart_log_ptr->ext_smart_lpv));
 		char guid[40];
+		__u8 *lpg;
 
-		memset((void *)guid, 0, 40);
-		sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
-			le64_to_cpu(*(uint64_t *)&ext_smart_log_ptr->ext_smart_lpg[8]),
-			le64_to_cpu(*(uint64_t *)&ext_smart_log_ptr->ext_smart_lpg[0]));
+		lpg = ext_smart_log_ptr->ext_smart_lpg;
+		snprintf((char *)guid, sizeof(guid), "0x%"PRIx64"%"PRIx64"",
+			 shr_get_unaligned_le64(&lpg[8]),
+			 shr_get_unaligned_le64(&lpg[0]));
 		json_object_add_value_string(root, "log_page_guid", guid);
 	}
 
@@ -8164,16 +8221,11 @@ static long double le_to_float(__u8 *data, int byte_len)
 	return result;
 }
 
-static void stringify_log_page_guid(__u8 *guid, char *buf)
+/* The GUID as "0x" and its bytes in hex, the most significant first */
+static void stringify_log_page_guid(__u8 *guid, char *buf, size_t size)
 {
-	char *ptr = buf;
-	int i;
-
-	memset(buf, 0, sizeof(char) * (2 * 16 + 1));
-
-	ptr += sprintf(ptr, "0x");
-	for (i = 0; i < 16; i++)
-		ptr += sprintf(ptr, "%x", guid[15 - i]);
+	shr_strscpy(buf, "0x", size);
+	shr_bin_to_hex(buf + 2, size - 2, guid, 16, SHR_HEX_REVERSE);
 }
 
 static const char *const cloud_smart_log_thermal_status[] = {
@@ -8283,12 +8335,15 @@ static void wdc_show_cloud_smart_log_json(struct ocp_cloud_smart_log *log)
 				   le16_to_cpu(log->capacitor_health));
 	if (smart_log_ver >= 3) {
 		if (smart_log_ver >= 4) {
-			sprintf(buf, "%c", log->nvme_base_errata_ver);
+			snprintf(buf, sizeof(buf), "%c",
+				 log->nvme_base_errata_ver);
 			json_object_add_value_string(root, "nvme_base_errata_version", buf);
-			sprintf(buf, "%c", log->nvme_cmd_set_errata_ver);
+			snprintf(buf, sizeof(buf), "%c",
+				 log->nvme_cmd_set_errata_ver);
 			json_object_add_value_string(root, "nvme_cmd_set_errata_version", buf);
 		} else {
-			sprintf(buf, "%c", log->nvme_base_errata_ver);
+			snprintf(buf, sizeof(buf), "%c",
+				 log->nvme_base_errata_ver);
 			json_object_add_value_string(root, "nvme_errata_version", buf);
 		}
 	}
@@ -8319,7 +8374,7 @@ static void wdc_show_cloud_smart_log_json(struct ocp_cloud_smart_log *log)
 	}
 	json_object_add_value_uint(root, "log_page_version",
 			smart_log_ver);
-	stringify_log_page_guid(log->log_page_guid, buf);
+	stringify_log_page_guid(log->log_page_guid, buf, sizeof(buf));
 	json_object_add_value_string(root, "log_page_guid", buf);
 
 	json_print_object(root, NULL);
@@ -8423,7 +8478,7 @@ static void wdc_show_cloud_smart_log_normal(struct ocp_cloud_smart_log *log,
 	}
 	printf("Log Page Version                             : %" PRIu16 "\n",
 			smart_log_ver);
-	stringify_log_page_guid(log->log_page_guid, buf);
+	stringify_log_page_guid(log->log_page_guid, buf, sizeof(buf));
 	printf("Log Page GUID                                : %s\n", buf);
 	printf("\n\n");
 }
@@ -8943,8 +8998,10 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *acmd,
 				(phys_media_units_written_slc/data_units_written));
 	} else if (fmt == JSON) {
 		root = json_create_object();
-		sprintf(tlc_waf_str, "%4.2Lf", (phys_media_units_written_tlc/data_units_written));
-		sprintf(slc_waf_str, "%4.2Lf", (phys_media_units_written_slc/data_units_written));
+		snprintf(tlc_waf_str, sizeof(tlc_waf_str), "%4.2Lf",
+			 (phys_media_units_written_tlc/data_units_written));
+		snprintf(slc_waf_str, sizeof(slc_waf_str), "%4.2Lf",
+			 (phys_media_units_written_slc/data_units_written));
 
 		json_object_add_value_string(root, "Device Write Amplification Factor TLC", tlc_waf_str);
 		json_object_add_value_string(root, "Device Write Amplification Factor SLC", slc_waf_str);
@@ -10601,7 +10658,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *acmd,
 	}
 
 	if (cfg.dirName) {
-		strncpy(d, cfg.dirName, PATH_MAX - 1);
+		shr_strscpy(d, cfg.dirName, sizeof(d));
 		d_ptr = d;
 	} else {
 		d_ptr = NULL;
@@ -10821,7 +10878,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 			return -1;
 		}
 		close(verify_file);
-		strncpy(f, cfg.file, PATH_MAX - 1);
+		shr_strscpy(f, cfg.file, sizeof(f));
 	} else {
 		wdc_UtilsGetTime(&timeInfo);
 		memset(timeStamp, 0, sizeof(timeStamp));
@@ -10841,7 +10898,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 			nvme_show_error("ERROR: WDC: file name overflow");
 			return -1;
 		}
-		strcat(f, ".bin");
+		shr_strscat(f, ".bin", sizeof(f));
 	}
 
 	nvme_show_error("%s: filename = %s", __func__, f);
@@ -12059,7 +12116,8 @@ static int wdc_vs_drive_info(int argc, char **argv,
 					printf("Customer SN:        %-.*s\n", (int)sizeof(ctrl.sn), &ctrl.sn[0]);
 				} else if (fmt == JSON) {
 					root = json_create_object();
-					sprintf(rev_str, "%4.1f", (.1 * rev));
+					snprintf(rev_str, sizeof(rev_str),
+						 "%4.1f", (.1 * rev));
 					json_object_add_value_string(root, "Drive HW Revision", rev_str);
 
 					json_object_add_value_int(root, "FTL Unit Size", le16_to_cpu(size));
@@ -12084,7 +12142,8 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				printf("Customer SN:         %-.*s\n", 14, &ctrl.sn[0]);
 			} else if (fmt == JSON) {
 				root = json_create_object();
-				sprintf(rev_str, "%c.%c", major_rev, minor_rev);
+				snprintf(rev_str, sizeof(rev_str), "%c.%c",
+					 major_rev, minor_rev);
 				json_object_add_value_string(root, "Drive HW Revison", rev_str);
 				wdc_StrFormat(formatter, sizeof(formatter), &ctrl.sn[0], 14);
 				json_object_add_value_string(root, "Customer SN", formatter);
@@ -12152,7 +12211,8 @@ static int wdc_vs_drive_info(int argc, char **argv,
 
 				json_object_add_value_int(root, "Drive HW Revison", major_rev);
 				json_object_add_value_int(root, "FTL Unit Size", ftl_unit_size);
-				sprintf(rev_str, "%d.%d", boot_spec_major, boot_spec_minor);
+				snprintf(rev_str, sizeof(rev_str), "%d.%d",
+					 boot_spec_major, boot_spec_minor);
 				json_object_add_value_string(root, "HyperScale Boot Version Spec", rev_str);
 				json_object_add_value_int(root, "TCG Device Ownership Status", tcg_dev_ownership);
 
@@ -12195,8 +12255,9 @@ static int wdc_vs_drive_info(int argc, char **argv,
 					root = json_create_object();
 
 					memset((void *)buf, 0, 20);
-					sprintf(buf, "%" PRIu32 ".%" PRIu32,
-						hw_rev_major, hw_rev_minor);
+					snprintf(buf, sizeof(buf),
+						 "%" PRIu32 ".%" PRIu32,
+						 hw_rev_major, hw_rev_minor);
 
 					json_object_add_value_string(root,
 						"hw_revision", buf);
