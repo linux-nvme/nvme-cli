@@ -61,6 +61,8 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 
 	switch (s->config_type) {
 	case CFG_STRING:
+	case CFG_FILE:
+	case CFG_DIR:
 		*(char **)value = arg;
 		break;
 	case CFG_INT:
@@ -150,6 +152,8 @@ static void argconfig_set_opt_val(enum argconfig_types type,
 		*(int *)val = opt_val->increment;
 		break;
 	case CFG_STRING:
+	case CFG_FILE:
+	case CFG_DIR:
 		*(char **)val = opt_val->string;
 		break;
 	case CFG_GROUP_SEPARATOR:

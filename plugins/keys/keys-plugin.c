@@ -490,7 +490,7 @@ static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *p
 		OPT_STR("hostnqn",   'n', &cfg.hostnqn,   hostnqn),
 		OPT_STR("subsysnqn", 'c', &cfg.subsysnqn, subsysnqn),
 		OPT_STR("secret",    's', &cfg.secret,    secret),
-		OPT_STR("keyfile",   'f', &cfg.keyfile,   keyfile),
+		OPT_FILE("keyfile",  'f', &cfg.keyfile,   keyfile),
 		OPT_BYTE("hmac",     'm', &cfg.hmac,      hmac),
 		OPT_BYTE("identity", 'I', &cfg.version,   version),
 		OPT_FLAG("insert",   'i', &cfg.insert,    insert),
@@ -735,7 +735,7 @@ static int insert_tls(int argc, char **argv, struct command *acmd, struct plugin
 		OPT_STR("hostnqn",   'n', &cfg.hostnqn,   hostnqn),
 		OPT_STR("subsysnqn", 'c', &cfg.subsysnqn, subsysnqn),
 		OPT_STR("keydata",   'd', &cfg.keydata,   keydata),
-		OPT_STR("keyfile",   'f', &cfg.keyfile,   keyfile),
+		OPT_FILE("keyfile",  'f', &cfg.keyfile,   keyfile),
 		OPT_BYTE("identity", 'I', &cfg.identity,  identity),
 		OPT_FLAG("compat",   'C', &cfg.compat,    compat),
 		OPT_END()
@@ -835,7 +835,7 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 
 	OPT_ARGS(opts) = {
 		OPT_STR("keyring", 'k', &cfg.keyring, keyring),
-		OPT_STR("keyfile", 'f', &cfg.keyfile, keyfile),
+		OPT_FILE("keyfile", 'f', &cfg.keyfile, keyfile),
 		OPT_END()
 	};
 
@@ -981,7 +981,7 @@ static int key_import(int argc, char **argv, struct command *acmd, struct plugin
 
 	OPT_ARGS(opts) = {
 		OPT_STR("keyring",  'k', &cfg.keyring,  keyring),
-		OPT_STR("keyfile",  'f', &cfg.keyfile,  keyfile),
+		OPT_FILE("keyfile", 'f', &cfg.keyfile,  keyfile),
 		OPT_STR("keydata",  'd', &cfg.keydata,  keydata),
 		OPT_STR("identity", 'i', &cfg.identity, identity),
 		OPT_END()

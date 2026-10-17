@@ -670,8 +670,8 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		OPT_FLAG("hfi",         0,   &show_hfi, "show NBFT HFIs"),
 		OPT_FLAG("discovery", 'd', &show_discovery,
 			 "show NBFT discovery controllers"),
-		OPT_STRING("nbft-path", 0, "STR", &nbft_path,
-			   "user-defined path for NBFT tables"),
+		OPT_DIR("nbft-path", 0, &nbft_path,
+			"user-defined path for NBFT tables"),
 		OPT_END()
 	};
 

@@ -172,12 +172,12 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	struct config cfg = { 0 };
 
 	OPT_ARGS(opts) = {
-		OPT_STR("keyring", 'k', &cfg.keyring, keyring),
-		OPT_STR("keytype", 't', &cfg.keytype, keytype),
-		OPT_STR("keyfile", 'f', &cfg.keyfile, keyfile),
-		OPT_FLAG("import", 'i', &cfg.import,  import),
-		OPT_FLAG("export", 'e', &cfg.export,  export),
-		OPT_STR("revoke",  'r', &cfg.revoke,  revoke),
+		OPT_STR("keyring",  'k', &cfg.keyring, keyring),
+		OPT_STR("keytype",  't', &cfg.keytype, keytype),
+		OPT_FILE("keyfile", 'f', &cfg.keyfile, keyfile),
+		OPT_FLAG("import",  'i', &cfg.import,  import),
+		OPT_FLAG("export",  'e', &cfg.export,  export),
+		OPT_STR("revoke",   'r', &cfg.revoke,  revoke),
 		OPT_END()
 	};
 

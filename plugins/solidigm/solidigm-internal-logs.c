@@ -880,8 +880,8 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_ENUM("type",       't', &cfg.type,   type,         types),
-		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir),
+		OPT_ENUM("type",    't', &cfg.type,    type, types),
+		OPT_DIR("dir-name", 'd', &cfg.out_dir, out_dir),
 		OPT_END()
 	};
 

@@ -1003,9 +1003,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	bool host_behavior_changed = false;
 
 	OPT_ARGS(opts) = {
-		OPT_STR("telemetry-log", 'l', &opt.telemetry_log,
-			telemetry_log),
-		OPT_STR("string-log",      's', &opt.string_log,  string_log),
+		OPT_FILE("telemetry-log",  'l', &opt.telemetry_log,
+			 telemetry_log),
+		OPT_FILE("string-log",     's', &opt.string_log,  string_log),
 		OPT_FILE("output-file",    'f', &opt.output_file, output_file),
 		OPT_INT("data-area",       'a', &opt.data_area,   data_area),
 		OPT_ENUM("telemetry-type", 't', &tele_type, telemetry_type,

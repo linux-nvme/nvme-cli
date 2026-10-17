@@ -962,8 +962,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FILE("raw",     'r', &raw,    "save raw output to file"),
 		OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
 				    &persistent_arg, nvmf_persistent),
-		OPT_STRING("config", 'J', "FILE", &config_file,
-			   nvmf_config_file),
+		OPT_FILE("config", 'J', &config_file, nvmf_config_file),
 		OPT_FLAG("no-reuse", 0, &no_reuse,
 			 "always create a new connection, never reuse an existing one",
 			 .old_name = "force"),
@@ -971,8 +970,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FLAG("no-nbft", 0,   &nonbft, "Do not look at NBFT tables"),
 		OPT_STRING("owner", 0, "NAME", &owner,
 			   "record this owner in the registry"),
-		OPT_STRING("nbft-path", 0, "STR", &nbft_path,
-			   "user-defined path for NBFT tables"),
+		OPT_DIR("nbft-path", 0, &nbft_path,
+			"user-defined path for NBFT tables"),
 		OPT_END()
 	};
 
@@ -1168,12 +1167,11 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	OPT_ARGS(opts) = {
 		OPT_INCLUDE(nvmf, "Fabrics options"),
-		OPT_STRING("config", 'J', "FILE", &config_file,
-			   nvmf_config_file),
+		OPT_FILE("config", 'J', &config_file, nvmf_config_file),
 		OPT_STRING("owner", 0, "NAME", &owner,
 			   "record this owner in the registry"),
-		OPT_STRING("devid-file", 0, "FILE", &devid_file,
-			   "write connected device name to FILE"),
+		OPT_FILE("devid-file", 0, &devid_file,
+			 "write connected device name to FILE"),
 		OPT_FLAG("idempotent", 0, &idempotent,
 			 "exit 0 if already connected"),
 		OPT_FLAG("discovery", 0, &discovery,
@@ -1732,7 +1730,7 @@ int fabrics_config_validate(const char *desc, int argc, char **argv)
 	int ret;
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file_ro),
+		OPT_FILE("config", 'J', &config_file, nvmf_config_file_ro),
 		OPT_END()
 	};
 
@@ -1767,8 +1765,7 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 	int ret;
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("config", 'J', "FILE", &config_file,
-			   nvmf_config_file_ro),
+		OPT_FILE("config", 'J', &config_file, nvmf_config_file_ro),
 		OPT_END()
 	};
 

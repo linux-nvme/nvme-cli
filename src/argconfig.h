@@ -27,6 +27,9 @@ enum argconfig_types {
 	CFG_POSITIVE,
 	CFG_INCREMENT,
 	CFG_ENUM,
+	/* strings which name a file or a directory */
+	CFG_FILE,
+	CFG_DIR,
 	CFG_GROUP_SEPARATOR,
 	CFG_INCLUDE,
 };
@@ -126,8 +129,15 @@ enum argconfig_types {
 	{l, s, m, CFG_STRING, OPT_CHECK_STR(v), \
 	 ARGCONFIG_ARG_OPTIONAL, d, false, __VA_ARGS__}
 
+#define OPT_FILE(l, s, v, d, ...) \
+	{l, s, "FILE", CFG_FILE, OPT_CHECK_STR(v), \
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
+
+#define OPT_DIR(l, s, v, d, ...) \
+	{l, s, "DIRECTORY", CFG_DIR, OPT_CHECK_STR(v), \
+	 ARGCONFIG_ARG_REQUIRED, d, false, __VA_ARGS__}
+
 #define OPT_FMT(l, s, v, d, ...)  OPT_STRING(l, s, "FMT", v, d, __VA_ARGS__)
-#define OPT_FILE(l, s, v, d, ...) OPT_STRING(l, s, "FILE", v, d, __VA_ARGS__)
 #define OPT_LIST(l, s, v, d, ...) OPT_STRING(l, s, "LIST", v, d, __VA_ARGS__)
 #define OPT_STR(l, s, v, d, ...) OPT_STRING(l, s, "STRING", v, d, __VA_ARGS__)
 

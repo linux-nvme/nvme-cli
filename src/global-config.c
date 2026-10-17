@@ -131,6 +131,8 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 		*(uint32_t *)s->default_value = uval;
 		break;
 	case CFG_STRING:
+	case CFG_FILE:
+	case CFG_DIR:
 		err = set_string(s, value);
 		if (err)
 			return err;
