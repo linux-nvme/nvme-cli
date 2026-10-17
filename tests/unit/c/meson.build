@@ -50,7 +50,8 @@ test('nvme-cli - global-config', test_global_config, suite: 'unit')
 
 test_plugin = executable(
     'test-plugin',
-    ['test-plugin.c', '../../../src/plugin.c', '../../../src/argconfig.c'],
+    ['test-plugin.c', '../../../src/plugin.c', '../../../src/argconfig.c',
+     '../../../src/privsep.c'],
     dependencies: [
         config_dep,
         ccan_dep,
