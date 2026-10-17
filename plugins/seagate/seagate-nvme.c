@@ -311,6 +311,20 @@ static char *print_ext_smart_id(__u8 attrId)
 	}
 }
 
+/* A 128 bit counter as "0x" and 32 hex digits */
+static void u128_hex_str(char *buf, size_t size, const U128 *v)
+{
+	snprintf(buf, size, "0x%016"PRIx64"%016"PRIx64"",
+		 (uint64_t)le64_to_cpu(v->MS__u64),
+		 (uint64_t)le64_to_cpu(v->LS__u64));
+}
+
+/* The name of a 64 bit attribute by its LSB, without the "LSB of " */
+static void print_64bit_name(__u8 lsb_id)
+{
+	printf("%-40s", print_ext_smart_id(lsb_id) + strlen("LSB of "));
+}
+
 static __u64 smart_attribute_vs(__u16 verNo, SmartVendorSpecific attr)
 {
 	__u64 val = 0;
@@ -332,7 +346,6 @@ static void print_smart_log(__u16 verNo, SmartVendorSpecific attr, int lastAttr)
 	static __u64 lsbGbErased = 0, msbGbErased = 0, lsbLifWrtToFlash = 0, msbLifWrtToFlash = 0,
 		lsbLifWrtFrmHost = 0, msbLifWrtFrmHost = 0, lsbLifRdToHost = 0, msbLifRdToHost = 0, lsbTrimCnt = 0, msbTrimCnt = 0;
 	char buf[40] = {0};
-	char strBuf[35] = {0};
 	int hideAttr = 0;
 
 	if (attr.AttributeNumber == VS_ATTR_ID_GB_ERASED_LSB) {
@@ -392,44 +405,46 @@ static void print_smart_log(__u16 verNo, SmartVendorSpecific attr, int lastAttr)
 	}
 
 	if (lastAttr == 1) {
-		sprintf(strBuf, "%s", (print_ext_smart_id(VS_ATTR_ID_GB_ERASED_LSB) + 7));
-		printf("%-40s", strBuf);
+		print_64bit_name(VS_ATTR_ID_GB_ERASED_LSB);
 
 		printf("%-15d", VS_ATTR_ID_GB_ERASED_MSB << 8 | VS_ATTR_ID_GB_ERASED_LSB);
 
-		sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbGbErased, (uint64_t)lsbGbErased);
+		snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+			 (uint64_t)msbGbErased, (uint64_t)lsbGbErased);
 		printf(" %s\n", buf);
 
-		sprintf(strBuf, "%s", (print_ext_smart_id(VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_LSB) + 7));
-		printf("%-40s", strBuf);
+		print_64bit_name(VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_LSB);
 
 		printf("%-15d", VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_MSB << 8 | VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_LSB);
 
-		sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbLifWrtToFlash, (uint64_t)lsbLifWrtToFlash);
+		snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+			 (uint64_t)msbLifWrtToFlash,
+			 (uint64_t)lsbLifWrtToFlash);
 		printf(" %s\n", buf);
 
-		sprintf(strBuf, "%s", (print_ext_smart_id(VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_LSB) + 7));
-		printf("%-40s", strBuf);
+		print_64bit_name(VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_LSB);
 
 		printf("%-15d", VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_MSB << 8 | VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_LSB);
 
-		sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbLifWrtFrmHost, (uint64_t)lsbLifWrtFrmHost);
+		snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+			 (uint64_t)msbLifWrtFrmHost,
+			 (uint64_t)lsbLifWrtFrmHost);
 		printf(" %s\n", buf);
 
-		sprintf(strBuf, "%s", (print_ext_smart_id(VS_ATTR_ID_LIFETIME_READS_TO_HOST_LSB) + 7));
-		printf("%-40s", strBuf);
+		print_64bit_name(VS_ATTR_ID_LIFETIME_READS_TO_HOST_LSB);
 
 		printf("%-15d", VS_ATTR_ID_LIFETIME_READS_TO_HOST_MSB << 8 | VS_ATTR_ID_LIFETIME_READS_TO_HOST_LSB);
 
-		sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbLifRdToHost, (uint64_t)lsbLifRdToHost);
+		snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+			 (uint64_t)msbLifRdToHost, (uint64_t)lsbLifRdToHost);
 		printf(" %s\n", buf);
 
-		sprintf(strBuf, "%s", (print_ext_smart_id(VS_ATTR_ID_TRIM_COUNT_LSB) + 7));
-		printf("%-40s", strBuf);
+		print_64bit_name(VS_ATTR_ID_TRIM_COUNT_LSB);
 
 		printf("%-15d", VS_ATTR_ID_TRIM_COUNT_MSB << 8 | VS_ATTR_ID_TRIM_COUNT_LSB);
 
-		sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbTrimCnt, (uint64_t)lsbTrimCnt);
+		snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+			 (uint64_t)msbTrimCnt, (uint64_t)lsbTrimCnt);
 		printf(" %s\n", buf);
 
 	}
@@ -494,7 +509,8 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 
 	json_object_add_value_int(lbaf, "attribute_id", VS_ATTR_ID_GB_ERASED_MSB << 8 | VS_ATTR_ID_GB_ERASED_LSB);
 
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbGbErased, (uint64_t)lsbGbErased);
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 (uint64_t)msbGbErased, (uint64_t)lsbGbErased);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(lbafs, lbaf);
 
@@ -505,7 +521,8 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 
 	json_object_add_value_int(lbaf, "attribute_id", VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_MSB << 8 | VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_LSB);
 
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbLifWrtToFlash, (uint64_t)lsbLifWrtToFlash);
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 (uint64_t)msbLifWrtToFlash, (uint64_t)lsbLifWrtToFlash);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(lbafs, lbaf);
 
@@ -516,7 +533,8 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 
 	json_object_add_value_int(lbaf, "attribute_id", VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_MSB << 8 | VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_LSB);
 
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbLifWrtFrmHost, (uint64_t)lsbLifWrtFrmHost);
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 (uint64_t)msbLifWrtFrmHost, (uint64_t)lsbLifWrtFrmHost);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(lbafs, lbaf);
 
@@ -527,7 +545,8 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 
 	json_object_add_value_int(lbaf, "attribute_id", VS_ATTR_ID_LIFETIME_READS_TO_HOST_MSB << 8 | VS_ATTR_ID_LIFETIME_READS_TO_HOST_LSB);
 
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbLifRdToHost, (uint64_t)lsbLifRdToHost);
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 (uint64_t)msbLifRdToHost, (uint64_t)lsbLifRdToHost);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(lbafs, lbaf);
 
@@ -538,7 +557,8 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 
 	json_object_add_value_int(lbaf, "attribute_id", VS_ATTR_ID_TRIM_COUNT_MSB << 8 | VS_ATTR_ID_TRIM_COUNT_LSB);
 
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)msbTrimCnt, (uint64_t)lsbTrimCnt);
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 (uint64_t)msbTrimCnt, (uint64_t)lsbTrimCnt);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(lbafs, lbaf);
 }
@@ -605,16 +625,16 @@ static void json_print_smart_log_CF(struct json_object *root, vendor_log_page_CF
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Data units read to DRAM namespace");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
-		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
+	u128_hex_str(buf, sizeof(buf),
+		     &pLogPageCF->AttrCF.DataUnitsReadToDramNamespace);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Data units written to DRAM namespace");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
-		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
+	u128_hex_str(buf, sizeof(buf),
+		     &pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
@@ -737,8 +757,9 @@ static void json_print_stx_smart_log_C0(struct json_object *root, STX_EXT_SMART_
 
 	json_object_add_value_string(lbaf, "attribute_name", "Physical Media Units Written");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.MS__u64),
-		le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.LS__u64));
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.MS__u64),
+		 le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
@@ -746,8 +767,9 @@ static void json_print_stx_smart_log_C0(struct json_object *root, STX_EXT_SMART_
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Physical Media Units Read");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->phyMediaUnitsRd.MS__u64),
-		le64_to_cpu(pLogPageC0->phyMediaUnitsRd.LS__u64));
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(pLogPageC0->phyMediaUnitsRd.MS__u64),
+		 le64_to_cpu(pLogPageC0->phyMediaUnitsRd.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
@@ -804,10 +826,10 @@ static void json_print_stx_smart_log_C0(struct json_object *root, STX_EXT_SMART_
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "DSSD Specification Version");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "%d.%d.%d.%d", pLogPageC0->dssdSpecVerMajor,
-					le16_to_cpu(pLogPageC0->dssdSpecVerMinor),
-					le16_to_cpu(pLogPageC0->dssdSpecVerPoint),
-					pLogPageC0->dssdSpecVerErrata);
+	snprintf(buf, sizeof(buf), "%d.%d.%d.%d", pLogPageC0->dssdSpecVerMajor,
+		 le16_to_cpu(pLogPageC0->dssdSpecVerMinor),
+		 le16_to_cpu(pLogPageC0->dssdSpecVerPoint),
+		 pLogPageC0->dssdSpecVerErrata);
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
@@ -854,16 +876,18 @@ static void json_print_stx_smart_log_C0(struct json_object *root, STX_EXT_SMART_
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "PLP Start Count");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->plpStartCnt.MS__u64),
-		le64_to_cpu(pLogPageC0->plpStartCnt.LS__u64));
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(pLogPageC0->plpStartCnt.MS__u64),
+		 le64_to_cpu(pLogPageC0->plpStartCnt.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Endurance Estimate");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->enduranceEstimate.MS__u64),
-		le64_to_cpu(pLogPageC0->enduranceEstimate.LS__u64));
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(pLogPageC0->enduranceEstimate.MS__u64),
+		 le64_to_cpu(pLogPageC0->enduranceEstimate.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
@@ -885,8 +909,9 @@ static void json_print_stx_smart_log_C0(struct json_object *root, STX_EXT_SMART_
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Log Page GUID");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->logPageGUID.MS__u64),
-		le64_to_cpu(pLogPageC0->logPageGUID.LS__u64));
+	snprintf(buf, sizeof(buf), "0x%016"PRIx64"%016"PRIx64"",
+		 le64_to_cpu(pLogPageC0->logPageGUID.MS__u64),
+		 le64_to_cpu(pLogPageC0->logPageGUID.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 }
