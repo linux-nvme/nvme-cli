@@ -10,6 +10,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <locale.h>
 #include <stdarg.h>
@@ -302,6 +303,25 @@ static bool argconfig_is_string(enum argconfig_types type)
 	return type == CFG_STRING || type == CFG_FILE || type == CFG_DIR;
 }
 
+/* @u is in the range of @s, if it has one */
+bool argconfig_in_range(const struct argconfig_commandline_options *s,
+			uint64_t u)
+{
+	return !s->max || (u >= s->min && u <= s->max);
+}
+
+/* An unsigned number up to @max, in the range of @s */
+static int argconfig_parse_u64(struct argconfig_commandline_options *s,
+			       const char *arg, uint64_t max, uint64_t *u)
+{
+	int ret = shr_parse_u64(arg, max, u);
+
+	if (!ret && !argconfig_in_range(s, *u))
+		return -ERANGE;
+
+	return ret;
+}
+
 static int argconfig_parse_type(struct argconfig_commandline_options *s,
 				char *arg)
 {
@@ -328,17 +348,17 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 			*(int *)value = i;
 		break;
 	case CFG_BYTE:
-		ret = shr_parse_u64(arg, UINT8_MAX, &u);
+		ret = argconfig_parse_u64(s, arg, UINT8_MAX, &u);
 		if (!ret)
 			*(uint8_t *)value = u;
 		break;
 	case CFG_SHORT:
-		ret = shr_parse_u64(arg, UINT16_MAX, &u);
+		ret = argconfig_parse_u64(s, arg, UINT16_MAX, &u);
 		if (!ret)
 			*(uint16_t *)value = u;
 		break;
 	case CFG_POSITIVE:
-		ret = shr_parse_u64(arg, UINT32_MAX, &u);
+		ret = argconfig_parse_u64(s, arg, UINT32_MAX, &u);
 		if (!ret)
 			*(uint32_t *)value = u;
 		break;
@@ -350,7 +370,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		ret = -EINVAL;
 		break;
 	case CFG_LONG:
-		ret = shr_parse_u64(arg, UINT64_MAX, &u);
+		ret = argconfig_parse_u64(s, arg, UINT64_MAX, &u);
 		if (!ret)
 			*(uint64_t *)value = u;
 		break;
@@ -361,6 +381,8 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s,
 		if (!isdigit((unsigned char)*arg))
 			return -EINVAL;
 		ret = shr_suffix_binary_parse(arg, &endptr, &u);
+		if (!ret && !argconfig_in_range(s, u))
+			ret = -ERANGE;
 		if (!ret)
 			*(uint64_t *)value = u;
 		break;
@@ -617,6 +639,14 @@ argconfig_find_short_any(struct argconfig_commandline_options *root, char c)
 /* What a value of @s has to look like */
 static const char *argconfig_expected(struct argconfig_commandline_options *s)
 {
+	static char range[64];
+
+	if (s->max) {
+		snprintf(range, sizeof(range), "a number from %" PRIu64
+			 " to %" PRIu64, s->min, s->max);
+		return range;
+	}
+
 	switch (s->config_type) {
 	case CFG_BYTE:
 		return "a number from 0 to 255";
