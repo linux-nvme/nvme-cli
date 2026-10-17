@@ -10,6 +10,7 @@
 #include <libnvme.h>
 
 #include <shared/compiler-attributes-util.h>
+#include <shared/string-util.h>
 
 #include "global-ctx.h"
 #include "nvme-print.h"
@@ -189,14 +190,15 @@ static int innogrit_geteventlog(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	if (getcwd(currentdir, 128) == NULL)
+	if (getcwd(currentdir, sizeof(currentdir)) == NULL)
 		return -1;
 
 	time(&timep);
 	logtime = localtime(&timep);
-	sprintf(filename, "%s/eventlog_%02d%02d-%02d%02d%02d.eraw", currentdir,
-		logtime->tm_mon + 1, logtime->tm_mday, logtime->tm_hour,
-		logtime->tm_min, logtime->tm_sec);
+	snprintf(filename, sizeof(filename),
+		 "%s/eventlog_%02d%02d-%02d%02d%02d.eraw", currentdir,
+		 logtime->tm_mon + 1, logtime->tm_mday, logtime->tm_hour,
+		 logtime->tm_min, logtime->tm_sec);
 	printf("output eventlog file : %s\n", filename);
 
 	fp = fopen(filename, "a+");
@@ -239,7 +241,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 
 	ivsctype = getvsctype(hdl);
 
-	if (getcwd(currentdir, 128) == NULL)
+	if (getcwd(currentdir, sizeof(currentdir)) == NULL)
 		return -1;
 
 	time(&timep);
@@ -268,10 +270,13 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 				itotal = cdumpinfo.cdumppack[ipackindex].ilenth;
 				memset(fwvera, 0, sizeof(fwvera));
 				memcpy(fwvera, cdumpinfo.cdumppack[ipackindex].fwver, 8);
-				sprintf(fname, "cdump_%02d%02d-%02d%02d%02d_%d_%s.cdp",
-					logtime->tm_mon+1, logtime->tm_mday, logtime->tm_hour,
-					logtime->tm_min, logtime->tm_sec, ipackindex, fwvera);
-				sprintf(filename, "%s/%s", currentdir, fname);
+				snprintf(fname, sizeof(fname),
+					 "cdump_%02d%02d-%02d%02d%02d_%d_%s.cdp",
+					 logtime->tm_mon+1, logtime->tm_mday,
+					 logtime->tm_hour, logtime->tm_min,
+					 logtime->tm_sec, ipackindex, fwvera);
+				snprintf(filename, sizeof(filename), "%s/%s",
+					 currentdir, fname);
 				fp = fopen(filename, "a+");
 			}
 		}
@@ -286,9 +291,12 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 
 		ipackcount = 1;
 		memcpy(&itotal, &data[4092], 4);
-		sprintf(fname, "cdump_%02d%02d-%02d%02d%02d.cdp", logtime->tm_mon+1,
-			logtime->tm_mday, logtime->tm_hour, logtime->tm_min, logtime->tm_sec);
-		sprintf(filename, "%s/%s", currentdir, fname);
+		snprintf(fname, sizeof(fname),
+			 "cdump_%02d%02d-%02d%02d%02d.cdp", logtime->tm_mon+1,
+			 logtime->tm_mday, logtime->tm_hour, logtime->tm_min,
+			 logtime->tm_sec);
+		snprintf(filename, sizeof(filename), "%s/%s", currentdir,
+			 fname);
 		fp = fopen(filename, "a+");
 	}
 
@@ -301,7 +309,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 
 	while (ipackindex < ipackcount) {
 		memset(data, 0, 4096);
-		strcpy((char *)data, "cdumpstart");
+		shr_strscpy(data, "cdumpstart", sizeof(data));
 		fwrite(data, 1, strlen((char *)data), fp);
 		for (icur = 0; icur < itotal; icur += 4096) {
 			memset(data, 0, 4096);
@@ -331,7 +339,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 			       ((icur + 4096) * 100 / itotal));
 		}
 		memset(data, 0, 4096);
-		strcpy((char *)data, "cdumpend");
+		shr_strscpy(data, "cdumpend", sizeof(data));
 		fwrite(data, 1, strlen((char *)data), fp);
 		printf("\r%s\n", fname);
 		ipackindex++;
@@ -361,10 +369,13 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 			itotal = cdumpinfo.cdumppack[ipackindex].ilenth;
 			memset(fwvera, 0, sizeof(fwvera));
 			memcpy(fwvera, cdumpinfo.cdumppack[ipackindex].fwver, 8);
-			sprintf(fname, "cdump_%02d%02d-%02d%02d%02d_%d_%s.cdp", logtime->tm_mon+1,
-				logtime->tm_mday, logtime->tm_hour, logtime->tm_min, logtime->tm_sec,
-				ipackindex,	fwvera);
-			sprintf(filename, "%s/%s", currentdir, fname);
+			snprintf(fname, sizeof(fname),
+				 "cdump_%02d%02d-%02d%02d%02d_%d_%s.cdp",
+				 logtime->tm_mon+1, logtime->tm_mday,
+				 logtime->tm_hour, logtime->tm_min,
+				 logtime->tm_sec, ipackindex, fwvera);
+			snprintf(filename, sizeof(filename), "%s/%s",
+				 currentdir, fname);
 			if (fp != NULL)
 				fclose(fp);
 			fp = fopen(filename, "a+");
