@@ -23,6 +23,7 @@
 #include "global-ctx.h"
 #include "logging.h"
 #include "nvme-print.h"
+#include "privsep.h"
 
 static int check_arg_dev(int argc, char **argv)
 {
@@ -262,6 +263,7 @@ static int __nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
+	nvme_privsep_attach(ctx);
 
 	log_level = map_log_level(nvme_args.verbose, nvme_args.quiet);
 	libnvme_set_logging_file(ctx, stderr);

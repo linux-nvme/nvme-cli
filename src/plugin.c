@@ -14,6 +14,7 @@
 #include "args.h"
 #include "cleanup.h"
 #include "plugin.h"
+#include "privsep.h"
 
 static int version_cmd(struct plugin *plugin)
 {
@@ -459,6 +460,10 @@ static int run_command(int argc, char **argv, struct plugin *plugin,
 {
 	char use[0x100], path[0x80];
 	int err;
+
+	err = nvme_privsep_check(cmd);
+	if (err)
+		return err;
 
 	build_command_usage(use, sizeof(use), plugin->parent, plugin, cmd);
 	if (plugin->name)

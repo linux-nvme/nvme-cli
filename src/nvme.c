@@ -48,6 +48,7 @@
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "privsep.h"
 
 static const char nvme_version_string[] = NVME_VERSION;
 
@@ -186,6 +187,10 @@ int nvme_main(int argc, char **argv)
 
 	/* The command line comes first, nvme-cli.conf does not override it */
 	err = plugin_lookup(argc, argv, nvme.extensions, &call);
+	if (!err && nvme_privsep_init(&call)) {
+		plugin_call_free(&call);
+		return 1;
+	}
 	if (!err) {
 		setlocale(LC_ALL, "");
 		err = nvme_load_global_config();
