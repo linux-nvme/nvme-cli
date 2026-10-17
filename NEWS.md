@@ -111,7 +111,10 @@
   `sndk` and `wdc` `vs-internal-log` and `solidigm internal-log
   --type`. An unknown word is a usage error which lists the words.
   `ocp internal-log` with an unknown telemetry type failed with status
-  0 before.
+  0 before. `samsung vs-internal-log --dump-type` checks its list of
+  dump types the same way, before it opens the device, and may be given
+  more than once; the completions complete the type after the last
+  comma.
 
 * The help of `connect`, `discover`, `connect-all`, `disconnect` and
   `config create` lists the fabrics options they share under "Fabrics
