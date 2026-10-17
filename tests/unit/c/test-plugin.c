@@ -459,6 +459,70 @@ static void test_extension_unknown_subcommand(void)
 	      "extension_unknown_subcommand: stderr names the extension");
 }
 
+/*
+ * plugin_lookup() must find the command handle_plugin() runs for the
+ * same arguments, without running anything.
+ */
+static void test_lookup(void)
+{
+	static const char * const cases[][6] = {
+		{ "bar" },
+		{ "f" },
+		{ "sta" },
+		{ "list" },
+		{ "list-a" },
+		{ "zzz" },
+		{ "ext", "sub" },
+		{ "ext-sub" },
+		{ "ext--sub" },
+		{ "ext", "zzz" },
+		{ "ext", "-v", "sub" },
+		{ "-v", "ext", "-o", "json", "sub" },
+		{ "-o", "json", "bar" },
+		{ "--output=json", "bar" },
+		{ "--", "bar" },
+		{ "--bogus", "bar" },
+		{ "version" },
+		{ "-V", "bar" },
+		{ "help" },
+	};
+	struct captured_output cap;
+	struct plugin_call call;
+	char *argv[8], *argv2[8];
+	const char *found;
+	char desc[128];
+	size_t i;
+	int argc, j;
+
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
+		argv[0] = argv2[0] = "test-prog";
+		for (argc = 1; argc <= 6 && cases[i][argc - 1]; argc++)
+			argv[argc] = argv2[argc] = (char *)cases[i][argc - 1];
+		argv[argc] = argv2[argc] = NULL;
+
+		reset_last_call();
+		memset(&call, 0, sizeof(call));
+		check(!plugin_lookup(argc, argv, &builtin_plugin, &call),
+		      "lookup: no error");
+		for (j = 1; j < argc; j++)
+			check(argv[j] == cases[i][j - 1],
+			      "lookup: arguments changed");
+		found = call.action == PLUGIN_RUN ? call.cmd->name : NULL;
+		plugin_call_free(&call);
+		check(!last_call.cmd_name, "lookup: nothing ran");
+
+		run_handle_plugin(argv2, argc, &builtin_plugin, &cap);
+
+		snprintf(desc, sizeof(desc),
+			 "lookup: case %zu: found '%s', ran '%s'", i,
+			 found ? found : "(none)",
+			 last_call.cmd_name ? last_call.cmd_name : "(none)");
+		check(found ? last_call.cmd_name &&
+		      !strcmp(found, last_call.cmd_name) :
+		      !last_call.cmd_name, desc);
+	}
+}
+
 int main(void)
 {
 	test_rc = 0;
@@ -486,6 +550,7 @@ int main(void)
 	test_extension_dispatch_separate_token();
 	test_extension_dispatch_concatenated();
 	test_extension_unknown_subcommand();
+	test_lookup();
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
