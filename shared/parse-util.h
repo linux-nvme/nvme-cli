@@ -27,9 +27,17 @@ typedef unsigned __int128 uint128_t;
 int shr_parse_bool(const char *value, bool *out);
 
 /*
- * Parse the whole string @s as an unsigned number: decimal, hexadecimal
- * with a 0x prefix or octal with a leading 0, like strtoull() with base 0,
- * but no whitespace, no sign and nothing after the digits.
+ * True if the number @s starts with a 0 followed by another digit, such
+ * as "010". strtoull() with base 0 reads it as octal, which hardly anyone
+ * means, so the number parsers reject it.
+ */
+bool shr_has_leading_zero(const char *s);
+
+/*
+ * Parse the whole string @s as an unsigned number: decimal, or hexadecimal
+ * with a 0x prefix, like strtoull() with base 0, but no octal (see
+ * shr_has_leading_zero()), no whitespace, no sign and nothing after the
+ * digits.
  * Return: 0 on success (*out set), -EINVAL if @s is no number, -ERANGE if
  * it is larger than @max.
  */

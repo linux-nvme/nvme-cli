@@ -732,6 +732,18 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 			list ? "" : "one of: ", v->str);
 	fprintf(stderr, "\n");
 
+	/* "010" was octal once, say what to write instead */
+	if (arg && !list && s->config_type != CFG_ENUM &&
+	    shr_has_leading_zero(arg)) {
+		const char *d = arg;
+
+		while (d[0] == '0' && d[1])
+			d++;
+		fprintf(stderr,
+			"a number must not start with 0: write %s, or 0x%s for hexadecimal\n",
+			d, d);
+	}
+
 	return ARGCONFIG_USAGE;
 }
 

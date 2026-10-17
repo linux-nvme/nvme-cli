@@ -108,6 +108,12 @@ static struct toval_test toval_tests[] = {
 	VAL_TEST("--suffix=32Gii", suffix, 0, true, -EINVAL),
 	VAL_TEST("--uint=1", uint, 1, true, 0),
 	VAL_TEST("--uint=4294967295", uint, 4294967295, true, 0),
+	/* no octal: a leading 0 is rejected, 0 and 0x are fine */
+	VAL_TEST("--uint=010", uint, 0, true, -EINVAL),
+	VAL_TEST("--uint=0", uint, 0, true, 0),
+	VAL_TEST("--uint=0x10", uint, 16, true, 0),
+	VAL_TEST("--int=-010", int_val, 0, true, -EINVAL),
+	VAL_TEST("--suffix=010Ki", suffix, 0, true, -EINVAL),
 	VAL_TEST("--uint=4294967296", uint, 0, true, -EINVAL),
 	/* unsigned options reject negative numbers, signed ones don't */
 	VAL_TEST("--uint=-1", uint, 0, true, -EINVAL),

@@ -50,13 +50,18 @@ int shr_parse_bool(const char *value, bool *out)
 	return -EINVAL;
 }
 
+bool shr_has_leading_zero(const char *s)
+{
+	return s[0] == '0' && isdigit((unsigned char)s[1]);
+}
+
 int shr_parse_u64(const char *s, uint64_t max, uint64_t *out)
 {
 	unsigned long long v;
 	char *end;
 
 	/* strtoull() skips whitespace and takes a sign, a digit must lead */
-	if (!s || !isdigit((unsigned char)*s))
+	if (!s || !isdigit((unsigned char)*s) || shr_has_leading_zero(s))
 		return -EINVAL;
 
 	errno = 0;
@@ -79,7 +84,7 @@ int shr_parse_s64(const char *s, int64_t min, int64_t max, int64_t *out)
 	if (!s)
 		return -EINVAL;
 	digits = *s == '-' ? s + 1 : s;
-	if (!isdigit((unsigned char)*digits))
+	if (!isdigit((unsigned char)*digits) || shr_has_leading_zero(digits))
 		return -EINVAL;
 
 	errno = 0;
@@ -205,6 +210,8 @@ int shr_parse_csv_uint128(char *string, uint128_t *val, unsigned int max_length)
 		if (src[0] == '0' && (src[1] == 'x' || src[1] == 'X')) {
 			base = 16;
 			src += 2;
+		} else if (shr_has_leading_zero(src)) {
+			return -EINVAL;
 		}
 
 		if (*src == '\0')
