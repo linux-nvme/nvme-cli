@@ -24,7 +24,8 @@ int nvme_load_global_config_from(const char *path);
 int nvme_load_global_config_buf(const char *text, const char *name);
 
 /*
- * Free the strings the config set. The options which point to them must
- * be set anew before they are used.
+ * Free the strings the config set and forget the counts given on the
+ * command line. The options which point to them must be set anew before
+ * they are used.
  */
 void nvme_global_config_free(void);

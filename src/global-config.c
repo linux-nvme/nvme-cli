@@ -10,7 +10,9 @@
  * /etc/nvme/nvme-cli.conf: a global INI config file for the global options
  * (global-options.c, struct nvme_args). Its keys are their long names.
  * Values from this file become the new defaults; any command-line flag
- * still overrides them, since this is loaded before argument parsing runs.
+ * still overrides them: the global options in front of the command are
+ * parsed before the file is loaded, the file skips those, and the options
+ * of the command are parsed afterwards.
  */
 
 #include <errno.h>
@@ -42,9 +44,28 @@ struct config_file {
 
 static struct config_file *config_files;
 
+/*
+ * The count of an option given on the command line, which the last valid
+ * value of the files adds to.
+ */
+struct given_count {
+	struct given_count *next;
+	int *count;
+	int given;
+};
+
+static struct given_count *given_counts;
+
 void nvme_global_config_free(void)
 {
 	struct config_file *file;
+	struct given_count *g;
+
+	while (given_counts) {
+		g = given_counts;
+		given_counts = g->next;
+		free(g);
+	}
 
 	while (config_files) {
 		file = config_files;
@@ -58,6 +79,26 @@ void nvme_global_config_free(void)
 static int parse_uint(const char *value, uint64_t max, uint64_t *out)
 {
 	return shr_parse_u64(value, max, out) ? -EINVAL : 0;
+}
+
+/* The command-line count of @count, before a file added to it */
+static int *given_count(int *count)
+{
+	struct given_count *g;
+
+	for (g = given_counts; g; g = g->next)
+		if (g->count == count)
+			return &g->given;
+
+	g = calloc(1, sizeof(*g));
+	if (!g)
+		return NULL;
+	g->count = count;
+	g->given = *count;
+	g->next = given_counts;
+	given_counts = g;
+
+	return &g->given;
 }
 
 /* The keys are the global options which the help shows */
@@ -75,20 +116,14 @@ static struct argconfig_commandline_options *find_key(const char *key)
 	return NULL;
 }
 
-static int apply_kv(struct global_config_ctx *gc, const char *key,
+/* Set the global option @s to @value, warn about an invalid one */
+static int set_value(struct global_config_ctx *gc,
+		     struct argconfig_commandline_options *s, const char *k,
 		     const char *value, unsigned int line)
 {
-	struct argconfig_commandline_options *s = find_key(key);
-	__cleanup_free char *k = shr_escape(key);
 	uint64_t uval;
 	bool bval;
 	int err;
-
-	if (!s || !s->default_value) {
-		fprintf(stderr, "%s:%u: unknown key \"%s\", ignoring\n",
-			gc->path, line, k ? k : "");
-		return 0;
-	}
 
 	/* 'timeout = infinite' like on the command line */
 	if (argconfig_set_value_name(s, value))
@@ -139,6 +174,54 @@ bad_value:
 		err = 0;
 	}
 	return err;
+}
+
+static int apply_kv(struct global_config_ctx *gc, const char *key,
+		     const char *value, unsigned int line)
+{
+	struct argconfig_commandline_options *s = find_key(key);
+	__cleanup_free char *k = shr_escape(key);
+	union {
+		bool b;
+		int i;
+		uint32_t u;
+		char *str;
+	} scratch = {};
+
+	if (!s || !s->default_value) {
+		fprintf(stderr, "%s:%u: unknown key \"%s\", ignoring\n",
+			gc->path, line, k ? k : "");
+		return 0;
+	}
+
+	if (!argconfig_given(argconfig_get_global_options(),
+			     s->default_value))
+		return set_value(gc, s, k, value, line);
+
+	/*
+	 * An option given on the command line wins, the value is checked
+	 * all the same. A count adds up as if the file came first: the
+	 * last valid value of the file adds to the count given.
+	 */
+	{
+		struct argconfig_commandline_options tmp = *s;
+		int *count = s->default_value, *given;
+		int err;
+
+		/* an invalid value leaves it alone */
+		scratch.i = -1;
+		tmp.default_value = &scratch;
+		err = set_value(gc, &tmp, k, value, line);
+		if (err || s->config_type != CFG_INCREMENT || scratch.i < 0)
+			return err;
+
+		given = given_count(count);
+		if (!given)
+			return -ENOMEM;
+		*count = scratch.i > INT_MAX - *given ?
+			INT_MAX : *given + scratch.i;
+		return 0;
+	}
 }
 
 static int global_config_event(enum shr_ini_event event, const char *section,
