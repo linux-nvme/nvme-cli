@@ -285,7 +285,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 	if (!argconfig_given(opts, &cfg.namespace_id)) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
 		if (err < 0) {
-			if (errno != ENOTTY) {
+			if (err != -ENOTTY) {
 				nvme_show_error("get-namespace-id: %s", libnvme_strerror(-err));
 				return err;
 			}
@@ -379,9 +379,9 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	if (!argconfig_given(opts, &cfg.nsid)) {
 		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
-			if (errno != ENOTTY) {
+			if (err != -ENOTTY) {
 				nvme_show_error("get-namespace-id: %s", libnvme_strerror(-err));
-				return -errno;
+				return err;
 			}
 			cfg.nsid = NVME_NSID_ALL;
 		}

@@ -480,8 +480,9 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 	if (!cfg.nsid) {
 		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
-			if (errno != ENOTTY) {
-				nvme_show_error("get-namespace-id: %s", libnvme_strerror(errno));
+			if (err != -ENOTTY) {
+				nvme_show_error("get-namespace-id: %s",
+						libnvme_strerror(-err));
 				return err;
 			}
 
