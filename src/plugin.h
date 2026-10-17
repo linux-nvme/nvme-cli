@@ -81,6 +81,42 @@ extern struct plugin builtin;
 void general_help(struct plugin *plugin, char *str);
 void command_prepare(struct command *cmd);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
+
+enum plugin_action {
+	PLUGIN_RUN,		/* run @cmd */
+	PLUGIN_HELP,		/* the help sub-command */
+	PLUGIN_VERSION,		/* the version sub-command */
+	PLUGIN_GENERAL_HELP,	/* list the commands */
+	PLUGIN_ERROR,		/* return @err, @str is no sub-command */
+};
+
+/* What handle_plugin() does for a command line */
+struct plugin_call {
+	enum plugin_action action;
+	struct plugin *plugin;
+	struct command *cmd;
+	int argc;
+	char **argv;
+	char *str;
+	int err;
+	/* argv when a name is prepended, freed by plugin_call_free() */
+	char **alloc_argv;
+	char *alloc_name;
+};
+
+/*
+ * plugin_lookup() - Find what handle_plugin() does for a command line
+ *
+ * Parses the global options in front of the command, as handle_plugin()
+ * does, but runs nothing. Only the usage errors of the global options are
+ * printed, the rest by plugin_call_run().
+ *
+ * Return: 0, or a negative error code.
+ */
+int plugin_lookup(int argc, char **argv, struct plugin *plugin,
+		  struct plugin_call *call);
+int plugin_call_run(struct plugin_call *call);
+void plugin_call_free(struct plugin_call *call);
 int run_replacement(int argc, char **argv, struct command *cmd,
 		    struct plugin *plugin);
 int run_replacement_command(struct plugin *plugin, struct command *cmd,
