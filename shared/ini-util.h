@@ -54,6 +54,23 @@ int shr_ini_parse_buf(const char *text, shr_ini_parse_fn callback,
 		void *user_data);
 
 /*
+ * Parse @text like shr_ini_parse_buf(), but in place: @text is modified,
+ * and the strings passed to @callback point into it, so they stay valid
+ * as long as @text.
+ */
+int shr_ini_parse_inplace(char *text, shr_ini_parse_fn callback,
+		void *user_data);
+
+/*
+ * Read @path for shr_ini_parse_buf() into a NUL-terminated buffer @out,
+ * which the caller frees. Fails for files which are not regular, too large
+ * or contain NUL bytes. A missing file is reported as -ENOENT.
+ *
+ * Returns 0 on success or a negative errno.
+ */
+int shr_ini_read_file(const char *path, char **out);
+
+/*
  * Parse @path like shr_ini_parse_buf(). A missing file is reported as
  * -ENOENT so callers can treat an absent configuration as empty rather
  * than an error.

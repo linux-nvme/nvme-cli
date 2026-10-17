@@ -94,6 +94,15 @@ static int parse_lines(char *buf, shr_ini_parse_fn callback, void *user_data)
 	return ret;
 }
 
+int shr_ini_parse_inplace(char *text, shr_ini_parse_fn callback,
+		void *user_data)
+{
+	if (!text || !callback)
+		return -EINVAL;
+
+	return parse_lines(text, callback, user_data);
+}
+
 int shr_ini_parse_buf(const char *text, shr_ini_parse_fn callback,
 		void *user_data)
 {
@@ -107,14 +116,13 @@ int shr_ini_parse_buf(const char *text, shr_ini_parse_fn callback,
 	if (!copy)
 		return -ENOMEM;
 
-	ret = parse_lines(copy, callback, user_data);
+	ret = shr_ini_parse_inplace(copy, callback, user_data);
 	free(copy);
 
 	return ret;
 }
 
-int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
-		void *user_data)
+int shr_ini_read_file(const char *path, char **out)
 {
 	FILE *f;
 	char *text;
@@ -122,7 +130,7 @@ int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
 	size_t len;
 	int ret;
 
-	if (!path || !callback)
+	if (!path || !out)
 		return -EINVAL;
 
 	/*
@@ -178,12 +186,33 @@ int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
 		goto free_text;
 	}
 
-	ret = parse_lines(text, callback, user_data);
+	*out = text;
+	text = NULL;
+	ret = 0;
 
 free_text:
 	free(text);
 close_file:
 	fclose(f);
+
+	return ret;
+}
+
+int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
+		void *user_data)
+{
+	char *text;
+	int ret;
+
+	if (!callback)
+		return -EINVAL;
+
+	ret = shr_ini_read_file(path, &text);
+	if (ret)
+		return ret;
+
+	ret = parse_lines(text, callback, user_data);
+	free(text);
 
 	return ret;
 }
