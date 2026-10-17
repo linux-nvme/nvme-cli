@@ -54,11 +54,28 @@ struct argconfig_commandline_options *argconfig_get_global_options(void)
 	return global_options;
 }
 
-/* The global options, unless they are the table itself */
-static struct argconfig_commandline_options *
-argconfig_globals(struct argconfig_commandline_options *options)
+/* The entries of a root, see argconfig_root() */
+#define ARGCONFIG_ROOT_LEN	3
+
+/*
+ * The options a command accepts: its table @options and the global
+ * options, each as an include with the heading of the help. The global
+ * options are included last, as root[1]. The table of the global options
+ * themselves includes nothing else.
+ */
+static void argconfig_root(struct argconfig_commandline_options *root,
+			   struct argconfig_commandline_options *options)
 {
-	return options == global_options ? NULL : global_options;
+	struct argconfig_commandline_options r[ARGCONFIG_ROOT_LEN] = {
+		OPT_INCLUDE(options, "Options"),
+		OPT_INCLUDE(global_options, "Global options"),
+		OPT_END()
+	};
+	struct argconfig_commandline_options end[] = { OPT_END() };
+
+	memcpy(root, r, sizeof(r));
+	if (!global_options || options == global_options)
+		memcpy(&root[1], end, sizeof(end));
 }
 
 void argconfig_append_usage(const char *str)
@@ -261,7 +278,7 @@ static void print_options(FILE *out, struct argconfig_commandline_options *s,
 }
 
 static void show_help(FILE *out, const char *program_desc,
-		      struct argconfig_commandline_options *s)
+		      struct argconfig_commandline_options *root)
 {
 	argconfig_print_heading(out, "Usage: %s", append_usage_str);
 	fputs("\n\n", out);
@@ -269,8 +286,7 @@ static void show_help(FILE *out, const char *program_desc,
 	shr_print_word_wrapped(program_desc, 0, 0, out);
 	fputc('\n', out);
 
-	print_options(out, s, "Options");
-	print_options(out, argconfig_globals(s), "Global options");
+	print_options(out, root, "Options");
 }
 
 static bool help_requested;
@@ -478,7 +494,8 @@ struct argconfig_parser {
 	int argc;
 	char **argv;
 	int ind;
-	struct argconfig_commandline_options *options;
+	/* the table of the command, the global options included */
+	struct argconfig_commandline_options root[ARGCONFIG_ROOT_LEN];
 	/*
 	 * Global options stop at the first operand, the subcommand. Their
 	 * implicit -h, --help, -V and --version are recorded and the parse
@@ -562,34 +579,30 @@ argconfig_find_short(struct argconfig_commandline_options *s, char c)
 	return NULL;
 }
 
-/* @s given by its short name @c, or by its long name without, and @arg */
 /*
- * The option @s or the global options name, the global ones first: a
- * global option is the same for every command.
+ * The option of @root with the long name @name, a global option first: a
+ * global option is the same for every command. &root[1] is the include
+ * of the global options alone.
  */
 static struct argconfig_commandline_options *
-argconfig_find_long_any(struct argconfig_commandline_options *s,
+argconfig_find_long_any(struct argconfig_commandline_options *root,
 			const char *name, size_t len)
 {
-	struct argconfig_commandline_options *g = argconfig_globals(s);
-	struct argconfig_commandline_options *o = NULL;
+	struct argconfig_commandline_options *o;
 
-	if (g)
-		o = argconfig_find_long(g, name, len);
+	o = argconfig_find_long(&root[1], name, len);
 
-	return o ? o : argconfig_find_long(s, name, len);
+	return o ? o : argconfig_find_long(root, name, len);
 }
 
 static struct argconfig_commandline_options *
-argconfig_find_short_any(struct argconfig_commandline_options *s, char c)
+argconfig_find_short_any(struct argconfig_commandline_options *root, char c)
 {
-	struct argconfig_commandline_options *g = argconfig_globals(s);
-	struct argconfig_commandline_options *o = NULL;
+	struct argconfig_commandline_options *o;
 
-	if (g)
-		o = argconfig_find_short(g, c);
+	o = argconfig_find_short(&root[1], c);
 
-	return o ? o : argconfig_find_short(s, c);
+	return o ? o : argconfig_find_short(root, c);
 }
 
 /* What a value of @s has to look like */
@@ -643,6 +656,7 @@ static int argconfig_value_error(struct argconfig_commandline_options *s,
 	return ARGCONFIG_USAGE;
 }
 
+/* @s given by its short name @c, or by its long name without, and @arg */
 static int argconfig_apply(struct argconfig_commandline_options *s, char c,
 			   char *arg)
 {
@@ -730,7 +744,7 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 	char *eq = strchr(name, '=');
 	size_t len = eq ? (size_t)(eq - name) : strlen(name);
 
-	s = argconfig_find_long_any(p->options, name, len);
+	s = argconfig_find_long_any(p->root, name, len);
 	if (!s) {
 		bool help = len == 4 && !strncmp(name, "help", 4);
 		bool version = len == 7 && !strncmp(name, "version", 7);
@@ -795,7 +809,7 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
 		if (!p->global && (*c == 'h' || *c == '?'))
 			return ARGCONFIG_HELP;
 
-		s = argconfig_find_short_any(p->options, *c);
+		s = argconfig_find_short_any(p->root, *c);
 		if (!s && p->global && (*c == 'h' || *c == 'V')) {
 			p->help |= *c == 'h';
 			p->version |= *c == 'V';
@@ -854,7 +868,11 @@ static int argconfig_parse_args(struct argconfig_parser *p)
 	char *arg;
 	int ret;
 
-	argconfig_reset_seen(p->options);
+	/*
+	 * The global options keep theirs: they may have been given before
+	 * the command name.
+	 */
+	argconfig_reset_seen(p->root[0].default_value);
 
 	/* argv ends at argc or at a NULL, whichever comes first */
 	for (p->ind = 1; p->ind < p->argc && p->argv[p->ind]; p->ind++) {
@@ -895,16 +913,31 @@ void argconfig_set_parse_hook(argconfig_parse_hook_fn hook)
 	argconfig_parse_hook = hook;
 }
 
+static bool given_in(struct argconfig_commandline_options *s,
+		     const void *value)
+{
+	bool given = false;
+
+	for (; s && s->option; s++) {
+		if (s->config_type == CFG_INCLUDE)
+			given |= given_in(s->default_value, value);
+		else
+			given |= s->default_value == value && s->seen;
+	}
+
+	return given;
+}
+
 /* --verbose, or an alias of it such as --human-readable, was given */
-static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
+static bool argconfig_check_verbose(struct argconfig_commandline_options *root)
 {
 	struct argconfig_commandline_options *v;
 
-	v = argconfig_find_long_any(s, "verbose", strlen("verbose"));
+	v = argconfig_find_long_any(root, "verbose", strlen("verbose"));
 	if (!v || v->config_type != CFG_INCREMENT)
 		return false;
 
-	return argconfig_given(s, v->default_value);
+	return given_in(root, v->default_value);
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
@@ -914,10 +947,10 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	struct argconfig_parser p = {
 		.argc = argc,
 		.argv = argv,
-		.options = options,
 	};
 	int ret;
 
+	argconfig_root(p.root, options);
 	parse_argv0 = argc > 0 ? argv[0] : "";
 	free(operand_buf);
 	operand_buf = NULL;
@@ -925,7 +958,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	operands.argc = 0;
 
 	if (argconfig_parse_hook)
-		return argconfig_parse_hook(argc, argv, program_desc, options);
+		return argconfig_parse_hook(argc, argv, program_desc, p.root);
 
 	p.operands = calloc(argc > 0 ? argc : 1, sizeof(*p.operands));
 	if (!p.operands)
@@ -939,7 +972,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		 * either way: it gets ARGCONFIG_HELP or an error.
 		 */
 		if (ret == ARGCONFIG_HELP) {
-			show_help(stdout, program_desc, options);
+			show_help(stdout, program_desc, p.root);
 			help_requested = true;
 		} else if (ret > 0) {
 			argconfig_print_usage();
@@ -952,7 +985,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		operands.argc = p.nr_operands;
 	}
 
-	if (!argconfig_check_verbose(options))
+	if (!argconfig_check_verbose(p.root))
 		setlocale(LC_ALL, "C");
 
 	return ret;
@@ -979,10 +1012,11 @@ int argconfig_parse_global(int argc, char *argv[],
 	struct argconfig_parser p = {
 		.argc = argc,
 		.argv = argv,
-		.options = options ? options : no_options,
 		.global = true,
 	};
 	int ret;
+
+	argconfig_root(p.root, options ? options : no_options);
 
 	parse_argv0 = argc > 0 ? argv[0] : "";
 	ret = argconfig_parse_args(&p);
@@ -994,21 +1028,6 @@ int argconfig_parse_global(int argc, char *argv[],
 	       (p.version ? ARGCONFIG_VERSION : 0);
 }
 
-static bool given_in(struct argconfig_commandline_options *s,
-		     const void *value)
-{
-	bool given = false;
-
-	for (; s && s->option; s++) {
-		if (s->config_type == CFG_INCLUDE)
-			given |= given_in(s->default_value, value);
-		else
-			given |= s->default_value == value && s->seen;
-	}
-
-	return given;
-}
-
 /*
  * True if an option which stores to @value was given, in the table or in
  * the global options. Aliases share the variable, so any of them counts.
@@ -1016,10 +1035,11 @@ static bool given_in(struct argconfig_commandline_options *s,
 bool argconfig_given(struct argconfig_commandline_options *s,
 		     const void *value)
 {
-	struct argconfig_commandline_options *g = argconfig_globals(s);
+	struct argconfig_commandline_options root[ARGCONFIG_ROOT_LEN];
 
 	if (!value)
 		return false;
+	argconfig_root(root, s);
 
-	return given_in(s, value) || given_in(g, value);
+	return given_in(root, value);
 }

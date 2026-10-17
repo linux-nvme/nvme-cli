@@ -257,9 +257,13 @@ struct argconfig_commandline_options *argconfig_get_global_options(void);
 int argconfig_nr_operands(void);
 char *argconfig_operand(int i);
 
+/*
+ * Called by argconfig_parse() instead of parsing. @root includes the table
+ * of the command and the global options, under the headings of the help.
+ */
 typedef int (*argconfig_parse_hook_fn)(int argc, char *argv[],
-				       const char *program_desc,
-				       struct argconfig_commandline_options *options);
+		const char *program_desc,
+		struct argconfig_commandline_options *root);
 void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
 
 bool argconfig_given(struct argconfig_commandline_options *options,
