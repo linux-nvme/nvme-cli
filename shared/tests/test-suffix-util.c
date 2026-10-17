@@ -90,6 +90,8 @@ static bool test_suffix_si_parse(void)
 		{ "-1k", 0, -EINVAL },
 		{ " 1k", 0, -EINVAL },
 		{ "+1k", 0, -EINVAL },
+		{ "010k", 0, -EINVAL },
+		{ "0.5k", 500ULL, 0 },
 		{ "", 0, -EINVAL },
 	};
 	bool pass = true;
@@ -127,6 +129,8 @@ static bool test_suffix_binary_parse(void)
 		{ "18446744073709551616", 0, -EINVAL },
 		{ "-1Ki", 0, -EINVAL },
 		{ " 1Ki", 0, -EINVAL },
+		{ "010Ki", 0, -EINVAL },
+		{ "0", 0, 0 },
 		{ "1ki", 1024ULL, 0 },
 		{ "", 0, -EINVAL },
 	};

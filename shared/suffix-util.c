@@ -22,6 +22,7 @@
 
 #include <ccan/array_size/array_size.h>
 
+#include "parse-util.h"
 #include "suffix-util.h"
 
 static struct si_suffix {
@@ -68,7 +69,7 @@ int shr_suffix_si_parse(const char *str, char **endptr, uint64_t *val)
 	int frac_len = 0, i;
 
 	/* strtoull() takes whitespace and a sign, a digit must lead */
-	if (!isdigit((unsigned char)*str))
+	if (!isdigit((unsigned char)*str) || shr_has_leading_zero(str))
 		return -EINVAL;
 
 	errno = 0;
@@ -203,7 +204,7 @@ int shr_suffix_binary_parse(const char *str, char **endptr, uint64_t *val)
 	int i;
 
 	/* strtoull() takes whitespace and a sign, a digit must lead */
-	if (!isdigit((unsigned char)*str))
+	if (!isdigit((unsigned char)*str) || shr_has_leading_zero(str))
 		return -EINVAL;
 
 	errno = 0;

@@ -345,6 +345,14 @@ static bool test_csv_u128(void)
 	pass &= check_int_ret("val[1]", (int)val[1], 2147483647);
 	pass &= check_uint128_ret("val[2]", val[2], want);
 
+	{
+		/* no octal, a leading 0 was read as decimal */
+		char octal[] = "1,010";
+
+		ret = shr_parse_csv_u128(octal, val, 8);
+		pass &= check_int_ret("leading 0 rejected", ret, -EINVAL);
+	}
+
 	return pass;
 }
 #else /* NVME_HAVE_INT128 */
@@ -376,7 +384,10 @@ static bool test_u64(void)
 	pass &= check_u64("0", UINT64_MAX, 0, 0);
 	pass &= check_u64("42", UINT64_MAX, 0, 42);
 	pass &= check_u64("0x1F", UINT64_MAX, 0, 31);
-	pass &= check_u64("010", UINT64_MAX, 0, 8);
+	/* no octal: a leading 0 is rejected */
+	pass &= check_u64("010", UINT64_MAX, -EINVAL, 0);
+	pass &= check_u64("00", UINT64_MAX, -EINVAL, 0);
+	pass &= check_u64("0x010", UINT64_MAX, 0, 16);
 	pass &= check_u64("18446744073709551615", UINT64_MAX, 0, UINT64_MAX);
 	pass &= check_u64("18446744073709551616", UINT64_MAX, -ERANGE, 0);
 	pass &= check_u64("256", 255, -ERANGE, 0);
@@ -421,6 +432,9 @@ static bool test_s64(void)
 	pass &= check_s64("2147483648", INT32_MIN, INT32_MAX, -ERANGE, 0);
 	pass &= check_s64("-2147483649", INT32_MIN, INT32_MAX, -ERANGE, 0);
 	pass &= check_s64("-0x10", INT32_MIN, INT32_MAX, 0, -16);
+	pass &= check_s64("-0", INT32_MIN, INT32_MAX, 0, 0);
+	pass &= check_s64("010", INT32_MIN, INT32_MAX, -EINVAL, 0);
+	pass &= check_s64("-010", INT32_MIN, INT32_MAX, -EINVAL, 0);
 	pass &= check_s64("9223372036854775808", INT64_MIN, INT64_MAX,
 			  -ERANGE, 0);
 	pass &= check_s64("--1", INT32_MIN, INT32_MAX, -EINVAL, 0);
@@ -481,7 +495,8 @@ static bool test_csv_strict(void)
 		{ "1,-2", -1 },
 		{ "+1", -1 },
 		{ "4294967296", -1 },
-		{ "0x10,010", 2 },
+		{ "0x10,10", 2 },
+		{ "0x10,010", -1 },
 	};
 	unsigned int val[8];
 	bool pass = true;
