@@ -45,9 +45,22 @@ static const char *append_usage_str = "";
  */
 static struct argconfig_commandline_options *global_options;
 
+/* Forget the options given before, also those of included tables */
+static void argconfig_reset_seen(struct argconfig_commandline_options *s)
+{
+	for (; s->option; s++) {
+		if (s->config_type == CFG_INCLUDE)
+			argconfig_reset_seen(s->default_value);
+		s->seen = false;
+	}
+}
+
+/* None of the global options counts as given yet */
 void argconfig_set_global_options(struct argconfig_commandline_options *options)
 {
 	global_options = options;
+	if (options)
+		argconfig_reset_seen(options);
 }
 
 struct argconfig_commandline_options *argconfig_get_global_options(void)
@@ -931,16 +944,6 @@ static int argconfig_parse_short(struct argconfig_parser *p, char *arg)
  * Returns 0, ARGCONFIG_HELP, ARGCONFIG_USAGE or a negative errno from the
  * value conversion.
  */
-/* Forget the options given before, also those of included tables */
-static void argconfig_reset_seen(struct argconfig_commandline_options *s)
-{
-	for (; s->option; s++) {
-		if (s->config_type == CFG_INCLUDE)
-			argconfig_reset_seen(s->default_value);
-		s->seen = false;
-	}
-}
-
 static int argconfig_parse_args(struct argconfig_parser *p)
 {
 	char *arg;

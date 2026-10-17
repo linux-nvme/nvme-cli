@@ -10,7 +10,9 @@
  * /etc/nvme/nvme-cli.conf: a global INI config file for the global options
  * (global-options.c, struct nvme_args). Its keys are their long names.
  * Values from this file become the new defaults; any command-line flag
- * still overrides them, since this is loaded before argument parsing runs.
+ * still overrides them: the global options in front of the command are
+ * parsed before the file is loaded, the file skips those, and the options
+ * of the command are parsed afterwards.
  */
 
 #include <errno.h>
@@ -75,20 +77,14 @@ static struct argconfig_commandline_options *find_key(const char *key)
 	return NULL;
 }
 
-static int apply_kv(struct global_config_ctx *gc, const char *key,
+/* Set the global option @s to @value, warn about an invalid one */
+static int set_value(struct global_config_ctx *gc,
+		     struct argconfig_commandline_options *s, const char *k,
 		     const char *value, unsigned int line)
 {
-	struct argconfig_commandline_options *s = find_key(key);
-	__cleanup_free char *k = shr_escape(key);
 	uint64_t uval;
 	bool bval;
 	int err;
-
-	if (!s || !s->default_value) {
-		fprintf(stderr, "%s:%u: unknown key \"%s\", ignoring\n",
-			gc->path, line, k ? k : "");
-		return 0;
-	}
 
 	/* 'timeout = infinite' like on the command line */
 	if (argconfig_set_value_name(s, value))
@@ -139,6 +135,46 @@ bad_value:
 		err = 0;
 	}
 	return err;
+}
+
+static int apply_kv(struct global_config_ctx *gc, const char *key,
+		     const char *value, unsigned int line)
+{
+	struct argconfig_commandline_options *s = find_key(key);
+	__cleanup_free char *k = shr_escape(key);
+	union {
+		bool b;
+		int i;
+		uint32_t u;
+		char *str;
+	} scratch = {};
+
+	if (!s || !s->default_value) {
+		fprintf(stderr, "%s:%u: unknown key \"%s\", ignoring\n",
+			gc->path, line, k ? k : "");
+		return 0;
+	}
+
+	if (!argconfig_given(argconfig_get_global_options(),
+			     s->default_value))
+		return set_value(gc, s, k, value, line);
+
+	/*
+	 * An option given on the command line wins, the value is checked
+	 * all the same. A count adds up as if the file came first.
+	 */
+	{
+		struct argconfig_commandline_options tmp = *s;
+		int *count = s->default_value;
+		int err;
+
+		tmp.default_value = &scratch;
+		err = set_value(gc, &tmp, k, value, line);
+		if (!err && s->config_type == CFG_INCREMENT)
+			*count = scratch.i > INT_MAX - *count ?
+				INT_MAX : *count + scratch.i;
+		return err;
+	}
 }
 
 static int global_config_event(enum shr_ini_event event, const char *section,
