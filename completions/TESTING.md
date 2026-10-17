@@ -69,8 +69,8 @@ These behaviors are identical in bash, zsh, and PowerShell.
 - [ ] **Enumerated value** — `nvme id ctrl --output-format <tab>`,
       `nvme id ctrl -o <tab>`, and `nvme id ctrl --output-format=<tab>` all
       list `normal json binary tabular`.
-- [ ] **Value from a hint** — `nvme feat power-meas --sel <tab>` lists
-      `0 1 2 3`.
+- [ ] **Value from a range** — `nvme feat power-meas --sel <tab>` lists
+      `0 1 2 3 current default saved supported`.
 - [ ] **Command-local value** — `nvme fw commit --action <tab>` lists
       `replace … set-active …`.
 - [ ] **File-valued option** — `nvme fw download --fw <tab>` completes

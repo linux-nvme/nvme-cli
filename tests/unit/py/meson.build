@@ -91,6 +91,18 @@ if python3.found()
         timeout: 60,
     )
 
+    # The options complete what their type and range in the metadata say.
+    test(
+        'nvme-cli - generate-completions-values',
+        python3,
+        args: [
+            files('test_generate_completions_values.py'),
+            meson.project_source_root() / 'completions' / 'generate-completions.py',
+            meson.project_source_root() / 'completions' / 'test-command-metadata.json',
+        ],
+        timeout: 60,
+    )
+
     # The completion test fixture is a hand-written, synthetic metadata model;
     # validate it against the schema so a schema change the fixture no longer
     # satisfies is caught. Both inputs are committed, so no binary needed.
