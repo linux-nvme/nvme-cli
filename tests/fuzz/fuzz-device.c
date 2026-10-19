@@ -19,6 +19,8 @@
  * value of the option the command names) and then the answers of the
  * device, see ipc_call() in the mock.
  */
+#include <dlfcn.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -27,6 +29,8 @@
 #include <sys/resource.h>
 
 #include <ccan/array_size/array_size.h>
+
+#include <libnvme.h>
 
 #include "args.h"
 #include "fuzz.h"
@@ -250,6 +254,65 @@ const char *__asan_default_options(void)
 	return "allocator_may_return_null=1:max_allocation_size_mb=1024";
 }
 #endif
+
+/*
+ * The mock answers a run with 1 MiB of data at most, so a larger buffer
+ * only ever holds zeros. Fail the allocations of a length the device
+ * claims early, as nvme-cli allocates its buffers with libnvme: clearing
+ * gigabytes takes long, and under valgrind its shadow memory of them
+ * exceeds the address space limit below. The executable's definitions
+ * take the place of the libnvme ones.
+ */
+#define FUZZ_MAX_ALLOC	(64UL << 20)
+
+static void *real(const char *name)
+{
+	void *fn = dlsym(RTLD_NEXT, name);
+
+	if (!fn)
+		abort();
+	return fn;
+}
+
+void *libnvme_alloc(size_t len)
+{
+	static void *(*fn)(size_t);
+
+	if (len > FUZZ_MAX_ALLOC) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	if (!fn)
+		fn = real("libnvme_alloc");
+	return fn(len);
+}
+
+void *libnvme_realloc(void *p, size_t len)
+{
+	static void *(*fn)(void *, size_t);
+
+	if (len > FUZZ_MAX_ALLOC) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	if (!fn)
+		fn = real("libnvme_realloc");
+	return fn(p, len);
+}
+
+void *libnvme_alloc_huge(size_t len, struct libnvme_mem_huge *mh)
+{
+	static void *(*fn)(size_t, struct libnvme_mem_huge *);
+
+	if (len > FUZZ_MAX_ALLOC) {
+		memset(mh, 0, sizeof(*mh));
+		errno = ENOMEM;
+		return NULL;
+	}
+	if (!fn)
+		fn = real("libnvme_alloc_huge");
+	return fn(len, mh);
+}
 
 int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
