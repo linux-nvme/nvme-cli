@@ -39,6 +39,7 @@ fuzz_targets = {
 if want_fabrics and want_libnvme
     fuzz_targets += {
         'fabrics-conf': {
+            'component': 'libnvme',
             'sources': ['fuzz-fabrics-conf.c'],
             'deps': [config_dep, ccan_dep, shared_dep, libnvme_test_dep],
         },
@@ -81,7 +82,7 @@ foreach name, t : fuzz_targets
             link_args: t.get('link_args', []),
         )
         test(
-            'nvme-cli - fuzz-' + name,
+            t.get('component', 'nvme-cli') + ' - fuzz-' + name,
             exe,
             args: [meson.current_source_dir() / 'corpus' / name],
             workdir: meson.current_build_dir(),
