@@ -35,6 +35,22 @@ cc = meson.get_compiler('c')
 cxx_available = add_languages('cpp', required: false, native: false)
 host_system = host_machine.system()
 
+# Sanitizer and fuzzing builds fail late, with misleading linker errors,
+# in some setups. Catch them here.
+if get_option('b_sanitize') != 'none' or get_option('fuzzing')
+    # The C++ tests link with the C++ compiler. With a different toolchain
+    # than the C compiler, the sanitizer runtimes do not match.
+    if cxx_available
+        cxx_id = meson.get_compiler('cpp').get_id()
+        if cxx_id != cc.get_id()
+            error('The C compiler is @0@, but the C++ compiler is @1@. '.format(
+                      cc.get_id(), cxx_id) +
+                  'Sanitizer and fuzzing builds need both from the same ' +
+                  'toolchain, e.g. CC=clang CXX=clang++')
+        endif
+    endif
+endif
+
 ################################################################################
 # Determine which features we need to build: The nvme executable, the libnvme
 # library, and/or the python bindings. These are controlled by the following
