@@ -119,7 +119,7 @@ if python3.found()
 
     # Test e2e runner's TAP/JSON generation.
     test(
-        'nvme-cli - e2e-runner-tap',
+        'nvme-cli-e2e - tap',
         python3,
         args: [
             files('test_e2e_runner_tap.py'),
