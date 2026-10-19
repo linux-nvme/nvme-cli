@@ -886,41 +886,11 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;
-	long telemetry_buffer_size = 0;
 	long string_buffer_size = 0;
 	enum nvme_print_flags fmt;
-	unsigned char log_id;
 
-	if (options->telemetry_log) {
-		/* Read the data from the telemetry binary file */
-		status = shr_read_file(NULL,
-				(const char *)options->telemetry_log,
-				&telemetry_buffer_size,
-				&ptelemetry_buffer);
-		if (status) {
-			nvme_show_error("Failed to read telemetry-log.");
-			return status;
-		}
-
-		/* Host and controller headers are both 512 bytes. */
-		if (telemetry_buffer_size <
-		    (long)sizeof(struct nvme_ocp_telemetry_host_initiated_header)) {
-			nvme_show_error("telemetry-log is smaller than its %zu-byte header.",
-					sizeof(struct nvme_ocp_telemetry_host_initiated_header));
-			free(ptelemetry_buffer);
-			ptelemetry_buffer = NULL;
-			return -EINVAL;
-		}
-
-		ptelemetry_buffer_size = telemetry_buffer_size;
-	} else {
+	if (!ptelemetry_buffer) {
 		nvme_show_error("telemetry-log is empty.");
-		return -1;
-	}
-
-	log_id = ptelemetry_buffer[0];
-	if ((log_id != NVME_LOG_LID_TELEMETRY_HOST) && (log_id != NVME_LOG_LID_TELEMETRY_CTRL)) {
-		nvme_show_error("Invalid LogPageId [0x%02X]", log_id);
 		return -1;
 	}
 
@@ -962,6 +932,45 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 	return 0;
 }
 
+/*
+ * Loads the telemetry log at path into ptelemetry_buffer and validates that
+ * its Log Identifier indicates a Host- or Controller-Initiated Telemetry log.
+ */
+static int load_telemetry_log_file(const char *path)
+{
+	/* Host and controller headers are both 512 bytes. */
+	const size_t header_size =
+		sizeof(struct nvme_ocp_telemetry_host_initiated_header);
+	unsigned char *buf;
+	long size;
+	int err;
+
+	err = shr_read_file(NULL, path, &size, &buf);
+	if (err) {
+		nvme_show_error("Failed to read telemetry-log.");
+		return err;
+	}
+
+	if (size < (long)header_size) {
+		nvme_show_error("telemetry-log is smaller than its %zu-byte header.",
+				header_size);
+		free(buf);
+		return -EINVAL;
+	}
+
+	if (buf[0] != NVME_LOG_LID_TELEMETRY_HOST &&
+	    buf[0] != NVME_LOG_LID_TELEMETRY_CTRL) {
+		nvme_show_error("Invalid LogPageId [0x%02X]", buf[0]);
+		free(buf);
+		return -EINVAL;
+	}
+
+	free(ptelemetry_buffer);
+	ptelemetry_buffer = buf;
+	ptelemetry_buffer_size = size;
+	return 0;
+}
+
 static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	bool no_uuid_flag = false;
@@ -978,7 +987,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			"e.g. '-a 4 for Data Areas 1, 2, 3, and 4.';\n";
 
 	const char *telemetry_type = "Telemetry Type; 'host' or 'controller'\n"
-			"('host0' and 'host1' are deprecated)";
+			"('host0' and 'host1' are deprecated);\n"
+			"determined from the log when --telemetry-log is given";
 	const char *hgen = "Have the host tell the controller to generate the report (default 1)";
 	struct argconfig_opt_val tele_types[] = {
 		VAL_ENUM("host", TELEMETRY_TYPE_HOST),
@@ -994,7 +1004,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	__u32  nsid = NVME_NSID_ALL;
 	struct nvme_id_ctrl ctrl;
 	struct libnvme_passthru_cmd cmd;
-	bool is_support_telemetry_controller;
 	struct ocp_telemetry_parse_options opt = {0};
 	int tele_type = TELEMETRY_TYPE_HOST;
 	int tele_area = 0;
@@ -1027,13 +1036,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			return err;
 	}
 
-	nvme_init_identify_ctrl(&cmd, &ctrl);
-	err = libnvme_exec_admin_passthru(hdl, &cmd);
-	if (err)
-		return err;
-
-	is_support_telemetry_controller = ((ctrl.lpa & 0x8) >> 3);
-
 	if (opt.output_file == NULL)
 		opt.output_file = DEFAULT_TELEMETRY_LOG;
 
@@ -1060,12 +1062,43 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		host_gen = 1;
 	}
 
-	if (!opt.telemetry_log) {
-		nvme_show_result("\nMissing telemetry-log. Fetching from drive...\n");
+	if (opt.telemetry_log) {
+		int log_type;
+
+		err = load_telemetry_log_file(opt.telemetry_log);
+		if (err)
+			goto out;
+
+		log_type = ptelemetry_buffer[0] == NVME_LOG_LID_TELEMETRY_CTRL ?
+			   TELEMETRY_TYPE_CONTROLLER : TELEMETRY_TYPE_HOST;
+		if (argconfig_given(opts, &tele_type) &&
+		    tele_type != log_type) {
+			nvme_show_error("--telemetry-type does not match the %s-Initiated log in telemetry-log.",
+					log_type == TELEMETRY_TYPE_HOST ?
+					"Host" : "Controller");
+			err = -EINVAL;
+			goto out;
+		}
+		tele_type = log_type;
+	} else {
+		nvme_show_result("\nFetching telemetry-log from drive...\n");
+
+		nvme_init_identify_ctrl(&cmd, &ctrl);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
+		if (err)
+			goto out;
+
+		if (tele_type == TELEMETRY_TYPE_CONTROLLER &&
+		    !(ctrl.lpa & 0x8)) {
+			nvme_show_error("Controller-initiated telemetry not supported by device.");
+			err = -ENOTSUP;
+			goto out;
+		}
 
 		if (tele_area == 4) {
 			if (!(ctrl.lpa & 0x40)) {
 				nvme_show_error("Telemetry data area 4 not supported by device.");
+				err = -ENOTSUP;
 				goto out;
 			}
 
@@ -1098,10 +1131,14 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		}
 		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
 		opt.telemetry_log = file_path_telemetry;
+
+		err = load_telemetry_log_file(opt.telemetry_log);
+		if (err)
+			goto out;
 	}
 
 	if (!opt.string_log) {
-		nvme_show_result("Missing string-log. Fetching from drive...\n");
+		nvme_show_result("Fetching string-log from drive...\n");
 
 		/* Pull String log */
 		snprintf(file_path_string, sizeof(file_path_string), "%s-%s",
@@ -1126,23 +1163,12 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		opt.output_format = DEFAULT_OUTPUT_FORMAT;
 	}
 
-	switch (tele_type) {
-	case TELEMETRY_TYPE_HOST:
-		printf("Extracting Telemetry Host Dump (Data Area %d)...\n", tele_area);
-
-		err = parse_ocp_telemetry_log(&opt);
-		if (err)
-			nvme_show_result("Status:(%x)\n", err);
-		break;
-	case TELEMETRY_TYPE_CONTROLLER:
-		printf("Extracting Telemetry Controller Dump (Data Area %d)...\n", tele_area);
-		if (is_support_telemetry_controller == true) {
-			err = parse_ocp_telemetry_log(&opt);
-			if (err)
-				nvme_show_result("Status:(%x)\n", err);
-		}
-		break;
-	}
+	printf("Extracting Telemetry %s Dump (Data Area %d)...\n",
+	       tele_type == TELEMETRY_TYPE_HOST ? "Host" : "Controller",
+	       tele_area);
+	err = parse_ocp_telemetry_log(&opt);
+	if (err)
+		nvme_show_result("Status:(%x)\n", err);
 
 	printf("ocp internal-log command completed.\n");
 out:
