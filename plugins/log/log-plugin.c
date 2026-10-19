@@ -1520,6 +1520,7 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
 	__u8 lsp_tmp;
+	void *p;
 
 	struct config {
 		__u8	lsp;
@@ -1573,14 +1574,15 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 
 	if (phy_rx_eom_log->eomip == NVME_PHY_RX_EOM_COMPLETED)
 		phy_rx_eom_log_len = le16_to_cpu(phy_rx_eom_log->hsize) +
-				     le32_to_cpu(phy_rx_eom_log->dsize) *
-				     le16_to_cpu(phy_rx_eom_log->nd);
+			(size_t)le32_to_cpu(phy_rx_eom_log->dsize) *
+			le16_to_cpu(phy_rx_eom_log->nd);
 	else
 		phy_rx_eom_log_len = le16_to_cpu(phy_rx_eom_log->hsize);
 
-	phy_rx_eom_log = libnvme_realloc(phy_rx_eom_log, phy_rx_eom_log_len);
-	if (!phy_rx_eom_log)
+	p = libnvme_realloc(phy_rx_eom_log, phy_rx_eom_log_len);
+	if (!p)
 		return -ENOMEM;
+	phy_rx_eom_log = p;
 
 	nvme_init_get_log_phy_rx_eom(&cmd, cfg.lsp, cfg.controller,
 				     phy_rx_eom_log, phy_rx_eom_log_len);
