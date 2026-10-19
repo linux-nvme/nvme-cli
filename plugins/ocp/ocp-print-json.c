@@ -117,26 +117,17 @@ static void print_hwcomp_desc_list_json(struct json_object *r, struct hwcomp_des
 	print_hwcomp_desc_json(e, obj_create_array_obj(r, k));
 }
 
-static void print_hwcomp_descs_json(struct hwcomp_desc *desc, long double log_size, __u32 id,
+static void print_hwcomp_descs_json(struct hwcomp_log *log, __u32 id,
 				    bool list, struct json_object *r)
 {
-	size_t date_lot_code_offset = sizeof(struct hwcomp_desc);
-	struct hwcomp_desc_entry e = { desc };
+	struct hwcomp_desc_entry e;
+	__u64 offset;
 	int num = 1;
 
-	while (log_size > 0) {
-		e.date_lot_size = le64_to_cpu(e.desc->date_lot_size) * sizeof(__le32);
-		e.date_lot_code = e.date_lot_size ?
-		    (__u8 *)e.desc + date_lot_code_offset : NULL;
-		e.add_info_size = le64_to_cpu(e.desc->add_info_size) * sizeof(__le32);
-		e.add_info = e.add_info_size ? e.date_lot_code ?
-		    e.date_lot_code + e.date_lot_size :
-		    (__u8 *)e.desc + date_lot_code_offset : NULL;
+	for (offset = 0; hwcomp_desc_entry(log, offset, &e);
+	     offset += e.desc_size) {
 		if (!id || id == le32_to_cpu(e.desc->id))
 			print_hwcomp_desc_list_json(r, &e, list, num++);
-		e.desc_size = date_lot_code_offset + e.date_lot_size + e.add_info_size;
-		e.desc = (struct hwcomp_desc *)((__u8 *)e.desc + e.desc_size);
-		log_size -= e.desc_size;
 	}
 }
 
@@ -151,7 +142,7 @@ static void json_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	json_object_add_nprix64(r, "Hardware Component Log Size",
 				(unsigned long long)log->desc_len);
 	json_object_add_byte_array(r, "Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
-	print_hwcomp_descs_json(log->desc, log->desc_len, id, list,
+	print_hwcomp_descs_json(log, id, list,
 				obj_create_array_obj(r, "Component Descriptions"));
 
 	json_print(r);

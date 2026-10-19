@@ -62,3 +62,5 @@ enum hwcomp_id {
 
 int ocp_hwcomp_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 const char *hwcomp_id_to_string(__u32 id);
+bool hwcomp_desc_entry(struct hwcomp_log *log, __u64 offset,
+		       struct hwcomp_desc_entry *e);
