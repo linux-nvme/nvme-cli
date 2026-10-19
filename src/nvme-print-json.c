@@ -2173,12 +2173,15 @@ static void json_lba_status(struct nvme_lba_status *list,
 			      unsigned long len)
 {
 	struct json_object *r = json_r;
-	int idx;
+	__u32 nlsd = le32_to_cpu(list->nlsd);
+	size_t nr = nvme_log_nr_entries(nlsd, len, sizeof(*list),
+					sizeof(list->descs[0]));
+	size_t idx;
 	struct nvme_lba_status_desc *e;
 	struct json_object *lsde;
 	char json_str[STR_LEN];
 
-	obj_add_uint(r, "Number of LBA Status Descriptors (NLSD)", le32_to_cpu(list->nlsd));
+	obj_add_uint(r, "Number of LBA Status Descriptors (NLSD)", nlsd);
 	obj_add_uint(r, "Completion Condition (CMPC)", list->cmpc);
 
 	switch (list->cmpc) {
@@ -2201,10 +2204,10 @@ static void json_lba_status(struct nvme_lba_status *list,
 		break;
 	}
 
-	for (idx = 0; idx < list->nlsd; idx++) {
-		lsde = json_create_array();
-		sprintf(json_str, "LSD entry %d", idx);
-		obj_add_array(r, json_str, lsde);
+	for (idx = 0; idx < nr; idx++) {
+		lsde = json_create_object();
+		sprintf(json_str, "LSD entry %zu", idx);
+		obj_add_obj(r, json_str, lsde);
 		e = &list->descs[idx];
 		sprintf(json_str, "0x%016"PRIx64"", le64_to_cpu(e->dslba));
 		obj_add_str(lsde, "DSLBA", json_str);

@@ -3245,7 +3245,10 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 	};
 	struct shr_table *t;
 	__u32 nlsd = le32_to_cpu(list->nlsd);
-	int idx, row;
+	size_t nr = nvme_log_nr_entries(nlsd, len, sizeof(*list),
+					sizeof(list->descs[0]));
+	size_t idx;
+	int row;
 
 	t = stdout_kv_table_create();
 	if (!t)
@@ -3275,14 +3278,14 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 		break;
 	}
 
-	if (!nlsd)
+	if (!nr)
 		return;
 
 	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
 	if (!t)
 		return;
 
-	for (idx = 0; idx < nlsd; idx++) {
+	for (idx = 0; idx < nr; idx++) {
 		struct nvme_lba_status_desc *e = &list->descs[idx];
 		char dslba[24], nlb[16], status[8];
 
