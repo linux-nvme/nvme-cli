@@ -193,6 +193,12 @@ config_meson_default() {
     local extra_args=()
     if [ "${use_asan:-0}" -eq 1 ]; then
         extra_args+=(-Db_sanitize=address,undefined)
+        # The C++ tests need clang++ to match, and clang links the
+        # sanitizer runtime only into executables.
+        if [[ "${CC}" == *clang* ]]; then
+            export CXX="${CXX:-${CC/clang/clang++}}"
+            extra_args+=(-Db_lundef=false)
+        fi
     fi
     # Build nvme-keysd in CI. "enabled" fails without libsystemd >= 257.
     if pkg-config --atleast-version=257 libsystemd 2>/dev/null; then
