@@ -558,7 +558,7 @@ test_meson_fuzz() {
     local seconds="${fuzz_seconds}"
     local jobs="${fuzz_jobs:-$(nproc 2>/dev/null || echo 1)}"
     local failed=()
-    local t f exe corpus artifacts logs args status summary
+    local t f exe corpus artifacts logs args status summary stamp found
     # A device reports sizes of up to gigabytes: let ASan fail such an
     # allocation instead of libFuzzer aborting as out of memory.
     local asan="allocator_may_return_null=1:max_allocation_size_mb=1024"
@@ -589,8 +589,10 @@ test_meson_fuzz() {
 
         # Run the jobs as independent processes on the shared corpus. The
         # -fork mode is newer, but the libFuzzer of clang 22 crashes in it.
+        # A job ends at its first finding, so queue more jobs than workers
+        # to keep all of them busy: the timeout below ends the run.
         args=(-close_fd_mask=3 -max_total_time="${seconds}"
-              -jobs="${jobs}" -workers="${jobs}"
+              -jobs="$((jobs * 100))" -workers="${jobs}"
               -artifact_prefix="${artifacts}/")
         case "${t}" in
             argconfig)
@@ -605,21 +607,37 @@ test_meson_fuzz() {
         esac
 
         echo "fuzz-${t}: ${seconds}s, ${jobs} jobs, logs in ${logs}"
-        # Each job writes fuzz-<job>.log to the current directory
+        # Each job writes fuzz-<job>.log to the current directory. The
+        # timeout signals the whole process group, the jobs included: a
+        # job whose timeout handler deadlocks would keep libFuzzer waiting
+        # forever otherwise.
+        stamp="${logs}/start"
+        touch "${stamp}"
         status=0
         (cd "${logs}" &&
          ASAN_OPTIONS="${ASAN_OPTIONS:+${ASAN_OPTIONS}:}${asan}" \
+            timeout --kill-after=60 "$((seconds + 60))" \
             "${exe}" "${args[@]}" "${corpus}" > main.log 2>&1) ||
             status=$?
-        if [ "${status}" -ne 0 ]; then
+        # Whether libFuzzer exits on its own or the timeout ends it (124,
+        # or 137 after SIGKILL), the inputs it saved tell about the
+        # findings. A slow unit is none.
+        found="$(find "${artifacts}" -type f -newer "${stamp}" \
+                 ! -name 'slow-unit-*' | wc -l)"
+        if [ "${found}" -gt 0 ]; then
             failed+=("${t}")
-            echo "fuzz-${t}: finding, exit status ${status}" |
+            echo "fuzz-${t}: ${found} findings, exit status ${status}" |
                 tee -a "${summary}"
             {
                 grep -hE '^(SUMMARY|==[0-9]+==ERROR)' "${logs}"/fuzz-*.log ||
                     true
-                ls "${artifacts}"/* 2>/dev/null || true
+                find "${artifacts}" -type f -newer "${stamp}" \
+                     ! -name 'slow-unit-*'
             } >> "${summary}"
+        elif [[ ! "${status}" =~ ^(0|124|137)$ ]]; then
+            failed+=("${t}")
+            echo "fuzz-${t}: failed, exit status ${status}" |
+                tee -a "${summary}"
         else
             echo "fuzz-${t}: no finding in ${seconds}s" | tee -a "${summary}"
         fi
