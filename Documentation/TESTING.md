@@ -132,6 +132,38 @@ Example: Cross-build for `s390x`:
 
 The exact supported targets depend on the toolchains installed in the container.
 
+## Test names
+
+Every test is named `<component> - <test>` and is in exactly one
+group. `meson test` prints it as `<group> - nvme-cli:<component> - <test>`:
+
+- `<component>` is what the test covers: `nvme-cli`, `libnvme`,
+  `shared`, a daemon (`nvme-discoverd`, `nvme-keysd`, ...) or a plugin
+  (`micron`, `ocp`, ...).
+- `<test>` is in kebab-case and names the feature, usually the command
+  it covers. It does not repeat the component and has no `-test` or
+  `-cli` suffix. Fuzz and e2e tests start with `fuzz-` and `e2e-`.
+- A group of tests over a set of inputs uses a `/`, e.g.
+  `libnvme - header/tree` or `libnvme - nbft/rhpoc`.
+
+The group is the meson suite and says how the test runs:
+
+| Group   | What runs                                                     |
+|---------|---------------------------------------------------------------|
+| `unit`  | a test program for library or internal code                   |
+| `mock`  | the nvme binary or a daemon, with a mock where it needs a device |
+| `e2e`   | the nvme binary against a real device (`-De2e-tests=true`)    |
+| `fuzz`  | a fuzz target over its corpus (see [Fuzzing](#fuzzing))       |
+| `check` | a consistency check of the tree: headers, symbols, docs, tags |
+
+Select tests by group or by a name pattern:
+
+```shell
+meson test -C .build --suite unit --suite mock
+meson test -C .build 'micron - *'
+meson test -C .build 'nvme-cli - print'
+```
+
 ## Memory Testing
 
 ### Valgrind
