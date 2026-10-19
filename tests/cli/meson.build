@@ -15,7 +15,8 @@ if python3.found()
              python3,
              args: [files('nvme_registry_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe)
+             depends: nvme_exe,
+             suite: 'mock')
     endif
 
     # Standalone CLI test for the "keys" plugin. Needs no device. Restricted
@@ -26,7 +27,8 @@ if python3.found()
              python3,
              args: [files('nvme_keys_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe)
+             depends: nvme_exe,
+             suite: 'mock')
     endif
 
     # Standalone CLI test for "nvme config-convert". Needs no device; uses
@@ -37,7 +39,8 @@ if python3.found()
              python3,
              args: [files('nvme_config_convert_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe)
+             depends: nvme_exe,
+             suite: 'mock')
     endif
 
     # Standalone CLI test for "nvme config-create". Needs no device; uses an
@@ -48,7 +51,8 @@ if python3.found()
              python3,
              args: [files('nvme_config_create_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe)
+             depends: nvme_exe,
+             suite: 'mock')
     endif
 
     if want_fabrics
@@ -62,7 +66,8 @@ if python3.found()
                  files('nbft/NBFT-unlinked-discovery'),
              ],
              env: cli_test_env,
-             depends: nvme_exe)
+             depends: nvme_exe,
+             suite: 'mock')
     endif
 
     have_mock_nvme = (not is_static) and (host_system == 'linux')
@@ -91,46 +96,53 @@ if python3.found()
                  python3,
                  args: [files('nvme_fabrics_mock_test.py'), nvme_exe, mock_nvme_lib],
                  env: cli_test_env,
-                 depends: [nvme_exe, mock_nvme_lib])
+                 depends: [nvme_exe, mock_nvme_lib],
+                 suite: 'mock')
         endif
 
         test('nvme-cli - pif-sts',
              python3,
              args: [files('nvme_pif_sts_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib])
+             depends: [nvme_exe, mock_nvme_lib],
+             suite: 'mock')
 
         test('nvme-cli - init-pi-tags',
              python3,
              args: [files('nvme_init_pi_tags_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib])
+             depends: [nvme_exe, mock_nvme_lib],
+             suite: 'mock')
 
         if 'id' in selected_plugins
             test('nvme-cli - usage',
                  python3,
                  args: [files('nvme_usage_test.py'), nvme_exe],
-                 depends: nvme_exe)
+                 depends: nvme_exe,
+                 suite: 'mock')
         endif
 
         test('nvme-cli - dry-run',
              python3,
              args: [files('nvme_dry_run_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib])
+             depends: [nvme_exe, mock_nvme_lib],
+             suite: 'mock')
 
         test('nvme-cli - sel',
              python3,
              args: [files('nvme_sel_test.py'), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib])
+             depends: [nvme_exe, mock_nvme_lib],
+             suite: 'mock')
 
         test('nvme-cli - host-metadata',
              python3,
              args: [files('nvme_host_metadata_test.py'), nvme_exe,
                     mock_nvme_lib],
              env: cli_test_env,
-             depends: [nvme_exe, mock_nvme_lib])
+             depends: [nvme_exe, mock_nvme_lib],
+             suite: 'mock')
 
         # The host and AVE discovery printers need the fabrics code.
         if want_fabrics and json_c_dep.found() and 'log' in selected_plugins
@@ -139,7 +151,8 @@ if python3.found()
                  args: [files('nvme_discovery_logs_test.py'), nvme_exe,
                         mock_nvme_lib],
                  env: cli_test_env,
-                 depends: [nvme_exe, mock_nvme_lib])
+                 depends: [nvme_exe, mock_nvme_lib],
+                 suite: 'mock')
         endif
 
         if 'id' in selected_plugins and 'log' in selected_plugins and \
@@ -152,7 +165,8 @@ if python3.found()
                  args: [files('nvme_print_test.py'), nvme_exe, mock_nvme_lib],
                  env: print_test_env,
                  depends: [nvme_exe, mock_nvme_lib],
-                 timeout: 300)
+                 timeout: 300,
+                 suite: 'mock')
         endif
 
         if 'sed' in selected_plugins and want_sed and \
@@ -169,7 +183,8 @@ if python3.found()
                  python3,
                  args: [files('nvme_sed_test.py'), nvme_exe, mock_nvme_lib],
                  env: sed_test_env,
-                 depends: [nvme_exe, mock_nvme_lib])
+                 depends: [nvme_exe, mock_nvme_lib],
+                 suite: 'mock')
         endif
     endif
 

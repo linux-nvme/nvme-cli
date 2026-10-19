@@ -11,7 +11,7 @@ test_argconfig_parse = executable(
     ],
 )
 
-test('nvme-cli - argconfig-parse', test_argconfig_parse)
+test('nvme-cli - argconfig-parse', test_argconfig_parse, suite: 'unit')
 
 test_argconfig_diff = executable(
     'test-argconfig-diff',
@@ -28,7 +28,7 @@ test_argconfig_diff = executable(
     ],
 )
 
-test('nvme-cli - argconfig-diff', test_argconfig_diff)
+test('nvme-cli - argconfig-diff', test_argconfig_diff, suite: 'unit')
 
 test_global_config = executable(
     'test-global-config',
@@ -46,7 +46,7 @@ test_global_config = executable(
     ],
 )
 
-test('nvme-cli - global-config', test_global_config)
+test('nvme-cli - global-config', test_global_config, suite: 'unit')
 
 test_plugin = executable(
     'test-plugin',
@@ -60,4 +60,4 @@ test_plugin = executable(
     ],
 )
 
-test('nvme-cli - plugin-dispatch', test_plugin)
+test('nvme-cli - plugin-dispatch', test_plugin, suite: 'unit')

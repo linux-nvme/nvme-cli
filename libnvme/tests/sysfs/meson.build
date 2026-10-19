@@ -34,6 +34,7 @@ if diff.found() and bash_prog.found()
                 files('data'/t_file + '.out'),
             ],
             depends : tree_scan,
+            suite: 'unit',
         )
     endforeach
 
@@ -56,6 +57,7 @@ if diff.found() and bash_prog.found()
                     files('data'/t_file + '-hostnqn.out'),
                 ],
                 depends : tree_scan_hostnqn,
+                suite: 'unit',
             )
         endforeach
     endif

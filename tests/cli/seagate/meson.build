@@ -8,5 +8,6 @@ if have_mock_nvme and json_c_dep.found()
          args: [files('seagate_vs_smart_add_log_mock_test.py'), nvme_exe,
                 mock_nvme_lib],
          env: cli_test_env,
-         depends: [nvme_exe, mock_nvme_lib])
+         depends: [nvme_exe, mock_nvme_lib],
+         suite: 'mock')
 endif

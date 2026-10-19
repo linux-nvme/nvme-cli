@@ -930,6 +930,7 @@ if want_tests and py3_prog.found()
             files('scripts/check-install-tags.py'),
             meson.project_build_root(),
         ],
+        suite: 'check',
     )
 endif
 

@@ -72,6 +72,7 @@ if want_tests and _bash.found() and _py3.found()
         args: [files('test-bash-completion.sh')],
         env: {'PYTHON3': _py3.full_path()},
         timeout: 120,
+        suite: 'mock',
     )
 endif
 
@@ -83,6 +84,7 @@ if want_tests and _zsh.found() and _py3.found()
         args: [files('test-zsh-completion.sh')],
         env: {'PYTHON3': _py3.full_path()},
         timeout: 120,
+        suite: 'mock',
     )
 endif
 
@@ -93,5 +95,6 @@ if want_tests and _pwsh.found()
         _pwsh,
         args: ['-File', files('test-powershell-completion.ps1')],
         timeout: 120,
+        suite: 'mock',
     )
 endif
