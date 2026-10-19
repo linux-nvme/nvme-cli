@@ -89,7 +89,7 @@ if want_python
     test_env.set('PYTHONMALLOC', 'malloc')
 
     # Test section
-    test('libnvme - python-import-libnvme', python3, args: ['-c', 'from libnvme3 import nvme'], env: test_env, depends: pynvme_clib)
+    test('libnvme - python/import-libnvme', python3, args: ['-c', 'from libnvme3 import nvme'], env: test_env, depends: pynvme_clib)
 
     py_tests = [
         [ 'create-ctrl-object', [ files('tests/create-ctrl-obj.py'), ] ],
@@ -104,6 +104,6 @@ if want_python
     foreach test: py_tests
         description = test[0]
         args = test[1]
-        test('libnvme - python-' + description, python3, args: args, env: test_env, depends: pynvme_clib)
+        test('libnvme - python/' + description, python3, args: args, env: test_env, depends: pynvme_clib)
     endforeach
 endif
