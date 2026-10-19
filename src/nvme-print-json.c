@@ -2354,10 +2354,10 @@ static void json_boot_part_log(void *bp_log, const char *devname,
 }
 
 /* Printable Eye string is allocated and returned, caller must free */
-static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
+static char *json_eom_printable_eye(const struct nvme_eom_lane_desc *lane,
+				    const unsigned char *eye,
 				    struct json_object *r)
 {
-	char *eye = (char *)lane->eye_desc;
 	size_t nrows = le16_to_cpu(lane->nrows);
 	size_t ncols = le16_to_cpu(lane->ncols);
 	struct json_object *eye_array = NULL;
@@ -2418,7 +2418,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 			struct json_object *r, char **allocated_eyes, size_t len)
 {
 	struct eom_desc_iter it;
-	struct nvme_eom_lane_desc *desc;
+	struct nvme_eom_lane_desc desc;
 	struct json_object *descs = json_create_array();
 	int i = 0;
 
@@ -2426,7 +2426,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 
 	eom_desc_iter_init(&it, log, len);
 
-	while ((desc = eom_desc_iter_next(&it))) {
+	while (eom_desc_iter_next(&it, &desc)) {
 		int idx = i++;
 		__cleanup_free char *hexstr = NULL;
 		unsigned char *vsdata;
@@ -2438,25 +2438,26 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		if (!jdesc)
 			return;
 
-		obj_add_uint(jdesc, "lid", desc->mstatus);
-		obj_add_uint(jdesc, "lane", desc->lane);
-		obj_add_uint(jdesc, "eye", desc->eye);
-		obj_add_uint(jdesc, "top", le16_to_cpu(desc->top));
-		obj_add_uint(jdesc, "bottom", le16_to_cpu(desc->bottom));
-		obj_add_uint(jdesc, "left", le16_to_cpu(desc->left));
-		obj_add_uint(jdesc, "right", le16_to_cpu(desc->right));
-		obj_add_uint(jdesc, "nrows", le16_to_cpu(desc->nrows));
-		obj_add_uint(jdesc, "ncols", le16_to_cpu(desc->ncols));
-		obj_add_uint(jdesc, "edlen", le16_to_cpu(desc->edlen));
+		obj_add_uint(jdesc, "lid", desc.mstatus);
+		obj_add_uint(jdesc, "lane", desc.lane);
+		obj_add_uint(jdesc, "eye", desc.eye);
+		obj_add_uint(jdesc, "top", le16_to_cpu(desc.top));
+		obj_add_uint(jdesc, "bottom", le16_to_cpu(desc.bottom));
+		obj_add_uint(jdesc, "left", le16_to_cpu(desc.left));
+		obj_add_uint(jdesc, "right", le16_to_cpu(desc.right));
+		obj_add_uint(jdesc, "nrows", le16_to_cpu(desc.nrows));
+		obj_add_uint(jdesc, "ncols", le16_to_cpu(desc.ncols));
+		obj_add_uint(jdesc, "edlen", le16_to_cpu(desc.edlen));
 
-		vsdata = eom_desc_iter_vsdata(&it, desc, &vsdatalen);
+		vsdata = eom_desc_iter_vsdata(&it, &desc, &vsdatalen);
 		if (!vsdata) {
 			json_free_object(jdesc);
 			continue;
 		}
 
 		if (NVME_EOM_ODP_PEFP(log->odp))
-			allocated_eyes[idx] = json_eom_printable_eye(desc, jdesc);
+			allocated_eyes[idx] = json_eom_printable_eye(&desc,
+					eom_desc_iter_eye(&it), jdesc);
 
 		if (vsdatalen == 0) {
 			json_free_object(jdesc);
