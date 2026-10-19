@@ -3799,6 +3799,8 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	ret = libnvme_open(ctx, c->name, O_RDONLY, &c->hdl);
 	if (ret) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to open %s\n", c->name);
+		libnvmf_disconnect_ctrl(c);
+		libnvme_free_ctrl(c);
 		return ret;
 	}
 
