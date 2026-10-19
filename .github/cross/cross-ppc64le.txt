@@ -4,7 +4,7 @@
 c = '/usr/bin/powerpc64le-linux-gnu-gcc'
 ar = '/usr/powerpc64le-linux-gnu/bin/ar'
 strip = '/usr/powerpc64le-linux-gnu/bin/strip'
-pkgconfig = '/usr/bin/powerpc64le-linux-gnu-pkg-config'
+pkgconfig = 'pkg-config'
 ld = '/usr/bin/powerpc64le-linux-gnu-ld'
 exe_wrapper = '/usr/bin/qemu-ppc64le-static'
 
@@ -12,6 +12,9 @@ c_native = 'gcc'
 cpp_native = 'g++'
 
 [properties]
+# Plain pkg-config on the multiarch directory: a <triplet>-pkg-config
+# only comes with the pkgconf package of that architecture.
+pkg_config_libdir = ['/usr/lib/powerpc64le-linux-gnu/pkgconfig', '/usr/share/pkgconfig']
 root = '/usr/powerpc64le-linux-gnu'
 has_function_printf = true
 skip_sanity_check = true

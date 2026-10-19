@@ -4,14 +4,17 @@
 c = '/usr/bin/arm-linux-gnueabihf-gcc'
 ar = '/usr/arm-linux-gnueabihf/bin/ar'
 strip = '/usr/arm-linux-gnueabihf/bin/strip'
-pkgconfig = '/usr/bin/arm-linux-gnueabihf-pkg-config'
-ld = '/usr/bin/arm-linux/gnueabihf-ld'
+pkgconfig = 'pkg-config'
+ld = '/usr/bin/arm-linux-gnueabihf-ld'
 exe_wrapper = '/usr/bin/qemu-arm-static'
 
 c_native = 'gcc'
 cpp_native = 'g++'
 
 [properties]
+# Plain pkg-config on the multiarch directory: a <triplet>-pkg-config
+# only comes with the pkgconf package of that architecture.
+pkg_config_libdir = ['/usr/lib/arm-linux-gnueabihf/pkgconfig', '/usr/share/pkgconfig']
 root = '/usr/arm-linux-gnueabihf'
 has_function_printf = true
 skip_sanity_check = true
