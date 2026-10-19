@@ -8,6 +8,8 @@
 
 set -e
 
+ALL_FUZZ_TARGETS="argconfig ini global-config fabrics-conf device"
+
 usage() {
     echo "Usage: build.sh [-b [release|debug]] "
     echo "                [-c [gcc|clang]]"
@@ -18,6 +20,8 @@ usage() {
     echo "                [--e2e-log-level level]"
     echo "                [--e2e-nvme-bin path]"
     echo "                [--plugin-tests plugin1,plugin2]"
+    echo "                [--fuzz-seconds n] [--fuzz-jobs n]"
+    echo "                [--fuzz-targets target1,target2] [--fuzz-dir dir]"
     echo "                [config]"
     echo ""
     echo "CI build script."
@@ -42,6 +46,14 @@ usage() {
     echo " --plugin-tests list     comma-separated list of plugin test suites to"
     echo "                         run against real hardware, e.g. micron,ocp"
     echo ""
+    echo "options for the 'fuzz' config:"
+    echo " --fuzz-seconds n        run each target for n seconds (600)"
+    echo " --fuzz-jobs n           run n libFuzzer jobs per target (all CPUs)"
+    echo " --fuzz-targets list     comma-separated list of targets (all):"
+    echo "                         ${ALL_FUZZ_TARGETS// /, }"
+    echo " --fuzz-dir dir          directory for the results (.build-ci/fuzz):"
+    echo "                         summary.txt, logs/, artifacts/ and corpus/"
+    echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
     echo "  libdbus             build with libdbus"
@@ -61,6 +73,8 @@ usage() {
     echo "  libnvme             build only libnvme"
     echo "  libnvme_abi         build only libnvme3.so, no tests/examples"
     echo "  tests               build for nightly build"
+    echo "  fuzz                build the fuzz targets for libFuzzer with clang"
+    echo "                      and run them, see the options above"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -84,6 +98,11 @@ E2E_LOG_DIR=""
 E2E_LOG_LEVEL=""
 E2E_NVME_BIN=""
 PLUGIN_TESTS=""
+
+fuzz_seconds=600
+fuzz_jobs=""
+fuzz_targets="${ALL_FUZZ_TARGETS}"
+fuzz_dir=""
 
 # The options which only one config takes, as "config option"
 CONFIG_OPTIONS=()
@@ -166,6 +185,40 @@ while [[ $# -gt 0 ]]; do
         --plugin-tests)
             PLUGIN_TESTS="$2"
             config_option tests "$1"
+            shift 2
+            ;;
+        --fuzz-seconds|--fuzz-jobs)
+            if ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
+                echo "error: $1 takes a positive number" >&2
+                exit 1
+            fi
+            if [[ "$1" == --fuzz-seconds ]]; then
+                fuzz_seconds="$2"
+            else
+                fuzz_jobs="$2"
+            fi
+            config_option fuzz "$1"
+            shift 2
+            ;;
+        --fuzz-targets)
+            fuzz_targets="${2//,/ }"
+            for t in ${fuzz_targets}; do
+                if [[ " ${ALL_FUZZ_TARGETS} " != *" ${t} "* ]]; then
+                    echo "error: unknown fuzz target '${t}'" >&2
+                    exit 1
+                fi
+            done
+            config_option fuzz "$1"
+            shift 2
+            ;;
+        --fuzz-dir)
+            # relative to where build.sh runs, not to the top directory
+            if [[ "$2" == /* ]]; then
+                fuzz_dir="$2"
+            else
+                fuzz_dir="$(pwd)/$2"
+            fi
+            config_option fuzz "$1"
             shift 2
             ;;
         -h|--help)
@@ -477,6 +530,105 @@ config_meson_libnvme_abi() {
 
 test_meson_libnvme_abi() {
     :
+}
+
+# Coverage guided fuzzing with libFuzzer, see Documentation/TESTING.md.
+# The results are in the --fuzz-dir, by default in the build directory:
+# per target the corpus, the logs and the inputs which found a bug, and a
+# summary. A --fuzz-dir outside of it grows the corpus across runs.
+config_meson_fuzz() {
+    if [[ "${CC}" != *clang* ]]; then
+        CC=clang
+    fi
+    CXX="${CXX:-${CC/clang/clang++}}"
+
+    CC="${CC}" CXX="${CXX}" "${MESON}" setup    \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dfuzzing=true                          \
+        -Db_sanitize=address,undefined          \
+        -Db_lundef=false                        \
+        "${BUILDDIR}"
+}
+
+test_meson_fuzz() {
+    local root
+    root="$(pwd)"
+    local dir="${fuzz_dir:-${BUILDDIR}/fuzz}"
+    local seconds="${fuzz_seconds}"
+    local jobs="${fuzz_jobs:-$(nproc 2>/dev/null || echo 1)}"
+    local failed=()
+    local t f exe corpus artifacts logs args status summary
+    # A device reports sizes of up to gigabytes: let ASan fail such an
+    # allocation instead of libFuzzer aborting as out of memory.
+    local asan="allocator_may_return_null=1:max_allocation_size_mb=1024"
+
+    mkdir -p "${dir}"
+    summary="${dir}/summary.txt"
+    : > "${summary}"
+
+    # A UBSan finding is a crash too
+    export UBSAN_OPTIONS="${UBSAN_OPTIONS:-halt_on_error=1:print_stacktrace=1}"
+
+    for t in ${fuzz_targets}; do
+        exe="${BUILDDIR}/tests/fuzz/fuzz-${t}"
+        if [ ! -x "${exe}" ]; then
+            echo "fuzz-${t}: not built, skipped"
+            continue
+        fi
+
+        corpus="${dir}/corpus/${t}"
+        artifacts="${dir}/artifacts/${t}"
+        logs="${dir}/logs/${t}"
+        rm -rf "${logs}"
+        mkdir -p "${corpus}" "${artifacts}" "${logs}"
+        # Add the seeds, but keep what earlier runs found
+        for f in "${root}"/tests/fuzz/corpus/"${t}"/*; do
+            [ -e "${corpus}/${f##*/}" ] || cp "${f}" "${corpus}/"
+        done
+
+        # Run the jobs as independent processes on the shared corpus. The
+        # -fork mode is newer, but the libFuzzer of clang 22 crashes in it.
+        args=(-close_fd_mask=3 -max_total_time="${seconds}"
+              -jobs="${jobs}" -workers="${jobs}"
+              -artifact_prefix="${artifacts}/")
+        case "${t}" in
+            argconfig)
+                args+=(-dict="${root}/tests/fuzz/argconfig.dict")
+                ;;
+            device)
+                args+=(-max_len=16384 -timeout=10)
+                ;;
+            *)
+                args+=(-dict="${root}/tests/fuzz/config.dict")
+                ;;
+        esac
+
+        echo "fuzz-${t}: ${seconds}s, ${jobs} jobs, logs in ${logs}"
+        # Each job writes fuzz-<job>.log to the current directory
+        status=0
+        (cd "${logs}" &&
+         ASAN_OPTIONS="${ASAN_OPTIONS:+${ASAN_OPTIONS}:}${asan}" \
+            "${exe}" "${args[@]}" "${corpus}" > main.log 2>&1) ||
+            status=$?
+        if [ "${status}" -ne 0 ]; then
+            failed+=("${t}")
+            echo "fuzz-${t}: finding, exit status ${status}" |
+                tee -a "${summary}"
+            {
+                grep -hE '^(SUMMARY|==[0-9]+==ERROR)' "${logs}"/fuzz-*.log ||
+                    true
+                ls "${artifacts}"/* 2>/dev/null || true
+            } >> "${summary}"
+        else
+            echo "fuzz-${t}: no finding in ${seconds}s" | tee -a "${summary}"
+        fi
+    done
+
+    if [ "${#failed[@]}" -gt 0 ]; then
+        echo "fuzz targets with findings: ${failed[*]}, see ${summary}"
+        return 1
+    fi
 }
 
 build_meson() {

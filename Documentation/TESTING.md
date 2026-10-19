@@ -297,7 +297,22 @@ ASAN_OPTIONS=allocator_may_return_null=1:max_allocation_size_mb=1024 \
     -timeout=10 .build-fuzz/corpus/device
 ```
 
-A crashing input is written to `crash-*` in the current directory. Add an
-input which found a bug to the seeds of its target. The targets use the
-libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
-`-fsanitize=fuzzer`).
+`scripts/build.sh fuzz` does all of this for every target in turn, each with
+one libFuzzer job per CPU on a shared corpus, for 600 seconds by default:
+
+```bash
+scripts/build.sh --fuzz-seconds 3600 fuzz
+scripts/build.sh --fuzz-targets device --fuzz-jobs 8 fuzz
+```
+
+It writes the results to `.build-ci/fuzz`: `summary.txt`, and per target the
+logs of the jobs in `logs/<target>/`, the inputs which found a bug in
+`artifacts/<target>/` and the corpus in `corpus/<target>/`. A finding stops
+only its job, a UBSan finding like a crash. The next run of `build.sh` removes
+the results; pass a `--fuzz-dir` outside of `.build-ci` to keep them, and to
+grow the corpus across runs. `scripts/build.sh -h` lists all options.
+
+When run by hand, a crashing input is written to `crash-*` in the current
+directory. Add an input which found a bug to the seeds of its target. The
+targets use the libFuzzer interface, so AFL++ can run them too
+(`afl-clang-fast` with `-fsanitize=fuzzer`).
