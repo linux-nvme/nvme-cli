@@ -85,6 +85,12 @@ E2E_LOG_LEVEL=""
 E2E_NVME_BIN=""
 PLUGIN_TESTS=""
 
+# The options which only one config takes, as "config option"
+CONFIG_OPTIONS=()
+config_option() {
+    CONFIG_OPTIONS+=("$1 $2")
+}
+
 ARGS=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -134,26 +140,32 @@ while [[ $# -gt 0 ]]; do
             ;;
         --e2e-controller)
             E2E_CONTROLLER="$2"
+            config_option tests "$1"
             shift 2
             ;;
         --e2e-ns1)
             E2E_NS1="$2"
+            config_option tests "$1"
             shift 2
             ;;
         --e2e-log-dir)
             E2E_LOG_DIR="$2"
+            config_option tests "$1"
             shift 2
             ;;
         --e2e-log-level)
             E2E_LOG_LEVEL="$2"
+            config_option tests "$1"
             shift 2
             ;;
         --e2e-nvme-bin)
             E2E_NVME_BIN="$2"
+            config_option tests "$1"
             shift 2
             ;;
         --plugin-tests)
             PLUGIN_TESTS="$2"
+            config_option tests "$1"
             shift 2
             ;;
         -h|--help)
@@ -174,13 +186,12 @@ set -- "${ARGS[@]}"
 
 CONFIG=${1:-"default"}
 
-if [[ "${CONFIG}" != "tests" ]]; then
-    if [[ -n "${E2E_CONTROLLER}" || -n "${E2E_NS1}" || -n "${E2E_LOG_DIR}" || \
-          -n "${E2E_LOG_LEVEL}" || -n "${E2E_NVME_BIN}" || -n "${PLUGIN_TESTS}" ]]; then
-        echo "error: --e2e-* and --plugin-tests are only valid with the 'tests' config" >&2
+for opt in "${CONFIG_OPTIONS[@]}"; do
+    if [[ "${opt%% *}" != "${CONFIG}" ]]; then
+        echo "error: ${opt#* } is only valid with the '${opt%% *}' config" >&2
         exit 1
     fi
-fi
+done
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
