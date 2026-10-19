@@ -4216,8 +4216,9 @@ static void json_feat_perfc(struct json_object *r, enum nvme_features_id fid, un
 static void json_host_metadata(struct json_object *r, enum nvme_features_id fid,
 			       struct nvme_host_metadata *data)
 {
-	struct nvme_metadata_element_desc *desc = &data->descs[0];
-	__u8 *end = (__u8 *)data + sizeof(*data);
+	struct nvme_metadata_element_desc desc;
+	const __u8 *v;
+	size_t off = 0;
 	int i;
 	char val[VAL_LEN];
 	__u16 len;
@@ -4230,8 +4231,8 @@ static void json_host_metadata(struct json_object *r, enum nvme_features_id fid,
 	obj_add_array(r, "Metadata Element Descriptors", desca);
 
 	for (i = 0; i < data->ndesc; i++) {
-		/* the descriptors and their values end with the structure */
-		if (desc->val > end)
+		v = nvme_host_metadata_element(data, &off, &desc, &len);
+		if (!v)
 			break;
 
 		desce = json_create_object();
@@ -4239,21 +4240,18 @@ static void json_host_metadata(struct json_object *r, enum nvme_features_id fid,
 
 		obj_add_int(desce, "Element", i);
 
-		snprintf(json_str, sizeof(json_str), "0x%02x", desc->type);
+		snprintf(json_str, sizeof(json_str), "0x%02x", desc.type);
 		obj_add_str(desce, "Type", json_str);
 
 		obj_add_str(desce, "Type definition",
-			    nvme_host_metadata_type_to_string(fid, desc->type));
+			    nvme_host_metadata_type_to_string(fid, desc.type));
 
-		obj_add_int(desce, "Revision", desc->rev);
+		obj_add_int(desce, "Revision", desc.rev);
 
-		obj_add_int(desce, "Length", le16_to_cpu(desc->len));
+		obj_add_int(desce, "Length", le16_to_cpu(desc.len));
 
-		len = min_t(size_t, le16_to_cpu(desc->len), end - desc->val);
-		snprintf(val, sizeof(val), "%.*s", len, (char *)desc->val);
+		snprintf(val, sizeof(val), "%.*s", len, (const char *)v);
 		obj_add_str(desce, "Value", val);
-
-		desc = (struct nvme_metadata_element_desc *)&desc->val[len];
 	}
 }
 
