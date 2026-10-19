@@ -247,8 +247,11 @@ The `device` target fuzzes what nvme-cli does with the data a device
 returns. It runs one of the commands which read and print something, from
 the table in `tests/fuzz/fuzz-device.c`, against the device mock of
 `tests/cli/libmock_nvme.c`, which answers every command from the input.
-It needs a dynamically linked Linux build. Its seeds named `regress-*` are
-inputs which found a bug.
+An input selects the command by its index in the table, and may pass a
+fuzzed value to one option of it, so add new commands at the end of the
+table: the seeds and the corpus of earlier runs keep their meaning. It needs
+a dynamically linked Linux build. Its seeds named `regress-*` are inputs
+which found a bug.
 
 Every build runs them as tests of the `fuzz` suite: each target replays its
 seeds in `tests/fuzz/corpus/<target>` and then a few seconds of random
