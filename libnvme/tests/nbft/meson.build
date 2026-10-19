@@ -91,6 +91,7 @@ if diffcmd.found()
                 files(tables_dir/table),
                 files(diff_dir/table),
             ],
+            suite: 'unit',
         )
     endforeach
 endif
@@ -104,6 +105,7 @@ foreach table: tables_bad
                 files(tables_bad_dir/table),
             ],
             expected_fail: true,
+            suite: 'unit',
         )
     else
         test(
@@ -113,6 +115,7 @@ foreach table: tables_bad
                 files(tables_bad_dir/table),
             ],
             should_fail: true,
+            suite: 'unit',
         )
     endif
 endforeach
@@ -125,5 +128,6 @@ foreach table: tables_rejected
             nbft_dump,
             files(tables_bad_dir/table),
         ],
+        suite: 'unit',
     )
 endforeach

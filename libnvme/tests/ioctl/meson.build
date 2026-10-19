@@ -14,7 +14,7 @@ ana = executable(
         libnvme_test_dep,
     ],
 )
-test('libnvme - ana', ana)
+test('libnvme - ana', ana, suite: 'unit')
 
 async = executable(
     'test-async',
@@ -25,7 +25,7 @@ async = executable(
         libnvme_test_dep,
     ],
 )
-test('libnvme - async', async)
+test('libnvme - async', async, suite: 'unit')
 
 if want_fabrics
     discovery = executable(
@@ -37,7 +37,7 @@ if want_fabrics
             libnvme_test_dep,
         ],
     )
-    test('libnvme - discovery', discovery)
+    test('libnvme - discovery', discovery, suite: 'unit')
 endif
 
 features = executable(
@@ -49,7 +49,7 @@ features = executable(
         libnvme_test_dep,
     ],
 )
-test('libnvme - features', features)
+test('libnvme - features', features, suite: 'unit')
 
 identify = executable(
     'test-identify',
@@ -60,7 +60,7 @@ identify = executable(
         libnvme_test_dep,
     ],
 )
-test('libnvme - identify', identify)
+test('libnvme - identify', identify, suite: 'unit')
 
 logs = executable(
     'test-logs',
@@ -71,7 +71,7 @@ logs = executable(
         libnvme_test_dep,
     ],
 )
-test('libnvme - logs', logs)
+test('libnvme - logs', logs, suite: 'unit')
 
 zns = executable(
     'test-zns',
@@ -82,7 +82,7 @@ zns = executable(
         libnvme_test_dep,
     ],
 )
-test('libnvme - zns', zns)
+test('libnvme - zns', zns, suite: 'unit')
 
 misc = executable(
     'test-misc',
@@ -93,7 +93,7 @@ misc = executable(
         libnvme_test_dep,
     ],
 )
-test('libnvme - misc', misc)
+test('libnvme - misc', misc, suite: 'unit')
 
 if want_sed
     sed = executable(
@@ -105,5 +105,5 @@ if want_sed
             libnvme_test_dep,
         ],
     )
-    test('libnvme - sed', sed)
+    test('libnvme - sed', sed, suite: 'unit')
 endif

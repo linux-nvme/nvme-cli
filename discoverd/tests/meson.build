@@ -13,7 +13,7 @@ test_dlp = executable(
     ],
 )
 
-test('nvme-discoverd - dlp', test_dlp)
+test('nvme-discoverd - dlp', test_dlp, suite: 'unit')
 
 test_tid = executable(
     'test-tid',
@@ -27,7 +27,7 @@ test_tid = executable(
     ],
 )
 
-test('nvme-discoverd - tid', test_tid)
+test('nvme-discoverd - tid', test_tid, suite: 'unit')
 
 test_config = executable(
     'test-config',
@@ -42,7 +42,7 @@ test_config = executable(
     ],
 )
 
-test('nvme-discoverd - config', test_config)
+test('nvme-discoverd - config', test_config, suite: 'unit')
 
 test_netif = executable(
     'test-netif',
@@ -57,7 +57,7 @@ test_netif = executable(
     ],
 )
 
-test('nvme-discoverd - netif', test_netif)
+test('nvme-discoverd - netif', test_netif, suite: 'unit')
 
 test_inventory = executable(
     'test-inventory',
@@ -76,13 +76,16 @@ test_inventory = executable(
     ],
 )
 
-test('nvme-discoverd - inventory', test_inventory)
+test('nvme-discoverd - inventory', test_inventory, suite: 'unit')
 
-test('nvme-discoverd - help', nvme_discoverd, args: ['--help'])
+test('nvme-discoverd - help', nvme_discoverd, args: ['--help'], suite: 'mock')
 test('nvme-discoverd - unknown-option', nvme_discoverd,
-     args: ['--bogus'], should_fail: true)
+     args: ['--bogus'], should_fail: true,
+     suite: 'mock')
 test('nvme-discoverd - missing-nvme-path', nvme_discoverd,
-     args: ['--nvme-path', '/nonexistent/nvme'], should_fail: true)
+     args: ['--nvme-path', '/nonexistent/nvme'], should_fail: true,
+     suite: 'mock')
 test('nvme-discoverd - missing-config', nvme_discoverd,
      args: ['--config', '/nonexistent/nvme-discoverd.conf'],
-     should_fail: true)
+     should_fail: true,
+     suite: 'mock')

@@ -14,6 +14,7 @@ if python3_prog.found()
             files('../tools/check-public-symbols.py'),
             meson.project_source_root() / 'libnvme',
         ],
+        suite: 'check',
     )
     _ld_args = ['--ld', nvme_ld, '--ld', accessors_ld, '--ld', attr_accessors_ld]
     if want_fabrics
@@ -30,6 +31,7 @@ if python3_prog.found()
         'libnvme - check-public-headers',
         python3_prog,
         args: [files('../tools/check-public-headers.py')] + _ld_args + _hdr_args,
+        suite: 'check',
     )
 endif
 
@@ -58,7 +60,7 @@ if cxx_available
         ],
     )
 
-    test('libnvme - cpp-dump', cpp)
+    test('libnvme - cpp-dump', cpp, suite: 'unit')
 
     misc = executable(
         'test-misc',
@@ -69,7 +71,7 @@ if cxx_available
             libnvme_dep,
         ],
     )
-    test('libnvme - cpp-misc', misc)
+    test('libnvme - cpp-misc', misc, suite: 'unit')
 
 endif
 
@@ -106,7 +108,7 @@ if want_mi
         ],
     )
 
-    test('libnvme - mi', mi)
+    test('libnvme - mi', mi, suite: 'unit')
 
     mi_mctp = executable(
         'test-mi-mctp',
@@ -118,7 +120,7 @@ if want_mi
         ],
     )
 
-    test('libnvme - mi-mctp', mi_mctp)
+    test('libnvme - mi-mctp', mi_mctp, suite: 'unit')
 endif
 
 uuid = executable(
@@ -131,7 +133,7 @@ uuid = executable(
     ],
 )
 
-test('libnvme - uuid', uuid)
+test('libnvme - uuid', uuid, suite: 'unit')
 
 if host_system == 'linux' and (not is_static)
     mem = executable(
@@ -145,7 +147,7 @@ if host_system == 'linux' and (not is_static)
         ],
     )
 
-    test('libnvme - mem', mem)
+    test('libnvme - mem', mem, suite: 'unit')
 endif
 
 tree = executable(
@@ -158,7 +160,7 @@ tree = executable(
     ],
 )
 
-test('libnvme - tree', tree)
+test('libnvme - tree', tree, suite: 'unit')
 
 if want_fabrics
     test_tid = executable(
@@ -171,7 +173,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - tid', test_tid)
+    test('libnvme - tid', test_tid, suite: 'unit')
 
     registry = executable(
         'test-registry',
@@ -183,7 +185,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - registry', registry)
+    test('libnvme - registry', registry, suite: 'unit')
 
     exclusion = executable(
         'test-exclusion',
@@ -195,7 +197,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - exclusion', exclusion)
+    test('libnvme - exclusion', exclusion, suite: 'unit')
 
     config_ini = executable(
         'test-config-ini',
@@ -208,7 +210,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - config-ini', config_ini)
+    test('libnvme - config-ini', config_ini, suite: 'unit')
 
     config_api = executable(
         'test-config-api',
@@ -220,7 +222,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - config-api', config_api)
+    test('libnvme - config-api', config_api, suite: 'unit')
 
     config_emit = executable(
         'test-config-emit',
@@ -232,7 +234,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - config-emit', config_emit)
+    test('libnvme - config-emit', config_emit, suite: 'unit')
 
     uriparser = executable(
         'test-uriparser',
@@ -244,7 +246,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - uriparser', uriparser)
+    test('libnvme - uriparser', uriparser, suite: 'unit')
 
     test_fabrics = executable(
         'test-fabrics',
@@ -268,7 +270,7 @@ if want_fabrics
     test_fabrics_env = environment()
     test_fabrics_env.set('ASAN_OPTIONS', 'detect_odr_violation=0')
 
-    test('libnvme - fabrics', test_fabrics, env: test_fabrics_env)
+    test('libnvme - fabrics', test_fabrics, env: test_fabrics_env, suite: 'unit')
 
     psk = executable(
         'test-psk',
@@ -280,7 +282,7 @@ if want_fabrics
         ],
     )
 
-    test('libnvme - psk', psk)
+    test('libnvme - psk', psk, suite: 'unit')
 
     if openssl_dep.found()
         raw_secret = executable(
@@ -293,7 +295,7 @@ if want_fabrics
             ],
         )
 
-        test('libnvme - raw-secret', raw_secret)
+        test('libnvme - raw-secret', raw_secret, suite: 'unit')
     endif
 endif
 
@@ -319,7 +321,7 @@ if want_fabrics
         link_with: mock_ifaddrs,
     )
 
-    test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env)
+    test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env, suite: 'unit')
 
     test_util = executable(
         'test-util',
@@ -330,7 +332,7 @@ if want_fabrics
             libnvme_test_dep,
         ],
     )
-    test('libnvme - util', test_util)
+    test('libnvme - util', test_util, suite: 'unit')
 endif
 
 if want_ioctl_tests
@@ -353,7 +355,7 @@ if host_system == 'linux'
             libnvme_test_dep,
         ],
     )
-    test('libnvme - regs', regs)
+    test('libnvme - regs', regs, suite: 'unit')
 
     if want_fabrics
         subdir('nbft')
@@ -407,7 +409,7 @@ foreach hdr : [
         src,
         dependencies: [libnvme_dep],
     )
-    test('libnvme - header/' + hdr, exe)
+    test('libnvme - header/' + hdr, exe, suite: 'check')
 endforeach
 
 if want_sed
@@ -428,7 +430,7 @@ if want_sed
             src,
             dependencies: [libnvme_dep],
         )
-        test('libnvme - header/sed/' + hdr, exe)
+        test('libnvme - header/sed/' + hdr, exe, suite: 'check')
     endforeach
 endif
 
@@ -446,5 +448,5 @@ if want_privsep
         src,
         dependencies: [libnvme_dep],
     )
-    test('libnvme - header/privsep', exe)
+    test('libnvme - header/privsep', exe, suite: 'check')
 endif

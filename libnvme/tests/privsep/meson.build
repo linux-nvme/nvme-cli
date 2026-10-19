@@ -43,6 +43,7 @@ test(
     args: [privsep_helper.full_path(), mock_ioctl.full_path()],
     depends: [privsep_helper, mock_ioctl],
     env: privsep_env,
+    suite: 'unit',
 )
 
 privsep_proto_test = executable(
@@ -63,4 +64,5 @@ test(
     args: [privsep_helper.full_path(), mock_ioctl.full_path()],
     depends: [privsep_helper, mock_ioctl],
     env: privsep_env,
+    suite: 'unit',
 )

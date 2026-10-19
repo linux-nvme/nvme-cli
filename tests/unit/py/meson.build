@@ -21,6 +21,7 @@ if python3.found()
             ],
             depends: nvme_exe,
             timeout: 120,
+            suite: 'check',
         )
 
         # The global options are one table; the documentation has to list
@@ -35,6 +36,7 @@ if python3.found()
             ],
             depends: nvme_exe,
             timeout: 60,
+            suite: 'check',
         )
 
         # The global options are looked up first, -h is the help; a
@@ -48,6 +50,7 @@ if python3.found()
             ],
             depends: nvme_exe,
             timeout: 60,
+            suite: 'check',
         )
     endif
 
@@ -61,6 +64,7 @@ if python3.found()
             meson.project_source_root() / 'completions' / 'generate-completions.py',
         ],
         timeout: 60,
+        suite: 'check',
     )
 
     # The generated completion scripts must not depend on the order commands,
@@ -75,6 +79,7 @@ if python3.found()
             meson.project_source_root() / 'completions' / 'test-command-metadata.json',
         ],
         timeout: 60,
+        suite: 'check',
     )
 
     # Commands, plugins, sub-commands, and options must be listed
@@ -89,6 +94,7 @@ if python3.found()
             meson.project_source_root() / 'completions' / 'test-command-metadata.json',
         ],
         timeout: 60,
+        suite: 'check',
     )
 
     # The options complete what their type and range in the metadata say.
@@ -101,6 +107,7 @@ if python3.found()
             meson.project_source_root() / 'completions' / 'test-command-metadata.json',
         ],
         timeout: 60,
+        suite: 'check',
     )
 
     # The completion test fixture is a hand-written, synthetic metadata model;
@@ -115,6 +122,7 @@ if python3.found()
             meson.project_source_root() / 'plugins' / 'utils' / 'command-metadata-schema.json',
         ],
         timeout: 60,
+        suite: 'check',
     )
 
     # Test e2e runner's TAP/JSON generation.
@@ -126,5 +134,6 @@ if python3.found()
             meson.project_source_root() / 'tests' / 'e2e' / 'runner.py',
         ],
         timeout: 60,
+        suite: 'unit',
     )
 endif
