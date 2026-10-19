@@ -370,7 +370,7 @@ static int __get_telemetry_log_ctrl(struct libnvme_transport_handle *hdl,
 				    struct nvme_telemetry_log **buf,
 				    bool da4_support)
 {
-	struct nvme_telemetry_log *log;
+	__cleanup_libnvme_free struct nvme_telemetry_log *log = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
@@ -385,19 +385,19 @@ static int __get_telemetry_log_ctrl(struct libnvme_transport_handle *hdl,
 	nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, NVME_LOG_TELEM_BLOCK_SIZE);
 	err = libnvme_get_log_dynamic_chunk(hdl, &cmd, true, NVME_LOG_TELEM_BLOCK_SIZE);
 	if (err)
-		goto free;
+		return err;
 
 	if (!log->ctrlavail) {
 		if (!rae) {
 			nvme_init_get_log_telemetry_ctrl(&cmd, 0, log,
 				NVME_LOG_TELEM_BLOCK_SIZE);
-			err = libnvme_get_log_dynamic_chunk(hdl, &cmd, rae,
+			return libnvme_get_log_dynamic_chunk(hdl, &cmd, rae,
 				NVME_LOG_TELEM_BLOCK_SIZE);
-			goto free;
 		}
 
 		*size = NVME_LOG_TELEM_BLOCK_SIZE;
 		*buf = log;
+		log = NULL;
 
 		nvme_show_error("Warning: Telemetry Controller-Initiated Data Not Available.");
 		return 0;
@@ -405,13 +405,9 @@ static int __get_telemetry_log_ctrl(struct libnvme_transport_handle *hdl,
 
 	err = parse_telemetry_da(hdl, da, log, size, da4_support);
 	if (err)
-		goto free;
+		return err;
 
 	return get_log_telemetry_ctrl(hdl, rae, *size, buf);
-
-free:
-	libnvme_free(log);
-	return err;
 }
 
 static int __get_telemetry_log_host(struct libnvme_transport_handle *hdl,
@@ -545,10 +541,6 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 				cfg.file_name, libnvme_strerror(errno));
 		return output;
 	}
-
-	log = libnvme_alloc(sizeof(*log));
-	if (!log)
-		return -ENOMEM;
 
 	if (cfg.ctrl_init)
 		err = __get_telemetry_log_ctrl(hdl, cfg.rae, cfg.data_area,
