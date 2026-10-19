@@ -4182,9 +4182,12 @@ static void json_feat_perfc_id_list(struct json_object *r, struct nvme_perf_attr
 
 static void json_feat_perfc_vs(struct json_object *r, struct nvme_vs_perf_attr *data)
 {
+	__u16 attrl = le16_to_cpu(data->attrl);
+
 	obj_add_str(r, "performance attribute identifier (PAID)", shr_uuid_to_string(data->paid));
-	obj_add_uint(r, "attribute length (ATTRL)", data->attrl);
-	obj_d(r, "vendor specific (VS)", (unsigned char *)data->vs, data->attrl, 16, 1);
+	obj_add_uint(r, "attribute length (ATTRL)", attrl);
+	obj_d(r, "vendor specific (VS)", (unsigned char *)data->vs,
+	      min_t(size_t, attrl, sizeof(data->vs)), 16, 1);
 }
 
 static void json_feat_perfc(struct json_object *r, enum nvme_features_id fid, unsigned int result,
