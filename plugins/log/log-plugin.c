@@ -2129,6 +2129,12 @@ static int get_dispersed_ns_psub(struct libnvme_transport_handle *hdl, __u32 nsi
 		goto err_free;
 	}
 	psub_list_len = numpsub * NVME_NQN_LENGTH;
+	/* and the buffer must not be cut short on a 32 bit system */
+	if ((size_t)(header_len + psub_list_len) !=
+	    header_len + psub_list_len) {
+		err = -EINVAL;
+		goto err_free;
+	}
 
 	p = libnvme_realloc(log, header_len + psub_list_len);
 	if (!p) {
