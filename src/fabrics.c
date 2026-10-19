@@ -227,8 +227,9 @@ static void save_discovery_log(char *raw, const struct nvmf_discovery_log *log)
 {
 	__cleanup_free char *path = NULL;
 	static unsigned int save_count;
-	int fd, len, ret;
+	int fd, ret;
 	uint64_t numrec;
+	size_t len;
 
 	if (save_count) {
 		if (asprintf(&path, "%s.%u", raw, save_count) < 0) {
