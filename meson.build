@@ -49,6 +49,11 @@ if get_option('b_sanitize') != 'none' or get_option('fuzzing')
                   'toolchain, e.g. CC=clang CXX=clang++')
         endif
     endif
+    # clang links the sanitizer runtime only into executables, so a shared
+    # library has undefined symbols, which -Wl,--no-undefined rejects.
+    if cc.get_id() == 'clang' and get_option('b_lundef')
+        error('Sanitizer and fuzzing builds with clang need -Db_lundef=false')
+    endif
 endif
 
 ################################################################################
