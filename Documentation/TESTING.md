@@ -132,6 +132,31 @@ Example: Cross-build for `s390x`:
 
 The exact supported targets depend on the toolchains installed in the container.
 
+#### 5.5 Cross Build on a Debian Host
+
+The cross files in `.github/cross` work on a Debian (or Ubuntu) host too.
+Install the toolchain of the target, and for the targets other than i386
+qemu, which runs the tests:
+
+```bash
+apt install gcc-multilib                                 # i386
+apt install gcc-arm-linux-gnueabihf qemu-user-static     # armhf
+apt install gcc-powerpc64le-linux-gnu qemu-user-static   # ppc64le
+apt install gcc-s390x-linux-gnu qemu-user-static         # s390x
+```
+
+The optional libraries come from the target architecture, e.g. json-c:
+
+```bash
+dpkg --add-architecture i386
+apt update
+apt install libjson-c-dev:i386
+```
+
+`scripts/build.sh` points qemu at the libraries of the cross toolchain
+(`QEMU_LD_PREFIX`), as the tests also start the binaries through
+binfmt_misc.
+
 ## Test names
 
 Every test is named `<component> - <test>` and is in exactly one

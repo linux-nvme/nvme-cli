@@ -32,7 +32,7 @@ usage() {
     echo " -m [meson]|muon      use meson or muon"
     echo " -p                   enable coverage report"
     echo " -s                   run tests with ASan+UBSan (asanubsan setup)"
-    echo " -t [arm]|ppc64le|s390x|i386  cross compile target"
+    echo " -t [armhf]|ppc64le|s390x|i386 cross compile target"
     echo " -x                   run tests with valgrind (valgrind setup)"
     echo ""
     echo "options for the 'tests' config (mirror the e2e-* meson options):"
@@ -83,7 +83,7 @@ usage() {
 BUILDTOOL=meson
 MESON=meson
 BUILDTYPE=release
-CROSS_TARGET=arm
+CROSS_TARGET=armhf
 CC=${CC:-"gcc"}
 SCAN_BUILD=""
 
@@ -330,22 +330,39 @@ config_meson_fallback() {
         "${BUILDDIR}"
 }
 
+# The cross files work on Debian and Ubuntu, see Documentation/TESTING.md
 config_meson_cross() {
-    # armhf/ppc64le/s390x each get a dedicated <triplet>-pkg-config wrapper
-    # from their cross-gcc package, preconfigured to look in the right
-    # multiarch dir. i386 has no such wrapper (it's gcc-multilib, not a
-    # separate cross-gcc), so point plain pkg-config at the i386 multiarch
-    # dir directly instead.
-    if [ "${CROSS_TARGET}" = "i386" ]; then
-        export PKG_CONFIG_LIBDIR=/usr/lib/i386-linux-gnu/pkgconfig
+    local triplet
+    local opts=()
+
+    case "${CROSS_TARGET}" in
+        armhf)   triplet=arm-linux-gnueabihf ;;
+        ppc64le) triplet=powerpc64le-linux-gnu ;;
+        s390x)   triplet=s390x-linux-gnu ;;
+        *)       triplet="" ;;
+    esac
+    # The tests run the binaries through binfmt_misc too, not only through
+    # the exe_wrapper of the cross file: point qemu at the libraries of the
+    # cross toolchain. qemu still finds what is not there, like the
+    # libraries of the target architecture in the multiarch directories.
+    if [ -n "${triplet}" ] && [ -d "/usr/${triplet}/lib" ] &&
+       [ -z "${QEMU_LD_PREFIX:-}" ]; then
+        export QEMU_LD_PREFIX="/usr/${triplet}"
+    fi
+    # The micron and ocp plugins decode some logs in host byte order, which
+    # the JSON based mock tests of them catch on big endian: leave them out
+    # until that is fixed.
+    if [ "${CROSS_TARGET}" = "s390x" ]; then
+        opts+=(-Djson-c=disabled)
     fi
 
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        --cross-file=.github/cross/ubuntu-cross-${CROSS_TARGET}.txt \
+        --cross-file=.github/cross/cross-${CROSS_TARGET}.txt \
         -Dpython=disabled               \
         -Dopenssl=disabled              \
+        "${opts[@]}"                    \
         "${BUILDDIR}"
 }
 

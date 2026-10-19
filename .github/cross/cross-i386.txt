@@ -15,6 +15,9 @@ c_args = ['-m32']
 c_link_args = ['-m32']
 
 [properties]
+# Plain pkg-config on the multiarch directory: a <triplet>-pkg-config
+# only comes with the pkgconf package of that architecture.
+pkg_config_libdir = ['/usr/lib/i386-linux-gnu/pkgconfig', '/usr/share/pkgconfig']
 # Same CPU family as the amd64 build host (gcc-multilib, not a separate
 # cross-gcc), so the 32-bit binaries run directly, no qemu needed.
 needs_exe_wrapper = false
