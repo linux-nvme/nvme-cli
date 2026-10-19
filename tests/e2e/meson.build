@@ -80,8 +80,9 @@ test_env.prepend('PATH', meson.project_build_root())
 
 foreach t : tests
     t_name = t.split('.')[0]
+    name = t_name.replace('nvme_', '').replace('_test', '').replace('_', '-')
     test(
-        'nvme-cli - @0@'.format(t_name),
+        'nvme-cli - e2e-' + name,
         python3,
         args: [
             e2e_runner,
@@ -93,6 +94,7 @@ foreach t : tests
         timeout: 500,
         protocol: 'tap',
         is_parallel: false,
+        suite: 'e2e',
     )
 endforeach
 

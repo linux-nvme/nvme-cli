@@ -12,8 +12,9 @@ test_env.prepend('PATH', meson.project_build_root())
 
 foreach t : ocp_tests
     t_name = t.split('.')[0]
+    name = t_name.replace('ocp_', '').replace('_test', '').replace('_', '-')
     test(
-        'ocp - @0@'.format(t_name),
+        'ocp - e2e-' + name,
         python3,
         args: [
             e2e_runner,
@@ -25,6 +26,6 @@ foreach t : ocp_tests
         timeout: 500,
         protocol: 'tap',
         is_parallel: false,
-        suite: 'ocp',
+        suite: 'e2e',
     )
 endforeach

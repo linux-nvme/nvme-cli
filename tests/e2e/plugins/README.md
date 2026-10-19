@@ -71,16 +71,22 @@ meson setup .build -De2e-tests=true -Dplugin-tests=ocp,micron \
 meson test -C .build
 ```
 
-### Run a specific plugin suite
+### Run only the e2e tests
 
 ```bash
-meson test -C .build --suite ocp
+meson test -C .build --suite e2e
+```
+
+### Run the e2e tests of one plugin
+
+```bash
+meson test -C .build "ocp - e2e-*"
 ```
 
 ### Run a single test by name
 
 ```bash
-meson test -C .build "ocp - ocp_smart_add_log_test"
+meson test -C .build "ocp - e2e-smart-add-log"
 ```
 
 ## Writing a New Test

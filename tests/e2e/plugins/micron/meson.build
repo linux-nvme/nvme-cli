@@ -26,8 +26,9 @@ test_env.prepend('PATH', meson.project_build_root())
 
 foreach t : micron_tests
     t_name = t.split('.')[0]
+    name = t_name.replace('micron_', '').replace('_test', '').replace('_', '-')
     test(
-        'micron - @0@'.format(t_name),
+        'micron - e2e-' + name,
         python3,
         args: [
             e2e_runner,
@@ -39,6 +40,6 @@ foreach t : micron_tests
         timeout: 500,
         protocol: 'tap',
         is_parallel: false,
-        suite: 'micron',
+        suite: 'e2e',
     )
 endforeach
