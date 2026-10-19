@@ -532,41 +532,47 @@ static inline void eom_desc_iter_init(struct eom_desc_iter *it,
 }
 
 /*
- * Returns the next descriptor, or NULL once the count is exhausted or a
- * descriptor no longer fits the log buffer -- a corrupt or hostile
+ * Copies the fixed part of the next descriptor to @desc: dsize need not
+ * keep the descriptors aligned. Returns false once the count is exhausted
+ * or a descriptor no longer fits the log buffer -- a corrupt or hostile
  * dsize/nd pair gives no way to locate anything past that point, so the
  * walk stops there rather than guessing.
  */
-static inline struct nvme_eom_lane_desc *eom_desc_iter_next(struct eom_desc_iter *it)
+static inline bool eom_desc_iter_next(struct eom_desc_iter *it,
+		struct nvme_eom_lane_desc *desc)
 {
-	struct nvme_eom_lane_desc *desc;
-
 	if (!it->remaining)
-		return NULL;
+		return false;
 
 	/*
 	 * The full stride, not just the fixed descriptor, must fit: advancing
 	 * by dsize below would otherwise form an out-of-bounds pointer.
 	 */
 	if (it->dsize < sizeof(*desc) || !shr_buf_has_room(it->p, it->end, it->dsize))
-		return NULL;
+		return false;
 
 	it->remaining--;
 	it->cur = it->p;
-	desc = (struct nvme_eom_lane_desc *)it->cur;
+	memcpy(desc, it->cur, sizeof(*desc));
 	it->p += it->dsize;
 
-	return desc;
+	return true;
+}
+
+/* The eye data of the descriptor eom_desc_iter_next() copied last */
+static inline unsigned char *eom_desc_iter_eye(struct eom_desc_iter *it)
+{
+	return it->cur + sizeof(struct nvme_eom_lane_desc);
 }
 
 /*
  * Validates the vendor-specific eye data following the descriptor most
- * recently returned by eom_desc_iter_next() against both dsize and the log
+ * recently copied by eom_desc_iter_next() against both dsize and the log
  * buffer. Returns the data and its length via *vsdatalen, or NULL with
  * *vsdatalen == 0 if it doesn't fit.
  */
 static inline unsigned char *eom_desc_iter_vsdata(struct eom_desc_iter *it,
-		struct nvme_eom_lane_desc *desc, uint16_t *vsdatalen)
+		const struct nvme_eom_lane_desc *desc, uint16_t *vsdatalen)
 {
 	uint16_t nrows = le16_to_cpu(desc->nrows);
 	uint16_t ncols = le16_to_cpu(desc->ncols);
