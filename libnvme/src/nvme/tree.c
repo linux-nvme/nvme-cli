@@ -1391,6 +1391,9 @@ int libnvme_ctrl_scan_namespaces(struct libnvme_global_ctx *ctx,
 		return 0;
 	}
 	namespaces.num = libnvme_scan_ctrl_namespaces(c, &namespaces.ents);
+	if (namespaces.num < 0)
+		return namespaces.num;
+
 	for (i = 0; i < namespaces.num; i++) {
 		err = libnvme_ctrl_scan_namespace(ctx, c,
 			namespaces.ents[i]->d_name);
