@@ -319,19 +319,20 @@ static void init_orig_functions(void)
 	orig_get_nprocs = (orig_get_nprocs_t)dlsym(RTLD_NEXT, "get_nprocs");
 }
 
-#ifdef MOCK_FUZZ
 /*
  * Built into a fuzz target (tests/fuzz/fuzz-device.c), the shim has no
  * IPC server: the fuzz input answers every command instead. A "socket"
  * is a /dev/null fd, so the callers can close it as usual.
+ *
+ * Both builds define each function once, at the same line, and keep
+ * MOCK_FUZZ inside the body: gcovr merges the coverage of both and
+ * fails on a function it finds on two lines.
  */
 static int connect_ipc_socket(void)
 {
+#ifdef MOCK_FUZZ
 	return orig_open("/dev/null", O_RDWR);
-}
 #else
-static int connect_ipc_socket(void)
-{
 	const char *sock_path = getenv("MOCK_IPC_SOCK");
 	struct sockaddr_un addr;
 	int fd;
@@ -358,8 +359,8 @@ static int connect_ipc_socket(void)
 	}
 
 	return fd;
-}
 #endif
+}
 
 const char *default_opts =
 	"instance,cntlid,concat,ctrl_loss_tmo,data_digest,"
@@ -601,15 +602,13 @@ static void fuzz_read(void *buf, size_t len)
  * failed ioctl(). Everything that is no device command fails, so the
  * real function takes over where there is one.
  */
-static void *ipc_call(int ipc_fd, struct ipc_request *req, const void *data,
-		      struct ipc_response *resp)
+static void *fuzz_ipc_call(struct ipc_request *req,
+			   struct ipc_response *resp)
 {
 	uint8_t ctl;
 	uint16_t sc;
 	void *buf;
 
-	(void)ipc_fd;
-	(void)data;
 	memset(resp, 0, sizeof(*resp));
 
 	switch (req->type) {
@@ -730,6 +729,8 @@ static void *read_ipc_response(int ipc_fd, struct ipc_response *resp)
 	return payload;
 }
 
+#endif
+
 /*
  * Send a request and its data_len bytes of data, and read the response.
  * A failed send is reported like a failed read.
@@ -737,6 +738,11 @@ static void *read_ipc_response(int ipc_fd, struct ipc_response *resp)
 static void *ipc_call(int ipc_fd, struct ipc_request *req, const void *data,
 		      struct ipc_response *resp)
 {
+#ifdef MOCK_FUZZ
+	(void)ipc_fd;
+	(void)data;
+	return fuzz_ipc_call(req, resp);
+#else
 	size_t len = req->data_len;
 
 	ipc_request_encode(req);
@@ -750,8 +756,8 @@ static void *ipc_call(int ipc_fd, struct ipc_request *req, const void *data,
 	}
 
 	return read_ipc_response(ipc_fd, resp);
-}
 #endif
+}
 
 ssize_t write(int fd, const void *buf, size_t count)
 {
