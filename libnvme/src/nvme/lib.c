@@ -143,8 +143,8 @@ __shr_public void libnvme_transport_handle_set_submit_entry(
 				struct libnvme_passthru_cmd *cmd))
 {
 	hdl->submit_entry = submit_entry;
-	if (!hdl->submit_exit)
-		hdl->submit_exit = __libnvme_submit_exit;
+	if (!hdl->submit_entry)
+		hdl->submit_entry = __libnvme_submit_entry;
 }
 
 __shr_public void libnvme_transport_handle_set_submit_exit(
