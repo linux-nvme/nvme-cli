@@ -590,6 +590,35 @@ static inline unsigned char *eom_desc_iter_vsdata(struct eom_desc_iter *it,
 }
 
 /*
+ * The Metadata Element Descriptor at offset *@off of a Host Metadata data
+ * structure. A descriptor is 4 bytes and its value, so it may start at
+ * any offset: its fixed part is copied to @desc. Returns its value, which
+ * *@len long ends with the structure at the latest, and advances *@off
+ * to the next descriptor. NULL if the fixed part does not fit anymore.
+ */
+static inline const __u8 *
+nvme_host_metadata_element(const struct nvme_host_metadata *data,
+		size_t *off, struct nvme_metadata_element_desc *desc,
+		__u16 *len)
+{
+	size_t size = sizeof(data->descs_buf);
+	const __u8 *val;
+
+	if (*off > size || size - *off < sizeof(*desc))
+		return NULL;
+
+	memcpy(desc, data->descs_buf + *off, sizeof(*desc));
+	*off += sizeof(*desc);
+	val = data->descs_buf + *off;
+	*len = le16_to_cpu(desc->len);
+	if (*len > size - *off)
+		*len = size - *off;
+	*off += *len;
+
+	return val;
+}
+
+/*
  * Walks the Media Unit Status Descriptors. A descriptor is CIO + 2 * MUCS
  * bytes long. CIO shall be a multiple of 16, but a device may report
  * another value, so each descriptor is copied before it is read.
