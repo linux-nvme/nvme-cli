@@ -711,7 +711,9 @@ static int query_cap_info(int argc, char **argv, struct command *acmd, struct pl
 	struct config {
 		bool  raw_binary;
 	};
-	struct config cfg;
+	struct config cfg = {
+		.raw_binary = false,
+	};
 	int err = 0;
 
 	OPT_ARGS(opts) = {
