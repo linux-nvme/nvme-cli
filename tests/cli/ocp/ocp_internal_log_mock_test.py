@@ -56,9 +56,6 @@ Tests in this module verify:
     read whatever their names, -a 3 and -a 4 decoding
     Data Area 2, invalid -a, -t and -o values, and -o json.
 
-Known defects are covered by expectedFailure tests asserting the correct
-behavior: an invalid -a value exits 0.
-
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_internal_log_mock_test.py <nvme-binary> <mock-lib>
@@ -66,7 +63,6 @@ Usage: python3 ocp_internal_log_mock_test.py <nvme-binary> <mock-lib>
 import json
 import os
 import struct
-import unittest
 
 from tests.cli.ocp.ocp_mock_test import (CNS_UUID_LIST, LPA_TELEMETRY,
                                          MODES, NSID_ALL, SC_INVALID_FIELD,
@@ -1263,9 +1259,7 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
         self.assertIn("invalid value 'bogus' for -t: expected one of: host, "
                       "controller, host0, host1", result.stderr)
 
-    @unittest.expectedFailure
     def test_invalid_data_area_exits_nonzero(self):
-        """Defect: the data area check jumps out with err still 0."""
         self.assertNotEqual(self._invalid_option('-a', '5').returncode, 0)
 
     def test_invalid_telemetry_type_exits_nonzero(self):

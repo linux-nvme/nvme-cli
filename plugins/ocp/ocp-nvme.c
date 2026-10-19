@@ -1043,6 +1043,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	} else if (opt.data_area != 1 && opt.data_area != 2 &&
 			   opt.data_area != 3 && opt.data_area != 4) {
 		nvme_show_result("Invalid data-area specified. Please specify 1, 2, 3, or 4.\n");
+		err = -EINVAL;
 		goto out;
 	}
 
