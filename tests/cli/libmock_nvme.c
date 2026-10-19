@@ -567,10 +567,12 @@ int __openat64_2(int dirfd, const char *pathname, int flags)
 /*
  * The kernel rejects a transfer larger than the controller takes. And a
  * fuzzed log length must not have the mock serve, and nvme-cli print,
- * gigabytes: the data of all commands of a run is limited too.
+ * gigabytes: the data of all commands of a run is limited too. A
+ * megabyte of log entries already prints as tens of megabytes of text,
+ * which takes seconds with the sanitizers.
  */
 #define FUZZ_MAX_TRANSFER	(2 * 1024 * 1024)
-#define FUZZ_MAX_TOTAL		(8 * 1024 * 1024)
+#define FUZZ_MAX_TOTAL		(1 * 1024 * 1024)
 
 static const uint8_t *fuzz_data;
 static size_t fuzz_size;
