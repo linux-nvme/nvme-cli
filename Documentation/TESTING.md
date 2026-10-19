@@ -225,6 +225,15 @@ meson test -C .build-asanubsan --setup asanubsan
 No wrapper binary is needed — sanitizer reports are emitted directly to stderr
 when a violation is detected.
 
+With clang, set the C++ compiler too, and let shared libraries have the
+symbols of the sanitizer runtime undefined: clang links the runtime only into
+executables.
+
+```bash
+CC=clang CXX=clang++ meson setup .build-asanubsan \
+    -Db_sanitize=address,undefined -Db_lundef=false
+```
+
 The same known limitations apply as for Valgrind: Python tests and shell script
 tests may produce false positives. Focus triage on the `nvme-cli - *` unit tests.
 
@@ -255,25 +264,40 @@ FUZZ_SECONDS=60 FUZZ_SEED=7 meson test -C .build --suite fuzz
 Run in a sanitizer build (see above) they also catch memory errors which
 don't crash.
 
-For longer, coverage guided runs, build the targets for libFuzzer with clang:
+For longer, coverage guided runs, build the targets for libFuzzer with clang,
+in a sanitizer build as described above:
 
 ```bash
-CC=clang meson setup .build-fuzz -Dfuzzing=true -Db_sanitize=address,undefined
+CC=clang CXX=clang++ meson setup .build-fuzz -Dfuzzing=true \
+    -Db_sanitize=address,undefined -Db_lundef=false
 meson compile -C .build-fuzz
-mkdir corpus && cp tests/fuzz/corpus/argconfig/* corpus/
-.build-fuzz/tests/fuzz/fuzz-argconfig -close_fd_mask=3 \
-    -dict=tests/fuzz/argconfig.dict corpus
 ```
 
-The config targets use `tests/fuzz/config.dict`. The `device` target
-reads log pages, so give it longer inputs, and let allocations of the sizes
-a device reports fail instead of aborting:
+Run a target on a copy of its seeds in the build directory, so the seeds in
+the tree stay as they are. The new inputs libFuzzer finds go to the copy:
 
 ```bash
-ASAN_OPTIONS=allocator_may_return_null=1 .build-fuzz/tests/fuzz/fuzz-device \
-    -close_fd_mask=3 -max_len=16384 -timeout=10 corpus
+mkdir -p .build-fuzz/corpus/argconfig
+cp tests/fuzz/corpus/argconfig/* .build-fuzz/corpus/argconfig/
+.build-fuzz/tests/fuzz/fuzz-argconfig -close_fd_mask=3 \
+    -dict=tests/fuzz/argconfig.dict .build-fuzz/corpus/argconfig
 ```
- The targets use the
+
+The config targets (`ini`, `global-config`, `fabrics-conf`) use
+`tests/fuzz/config.dict`. The `device` target reads log pages, so give it
+longer inputs. A device reports sizes of up to gigabytes, which nvme-cli
+allocates: let ASan fail such an allocation instead of libFuzzer aborting the
+run as out of memory:
+
+```bash
+mkdir -p .build-fuzz/corpus/device
+cp tests/fuzz/corpus/device/* .build-fuzz/corpus/device/
+ASAN_OPTIONS=allocator_may_return_null=1:max_allocation_size_mb=1024 \
+    .build-fuzz/tests/fuzz/fuzz-device -close_fd_mask=3 -max_len=16384 \
+    -timeout=10 .build-fuzz/corpus/device
+```
+
+A crashing input is written to `crash-*` in the current directory. Add an
+input which found a bug to the seeds of its target. The targets use the
 libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
-`-fsanitize=fuzzer`). Add an input which found a bug to the seeds of its
-target.
+`-fsanitize=fuzzer`).
