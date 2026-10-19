@@ -682,6 +682,12 @@ if get_option('fuzzing')
     if cc.get_id() != 'clang'
         error('-Dfuzzing=true needs clang')
     endif
+    # The coverage hooks of all code but the fuzz targets come from the
+    # sanitizer runtime.
+    if get_option('b_sanitize') == 'none'
+        error('-Dfuzzing=true needs a sanitizer, ' +
+              'e.g. -Db_sanitize=address,undefined')
+    endif
     add_project_arguments('-fsanitize=fuzzer-no-link', language : 'c')
 endif
 
