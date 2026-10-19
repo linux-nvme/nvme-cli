@@ -337,6 +337,35 @@ const char *nvme_nss_hw_error_to_string(__u16 error_code)
  * of the event data, zero padded to the largest event structure, or NULL.
  * The caller frees the copy.
  */
+/*
+ * The event at offset of a Persistent Event log of size bytes, or NULL if
+ * there is no complete event: its header must hold all header fields, its
+ * vendor specific information must fit into the event, and the event into
+ * the log.
+ */
+struct nvme_persistent_event_entry *nvme_pel_event(void *pevent_log_info,
+		__u32 size, __u32 offset)
+{
+	struct nvme_persistent_event_entry *e;
+	__u64 len;
+
+	if ((__u64)offset + sizeof(*e) > size)
+		return NULL;
+
+	e = pevent_log_info + offset;
+	/* The Event Header Length does not count the first 3 bytes */
+	if (e->ehl + 3 < sizeof(*e))
+		return NULL;
+	if (le16_to_cpu(e->vsil) > le16_to_cpu(e->el))
+		return NULL;
+
+	len = (__u64)e->ehl + 3 + le16_to_cpu(e->el);
+	if (offset + len > size)
+		return NULL;
+
+	return e;
+}
+
 void *nvme_pel_event_data(void *pevent_log_info, __u32 offset, __u32 len,
 		__u32 *buf_len)
 {

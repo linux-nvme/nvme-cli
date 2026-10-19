@@ -839,16 +839,13 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 	printf("\n");
 	printf("\nPersistent Event Entries:\n");
 	for (int i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
-		if (offset + sizeof(*pevent_entry_head) > size)
+		pevent_entry_head = nvme_pel_event(pevent_log_info, size,
+						   offset);
+		if (!pevent_entry_head)
 			break;
 
-		pevent_entry_head = pevent_log_info + offset;
 		vsil = le16_to_cpu(pevent_entry_head->vsil);
 		el = le16_to_cpu(pevent_entry_head->el);
-
-		if (vsil > el ||
-		    offset + pevent_entry_head->ehl + 3 + el > size)
-			break;
 
 		nvme_show_pel_event_header(i, pevent_entry_head, human);
 
