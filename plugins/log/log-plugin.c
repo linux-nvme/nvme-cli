@@ -1472,7 +1472,8 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 		return err;
 	}
 
-	bpsz = (boot->bpinfo & 0x7fff) * 128 * 1024;
+	bpsz = NVME_BOOT_PARTITION_INFO_BPSZ(le32_to_cpu(boot->bpinfo)) *
+		128 * 1024;
 	bp_log = libnvme_alloc(sizeof(*boot) + bpsz);
 	if (!bp_log)
 		return -ENOMEM;
@@ -1484,7 +1485,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		nvme_show_err(err, "boot partition log");
 	else
-		nvme_show_boot_part_log(&bp_log,
+		nvme_show_boot_part_log(bp_log,
 					libnvme_transport_handle_get_name(hdl),
 					sizeof(*boot) + bpsz, flags);
 
