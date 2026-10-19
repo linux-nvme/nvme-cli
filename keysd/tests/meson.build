@@ -39,7 +39,7 @@ test_kmip_tls = executable(
     ],
 )
 
-test('nvme-keysd - kmip tls', test_kmip_tls)
+test('nvme-keysd - kmip-tls', test_kmip_tls)
 
 if want_kmip
     test_kmip_psk = executable(
@@ -64,7 +64,7 @@ if want_kmip
         ],
     )
 
-    test('nvme-keysd - kmip psk', test_kmip_psk)
+    test('nvme-keysd - kmip-psk', test_kmip_psk)
 
     test_kmip_client = executable(
         'test-keysd-kmip-client',
@@ -78,21 +78,21 @@ if want_kmip
         ],
     )
 
-    test('nvme-keysd - kmip client', test_kmip_client)
+    test('nvme-keysd - kmip-client', test_kmip_client)
 
-    test('nvme-keysd-kmip - --help', nvme_keysd_kmip, args: ['--help'])
-    test('nvme-keysd-kmip - not socket activated', nvme_keysd_kmip,
+    test('nvme-keysd-kmip - help', nvme_keysd_kmip, args: ['--help'])
+    test('nvme-keysd-kmip - not-socket-activated', nvme_keysd_kmip,
          should_fail: true)
 endif
 
-test('nvme-keysd - --help', nvme_keysd, args: ['--help'])
-test('nvme-keysd - unknown option', nvme_keysd,
+test('nvme-keysd - help', nvme_keysd, args: ['--help'])
+test('nvme-keysd - unknown-option', nvme_keysd,
      args: ['--bogus'], should_fail: true)
-test('nvme-keysd - missing --config', nvme_keysd,
+test('nvme-keysd - missing-config', nvme_keysd,
      args: ['--config', '/nonexistent/nvme-keysd.conf'],
      should_fail: true)
-test('nvme-keysd - missing --creds-dir', nvme_keysd,
+test('nvme-keysd - missing-creds-dir', nvme_keysd,
      args: ['--creds-dir', '/nonexistent/creds'], should_fail: true)
-test('nvme-keysd - missing --fabrics-config', nvme_keysd,
+test('nvme-keysd - missing-fabrics-config', nvme_keysd,
      args: ['--fabrics-config', '/nonexistent/config.ini'],
      should_fail: true)
