@@ -2460,6 +2460,7 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	uint32_t dalb = 0;
 	bool ctrl_init = (type == NVME_LOG_LID_TELEMETRY_CTRL);
 	struct nvme_telemetry_log *log = libnvme_alloc(bs);
+	void *p;
 
 	if (!log) {
 		nvme_show_error("Failed to allocate memory for %s telemetry log header",
@@ -2509,12 +2510,14 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	}
 
 	*logSize = (dalb + 1) * bs;
-	log = libnvme_realloc(log, (size_t)(*logSize));
-	if (!log) {
+	p = libnvme_realloc(log, (size_t)(*logSize));
+	if (!p) {
 		nvme_show_error("Failed to allocate memory for %s telemetry data (%u bytes)",
 			ctrl_init ? "controller" : "host", *logSize);
+		libnvme_free(log);
 		return -ENOMEM;
 	}
+	log = p;
 
 	if (ctrl_init) {
 		nvme_init_get_log_telemetry_ctrl(&cmd, bs, (__u8 *)log + bs, *logSize - bs);

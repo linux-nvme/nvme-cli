@@ -184,6 +184,20 @@ static struct nvme_args defaults;
 #endif
 #endif
 
+#ifdef __SANITIZE_ADDRESS__
+const char *__asan_default_options(void);
+
+/*
+ * nvme-cli allocates what a log length from the device says. Have ASan
+ * fail a gigabyte allocation rather than abort, whichever driver runs
+ * the target. ASAN_OPTIONS overrides it.
+ */
+const char *__asan_default_options(void)
+{
+	return "allocator_may_return_null=1:max_allocation_size_mb=1024";
+}
+#endif
+
 int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
 #ifndef __SANITIZE_ADDRESS__
