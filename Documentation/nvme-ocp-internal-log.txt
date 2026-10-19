@@ -41,9 +41,9 @@ OPTIONS
 -------
 -l <file>::
 --telemetry-log=<file>::
-	File name to existing Telemetry Host-Initiated raw binary data to be used.
-	If no path is specified, a live retrieval of payload on <device> will be
-	performed.
+	File name to existing Telemetry Host- or Controller-Initiated raw binary
+	data to be used. If no path is specified, a live retrieval of payload on
+	<device> will be performed.
 
 -s <file>::
 --string-log=<file>::
@@ -63,10 +63,12 @@ OPTIONS
 
 -t <type>::
 --telemetry-type=<type>::
-	Set the telemetry type to 'host' or 'controller'. If this option is not
-	specified, the default value is 'host'. 'host0' and 'host1' are deprecated
-	and will be removed in the next major version; use 'host' with
-	--host-generate=0 in place of 'host0'.
+	Set the telemetry type to 'host' or 'controller'. With --telemetry-log,
+	the type is detected from the Log Identifier of the provided log, and
+	--telemetry-type is not required. Otherwise, if this option is not
+	specified, the default value is 'host'. 'host0' and 'host1' are
+	deprecated and will be removed in the next major version;
+	use 'host' with --host-generate=0 in place of 'host0'.
 
 -g <gen>::
 --host-generate=<gen>::
