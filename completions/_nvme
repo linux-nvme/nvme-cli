@@ -7054,7 +7054,7 @@ _nvme () {
 						-s':alias for --string-log'
 						--telemetry-log=':Telemetry log binary; '\''host.bin'\'' or '\''controller.bin'\'''
 						-l':alias for --telemetry-log'
-						--telemetry-type=':Telemetry Type; '\''host'\'' or '\''controller'\'' ('\''host0'\'' and '\''host1'\'' are deprecated)'
+						--telemetry-type=':Telemetry Type; '\''host'\'' or '\''controller'\'' ('\''host0'\'' and '\''host1'\'' are deprecated); determined from the log when --telemetry-log is given'
 						-t':alias for --telemetry-type'
 						--timeout=':timeout value, in milliseconds'
 						--verbose':Increase output verbosity'
