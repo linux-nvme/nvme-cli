@@ -5850,7 +5850,8 @@ static void json_output_key_value(const char *key, const char *val, va_list ap)
 	struct json_object *r = json_r;
 
 	__cleanup_free char *value = NULL;
-	__cleanup_free char *key_trim = trim_white_space(strdup(key));
+	__cleanup_free char *key_dup = strdup(key);
+	char *key_trim = trim_white_space(key_dup);
 
 	if (vasprintf(&value, val, ap) < 0)
 		value = NULL;
