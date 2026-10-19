@@ -4,12 +4,11 @@
 # config files and the data from the device. Without -Dfuzzing=true each
 # target runs as a test, with the seeds in corpus/<target> and a few
 # seconds of mutations of them (FUZZ_SECONDS, FUZZ_SEED). With
-# -Dfuzzing=true and clang, the targets are built for libFuzzer:
+# -Dfuzzing=true and clang, the targets are built for libFuzzer, see
+# Documentation/TESTING.md:
 #
-#   CC=clang meson setup fuzz -Dfuzzing=true -Db_sanitize=address,undefined
-#   ninja -C fuzz
-#   fuzz/tests/fuzz/fuzz-argconfig -dict=tests/fuzz/argconfig.dict \
-#       tests/fuzz/corpus/argconfig
+#   CC=clang CXX=clang++ meson setup fuzz -Dfuzzing=true \
+#       -Db_sanitize=address,undefined -Db_lundef=false
 #
 # The targets use the libFuzzer interface, which AFL++ (afl-clang-fast
 # -fsanitize=fuzzer) runs as well.
