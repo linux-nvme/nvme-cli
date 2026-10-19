@@ -23,12 +23,13 @@ endif
 
 if have_mock_nvme
     foreach t : ocp_mock_tests
-        test('nvme-cli - @0@'.format(t.split('.')[0]),
+        name = t.split('.')[0].replace('ocp_', '')
+        name = name.replace('_mock_test', '').replace('_', '-')
+        test('ocp - ' + name,
              python3,
              args: [files(t), nvme_exe, mock_nvme_lib],
              env: cli_test_env,
              depends: [nvme_exe, mock_nvme_lib],
-             suite: ['ocp', 'ocp-cli'],
              timeout: 120)
     endforeach
 endif

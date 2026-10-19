@@ -25,20 +25,20 @@ micron_mock_tests = [
 if json_c_dep.found()
     if have_mock_nvme
         foreach t : micron_mock_tests
-            test('nvme-cli - @0@'.format(t.split('.')[0]),
+            name = t.split('.')[0].replace('micron_', '')
+            name = name.replace('_mock_test', '').replace('_', '-')
+            test('micron - ' + name,
                 python3,
                 args: [files(t), nvme_exe, mock_nvme_lib],
                 env: cli_test_env,
                 depends: [nvme_exe, mock_nvme_lib],
-                suite: ['micron', 'micron-cli'],
                 timeout: 120)
         endforeach
     endif
 
-    test('nvme-cli - micron-plugin-version',
+    test('micron - version',
          python3,
          args: [files('micron_plugin_version_test.py'), nvme_exe],
          env: cli_test_env,
-         depends: nvme_exe,
-         suite: ['micron', 'micron-cli'])
+         depends: nvme_exe)
 endif
