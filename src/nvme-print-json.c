@@ -5888,7 +5888,8 @@ bool json_empty(struct json_object *obj)
 
 void json_show_finish(void)
 {
-	if (--json_init)
+	/* nvme_main() finishes even if no command started a document */
+	if (!json_init || --json_init)
 		return;
 
 	if (!json_empty(json_r))
