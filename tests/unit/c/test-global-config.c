@@ -12,6 +12,7 @@
  * unknown keys, malformed values, and a missing file.
  */
 
+#include <errno.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -310,6 +311,41 @@ static bool test_missing_file_is_noop(void)
 	return pass;
 }
 
+/* A file which can't be read is reported with its name */
+static bool test_unreadable_file_reported(void)
+{
+	char buf[256] = {};
+	int saved, err;
+	FILE *tmp;
+	size_t n;
+
+	printf("test_unreadable_file_reported:\n");
+
+	/* a directory can't be read even by root */
+	tmp = tmpfile();
+	shr_assert(tmp);
+	fflush(stderr);
+	saved = dup(STDERR_FILENO);
+	shr_assert(saved >= 0);
+	dup2(fileno(tmp), STDERR_FILENO);
+	err = nvme_load_global_config_from(".");
+	fflush(stderr);
+	dup2(saved, STDERR_FILENO);
+	close(saved);
+	rewind(tmp);
+	n = fread(buf, 1, sizeof(buf) - 1, tmp);
+	buf[n] = '\0';
+	fclose(tmp);
+
+	if (err != -EISDIR || strncmp(buf, ".: ", 3)) {
+		printf(" - error and file name reported [FAIL]\n");
+		return false;
+	}
+	printf(" - error and file name reported [PASS]\n");
+
+	return true;
+}
+
 /* The global options in front of the command win over the file */
 static bool test_command_line_wins(void)
 {
@@ -445,6 +481,7 @@ int main(void)
 	pass &= test_hidden_and_out_of_range();
 	pass &= test_keys_outside_global_ignored();
 	pass &= test_missing_file_is_noop();
+	pass &= test_unreadable_file_reported();
 	pass &= test_command_line_wins();
 	pass &= test_command_line_count_repeated();
 
