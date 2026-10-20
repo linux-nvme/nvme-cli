@@ -36,6 +36,12 @@ option(
   description : 'privilege separation helper (technology preview; Linux only)'
 )
 option(
+  'sandbox',
+  type : 'feature',
+  value: 'disabled',
+  description : 'decode the data devices return in a sandboxed child process (technology preview; Linux and FreeBSD)'
+)
+option(
   'nvme-discoverd',
   type : 'feature',
   value: 'auto',

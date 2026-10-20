@@ -81,6 +81,9 @@ want_mi = get_option('mi').require(host_system == 'linux',
 want_sed = get_option('sed').allowed()
 want_privsep = get_option('privsep').require(host_system == 'linux',
     error_message: 'privsep requires Linux').allowed()
+want_sandbox = get_option('sandbox').require(
+    host_system == 'linux' or host_system == 'freebsd',
+    error_message: 'sandbox requires Linux or FreeBSD').allowed()
 want_top = get_option('top').require(host_system == 'linux',
     error_message: 'top requires Linux').allowed()
 discoverd_opt = get_option('nvme-discoverd').require(want_fabrics,
@@ -201,6 +204,8 @@ conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 conf.set('CONFIG_SED', want_sed, description: 'Is SED enabled')
 conf.set('CONFIG_PRIVSEP', want_privsep,
     description: 'Is the privilege separation helper enabled')
+conf.set('CONFIG_SANDBOX', want_sandbox,
+    description: 'Are the decoders of device data sandboxed by default')
 conf.set('LIBNVME_PRIVSEP_HELPER',
     '"@0@"'.format(libexecdir / 'nvme-privsep-helper'))
 conf.set('CONFIG_LOOPBACK', want_ioctl_tests,
@@ -1005,6 +1010,7 @@ wanted_dict = {
     'libnvme':          want_libnvme,
     'fabrics':          want_fabrics,
     'privsep':          want_privsep,
+    'sandbox':          want_sandbox,
     'nvme-discoverd':   want_discoverd,
     'mdns':             want_mdns,
     'nvme-keysd':       want_keysd,
