@@ -265,5 +265,5 @@ int nvme_main(int argc, char **argv)
 	if (argconfig_help_requested())
 		return 0;
 
-	return err ? 1 : 0;
+	return err || nvme_show_failed() ? 1 : 0;
 }

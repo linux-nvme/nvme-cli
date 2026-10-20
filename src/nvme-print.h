@@ -421,6 +421,15 @@ struct print_ops {
 	void (*show_error_status)(int status, const char *msg, va_list ap);
 	void (*show_key_value)(const char *key, const char *val, va_list ap);
 
+	/*
+	 * A sandboxed printer, see nvme_print_begin(): output which does not
+	 * go to stdout is captured in the child, between capture_begin() and
+	 * capture_end(), and handed to capture_add() in the caller. Optional.
+	 */
+	int (*capture_begin)(void);
+	int (*capture_end)(void **buf, size_t *len);
+	int (*capture_add)(const void *buf, size_t len);
+
 	nvme_print_flags_t flags;
 };
 
@@ -433,6 +442,9 @@ struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags);
 static inline struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags) { return NULL; }
 
 #endif /* !CONFIG_JSONC */
+
+/* A printer failed in the sandbox */
+bool nvme_show_failed(void);
 
 struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
