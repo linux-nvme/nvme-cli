@@ -312,6 +312,36 @@ test_sig_util = executable(
 
 test('shared - sig-util', test_sig_util, suite: 'unit')
 
+if host_system != 'windows'
+    test_sandbox_util = executable(
+        'test-sandbox-util',
+        ['test-sandbox-util.c'],
+        dependencies: [
+            ccan_dep,
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - sandbox-util', test_sandbox_util, suite: 'unit')
+
+    # The same without close_range(), which closes the descriptors otherwise
+    test_sandbox_util_fallback = executable(
+        'test-sandbox-util-fallback',
+        ['test-sandbox-util.c', '../sandbox-util.c'],
+        c_args: ['-DSANDBOX_NO_CLOSE_RANGE'],
+        include_directories: ['..'],
+        dependencies: [
+            ccan_dep,
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - sandbox-util-fallback', test_sandbox_util_fallback,
+         suite: 'unit')
+endif
+
 test_assert_util = executable(
     'test-assert-util',
     ['test-assert-util.c'],
