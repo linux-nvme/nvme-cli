@@ -497,8 +497,8 @@ int run_replacement_command(struct plugin *plugin, struct command *cmd,
 
 	extension = find_extension(plugin, name);
 	if (!extension) {
-		fprintf(stderr,
-			"ERROR: '%s' is deprecated and requires the '%s' plugin, which is not available in this build; use 'nvme %s %s'\n",
+		argconfig_error(
+			"'%s' is deprecated and requires the '%s' plugin, which is not available in this build; use 'nvme %s %s'",
 			cmd->name, name, name, command);
 		return -ENOTTY;
 	}
@@ -688,14 +688,7 @@ int plugin_call_run(struct plugin_call *call)
 	case PLUGIN_ERROR:
 		if (call->str) {
 			e = shr_escape(call->str);
-			if (plugin->name)
-				fprintf(stderr,
-					"ERROR: Invalid sub-command '%s' for plugin %s\n",
-					e ? e : "", plugin->name);
-			else
-				fprintf(stderr,
-					"ERROR: Invalid sub-command '%s'\n",
-					e ? e : "");
+			argconfig_error("invalid sub-command '%s'", e ? e : "");
 		}
 		commands_hint(plugin);
 		return call->err;

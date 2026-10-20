@@ -127,6 +127,18 @@ void argconfig_print_error_label(void)
 		print_label(command_path);
 }
 
+/* An error of the current command, or of nvme-cli before one runs */
+void argconfig_error(const char *fmt, ...)
+{
+	va_list ap;
+
+	print_label(command_name());
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fprintf(stderr, "\n");
+}
+
 /* The synopsis and where to find the help, after a usage error */
 void argconfig_print_usage(void)
 {

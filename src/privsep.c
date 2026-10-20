@@ -32,6 +32,7 @@
 #include <libnvme-privsep.h>
 #endif
 
+#include "argconfig.h"
 #include "args.h"
 #include "plugin.h"
 #include "privsep.h"
@@ -97,7 +98,7 @@ static int env_target(const char *uid_env, const char *gid_env,
 	unsigned int u, g;
 
 	if (parse_id(getenv(uid_env), &u) || parse_id(getenv(gid_env), &g)) {
-		fprintf(stderr, "ERROR: invalid %s or %s\n", uid_env, gid_env);
+		argconfig_error("invalid %s or %s", uid_env, gid_env);
 		return -EINVAL;
 	}
 	*uid = u;
@@ -177,8 +178,8 @@ static int privsep_start(void)
 
 	ret = libnvme_privsep_spawn(helper, &privsep);
 	if (ret) {
-		fprintf(stderr,
-			"ERROR: failed to start the privilege separation helper: %s\n",
+		argconfig_error(
+			"failed to start the privilege separation helper: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -189,8 +190,8 @@ static int privsep_start(void)
 
 	ret = privsep_drop(uid, gid);
 	if (ret)
-		fprintf(stderr, "ERROR: failed to drop privileges: %s\n",
-			libnvme_strerror(-ret));
+		argconfig_error("failed to drop privileges: %s",
+				libnvme_strerror(-ret));
 
 	return ret;
 }
@@ -223,7 +224,7 @@ int nvme_privsep_check(struct command *cmd)
 	if (!privsep_active() || !cmd->needs_root)
 		return 0;
 
-	fprintf(stderr, "ERROR: '%s' needs root privileges\n", cmd->name);
+	argconfig_error("'%s' needs root privileges", cmd->name);
 	return -EPERM;
 }
 

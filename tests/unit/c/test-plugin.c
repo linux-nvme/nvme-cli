@@ -260,7 +260,7 @@ static void test_dispatch_prefix_ambiguous(void)
 	check(ret == -ENOTTY, "dispatch_prefix_ambiguous: return code");
 	check(last_call.cmd_name == NULL,
 	      "dispatch_prefix_ambiguous: neither list-a nor list-b ran");
-	check(strstr(cap.err, "Invalid sub-command 'list'") != NULL,
+	check(strstr(cap.err, "invalid sub-command 'list'") != NULL,
 	      "dispatch_prefix_ambiguous: stderr reports invalid sub-command");
 }
 
@@ -414,7 +414,7 @@ static void test_unknown_subcommand(void)
 	ret = run_handle_plugin(argv, ARRAY_SIZE(argv), &builtin_plugin, &cap);
 
 	check(ret == -ENOTTY, "unknown_subcommand: return code");
-	check(strstr(cap.err, "Invalid sub-command 'zzz'") != NULL,
+	check(strstr(cap.err, "invalid sub-command 'zzz'") != NULL,
 	      "unknown_subcommand: stderr reports invalid sub-command");
 }
 
@@ -456,7 +456,7 @@ static void test_extension_unknown_subcommand(void)
 	ret = run_handle_plugin(argv, ARRAY_SIZE(argv), &builtin_plugin, &cap);
 
 	check(ret == -ENOTTY, "extension_unknown_subcommand: return code");
-	check(strstr(cap.err, "Invalid sub-command 'zzz' for plugin ext") != NULL,
+	check(strstr(cap.err, "ext: invalid sub-command 'zzz'") != NULL,
 	      "extension_unknown_subcommand: stderr names the extension");
 }
 
