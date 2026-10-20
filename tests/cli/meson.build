@@ -135,6 +135,18 @@ if python3.found()
             mock_cli_tests += [
                 ['print', 'nvme_print_test.py', print_test_env, 300],
             ]
+
+            # The decoders print the same with and without the sandbox
+            compare_env = print_test_env
+            compare_env.set('NVME_TEST_COMPARE_SANDBOX', '1')
+            test('nvme-cli - print-sandbox-compare',
+                 python3,
+                 args: [files('nvme_print_test.py'), nvme_exe,
+                        mock_nvme_lib],
+                 env: compare_env,
+                 depends: [nvme_exe, mock_nvme_lib],
+                 timeout: 600,
+                 suite: 'mock')
         endif
 
         if 'sed' in selected_plugins and want_sed and \
@@ -157,6 +169,16 @@ if python3.found()
                  python3,
                  args: [files(t[1]), nvme_exe, mock_nvme_lib],
                  env: t[2],
+                 depends: [nvme_exe, mock_nvme_lib],
+                 timeout: t[3],
+                 suite: 'mock')
+
+            sandbox_env = t[2]
+            sandbox_env.set('NVME_SANDBOX', '1')
+            test('nvme-cli - ' + t[0] + '-sandbox',
+                 python3,
+                 args: [files(t[1]), nvme_exe, mock_nvme_lib],
+                 env: sandbox_env,
                  depends: [nvme_exe, mock_nvme_lib],
                  timeout: t[3],
                  suite: 'mock')
