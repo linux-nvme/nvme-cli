@@ -1569,12 +1569,12 @@ static void stdout_zns_report_zone_attrs_decoded(char *buf, size_t len,
 	if (za & NVME_ZNS_ZA_RZR)
 		n += snprintf(buf + n, len - n,
 			      ", Reset Recommended (Limit %s)",
-			      recommended_limit[(zai&0xd)>>2]);
+			      recommended_limit[NVME_ZNS_ZAI_RZRTL(zai)]);
 
 	if (za & NVME_ZNS_ZA_FZR)
 		n += snprintf(buf + n, len - n,
 			      ", Finish Recommended (Limit %s)",
-			      recommended_limit[zai&0x3]);
+			      recommended_limit[NVME_ZNS_ZAI_FZRTL(zai)]);
 
 	if (za & NVME_ZNS_ZA_ZFC)
 		snprintf(buf + n, len - n, ", Finished by Controller");
@@ -1650,10 +1650,9 @@ static void stdout_zns_report_zones(void *report, __u32 descs,
 		shr_table_set_value_str(t, col++, row, cap, LEFT);
 
 		if (verbose) {
-			const char *state =
-				nvme_zone_state_to_string(desc->zs >> 4);
+			const char *state = nvme_zone_state_to_string(
+			    NVME_ZNS_DESC_ZS(desc->zs));
 			const char *type = nvme_zone_type_to_string(desc->zt);
-
 			shr_table_set_value_str(t, col++, row, state, LEFT);
 			shr_table_set_value_str(t, col++, row, type, LEFT);
 		} else {
@@ -1741,9 +1740,9 @@ static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 static struct shr_table *stdout_primary_ctrl_caps_crt_table(__u8 crt)
 {
 	struct shr_table *t;
-	__u8 rsvd = (crt & 0xFC) >> 2;
-	__u8 vi = (crt & 0x2) >> 1;
-	__u8 vq = crt & 0x1;
+	__u8 rsvd = NVME_PRIMARY_CTRL_CAP_CRT_RSVD(crt);
+	__u8 vi = NVME_PRIMARY_CTRL_CAP_CRT_VIRS(crt);
+	__u8 vq = NVME_PRIMARY_CTRL_CAP_CRT_VQRS(crt);
 
 	t = stdout_bits_table_create();
 	if (!t)
