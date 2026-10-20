@@ -38,6 +38,7 @@
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
+#include <shared/sandbox-util.h>
 #include <shared/sig-util.h>
 #include <shared/suffix-util.h>
 #include <shared/time-util.h>
@@ -190,6 +191,24 @@ static int nvme_reserve_stdio(void)
 	return 0;
 }
 
+/*
+ * The decoders of device data run sandboxed with -Dsandbox=enabled unless
+ * NVME_SANDBOX=0, e.g. for a debugger, and in any build with
+ * NVME_SANDBOX=1.
+ */
+static void nvme_sandbox_init(void)
+{
+	const char *env = getenv("NVME_SANDBOX");
+	bool enable = false;
+
+#ifdef CONFIG_SANDBOX
+	enable = true;
+#endif
+	if (env)
+		enable = strcmp(env, "0");
+	shr_sandbox_enable(enable);
+}
+
 int nvme_main(int argc, char **argv)
 {
 	struct plugin_call call = {};
@@ -216,6 +235,8 @@ int nvme_main(int argc, char **argv)
 		general_help(&builtin, NULL);
 		return 0;
 	}
+
+	nvme_sandbox_init();
 	nvme_args_register();
 
 	/* The command line comes first, nvme-cli.conf does not override it */
