@@ -264,6 +264,8 @@ void argconfig_print_warning(void);
 void argconfig_print_error_label(void);
 void argconfig_print_heading(FILE *out, const char *fmt, const char *text);
 void argconfig_set_command(const char *prog, const char *path);
+void argconfig_error(const char *fmt, ...)
+	__attribute__((format(printf, 1, 2)));
 void argconfig_print_usage(void);
 int argconfig_usage_error(const char *fmt, ...)
 	__attribute__((format(printf, 1, 2)));

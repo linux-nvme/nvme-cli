@@ -186,9 +186,8 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		return err;
 
 	if (cfg.import + cfg.export + argconfig_given(opts, &cfg.revoke) > 1) {
-		fprintf(stderr,
-			"ERROR: only one of --import, --export, or --revoke may be given\n");
-		return -EINVAL;
+		return argconfig_usage_error(
+			"only one of --import, --export, or --revoke may be given");
 	}
 	if (cfg.import)
 		subcmd = "import";
@@ -198,8 +197,8 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		subcmd = "revoke";
 
 	if (!subcmd) {
-		fprintf(stderr, "ERROR: 'tls-key' requires one of --import, --export, or --revoke\n");
-		return -EINVAL;
+		return argconfig_usage_error(
+			"one of --import, --export, or --revoke is required");
 	}
 
 	if (argconfig_given(opts, &cfg.keyring)) {

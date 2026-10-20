@@ -74,7 +74,7 @@ def _probe_command(nvme_bin, command):
         # nvme-cli
         # prints it to stderr on current builds but to stdout on 2.16 and
         # earlier, so capture both into one stream rather than picking one.
-        supported = b"Invalid sub-command" not in probe.stdout
+        supported = b"invalid sub-command" not in probe.stdout.lower()
         _command_cache[key] = command if supported else _LEGACY_COMMANDS[command]
     return _command_cache[key]
 
