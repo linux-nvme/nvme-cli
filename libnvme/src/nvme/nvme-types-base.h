@@ -4055,8 +4055,30 @@ struct nvme_id_ctrl_nvm {
 	__u8	rsvd28[4068];
 };
 
+/**
+ * enum nvme_primary_ctrl_cap_crt - Controller Resource Types
+ * @NVME_PRIMARY_CTRL_CAP_CRT_VQRS_SHIFT:	Shift amount to get VQRS
+ * @NVME_PRIMARY_CTRL_CAP_CRT_VQRS_MASK:	Mask to get VQRS
+ * @NVME_PRIMARY_CTRL_CAP_CRT_VIRS_SHIFT:	Shift amount to get VIRS
+ * @NVME_PRIMARY_CTRL_CAP_CRT_VIRS_MASK:	Mask to get VIRS
+ * @NVME_PRIMARY_CTRL_CAP_CRT_RSVD_SHIFT:	Shift amount to get Reserved
+ * @NVME_PRIMARY_CTRL_CAP_CRT_RSVD_MASK:	Mask to get Reserved
+ */
+enum nvme_primary_ctrl_cap_crt {
+	NVME_PRIMARY_CTRL_CAP_CRT_VQRS_SHIFT	= 0,
+	NVME_PRIMARY_CTRL_CAP_CRT_VQRS_MASK	= 0x1,
+	NVME_PRIMARY_CTRL_CAP_CRT_VIRS_SHIFT	= 1,
+	NVME_PRIMARY_CTRL_CAP_CRT_VIRS_MASK	= 0x1,
+	NVME_PRIMARY_CTRL_CAP_CRT_RSVD_SHIFT	= 2,
+	NVME_PRIMARY_CTRL_CAP_CRT_RSVD_MASK	= 0x3f,
+};
 
-
+#define NVME_PRIMARY_CTRL_CAP_CRT_VQRS(crt) \
+	NVME_GET(crt, PRIMARY_CTRL_CAP_CRT_VQRS)
+#define NVME_PRIMARY_CTRL_CAP_CRT_VIRS(crt) \
+	NVME_GET(crt, PRIMARY_CTRL_CAP_CRT_VIRS)
+#define NVME_PRIMARY_CTRL_CAP_CRT_RSVD(crt) \
+	NVME_GET(crt, PRIMARY_CTRL_CAP_CRT_RSVD)
 
 /**
  * struct nvme_primary_ctrl_cap -  Identify - Controller Capabilities Structure
