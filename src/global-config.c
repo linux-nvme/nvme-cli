@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <libnvme.h>
+
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
@@ -276,8 +278,12 @@ int nvme_load_global_config_from(const char *path)
 	int err;
 
 	err = shr_ini_read_file(path, &text);
-	if (err)
-		return err == -ENOENT ? 0 : err;
+	if (err == -ENOENT)
+		return 0;
+	if (err) {
+		fprintf(stderr, "%s: %s\n", path, libnvme_strerror(-err));
+		return err;
+	}
 
 	return load_text(text, path);
 }
