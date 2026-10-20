@@ -45,6 +45,7 @@ summary with `nvme help`.
 | Configuring host identity, NVMe-oF connections, and multi-orchestrator coordination | [CONFIGURATION.md](Documentation/CONFIGURATION.md) |
 | Pre-built binaries, reproducing CI builds, memory/sanitizer testing | [TESTING.md](Documentation/TESTING.md) |
 | libnvme coverage against NVMe specifications, chapter by chapter | [SPEC-COVERAGE.md](Documentation/SPEC-COVERAGE.md) |
+| Privilege separation and the decoder sandbox: design, threat model, helper protocol | [PRIVSEP.md](Documentation/PRIVSEP.md) |
 | Command/plugin man pages | `man nvme`, or browse [Documentation](Documentation/) |
 | Contributing: adding commands/plugins, API naming, commit & PR workflow | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Reporting security vulnerabilities | [SECURITY.md](SECURITY.md) |

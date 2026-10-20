@@ -44,6 +44,8 @@
  * descriptors open from the start of the program, e.g. on /dev/null: the
  * child keeps them, whatever a descriptor opened while one was closed
  * refers to.
+ *
+ * See Documentation/PRIVSEP.md for the design.
  */
 
 /*

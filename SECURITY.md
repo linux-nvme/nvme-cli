@@ -43,6 +43,11 @@ This policy applies only to vulnerabilities in the source code of this
 repository. Issues related to third-party dependencies should be reported to the
 respective upstream projects.
 
+The threat model in [PRIVSEP.md](Documentation/PRIVSEP.md#threat-model)
+describes which inputs nvme-cli treats as untrusted, the data a device or a
+fabrics target returns, and what privilege separation and the decoder sandbox
+protect against. It helps to judge whether an issue crosses a trust boundary.
+
 Thank you for helping improve the security of this project.
 
 
