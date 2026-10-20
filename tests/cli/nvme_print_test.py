@@ -324,6 +324,29 @@ class PrintCLITest(unittest.TestCase):
         self.assertEqual([e['prev_ts'] for e in entries],
                          [0x1000, 0x1001, 0x1002])
 
+    def test_persistent_event_supported_events(self):
+        # Only the Timestamp Change event (bit 3) is supported.
+        header = bytearray(512)
+        struct.pack_into('<B3xIQ', header, 0, _LID_PERSISTENT_EVENT, 0,
+                         len(header))
+        header[480] = 1 << 3
+        self.server.logs[_LID_PERSISTENT_EVENT] = bytes(header)
+
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'persistent-event', self.CTRL)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.count('Support '), 1)
+
+        if not _HAVE_JSON:
+            return
+        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
+                          'log', 'persistent-event', self.CTRL, '-o', 'json')
+        self.assertEqual(result.returncode, 0)
+        log = json.loads(result.stdout)
+        self.assertEqual({k: v for k, v in log.items()
+                          if k.startswith('bitmap_')},
+                         {'bitmap_3': 'Support Timestamp Change Event(0x3)'})
+
     def test_persistent_event_vendor_specific(self):
         # An Event Name with an odd length leaves the next descriptor
         # and its signed integer unaligned.
