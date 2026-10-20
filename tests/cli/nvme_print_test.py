@@ -181,6 +181,29 @@ _LIST = [['list'], ['list-subsys'], ['show-topology'],
 _LIST_FORMATS = [[], ['-v'], ['-o', 'json'], ['-v', '-o', 'json']]
 
 
+def _pretty_indent_error(text):
+    """The first line of pretty JSON which is not indented by its depth."""
+    depth = 0
+    for n, line in enumerate(text.splitlines(), 1):
+        stripped = line.lstrip(' ')
+        closing = stripped[:1] in ('}', ']')
+        if stripped and len(line) - len(stripped) != 2 * (depth - closing):
+            return f'line {n}: {line!r}'
+        in_str = esc = False
+        for c in line:
+            if esc:
+                esc = False
+            elif c == '\\':
+                esc = in_str
+            elif c == '"':
+                in_str = not in_str
+            elif not in_str and c in '{[':
+                depth += 1
+            elif not in_str and c in '}]':
+                depth -= 1
+    return None
+
+
 class PrintCLITest(unittest.TestCase):
 
     CTRL = '/dev/nvme0'
@@ -229,6 +252,8 @@ class PrintCLITest(unittest.TestCase):
         if (_HAVE_JSON and result.returncode == 0 and '-o' in args and
                 'json' in args and result.stdout.strip()):
             json.loads(result.stdout)
+            # the members of the printer calls are put together as text
+            self.assertIsNone(_pretty_indent_error(result.stdout))
 
     def test_id(self):
         self._run_all([['id', c, self.NS] for c in _ID])

@@ -5900,6 +5900,150 @@ void json_show_finish(void)
 	json_r = NULL;
 }
 
+/*
+ * A sandboxed printer: the child inherits the document as it was at the
+ * fork. Let the printer write to an object of its own instead, whose
+ * members the caller adds to its document.
+ */
+static int json_capture_begin(void)
+{
+	if (!json_init)
+		return 0;
+
+	json_r = json_create_object();
+	return json_r ? 0 : -ENOMEM;
+}
+
+static int json_member_put(struct printbuf *pb, const char *s, size_t len)
+{
+	uint32_t n = len;
+
+	if (len > UINT32_MAX)
+		return -EOVERFLOW;
+	printbuf_memappend(pb, (const char *)&n, sizeof(n));
+	printbuf_memappend(pb, s, len);
+
+	return 0;
+}
+
+/*
+ * The members the printer added, serialized as pairs of a length and the
+ * key, a length and the value. @buf is to free().
+ */
+static int json_capture_end(void **buf, size_t *len)
+{
+	struct printbuf *pb;
+	const char *v;
+	int err = 0;
+
+	*buf = NULL;
+	*len = 0;
+	if (!json_init)
+		return 0;
+
+	pb = printbuf_new();
+	if (!pb)
+		return -ENOMEM;
+	json_object_object_foreach(json_r, key, val) {
+		v = json_object_to_json_string_ext(val,
+				JSON_C_TO_STRING_PRETTY |
+				JSON_C_TO_STRING_NOSLASHESCAPE);
+		if (!v || json_member_put(pb, key, strlen(key)) ||
+		    json_member_put(pb, v, strlen(v))) {
+			err = -ENOMEM;
+			break;
+		}
+	}
+	if (!err && printbuf_length(pb)) {
+		*buf = malloc(printbuf_length(pb));
+		if (*buf) {
+			memcpy(*buf, pb->buf, printbuf_length(pb));
+			*len = printbuf_length(pb);
+		} else {
+			err = -ENOMEM;
+		}
+	}
+	printbuf_free(pb);
+
+	return err;
+}
+
+/* Writes a serialized value as it is, indented to @level */
+static int json_member_serialize(struct json_object *jso,
+				 struct printbuf *pb, int level, int flags)
+{
+	const char *s = json_object_get_string(jso);
+	size_t len = json_object_get_string_len(jso), i, start = 0;
+	int j;
+
+	for (i = 0; i < len; i++) {
+		if (s[i] != '\n')
+			continue;
+		printbuf_memappend(pb, s + start, i - start + 1);
+		start = i + 1;
+		if (flags & JSON_C_TO_STRING_PRETTY)
+			for (j = 0; j < level; j++)
+				printbuf_strappend(pb, "  ");
+	}
+	printbuf_memappend(pb, s + start, len - start);
+
+	return 0;
+}
+
+static bool json_member_get(const char **p, const char *end,
+			    const char **s, uint32_t *n)
+{
+	if ((size_t)(end - *p) < sizeof(*n))
+		return false;
+	memcpy(n, *p, sizeof(*n));
+	*p += sizeof(*n);
+	if ((size_t)(end - *p) < *n)
+		return false;
+	*s = *p;
+	*p += *n;
+
+	return true;
+}
+
+/*
+ * Adds the members of a sandboxed printer to the document. They are added
+ * as the child serialized them, not parsed again: a parse would turn 128
+ * bit numbers into doubles. A member replaces one of the same key, as when
+ * the printer runs in process. The child may have been taken over: check
+ * the framing, the values are only copied to the output.
+ */
+static int json_capture_add(const void *buf, size_t len)
+{
+	const char *p = buf, *end = p + len, *k, *v;
+	struct json_object *val;
+	__cleanup_free char *key = NULL;
+	uint32_t klen, vlen;
+
+	if (!len)
+		return 0;
+	if (!json_init || !json_r)
+		return -EPROTO;
+
+	while (p < end) {
+		if (!json_member_get(&p, end, &k, &klen) ||
+		    !json_member_get(&p, end, &v, &vlen) ||
+		    memchr(k, '\0', klen))
+			return -EPROTO;
+		free(key);
+		key = strndup(k, klen);
+		if (!key)
+			return -ENOMEM;
+		val = json_object_new_string_len(v, vlen);
+		if (!val)
+			return -ENOMEM;
+		json_object_set_serializer(val, json_member_serialize,
+					   NULL, NULL);
+		json_object_object_add(json_r, key, val);
+	}
+
+	return 0;
+}
+
 static void json_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
 {
 	int i;
@@ -6364,6 +6508,9 @@ static struct print_ops json_print_ops = {
 	.show_opcode_status		= json_output_opcode_status,
 	.show_error_status		= json_output_error_status,
 	.show_key_value			= json_output_key_value,
+	.capture_begin			= json_capture_begin,
+	.capture_end			= json_capture_end,
+	.capture_add			= json_capture_add,
 };
 
 struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags)
