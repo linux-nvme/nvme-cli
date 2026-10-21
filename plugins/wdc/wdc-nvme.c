@@ -4934,11 +4934,12 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *acmd,
 
 static void wdc_do_id_ctrl(__u8 *vs, struct json_object *root)
 {
-	char vsn[24] = {0};
+	/* 24 bytes, not NUL terminated if all used */
+	char vsn[25] = {0};
 	int base = 3072;
 	int vsn_start = 3081;
 
-	memcpy(vsn, &vs[vsn_start - base], sizeof(vsn));
+	memcpy(vsn, &vs[vsn_start - base], sizeof(vsn) - 1);
 	if (root)
 		json_object_add_value_string(root, "wdc vsn", strlen(vsn) > 1 ? vsn : "NULL");
 	else
