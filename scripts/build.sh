@@ -53,6 +53,7 @@ usage() {
     echo "                         ${ALL_FUZZ_TARGETS// /, }"
     echo " --fuzz-dir dir          directory for the results (.build-ci/fuzz):"
     echo "                         summary.txt, logs/, artifacts/ and corpus/"
+    echo " the 'fuzz' config builds debugoptimized unless -b is given"
     echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
@@ -86,6 +87,7 @@ usage() {
 BUILDTOOL=meson
 MESON=meson
 BUILDTYPE=release
+buildtype_given=0
 CROSS_TARGET=armhf
 CC=${CC:-"gcc"}
 SCAN_BUILD=""
@@ -134,6 +136,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -b)
             BUILDTYPE="$2"
+            buildtype_given=1
             shift 2
             ;;
         -c)
@@ -583,10 +586,15 @@ config_meson_fuzz() {
         CC=clang
     fi
     CXX="${CXX:-${CC/clang/clang++}}"
+    # Optimized, but with the source lines in the reports of a finding
+    local buildtype="${BUILDTYPE}"
+    if [ "${buildtype_given}" -eq 0 ]; then
+        buildtype=debugoptimized
+    fi
 
     CC="${CC}" CXX="${CXX}" "${MESON}" setup    \
         --werror                                \
-        --buildtype="${BUILDTYPE}"              \
+        --buildtype="${buildtype}"              \
         -Dfuzzing=true                          \
         -Db_sanitize=address,undefined          \
         -Db_lundef=false                        \

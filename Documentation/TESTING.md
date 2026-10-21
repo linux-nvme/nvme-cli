@@ -334,7 +334,9 @@ ASAN_OPTIONS=allocator_may_return_null=1:max_allocation_size_mb=1024 \
 ```
 
 `scripts/build.sh fuzz` does all of this for every target in turn, each with
-one libFuzzer job per CPU on a shared corpus, for 600 seconds by default:
+one libFuzzer job per CPU on a shared corpus, for 600 seconds by default. It
+builds with `--buildtype=debugoptimized`, so the reports of a finding name the
+source lines, unless `-b` selects another build type:
 
 ```bash
 scripts/build.sh --fuzz-seconds 3600 fuzz
