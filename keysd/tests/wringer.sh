@@ -1127,7 +1127,7 @@ OLD_PID=$(keysd_main_pid)
 systemctl kill -s KILL --kill-whom=main "${UNIT}"
 check "systemd started nvme-keysd again" \
 	wait_until 10 keysd_restarted_after "${OLD_PID}"
-check "nvme-keysd keeps running" keysd_active
+check "nvme-keysd keeps running" wait_until 10 keysd_active
 check "key A is still in .nvme" key_present "${ID_A}"
 
 phase "nvme-keysd stops on SIGTERM"
