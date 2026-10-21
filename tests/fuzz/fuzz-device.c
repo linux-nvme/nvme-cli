@@ -21,12 +21,15 @@
  */
 #include <dlfcn.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 
 #include <ccan/array_size/array_size.h>
 
@@ -49,10 +52,16 @@ void mock_fuzz_input(const uint8_t *data, size_t size);
  *
  * A command may name an option which takes the argument byte of the
  * input as its value, 0xff meaning 0xffffffff (all namespaces).
+ *
+ * A command with pci set sees a controller whose PCI vendor and device ID
+ * are the next four bytes of the input, little endian, ahead of the
+ * answers of the device: plugins which check them to decide what a drive
+ * supports do nothing on any other controller.
  */
 static const struct {
 	const char *argv[4];
 	const char *arg;
+	bool pci;
 } commands[] = {
 	{ { "id", "ctrl" } },
 	{ { "id", "ns" }, "--namespace-id" },
@@ -229,6 +238,70 @@ static const struct {
 	{ { "security", "recv", "--size=4096" }, "--secp" },
 	{ { "fw", "commit" }, "--action" },
 	{ { "ns", "get-id" } },
+	{ { "inspur", "nvme-vendor-log" } },
+	{ { "memblaze", "smart-log-add-x" } },
+	{ { "memblaze", "lat-get-feature-x" } },
+	{ { "memblaze", "lat-stats-print-x" } },
+	{ { "memblaze", "lat-log-print-x" } },
+	{ { "micron", "latency-tracking" }, .pci = true },
+	{ { "micron", "latency-stats" }, .pci = true },
+	{ { "micron", "latency-logs" }, .pci = true },
+	{ { "micron", "id-ctrl" }, .pci = true },
+	{ { "micron", "cloud-boot-SSD-version" }, .pci = true },
+	{ { "ocp", "get-error-injection" }, "--sel" },
+	{ { "ocp", "get-latency-monitor" }, "--sel" },
+	{ { "ocp", "get-latency-monitor", "--no-uuid" }, "--sel" },
+	{ { "ocp", "get-idle-wakeup-time" }, "--sel" },
+	{ { "ocp", "get-idle-wakeup-time", "--no-uuid" }, "--sel" },
+	{ { "ocp", "get-dssd-power-state-feature", "--all" } },
+	{ { "ocp", "get-plp-health-check-interval" }, "--sel" },
+	{ { "ocp", "get-dssd-async-event-config" }, "--sel" },
+	{ { "ocp", "get-enable-ieee1667-silo" }, "--sel" },
+	{ { "ocp", "get-clear-pcie-correctable-errors" }, "--sel" },
+	{ { "ocp", "get-telemetry-profile" }, "--sel" },
+	{ { "ocp", "eol-plp-failure-mode" }, "--sel" },
+	{ { "sndk", "vs-fw-activate-history" }, .pci = true },
+	{ { "sndk", "capabilities" }, .pci = true },
+	{ { "sfx", "get-bad-block" } },
+	{ { "sfx", "get-feature" }, "--feature-id" },
+	{ { "transcend", "badblock" } },
+	{ { "wdc", "id-ctrl" }, .pci = true },
+	{ { "wdc", "get-drive-status" }, .pci = true },
+	{ { "wdc", "purge-monitor" }, .pci = true },
+	{ { "wdc", "cloud-boot-SSD-version" }, .pci = true },
+	{ { "wdc", "cloud-SSD-plugin-version" }, .pci = true },
+	{ { "amzn", "id-ctrl" } },
+	{ { "dell", "id-ctrl" } },
+	{ { "mangoboost", "id-ctrl" } },
+	{ { "nvidia", "id-ctrl" } },
+	{ { "solidigm", "id-ctrl" } },
+	{ { "read", "--data-size=4096" }, "--block-count" },
+	{ { "wdc", "vs-smart-add-log" }, .pci = true },
+	{ { "wdc", "vs-nand-stats" }, .pci = true },
+	{ { "wdc", "vs-fw-activate-history" }, .pci = true },
+	{ { "wdc", "log-page-directory" }, .pci = true },
+	{ { "wdc", "vs-drive-info" }, .pci = true },
+	{ { "wdc", "vs-temperature-stats" }, .pci = true },
+	{ { "wdc", "capabilities" }, .pci = true },
+	{ { "wdc", "vs-pcie-stats" }, .pci = true },
+	{ { "wdc", "get-latency-monitor-log" }, .pci = true },
+	{ { "wdc", "get-error-recovery-log" }, .pci = true },
+	{ { "wdc", "get-dev-capabilities-log" }, .pci = true },
+	{ { "wdc", "get-unsupported-reqs-log" }, .pci = true },
+	{ { "wdc", "vs-cloud-log" }, .pci = true },
+	{ { "wdc", "vs-hw-rev-log" }, .pci = true },
+	{ { "wdc", "vs-device-waf" }, .pci = true },
+	{ { "wdc", "cu-smart-log" }, .pci = true },
+	{ { "micron", "vs-temperature-stats" }, .pci = true },
+	{ { "micron", "vs-pcie-stats" }, .pci = true },
+	{ { "micron", "vs-nand-stats" }, .pci = true },
+	{ { "micron", "vs-smart-ext-log" }, .pci = true },
+	{ { "micron", "vs-drive-info" }, .pci = true },
+	{ { "micron", "log-page-directory" }, .pci = true },
+	{ { "micron", "vs-fw-activate-history" }, .pci = true },
+	{ { "micron", "vs-smart-add-log" }, .pci = true },
+	{ { "micron", "vs-device-waf" }, .pci = true },
+	{ { "micron", "smart-log" }, .pci = true },
 };
 
 #define NR_COMMANDS ARRAY_SIZE(commands)
@@ -314,6 +387,83 @@ void *libnvme_alloc_huge(size_t len, struct libnvme_mem_huge *mh)
 	return fn(len, mh);
 }
 
+/*
+ * The test root of a command with pci set: a sysfs with the controller
+ * nvme0, whose PCI IDs pci_sysfs() writes. It is in the current
+ * directory: a job which crashes leaves it behind, and scripts/build.sh
+ * removes them from the directory it runs the jobs in.
+ */
+#define PCI_ROOT_TEMPLATE "fuzz-device-XXXXXX"
+static char pci_root[PATH_MAX];
+static char pci_dir[sizeof(pci_root) + 64];
+static char pci_option[sizeof(pci_root) + 32];
+static const char *const pci_attrs[] = {
+	"vendor", "device", "subsystem_vendor", "subsystem_device",
+};
+
+static void pci_cleanup(void)
+{
+	char path[sizeof(pci_dir) + 32];
+	static const char *const dirs[] = { "/sys/class/nvme/nvme0/device",
+		"/sys/class/nvme/nvme0", "/sys/class/nvme",
+		"/sys/class/nvme-subsystem", "/sys/class", "/sys", "" };
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(pci_attrs); i++) {
+		snprintf(path, sizeof(path), "%s/%s", pci_dir, pci_attrs[i]);
+		unlink(path);
+	}
+	for (i = 0; i < ARRAY_SIZE(dirs); i++) {
+		snprintf(path, sizeof(path), "%s%s", pci_root, dirs[i]);
+		rmdir(path);
+	}
+}
+
+static void pci_setup(void)
+{
+	/* without nvme-subsystem, a topology scan fails */
+	static const char *const dirs[] = { "/sys", "/sys/class",
+		"/sys/class/nvme-subsystem", "/sys/class/nvme",
+		"/sys/class/nvme/nvme0", "/sys/class/nvme/nvme0/device" };
+	char path[sizeof(pci_dir)];
+	size_t i;
+
+	if (!getcwd(pci_root, sizeof(pci_root) - sizeof(PCI_ROOT_TEMPLATE) - 1))
+		abort();
+	strcat(pci_root, "/" PCI_ROOT_TEMPLATE);
+	if (!mkdtemp(pci_root))
+		abort();
+	atexit(pci_cleanup);
+	for (i = 0; i < ARRAY_SIZE(dirs); i++) {
+		snprintf(path, sizeof(path), "%s%s", pci_root, dirs[i]);
+		if (mkdir(path, 0700))
+			abort();
+	}
+	snprintf(pci_dir, sizeof(pci_dir), "%s", path);
+	snprintf(pci_option, sizeof(pci_option), "test-sysfs-dir=%s",
+		 pci_root);
+}
+
+/* Give nvme0 of the test root the PCI IDs at @data, vendor and device */
+static void pci_sysfs(const uint8_t *data)
+{
+	char path[sizeof(pci_dir) + 32];
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(pci_attrs); i++) {
+		/* the subsystem IDs are the same as the device's */
+		unsigned int id = data[i % 2 * 2] | data[i % 2 * 2 + 1] << 8;
+		FILE *f;
+
+		snprintf(path, sizeof(path), "%s/%s", pci_dir, pci_attrs[i]);
+		f = fopen(path, "w");
+		if (!f)
+			abort();
+		fprintf(f, "0x%04x\n", id);
+		fclose(f);
+	}
+}
+
 int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
 #ifndef __SANITIZE_ADDRESS__
@@ -329,6 +479,7 @@ int LLVMFuzzerInitialize(int *argc, char ***argv)
 	(void)argc;
 	(void)argv;
 	defaults = nvme_args;
+	pci_setup();
 	return 0;
 }
 
@@ -338,9 +489,13 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	char arg[64];
 	uint8_t variant;
 	int argc = 0, i;
+	bool pci;
 
 	/* No modulo: a new command must not change what an input does */
 	if (size < 3 || data[0] >= NR_COMMANDS)
+		return 0;
+	pci = commands[data[0]].pci;
+	if (pci && size < 7)
 		return 0;
 
 	argv[argc++] = "nvme";
@@ -350,7 +505,12 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	 * do something else on a machine with one.
 	 */
 	argv[argc++] = "--set-options";
-	argv[argc++] = "test-sysfs-dir=/nonexistent/fuzz-device";
+	if (pci) {
+		pci_sysfs(data + 3);
+		argv[argc++] = pci_option;
+	} else {
+		argv[argc++] = "test-sysfs-dir=/nonexistent/fuzz-device";
+	}
 	for (i = 0; i < 4 && commands[data[0]].argv[i]; i++)
 		argv[argc++] = (char *)commands[data[0]].argv[i];
 
@@ -368,7 +528,10 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	argv[argc] = NULL;
 
 	nvme_args = defaults;
-	mock_fuzz_input(data + 3, size - 3);
+	if (pci)
+		mock_fuzz_input(data + 7, size - 7);
+	else
+		mock_fuzz_input(data + 3, size - 3);
 	nvme_main(argc, argv);
 	mock_fuzz_input(NULL, 0);
 
