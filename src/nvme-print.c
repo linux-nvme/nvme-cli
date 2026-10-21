@@ -2259,8 +2259,14 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		break;
 	case NVME_LOG_LID_DISCOVERY: {
 		struct nvmf_discovery_log *discovery_log = log;
+		/* no more records than the log holds, before size_t cuts it */
+		__u64 nr = min_t(__u64, le64_to_cpu(discovery_log->numrec),
+				 len);
 
-		nvme_show_discovery_log(discovery_log, le64_to_cpu(discovery_log->numrec), flags);
+		nvme_show_discovery_log(discovery_log,
+			nvme_log_nr_entries(nr, len, sizeof(*discovery_log),
+					    sizeof(discovery_log->entries[0])),
+			flags);
 		break;
 	}
 	case NVME_LOG_LID_HOST_DISCOVERY:
