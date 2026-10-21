@@ -6522,8 +6522,22 @@ static struct print_ops json_print_ops = {
 	.capture_add			= json_capture_add,
 };
 
+/*
+ * json-c seeds its string hash on the first lookup. Built without
+ * getrandom(), as the meson subproject is, it reads /dev/urandom then,
+ * which a printer in the sandbox cannot open.
+ */
+static void json_seed_hash(void)
+{
+	struct json_object *o = json_create_object();
+
+	json_object_object_get_ex(o, "", NULL);
+	json_free_object(o);
+}
+
 struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags)
 {
+	json_seed_hash();
 	json_print_ops.flags = flags;
 	return &json_print_ops;
 }
