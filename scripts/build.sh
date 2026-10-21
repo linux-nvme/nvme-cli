@@ -8,8 +8,6 @@
 
 set -e
 
-ALL_FUZZ_TARGETS="argconfig ini global-config fabrics-conf device"
-
 usage() {
     echo "Usage: build.sh [-b [release|debug]] "
     echo "                [-c [gcc|clang]]"
@@ -49,8 +47,8 @@ usage() {
     echo "options for the 'fuzz' config:"
     echo " --fuzz-seconds n        run each target for n seconds (600)"
     echo " --fuzz-jobs n           run n libFuzzer jobs per target (all CPUs)"
-    echo " --fuzz-targets list     comma-separated list of targets (all):"
-    echo "                         ${ALL_FUZZ_TARGETS// /, }"
+    echo " --fuzz-targets list     comma-separated list of targets (all), see"
+    echo "                         scripts/fuzz/nvme-fuzz run --help"
     echo " --fuzz-dir dir          directory for the results (.build-ci/fuzz):"
     echo "                         summary.txt, logs/, artifacts/ and corpus/"
     echo " the 'fuzz' config builds debugoptimized unless -b is given"
@@ -102,7 +100,7 @@ PLUGIN_TESTS=""
 
 fuzz_seconds=600
 fuzz_jobs=""
-fuzz_targets="${ALL_FUZZ_TARGETS}"
+fuzz_targets=""
 fuzz_dir=""
 
 # The options which only one config takes, as "config option"
@@ -203,13 +201,8 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --fuzz-targets)
-            fuzz_targets="${2//,/ }"
-            for t in ${fuzz_targets}; do
-                if [[ " ${ALL_FUZZ_TARGETS} " != *" ${t} "* ]]; then
-                    echo "error: unknown fuzz target '${t}'" >&2
-                    exit 1
-                fi
-            done
+            # nvme-fuzz checks the names
+            fuzz_targets="$2"
             config_option fuzz "$1"
             shift 2
             ;;
@@ -537,128 +530,33 @@ test_meson_libnvme_abi() {
     :
 }
 
-# Coverage guided fuzzing with libFuzzer, see Documentation/TESTING.md.
-# The results are in the --fuzz-dir, by default in the build directory:
-# per target the corpus, the logs and the inputs which found a bug, and a
-# summary. A --fuzz-dir outside of it grows the corpus across runs.
+# Coverage guided fuzzing with libFuzzer, see Documentation/TESTING.md:
+# scripts/fuzz/nvme-fuzz does it, with the options given here. The results
+# are in the --fuzz-dir, by default in the build directory: per target the
+# corpus, the logs and the inputs which found a bug, and a summary. The
+# build directory is removed first, so only a --fuzz-dir outside of it
+# grows the corpus across runs.
 config_meson_fuzz() {
-    if [[ "${CC}" != *clang* ]]; then
-        CC=clang
-    fi
-    CXX="${CXX:-${CC/clang/clang++}}"
-    # Optimized, but with the source lines in the reports of a finding
     local buildtype="${BUILDTYPE}"
     if [ "${buildtype_given}" -eq 0 ]; then
         buildtype=debugoptimized
     fi
 
-    CC="${CC}" CXX="${CXX}" "${MESON}" setup    \
-        --werror                                \
-        --buildtype="${buildtype}"              \
-        -Dfuzzing=true                          \
-        -Db_sanitize=address,undefined          \
-        -Db_lundef=false                        \
-        "${BUILDDIR}"
+    scripts/fuzz/nvme-fuzz -C "${BUILDDIR}" build --buildtype="${buildtype}"
+}
+
+build_meson_fuzz() {
+    # nvme-fuzz build built the fuzz targets
+    :
 }
 
 test_meson_fuzz() {
-    local root
-    root="$(pwd)"
-    local dir="${fuzz_dir:-${BUILDDIR}/fuzz}"
-    local seconds="${fuzz_seconds}"
-    local jobs="${fuzz_jobs:-$(nproc 2>/dev/null || echo 1)}"
-    local failed=()
-    local t f exe corpus artifacts logs args status summary stamp found
-    # A device reports sizes of up to gigabytes: let ASan fail such an
-    # allocation instead of libFuzzer aborting as out of memory.
-    local asan="allocator_may_return_null=1:max_allocation_size_mb=1024"
+    local args=(--seconds "${fuzz_seconds}")
 
-    mkdir -p "${dir}"
-    summary="${dir}/summary.txt"
-    : > "${summary}"
-
-    # A UBSan finding is a crash too
-    export UBSAN_OPTIONS="${UBSAN_OPTIONS:-halt_on_error=1:print_stacktrace=1}"
-
-    for t in ${fuzz_targets}; do
-        exe="${BUILDDIR}/tests/fuzz/fuzz-${t}"
-        if [ ! -x "${exe}" ]; then
-            echo "fuzz-${t}: not built, skipped"
-            continue
-        fi
-
-        corpus="${dir}/corpus/${t}"
-        artifacts="${dir}/artifacts/${t}"
-        logs="${dir}/logs/${t}"
-        rm -rf "${logs}"
-        mkdir -p "${corpus}" "${artifacts}" "${logs}"
-        # Add the seeds, but keep what earlier runs found
-        for f in "${root}"/tests/fuzz/corpus/"${t}"/*; do
-            [ -e "${corpus}/${f##*/}" ] || cp "${f}" "${corpus}/"
-        done
-
-        # Run the jobs as independent processes on the shared corpus. The
-        # -fork mode is newer, but the libFuzzer of clang 22 crashes in it.
-        # A job ends at its first finding, so queue more jobs than workers
-        # to keep all of them busy: the timeout below ends the run.
-        args=(-close_fd_mask=3 -max_total_time="${seconds}"
-              -jobs="$((jobs * 100))" -workers="${jobs}"
-              -artifact_prefix="${artifacts}/")
-        case "${t}" in
-            argconfig)
-                args+=(-dict="${root}/tests/fuzz/argconfig.dict")
-                ;;
-            device)
-                args+=(-max_len=16384 -timeout=10)
-                ;;
-            *)
-                args+=(-dict="${root}/tests/fuzz/config.dict")
-                ;;
-        esac
-
-        echo "fuzz-${t}: ${seconds}s, ${jobs} jobs, logs in ${logs}"
-        # Each job writes fuzz-<job>.log to the current directory. The
-        # timeout signals the whole process group, the jobs included: a
-        # job whose timeout handler deadlocks would keep libFuzzer waiting
-        # forever otherwise.
-        stamp="${logs}/start"
-        touch "${stamp}"
-        status=0
-        (cd "${logs}" &&
-         ASAN_OPTIONS="${ASAN_OPTIONS:+${ASAN_OPTIONS}:}${asan}" \
-            timeout --kill-after=60 "$((seconds + 60))" \
-            "${exe}" "${args[@]}" "${corpus}" > main.log 2>&1) ||
-            status=$?
-        # what the device target's jobs which crashed left behind
-        rm -rf "${logs}"/fuzz-device-??????
-        # Whether libFuzzer exits on its own or the timeout ends it (124,
-        # or 137 after SIGKILL), the inputs it saved tell about the
-        # findings. A slow unit is none.
-        found="$(find "${artifacts}" -type f -newer "${stamp}" \
-                 ! -name 'slow-unit-*' | wc -l)"
-        if [ "${found}" -gt 0 ]; then
-            failed+=("${t}")
-            echo "fuzz-${t}: ${found} findings, exit status ${status}" |
-                tee -a "${summary}"
-            {
-                grep -hE '^(SUMMARY|==[0-9]+==ERROR)' "${logs}"/fuzz-*.log ||
-                    true
-                find "${artifacts}" -type f -newer "${stamp}" \
-                     ! -name 'slow-unit-*'
-            } >> "${summary}"
-        elif [[ ! "${status}" =~ ^(0|124|137)$ ]]; then
-            failed+=("${t}")
-            echo "fuzz-${t}: failed, exit status ${status}" |
-                tee -a "${summary}"
-        else
-            echo "fuzz-${t}: no finding in ${seconds}s" | tee -a "${summary}"
-        fi
-    done
-
-    if [ "${#failed[@]}" -gt 0 ]; then
-        echo "fuzz targets with findings: ${failed[*]}, see ${summary}"
-        return 1
-    fi
+    [ -n "${fuzz_jobs}" ] && args+=(--jobs "${fuzz_jobs}")
+    [ -n "${fuzz_targets}" ] && args+=(--targets "${fuzz_targets}")
+    [ -n "${fuzz_dir}" ] && args+=(--results "${fuzz_dir}")
+    scripts/fuzz/nvme-fuzz -C "${BUILDDIR}" run "${args[@]}"
 }
 
 build_meson() {
