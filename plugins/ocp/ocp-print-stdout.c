@@ -891,7 +891,7 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 			nvme_show_pel_sanitize_completion_event(data, 0);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_show_pel_set_feature_event(data, 0);
+			nvme_show_pel_set_feature_event(data, el - vsil);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
 			d(data, 512, 16, 1);

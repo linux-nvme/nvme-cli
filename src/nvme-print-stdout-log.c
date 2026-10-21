@@ -504,16 +504,14 @@ void nvme_show_pel_sanitize_completion_event(void *pevent_log_info,
 	stdout_kv_table_finish(t, "pel-sanitize-completion-event");
 }
 
-void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset)
+void nvme_show_pel_set_feature_event(void *data, __u32 len)
 {
-	int fid, cdw11, cdw12, dword_cnt;
-	unsigned char *mem_buf;
-	struct nvme_set_feature_event *set_feat_event =
-		pevent_log_info + offset;
+	int fid, cdw11, cdw12;
+	__cleanup_free unsigned char *mem_buf = NULL;
+	struct nvme_set_feature_event *set_feat_event = data;
 	struct shr_table *t;
 
 	printf("Set Feature Event Entry:\n");
-	dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
 	fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]),
 		       SET_FEATURES_CDW10_FID);
 	cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
@@ -527,10 +525,9 @@ void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset)
 
 	stdout_kv_table_finish(t, "pel-set-feature-event");
 
-	if (!NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout))
+	mem_buf = nvme_pel_set_feature_data(data, len);
+	if (!mem_buf)
 		return;
-
-	mem_buf = (unsigned char *)set_feat_event + 4 + dword_cnt * 4;
 	if (fid == NVME_FEAT_FID_FDP_EVENTS) {
 		cdw12 = le32_to_cpu(set_feat_event->cdw_mem[2]);
 		stdout_persistent_event_log_fdp_events(cdw11, cdw12, mem_buf);
@@ -737,7 +734,7 @@ void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u32 size,
 			nvme_show_pel_sanitize_completion_event(data, 0);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_show_pel_set_feature_event(data, 0);
+			nvme_show_pel_set_feature_event(data, el - vsil);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
 			if (el >= 512)

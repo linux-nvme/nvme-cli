@@ -496,6 +496,36 @@ void *nvme_pel_event_data(void *pevent_log_info, __u32 offset, __u32 len,
 	return buf;
 }
 
+/*
+ * The feature printers read a whole data structure from the memory buffer
+ * of a Set Feature event, the largest 4 KiB, through an aligned pointer.
+ * The buffer follows the dwords of the command in the event data of len
+ * bytes, so is neither aligned nor that long. Returns an aligned copy of
+ * it, zero padded to 4 KiB, or NULL if the event has none. The caller
+ * frees the copy.
+ */
+void *nvme_pel_set_feature_data(void *data, __u32 len)
+{
+	struct nvme_set_feature_event *e = data;
+	__u32 layout = le32_to_cpu(e->layout);
+	__u32 rel;
+	void *buf;
+
+	if (!NVME_SET_FEAT_EVENT_MB_COUNT(layout))
+		return NULL;
+	rel = 4 + NVME_SET_FEAT_EVENT_DW_COUNT(layout) * 4;
+	if (rel >= len)
+		return NULL;
+
+	buf = calloc(1, NVME_PEL_FEATURE_DATA_SIZE);
+	if (!buf)
+		return NULL;
+	memcpy(buf, data + rel,
+	       min_t(__u32, len - rel, NVME_PEL_FEATURE_DATA_SIZE));
+
+	return buf;
+}
+
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	nvme_print_flags_t flags)
