@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# The linters for nvme-fuzz: ruff check and mypy, run from this directory
+# or with meson compile lint-fuzz-tool.
+
+[project]
+name = "nvme-fuzz"
+version = "0.1.0"
+description = "Build, run and evaluate the libFuzzer targets of nvme-cli"
+requires-python = ">=3.10"
+license = { text = "GPL-2.0-or-later" }
+# Pure stdlib
+dependencies = []
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+extend-include = ["nvme-fuzz"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "W",
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "SIM",  # simplify
+    "RUF",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["nvme_fuzz", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# its start runs with old Pythons, to find a new one
+"nvme-fuzz" = ["UP031", "UP036"]
