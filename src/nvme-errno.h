@@ -16,9 +16,12 @@
  *			     inconsistent (e.g. LBSTM disagrees with PIFA's
  *			     masking level)
  * @ECLI_IDENTIFY_NS_FAILED: the base Identify Namespace command failed
+ * @ECLI_INVALID_LBA_FORMAT: the LBA data size of the namespace's LBA format
+ *			      is too large to be one
  */
 enum cli_error_codes {
 	ECLI_INVALID_TAGS = 2000,
 	ECLI_INVALID_PI_FORMAT = 2001,
 	ECLI_IDENTIFY_NS_FAILED = 2002,
+	ECLI_INVALID_LBA_FORMAT = 2003,
 };
