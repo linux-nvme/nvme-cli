@@ -420,7 +420,8 @@ static int get_market_log(int argc, char **argv, struct command *acmd, struct pl
 	err = nvme_get_log_simple(hdl, 0xdd, log, sizeof(log));
 	if (!err) {
 		if (!cfg.raw_binary)
-			printf("Intel Marketing Name Log:\n%s\n", log);
+			printf("Intel Marketing Name Log:\n%.*s\n",
+			       (int)sizeof(log), log);
 		else
 			d_raw((unsigned char *)&log, sizeof(log));
 	} else if (err > 0)
