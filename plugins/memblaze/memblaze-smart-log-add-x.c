@@ -63,7 +63,7 @@ static uint64_t int48_to_long_local(const uint8_t *data)
 	return le64_to_cpu(value);
 }
 
-static const struct smart_log_add_desc smart_log_add_v0_items[0xff] = {
+static const struct smart_log_add_desc smart_log_add_v0_items[256] = {
 	[0xab] = {0,  "program_fail_count"},
 	[0xac] = {1,  "erase_fail_count"},
 	[0xad] = {2,  "wear_leveling_count"},
@@ -88,7 +88,7 @@ static const struct smart_log_add_desc smart_log_add_v0_items[0xff] = {
 	[0xed] = {21, "flash_error_media_count"},
 };
 
-static const struct smart_log_add_desc smart_log_add_v2_items[0xff] = {
+static const struct smart_log_add_desc smart_log_add_v2_items[256] = {
 	[0xab] = {0,  "program_fail_count"},
 	[0xac] = {1,  "erase_fail_count"},
 	[0xad] = {2,  "wear_leveling_count"},
@@ -120,7 +120,7 @@ static const struct smart_log_add_desc smart_log_add_v2_items[0xff] = {
 	[0xed] = {28, "free_xblock_status"},
 };
 
-static const struct smart_log_add_desc smart_log_add_v3_items[0xff] = {
+static const struct smart_log_add_desc smart_log_add_v3_items[256] = {
 	[0xab] = {0,  "program_fail_count"},
 	[0xac] = {1,  "erase_fail_count"},
 	[0xad] = {2,  "wear_leveling_count"},
