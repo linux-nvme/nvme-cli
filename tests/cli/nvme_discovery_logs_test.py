@@ -69,6 +69,20 @@ def _host_discovery_log(hostnqns, tel=_HEDLPE_LEN):
     return bytes(hdr) + records
 
 
+def _unaligned_page(records):
+    """A host or AVE discovery log page (their headers are alike) of
+    @records, the first padded by a byte, so that the second isn't 4 byte
+    aligned. The length of a record is in its TEL field at @tel_off."""
+    (first, tel_off), (second, _) = records
+    first = bytearray(first) + b'\0'
+    struct.pack_into('<I', first, tel_off, len(first))
+    body = bytes(first) + second
+    hdr = bytearray(_HEADER_LEN)
+    struct.pack_into('<QQ', hdr, 0, 1, 2)
+    struct.pack_into('<I', hdr, 20, _HEADER_LEN + len(body))
+    return bytes(hdr) + body
+
+
 def _ave_discovery_log(avenqns, tel=None, numatr=1):
     """An AVE discovery log page with one record of one IPv4 transport
     record for each of @avenqns. @tel and @numatr default to the record
@@ -234,6 +248,40 @@ class DiscoveryLogsTest(unittest.TestCase):
                                 tel=_HEDLPE_LEN * 4)
         out = self._run_both('host-discovery')
         self.assertFalse([k for k in out if k.startswith('hedlpe')])
+
+    def test_host_discovery_unaligned_record(self):
+        """A record behind one whose length is not a multiple of 4 is
+        printed, with its extended attributes."""
+        page = _host_discovery_log(['nqn.2014-08.org.example:host1',
+                                    'nqn.2014-08.org.example:host2'])
+        first = page[_HEADER_LEN:_HEADER_LEN + _HEDLPE_LEN]
+        second = bytearray(page[_HEADER_LEN + _HEDLPE_LEN:])
+        exat = struct.pack('<HH', 1, 16) + bytes(range(16))
+        second += exat
+        struct.pack_into('<IH', second, 1024, len(second), 1)
+        self.server.logs[_LID_HOST_DISCOVERY] = \
+            _unaligned_page([(first, 1024), (bytes(second), 1024)])
+        out = self._run_both('host-discovery')
+        self.assertEqual(out['hedlpe: 0']['tel'], _HEDLPE_LEN + 1)
+        self.assertEqual(out['hedlpe: 1']['hostnqn'],
+                         'nqn.2014-08.org.example:host2')
+        self.assertEqual(out['hedlpe: 1']['numexat'], 1)
+        self.assertEqual(out['hedlpe: 1']['exat: 0']['exatlen'], 16)
+
+    def test_ave_discovery_unaligned_record(self):
+        """A record behind one whose length is not a multiple of 4 is
+        printed, with its transport records."""
+        page = _ave_discovery_log(['nqn.2014-08.org.example:ave1',
+                                   'nqn.2014-08.org.example:ave2'])
+        n = _ADLPE_LEN + _ATR_LEN
+        first = page[_HEADER_LEN:_HEADER_LEN + n]
+        second = page[_HEADER_LEN + n:]
+        self.server.logs[_LID_AVE_DISCOVERY] = \
+            _unaligned_page([(first, 0), (second, 0)])
+        out = self._run_both('ave-discovery')
+        self.assertEqual(out['adlpe: 1']['avenqn'],
+                         'nqn.2014-08.org.example:ave2')
+        self.assertEqual(out['adlpe: 1']['atr: 0']['avetraddr'], '192.0.2.7')
 
     def test_ave_discovery_records_are_read(self):
         self.server.logs[_LID_AVE_DISCOVERY] = \
