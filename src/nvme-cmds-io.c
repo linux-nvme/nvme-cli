@@ -335,7 +335,12 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-	lbs = 1 << ns->lbaf[lba_index].ds;
+	if (ns->lbaf[lba_index].ds >= 32) {
+		nvme_show_error("invalid LBA data size %u",
+				ns->lbaf[lba_index].ds);
+		return -ECLI_INVALID_LBA_FORMAT;
+	}
+	lbs = 1U << ns->lbaf[lba_index].ds;
 	ms = le16_to_cpu(ns->lbaf[lba_index].ms);
 	/*
 	 * Conservative fallback: if Identify NVM CS NS below fails for any
@@ -1161,6 +1166,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			/* Could not even allocate the Identify buffer. */
 		case -ECLI_IDENTIFY_NS_FAILED:
 			/* Base Identify Namespace failed: no logical block size. */
+		case -ECLI_INVALID_LBA_FORMAT:
+			/* LBA data size too large: no logical block size. */
 		case -ECLI_INVALID_TAGS:
 			/* Reference/storage tag is invalid for this PI format. */
 		case -ECLI_INVALID_PI_FORMAT:
