@@ -463,9 +463,9 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 	json_object_add_value_array(root, "Extended-SMART-Attributes", lbafs);
 
 	for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++) {
-		struct json_object *lbaf = json_create_object();
-
 		if (ExtdSMARTInfo->vendorData[index].AttributeNumber) {
+			struct json_object *lbaf = json_create_object();
+
 			json_object_add_value_string(lbaf, "attribute_name", print_ext_smart_id(ExtdSMARTInfo->vendorData[index].AttributeNumber));
 			json_object_add_value_int(lbaf, "attribute_id", ExtdSMARTInfo->vendorData[index].AttributeNumber);
 			json_object_add_value_int(lbaf, "attribute_value", smart_attribute_vs(ExtdSMARTInfo->Version, ExtdSMARTInfo->vendorData[index]));
