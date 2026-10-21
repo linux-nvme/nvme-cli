@@ -28,7 +28,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#define FUZZ_MAX_INPUT	4096
+/* the -max_len scripts/build.sh gives libFuzzer */
+#define FUZZ_MAX_INPUT	16384
 #define FUZZ_MAX_SEEDS	256
 
 #include "fuzz.h"
@@ -102,14 +103,14 @@ static void run(const uint8_t *data, size_t size)
 	alarm(0);
 }
 
-static void load_seeds(const char *dir)
+static int load_seeds(const char *dir)
 {
 	struct dirent *e;
 	char path[4096];
 	DIR *d = opendir(dir);
 
 	if (!d)
-		return;
+		return 0;
 
 	while ((e = readdir(d)) && nr_seeds < FUZZ_MAX_SEEDS) {
 		FILE *f;
@@ -121,17 +122,26 @@ static void load_seeds(const char *dir)
 		f = fopen(path, "rb");
 		if (!f)
 			continue;
-		seeds[nr_seeds].data = malloc(FUZZ_MAX_INPUT);
+		seeds[nr_seeds].data = malloc(FUZZ_MAX_INPUT + 1);
 		if (!seeds[nr_seeds].data) {
 			fclose(f);
 			break;
 		}
-		n = fread(seeds[nr_seeds].data, 1, FUZZ_MAX_INPUT, f);
+		n = fread(seeds[nr_seeds].data, 1, FUZZ_MAX_INPUT + 1, f);
 		fclose(f);
+		/* a cut seed tests something else */
+		if (n > FUZZ_MAX_INPUT) {
+			fprintf(stderr, "%s: larger than %d bytes\n", path,
+				FUZZ_MAX_INPUT);
+			free(seeds[nr_seeds].data);
+			closedir(d);
+			return -1;
+		}
 		seeds[nr_seeds].size = n;
 		nr_seeds++;
 	}
 	closedir(d);
+	return 0;
 }
 
 /* The bytes which separate or mark things for the parsers */
@@ -220,7 +230,8 @@ int main(int argc, char **argv)
 	rng_state = seed ? strtoull(seed, NULL, 0) : 1;
 	if (!rng_state)
 		rng_state = 1;
-	load_seeds(argv[1]);
+	if (load_seeds(argv[1]))
+		return 2;
 	if (!nr_seeds) {
 		fprintf(stderr, "no seeds in %s\n", argv[1]);
 		return 2;
