@@ -1897,29 +1897,21 @@ void nvme_json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
 	obj_add_uint(valid_attrs, "cmpln_info", le16_to_cpu(sanitize_cmpln_event->cmpln_info));
 }
 
-void nvme_json_pel_set_feature(void *pevent_log_info, __u32 offset,
-			       struct json_object *valid_attrs,
-			       __le16 el, __u32 size)
+void nvme_json_pel_set_feature(void *data, __u32 len,
+			       struct json_object *valid_attrs)
 {
-	struct nvme_set_feature_event *set_feat_event = pevent_log_info + offset;
+	struct nvme_set_feature_event *set_feat_event = data;
 	int fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), SET_FEATURES_CDW10_FID);
 	int cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
-	int dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
-	unsigned char *mem_buf;
-	__u32 rel;
+	__cleanup_free unsigned char *mem_buf = NULL;
 
 	obj_add_uint_02x(valid_attrs, "feature", fid);
 	obj_add_str(valid_attrs, "name", nvme_feature_to_string(fid));
 	obj_add_uint_0nx(valid_attrs, "value", cdw11, 8);
 
-	if (NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout)) {
-		rel = 4 + dword_cnt * 4;
-		if (rel >= le16_to_cpu(el) ||
-		    offset + rel >= size)
-			return;
-		mem_buf = (unsigned char *)set_feat_event + rel;
+	mem_buf = nvme_pel_set_feature_data(data, len);
+	if (mem_buf)
 		json_feature_show_fields(fid, cdw11, mem_buf);
-	}
 }
 
 void nvme_json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
@@ -2109,9 +2101,8 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			nvme_json_pel_sanitize_completion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_json_pel_set_feature(data, 0, valid_attrs,
-						  pevent_entry_head->el,
-						  data_len);
+			nvme_json_pel_set_feature(data, el - vsil,
+						  valid_attrs);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
 			nvme_json_pel_telemetry_crt(data, 0, valid_attrs,

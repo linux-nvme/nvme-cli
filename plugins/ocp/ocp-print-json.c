@@ -1318,9 +1318,8 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			nvme_json_pel_sanitize_completion(data, 0, valid_attrs);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			nvme_json_pel_set_feature(data, 0, valid_attrs,
-						  pevent_entry_head->el,
-						  data_len);
+			nvme_json_pel_set_feature(data, el - vsil,
+						  valid_attrs);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
 			nvme_json_pel_telemetry_crt(data, 0, valid_attrs,

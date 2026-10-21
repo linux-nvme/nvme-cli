@@ -962,7 +962,9 @@ void nvme_show_pel_format_start_event(void *pevent_log_info, __u32 offset);
 void nvme_show_pel_format_completion_event(void *pevent_log_info, __u32 offset);
 void nvme_show_pel_sanitize_start_event(void *pevent_log_info, __u32 offset);
 void nvme_show_pel_sanitize_completion_event(void *pevent_log_info, __u32 offset);
-void nvme_show_pel_set_feature_event(void *pevent_log_info, __u32 offset);
+#define NVME_PEL_FEATURE_DATA_SIZE	4096
+void *nvme_pel_set_feature_data(void *data, __u32 len);
+void nvme_show_pel_set_feature_event(void *data, __u32 len);
 void nvme_show_pel_thermal_excursion_event(void *pevent_log_info, __u32 offset);
 void nvme_show_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 					 __u32 event_data_len);
@@ -990,9 +992,8 @@ void nvme_json_pel_sanitize_start(void *pevent_log_info, __u32 offset,
 				  struct json_object *valid_attrs);
 void nvme_json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
 				       struct json_object *valid_attrs);
-void nvme_json_pel_set_feature(void *pevent_log_info, __u32 offset,
-			       struct json_object *valid_attrs,
-			       __le16 el, __u32 size);
+void nvme_json_pel_set_feature(void *data, __u32 len,
+			       struct json_object *valid_attrs);
 void nvme_json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
 				 struct json_object *valid_attrs,
 				 __le16 el, __u32 size);
