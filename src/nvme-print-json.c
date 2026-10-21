@@ -3502,51 +3502,43 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 	} desc;
 	struct json_object *r = json_r;
 	struct json_object *json_array = NULL;
-	off_t off;
-	int pos, len = 0;
+	struct nvme_ns_id_desc *cur;
+	size_t pos, off;
 	int i;
 
-	for (pos = 0; pos < NVME_IDENTIFY_DATA_SIZE; pos += len) {
-		struct nvme_ns_id_desc *cur = data + pos;
+	for (pos = 0; (cur = nvme_ns_id_desc(data, pos));
+	     pos += sizeof(*cur) + cur->nidl) {
 		const char *nidt_name = NULL;
-
-		if (cur->nidl == 0)
-			break;
 
 		memset(json_str, 0, sizeof(json_str));
 		json_str_p = json_str;
 		off = pos + sizeof(*cur);
 
-		switch (cur->nidt) {
+		switch (nvme_ns_id_desc_type(cur)) {
 		case NVME_NIDT_EUI64:
 			memcpy(desc.eui64, data + off, sizeof(desc.eui64));
 			for (i = 0; i < sizeof(desc.eui64); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.eui64[i]);
-			len = sizeof(desc.eui64);
 			nidt_name = "eui64";
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(desc.nguid, data + off, sizeof(desc.nguid));
 			for (i = 0; i < sizeof(desc.nguid); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.nguid[i]);
-			len = sizeof(desc.nguid);
 			nidt_name = "nguid";
 			break;
 		case NVME_NIDT_UUID:
 			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
 			libnvme_uuid_to_string(desc.uuid, json_str);
-			len = sizeof(desc.uuid);
 			nidt_name = "uuid";
 			break;
 		case NVME_NIDT_CSI:
 			memcpy(&desc.csi, data + off, sizeof(desc.csi));
 			sprintf(json_str_p, "%#x", desc.csi);
-			len += sizeof(desc.csi);
 			nidt_name = "csi";
 			break;
 		default:
 			/* Skip unknown types */
-			len = cur->nidl;
 			break;
 		}
 
@@ -3563,8 +3555,6 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 				json_array = json_create_array();
 			array_add_obj(json_array, elem);
 		}
-
-		len += sizeof(*cur);
 	}
 
 	if (json_array)
