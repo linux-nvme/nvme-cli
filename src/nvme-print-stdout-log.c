@@ -1322,7 +1322,7 @@ static struct shr_table *stdout_fdp_config_fdpa_table(uint8_t fdpa)
 }
 
 static struct shr_table *stdout_fdp_config_ruh_list_table(
-		struct nvme_fdp_config_desc *config, uint16_t nruh)
+		struct nvme_fdp_ruh_desc *ruhs, uint16_t nruh)
 {
 	struct shr_table *t;
 
@@ -1333,7 +1333,7 @@ static struct shr_table *stdout_fdp_config_ruh_list_table(
 	shr_table_set_indent(t, 2);
 
 	for (int j = 0; j < nruh; j++) {
-		struct nvme_fdp_ruh_desc *ruh = &config->ruhs[j];
+		struct nvme_fdp_ruh_desc *ruh = &ruhs[j];
 		const char *ruht_str;
 		char name[16];
 
@@ -1365,50 +1365,53 @@ void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 	n = le16_to_cpu(log->n) + 1;
 
 	for (int i = 0; i < n; i++) {
-		struct nvme_fdp_config_desc *config =
-			(struct nvme_fdp_config_desc *)p;
+		struct nvme_fdp_config_desc config;
+		struct nvme_fdp_ruh_desc *ruhs;
 		uint16_t size, nruh, max_nruh;
 
-		if (!shr_buf_has_room(p, end, sizeof(*config)))
+		if (!shr_buf_has_room(p, end, sizeof(config)))
 			break;
+
+		/* descriptors are only 4 byte aligned */
+		memcpy(&config, p, sizeof(config));
+		ruhs = (struct nvme_fdp_ruh_desc *)(p + sizeof(config));
 
 		t = stdout_kv_table_create();
 		if (!t)
 			return;
 
-		row = stdout_kv_add(t, "FDP Attributes", "%#x", config->fdpa);
+		row = stdout_kv_add(t, "FDP Attributes", "%#x", config.fdpa);
 		if (verbose)
 			shr_table_set_row_subtable(t, row,
-				stdout_fdp_config_fdpa_table(config->fdpa));
+				stdout_fdp_config_fdpa_table(config.fdpa));
 
-		stdout_kv_add(t, "Vendor Specific Size", "%u", config->vss);
+		stdout_kv_add(t, "Vendor Specific Size", "%u", config.vss);
 		stdout_kv_add(t, "Number of Reclaim Groups", "%"PRIu32,
-			      le32_to_cpu(config->nrg));
+			      le32_to_cpu(config.nrg));
 		stdout_kv_add(t, "Number of Reclaim Unit Handles", "%"PRIu16,
-			      le16_to_cpu(config->nruh));
+			      le16_to_cpu(config.nruh));
 		stdout_kv_add(t, "Number of Namespaces Supported", "%"PRIu32,
-			      le32_to_cpu(config->nnss));
+			      le32_to_cpu(config.nnss));
 		stdout_kv_add(t, "Reclaim Unit Nominal Size", "%"PRIu64,
-			      le64_to_cpu(config->runs));
+			      le64_to_cpu(config.runs));
 		stdout_kv_add(t, "Estimated Reclaim Unit Time Limit", "%"PRIu32,
-			      le32_to_cpu(config->erutl));
+			      le32_to_cpu(config.erutl));
 
-		size = le16_to_cpu(config->size);
-		if (size < sizeof(*config) || !shr_buf_has_room(p, end, size)) {
+		size = le16_to_cpu(config.size);
+		if (size < sizeof(config) || !shr_buf_has_room(p, end, size)) {
 			stdout_kv_table_finish(t, "fdp-configs");
 			break;
 		}
 
-		nruh = le16_to_cpu(config->nruh);
-		max_nruh = (size - sizeof(*config)) /
-			   sizeof(struct nvme_fdp_ruh_desc);
+		nruh = le16_to_cpu(config.nruh);
+		max_nruh = (size - sizeof(config)) / sizeof(*ruhs);
 		if (nruh > max_nruh)
 			nruh = max_nruh;
 
 		if (nruh) {
 			row = stdout_kv_add(t, "Reclaim Unit Handle List", "");
 			shr_table_set_row_subtable(t, row,
-				stdout_fdp_config_ruh_list_table(config, nruh));
+				stdout_fdp_config_ruh_list_table(ruhs, nruh));
 		}
 
 		stdout_kv_table_finish(t, "fdp-configs");

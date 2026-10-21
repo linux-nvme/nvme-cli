@@ -2749,35 +2749,40 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 	obj_add_uint(r, "n", n);
 
 	for (int i = 0; i < n + 1; i++) {
-		struct nvme_fdp_config_desc *config = (struct nvme_fdp_config_desc *)p;
+		struct nvme_fdp_config_desc config;
+		struct nvme_fdp_ruh_desc *ruhs;
 		uint16_t nruh, size, max_nruh;
 		struct json_object *obj_config, *obj_ruhs;
 
-		if (!shr_buf_has_room(p, end, sizeof(*config)))
+		if (!shr_buf_has_room(p, end, sizeof(config)))
 			break;
 
-		size = le16_to_cpu(config->size);
-		if (size < sizeof(*config) || !shr_buf_has_room(p, end, size))
+		/* descriptors are only 4 byte aligned */
+		memcpy(&config, p, sizeof(config));
+		ruhs = (struct nvme_fdp_ruh_desc *)(p + sizeof(config));
+
+		size = le16_to_cpu(config.size);
+		if (size < sizeof(config) || !shr_buf_has_room(p, end, size))
 			break;
 
-		nruh = le16_to_cpu(config->nruh);
-		max_nruh = (size - sizeof(*config)) / sizeof(struct nvme_fdp_ruh_desc);
+		nruh = le16_to_cpu(config.nruh);
+		max_nruh = (size - sizeof(config)) / sizeof(*ruhs);
 		if (nruh > max_nruh)
 			nruh = max_nruh;
 
 		obj_config = json_create_object();
 		obj_ruhs = json_create_array();
 
-		obj_add_uint(obj_config, "fdpa", config->fdpa);
-		obj_add_uint(obj_config, "vss", config->vss);
-		obj_add_uint(obj_config, "nrg", le32_to_cpu(config->nrg));
+		obj_add_uint(obj_config, "fdpa", config.fdpa);
+		obj_add_uint(obj_config, "vss", config.vss);
+		obj_add_uint(obj_config, "nrg", le32_to_cpu(config.nrg));
 		obj_add_uint(obj_config, "nruh", nruh);
-		obj_add_uint(obj_config, "nnss", le32_to_cpu(config->nnss));
-		obj_add_uint64(obj_config, "runs", le64_to_cpu(config->runs));
-		obj_add_uint(obj_config, "erutl", le32_to_cpu(config->erutl));
+		obj_add_uint(obj_config, "nnss", le32_to_cpu(config.nnss));
+		obj_add_uint64(obj_config, "runs", le64_to_cpu(config.runs));
+		obj_add_uint(obj_config, "erutl", le32_to_cpu(config.erutl));
 
 		for (int j = 0; j < nruh; j++) {
-			struct nvme_fdp_ruh_desc *ruh = &config->ruhs[j];
+			struct nvme_fdp_ruh_desc *ruh = &ruhs[j];
 
 			struct json_object *obj_ruh = json_create_object();
 
