@@ -104,6 +104,52 @@ static inline size_t nvme_log_nr_entries(size_t nr, size_t len, size_t hdr,
 }
 
 /*
+ * The namespace identification descriptor at offset @pos of the list, or
+ * NULL where the list ends: at a descriptor of length 0, or at one which
+ * does not fit into the list. A descriptor takes its header and NIDL bytes.
+ */
+static inline struct nvme_ns_id_desc *nvme_ns_id_desc(void *data, size_t pos)
+{
+	struct nvme_ns_id_desc *cur = data + pos;
+
+	if (pos > NVME_IDENTIFY_DATA_SIZE - sizeof(*cur))
+		return NULL;
+	if (!cur->nidl ||
+	    cur->nidl > NVME_IDENTIFY_DATA_SIZE - pos - sizeof(*cur))
+		return NULL;
+
+	return cur;
+}
+
+/*
+ * Return: the type of the namespace identification descriptor @cur, or 0,
+ * a reserved type, if its length is not the one its type has.
+ */
+static inline __u8 nvme_ns_id_desc_type(const struct nvme_ns_id_desc *cur)
+{
+	__u8 len;
+
+	switch (cur->nidt) {
+	case NVME_NIDT_EUI64:
+		len = NVME_NIDT_EUI64_LEN;
+		break;
+	case NVME_NIDT_NGUID:
+		len = NVME_NIDT_NGUID_LEN;
+		break;
+	case NVME_NIDT_UUID:
+		len = NVME_NIDT_UUID_LEN;
+		break;
+	case NVME_NIDT_CSI:
+		len = NVME_NIDT_CSI_LEN;
+		break;
+	default:
+		return cur->nidt;
+	}
+
+	return cur->nidl == len ? cur->nidt : 0;
+}
+
+/*
  * The host discovery log record at offset @off of a page of @len bytes, or
  * NULL if no whole record starts there. The page ends where its header
  * says or where the buffer ends, whichever comes first. A record must hold
