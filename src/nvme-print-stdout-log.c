@@ -2346,9 +2346,10 @@ void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 {
 	size_t offset = sizeof(struct nvme_ana_log);
 	struct nvme_ana_log *hdr = ana_log;
-	struct nvme_ana_group_desc *desc;
+	struct nvme_ana_group_desc desc;
 	size_t nsid_buf_size;
 	void *base = ana_log;
+	__le32 *nsids;
 	__u32 nr_nsids;
 	struct shr_table *t;
 	int i, j;
@@ -2369,29 +2370,31 @@ void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	printf("ANA Log Desc :-\n");
 
 	for (i = 0; i < le16_to_cpu(ana_log->ngrps); i++) {
-		if (offset > len || len - offset < sizeof(*desc))
+		if (offset > len || len - offset < sizeof(desc))
 			return;
-		desc = base + offset;
-		nr_nsids = le32_to_cpu(desc->nnsids);
+		/* descriptors are only 4 byte aligned */
+		memcpy(&desc, base + offset, sizeof(desc));
+		nr_nsids = le32_to_cpu(desc.nnsids);
 		nsid_buf_size = (size_t)nr_nsids * sizeof(__le32);
-		if (len - offset - sizeof(*desc) < nsid_buf_size)
+		if (len - offset - sizeof(desc) < nsid_buf_size)
 			return;
 
-		offset += sizeof(*desc);
+		offset += sizeof(desc);
+		nsids = base + offset;
 
 		t = stdout_kv_table_create();
 		if (!t)
 			return;
 
-		stdout_kv_add(t, "grpid", "%u", le32_to_cpu(desc->grpid));
-		stdout_kv_add(t, "nnsids", "%u", le32_to_cpu(desc->nnsids));
+		stdout_kv_add(t, "grpid", "%u", le32_to_cpu(desc.grpid));
+		stdout_kv_add(t, "nnsids", "%u", le32_to_cpu(desc.nnsids));
 		stdout_kv_add(t, "chgcnt", "%"PRIu64,
-			      le64_to_cpu(desc->chgcnt));
+			      le64_to_cpu(desc.chgcnt));
 		stdout_kv_add(t, "state", "%s",
-			      nvme_ana_state_to_string(desc->state));
+			      nvme_ana_state_to_string(desc.state));
 		for (j = 0; j < nr_nsids; j++)
 			stdout_kv_add(t, "nsid", "%u",
-				      le32_to_cpu(desc->nsids[j]));
+				      le32_to_cpu(nsids[j]));
 
 		stdout_kv_table_finish(t, "ana-log group");
 

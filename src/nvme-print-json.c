@@ -870,7 +870,7 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 {
 	size_t offset = sizeof(struct nvme_ana_log);
 	struct nvme_ana_log *hdr = ana_log;
-	struct nvme_ana_group_desc *ana_desc;
+	struct nvme_ana_group_desc ana_desc;
 	struct json_object *desc_list = json_create_array();
 	struct json_object *ns_list;
 	struct json_object *desc;
@@ -878,6 +878,7 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	struct json_object *r = json_r;
 	size_t nsid_buf_size;
 	void *base = ana_log;
+	__le32 *nsids;
 	__u32 nr_nsids;
 	int i, j;
 
@@ -886,25 +887,28 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	obj_add_uint(r, "ngrps", le16_to_cpu(hdr->ngrps));
 
 	for (i = 0; i < le16_to_cpu(ana_log->ngrps); i++) {
-		if (offset > len || len - offset < sizeof(*ana_desc))
+		if (offset > len || len - offset < sizeof(ana_desc))
 			break;
-		ana_desc = base + offset;
-		nr_nsids = le32_to_cpu(ana_desc->nnsids);
+		/* descriptors are only 4 byte aligned */
+		memcpy(&ana_desc, base + offset, sizeof(ana_desc));
+		nr_nsids = le32_to_cpu(ana_desc.nnsids);
 		nsid_buf_size = (size_t)nr_nsids * sizeof(__le32);
-		if (len - offset - sizeof(*ana_desc) < nsid_buf_size)
+		if (len - offset - sizeof(ana_desc) < nsid_buf_size)
 			break;
 
 		desc = json_create_object();
-		offset += sizeof(*ana_desc);
-		obj_add_uint(desc, "grpid", le32_to_cpu(ana_desc->grpid));
-		obj_add_uint(desc, "nnsids", le32_to_cpu(ana_desc->nnsids));
-		obj_add_uint64(desc, "chgcnt", le64_to_cpu(ana_desc->chgcnt));
-		obj_add_str(desc, "state", nvme_ana_state_to_string(ana_desc->state));
+		offset += sizeof(ana_desc);
+		nsids = base + offset;
+		obj_add_uint(desc, "grpid", le32_to_cpu(ana_desc.grpid));
+		obj_add_uint(desc, "nnsids", le32_to_cpu(ana_desc.nnsids));
+		obj_add_uint64(desc, "chgcnt", le64_to_cpu(ana_desc.chgcnt));
+		obj_add_str(desc, "state",
+			    nvme_ana_state_to_string(ana_desc.state));
 
 		ns_list = json_create_array();
 		for (j = 0; j < nr_nsids; j++) {
 			nsid = json_create_object();
-			obj_add_uint(nsid, "nsid", le32_to_cpu(ana_desc->nsids[j]));
+			obj_add_uint(nsid, "nsid", le32_to_cpu(nsids[j]));
 			array_add_obj(ns_list, nsid);
 		}
 		obj_add_array(desc, "NSIDS", ns_list);
