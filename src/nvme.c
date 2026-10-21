@@ -164,10 +164,43 @@ static void __shr_destructor free_plugins(void)
 	}
 }
 
+/*
+ * Open /dev/null on the standard descriptors which are closed. Else the
+ * next descriptor nvme-cli opens, e.g. the socket to the privsep helper,
+ * becomes one of them, and the output goes there.
+ */
+static int nvme_reserve_stdio(void)
+{
+#ifndef _WIN32
+	int fd, null;
+
+	for (fd = STDIN_FILENO; fd <= STDERR_FILENO; fd++) {
+		if (fcntl(fd, F_GETFD) >= 0 || errno != EBADF)
+			continue;
+		/* the lowest free descriptor, fd */
+		null = open("/dev/null", O_RDWR);
+		if (null < 0)
+			return -errno;
+		if (null != fd) {
+			close(null);
+			return -EBADF;
+		}
+	}
+#endif
+	return 0;
+}
+
 int nvme_main(int argc, char **argv)
 {
 	struct plugin_call call = {};
 	int err;
+
+	err = nvme_reserve_stdio();
+	if (err) {
+		fprintf(stderr, "%s: cannot open /dev/null: %s\n", argv[0],
+			strerror(-err));
+		return 1;
+	}
 
 #ifdef _WIN32
 	/*

@@ -281,7 +281,7 @@ def _is_asan_binary(nvme_bin):
 
 
 def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
-             stdin_data=None, stack_limit_kb=None):
+             stdin_data=None, stack_limit_kb=None, close_fd=None):
     """Runs `nvme_bin *args` under libmock_nvme.c. Returns the completed
     subprocess.Popen result, with stdout/stderr captured as text. Callers
     check .returncode/.stdout/.stderr themselves.
@@ -290,7 +290,8 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
     commands whose output is not text ('-o binary'). Pass @stdin_data to
     feed it to stdin, e.g. to answer a confirmation prompt. Otherwise
     stdin is /dev/null. Pass @stack_limit_kb to run nvme with that
-    stack size limit."""
+    stack size limit. Pass @close_fd to run nvme with that standard
+    descriptor closed."""
     cmd = [
         nvme_bin,
         '--set-options', f'test-sysfs-dir={sysfs_dir},test-base-dir={base_dir}',
@@ -321,9 +322,10 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
     # process that, like the mock server, runs threads.
     if stack_limit_kb is not None:
         ulimit += f'ulimit -s {int(stack_limit_kb)}; '
+    close = f' {int(close_fd)}>&-' if close_fd is not None else ''
     wrapped_cmd = [
         '/bin/sh', '-c',
-        f'{ulimit}export LD_PRELOAD={shlex.quote(ld_preload)}; exec "$@"',
+        f'{ulimit}export LD_PRELOAD={shlex.quote(ld_preload)}; exec "$@"{close}',
         'nvme-mock-wrapper',
     ] + cmd
 
