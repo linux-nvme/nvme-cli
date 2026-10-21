@@ -888,13 +888,13 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	for (i = 0; i < le16_to_cpu(ana_log->ngrps); i++) {
 		if (offset > len || len - offset < sizeof(*ana_desc))
 			break;
-		desc = json_create_object();
 		ana_desc = base + offset;
 		nr_nsids = le32_to_cpu(ana_desc->nnsids);
 		nsid_buf_size = (size_t)nr_nsids * sizeof(__le32);
 		if (len - offset - sizeof(*ana_desc) < nsid_buf_size)
 			break;
 
+		desc = json_create_object();
 		offset += sizeof(*ana_desc);
 		obj_add_uint(desc, "grpid", le32_to_cpu(ana_desc->grpid));
 		obj_add_uint(desc, "nnsids", le32_to_cpu(ana_desc->nnsids));
