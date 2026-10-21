@@ -422,6 +422,9 @@ struct ibm_reported_err_event {
 };
 
 /* persistent event type deh */
+/* The vendor specific event header: its fields up to vse_data */
+#define VENDOR_SPECIFIC_EVENT_HDR_LEN	6
+
 struct nvme_pel_ibm_specific_event {
 	__le16	vsecode;
 	__u8	vsetype;
@@ -437,7 +440,6 @@ void nvme_show_ibm_persistent_event_log(void *pevent_log_info,
 		enum nvme_print_flags flags)
 {
 	__u32 offset;
-	struct nvme_pel_ibm_specific_event *vendor_speci_event;
 	struct nvme_persistent_event_log *pevent_log_head;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	int human = flags & VERBOSE;
@@ -471,46 +473,69 @@ void nvme_show_ibm_persistent_event_log(void *pevent_log_info,
 		offset += pevent_entry_head->ehl + 3;
 
 		switch (pevent_entry_head->etype) {
-		case NVME_VENDOR_SPECIFIC_EVENT:
+		case NVME_VENDOR_SPECIFIC_EVENT: {
+			struct nvme_pel_ibm_specific_event vse = {};
+			__cleanup_free __u8 *data = NULL;
+			__u32 data_len;
+
 			printf("\nPersistent Event Entries:\n");
 			printf("Event Number: %u\n", i);
 			printf("Event Type Field: 0x%X\n", pevent_entry_head->etype);
 			printf("Event Type Revision: 0x%X\n", pevent_entry_head->etype_rev);
 
-			vendor_speci_event = pevent_log_info + offset;
+			/*
+			 * The event data is not aligned, and may be shorter
+			 * than the structures read from it: read them from a
+			 * zero padded copy.
+			 */
+			data = nvme_pel_event_data(pevent_log_info, offset,
+					le16_to_cpu(pevent_entry_head->el),
+					&data_len);
+			if (!data)
+				break;
+			memcpy(&vse, data, VENDOR_SPECIFIC_EVENT_HDR_LEN);
 
 			printf("Vendor Specific Event Code: 0x%X\n",
-				le16_to_cpu(vendor_speci_event->vsecode));
+				le16_to_cpu(vse.vsecode));
 			printf("Vendor Specific Event Data Type: 0x%X\n",
-				vendor_speci_event->vsetype);
-			printf("UUID Index: %u\n", vendor_speci_event->uuid);
-			printf("VSEDL: %u\n", le16_to_cpu(vendor_speci_event->vsedl));
+				vse.vsetype);
+			printf("UUID Index: %u\n", vse.uuid);
+			printf("VSEDL: %u\n", le16_to_cpu(vse.vsedl));
 
-			if (le16_to_cpu(vendor_speci_event->vsecode) == NVME_IBM_CHG_DEF) {
-				struct ibm_change_def_event *change_def;
+			if (le16_to_cpu(vse.vsecode) == NVME_IBM_CHG_DEF) {
+				struct ibm_change_def_event change_def;
 
-				change_def = pevent_log_info + offset + 6;
-				printf("POM: %"PRIu64"\n", le64_to_cpu(change_def->pom));
-				printf("VS1: %u\n", change_def->vs1);
-				printf("VS2: %u\n", change_def->vs2);
-				printf("DP : %u\n", change_def->dp);
+				memcpy(&change_def,
+				       data + VENDOR_SPECIFIC_EVENT_HDR_LEN,
+				       sizeof(change_def));
+				printf("POM: %"PRIu64"\n",
+				       le64_to_cpu(change_def.pom));
+				printf("VS1: %u\n", change_def.vs1);
+				printf("VS2: %u\n", change_def.vs2);
+				printf("DP : %u\n", change_def.dp);
 			}
 
-			if (le16_to_cpu(vendor_speci_event->vsecode) == NVME_IBM_RPT_ERR) {
-				struct ibm_reported_err_event *report_err;
+			if (le16_to_cpu(vse.vsecode) == NVME_IBM_RPT_ERR) {
+				struct ibm_reported_err_event report_err;
 
-				report_err = pevent_log_info + offset + 6;
-				printf("POM: %"PRIu64"\n", le64_to_cpu(report_err->pom));
-				printf("TEMP: %u\n", report_err->temp);
-				printf("Retry Count: %u\n", report_err->retry_cnt);
-				printf("SC : %u\n", report_err->sc);
-				printf("SCT : %u\n", report_err->sct);
+				memcpy(&report_err,
+				       data + VENDOR_SPECIFIC_EVENT_HDR_LEN,
+				       sizeof(report_err));
+				printf("POM: %"PRIu64"\n",
+				       le64_to_cpu(report_err.pom));
+				printf("TEMP: %u\n", report_err.temp);
+				printf("Retry Count: %u\n",
+				       report_err.retry_cnt);
+				printf("SC : %u\n", report_err.sc);
+				printf("SCT : %u\n", report_err.sct);
 				printf("CMD Specific Info: %"PRIu64"\n",
-						le64_to_cpu(report_err->cmd_specific_info));
+				       le64_to_cpu(
+					report_err.cmd_specific_info));
 			}
 			ibm_event = true;
 			printf("\n");
 			break;
+		}
 		default:
 			break;
 		}
