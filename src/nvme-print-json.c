@@ -5450,25 +5450,26 @@ static void json_directive_show_fields_identify(__u8 doper, __u8 *field, struct 
 
 	switch (doper) {
 	case NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
-		support = json_create_array();
-		obj_add_array(r, "Directive support", support);
+		support = json_create_object();
+		obj_add_obj(r, "Directive support", support);
 		obj_add_str(support, "Identify Directive",
 			    *field & 0x1 ? "Supported" : "Not supported");
 		obj_add_str(support, "Stream Directive",
 			    *field & 0x2 ? "Supported" : "Not supported");
 		obj_add_str(support, "Data Placement Directive",
 			    *field & 0x4 ? "Supported" : "Not supported");
-		enabled = json_create_array();
-		obj_add_array(r, "Directive enabled", enabled);
+		enabled = json_create_object();
+		obj_add_obj(r, "Directive enabled", enabled);
 		obj_add_str(enabled, "Identify Directive",
 			    *(field + 32) & 0x1 ? "Enabled" : "Disabled");
 		obj_add_str(enabled, "Stream Directive",
 			    *(field + 32) & 0x2 ? "Enabled" : "Disabled");
 		obj_add_str(enabled, "Data Placement Directive",
 			    *(field + 32) & 0x4 ? "Enabled" : "Disabled");
-		persistent = json_create_array();
-		obj_add_array(r, "Directive Persistent Across Controller Level Resets",
-			      persistent);
+		persistent = json_create_object();
+		obj_add_obj(r,
+			    "Directive Persistent Across Controller Level Resets",
+			    persistent);
 		obj_add_str(persistent, "Identify Directive",
 			    *(field + 64) & 0x1 ? "Enabled" : "Disabled");
 		obj_add_str(persistent, "Stream Directive",
