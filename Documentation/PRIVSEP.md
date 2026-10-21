@@ -304,3 +304,7 @@ JSON document gives it nothing new.
   the print test on random device data with and without the sandbox and
   requires the same exit status, stdout and stderr, and a check in the
   print test that the sandbox is used.
+- CI: both are disabled by default, `scripts/build.sh privsep` enables
+  them and runs the tests (as a user, the privsep tests skip as root).
+  The `Build privsep` workflow runs it on Linux and, with the sandbox
+  only, on FreeBSD.

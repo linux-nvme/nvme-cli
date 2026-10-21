@@ -58,6 +58,9 @@ usage() {
     echo "  [default]           default settings"
     echo "  libdbus             build with libdbus"
     echo "  liburing            build with liburing"
+    echo "  privsep             build with privilege separation (Linux) and the"
+    echo "                      decoder sandbox; run the tests as a user, the"
+    echo "                      privsep tests skip as root"
     echo "  fallback            download all dependencies"
     echo "                      and build them as shared libraries"
     echo "  cross               use cross toolchain to build"
@@ -315,6 +318,28 @@ config_meson_liburing() {
         --buildtype="${BUILDTYPE}"              \
         -Dliburing=enabled                      \
         --prefix="${BUILDDIR}/usr"              \
+        "${BUILDDIR}"
+}
+
+# Privilege separation (Linux only) and the decoder sandbox are disabled by
+# default for now, this config builds and tests them.
+config_meson_privsep() {
+    local extra_args=()
+
+    if [ "$(uname -s)" = Linux ]; then
+        # NVME_PRIVSEP_TEST_HELPER, which the tests use, is ignored as root
+        if [ "$(id -u)" -eq 0 ]; then
+            echo "error: run the privsep config as a user, not as root" >&2
+            exit 1
+        fi
+        extra_args+=(-Dprivsep=enabled)
+    fi
+
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dsandbox=enabled                       \
+        "${extra_args[@]}"                      \
         "${BUILDDIR}"
 }
 

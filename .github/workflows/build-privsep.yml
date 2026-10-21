@@ -1,0 +1,82 @@
+---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
+name: Build privsep
+
+# Privilege separation (Linux only) and the decoder sandbox (Linux and
+# FreeBSD) are disabled by default for now. Build and test them here, so
+# they do not bitrot: scripts/build.sh privsep. See Documentation/PRIVSEP.md.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  privsep-linux:
+    name: privsep and sandbox on Linux
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/fedora:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      # The privsep tests skip as root, and the sandbox runs in process
+      # under valgrind: run them as a user, without valgrind.
+      - name: Add a user for the tests
+        run: |
+          useradd -m ci
+          chown -R ci "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          runuser -u ci -- scripts/build.sh -b debug -c gcc privsep
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        name: upload logs
+        if: failure()
+        with:
+          name: privsep logs files
+          path: |
+            .build-ci/meson-logs/*.txt
+
+  # The FreeBSD VM is slow, so as build-freebsd.yml this runs only when
+  # master is updated, not on every pull request.
+  privsep-freebsd:
+    name: sandbox on FreeBSD
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.repository == 'linux-nvme/nvme-cli') }}
+    runs-on: arc-vm-nvme-cli
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: "linux-blktests/blktests-ci"
+      - name: Build and test nvme-cli in VM
+        id: build
+        uses: ./.github/actions/kubevirt-action
+        with:
+          container_disk_image: ghcr.io/linux-nvme/blktests-freebsd-containerdisk:next
+          distro: freebsd
+          run_cmds: |
+            set -e
+            set -x
+            uname -a
+
+            sudo pkg install -y bash git meson ninja pkgconf json-c openssl
+
+            git clone https://github.com/${{ github.repository }} nvme-cli
+            cd nvme-cli
+            git checkout ${{ github.sha }}
+
+            bash scripts/build.sh -b debug -c cc privsep
