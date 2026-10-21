@@ -563,7 +563,7 @@ int sfx_nvme_get_log(struct libnvme_transport_handle *hdl, __u32 nsid, __u8 log_
 	__u32 numd = (data_len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
 
-	cmd.cdw10 = log_id | (numdl << 16);
+	cmd.cdw10 = log_id | ((__u32)numdl << 16);
 	cmd.cdw11 = numdu;
 
 	return libnvme_exec_admin_passthru(hdl, &cmd);
@@ -601,12 +601,14 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	__u32 total_bb_count = 0;
 	__u32 remap_mfbb_count = 0;
 	__u32 remap_gbb_count = 0;
-	__u64 *bb_elem;
-	__u64 *elem_end = (__u64 *)(bd_table + table_size);
+	/* the elements follow the five counts, so are not 8 byte aligned */
+	unsigned char *bb_elem;
+	unsigned char *elem_end;
+	__u64 elem;
 	__u64 i;
 
-	/*buf should at least have 8bytes for mf_bb_count & total_bb_count*/
-	if (!bd_table || table_size < sizeof(__u64))
+	/* the buffer must at least hold the five counts */
+	if (!bd_table || table_size < 5 * sizeof(__u32))
 		return;
 
 	mf_bb_count = *((__u32 *)bd_table);
@@ -614,7 +616,9 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	total_bb_count = *((__u32 *)(bd_table + 2 * sizeof(__u32)));
 	remap_mfbb_count = *((__u32 *)(bd_table + 3 * sizeof(__u32)));
 	remap_gbb_count = *((__u32 *)(bd_table + 4 * sizeof(__u32)));
-	bb_elem = (__u64 *)(bd_table + 5 * sizeof(__u32));
+	bb_elem = bd_table + 5 * sizeof(__u32);
+	elem_end = bd_table + table_size - (table_size - 5 * sizeof(__u32)) %
+		   sizeof(elem);
 
 	printf("Bad Block Table\n");
 	printf("MF_BB_COUNT:           %u\n", mf_bb_count);
@@ -626,7 +630,9 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	printf("REMAP_MFBB_TABLE [");
 	i = 0;
 	while (bb_elem < elem_end && i < remap_mfbb_count) {
-		printf(" 0x%"PRIx64"", (uint64_t)*(bb_elem++));
+		memcpy(&elem, bb_elem, sizeof(elem));
+		bb_elem += sizeof(elem);
+		printf(" 0x%"PRIx64"", (uint64_t)elem);
 		i++;
 	}
 	printf(" ]\n");
@@ -634,7 +640,9 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	printf("REMAP_GBB_TABLE [");
 	i = 0;
 	while (bb_elem < elem_end && i < remap_gbb_count) {
-		printf(" 0x%"PRIx64"", (uint64_t)*(bb_elem++));
+		memcpy(&elem, bb_elem, sizeof(elem));
+		bb_elem += sizeof(elem);
+		printf(" 0x%"PRIx64"", (uint64_t)elem);
 		i++;
 	}
 	printf(" ]\n");
