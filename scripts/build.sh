@@ -629,6 +629,8 @@ test_meson_fuzz() {
             timeout --kill-after=60 "$((seconds + 60))" \
             "${exe}" "${args[@]}" "${corpus}" > main.log 2>&1) ||
             status=$?
+        # what the device target's jobs which crashed left behind
+        rm -rf "${logs}"/fuzz-device-??????
         # Whether libFuzzer exits on its own or the timeout ends it (124,
         # or 137 after SIGKILL), the inputs it saved tell about the
         # findings. A slow unit is none.
