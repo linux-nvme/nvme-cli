@@ -6186,11 +6186,11 @@ static void json_host_discovery_log(struct nvme_host_discovery_log *log,
 	struct json_object *r = json_r;
 	__u64 i;
 	__u16 j;
-	struct nvme_host_ext_discovery_log *hedlpe;
-	struct nvmf_ext_attr *exat;
-	void *p;
-	char hostnqn[sizeof(hedlpe->hostnqn) + 1];
-	char traddr[sizeof(hedlpe->traddr) + 1];
+	struct nvme_host_ext_discovery_log hedlpe;
+	struct nvmf_ext_attr exat;
+	void *rec, *p;
+	char hostnqn[sizeof(hedlpe.hostnqn) + 1];
+	char traddr[sizeof(hedlpe.traddr) + 1];
 	__u32 thdlpl = le32_to_cpu(log->thdlpl);
 	__u32 tel;
 	__u16 numexat;
@@ -6207,51 +6207,63 @@ static void json_host_discovery_log(struct nvme_host_discovery_log *log,
 	obj_add_uint(r, "thdlpl", thdlpl);
 
 	for (i = sizeof(*log);
-	     (hedlpe = nvme_host_discovery_record(log, len, i)); i += tel) {
+	     (rec = nvme_host_discovery_record(log, len, i)); i += tel) {
+		memcpy(&hedlpe, rec, sizeof(hedlpe));
 		hedlpe_o = json_create_object();
-		tel = le32_to_cpu(hedlpe->tel);
-		numexat = le16_to_cpu(hedlpe->numexat);
+		tel = le32_to_cpu(hedlpe.tel);
+		numexat = le16_to_cpu(hedlpe.numexat);
 		snprintf(hostnqn, sizeof(hostnqn), "%-.*s",
-			 (int)sizeof(hedlpe->hostnqn), hedlpe->hostnqn);
+			 (int)sizeof(hedlpe.hostnqn), hedlpe.hostnqn);
 		snprintf(traddr, sizeof(traddr), "%-.*s",
-			 (int)sizeof(hedlpe->traddr), hedlpe->traddr);
-		obj_add_str(hedlpe_o, "trtype", libnvmf_trtype_str(hedlpe->trtype));
+			 (int)sizeof(hedlpe.traddr), hedlpe.traddr);
+		obj_add_str(hedlpe_o, "trtype",
+			    libnvmf_trtype_str(hedlpe.trtype));
 		obj_add_str(hedlpe_o, "adrfam", traddr[0] ?
-			    libnvmf_adrfam_str(hedlpe->adrfam) : "");
-		obj_add_str(hedlpe_o, "eflags", libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
+			    libnvmf_adrfam_str(hedlpe.adrfam) : "");
+		obj_add_str(hedlpe_o, "eflags",
+			    libnvmf_eflags_str(le16_to_cpu(hedlpe.eflags)));
 		obj_add_str(hedlpe_o, "hostnqn", hostnqn);
 		obj_add_str(hedlpe_o, "traddr", traddr);
 		tsas_o = json_create_object();
-		switch (hedlpe->trtype) {
+		switch (hedlpe.trtype) {
 		case NVMF_TRTYPE_RDMA:
-			obj_add_str(tsas_o, "prtype", libnvmf_prtype_str(hedlpe->tsas.rdma.prtype));
-			obj_add_str(tsas_o, "qptype", libnvmf_qptype_str(hedlpe->tsas.rdma.qptype));
-			obj_add_str(tsas_o, "cms", libnvmf_cms_str(hedlpe->tsas.rdma.cms));
-			obj_add_uint_0nx(tsas_o, "pkey", le16_to_cpu(hedlpe->tsas.rdma.pkey), 4);
+			obj_add_str(tsas_o, "prtype",
+				libnvmf_prtype_str(hedlpe.tsas.rdma.prtype));
+			obj_add_str(tsas_o, "qptype",
+				libnvmf_qptype_str(hedlpe.tsas.rdma.qptype));
+			obj_add_str(tsas_o, "cms",
+				    libnvmf_cms_str(hedlpe.tsas.rdma.cms));
+			obj_add_uint_0nx(tsas_o, "pkey",
+					 le16_to_cpu(hedlpe.tsas.rdma.pkey), 4);
 			break;
 		case NVMF_TRTYPE_TCP:
-			obj_add_str(tsas_o, "sectype", libnvmf_sectype_str(hedlpe->tsas.tcp.sectype));
+			obj_add_str(tsas_o, "sectype",
+				libnvmf_sectype_str(hedlpe.tsas.tcp.sectype));
 			break;
 		default:
-			obj_d(tsas_o, "common", (unsigned char *)hedlpe->tsas.common,
-			      sizeof(hedlpe->tsas.common), 16, 1);
+			obj_d(tsas_o, "common",
+			      (unsigned char *)hedlpe.tsas.common,
+			      sizeof(hedlpe.tsas.common), 16, 1);
 			break;
 		}
 		obj_add_obj(hedlpe_o, "tsas", tsas_o);
 		obj_add_uint(hedlpe_o, "tel", tel);
 		obj_add_uint(hedlpe_o, "numexat", numexat);
 
-		p = hedlpe->exat;
+		p = rec + sizeof(hedlpe);
 		for (j = 0; j < numexat &&
-		     (exat = nvme_host_discovery_exat(hedlpe, p)); j++) {
+		     (p = nvme_host_discovery_exat(rec, tel, p, &exat)); j++) {
 			exat_o = json_create_object();
 			snprintf(json_str, sizeof(json_str), "exat: %d", j);
-			obj_add_uint(exat_o, "exattype", le16_to_cpu(exat->exattype));
-			obj_add_uint(exat_o, "exatlen", le16_to_cpu(exat->exatlen));
-			obj_d(exat_o, "exatval", (unsigned char *)exat->exatval,
-			      le16_to_cpu(exat->exatlen), 16, 1);
+			obj_add_uint(exat_o, "exattype",
+				     le16_to_cpu(exat.exattype));
+			obj_add_uint(exat_o, "exatlen",
+				     le16_to_cpu(exat.exatlen));
+			obj_d(exat_o, "exatval",
+			      (unsigned char *)p + sizeof(exat),
+			      le16_to_cpu(exat.exatlen), 16, 1);
 			obj_add_obj(hedlpe_o, json_str, exat_o);
-			p = libnvmf_exat_ptr_next(exat);
+			p = nvme_host_discovery_exat_next(p, &exat);
 		}
 		snprintf(json_str, sizeof(json_str), "hedlpe: %d", n++);
 		obj_add_obj(r, json_str, hedlpe_o);

@@ -156,42 +156,58 @@ static inline __u8 nvme_ns_id_desc_type(const struct nvme_ns_id_desc *cur)
  * NULL if no whole record starts there. The page ends where its header
  * says or where the buffer ends, whichever comes first. A record must hold
  * at least its fixed part, and its length must not reach past the page.
+ * The length of a record need not be a multiple of 4, so a record need not
+ * be aligned: copy it before reading it.
  */
-static inline struct nvme_host_ext_discovery_log *
+static inline void *
 nvme_host_discovery_record(struct nvme_host_discovery_log *log, __u64 len,
 			   __u64 off)
 {
 	__u64 thdlpl = le32_to_cpu(log->thdlpl);
 	__u64 end = thdlpl < len ? thdlpl : len;
-	struct nvme_host_ext_discovery_log *rec;
+	void *rec;
 	__u32 tel;
 
-	if (off > end || end - off < sizeof(*rec))
+	if (off > end ||
+	    end - off < sizeof(struct nvme_host_ext_discovery_log))
 		return NULL;
 
 	rec = (void *)log + off;
-	tel = le32_to_cpu(rec->tel);
-	if (tel < sizeof(*rec) || tel > end - off)
+	tel = shr_get_unaligned_le32(rec +
+		offsetof(struct nvme_host_ext_discovery_log, tel));
+	if (tel < sizeof(struct nvme_host_ext_discovery_log) ||
+	    tel > end - off)
 		return NULL;
 
 	return rec;
 }
 
 /*
- * The extended attribute at @p of the host discovery log record @rec, or
- * NULL if it, with its value, doesn't fit the record.
+ * The extended attribute at @p of the host discovery log record @rec of
+ * @tel bytes, its header copied to @exat, or NULL if it, with its value,
+ * doesn't fit the record.
  */
-static inline struct nvmf_ext_attr *
-nvme_host_discovery_exat(struct nvme_host_ext_discovery_log *rec, void *p)
+static inline void *
+nvme_host_discovery_exat(void *rec, __u32 tel, void *p,
+			 struct nvmf_ext_attr *exat)
 {
-	void *end = (void *)rec + le32_to_cpu(rec->tel);
-	struct nvmf_ext_attr *exat = p;
+	void *end = rec + tel;
 
-	if (!shr_buf_has_room(p, end, sizeof(*exat)) ||
-	    !shr_buf_has_room(exat->exatval, end, le16_to_cpu(exat->exatlen)))
+	if (!shr_buf_has_room(p, end, sizeof(*exat)))
+		return NULL;
+	memcpy(exat, p, sizeof(*exat));
+	if (!shr_buf_has_room(p + sizeof(*exat), end,
+			      le16_to_cpu(exat->exatlen)))
 		return NULL;
 
-	return exat;
+	return p;
+}
+
+/* The extended attribute behind the one at @p, as libnvmf_exat_ptr_next() */
+static inline void *nvme_host_discovery_exat_next(void *p,
+		const struct nvmf_ext_attr *exat)
+{
+	return p + sizeof(*exat) + ((le16_to_cpu(exat->exatlen) + 3) & ~3);
 }
 
 /*

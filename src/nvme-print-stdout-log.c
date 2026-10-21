@@ -2723,9 +2723,9 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 {
 	__u64 i;
 	__u16 j;
-	struct nvme_host_ext_discovery_log *hedlpe;
-	struct nvmf_ext_attr *exat;
-	void *p;
+	struct nvme_host_ext_discovery_log hedlpe;
+	struct nvmf_ext_attr exat;
+	void *rec, *p;
 	__u32 thdlpl = le32_to_cpu(log->thdlpl);
 	__u32 tel;
 	__u16 numexat;
@@ -2745,43 +2745,44 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 	stdout_kv_table_finish(t, "host-discovery-log");
 
 	for (i = sizeof(*log);
-	     (hedlpe = nvme_host_discovery_record(log, len, i)); i += tel) {
+	     (rec = nvme_host_discovery_record(log, len, i)); i += tel) {
+		memcpy(&hedlpe, rec, sizeof(hedlpe));
 		printf("hedlpe: %d\n", n++);
-		tel = le32_to_cpu(hedlpe->tel);
-		numexat = le16_to_cpu(hedlpe->numexat);
+		tel = le32_to_cpu(hedlpe.tel);
+		numexat = le16_to_cpu(hedlpe.numexat);
 
 		t = stdout_kv_table_create();
 		if (!t)
 			return;
 
 		stdout_kv_add(t, "trtype", "%s",
-			      libnvmf_trtype_str(hedlpe->trtype));
+			      libnvmf_trtype_str(hedlpe.trtype));
 		stdout_kv_add(t, "adrfam", "%s",
-			      hedlpe->traddr[0] ?
-			      libnvmf_adrfam_str(hedlpe->adrfam) : "");
+			      hedlpe.traddr[0] ?
+			      libnvmf_adrfam_str(hedlpe.adrfam) : "");
 		stdout_kv_add(t, "eflags", "%s",
-			      libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
+			      libnvmf_eflags_str(le16_to_cpu(hedlpe.eflags)));
 		stdout_kv_add(t, "hostnqn", "%-.*s",
-			      (int)sizeof(hedlpe->hostnqn), hedlpe->hostnqn);
+			      (int)sizeof(hedlpe.hostnqn), hedlpe.hostnqn);
 		stdout_kv_add(t, "traddr", "%-.*s",
-			      (int)sizeof(hedlpe->traddr), hedlpe->traddr);
-		switch (hedlpe->trtype) {
+			      (int)sizeof(hedlpe.traddr), hedlpe.traddr);
+		switch (hedlpe.trtype) {
 		case NVMF_TRTYPE_RDMA:
 			stdout_kv_add(t, "tsas.prtype", "%s",
 				      libnvmf_prtype_str(
-						hedlpe->tsas.rdma.prtype));
+						hedlpe.tsas.rdma.prtype));
 			stdout_kv_add(t, "tsas.qptype", "%s",
 				      libnvmf_qptype_str(
-						hedlpe->tsas.rdma.qptype));
+						hedlpe.tsas.rdma.qptype));
 			stdout_kv_add(t, "tsas.cms", "%s",
-				      libnvmf_cms_str(hedlpe->tsas.rdma.cms));
+				      libnvmf_cms_str(hedlpe.tsas.rdma.cms));
 			stdout_kv_add(t, "tsas.pkey", "0x%04x",
-				      le16_to_cpu(hedlpe->tsas.rdma.pkey));
+				      le16_to_cpu(hedlpe.tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
 			stdout_kv_add(t, "tsas.sectype", "%s",
 				      libnvmf_sectype_str(
-						hedlpe->tsas.tcp.sectype));
+						hedlpe.tsas.tcp.sectype));
 			break;
 		default:
 			stdout_kv_add(t, "tsas.common", "");
@@ -2792,14 +2793,14 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 
 		stdout_kv_table_finish(t, "host-discovery-log");
 
-		if (hedlpe->trtype != NVMF_TRTYPE_RDMA &&
-		    hedlpe->trtype != NVMF_TRTYPE_TCP)
-			d((unsigned char *)hedlpe->tsas.common,
-			  sizeof(hedlpe->tsas.common), 16, 1);
+		if (hedlpe.trtype != NVMF_TRTYPE_RDMA &&
+		    hedlpe.trtype != NVMF_TRTYPE_TCP)
+			d((unsigned char *)hedlpe.tsas.common,
+			  sizeof(hedlpe.tsas.common), 16, 1);
 
-		p = hedlpe->exat;
+		p = rec + sizeof(hedlpe);
 		for (j = 0; j < numexat &&
-		     (exat = nvme_host_discovery_exat(hedlpe, p)); j++) {
+		     (p = nvme_host_discovery_exat(rec, tel, p, &exat)); j++) {
 			printf("exat: %d\n", j);
 
 			t = stdout_kv_table_create();
@@ -2807,16 +2808,16 @@ void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len)
 				return;
 
 			stdout_kv_add(t, "exattype", "%u",
-				      le16_to_cpu(exat->exattype));
+				      le16_to_cpu(exat.exattype));
 			stdout_kv_add(t, "exatlen", "%u",
-				      le16_to_cpu(exat->exatlen));
+				      le16_to_cpu(exat.exatlen));
 
 			stdout_kv_table_finish(t, "host-discovery-log");
 
 			printf("exatval:\n");
-			d((unsigned char *)exat->exatval,
-			  le16_to_cpu(exat->exatlen), 16, 1);
-			p = libnvmf_exat_ptr_next(exat);
+			d((unsigned char *)p + sizeof(exat),
+			  le16_to_cpu(exat.exatlen), 16, 1);
+			p = nvme_host_discovery_exat_next(p, &exat);
 		}
 	}
 }
