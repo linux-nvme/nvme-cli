@@ -80,11 +80,12 @@ class TestPrivsep(unittest.TestCase):
         self.server.join()
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def nvme(self, helper, *args):
+    def nvme(self, helper, *args, close_fd=None):
         env = dict(self.env)
         if helper:
             env['NVME_PRIVSEP_TEST_HELPER'] = helper
-        return run_nvme(_NVME_BIN, env, self.sysfs_dir, self.base_dir, *args)
+        return run_nvme(_NVME_BIN, env, self.sysfs_dir, self.base_dir, *args,
+                        close_fd=close_fd)
 
     def test_device_command_starts_helper(self):
         """A device command starts the helper and fails without one."""
@@ -126,6 +127,29 @@ class TestPrivsep(unittest.TestCase):
         self.assertIn(_SERIAL.decode(), result.stdout)
         self.assertEqual(result.stdout, direct.stdout)
         self.assertEqual(self.server.ioctls - direct_ioctls, direct_ioctls)
+
+    def test_closed_stdio(self):
+        """A closed standard descriptor does not become the socket to the
+        helper: nvme-cli's output would go to the helper, and a sandboxed
+        decoder, which keeps stdio, could send it requests. The helper
+        lists the descriptors of nvme-cli, which waits for it."""
+        fds = os.path.join(self.tmp_dir, 'fds')
+        wrapper = os.path.join(self.tmp_dir, 'helper-list-fds')
+        with open(wrapper, 'w', encoding='utf-8') as f:
+            f.write('#!/bin/sh\n'
+                    f'ls -l /proc/$PPID/fd > "{fds}"\n'
+                    'exec "$REAL_HELPER" "$@"\n')
+        os.chmod(wrapper, stat.S_IRWXU)
+        self.env['REAL_HELPER'] = _HELPER
+
+        for fd in (0, 1, 2):
+            result = self.nvme(wrapper, 'id-ctrl', '/dev/nvme0',
+                               close_fd=fd)
+            self.assertEqual(result.returncode, 0, fd)
+            with open(fds, encoding='utf-8') as f:
+                links = dict(line.split()[-3::2] for line in f
+                             if ' -> ' in line)
+            self.assertEqual(links.get(str(fd)), '/dev/null', fd)
 
     def test_device_opened_by_helper(self):
         """nvme-cli itself does not open the device: without the mock in
