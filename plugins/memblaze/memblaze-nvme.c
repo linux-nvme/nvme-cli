@@ -1359,7 +1359,8 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 
 		printf("Threshold for Read = %dms\n", (((result & (0xff << 8)) >> 8) + 1) * 10);
 		printf("Threshold for Write = %dms\n", (((result & (0xff << 16)) >> 16) + 1) * 10);
-		printf("Threshold for Trim = %dms\n", (((result & (0xff << 24)) >> 24) + 1) * 10);
+		printf("Threshold for Trim = %dms\n",
+		       (((result & (0xffU << 24)) >> 24) + 1) * 10);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
