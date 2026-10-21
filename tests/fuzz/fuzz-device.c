@@ -39,7 +39,7 @@
 /* the fuzz backend of libmock_nvme.c */
 void mock_fuzz_input(const uint8_t *data, size_t size);
 
-#define MAX_ARGS 12
+#define MAX_ARGS 14
 
 /*
  * Commands which read from the device and print what they got. Nothing
@@ -344,6 +344,13 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		return 0;
 
 	argv[argc++] = "nvme";
+	/*
+	 * Not the sysfs, /proc and /etc of the host: run as root, nvme-cli
+	 * would map the registers of a real controller, and an input would
+	 * do something else on a machine with one.
+	 */
+	argv[argc++] = "--set-options";
+	argv[argc++] = "test-sysfs-dir=/nonexistent/fuzz-device";
 	for (i = 0; i < 4 && commands[data[0]].argv[i]; i++)
 		argv[argc++] = (char *)commands[data[0]].argv[i];
 
