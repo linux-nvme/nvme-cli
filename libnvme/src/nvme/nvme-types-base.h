@@ -104,7 +104,7 @@
  *
  * Return: The mask value shifted
  */
-#define NVME_VAL(name) (NVME_##name##_MASK << NVME_##name##_SHIFT)
+#define NVME_VAL(name) ((__u32)NVME_##name##_MASK << NVME_##name##_SHIFT)
 
 /**
  * enum nvme_constants - A place to stash various constant nvme values
