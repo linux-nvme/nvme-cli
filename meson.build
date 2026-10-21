@@ -822,6 +822,7 @@ if want_nvme
     endif
 
     subdir('tests')
+    subdir('scripts/fuzz')
 
     if want_discoverd or want_keysd
         subdir('daemon-util')
