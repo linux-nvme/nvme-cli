@@ -6285,9 +6285,10 @@ static void json_ave_discovery_log(struct nvme_ave_discovery_log *log,
 	struct json_object *r = json_r;
 	__u64 i;
 	__u8 j;
-	struct nvme_ave_discovery_log_entry *adlpe;
-	char avenqn[sizeof(adlpe->avenqn) + 1];
-	struct nvme_ave_tr_record *atr;
+	struct nvme_ave_discovery_log_entry adlpe;
+	char avenqn[sizeof(adlpe.avenqn) + 1];
+	struct nvme_ave_tr_record atr;
+	void *rec;
 	__u32 tadlpl = le32_to_cpu(log->tadlpl);
 	__u32 tel;
 	__u8 numatr;
@@ -6302,28 +6303,32 @@ static void json_ave_discovery_log(struct nvme_ave_discovery_log *log,
 	obj_add_uint(r, "thdlpl", tadlpl);
 
 	for (i = sizeof(*log);
-	     (adlpe = nvme_ave_discovery_record(log, len, i)); i += tel) {
+	     (rec = nvme_ave_discovery_record(log, len, i)); i += tel) {
+		memcpy(&adlpe, rec, sizeof(adlpe));
 		adlpe_o = json_create_object();
-		tel = le32_to_cpu(adlpe->tel);
-		numatr = adlpe->numatr;
+		tel = le32_to_cpu(adlpe.tel);
+		numatr = adlpe.numatr;
 		snprintf(avenqn, sizeof(avenqn), "%-.*s",
-			 (int)sizeof(adlpe->avenqn), adlpe->avenqn);
+			 (int)sizeof(adlpe.avenqn), adlpe.avenqn);
 		obj_add_uint(adlpe_o, "tel", tel);
 		obj_add_str(adlpe_o, "avenqn", avenqn);
 		obj_add_uint(adlpe_o, "numatr", numatr);
 
 		/* the transport records must fit the record */
-		numatr = nvme_log_nr_entries(numatr, tel, sizeof(*adlpe),
-					     sizeof(*atr));
-		atr = adlpe->atr;
+		numatr = nvme_log_nr_entries(numatr, tel, sizeof(adlpe),
+					     sizeof(atr));
 		for (j = 0; j < numatr; j++) {
+			memcpy(&atr, rec + sizeof(adlpe) + j * sizeof(atr),
+			       sizeof(atr));
 			atr_o = json_create_object();
 			snprintf(json_str, sizeof(json_str), "atr: %d", j);
-			obj_add_str(atr_o, "aveadrfam", libnvmf_adrfam_str(atr->aveadrfam));
-			obj_add_uint(atr_o, "avetrsvcid", le16_to_cpu(atr->avetrsvcid));
-			obj_add_traddr(atr_o, "avetraddr", atr->aveadrfam, atr->avetraddr);
+			obj_add_str(atr_o, "aveadrfam",
+				    libnvmf_adrfam_str(atr.aveadrfam));
+			obj_add_uint(atr_o, "avetrsvcid",
+				     le16_to_cpu(atr.avetrsvcid));
+			obj_add_traddr(atr_o, "avetraddr", atr.aveadrfam,
+				       atr.avetraddr);
 			obj_add_obj(adlpe_o, json_str, atr_o);
-			atr++;
 		}
 		snprintf(json_str, sizeof(json_str), "adlpe: %d", n++);
 		obj_add_obj(r, json_str, adlpe_o);

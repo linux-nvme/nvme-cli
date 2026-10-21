@@ -2,6 +2,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <stddef.h>
 #include <string.h>
 
 #include <ccan/array_size/array_size.h>
@@ -14,6 +15,7 @@
 #include <shared/mem-util.h>
 #include <shared/table-util.h>
 #include <shared/uint128-util.h>
+#include <shared/unaligned-util.h>
 #include <shared/uuid-util.h>
 
 #define STR_LEN 100
@@ -195,22 +197,27 @@ nvme_host_discovery_exat(struct nvme_host_ext_discovery_log *rec, void *p)
 /*
  * The AVE discovery log record at offset @off of a page of @len bytes, or
  * NULL if no whole record starts there, as nvme_host_discovery_record().
+ * The length of a record need not be a multiple of 4, so a record need not
+ * be aligned: copy it before reading it.
  */
-static inline struct nvme_ave_discovery_log_entry *
+static inline void *
 nvme_ave_discovery_record(struct nvme_ave_discovery_log *log, __u64 len,
 			  __u64 off)
 {
 	__u64 tadlpl = le32_to_cpu(log->tadlpl);
 	__u64 end = tadlpl < len ? tadlpl : len;
-	struct nvme_ave_discovery_log_entry *rec;
+	void *rec;
 	__u32 tel;
 
-	if (off > end || end - off < sizeof(*rec))
+	if (off > end ||
+	    end - off < sizeof(struct nvme_ave_discovery_log_entry))
 		return NULL;
 
 	rec = (void *)log + off;
-	tel = le32_to_cpu(rec->tel);
-	if (tel < sizeof(*rec) || tel > end - off)
+	tel = shr_get_unaligned_le32(rec +
+		offsetof(struct nvme_ave_discovery_log_entry, tel));
+	if (tel < sizeof(struct nvme_ave_discovery_log_entry) ||
+	    tel > end - off)
 		return NULL;
 
 	return rec;

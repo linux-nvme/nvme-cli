@@ -2847,8 +2847,9 @@ void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 {
 	__u64 i;
 	__u8 j;
-	struct nvme_ave_discovery_log_entry *adlpe;
-	struct nvme_ave_tr_record *atr;
+	struct nvme_ave_discovery_log_entry adlpe;
+	struct nvme_ave_tr_record atr;
+	void *rec;
 	__u32 tadlpl = le32_to_cpu(log->tadlpl);
 	__u32 tel;
 	__u8 numatr;
@@ -2867,10 +2868,11 @@ void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 	stdout_kv_table_finish(t, "ave-discovery-log");
 
 	for (i = sizeof(*log);
-	     (adlpe = nvme_ave_discovery_record(log, len, i)); i += tel) {
+	     (rec = nvme_ave_discovery_record(log, len, i)); i += tel) {
+		memcpy(&adlpe, rec, sizeof(adlpe));
 		printf("adlpe: %d\n", n++);
-		tel = le32_to_cpu(adlpe->tel);
-		numatr = adlpe->numatr;
+		tel = le32_to_cpu(adlpe.tel);
+		numatr = adlpe.numatr;
 
 		t = stdout_kv_table_create();
 		if (!t)
@@ -2878,16 +2880,17 @@ void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 
 		stdout_kv_add(t, "tel", "%u", tel);
 		stdout_kv_add(t, "avenqn", "%-.*s",
-			      (int)sizeof(adlpe->avenqn), adlpe->avenqn);
+			      (int)sizeof(adlpe.avenqn), adlpe.avenqn);
 		stdout_kv_add(t, "numatr", "%u", numatr);
 
 		stdout_kv_table_finish(t, "ave-discovery-log");
 
 		/* the transport records must fit the record */
-		numatr = nvme_log_nr_entries(numatr, tel, sizeof(*adlpe),
-					     sizeof(*atr));
-		atr = adlpe->atr;
+		numatr = nvme_log_nr_entries(numatr, tel, sizeof(adlpe),
+					     sizeof(atr));
 		for (j = 0; j < numatr; j++) {
+			memcpy(&atr, rec + sizeof(adlpe) + j * sizeof(atr),
+			       sizeof(atr));
 			printf("atr: %d\n", j);
 
 			t = stdout_kv_table_create();
@@ -2895,15 +2898,13 @@ void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log, __u64 len)
 				return;
 
 			stdout_kv_add(t, "aveadrfam", "%s",
-				      libnvmf_adrfam_str(atr->aveadrfam));
+				      libnvmf_adrfam_str(atr.aveadrfam));
 			stdout_kv_add(t, "avetrsvcid", "%u",
-				      le16_to_cpu(atr->avetrsvcid));
-			stdout_kv_add_traddr(t, "avetraddr", atr->aveadrfam,
-					     atr->avetraddr);
+				      le16_to_cpu(atr.avetrsvcid));
+			stdout_kv_add_traddr(t, "avetraddr", atr.aveadrfam,
+					     atr.avetraddr);
 
 			stdout_kv_table_finish(t, "ave-discovery-log");
-
-			atr++;
 		}
 	}
 }
