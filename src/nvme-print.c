@@ -2198,9 +2198,13 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		break;
 	case NVME_LOG_LID_ENDURANCE_GRP_EVT: {
 		struct nvme_aggregate_endurance_group_event *end = log;
+		/* no more entries than the log holds, before size_t cuts it */
+		__u64 nr = min_t(__u64, le64_to_cpu(end->num_entries), len);
 
-		nvme_show_endurance_group_event_agg_log(end, end->num_entries, len, devname,
-							flags);
+		nvme_show_endurance_group_event_agg_log(end,
+			nvme_log_nr_entries(nr, len, sizeof(*end),
+					    sizeof(end->entries[0])),
+			len, devname, flags);
 		break;
 	}
 	case NVME_LOG_LID_MEDIA_UNIT_STATUS:
