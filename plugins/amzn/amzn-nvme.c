@@ -119,7 +119,8 @@ static void amzn_id_ctrl(__u8 *vs, struct json_object *root)
 		if (id->bdev[++len] == ' ')
 			break;
 	}
-	snprintf(bdev, len+1, "%s", id->bdev);
+	/* the field need not be terminated */
+	snprintf(bdev, len + 1, "%.*s", len, (const char *)id->bdev);
 
 	if (root) {
 		json_amzn_id_ctrl(id, bdev, root);
