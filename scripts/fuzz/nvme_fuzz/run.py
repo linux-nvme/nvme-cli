@@ -40,6 +40,12 @@ from .targets import TARGETS, Target, parse_targets, sanitizer_env
 DEADLINE_EXTRA = 60
 GRACE_SECONDS = 60
 
+# How often a job looks for the inputs the other jobs added to the shared
+# corpus, in seconds. Each time it lists and stats every file of it, and
+# the corpus grows by tens of thousands in a run: libFuzzer's default of
+# every second costs a job a tenth of its time.
+RELOAD_SECONDS = 60
+
 
 def parse_sizes(spec: str) -> tuple[int, ...]:
     """The sizes in bytes of a comma-separated list, each a number with an
@@ -287,6 +293,7 @@ def _run_target(
             f'-max_total_time={secs}',
             f'-jobs={jobs * 100}',
             f'-workers={jobs}',
+            f'-reload={RELOAD_SECONDS}',
             f'-artifact_prefix={prefix}',
             *t.libfuzzer_options(),
             str(corpus),
