@@ -107,14 +107,15 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	if (id->health[0] == 0)
 		snprintf(health, 21, "%s", "healthy");
 	else
-		snprintf(health, 21, "%s", id->health);
+		snprintf(health, 21, "%.*s", (int)sizeof(id->health),
+			 id->health);
 
-	snprintf(bl, 9, "%s", id->bl);
+	snprintf(bl, 9, "%.*s", (int)sizeof(id->bl), id->bl);
 	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", id->ww[7],
 		id->ww[6], id->ww[5], id->ww[4], id->ww[3], id->ww[2],
 		id->ww[1], id->ww[0]);
-	snprintf(mic_bl, 5, "%s", id->mic_bl);
-	snprintf(mic_fw, 5, "%s", id->mic_fw);
+	snprintf(mic_bl, 5, "%.*s", (int)sizeof(id->mic_bl), id->mic_bl);
+	snprintf(mic_fw, 5, "%.*s", (int)sizeof(id->mic_fw), id->mic_fw);
 
 	if (root) {
 		json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
