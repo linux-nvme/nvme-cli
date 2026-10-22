@@ -8,7 +8,8 @@
 
 For each target the results are in the results directory: the corpus,
 which grows across runs, the logs of the jobs and the inputs which found
-a bug, and a summary.txt of all targets.
+a bug, and a summary.txt of all targets. Each run starts with minimizing
+the corpus.
 """
 
 from __future__ import annotations
@@ -119,6 +120,68 @@ def _wait(proc: subprocess.Popen[bytes], stop: _Stop, deadline: float) -> int:
         return proc.wait()
 
 
+def _libfuzzer(
+    cmd: list[str],
+    logs: Path,
+    log_name: str,
+    env: dict[str, str],
+    stop: _Stop,
+    deadline: float | None = None,
+) -> int:
+    """Run libFuzzer in @logs, its output in @log_name there, until it
+    ends or @deadline. Returns its exit status."""
+    with open(logs / log_name, 'wb') as log:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=logs,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            env=env,
+            start_new_session=True,
+        )
+        stop.pgid = proc.pid
+        if deadline is None:
+            status = proc.wait()
+        else:
+            status = _wait(proc, stop, deadline)
+        stop.kill_all()
+    return status
+
+
+def _merge(
+    t: Target, binary: Path, corpus: Path, logs: Path, stop: _Stop
+) -> None:
+    """Keep only the inputs of @corpus which add coverage. The corpus
+    grows by each input which added some when it was found, most of which
+    later inputs reach as well, and each job loads all of it. A failed or
+    interrupted merge keeps the corpus as it is."""
+    merged = corpus.with_name(f'{corpus.name}.merge')
+    shutil.rmtree(merged, ignore_errors=True)
+    merged.mkdir()
+    before = sum(1 for _ in corpus.iterdir())
+    print(f'fuzz-{t.name}: minimizing the corpus of {before} inputs')
+    cmd = [
+        str(binary),
+        '-merge=1',
+        '-close_fd_mask=3',
+        *t.libfuzzer_options(),
+        str(merged),
+        str(corpus),
+    ]
+    # Only the coverage counts here, the jobs report the findings
+    env = sanitizer_env(dict(os.environ))
+    env['ASAN_OPTIONS'] += ':detect_leaks=0'
+    status = _libfuzzer(cmd, logs, 'merge.log', env, stop)
+    after = sum(1 for _ in merged.iterdir())
+    if status or stop.interrupted or not after:
+        print(f'fuzz-{t.name}: merge failed, the corpus stays as it is')
+        shutil.rmtree(merged)
+        return
+    shutil.rmtree(corpus)
+    merged.rename(corpus)
+    print(f'fuzz-{t.name}: {after} of {before} inputs add coverage')
+
+
 def _findings(artifacts: Path, since: float) -> list[Path]:
     """The inputs libFuzzer saved since @since. A slow unit is none."""
     return sorted(
@@ -144,6 +207,9 @@ def _run_target(
         d.mkdir(parents=True, exist_ok=True)
     # Add the seeds, but keep what earlier runs found
     copy_new(t.seeds, corpus)
+    _merge(t, binary, corpus, logs, stop)
+    if stop.interrupted:
+        return [], 0, logs
 
     # The jobs are independent processes on the shared corpus. The -fork
     # mode is newer, but the libFuzzer of clang 22 crashes in it. A job
@@ -164,18 +230,14 @@ def _run_target(
     )
     start = time.time()
     # Each job writes fuzz-<job>.log to the current directory
-    with open(logs / 'main.log', 'wb') as log:
-        proc = subprocess.Popen(
-            cmd,
-            cwd=logs,
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            env=sanitizer_env(dict(os.environ)),
-            start_new_session=True,
-        )
-        stop.pgid = proc.pid
-        status = _wait(proc, stop, time.monotonic() + seconds + DEADLINE_EXTRA)
-        stop.kill_all()
+    status = _libfuzzer(
+        cmd,
+        logs,
+        'main.log',
+        sanitizer_env(dict(os.environ)),
+        stop,
+        time.monotonic() + seconds + DEADLINE_EXTRA,
+    )
     # What jobs which crashed left behind, e.g. the sysfs of the device
     # target
     for d in logs.glob(f'fuzz-{t.name}-??????'):

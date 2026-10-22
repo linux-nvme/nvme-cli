@@ -21,12 +21,21 @@ from unittest import mock
 from nvme_fuzz import run, targets
 
 # What a libFuzzer binary does, as far as nvme-fuzz run cares: FAKE_MODE
-# says whether it finds something, ignores SIGTERM or just runs
+# says whether it finds something, ignores SIGTERM or just runs. A merge
+# keeps the inputs not named redundant-*, unless it fails.
 FAKE = f"""#!{sys.executable}
-import os, signal, sys, time
+import os, shutil, signal, sys, time
 args = [a for a in sys.argv[1:] if a.startswith('-')]
+dirs = [a for a in sys.argv[1:] if not a.startswith('-')]
 prefix = [a.split('=', 1)[1] for a in args if 'artifact_prefix' in a]
 mode = os.environ.get('FAKE_MODE', 'sleep')
+if '-merge=1' in args:
+    if mode == 'merge-fail':
+        sys.exit(1)
+    for f in os.listdir(dirs[1]):
+        if not f.startswith('redundant-'):
+            shutil.copy(os.path.join(dirs[1], f), dirs[0])
+    sys.exit(0)
 os.mkdir('fuzz-device-abcdef')
 if mode == 'crash':
     open(prefix[0] + 'crash-1234', 'wb').write(b'x')
@@ -78,6 +87,29 @@ class RunTest(unittest.TestCase):
         self.assertTrue(any((self.results / 'corpus' / 'device').iterdir()))
         logs = self.results / 'logs' / 'device'
         self.assertFalse(list(logs.glob('fuzz-device-*')))
+
+    def test_merge(self) -> None:
+        corpus = self.results / 'corpus' / 'device'
+        corpus.mkdir(parents=True)
+        (corpus / 'redundant-1').write_bytes(b'x')
+        (corpus / 'new-1').write_bytes(b'y')
+        with mock.patch.object(run, 'DEADLINE_EXTRA', 0):
+            self.assertEqual(self._run('sleep'), 0)
+        names = {f.name for f in corpus.iterdir()}
+        self.assertNotIn('redundant-1', names)
+        self.assertIn('new-1', names)
+        # the seeds
+        self.assertTrue(any(n.startswith('regress-') for n in names))
+        self.assertFalse(corpus.with_name('device.merge').exists())
+
+    def test_merge_failed(self) -> None:
+        corpus = self.results / 'corpus' / 'device'
+        corpus.mkdir(parents=True)
+        (corpus / 'redundant-1').write_bytes(b'x')
+        with mock.patch.object(run, 'DEADLINE_EXTRA', 0):
+            self.assertEqual(self._run('merge-fail'), 0)
+        self.assertTrue((corpus / 'redundant-1').exists())
+        self.assertFalse(corpus.with_name('device.merge').exists())
 
     def test_deadline(self) -> None:
         with mock.patch.object(run, 'DEADLINE_EXTRA', 0):
