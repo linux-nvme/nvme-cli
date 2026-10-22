@@ -60,7 +60,8 @@ int sldgm_get_market_log(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 	if (!raw_binary)
-		printf("Solidigm Marketing Name Log:\n%s\n", log);
+		printf("Solidigm Marketing Name Log:\n%.*s\n",
+		       (int)sizeof(log), log);
 	else
 		d_raw((unsigned char *)&log, sizeof(log));
 
