@@ -460,6 +460,7 @@ enum consume_mode {
 
 struct consume_state {
 	struct libnvme_global_ctx *ctx;
+	const struct libnvmf_config *cfg;
 	enum consume_mode mode;
 	bool connect;
 	bool no_reuse;
@@ -617,6 +618,7 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 				NVMF_DEF_DISC_TMO);
 		libnvmf_context_set_connect(fctx, st->connect);
 		libnvmf_context_set_no_reuse(fctx, st->no_reuse);
+		libnvmf_context_set_config(fctx, st->cfg, conn);
 		err = libnvmf_discover(st->ctx, fctx);
 	} else {
 		err = libnvmf_connect(st->ctx, fctx);
@@ -879,6 +881,7 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 
 	st = (struct consume_state){
 		.ctx = ctx,
+		.cfg = cfg,
 		.mode = CONSUME_ROLE_BASED,
 		.connect = connect,
 		.no_reuse = no_reuse,
