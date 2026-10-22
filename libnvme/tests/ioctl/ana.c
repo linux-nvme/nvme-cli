@@ -615,6 +615,45 @@ static void test_buffer_too_short(void)
 	free(log);
 }
 
+static void test_nnsids_too_large(void)
+{
+	struct nvme_ana_log header;
+	struct nvme_ana_group_desc group;
+	__le32 nsid;
+	__u8 log_page[sizeof(header) + sizeof(group) + sizeof(nsid)];
+	__u32 len = sizeof(log_page);
+	__u32 len_dwords = len / 4;
+	/*
+	 * The group reports more NSIDs than any buffer has room for. With a
+	 * 32 bit size_t, 0x40000001 NSIDs of 4 bytes wrap around to 4 bytes,
+	 * which fit the buffer.
+	 */
+	struct libnvme_loopback_cmd mock_admin_cmd = {
+		.opcode = nvme_admin_get_log_page,
+		.data_len = len_dwords * 4,
+		.cdw10 = (len_dwords - 1) << 16 /* NUMDL */
+		       | NVME_LOG_LID_ANA, /* LID */
+		.out_data = log_page,
+	};
+	struct nvme_ana_log *log = malloc(len);
+
+	arbitrary(log, len);
+	arbitrary(&header, sizeof(header));
+	header.ngrps = cpu_to_le16(1);
+	arbitrary(&group, sizeof(group));
+	group.nnsids = cpu_to_le32(0x40000001);
+	arbitrary(&nsid, sizeof(nsid));
+	memcpy(log_page, &header, sizeof(header));
+	memcpy(log_page + sizeof(header), &group, sizeof(group));
+	memcpy(log_page + sizeof(header) + sizeof(group), &nsid, sizeof(nsid));
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
+	check(libnvme_get_ana_log_atomic(test_hdl, false, false,
+					 log, &len, 1) == -ENOSPC,
+	      "log page succeeded");
+	libnvme_loopback_end(test_hdl);
+	free(log);
+}
+
 static void run_test(const char *test_name, void (*test_fn)(void))
 {
 	printf("Running test %s...", test_name);
@@ -645,6 +684,7 @@ int main(void)
 	RUN_TEST(buffer_too_short_chgcnt_change);
 	RUN_TEST(chgcnt_max_retries);
 	RUN_TEST(buffer_too_short);
+	RUN_TEST(nnsids_too_large);
 
 	libnvme_free_global_ctx(ctx);
 }

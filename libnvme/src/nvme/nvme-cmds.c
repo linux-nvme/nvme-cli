@@ -261,6 +261,15 @@ static int try_read_ana(struct libnvme_transport_handle *hdl,
 		memcpy(&nnsids,
 		       group + offsetof(struct nvme_ana_group_desc, nnsids),
 		       sizeof(nnsids));
+		/*
+		 * The NSIDs must fit the buffer. Check it before moving
+		 * to_read: with a 32 bit size_t, NNSIDS * 4 wraps around.
+		 */
+		if (le32_to_cpu(nnsids) >
+		    (size_t)(log_end - *to_read) / sizeof(__le32)) {
+			*may_retry = true;
+			return -ENOSPC;
+		}
 		*to_read += le32_to_cpu(nnsids) * sizeof(__le32);
 		ret = read_ana_chunk(hdl, lsp, rae,
 				     (__u8 *)log, &read, *to_read, log_end);
