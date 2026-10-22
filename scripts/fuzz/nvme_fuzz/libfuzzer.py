@@ -18,6 +18,27 @@ from pathlib import Path
 
 from .targets import sanitizer_env
 
+# nvme-fuzz run names the findings of the device target after the data
+# limit they were found with, see the data_limits of a Target
+_DATA_LIMIT = re.compile(r'data-(\d+)-')
+
+
+def is_slow_unit(path: Path) -> bool:
+    """Whether @path is a slow input libFuzzer saved, which is no
+    finding."""
+    name = _DATA_LIMIT.sub('', path.name, count=1)
+    return name.startswith('slow-unit-')
+
+
+def input_env(path: Path) -> dict[str, str]:
+    """The environment to run the input @path in: the sanitizer settings,
+    and the data limit it was found with."""
+    env = sanitizer_env(dict(os.environ))
+    m = _DATA_LIMIT.match(path.name)
+    if m:
+        env['FUZZ_DATA_LIMIT'] = m[1]
+    return env
+
 
 def replay(binary: Path, path: Path, timeout: int = 20) -> tuple[int, str]:
     """Run @binary on the input @path once. Returns the exit status, -1 on
@@ -30,7 +51,7 @@ def replay(binary: Path, path: Path, timeout: int = 20) -> tuple[int, str]:
                 f'-timeout={timeout}',
                 str(path),
             ],
-            env=sanitizer_env(dict(os.environ)),
+            env=input_env(path),
             capture_output=True,
             text=True,
             errors='replace',
@@ -79,9 +100,7 @@ def inputs_of(paths: Iterable[Path]) -> list[Path]:
     for p in paths:
         if p.is_dir():
             files += sorted(
-                f
-                for f in p.iterdir()
-                if f.is_file() and not f.name.startswith('slow-unit-')
+                f for f in p.iterdir() if f.is_file() and not is_slow_unit(f)
             )
         else:
             files.append(p)
