@@ -2927,11 +2927,12 @@ void stdout_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
 		case 1:
 		case 2:
 			snprintf(name, sizeof(name), "Descriptor %d", i);
-			stdout_kv_add(t, name, "Type: %d (%s), Address: %s",
+			stdout_kv_add(t, name, "Type: %d (%s), Address: %.*s",
 				      ma_list->mad[i].mat,
 				      ma_list->mad[i].mat == 1 ?
 				      "NVM subsystem management agent" :
 				      "fabric interface manager",
+				      (int)sizeof(ma_list->mad[i].madrs),
 				      ma_list->mad[i].madrs);
 			reserved = false;
 			break;
