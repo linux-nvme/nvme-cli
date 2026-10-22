@@ -12,9 +12,24 @@ int run_wdc_cloud_ssd_plugin_version(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin);
 
-int run_wdc_vs_internal_fw_log(int argc, char **argv,
-		struct command *command,
-		struct plugin *plugin);
+/* The options of vs-internal-log */
+struct wdc_vs_internal_fw_log_cfg {
+	char *file;
+	__u32 xfer_size;
+	__u32 data_area;
+	__u64 file_size;
+	__u64 offset;
+	int type;
+};
+
+/*
+ * These run the command on the device @hdl of @ctx, after the topology
+ * scan: the sandisk plugin runs them for older drives on the device it
+ * opened.
+ */
+int run_wdc_vs_internal_fw_log(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl,
+		struct wdc_vs_internal_fw_log_cfg *cfg);
 
 int run_wdc_vs_nand_stats(int argc, char **argv,
 		struct command *command,
@@ -36,17 +51,14 @@ int run_wdc_clear_assert_dump(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin);
 
-int run_wdc_drive_resize(int argc, char **argv,
-		struct command *command,
-		struct plugin *plugin);
+int run_wdc_drive_resize(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl, uint64_t size);
 
-int run_wdc_vs_fw_activate_history(int argc, char **argv,
-		struct command *command,
-		struct plugin *plugin);
+int run_wdc_vs_fw_activate_history(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl);
 
-int run_wdc_clear_fw_activate_history(int argc, char **argv,
-		struct command *command,
-		struct plugin *plugin);
+int run_wdc_clear_fw_activate_history(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl);
 
 int run_wdc_vs_telemetry_controller_option(int argc, char **argv,
 		struct command *command,

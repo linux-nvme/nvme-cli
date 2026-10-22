@@ -124,6 +124,8 @@ if python3.found()
             mock_cli_tests += [
                 ['json-document', 'nvme_json_document_test.py', cli_test_env,
                  30],
+                ['sndk-fallback', 'nvme_sndk_fallback_test.py', cli_test_env,
+                 30],
             ]
         endif
 
