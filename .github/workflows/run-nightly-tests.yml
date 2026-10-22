@@ -78,6 +78,9 @@ jobs:
 
             # IMPORTANT: do NOT install for coverage run
             export PATH="$PWD/.build-ci:$PATH"
+            # The test suite has a report of its own (test-coverage): only
+            # what blktests reaches goes into this one.
+            find .build-ci -name '*.gcda' -delete
 
             cd -
             git clone https://github.com/linux-blktests/blktests.git blktests
@@ -245,11 +248,56 @@ jobs:
             fi
             exit "${keysd_status}"
 
+  # The coverage of the test suite, which needs no hardware, and of the
+  # fuzz seeds alone: the inputs which found a bug and the seeds of the
+  # fuzz targets. Without the random mutations of the fuzz suite, so the
+  # reports of two nights differ only by the code.
+  test-coverage:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    env:
+      FUZZ_SECONDS: 0
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Run the test suite
+        run: |
+          mkdir -p test-results
+          # A test failure must not skip the reports.
+          test_status=0
+          scripts/build.sh -p || test_status=$?
+          cp coverage.xml test-results/coverage-tests.xml
+          echo "test_status=${test_status}" >> "${GITHUB_ENV}"
+      - name: Run the fuzz seeds
+        run: |
+          find .build-ci -name '*.gcda' -delete
+          fuzz_status=0
+          meson test -C .build-ci --suite fuzz || fuzz_status=$?
+          gcovr -r . .build-ci --xml-pretty \
+              -o test-results/coverage-fuzz-seeds.xml
+          exit $(( test_status || fuzz_status ))
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: success() || failure()
+        with:
+          name: artifact-test-coverage
+          path: |
+            test-results/
+            .build-ci/meson-logs/testlog.txt
+
+  # One upload per report, each with its flag, so that Codecov shows what
+  # each kind of test reaches.
   codecov-upload:
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
-    needs: nightly-tests
+    needs: [nightly-tests, test-coverage]
     runs-on: ubuntu-latest
     continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        flag: [blktests, nvmetests, daemons, tests, fuzz-seeds]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Download nightly coverage reports
@@ -259,20 +307,21 @@ jobs:
           path: coverage
           merge-multiple: true
 
-      - name: Collect nightly coverage reports
-        id: collect-coverage
+      - name: Find the ${{ matrix.flag }} coverage report
+        id: report
         shell: bash
         run: |
-          files=$(find coverage -type f -name 'coverage-*.xml' -print | sort | paste -sd, -)
-          echo "files=${files}" >> "${GITHUB_OUTPUT}"
+          file=$(find coverage -type f -name 'coverage-${{ matrix.flag }}.xml' -print -quit)
+          echo "file=${file}" >> "${GITHUB_OUTPUT}"
 
-      - name: Upload nightly coverage to Codecov
-        if: steps.collect-coverage.outputs.files != ''
+      - name: Upload the ${{ matrix.flag }} coverage to Codecov
+        if: steps.report.outputs.file != ''
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         env:
           CODECOV_WORKING_DIR: ${{ github.workspace }}
         with:
           root_dir: ${{ github.workspace }}
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ${{ steps.collect-coverage.outputs.files }}
+          files: ${{ steps.report.outputs.file }}
+          flags: ${{ matrix.flag }}
           fail_ci_if_error: false
