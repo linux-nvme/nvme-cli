@@ -101,6 +101,13 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 	const char *keyring;		// !access:write=custom
 	char *tls_key;			// !access:write=custom
 	const char *tls_key_identity;	// !access:write=custom
+
+	/*
+	 * Configuration and DC connection that libnvmf_discover() starts
+	 * from. Owned by the caller.
+	 */
+	const struct libnvmf_config *config;	// !access:read=none,write=none
+	const struct libnvmf_config_conn *conn;	// !access:read=none,write=none
 };
 
 /*

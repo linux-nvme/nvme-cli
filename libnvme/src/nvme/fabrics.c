@@ -47,6 +47,7 @@
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
+#include "config-ini.h"
 #include "private.h"
 #include "private-fabrics.h"
 
@@ -2199,19 +2200,37 @@ static bool nvmf_excluded(struct libnvme_global_ctx *ctx,
 }
 
 /*
- * A discovered controller gets the host secret and the keyring of the DC
- * that reported it. The controller secret and the TLS PSK belong to one
- * (host, subsystem) pair, so they are not inherited.
+ * A discovered controller gets the KX-HMAC-CHAP secrets of the
+ * configuration section with its NQN. Otherwise it gets the host secret of
+ * the DC that reported it. It always gets the keyring of that DC. The
+ * controller secret and the TLS PSK of the DC belong to the discovery
+ * subsystem, so they are not inherited.
  */
 static void dc_inherit_keys(struct libnvmf_context *fctx,
 		struct libnvme_ctrl *dc, struct libnvme_ctrl *c)
 {
-	const char *key = fctx->hostkey;
+	const char *hostkey = NULL, *ctrlkey = NULL, *keyring;
+	const struct libnvmf_config_subsys *s;
 
-	if (key || !libnvme_ctrl_get_kxchap_host_key(dc, &key, NULL))
-		libnvme_ctrl_set_kxchap_host_key(c, key);
-	if (!libnvme_ctrl_get_keyring(dc, &key, NULL))
-		libnvme_ctrl_set_keyring(c, key);
+	s = libnvmf_config_find_subsys(fctx->config, fctx->conn,
+			c->discovery_ctrl, c->subsysnqn);
+	if (s) {
+		hostkey = libnvmf_params_get(s->keys, "kxchap-secret");
+		ctrlkey = libnvmf_params_get(s->keys, "kxchap-ctrl-secret");
+	}
+
+	/* An empty value in the section resets the secret. */
+	if (!hostkey)
+		hostkey = fctx->hostkey;
+	if (!hostkey)
+		libnvme_ctrl_get_kxchap_host_key(dc, &hostkey, NULL);
+	if (hostkey && *hostkey)
+		libnvme_ctrl_set_kxchap_host_key(c, hostkey);
+	if (ctrlkey && *ctrlkey)
+		libnvme_ctrl_set_kxchap_ctrl_key(c, ctrlkey);
+
+	if (!libnvme_ctrl_get_keyring(dc, &keyring, NULL))
+		libnvme_ctrl_set_keyring(c, keyring);
 }
 
 static int nvmf_connect_disc_entry(struct libnvmf_context *fctx,

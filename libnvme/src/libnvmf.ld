@@ -23,6 +23,7 @@ LIBNVMF_3 {
 		libnvmf_config_emit_install;
 		libnvmf_config_emit_new;
 		libnvmf_config_free;
+		libnvmf_config_get_discovered_params;
 		libnvmf_config_get_hostid;
 		libnvmf_config_get_hostnqn;
 		libnvmf_config_get_hostsymname;
@@ -36,6 +37,7 @@ LIBNVMF_3 {
 		libnvmf_context_create;
 		libnvmf_context_free;
 		libnvmf_context_get_persistent;
+		libnvmf_context_set_config;
 		libnvmf_context_set_connection;
 		libnvmf_context_set_connection_from_tid;
 		libnvmf_context_set_crypto;

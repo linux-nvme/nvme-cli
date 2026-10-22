@@ -283,6 +283,234 @@ static bool test_resolve_discovered(struct libnvme_global_ctx *ctx,
 	return pass;
 }
 
+/*
+ * Sections that supply the KX-HMAC-CHAP secrets of discovered controllers.
+ * sub1 has no controller= line, sub2 has one. The drop-in is another
+ * persona with its own secret for sub1.
+ */
+static const char keys_text[] =
+	"[I/O Controller Defaults]\n"
+	"ctrl-loss-tmo = 600\n"
+	"kxchap-secret = DHHC-1:00:default:\n"
+	"[Discovery Controller]\n"
+	"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:sub1\n"
+	"kxchap-secret = DHHC-1:00:sub1-host:\n"
+	"kxchap-ctrl-secret = DHHC-1:00:sub1-ctrl:\n"
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:sub2\n"
+	"kxchap-ctrl-secret = DHHC-1:00:sub2-ctrl:\n"
+	"controller = transport=tcp;traddr=10.0.0.9;trsvcid=4420\n"
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:sub3\n"
+	"kxchap-secret =\n"
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:sub4\n"
+	"tls = true\n"
+	"[Discovery Controller]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:cdc\n"
+	"kxchap-secret = DHHC-1:00:cdc-host:\n"
+	"kxchap-ctrl-secret = DHHC-1:00:cdc-ctrl:\n"
+	"[Discovery Controller]\n"
+	"nqn = " NVME_DISC_SUBSYS_NAME "\n"
+	"kxchap-secret = DHHC-1:00:wk-host:\n";
+
+static const char keys_dropin_text[] =
+	"[Host]\n"
+	"hostnqn = nqn.2014-08.org.nvmexpress:other-host\n"
+	"hostid = 2b6f1a0e-4d39-4c5a-9a0e-0b8a3f2c1d00\n"
+	"[Discovery Controller]\n"
+	"controller = transport=tcp;traddr=10.0.0.6;trsvcid=8009\n"
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:sub1\n"
+	"kxchap-secret = DHHC-1:00:other-host:\n";
+
+/* The parameters of a discovered controller, NULL on error. */
+static const struct libnvmf_params *discovered(
+		const struct libnvmf_config *config, const char *hostnqn,
+		bool is_dc, const char *nqn)
+{
+	const struct libnvmf_params *params;
+
+	if (libnvmf_config_get_discovered_params(config, hostnqn, is_dc, nqn,
+						 &params))
+		return NULL;
+
+	return params;
+}
+
+static bool expect_keys(const char *what, const struct libnvmf_params *params,
+			const char *hostkey, const char *ctrlkey)
+{
+	const char *h = libnvmf_params_get(params, "kxchap-secret");
+	const char *c = libnvmf_params_get(params, "kxchap-ctrl-secret");
+
+	if (!params || !shr_streq0(h, hostkey) || !shr_streq0(c, ctrlkey)) {
+		printf(" - %s: secret %s, ctrl secret %s [FAIL]\n",
+		       what, h ? h : "(unset)", c ? c : "(unset)");
+		return false;
+	}
+	printf(" - %s [PASS]\n", what);
+
+	return true;
+}
+
+static bool test_get_discovered_params(struct libnvme_global_ctx *ctx,
+				       const struct fixture *fx)
+{
+	const char *top, *other, *sub1 = "nqn.2014-08.org.nvmexpress:sub1";
+	const char *cdc = "nqn.2014-08.org.nvmexpress:cdc";
+	const struct libnvmf_params *params;
+	struct conn_list list = { 0 };
+	struct libnvmf_config *config;
+	char path[352], dropin_dir[356];
+	bool pass = true;
+
+	printf("test_get_discovered_params:\n");
+
+	write_file(fx->dir, "keys.conf", keys_text);
+	snprintf(path, sizeof(path), "%s/keys.conf", fx->dir);
+	snprintf(dropin_dir, sizeof(dropin_dir), "%s.d", path);
+	shr_assert(mkdir(dropin_dir, 0755) == 0);
+	write_file(dropin_dir, "10-other.conf", keys_dropin_text);
+
+	shr_assert(!libnvmf_config_read(ctx, path, &config));
+	libnvmf_config_conn_for_each(config, collect, &list);
+	shr_assert(list.n == 3);
+	shr_assert(libnvmf_config_conn_is_dc(list.conn[0]) &&
+		   libnvmf_config_conn_is_dc(list.conn[2]));
+
+	/* The persona of a DC connection, as nvme-discoverd passes it. */
+	top = libnvmf_config_conn_get_hostnqn(list.conn[0]);
+	other = libnvmf_config_conn_get_hostnqn(list.conn[2]);
+	shr_assert(!top && other);
+
+	params = discovered(config, top, false, sub1);
+	pass &= expect_keys("a section without controller= matches", params,
+			    "DHHC-1:00:sub1-host:", "DHHC-1:00:sub1-ctrl:");
+	if (!shr_streq0(libnvmf_params_get(params, "ctrl-loss-tmo"), "600")) {
+		printf(" - the file scope defaults are kept [FAIL]\n");
+		pass = false;
+	}
+
+	pass &= expect_keys("a section with controller= matches, scope secret",
+		discovered(config, top, false,
+			"nqn.2014-08.org.nvmexpress:sub2"),
+		"DHHC-1:00:default:", "DHHC-1:00:sub2-ctrl:");
+	pass &= expect_keys("a reset secret stays reset",
+		discovered(config, top, false,
+			"nqn.2014-08.org.nvmexpress:sub3"),
+		"", NULL);
+	pass &= expect_keys("a section without a secret does not match",
+		discovered(config, top, false,
+			"nqn.2014-08.org.nvmexpress:sub4"),
+		"DHHC-1:00:default:", NULL);
+	pass &= expect_keys("no section: the file scope",
+		discovered(config, top, false,
+			"nqn.2014-08.org.nvmexpress:unknown"),
+		"DHHC-1:00:default:", NULL);
+	pass &= expect_keys("no NQN: the file scope",
+		discovered(config, top, false,
+			NULL),
+		"DHHC-1:00:default:", NULL);
+	pass &= expect_keys("a [Subsystem] does not match a DC",
+		discovered(config, top, true, sub1),
+		NULL, NULL);
+
+	pass &= expect_keys("a DC with a unique NQN",
+		discovered(config, top, true, cdc),
+		"DHHC-1:00:cdc-host:", "DHHC-1:00:cdc-ctrl:");
+	pass &= expect_keys("the well-known NQN never matches",
+		discovered(config, top, true,
+			NVME_DISC_SUBSYS_NAME),
+		NULL, NULL);
+
+	pass &= expect_keys("another persona uses the section of its file",
+		discovered(config, other, false,
+			sub1),
+		"DHHC-1:00:other-host:", NULL);
+	pass &= expect_keys("another persona's section does not match",
+		discovered(config, other, false,
+			"nqn.2014-08.org.nvmexpress:sub2"),
+		"DHHC-1:00:default:", NULL);
+
+	if (libnvmf_config_get_discovered_params(config,
+			"nqn.2014-08.org.nvmexpress:no-such-host", false,
+			sub1, &params) != -ENOENT) {
+		printf(" - an unknown persona [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - an unknown persona has none [PASS]\n");
+	}
+
+	libnvmf_config_free(config);
+	rm_file(dropin_dir, "10-other.conf");
+	rmdir(dropin_dir);
+	rm_file(fx->dir, "keys.conf");
+
+	return pass;
+}
+
+/* Two sections with the same NQN: their secrets are combined. */
+static const char dup_text[] =
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:dup\n"
+	"kxchap-secret = DHHC-1:00:dup-host:\n"
+	"controller = transport=tcp;traddr=10.0.0.9;trsvcid=4420\n"
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:dup\n"
+	"kxchap-secret = DHHC-1:00:dup-host:\n"
+	"kxchap-ctrl-secret = DHHC-1:00:dup-ctrl:\n"
+	"controller = transport=tcp;traddr=10.0.0.10;trsvcid=4420\n"
+	"[Discovery Controller]\n"
+	"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
+	"[Discovery Controller]\n"
+	"controller = transport=tcp;traddr=10.0.0.6;trsvcid=8009\n";
+
+static const char dup_conflict_text[] =
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:dup\n"
+	"kxchap-secret = DHHC-1:00:dup-host:\n"
+	"[Subsystem]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:dup\n"
+	"kxchap-secret = DHHC-1:00:other:\n";
+
+static bool test_duplicate_nqn(struct libnvme_global_ctx *ctx,
+			       const struct fixture *fx)
+{
+	struct libnvmf_config *config;
+	char path[352];
+	bool pass = true;
+
+	printf("test_duplicate_nqn:\n");
+
+	snprintf(path, sizeof(path), "%s/dup.conf", fx->dir);
+
+	write_file(fx->dir, "dup.conf", dup_text);
+	if (libnvmf_config_read(ctx, path, &config)) {
+		printf(" - same NQN, same secrets is accepted [FAIL]\n");
+		pass = false;
+	} else {
+		pass &= expect_keys("same NQN, same secrets: combined",
+			discovered(config, NULL,
+				false, "nqn.2014-08.org.nvmexpress:dup"),
+			"DHHC-1:00:dup-host:", "DHHC-1:00:dup-ctrl:");
+		libnvmf_config_free(config);
+	}
+
+	write_file(fx->dir, "dup.conf", dup_conflict_text);
+	if (libnvmf_config_read(ctx, path, &config) != -EINVAL) {
+		printf(" - same NQN, different secrets [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - same NQN, different secrets is rejected [PASS]\n");
+	}
+	rm_file(fx->dir, "dup.conf");
+
+	return pass;
+}
+
 static const char host_only_text[] =
 	"[Host]\n"
 	"hostnqn = nqn.2014-08.org.nvmexpress:solo-host\n"
@@ -988,6 +1216,7 @@ out:
 static bool test_edge_cases(struct libnvme_global_ctx *ctx,
 			    const struct fixture *fx)
 {
+	const struct libnvmf_params *params;
 	struct conn_list list = { 0 };
 	struct libnvmf_config *config;
 	char missing[320];
@@ -1042,9 +1271,17 @@ static bool test_edge_cases(struct libnvme_global_ctx *ctx,
 	} else {
 		printf(" - NULL-tolerant getters [PASS]\n");
 	}
+	if (libnvmf_config_get_discovered_params(NULL, NULL, true, "nqn",
+						 &params) != -EINVAL) {
+		printf(" - discovered params of a NULL config [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - discovered params of a NULL config: -EINVAL [PASS]\n");
+	}
 	libnvmf_config_conn_for_each(NULL, collect, NULL);
 	libnvmf_params_for_each(NULL, NULL, NULL);
 	libnvmf_config_free(NULL);
+	libnvmf_context_set_config(NULL, NULL, NULL);
 	printf(" - NULL iteration and free are no-ops [PASS]\n");
 
 	return pass;
@@ -1062,6 +1299,8 @@ int main(void)
 
 	pass &= test_read(ctx, &fx);
 	pass &= test_resolve_discovered(ctx, &fx);
+	pass &= test_get_discovered_params(ctx, &fx);
+	pass &= test_duplicate_nqn(ctx, &fx);
 	pass &= test_top_level_host(ctx, &fx);
 	pass &= test_persona_validation(ctx, &fx);
 	pass &= test_validate(ctx, &fx);

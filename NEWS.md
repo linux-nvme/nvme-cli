@@ -435,6 +435,17 @@
   example, `libnvme3 >= 3.2`. The ABI version and the soname
   (`libnvme3.so.1`) do not change.
 
+* A discovered controller gets the KX-HMAC-CHAP secrets
+  (`kxchap-secret`, `kxchap-ctrl-secret`) of the `[Subsystem]` or
+  `[Discovery Controller]` section in `nvme-fabrics.conf` with the same
+  NQN, in the file of the Discovery Controller that reported it. This
+  applies to `nvme connect-all` and nvme-discoverd. A section with no
+  `controller =` line now has a use: it holds the secrets of a
+  subsystem, wherever discovery finds it. Two sections with the same
+  NQN in one file that set different secrets are rejected. New
+  `libnvmf_config_get_discovered_params()` and
+  `libnvmf_context_set_config()`.
+
 ### nvme-keysd
 
 * New daemon, nvme-keysd, a technology preview: it will put NVMe/TCP
