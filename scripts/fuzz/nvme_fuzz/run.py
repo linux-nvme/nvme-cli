@@ -9,7 +9,8 @@
 For each target the results are in the results directory: the corpus,
 which grows across runs, the logs of the jobs and the inputs which found
 a bug, and a summary.txt of all targets. Each run starts with minimizing
-the corpus.
+the corpus, for the device target after adding the seeds of the mock
+tests (see nvme-fuzz seeds).
 
 The device target runs in stages of equal time, with more device data in
 each: its findings are named data-<limit>-*, and check and triage replay
@@ -30,6 +31,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import FrameType
 
+from . import seeds
 from .libfuzzer import copy_new, is_slow_unit
 from .targets import TARGETS, Target, parse_targets, sanitizer_env
 
@@ -91,6 +93,12 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
         help='the bytes of device data an input of the device target gets, '
         'in stages of equal time '
         f'({_sizes(TARGETS["device"].data_limits)})',
+    )
+    p.add_argument(
+        '--no-mock-seeds',
+        action='store_true',
+        help='do not add the seeds of the mock tests to the corpus of the '
+        'device target',
     )
 
 
@@ -234,6 +242,7 @@ def _run_target(
     seconds: int,
     jobs: int,
     data_limits: tuple[int, ...] | None,
+    mock_seeds: Path | None,
     stop: _Stop,
 ) -> tuple[list[Path], int, Path]:
     corpus = results / 'corpus' / t.name
@@ -244,6 +253,9 @@ def _run_target(
         d.mkdir(parents=True, exist_ok=True)
     # Add the seeds, but keep what earlier runs found
     copy_new(t.seeds, corpus)
+    # The build of the mock tests whose answers seed the device target
+    if mock_seeds and t.name == 'device':
+        seeds.add_seeds(mock_seeds, corpus)
     _merge(t, binary, corpus, logs, stop)
     if stop.interrupted:
         return [], 0, logs
@@ -339,6 +351,7 @@ def main(args: argparse.Namespace) -> int:
                 args.seconds,
                 args.jobs,
                 args.data_limits,
+                None if args.no_mock_seeds else args.build_dir,
                 stop,
             )
             if found:

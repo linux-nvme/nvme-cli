@@ -177,16 +177,23 @@ def write_seeds(records: Path, corpus: Path) -> tuple[int, int, int]:
     return len(files), new, len(seen)
 
 
-def main(args: argparse.Namespace) -> int:
-    results: Path = args.results or args.build_dir / 'fuzz'
-    corpus = results / 'corpus' / 'device'
+def add_seeds(
+    build_dir: Path, corpus: Path, records: Path | None = None
+) -> None:
+    """Add the seeds of the mock tests of @build_dir to @corpus, or of the
+    records in @records."""
     with tempfile.TemporaryDirectory(prefix='nvme-fuzz-records-') as tmp:
-        records: Path = args.records or Path(tmp)
-        if not args.records:
-            _record(args.build_dir, records)
+        if not records:
+            records = Path(tmp)
+            _record(build_dir, records)
         n, new, nr_cmds = write_seeds(records, corpus)
     print(
         f'{n} runs of the mock tests, {new} new seeds of {nr_cmds} '
         f'commands in {corpus}'
     )
+
+
+def main(args: argparse.Namespace) -> int:
+    results: Path = args.results or args.build_dir / 'fuzz'
+    add_seeds(args.build_dir, results / 'corpus' / 'device', args.records)
     return 0

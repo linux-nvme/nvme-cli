@@ -18,7 +18,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from nvme_fuzz import run, targets
+from nvme_fuzz import run, seeds, targets
 
 # What a libFuzzer binary does, as far as nvme-fuzz run cares: FAKE_MODE
 # says whether it finds something, ignores SIGTERM or just runs. A merge
@@ -77,6 +77,7 @@ class RunTest(unittest.TestCase):
             jobs=1,
             targets=[targets.TARGETS['device']],
             data_limits=data_limits,
+            no_mock_seeds=True,
         )
         with mock.patch.dict(os.environ, {'FAKE_MODE': mode}):
             return run.main(args)
@@ -110,6 +111,29 @@ class RunTest(unittest.TestCase):
         self.assertEqual(
             self._summary().count('SUMMARY: AddressSanitizer: x'), 2
         )
+
+    def test_mock_seeds(self) -> None:
+        def add_seeds(build_dir: Path, corpus: Path) -> None:
+            self.assertEqual(build_dir, self.build)
+            (corpus / 'mock-1').write_bytes(b'm')
+
+        args = argparse.Namespace(
+            build_dir=self.build,
+            results=self.results,
+            seconds=1,
+            jobs=1,
+            targets=[targets.TARGETS['device']],
+            data_limits=(1 << 20,),
+            no_mock_seeds=False,
+        )
+        with (
+            mock.patch.object(run, 'DEADLINE_EXTRA', 0),
+            mock.patch.object(seeds, 'add_seeds', add_seeds),
+        ):
+            self.assertEqual(run.main(args), 0)
+        # added ahead of the merge, which keeps it
+        corpus = self.results / 'corpus' / 'device'
+        self.assertTrue((corpus / 'mock-1').exists())
 
     def test_merge(self) -> None:
         corpus = self.results / 'corpus' / 'device'
