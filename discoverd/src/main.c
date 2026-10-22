@@ -600,8 +600,9 @@ static bool should_connect(const struct conn_scan *scan,
  * Resolved connect parameters for @t: a statically configured connection's
  * own params, or — for anything discoverd found on its own (NBFT, DLP, FC
  * kickstart) — the discovered-controller defaults for the scope @via_dc
- * was learned through (NULL if @t has no configured parent DC either).
- * See libnvmf_config_resolve_discovered() in <nvme/config.h>.
+ * was learned through (NULL if @t has no configured parent DC either),
+ * with the KX-HMAC-CHAP secrets of the section that has @t's NQN.
+ * See libnvmf_config_get_discovered_params() in <nvme/config.h>.
  */
 static const struct libnvmf_params *params_for(
 		const struct libnvmf_tid *t, bool is_dc,
@@ -609,13 +610,18 @@ static const struct libnvmf_params *params_for(
 {
 	const struct libnvmf_config_conn *conn =
 		inventory_config_conn_for(ctx.inventory, t);
+	const struct libnvmf_params *params;
 
 	if (conn)
 		return libnvmf_config_conn_get_params(conn);
 	if (!ctx.fabrics_cfg)
 		return NULL;
-	return libnvmf_config_resolve_discovered(ctx.fabrics_cfg, via_dc,
-						 is_dc);
+	if (libnvmf_config_get_discovered_params(ctx.fabrics_cfg,
+			libnvmf_config_conn_get_hostnqn(via_dc), is_dc,
+			libnvmf_tid_get_subsysnqn(t), &params))
+		return NULL;
+
+	return params;
 }
 
 static void dlp_fetch(struct active_ctrl *e);
