@@ -470,6 +470,8 @@ struct print_ops {
 				  __u64 len);
 	void (*pull_model_ddc_req_log)(struct nvme_pull_model_ddc_req_log *log,
 				       __u64 len);
+	void (*voltage_meas_log)(struct nvme_voltage_measurement_log *log,
+				 __u32 size);
 
 	/* libnvme tree print functions */
 	void (*list_item)(struct libnvme_ns *n, struct shr_table *t);
@@ -925,6 +927,8 @@ void nvme_show_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list,
 				  nvme_print_flags_t flags);
 void nvme_show_power_meas_log(struct nvme_power_meas_log *log, __u32 size,
 			      nvme_print_flags_t flags);
+void nvme_show_voltage_meas_log(struct nvme_voltage_measurement_log *log,
+				__u32 size, nvme_print_flags_t flags);
 void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *info,
 					 nvme_print_flags_t flags);
 void nvme_show_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log,

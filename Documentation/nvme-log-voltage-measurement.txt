@@ -1,0 +1,47 @@
+nvme-log-voltage-measurement(1)
+===============================
+
+NAME
+----
+nvme-log-voltage-measurement - Retrieve Voltage Measurement Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log voltage-measurement' <device> [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieve the Voltage Measurement Log (Log Identifier 27h) from an NVMe
+device, show it. With the --verbose option, the bit fields of the
+attributes and timestamps are described in detail.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Dump the whole log page in its raw binary format to stdout.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Retrieve and show the Voltage Measurement Log
++
+------------
+# nvme log voltage-measurement /dev/nvme0
+------------
+
+* Also describe the attribute bit fields
++
+------------
+# nvme log voltage-measurement /dev/nvme0 --verbose
+------------
+
+NVME
+----
+Part of the nvme-user suite.

@@ -263,6 +263,13 @@ if python3.found()
             ]
         endif
 
+        if 'log' in selected_plugins
+            mock_cli_tests += [
+                ['voltage-measurement-log',
+                 'nvme_voltage_measurement_log_test.py', cli_test_env, 60],
+            ]
+        endif
+
         if 'id' in selected_plugins and 'log' in selected_plugins and \
            'feat' in selected_plugins
             mock_cli_tests += [

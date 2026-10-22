@@ -160,6 +160,7 @@ adoc_sources_man1 = [
     'nvme-log-supported-cap-config',
     'nvme-log-supported-pages',
     'nvme-log-telemetry',
+    'nvme-log-voltage-measurement',
     'nvme-mangoboost-id-ctrl',
     'nvme-memblaze-clear-error-log',
     'nvme-memblaze-get-pm-status',

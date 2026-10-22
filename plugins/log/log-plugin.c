@@ -2285,6 +2285,88 @@ static int get_power_measurement_log(int argc, char **argv, struct command *acmd
 	return err;
 }
 
+static int get_voltage_measurement_log(int argc, char **argv,
+				       struct command *acmd,
+				       struct plugin *plugin)
+{
+	const char *desc = "Retrieve Voltage Measurement Log (Log ID 0x27) "
+		"for the given device in either decoded format (default), "
+		"json, or binary.";
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_libnvme_free struct nvme_voltage_measurement_log *log = NULL;
+	struct libnvme_passthru_cmd cmd;
+	nvme_print_flags_t flags;
+	__u32 min_log_size = sizeof(struct nvme_voltage_measurement_log);
+	__u32 log_size;
+	int err = -1;
+
+	struct config {
+		bool	raw_binary;
+	};
+
+	struct config cfg = {
+		.raw_binary	= false,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_output),
+		OPT_END()
+	};
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	flags = nvme_args.output_flags;
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	if (nvme_args.verbose)
+		flags |= VERBOSE;
+
+	/* First read the header to discover the full log size */
+	log = libnvme_alloc(min_log_size);
+	if (!log)
+		return -ENOMEM;
+
+	nvme_init_get_log_voltage_measurement(&cmd, log, min_log_size);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	if (err) {
+		nvme_show_err(err, "voltage-measurement-log");
+		return err;
+	}
+
+	log_size = le32_to_cpu(log->vmlsz);
+
+	if (log_size < min_log_size)
+		log_size = min_log_size;
+	if (log_size > LOG_NO_LEN_MAX_LEN)
+		log_size = LOG_NO_LEN_MAX_LEN;
+
+	/* If the log is larger, re-read with full size */
+	if (log_size > min_log_size) {
+		void *p = libnvme_realloc(log, log_size);
+
+		if (!p)
+			return -ENOMEM;
+		log = p;
+
+		nvme_init_get_log_voltage_measurement(&cmd, log, log_size);
+		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+		if (err) {
+			nvme_show_err(err, "voltage-measurement-log");
+			return err;
+		}
+	}
+
+	nvme_show_voltage_meas_log(log, log_size, flags);
+
+	return err;
+}
+
 /*
  * Read @len bytes of a log at @offset into the buffer @log of @size bytes,
  * and advance @offset past them. The buffer grows as needed, at least to
@@ -3043,6 +3125,12 @@ static struct command power_measurement_cmd = {
 	.fn = get_power_measurement_log,
 };
 
+static struct command voltage_measurement_cmd = {
+	.name = "voltage-measurement",
+	.help = "Retrieve Voltage Measurement Log, show it",
+	.fn = get_voltage_measurement_log,
+};
+
 static struct command sanitize_cmd = {
 	.name = "sanitize",
 	.help = "Retrieve sanitize log, show it",
@@ -3082,6 +3170,7 @@ static struct command *commands[] = {
 	&ave_discovery_cmd,
 	&pull_model_ddc_req_cmd,
 	&power_measurement_cmd,
+	&voltage_measurement_cmd,
 	&sanitize_cmd,
 	NULL,
 };

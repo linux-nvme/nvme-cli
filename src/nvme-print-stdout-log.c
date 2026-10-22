@@ -3230,3 +3230,237 @@ void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 		}
 	}
 }
+
+/* @scale is a Voltage Sample Scale (VOLSS) value */
+static char *stdout_voltage_str(__u16 volts, __u8 scale)
+{
+	char *s = NULL;
+	int ret;
+
+	switch (scale & 0x3) {
+	case 1:
+		ret = asprintf(&s, "%u.%03u V", volts / 1000, volts % 1000);
+		break;
+	case 2:
+		ret = asprintf(&s, "%u.%02u V", volts / 100, volts % 100);
+		break;
+	default:
+		ret = asprintf(&s, "%u (reserved scale)", volts);
+		break;
+	}
+
+	return ret < 0 ? NULL : s;
+}
+
+static struct shr_table *stdout_voltage_meas_log_vma_table(__u8 vma)
+{
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[0:0]", !!(vma & NVME_VOLTAGE_MEASUREMENT_VMA_VME),
+			"Voltage Measurement Enable");
+	stdout_bits_add(t, "[1:1]",
+			!!(vma & NVME_VOLTAGE_MEASUREMENT_VMA_IVOLTS),
+			"Interval Voltage Timestamp Support");
+	stdout_bits_add(t, "[3:2]", NVME_VOLTAGE_MEASUREMENT_VMA_VSM(vma),
+			"Voltage Sensor Measured");
+	stdout_bits_add(t, "[4:4]", !!(vma & NVME_VOLTAGE_MEASUREMENT_VMA_VMC),
+			"Voltage Measurement Counted");
+
+	return t;
+}
+
+static struct shr_table *stdout_voltage_meas_log_vsi_table(__u16 vsi)
+{
+	__cleanup_free char *vssv_str = NULL;
+	struct shr_table *t;
+	__u16 vssv = NVME_VOLTAGE_MEASUREMENT_VSI_VSSV(vsi);
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	if (asprintf(&vssv_str, "%u.%02u V", vssv * 5 / 100,
+		     vssv * 5 % 100) < 0)
+		vssv_str = NULL;
+	stdout_bits_add(t, "[11:0]", vssv, "Voltage Sensor Supply Value: %s",
+			vssv_str ?: "-");
+	stdout_bits_add(t, "[13:12]", NVME_VOLTAGE_MEASUREMENT_VSI_VSSL(vsi),
+			"Voltage Sensor Supply Label");
+	stdout_bits_add(t, "[15:14]", NVME_VOLTAGE_MEASUREMENT_VSI_VSSS(vsi),
+			"Voltage Sensor Sample Scale");
+
+	return t;
+}
+
+static struct shr_table *stdout_voltage_meas_log_ovol_table(__u16 ovol,
+							    __u8 scale)
+{
+	__cleanup_free char *movv_str = NULL;
+	__u16 movv = NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV(ovol);
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	movv_str = stdout_voltage_str(movv, scale);
+	stdout_bits_add(t, "[13:0]", movv, "Maximum Overvoltage Value: %s",
+			movv_str ?: "-");
+	stdout_bits_add(t, "[14:14]",
+			!!(ovol & NVME_VOLTAGE_MEASUREMENT_OVOL_OVV),
+			"Overvoltage Valid");
+
+	return t;
+}
+
+static struct shr_table *stdout_voltage_meas_log_uvol_table(__u16 uvol,
+							    __u8 scale)
+{
+	__cleanup_free char *muvv_str = NULL;
+	__u16 muvv = NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV(uvol);
+	struct shr_table *t;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	if (muvv != NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_MASK)
+		muvv_str = stdout_voltage_str(muvv, scale);
+	stdout_bits_add(t, "[13:0]", muvv, "Minimum Undervoltage Value: %s",
+			muvv_str ?: "not measured");
+	stdout_bits_add(t, "[14:14]",
+			!!(uvol & NVME_VOLTAGE_MEASUREMENT_UVOL_UVV),
+			"Undervoltage Valid");
+
+	return t;
+}
+
+static void stdout_voltage_meas_log_percent_error(struct shr_table *t,
+						  const char *name, __u8 pe)
+{
+	if (pe == 0xff)
+		stdout_kv_add(t, name, "not reported");
+	else
+		stdout_kv_add(t, name, "%u%%", pe);
+}
+
+void stdout_voltage_meas_log(struct nvme_voltage_measurement_log *log,
+			     __u32 size)
+{
+	__u8 vma = log->vma;
+	__u16 vsi = le16_to_cpu(log->vsi);
+	__u16 nvmde = le16_to_cpu(log->nvmde);
+	__u16 vlvss = le16_to_cpu(log->vlvss);
+	__u16 ovol = le16_to_cpu(log->ovol);
+	__u16 uvol = le16_to_cpu(log->uvol);
+	__u8 scale = NVME_VOLTAGE_MEASUREMENT_VSI_VSSS(vsi);
+	__cleanup_free char *ovlt_str = NULL;
+	__cleanup_free char *uvlt_str = NULL;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
+	struct shr_table *t;
+	size_t vs_off;
+	__u16 i;
+	int row;
+
+	printf("Voltage Measurement Log\n");
+
+	t = stdout_kv_table_create();
+	if (!t)
+		return;
+
+	stdout_kv_add(t, "Voltage Measurement Generation Number", "%u",
+		      log->vmgn);
+	row = stdout_kv_add(t, "Voltage Measurement Attributes", "%#04x", vma);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_voltage_meas_log_vma_table(vma));
+
+	row = stdout_kv_add(t, "Voltage Sensor Info", "%#06x", vsi);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_voltage_meas_log_vsi_table(vsi));
+
+	stdout_kv_add(t, "Log Size (bytes)", "%u", le32_to_cpu(log->vmlsz));
+	stdout_kv_add(t, "Number of Voltage Measurement Descriptors Supported",
+		      "%u", le16_to_cpu(log->nvmds));
+	stdout_kv_add(t, "Number of Voltage Measurement Descriptors Entries",
+		      "%u", nvmde);
+	stdout_kv_add(t, "Stop Voltage Measurement Time Remaining (minutes)",
+		      "%u", le16_to_cpu(log->svmtr));
+	row = stdout_kv_add(t, "Stop Voltage Measurement Timestamp", "%s",
+			    stdout_format_timestamp(log->svmts.timestamp));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_power_meas_log_ts_table(log->svmts.attr));
+
+	stdout_kv_add(t, "Controller Identifier", "%u",
+		      le16_to_cpu(log->cntlid));
+	stdout_kv_add(t, "Voltage Log Vendor Specific Size (bytes)", "%u",
+		      vlvss);
+
+	row = stdout_kv_add(t, "Overvoltage", "%#06x", ovol);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_voltage_meas_log_ovol_table(ovol, scale));
+	stdout_kv_add(t, "Overvoltage Count", "%u", le16_to_cpu(log->ovc));
+	ovlt_str = stdout_voltage_str(le16_to_cpu(log->ovlt), scale);
+	stdout_kv_add(t, "Overvoltage Log Threshold", "%s", ovlt_str ?: "-");
+	row = stdout_kv_add(t, "Overvoltage Timestamp", "%s",
+			    stdout_format_timestamp(log->ovts.timestamp));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_power_meas_log_ts_table(log->ovts.attr));
+	stdout_voltage_meas_log_percent_error(t,
+		"Interval Overvoltage Percent Error", log->iovpe);
+
+	row = stdout_kv_add(t, "Undervoltage", "%#06x", uvol);
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_voltage_meas_log_uvol_table(uvol, scale));
+	stdout_kv_add(t, "Undervoltage Count", "%u", le16_to_cpu(log->uvc));
+	uvlt_str = stdout_voltage_str(le16_to_cpu(log->uvlt), scale);
+	stdout_kv_add(t, "Undervoltage Log Threshold", "%s", uvlt_str ?: "-");
+	row = stdout_kv_add(t, "Undervoltage Timestamp", "%s",
+			    stdout_format_timestamp(log->uvts.timestamp));
+	if (verbose)
+		shr_table_set_row_subtable(t, row,
+			stdout_power_meas_log_ts_table(log->uvts.attr));
+	stdout_voltage_meas_log_percent_error(t,
+		"Interval Undervoltage Percent Error", log->iuvpe);
+
+	stdout_kv_table_finish(t, "voltage-meas-log");
+
+	/* the descriptors the buffer holds */
+	vs_off = sizeof(*log) + (size_t)nvmde * sizeof(log->ivmd[0]);
+	nvmde = nvme_log_nr_entries(nvmde, size, sizeof(*log),
+				    sizeof(log->ivmd[0]));
+	for (i = 0; i < nvmde; i++) {
+		__u16 ivmd = le16_to_cpu(log->ivmd[i]);
+		__cleanup_free char *volv_str = NULL;
+
+		printf("Interval Voltage Measurement Descriptor [%u]:\n", i);
+
+		t = stdout_kv_table_create();
+		if (!t)
+			return;
+
+		shr_table_set_indent(t, 2);
+
+		volv_str = stdout_voltage_str(
+			NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV(ivmd), scale);
+		stdout_kv_add(t, "Voltage Value", "%s", volv_str ?: "-");
+		stdout_kv_add(t, "Non Contiguous Voltage Measurement", "%u",
+			      !!(ivmd & NVME_VOLTAGE_MEASUREMENT_IVMD_NCVM));
+
+		stdout_kv_table_finish(t, "voltage-meas-log");
+	}
+
+	if (vlvss && vs_off + vlvss <= size) {
+		printf("Voltage Log Vendor Specific:\n");
+		d((unsigned char *)log + vs_off, vlvss, 16, 1);
+	}
+}
