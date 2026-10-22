@@ -321,7 +321,9 @@ UBSan finding like a crash; Ctrl-C stops the run. The results are in
 `.build-fuzz/fuzz` (`--results` selects another directory): `summary.txt`, and
 per target the logs of the jobs in `logs/<target>/`, the inputs which found a
 bug in `artifacts/<target>/` and the corpus in `corpus/<target>/`, which starts
-with the seeds and grows across runs.
+with the seeds and grows across runs. Each run first minimizes the corpus to
+the inputs which add coverage (libFuzzer's `-merge=1`): every job loads all of
+it.
 
 `triage` replays the findings of a target and groups them by the bug they hit:
 the kind of finding and the first nvme-cli frame. For the `device` target, it
