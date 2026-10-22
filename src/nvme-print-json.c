@@ -6043,6 +6043,7 @@ static void json_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
 	struct json_object *mad;
 	struct json_object *mat;
 	char json_str[STR_LEN];
+	char madrs[sizeof(ma_list->mad[0].madrs) + 1];
 
 	for (i = 0; i < ARRAY_SIZE(ma_list->mad); i++) {
 		switch (ma_list->mad[i].mat) {
@@ -6054,7 +6055,10 @@ static void json_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
 				    "NVM subsystem management agent" : "fabric interface manager");
 			snprintf(json_str, sizeof(json_str), "type: %d", ma_list->mad[i].mat);
 			obj_add_obj(mad, json_str, mat);
-			obj_add_str(mad, "address", (const char *)ma_list->mad[i].madrs);
+			snprintf(madrs, sizeof(madrs), "%-.*s",
+				 (int)sizeof(ma_list->mad[i].madrs),
+				 ma_list->mad[i].madrs);
+			obj_add_str(mad, "address", madrs);
 			snprintf(json_str, sizeof(json_str), "descriptor: %d", i);
 			obj_add_obj(r, json_str, mad);
 			reserved = false;
