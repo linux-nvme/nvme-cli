@@ -781,6 +781,34 @@ PyObject *config_defaults(struct libnvme_global_ctx *ctx, const char *file)
 	return dict;
 }
 
+PyObject *config_discovered_params(struct libnvme_global_ctx *ctx,
+				   const char *nqn, bool is_dc,
+				   const char *hostnqn, const char *file)
+{
+	__cleanup_config struct libnvmf_config *config = NULL;
+	const struct libnvmf_params *params;
+	int ret;
+
+	ret = libnvmf_config_read(ctx, file, &config);
+	if (ret < 0) {
+		PyErr_Format(PyExc_OSError, "config_discovered_params failed: %s",
+			     strerror(-ret));
+		return NULL;
+	}
+
+	ret = libnvmf_config_get_discovered_params(config, hostnqn, is_dc, nqn,
+						   &params);
+	if (ret == -ENOENT)
+		Py_RETURN_NONE;
+	if (ret < 0) {
+		PyErr_Format(PyExc_OSError, "config_discovered_params failed: %s",
+			     strerror(-ret));
+		return NULL;
+	}
+
+	return _config_params_to_dict(params);
+}
+
 PyObject *config_host(struct libnvme_global_ctx *ctx, const char *file)
 {
 	__cleanup_config struct libnvmf_config *config = NULL;
@@ -1337,8 +1365,8 @@ PyObject *config_read(struct libnvme_global_ctx *ctx, const char *file = NULL);
 		"These are the defaults for a controller with no configured\n"
 		"origin -- one found over mDNS, or learned from a discovery\n"
 		"log page -- taken from the top-level file. A drop-in's own\n"
-		"overlay is not included: a controller discovered at runtime\n"
-		"cannot be attributed to a drop-in.\n"
+		"overlay is not included. config_discovered_params() gives\n"
+		"the parameters for a drop-in.\n"
 		"\n"
 		"Args:\n"
 		"    file: Path to the main configuration file, or None for\n"
@@ -1351,6 +1379,39 @@ PyObject *config_read(struct libnvme_global_ctx *ctx, const char *file = NULL);
 		config_defaults;
 PyObject *config_defaults(struct libnvme_global_ctx *ctx,
 			  const char *file = NULL);
+
+%exception config_discovered_params {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+%feature("autodoc", "Read the connection parameters of a discovered "
+		"controller from a configuration.\n"
+		"\n"
+		"The parameters come from the file whose [Host] section has\n"
+		"hostnqn: the defaults of that file for a discovery\n"
+		"controller or an I/O controller. If the file also has a\n"
+		"[Discovery Controller] (is_dc True) or [Subsystem] (is_dc\n"
+		"False) section with nqn, its kxchap-secret and\n"
+		"kxchap-ctrl-secret replace the defaults.\n"
+		"\n"
+		"Args:\n"
+		"    nqn: NQN of the discovered controller, or None.\n"
+		"    is_dc: True for a discovery controller.\n"
+		"    hostnqn: Host NQN that selects the file, or None for the\n"
+		"             top-level file. For a controller found through\n"
+		"             a discovery controller, the host NQN of that\n"
+		"             discovery controller's connection.\n"
+		"    file: Path to the main configuration file, or None for\n"
+		"          the default.\n"
+		"\n"
+		"Returns:\n"
+		"    A dict of parameters, or None when no file of the\n"
+		"    configuration has hostnqn.")
+		config_discovered_params;
+PyObject *config_discovered_params(struct libnvme_global_ctx *ctx,
+				   const char *nqn, bool is_dc = false,
+				   const char *hostnqn = NULL,
+				   const char *file = NULL);
 
 %exception config_host {
 	$action

@@ -444,7 +444,8 @@
   subsystem, wherever discovery finds it. Two sections with the same
   NQN in one file that set different secrets are rejected. New
   `libnvmf_config_get_discovered_params()` and
-  `libnvmf_context_set_config()`.
+  `libnvmf_context_set_config()`, and `config_discovered_params()` in
+  the Python bindings.
 
 ### nvme-keysd
 
