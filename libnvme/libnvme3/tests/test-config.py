@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Unit tests for the connection configuration read-side Python bindings
-(nvme.config_read() / nvme.config_defaults() / nvme.config_host() /
-nvme.config_validate()).
+(nvme.config_read() / nvme.config_defaults() / nvme.config_discovered_params() /
+nvme.config_host() / nvme.config_validate()).
 
 Each test points at a throwaway file under /tmp -- the config file is reached
 by an explicit path, so no sandbox rerouting (set_test_base_dir()) is needed,
@@ -256,6 +256,77 @@ controller = transport=tcp;traddr=192.168.1.20;trsvcid=4420
         conn, = nvme.config_read(self.ctx, self.conf)
         self.assertEqual(conn['params']['ctrl-loss-tmo'], '1800')
         self.assertEqual(conn['params']['reconnect-delay'], '20')
+
+
+class TestConfigDiscovered(unittest.TestCase):
+    """The parameters of a controller discovered under a persona."""
+
+    _HOSTNQN = 'nqn.2014-08.org.nvmexpress:uuid:aaaaaaaa-0000-0000-0000-000000000001'
+    _SUB1 = 'nqn.2024-01.com.example:data.vol1'
+
+    def setUp(self):
+        self.ctx = nvme.GlobalCtx()
+        self.tmpdir = tempfile.TemporaryDirectory(prefix='nvme-config-test-',
+                                                    dir='/tmp')
+        self.conf = os.path.join(self.tmpdir.name, 'nvme-fabrics.conf')
+        _write(self.conf, f"""
+[I/O Controller Defaults]
+ctrl-loss-tmo = 600
+
+[Subsystem]
+nqn                = {self._SUB1}
+kxchap-secret      = DHHC-1:00:top-host:
+kxchap-ctrl-secret = DHHC-1:00:top-ctrl:
+""")
+        dropin_dir = self.conf + '.d'
+        os.mkdir(dropin_dir)
+        _write(os.path.join(dropin_dir, 'persona.conf'), f"""
+[Host]
+hostnqn = {self._HOSTNQN}
+hostid  = aaaaaaaa-0000-0000-0000-000000000001
+
+[I/O Controller Defaults]
+ctrl-loss-tmo = 1800
+
+[Subsystem]
+nqn           = {self._SUB1}
+kxchap-secret = DHHC-1:00:dropin-host:
+""")
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+        self.ctx = None
+
+    def test_top_level_persona(self):
+        self.assertEqual(
+            nvme.config_discovered_params(self.ctx, self._SUB1, False, None,
+                                   self.conf),
+            {'ctrl-loss-tmo': '600',
+             'kxchap-secret': 'DHHC-1:00:top-host:',
+             'kxchap-ctrl-secret': 'DHHC-1:00:top-ctrl:'})
+
+    def test_drop_in_persona(self):
+        self.assertEqual(
+            nvme.config_discovered_params(self.ctx, self._SUB1, False,
+                                   self._HOSTNQN, self.conf),
+            {'ctrl-loss-tmo': '1800',
+             'kxchap-secret': 'DHHC-1:00:dropin-host:'})
+
+    def test_no_section_gives_the_defaults(self):
+        self.assertEqual(
+            nvme.config_discovered_params(self.ctx, 'nqn.2024-01.com.example:other',
+                                   False, None, self.conf),
+            {'ctrl-loss-tmo': '600'})
+        self.assertEqual(
+            nvme.config_discovered_params(self.ctx, self._SUB1, True, None,
+                                   self.conf),
+            {})
+
+    def test_unknown_persona_returns_none(self):
+        self.assertIsNone(
+            nvme.config_discovered_params(self.ctx, self._SUB1, False,
+                                   'nqn.2014-08.org.nvmexpress:none',
+                                   self.conf))
 
 
 class TestConfigHost(unittest.TestCase):
