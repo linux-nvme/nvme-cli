@@ -323,7 +323,8 @@ per target the logs of the jobs in `logs/<target>/`, the inputs which found a
 bug in `artifacts/<target>/` and the corpus in `corpus/<target>/`, which starts
 with the seeds and grows across runs. Each run first minimizes the corpus to
 the inputs which add coverage (libFuzzer's `-merge=1`): every job loads all of
-it.
+it. Before that, it adds the seeds of the mock tests of the build to the
+corpus of the `device` target (see `seeds` below, `--no-mock-seeds` skips it).
 
 The `device` target runs in stages of equal time with more device data per
 input in each: 16 KiB, 64 KiB, 256 KiB and 1 MiB, the default of the device
