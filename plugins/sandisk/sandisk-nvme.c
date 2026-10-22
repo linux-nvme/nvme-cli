@@ -567,7 +567,15 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	}
 
 	/* Fallback to WDC plugin if otherwise not supported */
-	return run_wdc_vs_internal_fw_log(argc, argv, command, plugin);
+	return run_wdc_vs_internal_fw_log(ctx, hdl,
+		&(struct wdc_vs_internal_fw_log_cfg) {
+			.file = cfg.file,
+			.xfer_size = cfg.xfer_size,
+			.data_area = cfg.data_area,
+			.file_size = cfg.file_size,
+			.offset = cfg.offset,
+			.type = cfg.type,
+		});
 
 out:
 	return ret;
@@ -811,7 +819,7 @@ static int sndk_drive_resize(int argc, char **argv,
 					__func__, ret, (uint64_t)result);
 	} else {
 		/* Fallback to WDC plugin command if otherwise not supported */
-		return run_wdc_drive_resize(argc, argv, command, plugin);
+		return run_wdc_drive_resize(ctx, hdl, cfg.size);
 	}
 
 	nvme_show_status(ret);
@@ -1160,7 +1168,7 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 		}
 	} else
 		/* Fall back to the wdc plugin command */
-		ret = run_wdc_vs_fw_activate_history(argc, argv, command, plugin);
+		ret = run_wdc_vs_fw_activate_history(ctx, hdl);
 
 	return ret;
 }
@@ -1210,7 +1218,7 @@ static int sndk_clear_fw_activate_history(int argc, char **argv,
 		}
 	} else
 		/* Fall back to the wdc plugin command */
-		ret = run_wdc_clear_fw_activate_history(argc, argv, command, plugin);
+		ret = run_wdc_clear_fw_activate_history(ctx, hdl);
 
 	return ret;
 }
