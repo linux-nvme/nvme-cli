@@ -12,7 +12,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import build, check, coverage, run, triage
+from . import build, check, coverage, run, seeds, triage
 from .targets import SOURCE_ROOT
 
 COMMANDS = {
@@ -21,6 +21,7 @@ COMMANDS = {
     'triage': triage,
     'check': check,
     'coverage': coverage,
+    'seeds': seeds,
 }
 
 
