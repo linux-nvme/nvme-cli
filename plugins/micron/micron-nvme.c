@@ -1516,26 +1516,28 @@ C6_log_page[] = {
 
 static void print_smart_cloud_health_log(__u8 *buf, bool is_json, enum eDriveModel eModel)
 {
+	__cleanup_json_object struct json_object *stats = NULL;
 	struct json_object *root = NULL;
 	struct json_object *logPages = NULL;
-	struct json_object *stats = NULL;
+	const char *name = NULL;
 	int field_count = 0;
 
-	if (eModel == M51CX)
+	if (eModel == M51CX) {
 		field_count = ARRAY_SIZE(ocp_c0_log_page);
-	else if (eModel == M51BY || eModel == M51CY)
+		name = "OCP SMART Cloud Health Log: 0xC0";
+	} else if (eModel == M51BY || eModel == M51CY) {
 		field_count = ARRAY_SIZE(datacenter_c0_log_page);
+		name = "OCP DataCenter SMART Health Log: 0xC0";
+	}
 
 	if (is_json) {
 		root = json_create_object();
 		stats = json_create_object();
-		logPages = json_create_array();
-		if (eModel == M51BY || eModel == M51CY)
-			json_object_add_value_array(root, "OCP DataCenter SMART Health Log: 0xC0",
-						logPages);
-		else if (eModel == M51CX)
-			json_object_add_value_array(root, "OCP SMART Cloud Health Log: 0xC0",
-						logPages);
+		/* no layout of the other models, e.g. M6003 and M6004 */
+		if (name) {
+			logPages = json_create_array();
+			json_object_add_value_array(root, name, logPages);
+		}
 	}
 
 	if (eModel == M51BY || eModel == M51CY)
@@ -1544,7 +1546,10 @@ static void print_smart_cloud_health_log(__u8 *buf, bool is_json, enum eDriveMod
 		generic_structure_parser(buf, ocp_c0_log_page, field_count, stats, 0, NULL);
 
 	if (is_json) {
-		json_array_add_value_object(logPages, stats);
+		if (logPages) {
+			json_array_add_value_object(logPages, stats);
+			stats = NULL;
+		}
 		json_print_object(root, NULL);
 		printf("\n");
 		json_free_object(root);
