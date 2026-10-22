@@ -3,6 +3,10 @@
 fs = import('fs')
 
 selected_plugins = get_option('plugins')
+# The sandisk plugin runs the commands of the wdc one for older drives
+if 'sandisk' in selected_plugins and 'wdc' not in selected_plugins
+    selected_plugins += 'wdc'
+endif
 
 plugin_sources = []
 enabled_plugins = []
