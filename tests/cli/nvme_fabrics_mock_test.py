@@ -1300,6 +1300,54 @@ class FabricsMockCLITest(unittest.TestCase):
         secrets = sorted(c['dhchap_secret'] for c in self._ctrls_for(subsys))
         self.assertEqual(secrets, sorted([self._KEY_A, self._KEY_C]))
 
+    def test_connect_all_config_section_keys_for_discovered_ctrls(self):
+        """A discovered controller gets the secrets of the section with its
+        NQN, also behind a referral. A secret the section does not set
+        comes from the DC, but never the DC's controller secret (#4167)."""
+        io_d = "nqn.2014-08.org.nvmexpress:secret-io-D"
+        io_e = "nqn.2014-08.org.nvmexpress:secret-io-E"
+        referral = "nqn.2014-08.org.nvmexpress:dc-secret-referral"
+        config = Path(self.base_dir) / 'nvme-fabrics.conf'
+        config.write_text(
+            "[Discovery Controller]\n"
+            f"kxchap-secret = {self._KEY_A}\n"
+            "controller = transport=tcp;traddr=192.168.174.1;trsvcid=8009\n"
+            "[Subsystem]\n"
+            f"nqn = {io_d}\n"
+            f"kxchap-secret = {self._KEY_B}\n"
+            f"kxchap-ctrl-secret = {self._KEY_C}\n"
+            "[Discovery Controller]\n"
+            f"nqn = {referral}\n"
+            f"kxchap-ctrl-secret = {self._KEY_C}\n")
+        self.server.discovery_entries = [
+            {'transport': 'tcp', 'traddr': '192.168.174.2',
+             'trsvcid': '4420', 'subsysnqn': io_d},
+            {'transport': 'tcp', 'traddr': '192.168.174.3',
+             'trsvcid': '4420', 'subsysnqn': io_e},
+            {'transport': 'tcp', 'traddr': '192.168.174.4',
+             'trsvcid': '8009', 'subsysnqn': referral},
+        ]
+        self.server.discovery_map = {
+            referral: [
+                {'transport': 'tcp', 'traddr': '192.168.174.5',
+                 'trsvcid': '4420', 'subsysnqn': io_d},
+            ],
+        }
+
+        self._run('connect-all', '-J', str(config), '--hostnqn', self._HOSTNQN)
+
+        io_d_ctrls = self._ctrls_for(io_d)
+        self.assertEqual(len(io_d_ctrls), 2)
+        for ctrl in io_d_ctrls:
+            self.assertEqual(ctrl['dhchap_secret'], self._KEY_B)
+            self.assertEqual(ctrl['dhchap_ctrl_secret'], self._KEY_C)
+        ctrl = self._only_ctrl_for(io_e)
+        self.assertEqual(ctrl['dhchap_secret'], self._KEY_A)
+        self.assertIsNone(ctrl['dhchap_ctrl_secret'])
+        ctrl = self._only_ctrl_for(referral)
+        self.assertEqual(ctrl['dhchap_secret'], self._KEY_A)
+        self.assertEqual(ctrl['dhchap_ctrl_secret'], self._KEY_C)
+
 if __name__ == '__main__':
     # If called standalone, strip the arguments parsed by FabricsMockCLITest
     # and run standard unittest main.
