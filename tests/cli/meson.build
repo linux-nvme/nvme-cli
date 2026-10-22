@@ -118,6 +118,15 @@ if python3.found()
             ]
         endif
 
+        # A command of the sandisk plugin which falls back to the wdc one
+        if 'sandisk' in selected_plugins and 'wdc' in selected_plugins and \
+           json_c_dep.found()
+            mock_cli_tests += [
+                ['json-document', 'nvme_json_document_test.py', cli_test_env,
+                 30],
+            ]
+        endif
+
         if 'id' in selected_plugins
             test('nvme-cli - usage',
                  python3,
