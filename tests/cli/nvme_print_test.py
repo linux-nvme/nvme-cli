@@ -142,7 +142,7 @@ _LOG = ['supported-pages', 'smart', 'ana', 'fw', 'endurance', 'effects',
         'rotational-media-info', 'dispersed-ns-participating-nss',
         'reachability-groups', 'reachability-associations',
         'host-discovery', 'ave-discovery', 'pull-model-ddc-req',
-        'power-measurement', 'sanitize']
+        'power-measurement', 'voltage-measurement', 'sanitize']
 _FEAT = ['arbitration', 'power-mgmt', 'temp-thresh', 'volatile-wc',
          'num-queues', 'timestamp', 'hctm', 'host-behavior-support',
          'perf-characteristics', 'power-limit', 'power-thresh', 'power-meas',

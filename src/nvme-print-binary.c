@@ -377,6 +377,12 @@ static void binary_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 	d_raw((unsigned char *)log, size);
 }
 
+static void binary_voltage_meas_log(struct nvme_voltage_measurement_log *log,
+				    __u32 size)
+{
+	d_raw((unsigned char *)log, size);
+}
+
 static void binary_feature_show(enum nvme_features_id fid, int sel,
 				unsigned int result, void *buf, __u32 data_len)
 {
@@ -436,6 +442,7 @@ static struct print_ops binary_print_ops = {
 	.smart_log			= binary_smart_log,
 	.supported_cap_config_list_log	= binary_supported_cap_config_log,
 	.supported_log_pages		= binary_supported_log,
+	.voltage_meas_log		= binary_voltage_meas_log,
 	.zns_start_zone_list		= NULL,
 	.zns_changed_zone_log		= binary_zns_changed,
 	.zns_finish_zone_list		= NULL,

@@ -126,6 +126,7 @@ static const struct {
 	{ { "log", "ave-discovery" } },
 	{ { "log", "pull-model-ddc-req" } },
 	{ { "log", "power-measurement" } },
+	{ { "log", "voltage-measurement" } },
 	{ { "log", "sanitize" } },
 	{ { "get-feature" }, "--feature-id" },
 	{ { "zns", "id-ctrl" } },

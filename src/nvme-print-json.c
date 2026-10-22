@@ -5764,6 +5764,83 @@ static void json_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 	obj_add_obj(r, "descs", descs);
 }
 
+static void json_voltage_meas_log(struct nvme_voltage_measurement_log *log,
+				  __u32 size)
+{
+	struct json_object *r = json_r;
+	struct json_object *ivmds;
+	struct json_object *ts_obj;
+	__u8 vma = log->vma;
+	__u16 vsi = le16_to_cpu(log->vsi);
+	__u16 nvmde = le16_to_cpu(log->nvmde);
+	__u16 ovol = le16_to_cpu(log->ovol);
+	__u16 uvol = le16_to_cpu(log->uvol);
+	__u16 i;
+
+	obj_add_uint(r, "vmgn", log->vmgn);
+	obj_add_uint(r, "vma", vma);
+	obj_add_uint(r, "vme", !!(vma & NVME_VOLTAGE_MEASUREMENT_VMA_VME));
+	obj_add_uint(r, "ivolts",
+		     !!(vma & NVME_VOLTAGE_MEASUREMENT_VMA_IVOLTS));
+	obj_add_uint(r, "vsm", NVME_VOLTAGE_MEASUREMENT_VMA_VSM(vma));
+	obj_add_uint(r, "vmc", !!(vma & NVME_VOLTAGE_MEASUREMENT_VMA_VMC));
+	obj_add_uint(r, "vsi", vsi);
+	obj_add_uint(r, "vssv", NVME_VOLTAGE_MEASUREMENT_VSI_VSSV(vsi));
+	obj_add_uint(r, "vssl", NVME_VOLTAGE_MEASUREMENT_VSI_VSSL(vsi));
+	obj_add_uint(r, "vsss", NVME_VOLTAGE_MEASUREMENT_VSI_VSSS(vsi));
+	obj_add_uint(r, "vmlsz", le32_to_cpu(log->vmlsz));
+	obj_add_uint(r, "nvmds", le16_to_cpu(log->nvmds));
+	obj_add_uint(r, "nvmde", nvmde);
+	obj_add_uint(r, "svmtr", le16_to_cpu(log->svmtr));
+
+	ts_obj = json_create_object();
+	json_timestamp(ts_obj, &log->svmts);
+	obj_add_obj(r, "svmts", ts_obj);
+
+	obj_add_uint(r, "cntlid", le16_to_cpu(log->cntlid));
+	obj_add_uint(r, "vlvss", le16_to_cpu(log->vlvss));
+
+	obj_add_uint(r, "ovol", ovol);
+	obj_add_uint(r, "movv", NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV(ovol));
+	obj_add_uint(r, "ovv", !!(ovol & NVME_VOLTAGE_MEASUREMENT_OVOL_OVV));
+	obj_add_uint(r, "ovc", le16_to_cpu(log->ovc));
+	obj_add_uint(r, "ovlt", le16_to_cpu(log->ovlt));
+
+	ts_obj = json_create_object();
+	json_timestamp(ts_obj, &log->ovts);
+	obj_add_obj(r, "ovts", ts_obj);
+
+	obj_add_uint(r, "iovpe", log->iovpe);
+
+	obj_add_uint(r, "uvol", uvol);
+	obj_add_uint(r, "muvv", NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV(uvol));
+	obj_add_uint(r, "uvv", !!(uvol & NVME_VOLTAGE_MEASUREMENT_UVOL_UVV));
+	obj_add_uint(r, "uvc", le16_to_cpu(log->uvc));
+	obj_add_uint(r, "uvlt", le16_to_cpu(log->uvlt));
+
+	ts_obj = json_create_object();
+	json_timestamp(ts_obj, &log->uvts);
+	obj_add_obj(r, "uvts", ts_obj);
+
+	obj_add_uint(r, "iuvpe", log->iuvpe);
+
+	/* the descriptors the buffer holds */
+	nvmde = nvme_log_nr_entries(nvmde, size, sizeof(*log),
+				    sizeof(log->ivmd[0]));
+	ivmds = json_create_array();
+	for (i = 0; i < nvmde; i++) {
+		struct json_object *ivmd = json_create_object();
+		__u16 v = le16_to_cpu(log->ivmd[i]);
+
+		obj_add_uint(ivmd, "volv",
+			     NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV(v));
+		obj_add_uint(ivmd, "ncvm",
+			     !!(v & NVME_VOLTAGE_MEASUREMENT_IVMD_NCVM));
+		json_object_array_add(ivmds, ivmd);
+	}
+	obj_add_obj(r, "ivmd", ivmds);
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -5815,6 +5892,7 @@ static struct print_ops json_print_ops = {
 	.smart_log			= json_smart_log,
 	.supported_cap_config_list_log	= json_supported_cap_config_log,
 	.supported_log_pages		= json_support_log,
+	.voltage_meas_log		= json_voltage_meas_log,
 	.zns_start_zone_list		= json_zns_start_zone_list,
 	.zns_changed_zone_log		= json_zns_changed,
 	.zns_finish_zone_list		= json_zns_finish_zone_list,

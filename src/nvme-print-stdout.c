@@ -3735,6 +3735,7 @@ struct print_ops stdout_print_ops = {
 	.smart_log			= stdout_smart_log,
 	.supported_cap_config_list_log	= stdout_supported_cap_config_log,
 	.supported_log_pages		= stdout_supported_log,
+	.voltage_meas_log		= stdout_voltage_meas_log,
 	.zns_start_zone_list		= stdout_zns_start_zone_list,
 	.zns_changed_zone_log		= stdout_zns_changed,
 	.zns_finish_zone_list		= NULL,

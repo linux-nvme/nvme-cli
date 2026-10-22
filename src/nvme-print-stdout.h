@@ -102,6 +102,8 @@ void stdout_reachability_associations_log(
 void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 				   __u64 len);
 void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size);
+void stdout_voltage_meas_log(struct nvme_voltage_measurement_log *log,
+			     __u32 size);
 #ifdef CONFIG_FABRICS
 void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec);
 void stdout_host_discovery_log(struct nvme_host_discovery_log *log, __u64 len);

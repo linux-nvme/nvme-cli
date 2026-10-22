@@ -1894,6 +1894,12 @@ void nvme_show_power_meas_log(struct nvme_power_meas_log *log, __u32 size,
 	nvme_print(power_meas_log, flags, log, size);
 }
 
+void nvme_show_voltage_meas_log(struct nvme_voltage_measurement_log *log,
+				__u32 size, nvme_print_flags_t flags)
+{
+	nvme_print(voltage_meas_log, flags, log, size);
+}
+
 void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *info,
 					 nvme_print_flags_t flags)
 {
@@ -2069,6 +2075,9 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		break;
 	case NVME_LOG_LID_POWER_MEASUREMENT:
 		nvme_show_power_meas_log(log, len, flags);
+		break;
+	case NVME_LOG_LID_VOLTAGE_MEASUREMENT:
+		nvme_show_voltage_meas_log(log, len, flags);
 		break;
 	case NVME_LOG_LID_RESERVATION:
 		nvme_show_resv_notif_log(log, devname, flags);
