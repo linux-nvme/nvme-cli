@@ -349,6 +349,14 @@ identifies the controller. A command which adds few does not get past its
 option parsing, or a check of the device the fuzzer may never pass. It uses
 random device data, or with `--corpus` the inputs of a corpus.
 
+`seeds` adds seeds to the corpus of the `device` target from the CLI mock
+tests, which answer the commands with valid device data, where fuzzed data
+rarely gets past the first check. It runs the `mock` test suite of the build
+with `NVME_FUZZ_RECORD` set, which records the answers in the input format of
+the target, and turns each run of a command of the table into a seed named
+`mock-*`. `-C` selects the build, e.g. one which runs the mock tests faster
+than the sanitizer build; failed tests only record less.
+
 `scripts/build.sh fuzz` builds and runs with `nvme-fuzz` too, in `.build-ci`
 and with its `--fuzz-*` options. It removes the build directory first, the
 results included: pass a `--fuzz-dir` outside of `.build-ci` to grow the
