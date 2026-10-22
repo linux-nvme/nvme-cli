@@ -38,7 +38,8 @@ if '-merge=1' in args:
     sys.exit(0)
 os.mkdir('fuzz-device-abcdef')
 if mode == 'crash':
-    open(prefix[0] + 'crash-1234', 'wb').write(b'x')
+    limit = os.environ.get('FUZZ_DATA_LIMIT', 'none')
+    open(prefix[0] + 'crash-1234', 'w').write(limit)
     open('fuzz-0.log', 'w').write('SUMMARY: AddressSanitizer: x\\n')
     sys.exit(1)
 if mode == 'ignore-term':
@@ -63,13 +64,19 @@ class RunTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
-    def _run(self, mode: str, seconds: int = 1) -> int:
+    def _run(
+        self,
+        mode: str,
+        seconds: int = 1,
+        data_limits: tuple[int, ...] = (1 << 20,),
+    ) -> int:
         args = argparse.Namespace(
             build_dir=self.build,
             results=self.results,
             seconds=seconds,
             jobs=1,
             targets=[targets.TARGETS['device']],
+            data_limits=data_limits,
         )
         with mock.patch.dict(os.environ, {'FAKE_MODE': mode}):
             return run.main(args)
@@ -82,11 +89,27 @@ class RunTest(unittest.TestCase):
         summary = self._summary()
         self.assertEqual(summary[0], 'fuzz-device: 1 findings, exit status 1')
         self.assertIn('SUMMARY: AddressSanitizer: x', summary)
-        self.assertTrue(summary[-1].endswith('artifacts/device/crash-1234'))
+        self.assertTrue(
+            summary[-1].endswith('artifacts/device/data-1048576-crash-1234')
+        )
         # the seeds are in the corpus, the leftovers of jobs gone
         self.assertTrue(any((self.results / 'corpus' / 'device').iterdir()))
         logs = self.results / 'logs' / 'device'
         self.assertFalse(list(logs.glob('fuzz-device-*')))
+
+    def test_stages(self) -> None:
+        self.assertEqual(self._run('crash', data_limits=(4096, 8192)), 1)
+        artifacts = self.results / 'artifacts' / 'device'
+        for limit in (4096, 8192):
+            f = artifacts / f'data-{limit}-crash-1234'
+            self.assertEqual(f.read_text(), str(limit))
+        self.assertEqual(
+            self._summary()[0], 'fuzz-device: 2 findings, exit status 1'
+        )
+        # the reports of both stages
+        self.assertEqual(
+            self._summary().count('SUMMARY: AddressSanitizer: x'), 2
+        )
 
     def test_merge(self) -> None:
         corpus = self.results / 'corpus' / 'device'

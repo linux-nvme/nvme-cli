@@ -10,6 +10,10 @@ For each target the results are in the results directory: the corpus,
 which grows across runs, the logs of the jobs and the inputs which found
 a bug, and a summary.txt of all targets. Each run starts with minimizing
 the corpus.
+
+The device target runs in stages of equal time, with more device data in
+each: its findings are named data-<limit>-*, and check and triage replay
+them with that limit.
 """
 
 from __future__ import annotations
@@ -17,6 +21,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -25,13 +30,37 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import FrameType
 
-from .libfuzzer import copy_new
+from .libfuzzer import copy_new, is_slow_unit
 from .targets import TARGETS, Target, parse_targets, sanitizer_env
 
 # libFuzzer stops at the end of the run itself. Only after this more is
 # it stopped, with SIGTERM, and with SIGKILL after the grace time.
 DEADLINE_EXTRA = 60
 GRACE_SECONDS = 60
+
+
+def parse_sizes(spec: str) -> tuple[int, ...]:
+    """The sizes in bytes of a comma-separated list, each a number with an
+    optional K or M suffix."""
+    sizes = []
+    for item in spec.split(','):
+        m = re.fullmatch(r'([1-9][0-9]*)([KM]?)', item)
+        if not m:
+            raise argparse.ArgumentTypeError(
+                f"'{item}' is no size, e.g. 4096, 64K or 1M"
+            )
+        sizes.append(int(m[1]) << {'': 0, 'K': 10, 'M': 20}[m[2]])
+    return tuple(sizes)
+
+
+def _sizes(sizes: tuple[int, ...]) -> str:
+    def size(n: int) -> str:
+        for shift, unit in ((20, 'M'), (10, 'K')):
+            if n >= 1 << shift and not n % (1 << shift):
+                return f'{n >> shift}{unit}'
+        return str(n)
+
+    return ','.join(map(size, sizes))
 
 
 def add_arguments(p: argparse.ArgumentParser) -> None:
@@ -55,6 +84,13 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     )
     p.add_argument(
         '--results', type=Path, help='results directory (BUILD_DIR/fuzz)'
+    )
+    p.add_argument(
+        '--data-limits',
+        type=parse_sizes,
+        help='the bytes of device data an input of the device target gets, '
+        'in stages of equal time '
+        f'({_sizes(TARGETS["device"].data_limits)})',
     )
 
 
@@ -187,7 +223,7 @@ def _findings(artifacts: Path, since: float) -> list[Path]:
     return sorted(
         f
         for f in artifacts.iterdir()
-        if f.stat().st_mtime >= since and not f.name.startswith('slow-unit-')
+        if f.stat().st_mtime >= since and not is_slow_unit(f)
     )
 
 
@@ -197,6 +233,7 @@ def _run_target(
     results: Path,
     seconds: int,
     jobs: int,
+    data_limits: tuple[int, ...] | None,
     stop: _Stop,
 ) -> tuple[list[Path], int, Path]:
     corpus = results / 'corpus' / t.name
@@ -215,32 +252,54 @@ def _run_target(
     # mode is newer, but the libFuzzer of clang 22 crashes in it. A job
     # ends at its first finding, so queue more jobs than workers to keep
     # all of them busy: the deadline ends the run.
-    cmd = [
-        str(binary),
-        '-close_fd_mask=3',
-        f'-max_total_time={seconds}',
-        f'-jobs={jobs * 100}',
-        f'-workers={jobs}',
-        f'-artifact_prefix={artifacts}/',
-        *t.libfuzzer_options(),
-        str(corpus),
-    ]
-    print(
-        f'fuzz-{t.name}: {seconds}s, {jobs} jobs, logs in {logs}', flush=True
+    stages: tuple[int | None, ...] = (
+        (data_limits or t.data_limits) if t.data_limits else (None,)
     )
     start = time.time()
-    # Each job writes fuzz-<job>.log to the current directory
-    status = _libfuzzer(
-        cmd,
-        logs,
-        'main.log',
-        sanitizer_env(dict(os.environ)),
-        stop,
-        time.monotonic() + seconds + DEADLINE_EXTRA,
-    )
+    status = 0
+    for i, limit in enumerate(stages):
+        secs = max(1, seconds // len(stages) + (i < seconds % len(stages)))
+        env = sanitizer_env(dict(os.environ))
+        prefix = f'{artifacts}/'
+        cwd = logs
+        what = ''
+        if limit is not None:
+            env['FUZZ_DATA_LIMIT'] = str(limit)
+            prefix += f'data-{limit}-'
+            cwd = logs / f'data-{limit}'
+            cwd.mkdir(exist_ok=True)
+            what = f', {limit} bytes of device data'
+        cmd = [
+            str(binary),
+            '-close_fd_mask=3',
+            f'-max_total_time={secs}',
+            f'-jobs={jobs * 100}',
+            f'-workers={jobs}',
+            f'-artifact_prefix={prefix}',
+            *t.libfuzzer_options(),
+            str(corpus),
+        ]
+        print(
+            f'fuzz-{t.name}: {secs}s, {jobs} jobs{what}, logs in {cwd}',
+            flush=True,
+        )
+        # Each job writes fuzz-<job>.log to the current directory
+        res = _libfuzzer(
+            cmd,
+            cwd,
+            'main.log',
+            env,
+            stop,
+            time.monotonic() + secs + DEADLINE_EXTRA,
+        )
+        # The first failure of libFuzzer itself counts
+        if status in (0, -signal.SIGTERM, -signal.SIGKILL):
+            status = res
+        if stop.interrupted:
+            break
     # What jobs which crashed left behind, e.g. the sysfs of the device
     # target
-    for d in logs.glob(f'fuzz-{t.name}-??????'):
+    for d in logs.rglob(f'fuzz-{t.name}-??????'):
         shutil.rmtree(d, ignore_errors=True)
     return _findings(artifacts, start), status, logs
 
@@ -248,7 +307,7 @@ def _run_target(
 def _reports(logs: Path) -> list[str]:
     """The sanitizer summaries in the logs of the jobs."""
     res = []
-    for log in sorted(logs.glob('fuzz-*.log')):
+    for log in sorted(logs.rglob('fuzz-*.log')):
         for line in log.read_text(errors='replace').splitlines():
             if line.startswith('SUMMARY') or '==ERROR' in line:
                 res.append(line)
@@ -274,7 +333,13 @@ def main(args: argparse.Namespace) -> int:
                 print(f'fuzz-{t.name}: not built, skipped')
                 continue
             found, status, logs = _run_target(
-                t, binary, results, args.seconds, args.jobs, stop
+                t,
+                binary,
+                results,
+                args.seconds,
+                args.jobs,
+                args.data_limits,
+                stop,
             )
             if found:
                 failed.append(t.name)

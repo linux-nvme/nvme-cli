@@ -325,6 +325,14 @@ with the seeds and grows across runs. Each run first minimizes the corpus to
 the inputs which add coverage (libFuzzer's `-merge=1`): every job loads all of
 it.
 
+The `device` target runs in stages of equal time with more device data per
+input in each: 16 KiB, 64 KiB, 256 KiB and 1 MiB, the default of the device
+mock (`--data-limits` selects others). Most data structures fit a page, and an
+input which gets little data runs fast: a megabyte of log entries prints as
+tens of megabytes of text. The mock takes the limit from `FUZZ_DATA_LIMIT`.
+The findings of the target are named after the limit, `data-<limit>-crash-*`,
+and `check` and `triage` replay them with it.
+
 `triage` replays the findings of a target and groups them by the bug they hit:
 the kind of finding and the first nvme-cli frame. For the `device` target, it
 names the command an input runs. `triage --show` prints the stack of each
@@ -353,6 +361,8 @@ the settings of `scripts/fuzz/pyproject.toml`.
 The fuzz targets are libFuzzer binaries, which also run by hand: a file
 argument runs that input once, a directory is a corpus to fuzz. Then a
 crashing input is written to `crash-*` in the current directory. Add an input
-which found a bug to the seeds of its target, named `regress-*`. The targets
+which found a bug to the seeds of its target, named `regress-*`: the seeds run
+with the default data limit, so check that it still fails without the fix with
+`nvme-fuzz check`. The targets
 use the libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
 `-fsanitize=fuzzer`).

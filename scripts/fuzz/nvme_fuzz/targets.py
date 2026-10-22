@@ -25,6 +25,8 @@ class Target:
     # A dictionary in tests/fuzz, if any
     dictionary: str | None = None
     options: tuple[str, ...] = ()
+    # The FUZZ_DATA_LIMIT of the device mock in the stages of a run
+    data_limits: tuple[int, ...] = ()
 
     @property
     def seeds(self) -> Path:
@@ -48,8 +50,14 @@ TARGETS: dict[str, Target] = {
         Target('global-config', 'config.dict'),
         Target('fabrics-conf', 'config.dict'),
         # It reads log pages, so it needs longer inputs. Large but valid logs
-        # take seconds under ASan: only a much slower input is a hang.
-        Target('device', options=('-max_len=16384', '-timeout=10')),
+        # take seconds under ASan: only a much slower input is a hang. Most
+        # data structures fit a page, and an input which gets little data
+        # runs fast: start with little, and end with the default of the mock.
+        Target(
+            'device',
+            options=('-max_len=16384', '-timeout=10'),
+            data_limits=(16 << 10, 64 << 10, 256 << 10, 1 << 20),
+        ),
     )
 }
 
