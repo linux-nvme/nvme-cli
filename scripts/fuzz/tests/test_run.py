@@ -40,6 +40,7 @@ os.mkdir('fuzz-device-abcdef')
 if mode == 'crash':
     limit = os.environ.get('FUZZ_DATA_LIMIT', 'none')
     open(prefix[0] + 'crash-1234', 'w').write(limit)
+    open('args', 'w').write(' '.join(args))
     open('fuzz-0.log', 'w').write('SUMMARY: AddressSanitizer: x\\n')
     sys.exit(1)
 if mode == 'ignore-term':
@@ -97,6 +98,12 @@ class RunTest(unittest.TestCase):
         self.assertTrue(any((self.results / 'corpus' / 'device').iterdir()))
         logs = self.results / 'logs' / 'device'
         self.assertFalse(list(logs.glob('fuzz-device-*')))
+
+    def test_reload(self) -> None:
+        self.assertEqual(self._run('crash'), 1)
+        logs = self.results / 'logs' / 'device' / 'data-1048576'
+        args = (logs / 'args').read_text().split()
+        self.assertIn(f'-reload={run.RELOAD_SECONDS}', args)
 
     def test_stages(self) -> None:
         self.assertEqual(self._run('crash', data_limits=(4096, 8192)), 1)
