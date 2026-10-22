@@ -109,6 +109,7 @@ if python3.found()
             ['sel', 'nvme_sel_test.py', cli_test_env, 30],
             ['host-metadata', 'nvme_host_metadata_test.py', cli_test_env,
              30],
+            ['fuzz-record', 'nvme_fuzz_record_test.py', cli_test_env, 30],
         ]
 
         if 'id' in selected_plugins and json_c_dep.found()
