@@ -192,6 +192,31 @@ struct libnvmf_config_conn {
 	struct libnvmf_params *dlp_ioc_params;
 };
 
+/*
+ * The KX-HMAC-CHAP secrets of an endpoint section with its own NQN, for a
+ * controller that discovery finds with that NQN. The secrets belong to the
+ * (host, subsystem) pair, so a section matches only discoveries made under
+ * the persona of its own file.
+ */
+struct libnvmf_config_subsys {
+	struct list_node entry;
+	bool is_dc;
+	char *nqn;
+	char *source;			/* file, i.e. the persona */
+	unsigned int line;		/* the first section */
+	struct libnvmf_params *keys;	/* the section's kxchap-* keys */
+	struct libnvmf_params *params;	/* file scope defaults + keys */
+};
+
+/* The scope of one file, for the controllers discovered under its persona. */
+struct libnvmf_config_persona {
+	struct list_node entry;
+	char *source;
+	char *hostnqn;			/* NULL: the system identity */
+	struct libnvmf_params *dc_params;
+	struct libnvmf_params *ioc_params;
+};
+
 struct libnvmf_config {
 	/* Main file's connections first, then the sorted drop-ins'. */
 	struct list_head conns;		/* struct libnvmf_config_conn */
@@ -201,6 +226,9 @@ struct libnvmf_config {
 	 */
 	struct libnvmf_params *top_dc_params;
 	struct libnvmf_params *top_ioc_params;
+	char *top_source;		/* the top-level file */
+	struct list_head subsystems;	/* struct libnvmf_config_subsys */
+	struct list_head personas;	/* struct libnvmf_config_persona */
 	/*
 	 * Top-level [Host] identity.  Retained because a consumer that
 	 * configures no connections still has a host identity: the
@@ -226,6 +254,21 @@ struct libnvmf_config {
  */
 int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
 		struct libnvmf_config **out);
+
+/*
+ * The section that supplies the KX-HMAC-CHAP secrets of a controller
+ * discovered with @nqn through @via_dc (NULL: no configured origin, the
+ * top-level persona). Returns NULL when no section matches.
+ */
+const struct libnvmf_config_subsys *libnvmf_config_find_subsys(
+		const struct libnvmf_config *config,
+		const struct libnvmf_config_conn *via_dc,
+		bool is_dc, const char *nqn);
+
+/* The section with @nqn in the file @source, or NULL. */
+struct libnvmf_config_subsys *libnvmf_config_subsys_find(
+		const struct list_head *subsystems, const char *source,
+		bool is_dc, const char *nqn);
 
 /* The scandir() filter selecting *.conf drop-ins. */
 struct dirent;

@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 
 #include <shared/compiler-attributes-util.h>
@@ -133,13 +134,54 @@ static void free_conns(struct list_head *conns)
 		free_conn(c);
 }
 
+static void free_subsys(struct libnvmf_config_subsys *s)
+{
+	if (!s)
+		return;
+	free(s->nqn);
+	free(s->source);
+	libnvmf_params_free(s->keys);
+	libnvmf_params_free(s->params);
+	free(s);
+}
+
+static void free_subsystems(struct list_head *subsystems)
+{
+	struct libnvmf_config_subsys *s, *next;
+
+	list_for_each_safe(subsystems, s, next, entry)
+		free_subsys(s);
+}
+
+static void free_persona(struct libnvmf_config_persona *p)
+{
+	if (!p)
+		return;
+	free(p->source);
+	free(p->hostnqn);
+	libnvmf_params_free(p->dc_params);
+	libnvmf_params_free(p->ioc_params);
+	free(p);
+}
+
+static void free_personas(struct list_head *personas)
+{
+	struct libnvmf_config_persona *p, *next;
+
+	list_for_each_safe(personas, p, next, entry)
+		free_persona(p);
+}
+
 __shr_public void libnvmf_config_free(struct libnvmf_config *conf)
 {
 	if (!conf)
 		return;
 	free_conns(&conf->conns);
+	free_subsystems(&conf->subsystems);
+	free_personas(&conf->personas);
 	libnvmf_params_free(conf->top_dc_params);
 	libnvmf_params_free(conf->top_ioc_params);
+	free(conf->top_source);
 	free(conf->top_hostnqn);
 	free(conf->top_hostid);
 	free(conf->top_hostsymname);
@@ -217,10 +259,158 @@ fail:
 	return -ENOMEM;
 }
 
+static const char * const subsys_keys[] = {
+	"kxchap-secret",
+	"kxchap-ctrl-secret",
+};
+
+struct libnvmf_config_subsys *libnvmf_config_subsys_find(
+		const struct list_head *subsystems, const char *source,
+		bool is_dc, const char *nqn)
+{
+	struct libnvmf_config_subsys *s;
+
+	if (!source || !nqn)
+		return NULL;
+
+	list_for_each(subsystems, s, entry) {
+		if (s->is_dc == is_dc && !strcmp(s->nqn, nqn) &&
+		    !strcmp(s->source, source))
+			return s;
+	}
+
+	return NULL;
+}
+
+/*
+ * Add the secrets of a second section with the same NQN to @s. Two
+ * different values for one secret are ambiguous.
+ */
+static int subsys_merge(struct libnvme_global_ctx *ctx,
+			struct libnvmf_config_subsys *s,
+			const struct libnvmf_params *keys, unsigned int line)
+{
+	const char *value, *old;
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(subsys_keys); i++) {
+		value = libnvmf_params_get(keys, subsys_keys[i]);
+		if (!value)
+			continue;
+		old = libnvmf_params_get(s->keys, subsys_keys[i]);
+		if (old && strcmp(old, value)) {
+			resolve_err(ctx, s->source,
+				    "line %u: nqn %s: %s differs from line %u",
+				    line, s->nqn, subsys_keys[i], s->line);
+			return -EINVAL;
+		}
+		if (libnvmf_params_set(s->keys, subsys_keys[i], value) ||
+		    libnvmf_params_set(s->params, subsys_keys[i], value))
+			return -ENOMEM;
+	}
+
+	return 0;
+}
+
+/*
+ * Keep the KX-HMAC-CHAP secrets of @ep for the controllers discovered with
+ * its NQN. A DC with the well-known discovery NQN is not kept: it would
+ * apply to every DC that uses that NQN, which is what the DC defaults are
+ * for.
+ */
+static int resolve_subsys(struct libnvme_global_ctx *ctx,
+			  const struct libnvmf_conf_file *f,
+			  const struct scope *scope,
+			  const struct libnvmf_conf_endpoint *ep,
+			  struct list_head *subsystems)
+{
+	struct libnvmf_config_subsys *s, *old;
+	bool found = false;
+	const char *value;
+	size_t i;
+	int ret;
+
+	if (!ep->nqn || (ep->is_dc && !strcmp(ep->nqn, NVME_DISC_SUBSYS_NAME)))
+		return 0;
+
+	s = calloc(1, sizeof(*s));
+	if (!s)
+		return -ENOMEM;
+
+	s->keys = libnvmf_params_new();
+	if (!s->keys)
+		goto fail;
+	for (i = 0; i < ARRAY_SIZE(subsys_keys); i++) {
+		value = libnvmf_params_get(ep->params, subsys_keys[i]);
+		if (!value)
+			continue;
+		if (libnvmf_params_set(s->keys, subsys_keys[i], value))
+			goto fail;
+		found = true;
+	}
+	if (!found) {
+		free_subsys(s);
+		return 0;
+	}
+
+	old = libnvmf_config_subsys_find(subsystems, f->path, ep->is_dc,
+					 ep->nqn);
+	if (old) {
+		ret = subsys_merge(ctx, old, s->keys, ep->line);
+		free_subsys(s);
+		return ret;
+	}
+
+	s->is_dc = ep->is_dc;
+	s->line = ep->line;
+	s->nqn = shr_xstrdup(ep->nqn);
+	s->source = shr_xstrdup(f->path);
+	s->params = libnvmf_params_dup(ep->is_dc ? scope->dc_base :
+						   scope->ioc_base);
+	if (!s->nqn || !s->source || !s->params ||
+	    libnvmf_params_merge(s->params, s->keys))
+		goto fail;
+
+	list_add_tail(subsystems, &s->entry);
+
+	return 0;
+
+fail:
+	free_subsys(s);
+	return -ENOMEM;
+}
+
+/* The scope of @f, for the controllers discovered under its persona. */
+static int resolve_persona(const struct libnvmf_conf_file *f,
+			   const struct scope *scope,
+			   struct list_head *personas)
+{
+	struct libnvmf_config_persona *p;
+
+	p = calloc(1, sizeof(*p));
+	if (!p)
+		return -ENOMEM;
+
+	p->source = shr_xstrdup(f->path);
+	if (real_value(f->hostnqn))
+		p->hostnqn = shr_xstrdup(f->hostnqn);
+	p->dc_params = libnvmf_params_dup(scope->dc_base);
+	p->ioc_params = libnvmf_params_dup(scope->ioc_base);
+	if (!p->source || (real_value(f->hostnqn) && !p->hostnqn) ||
+	    !p->dc_params || !p->ioc_params) {
+		free_persona(p);
+		return -ENOMEM;
+	}
+
+	list_add_tail(personas, &p->entry);
+
+	return 0;
+}
+
 static int resolve_file(struct libnvme_global_ctx *ctx,
 			const struct libnvmf_conf_file *top,
 			const struct libnvmf_conf_file *f,
-			struct list_head *conns)
+			struct libnvmf_config *conf)
 {
 	const struct libnvmf_conf_endpoint *ep;
 	const struct libnvmf_conf_path *path;
@@ -231,9 +421,17 @@ static int resolve_file(struct libnvme_global_ctx *ctx,
 	if (ret)
 		return ret;
 
+	ret = resolve_persona(f, &scope, &conf->personas);
+	if (ret)
+		goto out;
+
 	list_for_each(&f->endpoints, ep, entry) {
+		ret = resolve_subsys(ctx, f, &scope, ep, &conf->subsystems);
+		if (ret)
+			goto out;
 		list_for_each(&ep->paths, path, entry) {
-			ret = resolve_path(ctx, f, &scope, ep, path, conns);
+			ret = resolve_path(ctx, f, &scope, ep, path,
+					   &conf->conns);
 			if (ret)
 				goto out;
 		}
@@ -400,8 +598,10 @@ int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
 	}
 
 	list_head_init(&conf->conns);
+	list_head_init(&conf->subsystems);
+	list_head_init(&conf->personas);
 	for (i = 0; i < nfiles; i++) {
-		ret = resolve_file(ctx, files[0], files[i], &conf->conns);
+		ret = resolve_file(ctx, files[0], files[i], conf);
 		if (ret)
 			goto out;
 	}
@@ -409,7 +609,9 @@ int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
 	/* The top-level scope: defaults for discovered, un-configured DCs. */
 	conf->top_dc_params = build_base(files[0], files[0], true);
 	conf->top_ioc_params = build_base(files[0], files[0], false);
-	if (!conf->top_dc_params || !conf->top_ioc_params) {
+	conf->top_source = shr_xstrdup(files[0]->path);
+	if (!conf->top_dc_params || !conf->top_ioc_params ||
+	    !conf->top_source) {
 		ret = -ENOMEM;
 		goto out;
 	}

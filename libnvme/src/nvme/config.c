@@ -24,6 +24,7 @@
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/parse-util.h>
+#include <shared/string-util.h>
 
 #include <nvme/config.h>
 #include <nvme/fabrics.h>
@@ -157,6 +158,72 @@ __shr_public const struct libnvmf_params *libnvmf_config_resolve_discovered(
 		return is_dc ? via_dc->dlp_dc_params : via_dc->dlp_ioc_params;
 
 	return is_dc ? config->top_dc_params : config->top_ioc_params;
+}
+
+const struct libnvmf_config_subsys *libnvmf_config_find_subsys(
+		const struct libnvmf_config *config,
+		const struct libnvmf_config_conn *via_dc,
+		bool is_dc, const char *nqn)
+{
+	if (!config)
+		return NULL;
+
+	return libnvmf_config_subsys_find(&config->subsystems,
+			via_dc ? via_dc->source : config->top_source,
+			is_dc, nqn);
+}
+
+/* NULL @hostnqn: the persona of the top-level file. */
+static const struct libnvmf_config_persona *persona_find(
+		const struct libnvmf_config *config, const char *hostnqn)
+{
+	const struct libnvmf_config_persona *p;
+
+	list_for_each(&config->personas, p, entry) {
+		if (!hostnqn) {
+			if (!strcmp(p->source, config->top_source))
+				return p;
+		} else if (shr_streq0(p->hostnqn, hostnqn)) {
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
+__shr_public int libnvmf_config_get_discovered_params(
+		const struct libnvmf_config *config, const char *hostnqn,
+		bool is_dc, const char *nqn,
+		const struct libnvmf_params **params)
+{
+	const struct libnvmf_config_persona *p;
+	const struct libnvmf_config_subsys *s;
+
+	if (!config || !params)
+		return -EINVAL;
+
+	p = persona_find(config, hostnqn);
+	if (!p)
+		return -ENOENT;
+
+	s = libnvmf_config_subsys_find(&config->subsystems, p->source,
+				       is_dc, nqn);
+	if (s)
+		*params = s->params;
+	else
+		*params = is_dc ? p->dc_params : p->ioc_params;
+
+	return 0;
+}
+
+__shr_public void libnvmf_context_set_config(struct libnvmf_context *fctx,
+		const struct libnvmf_config *config,
+		const struct libnvmf_config_conn *conn)
+{
+	if (!fctx)
+		return;
+	fctx->config = config;
+	fctx->conn = conn;
 }
 
 __shr_public const char *libnvmf_config_get_hostnqn(

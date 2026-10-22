@@ -276,6 +276,36 @@ const struct libnvmf_params *libnvmf_config_resolve_discovered(
 		bool is_dc);
 
 /**
+ * libnvmf_config_get_discovered_params() - discovered controller parameters.
+ * @config:  the resolved configuration
+ * @hostnqn: the host NQN that selects the file, or NULL for the top-level
+ *           file
+ * @is_dc:   true for a discovery controller, false for an I/O controller
+ * @nqn:     the NQN of the discovered controller, or NULL
+ * @params:  set to the parameters, valid while @config is alive
+ *
+ * A controller found through discovery has no section in the
+ * configuration. Its parameters come from one file: the file whose [Host]
+ * section has @hostnqn. For a controller found through a discovery
+ * controller of @config, use libnvmf_config_conn_get_hostnqn() of that
+ * discovery controller's connection.
+ *
+ * The parameters are the defaults of that file for a discovery controller
+ * or an I/O controller. If the file also has a section with nqn = @nqn,
+ * its kxchap-secret and kxchap-ctrl-secret replace the defaults. That
+ * section is a [Discovery Controller] section if @is_dc is true, a
+ * [Subsystem] section otherwise. Its controller= lines do not matter. A
+ * section with the well-known discovery NQN never matches.
+ *
+ * Return: 0 on success, -EINVAL if @config or @params is NULL, or -ENOENT
+ * if no file of @config has @hostnqn.
+ */
+int libnvmf_config_get_discovered_params(
+		const struct libnvmf_config *config, const char *hostnqn,
+		bool is_dc, const char *nqn,
+		const struct libnvmf_params **params);
+
+/**
  * libnvmf_config_get_hostnqn() - the top-level [Host] host NQN.
  * @config: the resolved configuration
  *
@@ -348,6 +378,28 @@ int libnvmf_connect_args_emit(const struct libnvmf_tid *tid,
 		const struct libnvmf_params *params,
 		void (*callback)(const char *arg, void *user_data),
 		void *user_data);
+
+/**
+ * libnvmf_context_set_config() - Set the configuration for discovery
+ * @fctx:   Fabrics context of a discovery controller
+ * @config: Resolved configuration, or NULL
+ * @conn:   Connection of the discovery controller in @config
+ *
+ * libnvmf_discover() connects to the controllers in the discovery log
+ * page. With a configuration, a controller gets the KX-HMAC-CHAP secrets
+ * of the [Subsystem] or [Discovery Controller] section with its NQN. The
+ * section must be in the same file as @conn.
+ *
+ * If no section sets the host secret, the controller uses the host secret
+ * of the discovery controller. This is also what happens without a
+ * configuration. The controller secret comes only from a section.
+ *
+ * The caller keeps ownership of @config and @conn. They must stay valid
+ * until libnvmf_discover() returns.
+ */
+void libnvmf_context_set_config(struct libnvmf_context *fctx,
+		const struct libnvmf_config *config,
+		const struct libnvmf_config_conn *conn);
 
 /**
  * libnvmf_context_apply_params() - apply a parameter set to a connect

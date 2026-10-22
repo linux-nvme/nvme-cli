@@ -63,6 +63,9 @@ Boolean values accept '1'/'yes'/'y'/'true'/'t'/'on' and
 
 Both endpoint sections accept any TUNABLE or SECURITY key as a
 per-section override, plus one or more 'controller =' lines (below).
+A section with no 'controller =' line makes no connection. It can
+still give the KX-HMAC-CHAP secrets of a discovered controller (see
+DISCOVERED CONTROLLERS below).
 
 CONTROLLER LINES
 -----------------
@@ -135,6 +138,34 @@ A key resolves most-specific first:
 The type-defaults level is chosen by the connection's class: a
 Discovery Controller draws from '[Discovery Controller Defaults]', an
 I/O Controller from '[I/O Controller Defaults]'.
+
+DISCOVERED CONTROLLERS
+----------------------
+A controller found through discovery (an I/O controller or a referral
+in a discovery log page, or a Discovery Controller found through mDNS)
+has no section of its own. It gets 'kxchap-secret' and
+'kxchap-ctrl-secret' from the endpoint section with the same 'nqn =':
+a '[Subsystem]' section for an I/O controller, a '[Discovery
+Controller]' section for a Discovery Controller. The section must be in
+the same file as the Discovery Controller that reported the controller
+(the top-level file for mDNS), because a secret belongs to one (host,
+subsystem) pair. The section's 'controller =' lines do not matter: the
+addresses come from discovery.
+
+A secret that no such section sets comes from the Discovery Controller:
+its 'kxchap-secret' for 'nvme connect-all', the defaults of its file for
+nvme-discoverd. The 'kxchap-ctrl-secret' of the Discovery Controller is
+never used. A '[Discovery Controller]' section with the well-known
+discovery NQN never matches.
+
+Two sections of the same type with the same NQN in one file share their
+secrets. If they set different values for the same secret, the file is
+rejected.
+
+	[Subsystem]
+	nqn = nqn.2026-10.com.example:sub1
+	kxchap-secret = DHHC-1:00:...
+	kxchap-ctrl-secret = DHHC-1:00:...
 
 EXAMPLE
 -------
