@@ -569,7 +569,9 @@ int __openat64_2(int dirfd, const char *pathname, int flags)
  * fuzzed log length must not have the mock serve, and nvme-cli print,
  * gigabytes: the data of all commands of a run is limited too. A
  * megabyte of log entries already prints as tens of megabytes of text,
- * which takes seconds with the sanitizers.
+ * which takes seconds with the sanitizers. FUZZ_DATA_LIMIT sets another
+ * limit in bytes: most of the data structures fit a page, and with less
+ * data an input runs faster.
  */
 #define FUZZ_MAX_TRANSFER	(2 * 1024 * 1024)
 #define FUZZ_MAX_TOTAL		(1 * 1024 * 1024)
@@ -577,6 +579,31 @@ int __openat64_2(int dirfd, const char *pathname, int flags)
 static const uint8_t *fuzz_data;
 static size_t fuzz_size;
 static size_t fuzz_total;
+static size_t fuzz_limit;
+
+static size_t fuzz_data_limit(void)
+{
+	unsigned long long limit;
+	const char *env;
+	char *end;
+
+	if (fuzz_limit)
+		return fuzz_limit;
+	fuzz_limit = FUZZ_MAX_TOTAL;
+	env = getenv("FUZZ_DATA_LIMIT");
+	if (!env)
+		return fuzz_limit;
+	errno = 0;
+	limit = strtoull(env, &end, 10);
+	if (errno || end == env || *end || !limit ||
+	    (size_t)limit != limit) {
+		fprintf(stderr, "FUZZ_DATA_LIMIT=%s: not a size in bytes\n",
+			env);
+		exit(EXIT_FAILURE);
+	}
+	fuzz_limit = limit;
+	return fuzz_limit;
+}
 
 /* The bytes the following commands get their answers from */
 void mock_fuzz_input(const uint8_t *data, size_t size)
@@ -632,7 +659,7 @@ static void *fuzz_ipc_call(struct ipc_request *req,
 		resp->errno_val = EINVAL;
 		return NULL;
 	}
-	if (resp->data_len > FUZZ_MAX_TOTAL - fuzz_total) {
+	if (resp->data_len > fuzz_data_limit() - fuzz_total) {
 		resp->status = -1;
 		resp->errno_val = EIO;
 		return NULL;
