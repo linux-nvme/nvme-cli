@@ -43,6 +43,10 @@
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "%s: " fmt "\n", src,	\
 		    ##__VA_ARGS__)
 
+#define resolve_warn(ctx, src, fmt, ...)				\
+	libnvme_msg(ctx, LIBNVME_LOG_WARN, "%s: " fmt "\n", src,	\
+		    ##__VA_ARGS__)
+
 /*
  * Configuration scope for one file before endpoint-specific overrides.
  */
@@ -316,7 +320,9 @@ static int subsys_merge(struct libnvme_global_ctx *ctx,
  * Keep the KX-HMAC-CHAP secrets of @ep for the controllers discovered with
  * its NQN. A DC with the well-known discovery NQN is not kept: it would
  * apply to every DC that uses that NQN, which is what the DC defaults are
- * for.
+ * for. Such a DC allows only unidirectional authentication (NVMe Base
+ * Specification 2.4, section 8.3.4.2.1), so its controller secret is
+ * reported.
  */
 static int resolve_subsys(struct libnvme_global_ctx *ctx,
 			  const struct libnvmf_conf_file *f,
@@ -330,7 +336,16 @@ static int resolve_subsys(struct libnvme_global_ctx *ctx,
 	size_t i;
 	int ret;
 
-	if (!ep->nqn || (ep->is_dc && !strcmp(ep->nqn, NVME_DISC_SUBSYS_NAME)))
+	if (ep->is_dc &&
+	    (!ep->nqn || !strcmp(ep->nqn, NVME_DISC_SUBSYS_NAME))) {
+		value = libnvmf_params_get(ep->params, "kxchap-ctrl-secret");
+		if (value && *value)
+			resolve_warn(ctx, f->path,
+				     "line %u: kxchap-ctrl-secret is not allowed with the well-known discovery NQN",
+				     ep->line);
+		return 0;
+	}
+	if (!ep->nqn)
 		return 0;
 
 	s = calloc(1, sizeof(*s));

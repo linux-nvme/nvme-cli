@@ -511,6 +511,72 @@ static bool test_duplicate_nqn(struct libnvme_global_ctx *ctx,
 	return pass;
 }
 
+/* Only unidirectional authentication with the well-known discovery NQN */
+static const char wk_ctrl_secret_text[] =
+	"[Discovery Controller]\n"
+	"kxchap-secret = DHHC-1:00:wk-host:\n"
+	"kxchap-ctrl-secret = DHHC-1:00:wk-ctrl:\n"
+	"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
+	"[Discovery Controller]\n"
+	"nqn = " NVME_DISC_SUBSYS_NAME "\n"
+	"kxchap-ctrl-secret = DHHC-1:00:wk-ctrl:\n"
+	"[Discovery Controller]\n"
+	"nqn = " NVME_DISC_SUBSYS_NAME "\n"
+	"kxchap-secret = DHHC-1:00:wk-host:\n"
+	"kxchap-ctrl-secret =\n"
+	"[Discovery Controller]\n"
+	"nqn = nqn.2014-08.org.nvmexpress:cdc\n"
+	"kxchap-ctrl-secret = DHHC-1:00:cdc-ctrl:\n";
+
+static bool test_wellknown_ctrl_secret(struct libnvme_global_ctx *ctx,
+				       const struct fixture *fx)
+{
+	struct libnvmf_config *config = NULL;
+	char path[352], log[1024] = "";
+	unsigned int warnings = 0;
+	const char *p;
+	bool pass = true;
+	FILE *fp;
+	int ret;
+
+	printf("test_wellknown_ctrl_secret:\n");
+
+	snprintf(path, sizeof(path), "%s/wk.conf", fx->dir);
+	write_file(fx->dir, "wk.conf", wk_ctrl_secret_text);
+
+	/* The log goes to the file descriptor, not to the FILE buffer */
+	fp = tmpfile();
+	shr_assert(fp);
+	libnvme_set_logging_file(ctx, fp);
+	ret = libnvmf_config_read(ctx, path, &config);
+	libnvme_set_logging_file(ctx, NULL);
+	rewind(fp);
+	log[fread(log, 1, sizeof(log) - 1, fp)] = '\0';
+	fclose(fp);
+
+	if (ret) {
+		printf(" - well-known DC with a ctrl secret loads [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - well-known DC with a ctrl secret loads [PASS]\n");
+	}
+
+	for (p = log; (p = strstr(p, "kxchap-ctrl-secret is not")); p++)
+		warnings++;
+	if (warnings != 2 || !strstr(log, "line 1:") ||
+	    !strstr(log, "line 5:")) {
+		printf(" - warned for lines 1 and 5 only [FAIL]\n%s", log);
+		pass = false;
+	} else {
+		printf(" - warned for lines 1 and 5 only [PASS]\n");
+	}
+
+	libnvmf_config_free(config);
+	rm_file(fx->dir, "wk.conf");
+
+	return pass;
+}
+
 static const char host_only_text[] =
 	"[Host]\n"
 	"hostnqn = nqn.2014-08.org.nvmexpress:solo-host\n"
@@ -1301,6 +1367,7 @@ int main(void)
 	pass &= test_resolve_discovered(ctx, &fx);
 	pass &= test_get_discovered_params(ctx, &fx);
 	pass &= test_duplicate_nqn(ctx, &fx);
+	pass &= test_wellknown_ctrl_secret(ctx, &fx);
 	pass &= test_top_level_host(ctx, &fx);
 	pass &= test_persona_validation(ctx, &fx);
 	pass &= test_validate(ctx, &fx);

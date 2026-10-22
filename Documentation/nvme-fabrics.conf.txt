@@ -158,6 +158,11 @@ nvme-discoverd. The 'kxchap-ctrl-secret' of the Discovery Controller is
 never used. A '[Discovery Controller]' section with the well-known
 discovery NQN never matches.
 
+A Discovery Controller with the well-known discovery NQN allows only
+unidirectional authentication. A '[Discovery Controller]' section with
+that NQN, or with no 'nqn =', may set 'kxchap-secret'. If it sets
+'kxchap-ctrl-secret', a warning is logged.
+
 Two sections of the same type with the same NQN in one file share their
 secrets. If they set different values for the same secret, the file is
 rejected.
