@@ -21,6 +21,7 @@ mechanics.
 """
 import collections
 import errno
+import json
 import os
 import shlex
 import shutil
@@ -106,6 +107,77 @@ def built_with_library(nvme_bin, soname_fragment):
     return soname_fragment in result.stdout
 
 
+class _FuzzRecorder:
+    """With NVME_FUZZ_RECORD=<dir>, each run_nvme() writes what it ran and
+    the answers of the device to <dir>, the answers in the input format of
+    the fuzz backend of libmock_nvme.c: a control byte, the result dword,
+    the NVMe status or the data. scripts/fuzz/nvme-fuzz seeds turns them
+    into seeds of the device fuzz target, which then start with the valid
+    device data of the tests.
+
+    Like the fuzz backend, only device commands get an answer, and none
+    once the data of a run would exceed what it serves."""
+
+    # FUZZ_MAX_TRANSFER and FUZZ_MAX_TOTAL of libmock_nvme.c
+    MAX_TRANSFER = 2 * 1024 * 1024
+    MAX_TOTAL = 1 * 1024 * 1024
+
+    def __init__(self):
+        self.dir = os.environ.get('NVME_FUZZ_RECORD')
+        self.answers = None
+        self.total = 0
+        self.data_len = None
+        self.runs = 0
+
+    def start(self):
+        if self.dir:
+            self.answers = bytearray()
+            self.total = 0
+
+    def request(self, data_len):
+        """The next answer is to a device command which reads @data_len
+        bytes, or with None to no device command."""
+        self.data_len = data_len
+
+    def answer(self, status, sc_status, result, payload):
+        data_len, self.data_len = self.data_len, None
+        if self.answers is None or data_len is None:
+            return
+        if (data_len > self.MAX_TRANSFER or
+                data_len > self.MAX_TOTAL - self.total):
+            return
+        self.total += data_len
+        res = struct.pack('<I', result & 0xffffffff)
+        if status == -1:
+            self.answers += b'\xff' + res
+        elif sc_status:
+            self.answers += (b'\xe0' + res +
+                             struct.pack('<H', sc_status & 0x7fff))
+        else:
+            self.answers += (b'\x00' + res +
+                             payload[:data_len].ljust(data_len, b'\0'))
+
+    def finish(self, args, sysfs_dir):
+        if self.answers is None:
+            return
+        pci = None
+        dev = Path(sysfs_dir) / 'sys/class/nvme/nvme0/device'
+        try:
+            pci = [int((dev / a).read_text(), 16)
+                   for a in ('vendor', 'device')]
+        except (OSError, ValueError):
+            pass
+        self.runs += 1
+        name = f'{os.getpid()}-{self.runs}.json'
+        with open(Path(self.dir) / name, 'w') as f:
+            json.dump({'args': [str(a) for a in args], 'pci': pci,
+                       'answers': self.answers.hex()}, f)
+        self.answers = None
+
+
+_fuzz_recorder = _FuzzRecorder()
+
+
 class MockIPCServer(threading.Thread):
     """Generic Unix-socket IPC server for libmock_nvme.c.
 
@@ -143,6 +215,7 @@ class MockIPCServer(threading.Thread):
         """@status/@errno_val: a real syscall/errno-level failure (status=-1),
         vs. a normal ioctl() return (status=0). @sc_status: with status=0,
         the raw NVMe completion status ioctl() itself should return."""
+        _fuzz_recorder.answer(status, sc_status, result, payload)
         conn.sendall(struct.pack(IPC_RESPONSE_FMT, status, errno_val, sc_status, result, len(payload)))
         if payload:
             conn.sendall(payload)
@@ -205,6 +278,13 @@ class MockIPCServer(threading.Thread):
 
             payload = (conn.recv(data_len, socket.MSG_WAITALL)
                        if data_len > 0 else b"")
+
+            if req_type == IPC_TYPE_IOCTL:
+                _fuzz_recorder.request(req_len)
+            elif req_type == IPC_TYPE_RAW_IOCTL:
+                _fuzz_recorder.request(ioc_size if ioc_dir & IOC_READ else 0)
+            else:
+                _fuzz_recorder.request(None)
 
             if req_type == IPC_TYPE_WRITE:
                 self.handle_write(conn, payload)
@@ -331,6 +411,7 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
 
     stdin_args = ({'input': stdin_data} if stdin_data is not None
                   else {'stdin': subprocess.DEVNULL})
+    _fuzz_recorder.start()
     result = subprocess.run(wrapped_cmd, env=env,
                             **stdin_args,
                             stdout=subprocess.PIPE,
@@ -338,6 +419,7 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
                             encoding=encoding,
                             errors='replace' if encoding else None,
                             timeout=_NVME_TIMEOUT_S)
+    _fuzz_recorder.finish(args, sysfs_dir)
 
     # Print outputs to sys.stderr so they are displayed by unittest on
     # failure. With encoding=None these are bytes, so summarise stdout
