@@ -12,7 +12,8 @@ struct ocp_print_ops {
 	void (*fw_act_history)(const struct fw_activation_history *fw_history);
 	void (*persistent_event_log)(void *pevent_log_info, __u8 action, __u32 size, const char *devname);
 	void (*smart_extended_log)(struct ocp_smart_extended_log *log, unsigned int version);
-	void (*telemetry_log)(struct ocp_telemetry_parse_options *options);
+	void (*telemetry_log)(const struct ocp_telemetry_logs *logs,
+			      struct ocp_telemetry_parse_options *options);
 	void (*c3_log)(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data);
 	void (*c5_log)(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data);
 	void (*c1_log)(struct ocp_error_recovery_log_page *log_data);
@@ -42,7 +43,9 @@ void ocp_show_persistent_event_log(void *pevent_log_info,
 	nvme_print_flags_t flags);
 void ocp_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int version,
 		nvme_print_flags_t flags);
-void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_print_flags_t flags);
+void ocp_show_telemetry_log(const struct ocp_telemetry_logs *logs,
+			    struct ocp_telemetry_parse_options *options,
+			    nvme_print_flags_t flags);
 void ocp_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data,
 		nvme_print_flags_t flags);
 void ocp_c5_log(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data,

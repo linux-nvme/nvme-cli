@@ -52,9 +52,11 @@ void ocp_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int ver
 	ocp_print(smart_extended_log, flags, log, version);
 }
 
-void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_print_flags_t flags)
+void ocp_show_telemetry_log(const struct ocp_telemetry_logs *logs,
+			    struct ocp_telemetry_parse_options *options,
+			    nvme_print_flags_t flags)
 {
-	ocp_print(telemetry_log, flags, options);
+	ocp_print(telemetry_log, flags, logs, options);
 }
 
 void ocp_c3_log(struct libnvme_transport_handle *hdl,

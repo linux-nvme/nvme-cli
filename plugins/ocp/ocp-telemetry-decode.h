@@ -15,10 +15,12 @@
 
 #include "ocp-nvme.h"
 
-extern __u8 *ptelemetry_buffer;
-extern size_t ptelemetry_buffer_size;
-extern __u8 *pstring_buffer;
-extern size_t pstring_buffer_size;
+struct ocp_telemetry_logs {
+	__u8 *telemetry;
+	size_t telemetry_size;
+	__u8 *string;
+	size_t string_size;
+};
 
 #define OCP_TELEMETRY_DESCRIPTION_MAX 256
 
@@ -829,19 +831,9 @@ static inline __u8 *ocp_string_table(__u8 *buf, size_t buf_len, __u64 ofst_dw,
 }
 
 /**
- * @brief parse the ocp telemetry host or controller log binary file
- *        into json or text
- *
- * @param options, input pointer for inputs like telemetry log bin file,
- *        string log bin file and output file etc.
- *
- * @return 0 success
- */
-int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options);
-
-/**
  * @brief parse the ocp telemetry string log binary file to json or text
  *
+ * @param logs, input telemetry and string logs
  * @param event_fifo_num, input event FIFO number
  * @param debug_event_class, input debug event class id
  * @param string_table, input string table
@@ -849,7 +841,8 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options);
  *
  * @return 0 success
  */
-int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug_event_class,
+int parse_ocp_telemetry_string_log(const struct ocp_telemetry_logs *logs,
+	int event_fifo_num, int identifier, int debug_event_class,
 	enum ocp_telemetry_string_tables string_table, char *description);
 
 /**
@@ -868,104 +861,129 @@ int get_telemetry_das_offset_and_size(
 /**
  * @brief parses statistics data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param root, input time json root object pointer
  * @param ptelemetry_das_offset, input telemetry offsets pointer
  * @param fp, input file pointer
  *
  * @return 0 success
  */
-int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets *pOffsets,
+int parse_statistics(const struct ocp_telemetry_logs *logs,
+	struct json_object *root, struct nvme_ocp_telemetry_offsets *pOffsets,
 	FILE *fp);
 
 /**
  * @brief parses a single statistic data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pstatistic_entry, statistic entry pointer
  * @param pstat_obj, JSON object which receives the statistic, or NULL
  * @param fp, input file pointer
  *
  * @return 0 success
  */
-int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
+int parse_statistic(const struct ocp_telemetry_logs *logs,
+	struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
 	struct json_object *pstat_obj, FILE *fp);
 
 /**
  * @brief parses event fifos data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param root, input time json root object pointer
  * @param poffsets, input telemetry offsets pointer
  * @param fp, input file pointer
  *
  * @return 0 success
  */
-int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offsets *poffsets,
+int parse_event_fifos(const struct ocp_telemetry_logs *logs,
+	struct json_object *root, struct nvme_ocp_telemetry_offsets *poffsets,
 	FILE *fp);
 
 /**
  * @brief parses a single event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param fifo_num, input event fifo number
  * @param pfifo_start, event fifo start pointer
  * @param pevent_fifos_object, event fifos json object pointer
- * @param ptelemetry_das_offset, input telemetry offsets pointer
+ * @param poffsets, input telemetry offsets pointer
  * @param fifo_size, input event fifo size
  * @param fp, input file pointer
  *
  * @return 0 success
  */
-int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
-	struct json_object *pevent_fifos_object, unsigned char *pstring_buffer,
+int parse_event_fifo(const struct ocp_telemetry_logs *logs,
+	unsigned int fifo_num, unsigned char *pfifo_start,
+	struct json_object *pevent_fifos_object,
 	struct nvme_ocp_telemetry_offsets *poffsets, __u64 fifo_size, FILE *fp);
 
 /**
  * @brief parses event fifos data to text or json formats
  *
+ * @param logs, input telemetry and string logs
+ * @param options, input parse options
+ *
  * @return 0 success
  */
-int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options);
+int print_ocp_telemetry_normal(const struct ocp_telemetry_logs *logs,
+			       struct ocp_telemetry_parse_options *options);
 
 /**
  * @brief parses event fifos data to text or json formats
  *
+ * @param logs, input telemetry and string logs
+ * @param options, input parse options
+ *
  * @return 0 success
  */
-int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options);
+int print_ocp_telemetry_json(const struct ocp_telemetry_logs *logs,
+			     struct ocp_telemetry_parse_options *options);
 
 /**
  * @brief gets statistic id ascii string
  *
+ * @param logs, input telemetry and string logs
  * @param identifier, string id
  * @param description, string description
  *
  * @return 0 success
  */
-int get_statistic_id_ascii_string(int identifier, char *description);
+int get_statistic_id_ascii_string(const struct ocp_telemetry_logs *logs,
+				  int identifier, char *description);
 
 /**
  * @brief gets event id ascii string
  *
+ * @param logs, input telemetry and string logs
  * @param identifier, string id
  * @param debug_event_class, debug event class
  * @param description, string description
  *
  * @return 0 success
  */
-int get_event_id_ascii_string(int identifier, int debug_event_class, char *description);
+int get_event_id_ascii_string(const struct ocp_telemetry_logs *logs,
+			      int identifier, int debug_event_class,
+			      char *description);
 
 /**
  * @brief gets vu event id ascii string
  *
+ * @param logs, input telemetry and string logs
  * @param identifier, string id
  * @param debug_event_class, debug event class
  * @param description, string description
  *
  * @return 0 success
  */
-int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *description);
+int get_vu_event_id_ascii_string(const struct ocp_telemetry_logs *logs,
+				 int identifier, int debug_event_class,
+				 char *description);
 
 /**
  * @brief parses a time-stamp event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -975,6 +993,7 @@ int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *de
  * @return 0 success
  */
 int parse_time_stamp_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -984,6 +1003,7 @@ int parse_time_stamp_event(
 /**
  * @brief parses a pcie event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -993,6 +1013,7 @@ int parse_time_stamp_event(
  * @return 0 success
  */
 int parse_pcie_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1002,6 +1023,7 @@ int parse_pcie_event(
 /**
  * @brief parses a nvme event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -1011,6 +1033,7 @@ int parse_pcie_event(
  * @return 0 success
  */
 int parse_nvme_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1020,6 +1043,7 @@ int parse_nvme_event(
 /**
  * @brief parses common event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -1028,13 +1052,18 @@ int parse_nvme_event(
  *
  * @return
  */
-void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp);
+void parse_common_event(
+		const struct ocp_telemetry_logs *logs,
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
 
 /**
  * @brief parses a media-wear event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -1044,6 +1073,7 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
  * @return 0 success
  */
 int parse_media_wear_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1053,6 +1083,7 @@ int parse_media_wear_event(
 /**
  * @brief parses a virtual FIFO event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -1062,6 +1093,7 @@ int parse_media_wear_event(
  * @return 0 success
  */
 int parse_virtual_fifo_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1071,6 +1103,7 @@ int parse_virtual_fifo_event(
 /**
  * @brief parses a SMBUS/I2C/I3C event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -1080,6 +1113,7 @@ int parse_virtual_fifo_event(
  * @return 0 success
  */
 int parse_smbus_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1089,6 +1123,7 @@ int parse_smbus_event(
 /**
  * @brief parses a MCTP event fifo data to text or json formats
  *
+ * @param logs, input telemetry and string logs
  * @param pevent_descriptor, input event descriptor data
  * @param pevent_descriptor_obj, event descriptor json object pointer
  * @param pevent_specific_data, input event specific data
@@ -1098,6 +1133,7 @@ int parse_smbus_event(
  * @return 0 success
  */
 int parse_mctp_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,

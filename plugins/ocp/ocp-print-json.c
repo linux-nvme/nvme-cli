@@ -553,9 +553,10 @@ static void json_smart_extended_log(struct ocp_smart_extended_log *log, unsigned
 		json_smart_extended_log_v2(log);
 	}
 }
-static void json_telemetry_log(struct ocp_telemetry_parse_options *options)
+static void json_telemetry_log(const struct ocp_telemetry_logs *logs,
+			       struct ocp_telemetry_parse_options *options)
 {
-	print_ocp_telemetry_json(options);
+	print_ocp_telemetry_json(logs, options);
 }
 
 static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data)

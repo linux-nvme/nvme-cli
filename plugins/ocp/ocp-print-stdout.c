@@ -247,9 +247,10 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 	printf("\n");
 }
 
-static void stdout_telemetry_log(struct ocp_telemetry_parse_options *options)
+static void stdout_telemetry_log(const struct ocp_telemetry_logs *logs,
+				 struct ocp_telemetry_parse_options *options)
 {
-	print_ocp_telemetry_normal(options);
+	print_ocp_telemetry_normal(logs, options);
 }
 
 static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data)
