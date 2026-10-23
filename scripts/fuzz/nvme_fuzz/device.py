@@ -31,7 +31,8 @@ OK_ANSWER = bytes(5)
 
 # The PCI IDs of controllers the plugins check for: a model of each set of
 # capabilities in their model tables (wdc_get_drive_capabilities(),
-# sndk_get_drive_capabilities() and GetDriveModel() of micron)
+# sndk_get_drive_capabilities(), GetDriveModel() of micron, GetSSDModel()
+# of ymtc), and the vendors sfx status knows
 _WDC_PCI_IDS = (
     (0x1C58, 0x0003),
     (0x1C58, 0x0023),
@@ -77,6 +78,18 @@ PCI_IDS: dict[str, tuple[tuple[int, int], ...]] = {
         (0x1344, 0x6001),
         (0x1344, 0x6003),
         (0x1344, 0x6004),
+    ),
+    'ymtc': (
+        (0x1E49, 0x1058),
+        (0x1E49, 0x1078),
+        (0x1E49, 0x1A28),
+        (0x1E49, 0x1A38),
+        (0x1E49, 0x1A48),
+    ),
+    'sfx': (
+        (0xCC53, 0x0020),
+        (0xCC53, 0x0021),
+        (0x1DFD, 0x0020),
     ),
 }
 
