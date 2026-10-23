@@ -26,14 +26,6 @@ from .libfuzzer import coverage
 from .targets import TARGETS
 
 
-def _entries(spec: str, n: int) -> list[int]:
-    res: list[int] = []
-    for part in spec.split(','):
-        first, _, last = part.partition('-')
-        res += range(int(first), int(last or first) + 1)
-    return [i for i in res if 0 <= i < n]
-
-
 def _pci_id(s: str) -> tuple[int, int]:
     vid, _, did = s.partition(':')
     return int(vid, 16), int(did, 16)
@@ -109,7 +101,9 @@ def main(args: argparse.Namespace) -> int:
     base = coverage(binary, base_inputs)
     print(f'reference {ref.name}: {base} edges')
     selected = (
-        _entries(args.entries, len(cmds)) if args.entries else range(len(cmds))
+        device.parse_entries(args.entries, len(cmds))
+        if args.entries
+        else range(len(cmds))
     )
     for i in selected:
         cmd = cmds[i]

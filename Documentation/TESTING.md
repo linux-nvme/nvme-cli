@@ -355,6 +355,13 @@ of plugins which check the PCI IDs of the controller run with a model of each
 set of capabilities in the model tables of the plugin, or with the IDs of
 `--pci`.
 
+`sweep` tries the commands of the `device` target before a fuzz run: it runs
+each a few times with each variant and random device data, and reports one
+which crashes, takes long or writes files into its working directory. A new
+command in the table which does any of this would make a run fail on nearly
+every input. `--entries` selects commands, `--save` keeps the inputs with a
+problem for `check` and `triage`.
+
 `seeds` adds seeds to the corpus of the `device` target from the CLI mock
 tests, which answer the commands with valid device data, where fuzzed data
 rarely gets past the first check. It runs the `mock` test suite of the build
