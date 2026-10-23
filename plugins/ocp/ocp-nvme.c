@@ -194,8 +194,8 @@ struct ieee1667_get_cq_entry {
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *no_uuid = "Skip UUID index search (UUID index not required for OCP 1.0)";
 static const char *all_ns = "Apply to all namespaces";
-const char *data = "Error injection data structure entries";
-const char *number = "Number of valid error injection data entries";
+static const char *data = "Error injection data structure entries";
+static const char *number = "Number of valid error injection data entries";
 static const char *type = "Error injection type";
 static const char *nrtdp = "Number of reads to trigger device panic";
 static const char *save = "Specifies that the controller shall save the attribute";
