@@ -8,11 +8,6 @@
 
 #include <libnvme.h>
 
-/*
- * UUID assigned for OCP.
- */
-extern const unsigned char ocp_uuid[NVME_UUID_LEN];
-
 /**
  * ocp_get_uuid_index() - Get OCP UUID index
  * @dev:	nvme device
