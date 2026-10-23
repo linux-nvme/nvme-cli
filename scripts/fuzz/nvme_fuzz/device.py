@@ -136,6 +136,16 @@ def commands(source: Path = SOURCE) -> list[Command]:
     return cmds
 
 
+def parse_entries(spec: str, n: int) -> list[int]:
+    """The indices of a list of them and ranges, e.g. 0-9,175, below
+    @n."""
+    res: list[int] = []
+    for part in spec.split(','):
+        first, _, last = part.partition('-')
+        res += range(int(first), int(last or first) + 1)
+    return [i for i in res if 0 <= i < n]
+
+
 def describe(data: bytes, cmds: list[Command]) -> str:
     """What the input @data runs, e.g. "id ctrl (json,verbose)"."""
     if len(data) < 3:
