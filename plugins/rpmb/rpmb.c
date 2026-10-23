@@ -147,15 +147,12 @@ struct rpmb_config_block_t {
 #define RPMB_NVME_SECP        0xEA
 #define RPMB_NVME_SPSP        0x0001
 
-union ctrl_rpmbs_reg {
-	struct {
-		unsigned int num_targets:3;
-		unsigned int auth_method:3;
-		unsigned int reserved:10;
-		unsigned int total_size:8;   /* 128K units */
-		unsigned int access_size:8;  /* in 512 byte count */
-	};
+/* The RPMBS field of Identify Controller and its fields */
+struct ctrl_rpmbs_reg {
 	unsigned int rpmbs;
+	unsigned int num_targets;
+	unsigned int total_size;   /* 128K units */
+	unsigned int access_size;  /* in 512 byte count */
 };
 
 static int send_rpmb_req(struct libnvme_transport_handle *hdl, unsigned char tgt,
@@ -712,7 +709,8 @@ static bool invalid_xfer_size(int blocks, unsigned int bpsz)
 }
 
 /* Identify the controller and fetch its RPMBS support register */
-static int rpmb_get_regs(struct libnvme_transport_handle *hdl, union ctrl_rpmbs_reg *regs)
+static int rpmb_get_regs(struct libnvme_transport_handle *hdl,
+			 struct ctrl_rpmbs_reg *regs)
 {
 	struct nvme_id_ctrl ctrl;
 	struct libnvme_passthru_cmd cmd;
@@ -724,6 +722,9 @@ static int rpmb_get_regs(struct libnvme_transport_handle *hdl, union ctrl_rpmbs_
 		return err;
 
 	regs->rpmbs = le32_to_cpu(ctrl.rpmbs);
+	regs->num_targets = regs->rpmbs & NVME_CTRL_RPMBS_NR_UNITS;
+	regs->total_size = (regs->rpmbs & NVME_CTRL_RPMBS_TOTAL_SIZE) >> 16;
+	regs->access_size = (regs->rpmbs & NVME_CTRL_RPMBS_ACCESS_SIZE) >> 24;
 	if (regs->num_targets == 0) {
 		nvme_show_error("No RPMB targets are supported by the drive");
 		return -1;
@@ -776,7 +777,7 @@ static int rpmb_info(int argc, char **argv, struct command *acmd, struct plugin 
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	union ctrl_rpmbs_reg regs;
+	struct ctrl_rpmbs_reg regs;
 	int err;
 
 	OPT_ARGS(opts) = {
@@ -825,7 +826,7 @@ static int rpmb_program_key(int argc, char **argv, struct command *acmd, struct 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free unsigned char *key_buf = NULL;
-	union ctrl_rpmbs_reg regs;
+	struct ctrl_rpmbs_reg regs;
 	unsigned int key_size = 0;
 	int err;
 
@@ -869,7 +870,7 @@ static int rpmb_read_counter(int argc, char **argv, struct command *acmd,
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	union ctrl_rpmbs_reg regs;
+	struct ctrl_rpmbs_reg regs;
 	unsigned int write_cntr = 0;
 	int err;
 
@@ -921,7 +922,7 @@ static int rpmb_read_data(int argc, char **argv, struct command *acmd, struct pl
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
-	union ctrl_rpmbs_reg regs;
+	struct ctrl_rpmbs_reg regs;
 	int err;
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -993,7 +994,7 @@ static int rpmb_write_data(int argc, char **argv, struct command *acmd, struct p
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free unsigned char *key_buf = NULL;
 	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
-	union ctrl_rpmbs_reg regs;
+	struct ctrl_rpmbs_reg regs;
 	unsigned int key_size = 0;
 	unsigned int msg_size = 0;
 	int err;
@@ -1055,7 +1056,7 @@ static int rpmb_read_config(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
-	union ctrl_rpmbs_reg regs;
+	struct ctrl_rpmbs_reg regs;
 	unsigned int write_cntr;
 	int err;
 
@@ -1126,7 +1127,7 @@ static int rpmb_write_config(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free unsigned char *key_buf = NULL;
 	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
-	union ctrl_rpmbs_reg regs;
+	struct ctrl_rpmbs_reg regs;
 	unsigned int key_size = 0;
 	unsigned int msg_size = 0;
 	int err;
