@@ -42,7 +42,7 @@ void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t dat
 	free(description_str);
 }
 
-char *process_field_size_16(int offset, char *sfield, __u8 *buf)
+char *process_field_size_16(int offset, const char *sfield, __u8 *buf)
 {
 	uint64_t lval_lo, lval_hi;
 	char *datastr = NULL;
@@ -68,7 +68,7 @@ char *process_field_size_16(int offset, char *sfield, __u8 *buf)
 	return datastr;
 }
 
-char *process_field_size_8(int offset, char *sfield, __u8 *buf)
+char *process_field_size_8(int offset, const char *sfield, __u8 *buf)
 {
 	uint64_t lval_lo;
 	char *datastr = NULL;
@@ -107,7 +107,7 @@ char *process_field_size_8(int offset, char *sfield, __u8 *buf)
 	return datastr;
 }
 
-char *process_field_size_7(int offset, char *sfield, __u8 *buf)
+char *process_field_size_7(int offset, const char *sfield, __u8 *buf)
 {
 	__u8 lval[8] = { 0 };
 	__u64 lval_lo;
@@ -121,7 +121,7 @@ char *process_field_size_7(int offset, char *sfield, __u8 *buf)
 	return datastr;
 }
 
-char *process_field_size_6(int offset, char *sfield, __u8 *buf)
+char *process_field_size_6(int offset, const char *sfield, __u8 *buf)
 {
 	__u32 ival;
 	__u16 sval;
@@ -144,7 +144,8 @@ char *process_field_size_6(int offset, char *sfield, __u8 *buf)
 	return datastr;
 }
 
-char *process_field_size_default(int offset, char *sfield, __u8 *buf, int size)
+char *process_field_size_default(int offset, const char *sfield, __u8 *buf,
+	int size)
 {
 	/* "0x" prefix + 2 hex chars per byte + null terminator */
 	char *datastr = malloc(size * 2 + 3);
@@ -160,14 +161,14 @@ char *process_field_size_default(int offset, char *sfield, __u8 *buf, int size)
 	return datastr;
 }
 
-void generic_structure_parser(__u8 *buf, struct request_data *req_data, int field_count,
-	struct json_object *stats, __u8 spec, FILE *fp)
+void generic_structure_parser(__u8 *buf, const struct request_data *req_data,
+	int field_count, struct json_object *stats, __u8 spec, FILE *fp)
 {
 	int offset = 0;
 
 	for (int field = 0; field < field_count; field++) {
 		__cleanup_free char *datastr = NULL;
-		char *sfield = req_data[field].field;
+		const char *sfield = req_data[field].field;
 		int size = !spec ? req_data[field].size : req_data[field].size2;
 
 		if (!size || sfield == NULL)
