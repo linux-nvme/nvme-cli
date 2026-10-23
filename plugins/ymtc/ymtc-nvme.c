@@ -24,6 +24,7 @@
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/int-util.h>
+#include <shared/unaligned-util.h>
 
 #include "global-ctx.h"
 #include "nvme-pci-ids.h"
@@ -131,13 +132,18 @@ static void print_ymtc_smart_item(const struct nvme_ymtc_smart_log_item *it,
 
 	case SI_VD_WEARLEVELING_COUNT_ID:
 		printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
-			   *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
+			   *nm,
+			   shr_get_unaligned_le16(raw),
+			   shr_get_unaligned_le16(raw + 2),
+			   shr_get_unaligned_le16(raw + 4));
 		break;
 
 	case SI_VD_TEMPT_SINCE_BOOTUP_ID:
 		printf("tempt_since_bootup              : %3d%%       max: %u, min: %u, curr: %u\n",
-			   *nm, *(uint16_t *)raw - 273, *(uint16_t *)(raw + 2) - 273,
-			   *(uint16_t *)(raw + 4) - 273);
+			   *nm,
+			   shr_get_unaligned_le16(raw) - 273,
+			   shr_get_unaligned_le16(raw + 2) - 273,
+			   shr_get_unaligned_le16(raw + 4) - 273);
 		break;
 
 	case SI_VD_E2E_DECTECTION_COUNT_ID:
@@ -147,7 +153,7 @@ static void print_ymtc_smart_item(const struct nvme_ymtc_smart_log_item *it,
 
 	case SI_VD_PCIE_CRC_ERR_COUNT_ID:
 		printf("crc_error_count                 : %3d%%       %"PRIu32"\n",
-			   *nm, *(uint32_t *)raw);
+			   *nm, shr_get_unaligned_le32(raw));
 		break;
 
 	case SI_VD_TIMED_WORKLOAD_MEDIA_WEAR_ID:
@@ -177,23 +183,28 @@ static void print_ymtc_smart_item(const struct nvme_ymtc_smart_log_item *it,
 
 	case SI_VD_TEMPT_SINCE_BORN_ID:
 		printf("tempt_since_born                : %3d%%       max: %u, min: %u, curr: %u\n",
-			   *nm, *(uint16_t *)raw - 273, *(uint16_t *)(raw + 2) - 273,
-			   *(int16_t *)(raw + 4) - 273);
+			   *nm,
+			   shr_get_unaligned_le16(raw) - 273,
+			   shr_get_unaligned_le16(raw + 2) - 273,
+			   (int16_t)shr_get_unaligned_le16(raw + 4) - 273);
 		break;
 
 	case SI_VD_POWER_CONSUMPTION_ID:
 		printf("power_consumption               : %3d%%       max: %u, min: %u, curr: %u\n",
-			   *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
+			   *nm,
+			   shr_get_unaligned_le16(raw),
+			   shr_get_unaligned_le16(raw + 2),
+			   shr_get_unaligned_le16(raw + 4));
 		break;
 
 	case SI_VD_THERMAL_THROTTLE_STATUS_ID:
 		printf("thermal_throttle_status         : %3d%%       %d%%, cnt: %"PRIu32"\n",
-			   *nm, *raw, *(uint32_t *)(raw + 1));
+			   *nm, *raw, shr_get_unaligned_le32(raw + 1));
 		break;
 
 	case SI_VD_THERMAL_THROTTLE_TIME_ID:
 		printf("thermal_throttle_time           : %3d%%       %u, time: %"PRIu32"\n",
-			   *nm, *raw, *(uint32_t *)(raw + 1));
+			   *nm, *raw, shr_get_unaligned_le32(raw + 1));
 		break;
 
 	case SI_VD_FEATURE_EC_ID:
@@ -202,7 +213,10 @@ static void print_ymtc_smart_item(const struct nvme_ymtc_smart_log_item *it,
 				   *nm, int48_to_long(raw));
 		else if (model == PE501 || model == PE522)
 			printf("capacitor_capacitance           : %3d%%       current: %u, nominal: %u, threshold: %u\n",
-				   *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
+				   *nm,
+				   shr_get_unaligned_le16(raw),
+				   shr_get_unaligned_le16(raw + 2),
+				   shr_get_unaligned_le16(raw + 4));
 		break;
 
 	case SI_VD_FEATURE_ED_ID:
