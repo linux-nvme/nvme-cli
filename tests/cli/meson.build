@@ -108,6 +108,7 @@ if python3.found()
             ['init-pi-tags', 'nvme_init_pi_tags_test.py', cli_test_env, 30],
             ['dry-run', 'nvme_dry_run_test.py', cli_test_env, 30],
             ['sel', 'nvme_sel_test.py', cli_test_env, 30],
+            ['format', 'nvme_format_test.py', cli_test_env, 30],
             ['host-metadata', 'nvme_host_metadata_test.py', cli_test_env,
              30],
             ['fuzz-record', 'nvme_fuzz_record_test.py', cli_test_env, 30],

@@ -856,8 +856,11 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &prev_lbaf);
 
 		if (cfg.bs) {
-			for (i = 0; i <= ns->nlbaf; ++i) {
-				if ((1ULL << ns->lbaf[i].ds) == cfg.bs && ns->lbaf[i].ms == 0) {
+			for (i = 0; i <= ns->nlbaf && i < ARRAY_SIZE(ns->lbaf);
+			     ++i) {
+				if (ns->lbaf[i].ds < 64 &&
+				    (1ULL << ns->lbaf[i].ds) == cfg.bs &&
+				    ns->lbaf[i].ms == 0) {
 					cfg.lbaf = i;
 					break;
 				}
@@ -939,6 +942,11 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 				return err;
 			}
 		} else if (cfg.namespace_id != NVME_NSID_ALL) {
+			if (ns->lbaf[cfg.lbaf].ds >= 31) {
+				nvme_show_error("invalid LBA data size %u",
+						ns->lbaf[cfg.lbaf].ds);
+				return -EINVAL;
+			}
 			block_size = 1 << ns->lbaf[cfg.lbaf].ds;
 
 			/*
