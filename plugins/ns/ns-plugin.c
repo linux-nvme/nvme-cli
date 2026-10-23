@@ -491,7 +491,7 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	if (id->ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) {
+	if (le32_to_cpu(id->ctratt) & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) {
 		gr_list = libnvme_alloc(sizeof(*gr_list));
 		if (!gr_list)
 			return -ENOMEM;
