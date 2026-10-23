@@ -717,8 +717,10 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	shr_bin_to_hex(s, sizeof(s), &buf[2], 2,
 		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
 	printf("    \"PCI Subsystem Vendor ID\":\"%sh\",\n",  s);
-	printf("    \"Serial Number\":\"%s\",\n", ctrl->sn);
-	printf("    \"Model Number\":\"%s\",\n", ctrl->mn);
+	printf("    \"Serial Number\":\"%-.*s\",\n",
+	       (int)sizeof(ctrl->sn), ctrl->sn);
+	printf("    \"Model Number\":\"%-.*s\",\n",
+	       (int)sizeof(ctrl->mn), ctrl->mn);
 	printf("    \"Firmware Revision\":\"%-.*s\",\n", (int)sizeof(ctrl->fr), ctrl->fr);
 	shr_bin_to_hex(s, sizeof(s), &buf[72], 1,
 		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
