@@ -985,7 +985,12 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
-	lba_size = 1 << ns.lbaf[lba_index].ds;
+	lba_size = nvme_lbaf_data_size(ns.lbaf[lba_index].ds);
+	if (!lba_size) {
+		nvme_show_error("invalid LBA data size %u",
+				ns.lbaf[lba_index].ds);
+		return -EINVAL;
+	}
 	if (cfg.data_size & (lba_size - 1)) {
 		nvme_show_error(
 			"Data size:%#"PRIx64" not aligned to lba size:%#x",

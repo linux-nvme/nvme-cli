@@ -686,6 +686,9 @@ __shr_public int libnvme_get_logical_block_size(
 		return ret;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
+	/* an LBA data size the device reports, which has to fit an int */
+	if (ns->lbaf[flbas].ds >= 31)
+		return -EINVAL;
 	*blksize = 1 << ns->lbaf[flbas].ds;
 
 	return 0;

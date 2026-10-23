@@ -110,7 +110,8 @@ static void vt_convert_smart_data_to_human_readable_format(
 
 	setlocale(LC_ALL, "C");
 
-	unsigned long long lba = 1ULL << smart->raw_ns.lbaf[lba_index].ds;
+	unsigned long long lba =
+		nvme_lbaf_data_size(smart->raw_ns.lbaf[lba_index].ds);
 
 	capacity = le64_to_cpu(smart->raw_ns.nsze) * lba;
 

@@ -112,7 +112,9 @@ static int ns_freebsd_load_geometry(struct libnvme_ns *n)
 		n->attrs->lba_size = malloc(sizeof(int));
 		if (!n->attrs->lba_size)
 			return -ENOMEM;
-		*n->attrs->lba_size = 1 << id->lbaf[flbas].ds;
+		/* the LBA data size the device reports, 0 if no int */
+		*n->attrs->lba_size = id->lbaf[flbas].ds < 31 ?
+			1 << id->lbaf[flbas].ds : 0;
 	}
 
 	if (!ATTR_IS_LOADED(n->attrs->lba_count)) {
