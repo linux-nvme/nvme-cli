@@ -28,7 +28,7 @@ import shutil
 import signal
 import subprocess
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import FrameType
@@ -275,14 +275,16 @@ def _merge(
         outs = [parts / 'out' / d.name for d in ins]
         (parts / 'out').mkdir(parents=True)
         with ThreadPoolExecutor(jobs) as pool:
-            done = list(
-                pool.map(
-                    lambda d, out: merge(out, d, f'merge-{d.name}.log'),
-                    ins,
-                    outs,
-                )
-            )
-        ok = all(done)
+            futures = [
+                pool.submit(merge, out, d, f'merge-{d.name}.log')
+                for d, out in zip(ins, outs, strict=True)
+            ]
+            # Wait in steps: Ctrl-C runs its handler in this thread, and
+            # an endless wait for a lock is not interrupted on every
+            # system, e.g. FreeBSD
+            while wait(futures, timeout=1).not_done:
+                pass
+        ok = all(f.result() for f in futures)
         src = parts / 'kept'
         src.mkdir()
         for out in outs if ok else []:
