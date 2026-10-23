@@ -2439,6 +2439,7 @@ static int enable_ieee1667_silo_get(struct libnvme_transport_handle *hdl, const 
 	err = nvme_get_features(hdl, NVME_NSID_NONE, fid, sel, 0, uidx,
 		NULL, 0, &result);
 	if (!err) {
+		cq_entry.enabled = result;
 		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, result);
 		else
