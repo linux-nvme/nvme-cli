@@ -13,7 +13,7 @@
 #include "nvme-print.h"
 #include "ocp-telemetry-decode.h"
 
-struct statistic_entry statistic_identifiers_map[] = {
+static const struct statistic_entry statistic_identifiers_map[] = {
 	{ 0x00, "Error, this entry does not exist." },
 	{ 0x01, "Outstanding Admin Commands" },
 	{ 0x02, "Host Write Bandwidth"},
@@ -247,7 +247,7 @@ static const struct {
 	[MCTP_EVENT_CLASS_TYPE] = EVENT_IDS(mctp_event_id_str),
 };
 
-struct request_data host_log_page_header[] = {
+static const struct request_data host_log_page_header[] = {
 	{ "LogIdentifier", 1 },
 	{ "Reserved1", 4 },
 	{ "IEEE OUI Identifier", 3 },
@@ -263,7 +263,7 @@ struct request_data host_log_page_header[] = {
 	{ "Telemetry Controller-Initiated Data Generation Number", 1 }
 };
 
-struct request_data controller_log_page_header[] = {
+static const struct request_data controller_log_page_header[] = {
 	{ "LogIdentifier", 1 },
 	{ "Reserved1", 4 },
 	{ "IEEE OUI Identifier", 3 },
@@ -278,7 +278,7 @@ struct request_data controller_log_page_header[] = {
 	{ "Telemetry Controller-Initiated Data Generation Number", 1 }
 };
 
-struct request_data reason_identifier[] = {
+static const struct request_data reason_identifier[] = {
 	{ "Error ID", 64 },
 	{ "File ID", 8 },
 	{ "Line Number", 2 },
@@ -287,7 +287,7 @@ struct request_data reason_identifier[] = {
 	{ "VU Reason Extension", 32 }
 };
 
-struct request_data ocp_header_in_da1[] = {
+static const struct request_data ocp_header_in_da1[] = {
 	{ "Major Version", 2 },
 	{ "Minor Version", 2 },
 	{ "Reserved1", 4 },
@@ -356,7 +356,7 @@ struct request_data ocp_header_in_da1[] = {
 	{ "Reserved6", 80 }
 };
 
-struct request_data smart[] = {
+static const struct request_data smart[] = {
 	{ "Critical Warning", 1 },
 	{ "Composite Temperature", 2 },
 	{ "Available Spare", 1 },
@@ -390,7 +390,7 @@ struct request_data smart[] = {
 	{ "Reserved2", 280 }
 };
 
-struct request_data smart_extended[] = {
+static const struct request_data smart_extended[] = {
 	{ "Physical Media Units Written", 16 },
 	{ "Physical Media Units Read", 16 },
 	{ "Bad User NAND Blocks Raw Count", 6 },
