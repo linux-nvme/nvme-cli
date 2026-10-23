@@ -15,7 +15,7 @@
 
 /*Request data format*/
 struct __packed request_data {
-	char *field;
+	const char *field;
 	int  size;
 	int  size2;
 };
@@ -43,8 +43,9 @@ enum field_size {
  *
  * @return 0 success
  */
-void generic_structure_parser(__u8 *buf, struct request_data *req_data, int field_count,
-			  struct json_object *stats, __u8 spec, FILE *fp);
+void generic_structure_parser(__u8 *buf, const struct request_data *req_data,
+			      int field_count, struct json_object *stats,
+			      __u8 spec, FILE *fp);
 
 /**
  * @brief prints raw data to the buffer
@@ -67,7 +68,7 @@ void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t dat
  *
  * @return allocated string (caller must free), or NULL on error
  */
-char *process_field_size_16(int offset, char *sfield, __u8 *buf);
+char *process_field_size_16(int offset, const char *sfield, __u8 *buf);
 
 /**
  * @brief formats an 8-byte field as a hex string
@@ -78,7 +79,7 @@ char *process_field_size_16(int offset, char *sfield, __u8 *buf);
  *
  * @return allocated string (caller must free), or NULL on error
  */
-char *process_field_size_8(int offset, char *sfield, __u8 *buf);
+char *process_field_size_8(int offset, const char *sfield, __u8 *buf);
 
 /**
  * @brief formats a 7-byte field as a hex string
@@ -89,7 +90,7 @@ char *process_field_size_8(int offset, char *sfield, __u8 *buf);
  *
  * @return allocated string (caller must free), or NULL on error
  */
-char *process_field_size_7(int offset, char *sfield, __u8 *buf);
+char *process_field_size_7(int offset, const char *sfield, __u8 *buf);
 
 /**
  * @brief formats a 6-byte field as a hex string
@@ -100,7 +101,7 @@ char *process_field_size_7(int offset, char *sfield, __u8 *buf);
  *
  * @return allocated string (caller must free), or NULL on error
  */
-char *process_field_size_6(int offset, char *sfield, __u8 *buf);
+char *process_field_size_6(int offset, const char *sfield, __u8 *buf);
 
 /**
  * @brief formats a variable-size field as a hex string
@@ -112,4 +113,5 @@ char *process_field_size_6(int offset, char *sfield, __u8 *buf);
  *
  * @return allocated string (caller must free), or NULL on error
  */
-char *process_field_size_default(int offset, char *sfield, __u8 *buf, int size);
+char *process_field_size_default(int offset, const char *sfield, __u8 *buf,
+				 int size);
