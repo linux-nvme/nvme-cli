@@ -53,6 +53,13 @@ class CommandsTest(unittest.TestCase):
             bytes([3, 0, 0, 0x96, 0x1B, 0x00, 0x25]),
         )
 
+    def test_pci_ids(self) -> None:
+        self.assertEqual(self.cmds[0].pci_ids, ())
+        self.assertEqual(self.cmds[3].pci_ids, device.PCI_IDS['wdc'])
+        other = device.Command(9, ('other', 'cmd'), None, True)
+        for ids in device.PCI_IDS.values():
+            self.assertTrue(set(ids) <= set(other.pci_ids))
+
     def test_describe(self) -> None:
         def d(data: bytes) -> str:
             return device.describe(data, self.cmds)
@@ -78,6 +85,9 @@ class RealTableTest(unittest.TestCase):
     def test_real_table(self) -> None:
         cmds = device.commands()
         self.assertGreater(len(cmds), 100)
+        # the plugins with commands which check the PCI IDs have models
+        plugins = {c.argv[0] for c in cmds if c.pci}
+        self.assertLessEqual(plugins, set(device.PCI_IDS))
         self.assertEqual(cmds[0].name, 'id ctrl')
         self.assertTrue(all(c.argv for c in cmds))
         self.assertEqual([c.index for c in cmds], list(range(len(cmds))))

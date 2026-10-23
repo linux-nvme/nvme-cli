@@ -350,7 +350,10 @@ a seed fails, or to show that a new regression input fails without its fix.
 the edges an input of a command reaches beyond those of a command which only
 identifies the controller. A command which adds few does not get past its
 option parsing, or a check of the device the fuzzer may never pass. It uses
-random device data, or with `--corpus` the inputs of a corpus.
+random device data, or with `--corpus` the inputs of a corpus. The commands
+of plugins which check the PCI IDs of the controller run with a model of each
+set of capabilities in the model tables of the plugin, or with the IDs of
+`--pci`.
 
 `seeds` adds seeds to the corpus of the `device` target from the CLI mock
 tests, which answer the commands with valid device data, where fuzzed data
