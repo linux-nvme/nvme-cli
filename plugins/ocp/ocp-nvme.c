@@ -886,6 +886,28 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	return 0;
 }
 
+static int read_log_file(const char *path, const char *name,
+			 size_t min_size, unsigned char **buf, long *size)
+{
+	int err;
+
+	err = shr_read_file(NULL, path, size, buf);
+	if (err) {
+		nvme_show_error("Failed to read %s.", name);
+		return err;
+	}
+
+	if (*size < (long)min_size) {
+		nvme_show_error("%s is smaller than its %zu-byte header.",
+				name, min_size);
+		free(*buf);
+		*buf = NULL;
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int load_string_log_file(const char *path,
 				struct ocp_telemetry_logs *logs)
 {
@@ -895,19 +917,9 @@ static int load_string_log_file(const char *path,
 	long size;
 	int err;
 
-	err = shr_read_file(NULL, path, &size, &buf);
-	if (err) {
-		nvme_show_error("Failed to read string-log.");
+	err = read_log_file(path, "string-log", header_size, &buf, &size);
+	if (err)
 		return err;
-	}
-
-	/* All lookups rely on a valid string log header. */
-	if (size < (long)header_size) {
-		nvme_show_error("string-log is smaller than its %zu-byte header.",
-				header_size);
-		free(buf);
-		return -EINVAL;
-	}
 
 	free(logs->string);
 	logs->string = buf;
@@ -915,10 +927,6 @@ static int load_string_log_file(const char *path,
 	return 0;
 }
 
-/*
- * Loads the telemetry log at path into logs->telemetry and validates that
- * its Log Identifier indicates a Host- or Controller-Initiated Telemetry log.
- */
 static int load_telemetry_log_file(const char *path,
 				   struct ocp_telemetry_logs *logs)
 {
@@ -929,18 +937,9 @@ static int load_telemetry_log_file(const char *path,
 	long size;
 	int err;
 
-	err = shr_read_file(NULL, path, &size, &buf);
-	if (err) {
-		nvme_show_error("Failed to read telemetry-log.");
+	err = read_log_file(path, "telemetry-log", header_size, &buf, &size);
+	if (err)
 		return err;
-	}
-
-	if (size < (long)header_size) {
-		nvme_show_error("telemetry-log is smaller than its %zu-byte header.",
-				header_size);
-		free(buf);
-		return -EINVAL;
-	}
 
 	if (buf[0] != NVME_LOG_LID_TELEMETRY_HOST &&
 	    buf[0] != NVME_LOG_LID_TELEMETRY_CTRL) {
