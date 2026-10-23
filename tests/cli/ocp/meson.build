@@ -21,6 +21,9 @@ else
     ]
 endif
 
+# Text output only
+ocp_mock_tests += ['ocp_ieee1667_silo_mock_test.py']
+
 if have_mock_nvme
     foreach t : ocp_mock_tests
         name = t.split('.')[0].replace('ocp_', '')
