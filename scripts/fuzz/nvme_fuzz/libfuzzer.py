@@ -13,7 +13,9 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 
 from .targets import sanitizer_env
@@ -40,27 +42,56 @@ def input_env(path: Path) -> dict[str, str]:
     return env
 
 
+@dataclass(frozen=True)
+class Result:
+    """How a run of the fuzz target on one input went."""
+
+    # The exit status, -1 on a hang
+    status: int
+    report: str
+    seconds: float
+    # What it left in its working directory, e.g. files an nvme-cli
+    # command wrote, or the crash-* input and fake sysfs of a crash
+    files: tuple[str, ...]
+
+
+def run_input(binary: Path, path: Path, timeout: int = 20) -> Result:
+    """Run @binary on the input @path once, in a directory of its own:
+    nothing it writes stays behind in the current one."""
+    with tempfile.TemporaryDirectory(prefix='nvme-fuzz-replay-') as tmp:
+        start = time.monotonic()
+        try:
+            r = subprocess.run(
+                [
+                    str(binary.resolve()),
+                    '-close_fd_mask=3',
+                    f'-timeout={timeout}',
+                    str(path.resolve()),
+                ],
+                cwd=tmp,
+                env=input_env(path),
+                capture_output=True,
+                text=True,
+                errors='replace',
+                timeout=timeout * 6,
+                check=False,
+            )
+            status, report = r.returncode, r.stderr
+        except subprocess.TimeoutExpired:
+            status, report = -1, 'TIMEOUT'
+        return Result(
+            status,
+            report,
+            time.monotonic() - start,
+            tuple(sorted(os.listdir(tmp))),
+        )
+
+
 def replay(binary: Path, path: Path, timeout: int = 20) -> tuple[int, str]:
     """Run @binary on the input @path once. Returns the exit status, -1 on
     a hang, and what it reported."""
-    try:
-        r = subprocess.run(
-            [
-                str(binary),
-                '-close_fd_mask=3',
-                f'-timeout={timeout}',
-                str(path),
-            ],
-            env=input_env(path),
-            capture_output=True,
-            text=True,
-            errors='replace',
-            timeout=timeout * 6,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return -1, 'TIMEOUT'
-    return r.returncode, r.stderr
+    r = run_input(binary, path, timeout)
+    return r.status, r.report
 
 
 def coverage(binary: Path, inputs: Iterable[bytes]) -> int:

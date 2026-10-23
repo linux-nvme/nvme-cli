@@ -6,6 +6,7 @@
 # Authors: Daniel Wagner <dwagner@suse.de>
 """Tests for running a libFuzzer binary on given inputs."""
 
+import os
 import stat
 import sys
 import tempfile
@@ -14,10 +15,12 @@ from pathlib import Path
 
 from nvme_fuzz import libfuzzer
 
-# Reports the data limit it runs with
+# Reports the data limit it runs with, and leaves a crash-* input behind
+# as libFuzzer does on a crash
 FAKE = f"""#!{sys.executable}
 import os, sys
 sys.stderr.write(os.environ.get('FUZZ_DATA_LIMIT', 'none'))
+open('crash-1234', 'w').close()
 """
 
 
@@ -48,6 +51,26 @@ class LibFuzzerTest(unittest.TestCase):
         ):
             status, report = libfuzzer.replay(binary, self._input(name))
             self.assertEqual((status, report), (0, limit), name)
+
+    @unittest.skipIf(
+        sys.platform == 'win32', 'runs a script as the fuzz target'
+    )
+    def test_run_input_own_dir(self) -> None:
+        binary = self.dir / 'fuzz-device'
+        binary.write_text(FAKE)
+        binary.chmod(binary.stat().st_mode | stat.S_IXUSR)
+        self._input('crash-0')
+        cwd = self.dir / 'cwd'
+        cwd.mkdir()
+        old = Path.cwd()
+        os.chdir(cwd)
+        try:
+            # relative paths, as on the command line
+            r = libfuzzer.run_input(Path('../fuzz-device'), Path('../crash-0'))
+        finally:
+            os.chdir(old)
+        self.assertEqual((r.status, r.files), (0, ('crash-1234',)))
+        self.assertEqual(list(cwd.iterdir()), [])
 
     def test_slow_unit(self) -> None:
         for name, slow in (
