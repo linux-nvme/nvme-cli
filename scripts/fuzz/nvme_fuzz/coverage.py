@@ -25,16 +25,6 @@ from . import device
 from .libfuzzer import coverage
 from .targets import TARGETS
 
-# The PCI IDs of controllers the plugins check for
-PCI_IDS = (
-    (0x1B96, 0x2500),
-    (0x1B96, 0x2400),
-    (0x1C58, 0x0023),
-    (0x15B7, 0x5011),
-    (0x1344, 0x51A2),
-    (0x1344, 0x5196),
-)
-
 
 def _entries(spec: str, n: int) -> list[int]:
     res: list[int] = []
@@ -64,7 +54,8 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
         type=_pci_id,
         action='append',
         metavar='VID:DID',
-        help='PCI IDs for commands with pci set (some of the plugins)',
+        help='PCI IDs for commands with pci set, instead of models of '
+        'the plugin of the command',
     )
     p.add_argument(
         '--low',
@@ -75,13 +66,15 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
 
 
 def generated(
-    cmd: device.Command, pci_ids: tuple[tuple[int, int], ...]
+    cmd: device.Command, pci_ids: tuple[tuple[int, int], ...] = ()
 ) -> list[bytes]:
-    """Inputs for @cmd: random and zeroed data, with each variant."""
+    """Inputs for @cmd: random and zeroed data, with each variant, and
+    for a command with pci set each of @pci_ids, by default those of its
+    plugin."""
     ins = []
     for variant in (0, 1, 2, 9):
         rnd = random.Random(cmd.index * 100 + variant)
-        for ids in pci_ids if cmd.pci else ((0, 0),):
+        for ids in (pci_ids or cmd.pci_ids) if cmd.pci else ((0, 0),):
             head = cmd.header(variant, rnd.randrange(256), ids)
             ins.append(head + rnd.randbytes(8192))
             ins.append(head + bytes(8192))
@@ -96,7 +89,7 @@ def main(args: argparse.Namespace) -> int:
         print(f"no command '{args.reference}'")
         return 1
     ref = cmds[names.index(args.reference)]
-    pci_ids = tuple(args.pci) if args.pci else PCI_IDS
+    pci_ids = tuple(args.pci or ())
 
     if args.corpus:
         by_index: dict[int, list[bytes]] = collections.defaultdict(list)
