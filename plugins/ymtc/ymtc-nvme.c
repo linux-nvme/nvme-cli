@@ -26,65 +26,28 @@
 #include <shared/int-util.h>
 
 #include "global-ctx.h"
+#include "nvme-pci-ids.h"
 #include "nvme-print.h"
 #include "plugin.h"
 #include "src/cleanup.h"
 #include "ymtc-utils.h"
 
-static unsigned short vendor_id;
-static unsigned short device_id;
-
 /**
- * ReadSysFile - Read a hexadecimal ID value from a sysfs file
- * @file:  Path to the sysfs file
- * @id:    Output parameter to store the read ID value
- * Return: Number of bytes read on success, -1 on failure
- */
-static int ReadSysFile(const char *file, unsigned short *id)
-{
-	int ret = 0;
-	char idstr[32] = { '\0' };
-	int fd = open(file, O_RDONLY);
-
-	if (fd < 0) {
-		perror(file);
-		return fd;
-	}
-
-	ret = read(fd, idstr, sizeof(idstr) - 1);
-	close(fd);
-	if (ret < 0)
-		perror("read");
-	else
-		*id = strtol(idstr, NULL, 16);
-
-	return ret;
-}
-
-/**
- * GetSSDModel - Identify YMTC SSD model by NVMe controller index
- * @idx: NVMe controller index (e.g., idx=0 for nvme0)
+ * GetSSDModel - Identify the YMTC SSD model of a controller
+ * @ctx: NVMe global context
+ * @hdl: transport handle of the controller or one of its namespaces
  * Return: ySSDModel enum value indicating the SSD model
  */
-static enum ySSDModel GetSSDModel(int idx)
+static enum ySSDModel GetSSDModel(struct libnvme_global_ctx *ctx,
+				  struct libnvme_transport_handle *hdl)
 {
 	enum ySSDModel model = UNKNOWN_SSD;
-	char path[512];
+	__u32 vendor_id = 0, device_id = 0;
 
-	snprintf(path, sizeof(path),
-		 "/sys/class/nvme/nvme%d/device/vendor", idx);
-	if (ReadSysFile(path, &vendor_id) < 0) {
-		snprintf(path, sizeof(path),
-			 "/sys/class/misc/nvme%d/device/vendor", idx);
-		ReadSysFile(path, &vendor_id);
-	}
-	snprintf(path, sizeof(path),
-		 "/sys/class/nvme/nvme%d/device/device", idx);
-	if (ReadSysFile(path, &device_id) < 0) {
-		snprintf(path, sizeof(path),
-			 "/sys/class/misc/nvme%d/device/device", idx);
-		ReadSysFile(path, &device_id);
-	}
+	if (nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id,
+			     NULL, NULL, NULL))
+		return model;
+
 	if (vendor_id == YMTC_VENDOR_ID) {
 		switch (device_id) {
 		case 0x1058:
@@ -127,18 +90,14 @@ static int ymtc_parse_options(struct libnvme_global_ctx **ctx,
 		struct argconfig_commandline_options *opts,
 		enum ySSDModel *model)
 {
-	int idx;
 	int err;
 
 	err = parse_and_open(ctx, hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	if (model) {
-		if (sscanf(nvme_args.device, "/dev/nvme%d", &idx) != 1)
-			idx = 0;
-		*model = GetSSDModel(idx);
-	}
+	if (model)
+		*model = GetSSDModel(*ctx, *hdl);
 
 	return 0;
 }

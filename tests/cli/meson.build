@@ -150,6 +150,12 @@ if python3.found()
             ]
         endif
 
+        if 'ymtc' in selected_plugins
+            mock_cli_tests += [
+                ['ymtc', 'nvme_ymtc_test.py', cli_test_env, 30],
+            ]
+        endif
+
         if 'id' in selected_plugins
             test('nvme-cli - usage',
                  python3,
