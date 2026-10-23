@@ -915,37 +915,6 @@ static int load_string_log_file(const char *path,
 	return 0;
 }
 
-static int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options,
-				   struct ocp_telemetry_logs *logs)
-{
-	int status = 0;
-	enum nvme_print_flags fmt;
-
-	if (!logs->telemetry) {
-		nvme_show_error("telemetry-log is empty.");
-		return -1;
-	}
-
-	if (options->string_log) {
-		status = load_string_log_file(options->string_log, logs);
-		if (status)
-			return status;
-	} else {
-		nvme_show_error("string-log is empty.");
-		return -1;
-	}
-
-	status = validate_output_format(options->output_format, &fmt);
-	if (status < 0) {
-		nvme_show_error("Invalid output format");
-		return status;
-	}
-
-	ocp_show_telemetry_log(logs, options, fmt);
-
-	return 0;
-}
-
 /*
  * Loads the telemetry log at path into logs->telemetry and validates that
  * its Log Identifier indicates a Host- or Controller-Initiated Telemetry log.
@@ -1028,6 +997,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	const char *string_suffix = "string.bin";
 	const char *tele_log_suffix = "telemetry.bin";
 	bool host_behavior_changed = false;
+	enum nvme_print_flags fmt;
 
 	OPT_ARGS(opts) = {
 		OPT_FILE("telemetry-log",  'l', &opt.telemetry_log,
@@ -1062,6 +1032,21 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			   opt.data_area != 3 && opt.data_area != 4) {
 		nvme_show_result("Invalid data-area specified. Please specify 1, 2, 3, or 4.\n");
 		err = -EINVAL;
+		goto out;
+	}
+
+	if (argconfig_given(opts, &nvme_args.output_format))
+		opt.output_format = nvme_args.output_format;
+
+	if (!opt.output_format) {
+		nvme_show_result("Missing output format. Using default format - %s.\n",
+				 DEFAULT_OUTPUT_FORMAT);
+		opt.output_format = DEFAULT_OUTPUT_FORMAT;
+	}
+
+	err = validate_output_format(opt.output_format, &fmt);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto out;
 	}
 
@@ -1171,21 +1156,14 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		opt.string_log = file_path_string;
 	}
 
-	if (argconfig_given(opts, &nvme_args.output_format))
-		opt.output_format = nvme_args.output_format;
-
-	if (!opt.output_format) {
-		nvme_show_result("Missing output format. Using default format - %s.\n",
-				 DEFAULT_OUTPUT_FORMAT);
-		opt.output_format = DEFAULT_OUTPUT_FORMAT;
-	}
+	err = load_string_log_file(opt.string_log, &logs);
+	if (err)
+		goto out;
 
 	printf("Extracting Telemetry %s Dump (Data Area %d)...\n",
 	       tele_type == TELEMETRY_TYPE_HOST ? "Host" : "Controller",
 	       tele_area);
-	err = parse_ocp_telemetry_log(&opt, &logs);
-	if (err)
-		nvme_show_result("Status:(%x)\n", err);
+	ocp_show_telemetry_log(&logs, &opt, fmt);
 
 	printf("ocp internal-log command completed.\n");
 out:
