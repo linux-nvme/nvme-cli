@@ -5727,18 +5727,15 @@ static void wdc_print_fb_ca_log_json(struct wdc_ssd_ca_perf_stats *perf)
 static void wdc_print_bd_ca_log_normal(struct libnvme_transport_handle *hdl, void *data)
 {
 	struct wdc_bd_ca_log_format *bd_data = (struct wdc_bd_ca_log_format *)data;
-	__u64 *raw;
+	struct wdc_bd_ca_log_format *end = bd_data +
+		WDC_BD_CA_LOG_BUF_LEN / sizeof(*bd_data);
 	__u64 rawSwapped;
-	__u16 *word_raw1 = NULL,
-		*word_raw2 = NULL,
-		*word_raw3 = NULL;
-	__u32  *dword_raw = NULL;
-	__u8  *byte_raw = NULL;
+	__u8 *raw;
 	bool valid_id = true;
 
-	while (valid_id) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		rawSwapped = (le64_to_cpu(*raw)>>8);
+	while (valid_id && bd_data < end) {
+		raw = bd_data->raw_value;
+		rawSwapped = shr_get_unaligned_le64(raw) >> 8;
 
 		switch (bd_data->field_id) {
 		case 0x0:
@@ -5753,15 +5750,12 @@ static void wdc_print_bd_ca_log_normal(struct libnvme_transport_handle *hdl, voi
 					bd_data->normalized_value, (uint64_t)rawSwapped);
 			break;
 		case 0x2:
-			word_raw1 = (__u16 *)&bd_data->raw_value[1];
-			word_raw2 = (__u16 *)&bd_data->raw_value[3];
-			word_raw3 = (__u16 *)&bd_data->raw_value[5];
 			printf("wear_leveling                   : %3"PRIu8,
 					bd_data->normalized_value);
 			printf("%%       min: %"PRIu16", max: %"PRIu16", avg: %"PRIu16"\n",
-					le16_to_cpu(*word_raw1),
-					le16_to_cpu(*word_raw2),
-					le16_to_cpu(*word_raw3));
+					shr_get_unaligned_le16(&raw[1]),
+					shr_get_unaligned_le16(&raw[3]),
+					shr_get_unaligned_le16(&raw[5]));
 			break;
 		case 0x3:
 			printf("end_to_end_error_detection_count: %3"PRIu8"%%       %"PRIu64"\n",
@@ -5785,11 +5779,10 @@ static void wdc_print_bd_ca_log_normal(struct libnvme_transport_handle *hdl, voi
 					bd_data->normalized_value, (uint64_t)rawSwapped);
 			break;
 		case 0x8:
-			byte_raw = (__u8 *)&bd_data->raw_value[1];
-			dword_raw = (__u32 *)&bd_data->raw_value[2];
 			printf("thermal_throttle_status         : %3"PRIu8"%%       %"PRIu16,
-					bd_data->normalized_value, *byte_raw);
-			printf("%%, cnt: %"PRIu16"\n", le32_to_cpu(*dword_raw));
+					bd_data->normalized_value, raw[1]);
+			printf("%%, cnt: %"PRIu32"\n",
+					shr_get_unaligned_le32(&raw[2]));
 			break;
 		case 0x9:
 			printf("retry_buffer_overflow_count     : %3"PRIu8"%%       %"PRIu64"\n",
@@ -5823,16 +5816,16 @@ static void wdc_print_bd_ca_log_normal(struct libnvme_transport_handle *hdl, voi
 static void wdc_print_bd_ca_log_json(void *data)
 {
 	struct wdc_bd_ca_log_format *bd_data = (struct wdc_bd_ca_log_format *)data;
-	__u64 *raw, rawSwapped;
-	__u16 *word_raw;
-	__u32  *dword_raw;
-	__u8  *byte_raw;
+	struct wdc_bd_ca_log_format *end = bd_data +
+		WDC_BD_CA_LOG_BUF_LEN / sizeof(*bd_data);
+	__u64 rawSwapped;
+	__u8 *raw;
 	bool valid_id = true;
 	struct json_object *root = json_create_object();
 
-	while (valid_id) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		rawSwapped = (le64_to_cpu(*raw)>>8);
+	while (valid_id && bd_data < end) {
+		raw = bd_data->raw_value;
+		rawSwapped = shr_get_unaligned_le64(raw) >> 8;
 
 		switch (bd_data->field_id) {
 		case 0x0:
@@ -5848,17 +5841,14 @@ static void wdc_print_bd_ca_log_json(void *data)
 					rawSwapped);
 			break;
 		case 0x2:
-			word_raw = (__u16 *)&bd_data->raw_value[1];
 			json_object_add_value_int(root, "wear_leveling normalized",
 					bd_data->normalized_value);
 			json_object_add_value_int(root, "wear_leveling min",
-					le16_to_cpu(*word_raw));
-			word_raw = (__u16 *)&bd_data->raw_value[3];
+					shr_get_unaligned_le16(&raw[1]));
 			json_object_add_value_int(root, "wear_leveling max",
-					le16_to_cpu(*word_raw));
-			word_raw = (__u16 *)&bd_data->raw_value[5];
+					shr_get_unaligned_le16(&raw[3]));
 			json_object_add_value_int(root, "wear_leveling avg",
-					le16_to_cpu(*word_raw));
+					shr_get_unaligned_le16(&raw[5]));
 			break;
 		case 0x3:
 			json_object_add_value_int(root,
@@ -5893,14 +5883,12 @@ static void wdc_print_bd_ca_log_json(void *data)
 					rawSwapped);
 			break;
 		case 0x8:
-			byte_raw = (__u8 *)&bd_data->raw_value[1];
 			json_object_add_value_int(root, "thermal_throttle_status normalized",
 					bd_data->normalized_value);
 			json_object_add_value_int(root, "thermal_throttle_status",
-					*byte_raw);
-			dword_raw = (__u32 *)&bd_data->raw_value[2];
+					raw[1]);
 			json_object_add_value_int(root, "thermal_throttle_cnt",
-					le32_to_cpu(*dword_raw));
+					shr_get_unaligned_le32(&raw[2]));
 			break;
 		case 0x9:
 			json_object_add_value_int(root, "retry_buffer_overflow_count normalized",
