@@ -27,6 +27,9 @@ class Target:
     options: tuple[str, ...] = ()
     # The FUZZ_DATA_LIMIT of the device mock in the stages of a run
     data_limits: tuple[int, ...] = ()
+    # Whether nvme-fuzz run merges its corpus in parts, by the first byte
+    # of the inputs
+    partitioned: bool = False
 
     @property
     def seeds(self) -> Path:
@@ -57,6 +60,7 @@ TARGETS: dict[str, Target] = {
             'device',
             options=('-max_len=16384', '-timeout=10'),
             data_limits=(16 << 10, 64 << 10, 256 << 10, 1 << 20),
+            partitioned=True,
         ),
     )
 }

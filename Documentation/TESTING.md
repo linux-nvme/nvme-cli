@@ -332,7 +332,11 @@ mock (`--data-limits` selects others). Most data structures fit a page, and an
 input which gets little data runs fast: a megabyte of log entries prints as
 tens of megabytes of text. The mock takes the limit from `FUZZ_DATA_LIMIT`.
 The findings of the target are named after the limit, `data-<limit>-crash-*`,
-and `check` and `triage` replay them with it.
+and `check` and `triage` replay them with it. Each stage starts with the corpus
+minimized again, for its limit: a stage adds tens of thousands of inputs, and
+each job of the next one would load all of them. A merge runs every input once,
+so the corpus of the target is merged by command, one merge per CPU, and what
+they keep once more.
 
 `triage` replays the findings of a target and groups them by the bug they hit:
 the kind of finding and the first nvme-cli frame. For the `device` target, it

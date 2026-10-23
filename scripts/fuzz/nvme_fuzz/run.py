@@ -14,7 +14,8 @@ tests (see nvme-fuzz seeds).
 
 The device target runs in stages of equal time, with more device data in
 each: its findings are named data-<limit>-*, and check and triage replay
-them with that limit.
+them with that limit. Ahead of each stage, its corpus is minimized for
+the data limit of the stage, so that its jobs start fast.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ import shutil
 import signal
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import FrameType
@@ -113,32 +115,33 @@ class _Stop:
     """Ctrl-C or SIGTERM: stop the jobs, summarize, and run no more
     targets."""
 
-    pgid: int | None = None
+    # The process groups of the libFuzzer processes which run, several
+    # in a merge
+    pgids: set[int] = field(default_factory=set)
     interrupted: bool = False
     old: dict[int, object] = field(default_factory=dict)
 
     def __call__(self, signum: int, frame: FrameType | None) -> None:
         self.interrupted = True
-        self.kill(signal.SIGTERM)
+        for pgid in list(self.pgids):
+            self.kill(pgid, signal.SIGTERM)
 
-    def kill(self, sig: int) -> None:
-        if self.pgid is not None:
-            with contextlib.suppress(ProcessLookupError):
-                os.killpg(self.pgid, sig)
+    @staticmethod
+    def kill(pgid: int, sig: int) -> None:
+        with contextlib.suppress(ProcessLookupError):
+            os.killpg(pgid, sig)
 
-    def kill_all(self) -> None:
-        """SIGKILL what is left of the process group, the jobs which
-        outlive libFuzzer, and wait until it is gone."""
-        if self.pgid is None:
-            return
-        self.kill(signal.SIGKILL)
+    def kill_all(self, pgid: int) -> None:
+        """SIGKILL what is left of the process group @pgid, the jobs
+        which outlive libFuzzer, and wait until it is gone."""
+        self.kill(pgid, signal.SIGKILL)
         for _ in range(100):
             try:
-                os.killpg(self.pgid, 0)
+                os.killpg(pgid, 0)
             except ProcessLookupError:
                 break
             time.sleep(0.1)
-        self.pgid = None
+        self.pgids.discard(pgid)
 
     def __enter__(self) -> _Stop:
         for sig in (signal.SIGINT, signal.SIGTERM):
@@ -162,11 +165,11 @@ def _wait(proc: subprocess.Popen[bytes], stop: _Stop, deadline: float) -> int:
             pass
         if deadline - time.monotonic() <= 0:
             break
-    stop.kill(signal.SIGTERM)
+    stop.kill(proc.pid, signal.SIGTERM)
     try:
         return proc.wait(timeout=GRACE_SECONDS)
     except subprocess.TimeoutExpired:
-        stop.kill(signal.SIGKILL)
+        stop.kill(proc.pid, signal.SIGKILL)
         return proc.wait()
 
 
@@ -189,41 +192,106 @@ def _libfuzzer(
             env=env,
             start_new_session=True,
         )
-        stop.pgid = proc.pid
+        stop.pgids.add(proc.pid)
         if deadline is None:
             status = proc.wait()
         else:
             status = _wait(proc, stop, deadline)
-        stop.kill_all()
+        stop.kill_all(proc.pid)
     return status
 
 
+def _partitions(corpus: Path, parts: Path) -> list[Path]:
+    """Split @corpus by the first byte of its inputs into directories in
+    @parts, of hard links to them. Returns them, the largest first."""
+    sizes: dict[Path, int] = {}
+    for f in corpus.iterdir():
+        with f.open('rb') as fh:
+            first = fh.read(1)
+        d = parts / str(first[0] if first else 'empty')
+        if d not in sizes:
+            d.mkdir(parents=True)
+            sizes[d] = 0
+        try:
+            os.link(f, d / f.name)
+        except OSError:
+            shutil.copy(f, d / f.name)
+        sizes[d] += 1
+    return sorted(sizes, key=lambda d: -sizes[d])
+
+
 def _merge(
-    t: Target, binary: Path, corpus: Path, logs: Path, stop: _Stop
+    t: Target,
+    binary: Path,
+    corpus: Path,
+    logs: Path,
+    stop: _Stop,
+    jobs: int,
+    limit: int | None,
 ) -> None:
-    """Keep only the inputs of @corpus which add coverage. The corpus
-    grows by each input which added some when it was found, most of which
-    later inputs reach as well, and each job loads all of it. A failed or
-    interrupted merge keeps the corpus as it is."""
+    """Keep only the inputs of @corpus which add coverage, with the data
+    limit @limit. The corpus grows by each input which added some when it
+    was found, most of which later inputs reach as well, and each job
+    loads all of it. A failed or interrupted merge keeps the corpus as it
+    is.
+
+    A merge runs every input once, which takes long for a big corpus: the
+    corpus of a partitioned target is merged in parts, in parallel, and
+    then what they keep once more. The first byte of an input of the
+    device target selects the command: inputs of different commands
+    rarely reach the same code, and the merge of what the parts keep
+    keeps about what one merge of all of it does."""
     merged = corpus.with_name(f'{corpus.name}.merge')
-    shutil.rmtree(merged, ignore_errors=True)
+    parts = corpus.with_name(f'{corpus.name}.parts')
+    for d in (merged, parts):
+        shutil.rmtree(d, ignore_errors=True)
     merged.mkdir()
     before = sum(1 for _ in corpus.iterdir())
     print(f'fuzz-{t.name}: minimizing the corpus of {before} inputs')
-    cmd = [
-        str(binary),
-        '-merge=1',
-        '-close_fd_mask=3',
-        *t.libfuzzer_options(),
-        str(merged),
-        str(corpus),
-    ]
     # Only the coverage counts here, the jobs report the findings
     env = sanitizer_env(dict(os.environ))
     env['ASAN_OPTIONS'] += ':detect_leaks=0'
-    status = _libfuzzer(cmd, logs, 'merge.log', env, stop)
+    if limit is not None:
+        env['FUZZ_DATA_LIMIT'] = str(limit)
+
+    def merge(out: Path, src: Path, log_name: str) -> bool:
+        if stop.interrupted:
+            return False
+        out.mkdir(exist_ok=True)
+        cmd = [
+            str(binary),
+            '-merge=1',
+            '-close_fd_mask=3',
+            *t.libfuzzer_options(),
+            str(out),
+            str(src),
+        ]
+        return _libfuzzer(cmd, logs, log_name, env, stop) == 0
+
+    src = corpus
+    ok = True
+    if t.partitioned and jobs > 1:
+        ins = _partitions(corpus, parts / 'in')
+        outs = [parts / 'out' / d.name for d in ins]
+        (parts / 'out').mkdir(parents=True)
+        with ThreadPoolExecutor(jobs) as pool:
+            done = list(
+                pool.map(
+                    lambda d, out: merge(out, d, f'merge-{d.name}.log'),
+                    ins,
+                    outs,
+                )
+            )
+        ok = all(done)
+        src = parts / 'kept'
+        src.mkdir()
+        for out in outs if ok else []:
+            for f in out.iterdir():
+                os.link(f, src / f.name)
+    ok = ok and merge(merged, src, 'merge.log')
+    shutil.rmtree(parts, ignore_errors=True)
     after = sum(1 for _ in merged.iterdir())
-    if status or stop.interrupted or not after:
+    if not ok or stop.interrupted or not after:
         print(f'fuzz-{t.name}: merge failed, the corpus stays as it is')
         shutil.rmtree(merged)
         return
@@ -262,9 +330,6 @@ def _run_target(
     # The build of the mock tests whose answers seed the device target
     if mock_seeds and t.name == 'device':
         seeds.add_seeds(mock_seeds, corpus)
-    _merge(t, binary, corpus, logs, stop)
-    if stop.interrupted:
-        return [], 0, logs
 
     # The jobs are independent processes on the shared corpus. The -fork
     # mode is newer, but the libFuzzer of clang 22 crashes in it. A job
@@ -287,6 +352,11 @@ def _run_target(
             cwd = logs / f'data-{limit}'
             cwd.mkdir(exist_ok=True)
             what = f', {limit} bytes of device data'
+        # Each stage starts with the corpus minimized for its limit, and
+        # each of its jobs loads all of it
+        _merge(t, binary, corpus, cwd, stop, jobs, limit)
+        if stop.interrupted:
+            break
         cmd = [
             str(binary),
             '-close_fd_mask=3',
