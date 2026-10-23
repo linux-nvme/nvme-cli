@@ -2132,7 +2132,8 @@ static void stdout_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
 }
 
 static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
-					 unsigned int result, unsigned char *buf)
+					 unsigned int result,
+					 unsigned char *buf, __u32 len)
 {
 	struct nvme_streams_directive_params *params = (void *)buf;
 	struct nvme_streams_directive_status *status = (void *)buf;
@@ -2144,6 +2145,10 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 	case NVME_DIRECTIVE_DTYPE_IDENTIFY:
 		switch (doper) {
 		case NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
+			if (len < NVME_DIRECTIVE_IDENTIFY_PARAM_LEN) {
+				fprintf(stderr, "directive data too short\n");
+				break;
+			}
 			printf("\tDirective support\n");
 
 			t = stdout_kv_table_create();
@@ -2210,6 +2215,10 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 	case NVME_DIRECTIVE_DTYPE_STREAMS:
 		switch (doper) {
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
+			if (len < sizeof(*params)) {
+				fprintf(stderr, "directive data too short\n");
+				break;
+			}
 			t = stdout_kv_table_create();
 			if (!t)
 				return;
@@ -2240,13 +2249,18 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 			stdout_kv_table_finish(t, "directive-show");
 			break;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
-			count = le16_to_cpu(status->osc);
+			if (len < sizeof(*status)) {
+				fprintf(stderr, "directive data too short\n");
+				break;
+			}
+			count = nvme_streams_status_nr_sid(status, len);
 
 			t = stdout_kv_table_create();
 			if (!t)
 				return;
 
-			stdout_kv_add(t, "Open Stream Count", "%u", count);
+			stdout_kv_add(t, "Open Stream Count", "%u",
+				      le16_to_cpu(status->osc));
 			for (i = 0; i < count; i++) {
 				char name[32];
 
@@ -2286,7 +2300,7 @@ static void stdout_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, 
 	printf("dir-receive: type:%#x operation:%#x spec:%#x nsid:%#x result:%#"PRIx64"\n",
 		type, oper, spec, nsid, (uint64_t)result);
 	if (stdout_print_ops.flags & VERBOSE)
-		stdout_directive_show_fields(type, oper, result, buf);
+		stdout_directive_show_fields(type, oper, result, buf, len);
 	else if (buf)
 		d(buf, len, 16, 1);
 }
