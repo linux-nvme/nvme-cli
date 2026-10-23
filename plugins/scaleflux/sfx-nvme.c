@@ -1595,9 +1595,10 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		if (!libnvme_exec_admin_passthru(hdl, &cmd)) {
 			nvme_id_ns_flbas_to_lbaf_inuse(id_ns.flbas,
 						       &lbaf_index);
-			sector_size = 1 << id_ns.lbaf[lbaf_index].ds;
+			sector_size =
+				nvme_lbaf_data_size(id_ns.lbaf[lbaf_index].ds);
 			capacity = le64_to_cpu(id_ns.nsze) * sector_size;
-			capacity_valid = true;
+			capacity_valid = sector_size != 0;
 		}
 	}
 

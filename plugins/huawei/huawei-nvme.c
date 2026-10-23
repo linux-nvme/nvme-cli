@@ -223,7 +223,8 @@ static void huawei_print_list_item(struct huawei_list_item *list_item,
 	__u8 lba_index;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(list_item->ns.flbas, &lba_index);
-	unsigned long long lba = 1ULL << list_item->ns.lbaf[lba_index].ds;
+	unsigned long long lba =
+		nvme_lbaf_data_size(list_item->ns.lbaf[lba_index].ds);
 	double nsze       = le64_to_cpu(list_item->ns.nsze) * lba;
 	double nuse       = le64_to_cpu(list_item->ns.nuse) * lba;
 

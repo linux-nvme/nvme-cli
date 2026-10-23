@@ -117,7 +117,7 @@ static void netapp_get_ns_size(char size[NETAPP_ATTR_LEN],
 	__u8 lba_index;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-	*lba = 1ULL << ns->lbaf[lba_index].ds;
+	*lba = nvme_lbaf_data_size(ns->lbaf[lba_index].ds);
 	double nsze = le64_to_cpu(ns->nsze) * (*lba);
 	const char *s_suffix = shr_suffix_si_get(&nsze);
 
@@ -132,7 +132,7 @@ static void netapp_get_ns_attrs(char size[NETAPP_ATTR_LEN],
 	__u8 lba_index;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-	*lba = 1ULL << ns->lbaf[lba_index].ds;
+	*lba = nvme_lbaf_data_size(ns->lbaf[lba_index].ds);
 
 	/* get the namespace size */
 	double nsze = le64_to_cpu(ns->nsze) * (*lba);
@@ -147,7 +147,7 @@ static void netapp_get_ns_attrs(char size[NETAPP_ATTR_LEN],
 	snprintf(used, NETAPP_ATTR_LEN, "%.2f%sB", nuse, u_suffix);
 
 	/* get the namespace block size */
-	long long addr = 1LL << ns->lbaf[lba_index].ds;
+	long long addr = *lba;
 	const char *l_suffix = shr_suffix_binary_get(&addr);
 
 	snprintf(blk_size, NETAPP_ATTR_LEN, "%u%sB", (unsigned int)addr,
