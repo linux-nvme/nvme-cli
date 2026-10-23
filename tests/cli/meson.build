@@ -119,6 +119,13 @@ if python3.found()
             ]
         endif
 
+        if 'dir' in selected_plugins and json_c_dep.found()
+            mock_cli_tests += [
+                ['dir-receive', 'nvme_dir_receive_test.py', cli_test_env,
+                 30],
+            ]
+        endif
+
         # A command of the sandisk plugin which falls back to the wdc one
         if 'sandisk' in selected_plugins and 'wdc' in selected_plugins and \
            json_c_dep.found()
