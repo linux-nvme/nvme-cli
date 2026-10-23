@@ -344,7 +344,7 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 		return -errno;
 	}
 
-	if (ctrl->ctratt & NVME_CTRL_CTRATT_128_ID)
+	if (le32_to_cpu(ctrl->ctratt) & NVME_CTRL_CTRATT_128_ID)
 		cfg.eds = true;
 
 	/*
