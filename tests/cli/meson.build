@@ -264,6 +264,10 @@ if python3.found()
         subdir('micron')
     endif
 
+    if 'wdc' in selected_plugins
+        subdir('wdc')
+    endif
+
     if 'samsung' in selected_plugins
         subdir('samsung')
     endif
