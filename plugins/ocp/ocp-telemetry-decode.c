@@ -538,38 +538,41 @@ static size_t ocp_ascii_id_copy_len(__u8 ascii_id_length)
 	return copy_len;
 }
 
-static int ocp_copy_ascii_id(__le64 ascii_id_offset, __u8 ascii_id_length, char *description)
+static int ocp_copy_ascii_id(const struct ocp_telemetry_logs *logs,
+			     __le64 ascii_id_offset, __u8 ascii_id_length,
+			     char *description)
 {
 	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
-		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+		(struct nvme_ocp_telemetry_string_header *)logs->string;
 	__u64 ascts = le64_to_cpu(pocp_ts_header->ascts);
 	__u64 asctsz = le64_to_cpu(pocp_ts_header->asctsz);
 	__u64 offset = le64_to_cpu(ascii_id_offset);
 	size_t copy_len = ocp_ascii_id_copy_len(ascii_id_length);
 
 	/* With the ASCII table inside the log, neither product can overflow. */
-	if (!ocp_c9_table_fits(ascts, asctsz, pstring_buffer_size) || offset > asctsz ||
+	if (!ocp_c9_table_fits(ascts, asctsz, logs->string_size) || offset > asctsz ||
 	    copy_len > (asctsz - offset) * SIZE_OF_DWORD)
 		return -1;
 
-	memcpy(description, pstring_buffer + (ascts + offset) * SIZE_OF_DWORD, copy_len);
+	memcpy(description, logs->string + (ascts + offset) * SIZE_OF_DWORD, copy_len);
 	description[copy_len] = '\0';
 
 	return 0;
 }
 
-int get_statistic_id_ascii_string(int identifier, char *description)
+int get_statistic_id_ascii_string(const struct ocp_telemetry_logs *logs,
+				  int identifier, char *description)
 {
 	struct nvme_ocp_telemetry_string_header *pocp_ts_header;
 	struct nvme_ocp_statistics_identifier_string_table *entry;
 	__u64 entries = 0, i;
 	__u8 *table;
 
-	if (!pstring_buffer || !description)
+	if (!logs->string || !description)
 		return -1;
 
-	pocp_ts_header = (struct nvme_ocp_telemetry_string_header *)pstring_buffer;
-	table = ocp_string_table(pstring_buffer, pstring_buffer_size,
+	pocp_ts_header = (struct nvme_ocp_telemetry_string_header *)logs->string;
+	table = ocp_string_table(logs->string, logs->string_size,
 				 le64_to_cpu(pocp_ts_header->sits),
 				 le64_to_cpu(pocp_ts_header->sitsz), sizeof(*entry), &entries);
 
@@ -578,8 +581,8 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 			(table + i * sizeof(*entry));
 
 		if (identifier == (int)le16_to_cpu(entry->vs_statistic_identifier) &&
-		    !ocp_copy_ascii_id(entry->ascii_id_offset, entry->ascii_id_length,
-				       description))
+		    !ocp_copy_ascii_id(logs, entry->ascii_id_offset,
+				       entry->ascii_id_length, description))
 			return 0;
 	}
 
@@ -596,14 +599,15 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 }
 
 /* Event and VU event string table entries share one layout. */
-static int ocp_event_ascii_string(__le64 start, __le64 size, int identifier,
+static int ocp_event_ascii_string(const struct ocp_telemetry_logs *logs,
+				  __le64 start, __le64 size, int identifier,
 				  int debug_event_class, char *description)
 {
 	struct nvme_ocp_event_string_table *entry;
 	__u64 entries = 0, i;
 	__u8 *table;
 
-	table = ocp_string_table(pstring_buffer, pstring_buffer_size, le64_to_cpu(start),
+	table = ocp_string_table(logs->string, logs->string_size, le64_to_cpu(start),
 				 le64_to_cpu(size), sizeof(*entry), &entries);
 
 	for (i = 0; table && i < entries; i++) {
@@ -611,8 +615,8 @@ static int ocp_event_ascii_string(__le64 start, __le64 size, int identifier,
 
 		if (identifier == (int)le16_to_cpu(entry->event_identifier) &&
 		    debug_event_class == (int)entry->debug_event_class &&
-		    !ocp_copy_ascii_id(entry->ascii_id_offset, entry->ascii_id_length,
-				       description))
+		    !ocp_copy_ascii_id(logs, entry->ascii_id_offset,
+				       entry->ascii_id_length, description))
 			return 0;
 	}
 
@@ -638,16 +642,19 @@ static int ocp_spec_event_id_string(int identifier, int debug_event_class,
 	return 0;
 }
 
-int get_event_id_ascii_string(int identifier, int debug_event_class, char *description)
+int get_event_id_ascii_string(const struct ocp_telemetry_logs *logs,
+			      int identifier, int debug_event_class,
+			      char *description)
 {
 	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
-		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+		(struct nvme_ocp_telemetry_string_header *)logs->string;
 
-	if (!pstring_buffer)
+	if (!logs->string)
 		return -1;
 
-	if (!ocp_event_ascii_string(pocp_ts_header->ests, pocp_ts_header->estsz,
-				    identifier, debug_event_class, description))
+	if (!ocp_event_ascii_string(logs, pocp_ts_header->ests,
+				    pocp_ts_header->estsz, identifier,
+				    debug_event_class, description))
 		return 0;
 
 	/* TELSLG-14: the String Log may omit Event IDs the spec defines. */
@@ -655,22 +662,26 @@ int get_event_id_ascii_string(int identifier, int debug_event_class, char *descr
 					description);
 }
 
-int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *description)
+int get_vu_event_id_ascii_string(const struct ocp_telemetry_logs *logs,
+				 int identifier, int debug_event_class,
+				 char *description)
 {
 	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
-		(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+		(struct nvme_ocp_telemetry_string_header *)logs->string;
 
-	if (!pstring_buffer)
+	if (!logs->string)
 		return -1;
 
-	return ocp_event_ascii_string(pocp_ts_header->vu_ests, pocp_ts_header->vu_estsz,
-				      identifier, debug_event_class, description);
+	return ocp_event_ascii_string(logs, pocp_ts_header->vu_ests,
+				      pocp_ts_header->vu_estsz, identifier,
+				      debug_event_class, description);
 }
 
-int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug_event_class,
+int parse_ocp_telemetry_string_log(const struct ocp_telemetry_logs *logs,
+	int event_fifo_num, int identifier, int debug_event_class,
 	enum ocp_telemetry_string_tables string_table, char *description)
 {
-	if (pstring_buffer == NULL)
+	if (logs->string == NULL)
 		return -1;
 
 	if (event_fifo_num < 0 || event_fifo_num > MAX_NUM_FIFOS)
@@ -678,7 +689,7 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 
 	if (event_fifo_num != 0) {
 		struct nvme_ocp_telemetry_string_header *pocp_ts_header =
-			(struct nvme_ocp_telemetry_string_header *)pstring_buffer;
+			(struct nvme_ocp_telemetry_string_header *)logs->string;
 
 		/* A name that fills all 16 bytes carries no terminator. */
 		memcpy(description, pocp_ts_header->fifo_ascii_string[event_fifo_num - 1],
@@ -689,16 +700,19 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 	}
 
 	if (string_table == STATISTICS_IDENTIFIER_STRING)
-		get_statistic_id_ascii_string(identifier, description);
+		get_statistic_id_ascii_string(logs, identifier, description);
 	else if (string_table == EVENT_STRING && debug_event_class < 0x80)
-		get_event_id_ascii_string(identifier, debug_event_class, description);
+		get_event_id_ascii_string(logs, identifier, debug_event_class,
+					  description);
 	else if (string_table == VU_EVENT_STRING || debug_event_class >= 0x80)
-		get_vu_event_id_ascii_string(identifier, debug_event_class, description);
+		get_vu_event_id_ascii_string(logs, identifier,
+					     debug_event_class, description);
 
 	return 0;
 }
 
 int parse_time_stamp_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -728,7 +742,7 @@ int parse_time_stamp_event(
 		vu_event_id = le16_to_cpu(ptime_stamp_event_vu_data->vu_event_identifier);
 		pdata = (__u8 *)&(ptime_stamp_event_vu_data->data);
 
-		parse_ocp_telemetry_string_log(0, vu_event_id,
+		parse_ocp_telemetry_string_log(logs, 0, vu_event_id,
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING, description_str);
 	}  else if (pevent_descriptor->event_data_size < 2)
@@ -769,6 +783,7 @@ int parse_time_stamp_event(
 }
 
 int parse_pcie_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -798,7 +813,7 @@ int parse_pcie_event(
 		vu_event_id = le16_to_cpu(ppcie_event_vu_data->vu_event_identifier);
 		pdata = (__u8 *)&(ppcie_event_vu_data->data);
 
-		parse_ocp_telemetry_string_log(0, vu_event_id,
+		parse_ocp_telemetry_string_log(logs, 0, vu_event_id,
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING, description_str);
 	}  else if (pevent_descriptor->event_data_size < 1)
@@ -839,6 +854,7 @@ int parse_pcie_event(
 }
 
 int parse_nvme_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -868,7 +884,7 @@ int parse_nvme_event(
 		vu_event_id = le16_to_cpu(pnvme_event_vu_data->vu_event_identifier);
 		pdata = (__u8 *)&(pnvme_event_vu_data->data);
 
-		parse_ocp_telemetry_string_log(0, vu_event_id,
+		parse_ocp_telemetry_string_log(logs, 0, vu_event_id,
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING,
 			description_str);
@@ -909,9 +925,13 @@ int parse_nvme_event(
 	return 0;
 }
 
-void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp)
+void parse_common_event(
+		const struct ocp_telemetry_logs *logs,
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
 {
 	if (pevent_specific_data) {
 		struct nvme_ocp_common_dbg_evt_class_vu_data *pcommon_debug_event_vu_data =
@@ -924,7 +944,7 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
 		unsigned int vu_data_size = ((pevent_descriptor->event_data_size *
 			SIZE_OF_DWORD) - SIZE_OF_VU_EVENT_ID);
 
-		parse_ocp_telemetry_string_log(0, vu_event_id,
+		parse_ocp_telemetry_string_log(logs, 0, vu_event_id,
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING, description_str);
 
@@ -950,6 +970,7 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
 }
 
 int parse_media_wear_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -980,7 +1001,7 @@ int parse_media_wear_event(
 		vu_event_id = le16_to_cpu(pmedia_wear_event_vu_data->vu_event_identifier);
 		pdata = (__u8 *)&(pmedia_wear_event_vu_data->data);
 
-		parse_ocp_telemetry_string_log(0, vu_event_id,
+		parse_ocp_telemetry_string_log(logs, 0, vu_event_id,
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING,
 			description_str);
@@ -1029,6 +1050,7 @@ int parse_media_wear_event(
  * number within that physical FIFO.
  */
 int parse_virtual_fifo_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1053,7 +1075,7 @@ int parse_virtual_fifo_event(
 	physical_fifo_num = vu_virtual_fifo_id >> VU_VIRTUAL_FIFO_PHY_NUM_SHIFT;
 	virtual_fifo_num = vu_virtual_fifo_id & VU_VIRTUAL_FIFO_NUM_MASK;
 
-	parse_ocp_telemetry_string_log(0, vu_virtual_fifo_id,
+	parse_ocp_telemetry_string_log(logs, 0, vu_virtual_fifo_id,
 		pevent_descriptor->debug_event_class_type,
 		VU_EVENT_STRING, description_str);
 
@@ -1063,7 +1085,7 @@ int parse_virtual_fifo_event(
 	 * it to index the string log's FIFO name array.
 	 */
 	if (physical_fifo_num >= 1 && physical_fifo_num <= MAX_NUM_FIFOS)
-		parse_ocp_telemetry_string_log(physical_fifo_num, 0, 0,
+		parse_ocp_telemetry_string_log(logs, physical_fifo_num, 0, 0,
 			EVENT_STRING, fifo_name_str);
 
 	if (pevent_fifos_object != NULL) {
@@ -1114,6 +1136,7 @@ int parse_virtual_fifo_event(
  * Event Data Size reaches past it. @vu_data_size excludes the identifier.
  */
 static void parse_class_vu_fields(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pvu_fields, unsigned int vu_data_size,
@@ -1125,7 +1148,7 @@ static void parse_class_vu_fields(
 	char description_str[OCP_TELEMETRY_DESCRIPTION_MAX] = "";
 	__u16 vu_event_id = le16_to_cpu(pvu_data->vu_event_identifier);
 
-	parse_ocp_telemetry_string_log(0, vu_event_id,
+	parse_ocp_telemetry_string_log(logs, 0, vu_event_id,
 		pevent_descriptor->debug_event_class_type,
 		VU_EVENT_STRING, description_str);
 
@@ -1157,6 +1180,7 @@ static void parse_class_vu_fields(
  * Event Data values are defined only for the NACK error Event ID.
  */
 int parse_smbus_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1198,7 +1222,8 @@ int parse_smbus_event(
 	}
 
 	if (event_size > sizeof(*psmbus_event))
-		parse_class_vu_fields(pevent_descriptor, pevent_descriptor_obj,
+		parse_class_vu_fields(logs, pevent_descriptor,
+			pevent_descriptor_obj,
 			pevent_specific_data + sizeof(*psmbus_event),
 			event_size - sizeof(*psmbus_event) - SIZE_OF_VU_EVENT_ID,
 			pevent_fifos_object, fp);
@@ -1214,6 +1239,7 @@ int parse_smbus_event(
  * Header Valid flag is set, so it is left out otherwise.
  */
 int parse_mctp_event(
+		const struct ocp_telemetry_logs *logs,
 		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 		struct json_object *pevent_descriptor_obj,
 		__u8 *pevent_specific_data,
@@ -1292,7 +1318,8 @@ int parse_mctp_event(
 	}
 
 	if (event_size > sizeof(*pmctp_event))
-		parse_class_vu_fields(pevent_descriptor, pevent_descriptor_obj,
+		parse_class_vu_fields(logs, pevent_descriptor,
+			pevent_descriptor_obj,
 			pevent_specific_data + sizeof(*pmctp_event),
 			event_size - sizeof(*pmctp_event) - SIZE_OF_VU_EVENT_ID,
 			pevent_fifos_object, fp);
@@ -1300,8 +1327,9 @@ int parse_mctp_event(
 	return 0;
 }
 
-int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
-	struct json_object *pevent_fifos_object, unsigned char *pstring_buffer,
+int parse_event_fifo(const struct ocp_telemetry_logs *logs,
+	unsigned int fifo_num, unsigned char *pfifo_start,
+	struct json_object *pevent_fifos_object,
 	struct nvme_ocp_telemetry_offsets *poffsets, __u64 fifo_size, FILE *fp)
 {
 	if (NULL == pfifo_start || NULL == poffsets) {
@@ -1319,7 +1347,8 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 	}
 
 	status =
-		parse_ocp_telemetry_string_log(event_fifo_number, 0, 0, EVENT_STRING, description);
+		parse_ocp_telemetry_string_log(logs, event_fifo_number, 0, 0,
+					       EVENT_STRING, description);
 
 	if (status != 0) {
 		nvme_show_error("Failed to get C9 String. status: %d", status);
@@ -1414,7 +1443,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 
 			event_id = le16_to_cpu(pevent_descriptor->event_id);
 
-			parse_ocp_telemetry_string_log(0, event_id,
+			parse_ocp_telemetry_string_log(logs, 0, event_id,
 				pevent_descriptor->debug_event_class_type, EVENT_STRING,
 				description_str);
 
@@ -1462,21 +1491,24 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 
 			switch (pevent_descriptor->debug_event_class_type) {
 			case TIME_STAMP_CLASS_TYPE:
-				ret = parse_time_stamp_event(pevent_descriptor,
+				ret = parse_time_stamp_event(logs,
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
 					fp);
 				break;
 			case PCIE_CLASS_TYPE:
-				ret = parse_pcie_event(pevent_descriptor,
+				ret = parse_pcie_event(logs,
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
 					fp);
 				break;
 			case NVME_CLASS_TYPE:
-				ret = parse_nvme_event(pevent_descriptor,
+				ret = parse_nvme_event(logs,
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
@@ -1487,7 +1519,8 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 			case FIRMWARE_ASSERT_CLASS_TYPE:
 			case TEMPERATURE_CLASS_TYPE:
 			case MEDIA_CLASS_TYPE:
-				parse_common_event(pevent_descriptor,
+				parse_common_event(logs,
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
@@ -1495,7 +1528,8 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				ret = 0;
 				break;
 			case MEDIA_WEAR_CLASS_TYPE:
-				ret = parse_media_wear_event(pevent_descriptor,
+				ret = parse_media_wear_event(logs,
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
@@ -1503,6 +1537,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				break;
 			case VIRTUAL_FIFO_EVENT_CLASS_TYPE:
 				ret = parse_virtual_fifo_event(
+					logs,
 					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
@@ -1510,14 +1545,16 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					fp);
 				break;
 			case SMBUS_I2C_I3C_EVENT_CLASS_TYPE:
-				ret = parse_smbus_event(pevent_descriptor,
+				ret = parse_smbus_event(logs,
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
 					fp);
 				break;
 			case MCTP_EVENT_CLASS_TYPE:
-				ret = parse_mctp_event(pevent_descriptor,
+				ret = parse_mctp_event(logs,
+					pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
@@ -1572,7 +1609,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					printf(STR_LINE2);
 			}
 		} else {
-			parse_ocp_telemetry_string_log(0, event_id,
+			parse_ocp_telemetry_string_log(logs, 0, event_id,
 				pevent_descriptor->debug_event_class_type, EVENT_STRING,
 				description_str);
 
@@ -1611,7 +1648,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					(__u8 *)pStaticSnapshotEvent +
 					sizeof(struct nvme_ocp_telemetry_event_descriptor);
 
-				parse_statistic(
+				parse_statistic(logs,
 					(struct nvme_ocp_telemetry_statistic_descriptor *)
 						pstatistic_entry,
 					pevent_descriptor_obj,
@@ -1651,7 +1688,8 @@ static bool telemetry_da1_header_present(
 	return poffsets->da1_size >= sizeof(struct nvme_ocp_header_in_da1);
 }
 
-int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offsets *poffsets,
+int parse_event_fifos(const struct ocp_telemetry_logs *logs,
+	struct json_object *root, struct nvme_ocp_telemetry_offsets *poffsets,
 	FILE *fp)
 {
 	if (poffsets == NULL) {
@@ -1667,8 +1705,8 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 	if (root != NULL)
 		pevent_fifos_object = json_create_object();
 
-	__u8 *pda1_header_offset = ptelemetry_buffer + poffsets->da1_start_offset;//512
-	__u8 *pda2_offset = ptelemetry_buffer + poffsets->da2_start_offset;
+	__u8 *pda1_header_offset = logs->telemetry + poffsets->da1_start_offset;//512
+	__u8 *pda2_offset = logs->telemetry + poffsets->da2_start_offset;
 	struct nvme_ocp_header_in_da1 *pda1_header = (struct nvme_ocp_header_in_da1 *)
 		pda1_header_offset;
 	struct nvme_ocp_event_fifo_data event_fifo[MAX_NUM_FIFOS];
@@ -1710,8 +1748,10 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 				return -1;
 			}
 
-			int status = parse_event_fifo(fifo_no, pfifo_start, pevent_fifos_object,
-						      pstring_buffer, poffsets, fifo_size, fp);
+			int status = parse_event_fifo(logs, fifo_no,
+						      pfifo_start,
+						      pevent_fifos_object,
+						      poffsets, fifo_size, fp);
 
 			if (status != 0) {
 				nvme_show_error("Failed to parse Event FIFO. status:%d", status);
@@ -1847,11 +1887,14 @@ static bool is_context_statistic(struct nvme_ocp_telemetry_statistic_descriptor 
 		is_context_scope_id(le16_to_cpu(d->statistic_id));
 }
 
-static void print_statistics(__u8 *pstats, unsigned int size, struct json_object *array,
+static void print_statistics(const struct ocp_telemetry_logs *logs,
+			     __u8 *pstats, unsigned int size,
+			     struct json_object *array,
 			     FILE *fp, bool encapsulated, const char *where);
 
-static void parse_context_statistic(__u16 id, __u8 *pdata, unsigned int data_size,
-				    struct stat_sink *s)
+static void parse_context_statistic(const struct ocp_telemetry_logs *logs,
+				    __u16 id, __u8 *pdata,
+				    unsigned int data_size, struct stat_sink *s)
 {
 	struct nvme_ocp_statistic_context_data *context =
 		(struct nvme_ocp_statistic_context_data *)pdata;
@@ -1895,7 +1938,8 @@ static void parse_context_statistic(__u16 id, __u8 *pdata, unsigned int data_siz
 	snprintf(where, sizeof(where),
 		 "Encapsulated Statistic Descriptors of Context Statistic 0x%x", id);
 	array = stat_list_begin(s, STR_ENCAPSULATED_STATISTICS);
-	print_statistics(pdata + sizeof(*context), data_size - sizeof(*context), array, s->fp,
+	print_statistics(logs, pdata + sizeof(*context),
+			 data_size - sizeof(*context), array, s->fp,
 			 true, where);
 }
 
@@ -1903,7 +1947,8 @@ static void parse_context_statistic(__u16 id, __u8 *pdata, unsigned int data_siz
  * Prints a statistic as a new object of @pstats_array, into the existing
  * object @pstat_obj, or as text.
  */
-static void print_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
+static void print_statistic(const struct ocp_telemetry_logs *logs,
+			    struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
 			    struct json_object *pstats_array,
 			    struct json_object *pstat_obj, FILE *fp,
 			    bool encapsulated)
@@ -1917,7 +1962,9 @@ static void print_statistic(struct nvme_ocp_telemetry_statistic_descriptor *psta
 	struct stat_sink s;
 	size_t i;
 
-	parse_ocp_telemetry_string_log(0, id, 0, STATISTICS_IDENTIFIER_STRING, description_str);
+	parse_ocp_telemetry_string_log(logs, 0, id, 0,
+				       STATISTICS_IDENTIFIER_STRING,
+				       description_str);
 
 	stat_item_begin(&s, pstats_array, fp, encapsulated ? STAT_NESTED_INDENT : "");
 	if (pstat_obj)
@@ -1941,7 +1988,7 @@ static void print_statistic(struct nvme_ocp_telemetry_statistic_descriptor *psta
 	/* Context Statistic Descriptors do not nest; the walk reports one that does */
 	if (context && !encapsulated) {
 		if (data_dwords >= CONTEXT_DATA_DWORDS) {
-			parse_context_statistic(id, pdata, data_size, &s);
+			parse_context_statistic(logs, id, pdata, data_size, &s);
 			goto out;
 		}
 		nvme_show_error("Context Statistic 0x%x: %u data bytes cannot hold "
@@ -1966,7 +2013,9 @@ out:
  * Prints the statistic descriptors in the @size bytes at @pstats, up to the
  * first reserved identifier or the first descriptor that does not fit.
  */
-static void print_statistics(__u8 *pstats, unsigned int size, struct json_object *array,
+static void print_statistics(const struct ocp_telemetry_logs *logs,
+			     __u8 *pstats, unsigned int size,
+			     struct json_object *array,
 			     FILE *fp, bool encapsulated, const char *where)
 {
 	struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry;
@@ -2001,7 +2050,7 @@ static void print_statistics(__u8 *pstats, unsigned int size, struct json_object
 					"Context Statistic Descriptor 0x%x does not nest",
 					offset, where, id);
 
-		print_statistic(pstatistic_entry, array, NULL, fp,
+		print_statistic(logs, pstatistic_entry, array, NULL, fp,
 				encapsulated);
 
 		/*
@@ -2012,8 +2061,9 @@ static void print_statistics(__u8 *pstats, unsigned int size, struct json_object
 	}
 }
 
-int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
-		    struct json_object *pstat_obj, FILE *fp)
+int parse_statistic(const struct ocp_telemetry_logs *logs,
+	struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry,
+	struct json_object *pstat_obj, FILE *fp)
 {
 	if (pstatistic_entry == NULL) {
 		nvme_show_error("Statistics Input buffer was NULL");
@@ -2024,11 +2074,13 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 		/* End of statistics entries, return -1 to stop processing the buffer */
 		return -1;
 
-	print_statistic(pstatistic_entry, NULL, pstat_obj, fp, false);
+	print_statistic(logs, pstatistic_entry, NULL, pstat_obj, fp, false);
 	return 0;
 }
 
-int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets *poffsets,
+int parse_statistics(const struct ocp_telemetry_logs *logs,
+		     struct json_object *root,
+		     struct nvme_ocp_telemetry_offsets *poffsets,
 		     FILE *fp)
 {
 	if (poffsets == NULL) {
@@ -2039,7 +2091,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	if (!telemetry_da1_header_present(poffsets))
 		return 0;
 
-	__u8 *pda1_ocp_header_offset = ptelemetry_buffer + poffsets->header_size;//512
+	__u8 *pda1_ocp_header_offset = logs->telemetry + poffsets->header_size;//512
 	struct nvme_ocp_header_in_da1 *pda1_header =
 		(struct nvme_ocp_header_in_da1 *)pda1_ocp_header_offset;
 	__u64 start_dw, size_dw, da_dw;
@@ -2056,7 +2108,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 		start_dw = le64_to_cpu(pda1_header->da2_statistic_start);
 		size_dw = le64_to_cpu(pda1_header->da2_statistic_size);
 		da_dw = poffsets->da2_size / SIZE_OF_DWORD;
-		pda_offset = ptelemetry_buffer + poffsets->da2_start_offset;
+		pda_offset = logs->telemetry + poffsets->da2_start_offset;
 	} else {
 		nvme_show_error("Unsupported Data Area:[%d]", poffsets->data_area);
 		return -1;
@@ -2074,7 +2126,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	struct json_object *pstats_array = ((root != NULL) ? json_create_array() : NULL);
 
 	snprintf(where, sizeof(where), "Data Area %d", poffsets->data_area);
-	print_statistics(pda_offset + start_dw * SIZE_OF_DWORD, size_dw * SIZE_OF_DWORD,
+	print_statistics(logs, pda_offset + start_dw * SIZE_OF_DWORD, size_dw * SIZE_OF_DWORD,
 			 pstats_array, fp, false, where);
 
 	if (root != NULL && pstats_array != NULL)
@@ -2085,25 +2137,27 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	return 0;
 }
 
-static void parse_log_page_header(struct json_object *pobject, FILE *fp)
+static void parse_log_page_header(const struct ocp_telemetry_logs *logs,
+				  struct json_object *pobject, FILE *fp)
 {
-	if (ptelemetry_buffer[0] == NVME_LOG_LID_TELEMETRY_CTRL)
-		generic_structure_parser(ptelemetry_buffer,
+	if (logs->telemetry[0] == NVME_LOG_LID_TELEMETRY_CTRL)
+		generic_structure_parser(logs->telemetry,
 			controller_log_page_header,
 			ARRAY_SIZE(controller_log_page_header), pobject, 0, fp);
 	else
-		generic_structure_parser(ptelemetry_buffer,
+		generic_structure_parser(logs->telemetry,
 			host_log_page_header,
 			ARRAY_SIZE(host_log_page_header), pobject, 0, fp);
 }
 
-int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
+int print_ocp_telemetry_normal(const struct ocp_telemetry_logs *logs,
+			       struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;
 	char file_path[PATH_MAX];
 	FILE *fp = stdout;
 
-	if (ptelemetry_buffer == NULL) {
+	if (logs->telemetry == NULL) {
 		nvme_show_error("No telemetry data to parse.");
 		return -1;
 	}
@@ -2121,11 +2175,11 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	fprintf(fp, STR_LINE);
 	fprintf(fp, "%s\n", STR_LOG_PAGE_HEADER);
 	fprintf(fp, STR_LINE);
-	parse_log_page_header(NULL, fp);
+	parse_log_page_header(logs, NULL, fp);
 	fprintf(fp, STR_LINE);
 	fprintf(fp, "%s\n", STR_REASON_IDENTIFIER);
 	fprintf(fp, STR_LINE);
-	__u8 *preason_identifier_offset = ptelemetry_buffer +
+	__u8 *preason_identifier_offset = logs->telemetry +
 		offsetof(struct nvme_ocp_telemetry_host_initiated_header,
 			 reason_id);
 
@@ -2142,12 +2196,12 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	offsets.data_area = 1;// Default DA - DA1
 
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
-		(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
+		(struct nvme_ocp_telemetry_common_header *) logs->telemetry;
 
-	get_telemetry_das_offset_and_size(ptelemetry_common_header, ptelemetry_buffer_size,
+	get_telemetry_das_offset_and_size(ptelemetry_common_header, logs->telemetry_size,
 					  &offsets);
 
-	__u8 *pda1_header_offset = ptelemetry_buffer +
+	__u8 *pda1_header_offset = logs->telemetry +
 		offsets.da1_start_offset;//512
 
 	if (telemetry_da1_header_present(&offsets)) {
@@ -2182,7 +2236,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	fprintf(fp, "%s\n", STR_DA_1_STATS);
 	fprintf(fp, STR_LINE);
 
-	status = parse_statistics(NULL, &offsets, fp);
+	status = parse_statistics(logs, NULL, &offsets, fp);
 	if (status != 0) {
 		nvme_show_error("status: %d", status);
 		status = -1;
@@ -2192,7 +2246,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 	fprintf(fp, STR_LINE);
 	fprintf(fp, "%s\n", STR_DA_1_EVENT_FIFO_INFO);
 	fprintf(fp, STR_LINE);
-	status = parse_event_fifos(NULL, &offsets, fp);
+	status = parse_event_fifos(logs, NULL, &offsets, fp);
 	if (status != 0) {
 		status = -1;
 		goto out;
@@ -2204,7 +2258,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 		fprintf(fp, STR_LINE);
 		fprintf(fp, "%s\n", STR_DA_2_STATS);
 		fprintf(fp, STR_LINE);
-		status = parse_statistics(NULL, &offsets, fp);
+		status = parse_statistics(logs, NULL, &offsets, fp);
 		if (status != 0) {
 			nvme_show_error("status: %d", status);
 			status = -1;
@@ -2214,7 +2268,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 		fprintf(fp, STR_LINE);
 		fprintf(fp, "%s\n", STR_DA_2_EVENT_FIFO_INFO);
 		fprintf(fp, STR_LINE);
-		status = parse_event_fifos(NULL, &offsets, fp);
+		status = parse_event_fifos(logs, NULL, &offsets, fp);
 		if (status != 0) {
 			status = -1;
 			goto out;
@@ -2230,7 +2284,8 @@ out:
 }
 
 #ifdef CONFIG_JSONC
-int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
+int print_ocp_telemetry_json(const struct ocp_telemetry_logs *logs,
+			     struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;
 	char file_path[PATH_MAX];
@@ -2246,13 +2301,13 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	//"Log Page Header"
 	pheader = json_create_object();
 
-	parse_log_page_header(pheader, NULL);
+	parse_log_page_header(logs, pheader, NULL);
 	json_object_add_value_object(root, STR_LOG_PAGE_HEADER, pheader);
 
 	//"Reason Identifier"
 	preason_identifier = json_create_object();
 
-	__u8 *preason_identifier_offset = ptelemetry_buffer +
+	__u8 *preason_identifier_offset = logs->telemetry +
 		offsetof(struct nvme_ocp_telemetry_host_initiated_header, reason_id);
 
 	generic_structure_parser(preason_identifier_offset, reason_identifier,
@@ -2264,13 +2319,13 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	//Set DA to 1 and get offsets
 	offsets.data_area = 1;
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
-		(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
+		(struct nvme_ocp_telemetry_common_header *) logs->telemetry;
 
-	get_telemetry_das_offset_and_size(ptelemetry_common_header, ptelemetry_buffer_size,
+	get_telemetry_das_offset_and_size(ptelemetry_common_header, logs->telemetry_size,
 					  &offsets);
 
 	//"Telemetry Host-Initiated Data Block 1"
-	__u8 *pda1_header_offset = ptelemetry_buffer + offsets.da1_start_offset;//512
+	__u8 *pda1_header_offset = logs->telemetry + offsets.da1_start_offset;//512
 
 	if (telemetry_da1_header_present(&offsets)) {
 		da1_header = json_create_object();
@@ -2309,7 +2364,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	}
 
 	//Data Area 1 Statistics
-	status = parse_statistics(root, &offsets, NULL);
+	status = parse_statistics(logs, root, &offsets, NULL);
 	if (status != 0) {
 		nvme_show_error("status: %d", status);
 		status = -1;
@@ -2317,7 +2372,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	}
 
 	//Data Area 1 Event FIFOs
-	status = parse_event_fifos(root, &offsets, NULL);
+	status = parse_event_fifos(logs, root, &offsets, NULL);
 	if (status != 0) {
 		status = -1;
 		goto out;
@@ -2327,7 +2382,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 		//Set the DA to 2
 		offsets.data_area = 2;
 		//Data Area 2 Statistics
-		status = parse_statistics(root, &offsets, NULL);
+		status = parse_statistics(logs, root, &offsets, NULL);
 		if (status != 0) {
 			nvme_show_error("status: %d", status);
 			status = -1;
@@ -2335,7 +2390,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 		}
 
 		//Data Area 2 Event FIFOs
-		status = parse_event_fifos(root, &offsets, NULL);
+		status = parse_event_fifos(logs, root, &offsets, NULL);
 		if (status != 0) {
 			status = -1;
 			goto out;
