@@ -377,6 +377,7 @@ config_meson_cross() {
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
         --cross-file=.github/cross/cross-${CROSS_TARGET}.txt \
+        -Dioctl-tests=true              \
         -Dpython=disabled               \
         -Dopenssl=disabled              \
         "${opts[@]}"                    \
