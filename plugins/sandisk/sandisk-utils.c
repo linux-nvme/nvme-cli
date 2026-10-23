@@ -938,6 +938,17 @@ static long double sndk_le_to_float(__u8 *data, int byte_len)
 	return result;
 }
 
+/*
+ * A counter of @byte_len bytes at @data, at most UINT64_MAX: a device can
+ * report more, which a conversion of the long double would make undefined.
+ */
+static __u64 sndk_le_to_u64(__u8 *data, int byte_len)
+{
+	long double val = sndk_le_to_float(data, byte_len);
+
+	return val < 0x1p64L ? (__u64)val : UINT64_MAX;
+}
+
 /* The GUID as "0x" and its bytes in hex, the most significant first */
 static void sndk_stringify_log_page_guid(__u8 *guid, char *buf, size_t size)
 {
@@ -1015,9 +1026,9 @@ static void sndk_show_cloud_smart_log_json(struct sndk_ocp_cloud_smart_log *log)
 
 	root = json_create_object();
 	json_object_add_value_uint64(root, "physical_media_units_written",
-				     sndk_le_to_float(log->physical_media_units_written, 16));
+		sndk_le_to_u64(log->physical_media_units_written, 16));
 	json_object_add_value_uint64(root, "physical_media_units_read",
-				     sndk_le_to_float(log->physical_media_units_read, 16));
+		sndk_le_to_u64(log->physical_media_units_read, 16));
 	json_object_add_value_object(root, "bad_user_nand_blocks",
 				     bad_user_nand_blocks);
 	json_object_add_value_object(root, "bad_system_nand_blocks",
@@ -1072,9 +1083,9 @@ static void sndk_show_cloud_smart_log_json(struct sndk_ocp_cloud_smart_log *log)
 	json_object_add_value_uint(root, "total_nuse",
 				   le64_to_cpu(log->total_nuse));
 	json_object_add_value_uint64(root, "plp_start_count",
-				     sndk_le_to_float(log->plp_start_count, 16));
+		sndk_le_to_u64(log->plp_start_count, 16));
 	json_object_add_value_uint64(root, "endurance_estimate",
-				     sndk_le_to_float(log->endurance_estimate, 16));
+		sndk_le_to_u64(log->endurance_estimate, 16));
 	if (smart_log_ver >= 3) {
 		json_object_add_value_uint(root, "pcie_link_retraining_count",
 					   le64_to_cpu(log->pcie_link_retraining_cnt));
