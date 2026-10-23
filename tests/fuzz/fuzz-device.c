@@ -302,6 +302,8 @@ static const struct {
 	{ { "micron", "vs-smart-add-log" }, .pci = true },
 	{ { "micron", "vs-device-waf" }, .pci = true },
 	{ { "micron", "smart-log" }, .pci = true },
+	{ { "ymtc", "smart-log-add" }, .pci = true },
+	{ { "sfx", "status" }, .pci = true },
 };
 
 #define NR_COMMANDS ARRAY_SIZE(commands)
@@ -401,6 +403,45 @@ static const char *const pci_attrs[] = {
 	"vendor", "device", "subsystem_vendor", "subsystem_device",
 };
 
+/* Other attributes of the PCI device which commands read */
+#define AER_COUNTERS(n) n " 0\n"
+static const struct {
+	const char *name;
+	const char *value;
+} pci_fixed_attrs[] = {
+	{ "current_link_speed", "16.0 GT/s PCIe\n" },
+	{ "current_link_width", "4\n" },
+	{ "numa_node", "0\n" },
+	{ "aer_dev_correctable",
+	  AER_COUNTERS("RxErr") AER_COUNTERS("BadTLP")
+	  AER_COUNTERS("BadDLLP") AER_COUNTERS("Rollover")
+	  AER_COUNTERS("Timeout") AER_COUNTERS("NonFatalErr")
+	  AER_COUNTERS("CorrIntErr") AER_COUNTERS("HeaderOF")
+	  "TOTAL_ERR_COR 0\n" },
+	{ "aer_dev_nonfatal",
+	  AER_COUNTERS("Undefined") AER_COUNTERS("DLP")
+	  AER_COUNTERS("SDES") AER_COUNTERS("TLP") AER_COUNTERS("FCP")
+	  AER_COUNTERS("CmpltTO") AER_COUNTERS("CmpltAbrt")
+	  AER_COUNTERS("UnxCmplt") AER_COUNTERS("RxOF")
+	  AER_COUNTERS("MalfTLP") AER_COUNTERS("ECRC")
+	  AER_COUNTERS("UnsupReq") AER_COUNTERS("ACSViol")
+	  AER_COUNTERS("UncorrIntErr") AER_COUNTERS("BlockedTLP")
+	  AER_COUNTERS("AtomicOpBlocked") AER_COUNTERS("TLPBlockedErr")
+	  AER_COUNTERS("PoisonTLPBlocked")
+	  "TOTAL_ERR_NONFATAL 0\n" },
+	{ "aer_dev_fatal",
+	  AER_COUNTERS("Undefined") AER_COUNTERS("DLP")
+	  AER_COUNTERS("SDES") AER_COUNTERS("TLP") AER_COUNTERS("FCP")
+	  AER_COUNTERS("CmpltTO") AER_COUNTERS("CmpltAbrt")
+	  AER_COUNTERS("UnxCmplt") AER_COUNTERS("RxOF")
+	  AER_COUNTERS("MalfTLP") AER_COUNTERS("ECRC")
+	  AER_COUNTERS("UnsupReq") AER_COUNTERS("ACSViol")
+	  AER_COUNTERS("UncorrIntErr") AER_COUNTERS("BlockedTLP")
+	  AER_COUNTERS("AtomicOpBlocked") AER_COUNTERS("TLPBlockedErr")
+	  AER_COUNTERS("PoisonTLPBlocked")
+	  "TOTAL_ERR_FATAL 0\n" },
+};
+
 static void pci_cleanup(void)
 {
 	char path[sizeof(pci_dir) + 32];
@@ -411,6 +452,11 @@ static void pci_cleanup(void)
 
 	for (i = 0; i < ARRAY_SIZE(pci_attrs); i++) {
 		snprintf(path, sizeof(path), "%s/%s", pci_dir, pci_attrs[i]);
+		unlink(path);
+	}
+	for (i = 0; i < ARRAY_SIZE(pci_fixed_attrs); i++) {
+		snprintf(path, sizeof(path), "%s/%s", pci_dir,
+			 pci_fixed_attrs[i].name);
 		unlink(path);
 	}
 	for (i = 0; i < ARRAY_SIZE(dirs); i++) {
@@ -442,6 +488,18 @@ static void pci_setup(void)
 	snprintf(pci_dir, sizeof(pci_dir), "%s", path);
 	snprintf(pci_option, sizeof(pci_option), "test-sysfs-dir=%s",
 		 pci_root);
+	for (i = 0; i < ARRAY_SIZE(pci_fixed_attrs); i++) {
+		char attr[sizeof(pci_dir) + 32];
+		FILE *f;
+
+		snprintf(attr, sizeof(attr), "%s/%s", pci_dir,
+			 pci_fixed_attrs[i].name);
+		f = fopen(attr, "w");
+		if (!f)
+			abort();
+		fputs(pci_fixed_attrs[i].value, f);
+		fclose(f);
+	}
 }
 
 /* Give nvme0 of the test root the PCI IDs at @data, vendor and device */
