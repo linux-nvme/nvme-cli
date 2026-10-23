@@ -10,7 +10,8 @@ The test suite runs the seeds with the fuzz driver, which sends the
 output of the target to /dev/null: a seed which fails there shows no
 report. This runs each input alone with halting sanitizers, and prints
 what went wrong. To show that a regression input catches its bug, run it
-without the fix and with it.
+without the fix and with it. Without inputs, it runs the regression inputs
+of the source tree this nvme-fuzz is in, whichever build it runs.
 """
 
 from __future__ import annotations
