@@ -50,7 +50,7 @@
 
 #define C3_LATENCY_MON_LOG_BUF_LEN		0x200
 
-static __u8 lat_mon_guid[GUID_LEN] = {
+static const __u8 lat_mon_guid[GUID_LEN] = {
 	0x92, 0x7a, 0xc0, 0x8c,
 	0xd0, 0x84, 0x6c, 0x9c,
 	0x70, 0x43, 0xe6, 0xd4,
@@ -1201,7 +1201,7 @@ out:
 /* C5 Unsupported Requirement Log Page */
 #define C5_UNSUPPORTED_REQS_LEN            4096
 
-static __u8 unsupported_req_guid[GUID_LEN] = {
+static const __u8 unsupported_req_guid[GUID_LEN] = {
 	0x2F, 0x72, 0x9C, 0x0E,
 	0x99, 0x23, 0x2C, 0xBB,
 	0x63, 0x48, 0x32, 0xD0,
@@ -1308,7 +1308,7 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 
 #define C1_ERROR_RECOVERY_LOG_BUF_LEN       0x200
 
-static __u8 error_recovery_guid[GUID_LEN] = {
+static const __u8 error_recovery_guid[GUID_LEN] = {
 	0x44, 0xd9, 0x31, 0x21,
 	0xfe, 0x30, 0x34, 0xae,
 	0xab, 0x4d, 0xfd, 0x3d,
@@ -1412,7 +1412,7 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, s
 /// Device Capabilities (Log Identifier C4h) Requirements
 
 #define C4_DEV_CAP_REQ_LEN			0x1000
-static __u8 dev_cap_req_guid[GUID_LEN] = {
+static const __u8 dev_cap_req_guid[GUID_LEN] = {
 	0x97, 0x42, 0x05, 0x0d,
 	0xd1, 0xe1, 0xc9, 0x98,
 	0x5d, 0x49, 0x58, 0x4b,
@@ -2113,7 +2113,7 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 /* C7 TCG Configuration Log Page */
 #define C7_TCG_CONFIGURATION_LEN           512
 
-static __u8 tcg_configuration_guid[GUID_LEN] = {
+static const __u8 tcg_configuration_guid[GUID_LEN] = {
 	0x06, 0x40, 0x24, 0xBD,
 	0x7E, 0xE0, 0xE6, 0x83,
 	0xC0, 0x47, 0x54, 0xFA,
