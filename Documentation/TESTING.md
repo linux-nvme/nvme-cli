@@ -337,7 +337,9 @@ and `check` and `triage` replay them with it.
 `triage` replays the findings of a target and groups them by the bug they hit:
 the kind of finding and the first nvme-cli frame. For the `device` target, it
 names the command an input runs. `triage --show` prints the stack of each
-input instead, with the source lines also without `llvm-symbolizer`.
+input instead, with the source lines also without `llvm-symbolizer`. Both
+replay each input in a temporary directory, so the `crash-*` inputs and
+other files a run leaves behind do not pile up in the current one.
 
 `check` runs inputs once each with halting sanitizers, by default the
 regression inputs of a target, and prints what went wrong. The test suite
