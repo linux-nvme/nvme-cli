@@ -35,6 +35,7 @@ NVME_BIN = (sys.argv[1]
             if len(sys.argv) > 1 and not sys.argv[1].startswith('-')
             else 'nvme')
 MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
+HAVE_JSON = os.environ.get('NVME_TEST_JSON', '1') == '1'
 
 OPC_GET_LOG_PAGE = 0x02
 OPC_IDENTIFY = 0x06
@@ -222,6 +223,8 @@ class WdcModel:
                 self.check(command)
 
     def test_commands_json(self):
+        if not HAVE_JSON:
+            self.skipTest('nvme built without json-c')
         for command in self.COMMANDS:
             with self.subTest(command=command):
                 result = self.run_cmd(command, '--output-format=json')
