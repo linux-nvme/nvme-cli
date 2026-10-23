@@ -7910,7 +7910,8 @@ static int wdc_get_c3_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 		log_data = (struct wdc_ssd_latency_monitor_log *)data;
 
 		/* check log page version */
-		if (log_data->log_page_version != WDC_LATENCY_MON_VERSION) {
+		if (le16_to_cpu(log_data->log_page_version) !=
+		    WDC_LATENCY_MON_VERSION) {
 			nvme_show_error("ERROR: WDC: invalid latency monitor version");
 			ret = -1;
 			goto out;
@@ -7982,10 +7983,10 @@ static int wdc_get_ocp_c1_log_page(struct libnvme_global_ctx *ctx, struct libnvm
 		log_data = (struct wdc_ocp_c1_error_recovery_log *)data;
 
 		/* check log page version */
-		if ((log_data->log_page_version < 1) ||
-			(log_data->log_page_version > 3)) {
+		if ((le16_to_cpu(log_data->log_page_version) < 1) ||
+			(le16_to_cpu(log_data->log_page_version) > 3)) {
 			nvme_show_error("ERROR: WDC: invalid error recovery log version - %d",
-				log_data->log_page_version);
+				le16_to_cpu(log_data->log_page_version));
 			ret = -1;
 			goto out;
 		}
@@ -8054,8 +8055,11 @@ static int wdc_get_ocp_c4_log_page(struct libnvme_global_ctx *ctx, struct libnvm
 		log_data = (struct wdc_ocp_C4_dev_cap_log *)data;
 
 		/* check log page version */
-		if (log_data->log_page_version != WDC_DEV_CAP_LOG_VERSION) {
-			nvme_show_error("ERROR: WDC: invalid device capabilities log version - %d", log_data->log_page_version);
+		if (le16_to_cpu(log_data->log_page_version) !=
+		    WDC_DEV_CAP_LOG_VERSION) {
+			nvme_show_error(
+				"ERROR: WDC: invalid device capabilities log version - %d",
+				le16_to_cpu(log_data->log_page_version));
 			ret = -1;
 			goto out;
 		}
@@ -8124,10 +8128,11 @@ static int wdc_get_ocp_c5_log_page(struct libnvme_global_ctx *ctx, struct libnvm
 		log_data = (struct wdc_ocp_C5_unsupported_reqs *)data;
 
 		/* check log page version */
-		if (log_data->log_page_version != WDC_UNSUPPORTED_REQS_LOG_VERSION) {
+		if (le16_to_cpu(log_data->log_page_version) !=
+		    WDC_UNSUPPORTED_REQS_LOG_VERSION) {
 			nvme_show_error("ERROR: WDC: invalid 0xC5 log page version");
 			nvme_show_error("ERROR: WDC: log page version: %d",
-				log_data->log_page_version);
+				le16_to_cpu(log_data->log_page_version));
 			ret = -1;
 			goto out;
 		}
