@@ -415,8 +415,7 @@ __shr_public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 		return err;
 	}
 
-	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) ==
-			NVME_CTRL_CTRATT_UUID_LIST) {
+	if (le32_to_cpu(ctrl.ctratt) & NVME_CTRL_CTRATT_UUID_LIST) {
 		nvme_init_identify_uuid_list(&cmd, uuid_list);
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
 	}

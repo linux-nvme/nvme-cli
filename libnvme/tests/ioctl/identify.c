@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
+
 #include <libnvme.h>
 
 #include "nvme/loopback.h"
@@ -448,6 +451,37 @@ static void test_uuid(void)
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
+static void test_get_uuid_list(void)
+{
+	struct nvme_id_uuid_list expected_id, id = {};
+	struct nvme_id_ctrl ctrl = {
+		.ctratt = cpu_to_le32(NVME_CTRL_CTRATT_UUID_LIST),
+	};
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
+		{
+			.opcode = nvme_admin_identify,
+			.data_len = sizeof(ctrl),
+			.cdw10 = NVME_IDENTIFY_CNS_CTRL,
+			.out_data = &ctrl,
+		},
+		{
+			.opcode = nvme_admin_identify,
+			.data_len = sizeof(expected_id),
+			.cdw10 = NVME_IDENTIFY_CNS_UUID_LIST,
+			.out_data = &expected_id,
+		},
+	};
+	int err;
+
+	arbitrary(&expected_id, sizeof(expected_id));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds,
+					ARRAY_SIZE(mock_admin_cmds));
+	err = libnvme_get_uuid_list(test_hdl, &id);
+	libnvme_loopback_end(test_hdl);
+	check(err == 0, "get uuid list returned error %d", err);
+	cmp(&id, &expected_id, sizeof(id), "incorrect uuid list");
+}
+
 static void test_domain_list(void)
 {
 	struct nvme_id_domain_list expected_id, id = {};
@@ -672,6 +706,7 @@ int main(void)
 	RUN_TEST(secondary_ctrl_list);
 	RUN_TEST(ns_granularity);
 	RUN_TEST(uuid);
+	RUN_TEST(get_uuid_list);
 	RUN_TEST(domain_list);
 	RUN_TEST(endurance_group_list);
 	RUN_TEST(allocated_ns_list_csi);
