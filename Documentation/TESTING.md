@@ -345,6 +345,8 @@ other files a run leaves behind do not pile up in the current one.
 regression inputs of a target, and prints what went wrong. The test suite
 sends the output of the targets to `/dev/null`, so this is the way to see why
 a seed fails, or to show that a new regression input fails without its fix.
+The regression inputs are those of the source tree `nvme-fuzz` is in, also
+with the build of another tree: run the `nvme-fuzz` of the tree under test.
 
 `coverage` shows how far the `device` target gets into each of its commands:
 the edges an input of a command reaches beyond those of a command which only
