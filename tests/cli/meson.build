@@ -33,8 +33,9 @@ if python3.found()
 
     # Standalone CLI test for "nvme config-convert". Needs no device; uses
     # an explicit --config/--output pair under /tmp instead. Requires
-    # json-c since the legacy config.json reader is a no-op without it.
-    if want_fabrics and json_c_dep.found()
+    # json-c since the legacy config.json reader is a no-op without it,
+    # and the "config" plugin, which has the command.
+    if want_fabrics and 'config' in selected_plugins and json_c_dep.found()
         test('nvme-cli - config-convert',
              python3,
              args: [files('nvme_config_convert_test.py'), nvme_exe],
