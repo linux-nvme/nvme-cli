@@ -180,7 +180,7 @@ bool wdc_CheckUuidListSupport(struct libnvme_transport_handle *hdl,
 		return false;
 	}
 
-	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST) {
+	if (le32_to_cpu(ctrl.ctratt) & NVME_CTRL_CTRATT_UUID_LIST) {
 		nvme_init_identify_uuid_list(&cmd, uuid_list);
 
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
