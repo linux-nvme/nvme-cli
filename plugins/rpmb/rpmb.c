@@ -88,24 +88,18 @@ out:
 }
 
 /* Write given buffer data to specified file */
-static void write_file(unsigned char *data, size_t len, const char *dir,
-			const char *file, const char *msg)
+static void write_file(unsigned char *data, size_t len, const char *file,
+		       const char *msg)
 {
-	char temp_folder[PATH_MAX] = { 0 };
 	__cleanup_file FILE *fp = NULL;
 
-	if (dir)
-		snprintf(temp_folder, sizeof(temp_folder), "%s/%s", dir, file);
-	else
-		snprintf(temp_folder, sizeof(temp_folder), "./%s", file);
-
-	fp = fopen(temp_folder, "ab+");
+	fp = fopen(file, "ab+");
 	if (fp) {
 		if (fwrite(data, 1, len, fp) != len)
 			nvme_show_error("Failed to write %s data to %s", msg ? msg : "",
-					 temp_folder);
+					 file);
 	} else {
-		nvme_show_error("Failed to open %s file to write %s", temp_folder,
+		nvme_show_error("Failed to open %s file to write %s", file,
 				 msg ? msg : "");
 	}
 }
@@ -942,7 +936,7 @@ static int rpmb_read_data(int argc, char **argv, struct command *acmd, struct pl
 				   (regs.access_size + 1));
 	if (err > 0 && msg_buf) {
 		nvme_show_result("Writing %d bytes to file %s", err * 512, cfg.msgfile);
-		write_file(msg_buf, err * 512, NULL, cfg.msgfile, NULL);
+		write_file(msg_buf, err * 512, cfg.msgfile, NULL);
 	}
 
 	return err > 0 ? 0 : err;
@@ -1085,8 +1079,8 @@ static int rpmb_read_config(int argc, char **argv, struct command *acmd,
 				  (rcfg->bp_lock & 0x1) ? "Locked" : "Unlocked");
 	} else {
 		nvme_show_result("Saving received config data to %s file", cfg.msgfile);
-		write_file(msg_buf, sizeof(struct rpmb_config_block_t), NULL, cfg.msgfile,
-			   NULL);
+		write_file(msg_buf, sizeof(struct rpmb_config_block_t),
+			   cfg.msgfile, NULL);
 	}
 
 	return write_cntr == 0 ? -1 : 0;

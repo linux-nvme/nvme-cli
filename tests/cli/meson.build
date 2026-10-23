@@ -127,6 +127,12 @@ if python3.found()
             ]
         endif
 
+        if 'rpmb' in selected_plugins
+            mock_cli_tests += [
+                ['rpmb', 'nvme_rpmb_test.py', cli_test_env, 30],
+            ]
+        endif
+
         # A command of the sandisk plugin which falls back to the wdc one
         if 'sandisk' in selected_plugins and 'wdc' in selected_plugins and \
            json_c_dep.found()
