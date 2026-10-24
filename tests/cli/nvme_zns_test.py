@@ -209,6 +209,19 @@ class ZoneAppendTest(ZnsTestBase):
         self.assertEqual(cmd.cdw12, 1 << 31 | 1 << 30 | 8 << 26 | 1 << 25 | 1)
         self.assertEqual(cmd.data, data)
 
+    def test_metadata(self):
+        """The metadata of 1024 blocks, larger than a page"""
+        self.server.identify[CNS_NS] = id_ns(lbaf=[(8, 9, 0)])
+        data = b'\xa5' * (1024 * 512)
+        metadata = bytes(range(256)) * 32
+        cmd = self.zns(OPC_ZONE_APPEND, 'zone-append', self.ns,
+                       f'--data-size={len(data)}',
+                       f'--metadata-size={len(metadata)}',
+                       f'--data={self.file("d", data)}',
+                       f'--metadata={self.file("m", metadata)}')
+        self.assertEqual((cmd.cdw12, cmd.data_len), (1023, len(data)))
+        self.assertEqual(cmd.metadata, metadata)
+
     def test_size_required(self):
         self.assertRefused(['zone-append', self.ns],
                            'Append size not provided', OPC_ZONE_APPEND)

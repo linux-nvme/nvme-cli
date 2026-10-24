@@ -1043,10 +1043,10 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	}
 
 	if (cfg.metadata_size) {
-		mbuf = libnvme_alloc(meta_size);
+		mbuf = libnvme_alloc(cfg.metadata_size);
 		if (!mbuf) {
-			nvme_show_error("No memory for metadata size:%d",
-				meta_size);
+			nvme_show_error("No memory for metadata size:%"PRIx64"",
+				(uint64_t)cfg.metadata_size);
 			err = -1;
 			goto close_mfd;
 		}
