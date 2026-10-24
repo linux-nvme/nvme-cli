@@ -1292,6 +1292,12 @@ static int lba_range_type_set(struct libnvme_transport_handle *hdl, __u8 fid,
 	int j;
 #endif /* NVME_HAVE_INT128 */
 
+	if (cfg->num >= NVME_FEAT_LBA_RANGE_MAX) {
+		nvme_show_error("invalid number of LBA ranges: %u (0's based)",
+				cfg->num);
+		return -EINVAL;
+	}
+
 	if (sv)
 		gsel = NVME_GET_FEATURES_SEL_SAVED;
 
