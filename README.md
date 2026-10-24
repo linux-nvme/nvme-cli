@@ -17,7 +17,7 @@ https://lists.infradead.org/mailman/listinfo/linux-nvme
 | | Shared | nvme-cli | libnvme |
 |---|---|---|---|
 | Build | [![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml) |  | [![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml) |
-| Static analysis | [![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli) [![clang-analyzer](https://img.shields.io/badge/clang--analyzer-report-blue)](https://monom.org/linux-nvme/clang-analyze/current/) |  |  |
+| Static analysis | [![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli) [![clang-analyzer](https://img.shields.io/badge/clang--analyzer-report-blue)](https://linux-nvme.github.io/nvme-cli/) |  |  |
 | Test coverage | [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli) |  |  |
 | Docs |  | [![nvme-cli Docs](https://img.shields.io/readthedocs/nvme-cli?label=docs)](https://nvme-cli.readthedocs.io/en/stable/) | [![libnvme Docs](https://img.shields.io/readthedocs/libnvme?label=docs)](https://libnvme.readthedocs.io/en/stable/) |
 | Package |  |  | [![PyPI](https://img.shields.io/pypi/v/libnvme3)](https://pypi.org/project/libnvme3/) [![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme3)](https://pypi.org/project/libnvme3/) |
