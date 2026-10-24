@@ -176,6 +176,23 @@ class FeatPluginSetTest(FeaturesTestBase):
         self.assertEqual(cmd.data, expected)
 
 
+    def test_perf_characteristics_vendor_specific(self):
+        paid = '00112233-4455-6677-8899-aabbccddeeff'
+        path = os.path.join(self.tmp, 'vs')
+        with open(path, 'wb') as f:
+            f.write(b'VSDATA')
+        cmd = self.set_feature('feat', 'perf-characteristics', self.ctrl,
+                               '--attri=0xc1', '--rvspa', f'--paid={paid}',
+                               '--attrl=4', f'--vs-data={path}')
+        self.assertFields(cmd, FID_PERF_CHARACTERISTICS,
+                          cdw11=0xc1 | 1 << 8)
+        # PAID, ATTRL, then the ATTRL bytes of vendor specific data
+        expected = bytearray(PERF_ATTR_SIZE)
+        expected[0:16] = bytes.fromhex(paid.replace('-', ''))
+        struct.pack_into('<H', expected, 30, 4)
+        expected[32:36] = b'VSDA'
+        self.assertEqual(cmd.data, expected)
+
     def test_perf_characteristics_attribute_length(self):
         """The vendor specific data is at most 4064 bytes"""
         path = os.path.join(self.tmp, 'vs')
