@@ -14339,7 +14339,8 @@ _nvme () {
 			;;
 
 		(get-property)
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1" && return
 			local _get_property
@@ -14347,7 +14348,7 @@ _nvme () {
 				--dry-run':show command instead of executing'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--offset=':offset of the requested property'
+				--offset=':the offset or the name of the property'
 				-O':alias for --offset'
 				--output-format=':Output format: normal|json|binary'
 				-o':alias for --output-format'
@@ -14366,52 +14367,28 @@ _nvme () {
 			;;
 
 		(get-reg)
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1" && return
+			_nvme_opt_list "--register -r" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" && return
 			local _get_reg
 			_get_reg=(
-				--acq':ACQ=0x30 register offset'
-				--aqa':AQA=0x24 register offset'
-				--asq':ASQ=0x28 register offset'
-				--bpinfo':BPINFO=0x40 register offset'
-				--bpmbl':BPMBL=0x48 register offset'
-				--bprsel':BPRSEL=0x44 register offset'
-				--cap':CAP=0x0 register offset'
-				--cc':CC=0x14 register offset'
-				--cmbebs':CMBEBS=0x5c register offset'
-				--cmbloc':CMBLOC=0x38 register offset'
-				--cmbmsc':CMBMSC=0x50 register offset'
-				--cmbsts':CMBSTS=0x58 register offset'
-				--cmbswtp':CMBSWTP=0x60 register offset'
-				--cmbsz':CMBSZ=0x3c register offset'
-				--crto':CRTO=0x68 register offset'
-				--csts':CSTS=0x1c register offset'
 				--dry-run':show command instead of executing'
-				--intmc':INTMC=0x10 register offset'
-				--intms':INTMS=0xc register offset'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--nssd':NSSD=0x64 register offset'
-				--nssr':NSSR=0x20 register offset'
-				--offset=':offset of the requested register'
+				--offset=':the offset or the name of a register'
 				-O':alias for --offset'
 				--output-format=':Output format: normal|json|binary'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
-				--pmrcap':PMRCAP=0xe00 register offset'
-				--pmrctl':PMRCTL=0xe04 register offset'
-				--pmrebs':PMREBS=0xe0c register offset'
-				--pmrmscl':PMRMSCL=0xe14 register offset'
-				--pmrmscu':PMRMSCU=0xe18 register offset'
-				--pmrsts':PMRSTS=0xe08 register offset'
-				--pmrswtp':PMRSWTP=0xe10 register offset'
 				--quiet':suppress informational output'
+				--register=':the names of the registers'
+				-r':alias for --register'
 				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
 				--timeout=':timeout value, in milliseconds'
 				--verbose':Increase output verbosity'
 				-v':alias for --verbose'
-				--vs':VS=0x8 register offset'
 				--help':show help'
 				-h':alias for --help'
 			)
@@ -16176,7 +16153,8 @@ _nvme () {
 			;;
 
 		(set-property)
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1" && return
 			local _set_property
@@ -16184,7 +16162,7 @@ _nvme () {
 				--dry-run':show command instead of executing'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--offset=':the offset of the property'
+				--offset=':the offset or the name of the property'
 				-O':alias for --offset'
 				--output-format=':Output format: normal|json|binary'
 				-o':alias for --output-format'
@@ -16205,37 +16183,26 @@ _nvme () {
 			;;
 
 		(set-reg)
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
+			               "--register -r" "intms intmc cc csts nssr aqa asq acq bprsel bpmbl cmbmsc nssd pmrctl pmrmscl pmrmscu" \
 			               "--timeout" "infinite -1" && return
 			local _set_reg
 			_set_reg=(
-				--acq=':ACQ=0x30 register offset'
-				--aqa=':AQA=0x24 register offset'
-				--asq=':ASQ=0x28 register offset'
-				--bpmbl=':BPMBL=0x48 register offset'
-				--bprsel=':BPRSEL=0x44 register offset'
-				--cc=':CC=0x14 register offset'
-				--cmbmsc=':CMBMSC=0x50 register offset'
-				--csts=':CSTS=0x1c register offset'
 				--dry-run':show command instead of executing'
-				--intmc=':INTMC=0x10 register offset'
-				--intms=':INTMS=0xc register offset'
 				--mmio32':Access 64-bit registers as 2 32-bit'
 				-m':alias for --mmio32'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--nssd=':NSSD=0x64 register offset'
-				--nssr=':NSSR=0x20 register offset'
-				--offset=':offset of the requested register'
+				--offset=':the offset or the name of the register'
 				-O':alias for --offset'
 				--output-format=':Output format: normal|json|binary'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
-				--pmrctl=':PMRCTL=0xe04 register offset'
-				--pmrmscl=':PMRMSCL=0xe14 register offset'
-				--pmrmscu=':PMRMSCU=0xe18 register offset'
 				--quiet':suppress informational output'
+				--register=':the name of the register'
+				-r':alias for --register'
 				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
 				--timeout=':timeout value, in milliseconds'
 				--value=':the value of the register to be set'

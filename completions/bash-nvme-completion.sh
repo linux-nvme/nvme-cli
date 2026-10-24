@@ -606,17 +606,21 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --offset -O --output-format -o --output-format-version --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
 			;;
 
 		"get-reg")
-			opts+=" --acq --aqa --asq --bpinfo --bpmbl --bprsel --cap --cc --cmbebs --cmbloc --cmbmsc --cmbsts --cmbswtp --cmbsz --crto --csts --dry-run --intmc --intms --no-ioctl-probing --no-retries --nssd --nssr --offset= -O --output-format= -o --output-format-version= --pmrcap --pmrctl --pmrebs --pmrmscl --pmrmscu --pmrsts --pmrswtp --quiet --set-options= --timeout= --verbose -v --vs"
-			valopts+=" --offset -O --output-format -o --output-format-version --set-options --timeout"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --quiet --register= -r --set-options= --timeout= --verbose -v"
+			valopts+=" --offset -O --output-format -o --output-format-version --register -r --set-options --timeout"
+			listopts+=" --register -r"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
+			               "--register -r" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
 			               "--timeout" "infinite -1"
 			;;
 
@@ -1141,17 +1145,20 @@ nvme_list_opts () {
 			opts+=" --dry-run --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --quiet --set-options= --timeout= --value= -V --verbose -v"
 			valopts+=" --offset -O --output-format -o --output-format-version --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1"
 			;;
 
 		"set-reg")
-			opts+=" --acq= --aqa= --asq= --bpmbl= --bprsel= --cc= --cmbmsc= --csts= --dry-run --intmc= --intms= --mmio32 -m --no-ioctl-probing --no-retries --nssd= --nssr= --offset= -O --output-format= -o --output-format-version= --pmrctl= --pmrmscl= --pmrmscu= --quiet --set-options= --timeout= --value= -V --verbose -v"
-			valopts+=" --acq --aqa --asq --bpmbl --bprsel --cc --cmbmsc --csts --intmc --intms --nssd --nssr --offset -O --output-format -o --output-format-version --pmrctl --pmrmscl --pmrmscu --set-options --timeout --value -V"
+			opts+=" --dry-run --mmio32 -m --no-ioctl-probing --no-retries --offset= -O --output-format= -o --output-format-version= --quiet --register= -r --set-options= --timeout= --value= -V --verbose -v"
+			valopts+=" --offset -O --output-format -o --output-format-version --register -r --set-options --timeout --value -V"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--offset -O" "cap vs intms intmc cc csts nssr aqa asq acq cmbloc cmbsz bpinfo bprsel bpmbl cmbmsc cmbsts cmbebs cmbswtp nssd crto pmrcap pmrctl pmrsts pmrebs pmrswtp pmrmscl pmrmscu" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
+			               "--register -r" "intms intmc cc csts nssr aqa asq acq bprsel bpmbl cmbmsc nssd pmrctl pmrmscl pmrmscu" \
 			               "--timeout" "infinite -1"
 			;;
 
