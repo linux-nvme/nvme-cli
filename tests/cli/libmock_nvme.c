@@ -185,7 +185,7 @@ struct __attribute__((packed)) ipc_response {
 	int32_t  status;	/* 0 for success, -1 for a real syscall/errno failure */
 	int32_t  errno_val;	/* errno to return on error (status == -1 only) */
 	int32_t  sc_status;	/* NVMe completion status */
-	uint32_t result;	/* cmd->result */
+	uint64_t result;	/* cmd->result */
 	uint32_t data_len;	/* payload length (follows immediately) */
 };
 
@@ -224,7 +224,7 @@ static void ipc_response_decode(struct ipc_response *r)
 	r->status    = (int32_t)le32toh((uint32_t)r->status);
 	r->errno_val = (int32_t)le32toh((uint32_t)r->errno_val);
 	r->sc_status = (int32_t)le32toh((uint32_t)r->sc_status);
-	r->result    = le32toh(r->result);
+	r->result    = le64toh(r->result);
 	r->data_len  = le32toh(r->data_len);
 }
 #endif
@@ -655,6 +655,7 @@ static void fuzz_read(void *buf, size_t len)
 static void *fuzz_ipc_call(struct ipc_request *req,
 			   struct ipc_response *resp)
 {
+	uint32_t result;
 	uint8_t ctl;
 	uint16_t sc;
 	void *buf;
@@ -688,8 +689,9 @@ static void *fuzz_ipc_call(struct ipc_request *req,
 	fuzz_total += resp->data_len;
 
 	fuzz_read(&ctl, sizeof(ctl));
-	fuzz_read(&resp->result, sizeof(resp->result));
-	resp->result = le32toh(resp->result);
+	/* The fuzz input keeps a 32 bit result. */
+	fuzz_read(&result, sizeof(result));
+	resp->result = le32toh(result);
 	if (ctl >= 0xf8) {
 		resp->status = -1;
 		resp->errno_val = EIO;
@@ -948,8 +950,9 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 	};
 
 	resp_data = ipc_call(ipc_fd, &req, payload, &resp);
-	mock_dbg("ioctl received IPC response status %d, sc_status %d, result %u, data_len %u\n",
-		 resp.status, resp.sc_status, resp.result, resp.data_len);
+	mock_dbg("ioctl received IPC response status %d, sc_status %d, result %llu, data_len %u\n",
+		 resp.status, resp.sc_status,
+		 (unsigned long long)resp.result, resp.data_len);
 
 	if (resp.status == -1) {
 		free(resp_data);

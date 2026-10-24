@@ -37,7 +37,7 @@ from pathlib import Path
 IPC_REQUEST_FMT = "<IIII B3x I IIIIII I BBBBI BB2x IIII"
 IPC_REQUEST_LEN = struct.calcsize(IPC_REQUEST_FMT)
 # status, errno_val, sc_status, result, data_len -- see struct ipc_response.
-IPC_RESPONSE_FMT = "<iiiII"
+IPC_RESPONSE_FMT = "<iiiQI"
 
 IPC_TYPE_WRITE = 1  # write() on /dev/nvme-fabrics (connect args)
 IPC_TYPE_IOCTL = 2  # ioctl() admin or I/O passthru command
