@@ -71,3 +71,19 @@ test_bitfields = executable(
 )
 
 test('nvme-cli - bitfields', test_bitfields, suite: 'unit')
+
+test_regs = executable(
+    'test-regs',
+    [
+        'test-regs.c',
+        '../../../src/nvme-regs.c',
+        '../../../src/bitfields.c',
+    ],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
+)
+
+test('nvme-cli - regs', test_regs, suite: 'unit')
