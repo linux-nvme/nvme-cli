@@ -14,19 +14,12 @@ Usage: python3 nvme_sed_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
 import errno
 import os
-import shutil
 import struct
-import sys
-import tempfile
 import unittest
 
-from nvme_mock_ipc import (IOC_WRITE, MockIPCServer, make_mock_env,
-                           resolve_mock_lib_path, run_nvme)
-
-_NVME_BIN = (sys.argv[1]
-             if len(sys.argv) > 1 and not sys.argv[1].startswith('-')
-             else 'nvme')
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
+from tests.cli.nvme_mock import (OPC_SECURITY_RECV, MockController,
+                                 MockTestCase, main)
+from tests.cli.nvme_mock_ipc import IOC_WRITE
 
 # Opal ioctls missing from older linux/sed-opal.h. libnvme returns
 # -ENOTSUP for them. Unset means all of them are available.
@@ -39,7 +32,6 @@ def _requires_ioctl(name):
     return unittest.skipUnless(name in _SED_IOCTLS,
                                f'IOC_OPAL_{name} not in linux/sed-opal.h')
 
-_NVME_OPCODE_SECURITY_RECV = 0x82
 _NVME_SC_INVALID_FIELD = 0x2
 
 # TCG Level 0 Discovery
@@ -150,7 +142,10 @@ def _decode_opal(name, bo, payload):
     raise AssertionError(f"no decoder for {name}")
 
 
-class SEDMockIPCServer(MockIPCServer):
+class SEDController(MockController):
+    """Answers the Level 0 Discovery with @l0, or the NVMe status
+    @l0_sc_status, the Opal ioctls with @ioctl_status and getpass() with
+    @passwords."""
 
     def __init__(self, sock_path):
         super().__init__(sock_path)
@@ -161,19 +156,14 @@ class SEDMockIPCServer(MockIPCServer):
         # ioctl name -> ioctl() return value, or -errno
         self.ioctl_status = {}
         self.ioctls = []
+        self.admin[OPC_SECURITY_RECV] = self.security_recv
 
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        secp = cdw10 >> 24
-        spsp = (cdw10 >> 8) & 0xffff
-        if (opcode == _NVME_OPCODE_SECURITY_RECV and
-                secp == _TCG_L0_SECP and spsp == _TCG_L0_COMID):
-            if self.l0_sc_status:
-                self.send_response(conn, 0, sc_status=self.l0_sc_status)
-            else:
-                self.send_response(conn, 0, payload=self.l0[:req_len])
-        else:
-            self.send_response(conn, 0)
+    def security_recv(self, cmd):
+        secp = cmd.cdw10 >> 24
+        spsp = (cmd.cdw10 >> 8) & 0xffff
+        if secp != _TCG_L0_SECP or spsp != _TCG_L0_COMID:
+            return self.default
+        return self.l0_sc_status or self.l0
 
     def _respond(self, conn, name):
         status = self.ioctl_status.get(name, 0)
@@ -204,33 +194,13 @@ class SEDMockIPCServer(MockIPCServer):
         self.send_response(conn, 0, payload=self.passwords.pop(0).encode())
 
 
-class SEDCLITest(unittest.TestCase):
+class SEDCLITest(MockTestCase):
 
-    DEVICE = '/dev/nvme0n1'
-
-    def setUp(self):
-        self.sysfs_dir = tempfile.mkdtemp(prefix='nvme-sed-sysfs-', dir='/tmp')
-        self.base_dir = tempfile.mkdtemp(prefix='nvme-sed-base-', dir='/tmp')
-        self.ipc_dir = tempfile.mkdtemp(prefix='nvme-sed-ipc-', dir='/tmp')
-        self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
-
-        self.server = SEDMockIPCServer(self.ipc_sock_path)
-        self.server.start()
-
-        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-
-        shutil.rmtree(self.sysfs_dir, ignore_errors=True)
-        shutil.rmtree(self.base_dir, ignore_errors=True)
-        shutil.rmtree(self.ipc_dir, ignore_errors=True)
+    controller_class = SEDController
 
     def _sed(self, *args, expect_fail=False, stdin_data=None):
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'sed', args[0], self.DEVICE, *args[1:],
-                          stdin_data=stdin_data)
+        result = self.nvme('sed', args[0], self.ns, *args[1:],
+                           stdin_data=stdin_data)
         if expect_fail:
             self.assertNotEqual(result.returncode, 0,
                                 f'sed {args} was expected to fail but '
@@ -496,8 +466,4 @@ class SEDCLITest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # Standalone run: strip the args parsed above, hand the rest to unittest.
-    unittest_args = [sys.argv[0]]
-    if len(sys.argv) > 3:
-        unittest_args.extend(sys.argv[3:])
-    unittest.main(argv=unittest_args)
+    main()

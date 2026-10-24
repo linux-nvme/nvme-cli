@@ -12,31 +12,11 @@ the device reports, and each value is printed with its length.
 Usage: python3 nvme_host_metadata_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
 import json
-import os
-import shutil
 import struct
-import subprocess
-import sys
-import tempfile
-import unittest
 
-from nvme_mock_ipc import (MockIPCServer, make_mock_env,
-                           resolve_mock_lib_path, run_nvme)
+from tests.cli.nvme_mock import HAVE_JSON, MockTestCase, main
 
-_NVME_BIN = (sys.argv[1]
-             if len(sys.argv) > 1 and not sys.argv[1].startswith('-')
-             else 'nvme')
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-_NVME_ADMIN_GET_FEATURES = 0x0a
-
-
-def json_c_available():
-    """True if nvme was built with json-c: the help of --output-format
-    lists json only then."""
-    proc = subprocess.run([_NVME_BIN, 'get-feature', '--help'],
-                          capture_output=True, text=True)
-    return 'json' in proc.stdout + proc.stderr
+_FID_HOST_METADATA = 0x7e
 _HOST_METADATA_SIZE = 4096
 
 
@@ -46,55 +26,17 @@ def element(etype, value, length=None):
                        len(value) if length is None else length) + value
 
 
-class MetadataMockIPCServer(MockIPCServer):
-
-    def __init__(self, sock_path):
-        super().__init__(sock_path)
-        self.metadata = b''
-
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        if opcode == _NVME_ADMIN_GET_FEATURES:
-            data = self.metadata.ljust(_HOST_METADATA_SIZE, b'\xaa')
-            self.send_response(conn, 0, payload=data[:req_len])
-        else:
-            self.send_response(conn, 0, payload=b"\x00" * req_len)
-
-
-class HostMetadataCLITest(unittest.TestCase):
-
-    DEVICE = '/dev/nvme0'
-
-    def setUp(self):
-        self.sysfs_dir = tempfile.mkdtemp(prefix='nvme-md-sysfs-', dir='/tmp')
-        self.base_dir = tempfile.mkdtemp(prefix='nvme-md-base-', dir='/tmp')
-        self.ipc_dir = tempfile.mkdtemp(prefix='nvme-md-ipc-', dir='/tmp')
-        self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
-
-        self.server = MetadataMockIPCServer(self.ipc_sock_path)
-        self.server.start()
-
-        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-
-        shutil.rmtree(self.sysfs_dir, ignore_errors=True)
-        shutil.rmtree(self.base_dir, ignore_errors=True)
-        shutil.rmtree(self.ipc_dir, ignore_errors=True)
+class HostMetadataCLITest(MockTestCase):
 
     def _get_feature(self, *args):
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'get-feature', self.DEVICE, '--feature-id=0x7e',
-                          '--verbose', *args)
-        self.assertEqual(result.returncode, 0,
-                         f'stdout:\n{result.stdout}\nstderr:\n'
-                         f'{result.stderr}')
-        return result.stdout
+        return self.assertOk(self.nvme('get-feature', self.ctrl,
+                                       '--feature-id=0x7e', '--verbose',
+                                       *args)).stdout
 
     def _metadata(self, *elements):
-        self.server.metadata = bytes([len(elements), 0]) + b''.join(elements)
+        metadata = bytes([len(elements), 0]) + b''.join(elements)
+        self.server.features[_FID_HOST_METADATA] = metadata.ljust(
+            _HOST_METADATA_SIZE, b'\xaa')
 
     def test_values(self):
         """Each value is printed with its length, not up to a NUL."""
@@ -110,7 +52,7 @@ class HostMetadataCLITest(unittest.TestCase):
                        element(2, b'second', length=0xffff),
                        element(3, b'never'))
         formats = [[]]
-        if json_c_available():
+        if HAVE_JSON:
             formats.append(['--output-format=json'])
         for fmt in formats:
             with self.subTest(fmt=fmt):
@@ -126,4 +68,4 @@ class HostMetadataCLITest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[sys.argv[0]] + sys.argv[3:])
+    main()

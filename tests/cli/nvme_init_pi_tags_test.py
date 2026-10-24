@@ -9,51 +9,29 @@
 
 Usage: python3 nvme_init_pi_tags_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
+
 import errno
-import os
-import shutil
 import signal
-import struct
-import sys
-import tempfile
-import unittest
 
-from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
-
-_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-_NVME_OPCODE_READ = 0x02
-_NVME_OPCODE_IDENTIFY = 0x06
-_NVME_IDENTIFY_CNS_NS = 0x00
-_NVME_IDENTIFY_CNS_CSI_NS = 0x05
-
-NVME_SC_INVALID_FIELD = 0x2
-NVME_SC_INTERNAL = 0x6
+from tests.cli.nvme_mock import (CNS_CSI_NS, CNS_NS, FLBAS_META_EXT,
+                                 OPC_NVM_READ, PIC_QPIFS, SC_INTERNAL,
+                                 SC_INVALID_FIELD, MockTestCase, Reply,
+                                 id_ns, main, nvm_id_ns)
 
 PIF_16B_GUARD = 0
 PIF_QTYPE = 3
 
 PIFA_BYTE_GRANULARITY_MASKING = 0x1
 
-_ID_NS_SIZE = 4096
-_NVM_ID_NS_SIZE = 4096
 
-
-_FLBAS_META_EXT = 0x10
-
-
-def _pack_id_ns(lba_index=0, ds=9, ms=0, meta_ext=False):
-    """Pack a struct nvme_id_ns (4096 bytes). FLBAS (offset 26) selects
-    @lba_index as the in-use LBA format, and its META_EXT bit (0x10) says
-    whether @ms bytes of metadata are transferred as part of the extended
-    LBA. LBAF[@lba_index] (offset 128 + 4*index) encodes a 2**@ds byte
+def _id_ns(lba_index=0, ds=9, ms=0, meta_ext=False):
+    """FLBAS selects @lba_index as the in-use LBA format, and its
+    META_EXT bit says whether @ms bytes of metadata are transferred as
+    part of the extended LBA. LBAF[@lba_index] encodes a 2**@ds byte
     logical block with @ms bytes of metadata. This is everything
     get_pi_info() reads out of the base Identify Namespace response."""
-    buf = bytearray(_ID_NS_SIZE)
-    buf[26] = (lba_index & 0xff) | (_FLBAS_META_EXT if meta_ext else 0)
-    struct.pack_into("<HBB", buf, 128 + 4 * lba_index, ms, ds, 0)
-    return bytes(buf)
+    return id_ns(flbas=lba_index | (FLBAS_META_EXT if meta_ext else 0),
+                 lbaf={lba_index: (ms, ds, 0)})
 
 
 def _expected_buffer_size(data_size, logical_block_size):
@@ -64,76 +42,26 @@ def _expected_buffer_size(data_size, logical_block_size):
     return (nblocks + 1) * logical_block_size
 
 
-def _pack_nvm_id_ns(lba_index=0, sts=0, pif=PIF_16B_GUARD, qpif=0, qpifs=False,
-                     pifa=0, lbstm=0):
-    """Pack struct nvme_nvm_id_ns: LBSTM (offset 0), PIC.QPIFS (offset 8,
-    bit 3), PIFA.STMLA (offset 9), and ELBAF[@lba_index] (offset
-    12 + 4*index), encoding (@sts, @pif, @qpif)."""
-    buf = bytearray(_NVM_ID_NS_SIZE)
-    struct.pack_into("<Q", buf, 0, lbstm)
-    buf[8] = 0x8 if qpifs else 0
-    buf[9] = pifa & 0xf
-    elbaf = (sts & 0x7f) | ((pif & 0x3) << 7) | ((qpif & 0xf) << 9)
-    struct.pack_into("<I", buf, 12 + 4 * lba_index, elbaf)
-    return bytes(buf)
+def _nvm_id_ns(lba_index=0, sts=0, pif=PIF_16B_GUARD, qpif=0, qpifs=False,
+               pifa=0, lbstm=0):
+    """ELBAF[@lba_index] encodes (@sts, @pif, @qpif)"""
+    return nvm_id_ns(elbaf={lba_index: (sts, pif, qpif)}, lbstm=lbstm,
+                     pic=PIC_QPIFS if qpifs else 0, pifa=pifa)
 
 
-class PITagsMockIPCServer(MockIPCServer):
+class PITagsMockTestBase(MockTestCase):
+    """A namespace without an I/O Command Set specific Identify
+    Namespace, unless a test sets one."""
 
-    def __init__(self, sock_path):
-        super().__init__(sock_path)
-        self.id_ns = _pack_id_ns()
-        self.id_ns_sc_status = 0
-        self.nvm_id_ns = None
-        self.nvm_id_ns_sc_status = 0
-        self.last_read_req_len = None
-
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        if opcode == _NVME_OPCODE_IDENTIFY and (cdw10 & 0xff) == _NVME_IDENTIFY_CNS_NS:
-            if self.id_ns_sc_status:
-                self.send_response(conn, 0, sc_status=self.id_ns_sc_status)
-            else:
-                self.send_response(conn, 0, payload=self.id_ns[:req_len])
-        elif opcode == _NVME_OPCODE_IDENTIFY and (cdw10 & 0xff) == _NVME_IDENTIFY_CNS_CSI_NS:
-            if self.nvm_id_ns_sc_status:
-                self.send_response(conn, 0, sc_status=self.nvm_id_ns_sc_status)
-            elif self.nvm_id_ns is not None:
-                self.send_response(conn, 0, payload=self.nvm_id_ns[:req_len])
-            else:
-                self.send_response(conn, -1, errno_val=errno.ENOTTY)
-        else:
-            if opcode == _NVME_OPCODE_READ:
-                self.last_read_req_len = req_len
-            self.send_response(conn, 0)
-
-
-class PITagsMockTestBase(unittest.TestCase):
-
-    DEVICE = '/dev/nvme0n1'
     NSID = '1'
 
     def setUp(self):
-        self.sysfs_dir = tempfile.mkdtemp(prefix='nvme-pi-tags-sysfs-', dir='/tmp')
-        self.base_dir = tempfile.mkdtemp(prefix='nvme-pi-tags-base-', dir='/tmp')
-        self.ipc_dir = tempfile.mkdtemp(prefix='nvme-pi-tags-ipc-', dir='/tmp')
-        self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
-
-        self.server = PITagsMockIPCServer(self.ipc_sock_path)
-        self.server.start()
-
-        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-
-        shutil.rmtree(self.sysfs_dir, ignore_errors=True)
-        shutil.rmtree(self.base_dir, ignore_errors=True)
-        shutil.rmtree(self.ipc_dir, ignore_errors=True)
+        super().setUp()
+        self.server.identify[CNS_NS] = _id_ns()
+        self.server.identify[CNS_CSI_NS] = Reply(errno=errno.ENOTTY)
 
     def _run(self, *args):
-        return run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir, *args)
+        return self.nvme(*args)
 
 
 # ==================================================================== #
@@ -152,7 +80,8 @@ class PITagsMockTestBase(unittest.TestCase):
 class SubmitIOMockTestBase(PITagsMockTestBase):
 
     def _read(self, *args):
-        return self._run('read', self.DEVICE, '-n', self.NSID, '--data-size', '4096', *args)
+        return self._run('read', self.ns, '-n', self.NSID, '--data-size',
+                         '4096', *args)
 
 
 class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
@@ -171,7 +100,7 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
 
     def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
         """Invalid Field -> not supported -> proceed without PI."""
-        self.server.nvm_id_ns_sc_status = NVME_SC_INVALID_FIELD
+        self.server.identify[CNS_CSI_NS] = SC_INVALID_FIELD
         result = self._read()
         self.assertEqual(result.returncode, 0,
                          f'nvme read failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
@@ -180,7 +109,7 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
         """Any other failure (Internal Error here) is tolerated too: only
         ECLI_INVALID_TAGS aborts. More lenient than write-zeroes/copy and
         submit_io() with --block-size (see below)."""
-        self.server.nvm_id_ns_sc_status = NVME_SC_INTERNAL
+        self.server.identify[CNS_CSI_NS] = SC_INTERNAL
         result = self._read()
         self.assertEqual(result.returncode, 0,
                          f'nvme read failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
@@ -193,8 +122,8 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
         reads out of the base Identify Namespace before it even attempts
         Identify NVM CS NS."""
         ds, ms = 9, 8
-        self.server.id_ns = _pack_id_ns(ds=ds, ms=ms, meta_ext=True)
-        self.server.nvm_id_ns_sc_status = NVME_SC_INTERNAL
+        self.server.identify[CNS_NS] = _id_ns(ds=ds, ms=ms, meta_ext=True)
+        self.server.identify[CNS_CSI_NS] = SC_INTERNAL
 
         result = self._read()
 
@@ -206,9 +135,10 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
         bare_len = _expected_buffer_size(4096, 1 << ds)
         self.assertNotEqual(expected_len, bare_len,
                             'test bug: full and bare sizes must differ to be a useful check')
-        self.assertEqual(self.server.last_read_req_len, expected_len,
+        read_len = self.server.io_cmds(OPC_NVM_READ)[-1].data_len
+        self.assertEqual(read_len, expected_len,
                          f'expected the full extended-LBA transfer size {expected_len} bytes, '
-                         f'got {self.server.last_read_req_len} (bare-block-size {bare_len} would '
+                         f'got {read_len} (bare-block-size {bare_len} would '
                          f'undersize the buffer)')
 
     def test_base_identify_ns_failure_aborts_without_dividing_by_zero(self):
@@ -218,7 +148,7 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
         can tell the two apart and abort here instead of dividing by the
         block size it never got (the same SIGFPE this whole change set is
         meant to prevent)."""
-        self.server.id_ns_sc_status = NVME_SC_INTERNAL
+        self.server.identify[CNS_NS] = SC_INTERNAL
 
         result = self._read()
 
@@ -232,7 +162,7 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
     def test_invalid_ref_tag_aborts_the_command(self):
         """An invalid ref tag must still abort, unlike the failures above."""
         # 16B Guard, STS=8: ref tag is 32-8=24 bits; 0x1000000 is one past.
-        self.server.nvm_id_ns = _pack_nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
+        self.server.identify[CNS_CSI_NS] = _nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
 
         result = self._read('--ref-tag', '0x1000000')
 
@@ -248,7 +178,7 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
         silently fall back to "no PI"."""
         # STS=16 (2 full bytes), byte-granularity masking, but LBSTM only
         # masks one of those two bytes -> get_pif_sts_via_qpif() fails.
-        self.server.nvm_id_ns = _pack_nvm_id_ns(
+        self.server.identify[CNS_CSI_NS] = _nvm_id_ns(
             sts=16, pif=PIF_QTYPE, qpif=PIF_16B_GUARD, qpifs=True,
             pifa=PIFA_BYTE_GRANULARITY_MASKING, lbstm=0x01ff)
 
@@ -268,7 +198,7 @@ class SubmitIOExplicitBlockSizeTest(SubmitIOMockTestBase):
         return self._read('--block-size', '512', *args)
 
     def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
-        self.server.nvm_id_ns_sc_status = NVME_SC_INVALID_FIELD
+        self.server.identify[CNS_CSI_NS] = SC_INVALID_FIELD
         result = self._read_with_block_size()
         self.assertEqual(result.returncode, 0,
                          f'nvme read failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
@@ -276,14 +206,14 @@ class SubmitIOExplicitBlockSizeTest(SubmitIOMockTestBase):
     def test_nvm_cs_ns_other_status_error_aborts(self):
         """No "tolerate anything" fallback here: a real failure aborts the
         command, same as write-zeroes/copy."""
-        self.server.nvm_id_ns_sc_status = NVME_SC_INTERNAL
+        self.server.identify[CNS_CSI_NS] = SC_INTERNAL
         result = self._read_with_block_size()
         self.assertNotEqual(result.returncode, 0,
                             f'nvme read --block-size with Identify NVM CS NS failing on a real '
                             f'error should have failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
 
     def test_invalid_ref_tag_aborts_the_command(self):
-        self.server.nvm_id_ns = _pack_nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
+        self.server.identify[CNS_CSI_NS] = _nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
 
         result = self._read_with_block_size('--ref-tag', '0x1000000')
 
@@ -302,10 +232,10 @@ class WriteZeroesInvalidTagsTest(PITagsMockTestBase):
         super().setUp()
         # Fixed 16B Guard/STS=8 by default; individual tests override
         # nvm_id_ns_sc_status instead.
-        self.server.nvm_id_ns = _pack_nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
+        self.server.identify[CNS_CSI_NS] = _nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
 
     def _write_zeroes(self, ref_tag):
-        return self._run('write-zeroes', self.DEVICE, '-n', self.NSID,
+        return self._run('write-zeroes', self.ns, '-n', self.NSID,
                          '--ref-tag', hex(ref_tag), '--verbose')
 
     def test_valid_ref_tag_succeeds(self):
@@ -323,7 +253,7 @@ class WriteZeroesInvalidTagsTest(PITagsMockTestBase):
                      result.stdout + result.stderr)
 
     def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
-        self.server.nvm_id_ns_sc_status = NVME_SC_INVALID_FIELD
+        self.server.identify[CNS_CSI_NS] = SC_INVALID_FIELD
         result = self._write_zeroes(ref_tag=0)
         self.assertEqual(result.returncode, 0,
                          f'write-zeroes failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
@@ -337,12 +267,12 @@ class CopyInvalidTagsTest(PITagsMockTestBase):
 
     def setUp(self):
         super().setUp()
-        self.server.nvm_id_ns = _pack_nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
+        self.server.identify[CNS_CSI_NS] = _nvm_id_ns(sts=8, pif=PIF_16B_GUARD)
 
     def _copy(self, ref_tag):
         # One source block ("0" is 1 block) is enough: init_pi_tags() only
         # cares about -n/--ref-tag/--storage-tag.
-        return self._run('copy', self.DEVICE, '-n', self.NSID,
+        return self._run('copy', self.ns, '-n', self.NSID,
                          '--sdlba', '0', '--slbs', '0', '--blocks', '0',
                          '--ref-tag', hex(ref_tag), '--verbose')
 
@@ -360,16 +290,11 @@ class CopyInvalidTagsTest(PITagsMockTestBase):
                      result.stdout + result.stderr)
 
     def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
-        self.server.nvm_id_ns_sc_status = NVME_SC_INVALID_FIELD
+        self.server.identify[CNS_CSI_NS] = SC_INVALID_FIELD
         result = self._copy(ref_tag=0)
         self.assertEqual(result.returncode, 0,
                          f'copy failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
 
 
 if __name__ == '__main__':
-    # If called standalone, strip the arguments parsed above and run
-    # standard unittest main.
-    unittest_args = [sys.argv[0]]
-    if len(sys.argv) > 3:
-        unittest_args.extend(sys.argv[3:])
-    unittest.main(argv=unittest_args)
+    main()

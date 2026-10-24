@@ -10,24 +10,10 @@ src/nvme-cmds-io.c.
 
 Usage: python3 nvme_pif_sts_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
-import os
-import shutil
-import struct
-import sys
-import tempfile
-import unittest
 
-from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
-
-_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-_NVME_OPCODE_IDENTIFY = 0x06
-_NVME_IDENTIFY_CNS_NS = 0x00
-_NVME_IDENTIFY_CNS_CSI_NS = 0x05
-
-NVME_SC_INVALID_FIELD = 0x2
-NVME_SC_INTERNAL = 0x6
+from tests.cli.nvme_mock import (CNS_CSI_NS, CNS_NS, PIC_QPIFS,
+                                 SC_INTERNAL, SC_INVALID_FIELD, MockTestCase,
+                                 id_ns, main, nvm_id_ns)
 
 PIF_16B_GUARD = 0
 PIF_32B_GUARD = 1
@@ -38,94 +24,28 @@ PIFA_BIT_GRANULARITY_MASKING = 0x0
 PIFA_BYTE_GRANULARITY_MASKING = 0x1
 PIFA_MASKING_NOT_SUPPORTED = 0x2
 
-_ID_NS_SIZE = 4096
-_NVM_ID_NS_SIZE = 4096
+
+def _nvm_id_ns(lba_index, sts=0, pif=0, qpif=0, qpifs=False, pifa=0,
+               lbstm=0):
+    """ELBAF[@lba_index] encodes (@sts, @pif, @qpif)"""
+    return nvm_id_ns(elbaf={lba_index: (sts, pif, qpif)}, lbstm=lbstm,
+                     pic=PIC_QPIFS if qpifs else 0, pifa=pifa)
 
 
-def _pack_id_ns(lba_index=0):
-    """Pack a struct nvme_id_ns (4096 bytes). FLBAS (offset 26) selects
-    @lba_index as the in-use LBA format. Every other field stays 0:
-    get_pif_sts() only reads FLBAS out of this struct."""
-    buf = bytearray(_ID_NS_SIZE)
-    buf[26] = lba_index & 0xff  # lba_index <= 15 here, so HIGHER stays 0
-    return bytes(buf)
+class PIFStsCLITest(MockTestCase):
 
-
-def _pack_elbaf(sts, pif, qpif=0):
-    return (sts & 0x7f) | ((pif & 0x3) << 7) | ((qpif & 0xf) << 9)
-
-
-def _pack_nvm_id_ns(lba_index=0, sts=0, pif=0, qpif=0, qpifs=False, pifa=0, lbstm=0):
-    """Pack a struct nvme_nvm_id_ns (4096 bytes): LBSTM (offset 0),
-    PIC.QPIFS (offset 8, bit 3), PIFA.STMLA (offset 9), and
-    ELBAF[@lba_index] (offset 12 + 4*index), encoding (@sts, @pif, @qpif)."""
-    buf = bytearray(_NVM_ID_NS_SIZE)
-    struct.pack_into("<Q", buf, 0, lbstm)
-    buf[8] = 0x8 if qpifs else 0
-    buf[9] = pifa & 0xf
-    struct.pack_into("<I", buf, 12 + 4 * lba_index, _pack_elbaf(sts, pif, qpif))
-    return bytes(buf)
-
-
-class PIFMockIPCServer(MockIPCServer):
-
-    def __init__(self, sock_path):
-        super().__init__(sock_path)
-        self.id_ns = _pack_id_ns()
-        self.nvm_id_ns = _pack_nvm_id_ns()
-        self.nvm_id_ns_sc_status = 0
-
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        if opcode == _NVME_OPCODE_IDENTIFY:
-            cns = cdw10 & 0xff
-            if cns == _NVME_IDENTIFY_CNS_NS:
-                self.send_response(conn, 0, payload=self.id_ns[:req_len])
-            elif cns == _NVME_IDENTIFY_CNS_CSI_NS:
-                if self.nvm_id_ns_sc_status:
-                    self.send_response(conn, 0, sc_status=self.nvm_id_ns_sc_status)
-                else:
-                    self.send_response(conn, 0, payload=self.nvm_id_ns[:req_len])
-            else:
-                self.send_response(conn, 0, payload=b"\x00" * req_len)
-        else:
-            self.send_response(conn, 0)
-
-
-class PIFStsCLITest(unittest.TestCase):
-
-    DEVICE = '/dev/nvme0n1'
     NSID = '1'
-
-    def setUp(self):
-        self.sysfs_dir = tempfile.mkdtemp(prefix='nvme-pif-sysfs-', dir='/tmp')
-        self.base_dir = tempfile.mkdtemp(prefix='nvme-pif-base-', dir='/tmp')
-        self.ipc_dir = tempfile.mkdtemp(prefix='nvme-pif-ipc-', dir='/tmp')
-        self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
-
-        self.server = PIFMockIPCServer(self.ipc_sock_path)
-        self.server.start()
-
-        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-
-        shutil.rmtree(self.sysfs_dir, ignore_errors=True)
-        shutil.rmtree(self.base_dir, ignore_errors=True)
-        shutil.rmtree(self.ipc_dir, ignore_errors=True)
 
     def _verify(self, ref_tag=0, storage_tag=0, expect_fail=False, lba_index=0,
                nvm_id_ns_sc_status=0, **ns_kwargs):
-        self.server.id_ns = _pack_id_ns(lba_index=lba_index)
-        self.server.nvm_id_ns = _pack_nvm_id_ns(lba_index=lba_index, **ns_kwargs)
-        self.server.nvm_id_ns_sc_status = nvm_id_ns_sc_status
+        # get_pif_sts() only reads FLBAS of Identify Namespace
+        self.server.identify[CNS_NS] = id_ns(flbas=lba_index)
+        self.server.identify[CNS_CSI_NS] = (
+            nvm_id_ns_sc_status or _nvm_id_ns(lba_index, **ns_kwargs))
 
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'verify', self.DEVICE, '-n', self.NSID,
-                          '--ref-tag', hex(ref_tag), '--storage-tag', hex(storage_tag),
-                          '--verbose')
+        result = self.nvme('verify', self.ns, '-n', self.NSID,
+                           '--ref-tag', hex(ref_tag),
+                           '--storage-tag', hex(storage_tag), '--verbose')
 
         desc = f"ref_tag={hex(ref_tag)}, storage_tag={hex(storage_tag)}, lba_index={lba_index}, {ns_kwargs}"
         if expect_fail:
@@ -294,18 +214,15 @@ class PIFStsCLITest(unittest.TestCase):
     def test_nvm_cs_ns_invalid_field_falls_back_and_succeeds(self):
         """Invalid Field means "not supported": get_pif_sts() is skipped,
         PIF/STS default to 16B Guard/0, and the command proceeds."""
-        self._verify(nvm_id_ns_sc_status=NVME_SC_INVALID_FIELD, ref_tag=0, storage_tag=0)
+        self._verify(nvm_id_ns_sc_status=SC_INVALID_FIELD, ref_tag=0,
+                     storage_tag=0)
 
     def test_nvm_cs_ns_other_status_error_propagates(self):
         """Any other failure (Internal Error here) is a real error, not
         "not supported". It must not be swallowed: the command fails."""
-        self._verify(nvm_id_ns_sc_status=NVME_SC_INTERNAL, ref_tag=0, storage_tag=0,
+        self._verify(nvm_id_ns_sc_status=SC_INTERNAL, ref_tag=0, storage_tag=0,
                      expect_fail=True)
 
 
 if __name__ == '__main__':
-    # Standalone run: strip the args parsed above, hand the rest to unittest.
-    unittest_args = [sys.argv[0]]
-    if len(sys.argv) > 3:
-        unittest_args.extend(sys.argv[3:])
-    unittest.main(argv=unittest_args)
+    main()

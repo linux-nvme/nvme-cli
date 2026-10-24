@@ -15,22 +15,14 @@ data, and simulated errno failures.
 
 Usage: python3 nvme_fabrics_mock_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
-import os
 import shutil
 import struct
-import sys
-import tempfile
-import unittest
 from pathlib import Path
 
-from nvme_mock_ipc import (NIC_QUEUES_FMT, MockIPCServer, make_mock_env,
-                           resolve_mock_lib_path, run_nvme)
+from tests.cli.nvme_mock import (CNS_CTRL, MockController, MockTestCase,
+                                 Reply, id_ctrl, main, write_sysfs_ctrl)
+from tests.cli.nvme_mock_ipc import NIC_QUEUES_FMT
 
-# Capture the nvme binary path and preload library path from argv before
-# unittest.main() strips them.
-_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
-
-# NVMe-oF well-known discovery subsystem NQN (NVME_DISC_SUBSYS_NAME).
 DISCOVERY_NQN = "nqn.2014-08.org.nvmexpress.discovery"
 # Default TCP port used for discovery controller connections (NVME_DISC_IP_PORT).
 DISCOVERY_PORT = "8009"
@@ -43,11 +35,7 @@ NVME_NQN_CURR = 3   # This Discovery Controller's own port
 # struct nvmf_disc_log_entry EFLAGS bit (enum nvmf_disc_eflags).
 NVMF_DISC_EFLAGS_EPCSD = 1 << 1
 
-_NVME_OPCODE_GET_LOG_PAGE = 0x02
-_NVME_OPCODE_IDENTIFY = 0x06
 _DISCOVERY_LOG_LID = 0x70
-
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
 
 
 def _pack_disc_log_entry(portid, entry):
@@ -87,9 +75,11 @@ def _pack_disc_log_entry(portid, entry):
     return header + rsvd12 + trsvcid_bytes + rsvd64 + subnqn_bytes + traddr_bytes + tsas
 
 
-class FabricsMockIPCServer(MockIPCServer):
+class FabricsController(MockController):
     def __init__(self, sock_path):
         super().__init__(sock_path)
+        self.identify[CNS_CTRL] = self.id_ctrl
+        self.logs[_DISCOVERY_LOG_LID] = self.discovery_log
 
         # Test-specific state overrides, steered from Python tests.
         self.connect_errno = 0
@@ -167,44 +157,28 @@ class FabricsMockIPCServer(MockIPCServer):
         if self.sysfs_dir:
             self._write_sysfs_ctrl(inst, subsysnqn, transport, traddr, trsvcid,
                                     host_traddr, host_iface, hostnqn, hostid)
-            self._write_sysfs_secrets(inst, self.controllers[inst])
 
         resp_payload = f"instance={inst}\n".encode('utf-8')
         self.send_response(conn, 0, payload=resp_payload)
 
     def _write_sysfs_ctrl(self, inst, subsysnqn, transport, traddr, trsvcid,
                            host_traddr, host_iface, hostnqn, hostid):
-        ctrl_path = Path(self.sysfs_dir) / f"sys/class/nvme/nvme{inst}"
-        ctrl_path.mkdir(parents=True, exist_ok=True)
-
-        (ctrl_path / "transport").write_text(f"{transport}\n")
-
         addr_str = f"traddr={traddr},trsvcid={trsvcid}"
         if host_traddr not in ('none', ''):
             addr_str += f",host_traddr={host_traddr}"
         if host_iface not in ('none', ''):
             addr_str += f",host_iface={host_iface}"
-        (ctrl_path / "address").write_text(addr_str + "\n")
 
-        (ctrl_path / "subsysnqn").write_text(f"{subsysnqn}\n")
-        (ctrl_path / "state").write_text("live\n")
-        (ctrl_path / "delete_controller").write_text("")
-
+        attrs = {'delete_controller': ''}
         if hostnqn:
-            (ctrl_path / "hostnqn").write_text(f"{hostnqn}\n")
+            attrs['hostnqn'] = hostnqn
         if hostid:
-            (ctrl_path / "hostid").write_text(f"{hostid}\n")
-
-        sub_path = Path(self.sysfs_dir) / f"sys/class/nvme-subsystem/nvme-subsys{inst}"
-        sub_path.mkdir(parents=True, exist_ok=True)
-        (sub_path / "subsysnqn").write_text(f"{subsysnqn}\n")
-        (sub_path / f"nvme{inst}").mkdir(exist_ok=True)
-
-    def _write_sysfs_secrets(self, inst, ctrl):
+            attrs['hostid'] = hostid
         # Like the kernel: the secret, or "none" when the connect had none.
-        ctrl_path = Path(self.sysfs_dir) / f"sys/class/nvme/nvme{inst}"
         for attr in ('dhchap_secret', 'dhchap_ctrl_secret'):
-            (ctrl_path / attr).write_text(f"{ctrl[attr] or 'none'}\n")
+            attrs[attr] = self.controllers[inst][attr] or 'none'
+        write_sysfs_ctrl(self.sysfs_dir, inst, transport, addr_str,
+                         subsysnqn, **attrs)
 
     def handle_route(self, conn, daddr, saddr):
         self.route_lookups.append((daddr, saddr))
@@ -228,78 +202,46 @@ class FabricsMockIPCServer(MockIPCServer):
             return
         self.send_response(conn, 0, result=self.nprocs)
 
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
+    def answer(self, cmd):
         if self.ioctl_errno != 0:
-            self.send_response(conn, -1, errno_val=self.ioctl_errno)
-            return
+            return Reply(errno=self.ioctl_errno)
+        return super().answer(cmd)
 
-        resp_payload = b""
+    def discovery_log(self, cmd):
+        ctrl_nqn = self.controllers.get(cmd.instance, {}).get('subsysnqn', '')
+        entries = self.discovery_map.get(ctrl_nqn, self.discovery_entries)
 
-        if opcode == _NVME_OPCODE_GET_LOG_PAGE and (cdw10 & 0xff) == _DISCOVERY_LOG_LID:
-            # fd carries the controller instance for IOCTLs (see libmock_nvme.c).
-            ctrl_nqn = self.controllers.get(fd, {}).get('subsysnqn', '')
-            entries = self.discovery_map.get(ctrl_nqn, self.discovery_entries)
+        log_entries = b"".join(_pack_disc_log_entry(i + 1, e)
+                               for i, e in enumerate(entries))
+        log_header = struct.pack("<QQH", 1, len(entries), 0) + b"\x00" * 1006
+        full_log = log_header + log_entries
 
-            log_entries = b"".join(_pack_disc_log_entry(i + 1, e) for i, e in enumerate(entries))
-            log_header = struct.pack("<QQH", 1, len(entries), 0) + b"\x00" * 1006
-            full_log = log_header + log_entries
+        # libnvmf_get_discovery_log() reads the header twice (lpo=0: once
+        # to size the entries, once after to re-check genctr) but the
+        # entries themselves (lpo != 0) exactly once per completed
+        # fetch -- count that one, not the header reads, so a caller can
+        # tell "was this DC's DLP walked" from "was it walked twice".
+        if cmd.lpo != 0:
+            self.log_page_fetch_count[ctrl_nqn] = \
+                self.log_page_fetch_count.get(ctrl_nqn, 0) + 1
 
-            # libnvmf_get_discovery_log() reads the header twice (lpo=0: once
-            # to size the entries, once after to re-check genctr) but the
-            # entries themselves (lpo != 0) exactly once per completed
-            # fetch -- count that one, not the header reads, so a caller can
-            # tell "was this DC's DLP walked" from "was it walked twice".
-            if lpo != 0:
-                self.log_page_fetch_count[ctrl_nqn] = \
-                    self.log_page_fetch_count.get(ctrl_nqn, 0) + 1
+        return full_log[cmd.lpo:]
 
-            if lpo < len(full_log):
-                resp_payload = full_log[lpo:lpo + req_len]
-
-        elif opcode == _NVME_OPCODE_IDENTIFY:
-            vid = struct.pack("<HH", 0x105b, 0x105b)
-            sn_bytes = self.serial_number.encode('utf-8').ljust(20, b" ")[:20]
-            mn_bytes = self.model_number.encode('utf-8').ljust(40, b" ")[:40]
-            fr_bytes = b"MOCK1234".ljust(8, b" ")[:8]
-            rsvd = b"\x00" * (4096 - len(vid) - len(sn_bytes) - len(mn_bytes) - len(fr_bytes))
-            resp_payload = (vid + sn_bytes + mn_bytes + fr_bytes + rsvd)[:req_len]
-
-        self.send_response(conn, 0, payload=resp_payload)
+    def id_ctrl(self, cmd):
+        return id_ctrl(vid=0x105b, ssvid=0x105b, sn=self.serial_number[:20],
+                       mn=self.model_number[:40], fr='MOCK1234')
 
 
-class FabricsMockCLITest(unittest.TestCase):
+class FabricsMockCLITest(MockTestCase):
+
+    controller_class = FabricsController
 
     def setUp(self):
-        print(f"\n[DIAG] os.getcwd(): {os.getcwd()}", file=sys.stderr)
-        print(f"[DIAG] _MOCK_LIB: {_MOCK_LIB}", file=sys.stderr)
-        print(f"[DIAG] _MOCK_LIB exists: {Path(_MOCK_LIB).exists()}", file=sys.stderr)
-
-        self.sysfs_dir = tempfile.mkdtemp(prefix='nvme-mock-sysfs-', dir='/tmp')
-        self.base_dir = tempfile.mkdtemp(prefix='nvme-mock-base-', dir='/tmp')
-
-        Path(f"{self.sysfs_dir}/sys/class/nvme").mkdir(parents=True, exist_ok=True)
-        Path(f"{self.sysfs_dir}/sys/class/nvme-subsystem").mkdir(parents=True, exist_ok=True)
-
-        self.ipc_dir = tempfile.mkdtemp(prefix='nvme-mock-ipc-', dir='/tmp')
-        self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
-
-        self.server = FabricsMockIPCServer(self.ipc_sock_path)
+        super().setUp()
         self.server.sysfs_dir = self.sysfs_dir
-        self.server.start()
-
-        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-
-        shutil.rmtree(self.sysfs_dir, ignore_errors=True)
-        shutil.rmtree(self.base_dir, ignore_errors=True)
-        shutil.rmtree(self.ipc_dir, ignore_errors=True)
 
     def _run(self, *args, expect_fail=False):
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir, *args)
+        result = self.nvme(*args)
 
         if not expect_fail:
             self.assertEqual(result.returncode, 0,
@@ -1349,9 +1291,4 @@ class FabricsMockCLITest(unittest.TestCase):
         self.assertEqual(ctrl['dhchap_ctrl_secret'], self._KEY_C)
 
 if __name__ == '__main__':
-    # If called standalone, strip the arguments parsed by FabricsMockCLITest
-    # and run standard unittest main.
-    unittest_args = [sys.argv[0]]
-    if len(sys.argv) > 3:
-        unittest_args.extend(sys.argv[3:])
-    unittest.main(argv=unittest_args)
+    main()

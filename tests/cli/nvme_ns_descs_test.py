@@ -15,19 +15,9 @@ and that a descriptor which does not fit into the page ends the list.
 Usage: python3 nvme_ns_descs_test.py <nvme-binary> <mock-lib>
 """
 import json
-import os
-import shutil
-import sys
-import tempfile
-import unittest
 
-from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
+from tests.cli.nvme_mock import CNS_NS_DESC_LIST, MockTestCase, main
 
-_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-_OPC_IDENTIFY = 0x06
-_CNS_NS_DESC_LIST = 0x03
 _PAGE_SIZE = 4096
 
 _NIDT_EUI64 = 1
@@ -57,52 +47,17 @@ def _filler(size):
     return out
 
 
-class NsDescsMockServer(MockIPCServer):
-    """A controller which returns @page for the descriptor list."""
-
-    def __init__(self, sock_path):
-        super().__init__(sock_path)
-        self.page = bytes(_PAGE_SIZE)
-
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        data = bytearray(req_len)
-        if opcode == _OPC_IDENTIFY and (cdw10 & 0xff) == _CNS_NS_DESC_LIST:
-            data[:len(self.page)] = self.page[:req_len]
-        self.send_response(conn, 0, payload=bytes(data))
-
-
-class NsDescsTest(unittest.TestCase):
-
-    DEVICE = '/dev/nvme0'
-
-    def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix='nvme-ns-descs-', dir='/tmp')
-        self.sysfs_dir = os.path.join(self.tmp, 'sysfs')
-        self.base_dir = os.path.join(self.tmp, 'base')
-        os.mkdir(self.sysfs_dir)
-        os.mkdir(self.base_dir)
-        self.server = NsDescsMockServer(os.path.join(self.tmp, 'ipc.sock'))
-        self.server.start()
-        self.env = make_mock_env(_MOCK_LIB, self.server.sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-        shutil.rmtree(self.tmp, ignore_errors=True)
+class NsDescsTest(MockTestCase):
+    """A controller which returns the descriptor list of a test."""
 
     def _set_page(self, descs):
         page = bytearray(_PAGE_SIZE)
         page[:len(descs)] = descs
-        self.server.page = bytes(page)
+        self.server.identify[CNS_NS_DESC_LIST] = page
 
     def _run(self, *args):
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'id', 'ns-descs', self.DEVICE, '-n', '1', *args)
-        self.assertEqual(result.returncode, 0,
-                         f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
-        self.assertEqual(self.server.errors, [])
-        return result.stdout
+        return self.assertOk(self.nvme('id', 'ns-descs', self.ctrl, '-n',
+                                       '1', *args)).stdout
 
     def _json(self):
         # Without a descriptor, there is no JSON document
@@ -151,4 +106,4 @@ class NsDescsTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[sys.argv[0]])
+    main()
