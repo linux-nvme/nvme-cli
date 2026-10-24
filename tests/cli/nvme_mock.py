@@ -167,6 +167,39 @@ HOST_BEHAVIOR_FIELDS = {
 }
 HOST_BEHAVIOR_SIZE = 512
 
+# The controller registers, in the first page of BAR0 (resource0)
+CTRL_REGS_FIELDS = {
+    'cap': ('<Q', 0x00),
+    'vs': ('<I', 0x08),
+    'intms': ('<I', 0x0c),
+    'intmc': ('<I', 0x10),
+    'cc': ('<I', 0x14),
+    'csts': ('<I', 0x1c),
+    'nssr': ('<I', 0x20),
+    'aqa': ('<I', 0x24),
+    'asq': ('<Q', 0x28),
+    'acq': ('<Q', 0x30),
+    'cmbloc': ('<I', 0x38),
+    'cmbsz': ('<I', 0x3c),
+    'bpinfo': ('<I', 0x40),
+    'bprsel': ('<I', 0x44),
+    'bpmbl': ('<Q', 0x48),
+    'cmbmsc': ('<Q', 0x50),
+    'cmbsts': ('<I', 0x58),
+    'cmbebs': ('<I', 0x5c),
+    'cmbswtp': ('<I', 0x60),
+    'nssd': ('<I', 0x64),
+    'crto': ('<I', 0x68),
+    'pmrcap': ('<I', 0xe00),
+    'pmrctl': ('<I', 0xe04),
+    'pmrsts': ('<I', 0xe08),
+    'pmrebs': ('<I', 0xe0c),
+    'pmrswtp': ('<I', 0xe10),
+    'pmrmscl': ('<I', 0xe14),
+    'pmrmscu': ('<I', 0xe18),
+}
+CTRL_REGS_SIZE = 4096
+
 CTRATT_UUID_LIST = 1 << 9
 LPA_TELEMETRY = 1 << 3
 
@@ -226,6 +259,11 @@ def uuid_list(*uuids):
     return buf
 
 
+def ctrl_regs(**values):
+    """The controller registers, see CTRL_REGS_FIELDS."""
+    return pack_fields(CTRL_REGS_FIELDS, CTRL_REGS_SIZE, **values)
+
+
 def smart_log(**values):
     """A SMART / Health Information log page, see SMART_LOG_FIELDS."""
     return pack_fields(SMART_LOG_FIELDS, SMART_LOG_SIZE, **values)
@@ -263,10 +301,11 @@ def write_sysfs_ctrl(root, instance, transport, address, subsysnqn=None,
 def write_sysfs_pci_ctrl(root, instance=0, vid=0x1b36, did=0x0010,
                          ssvid=None, ssdid=None, bdf='0000:03:00.0',
                          subsysnqn=None, model='MOCK NVMe',
-                         serial='MOCK0001', firmware='1.0'):
+                         serial='MOCK0001', firmware='1.0', resource0=None):
     """Write the sysfs tree of a PCIe controller nvme<@instance> under
     @root, with the PCI IDs @vid/@did and the subsystem IDs @ssvid/
-    @ssdid (default: the same).
+    @ssdid (default: the same), and the controller registers @resource0
+    (see ctrl_regs()), if given. Returns the path of resource0.
 
     The PCI attributes are in a PCI device directory, which <ctrl>/device
     links to, as in the real sysfs: nvme_get_pci_ids() reads them through
@@ -282,11 +321,14 @@ def write_sysfs_pci_ctrl(root, instance=0, vid=0x1b36, did=0x0010,
                         ('subsystem_device', did if ssdid is None else ssdid)):
         (pci / attr).write_text(f'0x{value:04x}\n')
     (pci / 'class').write_text('0x010802\n')
+    if resource0 is not None:
+        (pci / 'resource0').write_bytes(bytes(resource0))
 
     link = ctrl / 'device'
     if link.is_symlink() or link.exists():
         link.unlink()
     link.symlink_to(os.path.relpath(pci, ctrl))
+    return pci / 'resource0'
 
 
 Reply = collections.namedtuple('Reply', ['data', 'result', 'status', 'errno'],
@@ -466,7 +508,7 @@ class MockTestCase(TestNVMeBase):
     def write_sysfs_pci_ctrl(self, **kwargs):
         """Add a PCIe controller to the fake sysfs tree, see
         write_sysfs_pci_ctrl()."""
-        write_sysfs_pci_ctrl(self.sysfs_dir, **kwargs)
+        return write_sysfs_pci_ctrl(self.sysfs_dir, **kwargs)
 
     def nvme(self, *args, **kwargs):
         """Run `nvme *args`, see run_nvme() for @kwargs."""
