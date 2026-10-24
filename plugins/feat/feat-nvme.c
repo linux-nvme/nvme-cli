@@ -1333,10 +1333,12 @@ static int lba_range_type_set(struct libnvme_transport_handle *hdl, __u8 fid,
 	}
 
 #ifdef NVME_HAVE_INT128
-	ng = shr_parse_csv_u128(cfg->guids, guids, ARRAY_SIZE(guids));
-	if (ng != num) {
-		nvme_show_error("No valid guid definition provided");
-		return -EINVAL;
+	if (argconfig_given(opts, &cfg->guids)) {
+		ng = shr_parse_csv_u128(cfg->guids, guids, ARRAY_SIZE(guids));
+		if (ng != num) {
+			nvme_show_error("No valid guid definition provided");
+			return -EINVAL;
+		}
 	}
 #else /* NVME_HAVE_INT128 */
 	if (argconfig_given(opts, &cfg->guids)) {
