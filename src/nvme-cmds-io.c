@@ -1192,8 +1192,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		nblocks = cfg.block_count;
 	} else {
 		/* Get the required block count. Note this is a zeroes based value. */
-		blocks = (buffer_size + logical_block_size - 1) /
-			logical_block_size;
+		/* Round up without adding: --data-size may be near 2^64. */
+		blocks = buffer_size / logical_block_size +
+			!!(buffer_size % logical_block_size);
 		if (blocks > 0x10000) {
 			nvme_show_error(
 				"data size %llu exceeds 65536 logical blocks",
