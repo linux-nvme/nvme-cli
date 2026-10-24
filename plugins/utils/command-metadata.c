@@ -280,8 +280,7 @@ static void free_option_fields(struct command_metadata_option *o)
 
 /*
  * Deep-copy an options array into *out (a heap array of *n_out entries).
- * Returns -ENOMEM on failure; the partial allocation is left for process exit
- * to reclaim, as the model is never explicitly freed.
+ * Returns -ENOMEM on failure, with nothing left allocated.
  */
 static int copy_options(const struct argconfig_commandline_options *opts,
 			struct command_metadata_option **out, size_t *n_out)
@@ -481,9 +480,35 @@ static size_t count_plugins(struct plugin *p)
 	return n;
 }
 
+/* Free @model and everything it holds (safe on a partial model). */
+static void free_model(struct command_metadata_program *model)
+{
+	size_t pi, ci, oi;
+
+	for (pi = 0; pi < model->num_plugins; pi++) {
+		struct command_metadata_plugin *mp = &model->plugins[pi];
+
+		for (ci = 0; ci < mp->num_commands; ci++) {
+			struct command_metadata_command *mc = &mp->commands[ci];
+
+			for (oi = 0; oi < mc->num_options; oi++)
+				free_option_fields(&mc->options[oi]);
+			free(mc->options);
+		}
+		free(mp->commands);
+	}
+	free(model->plugins);
+	free(model);
+}
+
+static DEFINE_CLEANUP_FUNC(cleanup_model, struct command_metadata_program *,
+			   free_model)
+#define __cleanup_model __cleanup(cleanup_model)
+
 static struct command_metadata_program *build_model(struct program *prog)
 {
-	struct command_metadata_program *model;
+	__cleanup_model struct command_metadata_program *model = NULL;
+	struct command_metadata_program *ret;
 	struct plugin *plugin;
 	int saved_stdout = -1, saved_stderr = -1, devnull;
 	int err = 0;
@@ -499,10 +524,8 @@ static struct command_metadata_program *build_model(struct program *prog)
 	model->num_plugins = count_plugins(prog->extensions);
 	if (model->num_plugins) {
 		model->plugins = calloc(model->num_plugins, sizeof(*model->plugins));
-		if (!model->plugins) {
-			free(model);
+		if (!model->plugins)
 			return NULL;
-		}
 	}
 
 	/*
@@ -571,14 +594,15 @@ static struct command_metadata_program *build_model(struct program *prog)
 
 	/*
 	 * An allocation failure while capturing would leave an incomplete model
-	 * that looks complete in the emitted JSON; fail the dump instead. The
-	 * partial model is left for process exit to reclaim (it is never freed
-	 * on the success path either).
+	 * that looks complete in the emitted JSON; fail the dump instead.
 	 */
 	if (err)
 		return NULL;
 
-	return model;
+	/* The caller owns the model now. */
+	ret = model;
+	model = NULL;
+	return ret;
 }
 
 /* ------------------------------------------------------------------ */
@@ -867,7 +891,7 @@ static void json_program(const struct command_metadata_program *m)
 
 int dump_command_metadata(struct program *prog)
 {
-	struct command_metadata_program *model;
+	__cleanup_model struct command_metadata_program *model = NULL;
 
 	model = build_model(prog);
 	if (!model)
@@ -875,8 +899,6 @@ int dump_command_metadata(struct program *prog)
 
 	json_program(model);
 
-	free(model->plugins);
-	free(model);
 	return 0;
 }
 
