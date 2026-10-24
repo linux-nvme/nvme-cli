@@ -118,6 +118,7 @@ if python3.found()
             ['device-self-test', 'nvme_device_self_test_test.py',
              cli_test_env, 30],
             ['sanitize', 'nvme_sanitize_test.py', cli_test_env, 30],
+            ['mgmt', 'nvme_mgmt_test.py', cli_test_env, 30],
         ]
 
         if 'feat' in selected_plugins
