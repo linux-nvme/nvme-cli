@@ -122,6 +122,8 @@ class SanitizeTest(MockTestCase):
              'SANACT is not Overwrite'),
             (['--sanact=start-crypto-erase', '--oipbp'],
              'SANACT is not Overwrite'),
+            (['--sanact=start-block-erase', '--repeat=0'],
+             'invalid repeat count: 0'),
         ]
         for args, message in cases:
             with self.subTest(args=args):
