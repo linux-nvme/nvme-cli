@@ -504,6 +504,11 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
+	if (!cfg.repeat) {
+		nvme_show_error("invalid repeat count: 0");
+		return -EINVAL;
+	}
+
 	ctrl = identify_ctrl(hdl);
 	if (!ctrl)
 		return -errno;
