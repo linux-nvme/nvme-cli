@@ -768,6 +768,12 @@ int nvme_show_ctrl_register(void *bar, bool fabrics, int offset,
 		return -EINVAL;
 	}
 
+	if (fabrics && nvme_fabrics_reg_unsupported(bar, offset)) {
+		nvme_show_error("register: %#04x (%s) not implemented",
+				offset, nvme_register_to_string(offset));
+		return -EINVAL;
+	}
+
 	if (nvme_is_64bit_reg(offset))
 		value = shr_mmio_read64(bar + offset);
 	else

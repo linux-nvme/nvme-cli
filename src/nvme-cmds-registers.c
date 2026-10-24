@@ -81,14 +81,13 @@ static int nvme_get_single_property(struct libnvme_transport_handle *hdl,
 		return 0;
 	}
 
-	if (cfg->fabrics && nvme_is_fabrics_optional_reg(cfg->offset)) {
-		*value = -1;
-		return 0;
-	}
-
-	if (!cfg->fabrics &&
-	    nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
-			       NVME_SC_INVALID_FIELD)) {
+	/*
+	 * A controller fails a property it doesn't implement with Invalid
+	 * Field in Command, maybe with the DNR bit set: show an optional one
+	 * as unsupported.
+	 */
+	if (nvme_is_fabrics_optional_reg(cfg->offset) &&
+	    libnvme_status_is_invalid_field(err)) {
 		*value = -1;
 		return 0;
 	}
@@ -280,7 +279,8 @@ static int get_register_properties(struct libnvme_transport_handle *hdl,
 
 		nvme_init_get_property(&cmd, offset);
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
-		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
+		if (libnvme_status_is_invalid_field(err)) {
+			/* not implemented, see nvme_get_single_property() */
 			value = -1;
 		} else if (err) {
 			nvme_show_err(err, "get-property");
@@ -785,7 +785,7 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__u64 value;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 	nvme_print_flags_t flags = NORMAL;
 
@@ -813,11 +813,17 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	err = nvme_get_single_property(hdl, &cfg, &value);
-	if (!err)
-		nvme_show_single_property(cfg.offset, value, flags);
+	/* Any failure, also of a property the controller doesn't implement */
+	nvme_init_get_property(&cmd, cfg.offset);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "get-property");
+		return err;
+	}
 
-	return err;
+	nvme_show_single_property(cfg.offset, cmd.result, flags);
+
+	return 0;
 }
 
 static int set_property(int argc, char **argv, struct command *acmd, struct plugin *plugin)
