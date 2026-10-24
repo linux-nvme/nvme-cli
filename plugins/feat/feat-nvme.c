@@ -333,7 +333,7 @@ static int perfc_set(struct libnvme_transport_handle *hdl, __u8 fid, __u32 cdw11
 
 	nvme_show_result("Set %s: 0x%04x (%s)", perfc_feat, cdw11,
 			 sv ? "Save" : "Not save");
-	nvme_feature_show_fields(fid, cdw11, NULL);
+	nvme_feature_show_fields(fid, cdw11, (unsigned char *)&data);
 
 	return err;
 }
