@@ -207,6 +207,22 @@ class FeatPluginSetTest(FeaturesTestBase):
         self.assertEqual(self.set_features(), [])
 
 
+class FeatPluginGetTest(FeaturesTestBase):
+    """Without the options of the fields, the feat commands get the
+    feature."""
+
+    def test_arbitration(self):
+        for args in ([], ['--output-format=normal'], ['--verbose'],
+                     ['--sel=2']):
+            with self.subTest(args=args):
+                self.server.commands.clear()
+                self.assertOk(self.nvme('feat', 'arbitration', self.ctrl,
+                                        *args))
+                self.assertEqual(self.set_features(), [])
+                get, = self.server.admin_cmds(OPC_GET_FEATURES)
+                self.assertEqual(get.fid, FID_ARBITRATION)
+
+
 class FeatPluginReadModifyWriteTest(FeaturesTestBase):
     """The feat commands which keep the fields not given, from the value
     Get Features reads: of the saved value with --save."""

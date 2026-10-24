@@ -699,7 +699,11 @@ static int feat_arbitration(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	if (argc == 2 || argconfig_given(opts, &cfg.feat.sel))
+	if (argconfig_given(opts, &cfg.feat.sel) ||
+	    !(argconfig_given(opts, &cfg.ab) ||
+	      argconfig_given(opts, &cfg.lpw) ||
+	      argconfig_given(opts, &cfg.mpw) ||
+	      argconfig_given(opts, &cfg.hpw)))
 		return feat_get(hdl, fid, 0, cfg.feat.sel, 0,
 				"arbitration feature");
 
