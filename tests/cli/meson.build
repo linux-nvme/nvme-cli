@@ -115,6 +115,8 @@ if python3.found()
             ['host-metadata', 'nvme_host_metadata_test.py', cli_test_env,
              30],
             ['fuzz-record', 'nvme_fuzz_record_test.py', cli_test_env, 30],
+            ['device-self-test', 'nvme_device_self_test_test.py',
+             cli_test_env, 30],
         ]
 
         if 'feat' in selected_plugins
