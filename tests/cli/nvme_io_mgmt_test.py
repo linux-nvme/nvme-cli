@@ -65,6 +65,17 @@ class IoMgmtTest(MockTestCase):
                          (1, 2 << 16 | MO_RUH_STATUS, 3, 16))
         self.assertIn('ABCDEFGHIJKLMNOP', result.stdout)
 
+    def test_recv_file(self):
+        """The data received, written to a file"""
+        data = bytes(range(16))
+        self.server.io[OPC_IO_MGMT_RECV] = data
+        path = os.path.join(self.tmp, 'status')
+        self.io_mgmt(OPC_IO_MGMT_RECV, 'recv', self.ns,
+                     f'--mo={MO_RUH_STATUS}', '--data-len=16',
+                     f'--data={path}')
+        with open(path, 'rb') as f:
+            self.assertEqual(f.read(), data)
+
 
 if __name__ == '__main__':
     main()
