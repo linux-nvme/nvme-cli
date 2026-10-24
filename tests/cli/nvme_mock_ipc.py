@@ -14,7 +14,7 @@ It also forwards the egress route lookup, the NIC h/w queue query and
 get_nprocs(), so the test decides the host's network and CPU setup.
 
 Test files subclass MockIPCServer and override handle_write()/
-handle_ioctl()/handle_raw_ioctl()/handle_getpass()/handle_route()/
+handle_command()/handle_raw_ioctl()/handle_getpass()/handle_route()/
 handle_nic_queues()/handle_nprocs() to steer responses for their own
 scenario. run_nvme() provides the common subprocess-invocation
 mechanics.
@@ -33,7 +33,7 @@ import threading
 import traceback
 from pathlib import Path
 
-IPC_REQUEST_FMT = "<IIII B3x I IIIIII QI BBBBI"
+IPC_REQUEST_FMT = "<IIII B3x I IIIIII I BBBBI BB2x IIII"
 IPC_REQUEST_LEN = struct.calcsize(IPC_REQUEST_FMT)
 # status, errno_val, sc_status, result, data_len -- see struct ipc_response.
 IPC_RESPONSE_FMT = "<iiiII"
@@ -48,6 +48,11 @@ IPC_TYPE_NPROCS = 7  # get_nprocs()
 # combined_count, tx_count, rx_count -- the handle_nic_queues() payload.
 NIC_QUEUES_FMT = "<III"
 
+# enum ipc_cmd_flags: what an IPC_TYPE_IOCTL request carries
+IPC_CMD_ADMIN = 1 << 0  # admin, not I/O, queue
+IPC_CMD_DATA = 1 << 1  # the payload has the data
+IPC_CMD_METADATA = 1 << 2  # the payload has the metadata
+
 IOC_WRITE = 1 << 0  # the caller passes data in
 IOC_READ = 1 << 1  # the caller gets data back
 
@@ -58,6 +63,51 @@ with the target's _IOC_* macros, so it is the same on every arch.
 @big_endian is the byte order of the payload. Use byte_order() to pick
 the struct module prefix for it."""
 RawIoctl.byte_order = lambda self: '>' if self.big_endian else '<'
+
+
+class Command(collections.namedtuple('Command', [
+        'instance', 'admin', 'opcode', 'flags', 'nsid', 'cdw2', 'cdw3',
+        'cdw10', 'cdw11', 'cdw12', 'cdw13', 'cdw14', 'cdw15',
+        'data_len', 'metadata_len', 'timeout_ms', 'data', 'metadata'])):
+    """An admin or I/O passthru command, as libmock_nvme.c decodes it.
+    @instance is the controller instance it goes to (the N of
+    /dev/nvmeN), @admin is True for the admin queue. @data_len and
+    @metadata_len are the buffer sizes of the command. @data and
+    @metadata are what a command which transfers data to the controller
+    sends, else None."""
+    __slots__ = ()
+
+    @property
+    def cdw10_lo(self):
+        """CNS of Identify, LID of Get Log Page, FID of Get/Set Features"""
+        return self.cdw10 & 0xff
+
+    cns = lid = fid = cdw10_lo
+
+    @property
+    def lsp(self):
+        """Log specific parameter of Get Log Page"""
+        return (self.cdw10 >> 8) & 0x7f
+
+    @property
+    def rae(self):
+        """Retain Asynchronous Event of Get Log Page"""
+        return bool(self.cdw10 & (1 << 15))
+
+    @property
+    def uuid_index(self):
+        """UUID index of Get Log Page, Get/Set Features and others"""
+        return self.cdw14 & 0x7f
+
+    @property
+    def sel(self):
+        """Select of Get Features"""
+        return (self.cdw10 >> 8) & 0x7
+
+    @property
+    def lpo(self):
+        """Log page offset of Get Log Page"""
+        return (self.cdw13 << 32) | self.cdw12
 
 
 def resolve_mock_lib_path(default="./libmock_nvme.so"):
@@ -182,7 +232,7 @@ class MockIPCServer(threading.Thread):
     """Generic Unix-socket IPC server for libmock_nvme.c.
 
     Subclasses hold their own test-scenario state and override
-    handle_write()/handle_ioctl() to fabricate responses for it. Socket
+    handle_write()/handle_command() to fabricate responses for it. Socket
     setup, request framing, and thread lifecycle are shared here.
 
     An exception in a handler fails only that request, with EIO. The
@@ -224,11 +274,16 @@ class MockIPCServer(threading.Thread):
         """Override for IPC_TYPE_WRITE. Default: report success."""
         self.send_response(conn, 0)
 
+    def handle_command(self, conn, cmd):
+        """Override for IPC_TYPE_IOCTL. @cmd is the Command. Default: hand
+        the command to handle_ioctl()."""
+        self.handle_ioctl(conn, cmd.instance, None, cmd.opcode, cmd.nsid,
+                          cmd.cdw10, cmd.cdw11, cmd.cdw12, cmd.cdw13,
+                          cmd.cdw14, cmd.cdw15, cmd.lpo, cmd.data_len)
+
     def handle_ioctl(self, conn, fd, request, opcode, nsid,
                       cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        """Override for IPC_TYPE_IOCTL. @fd is the controller instance, not
-        a real fd (see libmock_nvme.c). Default: report success, result 0,
-        no payload."""
+        """Default: report success, result 0, no payload."""
         self.send_response(conn, 0)
 
     def handle_raw_ioctl(self, conn, fd, ioc, payload):
@@ -272,8 +327,9 @@ class MockIPCServer(threading.Thread):
                 return
 
             req_type, fd, data_len, ioctl_request, opcode, nsid, \
-                cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len, \
-                ioc_dir, ioc_type, ioc_nr, big_endian, ioc_size = \
+                cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, req_len, \
+                ioc_dir, ioc_type, ioc_nr, big_endian, ioc_size, \
+                flags, cmd_flags, cdw2, cdw3, metadata_len, timeout_ms = \
                 struct.unpack(IPC_REQUEST_FMT, req_header)
 
             payload = (conn.recv(data_len, socket.MSG_WAITALL)
@@ -289,8 +345,18 @@ class MockIPCServer(threading.Thread):
             if req_type == IPC_TYPE_WRITE:
                 self.handle_write(conn, payload)
             elif req_type == IPC_TYPE_IOCTL:
-                self.handle_ioctl(conn, fd, ioctl_request, opcode, nsid,
-                                   cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len)
+                data = metadata = None
+                if cmd_flags & IPC_CMD_DATA:
+                    data, payload = payload[:req_len], payload[req_len:]
+                if cmd_flags & IPC_CMD_METADATA:
+                    metadata = payload
+                # fd is the controller instance, not a real fd (see
+                # libmock_nvme.c)
+                cmd = Command(fd, bool(cmd_flags & IPC_CMD_ADMIN), opcode,
+                              flags, nsid, cdw2, cdw3, cdw10, cdw11, cdw12,
+                              cdw13, cdw14, cdw15, req_len, metadata_len,
+                              timeout_ms, data, metadata)
+                self.handle_command(conn, cmd)
             elif req_type == IPC_TYPE_RAW_IOCTL:
                 ioc = RawIoctl(ioctl_request, ioc_dir, ioc_type, ioc_nr,
                                ioc_size, bool(big_endian))
