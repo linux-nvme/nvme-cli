@@ -123,6 +123,16 @@ class SetFeatureTest(FeaturesTestBase):
         self.assertFields(cmd, FID_TIMESTAMP, nsid=NSID_ALL)
         self.assertEqual(cmd.data, struct.pack('<Q', 0x123456789abc))
 
+    def test_value_out_of_range(self):
+        for fid, value in ((0x80, '0x100000000'),
+                           (FID_TIMESTAMP, '0x1000000000000')):
+            with self.subTest(fid=fid):
+                result = self.nvme('set-feature', self.ctrl,
+                                   f'--feature-id={fid}', f'--value={value}')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(f'value {value} out of range', result.stderr)
+        self.assertEqual(self.set_features(), [])
+
     def test_feature_id_required(self):
         result = self.nvme('set-feature', self.ctrl, '--value=1')
         self.assertNotEqual(result.returncode, 0)

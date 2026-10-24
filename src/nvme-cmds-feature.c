@@ -398,6 +398,13 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		return -1;
 	}
 
+	/* a value is Command Dword 11, or the 48 bit timestamp */
+	if (cfg.value >> (cfg.fid == NVME_FEAT_FID_TIMESTAMP ? 48 : 32)) {
+		nvme_show_error("value %#" PRIx64 " out of range",
+				(uint64_t)cfg.value);
+		return -EINVAL;
+	}
+
 	if (!cfg.data_len)
 		libnvme_get_feature_length(cfg.fid, cfg.value,
 					 NVME_DATA_TFR_HOST_TO_CTRL,
