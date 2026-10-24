@@ -23,8 +23,8 @@ SYNOPSIS
 			[--expected-ref-tags=<reftag,> | -R <reftag,>]
 			[--app-tag=<apptag> | -a <apptag>]
 			[--expected-app-tags=<apptag,> | -A <apptag,>]
-			[--app-mask=<appmask> | -m <appmask>]
-			[--expected-app-masks=<appmask,> | -M <appmask,>]
+			[--app-tag-mask=<appmask> | -m <appmask>]
+			[--expected-app-tag-masks=<appmask,> | -M <appmask,>]
 			[--dir-type=<type> | -T <type>]
 			[--dir-spec=<spec> | -S <spec>]
 			[--format=<entry-format> | -F <entry-format>]
@@ -102,11 +102,11 @@ OPTIONS
 	expected lba app tags (comma-separated list)
 
 -m <appmask>::
---app-mask=<appmask>::
+--app-tag-mask=<appmask>::
 	lba tag mask
 
 -M <appmask,>::
---expected-app-masks=<appmask,>::
+--expected-app-tag-masks=<appmask,>::
 	expected lba tag masks (comma-separated list)
 
 -T <type>::
