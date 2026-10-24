@@ -6,6 +6,8 @@
 
 cli_test_env = environment()
 cli_test_env.prepend('PYTHONPATH', meson.project_source_root())
+# Without json-c, some commands ignore '-o json' and print text.
+cli_test_env.set('NVME_TEST_JSON', json_c_dep.found() ? '1' : '0')
 
 if python3.found()
     # Standalone CLI test for the ownership registry.  It needs no device
@@ -109,6 +111,7 @@ if python3.found()
             ['dry-run', 'nvme_dry_run_test.py', cli_test_env, 30],
             ['sel', 'nvme_sel_test.py', cli_test_env, 30],
             ['format', 'nvme_format_test.py', cli_test_env, 30],
+            ['passthru', 'nvme_passthru_test.py', cli_test_env, 30],
             ['host-metadata', 'nvme_host_metadata_test.py', cli_test_env,
              30],
             ['fuzz-record', 'nvme_fuzz_record_test.py', cli_test_env, 30],
@@ -180,15 +183,12 @@ if python3.found()
 
         if 'id' in selected_plugins and 'log' in selected_plugins and \
            'feat' in selected_plugins
-            print_test_env = environment()
-            print_test_env.prepend('PYTHONPATH', meson.project_source_root())
-            print_test_env.set('NVME_TEST_JSON', json_c_dep.found() ? '1' : '0')
             mock_cli_tests += [
-                ['print', 'nvme_print_test.py', print_test_env, 300],
+                ['print', 'nvme_print_test.py', cli_test_env, 300],
             ]
 
             # The decoders print the same with and without the sandbox
-            compare_env = print_test_env
+            compare_env = cli_test_env
             compare_env.set('NVME_TEST_COMPARE_SANDBOX', '1')
             test('nvme-cli - print-sandbox-compare',
                  python3,
