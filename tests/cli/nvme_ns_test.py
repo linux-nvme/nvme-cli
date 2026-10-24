@@ -19,7 +19,11 @@ from tests.cli.nvme_mock import (CNS_CTRL, CNS_NS, NSID_ALL, NVME_IOCTL_ID,
 
 OPC_NS_MGMT = 0x0d
 OPC_NS_ATTACH = 0x15
+CNS_ACTIVE_NS_LIST = 0x02
+CNS_NS_GRANULARITY = 0x16
 CSI_ZNS = 0x02
+CTRATT_NS_GRANULARITY = 1 << 7
+ONE_MIB = 1 << 20
 
 
 def host_specified(data, offset, fmt):
@@ -103,10 +107,60 @@ class NsCreateTest(MockTestCase):
         self.assertRefused(['--nsze=1', '--ncap=1', '--block-size=1000'],
                            'Block size must be a power of two')
 
+    def test_si_units(self):
+        """Sizes in bytes, aligned up to 1 MiB, in logical blocks of the
+        LBA format of the first active namespace"""
+        self.server.identify[CNS_ACTIVE_NS_LIST] = struct.pack('<I', 1)
+        cmd, _ = self.create('--nsze-si=1G', '--ncap-si=1M', '--flbas=2')
+        nsze, ncap = struct.unpack_from('<QQ', cmd.data)
+        self.assertEqual((nsze, ncap),
+                         (954 * ONE_MIB // 4096, ONE_MIB // 4096))
+
+    def test_si_units_without_suffix(self):
+        """A number without a suffix is in logical blocks, also a
+        hexadecimal one which ends in a letter"""
+        self.server.identify[CNS_ACTIVE_NS_LIST] = struct.pack('<I', 1)
+        cmd, _ = self.create('--nsze-si=1000', '--ncap-si=0xfff',
+                             '--flbas=2')
+        self.assertEqual(struct.unpack_from('<QQ', cmd.data), (1000, 0xfff))
+
     def test_si_units_and_logical_blocks(self):
         self.assertRefused(['--nsze=1', '--nsze-si=1G', '--ncap=1',
                             '--flbas=0'],
                            'Invalid specification of both nsze and its SI')
+
+
+    def test_si_units_granularity(self):
+        """The namespace granularity of the LBA format overrides the 1 MiB
+        alignment"""
+        self.server.identify[CNS_CTRL] = id_ctrl(
+            ctratt=CTRATT_NS_GRANULARITY)
+        self.server.identify[CNS_ACTIVE_NS_LIST] = struct.pack('<I', 1)
+        granularity = bytearray(288)
+        # attributes: a descriptor per LBA format, number of descriptors
+        struct.pack_into('<IB', granularity, 0, 1, 3)
+        # descriptor 2: NSZEGRAN 4 MiB, NCAPGRAN 64 KiB
+        struct.pack_into('<QQ', granularity, 32 + 2 * 16, 4 * ONE_MIB,
+                         64 * 1024)
+        self.server.identify[CNS_NS_GRANULARITY] = bytes(granularity)
+        cmd, _ = self.create('--nsze-si=5M', '--ncap-si=100k', '--flbas=2')
+        nsze, ncap = struct.unpack_from('<QQ', cmd.data)
+        self.assertEqual((nsze, ncap),
+                         (8 * ONE_MIB // 4096, 128 * 1024 // 4096))
+
+
+    def test_si_units_granularity_above_4g(self):
+        self.server.identify[CNS_CTRL] = id_ctrl(
+            ctratt=CTRATT_NS_GRANULARITY)
+        self.server.identify[CNS_ACTIVE_NS_LIST] = struct.pack('<I', 1)
+        granularity = bytearray(288)
+        struct.pack_into('<IB', granularity, 0, 1, 3)
+        # descriptor 2: NSZEGRAN and NCAPGRAN 8 GiB
+        struct.pack_into('<QQ', granularity, 32 + 2 * 16, 8 << 30, 8 << 30)
+        self.server.identify[CNS_NS_GRANULARITY] = bytes(granularity)
+        cmd, _ = self.create('--nsze-si=5G', '--ncap-si=5G', '--flbas=2')
+        self.assertEqual(struct.unpack_from('<QQ', cmd.data),
+                         ((8 << 30) // 4096, (8 << 30) // 4096))
 
 
 class NsDeleteTest(MockTestCase):
