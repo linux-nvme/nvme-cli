@@ -273,6 +273,19 @@ class FabricsRegsTest(MockTestCase):
                          'property : 0000 (Controller Capabilities), '
                          'value: 0x2028030fff')
 
+    def test_all_ones(self):
+        """All ones is a value as well: a CRTO with both timeouts at
+        their maximum"""
+        self.props[CTRL_REGS_FIELDS['crto'][1]] = 0xffffffff
+        result = self.assertOk(self.nvme('show-regs', self.ctrl))
+        self.assertRegex(result.stdout, r'(?m)^crto\s*: 0xffffffff$')
+        if HAVE_JSON:
+            result = self.assertOk(self.nvme('show-regs', self.ctrl,
+                                             '--output-format=json'))
+            self.assertIn('crto', json.loads(result.stdout))
+        result = self.assertOk(self.nvme('get-reg', self.ctrl, '--crto'))
+        self.assertIn('value: 0xffffffff', result.stdout)
+
     def test_show_regs_error(self):
         """Only Invalid Field means a property is not implemented"""
         self.server.admin[OPC_FABRICS] = (

@@ -88,6 +88,8 @@ static int nvme_get_single_property(struct libnvme_transport_handle *hdl,
 	 */
 	if (nvme_is_fabrics_optional_reg(cfg->offset) &&
 	    libnvme_status_is_invalid_field(err)) {
+		nvme_fabrics_reg_set_unsupported(&cfg->unsupported,
+						 cfg->offset);
 		*value = -1;
 		return 0;
 	}
@@ -177,7 +179,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 			return err;
 	}
 
-	nvme_show_ctrl_registers(bar, cfg.fabrics, flags);
+	nvme_show_ctrl_registers(bar, cfg.fabrics, cfg.unsupported, flags);
 	free(bar);
 
 	return 0;
@@ -281,6 +283,8 @@ static int get_register_properties(struct libnvme_transport_handle *hdl,
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (libnvme_status_is_invalid_field(err)) {
 			/* not implemented, see nvme_get_single_property() */
+			nvme_fabrics_reg_set_unsupported(&cfg->unsupported,
+							 offset);
 			value = -1;
 		} else if (err) {
 			nvme_show_err(err, "get-property");
@@ -350,14 +354,16 @@ static int get_register_offset(struct argconfig_commandline_options *opts,
 	int offset, err = 0;
 
 	if (offset_matched)
-		err = nvme_show_ctrl_register(bar, fabrics, cfg->offset, flags);
+		err = nvme_show_ctrl_register(bar, fabrics, cfg->unsupported,
+					      cfg->offset, flags);
 
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_PMRMSCU; offset += get_reg_size(offset)) {
 		if (!nvme_is_ctrl_reg(offset) ||
 		    (given && offset == cfg->offset) ||
 		    !is_reg_selected(cfg, offset))
 			continue;
-		if (nvme_show_ctrl_register(bar, fabrics, offset, flags))
+		if (nvme_show_ctrl_register(bar, fabrics, cfg->unsupported,
+					    offset, flags))
 			err = -EINVAL;
 		offset_matched = true;
 	}

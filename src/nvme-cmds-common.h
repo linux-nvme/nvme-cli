@@ -52,6 +52,11 @@ struct passthru_config {
 
 struct get_reg_config {
 	__u32 offset;
+	/*
+	 * the properties a fabrics controller doesn't implement, see
+	 * nvme_fabrics_reg_set_unsupported()
+	 */
+	__u32 unsupported;
 	bool cap;
 	bool vs;
 	bool intms;
