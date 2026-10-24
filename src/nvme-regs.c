@@ -6,12 +6,10 @@
  * Authors: Daniel Wagner <dwagner@suse.de>
  */
 #include <stddef.h>
-#include <stdlib.h>
 
 #include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
-#include <shared/fs-util.h>
 
 #include "nvme-regs.h"
 
@@ -379,25 +377,4 @@ const struct nvme_reg *nvme_reg_by_offset(uint32_t offset)
 			return &nvme_regs[i];
 
 	return NULL;
-}
-
-void *read_registers(struct libnvme_transport_handle *hdl)
-{
-	int size = shr_getpagesize();
-	void *bar;
-
-	bar = calloc(1, size);
-	if (!bar)
-		return NULL;
-
-	if (libnvme_read_regs(hdl, NVME_REG_CAP, bar + NVME_REG_CAP,
-			      NVME_REG_CRTO + sizeof(uint32_t)) ||
-	    libnvme_read_regs(hdl, NVME_REG_PMRCAP, bar + NVME_REG_PMRCAP,
-			      NVME_REG_PMRMSCU + sizeof(uint32_t) -
-			      NVME_REG_PMRCAP)) {
-		free(bar);
-		return NULL;
-	}
-
-	return bar;
 }
