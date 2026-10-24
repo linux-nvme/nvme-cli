@@ -61,7 +61,9 @@ static bool mul10(uint64_t *v)
 	return true;
 }
 
-int shr_suffix_si_parse(const char *str, char **endptr, uint64_t *val)
+/* shr_suffix_si_parse(), which also tells whether @str has a @suffix */
+static int suffix_si_parse(const char *str, char **endptr, uint64_t *val,
+			   bool *suffix)
 {
 	unsigned long long num;
 	uint64_t frac = 0;
@@ -97,6 +99,7 @@ int shr_suffix_si_parse(const char *str, char **endptr, uint64_t *val)
 	if (*p == '\0') {
 		/* no suffix keeps no fraction */
 		*val = num;
+		*suffix = false;
 		return 0;
 	}
 
@@ -131,10 +134,49 @@ int shr_suffix_si_parse(const char *str, char **endptr, uint64_t *val)
 
 		*endptr = (char *)p + 1;
 		*val = v + frac;
+		*suffix = true;
 		return 0;
 	}
 
 	return -EINVAL;
+}
+
+int shr_suffix_si_parse(const char *str, char **endptr, uint64_t *val)
+{
+	bool suffix;
+
+	return suffix_si_parse(str, endptr, val, &suffix);
+}
+
+int shr_suffix_si_parse_units(const char *str, uint64_t align, uint64_t unit,
+			      uint64_t *val)
+{
+	uint64_t bytes, rem;
+	bool suffix;
+	char *end;
+	int err;
+
+	if (!unit)
+		return -EINVAL;
+
+	err = suffix_si_parse(str, &end, &bytes, &suffix);
+	if (err)
+		return err;
+
+	if (!suffix) {
+		*val = bytes;
+		return 0;
+	}
+
+	rem = align ? bytes % align : 0;
+	if (rem) {
+		if (bytes > UINT64_MAX - (align - rem))
+			return -ERANGE;
+		bytes += align - rem;
+	}
+	*val = bytes / unit;
+
+	return 0;
 }
 
 const char *shr_suffix_si_get_ld(long double *value)
