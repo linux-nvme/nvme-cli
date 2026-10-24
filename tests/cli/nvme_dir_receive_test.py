@@ -13,22 +13,10 @@ device reports.
 Usage: python3 nvme_dir_receive_test.py <path-to-nvme-binary> <mock-lib>
 """
 import json
-import os
-import shutil
 import struct
-import sys
-import tempfile
-import unittest
 
-from nvme_mock_ipc import (MockIPCServer, make_mock_env,
-                           resolve_mock_lib_path, run_nvme)
-
-_NVME_BIN = (sys.argv[1]
-             if len(sys.argv) > 1 and not sys.argv[1].startswith('-')
-             else 'nvme')
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-_NVME_ADMIN_DIRECTIVE_RECV = 0x1a
+from tests.cli.nvme_mock import (OPC_DIRECTIVE_RECV, MockController,
+                                 MockTestCase, main)
 
 DTYPE_IDENTIFY = 0
 DTYPE_STREAMS = 1
@@ -38,47 +26,33 @@ DOPER_STREAMS_STATUS = 2
 TOO_SHORT = 'directive data too short'
 
 
-class DirMockIPCServer(MockIPCServer):
+class DirController(MockController):
     """Answers Directive Receive with a Streams status of @osc open
     streams, as much of it as the command reads."""
 
     osc = 0xffff
 
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        data = bytearray(req_len)
-        if opcode == _NVME_ADMIN_DIRECTIVE_RECV and req_len >= 2:
+    def __init__(self, sock_path):
+        super().__init__(sock_path)
+        self.admin[OPC_DIRECTIVE_RECV] = self.streams_status
+
+    def streams_status(self, cmd):
+        data = bytearray(cmd.data_len)
+        if cmd.data_len >= 2:
             struct.pack_into('<H', data, 0, self.osc)
-            for i in range(min(self.osc, (req_len - 2) // 2)):
+            for i in range(min(self.osc, (cmd.data_len - 2) // 2)):
                 struct.pack_into('<H', data, 2 + 2 * i, i + 1)
-        self.send_response(conn, 0, payload=bytes(data))
+        return data
 
 
-class DirReceiveCLITest(unittest.TestCase):
+class DirReceiveCLITest(MockTestCase):
 
-    DEVICE = '/dev/nvme0'
-
-    def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix='nvme-dir-', dir='/tmp')
-        self.sysfs_dir = os.path.join(self.tmp, 'sysfs')
-        self.base_dir = os.path.join(self.tmp, 'base')
-        os.mkdir(self.sysfs_dir)
-        os.mkdir(self.base_dir)
-        self.server = DirMockIPCServer(os.path.join(self.tmp, 'ipc.sock'))
-        self.server.start()
-        self.env = make_mock_env(_MOCK_LIB, os.path.join(self.tmp,
-                                                         'ipc.sock'))
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-        shutil.rmtree(self.tmp, ignore_errors=True)
+    controller_class = DirController
 
     def _receive(self, dtype, doper, *args):
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir,
-                          self.base_dir, 'dir', 'receive', self.DEVICE,
-                          f'--dir-type={dtype}', f'--dir-oper={doper}',
-                          '--verbose', *args)
+        result = self.nvme('dir', 'receive', self.ctrl,
+                           f'--dir-type={dtype}', f'--dir-oper={doper}',
+                           '--verbose', *args)
         self.assertNotIn('ERROR: AddressSanitizer', result.stderr)
         return result
 
@@ -121,4 +95,4 @@ class DirReceiveCLITest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(argv=sys.argv[:1])
+    main()

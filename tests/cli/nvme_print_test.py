@@ -23,40 +23,29 @@ Usage: python3 nvme_print_test.py <path-to-nvme-binary> <path-to-mock-lib>
 import json
 import os
 import random
-import shutil
 import struct
 import subprocess
-import sys
-import tempfile
 import unittest
 from pathlib import Path
 
-from nvme_mock_ipc import (MockIPCServer, make_mock_env,
-                           resolve_mock_lib_path, run_nvme)
-
-_NVME_BIN = (sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-')
-             else 'nvme')
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
+from tests.cli.nvme_mock import (CNS_CTRL, HAVE_JSON, NVME_IOCTL_ID,
+                                 OPC_DIRECTIVE_RECV, OPC_GET_LOG_PAGE,
+                                 OPC_IDENTIFY, MockController, MockTestCase,
+                                 Reply, main)
+from tests.cli.nvme_mock_ipc import run_nvme
 
 _SEEDS = (1, 2)
 
-# Without json-c, some commands ignore '-o json' and print text.
-_HAVE_JSON = os.environ.get('NVME_TEST_JSON', '1') == '1'
 # Run every command with and without the sandbox and compare the output.
 _COMPARE_SANDBOX = os.environ.get('NVME_TEST_COMPARE_SANDBOX') == '1'
 
-_OPC_GET_LOG_PAGE = 0x02
-_OPC_IDENTIFY = 0x06
 _OPC_IO_MGMT_RECV = 0x12
 _OPC_RESV_REPORT = 0x0e
-_OPC_DIR_RECV = 0x1a
 _DIR_STREAMS_PARAM = 0x0101      # directive type 1, operation 1
 _DIR_STREAMS_STATUS = 0x0102     # directive type 1, operation 2
 _LID_PERSISTENT_EVENT = 0x0d
 _LID_MEDIA_UNIT_STATUS = 0x10
 _LID_SUPPORTED_CAP_CONFIG = 0x11
-_CNS_CTRL = 0x01
-_NVME_IOCTL_ID = 0x40
 
 
 def _put(buf, fmt, offset, value):
@@ -94,32 +83,35 @@ _ID_CTRL_FIXUPS = [
 ]
 
 
-class PrintMockIPCServer(MockIPCServer):
+class PrintController(MockController):
+    """Answers each command with pseudo-random data and result, from a
+    seed and the command, with the fixups above, or with the data of
+    @logs and @dir_data. @id_ctrl patches Identify Controller: offset ->
+    bytes."""
 
     def __init__(self, sock_path):
         super().__init__(sock_path)
         self.seed = 0
         self.header_len = {}
-        self.logs = {}
         self.id_ctrl = {}
         self.dir_data = {}
+        self.ioctls[NVME_IOCTL_ID] = Reply(status=1)    # namespace 1
 
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        rng = random.Random(f'{self.seed}:{opcode}:{cdw10}:{cdw11}:{lpo}')
-        buf = bytearray(rng.randbytes(req_len))
+    def answer(self, cmd):
+        rng = random.Random(f'{self.seed}:{cmd.opcode}:{cmd.cdw10}:'
+                            f'{cmd.cdw11}:{cmd.lpo}')
+        buf = bytearray(rng.randbytes(cmd.data_len))
         result = rng.getrandbits(32)
+        opcode, dtype_doper = cmd.opcode, cmd.cdw11 & 0xffff
 
-        if opcode == _OPC_GET_LOG_PAGE and cdw10 & 0xff in self.logs:
-            data = self.logs[cdw10 & 0xff][lpo:lpo + req_len]
-            buf = bytearray(data.ljust(req_len, b'\0'))
-        elif opcode == _OPC_GET_LOG_PAGE and lpo == 0:
-            lid = cdw10 & 0xff
-            self.header_len.setdefault(lid, req_len)
-            for fmt, offset, value in _FIXUPS.get(lid, []):
+        if opcode == OPC_GET_LOG_PAGE and cmd.lid in self.logs:
+            buf = super().answer(cmd)
+        elif opcode == OPC_GET_LOG_PAGE and cmd.lpo == 0:
+            self.header_len.setdefault(cmd.lid, cmd.data_len)
+            for fmt, offset, value in _FIXUPS.get(cmd.lid, []):
                 _put(buf, fmt, offset,
-                     self.header_len[lid] if value is None else value)
-        elif opcode == _OPC_IDENTIFY and cdw10 & 0xff == _CNS_CTRL:
+                     self.header_len[cmd.lid] if value is None else value)
+        elif opcode == OPC_IDENTIFY and cmd.cns == CNS_CTRL:
             for fmt, offset, value in _ID_CTRL_FIXUPS:
                 _put(buf, fmt, offset, value)
             for offset, value in self.id_ctrl.items():
@@ -128,19 +120,13 @@ class PrintMockIPCServer(MockIPCServer):
             _put(buf, '<H', 14, 2)      # reclaim unit handle status: nruhsd
         elif opcode == _OPC_RESV_REPORT:
             _put(buf, '<H', 5, 2)       # number of registered controllers
-        elif opcode == _OPC_DIR_RECV and cdw11 & 0xffff in self.dir_data:
-            buf = bytearray(self.dir_data[cdw11 & 0xffff].ljust(req_len, b'\0'))
-        elif (opcode == _OPC_DIR_RECV and
-              cdw11 & 0xffff == _DIR_STREAMS_STATUS):
+        elif opcode == OPC_DIRECTIVE_RECV and dtype_doper in self.dir_data:
+            buf = self.dir_data[dtype_doper]
+        elif (opcode == OPC_DIRECTIVE_RECV and
+              dtype_doper == _DIR_STREAMS_STATUS):
             _put(buf, '<H', 0, 2)       # open stream count
 
-        self.send_response(conn, 0, result=result, payload=bytes(buf))
-
-    def handle_raw_ioctl(self, conn, fd, ioc, payload):
-        if ioc.type == ord('N') and ioc.nr == _NVME_IOCTL_ID:
-            self.send_response(conn, 0, sc_status=1)    # namespace 1
-        else:
-            super().handle_raw_ioctl(conn, fd, ioc, payload)
+        return Reply(data=buf, result=result)
 
 
 _ID = ['ctrl', 'ns', 'ns-granularity', 'ns-lba-format', 'ns-list',
@@ -206,30 +192,9 @@ def _pretty_indent_error(text):
     return None
 
 
-class PrintCLITest(unittest.TestCase):
+class PrintCLITest(MockTestCase):
 
-    CTRL = '/dev/nvme0'
-    NS = '/dev/nvme0n1'
-
-    def setUp(self):
-        self.tmp_dir = tempfile.mkdtemp(prefix='nvme-print-', dir='/tmp')
-        self.sysfs_dir = os.path.join(self.tmp_dir, 'sysfs')
-        self.base_dir = os.path.join(self.tmp_dir, 'base')
-        os.mkdir(self.sysfs_dir)
-        os.mkdir(self.base_dir)
-        sock_path = os.path.join(self.tmp_dir, 'ipc.sock')
-
-        self.server = PrintMockIPCServer(sock_path)
-        self.server.start()
-        self.env = make_mock_env(_MOCK_LIB, sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-        shutil.rmtree(self.tmp_dir, ignore_errors=True)
-        if self.server.errors:
-            self.fail('the mock server failed:\n' +
-                      ''.join(self.server.errors))
+    controller_class = PrintController
 
     def _run_all(self, commands):
         for seed in _SEEDS:
@@ -243,11 +208,12 @@ class PrintCLITest(unittest.TestCase):
         binary = '-o' in args and 'binary' in args
         env = dict(self.env, NVME_SANDBOX='1') \
             if _COMPARE_SANDBOX else self.env
-        result = run_nvme(_NVME_BIN, env, self.sysfs_dir,
+        result = run_nvme(self.nvme_bin, env, self.sysfs_dir,
                           self.base_dir, *args,
                           encoding=None if binary else 'utf-8')
         if _COMPARE_SANDBOX and compare:
-            direct = run_nvme(_NVME_BIN, dict(self.env, NVME_SANDBOX='0'),
+            direct = run_nvme(self.nvme_bin,
+                              dict(self.env, NVME_SANDBOX='0'),
                               self.sysfs_dir, self.base_dir, *args,
                               encoding=None if binary else 'utf-8')
             self.assertEqual(result.returncode, direct.returncode)
@@ -260,32 +226,32 @@ class PrintCLITest(unittest.TestCase):
         self.assertGreaterEqual(result.returncode, 0)
         self.assertLess(result.returncode, 128)
         # Empty JSON output is not printed at all.
-        if (_HAVE_JSON and result.returncode == 0 and '-o' in args and
+        if (HAVE_JSON and result.returncode == 0 and '-o' in args and
                 'json' in args and result.stdout.strip()):
             json.loads(result.stdout)
             # the members of the printer calls are put together as text
             self.assertIsNone(_pretty_indent_error(result.stdout))
 
     def test_id(self):
-        self._run_all([['id', c, self.NS] for c in _ID])
+        self._run_all([['id', c, self.ns] for c in _ID])
 
     def test_log(self):
-        self._run_all([['log', c, self.CTRL] for c in _LOG])
+        self._run_all([['log', c, self.ctrl] for c in _LOG])
 
     def test_feat(self):
-        self._run_all([['feat', c, self.CTRL] for c in _FEAT])
+        self._run_all([['feat', c, self.ctrl] for c in _FEAT])
 
     def test_plugin(self):
         def dev(cmd):
             if 'NS' in cmd:
-                return [self.NS if a == 'NS' else a for a in cmd]
-            return cmd[:2] + [self.CTRL] + cmd[2:]
+                return [self.ns if a == 'NS' else a for a in cmd]
+            return cmd[:2] + [self.ctrl] + cmd[2:]
 
         self._run_all([dev(c) for c in _PLUGIN])
 
     def test_list(self):
         for tree in _SYSFS_TREES:
-            self.sysfs_dir = os.path.join(self.tmp_dir, tree.split('.')[0])
+            self.sysfs_dir = os.path.join(self.tmp, tree.split('.')[0])
             os.mkdir(self.sysfs_dir)
             subprocess.run(['tar', 'xJf', _SYSFS_DATA / tree,
                             '-C', self.sysfs_dir], check=True)
@@ -313,21 +279,19 @@ class PrintCLITest(unittest.TestCase):
         self.server.logs[_LID_PERSISTENT_EVENT] = bytes(header) + events
 
         for fmt in _FORMATS:
-            self._run(['log', 'persistent-event', self.CTRL] + fmt)
+            self._run(['log', 'persistent-event', self.ctrl] + fmt)
 
     def test_id_ctrl_strings(self):
         # A '%' in a device string is not a format directive.
         mn = '%s%s%s%s%s%s%s%s'
         self.server.id_ctrl[24] = mn.encode().ljust(40)
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'id-ctrl', self.CTRL)
+        result = self.nvme('id-ctrl', self.ctrl)
         self.assertEqual(result.returncode, 0)
         self.assertIn(mn, result.stdout)
 
-        if not _HAVE_JSON:
+        if not HAVE_JSON:
             return
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'id-ctrl', self.CTRL, '-o', 'json')
+        result = self.nvme('id-ctrl', self.ctrl, '-o', 'json')
         self.assertEqual(result.returncode, 0)
         self.assertEqual(json.loads(result.stdout)['mn'], mn)
 
@@ -347,15 +311,13 @@ class PrintCLITest(unittest.TestCase):
                          len(header) + len(events))
         self.server.logs[_LID_PERSISTENT_EVENT] = bytes(header) + events
 
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'persistent-event', self.CTRL)
+        result = self.nvme('log', 'persistent-event', self.ctrl)
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout.count('Event Number'), 3)
 
-        if not _HAVE_JSON:
+        if not HAVE_JSON:
             return
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'persistent-event', self.CTRL, '-o', 'json')
+        result = self.nvme('log', 'persistent-event', self.ctrl, '-o', 'json')
         self.assertEqual(result.returncode, 0)
         entries = json.loads(result.stdout)['list_of_event_entries']
         self.assertEqual([e['prev_ts'] for e in entries],
@@ -364,24 +326,24 @@ class PrintCLITest(unittest.TestCase):
     @unittest.skipIf(os.geteuid() == 0, 'process limits do not apply to root')
     def test_sandbox_used(self):
         """With the sandbox, decoding needs a child process."""
-        wrapper = os.path.join(self.tmp_dir, 'nvme-no-fork')
+        wrapper = os.path.join(self.tmp, 'nvme-no-fork')
         with open(wrapper, 'w', encoding='utf-8') as f:
             f.write('#!/bin/sh\nulimit -u 1 || exit 99\n'
                     'exec "$REAL_NVME" "$@"\n')
         os.chmod(wrapper, 0o755)
-        env = dict(self.env, REAL_NVME=os.path.abspath(_NVME_BIN))
+        env = dict(self.env, REAL_NVME=self.nvme_bin)
         # starting the privsep helper needs a child process too
         env.pop('NVME_PRIVSEP_TEST_HELPER', None)
 
         direct = run_nvme(wrapper, dict(env, NVME_SANDBOX='0'),
                           self.sysfs_dir, self.base_dir,
-                          'log', 'smart', self.CTRL)
+                          'log', 'smart', self.ctrl)
         if direct.returncode == 99:
             self.skipTest('ulimit -u not supported')
         self.assertEqual(direct.returncode, 0)
         sandboxed = run_nvme(wrapper, dict(env, NVME_SANDBOX='1'),
                              self.sysfs_dir, self.base_dir,
-                             'log', 'smart', self.CTRL)
+                             'log', 'smart', self.ctrl)
         self.assertEqual(sandboxed.returncode, 1)
         self.assertIn('cannot decode the device data in the sandbox',
                       sandboxed.stderr)
@@ -394,15 +356,13 @@ class PrintCLITest(unittest.TestCase):
         header[480] = 1 << 3
         self.server.logs[_LID_PERSISTENT_EVENT] = bytes(header)
 
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'persistent-event', self.CTRL)
+        result = self.nvme('log', 'persistent-event', self.ctrl)
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout.count('Support '), 1)
 
-        if not _HAVE_JSON:
+        if not HAVE_JSON:
             return
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'persistent-event', self.CTRL, '-o', 'json')
+        result = self.nvme('log', 'persistent-event', self.ctrl, '-o', 'json')
         self.assertEqual(result.returncode, 0)
         log = json.loads(result.stdout)
         self.assertEqual({k: v for k, v in log.items()
@@ -422,15 +382,13 @@ class PrintCLITest(unittest.TestCase):
                          len(header) + len(events))
         self.server.logs[_LID_PERSISTENT_EVENT] = bytes(header) + events
 
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'persistent-event', self.CTRL)
+        result = self.nvme('log', 'persistent-event', self.ctrl)
         self.assertEqual(result.returncode, 0)
         self.assertRegex(result.stdout, r'Signed Integer Data\s*:?\s*-2\b')
 
-        if not _HAVE_JSON:
+        if not HAVE_JSON:
             return
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'persistent-event', self.CTRL, '-o', 'json')
+        result = self.nvme('log', 'persistent-event', self.ctrl, '-o', 'json')
         self.assertEqual(result.returncode, 0)
         self.assertIn('"signed_integer_data":-2', result.stdout.replace(' ', ''))
 
@@ -445,9 +403,8 @@ class PrintCLITest(unittest.TestCase):
         status = [3, 11, 12, 13]
 
         def values(oper, *fmt):
-            result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir,
-                              self.base_dir, 'dir', 'receive', self.NS,
-                              '-D', '1', '-O', oper, '-l', '64', '-v', *fmt)
+            result = self.nvme('dir', 'receive', self.ns, '-D', '1', '-O',
+                               oper, '-l', '64', '-v', *fmt)
             self.assertEqual(result.returncode, 0)
             if fmt:
                 obj = json.loads(result.stdout)
@@ -458,7 +415,7 @@ class PrintCLITest(unittest.TestCase):
         self.assertEqual(values('1'), params)
         self.assertEqual(values('2'), status)
 
-        if not _HAVE_JSON:
+        if not HAVE_JSON:
             return
         self.assertEqual(values('1', '-o', 'json'), params)
         self.assertEqual(values('2', '-o', 'json'), status)
@@ -484,14 +441,13 @@ class PrintCLITest(unittest.TestCase):
         self.server.logs[_LID_SUPPORTED_CAP_CONFIG] = log
 
         for fmt in _FORMATS:
-            self._run(['log', 'supported-cap-config', self.CTRL] + fmt)
+            self._run(['log', 'supported-cap-config', self.ctrl] + fmt)
 
         # The checks below read the JSON output.
-        if not _HAVE_JSON:
+        if not HAVE_JSON:
             return
 
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'supported-cap-config', self.CTRL,
+        result = self.nvme('log', 'supported-cap-config', self.ctrl,
                           '-o', 'json')
         self.assertEqual(result.returncode, 0)
         caps = json.loads(result.stdout)['Capacity Descriptor']
@@ -511,8 +467,7 @@ class PrintCLITest(unittest.TestCase):
         chans = [channel(c, c) for c in range(1000)]
         self.server.logs[_LID_SUPPORTED_CAP_CONFIG] = (
             struct.pack('<B15x', 1) + config(1, egcd(1, [], chans)))
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'supported-cap-config', self.CTRL,
+        result = self.nvme('log', 'supported-cap-config', self.ctrl,
                           '-o', 'json')
         self.assertEqual(result.returncode, 0)
         caps = json.loads(result.stdout)['Capacity Descriptor']
@@ -528,9 +483,8 @@ class PrintCLITest(unittest.TestCase):
 
         def media_units(log):
             self.server.logs[_LID_MEDIA_UNIT_STATUS] = log
-            result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir,
-                              self.base_dir, 'log', 'media-unit-stat',
-                              self.CTRL, '-o', 'json')
+            result = self.nvme('log', 'media-unit-stat', self.ctrl, '-o',
+                               'json')
             self.assertEqual(result.returncode, 0)
             return json.loads(result.stdout)['mus_list']
 
@@ -539,10 +493,10 @@ class PrintCLITest(unittest.TestCase):
         self.server.logs[_LID_MEDIA_UNIT_STATUS] = log
 
         for fmt in _FORMATS:
-            self._run(['log', 'media-unit-stat', self.CTRL] + fmt)
+            self._run(['log', 'media-unit-stat', self.ctrl] + fmt)
 
         # The checks below read the JSON output.
-        if not _HAVE_JSON:
+        if not HAVE_JSON:
             return
 
         mus = media_units(log)
@@ -562,9 +516,9 @@ class PrintCLITest(unittest.TestCase):
         self.assertEqual([m['muid'] for m in mus], [0])
 
     def test_get_feature(self):
-        self._run_all([['get-feature', self.CTRL, '-f', str(fid)]
+        self._run_all([['get-feature', self.ctrl, '-f', str(fid)]
                        for fid in range(0x01, 0x30)])
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[sys.argv[0]] + sys.argv[3:], verbosity=2)
+    main()

@@ -17,19 +17,10 @@ printed only as far as it goes.
 Usage: python3 nvme_discovery_logs_test.py <nvme-binary> <mock-lib>
 """
 import json
-import os
-import shutil
 import struct
-import sys
-import tempfile
-import unittest
 
-from nvme_mock_ipc import MockIPCServer, make_mock_env, resolve_mock_lib_path, run_nvme
+from tests.cli.nvme_mock import MockTestCase, main
 
-_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-_OPC_GET_LOG_PAGE = 0x02
 _LID_HOST_DISCOVERY = 0x71
 _LID_AVE_DISCOVERY = 0x72
 _LID_PULL_MODEL_DDC_REQ = 0x73
@@ -151,54 +142,11 @@ def _kv(text):
     return pairs
 
 
-class LogMockServer(MockIPCServer):
-    """Serves the log page in @logs[lid] by the offset and length a Get
-    Log Page asks for, and records (lid, lsp, offset, length) of each."""
-
-    def __init__(self, sock_path):
-        super().__init__(sock_path)
-        self.logs = {}
-        self.requests = []
-
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        if opcode != _OPC_GET_LOG_PAGE:
-            self.send_response(conn, 0, payload=b'\x00' * req_len)
-            return
-        lid = cdw10 & 0xff
-        lsp = (cdw10 >> 8) & 0x7f
-        self.requests.append((lid, lsp, lpo, req_len))
-        page = self.logs.get(lid, b'')
-        data = page[lpo:lpo + req_len]
-        self.send_response(conn, 0, payload=data + b'\x00' * (req_len - len(data)))
-
-
-class DiscoveryLogsTest(unittest.TestCase):
-
-    DEVICE = '/dev/nvme0'
-
-    def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix='nvme-discovery-logs-', dir='/tmp')
-        self.sysfs_dir = os.path.join(self.tmp, 'sysfs')
-        self.base_dir = os.path.join(self.tmp, 'base')
-        os.mkdir(self.sysfs_dir)
-        os.mkdir(self.base_dir)
-        self.server = LogMockServer(os.path.join(self.tmp, 'ipc.sock'))
-        self.server.start()
-        self.env = make_mock_env(_MOCK_LIB, self.server.sock_path)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-        shutil.rmtree(self.tmp, ignore_errors=True)
+class DiscoveryLogsTest(MockTestCase):
+    """Serves the log pages of a test."""
 
     def _run(self, *args):
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', *args, self.DEVICE)
-        self.assertEqual(result.returncode, 0,
-                         f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
-        self.assertEqual(self.server.errors, [])
-        return result.stdout
+        return self.assertOk(self.nvme('log', *args, self.ctrl)).stdout
 
     def _run_json(self, *args):
         return json.loads(self._run(*args, '-o', 'json'))
@@ -224,10 +172,10 @@ class DiscoveryLogsTest(unittest.TestCase):
         self.server.logs[_LID_HOST_DISCOVERY] = \
             _host_discovery_log(['nqn.2014-08.org.example:host1'])
         self._run_json('host-discovery', '--all-host-entries')
-        reqs = [r for r in self.server.requests if r[0] == _LID_HOST_DISCOVERY]
+        reqs = self.server.log_reads(_LID_HOST_DISCOVERY)
         self.assertTrue(reqs)
-        for lid, lsp, lpo, length in reqs:
-            self.assertEqual(lsp, 1, f'request at offset {lpo}')
+        for r in reqs:
+            self.assertEqual(r.lsp, 1, f'request at offset {r.lpo}')
 
     def test_host_discovery_header_only(self):
         self.server.logs[_LID_HOST_DISCOVERY] = _host_discovery_log([])
@@ -333,11 +281,9 @@ class DiscoveryLogsTest(unittest.TestCase):
         asked for, not of the length the page says."""
         self.server.logs[_LID_PULL_MODEL_DDC_REQ] = \
             _pull_model_ddc_req_log(b'OSPDATA!' * 8, tpdrpl=0x10000)
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'get-log', self.DEVICE, '--log-id=0x73',
-                          '--log-len=16', '--verbose')
-        self.assertEqual(result.returncode, 0,
-                         f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+        result = self.nvme('get-log', self.ctrl, '--log-id=0x73',
+                           '--log-len=16', '--verbose')
+        self.assertOk(result)
         osp = result.stdout.split('osp:\n')[-1].splitlines()
         self.assertEqual(len(osp), 2, result.stdout)  # offset ruler, 8 bytes
         self.assertIn('OSPDATA!', osp[1])
@@ -365,8 +311,8 @@ class DiscoveryLogsTest(unittest.TestCase):
         self.server.logs[_LID_REACHABILITY_GROUPS] = \
             _reachability_log([(1, []), (2, [])])
         self._run('reachability-groups', '--groups-only')
-        lengths = [r[3] for r in self.server.requests
-                   if r[0] == _LID_REACHABILITY_GROUPS]
+        lengths = [r.data_len for r in
+                   self.server.log_reads(_LID_REACHABILITY_GROUPS)]
         self.assertNotIn(0, lengths)
 
     def test_reachability_groups_too_many_namespace_ids(self):
@@ -375,8 +321,7 @@ class DiscoveryLogsTest(unittest.TestCase):
         log = bytearray(_reachability_log([(1, [10])]))
         struct.pack_into('<I', log, 16 + 4, 0xffffffff)
         self.server.logs[_LID_REACHABILITY_GROUPS] = bytes(log)
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'reachability-groups', self.DEVICE)
+        result = self.nvme('log', 'reachability-groups', self.ctrl)
         self.assertGreater(result.returncode, 0, 'not an error exit')
         self.assertNotIn('nsid', result.stdout)
 
@@ -410,16 +355,15 @@ class DiscoveryLogsTest(unittest.TestCase):
     def test_dispersed_ns_psub_no_zero_length_read(self):
         self.server.logs[_LID_DISPERSED_NS_PSUB] = _dispersed_ns_psub_log([])
         self._run('dispersed-ns-participating-nss')
-        lengths = [r[3] for r in self.server.requests
-                   if r[0] == _LID_DISPERSED_NS_PSUB]
+        lengths = [r.data_len for r in
+                   self.server.log_reads(_LID_DISPERSED_NS_PSUB)]
         self.assertNotIn(0, lengths)
 
     def test_dispersed_ns_psub_too_many_subsystems(self):
         """A count whose list no command can read fails the command."""
         self.server.logs[_LID_DISPERSED_NS_PSUB] = \
             _dispersed_ns_psub_log([], numpsub=1 << 62)
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'dispersed-ns-participating-nss', self.DEVICE)
+        result = self.nvme('log', 'dispersed-ns-participating-nss', self.ctrl)
         self.assertGreater(result.returncode, 0, 'not an error exit')
         self.assertNotIn('participating_nss 0', result.stdout)
 
@@ -428,11 +372,9 @@ class DiscoveryLogsTest(unittest.TestCase):
         self.server.logs[_LID_DISPERSED_NS_PSUB] = _dispersed_ns_psub_log(
             ['nqn.2014-08.org.example:sub%d' % i for i in range(4)],
             numpsub=100)
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'get-log', self.DEVICE, '--log-id=0x17',
-                          '--log-len=512', '--verbose')
-        self.assertEqual(result.returncode, 0,
-                         f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+        result = self.nvme('get-log', self.ctrl, '--log-id=0x17',
+                           '--log-len=512', '--verbose')
+        self.assertOk(result)
         self.assertIn('participating_nss 0', result.stdout)
         self.assertNotIn('participating_nss 1', result.stdout)
 
@@ -442,14 +384,13 @@ class DiscoveryLogsTest(unittest.TestCase):
         hdr = bytearray(512)
         struct.pack_into('<Q', hdr, 8, (1 << 32) + 512)
         self.server.logs[_LID_PERSISTENT_EVENT] = bytes(hdr)
-        result = run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                          'log', 'persistent-event', self.DEVICE)
+        result = self.nvme('log', 'persistent-event', self.ctrl)
         self.assertGreater(result.returncode, 0, 'not an error exit')
         self.assertIn('too large', result.stderr)
-        lengths = [r[3] for r in self.server.requests
-                   if r[0] == _LID_PERSISTENT_EVENT]
+        lengths = [r.data_len for r in
+                   self.server.log_reads(_LID_PERSISTENT_EVENT)]
         self.assertEqual(lengths, [512])
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[sys.argv[0]])
+    main()
