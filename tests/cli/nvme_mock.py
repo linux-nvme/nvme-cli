@@ -119,6 +119,7 @@ ID_CTRL_FIELDS = {
     'lpa': ('B', 261),
     'elpe': ('B', 262),
     'rpmbs': ('<I', 312),
+    'sanicap': ('<I', 328),
     'nanagrpid': ('<I', 348),
     'nn': ('<I', 516),
     'mnan': ('<I', 540),

@@ -117,6 +117,7 @@ if python3.found()
             ['fuzz-record', 'nvme_fuzz_record_test.py', cli_test_env, 30],
             ['device-self-test', 'nvme_device_self_test_test.py',
              cli_test_env, 30],
+            ['sanitize', 'nvme_sanitize_test.py', cli_test_env, 30],
         ]
 
         if 'feat' in selected_plugins
