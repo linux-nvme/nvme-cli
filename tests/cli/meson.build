@@ -120,6 +120,7 @@ if python3.found()
             ['sanitize', 'nvme_sanitize_test.py', cli_test_env, 30],
             ['mgmt', 'nvme_mgmt_test.py', cli_test_env, 30],
             ['io', 'nvme_io_test.py', cli_test_env, 30],
+            ['registers', 'nvme_registers_test.py', cli_test_env, 30],
         ]
 
         if 'feat' in selected_plugins
