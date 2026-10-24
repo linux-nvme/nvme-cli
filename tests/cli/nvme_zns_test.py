@@ -186,14 +186,18 @@ class ZoneMgmtRecvTest(ZnsTestBase):
                           cmd.data_len), (1, 0x23456789, 1, 1023, 4096))
         self.assertEqual(cmd.cdw13, 1 << 16 | 2 << 8 | ZRA_EXT_REPORT_ZONES)
 
-    def test_data_len_required(self):
-        """Each Zone Receive Action returns data"""
+    def test_data_len(self):
+        """Each Zone Receive Action returns data, NUMD dwords of it (0's
+        based)"""
         for zra in (ZRA_REPORT_ZONES, ZRA_EXT_REPORT_ZONES):
-            with self.subTest(zra=zra):
-                self.assertRefused(['zone-mgmt-recv', self.ns,
-                                    f'--zra={zra}'],
-                                   'data length (--data-len) has to be given',
-                                   OPC_ZONE_MGMT_RECV)
+            for args in ([], ['--data-len=1'], ['--data-len=2'],
+                         ['--data-len=3'], ['--data-len=6']):
+                with self.subTest(zra=zra, args=args):
+                    self.assertRefused(['zone-mgmt-recv', self.ns,
+                                        f'--zra={zra}', *args],
+                                       '--data-len must be a non-zero '
+                                       'multiple of 4',
+                                       OPC_ZONE_MGMT_RECV)
 
 
 class ZoneAppendTest(ZnsTestBase):
