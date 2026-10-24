@@ -84,6 +84,11 @@ class DeviceSelfTestTest(MockTestCase):
         self.assertOk(self._wait((1, 10), (1, 60), (0, 0)))
         self.assertEqual(len(self.server.log_reads(LID_DEVICE_SELF_TEST)), 3)
 
+    def test_wait_done_before_the_first_read(self):
+        """A self-test can be done before the first read of its progress"""
+        self.assertOk(self._wait((0, 0)))
+        self.assertEqual(len(self.server.log_reads(LID_DEVICE_SELF_TEST)), 1)
+
     def test_wait_interrupted(self):
         """Ctrl-C while waiting aborts the self-test"""
         if os.environ.get('NVME_PRIVSEP_TEST_HELPER'):

@@ -113,15 +113,18 @@ static int wait_self_test(struct libnvme_transport_handle *hdl)
 			return err;
 		}
 
-		if (++cnt > wthr) {
-			nvme_show_error("no progress for %d seconds, stop waiting", wthr);
-			return -EIO;
-		}
-
-		if (log->completion == 0 && p > 0) {
+		if (NVME_GET(log->current_operation, ST_CURR_OP) ==
+		    NVME_ST_CURR_OP_NOT_RUNNING) {
 			if (nvme_is_output_format_normal())
 				print_info("\r[%.*s] %3d%%\n", 50, dash, 100);
 			break;
+		}
+
+		if (++cnt > wthr) {
+			nvme_show_error(
+				"no progress for %d seconds, stop waiting",
+				wthr);
+			return -EIO;
 		}
 
 		if (log->completion < p) {
