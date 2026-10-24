@@ -144,6 +144,17 @@ class PcieRegsTest(MockTestCase):
                          [('0000', '0x2028030fff'), ('0x1c', '0x1'),
                           ('0xe00', '0x8')])
 
+    def test_get_reg_invalid_offset(self):
+        """Only the offset of a register, which is in the page read"""
+        for offset in ('0x2', '0x18', '0x70', '0xffc', '0x1000', '0x2000'):
+            with self.subTest(offset=offset):
+                result = self.nvme('get-reg', self.ctrl,
+                                   f'--offset={offset}')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(f'invalid register offset: {offset}',
+                              result.stderr)
+                self.assertNotIn('AddressSanitizer', result.stderr)
+
     def test_get_reg_offset_required(self):
         result = self.nvme('get-reg', self.ctrl)
         self.assertNotEqual(result.returncode, 0)

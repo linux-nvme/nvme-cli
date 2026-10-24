@@ -444,6 +444,13 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
+	/* The registers are read into a page: no other offset in there. */
+	if (argconfig_given(opts, &cfg.offset) &&
+	    !nvme_is_ctrl_reg(cfg.offset)) {
+		nvme_show_error("invalid register offset: %#x", cfg.offset);
+		return -EINVAL;
+	}
+
 	flags = nvme_args.output_flags;
 
 	if (nvme_args.verbose)
