@@ -65,14 +65,19 @@ class IoMgmtTest(MockTestCase):
                          (1, 2 << 16 | MO_RUH_STATUS, 3, 16))
         self.assertIn('ABCDEFGHIJKLMNOP', result.stdout)
 
-    def test_recv_data_len_required(self):
-        result = self.nvme('io-mgmt', 'recv', self.ns, f'--mo={MO_RUH_STATUS}')
-        if 'invalid sub-command' in result.stderr:
-            self.skipTest('io-mgmt plugin not built')
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('data length (--data-len) has to be given',
-                      result.stderr)
-        self.assertEqual(self.server.io_cmds(OPC_IO_MGMT_RECV), [])
+    def test_recv_data_len(self):
+        """NUMD is a 0's based count of dwords"""
+        for args in ([], ['--data-len=1'], ['--data-len=2'],
+                     ['--data-len=3'], ['--data-len=6']):
+            with self.subTest(args=args):
+                result = self.nvme('io-mgmt', 'recv', self.ns,
+                                   f'--mo={MO_RUH_STATUS}', *args)
+                if 'invalid sub-command' in result.stderr:
+                    self.skipTest('io-mgmt plugin not built')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('--data-len must be a non-zero multiple of 4',
+                              result.stderr)
+                self.assertEqual(self.server.io_cmds(OPC_IO_MGMT_RECV), [])
 
     def test_recv_file(self):
         """The data received, written to a file"""
