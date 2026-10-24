@@ -216,15 +216,14 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 			return -ENOMEM;
 	}
 
+	nvme_init_security_receive(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
+				   cfg.secp, cfg.al, sec_buf, cfg.size);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
 			nvme_init_mi_cmd_flags(&cmd, ish);
 		else
 			nvme_show_error("ISH is supported only for NVMe-MI");
 	}
-
-	nvme_init_security_receive(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
-				   cfg.secp, cfg.al, sec_buf, cfg.size);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "security receive");
