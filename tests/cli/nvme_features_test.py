@@ -114,6 +114,15 @@ class SetFeatureTest(FeaturesTestBase):
                                '--data=/dev/zero')
         self.assertEqual(cmd.data_len, 512)
 
+    def test_timestamp_value(self):
+        """--value of the timestamp feature is its data: the milliseconds
+        in the first 6 of 8 bytes. Command Dword 11 is reserved."""
+        cmd = self.set_feature('set-feature', self.ctrl,
+                               f'--feature-id={FID_TIMESTAMP}',
+                               '--value=0x123456789abc')
+        self.assertFields(cmd, FID_TIMESTAMP, nsid=NSID_ALL)
+        self.assertEqual(cmd.data, struct.pack('<Q', 0x123456789abc))
+
     def test_feature_id_required(self):
         result = self.nvme('set-feature', self.ctrl, '--value=1')
         self.assertNotEqual(result.returncode, 0)
