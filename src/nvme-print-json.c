@@ -3309,7 +3309,7 @@ static void json_ctrl_registers_pmrmscu(void *bar, struct json_object *r)
 		obj_add_uint(r, "pmrmscu", pmrmscu);
 }
 
-static void json_ctrl_registers(void *bar, bool fabrics)
+static void json_ctrl_registers(void *bar, bool fabrics, __u32 unsupported)
 {
 	static const struct {
 		int offset;
@@ -3352,7 +3352,8 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 
 		/* Only the properties a fabrics controller implements */
 		if (fabrics && (!nvme_is_fabrics_reg(offset) ||
-				nvme_fabrics_reg_unsupported(bar, offset)))
+				nvme_fabrics_reg_unsupported(unsupported,
+							     offset)))
 			continue;
 		regs[i].show(bar, r);
 	}

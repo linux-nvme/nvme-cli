@@ -717,15 +717,20 @@ bool nvme_is_fabrics_reg(int offset)
 }
 
 /*
- * The properties a fabrics controller does not implement are all ones in
- * the registers show-regs and get-reg read them into.
+ * The properties a fabrics controller does not implement, a bit for the
+ * dword offset of each: all of them are below 80h. Any value, all ones
+ * too, can be the one of a property which is implemented.
  */
-bool nvme_fabrics_reg_unsupported(void *bar, int offset)
+void nvme_fabrics_reg_set_unsupported(__u32 *unsupported, int offset)
 {
-	if (nvme_is_64bit_reg(offset))
-		return shr_mmio_read64(bar + offset) == UINT64_MAX;
+	if (offset >= 0 && offset < 32 * 4)
+		*unsupported |= 1U << (offset / 4);
+}
 
-	return shr_mmio_read32(bar + offset) == UINT32_MAX;
+bool nvme_fabrics_reg_unsupported(__u32 unsupported, int offset)
+{
+	return offset >= 0 && offset < 32 * 4 &&
+		unsupported & (1U << (offset / 4));
 }
 
 /*
@@ -757,8 +762,8 @@ bool nvme_registers_pmrctl_ready(__u32 pmrctl)
 	return NVME_PMRCTL_EN(pmrctl);
 }
 
-int nvme_show_ctrl_register(void *bar, bool fabrics, int offset,
-			    nvme_print_flags_t flags)
+int nvme_show_ctrl_register(void *bar, bool fabrics, __u32 unsupported,
+			    int offset, nvme_print_flags_t flags)
 {
 	uint64_t value;
 
@@ -768,7 +773,7 @@ int nvme_show_ctrl_register(void *bar, bool fabrics, int offset,
 		return -EINVAL;
 	}
 
-	if (fabrics && nvme_fabrics_reg_unsupported(bar, offset)) {
+	if (fabrics && nvme_fabrics_reg_unsupported(unsupported, offset)) {
 		nvme_show_error("register: %#04x (%s) not implemented",
 				offset, nvme_register_to_string(offset));
 		return -EINVAL;
@@ -784,9 +789,10 @@ int nvme_show_ctrl_register(void *bar, bool fabrics, int offset,
 	return 0;
 }
 
-void nvme_show_ctrl_registers(void *bar, bool fabrics, nvme_print_flags_t flags)
+void nvme_show_ctrl_registers(void *bar, bool fabrics, __u32 unsupported,
+			      nvme_print_flags_t flags)
 {
-	nvme_print(ctrl_registers, flags, bar, fabrics);
+	nvme_print(ctrl_registers, flags, bar, fabrics, unsupported);
 }
 
 void nvme_show_single_property(int offset, uint64_t value64, nvme_print_flags_t flags)

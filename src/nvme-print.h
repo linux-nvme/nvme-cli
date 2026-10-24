@@ -406,7 +406,7 @@ struct print_ops {
 	void (*boot_part_log)(void *bp_log, const char *devname, __u32 size);
 	void (*phy_rx_eom_log)(struct nvme_phy_rx_eom_log *log, __u16 controller, size_t len);
 	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
-	void (*ctrl_registers)(void *bar, bool fabrics);
+	void (*ctrl_registers)(void *bar, bool fabrics, __u32 unsupported);
 	void (*ctrl_register)(int offset, uint64_t value);
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result, void *buf, __u32 len);
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
@@ -804,9 +804,10 @@ void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
 	size_t len, nvme_print_flags_t flags);
 void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_log *caplog,
 				size_t len, nvme_print_flags_t flags);
-void nvme_show_ctrl_registers(void *bar, bool fabrics, nvme_print_flags_t flags);
-int nvme_show_ctrl_register(void *bar, bool fabrics, int offset,
-			    nvme_print_flags_t flags);
+void nvme_show_ctrl_registers(void *bar, bool fabrics, __u32 unsupported,
+			      nvme_print_flags_t flags);
+int nvme_show_ctrl_register(void *bar, bool fabrics, __u32 unsupported,
+			    int offset, nvme_print_flags_t flags);
 void nvme_show_single_property(int offset, uint64_t prop, nvme_print_flags_t flags);
 void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
@@ -935,7 +936,8 @@ void nvme_show_key_value(const char *key, const char *value, ...);
 void nvme_show_verbose_key_value(const char *key, const char *value, ...);
 bool nvme_is_fabrics_reg(int offset);
 bool nvme_is_fabrics_optional_reg(int offset);
-bool nvme_fabrics_reg_unsupported(void *bar, int offset);
+void nvme_fabrics_reg_set_unsupported(__u32 *unsupported, int offset);
+bool nvme_fabrics_reg_unsupported(__u32 unsupported, int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
 bool nvme_registers_pmrctl_ready(__u32 pmrctl);
 const char *nvme_degrees_string(long t);

@@ -110,7 +110,7 @@ static void binary_supported_cap_config_log(
 	d_raw((unsigned char *)cap, len);
 }
 
-static void binary_ctrl_registers(void *bar, bool fabrics)
+static void binary_ctrl_registers(void *bar, bool fabrics, __u32 unsupported)
 {
 	const unsigned int reg_size = 0x0e1c;  /* 0x0000 to 0x0e1b */
 
