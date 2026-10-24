@@ -1503,6 +1503,12 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 		}
 	}
 
+	/* MNDW is 0's based: the data length must fit 32 bits. */
+	if (cfg.mndw >= UINT32_MAX / 4) {
+		nvme_show_error("invalid max-dw:%#x", cfg.mndw);
+		return -EINVAL;
+	}
+
 	buf_len = (cfg.mndw + 1) * 4;
 	buf = libnvme_alloc(buf_len);
 	if (!buf)

@@ -290,6 +290,17 @@ class GetLbaStatusTest(IoTestBase):
         cmd, = self.server.admin_cmds(OPC_GET_LBA_STATUS)
         self.assertEqual(cmd.nsid, 1)
 
+    def test_max_dw(self):
+        """The data length of MNDW dwords must fit 32 bits"""
+        for mndw in (0x3fffffff, 0xffffffff):
+            with self.subTest(mndw=mndw):
+                result = self.nvme('get-lba-status', self.ns, '--action=2',
+                                   f'--max-dw={mndw:#x}')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(f'invalid max-dw:{mndw:#x}', result.stderr)
+                self.assertEqual(
+                    self.server.admin_cmds(OPC_GET_LBA_STATUS), [])
+
     def test_action_required(self):
         result = self.nvme('get-lba-status', self.ns, '--namespace-id=1')
         self.assertNotEqual(result.returncode, 0)
