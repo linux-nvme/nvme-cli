@@ -224,9 +224,8 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 			NVME_CSI_NVM, log, sizeof(*log));
 		err = libnvme_get_log(hdl, &cmd, false, sizeof(*log));
 		if (err) {
-			if (nvme_is_output_format_normal())
-				print_info("\n");
-			nvme_show_err(err, "self test log\n");
+			nvme_show_err(err, "self test log");
+			return err;
 		}
 
 		if (log->completion == 0) {
