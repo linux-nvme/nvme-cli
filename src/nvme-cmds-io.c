@@ -1495,6 +1495,14 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
+	if (!cfg.namespace_id) {
+		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
+		if (err < 0) {
+			nvme_show_err(err, "get-namespace-id");
+			return err;
+		}
+	}
+
 	buf_len = (cfg.mndw + 1) * 4;
 	buf = libnvme_alloc(buf_len);
 	if (!buf)

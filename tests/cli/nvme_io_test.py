@@ -285,6 +285,11 @@ class GetLbaStatusTest(IoTestBase):
                           cmd.cdw13, cmd.data_len),
                          (1, 0x23456789, 1, 7, 2 << 24 | 8, 32))
 
+    def test_namespace_of_device(self):
+        self.assertOk(self.nvme('get-lba-status', self.ns, '--action=2'))
+        cmd, = self.server.admin_cmds(OPC_GET_LBA_STATUS)
+        self.assertEqual(cmd.nsid, 1)
+
     def test_action_required(self):
         result = self.nvme('get-lba-status', self.ns, '--namespace-id=1')
         self.assertNotEqual(result.returncode, 0)
