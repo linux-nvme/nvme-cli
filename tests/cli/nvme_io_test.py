@@ -190,6 +190,18 @@ class SubmitIoTest(IoTestBase):
         self.assertEqual((cmd.cdw12, cmd.data_len), (1, 1024))
         self.assertEqual(cmd.data[:512], data)
 
+    def test_metadata(self):
+        """The metadata of all blocks the data takes, also when
+        --metadata-size gives less"""
+        self.server.identify[CNS_NS] = id_ns(lbaf=[(8, 9, 0)])
+        metadata = b'\x11' * 8
+        cmd = self.send(OPC_NVM_WRITE, 'write', self.ns, '--data-size=2048',
+                        '--metadata-size=8',
+                        f'--metadata={self.file("m", metadata)}')
+        self.assertEqual((cmd.cdw12, cmd.data_len, cmd.metadata_len),
+                         (3, 2048, 32))
+        self.assertEqual(cmd.metadata[:8], metadata)
+
     def test_read(self):
         self.server.io[OPC_NVM_READ] = b'R' * 1024
         path = os.path.join(self.tmp, 'out')

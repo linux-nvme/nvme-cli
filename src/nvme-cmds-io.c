@@ -1213,7 +1213,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	if (cfg.metadata_size) {
-		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
+		mbuffer_size = ((unsigned long long)nblocks + 1) * ms;
 		if (ms && cfg.metadata_size < mbuffer_size)
 			nvme_show_error("Rounding metadata size to fit block count (%lld bytes)",
 					mbuffer_size);
