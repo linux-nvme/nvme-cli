@@ -29,7 +29,8 @@ Usage: python3 micron_vs_fw_activate_history_mock_test.py <nvme-binary>
 import re
 import struct
 
-from micron_mock_test import SC_INVALID_LOG_PAGE, TestMicronMock, main
+from tests.cli.nvme_mock import SC_INVALID_LOG_PAGE, main
+from micron_mock_test import TestMicronMock
 
 _COMMAND = "vs-fw-activate-history"
 
@@ -384,7 +385,7 @@ class TestMicronVsFwActivateHistory(TestMicronMock):
     def test_namespace_path_matches_the_controller_path(self):
         self.set_log(pack_history_log([pack_entry(power_on_hour=99)]))
         ctrl = self.run_plugin_cmd_check(_COMMAND, device=self.ctrl)
-        ns = self.run_plugin_cmd_check(_COMMAND, device=self.ns1)
+        ns = self.run_plugin_cmd_check(_COMMAND, device=self.ns)
 
         self.assertEqual(ctrl.stdout, ns.stdout)
 
@@ -407,11 +408,11 @@ class TestMicronClearFwActivateHistory(TestMicronMock):
         self.server.commands.clear()
         self.run_plugin_cmd_check(_CLEAR)
         written = [c for c in self.server.commands
-                   if c['fid'] == _FID_CLEAR_FW_ACTIVATION_HISTORY]
+                   if c.fid == _FID_CLEAR_FW_ACTIVATION_HISTORY]
 
         self.assertTrue(written, "the 0xC1 feature was never written")
-        self.assertEqual(written[0]['cdw11'], 1 << 31)
-        self.assertEqual(written[0]['nsid'], 0)
+        self.assertEqual(written[0].cdw11, 1 << 31)
+        self.assertEqual(written[0].nsid, 0)
 
 
 if __name__ == '__main__':

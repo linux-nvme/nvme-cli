@@ -31,7 +31,8 @@ Usage: python3 micron_log_page_directory_mock_test.py <nvme-binary> <mock-lib>
 
 import re
 
-from micron_mock_test import TestMicronMock, main
+from tests.cli.nvme_mock import main
+from micron_mock_test import TestMicronMock
 
 _COMMAND = "log-page-directory"
 
@@ -88,10 +89,6 @@ class TestMicronLogPageDirectory(TestMicronMock):
     def support(self, lids):
         """Make exactly @lids readable; every other page is rejected."""
         self.server.logs = {lid: bytes(_PROBE_SIZE) for lid in lids}
-        # The SMART log has a default payload of its own, so drop it unless
-        # this test wants 0x02 listed.
-        wants_smart = self.server.logs.get(0x02) is not None
-        self.server.smart = bytes(_PROBE_SIZE) if wants_smart else None
 
     def listed(self, stdout):
         """Return {lid: description} from the printed rows."""
@@ -189,7 +186,7 @@ class TestMicronLogPageDirectory(TestMicronMock):
         self.support([0x02])
         self.server.commands.clear()
         self.run_plugin_cmd_check(_COMMAND)
-        probed = [c['lid'] for c in self.server.log_reads()]
+        probed = [c.lid for c in self.server.log_reads()]
 
         self.assertEqual(probed, list(_ALL_LIDS),
                          "the table was not walked exactly once, in order")
@@ -202,9 +199,9 @@ class TestMicronLogPageDirectory(TestMicronMock):
 
         for command in self.server.log_reads():
             self.assertEqual(
-                command['len'], _PROBE_SIZE,
-                f"page {command['lid']:#04x} was probed with "
-                f"{command['len']} bytes",
+                command.data_len, _PROBE_SIZE,
+                f"page {command.lid:#04x} was probed with "
+                f"{command.data_len} bytes",
             )
 
     # ---------------------------------------------------------------- #
@@ -257,7 +254,7 @@ class TestMicronLogPageDirectory(TestMicronMock):
         """A namespace path resolves to its parent controller."""
         self.support([0x02, 0x07, 0xC2])
         ctrl = self.run_plugin_cmd_check(_COMMAND, device=self.ctrl)
-        ns = self.run_plugin_cmd_check(_COMMAND, device=self.ns1)
+        ns = self.run_plugin_cmd_check(_COMMAND, device=self.ns)
 
         self.assertEqual(self.listed(ctrl.stdout), self.listed(ns.stdout))
 

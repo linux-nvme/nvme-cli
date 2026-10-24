@@ -28,14 +28,9 @@ Tests in this module verify:
 Usage: python3 micron_vs_smart_logs_mock_test.py <nvme-binary> <mock-lib>
 """
 
-from micron_mock_test import (
-    CUST_ID_GENERIC,
-    CUST_ID_GG,
-    SC_INVALID_LOG_PAGE,
-    TestMicronMock,
-    main,
-    pack_id_ctrl,
-)
+from tests.cli.nvme_mock import CNS_CTRL, SC_INVALID_LOG_PAGE, main
+from micron_mock_test import (CUST_ID_GENERIC, CUST_ID_GG, TestMicronMock,
+                              pack_id_ctrl)
 
 _EXT_LOG = "vs-smart-ext-log"
 _WORK_LOAD = "vs-work-load-log"
@@ -165,7 +160,7 @@ class TestMicronVsSmartExtLog(SmartLogsTestBase):
         self.assertEqual(self.json_fields(_EXT_LOG, self._JSON_KEYS,
                                           device=self.ctrl),
                          self.json_fields(_EXT_LOG, self._JSON_KEYS,
-                                          device=self.ns1))
+                                          device=self.ns))
 
     def test_output_formats_rejected(self):
         self.assert_formats_rejected(_EXT_LOG)
@@ -264,7 +259,7 @@ class TestMicronVsNandStats(SmartLogsTestBase):
 
     def setup_drive(self, model='M51CX', cust_id=CUST_ID_GENERIC):
         self.select_model(model)
-        self.server.identify = pack_id_ctrl(cust_id=cust_id)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(cust_id=cust_id)
 
     def test_hyperscale_m51cx_reads_the_cloud_log(self):
         """A Hyperscale M51CX reports the 0xC0 cloud log."""
@@ -336,7 +331,7 @@ class TestMicronVsNandStats(SmartLogsTestBase):
     def test_identify_failure_is_reported(self):
         """The customer ID comes from identify, which can fail."""
         self.setup_drive()
-        self.server.identify_status = SC_INVALID_LOG_PAGE
+        self.server.identify[CNS_CTRL] = SC_INVALID_LOG_PAGE
         result = self.run_plugin_cmd(_NAND_STATS)
 
         self.assertNotEqual(result.returncode, 0)
@@ -349,7 +344,7 @@ class TestMicronVsNandStats(SmartLogsTestBase):
         self.assertEqual(self.json_fields(_NAND_STATS, self._JSON_KEYS,
                                           device=self.ctrl),
                          self.json_fields(_NAND_STATS, self._JSON_KEYS,
-                                          device=self.ns1))
+                                          device=self.ns))
 
     def test_output_formats_rejected(self):
         self.assert_formats_rejected(_NAND_STATS)

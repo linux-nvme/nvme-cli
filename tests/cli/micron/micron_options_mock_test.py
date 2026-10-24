@@ -35,17 +35,11 @@ Usage: python3 micron_options_mock_test.py <nvme-binary> <mock-lib>
 
 import os
 
-from micron_mock_test import (
-    LPA_TELEMETRY,
-    OPC_FW_COMMIT,
-    OPC_FW_DOWNLOAD,
-    OPC_GET_FEATURES,
-    OPC_SET_FEATURES,
-    SC_INVALID_FIELD,
-    TestMicronMock,
-    main,
-    pack_id_ctrl,
-)
+from tests.cli.nvme_mock import (CNS_CTRL, LPA_TELEMETRY, OPC_FW_COMMIT,
+                                 OPC_FW_DOWNLOAD, OPC_GET_FEATURES,
+                                 OPC_SET_FEATURES, SC_INVALID_FIELD, Reply,
+                                 main)
+from micron_mock_test import TestMicronMock, pack_id_ctrl
 
 _SMBUS = "vs-smbus-option"
 _TELEMETRY = "vs-telemetry-controller-option"
@@ -75,11 +69,11 @@ class FeatureTestBase(TestMicronMock):
 
     def writes(self, fid):
         return [c for c in self.server.commands
-                if c['opcode'] == OPC_SET_FEATURES and c['fid'] == fid]
+                if c.opcode == OPC_SET_FEATURES and c.fid == fid]
 
     def reads(self, fid):
         return [c for c in self.server.commands
-                if c['opcode'] == OPC_GET_FEATURES and c['fid'] == fid]
+                if c.opcode == OPC_GET_FEATURES and c.fid == fid]
 
     def one_write(self, fid):
         writes = self.writes(fid)
@@ -104,18 +98,18 @@ class TestMicronSmbusOption(FeatureTestBase):
         """Enabling sets bit 0 of the feature value."""
         self.run_plugin_cmd_check(_SMBUS, args="-O enable")
 
-        self.assertEqual(self.one_write(_FID_SMBUS)['cdw11'], 1)
+        self.assertEqual(self.one_write(_FID_SMBUS).cdw11, 1)
 
     def test_disable_clears_the_enable_bit(self):
         self.run_plugin_cmd_check(_SMBUS, args="-O disable")
 
-        self.assertEqual(self.one_write(_FID_SMBUS)['cdw11'], 0)
+        self.assertEqual(self.one_write(_FID_SMBUS).cdw11, 0)
 
     def test_disable_is_the_default_action(self):
         """With no -O the command disables the feature."""
         self.run_plugin_cmd_check(_SMBUS)
 
-        self.assertEqual(self.one_write(_FID_SMBUS)['cdw11'], 0)
+        self.assertEqual(self.one_write(_FID_SMBUS).cdw11, 0)
 
     def test_value_selects_the_reported_temperature(self):
         """The temperature selection is bit 1, above the enable bit."""
@@ -131,7 +125,7 @@ class TestMicronSmbusOption(FeatureTestBase):
                 self.run_plugin_cmd_check(_SMBUS,
                                           args=f"-O {option} -V {value}")
 
-                self.assertEqual(self.one_write(_FID_SMBUS)['cdw11'], expected)
+                self.assertEqual(self.one_write(_FID_SMBUS).cdw11, expected)
 
     def test_save_makes_the_setting_persistent(self):
         """-s 1 sets the save bit, so the setting survives a power cycle."""
@@ -140,13 +134,13 @@ class TestMicronSmbusOption(FeatureTestBase):
                 self.server.commands.clear()
                 self.run_plugin_cmd_check(_SMBUS,
                                           args=f"-O enable -s {save}")
-                saved = bool(self.one_write(_FID_SMBUS)['cdw10'] & (1 << 31))
+                saved = bool(self.one_write(_FID_SMBUS).cdw10 & (1 << 31))
 
                 self.assertEqual(saved, expected)
 
     def test_write_failure_is_reported(self):
         """A drive that rejects the write says so and exits non-zero."""
-        self.server.feature_status[_FID_SMBUS] = SC_INVALID_FIELD
+        self.server.features[_FID_SMBUS] = SC_INVALID_FIELD
         result = self.run_plugin_cmd(_SMBUS, args="-O enable")
 
         self.assertNotEqual(result.returncode, 0)
@@ -173,7 +167,7 @@ class TestMicronSmbusOption(FeatureTestBase):
         }
         for value, (state, sensor) in cases.items():
             with self.subTest(value=bin(value)):
-                self.server.features[_FID_SMBUS] = value
+                self.server.features[_FID_SMBUS] = Reply(result=value)
                 result = self.run_plugin_cmd_check(_SMBUS, args="-O status")
 
                 self.assertIn(f"SMBus status on the drive: {state}",
@@ -196,10 +190,10 @@ class TestMicronSmbusOption(FeatureTestBase):
                 reads = self.reads(_FID_SMBUS)
 
                 self.assertEqual(len(reads), 1)
-                self.assertEqual((reads[0]['cdw10'] >> 8) & 0x7, value)
+                self.assertEqual((reads[0].cdw10 >> 8) & 0x7, value)
 
     def test_status_read_failure_is_reported(self):
-        self.server.feature_status[_FID_SMBUS] = SC_INVALID_FIELD
+        self.server.features[_FID_SMBUS] = SC_INVALID_FIELD
         result = self.run_plugin_cmd(_SMBUS, args="-O status")
 
         self.assertNotEqual(result.returncode, 0)
@@ -246,22 +240,22 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
 
     def setUp(self):
         super().setUp()
-        self.server.identify = pack_id_ctrl(lpa=LPA_TELEMETRY)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(lpa=LPA_TELEMETRY)
 
     def test_enable_sets_the_feature(self):
         self.run_plugin_cmd_check(_TELEMETRY, args="-O enable")
 
-        self.assertEqual(self.one_write(_FID_TELEMETRY)['cdw11'], 1)
+        self.assertEqual(self.one_write(_FID_TELEMETRY).cdw11, 1)
 
     def test_disable_clears_the_feature(self):
         self.run_plugin_cmd_check(_TELEMETRY, args="-O disable")
 
-        self.assertEqual(self.one_write(_FID_TELEMETRY)['cdw11'], 0)
+        self.assertEqual(self.one_write(_FID_TELEMETRY).cdw11, 0)
 
     def test_disable_is_the_default_action(self):
         self.run_plugin_cmd_check(_TELEMETRY)
 
-        self.assertEqual(self.one_write(_FID_TELEMETRY)['cdw11'], 0)
+        self.assertEqual(self.one_write(_FID_TELEMETRY).cdw11, 0)
 
     def test_select_controls_the_save_bit(self):
         """-s 1 makes the setting persistent; only its low bit is used."""
@@ -271,7 +265,7 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
                 self.server.commands.clear()
                 self.run_plugin_cmd_check(_TELEMETRY,
                                           args=f"-O enable -s {select}")
-                saved = bool(self.one_write(_FID_TELEMETRY)['cdw10']
+                saved = bool(self.one_write(_FID_TELEMETRY).cdw10
                              & (1 << 31))
 
                 self.assertEqual(saved, expected)
@@ -280,7 +274,7 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
         for value, expected in ((0, "disabled"), (1, "enabled"),
                                 (0xFFFF, "enabled")):
             with self.subTest(value=value):
-                self.server.features[_FID_TELEMETRY] = value
+                self.server.features[_FID_TELEMETRY] = Reply(result=value)
                 result = self.run_plugin_cmd_check(_TELEMETRY,
                                                    args="-O status")
 
@@ -297,7 +291,7 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
                 reads = self.reads(_FID_TELEMETRY)
 
                 self.assertEqual(len(reads), 1)
-                self.assertEqual((reads[0]['cdw10'] >> 8) & 0x7, select)
+                self.assertEqual((reads[0].cdw10 >> 8) & 0x7, select)
 
     def test_status_writes_nothing(self):
         self.run_plugin_cmd_check(_TELEMETRY, args="-O status")
@@ -306,7 +300,7 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
 
     def test_telemetry_support_gate(self):
         """A drive without telemetry support is told so, nothing written."""
-        self.server.identify = pack_id_ctrl(lpa=0)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(lpa=0)
         result = self.run_plugin_cmd(_TELEMETRY, args="-O enable")
 
         self.assertIn("drive doesn't support host/controller generated "
@@ -315,7 +309,8 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
 
     def test_other_lpa_bits_do_not_grant_support(self):
         """Only the telemetry bit of LPA matters."""
-        self.server.identify = pack_id_ctrl(lpa=0xFF & ~LPA_TELEMETRY)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(
+            lpa=0xFF & ~LPA_TELEMETRY)
         result = self.run_plugin_cmd(_TELEMETRY, args="-O enable")
 
         self.assertIn("doesn't support", result.stdout)
@@ -329,7 +324,7 @@ class TestMicronTelemetryControllerOption(FeatureTestBase):
         self.assertEqual(self.writes(_FID_TELEMETRY), [])
 
     def test_write_failure_is_reported(self):
-        self.server.feature_status[_FID_TELEMETRY] = SC_INVALID_FIELD
+        self.server.features[_FID_TELEMETRY] = SC_INVALID_FIELD
         result = self.run_plugin_cmd(_TELEMETRY, args="-O enable")
 
         self.assertNotEqual(result.returncode, 0)
@@ -359,11 +354,11 @@ class TestMicronSelectDownload(TestMicronMock):
 
     def downloads(self):
         return [c for c in self.server.commands
-                if c['opcode'] == OPC_FW_DOWNLOAD]
+                if c.opcode == OPC_FW_DOWNLOAD]
 
     def commits(self):
         return [c for c in self.server.commands
-                if c['opcode'] == OPC_FW_COMMIT]
+                if c.opcode == OPC_FW_COMMIT]
 
     # ---------------------------------------------------------------- #
     # Slot selection                                                   #
@@ -380,7 +375,7 @@ class TestMicronSelectDownload(TestMicronMock):
                 commits = self.commits()
 
                 self.assertEqual(len(commits), 1)
-                self.assertEqual(commits[0]['cdw12'], action)
+                self.assertEqual(commits[0].cdw12, action)
 
     def test_selection_is_case_insensitive(self):
         """A lower-case selection means the same as an upper-case one."""
@@ -392,7 +387,7 @@ class TestMicronSelectDownload(TestMicronMock):
                     self.run_plugin_cmd_check(_DOWNLOAD,
                                               args=f"-f {path} -s {spelling}")
 
-                    self.assertEqual(self.commits()[0]['cdw12'], action)
+                    self.assertEqual(self.commits()[0].cdw12, action)
 
     def test_unrecognised_selection_is_rejected(self):
         """Only the three defined selections are accepted."""
@@ -411,7 +406,7 @@ class TestMicronSelectDownload(TestMicronMock):
         path = self.firmware()
         self.run_plugin_cmd_check(_DOWNLOAD, args=f"-f {path} --select=oo")
 
-        self.assertEqual(self.commits()[0]['cdw12'], _SELECTIONS['OOB'])
+        self.assertEqual(self.commits()[0].cdw12, _SELECTIONS['OOB'])
 
     def test_selection_no_name(self):
         """An empty or too long selection names no selection.
@@ -488,10 +483,10 @@ class TestMicronSelectDownload(TestMicronMock):
 
         # nvme_init_fw_download() puts the dword count in cdw10 and the dword
         # offset in cdw11.
-        self.assertEqual([c['cdw11'] for c in downloads],
+        self.assertEqual([c.cdw11 for c in downloads],
                          [0, _FW_CHUNK // 4, 2 * _FW_CHUNK // 4])
         for command in downloads:
-            self.assertEqual(command['len'], _FW_CHUNK)
+            self.assertEqual(command.data_len, _FW_CHUNK)
 
     def test_a_short_final_chunk_is_sent(self):
         """An image that is not a whole number of chunks still transfers."""
@@ -501,14 +496,14 @@ class TestMicronSelectDownload(TestMicronMock):
         downloads = self.downloads()
 
         self.assertEqual(len(downloads), 2)
-        self.assertEqual(downloads[1]['len'], 8)
+        self.assertEqual(downloads[1].data_len, 8)
 
     def test_commit_follows_the_download(self):
         """The image is committed once, after it has all been sent."""
         path = self.firmware(size=2 * _FW_CHUNK, name="fw2.bin")
         self.run_plugin_cmd_check(_DOWNLOAD, args=f"-f {path} -s OOB")
-        opcodes = [c['opcode'] for c in self.server.commands
-                   if c['opcode'] in (OPC_FW_DOWNLOAD, OPC_FW_COMMIT)]
+        opcodes = [c.opcode for c in self.server.commands
+                   if c.opcode in (OPC_FW_DOWNLOAD, OPC_FW_COMMIT)]
 
         self.assertEqual(opcodes, [OPC_FW_DOWNLOAD, OPC_FW_DOWNLOAD,
                                    OPC_FW_COMMIT])
@@ -522,7 +517,7 @@ class TestMicronSelectDownload(TestMicronMock):
         path = self.firmware()
         for status in _POWER_CYCLE_STATUSES:
             with self.subTest(status=hex(status)):
-                self.server.fw_commit_status = status
+                self.server.admin[OPC_FW_COMMIT] = status
                 result = self.run_plugin_cmd(_DOWNLOAD,
                                              args=f"-f {path} -s ALL")
 
@@ -535,7 +530,7 @@ class TestMicronSelectDownload(TestMicronMock):
     def test_other_commit_failures_are_reported(self):
         """A commit the drive rejects outright fails."""
         path = self.firmware()
-        self.server.fw_commit_status = SC_INVALID_FIELD
+        self.server.admin[OPC_FW_COMMIT] = SC_INVALID_FIELD
         result = self.run_plugin_cmd(_DOWNLOAD, args=f"-f {path} -s ALL")
 
         self.assertNotEqual(result.returncode, 0)
@@ -543,7 +538,7 @@ class TestMicronSelectDownload(TestMicronMock):
     def test_download_failure_stops_the_transfer(self):
         """A rejected transfer is reported and the commit is not attempted."""
         path = self.firmware(size=3 * _FW_CHUNK, name="fwfail.bin")
-        self.server.fw_download_status = SC_INVALID_FIELD
+        self.server.admin[OPC_FW_DOWNLOAD] = SC_INVALID_FIELD
         result = self.run_plugin_cmd(_DOWNLOAD, args=f"-f {path} -s ALL")
 
         self.assertNotEqual(result.returncode, 0)

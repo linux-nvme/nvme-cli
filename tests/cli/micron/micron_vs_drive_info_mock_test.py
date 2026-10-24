@@ -36,16 +36,10 @@ import json
 import re
 import struct
 
-from micron_mock_test import (
-    CUST_ID_GENERIC,
-    CUST_ID_GG,
-    OPC_VENDOR_DA,
-    SC_INVALID_FIELD,
-    SC_INVALID_LOG_PAGE,
-    TestMicronMock,
-    main,
-    pack_id_ctrl,
-)
+from tests.cli.nvme_mock import (CNS_CTRL, SC_INVALID_FIELD,
+                                 SC_INVALID_LOG_PAGE, main)
+from micron_mock_test import (CUST_ID_GENERIC, CUST_ID_GG, OPC_VENDOR_DA,
+                              TestMicronMock, pack_id_ctrl)
 
 _COMMAND = "vs-drive-info"
 
@@ -98,8 +92,8 @@ class TestMicronVsDriveInfo(TestMicronMock):
         about that read do not have to care whether this model consults it.
         """
         self.select_model(model)
-        self.server.identify = pack_id_ctrl(cust_id=cust_id, hw_ver=hw_ver,
-                                            ftl_unit_size=ftl_unit_size)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(
+            cust_id=cust_id, hw_ver=hw_ver, ftl_unit_size=ftl_unit_size)
         self.server.logs[0xC0] = pack_c0_log() if c0_log is None else c0_log
 
     def text_fields(self, stdout):
@@ -130,7 +124,7 @@ class TestMicronVsDriveInfo(TestMicronMock):
     def test_m5407_reads_the_vendor_opcode(self):
         """On M5407 the hardware data comes from the 0xDA opcode."""
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_DA] = pack_fb_drive_info(hw_major=9,
+        self.server.admin[OPC_VENDOR_DA] = pack_fb_drive_info(hw_major=9,
                                                                hw_minor=4)
         result = self.run_plugin_cmd_check(_COMMAND)
 
@@ -150,7 +144,7 @@ class TestMicronVsDriveInfo(TestMicronMock):
     def test_vendor_opcode_failure_is_fatal(self):
         """A drive that rejects 0xDA reports the failure and exits non-zero."""
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_DA] = SC_INVALID_FIELD
+        self.server.admin[OPC_VENDOR_DA] = SC_INVALID_FIELD
         result = self.run_plugin_cmd(_COMMAND)
 
         self.assertNotEqual(result.returncode, 0)
@@ -224,7 +218,7 @@ class TestMicronVsDriveInfo(TestMicronMock):
     def test_boot_spec_from_the_vendor_opcode_on_m5407(self):
         """M5407 reports the plain version its 0xDA payload carries."""
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_DA] = pack_fb_drive_info(
+        self.server.admin[OPC_VENDOR_DA] = pack_fb_drive_info(
             hw_major=1, hw_minor=0, bs_ver_major=4, bs_ver_minor=1)
         text = self.text_fields(self.run_plugin_cmd_check(_COMMAND).stdout)
 
@@ -383,7 +377,7 @@ class TestMicronVsDriveInfo(TestMicronMock):
                          c0_log=pack_c0_log(ownership_status=1))
 
         self.assertEqual(self.json_fields(device=self.ctrl),
-                         self.json_fields(device=self.ns1))
+                         self.json_fields(device=self.ns))
 
     def test_binary_output_format_rejected(self):
         """The command declares normal|json, so binary is refused."""

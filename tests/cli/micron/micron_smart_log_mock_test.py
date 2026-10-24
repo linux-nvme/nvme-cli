@@ -36,14 +36,9 @@ Usage: python3 micron_smart_log_mock_test.py <nvme-binary> <mock-lib>
 
 import struct
 
-from micron_mock_test import (
-    LID_SMART,
-    SC_INVALID_LOG_PAGE,
-    SMART_LOG_SIZE,
-    TestMicronMock,
-    main,
-    pack_smart_log,
-)
+from tests.cli.nvme_mock import (LID_SMART, SC_INVALID_LOG_PAGE,
+                                 SMART_LOG_SIZE, main)
+from micron_mock_test import TestMicronMock, pack_smart_log
 
 _COMMAND = "smart-log"
 
@@ -90,15 +85,16 @@ class TestMicronSmartLog(TestMicronMock):
     """micron smart-log against a mocked SMART log."""
 
     def set_smart(self, **kwargs):
-        self.server.smart = pack_smart_log(**kwargs)
+        self.server.logs[LID_SMART] = pack_smart_log(**kwargs)
 
     def set_smart_bytes(self, patches):
         """Patch raw bytes into the SMART log, for fields pack_smart_log()
         does not model."""
-        buf = bytearray(self.server.smart.ljust(SMART_LOG_SIZE, b'\0'))
+        buf = bytearray(self.server.logs[LID_SMART].ljust(SMART_LOG_SIZE,
+                                                          b'\0'))
         for offset, value in patches.items():
             buf[offset] = value
-        self.server.smart = bytes(buf)
+        self.server.logs[LID_SMART] = bytes(buf)
 
     def micron_json(self, device=None):
         return self.run_plugin_cmd_json(
@@ -172,7 +168,7 @@ class TestMicronSmartLog(TestMicronMock):
         buf = bytearray(pack_smart_log())
         struct.pack_into('<Q', buf, _OFF_OLEC, 0x1122334455667788)
         struct.pack_into('<I', buf, _OFF_IPM, 0xDEADBEEF)
-        self.server.smart = bytes(buf)
+        self.server.logs[LID_SMART] = bytes(buf)
         micron = self.micron_json()
 
         self.assertEqual(to_decimal(micron["olec"]), 0x1122334455667788)
@@ -262,14 +258,14 @@ class TestMicronSmartLog(TestMicronMock):
 
     def test_header_echoes_the_device_argument(self):
         """The header prints the argument verbatim, not a canonical path."""
-        for device in (self.ctrl, self.ns1):
+        for device in (self.ctrl, self.ns):
             with self.subTest(device=device):
                 self.assertEqual(self.header_line(device=device),
                                  _HEADER_PREFIX + device)
 
     def test_json_device_matches_the_header(self):
         """The JSON device field holds the same string as the header."""
-        for device in (self.ctrl, self.ns1):
+        for device in (self.ctrl, self.ns):
             with self.subTest(device=device):
                 echoed = self.header_line(device=device)[len(_HEADER_PREFIX):]
 
@@ -281,7 +277,7 @@ class TestMicronSmartLog(TestMicronMock):
         self.set_smart(temperature_kelvin=_KELVIN_OFFSET + 30,
                        sensors={1: _KELVIN_OFFSET + 31})
         from_ctrl = self.micron_json(device=self.ctrl)
-        from_ns = self.micron_json(device=self.ns1)
+        from_ns = self.micron_json(device=self.ns)
 
         self.assertNotEqual(from_ctrl.pop("device"), from_ns.pop("device"))
         self.assertEqual(from_ctrl, from_ns)

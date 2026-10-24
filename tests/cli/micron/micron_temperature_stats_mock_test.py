@@ -29,13 +29,8 @@ Usage: python3 micron_temperature_stats_mock_test.py <nvme-binary> <mock-lib>
 import json
 import re
 
-from micron_mock_test import (
-    LID_SMART,
-    SC_INVALID_LOG_PAGE,
-    TestMicronMock,
-    main,
-    pack_smart_log,
-)
+from tests.cli.nvme_mock import LID_SMART, SC_INVALID_LOG_PAGE, main
+from micron_mock_test import TestMicronMock, pack_smart_log
 
 _COMMAND = "vs-temperature-stats"
 
@@ -53,8 +48,8 @@ class TestMicronTemperatureStats(TestMicronMock):
     """vs-temperature-stats against a mocked SMART log."""
 
     def set_temperatures(self, composite_kelvin=0, sensors=()):
-        self.server.smart = pack_smart_log(temperature_kelvin=composite_kelvin,
-                                           sensors=sensors)
+        self.server.logs[LID_SMART] = pack_smart_log(
+            temperature_kelvin=composite_kelvin, sensors=sensors)
 
     def text_values(self, stdout):
         """Return {label: celsius} parsed from the text output."""
@@ -220,7 +215,7 @@ class TestMicronTemperatureStats(TestMicronMock):
                               sensors={2: _KELVIN_OFFSET + 31})
 
         self.assertEqual(self.json_values(device=self.ctrl),
-                         self.json_values(device=self.ns1))
+                         self.json_values(device=self.ns))
 
     # ---------------------------------------------------------------- #
     # Failure and option handling                                      #

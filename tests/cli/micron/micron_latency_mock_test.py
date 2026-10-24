@@ -41,13 +41,9 @@ Usage: python3 micron_latency_mock_test.py <nvme-binary> <mock-lib>
 import re
 import struct
 
-from micron_mock_test import (
-    OPC_GET_FEATURES,
-    OPC_SET_FEATURES,
-    SC_INVALID_LOG_PAGE,
-    TestMicronMock,
-    main,
-)
+from tests.cli.nvme_mock import (OPC_GET_FEATURES, OPC_SET_FEATURES,
+                                 SC_INVALID_LOG_PAGE, Reply, main)
+from micron_mock_test import TestMicronMock
 
 _TRACKING = "latency-tracking"
 _STATS = "latency-stats"
@@ -158,13 +154,13 @@ class TestMicronLatencyTracking(TestMicronMock):
     """latency-tracking: reading and writing the monitoring feature."""
 
     def set_feature_value(self, value):
-        self.server.features[_FID_LATENCY_MONITOR] = value
+        self.server.features[_FID_LATENCY_MONITOR] = Reply(result=value)
 
     def written(self):
         """Return the single Set Features command the command issued."""
         writes = [c for c in self.server.commands
-                  if c['opcode'] == OPC_SET_FEATURES
-                  and c['fid'] == _FID_LATENCY_MONITOR]
+                  if c.opcode == OPC_SET_FEATURES
+                  and c.fid == _FID_LATENCY_MONITOR]
         self.assertEqual(len(writes), 1,
                          f"expected one Set Features, got {len(writes)}")
         return writes[0]
@@ -216,14 +212,14 @@ class TestMicronLatencyTracking(TestMicronMock):
         self.run_plugin_cmd_check(_TRACKING)
 
         reads = [c for c in self.server.commands
-                 if c['opcode'] == OPC_GET_FEATURES]
+                 if c.opcode == OPC_GET_FEATURES]
         self.assertEqual(len(reads), 1)
-        self.assertEqual(reads[0]['fid'], _FID_LATENCY_MONITOR)
+        self.assertEqual(reads[0].fid, _FID_LATENCY_MONITOR)
         self.assertEqual(self.server.log_reads(), [])
 
     def test_feature_read_failure_is_reported(self):
         """A drive that rejects the feature read fails with a message."""
-        self.server.feature_status[_FID_LATENCY_MONITOR] = SC_INVALID_LOG_PAGE
+        self.server.features[_FID_LATENCY_MONITOR] = SC_INVALID_LOG_PAGE
         result = self.run_plugin_cmd(_TRACKING)
 
         self.assertNotEqual(result.returncode, 0)
@@ -240,8 +236,8 @@ class TestMicronLatencyTracking(TestMicronMock):
         self.run_plugin_cmd_check(_TRACKING, args="-O enable")
         write = self.written()
 
-        self.assertEqual(write['cdw11'], 1)
-        self.assertTrue(write['cdw10'] & (1 << 31),
+        self.assertEqual(write.cdw11, 1)
+        self.assertTrue(write.cdw10 & (1 << 31),
                         "the save bit was not set")
 
     def test_disable_writes_the_disable_flag(self):
@@ -249,7 +245,7 @@ class TestMicronLatencyTracking(TestMicronMock):
         self.set_feature_value(0x08080800 | _MASK_ALL)
         self.run_plugin_cmd_check(_TRACKING, args="-O disable")
 
-        self.assertEqual(self.written()['cdw11'], 0)
+        self.assertEqual(self.written().cdw11, 0)
 
     def test_command_class_selects_its_mask_and_threshold_slot(self):
         """Each class writes its own bit and its own threshold byte.
@@ -270,8 +266,8 @@ class TestMicronLatencyTracking(TestMicronMock):
                     _TRACKING, args=f"-O enable -c {name} -t 500")
                 write = self.written()
 
-                self.assertEqual(write['cdw12'], mask)
-                self.assertEqual(write['cdw13'], (500 // 10) << shift)
+                self.assertEqual(write.cdw12, mask)
+                self.assertEqual(write.cdw13, (500 // 10) << shift)
 
     def test_all_commands_uses_the_default_mask_and_threshold(self):
         """Monitoring every class writes the plugin's fixed default mask.
@@ -283,15 +279,15 @@ class TestMicronLatencyTracking(TestMicronMock):
         self.run_plugin_cmd_check(_TRACKING, args="-O enable -c all -t 500")
         write = self.written()
 
-        self.assertEqual(write['cdw12'], _MASK_ALL)
-        self.assertEqual(write['cdw13'], _DEFAULT_TIMING_MASK)
+        self.assertEqual(write.cdw12, _MASK_ALL)
+        self.assertEqual(write.cdw13, _DEFAULT_TIMING_MASK)
 
     def test_default_command_class_is_all(self):
         """Omitting -c monitors every command class."""
         self.set_feature_value(0)
         self.run_plugin_cmd_check(_TRACKING, args="-O enable")
 
-        self.assertEqual(self.written()['cdw12'], _MASK_ALL)
+        self.assertEqual(self.written().cdw12, _MASK_ALL)
 
     def test_enable_reports_success(self):
         """A successful write is reported under --verbose."""
@@ -334,7 +330,7 @@ class TestMicronLatencyTracking(TestMicronMock):
         self.run_plugin_cmd_check(_TRACKING,
                                   args="-O enable -c read -t 2550")
 
-        self.assertEqual(self.written()['cdw13'], (2550 // 10) << 24)
+        self.assertEqual(self.written().cdw13, (2550 // 10) << 24)
 
     def test_threshold_must_be_a_multiple_of_ten(self):
         """A threshold that is not a whole number of 10ms units is refused."""
@@ -352,7 +348,7 @@ class TestMicronLatencyTracking(TestMicronMock):
         self.run_plugin_cmd_check(_TRACKING,
                                   args="-O disable -c read -t 9999")
 
-        self.assertEqual(self.written()['cdw11'], 0)
+        self.assertEqual(self.written().cdw11, 0)
 
     def test_unrecognised_option_is_rejected(self):
         """-O takes enable, disable or status and nothing else."""
@@ -541,7 +537,7 @@ class TestMicronLatencyStats(TestMicronMock):
     def test_namespace_path_matches_the_controller_path(self):
         self.set_stats(counts={'all': list(range(_BUCKET_COUNT))})
         ctrl = self.run_plugin_cmd_check(_STATS, device=self.ctrl)
-        ns = self.run_plugin_cmd_check(_STATS, device=self.ns1)
+        ns = self.run_plugin_cmd_check(_STATS, device=self.ns)
 
         self.assertEqual(ctrl.stdout, ns.stdout)
 
@@ -666,7 +662,7 @@ class TestMicronLatencyLogs(TestMicronMock):
     def test_namespace_path_matches_the_controller_path(self):
         self.set_entries([pack_log_entry(timestamp=42, latency=7)])
         ctrl = self.run_plugin_cmd_check(_LOGS, device=self.ctrl)
-        ns = self.run_plugin_cmd_check(_LOGS, device=self.ns1)
+        ns = self.run_plugin_cmd_check(_LOGS, device=self.ns)
 
         self.assertEqual(ctrl.stdout, ns.stdout)
 

@@ -30,13 +30,8 @@ Tests in this module verify:
 Usage: python3 micron_id_ctrl_mock_test.py <nvme-binary> <mock-lib>
 """
 
-from micron_mock_test import (
-    ID_CTRL_SIZE,
-    SC_INVALID_FIELD,
-    TestMicronMock,
-    main,
-    pack_id_ctrl,
-)
+from tests.cli.nvme_mock import CNS_CTRL, ID_CTRL_SIZE, SC_INVALID_FIELD, main
+from micron_mock_test import TestMicronMock, pack_id_ctrl
 
 _COMMAND = "id-ctrl"
 
@@ -103,7 +98,7 @@ class TestMicronIdCtrl(TestMicronMock):
         )
         for ctratt, expected in cases:
             with self.subTest(ctratt=hex(ctratt)):
-                self.server.identify = pack_id_ctrl(ctratt=ctratt)
+                self.server.identify[CNS_CTRL] = pack_id_ctrl(ctratt=ctratt)
 
                 self.assertEqual(self.micron_json()["pms"], expected)
 
@@ -111,13 +106,13 @@ class TestMicronIdCtrl(TestMicronMock):
         """Only bit 21 matters, not the bits either side of it."""
         neighbours = (1 << (_CTRATT_PMS_BIT - 1)
                       ) | (1 << (_CTRATT_PMS_BIT + 1))
-        self.server.identify = pack_id_ctrl(ctratt=neighbours)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(ctratt=neighbours)
 
         self.assertEqual(self.micron_json()["pms"], 0)
 
     def test_pms_matches_the_reported_ctratt(self):
         """pms stays consistent with the CTRATT value in the same output."""
-        self.server.identify = pack_id_ctrl(
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(
             ctratt=(1 << _CTRATT_PMS_BIT) | 0x55)
         micron = self.micron_json()
         ctratt = int(str(micron["ctratt"]), 0)
@@ -130,7 +125,8 @@ class TestMicronIdCtrl(TestMicronMock):
 
     def test_normal_output_adds_the_pms_line(self):
         """Normal output is the core listing plus one line."""
-        self.server.identify = pack_id_ctrl(ctratt=1 << _CTRATT_PMS_BIT)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(
+            ctratt=1 << _CTRATT_PMS_BIT)
         result = self.run_plugin_cmd_check(_COMMAND)
 
         self.assertIn(_IDENTIFY_HEADER, result.stdout)
@@ -145,9 +141,9 @@ class TestMicronIdCtrl(TestMicronMock):
 
     def test_identify_strings_are_reported(self):
         """The drive's identity strings reach the output."""
-        self.server.identify = pack_id_ctrl(serial="MOCKSERIAL42",
-                                            model="MockModel",
-                                            fw="MOCKFW1")
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(serial="MOCKSERIAL42",
+                                                      model="MockModel",
+                                                      fw="MOCKFW1")
         result = self.run_plugin_cmd_check(_COMMAND)
 
         for value in ("MOCKSERIAL42", "MockModel", "MOCKFW1"):
@@ -160,8 +156,8 @@ class TestMicronIdCtrl(TestMicronMock):
     def test_binary_output_is_the_identify_structure(self):
         """Binary output is the structure the drive returned, byte for byte."""
         identify = pack_id_ctrl(serial="BINARYSN", ctratt=0x1234)
-        self.server.identify = identify
-        result = self.run_nvme('micron', _COMMAND, self.ctrl, '-o', 'binary',
+        self.server.identify[CNS_CTRL] = identify
+        result = self.nvme('micron', _COMMAND, self.ctrl, '-o', 'binary',
                                encoding=None)
 
         self.assertEqual(result.returncode, 0,
@@ -199,11 +195,11 @@ class TestMicronIdCtrl(TestMicronMock):
     def test_namespace_path_matches_the_controller_path(self):
         """A namespace path resolves to its parent controller."""
         self.assertEqual(self.micron_json(device=self.ctrl),
-                         self.micron_json(device=self.ns1))
+                         self.micron_json(device=self.ns))
 
     def test_identify_failure_is_reported(self):
         """A drive that rejects identify fails with a message."""
-        self.server.identify_status = SC_INVALID_FIELD
+        self.server.identify[CNS_CTRL] = SC_INVALID_FIELD
         result = self.run_plugin_cmd(_COMMAND)
 
         self.assertNotEqual(result.returncode, 0)
