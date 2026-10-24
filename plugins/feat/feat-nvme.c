@@ -1002,7 +1002,8 @@ static int feat_power_meas(int argc, char **argv, struct command *cmd,
 				     cfg.uidx,
 				     cfg.feat.save);
 	else
-		err = feat_get(hdl, fid, 0, cfg.feat.sel, 0, power_meas_feat);
+		err = feat_get(hdl, fid, 0, cfg.feat.sel, cfg.uidx,
+			       power_meas_feat);
 
 	return err;
 }
