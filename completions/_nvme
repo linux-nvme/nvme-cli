@@ -15983,7 +15983,8 @@ _nvme () {
 			;;
 
 		(sanitize-ns)
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--namespace-id -n" "all -1" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sanact -a" "exit-failure start-crypto-erase exit-media-verification" \
 			               "--timeout" "infinite -1" && return
@@ -15996,6 +15997,8 @@ _nvme () {
 				-e':alias for --emvs'
 				--ish':Ignore Shutdown (for NVMe-MI command)'
 				-I':alias for --ish'
+				--namespace-id=':identifier of desired namespace'
+				-n':alias for --namespace-id'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
 				--output-format=':Output format: normal|json|binary'
