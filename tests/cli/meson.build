@@ -192,6 +192,7 @@ if python3.found()
         if 'zns' in selected_plugins
             mock_cli_tests += [
                 ['zns-append', 'nvme_zns_append_test.py', cli_test_env, 30],
+                ['zns', 'nvme_zns_test.py', cli_test_env, 30],
             ]
         endif
 
