@@ -13,7 +13,8 @@ Usage: python3 nvme_resv_test.py <path-to-nvme-binary> <mock-lib>
 """
 import struct
 
-from tests.cli.nvme_mock import (NVME_IOCTL_ID, MockTestCase, Reply, main)
+from tests.cli.nvme_mock import (CNS_CTRL, NVME_IOCTL_ID, SC_INVALID_FIELD,
+                                 MockTestCase, Reply, main)
 
 OPC_RESV_REGISTER = 0x0d
 OPC_RESV_REPORT = 0x0e
@@ -135,6 +136,14 @@ class ReportTest(ResvTestBase):
         cmd, = self.resv(OPC_RESV_REPORT, 'report', self.ns, '--eds')
         self.assertEqual((cmd.cdw10, cmd.cdw11, cmd.data_len),
                          (RESV_EXT_HDR_SIZE // 4 - 1, 1, RESV_EXT_HDR_SIZE))
+
+    def test_identify_fails(self):
+        """The report fails with the status of Identify Controller"""
+        self.server.identify[CNS_CTRL] = SC_INVALID_FIELD
+        result = self.nvme('resv', 'report', self.ns)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Invalid Field in Command', result.stderr)
+        self.assertEqual(self.server.io_cmds(OPC_RESV_REPORT), [])
 
     def test_numd(self):
         """An explicit --numd is taken as given, in one command"""

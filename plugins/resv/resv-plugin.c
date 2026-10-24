@@ -340,8 +340,8 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	nvme_init_identify_ctrl(&cmd, ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
-		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
-		return -errno;
+		nvme_show_err(err, "identify-ctrl");
+		return err;
 	}
 
 	if (le32_to_cpu(ctrl->ctratt) & NVME_CTRL_CTRATT_128_ID)
