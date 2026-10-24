@@ -72,6 +72,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <shared/cleanup-util.h>
 #include <shared/compiler-attributes-util.h>
 
 struct linux_passthru_cmd32 {
@@ -138,6 +139,16 @@ enum ipc_ioc_dir {
 	IPC_IOC_READ		= 1 << 1,	/* the caller gets data back */
 };
 
+/*
+ * What a passthru request carries. A command which transfers data to the
+ * controller sends its data, then its metadata, as the payload.
+ */
+enum ipc_cmd_flags {
+	IPC_CMD_ADMIN		= 1 << 0,	/* admin, not I/O, queue */
+	IPC_CMD_DATA		= 1 << 1,	/* payload has the data */
+	IPC_CMD_METADATA	= 1 << 2,	/* payload has the metadata */
+};
+
 /* Wire format shared with the Python IPC server -- keep both sides in sync. */
 struct __attribute__((packed)) ipc_request {
 	uint32_t type;		/* enum ipc_type */
@@ -153,7 +164,6 @@ struct __attribute__((packed)) ipc_request {
 	uint32_t cdw13;
 	uint32_t cdw14;
 	uint32_t cdw15;
-	uint64_t lpo;
 	uint32_t req_len;	/* command data length */
 	/* raw ioctl only: the decoded request number */
 	uint8_t  ioc_dir;	/* enum ipc_ioc_dir */
@@ -161,6 +171,14 @@ struct __attribute__((packed)) ipc_request {
 	uint8_t  ioc_nr;
 	uint8_t  big_endian;	/* byte order of the payload */
 	uint32_t ioc_size;
+	/* passthru only: the rest of the command */
+	uint8_t  flags;
+	uint8_t  cmd_flags;	/* enum ipc_cmd_flags */
+	uint8_t  rsvd2[2];
+	uint32_t cdw2;
+	uint32_t cdw3;
+	uint32_t metadata_len;
+	uint32_t timeout_ms;
 };
 
 struct __attribute__((packed)) ipc_response {
@@ -193,9 +211,12 @@ static void ipc_request_encode(struct ipc_request *r)
 	r->cdw13    = htole32(r->cdw13);
 	r->cdw14    = htole32(r->cdw14);
 	r->cdw15    = htole32(r->cdw15);
-	r->lpo      = htole64(r->lpo);
 	r->req_len  = htole32(r->req_len);
 	r->ioc_size = htole32(r->ioc_size);
+	r->cdw2     = htole32(r->cdw2);
+	r->cdw3     = htole32(r->cdw3);
+	r->metadata_len = htole32(r->metadata_len);
+	r->timeout_ms = htole32(r->timeout_ms);
 }
 
 static void ipc_response_decode(struct ipc_response *r)
@@ -853,9 +874,23 @@ static bool mock_ctrl_is_block(int fd, bool *is_block)
 	return false;
 }
 
+/*
+ * Bits 1:0 of an opcode give the direction of its data transfer. Like
+ * the kernel, treat a bidirectional command as a write.
+ */
+static bool opcode_is_write(uint8_t opcode)
+{
+	return opcode & 1;
+}
+
 static int handle_passthru_ioctl(int instance, unsigned long request,
 				  struct linux_passthru_cmd64 *cmd)
 {
+	bool admin = request == LIBNVME_IOCTL_ADMIN_CMD ||
+		request == LIBNVME_IOCTL_ADMIN64_CMD;
+	bool write = opcode_is_write(cmd->opcode);
+	uint32_t data_len = 0, metadata_len = 0;
+	__cleanup_free void *payload = NULL;
 	struct ipc_response resp;
 	void *resp_data;
 	int ipc_fd;
@@ -870,9 +905,28 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 		return -2;
 	}
 
+	if (write && cmd->addr)
+		data_len = cmd->data_len;
+	if (write && cmd->metadata)
+		metadata_len = cmd->metadata_len;
+	if (data_len + metadata_len) {
+		payload = malloc(data_len + metadata_len);
+		if (!payload) {
+			orig_close(ipc_fd);
+			errno = ENOMEM;
+			return -1;
+		}
+		if (data_len)
+			memcpy(payload, (void *)(uintptr_t)cmd->addr, data_len);
+		if (metadata_len)
+			memcpy((uint8_t *)payload + data_len,
+			       (void *)(uintptr_t)cmd->metadata, metadata_len);
+	}
+
 	struct ipc_request req = {
 		.type = IPC_TYPE_IOCTL,
 		.fd = instance, /* controller instance, not a real fd */
+		.data_len = data_len + metadata_len,
 		.request = request,
 		.opcode = cmd->opcode,
 		.nsid = cmd->nsid,
@@ -882,11 +936,18 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 		.cdw13 = cmd->cdw13,
 		.cdw14 = cmd->cdw14,
 		.cdw15 = cmd->cdw15,
-		.lpo = ((uint64_t)cmd->cdw13 << 32) | cmd->cdw12,
 		.req_len = cmd->data_len,
+		.flags = cmd->flags,
+		.cmd_flags = (admin ? IPC_CMD_ADMIN : 0) |
+			(data_len ? IPC_CMD_DATA : 0) |
+			(metadata_len ? IPC_CMD_METADATA : 0),
+		.cdw2 = cmd->cdw2,
+		.cdw3 = cmd->cdw3,
+		.metadata_len = cmd->metadata_len,
+		.timeout_ms = cmd->timeout_ms,
 	};
 
-	resp_data = ipc_call(ipc_fd, &req, NULL, &resp);
+	resp_data = ipc_call(ipc_fd, &req, payload, &resp);
 	mock_dbg("ioctl received IPC response status %d, sc_status %d, result %u, data_len %u\n",
 		 resp.status, resp.sc_status, resp.result, resp.data_len);
 
@@ -907,8 +968,11 @@ static int handle_passthru_ioctl(int instance, unsigned long request,
 		cmd->result = resp.result;
 	}
 
-	/* like the kernel, which transfers no data without a buffer */
-	if (resp_data && cmd->addr) {
+	/*
+	 * like the kernel, which transfers no data without a buffer, and
+	 * none back to the caller for a write
+	 */
+	if (resp_data && cmd->addr && !write) {
 		if (resp.data_len > cmd->data_len) {
 			mock_dbg("ioctl response data_len %u exceeds caller buffer %u, truncating\n",
 				 resp.data_len, cmd->data_len);
