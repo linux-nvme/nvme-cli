@@ -69,13 +69,14 @@ RawIoctl.byte_order = lambda self: '>' if self.big_endian else '<'
 class Command(collections.namedtuple('Command', [
         'instance', 'admin', 'opcode', 'flags', 'nsid', 'cdw2', 'cdw3',
         'cdw10', 'cdw11', 'cdw12', 'cdw13', 'cdw14', 'cdw15',
-        'data_len', 'metadata_len', 'timeout_ms', 'data', 'metadata'])):
+        'data_len', 'metadata_len', 'timeout_ms', 'data', 'metadata',
+        'pid'])):
     """An admin or I/O passthru command, as libmock_nvme.c decodes it.
     @instance is the controller instance it goes to (the N of
     /dev/nvmeN), @admin is True for the admin queue. @data_len and
     @metadata_len are the buffer sizes of the command. @data and
     @metadata are what a command which transfers data to the controller
-    sends, else None."""
+    sends, else None. @pid is the process which sends it."""
     __slots__ = ()
 
     @property
@@ -346,10 +347,13 @@ class MockIPCServer(threading.Thread):
                     metadata = payload
                 # fd is the controller instance, not a real fd (see
                 # libmock_nvme.c)
+                pid, _, _ = struct.unpack('3i', conn.getsockopt(
+                    socket.SOL_SOCKET, socket.SO_PEERCRED,
+                    struct.calcsize('3i')))
                 cmd = Command(fd, bool(cmd_flags & IPC_CMD_ADMIN), opcode,
                               flags, nsid, cdw2, cdw3, cdw10, cdw11, cdw12,
                               cdw13, cdw14, cdw15, req_len, metadata_len,
-                              timeout_ms, data, metadata)
+                              timeout_ms, data, metadata, pid)
                 self.handle_command(conn, cmd)
             elif req_type == IPC_TYPE_RAW_IOCTL:
                 ioc = RawIoctl(ioctl_request, ioc_dir, ioc_type, ioc_nr,
