@@ -716,7 +716,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	union {
 		__u32 short_pi[256];
 		__u64 long_pi[256];
-	} eilbrts;
+	} eilbrts = { 0 };
 
 	__u16 elbatms[256] = { 0 };
 	__u16 elbats[256] = { 0 };
