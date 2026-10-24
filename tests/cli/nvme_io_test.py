@@ -220,8 +220,11 @@ class SubmitIoTest(IoTestBase):
 
     def test_too_many_blocks(self):
         """NLB counts at most 65536 blocks"""
-        self.assertRefused(['write', self.ns, f'--data-size={65537 * 512}'],
-                           'exceeds 65536 logical blocks', OPC_NVM_WRITE)
+        for cmd, opcode, size in (('write', OPC_NVM_WRITE, 65537 * 512),
+                                  ('read', OPC_NVM_READ, 2**64 - 1)):
+            with self.subTest(cmd=cmd, size=size):
+                self.assertRefused([cmd, self.ns, f'--data-size={size}'],
+                                   'exceeds 65536 logical blocks', opcode)
 
     def test_data_size_required(self):
         self.assertRefused(['read', self.ns], 'data size not provided',
