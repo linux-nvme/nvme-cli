@@ -313,6 +313,17 @@ class FeatPluginReadModifyWriteTest(FeaturesTestBase):
         cmd, = self.set_features()
         self.assertEqual(cmd.data[32:48], bytes(range(16, 0, -1)))
 
+    def test_lba_range_type_too_many(self):
+        """NUM is 6 bits: up to 64 ranges"""
+        for num in (64, 255):
+            with self.subTest(num=num):
+                result = self.nvme('feat', 'lba-range-type', self.ctrl,
+                                   '--nsid=1', f'--num={num}')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(f'invalid number of LBA ranges: {num}',
+                              result.stderr)
+        self.assertEqual(self.set_features(), [])
+
     def test_lba_range_type_count_mismatch(self):
         result = self.nvme('feat', 'lba-range-type', self.ctrl, '--nsid=1',
                            '--num=1', '--types=2', '--lbaros=1',
