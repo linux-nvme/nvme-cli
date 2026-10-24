@@ -13,17 +13,19 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe over PCIe device given, sends an identify namespace command and
-provides the result and returned structure.
-For the NVMe over Fabrics device given, sends a fabric command and provides
-the result and returned structure.
+Reads and shows the controller registers. For an NVMe over PCIe controller,
+nvme maps its PCI memory space through sysfs (the resource0 file of the PCI
+device) and reads them there. For an NVMe over Fabrics controller, it reads
+its properties with Property Get commands: CAP, VS, CC, CSTS and the ones of
+NSSR, NSSD and CRTO the controller implements.
 
 The <device> parameter is mandatory and must be the nvme admin character
-device (ex: /dev/nvme0). For NVMe over PCIe, the program uses knowledge of the
-sysfs layout to map the device to the pci resource stored there and mmaps the
-memory to get access to the registers. For NVMe over Fabrics, the programs
-sends a fabric command to get the properties of the target NVMe controller.
-Only the supported properties are displayed.
+device (ex: /dev/nvme0).
+
+With -v, the fields of each register are shown decoded. The JSON output has
+the value of each register under its name, with -v an object of the value
+and its decoded fields. The binary output is the registers from 0h to E1Bh,
+as they are in the PCI memory space, with zeros for the ones not read.
 
 OPTIONS
 -------

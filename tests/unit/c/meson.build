@@ -62,3 +62,28 @@ test_plugin = executable(
 )
 
 test('nvme-cli - plugin-dispatch', test_plugin, suite: 'unit')
+
+test_bitfields = executable(
+    'test-bitfields',
+    ['test-bitfields.c', '../../../src/bitfields.c'],
+    include_directories: '../../../src',
+    dependencies: [config_dep],
+)
+
+test('nvme-cli - bitfields', test_bitfields, suite: 'unit')
+
+test_regs = executable(
+    'test-regs',
+    [
+        'test-regs.c',
+        '../../../src/nvme-regs.c',
+        '../../../src/bitfields.c',
+    ],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
+)
+
+test('nvme-cli - regs', test_regs, suite: 'unit')

@@ -5,6 +5,29 @@
 
 ### Feature removals and incompatible changes
 
+* The JSON output of `nvme show-regs`, `get-reg` and `get-property` has
+  one shape: the value of each register under its name, e.g.
+  `{"cc": 4587521}`, with `-v` an object of the value and its decoded
+  fields. Before, `get-reg` printed `{"register: 0x14": [{"name": "cc",
+  "value": ...}]}`, `get-property` the value as a hex string, and `-v`
+  wrapped each register in a one element array.
+
+* `nvme show-regs`, `get-reg` and `get-property -v` decode the fields of
+  the registers as the specification names them, the same in the normal
+  and the JSON output, which differed before. The composite fields are
+  split into theirs: CAP.CSS, CAP.AMS, CAP.CRMS and VS. The normal
+  output of `show-regs` names the Version register `vs`, like the JSON
+  output and the options, instead of `version`.
+
+* `nvme set-reg` falls back to a Property Set only for a controller
+  whose registers can't be mapped, a fabrics controller. Before, it set
+  the property after any failed write. It refuses a register the host
+  may not write and a value too large for a 32 bit register, and fails
+  without a register to write instead of doing nothing.
+
+* `nvme help` no longer lists the deprecated commands. They still
+  work, with a warning.
+
 * nvme-cli parses its command line itself instead of with getopt, so
   it behaves the same with every C library. Long options now need two
   dashes and their full name: single-dash long options such as
@@ -241,6 +264,13 @@
   platform.
 
 ### nvme-cli
+
+* `nvme get-reg --register=NAME[,NAME...]` and `nvme set-reg
+  --register=NAME --value=VAL` name the registers, with completion of
+  the names, and `--offset` of `get-reg`, `set-reg`, `get-property` and
+  `set-property` takes a name too, e.g. `--offset=cc`. The options of a
+  register each of earlier versions, like `get-reg --cc` and `set-reg
+  --cc=VAL`, still work, but are deprecated.
 
 * `nvme help <command>` finds the command like `nvme <command>` does,
   also by a unique prefix, and `nvme help <plugin> <command>` shows the

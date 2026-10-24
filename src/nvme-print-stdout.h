@@ -11,6 +11,8 @@ struct shr_table *stdout_kv_table_create(void);
 int stdout_kv_add(struct shr_table *t, const char *name,
 		const char *fmt, ...);
 void stdout_kv_table_finish(struct shr_table *t, const char *what);
+struct shr_table *stdout_bitfields_table(const struct bitfield *fields,
+					 unsigned int nr, uint64_t value);
 struct shr_table *stdout_bits_table_create(void);
 void stdout_bits_add(struct shr_table *t, const char *bits,
 		unsigned int val, const char *desc_fmt, ...);

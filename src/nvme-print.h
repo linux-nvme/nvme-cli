@@ -11,6 +11,7 @@
 
 #include "args.h"
 #include "nvme-json.h"
+#include "nvme-regs.h"
 #include <shared/int-util.h>
 #include <shared/mem-util.h>
 #include <shared/table-util.h>
@@ -47,25 +48,11 @@ enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_MULTIPATH,
 };
 
-enum prop_cap {
-	PROP_CAP_MQES,
-	PROP_CAP_CQR,
-	PROP_CAP_AMS,
-	PROP_CAP_TO,
-	PROP_CAP_DSTRD,
-	PROP_CAP_NSSRS,
-	PROP_CAP_CSS,
-	PROP_CAP_BPS,
-	PROP_CAP_CPS,
-	PROP_CAP_MPSMIN,
-	PROP_CAP_MPSMAX,
-	PROP_CAP_PMRS,
-	PROP_CAP_CMBS,
-	PROP_CAP_NSSS,
-	PROP_CAP_CRIMS,
-	PROP_CAP_CRWMS,
-	PROP_CAP_NSSES,
-	PROP_CAP_NONE,
+/* How nvme_show_ctrl_registers() shows the registers */
+enum nvme_regs_style {
+	NVME_REGS_TABLE,	/* show-regs: a row for each */
+	NVME_REGS_REGISTER,	/* get-reg: "register : offset (name), value" */
+	NVME_REGS_PROPERTY,	/* get-property: "property : ..." */
 };
 
 /*
@@ -381,8 +368,6 @@ static inline bool subsystem_iopolicy_filter(const char *name, void *arg)
 	return true;
 }
 
-int get_reg_size(int offset);
-bool nvme_is_ctrl_reg(int offset);
 
 struct nvme_error_log_filter {
 	bool valid;
@@ -406,8 +391,8 @@ struct print_ops {
 	void (*boot_part_log)(void *bp_log, const char *devname, __u32 size);
 	void (*phy_rx_eom_log)(struct nvme_phy_rx_eom_log *log, __u16 controller, size_t len);
 	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
-	void (*ctrl_registers)(void *bar, bool fabrics, __u32 unsupported);
-	void (*ctrl_register)(int offset, uint64_t value);
+	void (*ctrl_registers)(const struct nvme_reg_val *vals, unsigned int nr,
+			       enum nvme_regs_style style);
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result, void *buf, __u32 len);
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*effects_log_list)(struct list_head *list);
@@ -454,7 +439,6 @@ struct print_ops {
 	void (*secondary_ctrl_list)(const struct nvme_secondary_ctrl_list *sc_list, __u32 count);
 	void (*select_result)(enum nvme_features_id fid, __u64 result);
 	void (*self_test_log)(struct nvme_self_test_log *self_test, __u8 dst_entries, __u32 size, const char *devname);
-	void (*single_property)(int offset, uint64_t value64);
 	void (*smart_log)(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 	void (*supported_cap_config_list_log)(struct nvme_supported_cap_config_list_log *cap_log, size_t len);
 	void (*supported_log_pages)(struct nvme_supported_log_pages *support_log, const char *devname);
@@ -804,11 +788,9 @@ void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
 	size_t len, nvme_print_flags_t flags);
 void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_log *caplog,
 				size_t len, nvme_print_flags_t flags);
-void nvme_show_ctrl_registers(void *bar, bool fabrics, __u32 unsupported,
+void nvme_show_ctrl_registers(const struct nvme_reg_val *vals, unsigned int nr,
+			      enum nvme_regs_style style,
 			      nvme_print_flags_t flags);
-int nvme_show_ctrl_register(void *bar, bool fabrics, __u32 unsupported,
-			    int offset, nvme_print_flags_t flags);
-void nvme_show_single_property(int offset, uint64_t prop, nvme_print_flags_t flags);
 void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	nvme_print_flags_t flags);
@@ -900,11 +882,6 @@ const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid, __u8 ty
 const char *nvme_log_to_string(__u8 lid);
 const char *nvme_nss_hw_error_to_string(__u16 error_code);
 const char *nvme_pel_event_to_string(int type);
-const char *nvme_register_pmr_hsts_to_string(__u8 hsts);
-const char *nvme_register_unit_to_string(__u8 unit);
-const char *nvme_register_szu_to_string(__u8 szu);
-const char *nvme_register_to_string(int reg);
-const char *nvme_register_symbol_to_string(int offset);
 const char *nvme_resv_notif_to_string(__u8 type);
 const char *nvme_select_to_string(int sel);
 const char *nvme_sstat_status_to_string(__u16 status);
@@ -934,12 +911,6 @@ void nvme_show_init(void);
 void nvme_show_finish(void);
 void nvme_show_key_value(const char *key, const char *value, ...);
 void nvme_show_verbose_key_value(const char *key, const char *value, ...);
-bool nvme_is_fabrics_reg(int offset);
-bool nvme_is_fabrics_optional_reg(int offset);
-void nvme_fabrics_reg_set_unsupported(__u32 *unsupported, int offset);
-bool nvme_fabrics_reg_unsupported(__u32 unsupported, int offset);
-bool nvme_registers_cmbloc_support(__u32 cmbsz);
-bool nvme_registers_pmrctl_ready(__u32 pmrctl);
 const char *nvme_degrees_string(long t);
 const char *nvme_degrees_fahrenheit_string(long t);
 const char *nvme_format_timestamp(__u8 *timestamp_bytes);
@@ -948,6 +919,8 @@ const char *nvme_format_timestamp_sync(__u8 attr);
 void print_array(char *name, __u8 *data, int size);
 void json_print(struct json_object *r);
 struct json_object *obj_create_array_obj(struct json_object *o, const char *k);
+void json_bitfields(struct json_object *o, const struct bitfield *fields,
+		    unsigned int nr, uint64_t value);
 void nvme_show_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list,
 				  nvme_print_flags_t flags);
 void nvme_show_power_meas_log(struct nvme_power_meas_log *log, __u32 size,
@@ -1029,7 +1002,6 @@ void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 					 struct json_object *valid_attrs);
 const char *nvme_support_str(bool support);
 const char *nvme_yes_str(bool yes);
-const char *prop_cap_cps_str(uint8_t cps);
 
 extern const char *alloc_error;
 extern const char *feat_ae_dlpcn;
@@ -1053,4 +1025,3 @@ extern const char *feat_ae_telem;
 extern const char *feat_ae_fw;
 extern const char *feat_ae_nan;
 extern const char *feat_ae_smart;
-extern const char *prop_cap[][2];

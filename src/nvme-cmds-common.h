@@ -50,65 +50,6 @@ struct passthru_config {
 	bool	latency;
 };
 
-struct get_reg_config {
-	__u32 offset;
-	/*
-	 * the properties a fabrics controller doesn't implement, see
-	 * nvme_fabrics_reg_set_unsupported()
-	 */
-	__u32 unsupported;
-	bool cap;
-	bool vs;
-	bool intms;
-	bool intmc;
-	bool cc;
-	bool csts;
-	bool nssr;
-	bool aqa;
-	bool asq;
-	bool acq;
-	bool cmbloc;
-	bool cmbsz;
-	bool bpinfo;
-	bool bprsel;
-	bool bpmbl;
-	bool cmbmsc;
-	bool cmbsts;
-	bool cmbebs;
-	bool cmbswtp;
-	bool nssd;
-	bool crto;
-	bool pmrcap;
-	bool pmrctl;
-	bool pmrsts;
-	bool pmrebs;
-	bool pmrswtp;
-	bool pmrmscl;
-	bool pmrmscu;
-	bool fabrics;
-};
-
-struct set_reg_config {
-	__u32 offset;
-	bool mmio32;
-	__u64 value;
-	__u32 intms;
-	__u32 intmc;
-	__u32 cc;
-	__u32 csts;
-	__u32 nssr;
-	__u32 aqa;
-	__u64 asq;
-	__u64 acq;
-	__u32 bprsel;
-	__u64 bpmbl;
-	__u64 cmbmsc;
-	__u32 nssd;
-	__u32 pmrctl;
-	__u32 pmrmscl;
-	__u32 pmrmscu;
-};
-
 struct nvme_get_log_args {
 	__u32 nsid;
 	bool rae;

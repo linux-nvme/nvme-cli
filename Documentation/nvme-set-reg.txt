@@ -8,88 +8,50 @@ nvme-set-reg - Writes and shows the defined NVMe controller register
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'set-reg' <device> [--offset=<offset>, -O <offset>]
+'nvme' [<global-options>] 'set-reg' <device>
+			[--register=<name> | -r <name>] [--offset=<offset> | -O <offset>]
 			[--value=<val> | -V <val>] [--mmio32 | -m]
-			[--intms=<val>] [--intmc=<val>] [--cc=<val>]
-			[--csts=<val>] [--nssr=<val>] [--aqa=<val>]
-			[--asq=<val>] [--acq=<val>] [--bprsel=<val>]
-			[--bpmbl=<val>] [--cmbmsc=<val>] [--nssd=<val>]
-			[--pmrctl=<val>] [--pmrmscl=<val>] [--pmrmscu=<val>]
 
 DESCRIPTION
 -----------
-Writes and shows the defined NVMe controller register.
+Writes a controller register: of an NVMe over PCIe controller in its PCI
+memory space, of an NVMe over Fabrics controller, which has no PCI memory
+space, the property with a Property Set command.
 
 The <device> parameter is mandatory and must be the nvme admin character
 device (ex: /dev/nvme0).
 
 OPTIONS
 -------
+-r <name>::
+--register=<name>::
+	The register to write, by name: one of the registers the host may
+	write, intms, intmc, cc, csts, nssr, aqa, asq, acq, bprsel, bpmbl, cmbmsc, nssd, pmrctl, pmrmscl, pmrmscu.
+
 -O <offset>::
 --offset=<offset>::
-	offset of the requested register
+	The register to write, by offset or name, e.g. 0x14 or cc.
 
 -V <val>::
 --value=<val>::
-	the value of the register to be set
+	The value to write. A 32 bit register refuses a larger value.
 
---mmio32::
 -m::
-	Access 64-bit registers as 2 32-bit
+--mmio32::
+	Write a 64 bit register as two 32 bit accesses.
 
---intms=<val>::
-	INTMS=0xc register offset
-
---intmc=<val>::
-	INTMC=0x10 register offset
-
---cc=<val>::
-	CC=0x14 register offset
-
---csts=<val>::
-	CSTS=0x1c register offset
-
---nssr=<val>::
-	NSSR=0x20 register offset
-
---aqa=<val>::
-	AQA=0x24 register offset
-
---asq=<val>::
-	ASQ=0x28 register offset
-
---acq=<val>::
-	ACQ=0x30 register offset
-
---bprsel=<val>::
-	BPRSEL=0x44 register offset
-
---bpmbl=<val>::
-	BPMBL=0x48 register offset
-
---cmbmsc=<val>::
-	CMBMSC=0x50 register offset
-
---nssd=<val>::
-	NSSD=0x64 register offset
-
---pmrctl=<val>::
-	PMRCTL=0xe04 register offset
-
---pmrmscl=<val>::
-	PMRMSCL=0xe14 register offset
-
---pmrmscu=<val>::
-	PMRMSCU=0xe18 register offset
+The options --cc=<val>, --aqa=<val> and so on of earlier versions, one for
+each register the host may write, still work, but are deprecated: use
+--register and --value.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* The following will run the set-reg command with offset 0x14 and value 0x460000
+* Write 0x460000 to the Controller Configuration register
 +
 ------------
-# nvme set-reg /dev/nvme0 -O 0x14 -V 0x460000
+# nvme set-reg /dev/nvme0 --register=cc --value=0x460000
 ------------
 
 NVME
