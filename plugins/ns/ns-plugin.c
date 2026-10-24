@@ -186,7 +186,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		nvme_init_identify_ctrl(&cmd, &ctrl);
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err) {
-			nvme_show_error("identify-ctrl %s", libnvme_strerror(-err));
+			nvme_show_err(err, "identify-ctrl");
 			return err;
 		}
 		cntlist->num = cpu_to_le16(1);

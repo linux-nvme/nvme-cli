@@ -228,6 +228,13 @@ class NsAttachTest(MockTestCase):
         self.assertControllerList(cmd, [1, 2, 0x30])
         self.assertEqual(self.server.identifies(), [])
 
+    def test_identify_failed(self):
+        self.server.identify[CNS_CTRL] = 0x2      # Invalid Field
+        result = self.nvme('ns', 'attach', self.ctrl, '--namespace-id=2')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Invalid Field in Command', result.stderr)
+        self.assertEqual(self.attachments(), [])
+
     def test_invalid(self):
         cases = [
             (self.ctrl, [], 'namespace-id parameter required'),
