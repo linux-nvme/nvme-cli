@@ -139,6 +139,12 @@ if python3.found()
             ]
         endif
 
+        if 'security' in selected_plugins
+            mock_cli_tests += [
+                ['security', 'nvme_security_test.py', cli_test_env, 30],
+            ]
+        endif
+
         if 'id' in selected_plugins and json_c_dep.found()
             mock_cli_tests += [
                 ['ns-descs', 'nvme_ns_descs_test.py', cli_test_env, 30],
