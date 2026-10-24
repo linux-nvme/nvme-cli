@@ -267,6 +267,18 @@ class FabricsRegsTest(MockTestCase):
                                     result.stdout),
                          [('0000', '0x2028030fff'), ('0x14', '0x460001')])
 
+    def test_get_reg_not_property(self):
+        """A register which is no property of a fabrics controller fails
+        get-reg, after the properties"""
+        for args in (['--offset=0xe00'], ['--cap', '--pmrcap']):
+            with self.subTest(args=args):
+                result = self.nvme('get-reg', self.ctrl, *args)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('register: 0xe00 (Persistent Memory Region '
+                              'Capabilities) not fabrics', result.stderr)
+                if '--cap' in args:
+                    self.assertIn('value: 0x2028030fff', result.stdout)
+
     def test_set_property(self):
         """ATTRIB gives the size of the property at OFST, the value is in
         Command Dwords 12 and 13"""

@@ -736,14 +736,15 @@ bool nvme_registers_pmrctl_ready(__u32 pmrctl)
 	return NVME_PMRCTL_EN(pmrctl);
 }
 
-void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_flags_t flags)
+int nvme_show_ctrl_register(void *bar, bool fabrics, int offset,
+			    nvme_print_flags_t flags)
 {
 	uint64_t value;
 
 	if (fabrics && !nvme_is_fabrics_reg(offset)) {
 		nvme_show_error("register: %#04x (%s) not fabrics", offset,
 				nvme_register_to_string(offset));
-		return;
+		return -EINVAL;
 	}
 
 	if (nvme_is_64bit_reg(offset))
@@ -752,6 +753,8 @@ void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_fla
 		value = shr_mmio_read32(bar + offset);
 
 	nvme_print(ctrl_register, flags, offset, value);
+
+	return 0;
 }
 
 void nvme_show_ctrl_registers(void *bar, bool fabrics, nvme_print_flags_t flags)

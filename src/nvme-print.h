@@ -805,7 +805,8 @@ void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
 void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_log *caplog,
 				size_t len, nvme_print_flags_t flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, nvme_print_flags_t flags);
-void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_flags_t flags);
+int nvme_show_ctrl_register(void *bar, bool fabrics, int offset,
+			    nvme_print_flags_t flags);
 void nvme_show_single_property(int offset, uint64_t prop, nvme_print_flags_t flags);
 void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
