@@ -303,6 +303,11 @@ static int perfc_set(struct libnvme_transport_handle *hdl, __u8 fid, __u32 cdw11
 		data.std_perf->r4karl = cfg->r4karl;
 		break;
 	case NVME_FEAT_PERFC_ATTRI_VS_MIN ... NVME_FEAT_PERFC_ATTRI_VS_MAX:
+		if (cfg->attrl > sizeof(data.vs_perf->vs)) {
+			nvme_show_error("attribute length %u exceeds %zu bytes",
+					cfg->attrl, sizeof(data.vs_perf->vs));
+			return -EINVAL;
+		}
 		libnvme_uuid_from_string(cfg->paid, data.vs_perf->paid);
 		data.vs_perf->attrl = cfg->attrl;
 		if (data.vs_perf->attrl && strlen(cfg->vs_data)) {
