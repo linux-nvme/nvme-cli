@@ -706,8 +706,9 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 		}
 	}
 
-	if (cfg.zra == NVME_ZNS_ZRA_REPORT_ZONES && !cfg.data_len) {
-		nvme_show_error("error: data len is needed for NVME_ZRA_ZONE_REPORT");
+	/* Each action returns data: NUMD is 0's based. */
+	if (!cfg.data_len) {
+		nvme_show_error("data length (--data-len) has to be given");
 		return -EINVAL;
 	}
 	if (cfg.data_len) {
