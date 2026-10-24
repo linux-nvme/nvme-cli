@@ -117,6 +117,7 @@ ID_CTRL_FIELDS = {
     'fr': ('8s', 64),
     'cntlid': ('<H', 78),
     'ctratt': ('<I', 96),
+    'oacs': ('<H', 256),
     'frmw': ('B', 260),
     'lpa': ('B', 261),
     'elpe': ('B', 262),

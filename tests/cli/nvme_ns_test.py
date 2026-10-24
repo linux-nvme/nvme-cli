@@ -23,6 +23,7 @@ CNS_ACTIVE_NS_LIST = 0x02
 CNS_NS_GRANULARITY = 0x16
 CSI_ZNS = 0x02
 CTRATT_NS_GRANULARITY = 1 << 7
+OACS_NMS = 1 << 3
 ONE_MIB = 1 << 20
 
 
@@ -115,6 +116,16 @@ class NsCreateTest(MockTestCase):
         nsze, ncap = struct.unpack_from('<QQ', cmd.data)
         self.assertEqual((nsze, ncap),
                          (954 * ONE_MIB // 4096, ONE_MIB // 4096))
+
+    def test_si_units_ns_management(self):
+        """With Namespace Management, the LBA format of the common
+        namespace capabilities"""
+        self.server.identify[CNS_CTRL] = id_ctrl(oacs=OACS_NMS)
+        cmd, _ = self.create('--nsze-si=1M', '--ncap-si=1M', '--flbas=2')
+        self.assertEqual(struct.unpack_from('<QQ', cmd.data),
+                         (ONE_MIB // 4096, ONE_MIB // 4096))
+        self.assertEqual([c.nsid for c in self.server.identifies(CNS_NS)],
+                         [NSID_ALL, NSID_ALL])
 
     def test_si_units_without_suffix(self):
         """A number without a suffix is in logical blocks, also a
