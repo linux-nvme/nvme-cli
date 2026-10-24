@@ -71,7 +71,8 @@ class ZnsTestBase(MockTestCase):
         if 'invalid sub-command' in result.stderr:
             self.skipTest('zns plugin not built')
         self.assertOk(result)
-        cmd, = self.zns_cmds(opcode)
+        self.assertEqual(self.server.admin_cmds(opcode), [])
+        cmd, = self.server.io_cmds(opcode)
         return cmd
 
     def assertRefused(self, args, message, opcode):
