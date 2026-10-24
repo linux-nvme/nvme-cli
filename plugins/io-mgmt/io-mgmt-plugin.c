@@ -162,9 +162,10 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 		}
 	}
 
-	/* NUMD is 0's based */
-	if (!cfg.data_len) {
-		nvme_show_error("data length (--data-len) has to be given");
+	/* NUMD is a 0's based count of dwords */
+	if (!cfg.data_len || cfg.data_len % 4) {
+		nvme_show_error(
+			"--data-len must be a non-zero multiple of 4");
 		return -EINVAL;
 	}
 
