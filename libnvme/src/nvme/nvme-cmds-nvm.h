@@ -794,9 +794,9 @@ nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
-		copy[i].elbt = htobe32(elbts[i]);
-		copy[i].elbatm = htobe16(elbatms[i]);
-		copy[i].elbat = htobe16(elbats[i]);
+		copy[i].elbt = htole32(elbts[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
 	}
 }
 
@@ -822,9 +822,13 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
+		/*
+		 * Unlike the other fields, the 80 bit ELBT is big endian, the
+		 * byte order of the Storage and Reference Space it carries.
+		 */
 		*(__be64 *)&copy[i].elbt[2] = htobe64(eilbrts[i]);
-		copy[i].elbatm = htobe16(elbatms[i]);
-		copy[i].elbat = htobe16(elbats[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
 	}
 }
 
@@ -853,9 +857,9 @@ nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
-		copy[i].elbt = htobe32(elbts[i]);
-		copy[i].elbatm = htobe16(elbatms[i]);
-		copy[i].elbat = htobe16(elbats[i]);
+		copy[i].elbt = htole32(elbts[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
 	}
 }
 
@@ -886,9 +890,13 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
+		/*
+		 * Unlike the other fields, the 80 bit ELBT is big endian, the
+		 * byte order of the Storage and Reference Space it carries.
+		 */
 		*(__be64 *)&copy[i].elbt[2] = htobe64(eilbrts[i]);
-		copy[i].elbatm = htobe16(elbatms[i]);
-		copy[i].elbat = htobe16(elbats[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
 	}
 }
 
