@@ -339,6 +339,27 @@
 * `nvme log persistent-event` fails for a log larger than 4 GiB, which
   it can't read, instead of printing a part of it as the whole log.
 
+* `nvme sanitize-ns` sends the Sanitize Namespace command to the
+  namespace of the device, or to the one the new `--namespace-id`
+  option gives. Before, it sent it with NSID 0, which the controller
+  rejects.
+
+* `nvme set-feature` sends the timestamp of `--value` little endian,
+  and no longer in Command Dword 11. It refuses a value which doesn't
+  fit: 32 bits, 48 for the timestamp. Before, it cut off the rest.
+
+* `nvme device-self-test --wait` aborts the self-test on Ctrl-C again,
+  and no longer waits for a self-test which is done before it reads the
+  progress the first time. Without a self-test code, it fails when it
+  can't read the progress, instead of reporting no running self-test.
+
+* `nvme sanitize --wait` waits for the estimated time on big endian
+  hosts too, and no longer fails on a sanitize without an estimated
+  time, like exit-failure, which is done. `--repeat=0` is refused.
+
+* `nvme format` on a controller without `--namespace-id` tells how to
+  format a namespace or all of them.
+
 ### Plugins
 
 * `nvme feat num-queues --nsqr=N` without `--ncqr` keeps the current
@@ -367,6 +388,30 @@
   affected subcommands fail with a clear error instead of depending
   on whatever `tar`/`zip` happens to be on `PATH`. See
   [BUILDING.md](Documentation/BUILDING.md).
+
+* `nvme feat perf-characteristics` no longer crashes after it sets the
+  feature. It refuses an `--attrl` above 4064 bytes, which overflowed a
+  buffer, and sends the attribute length little endian.
+
+* `nvme feat arbitration` sets the feature only with the option of a
+  field. Before, any option but `--sel`, like `-o json`, set it.
+
+* `nvme feat power-meas` gets the feature with `--uuid-index` too.
+
+* `nvme feat timestamp` clears the attributes of the timestamp it sets.
+  Before, they were whatever was on the stack.
+
+* `nvme feat lba-range-type` takes `--guids` as optional on every
+  architecture, refuses a `--num` above 63, which set 64 zeroed ranges,
+  and shows its own description in its help.
+
+* `nvme fw commit` reports a commit which needs a reset to activate
+  the image as a success. `nvme fw download` and `nvme security recv`
+  send the `--ish` flag of an NVMe-MI command.
+
+* `nvme ns create --nsze-si` and `--ncap-si` take the namespace
+  granularity of a format with extended metadata, and the LBA format
+  on big endian hosts, right, and align to a granularity above 4 GiB.
 
 ### nvme-discoverd
 
