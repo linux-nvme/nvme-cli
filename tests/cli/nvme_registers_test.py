@@ -216,6 +216,21 @@ class FabricsRegsTest(MockTestCase):
         return [cmd for cmd in self.server.admin_cmds(OPC_FABRICS)
                 if cmd.nsid == fctype]
 
+    def test_show_regs(self):
+        """The properties of a fabrics controller: CAP, VS, CC, CSTS and
+        the optional NSSR, which the controller doesn't implement"""
+        result = self.assertOk(self.nvme('show-regs', self.ctrl))
+        # ATTRIB (size: 0 for 4 bytes, 1 for 8 bytes); OFST
+        self.assertEqual([(c.cdw10, c.cdw11) for c in
+                          self.property_cmds(FCTYPE_PROPERTY_GET)],
+                         [(1, 0x00), (0, 0x08), (0, 0x14), (0, 0x1c),
+                          (0, 0x20)])
+        for name in ('cap', 'vs', 'cc', 'csts'):
+            with self.subTest(name=name):
+                show = SHOW_NAMES.get(name, name)
+                self.assertRegex(result.stdout,
+                                 rf'(?m)^{show}\s*: {value_str(REGS[name])}$')
+
     def test_get_property(self):
         result = self.assertOk(self.nvme('get-property', self.ctrl,
                                          '--offset=0'))
@@ -230,6 +245,16 @@ class FabricsRegsTest(MockTestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('offset required param', result.stderr)
         self.assertEqual(self.server.commands, [])
+
+    def test_get_reg(self):
+        result = self.assertOk(self.nvme('get-reg', self.ctrl, '--cap',
+                                         '--cc'))
+        self.assertEqual([(c.cdw10, c.cdw11) for c in
+                          self.property_cmds(FCTYPE_PROPERTY_GET)],
+                         [(1, 0x00), (0, 0x14)])
+        self.assertEqual(re.findall(r'register : (\w+) .*value: (\w+)',
+                                    result.stdout),
+                         [('0000', '0x2028030fff'), ('0x14', '0x460001')])
 
     def test_set_property(self):
         """ATTRIB gives the size of the property at OFST, the value is in

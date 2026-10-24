@@ -35,6 +35,7 @@
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/mmio-util.h>
 #include <shared/parse-util.h>
 #include <shared/sig-util.h>
 #include <shared/suffix-util.h>
@@ -120,11 +121,12 @@ static int nvme_get_properties(struct libnvme_transport_handle *hdl, void **pbar
 		if (err)
 			break;
 
+		/* Little endian, as the printers read the registers */
 		is_64bit = nvme_is_64bit_reg(cfg->offset);
 		if (is_64bit)
-			*(uint64_t *)(bar + cfg->offset) = value;
+			shr_mmio_write64(bar + cfg->offset, value, true);
 		else
-			*(uint32_t *)(bar + cfg->offset) = value;
+			shr_mmio_write32(bar + cfg->offset, value);
 	}
 
 	if (err)
@@ -289,9 +291,9 @@ static int get_register_properties(struct libnvme_transport_handle *hdl,
 		}
 
 		if (nvme_is_64bit_reg(offset))
-			*(uint64_t *)(bar + offset) = value;
+			shr_mmio_write64(bar + offset, value, true);
 		else
-			*(uint32_t *)(bar + offset) = value;
+			shr_mmio_write32(bar + offset, value);
 	}
 
 	*pbar = bar;
