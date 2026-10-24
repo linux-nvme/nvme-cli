@@ -11,6 +11,10 @@ waits for the progress of a self-test from the Device Self-test log page.
 
 Usage: python3 nvme_device_self_test_test.py <path-to-nvme-binary> <mock-lib>
 """
+import os
+import signal
+import threading
+
 from tests.cli.nvme_mock import NSID_ALL, MockTestCase, main
 
 OPC_DEVICE_SELF_TEST = 0x14
@@ -79,6 +83,26 @@ class DeviceSelfTestTest(MockTestCase):
     def test_wait(self):
         self.assertOk(self._wait((1, 10), (1, 60), (0, 0)))
         self.assertEqual(len(self.server.log_reads(LID_DEVICE_SELF_TEST)), 3)
+
+    def test_wait_interrupted(self):
+        """Ctrl-C while waiting aborts the self-test"""
+        if os.environ.get('NVME_PRIVSEP_TEST_HELPER'):
+            self.skipTest('the privsep helper sends the commands')
+
+        def progress(cmd):
+            # during the sleep before the next read
+            if not self.server.log_reads(LID_DEVICE_SELF_TEST)[:-1]:
+                threading.Timer(0.3, os.kill,
+                                (cmd.pid, signal.SIGINT)).start()
+            return self_test_log(1, 10)
+
+        self.server.logs[LID_DEVICE_SELF_TEST] = progress
+        result = self.nvme('device-self-test', self.ctrl,
+                           '--self-test-code=1', '--namespace-id=1', '--wait')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Interrupted', result.stderr)
+        self.assertEqual([(c.nsid, c.cdw10) for c in self.self_tests()],
+                         [(1, 1), (1, 0xf)])
 
     def test_wait_progress_backwards(self):
         result = self._wait((1, 60), (1, 10))

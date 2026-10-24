@@ -61,7 +61,7 @@ static int nvme_sleep(unsigned int seconds)
 
 	if (shr_sigint_received) {
 		nvme_show_error("Interrupted device self-test operation by SIGINT");
-		return -SIGINT;
+		return -EINTR;
 	}
 
 	return 0;
