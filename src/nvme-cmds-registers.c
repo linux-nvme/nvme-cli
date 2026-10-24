@@ -283,7 +283,7 @@ static int get_register_properties(struct libnvme_transport_handle *hdl,
 		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
 			value = -1;
 		} else if (err) {
-			nvme_show_error("get-property: %s", libnvme_strerror(-err));
+			nvme_show_err(err, "get-property");
 			free(bar);
 			return err;
 		} else {

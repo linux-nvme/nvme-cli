@@ -26,6 +26,7 @@ OPC_FABRICS = 0x7f
 FCTYPE_PROPERTY_SET = 0x00
 FCTYPE_PROPERTY_GET = 0x04
 SC_INVALID_FIELD = 0x02
+SC_INTERNAL = 0x06
 
 REGS = {
     'cap': 0x0000002028030fff,
@@ -278,6 +279,15 @@ class FabricsRegsTest(MockTestCase):
                               'Capabilities) not fabrics', result.stderr)
                 if '--cap' in args:
                     self.assertIn('value: 0x2028030fff', result.stdout)
+
+    def test_get_reg_error(self):
+        """A failed Property Get with its status"""
+        self.server.admin[OPC_FABRICS] = (
+            lambda cmd: SC_INTERNAL if cmd.cdw11 == 0 else
+            self.property_cmd(cmd))
+        result = self.nvme('get-reg', self.ctrl, '--cap')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Internal Error', result.stderr)
 
     def test_set_property(self):
         """ATTRIB gives the size of the property at OFST, the value is in
