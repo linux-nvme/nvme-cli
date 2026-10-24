@@ -89,6 +89,16 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 	if (err)
 		return err;
 
+	/* Namespace 1 is the default of a controller device only. */
+	if (!argconfig_given(opts, &cfg.namespace_id) &&
+	    libnvme_transport_handle_is_ns(hdl)) {
+		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
+		if (err < 0) {
+			nvme_show_err(err, "get-namespace-id");
+			return err;
+		}
+	}
+
 	switch (cfg.dtype) {
 	case NVME_DIRECTIVE_DTYPE_IDENTIFY:
 		switch (cfg.doper) {
@@ -215,6 +225,16 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	/* Namespace 1 is the default of a controller device only. */
+	if (!argconfig_given(opts, &cfg.namespace_id) &&
+	    libnvme_transport_handle_is_ns(hdl)) {
+		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
+		if (err < 0) {
+			nvme_show_err(err, "get-namespace-id");
+			return err;
+		}
+	}
 
 	if (nvme_args.verbose)
 		flags |= VERBOSE;

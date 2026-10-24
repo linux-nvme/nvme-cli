@@ -10,7 +10,7 @@ the NVM Express Base Specification 2.3.
 
 Usage: python3 nvme_dir_send_test.py <path-to-nvme-binary> <mock-lib>
 """
-from tests.cli.nvme_mock import MockTestCase, main
+from tests.cli.nvme_mock import NVME_IOCTL_ID, MockTestCase, Reply, main
 
 OPC_DIRECTIVE_SEND = 0x19
 
@@ -23,8 +23,8 @@ DOPER_STREAMS_RELEASE_RES = 2
 
 class DirSendTest(MockTestCase):
 
-    def send(self, *args):
-        result = self.nvme('dir', 'send', self.ctrl, *args)
+    def send(self, *args, device=None):
+        result = self.nvme('dir', 'send', device or self.ctrl, *args)
         if 'invalid sub-command' in result.stderr:
             self.skipTest('dir plugin not built')
         self.assertOk(result)
@@ -59,6 +59,19 @@ class DirSendTest(MockTestCase):
                 self.assertEqual((cmd.cdw11, cmd.cdw12),
                                  (dspec << 16 | DTYPE_STREAMS << 8 | doper,
                                   0))
+
+    def test_namespace_id(self):
+        """The namespace of a namespace device, namespace 1 of a
+        controller device, unless --namespace-id is given"""
+        self.server.ioctls[NVME_IOCTL_ID] = Reply(status=2)
+        for device, args, nsid in ((self.ns, [], 2), (self.ctrl, [], 1),
+                                   (self.ns, ['--namespace-id=3'], 3)):
+            with self.subTest(device=device, args=args):
+                self.server.commands.clear()
+                cmd = self.send(f'--dir-type={DTYPE_STREAMS}',
+                                f'--dir-oper={DOPER_STREAMS_RELEASE_RES}',
+                                *args, device=device)
+                self.assertEqual(cmd.nsid, nsid)
 
     def test_invalid(self):
         cases = [
