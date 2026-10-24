@@ -706,9 +706,10 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 		}
 	}
 
-	/* Each action returns data: NUMD is 0's based. */
-	if (!cfg.data_len) {
-		nvme_show_error("data length (--data-len) has to be given");
+	/* Each action returns data: NUMD is a 0's based count of dwords. */
+	if (!cfg.data_len || cfg.data_len % 4) {
+		nvme_show_error(
+			"--data-len must be a non-zero multiple of 4");
 		return -EINVAL;
 	}
 	if (cfg.data_len) {
