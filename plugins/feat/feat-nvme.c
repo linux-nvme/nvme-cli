@@ -1304,7 +1304,7 @@ static int lba_range_type_set(struct libnvme_transport_handle *hdl, __u8 fid,
 	nvme_init_get_features_lba_range(&cmd, cfg->nsid, gsel, &data);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
-		nvme_show_err(err, "Get %s", host_behavior_feat);
+		nvme_show_err(err, "Get %s", lba_range_feat);
 		return err;
 	}
 
@@ -1418,7 +1418,7 @@ static int feat_lba_range_type(int argc, char **argv, struct command *acmd,
 	if (!feat)
 		return -ENOMEM;
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, HOST_BEHAVIOR_DESC, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, LBA_RANGE_DESC, opts);
 	if (err)
 		return err;
 
