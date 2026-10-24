@@ -154,10 +154,15 @@ class NsCreateTest(MockTestCase):
         struct.pack_into('<QQ', granularity, 32 + 2 * 16, 4 * ONE_MIB,
                          64 * 1024)
         self.server.identify[CNS_NS_GRANULARITY] = bytes(granularity)
-        cmd, _ = self.create('--nsze-si=5M', '--ncap-si=100k', '--flbas=2')
-        nsze, ncap = struct.unpack_from('<QQ', cmd.data)
-        self.assertEqual((nsze, ncap),
-                         (8 * ONE_MIB // 4096, 128 * 1024 // 4096))
+        # the LBA format of FLBAS, also with extended metadata (bit 4)
+        for flbas in ('2', '0x12'):
+            with self.subTest(flbas=flbas):
+                self.server.commands.clear()
+                cmd, _ = self.create('--nsze-si=5M', '--ncap-si=100k',
+                                     f'--flbas={flbas}')
+                nsze, ncap = struct.unpack_from('<QQ', cmd.data)
+                self.assertEqual((nsze, ncap),
+                                 (8 * ONE_MIB // 4096, 128 * 1024 // 4096))
 
 
     def test_si_units_granularity_above_4g(self):
