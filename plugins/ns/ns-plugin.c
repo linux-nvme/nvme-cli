@@ -489,7 +489,9 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		nvme_init_identify_ns_granularity(&cmd, gr_list);
 		if (!libnvme_exec_admin_passthru(hdl, &cmd)) {
 			struct nvme_id_ns_granularity_desc *desc;
-			int index = cfg.flbas;
+			__u8 index;
+
+			nvme_id_ns_flbas_to_lbaf_inuse(cfg.flbas, &index);
 
 			/* FIXME: add a proper bitmask to libnvme */
 			if (!(le32_to_cpu(gr_list->attributes) & 1)) {
