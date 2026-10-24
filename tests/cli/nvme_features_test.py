@@ -223,6 +223,18 @@ class FeatPluginGetTest(FeaturesTestBase):
                 self.assertEqual(get.fid, FID_ARBITRATION)
 
 
+    def test_uuid_index(self):
+        for command, fid in (('power-limit', FID_POWER_LIMIT),
+                             ('power-thresh', FID_POWER_THRESH),
+                             ('power-meas', FID_POWER_MEASUREMENT)):
+            with self.subTest(command=command):
+                self.server.commands.clear()
+                self.assertOk(self.nvme('feat', command, self.ctrl,
+                                        '--uuid-index=3'))
+                get, = self.server.admin_cmds(OPC_GET_FEATURES)
+                self.assertEqual((get.fid, get.uuid_index), (fid, 3))
+
+
 class FeatPluginReadModifyWriteTest(FeaturesTestBase):
     """The feat commands which keep the fields not given, from the value
     Get Features reads: of the saved value with --save."""
