@@ -274,6 +274,24 @@ class CopyTest(IoTestBase):
                           struct.unpack_from('<H', r, 22)[0])
                          for r in ranges], [(1, 0x8000), (2, 0)])
 
+    def test_no_tags(self):
+        """Without the tag options, the tag fields of the source ranges
+        are 0"""
+        for fmt in (0, 1, 2, 3):
+            with self.subTest(format=fmt):
+                self.server.commands.clear()
+                args = ['--slbs=0x10,0x20', '--blocks=7,15', f'--format={fmt}']
+                if fmt >= 2:
+                    args.append('--snsids=1,2')
+                cmd = self.copy(*args)
+                for i, r in enumerate(self.ranges(cmd, fmt)):
+                    entry = bytearray(COPY_RANGE_SIZE[fmt])
+                    if fmt >= 2:
+                        struct.pack_into('<I', entry, 0, i + 1)
+                    struct.pack_into('<QH', entry, 8, 0x10 * (i + 1),
+                                     8 * i + 7)
+                    self.assertEqual(r, bytes(entry))
+
     def test_invalid(self):
         cases = [
             (['--slbs=0', '--blocks=1', '--format=4'], 'invalid format'),
