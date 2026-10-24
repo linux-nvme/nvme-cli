@@ -21,29 +21,11 @@ nvme-fuzz seeds), where fuzzed data rarely gets past these checks.
 
 Usage: python3 wdc_mock_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
-import os
-import shutil
 import struct
-import sys
-import tempfile
-import unittest
 
-from tests.cli.nvme_mock_ipc import (MockIPCServer, make_mock_env,
-                                     resolve_mock_lib_path, run_nvme)
-
-NVME_BIN = (sys.argv[1]
-            if len(sys.argv) > 1 and not sys.argv[1].startswith('-')
-            else 'nvme')
-MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-HAVE_JSON = os.environ.get('NVME_TEST_JSON', '1') == '1'
-
-OPC_GET_LOG_PAGE = 0x02
-OPC_IDENTIFY = 0x06
-CNS_ID_CTRL = 0x01
-CNS_UUID_LIST = 0x17
-
-# Identify Controller: CTRATT bit 9, UUID List supported
-CTRATT_UUID_LIST = 1 << 9
+from tests.cli.nvme_mock import (CNS_CTRL, CNS_UUID_LIST, CTRATT_UUID_LIST,
+                                 HAVE_JSON, MockController, MockTestCase,
+                                 id_ctrl, main, uuid_list)
 
 WDC_UUID = bytes.fromhex('2db98c520c4c5a15abe633299a70dfd0')
 
@@ -118,95 +100,63 @@ def smart_log():
     return log
 
 
-class WdcMockServer(MockIPCServer):
-    """A WDC controller with the PCI vendor ID @vid. A C0 log of a client
-    drive (SanDisk vendor ID) has the extended SMART GUID."""
+def supported_log_pages():
+    """Every vendor specific log page is supported"""
+    supported = bytearray(1024)
+    for vendor_lid in range(0xc0, 0x100):
+        struct.pack_into('<I', supported, vendor_lid * 4, 1)
+    return supported
 
-    def __init__(self, sock_path, vid):
+
+def c2_log(cmd):
+    """Two logs share the ID: the WDC UUID selects the Device Management
+    log"""
+    if cmd.uuid_index:
+        return c2_device_management_log()[cmd.lpo:]
+    return fw_activate_history_log()[cmd.lpo:]
+
+
+class WdcController(MockController):
+    """A WDC controller with the WDC UUID and the vendor specific log
+    pages the commands read, but for C0, which depends on the model."""
+
+    def __init__(self, sock_path):
         super().__init__(sock_path)
-        self.vid = vid
-        self.logs = {
+        self.identify[CNS_UUID_LIST] = uuid_list(WDC_UUID)
+        self.logs.update({
+            0x00: supported_log_pages(),
             0x02: smart_log(),
-            0xc0: (ocp_log(512, GUID_EXT_SMART_C0, 3) if vid == 0x15b7
-                   else ocp_c0_log()),
             0xc1: ocp_log(512, GUID_C1),
+            0xc2: c2_log,
             0xc3: ocp_log(512, GUID_C3),
             0xc4: ocp_log(4096, GUID_C4),
             0xc5: ocp_log(4096, GUID_C5),
             0xc6: ocp_log(512, GUID_HW_REV_C6),
-        }
-
-    def id_ctrl(self):
-        data = bytearray(4096)
-        struct.pack_into('<HH', data, 0, self.vid, self.vid)
-        data[4:24] = b'WDC0123456789'.ljust(20)
-        data[24:64] = b'WDC Mock SSD'.ljust(40)
-        data[64:72] = b'FW100'.ljust(8)
-        struct.pack_into('<I', data, 96, CTRATT_UUID_LIST)
-        return data
-
-    def log(self, lid, uuid_index):
-        if lid == 0x00:
-            # every vendor specific log page is supported
-            supported = bytearray(1024)
-            for vendor_lid in range(0xc0, 0x100):
-                struct.pack_into('<I', supported, vendor_lid * 4, 1)
-            return supported
-        if lid == 0xc2:
-            # two logs share the ID: the WDC UUID selects the Device
-            # Management log
-            if uuid_index:
-                return c2_device_management_log()
-            return fw_activate_history_log()
-        return self.logs.get(lid, b'')
-
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        data = b''
-        if opcode == OPC_IDENTIFY and cdw10 & 0xff == CNS_ID_CTRL:
-            data = self.id_ctrl()
-        elif opcode == OPC_IDENTIFY and cdw10 & 0xff == CNS_UUID_LIST:
-            data = bytes(48) + WDC_UUID
-        elif opcode == OPC_GET_LOG_PAGE:
-            data = self.log(cdw10 & 0xff, cdw14 & 0x7f)[lpo:lpo + req_len]
-        payload = bytes(data[:req_len])
-        self.send_response(conn, 0, payload=payload.ljust(req_len, b'\0'))
+        })
 
 
 class WdcModel:
     """The commands of the wdc plugin on a model which supports them."""
 
+    controller_class = WdcController
     VID = 0
     DID = 0
     COMMANDS: tuple = ()
 
     def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix='nvme-wdc-', dir='/tmp')
-        self.sysfs_dir = os.path.join(self.tmp, 'sysfs')
-        dev = os.path.join(self.sysfs_dir, 'sys/class/nvme/nvme0/device')
-        os.makedirs(dev)
-        os.makedirs(os.path.join(self.sysfs_dir, 'sys/class/nvme-subsystem'))
-        for attr, value in (('vendor', self.VID), ('device', self.DID),
-                            ('subsystem_vendor', self.VID),
-                            ('subsystem_device', self.DID),
-                            ('class', 0x010802)):
-            with open(os.path.join(dev, attr), 'w') as f:
-                f.write(f'0x{value:04x}\n')
-        self.base_dir = os.path.join(self.tmp, 'base')
-        os.mkdir(self.base_dir)
-        sock = os.path.join(self.tmp, 'ipc.sock')
-        self.server = WdcMockServer(sock, self.VID)
-        self.server.start()
-        self.env = make_mock_env(MOCK_LIB, sock)
-
-    def tearDown(self):
-        self.server.shutdown()
-        self.server.join()
-        shutil.rmtree(self.tmp, ignore_errors=True)
+        super().setUp()
+        self.write_sysfs_pci_ctrl(vid=self.VID, did=self.DID)
+        self.server.identify[CNS_CTRL] = id_ctrl(vid=self.VID, ssvid=self.VID,
+                                                 sn='WDC0123456789',
+                                                 mn='WDC Mock SSD', fr='FW100',
+                                                 ctratt=CTRATT_UUID_LIST)
+        # A C0 log of a client drive (SanDisk vendor ID) has the extended
+        # SMART GUID.
+        self.server.logs[0xc0] = (ocp_log(512, GUID_EXT_SMART_C0, 3)
+                                  if self.VID == 0x15b7 else ocp_c0_log())
 
     def run_cmd(self, command, *args):
-        return run_nvme(NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                        *command.split(), '/dev/nvme0', *args)
+        return self.nvme(*command.split(), self.ctrl, *args)
 
     def check(self, command, *args):
         result = self.run_cmd(command, *args)
@@ -234,7 +184,7 @@ class WdcModel:
                 self.assertNotIn('ERROR', result.stderr)
 
 
-class SN861Test(WdcModel, unittest.TestCase):
+class SN861Test(WdcModel, MockTestCase):
     VID, DID = 0x1b96, 0x2750
     COMMANDS = (
         'wdc id-ctrl',
@@ -263,7 +213,7 @@ class SN861Test(WdcModel, unittest.TestCase):
         self.assertIn('FW200', result.stdout)
 
 
-class SN650Test(WdcModel, unittest.TestCase):
+class SN650Test(WdcModel, MockTestCase):
     VID, DID = 0x1b96, 0x2700
     COMMANDS = (
         'wdc log-page-directory',
@@ -271,12 +221,12 @@ class SN650Test(WdcModel, unittest.TestCase):
     )
 
 
-class SN200Test(WdcModel, unittest.TestCase):
+class SN200Test(WdcModel, MockTestCase):
     VID, DID = 0x1c58, 0x0023
     COMMANDS = ('wdc purge-monitor',)
 
 
-class SN820CLTest(WdcModel, unittest.TestCase):
+class SN820CLTest(WdcModel, MockTestCase):
     VID, DID = 0x15b7, 0x5037
     COMMANDS = (
         'wdc cloud-boot-SSD-version',
@@ -288,10 +238,10 @@ class SN820CLTest(WdcModel, unittest.TestCase):
     )
 
 
-class SN730Test(WdcModel, unittest.TestCase):
+class SN730Test(WdcModel, MockTestCase):
     VID, DID = 0x15b7, 0x5006
     COMMANDS = ('wdc vs-pcie-stats',)
 
 
 if __name__ == '__main__':
-    unittest.main(argv=sys.argv[:1], verbosity=2)
+    main()
