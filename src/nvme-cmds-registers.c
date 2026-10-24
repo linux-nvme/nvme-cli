@@ -36,7 +36,37 @@
 #define ALL_REGS	((UINT32_C(1) << NVME_NR_REGS) - 1)
 
 static const char *only_ctrl_dev = "Only controller device is allowed";
-static const char *reg_required = "a register has to be given";
+static const char *reg_required =
+	"a register (--register or --offset) has to be given";
+
+/*
+ * The names of the registers for the options, from the table: as bits for
+ * a list of registers, as the index of one the host may write, and as
+ * their offsets.
+ */
+static struct argconfig_opt_val reg_bits[NVME_NR_REGS + 1];
+static struct argconfig_opt_val reg_writable[NVME_NR_REGS + 1];
+static struct argconfig_opt_val reg_offsets[NVME_NR_REGS + 1];
+
+static void reg_names_init(void)
+{
+	unsigned int i, w = 0;
+
+	if (reg_bits[0].str)
+		return;
+
+	for (i = 0; i < NVME_NR_REGS; i++) {
+		const struct nvme_reg *reg = &nvme_regs[i];
+
+		reg_bits[i] = (struct argconfig_opt_val)
+			VAL_ENUM(reg->sym, 1 << i);
+		reg_offsets[i] = (struct argconfig_opt_val)
+			VAL_UINT(reg->sym, reg->offset);
+		if (reg->flags & NVME_REGF_WRITE)
+			reg_writable[w++] = (struct argconfig_opt_val)
+				VAL_ENUM(reg->sym, i);
+	}
+}
 
 static bool reg_is_ns(struct libnvme_transport_handle *hdl)
 {
@@ -249,16 +279,18 @@ static int show_registers(int argc, char **argv, struct command *acmd,
 	return 0;
 }
 
-/* The option of the register @idx */
+/* The deprecated option of the register @idx, see --register */
 #define OPT_REG_FLAG(sym, idx)						\
-	OPT_FLAG(sym, 0, &old[NVME_REGI_##idx], "the " sym " register")
+	OPT_FLAG(sym, 0, &old[NVME_REGI_##idx], NULL,			\
+		 .deprecated = "--register=" sym)
 
 static int get_register(int argc, char **argv, struct command *acmd,
 			struct plugin *plugin)
 {
 	const char *desc =
 		"Reads and shows the defined NVMe controller registers.";
-	const char *offset_desc = "the offset of a register";
+	const char *offset_desc = "the offset or the name of a register";
+	const char *register_desc = "the names of the registers";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle
@@ -271,8 +303,11 @@ static int get_register(int argc, char **argv, struct command *acmd,
 	bool fabrics;
 	int err;
 
+	reg_names_init();
+
 	OPT_ARGS(opts) = {
-		OPT_UINT("offset", 'O', &offset, offset_desc),
+		OPT_UINT("offset", 'O', &offset, offset_desc, reg_offsets),
+		OPT_ENUM_LIST("register", 'r', &sel, register_desc, reg_bits),
 		OPT_REG_FLAG("cap", CAP),
 		OPT_REG_FLAG("vs", VS),
 		OPT_REG_FLAG("intms", INTMS),
@@ -335,20 +370,21 @@ static int get_register(int argc, char **argv, struct command *acmd,
 	return err;
 }
 
-/* The option of the value of the register @idx */
+/* The deprecated option of the register @idx, see --register and --value */
 #define OPT_REG_VAL(sym, idx)						\
-	OPT_UINT(sym, 0, &val32[NVME_REGI_##idx],			\
-		 "the value of the " sym " register")
+	OPT_UINT(sym, 0, &val32[NVME_REGI_##idx], NULL,			\
+		 .deprecated = "--register=" sym " --value")
 #define OPT_REG_VAL64(sym, idx)						\
-	OPT_SUFFIX(sym, 0, &val64[NVME_REGI_##idx],			\
-		   "the value of the " sym " register")
+	OPT_SUFFIX(sym, 0, &val64[NVME_REGI_##idx], NULL,		\
+		   .deprecated = "--register=" sym " --value")
 
 static int set_register(int argc, char **argv, struct command *acmd,
 			struct plugin *plugin)
 {
 	const char *desc =
 		"Writes and shows the defined NVMe controller register";
-	const char *offset_desc = "the offset of the register";
+	const char *offset_desc = "the offset or the name of the register";
+	const char *register_desc = "the name of the register";
 	const char *value = "the value of the register to be set";
 	const char *mmio32 = "Access 64-bit registers as 2 32-bit";
 
@@ -361,7 +397,7 @@ static int set_register(int argc, char **argv, struct command *acmd,
 	struct argconfig_commandline_options *o;
 	uint64_t vals[NVME_NR_REGS] = { 0 };
 	uint32_t offset = 0, dummy, sel = 0;
-	int err;
+	int idx = -1, err;
 	unsigned int i;
 	bool mapped;
 
@@ -370,8 +406,11 @@ static int set_register(int argc, char **argv, struct command *acmd,
 		bool mmio32;
 	} cfg = { 0 };
 
+	reg_names_init();
+
 	OPT_ARGS(opts) = {
-		OPT_UINT("offset", 'O', &offset, offset_desc),
+		OPT_UINT("offset", 'O', &offset, offset_desc, reg_offsets),
+		OPT_ENUM("register", 'r', &idx, register_desc, reg_writable),
 		OPT_SUFFIX("value", 'V', &cfg.value, value),
 		OPT_FLAG("mmio32", 'm', &cfg.mmio32, mmio32),
 		OPT_REG_VAL("intms", INTMS),
@@ -399,12 +438,18 @@ static int set_register(int argc, char **argv, struct command *acmd,
 	if (reg_is_ns(hdl))
 		return -EINVAL;
 
+	if (argconfig_given(opts, &offset) && argconfig_given(opts, &idx)) {
+		nvme_show_error("--offset and --register are exclusive");
+		return -EINVAL;
+	}
 	if (argconfig_given(opts, &offset)) {
 		reg = nvme_reg_by_offset(offset);
 		if (!reg) {
 			nvme_show_error("invalid register offset: %#x", offset);
 			return -EINVAL;
 		}
+	} else if (argconfig_given(opts, &idx)) {
+		reg = &nvme_regs[idx];
 	}
 
 	if (reg) {
@@ -418,7 +463,7 @@ static int set_register(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	/* the registers of the options of each, in register order */
+	/* the registers of the deprecated options, in register order */
 	for (o = opts; o->option; o++) {
 		if (!argconfig_given(opts, o->default_value))
 			continue;
@@ -490,7 +535,7 @@ static int get_property(int argc, char **argv, struct command *acmd,
 	const char *desc = "Reads and shows the defined NVMe controller property\n"
 		"for NVMe over Fabric. Property offset must be one of:\n"
 		"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20, NSSD=0x64, CRTO=0x68";
-	const char *offset_desc = "the offset of the property";
+	const char *offset_desc = "the offset or the name of the property";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle
@@ -501,8 +546,10 @@ static int get_property(int argc, char **argv, struct command *acmd,
 	char sym[16];
 	int err;
 
+	reg_names_init();
+
 	OPT_ARGS(opts) = {
-		OPT_UINT("offset", 'O', &offset, offset_desc),
+		OPT_UINT("offset", 'O', &offset, offset_desc, reg_offsets),
 		OPT_END()
 	};
 
@@ -534,7 +581,7 @@ static int set_property(int argc, char **argv, struct command *acmd,
 {
 	const char *desc =
 	    "Writes and shows the defined NVMe controller property for NVMe over Fabric";
-	const char *offset_desc = "the offset of the property";
+	const char *offset_desc = "the offset or the name of the property";
 	const char *value = "the value of the property to be set";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -548,8 +595,10 @@ static int set_property(int argc, char **argv, struct command *acmd,
 	char sym[16];
 	int err;
 
+	reg_names_init();
+
 	OPT_ARGS(opts) = {
-		OPT_UINT("offset", 'O', &offset, offset_desc),
+		OPT_UINT("offset", 'O', &offset, offset_desc, reg_offsets),
 		OPT_SUFFIX("value", 'V', &val, value),
 		OPT_END()
 	};

@@ -44,7 +44,7 @@ REGS = {
 }
 
 ONLY_CTRL = 'Only controller device is allowed'
-REG_REQUIRED = 'a register has to be given'
+REG_REQUIRED = 'a register (--register or --offset) has to be given'
 
 # The fields of the registers, from the figures of section 3.1.4 of the
 # specification: (name, low bit, width, format, argument), see
@@ -375,14 +375,15 @@ class PcieRegsTest(MockTestCase):
                     self.assertEqual(doc[name], expected)
 
     def test_namespace_refused(self):
-        for args in (['show-regs'], ['get-reg', '--cap'],
-                     ['set-reg', '--cc=0']):
+        for args in (['show-regs'], ['get-reg', '--register=cap'],
+                     ['set-reg', '--register=cc', '--value=0']):
             with self.subTest(args=args):
                 self.assertFails(args, ONLY_CTRL, device=self.ns)
         self.assertEqual(self.regs()['cc'], REGS['cc'])
 
     def test_get_reg(self):
-        for args in (['--offset=0x14'], ['--cc']):
+        for args in (['--offset=0x14'], ['--offset=cc'],
+                     ['--register=cc'], ['-r', 'cc']):
             with self.subTest(args=args):
                 result = self.assertOk(self.nvme('get-reg', self.ctrl,
                                                  *args))
@@ -392,9 +393,9 @@ class PcieRegsTest(MockTestCase):
         self.assertNoCommands()
 
     def test_get_reg_names(self):
-        """The registers of the options, in register order"""
-        for args in (['--pmrcap', '--csts', '--cap'],
-                     ['--pmrcap', '--csts', '--offset=0']):
+        """The registers of a list, in register order"""
+        for args in (['--register=pmrcap,csts,cap'],
+                     ['--register=pmrcap', '--register=csts', '--offset=0']):
             with self.subTest(args=args):
                 result = self.assertOk(self.nvme('get-reg', self.ctrl,
                                                  *args))
@@ -404,17 +405,33 @@ class PcieRegsTest(MockTestCase):
                     [('0000', '0x2028030fff'), ('0x1c', '0x1'),
                      ('0xe00', '0x8')])
 
+    def test_get_reg_deprecated(self):
+        """The options of earlier versions, a flag for each register,
+        still work, with a warning"""
+        result = self.assertOk(self.nvme('get-reg', self.ctrl, '--pmrcap',
+                                         '--csts', '--cap'))
+        self.assertEqual(re.findall(r'register : (\w+) .*value: (\w+)',
+                                    result.stdout),
+                         [('0000', '0x2028030fff'), ('0x1c', '0x1'),
+                          ('0xe00', '0x8')])
+        self.assertIn('--register=cap', result.stderr)
+
+    def test_get_reg_unknown_name(self):
+        result = self.nvme('get-reg', self.ctrl, '--register=cc,bogus')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('bogus', result.stderr)
+
     def test_get_reg_json(self):
         """The same as show-regs, for the registers asked for"""
         if not HAVE_JSON:
             self.skipTest('built without json-c')
         result = self.assertOk(self.nvme('get-reg', self.ctrl,
-                                         '--cc', '--csts',
+                                         '--register=cc,csts',
                                          '--output-format=json'))
         self.assertEqual(json.loads(result.stdout),
                          {'cc': REGS['cc'], 'csts': REGS['csts']})
         result = self.assertOk(self.nvme('get-reg', self.ctrl,
-                                         '--crto', '--verbose',
+                                         '--register=crto', '--verbose',
                                          '--output-format=json'))
         self.assertEqual(json.loads(result.stdout), {'crto': {
             'value': REGS['crto'],
@@ -435,7 +452,8 @@ class PcieRegsTest(MockTestCase):
         self.assertFails(['get-reg'], REG_REQUIRED)
 
     def test_set_reg(self):
-        for args in (['--offset=0x14'],):
+        for args in (['--offset=0x14'], ['--offset=cc'],
+                     ['--register=cc']):
             with self.subTest(args=args):
                 self.resource0.write_bytes(ctrl_regs(**REGS))
                 result = self.assertOk(self.nvme('set-reg', self.ctrl, *args,
@@ -446,15 +464,16 @@ class PcieRegsTest(MockTestCase):
                 self.assertEqual(self.regs(), self.expected(cc=0x460000))
         self.assertNoCommands()
 
-    def test_set_reg_names(self):
-        """An option with the value for each register the host may
-        write"""
-        self.assertOk(self.nvme('set-reg', self.ctrl, '--intms=5',
-                                '--cc=0x460000', '--aqa=0x70007',
-                                '--pmrctl=1'))
+    def test_set_reg_deprecated(self):
+        """The options of earlier versions, an option with the value for
+        each register the host may write, still work"""
+        result = self.assertOk(self.nvme('set-reg', self.ctrl, '--intms=5',
+                                         '--cc=0x460000', '--aqa=0x70007',
+                                         '--pmrctl=1'))
         self.assertEqual(self.regs(),
                          self.expected(intms=5, cc=0x460000, aqa=0x70007,
                                        pmrctl=1))
+        self.assertIn('--register=cc --value', result.stderr)
         self.assertNoCommands()
 
     def test_set_reg_64bit(self):
@@ -462,7 +481,7 @@ class PcieRegsTest(MockTestCase):
         for args in ([], ['--mmio32']):
             with self.subTest(args=args):
                 self.assertOk(self.nvme('set-reg', self.ctrl,
-                                        '--offset=0x28',
+                                        '--register=asq',
                                         '--value=0x1122334455667000',
                                         *args))
                 self.assertOk(self.nvme('set-reg', self.ctrl,
@@ -475,17 +494,26 @@ class PcieRegsTest(MockTestCase):
 
     def test_set_reg_invalid(self):
         for args, message in (
-                (['--offset=0x14'], 'value required param'),
+                (['--register=cc'], 'value required param'),
                 (['--offset=0x14', '--value=1', '--cc=2'],
                  'offset duplicated param'),
+                (['--offset=0x14', '--register=cc', '--value=1'],
+                 '--offset and --register are exclusive'),
                 (['--offset=0', '--value=1'], 'register cap is read only'),
                 (['--offset=0x18', '--value=1'],
                  'invalid register offset: 0x18'),
-                (['--offset=0x14', '--value=0x100000000'],
+                (['--register=cc', '--value=0x100000000'],
                  'value 0x100000000 too large for cc'),
                 ([], REG_REQUIRED)):
             with self.subTest(args=args):
                 self.assertFails(['set-reg', *args], message)
+        self.assertEqual(self.regs(), self.expected())
+
+    def test_set_reg_read_only_name(self):
+        """--register names only the registers the host may write"""
+        result = self.nvme('set-reg', self.ctrl, '--register=cap',
+                           '--value=1')
+        self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.regs(), self.expected())
 
 
@@ -551,7 +579,7 @@ class FabricsRegsTest(MockTestCase):
                           for name in ('cap', 'vs', 'cc', 'csts', 'crto')})
 
     def test_get_property(self):
-        for offset in ('0',):
+        for offset in ('0', 'cap'):
             with self.subTest(offset=offset):
                 self.server.commands.clear()
                 result = self.assertOk(self.nvme('get-property', self.ctrl,
@@ -587,7 +615,8 @@ class FabricsRegsTest(MockTestCase):
             result = self.assertOk(self.nvme('show-regs', self.ctrl,
                                              '--output-format=json'))
             self.assertEqual(json.loads(result.stdout)['crto'], 0xffffffff)
-        result = self.assertOk(self.nvme('get-reg', self.ctrl, '--crto'))
+        result = self.assertOk(self.nvme('get-reg', self.ctrl,
+                                         '--register=crto'))
         self.assertIn('value: 0xffffffff', result.stdout)
 
     def test_show_regs_error(self):
@@ -605,7 +634,7 @@ class FabricsRegsTest(MockTestCase):
                 lambda cmd, status=status: status if cmd.cdw11 == 0x68 else
                 self.property_cmd(cmd))
             for args, message in (
-                    (['get-reg', '--cap', '--crto'],
+                    (['get-reg', '--register=cap,crto'],
                      'register: 0x68 (Controller Ready Timeouts) not '
                      'implemented'),
                     (['get-property', '--offset=0x68'],
@@ -621,8 +650,8 @@ class FabricsRegsTest(MockTestCase):
         self.assertEqual(self.server.commands, [])
 
     def test_get_reg(self):
-        result = self.assertOk(self.nvme('get-reg', self.ctrl, '--cap',
-                                         '--cc'))
+        result = self.assertOk(self.nvme('get-reg', self.ctrl,
+                                         '--register=cap,cc'))
         self.assertEqual([(c.cdw10, c.cdw11) for c in
                           self.property_cmds(FCTYPE_PROPERTY_GET)],
                          [(1, 0x00), (0, 0x14)])
@@ -631,7 +660,8 @@ class FabricsRegsTest(MockTestCase):
                          [('0000', '0x2028030fff'), ('0x14', '0x460001')])
 
     def test_get_reg_crto(self):
-        result = self.assertOk(self.nvme('get-reg', self.ctrl, '--crto'))
+        result = self.assertOk(self.nvme('get-reg', self.ctrl,
+                                         '--register=crto'))
         cmd, = self.property_cmds(FCTYPE_PROPERTY_GET)
         self.assertEqual((cmd.cdw10, cmd.cdw11), (0, 0x68))
         self.assertIn('value: 0x50003', result.stdout)
@@ -639,13 +669,13 @@ class FabricsRegsTest(MockTestCase):
     def test_get_reg_not_property(self):
         """A register which is no property of a fabrics controller fails
         get-reg, after the properties"""
-        for args in (['--offset=0xe00'], ['--cap', '--pmrcap']):
+        for args in (['--offset=0xe00'], ['--register=cap,pmrcap']):
             with self.subTest(args=args):
                 result = self.assertFails(['get-reg', *args],
                                           'register: 0xe00 (Persistent '
                                           'Memory Region Capabilities) not '
                                           'fabrics')
-                if '--cap' in args:
+                if 'cap' in args[0]:
                     self.assertIn('value: 0x2028030fff', result.stdout)
 
     def test_get_reg_error(self):
@@ -653,12 +683,13 @@ class FabricsRegsTest(MockTestCase):
         self.server.admin[OPC_FABRICS] = (
             lambda cmd: SC_INTERNAL if cmd.cdw11 == 0 else
             self.property_cmd(cmd))
-        self.assertFails(['get-reg', '--cap'], 'Internal Error')
+        self.assertFails(['get-reg', '--register=cap'], 'Internal Error')
 
     def test_set_property(self):
         """ATTRIB gives the size of the property at OFST, the value is in
         Command Dwords 12 and 13"""
         for offset, value, attrib in (('0x14', 0x460000, 0),
+                                      ('cc', 0x460000, 0),
                                       ('0x28', 0x1122334455667000, 1)):
             with self.subTest(offset=offset):
                 self.server.commands.clear()
@@ -669,7 +700,8 @@ class FabricsRegsTest(MockTestCase):
                 cmd, = self.property_cmds(FCTYPE_PROPERTY_SET)
                 self.assertEqual((cmd.cdw10, cmd.cdw11, cmd.cdw12,
                                   cmd.cdw13),
-                                 (attrib, int(offset, 16), value & 0xffffffff,
+                                 (attrib, int(offset, 16) if offset[0] == '0'
+                                  else 0x14, value & 0xffffffff,
                                   value >> 32))
 
     def test_set_property_invalid(self):
@@ -681,7 +713,7 @@ class FabricsRegsTest(MockTestCase):
 
     def test_set_reg(self):
         """Without resource0, set-reg sets the property"""
-        for args in (['--offset=0x14', '--value=0x460000'],
+        for args in (['--register=cc', '--value=0x460000'],
                      ['--cc=0x460000']):
             with self.subTest(args=args):
                 self.server.commands.clear()
@@ -693,7 +725,7 @@ class FabricsRegsTest(MockTestCase):
     def test_set_reg_not_property(self):
         """A register which is no property can't be set without
         resource0"""
-        self.assertFails(['set-reg', '--offset=0x24', '--value=1'],
+        self.assertFails(['set-reg', '--register=aqa', '--value=1'],
                          'register: 0x24 (Admin Queue Attributes) not '
                          'fabrics')
         self.assertEqual(self.property_cmds(FCTYPE_PROPERTY_SET), [])
