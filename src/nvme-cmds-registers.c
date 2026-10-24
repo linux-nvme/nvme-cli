@@ -111,7 +111,7 @@ static int nvme_get_properties(struct libnvme_transport_handle *hdl, void **pbar
 		return -ENOMEM;
 
 	memset(bar, 0xff, size);
-	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;
+	for (offset = NVME_REG_CAP; offset <= NVME_REG_CRTO;
 	     offset += is_64bit ? sizeof(uint64_t) : sizeof(uint32_t)) {
 		if (!nvme_is_fabrics_reg(offset))
 			continue;
