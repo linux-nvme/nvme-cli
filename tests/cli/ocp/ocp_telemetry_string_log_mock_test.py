@@ -33,7 +33,8 @@ import os
 import re
 import struct
 
-from tests.cli.ocp.ocp_mock_test import OCPMockServer, OCPMockTestBase, main
+from tests.cli.nvme_mock import main
+from tests.cli.ocp.ocp_mock_test import OCPController, OCPMockTestBase
 
 _OCP_LID_TELSLG = 0xC9
 
@@ -105,18 +106,19 @@ def pack_page(stats=2, events=3, vu_events=1, ascii_text=b'OCP_STRINGS_LOG!',
     return bytes(header) + body
 
 
-class OCPTelemetryStringLogMockServer(OCPMockServer):
+class OCPTelemetryStringLogController(OCPController):
     def __init__(self, sock_path):
         super().__init__(sock_path)
         self.logs[_OCP_LID_TELSLG] = pack_page()
 
 
 class TestOCPTelemetryStringLog(OCPMockTestBase):
-    server_class = OCPTelemetryStringLogMockServer
+    controller_class = OCPTelemetryStringLogController
 
     def setUp(self):
         super().setUp()
-        self.out_dir = self._temp_dir('nvme-ocp-c9-')
+        self.out_dir = os.path.join(self.tmp, 'c9')
+        os.mkdir(self.out_dir)
 
     def run_c9(self, *args, stack_limit_kb=None):
         return self.run_ocp('telemetry-string-log', '-f',
@@ -197,9 +199,8 @@ class TestOCPTelemetryStringLog(OCPMockTestBase):
                 result = self.run_c9()
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn('C9 log is too large', result.stderr)
-                self.assertEqual(
-                    [c['len'] for c in self.server.log_reads(_OCP_LID_TELSLG)],
-                    [_HEADER_LEN])
+                reads = self.server.log_reads(_OCP_LID_TELSLG)
+                self.assertEqual([c.data_len for c in reads], [_HEADER_LEN])
 
     def test_table_larger_than_the_stack_decodes(self):
         """A table copied onto the stack overruns @_SMALL_STACK_KB and

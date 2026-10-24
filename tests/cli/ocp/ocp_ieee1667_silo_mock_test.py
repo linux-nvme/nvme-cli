@@ -11,29 +11,26 @@ Get Features reports.
 
 Usage: python3 ocp_ieee1667_silo_mock_test.py <nvme-binary> <mock-lib>
 """
-from tests.cli.ocp.ocp_mock_test import OCPMockServer, OCPMockTestBase, main
+from tests.cli.nvme_mock import Reply, main
+from tests.cli.ocp.ocp_mock_test import OCPController, OCPMockTestBase
 
-OPC_GET_FEATURES = 0x0A
 FID_IEEE1667_SILO = 0xC4
 
 
-class SiloMockServer(OCPMockServer):
+class SiloController(OCPController):
     """Reports @enabled in Dword 0 of Get Features of the silo feature."""
 
     enabled = 0
 
-    def respond(self, conn, cmd):
-        if (cmd['opcode'] == OPC_GET_FEATURES and
-                cmd['cdw10'] & 0xFF == FID_IEEE1667_SILO):
-            self.send_response(conn, 0, result=self.enabled,
-                               payload=bytes(cmd['len']))
-            return
-        super().respond(conn, cmd)
+    def __init__(self, sock_path):
+        super().__init__(sock_path)
+        self.features[FID_IEEE1667_SILO] = lambda cmd: Reply(
+            result=self.enabled)
 
 
 class IEEE1667SiloTest(OCPMockTestBase):
 
-    server_class = SiloMockServer
+    controller_class = SiloController
 
     def get(self):
         return self.assertOk(self.run_ocp('get-enable-ieee1667-silo'))

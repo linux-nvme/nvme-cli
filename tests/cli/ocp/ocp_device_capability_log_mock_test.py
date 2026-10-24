@@ -25,7 +25,8 @@ Usage: python3 ocp_device_capability_log_mock_test.py <nvme-binary> <mock-lib>
 """
 import json
 
-from tests.cli.ocp.ocp_mock_test import OCPMockTestBase, main
+from tests.cli.nvme_mock import main
+from tests.cli.ocp.ocp_mock_test import OCPMockTestBase
 from tests.e2e.plugins.ocp import ocp_c4_layout as layout
 
 UNKNOWN_GUID_MSG = 'Unknown GUID in C4 Log Page data'
@@ -78,9 +79,9 @@ class TestDeviceCapabilityLog(DeviceCapabilityLogTestBase):
         self.assertOk(self.run_c4())
         reads = self.server.log_reads(layout.LID)
         self.assertEqual(len(reads), 1, reads)
-        self.assertEqual((reads[0]['lpo'], reads[0]['len']),
+        self.assertEqual((reads[0].lpo, reads[0].data_len),
                          (0, layout.LOG_PAGE_SIZE))
-        self.assertEqual(reads[0]['cdw14'] & 0x7F, 2)
+        self.assertEqual(reads[0].cdw14 & 0x7F, 2)
 
     def test_fixed_fields_in_text(self):
         fields = self.text_log()

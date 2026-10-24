@@ -64,11 +64,13 @@ import json
 import os
 import struct
 
-from tests.cli.ocp.ocp_mock_test import (CNS_UUID_LIST, LPA_TELEMETRY,
-                                         MODES, NSID_ALL, SC_INVALID_FIELD,
-                                         STR_DA_EVENT_FIFO_INFO, STR_DA_STATS,
-                                         OCPInternalLogTestBase,
-                                         OCPMockServer, main, pack_id_ctrl,
+from tests.cli.nvme_mock import (CNS_CTRL, CNS_UUID_LIST, FID_HOST_BEHAVIOR,
+                                 LPA_TELEMETRY, NSID_ALL, OPC_GET_LOG_PAGE,
+                                 OPC_SET_FEATURES, SC_INVALID_FIELD,
+                                 host_behavior, main)
+from tests.cli.ocp.ocp_mock_test import (MODES, STR_DA_EVENT_FIFO_INFO,
+                                         STR_DA_STATS, OCPController,
+                                         OCPInternalLogTestBase, pack_id_ctrl,
                                          text_fields, text_records)
 from tests.e2e.plugins.ocp import ocp_telemetry_layout as layout
 
@@ -79,12 +81,7 @@ LSP_CREATE = 1
 LPA_TELEMETRY_DA4 = 0x40
 DA1_TIMESTAMP_MS = 1700000000123
 
-OPC_SET_FEATURES = 0x09
-OPC_GET_FEATURES = 0x0A
-FID_HOST_BEHAVIOR = 0x16
 # struct nvme_feat_host_behavior: 512 bytes, ETDAS at byte 1.
-HOST_BEHAVIOR_SIZE = 512
-HOST_BEHAVIOR_ETDAS = 1
 
 FETCH_TELEMETRY_MSG = 'Failed to fetch telemetry-log from the drive.'
 FETCH_STRING_MSG = 'Failed to fetch string-log from the drive.'
@@ -122,10 +119,10 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
     def setUp(self):
         super().setUp()
         self.host = telemetry_log()
-        self.ctrl = telemetry_log(lid=layout.LID_TELEMETRY_CTRL)
+        self.ctrl_log = telemetry_log(lid=layout.LID_TELEMETRY_CTRL)
         self.strings = string_log()
         self.server.logs = {layout.LID_TELEMETRY_HOST: self.host,
-                            layout.LID_TELEMETRY_CTRL: self.ctrl,
+                            layout.LID_TELEMETRY_CTRL: self.ctrl_log,
                             layout.LID_STRING_LOG: self.strings}
 
     def saved(self, suffix):
@@ -136,14 +133,14 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
         """@reads are back to back and span [@start, @end)."""
         offset = start
         for read in reads:
-            self.assertEqual(read['lpo'], offset, reads)
-            offset += read['len']
+            self.assertEqual(read.lpo, offset, reads)
+            offset += read.data_len
         self.assertEqual(offset, end, reads)
 
     def test_host_header_read_creates_a_snapshot(self):
         self.assertOk(self.run_internal_log())
         header = self.server.log_reads(layout.LID_TELEMETRY_HOST)[0]
-        self.assertEqual((header['lsp'], header['lpo'], header['len']),
+        self.assertEqual((header.lsp, header.lpo, header.data_len),
                          (LSP_CREATE, 0, layout.HEADER_SIZE))
 
     def test_host_body_reads_retain_the_snapshot(self):
@@ -154,7 +151,7 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
                 self.assertOk(self.run_internal_log('-a', str(da)))
                 body = self.server.log_reads(layout.LID_TELEMETRY_HOST)[1:]
                 self.assertTrue(body)
-                self.assertEqual({r['lsp'] for r in body}, {LSP_RETAIN})
+                self.assertEqual({r.lsp for r in body}, {LSP_RETAIN})
                 self.assert_covers(body, layout.HEADER_SIZE,
                                    data_area_end(self.host, da))
                 self.assertEqual(self.saved('telemetry'),
@@ -163,12 +160,12 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
     def host_header_lsp(self, *args):
         result = self.assertOk(self.run_internal_log(*args))
         reads = self.server.log_reads(layout.LID_TELEMETRY_HOST)
-        self.assertEqual((reads[0]['lpo'], reads[0]['len']),
+        self.assertEqual((reads[0].lpo, reads[0].data_len),
                          (0, layout.HEADER_SIZE))
-        self.assertEqual({r['lsp'] for r in reads[1:]}, {LSP_RETAIN})
+        self.assertEqual({r.lsp for r in reads[1:]}, {LSP_RETAIN})
         self.assertEqual(self.saved('telemetry'),
                          self.host[:data_area_end(self.host, 1)])
-        return reads[0]['lsp'], result
+        return reads[0].lsp, result
 
     def test_host_generate_selects_create_or_retain(self):
         for args, lsp in ((('--host-generate=0',), LSP_RETAIN),
@@ -211,23 +208,23 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
                 self.assertEqual(
                     self.server.log_reads(layout.LID_TELEMETRY_HOST), [])
                 reads = self.server.log_reads(layout.LID_TELEMETRY_CTRL)
-                self.assertEqual({r['lsp'] for r in reads}, {0})
-                self.assert_covers(reads, 0, data_area_end(self.ctrl, 1))
+                self.assertEqual({r.lsp for r in reads}, {0})
+                self.assert_covers(reads, 0, data_area_end(self.ctrl_log, 1))
 
     def test_controller_log_is_read_from_lid_08h(self):
         self.assertOk(self.run_internal_log('-t', 'controller', '-a', '2'))
         self.assertEqual(self.server.log_reads(layout.LID_TELEMETRY_HOST), [])
         reads = self.server.log_reads(layout.LID_TELEMETRY_CTRL)
-        self.assertEqual({r['lsp'] for r in reads}, {0})
-        self.assertEqual(reads[0]['len'], layout.HEADER_SIZE)
-        self.assert_covers(reads, 0, data_area_end(self.ctrl, 2))
-        self.assertEqual(self.saved('telemetry'), self.ctrl)
+        self.assertEqual({r.lsp for r in reads}, {0})
+        self.assertEqual(reads[0].data_len, layout.HEADER_SIZE)
+        self.assert_covers(reads, 0, data_area_end(self.ctrl_log, 2))
+        self.assertEqual(self.saved('telemetry'), self.ctrl_log)
 
     def test_telemetry_is_read_without_a_namespace(self):
         self.assertOk(self.run_internal_log())
         reads = (self.server.log_reads(layout.LID_TELEMETRY_HOST)
                  + self.server.log_reads(layout.LID_TELEMETRY_CTRL))
-        self.assertEqual({r['nsid'] for r in reads}, {0})
+        self.assertEqual({r.nsid for r in reads}, {0})
 
     def test_string_log_is_read_with_the_ocp_uuid_index(self):
         """The 432-byte header first, then the whole log its table sizes
@@ -235,11 +232,11 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
         self.server.uuid_slot = 1
         self.assertOk(self.run_internal_log())
         reads = self.server.log_reads(layout.LID_STRING_LOG)
-        self.assertEqual((reads[0]['lpo'], reads[0]['len']),
+        self.assertEqual((reads[0].lpo, reads[0].data_len),
                          (0, layout.STR_HEADER_SIZE))
         self.assert_covers(reads[1:], 0, len(self.strings))
-        self.assertEqual({r['nsid'] for r in reads}, {NSID_ALL})
-        self.assertEqual({r['cdw14'] & 0x7F for r in reads}, {2})
+        self.assertEqual({r.nsid for r in reads}, {NSID_ALL})
+        self.assertEqual({r.cdw14 & 0x7F for r in reads}, {2})
         self.assertEqual(self.saved('string'), self.strings)
 
     def test_no_uuid_reads_the_string_log_with_index_zero(self):
@@ -248,10 +245,10 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
             with self.subTest(flag=flag):
                 self.assertOk(self.run_internal_log(flag))
                 self.assertEqual(
-                    self.server.identify_requests(CNS_UUID_LIST), [])
+                    self.server.identifies(CNS_UUID_LIST), [])
                 reads = self.server.log_reads(layout.LID_STRING_LOG)
                 self.assertTrue(reads)
-                self.assertEqual({r['cdw14'] & 0x7F for r in reads}, {0})
+                self.assertEqual({r.cdw14 & 0x7F for r in reads}, {0})
 
     def test_missing_ocp_uuid_fails_the_string_log_fetch(self):
         self.server.uuid_slot = None
@@ -286,50 +283,43 @@ class TestInternalLogFetch(OCPInternalLogTestBase):
                                  'VFIFO 2.33')
 
 
-class HostBehaviorMockServer(OCPMockServer):
-    """Keeps Host Behavior Support's ETDAS bit across commands.
-
-    libmock_nvme.c does not forward a command's outgoing data, so the
-    value a Set Features writes is invisible here. Every write this path
-    makes flips the bit, so a write is modeled as flipping it."""
+class HostBehaviorController(OCPController):
+    """Keeps Host Behavior Support's ETDAS bit across commands."""
 
     def __init__(self, sock_path):
         super().__init__(sock_path)
-        self.etdas = False
+        self.features[FID_HOST_BEHAVIOR] = host_behavior()
 
-    def respond(self, conn, cmd):
-        if (cmd['opcode'] in (OPC_GET_FEATURES, OPC_SET_FEATURES)
-                and cmd['cdw10'] & 0xFF == FID_HOST_BEHAVIOR):
-            if cmd['opcode'] == OPC_SET_FEATURES:
-                self.etdas = not self.etdas
-                self.send_response(conn, 0)
-                return
-            data = bytearray(HOST_BEHAVIOR_SIZE)
-            data[HOST_BEHAVIOR_ETDAS] = int(self.etdas)
-            self.send_slice(conn, bytes(data), 0, cmd['len'])
-            return
-        super().respond(conn, cmd)
+    @property
+    def etdas(self):
+        return bool(self.features[FID_HOST_BEHAVIOR][1])
+
+    @etdas.setter
+    def etdas(self, value):
+        self.features[FID_HOST_BEHAVIOR] = host_behavior(etdas=int(value))
 
 
 class TestInternalLogDataArea4(OCPInternalLogTestBase):
     """Data Area 4 is readable only while ETDAS is set."""
 
-    server_class = HostBehaviorMockServer
+    controller_class = HostBehaviorController
 
     def setUp(self):
         super().setUp()
         self.host = telemetry_log()
         self.server.logs = {layout.LID_TELEMETRY_HOST: self.host,
                             layout.LID_STRING_LOG: string_log()}
-        self.server.identify = pack_id_ctrl(LPA_TELEMETRY | LPA_TELEMETRY_DA4)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(
+            LPA_TELEMETRY | LPA_TELEMETRY_DA4)
 
     def sequence(self):
         """Host Behavior writes and telemetry reads, in order."""
-        return ['set' if c['opcode'] == OPC_SET_FEATURES else 'read'
+        return ['set' if c.opcode == OPC_SET_FEATURES else 'read'
                 for c in self.server.commands
-                if (c['opcode'] == OPC_SET_FEATURES
-                    and c['cdw10'] & 0xFF == FID_HOST_BEHAVIOR)
-                or c.get('lid') == layout.LID_TELEMETRY_HOST]
+                if (c.opcode == OPC_SET_FEATURES
+                    and c.fid == FID_HOST_BEHAVIOR)
+                or (c.opcode == OPC_GET_LOG_PAGE
+                    and c.lid == layout.LID_TELEMETRY_HOST)]
 
     def test_etdas_is_set_for_the_read_and_cleared_after(self):
         self.assertOk(self.run_internal_log('-a', '4'))
@@ -339,7 +329,7 @@ class TestInternalLogDataArea4(OCPInternalLogTestBase):
         self.assertEqual(sequence.count('set'), 2, sequence)
         self.assertFalse(self.server.etdas)
         reads = self.server.log_reads(layout.LID_TELEMETRY_HOST)
-        self.assertEqual(reads[-1]['lpo'] + reads[-1]['len'],
+        self.assertEqual(reads[-1].lpo + reads[-1].data_len,
                          data_area_end(self.host, 4))
 
     def test_etdas_already_set_is_left_alone(self):
@@ -350,7 +340,7 @@ class TestInternalLogDataArea4(OCPInternalLogTestBase):
 
     def test_data_area_4_needs_extended_telemetry_support(self):
         """Without LPA bit 6 the controller has no Data Area 4 to read."""
-        self.server.identify = pack_id_ctrl()
+        self.server.identify[CNS_CTRL] = pack_id_ctrl()
         result = self.run_internal_log('-a', '4')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Telemetry data area 4 not supported by device.',
@@ -1132,7 +1122,7 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
     def test_controller_log_needs_telemetry_support(self):
         """A controller without LPA bit 3 has no controller-initiated log
         to fetch, so nothing is read or written."""
-        self.server.identify = pack_id_ctrl(lpa=0)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(lpa=0)
         self.server.logs = {
             layout.LID_TELEMETRY_CTRL: telemetry_log(
                 lid=layout.LID_TELEMETRY_CTRL),
@@ -1148,7 +1138,7 @@ class TestInternalLogOptions(OCPInternalLogTestBase):
     def test_controller_log_file_decodes_without_telemetry_support(self):
         """With both logs given as files nothing is sent to the drive, so
         what it supports does not matter."""
-        self.server.identify = pack_id_ctrl(lpa=0)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(lpa=0)
         for args in ((), ('-t', 'controller')):
             with self.subTest(args=args):
                 report = self.decode(
