@@ -268,7 +268,7 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	if (!ns_list)
 		return -ENOMEM;
 
-	if ((ctrl->oacs & 0x8) >> 3) {
+	if (le16_to_cpu(ctrl->oacs) & NVME_CTRL_OACS_NMS) {
 		nsid = NVME_NSID_ALL;
 	} else {
 		nvme_init_identify_active_ns_list(&cmd, nsid - 1, ns_list);
