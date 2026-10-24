@@ -50,9 +50,6 @@ static int fw_download_single(struct libnvme_transport_handle *hdl, void *fw_buf
 		           offset, fw_len, (int)(100 * offset / fw_len));
 	}
 
-	if (libnvme_transport_handle_is_mi(hdl))
-		nvme_init_mi_cmd_flags(&cmd, ish);
-
 	for (try = 0; try < max_retries; try++) {
 		if (try > 0) {
 			nvme_show_error("retrying offset %x (%u/%u)",
@@ -62,6 +59,8 @@ static int fw_download_single(struct libnvme_transport_handle *hdl, void *fw_buf
 		err = nvme_init_fw_download(&cmd, fw_buf, len, offset);
 		if (err)
 			return err;
+		if (libnvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
 
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (!err)
