@@ -242,6 +242,7 @@ class FabricsRegsTest(MockTestCase):
                 show = SHOW_NAMES.get(name, name)
                 self.assertRegex(result.stdout,
                                  rf'(?m)^{show}\s*: {value_str(REGS[name])}$')
+        self.assertNotRegex(result.stdout, r'(?m)^nssr')
 
     def test_get_property(self):
         result = self.assertOk(self.nvme('get-property', self.ctrl,
