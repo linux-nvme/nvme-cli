@@ -21,7 +21,10 @@ OPTIONS
 -------
 -O <offset>::
 --offset=<offset>::
-	The offset of the property.
+	The offset of the property, or the name of a register, e.g.
+	0x14 or cc. The properties of a fabrics controller are cap (0x0),
+	vs (0x8), cc (0x14), csts (0x1c), nssr (0x20), nssd (0x64) and
+	crto (0x68), the transport may define more.
 
 -V <val>::
 --value=<val>::
