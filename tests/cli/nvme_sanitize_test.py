@@ -12,7 +12,8 @@ against the Sanitize Capabilities of the controller.
 
 Usage: python3 nvme_sanitize_test.py <path-to-nvme-binary> <mock-lib>
 """
-from tests.cli.nvme_mock import CNS_CTRL, MockTestCase, id_ctrl, main
+from tests.cli.nvme_mock import (CNS_CTRL, NVME_IOCTL_ID, MockTestCase, Reply,
+                                 id_ctrl, main)
 
 OPC_SANITIZE = 0x84
 OPC_SANITIZE_NS = 0x8c
@@ -121,6 +122,31 @@ class SanitizeTest(MockTestCase):
 
 
 class SanitizeNsTest(MockTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.server.ioctls[NVME_IOCTL_ID] = Reply(status=1)
+
+    def test_namespace(self):
+        """The namespace of the device, or of --namespace-id; NSID 0h is
+        invalid for Sanitize Namespace"""
+        for device, args, nsid in ((self.ns, [], 1),
+                                   (self.ctrl, ['--namespace-id=2'], 2)):
+            with self.subTest(device=device, args=args):
+                self.server.commands.clear()
+                self.assertOk(self.nvme('sanitize-ns', device,
+                                        '--sanact=start-crypto-erase', *args))
+                cmd, = self.server.admin_cmds(OPC_SANITIZE_NS)
+                self.assertEqual(cmd.nsid, nsid)
+
+    def test_no_namespace(self):
+        # a controller has no namespace
+        del self.server.ioctls[NVME_IOCTL_ID]
+        result = self.nvme('sanitize-ns', self.ctrl,
+                           '--sanact=start-crypto-erase')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('get-namespace-id', result.stderr)
+        self.assertEqual(self.server.admin_cmds(OPC_SANITIZE_NS), [])
 
     def test_actions(self):
         cases = [

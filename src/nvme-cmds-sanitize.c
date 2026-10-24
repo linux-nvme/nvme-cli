@@ -613,6 +613,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 
 	struct config {
 		bool	ish;
+		__u32	nsid;
 		bool	ause;
 		__u8	sanact;
 		bool	emvs;
@@ -621,6 +622,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 
 	struct config cfg = {
 		.ish		= false,
+		.nsid		= 0,
 		.ause		= false,
 		.sanact		= 0,
 		.emvs		= false,
@@ -638,6 +640,8 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("ish",    'I', &cfg.ish,    ish),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid,
+			 namespace_id_desired, nvme_nsid_values),
 		OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
 		OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
 		OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc),
@@ -648,6 +652,15 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	if (!cfg.nsid) {
+		err = libnvme_get_nsid(hdl, &cfg.nsid);
+		if (err < 0) {
+			nvme_show_error("get-namespace-id: %s",
+					libnvme_strerror(-err));
+			return err;
+		}
+	}
 
 	switch (cfg.sanact) {
 	case NVME_SANITIZE_SANACT_EXIT_FAILURE:
@@ -672,6 +685,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	}
 
 	nvme_init_sanitize_ns(&cmd, cfg.sanact, cfg.ause, cfg.emvs, cfg.preq);
+	cmd.nsid = cfg.nsid;
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
 			nvme_init_mi_cmd_flags(&cmd, ish);
