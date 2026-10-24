@@ -371,6 +371,29 @@
   `--namespace-id`, instead of NSID 0, and refuses a `--max-dw` whose
   data length doesn't fit 32 bits.
 
+* `nvme show-regs` and `get-reg` on a fabrics controller show the
+  properties in the right byte order on big endian hosts, and read the
+  NSSD and CRTO properties too. `show-regs` leaves out the properties
+  the controller doesn't implement, also in the JSON output, which
+  printed all registers of a PCIe controller before, as -1 if they
+  weren't properties.
+
+* `nvme get-reg` and `get-property` on a fabrics controller fail for a
+  property the controller doesn't implement, instead of showing it as
+  all ones, or failing only if the status had the DNR bit set.
+  `show-regs` fails for any other error of an optional property.
+
+* `nvme get-reg` refuses an `--offset` which is no register, which read
+  past a buffer from 0x1000 on. On a fabrics controller it fails for a
+  register which is no property, and prints the status of a failed
+  Property Get.
+
+* `nvme show-regs --verbose` prints the CRTO timeouts in milliseconds.
+  Before, it dropped the half seconds.
+
+* `nvme show-regs -o json` prints the 32 bit registers unsigned. Before,
+  a register with bit 31 set showed as a negative number.
+
 ### Plugins
 
 * `nvme feat num-queues --nsqr=N` without `--ncqr` keeps the current
