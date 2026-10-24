@@ -123,6 +123,7 @@ class FormatCommandTest(MockTestCase):
         self.assertEqual(self.server.identifies(CNS_NS), [])
 
     def test_no_namespace(self):
+        self.assertRefused([self.ctrl], 'Invalid namespace ID')
         self.server.ioctls[NVME_IOCTL_ID] = 0     # no namespace
         self.assertRefused([self.ns], 'Invalid namespace ID')
 
