@@ -999,6 +999,14 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 		return -EINVAL;
 	}
 
+	/* NLB is a 0's based 16 bit count */
+	if (cfg.data_size / lba_size > 0x10000) {
+		nvme_show_error(
+			"Data size:%#"PRIx64" exceeds 65536 logical blocks",
+			(uint64_t)cfg.data_size);
+		return -EINVAL;
+	}
+
 	meta_size = ns.lbaf[lba_index].ms;
 	if (meta_size && !(meta_size == 8 && (cfg.prinfo & 0x8)) &&
 	    (!cfg.metadata_size || cfg.metadata_size % meta_size)) {

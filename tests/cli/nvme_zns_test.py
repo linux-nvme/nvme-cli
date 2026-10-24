@@ -226,6 +226,12 @@ class ZoneAppendTest(ZnsTestBase):
         self.assertRefused(['zone-append', self.ns],
                            'Append size not provided', OPC_ZONE_APPEND)
 
+    def test_too_many_blocks(self):
+        """NLB counts at most 65536 blocks"""
+        self.assertRefused(['zone-append', self.ns,
+                            f'--data-size={65537 * 512}'],
+                           'exceeds 65536 logical blocks', OPC_ZONE_APPEND)
+
     def test_invalid_prinfo(self):
         self.assertRefused(['zone-append', self.ns, '--data-size=512',
                             '--prinfo=16'],
