@@ -278,14 +278,11 @@ static void test_no_args(void)
 	check(strstr(cap.out, "test-prog") != NULL, "no_args: prints program name");
 	check(strstr(cap.out, "bar") != NULL, "no_args: lists 'bar' command");
 
-	/* Deprecated commands are omitted from the main listing but still
-	 * shown afterwards, under their own "deprecated" banner.
-	 */
-	banner = strstr(cap.out, "deprecated and will be removed");
+	/* Deprecated commands are not shown, only warned about when run. */
+	banner = strstr(cap.out, "deprecated");
 	old_cmd = strstr(cap.out, "old-cmd");
-	check(banner != NULL, "no_args: deprecated-commands banner present");
-	check(old_cmd != NULL && banner != NULL && old_cmd > banner,
-	      "no_args: old-cmd listed only after the deprecated banner, not in the main listing");
+	check(banner == NULL, "no_args: no deprecated-commands banner");
+	check(old_cmd == NULL, "no_args: old-cmd not listed");
 
 	check(strstr(cap.out, "ext") != NULL, "no_args: lists 'ext' extension");
 

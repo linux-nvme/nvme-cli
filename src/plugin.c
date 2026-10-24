@@ -250,7 +250,6 @@ void general_help(struct plugin *plugin, char *str)
 	unsigned int i = 0;
 	unsigned int padding = 15;
 	unsigned int curr_length = 0;
-	bool have_deprecated = false;
 	bool needs_device = false;
 
 	for (i = 0; plugin->commands[i]; i++) {
@@ -290,11 +289,12 @@ void general_help(struct plugin *plugin, char *str)
 	 * Still need to handle the case of ultra long strings, help messages, etc
 	 */
 	for (i = 0; plugin->commands[i]; i++) {
+		/* the deprecated ones are only warned about when run */
+		if (plugin->commands[i]->deprecated)
+			continue;
 		curr_length = 2 + strlen(plugin->commands[i]->name);
 		if (padding < curr_length)
 			padding = curr_length;
-		if (plugin->commands[i]->deprecated)
-			have_deprecated = true;
 	}
 
 	if (plugin->groups) {
@@ -416,21 +416,6 @@ void general_help(struct plugin *plugin, char *str)
 		if (have_core || have_vendor)
 			printf("\nSee '%s <plugin> help' for more information on a plugin\n",
 					prog->name);
-	}
-
-	if (have_deprecated) {
-		printf("\nThe following sub-commands are deprecated and will be removed in the next major version:\n");
-		if (str)
-			printf("Note: Only sub-commands including %s\n", str);
-
-		i = 0;
-		for (; plugin->commands[i]; i++) {
-			if (!plugin->commands[i]->deprecated)
-				continue;
-			if (!str || strstr(plugin->commands[i]->name, str))
-				printf("  %-*s %s\n", padding, plugin->commands[i]->name,
-				       plugin->commands[i]->help);
-		}
 	}
 }
 
