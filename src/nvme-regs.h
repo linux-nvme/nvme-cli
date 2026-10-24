@@ -10,8 +10,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <libnvme.h>
-
 #include "bitfields.h"
 
 /*
@@ -79,9 +77,3 @@ struct nvme_reg_val {
 	const struct nvme_reg *reg;
 	uint64_t value;
 };
-
-/*
- * Returns a copy of the controller registers in a page-sized buffer, which
- * the caller must free(), or NULL if they cannot be read.
- */
-void *read_registers(struct libnvme_transport_handle *hdl);

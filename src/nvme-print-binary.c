@@ -3,6 +3,8 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+#include <shared/compiler-attributes-util.h>
+#include <shared/mmio-util.h>
 
 #include "nvme-print.h"
 
@@ -110,11 +112,31 @@ static void binary_supported_cap_config_log(
 	d_raw((unsigned char *)cap, len);
 }
 
-static void binary_ctrl_registers(void *bar, bool fabrics, __u32 unsupported)
+/*
+ * The registers as they are in BAR0, 0h to E1Bh, the ones not read zero:
+ * all of them for a PCIe controller, the properties of a fabrics one.
+ */
+static void binary_ctrl_registers(const struct nvme_reg_val *vals,
+				  unsigned int nr,
+				  enum nvme_regs_style style __shr_unused)
 {
-	const unsigned int reg_size = 0x0e1c;  /* 0x0000 to 0x0e1b */
+	const unsigned int size = NVME_REG_PMRMSCU + sizeof(uint32_t);
+	unsigned char page[NVME_REG_PMRMSCU + sizeof(uint32_t)] = { 0 };
+	unsigned int i;
 
-	d_raw((unsigned char *)bar, reg_size);
+	for (i = 0; i < nr; i++) {
+		const struct nvme_reg *reg = vals[i].reg;
+
+		if (reg->offset + reg->size > size)
+			continue;
+		if (reg->size == 8)
+			shr_mmio_write64(page + reg->offset, vals[i].value,
+					 true);
+		else
+			shr_mmio_write32(page + reg->offset, vals[i].value);
+	}
+
+	d_raw(page, size);
 }
 
 static void binary_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
@@ -411,7 +433,6 @@ static struct print_ops binary_print_ops = {
 	.secondary_ctrl_list		= binary_list_secondary_ctrl,
 	.select_result			= NULL,
 	.self_test_log 			= binary_self_test_log,
-	.single_property		= NULL,
 	.smart_log			= binary_smart_log,
 	.supported_cap_config_list_log	= binary_supported_cap_config_log,
 	.supported_log_pages		= binary_supported_log,
