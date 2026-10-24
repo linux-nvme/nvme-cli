@@ -3311,36 +3311,51 @@ static void json_ctrl_registers_pmrmscu(void *bar, struct json_object *r)
 
 static void json_ctrl_registers(void *bar, bool fabrics)
 {
+	static const struct {
+		int offset;
+		void (*show)(void *bar, struct json_object *r);
+	} regs[] = {
+		{ NVME_REG_CAP, json_ctrl_registers_cap },
+		{ NVME_REG_VS, json_ctrl_registers_vs },
+		{ NVME_REG_INTMS, json_ctrl_registers_intms },
+		{ NVME_REG_INTMC, json_ctrl_registers_intmc },
+		{ NVME_REG_CC, json_ctrl_registers_cc },
+		{ NVME_REG_CSTS, json_ctrl_registers_csts },
+		{ NVME_REG_NSSR, json_ctrl_registers_nssr },
+		{ NVME_REG_AQA, json_ctrl_registers_aqa },
+		{ NVME_REG_ASQ, json_ctrl_registers_asq },
+		{ NVME_REG_ACQ, json_ctrl_registers_acq },
+		{ NVME_REG_CMBLOC, json_ctrl_registers_cmbloc },
+		{ NVME_REG_CMBSZ, json_ctrl_registers_cmbsz },
+		{ NVME_REG_BPINFO, json_ctrl_registers_bpinfo },
+		{ NVME_REG_BPRSEL, json_ctrl_registers_bprsel },
+		{ NVME_REG_BPMBL, json_ctrl_registers_bpmbl },
+		{ NVME_REG_CMBMSC, json_ctrl_registers_cmbmsc },
+		{ NVME_REG_CMBSTS, json_ctrl_registers_cmbsts },
+		{ NVME_REG_CMBEBS, json_ctrl_registers_cmbebs },
+		{ NVME_REG_CMBSWTP, json_ctrl_registers_cmbswtp },
+		{ NVME_REG_NSSD, json_ctrl_registers_nssd },
+		{ NVME_REG_CRTO, json_ctrl_registers_crto },
+		{ NVME_REG_PMRCAP, json_ctrl_registers_pmrcap },
+		{ NVME_REG_PMRCTL, json_ctrl_registers_pmrctl },
+		{ NVME_REG_PMRSTS, json_ctrl_registers_pmrsts },
+		{ NVME_REG_PMREBS, json_ctrl_registers_pmrebs },
+		{ NVME_REG_PMRSWTP, json_ctrl_registers_pmrswtp },
+		{ NVME_REG_PMRMSCL, json_ctrl_registers_pmrmscl },
+		{ NVME_REG_PMRMSCU, json_ctrl_registers_pmrmscu },
+	};
 	struct json_object *r = json_r;
+	size_t i;
 
-	json_ctrl_registers_cap(bar, r);
-	json_ctrl_registers_vs(bar, r);
-	json_ctrl_registers_intms(bar, r);
-	json_ctrl_registers_intmc(bar, r);
-	json_ctrl_registers_cc(bar, r);
-	json_ctrl_registers_csts(bar, r);
-	json_ctrl_registers_nssr(bar, r);
-	json_ctrl_registers_aqa(bar, r);
-	json_ctrl_registers_asq(bar, r);
-	json_ctrl_registers_acq(bar, r);
-	json_ctrl_registers_cmbloc(bar, r);
-	json_ctrl_registers_cmbsz(bar, r);
-	json_ctrl_registers_bpinfo(bar, r);
-	json_ctrl_registers_bprsel(bar, r);
-	json_ctrl_registers_bpmbl(bar, r);
-	json_ctrl_registers_cmbmsc(bar, r);
-	json_ctrl_registers_cmbsts(bar, r);
-	json_ctrl_registers_cmbebs(bar, r);
-	json_ctrl_registers_cmbswtp(bar, r);
-	json_ctrl_registers_nssd(bar, r);
-	json_ctrl_registers_crto(bar, r);
-	json_ctrl_registers_pmrcap(bar, r);
-	json_ctrl_registers_pmrctl(bar, r);
-	json_ctrl_registers_pmrsts(bar, r);
-	json_ctrl_registers_pmrebs(bar, r);
-	json_ctrl_registers_pmrswtp(bar, r);
-	json_ctrl_registers_pmrmscl(bar, r);
-	json_ctrl_registers_pmrmscu(bar, r);
+	for (i = 0; i < ARRAY_SIZE(regs); i++) {
+		int offset = regs[i].offset;
+
+		/* Only the properties a fabrics controller implements */
+		if (fabrics && (!nvme_is_fabrics_reg(offset) ||
+				nvme_fabrics_reg_unsupported(bar, offset)))
+			continue;
+		regs[i].show(bar, r);
+	}
 }
 
 static void json_ctrl_register_human(int offset, uint64_t value, struct json_object *r)

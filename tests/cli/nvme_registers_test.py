@@ -244,6 +244,16 @@ class FabricsRegsTest(MockTestCase):
                                  rf'(?m)^{show}\s*: {value_str(REGS[name])}$')
         self.assertNotRegex(result.stdout, r'(?m)^nssr')
 
+    def test_show_regs_json(self):
+        """Only the properties the controller implements"""
+        if not HAVE_JSON:
+            self.skipTest('built without json-c')
+        result = self.assertOk(self.nvme('show-regs', self.ctrl,
+                                         '--output-format=json'))
+        self.assertEqual(json.loads(result.stdout),
+                         {name: REGS[name]
+                          for name in ('cap', 'vs', 'cc', 'csts')})
+
     def test_get_property(self):
         result = self.assertOk(self.nvme('get-property', self.ctrl,
                                          '--offset=0'))
