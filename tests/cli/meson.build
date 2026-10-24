@@ -165,6 +165,12 @@ if python3.found()
             ]
         endif
 
+        if 'io-mgmt' in selected_plugins
+            mock_cli_tests += [
+                ['io-mgmt', 'nvme_io_mgmt_test.py', cli_test_env, 30],
+            ]
+        endif
+
         if 'resv' in selected_plugins
             mock_cli_tests += [
                 ['resv', 'nvme_resv_test.py', cli_test_env, 30],
