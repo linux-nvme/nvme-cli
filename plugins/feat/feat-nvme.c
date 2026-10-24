@@ -467,7 +467,7 @@ static int timestamp_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 {
 	__u64 result;
 	int err;
-	struct nvme_timestamp ts;
+	struct nvme_timestamp ts = { 0 };
 	__le64 timestamp = cpu_to_le64(tstmp);
 
 	memcpy(ts.timestamp, &timestamp, sizeof(ts.timestamp));

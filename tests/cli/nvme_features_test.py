@@ -166,8 +166,7 @@ class FeatPluginSetTest(FeaturesTestBase):
                                '--tstmp=0x123456789abc')
         self.assertFields(cmd, FID_TIMESTAMP)
         # the timestamp in milliseconds, in the first 6 of 8 bytes
-        self.assertEqual(cmd.data[:6],
-                         struct.pack('<Q', 0x123456789abc)[:6])
+        self.assertEqual(cmd.data, struct.pack('<Q', 0x123456789abc))
 
 
     def test_perf_characteristics_standard(self):
