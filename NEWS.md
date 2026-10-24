@@ -426,14 +426,16 @@
 
 * The `nvme zns` zone management commands and `zone-append` work again:
   they sent their I/O commands to the admin queue. `zone-mgmt-recv`
-  requires `--data-len` for each action, and `zone-append` refuses more
-  than 65536 logical blocks and no longer overflows the metadata buffer.
+  requires a `--data-len` which is a multiple of 4 for each action, and
+  `zone-append` refuses more than 65536 logical blocks and no longer
+  overflows the metadata buffer.
 
 * `nvme resv report` reports a failed Identify Controller with its
   status, and fails.
 
-* `nvme io-mgmt recv` requires `--data-len`, and exits with success
-  after writing the data to `--data`.
+* `nvme io-mgmt recv` requires a `--data-len` which is a multiple of 4,
+  exits with success after writing the data to `--data`, and fails if
+  it can't write all of it.
 
 * `nvme dir send` and `dir receive` default to the namespace of a
   namespace device, and `dir send` refuses an `--endir` above 1.
