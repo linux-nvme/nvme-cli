@@ -85,6 +85,19 @@ class IoMgmtTest(MockTestCase):
         with open(path, 'rb') as f:
             self.assertEqual(f.read(), data)
 
+    def test_recv_file_short_write(self):
+        """A write of the data cut short fails the command"""
+        self.server.io[OPC_IO_MGMT_RECV] = bytes(range(256)) * 16
+        path = os.path.join(self.tmp, 'status')
+        result = self.nvme('io-mgmt', 'recv', self.ns,
+                           f'--mo={MO_RUH_STATUS}', '--data-len=4096',
+                           f'--data={path}', file_size_limit=1)
+        if 'invalid sub-command' in result.stderr:
+            self.skipTest('io-mgmt plugin not built')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('write', result.stderr)
+        self.assertLess(os.path.getsize(path), 4096)
+
 
 if __name__ == '__main__':
     main()

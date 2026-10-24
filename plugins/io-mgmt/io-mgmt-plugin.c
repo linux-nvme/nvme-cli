@@ -17,6 +17,7 @@
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/io-util.h>
 
 #include "argconfig.h"
 #include "cleanup.h"
@@ -189,9 +190,10 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 			return -errno;
 		}
 
-		if (write(dfd, buf, cfg.data_len) < 0) {
+		err = shr_write_all(dfd, buf, cfg.data_len);
+		if (err) {
 			nvme_show_perror("write");
-			return -errno;
+			return err;
 		}
 	} else {
 		d((unsigned char *)buf, cfg.data_len, 16, 1);
