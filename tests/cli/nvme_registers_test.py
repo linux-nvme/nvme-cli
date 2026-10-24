@@ -26,6 +26,8 @@ OPC_FABRICS = 0x7f
 FCTYPE_PROPERTY_SET = 0x00
 FCTYPE_PROPERTY_GET = 0x04
 SC_INVALID_FIELD = 0x02
+# with the More and Do Not Retry bits, as the Linux target answers
+SC_INVALID_FIELD_DNR = 0x6002
 SC_INTERNAL = 0x06
 
 REGS = {
@@ -220,7 +222,7 @@ class FabricsRegsTest(MockTestCase):
     def property_cmd(self, cmd):
         if cmd.nsid == FCTYPE_PROPERTY_GET:
             if cmd.cdw11 not in self.props:
-                return SC_INVALID_FIELD
+                return SC_INVALID_FIELD_DNR
             return Reply(result=self.props[cmd.cdw11])
         return Reply()
 
@@ -270,6 +272,36 @@ class FabricsRegsTest(MockTestCase):
         self.assertEqual(result.stdout.strip(),
                          'property : 0000 (Controller Capabilities), '
                          'value: 0x2028030fff')
+
+    def test_show_regs_error(self):
+        """Only Invalid Field means a property is not implemented"""
+        self.server.admin[OPC_FABRICS] = (
+            lambda cmd: SC_INTERNAL if cmd.cdw11 == 0x20 else
+            self.property_cmd(cmd))
+        result = self.nvme('show-regs', self.ctrl)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Internal Error', result.stderr)
+
+    def test_not_implemented(self):
+        """get-reg and get-property fail for a property the controller
+        doesn't implement, with or without the DNR bit"""
+        for status in (SC_INVALID_FIELD, SC_INVALID_FIELD_DNR):
+            self.server.admin[OPC_FABRICS] = (
+                lambda cmd, status=status: status if cmd.cdw11 == 0x68 else
+                self.property_cmd(cmd))
+            for args, message in (
+                    (['get-reg', '--cap', '--crto'],
+                     'register: 0x68 (Controller Ready Timeouts) not '
+                     'implemented'),
+                    (['get-property', '--offset=0x68'],
+                     'Invalid Field in Command')):
+                with self.subTest(status=status, args=args):
+                    result = self.nvme(args[0], self.ctrl, *args[1:])
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(message, result.stderr)
+                    self.assertNotIn('0xffffffff', result.stdout)
+                    if '--cap' in args:
+                        self.assertIn('value: 0x2028030fff', result.stdout)
 
     def test_get_property_offset_required(self):
         result = self.nvme('get-property', self.ctrl)
