@@ -72,7 +72,8 @@ jobs:
       - name: Compute dev version from git
         id: version
         run: |
-          TAG=$(git describe --tags --abbrev=0)
+          # only release tags: the nightly tag follows master
+          TAG=$(git describe --tags --abbrev=0 --match 'v*')
           REV=$(git rev-list HEAD --count)
           BASE_VERSION="${TAG#v}"
           VERSION="${BASE_VERSION}.dev${REV}"
