@@ -95,6 +95,18 @@ class PcieRegsTest(MockTestCase):
         expected = {name: REGS.get(name, 0) for name in CTRL_REGS_FIELDS}
         self.assertEqual(json.loads(result.stdout), expected)
 
+    def test_show_regs_json_unsigned(self):
+        """Register values are unsigned, also with the top bit set"""
+        if not HAVE_JSON:
+            self.skipTest('built without json-c')
+        regs = {name: (1 << 63 if fmt == '<Q' else 1 << 31) | i
+                for i, (name, (fmt, _)) in enumerate(
+                    CTRL_REGS_FIELDS.items())}
+        self.resource0.write_bytes(ctrl_regs(**regs))
+        result = self.assertOk(self.nvme('show-regs', self.ctrl,
+                                         '--output-format=json'))
+        self.assertEqual(json.loads(result.stdout), regs)
+
     def test_show_regs_verbose(self):
         """The fields of the registers, decoded"""
         result = self.assertOk(self.nvme('show-regs', self.ctrl,
@@ -282,7 +294,7 @@ class FabricsRegsTest(MockTestCase):
         if HAVE_JSON:
             result = self.assertOk(self.nvme('show-regs', self.ctrl,
                                              '--output-format=json'))
-            self.assertIn('crto', json.loads(result.stdout))
+            self.assertEqual(json.loads(result.stdout)['crto'], 0xffffffff)
         result = self.assertOk(self.nvme('get-reg', self.ctrl, '--crto'))
         self.assertIn('value: 0xffffffff', result.stdout)
 
