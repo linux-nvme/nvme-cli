@@ -72,8 +72,9 @@ Usage: python3 ocp_internal_log_event_fifo_mock_test.py <nvme-binary> <mock-lib>
 import struct
 import unittest
 
+from tests.cli.nvme_mock import main
 from tests.cli.ocp.ocp_mock_test import (MODES, STR_DA_EVENT_FIFO_INFO,
-                                         OCPInternalLogTestBase, main)
+                                         OCPInternalLogTestBase)
 from tests.e2e.plugins.ocp import ocp_telemetry_layout as layout
 
 PHYS_NAMES = {n: f'PHYS FIFO {n:02d}' for n in range(1, layout.MAX_FIFOS + 1)}

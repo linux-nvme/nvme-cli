@@ -26,8 +26,9 @@ Usage: python3 ocp_internal_log_no_json_mock_test.py <nvme-binary> <mock-lib>
 import os
 
 from tests.cli.ocp.ocp_internal_log_mock_test import string_log, telemetry_log
+from tests.cli.nvme_mock import main
 from tests.cli.ocp.ocp_mock_test import (MODES, STR_DA_STATS,
-                                         OCPInternalLogTestBase, main,
+                                         OCPInternalLogTestBase,
                                          parse_text_report, text_records)
 
 
