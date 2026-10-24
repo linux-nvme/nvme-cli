@@ -1085,10 +1085,11 @@ nvme_list_opts () {
 			;;
 
 		"sanitize-ns")
-			opts+=" --ause -u --dry-run --emvs -e --ish -I --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --preq -q --quiet --sanact= -a --set-options= --timeout= --verbose -v"
-			valopts+=" --output-format -o --output-format-version --sanact -a --set-options --timeout"
+			opts+=" --ause -u --dry-run --emvs -e --ish -I --namespace-id= -n --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --preq -q --quiet --sanact= -a --set-options= --timeout= --verbose -v"
+			valopts+=" --namespace-id -n --output-format -o --output-format-version --sanact -a --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--namespace-id -n" "all -1" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sanact -a" "exit-failure start-crypto-erase exit-media-verification" \
 			               "--timeout" "infinite -1"
