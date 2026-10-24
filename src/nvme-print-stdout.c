@@ -1347,7 +1347,7 @@ static void stdout_ctrl_register_support(struct shr_table *t, void *bar,
 		shr_mmio_read64(bar + offset) : shr_mmio_read32(bar + offset);
 	int row;
 
-	if (fabrics && value == -1)
+	if (fabrics && nvme_fabrics_reg_unsupported(bar, offset))
 		return;
 
 	row = stdout_kv_add(t, nvme_register_symbol_to_string(offset),

@@ -935,6 +935,7 @@ void nvme_show_key_value(const char *key, const char *value, ...);
 void nvme_show_verbose_key_value(const char *key, const char *value, ...);
 bool nvme_is_fabrics_reg(int offset);
 bool nvme_is_fabrics_optional_reg(int offset);
+bool nvme_fabrics_reg_unsupported(void *bar, int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
 bool nvme_registers_pmrctl_ready(__u32 pmrctl);
 const char *nvme_degrees_string(long t);

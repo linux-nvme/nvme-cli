@@ -714,6 +714,18 @@ bool nvme_is_fabrics_reg(int offset)
 	return false;
 }
 
+/*
+ * The properties a fabrics controller does not implement are all ones in
+ * the registers show-regs and get-reg read them into.
+ */
+bool nvme_fabrics_reg_unsupported(void *bar, int offset)
+{
+	if (nvme_is_64bit_reg(offset))
+		return shr_mmio_read64(bar + offset) == UINT64_MAX;
+
+	return shr_mmio_read32(bar + offset) == UINT32_MAX;
+}
+
 bool nvme_is_fabrics_optional_reg(int offset)
 {
 	switch (offset) {
