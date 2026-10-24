@@ -26,6 +26,7 @@ SV = 1 << 31
 
 FID_ARBITRATION = 0x01
 FID_POWER_MGMT = 0x02
+FID_LBA_RANGE = 0x03
 FID_TEMP_THRESH = 0x04
 FID_ERR_RECOVERY = 0x05
 FID_VOLATILE_WC = 0x06
@@ -43,6 +44,7 @@ FID_POWER_THRESH = 0x24
 FID_POWER_MEASUREMENT = 0x25
 
 PERF_ATTR_SIZE = 4096
+LBA_RANGE_ENTRY_SIZE = 64
 
 
 class FeaturesTestBase(MockTestCase):
@@ -279,6 +281,37 @@ class FeatPluginReadModifyWriteTest(FeaturesTestBase):
         self.assertFields(cmd, FID_HOST_BEHAVIOR)
         self.assertEqual(cmd.data, host_behavior(acre=1, etdas=1, lbafee=0,
                                                  cdfe=0x105))
+
+    def test_lba_range_type(self):
+        """The unique identifiers are optional"""
+        cmd = self.set_feature('feat', 'lba-range-type', self.ctrl,
+                               '--nsid=1', '--num=1', '--types=2,3',
+                               '--lbaros=1,0', '--hlbars=0,1',
+                               '--slbas=0,0x1000', '--nlbs=0xfff,0x2000')
+        get, = self.server.admin_cmds(OPC_GET_FEATURES)
+        self.assertEqual(get.fid, FID_LBA_RANGE)
+        # NUM is a 0's based value
+        self.assertFields(cmd, FID_LBA_RANGE, cdw11=1, nsid=1)
+        entries = [cmd.data[i:i + LBA_RANGE_ENTRY_SIZE]
+                   for i in range(0, 2 * LBA_RANGE_ENTRY_SIZE,
+                                  LBA_RANGE_ENTRY_SIZE)]
+        # type, attributes: LBARO bit 0, HLBAR bit 1; SLBA, NLB
+        self.assertEqual([(e[0], e[1]) for e in entries], [(2, 1), (3, 2)])
+        self.assertEqual([struct.unpack_from('<QQ', e, 16) for e in entries],
+                         [(0, 0xfff), (0x1000, 0x2000)])
+        self.assertEqual(cmd.data[2 * LBA_RANGE_ENTRY_SIZE:],
+                         bytes(len(cmd.data) - 2 * LBA_RANGE_ENTRY_SIZE))
+
+    def test_lba_range_type_guids(self):
+        result = self.nvme('feat', 'lba-range-type', self.ctrl, '--nsid=1',
+                           '--num=0', '--types=2', '--lbaros=0',
+                           '--hlbars=0', '--slbas=0', '--nlbs=1',
+                           '--guids=0x0102030405060708090a0b0c0d0e0f10')
+        if 'unsupported without __int128' in result.stderr:
+            self.skipTest('nvme built without __int128')
+        self.assertOk(result)
+        cmd, = self.set_features()
+        self.assertEqual(cmd.data[32:48], bytes(range(16, 0, -1)))
 
     def test_lba_range_type_count_mismatch(self):
         result = self.nvme('feat', 'lba-range-type', self.ctrl, '--nsid=1',
