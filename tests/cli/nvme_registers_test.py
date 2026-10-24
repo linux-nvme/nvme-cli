@@ -36,7 +36,7 @@ REGS = {
     'aqa': 0x001f001f,
     'asq': 0x12345000,
     'acq': 0x6789a000,
-    'crto': 0x00040002,
+    'crto': 0x00050003,
     'pmrcap': 0x00000008,
 }
 
@@ -110,8 +110,8 @@ class PcieRegsTest(MockTestCase):
                 ('Ready (RDY)', 'Yes'),
                 ('Admin Completion Queue Size (ACQS)', '32'),
                 ('Admin Submission Queue Size (ASQS)', '32'),
-                ('CRIMT', '2 secs'),
-                ('CRWMT', '1 secs'),
+                ('CRIMT', '2500 ms'),
+                ('CRWMT', '1500 ms'),
                 ('Read Data Support (RDS)',
                  'Read data from the PMR is supported')):
             with self.subTest(field=field):
