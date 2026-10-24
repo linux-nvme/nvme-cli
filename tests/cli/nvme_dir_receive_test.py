@@ -15,8 +15,8 @@ Usage: python3 nvme_dir_receive_test.py <path-to-nvme-binary> <mock-lib>
 import json
 import struct
 
-from tests.cli.nvme_mock import (OPC_DIRECTIVE_RECV, MockController,
-                                 MockTestCase, main)
+from tests.cli.nvme_mock import (NVME_IOCTL_ID, OPC_DIRECTIVE_RECV,
+                                 MockController, MockTestCase, Reply, main)
 
 DTYPE_IDENTIFY = 0
 DTYPE_STREAMS = 1
@@ -92,6 +92,22 @@ class DirReceiveCLITest(MockTestCase):
     def test_identify_too_short(self):
         result = self._receive(DTYPE_IDENTIFY, 1, '--data-len=16')
         self.assertIn(TOO_SHORT, result.stderr)
+
+    def test_namespace_id(self):
+        """The namespace of a namespace device, namespace 1 of a
+        controller device, unless --namespace-id is given"""
+        self.server.ioctls[NVME_IOCTL_ID] = Reply(status=2)
+        for device, args, nsid in ((self.ns, [], 2), (self.ctrl, [], 1),
+                                   (self.ns, ['--namespace-id=3'], 3)):
+            with self.subTest(device=device, args=args):
+                self.server.commands.clear()
+                result = self.nvme('dir', 'receive', device,
+                                   f'--dir-type={DTYPE_STREAMS}',
+                                   f'--dir-oper={DOPER_STREAMS_STATUS}',
+                                   *args)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                cmd, = self.server.admin_cmds(OPC_DIRECTIVE_RECV)
+                self.assertEqual(cmd.nsid, nsid)
 
 
 if __name__ == '__main__':
