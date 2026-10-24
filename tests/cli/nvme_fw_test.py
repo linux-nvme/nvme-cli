@@ -165,6 +165,18 @@ class FwCommitTest(MockTestCase):
                 self.assertIn(message, result.stderr)
         self.assertEqual(self.server.admin_cmds(OPC_FW_COMMIT), [])
 
+    def test_reset_required(self):
+        """A commit which needs a reset to activate the image succeeds"""
+        for sc, reset in ((0x0b, 'conventional'), (0x10, 'subsystem'),
+                          (0x11, 'any controller')):
+            with self.subTest(reset=reset):
+                self.server.admin[OPC_FW_COMMIT] = 0x100 | sc
+                result = self.nvme('fw', 'commit', self.ctrl, '--slot=2',
+                                   '--action=1')
+                self.assertIn('Success activating firmware action:1 slot:2'
+                              f', but firmware requires {reset} reset',
+                              result.stdout)
+
     def test_multiple_update_detected(self):
         self.server.admin[OPC_FW_COMMIT] = Reply(result=0x3)
         for frmw, shown in ((FRMW_MUDS, True), (0, False)):
