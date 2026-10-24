@@ -826,8 +826,9 @@ static struct shr_table *stdout_registers_crto_table(__u32 crto)
 	if (!t)
 		return NULL;
 
-	stdout_kv_add(t, "CRIMT", "%d secs", NVME_CRTO_CRIMT(crto) / 2);
-	stdout_kv_add(t, "CRWMT", "%d secs", NVME_CRTO_CRWMT(crto) / 2);
+	/* in 500 millisecond units */
+	stdout_kv_add(t, "CRIMT", "%u ms", NVME_CRTO_CRIMT(crto) * 500);
+	stdout_kv_add(t, "CRWMT", "%u ms", NVME_CRTO_CRWMT(crto) * 500);
 
 	return t;
 }
