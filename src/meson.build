@@ -29,6 +29,7 @@ sources = [
     'src/nvme-cmds-security.c',
     'src/plugin.c',
     'src/privsep.c',
+    'src/bitfields.c',
     'src/field-parser.c',
 ]
 

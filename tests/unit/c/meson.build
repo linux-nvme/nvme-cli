@@ -62,3 +62,12 @@ test_plugin = executable(
 )
 
 test('nvme-cli - plugin-dispatch', test_plugin, suite: 'unit')
+
+test_bitfields = executable(
+    'test-bitfields',
+    ['test-bitfields.c', '../../../src/bitfields.c'],
+    include_directories: '../../../src',
+    dependencies: [config_dep],
+)
+
+test('nvme-cli - bitfields', test_bitfields, suite: 'unit')
