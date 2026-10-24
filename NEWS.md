@@ -360,6 +360,17 @@
 * `nvme format` on a controller without `--namespace-id` tells how to
   format a namespace or all of them.
 
+* `nvme read`, `write` and `compare` refuse a `--data-size` of more
+  than 65536 logical blocks, which overflowed a buffer, and size the
+  metadata for all blocks of `--data-size` without `--block-count`.
+
+* `nvme copy` sends 0 as the expected reference tag of a range without
+  `--expected-ref-tags`. Before, it was whatever was on the stack.
+
+* `nvme get-lba-status` sends the namespace of the device without
+  `--namespace-id`, instead of NSID 0, and refuses a `--max-dw` whose
+  data length doesn't fit 32 bits.
+
 ### Plugins
 
 * `nvme feat num-queues --nsqr=N` without `--ncqr` keeps the current
@@ -412,6 +423,20 @@
 * `nvme ns create --nsze-si` and `--ncap-si` take the namespace
   granularity of a format with extended metadata, and the LBA format
   on big endian hosts, right, and align to a granularity above 4 GiB.
+
+* The `nvme zns` zone management commands and `zone-append` work again:
+  they sent their I/O commands to the admin queue. `zone-mgmt-recv`
+  requires `--data-len` for each action, and `zone-append` refuses more
+  than 65536 logical blocks and no longer overflows the metadata buffer.
+
+* `nvme resv report` reports a failed Identify Controller with its
+  status, and fails.
+
+* `nvme io-mgmt recv` requires `--data-len`, and exits with success
+  after writing the data to `--data`.
+
+* `nvme dir send` and `dir receive` default to the namespace of a
+  namespace device, and `dir send` refuses an `--endir` above 1.
 
 ### nvme-discoverd
 
