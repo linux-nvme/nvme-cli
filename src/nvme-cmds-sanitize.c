@@ -278,7 +278,7 @@ static int wait_sanitize(struct libnvme_transport_handle *hdl)
 	static const char spin[] = {'-', '\\', '|', '/' };
 	struct libnvme_passthru_cmd cmd;
 	__u64 i = 0, cnt = 0, wthr = 0;
-	__u32 p = 0;
+	__u32 p = 0, scdw10;
 	int err;
 
 	log = libnvme_alloc(sizeof(*log));
@@ -292,23 +292,24 @@ static int wait_sanitize(struct libnvme_transport_handle *hdl)
 		return err;
 	}
 
-	switch (NVME_GET(log->scdw10, SANITIZE_CDW10_SANACT)) {
+	scdw10 = le32_to_cpu(log->scdw10);
+	switch (NVME_GET(scdw10, SANITIZE_CDW10_SANACT)) {
 	case NVME_SANITIZE_SANACT_EXIT_FAILURE:
 		break;
 	case NVME_SANITIZE_SANACT_START_BLOCK_ERASE:
-		if (NVME_GET(log->scdw10, SANITIZE_CDW10_NDAS))
+		if (NVME_GET(scdw10, SANITIZE_CDW10_NDAS))
 			wthr = le32_to_cpu(log->etbend);
 		else
 			wthr = le32_to_cpu(log->etbe);
 		break;
 	case NVME_SANITIZE_SANACT_START_OVERWRITE:
-		if (NVME_GET(log->scdw10, SANITIZE_CDW10_NDAS))
+		if (NVME_GET(scdw10, SANITIZE_CDW10_NDAS))
 			wthr = le32_to_cpu(log->etond);
 		else
 			wthr = le32_to_cpu(log->eto);
 		break;
 	case NVME_SANITIZE_SANACT_START_CRYPTO_ERASE:
-		if (NVME_GET(log->scdw10, SANITIZE_CDW10_NDAS))
+		if (NVME_GET(scdw10, SANITIZE_CDW10_NDAS))
 			wthr = le32_to_cpu(log->etcend);
 		else
 			wthr = le32_to_cpu(log->etce);
@@ -317,7 +318,7 @@ static int wait_sanitize(struct libnvme_transport_handle *hdl)
 	default:
 		break;
 	}
-	if (wthr != 0xffffffff && NVME_GET(log->scdw10, SANITIZE_CDW10_EMVS))
+	if (wthr != 0xffffffff && NVME_GET(scdw10, SANITIZE_CDW10_EMVS))
 		wthr += le32_to_cpu(log->etpvds);
 
 	nvme_show_result("Waiting for sanitize completion...");
