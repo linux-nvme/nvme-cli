@@ -159,6 +159,12 @@ if python3.found()
             ]
         endif
 
+        if 'dir' in selected_plugins
+            mock_cli_tests += [
+                ['dir-send', 'nvme_dir_send_test.py', cli_test_env, 30],
+            ]
+        endif
+
         if 'resv' in selected_plugins
             mock_cli_tests += [
                 ['resv', 'nvme_resv_test.py', cli_test_env, 30],
