@@ -590,6 +590,14 @@
   `libnvmf_context_set_config()`, and `config_discovered_params()` in
   the Python bindings.
 
+* The Copy source range entries carry the Expected Logical Block Tags
+  (ELBT), Application Tag (ELBAT) and Application Tag Mask (ELBATM)
+  little endian again, as in 2.x, except the 80 bit ELBT of formats 1h
+  and 3h, which stays big endian. 3.0 and 3.1 sent them big endian,
+  which `nvme copy --expected-ref-tags` and `--expected-app-tags`
+  inherit. The byte order is not spelled out in the specification,
+  see [#4278](https://github.com/linux-nvme/nvme-cli/issues/4278).
+
 ### nvme-keysd
 
 * New daemon, nvme-keysd, a technology preview: it will put NVMe/TCP
