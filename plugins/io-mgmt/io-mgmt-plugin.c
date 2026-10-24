@@ -161,11 +161,15 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 		}
 	}
 
-	if (cfg.data_len) {
-		buf = libnvme_alloc(cfg.data_len);
-		if (!buf)
-			return -ENOMEM;
+	/* NUMD is 0's based */
+	if (!cfg.data_len) {
+		nvme_show_error("data length (--data-len) has to be given");
+		return -EINVAL;
 	}
+
+	buf = libnvme_alloc(cfg.data_len);
+	if (!buf)
+		return -ENOMEM;
 
 	nvme_init_io_mgmt_recv(&cmd, cfg.nsid, cfg.mo, cfg.mos, buf,
 		cfg.data_len);
