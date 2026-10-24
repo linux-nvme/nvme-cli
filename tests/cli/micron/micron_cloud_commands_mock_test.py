@@ -32,15 +32,9 @@ Usage: python3 micron_cloud_commands_mock_test.py <nvme-binary> <mock-lib>
 import re
 import struct
 
-from micron_mock_test import (
-    CUST_ID_GENERIC,
-    CUST_ID_GG,
-    SC_INVALID_LOG_PAGE,
-    TestMicronMock,
-    main,
-    pack_id_ctrl,
-    pack_smart_log,
-)
+from tests.cli.nvme_mock import CNS_CTRL, LID_SMART, SC_INVALID_LOG_PAGE, main
+from micron_mock_test import (CUST_ID_GENERIC, CUST_ID_GG, TestMicronMock,
+                              pack_id_ctrl, pack_smart_log)
 
 _CLOUD_LOG = "vs-cloud-log"
 _DEVICE_WAF = "vs-device-waf"
@@ -86,8 +80,8 @@ class CloudTestBase(TestMicronMock):
     def setup_cloud_drive(self, model='M51CX', cust_id=CUST_ID_GG,
                           data_units_written=0, log=None):
         self.select_model(model)
-        self.server.identify = pack_id_ctrl(cust_id=cust_id)
-        self.server.smart = pack_smart_log(
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(cust_id=cust_id)
+        self.server.logs[LID_SMART] = pack_smart_log(
             data_units_written=data_units_written)
         self.server.logs[_LID_CLOUD] = (pack_cloud_log() if log is None
                                         else log)

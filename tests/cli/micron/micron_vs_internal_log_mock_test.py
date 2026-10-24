@@ -43,19 +43,12 @@ import struct
 import tarfile
 import zipfile
 
-from micron_mock_test import (
-    LID_TELEMETRY_CTRL,
-    LID_TELEMETRY_HOST,
-    LPA_TELEMETRY,
-    MICRON_MODELS,
-    MICRON_VENDOR_ID,
-    NVME_BIN,
-    TestMicronMock,
-    built_with_library,
-    main,
-    pack_id_ctrl,
-    pack_telemetry_log,
-)
+from tests.cli.nvme_mock import (CNS_CTRL, LID_TELEMETRY_CTRL,
+                                 LID_TELEMETRY_HOST, LPA_TELEMETRY, NVME_BIN,
+                                 main)
+from tests.cli.nvme_mock_ipc import built_with_library
+from micron_mock_test import (MICRON_MODELS, MICRON_VENDOR_ID, TestMicronMock,
+                              pack_id_ctrl, pack_telemetry_log)
 
 _COMMAND = "vs-internal-log"
 
@@ -112,8 +105,8 @@ class InternalLogTestBase(TestMicronMock):
     def setUp(self):
         super().setUp()
         self.select_model('M51CX')
-        self.server.identify = pack_id_ctrl(serial=_SERIAL,
-                                            lpa=LPA_TELEMETRY)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(serial=_SERIAL,
+                                                      lpa=LPA_TELEMETRY)
 
     def package_path(self, name):
         return os.path.join(self.out_dir, name)
@@ -286,7 +279,7 @@ class TestMicronInternalLogTelemetry(InternalLogTestBase):
 
     def test_telemetry_support_gate(self):
         """A drive whose LPA lacks telemetry support is refused."""
-        self.server.identify = pack_id_ctrl(serial=_SERIAL, lpa=0)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(serial=_SERIAL, lpa=0)
         result = self.run_log(
             f"--type=host --data_area=1 "
             f"--package={self.package_path('t.bin')}")
@@ -295,8 +288,8 @@ class TestMicronInternalLogTelemetry(InternalLogTestBase):
         self.assertIn(_TELEMETRY_UNSUPPORTED_MSG, result.stderr)
 
     def test_other_lpa_bits_do_not_grant_telemetry_support(self):
-        self.server.identify = pack_id_ctrl(serial=_SERIAL,
-                                            lpa=0xFF & ~LPA_TELEMETRY)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(
+            serial=_SERIAL, lpa=0xFF & ~LPA_TELEMETRY)
         result = self.run_log(
             f"--type=host --data_area=1 "
             f"--package={self.package_path('t.bin')}")
@@ -449,8 +442,10 @@ class TestMicronInternalLogPackage(InternalLogTestBase):
     def test_metadata_identity_strings_are_trimmed(self):
         """Identify strings are padded; the metadata holds them trimmed."""
         self.require_tool('zip')
-        self.server.identify = pack_id_ctrl(serial=_SERIAL, model="MockModel",
-                                            fw="MFW1", lpa=LPA_TELEMETRY)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(serial=_SERIAL,
+                                                      model="MockModel",
+                                                      fw="MFW1",
+                                                      lpa=LPA_TELEMETRY)
         metadata = json.loads(self.read_entry(self.collect(), _METADATA_FILE))
 
         self.assertEqual(metadata["serial_number"], _SERIAL)
@@ -613,7 +608,7 @@ class TestMicronInternalLogPackage(InternalLogTestBase):
     def test_telemetry_is_skipped_when_unsupported(self):
         """A drive without telemetry support is not asked for those logs."""
         self.require_tool('zip')
-        self.server.identify = pack_id_ctrl(serial=_SERIAL, lpa=0)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(serial=_SERIAL, lpa=0)
         self.server.commands.clear()
         self.collect()
         read = self.server.lids_read()
@@ -628,8 +623,8 @@ class TestMicronInternalLogPackage(InternalLogTestBase):
     def test_serial_is_sanitised_before_it_names_a_directory(self):
         """The drive supplies the serial, so it must not steer the path."""
         self.require_tool('zip')
-        self.server.identify = pack_id_ctrl(serial="../bad'sn",
-                                            lpa=LPA_TELEMETRY)
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(serial="../bad'sn",
+                                                      lpa=LPA_TELEMETRY)
         before = set(os.listdir(self.out_dir))
         path = self.collect("sanitised.zip")
         entries = self.entries(path)

@@ -26,12 +26,8 @@ Tests in this module verify:
 Usage: python3 micron_drive_model_mock_test.py <nvme-binary> <mock-lib>
 """
 
-from micron_mock_test import (
-    MICRON_MODELS,
-    UNKNOWN_DEVICE_ID,
-    TestMicronMock,
-    main,
-)
+from tests.cli.nvme_mock import main
+from micron_mock_test import MICRON_MODELS, UNKNOWN_DEVICE_ID, TestMicronMock
 
 # Models each gated command accepts, mirroring the plugin's gate conditions.
 # A command is expected to refuse every other model, UNKNOWN included.

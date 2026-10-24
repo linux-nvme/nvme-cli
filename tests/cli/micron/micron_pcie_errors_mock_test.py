@@ -46,12 +46,8 @@ import re
 import struct
 from pathlib import Path
 
-from micron_mock_test import (
-    OPC_VENDOR_D6,
-    SC_INVALID_FIELD,
-    TestMicronMock,
-    main,
-)
+from tests.cli.nvme_mock import SC_INVALID_FIELD, Reply, main
+from micron_mock_test import OPC_VENDOR_D6, TestMicronMock
 
 _STATS = "vs-pcie-stats"
 _CLEAR = "clear-pcie-correctable-errors"
@@ -210,7 +206,7 @@ class TestMicronVsPcieStats(PcieTestBase):
         read, and this would catch that instead of silently passing.
         """
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_D6] = pack_error_counters()
+        self.server.admin[OPC_VENDOR_D6] = pack_error_counters()
         self.run_plugin_cmd_check(_STATS)
 
         self.assertIn(OPC_VENDOR_D6, self.server.opcodes())
@@ -230,7 +226,7 @@ class TestMicronVsPcieStats(PcieTestBase):
     def test_vendor_failure_falls_back_to_the_aer_registers(self):
         """A M5407 drive rejecting 0xD6 still reports what AER knows."""
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_D6] = SC_INVALID_FIELD
+        self.server.admin[OPC_VENDOR_D6] = SC_INVALID_FIELD
         self.install_aer(correctable=1 << 12)
         result = self.run_plugin_cmd_check(_STATS)
 
@@ -247,7 +243,7 @@ class TestMicronVsPcieStats(PcieTestBase):
         values = {name: index + 1
                   for index, (name, _, _) in enumerate(_ALL_FIELDS)}
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_D6] = pack_error_counters(values)
+        self.server.admin[OPC_VENDOR_D6] = pack_error_counters(values)
         result = self.run_plugin_cmd_check(_STATS)
 
         self.assertEqual(self.text_fields(result.stdout), values)
@@ -257,21 +253,21 @@ class TestMicronVsPcieStats(PcieTestBase):
         """A counter is 16 bits wide, so 65535 must not wrap or go negative."""
         values = {name: 0xFFFF for name, _, _ in _ALL_FIELDS}
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_D6] = pack_error_counters(values)
+        self.server.admin[OPC_VENDOR_D6] = pack_error_counters(values)
 
         self.assertEqual(self.json_stats(), values)
 
     def test_counter_route_requests_the_whole_struct(self):
         """The 0xD6 read asks for the counter struct, with cdw10 set to 1."""
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_D6] = pack_error_counters()
+        self.server.admin[OPC_VENDOR_D6] = pack_error_counters()
         self.run_plugin_cmd_check(_STATS)
         vendor = [c for c in self.server.commands
-                  if c['opcode'] == OPC_VENDOR_D6]
+                  if c.opcode == OPC_VENDOR_D6]
 
         self.assertEqual(len(vendor), 1)
-        self.assertEqual(vendor[0]['len'], _COUNTER_STRUCT_SIZE)
-        self.assertEqual(vendor[0]['cdw10'], 1)
+        self.assertEqual(vendor[0].data_len, _COUNTER_STRUCT_SIZE)
+        self.assertEqual(vendor[0].cdw10, 1)
 
     # ---------------------------------------------------------------- #
     # AER route decoding                                               #
@@ -361,7 +357,7 @@ class TestMicronVsPcieStats(PcieTestBase):
     def test_json_is_the_same_shape_for_every_route(self):
         """JSON hides the route difference the text layouts expose."""
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_D6] = pack_error_counters()
+        self.server.admin[OPC_VENDOR_D6] = pack_error_counters()
         counter_keys = sorted(self.json_stats())
 
         self.select_model(_GENERIC_MODEL)
@@ -426,7 +422,7 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
                 result = self.run_plugin_cmd_check(_CLEAR, args="--verbose")
 
                 written = [c for c in self.server.commands
-                           if c['fid'] == _FID_CLEAR_PCI_CORRECTABLE]
+                           if c.fid == _FID_CLEAR_PCI_CORRECTABLE]
                 self.assertTrue(written, "the 0xC3 feature was never written")
                 self.assertIn("Device correctable errors cleared!",
                               result.stdout + result.stderr)
@@ -436,14 +432,14 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
         self.select_model('M51CX')
         self.run_plugin_cmd_check(_CLEAR)
         written = [c for c in self.server.commands
-                   if c['fid'] == _FID_CLEAR_PCI_CORRECTABLE]
+                   if c.fid == _FID_CLEAR_PCI_CORRECTABLE]
 
-        self.assertEqual(written[0]['cdw11'], 1 << 31)
+        self.assertEqual(written[0].cdw11, 1 << 31)
 
     def test_m5407_uses_the_vendor_opcode(self):
         """M5407 clears with the 0xD6 command."""
         self.select_model('M5407')
-        self.server.vendor[OPC_VENDOR_D6] = b""
+        self.server.admin[OPC_VENDOR_D6] = b""
         result = self.run_plugin_cmd_check(_CLEAR, args="--verbose")
 
         self.assertIn(OPC_VENDOR_D6, self.server.opcodes())
@@ -453,8 +449,7 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
     def test_vendor_feature_failure_falls_back_to_aer(self):
         """A drive rejecting 0xC3 still gets cleared through the AER route."""
         self.select_model('M51CX')
-        self.server.feature_status[_FID_CLEAR_PCI_CORRECTABLE] = \
-            SC_INVALID_FIELD
+        self.server.features[_FID_CLEAR_PCI_CORRECTABLE] = SC_INVALID_FIELD
         self.install_aer(correctable=0xFF)
         result = self.run_plugin_cmd_check(_CLEAR)
 
@@ -473,7 +468,7 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
         treated as a successful clear.
         """
         self.select_model('M51CX')
-        self.server.features[_FID_CLEAR_PCI_CORRECTABLE] = 1
+        self.server.features[_FID_CLEAR_PCI_CORRECTABLE] = Reply(result=1)
         self.install_aer(correctable=0xFF)
         self.run_plugin_cmd_check(_CLEAR)
 
@@ -554,7 +549,7 @@ class TestMicronClearPcieCorrectableErrors(PcieTestBase):
         """A namespace path resolves to its parent controller."""
         self.select_model(_GENERIC_MODEL)
         self.install_aer(correctable=0x10)
-        result = self.run_plugin_cmd_check(_CLEAR, device=self.ns1)
+        result = self.run_plugin_cmd_check(_CLEAR, device=self.ns)
 
         self.assertIn("Device correctable errors detected: ffffffff",
                       result.stdout)
