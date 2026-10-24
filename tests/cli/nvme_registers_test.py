@@ -229,20 +229,28 @@ class FabricsRegsTest(MockTestCase):
                 if cmd.nsid == fctype]
 
     def test_show_regs(self):
-        """The properties of a fabrics controller: CAP, VS, CC, CSTS and
-        the optional NSSR, which the controller doesn't implement"""
+        """The properties of a fabrics controller: CAP, VS, CC, CSTS, CRTO
+        and the optional NSSR and NSSD, which the controller doesn't
+        implement"""
         result = self.assertOk(self.nvme('show-regs', self.ctrl))
         # ATTRIB (size: 0 for 4 bytes, 1 for 8 bytes); OFST
         self.assertEqual([(c.cdw10, c.cdw11) for c in
                           self.property_cmds(FCTYPE_PROPERTY_GET)],
                          [(1, 0x00), (0, 0x08), (0, 0x14), (0, 0x1c),
-                          (0, 0x20)])
-        for name in ('cap', 'vs', 'cc', 'csts'):
+                          (0, 0x20), (0, 0x64), (0, 0x68)])
+        for name in ('cap', 'vs', 'cc', 'csts', 'crto'):
             with self.subTest(name=name):
                 show = SHOW_NAMES.get(name, name)
                 self.assertRegex(result.stdout,
                                  rf'(?m)^{show}\s*: {value_str(REGS[name])}$')
-        self.assertNotRegex(result.stdout, r'(?m)^nssr')
+        self.assertNotRegex(result.stdout, r'(?m)^nss[rd]')
+
+    def test_show_regs_no_crto(self):
+        """A Discovery Controller, or one before NVMe 2.0, has no CRTO"""
+        del self.props[CTRL_REGS_FIELDS['crto'][1]]
+        result = self.assertOk(self.nvme('show-regs', self.ctrl))
+        self.assertRegex(result.stdout, r'(?m)^cap\s*: 0x2028030fff$')
+        self.assertNotRegex(result.stdout, r'(?m)^crto')
 
     def test_show_regs_json(self):
         """Only the properties the controller implements"""
@@ -252,7 +260,7 @@ class FabricsRegsTest(MockTestCase):
                                          '--output-format=json'))
         self.assertEqual(json.loads(result.stdout),
                          {name: REGS[name]
-                          for name in ('cap', 'vs', 'cc', 'csts')})
+                          for name in ('cap', 'vs', 'cc', 'csts', 'crto')})
 
     def test_get_property(self):
         result = self.assertOk(self.nvme('get-property', self.ctrl,
@@ -278,6 +286,12 @@ class FabricsRegsTest(MockTestCase):
         self.assertEqual(re.findall(r'register : (\w+) .*value: (\w+)',
                                     result.stdout),
                          [('0000', '0x2028030fff'), ('0x14', '0x460001')])
+
+    def test_get_reg_crto(self):
+        result = self.assertOk(self.nvme('get-reg', self.ctrl, '--crto'))
+        cmd, = self.property_cmds(FCTYPE_PROPERTY_GET)
+        self.assertEqual((cmd.cdw10, cmd.cdw11), (0, 0x68))
+        self.assertIn('value: 0x50003', result.stdout)
 
     def test_get_reg_not_property(self):
         """A register which is no property of a fabrics controller fails

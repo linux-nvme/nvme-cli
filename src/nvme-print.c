@@ -706,6 +706,8 @@ bool nvme_is_fabrics_reg(int offset)
 	case NVME_REG_CC:
 	case NVME_REG_CSTS:
 	case NVME_REG_NSSR:
+	case NVME_REG_NSSD:
+	case NVME_REG_CRTO:
 		return true;
 	default:
 		break;
@@ -726,10 +728,17 @@ bool nvme_fabrics_reg_unsupported(void *bar, int offset)
 	return shr_mmio_read32(bar + offset) == UINT32_MAX;
 }
 
+/*
+ * The properties a fabrics controller may not implement: NSSR and NSSD
+ * are optional, and CRTO is reserved for a Discovery Controller and not
+ * there before NVMe 2.0.
+ */
 bool nvme_is_fabrics_optional_reg(int offset)
 {
 	switch (offset) {
 	case NVME_REG_NSSR:
+	case NVME_REG_NSSD:
+	case NVME_REG_CRTO:
 		return true;
 	default:
 		break;
