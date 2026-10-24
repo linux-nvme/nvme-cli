@@ -342,17 +342,17 @@ static int wait_sanitize(struct libnvme_transport_handle *hdl)
 			return err;
 		}
 
+		if (le16_to_cpu(log->sprog) == 0xffff) {
+			if (nvme_is_output_format_normal())
+				print_info("\r[%.*s] %3d%%\n", 50, dash, 100);
+			break;
+		}
+
 		if (++cnt > wthr) {
 			nvme_show_error(
 			    "no progress for %"PRIu64" seconds, stop waiting",
 			    wthr);
 			return -EIO;
-		}
-
-		if (le16_to_cpu(log->sprog) == 0xffff) {
-			if (nvme_is_output_format_normal())
-				print_info("\r[%.*s] %3d%%\n", 50, dash, 100);
-			break;
 		}
 
 		if (le16_to_cpu(log->sprog) < p) {
