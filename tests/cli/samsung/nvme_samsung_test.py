@@ -19,49 +19,24 @@ Run from the repository root with PYTHONPATH=.
 Usage: python3 <test-script> <nvme> <mock-lib>
 """
 import os
-import shutil
 import stat
 import struct
 import subprocess
-import sys
 import tarfile
-import tempfile
 import unittest
 
-from tests.cli.nvme_mock_ipc import (
-    MockIPCServer,
-    built_with_library,
-    make_mock_env,
-    resolve_mock_lib_path,
-    run_nvme,
-)
+from tests.cli.nvme_mock import (CNS_CTRL, FID_HOST_BEHAVIOR, NVME_BIN,
+                                 OPC_GET_LOG_PAGE, OPC_SET_FEATURES,
+                                 SC_INVALID_FIELD, MockController,
+                                 MockTestCase, host_behavior, main)
+from tests.cli.nvme_mock_ipc import built_with_library
 
-_NVME_BIN = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'nvme'
-_MOCK_LIB = resolve_mock_lib_path("./libmock_nvme.so")
-
-# Meson passes these as paths relative to the build directory, and the
-# tests below chdir into a scratch directory to exercise the default
-# output location. Pin them down first.
-if os.path.exists(_NVME_BIN):
-    _NVME_BIN = os.path.abspath(_NVME_BIN)
-if os.path.exists(_MOCK_LIB):
-    _MOCK_LIB = os.path.abspath(_MOCK_LIB)
-
-# -z (archiving) needs nvme-cli built with libarchive; see built_with_library().
-_HAS_LIBARCHIVE = built_with_library(_NVME_BIN, 'libarchive')
+_HAS_LIBARCHIVE = built_with_library(NVME_BIN, 'libarchive')
 _NO_LIBARCHIVE_MSG = 'built without libarchive'
 
 SAMSUNG_VID = 0x144D
 SERIAL = "MOCKSN0001"
 
-_OPC_GET_LOG_PAGE = 0x02
-_OPC_IDENTIFY = 0x06
-_OPC_SET_FEATURES = 0x09
-_OPC_GET_FEATURES = 0x0A
-
-_FID_HOST_BEHAVIOR = 0x16
-_HOST_BEHAVIOR_SIZE = 512
-_ETDAS_OFFSET = 1  # struct nvme_feat_host_behavior: acre, etdas, ...
 
 # Samsung vendor dump opcodes
 _OPC_VENDOR_F7 = 0xF7
@@ -115,7 +90,7 @@ def pack_vendor_dump_header(units=_VENDOR_DUMP_UNITS):
     return bytes(buf)
 
 
-class SamsungMockServer(MockIPCServer):
+class SamsungController(MockController):
     """Answers the commands vs-internal-log issues. Anything not listed
     succeeds with zeroes, which is enough for the feature negotiation the
     plugin does around Data Area 4."""
@@ -129,110 +104,63 @@ class SamsungMockServer(MockIPCServer):
         self.last_blocks = (2, 4, 0, 0)
         self.vendor_supported = True
         self.telemetry_sc_status = 0
-        self.seen_opcodes = []
-        # ETDAS lives in the device across commands, so the mock has to
-        # keep it: set_etdas() only writes when it reads back as 0, and
-        # clear_etdas() only restores when it reads back as 1.
-        self.etdas = 0
-        self.set_features_calls = 0
-        self.log_lsps = []
-        self.log_transfers = []
+        self.identify[CNS_CTRL] = lambda cmd: pack_id_ctrl(
+            self.vid, self.serial, self.da4s)
+        # ETDAS lives in the device across commands: set_etdas() only
+        # writes when it reads back as 0, and clear_etdas() only restores
+        # when it reads back as 1.
+        self.features[FID_HOST_BEHAVIOR] = host_behavior()
+        self.logs[0x00] = lambda cmd: pack_supported_log_pages(self.mcdas)
+        self.logs[0x07] = self.logs[0x08] = self.telemetry
+        self.admin[_OPC_VENDOR_F7] = self.admin[_OPC_VENDOR_F8] = self.dump
 
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                     cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        self.seen_opcodes.append(opcode)
+    @property
+    def etdas(self):
+        return self.features[FID_HOST_BEHAVIOR][1]
 
-        if opcode == _OPC_GET_FEATURES and (cdw10 & 0xFF) == _FID_HOST_BEHAVIOR:
-            buf = bytearray(_HOST_BEHAVIOR_SIZE)
-            buf[_ETDAS_OFFSET] = self.etdas
-            self.send_response(conn, 0, payload=bytes(buf)[:req_len])
-            return
+    @property
+    def set_features_calls(self):
+        return len(self.admin_cmds(OPC_SET_FEATURES))
 
-        if opcode == _OPC_SET_FEATURES and (cdw10 & 0xFF) == _FID_HOST_BEHAVIOR:
-            # The outgoing buffer is not forwarded to the mock, but the
-            # caller only ever writes the value it did not read, so
-            # toggling tracks it exactly.
-            self.etdas ^= 1
-            self.set_features_calls += 1
-            self.send_response(conn, 0)
-            return
+    @property
+    def log_lsps(self):
+        return [(c.lid, c.lsp) for c in self.log_reads()]
 
-        if opcode == _OPC_IDENTIFY:
-            payload = pack_id_ctrl(self.vid, self.serial, self.da4s)
-            self.send_response(conn, 0, payload=payload[:req_len])
-            return
+    @property
+    def log_transfers(self):
+        return [(c.lid, c.lpo, c.data_len) for c in self.log_reads()]
 
-        if opcode == _OPC_GET_LOG_PAGE:
-            lid = cdw10 & 0xFF
-            self.log_lsps.append((lid, (cdw10 >> 8) & 0x7F))
-            self.log_transfers.append((lid, lpo, req_len))
-            if lid == 0:
-                payload = pack_supported_log_pages(self.mcdas)
-            elif lid in (0x07, 0x08):
-                if self.telemetry_sc_status:
-                    self.send_response(conn, 0, sc_status=self.telemetry_sc_status)
-                    return
-                if req_len == _TELEMETRY_HEADER_SIZE and lpo == 0:
-                    payload = pack_telemetry_header(self.last_blocks)
-                else:
-                    payload = bytes([lid]) * req_len
-            else:
-                payload = bytes(req_len)
-            self.send_response(conn, 0, payload=payload[:req_len])
-            return
+    def telemetry(self, cmd):
+        if self.telemetry_sc_status:
+            return self.telemetry_sc_status
+        if cmd.data_len == _TELEMETRY_HEADER_SIZE and cmd.lpo == 0:
+            return pack_telemetry_header(self.last_blocks)
+        return bytes([cmd.lid]) * cmd.data_len
 
-        if opcode in (_OPC_VENDOR_F7, _OPC_VENDOR_F8):
-            if not self.vendor_supported:
-                self.send_response(conn, 0, sc_status=0x02)  # INVALID_FIELD
-                return
-            if req_len == 8 * 1024:
-                payload = pack_vendor_dump_header()
-            else:
-                payload = bytes([0xAB]) * req_len
-            self.send_response(conn, 0, payload=payload[:req_len])
-            return
-
-        self.send_response(conn, 0, payload=bytes(req_len))
+    def dump(self, cmd):
+        if not self.vendor_supported:
+            return SC_INVALID_FIELD
+        if cmd.data_len == 8 * 1024:
+            return pack_vendor_dump_header()
+        return bytes([0xAB]) * cmd.data_len
 
 
-class SamsungCLITest(unittest.TestCase):
+class SamsungCLITest(MockTestCase):
 
-    DEVICE = '/dev/nvme0'
+    controller_class = SamsungController
 
     def setUp(self):
-        self.sysfs_dir = tempfile.mkdtemp(prefix='nvme-samsung-sysfs-', dir='/tmp')
-        self.base_dir = tempfile.mkdtemp(prefix='nvme-samsung-base-', dir='/tmp')
-        self.ipc_dir = tempfile.mkdtemp(prefix='nvme-samsung-ipc-', dir='/tmp')
-        self.out_dir = tempfile.mkdtemp(prefix='nvme-samsung-out-', dir='/tmp')
-        self.ipc_sock_path = os.path.join(self.ipc_dir, "ipc.sock")
-
-        self.server = SamsungMockServer(self.ipc_sock_path)
-        self.server.start()
-        self.env = make_mock_env(_MOCK_LIB, self.ipc_sock_path)
-        self.cwd = os.getcwd()
-        os.chdir(self.out_dir)
-
-    def tearDown(self):
-        os.chdir(self.cwd)
-        self.server.shutdown()
-        self.server.join()
-        for d in (self.sysfs_dir, self.base_dir, self.ipc_dir, self.out_dir):
-            shutil.rmtree(d, ignore_errors=True)
+        super().setUp()
+        self.chdir_out_dir()
 
     def run_cmd(self, *args):
-        return run_nvme(_NVME_BIN, self.env, self.sysfs_dir, self.base_dir,
-                        'samsung', 'vs-internal-log', self.DEVICE, *args)
+        return self.nvme('samsung', 'vs-internal-log', self.ctrl, *args)
 
     def files(self, subdir=''):
         root = os.path.join(self.out_dir, subdir) if subdir else self.out_dir
         if not os.path.isdir(root):
             return []
         return sorted(os.listdir(root))
-
-    def assertOk(self, result):
-        self.assertEqual(result.returncode, 0,
-                         f'command failed:\nstdout:\n{result.stdout}\n'
-                         f'stderr:\n{result.stderr}')
 
     def _archive_members(self, relative_path):
         archive = os.path.join(self.out_dir, relative_path)
@@ -469,11 +397,11 @@ class SamsungCLITest(unittest.TestCase):
                 with open(sentinel, 'w', encoding='utf-8') as f:
                     f.write(kind)
 
-                self.server.seen_opcodes.clear()
+                self.server.commands.clear()
                 result = self.run_cmd('-t', 'ctlr',
                                       '-O', f'./{relative_parent}/', '-z')
                 self.assertNotEqual(result.returncode, 0)
-                self.assertNotIn(_OPC_GET_LOG_PAGE, self.server.seen_opcodes,
+                self.assertNotIn(OPC_GET_LOG_PAGE, self.server.opcodes(),
                                  'the dump started despite a taken staging path')
                 self.assertIn(f'Remove ./{relative_parent}/temp_samsung_dumps '
                               'and run the command again', result.stderr,
@@ -588,13 +516,13 @@ class SamsungCLITest(unittest.TestCase):
 
     def test_help_declares_normal_output_format_only(self):
         result = subprocess.run(
-            [_NVME_BIN, 'samsung', 'vs-internal-log', '--help'],
+            [NVME_BIN, 'samsung', 'vs-internal-log', '--help'],
             capture_output=True, text=True)
         self.assertIn('Output format: normal', result.stdout + result.stderr)
 
     def test_help_keeps_capital_O_for_output_file(self):
         result = subprocess.run(
-            [_NVME_BIN, 'samsung', 'vs-internal-log', '--help'],
+            [NVME_BIN, 'samsung', 'vs-internal-log', '--help'],
             capture_output=True, text=True)
         out = result.stdout + result.stderr
         self.assertIn('--output-file=<FILE>, -O <FILE>', out)
@@ -745,4 +673,4 @@ class SamsungCLITest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[sys.argv[0]], verbosity=2)
+    main()
