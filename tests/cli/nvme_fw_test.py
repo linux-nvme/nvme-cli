@@ -58,6 +58,14 @@ class FwDownloadTest(MockTestCase):
         self.assertOk(self.nvme('fw', 'download', self.ctrl, f'--fw={path}'))
         self.assertTransfers(data, [(0, 8192), (8192, 4096)])
 
+    def test_identify_failed(self):
+        self.server.identify[CNS_CTRL] = 0x2      # Invalid Field
+        path, _ = self.image(4096)
+        result = self.nvme('fw', 'download', self.ctrl, f'--fw={path}')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Invalid Field in Command', result.stderr)
+        self.assertEqual(self.downloads(), [])
+
     def test_xfer(self):
         path, data = self.image(16384)
         self.assertOk(self.nvme('fw', 'download', self.ctrl, f'--fw={path}',

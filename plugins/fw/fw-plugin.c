@@ -228,7 +228,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		nvme_init_identify_ctrl(&cmd, &ctrl);
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err) {
-			nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
+			nvme_show_err(err, "identify-ctrl");
 			return err;
 		}
 		if (ctrl.fwug == 0 || ctrl.fwug == 0xff)
@@ -239,8 +239,9 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		cfg.xfer = 4096;
 
 	if (ctrl.fwug && ctrl.fwug != 0xff && fw_size % cfg.xfer)
-		nvme_show_error("WARNING: firmware file size %u not conform to FWUG alignment %lu",
-				fw_size, cfg.xfer);
+		nvme_show_error(
+			"WARNING: firmware file size %u not conform to FWUG alignment %u",
+			fw_size, cfg.xfer);
 
 	if (cfg.stream) {
 		stream_buf = libnvme_alloc(cfg.xfer);
