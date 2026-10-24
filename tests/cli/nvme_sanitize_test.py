@@ -153,6 +153,13 @@ class SanitizeTest(MockTestCase):
                 self.assertEqual(
                     len(self.server.log_reads(LID_SANITIZE_STATUS)), 4)
 
+    def test_wait_done(self):
+        """An action without an estimated time can be done at the first
+        read of the progress"""
+        logs = [sanitize_log(0, scdw10=EXIT_FAILURE),
+                sanitize_log(0xffff, scdw10=EXIT_FAILURE)]
+        self.assertOk(self.wait(0, logs, '--sanact=exit-failure'))
+
     def test_failed(self):
         self.server.admin[OPC_SANITIZE] = 0x11d     # in progress
         result = self.sanitize(BES, '--sanact=start-block-erase')
