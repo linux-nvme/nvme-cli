@@ -240,8 +240,6 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	struct libnvme_passthru_cmd cmd;
 	__u32 nsid = 1;
 	__u8 lbaf;
-	unsigned int remainder;
-	char *endptr;
 	int err = -EINVAL;
 	unsigned int data_size, lbas;
 
@@ -301,21 +299,13 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	}
 	lbas = data_size + le16_to_cpu(ns->lbaf[lbaf].ms);
 
-	err = shr_suffix_si_parse(val, &endptr, (uint64_t *)num);
+	/* a size in bytes, or without an SI suffix in logical blocks */
+	err = shr_suffix_si_parse_units(val, align, lbas, (uint64_t *)num);
 	if (err) {
 		nvme_show_error("Expected long suffixed integer argument for '%s-si' but got '%s'!",
 				opt, val);
-		return -err;
+		return err;
 	}
-
-	if (endptr[0]) {
-		remainder = *num % align;
-		if (remainder)
-			*num += align - remainder;
-	}
-
-	if (endptr[0] != '\0')
-		*num /= lbas;
 
 	return 0;
 }
