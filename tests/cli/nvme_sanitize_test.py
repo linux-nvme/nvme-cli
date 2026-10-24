@@ -12,10 +12,13 @@ against the Sanitize Capabilities of the controller.
 
 Usage: python3 nvme_sanitize_test.py <path-to-nvme-binary> <mock-lib>
 """
+import struct
+
 from tests.cli.nvme_mock import (CNS_CTRL, NVME_IOCTL_ID, MockTestCase, Reply,
                                  id_ctrl, main)
 
 OPC_SANITIZE = 0x84
+LID_SANITIZE_STATUS = 0x81
 OPC_SANITIZE_NS = 0x8c
 
 # SANICAP
@@ -36,6 +39,19 @@ OIPBP = 1 << 8
 NDAS = 1 << 9
 EMVS = 1 << 10
 PREQ = 1 << 11
+
+
+def sanitize_log(sprog=0xffff, sstat=0, scdw10=0, etbe=0xffffffff,
+                 etbend=0xffffffff):
+    """A Sanitize Status log page: the progress SPROG, the status SSTAT,
+    Command Dword 10 of the last Sanitize, the estimated times ETBE and
+    ETBEND of a block erase. The other estimated times are not
+    reported."""
+    log = bytearray(512)
+    struct.pack_into('<HHIIIIIII', log, 0, sprog, sstat, scdw10,
+                     0xffffffff, etbe, 0xffffffff, 0xffffffff, etbend,
+                     0xffffffff)
+    return bytes(log)
 
 
 class SanitizeTest(MockTestCase):
@@ -113,6 +129,29 @@ class SanitizeTest(MockTestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn(message, result.stderr)
         self.assertEqual(self.sanitizes(), [])
+
+    def wait(self, sanicap, logs, *args):
+        """Run sanitize with --wait. The Sanitize Status log page reads
+        get @logs."""
+        logs = iter(logs)
+        self.server.logs[LID_SANITIZE_STATUS] = lambda cmd: next(logs)
+        return self.sanitize(sanicap, '--wait', *args)
+
+    def test_wait(self):
+        """The estimated time of the action the log page has is the time
+        without progress to wait for"""
+        for ndas, estimate in (([], {'etbe': 10}),
+                               (['--no-dealloc'], {'etbend': 10})):
+            with self.subTest(ndas=ndas):
+                scdw10 = BLOCK_ERASE | (NDAS if ndas else 0)
+                logs = [sanitize_log(0, scdw10=scdw10, **estimate)]
+                logs += [sanitize_log(p, scdw10=scdw10, **estimate)
+                         for p in (0x4000, 0x8000, 0xffff)]
+                self.server.commands.clear()
+                self.assertOk(self.wait(BES, logs,
+                                        '--sanact=start-block-erase', *ndas))
+                self.assertEqual(
+                    len(self.server.log_reads(LID_SANITIZE_STATUS)), 4)
 
     def test_failed(self):
         self.server.admin[OPC_SANITIZE] = 0x11d     # in progress
