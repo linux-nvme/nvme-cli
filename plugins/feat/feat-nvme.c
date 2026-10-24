@@ -309,15 +309,15 @@ static int perfc_set(struct libnvme_transport_handle *hdl, __u8 fid, __u32 cdw11
 			return -EINVAL;
 		}
 		libnvme_uuid_from_string(cfg->paid, data.vs_perf->paid);
-		data.vs_perf->attrl = cfg->attrl;
-		if (data.vs_perf->attrl && strlen(cfg->vs_data)) {
+		data.vs_perf->attrl = cpu_to_le16(cfg->attrl);
+		if (cfg->attrl && strlen(cfg->vs_data)) {
 			ffd = open(cfg->vs_data, O_RDONLY);
 			if (ffd < 0) {
 				nvme_show_error("Failed to open file %s: %s", cfg->vs_data,
 						libnvme_strerror(errno));
 				return -EINVAL;
 			}
-			err = read(ffd, data.vs_perf->vs, data.vs_perf->attrl);
+			err = read(ffd, data.vs_perf->vs, cfg->attrl);
 			if (err < 0) {
 				nvme_show_error("failed to read data buffer from input file: %s",
 						libnvme_strerror(errno));
