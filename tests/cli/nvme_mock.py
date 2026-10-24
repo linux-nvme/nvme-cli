@@ -122,6 +122,7 @@ ID_CTRL_FIELDS = {
     'sanicap': ('<I', 328),
     'nanagrpid': ('<I', 348),
     'nn': ('<I', 516),
+    'fna': ('B', 524),
     'mnan': ('<I', 540),
 }
 
