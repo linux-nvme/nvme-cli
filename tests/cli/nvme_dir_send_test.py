@@ -82,6 +82,10 @@ class DirSendTest(MockTestCase):
              'invalid directive operations for Identify Directives'),
             ([f'--dir-type={DTYPE_STREAMS}', '--dir-oper=3'],
              'invalid directive operations for Streams Directives'),
+            ([f'--dir-type={DTYPE_IDENTIFY}',
+              f'--dir-oper={DOPER_IDENTIFY_ENDIR}',
+              f'--target-dir={DTYPE_STREAMS}', '--endir=0x100'],
+             'invalid endir:256'),
             (['--dir-type=2'], 'invalid directive type'),
         ]
         for args, message in cases:

@@ -107,6 +107,10 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 				nvme_show_error("target-dir required param\n");
 				return -EINVAL;
 			}
+			if (cfg.endir > 1) {
+				nvme_show_error("invalid endir:%u", cfg.endir);
+				return -EINVAL;
+			}
 			dw12 = cfg.ttype << 8 | cfg.endir;
 			break;
 		default:
