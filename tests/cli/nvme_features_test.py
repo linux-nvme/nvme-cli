@@ -37,9 +37,12 @@ FID_ASYNC_EVENT = 0x0b
 FID_TIMESTAMP = 0x0e
 FID_KATO = 0x0f
 FID_HCTM = 0x10
+FID_PERF_CHARACTERISTICS = 0x1c
 FID_POWER_LIMIT = 0x23
 FID_POWER_THRESH = 0x24
 FID_POWER_MEASUREMENT = 0x25
+
+PERF_ATTR_SIZE = 4096
 
 
 class FeaturesTestBase(MockTestCase):
@@ -162,6 +165,15 @@ class FeatPluginSetTest(FeaturesTestBase):
         # the timestamp in milliseconds, in the first 6 of 8 bytes
         self.assertEqual(cmd.data[:6],
                          struct.pack('<Q', 0x123456789abc)[:6])
+
+
+    def test_perf_characteristics_standard(self):
+        cmd = self.set_feature('feat', 'perf-characteristics', self.ctrl,
+                               '--attri=0', '--r4karl=5')
+        self.assertFields(cmd, FID_PERF_CHARACTERISTICS)
+        expected = bytearray(PERF_ATTR_SIZE)
+        expected[4] = 5
+        self.assertEqual(cmd.data, expected)
 
 
 class FeatPluginReadModifyWriteTest(FeaturesTestBase):
