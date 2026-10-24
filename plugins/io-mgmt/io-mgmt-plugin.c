@@ -185,8 +185,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 			return -errno;
 		}
 
-		err = write(dfd, buf, cfg.data_len);
-		if (err < 0) {
+		if (write(dfd, buf, cfg.data_len) < 0) {
 			nvme_show_perror("write");
 			return -errno;
 		}
