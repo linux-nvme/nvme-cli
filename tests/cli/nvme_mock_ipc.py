@@ -16,8 +16,9 @@ get_nprocs(), so the test decides the host's network and CPU setup.
 Test files subclass MockIPCServer and override handle_write()/
 handle_command()/handle_raw_ioctl()/handle_getpass()/handle_route()/
 handle_nic_queues()/handle_nprocs() to steer responses for their own
-scenario. run_nvme() provides the common subprocess-invocation
-mechanics.
+scenario. Most use MockController of nvme_mock.py, which answers the
+commands from tables. run_nvme() provides the common subprocess-
+invocation mechanics.
 """
 import collections
 import errno
@@ -275,15 +276,8 @@ class MockIPCServer(threading.Thread):
         self.send_response(conn, 0)
 
     def handle_command(self, conn, cmd):
-        """Override for IPC_TYPE_IOCTL. @cmd is the Command. Default: hand
-        the command to handle_ioctl()."""
-        self.handle_ioctl(conn, cmd.instance, None, cmd.opcode, cmd.nsid,
-                          cmd.cdw10, cmd.cdw11, cmd.cdw12, cmd.cdw13,
-                          cmd.cdw14, cmd.cdw15, cmd.lpo, cmd.data_len)
-
-    def handle_ioctl(self, conn, fd, request, opcode, nsid,
-                      cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, lpo, req_len):
-        """Default: report success, result 0, no payload."""
+        """Override for IPC_TYPE_IOCTL. @cmd is the Command. Default:
+        report success, result 0, no payload."""
         self.send_response(conn, 0)
 
     def handle_raw_ioctl(self, conn, fd, ioc, payload):
