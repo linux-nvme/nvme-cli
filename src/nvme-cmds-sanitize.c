@@ -848,7 +848,8 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		cfg.namespace_id = NVME_NSID_ALL;
 	} else if (!cfg.namespace_id) {
 		err = libnvme_get_nsid(hdl, &cfg.namespace_id);
-		if (err < 0) {
+		/* a controller has no namespace */
+		if (err < 0 && err != -ENOTTY) {
 			nvme_show_error("get-namespace-id: %s", libnvme_strerror(-err));
 			return err;
 		}
