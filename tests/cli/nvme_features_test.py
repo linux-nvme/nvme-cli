@@ -176,6 +176,20 @@ class FeatPluginSetTest(FeaturesTestBase):
         self.assertEqual(cmd.data, expected)
 
 
+    def test_perf_characteristics_attribute_length(self):
+        """The vendor specific data is at most 4064 bytes"""
+        path = os.path.join(self.tmp, 'vs')
+        with open(path, 'wb') as f:
+            f.write(bytes(8192))
+        result = self.nvme('feat', 'perf-characteristics', self.ctrl,
+                           '--attri=0xc1', '--rvspa', '--attrl=4065',
+                           f'--vs-data={path}')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('attribute length 4065 exceeds 4064 bytes',
+                      result.stderr)
+        self.assertEqual(self.set_features(), [])
+
+
 class FeatPluginReadModifyWriteTest(FeaturesTestBase):
     """The feat commands which keep the fields not given, from the value
     Get Features reads: of the saved value with --save."""
