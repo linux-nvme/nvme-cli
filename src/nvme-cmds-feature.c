@@ -335,6 +335,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free void *buf = NULL;
 	__cleanup_fd int ffd = STDIN_FILENO;
+	__u32 cdw11;
 	int err;
 	__u64 result;
 
@@ -408,6 +409,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 			return -ENOMEM;
 	}
 
+	cdw11 = cfg.value;
 	if (buf) {
 		/*
 		 * Use the '-v' value for the timestamp feature if provided as
@@ -417,7 +419,11 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		 */
 		if (cfg.fid == NVME_FEAT_FID_TIMESTAMP &&
 		    argconfig_given(opts, &cfg.value)) {
-			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
+			__le64 timestamp = cpu_to_le64(cfg.value);
+
+			memcpy(buf, &timestamp, NVME_FEAT_TIMESTAMP_DATA_SIZE);
+			/* the timestamp is no Command Dword 11 value */
+			cdw11 = 0;
 		} else {
 			if (strlen(cfg.file))
 				ffd = shr_open_rawdata(cfg.file, O_RDONLY);
@@ -437,8 +443,8 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		}
 	}
 
-	err = nvme_set_features(hdl, cfg.nsid, cfg.fid, cfg.sv, cfg.value, cfg.cdw12,
-			0, cfg.uidx, 0, buf, cfg.data_len, &result);
+	err = nvme_set_features(hdl, cfg.nsid, cfg.fid, cfg.sv, cdw11,
+			cfg.cdw12, 0, cfg.uidx, 0, buf, cfg.data_len, &result);
 	if (err) {
 		nvme_show_admin_cmd_err("set-feature", nvme_admin_set_features,
 					err);
