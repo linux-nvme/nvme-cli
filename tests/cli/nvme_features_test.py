@@ -15,6 +15,7 @@ Features and keep the fields not given.
 
 Usage: python3 nvme_features_test.py <path-to-nvme-binary> <mock-lib>
 """
+import errno
 import os
 import struct
 
@@ -323,6 +324,18 @@ class FeatPluginReadModifyWriteTest(FeaturesTestBase):
                 self.assertIn(f'invalid number of LBA ranges: {num}',
                               result.stderr)
         self.assertEqual(self.set_features(), [])
+
+    def test_lba_range_type_messages(self):
+        result = self.assertOk(self.nvme('feat', 'lba-range-type', '--help'))
+        self.assertIn('lba range type feature', result.stdout)
+        self.assertNotIn('host behavior', result.stdout)
+
+        self.server.features[FID_LBA_RANGE] = Reply(errno=errno.EIO)
+        result = self.nvme('feat', 'lba-range-type', self.ctrl, '--nsid=1',
+                           '--num=0', '--types=2', '--lbaros=0',
+                           '--hlbars=0', '--slbas=0', '--nlbs=1')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Get lba range type feature', result.stderr)
 
     def test_lba_range_type_count_mismatch(self):
         result = self.nvme('feat', 'lba-range-type', self.ctrl, '--nsid=1',
