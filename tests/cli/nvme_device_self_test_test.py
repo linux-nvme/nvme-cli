@@ -72,6 +72,12 @@ class DeviceSelfTestTest(MockTestCase):
                 self.assertIn(message, result.stdout)
         self.assertEqual(self.self_tests(), [])
 
+    def test_progress_failed(self):
+        self.server.logs[LID_DEVICE_SELF_TEST] = 0x2    # Invalid Field
+        result = self.nvme('device-self-test', self.ctrl)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn('no self test running', result.stdout)
+
     def _wait(self, *progress):
         """Run a short self-test with --wait. The log page reads report
         @progress, (operation, completion) for each read."""
