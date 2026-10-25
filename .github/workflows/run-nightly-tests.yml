@@ -266,19 +266,23 @@ jobs:
       - name: Run the test suite
         run: |
           mkdir -p test-results
-          # A test failure must not skip the reports.
+          # A test failure must not skip the report.
           test_status=0
           scripts/build.sh -p || test_status=$?
           cp coverage.xml test-results/coverage-tests.xml
-          echo "test_status=${test_status}" >> "${GITHUB_ENV}"
+          exit "${test_status}"
+      # Also after a test failure, which the step above reports itself.
+      # The log of its own name keeps the testlog.txt of the test suite.
       - name: Run the fuzz seeds
+        if: success() || failure()
         run: |
           find .build-ci -name '*.gcda' -delete
           fuzz_status=0
-          meson test -C .build-ci --suite fuzz || fuzz_status=$?
+          meson test -C .build-ci --suite fuzz --logbase testlog-fuzz \
+              || fuzz_status=$?
           gcovr -r . .build-ci --xml-pretty \
               -o test-results/coverage-fuzz-seeds.xml
-          exit $(( test_status || fuzz_status ))
+          exit "${fuzz_status}"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: success() || failure()
         with:
@@ -286,6 +290,7 @@ jobs:
           path: |
             test-results/
             .build-ci/meson-logs/testlog.txt
+            .build-ci/meson-logs/testlog-fuzz.txt
 
   # One upload per report, each with its flag, so that Codecov shows what
   # each kind of test reaches.
