@@ -30,6 +30,7 @@ import socket
 import struct
 import subprocess
 import sys
+import tempfile
 import threading
 import traceback
 from pathlib import Path
@@ -438,7 +439,10 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
     stack size limit. Pass @close_fd to run nvme with that standard
     descriptor closed. Pass @file_size_limit to run nvme with that file
     size limit, in the units of `ulimit -f` (512 or 1024 bytes), and
-    SIGXFSZ ignored: a write past the limit is cut short instead."""
+    SIGXFSZ ignored: a write past the limit is cut short instead. The
+    gcov counters of such a run go to a scratch directory: the limit
+    cuts their write short as well, which corrupts the .gcda files of
+    the build tree."""
     cmd = [
         nvme_bin,
         '--set-options', f'test-sysfs-dir={sysfs_dir},test-base-dir={base_dir}',
@@ -469,8 +473,11 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
     # process that, like the mock server, runs threads.
     if stack_limit_kb is not None:
         ulimit += f'ulimit -s {int(stack_limit_kb)}; '
+    gcov_dir = None
     if file_size_limit is not None:
         ulimit += f"trap '' XFSZ; ulimit -f {int(file_size_limit)}; "
+        gcov_dir = tempfile.TemporaryDirectory(prefix='nvme-gcov-')
+        env['GCOV_PREFIX'] = gcov_dir.name
     close = f' {int(close_fd)}>&-' if close_fd is not None else ''
     wrapped_cmd = [
         '/bin/sh', '-c',
@@ -489,6 +496,8 @@ def run_nvme(nvme_bin, env, sysfs_dir, base_dir, *args, encoding='utf-8',
                             errors='replace' if encoding else None,
                             timeout=_NVME_TIMEOUT_S)
     _fuzz_recorder.finish(args, sysfs_dir)
+    if gcov_dir is not None:
+        gcov_dir.cleanup()
 
     # Print outputs to sys.stderr so they are displayed by unittest on
     # failure. With encoding=None these are bytes, so summarise stdout
