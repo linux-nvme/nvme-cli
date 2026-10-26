@@ -29,12 +29,11 @@
 #define LOG_CLOCK CLOCK_MONOTONIC
 #endif
 
-void __libnvme_printf_format(4, 5)
-__libnvme_msg(struct libnvme_global_ctx *ctx, int level,
-	   const char *func, const char *format, ...)
+static void __libnvme_printf_format(4, 0)
+log_vmsg(struct libnvme_global_ctx *ctx, int level,
+	 const char *func, const char *format, va_list ap)
 {
 	struct libnvme_log *l = &ctx->log;
-	va_list ap;
 	char pidbuf[16];
 	char timebuf[32];
 	static const char *const formats[] = {
@@ -78,10 +77,8 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 		     timebuf, pidbuf, func ? func : "") == -1)
 		header = NULL;
 
-	va_start(ap, format);
 	if (vasprintf(&message, format, ap) == -1)
 		message = NULL;
-	va_end(ap);
 
 	if (asprintf(&log, "%s%s", header ? header : "<error>",
 			message ? message : "<error>") == -1)
@@ -89,6 +86,23 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 
 	if (shr_write_all(l->fd, log, strlen(log)) < 0)
 		perror("failed to write log entry");
+}
+
+/*
+ * Keeps errno: a caller may log the failure of a call before it returns
+ * its errno.
+ */
+void __libnvme_printf_format(4, 5)
+__libnvme_msg(struct libnvme_global_ctx *ctx, int level,
+	   const char *func, const char *format, ...)
+{
+	int err = errno;
+	va_list ap;
+
+	va_start(ap, format);
+	log_vmsg(ctx, level, func, format, ap);
+	va_end(ap);
+	errno = err;
 }
 
 __shr_public void libnvme_set_logging_level(
