@@ -2257,6 +2257,27 @@ static int wdc_create_log_file(const char *file, const __u8 *drive_log_data,
 	return 0;
 }
 
+/*
+ * A C2 log entry starts where the lengths of the entries before it put
+ * it, at any byte: read its fields unaligned.
+ */
+static __u32 wdc_c2_entry_length(const void *entry)
+{
+	return shr_get_unaligned_le32(entry);
+}
+
+static __u32 wdc_c2_entry_id(const void *entry)
+{
+	return shr_get_unaligned_le32((const __u8 *)entry +
+		offsetof(struct wdc_c2_log_subpage_header, entry_id));
+}
+
+static const __u8 *wdc_c2_entry_data(const void *entry)
+{
+	return (const __u8 *)entry +
+		offsetof(struct wdc_c2_log_subpage_header, data);
+}
+
 bool wdc_validate_dev_mng_log(void *data)
 {
 	__u32 remaining_len = 0;
@@ -2285,8 +2306,8 @@ bool wdc_validate_dev_mng_log(void *data)
 	/* Proceed only if there is at least enough data to read an entry header */
 	while (remaining_len >= sizeof(struct wdc_c2_log_subpage_header)) {
 		/* Get size of the next entry */
-		log_entry_size = le32_to_cpu(p_next_log_entry->length);
-		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
+		log_entry_size = wdc_c2_entry_length(p_next_log_entry);
+		log_entry_id = wdc_c2_entry_id(p_next_log_entry);
 		/*
 		 * If log entry size is 0 or the log entry goes past the end
 		 * of the data, we must be at the end of the data
@@ -2364,8 +2385,8 @@ bool wdc_parse_dev_mng_log_entry(void *data, __u32 entry_id,
 	/* Proceed only if there is at least enough data to read an entry header */
 	while (remaining_len >= sizeof(struct wdc_c2_log_subpage_header)) {
 		/* Get size of the next entry */
-		log_entry_size = le32_to_cpu(p_next_log_entry->length);
-		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
+		log_entry_size = wdc_c2_entry_length(p_next_log_entry);
+		log_entry_id = wdc_c2_entry_id(p_next_log_entry);
 
 		/*
 		 * If log entry size is 0 or the log entry goes past the end
@@ -2454,8 +2475,8 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 	/* Proceed only if there is at least enough data to read an entry header */
 	while (remaining_len >= log_entry_hdr_size) {
 		/* Get size of the next entry */
-		log_entry_size = le32_to_cpu(p_next_log_entry->length);
-		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
+		log_entry_size = wdc_c2_entry_length(p_next_log_entry);
+		log_entry_id = wdc_c2_entry_id(p_next_log_entry);
 
 		/*
 		 * If log entry size is 0 or the log entry goes past the end
@@ -2657,13 +2678,14 @@ static bool get_dev_mgmt_log_page_lid_data(struct libnvme_transport_handle *hdl,
 	sph = NULL;
 	found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
 	if (found && sph) {
-		*cbs_data = calloc(le32_to_cpu(sph->length), sizeof(__u8));
+		*cbs_data = calloc(wdc_c2_entry_length(sph), sizeof(__u8));
 		if (!*cbs_data) {
 			nvme_show_error("ERROR: WDC: calloc: %s", libnvme_strerror(errno));
 			found = false;
 			goto end;
 		}
-		memcpy((void *)*cbs_data, (void *)&sph->data, le32_to_cpu(sph->length));
+		memcpy((void *)*cbs_data, wdc_c2_entry_data(sph),
+		       wdc_c2_entry_length(sph));
 	} else if(found && !sph) {
 		nvme_show_error("ERROR: WDC: C2 log id 0x%x not present in log page with uuid index %d",log_id, uuid_ix);
 		found = false;
@@ -2900,7 +2922,8 @@ static bool wdc_nvme_parse_dev_status_log_entry(void *log_data, __u32 *ret_data,
 
 	if (wdc_parse_dev_mng_log_entry(log_data, entry_id, &entry_data)) {
 		if (entry_data) {
-			*ret_data = le32_to_cpu(entry_data->data);
+			*ret_data = shr_get_unaligned_le32(
+				wdc_c2_entry_data(entry_data));
 			return true;
 		}
 	}
@@ -2916,7 +2939,7 @@ static bool wdc_nvme_parse_dev_status_log_str(void *log_data,
 		__u32 *ret_data_len)
 {
 	struct wdc_c2_log_subpage_header *entry_data = NULL;
-	struct wdc_c2_cbs_data *entry_str_data = NULL;
+	const __u8 *entry_str_data;
 	__u32 entry_len, entry_total_len, max_payload_len;
 
 	if (!ret_data || !ret_data_len || ret_data_size == 0)
@@ -2924,9 +2947,9 @@ static bool wdc_nvme_parse_dev_status_log_str(void *log_data,
 
 	if (wdc_parse_dev_mng_log_entry(log_data, entry_id, &entry_data)) {
 		if (entry_data) {
-			entry_str_data = (struct wdc_c2_cbs_data *)&entry_data->data;
-			entry_len = le32_to_cpu(entry_str_data->length);
-			entry_total_len = le32_to_cpu(entry_data->length);
+			entry_str_data = wdc_c2_entry_data(entry_data);
+			entry_len = shr_get_unaligned_le32(entry_str_data);
+			entry_total_len = wdc_c2_entry_length(entry_data);
 			if (entry_total_len <
 			    sizeof(struct wdc_c2_log_subpage_header))
 				return false;
@@ -2935,8 +2958,8 @@ static bool wdc_nvme_parse_dev_status_log_str(void *log_data,
 			if (entry_len > max_payload_len ||
 			    entry_len >= ret_data_size)
 				return false;
-			memcpy(ret_data,
-			       (void *)&entry_str_data->data,
+			memcpy(ret_data, entry_str_data +
+			       offsetof(struct wdc_c2_cbs_data, data),
 			       entry_len);
 			ret_data[entry_len] = '\0';
 			*ret_data_len = entry_len;
