@@ -59,6 +59,18 @@ if want_nvme and have_mock_nvme
     }
 endif
 
+# nvme nbft show with the table from the input
+if want_nvme and want_fabrics
+    fuzz_targets += {
+        'nbft': {
+            'sources': ['fuzz-nbft.c'],
+            'objects': nvme_exe.extract_objects(sources),
+            'deps': link_deps,
+            'link_args': link_args_list,
+        },
+    }
+endif
+
 foreach name, t : fuzz_targets
     if get_option('fuzzing')
         executable(
