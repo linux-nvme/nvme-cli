@@ -42,98 +42,75 @@
 #define PATH_DMI_PROD_UUID		"/sys/class/dmi/id/product_uuid"
 #define PATH_MACHINE_ID			"/etc/machine-id" /* no SYSCONFDIR */
 
-static const char *make_sysfs_dir(struct libnvme_global_ctx *ctx,
-		const char *path)
+static const char *const sysfs_paths[LIBNVME_SYSFS_PATH_MAX] = {
+	[LIBNVME_SYSFS_SUBSYS]		= PATH_SYSFS_NVME_SUBSYSTEM,
+	[LIBNVME_SYSFS_CTRL]		= PATH_SYSFS_NVME,
+	[LIBNVME_SYSFS_NS]		= PATH_SYSFS_BLOCK,
+	[LIBNVME_SYSFS_SLOTS]		= PATH_SYSFS_SLOTS,
+	[LIBNVME_SYSFS_UUID_IBM]	= PATH_UUID_IBM,
+	[LIBNVME_SYSFS_DMI_ENTRIES]	= PATH_DMI_ENTRIES,
+	[LIBNVME_SYSFS_DMI_PROD_UUID]	= PATH_DMI_PROD_UUID,
+	[LIBNVME_SYSFS_MACHINE_ID]	= PATH_MACHINE_ID,
+};
+
+/*
+ * The path @p, below the test sysfs directory of @ctx if it has one. The
+ * context keeps it: another context may have another test directory.
+ */
+static const char *libnvme_sysfs_path(struct libnvme_global_ctx *ctx,
+		enum libnvme_sysfs_path p)
 {
 	char *str;
 
 	if (!ctx || !ctx->test_sysfs_dir)
-		return path;
+		return sysfs_paths[p];
+	if (ctx->sysfs_paths[p])
+		return ctx->sysfs_paths[p];
 
-	if (asprintf(&str, "%s%s", ctx->test_sysfs_dir, path) < 0)
+	if (asprintf(&str, "%s%s", ctx->test_sysfs_dir, sysfs_paths[p]) < 0)
 		return NULL;
 
-	return str;
+	return ctx->sysfs_paths[p] = str;
 }
 
 const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_SYSFS_NVME_SUBSYSTEM);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_SUBSYS);
 }
 
 const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_SYSFS_NVME);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_CTRL);
 }
 
 const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_SYSFS_BLOCK);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_NS);
 }
 
 const char *libnvme_slots_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_SYSFS_SLOTS);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_SLOTS);
 }
 
 const char *libnvme_uuid_ibm_filename(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_UUID_IBM);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_UUID_IBM);
 }
 
 const char *libnvme_dmi_entries_dir(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_DMI_ENTRIES);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_DMI_ENTRIES);
 }
 
 const char *libnvme_dmi_product_uuid_filename(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_DMI_PROD_UUID);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_DMI_PROD_UUID);
 }
 
 const char *libnvme_machine_id_filename(struct libnvme_global_ctx *ctx)
 {
-	static const char *str;
-
-	if (str)
-		return str;
-
-	return str = make_sysfs_dir(ctx, PATH_MACHINE_ID);
+	return libnvme_sysfs_path(ctx, LIBNVME_SYSFS_MACHINE_ID);
 }
 
 static int __nvme_set_attr(const char *path, const char *value)

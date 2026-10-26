@@ -38,6 +38,23 @@ if diff.found() and bash_prog.found()
         )
     endforeach
 
+    # a context must not take the sysfs paths of another one
+    test(
+        'libnvme - tree-pcie-scan-before',
+        bash_prog,
+        args : [
+            tree_diff,
+            meson.current_build_dir(),
+            tree_scan.full_path(),
+            files('data/tree-pcie.tar.xz'),
+            files('data/tree-pcie.out'),
+            'tree-pcie-scan-before',
+            '--scan-before=/nonexistent',
+        ],
+        depends : tree_scan,
+        suite: 'unit',
+    )
+
     if want_fabrics
         tree_scan_hostnqn = executable(
             'test-tree-scan-hostnqn',

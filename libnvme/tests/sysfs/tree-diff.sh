@@ -5,8 +5,9 @@ BUILD_DIR=$1
 TREE_DUMP=$2
 SYSFS_INPUT=$3
 EXPECTED_OUTPUT=$4
-
-TEST_NAME="$(basename -s .out "$EXPECTED_OUTPUT")"
+# optional: the name of the test, then more options of TREE_DUMP
+TEST_NAME=${5:-$(basename -s .out "$EXPECTED_OUTPUT")}
+shift $(($# < 5 ? $# : 5))
 TEST_DIR="${BUILD_DIR}/${TEST_NAME}"
 ACTUAL_OUTPUT="${TEST_DIR}.out"
 
@@ -20,6 +21,7 @@ HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
 cmd=(
 	"${TREE_DUMP}"
 	--set-options "test-sysfs-dir=${TEST_DIR},hostnqn=${HOSTNQN},hostid=${HOSTID}"
+	"$@"
 )
 
 echo "Running command:"
