@@ -57,6 +57,31 @@ class SeedTest(unittest.TestCase):
         data = seed('id', 'ns', '/dev/nvme0', '--namespace-id', '300')
         self.assertEqual(data[:3], bytes([index('id ns'), 0, 0]))
 
+    def test_option_set(self) -> None:
+        cmds = [
+            device.Command(
+                0,
+                ('format',),
+                None,
+                False,
+                (('--ses=1',), ('--ses=1', '--pi=1')),
+            )
+        ]
+
+        def opts(*args: str) -> int:
+            data = seeds.seed(
+                {'args': list(args), 'pci': None, 'answers': ''}, cmds
+            )
+            assert data is not None
+            return data[1] >> device.OPTS_SHIFT
+
+        # the set with the most options the command line gives
+        self.assertEqual(opts('format', '/dev/nvme0', '--ses=1'), 0)
+        self.assertEqual(opts('format', '/dev/nvme0', '--pi=1', '--ses=1'), 1)
+        # one without options, for none or other values
+        self.assertEqual(opts('format', '/dev/nvme0'), 2)
+        self.assertEqual(opts('format', '/dev/nvme0', '--ses=2'), 2)
+
     def test_pci_ids(self) -> None:
         data = seed('wdc', 'vs-nand-stats', '/dev/nvme0', pci=[0x1B96, 0x2500])
         self.assertEqual(

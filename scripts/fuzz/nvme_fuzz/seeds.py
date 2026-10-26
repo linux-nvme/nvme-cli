@@ -139,7 +139,25 @@ def seed(record: dict[str, Any], cmds: list[device.Command]) -> bytes | None:
             variant |= 8
             arg = n & 0xFF
     pci_ids = (pci[0], pci[1]) if cmd.pci and pci else (0, 0)
-    return cmd.header(variant, arg, pci_ids) + bytes.fromhex(record['answers'])
+    return cmd.header(variant, arg, pci_ids, _opts(cmd, args)) + bytes.fromhex(
+        record['answers']
+    )
+
+
+def _opts(cmd: device.Command, args: _Args) -> int:
+    """The option set of @cmd the command line @args uses: the one with
+    the most options, all of which it gives with the same value, else
+    one without options."""
+    best, most = None, -1
+    for n in range(4):
+        opts = cmd.opts[n] if n < len(cmd.opts) else ()
+        given = all(
+            name in args.options and (not eq or args.options[name] == value)
+            for name, eq, value in (o.partition('=') for o in opts)
+        )
+        if given and len(opts) > most:
+            best, most = n, len(opts)
+    return best or 0
 
 
 def _record(build_dir: Path, records: Path) -> None:

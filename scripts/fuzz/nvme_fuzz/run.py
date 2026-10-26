@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import FrameType
 
-from . import seeds
+from . import device, seeds
 from .libfuzzer import copy_new, is_slow_unit
 from .targets import TARGETS, Target, parse_targets, sanitizer_env
 
@@ -202,13 +202,18 @@ def _libfuzzer(
 
 
 def _partitions(corpus: Path, parts: Path) -> list[Path]:
-    """Split @corpus by the first byte of its inputs into directories in
+    """Split @corpus by the first byte of its inputs, the first two for
+    those of the device target from index 255 on, into directories in
     @parts, of hard links to them. Returns them, the largest first."""
     sizes: dict[Path, int] = {}
     for f in corpus.iterdir():
         with f.open('rb') as fh:
-            first = fh.read(1)
-        d = parts / str(first[0] if first else 'empty')
+            first = fh.read(2)
+        if first[:1] == bytes([device.EXTENDED_INDEX]):
+            first = first[:2]
+        else:
+            first = first[:1]
+        d = parts / ('-'.join(map(str, first)) or 'empty')
         if d not in sizes:
             d.mkdir(parents=True)
             sizes[d] = 0

@@ -59,11 +59,16 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
 
 
 def inputs(cmd: device.Command, samples: int) -> list[bytes]:
-    """The inputs for @cmd: @samples with random data for each variant,
-    each with the next of the PCI IDs of its plugin."""
+    """The inputs for @cmd: @samples with random data for each variant
+    and option set, each with the next of the PCI IDs of its plugin."""
     variants = [0, 1, 2, 3, 4]
     if cmd.arg:
         variants += [9, 11]
+    variants += [
+        v | n << device.OPTS_SHIFT
+        for n in range(1, len(cmd.opts))
+        for v in (0, 1)
+    ]
     pci_ids = cmd.pci_ids or ((0, 0),)
     res = []
     for v in variants:
