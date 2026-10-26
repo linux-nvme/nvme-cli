@@ -1445,7 +1445,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 
 	if (err < 0) {
 		nvme_show_err(err, "set-feature");
-		return errno;
+		return err;
 	}
 
 	return err;
@@ -1505,7 +1505,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 
 	if (err < 0) {
 		nvme_show_err(err, "set-feature");
-		return errno;
+		return err;
 	}
 
 	return err;

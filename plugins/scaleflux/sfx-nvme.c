@@ -989,7 +989,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 
 	if (err < 0) {
 		nvme_show_err(err, "ScaleFlux-set-feature");
-			return errno;
+		return err;
 	} else if (!err) {
 		printf("ScaleFlux set-feature:%#02x (%s), value:%d\n", cfg.feature_id,
 			sfx_feature_to_string(cfg.feature_id), cfg.value);
@@ -1040,7 +1040,7 @@ static int sfx_get_feature(int argc, char **argv, struct command *acmd, struct p
 				    cfg.feature_id, &result);
 	if (err < 0) {
 		nvme_show_err(err, "ScaleFlux-get-feature");
-			return errno;
+		return err;
 	} else if (!err) {
 		printf("ScaleFlux get-feature:%02x (%s), value:%d\n", cfg.feature_id,
 			sfx_feature_to_string(cfg.feature_id), result);
