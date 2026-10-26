@@ -201,6 +201,16 @@ def _libfuzzer(
     return status
 
 
+def job_env() -> dict[str, str]:
+    """The environment of the fuzz jobs and the merges: the sanitizer
+    settings, and allocation stacks of two frames instead of 30, which
+    makes a job about a tenth faster. A finding is still reported; triage
+    and check replay it with the whole stacks."""
+    env = sanitizer_env(dict(os.environ))
+    env['ASAN_OPTIONS'] += ':malloc_context_size=2'
+    return env
+
+
 def _partitions(corpus: Path, parts: Path) -> list[Path]:
     """Split @corpus by the first byte of its inputs, the first two for
     those of the device target from index 255 on, into directories in
@@ -254,7 +264,7 @@ def _merge(
     before = sum(1 for _ in corpus.iterdir())
     print(f'fuzz-{t.name}: minimizing the corpus of {before} inputs')
     # Only the coverage counts here, the jobs report the findings
-    env = sanitizer_env(dict(os.environ))
+    env = job_env()
     env['ASAN_OPTIONS'] += ':detect_leaks=0'
     if limit is not None:
         env['FUZZ_DATA_LIMIT'] = str(limit)
@@ -349,7 +359,7 @@ def _run_target(
     status = 0
     for i, limit in enumerate(stages):
         secs = max(1, seconds // len(stages) + (i < seconds % len(stages)))
-        env = sanitizer_env(dict(os.environ))
+        env = job_env()
         prefix = f'{artifacts}/'
         cwd = logs
         what = ''
