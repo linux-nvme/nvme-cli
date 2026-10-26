@@ -84,7 +84,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	if (!consent) {
+	if (!cfg.consent) {
 		nvme_show_error("ERROR: consent required");
 		return -EINVAL;
 	}

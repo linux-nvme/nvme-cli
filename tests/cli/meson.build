@@ -178,6 +178,11 @@ if python3.found()
             ]
         endif
 
+        if 'lm' in selected_plugins
+            mock_cli_tests += [
+                ['lm', 'nvme_lm_test.py', cli_test_env, 30],
+            ]
+        endif
         if 'ns' in selected_plugins and 'resv' in selected_plugins
             mock_cli_tests += [
                 ['ctratt', 'nvme_ctratt_test.py', cli_test_env, 30],
