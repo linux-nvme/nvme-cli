@@ -584,6 +584,15 @@ int __openat64_2(int dirfd, const char *pathname, int flags)
 	return orig_openat64(dirfd, pathname, flags, 0);
 }
 
+/*
+ * Bits 1:0 of an opcode give the direction of its data transfer. Like
+ * the kernel, treat a bidirectional command as a write.
+ */
+static bool opcode_is_write(uint8_t opcode)
+{
+	return opcode & 1;
+}
+
 #ifdef MOCK_FUZZ
 /*
  * The kernel rejects a transfer larger than the controller takes. And a
@@ -647,10 +656,10 @@ static void fuzz_read(void *buf, size_t len)
 
 /*
  * Answer a command from the fuzz input: a control byte, the result
- * dword, and then the data the command reads. Most control bytes mean
- * success, the rest an NVMe status (from the next two bytes) or a
- * failed ioctl(). Everything that is no device command fails, so the
- * real function takes over where there is one.
+ * dword, and then the data the command reads, none for a write. Most
+ * control bytes mean success, the rest an NVMe status (from the next two
+ * bytes) or a failed ioctl(). Everything that is no device command
+ * fails, so the real function takes over where there is one.
  */
 static void *fuzz_ipc_call(struct ipc_request *req,
 			   struct ipc_response *resp)
@@ -664,7 +673,8 @@ static void *fuzz_ipc_call(struct ipc_request *req,
 
 	switch (req->type) {
 	case IPC_TYPE_IOCTL:
-		resp->data_len = req->req_len;
+		if (!opcode_is_write(req->opcode))
+			resp->data_len = req->req_len;
 		break;
 	case IPC_TYPE_RAW_IOCTL:
 		if (req->ioc_dir & IPC_IOC_READ)
@@ -874,15 +884,6 @@ static bool mock_ctrl_is_block(int fd, bool *is_block)
 	}
 
 	return false;
-}
-
-/*
- * Bits 1:0 of an opcode give the direction of its data transfer. Like
- * the kernel, treat a bidirectional command as a write.
- */
-static bool opcode_is_write(uint8_t opcode)
-{
-	return opcode & 1;
 }
 
 static int handle_passthru_ioctl(int instance, unsigned long request,

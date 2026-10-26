@@ -58,14 +58,14 @@ class FuzzRecordTest(MockTestCase):
                         nvme_mock_ipc._fuzz_recorder.dir)
         nvme_mock_ipc._fuzz_recorder.dir = self.record_dir
 
-    def _record(self):
-        result = self.nvme('get-log', self.ctrl, '--log-id=2',
-                           f'--log-len={_LOG_LEN}')
+    def _record(self, *args):
+        args = args or ('get-log', self.ctrl, '--log-id=2',
+                        f'--log-len={_LOG_LEN}')
+        result = self.nvme(*args)
         records = list(Path(self.record_dir).glob('*.json'))
         self.assertEqual(len(records), 1, result.stderr)
         rec = json.loads(records[0].read_text())
-        self.assertEqual(rec['args'], ['get-log', '/dev/nvme0', '--log-id=2',
-                                       f'--log-len={_LOG_LEN}'])
+        self.assertEqual(rec['args'], [str(a) for a in args])
         return rec
 
     def test_data(self):
@@ -81,6 +81,12 @@ class FuzzRecordTest(MockTestCase):
         self.assertEqual(bytes.fromhex(rec['answers']),
                          b'\xe0' + struct.pack('<I', _RESULT) +
                          struct.pack('<H', SC_INVALID_FIELD))
+
+    def test_write(self):
+        # the data of a write is the host's: the answer is without it
+        rec = self._record('admin-passthru', self.ctrl, '--opcode=0x81',
+                           f'--data-len={_LOG_LEN}', '--write')
+        self.assertEqual(bytes.fromhex(rec['answers']), bytes(5))
 
     def test_pci_ids(self):
         self.write_sysfs_pci_ctrl(vid=0x1344, did=0x51c0)
