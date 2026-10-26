@@ -683,20 +683,25 @@ static void nvme_show_cmd_err(const char *msg, bool admin, __u8 opcode, int err)
 		nvme_show_status(err);
 }
 
-void nvme_show_err(int err, const char *fmt, ...)
+static void show_err(int err, const char *fmt, va_list ap)
 {
-	va_list ap;
-
 	__cleanup_free char *msg = NULL;
-
-	va_start(ap, fmt);
 
 	if (vasprintf(&msg, fmt, ap) < 0)
 		msg = NULL;
 
 	nvme_show_cmd_err(msg ? msg : alloc_error, false, 0, err);
+}
 
+void nvme_show_err(int err, const char *fmt, ...)
+{
+	int saved_errno = errno;
+	va_list ap;
+
+	va_start(ap, fmt);
+	show_err(err, fmt, ap);
 	va_end(ap);
+	errno = saved_errno;
 }
 
 void nvme_show_io_cmd_err(const char *msg, __u8 opcode, int err)
@@ -1753,9 +1758,14 @@ void nvme_show_topology_tabular(struct libnvme_global_ctx *ctx, nvme_print_flags
 	nvme_print(topology_tabular, flags, ctx);
 }
 
+/*
+ * The message helpers keep errno: a caller may report the failure of a
+ * call before it returns its errno.
+ */
 static void show_message(bool error, const char *msg, va_list ap)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
+	int err = errno;
 
 	if (nvme_args.quiet && !error)
 		return;
@@ -1765,6 +1775,7 @@ static void show_message(bool error, const char *msg, va_list ap)
 
 	if (ops && ops->show_message)
 		ops->show_message(error, msg, ap);
+	errno = err;
 }
 
 void nvme_show_message(bool error, const char *msg, ...)
@@ -1795,6 +1806,7 @@ void nvme_show_verbose_message(const char *msg, ...)
 void nvme_show_perror(const char *msg, ...)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
+	int err = errno;
 	va_list ap;
 
 	va_start(ap, msg);
@@ -1806,6 +1818,7 @@ void nvme_show_perror(const char *msg, ...)
 		ops->show_perror(msg, ap);
 
 	va_end(ap);
+	errno = err;
 }
 
 static void show_key_value(const char *key, const char *val, va_list ap)

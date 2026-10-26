@@ -4876,6 +4876,7 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 static void json_output_perror(const char *msg, va_list ap)
 {
 	struct json_object *r = json_r;
+	int err = errno;
 
 	__cleanup_free char *error = NULL;
 
@@ -4883,7 +4884,7 @@ static void json_output_perror(const char *msg, va_list ap)
 		error = NULL;
 
 	obj_add_key(r, "error", "%s: %s", error ? error : alloc_error,
-		    libnvme_strerror(errno));
+		    libnvme_strerror(err));
 }
 
 static char *trim_white_space(char *str)
