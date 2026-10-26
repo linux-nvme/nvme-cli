@@ -46,10 +46,10 @@ void mock_fuzz_input(const uint8_t *data, size_t size);
 #define MAX_ARGS 14
 
 /*
- * Commands which do something with what the device returns: print it
- * or size a buffer by it. Nothing which writes a file but /dev/null,
- * reads one but /dev/zero, needs a terminal or a value which can't have
- * a default. The seeds select a command by its index: add new
+ * Commands which do something with what the device returns: print it,
+ * size a buffer by it, wait for it. Nothing which writes a file but
+ * /dev/null, reads one but /dev/zero, needs a terminal or a value which
+ * can't have a default. The seeds select a command by its index: add new
  * commands at the end.
  *
  * A command may name an option which takes the argument byte of the
@@ -533,6 +533,25 @@ static void pci_sysfs(const uint8_t *data)
 	}
 }
 
+static bool running;
+
+/*
+ * nvme-cli waits a second between the polls of a device which sanitizes
+ * or tests itself, and the mock answers them right away: don't wait. The
+ * polls end when the device says so, or the data limit of the mock is
+ * reached. libFuzzer's own sleep() calls still sleep.
+ */
+unsigned int sleep(unsigned int seconds)
+{
+	static unsigned int (*fn)(unsigned int);
+
+	if (running)
+		return 0;
+	if (!fn)
+		fn = real("sleep");
+	return fn(seconds);
+}
+
 int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
 #ifndef __SANITIZE_ADDRESS__
@@ -615,7 +634,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		mock_fuzz_input(data + 7, size - 7);
 	else
 		mock_fuzz_input(data + 3, size - 3);
+	running = true;
 	nvme_main(argc, argv);
+	running = false;
 	mock_fuzz_input(NULL, 0);
 
 	return 0;
