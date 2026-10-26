@@ -1161,7 +1161,6 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	bool discovery = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
-	__cleanup_nvme_ctrl struct libnvme_ctrl *c = NULL;
 	__cleanup_free char *resolved_traddr = NULL;
 	int ret;
 	nvme_print_flags_t flags;
