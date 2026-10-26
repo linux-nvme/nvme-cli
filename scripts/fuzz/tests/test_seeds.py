@@ -57,6 +57,28 @@ class SeedTest(unittest.TestCase):
         data = seed('id', 'ns', '/dev/nvme0', '--namespace-id', '300')
         self.assertEqual(data[:3], bytes([index('id ns'), 0, 0]))
 
+    def test_dev_file_options(self) -> None:
+        cmds = [
+            device.Command(
+                0,
+                ('write', '--data=/dev/zero', '--data-size=4096'),
+                None,
+                False,
+            )
+        ]
+
+        def matches(*args: str) -> bool:
+            record = {'args': list(args), 'pci': None, 'answers': ''}
+            return seeds.seed(record, cmds) is not None
+
+        # the test's own data file, or none
+        self.assertTrue(
+            matches('write', '/dev/nvme0n1', '--data=d', '--data-size=512')
+        )
+        self.assertTrue(matches('write', '/dev/nvme0n1', '--data-size=512'))
+        # but the other options
+        self.assertFalse(matches('write', '/dev/nvme0n1', '--data=d'))
+
     def test_option_set(self) -> None:
         cmds = [
             device.Command(

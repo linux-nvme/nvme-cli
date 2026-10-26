@@ -89,13 +89,17 @@ def _is_value(a: str) -> bool:
 
 def _score(cmd: device.Command, args: _Args) -> int | None:
     """How well @cmd matches @args, None for not at all: its words must be
-    those of the command line, its options given, best with its value."""
+    those of the command line, its options given, best with its value.
+    An option which names a file in /dev, which the target passes for the
+    files a test writes or reads, need not be given."""
     words = [a for a in cmd.argv if not a.startswith('-')]
     if words != args.words:
         return None
     score = 0
     for opt in (a for a in cmd.argv if a.startswith('-')):
         name, _, value = opt.partition('=')
+        if name not in args.options and value.startswith('/dev/'):
+            continue
         if name not in args.options:
             return None
         score += 1 + (args.options[name] == value)
