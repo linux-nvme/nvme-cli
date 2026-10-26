@@ -214,6 +214,25 @@ static bool check_ret(const char *name, int got, int want)
 	return false;
 }
 
+/*
+ * Whether the loopback interface has an IPv6 address: without one, as in
+ * a container with IPv6 disabled, there is no route to ::1.
+ */
+static bool lo_has_ipv6(void)
+{
+	struct ifaddrs *ifas, *ifa;
+	bool found = false;
+
+	if (getifaddrs(&ifas))
+		return false;
+	for (ifa = ifas; ifa; ifa = ifa->ifa_next)
+		if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET6 &&
+		    !strcmp(ifa->ifa_name, "lo"))
+			found = true;
+	freeifaddrs(ifas);
+	return found;
+}
+
 static bool test_route_get_egress_iface(void)
 {
 	char ifname[IF_NAMESIZE];
@@ -264,16 +283,26 @@ static bool test_route_get_egress_iface(void)
 	pass &= check_str("IPv4 loopback src/dst egress interface is lo",
 			ifname, "lo");
 
-	memset(ifname, 0, sizeof(ifname));
-	ret = shr_route_get_egress_iface(NULL, "::1", ifname, sizeof(ifname));
-	pass &= check_ret("IPv6 loopback destination lookup returns 0", ret, 0);
-	pass &= check_str("IPv6 loopback egress interface is lo", ifname, "lo");
+	if (!lo_has_ipv6()) {
+		printf(" - IPv6 loopback: lo has no IPv6 address [SKIP]\n");
+	} else {
+		memset(ifname, 0, sizeof(ifname));
+		ret = shr_route_get_egress_iface(NULL, "::1", ifname,
+				sizeof(ifname));
+		pass &= check_ret("IPv6 loopback destination lookup returns 0",
+				ret, 0);
+		pass &= check_str("IPv6 loopback egress interface is lo",
+				ifname, "lo");
 
-	memset(ifname, 0, sizeof(ifname));
-	ret = shr_route_get_egress_iface("::1", "::1", ifname, sizeof(ifname));
-	pass &= check_ret("IPv6 loopback src and dst lookup returns 0", ret, 0);
-	pass &= check_str("IPv6 loopback src/dst egress interface is lo",
+		memset(ifname, 0, sizeof(ifname));
+		ret = shr_route_get_egress_iface("::1", "::1", ifname,
+				sizeof(ifname));
+		pass &= check_ret("IPv6 loopback src and dst lookup returns 0",
+				ret, 0);
+		pass &= check_str(
+			"IPv6 loopback src/dst egress interface is lo",
 			ifname, "lo");
+	}
 
 	/* Link-local: the scope names the interface */
 	memset(ifname, 0, sizeof(ifname));
