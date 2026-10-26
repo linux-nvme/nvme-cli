@@ -155,6 +155,20 @@ no_uring:
 	return err;
 }
 
+/*
+ * Whether the kernel takes @ioctl_cmd through io_uring on the device of
+ * @hdl: admin commands on the char device of a controller only, I/O
+ * commands on that of a namespace only.
+ */
+static bool uring_takes_cmd(struct libnvme_transport_handle *hdl,
+			    unsigned long ioctl_cmd)
+{
+	if (hdl->ns_chardev)
+		return ioctl_cmd == LIBNVME_URING_CMD_IO;
+
+	return ioctl_cmd == LIBNVME_URING_CMD_ADMIN;
+}
+
 static int libnvme_submit_passthru(
 		struct libnvme_transport_handle *hdl,
 		unsigned long ioctl_cmd,
@@ -167,6 +181,10 @@ static int libnvme_submit_passthru(
 		return -ENODEV;
 
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
+		return -ENOTSUP;
+
+	/* the callers send the others with an ioctl() */
+	if (!uring_takes_cmd(hdl, ioctl_cmd))
 		return -ENOTSUP;
 
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_UNKNOWN) {

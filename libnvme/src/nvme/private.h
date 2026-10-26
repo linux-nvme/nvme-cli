@@ -233,6 +233,7 @@ struct libnvme_transport_handle {
 	enum ioctl_state ioctl_admin_state;
 	enum ioctl_state ioctl_io_state;
 	enum libnvme_io_uring_state uring_state;
+	bool ns_chardev;	/* ngXnY: the char device of a namespace */
 #ifdef CONFIG_LIBURING
 	unsigned int uring_pending;
 	struct io_uring *ring;

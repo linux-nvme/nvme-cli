@@ -38,6 +38,8 @@ static int __libnvme_transport_handle_open_direct(
 		c = false;
 	else if (ret != 1 && sscanf(name, "ng%dn%d", &id, &ns) != 2)
 		return -EINVAL;
+	else if (ret != 1)
+		hdl->ns_chardev = true;
 
 	ret = asprintf(&path, "%s/%s", "/dev", name);
 	if (ret < 0)
@@ -61,6 +63,9 @@ static int __libnvme_transport_handle_open_direct(
 		}
 	} else if (!S_ISBLK(hdl->stat.st_mode)) {
 		return -EINVAL;
+	} else {
+		/* only the char devices take io_uring passthru commands */
+		hdl->uring_state = LIBNVME_IO_URING_STATE_NOT_AVAILABLE;
 	}
 
 	return 0;
