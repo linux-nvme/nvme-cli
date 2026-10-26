@@ -7810,8 +7810,8 @@ static int wdc_get_c1_log_page(struct libnvme_global_ctx *ctx,
 			       struct libnvme_transport_handle *hdl, char *format,
 			       uint8_t interval)
 {
-	struct wdc_log_page_subpage_header *sph;
-	struct wdc_ssd_perf_stats *perf;
+	struct wdc_log_page_subpage_header sph;
+	struct wdc_ssd_perf_stats perf;
 	struct wdc_log_page_header *l;
 	nvme_print_flags_t fmt;
 	int total_subpages;
@@ -7853,21 +7853,22 @@ static int wdc_get_c1_log_page(struct libnvme_global_ctx *ctx,
 		/* the subpages must fit the buffer */
 		for (i = 0, off = skip_cnt; i < total_subpages &&
 		     off < WDC_ADD_LOG_BUF_LEN &&
-		     WDC_ADD_LOG_BUF_LEN - off >= sizeof(*sph);
+		     WDC_ADD_LOG_BUF_LEN - off >= sizeof(sph);
 		     i++, off += skip_cnt) {
+			/* a subpage starts at any byte: copy what is read */
 			p = data + off;
-			sph = (struct wdc_log_page_subpage_header *)p;
-			if (sph->spcode == WDC_GET_LOG_PAGE_SSD_PERFORMANCE) {
-				if (sph->pcset == interval) {
+			memcpy(&sph, p, sizeof(sph));
+			if (sph.spcode == WDC_GET_LOG_PAGE_SSD_PERFORMANCE) {
+				if (sph.pcset == interval) {
 					if (WDC_ADD_LOG_BUF_LEN - off - 4 <
-					    sizeof(*perf))
+					    sizeof(perf))
 						break;
-					perf = (struct wdc_ssd_perf_stats *)(p + 4);
-					ret = wdc_print_log(perf, fmt);
+					memcpy(&perf, p + 4, sizeof(perf));
+					ret = wdc_print_log(&perf, fmt);
 					break;
 				}
 			}
-			skip_cnt = le16_to_cpu(sph->subpage_length) + 4;
+			skip_cnt = le16_to_cpu(sph.subpage_length) + 4;
 		}
 		if (ret)
 			nvme_show_error("ERROR: WDC: Unable to read data from buffer");
