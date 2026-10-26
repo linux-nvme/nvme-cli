@@ -1506,12 +1506,12 @@ static uint64_t calc_percent(uint64_t numerator, uint64_t denominator)
 	return percent < 0x1p64 ? (uint64_t)percent : UINT64_MAX;
 }
 
-/* An average of the JSON output, which has it as an int */
-static int json_avg(double numerator, double denominator)
+/* An average of the JSON output, at most UINT64_MAX */
+static uint64_t json_avg(double numerator, double denominator)
 {
 	double avg = safe_div_fp(numerator, denominator);
 
-	return avg < INT_MAX ? (int)avg : INT_MAX;
+	return avg < 0x1p64 ? (uint64_t)avg : UINT64_MAX;
 }
 
 static int wdc_get_vendor_id(struct libnvme_transport_handle *hdl, uint32_t *vendor_id)
@@ -5220,58 +5220,69 @@ static void wdc_print_log_json(struct wdc_ssd_perf_stats *perf)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_int(root, "Host Read Commands", le64_to_cpu(perf->hr_cmds));
-	json_object_add_value_int(root, "Host Read Blocks", le64_to_cpu(perf->hr_blks));
-	json_object_add_value_int(root, "Average Read Size",
+	json_object_add_value_uint64(root, "Host Read Commands",
+		le64_to_cpu(perf->hr_cmds));
+	json_object_add_value_uint64(root, "Host Read Blocks",
+		le64_to_cpu(perf->hr_blks));
+	json_object_add_value_uint64(root, "Average Read Size",
 			json_avg(le64_to_cpu(perf->hr_blks),
 				 le64_to_cpu(perf->hr_cmds)));
-	json_object_add_value_int(root, "Host Read Cache Hit Commands",
+	json_object_add_value_uint64(root, "Host Read Cache Hit Commands",
 			le64_to_cpu(perf->hr_ch_cmds));
-	json_object_add_value_int(root, "Host Read Cache Hit Percentage",
-			(uint64_t) calc_percent(le64_to_cpu(perf->hr_ch_cmds), le64_to_cpu(perf->hr_cmds)));
-	json_object_add_value_int(root, "Host Read Cache Hit Blocks",
+	json_object_add_value_uint64(root, "Host Read Cache Hit Percentage",
+			calc_percent(le64_to_cpu(perf->hr_ch_cmds),
+				     le64_to_cpu(perf->hr_cmds)));
+	json_object_add_value_uint64(root, "Host Read Cache Hit Blocks",
 			le64_to_cpu(perf->hr_ch_blks));
-	json_object_add_value_int(root, "Average Read Cache Hit Size",
+	json_object_add_value_uint64(root, "Average Read Cache Hit Size",
 			json_avg(le64_to_cpu(perf->hr_ch_blks),
 				 le64_to_cpu(perf->hr_ch_cmds)));
-	json_object_add_value_int(root, "Host Read Commands Stalled",
+	json_object_add_value_uint64(root, "Host Read Commands Stalled",
 			le64_to_cpu(perf->hr_st_cmds));
-	json_object_add_value_int(root, "Host Read Commands Stalled Percentage",
-			(uint64_t)calc_percent((le64_to_cpu(perf->hr_st_cmds)), le64_to_cpu(perf->hr_cmds)));
-	json_object_add_value_int(root, "Host Write Commands",
+	json_object_add_value_uint64(root,
+		"Host Read Commands Stalled Percentage",
+			calc_percent((le64_to_cpu(perf->hr_st_cmds)),
+				     le64_to_cpu(perf->hr_cmds)));
+	json_object_add_value_uint64(root, "Host Write Commands",
 			le64_to_cpu(perf->hw_cmds));
-	json_object_add_value_int(root, "Host Write Blocks",
+	json_object_add_value_uint64(root, "Host Write Blocks",
 			le64_to_cpu(perf->hw_blks));
-	json_object_add_value_int(root, "Average Write Size",
+	json_object_add_value_uint64(root, "Average Write Size",
 			json_avg(le64_to_cpu(perf->hw_blks),
 				 le64_to_cpu(perf->hw_cmds)));
-	json_object_add_value_int(root, "Host Write Odd Start Commands",
+	json_object_add_value_uint64(root, "Host Write Odd Start Commands",
 			le64_to_cpu(perf->hw_os_cmds));
-	json_object_add_value_int(root, "Host Write Odd Start Commands Percentage",
-			(uint64_t)calc_percent((le64_to_cpu(perf->hw_os_cmds)), (le64_to_cpu(perf->hw_cmds))));
-	json_object_add_value_int(root, "Host Write Odd End Commands",
+	json_object_add_value_uint64(root,
+		"Host Write Odd Start Commands Percentage",
+			calc_percent((le64_to_cpu(perf->hw_os_cmds)),
+				     (le64_to_cpu(perf->hw_cmds))));
+	json_object_add_value_uint64(root, "Host Write Odd End Commands",
 			le64_to_cpu(perf->hw_oe_cmds));
-	json_object_add_value_int(root, "Host Write Odd End Commands Percentage",
-			(uint64_t)calc_percent((le64_to_cpu(perf->hw_oe_cmds)), (le64_to_cpu((perf->hw_cmds)))));
-	json_object_add_value_int(root, "Host Write Commands Stalled",
+	json_object_add_value_uint64(root,
+		"Host Write Odd End Commands Percentage",
+			calc_percent((le64_to_cpu(perf->hw_oe_cmds)),
+				     (le64_to_cpu((perf->hw_cmds)))));
+	json_object_add_value_uint64(root, "Host Write Commands Stalled",
 		le64_to_cpu(perf->hw_st_cmds));
-	json_object_add_value_int(root, "Host Write Commands Stalled Percentage",
-		(uint64_t)calc_percent((le64_to_cpu(perf->hw_st_cmds)), (le64_to_cpu(perf->hw_cmds))));
-	json_object_add_value_int(root, "NAND Read Commands",
+	json_object_add_value_uint64(root,
+		"Host Write Commands Stalled Percentage",
+		calc_percent((le64_to_cpu(perf->hw_st_cmds)),
+			     (le64_to_cpu(perf->hw_cmds))));
+	json_object_add_value_uint64(root, "NAND Read Commands",
 		le64_to_cpu(perf->nr_cmds));
-	json_object_add_value_int(root, "NAND Read Blocks Commands",
+	json_object_add_value_uint64(root, "NAND Read Blocks Commands",
 		le64_to_cpu(perf->nr_blks));
-	json_object_add_value_int(root, "Average NAND Read Size",
+	json_object_add_value_uint64(root, "Average NAND Read Size",
 		json_avg(le64_to_cpu(perf->nr_blks),
 			 le64_to_cpu(perf->nr_cmds)));
-	json_object_add_value_int(root, "Nand Write Commands",
+	json_object_add_value_uint64(root, "Nand Write Commands",
 			le64_to_cpu(perf->nw_cmds));
-	json_object_add_value_int(root, "NAND Write Blocks",
+	json_object_add_value_uint64(root, "NAND Write Blocks",
 			le64_to_cpu(perf->nw_blks));
-	json_object_add_value_int(root, "Average NAND Write Size",
+	json_object_add_value_uint64(root, "Average NAND Write Size",
 			json_avg(le64_to_cpu(perf->nw_blks),
 				 le64_to_cpu(perf->nw_cmds)));
-	json_object_add_value_int(root, "NAND Read Before Written",
+	json_object_add_value_uint64(root, "NAND Read Before Written",
 			le64_to_cpu(perf->nrbw));
 	json_print_object(root, NULL);
 	printf("\n");
