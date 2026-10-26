@@ -962,7 +962,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	unsigned int logical_block_size = 0;
 	struct timeval start_time, end_time;
-	__cleanup_free void *mbuffer = NULL;
+	__cleanup_libnvme_free void *mbuffer = NULL;
 	__cleanup_fd int dfd = -1, mfd = -1;
 	__u16 control = 0, nblocks = 0;
 	struct libnvme_passthru_cmd cmd;
@@ -1219,10 +1219,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		else
 			mbuffer_size = cfg.metadata_size;
 
-		mbuffer = malloc(mbuffer_size);
+		mbuffer = libnvme_alloc(mbuffer_size);
 		if (!mbuffer)
 			return -ENOMEM;
-		memset(mbuffer, 0, mbuffer_size);
 	}
 
 	if (opcode & 1) {
