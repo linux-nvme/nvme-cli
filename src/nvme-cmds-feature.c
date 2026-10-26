@@ -464,12 +464,17 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	                 (uint64_t)cfg.value, cfg.cdw12 ? 10 : 8, cfg.cdw12, cfg.sv);
 	if (cfg.fid == NVME_FEAT_FID_LBA_STS_INTERVAL)
 		nvme_show_lba_status_info(result);
-	if (buf) {
-		if (cfg.fid == NVME_FEAT_FID_LBA_RANGE)
+	if (buf && cfg.fid == NVME_FEAT_FID_LBA_RANGE) {
+		/* the ranges NUM (0's based) of CDW11 names, in the data */
+		int ranges = cfg.data_len /
+			sizeof(struct nvme_lba_range_type_entry);
+
+		if (ranges)
 			nvme_show_lba_range((struct nvme_lba_range_type *)buf,
-					    result, 0);
-		else
-			d(buf, cfg.data_len, 16, 1);
+					    min((int)NVME_FEAT_LBAR_NR(cdw11),
+						ranges - 1), 0);
+	} else if (buf) {
+		d(buf, cfg.data_len, 16, 1);
 	}
 
 	return err;

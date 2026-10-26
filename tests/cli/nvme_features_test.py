@@ -107,6 +107,28 @@ class SetFeatureTest(FeaturesTestBase):
         cmd, = self.set_features()
         self.assertEqual(cmd.data, data)
 
+    def test_lba_range_count(self):
+        """The LBA ranges of the data are printed by the count NUM of
+        Command Dword 11 (bits 5:0, 0's based), not by Dword 0 of the
+        completion, which Set Features doesn't define for this feature,
+        and only as many as the data holds."""
+        data = b''.join(bytes([t]) + bytes(LBA_RANGE_ENTRY_SIZE - 1)
+                        for t in (1, 2))
+        path = os.path.join(self.tmp, 'ranges')
+        with open(path, 'wb') as f:
+            f.write(data)
+        self.server.features[FID_LBA_RANGE] = Reply(result=0xffff)
+        for value, ranges in ((1, 2), (0x3f, 2), (0, 1)):
+            with self.subTest(value=value):
+                self.server.commands.clear()
+                result = self.nvme('set-feature', self.ctrl,
+                                   f'--feature-id={FID_LBA_RANGE}',
+                                   f'--value={value}', '--data-len=128',
+                                   f'--data={path}')
+                self.assertOk(result)
+                self.assertEqual(result.stdout.count('type'), ranges,
+                                 result.stdout)
+
     def test_data_length_of_the_feature(self):
         """Without --data-len, the length the feature has"""
         cmd = self.set_feature('set-feature', self.ctrl,
