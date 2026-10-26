@@ -6615,10 +6615,12 @@ static int nvme_get_ext_smart_cloud_log(struct libnvme_transport_handle *hdl, __
 
 static int nvme_get_hw_rev_log(struct libnvme_transport_handle *hdl, __u8 **data, int uuid_index, __u32 namespace_id)
 {
-	struct wdc_nvme_hw_rev_log *log_ptr = NULL;
+	__cleanup_free struct wdc_nvme_hw_rev_log *log_ptr = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int ret, i;
 
+	/* the log only on success: the callers free it only then */
+	*data = NULL;
 	log_ptr = malloc(sizeof(*log_ptr));
 	if (!log_ptr) {
 		nvme_show_error("ERROR: WDC: malloc: %s", libnvme_strerror(errno));
@@ -6653,10 +6655,13 @@ static int nvme_get_hw_rev_log(struct libnvme_transport_handle *hdl, __u8 **data
 			}
 		}
 	}
+	if (ret)
+		return ret;
 
 	*data = (__u8 *)log_ptr;
+	log_ptr = NULL;
 
-	return ret;
+	return 0;
 }
 
 
