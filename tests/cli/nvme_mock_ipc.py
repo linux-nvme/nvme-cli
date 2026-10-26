@@ -332,7 +332,8 @@ class MockIPCServer(threading.Thread):
                        if data_len > 0 else b"")
 
             if req_type == IPC_TYPE_IOCTL:
-                _fuzz_recorder.request(req_len)
+                # bits 1:0 of the opcode: a write reads nothing back
+                _fuzz_recorder.request(0 if opcode & 1 else req_len)
             elif req_type == IPC_TYPE_RAW_IOCTL:
                 _fuzz_recorder.request(ioc_size if ioc_dir & IOC_READ else 0)
             else:
