@@ -11486,9 +11486,9 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 {
 	struct wdc_nand_stats *nand_stats = (struct wdc_nand_stats *)(data);
 	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
-	__u64 temp_raw;
+	uint64_t temp_raw;
 	__u16 temp_norm;
-	__u64 *temp_ptr = NULL;
+	uint64_t temp;
 
 	switch (version) {
 	case 0:
@@ -11522,13 +11522,14 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 		printf("  SLC Units Written				 %s\n",
 			uint128_t_to_string(
 				le128_to_cpu(nand_stats_v3->nand_write_slc)));
-		temp_ptr = (__u64 *)nand_stats_v3->bad_nand_block_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->bad_nand_block_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		printf("  Bad NAND Blocks Count - Normalized		 %"PRIu16"\n",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		printf("  Bad NAND Blocks Count - Raw			 %"PRIu64"\n",
-				le64_to_cpu(temp_raw));
+				temp_raw);
 		printf("  NAND XOR Recovery count			 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->xor_recovery_count));
 		printf("  UECC Read Error count				 %"PRIu64"\n",
@@ -11549,20 +11550,22 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
 		printf("  User Data Erase Counts - SLC Max		 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
-		temp_ptr = (__u64 *)nand_stats_v3->program_fail_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->program_fail_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		printf("  Program Fail Count - Normalized		 %"PRIu16"\n",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		printf("  Program Fail Count - Raw			 %"PRIu64"\n",
-				le64_to_cpu(temp_raw));
-		temp_ptr = (__u64 *)nand_stats_v3->erase_fail_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+				temp_raw);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->erase_fail_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		printf("  Erase Fail Count - Normalized			 %"PRIu16"\n",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		printf("  Erase Fail Count - Raw		         %"PRIu64"\n",
-				le64_to_cpu(temp_raw));
+				temp_raw);
 		printf("  PCIe Correctable Error Count			 %"PRIu16"\n",
 				le16_to_cpu(nand_stats_v3->correctable_error_count));
 		printf("  %% Free Blocks (User)				 %u\n",
@@ -11584,13 +11587,14 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
 		printf("  Refresh Count					 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->refresh_count));
-		temp_ptr = (__u64 *)nand_stats_v3->bad_sys_nand_block_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->bad_sys_nand_block_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		printf("  Bad System Nand Block Count - Normalized	 %"PRIu16"\n",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		printf("  Bad System Nand Block Count - Raw	         %"PRIu64"\n",
-				le64_to_cpu(temp_raw));
+				temp_raw);
 		printf("  Endurance Estimate				 %s\n",
 			uint128_t_to_string(
 				le128_to_cpu(nand_stats_v3->endurance_estimate)));
@@ -11619,9 +11623,9 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 	struct wdc_nand_stats *nand_stats = (struct wdc_nand_stats *)(data);
 	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
 	struct json_object *root = json_create_object();
-	__u64 temp_raw;
+	uint64_t temp_raw;
 	__u16 temp_norm;
-	__u64 *temp_ptr = NULL;
+	uint64_t temp;
 
 	switch (version) {
 	case 0:
@@ -11650,13 +11654,14 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le128_to_cpu(nand_stats_v3->nand_write_tlc));
 		json_object_add_value_uint128(root, "NAND Writes SLC (Bytes)",
 				le128_to_cpu(nand_stats_v3->nand_write_slc));
-		temp_ptr = (__u64 *)nand_stats_v3->bad_nand_block_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->bad_nand_block_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		json_object_add_value_uint(root, "Bad NAND Blocks Count - Normalized",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		json_object_add_value_uint64(root, "Bad NAND Blocks Count - Raw",
-				le64_to_cpu(temp_raw));
+				temp_raw);
 		json_object_add_value_uint64(root, "NAND XOR Recovery count",
 				le64_to_cpu(nand_stats_v3->xor_recovery_count));
 		json_object_add_value_uint64(root, "UECC Read Error count",
@@ -11677,20 +11682,22 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
 		json_object_add_value_uint64(root, "User Data Erase Counts - SLC Max",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
-		temp_ptr = (__u64 *)nand_stats_v3->program_fail_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->program_fail_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		json_object_add_value_uint(root, "Program Fail Count - Normalized",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		json_object_add_value_uint64(root, "Program Fail Count - Raw",
-				le64_to_cpu(temp_raw));
-		temp_ptr = (__u64 *)nand_stats_v3->erase_fail_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+				temp_raw);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->erase_fail_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		json_object_add_value_uint(root, "Erase Fail Count - Normalized",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		json_object_add_value_uint64(root, "Erase Fail Count - Raw",
-				le64_to_cpu(temp_raw));
+				temp_raw);
 		json_object_add_value_uint(root, "PCIe Correctable Error Count",
 				le16_to_cpu(nand_stats_v3->correctable_error_count));
 		json_object_add_value_uint(root, "% Free Blocks (User)",
@@ -11711,13 +11718,14 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
 		json_object_add_value_uint64(root, "Refresh Count",
 				le64_to_cpu(nand_stats_v3->refresh_count));
-		temp_ptr = (__u64 *)nand_stats_v3->bad_sys_nand_block_count;
-		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
-		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		temp = shr_get_unaligned_le64(
+			nand_stats_v3->bad_sys_nand_block_count);
+		temp_norm = temp & 0xffff;
+		temp_raw = temp >> 16;
 		json_object_add_value_uint(root, "Bad System Nand Block Count - Normalized",
-				le16_to_cpu(temp_norm));
+				temp_norm);
 		json_object_add_value_uint64(root, "Bad System Nand Block Count - Raw",
-				le64_to_cpu(temp_raw));
+				temp_raw);
 		json_object_add_value_uint128(root, "Endurance Estimate",
 				le128_to_cpu(nand_stats_v3->endurance_estimate));
 		json_object_add_value_uint(root, "Thermal Throttling Status",
