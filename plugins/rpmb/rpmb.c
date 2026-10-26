@@ -122,11 +122,11 @@ struct rpmb_data_frame_t {
 	unsigned char  mac[32];
 	unsigned char  target;     /* 0-6, should match with NSSF with SS, SR */
 	unsigned char  nonce[16];
-	unsigned int   write_counter;
-	unsigned int   address;
-	unsigned int   sectors;
-	unsigned short result;
-	unsigned short type;       /* req or response */
+	__le32         write_counter;
+	__le32         address;
+	__le32         sectors;
+	__le16         result;
+	__le16         type;       /* req or response */
 	unsigned char  data[0];    /* in sector count times */
 };
 #pragma pack()
@@ -219,10 +219,10 @@ rpmb_request_init(unsigned int req_size, unsigned short type, unsigned char targ
 		return req;
 	}
 
-	req->type = type;
+	req->type = cpu_to_le16(type);
 	req->target = target;
-	req->address = addr;
-	req->sectors = sectors;
+	req->address = cpu_to_le32(addr);
+	req->sectors = cpu_to_le32(sectors);
 
 	if (nonce && rpmb_nonce_init(req) != 0) {
 		free(req);
@@ -251,15 +251,19 @@ static int check_rpmb_response(struct rpmb_data_frame_t *req, struct rpmb_data_f
 		"Unknown error",
 	};
 
+	__u16 result = le16_to_cpu(rsp->result);
+	__u16 rsp_type = le16_to_cpu(rsp->type);
+	__u16 req_type = le16_to_cpu(req->type);
+
 	/* check error status before comparing nonce and mac */
-	if (rsp->result != 0) {
-		if (rsp->type != ((req->type << 8) & 0xFF00)) {
+	if (result != 0) {
+		if (rsp_type != ((req_type << 8) & 0xFF00)) {
 			nvme_show_error("%s ! non-matching response 0x%04x for 0x%04x", msg,
-					 rsp->type, req->type);
-		} else if ((rsp->result & 0x80) == 0x80) {
+					 rsp_type, req_type);
+		} else if ((result & 0x80) == 0x80) {
 			nvme_show_error("%s ! Expired write-counter !", msg);
-		} else if (rsp->result) {
-			unsigned int code = rsp->result & 0x7F;
+		} else if (result) {
+			unsigned int code = result & 0x7F;
 
 			nvme_show_error("%s ! %s", msg,
 					 code < ARRAY_SIZE(rpmb_result_string) ?
@@ -268,12 +272,13 @@ static int check_rpmb_response(struct rpmb_data_frame_t *req, struct rpmb_data_f
 			nvme_show_error("%s ! non-matching nonce", msg);
 		} else if (memcmp(req->mac, rsp->mac, 32)) {
 			nvme_show_error("%s ! non-matching MAC", msg);
-		} else if ((req->write_counter + 1) != rsp->write_counter) {
+		} else if (le32_to_cpu(req->write_counter) + 1 !=
+			   le32_to_cpu(rsp->write_counter)) {
 			nvme_show_error("%s ! out-of-sync write-counters", msg);
 		}
 	}
 
-	return (int)rsp->result;
+	return (int)result;
 }
 
 /*
@@ -290,7 +295,7 @@ rpmb_read_request(struct libnvme_transport_handle *hdl, struct rpmb_data_frame_t
 	int error;
 
 	snprintf((char *)msg, sizeof(msg), "RPMB request 0x%04x to target 0x%x",
-		 req->type, req->target);
+		 le16_to_cpu(req->type), req->target);
 
 	error = send_rpmb_req(hdl, req->target, req_size, req);
 	if (error != 0) {
@@ -338,7 +343,7 @@ static int rpmb_read_write_counter(struct libnvme_transport_handle *hdl, unsigne
 	rsp = rpmb_read_request(hdl, req, req_size, req_size);
 	if (!rsp)
 		goto out;
-	*counter = rsp->write_counter;
+	*counter = le32_to_cpu(rsp->write_counter);
 	error = 0;
 
 out:
@@ -384,7 +389,7 @@ static unsigned int rpmb_read_config_block(struct libnvme_transport_handle *hdl,
 	memcpy(cfg, rsp->data, cfg_size);
 	*config_buf = (unsigned char *)cfg;
 	cfg = NULL;
-	retval = rsp->write_counter;
+	retval = le32_to_cpu(rsp->write_counter);
 out:
 	free(req);
 	free(rsp);
@@ -423,15 +428,15 @@ static int rpmb_auth_data_read(struct libnvme_transport_handle *hdl, unsigned ch
 			goto err_free_req;
 		}
 
-		if (rsp->sectors > (unsigned int)xfer) {
+		if (le32_to_cpu(rsp->sectors) > (unsigned int)xfer) {
 			nvme_show_error("device reported %u sectors, more than the %d requested",
-					 rsp->sectors, xfer);
+					 le32_to_cpu(rsp->sectors), xfer);
 			goto err_free_rsp;
 		}
 
-		data_size = rsp->sectors * 512;
+		data_size = le32_to_cpu(rsp->sectors) * 512;
 		memcpy(tbufp, rsp->data, data_size);
-		offset += rsp->sectors;
+		offset += le32_to_cpu(rsp->sectors);
 		tbufp += data_size;
 		if (offset + chunk_size > msg_size)
 			xfer = msg_size - offset;
@@ -475,7 +480,8 @@ static int rpmb_program_auth_key(struct libnvme_transport_handle *hdl, unsigned 
 	/* send the request and get response */
 	err = send_rpmb_req(hdl, req->target, req_size, req);
 	if (err) {
-		nvme_show_error("RPMB request 0x%04x for 0x%x, err: %d", req->type, req->target,
+		nvme_show_error("RPMB request 0x%04x for 0x%x, err: %d",
+				 le16_to_cpu(req->type), req->target,
 				 err);
 		goto out;
 	}
@@ -489,11 +495,12 @@ static int rpmb_program_auth_key(struct libnvme_transport_handle *hdl, unsigned 
 	}
 
 	rsp->target = req->target;
-	rsp->type = RPMB_REQ_READ_RESULT;
+	rsp->type = cpu_to_le16(RPMB_REQ_READ_RESULT);
 	err = send_rpmb_req(hdl, req->target, rsp_size, rsp);
 	if (err || rsp->result) {
-		nvme_show_error("Program auth key read result 0x%x, error = 0x%x", rsp->result,
-				 err);
+		nvme_show_error(
+			"Program auth key read result 0x%x, error = 0x%x",
+			le16_to_cpu(rsp->result), err);
 		goto out;
 	}
 
@@ -546,7 +553,7 @@ static int auth_data_write_chunk(struct libnvme_transport_handle *hdl, unsigned 
 		goto out;
 	}
 
-	req->write_counter = write_cntr;
+	req->write_counter = cpu_to_le32(write_cntr);
 
 	/* compute HMAC hash */
 	mac = shr_hmac_sha256(((unsigned char *)req + 223), req_size - 223, keybuf, keysize);
@@ -561,7 +568,8 @@ static int auth_data_write_chunk(struct libnvme_transport_handle *hdl, unsigned 
 	/* send the request and get response */
 	error = send_rpmb_req(hdl, tgt, req_size, req);
 	if (error != 0) {
-		nvme_show_error("RPMB request 0x%04x for 0x%x, error: %d", req->type, tgt,
+		nvme_show_error("RPMB request 0x%04x for 0x%x, error: %d",
+				 le16_to_cpu(req->type), tgt,
 				 error);
 		goto out;
 	}
@@ -574,10 +582,11 @@ static int auth_data_write_chunk(struct libnvme_transport_handle *hdl, unsigned 
 		goto out;
 	}
 	rsp->target = req->target;
-	rsp->type = RPMB_REQ_READ_RESULT;
+	rsp->type = cpu_to_le16(RPMB_REQ_READ_RESULT);
 	error = send_rpmb_req(hdl, tgt, rsp_size, rsp);
 	if (error != 0 || rsp->result != 0) {
-		nvme_show_error("Write-data read result 0x%x, error = 0x%x", rsp->result,
+		nvme_show_error("Write-data read result 0x%x, error = 0x%x",
+				 le16_to_cpu(rsp->result),
 				 error);
 		goto out;
 	}
@@ -654,7 +663,7 @@ static int rpmb_write_config_block(struct libnvme_transport_handle *hdl,
 	}
 
 	free(cfg_buf_read);
-	req->write_counter = write_cntr;
+	req->write_counter = cpu_to_le32(write_cntr);
 	mac = shr_hmac_sha256(((unsigned char *)req + 223), req_size - 223, keybuf, keysize);
 	if (!mac) {
 		nvme_show_error("failed to compute hmac-sha256 hash");
@@ -681,7 +690,7 @@ static int rpmb_write_config_block(struct libnvme_transport_handle *hdl,
 	/* get result first */
 	memset(rsp, 0, rsp_size);
 	rsp->target = req->target;
-	rsp->type = RPMB_REQ_READ_RESULT;
+	rsp->type = cpu_to_le16(RPMB_REQ_READ_RESULT);
 	/* get the response and validate */
 	error = recv_rpmb_rsp(hdl, req->target, rsp_size, rsp);
 	if (error != 0) {
