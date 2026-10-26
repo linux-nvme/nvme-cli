@@ -841,9 +841,10 @@ static int dashboard_uevent_fd(void)
 
 	ret = bind(fd, (struct sockaddr *)&sa, sizeof(struct sockaddr_nl));
 	if (ret < 0) {
-		close(fd);
 		nvme_show_perror("uevent bind");
-		return -errno;
+		ret = -errno;
+		close(fd);
+		return ret;
 	}
 
 	return fd;
@@ -866,8 +867,8 @@ FILE *dashboard_init(struct dashboard_ctx **db_ctx, int refresh_interval)
 
 	ctx->term_fd = open(ctermid(NULL), O_RDWR);
 	if (ctx->term_fd < 0) {
-		free(ctx);
 		nvme_show_perror("open controlling terminal");
+		free(ctx);
 		return NULL;
 	}
 
