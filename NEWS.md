@@ -426,6 +426,10 @@
 
 ### Plugins
 
+* The JSON output of `nvme wdc vs-smart-add-log` prints the counters,
+  averages and percentages of the C1 performance statistics as 64 bit
+  values. Before, a value above 2^31 - 1 came out wrapped.
+
 * `nvme feat num-queues --nsqr=N` without `--ncqr` keeps the current
   number of completion queues now. Before, it requested a single
   completion queue and a wrong number of submission queues.
