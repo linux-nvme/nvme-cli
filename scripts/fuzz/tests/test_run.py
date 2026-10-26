@@ -204,6 +204,33 @@ class RunTest(unittest.TestCase):
         self.assertEqual({f.name for f in corpus.iterdir()}, {'a-1', 'b-1'})
         self.assertFalse(corpus.with_name('device.parts').exists())
 
+    def test_partitions(self) -> None:
+        corpus = Path(self.tmp.name) / 'corpus'
+        corpus.mkdir()
+        inputs = {
+            'a': b'\x01x',
+            'b': b'\x01y',
+            'c': b'\xff\x02y',
+            'd': b'\xff\x03y',
+            'e': b'\xff',
+            'f': b'',
+        }
+        for name, data in inputs.items():
+            (corpus / name).write_bytes(data)
+        parts = run._partitions(corpus, Path(self.tmp.name) / 'parts')
+        # the commands from index 255 on by their second byte too
+        self.assertEqual(
+            {p.name: sorted(f.name for f in p.iterdir()) for p in parts},
+            {
+                '1': ['a', 'b'],
+                '255-2': ['c'],
+                '255-3': ['d'],
+                '255': ['e'],
+                'empty': ['f'],
+            },
+        )
+        self.assertEqual(parts[0].name, '1')
+
     def test_interrupt_merge(self) -> None:
         corpus = self.results / 'corpus' / 'device'
         corpus.mkdir(parents=True)

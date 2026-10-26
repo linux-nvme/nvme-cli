@@ -277,12 +277,13 @@ command line parser (`argconfig`), the INI parser (`ini`), `nvme-cli.conf`
 (`global-config`) and `nvme-fabrics.conf` (`fabrics-conf`).
 
 The `device` target fuzzes what nvme-cli does with the data a device
-returns. It runs one of the commands which read and print something, from
-the table in `tests/fuzz/fuzz-device.c`, against the device mock of
-`tests/cli/libmock_nvme.c`, which answers every command from the input.
-An input selects the command by its index in the table, and may pass a
-fuzzed value to one option of it, so add new commands at the end of the
-table: the seeds and the corpus of earlier runs keep their meaning. It needs
+returns. It runs one of the commands which print, or size a buffer by,
+what the device returns, from the table in `tests/fuzz/fuzz-device.c`,
+against the device mock of `tests/cli/libmock_nvme.c`, which answers every
+command from the input. An input selects the command by its index in the
+table, may pass a fuzzed value to one option of it and select one of up to
+four fixed option sets, so add new commands at the end of the table: the
+seeds and the corpus of earlier runs keep their meaning. It needs
 a dynamically linked Linux build. Its seeds named `regress-*` are inputs
 which found a bug.
 

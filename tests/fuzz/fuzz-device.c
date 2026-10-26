@@ -13,11 +13,12 @@
  * tests/cli/libmock_nvme.c built with MOCK_FUZZ, linked into this
  * program, so its open()/ioctl() replace the libc ones.
  *
- * The input is the command (one byte, an index into the table below),
- * the variant (one byte: output format, verbose, controller or namespace
- * device, whether to pass the argument), the argument (one byte, the
- * value of the option the command names) and then the answers of the
- * device, see ipc_call() in the mock.
+ * The input is the command (one byte, an index into the table below,
+ * or 0xff and a second byte for the commands from index 255 on), the
+ * variant (one byte: output format, verbose, controller or namespace
+ * device, whether to pass the argument, which option set), the argument
+ * (one byte, the value of the option the command names) and then the
+ * answers of the device, see ipc_call() in the mock.
  */
 #include <dlfcn.h>
 #include <errno.h>
@@ -45,13 +46,19 @@ void mock_fuzz_input(const uint8_t *data, size_t size);
 #define MAX_ARGS 14
 
 /*
- * Commands which read from the device and print what they got. Nothing
- * which writes a file but /dev/null, waits or loops on the device, or
- * needs a value which can't have a default. The seeds select a command
- * by its index: add new commands at the end.
+ * Commands which do something with what the device returns: print it
+ * or size a buffer by it. Nothing which writes a file but /dev/null,
+ * reads one but /dev/zero, needs a terminal or a value which can't have
+ * a default. The seeds select a command by its index: add new
+ * commands at the end.
  *
  * A command may name an option which takes the argument byte of the
  * input as its value, 0xff meaning 0xffffffff (all namespaces).
+ *
+ * A command may have up to four option sets, of which bits 5:4 of the
+ * variant select one: fixed values of the options which decide how much
+ * data the command transfers, or what it does, rather than fuzzed ones.
+ * A set it doesn't have adds no option.
  *
  * A command with pci set sees a controller whose PCI vendor and device ID
  * are the next four bytes of the input, little endian, ahead of the
@@ -62,6 +69,7 @@ static const struct {
 	const char *argv[4];
 	const char *arg;
 	bool pci;
+	const char *opts[4][3];
 } commands[] = {
 	{ { "id", "ctrl" } },
 	{ { "id", "ns" }, "--namespace-id" },
@@ -308,6 +316,9 @@ static const struct {
 
 #define NR_COMMANDS ARRAY_SIZE(commands)
 
+/* The first byte of an input of a command from index 255 on */
+#define EXTENDED_INDEX 0xff
+
 static struct nvme_args defaults;
 
 #if defined(__has_feature)
@@ -543,16 +554,27 @@ int LLVMFuzzerInitialize(int *argc, char ***argv)
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+	const char *const *opts;
 	char *argv[MAX_ARGS + 1];
+	unsigned int idx;
 	char arg[64];
 	uint8_t variant;
 	int argc = 0, i;
 	bool pci;
 
+	if (size && data[0] == EXTENDED_INDEX) {
+		if (size < 2)
+			return 0;
+		idx = EXTENDED_INDEX + data[1];
+		data++;
+		size--;
+	} else {
+		idx = size ? data[0] : 0;
+	}
 	/* No modulo: a new command must not change what an input does */
-	if (size < 3 || data[0] >= NR_COMMANDS)
+	if (size < 3 || idx >= NR_COMMANDS)
 		return 0;
-	pci = commands[data[0]].pci;
+	pci = commands[idx].pci;
 	if (pci && size < 7)
 		return 0;
 
@@ -569,8 +591,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	} else {
 		argv[argc++] = "test-sysfs-dir=/nonexistent/fuzz-device";
 	}
-	for (i = 0; i < 4 && commands[data[0]].argv[i]; i++)
-		argv[argc++] = (char *)commands[data[0]].argv[i];
+	for (i = 0; i < 4 && commands[idx].argv[i]; i++)
+		argv[argc++] = (char *)commands[idx].argv[i];
 
 	variant = data[1];
 	argv[argc++] = variant & 4 ? "/dev/nvme0n1" : "/dev/nvme0";
@@ -578,11 +600,14 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		argv[argc++] = "--output-format=json";
 	if (variant & 2)
 		argv[argc++] = "--verbose";
-	if (variant & 8 && commands[data[0]].arg) {
-		snprintf(arg, sizeof(arg), "%s=%u", commands[data[0]].arg,
+	if (variant & 8 && commands[idx].arg) {
+		snprintf(arg, sizeof(arg), "%s=%u", commands[idx].arg,
 			 data[2] == 0xff ? 0xffffffffU : data[2]);
 		argv[argc++] = arg;
 	}
+	opts = commands[idx].opts[variant >> 4 & 3];
+	for (i = 0; i < 3 && opts[i]; i++)
+		argv[argc++] = (char *)opts[i];
 	argv[argc] = NULL;
 
 	nvme_args = defaults;

@@ -87,8 +87,9 @@ def main(args: argparse.Namespace) -> int:
         by_index: dict[int, list[bytes]] = collections.defaultdict(list)
         for f in args.corpus.iterdir():
             data = f.read_bytes()
-            if data:
-                by_index[data[0]].append(data)
+            parts = device.split(data)
+            if parts:
+                by_index[parts[0]].append(data)
 
         def inputs(cmd: device.Command) -> list[bytes]:
             return by_index.get(cmd.index, [])

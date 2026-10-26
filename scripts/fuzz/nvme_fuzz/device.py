@@ -7,8 +7,9 @@
 """The commands of the device target, as its inputs select them.
 
 An input of tests/fuzz/fuzz-device.c is the index of a command in its
-commands[] table, a variant byte, an argument byte, for a command with
-pci set the PCI vendor and device ID, and then the answers of the device.
+commands[] table (0xff and a second byte from index 255 on), a variant
+byte, an argument byte, for a command with pci set the PCI vendor and
+device ID, and then the answers of the device.
 """
 
 from __future__ import annotations
@@ -22,8 +23,12 @@ from .targets import FUZZ_DIR
 
 SOURCE = FUZZ_DIR / 'fuzz-device.c'
 
-# The bits of the variant byte
+# The bits of the variant byte; bits 5:4 select the option set
 VARIANTS = ((1, 'json'), (2, 'verbose'), (4, 'ns'), (8, 'arg'))
+OPTS_SHIFT = 4
+
+# The first byte of an input of a command from index 255 on
+EXTENDED_INDEX = 0xFF
 
 # An answer of the device: a control byte (0: success), the result dword
 # and then the data of the command
@@ -101,6 +106,8 @@ class Command:
     # The option which takes the argument byte, if any
     arg: str | None
     pci: bool
+    # The option sets bits 5:4 of the variant select
+    opts: tuple[tuple[str, ...], ...] = ()
 
     @property
     def name(self) -> str:
@@ -117,33 +124,79 @@ class Command:
         return tuple(dict.fromkeys(i for v in PCI_IDS.values() for i in v))
 
     def header(
-        self, variant: int = 0, arg: int = 0, pci_ids: tuple[int, int] = (0, 0)
+        self,
+        variant: int = 0,
+        arg: int = 0,
+        pci_ids: tuple[int, int] = (0, 0),
+        opts: int = 0,
     ) -> bytes:
-        """The start of an input which selects this command."""
-        data = bytes([self.index, variant, arg])
+        """The start of an input which selects this command, with the
+        option set @opts."""
+        if self.index < EXTENDED_INDEX:
+            data = bytes([self.index])
+        else:
+            data = bytes([EXTENDED_INDEX, self.index - EXTENDED_INDEX])
+        data += bytes([variant | opts << OPTS_SHIFT, arg])
         if self.pci:
             data += struct.pack('<HH', *pci_ids)
         return data
 
 
-_ENTRY = re.compile(r'^\t\{ \{ (?P<argv>[^}]*)\}(?P<rest>[^\n]*)\},$', re.M)
+def split(data: bytes) -> tuple[int, bytes] | None:
+    """The command index of the input @data and the rest of it, from the
+    variant byte on; None if it is too short to have one."""
+    if data[:1] == bytes([EXTENDED_INDEX]):
+        if len(data) < 2:
+            return None
+        return EXTENDED_INDEX + data[1], data[2:]
+    if not data:
+        return None
+    return data[0], data[1:]
+
+
+def _entries(body: str) -> list[str]:
+    """The text of each entry of the table @body, by its braces."""
+    res = []
+    depth = 0
+    start = 0
+    for i, c in enumerate(body):
+        if c == '{':
+            if depth == 0:
+                start = i
+            depth += 1
+        elif c == '}':
+            depth -= 1
+            if depth == 0:
+                res.append(body[start + 1 : i])
+    return res
 
 
 def commands(source: Path = SOURCE) -> list[Command]:
     """The commands[] table of the device target."""
     src = source.read_text()
-    start = src.index('} commands[] = {')
+    start = src.index('} commands[] = {') + len('} commands[] = {')
     body = src[start : src.index('\n};', start)]
     cmds: list[Command] = []
-    for m in _ENTRY.finditer(body):
-        argv = tuple(re.findall(r'"([^"]*)"', m.group('argv')))
-        arg = re.search(r'"([^"]+)"', m.group('rest'))
+    for entry in _entries(body):
+        argv_end = entry.index('}')
+        argv = tuple(re.findall(r'"([^"]*)"', entry[:argv_end]))
+        rest, _, opts_text = entry[argv_end + 1 :].partition('.opts')
+        arg = re.search(r'"([^"]+)"', rest)
+        opts = (
+            tuple(
+                tuple(re.findall(r'"([^"]*)"', o))
+                for o in _entries(opts_text[opts_text.index('{') + 1 :])
+            )
+            if opts_text
+            else ()
+        )
         cmds.append(
             Command(
                 len(cmds),
                 argv,
                 arg.group(1) if arg else None,
-                '.pci = true' in m.group('rest'),
+                '.pci = true' in rest,
+                opts,
             )
         )
     return cmds
@@ -161,18 +214,23 @@ def parse_entries(spec: str, n: int) -> list[int]:
 
 def describe(data: bytes, cmds: list[Command]) -> str:
     """What the input @data runs, e.g. "id ctrl (json,verbose)"."""
-    if len(data) < 3:
+    parts = split(data)
+    if parts is None or len(parts[1]) < 2:
         return 'too short'
-    if data[0] >= len(cmds):
-        return f'index {data[0]} (no command)'
-    cmd = cmds[data[0]]
-    flags = [name for bit, name in VARIANTS if data[1] & bit]
+    index, rest = parts
+    if index >= len(cmds):
+        return f'index {index} (no command)'
+    cmd = cmds[index]
+    flags = [name for bit, name in VARIANTS if rest[0] & bit]
     if 'arg' in flags:
         if cmd.arg:
-            flags[flags.index('arg')] = f'{cmd.arg}={data[2]}'
+            flags[flags.index('arg')] = f'{cmd.arg}={rest[1]}'
         else:
             flags.remove('arg')
-    if cmd.pci and len(data) >= 7:
-        vid, did = struct.unpack_from('<HH', data, 3)
+    n = rest[0] >> OPTS_SHIFT & 3
+    if n < len(cmd.opts) and cmd.opts[n]:
+        flags.append(' '.join(cmd.opts[n]))
+    if cmd.pci and len(rest) >= 6:
+        vid, did = struct.unpack_from('<HH', rest, 2)
         flags.append(f'pci={vid:04x}:{did:04x}')
     return cmd.name + (f' ({",".join(flags)})' if flags else '')
