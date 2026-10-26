@@ -630,7 +630,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		err = nvme_set_features(wlt.hdl, 0, 0xf5, 0, cfg.trigger_treshold, 0,
 				0, wlt.uuid_index, 0, NULL, 0, NULL);
 		if (err < 0) {
-			nvme_show_error("Trigger Threshold set-feature: %s", libnvme_strerror(errno));
+			nvme_show_error("Trigger Threshold set-feature: %s",
+					libnvme_strerror(-err));
 			return err;
 		} else if (err > 0) {
 			nvme_show_status(err);
@@ -648,7 +649,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		we.trackerEnable = true;
 		err = wltracker_config(&wlt, &we);
 		if (err < 0) {
-			nvme_show_error("tracker set-feature: %s", libnvme_strerror(errno));
+			nvme_show_error("tracker set-feature: %s",
+					libnvme_strerror(-err));
 			return err;
 		} else if (err > 0) {
 			nvme_show_status(err);
@@ -703,7 +705,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		we2.triggerEnable = false;
 		err = wltracker_config(&wlt, &we2);
 		if (err < 0) {
-			nvme_show_error("tracker set-feature: %s", libnvme_strerror(errno));
+			nvme_show_error("tracker set-feature: %s",
+					libnvme_strerror(-err));
 			return err;
 		} else if (err > 0) {
 			nvme_show_status(err);

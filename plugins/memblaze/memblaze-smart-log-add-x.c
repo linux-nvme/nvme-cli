@@ -393,7 +393,7 @@ int mb_smart_log_add_x(int argc, char **argv, struct command *acmd,
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(-err));
 	}
 
 out:

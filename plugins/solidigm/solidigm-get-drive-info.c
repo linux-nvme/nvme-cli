@@ -71,7 +71,7 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 
 	err = libnvme_ns_identify(n, &ns);
 	if (err) {
-		nvme_show_error("identify namespace: %s", libnvme_strerror(errno));
+		nvme_show_err(err, "identify namespace");
 		return err;
 	}
 

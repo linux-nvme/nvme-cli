@@ -9014,7 +9014,7 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *acmd,
 		ret = -1;
 		goto out;
 	} else {
-		nvme_show_error("smart log: %s", libnvme_strerror(errno));
+		nvme_show_error("smart log: %s", libnvme_strerror(-ret));
 		ret = -1;
 		goto out;
 	}
