@@ -118,16 +118,16 @@ enum rpmb_request_type {
 /* RPMB data frame structure */
 #pragma pack(1)
 struct rpmb_data_frame_t {
-	unsigned char  pad[191];
-	unsigned char  mac[32];
-	unsigned char  target;     /* 0-6, should match with NSSF with SS, SR */
-	unsigned char  nonce[16];
+	__u8           pad[191];
+	__u8           mac[32];
+	__u8           target;     /* 0-6, should match with NSSF with SS, SR */
+	__u8           nonce[16];
 	__le32         write_counter;
 	__le32         address;
 	__le32         sectors;
 	__le16         result;
 	__le16         type;       /* req or response */
-	unsigned char  data[0];    /* in sector count times */
+	__u8           data[0];    /* in sector count times */
 };
 #pragma pack()
 
