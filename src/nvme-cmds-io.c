@@ -959,9 +959,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	unsigned long long buffer_size = 0, mbuffer_size = 0, blocks;
-	__cleanup_free struct nvme_nvm_id_ns *nvm_ns = NULL;
 	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
-	__cleanup_free struct nvme_id_ns *ns = NULL;
 	unsigned int logical_block_size = 0;
 	struct timeval start_time, end_time;
 	__cleanup_free void *mbuffer = NULL;
