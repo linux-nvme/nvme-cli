@@ -547,6 +547,14 @@
 
 ### libnvme
 
+* Built with liburing, libnvme sends a passthru command through
+  io_uring only where the kernel takes it: admin commands on the char
+  device of a controller, I/O commands on that of a namespace, and
+  nothing on a block device. Before, every command on a namespace
+  block device (`/dev/nvme0n1`) failed with "Invalid argument", and
+  every admin command on a namespace char device (`/dev/ng0n1`) with
+  "Inappropriate ioctl for device".
+
 * A failed read of `/dev/nvme-fabrics` is no longer cached for the
   life of the global context, so a later connect retries it.
 
