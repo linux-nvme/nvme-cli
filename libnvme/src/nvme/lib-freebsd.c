@@ -64,8 +64,9 @@ static int __libnvme_transport_handle_open_direct(
 
 	ret = fstat(hdl->fd, &hdl->stat);
 	if (ret < 0) {
+		ret = -errno;
 		close(hdl->fd);
-		return -errno;
+		return ret;
 	}
 
 	if (!S_ISCHR(hdl->stat.st_mode)) {
