@@ -531,7 +531,8 @@ static void print_nbft_discovery_info(struct libnbft_info *nbft)
 		len = strlen((*disc)->uri);
 		if (len > uri_width)
 			uri_width = len;
-		len = strlen((*disc)->nqn);
+		/* none means the well-known Discovery NQN */
+		len = (*disc)->nqn ? strlen((*disc)->nqn) : 0;
 		if (len > nqn_width)
 			nqn_width = len;
 	}
@@ -543,7 +544,8 @@ static void print_nbft_discovery_info(struct libnbft_info *nbft)
 	for (disc = nbft->discovery_list; *disc; disc++)
 		printf("%-3d|%-*.*s|%-*.*s\n", (*disc)->index,
 		       uri_width, uri_width, (*disc)->uri,
-		       nqn_width, nqn_width, (*disc)->nqn);
+		       nqn_width, nqn_width,
+		       (*disc)->nqn ? (*disc)->nqn : "");
 }
 
 #define HFIS_LEN 20
