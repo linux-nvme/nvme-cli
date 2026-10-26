@@ -858,8 +858,8 @@ static int slurp(const char *path, char **out, size_t *len)
 		if (n < 0) {
 			if (errno == EINTR)
 				continue;
-			free(buf);
 			ret = -errno;
+			free(buf);
 			goto out;
 		}
 		if (n == 0)

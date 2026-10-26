@@ -1330,9 +1330,10 @@ int __libnvmf_import_keys_from_config(struct libnvme_host *h, struct libnvme_ctr
 			return ret;
 	}
 
-	if (libnvmf_set_keyring(h->ctx, kr_id) < 0) {
+	ret = libnvmf_set_keyring(h->ctx, kr_id);
+	if (ret < 0) {
 		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "Failed to set keyring\n");
-		return -errno;
+		return ret;
 	}
 
 	identity = libnvme_ctrl_get_tls_key_identity(c);
