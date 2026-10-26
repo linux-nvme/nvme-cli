@@ -65,6 +65,11 @@ void mock_fuzz_input(const uint8_t *data, size_t size);
  * answers of the device: plugins which check them to decide what a drive
  * supports do nothing on any other controller.
  */
+/* --fw= the firmware image fw_setup() writes into the test root */
+#define FW_IMAGE "fw.img"
+#define FW_IMAGE_SIZE (64 * 1024)
+static char fw_option[sizeof("--fw=/" FW_IMAGE) + PATH_MAX];
+
 static const struct {
 	const char *argv[4];
 	const char *arg;
@@ -312,6 +317,49 @@ static const struct {
 	{ { "micron", "smart-log" }, .pci = true },
 	{ { "ymtc", "smart-log-add" }, .pci = true },
 	{ { "sfx", "status" }, .pci = true },
+	{ { "read", "--data=/dev/null", "--data-size=65536" }, "--block-count",
+	  .opts = { {}, { "--metadata-size=4096", "--metadata=/dev/null" },
+		    { "--block-size=4096" } } },
+	{ { "write", "--data=/dev/zero", "--data-size=65536" }, "--block-count",
+	  .opts = { {}, { "--metadata-size=4096", "--metadata=/dev/zero" },
+		    { "--block-size=4096" } } },
+	{ { "compare", "--data=/dev/zero", "--data-size=65536" },
+	  "--block-count",
+	  .opts = { {}, { "--metadata-size=4096", "--metadata=/dev/zero" },
+		    { "--block-size=4096" } } },
+	{ { "admin-passthru", "--data-len=4096", "--input-file=/dev/null",
+	    "--metadata=/dev/null" }, "--opcode",
+	  .opts = { {}, { "--read", "--metadata-len=64" }, { "--raw-binary" },
+		    { "--write", "--metadata-len=64" } } },
+	{ { "io-passthru", "--data-len=4096", "--input-file=/dev/null",
+	    "--metadata=/dev/null" }, "--opcode",
+	  .opts = { {}, { "--read", "--metadata-len=64" }, { "--raw-binary" },
+		    { "--write", "--metadata-len=64" } } },
+	{ { "format", "--force" }, "--lbaf",
+	  .opts = { { "--namespace-id=1" },
+		    { "--namespace-id=1", "--block-size=4096" },
+		    { "--namespace-id=1", "--pi=1", "--ms=1" },
+		    { "--namespace-id=1", "--reset" } } },
+	{ { "sanitize", "--wait" }, "--sanact",
+	  .opts = { { "--sanact=start-block-erase" },
+		    { "--sanact=start-crypto-erase" },
+		    { "--sanact=start-overwrite" },
+		    { "--sanact=exit-media-verification" } } },
+	{ { "sanitize-ns" }, "--namespace-id",
+	  .opts = { { "--sanact=start-crypto-erase" },
+		    { "--sanact=exit-media-verification" },
+		    { "--sanact=exit-failure" } } },
+	{ { "device-self-test", "--wait" }, "--self-test-code",
+	  .opts = { { "--self-test-code=1" }, { "--self-test-code=2" } } },
+	{ { "fw", "download", fw_option }, "--offset",
+	  .opts = { {}, { "--xfer=4096" }, { "--stream", "--progress" },
+		    { "--xfer=16384", "--ignore-ovr" } } },
+	{ { "rpmb", "read-data", "--msgfile=/dev/null" }, "--blocks",
+	  .opts = { {}, { "--address=8", "--target=1" } } },
+	{ { "rpmb", "write-data", "--msg=fuzz", "--key=fuzz" }, "--blocks",
+	  .opts = { {}, { "--address=8", "--target=1" } } },
+	{ { "rpmb", "write-config", "--msg=fuzz", "--key=fuzz" } },
+	{ { "rpmb", "program-key", "--key=fuzz" }, "--target" },
 };
 
 #define NR_COMMANDS ARRAY_SIZE(commands)
@@ -470,6 +518,8 @@ static void pci_cleanup(void)
 			 pci_fixed_attrs[i].name);
 		unlink(path);
 	}
+	snprintf(path, sizeof(path), "%s/" FW_IMAGE, pci_root);
+	unlink(path);
 	for (i = 0; i < ARRAY_SIZE(dirs); i++) {
 		snprintf(path, sizeof(path), "%s%s", pci_root, dirs[i]);
 		rmdir(path);
@@ -511,6 +561,29 @@ static void pci_setup(void)
 		fputs(pci_fixed_attrs[i].value, f);
 		fclose(f);
 	}
+}
+
+/*
+ * The firmware image fw download sends, in the test root: of a size
+ * which takes several transfers. What it holds doesn't matter, the mock
+ * answers a write without looking at its data.
+ */
+static void fw_setup(void)
+{
+	static const char chunk[4096];
+	FILE *f;
+	size_t i;
+
+	snprintf(fw_option, sizeof(fw_option), "--fw=%s/" FW_IMAGE,
+		 pci_root);
+	f = fopen(fw_option + strlen("--fw="), "w");
+	if (!f)
+		abort();
+	for (i = 0; i < FW_IMAGE_SIZE / sizeof(chunk); i++)
+		if (fwrite(chunk, sizeof(chunk), 1, f) != 1)
+			abort();
+	if (fclose(f))
+		abort();
 }
 
 /* Give nvme0 of the test root the PCI IDs at @data, vendor and device */
@@ -568,6 +641,7 @@ int LLVMFuzzerInitialize(int *argc, char ***argv)
 	(void)argv;
 	defaults = nvme_args;
 	pci_setup();
+	fw_setup();
 	return 0;
 }
 
