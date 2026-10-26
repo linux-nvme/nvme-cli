@@ -647,6 +647,7 @@ int LLVMFuzzerInitialize(int *argc, char ***argv)
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+	static char args[MAX_ARGS][PATH_MAX + 64];
 	const char *const *opts;
 	char *argv[MAX_ARGS + 1];
 	unsigned int idx;
@@ -702,6 +703,12 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	for (i = 0; i < 3 && opts[i]; i++)
 		argv[argc++] = (char *)opts[i];
 	argv[argc] = NULL;
+
+	/* nvme-cli splits list values in place, as argv is writable */
+	for (i = 0; i < argc; i++) {
+		snprintf(args[i], sizeof(args[i]), "%s", argv[i]);
+		argv[i] = args[i];
+	}
 
 	nvme_args = defaults;
 	if (pci)
