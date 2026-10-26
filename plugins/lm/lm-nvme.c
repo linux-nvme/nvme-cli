@@ -102,7 +102,8 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 			 cfg.cntlid, cfg.sz, queue);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s",
+				libnvme_strerror(-err));
 	else if (err)
 		nvme_show_status(err);
 	else
@@ -142,7 +143,8 @@ static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plu
 	nvme_init_lm_cdq_delete(&cmd, 0, cfg.cdqid);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s",
+				libnvme_strerror(-err));
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -227,7 +229,8 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	nvme_init_lm_track_send(&cmd, cfg.sel, cfg.mos, cfg.cdqid, NULL, 0);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_track_send() failed %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_track_send() failed %s",
+				libnvme_strerror(-err));
 	else if (err)
 		nvme_show_status(err);
 	else
@@ -374,7 +377,8 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 				    (cfg.numd << 2));
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_migration_send() failed %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_migration_send() failed %s",
+				libnvme_strerror(-err));
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -481,7 +485,8 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 				    (cfg.numd + 1) << 2);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_migration_recv() failed %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_migration_recv() failed %s",
+				libnvme_strerror(-err));
 	else if (err)
 		nvme_show_status(err);
 	else if (cfg.sel == NVME_LM_SEL_GET_CONTROLLER_STATE) {
@@ -551,7 +556,8 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 			 NVME_SET(1, LM_CTRL_DATA_QUEUE_ETPT) : 0),
 			cfg.hp, cfg.tpt, 0, 0, NULL, 0, NULL);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_set_features() failed %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR: nvme_set_features() failed %s",
+				libnvme_strerror(-err));
 	else if (err)
 		nvme_show_status(err);
 	else
@@ -595,7 +601,8 @@ static int lm_get_cdq(int argc, char **argv, struct command *acmd, struct plugin
 	err = nvme_get_features(hdl, 0, lm_cdq_feature_id, 0, cfg.cdqid, 0,
 			&data, sizeof(data), NULL);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_get_features() failed %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR: nvme_get_features() failed %s",
+				libnvme_strerror(-err));
 	else if (err)
 		nvme_show_status(err);
 	else

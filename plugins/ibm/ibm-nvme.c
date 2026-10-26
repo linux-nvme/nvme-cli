@@ -261,7 +261,8 @@ static int get_ibm_addi_smart_log(int argc, char **argv, struct command *cmd, st
 	} else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_error("ibm additional smart log: %s", libnvme_strerror(errno));
+		nvme_show_error("ibm additional smart log: %s",
+				libnvme_strerror(-err));
 
 	return err;
 }
@@ -394,7 +395,7 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 	} else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_error("ibm vpd log: %s", libnvme_strerror(errno));
+		nvme_show_error("ibm vpd log: %s", libnvme_strerror(-err));
 
 	return err;
 }

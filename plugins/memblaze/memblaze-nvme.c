@@ -1314,7 +1314,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(-err));
 
 	return err;
 }
@@ -1364,7 +1364,7 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(-err));
 	}
 
 	return err;
@@ -1507,7 +1507,7 @@ static int mb_get_latency_stats(int argc, char **argv, struct command *acmd, str
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(-err));
 	}
 
 	return err;
@@ -1612,7 +1612,7 @@ static int mb_get_high_latency_log(int argc, char **argv, struct command *acmd,
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(-err));
 	}
 
 	return err;
@@ -1871,7 +1871,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, libnvme_strerror(-err));
 	}
 
 	return err;
