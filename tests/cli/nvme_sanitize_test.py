@@ -18,6 +18,7 @@ from tests.cli.nvme_mock import (CNS_CTRL, NVME_IOCTL_ID, MockTestCase, Reply,
                                  id_ctrl, main)
 
 OPC_SANITIZE = 0x84
+SC_INTERNAL = 0x006
 LID_SANITIZE_STATUS = 0x81
 OPC_SANITIZE_NS = 0x8c
 
@@ -84,6 +85,15 @@ class SanitizeTest(MockTestCase):
                 self.assertOk(self.sanitize(all_caps, *args))
                 cmd, = self.sanitizes()
                 self.assertEqual((cmd.cdw10, cmd.cdw11), (cdw10, cdw11))
+
+    def test_identify_fails(self):
+        """A failed Identify Controller fails the command, with its
+        status, before a Sanitize is sent."""
+        self.server.identify[CNS_CTRL] = Reply(status=SC_INTERNAL)
+        result = self.nvme('sanitize', self.ctrl, '--sanact=exit-failure')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Internal Error', result.stderr)
+        self.assertEqual(self.sanitizes(), [])
 
     def test_unsupported(self):
         """An action or a bit the controller doesn't support is refused,
