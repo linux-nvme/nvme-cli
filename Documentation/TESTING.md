@@ -274,7 +274,8 @@ tests may produce false positives. Focus triage on the `nvme-cli - *` unit tests
 
 The parsers of untrusted input have fuzz targets in `tests/fuzz`: the
 command line parser (`argconfig`), the INI parser (`ini`), `nvme-cli.conf`
-(`global-config`) and `nvme-fabrics.conf` (`fabrics-conf`).
+(`global-config`), `nvme-fabrics.conf` (`fabrics-conf`) and the NVMe Boot
+Firmware Table, which `nvme nbft show` parses and prints (`nbft`).
 
 The `device` target fuzzes what nvme-cli does with the data a device
 returns. It runs one of the commands which print, or size a buffer by,
