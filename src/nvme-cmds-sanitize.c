@@ -404,26 +404,26 @@ static int check_sanitize(struct libnvme_transport_handle *hdl, bool *sanitized)
 	return 0;
 }
 
-struct nvme_id_ctrl *identify_ctrl(struct libnvme_transport_handle *hdl)
+/* Returns the error of the Identify Controller, or 0 and the data */
+static int identify_ctrl(struct libnvme_transport_handle *hdl,
+			 struct nvme_id_ctrl **ctrl)
 {
-	struct nvme_id_ctrl *ctrl = libnvme_alloc(sizeof(*ctrl));
 	struct libnvme_passthru_cmd cmd;
-	int err = 0;
+	int err;
 
-	if (!ctrl) {
-		errno = ENOMEM;
-		return NULL;
-	}
+	*ctrl = libnvme_alloc(sizeof(**ctrl));
+	if (!*ctrl)
+		return -ENOMEM;
 
-	nvme_init_identify_ctrl(&cmd, ctrl);
+	nvme_init_identify_ctrl(&cmd, *ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify-ctrl");
-		libnvme_free(ctrl);
-		return NULL;
+		libnvme_free(*ctrl);
+		*ctrl = NULL;
 	}
 
-	return ctrl;
+	return err;
 }
 
 static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -509,9 +509,9 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	ctrl = identify_ctrl(hdl);
-	if (!ctrl)
-		return -errno;
+	err = identify_ctrl(hdl, &ctrl);
+	if (err)
+		return err;
 
 	switch (cfg.sanact) {
 	case NVME_SANITIZE_SANACT_EXIT_FAILURE:
