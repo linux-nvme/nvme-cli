@@ -404,20 +404,23 @@ static int rpmb_auth_data_read(struct libnvme_transport_handle *hdl, unsigned ch
 	struct rpmb_data_frame_t *rsp = NULL;
 	int req_size = sizeof(struct rpmb_data_frame_t);
 	int chunk_size = (acc_size < msg_size) ? acc_size : msg_size;
-	int xfer = chunk_size;
 	unsigned char *bufp = malloc(msg_size * 512);
-	unsigned char *tbufp = bufp;
-	int data_size, rsp_size;
+	int done = 0, xfer, rsp_size;
+	__u32 sectors;
 
 	if (!bufp) {
 		nvme_show_error("Failed to allocated memory for read-data req");
 		return -1;
 	}
 
-	while (xfer > 0) {
+	/* @offset is the first sector to read, @done the sectors read */
+	while (done < msg_size) {
+		xfer = msg_size - done < chunk_size ?
+		       msg_size - done : chunk_size;
 		rsp_size = req_size + xfer * 512;
-		req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DATA_READ, target, 1, offset,
-					 xfer, 0, 0, 0);
+		req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DATA_READ,
+					 target, 1, offset + done, xfer,
+					 0, 0, 0);
 		if (!req) {
 			nvme_show_error("failed to allocate read-data request");
 			goto err_free_bufp;
@@ -428,26 +431,21 @@ static int rpmb_auth_data_read(struct libnvme_transport_handle *hdl, unsigned ch
 			goto err_free_req;
 		}
 
-		if (le32_to_cpu(rsp->sectors) > (unsigned int)xfer) {
-			nvme_show_error("device reported %u sectors, more than the %d requested",
-					 le32_to_cpu(rsp->sectors), xfer);
+		sectors = le32_to_cpu(rsp->sectors);
+		if (!sectors || sectors > (unsigned int)xfer) {
+			nvme_show_error("device returned %u of %d sectors",
+					 sectors, xfer);
 			goto err_free_rsp;
 		}
 
-		data_size = le32_to_cpu(rsp->sectors) * 512;
-		memcpy(tbufp, rsp->data, data_size);
-		offset += le32_to_cpu(rsp->sectors);
-		tbufp += data_size;
-		if (offset + chunk_size > msg_size)
-			xfer = msg_size - offset;
-		else
-			xfer = chunk_size;
+		memcpy(bufp + done * 512, rsp->data, sectors * 512);
+		done += sectors;
 		free(req);
 		free(rsp);
 	}
 
 	*msg_buf = bufp;
-	return offset;
+	return done;
 
 err_free_rsp:
 	free(rsp);
