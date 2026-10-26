@@ -26,10 +26,12 @@ int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 	int i = libnvme_find_uuid(uuid_list, ocp_uuid);
 
 	*index = 0;
-	if (i > 0)
-		*index = i;
-	else
-		return -errno;
+	/* not in the list: index 0, no UUID */
+	if (i == -ENOENT)
+		return 0;
+	if (i < 0)
+		return i;
+	*index = i;
 
 	return 0;
 }
