@@ -5558,9 +5558,11 @@ static void wdc_print_unsupported_reqs_log_normal(struct wdc_ocp_C5_unsupported_
 	printf("  Number Unsupported Req IDs		: 0x%x\n",
 	       le16_to_cpu(log_data->unsupported_count));
 
-	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++)
-		printf("  Unsupported Requirement List %d	: %s\n", j,
-		       log_data->unsupported_req_list[j]);
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count) &&
+		    j < ARRAY_SIZE(log_data->unsupported_req_list); j++)
+		printf("  Unsupported Requirement List %d	: %.*s\n", j,
+		       (int)sizeof(log_data->unsupported_req_list[j]),
+		       (char *)log_data->unsupported_req_list[j]);
 
 	printf("  Log Page Version			: 0x%x\n", le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID				: 0x");
@@ -5579,10 +5581,15 @@ static void wdc_print_unsupported_reqs_log_json(struct wdc_ocp_C5_unsupported_re
 	char unsup_req_list_str[41];
 
 	memset((void *)unsup_req_list_str, 0, 41);
-	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count) &&
+		    j < ARRAY_SIZE(log_data->unsupported_req_list); j++) {
+		char req[sizeof(log_data->unsupported_req_list[j]) + 1] = {};
+
+		memcpy(req, log_data->unsupported_req_list[j],
+		       sizeof(log_data->unsupported_req_list[j]));
 		snprintf((char *)unsup_req_list_str, sizeof(unsup_req_list_str),
 			 "Unsupported Requirement List %d", j);
-		json_object_add_value_string(root, unsup_req_list_str, (char *)log_data->unsupported_req_list[j]);
+		json_object_add_value_string(root, unsup_req_list_str, req);
 	}
 
 	json_object_add_value_int(root, "Log Page Version",
