@@ -141,17 +141,27 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 	*output = (char *)header + le32_to_cpu(obj.offset);
 
 	if (is_string) {
-		if (strnlen(*output, obj_length + 1) < obj_length) {
-			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-				"file %s: string '%s' in descriptor '%s' is shorter (%zd) than specified length (%d)\n",
-				filename, fieldname, descriptorname,
-				strnlen(*output, obj_length + 1), obj_length);
-		} else if (strnlen(*output, obj_length + 1) > obj_length) {
+		/*
+		 * The terminating NUL follows the bytes the length counts,
+		 * which may end the table: look for it within the table.
+		 */
+		size_t max = le32_to_cpu(header->length) -
+			le32_to_cpu(obj.offset);
+		size_t n = (size_t)obj_length + 1 < max ?
+			(size_t)obj_length + 1 : max;
+		size_t len = strnlen(*output, n);
+
+		if (len == n) {
 			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 				"file %s: string '%s' in descriptor '%s' is not zero terminated\n",
 				filename, fieldname, descriptorname);
 			return -EINVAL;
 		}
+		if (len < obj_length)
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+				"file %s: string '%s' in descriptor '%s' is shorter (%zd) than specified length (%d)\n",
+				filename, fieldname, descriptorname,
+				len, obj_length);
 	}
 
 	if (length)
