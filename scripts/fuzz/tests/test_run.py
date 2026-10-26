@@ -57,6 +57,19 @@ time.sleep(60)
 """
 
 
+class JobEnvTest(unittest.TestCase):
+    def test_short_allocation_stacks(self) -> None:
+        with mock.patch.dict(os.environ, {'ASAN_OPTIONS': 'verbosity=1'}):
+            env = run.job_env()
+            replay = targets.sanitizer_env(dict(os.environ))
+        opts = env['ASAN_OPTIONS'].split(':')
+        self.assertIn('verbosity=1', opts)
+        self.assertIn('allocator_may_return_null=1', opts)
+        self.assertIn('malloc_context_size=2', opts)
+        # replays for triage and check keep the whole stacks
+        self.assertNotIn('malloc_context_size', replay['ASAN_OPTIONS'])
+
+
 @unittest.skipIf(
     sys.platform == 'win32', 'nvme-fuzz run needs POSIX process groups'
 )
