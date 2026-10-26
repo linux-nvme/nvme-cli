@@ -15,6 +15,7 @@
 
 enum {
 	OPT_SET_OPTIONS = 1000,
+	OPT_SCAN_BEFORE,
 };
 
 static void usage(const char *prog)
@@ -23,7 +24,9 @@ static void usage(const char *prog)
 		"Usage: %s [OPTIONS]\n"
 		"\n"
 		"Options:\n"
-		"  --set-options key=value[,key=value...]\n",
+		"  --set-options key=value[,key=value...]\n"
+		"  --scan-before DIR   scan the sysfs at DIR with another\n"
+		"                      context first\n",
 		prog);
 }
 
@@ -188,10 +191,31 @@ static bool tree_scan(struct libnvme_global_ctx *ctx)
 	return true;
 }
 
+/*
+ * Scan the topology of the sysfs at @dir with a context of its own. The
+ * context of the real scan must not see it.
+ */
+static bool scan_before(const char *dir)
+{
+	struct libnvme_global_ctx *ctx;
+
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return false;
+	if (libnvme_set_test_sysfs_dir(ctx, dir)) {
+		libnvme_free_global_ctx(ctx);
+		return false;
+	}
+	libnvme_scan_topology(ctx, NULL, NULL);
+	libnvme_free_global_ctx(ctx);
+	return true;
+}
+
 int main(int argc, char *argv[])
 {
 	static const struct option long_options[] = {
 		{ "set-options", required_argument, NULL, OPT_SET_OPTIONS },
+		{ "scan-before", required_argument, NULL, OPT_SCAN_BEFORE },
 		{ NULL, 0, NULL, 0 }
 	};
 
@@ -210,6 +234,13 @@ int main(int argc, char *argv[])
 		switch (c) {
 		case OPT_SET_OPTIONS:
 			if (parse_set_options(ctx, optarg)) {
+				libnvme_free_global_ctx(ctx);
+				return EXIT_FAILURE;
+			}
+			break;
+
+		case OPT_SCAN_BEFORE:
+			if (!scan_before(optarg)) {
 				libnvme_free_global_ctx(ctx);
 				return EXIT_FAILURE;
 			}

@@ -90,6 +90,16 @@ __shr_public int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
+void libnvme_free_sysfs_paths(struct libnvme_global_ctx *ctx)
+{
+	int i;
+
+	for (i = 0; i < LIBNVME_SYSFS_PATH_MAX; i++) {
+		free(ctx->sysfs_paths[i]);
+		ctx->sysfs_paths[i] = NULL;
+	}
+}
+
 __shr_public int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx,
 					       const char *path)
 {
@@ -104,6 +114,7 @@ __shr_public int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx,
 	}
 	free(ctx->test_sysfs_dir);
 	ctx->test_sysfs_dir = dup;
+	libnvme_free_sysfs_paths(ctx);
 	return 0;
 }
 
@@ -134,6 +145,7 @@ __shr_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	free(ctx->owner);
 	free(ctx->test_base_dir);
 	free(ctx->test_sysfs_dir);
+	libnvme_free_sysfs_paths(ctx);
 	free(ctx);
 }
 

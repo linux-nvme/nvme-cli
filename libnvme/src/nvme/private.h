@@ -36,6 +36,19 @@ struct libnvme_path_attrs;
 struct libnvme_ns_attrs;
 struct libnvme_subsystem_attrs;
 
+/* The paths of libnvme_sysfs_path(), cached in the global context */
+enum libnvme_sysfs_path {
+	LIBNVME_SYSFS_SUBSYS,
+	LIBNVME_SYSFS_CTRL,
+	LIBNVME_SYSFS_NS,
+	LIBNVME_SYSFS_SLOTS,
+	LIBNVME_SYSFS_UUID_IBM,
+	LIBNVME_SYSFS_DMI_ENTRIES,
+	LIBNVME_SYSFS_DMI_PROD_UUID,
+	LIBNVME_SYSFS_MACHINE_ID,
+	LIBNVME_SYSFS_PATH_MAX,
+};
+
 const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx);
@@ -44,6 +57,7 @@ const char *libnvme_uuid_ibm_filename(struct libnvme_global_ctx *ctx);
 const char *libnvme_dmi_entries_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_dmi_product_uuid_filename(struct libnvme_global_ctx *ctx);
 const char *libnvme_machine_id_filename(struct libnvme_global_ctx *ctx);
+void libnvme_free_sysfs_paths(struct libnvme_global_ctx *ctx);
 
 struct linux_passthru_cmd32 {
 	__u8    opcode;
@@ -439,6 +453,8 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=l
 	bool ioctl_probing;	// !access:read=generated,write=generated
 	char *test_base_dir;
 	char *test_sysfs_dir;
+	/* the paths below test_sysfs_dir, see libnvme_sysfs_path() */
+	char *sysfs_paths[LIBNVME_SYSFS_PATH_MAX];
 
 #ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
