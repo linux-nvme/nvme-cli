@@ -21,6 +21,7 @@ nvme-fuzz seeds), where fuzzed data rarely gets past these checks.
 
 Usage: python3 wdc_mock_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
+import json
 import struct
 
 from tests.cli.nvme_mock import (CNS_CTRL, CNS_UUID_LIST, CTRATT_UUID_LIST,
@@ -236,6 +237,38 @@ class SN820CLTest(WdcModel, MockTestCase):
         'wdc vs-hw-rev-log',
         'wdc vs-device-waf',
     )
+
+
+def c1_perf_log(hr_cmds, hr_blks, interval=14):
+    """A C1 log with the performance statistics of one interval: a header
+    with the number of subpages, a subpage header (code 0x37, the
+    interval, the length) and the counters, Host Read Commands first."""
+    perf = struct.pack('<QQ', hr_cmds, hr_blks) + bytes(8 * 22)
+    log = bytearray(0x4000)
+    struct.pack_into('<BBH', log, 0, 1, 0, 4 + 4 + len(perf))
+    struct.pack_into('<BBH', log, 4, 0x37, interval, len(perf))
+    log[8:8 + len(perf)] = perf
+    return bytes(log)
+
+
+class SN100Test(WdcModel, MockTestCase):
+    VID, DID = 0x1c58, 0x0003
+
+    def test_perf_stats_json_64bit(self):
+        """The counters of the C1 performance statistics are 64 bit, in
+        the JSON output too"""
+        if not HAVE_JSON:
+            self.skipTest('nvme built without json-c')
+        self.server.logs[0xc1] = c1_perf_log(1 << 33, 3 << 33)
+        result = self.run_cmd('wdc vs-smart-add-log', '--log-page-mask=0xc1',
+                              '--output-format=json')
+        if 'invalid sub-command' in result.stderr:
+            self.skipTest('wdc plugin not built')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        doc = json.loads(result.stdout)
+        self.assertEqual(doc['Host Read Commands'], 1 << 33)
+        self.assertEqual(doc['Host Read Blocks'], 3 << 33)
+        self.assertEqual(doc['Average Read Size'], 3)
 
 
 class SN730Test(WdcModel, MockTestCase):
