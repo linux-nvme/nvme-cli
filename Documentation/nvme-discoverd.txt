@@ -22,6 +22,11 @@ kickstart). It never disconnects a live controller in response to a
 discovery change; the only disconnects it causes are a side effect of
 stopping its own systemd units, at shutdown or on request.
 
+At shutdown, a unit is stopped only after the file systems mounted
+with the '_netdev' option are unmounted. A file system on an NVMe-oF
+namespace must use '_netdev' in fstab(5). Without it, the controller
+can be disconnected while the file system is still mounted.
+
 Every connection attempt is delegated to 'nvme connect', which runs
 inside a systemd transient unit instead of writing directly to
 /dev/nvme-fabrics. As a result, a stuck connect attempt never blocks

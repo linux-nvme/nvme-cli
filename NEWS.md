@@ -555,6 +555,12 @@
   still matches. At startup, nvme-discoverd removes the state of
   controllers that are gone.
 
+* At shutdown, a connection unit of nvme-discoverd disconnects only
+  after the file systems mounted with `_netdev` are unmounted. Before,
+  it could disconnect a controller while its file system was still
+  mounted. A file system on an NVMe-oF namespace needs `_netdev` in
+  fstab.
+
 * nvme-discoverd resolves the host names in `nvme-fabrics.conf` in
   parallel, without blocking. Before, it resolved them one at a time,
   and a slow DNS server stopped the daemon. A failed lookup is tried
