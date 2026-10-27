@@ -265,6 +265,20 @@
 
 ### nvme-cli
 
+* `nvme top -o json` samples the I/O statistics over `--delay` seconds
+  and prints the rates and the error, retry, failover, reset and
+  reconnect counters of the subsystems, namespaces, paths and
+  controllers as one JSON document, for scripts and monitoring tools.
+  `nvme top` has a man page now, which describes the document.
+
+* `scripts/mcp/nvme-mcp` is an MCP server on top of `nvme top -o json`.
+  It lets an agent watch the multipath I/O of a host: it flags paths
+  which are not optimized, are slow compared with their siblings, get
+  an uneven share of the I/O, or whose error counters go up. Started
+  with `--allow-iopolicy`, it also changes the I/O policy of a
+  subsystem and compares the policies under a running workload. See
+  `scripts/mcp/README.md`.
+
 * `nvme get-reg --register=NAME[,NAME...]` and `nvme set-reg
   --register=NAME --value=VAL` name the registers, with completion of
   the names, and `--offset` of `get-reg`, `set-reg`, `get-property` and
