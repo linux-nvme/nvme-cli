@@ -208,6 +208,11 @@ FILES
 @SYSCONFDIR@/nvme/nvme-keysd.conf::
 	The daemon's own configuration; see CONFIGURATION.
 
+@SYSCONFDIR@/nvme/nvme-keysd.conf.sample::
+	A commented example of nvme-keysd.conf with every setting at its
+	default. It is not read; copy it to nvme-keysd.conf to change a
+	setting.
+
 @SYSCONFDIR@/nvme/creds/::
 	The encrypted credentials; see CREDENTIALS.
 
