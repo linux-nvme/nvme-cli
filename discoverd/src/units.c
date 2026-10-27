@@ -521,11 +521,24 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 	if (r < 0)
 		goto err;
 
-	/* Ordering: Before=nvme-discoverd.service always. */
+	/*
+	 * Ordering: Before=nvme-discoverd.service always. At shutdown, the
+	 * unit stops after the _netdev mounts are unmounted, so ExecStop=
+	 * never disconnects a mounted namespace. remote-fs-pre.target is
+	 * passive: Before= has no effect unless the unit also wants it.
+	 */
 	{
-		static const char *const before[] = { "nvme-discoverd.service", NULL };
+		static const char *const before[] = {
+			"nvme-discoverd.service", "remote-fs-pre.target", NULL
+		};
+		static const char *const wants[] = {
+			"remote-fs-pre.target", NULL
+		};
 
 		r = append_strv_prop(m, "Before", before);
+		if (r < 0)
+			goto err;
+		r = append_strv_prop(m, "Wants", wants);
 		if (r < 0)
 			goto err;
 	}
