@@ -277,6 +277,13 @@ command line parser (`argconfig`), the INI parser (`ini`), `nvme-cli.conf`
 (`global-config`), `nvme-fabrics.conf` (`fabrics-conf`) and the NVMe Boot
 Firmware Table, which `nvme nbft show` parses and prints (`nbft`).
 
+The `iostat` target fuzzes the I/O statistics of `nvme top`: the block
+layer stat files of the namespaces and paths of a captured sysfs tree,
+which libnvme parses, and the rates `src/nvme-iostat.c` computes from two
+samples. The first line of an input is the time between the samples in
+milliseconds, the target takes over `clock_gettime()` for it. It needs a
+dynamically linked Linux build.
+
 The `device` target fuzzes what nvme-cli does with the data a device
 returns. It runs one of the commands which print, or size a buffer by,
 what the device returns, from the table in `tests/fuzz/fuzz-device.c`,
