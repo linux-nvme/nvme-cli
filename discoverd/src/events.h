@@ -34,8 +34,9 @@ struct events_callbacks {
 
 	/*
 	 * nvmeX device appeared with cntrltype=="io".
-	 * The state directory is already created by ExecStartPost= inside
-	 * the transient unit; this callback just confirms the connection.
+	 * The event can be processed before ExecStartPost= of the transient
+	 * unit wrote the state directory; the unit's job completion links
+	 * the device then.
 	 */
 	void (*ioc_add)(const char *devname, void *user_data);
 
