@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme-cli.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+"""MCP server which lets an agent watch NVMe multipath I/O."""
+
+import os
+import shutil
+import sys
+from pathlib import Path
+
+# nvme-mcp needs Python 3.10. Distributions with an older python3, e.g.
+# SLE 15, have newer ones as python3.N: run with the newest of them. This
+# part has to run with the old one.
+if sys.version_info < (3, 10):
+    for minor in range(20, 9, -1):
+        python = shutil.which('python3.%d' % minor)
+        if python:
+            os.execv(python, [python, *sys.argv])
+    sys.exit('nvme-mcp needs Python 3.10 or newer, as python3 or python3.N')
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from nvme_mcp.cli import main
+
+sys.exit(main())
