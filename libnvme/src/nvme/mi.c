@@ -1964,9 +1964,10 @@ __shr_public int libnvme_mi_aem_process(struct libnvme_mi_ep *ep, void *userdata
 			//The Ack is not guaranteed to have data
 			if (response_len && response->occ_list_hdr.numaeo) {
 				rc = validate_occ_list_update_ctx(&response->occ_list_hdr,
-										response_len,
-										ep->aem_ctx,
-										true);
+								response_len,
+								ep->aem_ctx,
+								false);
+
 				//Callbacks based on ack
 				if (rc == 0 && response->occ_list_hdr.numaeo) {
 					//Return value unused here
