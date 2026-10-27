@@ -395,3 +395,73 @@ with the default data limit, so check that it still fails without the fix with
 `nvme-fuzz check`. The targets
 use the libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
 `-fsanitize=fuzzer`).
+
+## NVMe-oF failover tests
+
+[nvmf-failover](https://github.com/igaw/nvmf-failover) breaks NVMe-oF paths
+on purpose and checks that the host recovers: every path comes back, no
+controller is connected twice, no connection unit of nvme-discoverd fails,
+and the I/O running meanwhile sees no errors. Use it for changes to
+nvme-discoverd, to the fabrics code of nvme-cli and libnvme, and to the
+kernel's NVMe-oF transports. It needs root on a test host with NVMe-oF
+connections, Python 3.11 or later and fio; the faults change the host's
+connectivity, so never run it on a production system.
+
+It breaks a path at any point: a host port (an FC port's link, or its PCI
+function for drivers without a link control), the cable (the switch port),
+a target port or a whole array node. A configuration file names the arrays
+and switches it may log in to; it reads their configuration back
+(`discover`), so nothing about the array is kept in files. See the tool's
+README for the supported arrays and switches.
+
+```bash
+git clone https://github.com/igaw/nvmf-failover && cd nvmf-failover
+pip install '.[ontap]'                  # the scenarios are in the checkout
+nvmf-failover status                    # the host's controllers and paths
+nvmf-failover discover                  # the array's view, matched to the host
+nvmf-failover plan scenarios/host-port-long.toml
+nvmf-failover run scenarios/host-port-long.toml --io all
+```
+
+A scenario says what to break by its place in the paths, not by interface
+names, and `plan` shows what that means on the host at hand before anything
+is touched. Durations may refer to the kernel's timers, so a scenario stays
+right on hosts with other settings:
+
+```toml
+name = "each host port down longer than dev_loss_tmo"
+
+[paths]
+subsystem = "*"
+
+[[phase]]
+fail = "host-port"              # host-port, host-cable, target-port,
+pick = "each"                   # array-node, fabric; one, each, all-but-one
+duration = "dev_loss_tmo + 30s"
+gap = "until-recovered"
+
+[expect]
+io_errors = 0
+paths_during = 1                # live paths per subsystem, at least
+recovered_within = "300s"
+reconnected_by = "discoverd"    # who must reconnect: kernel or discoverd
+```
+
+`dev_loss_tmo` divides the cases. A path that is down for less time is
+reconnected by the kernel, and no controller may be deleted
+(`host-port-short`, `flap-short`). A path that is down for longer loses its
+controllers, and only nvme-discoverd can connect them again
+(`host-port-long`, `port-offline-rounds`, `flap-long`). Run both kinds for
+a change to nvme-discoverd, and a long run (`port-offline-night`) before a
+release.
+
+`--io all` reads from every namespace of the selected subsystems during the
+run; `--io-verify DEVICE` writes at random and reads every block back
+against its checksum, so a failover that corrupts data fails the run. It
+destroys the data on DEVICE. Name it by its `/dev/disk/by-id` link: the
+`/dev/nvmeXnY` names change across boots.
+
+Test nvme-discoverd with the legacy udev autoconnect turned off, also in the
+initrd (`lsinitrd | grep nvmf`): otherwise both connect at once. A run
+writes its events, verdict and fio report to `runs/<time>-<scenario>/`;
+attach `summary.json` and `events.log` to a bug report.
