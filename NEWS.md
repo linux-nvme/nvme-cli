@@ -499,6 +499,12 @@
 
 ### nvme-discoverd
 
+* `meson install` no longer installs `nvme-discoverd.conf`, which
+  overwrote the admin's settings. It installs a commented
+  `nvme-discoverd.conf.sample` instead; copy it to
+  `nvme-discoverd.conf` to change a setting. Without the file, every
+  setting keeps its default.
+
 * Discovery Controllers are now connected with `--discovery` and a
   keep-alive timeout of 30 s, or the configured `keep-alive-tmo`. No
   keep-alive timeout is used for `persistent = no`.
