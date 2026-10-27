@@ -73,6 +73,22 @@ if python3.found()
              suite: 'mock')
     endif
 
+    # nvme top in a pseudo terminal on the sysfs of a loop subsystem
+    if want_top
+        test('nvme-cli - top',
+             python3,
+             args: [
+                 files('nvme_top_test.py'),
+                 nvme_exe,
+                 meson.project_source_root() /
+                     'libnvme/tests/sysfs/data/tree-loop-duplicate.tar.xz',
+             ],
+             env: cli_test_env,
+             depends: nvme_exe,
+             timeout: 60,
+             suite: 'mock')
+    endif
+
     have_mock_nvme = (not is_static) and (host_system == 'linux')
 
     if have_mock_nvme
