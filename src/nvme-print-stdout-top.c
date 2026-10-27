@@ -488,7 +488,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
-	const char *node;
+	const char *node, *traddr, *state;
 	long reset_count, reconnect_count, command_error_count;
 	struct shr_table *t;
 	bool is_fabric = false;
@@ -587,10 +587,16 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 		shr_table_set_value_str(t, ++col, row, node, LEFT);
 		shr_table_set_value_str(t, ++col, row,
 				libnvme_ctrl_get_transport(c), LEFT);
-		shr_table_set_value_str(t, ++col, row,
-				libnvme_ctrl_get_traddr(c), LEFT);
-		shr_table_set_value_str(t, ++col, row,
-				libnvme_ctrl_get_state(c), LEFT);
+		/*
+		 * A loop controller has no transport address, and the state
+		 * of a controller is gone while it is deleted.
+		 */
+		traddr = libnvme_ctrl_get_traddr(c);
+		shr_table_set_value_str(t, ++col, row, traddr ? traddr : "",
+				LEFT);
+		state = libnvme_ctrl_get_state(c);
+		shr_table_set_value_str(t, ++col, row, state ? state : "",
+				LEFT);
 
 		libnvme_ctrl_get_reset_count(c, &reset_count, 0);
 		shr_table_set_value_long(t, ++col, row, reset_count, LEFT);
