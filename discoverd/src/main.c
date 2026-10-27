@@ -1415,10 +1415,35 @@ static void on_nvme_remove(const char *devname,
 	}
 }
 
+/*
+ * A tracked DC that is parked for EPCSD=0, or waits for a retry, is tried
+ * again only when its timer fires: up to the EPCSD poll interval later.
+ * An FC discovery event says its remote port is (back) there, so fire the
+ * timer now. The timer's handler decides what to do, as always.
+ */
+static void ctrl_retry_now(struct active_ctrl *e)
+{
+	sd_event_source *src = e->epcsd_poll_timer ? e->epcsd_poll_timer :
+						     e->retry_timer;
+	int r;
+
+	if (!src)
+		return;
+
+	log_info("%s - FC discovery event, re-checking now",
+		 libnvmf_tid_str(e->tid));
+	r = sd_event_source_set_time_relative(src, 0);
+	if (r < 0)
+		log_warn("%s - failed to re-arm timer: %s",
+			 libnvmf_tid_str(e->tid), strerror(-r));
+}
+
 static void on_fc_discovery(const struct libnvmf_tid *t,
 			    void *user_data __attribute__((unused)))
 {
 	__cleanup_tid struct libnvmf_tid *tid = libnvmf_tid_dup(t);
+	__cleanup_free char *unit_name = NULL;
+	struct active_ctrl *e;
 
 	// The uevent names no host: connect as the default host.
 	if (!tid ||
@@ -1433,6 +1458,13 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 	 * DLP (and discover any IOCs behind it) once the device appears.
 	 */
 	inventory_add_discovered_dc(ctx.inventory, tid);
+
+	unit_name = tid_unit_name(tid);
+	e = unit_name ? ctrl_find_by_unit(unit_name) : NULL;
+	if (e) {
+		ctrl_retry_now(e);
+		return;
+	}
 	if (should_connect(NULL, tid, NULL))
 		start_ctrl(tid, true, NULL);
 }
