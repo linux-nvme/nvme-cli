@@ -54,6 +54,8 @@ TARGETS: dict[str, Target] = {
         Target('fabrics-conf', 'config.dict'),
         # The NBFT tables of real hosts are a few KiB
         Target('nbft', options=('-max_len=8192', '-timeout=10')),
+        # A time and two samples of the stat files of four block devices
+        Target('iostat', options=('-max_len=2048',)),
         # It reads log pages, so it needs longer inputs. Large but valid logs
         # take seconds under ASan: only a much slower input is a hang. Most
         # data structures fit a page, and an input which gets little data

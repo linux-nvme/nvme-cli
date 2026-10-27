@@ -59,6 +59,22 @@ if want_nvme and have_mock_nvme
     }
 endif
 
+# The I/O statistics of nvme top on a captured sysfs tree. The target
+# takes over clock_gettime() with dlsym(RTLD_NEXT), so a dynamic Linux
+# build.
+if want_top and have_mock_nvme
+    fuzz_targets += {
+        'iostat': {
+            'sources': ['fuzz-iostat.c', '../../src/nvme-iostat.c'],
+            'c_args': [
+                '-DFUZZ_IOSTAT_TREE="' + (meson.project_source_root() /
+                    'libnvme/tests/sysfs/data/tree-pcie.tar.xz') + '"',
+            ],
+            'deps': [config_dep, libnvme_dep, dl_dep],
+        },
+    }
+endif
+
 # nvme nbft show with the table from the input
 if want_nvme and want_fabrics
     fuzz_targets += {
