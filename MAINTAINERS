@@ -1,0 +1,174 @@
+List of maintainers of nvme-cli and libnvme
+===========================================
+
+Send patches as GitHub pull requests to
+https://github.com/linux-nvme/nvme-cli and Cc the maintainers of the
+files you change. Questions and discussion go to the mailing list.
+
+Descriptions of the section entries:
+
+	M: Maintainer: FullName <address> (@GitHub handle, to assign
+	   issues and reviews)
+	L: Mailing list
+	S: Status, one of the following:
+	   Supported:	Someone is paid to look after this.
+	   Maintained:	Someone looks after this.
+	   Odd Fixes:	Fixes are taken, nobody works on it.
+	   Orphan:	No current maintainer. The core maintainers take
+			fixes; a vendor willing to take over is welcome.
+	F: Files and directories, a trailing / covers everything below.
+
+The NVME-CLI section covers every file. The other sections add the
+maintainers of a component, such as a daemon or a vendor plugin. See
+"Maintaining a component" in CONTRIBUTING.md for what is expected of
+them.
+
+NVME-CLI
+M:	Daniel Wagner <dwagner@suse.de> (@igaw)
+L:	linux-nvme@lists.infradead.org
+S:	Maintained
+T:	git https://github.com/linux-nvme/nvme-cli.git
+F:	*
+
+NVME-DISCOVERD
+M:	Martin Belanger <martin.belanger@dell.com> (@martin-belanger)
+S:	Maintained
+F:	Documentation/nvme-discoverd.*
+F:	daemon-util/
+F:	discoverd/
+
+NVME-KEYSD
+M:	Martin Belanger <martin.belanger@dell.com> (@martin-belanger)
+S:	Maintained
+F:	Documentation/nvme-keysd.*
+F:	daemon-util/
+F:	keysd/
+
+AMAZON PLUGIN
+M:	Zhen Wang <awz@amazon.com> (@awz1234)
+S:	Supported
+F:	plugins/amzn/
+
+DAPUSTOR PLUGIN
+S:	Orphan
+F:	plugins/dapustor/
+
+DELL PLUGIN
+S:	Orphan
+F:	plugins/dell/
+
+DERA PLUGIN
+S:	Orphan
+F:	plugins/dera/
+
+HUAWEI PLUGIN
+S:	Orphan
+F:	plugins/huawei/
+
+IBM PLUGIN
+M:	Wen Xiong <wenxiong@linux.ibm.com> (@wxiong66)
+S:	Supported
+F:	plugins/ibm/
+
+INNOGRIT PLUGIN
+S:	Orphan
+F:	plugins/innogrit/
+
+INSPUR PLUGIN
+S:	Orphan
+F:	plugins/inspur/
+
+INTEL PLUGIN
+S:	Orphan
+F:	plugins/intel/
+
+MANGOBOOST PLUGIN
+M:	Jonghyeon Kim <jonghyeon.kim@mangoboost.io> (@mango-jonghyeonkim)
+S:	Supported
+F:	plugins/mangoboost/
+
+MEMBLAZE PLUGIN
+M:	Jinhua Huang <jinhua.huang@memblaze.com> (@jinhuahuang2021)
+S:	Supported
+F:	plugins/memblaze/
+
+MICRON PLUGIN
+M:	Broc Going <bgoing@micron.com> (@brgoing)
+M:	Jim Munn <jlmunn@micron.com> (@jimmunn)
+S:	Supported
+F:	plugins/micron/
+F:	tests/cli/micron/
+
+NETAPP PLUGIN
+M:	Martin George <marting@netapp.com> (@martin-gpy)
+S:	Supported
+F:	plugins/netapp/
+
+NVIDIA PLUGIN
+S:	Orphan
+F:	plugins/nvidia/
+
+OCP PLUGIN
+M:	Broc Going <bgoing@micron.com> (@brgoing)
+M:	Jeff Lien <jeff.lien@sandisk.com> (@jeff-lien-sndk)
+M:	Brandon Paupore <brandon.paupore@sandisk.com> (@brandon-paupore-sndk)
+S:	Supported
+F:	plugins/ocp/
+F:	tests/cli/ocp/
+
+SAMSUNG PLUGIN
+M:	Hyuntae Kim <h1219.kim@samsung.com> (@h1219-kim)
+M:	Jinmin Hwang <jinmin.hwang@samsung.com> (@hjm507)
+S:	Supported
+F:	plugins/samsung/
+F:	tests/cli/samsung/
+
+SANDISK AND WDC PLUGINS
+M:	Jeff Lien <jeff.lien@sandisk.com> (@jeff-lien-sndk)
+M:	Brandon Paupore <brandon.paupore@sandisk.com> (@brandon-paupore-sndk)
+S:	Supported
+F:	plugins/sandisk/
+F:	plugins/wdc/
+F:	tests/cli/nvme_sndk_fallback_test.py
+F:	tests/cli/wdc/
+
+SCALEFLUX PLUGIN
+M:	Keith McKay <kpmckay@gmail.com> (@kpmckay)
+S:	Supported
+F:	plugins/scaleflux/
+
+SEAGATE PLUGIN
+S:	Orphan
+F:	plugins/seagate/
+F:	tests/cli/seagate/
+
+SHANNON PLUGIN
+S:	Orphan
+F:	plugins/shannon/
+
+SOLIDIGM PLUGIN
+M:	Leonardo da Cunha <leonardo.da.cunha@solidigm.com> (@lgdacunh)
+M:	Hardeep Dhillon <Hardeep.Dhillon@solidigm.com> (@SolidigmTools)
+S:	Supported
+F:	plugins/solidigm/
+
+SSSTC PLUGIN
+S:	Orphan
+F:	plugins/ssstc/
+
+TOSHIBA PLUGIN
+S:	Orphan
+F:	plugins/toshiba/
+
+TRANSCEND PLUGIN
+S:	Orphan
+F:	plugins/transcend/
+
+VIRTIUM PLUGIN
+S:	Orphan
+F:	plugins/virtium/
+
+YMTC PLUGIN
+S:	Orphan
+F:	plugins/ymtc/
+F:	tests/cli/nvme_ymtc_test.py
