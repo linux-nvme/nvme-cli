@@ -169,6 +169,53 @@ file, and have each file call `plugin_add_group()` with its own commands
 (and its own title, if you want `nvme <plugin> help` to show sub-headings)
 . only *one* file should call `register_extension()`.
 
+### Add tests for a command
+
+Every command that reads data from the device should have a mock test,
+and, if it only reads and prints, an entry in the device fuzz target.
+Neither needs hardware. `Documentation/TESTING.md` describes the tools.
+
+**Mock tests** run the real `nvme` binary against a mocked controller:
+`tests/cli/libmock_nvme.c` intercepts the ioctls and hands every command
+to a Python object in the test, which answers it (`tests/cli/nvme_mock.py`).
+Vendor tests live in `tests/cli/<plugin>/`; `tests/cli/ocp/` (a shared
+controller class, one file per command), `tests/cli/wdc/` (several
+models) and `tests/cli/micron/` are examples. A test
+
+1. subclasses the controller and fills in the answers: Identify data, log
+   pages by log ID (and UUID index), features by feature ID;
+2. sets up the model if the plugin checks one: the PCI IDs in the test's
+   sysfs directory, the Identify Controller fields;
+3. runs the command with normal and JSON output and checks the values
+   that come from the device, not only the exit code;
+4. is added to the `meson.build` of its directory.
+
+Take the expected values from the specification of the log page or from a
+real drive, not from what the code prints today, and use non-zero values
+in every field so that a wrong offset shows. Check that the test fails
+when the code is wrong, and run it in an ASan/UBSan build too
+(`meson test -C .build-asan --suite <plugin>`).
+
+**The device fuzz target** (`tests/fuzz/fuzz-device.c`) runs commands
+against the same mock, with every answer from the fuzzer. A command is
+fuzzed only if it has an entry in the `commands[]` table there:
+
+- Append new entries at the end; inputs select a command by its index.
+- Only commands that read and print. Nothing that changes the device or
+  writes a file, unless its output can go to `/dev/null`.
+- A command behind a model check gets `.pci = true`, and the plugin's
+  model IDs go into `PCI_IDS` in `scripts/fuzz/nvme_fuzz/device.py`.
+- `scripts/fuzz/nvme-fuzz sweep --entries N` tries a new entry before a
+  fuzz run; `nvme-fuzz coverage --entries N` shows whether it gets past
+  its checks. The mock tests are the best seeds (`nvme-fuzz seeds`), so
+  write the mock test first.
+- Fix what the fuzzer finds before adding the entry, each fix in its own
+  commit with its input as a regression seed in
+  `tests/fuzz/corpus/device/`.
+
+Before sending, compare the output of master and your branch on a real
+drive if you have one: a mock only knows what its author assumed.
+
 ### Regenerating shell completions
 
 nvme-cli ships bash, zsh, and PowerShell tab-completion scripts under
@@ -377,6 +424,31 @@ however, is not loaded from an --add-dir directory by default; to load it as
 well, also set CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1:
 
     $ CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1 claude --add-dir ../nvme-cli-ai
+
+### Adding tests with an assistant
+
+Writing mock tests and fuzz table entries (see "Add tests for a command")
+suits an assistant well. nvme-cli-ai's `.claude/rules/fuzzing.md` gives it
+the rules of the fuzz table, how to get coverage past model checks, and
+how to triage and fix findings. Give it precise input data:
+
+- the layout of the log pages and features, from the specification or a
+  firmware header;
+- the output of the command on a real drive, normal and `-o json`, or a
+  hex dump of the log (without serial numbers or customer data);
+- the PCI IDs and Identify Controller fields of the models the plugin
+  checks.
+
+For example: "Add mock tests for `nvme <plugin> <command>` in
+`tests/cli/<plugin>/` following `tests/cli/ocp/`. The log layout is in
+`<file>`, the output of a real drive in `<file>`. Use non-zero values in
+every field and check normal and JSON output. Then add the command to the
+device fuzz table, sweep it and compare its coverage with and without the
+mock seeds."
+
+Review the result like any other patch before you sign it off: check that
+the expected values match the specification and that the test fails on
+broken code.
 
 ## Bug Reports
 
