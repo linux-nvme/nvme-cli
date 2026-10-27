@@ -73,15 +73,14 @@ if python3.found()
              suite: 'mock')
     endif
 
-    # nvme top in a pseudo terminal on the sysfs of a loop subsystem
+    # nvme top in a pseudo terminal, and its JSON output, on captured sysfs
     if want_top
         test('nvme-cli - top',
              python3,
              args: [
                  files('nvme_top_test.py'),
                  nvme_exe,
-                 meson.project_source_root() /
-                     'libnvme/tests/sysfs/data/tree-loop-duplicate.tar.xz',
+                 meson.project_source_root() / 'libnvme/tests/sysfs/data',
              ],
              env: cli_test_env,
              depends: nvme_exe,

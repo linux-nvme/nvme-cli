@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifdef CONFIG_FABRICS
 #include <arpa/inet.h>
@@ -23,6 +24,8 @@
 #include <shared/unaligned-util.h>
 
 #include "cleanup.h"
+#include "global-ctx.h"
+#include "nvme-iostat.h"
 #include "nvme-json.h"
 #include "nvme-print.h"
 
@@ -4489,6 +4492,269 @@ static void json_simple_topology(struct libnvme_global_ctx *ctx)
 	json_print(a);
 }
 
+#ifdef CONFIG_TOP
+/* A rate with two decimals, as nvme top shows it */
+static void obj_add_rate(struct json_object *o, const char *k, double v)
+{
+	char buf[64];
+
+	snprintf(buf, sizeof(buf), "%.2f", v);
+	json_object_object_add(o, k, json_object_new_double_s(v, buf));
+}
+
+/* An attribute of a kernel which may not have it is left out */
+static void obj_add_count(struct json_object *o, const char *k, int ret,
+			  long v)
+{
+	if (!ret)
+		json_object_object_add(o, k, json_object_new_int64(v));
+}
+
+static void obj_add_iostat(struct json_object *o, const struct nvme_iostat *st)
+{
+	struct json_object *r = json_create_object();
+
+	obj_add_rate(r, "ReadIOPS", st->r_iops);
+	obj_add_rate(r, "WriteIOPS", st->w_iops);
+	obj_add_rate(r, "ReadLatencyMs", st->r_lat);
+	obj_add_rate(r, "WriteLatencyMs", st->w_lat);
+	obj_add_rate(r, "ReadBytesPerSec", st->r_bw);
+	obj_add_rate(r, "WriteBytesPerSec", st->w_bw);
+	obj_add_uint(r, "Inflights", st->inflights);
+	obj_add_rate(r, "UtilPercent", st->util);
+
+	obj_add_obj(o, "Stats", r);
+}
+
+/* The sum of the rates, and the highest latencies and utilization */
+static void obj_add_iostat_aggr(struct json_object *o,
+				const struct nvme_iostat *st)
+{
+	struct json_object *r = json_create_object();
+
+	obj_add_rate(r, "ReadIOPS", st->r_iops);
+	obj_add_rate(r, "WriteIOPS", st->w_iops);
+	obj_add_rate(r, "MaxReadLatencyMs", st->r_lat);
+	obj_add_rate(r, "MaxWriteLatencyMs", st->w_lat);
+	obj_add_rate(r, "ReadBytesPerSec", st->r_bw);
+	obj_add_rate(r, "WriteBytesPerSec", st->w_bw);
+	obj_add_rate(r, "MaxUtilPercent", st->util);
+
+	obj_add_obj(o, "Stats", r);
+}
+
+static struct json_object *json_top_path(struct libnvme_path *p)
+{
+	struct json_object *r = json_create_object();
+	struct nvme_iostat st;
+	const char *str;
+	int qdepth, ret;
+	long v;
+
+	obj_add_str(r, "Name", libnvme_path_get_name(p));
+	obj_add_str(r, "Controller",
+		    libnvme_ctrl_get_name(libnvme_path_get_ctrl(p)));
+	if (!libnvme_path_get_ana_state(p, &str, NULL))
+		obj_add_str(r, "ANAState", str);
+	if (!libnvme_path_get_numa_nodes(p, &str, NULL))
+		obj_add_str(r, "NUMANodes", str);
+	if (!libnvme_path_get_queue_depth(p, &qdepth, 0))
+		obj_add_int(r, "Qdepth", qdepth);
+	ret = libnvme_path_get_command_retry_count(p, &v, 0);
+	obj_add_count(r, "Retries", ret, v);
+	ret = libnvme_path_get_multipath_failover_count(p, &v, 0);
+	obj_add_count(r, "Failovers", ret, v);
+	ret = libnvme_path_get_command_error_count(p, &v, 0);
+	obj_add_count(r, "Errors", ret, v);
+
+	nvme_iostat_path(p, &st);
+	obj_add_iostat(r, &st);
+
+	return r;
+}
+
+static struct json_object *json_top_nshead(struct libnvme_ns *n,
+					   struct nvme_iostat *aggr)
+{
+	struct json_object *r = json_create_object();
+	struct json_object *paths = json_create_array();
+	struct libnvme_path *p;
+	struct nvme_iostat st;
+	int ret;
+	long v;
+
+	obj_add_str(r, "Name", libnvme_ns_get_name(n));
+	obj_add_uint(r, "NSID", libnvme_ns_get_nsid(n));
+	ret = libnvme_ns_get_io_requeue_no_usable_path_count(n, &v, 0);
+	obj_add_count(r, "RequeueIO", ret, v);
+	ret = libnvme_ns_get_io_fail_no_available_path_count(n, &v, 0);
+	obj_add_count(r, "FailIO", ret, v);
+
+	nvme_iostat_ns(n, &st);
+	nvme_iostat_aggr(aggr, &st);
+	obj_add_iostat(r, &st);
+
+	libnvme_namespace_for_each_path(n, p)
+		array_add_obj(paths, json_top_path(p));
+	obj_add_array(r, "Paths", paths);
+
+	return r;
+}
+
+static struct json_object *json_top_ns(struct libnvme_ns *n,
+				       struct libnvme_ctrl *c,
+				       struct nvme_iostat *aggr)
+{
+	struct json_object *r = json_create_object();
+	struct nvme_iostat st;
+	int ret;
+	long v;
+
+	obj_add_str(r, "Name", libnvme_ns_get_name(n));
+	obj_add_uint(r, "NSID", libnvme_ns_get_nsid(n));
+	obj_add_str(r, "Controller", libnvme_ctrl_get_name(c));
+	ret = libnvme_ns_get_command_retry_count(n, &v, 0);
+	obj_add_count(r, "Retries", ret, v);
+	ret = libnvme_ns_get_command_error_count(n, &v, 0);
+	obj_add_count(r, "Errors", ret, v);
+
+	nvme_iostat_ns(n, &st);
+	nvme_iostat_aggr(aggr, &st);
+	obj_add_iostat(r, &st);
+
+	return r;
+}
+
+static struct json_object *json_top_ctrl(struct libnvme_ctrl *c,
+					 bool multipath)
+{
+	struct json_object *r = json_create_object();
+	struct nvme_iostat aggr = { 0 }, st;
+	struct libnvme_path *p;
+	struct libnvme_ns *n;
+	const char *node;
+	int npaths = 0, ret;
+	long v;
+
+	obj_add_str(r, "Name", libnvme_ctrl_get_name(c));
+	obj_add_str(r, "Transport", libnvme_ctrl_get_transport(c));
+	obj_add_ctrl_address(r, c);
+	obj_add_str(r, "State", libnvme_ctrl_get_state(c));
+	if (!libnvme_ctrl_get_numa_node(c, &node, NULL))
+		obj_add_int(r, "NUMANode", atoi(node));
+	ret = libnvme_ctrl_get_reset_count(c, &v, 0);
+	obj_add_count(r, "Resets", ret, v);
+	ret = libnvme_ctrl_get_reconnect_count(c, &v, 0);
+	obj_add_count(r, "Reconnects", ret, v);
+	ret = libnvme_ctrl_get_command_error_count(c, &v, 0);
+	obj_add_count(r, "Errors", ret, v);
+
+	if (multipath) {
+		libnvme_ctrl_for_each_path(c, p) {
+			npaths++;
+			nvme_iostat_path(p, &st);
+			nvme_iostat_aggr(&aggr, &st);
+		}
+		obj_add_int(r, "Paths", npaths);
+	} else {
+		libnvme_ctrl_for_each_ns(c, n) {
+			nvme_iostat_ns(n, &st);
+			nvme_iostat_aggr(&aggr, &st);
+		}
+	}
+	obj_add_iostat_aggr(r, &aggr);
+
+	return r;
+}
+
+static struct json_object *json_top_subsys(struct libnvme_subsystem *s)
+{
+	struct json_object *r = json_create_object();
+	struct json_object *namespaces = json_create_array();
+	struct json_object *ctrls = json_create_array();
+	bool multipath = nvme_is_multipath(s);
+	struct nvme_iostat aggr = { 0 };
+	struct libnvme_ctrl *c;
+	struct libnvme_ns *n;
+	const char *str;
+
+	obj_add_str(r, "Name", libnvme_subsystem_get_name(s));
+	obj_add_str(r, "NQN", libnvme_subsystem_get_subsysnqn(s));
+	obj_add_str(r, "HostNQN",
+		    libnvme_host_get_hostnqn(libnvme_subsystem_get_host(s)));
+	if (!libnvme_subsystem_get_iopolicy(s, &str, NULL))
+		obj_add_str(r, "IOPolicy", str);
+	if (!libnvme_subsystem_get_model(s, &str, NULL))
+		obj_add_str(r, "Model", str);
+	if (!libnvme_subsystem_get_serial(s, &str, NULL))
+		obj_add_str(r, "Serial", str);
+	if (!libnvme_subsystem_get_firmware(s, &str, NULL))
+		obj_add_str(r, "Firmware", str);
+	obj_add_str(r, "Type", libnvme_subsystem_get_subsystype(s));
+
+	if (multipath) {
+		libnvme_subsystem_for_each_ns(s, n)
+			array_add_obj(namespaces, json_top_nshead(n, &aggr));
+	} else {
+		libnvme_subsystem_for_each_ctrl(s, c)
+			libnvme_ctrl_for_each_ns(c, n)
+				array_add_obj(namespaces,
+					      json_top_ns(n, c, &aggr));
+	}
+	obj_add_iostat_aggr(r, &aggr);
+	obj_add_array(r, "Namespaces", namespaces);
+
+	libnvme_subsystem_for_each_ctrl(s, c)
+		array_add_obj(ctrls, json_top_ctrl(c, multipath));
+	obj_add_array(r, "Controllers", ctrls);
+
+	return r;
+}
+
+static void json_top_update(struct libnvme_global_ctx *ctx)
+{
+	struct libnvme_subsystem *s;
+	struct libnvme_host *h;
+
+	libnvme_for_each_host(ctx, h)
+		libnvme_for_each_subsystem(h, s)
+			nvme_iostat_update_subsys(s, nvme_is_multipath(s));
+}
+
+/* Takes two samples @interval seconds apart and prints the rates */
+static void json_top(int interval)
+{
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	struct json_object *r, *subsystems;
+	struct libnvme_subsystem *s;
+	struct libnvme_host *h;
+	int err;
+
+	err = nvme_create_global_ctx(&ctx);
+	if (err)
+		return;
+
+	if (libnvme_scan_topology(ctx, NULL, NULL)) {
+		nvme_show_error("Failed to scan topology");
+		return;
+	}
+
+	json_top_update(ctx);
+	sleep(interval);
+	json_top_update(ctx);
+
+	r = json_create_object();
+	obj_add_int(r, "Interval", interval);
+	subsystems = json_create_array();
+	libnvme_for_each_host(ctx, h)
+		libnvme_for_each_subsystem(h, s)
+			array_add_obj(subsystems, json_top_subsys(s));
+	obj_add_array(r, "Subsystems", subsystems);
+
+	json_print(r);
+}
+#endif /* CONFIG_TOP */
+
 static void json_directive_show_fields_identify(__u8 doper, __u8 *field,
 						__u32 len,
 						struct json_object *r)
@@ -5580,6 +5846,11 @@ static struct print_ops json_print_ops = {
 	.topology_ctrl			= json_simple_topology,
 	.topology_namespace		= json_simple_topology,
 	.topology_multipath		= json_simple_topology,
+
+	/* nvme top */
+#ifdef CONFIG_TOP
+	.top				= json_top,
+#endif
 
 	/* config show */
 	.config_conn_list		= json_config_conn_list,
