@@ -15,16 +15,6 @@
  * GNU General Public License for more details.
  */
 
-#define IOPS_UNIT_NONE		""
-#define IOPS_UNIT_KB		"k"
-
-#define BW_UNIT_BYTES_PER_SEC	"B/s"
-#define BW_UNIT_KIB_PER_SEC	"KiB/s"
-#define BW_UNIT_MIB_PER_SEC	"MiB/s"
-
-#define BW_KIB	1024
-#define BW_MIB	(BW_KIB * 1024)
-
 #include <stddef.h>
 #include <stdio.h>
 
@@ -37,338 +27,8 @@
 #include "cleanup.h"
 #include "dashboard.h"
 #include "global-ctx.h"
+#include "nvme-iostat.h"
 #include "nvme-print.h"
-
-static double nvme_calc_util_percent(unsigned int ticks, double interval_ms)
-{
-	if (!interval_ms)
-		return 0;
-
-	return (ticks / interval_ms) * 100;
-}
-
-static double nvme_path_calc_util_percent(struct libnvme_path *p, double interval_ms)
-{
-	unsigned int ticks;
-
-	ticks = libnvme_path_get_io_ticks(p);
-	return nvme_calc_util_percent(ticks, interval_ms);
-}
-
-static double nvme_ns_calc_util_percent(struct libnvme_ns *n, double interval_ms)
-{
-	unsigned int ticks;
-
-	ticks = libnvme_ns_get_io_ticks(n);
-	return nvme_calc_util_percent(ticks, interval_ms);
-}
-
-static double nvme_calc_iops(unsigned long ios, double interval_ms)
-{
-	double interval_sec;
-
-	if (interval_ms < 1000)
-		return 0;
-
-	interval_sec = interval_ms / 1000;
-	return (ios / interval_sec);
-}
-
-static double nvme_path_calc_read_iops(struct libnvme_path *p, double interval_ms)
-{
-	unsigned long read_ios;
-
-	read_ios = libnvme_path_get_read_ios(p);
-	return nvme_calc_iops(read_ios, interval_ms);
-}
-
-static double nvme_path_calc_write_iops(struct libnvme_path *p, double interval_ms)
-{
-	unsigned long write_ios;
-
-	write_ios = libnvme_path_get_write_ios(p);
-	return nvme_calc_iops(write_ios, interval_ms);
-}
-
-static double nvme_ns_calc_read_iops(struct libnvme_ns *n, double interval_ms)
-{
-	unsigned long read_ios;
-
-	read_ios = libnvme_ns_get_read_ios(n);
-	return nvme_calc_iops(read_ios, interval_ms);
-}
-
-static double nvme_ns_calc_write_iops(struct libnvme_ns *n, double interval_ms)
-{
-	unsigned long write_ios;
-
-	write_ios = libnvme_ns_get_write_ios(n);
-	return nvme_calc_iops(write_ios, interval_ms);
-}
-
-static double nvme_calc_latency(unsigned long ticks, unsigned long ios)
-{
-	if (!ios)
-		return 0;
-
-	return ((double)ticks/ios);
-}
-
-static double nvme_path_calc_read_latency(struct libnvme_path *p)
-{
-	unsigned int ticks;
-	unsigned long ios;
-
-	ticks = libnvme_path_get_read_ticks(p);
-	ios = libnvme_path_get_read_ios(p);
-
-	return nvme_calc_latency(ticks, ios);
-}
-
-static double nvme_path_calc_write_latency(struct libnvme_path *p)
-{
-	unsigned int ticks;
-	unsigned long ios;
-
-	ticks = libnvme_path_get_write_ticks(p);
-	ios = libnvme_path_get_write_ios(p);
-
-	return nvme_calc_latency(ticks, ios);
-}
-
-static double nvme_ns_calc_read_latency(struct libnvme_ns *n)
-{
-	unsigned int ticks;
-	unsigned long ios;
-
-	ticks = libnvme_ns_get_read_ticks(n);
-	ios = libnvme_ns_get_read_ios(n);
-
-	return nvme_calc_latency(ticks, ios);
-}
-
-static double nvme_ns_calc_write_latency(struct libnvme_ns *n)
-{
-	unsigned int ticks;
-	unsigned long ios;
-
-	ticks = libnvme_ns_get_write_ticks(n);
-	ios = libnvme_ns_get_write_ios(n);
-
-	return nvme_calc_latency(ticks, ios);
-}
-
-static double nvme_calc_bandwidth(unsigned long long sectors,
-			double interval_ms)
-{
-	double bytes;
-	double sec;
-
-	if (interval_ms < 1000)
-		return 0;
-
-	sec = interval_ms / 1000;
-	bytes = (double)sectors * 512;
-	return (bytes / sec);
-}
-
-static double nvme_path_calc_read_bw(struct libnvme_path *p, double interval_ms)
-{
-	unsigned long long sectors;
-
-	sectors = libnvme_path_get_read_sectors(p);
-	return nvme_calc_bandwidth(sectors, interval_ms);
-}
-
-static double nvme_path_calc_write_bw(struct libnvme_path *p, double interval_ms)
-{
-	unsigned long long sectors;
-
-	sectors = libnvme_path_get_write_sectors(p);
-	return nvme_calc_bandwidth(sectors, interval_ms);
-}
-
-static double nvme_ns_calc_read_bw(struct libnvme_ns *n, double interval_ms)
-{
-	unsigned long long sectors;
-
-	sectors = libnvme_ns_get_read_sectors(n);
-	return nvme_calc_bandwidth(sectors, interval_ms);
-}
-
-static double nvme_ns_calc_write_bw(struct libnvme_ns *n, double interval_ms)
-{
-	unsigned long long sectors;
-
-	sectors = libnvme_ns_get_write_sectors(n);
-	return nvme_calc_bandwidth(sectors, interval_ms);
-}
-
-static int nvme_format_iops(double iops, char *buf, size_t size)
-{
-	char *unit;
-
-	if (iops < 1000)
-		unit = IOPS_UNIT_NONE;
-	else {
-		iops /= 1000;
-		unit = IOPS_UNIT_KB;
-	}
-
-	return snprintf(buf, size, "%.2f%s", iops, unit);
-}
-
-static int nvme_format_bw(double bw, char *buf, size_t size)
-{
-	char *unit = "";
-
-	if (!bw)
-		goto out;
-
-	if (bw < BW_KIB)
-		unit = BW_UNIT_BYTES_PER_SEC;
-	else if (bw < BW_MIB) {
-		bw /= BW_KIB;
-		unit = BW_UNIT_KIB_PER_SEC;
-	} else {
-		bw /= BW_MIB;
-		unit = BW_UNIT_MIB_PER_SEC;
-	}
-
-out:
-	return snprintf(buf, size, "%.2f%s", bw, unit);
-}
-
-static int nvme_format_lat(double lat, char *buf, size_t size)
-{
-	return snprintf(buf, size, "%.2f", lat);
-}
-
-static void nvme_ns_calc_aggr_stat(struct libnvme_ns *n,
-			double *r_iops, double *w_iops,
-			double *r_bw, double *w_bw,
-			double *max_rlat, double *max_wlat,
-			double *max_util)
-{
-	double interval_ms, rlat, wlat, util;
-
-	interval_ms = libnvme_ns_get_stat_interval(n);
-	if (!interval_ms)
-		return;
-
-	*r_iops += nvme_ns_calc_read_iops(n, interval_ms);
-	*w_iops += nvme_ns_calc_write_iops(n, interval_ms);
-
-	*r_bw += nvme_ns_calc_read_bw(n, interval_ms);
-	*w_bw += nvme_ns_calc_write_bw(n, interval_ms);
-
-	rlat = nvme_ns_calc_read_latency(n);
-	if (rlat > *max_rlat)
-		*max_rlat = rlat;
-
-	wlat = nvme_ns_calc_write_latency(n);
-	if (wlat > *max_wlat)
-		*max_wlat = wlat;
-
-	util = nvme_ns_calc_util_percent(n, interval_ms);
-	if (util > *max_util)
-		*max_util = util;
-}
-
-static void nvme_path_calc_aggr_stat(struct libnvme_path *p,
-			double *r_iops, double *w_iops,
-			double *r_bw, double *w_bw,
-			double *max_rlat, double *max_wlat,
-			double *max_util)
-{
-	double interval_ms, rlat, wlat, util;
-
-	interval_ms = libnvme_path_get_stat_interval(p);
-	if (!interval_ms)
-		return;
-
-	*r_iops += nvme_path_calc_read_iops(p, interval_ms);
-	*w_iops += nvme_path_calc_write_iops(p, interval_ms);
-
-	*r_bw += nvme_path_calc_read_bw(p, interval_ms);
-	*w_bw += nvme_path_calc_write_bw(p, interval_ms);
-
-	rlat = nvme_path_calc_read_latency(p);
-	if (rlat > *max_rlat)
-		*max_rlat = rlat;
-
-	wlat = nvme_path_calc_write_latency(p);
-	if (wlat > *max_wlat)
-		*max_wlat = wlat;
-
-	util = nvme_path_calc_util_percent(p, interval_ms);
-	if (util > *max_util)
-		*max_util = util;
-}
-
-static void nvme_ns_calc_stat(struct libnvme_ns *n,
-			double *r_iops, double *w_iops,
-			double *r_lat, double *w_lat,
-			double *r_bw, double *w_bw,
-			double *util,
-			unsigned int *inflights)
-{
-	double interval_ms;
-
-	interval_ms = libnvme_ns_get_stat_interval(n);
-	if (!interval_ms)
-		return;
-
-	/* calculate R/W IOPS */
-	*r_iops = nvme_ns_calc_read_iops(n, interval_ms);
-	*w_iops = nvme_ns_calc_write_iops(n, interval_ms);
-
-	/* calculate R/W latency */
-	*r_lat = nvme_ns_calc_read_latency(n);
-	*w_lat = nvme_ns_calc_write_latency(n);
-
-	/* calculate R/W bandwidth */
-	*r_bw = nvme_ns_calc_read_bw(n, interval_ms);
-	*w_bw = nvme_ns_calc_write_bw(n, interval_ms);
-
-	/* get inflights counter */
-	*inflights = libnvme_ns_get_inflights(n);
-
-	/* calculate util percent */
-	*util = nvme_ns_calc_util_percent(n, interval_ms);
-}
-
-static void nvme_path_calc_stat(struct libnvme_path *p,
-			double *r_iops, double *w_iops,
-			double *r_lat, double *w_lat,
-			double *r_bw, double *w_bw,
-			double *util,
-			unsigned int *inflights)
-{
-	double interval_ms;
-
-	interval_ms = libnvme_path_get_stat_interval(p);
-	if (!interval_ms)
-		return;
-
-	/* calculate R/W IOPS */
-	*r_iops = nvme_path_calc_read_iops(p, interval_ms);
-	*w_iops = nvme_path_calc_write_iops(p, interval_ms);
-
-	/* calculate R/W latency */
-	*r_lat = nvme_path_calc_read_latency(p);
-	*w_lat = nvme_path_calc_write_latency(p);
-
-	/* calculate R/W bandwidth */
-	*r_bw = nvme_path_calc_read_bw(p, interval_ms);
-	*w_bw = nvme_path_calc_write_bw(p, interval_ms);
-
-	/* get inflights counter */
-	*inflights = libnvme_path_get_inflights(p);
-
-	/* calculate util percent */
-	*util = nvme_path_calc_util_percent(p, interval_ms);
-}
 
 static bool stdout_top_nvme_ctrl_is_fabric(struct libnvme_ctrl *c)
 {
@@ -483,8 +143,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 	struct libnvme_ctrl *c;
 	struct libnvme_path *p;
 	struct libnvme_ns *n;
-	double max_util, max_rlat, max_wlat;
-	double r_iops, w_iops, r_bw, w_bw;
+	struct nvme_iostat aggr, st;
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
@@ -531,9 +190,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 	fprintf(stream, "\n---------- Controller Summary --------\n\n");
 	libnvme_subsystem_for_each_ctrl(s, c) {
 		npaths = 0;
-		r_iops = w_iops = 0;
-		r_bw = w_bw = 0;
-		max_util = max_rlat = max_wlat = 0;
+		aggr = (struct nvme_iostat){ 0 };
 
 		row = shr_table_get_row_id(t);
 		if (row < 0) {
@@ -548,30 +205,28 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 				/* count num of paths per controller */
 				npaths++;
 
-				nvme_path_calc_aggr_stat(p,
-						&r_iops, &w_iops,
-						&r_bw, &w_bw,
-						&max_rlat, &max_wlat,
-						&max_util);
+				nvme_iostat_path(p, &st);
+				nvme_iostat_aggr(&aggr, &st);
 			}
 		} else {
 			libnvme_ctrl_for_each_ns(c, n) {
-				nvme_ns_calc_aggr_stat(n,
-						&r_iops, &w_iops,
-						&r_bw, &w_bw,
-						&max_rlat, &max_wlat,
-						&max_util);
+				nvme_iostat_ns(n, &st);
+				nvme_iostat_aggr(&aggr, &st);
 			}
 		}
 
-		nvme_format_iops(r_iops, r_iops_str, sizeof(r_iops_str));
-		nvme_format_iops(w_iops, w_iops_str, sizeof(w_iops_str));
+		nvme_iostat_format_iops(aggr.r_iops, r_iops_str,
+				sizeof(r_iops_str));
+		nvme_iostat_format_iops(aggr.w_iops, w_iops_str,
+				sizeof(w_iops_str));
 
-		nvme_format_bw(r_bw, r_bw_str, sizeof(r_bw_str));
-		nvme_format_bw(w_bw, w_bw_str, sizeof(w_bw_str));
+		nvme_iostat_format_bw(aggr.r_bw, r_bw_str, sizeof(r_bw_str));
+		nvme_iostat_format_bw(aggr.w_bw, w_bw_str, sizeof(w_bw_str));
 
-		nvme_format_lat(max_rlat, r_clat_str, sizeof(r_clat_str));
-		nvme_format_lat(max_wlat, w_clat_str, sizeof(w_clat_str));
+		nvme_iostat_format_lat(aggr.r_lat, r_clat_str,
+				sizeof(r_clat_str));
+		nvme_iostat_format_lat(aggr.w_lat, w_clat_str,
+				sizeof(w_clat_str));
 
 		libnvme_ctrl_get_numa_node(c, &node, "-1");
 		if (!strcmp(node, "-1"))
@@ -617,7 +272,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 		shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-		shr_table_set_value_double(t, ++col, row, max_util, LEFT);
+		shr_table_set_value_double(t, ++col, row, aggr.util, LEFT);
 
 		shr_table_add_row(t, row);
 	}
@@ -634,8 +289,7 @@ static int stdout_top_print_ns_stat(FILE *stream, struct libnvme_subsystem *s)
 	struct libnvme_ns *n;
 	struct libnvme_ctrl *c;
 	int col, row;
-	unsigned int inflights;
-	double r_iops, w_iops, r_lat, w_lat, r_bw, w_bw, util;
+	struct nvme_iostat st;
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
@@ -673,26 +327,22 @@ static int stdout_top_print_ns_stat(FILE *stream, struct libnvme_subsystem *s)
 		libnvme_ctrl_for_each_ns(c, n) {
 			long command_retry_count, command_error_count;
 
-			r_iops = r_lat = r_bw = 0;
-			w_iops = w_lat = w_bw = 0;
-			util = inflights = 0;
+			nvme_iostat_ns(n, &st);
 
-			nvme_ns_calc_stat(n,
-					&r_iops, &w_iops,
-					&r_lat, &w_lat,
-					&r_bw, &w_bw,
-					&util, &inflights);
-
-			nvme_format_iops(r_iops, r_iops_str,
+			nvme_iostat_format_iops(st.r_iops, r_iops_str,
 					sizeof(r_iops_str));
-			nvme_format_iops(w_iops, w_iops_str,
+			nvme_iostat_format_iops(st.w_iops, w_iops_str,
 					sizeof(w_iops_str));
 
-			nvme_format_bw(r_bw, r_bw_str, sizeof(r_bw_str));
-			nvme_format_bw(w_bw, w_bw_str, sizeof(w_bw_str));
+			nvme_iostat_format_bw(st.r_bw, r_bw_str,
+					sizeof(r_bw_str));
+			nvme_iostat_format_bw(st.w_bw, w_bw_str,
+					sizeof(w_bw_str));
 
-			nvme_format_lat(r_lat, r_clat_str, sizeof(r_clat_str));
-			nvme_format_lat(w_lat, w_clat_str, sizeof(w_clat_str));
+			nvme_iostat_format_lat(st.r_lat, r_clat_str,
+					sizeof(r_clat_str));
+			nvme_iostat_format_lat(st.w_lat, w_clat_str,
+					sizeof(w_clat_str));
 
 			row = shr_table_get_row_id(t);
 			if (row < 0) {
@@ -723,9 +373,10 @@ static int stdout_top_print_ns_stat(FILE *stream, struct libnvme_subsystem *s)
 			shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
 			shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
 			shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-			shr_table_set_value_unsigned(t, ++col, row, inflights,
+			shr_table_set_value_unsigned(t, ++col, row,
+					st.inflights, LEFT);
+			shr_table_set_value_double(t, ++col, row, st.util,
 					LEFT);
-			shr_table_set_value_double(t, ++col, row, util, LEFT);
 
 			shr_table_add_row(t, row);
 		}
@@ -742,8 +393,7 @@ static int stdout_top_print_nshead_stat(FILE *stream, struct libnvme_subsystem *
 	int ret = 0;
 	struct libnvme_ns *n;
 	struct libnvme_path *p;
-	double r_iops, w_iops, r_lat, w_lat, r_bw, w_bw, util;
-	unsigned int inflights;
+	struct nvme_iostat st;
 	int col, row, npaths;
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
@@ -783,24 +433,20 @@ static int stdout_top_print_nshead_stat(FILE *stream, struct libnvme_subsystem *
 		long io_fail_no_available_path_count;
 
 		npaths = 0;
-		r_iops = r_lat = r_bw = 0;
-		w_iops = w_lat = w_bw = 0;
-		util = inflights = 0;
+		nvme_iostat_ns(n, &st);
 
-		nvme_ns_calc_stat(n,
-				&r_iops, &w_iops,
-				&r_lat, &w_lat,
-				&r_bw, &w_bw,
-				&util, &inflights);
+		nvme_iostat_format_iops(st.r_iops, r_iops_str,
+				sizeof(r_iops_str));
+		nvme_iostat_format_iops(st.w_iops, w_iops_str,
+				sizeof(w_iops_str));
 
-		nvme_format_iops(r_iops, r_iops_str, sizeof(r_iops_str));
-		nvme_format_iops(w_iops, w_iops_str, sizeof(w_iops_str));
+		nvme_iostat_format_bw(st.r_bw, r_bw_str, sizeof(r_bw_str));
+		nvme_iostat_format_bw(st.w_bw, w_bw_str, sizeof(w_bw_str));
 
-		nvme_format_bw(r_bw, r_bw_str, sizeof(r_bw_str));
-		nvme_format_bw(w_bw, w_bw_str, sizeof(w_bw_str));
-
-		nvme_format_lat(r_lat, r_clat_str, sizeof(r_clat_str));
-		nvme_format_lat(w_lat, w_clat_str, sizeof(w_clat_str));
+		nvme_iostat_format_lat(st.r_lat, r_clat_str,
+				sizeof(r_clat_str));
+		nvme_iostat_format_lat(st.w_lat, w_clat_str,
+				sizeof(w_clat_str));
 
 		libnvme_namespace_for_each_path(n, p)
 			npaths++;
@@ -833,8 +479,8 @@ static int stdout_top_print_nshead_stat(FILE *stream, struct libnvme_subsystem *
 		shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-		shr_table_set_value_unsigned(t, ++col, row, inflights, LEFT);
-		shr_table_set_value_double(t, ++col, row, util, LEFT);
+		shr_table_set_value_unsigned(t, ++col, row, st.inflights, LEFT);
+		shr_table_set_value_double(t, ++col, row, st.util, LEFT);
 
 		shr_table_add_row(t, row);
 	}
@@ -851,9 +497,8 @@ static int stdout_top_print_path_perf(FILE *stream, struct libnvme_subsystem *s)
 	struct libnvme_ns *n;
 	struct libnvme_path *p;
 	struct libnvme_ctrl *c;
-	unsigned int inflights;
 	int row, col;
-	double util, r_iops, w_iops, r_lat, w_lat, r_bw, w_bw;
+	struct nvme_iostat st;
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
 	char r_bw_str[16], w_bw_str[16];
@@ -896,26 +541,22 @@ static int stdout_top_print_path_perf(FILE *stream, struct libnvme_subsystem *s)
 	libnvme_subsystem_for_each_ns(s, n) {
 		first = true;
 		libnvme_namespace_for_each_path(n, p) {
-			r_iops = r_lat = r_bw = 0;
-			w_iops = w_lat = w_bw = 0;
-			util = inflights = 0;
+			nvme_iostat_path(p, &st);
 
-			nvme_path_calc_stat(p,
-					&r_iops, &w_iops,
-					&r_lat, &w_lat,
-					&r_bw, &w_bw,
-					&util, &inflights);
-
-			nvme_format_iops(r_iops, r_iops_str,
+			nvme_iostat_format_iops(st.r_iops, r_iops_str,
 					sizeof(r_iops_str));
-			nvme_format_iops(w_iops, w_iops_str,
+			nvme_iostat_format_iops(st.w_iops, w_iops_str,
 					sizeof(w_iops_str));
 
-			nvme_format_bw(r_bw, r_bw_str, sizeof(r_bw_str));
-			nvme_format_bw(w_bw, w_bw_str, sizeof(w_bw_str));
+			nvme_iostat_format_bw(st.r_bw, r_bw_str,
+					sizeof(r_bw_str));
+			nvme_iostat_format_bw(st.w_bw, w_bw_str,
+					sizeof(w_bw_str));
 
-			nvme_format_lat(r_lat, r_clat_str, sizeof(r_clat_str));
-			nvme_format_lat(w_lat, w_clat_str, sizeof(w_clat_str));
+			nvme_iostat_format_lat(st.r_lat, r_clat_str,
+					sizeof(r_clat_str));
+			nvme_iostat_format_lat(st.w_lat, w_clat_str,
+					sizeof(w_clat_str));
 
 			/* get controller associated with the path */
 			c = libnvme_path_get_ctrl(p);
@@ -973,8 +614,9 @@ static int stdout_top_print_path_perf(FILE *stream, struct libnvme_subsystem *s)
 			shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
 			shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
 			shr_table_set_value_unsigned(t, ++col, row,
-					inflights, LEFT);
-			shr_table_set_value_double(t, ++col, row, util, LEFT);
+					st.inflights, LEFT);
+			shr_table_set_value_double(t, ++col, row, st.util,
+					LEFT);
 
 			shr_table_add_row(t, row);
 		}
@@ -1014,52 +656,14 @@ static void  stdout_top_print_subsys_topology_config(FILE *stream,
 	fprintf(stream, "\n");
 }
 
-/*
- * A namespace or a path may go away while it is shown, e.g. at a failover:
- * its stats are zero until the topology is refreshed. libnvme gives no
- * rates for a sample which failed.
- */
 static void stdout_top_update_stat(struct libnvme_subsystem *s)
 {
-	struct libnvme_ctrl *c;
-	struct libnvme_ns *n;
-	struct libnvme_path *p;
-
-	if (nvme_is_multipath(s)) {
-		libnvme_subsystem_for_each_ns(s, n) {
-			libnvme_ns_update_stat(n, true);
-
-			libnvme_namespace_for_each_path(n, p)
-				libnvme_path_update_stat(p, true);
-		}
-	} else {
-		libnvme_subsystem_for_each_ctrl(s, c) {
-			libnvme_ctrl_for_each_ns(c, n)
-				libnvme_ns_update_stat(n, true);
-		}
-	}
+	nvme_iostat_update_subsys(s, nvme_is_multipath(s));
 }
 
 static void stdout_top_reset_stat(struct libnvme_subsystem *s)
 {
-	struct libnvme_ctrl *c;
-	struct libnvme_ns *n;
-	struct libnvme_path *p;
-
-	if (nvme_is_multipath(s)) {
-		libnvme_subsystem_for_each_ns(s, n) {
-			libnvme_ns_reset_stat(n);
-
-			libnvme_namespace_for_each_path(n, p)
-				libnvme_path_reset_stat(p);
-		}
-	} else {
-		libnvme_subsystem_for_each_ctrl(s, c) {
-
-			libnvme_ctrl_for_each_ns(c, n)
-				libnvme_ns_reset_stat(n);
-		}
-	}
+	nvme_iostat_reset_subsys(s, nvme_is_multipath(s));
 }
 
 static int stdout_top_print_subsys_topology(struct dashboard_ctx *db_ctx,
@@ -1353,9 +957,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	struct libnvme_ns *n;
 	struct libnvme_path *p;
 	int i, row, col, num_ns, num_path, num_ctrl;
-	double r_iops, w_iops;
-	double r_bw, w_bw;
-	double max_rlat, max_wlat, max_util;
+	struct nvme_iostat aggr, st;
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
@@ -1406,10 +1008,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	for (i = 0; i < num_subsys; i++) {
 		s = subsys_arr[i];
 		num_ctrl = num_ns = num_path = 0;
-		r_iops = w_iops = 0;
-		r_bw = w_bw = 0;
-		max_rlat = max_wlat = 0;
-		max_util = 0;
+		aggr = (struct nvme_iostat){ 0 };
 		libnvme_subsystem_get_iopolicy(s, &iopolicy, "NA");
 
 		libnvme_subsystem_for_each_ctrl(s, c)
@@ -1424,34 +1023,32 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 				libnvme_namespace_for_each_path(n, p)
 					num_path++;
 
-				nvme_ns_calc_aggr_stat(n,
-						&r_iops, &w_iops,
-						&r_bw, &w_bw,
-						&max_rlat, &max_wlat,
-						&max_util);
+				nvme_iostat_ns(n, &st);
+				nvme_iostat_aggr(&aggr, &st);
 			}
 		} else {
 			libnvme_subsystem_for_each_ctrl(s, c) {
 				libnvme_ctrl_for_each_ns(c, n) {
 					num_ns++;
 
-					nvme_ns_calc_aggr_stat(n,
-							&r_iops, &w_iops,
-							&r_bw, &w_bw,
-							&max_rlat, &max_wlat,
-							&max_util);
+					nvme_iostat_ns(n, &st);
+					nvme_iostat_aggr(&aggr, &st);
 				}
 			}
 		}
 
-		nvme_format_iops(r_iops, r_iops_str, sizeof(r_iops_str));
-		nvme_format_iops(w_iops, w_iops_str, sizeof(w_iops_str));
+		nvme_iostat_format_iops(aggr.r_iops, r_iops_str,
+				sizeof(r_iops_str));
+		nvme_iostat_format_iops(aggr.w_iops, w_iops_str,
+				sizeof(w_iops_str));
 
-		nvme_format_bw(r_bw, r_bw_str, sizeof(r_bw_str));
-		nvme_format_bw(w_bw, w_bw_str, sizeof(w_bw_str));
+		nvme_iostat_format_bw(aggr.r_bw, r_bw_str, sizeof(r_bw_str));
+		nvme_iostat_format_bw(aggr.w_bw, w_bw_str, sizeof(w_bw_str));
 
-		nvme_format_lat(max_rlat, r_clat_str, sizeof(r_clat_str));
-		nvme_format_lat(max_wlat, w_clat_str, sizeof(w_clat_str));
+		nvme_iostat_format_lat(aggr.r_lat, r_clat_str,
+				sizeof(r_clat_str));
+		nvme_iostat_format_lat(aggr.w_lat, w_clat_str,
+				sizeof(w_clat_str));
 
 		row = shr_table_get_row_id(t);
 		if (row < 0) {
@@ -1474,7 +1071,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-		shr_table_set_value_double(t, ++col, row, max_util, LEFT);
+		shr_table_set_value_double(t, ++col, row, aggr.util, LEFT);
 
 		shr_table_add_row(t, row);
 	}

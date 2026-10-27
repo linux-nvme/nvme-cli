@@ -87,3 +87,14 @@ test_regs = executable(
 )
 
 test('nvme-cli - regs', test_regs, suite: 'unit')
+
+if want_top
+    test_iostat = executable(
+        'test-iostat',
+        ['test-iostat.c', '../../../src/nvme-iostat.c'],
+        include_directories: '../../../src',
+        dependencies: [config_dep, libnvme_dep],
+    )
+
+    test('nvme-cli - iostat', test_iostat, suite: 'unit')
+endif

@@ -64,5 +64,5 @@ if want_fabrics
 endif
 
 if want_top
-    sources += 'src/nvme-print-stdout-top.c'
+    sources += ['src/nvme-iostat.c', 'src/nvme-print-stdout-top.c']
 endif
