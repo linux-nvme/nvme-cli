@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# The linters for nvme-mcp: ruff check and mypy, run from this directory
+# or with meson compile lint-mcp-tool.
+
+[project]
+name = "nvme-mcp"
+version = "0.1.0"
+description = "MCP server which lets an agent watch NVMe multipath I/O"
+requires-python = ">=3.10"
+license = { text = "GPL-2.0-or-later" }
+# Pure stdlib
+dependencies = []
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+extend-include = ["nvme-mcp"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "W",
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "SIM",  # simplify
+    "RUF",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["nvme_mcp", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# its start runs with old Pythons, to find a new one
+"nvme-mcp" = ["UP031", "UP036"]
