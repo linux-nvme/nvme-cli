@@ -1215,6 +1215,12 @@ static void on_job_done(const char *unit_name, bool success,
 
 			if (devname)
 				dc_connected(e, devname);
+		} else if (!e->devname) {
+			__cleanup_free char *devname =
+				unit_read_devid(unit_name);
+
+			if (devname)
+				e->devname = strdup(devname);
 		}
 		return;
 	}
