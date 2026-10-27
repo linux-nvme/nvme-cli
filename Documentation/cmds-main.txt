@@ -309,3 +309,6 @@ linknvme:nvme-verify[1]::
 
 linknvme:nvme-show-topology[1]::
 	Show NVMe topology
+
+linknvme:nvme-top[1]::
+	Show live I/O statistics of the NVMe subsystems

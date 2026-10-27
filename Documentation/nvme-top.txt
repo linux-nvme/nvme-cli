@@ -1,0 +1,85 @@
+nvme-top(1)
+===========
+
+NAME
+----
+nvme-top - Show live I/O statistics of the NVMe subsystems
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'top' [--delay=<seconds> | -d <seconds>]
+
+DESCRIPTION
+-----------
+Shows the subsystems with their I/O rates, refreshed every few seconds,
+like top(1). Enter shows the namespaces, the paths and the controllers
+of a subsystem, with their rates, the retries and errors, the
+multipath failovers and the controller resets and reconnects.
+
+With '--output-format=json', takes two samples '--delay' seconds apart,
+prints the rates and the counters as one JSON document, and exits. This
+is the output for scripts and monitoring tools.
+
+The rates come from the block layer statistics of the namespaces and the
+paths. A rate is per second, a latency is the average time of an I/O in
+milliseconds, and the utilization is the share of the interval the
+device was busy. The rates of a subsystem and a controller are the sum
+of those of their namespaces or paths, the latency and the utilization
+the highest of them.
+
+OPTIONS
+-------
+-d <seconds>::
+--delay=<seconds>::
+	The time between two refreshes, or between the two samples of the
+	JSON output. The default is 1.
+
+include::global-options.txt[]
+
+JSON OUTPUT
+-----------
+The document has the 'Interval' in seconds and a 'Subsystems' array.
+A subsystem has its 'Name', 'NQN', 'HostNQN', 'IOPolicy', 'Model',
+'Serial', 'Firmware' and 'Type', its 'Stats', a 'Namespaces' array and
+a 'Controllers' array.
+
+A namespace of a multipath subsystem has its 'Name', 'NSID', the
+'RequeueIO' and 'FailIO' counts of the I/O which found no usable path,
+its 'Stats' and a 'Paths' array. A path has its 'Name', 'Controller',
+'ANAState', 'NUMANodes', 'Qdepth', the 'Retries', 'Failovers' and
+'Errors' counts and its 'Stats'.
+
+A namespace of a subsystem without multipath has its 'Name', 'NSID',
+'Controller', the 'Retries' and 'Errors' counts and its 'Stats'.
+
+A controller has its 'Name', 'Transport', 'Address', 'State',
+'NUMANode', the number of 'Paths' of a multipath subsystem, the
+'Resets', 'Reconnects' and 'Errors' counts and its 'Stats'.
+
+The 'Stats' of a namespace or a path are 'ReadIOPS', 'WriteIOPS',
+'ReadLatencyMs', 'WriteLatencyMs', 'ReadBytesPerSec',
+'WriteBytesPerSec', 'Inflights' and 'UtilPercent'. Those of a subsystem
+or a controller have 'MaxReadLatencyMs', 'MaxWriteLatencyMs' and
+'MaxUtilPercent' instead of the latencies and the utilization, and no
+'Inflights'.
+
+A counter or an attribute the kernel does not provide is left out.
+
+EXAMPLES
+--------
+* Watch the subsystems, refreshed every 2 seconds:
++
+------------
+# nvme top --delay=2
+------------
+
+* Print the rates over 5 seconds as JSON:
++
+------------
+# nvme top --delay=5 --output-format=json
+------------
+
+NVME
+----
+Part of the nvme-user suite

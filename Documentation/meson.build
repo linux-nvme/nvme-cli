@@ -389,6 +389,7 @@ adoc_sources_deprecated = [
     'nvme-supported-cap-config-log',
     'nvme-telemetry-log',
     'nvme-tls-key',
+    'nvme-top',
 ]
 adoc_sources_man1 += adoc_sources_deprecated
 
