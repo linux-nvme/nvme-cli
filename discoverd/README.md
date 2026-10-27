@@ -38,7 +38,7 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 
 nvme-discoverd reads two independent files:
 
-- **`nvme-discoverd.conf`** — the daemon's own knobs: `[Global]` (`nbft`, `debug-level`) and `[Discovery]` (`epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes`, `dc-giveup-timeout`, `zeroconf`). Entirely optional; a missing file or key just keeps its default.
+- **`nvme-discoverd.conf`** — the daemon's own knobs: `[Global]` (`nbft`, `debug-level`) and `[Discovery]` (`epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes`, `dc-giveup-timeout`, `zeroconf`). Entirely optional; a missing file or key just keeps its default. The build installs a commented `nvme-discoverd.conf.sample` to copy from.
 - **The shared NVMe-oF fabrics configuration** (`nvme-fabrics.conf(5)`) — which Discovery Controllers and subsystems to connect, host identity, per-connection parameters. This is the same file `nvme connect-all`, `nvme discover`, and `nvme-stas` read. nvme-discoverd has no private connection format of its own.
 
 Both are reloaded on `SIGHUP`. Nothing already connected is ever disconnected by a reload.

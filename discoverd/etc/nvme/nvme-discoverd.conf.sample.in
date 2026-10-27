@@ -1,5 +1,8 @@
-# nvme-discoverd configuration
-# @SYSCONFDIR@/nvme/nvme-discoverd.conf
+# Example nvme-discoverd configuration.
+#
+# This file is NOT read by nvme-discoverd -- it is a reference only. To
+# change a setting, copy it to @SYSCONFDIR@/nvme/nvme-discoverd.conf and
+# edit the copy.
 #
 # All options are optional and have the defaults shown below.
 # Connections managed by nvme-discoverd are configured in the shared

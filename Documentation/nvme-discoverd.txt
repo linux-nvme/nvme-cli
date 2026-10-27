@@ -147,6 +147,11 @@ FILES
 @SYSCONFDIR@/nvme/nvme-discoverd.conf::
 	The daemon's own configuration; see CONFIGURATION.
 
+@SYSCONFDIR@/nvme/nvme-discoverd.conf.sample::
+	A commented example of nvme-discoverd.conf with every knob at its
+	default. It is not read; copy it to nvme-discoverd.conf to change a
+	setting.
+
 @SYSCONFDIR@/nvme/nvme-fabrics.conf, @SYSCONFDIR@/nvme/nvme-fabrics.conf.d/*.conf::
 	The connections nvme-discoverd manages; see nvme-fabrics.conf(5).
 
