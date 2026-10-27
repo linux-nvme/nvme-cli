@@ -16480,17 +16480,17 @@ _nvme () {
 			;;
 
 		(top)
-			_nvme_opt_vals "--output-format -o" "normal" \
+			_nvme_opt_vals "--output-format -o" "normal json" \
 			               "--output-format-version" "1 2" \
 			               "--timeout" "infinite -1" && return
 			local _top
 			_top=(
-				--delay=':refresh interval in seconds'
+				--delay=':refresh or JSON sampling interval in seconds'
 				-d':alias for --delay'
 				--dry-run':show command instead of executing'
 				--no-ioctl-probing':disable 64-bit IOCTL support probing'
 				--no-retries':disable retry logic on errors'
-				--output-format=':Output format: normal'
+				--output-format=':Output format: normal|json'
 				-o':alias for --output-format'
 				--output-format-version=':output format version: 1|2'
 				--quiet':suppress informational output'
