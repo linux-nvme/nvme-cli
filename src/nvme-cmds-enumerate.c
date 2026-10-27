@@ -169,7 +169,7 @@ static int top(int argc, char **argv, struct command *acmd,
 	int err;
 	nvme_print_flags_t flags = 0;
 	const char *desc = "show nvme top output";
-	const char *delay = "refresh interval in seconds";
+	const char *delay = "refresh or JSON sampling interval in seconds";
 
 	struct config {
 		int delay;
@@ -195,10 +195,13 @@ static int top(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	err = shr_install_sigwinch_handler();
-	if (err) {
-		nvme_show_error("failed to install sig handler for SIGWINCH");
-		return err;
+	if (!(flags & JSON)) {
+		err = shr_install_sigwinch_handler();
+		if (err) {
+			nvme_show_error(
+				"failed to install sig handler for SIGWINCH");
+			return err;
+		}
 	}
 
 	nvme_show_top(flags, cfg.delay);
@@ -264,7 +267,7 @@ static struct command top_cmd = {
 	.name = "top",
 	.help = "nvme top",
 	.fn = top,
-	.output_formats = OUTPUT_FORMATS_NORMAL,
+	.output_formats = NORMAL | JSON,
 	.device = COMMAND_NO_DEVICE,
 	.needs_root = true,
 };
