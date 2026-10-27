@@ -96,9 +96,12 @@ install_emptydir(
     install_tag: 'nvme-keysd',
 )
 
+# Every setting has a default, so the daemon needs no configuration file.
+# Install a commented sample, like nvme-fabrics.conf.sample: installing the
+# live file would overwrite the admin's settings on every install.
 configure_file(
-    input: 'etc/nvme/nvme-keysd.conf.in',
-    output: 'nvme-keysd.conf',
+    input: 'etc/nvme/nvme-keysd.conf.sample.in',
+    output: 'nvme-keysd.conf.sample',
     configuration: substs,
     install: true,
     install_dir: sysconfdir / 'nvme',

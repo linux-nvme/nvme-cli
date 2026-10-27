@@ -37,7 +37,7 @@ nvme-keysd-kmip:
 
 ## Configuration
 
-- **`nvme-keysd.conf`**: the daemon's own settings (`debug-level`) and the KMSes (`[kmip:<name>]`). Optional; a missing file or key keeps its default.
+- **`nvme-keysd.conf`**: the daemon's own settings (`debug-level`) and the KMSes (`[kmip:<name>]`). Optional; a missing file or key keeps its default. The build installs a commented `nvme-keysd.conf.sample` to copy from.
 - **The shared NVMe-oF fabrics configuration** (`nvme-fabrics.conf(5)`): which key belongs to which host and subsystem.
 
 Both are read at each start. `systemctl restart nvme-keysd` imports the keys again, and picks up new or changed credentials and KMIP keys.

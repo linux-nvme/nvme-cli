@@ -1,5 +1,8 @@
-# nvme-keysd configuration
-# @SYSCONFDIR@/nvme/nvme-keysd.conf
+# Example nvme-keysd configuration.
+#
+# This file is NOT read by nvme-keysd -- it is a reference only. To change
+# a setting, copy it to @SYSCONFDIR@/nvme/nvme-keysd.conf and edit the
+# copy.
 #
 # All options are optional and have the defaults shown below.
 # Which key belongs to which host and subsystem is configured in the shared
