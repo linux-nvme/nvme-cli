@@ -1014,42 +1014,30 @@ static void  stdout_top_print_subsys_topology_config(FILE *stream,
 	fprintf(stream, "\n");
 }
 
-static int stdout_top_update_stat(struct libnvme_subsystem *s)
+/*
+ * A namespace or a path may go away while it is shown, e.g. at a failover:
+ * its stats are zero until the topology is refreshed. libnvme gives no
+ * rates for a sample which failed.
+ */
+static void stdout_top_update_stat(struct libnvme_subsystem *s)
 {
 	struct libnvme_ctrl *c;
 	struct libnvme_ns *n;
 	struct libnvme_path *p;
-	int ret;
 
 	if (nvme_is_multipath(s)) {
 		libnvme_subsystem_for_each_ns(s, n) {
-			ret = libnvme_ns_update_stat(n, true);
-			if (ret < 0) {
-				nvme_show_error("Failed to update namespace stat");
-				return ret;
-			}
+			libnvme_ns_update_stat(n, true);
 
-			libnvme_namespace_for_each_path(n, p) {
-				ret = libnvme_path_update_stat(p, true);
-				if (ret < 0) {
-					nvme_show_error("Failed to update path stat");
-					return ret;
-				}
-			}
+			libnvme_namespace_for_each_path(n, p)
+				libnvme_path_update_stat(p, true);
 		}
 	} else {
 		libnvme_subsystem_for_each_ctrl(s, c) {
-			libnvme_ctrl_for_each_ns(c, n) {
-				ret = libnvme_ns_update_stat(n, true);
-				if (ret < 0) {
-					nvme_show_error("Failed to update namespace stat");
-					return ret;
-				}
-			}
+			libnvme_ctrl_for_each_ns(c, n)
+				libnvme_ns_update_stat(n, true);
 		}
 	}
-
-	return 0;
 }
 
 static void stdout_top_reset_stat(struct libnvme_subsystem *s)
@@ -1080,9 +1068,7 @@ static int stdout_top_print_subsys_topology(struct dashboard_ctx *db_ctx,
 	int ret = 0;
 	bool multipath = nvme_is_multipath(s);
 
-	ret = stdout_top_update_stat(s);
-	if (ret)
-		return ret;
+	stdout_top_update_stat(s);
 
 	stdout_top_print_subsys_topology_config(stream, s);
 
@@ -1429,9 +1415,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		libnvme_subsystem_for_each_ctrl(s, c)
 			num_ctrl++;
 
-		ret = stdout_top_update_stat(s);
-		if (ret)
-			goto free_tbl;
+		stdout_top_update_stat(s);
 
 		if (nvme_is_multipath(s)) {
 			libnvme_subsystem_for_each_ns(s, n) {

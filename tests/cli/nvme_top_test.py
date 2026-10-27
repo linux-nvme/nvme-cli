@@ -123,6 +123,13 @@ class TestTop(unittest.TestCase):
                 os.unlink(state)
         self.check_subsystem_screen()
 
+    def test_path_without_stat(self) -> None:
+        """A path may go away while it is shown, e.g. at a failover"""
+        ctl = os.path.join(self.tmp.name,
+                           "sys/devices/virtual/nvme-fabrics/ctl")
+        os.unlink(os.path.join(ctl, "nvme0/nvme0c0n1/stat"))
+        self.check_subsystem_screen()
+
 
 if __name__ == "__main__":
     NVME, TARBALL = sys.argv[1], sys.argv[2]
