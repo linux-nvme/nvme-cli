@@ -4432,7 +4432,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 						libnvme_msg(ctx, LIBNVME_LOG_INFO,
 							"SSNS %d: connect with host_traddr=\"%s\" failed, success after omitting host_traddr\n",
 							(*ss)->index,
-							host_traddr);
+							hfi->tcp_info.ipaddr);
 				}
 
 				if (rr) {
