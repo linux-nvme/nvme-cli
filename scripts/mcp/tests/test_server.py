@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import datetime
 import io
 import json
 import tempfile
@@ -25,6 +26,8 @@ from nvme_mcp.server import (
 )
 
 DATA = Path(__file__).resolve().parent / 'data'
+# a wall clock time with milliseconds
+WALL = 1_800_000_000.25
 
 
 class FakeSystem(System):
@@ -258,6 +261,7 @@ class TestWatchTool(unittest.TestCase):
             self.system,
             sleep=self.system.sleep,
             clock=lambda: self.system.now,
+            wall=lambda: WALL + self.system.now,
         )
         resp = server.handle(
             request('tools/call', {'name': 'nvme_watch', 'arguments': args})
@@ -297,6 +301,16 @@ class TestWatchTool(unittest.TestCase):
             ],
         )
         self.assertNotIn('KernelLogError', report)
+
+    def test_watch_started_is_wall_clock_time(self) -> None:
+        # to line T up with the timestamps of other tools
+        report = self.watch([self.loop()], duration=2, interval=2)[
+            'structuredContent'
+        ]
+        started = datetime.datetime.fromisoformat(report['Started'])
+        self.assertIsNotNone(started.tzinfo)
+        # the scripted clock starts at 100 s
+        self.assertEqual(started.timestamp(), WALL + 100.0)
 
     def test_watch_without_kernel_log(self) -> None:
         self.kmsg.unlink()
