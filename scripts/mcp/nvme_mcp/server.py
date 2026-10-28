@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 import time
 from collections.abc import Callable
@@ -90,10 +91,12 @@ class Server:
         allow_iopolicy: bool = False,
         sleep: Callable[[float], None] = time.sleep,
         clock: Callable[[], float] = time.monotonic,
+        wall: Callable[[], float] = time.time,
     ):
         self.system = system
         self.sleep = sleep
         self.clock = clock
+        self.wall = wall
         self.counters = analysis.Counters()
         self.tools = {t.name: t for t in self._tools(allow_iopolicy)}
 
@@ -159,7 +162,9 @@ class Server:
                 'e.g. during a failover. Each path is summarized with its '
                 'transport, address, average IOPS and the seconds it had no '
                 'I/O. Times are seconds from the start, accurate to the '
-                'interval; objects which appear show up a sample late. Also '
+                'interval; Started is the wall clock time of the start (ISO '
+                '8601), to line them up with the times of other tools. '
+                'Objects which appear show up a sample late. Also '
                 'the kernel log lines about nvme during the watch, with the '
                 'time they were seen; repeated messages once, with a count. '
                 'Start the failover or the fault while the call runs, e.g. '
@@ -269,7 +274,7 @@ class Server:
             log = self.system.kernel_log()
         except NvmeError as e:
             log_error = str(e)
-        start = self.clock()
+        start, started = self.clock(), self.wall()
         try:
             for _ in range(max(1, duration // interval)):
                 try:
@@ -291,7 +296,12 @@ class Server:
                 'every sample failed: '
                 + '; '.join(e['Message'] for e in w.events[:3])
             )
-        report = w.report(self.clock() - start)
+        report = {
+            'Started': datetime.datetime.fromtimestamp(started)
+            .astimezone()
+            .isoformat(timespec='milliseconds'),
+            **w.report(self.clock() - start),
+        }
         if log is None:
             report['KernelLogError'] = log_error
         else:
