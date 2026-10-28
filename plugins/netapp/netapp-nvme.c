@@ -317,7 +317,7 @@ bad_log:
 }
 
 static void netapp_smdevice_json(struct json_object *devices, char *devname,
-		char *arrayname, char *volname, int nsid, char *nguid,
+		char *arrayname, char *volname, unsigned int nsid, char *nguid,
 		char *ctrl, char *astate, char *version, unsigned long long lba,
 		unsigned long long nsze, unsigned long long nuse)
 {
@@ -328,7 +328,7 @@ static void netapp_smdevice_json(struct json_object *devices, char *devname,
 	json_object_add_value_string(device_attrs, "Device", devname);
 	json_object_add_value_string(device_attrs, "Array_Name", arrayname);
 	json_object_add_value_string(device_attrs, "Volume_Name", volname);
-	json_object_add_value_int(device_attrs, "NSID", nsid);
+	json_object_add_value_uint(device_attrs, "NSID", nsid);
 	json_object_add_value_string(device_attrs, "Volume_ID", nguid);
 	json_object_add_value_string(device_attrs, "Controller", ctrl);
 	json_object_add_value_string(device_attrs, "Access_State", astate);
@@ -340,7 +340,7 @@ static void netapp_smdevice_json(struct json_object *devices, char *devname,
 }
 
 static void netapp_ontapdevice_json(struct json_object *devices, char *devname,
-		char *vsname, char *subsysname, char *nspath, int nsid,
+		char *vsname, char *subsysname, char *nspath, unsigned int nsid,
 		char *uuid, unsigned long long lba, char *version,
 		unsigned long long nsze, unsigned long long nuse)
 {
@@ -353,7 +353,7 @@ static void netapp_ontapdevice_json(struct json_object *devices, char *devname,
 	json_object_add_value_string(device_attrs, "Vserver", vsname);
 	json_object_add_value_string(device_attrs, "Subsystem", subsysname);
 	json_object_add_value_string(device_attrs, "Namespace_Path", nspath);
-	json_object_add_value_int(device_attrs, "NSID", nsid);
+	json_object_add_value_uint(device_attrs, "NSID", nsid);
 	json_object_add_value_string(device_attrs, "UUID", uuid);
 	json_object_add_value_uint64(device_attrs, "LBA_Size", lba);
 	json_object_add_value_uint64(device_attrs, "Namespace_Size", ns_size);
@@ -376,10 +376,10 @@ static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
 
 	char *formatstr = NULL;
 	char basestr[] =
-		"%s, Array Name %s, Volume Name %s, NSID %d, Volume ID %s, "
+		"%s, Array Name %s, Volume Name %s, NSID %u, Volume ID %s, "
 		"Controller %c, Access State %s, Size %s, Format %s, Version %s\n";
 	char columnstr[] =
-		"%-16s %-30s %-30s %4d %32s  %c   %-12s %-9s %-9s %-9s\n";
+		"%-16s %-30s %-30s %4u %32s  %c   %-12s %-9s %-9s %-9s\n";
 
 	if (format == NNORMAL)
 		formatstr = basestr;
@@ -456,8 +456,8 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 
 	char *formatstr = NULL;
 	char basestr[] =
-	    "%s, Array Name %s, Volume Name %s, NSID %d, Volume ID %s, Controller %c, Access State %s, %s\n";
-	char columnstr[] = "%-16s %-30s %-30s %4d %32s  %c   %-12s %9s\n";
+	    "%s, Array Name %s, Volume Name %s, NSID %u, Volume ID %s, Controller %c, Access State %s, %s\n";
+	char columnstr[] = "%-16s %-30s %-30s %4u %32s  %c   %-12s %9s\n";
 
 	if (format == NCOLUMN) {
 		/* print column headers and change the output string */
@@ -594,9 +594,9 @@ static void netapp_ontapdevices_print_verbose(struct ontapdevice_info *devices,
 
 	char *formatstr = NULL;
 	char basestr[] =
-		"%s, Vserver %s, Subsystem %s, Namespace Path %s, NSID %d, "
+		"%s, Vserver %s, Subsystem %s, Namespace Path %s, NSID %u, "
 		"UUID %s, Size %s, Used %s, Format %s, Version %s\n";
-	char columnstr[] = "%-16s %-25s %-25s %-50s %-4d %-38s %-9s %-9s %-9s %-9s\n";
+	char columnstr[] = "%-16s %-25s %-25s %-50s %-4u %-38s %-9s %-9s %-9s %-9s\n";
 
 	if (format == NNORMAL)
 		formatstr = basestr;
@@ -664,8 +664,8 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 
 	char *formatstr = NULL;
 	char basestr[] =
-		"%s, Vserver %s, Subsystem %s, Namespace Path %s, NSID %d, UUID %s, %s\n";
-	char columnstr[] = "%-16s %-25s %-25s %-50s %-4d %-38s %-9s\n";
+		"%s, Vserver %s, Subsystem %s, Namespace Path %s, NSID %u, UUID %s, %s\n";
+	char columnstr[] = "%-16s %-25s %-25s %-50s %-4u %-38s %-9s\n";
 
 	if (format == NNORMAL)
 		formatstr = basestr;
