@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+description = """A mount that systemd never stops at shutdown, like root. \
+With the skip-if-mounted build, the unit does not disconnect it."""
+action = "reboot"
+
+[build]
+stop_unit = true
+
+[setup]
+mount = "root-like"
+dirty_mb = 200
+
+[expect]
+disconnect = "skipped"
+log_recovery = false
+data_intact = true

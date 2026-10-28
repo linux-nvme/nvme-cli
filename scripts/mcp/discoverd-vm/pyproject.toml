@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# The linters for discoverd-vm-mcp: ruff check and ruff format, run from
+# this directory. Same rules as nvme-cli's scripts/mcp.
+
+[project]
+name = "discoverd-vm-mcp"
+version = "0.1.0"
+description = "MCP server which tests a system shutdown with nvme-discoverd connection units in a VM"
+requires-python = ">=3.11"
+license = { text = "GPL-2.0-or-later" }
+dependencies = []
+
+[tool.ruff]
+line-length = 79
+target-version = "py311"
+extend-include = ["discoverd-vm-mcp"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["dvm_mcp", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# its start runs with old Pythons, to find a new one
+"discoverd-vm-mcp" = ["UP031", "UP036", "E402"]

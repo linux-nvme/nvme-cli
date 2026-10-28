@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+description = """A _netdev mount: systemd unmounts it before the unit \
+stops, and the unit disconnects after the unmount (#4332). Any build."""
+action = "reboot"
+
+[setup]
+mount = "netdev"
+dirty_mb = 200
+
+[expect]
+disconnect = "after-unmount"
+log_recovery = false
+data_intact = true

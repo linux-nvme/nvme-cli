@@ -33,3 +33,5 @@ if ruff.found() and mypy_mcp.found()
 else
     message('ruff or mypy not found: no lint-mcp-tool target')
 endif
+
+subdir('discoverd-vm')

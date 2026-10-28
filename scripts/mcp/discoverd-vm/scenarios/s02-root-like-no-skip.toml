@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+description = """The same mount without the skip-if-mounted build (#4332 \
+only): the unit disconnects the controller while it is mounted. Shows that \
+the test catches the bug."""
+action = "reboot"
+
+[build]
+stop_unit = false
+
+[setup]
+mount = "root-like"
+dirty_mb = 200
+
+[expect]
+disconnect = "while-mounted"

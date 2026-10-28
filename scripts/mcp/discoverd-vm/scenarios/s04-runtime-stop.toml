@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+description = """Stopping the unit at runtime still disconnects, even with \
+the file system mounted: only a shutdown skips the disconnect."""
+action = "stop-unit"
+
+[build]
+stop_unit = true
+
+[setup]
+mount = "root-like"
+dirty_mb = 20
+
+[expect]
+disconnect = "done"

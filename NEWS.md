@@ -279,6 +279,15 @@
   subsystem and compares the policies under a running workload. See
   `scripts/mcp/README.md`.
 
+* `scripts/mcp/discoverd-vm/discoverd-vm-mcp` is an MCP server which
+  tests, in a VM, what a system shutdown does to the nvme-discoverd
+  connection units and the file systems mounted on them. It builds a
+  Fedora VM with a loopback nvme-tcp target, then runs scenarios: a
+  file system mounted in a given way, dirty data, a reboot or a stop of
+  the connection unit. It checks when the controller was disconnected
+  and whether the data survived. See
+  `scripts/mcp/discoverd-vm/README.md`.
+
 * `nvme get-reg --register=NAME[,NAME...]` and `nvme set-reg
   --register=NAME --value=VAL` name the registers, with completion of
   the names, and `--offset` of `get-reg`, `set-reg`, `get-property` and
