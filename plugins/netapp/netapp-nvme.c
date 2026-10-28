@@ -239,7 +239,7 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	/* get the vserver name tlv */
 	tlv = *(__u8 *)&log_data[32];
 	if (tlv == ONTAP_VSERVER_NAME_TLV) {
-		label_len = (size_t)(*(__u16 *)&log_data[34]) * 4;
+		label_len = (size_t)le16_to_cpu(*(__le16 *)&log_data[34]) * 4;
 		if (36 + label_len > log_len)
 			goto bad_log;
 		vserver_name = (char *)&log_data[36];
@@ -257,7 +257,7 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	/* get the volume name tlv */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_VOLUME_NAME_TLV) {
-		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
+		label_len = (size_t)le16_to_cpu(*(__le16 *)&log_data[j]) * 4;
 		if (j + 2 + label_len > log_len)
 			goto bad_log;
 		volume_name = (char *)&log_data[j + 2];
@@ -275,7 +275,7 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	/* get the namespace name tlv */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_NS_NAME_TLV) {
-		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
+		label_len = (size_t)le16_to_cpu(*(__le16 *)&log_data[j]) * 4;
 		if (j + 2 + label_len > log_len)
 			goto bad_log;
 		namespace_name = (char *)&log_data[j + 2];
@@ -294,7 +294,7 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_NS_PATH_TLV) {
 		nspath_tlv_available = true;
-		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
+		label_len = (size_t)le16_to_cpu(*(__le16 *)&log_data[j]) * 4;
 		if (j + 2 + label_len > log_len)
 			goto bad_log;
 		namespace_path = (char *)&log_data[j + 2];
