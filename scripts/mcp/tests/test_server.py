@@ -102,7 +102,8 @@ class TestProtocol(unittest.TestCase):
     def test_tools_read_only(self) -> None:
         tools = self.call('tools/list')['result']['tools']
         self.assertEqual(
-            [t['name'] for t in tools], ['nvme_snapshot', 'nvme_path_health']
+            [t['name'] for t in tools],
+            ['nvme_snapshot', 'nvme_path_health', 'nvme_watch'],
         )
         for t in tools:
             self.assertTrue(t['annotations']['readOnlyHint'])
@@ -210,6 +211,87 @@ class TestTools(unittest.TestCase):
         )['result']
         self.assertTrue(res['isError'])
         self.assertEqual(self.system.policy, 'numa')
+
+
+class ScriptedSystem(System):
+    """Hands out a scripted series of snapshots and failures, and moves a
+    fake clock by the interval of each"""
+
+    def __init__(self, script: list[dict[str, Any] | None]) -> None:
+        super().__init__()
+        self.script = script
+        self.now = 100.0
+        self.intervals: list[int] = []
+
+    def snapshot(self, interval: int) -> dict[str, Any]:
+        self.intervals.append(interval)
+        snap = self.script.pop(0)
+        if snap is None:
+            raise NvmeError('controller nvme1 went away')
+        self.now += interval
+        return snap
+
+    def sleep(self, seconds: float) -> None:
+        self.now += seconds
+
+
+class TestWatchTool(unittest.TestCase):
+    def watch(
+        self, script: list[dict[str, Any] | None], **args: Any
+    ) -> dict[str, Any]:
+        self.system = ScriptedSystem(script)
+        server = Server(
+            self.system,
+            sleep=self.system.sleep,
+            clock=lambda: self.system.now,
+        )
+        resp = server.handle(
+            request('tools/call', {'name': 'nvme_watch', 'arguments': args})
+        )
+        assert resp is not None
+        result: dict[str, Any] = resp['result']
+        return result
+
+    def loop(self, state: str = 'live') -> dict[str, Any]:
+        snap: dict[str, Any] = json.loads(
+            (DATA / 'loop-3-paths.json').read_text()
+        )
+        snap['Subsystems'][0]['Controllers'][1]['State'] = state
+        return snap
+
+    def test_watch(self) -> None:
+        res = self.watch(
+            [self.loop(), self.loop('resetting'), self.loop()],
+            duration=6,
+            interval=2,
+        )
+        self.assertFalse(res['isError'])
+        report = res['structuredContent']
+        self.assertEqual(self.system.intervals, [2, 2, 2])
+        self.assertEqual((report['Samples'], report['Duration']), (3, 6.0))
+        self.assertEqual(
+            [(e['T'], e['Name'], e['To']) for e in report['Events']],
+            [(4.0, 'nvme1', 'resetting'), (6.0, 'nvme1', 'live')],
+        )
+
+    def test_watch_goes_on_after_failure(self) -> None:
+        report = self.watch(
+            [self.loop(), None, self.loop('connecting')], duration=3
+        )['structuredContent']
+        self.assertEqual(report['FailedSamples'], 1)
+        self.assertEqual(
+            [(e['T'], e['Event']) for e in report['Events']],
+            [(2.0, 'sample-failed'), (3.0, 'state')],
+        )
+
+    def test_watch_all_failed(self) -> None:
+        res = self.watch([None, None], duration=2)
+        self.assertTrue(res['isError'])
+        self.assertIn('went away', res['content'][0]['text'])
+
+    def test_watch_limits(self) -> None:
+        for args in ({'duration': 0}, {'duration': 601}, {'interval': 11}):
+            self.assertTrue(self.watch([], **args)['isError'], args)
 
 
 if __name__ == '__main__':

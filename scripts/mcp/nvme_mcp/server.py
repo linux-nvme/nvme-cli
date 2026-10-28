@@ -14,7 +14,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import IO, Any
 
-from . import __version__, analysis
+from . import __version__, analysis, watch
 from .nvme import IOPOLICIES, MAX_INTERVAL, NvmeError, System
 
 # The protocol versions this server speaks, newest first
@@ -31,8 +31,9 @@ samples the block layer statistics for 'interval' seconds, so it takes
 that long. Rates are per second, latencies in milliseconds. The counters
 (retries, failovers, errors, resets, reconnects) are totals since boot;
 nvme_path_health reports how much they grew since its previous call.
-The I/O policy tools measure the load which runs anyway: they start no
-I/O themselves."""
+nvme_watch samples back to back for a while and reports what changed:
+use it during a failover, a reset or a port toggle. The tools measure the
+load which runs anyway: they start no I/O themselves."""
 
 _INTERVAL = {
     'type': 'integer',
@@ -41,6 +42,8 @@ _INTERVAL = {
     'default': 2,
     'description': 'seconds to sample the I/O statistics over',
 }
+# The longest a watch may run
+MAX_WATCH = 600
 _SUBSYSTEM = {
     'type': 'string',
     'pattern': '^nvme-subsys[0-9]+$',
@@ -86,9 +89,11 @@ class Server:
         system: System,
         allow_iopolicy: bool = False,
         sleep: Callable[[float], None] = time.sleep,
+        clock: Callable[[], float] = time.monotonic,
     ):
         self.system = system
         self.sleep = sleep
+        self.clock = clock
         self.counters = analysis.Counters()
         self.tools = {t.name: t for t in self._tools(allow_iopolicy)}
 
@@ -139,6 +144,43 @@ class Server:
                     }
                 },
                 self._path_health,
+            ),
+            Tool(
+                'nvme_watch',
+                'Samples the NVMe subsystems back to back for a duration and '
+                'reports what changed, with the second it was seen: '
+                'controller states (live, resetting, connecting, deleting), '
+                'ANA states, paths which stopped or started to carry I/O, '
+                'controllers, paths and namespaces which went away or '
+                'appeared, and counters which went up, once for a run of '
+                'rises. I/O starts with 3 busy samples in a row, so a burst '
+                'like the partition scan after a reconnect is no load. Stalls '
+                'are the periods a namespace had no I/O after it had a load, '
+                'e.g. during a failover. Each path is summarized with its '
+                'transport, address, average IOPS and the seconds it had no '
+                'I/O. Times are seconds from the start, accurate to the '
+                'interval; objects which appear show up a sample late. Start '
+                'the failover or the fault while the call runs, e.g. from a '
+                'parallel tool call.',
+                {
+                    'properties': {
+                        'duration': {
+                            'type': 'integer',
+                            'minimum': 1,
+                            'maximum': MAX_WATCH,
+                            'default': 30,
+                            'description': 'seconds to watch',
+                        },
+                        'interval': {
+                            **_INTERVAL,
+                            'maximum': 10,
+                            'default': 1,
+                            'description': 'seconds per sample',
+                        },
+                        'subsystem': _SUBSYSTEM,
+                    }
+                },
+                self._watch,
             ),
         ]
         if allow_iopolicy:
@@ -210,6 +252,32 @@ class Server:
         return analysis.health(
             snap, self.counters, limits, args.get('subsystem')
         )
+
+    def _watch(self, args: dict[str, Any]) -> dict[str, Any]:
+        duration = _int(args, 'duration', 30)
+        interval = _int(args, 'interval', 1)
+        if not 1 <= duration <= MAX_WATCH:
+            raise ToolError(f'duration must be from 1 to {MAX_WATCH}')
+        if not 1 <= interval <= 10:
+            raise ToolError('interval must be from 1 to 10')
+        w = watch.Watch(interval, subsystem=args.get('subsystem'))
+        start = self.clock()
+        for _ in range(max(1, duration // interval)):
+            try:
+                snap = self.system.snapshot(interval)
+            except NvmeError as e:
+                # e.g. a controller went away during the scan: go on,
+                # the event marks the end of the gap it leaves
+                self.sleep(interval)
+                w.fail(self.clock() - start, str(e))
+                continue
+            w.add(self.clock() - start, snap)
+        if not w.samples:
+            raise ToolError(
+                'every sample failed: '
+                + '; '.join(e['Message'] for e in w.events[:3])
+            )
+        return w.report(self.clock() - start)
 
     def _set_iopolicy(self, args: dict[str, Any]) -> dict[str, Any]:
         sub, policy = _str(args, 'subsystem'), _str(args, 'policy')
