@@ -1986,4 +1986,54 @@ cleanup:
 	return rc;
 }
 
+__shr_public int libnvme_mi_pcie_xfer(struct libnvme_mi_ep *ep,
+		      struct nvme_mi_pcie_req_hdr *pcie_req,
+		      size_t req_data_size,
+		      struct nvme_mi_pcie_resp_hdr *pcie_resp,
+		      size_t *resp_data_size)
+{
+	int rc;
+	struct libnvme_mi_req req;
+	struct libnvme_mi_resp resp;
+	const size_t pcie_data_xfer_size_limit = 4096;
 
+	/* length/offset checks. The common _submit() API will do further
+	 * checking on the message lengths too, so these are kept specific
+	 * to the requirements of the particular command set
+	 */
+
+	if (*resp_data_size > pcie_data_xfer_size_limit) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	pcie_req->hdr.type = NVME_MI_MSGTYPE_NVME;
+	/* NMP: ROR[7]=0 (request), NMIMT[6:3]=4 (PCIe Command), CSI[0] */
+	pcie_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
+				(NVME_MI_MT_PCIE << 3) | (ep->csi & 1);
+
+	memset(&req, 0, sizeof(req));
+	req.hdr = &pcie_req->hdr;
+	/* 20-byte PCIe request header (includes NMD0, NMD1, NMD2) */
+	req.hdr_len = sizeof(*pcie_req);
+	req.data = pcie_req + 1;
+	req.data_len = req_data_size;
+
+	libnvme_mi_calc_req_mic(&req);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &pcie_resp->hdr;
+	resp.hdr_len = sizeof(*pcie_resp);
+	resp.data = pcie_resp + 1;
+	resp.data_len = *resp_data_size;
+
+	rc = libnvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	*resp_data_size = resp.data_len;
+	if (pcie_resp->status)
+		return pcie_resp->status;
+
+	return 0;
+}
