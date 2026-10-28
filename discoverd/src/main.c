@@ -46,6 +46,7 @@
 #include "fc.h"
 #include "mdns.h"
 #include "state.h"
+#include "stop.h"
 #include "tid.h"
 #include "units.h"
 
@@ -1807,11 +1808,12 @@ int main(int argc, char **argv)
 	static const struct option long_opts[] = {
 		{ "config",    required_argument, NULL, 'c' },
 		{ "nvme-path", required_argument, NULL, 'N' },
+		{ "stop-unit", required_argument, NULL, 'S' },
 		{ "debug",     no_argument,       NULL, 'd' },
 		{ "help",      no_argument,       NULL, 'h' },
 		{ NULL, 0, NULL, 0 },
 	};
-	const char *nvme_path = NULL, *config_path = NULL;
+	const char *nvme_path = NULL, *config_path = NULL, *stop_name = NULL;
 	char *nvme_path_abs = NULL, *config_path_abs = NULL;
 	bool debug = false;
 	int r, c;
@@ -1824,6 +1826,9 @@ int main(int argc, char **argv)
 		case 'N':
 			nvme_path = optarg;
 			break;
+		case 'S':
+			stop_name = optarg;
+			break;
 		case 'd':
 			debug = true;
 			break;
@@ -1835,6 +1840,8 @@ int main(int argc, char **argv)
 			       "                          (default: " DISCOVERD_CONF_PATH ")\n"
 			       "  --nvme-path PATH        nvme binary the connection units exec\n"
 			       "                          (default: <sbindir>/nvme)\n"
+			       "  --stop-unit UNIT        disconnect the controller of a connection\n"
+			       "                          unit and exit (the unit's ExecStop=)\n"
 			       "  --debug, -d             enable debug logging (journal + libnvme)\n"
 			       "  --help, -h              show this help and exit\n",
 			       argv[0]);
@@ -1863,6 +1870,13 @@ int main(int argc, char **argv)
 				nvme_path, strerror(errno));
 			return 1;
 		}
+	}
+
+	if (stop_name) {
+		r = stop_unit(stop_name,
+			      nvme_path_abs ? nvme_path_abs : NVME_PATH);
+		free(nvme_path_abs);
+		return r;
 	}
 
 	if (config_path) {

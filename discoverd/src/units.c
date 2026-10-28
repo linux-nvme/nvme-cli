@@ -77,6 +77,8 @@ struct unit_mgr {
 	sd_bus_slot *job_removed_slot;
 	/* nvme binary the transient units exec; borrowed (lives for argv's life). */
 	const char *nvme_path;
+	/* This nvme-discoverd binary, which ExecStop= runs. */
+	char *self_path;
 };
 
 /*
@@ -319,6 +321,13 @@ struct unit_mgr *unit_mgr_new(sd_bus *bus, sd_event *event,
 	mgr->nvme_path = (nvme_path && *nvme_path) ? nvme_path : NVME_PATH;
 	list_head_init(&mgr->jobs);
 
+	mgr->self_path = realpath("/proc/self/exe", NULL);
+	if (!mgr->self_path) {
+		log_err("cannot resolve /proc/self/exe: %s", strerror(errno));
+		free(mgr);
+		return NULL;
+	}
+
 	/*
 	 * Subscribe to JobRemoved before any units are created.  The bus must
 	 * already be attached to the event loop (sd_bus_attach_event) by the
@@ -330,6 +339,7 @@ struct unit_mgr *unit_mgr_new(sd_bus *bus, sd_event *event,
 				job_removed_handler, mgr);
 	if (r < 0) {
 		log_err("sd_bus_match_signal(JobRemoved): %s", strerror(-r));
+		free(mgr->self_path);
 		free(mgr);
 		return NULL;
 	}
@@ -349,6 +359,7 @@ void unit_mgr_free(struct unit_mgr *mgr)
 		free(e->unit_name);
 		free(e);
 	}
+	free(mgr->self_path);
 	free(mgr);
 }
 
@@ -557,16 +568,19 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 		goto err;
 
 	/*
-	 * Build the post/stop shell commands with the real devid path, state
+	 * Build the post shell commands with the real devid path, state
 	 * directory and unit name substituted (systemd does not expand %t/%N/%n
-	 * here — see unit_devid_path()).  The nvme path in ExecStop is
-	 * double-quoted to tolerate spaces.
+	 * here — see unit_devid_path()). ExecStop= runs nvme-discoverd
+	 * --stop-unit (see stop_unit()).
 	 */
 	{
 		char exec_start_post[512];
-		char exec_stop[PATH_MAX + 512];
 		char exec_stop_post[512];
-		int n1, n2, n3;
+		const char *exec_stop[] = {
+			mgr->self_path, "--nvme-path", mgr->nvme_path,
+			"--stop-unit", unit_name, NULL
+		};
+		int n1, n2;
 
 		n1 = snprintf(exec_start_post, sizeof(exec_start_post),
 			      "DEV=$(cat %s 2>/dev/null) && "
@@ -577,21 +591,7 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 			      unit_name, STATE_CTRLS_DIR,
 			      SYSFS_NVME_DIR, STATE_CTRLS_DIR);
 
-		/*
-		 * The kernel reuses device names. The inode check makes sure
-		 * $DEV is still the controller this unit connected.
-		 */
-		n2 = snprintf(exec_stop, sizeof(exec_stop),
-			      "DEV=$(cat %s 2>/dev/null); "
-			      "[ -n \"$DEV\" ] && "
-			      "[ \"$(cat %s/$DEV/unit 2>/dev/null)\" = \"%s\" ] && "
-			      "[ \"$(stat -Lc %%i %s/$DEV 2>/dev/null)\" = "
-			      "\"$(cat %s/$DEV/ino 2>/dev/null)\" ] && "
-			      "\"%s\" disconnect -d $DEV",
-			      devid_path, STATE_CTRLS_DIR, unit_name,
-			      SYSFS_NVME_DIR, STATE_CTRLS_DIR, mgr->nvme_path);
-
-		n3 = snprintf(exec_stop_post, sizeof(exec_stop_post),
+		n2 = snprintf(exec_stop_post, sizeof(exec_stop_post),
 			      "DEV=$(cat %s 2>/dev/null); "
 			      "rm -f %s; "
 			      "[ -n \"$DEV\" ] && "
@@ -601,8 +601,7 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 			      unit_name, STATE_CTRLS_DIR);
 
 		if (n1 < 0 || n1 >= (int)sizeof(exec_start_post) ||
-		    n2 < 0 || n2 >= (int)sizeof(exec_stop) ||
-		    n3 < 0 || n3 >= (int)sizeof(exec_stop_post)) {
+		    n2 < 0 || n2 >= (int)sizeof(exec_stop_post)) {
 			r = -ENAMETOOLONG;
 			goto err;
 		}
@@ -610,7 +609,7 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 		r = append_shell_exec_prop(m, "ExecStartPost", exec_start_post);
 		if (r < 0)
 			goto err;
-		r = append_shell_exec_prop(m, "ExecStop", exec_stop);
+		r = append_exec_prop(m, "ExecStop", exec_stop, true);
 		if (r < 0)
 			goto err;
 		r = append_shell_exec_prop(m, "ExecStopPost", exec_stop_post);

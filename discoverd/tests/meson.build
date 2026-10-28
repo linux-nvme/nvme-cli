@@ -89,3 +89,27 @@ test('nvme-discoverd - missing-config', nvme_discoverd,
      args: ['--config', '/nonexistent/nvme-discoverd.conf'],
      should_fail: true,
      suite: 'mock')
+
+test_stop = executable(
+    'test-stop',
+    [
+        'test-stop.c',
+        '../src/state.c',
+        '../src/stop.c',
+        '../src/tid.c',
+        '../src/units.c',
+    ],
+    c_args: [
+        '-DNVME_PATH="@0@"'.format(nvme_bin_path),
+    ],
+    include_directories: discoverd_inc,
+    dependencies: [
+        ccan_dep,
+        daemon_util_dep,
+        libnvme_dep,
+        libsystemd_dep,
+        shared_dep,
+    ],
+)
+
+test('nvme-discoverd - stop', test_stop, suite: 'unit')
