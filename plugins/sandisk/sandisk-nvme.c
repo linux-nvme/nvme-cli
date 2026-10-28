@@ -34,7 +34,7 @@
 #include "sandisk-utils.h"
 #include "src/cleanup.h"
 
-#define SANDISK_PLUGIN_VERSION   "3.1.6"
+#define SANDISK_PLUGIN_VERSION   "3.1.7"
 
 static __u8 ocp_C2_guid[SNDK_GUID_LENGTH] = {
 	0x6D, 0x79, 0x9A, 0x76, 0xB4, 0xDA, 0xF6, 0xA3,
@@ -713,14 +713,6 @@ static int sndk_vs_smart_add_log(int argc, char **argv,
 			nvme_show_error("ERROR: SNDK: Failure reading the CA Log Page, ret = %d",
 				ret);
 	}
-	if (((capabilities & SNDK_DRIVE_CAP_C1_LOG_PAGE) == SNDK_DRIVE_CAP_C1_LOG_PAGE) &&
-	    (page_mask & SNDK_C1_PAGE_MASK)) {
-		/* Get the C1 Log Page */
-		ret = sndk_get_c1_log_page(ctx, hdl, nvme_args.output_format, cfg.interval);
-		if (ret)
-			nvme_show_error("ERROR: SNDK: Failure reading the C1 Log Page, ret = %d",
-				ret);
-	}
 
 out:
 	return ret;
@@ -1287,8 +1279,6 @@ static int sndk_capabilities(int argc, char **argv,
 	printf("Sandisk Plugin Capabilities for NVME device:%s\n", libnvme_transport_handle_get_name(hdl));
 	printf("vs-internal-log               : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_INTERNAL_LOG_MASK ? "Supported" : "Not Supported");
-	printf("vs-nand-stats                 : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_NAND_STATS ? "Supported" : "Not Supported");
 	printf("vs-smart-add-log              : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_SMART_LOG_MASK ? "Supported" : "Not Supported");
 	printf("--C0 Log Page                 : %s\n",
@@ -1313,39 +1303,18 @@ static int sndk_capabilities(int argc, char **argv,
 	printf("clear-fw-activate-history     : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_CLEAR_FW_ACT_HISTORY_MASK ? "Supported" :
 	       "Not Supported");
-	printf("vs-telemetry-controller-option: %s\n",
-	       capabilities & SNDK_DRIVE_CAP_DISABLE_CTLR_TELE_LOG ? "Supported" : "Not Supported");
-	printf("vs-error-reason-identifier    : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_REASON_ID ? "Supported" : "Not Supported");
 	printf("log-page-directory            : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_LOG_PAGE_DIR ? "Supported" : "Not Supported");
-	printf("namespace-resize              : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_NS_RESIZE ? "Supported" : "Not Supported");
 	printf("vs-drive-info                 : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_INFO ? "Supported" : "Not Supported");
-	printf("vs-temperature-stats          : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_TEMP_STATS ? "Supported" : "Not Supported");
 	printf("cloud-SSD-plugin-version      : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_CLOUD_SSD_VERSION ? "Supported" : "Not Supported");
-	printf("vs-pcie-stats                 : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_PCIE_STATS ? "Supported" : "Not Supported");
-	printf("get-error-recovery-log        : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_OCP_C1_LOG_PAGE ? "Supported" : "Not Supported");
 	printf("get-dev-capabilities-log      : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_OCP_C4_LOG_PAGE ? "Supported" : "Not Supported");
 	printf("get-unsupported-reqs-log      : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE ? "Supported" : "Not Supported");
 	printf("get-latency-monitor-log       : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_C3_LOG_PAGE ? "Supported" : "Not Supported");
-	printf("cloud-boot-SSD-version        : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION ? "Supported" :
-	       "Not Supported");
-	printf("vs-cloud-log                  : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_CLOUD_LOG_PAGE ? "Supported" : "Not Supported");
-	printf("vs-hw-rev-log                 : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_HW_REV_LOG_PAGE ? "Supported" : "Not Supported");
-	printf("vs-device_waf                 : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_DEVICE_WAF ? "Supported" : "Not Supported");
 	printf("set-latency-monitor-feature   : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_SET_LATENCY_MONITOR ? "Supported" : "Not Supported");
 	printf("capabilities                  : Supported\n");
