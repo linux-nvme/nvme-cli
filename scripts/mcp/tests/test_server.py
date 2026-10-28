@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import io
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
@@ -217,8 +218,10 @@ class ScriptedSystem(System):
     """Hands out a scripted series of snapshots and failures, and moves a
     fake clock by the interval of each"""
 
-    def __init__(self, script: list[dict[str, Any] | None]) -> None:
-        super().__init__()
+    def __init__(
+        self, script: list[dict[str, Any] | None], kmsg: Path
+    ) -> None:
+        super().__init__(kmsg=kmsg)
         self.script = script
         self.now = 100.0
         self.intervals: list[int] = []
@@ -229,6 +232,9 @@ class ScriptedSystem(System):
         if snap is None:
             raise NvmeError('controller nvme1 went away')
         self.now += interval
+        if self.kmsg.exists():
+            with self.kmsg.open('a') as f:
+                f.write(f'4,1,1,-;nvme{len(self.intervals)}: sample\n')
         return snap
 
     def sleep(self, seconds: float) -> None:
@@ -236,10 +242,18 @@ class ScriptedSystem(System):
 
 
 class TestWatchTool(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.kmsg = Path(self.tmp.name) / 'kmsg'
+        self.kmsg.touch()
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
     def watch(
         self, script: list[dict[str, Any] | None], **args: Any
     ) -> dict[str, Any]:
-        self.system = ScriptedSystem(script)
+        self.system = ScriptedSystem(script, self.kmsg)
         server = Server(
             self.system,
             sleep=self.system.sleep,
@@ -273,6 +287,23 @@ class TestWatchTool(unittest.TestCase):
             [(e['T'], e['Name'], e['To']) for e in report['Events']],
             [(4.0, 'nvme1', 'resetting'), (6.0, 'nvme1', 'live')],
         )
+        # each line with the end of the sample it was logged in
+        self.assertEqual(
+            [(x['T'], x['Message']) for x in report['KernelLog']],
+            [
+                (2.0, 'nvme1: sample'),
+                (4.0, 'nvme2: sample'),
+                (6.0, 'nvme3: sample'),
+            ],
+        )
+        self.assertNotIn('KernelLogError', report)
+
+    def test_watch_without_kernel_log(self) -> None:
+        self.kmsg.unlink()
+        report = self.watch([self.loop()], duration=1)['structuredContent']
+        self.assertNotIn('KernelLog', report)
+        self.assertIn('cannot read the kernel log', report['KernelLogError'])
+        self.assertEqual(report['Samples'], 1)
 
     def test_watch_goes_on_after_failure(self) -> None:
         report = self.watch(
