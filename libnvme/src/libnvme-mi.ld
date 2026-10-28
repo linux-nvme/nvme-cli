@@ -32,9 +32,11 @@ LIBNVME_MI_3 {
 		libnvme_mi_mi_xfer;
 		libnvme_mi_next_endpoint;
 		libnvme_mi_open_mctp;
+		libnvme_mi_pcie_xfer;
 		libnvme_mi_scan_ep;
 		libnvme_mi_scan_mctp;
 		libnvme_mi_set_csi;
+		libnvme_mi_pcie_xfer;
 	local:
 		*;
 };
