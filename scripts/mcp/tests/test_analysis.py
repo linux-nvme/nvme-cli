@@ -52,6 +52,27 @@ class TestHealth(unittest.TestCase):
             self.assertAlmostEqual(p['SharePercent'], 100 / 3, delta=2)
         self.assertTrue(report['Baseline'])
 
+    def test_where(self) -> None:
+        """Each path tells the transport and address of its controller"""
+        snap = loop_snapshot()
+        addr = 'traddr=192.168.30.30,trsvcid=4421,src_addr=192.168.30.1'
+        ctrls = snap['Subsystems'][0]['Controllers']
+        ctrls[1].update(Transport='tcp', Address=addr)
+        report = self.health(snap)
+        where = {
+            p['Path']: (p['Controller'], p['Transport'], p['Address'])
+            for p in report['Paths']
+        }
+        self.assertEqual(where['nvme0c0n1'], ('nvme0', 'loop', None))
+        self.assertEqual(where['nvme0c1n1'], ('nvme1', 'tcp', addr))
+
+    def test_where_without_controller(self) -> None:
+        snap = loop_snapshot()
+        snap['Subsystems'][0]['Controllers'] = []
+        p = self.health(snap)['Paths'][0]
+        self.assertIsNone(p['Transport'])
+        self.assertIsNone(p['Address'])
+
     def test_latency(self) -> None:
         """The average of the read and the write latency, by their IOPS"""
         p = paths(loop_snapshot())[0]['Stats']

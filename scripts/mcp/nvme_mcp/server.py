@@ -109,8 +109,9 @@ class Server:
             ),
             Tool(
                 'nvme_path_health',
-                'The multipath paths with their I/O share and latency, and '
-                'flags for those which need a look: a non-optimized ANA '
+                'The multipath paths with their I/O share and latency, the '
+                'transport and address of their controller, and flags for '
+                'those which need a look: a non-optimized ANA '
                 'state, a latency outlier among the sibling paths, an '
                 'uneven share under the round-robin or queue-depth policy, '
                 'and counters which went up since the previous call. Also '

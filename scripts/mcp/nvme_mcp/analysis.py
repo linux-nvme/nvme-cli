@@ -63,6 +63,23 @@ def subsystems(snap: Snapshot, name: str | None = None) -> list[Any]:
     return [s for s in subs if s.get('Name') == name]
 
 
+def controllers(sub: dict[str, Any]) -> dict[str, Any]:
+    """The controllers of @sub by their names."""
+    return {c['Name']: c for c in sub.get('Controllers', [])}
+
+
+def where(ctrl: dict[str, Any] | None) -> dict[str, Any]:
+    """The transport and the address of a path through @ctrl, which
+    tell which port of the host and of the target it uses."""
+    if ctrl is None:
+        return {'Transport': None, 'Address': None}
+    return {
+        'Transport': ctrl.get('Transport'),
+        # empty without one, e.g. on loop
+        'Address': ctrl.get('Address') or None,
+    }
+
+
 @dataclass
 class Counters:
     """The counters of the previous call, to tell which ones went up."""
@@ -110,6 +127,7 @@ def _path_health(
     median = statistics.median(lats) if lats else 0.0
     total = sum(_iops(p['Stats']) for p in paths)
     optimized = [p for p in paths if p.get('ANAState') == 'optimized']
+    ctrls = controllers(sub)
     spreads = sub.get('IOPolicy') in ('round-robin', 'queue-depth')
 
     out = []
@@ -144,6 +162,7 @@ def _path_health(
             'Namespace': ns['Name'],
             'Path': p['Name'],
             'Controller': p.get('Controller'),
+            **where(ctrls.get(p.get('Controller'))),
             'ANAState': state,
             'IOPS': round(iops, 2),
             'SharePercent': round(100 * share, 2),
