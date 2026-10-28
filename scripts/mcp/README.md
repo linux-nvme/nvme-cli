@@ -14,7 +14,7 @@ source tree. Like nvme top, it has to run as root.
 | Tool | What it does |
 | --- | --- |
 | `nvme_snapshot` | The rates and counters of the subsystems, namespaces, paths and controllers over an interval, as nvme top prints them |
-| `nvme_path_health` | Each path with its I/O share and latency, flagged when its ANA state is not optimized, its latency is an outlier among its siblings, its share is uneven under round-robin or queue-depth, or its retry, failover or error count went up since the previous call. Also namespaces without an optimized path and controllers which are not live |
+| `nvme_path_health` | Each path with its I/O share and latency, and the transport and address of its controller, flagged when its ANA state is not optimized, its latency is an outlier among its siblings, its share is uneven under round-robin or queue-depth, or its retry, failover or error count went up since the previous call. Also namespaces without an optimized path and controllers which are not live |
 | `nvme_set_iopolicy` | Sets the I/O policy of a subsystem (only with `--allow-iopolicy`) |
 | `nvme_compare_iopolicies` | Measures a subsystem under each I/O policy in turn and restores its policy (only with `--allow-iopolicy`) |
 
