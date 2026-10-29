@@ -623,41 +623,46 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 ///////////////////////////////////////////////////////////////////////////////
 /// Telemetry Log
 
-static void cleanup_ocp_telemetry_logs(struct ocp_telemetry_logs *logs)
-{
-	free(logs->telemetry);
-	free(logs->string);
-}
-
-#define __cleanup_ocp_telemetry_logs __cleanup(cleanup_ocp_telemetry_logs)
-
+/*
+ * Read the telemetry header and the data areas up to @tele_area into one
+ * buffer, which is handed to the caller in @log_out. With @output_file,
+ * each part is also saved as it arrives, so a failed read leaves what was
+ * read so far. A log too large for memory is still saved whole, through
+ * a smaller buffer; then *@log_out is NULL and only the file has the log.
+ */
 static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		int tele_type,
 		bool create,
 		int tele_area,
-		const char *output_file)
+		const char *output_file,
+		__u8 **log_out,
+		size_t *log_size)
 {
-	void *telemetry_log = NULL;
 	const size_t bs = 512;
-	struct nvme_telemetry_log *hdr;
+	const size_t max_chunk = (size_t)UINT32_MAX & ~(bs - 1);
+	__cleanup_libnvme_free struct nvme_telemetry_log *hdr = NULL;
+	__cleanup_libnvme_free __u8 *log = NULL;
+	__cleanup_libnvme_free __u8 *chunk = NULL;
+	__cleanup_fd int fd = -1;
 	struct libnvme_passthru_cmd cmd;
-	size_t full_size = 0, offset = bs, chunk_size;
-	int err, fd;
+	size_t full_size = 0, offset = bs, chunk_size = max_chunk;
+	int err;
 
 	hdr = libnvme_alloc(bs);
 	if (!hdr) {
 		nvme_show_error("Failed to allocate %zu bytes for log: %s",
 			bs, libnvme_strerror(errno));
-		err = -ENOMEM;
-		goto exit_status;
+		return -ENOMEM;
 	}
 
-	fd = shr_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (fd < 0) {
-		nvme_show_error("Failed to open output file %s: %s!",
-				output_file, libnvme_strerror(errno));
-		err = fd;
-		goto exit_status;
+	if (output_file) {
+		fd = shr_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC,
+				      0666);
+		if (fd < 0) {
+			nvme_show_error("Failed to open output file %s: %s!",
+					output_file, libnvme_strerror(errno));
+			return fd;
+		}
 	}
 
 	if (tele_type == TELEMETRY_TYPE_HOST) {
@@ -671,17 +676,19 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err < 0) {
 		nvme_show_err(err, "Failed to fetch telemetry-header.");
-		goto close_fd;
+		return err;
 	} else if (err > 0) {
 		nvme_show_status(err);
 		nvme_show_error("Failed to fetch telemetry-header. Error:%d.", err);
-		goto close_fd;
+		return err;
 	}
 
-	err = shr_write_all(fd, hdr, bs);
-	if (err) {
-		nvme_show_error("Failed to write data to file.");
-		goto close_fd;
+	if (fd >= 0) {
+		err = shr_write_all(fd, hdr, bs);
+		if (err) {
+			nvme_show_error("Failed to write data to file.");
+			return err;
+		}
 	}
 
 	switch (tele_area) {
@@ -702,69 +709,62 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		break;
 	}
 
-	if (full_size <= offset) {
-		err = 0;
-		goto close_fd;
+	log = libnvme_alloc(full_size);
+	if (log) {
+		memcpy(log, hdr, bs);
+	} else if (fd >= 0) {
+		if (full_size - offset < chunk_size)
+			chunk_size = full_size - offset;
+		while (!(chunk = libnvme_alloc(chunk_size)) &&
+		       chunk_size > bs) {
+			chunk_size = (chunk_size / 2) & ~(bs - 1);
+			if (chunk_size < bs)
+				chunk_size = bs;
+		}
 	}
-
-	/*
-	 * Try to read the whole data area with a single call, but fall back
-	 * to smaller reads if necessary due to log size or memory constraints.
-	 */
-	chunk_size = full_size - offset;
-	if (chunk_size > UINT32_MAX)
-		chunk_size = (size_t)UINT32_MAX & ~(bs - 1);
-	while (!(telemetry_log = libnvme_alloc(chunk_size)) && chunk_size > bs) {
-		chunk_size = (chunk_size / 2) & ~(bs - 1);
-		if (chunk_size < bs)
-			chunk_size = bs;
-	}
-	if (!telemetry_log) {
+	if (!log && !chunk) {
 		nvme_show_error("Failed to allocate memory for log: %s",
 				libnvme_strerror(errno));
-		err = -ENOMEM;
-		goto close_fd;
+		return -ENOMEM;
 	}
 
 	while (offset < full_size) {
 		size_t remaining = full_size - offset;
 		__u32 len = remaining < chunk_size ? remaining : chunk_size;
+		__u8 *buf = log ? log + offset : chunk;
 
 		/*
 		 * nvme_get_log_telemetry methods read the log in the largest
 		 * successful chunks, filling the entire specified length.
 		 */
-		if (tele_type == TELEMETRY_TYPE_HOST) {
-			nvme_init_get_log_telemetry_host(&cmd, offset, telemetry_log, len);
-			err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, len);
-		} else {
-			nvme_init_get_log_telemetry_ctrl(&cmd, offset, telemetry_log, len);
-			err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, len);
-		}
+		if (tele_type == TELEMETRY_TYPE_HOST)
+			nvme_init_get_log_telemetry_host(&cmd, offset, buf, len);
+		else
+			nvme_init_get_log_telemetry_ctrl(&cmd, offset, buf, len);
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, len);
 		if (err < 0) {
 			nvme_show_error("Failed to fetch the log from drive.");
-			break;
+			return err;
 		} else if (err > 0) {
 			nvme_show_error("Failed to fetch telemetry-log.");
 			nvme_show_status(err);
-			break;
+			return err;
 		}
 
-		err = shr_write_all(fd, telemetry_log, len);
+		if (fd >= 0)
+			err = shr_write_all(fd, buf, len);
 		if (err) {
 			nvme_show_error("Failed to write data to file.");
-			goto close_fd;
+			return err;
 		}
 		offset += len;
 	}
 
-close_fd:
-	close(fd);
-exit_status:
-	libnvme_free(hdr);
-	libnvme_free(telemetry_log);
+	*log_size = log ? full_size : 0;
+	*log_out = log;
+	log = NULL;
 
-	return err;
+	return 0;
 }
 
 static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
@@ -908,49 +908,54 @@ static int read_log_file(const char *path, const char *name,
 	return 0;
 }
 
-static int load_string_log_file(const char *path,
-				struct ocp_telemetry_logs *logs)
+static int load_string_log_file(const char *path, unsigned char **buf,
+				size_t *size)
 {
 	const size_t header_size =
 		sizeof(struct nvme_ocp_telemetry_string_header);
-	unsigned char *buf;
-	long size;
+	long len;
 	int err;
 
-	err = read_log_file(path, "string-log", header_size, &buf, &size);
+	err = read_log_file(path, "string-log", header_size, buf, &len);
 	if (err)
 		return err;
 
-	free(logs->string);
-	logs->string = buf;
-	logs->string_size = size;
+	*size = len;
 	return 0;
 }
 
-static int load_telemetry_log_file(const char *path,
-				   struct ocp_telemetry_logs *logs)
+static int check_telemetry_log_id(const __u8 *log)
+{
+	if (log[0] != NVME_LOG_LID_TELEMETRY_HOST &&
+	    log[0] != NVME_LOG_LID_TELEMETRY_CTRL) {
+		nvme_show_error("Invalid LogPageId [0x%02X]", log[0]);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int load_telemetry_log_file(const char *path, unsigned char **buf,
+				   size_t *size)
 {
 	/* Host and controller headers are both 512 bytes. */
 	const size_t header_size =
 		sizeof(struct nvme_ocp_telemetry_host_initiated_header);
-	unsigned char *buf;
-	long size;
+	long len;
 	int err;
 
-	err = read_log_file(path, "telemetry-log", header_size, &buf, &size);
+	err = read_log_file(path, "telemetry-log", header_size, buf, &len);
 	if (err)
 		return err;
 
-	if (buf[0] != NVME_LOG_LID_TELEMETRY_HOST &&
-	    buf[0] != NVME_LOG_LID_TELEMETRY_CTRL) {
-		nvme_show_error("Invalid LogPageId [0x%02X]", buf[0]);
-		free(buf);
-		return -EINVAL;
+	err = check_telemetry_log_id(*buf);
+	if (err) {
+		free(*buf);
+		*buf = NULL;
+		return err;
 	}
 
-	free(logs->telemetry);
-	logs->telemetry = buf;
-	logs->telemetry_size = size;
+	*size = len;
 	return 0;
 }
 
@@ -988,7 +993,15 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	struct nvme_id_ctrl ctrl;
 	struct libnvme_passthru_cmd cmd;
 	struct ocp_telemetry_parse_options opt = {0};
-	__cleanup_ocp_telemetry_logs struct ocp_telemetry_logs logs = { 0 };
+	/*
+	 * logs points at the fetched logs (libnvme_alloc) or the files read
+	 * (malloc); each kind is owned and freed by its own pointer below.
+	 */
+	struct ocp_telemetry_logs logs = { 0 };
+	__cleanup_libnvme_free __u8 *telemetry_fetched = NULL;
+	__cleanup_libnvme_free __u8 *string_fetched = NULL;
+	__cleanup_free unsigned char *telemetry_read = NULL;
+	__cleanup_free unsigned char *string_read = NULL;
 	int tele_type = TELEMETRY_TYPE_HOST;
 	int tele_area = 0;
 	__u32 host_gen = 1;
@@ -1066,9 +1079,12 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	if (opt.telemetry_log) {
 		int log_type;
 
-		err = load_telemetry_log_file(opt.telemetry_log, &logs);
+		err = load_telemetry_log_file(opt.telemetry_log,
+					      &telemetry_read,
+					      &logs.telemetry_size);
 		if (err)
 			goto out;
+		logs.telemetry = telemetry_read;
 
 		log_type = logs.telemetry[0] == NVME_LOG_LID_TELEMETRY_CTRL ?
 			   TELEMETRY_TYPE_CONTROLLER : TELEMETRY_TYPE_HOST;
@@ -1117,7 +1133,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 				tele_type,
 				!!host_gen,
 				tele_area,
-				(const char *)file_path_telemetry);
+				(const char *)file_path_telemetry,
+				&telemetry_fetched,
+				&logs.telemetry_size);
 
 		if (host_behavior_changed) {
 			host_behavior_changed = false;
@@ -1131,11 +1149,20 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			goto out;
 		}
 		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
-		opt.telemetry_log = file_path_telemetry;
 
-		err = load_telemetry_log_file(opt.telemetry_log, &logs);
-		if (err)
-			goto out;
+		if (telemetry_fetched) {
+			err = check_telemetry_log_id(telemetry_fetched);
+			if (err)
+				goto out;
+			logs.telemetry = telemetry_fetched;
+		} else {
+			err = load_telemetry_log_file(file_path_telemetry,
+						      &telemetry_read,
+						      &logs.telemetry_size);
+			if (err)
+				goto out;
+			logs.telemetry = telemetry_read;
+		}
 	}
 
 	if (!opt.string_log) {
@@ -1145,19 +1172,22 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		snprintf(file_path_string, sizeof(file_path_string), "%s-%s",
 			 opt.output_file, string_suffix);
 		err = get_c9_log_page_data(hdl, 0, 1, (const char *)file_path_string,
-					   NULL, NULL, NULL,
+					   NULL, &string_fetched,
+					   &logs.string_size,
 					   !no_uuid_flag);
 		if (err) {
 			nvme_show_error("Failed to fetch string-log from the drive.");
 			goto out;
 		}
 		nvme_show_result("string.bin generated. Proceeding with next steps.\n");
-		opt.string_log = file_path_string;
+		logs.string = string_fetched;
+	} else {
+		err = load_string_log_file(opt.string_log, &string_read,
+					   &logs.string_size);
+		if (err)
+			goto out;
+		logs.string = string_read;
 	}
-
-	err = load_string_log_file(opt.string_log, &logs);
-	if (err)
-		goto out;
 
 	printf("Extracting Telemetry %s Dump (Data Area %d)...\n",
 	       tele_type == TELEMETRY_TYPE_HOST ? "Host" : "Controller",
