@@ -1070,3 +1070,70 @@ void *libnvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr,
 void libnvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr,
 			    size_t hdr_len, const void *data, size_t data_len,
 			    void *user_data);
+
+/**
+ * struct nvme_mi_pcie_req_hdr - PCIe command request header.
+ * @hdr: generic MI message header
+ * @opcode: opcode (OPC) for the specific PCIe command
+ * @rsvd: reserved
+ * @ctrlid: Controller ID (CTLID) of the NVMe Controller this command targets
+ * @nmd0: PCIe Request Dword 0 - command specific usage
+ * @nmd1: PCIe Request Dword 1 - command specific usage
+ * @nmd2: PCIe Request Dword 2 - command specific usage
+ *
+ * Wire format for PCIe command request headers (20 bytes), defined in the
+ * NVMe-MI PCIe Command Set. NMIMT in @hdr.nmp is set to NVME_MI_MT_PCIE (4)
+ * by libnvme_mi_pcie_xfer().
+ */
+struct nvme_mi_pcie_req_hdr {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	opcode;
+	__u8	rsvd;
+	__le16	ctrlid;
+	__le32	nmd0, nmd1, nmd2;
+} __attribute__((packed));
+
+/**
+ * struct nvme_mi_pcie_resp_hdr - PCIe command response header.
+ * @hdr: generic MI message header
+ * @status: generic response status from command; non-zero on failure
+ * @rsvd: reserved
+ *
+ * Wire format for PCIe command response headers (8 bytes), defined in the
+ * NVMe-MI PCIe Command Set.
+ */
+struct nvme_mi_pcie_resp_hdr {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	status;
+	__u8	rsvd[3];
+} __attribute__((packed));
+
+/**
+ * libnvme_mi_pcie_xfer() - Raw PCIe transfer interface.
+ * @ep: endpoint to send the PCIe command to
+ * @pcie_req: request data
+ * @req_data_size: size of request data payload
+ * @pcie_resp: buffer for response data
+ * @resp_data_size: size of response data buffer, updated to received size
+ *
+ * Performs an arbitrary NVMe-MI PCIe command, using the provided request data,
+ * in @pcie_req. The size of the request data *payload* is specified in
+ * @req_data_size - this does not include the standard header length (so a
+ * header-only request would have a size of 0). Note that the PCIe Request
+ * Doublewords are considered part of the header data.
+ *
+ * On success, response data is stored in @pcie_resp, which has an optional
+ * appended payload buffer of @resp_data_size bytes. The actual payload
+ * size transferred will be stored in @resp_data_size. This size does not
+ * include the PCIe response header, so 0 represents no payload.
+ *
+ * See: &struct nvme_mi_pcie_req_hdr and &struct nvme_mi_pcie_resp_hdr.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int libnvme_mi_pcie_xfer(struct libnvme_mi_ep *ep,
+		       struct nvme_mi_pcie_req_hdr *pcie_req,
+		       size_t req_data_size,
+		       struct nvme_mi_pcie_resp_hdr *pcie_resp,
+		       size_t *resp_data_size);
