@@ -429,6 +429,9 @@ static const struct {
 	  "--zslba",
 	  .opts = { {}, { "--metadata-size=64", "--metadata=/dev/zero" },
 		    { "--prinfo=8", "--piremap" } } },
+	{ { "ocp", "internal-log", "--print-only" }, "--host-generate",
+	  .opts = { {}, { "--data-area=2" }, { "--data-area=4" },
+		    { "--telemetry-type=controller", "--data-area=3" } } },
 };
 
 #define NR_COMMANDS ARRAY_SIZE(commands)
