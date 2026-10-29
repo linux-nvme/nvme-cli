@@ -7071,6 +7071,7 @@ _nvme () {
 						--output-format=':Output format: normal|json|binary'
 						-o':alias for --output-format'
 						--output-format-version=':output format version: 1|2'
+						--print-only':Print the report to stdout and save no files; incompatible with --output-file'
 						--quiet':suppress informational output'
 						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
 						--string-log=':String log binary; '\''C9.bin'\'''

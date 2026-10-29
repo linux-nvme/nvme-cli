@@ -26,6 +26,10 @@ Tests in this module verify:
     match what the drive returned, and fetch failures are reported.
   * Decoding a fetched log gives the same report as decoding the same
     bytes from files.
+  * --print-only: the report on stdout is the one that is saved
+    otherwise, for each data area and both log types, read with the same
+    commands, without the progress messages and without writing any
+    file; log files decode to stdout; --output-file is rejected.
   * The telemetry header, Reason Identifier, Data Area 1 header and SMART
     sections decode to the values in the log, for host and controller
     logs, and a log ending inside the Data Area 1 header decodes no
@@ -69,9 +73,11 @@ from tests.cli.nvme_mock import (CNS_CTRL, CNS_UUID_LIST, FID_HOST_BEHAVIOR,
                                  OPC_SET_FEATURES, SC_INVALID_FIELD,
                                  host_behavior, main)
 from tests.cli.ocp.ocp_mock_test import (MODES, STR_DA_EVENT_FIFO_INFO,
-                                         STR_DA_STATS, OCPController,
+                                         STR_DA_STATS, TEXT_RULE,
+                                         OCPController,
                                          OCPInternalLogTestBase, pack_id_ctrl,
-                                         text_fields, text_records)
+                                         parse_text_report, text_fields,
+                                         text_records)
 from tests.e2e.plugins.ocp import ocp_telemetry_layout as layout
 
 # Get Log Page Log Specific Parameter for the host-initiated log.
@@ -346,6 +352,129 @@ class TestInternalLogDataArea4(OCPInternalLogTestBase):
         self.assertIn('Telemetry data area 4 not supported by device.',
                       result.stderr)
         self.assertEqual(self.sequence(), [])
+
+
+class TestInternalLogPrintOnly(OCPInternalLogTestBase):
+    """--print-only prints the report to stdout and writes no file. The
+    runs use long options only, so that they make seeds for the device
+    fuzz target (scripts/fuzz/nvme_fuzz/seeds.py)."""
+
+    controller_class = HostBehaviorController
+
+    # option sets of the fuzz target's entry, and the log each one reads
+    OPTION_SETS = (((), layout.LID_TELEMETRY_HOST),
+                   (('--data-area=2',), layout.LID_TELEMETRY_HOST),
+                   (('--data-area=4',), layout.LID_TELEMETRY_HOST),
+                   (('--telemetry-type=controller', '--data-area=3'),
+                    layout.LID_TELEMETRY_CTRL))
+
+    def setUp(self):
+        super().setUp()
+        self.strings = string_log()
+        self.server.logs = {
+            layout.LID_TELEMETRY_HOST: telemetry_log(),
+            layout.LID_TELEMETRY_CTRL: telemetry_log(
+                lid=layout.LID_TELEMETRY_CTRL),
+            layout.LID_STRING_LOG: self.strings}
+        self.server.identify[CNS_CTRL] = pack_id_ctrl(
+            LPA_TELEMETRY | LPA_TELEMETRY_DA4)
+        self.chdir_out_dir()
+        # where the reports to compare with go, away from work_dir
+        saved_dir = os.path.join(self.tmp, 'saved')
+        os.mkdir(saved_dir)
+        self.saved_prefix = os.path.join(saved_dir, 'report')
+
+    def run_print_only(self, *args, telemetry=None, strings=None):
+        cmd = ['--print-only']
+        if telemetry is not None:
+            cmd += ['--telemetry-log',
+                    self.write_file('telemetry.bin', telemetry)]
+        if strings is not None:
+            cmd += ['--string-log', self.write_file('string.bin', strings)]
+        self.server.commands.clear()
+        return self.run_ocp('internal-log', *cmd, *args)
+
+    def printed(self, *args, mode='json', **kwargs):
+        """The report --print-only prints, parsed like decode()'s."""
+        fmt = ('--output-format=json' if mode == 'json'
+               else '--output-format=normal')
+        result = self.assertOk(self.run_print_only(fmt, *args, **kwargs))
+        if mode == 'text':
+            return parse_text_report(result.stdout)
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            self.fail(f'stdout is not only the JSON report ({exc}): '
+                      f'{result.stdout!r}')
+
+    def assert_nothing_written(self):
+        self.assertEqual(os.listdir(self.out_dir), [])
+        self.assertEqual(os.listdir(self.work_dir), [])
+
+    def sent(self):
+        """The commands sent to the drive, without the sending process."""
+        return [c._replace(pid=None) for c in self.server.commands]
+
+    def test_printed_report_is_the_saved_report(self):
+        for args, lid in self.OPTION_SETS:
+            for mode in MODES:
+                with self.subTest(args=args, mode=mode):
+                    printed = self.printed(*args, mode=mode)
+                    self.assert_nothing_written()
+                    saved = self.decode(None, None, *args, mode=mode,
+                                        prefix=self.saved_prefix)
+                    self.assertEqual(printed, saved)
+                    if mode == 'json':
+                        self.assertEqual(
+                            printed['Log Page Header']['LogIdentifier'],
+                            f'0x{lid:02x}')
+
+    def test_logs_are_read_like_without_it(self):
+        """The same commands go to the drive as for a saved report."""
+        for args, _ in self.OPTION_SETS:
+            with self.subTest(args=args):
+                self.printed(*args)
+                printed = self.sent()
+                self.decode(None, None, *args, prefix=self.saved_prefix)
+                self.assertEqual(printed, self.sent())
+
+    def test_progress_messages_are_left_out(self):
+        result = self.assertOk(self.run_print_only('--output-format=normal'))
+        for msg in ('Fetching', 'generated', 'Missing', 'Extracting',
+                    'completed'):
+            self.assertNotIn(msg, result.stdout)
+        self.assertTrue(result.stdout.startswith(TEXT_RULE),
+                        result.stdout[:200])
+
+    def test_log_files_decode_to_stdout(self):
+        """Nothing is sent to the drive, and the given files are left as
+        they are."""
+        telemetry = telemetry_log()
+        printed = self.printed('--data-area=2', telemetry=telemetry,
+                               strings=self.strings)
+        self.assertEqual(self.server.commands, [])
+        self.assertEqual(os.listdir(self.out_dir), [])
+        self.assertEqual(sorted(os.listdir(self.work_dir)),
+                         ['string.bin', 'telemetry.bin'])
+        saved = self.decode(telemetry, self.strings, '--data-area=2',
+                            prefix=self.saved_prefix)
+        self.assertEqual(printed, saved)
+
+    def test_output_file_is_rejected(self):
+        result = self.run_print_only('--output-file', self.out_prefix)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('--print-only and --output-file are mutually '
+                      'exclusive.', result.stderr)
+        self.assertEqual(self.server.commands, [])
+        self.assert_nothing_written()
+
+    def test_failed_string_log_fetch_writes_nothing(self):
+        self.server.logs[layout.LID_STRING_LOG] = SC_INVALID_FIELD
+        result = self.run_print_only()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(FETCH_STRING_MSG, result.stderr)
+        self.assertEqual(result.stdout, '')
+        self.assert_nothing_written()
 
 
 class TestInternalLogHeaders(OCPInternalLogTestBase):

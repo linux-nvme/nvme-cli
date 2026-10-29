@@ -18,7 +18,7 @@ SYNOPSIS
 			[--data-area=<da> | -a <da>]
 			[--telemetry-type=<type> | -t <type>]
 			[--host-generate=<gen> | -g <gen>]
-			[--no-uuid | -n]
+			[--no-uuid | -n] [--print-only]
 
 DESCRIPTION
 -----------
@@ -26,7 +26,8 @@ Conditionally retrieves 07h Telemetry Host-Initiated log, C9h OCP Strings Log
 from an NVMe device or from user-specified file path. Takes retrieved logs and
 decodes (or) parses into human-readable output format specified by user.
 Without --output-format, the report is written as JSON to <file>.json, or as
-normal text to <file>.txt when nvme-cli is built without json-c.
+normal text to <file>.txt when nvme-cli is built without json-c. With
+--print-only, the report is printed to stdout instead and no file is written.
 
 The <device> parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
@@ -84,6 +85,12 @@ OPTIONS
 	Do not try to automatically detect UUID index when retrieving the OCP
 	String Log from <device> (default UUID index to 0).
 
+--print-only::
+	Print the decoded report to stdout and save no files: neither the
+	telemetry and string log bin files nor the report file.
+	Logs provided with --telemetry-log and --string-log are still read.
+	Incompatible with --output-file.
+
 include::global-options.txt[]
 
 EXAMPLES
@@ -103,6 +110,13 @@ and output to the default ./telemetry-log.json.
 --------------------------------------------------------
 # nvme ocp internal-log /dev/nvme0 --host-generate=0
 --------------------------------------------------------
+
+* Retrieve both logs from the device and print the decoded Data Areas 1 and 2
+as JSON to stdout, saving no files.
++
+-----------------------------------------------------------------------
+# nvme ocp internal-log /dev/nvme0 --print-only --data-area=2 -o json
+-----------------------------------------------------------------------
 
 * Retrieve Telemetry Host-Initiated data, reads in the OCP String Log locally.
 Decode default data-area(s) in default format.

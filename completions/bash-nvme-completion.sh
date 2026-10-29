@@ -3779,7 +3779,7 @@ plugin_ocp_opts () {
 			;;
 
 		"internal-log")
-			opts+=" --data-area= -a --dry-run --host-generate= -g --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --string-log= -s --telemetry-log= -l --telemetry-type= -t --timeout= --verbose -v"
+			opts+=" --data-area= -a --dry-run --host-generate= -g --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --print-only --quiet --set-options= --string-log= -s --telemetry-log= -l --telemetry-type= -t --timeout= --verbose -v"
 			valopts+=" --data-area -a --host-generate -g --output-file -f --output-format -o --output-format-version --set-options --string-log -s --telemetry-log -l --telemetry-type -t --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
