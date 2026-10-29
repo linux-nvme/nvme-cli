@@ -391,6 +391,52 @@ $ git rebase master
 $ git push -u origin fix-something
 ```
 
+## Maintaining a component
+
+The `MAINTAINERS` file lists who looks after which part of the tree.
+The NVME-CLI section covers every file. The other sections name the
+maintainers of a component: a daemon such as `nvme-discoverd` or
+`nvme-keysd`, or a vendor plugin. Each `M:` line carries the GitHub
+handle, which is used to mention the maintainers on issues and pull
+requests that touch their files.
+
+To become a maintainer, or to hand a component over, send a pull
+request that changes the `MAINTAINERS` entry. Ask the people you
+replace and the new maintainers to ack it in the pull request.
+
+### What is expected of a vendor plugin maintainer
+
+A vendor plugin is only useful as long as somebody who knows the
+vendor's devices looks after it. The core maintainers can't test vendor
+specific log pages or features and can't tell whether a change matches
+the vendor's firmware. A plugin maintainer is expected to:
+
+- Review pull requests that touch the plugin and answer issues about
+  it, within a few days. Changes to the core that affect all plugins
+  (API renames, new helpers, fixes found by a tree-wide audit) are
+  usually done by the core maintainers; review and test them on your
+  devices.
+- Fix bugs in the plugin, in particular the ones found by fuzzing,
+  sanitizers, static analysis or security reports (see `SECURITY.md`).
+  Plugins parse data from the device, so a missing length check is a
+  security bug.
+- Add tests: a mock test for every command, and a device fuzz entry for
+  every command that only reads and prints (see "Add tests for a
+  command"). Work on the open coverage issues for the plugin.
+- Keep the output stable. Scripts depend on the JSON output; don't
+  change its format without a good reason, and announce it in
+  `NEWS.md`.
+- Keep the `MAINTAINERS` entry current. When you leave the company or
+  the role, hand the plugin over to a colleague.
+
+A plugin without a maintainer is marked `S: Orphan`. The core
+maintainers only take fixes for it on a best effort basis, and an
+orphaned plugin will eventually be removed from the project: the number
+of bug and security reports keeps growing, and nobody can verify fixes
+for hardware they don't have. A vendor that can't provide a maintainer
+can support the core maintainers instead, for example by sponsoring
+tokens for AI-assisted fixing and testing.
+
 ## AI-assisted development (optional)
 
 The [nvme-cli-ai](https://github.com/linux-nvme/nvme-cli-ai) companion
