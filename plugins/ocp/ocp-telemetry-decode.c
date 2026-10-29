@@ -2413,7 +2413,7 @@ int print_ocp_telemetry_json(const struct ocp_telemetry_logs *logs,
 	} else {
 		//Print root json object
 		json_print_object(root, NULL);
-		nvme_show_result("\n");
+		printf("\n");
 	}
 
 out:

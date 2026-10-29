@@ -978,6 +978,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			"('host0' and 'host1' are deprecated);\n"
 			"determined from the log when --telemetry-log is given";
 	const char *hgen = "Have the host tell the controller to generate the report (default 1)";
+	const char *ponly = "Print the report to stdout and save no files;\n"
+			"incompatible with --output-file";
 	struct argconfig_opt_val tele_types[] = {
 		VAL_ENUM("host", TELEMETRY_TYPE_HOST),
 		VAL_ENUM("controller", TELEMETRY_TYPE_CONTROLLER),
@@ -1009,6 +1011,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	const char *string_suffix = "string.bin";
 	const char *tele_log_suffix = "telemetry.bin";
 	bool host_behavior_changed = false;
+	bool print_only = false;
 	enum nvme_print_flags fmt;
 
 	OPT_ARGS(opts) = {
@@ -1021,6 +1024,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			 tele_types),
 		OPT_UINT("host-generate",  'g', &host_gen,        hgen),
 		OPT_FLAG("no-uuid",        'n', &no_uuid_flag,    no_uuid),
+		OPT_FLAG("print-only",     0,   &print_only,      ponly),
 		OPT_END()
 	};
 
@@ -1034,11 +1038,25 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			return err;
 	}
 
-	if (opt.output_file == NULL)
+	/*
+	 * With --print-only, stdout carries the report alone, so the progress
+	 * messages are left out, and output_file stays NULL for the decoder
+	 * to print to stdout.
+	 */
+	if (print_only) {
+		if (opt.output_file) {
+			nvme_show_error(
+				"--print-only and --output-file are mutually exclusive.");
+			return -EINVAL;
+		}
+	} else if (opt.output_file == NULL) {
 		opt.output_file = DEFAULT_TELEMETRY_LOG;
+	}
 
 	if (!opt.data_area) {
-		nvme_show_result("Missing data-area. Using default data area 1.\n");
+		if (!print_only)
+			nvme_show_result(
+				"Missing data-area. Using default data area 1.\n");
 		opt.data_area = DATA_AREA_1;//Default data area 1
 	} else if (opt.data_area != 1 && opt.data_area != 2 &&
 			   opt.data_area != 3 && opt.data_area != 4) {
@@ -1051,8 +1069,10 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		opt.output_format = nvme_args.output_format;
 
 	if (!opt.output_format) {
-		nvme_show_result("Missing output format. Using default format - %s.\n",
-				 DEFAULT_OUTPUT_FORMAT);
+		if (!print_only)
+			nvme_show_result(
+				"Missing output format. Using default format - %s.\n",
+				DEFAULT_OUTPUT_FORMAT);
 		opt.output_format = DEFAULT_OUTPUT_FORMAT;
 	}
 
@@ -1098,7 +1118,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		}
 		tele_type = log_type;
 	} else {
-		nvme_show_result("\nFetching telemetry-log from drive...\n");
+		if (!print_only)
+			nvme_show_result(
+				"\nFetching telemetry-log from drive...\n");
 
 		nvme_init_identify_ctrl(&cmd, &ctrl);
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
@@ -1127,13 +1149,15 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		}
 
 		/* Pull the Telemetry log */
-		snprintf(file_path_telemetry, sizeof(file_path_telemetry),
-			 "%s-%s", opt.output_file, tele_log_suffix);
+		if (!print_only)
+			snprintf(file_path_telemetry,
+				 sizeof(file_path_telemetry), "%s-%s",
+				 opt.output_file, tele_log_suffix);
 		err = get_telemetry_log_page_data(hdl,
 				tele_type,
 				!!host_gen,
 				tele_area,
-				(const char *)file_path_telemetry,
+				print_only ? NULL : file_path_telemetry,
 				&telemetry_fetched,
 				&logs.telemetry_size);
 
@@ -1148,7 +1172,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			nvme_show_error("Failed to fetch telemetry-log from the drive.");
 			goto out;
 		}
-		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
+		if (!print_only)
+			nvme_show_result(
+				"telemetry.bin generated. Proceeding with next steps.\n");
 
 		if (telemetry_fetched) {
 			err = check_telemetry_log_id(telemetry_fetched);
@@ -1166,12 +1192,15 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	}
 
 	if (!opt.string_log) {
-		nvme_show_result("Fetching string-log from drive...\n");
+		if (!print_only) {
+			nvme_show_result("Fetching string-log from drive...\n");
+			snprintf(file_path_string, sizeof(file_path_string),
+				 "%s-%s", opt.output_file, string_suffix);
+		}
 
 		/* Pull String log */
-		snprintf(file_path_string, sizeof(file_path_string), "%s-%s",
-			 opt.output_file, string_suffix);
-		err = get_c9_log_page_data(hdl, 0, 1, (const char *)file_path_string,
+		err = get_c9_log_page_data(hdl, 0, !print_only,
+					   print_only ? NULL : file_path_string,
 					   NULL, &string_fetched,
 					   &logs.string_size,
 					   !no_uuid_flag);
@@ -1179,7 +1208,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			nvme_show_error("Failed to fetch string-log from the drive.");
 			goto out;
 		}
-		nvme_show_result("string.bin generated. Proceeding with next steps.\n");
+		if (!print_only)
+			nvme_show_result(
+				"string.bin generated. Proceeding with next steps.\n");
 		logs.string = string_fetched;
 	} else {
 		err = load_string_log_file(opt.string_log, &string_read,
@@ -1189,12 +1220,14 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		logs.string = string_read;
 	}
 
-	printf("Extracting Telemetry %s Dump (Data Area %d)...\n",
-	       tele_type == TELEMETRY_TYPE_HOST ? "Host" : "Controller",
-	       tele_area);
+	if (!print_only)
+		printf("Extracting Telemetry %s Dump (Data Area %d)...\n",
+		       tele_type == TELEMETRY_TYPE_HOST ? "Host" : "Controller",
+		       tele_area);
 	ocp_show_telemetry_log(&logs, &opt, fmt);
 
-	printf("ocp internal-log command completed.\n");
+	if (!print_only)
+		printf("ocp internal-log command completed.\n");
 out:
 	return err;
 }
