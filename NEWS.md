@@ -561,6 +561,11 @@
   mounted. A file system on an NVMe-oF namespace needs `_netdev` in
   fstab.
 
+* At shutdown, a connection unit of nvme-discoverd does not disconnect
+  a controller while a namespace of its subsystem is still mounted or
+  used as swap, also through LVM or dm-crypt. This covers the root file
+  system, which systemd does not unmount.
+
 * nvme-discoverd resolves the host names in `nvme-fabrics.conf` in
   parallel, without blocking. Before, it resolved them one at a time,
   and a slow DNS server stopped the daemon. A failed lookup is tried

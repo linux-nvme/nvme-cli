@@ -27,6 +27,13 @@ with the '_netdev' option are unmounted. A file system on an NVMe-oF
 namespace must use '_netdev' in fstab(5). Without it, the controller
 can be disconnected while the file system is still mounted.
 
+The root file system and other file systems that systemd does not
+unmount at shutdown stay mounted when the units stop. At shutdown, a
+unit does not disconnect its controller while a namespace of the
+controller's subsystem, or a device on top of it (LVM, dm-crypt), is
+mounted or used as swap. Outside of a shutdown, stopping a unit always
+disconnects.
+
 Every connection attempt is delegated to 'nvme connect', which runs
 inside a systemd transient unit instead of writing directly to
 /dev/nvme-fabrics. As a result, a stuck connect attempt never blocks
@@ -81,6 +88,11 @@ OPTIONS
 	connection units exec. Default: @SBINDIR@/nvme. Mainly useful for
 	running nvme-discoverd against a locally built 'nvme' instead of
 	the installed one.
+
+--stop-unit=<UNIT>::
+	Disconnect the controller that connection unit <UNIT> connected,
+	and exit. This is the 'ExecStop=' command of the connection units.
+	It is not meant to be run by hand.
 
 -d::
 --debug::

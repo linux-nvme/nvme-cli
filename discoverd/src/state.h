@@ -26,6 +26,7 @@
 #define STATE_DESIRED    STATE_RUN_DIR "/desired"
 
 #define SYSFS_NVME_DIR   "/sys/class/nvme"
+#define SYSFS_NVME_SUBSYS_DIR "/sys/class/nvme-subsystem"
 
 /* Ensure the runtime directories exist. Call once at startup. */
 int state_init(void);
