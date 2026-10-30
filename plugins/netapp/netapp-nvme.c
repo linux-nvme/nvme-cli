@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -939,6 +940,57 @@ static int netapp_nvme_filter(const struct dirent *d)
 	return 0;
 }
 
+static bool netapp_parse_dev_number(const char **p, unsigned long *value)
+{
+	char *end;
+	unsigned long number;
+
+	if (**p < '0' || **p > '9')
+		return false;
+	/* Linux device names use canonical decimal numbers. */
+	if (**p == '0' && (*p)[1] >= '0' && (*p)[1] <= '9')
+		return false;
+
+	errno = 0;
+	number = strtoul(*p, &end, 10);
+	if (errno == ERANGE || number > INT_MAX)
+		return false;
+
+	*p = end;
+	*value = number;
+	return true;
+}
+
+static bool netapp_valid_namespace_name(const char *name)
+{
+	unsigned long ctrl, nsid;
+	const char *p;
+
+	if (strncmp(name, "nvme", 4))
+		return false;
+	p = name + 4;
+	if (!netapp_parse_dev_number(&p, &ctrl) || *p++ != 'n' ||
+	    !netapp_parse_dev_number(&p, &nsid) || *p || !nsid)
+		return false;
+
+	return true;
+}
+
+static int netapp_selected_device(const char **devname)
+{
+	*devname = NULL;
+	if (!nvme_args.device)
+		return 0;
+
+	*devname = basename(nvme_args.device);
+	if (!netapp_valid_namespace_name(*devname)) {
+		nvme_show_error("Invalid device name %s", *devname);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 #ifdef CONFIG_JSONC
 #define NETAPP_OUTPUT_FORMAT_DESC "Output format: normal|column|json"
 #else /* CONFIG_JSONC */
@@ -970,7 +1022,8 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	int i, ret, fmt;
 	struct smdevice_info *smdevices;
 	char path[264];
-	char *devname = NULL;
+	const char *devname;
+	int num_paths;
 	int num_smdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
@@ -993,41 +1046,31 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	devs.num = scandir(dev_path, &devs.ents, netapp_nvme_filter, alphasort);
-	if (devs.num <= 0) {
-		nvme_show_error("No smdevices detected");
-		return devs.num;
-	}
-
-	if (nvme_args.device)
-		devname = basename(nvme_args.device);
+	ret = netapp_selected_device(&devname);
+	if (ret)
+		return ret;
 
 	if (devname) {
-		int subsys_num, nsid;
-		struct stat st;
-		char path[512];
-
-		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) != 2) {
-			nvme_show_error("Invalid device name %s", devname);
-			return -EINVAL;
+		num_paths = 1;
+	} else {
+		devs.num = scandir(dev_path, &devs.ents, netapp_nvme_filter,
+				   alphasort);
+		if (devs.num <= 0) {
+			nvme_show_error("No smdevices detected");
+			return devs.num;
 		}
-
-		snprintf(path, sizeof(path), "/dev/%s", devname);
-		if (stat(path, &st) != 0) {
-			nvme_show_error("%s does not exist", path);
-			return -EINVAL;
-		}
+		num_paths = devs.num;
 	}
 
-	smdevices = calloc(devs.num, sizeof(*smdevices));
+	smdevices = calloc(num_paths, sizeof(*smdevices));
 	if (!smdevices) {
 		nvme_show_error("Unable to allocate memory for devices");
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < devs.num; i++) {
+	for (i = 0; i < num_paths; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev_path,
-			devs.ents[i]->d_name);
+			 devname ? devname : devs.ents[i]->d_name);
 		ret = libnvme_open(ctx, path, O_RDONLY, &hdl);
 		if (ret) {
 			nvme_show_error("Unable to open %s: %s", path,
@@ -1069,7 +1112,8 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	int i, ret, fmt;
 	struct ontapdevice_info *ontapdevices;
 	char path[264];
-	char *devname = NULL;
+	const char *devname;
+	int num_paths;
 	int num_ontapdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
@@ -1092,41 +1136,31 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	if (nvme_args.device)
-		devname = basename(nvme_args.device);
+	ret = netapp_selected_device(&devname);
+	if (ret)
+		return ret;
 
 	if (devname) {
-		int subsys_num, nsid;
-		struct stat st;
-		char path[512];
-
-		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) != 2) {
-			nvme_show_error("Invalid device name %s", devname);
-			return -EINVAL;
+		num_paths = 1;
+	} else {
+		devs.num = scandir(dev_path, &devs.ents, netapp_nvme_filter,
+				   alphasort);
+		if (devs.num <= 0) {
+			nvme_show_error("No ontapdevices detected");
+			return devs.num;
 		}
-
-		snprintf(path, sizeof(path), "/dev/%s", devname);
-		if (stat(path, &st) != 0) {
-			nvme_show_error("%s does not exist", path);
-			return -EINVAL;
-		}
+		num_paths = devs.num;
 	}
 
-	devs.num = scandir(dev_path, &devs.ents, netapp_nvme_filter, alphasort);
-	if (devs.num <= 0) {
-		nvme_show_error("No ontapdevices detected");
-		return devs.num;
-	}
-
-	ontapdevices = calloc(devs.num, sizeof(*ontapdevices));
+	ontapdevices = calloc(num_paths, sizeof(*ontapdevices));
 	if (!ontapdevices) {
 		nvme_show_error("Unable to allocate memory for devices");
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < devs.num; i++) {
+	for (i = 0; i < num_paths; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev_path,
-				devs.ents[i]->d_name);
+			 devname ? devname : devs.ents[i]->d_name);
 		ret = libnvme_open(ctx, path, O_RDONLY, &hdl);
 		if (ret) {
 			nvme_show_error("Unable to open %s: %s", path,
