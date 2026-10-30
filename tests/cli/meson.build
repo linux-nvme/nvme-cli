@@ -339,6 +339,10 @@ if python3.found()
         subdir('micron')
     endif
 
+    if 'nvidia' in selected_plugins
+        subdir('nvidia')
+    endif
+
     if 'wdc' in selected_plugins
         subdir('wdc')
     endif
