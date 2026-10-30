@@ -24,6 +24,10 @@ for f in conf.py index.rst api.rst quickstart.rst installation.rst mi.rst; do
 done
 
 # nvme-cli
+for f in "${src}"/Documentation/*.[0-9] "${src}"/Documentation/*.html; do
+	# The source of the page is gone.
+	[ -e "${build}/Documentation/${f##*/}" ] || rm -f "${f}"
+done
 find "${build}/Documentation" -maxdepth 1 \
 	\( -name '*.[0-9]' -o -name '*.html' \) \
 	-exec cp {} "${src}/Documentation" \;
