@@ -277,6 +277,7 @@ adoc_sources_man1 = [
     'nvme-solidigm-workload-tracker',
     'nvme-subsystem-reset',
     'nvme-supported-log-pages',
+    'nvme-top',
     'nvme-toshiba-clear-pcie-correctable-errors',
     'nvme-toshiba-vs-internal-log',
     'nvme-toshiba-vs-smart-add-log',
@@ -389,7 +390,6 @@ adoc_sources_deprecated = [
     'nvme-supported-cap-config-log',
     'nvme-telemetry-log',
     'nvme-tls-key',
-    'nvme-top',
 ]
 adoc_sources_man1 += adoc_sources_deprecated
 

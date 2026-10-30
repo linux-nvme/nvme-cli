@@ -1,0 +1,1111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
+<title>nvme-keysd(8)</title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+  padding: 0;
+  margin: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; vertical-align: text-bottom; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+div.unbreakable { page-break-inside: avoid; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overridden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+
+
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install();
+/*]]>*/
+</script>
+</head>
+<body class="manpage">
+<div id="header">
+<h1>
+nvme-keysd(8) Manual Page
+</h1>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>nvme-keysd -
+   NVMe/TCP TLS key provisioning daemon
+</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="verseblock">
+<pre class="content"><em>nvme-keysd</em> [--config=&lt;FILE&gt;] [--fabrics-config=&lt;FILE&gt;]
+                [--creds-dir=&lt;DIR&gt;] [--kmip-test-addr=&lt;PATH&gt;]
+                [--should-start] [--debug] [--help]</pre>
+<div class="attribution">
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>nvme-keysd puts the TLS pre-shared keys (PSKs) used by NVMe/TCP into the
+kernel&#8217;s .nvme keyring, before a connection needs them. The kernel then
+finds the key there when <em>nvme connect</em> or nvme-discoverd connects with
+TLS.</p></div>
+<div class="paragraph"><p>Which key belongs to which host and subsystem is configured in the
+shared NVMe-oF fabrics configuration, see nvme-fabrics.conf(5).</p></div>
+<div class="paragraph"><p>This is a technology preview.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_keys">KEYS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>nvme-keysd imports every entry of the fabrics configuration that has
+<em>tls-key-source = systemd-creds</em> or <em>tls-key-source = kmip</em>. With
+<em>systemd-creds</em>, <em>tls-key</em> is the name of a systemd credential. The
+credential holds the PSK in the PSK interchange format
+(<em>NVMeTLSkey-1:&lt;hmac&gt;:&lt;base64&gt;:</em>), as created by <em>nvme keys
+gen-tls-psk</em>.</p></div>
+<div class="paragraph"><p>nvme-keysd puts the PSK in the keyring named by <em>keyring</em> (default
+<em>.nvme</em>). The key identity is built from the host NQN and the subsystem
+NQN, as <em>nvme connect</em> does. A key that is already there is not written
+again. Any other key for the same host NQN and subsystem NQN is revoked,
+so that the kernel finds only one key for the pair.</p></div>
+<div class="paragraph"><p>Without a <em>kmip</em> entry, nvme-keysd imports the keys and exits. With a
+<em>kmip</em> entry, it keeps running: see KMIP. nvme-keysd never revokes a key
+because its entry was removed from the configuration.</p></div>
+<div class="paragraph"><p>The unit does not start when no entry of the fabrics configuration has
+a <em>tls-key-source</em> other than <em>inline</em>. In that case, nvme-keysd does not
+run, and the unit does not load the nvme_keyring module.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_credentials">CREDENTIALS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Each credential is a file in /usr/local/etc/nvme/creds/, encrypted with
+systemd-creds(1). The directory is installed with mode 0700. The file
+name is the credential name. nvme-keysd decrypts the file through
+systemd-creds, which checks that the name in the credential is the file
+name. When <em>--name</em> is not given, systemd-creds takes the name from the
+output file name:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># systemd-creds encrypt psk.txt /usr/local/etc/nvme/creds/vol1-psk</code></pre>
+</div></div>
+<div class="paragraph"><p>and in nvme-fabrics.conf:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>[Subsystem]
+nqn        = nqn.2024-01.com.example:storage.vol1
+controller = transport=tcp;traddr=192.0.2.10;trsvcid=4420
+tls        = true
+tls-key-source = systemd-creds
+tls-key    = vol1-psk</code></pre>
+</div></div>
+<div class="paragraph"><p>After adding or changing credentials, restart nvme-keysd to import
+them:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># systemctl restart nvme-keysd</code></pre>
+</div></div>
+<div class="paragraph"><p>nvme-keysd logs an error for a credential that it cannot decrypt, and
+imports the other keys.</p></div>
+<div class="paragraph"><p>nvme-keysd needs systemd 257 or later.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_kmip">KMIP</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>With <em>tls-key-source = kmip:&lt;name&gt;</em>, nvme-keysd gets the PSK from a key
+management server (KMS) that supports KMIP 1.4. <em>&lt;name&gt;</em> is a
+<em>[kmip:&lt;name&gt;]</em> section of nvme-keysd.conf. When only one KMS is
+configured, <em>tls-key-source = kmip</em> is enough. <em>tls-key</em> is the Name of
+the key on the KMS.</p></div>
+<div class="paragraph"><p>The key on the KMS is one of:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Secret Data that holds the PSK in the PSK interchange format.
+</p>
+</li>
+<li>
+<p>
+A Symmetric Key of 32 bytes (SHA-256) or 48 bytes (SHA-384).
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Only a key in the Active state is used. Two Active keys with the same
+Name are an error.</p></div>
+<div class="paragraph"><p>nvme-keysd itself has no network access. For privilege separation, a
+helper process with no privileges handles all communication with the
+KMS, over TLS. A client certificate is used when one is configured.
+The helper logs its errors in the journal, under the identifier
+nvme-keysd-kmip.</p></div>
+<div class="paragraph"><p>The servers of a KMS are nodes of one cluster, and hold the same keys.
+They are tried in order, until one answers. Different KMSes are asked
+in parallel.</p></div>
+<div class="paragraph"><p>nvme-keysd does not delay the boot for a KMS. The services that start
+after nvme-keysd find the keys from systemd credentials in the keyring,
+but a KMIP key can come later. nvme-keysd keeps running and gets the
+KMIP keys in the background. When it cannot get a key, it tries again
+after 5 seconds, then after twice the previous delay, up to 5 minutes.
+A connection that needs a KMIP key can therefore start before the key
+is in the keyring. nvme-discoverd connects again later. A single <em>nvme
+connect</em> does not.</p></div>
+<div class="paragraph"><p>Setup example. The client private key is a systemd credential in
+/usr/local/etc/nvme/creds/kmip/. systemd gives it to the helper as
+<em>kmip_&lt;file&gt;</em>, so <em>--name</em> must be <em>kmip_</em> and the file name:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># systemd-creds encrypt --name=kmip_my-client-key client-key.pem \
+        /usr/local/etc/nvme/creds/kmip/my-client-key</code></pre>
+</div></div>
+<div class="paragraph"><p>The CA and the client certificate are not secret. They must be readable
+by any user, because the helper runs without privileges. In
+nvme-keysd.conf:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>[kmip:my-kms]
+server      = kms1.example.com
+server      = kms2.example.com
+ca          = /usr/local/etc/nvme/kmip/ca.pem
+client-cert = /usr/local/etc/nvme/kmip/client.pem
+client-key  = my-client-key</code></pre>
+</div></div>
+<div class="paragraph"><p>and in nvme-fabrics.conf:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>[Subsystem]
+nqn        = nqn.2024-01.com.example:storage.vol1
+controller = transport=tcp;traddr=192.0.2.10;trsvcid=4420
+tls        = true
+tls-key-source = kmip:my-kms
+tls-key    = my-vol1-psk</code></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-c &lt;FILE&gt;
+</dt>
+<dt class="hdlist1">
+--config=&lt;FILE&gt;
+</dt>
+<dd>
+<p>
+        Use &lt;FILE&gt; instead of /usr/local/etc/nvme/nvme-keysd.conf.
+</p>
+</dd>
+<dt class="hdlist1">
+--fabrics-config=&lt;FILE&gt;
+</dt>
+<dd>
+<p>
+        Read the fabrics configuration from &lt;FILE&gt; instead of
+        /usr/local/etc/nvme/nvme-fabrics.conf.
+</p>
+</dd>
+<dt class="hdlist1">
+--creds-dir=&lt;DIR&gt;
+</dt>
+<dd>
+<p>
+        Read the encrypted credentials from &lt;DIR&gt; instead of
+        /usr/local/etc/nvme/creds.
+</p>
+</dd>
+<dt class="hdlist1">
+--kmip-test-addr=&lt;PATH&gt;
+</dt>
+<dd>
+<p>
+        Connect to the nvme-keysd-kmip Varlink socket at &lt;PATH&gt; instead of
+        /run/nvme/keysd/kmip. For tests.
+</p>
+</dd>
+<dt class="hdlist1">
+--should-start
+</dt>
+<dd>
+<p>
+        Exit with status 0 if an entry of the fabrics configuration has a
+        <em>tls-key-source</em> other than <em>inline</em>, and with status 1 otherwise.
+        The unit runs this check before it starts nvme-keysd.
+</p>
+</dd>
+<dt class="hdlist1">
+-d
+</dt>
+<dt class="hdlist1">
+--debug
+</dt>
+<dd>
+<p>
+        Enable debug-level logging for both nvme-keysd and the libnvme
+        calls it makes, overriding the configured debug-level.
+</p>
+</dd>
+<dt class="hdlist1">
+-h
+</dt>
+<dt class="hdlist1">
+--help
+</dt>
+<dd>
+<p>
+        Print usage and exit.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configuration">CONFIGURATION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>nvme-keysd.conf holds the daemon&#8217;s own settings, in a <em>[Global]</em>
+section, and the KMSes, in <em>[kmip:&lt;name&gt;]</em> sections:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>[Global]
+debug-level = info</code></pre>
+</div></div>
+<div class="paragraph"><p><em>debug-level</em> (err, warn, info, or debug; default info) sets the log
+threshold. <em>--debug</em> on the command line overrides it.</p></div>
+<div class="paragraph"><p>Each <em>[kmip:&lt;name&gt;]</em> section describes a KMS:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<em>server</em>
+</dt>
+<dd>
+<p>
+        Host name or IP address. Required. Repeat it for each server of
+        the cluster.
+</p>
+</dd>
+<dt class="hdlist1">
+<em>port</em>
+</dt>
+<dd>
+<p>
+        TCP port of the servers. Default 5696.
+</p>
+</dd>
+<dt class="hdlist1">
+<em>ca</em>
+</dt>
+<dd>
+<p>
+        CA certificate that signed the server certificates (PEM). Default:
+        the system CAs.
+</p>
+</dd>
+<dt class="hdlist1">
+<em>client-cert</em>
+</dt>
+<dd>
+<p>
+        Client certificate (PEM). Requires <em>client-key</em>.
+</p>
+</dd>
+<dt class="hdlist1">
+<em>client-key</em>
+</dt>
+<dd>
+<p>
+        File name of the client private key in
+        /usr/local/etc/nvme/creds/kmip/. Requires <em>client-cert</em>.
+</p>
+</dd>
+<dt class="hdlist1">
+<em>timeout</em>
+</dt>
+<dd>
+<p>
+        Time limit for one server: connect, TLS handshake and requests.
+        Default 10s. Each TCP connect fails after 3 seconds at most.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>A missing file, or a missing key, keeps the default.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_files">FILES</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+/usr/local/etc/nvme/nvme-keysd.conf
+</dt>
+<dd>
+<p>
+        The daemon&#8217;s own configuration; see CONFIGURATION.
+</p>
+</dd>
+<dt class="hdlist1">
+/usr/local/etc/nvme/nvme-keysd.conf.sample
+</dt>
+<dd>
+<p>
+        A commented example of nvme-keysd.conf with every setting at its
+        default. It is not read; copy it to nvme-keysd.conf to change a
+        setting.
+</p>
+</dd>
+<dt class="hdlist1">
+/usr/local/etc/nvme/creds/
+</dt>
+<dd>
+<p>
+        The encrypted credentials; see CREDENTIALS.
+</p>
+</dd>
+<dt class="hdlist1">
+/usr/local/etc/nvme/creds/kmip/
+</dt>
+<dd>
+<p>
+        The encrypted client private keys for the KMSes; see KMIP.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>nvme-fabrics.conf(5)
+systemd-creds(1)
+nvme-discoverd(8)
+nvme-connect(1)</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_nvme">NVME</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Part of the nvme-user suite</p></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated
+ 2026-10-30 17:46:17 UTC
+</div>
+</div>
+</body>
+</html>
