@@ -1,0 +1,300 @@
+'\" t
+.\"     Title: nvme-keysd
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/30/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-KEYSD" "8" "10/30/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-keysd \- NVMe/TCP TLS key provisioning daemon
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-keysd\fR [\-\-config=<FILE>] [\-\-fabrics\-config=<FILE>]
+                [\-\-creds\-dir=<DIR>] [\-\-kmip\-test\-addr=<PATH>]
+                [\-\-should\-start] [\-\-debug] [\-\-help]
+.fi
+.SH "DESCRIPTION"
+.sp
+nvme\-keysd puts the TLS pre\-shared keys (PSKs) used by NVMe/TCP into the kernel\(cqs \&.nvme keyring, before a connection needs them\&. The kernel then finds the key there when \fInvme connect\fR or nvme\-discoverd connects with TLS\&.
+.sp
+Which key belongs to which host and subsystem is configured in the shared NVMe\-oF fabrics configuration, see nvme\-fabrics\&.conf(5)\&.
+.sp
+This is a technology preview\&.
+.SH "KEYS"
+.sp
+nvme\-keysd imports every entry of the fabrics configuration that has \fItls\-key\-source = systemd\-creds\fR or \fItls\-key\-source = kmip\fR\&. With \fIsystemd\-creds\fR, \fItls\-key\fR is the name of a systemd credential\&. The credential holds the PSK in the PSK interchange format (\fINVMeTLSkey\-1:<hmac>:<base64>:\fR), as created by \fInvme keys gen\-tls\-psk\fR\&.
+.sp
+nvme\-keysd puts the PSK in the keyring named by \fIkeyring\fR (default \fI\&.nvme\fR)\&. The key identity is built from the host NQN and the subsystem NQN, as \fInvme connect\fR does\&. A key that is already there is not written again\&. Any other key for the same host NQN and subsystem NQN is revoked, so that the kernel finds only one key for the pair\&.
+.sp
+Without a \fIkmip\fR entry, nvme\-keysd imports the keys and exits\&. With a \fIkmip\fR entry, it keeps running: see KMIP\&. nvme\-keysd never revokes a key because its entry was removed from the configuration\&.
+.sp
+The unit does not start when no entry of the fabrics configuration has a \fItls\-key\-source\fR other than \fIinline\fR\&. In that case, nvme\-keysd does not run, and the unit does not load the nvme_keyring module\&.
+.SH "CREDENTIALS"
+.sp
+Each credential is a file in /usr/local/etc/nvme/creds/, encrypted with systemd\-creds(1)\&. The directory is installed with mode 0700\&. The file name is the credential name\&. nvme\-keysd decrypts the file through systemd\-creds, which checks that the name in the credential is the file name\&. When \fI\-\-name\fR is not given, systemd\-creds takes the name from the output file name:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# systemd\-creds encrypt psk\&.txt /usr/local/etc/nvme/creds/vol1\-psk
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+and in nvme\-fabrics\&.conf:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Subsystem]
+nqn        = nqn\&.2024\-01\&.com\&.example:storage\&.vol1
+controller = transport=tcp;traddr=192\&.0\&.2\&.10;trsvcid=4420
+tls        = true
+tls\-key\-source = systemd\-creds
+tls\-key    = vol1\-psk
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+After adding or changing credentials, restart nvme\-keysd to import them:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# systemctl restart nvme\-keysd
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+nvme\-keysd logs an error for a credential that it cannot decrypt, and imports the other keys\&.
+.sp
+nvme\-keysd needs systemd 257 or later\&.
+.SH "KMIP"
+.sp
+With \fItls\-key\-source = kmip:<name>\fR, nvme\-keysd gets the PSK from a key management server (KMS) that supports KMIP 1\&.4\&. \fI<name>\fR is a \fI[kmip:<name>]\fR section of nvme\-keysd\&.conf\&. When only one KMS is configured, \fItls\-key\-source = kmip\fR is enough\&. \fItls\-key\fR is the Name of the key on the KMS\&.
+.sp
+The key on the KMS is one of:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Secret Data that holds the PSK in the PSK interchange format\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A Symmetric Key of 32 bytes (SHA\-256) or 48 bytes (SHA\-384)\&.
+.RE
+.sp
+Only a key in the Active state is used\&. Two Active keys with the same Name are an error\&.
+.sp
+nvme\-keysd itself has no network access\&. For privilege separation, a helper process with no privileges handles all communication with the KMS, over TLS\&. A client certificate is used when one is configured\&. The helper logs its errors in the journal, under the identifier nvme\-keysd\-kmip\&.
+.sp
+The servers of a KMS are nodes of one cluster, and hold the same keys\&. They are tried in order, until one answers\&. Different KMSes are asked in parallel\&.
+.sp
+nvme\-keysd does not delay the boot for a KMS\&. The services that start after nvme\-keysd find the keys from systemd credentials in the keyring, but a KMIP key can come later\&. nvme\-keysd keeps running and gets the KMIP keys in the background\&. When it cannot get a key, it tries again after 5 seconds, then after twice the previous delay, up to 5 minutes\&. A connection that needs a KMIP key can therefore start before the key is in the keyring\&. nvme\-discoverd connects again later\&. A single \fInvme connect\fR does not\&.
+.sp
+Setup example\&. The client private key is a systemd credential in /usr/local/etc/nvme/creds/kmip/\&. systemd gives it to the helper as \fIkmip_<file>\fR, so \fI\-\-name\fR must be \fIkmip_\fR and the file name:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# systemd\-creds encrypt \-\-name=kmip_my\-client\-key client\-key\&.pem \e
+        /usr/local/etc/nvme/creds/kmip/my\-client\-key
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The CA and the client certificate are not secret\&. They must be readable by any user, because the helper runs without privileges\&. In nvme\-keysd\&.conf:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[kmip:my\-kms]
+server      = kms1\&.example\&.com
+server      = kms2\&.example\&.com
+ca          = /usr/local/etc/nvme/kmip/ca\&.pem
+client\-cert = /usr/local/etc/nvme/kmip/client\&.pem
+client\-key  = my\-client\-key
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+and in nvme\-fabrics\&.conf:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Subsystem]
+nqn        = nqn\&.2024\-01\&.com\&.example:storage\&.vol1
+controller = transport=tcp;traddr=192\&.0\&.2\&.10;trsvcid=4420
+tls        = true
+tls\-key\-source = kmip:my\-kms
+tls\-key    = my\-vol1\-psk
+.fi
+.if n \{\
+.RE
+.\}
+.SH "OPTIONS"
+.PP
+\-c <FILE>, \-\-config=<FILE>
+.RS 4
+Use <FILE> instead of /usr/local/etc/nvme/nvme\-keysd\&.conf\&.
+.RE
+.PP
+\-\-fabrics\-config=<FILE>
+.RS 4
+Read the fabrics configuration from <FILE> instead of /usr/local/etc/nvme/nvme\-fabrics\&.conf\&.
+.RE
+.PP
+\-\-creds\-dir=<DIR>
+.RS 4
+Read the encrypted credentials from <DIR> instead of /usr/local/etc/nvme/creds\&.
+.RE
+.PP
+\-\-kmip\-test\-addr=<PATH>
+.RS 4
+Connect to the nvme\-keysd\-kmip Varlink socket at <PATH> instead of /run/nvme/keysd/kmip\&. For tests\&.
+.RE
+.PP
+\-\-should\-start
+.RS 4
+Exit with status 0 if an entry of the fabrics configuration has a
+\fItls\-key\-source\fR
+other than
+\fIinline\fR, and with status 1 otherwise\&. The unit runs this check before it starts nvme\-keysd\&.
+.RE
+.PP
+\-d, \-\-debug
+.RS 4
+Enable debug\-level logging for both nvme\-keysd and the libnvme calls it makes, overriding the configured debug\-level\&.
+.RE
+.PP
+\-h, \-\-help
+.RS 4
+Print usage and exit\&.
+.RE
+.SH "CONFIGURATION"
+.sp
+nvme\-keysd\&.conf holds the daemon\(cqs own settings, in a \fI[Global]\fR section, and the KMSes, in \fI[kmip:<name>]\fR sections:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Global]
+debug\-level = info
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fIdebug\-level\fR (err, warn, info, or debug; default info) sets the log threshold\&. \fI\-\-debug\fR on the command line overrides it\&.
+.sp
+Each \fI[kmip:<name>]\fR section describes a KMS:
+.PP
+\fIserver\fR
+.RS 4
+Host name or IP address\&. Required\&. Repeat it for each server of the cluster\&.
+.RE
+.PP
+\fIport\fR
+.RS 4
+TCP port of the servers\&. Default 5696\&.
+.RE
+.PP
+\fIca\fR
+.RS 4
+CA certificate that signed the server certificates (PEM)\&. Default: the system CAs\&.
+.RE
+.PP
+\fIclient\-cert\fR
+.RS 4
+Client certificate (PEM)\&. Requires
+\fIclient\-key\fR\&.
+.RE
+.PP
+\fIclient\-key\fR
+.RS 4
+File name of the client private key in /usr/local/etc/nvme/creds/kmip/\&. Requires
+\fIclient\-cert\fR\&.
+.RE
+.PP
+\fItimeout\fR
+.RS 4
+Time limit for one server: connect, TLS handshake and requests\&. Default 10s\&. Each TCP connect fails after 3 seconds at most\&.
+.RE
+.sp
+A missing file, or a missing key, keeps the default\&.
+.SH "FILES"
+.PP
+/usr/local/etc/nvme/nvme\-keysd\&.conf
+.RS 4
+The daemon\(cqs own configuration; see CONFIGURATION\&.
+.RE
+.PP
+/usr/local/etc/nvme/nvme\-keysd\&.conf\&.sample
+.RS 4
+A commented example of nvme\-keysd\&.conf with every setting at its default\&. It is not read; copy it to nvme\-keysd\&.conf to change a setting\&.
+.RE
+.PP
+/usr/local/etc/nvme/creds/
+.RS 4
+The encrypted credentials; see CREDENTIALS\&.
+.RE
+.PP
+/usr/local/etc/nvme/creds/kmip/
+.RS 4
+The encrypted client private keys for the KMSes; see KMIP\&.
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-fabrics\&.conf(5) systemd\-creds(1) nvme\-discoverd(8) nvme\-connect(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
