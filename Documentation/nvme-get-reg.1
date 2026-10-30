@@ -1,0 +1,185 @@
+'\" t
+.\"     Title: nvme-get-reg
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/30/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-GET\-REG" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-get-reg \- Read and show the defined NVMe controller register
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIget\-reg\fR <device>
+                        [\-\-register=<name>[,<name>\&...] | \-r <name>[,<name>\&...]]
+                        [\-\-offset=<offset> | \-O <offset>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Reads and shows controller registers: of an NVMe over PCIe controller from its PCI memory space, of an NVMe over Fabrics controller its properties with Property Get commands\&.
+.sp
+The <device> parameter is mandatory and must be the nvme admin character device (ex: /dev/nvme0)\&.
+.sp
+On a fabrics controller, a register which is no property of a fabrics controller, or a property the controller doesn\(cqt implement, fails the command, after the other registers are shown\&.
+.SH "OPTIONS"
+.PP
+\-r <name>[,<name>\&...], \-\-register=<name>[,<name>\&...]
+.RS 4
+The registers to show, by name, in register order: one of cap, vs, intms, intmc, cc, csts, nssr, aqa, asq, acq, cmbloc, cmbsz, bpinfo, bprsel, bpmbl, cmbmsc, cmbsts, cmbebs, cmbswtp, nssd, crto, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp, pmrmscl, pmrmscu\&. The option may be given more than once\&.
+.RE
+.PP
+\-O <offset>, \-\-offset=<offset>
+.RS 4
+A register to show, by offset or name, e\&.g\&. 0x14 or cc\&. The offset has to be the one of a register\&.
+.RE
+.sp
+The options \-\-cap, \-\-vs, \-\-cc and so on of earlier versions, one for each register, still work, but are deprecated: use \-\-register\&.
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&. Other versions are rejected\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Suppress informational messages\&. Errors are still reported, and \-\-quiet cancels any \-\-verbose for the library log level\&.
+.RE
+.PP
+\-\-set\-options=<key=value>[,<key=value>\&...]
+.RS 4
+Set libnvme library options for this invocation\&. Supported keys are
+\fIforce\-4k\fR,
+\fImi\-probe\-enabled\fR,
+\fItest\-base\-dir\fR
+and
+\fItest\-sysfs\-dir\fR\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+\fIinfinite\fR
+or
+\fI\-1\fR
+waits without a time limit (0xffffffff)\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
+.sp
+With \-v, the fields of each register are shown decoded\&. The JSON output has the value of each register under its name, with \-v an object of the value and its decoded fields:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+{
+  "cc": 4587521
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Show the Controller Configuration register
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-reg /dev/nvme0 \-\-register=cc
+register : 0x14 (Controller Configuration), value: 0x460001
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Show the Controller Capabilities and Status registers, decoded
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-reg /dev/nvme0 \-r cap,csts \-v
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.
