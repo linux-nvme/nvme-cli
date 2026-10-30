@@ -17,6 +17,7 @@ Tests in this module verify:
     covering the Data Area 1 statistics and event FIFOs.
   * The default report is the one -o normal writes.
   * -a 2 adds the Data Area 2 statistics and event FIFOs.
+  * --print-only prints the same text report to stdout, writing no file.
   * -o json is rejected without writing a report.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
@@ -72,6 +73,18 @@ class TestInternalLogWithoutJson(OCPInternalLogTestBase):
         report, _ = self.decode_default('-a', '2')
         self.assert_data_area(report, 1, '0x22', 1)
         self.assert_data_area(report, 2, '0x23', 2)
+
+    def test_print_only_prints_the_text_report(self):
+        """With no -o, --print-only prints the .txt report to stdout."""
+        saved, _ = self.decode_default()
+        self.chdir_out_dir()
+        result = self.assertOk(self.run_ocp(
+            'internal-log', '--print-only',
+            '--telemetry-log', self.write_file('telemetry.bin',
+                                               telemetry_log()),
+            '--string-log', self.write_file('string.bin', string_log())))
+        self.assertEqual(parse_text_report(result.stdout), saved)
+        self.assertEqual(os.listdir(self.out_dir), [])
 
     def test_json_is_rejected(self):
         result = self.run_internal_log('-o', 'json',
