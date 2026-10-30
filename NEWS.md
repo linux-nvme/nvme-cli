@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
-## Changes in 3.2 (unreleased)
+## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes
 
