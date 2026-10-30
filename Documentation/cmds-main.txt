@@ -16,9 +16,6 @@ linknvme:nvme-dsm[1]::
 linknvme:nvme-format[1]::
 	Format namespace(s)
 
-linknvme:nvme-fw-activate[1]::
-	F/W Activate (in old version < 1.2)
-
 linknvme:nvme-fw-commit[1]::
 	F/W Commit (in > 1.2)
 

@@ -181,9 +181,6 @@ linknvme:nvme-wdc-clear-assert-dump[1]::
 linknvme:nvme-wdc-clear-fw-activate-history[1]::
 	Clears the firmware activate history table
 
-linknvme:nvme-wdc-clear-pcie-corr[1]::
-	Clears the pcie correctable errors field
-
 linknvme:nvme-wdc-clear-pcie-correctable-errors[1]::
 	Clears the pcie correctable errors returned in the smart-log-add command
 
@@ -232,9 +229,6 @@ linknvme:nvme-wdc-purge-monitor[1]::
 linknvme:nvme-wdc-purge[1]::
 	Send NVMe WDC Purge Vendor Unique Command
 
-linknvme:nvme-wdc-smart-add-log[1]::
-	Send NVMe WDC smart add log Vendor Unique Command
-
 linknvme:nvme-wdc-vs-drive-info[1]::
 	Send the NVMe WDC vs-drive-info command
 
@@ -249,6 +243,9 @@ linknvme:nvme-wdc-vs-internal-log[1]::
 
 linknvme:nvme-wdc-vs-nand-stats[1]::
 	Send NVMe WDC vs-nand-stats Vendor Unique Command
+
+linknvme:nvme-wdc-vs-smart-add-log[1]::
+	Send NVMe WDC vs-smart-add-log Vendor Unique Command
 
 linknvme:nvme-wdc-vs-telemetry-controller-option[1]::
 	Disable/Enable the controller initiated option of the telemetry log page
