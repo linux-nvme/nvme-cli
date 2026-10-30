@@ -19,7 +19,8 @@ usage() {
     echo "                [--e2e-nvme-bin path]"
     echo "                [--plugin-tests plugin1,plugin2]"
     echo "                [--fuzz-seconds n] [--fuzz-jobs n]"
-    echo "                [--fuzz-targets target1,target2] [--fuzz-dir dir]"
+    echo "                [--fuzz-targets target1,target2]"
+    echo "                [--fuzz-plugins plugin1,plugin2] [--fuzz-dir dir]"
     echo "                [config]"
     echo ""
     echo "CI build script."
@@ -49,6 +50,9 @@ usage() {
     echo " --fuzz-jobs n           run n libFuzzer jobs per target (all CPUs)"
     echo " --fuzz-targets list     comma-separated list of targets (all), see"
     echo "                         scripts/fuzz/nvme-fuzz run --help"
+    echo " --fuzz-plugins list     fuzz only the commands of these plugins with"
+    echo "                         the device target (all), and only it unless"
+    echo "                         --fuzz-targets is given"
     echo " --fuzz-dir dir          directory for the results (.build-ci/fuzz):"
     echo "                         summary.txt, logs/, artifacts/ and corpus/"
     echo " the 'fuzz' config builds debugoptimized unless -b is given"
@@ -101,6 +105,7 @@ PLUGIN_TESTS=""
 fuzz_seconds=600
 fuzz_jobs=""
 fuzz_targets=""
+fuzz_plugins=""
 fuzz_dir=""
 
 # The options which only one config takes, as "config option"
@@ -203,6 +208,12 @@ while [[ $# -gt 0 ]]; do
         --fuzz-targets)
             # nvme-fuzz checks the names
             fuzz_targets="$2"
+            config_option fuzz "$1"
+            shift 2
+            ;;
+        --fuzz-plugins)
+            # nvme-fuzz checks the names
+            fuzz_plugins="$2"
             config_option fuzz "$1"
             shift 2
             ;;
@@ -556,6 +567,7 @@ test_meson_fuzz() {
 
     [ -n "${fuzz_jobs}" ] && args+=(--jobs "${fuzz_jobs}")
     [ -n "${fuzz_targets}" ] && args+=(--targets "${fuzz_targets}")
+    [ -n "${fuzz_plugins}" ] && args+=(--plugins "${fuzz_plugins}")
     [ -n "${fuzz_dir}" ] && args+=(--results "${fuzz_dir}")
     scripts/fuzz/nvme-fuzz -C "${BUILDDIR}" run "${args[@]}"
 }

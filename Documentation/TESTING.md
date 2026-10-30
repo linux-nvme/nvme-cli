@@ -316,6 +316,7 @@ for libFuzzer with clang, runs them and evaluates what they find:
 scripts/fuzz/nvme-fuzz build
 scripts/fuzz/nvme-fuzz run --seconds 3600
 scripts/fuzz/nvme-fuzz run --targets device --jobs 8
+scripts/fuzz/nvme-fuzz run --plugins ocp --seconds 3600
 scripts/fuzz/nvme-fuzz triage
 ```
 
@@ -346,6 +347,17 @@ minimized again, for its limit: a stage adds tens of thousands of inputs, and
 each job of the next one would load all of them. A merge runs every input once,
 so the corpus of the target is merged by command, one merge per CPU, and what
 they keep once more.
+
+A run of the `device` target spreads its time over all commands of the table.
+`--plugins` selects the commands to fuzz by their first word, the plugin or the
+built-in command, e.g. `--plugins ocp,micron`, and then runs only the `device`
+target unless `--targets` names additional targets. The target takes the
+selection from `FUZZ_PLUGINS` and rejects an input of another command, also
+when run by hand; nvme-fuzz ignores an exported `FUZZ_PLUGINS` and sets it only
+with `--plugins`. A merge with `--plugins` set would drop the inputs of all
+other commands, so the run works on a copy of the inputs of the selected
+commands in the corpus, with one input of each command without device data, for
+each PCI ID its plugin checks, and adds what it finds to the corpus at its end.
 
 `triage` replays the findings of a target and groups them by the bug they hit:
 the kind of finding and the first nvme-cli frame. For the `device` target, it
