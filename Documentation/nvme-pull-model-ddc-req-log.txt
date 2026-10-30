@@ -1,14 +1,14 @@
-nvme-pull-model-ddr-req-log(1)
+nvme-pull-model-ddc-req-log(1)
 ==============================
 
 NAME
 ----
-nvme-pull-model-ddr-req-log - Retrieve Pull Model DDC Request Log, show it
+nvme-pull-model-ddc-req-log - Retrieve Pull Model DDC Request Log, show it
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'pull-model-ddr-req-log' <device> [--rae | -r]
+'nvme' [<global-options>] 'pull-model-ddc-req-log' <device> [--rae | -r]
 
 DESCRIPTION
 -----------
@@ -28,10 +28,10 @@ include::global-options.txt[]
 
 EXAMPLES
 --------
-* Has the program issue a pull-model-ddr-req-log
+* Has the program issue a pull-model-ddc-req-log
 +
 ------------
-# nvme pull-model-ddr-req-log /dev/nvme0
+# nvme pull-model-ddc-req-log /dev/nvme0
 ------------
 
 NVME
