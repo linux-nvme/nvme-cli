@@ -71,6 +71,19 @@ if python3.found()
              env: cli_test_env,
              depends: nvme_exe,
              suite: 'mock')
+
+        test('nvme-cli - nbft-show',
+             python3,
+             args: [
+                 files('nvme_nbft_show_test.py'),
+                 nvme_exe,
+                 files('nbft/NBFT-unlinked-discovery'),
+                 meson.project_source_root() / 'libnvme/tests/nbft/tables/NBFT-static-ipv4',
+                 meson.project_source_root() / 'libnvme/tests/nbft/tables/NBFT-synthetic-2hfi-3ssns-disc-sec',
+             ],
+             env: cli_test_env,
+             depends: nvme_exe,
+             suite: 'mock')
     endif
 
     # nvme top in a pseudo terminal, and its JSON output, on captured sysfs
