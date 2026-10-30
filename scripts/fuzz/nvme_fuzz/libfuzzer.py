@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from .targets import sanitizer_env
+from .targets import fuzz_env, sanitizer_env
 
 # nvme-fuzz run names the findings of the device target after the data
 # limit they were found with, see the data_limits of a Target
@@ -35,7 +35,7 @@ def is_slow_unit(path: Path) -> bool:
 def input_env(path: Path) -> dict[str, str]:
     """The environment to run the input @path in: the sanitizer settings,
     and the data limit it was found with."""
-    env = sanitizer_env(dict(os.environ))
+    env = sanitizer_env(fuzz_env())
     m = _DATA_LIMIT.match(path.name)
     if m:
         env['FUZZ_DATA_LIMIT'] = m[1]
@@ -105,7 +105,7 @@ def coverage(binary: Path, inputs: Iterable[bytes]) -> int:
         # Findings are not of interest here, only how far the inputs go.
         # In its own directory, so nothing it writes stays behind.
         env = dict(
-            os.environ,
+            fuzz_env(),
             ASAN_OPTIONS='allocator_may_return_null=1:'
             'max_allocation_size_mb=1024:'
             'detect_leaks=0',

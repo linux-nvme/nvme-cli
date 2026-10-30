@@ -6,6 +6,7 @@
 # Authors: Daniel Wagner <dwagner@suse.de>
 """Tests for reading the commands[] table of the device target."""
 
+import argparse
 import tempfile
 import unittest
 from pathlib import Path
@@ -106,6 +107,19 @@ class CommandsTest(unittest.TestCase):
         # a set the command doesn't have adds nothing
         self.assertEqual(d(bytes([5, 0x30, 0])), 'format --force')
 
+    def test_of_plugins(self) -> None:
+        def names(*plugins: str) -> list[str]:
+            return [c.name for c in device.of_plugins(self.cmds, plugins)]
+
+        self.assertEqual(names('ocp'), ['ocp get-latency-monitor --no-uuid'])
+        self.assertEqual(names('id'), ['id ctrl', 'id ns'])
+        # a built-in command by its name
+        self.assertEqual(
+            names('wdc', 'format'),
+            ['wdc vs-smart-add-log', 'format --force'],
+        )
+        self.assertEqual(names('get'), [])
+
 
 class RealTableTest(unittest.TestCase):
     """The table in the tree parses, and its first entry is id ctrl: the
@@ -120,6 +134,17 @@ class RealTableTest(unittest.TestCase):
         self.assertEqual(cmds[0].name, 'id ctrl')
         self.assertTrue(all(c.argv for c in cmds))
         self.assertEqual([c.index for c in cmds], list(range(len(cmds))))
+
+    def test_parse_plugins(self) -> None:
+        self.assertEqual(device.parse_plugins('ocp,micron'), ('ocp', 'micron'))
+        self.assertEqual(device.parse_plugins('read'), ('read',))
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "no command of 'nope'.*ocp"
+        ):
+            device.parse_plugins('ocp,nope')
+        # the commands from index 255 on are selected as well
+        cmds = device.of_plugins(device.commands(), ('zns',))
+        self.assertTrue(any(c.index >= device.EXTENDED_INDEX for c in cmds))
 
 
 if __name__ == '__main__':

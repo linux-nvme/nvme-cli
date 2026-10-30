@@ -18,11 +18,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from nvme_fuzz import run, seeds, targets
+from nvme_fuzz import device, libfuzzer, run, seeds, targets
 
 # What a libFuzzer binary does, as far as nvme-fuzz run cares: FAKE_MODE
-# says whether it finds something, ignores SIGTERM or just runs. A merge
-# keeps the inputs not named redundant-*, unless it fails, and notes its
+# says whether it finds something, ignores SIGTERM or just runs, and with
+# FAKE_FIND it adds found-1 to the corpus. A merge keeps the inputs not
+# named redundant-*, unless it fails, and notes its FUZZ_PLUGINS, if set,
 # data limit and inputs in FAKE_MERGES.
 FAKE = f"""#!{sys.executable}
 import os, shutil, signal, sys, time
@@ -39,12 +40,16 @@ if '-merge=1' in args:
         with open(os.environ['FAKE_MERGES'], 'a') as f:
             limit = os.environ.get('FUZZ_DATA_LIMIT', 'none')
             names = ' '.join(sorted(os.listdir(dirs[1])))
+            if 'FUZZ_PLUGINS' in os.environ:
+                f.write(os.environ['FUZZ_PLUGINS'] + ' ')
             f.write(f'{{limit}} {{names}}\\n')
     for f in os.listdir(dirs[1]):
         if not f.startswith('redundant-'):
             shutil.copy(os.path.join(dirs[1], f), dirs[0])
     sys.exit(0)
 os.mkdir('fuzz-device-abcdef')
+if 'FAKE_FIND' in os.environ:
+    open(os.path.join(dirs[0], 'found-1'), 'w').write('f')
 if mode == 'crash':
     limit = os.environ.get('FUZZ_DATA_LIMIT', 'none')
     open(prefix[0] + 'crash-1234', 'w').write(limit)
@@ -69,6 +74,36 @@ class JobEnvTest(unittest.TestCase):
         # replays for triage and check keep the whole stacks
         self.assertNotIn('malloc_context_size', replay['ASAN_OPTIONS'])
 
+    def test_no_exported_plugins(self) -> None:
+        # nvme-fuzz run sets it for --plugins only
+        with mock.patch.dict(os.environ, {'FUZZ_PLUGINS': 'ocp'}):
+            self.assertNotIn('FUZZ_PLUGINS', run.job_env())
+            self.assertNotIn('FUZZ_PLUGINS', libfuzzer.input_env(Path('x')))
+
+
+class SelectTest(unittest.TestCase):
+    def test_pci(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            corpus = Path(tmp) / 'device'
+            corpus.mkdir()
+            work = run._select(corpus, ('micron',))
+            names = {f.name for f in work.iterdir()}
+            cmds = device.of_plugins(device.commands(), ('micron',))
+            pci = [c for c in cmds if c.pci]
+            self.assertTrue(pci)
+            # a header for each PCI ID of the plugin
+            for c in pci:
+                for vid, did in device.PCI_IDS['micron']:
+                    name = f'header-{c.index}-{vid:04x}{did:04x}'
+                    self.assertIn(name, names)
+                    self.assertEqual(
+                        (work / name).read_bytes(),
+                        c.header(pci_ids=(vid, did)),
+                    )
+            for c in cmds:
+                if not c.pci:
+                    self.assertIn(f'header-{c.index}', names)
+
 
 @unittest.skipIf(
     sys.platform == 'win32', 'nvme-fuzz run needs POSIX process groups'
@@ -92,6 +127,7 @@ class RunTest(unittest.TestCase):
         seconds: int = 1,
         data_limits: tuple[int, ...] = (1 << 20,),
         jobs: int = 1,
+        plugins: tuple[str, ...] | None = None,
     ) -> int:
         args = argparse.Namespace(
             build_dir=self.build,
@@ -101,6 +137,7 @@ class RunTest(unittest.TestCase):
             targets=[targets.TARGETS['device']],
             data_limits=data_limits,
             no_mock_seeds=True,
+            plugins=plugins,
         )
         with mock.patch.dict(os.environ, {'FAKE_MODE': mode}):
             return run.main(args)
@@ -154,6 +191,7 @@ class RunTest(unittest.TestCase):
             targets=[targets.TARGETS['device']],
             data_limits=(1 << 20,),
             no_mock_seeds=False,
+            plugins=None,
         )
         with (
             mock.patch.object(run, 'DEADLINE_EXTRA', 0),
@@ -243,6 +281,107 @@ class RunTest(unittest.TestCase):
             },
         )
         self.assertEqual(parts[0].name, '1')
+
+    def test_plugins(self) -> None:
+        ocp = device.of_plugins(device.commands(), ('ocp',))
+        corpus = self.results / 'corpus' / 'device'
+        corpus.mkdir(parents=True)
+        (corpus / 'ocp-1').write_bytes(ocp[0].header() + b'x')
+        (corpus / 'id-1').write_bytes(bytes([0, 0, 0]))
+        merges = Path(self.tmp.name) / 'merges'
+        with (
+            mock.patch.object(run, 'DEADLINE_EXTRA', 0),
+            mock.patch.dict(
+                os.environ, {'FAKE_MERGES': str(merges), 'FAKE_FIND': '1'}
+            ),
+        ):
+            self.assertEqual(self._run('sleep', plugins=('ocp',)), 0)
+        plugins, limit, *names = merges.read_text().split()
+        self.assertEqual((plugins, limit), ('ocp', '1048576'))
+        # the inputs of the ocp commands only, one of each without data
+        self.assertIn('ocp-1', names)
+        self.assertNotIn('id-1', names)
+        headers = {f'header-{c.index}' for c in ocp}
+        self.assertLessEqual(headers, set(names))
+        indices = {c.index for c in ocp}
+        for n in names:
+            parts = device.split((corpus / n).read_bytes())
+            self.assertIsNotNone(parts, n)
+            assert parts is not None
+            self.assertIn(parts[0], indices, n)
+        # what the run found added to the corpus, which keeps the others
+        kept = {f.name for f in corpus.iterdir()}
+        self.assertLessEqual({'ocp-1', 'id-1', 'found-1'} | headers, kept)
+        self.assertEqual(
+            sorted(f.name for f in corpus.parent.iterdir()), ['device']
+        )
+
+    def test_plugins_exported(self) -> None:
+        # without --plugins, the merges see none of what the user exported
+        corpus = self.results / 'corpus' / 'device'
+        corpus.mkdir(parents=True)
+        (corpus / 'id-1').write_bytes(bytes([0, 0, 0]))
+        merges = Path(self.tmp.name) / 'merges'
+        with (
+            mock.patch.object(run, 'DEADLINE_EXTRA', 0),
+            mock.patch.dict(
+                os.environ, {'FAKE_MERGES': str(merges), 'FUZZ_PLUGINS': 'ocp'}
+            ),
+        ):
+            self.assertEqual(self._run('sleep'), 0)
+        self.assertEqual(merges.read_text().split()[0], '1048576')
+        self.assertTrue((corpus / 'id-1').exists())
+
+    def test_plugins_leftover(self) -> None:
+        # the copy of a run which did not end goes into the corpus first
+        corpus = self.results / 'corpus' / 'device'
+        work = corpus.with_name('device.select')
+        work.mkdir(parents=True)
+        (work / 'left-1').write_bytes(bytes([0, 0, 0]))
+        corpus.mkdir()
+        with mock.patch.object(run, 'DEADLINE_EXTRA', 0):
+            self.assertEqual(self._run('sleep', plugins=('ocp',)), 0)
+        self.assertTrue((corpus / 'left-1').exists())
+        self.assertFalse(work.exists())
+
+    def test_plugins_device_only(self) -> None:
+        ran = []
+
+        def run_target(
+            t: targets.Target, *args: object
+        ) -> tuple[list[Path], int, Path]:
+            ran.append(t.name)
+            return [], 0, Path(self.tmp.name)
+
+        def main(
+            plugins: tuple[str, ...] | None,
+            only: list[targets.Target] | None = None,
+            status: int = 0,
+        ) -> list[str]:
+            ran.clear()
+            args = argparse.Namespace(
+                build_dir=self.build,
+                results=self.results,
+                seconds=1,
+                jobs=1,
+                targets=only,
+                data_limits=None,
+                no_mock_seeds=True,
+                plugins=plugins,
+            )
+            for name in targets.TARGETS:
+                binary = targets.TARGETS[name].binary(self.build)
+                binary.touch()
+            with mock.patch.object(run, '_run_target', run_target):
+                self.assertEqual(run.main(args), status)
+            return list(ran)
+
+        self.assertEqual(main(('ocp',)), ['device'])
+        self.assertEqual(main(None), list(targets.TARGETS))
+        ini, dev = targets.TARGETS['ini'], targets.TARGETS['device']
+        self.assertEqual(main(('ocp',), [ini, dev]), ['ini', 'device'])
+        # the plugins would select nothing
+        self.assertEqual(main(('ocp',), [ini], 2), [])
 
     def test_interrupt_merge(self) -> None:
         corpus = self.results / 'corpus' / 'device'
