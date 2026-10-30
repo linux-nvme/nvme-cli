@@ -339,6 +339,10 @@ if python3.found()
         subdir('micron')
     endif
 
+    if 'netapp' in selected_plugins
+        subdir('netapp')
+    endif
+
     if 'wdc' in selected_plugins
         subdir('wdc')
     endif
