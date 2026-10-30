@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_uvol" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_uvol \- Voltage Measurement log page - Undervoltage (UVOL)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_uvol {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_UVOL_UVV"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_SHIFT" 12
+Shift amount to get the
+Minimum Undervoltage Value
+(MUVV)
+.IP "NVME_VOLTAGE_MEASUREMENT_UVOL_MUVV_MASK" 12
+Mask to get MUVV
+.IP "NVME_VOLTAGE_MEASUREMENT_UVOL_UVV" 12
+Undervoltage Valid

@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nvme_lm_tracked_memory_changed_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_tracked_memory_changed_descriptor \- Tracked Memory Changed Descriptor
+.SH SYNOPSIS
+struct nvme_lm_tracked_memory_changed_descriptor {
+.br
+.BI "    __le64 saddr;"
+.br
+.BI "    __le32 len;"
+.br
+.BI "    __u8 rsvd12[4];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "saddr" 12
+Start Address (SADDR)
+.IP "len" 12
+Length (LEN), in units of the tracking granularity indicated
+by \fIrpmpg\fP in \fIstruct nvme_lm_tracked_memory_change_data\fP
+.IP "rsvd12" 12
+Reserved

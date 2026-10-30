@@ -1,0 +1,19 @@
+.TH "libnvmf_lookup_keyring" 9 "libnvmf_lookup_keyring" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_lookup_keyring \- Lookup keyring serial number
+.SH SYNOPSIS
+.B "int" libnvmf_lookup_keyring
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *keyring "  ","
+.BI "long *key "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "keyring" 12
+Keyring name
+.IP "key" 12
+Key serial number to return
+.SH "DESCRIPTION"
+Looks up the serial number of the keyring \fIkeyring\fP.
+.SH "RETURN"
+0 on success, negative error code otherwise.

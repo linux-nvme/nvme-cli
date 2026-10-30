@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "struct nvme_exported_nvm_subsys_list" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_nvm_subsys_list \- Exported NVM Subsystems List Data Structure, returned by the Manage Exported NVM Subsystem Receive command's List Exported NVM Subsystems management operation
+.SH SYNOPSIS
+struct nvme_exported_nvm_subsys_list {
+.br
+.BI "    __le16 n;"
+.br
+.BI "    __u8 rsvd2;"
+.br
+.BI "    __u8 gn;"
+.br
+.BI "    struct nvme_exported_nvm_subsys_descriptor entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "n" 12
+Number of Exported NVM Subsystem Descriptors (N)
+.IP "rsvd2" 12
+Reserved
+.IP "gn" 12
+Generation Number (GN)
+.IP "entries" 12
+Exported NVM Subsystem Descriptor list, see \fIstruct
+nvme_exported_nvm_subsys_descriptor\fP

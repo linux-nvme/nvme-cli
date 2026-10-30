@@ -1,4 +1,4 @@
-.TH "libnvme_get_ana_log_atomic" 9 "libnvme_get_ana_log_atomic" "September 2026" "libnvme API manual" LINUX
+.TH "libnvme_get_ana_log_atomic" 9 "libnvme_get_ana_log_atomic" "October 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvme_get_ana_log_atomic \- Retrieve Asymmetric Namespace Access log page atomically
 .SH SYNOPSIS
@@ -26,7 +26,8 @@ The maximum number of times to retry on log page changes
 .SH "DESCRIPTION"
 See \fIstruct nvme_ana_log\fP for the definition of the returned structure.
 .SH "RETURN"
-If successful, returns 0 and sets *len to the actual log page length.
+If successful, returns 0 and sets ``*len`` to the actual log page
+length.
 If unsuccessful, returns the nvme command status if a response was received
 (see \fIenum nvme_status_field\fP) or negative error code otherwise.
 Sets errno = EINVAL if retries == 0.

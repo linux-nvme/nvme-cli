@@ -68,10 +68,11 @@ References to the specifications here will either to be the NVM Express
 Management Interface ("NVMe-MI") or the NVM Express Base specification
 ("NVMe"). At the time of writing, the versions we're referencing here
 are:
- - NVMe-MI 1.2b
- - NVMe 2.0b
-with a couple of accommodations for older spec types, particularly NVMe-MI
-1.1, where possible.
+
+- NVMe-MI 1.2b
+- NVMe 2.0b
+
+Older versions, in particular NVMe-MI 1.1, are supported where possible.
 
 .. c:function:: int libnvme_mi_set_csi (struct libnvme_mi_ep *ep, uint8_t csi)
 
@@ -199,7 +200,7 @@ seconds.
 This function provides a way to limit the maximum time we're prepared to
 wait for the final response. Specify zero in **mprt_max_ms** for no limit.
 This should be larger than the command/response timeout set in
-:c:type:`libnvme_mi_ep_set_timeout`().
+libnvme_mi_ep_set_timeout().
 
 
 .. c:function:: unsigned int libnvme_mi_ep_get_timeout (struct libnvme_mi_ep *ep)
@@ -275,9 +276,9 @@ See: :c:type:`libnvme_mi_first_transport_handle`, :c:type:`libnvme_mi_for_each_t
 
 Allows iteration of the list of controllers behind an endpoint. Unless the
 controllers have already been created explicitly, you'll probably want to
-call :c:type:`libnvme_mi_scan_ep`() to scan for the controllers first.
+call libnvme_mi_scan_ep() to scan for the controllers first.
 
-See: :c:type:`libnvme_mi_scan_ep`()
+See: libnvme_mi_scan_ep()
 
 
 .. c:macro:: libnvme_mi_for_each_transport_handle_safe
@@ -302,9 +303,9 @@ See: :c:type:`libnvme_mi_scan_ep`()
 Allows iteration of the list of controllers behind an endpoint, safe against
 deletion during iteration. Unless the controllers have already been created
 explicitly (or you're just iterating to destroy controllers) you'll probably
-want to call :c:type:`libnvme_mi_scan_ep`() to scan for the controllers first.
+want to call libnvme_mi_scan_ep() to scan for the controllers first.
 
-See: :c:type:`libnvme_mi_scan_ep`()
+See: libnvme_mi_scan_ep()
 
 
 .. c:function:: struct libnvme_mi_ep * libnvme_mi_open_mctp (struct libnvme_global_ctx *ctx, unsigned int netid, uint8_t eid)
@@ -952,7 +953,7 @@ values of the Composite Controller Status Flags. Bits set in **mask** will
 be cleared from future health status poll data, and may be re-triggered by
 a future health change event.
 
-See :c:type:`libnvme_mi_mi_subsystem_health_status_poll`(), :c:type:`enum nvme_mi_ccsf <nvme_mi_ccsf>` for
+See libnvme_mi_mi_subsystem_health_status_poll(), :c:type:`enum nvme_mi_ccsf <nvme_mi_ccsf>` for
 values in **mask**.
 
 **Return**

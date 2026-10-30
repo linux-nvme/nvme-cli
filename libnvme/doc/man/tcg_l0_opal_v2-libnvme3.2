@@ -1,0 +1,45 @@
+.TH "libnvme" 9 "struct tcg_l0_opal_v2" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_opal_v2 \- Opal SSC V2.00 feature (0x0203)
+.SH SYNOPSIS
+struct tcg_l0_opal_v2 {
+.br
+.BI "    __be16 base_comid;"
+.br
+.BI "    __be16 num_comids;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __be16 num_locking_sp_admin_auth;"
+.br
+.BI "    __be16 num_locking_sp_user_auth;"
+.br
+.BI "    __u8 initial_cpin_sid_ind;"
+.br
+.BI "    __u8 initial_cpin_sid_revert;"
+.br
+.BI "    __u8 rsvd11[5];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "base_comid" 12
+Base ComID
+.IP "num_comids" 12
+Number of ComIDs
+.IP "flags" 12
+Flags, see \fIenum tcg_l0_opal_v2_flags\fP
+.IP "num_locking_sp_admin_auth" 12
+Number of Locking SP Admin authorities
+.IP "num_locking_sp_user_auth" 12
+Number of Locking SP User authorities
+.IP "initial_cpin_sid_ind" 12
+Initial C_PIN_SID PIN indicator
+.IP "initial_cpin_sid_revert" 12
+Behavior of C_PIN_SID PIN upon TPer revert
+.IP "rsvd11" 12
+Reserved
+.SH "Description"
+TCG Opal SSC 2.02, section 3.1.1.5.

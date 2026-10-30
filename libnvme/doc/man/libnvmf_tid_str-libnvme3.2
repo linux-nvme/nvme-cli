@@ -1,0 +1,16 @@
+.TH "libnvmf_tid_str" 9 "libnvmf_tid_str" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_str \- Human-readable string form of a TID, for logging.
+.SH SYNOPSIS
+.B "const char *" libnvmf_tid_str
+.BI "(const struct libnvmf_tid *tid "  ");"
+.SH ARGUMENTS
+.IP "tid" 12
+The transport ID.
+.SH "DESCRIPTION"
+Returns "(transport, traddr, trsvcid[, subsysnqn][, host_iface][, host_traddr])"
+— the same rendering nvme-stas uses, so logs from both tools line up.
+hostnqn and hostid are omitted.  Lazily computed and cached; invalidated by
+any setter.
+.SH "RETURN"
+Cached string, or NULL if \fItid\fP is NULL or on allocation failure.

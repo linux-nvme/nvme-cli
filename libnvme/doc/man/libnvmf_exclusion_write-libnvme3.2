@@ -1,0 +1,28 @@
+.TH "libnvmf_exclusion_write" 9 "libnvmf_exclusion_write" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_write \- atomically replace a list's contents.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_write
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "const char *text "  ","
+.BI "uint64_t version "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name
+.IP "text" 12
+full replacement contents (every "exclusion = ..." line is
+validated and must sit inside the [exclusions] section;
+invalid entries cause -EINVAL and no write)
+.IP "version" 12
+token from a prior \fBlibnvmf_exclusion_read\fP.  The write proceeds
+only if the on-disk list still matches \fIversion\fP; otherwise it
+returns -ESTALE and leaves the file untouched, so a concurrent
+editor's changes are never silently overwritten.
+.SH "DESCRIPTION"
+The replacement is installed atomically (temp file + rename) with mode 0644.
+.SH "RETURN"
+0 on success, -ESTALE if the list changed since \fIversion\fP was read,
+-EINVAL for an invalid entry or name, negative errno otherwise.

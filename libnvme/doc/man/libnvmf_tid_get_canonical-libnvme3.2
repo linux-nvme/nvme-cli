@@ -1,0 +1,27 @@
+.TH "libnvmf_tid_get_canonical" 9 "libnvmf_tid_get_canonical" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_get_canonical \- Return the canonical string form of a TID.
+.SH SYNOPSIS
+.B "const char *" libnvmf_tid_get_canonical
+.BI "(const struct libnvmf_tid *tid "  ");"
+.SH ARGUMENTS
+.IP "tid" 12
+The transport ID.
+.SH "DESCRIPTION"
+Returns a deterministic, fixed-field-order semicolon-separated key=value
+string (e.g. "transport=tcp;traddr=1.2.3.4;trsvcid=8009").  Only non-NULL
+fields are included.  The string is lazily computed and cached; it is
+invalidated by any identity change.
+
+The fixed field order makes the output independent of the order fields
+were set, so the same logical TID always yields the same canonical string.
+This is the stable primitive libnvme provides for naming a connection; a
+caller that wants a compact hash (e.g. for a systemd unit name) derives it
+from this string itself -- libnvme does not hash it.
+
+The constructors store numeric addresses in one form: IPv6 is compressed,
+and an IPv4-mapped IPv6 address ("::ffff:1.2.3.4") becomes the IPv4
+address ("1.2.3.4").  So two spellings of one numeric address yield the
+same canonical string.
+.SH "RETURN"
+Cached canonical string, or NULL on allocation failure.

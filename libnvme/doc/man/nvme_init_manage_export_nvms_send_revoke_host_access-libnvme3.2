@@ -1,0 +1,22 @@
+.TH "nvme_init_manage_export_nvms_send_revoke_host_access" 9 "nvme_init_manage_export_nvms_send_revoke_host_access" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_nvms_send_revoke_host_access \- Initialize passthru command for Manage Exported NVM Subsystem Send - Revoke Host Access (message-based transports only)
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_nvms_send_revoke_host_access
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "struct nvme_exported_subsys_mgmt_data *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "data" 12
+Subsystem Management data buffer, see \fIstruct
+nvme_exported_subsys_mgmt_data\fP
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported NVM
+Subsystem Send command with SEL value
+NVME_MANAGE_EXPORT_NVMS_SEND_SEL_REVOKE_HOST_ACCESS. Command Dword 14
+(ESUBIDV/ESUBID) is not used by this operation - the target Exported NVM
+Subsystem(s) are specified in \fIdata\fP.

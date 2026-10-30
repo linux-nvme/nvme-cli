@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum tcg_l0_locking_features" "October 2026" "API Manual" LINUX
+.SH NAME
+enum tcg_l0_locking_features \- Locking feature flags
+.SH SYNOPSIS
+enum tcg_l0_locking_features {
+.br
+.BI "    TCG_L0_LOCKING_SUPPORTED"
+, 
+.br
+.br
+.BI "    TCG_L0_LOCKING_ENABLED"
+, 
+.br
+.br
+.BI "    TCG_L0_LOCKING_LOCKED"
+, 
+.br
+.br
+.BI "    TCG_L0_LOCKING_MEDIA_ENCRYPT"
+, 
+.br
+.br
+.BI "    TCG_L0_LOCKING_MBR_ENABLED"
+, 
+.br
+.br
+.BI "    TCG_L0_LOCKING_MBR_DONE"
+
+};
+.SH Constants
+.IP "TCG_L0_LOCKING_SUPPORTED" 12
+Locking supported
+.IP "TCG_L0_LOCKING_ENABLED" 12
+Locking enabled
+.IP "TCG_L0_LOCKING_LOCKED" 12
+Locked
+.IP "TCG_L0_LOCKING_MEDIA_ENCRYPT" 12
+Media encryption
+.IP "TCG_L0_LOCKING_MBR_ENABLED" 12
+MBR shadowing enabled
+.IP "TCG_L0_LOCKING_MBR_DONE" 12
+MBR shadowing done

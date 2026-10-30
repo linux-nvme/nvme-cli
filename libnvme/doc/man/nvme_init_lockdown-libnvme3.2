@@ -1,0 +1,36 @@
+.TH "nvme_init_lockdown" 9 "nvme_init_lockdown" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lockdown \- Initialize passthru command for Lockdown
+.SH SYNOPSIS
+.B "void" nvme_init_lockdown
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 scp "  ","
+.BI "__u8 prhbt "  ","
+.BI "__u8 ifc "  ","
+.BI "__u8 ofi "  ","
+.BI "__u8 uidx "  ","
+.BI "__u8 csel "  ","
+.BI "__u16 css "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "scp" 12
+Scope of the command
+.IP "prhbt" 12
+Prohibit or allow the command opcode or Set Features command
+.IP "ifc" 12
+Affected interface
+.IP "ofi" 12
+Opcode or Feature Identifier
+.IP "uidx" 12
+UUID Index if controller supports this id selection method
+.IP "csel" 12
+Controller Select (CSEL): specifies the controller(s)
+affected by this command, see \fIenum nvme_lockdown_csel\fP
+.IP "css" 12
+Controller Select Specific (CSS): meaning is specific to
+\fIcsel\fP (a Controller Identifier, a Primary Controller
+Identifier, or vendor specific). Ignored if \fIcsel\fP is
+NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM.
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Lockdown command.

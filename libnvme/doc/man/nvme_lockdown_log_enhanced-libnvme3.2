@@ -1,0 +1,49 @@
+.TH "libnvme" 9 "struct nvme_lockdown_log_enhanced" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_lockdown_log_enhanced \- Command and Feature Lockdown Log Page - Enhanced
+.SH SYNOPSIS
+struct nvme_lockdown_log_enhanced {
+.br
+.BI "    __u8 ver;"
+.br
+.BI "    __u8 cfia;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le32 sze;"
+.br
+.BI "    __le16 ncfid;"
+.br
+.BI "    __le16 cfids;"
+.br
+.BI "    __u8 rsvd12[4];"
+.br
+.BI "    struct nvme_lockdown_cfi_desc   cfid[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ver" 12
+Version: cleared to 0h.
+.IP "cfia" 12
+Command and Feature Identifier Attributes, see \fIenum
+nvme_lockdown_log_enhanced_cfia\fP.
+.IP "cntlid" 12
+Controller Identifier this log page applies to. FFFFh indicates
+the descriptor list entries are each reported by one or more
+controllers in the NVM subsystem, rather than a single
+controller.
+.IP "sze" 12
+Size of this log page in bytes.
+.IP "ncfid" 12
+Number of Command and Feature Identifier Descriptors in \fIcfid\fP.
+.IP "cfids" 12
+Command and Feature Identifier Descriptors Size: size in bytes
+of each entry in \fIcfid\fP.
+.IP "rsvd12" 12
+Reserved
+.IP "cfid" 12
+Command and Feature Identifier Descriptor list, see \fIstruct
+nvme_lockdown_cfi_desc\fP.

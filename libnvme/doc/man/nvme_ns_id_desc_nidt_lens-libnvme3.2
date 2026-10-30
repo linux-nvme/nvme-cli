@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_ns_id_desc_nidt_lens" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_ns_id_desc_nidt_lens \- Namespace Identifier Descriptor Type Lengths
+.SH SYNOPSIS
+enum nvme_ns_id_desc_nidt_lens {
+.br
+.BI "    NVME_NIDT_EUI64_LEN"
+, 
+.br
+.br
+.BI "    NVME_NIDT_NGUID_LEN"
+, 
+.br
+.br
+.BI "    NVME_NIDT_UUID_LEN"
+, 
+.br
+.br
+.BI "    NVME_NIDT_CSI_LEN"
+
+};
+.SH Constants
+.IP "NVME_NIDT_EUI64_LEN" 12
+IEEE Extended Unique Identifier length (8 bytes)
+.IP "NVME_NIDT_NGUID_LEN" 12
+Namespace Globally Unique Identifier length (16 bytes)
+.IP "NVME_NIDT_UUID_LEN" 12
+Universally Unique Identifier length (16 bytes)
+.IP "NVME_NIDT_CSI_LEN" 12
+Command Set Identifier length (1 byte)

@@ -1,0 +1,14 @@
+.TH "libnvme_alloc" 9 "libnvme_alloc" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_alloc \- Allocate zero-initialized memory
+.SH SYNOPSIS
+.B "void *" libnvme_alloc
+.BI "(size_t len "  ");"
+.SH ARGUMENTS
+.IP "len" 12
+Number of bytes to allocate
+.SH "DESCRIPTION"
+Allocates \fIlen\fP bytes of zero-initialized memory suitable for use by
+libnvme APIs.
+.SH "RETURN"
+Pointer to the allocated memory on success, or NULL on failure.

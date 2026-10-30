@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "enum nvme_cancel_cqe_dw0" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_cancel_cqe_dw0 \- Cancel - Completion Queue Entry Dword 0
+.SH SYNOPSIS
+enum nvme_cancel_cqe_dw0 {
+.br
+.BI "    NVME_CANCEL_CQE_CMDA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CANCEL_CQE_CMDA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CANCEL_CQE_CEDA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CANCEL_CQE_CEDA_MASK"
+
+};
+.SH Constants
+.IP "NVME_CANCEL_CQE_CMDA_SHIFT" 12
+Shift amount to get Commands Aborted (CMDA)
+.IP "NVME_CANCEL_CQE_CMDA_MASK" 12
+Mask to get CMDA
+.IP "NVME_CANCEL_CQE_CEDA_SHIFT" 12
+Shift amount to get Commands Eligible for
+Deferred Abort (CEDA)
+.IP "NVME_CANCEL_CQE_CEDA_MASK" 12
+Mask to get CEDA

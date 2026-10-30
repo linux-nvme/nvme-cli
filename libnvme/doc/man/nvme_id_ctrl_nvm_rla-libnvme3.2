@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_nvm_rla" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_nvm_rla \- Rate Limiting Attributes
+.SH SYNOPSIS
+enum nvme_id_ctrl_nvm_rla {
+.br
+.BI "    NVME_ID_CTRL_NVM_RLA_HLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_NVM_RLA_HLS_MASK"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_NVM_RLA_SLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_NVM_RLA_SLS_MASK"
+
+};
+.SH Constants
+.IP "NVME_ID_CTRL_NVM_RLA_HLS_SHIFT" 12
+Shift amount to get Hard Limit Support (HLS)
+.IP "NVME_ID_CTRL_NVM_RLA_HLS_MASK" 12
+Mask to get HLS
+.IP "NVME_ID_CTRL_NVM_RLA_SLS_SHIFT" 12
+Shift amount to get Soft Limit Support (SLS)
+.IP "NVME_ID_CTRL_NVM_RLA_SLS_MASK" 12
+Mask to get SLS

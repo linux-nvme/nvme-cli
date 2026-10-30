@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "enum nvme_rate_limiting_target" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_rate_limiting_target \- Rate Limiting Feature Command Dword 11 Target (TGT)
+.SH SYNOPSIS
+enum nvme_rate_limiting_target {
+.br
+.BI "    NVME_RATE_LIMITING_TARGET_CONTROLLER"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_TARGET_VENDOR_MIN"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_TARGET_VENDOR_MAX"
+
+};
+.SH Constants
+.IP "NVME_RATE_LIMITING_TARGET_CONTROLLER" 12
+Target Identifier field specifies
+the controller identifier
+.IP "NVME_RATE_LIMITING_TARGET_VENDOR_MIN" 12
+Start of vendor specific range
+.IP "NVME_RATE_LIMITING_TARGET_VENDOR_MAX" 12
+End of vendor specific range

@@ -1,0 +1,15 @@
+.TH "libnvme" 9 "struct nvme_exported_nvm_subsys_nqn_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_nvm_subsys_nqn_data \- Exported NVM Subsystem NQN Data Buffer, used by Manage Exported NVM Subsystem Send operations that identify the target Exported NVM Subsystem by NQN instead of by Exported NVM Subsystem Identifier (ESUBID)
+.SH SYNOPSIS
+struct nvme_exported_nvm_subsys_nqn_data {
+.br
+.BI "    __u8 esubnqn[256];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "esubnqn" 12
+Exported NVM Subsystem NQN (ESUBNQN)

@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nvme_exported_port_delete_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_port_delete_data \- Manage Exported Port - Delete Data Structure
+.SH SYNOPSIS
+struct nvme_exported_port_delete_data {
+.br
+.BI "    __u8 subnqn[256];"
+.br
+.BI "    __le16 epid;"
+.br
+.BI "    __u8 rsvd258[62];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "subnqn" 12
+Exported NVM Subsystem NQN (SUBNQN) associated with the
+Exported Port to delete
+.IP "epid" 12
+Exported Port ID (EPID) of the Exported Port to delete
+.IP "rsvd258" 12
+Reserved

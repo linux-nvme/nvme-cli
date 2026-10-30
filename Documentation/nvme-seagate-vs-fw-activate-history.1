@@ -2,12 +2,12 @@
 .\"     Title: nvme-seagate-vs-fw-activate-history
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/18/2026
+.\"      Date: 10/30/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SEAGATE\-VS\-F" "1" "09/18/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SEAGATE\-VS\-F" "1" "10/30/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -83,12 +83,31 @@ Select the output format version\&. Version
 \fI1\fR
 uses the original field naming, while version
 \fI2\fR
-(default) provides more consistent and script\-friendly field names\&.
+(default) provides more consistent and script\-friendly field names\&. Other versions are rejected\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Suppress informational messages\&. Errors are still reported, and \-\-quiet cancels any \-\-verbose for the library log level\&.
+.RE
+.PP
+\-\-set\-options=<key=value>[,<key=value>\&...]
+.RS 4
+Set libnvme library options for this invocation\&. Supported keys are
+\fIforce\-4k\fR,
+\fImi\-probe\-enabled\fR,
+\fItest\-base\-dir\fR
+and
+\fItest\-sysfs\-dir\fR\&.
 .RE
 .PP
 \-\-timeout=<ms>
 .RS 4
 Set the timeout for the command in milliseconds\&.
+\fIinfinite\fR
+or
+\fI\-1\fR
+waits without a time limit (0xffffffff)\&.
 .RE
 .PP
 \-v, \-\-verbose

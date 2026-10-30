@@ -1,0 +1,27 @@
+.TH "nvme_init_lm_track_receive" 9 "nvme_init_lm_track_receive" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lm_track_receive \- Initialize passthru command for Track Receive command
+.SH SYNOPSIS
+.B "void" nvme_init_lm_track_receive
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 sel "  ","
+.BI "__u16 cntlid "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select (SEL): This field specifies the type of management
+operation to perform.
+.IP "cntlid" 12
+Controller Identifier (CNTLID): Specifies the identifier of
+the controller for which the tracked memory changes, if any,
+are to be returned. Used by the Tracked Memory Changes
+management operation.
+.IP "data" 12
+Pointer to data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Track Receive command.

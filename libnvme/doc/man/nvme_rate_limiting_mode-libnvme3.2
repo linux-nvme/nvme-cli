@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_rate_limiting_mode" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_rate_limiting_mode \- Rate Limiting Control - Rate Limiting Mode (RLM)
+.SH SYNOPSIS
+enum nvme_rate_limiting_mode {
+.br
+.BI "    NVME_RATE_LIMITING_MODE_HARD_LIMIT"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_MODE_SOFT_LIMIT"
+
+};
+.SH Constants
+.IP "NVME_RATE_LIMITING_MODE_HARD_LIMIT" 12
+Hard Limit mode
+.IP "NVME_RATE_LIMITING_MODE_SOFT_LIMIT" 12
+Soft Limit mode

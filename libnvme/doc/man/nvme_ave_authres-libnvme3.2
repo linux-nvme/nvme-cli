@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_ave_authres" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_ave_authres \- KX-HMAC-CHAP AVE Authentication Verification Result (AuthRes)
+.SH SYNOPSIS
+enum nvme_ave_authres {
+.br
+.BI "    NVME_AVE_AUTHRES_SUCCESS"
+, 
+.br
+.br
+.BI "    NVME_AVE_AUTHRES_FAILED"
+
+};
+.SH Constants
+.IP "NVME_AVE_AUTHRES_SUCCESS" 12
+Authentication Verification Successful
+.IP "NVME_AVE_AUTHRES_FAILED" 12
+Authentication Verification Failed

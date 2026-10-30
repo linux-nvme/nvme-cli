@@ -1,0 +1,11 @@
+.TH "libnvmf_config_free" 9 "libnvmf_config_free" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_free \- release a resolved configuration.
+.SH SYNOPSIS
+.B "void" libnvmf_config_free
+.BI "(struct libnvmf_config *config "  ");"
+.SH ARGUMENTS
+.IP "config" 12
+configuration to free; NULL is a no-op.
+.SH "DESCRIPTION"
+Invalidates every connection and parameter set obtained from \fIconfig\fP.

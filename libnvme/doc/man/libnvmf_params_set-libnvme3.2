@@ -1,0 +1,25 @@
+.TH "libnvmf_params_set" 9 "libnvmf_params_set" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_params_set \- Set a connection parameter.
+.SH SYNOPSIS
+.B "int" libnvmf_params_set
+.BI "(struct libnvmf_params *params "  ","
+.BI "const char *key "  ","
+.BI "const char *value "  ");"
+.SH ARGUMENTS
+.IP "params" 12
+Caller-owned parameter set.
+.IP "key" 12
+Parameter name.
+.IP "value" 12
+Parameter value as a string. An empty string restores the
+kernel default for the parameter.
+.SH "DESCRIPTION"
+If the parameter already exists, its value is replaced.
+.SH "RETURN"
+
+
+* 0 on success.
+* -EINVAL if \fIkey\fP is unknown, is not a connection parameter,
+or if \fIvalue\fP is invalid for the parameter type.
+* -ENOMEM if memory allocation fails.

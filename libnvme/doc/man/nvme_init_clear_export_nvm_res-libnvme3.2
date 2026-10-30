@@ -1,0 +1,13 @@
+.TH "nvme_init_clear_export_nvm_res" 9 "nvme_init_clear_export_nvm_res" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_clear_export_nvm_res \- Initialize passthru command for Clear Exported NVM Resource Configuration
+.SH SYNOPSIS
+.B "void" nvme_init_clear_export_nvm_res
+.BI "(struct libnvme_passthru_cmd *cmd "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Clear Exported NVM
+Resource Configuration command. All command specific fields are
+reserved.

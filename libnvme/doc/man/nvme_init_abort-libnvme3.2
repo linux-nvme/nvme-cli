@@ -1,0 +1,17 @@
+.TH "nvme_init_abort" 9 "nvme_init_abort" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_abort \- Initialize passthru command for Abort command
+.SH SYNOPSIS
+.B "void" nvme_init_abort
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 sqid "  ","
+.BI "__u16 cid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sqid" 12
+Submission Queue Identifier (SQID) of the command to abort
+.IP "cid" 12
+Command Identifier (CID) of the command to abort
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Abort command.

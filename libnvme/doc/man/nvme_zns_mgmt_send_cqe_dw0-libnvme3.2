@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "enum nvme_zns_mgmt_send_cqe_dw0" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_zns_mgmt_send_cqe_dw0 \- Zone Management Send - Completion Queue Entry Dword 0
+.SH SYNOPSIS
+enum nvme_zns_mgmt_send_cqe_dw0 {
+.br
+.BI "    NVME_ZNS_MGMT_SEND_CQE_ZCC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ZNS_MGMT_SEND_CQE_ZCC_MASK"
+
+};
+.SH Constants
+.IP "NVME_ZNS_MGMT_SEND_CQE_ZCC_SHIFT" 12
+Shift amount to get Zone Capacity
+Changed (ZCC)
+.IP "NVME_ZNS_MGMT_SEND_CQE_ZCC_MASK" 12
+Mask to get ZCC

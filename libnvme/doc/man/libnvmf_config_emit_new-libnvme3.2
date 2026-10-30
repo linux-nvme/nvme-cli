@@ -1,0 +1,12 @@
+.TH "libnvmf_config_emit_new" 9 "libnvmf_config_emit_new" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_emit_new \- Create a configuration emitter.
+.SH SYNOPSIS
+.B "struct libnvmf_config_emitter *" libnvmf_config_emit_new
+.BI "(struct libnvme_global_ctx *ctx "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context. Must not be NULL.
+.SH "RETURN"
+A new emitter on success, or NULL on failure.
+Free the emitter with \fBlibnvmf_config_emit_free\fP.

@@ -1,0 +1,60 @@
+.TH "libnvme" 9 "struct nvme_mi_vpd_usce" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_vpd_usce \- Upstream Connector Element Descriptor
+.SH SYNOPSIS
+struct nvme_mi_vpd_usce {
+.br
+.BI "    __u8 typ;"
+.br
+.BI "    __u8 rev;"
+.br
+.BI "    __u8 len;"
+.br
+.BI "    __u8 ff;"
+.br
+.BI "    __u8 lptr;"
+.br
+.BI "    __u8 rsvd6[2];"
+.br
+.BI "    __u8 maxapwr;"
+.br
+.BI "    __le16 maxpwr;"
+.br
+.BI "    __u8 updc;"
+.br
+.BI "    __u8 upd[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "typ" 12
+Type: set to NVME_MI_ELEM_USCE.
+.IP "rev" 12
+Revision: cleared to 0h.
+.IP "len" 12
+Length of this Upstream Connector Element Descriptor in
+bytes.
+.IP "ff" 12
+Form Factor of the NVMe Storage Device, see \fIenum
+nvme_mi_form_factor\fP.
+.IP "lptr" 12
+Label Pointer: index of the Label Element Descriptor
+containing this Upstream Connector's label, if any. A value
+of 0h indicates there is no associated label.
+.IP "rsvd6" 12
+Reserved
+.IP "maxapwr" 12
+Maximum Auxiliary Power in 10 mW increments consumed by the
+NVMe Storage Device from this Upstream Connector. A value
+of 0h indicates auxiliary power is not used.
+.IP "maxpwr" 12
+Maximum Power in Watts consumed by the NVMe Storage Device.
+.IP "updc" 12
+Upstream Port Descriptor Count: number of Upstream Port
+Descriptors in \fIupd\fP.
+.IP "upd" 12
+Upstream Port Descriptor list. Each entry's size is
+implementation specific; use \fIlen\fP and \fIupdc\fP to walk the
+list.

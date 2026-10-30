@@ -1,0 +1,23 @@
+.TH "libnvmf_exclusion_add_subsysnqn" 9 "libnvmf_exclusion_add_subsysnqn" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_add_subsysnqn \- append a subsystem-NQN-only entry.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_add_subsysnqn
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "const char *subsysnqn "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name
+.IP "subsysnqn" 12
+subsystem NQN to exclude; must not be NULL or empty
+.SH "DESCRIPTION"
+Builds an exclusion entry matching every controller of a subsystem (the
+entry constrains only the NQN) inside libnvme -- the caller needs no
+knowledge of the on-disk entry format -- then appends it via
+\fBlibnvmf_exclusion_add\fP.  Creates the list if it does not exist.
+.SH "RETURN"
+0 on success, -EINVAL if \fIctx\fP or \fIsubsysnqn\fP is NULL/empty,
+negative errno otherwise.

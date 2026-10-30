@@ -1,0 +1,14 @@
+.TH "libnvme" 9 "enum nvme_lockdown_persistence_cqe_dw1" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_lockdown_persistence_cqe_dw1 \- Lockdown Persistence Personality - Get Features Completion Queue Entry Dword 1
+.SH SYNOPSIS
+enum nvme_lockdown_persistence_cqe_dw1 {
+.br
+.BI "    NVME_LOCKDOWN_PERSISTENCE_LDPS"
+
+};
+.SH Constants
+.IP "NVME_LOCKDOWN_PERSISTENCE_LDPS" 12
+Lockdown Persistence State: set to '1' if
+Lockdown Persistence is enabled; cleared
+to '0' if disabled.

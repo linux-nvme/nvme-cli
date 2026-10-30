@@ -1,0 +1,26 @@
+.TH "nvme_init_set_features_rate_limiting" 9 "nvme_init_set_features_rate_limiting" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_rate_limiting \- Initialize passthru command for Rate Limiting
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_rate_limiting
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 target "  ","
+.BI "__u16 tid "  ","
+.BI "struct nvme_rate_limiting_data *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "target" 12
+Target of the rate limits setting, see
+\fIenum nvme_rate_limiting_target\fP
+.IP "tid" 12
+Target Identifier for the target specified by \fItarget\fP
+.IP "data" 12
+User address of the Rate Limiting data buffer, see
+\fIstruct nvme_rate_limiting_data\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_RATE_LIMITING

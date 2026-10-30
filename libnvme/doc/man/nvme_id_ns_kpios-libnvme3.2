@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_id_ns_kpios" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_kpios \- Key Per I/O Status
+.SH SYNOPSIS
+enum nvme_id_ns_kpios {
+.br
+.BI "    NVME_NS_KPIOS_KPIOENS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_KPIOS_KPIOENS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_KPIOS_KPIOSNS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_KPIOS_KPIOSNS_MASK"
+
+};
+.SH Constants
+.IP "NVME_NS_KPIOS_KPIOENS_SHIFT" 12
+Shift amount to get Key Per I/O Enabled
+in Namespace from the \fIstruct nvme_id_ns\fP.kpios field.
+.IP "NVME_NS_KPIOS_KPIOENS_MASK" 12
+Mask to get Key Per I/O Enabled in Namespace
+from the \fIstruct nvme_id_ns\fP.kpios field.
+.IP "NVME_NS_KPIOS_KPIOSNS_SHIFT" 12
+Shift amount to get Key Per I/O Supported
+in Namespace from the \fIstruct nvme_id_ns\fP.kpios field.
+.IP "NVME_NS_KPIOS_KPIOSNS_MASK" 12
+Mask to get Key Per I/O Supported in Namespace
+from the \fIstruct nvme_id_ns\fP.kpios field.

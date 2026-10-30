@@ -1,0 +1,34 @@
+.TH "nvme_init_set_features_personality" 9 "nvme_init_set_features_personality" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_personality \- Initialize passthru command for Configurable Device Personality
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_personality
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 perid "  ","
+.BI "bool chps "  ","
+.BI "bool perfs "  ","
+.BI "__u32 cdw11 "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "perid" 12
+Personality Identifier (PERID), see \fIenum nvme_personality_identifier\fP
+.IP "chps" 12
+Change Personality Settings (CHPS)
+.IP "perfs" 12
+Personality Freeze State (PERFS)
+.IP "cdw11" 12
+Personality Identifier specific Command Dword 11 value
+.IP "data" 12
+Personality Identifier specific data buffer, or NULL if the
+personality does not use the data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_CONF_DEV_PERSONALITY

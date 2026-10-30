@@ -2,12 +2,12 @@
 .\"     Title: nvme-config-convert
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/18/2026
+.\"      Date: 10/30/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONFIG\-CONVER" "1" "09/18/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONFIG\-CONVER" "1" "10/30/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ nvme-config-convert \- Convert a legacy NVMe\-oF configuration to the INI format
 .nf
 \fInvme\fR [<global\-options>] \fIconfig convert\fR
                         [\-\-config=<file> | \-J <file>]
-                        [\-\-output=<file> | \-o <file>]
+                        [\-\-output=<file>]
                         [\-\-force]
                         [\-\-verbose | \-v]
 .fi
@@ -54,7 +54,7 @@ Malformed entries (for example, invalid addressing or an unreadable port) are sk
 Convert this JSON file instead of the default /usr/local/etc/nvme/config\&.json\&.
 .RE
 .PP
-\-o <file>, \-\-output=<file>
+\-\-output=<file>
 .RS 4
 Write the converted configuration here instead of the default /usr/local/etc/nvme/nvme\-fabrics\&.conf\&.
 .RE

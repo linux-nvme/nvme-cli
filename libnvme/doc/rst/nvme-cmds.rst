@@ -317,7 +317,8 @@ See :c:type:`struct nvme_ana_log <nvme_ana_log>` for the definition of the retur
 
 **Return**
 
-If successful, returns 0 and sets *len to the actual log page length.
+If successful, returns 0 and sets ``*len`` to the actual log page
+length.
 If unsuccessful, returns the nvme command status if a response was received
 (see :c:type:`enum nvme_status_field <nvme_status_field>`) or negative error code otherwise.
 Sets errno = EINVAL if retries == 0.

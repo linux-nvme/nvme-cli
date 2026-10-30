@@ -1,0 +1,37 @@
+.TH "libnvme" 9 "struct nvme_cross_ctrl_reset_entry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_cross_ctrl_reset_entry \- Cross-Controller Reset Entry Data Structure
+.SH SYNOPSIS
+struct nvme_cross_ctrl_reset_entry {
+.br
+.BI "    __le16 icid;"
+.br
+.BI "    __u8 ciu;"
+.br
+.BI "    __u8 rsvd3;"
+.br
+.BI "    __le16 acid;"
+.br
+.BI "    __u8 ccrs;"
+.br
+.BI "    __u8 ccrf;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "icid" 12
+Impacted Controller ID (ICID)
+.IP "ciu" 12
+Controller Instance Uniquifier (CIU)
+.IP "rsvd3" 12
+Reserved
+.IP "acid" 12
+Alternate Controller ID (ACID)
+.IP "ccrs" 12
+Cross-Controller Reset Status (CCRS), see \fIenum
+nvme_cross_ctrl_reset_ccrs\fP
+.IP "ccrf" 12
+Cross-Controller Reset Flags (CCRF), see \fIenum
+nvme_cross_ctrl_reset_ccrf\fP

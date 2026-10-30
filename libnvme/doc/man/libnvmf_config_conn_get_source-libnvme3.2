@@ -1,0 +1,13 @@
+.TH "libnvmf_config_conn_get_source" 9 "libnvmf_config_conn_get_source" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_get_source \- the file a connection came from.
+.SH SYNOPSIS
+.B "const char *" libnvmf_config_conn_get_source
+.BI "(const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "conn" 12
+the resolved connection
+.SH "DESCRIPTION"
+Provenance for diagnostics and "config show" style output.
+.SH "RETURN"
+borrowed string; the originating file's path.

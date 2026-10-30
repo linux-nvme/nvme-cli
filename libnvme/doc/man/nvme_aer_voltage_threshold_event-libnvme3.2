@@ -1,0 +1,50 @@
+.TH "libnvme" 9 "enum nvme_aer_voltage_threshold_event" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_aer_voltage_threshold_event \- Voltage Threshold Event - Event Specific Parameter
+.SH SYNOPSIS
+enum nvme_aer_voltage_threshold_event {
+.br
+.BI "    NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_MASK"
+, 
+.br
+.br
+.BI "    NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_MASK"
+, 
+.br
+.br
+.BI "    NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_MASK"
+
+};
+.SH Constants
+.IP "NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_SHIFT" 12
+Shift amount to get the
+Interval Voltage
+Measurement (IVM)
+.IP "NVME_AER_VOLTAGE_THRESHOLD_EVENT_IVM_MASK" 12
+Mask to get IVM
+.IP "NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_SHIFT" 12
+Shift amount to get the
+Voltage Threshold Type
+(VTHT), see \fIenum
+nvme_voltage_threshold_type\fP
+.IP "NVME_AER_VOLTAGE_THRESHOLD_EVENT_VTHT_MASK" 12
+Mask to get VTHT
+.IP "NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_SHIFT" 12
+Shift amount to get the
+Voltage Sensor Triggered
+(VSENT), see \fIenum
+nvme_voltage_sensor\fP
+.IP "NVME_AER_VOLTAGE_THRESHOLD_EVENT_VSENT_MASK" 12
+Mask to get VSENT

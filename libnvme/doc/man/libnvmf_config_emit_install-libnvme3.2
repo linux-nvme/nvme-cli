@@ -1,0 +1,31 @@
+.TH "libnvmf_config_emit_install" 9 "libnvmf_config_emit_install" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_emit_install \- Write a configuration to disk.
+.SH SYNOPSIS
+.B "int" libnvmf_config_emit_install
+.BI "(struct libnvmf_config_emitter *emitter "  ","
+.BI "const char *file "  ","
+.BI "bool force "  ");"
+.SH ARGUMENTS
+.IP "emitter" 12
+Configuration emitter.
+.IP "file" 12
+Destination configuration file, or NULL to use the default
+configuration file.
+.IP "force" 12
+Overwrite an existing configuration if true.
+.SH "DESCRIPTION"
+The default persona is written to the main configuration file. Each
+named persona is written to a separate drop-in file.
+
+The generated configuration is validated by reading it back through the
+standard parser before it is installed. Files are written atomically
+(temporary file followed by rename). If any step fails, no configuration
+is installed.
+.SH "RETURN"
+
+
+* 0 on success.
+* -EEXIST if a configuration already exists and \fIforce\fP is false.
+* -EINVAL if \fIemitter\fP is NULL.
+* A negative errno value on other failures.

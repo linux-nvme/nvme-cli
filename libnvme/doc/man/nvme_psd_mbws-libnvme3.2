@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum nvme_psd_mbws" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_psd_mbws \- Known values for &struct nvme_id_psd %mbws, the scale for &struct nvme_id_psd.mbw.
+.SH SYNOPSIS
+enum nvme_psd_mbws {
+.br
+.BI "    NVME_PSD_MBWS_1_MIB_S"
+, 
+.br
+.br
+.BI "    NVME_PSD_MBWS_10_MIB_S"
+, 
+.br
+.br
+.BI "    NVME_PSD_MBWS_100_MIB_S"
+, 
+.br
+.br
+.BI "    NVME_PSD_MBWS_1_GIB_S"
+, 
+.br
+.br
+.BI "    NVME_PSD_MBWS_10_GIB_S"
+, 
+.br
+.br
+.BI "    NVME_PSD_MBWS_100_GIB_S"
+
+};
+.SH Constants
+.IP "NVME_PSD_MBWS_1_MIB_S" 12
+1 MiB/second scale
+.IP "NVME_PSD_MBWS_10_MIB_S" 12
+10 MiB/second scale
+.IP "NVME_PSD_MBWS_100_MIB_S" 12
+100 MiB/second scale
+.IP "NVME_PSD_MBWS_1_GIB_S" 12
+1 GiB/second scale
+.IP "NVME_PSD_MBWS_10_GIB_S" 12
+10 GiB/second scale
+.IP "NVME_PSD_MBWS_100_GIB_S" 12
+100 GiB/second scale

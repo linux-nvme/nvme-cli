@@ -1,0 +1,29 @@
+.TH "libnvme" 9 "struct nvme_underlying_ns_list" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_underlying_ns_list \- Underlying Namespace List Data Structure (CNS 1Dh)
+.SH SYNOPSIS
+struct nvme_underlying_ns_list {
+.br
+.BI "    __le64 genctr;"
+.br
+.BI "    __le16 nument;"
+.br
+.BI "    __u8 rsvd10[6];"
+.br
+.BI "    struct nvme_underlying_ns_entry entries[NVME_UNDERLYING_NS_LIST_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "genctr" 12
+Generation Counter (GENCTR)
+.IP "nument" 12
+Number Entries (NUMENT)
+.IP "rsvd10" 12
+Reserved
+.IP "entries" 12
+Underlying Namespace list, see \fIstruct
+nvme_underlying_ns_entry\fP. Reportable up to
+NVME_UNDERLYING_NS_LIST_MAX entries.

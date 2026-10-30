@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "struct nvme_cdp_change_event" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_cdp_change_event \- CDP Change Event Data Format (Event Type 0Fh)
+.SH SYNOPSIS
+struct nvme_cdp_change_event {
+.br
+.BI "    __u8 ps;"
+.br
+.BI "    __u8 perid;"
+.br
+.BI "    __u8 rsvd2[10];"
+.br
+.BI "    __u8 ped[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ps" 12
+Personality Status, see \fIenum nvme_cdp_change_event_ps\fP.
+.IP "perid" 12
+Personality Identifier of the personality whose settings a Set
+Features command requested to change, see \fIenum
+nvme_personality_identifier\fP.
+.IP "rsvd2" 12
+Reserved
+.IP "ped" 12
+Personality Event Data: the data buffer of the Set Features
+command corresponding to \fIperid\fP, if any.

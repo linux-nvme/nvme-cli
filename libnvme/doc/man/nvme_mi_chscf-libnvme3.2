@@ -1,0 +1,84 @@
+.TH "libnvme" 9 "enum nvme_mi_chscf" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_chscf \- Controller Health Data Structure (CHDS) - Controller Health Status Changed Flags (CHSCF)
+.SH SYNOPSIS
+enum nvme_mi_chscf {
+.br
+.BI "    NVME_MI_CHSCF_RDYF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_CFSF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_SHSTF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_NSSROF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_CECOF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_NACF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_FAF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_CSF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_CTEMPF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_PDLUF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_SPAREF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_CWARNF"
+, 
+.br
+.br
+.BI "    NVME_MI_CHSCF_TCIDAF"
+
+};
+.SH Constants
+.IP "NVME_MI_CHSCF_RDYF" 12
+Ready Flag
+.IP "NVME_MI_CHSCF_CFSF" 12
+Controller Fatal Status Flag
+.IP "NVME_MI_CHSCF_SHSTF" 12
+Shutdown Status Flag
+.IP "NVME_MI_CHSCF_NSSROF" 12
+NVM Subsystem Reset Occurred Flag
+.IP "NVME_MI_CHSCF_CECOF" 12
+Controller Enable Change Occurred Flag
+.IP "NVME_MI_CHSCF_NACF" 12
+Namespace Attribute Changed Flag
+.IP "NVME_MI_CHSCF_FAF" 12
+Firmware Activated Flag
+.IP "NVME_MI_CHSCF_CSF" 12
+Controller Status Change Flag
+.IP "NVME_MI_CHSCF_CTEMPF" 12
+Composite Temperature Change Flag
+.IP "NVME_MI_CHSCF_PDLUF" 12
+Percentage Drive Life Used Flag
+.IP "NVME_MI_CHSCF_SPAREF" 12
+Available Spare Flag
+.IP "NVME_MI_CHSCF_CWARNF" 12
+Critical Warning Flag
+.IP "NVME_MI_CHSCF_TCIDAF" 12
+Telemetry Controller-Initiated Data Available Flag

@@ -1,0 +1,24 @@
+.TH "nvme_init_manage_export_nvms_receive_list_subsystems" 9 "nvme_init_manage_export_nvms_receive_list_subsystems" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_nvms_receive_list_subsystems \- Initialize passthru command for Manage Exported NVM Subsystem Receive - List Exported NVM Subsystems
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_nvms_receive_list_subsystems
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 esubid "  ","
+.BI "struct nvme_exported_nvm_subsys_list *list "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "esubid" 12
+Return Exported NVM Subsystems with an Exported NVM
+Subsystem Identifier greater than or equal to this value
+.IP "list" 12
+User address to store the Exported NVM Subsystems List data
+structure, see \fIstruct nvme_exported_nvm_subsys_list\fP
+.IP "len" 12
+The allocated length of \fIlist\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported NVM
+Subsystem Receive command with SEL value
+NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_SUBSYSTEMS.

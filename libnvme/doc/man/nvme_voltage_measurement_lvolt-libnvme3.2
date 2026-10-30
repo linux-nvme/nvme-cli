@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_lvolt" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_lvolt \- Start Voltage Measurements Data Structure - Log Voltage Threshold (LVOLT)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_lvolt {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_MASK"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_SHIFT" 12
+Shift amount to get the Log
+Undervoltage Threshold (LUVT)
+.IP "NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT_MASK" 12
+Mask to get LUVT
+.IP "NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_SHIFT" 12
+Shift amount to get the Log
+Overvoltage Threshold (LOVT)
+.IP "NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_MASK" 12
+Mask to get LOVT

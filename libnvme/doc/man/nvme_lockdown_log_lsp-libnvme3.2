@@ -1,0 +1,45 @@
+.TH "libnvme" 9 "enum nvme_lockdown_log_lsp" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_lockdown_log_lsp \- Command and Feature Lockdown Log Specific Parameter field (Get Log Page Command Dword 10 LSP field)
+.SH SYNOPSIS
+enum nvme_lockdown_log_lsp {
+.br
+.BI "    NVME_LOCKDOWN_LOG_LSP_SCP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_LOG_LSP_SCP_MASK"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_LOG_LSP_CNTTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_LOG_LSP_CNTTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_LOG_LSP_ELPF"
+
+};
+.SH Constants
+.IP "NVME_LOCKDOWN_LOG_LSP_SCP_SHIFT" 12
+Shift amount to get the Scope (SCP)
+.IP "NVME_LOCKDOWN_LOG_LSP_SCP_MASK" 12
+Mask to get SCP
+.IP "NVME_LOCKDOWN_LOG_LSP_CNTTS_SHIFT" 12
+Shift amount to get the Contents
+(CNTTS)
+.IP "NVME_LOCKDOWN_LOG_LSP_CNTTS_MASK" 12
+Mask to get CNTTS
+.IP "NVME_LOCKDOWN_LOG_LSP_ELPF" 12
+Enhanced Log Page Format: if set,
+then the Controller-scoped Enhanced
+log page format (see \fIstruct
+nvme_lockdown_log_enhanced\fP) is
+requested instead of \fIstruct
+nvme_lockdown_log\fP. The Controller
+Identifier is specified via the Log
+Specific Identifier field of Command
+Dword 11 (NVME_LOG_CDW11_LSI_SHIFT).

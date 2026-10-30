@@ -1,0 +1,31 @@
+.TH "nvme_init_set_features_power_measurement" 9 "nvme_init_set_features_power_measurement" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_power_measurement \- Initialize passthru command for Power Measurement
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_power_measurement
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 act "  ","
+.BI "__u8 pmts "  ","
+.BI "__u16 smt "  ","
+.BI "__u32 actsp "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "act" 12
+Action (ACT), see \fIenum nvme_voltage_measurement_act\fP (the
+Power Measurement and Voltage Measurement Action field
+values are defined identically)
+.IP "pmts" 12
+Power Measurement Type Select (PMTS), used if \fIact\fP requests
+Start Power Measurements
+.IP "smt" 12
+Stop Measurement Time (SMT), used if \fIact\fP requests Start Power
+Measurements
+.IP "actsp" 12
+Action Specific (ACTSP) Command Dword 12 value
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_POWER_MEASUREMENT

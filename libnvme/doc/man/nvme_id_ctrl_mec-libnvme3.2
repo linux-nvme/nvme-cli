@@ -1,0 +1,44 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_mec" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_mec \- Flags indicating the capabilities of the Management Endpoint in the Controller, &struct nvme_id_ctrl.mec.
+.SH SYNOPSIS
+enum nvme_id_ctrl_mec {
+.br
+.BI "    NVME_CTRL_MEC_TWPME_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_MEC_PCIEME_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_MEC_TWPME_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_MEC_PCIEME_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_MEC_TWPME"
+, 
+.br
+.br
+.BI "    NVME_CTRL_MEC_PCIEME"
+
+};
+.SH Constants
+.IP "NVME_CTRL_MEC_TWPME_SHIFT" 12
+TWPME shift
+.IP "NVME_CTRL_MEC_PCIEME_SHIFT" 12
+PCIEME shift
+.IP "NVME_CTRL_MEC_TWPME_MASK" 12
+TWPME mask
+.IP "NVME_CTRL_MEC_PCIEME_MASK" 12
+PCIEME mask
+.IP "NVME_CTRL_MEC_TWPME" 12
+If set, then the NVM Subsystem contains one or more
+Management Endpoints on the 2-Wire port.
+.IP "NVME_CTRL_MEC_PCIEME" 12
+If set, then the NVM Subsystem contains one or more
+Management Endpoints on one or more PCIe ports.

@@ -1,0 +1,26 @@
+.TH "nvme_init_get_features_fdp_events" 9 "nvme_init_get_features_fdp_events" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_fdp_events \- Initialize passthru command for Get Features - Flexible Data Placement Events
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_fdp_events
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u16 phndl "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "phndl" 12
+Placement Handle (PHNDL)
+.IP "data" 12
+Supported FDP Event Type List data buffer, see \fIstruct
+nvme_fdp_supported_event_desc\fP
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_FDP_EVENTS

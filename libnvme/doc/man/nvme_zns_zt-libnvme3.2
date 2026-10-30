@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_zns_zt" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_zns_zt \- Zone Descriptor Data Structure - Zone Type Attributes
+.SH SYNOPSIS
+enum nvme_zns_zt {
+.br
+.BI "    NVME_ZNS_DESC_ZT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ZNS_DESC_ZT_MASK"
+, 
+.br
+.br
+.BI "    NVME_ZONE_TYPE_SEQWRITE_REQ"
+
+};
+.SH Constants
+.IP "NVME_ZNS_DESC_ZT_SHIFT" 12
+Shift amount to get the Zone Type (ZT)
+from the \fIstruct nvme_zns_desc\fP.zt field.
+.IP "NVME_ZNS_DESC_ZT_MASK" 12
+Mask to get ZT from the
+\fIstruct nvme_zns_desc\fP.zt field.
+.IP "NVME_ZONE_TYPE_SEQWRITE_REQ" 12
+Sequential Write Required

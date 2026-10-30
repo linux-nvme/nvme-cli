@@ -1,0 +1,20 @@
+.TH "libnvmf_registry_delete" 9 "libnvmf_registry_delete" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_registry_delete \- Remove a controller's registry entry
+.SH SYNOPSIS
+.B "int" libnvmf_registry_delete
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *device "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "device" 12
+Kernel device name (e.g. "nvme3")
+.SH "DESCRIPTION"
+Removes the registry directory and all attribute files for \fIdevice\fP.  Called
+by the owning orchestrator on intentional disconnect.  The udev REMOVE rule
+handles the common case of kernel-driven removal directly via rm -rf and
+does not call this function.
+.SH "RETURN"
+0 on success, -ENOENT if no entry exists, negative errno from
+underlying system calls otherwise.

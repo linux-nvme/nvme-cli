@@ -782,6 +782,7 @@ Results for any other device are undefined.</p></div>
         NSID: Assign the different kind of nsid value(like
         active, inactive and invalid nsids) and check
         the get feature command response:
+        The broadcast value 0xffffffff can also be given as <em>all</em> or <em>-1</em>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -800,32 +801,34 @@ Results for any other device are undefined.</p></div>
 width="100%"
 frame="border"
 cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
 <tbody>
 <tr>
 <td align="left" valign="top"><p class="table">Select</p></td>
+<td align="left" valign="top"><p class="table">Name</p></td>
 <td align="left" valign="top"><p class="table">Description</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">0</p></td>
+<td align="left" valign="top"><p class="table">current</p></td>
 <td align="left" valign="top"><p class="table">Current</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">1</p></td>
+<td align="left" valign="top"><p class="table">default</p></td>
 <td align="left" valign="top"><p class="table">Default</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">2</p></td>
+<td align="left" valign="top"><p class="table">saved</p></td>
 <td align="left" valign="top"><p class="table">Saved</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">3</p></td>
+<td align="left" valign="top"><p class="table">supported</p></td>
 <td align="left" valign="top"><p class="table">Supported capabilities</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">4-7</p></td>
-<td align="left" valign="top"><p class="table">Reserved</p></td>
 </tr>
 </tbody>
 </table>
@@ -896,7 +899,26 @@ and are available to this subcommand:</p></div>
 <p>
         Select the output format version. Version <em>1</em> uses the original
         field naming, while version <em>2</em> (default) provides more consistent
-        and script-friendly field names.
+        and script-friendly field names. Other versions are rejected.
+</p>
+</dd>
+<dt class="hdlist1">
+--quiet
+</dt>
+<dd>
+<p>
+        Suppress informational messages. Errors are still reported, and
+        --quiet cancels any --verbose for the library log level.
+</p>
+</dd>
+<dt class="hdlist1">
+--set-options=&lt;key=value&gt;[,&lt;key=value&gt;&#8230;]
+</dt>
+<dd>
+<p>
+        Set libnvme library options for this invocation. Supported keys are
+        <em>force-4k</em>, <em>mi-probe-enabled</em>, <em>test-base-dir</em> and
+        <em>test-sysfs-dir</em>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -905,6 +927,7 @@ and are available to this subcommand:</p></div>
 <dd>
 <p>
         Set the timeout for the command in milliseconds.
+        <em>infinite</em> or <em>-1</em> waits without a time limit (0xffffffff).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -951,7 +974,7 @@ Has the program issue a get-telemetry-profile to retrieve the 0xC8 get features.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-18 12:15:54 CEST
+ 2026-10-30 19:29:20 CET
 </div>
 </div>
 </body>

@@ -1,0 +1,18 @@
+.TH "libnvmf_config_validate" 9 "libnvmf_config_validate" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_validate \- dry-run a connection configuration.
+.SH SYNOPSIS
+.B "int" libnvmf_config_validate
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *file "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context
+.IP "file" 12
+main configuration file, or NULL for the default.
+.SH "DESCRIPTION"
+Reads and resolves like \fBlibnvmf_config_read\fP, reporting every
+diagnostic through \fIctx\fP, without handing back a configuration.
+.SH "RETURN"
+0 when the configuration is valid (including absent),
+negative errno otherwise.

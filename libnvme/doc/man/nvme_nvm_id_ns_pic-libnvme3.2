@@ -1,0 +1,54 @@
+.TH "libnvme" 9 "enum nvme_nvm_id_ns_pic" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_nvm_id_ns_pic \- Protection Information Capabilities
+.SH SYNOPSIS
+enum nvme_nvm_id_ns_pic {
+.br
+.BI "    NVME_NVM_PIC_PITPS16B_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIC_PITPS16B_MASK"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIC_PISTM16B_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIC_PISTM16B_MASK"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIC_STCRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIC_STCRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIC_QPIFS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIC_QPIFS_MASK"
+
+};
+.SH Constants
+.IP "NVME_NVM_PIC_PITPS16B_SHIFT" 12
+Shift amount to get 16b Guard Protection Information Storage Tag Support
+.IP "NVME_NVM_PIC_PITPS16B_MASK" 12
+Mask to get 16b Guard Protection Information Storage Tag Support
+.IP "NVME_NVM_PIC_PISTM16B_SHIFT" 12
+Shift amount to get 16b Guard Protection Information Storage Tag Mask
+.IP "NVME_NVM_PIC_PISTM16B_MASK" 12
+Mask to get 16b Guard Protection Information Storage Tag Mask
+.IP "NVME_NVM_PIC_STCRS_SHIFT" 12
+Shift amount to get Storage Tag Check Read Support
+.IP "NVME_NVM_PIC_STCRS_MASK" 12
+Mask to get Storage Tag Check Read Support
+.IP "NVME_NVM_PIC_QPIFS_SHIFT" 12
+Shift amount to get Qualified Protection Information Format Support
+.IP "NVME_NVM_PIC_QPIFS_MASK" 12
+Mask to get Qualified Protection Information Format Support

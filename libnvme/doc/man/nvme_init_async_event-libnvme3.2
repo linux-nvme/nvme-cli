@@ -1,0 +1,12 @@
+.TH "nvme_init_async_event" 9 "nvme_init_async_event" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_async_event \- Initialize passthru command for Asynchronous Event Request command
+.SH SYNOPSIS
+.B "void" nvme_init_async_event
+.BI "(struct libnvme_passthru_cmd *cmd "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Asynchronous Event
+Request command. All command specific fields are reserved.

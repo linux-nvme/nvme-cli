@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "enum nvme_lm_tact" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_tact \- Track Send - Track Memory Changes - Management Operation Specific field - Tracking Action (TACT)
+.SH SYNOPSIS
+enum nvme_lm_tact {
+.br
+.BI "    NVME_LM_TACT_STOP_TRACKING"
+, 
+.br
+.br
+.BI "    NVME_LM_TACT_START_TRACKING"
+
+};
+.SH Constants
+.IP "NVME_LM_TACT_STOP_TRACKING" 12
+Stop tracking host memory changes
+.IP "NVME_LM_TACT_START_TRACKING" 12
+Start tracking host memory changes; the
+data buffer contains a Track Memory Changes data
+structure, see \fIstruct nvme_lm_track_memory_changes_data\fP

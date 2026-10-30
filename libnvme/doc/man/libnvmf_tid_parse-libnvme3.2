@@ -1,0 +1,29 @@
+.TH "libnvmf_tid_parse" 9 "libnvmf_tid_parse" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_parse \- Allocate a TID from a semicolon-separated key=value string.
+.SH SYNOPSIS
+.B "int" libnvmf_tid_parse
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *str "  ","
+.BI "struct libnvmf_tid **out "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context used only for logging the diagnostics below.
+.IP "str" 12
+Input string, e.g. "transport=tcp;traddr=1.2.3.4;trsvcid=8009".
+.IP "out" 12
+The allocated TID on success; NULL on error.
+.SH "DESCRIPTION"
+Recognized keys are the "nvme connect" option names: transport, traddr,
+trsvcid, nqn, host-traddr, host-iface, hostnqn, hostid.  (The "nqn",
+"host-traddr", and "host-iface" string keys map onto the struct's
+subsysnqn, host_traddr, and host_iface fields, whose names follow the
+C-identifier convention.)  Unknown keys, bare keys (no '='), and empty
+values are logged at WARN level and skipped.
+Whitespace around keys and values is trimmed.
+Like \fBlibnvmf_tid_from_fields\fP, a traddr/host-traddr that is not numeric on
+an IP transport fails the whole parse.
+.SH "RETURN"
+0 on success (*\fIout\fP is the allocated TID); -EINVAL if \fIctx\fP, \fIout\fP or
+\fIstr\fP is NULL, or a traddr/host-traddr is not numeric on an IP transport;
+-ENOMEM on allocation failure.

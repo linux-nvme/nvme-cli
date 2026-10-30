@@ -278,3 +278,113 @@ This should only be used for namespace handles, not controllers.
 0 if the block size was updated or a negative error code otherwise.
 
 
+.. c:function:: int libnvme_reread_partitions (struct libnvme_transport_handle *hdl)
+
+   Reread the partition table
+
+**Parameters**
+
+``struct libnvme_transport_handle *hdl``
+  Transport handle
+
+**Description**
+
+Ask the kernel to reread the partition table of a namespace, e.g. after
+the namespace has become readable again. This should only be used for
+namespace handles, not controllers.
+
+**Return**
+
+0 if the partition table was reread or a negative error code
+otherwise.
+
+
+.. c:function:: int libnvme_read_regs (struct libnvme_transport_handle *hdl, __u32 offset, void *buf, __u32 len)
+
+   Read the controller registers of a PCIe controller
+
+**Parameters**
+
+``struct libnvme_transport_handle *hdl``
+  Transport handle
+
+``__u32 offset``
+  Offset of the first register in bytes
+
+``void *buf``
+  Buffer to store the register values
+
+``__u32 len``
+  Number of bytes to read
+
+**Description**
+
+Copies the register range [**offset**, **offset** + **len**) of the controller
+into **buf**, using 32-bit MMIO reads. The register values are stored in
+little-endian byte order, as they appear in the register map. **offset**
+and **len** must be multiples of 4 and the range must be within the first
+4 KiB of the register map.
+
+This should only be sent to controller handles, not to namespaces.
+
+**Return**
+
+0 on success or a negative error code otherwise. -ENOTSUP
+indicates that the transport has no memory-mapped registers.
+
+
+.. c:function:: int libnvme_write_reg32 (struct libnvme_transport_handle *hdl, __u32 offset, __u32 value)
+
+   Write a 32-bit controller register of a PCIe controller
+
+**Parameters**
+
+``struct libnvme_transport_handle *hdl``
+  Transport handle
+
+``__u32 offset``
+  Offset of the register in bytes
+
+``__u32 value``
+  Value to write
+
+**Description**
+
+This should only be sent to controller handles, not to namespaces.
+
+**Return**
+
+0 on success or a negative error code otherwise. -ENOTSUP
+indicates that the transport has no memory-mapped registers.
+
+
+.. c:function:: int libnvme_write_reg64 (struct libnvme_transport_handle *hdl, __u32 offset, __u64 value, bool mmio32)
+
+   Write a 64-bit controller register of a PCIe controller
+
+**Parameters**
+
+``struct libnvme_transport_handle *hdl``
+  Transport handle
+
+``__u32 offset``
+  Offset of the register in bytes
+
+``__u64 value``
+  Value to write
+
+``bool mmio32``
+  Write the register as two 32-bit values, low half first.
+  Some devices do not support 64-bit MMIO.
+
+**Description**
+
+**offset** must be a multiple of 8. This should only be sent to controller
+handles, not to namespaces.
+
+**Return**
+
+0 on success or a negative error code otherwise. -ENOTSUP
+indicates that the transport has no memory-mapped registers.
+
+

@@ -1,0 +1,16 @@
+.TH "libnvme" 9 "enum nvme_aer_one_shot" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_aer_one_shot \- Asynchronous Event Information - One Shot
+.SH SYNOPSIS
+enum nvme_aer_one_shot {
+.br
+.BI "    NVME_AER_ONE_SHOT_VOLTAGE_THRESHOLD_EVENT"
+
+};
+.SH Constants
+.IP "NVME_AER_ONE_SHOT_VOLTAGE_THRESHOLD_EVENT" 12
+Voltage Threshold Event: the
+interval voltage measurement crossed one of the voltage thresholds
+configured by the Voltage Threshold feature, see \fIenum
+nvme_aer_voltage_threshold_event\fP for the Event Specific Parameter
+field format.

@@ -1,0 +1,18 @@
+.TH "libnvme_ns_get_csi" 9 "libnvme_ns_get_csi" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_csi \- Get csi.
+.SH SYNOPSIS
+.B "int" libnvme_ns_get_csi
+.BI "(const struct libnvme_ns *p "  ","
+.BI "enum nvme_csi *csi "  ","
+.BI "enum nvme_csi dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
+.IP "csi" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fIcsi\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

@@ -1,0 +1,54 @@
+.TH "libnvme" 9 "struct tcg_l0_data_removal" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_data_removal \- Data Removal Mechanism feature (0x0404)
+.SH SYNOPSIS
+struct tcg_l0_data_removal {
+.br
+.BI "    __u8 rsvd0;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 removal_mechanism;"
+.br
+.BI "    __u8 format;"
+.br
+.BI "    __be16 time_mechanism_bit0;"
+.br
+.BI "    __be16 time_mechanism_bit1;"
+.br
+.BI "    __be16 time_mechanism_bit2;"
+.br
+.BI "    __u8 rsvd10[4];"
+.br
+.BI "    __be16 time_mechanism_bit5;"
+.br
+.BI "    __u8 rsvd16[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "flags" 12
+Flags, see \fIenum tcg_l0_data_removal_flags\fP
+.IP "removal_mechanism" 12
+Supported mechanisms, see
+\fIenum tcg_l0_data_removal_mechanism\fP
+.IP "format" 12
+Data removal time format
+.IP "time_mechanism_bit0" 12
+Data removal time for mechanism bit 0
+.IP "time_mechanism_bit1" 12
+Data removal time for mechanism bit 1
+.IP "time_mechanism_bit2" 12
+Data removal time for mechanism bit 2
+.IP "rsvd10" 12
+Reserved
+.IP "time_mechanism_bit5" 12
+Data removal time for mechanism bit 5
+.IP "rsvd16" 12
+Reserved
+.SH "Description"
+TCG Storage Opal SSC 2.02, section 3.1.1.6.

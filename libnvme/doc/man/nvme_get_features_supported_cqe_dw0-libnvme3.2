@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "enum nvme_get_features_supported_cqe_dw0" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_get_features_supported_cqe_dw0 \- Get Features Completion Queue Entry Dword 0 when the Select field is set to %NVME_GET_FEATURES_SEL_SUPPORTED
+.SH SYNOPSIS
+enum nvme_get_features_supported_cqe_dw0 {
+.br
+.BI "    NVME_GET_FEATURES_SUPPORTED_SVBL"
+, 
+.br
+.br
+.BI "    NVME_GET_FEATURES_SUPPORTED_NSSPEC"
+, 
+.br
+.br
+.BI "    NVME_GET_FEATURES_SUPPORTED_CHANG"
+
+};
+.SH Constants
+.IP "NVME_GET_FEATURES_SUPPORTED_SVBL" 12
+Saveable: the feature values are
+saveable if set to '1'.
+.IP "NVME_GET_FEATURES_SUPPORTED_NSSPEC" 12
+NS Specific: the Feature Identifier
+has a namespace scope if set to '1'.
+.IP "NVME_GET_FEATURES_SUPPORTED_CHANG" 12
+Changeable: the feature values are
+changeable if set to '1'.

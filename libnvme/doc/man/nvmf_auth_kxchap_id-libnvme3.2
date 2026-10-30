@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvmf_auth_kxchap_id" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvmf_auth_kxchap_id \- KX-HMAC-CHAP Authentication Identifiers (AUTH_ID)
+.SH SYNOPSIS
+enum nvmf_auth_kxchap_id {
+.br
+.BI "    NVMF_AUTH_KXCHAP_ID_CHALLENGE"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXCHAP_ID_REPLY"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXCHAP_ID_SUCCESS1"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXCHAP_ID_SUCCESS2"
+
+};
+.SH Constants
+.IP "NVMF_AUTH_KXCHAP_ID_CHALLENGE" 12
+KX-HMAC-CHAP_Challenge
+.IP "NVMF_AUTH_KXCHAP_ID_REPLY" 12
+KX-HMAC-CHAP_Reply
+.IP "NVMF_AUTH_KXCHAP_ID_SUCCESS1" 12
+KX-HMAC-CHAP_Success1
+.IP "NVMF_AUTH_KXCHAP_ID_SUCCESS2" 12
+KX-HMAC-CHAP_Success2

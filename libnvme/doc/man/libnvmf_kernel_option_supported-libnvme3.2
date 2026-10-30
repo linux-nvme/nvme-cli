@@ -1,0 +1,23 @@
+.TH "libnvmf_kernel_option_supported" 9 "libnvmf_kernel_option_supported" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_kernel_option_supported \- Check if the kernel supports an option
+.SH SYNOPSIS
+.B "int" libnvmf_kernel_option_supported
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "bool *supported "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context
+.IP "name" 12
+Option name as the kernel lists it in /dev/nvme-fabrics,
+e.g. "discovery", "tls", "ctrl_loss_tmo"
+.IP "supported" 12
+Set to true if the kernel supports \fIname\fP
+.SH "DESCRIPTION"
+The options are read from /dev/nvme-fabrics once per \fIctx\fP. The read
+blocks while another process connects a controller.
+.SH "RETURN"
+0 on success, -EINVAL if an argument is NULL, -EOPNOTSUPP if
+the kernel does not list its options (Linux < 5.17), or another
+negative error code.

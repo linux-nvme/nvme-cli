@@ -1,0 +1,70 @@
+.TH "libnvme" 9 "enum nvme_send_discovery_log_page_cdw10" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_send_discovery_log_page_cdw10 \- Send Discovery Log Page (SDLP) - Command Dword 10
+.SH SYNOPSIS
+enum nvme_send_discovery_log_page_cdw10 {
+.br
+.BI "    NVME_SDLP_CDW10_TLID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_TLID_MASK"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_TLSP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_TLSP_MASK"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_SC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_SC_MASK"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_SCT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_SCT_MASK"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_RLPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SDLP_CDW10_RLPS_MASK"
+
+};
+.SH Constants
+.IP "NVME_SDLP_CDW10_TLID_SHIFT" 12
+Shift amount to set Transferred Log Page
+Identifier (TLID)
+.IP "NVME_SDLP_CDW10_TLID_MASK" 12
+Mask to set TLID
+.IP "NVME_SDLP_CDW10_TLSP_SHIFT" 12
+Shift amount to set Transferred Log Specific
+Parameter (TLSP)
+.IP "NVME_SDLP_CDW10_TLSP_MASK" 12
+Mask to set TLSP
+.IP "NVME_SDLP_CDW10_SC_SHIFT" 12
+Shift amount to set Status Code (SC)
+.IP "NVME_SDLP_CDW10_SC_MASK" 12
+Mask to set SC
+.IP "NVME_SDLP_CDW10_SCT_SHIFT" 12
+Shift amount to set Status Code Type (SCT)
+.IP "NVME_SDLP_CDW10_SCT_MASK" 12
+Mask to set SCT
+.IP "NVME_SDLP_CDW10_RLPS_SHIFT" 12
+Shift amount to set Requested Log Page
+Status (RLPS), see \fIenum
+nvme_send_discovery_log_page_rlps\fP
+.IP "NVME_SDLP_CDW10_RLPS_MASK" 12
+Mask to set RLPS

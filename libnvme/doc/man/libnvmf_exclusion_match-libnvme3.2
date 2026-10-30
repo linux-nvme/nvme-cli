@@ -1,0 +1,19 @@
+.TH "libnvmf_exclusion_match" 9 "libnvmf_exclusion_match" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_match \- check whether a controller matches any exclusion entry.
+.SH SYNOPSIS
+.B "bool" libnvmf_exclusion_match
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const struct libnvmf_tid *tid "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "tid" 12
+Transport ID identifying the controller.  All fields are optional;
+NULL means "this connection has no value for this field".
+.SH "DESCRIPTION"
+Re-reads the exclusion directory on every call (no caching).
+Entries with unknown keys never match (fail-safe).
+.SH "RETURN"
+true if any exclusion entry matches, false otherwise.
+Returns false (not excluded / fail-open) if the directory cannot be read.

@@ -1,0 +1,18 @@
+.TH "nvme_init_identify_iocs_ind_id_alloc_ns" 9 "nvme_init_identify_iocs_ind_id_alloc_ns" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_iocs_ind_id_alloc_ns \- Initialize passthru command for I/O Command Set Independent Identify Namespace data structure for an Allocated Namespace ID
+.SH SYNOPSIS
+.B "void" nvme_init_identify_iocs_ind_id_alloc_ns
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_id_independent_id_ns *ns "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "nsid" 12
+Allocated namespace identifier
+.IP "ns" 12
+I/O Command Set Independent Identify Namespace data structure
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS.

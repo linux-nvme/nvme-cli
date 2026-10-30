@@ -1,0 +1,14 @@
+.TH "libnvme" 9 "enum nvme_export_port_create_mos" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_export_port_create_mos \- Manage Exported Port - Create - Management Operation Specific (MOS) field
+.SH SYNOPSIS
+enum nvme_export_port_create_mos {
+.br
+.BI "    NVME_EXPORT_PORT_CREATE_MOS_GEPID"
+
+};
+.SH Constants
+.IP "NVME_EXPORT_PORT_CREATE_MOS_GEPID" 12
+Generate Exported Port ID (GEPID): if
+set, the controller generates the Exported Port ID
+instead of using the value in the data buffer

@@ -764,7 +764,9 @@ without passing <em>--no-ioctl-probing</em> on every invocation.</p></div>
 <div class="paragraph"><p>The file is read once, before command-line parsing, and only sets
 <strong>defaults</strong>: an explicit command-line flag always overrides whatever
 this file set. A missing file is not an error; it simply changes
-nothing.</p></div>
+nothing. A file which can&#8217;t be read is: <em>nvme</em> reports it and fails.
+The file holds no secrets and must be readable by every user, as
+<em>nvme</em> may read it after dropping its root privileges.</p></div>
 <div class="paragraph"><p>There is no <em>--config</em> override and no drop-in directory for this
 file; it always lives at the path above.</p></div>
 </div>
@@ -826,7 +828,7 @@ timeout = 5000</code></pre>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-18 12:15:54 CEST
+ 2026-10-30 19:29:20 CET
 </div>
 </div>
 </body>

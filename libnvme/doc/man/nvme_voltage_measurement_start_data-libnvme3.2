@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "struct nvme_voltage_measurement_start_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_voltage_measurement_start_data \- Start Voltage Measurements Data Structure
+.SH SYNOPSIS
+struct nvme_voltage_measurement_start_data {
+.br
+.BI "    __le16 lvolta;"
+.br
+.BI "    __le16 svmt;"
+.br
+.BI "    __le32 lvolt;"
+.br
+.BI "    __u8 rsvd8[4088];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lvolta" 12
+Log Voltage Threshold Attributes, see \fIenum
+nvme_voltage_measurement_lvolta\fP.
+.IP "svmt" 12
+Stop Voltage Measurement Time, in minutes. A value of 0h
+specifies no stop measurement time value.
+.IP "lvolt" 12
+Log Voltage Threshold, see \fIenum nvme_voltage_measurement_lvolt\fP.
+Ignored if the VMLT bit is cleared to '0' in \fIlvolta\fP.
+.IP "rsvd8" 12
+Reserved

@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_rate_limiting_controller_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_rate_limiting_controller_descriptor \- Rate Limiting Controller Descriptor (QCD)
+.SH SYNOPSIS
+struct nvme_rate_limiting_controller_descriptor {
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 nnsmad;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    struct nvme_rate_limiting_max_access_descriptor rlma;"
+.br
+.BI "    __u8 rsvd40[24];"
+.br
+.BI "    __u8 vs[256];"
+.br
+.BI "    __le32 nvsma_offset[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cntlid" 12
+Controller Identifier
+.IP "nnsmad" 12
+Number of Non-Volatile Storage Medium Access Descriptors in
+\fInvsma_offset\fP, non-zero
+.IP "rsvd4" 12
+Reserved
+.IP "rlma" 12
+Rate Limiting Maximum Access of the controller to the NVM
+subsystem port
+.IP "rsvd40" 12
+Reserved
+.IP "vs" 12
+Vendor Specific
+.IP "nvsma_offset" 12
+Dword offsets, relative to the start of the Rate Limiting
+log page, to the Non-Volatile Storage Medium Access
+Descriptors, \fInnsmad\fP entries

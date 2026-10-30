@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_exported_subsys_mgmt_host_entry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_subsys_mgmt_host_entry \- Host Entry Data Structure, used by the Manage Exported NVM Subsystem Send Grant Host Access and Revoke Host Access operations
+.SH SYNOPSIS
+struct nvme_exported_subsys_mgmt_host_entry {
+.br
+.BI "    __u8 rsvd0[8];"
+.br
+.BI "    __u8 hostid[16];"
+.br
+.BI "    __u8 hostnqn[256];"
+.br
+.BI "    __u8 rsvd280[40];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "hostid" 12
+Host Identifier (HOSTID)
+.IP "hostnqn" 12
+Host NVMe Qualified Name (HOSTNQN)
+.IP "rsvd280" 12
+Reserved

@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "struct nvme_exported_ctrl_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_ctrl_descriptor \- Exported Controller Descriptor
+.SH SYNOPSIS
+struct nvme_exported_ctrl_descriptor {
+.br
+.BI "    __le16 ecntlid;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ecntlid" 12
+Exported Controller Identifier (ECNTLID)
+.IP "cntlid" 12
+Controller Identifier (CNTLID) of the associated Underlying
+Controller

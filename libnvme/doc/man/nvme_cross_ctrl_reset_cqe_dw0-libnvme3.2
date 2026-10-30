@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_cross_ctrl_reset_cqe_dw0" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_cross_ctrl_reset_cqe_dw0 \- Cross-Controller Reset Command - Completion Queue Entry Dword 0
+.SH SYNOPSIS
+enum nvme_cross_ctrl_reset_cqe_dw0 {
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CQE_IRS"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CQE_V"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CQE_CLRI"
+
+};
+.SH Constants
+.IP "NVME_CROSS_CTRL_RESET_CQE_IRS" 12
+Immediate Reset Successful (IRS)
+.IP "NVME_CROSS_CTRL_RESET_CQE_V" 12
+Validated (V). Undefined if IRS is
+cleared to '0'.
+.IP "NVME_CROSS_CTRL_RESET_CQE_CLRI" 12
+Controller Level Reset Initiated (CLRI).
+Undefined if IRS is cleared to '0'.

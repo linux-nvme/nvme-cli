@@ -1,0 +1,35 @@
+.TH "nvme_init_lm_track_send" 9 "nvme_init_lm_track_send" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lm_track_send \- Initialize passthru command for Track Send command
+.SH SYNOPSIS
+.B "void" nvme_init_lm_track_send
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 sel "  ","
+.BI "__u16 mos "  ","
+.BI "__u16 cdqid "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select (SEL): This field specifies the type of
+management operation to perform
+.IP "mos" 12
+Management Operation Specific (MOS): This field
+is specific to the SEL type. For the Track Memory Changes
+operation, see \fIenum nvme_lm_tact\fP for the Tracking Action
+(TACT) bit.
+.IP "cdqid" 12
+Controller Data Queue ID (CDQID) for the Log User Data Changes
+operation, or Controller Identifier (CNTLID) for the Track
+Memory Changes operation
+.IP "data" 12
+Track Memory Changes data buffer, see \fIstruct
+nvme_lm_track_memory_changes_data\fP. Only used for the Track
+Memory Changes operation with TACT set to
+NVME_LM_TACT_START_TRACKING, otherwise NULL.
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Track Send command.

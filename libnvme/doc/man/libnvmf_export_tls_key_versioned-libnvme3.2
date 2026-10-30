@@ -1,0 +1,35 @@
+.TH "libnvmf_export_tls_key_versioned" 9 "libnvmf_export_tls_key_versioned" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_export_tls_key_versioned \- Encode a PSK in the PSK interchange format
+.SH SYNOPSIS
+.B "int" libnvmf_export_tls_key_versioned
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "unsigned char version "  ","
+.BI "enum libnvmf_hmac_alg hmac "  ","
+.BI "const unsigned char *key_data "  ","
+.BI "size_t key_len "  ","
+.BI "char **encoded_keyp "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "version" 12
+Version of the PSK interchange format to write. The
+specification defines 1, which appears in the encoded
+string as the digit after "NVMeTLSkey-".
+.IP "hmac" 12
+Hash function recorded in the encoded PSK, used to derive
+a retained PSK from a configured PSK
+.IP "key_data" 12
+Raw PSK data
+.IP "key_len" 12
+Length of \fIkey_data\fP
+.IP "encoded_keyp" 12
+Encoded PSK to return
+.SH "DESCRIPTION"
+Returns \fIkey_data\fP in the PSK Interchange format as defined in section
+3.6.1.5 of the NVMe TCP Transport Specification 1.3.
+
+It is the responsibility of the caller to free the returned
+string.
+.SH "RETURN"
+0 on success, negative error code otherwise.

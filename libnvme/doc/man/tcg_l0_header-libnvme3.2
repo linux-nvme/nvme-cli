@@ -1,0 +1,29 @@
+.TH "libnvme" 9 "struct tcg_l0_header" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_header \- Level 0 Discovery header
+.SH SYNOPSIS
+struct tcg_l0_header {
+.br
+.BI "    __be32 length;"
+.br
+.BI "    __be32 revision;"
+.br
+.BI "    __u8 rsvd8[8];"
+.br
+.BI "    __u8 vs[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "length" 12
+Length of the parameter data, excluding this field
+.IP "revision" 12
+Data structure revision
+.IP "rsvd8" 12
+Reserved
+.IP "vs" 12
+Vendor specific
+.SH "Description"
+TCG Opal SSC 2.02, section 3.1.1.1.

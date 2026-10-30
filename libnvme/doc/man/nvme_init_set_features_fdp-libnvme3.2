@@ -1,0 +1,24 @@
+.TH "nvme_init_set_features_fdp" 9 "nvme_init_set_features_fdp" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_fdp \- Initialize passthru command for Flexible Data Placement
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_fdp
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 endgid "  ","
+.BI "__u8 fdpcidx "  ","
+.BI "bool fdpe "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "endgid" 12
+Endurance Group Identifier (ENDGID)
+.IP "fdpcidx" 12
+Flexible Data Placement Configuration Index (FDPCIDX)
+.IP "fdpe" 12
+Flexible Data Placement Enable (FDPE)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_FDP

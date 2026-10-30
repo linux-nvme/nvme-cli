@@ -1,0 +1,16 @@
+.TH "libnvmf_config_conn_get_transport" 9 "libnvmf_config_conn_get_transport" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_get_transport \- a connection's transport.
+.SH SYNOPSIS
+.B "const char *" libnvmf_config_conn_get_transport
+.BI "(const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "conn" 12
+the resolved connection
+.SH "DESCRIPTION"
+Addressing is exposed as raw strings, not a TID: the configuration is a
+human interface and traddr/host-traddr may legitimately name a host,
+while TID construction rejects one.  Resolve first, then build a TID
+with \fBlibnvmf_tid_from_fields\fP + \fBlibnvmf_tid_set_identity\fP.
+.SH "RETURN"
+borrowed string, valid while the owning configuration is alive.

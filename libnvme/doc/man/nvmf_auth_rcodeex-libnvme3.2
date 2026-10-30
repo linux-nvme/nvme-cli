@@ -1,0 +1,60 @@
+.TH "libnvme" 9 "enum nvmf_auth_rcodeex" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvmf_auth_rcodeex \- AUTH_Failure Reason Code Explanations (RCODEEX)
+.SH SYNOPSIS
+enum nvmf_auth_rcodeex {
+.br
+.BI "    NVMF_AUTH_RCODEEX_FAILED"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_RCODEEX_PROTOCOL_NOT_USABLE"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_RCODEEX_SCC_MISMATCH"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_RCODEEX_HASH_NOT_USABLE"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_RCODEEX_KXGROUP_NOT_USABLE"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_RCODEEX_INCORRECT_PAYLOAD"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_RCODEEX_INCORRECT_MESSAGE"
+
+};
+.SH Constants
+.IP "NVMF_AUTH_RCODEEX_FAILED" 12
+Authentication failed:
+authentication of the involved host or NVM subsystem failed
+.IP "NVMF_AUTH_RCODEEX_PROTOCOL_NOT_USABLE" 12
+Authentication protocol not
+usable: the protocol descriptors proposed by the host do not
+satisfy the security requirements of the controller
+.IP "NVMF_AUTH_RCODEEX_SCC_MISMATCH" 12
+Secure channel concatenation
+mismatch: the SC_C value specified by the host does not
+satisfy the security requirements of the controller
+.IP "NVMF_AUTH_RCODEEX_HASH_NOT_USABLE" 12
+Hash function not usable: the
+HashIDList proposed by the host does not satisfy the security
+requirements of the controller
+.IP "NVMF_AUTH_RCODEEX_KXGROUP_NOT_USABLE" 12
+Key exchange group not usable:
+the KXgIDList proposed by the host does not satisfy the
+security requirements of the controller
+.IP "NVMF_AUTH_RCODEEX_INCORRECT_PAYLOAD" 12
+Incorrect payload: the payload
+of the received message is not correct
+.IP "NVMF_AUTH_RCODEEX_INCORRECT_MESSAGE" 12
+Incorrect protocol message: the
+received message is not the expected next message in the
+authentication protocol sequence

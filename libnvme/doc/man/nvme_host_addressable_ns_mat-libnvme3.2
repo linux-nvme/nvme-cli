@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_host_addressable_ns_mat" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_host_addressable_ns_mat \- Addressable Namespaces Data Structure - Memory Access Type (MAT)
+.SH SYNOPSIS
+enum nvme_host_addressable_ns_mat {
+.br
+.BI "    NVME_HOST_ADDRESSABLE_NS_MAT_BARA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_HOST_ADDRESSABLE_NS_MAT_BARA_MASK"
+, 
+.br
+.br
+.BI "    NVME_HOST_ADDRESSABLE_NS_MAT_CXLA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_HOST_ADDRESSABLE_NS_MAT_CXLA_MASK"
+
+};
+.SH Constants
+.IP "NVME_HOST_ADDRESSABLE_NS_MAT_BARA_SHIFT" 12
+Shift amount to get BAR Access (BARA)
+.IP "NVME_HOST_ADDRESSABLE_NS_MAT_BARA_MASK" 12
+Mask to get BARA
+.IP "NVME_HOST_ADDRESSABLE_NS_MAT_CXLA_SHIFT" 12
+Shift amount to get CXL Access (CXLA)
+.IP "NVME_HOST_ADDRESSABLE_NS_MAT_CXLA_MASK" 12
+Mask to get CXLA

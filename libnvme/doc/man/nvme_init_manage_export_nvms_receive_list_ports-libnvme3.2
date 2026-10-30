@@ -1,0 +1,24 @@
+.TH "nvme_init_manage_export_nvms_receive_list_ports" 9 "nvme_init_manage_export_nvms_receive_list_ports" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_nvms_receive_list_ports \- Initialize passthru command for Manage Exported NVM Subsystem Receive - List Exported Ports (memory-based transports only)
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_nvms_receive_list_ports
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 epid "  ","
+.BI "struct nvme_exported_port_list *list "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "epid" 12
+Return Exported Ports with an Exported Port Identifier
+greater than or equal to this value
+.IP "list" 12
+User address to store the Exported Ports List data
+structure, see \fIstruct nvme_exported_port_list\fP
+.IP "len" 12
+The allocated length of \fIlist\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported NVM
+Subsystem Receive command with SEL value
+NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_PORTS.

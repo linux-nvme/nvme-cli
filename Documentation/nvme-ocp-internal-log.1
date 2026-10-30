@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/18/2026
+.\"      Date: 10/30/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-INTERNAL\" "1" "09/18/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-INTERNAL\" "1" "10/30/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,10 +38,12 @@ nvme-ocp-internal-log \- Conditionally retrieves 07h Telemetry Host\-Initiated l
                         [\-\-output\-file=<file> | \-f <file>]
                         [\-\-data\-area=<da> | \-a <da>]
                         [\-\-telemetry\-type=<type> | \-t <type>]
+                        [\-\-host\-generate=<gen> | \-g <gen>]
+                        [\-\-no\-uuid | \-n]
 .fi
 .SH "DESCRIPTION"
 .sp
-Conditionally retrieves 07h Telemetry Host\-Initiated log, C9h OCP Strings Log from an NVMe device or from user\-specified file path\&. Takes retrieved logs and decodes (or) parses into human\-readable output format specified by user\&.
+Conditionally retrieves 07h Telemetry Host\-Initiated log, C9h OCP Strings Log from an NVMe device or from user\-specified file path\&. Takes retrieved logs and decodes (or) parses into human\-readable output format specified by user\&. Without \-\-output\-format, the report is written as JSON to <file>\&.json, or as normal text to <file>\&.txt when nvme\-cli is built without json\-c\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
@@ -52,7 +54,7 @@ On success it returns 0, error code otherwise\&.
 .PP
 \-l <file>, \-\-telemetry\-log=<file>
 .RS 4
-File name to existing Telemetry Host\-Initiated raw binary data to be used\&. If no path is specified, a live retrieval of payload on <device> will be performed\&.
+File name to existing Telemetry Host\- or Controller\-Initiated raw binary data to be used\&. If no path is specified, a live retrieval of payload on <device> will be performed\&.
 .RE
 .PP
 \-s <file>, \-\-string\-log=<file>
@@ -73,11 +75,27 @@ Retrieves the specific data area requested\&. Valid inputs are 1, 2, 3, or 4\&. 
 \-t <type>, \-\-telemetry\-type=<type>
 .RS 4
 Set the telemetry type to
-\fIhost\fR,
-\fIhost0\fR,
-\fIhost1\fR
+\fIhost\fR
 or
-\fIcontroller\fR\&. If set to host1, controller shall capture the Telemetry Host\-Initiated data representing the internal state of the controller at the time the associated Get Log Page command is processed\&. If set to host0, controller shall not update this data\&.
+\fIcontroller\fR\&. With \-\-telemetry\-log, the type is detected from the Log Identifier of the provided log, and \-\-telemetry\-type is not required\&. Otherwise, if this option is not specified, the default value is
+\fIhost\fR\&.
+\fIhost0\fR
+and
+\fIhost1\fR
+are deprecated and will be removed in the next major version; use
+\fIhost\fR
+with \-\-host\-generate=0 in place of
+\fIhost0\fR\&.
+.RE
+.PP
+\-g <gen>, \-\-host\-generate=<gen>
+.RS 4
+If set to 1, the controller shall capture the Telemetry Host\-Initiated data representing the internal state of the controller at the time the associated Get Log Page command is processed\&. If set to 0, the controller shall not update this data before reading the log\&. Ignored with \-\-telemetry\-type=controller\&. If this option is not specified, the default value is 1\&.
+.RE
+.PP
+\-n, \-\-no\-uuid
+.RS 4
+Do not try to automatically detect UUID index when retrieving the OCP String Log from <device> (default UUID index to 0)\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -112,12 +130,31 @@ Select the output format version\&. Version
 \fI1\fR
 uses the original field naming, while version
 \fI2\fR
-(default) provides more consistent and script\-friendly field names\&.
+(default) provides more consistent and script\-friendly field names\&. Other versions are rejected\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Suppress informational messages\&. Errors are still reported, and \-\-quiet cancels any \-\-verbose for the library log level\&.
+.RE
+.PP
+\-\-set\-options=<key=value>[,<key=value>\&...]
+.RS 4
+Set libnvme library options for this invocation\&. Supported keys are
+\fIforce\-4k\fR,
+\fImi\-probe\-enabled\fR,
+\fItest\-base\-dir\fR
+and
+\fItest\-sysfs\-dir\fR\&.
 .RE
 .PP
 \-\-timeout=<ms>
 .RS 4
 Set the timeout for the command in milliseconds\&.
+\fIinfinite\fR
+or
+\fI\-1\fR
+waits without a time limit (0xffffffff)\&.
 .RE
 .PP
 \-v, \-\-verbose
@@ -136,13 +173,34 @@ These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&
 .sp -1
 .IP \(bu 2.3
 .\}
-Retrieve in both OCP String Log and Telemetry Host\-Initiated Log from device\&. Decode default data\-area(s) in default format and output to console\&.
+Retrieve both OCP String Log and Telemetry Host\-Initiated Log from device\&. Decode default data\-area(s) and output to the default \&./telemetry\-log\&.json\&.
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
 # nvme ocp internal\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve the OCP String Log and the existing Telemetry Host\-Initiated data without having the controller capture new data\&. Decode default data\-area(s) and output to the default \&./telemetry\-log\&.json\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp internal\-log /dev/nvme0 \-\-host\-generate=0
 .fi
 .if n \{\
 .RE

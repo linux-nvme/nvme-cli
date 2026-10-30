@@ -1,0 +1,38 @@
+.TH "libnvmf_config_get_discovered_params" 9 "libnvmf_config_get_discovered_params" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_get_discovered_params \- discovered controller parameters.
+.SH SYNOPSIS
+.B "int" libnvmf_config_get_discovered_params
+.BI "(const struct libnvmf_config *config "  ","
+.BI "const char *hostnqn "  ","
+.BI "bool is_dc "  ","
+.BI "const char *nqn "  ","
+.BI "const struct libnvmf_params **params "  ");"
+.SH ARGUMENTS
+.IP "config" 12
+the resolved configuration
+.IP "hostnqn" 12
+the host NQN that selects the file, or NULL for the top-level
+file
+.IP "is_dc" 12
+true for a discovery controller, false for an I/O controller
+.IP "nqn" 12
+the NQN of the discovered controller, or NULL
+.IP "params" 12
+set to the parameters, valid while \fIconfig\fP is alive
+.SH "DESCRIPTION"
+A controller found through discovery has no section in the
+configuration. Its parameters come from one file: the file whose [Host]
+section has \fIhostnqn\fP. For a controller found through a discovery
+controller of \fIconfig\fP, use \fBlibnvmf_config_conn_get_hostnqn\fP of that
+discovery controller's connection.
+
+The parameters are the defaults of that file for a discovery controller
+or an I/O controller. If the file also has a section with nqn = \fInqn\fP,
+its kxchap-secret and kxchap-ctrl-secret replace the defaults. That
+section is a [Discovery Controller] section if \fIis_dc\fP is true, a
+[Subsystem] section otherwise. Its controller= lines do not matter. A
+section with the well-known discovery NQN never matches.
+.SH "RETURN"
+0 on success, -EINVAL if \fIconfig\fP or \fIparams\fP is NULL, or -ENOENT
+if no file of \fIconfig\fP has \fIhostnqn\fP.

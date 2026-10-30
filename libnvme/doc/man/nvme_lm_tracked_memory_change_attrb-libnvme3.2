@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_lm_tracked_memory_change_attrb" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_tracked_memory_change_attrb \- Tracked Memory Change Data Structure Attributes (ATTRB) field
+.SH SYNOPSIS
+enum nvme_lm_tracked_memory_change_attrb {
+.br
+.BI "    NVME_LM_TMC_ATTRB_MTR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_TMC_ATTRB_MTR_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_TMC_ATTRB_SUSP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_TMC_ATTRB_SUSP_MASK"
+
+};
+.SH Constants
+.IP "NVME_LM_TMC_ATTRB_MTR_SHIFT" 12
+Shift to get More To Report (MTR)
+.IP "NVME_LM_TMC_ATTRB_MTR_MASK" 12
+Mask to get MTR
+.IP "NVME_LM_TMC_ATTRB_SUSP_SHIFT" 12
+Shift to get Suspended (SUSP)
+.IP "NVME_LM_TMC_ATTRB_SUSP_MASK" 12
+Mask to get SUSP

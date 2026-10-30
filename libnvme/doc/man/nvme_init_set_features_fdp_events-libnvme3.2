@@ -1,0 +1,28 @@
+.TH "nvme_init_set_features_fdp_events" 9 "nvme_init_set_features_fdp_events" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_fdp_events \- Initialize passthru command for Flexible Data Placement Events
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_fdp_events
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 phndl "  ","
+.BI "bool fdpee "  ","
+.BI "__u8 *event_types "  ","
+.BI "__u8 noet "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "phndl" 12
+Placement Handle (PHNDL)
+.IP "fdpee" 12
+FDP Event Enable (FDPEE)
+.IP "event_types" 12
+FDP Event Type List data buffer, see Figure 504 of the Base
+Specification
+.IP "noet" 12
+Number of FDP Event Types (NOET) contained in \fIevent_types\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_FDP_EVENTS

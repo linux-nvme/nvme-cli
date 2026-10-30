@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum tcg_l0_sum_flags" "October 2026" "API Manual" LINUX
+.SH NAME
+enum tcg_l0_sum_flags \- Single User Mode feature flags
+.SH SYNOPSIS
+enum tcg_l0_sum_flags {
+.br
+.BI "    TCG_L0_SUM_ANY"
+, 
+.br
+.br
+.BI "    TCG_L0_SUM_ALL"
+, 
+.br
+.br
+.BI "    TCG_L0_SUM_POLICY"
+
+};
+.SH Constants
+.IP "TCG_L0_SUM_ANY" 12
+Any locking object is in single user mode
+.IP "TCG_L0_SUM_ALL" 12
+All locking objects are in single user mode
+.IP "TCG_L0_SUM_POLICY" 12
+Administrator controls the locking ranges

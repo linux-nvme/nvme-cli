@@ -1,0 +1,17 @@
+.TH "libnvmf_params_get" 9 "libnvmf_params_get" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_params_get \- look up one connection parameter.
+.SH SYNOPSIS
+.B "const char *" libnvmf_params_get
+.BI "(const struct libnvmf_params *params "  ","
+.BI "const char *key "  ");"
+.SH ARGUMENTS
+.IP "params" 12
+a resolved parameter set
+.IP "key" 12
+the configuration key name (the "nvme connect" long-option name,
+e.g. "ctrl-loss-tmo")
+.SH "RETURN"
+NULL when \fIkey\fP is unset (the kernel default applies), the empty
+string for an explicit reset to the kernel default, the value string
+otherwise.  Borrowed; valid while the owning configuration is alive.

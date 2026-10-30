@@ -1,0 +1,14 @@
+.TH "libnvmf_config_conn_get_params" 9 "libnvmf_config_conn_get_params" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_get_params \- a connection's resolved parameters.
+.SH SYNOPSIS
+.B "const struct libnvmf_params *" libnvmf_config_conn_get_params
+.BI "(const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "conn" 12
+the resolved connection
+.SH "DESCRIPTION"
+Every cascade level is already merged; what remains unset is a "use the
+kernel default".
+.SH "RETURN"
+borrowed pointer, valid while the owning configuration is alive.

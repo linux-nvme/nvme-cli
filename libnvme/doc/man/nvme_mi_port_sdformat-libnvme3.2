@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "enum nvme_mi_port_sdformat" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_port_sdformat \- 2-Wire Port Specific Data - Supported Data Format (SDFORMAT)
+.SH SYNOPSIS
+enum nvme_mi_port_sdformat {
+.br
+.BI "    NVME_MI_PORT_SDFORMAT_BYTE_LEVEL"
+, 
+.br
+.br
+.BI "    NVME_MI_PORT_SDFORMAT_512B"
+, 
+.br
+.br
+.BI "    NVME_MI_PORT_SDFORMAT_4KIB"
+
+};
+.SH Constants
+.IP "NVME_MI_PORT_SDFORMAT_BYTE_LEVEL" 12
+Byte Level data format of the
+NVMe-MI Persistent Data Area is
+supported
+.IP "NVME_MI_PORT_SDFORMAT_512B" 12
+512B data format of the NVMe-MI
+Persistent Data Area is supported
+.IP "NVME_MI_PORT_SDFORMAT_4KIB" 12
+4KiB data format of the NVMe-MI
+Persistent Data Area is supported

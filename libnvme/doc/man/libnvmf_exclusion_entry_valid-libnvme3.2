@@ -1,0 +1,18 @@
+.TH "libnvmf_exclusion_entry_valid" 9 "libnvmf_exclusion_entry_valid" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_entry_valid \- validate an entry string.
+.SH SYNOPSIS
+.B "bool" libnvmf_exclusion_entry_valid
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *entry "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "entry" 12
+Exclusion entry, e.g. "transport=tcp;traddr=1.2.3.4".
+.SH "DESCRIPTION"
+Returns true when every key is known and the entry has at least one
+recognized field; false for unknown/bare keys or an empty/field-less entry.
+Use this to pre-validate a hand-edited entry before writing it.
+.SH "RETURN"
+true if the entry is valid, false otherwise.

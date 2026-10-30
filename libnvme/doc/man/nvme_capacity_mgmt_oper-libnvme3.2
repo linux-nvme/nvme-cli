@@ -1,0 +1,16 @@
+.TH "libnvme" 9 "enum nvme_capacity_mgmt_oper" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_capacity_mgmt_oper \- Capacity Management - Operation (OPER)
+.SH SYNOPSIS
+enum nvme_capacity_mgmt_oper {
+.br
+.BI "    NVME_CAPACITY_MGMT_OPER_RESTORE_DEFAULT_CONFIG"
+
+};
+.SH Constants
+.IP "NVME_CAPACITY_MGMT_OPER_RESTORE_DEFAULT_CONFIG" 12
+Restore Default
+Capacity Management Configuration: restores the default
+Endurance Groups and NVM Sets configuration in the NVM
+subsystem. The Element Identifier field should be set to
+0h and shall be ignored by the controller.

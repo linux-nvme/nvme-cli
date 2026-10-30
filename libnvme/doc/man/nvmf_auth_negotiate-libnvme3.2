@@ -1,0 +1,44 @@
+.TH "libnvme" 9 "struct nvmf_auth_negotiate" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_auth_negotiate \- AUTH_Negotiate message, host to controller
+.SH SYNOPSIS
+struct nvmf_auth_negotiate {
+.br
+.BI "    __u8 auth_type;"
+.br
+.BI "    __u8 auth_id;"
+.br
+.BI "    __u16 rsvd2;"
+.br
+.BI "    __le16 t_id;"
+.br
+.BI "    __u8 sc_c;"
+.br
+.BI "    __u8 napd;"
+.br
+.BI "    __u8 apd[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "auth_type" 12
+Authentication Type, see \fIenum nvmf_auth_protocol_id\fP.
+Cleared to 0h (i.e., common messages).
+.IP "auth_id" 12
+Authentication Identifier, see \fIenum nvmf_auth_id\fP.
+Cleared to 0h (i.e., AUTH_Negotiate).
+.IP "rsvd2" 12
+Reserved
+.IP "t_id" 12
+Transaction Identifier
+.IP "sc_c" 12
+Secure Channel Concatenation, see \fIenum nvmf_auth_sc_c\fP
+.IP "napd" 12
+Number of Authentication Protocol Descriptors
+.IP "apd" 12
+Authentication Protocol Descriptor list, \fInapd\fP entries of 64
+bytes each. Currently always a
+\fIstruct nvmf_auth_kxchap_protocol_descriptor\fP, the only
+authentication protocol defined.

@@ -1,0 +1,148 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_lpa" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_lpa \- Flags indicating optional attributes for log pages that are accessed via the Get Log Page command.
+.SH SYNOPSIS
+enum nvme_id_ctrl_lpa {
+.br
+.BI "    NVME_CTRL_LPA_SMARTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_CSES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_LPEDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_TS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_PES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_MLPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_DA4S_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_SMARTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_CSES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_LPEDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_TS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_PES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_MLPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_DA4S_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_SMARTS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_CSES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_LPEDS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_TS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_PES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_MLPS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_DA4S"
+
+};
+.SH Constants
+.IP "NVME_CTRL_LPA_SMARTS_SHIFT" 12
+SMARTS shift
+.IP "NVME_CTRL_LPA_CSES_SHIFT" 12
+CSES shift
+.IP "NVME_CTRL_LPA_LPEDS_SHIFT" 12
+LPEDS shift
+.IP "NVME_CTRL_LPA_TS_SHIFT" 12
+TS shift
+.IP "NVME_CTRL_LPA_PES_SHIFT" 12
+PES shift
+.IP "NVME_CTRL_LPA_MLPS_SHIFT" 12
+MLPS shift
+.IP "NVME_CTRL_LPA_DA4S_SHIFT" 12
+DA4S shift
+.IP "NVME_CTRL_LPA_SMARTS_MASK" 12
+SMARTS mask
+.IP "NVME_CTRL_LPA_CSES_MASK" 12
+CSES mask
+.IP "NVME_CTRL_LPA_LPEDS_MASK" 12
+LPEDS mask
+.IP "NVME_CTRL_LPA_TS_MASK" 12
+TS mask
+.IP "NVME_CTRL_LPA_PES_MASK" 12
+PES mask
+.IP "NVME_CTRL_LPA_MLPS_MASK" 12
+MLPS mask
+.IP "NVME_CTRL_LPA_DA4S_MASK" 12
+DA4S mask
+.IP "NVME_CTRL_LPA_SMARTS" 12
+If set, controller supports SMART/Health log
+page on a per namespace basis.
+.IP "NVME_CTRL_LPA_CSES" 12
+If Set, the controller supports the commands
+supported and effects log page.
+.IP "NVME_CTRL_LPA_LPEDS" 12
+If set, the controller supports extended data
+for log page command including extended number
+of dwords and log page offset fields.
+.IP "NVME_CTRL_LPA_TS" 12
+If set, the controller supports the telemetry
+host-initiated and telemetry controller-initiated
+log pages and sending telemetry log notices.
+.IP "NVME_CTRL_LPA_PES" 12
+If set, the controller supports
+persistent event log.
+.IP "NVME_CTRL_LPA_MLPS" 12
+If set, the controller supports
+the log pages log page, the scope of
+each command in the commands
+supported and effects log page, the
+feature identifiers supported and
+effects log page, and the NVMe-MI
+commands supported and effects log
+page.
+.IP "NVME_CTRL_LPA_DA4S" 12
+If set, the controller supports data
+area 4 for telemetry host-initiated and
+telemetry.

@@ -1,0 +1,67 @@
+.TH "libnvme" 9 "struct nvmf_disc_log_entry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_disc_log_entry \- Discovery Log Page Entry
+.SH SYNOPSIS
+struct nvmf_disc_log_entry {
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 adrfam;"
+.br
+.BI "    __u8 subtype;"
+.br
+.BI "    __u8 treq;"
+.br
+.BI "    __le16 portid;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 asqsz;"
+.br
+.BI "    __le16 eflags;"
+.br
+.BI "    __u8 rsvd12[20];"
+.br
+.BI "    char trsvcid[NVMF_TRSVCID_SIZE];"
+.br
+.BI "    __u8 rsvd64[192];"
+.br
+.BI "    char subnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    char traddr[NVMF_TRADDR_SIZE];"
+.br
+.BI "    union nvmf_tsas tsas;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "trtype" 12
+Transport Type (see \fIenum nvmf_trtype\fP)
+.IP "adrfam" 12
+Address Family (see \fIenum nvmf_addr_family\fP)
+.IP "subtype" 12
+Subsystem Type
+.IP "treq" 12
+Transport Requirements (see \fIenum nvmf_treq\fP)
+.IP "portid" 12
+Port ID
+.IP "cntlid" 12
+Controller ID
+.IP "asqsz" 12
+Admin Submission Queue Size
+.IP "eflags" 12
+Entry Flags (see \fIenum nvmf_disc_eflags\fP)
+.IP "rsvd12" 12
+Reserved
+.IP "trsvcid" 12
+Transport Service Identifier
+.IP "rsvd64" 12
+Reserved
+.IP "subnqn" 12
+NVM Subsystem Qualified Name
+.IP "traddr" 12
+Transport Address
+.IP "tsas" 12
+Transport Specific Address Subtype (see \fIunion nvmf_tsas\fP)

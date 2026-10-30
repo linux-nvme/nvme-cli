@@ -1,0 +1,13 @@
+.TH "nvme_init_capacity_mgmt_restore_default_config" 9 "nvme_init_capacity_mgmt_restore_default_config" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_capacity_mgmt_restore_default_config \- Initialize passthru command to restore the default Endurance Groups and NVM Sets configuration
+.SH SYNOPSIS
+.B "void" nvme_init_capacity_mgmt_restore_default_config
+.BI "(struct libnvme_passthru_cmd *cmd "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Capacity Management -
+Restore Default Capacity Management Configuration operation
+(NVME_CAPACITY_MGMT_OPER_RESTORE_DEFAULT_CONFIG).

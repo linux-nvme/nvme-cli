@@ -1,0 +1,18 @@
+.TH "libnvmf_exclusion_remove" 9 "libnvmf_exclusion_remove" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_remove \- remove an entry by exact content match (atomic write).
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_remove
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "const char *entry "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name
+.IP "entry" 12
+entry string to remove, exactly as returned by
+\fBlibnvmf_exclusion_entry_for_each\fP (e.g. "transport=tcp;traddr=192.168.1.1")
+.SH "RETURN"
+0 on success, -ENOENT if the entry or list does not exist, negative errno otherwise.

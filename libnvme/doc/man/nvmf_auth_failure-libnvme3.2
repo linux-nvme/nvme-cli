@@ -1,0 +1,38 @@
+.TH "libnvme" 9 "struct nvmf_auth_failure" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_auth_failure \- AUTH_Failure1 message, controller to host, or AUTH_Failure2 message, host to controller
+.SH SYNOPSIS
+struct nvmf_auth_failure {
+.br
+.BI "    __u8 auth_type;"
+.br
+.BI "    __u8 auth_id;"
+.br
+.BI "    __u16 rsvd2;"
+.br
+.BI "    __le16 t_id;"
+.br
+.BI "    __u8 rcode;"
+.br
+.BI "    __u8 rcodeex;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "auth_type" 12
+Authentication Type, see \fIenum nvmf_auth_protocol_id\fP.
+Cleared to 0h (i.e., common messages).
+.IP "auth_id" 12
+Authentication Identifier, see \fIenum nvmf_auth_id\fP.
+NVMF_AUTH_ID_FAILURE1 for AUTH_Failure1, NVMF_AUTH_ID_FAILURE2
+for AUTH_Failure2.
+.IP "rsvd2" 12
+Reserved
+.IP "t_id" 12
+Transaction Identifier
+.IP "rcode" 12
+Reason Code, see \fIenum nvmf_auth_rcode\fP
+.IP "rcodeex" 12
+Reason Code Explanation, see \fIenum nvmf_auth_rcodeex\fP

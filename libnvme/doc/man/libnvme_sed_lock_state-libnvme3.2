@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum libnvme_sed_lock_state" "October 2026" "API Manual" LINUX
+.SH NAME
+enum libnvme_sed_lock_state \- Locking range lock state
+.SH SYNOPSIS
+enum libnvme_sed_lock_state {
+.br
+.BI "    LIBNVME_SED_LOCK_RO"
+, 
+.br
+.br
+.BI "    LIBNVME_SED_LOCK_RW"
+, 
+.br
+.br
+.BI "    LIBNVME_SED_LOCK_LK"
+
+};
+.SH Constants
+.IP "LIBNVME_SED_LOCK_RO" 12
+Read-only, writes are locked
+.IP "LIBNVME_SED_LOCK_RW" 12
+Read-write, the range is unlocked
+.IP "LIBNVME_SED_LOCK_LK" 12
+Reads and writes are locked

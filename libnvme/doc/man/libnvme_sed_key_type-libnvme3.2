@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum libnvme_sed_key_type" "October 2026" "API Manual" LINUX
+.SH NAME
+enum libnvme_sed_key_type \- Source of a SED key
+.SH SYNOPSIS
+enum libnvme_sed_key_type {
+.br
+.BI "    LIBNVME_SED_KEY_INCLUDED"
+, 
+.br
+.br
+.BI "    LIBNVME_SED_KEY_KEYRING"
+
+};
+.SH Constants
+.IP "LIBNVME_SED_KEY_INCLUDED" 12
+The key is stored in \fIstruct libnvme_sed_key\fP
+.IP "LIBNVME_SED_KEY_KEYRING" 12
+The kernel looks up the key in its keyring

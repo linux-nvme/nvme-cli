@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "struct tcg_l0_datastore" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_datastore \- Additional DataStore Tables feature (0x0202)
+.SH SYNOPSIS
+struct tcg_l0_datastore {
+.br
+.BI "    __be16 rsvd0;"
+.br
+.BI "    __be16 max_tables;"
+.br
+.BI "    __be32 max_table_size;"
+.br
+.BI "    __be32 table_alignment;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "max_tables" 12
+Maximum number of DataStore tables
+.IP "max_table_size" 12
+Maximum total size of DataStore tables
+.IP "table_alignment" 12
+DataStore table size alignment
+.SH "Description"
+TCG Opal SSC Feature Set: Additional DataStore Tables 1.00,
+section 4.2.1.

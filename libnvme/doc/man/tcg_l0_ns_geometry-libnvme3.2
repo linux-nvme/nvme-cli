@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "struct tcg_l0_ns_geometry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_ns_geometry \- Namespace Geometry Reporting feature (0x0405)
+.SH SYNOPSIS
+struct tcg_l0_ns_geometry {
+.br
+.BI "    __u8 align;"
+.br
+.BI "    __u8 rsvd1[7];"
+.br
+.BI "    __be32 logical_block_size;"
+.br
+.BI "    __be64 alignment_granularity;"
+.br
+.BI "    __be64 lowest_aligned_lba;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "align" 12
+Flags, see \fIenum tcg_l0_ns_geometry_flags\fP
+.IP "rsvd1" 12
+Reserved
+.IP "logical_block_size" 12
+Logical block size
+.IP "alignment_granularity" 12
+Alignment granularity
+.IP "lowest_aligned_lba" 12
+Lowest aligned LBA
+.SH "Description"
+TCG Storage Opal SSC Feature Set: Configurable Namespace Locking,
+section 4.2.1.

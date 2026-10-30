@@ -1,0 +1,19 @@
+.TH "nvme_init_identify_underlying_ns_list" 9 "nvme_init_identify_underlying_ns_list" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_underlying_ns_list \- Initialize passthru command for Get Underlying Namespace List
+.SH SYNOPSIS
+.B "void" nvme_init_identify_underlying_ns_list
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 idx "  ","
+.BI "struct nvme_underlying_ns_list *list "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "idx" 12
+Index into the list of reportable Underlying Namespaces to
+start reporting from
+.IP "list" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_UNDERLYING_NS_LIST.

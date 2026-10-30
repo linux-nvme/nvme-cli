@@ -1,0 +1,51 @@
+.TH "libnvme" 9 "enum nvme_manage_export_nvms_recv_sel" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_manage_export_nvms_recv_sel \- Manage Exported NVM Subsystem Receive - Select (SEL)
+.SH SYNOPSIS
+enum nvme_manage_export_nvms_recv_sel {
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_RECV_SEL_CREATE"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_SUBSYSTEMS"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_NAMESPACES"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_CONTROLLERS"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_PORTS"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_RECV_SEL_GET_CONFIG_STATE"
+
+};
+.SH Constants
+.IP "NVME_MANAGE_EXPORT_NVMS_RECV_SEL_CREATE" 12
+Create Exported NVM
+Subsystem
+.IP "NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_SUBSYSTEMS" 12
+List Exported NVM
+Subsystems
+.IP "NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_NAMESPACES" 12
+List Exported
+Namespaces
+.IP "NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_CONTROLLERS" 12
+List Exported
+Controllers (message-based
+transports only)
+.IP "NVME_MANAGE_EXPORT_NVMS_RECV_SEL_LIST_PORTS" 12
+List Exported Ports
+(memory-based transports
+only)
+.IP "NVME_MANAGE_EXPORT_NVMS_RECV_SEL_GET_CONFIG_STATE" 12
+Get Exported NVM
+Subsystem Configuration
+State

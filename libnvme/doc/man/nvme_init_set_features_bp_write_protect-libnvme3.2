@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_bp_write_protect" 9 "nvme_init_set_features_bp_write_protect" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_bp_write_protect \- Initialize passthru command for Boot Partition Write Protection Config
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_bp_write_protect
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 bp0wps "  ","
+.BI "__u8 bp1wps "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "bp0wps" 12
+Boot Partition 0 Write Protection State (BP0WPS)
+.IP "bp1wps" 12
+Boot Partition 1 Write Protection State (BP1WPS)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_BP_WRITE_PROTECT

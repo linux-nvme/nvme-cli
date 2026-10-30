@@ -1,0 +1,91 @@
+.TH "libnvme" 9 "enum nvmf_auth_kxgid" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvmf_auth_kxgid \- KX-HMAC-CHAP Key Exchange Group Identifiers
+.SH SYNOPSIS
+enum nvmf_auth_kxgid {
+.br
+.BI "    NVMF_AUTH_KXGID_NULL"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_FFDHE2048"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_FFDHE3072"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_FFDHE4096"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_FFDHE6144"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_FFDHE8192"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_SECP256R1"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_SECP384R1"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_MLKEM768"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_MLKEM1024"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_SECP256R1MLKEM768"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_KXGID_SECP384R1MLKEM1024"
+
+};
+.SH Constants
+.IP "NVMF_AUTH_KXGID_NULL" 12
+No key exchange performed
+.IP "NVMF_AUTH_KXGID_FFDHE2048" 12
+Finite Field Diffie-Hellman Ephemeral,
+2048-bit group (refer to RFC 7919)
+.IP "NVMF_AUTH_KXGID_FFDHE3072" 12
+Finite Field Diffie-Hellman Ephemeral,
+3072-bit group (refer to RFC 7919)
+.IP "NVMF_AUTH_KXGID_FFDHE4096" 12
+Finite Field Diffie-Hellman Ephemeral,
+4096-bit group (refer to RFC 7919)
+.IP "NVMF_AUTH_KXGID_FFDHE6144" 12
+Finite Field Diffie-Hellman Ephemeral,
+6144-bit group (refer to RFC 7919)
+.IP "NVMF_AUTH_KXGID_FFDHE8192" 12
+Finite Field Diffie-Hellman Ephemeral,
+8192-bit group (refer to RFC 7919)
+.IP "NVMF_AUTH_KXGID_SECP256R1" 12
+Elliptic Curve Diffie-Hellman Ephemeral,
+curve secp256r1 (refer to RFC 8422,
+NIST SP 800-186)
+.IP "NVMF_AUTH_KXGID_SECP384R1" 12
+Elliptic Curve Diffie-Hellman Ephemeral,
+curve secp384r1 (refer to RFC 8422,
+NIST SP 800-186)
+.IP "NVMF_AUTH_KXGID_MLKEM768" 12
+Module-Lattice Key-Encapsulation Mechanism,
+security category 3 (refer to NIST FIPS 203)
+.IP "NVMF_AUTH_KXGID_MLKEM1024" 12
+Module-Lattice Key-Encapsulation Mechanism,
+security category 5 (refer to NIST FIPS 203)
+.IP "NVMF_AUTH_KXGID_SECP256R1MLKEM768" 12
+Hybrid key exchange using secp256r1 and
+ML-KEM-768 (refer to draft-ietf-tls-ecdhe-mlkem)
+.IP "NVMF_AUTH_KXGID_SECP384R1MLKEM1024" 12
+Hybrid key exchange using secp384r1 and
+ML-KEM-1024 (refer to draft-ietf-tls-ecdhe-mlkem)

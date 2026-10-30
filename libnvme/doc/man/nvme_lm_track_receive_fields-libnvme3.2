@@ -1,0 +1,37 @@
+.TH "libnvme" 9 "enum nvme_lm_track_receive_fields" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_track_receive_fields \- Track Receive command fields
+.SH SYNOPSIS
+enum nvme_lm_track_receive_fields {
+.br
+.BI "    NVME_LM_TRACK_RECV_SEL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_TRACK_RECV_SEL_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_TRACKED_MEMORY_CHANGES"
+, 
+.br
+.br
+.BI "    NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_MASK"
+
+};
+.SH Constants
+.IP "NVME_LM_TRACK_RECV_SEL_SHIFT" 12
+Shift to set Select (SEL) field
+.IP "NVME_LM_TRACK_RECV_SEL_MASK" 12
+Mask to set SEL field
+.IP "NVME_LM_SEL_TRACKED_MEMORY_CHANGES" 12
+Tracked Memory Changes select option
+.IP "NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_SHIFT" 12
+Shift amount to set Controller
+Identifier (CNTLID)
+.IP "NVME_LM_TRACKED_MEMORY_CHANGES_CNTLID_MASK" 12
+Mask to set CNTLID

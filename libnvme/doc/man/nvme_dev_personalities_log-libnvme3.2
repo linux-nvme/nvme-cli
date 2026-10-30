@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_dev_personalities_log" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_dev_personalities_log \- Device Personalities Log Page (Log Identifier 1Dh)
+.SH SYNOPSIS
+struct nvme_dev_personalities_log {
+.br
+.BI "    __le16 nump;"
+.br
+.BI "    __u8 cdplpv;"
+.br
+.BI "    __u8 dplphl;"
+.br
+.BI "    __le16 cdplps;"
+.br
+.BI "    struct nvme_personality_properties perprops[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nump" 12
+Number of Personalities: number of \fIstruct
+nvme_personality_properties\fP entries in \fIperprops\fP. This is a
+0's based value.
+.IP "cdplpv" 12
+CDP Log Page Version
+.IP "dplphl" 12
+Device Personalities Log Page Header Length
+.IP "cdplps" 12
+Device Personalities Log Page Size: size of this log page in
+bytes.
+.IP "perprops" 12
+CDP Personality list, listed in ascending order of
+Personality Identifier.

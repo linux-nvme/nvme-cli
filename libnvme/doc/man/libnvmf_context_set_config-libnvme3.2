@@ -1,0 +1,27 @@
+.TH "libnvmf_context_set_config" 9 "libnvmf_context_set_config" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_set_config \- Set the configuration for discovery
+.SH SYNOPSIS
+.B "void" libnvmf_context_set_config
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "const struct libnvmf_config *config "  ","
+.BI "const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context of a discovery controller
+.IP "config" 12
+Resolved configuration, or NULL
+.IP "conn" 12
+Connection of the discovery controller in \fIconfig\fP
+.SH "DESCRIPTION"
+\fBlibnvmf_discover\fP connects to the controllers in the discovery log
+page. With a configuration, a controller gets the KX-HMAC-CHAP secrets
+of the [Subsystem] or [Discovery Controller] section with its NQN. The
+section must be in the same file as \fIconn\fP.
+
+If no section sets the host secret, the controller uses the host secret
+of the discovery controller. This is also what happens without a
+configuration. The controller secret comes only from a section.
+
+The caller keeps ownership of \fIconfig\fP and \fIconn\fP. They must stay valid
+until \fBlibnvmf_discover\fP returns.

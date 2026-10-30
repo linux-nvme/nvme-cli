@@ -1,0 +1,26 @@
+.TH "libnvmf_config_read" 9 "libnvmf_config_read" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_read \- read and resolve a connection configuration.
+.SH SYNOPSIS
+.B "int" libnvmf_config_read
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *file "  ","
+.BI "struct libnvmf_config **out "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context
+.IP "file" 12
+main configuration file, or NULL for the default
+(/etc/nvme/nvme-fabrics.conf).  The drop-in directory is always
+derived from the file name: the .conf files under <file>.d/.
+.IP "out" 12
+the resolved configuration on success; NULL on error
+.SH "DESCRIPTION"
+Reads the main file (if it exists) and the drop-ins (if the directory
+exists) and resolves them into the flat connection list.  An absent
+configuration is valid and yields an empty list.  Any validation error
+in any file fails the read as a unit; diagnostics carry file:line and
+are reported through \fIctx\fP.
+.SH "RETURN"
+0 on success (*\fIout\fP is the resolved configuration), negative
+errno otherwise (*\fIout\fP is NULL).

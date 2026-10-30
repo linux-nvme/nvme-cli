@@ -1,0 +1,18 @@
+.TH "libnvme_ctrl_get_cntlid" 9 "libnvme_ctrl_get_cntlid" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_cntlid \- Get cntlid.
+.SH SYNOPSIS
+.B "int" libnvme_ctrl_get_cntlid
+.BI "(const struct libnvme_ctrl *p "  ","
+.BI "const char **cntlid "  ","
+.BI "const char *dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to query.
+.IP "cntlid" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fIcntlid\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

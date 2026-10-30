@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct tcg_l0_opal_v1" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_opal_v1 \- Opal SSC V1.00 feature (0x0200)
+.SH SYNOPSIS
+struct tcg_l0_opal_v1 {
+.br
+.BI "    __be16 base_comid;"
+.br
+.BI "    __be16 num_comids;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "base_comid" 12
+Base ComID
+.IP "num_comids" 12
+Number of ComIDs

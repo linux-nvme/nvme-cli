@@ -1,0 +1,41 @@
+.TH "libnvmf_tid_from_fields" 9 "libnvmf_tid_from_fields" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_from_fields \- Allocate a TID from individual field strings.
+.SH SYNOPSIS
+.B "int" libnvmf_tid_from_fields
+.BI "(const char *transport "  ","
+.BI "const char *traddr "  ","
+.BI "const char *trsvcid "  ","
+.BI "const char *subsysnqn "  ","
+.BI "const char *host_traddr "  ","
+.BI "const char *host_iface "  ","
+.BI "const char *hostnqn "  ","
+.BI "const char *hostid "  ","
+.BI "struct libnvmf_tid **out "  ");"
+.SH ARGUMENTS
+.IP "transport" 12
+Transport type (e.g. "tcp", "rdma", "fc").
+.IP "traddr" 12
+Transport address.
+.IP "trsvcid" 12
+Transport service ID (e.g. "8009").
+.IP "subsysnqn" 12
+Subsystem NQN.
+.IP "host_traddr" 12
+Host transport address, or NULL.
+.IP "host_iface" 12
+Host interface name, or NULL.
+.IP "hostnqn" 12
+Host NQN, or NULL.
+.IP "hostid" 12
+Host Identifier, or NULL.
+.IP "out" 12
+The allocated TID on success; NULL on error.
+.SH "DESCRIPTION"
+Convenience constructor.  NULL fields are stored as NULL.  For an IP
+transport (tcp, rdma) a numeric traddr/host_traddr is canonicalized; a
+hostname is rejected -- resolving it is the caller's job, not libnvme's.
+.SH "RETURN"
+0 on success (*\fIout\fP is the allocated TID); -EINVAL if \fIout\fP is
+NULL or traddr/host_traddr is not numeric on an IP transport; -ENOMEM on
+allocation failure.

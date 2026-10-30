@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct libnvme_sed_key" "October 2026" "API Manual" LINUX
+.SH NAME
+struct libnvme_sed_key \- SED key (password or PSID)
+.SH SYNOPSIS
+struct libnvme_sed_key {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 len;"
+.br
+.BI "    __u8 key[LIBNVME_SED_KEY_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+Key source, see \fIenum libnvme_sed_key_type\fP
+.IP "len" 12
+Length of \fIkey\fP in bytes, ignored for
+LIBNVME_SED_KEY_KEYRING
+.IP "key" 12
+Key data

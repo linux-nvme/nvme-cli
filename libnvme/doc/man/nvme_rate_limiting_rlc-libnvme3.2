@@ -1,0 +1,33 @@
+.TH "libnvme" 9 "enum nvme_rate_limiting_rlc" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_rate_limiting_rlc \- Rate Limiting Data Buffer - Rate Limits Control (RLC)
+.SH SYNOPSIS
+enum nvme_rate_limiting_rlc {
+.br
+.BI "    NVME_RATE_LIMITING_RLC_RLM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_RLC_RLM_MASK"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_RLC_RLE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_RLC_RLE_MASK"
+
+};
+.SH Constants
+.IP "NVME_RATE_LIMITING_RLC_RLM_SHIFT" 12
+Shift amount to get/set the Rate
+Limiting Mode (RLM), see \fIenum
+nvme_rate_limiting_mode\fP
+.IP "NVME_RATE_LIMITING_RLC_RLM_MASK" 12
+Mask to get/set RLM
+.IP "NVME_RATE_LIMITING_RLC_RLE_SHIFT" 12
+Shift amount to get/set the Rate
+Limiting Enable (RLE)
+.IP "NVME_RATE_LIMITING_RLC_RLE_MASK" 12
+Mask to get/set RLE

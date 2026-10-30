@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_personality_aus" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_personality_aus \- Personality Properties - Authenticated Unfreeze Support (AUS)
+.SH SYNOPSIS
+enum nvme_personality_aus {
+.br
+.BI "    NVME_PERSONALITY_AUS_PCAS"
+, 
+.br
+.br
+.BI "    NVME_PERSONALITY_AUS_PKAS"
+
+};
+.SH Constants
+.IP "NVME_PERSONALITY_AUS_PCAS" 12
+Physical Credential Authentication Support
+.IP "NVME_PERSONALITY_AUS_PKAS" 12
+Programmable Key Authentication Support

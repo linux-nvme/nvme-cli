@@ -1,0 +1,18 @@
+.TH "libnvmf_traddr_is_numeric" 9 "libnvmf_traddr_is_numeric" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_traddr_is_numeric \- Would this address survive TID construction?
+.SH SYNOPSIS
+.B "bool" libnvmf_traddr_is_numeric
+.BI "(const char *traddr "  ");"
+.SH ARGUMENTS
+.IP "traddr" 12
+A candidate traddr/host_traddr, or NULL.
+.SH "DESCRIPTION"
+The TID constructors accept a numeric IP only and reject a hostname; this
+lets a caller check a candidate address -- and decide whether it must
+resolve it first -- before building the TID, using the same definition of
+"numeric" the constructors use internally (including an IPv6 scope
+suffix, which is numeric).
+.SH "RETURN"
+true if \fItraddr\fP is a numeric address, false otherwise (including a
+NULL \fItraddr\fP or an allocation failure while checking).

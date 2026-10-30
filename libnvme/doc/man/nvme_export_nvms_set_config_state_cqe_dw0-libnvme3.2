@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_export_nvms_set_config_state_cqe_dw0" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_export_nvms_set_config_state_cqe_dw0 \- Manage Exported NVM Subsystem Send - Set Exported Configuration State - Completion Queue Entry Dword 0, valid when the command fails with %NVME_SC_INVALID_EXPORTED_CONFIG_STATE
+.SH SYNOPSIS
+enum nvme_export_nvms_set_config_state_cqe_dw0 {
+.br
+.BI "    NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_MASK"
+, 
+.br
+.br
+.BI "    NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_MASK"
+
+};
+.SH Constants
+.IP "NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_SHIFT" 12
+Shift amount to get
+Dword Location (DWLOC): offset in the data buffer to
+the Dword that contained an invalid bit
+.IP "NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_DWLOC_MASK" 12
+Mask to get DWLOC
+.IP "NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_SHIFT" 12
+Shift amount to get
+Bit Location (BITLOC): offset of the invalid bit
+within the Dword indicated by DWLOC
+.IP "NVME_EXPORT_NVMS_SET_CONFIG_STATE_CQE_BITLOC_MASK" 12
+Mask to get BITLOC

@@ -1,0 +1,22 @@
+.TH "libnvme_realloc" 9 "libnvme_realloc" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_realloc \- Resize an allocated memory buffer
+.SH SYNOPSIS
+.B "void *" libnvme_realloc
+.BI "(void *p "  ","
+.BI "size_t len "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+Existing memory buffer to resize
+.IP "len" 12
+New size in bytes
+.SH "DESCRIPTION"
+Resizes the memory buffer referenced by \fIp\fP to \fIlen\fP bytes. The returned
+buffer may be relocated. On successful expansion, any newly allocated
+portion of the buffer is zero-initialized.
+
+If \fIp\fP is NULL, this function behaves like \fBlibnvme_alloc\fP.
+.SH "RETURN"
+Pointer to the resized memory buffer on success, or NULL on failure.
+On failure, the original buffer referenced by \fIp\fP remains valid and
+unchanged.

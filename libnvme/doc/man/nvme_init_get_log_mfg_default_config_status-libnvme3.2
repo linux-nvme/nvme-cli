@@ -1,0 +1,15 @@
+.TH "nvme_init_get_log_mfg_default_config_status" 9 "nvme_init_get_log_mfg_default_config_status" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_mfg_default_config_status \- Initialize passthru command for Manufacturer Default Configuration Status
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_mfg_default_config_status
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "struct nvme_mfg_default_config_status_log *log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "log" 12
+User address to store the log
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_MFG_DEFAULT_CONFIG

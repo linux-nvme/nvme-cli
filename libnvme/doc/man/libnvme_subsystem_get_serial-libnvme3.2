@@ -1,0 +1,18 @@
+.TH "libnvme_subsystem_get_serial" 9 "libnvme_subsystem_get_serial" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_subsystem_get_serial \- Get serial.
+.SH SYNOPSIS
+.B "int" libnvme_subsystem_get_serial
+.BI "(const struct libnvme_subsystem *p "  ","
+.BI "const char **serial "  ","
+.BI "const char *dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_subsystem\fP instance to query.
+.IP "serial" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fIserial\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

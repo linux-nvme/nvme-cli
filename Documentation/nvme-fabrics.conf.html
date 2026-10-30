@@ -827,7 +827,10 @@ Boolean values accept <em>1</em>/<em>yes</em>/<em>y</em>/<em>true</em>/<em>t</em
 </dd>
 </dl></div>
 <div class="paragraph"><p>Both endpoint sections accept any TUNABLE or SECURITY key as a
-per-section override, plus one or more <em>controller =</em> lines (below).</p></div>
+per-section override, plus one or more <em>controller =</em> lines (below).
+A section with no <em>controller =</em> line makes no connection. It can
+still give the KX-HMAC-CHAP secrets of a discovered controller (see
+DISCOVERED CONTROLLERS below).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -861,15 +864,51 @@ tos, duplicate-connect, disable-sqflow, hdr-digest, data-digest</code></pre>
 <div class="literalblock">
 <div class="content">
 <pre><code>tls, tls-key, tls-key-identity, keyring, concat, kxchap-secret,
-kxchap-ctrl-secret</code></pre>
+kxchap-ctrl-secret, tls-key-source</code></pre>
 </div></div>
 <div class="paragraph"><p>IDENTITY (<em>[Host]</em> only):</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><code>hostnqn, hostid, hostsymname</code></pre>
 </div></div>
-<div class="paragraph"><p>Every key here is the same name as its <em>nvme connect</em> long option
-(hyphenated). See <a href="nvme-connect.html">nvme-connect(1)</a> for what each one means.</p></div>
+<div class="paragraph"><p>Every key here except <em>tls-key-source</em> is the same name as its
+<em>nvme connect</em> long option (hyphenated). See <a href="nvme-connect.html">nvme-connect(1)</a>
+for what each one means.</p></div>
+<div class="paragraph"><p><em>tls-key-source</em> says where the TLS PSK comes from:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<em>inline</em>
+</dt>
+<dd>
+<p>
+        The default. <em>tls-key</em> is the key itself.
+</p>
+</dd>
+<dt class="hdlist1">
+<em>systemd-creds</em>
+</dt>
+<dd>
+<p>
+        <em>tls-key</em> is the name of a systemd credential. nvme-keysd reads the
+        credential and puts the PSK in the keyring. The connection does not
+        use <em>tls-key</em>: the kernel finds the PSK in the keyring by the host
+        NQN and the subsystem NQN. See <a href="nvme-keysd.html">nvme-keysd(8)</a>.
+</p>
+</dd>
+<dt class="hdlist1">
+<em>kmip:&lt;name&gt;</em>
+</dt>
+<dd>
+<p>
+        <em>tls-key</em> is the Name of a key on the key management server
+        (KMS) <em>&lt;name&gt;</em>, configured in nvme-keysd.conf. nvme-keysd gets the
+        key and puts it in the keyring. <em>kmip</em> alone is enough when only
+        one KMS is configured. See <a href="nvme-keysd.html">nvme-keysd(8)</a>.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>Any other value also means that <em>tls-key</em> is not the key. libnvme does
+not check the value: nvme-keysd does.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -892,6 +931,40 @@ inherits through the cascade below.</p></div>
 <div class="paragraph"><p>The type-defaults level is chosen by the connection&#8217;s class: a
 Discovery Controller draws from <em>[Discovery Controller Defaults]</em>, an
 I/O Controller from <em>[I/O Controller Defaults]</em>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_discovered_controllers">DISCOVERED CONTROLLERS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>A controller found through discovery (an I/O controller or a referral
+in a discovery log page, or a Discovery Controller found through mDNS)
+has no section of its own. It gets <em>kxchap-secret</em> and
+<em>kxchap-ctrl-secret</em> from the endpoint section with the same <em>nqn =</em>:
+a <em>[Subsystem]</em> section for an I/O controller, a <em>[Discovery
+Controller]</em> section for a Discovery Controller. The section must be in
+the same file as the Discovery Controller that reported the controller
+(the top-level file for mDNS), because a secret belongs to one (host,
+subsystem) pair. The section&#8217;s <em>controller =</em> lines do not matter: the
+addresses come from discovery.</p></div>
+<div class="paragraph"><p>A secret that no such section sets comes from the Discovery Controller:
+its <em>kxchap-secret</em> for <em>nvme connect-all</em>, the defaults of its file for
+nvme-discoverd. The <em>kxchap-ctrl-secret</em> of the Discovery Controller is
+never used. A <em>[Discovery Controller]</em> section with the well-known
+discovery NQN never matches.</p></div>
+<div class="paragraph"><p>A Discovery Controller with the well-known discovery NQN allows only
+unidirectional authentication. A <em>[Discovery Controller]</em> section with
+that NQN, or with no <em>nqn =</em>, may set <em>kxchap-secret</em>. If it sets
+<em>kxchap-ctrl-secret</em>, a warning is logged.</p></div>
+<div class="paragraph"><p>Two sections of the same type with the same NQN in one file share their
+secrets. If they set different values for the same secret, the file is
+rejected.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>[Subsystem]
+nqn = nqn.2026-10.com.example:sub1
+kxchap-secret = DHHC-1:00:...
+kxchap-ctrl-secret = DHHC-1:00:...</code></pre>
+</div></div>
 </div>
 </div>
 <div class="sect1">
@@ -943,7 +1016,7 @@ nvme-config-convert(1)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-18 12:15:54 CEST
+ 2026-10-30 19:29:20 CET
 </div>
 </div>
 </body>

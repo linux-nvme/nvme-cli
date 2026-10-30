@@ -1,0 +1,22 @@
+.TH "nvme_init_get_features_perf_characteristics" 9 "nvme_init_get_features_perf_characteristics" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_perf_characteristics \- Initialize passthru command for Get Features - Performance Characteristics
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_perf_characteristics
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u8 attri "  ","
+.BI "struct nvme_perf_characteristics *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "attri" 12
+Attribute Index (ATTRI)
+.IP "data" 12
+Buffer for returned struct nvme_perf_characteristics
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_PERF_CHARACTERISTICS

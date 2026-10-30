@@ -1,0 +1,19 @@
+.TH "libnvme_alloc_huge" 9 "libnvme_alloc_huge" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_alloc_huge \- Allocate a huge page-backed memory buffer
+.SH SYNOPSIS
+.B "void *" libnvme_alloc_huge
+.BI "(size_t len "  ","
+.BI "struct libnvme_mem_huge *mh "  ");"
+.SH ARGUMENTS
+.IP "len" 12
+Size of the memory buffer in bytes
+.IP "mh" 12
+Huge memory allocation descriptor
+.SH "DESCRIPTION"
+Attempts to allocate a memory buffer backed by huge pages. Allocation
+details are stored in \fImh\fP and must later be released using
+\fBlibnvme_free_huge\fP.
+.SH "RETURN"
+pointer to the allocated memory buffer on success, or NULL on
+failure.

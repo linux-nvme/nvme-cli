@@ -1,0 +1,254 @@
+.TH "libnvme" 9 "enum nvme_mi_form_factor" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_form_factor \- Upstream Connector Element Descriptor - Form Factor (FF) values
+.SH SYNOPSIS
+enum nvme_mi_form_factor {
+.br
+.BI "    NVME_MI_FF_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_INTEGRATED"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_OTHER"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_2_5_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_2_5_U2_15MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_2_5_U2_7MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_2_5_SFF_TA_1001_15MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_2_5_SFF_TA_1001_7MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_CEM_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_CEM_HHHL"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_CEM_FHHL"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_CEM_FHFL"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_M2_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_M2_2230"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_M2_2242"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_M2_2260"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_M2_2280"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_M2_22110"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_BGA_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_BGA_M2_1620"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_BGA_M2_1113"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_EDSFF_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E1S_5_9MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E1S_8MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E1L_9_5MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E1L_18MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E3S_7_5MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E3S_16_8MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E3L_7_5MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E3L_16_8MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E1S_9_5MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E1S_15MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E1S_25MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_PCIE_E2_9_5MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_ETHERNET_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_ETHERNET_2_5_15MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_ETHERNET_2_5_7MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_ETHERNET_E3S_7_5MM"
+, 
+.br
+.br
+.BI "    NVME_MI_FF_ETHERNET_E3S_16_8MM"
+
+};
+.SH Constants
+.IP "NVME_MI_FF_UNKNOWN" 12
+Unspecified: Other - unknown
+.IP "NVME_MI_FF_PCIE_INTEGRATED" 12
+PCIe: Integrated
+.IP "NVME_MI_FF_PCIE_OTHER" 12
+PCIe: Other - unknown
+.IP "NVME_MI_FF_PCIE_2_5_UNKNOWN" 12
+PCIe: 2.5" Form Factor - unknown
+.IP "NVME_MI_FF_PCIE_2_5_U2_15MM" 12
+PCIe: 2.5" Form Factor - PCI Express
+SFF-8639 Module (U.2) 15 mm
+.IP "NVME_MI_FF_PCIE_2_5_U2_7MM" 12
+PCIe: 2.5" Form Factor - PCI Express
+SFF-8639 Module (U.2) 7 mm
+.IP "NVME_MI_FF_PCIE_2_5_SFF_TA_1001_15MM" 12
+PCIe: 2.5" Form Factor -
+(SFF-TA-1001) 15 mm
+.IP "NVME_MI_FF_PCIE_2_5_SFF_TA_1001_7MM" 12
+PCIe: 2.5" Form Factor -
+(SFF-TA-1001) 7 mm
+.IP "NVME_MI_FF_PCIE_CEM_UNKNOWN" 12
+PCIe: CEM add in card - unknown
+.IP "NVME_MI_FF_PCIE_CEM_HHHL" 12
+PCIe: CEM add in card - Low Profile
+(HHHL)
+.IP "NVME_MI_FF_PCIE_CEM_FHHL" 12
+PCIe: CEM add in card - Standard
+Height Half Length (FHHL)
+.IP "NVME_MI_FF_PCIE_CEM_FHFL" 12
+PCIe: CEM add in card - Standard
+Height Full Length (FHFL)
+.IP "NVME_MI_FF_PCIE_M2_UNKNOWN" 12
+PCIe: M.2 module - unknown
+.IP "NVME_MI_FF_PCIE_M2_2230" 12
+PCIe: M.2 module - 2230
+.IP "NVME_MI_FF_PCIE_M2_2242" 12
+PCIe: M.2 module - 2242
+.IP "NVME_MI_FF_PCIE_M2_2260" 12
+PCIe: M.2 module - 2260
+.IP "NVME_MI_FF_PCIE_M2_2280" 12
+PCIe: M.2 module - 2280
+.IP "NVME_MI_FF_PCIE_M2_22110" 12
+PCIe: M.2 module - 22110
+.IP "NVME_MI_FF_PCIE_BGA_UNKNOWN" 12
+PCIe: BGA SSD - unknown
+.IP "NVME_MI_FF_PCIE_BGA_M2_1620" 12
+PCIe: BGA SSD - 16 x 20 mm (M.2 Type
+1620)
+.IP "NVME_MI_FF_PCIE_BGA_M2_1113" 12
+PCIe: BGA SSD - 11.5 x 13 mm (M.2
+Type 1113)
+.IP "NVME_MI_FF_PCIE_EDSFF_UNKNOWN" 12
+PCIe: Enterprise & Datacenter SSD
+Form Factor - unknown
+.IP "NVME_MI_FF_PCIE_E1S_5_9MM" 12
+PCIe: E1.S - (SFF-TA-1006) 5.9 mm
+.IP "NVME_MI_FF_PCIE_E1S_8MM" 12
+PCIe: E1.S - (SFF-TA-1006) 8 mm
+.IP "NVME_MI_FF_PCIE_E1L_9_5MM" 12
+PCIe: E1.L - (SFF-TA-1007) 9.5 mm
+.IP "NVME_MI_FF_PCIE_E1L_18MM" 12
+PCIe: E1.L - (SFF-TA-1007) 18 mm
+.IP "NVME_MI_FF_PCIE_E3S_7_5MM" 12
+PCIe: E3.S - (SFF-TA-1008) 7.5 mm
+.IP "NVME_MI_FF_PCIE_E3S_16_8MM" 12
+PCIe: E3.S - (SFF-TA-1008) 16.8 mm
+.IP "NVME_MI_FF_PCIE_E3L_7_5MM" 12
+PCIe: E3.L - (SFF-TA-1008) 7.5 mm
+.IP "NVME_MI_FF_PCIE_E3L_16_8MM" 12
+PCIe: E3.L - (SFF-TA-1008) 16.8 mm
+.IP "NVME_MI_FF_PCIE_E1S_9_5MM" 12
+PCIe: E1.S - (SFF-TA-1006) 9.5 mm
+.IP "NVME_MI_FF_PCIE_E1S_15MM" 12
+PCIe: E1.S - (SFF-TA-1006) 15 mm
+.IP "NVME_MI_FF_PCIE_E1S_25MM" 12
+PCIe: E1.S - (SFF-TA-1006) 25 mm
+.IP "NVME_MI_FF_PCIE_E2_9_5MM" 12
+PCIe: E2 - (SFF-TA-1042) 9.5 mm
+.IP "NVME_MI_FF_ETHERNET_UNKNOWN" 12
+Ethernet: Other - unknown
+.IP "NVME_MI_FF_ETHERNET_2_5_15MM" 12
+Ethernet: 2.5" Form Factor (Native
+NVMe-oF Drive) 15 mm
+.IP "NVME_MI_FF_ETHERNET_2_5_7MM" 12
+Ethernet: 2.5" Form Factor (Native
+NVMe-oF Drive) 7 mm
+.IP "NVME_MI_FF_ETHERNET_E3S_7_5MM" 12
+Ethernet: E3.S (Native NVMe-oF Drive)
+7.5 mm
+.IP "NVME_MI_FF_ETHERNET_E3S_16_8MM" 12
+Ethernet: E3.S (Native NVMe-oF Drive)
+16.8 mm

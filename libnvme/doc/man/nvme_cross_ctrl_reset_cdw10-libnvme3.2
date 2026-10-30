@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "enum nvme_cross_ctrl_reset_cdw10" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_cross_ctrl_reset_cdw10 \- Cross-Controller Reset - Command Dword 10
+.SH SYNOPSIS
+enum nvme_cross_ctrl_reset_cdw10 {
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CDW10_ICID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CDW10_ICID_MASK"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CDW10_CIU_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CDW10_CIU_MASK"
+
+};
+.SH Constants
+.IP "NVME_CROSS_CTRL_RESET_CDW10_ICID_SHIFT" 12
+Shift amount to set Impacted
+Controller ID (ICID)
+.IP "NVME_CROSS_CTRL_RESET_CDW10_ICID_MASK" 12
+Mask to set ICID
+.IP "NVME_CROSS_CTRL_RESET_CDW10_CIU_SHIFT" 12
+Shift amount to set Controller
+Instance Uniquifier (CIU)
+.IP "NVME_CROSS_CTRL_RESET_CDW10_CIU_MASK" 12
+Mask to set CIU

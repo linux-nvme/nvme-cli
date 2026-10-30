@@ -1,0 +1,34 @@
+.TH "libnvmf_import_tls_key_versioned" 9 "libnvmf_import_tls_key_versioned" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_import_tls_key_versioned \- Decode a PSK from the PSK interchange format
+.SH SYNOPSIS
+.B "int" libnvmf_import_tls_key_versioned
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *encoded_key "  ","
+.BI "unsigned char *version "  ","
+.BI "enum libnvmf_hmac_alg *hmac "  ","
+.BI "size_t *key_len "  ","
+.BI "unsigned char **key "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "encoded_key" 12
+PSK in PSK interchange format
+.IP "version" 12
+Version of the PSK interchange format read from
+\fIencoded_key\fP to return. Always 1; any other value
+is rejected with -EINVAL.
+.IP "hmac" 12
+Hash function recorded in \fIencoded_key\fP to return; it
+derives a retained PSK from a configured PSK
+.IP "key_len" 12
+Length of the decoded PSK to return
+.IP "key" 12
+Decoded PSK to return
+.SH "DESCRIPTION"
+Decodes \fIencoded_key\fP from the PSK Interchange format as defined in
+section 3.6.1.5 of the NVMe TCP Transport Specification 1.3.
+
+It is the responsibility of the caller to free the returned buffer.
+.SH "RETURN"
+0 on success, negative error code otherwise.

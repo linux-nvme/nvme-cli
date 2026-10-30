@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_power_limit" 9 "nvme_init_set_features_power_limit" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_power_limit \- Initialize passthru command for Power Limit
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_power_limit
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 pls "  ","
+.BI "__u16 plv "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "pls" 12
+Power Limit Scale (PLS)
+.IP "plv" 12
+Power Limit Value (PLV)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_POWER_LIMIT

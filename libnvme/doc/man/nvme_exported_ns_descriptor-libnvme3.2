@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_exported_ns_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_ns_descriptor \- Exported Namespace Descriptor
+.SH SYNOPSIS
+struct nvme_exported_ns_descriptor {
+.br
+.BI "    __le32 ensid;"
+.br
+.BI "    __le32 unsid;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ensid" 12
+Exported Namespace ID (ENSID)
+.IP "unsid" 12
+Underlying Namespace ID (UNSID)

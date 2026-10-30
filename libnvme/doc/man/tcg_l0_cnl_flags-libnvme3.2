@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum tcg_l0_cnl_flags" "October 2026" "API Manual" LINUX
+.SH NAME
+enum tcg_l0_cnl_flags \- Configurable Namespace Locking feature flags
+.SH SYNOPSIS
+enum tcg_l0_cnl_flags {
+.br
+.BI "    TCG_L0_CNL_RANGE_P"
+, 
+.br
+.br
+.BI "    TCG_L0_CNL_RANGE_C"
+
+};
+.SH Constants
+.IP "TCG_L0_CNL_RANGE_P" 12
+Non-global locking objects exist
+.IP "TCG_L0_CNL_RANGE_C" 12
+Non-global locking objects are supported

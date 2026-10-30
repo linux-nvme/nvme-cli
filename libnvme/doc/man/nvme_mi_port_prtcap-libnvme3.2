@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "enum nvme_mi_port_prtcap" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_port_prtcap \- Port Information Data Structure - Port Capabilities (PRTCAP)
+.SH SYNOPSIS
+enum nvme_mi_port_prtcap {
+.br
+.BI "    NVME_MI_PORT_PRTCAP_CIAPS"
+, 
+.br
+.br
+.BI "    NVME_MI_PORT_PRTCAP_AEMS"
+
+};
+.SH Constants
+.IP "NVME_MI_PORT_PRTCAP_CIAPS" 12
+Command Initiated Auto Pause Supported:
+obsolete as of NVMe-MI 2.2 and later (the
+Command Initiated Auto Pause bit in Command
+Messages is always supported); this bit is
+set to '1'.
+.IP "NVME_MI_PORT_PRTCAP_AEMS" 12
+Asynchronous Event Messages Supported: if set,
+then all Management Endpoints on this port
+support AEMs and the Asynchronous Event
+configuration (Configuration Identifier 04h).

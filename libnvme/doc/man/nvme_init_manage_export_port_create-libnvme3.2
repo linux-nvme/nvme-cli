@@ -1,0 +1,21 @@
+.TH "nvme_init_manage_export_port_create" 9 "nvme_init_manage_export_port_create" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_port_create \- Initialize passthru command for Manage Exported Port - Create
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_port_create
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool gepid "  ","
+.BI "struct nvme_exported_port_create_data *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "gepid" 12
+Generate Exported Port ID (GEPID): if set, the controller
+generates the Exported Port ID (returned in the CQE result,
+see \fIenum nvme_export_port_create_cqe_dw0\fP); if clear, the
+EPID field in \fIdata\fP specifies it
+.IP "data" 12
+Create data buffer, see \fIstruct nvme_exported_port_create_data\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported Port
+command with SEL value NVME_MANAGE_EXPORT_PORT_SEL_CREATE.

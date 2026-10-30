@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "enum nvme_manage_export_port_cdw10" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_manage_export_port_cdw10 \- Manage Exported Port - Command Dword 10
+.SH SYNOPSIS
+enum nvme_manage_export_port_cdw10 {
+.br
+.BI "    NVME_MANAGE_EXPORT_PORT_CDW10_SEL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_PORT_CDW10_SEL_MASK"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_PORT_CDW10_MOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_PORT_CDW10_MOS_MASK"
+
+};
+.SH Constants
+.IP "NVME_MANAGE_EXPORT_PORT_CDW10_SEL_SHIFT" 12
+Shift amount to set Select
+(SEL), see \fIenum nvme_manage_export_port_sel\fP
+.IP "NVME_MANAGE_EXPORT_PORT_CDW10_SEL_MASK" 12
+Mask to set SEL
+.IP "NVME_MANAGE_EXPORT_PORT_CDW10_MOS_SHIFT" 12
+Shift amount to set Management
+Operation Specific (MOS)
+.IP "NVME_MANAGE_EXPORT_PORT_CDW10_MOS_MASK" 12
+Mask to set MOS

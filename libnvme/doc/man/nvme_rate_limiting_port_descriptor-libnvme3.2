@@ -1,0 +1,62 @@
+.TH "libnvme" 9 "struct nvme_rate_limiting_port_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_rate_limiting_port_descriptor \- Rate Limiting Port Descriptor (QPD)
+.SH SYNOPSIS
+struct nvme_rate_limiting_port_descriptor {
+.br
+.BI "    __le16 portid;"
+.br
+.BI "    __le16 nc;"
+.br
+.BI "    __u8 rsvd4[3];"
+.br
+.BI "    __u8 abwsf;"
+.br
+.BI "    struct nvme_rate_limiting_max_access_descriptor rlma;"
+.br
+.BI "    __le64 arbwv;"
+.br
+.BI "    __le64 awbwv;"
+.br
+.BI "    __le32 ariops;"
+.br
+.BI "    __le32 awiops;"
+.br
+.BI "    __u8 rsvd64[448];"
+.br
+.BI "    __u8 vs[512];"
+.br
+.BI "    __le32 rlc_offset[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "portid" 12
+NVM subsystem Port Identifier
+.IP "nc" 12
+Number of Controllers in \fIrlc_offset\fP (0's based)
+.IP "rsvd4" 12
+Reserved
+.IP "abwsf" 12
+Available Bandwidth Scale Factor, see \fIenum nvme_rate_limiting_bw_scale\fP
+.IP "rlma" 12
+Rate Limiting Maximum Access to the non-volatile storage
+medium of the port
+.IP "arbwv" 12
+Available Read Bandwidth Value of the NVM subsystem to the transport
+.IP "awbwv" 12
+Available Write Bandwidth Value of the NVM subsystem to the transport
+.IP "ariops" 12
+Available Read IOPS of the NVM subsystem to the transport
+.IP "awiops" 12
+Available Write IOPS of the NVM subsystem to the transport
+.IP "rsvd64" 12
+Reserved
+.IP "vs" 12
+Vendor Specific
+.IP "rlc_offset" 12
+Dword offsets, relative to the start of the Rate Limiting log
+page, to the Rate Limiting Controller Descriptors accessible
+by this port, \fInc\fP + 1 entries

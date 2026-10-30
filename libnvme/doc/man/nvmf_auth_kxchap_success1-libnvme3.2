@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "struct nvmf_auth_kxchap_success1" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_auth_kxchap_success1 \- KX-HMAC-CHAP_Success1 message, controller to host
+.SH SYNOPSIS
+struct nvmf_auth_kxchap_success1 {
+.br
+.BI "    __u8 auth_type;"
+.br
+.BI "    __u8 auth_id;"
+.br
+.BI "    __u16 rsvd2;"
+.br
+.BI "    __le16 t_id;"
+.br
+.BI "    __u8 hl;"
+.br
+.BI "    __u8 rsvd7;"
+.br
+.BI "    __u8 rvalid;"
+.br
+.BI "    __u8 rsvd9[7];"
+.br
+.BI "    __u8 rval[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "auth_type" 12
+Authentication Type, see \fIenum nvmf_auth_protocol_id\fP
+.IP "auth_id" 12
+Authentication Identifier, see \fIenum nvmf_auth_kxchap_id\fP
+.IP "rsvd2" 12
+Reserved
+.IP "t_id" 12
+Transaction Identifier
+.IP "hl" 12
+Hash Length: length in bytes of the selected hash function
+.IP "rsvd7" 12
+Reserved
+.IP "rvalid" 12
+Response Valid: 01h if \fIrval\fP carries a valid Response Value
+(bidirectional authentication was requested), 00h otherwise.
+.IP "rsvd9" 12
+Reserved
+.IP "rval" 12
+Response Value (R2, \fIhl\fP bytes), cleared to 0h if \fIrvalid\fP is 00h.

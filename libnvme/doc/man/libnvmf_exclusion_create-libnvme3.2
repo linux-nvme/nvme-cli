@@ -1,0 +1,14 @@
+.TH "libnvmf_exclusion_create" 9 "libnvmf_exclusion_create" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_create \- create a new exclusion list.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_create
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name (used as filename: <dir>/<name>.conf)
+.SH "RETURN"
+0 on success, -EEXIST if the list already exists, negative errno otherwise.

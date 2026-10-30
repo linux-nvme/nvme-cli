@@ -1,0 +1,18 @@
+.TH "libnvme_ns_get_wwid" 9 "libnvme_ns_get_wwid" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_wwid \- Get wwid.
+.SH SYNOPSIS
+.B "int" libnvme_ns_get_wwid
+.BI "(const struct libnvme_ns *p "  ","
+.BI "const char **wwid "  ","
+.BI "const char *dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
+.IP "wwid" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fIwwid\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

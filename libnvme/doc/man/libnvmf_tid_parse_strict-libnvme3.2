@@ -1,0 +1,24 @@
+.TH "libnvmf_tid_parse_strict" 9 "libnvmf_tid_parse_strict" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_parse_strict \- Like libnvmf_tid_parse(), but reject malformed input.
+.SH SYNOPSIS
+.B "int" libnvmf_tid_parse_strict
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *str "  ","
+.BI "struct libnvmf_tid **out "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context for logging.
+.IP "str" 12
+Input string.
+.IP "out" 12
+The allocated TID on success; NULL on error.
+.SH "DESCRIPTION"
+Same as \fBlibnvmf_tid_parse\fP except that a malformed token -- a non-empty bare
+token (no '='), an empty value, or an unrecognized key -- fails the whole
+parse instead of being skipped.  Empty tokens (from ";;" or a trailing ';')
+are still benign.  Useful when an unrecognized key should be treated as an
+error (e.g. a typo in a hand-edited config) rather than silently ignored.
+.SH "RETURN"
+0 on success (*\fIout\fP is the allocated TID); -EINVAL if \fIctx\fP, \fIout\fP or
+\fIstr\fP is NULL, or on a malformed token; -ENOMEM on allocation failure.

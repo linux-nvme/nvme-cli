@@ -1,0 +1,18 @@
+.TH "libnvme_ns_get_eui64" 9 "libnvme_ns_get_eui64" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_eui64 \- Get eui64.
+.SH SYNOPSIS
+.B "int" libnvme_ns_get_eui64
+.BI "(const struct libnvme_ns *p "  ","
+.BI "const uint8_t **eui64 "  ","
+.BI "const uint8_t *dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
+.IP "eui64" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fIeui64\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

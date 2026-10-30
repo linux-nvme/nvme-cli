@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "struct tcg_l0_sum" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_sum \- Single User Mode feature (0x0201)
+.SH SYNOPSIS
+struct tcg_l0_sum {
+.br
+.BI "    __be32 num_locking_objects;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 rsvd5[7];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "num_locking_objects" 12
+Number of locking objects supported
+.IP "flags" 12
+Flags, see \fIenum tcg_l0_sum_flags\fP
+.IP "rsvd5" 12
+Reserved
+.SH "Description"
+TCG Opal SSC Feature Set: Single User Mode 1.00, section 4.2.1.

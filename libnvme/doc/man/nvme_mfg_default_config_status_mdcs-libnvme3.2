@@ -1,0 +1,45 @@
+.TH "libnvme" 9 "enum nvme_mfg_default_config_status_mdcs" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_mfg_default_config_status_mdcs \- Manufacturer Default Configuration Status log page - Manufacturer Default Configuration Status (MDCS)
+.SH SYNOPSIS
+enum nvme_mfg_default_config_status_mdcs {
+.br
+.BI "    NVME_MDCS_DSCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MDCS_DSCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_MDCS_DNCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MDCS_DNCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_MDCS_DCCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MDCS_DCCS_MASK"
+
+};
+.SH Constants
+.IP "NVME_MDCS_DSCS_SHIFT" 12
+Shift amount to get the Default NVM Subsystem
+Configuration Status (DSCS)
+.IP "NVME_MDCS_DSCS_MASK" 12
+Mask to get DSCS
+.IP "NVME_MDCS_DNCS_SHIFT" 12
+Shift amount to get the Default Namespace
+Configuration Status (DNCS)
+.IP "NVME_MDCS_DNCS_MASK" 12
+Mask to get DNCS
+.IP "NVME_MDCS_DCCS_SHIFT" 12
+Shift amount to get the Default Capacity
+Configuration Status (DCCS)
+.IP "NVME_MDCS_DCCS_MASK" 12
+Mask to get DCCS

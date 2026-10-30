@@ -1,0 +1,18 @@
+.TH "libnvme_path_get_ana_state" 9 "libnvme_path_get_ana_state" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_get_ana_state \- Get ana_state.
+.SH SYNOPSIS
+.B "int" libnvme_path_get_ana_state
+.BI "(const struct libnvme_path *p "  ","
+.BI "const char **ana_state "  ","
+.BI "const char *dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_path\fP instance to query.
+.IP "ana_state" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fIana_state\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

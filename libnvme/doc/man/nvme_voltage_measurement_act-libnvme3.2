@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_act" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_act \- Voltage Measurement Feature - Command Dword 11 Action (ACT)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_act {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_ACT_STOP"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_ACT_START"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_ACT_CLEAR"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_ACT_STOP" 12
+Stop Voltage Measurements
+.IP "NVME_VOLTAGE_MEASUREMENT_ACT_START" 12
+Start Voltage Measurements
+.IP "NVME_VOLTAGE_MEASUREMENT_ACT_CLEAR" 12
+Clear Overvoltage Valid and
+Undervoltage Valid

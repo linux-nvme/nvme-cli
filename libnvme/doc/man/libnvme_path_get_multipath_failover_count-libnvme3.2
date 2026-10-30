@@ -1,0 +1,18 @@
+.TH "libnvme_path_get_multipath_failover_count" 9 "libnvme_path_get_multipath_failover_count" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_get_multipath_failover_count \- Get multipath_failover_count.
+.SH SYNOPSIS
+.B "int" libnvme_path_get_multipath_failover_count
+.BI "(const struct libnvme_path *p "  ","
+.BI "long *multipath_failover_count "  ","
+.BI "long dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_path\fP instance to query.
+.IP "multipath_failover_count" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fImultipath_failover_count\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

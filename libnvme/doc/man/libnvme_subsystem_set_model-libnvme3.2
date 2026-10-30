@@ -1,0 +1,12 @@
+.TH "libnvme_subsystem_set_model" 9 "libnvme_subsystem_set_model" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_subsystem_set_model \- Set model.
+.SH SYNOPSIS
+.B "void" libnvme_subsystem_set_model
+.BI "(struct libnvme_subsystem *p "  ","
+.BI "const char *model "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_subsystem\fP instance to update.
+.IP "model" 12
+New string; a copy is stored. Pass NULL to clear.

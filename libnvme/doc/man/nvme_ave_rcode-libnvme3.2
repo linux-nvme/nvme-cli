@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_ave_rcode" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_ave_rcode \- KX-HMAC-CHAP AVE Access-Result Reason Code (RCODE)
+.SH SYNOPSIS
+enum nvme_ave_rcode {
+.br
+.BI "    NVME_AVE_RCODE_NONE"
+, 
+.br
+.br
+.BI "    NVME_AVE_RCODE_AUTH_FAILURE"
+, 
+.br
+.br
+.BI "    NVME_AVE_RCODE_HASH_UNUSABLE"
+
+};
+.SH Constants
+.IP "NVME_AVE_RCODE_NONE" 12
+No additional explanation
+.IP "NVME_AVE_RCODE_AUTH_FAILURE" 12
+Authentication failure
+.IP "NVME_AVE_RCODE_HASH_UNUSABLE" 12
+Selected hash function unusable

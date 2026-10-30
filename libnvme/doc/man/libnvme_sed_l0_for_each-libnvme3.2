@@ -1,0 +1,15 @@
+.TH "libnvme_sed_l0_for_each" 9 "libnvme_sed_l0_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sed_l0_for_each \- Iterate over Level 0 Discovery descriptors
+.SH SYNOPSIS
+.B "libnvme_sed_l0_for_each
+.BI "(desc "  ","
+.BI "buf "  ","
+.BI "len "  ");"
+.SH ARGUMENTS
+.IP "desc" 12
+\fIstruct tcg_l0_desc\fP pointer used as the loop cursor
+.IP "buf" 12
+Level 0 Discovery data
+.IP "len" 12
+Size of \fIbuf\fP in bytes

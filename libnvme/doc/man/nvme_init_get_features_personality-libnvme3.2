@@ -1,0 +1,27 @@
+.TH "nvme_init_get_features_personality" 9 "nvme_init_get_features_personality" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_personality \- Initialize passthru command for Get Features - Configurable Device Personality
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_personality
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u8 perid "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "perid" 12
+Personality Identifier (PERID), see \fIenum
+nvme_personality_identifier\fP
+.IP "data" 12
+Personality Identifier specific data buffer, or NULL if the
+personality does not use the data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_CONF_DEV_PERSONALITY

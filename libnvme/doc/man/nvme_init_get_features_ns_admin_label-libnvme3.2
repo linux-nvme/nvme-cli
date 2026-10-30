@@ -1,0 +1,20 @@
+.TH "nvme_init_get_features_ns_admin_label" 9 "nvme_init_get_features_ns_admin_label" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_ns_admin_label \- Initialize passthru command for Get Features - Namespace Admin Label
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_ns_admin_label
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "void *label "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "label" 12
+256 byte, null-terminated UTF-8 Namespace Admin Label (NSAL)
+data buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_NS_ADMIN_LABEL

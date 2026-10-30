@@ -1,0 +1,20 @@
+.TH "libnvmf_revoke_tls_key" 9 "libnvmf_revoke_tls_key" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_revoke_tls_key \- Revoke a TLS PSK from a keyring
+.SH SYNOPSIS
+.B "int" libnvmf_revoke_tls_key
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *keyring "  ","
+.BI "const char *key_type "  ","
+.BI "const char *identity "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "keyring" 12
+Keyring to use
+.IP "key_type" 12
+Type of the key to revoke
+.IP "identity" 12
+Key identity string
+.SH "RETURN"
+0 on success, negative error code otherwise.

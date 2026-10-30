@@ -1,0 +1,71 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_vsen" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_vsen \- Identify Controller Voltage Sensor data structure (VSEN1-VSEN4)
+.SH SYNOPSIS
+enum nvme_id_ctrl_vsen {
+.br
+.BI "    NVME_CTRL_VSEN_VSRV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_VSRV_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_VSRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_VSRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_VOLSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_VOLSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_PISL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_PISL_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_PISV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VSEN_PISV_MASK"
+
+};
+.SH Constants
+.IP "NVME_CTRL_VSEN_VSRV_SHIFT" 12
+Shift amount to get the Voltage Sample Rate
+Value (VSRV)
+.IP "NVME_CTRL_VSEN_VSRV_MASK" 12
+Mask to get VSRV
+.IP "NVME_CTRL_VSEN_VSRS_SHIFT" 12
+Shift amount to get the Voltage Sample Rate
+Scale (VSRS)
+.IP "NVME_CTRL_VSEN_VSRS_MASK" 12
+Mask to get VSRS
+.IP "NVME_CTRL_VSEN_VOLSS_SHIFT" 12
+Shift amount to get the Voltage Sample Scale
+(VOLSS)
+.IP "NVME_CTRL_VSEN_VOLSS_MASK" 12
+Mask to get VOLSS
+.IP "NVME_CTRL_VSEN_PISL_SHIFT" 12
+Shift amount to get the Power Input Supply
+Label (PISL)
+.IP "NVME_CTRL_VSEN_PISL_MASK" 12
+Mask to get PISL
+.IP "NVME_CTRL_VSEN_PISV_SHIFT" 12
+Shift amount to get the Power Input Supply
+Value (PISV), in units of 0.05 V
+.IP "NVME_CTRL_VSEN_PISV_MASK" 12
+Mask to get PISV

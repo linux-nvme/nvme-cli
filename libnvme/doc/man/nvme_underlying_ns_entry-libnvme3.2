@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_underlying_ns_entry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_underlying_ns_entry \- Underlying Namespace Entry Data Structure
+.SH SYNOPSIS
+struct nvme_underlying_ns_entry {
+.br
+.BI "    __u8 unsnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __u8 rsvd58[56];"
+.br
+.BI "    __le16 idx;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "unsnqn" 12
+Underlying NVM Subsystem NQN (UNSNQN)
+.IP "nsid" 12
+Namespace Identifier (NSID) of the Underlying Namespace
+.IP "cntlid" 12
+Controller ID (CNTLID) of a controller able to attach \fInsid\fP
+.IP "rsvd58" 12
+Reserved
+.IP "idx" 12
+Index (IDX) into the list of reportable Underlying Namespaces

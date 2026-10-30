@@ -1,0 +1,29 @@
+.TH "libnvme_read_regs" 9 "libnvme_read_regs" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_read_regs \- Read the controller registers of a PCIe controller
+.SH SYNOPSIS
+.B "int" libnvme_read_regs
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "__u32 offset "  ","
+.BI "void *buf "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "offset" 12
+Offset of the first register in bytes
+.IP "buf" 12
+Buffer to store the register values
+.IP "len" 12
+Number of bytes to read
+.SH "DESCRIPTION"
+Copies the register range [\fIoffset\fP, \fIoffset\fP + \fIlen\fP) of the controller
+into \fIbuf\fP, using 32-bit MMIO reads. The register values are stored in
+little-endian byte order, as they appear in the register map. \fIoffset\fP
+and \fIlen\fP must be multiples of 4 and the range must be within the first
+4 KiB of the register map.
+
+This should only be sent to controller handles, not to namespaces.
+.SH "RETURN"
+0 on success or a negative error code otherwise. -ENOTSUP
+indicates that the transport has no memory-mapped registers.

@@ -1,0 +1,16 @@
+.TH "libnvmf_params_for_each" 9 "libnvmf_params_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_params_for_each \- iterate over set connection parameters.
+.SH SYNOPSIS
+.B "void" libnvmf_params_for_each
+.BI "(const struct libnvmf_params *params "  ","
+.BI "void (*callback)(const char *key, const char *value, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "params" 12
+a resolved parameter set
+.IP "callback" 12
+called once per key in first-insertion order; \fIvalue\fP is the
+empty string for an explicit reset, never NULL
+.IP "user_data" 12
+caller context passed to \fIcallback\fP

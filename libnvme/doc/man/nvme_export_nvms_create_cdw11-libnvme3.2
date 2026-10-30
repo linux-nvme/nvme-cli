@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_export_nvms_create_cdw11" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_export_nvms_create_cdw11 \- Manage Exported NVM Subsystem Receive - Create Exported NVM Subsystem - Command Dword 11
+.SH SYNOPSIS
+enum nvme_export_nvms_create_cdw11 {
+.br
+.BI "    NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_MASK"
+, 
+.br
+.br
+.BI "    NVME_EXPORT_NVMS_CREATE_CDW11_TR"
+
+};
+.SH Constants
+.IP "NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_SHIFT" 12
+Shift amount to set Exported
+NVM Subsystem Template Index (ENSTI), see the Identify
+CNS value NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST
+.IP "NVME_EXPORT_NVMS_CREATE_CDW11_ENSTI_MASK" 12
+Mask to set ENSTI
+.IP "NVME_EXPORT_NVMS_CREATE_CDW11_TR" 12
+Template Required (TR)

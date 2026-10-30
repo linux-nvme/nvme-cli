@@ -1,0 +1,13 @@
+.TH "libnvme_free_huge" 9 "libnvme_free_huge" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_free_huge \- Free a huge page-backed memory buffer
+.SH SYNOPSIS
+.B "void" libnvme_free_huge
+.BI "(struct libnvme_mem_huge *mh "  ");"
+.SH ARGUMENTS
+.IP "mh" 12
+Huge memory allocation descriptor
+.SH "DESCRIPTION"
+Releases resources associated with a buffer allocated by
+\fBlibnvme_alloc_huge\fP. The descriptor contents are no longer valid after
+this call.

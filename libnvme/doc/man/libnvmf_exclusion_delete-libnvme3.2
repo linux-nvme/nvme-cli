@@ -1,0 +1,14 @@
+.TH "libnvmf_exclusion_delete" 9 "libnvmf_exclusion_delete" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_delete \- delete an exclusion list.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_delete
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name
+.SH "RETURN"
+0 on success, -ENOENT if the list does not exist, negative errno otherwise.

@@ -1,0 +1,18 @@
+.TH "libnvme_privsep_spawn" 9 "libnvme_privsep_spawn" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_privsep_spawn \- Start the privilege separation helper
+.SH SYNOPSIS
+.B "int" libnvme_privsep_spawn
+.BI "(const char *helper "  ","
+.BI "struct libnvme_privsep **psp "  ");"
+.SH ARGUMENTS
+.IP "helper" 12
+Path of the helper binary or NULL for the installed helper
+.IP "psp" 12
+On success, the helper channel
+.SH "DESCRIPTION"
+Starts the helper as a child process and checks that it speaks the same
+protocol version. The helper inherits the credentials of the caller, so
+call this function before dropping privileges.
+.SH "RETURN"
+0 on success or a negative error code otherwise.

@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "enum nvme_lockdown_csel" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_lockdown_csel \- Lockdown Command Dword 10 - Controller Select (CSEL)
+.SH SYNOPSIS
+enum nvme_lockdown_csel {
+.br
+.BI "    NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_CSEL_SPECIFIC_CTRL"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_CSEL_SECONDARY_CTRLS"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_CSEL_VENDOR_SPECIFIC"
+
+};
+.SH Constants
+.IP "NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM" 12
+NVM Subsystem: this command affects
+all controllers in the NVM subsystem.
+.IP "NVME_LOCKDOWN_CSEL_SPECIFIC_CTRL" 12
+Specific Controller: this command
+affects the controller specified in
+the Controller Select Specific (CSS)
+field of Command Dword 14.
+.IP "NVME_LOCKDOWN_CSEL_SECONDARY_CTRLS" 12
+Secondary Controllers for a Specific
+Primary Controller: this command
+affects all secondary controllers
+associated with the primary
+controller specified in the CSS
+field of Command Dword 14.
+.IP "NVME_LOCKDOWN_CSEL_VENDOR_SPECIFIC" 12
+Vendor Specific

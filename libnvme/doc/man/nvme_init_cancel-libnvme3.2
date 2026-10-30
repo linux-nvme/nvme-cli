@@ -1,0 +1,31 @@
+.TH "nvme_init_cancel" 9 "nvme_init_cancel" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_cancel \- Initialize passthru command for Cancel command
+.SH SYNOPSIS
+.B "void" nvme_init_cancel
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u16 sqid "  ","
+.BI "__u16 cid "  ","
+.BI "enum nvme_cancel_acode acode "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier, or NVME_NSID_ALL
+.IP "sqid" 12
+Submission Queue Identifier (SQID) that the Cancel command is
+associated with
+.IP "cid" 12
+Command Identifier (CID) of the command to abort. Ignored if
+\fIacode\fP is NVME_CANCEL_ACODE_MULTIPLE_CMD.
+.IP "acode" 12
+Action Code (ACODE), see \fIenum nvme_cancel_acode\fP
+.SH "DESCRIPTION"
+The Cancel command requests an abort for specified commands submitted on
+the same I/O Submission Queue to which the Cancel command is submitted.
+The number of commands eligible for a deferred abort and the number of
+commands aborted are returned in the CQE result, see \fIenum
+nvme_cancel_cqe_dw0\fP.
+
+Initializes the passthru command buffer for the Cancel command.

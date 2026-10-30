@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_non_volatile_storage_medium_access_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_non_volatile_storage_medium_access_descriptor \- Non-Volatile Storage Medium Access Descriptor (QNSED)
+.SH SYNOPSIS
+struct nvme_non_volatile_storage_medium_access_descriptor {
+.br
+.BI "    __u8 sc;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __le16 nnsmad;"
+.br
+.BI "    __le32 si;"
+.br
+.BI "    struct nvme_rate_limiting_max_access_descriptor rlma;"
+.br
+.BI "    __u8 rsvd40[24];"
+.br
+.BI "    __le32 nvsma_offset[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "sc" 12
+Scope, see \fIenum nvme_rate_limiting_scope\fP
+.IP "rsvd1" 12
+Reserved
+.IP "nnsmad" 12
+Number of Non-Volatile Storage Medium Access Descriptors in
+\fInvsma_offset\fP, cleared to 0h if \fIsc\fP is NVM subsystem or the
+NVM subsystem supports a single domain
+.IP "si" 12
+Scope Identifier for the scope indicated by \fIsc\fP
+.IP "rlma" 12
+Rate Limiting Maximum Access for the scope indicated by \fIsc\fP
+.IP "rsvd40" 12
+Reserved
+.IP "nvsma_offset" 12
+Dword offsets, relative to the start of the Rate Limiting
+log page, to the nested Non-Volatile Storage Medium Access
+Descriptors, \fInnsmad\fP entries

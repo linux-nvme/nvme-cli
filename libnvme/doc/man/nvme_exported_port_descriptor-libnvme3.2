@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_exported_port_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_port_descriptor \- Exported Port Descriptor
+.SH SYNOPSIS
+struct nvme_exported_port_descriptor {
+.br
+.BI "    __le16 epid;"
+.br
+.BI "    __le16 pidud;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __u8 trsvcid[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "epid" 12
+Exported Port ID (EPID)
+.IP "pidud" 12
+Port ID of the Underlying Port (PIDUD)
+.IP "rsvd4" 12
+Reserved
+.IP "trsvcid" 12
+Transport Service ID (TRSVCID), ASCII string

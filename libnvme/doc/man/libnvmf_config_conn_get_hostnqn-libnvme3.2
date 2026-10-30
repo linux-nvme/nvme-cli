@@ -1,0 +1,13 @@
+.TH "libnvmf_config_conn_get_hostnqn" 9 "libnvmf_config_conn_get_hostnqn" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_get_hostnqn \- a connection's host NQN.
+.SH SYNOPSIS
+.B "const char *" libnvmf_config_conn_get_hostnqn
+.BI "(const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "conn" 12
+the resolved connection
+.SH "RETURN"
+borrowed string, or NULL when the configuration leaves the host
+identity to the system default (the connect path applies its usual
+/etc/nvme/hostnqn fallback).

@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nvme_exported_port_list" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_port_list \- Exported Ports List Data Structure, returned by the Manage Exported NVM Subsystem Receive command's List Exported Ports management operation (memory-based transports only)
+.SH SYNOPSIS
+struct nvme_exported_port_list {
+.br
+.BI "    __le16 n;"
+.br
+.BI "    __u8 rsvd2[6];"
+.br
+.BI "    struct nvme_exported_port_descriptor entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "n" 12
+Number of Exported Ports (N)
+.IP "rsvd2" 12
+Reserved
+.IP "entries" 12
+Exported Port Descriptor list, see \fIstruct
+nvme_exported_port_descriptor\fP

@@ -1,0 +1,34 @@
+.TH "nvme_init_manage_export_ns" 9 "nvme_init_manage_export_ns" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_ns \- Initialize passthru command for Manage Exported Namespace
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_ns
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 sel "  ","
+.BI "__u8 mos "  ","
+.BI "bool esubidv "  ","
+.BI "__u16 esubid "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select (SEL): management operation to perform, see \fIenum
+nvme_manage_export_ns_sel\fP
+.IP "mos" 12
+Management Operation Specific (MOS): specific to \fIsel\fP
+.IP "esubidv" 12
+Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+\fIesubid\fP identifies the target Exported NVM Subsystem;
+otherwise the target is identified by the SUBNQN in \fIdata\fP
+.IP "esubid" 12
+Exported NVM Subsystem Identifier (ESUBID), used if
+\fIesubidv\fP is set
+.IP "data" 12
+Pointer to data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported
+Namespace command.

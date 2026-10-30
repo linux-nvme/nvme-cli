@@ -1,0 +1,18 @@
+.TH "libnvme_ctrl_get_phy_slot" 9 "libnvme_ctrl_get_phy_slot" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_phy_slot \- Get phy_slot.
+.SH SYNOPSIS
+.B "int" libnvme_ctrl_get_phy_slot
+.BI "(const struct libnvme_ctrl *p "  ","
+.BI "const char **phy_slot "  ","
+.BI "const char *dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to query.
+.IP "phy_slot" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fIphy_slot\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

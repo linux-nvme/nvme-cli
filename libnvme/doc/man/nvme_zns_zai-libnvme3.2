@@ -1,0 +1,60 @@
+.TH "libnvme" 9 "enum nvme_zns_zai" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_zns_zai \- Zone Descriptor Data Structure - Zone Attributes Information
+.SH SYNOPSIS
+enum nvme_zns_zai {
+.br
+.BI "    NVME_ZNS_ZAI_RZRTL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZAI_RZRTL_MASK"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZAI_FZRTL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZAI_FZRTL_MASK"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZAI_RTL_0"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZAI_RTL_1"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZAI_RTL_2"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZAI_RTL_3"
+
+};
+.SH Constants
+.IP "NVME_ZNS_ZAI_RZRTL_SHIFT" 12
+Shift amount to get the Reset Zone
+Recommended Time Limit (RZRTL) from the
+\fIstruct nvme_zns_desc\fP.zai field.
+.IP "NVME_ZNS_ZAI_RZRTL_MASK" 12
+Mask to get RZRTL from the
+\fIstruct nvme_zns_desc\fP.zai field.
+.IP "NVME_ZNS_ZAI_FZRTL_SHIFT" 12
+Shift amount to get the Finish Zone
+Recommended Time Limit (FZRTL) from the
+\fIstruct nvme_zns_desc\fP.zai field.
+.IP "NVME_ZNS_ZAI_FZRTL_MASK" 12
+Mask to get FZRTL from the
+\fIstruct nvme_zns_desc\fP.zai field.
+.IP "NVME_ZNS_ZAI_RTL_0" 12
+Reset/Finish Recommended Limit (RRL/FRL)
+.IP "NVME_ZNS_ZAI_RTL_1" 12
+Reset/Finish Recommended Limit 1 (RRL1/FRL1)
+.IP "NVME_ZNS_ZAI_RTL_2" 12
+Reset/Finish Recommended Limit 2 (RRL2/FRL2)
+.IP "NVME_ZNS_ZAI_RTL_3" 12
+Reset/Finish Recommended Limit 3 (RRL3/FRL3)

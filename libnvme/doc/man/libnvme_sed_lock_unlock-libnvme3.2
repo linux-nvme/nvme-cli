@@ -1,0 +1,17 @@
+.TH "libnvme_sed_lock_unlock" 9 "libnvme_sed_lock_unlock" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sed_lock_unlock \- Change the lock state of the global range
+.SH SYNOPSIS
+.B "int" libnvme_sed_lock_unlock
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "const struct libnvme_sed_key *key "  ","
+.BI "enum libnvme_sed_lock_state state "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "key" 12
+Admin1 password
+.IP "state" 12
+New lock state, see \fIenum libnvme_sed_lock_state\fP
+.SH "RETURN"
+See the return value convention above.

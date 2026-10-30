@@ -1,0 +1,15 @@
+.TH "libnvme" 9 "enum nvme_abort_cqe_dw0" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_abort_cqe_dw0 \- Abort Command – Completion Queue Entry Dword 0
+.SH SYNOPSIS
+enum nvme_abort_cqe_dw0 {
+.br
+.BI "    NVME_ABORT_CQE_DW0_IANP"
+
+};
+.SH Constants
+.IP "NVME_ABORT_CQE_DW0_IANP" 12
+Immediate Abort Not Performed: if set to '1',
+then an immediate abort was not performed for
+any reason. If cleared to '0', then an
+immediate abort was performed.

@@ -1,0 +1,12 @@
+.TH "libnvmf_config_conn_get_trsvcid" 9 "libnvmf_config_conn_get_trsvcid" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_get_trsvcid \- a connection's transport service ID.
+.SH SYNOPSIS
+.B "const char *" libnvmf_config_conn_get_trsvcid
+.BI "(const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "conn" 12
+the resolved connection
+.SH "RETURN"
+borrowed string, or NULL when unset (the transport default
+applies).

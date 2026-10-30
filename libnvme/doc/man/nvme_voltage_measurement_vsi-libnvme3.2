@@ -1,0 +1,46 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_vsi" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_vsi \- Voltage Measurement log page - Voltage Sensor Info (VSI)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_vsi {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_MASK"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_SHIFT" 12
+Shift amount to get the Voltage
+Sensor Supply Value (VSSV), in
+units of 0.05 V
+.IP "NVME_VOLTAGE_MEASUREMENT_VSI_VSSV_MASK" 12
+Mask to get VSSV
+.IP "NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_SHIFT" 12
+Shift amount to get the Voltage
+Sensor Supply Label (VSSL)
+.IP "NVME_VOLTAGE_MEASUREMENT_VSI_VSSL_MASK" 12
+Mask to get VSSL
+.IP "NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_SHIFT" 12
+Shift amount to get the Voltage
+Sensor Sample Scale (VSSS)
+.IP "NVME_VOLTAGE_MEASUREMENT_VSI_VSSS_MASK" 12
+Mask to get VSSS

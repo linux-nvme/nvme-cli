@@ -1,0 +1,21 @@
+.TH "libnvme" 9 "struct nvme_exported_nvm_subsys_template_uuid_list" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_nvm_subsys_template_uuid_list \- Exported NVM Subsystem Template UUID List data structure (CNS 22h)
+.SH SYNOPSIS
+struct nvme_exported_nvm_subsys_template_uuid_list {
+.br
+.BI "    __u8 rsvd0[16];"
+.br
+.BI "    __u8 enst[255][16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "enst" 12
+Exported NVM Subsystem Template UUID list, up to 255 entries,
+listed in ascending order. An entry that is not reserved and
+is cleared to 0h indicates the end of the list.

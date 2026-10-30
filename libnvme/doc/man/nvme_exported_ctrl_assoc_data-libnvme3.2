@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "struct nvme_exported_ctrl_assoc_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_ctrl_assoc_data \- Associate Controllers Management Operation Data Buffer
+.SH SYNOPSIS
+struct nvme_exported_ctrl_assoc_data {
+.br
+.BI "    __le16 n;"
+.br
+.BI "    __u8 rsvd2[2];"
+.br
+.BI "    struct nvme_exported_ctrl_assoc_descriptor entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "n" 12
+Number of Associated Exported Controller Descriptors (N),
+0's based
+.IP "rsvd2" 12
+Reserved
+.IP "entries" 12
+Exported Controller Association Descriptor list, see \fIstruct
+nvme_exported_ctrl_assoc_descriptor\fP

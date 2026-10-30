@@ -1,0 +1,33 @@
+.TH "libnvme" 9 "struct nvme_lm_track_memory_changes_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_track_memory_changes_data \- Track Memory Changes Data Structure, supplied by the host in the data buffer of a Track Send command's Track Memory Changes management operation when starting tracking (TACT set to %NVME_LM_TACT_START_TRACKING)
+.SH SYNOPSIS
+struct nvme_lm_track_memory_changes_data {
+.br
+.BI "    __u8 ver;"
+.br
+.BI "    __u8 rsvd1[2];"
+.br
+.BI "    __u8 rmrtg;"
+.br
+.BI "    __le32 rnmrtd;"
+.br
+.BI "    struct nvme_lm_memory_range_tracking_descriptor desc[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ver" 12
+Version (VER), shall be cleared to 0h
+.IP "rsvd1" 12
+Reserved
+.IP "rmrtg" 12
+Requested Memory Range Tracking Granularity (RMRTG)
+.IP "rnmrtd" 12
+Number of Memory Range Tracking Descriptors (RNMRTD), a 1's
+based value
+.IP "desc" 12
+Memory Range Tracking Descriptor list, see \fIstruct
+nvme_lm_memory_range_tracking_descriptor\fP

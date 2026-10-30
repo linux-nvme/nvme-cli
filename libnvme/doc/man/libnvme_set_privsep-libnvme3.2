@@ -1,0 +1,18 @@
+.TH "libnvme_set_privsep" 9 "libnvme_set_privsep" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_privsep \- Open devices through the helper
+.SH SYNOPSIS
+.B "void" libnvme_set_privsep
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvme_privsep *ps "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.IP "ps" 12
+Helper channel or NULL to open devices directly
+.SH "DESCRIPTION"
+\fBlibnvme_open\fP on \fIctx\fP returns transport handles which forward the
+commands to the helper. MI endpoints are not affected. Several contexts
+can share one helper channel. The channel must outlive the contexts and
+their transport handles. Commands on one channel must not be issued
+concurrently.

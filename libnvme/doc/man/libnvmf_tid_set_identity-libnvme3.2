@@ -1,0 +1,32 @@
+.TH "libnvmf_tid_set_identity" 9 "libnvmf_tid_set_identity" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_set_identity \- Set the subsystem and host identity together.
+.SH SYNOPSIS
+.B "int" libnvmf_tid_set_identity
+.BI "(struct libnvmf_tid *tid "  ","
+.BI "const char *subsysnqn "  ","
+.BI "const char *hostnqn "  ","
+.BI "const char *hostid "  ");"
+.SH ARGUMENTS
+.IP "tid" 12
+The transport ID.
+.IP "subsysnqn" 12
+Subsystem NQN, or NULL to leave it unchanged.
+.IP "hostnqn" 12
+Host NQN, or NULL to leave it unchanged.
+.IP "hostid" 12
+Host Identifier, or NULL to leave it unchanged (or derive it).
+.SH "DESCRIPTION"
+Identity is applied after addressing -- which subsystem, and which host
+persona, are decided by context.  A NULL argument leaves that field as-is,
+which is why the three are set through one call rather than per-field
+setters (addressing has none: it is construction-only).
+
+hostid is never left to chance: when no hostid is set but the resulting
+hostnqn carries a UUID (nqn.2014-08.org.nvmexpress:uuid:<X>), the hostid is
+derived from it -- the deterministic, per-host value (TP4126), never a
+random one.  A hostid without a hostnqn is rejected: one host is one
+(hostnqn, hostid) pair.
+.SH "RETURN"
+0 on success; -EINVAL for a NULL \fItid\fP or a hostid without a hostnqn;
+-ENOMEM on allocation failure.

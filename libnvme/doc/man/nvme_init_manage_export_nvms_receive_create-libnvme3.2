@@ -1,0 +1,32 @@
+.TH "nvme_init_manage_export_nvms_receive_create" 9 "nvme_init_manage_export_nvms_receive_create" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_nvms_receive_create \- Initialize passthru command for Manage Exported NVM Subsystem Receive - Create Exported NVM Subsystem
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_nvms_receive_create
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool tr "  ","
+.BI "__u8 ensti "  ","
+.BI "bool ra "  ","
+.BI "struct nvme_exported_nvm_subsys_create_data *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "tr" 12
+Template Required (TR)
+.IP "ensti" 12
+Exported NVM Subsystem Template Index (ENSTI), used if \fItr\fP is
+set. Indexes the Exported NVM Subsystem Template UUID List,
+see NVME_IDENTIFY_CNS_EXPORTED_NVM_SUBSYS_TEMPLATE_UUID_LIST.
+.IP "ra" 12
+Restricted Access (RA): message-based transports only,
+ignored by memory-based transports
+.IP "data" 12
+Create Exported NVM Subsystem data buffer, see \fIstruct
+nvme_exported_nvm_subsys_create_data\fP. The assigned Exported
+NVM Subsystem NQN is returned in this same buffer.
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported NVM
+Subsystem Receive command with SEL value
+NVME_MANAGE_EXPORT_NVMS_RECV_SEL_CREATE. The created Exported NVM
+Subsystem Identifier is returned in the CQE result, see \fIenum
+nvme_export_nvms_create_cqe_dw0\fP.

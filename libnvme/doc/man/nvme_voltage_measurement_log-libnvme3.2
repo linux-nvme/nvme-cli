@@ -1,0 +1,119 @@
+.TH "libnvme" 9 "struct nvme_voltage_measurement_log" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_voltage_measurement_log \- Voltage Measurement Log Page (Log Identifier 27h)
+.SH SYNOPSIS
+struct nvme_voltage_measurement_log {
+.br
+.BI "    __u8 vmgn;"
+.br
+.BI "    __u8 vma;"
+.br
+.BI "    __le16 vsi;"
+.br
+.BI "    __le32 vmlsz;"
+.br
+.BI "    __le16 nvmds;"
+.br
+.BI "    __le16 nvmde;"
+.br
+.BI "    __le16 svmtr;"
+.br
+.BI "    struct nvme_timestamp   svmts;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 vlvss;"
+.br
+.BI "    __u8 rsvd26[6];"
+.br
+.BI "    __le16 ovol;"
+.br
+.BI "    __le16 ovc;"
+.br
+.BI "    __le16 ovlt;"
+.br
+.BI "    struct nvme_timestamp   ovts;"
+.br
+.BI "    __u8 iovpe;"
+.br
+.BI "    __le16 uvol;"
+.br
+.BI "    __le16 uvc;"
+.br
+.BI "    __le16 uvlt;"
+.br
+.BI "    struct nvme_timestamp   uvts;"
+.br
+.BI "    __u8 iuvpe;"
+.br
+.BI "    __u8 rsvd62[2];"
+.br
+.BI "    __le16 ivmd[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "vmgn" 12
+Voltage Measurement Generation Number: incremented each time a
+Set Features command starts Voltage Measurements.
+.IP "vma" 12
+Voltage Measurement Attributes, see \fIenum
+nvme_voltage_measurement_vma\fP.
+.IP "vsi" 12
+Voltage Sensor Info, see \fIenum nvme_voltage_measurement_vsi\fP.
+Meaningless if the VMC bit is cleared to '0' in \fIvma\fP.
+.IP "vmlsz" 12
+Voltage Measurement Log Size: size of this log page in bytes.
+.IP "nvmds" 12
+Number of Voltage Measurement Descriptors Supported: maximum
+number of entries in the Interval Voltage Measurement Descriptor
+list.
+.IP "nvmde" 12
+Number of Voltage Measurement Descriptors Entries: number of
+entries in \fIivmd\fP.
+.IP "svmtr" 12
+Stop Voltage Measurement Time Remaining, in minutes rounded up.
+.IP "svmts" 12
+Stop Voltage Measurement Timestamp: time at which interval
+voltage measurements stopped being collected. See \fIstruct
+nvme_timestamp\fP.
+.IP "cntlid" 12
+Controller Identifier associated with \fIvsi\fP, \fIsvmts\fP, \fIovts\fP, and
+\fIuvts\fP.
+.IP "vlvss" 12
+Voltage Log Vendor Specific Size: size in bytes of the Vendor
+Specific field following \fIivmd\fP.
+.IP "rsvd26" 12
+Reserved
+.IP "ovol" 12
+Overvoltage, see \fIenum nvme_voltage_measurement_ovol\fP.
+.IP "ovc" 12
+Overvoltage Count.
+.IP "ovlt" 12
+Overvoltage Log Threshold, in units of the Voltage Sensor Sample
+Scale.
+.IP "ovts" 12
+Overvoltage Timestamp. See \fIstruct nvme_timestamp\fP.
+.IP "iovpe" 12
+Interval Overvoltage Percent Error (0 to 100). 255 indicates a
+value is not reported.
+.IP "uvol" 12
+Undervoltage, see \fIenum nvme_voltage_measurement_uvol\fP.
+.IP "uvc" 12
+Undervoltage Count.
+.IP "uvlt" 12
+Undervoltage Log Threshold, in units of the Voltage Sensor
+Sample Scale.
+.IP "uvts" 12
+Undervoltage Timestamp. See \fIstruct nvme_timestamp\fP.
+.IP "iuvpe" 12
+Interval Undervoltage Percent Error (0 to 100). 255 indicates a
+value is not reported.
+.IP "rsvd62" 12
+Reserved
+.IP "ivmd" 12
+Interval Voltage Measurement Descriptor list, see \fIenum
+nvme_voltage_measurement_ivmd\fP. Followed by a Vendor Specific
+field of \fIvlvss\fP bytes, if non-zero.

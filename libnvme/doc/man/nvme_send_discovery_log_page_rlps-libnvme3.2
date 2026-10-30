@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_send_discovery_log_page_rlps" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_send_discovery_log_page_rlps \- Send Discovery Log Page (SDLP) - Requested Log Page Status (RLPS)
+.SH SYNOPSIS
+enum nvme_send_discovery_log_page_rlps {
+.br
+.BI "    NVME_SDLP_RLPS_VALID"
+, 
+.br
+.br
+.BI "    NVME_SDLP_RLPS_INVALID"
+, 
+.br
+.br
+.BI "    NVME_SDLP_RLPS_NOT_ALLOWED"
+, 
+.br
+.br
+.BI "    NVME_SDLP_RLPS_NOT_SUCCESSFUL"
+
+};
+.SH Constants
+.IP "NVME_SDLP_RLPS_VALID" 12
+Valid Log Page: the requested log page is
+carried in the command.
+.IP "NVME_SDLP_RLPS_INVALID" 12
+Invalid Log Page: the requested log page is
+invalid or not supported.
+.IP "NVME_SDLP_RLPS_NOT_ALLOWED" 12
+Not Allowed Log Page: the requested log page
+is not allowed to be transferred by an SDLP
+command.
+.IP "NVME_SDLP_RLPS_NOT_SUCCESSFUL" 12
+Not Successful: retrieving the requested
+log page failed. Further details are
+provided in the SCT and SC fields.

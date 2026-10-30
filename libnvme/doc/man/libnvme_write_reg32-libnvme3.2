@@ -1,0 +1,20 @@
+.TH "libnvme_write_reg32" 9 "libnvme_write_reg32" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_write_reg32 \- Write a 32-bit controller register of a PCIe controller
+.SH SYNOPSIS
+.B "int" libnvme_write_reg32
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "__u32 offset "  ","
+.BI "__u32 value "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "offset" 12
+Offset of the register in bytes
+.IP "value" 12
+Value to write
+.SH "DESCRIPTION"
+This should only be sent to controller handles, not to namespaces.
+.SH "RETURN"
+0 on success or a negative error code otherwise. -ENOTSUP
+indicates that the transport has no memory-mapped registers.

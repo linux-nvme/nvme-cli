@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "enum nvme_manage_export_nvms_send_sel" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_manage_export_nvms_send_sel \- Manage Exported NVM Subsystem Send - Select (SEL)
+.SH SYNOPSIS
+enum nvme_manage_export_nvms_send_sel {
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_SEND_SEL_DELETE"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_SEND_SEL_CHANGE_ACCESS_MODE"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_SEND_SEL_GRANT_HOST_ACCESS"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_SEND_SEL_REVOKE_HOST_ACCESS"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_SEND_SEL_ASSOCIATE_CONTROLLERS"
+, 
+.br
+.br
+.BI "    NVME_MANAGE_EXPORT_NVMS_SEND_SEL_SET_CONFIG_STATE"
+
+};
+.SH Constants
+.IP "NVME_MANAGE_EXPORT_NVMS_SEND_SEL_DELETE" 12
+Delete
+.IP "NVME_MANAGE_EXPORT_NVMS_SEND_SEL_CHANGE_ACCESS_MODE" 12
+Change Access Mode
+(message-based transports only)
+.IP "NVME_MANAGE_EXPORT_NVMS_SEND_SEL_GRANT_HOST_ACCESS" 12
+Grant Host Access
+(message-based transports only)
+.IP "NVME_MANAGE_EXPORT_NVMS_SEND_SEL_REVOKE_HOST_ACCESS" 12
+Revoke Host Access
+(message-based transports only)
+.IP "NVME_MANAGE_EXPORT_NVMS_SEND_SEL_ASSOCIATE_CONTROLLERS" 12
+Associate
+Controllers (memory-based transports only)
+.IP "NVME_MANAGE_EXPORT_NVMS_SEND_SEL_SET_CONFIG_STATE" 12
+Set Exported
+Configuration State

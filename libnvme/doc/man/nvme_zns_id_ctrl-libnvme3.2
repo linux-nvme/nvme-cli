@@ -1,0 +1,56 @@
+.TH "libnvme" 9 "struct nvme_zns_id_ctrl" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_id_ctrl \- I/O Command Set Specific Identify Controller Data Structure for the Zoned Namespace Command Set
+.SH SYNOPSIS
+struct nvme_zns_id_ctrl {
+.br
+.BI "    __u8 zasl;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __le32 zctratt;"
+.br
+.BI "    __le32 tar;"
+.br
+.BI "    __le32 uar;"
+.br
+.BI "    __le32 tor;"
+.br
+.BI "    __le32 uor;"
+.br
+.BI "    __le32 tzrwar;"
+.br
+.BI "    __le32 uzrwar;"
+.br
+.BI "    __le32 ver;"
+.br
+.BI "    __u8 rsvd36[4060];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "zasl" 12
+Zone Append Size Limit
+.IP "rsvd1" 12
+Reserved
+.IP "zctratt" 12
+Zoned Controller Attributes, see \fIenum nvme_zns_id_ctrl_zctratt\fP
+.IP "tar" 12
+Total Active Resources
+.IP "uar" 12
+Unallocated Active Resources
+.IP "tor" 12
+Total Open Resources
+.IP "uor" 12
+Unallocated Open Resources
+.IP "tzrwar" 12
+Total ZRWA Resources
+.IP "uzrwar" 12
+Unallocated ZRWA Resources
+.IP "ver" 12
+Version, a Specification Version Descriptor, see
+NVME_MAJOR, NVME_MINOR, NVME_TERTIARY
+.IP "rsvd36" 12
+Reserved

@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_nvm_id_ns_pifa" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_nvm_id_ns_pifa \- Protection Information Format Attribute
+.SH SYNOPSIS
+enum nvme_nvm_id_ns_pifa {
+.br
+.BI "    NVME_NVM_PIFA_STMLA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIFA_STMLA_MASK"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIFA_BIT_GRANULARITY_MASKING"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIFA_MASKING_NOT_SUPPORTED"
+
+};
+.SH Constants
+.IP "NVME_NVM_PIFA_STMLA_SHIFT" 12
+Shift amount to get Storage Tag Masking Level Attribute
+.IP "NVME_NVM_PIFA_STMLA_MASK" 12
+Mask to get Storage Tag Masking Level Attribute
+.IP "NVME_NVM_PIFA_BIT_GRANULARITY_MASKING" 12
+Bit Granularity Masking
+.IP "NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING" 12
+Byte Granularity Masking
+.IP "NVME_NVM_PIFA_MASKING_NOT_SUPPORTED" 12
+Masking Not Supported

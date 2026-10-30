@@ -1,0 +1,23 @@
+.TH "libnvme_sed_discover" 9 "libnvme_sed_discover" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sed_discover \- Retrieve the TCG Level 0 Discovery data
+.SH SYNOPSIS
+.B "int" libnvme_sed_discover
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "void *buf "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "buf" 12
+Buffer for the Level 0 Discovery data
+.IP "len" 12
+Size of \fIbuf\fP in bytes
+.SH "DESCRIPTION"
+Issues a Security Receive for the Level 0 Discovery ComID. The data
+is returned unparsed; use \fBlibnvme_sed_l0_for_each\fP or
+\fBlibnvme_sed_l0_find\fP to walk the feature descriptors.
+.SH "RETURN"
+0 on success, the NVMe command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error code
+otherwise.

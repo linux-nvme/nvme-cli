@@ -1,0 +1,18 @@
+.TH "libnvmf_context_apply_params" 9 "libnvmf_context_apply_params" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_apply_params \- apply a parameter set to a connect context.
+.SH SYNOPSIS
+.B "int" libnvmf_context_apply_params
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "const struct libnvmf_params *params "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+fabrics context to update
+.IP "params" 12
+a resolved parameter set
+.SH "DESCRIPTION"
+Applies every set key via its typed setter. An unset key is left
+untouched, and an explicit reset (empty string) is skipped, since
+\fIfctx\fP already carries the kernel default either way.
+.SH "RETURN"
+0 on success, -EINVAL if \fIfctx\fP or \fIparams\fP is NULL.

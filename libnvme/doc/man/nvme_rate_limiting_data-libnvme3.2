@@ -1,0 +1,63 @@
+.TH "libnvme" 9 "struct nvme_rate_limiting_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_rate_limiting_data \- Rate Limiting Feature - Data Buffer (RLDB)
+.SH SYNOPSIS
+struct nvme_rate_limiting_data {
+.br
+.BI "    __le16 rlc;"
+.br
+.BI "    __u8 rsvd2[5];"
+.br
+.BI "    __u8 bwsf;"
+.br
+.BI "    __le64 tbwv;"
+.br
+.BI "    __le64 wbwv;"
+.br
+.BI "    __le32 tiops;"
+.br
+.BI "    __le32 wiops;"
+.br
+.BI "    __u8 riopsr;"
+.br
+.BI "    __u8 wiopsr;"
+.br
+.BI "    __u8 rbwr;"
+.br
+.BI "    __u8 wbwr;"
+.br
+.BI "    __u8 rsvd36[476];"
+.br
+.BI "    __u8 vs[512];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rlc" 12
+Rate Limits Control, see \fIenum nvme_rate_limiting_rlc\fP
+.IP "rsvd2" 12
+Reserved
+.IP "bwsf" 12
+Bandwidth Scale Factor, see \fIenum nvme_rate_limiting_bw_scale\fP
+.IP "tbwv" 12
+Total Bandwidth Value
+.IP "wbwv" 12
+Write Bandwidth Value
+.IP "tiops" 12
+Total IOPS
+.IP "wiops" 12
+Write IOPS
+.IP "riopsr" 12
+Read IOPS Ratio portion of the Write to Read IOPS Ratio, non-zero
+.IP "wiopsr" 12
+Write IOPS Ratio portion of the Write to Read IOPS Ratio, non-zero
+.IP "rbwr" 12
+Read Bandwidth Ratio portion of the Write to Read Bandwidth Ratio, non-zero
+.IP "wbwr" 12
+Write Bandwidth Ratio portion of the Write to Read Bandwidth Ratio, non-zero
+.IP "rsvd36" 12
+Reserved
+.IP "vs" 12
+Vendor Specific

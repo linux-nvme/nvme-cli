@@ -1,0 +1,43 @@
+.TH "nvme_init_manage_export_nvms_receive" 9 "nvme_init_manage_export_nvms_receive" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_nvms_receive \- Initialize passthru command for Manage Exported NVM Subsystem Receive
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_nvms_receive
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 sel "  ","
+.BI "__u8 mos "  ","
+.BI "__u16 mose "  ","
+.BI "__u16 mosi "  ","
+.BI "__u32 ol "  ","
+.BI "__u32 ou "  ","
+.BI "__u32 numdl "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select (SEL): management operation to perform, see \fIenum
+nvme_manage_export_nvms_recv_sel\fP
+.IP "mos" 12
+Management Operation Specific (MOS): specific to \fIsel\fP
+.IP "mose" 12
+Management Operation Specific Extended (MOSE): specific to
+\fIsel\fP
+.IP "mosi" 12
+Management Operation Specific Identifier (MOSI): specific to
+\fIsel\fP
+.IP "ol" 12
+Offset Lower (OL), in dwords: specific to \fIsel\fP
+.IP "ou" 12
+Offset Upper (OU), in dwords: specific to \fIsel\fP
+.IP "numdl" 12
+Number of Dwords (NUMDL) requested, 0's based: specific to
+\fIsel\fP
+.IP "data" 12
+Pointer to data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported NVM
+Subsystem Receive command.

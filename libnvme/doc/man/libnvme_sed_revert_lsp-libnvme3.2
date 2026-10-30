@@ -1,0 +1,17 @@
+.TH "libnvme_sed_revert_lsp" 9 "libnvme_sed_revert_lsp" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sed_revert_lsp \- Revert the Locking SP
+.SH SYNOPSIS
+.B "int" libnvme_sed_revert_lsp
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "const struct libnvme_sed_key *key "  ","
+.BI "bool keep_data "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "key" 12
+Admin1 password
+.IP "keep_data" 12
+Preserve the user data
+.SH "RETURN"
+See the return value convention above.

@@ -1,0 +1,19 @@
+.TH "nvme_init_fabric_zoning_lookup" 9 "nvme_init_fabric_zoning_lookup" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_fabric_zoning_lookup \- Initialize passthru command for Fabric Zoning Lookup
+.SH SYNOPSIS
+.B "void" nvme_init_fabric_zoning_lookup
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "data" 12
+Fabric Zoning Lookup data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Fabric Zoning Lookup
+command. The returned Zoning Data Key is available in the completion
+result, see \fIenum nvme_fabric_zoning_recv_cqe_dw0\fP for related fields.

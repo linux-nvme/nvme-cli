@@ -1,0 +1,12 @@
+.TH "nvme_init_keep_alive" 9 "nvme_init_keep_alive" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_keep_alive \- Initialize passthru command for Keep Alive command
+.SH SYNOPSIS
+.B "void" nvme_init_keep_alive
+.BI "(struct libnvme_passthru_cmd *cmd "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Keep Alive command. All
+command specific fields are reserved.

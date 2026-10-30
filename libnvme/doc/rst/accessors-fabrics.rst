@@ -650,6 +650,33 @@ The value of the device field, or NULL if not set.
 The value of the devid_file field, or NULL if not set.
 
 
+.. c:function:: void libnvmf_context_set_discovery_ctrl (struct libnvmf_context *p, bool discovery_ctrl)
+
+   Set discovery_ctrl.
+
+**Parameters**
+
+``struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
+
+``bool discovery_ctrl``
+  Value to assign to the discovery_ctrl field.
+
+
+.. c:function:: bool libnvmf_context_get_discovery_ctrl (const struct libnvmf_context *p)
+
+   Get discovery_ctrl.
+
+**Parameters**
+
+``const struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
+
+**Return**
+
+The value of the discovery_ctrl field.
+
+
 .. c:function:: void libnvmf_context_set_connect (struct libnvmf_context *p, bool connect)
 
    Set connect.
@@ -836,7 +863,7 @@ The value of the tls_key_identity field, or NULL if not set.
 **Parameters**
 
 ``struct libnvmf_tid **pp``
-  On success, *pp is set to the newly allocated object.
+  On success, ``*pp`` is set to the newly allocated object.
 
 **Description**
 
@@ -979,7 +1006,7 @@ The value of the hostid field, or NULL if not set.
 **Parameters**
 
 ``struct libnvmf_discovery_args **pp``
-  On success, *pp is set to the newly allocated object.
+  On success, ``*pp`` is set to the newly allocated object.
 
 **Description**
 

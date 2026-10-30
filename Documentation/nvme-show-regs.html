@@ -757,16 +757,17 @@ nvme-id-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe over PCIe device given, sends an identify namespace command and
-provides the result and returned structure.
-For the NVMe over Fabrics device given, sends a fabric command and provides
-the result and returned structure.</p></div>
+<div class="paragraph"><p>Reads and shows the controller registers. For an NVMe over PCIe controller,
+nvme maps its PCI memory space through sysfs (the resource0 file of the PCI
+device) and reads them there. For an NVMe over Fabrics controller, it reads
+its properties with Property Get commands: CAP, VS, CC, CSTS and the ones of
+NSSR, NSSD and CRTO the controller implements.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and must be the nvme admin character
-device (ex: /dev/nvme0). For NVMe over PCIe, the program uses knowledge of the
-sysfs layout to map the device to the pci resource stored there and mmaps the
-memory to get access to the registers. For NVMe over Fabrics, the programs
-sends a fabric command to get the properties of the target NVMe controller.
-Only the supported properties are displayed.</p></div>
+device (ex: /dev/nvme0).</p></div>
+<div class="paragraph"><p>With -v, the fields of each register are shown decoded. The JSON output has
+the value of each register under its name, with -v an object of the value
+and its decoded fields. The binary output is the registers from 0h to E1Bh,
+as they are in the PCI memory space, with zeros for the ones not read.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -824,7 +825,26 @@ and are available to this subcommand:</p></div>
 <p>
         Select the output format version. Version <em>1</em> uses the original
         field naming, while version <em>2</em> (default) provides more consistent
-        and script-friendly field names.
+        and script-friendly field names. Other versions are rejected.
+</p>
+</dd>
+<dt class="hdlist1">
+--quiet
+</dt>
+<dd>
+<p>
+        Suppress informational messages. Errors are still reported, and
+        --quiet cancels any --verbose for the library log level.
+</p>
+</dd>
+<dt class="hdlist1">
+--set-options=&lt;key=value&gt;[,&lt;key=value&gt;&#8230;]
+</dt>
+<dd>
+<p>
+        Set libnvme library options for this invocation. Supported keys are
+        <em>force-4k</em>, <em>mi-probe-enabled</em>, <em>test-base-dir</em> and
+        <em>test-sysfs-dir</em>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -833,6 +853,7 @@ and are available to this subcommand:</p></div>
 <dd>
 <p>
         Set the timeout for the command in milliseconds.
+        <em>infinite</em> or <em>-1</em> waits without a time limit (0xffffffff).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -873,7 +894,7 @@ properties in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme show-regs /dev/nvme0 -H</code></pre>
+<pre><code># nvme show-regs /dev/nvme0 -v</code></pre>
 </div></div>
 </li>
 <li>
@@ -900,7 +921,7 @@ in a json format:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-18 12:15:54 CEST
+ 2026-10-30 19:29:20 CET
 </div>
 </div>
 </body>

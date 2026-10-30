@@ -1,0 +1,29 @@
+.TH "libnvmf_exclusion_read" 9 "libnvmf_exclusion_read" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_read \- read a list's raw text and a concurrency token.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_read
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "char **text "  ","
+.BI "uint64_t *version "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name
+.IP "text" 12
+on success, set to the file's full contents as a newly allocated,
+NUL-terminated string (caller frees).  A missing list reads as an
+empty string so an editor can create it.
+.IP "version" 12
+on success, set to an opaque token identifying the contents read.
+0 means the list did not exist.  Pass it back to
+\fBlibnvmf_exclusion_write\fP to detect concurrent modification.
+.SH "DESCRIPTION"
+Intended for read-modify-write editors: read the raw text, let a human edit
+it, then write it back.  The directory location is entirely libnvme's
+concern -- the caller works only in terms of list names.
+.SH "RETURN"
+0 on success, -EINVAL for a bad name or NULL out-param, negative
+errno otherwise.

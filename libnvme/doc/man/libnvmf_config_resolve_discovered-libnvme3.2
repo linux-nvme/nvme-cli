@@ -1,0 +1,36 @@
+.TH "libnvmf_config_resolve_discovered" 9 "libnvmf_config_resolve_discovered" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_resolve_discovered \- parameters for a controller that is not in the configuration.
+.SH SYNOPSIS
+.B "const struct libnvmf_params *" libnvmf_config_resolve_discovered
+.BI "(const struct libnvmf_config *config "  ","
+.BI "const struct libnvmf_config_conn *via_dc "  ","
+.BI "bool is_dc "  ");"
+.SH ARGUMENTS
+.IP "config" 12
+the resolved configuration
+.IP "via_dc" 12
+the DC connection the controller was discovered through, or NULL
+for a controller with no configured origin (e.g. an
+mDNS-discovered DC)
+.IP "is_dc" 12
+true for a discovered discovery controller (a referral), false
+for a discovered I/O controller
+.SH "DESCRIPTION"
+A controller learned at runtime -- from a discovery log page, an AEN, or
+mDNS -- has no section in the configuration, but still draws parameters
+from it: the defaults of the file scope it was discovered through, or the
+top-level scope when it has no configured origin.  The four combinations:
+
+(via_dc = DC,   is_dc = true)   a referral: a DC discovered via a DC;
+draws that DC's DC-defaults scope
+(via_dc = DC,   is_dc = false)  a DLP-discovered IOC; draws that DC's
+IOC-defaults scope
+(via_dc = NULL, is_dc = true)   a DC with no configured origin (e.g.
+mDNS); draws the top-level DC scope
+(via_dc = NULL, is_dc = false)  an IOC with no configured origin;
+draws the top-level IOC scope
+.SH "RETURN"
+borrowed parameter set, valid while \fIconfig\fP is alive.  \fIvia_dc\fP must
+be a connection of \fIconfig\fP; an I/O-controller \fIvia_dc\fP yields NULL.  Passing
+a connection that does not belong to \fIconfig\fP is undefined.

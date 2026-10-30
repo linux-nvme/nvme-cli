@@ -1,0 +1,12 @@
+.TH "libnvmf_params_new" 9 "libnvmf_params_new" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_params_new \- Create a connection parameter set.
+.SH SYNOPSIS
+.B "struct libnvmf_params *" libnvmf_params_new
+.BI "(void "  ");"
+.SH ARGUMENTS
+.IP "void" 12
+no arguments
+.SH "RETURN"
+A new parameter set on success, or NULL on failure.
+Free the parameter set with \fBlibnvmf_params_free\fP.

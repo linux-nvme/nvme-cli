@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvmf_auth_kxchap_success2" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_auth_kxchap_success2 \- KX-HMAC-CHAP_Success2 message, host to controller
+.SH SYNOPSIS
+struct nvmf_auth_kxchap_success2 {
+.br
+.BI "    __u8 auth_type;"
+.br
+.BI "    __u8 auth_id;"
+.br
+.BI "    __u16 rsvd2;"
+.br
+.BI "    __le16 t_id;"
+.br
+.BI "    __u8 rsvd6[10];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "auth_type" 12
+Authentication Type, see \fIenum nvmf_auth_protocol_id\fP
+.IP "auth_id" 12
+Authentication Identifier, see \fIenum nvmf_auth_kxchap_id\fP
+.IP "rsvd2" 12
+Reserved
+.IP "t_id" 12
+Transaction Identifier
+.IP "rsvd6" 12
+Reserved

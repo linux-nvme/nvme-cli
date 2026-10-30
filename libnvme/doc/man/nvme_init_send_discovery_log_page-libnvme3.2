@@ -1,0 +1,42 @@
+.TH "nvme_init_send_discovery_log_page" 9 "nvme_init_send_discovery_log_page" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_send_discovery_log_page \- Initialize passthru command for Send Discovery Log Page
+.SH SYNOPSIS
+.B "void" nvme_init_send_discovery_log_page
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 rlps "  ","
+.BI "__u8 sct "  ","
+.BI "__u8 sc "  ","
+.BI "__u8 tlsp "  ","
+.BI "__u8 tlid "  ","
+.BI "__u32 ndws "  ","
+.BI "__u64 tlpo "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "rlps" 12
+Requested Log Page Status (RLPS), see \fIenum
+nvme_send_discovery_log_page_rlps\fP
+.IP "sct" 12
+Status Code Type (SCT), used if \fIrlps\fP is
+NVME_SDLP_RLPS_NOT_SUCCESSFUL
+.IP "sc" 12
+Status Code (SC), used if \fIrlps\fP is
+NVME_SDLP_RLPS_NOT_SUCCESSFUL
+.IP "tlsp" 12
+Transferred Log Specific Parameter (TLSP)
+.IP "tlid" 12
+Transferred Log Page Identifier (TLID)
+.IP "ndws" 12
+Number of Dwords (NDWS) transferred
+.IP "tlpo" 12
+Transferred Log Page Offset (TLPO)
+.IP "data" 12
+Transferred log page data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Send Discovery Log Page
+command.

@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_host_metadata_cdw11" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_host_metadata_cdw11 \- Host Metadata Features (7Dh/7Eh/7Fh) - Command Dword 11
+.SH SYNOPSIS
+enum nvme_host_metadata_cdw11 {
+.br
+.BI "    NVME_HOST_METADATA_GDHM"
+, 
+.br
+.br
+.BI "    NVME_HOST_METADATA_EA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_HOST_METADATA_EA_MASK"
+
+};
+.SH Constants
+.IP "NVME_HOST_METADATA_GDHM" 12
+Generate Default Host Metadata (Get Features
+Command Dword 11 only)
+.IP "NVME_HOST_METADATA_EA_SHIFT" 12
+Shift amount to set the Element Action (EA)
+field (Set Features Command Dword 11 only)
+.IP "NVME_HOST_METADATA_EA_MASK" 12
+Mask to set EA

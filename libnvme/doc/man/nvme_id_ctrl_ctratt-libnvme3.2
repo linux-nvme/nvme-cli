@@ -1,0 +1,452 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_ctratt" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_ctratt \- Controller attributes
+.SH SYNOPSIS
+enum nvme_id_ctrl_ctratt {
+.br
+.BI "    NVME_CTRL_CTRATT_HIDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NOPSPM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NSETS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_RRLVLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_EGS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PLM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_TBKAS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NG_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_SQA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ULIST_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FCM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_VCM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DEG_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DNVMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ELBAS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MEM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_HMBR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_RHII_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FDPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_VMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_IIELLSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_HIDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NOPSPM_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NSETS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_RRLVLS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_EGS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PLM_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_TBKAS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NG_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_SQA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ULIST_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FCM_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_VCM_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DEG_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DNVMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ELBAS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MEM_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_HMBR_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_RHII_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FDPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PLS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_VMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_IIELLSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_128_ID"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NON_OP_PSP"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NVM_SETS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_READ_RECV_LVLS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ENDURANCE_GROUPS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PREDICTABLE_LAT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_TBKAS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_SQ_ASSOCIATIONS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_UUID_LIST"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MDS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FIXED_CAP"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_VARIABLE_CAP"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DEL_NVM_SETS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ELBAS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MEM"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_HMBR"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_RHII"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FDPS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PLS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PMS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_VMS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_IIELLSS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_IIELLSS_POWER_STATE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_IIELLSS_GLOBAL"
+
+};
+.SH Constants
+.IP "NVME_CTRL_CTRATT_HIDS_SHIFT" 12
+HIDS shift
+.IP "NVME_CTRL_CTRATT_NOPSPM_SHIFT" 12
+NOPSPM shift
+.IP "NVME_CTRL_CTRATT_NSETS_SHIFT" 12
+NSETS shift
+.IP "NVME_CTRL_CTRATT_RRLVLS_SHIFT" 12
+RRLVLS shift
+.IP "NVME_CTRL_CTRATT_EGS_SHIFT" 12
+EGS shift
+.IP "NVME_CTRL_CTRATT_PLM_SHIFT" 12
+PLM shift
+.IP "NVME_CTRL_CTRATT_TBKAS_SHIFT" 12
+TBKAS shift
+.IP "NVME_CTRL_CTRATT_NG_SHIFT" 12
+NG shift
+.IP "NVME_CTRL_CTRATT_SQA_SHIFT" 12
+SQA shift
+.IP "NVME_CTRL_CTRATT_ULIST_SHIFT" 12
+ULIST shift
+.IP "NVME_CTRL_CTRATT_MDS_SHIFT" 12
+MDS shift
+.IP "NVME_CTRL_CTRATT_FCM_SHIFT" 12
+FCM shift
+.IP "NVME_CTRL_CTRATT_VCM_SHIFT" 12
+VCM shift
+.IP "NVME_CTRL_CTRATT_DEG_SHIFT" 12
+DEG shift
+.IP "NVME_CTRL_CTRATT_DNVMS_SHIFT" 12
+DNVMS shift
+.IP "NVME_CTRL_CTRATT_ELBAS_SHIFT" 12
+ELBAS shift
+.IP "NVME_CTRL_CTRATT_MEM_SHIFT" 12
+MEM shift
+.IP "NVME_CTRL_CTRATT_HMBR_SHIFT" 12
+HMBR shift
+.IP "NVME_CTRL_CTRATT_RHII_SHIFT" 12
+RHII shift
+.IP "NVME_CTRL_CTRATT_FDPS_SHIFT" 12
+FDPS shift
+.IP "NVME_CTRL_CTRATT_PLS_SHIFT" 12
+PLS shift
+.IP "NVME_CTRL_CTRATT_PMS_SHIFT" 12
+PMS shift
+.IP "NVME_CTRL_CTRATT_VMS_SHIFT" 12
+VMS shift
+.IP "NVME_CTRL_CTRATT_IIELLSS_SHIFT" 12
+IIELLSS shift
+.IP "NVME_CTRL_CTRATT_HIDS_MASK" 12
+HIDS mask
+.IP "NVME_CTRL_CTRATT_NOPSPM_MASK" 12
+NOPSPM mask
+.IP "NVME_CTRL_CTRATT_NSETS_MASK" 12
+NSETS mask
+.IP "NVME_CTRL_CTRATT_RRLVLS_MASK" 12
+RRLVLS mask
+.IP "NVME_CTRL_CTRATT_EGS_MASK" 12
+EGS mask
+.IP "NVME_CTRL_CTRATT_PLM_MASK" 12
+PLM mask
+.IP "NVME_CTRL_CTRATT_TBKAS_MASK" 12
+TBKAS mask
+.IP "NVME_CTRL_CTRATT_NG_MASK" 12
+NG mask
+.IP "NVME_CTRL_CTRATT_SQA_MASK" 12
+SQA mask
+.IP "NVME_CTRL_CTRATT_ULIST_MASK" 12
+ULIST mask
+.IP "NVME_CTRL_CTRATT_MDS_MASK" 12
+MDS mask
+.IP "NVME_CTRL_CTRATT_FCM_MASK" 12
+FCM mask
+.IP "NVME_CTRL_CTRATT_VCM_MASK" 12
+VCM mask
+.IP "NVME_CTRL_CTRATT_DEG_MASK" 12
+DEG mask
+.IP "NVME_CTRL_CTRATT_DNVMS_MASK" 12
+DNVMS mask
+.IP "NVME_CTRL_CTRATT_ELBAS_MASK" 12
+ELBAS mask
+.IP "NVME_CTRL_CTRATT_MEM_MASK" 12
+MEM mask
+.IP "NVME_CTRL_CTRATT_HMBR_MASK" 12
+HMBR mask
+.IP "NVME_CTRL_CTRATT_RHII_MASK" 12
+RHII mask
+.IP "NVME_CTRL_CTRATT_FDPS_MASK" 12
+FDPS mask
+.IP "NVME_CTRL_CTRATT_PLS_MASK" 12
+PLS mask
+.IP "NVME_CTRL_CTRATT_PMS_MASK" 12
+PMS mask
+.IP "NVME_CTRL_CTRATT_VMS_MASK" 12
+VMS mask
+.IP "NVME_CTRL_CTRATT_IIELLSS_MASK" 12
+IIELLSS mask
+.IP "NVME_CTRL_CTRATT_128_ID" 12
+128-bit Host Identifier supported
+.IP "NVME_CTRL_CTRATT_NON_OP_PSP" 12
+Non-Operational Poser State Permissive Mode
+supported
+.IP "NVME_CTRL_CTRATT_NVM_SETS" 12
+NVM Sets supported
+.IP "NVME_CTRL_CTRATT_READ_RECV_LVLS" 12
+Read Recovery Levels supported
+.IP "NVME_CTRL_CTRATT_ENDURANCE_GROUPS" 12
+Endurance Groups supported
+.IP "NVME_CTRL_CTRATT_PREDICTABLE_LAT" 12
+Predictable Latency Mode supported
+.IP "NVME_CTRL_CTRATT_TBKAS" 12
+Traffic Based Keep Alive Support
+.IP "NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY" 12
+Namespace Granularity reporting
+supported
+.IP "NVME_CTRL_CTRATT_SQ_ASSOCIATIONS" 12
+SQ Associations supported
+.IP "NVME_CTRL_CTRATT_UUID_LIST" 12
+UUID List reporting supported
+.IP "NVME_CTRL_CTRATT_MDS" 12
+Multi-Domain Subsystem supported
+.IP "NVME_CTRL_CTRATT_FIXED_CAP" 12
+Fixed Capacity Management  supported
+.IP "NVME_CTRL_CTRATT_VARIABLE_CAP" 12
+Variable Capacity Management supported
+.IP "NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS" 12
+Delete Endurance Groups supported
+.IP "NVME_CTRL_CTRATT_DEL_NVM_SETS" 12
+Delete NVM Sets supported
+.IP "NVME_CTRL_CTRATT_ELBAS" 12
+Extended LBA Formats supported
+.IP "NVME_CTRL_CTRATT_MEM" 12
+MDTS and Size Limits Exclude Metadata supported
+.IP "NVME_CTRL_CTRATT_HMBR" 12
+HMB Restrict Non-Operational Power State Access
+.IP "NVME_CTRL_CTRATT_RHII" 12
+Reservations and Host Identifier Interaction
+.IP "NVME_CTRL_CTRATT_FDPS" 12
+Flexible Data Placement supported
+.IP "NVME_CTRL_CTRATT_PLS" 12
+Power Limit Support
+.IP "NVME_CTRL_CTRATT_PMS" 12
+Power Measurement Support
+.IP "NVME_CTRL_CTRATT_VMS" 12
+Voltage Measurement Support
+.IP "NVME_CTRL_CTRATT_IIELLSS" 12
+Idle I/O Exit Latency Limit Support and Scope
+.IP "NVME_CTRL_CTRATT_IIELLSS_POWER_STATE" 12
+Each operational power state scope
+.IP "NVME_CTRL_CTRATT_IIELLSS_GLOBAL" 12
+All operational power states scope

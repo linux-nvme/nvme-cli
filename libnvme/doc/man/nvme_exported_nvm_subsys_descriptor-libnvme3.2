@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_exported_nvm_subsys_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_nvm_subsys_descriptor \- Exported NVM Subsystem Descriptor
+.SH SYNOPSIS
+struct nvme_exported_nvm_subsys_descriptor {
+.br
+.BI "    __u8 esubnqn[256];"
+.br
+.BI "    __u8 rsvd256[2];"
+.br
+.BI "    __le16 esubid;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "esubnqn" 12
+Exported NVM Subsystem NQN (ESUBNQN)
+.IP "rsvd256" 12
+Reserved
+.IP "esubid" 12
+Exported NVM Subsystem Identifier (ESUBID)

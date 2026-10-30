@@ -1,0 +1,18 @@
+.TH "nvme_init_set_features_spinup_control" 9 "nvme_init_set_features_spinup_control" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_spinup_control \- Initialize passthru command for Spinup Control
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_spinup_control
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "bool sce "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "sce" 12
+Spinup Control Enable (SCE)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_SPINUP_CONTROL

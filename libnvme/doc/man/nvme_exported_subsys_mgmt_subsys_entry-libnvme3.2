@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "struct nvme_exported_subsys_mgmt_subsys_entry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_subsys_mgmt_subsys_entry \- Exported NVM Subsystem Entry Data Structure, used by the Manage Exported NVM Subsystem Send Grant Host Access and Revoke Host Access operations
+.SH SYNOPSIS
+struct nvme_exported_subsys_mgmt_subsys_entry {
+.br
+.BI "    __u8 rsvd0[24];"
+.br
+.BI "    __u8 subnqn[256];"
+.br
+.BI "    __le16 pidup;"
+.br
+.BI "    __u8 rsvd282[38];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "subnqn" 12
+NVM Subsystem NVMe Qualified Name (SUBNQN) of an Exported NVM
+Subsystem
+.IP "pidup" 12
+Port ID of the Underlying Port (PIDUP)
+.IP "rsvd282" 12
+Reserved

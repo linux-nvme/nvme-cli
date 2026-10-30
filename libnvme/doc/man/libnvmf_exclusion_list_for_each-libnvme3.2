@@ -1,0 +1,18 @@
+.TH "libnvmf_exclusion_list_for_each" 9 "libnvmf_exclusion_list_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_list_for_each \- iterate over exclusion list names.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_list_for_each
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "void (*callback)(const char *name, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "callback" 12
+called for each .conf file; name is basename without .conf suffix
+.IP "user_data" 12
+caller context passed to \fIcallback\fP
+.SH "RETURN"
+0 on success, negative errno on error.
+Returns 0 when the directory does not exist (nothing excluded).

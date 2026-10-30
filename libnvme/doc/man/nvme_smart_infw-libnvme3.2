@@ -1,0 +1,15 @@
+.TH "libnvme" 9 "enum nvme_smart_infw" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_smart_infw \- Informative Warning
+.SH SYNOPSIS
+enum nvme_smart_infw {
+.br
+.BI "    NVME_SMART_INFW_VLTHW"
+
+};
+.SH Constants
+.IP "NVME_SMART_INFW_VLTHW" 12
+Voltage Log Threshold Warning: if set, then the
+Overvoltage Valid (OVV) bit or the Undervoltage
+Valid (UVV) bit in the Voltage Measurement log
+page is set to '1'.

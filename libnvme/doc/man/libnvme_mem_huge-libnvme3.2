@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct libnvme_mem_huge" "October 2026" "API Manual" LINUX
+.SH NAME
+struct libnvme_mem_huge \- Huge page memory allocation descriptor
+.SH SYNOPSIS
+struct libnvme_mem_huge {
+.br
+.BI "    size_t len;"
+.br
+.BI "    bool libnvme_alloc;"
+.br
+.BI "    void *p;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "len" 12
+Size of the allocated buffer in bytes
+.IP "libnvme_alloc" 12
+Indicates that \fIp\fP was allocated using \fBlibnvme_alloc\fP
+.IP "p" 12
+Pointer to the allocated memory buffer
+.SH "Description"
+Describes a memory buffer allocated by \fBlibnvme_alloc_huge\fP. The structure
+stores allocation metadata required for proper cleanup by
+\fBlibnvme_free_huge\fP.

@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "enum nvme_zns_id_ns_zoc" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_zns_id_ns_zoc \- Zone Operation Characteristics
+.SH SYNOPSIS
+enum nvme_zns_id_ns_zoc {
+.br
+.BI "    NVME_ZNS_ID_NS_ZOC_VZC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ID_NS_ZOC_VZC_MASK"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ID_NS_ZOC_ZAE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ID_NS_ZOC_ZAE_MASK"
+
+};
+.SH Constants
+.IP "NVME_ZNS_ID_NS_ZOC_VZC_SHIFT" 12
+Shift amount to get Variable Zone
+Capacity (VZC)
+.IP "NVME_ZNS_ID_NS_ZOC_VZC_MASK" 12
+Mask to get VZC
+.IP "NVME_ZNS_ID_NS_ZOC_ZAE_SHIFT" 12
+Shift amount to get Zone Active
+Excursions (ZAE)
+.IP "NVME_ZNS_ID_NS_ZOC_ZAE_MASK" 12
+Mask to get ZAE

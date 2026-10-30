@@ -372,7 +372,7 @@ indicate the particular structure to query from the endpoint.
 
 **Description**
 
-See :c:type:`nvme_mi_mi_config_get`() and :c:type:`nvme_mi_config_set`().
+See libnvme_mi_mi_config_get() and libnvme_mi_mi_config_set().
 
 
 
@@ -395,7 +395,8 @@ See :c:type:`nvme_mi_mi_config_get`() and :c:type:`nvme_mi_config_set`().
 **Description**
 
 Values used in the SMBus Frequency device configuration. See
-:c:type:`nvme_mi_mi_config_get_smbus_freq`() and :c:type:`nvme_mi_mi_config_set_smbus_freq`().
+libnvme_mi_mi_config_get_smbus_freq() and
+libnvme_mi_mi_config_set_smbus_freq().
 
 
 

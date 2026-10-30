@@ -1,0 +1,21 @@
+.TH "libnvmf_kernel_options_for_each" 9 "libnvmf_kernel_options_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_kernel_options_for_each \- Iterate over the kernel's options
+.SH SYNOPSIS
+.B "int" libnvmf_kernel_options_for_each
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "void (*callback)(const char *name, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context
+.IP "callback" 12
+Called once per option name
+.IP "user_data" 12
+Caller context passed to \fIcallback\fP, may be NULL
+.SH "DESCRIPTION"
+See \fBlibnvmf_kernel_option_supported\fP for how the options are read.
+.SH "RETURN"
+0 on success, -EINVAL if \fIctx\fP or \fIcallback\fP is NULL, -EOPNOTSUPP
+if the kernel does not list its options (Linux < 5.17), or another
+negative error code.

@@ -1,0 +1,35 @@
+.TH "nvme_init_fabric_zoning_send" 9 "nvme_init_fabric_zoning_send" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_fabric_zoning_send \- Initialize passthru command for Fabric Zoning Send
+.SH SYNOPSIS
+.B "void" nvme_init_fabric_zoning_send
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 zdk "  ","
+.BI "__u32 zdo "  ","
+.BI "bool lf "  ","
+.BI "bool zdkc "  ","
+.BI "__u32 numd "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "zdk" 12
+Zoning Data Key (ZDK), or Transaction ID if \fIzdkc\fP is set
+.IP "zdo" 12
+Zoning Data Offset (ZDO)
+.IP "lf" 12
+Last Fragment (LF): set if \fIdata\fP contains the last fragment
+of the Zoning data structure
+.IP "zdkc" 12
+ZDK Context (ZDKC): if set, \fIzdk\fP contains a Transaction ID
+instead of a Zoning Data Key
+.IP "numd" 12
+Number of Dwords (NUMD) to transfer
+.IP "data" 12
+Zoning data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Fabric Zoning Send
+command.

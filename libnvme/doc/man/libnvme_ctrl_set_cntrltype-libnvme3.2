@@ -1,0 +1,12 @@
+.TH "libnvme_ctrl_set_cntrltype" 9 "libnvme_ctrl_set_cntrltype" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_set_cntrltype \- Set cntrltype.
+.SH SYNOPSIS
+.B "void" libnvme_ctrl_set_cntrltype
+.BI "(struct libnvme_ctrl *p "  ","
+.BI "const char *cntrltype "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to update.
+.IP "cntrltype" 12
+New string; a copy is stored. Pass NULL to clear.

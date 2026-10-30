@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "enum nvme_cross_ctrl_reset_ccrf" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_cross_ctrl_reset_ccrf \- Cross-Controller Reset Entry - Cross- Controller Reset Flags (CCRF)
+.SH SYNOPSIS
+enum nvme_cross_ctrl_reset_ccrf {
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CCRF_V"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CCRF_CLRI"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CCRF_RETRY_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CCRF_RETRY_MASK"
+
+};
+.SH Constants
+.IP "NVME_CROSS_CTRL_RESET_CCRF_V" 12
+Validated (V)
+.IP "NVME_CROSS_CTRL_RESET_CCRF_CLRI" 12
+Controller Level Reset Initiated
+(CLRI)
+.IP "NVME_CROSS_CTRL_RESET_CCRF_RETRY_SHIFT" 12
+Shift amount to get the Retry
+(RETRY) field
+.IP "NVME_CROSS_CTRL_RESET_CCRF_RETRY_MASK" 12
+Mask to get RETRY

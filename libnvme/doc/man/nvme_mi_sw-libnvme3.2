@@ -1,0 +1,66 @@
+.TH "libnvme" 9 "enum nvme_mi_sw" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_sw \- Smart Warnings
+.SH SYNOPSIS
+enum nvme_mi_sw {
+.br
+.BI "    NVME_MI_SW_ST_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_ST_MASK"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_TAUT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_TAUT_MASK"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_RD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_RD_MASK"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_RO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_RO_MASK"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_VMBF_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_SW_VMBF_MASK"
+
+};
+.SH Constants
+.IP "NVME_MI_SW_ST_SHIFT" 12
+Shift amount to get Spare Threshold
+.IP "NVME_MI_SW_ST_MASK" 12
+Mask to get Spare Threshold
+.IP "NVME_MI_SW_TAUT_SHIFT" 12
+Shift amount to get Temperature Above or Under Threshold
+.IP "NVME_MI_SW_TAUT_MASK" 12
+Mask to get Temperature Above or Under Threshold
+.IP "NVME_MI_SW_RD_SHIFT" 12
+Shift amount to get Reliability Degraded
+.IP "NVME_MI_SW_RD_MASK" 12
+Mask to get Reliability Degraded
+.IP "NVME_MI_SW_RO_SHIFT" 12
+Shift amount to get Read Only
+.IP "NVME_MI_SW_RO_MASK" 12
+Mask to get Read Only
+.IP "NVME_MI_SW_VMBF_SHIFT" 12
+Shift amount to get Volatile Memory Backup Failed
+.IP "NVME_MI_SW_VMBF_MASK" 12
+Mask to get Volatile Memory Backup Failed

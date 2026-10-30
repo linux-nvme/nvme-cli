@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nvme_host_addressable_ns_log" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_host_addressable_ns_log \- Host Addressable Namespaces log page (Log Page Identifier 85h)
+.SH SYNOPSIS
+struct nvme_host_addressable_ns_log {
+.br
+.BI "    __le16 n;"
+.br
+.BI "    __u8 rsvd2[14];"
+.br
+.BI "    struct nvme_host_addressable_ns_data ns[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "n" 12
+Number of Entries in \fIns\fP
+.IP "rsvd2" 12
+Reserved
+.IP "ns" 12
+Addressable Namespaces List, \fIn\fP entries, see
+\fIstruct nvme_host_addressable_ns_data\fP

@@ -2,12 +2,12 @@
 .\"     Title: nvme-samsung-vs-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/18/2026
+.\"      Date: 10/30/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SAMSUNG\-VS\-I" "1" "09/18/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SAMSUNG\-VS\-I" "1" "10/30/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,7 +45,7 @@ This command will only work on Samsung devices supporting this feature\&.
 The \fI<device>\fR parameter is mandatory and may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
 .SH "OPTIONS"
 .PP
-\-t <TYPE>, \-\-dump\-type=<TYPE>
+\-t <NAME,\&...>, \-\-dump\-type=<NAME,\&...>
 .RS 4
 Comma\-separated list of dump types to extract, given without spaces\&. The supported types are
 \fIhost0\fR
@@ -53,9 +53,10 @@ and
 \fIhost1\fR
 for the host\-initiated telemetry dump using Log Specific Parameter 0 and 1 respectively,
 \fIctlr\fR
-for the controller\-initiated telemetry dump, and
+(or
+\fIcontroller\fR) for the controller\-initiated telemetry dump, and
 \fIvendor\fR
-for the vendor dumps\&. When this option is omitted, every dump type except
+for the vendor dumps\&. The option may be given more than once to add more types\&. When this option is omitted, every dump type except
 \fIhost0\fR
 is extracted;
 \fIhost0\fR
@@ -82,7 +83,7 @@ Collect the dumps into a
 directory next to the output path and save them as a single compressed \&.tar\&.gz archive, removing that directory afterwards\&. The directory is created for this run alone, so the command fails if anything already sits at that path: one left behind by an interrupted run has to be removed before retrying\&.
 .RE
 .PP
-\-H, \-\-hide\-progress
+\-\-hide\-progress
 .RS 4
 Do not print the incremental progress of an extraction\&. Useful where the output is captured line by line and a carriage return does not overwrite, so that every update would be kept\&. The completion line of each dump is still printed\&.
 .RE
@@ -119,12 +120,31 @@ Select the output format version\&. Version
 \fI1\fR
 uses the original field naming, while version
 \fI2\fR
-(default) provides more consistent and script\-friendly field names\&.
+(default) provides more consistent and script\-friendly field names\&. Other versions are rejected\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Suppress informational messages\&. Errors are still reported, and \-\-quiet cancels any \-\-verbose for the library log level\&.
+.RE
+.PP
+\-\-set\-options=<key=value>[,<key=value>\&...]
+.RS 4
+Set libnvme library options for this invocation\&. Supported keys are
+\fIforce\-4k\fR,
+\fImi\-probe\-enabled\fR,
+\fItest\-base\-dir\fR
+and
+\fItest\-sysfs\-dir\fR\&.
 .RE
 .PP
 \-\-timeout=<ms>
 .RS 4
 Set the timeout for the command in milliseconds\&.
+\fIinfinite\fR
+or
+\fI\-1\fR
+waits without a time limit (0xffffffff)\&.
 .RE
 .PP
 \-v, \-\-verbose
@@ -177,7 +197,7 @@ Extract data area 2 of the host\-initiated telemetry using Log Specific Paramete
 .RS 4
 .\}
 .nf
-# nvme samsung vs\-internal\-log /dev/nvme0 \-t host1 \-a 2 \-z \-H
+# nvme samsung vs\-internal\-log /dev/nvme0 \-t host1 \-a 2 \-z \-\-hide\-progress
 .fi
 .if n \{\
 .RE

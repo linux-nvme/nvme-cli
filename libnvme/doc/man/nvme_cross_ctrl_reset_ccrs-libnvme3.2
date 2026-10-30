@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_cross_ctrl_reset_ccrs" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_cross_ctrl_reset_ccrs \- Cross-Controller Reset Entry - Cross- Controller Reset Status (CCRS)
+.SH SYNOPSIS
+enum nvme_cross_ctrl_reset_ccrs {
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CCRS_IN_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CCRS_SUCCESS"
+, 
+.br
+.br
+.BI "    NVME_CROSS_CTRL_RESET_CCRS_FAILED"
+
+};
+.SH Constants
+.IP "NVME_CROSS_CTRL_RESET_CCRS_IN_PROGRESS" 12
+In Progress
+.IP "NVME_CROSS_CTRL_RESET_CCRS_SUCCESS" 12
+Success
+.IP "NVME_CROSS_CTRL_RESET_CCRS_FAILED" 12
+Failed

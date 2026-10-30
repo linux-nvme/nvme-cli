@@ -1,0 +1,24 @@
+.TH "libnvmf_exclusion_add_ctrl" 9 "libnvmf_exclusion_add_ctrl" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_add_ctrl \- append an entry built from a controller.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_add_ctrl
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "struct libnvme_ctrl *c "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name
+.IP "c" 12
+connected controller; the entry's transport, traddr, trsvcid,
+subsysnqn and (when set) host-iface are taken from it
+.SH "DESCRIPTION"
+Builds the exclusion entry from the controller's transport parameters inside
+libnvme -- the caller needs no knowledge of the on-disk entry format -- then
+appends it via \fBlibnvmf_exclusion_add\fP.  Creates the list if it does not
+exist.
+.SH "RETURN"
+0 on success, -EINVAL if \fIctx\fP or \fIc\fP is NULL or the controller lacks
+a transport/traddr/subsysnqn, negative errno otherwise.

@@ -1,0 +1,325 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_oaes" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_oaes \- Optional Asynchronous Events Supported
+.SH SYNOPSIS
+enum nvme_id_ctrl_oaes {
+.br
+.BI "    NVME_CTRL_OAES_NSAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_FAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANACN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_PLEAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LSIAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_EGEAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NNSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_TTHR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RGCNS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANSAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_CCRCN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LHCN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RLCC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ZDCN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_DLPCN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NSAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_FAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANACN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_PLEAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LSIAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_EGEAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NNSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_TTHR_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RGCNS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANSAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_CCRCN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LHCN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RLCC_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ZDCN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_DLPCN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NSAN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_FAN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANACN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_PLEAN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LSIAN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_EGEAN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NNSS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_TTHR"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RGCNS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANSAN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_CCRCN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LHCN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RLCC"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ZDCN"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_DLPCN"
+
+};
+.SH Constants
+.IP "NVME_CTRL_OAES_NSAN_SHIFT" 12
+Shift amount to get the Attached Namespace
+Attribute Notices event supported bit
+.IP "NVME_CTRL_OAES_FAN_SHIFT" 12
+Shift amount to get the Firmware Activation
+Notices event supported bit
+.IP "NVME_CTRL_OAES_ANACN_SHIFT" 12
+Shift amount to get the Asymmetric Namespace
+Access Change Notices event supported bit
+.IP "NVME_CTRL_OAES_PLEAN_SHIFT" 12
+Shift amount to get the Predictable Latency
+Event Aggregate Log Change Notices event
+supported bit
+.IP "NVME_CTRL_OAES_LSIAN_SHIFT" 12
+Shift amount to get the LBA Status Information
+Alert Notices event supported bit
+.IP "NVME_CTRL_OAES_EGEAN_SHIFT" 12
+Shift amount to get the Endurance Group Event
+Aggregate Log Page Change Notices event
+supported bit
+.IP "NVME_CTRL_OAES_NNSS_SHIFT" 12
+Shift amount to get the Normal NVM Subsystem
+Shutdown event supported bit
+.IP "NVME_CTRL_OAES_TTHR_SHIFT" 12
+Shift amount to get the Temperature Threshold
+Hysteresis Recovery event supported bit
+.IP "NVME_CTRL_OAES_RGCNS_SHIFT" 12
+Shift amount to get the Reachability Groups
+Change Notices event supported bit
+.IP "NVME_CTRL_OAES_ANSAN_SHIFT" 12
+Shift amount to get the Allocated Namespace
+Attribute Notices event supported bit
+.IP "NVME_CTRL_OAES_CCRCN_SHIFT" 12
+Shift amount to get the Cross-Controller Reset
+Completed Notices event supported bit
+.IP "NVME_CTRL_OAES_LHCN_SHIFT" 12
+Shift amount to get the Lost Host Communication
+Notices event supported bit
+.IP "NVME_CTRL_OAES_RLCC_SHIFT" 12
+Shift amount to get the Rate Limiting
+Configuration Change event supported bit
+.IP "NVME_CTRL_OAES_ZDCN_SHIFT" 12
+Shift amount to get the Zone Descriptor Changed
+Notices event supported bit
+.IP "NVME_CTRL_OAES_DLPCN_SHIFT" 12
+Shift amount to get the Discovery Log Page
+Change Notification event supported bit
+.IP "NVME_CTRL_OAES_NSAN_MASK" 12
+Mask to get the Attached Namespace Attribute
+Notices event supported bit
+.IP "NVME_CTRL_OAES_FAN_MASK" 12
+Mask to get the Firmware Activation Notices
+event supported bit
+.IP "NVME_CTRL_OAES_ANACN_MASK" 12
+Mask to get the Asymmetric Namespace Access
+Change Notices event supported bit
+.IP "NVME_CTRL_OAES_PLEAN_MASK" 12
+Mask to get the Predictable Latency Event
+Aggregate Log Change Notices event supported bit
+.IP "NVME_CTRL_OAES_LSIAN_MASK" 12
+Mask to get the LBA Status Information Alert
+Notices event supported bit
+.IP "NVME_CTRL_OAES_EGEAN_MASK" 12
+Mask to get the Endurance Group Event Aggregate
+Log Page Change Notices event supported bit
+.IP "NVME_CTRL_OAES_NNSS_MASK" 12
+Mask to get the Normal NVM Subsystem Shutdown
+event supported bit
+.IP "NVME_CTRL_OAES_TTHR_MASK" 12
+Mask to get the Temperature Threshold Hysteresis
+Recovery event supported bit
+.IP "NVME_CTRL_OAES_RGCNS_MASK" 12
+Mask to get the Reachability Groups Change
+Notices event supported bit
+.IP "NVME_CTRL_OAES_ANSAN_MASK" 12
+Mask to get the Allocated Namespace Attribute
+Notices event supported bit
+.IP "NVME_CTRL_OAES_CCRCN_MASK" 12
+Mask to get the Cross-Controller Reset Completed
+Notices event supported bit
+.IP "NVME_CTRL_OAES_LHCN_MASK" 12
+Mask to get the Lost Host Communication Notices
+event supported bit
+.IP "NVME_CTRL_OAES_RLCC_MASK" 12
+Mask to get the Rate Limiting Configuration
+Change event supported bit
+.IP "NVME_CTRL_OAES_ZDCN_MASK" 12
+Mask to get the Zone Descriptor Changed Notices
+event supported bit
+.IP "NVME_CTRL_OAES_DLPCN_MASK" 12
+Mask to get the Discovery Log Page Change
+Notification event supported bit
+.IP "NVME_CTRL_OAES_NSAN" 12
+If set, the controller supports the Attached
+Namespace Attribute Notices event.
+.IP "NVME_CTRL_OAES_FAN" 12
+If set, the controller supports the Firmware
+Activation Notices event.
+.IP "NVME_CTRL_OAES_ANACN" 12
+If set, the controller supports the Asymmetric
+Namespace Access Change Notices event.
+.IP "NVME_CTRL_OAES_PLEAN" 12
+If set, the controller supports the Predictable
+Latency Event Aggregate Log Change Notices
+event.
+.IP "NVME_CTRL_OAES_LSIAN" 12
+If set, the controller supports the LBA Status
+Information Alert Notices event.
+.IP "NVME_CTRL_OAES_EGEAN" 12
+If set, the controller supports the Endurance
+Group Event Aggregate Log Page Change Notices
+event.
+.IP "NVME_CTRL_OAES_NNSS" 12
+If set, the controller supports the Normal NVM
+Subsystem Shutdown event.
+.IP "NVME_CTRL_OAES_TTHR" 12
+If set, the controller supports the Temperature
+Threshold Hysteresis Recovery event.
+.IP "NVME_CTRL_OAES_RGCNS" 12
+If set, the controller supports the Reachability
+Groups Change Notices event.
+.IP "NVME_CTRL_OAES_ANSAN" 12
+If set, the controller supports the Allocated
+Namespace Attribute Notices event.
+.IP "NVME_CTRL_OAES_CCRCN" 12
+If set, the controller supports the
+Cross-Controller Reset Completed Notices event.
+.IP "NVME_CTRL_OAES_LHCN" 12
+If set, the controller supports the Lost Host
+Communication Notices event.
+.IP "NVME_CTRL_OAES_RLCC" 12
+If set, the controller supports the Rate
+Limiting Configuration Change event.
+.IP "NVME_CTRL_OAES_ZDCN" 12
+If set, the controller supports the Zone
+Descriptor Changed Notices event.
+.IP "NVME_CTRL_OAES_DLPCN" 12
+If set, the controller supports the Discovery
+Log Page Change Notification event.

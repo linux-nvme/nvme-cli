@@ -1,0 +1,21 @@
+.TH "libnvmf_registry_attr_equal" 9 "libnvmf_registry_attr_equal" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_registry_attr_equal \- Compare a registry attribute to a value
+.SH SYNOPSIS
+.B "int" libnvmf_registry_attr_equal
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *device "  ","
+.BI "const char *attr "  ","
+.BI "const char *value "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "device" 12
+Kernel device name (e.g. "nvme3")
+.IP "attr" 12
+Attribute name to compare (e.g. "owner")
+.IP "value" 12
+Value to compare against; NULL means "attribute absent"
+.SH "RETURN"
+0 if \fIattr\fP equals \fIvalue\fP (a missing attribute equals a NULL
+\fIvalue\fP), >0 if it differs, negative errno on a read error.

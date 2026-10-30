@@ -1,0 +1,38 @@
+.TH "libnvme" 9 "enum nvme_personality_mrstt" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_personality_mrstt \- Personality Properties - Minimum Required Reset Type (MRSTT)
+.SH SYNOPSIS
+enum nvme_personality_mrstt {
+.br
+.BI "    NVME_PERSONALITY_MRSTT_NONE"
+, 
+.br
+.br
+.BI "    NVME_PERSONALITY_MRSTT_CTRL_RESET"
+, 
+.br
+.br
+.BI "    NVME_PERSONALITY_MRSTT_LIMITED_CTRL_RESET"
+, 
+.br
+.br
+.BI "    NVME_PERSONALITY_MRSTT_NVM_SUBSYSTEM_RESET"
+, 
+.br
+.br
+.BI "    NVME_PERSONALITY_MRSTT_POWER_CYCLE"
+
+};
+.SH Constants
+.IP "NVME_PERSONALITY_MRSTT_NONE" 12
+No reset required
+.IP "NVME_PERSONALITY_MRSTT_CTRL_RESET" 12
+Controller Level Reset required
+.IP "NVME_PERSONALITY_MRSTT_LIMITED_CTRL_RESET" 12
+Controller Level Reset other
+than one initiated by a
+Controller Reset required
+.IP "NVME_PERSONALITY_MRSTT_NVM_SUBSYSTEM_RESET" 12
+NVM Subsystem Reset required
+.IP "NVME_PERSONALITY_MRSTT_POWER_CYCLE" 12
+Main power cycle required

@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "struct nvme_host_addressable_ns_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_host_addressable_ns_data \- Addressable Namespaces Data Structure
+.SH SYNOPSIS
+struct nvme_host_addressable_ns_data {
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __u8 mat;"
+.br
+.BI "    __u8 rsvd5[3];"
+.br
+.BI "    __le64 memo;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsid" 12
+Namespace Identifier, may or may not be attached to the
+controller processing the command
+.IP "mat" 12
+Memory Access Type, see \fIenum nvme_host_addressable_ns_mat\fP
+.IP "rsvd5" 12
+Reserved
+.IP "memo" 12
+Memory Offset, the offset of the memory address for this
+namespace from the base address of the memory access type
+indicated in \fImat\fP

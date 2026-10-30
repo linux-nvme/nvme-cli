@@ -76,6 +76,9 @@ libnvme utility functions
 ``ENVME_CONNECT_NOKEY``
   TLS PSK or KX-HMAC-CHAP secret not available
 
+``ENVME_CONNECT_DRY_RUN``
+  not connected, the context is in dry-run mode
+
 
 .. c:function:: __u8 libnvme_status_to_errno (int status, bool fabrics)
 

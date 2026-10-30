@@ -1,0 +1,40 @@
+.TH "libnvme" 9 "struct nvmf_auth_kxchap_protocol_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_auth_kxchap_protocol_descriptor \- KX-HMAC-CHAP Authentication Protocol Descriptor
+.SH SYNOPSIS
+struct nvmf_auth_kxchap_protocol_descriptor {
+.br
+.BI "    __u8 authid;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __u8 halen;"
+.br
+.BI "    __u8 kxlen;"
+.br
+.BI "    __u8 hashidlist[30];"
+.br
+.BI "    __u8 kxgidlist[30];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "authid" 12
+Authentication Protocol Identifier, see
+\fIenum nvmf_auth_protocol_id\fP
+.IP "rsvd1" 12
+Reserved
+.IP "halen" 12
+HashIDList Length: number of hash function identifiers (1 to 30)
+.IP "kxlen" 12
+KXgIDList Length: number of key exchange group identifiers (1 to 30)
+.IP "hashidlist" 12
+Hash Function Identifier List, one byte per identifier,
+see \fIenum libnvmf_hmac_alg\fP. Unused trailing bytes are padding
+cleared to 0h.
+.IP "kxgidlist" 12
+Key Exchange Group Identifier List, one byte per identifier,
+see \fIenum nvmf_auth_kxgid\fP. Unused trailing bytes are padding
+cleared to 0h.

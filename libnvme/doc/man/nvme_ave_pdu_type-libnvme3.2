@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_ave_pdu_type" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_ave_pdu_type \- KX-HMAC-CHAP AVE Access Protocol PDU Types
+.SH SYNOPSIS
+enum nvme_ave_pdu_type {
+.br
+.BI "    NVME_AVE_PDU_TYPE_ACCESS_REQUEST"
+, 
+.br
+.br
+.BI "    NVME_AVE_PDU_TYPE_ACCESS_RESULT"
+
+};
+.SH Constants
+.IP "NVME_AVE_PDU_TYPE_ACCESS_REQUEST" 12
+KX-HMAC-CHAP_Access-Request
+.IP "NVME_AVE_PDU_TYPE_ACCESS_RESULT" 12
+KX-HMAC-CHAP_Access-Result

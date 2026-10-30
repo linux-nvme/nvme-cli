@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_rate_limiting_scope" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_rate_limiting_scope \- Non-Volatile Storage Medium Access Descriptor - Scope (SC)
+.SH SYNOPSIS
+enum nvme_rate_limiting_scope {
+.br
+.BI "    NVME_RATE_LIMITING_SCOPE_NVM_SUBSYSTEM"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_SCOPE_DOMAIN"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_SCOPE_ENDURANCE_GROUP"
+, 
+.br
+.br
+.BI "    NVME_RATE_LIMITING_SCOPE_NAMESPACE"
+
+};
+.SH Constants
+.IP "NVME_RATE_LIMITING_SCOPE_NVM_SUBSYSTEM" 12
+NVM subsystem
+.IP "NVME_RATE_LIMITING_SCOPE_DOMAIN" 12
+Domain
+.IP "NVME_RATE_LIMITING_SCOPE_ENDURANCE_GROUP" 12
+Endurance Group
+.IP "NVME_RATE_LIMITING_SCOPE_NAMESPACE" 12
+Namespace

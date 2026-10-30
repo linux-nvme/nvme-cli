@@ -1,0 +1,23 @@
+.TH "libnvmf_lookup_key" 9 "libnvmf_lookup_key" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_lookup_key \- Lookup key serial number
+.SH SYNOPSIS
+.B "int" libnvmf_lookup_key
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *type "  ","
+.BI "const char *identity "  ","
+.BI "long *key "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "type" 12
+Key type
+.IP "identity" 12
+Key description
+.IP "key" 12
+Key serial number to return
+.SH "DESCRIPTION"
+Looks up the serial number of the key \fIidentity\fP
+with type \fItype\fP in the current session keyring.
+.SH "RETURN"
+0 on success, negative error code otherwise.

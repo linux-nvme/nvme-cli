@@ -1,0 +1,12 @@
+.TH "libnvme_ctrl_set_cntlid" 9 "libnvme_ctrl_set_cntlid" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_set_cntlid \- Set cntlid.
+.SH SYNOPSIS
+.B "void" libnvme_ctrl_set_cntlid
+.BI "(struct libnvme_ctrl *p "  ","
+.BI "const char *cntlid "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to update.
+.IP "cntlid" 12
+New string; a copy is stored. Pass NULL to clear.

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum libnvme_connect_err" "September 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum libnvme_connect_err" "October 2026" "API Manual" LINUX
 .SH NAME
 enum libnvme_connect_err \- nvme connect error codes
 .SH SYNOPSIS
@@ -85,6 +85,10 @@ enum libnvme_connect_err {
 .br
 .br
 .BI "    ENVME_CONNECT_NOKEY"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_DRY_RUN"
 
 };
 .SH Constants
@@ -130,3 +134,5 @@ cannot assign requested address
 connect attempt is ignored due to configuration
 .IP "ENVME_CONNECT_NOKEY" 12
 TLS PSK or KX-HMAC-CHAP secret not available
+.IP "ENVME_CONNECT_DRY_RUN" 12
+not connected, the context is in dry-run mode

@@ -1,0 +1,20 @@
+.TH "nvme_init_get_features_host_mgmt_agent_addr" 9 "nvme_init_get_features_host_mgmt_agent_addr" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_host_mgmt_agent_addr \- Initialize passthru command for Get Features - Host Management Agent Address
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_host_mgmt_agent_addr
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "void *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "data" 12
+512 byte Host Management Agent Address (HMAA) data buffer,
+see \fIstruct nvme_mgmt_addr_desc\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR

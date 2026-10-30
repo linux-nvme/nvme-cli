@@ -1,0 +1,167 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_sanicap" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_sanicap \- Indicates attributes for sanitize operations.
+.SH SYNOPSIS
+enum nvme_id_ctrl_sanicap {
+.br
+.BI "    NVME_CTRL_SANICAP_CES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_BES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_OWS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_VERS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NVERS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_SPRRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NDI_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NODMMAS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_CES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_BES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_OWS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_VERS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NVERS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_SPRRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NDI_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NODMMAS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_CES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_BES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_OWS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_VERS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NVERS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_SPRRS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NDI"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NODMMAS"
+
+};
+.SH Constants
+.IP "NVME_CTRL_SANICAP_CES_SHIFT" 12
+Crypto erase support shift
+.IP "NVME_CTRL_SANICAP_BES_SHIFT" 12
+Block erase support shift
+.IP "NVME_CTRL_SANICAP_OWS_SHIFT" 12
+Overwrite support shift
+.IP "NVME_CTRL_SANICAP_VERS_SHIFT" 12
+Verification support shift
+.IP "NVME_CTRL_SANICAP_NVERS_SHIFT" 12
+Namespace verification support shift
+.IP "NVME_CTRL_SANICAP_SPRRS_SHIFT" 12
+Sanitize purge request and reporting
+supported shift
+.IP "NVME_CTRL_SANICAP_NDI_SHIFT" 12
+No-deallocate inhibited shift
+.IP "NVME_CTRL_SANICAP_NODMMAS_SHIFT" 12
+No-deallocate modifies media after sanitize
+shift
+.IP "NVME_CTRL_SANICAP_CES_MASK" 12
+Crypto erase support mask
+.IP "NVME_CTRL_SANICAP_BES_MASK" 12
+Block erase support mask
+.IP "NVME_CTRL_SANICAP_OWS_MASK" 12
+Overwrite support mask
+.IP "NVME_CTRL_SANICAP_VERS_MASK" 12
+Verification support mask
+.IP "NVME_CTRL_SANICAP_NVERS_MASK" 12
+Namespace verification support mask
+.IP "NVME_CTRL_SANICAP_SPRRS_MASK" 12
+Sanitize purge request and reporting
+supported mask
+.IP "NVME_CTRL_SANICAP_NDI_MASK" 12
+No-deallocate inhibited mask
+.IP "NVME_CTRL_SANICAP_NODMMAS_MASK" 12
+No-deallocate modifies media after sanitize
+mask
+.IP "NVME_CTRL_SANICAP_CES" 12
+Crypto Erase Support. If set, then the
+controller supports the Crypto Erase sanitize operation.
+.IP "NVME_CTRL_SANICAP_BES" 12
+Block Erase Support. If set, then the controller
+supports the Block Erase sanitize operation.
+.IP "NVME_CTRL_SANICAP_OWS" 12
+Overwrite Support. If set, then the controller
+supports the Overwrite sanitize operation.
+.IP "NVME_CTRL_SANICAP_VERS" 12
+Verification support
+.IP "NVME_CTRL_SANICAP_NVERS" 12
+Namespace verification support
+.IP "NVME_CTRL_SANICAP_SPRRS" 12
+Sanitize Purge Request and Reporting
+Supported. If set, then the controller supports
+the Purged (PRGD) field in the Sanitize Status
+log page and the Purge Required (PREQ) bit in
+the Sanitize command and the Sanitize Namespace
+command.
+.IP "NVME_CTRL_SANICAP_NDI" 12
+No-Deallocate Inhibited. If set and the No-
+Deallocate Response Mode bit is set, then the
+controller deallocates after the sanitize
+operation even if the No-Deallocate After
+Sanitize bit is set in a Sanitize command.
+.IP "NVME_CTRL_SANICAP_NODMMAS" 12
+No-Deallocate Modifies Media After Sanitize,
+mask to extract value.

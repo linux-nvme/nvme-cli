@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_personality_properties" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_personality_properties \- Personality Properties data structure
+.SH SYNOPSIS
+struct nvme_personality_properties {
+.br
+.BI "    __u8 pps;"
+.br
+.BI "    __u8 perid;"
+.br
+.BI "    __u8 mrstt;"
+.br
+.BI "    __u8 aus;"
+.br
+.BI "    __u8 attrs;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "pps" 12
+Personality Properties Size: size in bytes of this data
+structure.
+.IP "perid" 12
+Personality Identifier, see \fIenum nvme_personality_identifier\fP.
+.IP "mrstt" 12
+Minimum Required Reset Type, see \fIenum nvme_personality_mrstt\fP.
+.IP "aus" 12
+Authenticated Unfreeze Support, see \fIenum
+nvme_personality_aus\fP. Cleared to 0h if this personality does
+not support an authenticated unfreeze method, in which case a
+frozen instance of this personality is permanently frozen.
+.IP "attrs" 12
+Personality Attributes, see \fIenum nvme_personality_attrs\fP.

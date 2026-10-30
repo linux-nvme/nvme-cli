@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_cdp_change_event_ps" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_cdp_change_event_ps \- CDP Change Event - Personality Status
+.SH SYNOPSIS
+enum nvme_cdp_change_event_ps {
+.br
+.BI "    NVME_CDP_CHANGE_EVENT_PS_CDPCE"
+, 
+.br
+.br
+.BI "    NVME_CDP_CHANGE_EVENT_PS_CDPRFS"
+
+};
+.SH Constants
+.IP "NVME_CDP_CHANGE_EVENT_PS_CDPCE" 12
+CDP Change Error: If the change to the
+settings of the specified personality was
+successful, then this bit is cleared to
+'0'; otherwise, this bit is set to '1'.
+.IP "NVME_CDP_CHANGE_EVENT_PS_CDPRFS" 12
+CDP Requested Freeze State: If the
+personality was requested to be frozen,
+then this bit is set to '1'; otherwise,
+this bit is cleared to '0'.

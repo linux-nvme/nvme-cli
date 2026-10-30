@@ -1,0 +1,16 @@
+.TH "libnvme_sed_revert_tper" 9 "libnvme_sed_revert_tper" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sed_revert_tper \- Revert the TPer to its factory state
+.SH SYNOPSIS
+.B "int" libnvme_sed_revert_tper
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "const struct libnvme_sed_key *key "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "key" 12
+SID password
+.SH "DESCRIPTION"
+This erases all user data.
+.SH "RETURN"
+See the return value convention above.

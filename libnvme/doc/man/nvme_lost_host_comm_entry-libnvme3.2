@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_lost_host_comm_entry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_lost_host_comm_entry \- Lost Host Communication Entry Data Structure
+.SH SYNOPSIS
+struct nvme_lost_host_comm_entry {
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __u8 lc;"
+.br
+.BI "    __u8 ciu;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cntlid" 12
+Controller ID (CNTLID) of the LHC Controller
+.IP "lc" 12
+Loss Count (LC)
+.IP "ciu" 12
+Controller Instance Uniquifier (CIU)
+.IP "rsvd4" 12
+Reserved

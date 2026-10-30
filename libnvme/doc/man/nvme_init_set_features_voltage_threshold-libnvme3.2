@@ -1,0 +1,27 @@
+.TH "nvme_init_set_features_voltage_threshold" 9 "nvme_init_set_features_voltage_threshold" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_voltage_threshold \- Initialize passthru command for Voltage Threshold
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_voltage_threshold
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 vsens "  ","
+.BI "bool evt "  ","
+.BI "__u16 ovt "  ","
+.BI "__u16 uvt "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "vsens" 12
+Voltage Sensor Select (VSENS)
+.IP "evt" 12
+Enable Voltage Threshold (EVT)
+.IP "ovt" 12
+Overvoltage Threshold (OVT)
+.IP "uvt" 12
+Undervoltage Threshold (UVT)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_VOLTAGE_THRESHOLD

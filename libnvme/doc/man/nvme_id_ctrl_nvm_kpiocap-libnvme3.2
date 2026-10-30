@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_nvm_kpiocap" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_nvm_kpiocap \- Key Per I/O Capabilities
+.SH SYNOPSIS
+enum nvme_id_ctrl_nvm_kpiocap {
+.br
+.BI "    NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_MASK"
+
+};
+.SH Constants
+.IP "NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_SHIFT" 12
+Shift amount to get Key Per I/O
+Supported (KPIOS)
+.IP "NVME_ID_CTRL_NVM_KPIOCAP_KPIOS_MASK" 12
+Mask to get KPIOS
+.IP "NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_SHIFT" 12
+Shift amount to get Key Per I/O
+Scope (KPIOSC)
+.IP "NVME_ID_CTRL_NVM_KPIOCAP_KPIOSC_MASK" 12
+Mask to get KPIOSC

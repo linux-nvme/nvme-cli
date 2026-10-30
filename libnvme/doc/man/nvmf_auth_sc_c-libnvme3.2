@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvmf_auth_sc_c" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvmf_auth_sc_c \- Secure Channel Concatenation values (SC_C)
+.SH SYNOPSIS
+enum nvmf_auth_sc_c {
+.br
+.BI "    NVMF_AUTH_SCC_NOSC"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_SCC_NEWTLSPSK"
+, 
+.br
+.br
+.BI "    NVMF_AUTH_SCC_REPLACETLSPSK"
+
+};
+.SH Constants
+.IP "NVMF_AUTH_SCC_NOSC" 12
+No secure channel concatenation. Allowed on
+any Admin or I/O Queue; does not generate a
+PSK.
+.IP "NVMF_AUTH_SCC_NEWTLSPSK" 12
+Generate a PSK and associated PSK identity on
+an Admin Queue over a TCP channel without TLS,
+for use setting up TLS secure channels for
+subsequent Admin and I/O queues. 0x01 is
+obsolete (refer to NVM Express Base
+Specification 2.0).
+.IP "NVMF_AUTH_SCC_REPLACETLSPSK" 12
+Generate a PSK and associated PSK identity
+on an Admin Queue over a TLS secure channel,
+replacing the PSK used to set up that secure
+channel.

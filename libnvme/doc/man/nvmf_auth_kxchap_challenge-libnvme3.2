@@ -1,0 +1,59 @@
+.TH "libnvme" 9 "struct nvmf_auth_kxchap_challenge" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_auth_kxchap_challenge \- KX-HMAC-CHAP_Challenge message, controller to host
+.SH SYNOPSIS
+struct nvmf_auth_kxchap_challenge {
+.br
+.BI "    __u8 auth_type;"
+.br
+.BI "    __u8 auth_id;"
+.br
+.BI "    __u16 rsvd2;"
+.br
+.BI "    __le16 t_id;"
+.br
+.BI "    __u8 hl;"
+.br
+.BI "    __u8 rsvd7;"
+.br
+.BI "    __u8 hashid;"
+.br
+.BI "    __u8 kxgid;"
+.br
+.BI "    __le16 kxvlen;"
+.br
+.BI "    __le32 seqnum;"
+.br
+.BI "    __u8 cval_kxv[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "auth_type" 12
+Authentication Type, see \fIenum nvmf_auth_protocol_id\fP
+.IP "auth_id" 12
+Authentication Identifier, see \fIenum nvmf_auth_kxchap_id\fP
+.IP "rsvd2" 12
+Reserved
+.IP "t_id" 12
+Transaction Identifier
+.IP "hl" 12
+Hash Length: length in bytes of the selected hash function
+.IP "rsvd7" 12
+Reserved
+.IP "hashid" 12
+Hash Identifier, see \fIenum libnvmf_hmac_alg\fP
+.IP "kxgid" 12
+Key Exchange Group Identifier, see \fIenum nvmf_auth_kxgid\fP.
+Cleared to 0h if no key exchange is performed.
+.IP "kxvlen" 12
+KX Value Length: length in bytes of the KX Value carried in
+\fIcval_kxv\fP, cleared to 0h if \fIkxgid\fP is cleared to 0h.
+.IP "seqnum" 12
+Sequence Number (S1)
+.IP "cval_kxv" 12
+Challenge Value (C1, \fIhl\fP bytes) followed by the KX Value
+(KXc, \fIkxvlen\fP bytes). The KX Value is absent if \fIkxvlen\fP is
+cleared to 0h.

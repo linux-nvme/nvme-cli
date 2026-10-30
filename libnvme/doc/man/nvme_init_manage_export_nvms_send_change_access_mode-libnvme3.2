@@ -1,0 +1,31 @@
+.TH "nvme_init_manage_export_nvms_send_change_access_mode" 9 "nvme_init_manage_export_nvms_send_change_access_mode" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_nvms_send_change_access_mode \- Initialize passthru command for Manage Exported NVM Subsystem Send - Change Access Mode (message-based transports only)
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_nvms_send_change_access_mode
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool ra "  ","
+.BI "bool esubidv "  ","
+.BI "__u16 esubid "  ","
+.BI "struct nvme_exported_nvm_subsys_nqn_data *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "ra" 12
+Restricted Access (RA): if set, the Exported NVM Subsystem is
+configured to restrict access to Host NQNs in its Allowed
+Host List; if clear, unrestricted access is allowed
+.IP "esubidv" 12
+Exported NVM Subsystem Identifier Valid (ESUBIDV): if set,
+\fIesubid\fP identifies the target Exported NVM Subsystem;
+otherwise the target is identified by the SUBNQN in \fIdata\fP
+.IP "esubid" 12
+Exported NVM Subsystem Identifier (ESUBID), used if
+\fIesubidv\fP is set
+.IP "data" 12
+Exported NVM Subsystem NQN data buffer, see \fIstruct
+nvme_exported_nvm_subsys_nqn_data\fP. Ignored if \fIesubidv\fP is set.
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported NVM
+Subsystem Send command with SEL value
+NVME_MANAGE_EXPORT_NVMS_SEND_SEL_CHANGE_ACCESS_MODE.

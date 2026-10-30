@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_fabrics_transport_entry" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_fabrics_transport_entry \- Underlying Fabrics Transport Entry Data Structure
+.SH SYNOPSIS
+struct nvme_fabrics_transport_entry {
+.br
+.BI "    __u8 traddr[NVMF_TRADDR_SIZE];"
+.br
+.BI "    __u8 tsas[NVMF_TSAS_SIZE];"
+.br
+.BI "    __le16 pidup;"
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 adrfam;"
+.br
+.BI "    __u8 treq;"
+.br
+.BI "    __u8 rsvd517[59];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "traddr" 12
+Transport Address (TRADDR)
+.IP "tsas" 12
+Transport Specific Address Subtype (TSAS)
+.IP "pidup" 12
+Port ID of the Underlying Port (PIDUP)
+.IP "trtype" 12
+Transport Type (TRTYPE), see \fIenum nvmf_trtype\fP
+.IP "adrfam" 12
+Transport Address Family (ADRFAM), see \fIenum nvmf_addr_family\fP
+.IP "treq" 12
+Transport Requirements (TREQ), see \fIenum nvmf_treq\fP
+.IP "rsvd517" 12
+Reserved

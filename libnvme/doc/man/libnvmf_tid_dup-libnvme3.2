@@ -1,0 +1,11 @@
+.TH "libnvmf_tid_dup" 9 "libnvmf_tid_dup" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_dup \- Allocate a copy of an existing TID.
+.SH SYNOPSIS
+.B "struct libnvmf_tid *" libnvmf_tid_dup
+.BI "(const struct libnvmf_tid *tid "  ");"
+.SH ARGUMENTS
+.IP "tid" 12
+Source TID, or NULL.
+.SH "RETURN"
+Allocated copy, or NULL if \fItid\fP is NULL or on allocation failure.

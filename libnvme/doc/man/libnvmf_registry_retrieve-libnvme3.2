@@ -1,0 +1,23 @@
+.TH "libnvmf_registry_retrieve" 9 "libnvmf_registry_retrieve" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_registry_retrieve \- Read an attribute from a controller's registry entry
+.SH SYNOPSIS
+.B "int" libnvmf_registry_retrieve
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *device "  ","
+.BI "const char *attr "  ","
+.BI "char **value "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "device" 12
+Kernel device name (e.g. "nvme3")
+.IP "attr" 12
+Attribute name to retrieve (e.g. "owner")
+.IP "value" 12
+On success, set to a newly allocated string with the attribute
+value.  The caller must free this string.
+.SH "RETURN"
+0 on success, -ENOENT if the controller is not registered or the
+attribute is not present, -ENOMEM on allocation failure, negative errno
+from underlying system calls otherwise.

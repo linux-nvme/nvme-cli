@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "struct nvme_exported_ns_list" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_ns_list \- Exported Namespace List Data Structure, returned by the Manage Exported NVM Subsystem Receive command's List Exported Namespaces management operation
+.SH SYNOPSIS
+struct nvme_exported_ns_list {
+.br
+.BI "    __le16 n;"
+.br
+.BI "    __u8 rsvd2;"
+.br
+.BI "    __u8 gn;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    struct nvme_exported_ns_descriptor entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "n" 12
+Number of Exported Namespaces (N)
+.IP "rsvd2" 12
+Reserved
+.IP "gn" 12
+Generation Number (GN)
+.IP "rsvd4" 12
+Reserved
+.IP "entries" 12
+Exported Namespace Descriptor list, see \fIstruct
+nvme_exported_ns_descriptor\fP

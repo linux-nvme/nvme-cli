@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_ivmd" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_ivmd \- Voltage Measurement log page - Interval Voltage Measurement Descriptor (IVMD)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_ivmd {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_IVMD_NCVM"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_SHIFT" 12
+Shift amount to get the Voltage
+Value (VOLV)
+.IP "NVME_VOLTAGE_MEASUREMENT_IVMD_VOLV_MASK" 12
+Mask to get VOLV
+.IP "NVME_VOLTAGE_MEASUREMENT_IVMD_NCVM" 12
+Non Contiguous Voltage
+Measurement

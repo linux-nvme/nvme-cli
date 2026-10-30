@@ -1,0 +1,25 @@
+.TH "libnvmf_registry_attr_for_each" 9 "libnvmf_registry_attr_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_registry_attr_for_each \- Iterate over attributes in a controller's registry entry
+.SH SYNOPSIS
+.B "int" libnvmf_registry_attr_for_each
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *device "  ","
+.BI "void (*callback)(const char *attr, const char *value, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "device" 12
+Kernel device name (e.g. "nvme3")
+.IP "callback" 12
+Callback invoked for each attribute
+.IP "user_data" 12
+User data passed to \fIcallback\fP
+.SH "DESCRIPTION"
+Opens the registry directory for \fIdevice\fP and invokes \fIcallback\fP for each
+attribute file found.  Attribute files that disappear during iteration
+(e.g. because the device is removed concurrently) are silently skipped.
+.SH "RETURN"
+0 on success, -ENOENT if the device directory does not exist at the
+time of the initial open, negative errno otherwise.

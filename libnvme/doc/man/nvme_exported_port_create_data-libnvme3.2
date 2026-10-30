@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "struct nvme_exported_port_create_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_port_create_data \- Manage Exported Port - Create Data Structure
+.SH SYNOPSIS
+struct nvme_exported_port_create_data {
+.br
+.BI "    __u8 subnqn[256];"
+.br
+.BI "    __le16 epid;"
+.br
+.BI "    __le16 pidud;"
+.br
+.BI "    __u8 trsvcid[32];"
+.br
+.BI "    __u8 rsvd292[28];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "subnqn" 12
+Exported NVM Subsystem NQN (SUBNQN) to associate the created
+Exported Port with
+.IP "epid" 12
+Exported Port ID (EPID). Used unless GEPID is set in the MOS
+field, in which case this field is ignored and the assigned
+Exported Port ID is returned in the CQE result instead.
+.IP "pidud" 12
+Port ID of the Underlying Port (PIDUD)
+.IP "trsvcid" 12
+Transport Service ID (TRSVCID), ASCII string
+.IP "rsvd292" 12
+Reserved

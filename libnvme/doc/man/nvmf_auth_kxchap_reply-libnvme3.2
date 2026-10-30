@@ -1,0 +1,60 @@
+.TH "libnvme" 9 "struct nvmf_auth_kxchap_reply" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvmf_auth_kxchap_reply \- KX-HMAC-CHAP_Reply message, host to controller
+.SH SYNOPSIS
+struct nvmf_auth_kxchap_reply {
+.br
+.BI "    __u8 auth_type;"
+.br
+.BI "    __u8 auth_id;"
+.br
+.BI "    __u16 rsvd2;"
+.br
+.BI "    __le16 t_id;"
+.br
+.BI "    __u8 hl;"
+.br
+.BI "    __u8 rsvd7;"
+.br
+.BI "    __u8 cvalid;"
+.br
+.BI "    __u8 rsvd9;"
+.br
+.BI "    __le16 kxvlen;"
+.br
+.BI "    __le32 seqnum;"
+.br
+.BI "    __u8 rval_cval_kxv[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "auth_type" 12
+Authentication Type, see \fIenum nvmf_auth_protocol_id\fP
+.IP "auth_id" 12
+Authentication Identifier, see \fIenum nvmf_auth_kxchap_id\fP
+.IP "rsvd2" 12
+Reserved
+.IP "t_id" 12
+Transaction Identifier
+.IP "hl" 12
+Hash Length: length in bytes of the selected hash function
+.IP "rsvd7" 12
+Reserved
+.IP "cvalid" 12
+Challenge Valid: 01h if the Challenge Value in \fIrval_cval_kxv\fP
+is valid (bidirectional authentication requested), 00h otherwise.
+.IP "rsvd9" 12
+Reserved
+.IP "kxvlen" 12
+KX Value Length: length in bytes of the KX Value carried in
+\fIrval_cval_kxv\fP, cleared to 0h if no key exchange is performed.
+.IP "seqnum" 12
+Sequence Number (S2)
+.IP "rval_cval_kxv" 12
+Response Value (R1, \fIhl\fP bytes), followed by the Challenge
+Value (C2, \fIhl\fP bytes, cleared to 0h if \fIcvalid\fP is 00h),
+followed by the KX Value (KXh, \fIkxvlen\fP bytes). The KX Value
+is absent if \fIkxvlen\fP is cleared to 0h.

@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_personality_identifier" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_personality_identifier \- Personality Identifier List
+.SH SYNOPSIS
+enum nvme_personality_identifier {
+.br
+.BI "    NVME_PERID_MFG_DEFAULT"
+, 
+.br
+.br
+.BI "    NVME_PERID_SECURITY"
+, 
+.br
+.br
+.BI "    NVME_PERID_LOCKDOWN_PERSISTENCE"
+, 
+.br
+.br
+.BI "    NVME_PERID_REVERT_MFG_SETTINGS"
+, 
+.br
+.br
+.BI "    NVME_PERID_ALL"
+
+};
+.SH Constants
+.IP "NVME_PERID_MFG_DEFAULT" 12
+Manufacturing Default Personality
+.IP "NVME_PERID_SECURITY" 12
+Security Personality
+.IP "NVME_PERID_LOCKDOWN_PERSISTENCE" 12
+Lockdown Persistence Personality, see
+\fIenum nvme_lockdown_persistence_cdw11\fP
+and \fIenum
+nvme_lockdown_persistence_cqe_dw1\fP
+.IP "NVME_PERID_REVERT_MFG_SETTINGS" 12
+Revert to Subsystem Manufacturing
+Settings Personality: reverts all
+supported Features (other than CDP
+itself), restorable log pages, and
+vendor specific settings to their
+manufacturing default content for the
+current active firmware image. Uses no
+data buffer; requires an NVM Subsystem
+Reset (see \fIenum
+nvme_personality_mrstt\fP) to take effect.
+.IP "NVME_PERID_ALL" 12
+All Personalities

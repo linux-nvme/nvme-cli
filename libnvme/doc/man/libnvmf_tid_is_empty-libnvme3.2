@@ -1,0 +1,11 @@
+.TH "libnvmf_tid_is_empty" 9 "libnvmf_tid_is_empty" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_is_empty \- Test whether a TID sets no fields.
+.SH SYNOPSIS
+.B "bool" libnvmf_tid_is_empty
+.BI "(const struct libnvmf_tid *tid "  ");"
+.SH ARGUMENTS
+.IP "tid" 12
+The transport ID, or NULL.
+.SH "RETURN"
+true if \fItid\fP is NULL or every field is unset, false otherwise.

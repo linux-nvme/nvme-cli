@@ -1,0 +1,12 @@
+.TH "libnvme_free" 9 "libnvme_free" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_free \- Free allocated memory
+.SH SYNOPSIS
+.B "void" libnvme_free
+.BI "(void *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+Memory buffer to free
+.SH "DESCRIPTION"
+Releases memory previously allocated by \fBlibnvme_alloc\fP,
+\fBlibnvme_realloc\fP, or related libnvme allocation helpers.

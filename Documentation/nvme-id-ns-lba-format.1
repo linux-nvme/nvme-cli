@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-id-ns-lba-format
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 01/07/2022
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/30/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS\-LBA\-F" "1" "01/07/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS\-LBA\-F" "1" "10/30/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,9 @@ nvme-id-ns-lba-format \- Send NVMe Identify Namespace for the specified LBA Form
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme id\-ns\fR <device> [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
-                    [\-\-lba\-format\-index=<lba_format_index> | \-i <lba_format_index>]
-                        [\-v | \-\-verbose]
-                        [\-\-output\-format=<fmt> | \-o <fmt>]
+\fInvme\fR [<global\-options>] \fIid ns\-lba\-format\fR <device>
+                        [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
+                        [\-\-lba\-format\-index=<lba_format_index> | \-i <lba_format_index>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,6 +43,8 @@ For the NVMe device given, sends an identify namespace for the specified LBA For
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
+.sp
+The bare \fInvme id\-ns\-lba\-format\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme id ns\-lba\-format\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-U <uuid\-index>, \-\-uuid\-index=<uuid\-index>
@@ -55,19 +56,72 @@ UUID Index of the feature
 .RS 4
 This field specifies the index into the LBA Format list identifying the LBA Format capabilities that are to be returned
 .RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
 .PP
-\-v, \-\-verbose
+\-\-dry\-run
 .RS 4
-Increase the information detail in the output\&.
+Print the command that would be executed, but do not actually execute it\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
 .RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&. Other versions are rejected\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Suppress informational messages\&. Errors are still reported, and \-\-quiet cancels any \-\-verbose for the library log level\&.
+.RE
+.PP
+\-\-set\-options=<key=value>[,<key=value>\&...]
+.RS 4
+Set libnvme library options for this invocation\&. Supported keys are
+\fIforce\-4k\fR,
+\fImi\-probe\-enabled\fR,
+\fItest\-base\-dir\fR
+and
+\fItest\-sysfs\-dir\fR\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+\fIinfinite\fR
+or
+\fI\-1\fR
+waits without a time limit (0xffffffff)\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -84,7 +138,7 @@ Has the program interpret the returned buffer and display the known fields in a 
 .RS 4
 .\}
 .nf
-# nvme id\-ns\-lba\-format /dev/nvme0n1 \-i 0
+# nvme id ns\-lba\-format /dev/nvme0n1 \-i 0
 .fi
 .if n \{\
 .RE
@@ -105,8 +159,8 @@ Have the program return the raw structure in binary:
 .RS 4
 .\}
 .nf
-# nvme id\-ns\-lba\-format /dev/nvme0n1 \-i 0 \-o binary > id_ns\&.raw
-# nvme id\-ns\-lba\-format /dev/nvme0n1 \-i 0 \-\-output\-format=binary > id_ns\&.raw
+# nvme id ns\-lba\-format /dev/nvme0n1 \-i 0 \-o binary > id_ns\&.raw
+# nvme id ns\-lba\-format /dev/nvme0n1 \-i 0 \-\-output\-format=binary > id_ns\&.raw
 .fi
 .if n \{\
 .RE
@@ -129,7 +183,7 @@ Alternatively you may want to send the data to another program that can parse th
 .RS 4
 .\}
 .nf
-# nvme id\-ns\-lba\-format /dev/nvme0n1 \-i 0 \-\-raw\-binary | nvme_parse_id_ns
+# nvme id ns\-lba\-format /dev/nvme0n1 \-i 0 \-\-raw\-binary | nvme_parse_id_ns
 .fi
 .if n \{\
 .RE

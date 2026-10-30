@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum tcg_l0_tper_features" "October 2026" "API Manual" LINUX
+.SH NAME
+enum tcg_l0_tper_features \- TPer feature flags
+.SH SYNOPSIS
+enum tcg_l0_tper_features {
+.br
+.BI "    TCG_L0_TPER_SYNC"
+, 
+.br
+.br
+.BI "    TCG_L0_TPER_ASYNC"
+, 
+.br
+.br
+.BI "    TCG_L0_TPER_ACKNAK"
+, 
+.br
+.br
+.BI "    TCG_L0_TPER_BUF_MGMT"
+, 
+.br
+.br
+.BI "    TCG_L0_TPER_STREAMING"
+, 
+.br
+.br
+.BI "    TCG_L0_TPER_COMID_MGMT"
+
+};
+.SH Constants
+.IP "TCG_L0_TPER_SYNC" 12
+Synchronous protocol supported
+.IP "TCG_L0_TPER_ASYNC" 12
+Asynchronous protocol supported
+.IP "TCG_L0_TPER_ACKNAK" 12
+ACK/NAK supported
+.IP "TCG_L0_TPER_BUF_MGMT" 12
+Buffer management supported
+.IP "TCG_L0_TPER_STREAMING" 12
+Streaming supported
+.IP "TCG_L0_TPER_COMID_MGMT" 12
+ComID management supported

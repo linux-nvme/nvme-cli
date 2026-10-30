@@ -1,0 +1,11 @@
+.TH "libnvmf_config_conn_get_host_iface" 9 "libnvmf_config_conn_get_host_iface" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_get_host_iface \- a connection's host interface binding.
+.SH SYNOPSIS
+.B "const char *" libnvmf_config_conn_get_host_iface
+.BI "(const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "conn" 12
+the resolved connection
+.SH "RETURN"
+borrowed string, or NULL when the path left it unset.

@@ -1,0 +1,20 @@
+.TH "libnvmf_exclusion_entry_for_each" 9 "libnvmf_exclusion_entry_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_exclusion_entry_for_each \- iterate over entries in a named list.
+.SH SYNOPSIS
+.B "int" libnvmf_exclusion_entry_for_each
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "void (*callback)(const char *entry, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "name" 12
+list name (basename without .conf suffix)
+.IP "callback" 12
+called with the raw entry string (e.g. "transport=tcp;traddr=...")
+.IP "user_data" 12
+caller context passed to \fIcallback\fP
+.SH "RETURN"
+0 on success, -ENOENT if the list does not exist, negative errno otherwise.

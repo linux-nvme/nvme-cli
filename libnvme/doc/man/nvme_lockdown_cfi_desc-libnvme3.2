@@ -1,0 +1,22 @@
+.TH "libnvme" 9 "struct nvme_lockdown_cfi_desc" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_lockdown_cfi_desc \- Command and Feature Identifier Descriptor
+.SH SYNOPSIS
+struct nvme_lockdown_cfi_desc {
+.br
+.BI "    __u8 cfi;"
+.br
+.BI "    __u8 cfia;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cfi" 12
+Command and Feature Identifier: contents depend on the Contents
+Selected (CS) and Scope Selected (SS) fields of \fIstruct\fP
+nvme_lockdown_log_enhanced.cfia.
+.IP "cfia" 12
+Command and Feature Identifier Attributes, see \fIenum
+nvme_lockdown_cfi_desc_cfia\fP.

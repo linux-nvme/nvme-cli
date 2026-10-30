@@ -1,0 +1,75 @@
+.TH "libnvme" 9 "struct nvme_ave_access_request" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_ave_access_request \- KX-HMAC-CHAP_Access-Request PDU, sent by an NVMe entity (host or controller) to an AVE over the AVE's TLS connection
+.SH SYNOPSIS
+struct nvme_ave_access_request {
+.br
+.BI "    __u8 pdu_type;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 hlen;"
+.br
+.BI "    __u8 pdo;"
+.br
+.BI "    __le32 plen;"
+.br
+.BI "    __le64 id;"
+.br
+.BI "    __u8 hl;"
+.br
+.BI "    __u8 hashid;"
+.br
+.BI "    __le16 t_id;"
+.br
+.BI "    __u8 sc_c;"
+.br
+.BI "    __u8 respr;"
+.br
+.BI "    __u8 nqnrlen;"
+.br
+.BI "    __u8 rsvd23;"
+.br
+.BI "    __le32 seqnum;"
+.br
+.BI "    __u8 acv_respv_nqnr[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "pdu_type" 12
+PDU Type, see \fIenum nvme_ave_pdu_type\fP
+.IP "flags" 12
+Reserved
+.IP "hlen" 12
+Header Length: fixed length of 8 bytes (08h)
+.IP "pdo" 12
+PDU Data Offset, reserved
+.IP "plen" 12
+PDU Length: total length of the PDU in bytes
+.IP "id" 12
+Identifier used to match this PDU with the corresponding
+\fIstruct nvme_ave_access_result\fP PDU
+.IP "hl" 12
+Hash Length: length in bytes of the selected hash function
+.IP "hashid" 12
+Hash Identifier, see \fIenum libnvmf_hmac_alg\fP
+.IP "t_id" 12
+Transaction Identifier
+.IP "sc_c" 12
+Secure Channel Concatenation, see \fIenum nvmf_auth_sc_c\fP
+.IP "respr" 12
+Responder's Role: 'H' (48h) if host, 'C' (43h) if controller
+.IP "nqnrlen" 12
+NQN Responder Length: length in bytes of \fIacv_respv_nqnr\fP's
+NQNR component
+.IP "rsvd23" 12
+Reserved
+.IP "seqnum" 12
+Sequence Number (S)
+.IP "acv_respv_nqnr" 12
+Augmented Challenge Value (Ca, \fIhl\fP bytes), followed by
+the Response Value (R, \fIhl\fP bytes), followed by the NQN of the
+Responder (NQNR, \fInqnrlen\fP bytes)

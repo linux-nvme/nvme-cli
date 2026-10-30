@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_lvolta" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_lvolta \- Start Voltage Measurements Data Structure - Log Voltage Threshold Attributes (LVOLTA)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_lvolta {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_LVOLTA_VMLT"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_SHIFT" 12
+Shift amount to get the
+Voltage Sensor Selected
+(VSSEL), see \fIenum
+nvme_voltage_sensor\fP
+.IP "NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_MASK" 12
+Mask to get VSSEL
+.IP "NVME_VOLTAGE_MEASUREMENT_LVOLTA_VMLT" 12
+Voltage Measurement Log
+Threshold

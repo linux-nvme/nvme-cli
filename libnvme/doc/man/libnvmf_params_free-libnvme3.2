@@ -1,0 +1,12 @@
+.TH "libnvmf_params_free" 9 "libnvmf_params_free" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_params_free \- Free a connection parameter set.
+.SH SYNOPSIS
+.B "void" libnvmf_params_free
+.BI "(struct libnvmf_params *params "  ");"
+.SH ARGUMENTS
+.IP "params" 12
+Parameter set to free. NULL is ignored.
+.SH "DESCRIPTION"
+Only free a set obtained from \fBlibnvmf_params_new\fP; never call this on
+a set borrowed from a configuration.

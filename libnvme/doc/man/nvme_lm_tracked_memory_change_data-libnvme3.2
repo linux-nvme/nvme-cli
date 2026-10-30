@@ -1,0 +1,40 @@
+.TH "libnvme" 9 "struct nvme_lm_tracked_memory_change_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_tracked_memory_change_data \- Tracked Memory Change Data Structure returned by the Track Receive command's Tracked Memory Changes management operation
+.SH SYNOPSIS
+struct nvme_lm_tracked_memory_change_data {
+.br
+.BI "    __u8 ver;"
+.br
+.BI "    __u8 attrb;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le32 ntmcd;"
+.br
+.BI "    __le16 rpmpg;"
+.br
+.BI "    __u8 rsvd10[6];"
+.br
+.BI "    struct nvme_lm_tracked_memory_changed_descriptor desc[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ver" 12
+Version (VER)
+.IP "attrb" 12
+Attributes (ATTRB), see \fIenum nvme_lm_tracked_memory_change_attrb\fP
+.IP "cntlid" 12
+Controller Identifier (CNTLID) whose memory modifications are
+being tracked and reported
+.IP "ntmcd" 12
+Number of Tracked Memory Changed Descriptors (NTMCD)
+.IP "rpmpg" 12
+Reported Memory Range Granularity (RPMPG)
+.IP "rsvd10" 12
+Reserved
+.IP "desc" 12
+Tracked Memory Changed Descriptor list

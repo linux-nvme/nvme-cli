@@ -1,0 +1,16 @@
+.TH "libnvmf_config_conn_for_each" 9 "libnvmf_config_conn_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_for_each \- iterate over the resolved connections.
+.SH SYNOPSIS
+.B "void" libnvmf_config_conn_for_each
+.BI "(const struct libnvmf_config *config "  ","
+.BI "void (*callback)(const struct libnvmf_config_conn *conn, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "config" 12
+the resolved configuration
+.IP "callback" 12
+called once per connection, in file order (main file first,
+then the drop-ins in sorted order)
+.IP "user_data" 12
+caller context passed to \fIcallback\fP

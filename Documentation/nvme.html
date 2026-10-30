@@ -791,7 +791,15 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Admin Passthrough Command
+        Submit an arbitrary admin command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-capacity-mgmt.html">nvme-capacity-mgmt(1)</a>
+</dt>
+<dd>
+<p>
+        Submit Capacity Management Command, return results
 </p>
 </dd>
 <dt class="hdlist1">
@@ -799,415 +807,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        IO Compare
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-error-log.html">nvme-error-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve error logs
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-flush.html">nvme-flush(1)</a>
-</dt>
-<dd>
-<p>
-        Submit flush
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-dsm.html">nvme-dsm(1)</a>
-</dt>
-<dd>
-<p>
-        Submit Data Set Management
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-format.html">nvme-format(1)</a>
-</dt>
-<dd>
-<p>
-        Format namespace(s)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fw-activate.html">nvme-fw-activate(1)</a>
-</dt>
-<dd>
-<p>
-        F/W Activate (in old version &lt; 1.2)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fw-commit.html">nvme-fw-commit(1)</a>
-</dt>
-<dd>
-<p>
-        F/W Commit (in &gt; 1.2)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fw-download.html">nvme-fw-download(1)</a>
-</dt>
-<dd>
-<p>
-        F/W Download
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fw-log.html">nvme-fw-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve f/w log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-get-feature.html">nvme-get-feature(1)</a>
-</dt>
-<dd>
-<p>
-        Get Features
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-get-log.html">nvme-get-log(1)</a>
-</dt>
-<dd>
-<p>
-        Generic Get Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-telemetry-log.html">nvme-telemetry-log(1)</a>
-</dt>
-<dd>
-<p>
-        Telemetry Host-Initiated Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-changed-ns-list-log.html">nvme-changed-ns-list-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Changed Namespace List Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-smart-log.html">nvme-smart-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Smart Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-ana-log.html">nvme-ana-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve ANA(Asymmetric Namespace Access) Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-endurance-log.html">nvme-endurance-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve endurance Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-effects-log.html">nvme-effects-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve effects Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-self-test-log.html">nvme-self-test-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Device Self-test Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-get-ns-id.html">nvme-get-ns-id(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve namespace identifier
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-help.html">nvme-help(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe CLI Help
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-id-ctrl.html">nvme-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        Identify Controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-id-ns.html">nvme-id-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Identify Namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-id-nvmset.html">nvme-id-nvmset(1)</a>
-</dt>
-<dd>
-<p>
-        Identify NVM Set List
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-id-iocs.html">nvme-id-iocs(1)</a>
-</dt>
-<dd>
-<p>
-        Identify I/O Command Set
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-create-ns.html">nvme-create-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Create a new namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-delete-ns.html">nvme-delete-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Delete existing namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-attach-ns.html">nvme-attach-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Attach namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-detach-ns.html">nvme-detach-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Detach namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-io-passthru.html">nvme-io-passthru(1)</a>
-</dt>
-<dd>
-<p>
-        IO Passthrough Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-list-ns.html">nvme-list-ns(1)</a>
-</dt>
-<dd>
-<p>
-        List all nvme namespaces
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-ns-descs.html">nvme-ns-descs(1)</a>
-</dt>
-<dd>
-<p>
-        Identify Namespace Identification Descriptor
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-list.html">nvme-list(1)</a>
-</dt>
-<dd>
-<p>
-        List all nvme controllers
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-list-ctrl.html">nvme-list-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        List controller in NVMe subsystem
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-list-subsys.html">nvme-list-subsys(1)</a>
-</dt>
-<dd>
-<p>
-        List NVMe subsystems
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-reset.html">nvme-reset(1)</a>
-</dt>
-<dd>
-<p>
-        Reset a NVMe controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-device-self-test.html">nvme-device-self-test(1)</a>
-</dt>
-<dd>
-<p>
-        Issue Device Self-test Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-read.html">nvme-read(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Read Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-write.html">nvme-write(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Write Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-write-zeroes.html">nvme-write-zeroes(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Write Zeroes Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-write-uncor.html">nvme-write-uncor(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Write Uncorrectable Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-acquire.html">nvme-resv-acquire(1)</a>
-</dt>
-<dd>
-<p>
-        Acquire Namespace Reservation
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-register.html">nvme-resv-register(1)</a>
-</dt>
-<dd>
-<p>
-        Register Namespace Reservation
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-release.html">nvme-resv-release(1)</a>
-</dt>
-<dd>
-<p>
-        Release Namespace Reservation
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-report.html">nvme-resv-report(1)</a>
-</dt>
-<dd>
-<p>
-        Report Reservation Capabilities
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-security-recv.html">nvme-security-recv(1)</a>
-</dt>
-<dd>
-<p>
-        Security Receive
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-security-send.html">nvme-security-send(1)</a>
-</dt>
-<dd>
-<p>
-        Security Send
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-dsm.html">nvme-dsm(1)</a>
-</dt>
-<dd>
-<p>
-        Issue Data Set Management Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-copy.html">nvme-copy(1)</a>
-</dt>
-<dd>
-<p>
-        Issue Simple Copy Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-set-feature.html">nvme-set-feature(1)</a>
-</dt>
-<dd>
-<p>
-        Set Feature
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-show-regs.html">nvme-show-regs(1)</a>
-</dt>
-<dd>
-<p>
-        Show NVMe Controller Registers
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-discover.html">nvme-discover(1)</a>
-</dt>
-<dd>
-<p>
-        Send Get Log Page request to Discovery Controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-connect-all.html">nvme-connect-all(1)</a>
-</dt>
-<dd>
-<p>
-        Discover and connect to all NVMe-over-Fabrics subsystems
+        Submit a Compare command, return results
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1215,7 +815,31 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Connect to an NVMe-over-Fabrics subsystem
+        Connect to NVMeoF subsystem
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-connect-all.html">nvme-connect-all(1)</a>
+</dt>
+<dd>
+<p>
+        Discover and Connect to NVMeoF subsystems
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-copy.html">nvme-copy(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Simple Copy command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-device-self-test.html">nvme-device-self-test(1)</a>
+</dt>
+<dd>
+<p>
+        Perform the necessary tests to observe the performance
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1231,7 +855,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Disconnect from an NVMe-over-Fabrics subsystem
+        Disconnect from NVMeoF subsystem
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1239,135 +863,39 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Disconnect from all NVMe-over-Fabrics subsystems
+        Disconnect from all connected NVMeoF subsystems
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-config-convert.html">nvme-config-convert(1)</a>
+<a href="nvme-discover.html">nvme-discover(1)</a>
 </dt>
 <dd>
 <p>
-        Convert a legacy NVMe-oF configuration to the INI format
+        Discover NVMeoF subsystems
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-config-create.html">nvme-config-create(1)</a>
+<a href="nvme-dsm.html">nvme-dsm(1)</a>
 </dt>
 <dd>
 <p>
-        Create an NVMe-oF connection entry in the INI configuration
+        Submit a Data Set Management command, return results
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-config-validate.html">nvme-config-validate(1)</a>
+<a href="nvme-flush.html">nvme-flush(1)</a>
 </dt>
 <dd>
 <p>
-        Validate an NVMe-oF INI connection configuration file
+        Submit a Flush command, return results
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-config-show.html">nvme-config-show(1)</a>
+<a href="nvme-format.html">nvme-format(1)</a>
 </dt>
 <dd>
 <p>
-        Show the resolved NVMe-oF INI connection configuration
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-config-status.html">nvme-config-status(1)</a>
-</dt>
-<dd>
-<p>
-        Report legacy config.json/discovery.conf conversion status
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-get-property.html">nvme-get-property(1)</a>
-</dt>
-<dd>
-<p>
-        Reads and shows NVMe-over-Fabrics controller property
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-media-unit-stat-log.html">nvme-media-unit-stat-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve and show the configuration and wear of media units
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-supported-cap-config-log.html">nvme-supported-cap-config-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve and show the list of Supported Capacity Configuration Descriptors
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-boot-part-log.html">nvme-boot-part-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Boot Partition Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-capacity-mgmt.html">nvme-capacity-mgmt(1)</a>
-</dt>
-<dd>
-<p>
-        Capacity Management Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-check-dhchap-key.html">nvme-check-dhchap-key(1)</a>
-</dt>
-<dd>
-<p>
-        Check a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-check-kxchap-secret)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-check-tls-key.html">nvme-check-tls-key(1)</a>
-</dt>
-<dd>
-<p>
-        Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls-psk)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-cmdset-ind-id-ns.html">nvme-cmdset-ind-id-ns(1)</a>
-</dt>
-<dd>
-<p>
-        I/O Command Set Independent Identify Namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-endurance-event-agg-log.html">nvme-endurance-event-agg-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Endurance Group Event Aggregate Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fid-support-effects-log.html">nvme-fid-support-effects-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve FID Support and Effects log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-gen-dhchap-key.html">nvme-gen-dhchap-key(1)</a>
-</dt>
-<dd>
-<p>
-        Generate a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-gen-kxchap-secret)
+        Format namespace with new block format
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1379,11 +907,11 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-gen-tls-key.html">nvme-gen-tls-key(1)</a>
+<a href="nvme-get-feature.html">nvme-get-feature(1)</a>
 </dt>
 <dd>
 <p>
-        Generate a NVMe TLS PSK (deprecated, see nvme-keys-gen-tls-psk)
+        Get feature and show the resulting value
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1391,39 +919,63 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Get LBA Status command
+        Submit a Get LBA Status command, return results
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-id-domain.html">nvme-id-domain(1)</a>
+<a href="nvme-get-log.html">nvme-get-log(1)</a>
 </dt>
 <dd>
 <p>
-        NVMe Identify Domain List
+        Generic NVMe get log, returns log in raw format
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-id-ns-lba-format.html">nvme-id-ns-lba-format(1)</a>
+<a href="nvme-get-property.html">nvme-get-property(1)</a>
 </dt>
 <dd>
 <p>
-        NVMe Identify Namespace for the specified LBA Format index
+        Get a property and show the resulting value
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-lba-status-log.html">nvme-lba-status-log(1)</a>
+<a href="nvme-get-reg.html">nvme-get-reg(1)</a>
 </dt>
 <dd>
 <p>
-        Retrieve LBA Status Information Log
+        Get a register and show the resulting value
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-list-endgrp.html">nvme-list-endgrp(1)</a>
+<a href="nvme-io-passthru.html">nvme-io-passthru(1)</a>
 </dt>
 <dd>
 <p>
-        NVMe Identify Endurance Group List
+        Submit an arbitrary IO command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-list.html">nvme-list(1)</a>
+</dt>
+<dd>
+<p>
+        List all NVMe devices and namespaces on machine
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-list-subsys.html">nvme-list-subsys(1)</a>
+</dt>
+<dd>
+<p>
+        List nvme subsystems
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-lockdown.html">nvme-lockdown(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Lockdown command,return result
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1435,59 +987,11 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-nvm-id-ctrl.html">nvme-nvm-id-ctrl(1)</a>
+<a href="nvme-read.html">nvme-read(1)</a>
 </dt>
 <dd>
 <p>
-        NVMe Identify Controller NVM Command Set
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-nvm-id-ns.html">nvme-nvm-id-ns(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe Identify Namespace NVM Command Set
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-nvm-id-ns-lba-format.html">nvme-nvm-id-ns-lba-format(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe Identify Namespace NVM Command Set for the specified LBA Format index
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-persistent-event-log.html">nvme-persistent-event-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Persistent Event Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-predictable-lat-log.html">nvme-predictable-lat-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Predictable Latency per Nvmset Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-pred-lat-event-agg-log.html">nvme-pred-lat-event-agg-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Predictable Latency Event Aggregate Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-primary-ctrl-caps.html">nvme-primary-ctrl-caps(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe Identify Primary Controller Capabilities
+        Submit a read command, return results
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1496,6 +1000,1134 @@ available, run "nvme help".</p></div>
 <dd>
 <p>
         Resets the controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sanitize.html">nvme-sanitize(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a sanitize command
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sanitize-ns
+</dt>
+<dd>
+<p>
+        Submit a sanitize namespace command
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-set-feature.html">nvme-set-feature(1)</a>
+</dt>
+<dd>
+<p>
+        Set a feature and show the resulting value
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-set-property.html">nvme-set-property(1)</a>
+</dt>
+<dd>
+<p>
+        Set a property and show the resulting value
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-set-reg.html">nvme-set-reg(1)</a>
+</dt>
+<dd>
+<p>
+        Set a register and show the resulting value
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-show-hostnqn.html">nvme-show-hostnqn(1)</a>
+</dt>
+<dd>
+<p>
+        Show NVMeoF host NQN
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-show-regs.html">nvme-show-regs(1)</a>
+</dt>
+<dd>
+<p>
+        Shows the controller registers or properties. Requires character device
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-show-topology.html">nvme-show-topology(1)</a>
+</dt>
+<dd>
+<p>
+        Show the topology
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-subsystem-reset.html">nvme-subsystem-reset(1)</a>
+</dt>
+<dd>
+<p>
+        Resets the subsystem
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-top.html">nvme-top(1)</a>
+</dt>
+<dd>
+<p>
+        nvme top
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-verify.html">nvme-verify(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a verify command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-virt-mgmt.html">nvme-virt-mgmt(1)</a>
+</dt>
+<dd>
+<p>
+        Manage Flexible Resources between Primary and Secondary Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-write.html">nvme-write(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a write command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-write-uncor.html">nvme-write-uncor(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a write uncorrectable command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-write-zeroes.html">nvme-write-zeroes(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a write zeroes command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-convert.html">nvme-config-convert(1)</a>
+</dt>
+<dd>
+<p>
+        Convert config.json/discovery.conf to INI
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-create.html">nvme-config-create(1)</a>
+</dt>
+<dd>
+<p>
+        Create an NVMeoF connection entry in the INI configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-show.html">nvme-config-show(1)</a>
+</dt>
+<dd>
+<p>
+        Show the resolved NVMeoF connection configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-status.html">nvme-config-status(1)</a>
+</dt>
+<dd>
+<p>
+        Report config status
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-validate.html">nvme-config-validate(1)</a>
+</dt>
+<dd>
+<p>
+        Validate an NVMeoF connection configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-dir-receive.html">nvme-dir-receive(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Directive Receive command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-dir-send.html">nvme-dir-send(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Directive Send command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-exclusion-add.html">nvme-exclusion-add(1)</a>
+</dt>
+<dd>
+<p>
+        Add an entry to an exclusion list
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-exclusion-create.html">nvme-exclusion-create(1)</a>
+</dt>
+<dd>
+<p>
+        Create an exclusion list
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-exclusion-delete.html">nvme-exclusion-delete(1)</a>
+</dt>
+<dd>
+<p>
+        Delete an exclusion list
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-exclusion-edit.html">nvme-exclusion-edit(1)</a>
+</dt>
+<dd>
+<p>
+        Edit an exclusion list interactively
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-exclusion-list.html">nvme-exclusion-list(1)</a>
+</dt>
+<dd>
+<p>
+        List exclusion lists or entries
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-exclusion-remove.html">nvme-exclusion-remove(1)</a>
+</dt>
+<dd>
+<p>
+        Remove an entry from an exclusion list
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-configs.html">nvme-fdp-configs(1)</a>
+</dt>
+<dd>
+<p>
+        List configurations
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-events.html">nvme-fdp-events(1)</a>
+</dt>
+<dd>
+<p>
+        List events affecting reclaim units and media usage
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-feature.html">nvme-fdp-feature(1)</a>
+</dt>
+<dd>
+<p>
+        Show, enable or disable FDP configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-set-events.html">nvme-fdp-set-events(1)</a>
+</dt>
+<dd>
+<p>
+        Enable or disable events
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-stats.html">nvme-fdp-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Show statistics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-status.html">nvme-fdp-status(1)</a>
+</dt>
+<dd>
+<p>
+        Show reclaim unit handle status
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-update.html">nvme-fdp-update(1)</a>
+</dt>
+<dd>
+<p>
+        Update a reclaim unit handle
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fdp-usage.html">nvme-fdp-usage(1)</a>
+</dt>
+<dd>
+<p>
+        Show reclaim unit handle usage
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-arbitration.html">nvme-feat-arbitration(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set arbitration feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-async-event-conf.html">nvme-feat-async-event-conf(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set async event configuration feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-err-recovery.html">nvme-feat-err-recovery(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set error recovery feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-hctm.html">nvme-feat-hctm(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set host controlled thermal management feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-host-behavior-support.html">nvme-feat-host-behavior-support(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set host behavior support feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-int-coalesce.html">nvme-feat-int-coalesce(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set interrupt coalescing feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-int-vector-config.html">nvme-feat-int-vector-config(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set interrupt vector configuration feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-keep-alive-timer.html">nvme-feat-keep-alive-timer(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set keep alive timer feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-lba-range-type.html">nvme-feat-lba-range-type(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set lba range type feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-num-queues.html">nvme-feat-num-queues(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set number of queues feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-perfc.html">nvme-feat-perfc(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set perf characteristics feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-power-limit.html">nvme-feat-power-limit(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set power limit feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-power-meas.html">nvme-feat-power-meas(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set power measurement feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-power-mgmt.html">nvme-feat-power-mgmt(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set power management feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-power-thresh.html">nvme-feat-power-thresh(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set power threshold feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-temp-thresh.html">nvme-feat-temp-thresh(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set temperature threshold feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-timestamp.html">nvme-feat-timestamp(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set timestamp feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-volatile-wc.html">nvme-feat-volatile-wc(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set volatile write cache feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-feat-write-atom-normal.html">nvme-feat-write-atom-normal(1)</a>
+</dt>
+<dd>
+<p>
+        Get and set write atomicity normal feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fw-commit.html">nvme-fw-commit(1)</a>
+</dt>
+<dd>
+<p>
+        Verify and commit firmware to a specific slot (fw-activate in old version &lt; 1.2)
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fw-download.html">nvme-fw-download(1)</a>
+</dt>
+<dd>
+<p>
+        Download new firmware
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ctrl.html">nvme-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ctrl-list.html">nvme-id-ctrl-list(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-domain.html">nvme-id-domain(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Domain List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-endgrp-list.html">nvme-id-endgrp-list(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Endurance Group List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-iocs.html">nvme-id-iocs(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify I/O Command Set, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ns.html">nvme-id-ns(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Namespace, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ns-descs.html">nvme-id-ns-descs(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Namespace Descriptor List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ns-granularity.html">nvme-id-ns-granularity(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Namespace Granularity List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ns-ind.html">nvme-id-ns-ind(1)</a>
+</dt>
+<dd>
+<p>
+        I/O Command Set Independent Identify Namespace
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ns-lba-format.html">nvme-id-ns-lba-format(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Namespace for the specified LBA Format index, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ns-list.html">nvme-id-ns-list(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-nvm-ctrl.html">nvme-id-nvm-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller NVM Command Set, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-nvm-ns.html">nvme-id-nvm-ns(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Namespace NVM Command Set, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-nvm-ns-lba-format.html">nvme-id-nvm-ns-lba-format(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Namespace NVM Command Set for the specified LBA Format index, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-nvmset.html">nvme-id-nvmset(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify NVM Set List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-primary-ctrl-caps.html">nvme-id-primary-ctrl-caps(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Primary Controller Capabilities
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-secondary-ctrl-list.html">nvme-id-secondary-ctrl-list(1)</a>
+</dt>
+<dd>
+<p>
+        List Secondary Controllers associated with a Primary Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-uuid.html">nvme-id-uuid(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify UUID List, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-io-mgmt-recv.html">nvme-io-mgmt-recv(1)</a>
+</dt>
+<dd>
+<p>
+        I/O Management Receive
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-io-mgmt-send.html">nvme-io-mgmt-send(1)</a>
+</dt>
+<dd>
+<p>
+        I/O Management Send
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-check-kxchap-secret.html">nvme-keys-check-kxchap-secret(1)</a>
+</dt>
+<dd>
+<p>
+        Validate NVMeoF KX-HMAC-CHAP host secret format or check if loaded
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>
+</dt>
+<dd>
+<p>
+        Validate NVMeoF TLS PSK format or check if loaded
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-export.html">nvme-keys-export(1)</a>
+</dt>
+<dd>
+<p>
+        Export NVMeoF TLS PSKs from a keyring
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-gen-kxchap-secret.html">nvme-keys-gen-kxchap-secret(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF KX-HMAC-CHAP host secret
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-gen-tls-psk.html">nvme-keys-gen-tls-psk(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF TLS PSK
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-import.html">nvme-keys-import(1)</a>
+</dt>
+<dd>
+<p>
+        Import NVMeoF TLS PSKs and KX-HMAC-CHAP secrets into a keyring
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a>
+</dt>
+<dd>
+<p>
+        Insert NVMeoF TLS PSK into a keyring
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-revoke.html">nvme-keys-revoke(1)</a>
+</dt>
+<dd>
+<p>
+        Revoke an NVMeoF TLS PSK from a keyring
+</p>
+</dd>
+<dt class="hdlist1">
+nvme lm create-cdq
+</dt>
+<dd>
+<p>
+        Create Controller Data Queue
+</p>
+</dd>
+<dt class="hdlist1">
+nvme lm delete-cdq
+</dt>
+<dd>
+<p>
+        Delete Controller Data Queue
+</p>
+</dd>
+<dt class="hdlist1">
+nvme lm get-cdq
+</dt>
+<dd>
+<p>
+        Get Feature - Controller Data Queue (FID 21h)
+</p>
+</dd>
+<dt class="hdlist1">
+nvme lm migration-recv
+</dt>
+<dd>
+<p>
+        Migration Receive
+</p>
+</dd>
+<dt class="hdlist1">
+nvme lm migration-send
+</dt>
+<dd>
+<p>
+        Migration Send
+</p>
+</dd>
+<dt class="hdlist1">
+nvme lm set-cdq
+</dt>
+<dd>
+<p>
+        Set Feature - Controller Data Queue (FID 21h)
+</p>
+</dd>
+<dt class="hdlist1">
+nvme lm track-send
+</dt>
+<dd>
+<p>
+        Track Send Command
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-ana.html">nvme-log-ana(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve ANA Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-ave-discovery.html">nvme-log-ave-discovery(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve AVE Discovery Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-boot-part.html">nvme-log-boot-part(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Boot Partition Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-changed-alloc-ns-list.html">nvme-log-changed-alloc-ns-list(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Changed Allocated Namespace List, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-changed-ns-list.html">nvme-log-changed-ns-list(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Changed Attached Namespace List, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-dispersed-ns-participating-nss.html">nvme-log-dispersed-ns-participating-nss(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-effects.html">nvme-log-effects(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Command Effects Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-endurance.html">nvme-log-endurance(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Endurance Group Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-endurance-event-agg.html">nvme-log-endurance-event-agg(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Endurance Group Event Aggregate Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-error.html">nvme-log-error(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Error Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-fid-support-effects.html">nvme-log-fid-support-effects(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve FID Support and Effects log and show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-fw.html">nvme-log-fw(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve FW Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-host-discovery.html">nvme-log-host-discovery(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Host Discovery Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-lba-status.html">nvme-log-lba-status(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve LBA Status Information Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-media-unit-stat.html">nvme-log-media-unit-stat(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the configuration and wear of media units, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-mgmt-addr-list.html">nvme-log-mgmt-addr-list(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Management Address List Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-mi-cmd-support-effects.html">nvme-log-mi-cmd-support-effects(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve MI Command Support and Effects log and show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-persistent-event.html">nvme-log-persistent-event(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Persistent Event Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-phy-rx-eom.html">nvme-log-phy-rx-eom(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Physical Interface Receiver Eye Opening Measurement, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme log power-measurement
+</dt>
+<dd>
+<p>
+        Retrieve Power Measurement Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-pred-lat-event-agg.html">nvme-log-pred-lat-event-agg(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Predictable Latency Event Aggregate Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-predictable-lat.html">nvme-log-predictable-lat(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Predictable Latency per Nvmset Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme log pull-model-ddc-req
+</dt>
+<dd>
+<p>
+        Retrieve Pull Model DDC Request Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-reachability-associations.html">nvme-log-reachability-associations(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Reachability Associations Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-reachability-groups.html">nvme-log-reachability-groups(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Reachability Groups Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-resv-notif.html">nvme-log-resv-notif(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Reservation Notification Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-rotational-media-info.html">nvme-log-rotational-media-info(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Rotational Media Information Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-sanitize.html">nvme-log-sanitize(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve sanitize log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-self-test.html">nvme-log-self-test(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the SELF-TEST Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-smart.html">nvme-log-smart(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-supported-cap-config.html">nvme-log-supported-cap-config(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the list of Supported Capacity Configuration Descriptors
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-supported-log-pages.html">nvme-supported-log-pages(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the Supported Log pages details, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-log-telemetry.html">nvme-log-telemetry(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve FW Telemetry log write to file
+</p>
+</dd>
+<dt class="hdlist1">
+nvme nbft show
+</dt>
+<dd>
+<p>
+        Show contents of ACPI NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ns-attach.html">nvme-ns-attach(1)</a>
+</dt>
+<dd>
+<p>
+        Attaches a namespace to requested controller(s)
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ns-create.html">nvme-ns-create(1)</a>
+</dt>
+<dd>
+<p>
+        Creates a namespace with the provided parameters
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ns-delete.html">nvme-ns-delete(1)</a>
+</dt>
+<dd>
+<p>
+        Deletes a namespace from the controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ns-detach.html">nvme-ns-detach(1)</a>
+</dt>
+<dd>
+<p>
+        Detaches a namespace from requested controller(s)
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ns-get-id.html">nvme-ns-get-id(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the namespace ID of opened block device
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-nvme-mi-recv.html">nvme-nvme-mi-recv(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a NVMe-MI Receive command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-nvme-mi-send.html">nvme-nvme-mi-send(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a NVMe-MI Send command, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-registry-delete.html">nvme-registry-delete(1)</a>
+</dt>
+<dd>
+<p>
+        Remove a controller&#8217;s registry entry
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-registry-list.html">nvme-registry-list(1)</a>
+</dt>
+<dd>
+<p>
+        List live registry entries
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-registry-retrieve.html">nvme-registry-retrieve(1)</a>
+</dt>
+<dd>
+<p>
+        Read an attribute from a controller&#8217;s entry
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-registry-update.html">nvme-registry-update(1)</a>
+</dt>
+<dd>
+<p>
+        Write an attribute to a controller&#8217;s entry
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-resv-acquire.html">nvme-resv-acquire(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Reservation Acquire, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-resv-register.html">nvme-resv-register(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Reservation Register, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-resv-release.html">nvme-resv-release(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Reservation Release, return results
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-resv-report.html">nvme-resv-report(1)</a>
+</dt>
+<dd>
+<p>
+        Submit a Reservation Report, return results
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1515,6 +2147,14 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+<a href="nvme-rpmb-read-config.html">nvme-rpmb-read-config(1)</a>
+</dt>
+<dd>
+<p>
+        Read the RPMB device configuration block
+</p>
+</dd>
+<dt class="hdlist1">
 <a href="nvme-rpmb-read-counter.html">nvme-rpmb-read-counter(1)</a>
 </dt>
 <dd>
@@ -1531,22 +2171,6 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-rpmb-write-data.html">nvme-rpmb-write-data(1)</a>
-</dt>
-<dd>
-<p>
-        Write authenticated data to an RPMB target
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-rpmb-read-config.html">nvme-rpmb-read-config(1)</a>
-</dt>
-<dd>
-<p>
-        Read the RPMB device configuration block
-</p>
-</dd>
-<dt class="hdlist1">
 <a href="nvme-rpmb-write-config.html">nvme-rpmb-write-config(1)</a>
 </dt>
 <dd>
@@ -1555,976 +2179,27 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-sanitize-log.html">nvme-sanitize-log(1)</a>
+<a href="nvme-rpmb-write-data.html">nvme-rpmb-write-data(1)</a>
 </dt>
 <dd>
 <p>
-        Retrieve sanitize log
+        Write authenticated data to an RPMB target
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-set-property.html">nvme-set-property(1)</a>
+<a href="nvme-security-recv.html">nvme-security-recv(1)</a>
 </dt>
 <dd>
 <p>
-        Set a property and show the resulting value
+        Submit a Security Receive command, return results
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-show-hostnqn.html">nvme-show-hostnqn(1)</a>
+<a href="nvme-security-send.html">nvme-security-send(1)</a>
 </dt>
 <dd>
 <p>
-        Show NVMeoF host NQN
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-subsystem-reset.html">nvme-subsystem-reset(1)</a>
-</dt>
-<dd>
-<p>
-        Resets the subsystem
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-supported-log-pages.html">nvme-supported-log-pages(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve the Supported Log pages details
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-tls-key.html">nvme-tls-key(1)</a>
-</dt>
-<dd>
-<p>
-        Manage NVMe TLS PSKs (deprecated, see nvme-keys-import/export/revoke)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-verify.html">nvme-verify(1)</a>
-</dt>
-<dd>
-<p>
-        verify command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-show-topology.html">nvme-show-topology(1)</a>
-</dt>
-<dd>
-<p>
-        Show NVMe topology
-</p>
-</dd>
-</dl></div>
-</div>
-<div class="sect2">
-<h3 id="_plugins_vendor_extension_commands">Plugins/Vendor extension commands</h3>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-<a href="nvme-intel-id-ctrl.html">nvme-intel-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        Intel - NVMe Identify Controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-intel-internal-log.html">nvme-intel-internal-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Intel device&#8217;s internal log and save to file
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-intel-lat-stats.html">nvme-intel-lat-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve NVMe Identify Controller, return result and structure
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-intel-market-name.html">nvme-intel-market-name(1)</a>
-</dt>
-<dd>
-<p>
-        Intel vendor specific marketing name log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-intel-smart-log-add.html">nvme-intel-smart-log-add(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe Intel Additional SMART log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-intel-temp-stats.html">nvme-intel-temp-stats(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe Intel Additional SMART log page for temp stats
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-huawei-id-ctrl.html">nvme-huawei-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe huawei Identify Controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-huawei-list.html">nvme-huawei-list(1)</a>
-</dt>
-<dd>
-<p>
-        List all recognized Huawei NVMe devices
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-dera-stat.html">nvme-dera-stat(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe Dera Device status and Additional SMART log page request
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-clear-pcie-errors.html">nvme-micron-clear-pcie-errors(1)</a>
-</dt>
-<dd>
-<p>
-        Clears correctable PCIe correctable errors of given Micron device
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-internal-log.html">nvme-micron-internal-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Micron device&#8217;s internal logs and save to given zip file
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-nand-stats.html">nvme-micron-nand-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves NAND statistics of given micron device
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-pcie-stats.html">nvme-micron-pcie-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves pcie error statistics for given micron device
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-selective-download.html">nvme-micron-selective-download(1)</a>
-</dt>
-<dd>
-<p>
-        Performs selective firmware download
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-smart-add-log.html">nvme-micron-smart-add-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves NAND statistics
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-temperature-stats.html">nvme-micron-temperature-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves temperature information of given micron device
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-smart-log.html">nvme-micron-smart-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve SMART/Health log with Micron vendor-specific fields
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-micron-id-ctrl.html">nvme-micron-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe Identify Controller with Micron vendor-specific fields
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-ocp-internal-log.html">nvme-ocp-internal-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves and parses OCP Telemetry DA1 and DA2 logs.
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-ocp-telemetry-string-log.html">nvme-ocp-telemetry-string-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves and parses OCP Telemetry String Log page.
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-netapp-ontapdevices.html">nvme-netapp-ontapdevices(1)</a>
-</dt>
-<dd>
-<p>
-        Display information about ONTAP devices
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-netapp-smdevices.html">nvme-netapp-smdevices(1)</a>
-</dt>
-<dd>
-<p>
-        Display information for each NVMe path to an E-Series volume
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-capabilities.html">nvme-sndk-capabilities(1)</a>
-</dt>
-<dd>
-<p>
-        Display Sandisk plugin command capabilities
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-clear-assert-dump.html">nvme-sndk-clear-assert-dump(1)</a>
-</dt>
-<dd>
-<p>
-        Clears the assert dump (if present)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-clear-fw-activate-history.html">nvme-sndk-clear-fw-activate-history(1)</a>
-</dt>
-<dd>
-<p>
-        Clears the firmware activate history table
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-clear-pcie-correctable-errors.html">nvme-sndk-clear-pcie-correctable-errors(1)</a>
-</dt>
-<dd>
-<p>
-        Clears the pcie correctable errors returned in the smart-log-add command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-cloud-SSD-plugin-version.html">nvme-sndk-cloud-SSD-plugin-version(1)</a>
-</dt>
-<dd>
-<p>
-        Display Sandisk plugin Cloud SSD Plugin Version
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-cloud-boot-SSD-version.html">nvme-sndk-cloud-boot-SSD-version(1)</a>
-</dt>
-<dd>
-<p>
-        Display Sandisk Cloud Boot SSD Version
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-cu-smart-log.html">nvme-sndk-cu-smart-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display Sandisk Customer Unique Smart log pagee
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-drive-resize.html">nvme-sndk-drive-resize(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe Sandisk Resize Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-get-drive-status.html">nvme-sndk-get-drive-status(1)</a>
-</dt>
-<dd>
-<p>
-        Send the NVMe Sandisk get-drive-status command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-get-dev-capabilities-log.html">nvme-sndk-get-dev-capabilities-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display device capabilities og page data in human readable format
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-get-error-recovery-log.html">nvme-sndk-get-error-recovery-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display error recovery log page data in human readable format
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-get-latency-monitor-log.html">nvme-sndk-get-latency-monitor-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display latency monitor log page data in human readable format
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-get-unsupported-reqs-log.html">nvme-sndk-get-unsupported-reqs-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display unsupported requirements log page data in human readable format
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-log-page-directory.html">nvme-sndk-log-page-directory(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves the list of Log IDs supported by the drive
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-namespace-resize.html">nvme-sndk-namespace-resize(1)</a>
-</dt>
-<dd>
-<p>
-        Resizes the device&#8217;s namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-set-latency-monitor-feature.html">nvme-sndk-set-latency-monitor-feature(1)</a>
-</dt>
-<dd>
-<p>
-        Set Latency Monitor feature
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-cloud-log.html">nvme-sndk-vs-cloud-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display the cloud log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-device-waf.html">nvme-sndk-vs-device-waf(1)</a>
-</dt>
-<dd>
-<p>
-        Display calculated device Write Amplication Factor
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-drive-info.html">nvme-sndk-vs-drive-info(1)</a>
-</dt>
-<dd>
-<p>
-        Send the NVMe Sandisk vs-drive-info command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-error-reason-identifier.html">nvme-sndk-vs-error-reason-identifier(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Sandisk device&#8217;s telemetry log error reason identifier field
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-fw-activate-history.html">nvme-sndk-vs-fw-activate-history(1)</a>
-</dt>
-<dd>
-<p>
-        Execute NVMe Sandisk vs-fw-activate-history Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-hw-rev-log.html">nvme-sndk-vs-hw-rev-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display hardware revision log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-internal-log.html">nvme-sndk-vs-internal-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Sandisk device&#8217;s internal firmware log and save to file
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-nand-stats.html">nvme-sndk-vs-nand-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe Sandisk vs-nand-stats Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-pcie-stats.html">nvme-sndk-vs-pcie-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Send the NVMe Sandisk vs-pcie-stats command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-smart-add-log.html">nvme-sndk-vs-smart-add-log(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe Sandisk smart add log Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-telemetry-controller-option.html">nvme-sndk-vs-telemetry-controller-option(1)</a>
-</dt>
-<dd>
-<p>
-        Disable/Enable the controller initiated option of the telemetry log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sndk-vs-temperature-stats.html">nvme-sndk-vs-temperature-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Display temperature-related statistics
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-toshiba-clear-pcie-correctable-errors.html">nvme-toshiba-clear-pcie-correctable-errors(1)</a>
-</dt>
-<dd>
-<p>
-        Reset the PCIe correctable errors count to zero
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-toshiba-vs-internal-log.html">nvme-toshiba-vs-internal-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve a Toshiba device&#8217;s vendor specific internal log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-toshiba-vs-smart-add-log.html">nvme-toshiba-vs-smart-add-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve a Toshiba device&#8217;s vendor specific extended SMART log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-transcend-badblock.html">nvme-transcend-badblock(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Transcend NVMe device&#8217;s bad blocks
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-transcend-healthvalue.html">nvme-transcend-healthvalue(1)</a>
-</dt>
-<dd>
-<p>
-        Use NVMe SMART table to analyze the health value of Transcend device
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-virtium-show-identify.html">nvme-virtium-show-identify(1)</a>
-</dt>
-<dd>
-<p>
-        Show a complete detail of identify device information in json format
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-virtium-save-smart-to-vtview-log.html">nvme-virtium-save-smart-to-vtview-log(1)</a>
-</dt>
-<dd>
-<p>
-        Periodically save smart attributes into a log file
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-cap-diag.html">nvme-wdc-cap-diag(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve WDC device&#8217;s diagnostic log and save to file
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-capabilities.html">nvme-wdc-capabilities(1)</a>
-</dt>
-<dd>
-<p>
-        Display WDC plugin command capabilities
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-clear-assert-dump.html">nvme-wdc-clear-assert-dump(1)</a>
-</dt>
-<dd>
-<p>
-        Clears the assert dump (if present)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-clear-fw-activate-history.html">nvme-wdc-clear-fw-activate-history(1)</a>
-</dt>
-<dd>
-<p>
-        Clears the firmware activate history table
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-clear-pcie-corr.html">nvme-wdc-clear-pcie-corr(1)</a>
-</dt>
-<dd>
-<p>
-        Clears the pcie correctable errors field
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-clear-pcie-correctable-errors.html">nvme-wdc-clear-pcie-correctable-errors(1)</a>
-</dt>
-<dd>
-<p>
-        Clears the pcie correctable errors returned in the smart-log-add command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-cloud-SSD-plugin-version.html">nvme-wdc-cloud-SSD-plugin-version(1)</a>
-</dt>
-<dd>
-<p>
-        Display WDC plugin Cloud SSD Plugin Version
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-cu-smart-log.html">nvme-wdc-cu-smart-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display WDC plugin Customer Unique Log Page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-drive-essentials.html">nvme-wdc-drive-essentials(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve WDC device&#8217;s drive essentials bin files
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-drive-log.html">nvme-wdc-drive-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve WDC device&#8217;s drive log and save to file
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-drive-resize.html">nvme-wdc-drive-resize(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe WDC Resize Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-enc-get-log.html">nvme-wdc-enc-get-log(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe WDC enc-get-log Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-get-crash-dump.html">nvme-wdc-get-crash-dump(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve WDC device&#8217;s crash dump
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-get-drive-status.html">nvme-wdc-get-drive-status(1)</a>
-</dt>
-<dd>
-<p>
-        Send the NVMe WDC get-drive-status command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-get-latency-monitor-log.html">nvme-wdc-get-latency-monitor-log(1)</a>
-</dt>
-<dd>
-<p>
-        Display latency monitor log page data in human readable format
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-get-pfail-dump.html">nvme-wdc-get-pfail-dump(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve WDC device&#8217;s pfail crash dump
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-id-ctrl.html">nvme-wdc-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe Identify Controller, return result and structure
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-log-page-directory.html">nvme-wdc-log-page-directory(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieves the list of Log IDs supported by the drive
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-namespace-resize.html">nvme-wdc-namespace-resize(1)</a>
-</dt>
-<dd>
-<p>
-        Resizes the device&#8217;s namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-purge-monitor.html">nvme-wdc-purge-monitor(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe WDC Purge-Monitor Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-purge.html">nvme-wdc-purge(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe WDC Purge Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-smart-add-log.html">nvme-wdc-smart-add-log(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe WDC smart add log Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-vs-drive-info.html">nvme-wdc-vs-drive-info(1)</a>
-</dt>
-<dd>
-<p>
-        Send the NVMe WDC vs-drive-info command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-vs-error-reason-identifier.html">nvme-wdc-vs-error-reason-identifier(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve WDC device&#8217;s telemetry log error reason identifier field
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-vs-fw-activate-history.html">nvme-wdc-vs-fw-activate-history(1)</a>
-</dt>
-<dd>
-<p>
-        Execute NVMe WDC vs-fw-activate-history Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-vs-internal-log.html">nvme-wdc-vs-internal-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve WDC device&#8217;s internal firmware log and save to file
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-vs-nand-stats.html">nvme-wdc-vs-nand-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe WDC vs-nand-stats Vendor Unique Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-vs-telemetry-controller-option.html">nvme-wdc-vs-telemetry-controller-option(1)</a>
-</dt>
-<dd>
-<p>
-        Disable/Enable the controller initiated option of the telemetry log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-wdc-vs-temperature-stats.html">nvme-wdc-vs-temperature-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Display temperature-related statistics
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-changed-zone-list.html">nvme-zns-changed-zone-list(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Changed Zone log for the given device
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-close-zone.html">nvme-zns-close-zone(1)</a>
-</dt>
-<dd>
-<p>
-        Closes one or all zones
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-finish-zone.html">nvme-zns-finish-zone(1)</a>
-</dt>
-<dd>
-<p>
-        Finishes one or all zones
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-id-ctrl.html">nvme-zns-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe Zoned Command Set Identify Controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-id-ns.html">nvme-zns-id-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Send NVMe Zoned Command Set Identify Namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-offline-zone.html">nvme-zns-offline-zone(1)</a>
-</dt>
-<dd>
-<p>
-        Offlines one or all zones
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-open-zone.html">nvme-zns-open-zone(1)</a>
-</dt>
-<dd>
-<p>
-        Opens one or all zones
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-report-zones.html">nvme-zns-report-zones(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve and display the Report Zones data structure
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-reset-zone.html">nvme-zns-reset-zone(1)</a>
-</dt>
-<dd>
-<p>
-        Resets one or all zones
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-set-zone-desc.html">nvme-zns-set-zone-desc(1)</a>
-</dt>
-<dd>
-<p>
-        Set extended descriptor data for a zone
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-zone-append.html">nvme-zns-zone-append(1)</a>
-</dt>
-<dd>
-<p>
-        Send an NVMe write command, provide results
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-zone-mgmt-recv.html">nvme-zns-zone-mgmt-recv(1)</a>
-</dt>
-<dd>
-<p>
-        Zone Management Receive command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-zone-mgmt-send.html">nvme-zns-zone-mgmt-send(1)</a>
-</dt>
-<dd>
-<p>
-        Zone Management Send command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-zns-zrwa-flush-zone.html">nvme-zns-zrwa-flush-zone(1)</a>
-</dt>
-<dd>
-<p>
-        Flush LBAs associated with a ZRWA to a zone
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-inspur-nvme-vendor-log.html">nvme-inspur-nvme-vendor-log(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe Inspur Device Vendor log page request
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-dapustor-smart-log-add.html">nvme-dapustor-smart-log-add(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe DapuStor Additional SMART log page
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-id-ctrl.html">nvme-solidigm-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        Solidigm - NVMe Identify Controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-smart-log-add.html">nvme-solidigm-smart-log-add(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Solidigm SMART Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-vs-internal-log.html">nvme-solidigm-vs-internal-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Debug log binaries
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-garbage-collect-log.html">nvme-solidigm-garbage-collect-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Garbage Collection Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-market-log.html">nvme-solidigm-market-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Market Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-latency-tracking-log.html">nvme-solidigm-latency-tracking-log(1)</a>
-</dt>
-<dd>
-<p>
-        Enable/Retrieve Latency tracking Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-parse-telemetry-log.html">nvme-solidigm-parse-telemetry-log(1)</a>
-</dt>
-<dd>
-<p>
-        Parse Telemetry Log binary
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-log-page-directory.html">nvme-solidigm-log-page-directory(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve log page directory
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-temp-stats.html">nvme-solidigm-temp-stats(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Temperature Statistics log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-vs-drive-info.html">nvme-solidigm-vs-drive-info(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve drive information
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-solidigm-workload-tracker.html">nvme-solidigm-workload-tracker(1)</a>
-</dt>
-<dd>
-<p>
-        Real Time capture Workload Tracker samples
+        Submit a Security Send command, return results
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2544,27 +2219,11 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-sed-revert.html">nvme-sed-revert(1)</a>
-</dt>
-<dd>
-<p>
-        Revert a SED Opal Device from locking
-</p>
-</dd>
-<dt class="hdlist1">
 <a href="nvme-sed-lock.html">nvme-sed-lock(1)</a>
 </dt>
 <dd>
 <p>
         Lock a SED Opal Device
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-sed-unlock.html">nvme-sed-unlock(1)</a>
-</dt>
-<dd>
-<p>
-        Unlock a SED Opal Device
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2576,75 +2235,920 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+<a href="nvme-sed-revert.html">nvme-sed-revert(1)</a>
+</dt>
+<dd>
+<p>
+        Revert a SED Opal Device from locking
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sed-unlock.html">nvme-sed-unlock(1)</a>
+</dt>
+<dd>
+<p>
+        Unlock a SED Opal Device
+</p>
+</dd>
+<dt class="hdlist1">
+nvme utils dump-command-metadata
+</dt>
+<dd>
+<p>
+        Dump all commands and their options as JSON
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-changed-zone-list.html">nvme-zns-changed-zone-list(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the changed zone list log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-close-zone.html">nvme-zns-close-zone(1)</a>
+</dt>
+<dd>
+<p>
+        Close one or more zones
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-finish-zone.html">nvme-zns-finish-zone(1)</a>
+</dt>
+<dd>
+<p>
+        Finish one or more zones
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-id-ctrl.html">nvme-zns-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Zoned Namespace Controller, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-id-ns.html">nvme-zns-id-ns(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Zoned Namespace Namespace, display structure
+</p>
+</dd>
+<dt class="hdlist1">
+nvme zns list
+</dt>
+<dd>
+<p>
+        List all NVMe devices with Zoned Namespace Command Set support
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-offline-zone.html">nvme-zns-offline-zone(1)</a>
+</dt>
+<dd>
+<p>
+        Offline one or more zones
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-open-zone.html">nvme-zns-open-zone(1)</a>
+</dt>
+<dd>
+<p>
+        Open one or more zones
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-report-zones.html">nvme-zns-report-zones(1)</a>
+</dt>
+<dd>
+<p>
+        Report zones associated to a Zoned Namespace
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-reset-zone.html">nvme-zns-reset-zone(1)</a>
+</dt>
+<dd>
+<p>
+        Reset one or more zones
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-set-zone-desc.html">nvme-zns-set-zone-desc(1)</a>
+</dt>
+<dd>
+<p>
+        Attach zone descriptor extension data to a zone
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-zone-append.html">nvme-zns-zone-append(1)</a>
+</dt>
+<dd>
+<p>
+        Append data and metadata (if applicable) to a zone
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-zone-mgmt-recv.html">nvme-zns-zone-mgmt-recv(1)</a>
+</dt>
+<dd>
+<p>
+        Send the zone management receive command
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-zone-mgmt-send.html">nvme-zns-zone-mgmt-send(1)</a>
+</dt>
+<dd>
+<p>
+        Send the zone management send command
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-zns-zrwa-flush-zone.html">nvme-zns-zrwa-flush-zone(1)</a>
+</dt>
+<dd>
+<p>
+        Flush LBAs associated with a ZRWA to a zone.
+</p>
+</dd>
+</dl></div>
+</div>
+<div class="sect2">
+<h3 id="_plugins_vendor_extension_commands">Plugins/Vendor extension commands</h3>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+nvme amzn id-ctrl
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+nvme amzn stats
+</dt>
+<dd>
+<p>
+        Get EBS volume stats
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-dapustor-smart-log-add.html">nvme-dapustor-smart-log-add(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve DapuStor SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme dell id-ctrl
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+nvme dera smart-log-add
+</dt>
+<dd>
+<p>
+        Retrieve Dera SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-huawei-id-ctrl.html">nvme-huawei-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Huawei identify controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-huawei-list.html">nvme-huawei-list(1)</a>
+</dt>
+<dd>
+<p>
+        List all Huawei NVMe devices and namespaces on machine
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ibm crit-log
+</dt>
+<dd>
+<p>
+        Display IBM Smart Log Information
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ibm persist-event-log
+</dt>
+<dd>
+<p>
+        IBM specific Persistent Event Log
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ibm vpd
+</dt>
+<dd>
+<p>
+        Display IBM VPD Information
+</p>
+</dd>
+<dt class="hdlist1">
+nvme innogrit get-cdump
+</dt>
+<dd>
+<p>
+        get cdump data
+</p>
+</dd>
+<dt class="hdlist1">
+nvme innogrit get-eventlog
+</dt>
+<dd>
+<p>
+        get event log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-inspur-nvme-vendor-log.html">nvme-inspur-nvme-vendor-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Inspur Vendor Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-id-ctrl.html">nvme-intel-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-internal-log.html">nvme-intel-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Intel internal firmware log, save it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-lat-stats.html">nvme-intel-lat-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Intel IO Latency Statistics log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme intel lat-stats-tracking
+</dt>
+<dd>
+<p>
+        Enable and disable Latency Statistics logging.
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-market-name.html">nvme-intel-market-name(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Intel Marketing Name log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme intel set-bucket-thresholds
+</dt>
+<dd>
+<p>
+        Set Latency Stats Bucket Values, save it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-smart-log-add.html">nvme-intel-smart-log-add(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Intel SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-temp-stats.html">nvme-intel-temp-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Intel Temperature Statistics log, show it
+</p>
+</dd>
+<dt class="hdlist1">
 <a href="nvme-mangoboost-id-ctrl.html">nvme-mangoboost-id-ctrl(1)</a>
 </dt>
 <dd>
 <p>
-        MangoBoost - NVMe Identify Controller
+        Send NVMe Identify Controller
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-gen-kxchap-secret.html">nvme-keys-gen-kxchap-secret(1)</a>
+nvme memblaze clear-error-log
 </dt>
 <dd>
 <p>
-        Generate NVMeoF KX-HMAC-CHAP host secret
+        Clear error log
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-check-kxchap-secret.html">nvme-keys-check-kxchap-secret(1)</a>
+nvme memblaze get-pm-status
 </dt>
 <dd>
 <p>
-        Validate NVMeoF KX-HMAC-CHAP host secret
+        Get Memblaze Power Manager Status
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-gen-tls-psk.html">nvme-keys-gen-tls-psk(1)</a>
+nvme memblaze lat-get-feature-x
 </dt>
 <dd>
 <p>
-        Generate NVMeoF TLS PSK
+        Get Enabled/Disabled of Latency Monitor feature
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-check-tls-psk.html">nvme-keys-check-tls-psk(1)</a>
+nvme memblaze lat-log
 </dt>
 <dd>
 <p>
-        Validate NVMeoF TLS PSK
+        Set Memblaze High Latency Log
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-insert-tls-psk.html">nvme-keys-insert-tls-psk(1)</a>
+nvme memblaze lat-log-print
 </dt>
 <dd>
 <p>
-        Insert an NVMeoF TLS PSK into a keyring
+        Output Memblaze High Latency Log
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-import.html">nvme-keys-import(1)</a>
+nvme memblaze lat-log-print-x
 </dt>
 <dd>
 <p>
-        Import NVMeoF TLS PSKs into a keyring
+        Get High Latency log and show it.
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-export.html">nvme-keys-export(1)</a>
+nvme memblaze lat-set-feature-x
 </dt>
 <dd>
 <p>
-        Export NVMeoF TLS PSKs from a keyring
+        Set Enable/Disable for Latency Monitor feature
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-revoke.html">nvme-keys-revoke(1)</a>
+nvme memblaze lat-stats
 </dt>
 <dd>
 <p>
-        Revoke an NVMeoF TLS PSK from a keyring
+        Enable and disable Latency Statistics logging
+</p>
+</dd>
+<dt class="hdlist1">
+nvme memblaze lat-stats-print
+</dt>
+<dd>
+<p>
+        Retrieve IO Latency Statistics log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme memblaze lat-stats-print-x
+</dt>
+<dd>
+<p>
+        Get Latency Statistics log and show it.
+</p>
+</dd>
+<dt class="hdlist1">
+nvme memblaze perf-stats-print-x
+</dt>
+<dd>
+<p>
+        Get Performance Stat log and show it.
+</p>
+</dd>
+<dt class="hdlist1">
+nvme memblaze select-download
+</dt>
+<dd>
+<p>
+        Selective Firmware Download
+</p>
+</dd>
+<dt class="hdlist1">
+nvme memblaze set-pm-status
+</dt>
+<dd>
+<p>
+        Set Memblaze Power Manager Status
+</p>
+</dd>
+<dt class="hdlist1">
+nvme memblaze smart-log-add
+</dt>
+<dd>
+<p>
+        Retrieve Memblaze SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme memblaze smart-log-add-x
+</dt>
+<dd>
+<p>
+        Retrieve Memblaze SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron clear-fw-activate-history
+</dt>
+<dd>
+<p>
+        Clear FW activation history
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-clear-pcie-errors.html">nvme-micron-clear-pcie-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Clear correctable PCIe errors
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron cloud-SSD-plugin-version
+</dt>
+<dd>
+<p>
+        Display plugin version info
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron cloud-boot-SSD-version
+</dt>
+<dd>
+<p>
+        Prints HyperScale Boot Version
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-id-ctrl.html">nvme-micron-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron latency-logs
+</dt>
+<dd>
+<p>
+        Latency log details tracked by drive
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron latency-stats
+</dt>
+<dd>
+<p>
+        Latency information for tracked commands
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron latency-tracking
+</dt>
+<dd>
+<p>
+        Latency monitoring feature control
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron log-page-directory
+</dt>
+<dd>
+<p>
+        Retrieve log page directory
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron plugin-version
+</dt>
+<dd>
+<p>
+        Display plugin version info
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-selective-download.html">nvme-micron-selective-download(1)</a>
+</dt>
+<dd>
+<p>
+        Selective Firmware Download
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-smart-log.html">nvme-micron-smart-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve SMART/Health Log
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-cloud-log
+</dt>
+<dd>
+<p>
+        Retrieve Extended Health Information of Hyperscale NVMe Boot SSD
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-device-waf
+</dt>
+<dd>
+<p>
+        Reports SLC and TLC WAF ratio
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-drive-info
+</dt>
+<dd>
+<p>
+        Retrieve Drive information
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-fw-activate-history
+</dt>
+<dd>
+<p>
+        Display FW activation history
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-internal-log.html">nvme-micron-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Micron logs
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-nand-stats.html">nvme-micron-nand-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve NAND Stats
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-pcie-stats.html">nvme-micron-pcie-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Micron PCIe error stats
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-smart-add-log.html">nvme-micron-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve extended SMART data
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-smart-ext-log
+</dt>
+<dd>
+<p>
+        Retrieve extended SMART logs
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-smbus-option
+</dt>
+<dd>
+<p>
+        Enable/Disable SMBUS on the drive
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-telemetry-controller-option
+</dt>
+<dd>
+<p>
+        Enable/Disable controller telemetry log generation
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-temperature-stats.html">nvme-micron-temperature-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Micron temperature statistics
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-vendor-telemetry-log
+</dt>
+<dd>
+<p>
+        Retrieve Vendor Telemetry logs
+</p>
+</dd>
+<dt class="hdlist1">
+nvme micron vs-work-load-log
+</dt>
+<dd>
+<p>
+        Retrieve Workload logs
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-netapp-ontapdevices.html">nvme-netapp-ontapdevices(1)</a>
+</dt>
+<dd>
+<p>
+        NetApp ONTAPdevices
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-netapp-smdevices.html">nvme-netapp-smdevices(1)</a>
+</dt>
+<dd>
+<p>
+        NetApp SMdevices
+</p>
+</dd>
+<dt class="hdlist1">
+nvme nvidia id-ctrl
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-clear-fw-activate-history.html">nvme-ocp-clear-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        Clear Firmware Update History
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-clear-pcie-correctable-error-counters.html">nvme-ocp-clear-pcie-correctable-error-counters(1)</a>
+</dt>
+<dd>
+<p>
+        Clear PCIe Correctable Error Counters
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-device-capability-log.html">nvme-ocp-device-capability-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Device Capabilities Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-eol-plp-failure-mode.html">nvme-ocp-eol-plp-failure-mode(1)</a>
+</dt>
+<dd>
+<p>
+        Define EOL or PLP Circuitry Failure Mode
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-error-recovery-log.html">nvme-ocp-error-recovery-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Error Recovery Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ocp fw-activate-history
+</dt>
+<dd>
+<p>
+        Retrieve Firmware Activation History Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-clear-pcie-correctable-errors.html">nvme-ocp-get-clear-pcie-correctable-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Get Clear PCIe Correctable Error Counters Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-dssd-async-event-config.html">nvme-ocp-get-dssd-async-event-config(1)</a>
+</dt>
+<dd>
+<p>
+        Get DSSD Asynchronous Event Configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-dssd-power-state-feature.html">nvme-ocp-get-dssd-power-state-feature(1)</a>
+</dt>
+<dd>
+<p>
+        Get DSSD Power State Feature
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ocp get-enable-ieee1667-silo
+</dt>
+<dd>
+<p>
+        Get Enable IEEE1667 Silo Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-error-injection.html">nvme-ocp-get-error-injection(1)</a>
+</dt>
+<dd>
+<p>
+        Get Error Injection Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-idle-wakeup-time.html">nvme-ocp-get-idle-wakeup-time(1)</a>
+</dt>
+<dd>
+<p>
+        Get Idle Wake Up Time Configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-latency-monitor.html">nvme-ocp-get-latency-monitor(1)</a>
+</dt>
+<dd>
+<p>
+        Get Latency Monitor Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-plp-health-check-interval.html">nvme-ocp-get-plp-health-check-interval(1)</a>
+</dt>
+<dd>
+<p>
+        Get PLP Health Check Interval
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-get-telemetry-profile.html">nvme-ocp-get-telemetry-profile(1)</a>
+</dt>
+<dd>
+<p>
+        Get Telemetry Profile Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-hardware-component-log.html">nvme-ocp-hardware-component-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Hardware Component Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-internal-log.html">nvme-ocp-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve and Save Internal Device Telemetry Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-latency-monitor-log.html">nvme-ocp-latency-monitor-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Latency Monitor Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-persistent-event-log.html">nvme-ocp-persistent-event-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Persistent Event Log with OCP Events
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-set-dssd-async-event-config.html">nvme-ocp-set-dssd-async-event-config(1)</a>
+</dt>
+<dd>
+<p>
+        Set DSSD Asynchronous Event Configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-set-dssd-power-state-feature.html">nvme-ocp-set-dssd-power-state-feature(1)</a>
+</dt>
+<dd>
+<p>
+        Set DSSD Power State Feature
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ocp set-enable-ieee1667-silo
+</dt>
+<dd>
+<p>
+        Set Enable IEEE1667 Silo Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-set-error-injection.html">nvme-ocp-set-error-injection(1)</a>
+</dt>
+<dd>
+<p>
+        Set Error Injection Feature
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ocp set-latency-monitor-feature
+</dt>
+<dd>
+<p>
+        Set Latency Monitor Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-set-plp-health-check-interval.html">nvme-ocp-set-plp-health-check-interval(1)</a>
+</dt>
+<dd>
+<p>
+        Set PLP Health Check Interval
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-set-telemetry-profile.html">nvme-ocp-set-telemetry-profile(1)</a>
+</dt>
+<dd>
+<p>
+        Set Telemetry Profile Feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-smart-add-log.html">nvme-ocp-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Extended SMART Information
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-tcg-configuration-log.html">nvme-ocp-tcg-configuration-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve TCG Configuration Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-telemetry-string-log.html">nvme-ocp-telemetry-string-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Telemetry String Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ocp-unsupported-reqs-log.html">nvme-ocp-unsupported-reqs-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Unsupported Requirements Log Page
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2652,7 +3156,935 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Retrieve Samsung vendor specific internal firmware logs
+        Retrieve and save internal firmware log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-clear-fw-activate-history.html">nvme-seagate-clear-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        Clear Firmware Activation History
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-clear-pcie-correctable-errors.html">nvme-seagate-clear-pcie-correctable-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Clear Seagate PCIe error statistics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-cloud-SSD-plugin-version.html">nvme-seagate-cloud-SSD-plugin-version(1)</a>
+</dt>
+<dd>
+<p>
+        Shows OCP Seagate plugin&#8217;s version information
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-get-ctrl-tele.html">nvme-seagate-get-ctrl-tele(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Seagate Controller-Initiated Telemetry
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-get-host-tele.html">nvme-seagate-get-host-tele(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Seagate Host-Initiated Telemetry
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-plugin-version.html">nvme-seagate-plugin-version(1)</a>
+</dt>
+<dd>
+<p>
+        Shows Seagate plugin&#8217;s version information
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-vs-fw-activate-history.html">nvme-seagate-vs-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the Firmware Activation History
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-vs-internal-log.html">nvme-seagate-vs-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Seagate Controller-Initiated Telemetry in binary format
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-vs-log-page-sup.html">nvme-seagate-vs-log-page-sup(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Seagate Supported Log-pages Information
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-vs-pcie-stats.html">nvme-seagate-vs-pcie-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Seagate PCIe error statistics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-vs-smart-add-log.html">nvme-seagate-vs-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Seagate extended-SMART Information
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-seagate-vs-temperature-stats.html">nvme-seagate-vs-temperature-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Seagate temperature statistics
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx change-cap
+</dt>
+<dd>
+<p>
+        Dynamic change capacity
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx dump-evtlog
+</dt>
+<dd>
+<p>
+        dump evtlog into file and parse warning &amp; error log
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx expand-cap
+</dt>
+<dd>
+<p>
+        expand the last namespace capacity lossless
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx get-bad-block
+</dt>
+<dd>
+<p>
+        Retrieve bad block table of block device, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx get-feature
+</dt>
+<dd>
+<p>
+        Get a feature
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx lat-stats
+</dt>
+<dd>
+<p>
+        Retrieve ScaleFlux IO Latency Statistics log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx query-cap
+</dt>
+<dd>
+<p>
+        Query current capacity info
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx set-feature
+</dt>
+<dd>
+<p>
+        Set a feature
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx smart-log-add
+</dt>
+<dd>
+<p>
+        Retrieve ScaleFlux SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme sfx status
+</dt>
+<dd>
+<p>
+        Retrieve the ScaleFlux status output, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme shannon get-additional-feature
+</dt>
+<dd>
+<p>
+        Get additional Shannon feature
+</p>
+</dd>
+<dt class="hdlist1">
+nvme shannon id-ctrl
+</dt>
+<dd>
+<p>
+        Retrieve Shannon ctrl id, show it
+</p>
+</dd>
+<dt class="hdlist1">
+nvme shannon set-additioal-feature
+</dt>
+<dd>
+<p>
+        Set additional Shannon feature
+</p>
+</dd>
+<dt class="hdlist1">
+nvme shannon smart-log-add
+</dt>
+<dd>
+<p>
+        Retrieve Shannon SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-capabilities.html">nvme-sndk-capabilities(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Device Capabilities
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-clear-assert-dump.html">nvme-sndk-clear-assert-dump(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Clear Assert Dump
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-clear-fw-activate-history.html">nvme-sndk-clear-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Clear FW Activate History
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-clear-pcie-correctable-errors.html">nvme-sndk-clear-pcie-correctable-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Clear PCIe Correctable Error Count
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-cloud-SSD-plugin-version.html">nvme-sndk-cloud-SSD-plugin-version(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Cloud SSD Plugin Version
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-cloud-boot-SSD-version.html">nvme-sndk-cloud-boot-SSD-version(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get the Cloud Boot SSD Version
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-cu-smart-log.html">nvme-sndk-cu-smart-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Customer Unique Smart Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-drive-resize.html">nvme-sndk-drive-resize(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Drive Resize
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-get-dev-capabilities-log.html">nvme-sndk-get-dev-capabilities-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Device Capabilities Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-get-drive-status.html">nvme-sndk-get-drive-status(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Drive Status
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-get-error-recovery-log.html">nvme-sndk-get-error-recovery-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Error Recovery Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-get-latency-monitor-log.html">nvme-sndk-get-latency-monitor-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Latency Monitor Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-get-unsupported-reqs-log.html">nvme-sndk-get-unsupported-reqs-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Unsupported Requirements Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-log-page-directory.html">nvme-sndk-log-page-directory(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Log Page Directory
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-namespace-resize.html">nvme-sndk-namespace-resize(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk NamespaceDrive Resize
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-set-latency-monitor-feature.html">nvme-sndk-set-latency-monitor-feature(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk set Latency Monitor feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-cloud-log.html">nvme-sndk-vs-cloud-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get the Cloud Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-device-waf.html">nvme-sndk-vs-device-waf(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Calculate Device Write Amplication Factor
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-drive-info.html">nvme-sndk-vs-drive-info(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Drive Info
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-error-reason-identifier.html">nvme-sndk-vs-error-reason-identifier(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Telemetry Reason Identifier
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-fw-activate-history.html">nvme-sndk-vs-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get FW Activate History
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-hw-rev-log.html">nvme-sndk-vs-hw-rev-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get the Hardware Revision Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-internal-log.html">nvme-sndk-vs-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Internal Firmware Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-nand-stats.html">nvme-sndk-vs-nand-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk NAND Statistics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-pcie-stats.html">nvme-sndk-vs-pcie-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk VS PCIE Statistics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-smart-add-log.html">nvme-sndk-vs-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Additional Smart Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-telemetry-controller-option.html">nvme-sndk-vs-telemetry-controller-option(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Enable/Disable Controller Initiated Telemetry Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sndk-vs-temperature-stats.html">nvme-sndk-vs-temperature-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Sandisk Get Temperature Stats
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-clear-fw-activate-history.html">nvme-solidigm-clear-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        Clear firmware update history log (redirects to ocp plug-in)
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-clear-pcie-correctable-errors.html">nvme-solidigm-clear-pcie-correctable-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Clear PCIe Correctable Error Counters (redirects to ocp plug-in)
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-cloud-SSDplugin-version.html">nvme-solidigm-cloud-SSDplugin-version(1)</a>
+</dt>
+<dd>
+<p>
+        Prints plug-in OCP version
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-garbage-collect-log.html">nvme-solidigm-garbage-collect-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Garbage Collection Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-id-ctrl.html">nvme-solidigm-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Send NVMe Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-latency-tracking-log.html">nvme-solidigm-latency-tracking-log(1)</a>
+</dt>
+<dd>
+<p>
+        Enable/Retrieve Latency tracking Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-log-page-directory.html">nvme-solidigm-log-page-directory(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve log page directory
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-market-log.html">nvme-solidigm-market-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Market Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-parse-telemetry-log.html">nvme-solidigm-parse-telemetry-log(1)</a>
+</dt>
+<dd>
+<p>
+        Parse Telemetry Log binary
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-smart-log-add.html">nvme-solidigm-smart-log-add(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Solidigm SMART Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-temp-stats.html">nvme-solidigm-temp-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Temperature Statistics log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-vs-drive-info.html">nvme-solidigm-vs-drive-info(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve drive information
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-vs-fw-activate-history.html">nvme-solidigm-vs-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        Get firmware activation history log (redirects to ocp plug-in)
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-vs-internal-log.html">nvme-solidigm-vs-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Debug log binaries
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-vs-smart-add-log.html">nvme-solidigm-vs-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Get SMART / health extended log (redirects to ocp plug-in)
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-solidigm-workload-tracker.html">nvme-solidigm-workload-tracker(1)</a>
+</dt>
+<dd>
+<p>
+        Real Time capture Workload Tracker samples
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ssstc smart-log-add
+</dt>
+<dd>
+<p>
+        Retrieve ssstc SMART Log, show it
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-toshiba-clear-pcie-correctable-errors.html">nvme-toshiba-clear-pcie-correctable-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Clear PCIe correctable error count
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-toshiba-vs-internal-log.html">nvme-toshiba-vs-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Get Internal Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-toshiba-vs-smart-add-log.html">nvme-toshiba-vs-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Extended SMART information
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-transcend-badblock.html">nvme-transcend-badblock(1)</a>
+</dt>
+<dd>
+<p>
+        Get NVME bad block number
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-transcend-healthvalue.html">nvme-transcend-healthvalue(1)</a>
+</dt>
+<dd>
+<p>
+        NVME health percentage
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-virtium-save-smart-to-vtview-log.html">nvme-virtium-save-smart-to-vtview-log(1)</a>
+</dt>
+<dd>
+<p>
+        Periodically save smart attributes into a log file. The data in this log file can be analyzed using excel or using Virtium’s vtView. Visit vtView.virtium.com to see full potential uses of the data
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-virtium-show-identify.html">nvme-virtium-show-identify(1)</a>
+</dt>
+<dd>
+<p>
+        Shows detail features and current settings
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-cap-diag.html">nvme-wdc-cap-diag(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Capture-Diagnostics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-capabilities.html">nvme-wdc-capabilities(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Device Capabilities
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-clear-assert-dump.html">nvme-wdc-clear-assert-dump(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Clear Assert Dump
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-clear-fw-activate-history.html">nvme-wdc-clear-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Clear FW Activate History
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-clear-pcie-correctable-errors.html">nvme-wdc-clear-pcie-correctable-errors(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Clear PCIe Correctable Error Count
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-cloud-SSD-plugin-version.html">nvme-wdc-cloud-SSD-plugin-version(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Cloud SSD Plugin Version
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-cloud-boot-SSD-version.html">nvme-wdc-cloud-boot-SSD-version(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get the Cloud Boot SSD Version
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-cu-smart-log.html">nvme-wdc-cu-smart-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Customer Unique Smart Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-drive-essentials.html">nvme-wdc-drive-essentials(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Drive Essentials
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-drive-log.html">nvme-wdc-drive-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Drive Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-drive-resize.html">nvme-wdc-drive-resize(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Drive Resize
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-enc-get-log.html">nvme-wdc-enc-get-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Enclosure Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-get-crash-dump.html">nvme-wdc-get-crash-dump(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Crash Dump
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-get-dev-capabilities-log.html">nvme-wdc-get-dev-capabilities-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Device Capabilities Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-get-drive-status.html">nvme-wdc-get-drive-status(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Drive Status
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-get-error-recovery-log.html">nvme-wdc-get-error-recovery-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Error Recovery Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-get-latency-monitor-log.html">nvme-wdc-get-latency-monitor-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Latency Monitor Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-get-pfail-dump.html">nvme-wdc-get-pfail-dump(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Pfail Dump
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-get-unsupported-reqs-log.html">nvme-wdc-get-unsupported-reqs-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Unsupported Requirements Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-id-ctrl.html">nvme-wdc-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        WDC identify controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-log-page-directory.html">nvme-wdc-log-page-directory(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Log Page Directory
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-namespace-resize.html">nvme-wdc-namespace-resize(1)</a>
+</dt>
+<dd>
+<p>
+        WDC NamespaceDrive Resize
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-purge.html">nvme-wdc-purge(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Purge
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-purge-monitor.html">nvme-wdc-purge-monitor(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Purge Monitor
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-set-latency-monitor-feature.html">nvme-wdc-set-latency-monitor-feature(1)</a>
+</dt>
+<dd>
+<p>
+        WDC set Latency Monitor feature
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-cloud-log.html">nvme-wdc-vs-cloud-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get the Cloud Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-device-waf.html">nvme-wdc-vs-device-waf(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Calculate Device Write Amplication Factor
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-drive-info.html">nvme-wdc-vs-drive-info(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Drive Info
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-error-reason-identifier.html">nvme-wdc-vs-error-reason-identifier(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Telemetry Reason Identifier
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-fw-activate-history.html">nvme-wdc-vs-fw-activate-history(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get FW Activate History
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-hw-rev-log.html">nvme-wdc-vs-hw-rev-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get the Hardware Revision Log Page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-internal-log.html">nvme-wdc-vs-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Internal Firmware Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-nand-stats.html">nvme-wdc-vs-nand-stats(1)</a>
+</dt>
+<dd>
+<p>
+        WDC NAND Statistics
+</p>
+</dd>
+<dt class="hdlist1">
+nvme wdc vs-pcie-stats
+</dt>
+<dd>
+<p>
+        WDC VS PCIE Statistics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-smart-add-log.html">nvme-wdc-vs-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Additional Smart Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-telemetry-controller-option.html">nvme-wdc-vs-telemetry-controller-option(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Enable/Disable Controller Initiated Telemetry Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-wdc-vs-temperature-stats.html">nvme-wdc-vs-temperature-stats(1)</a>
+</dt>
+<dd>
+<p>
+        WDC Get Temperature Stats
+</p>
+</dd>
+<dt class="hdlist1">
+nvme ymtc smart-log-add
+</dt>
+<dd>
+<p>
+        Retrieve YMTC SMART Log, show it
 </p>
 </dd>
 </dl></div>
@@ -2709,7 +4141,26 @@ and are available to this subcommand:</p></div>
 <p>
         Select the output format version. Version <em>1</em> uses the original
         field naming, while version <em>2</em> (default) provides more consistent
-        and script-friendly field names.
+        and script-friendly field names. Other versions are rejected.
+</p>
+</dd>
+<dt class="hdlist1">
+--quiet
+</dt>
+<dd>
+<p>
+        Suppress informational messages. Errors are still reported, and
+        --quiet cancels any --verbose for the library log level.
+</p>
+</dd>
+<dt class="hdlist1">
+--set-options=&lt;key=value&gt;[,&lt;key=value&gt;&#8230;]
+</dt>
+<dd>
+<p>
+        Set libnvme library options for this invocation. Supported keys are
+        <em>force-4k</em>, <em>mi-probe-enabled</em>, <em>test-base-dir</em> and
+        <em>test-sysfs-dir</em>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2718,6 +4169,7 @@ and are available to this subcommand:</p></div>
 <dd>
 <p>
         Set the timeout for the command in milliseconds.
+        <em>infinite</em> or <em>-1</em> waits without a time limit (0xffffffff).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2742,6 +4194,23 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sectionbody">
 <div class="paragraph"><p>All commands will behave the same, they will return 0 on success and 1 on
 failure.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_environment">ENVIRONMENT</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+NO_COLOR
+</dt>
+<dd>
+<p>
+        When set to a non-empty value, nvme prints no colors or bold text,
+        see <a href="https://no-color.org/">https://no-color.org/</a>. Without it, errors, warnings and
+        headings are highlighted when they go to a terminal.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -2776,7 +4245,7 @@ NVM-Express Site</a>.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-18 12:15:54 CEST
+ 2026-10-30 19:29:19 CET
 </div>
 </div>
 </body>

@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "struct nvme_disassociate_ns_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_disassociate_ns_data \- Disassociate Namespace Data Structure
+.SH SYNOPSIS
+struct nvme_disassociate_ns_data {
+.br
+.BI "    __u8 pad[32];"
+.br
+.BI "    __le32 ensid;"
+.br
+.BI "    __u8 ensnqn[256];"
+.br
+.BI "    __u8 rsvd292[28];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "pad" 12
+Padding (PAD), shall be cleared to 0h
+.IP "ensid" 12
+Exported Namespace ID (ENSID) to disassociate
+.IP "ensnqn" 12
+Exported NVM Subsystem NQN (ENSNQN). Ignored for a
+memory-based controller, or if ESUBIDV is set.
+.IP "rsvd292" 12
+Reserved

@@ -1,0 +1,24 @@
+.TH "nvme_init_manage_export_nvms_send_associate_controllers" 9 "nvme_init_manage_export_nvms_send_associate_controllers" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_nvms_send_associate_controllers \- Initialize passthru command for Manage Exported NVM Subsystem Send - Associate Controllers (memory-based transports only)
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_nvms_send_associate_controllers
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 esubid "  ","
+.BI "struct nvme_exported_ctrl_assoc_data *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "esubid" 12
+Exported NVM Subsystem Identifier (ESUBID) of the target
+Exported NVM Subsystem
+.IP "data" 12
+Associate Controllers data buffer, see \fIstruct
+nvme_exported_ctrl_assoc_data\fP
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported NVM
+Subsystem Send command with SEL value
+NVME_MANAGE_EXPORT_NVMS_SEND_SEL_ASSOCIATE_CONTROLLERS.

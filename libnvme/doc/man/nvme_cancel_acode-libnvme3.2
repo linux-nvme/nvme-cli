@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_cancel_acode" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_cancel_acode \- Cancel - Action Code (ACODE)
+.SH SYNOPSIS
+enum nvme_cancel_acode {
+.br
+.BI "    NVME_CANCEL_ACODE_SINGLE_CMD"
+, 
+.br
+.br
+.BI "    NVME_CANCEL_ACODE_MULTIPLE_CMD"
+
+};
+.SH Constants
+.IP "NVME_CANCEL_ACODE_SINGLE_CMD" 12
+Single Command Cancel
+.IP "NVME_CANCEL_ACODE_MULTIPLE_CMD" 12
+Multiple Command Cancel

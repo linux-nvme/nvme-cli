@@ -1,0 +1,15 @@
+.TH "nvme_init_manage_export_port_delete" 9 "nvme_init_manage_export_port_delete" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_manage_export_port_delete \- Initialize passthru command for Manage Exported Port - Delete
+.SH SYNOPSIS
+.B "void" nvme_init_manage_export_port_delete
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "struct nvme_exported_port_delete_data *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "data" 12
+Delete data buffer, see \fIstruct nvme_exported_port_delete_data\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Manage Exported Port
+command with SEL value NVME_MANAGE_EXPORT_PORT_SEL_DELETE.

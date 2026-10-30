@@ -1,0 +1,38 @@
+.TH "libnvme" 9 "struct nvme_exported_subsys_mgmt_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_subsys_mgmt_data \- Subsystem Management Data Structure, used by the Manage Exported NVM Subsystem Send Grant Host Access and Revoke Host Access operations
+.SH SYNOPSIS
+struct nvme_exported_subsys_mgmt_data {
+.br
+.BI "    __u8 rsvd0[64];"
+.br
+.BI "    __le16 numhent;"
+.br
+.BI "    __le16 numense;"
+.br
+.BI "    __u8 rsvd68[188];"
+.br
+.BI "    __u8 entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "numhent" 12
+Number of Host Entries (NUMHENT), shall be greater than 0h
+.IP "numense" 12
+Number of Exported NVM Subsystem Entries (NUMENSE), shall be
+greater than 0h
+.IP "rsvd68" 12
+Reserved
+.IP "entries" 12
+\fInumhent\fP entries of \fIstruct nvme_exported_subsys_mgmt_host_entry\fP
+followed by \fInumense\fP entries of \fIstruct
+nvme_exported_subsys_mgmt_subsys_entry\fP. Left as a raw byte
+buffer since the two variable-length lists have different
+element sizes and cannot both be expressed as fixed struct
+members - the caller walks \fIentries\fP using the sizes of those
+two struct types.

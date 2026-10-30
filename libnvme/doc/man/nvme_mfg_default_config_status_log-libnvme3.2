@@ -1,0 +1,21 @@
+.TH "libnvme" 9 "struct nvme_mfg_default_config_status_log" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_mfg_default_config_status_log \- Manufacturer Default Configuration Status log page (Log Page Identifier 24h)
+.SH SYNOPSIS
+struct nvme_mfg_default_config_status_log {
+.br
+.BI "    __u8 mdcsv;"
+.br
+.BI "    __u8 mdcs;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "mdcsv" 12
+Manufacturer Default Configuration Status Version: version of
+this data structure, shall be cleared to 0h
+.IP "mdcs" 12
+Manufacturer Default Configuration Status, see \fIenum
+nvme_mfg_default_config_status_mdcs\fP

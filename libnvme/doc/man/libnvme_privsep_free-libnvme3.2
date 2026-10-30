@@ -1,0 +1,12 @@
+.TH "libnvme_privsep_free" 9 "libnvme_privsep_free" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_privsep_free \- Stop the privilege separation helper
+.SH SYNOPSIS
+.B "void" libnvme_privsep_free
+.BI "(struct libnvme_privsep *ps "  ");"
+.SH ARGUMENTS
+.IP "ps" 12
+Helper channel
+.SH "DESCRIPTION"
+Closes the channel and waits for the helper to exit. All transport
+handles opened through the helper must be closed before.

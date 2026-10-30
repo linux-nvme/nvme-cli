@@ -1,0 +1,21 @@
+.TH "libnvme" 9 "struct tcg_l0_block_sid_auth" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_block_sid_auth \- Block SID Authentication feature (0x0402)
+.SH SYNOPSIS
+struct tcg_l0_block_sid_auth {
+.br
+.BI "    __u8 states;"
+.br
+.BI "    __u8 hw_reset;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "states" 12
+States, see \fIenum tcg_l0_block_sid_states\fP
+.IP "hw_reset" 12
+Hardware reset, see \fIenum tcg_l0_block_sid_hw_reset\fP
+.SH "Description"
+TCG Storage Feature Set: Block SID Authentication, section 4.1.1.

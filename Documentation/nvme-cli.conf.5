@@ -2,12 +2,12 @@
 .\"     Title: nvme-cli.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/18/2026
+.\"      Date: 10/30/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CLI\&.CONF" "5" "09/18/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CLI\&.CONF" "5" "10/30/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,7 +38,7 @@ nvme-cli.conf \- nvme\-cli global option defaults file format
 .sp
 An INI\-format file that sets machine\-wide defaults for the global options accepted by every \fInvme\fR subcommand (see GLOBAL OPTIONS in \fBnvme\fR(1)) \(em for example, always disabling IOCTL probing without passing \fI\-\-no\-ioctl\-probing\fR on every invocation\&.
 .sp
-The file is read once, before command\-line parsing, and only sets \fBdefaults\fR: an explicit command\-line flag always overrides whatever this file set\&. A missing file is not an error; it simply changes nothing\&.
+The file is read once, before command\-line parsing, and only sets \fBdefaults\fR: an explicit command\-line flag always overrides whatever this file set\&. A missing file is not an error; it simply changes nothing\&. A file which can\(cqt be read is: \fInvme\fR reports it and fails\&. The file holds no secrets and must be readable by every user, as \fInvme\fR may read it after dropping its root privileges\&.
 .sp
 There is no \fI\-\-config\fR override and no drop\-in directory for this file; it always lives at the path above\&.
 .SH "SECTIONS"

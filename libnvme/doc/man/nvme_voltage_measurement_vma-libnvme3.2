@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_vma" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_vma \- Voltage Measurement log page - Voltage Measurement Attributes (VMA)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_vma {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VMA_VME"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VMA_IVOLTS"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VMA_VSM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VMA_VSM_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_VMA_VMC"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_VMA_VME" 12
+Voltage Measurement Enable
+.IP "NVME_VOLTAGE_MEASUREMENT_VMA_IVOLTS" 12
+Interval Voltage Timestamp
+Support
+.IP "NVME_VOLTAGE_MEASUREMENT_VMA_VSM_SHIFT" 12
+Shift amount to get the
+Voltage Sensor Measured (VSM),
+see \fIenum nvme_voltage_sensor\fP
+.IP "NVME_VOLTAGE_MEASUREMENT_VMA_VSM_MASK" 12
+Mask to get VSM
+.IP "NVME_VOLTAGE_MEASUREMENT_VMA_VMC" 12
+Voltage Measurement Counted

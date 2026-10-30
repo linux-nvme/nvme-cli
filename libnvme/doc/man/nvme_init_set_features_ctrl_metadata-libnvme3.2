@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_ctrl_metadata" 9 "nvme_init_set_features_ctrl_metadata" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_ctrl_metadata \- Initialize passthru command for Controller Metadata
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_ctrl_metadata
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 ea "  ","
+.BI "struct nvme_host_metadata *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "ea" 12
+Element Action (EA), see \fIenum nvme_host_metadata_ea\fP
+.IP "data" 12
+Host Metadata data buffer, see \fIstruct nvme_host_metadata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_CTRL_METADATA

@@ -1,0 +1,16 @@
+.TH "libnvme_sed_revert_psid" 9 "libnvme_sed_revert_psid" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sed_revert_psid \- Revert the TPer using the PSID
+.SH SYNOPSIS
+.B "int" libnvme_sed_revert_psid
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "const struct libnvme_sed_key *psid "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "psid" 12
+Physical Security ID printed on the drive label
+.SH "DESCRIPTION"
+This erases all user data.
+.SH "RETURN"
+See the return value convention above.

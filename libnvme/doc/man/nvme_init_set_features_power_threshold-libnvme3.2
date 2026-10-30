@@ -1,0 +1,27 @@
+.TH "nvme_init_set_features_power_threshold" 9 "nvme_init_set_features_power_threshold" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_power_threshold \- Initialize passthru command for Power Threshold
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_power_threshold
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "bool ept "  ","
+.BI "__u8 pmts "  ","
+.BI "__u8 pts "  ","
+.BI "__u16 ptv "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "ept" 12
+Enable Power Threshold (EPT)
+.IP "pmts" 12
+Power Measurement Type Select (PMTS)
+.IP "pts" 12
+Power Threshold Scale (PTS)
+.IP "ptv" 12
+Power Threshold Value (PTV)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_POWER_THRESH

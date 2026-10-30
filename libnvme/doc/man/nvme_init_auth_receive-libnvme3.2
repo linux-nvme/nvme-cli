@@ -1,0 +1,30 @@
+.TH "nvme_init_auth_receive" 9 "nvme_init_auth_receive" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_auth_receive \- Initialize passthru command for Authentication Receive
+.SH SYNOPSIS
+.B "void" nvme_init_auth_receive
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 spsp "  ","
+.BI "__u8 secp "  ","
+.BI "__u32 al "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "spsp" 12
+Security Protocol Specific field
+.IP "secp" 12
+Security Protocol
+.IP "al" 12
+Protocol specific allocation length
+.IP "data" 12
+Authentication message payload buffer to receive data into
+.IP "len" 12
+Data length of the payload in bytes (must match \fIal\fP)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Fabrics Authentication
+Receive command, used to receive a KX-HMAC-CHAP authentication message
+(e.g. \fIstruct nvmf_auth_kxchap_challenge\fP) from a controller. This is an
+NVMe-over-Fabrics specific command that reuses the SECP/SPSP0/SPSP1/AL
+field encoding of the Security Receive command.

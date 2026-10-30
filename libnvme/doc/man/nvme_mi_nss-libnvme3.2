@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_mi_nss" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_nss \- NVM Subsystem Status
+.SH SYNOPSIS
+enum nvme_mi_nss {
+.br
+.BI "    NVME_MI_NSS_NRDY_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_NSS_NRDY_MASK"
+, 
+.br
+.br
+.BI "    NVME_MI_NSS_DRV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_NSS_DRV_MASK"
+
+};
+.SH Constants
+.IP "NVME_MI_NSS_NRDY_SHIFT" 12
+Shift amount to get Not Ready
+.IP "NVME_MI_NSS_NRDY_MASK" 12
+Mask to get Not Ready
+.IP "NVME_MI_NSS_DRV_SHIFT" 12
+Shift amount to get Drive Ready
+.IP "NVME_MI_NSS_DRV_MASK" 12
+Mask to get Drive Ready

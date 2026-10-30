@@ -1,0 +1,20 @@
+.TH "libnvme_sed_setup_range" 9 "libnvme_sed_setup_range" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sed_setup_range \- Configure the global locking range
+.SH SYNOPSIS
+.B "int" libnvme_sed_setup_range
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "const struct libnvme_sed_key *key "  ","
+.BI "bool read_lock "  ","
+.BI "bool write_lock "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "key" 12
+Admin1 password
+.IP "read_lock" 12
+Enable read locking
+.IP "write_lock" 12
+Enable write locking
+.SH "RETURN"
+See the return value convention above.

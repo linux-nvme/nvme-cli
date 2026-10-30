@@ -1,0 +1,18 @@
+.TH "libnvme_ctrl_get_model" 9 "libnvme_ctrl_get_model" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_model \- Get model.
+.SH SYNOPSIS
+.B "int" libnvme_ctrl_get_model
+.BI "(const struct libnvme_ctrl *p "  ","
+.BI "const char **model "  ","
+.BI "const char *dflt "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to query.
+.IP "model" 12
+Where to store the value on success.
+.IP "dflt" 12
+Value to store in \fImodel\fP on failure.
+.SH "RETURN"
+0 on success, -ENOENT if the attribute does not
+exist, or a negative errno on failure.

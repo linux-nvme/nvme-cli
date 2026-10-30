@@ -1,0 +1,52 @@
+.TH "libnvmf_config_emit_add" 9 "libnvmf_config_emit_add" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_emit_add \- Add a connection to a configuration emitter.
+.SH SYNOPSIS
+.B "int" libnvmf_config_emit_add
+.BI "(struct libnvmf_config_emitter *emitter "  ","
+.BI "bool is_dc "  ","
+.BI "const char *transport "  ","
+.BI "const char *traddr "  ","
+.BI "const char *trsvcid "  ","
+.BI "const char *subsysnqn "  ","
+.BI "const char *host_traddr "  ","
+.BI "const char *host_iface "  ","
+.BI "const char *hostnqn "  ","
+.BI "const char *hostid "  ","
+.BI "const struct libnvmf_params *params "  ","
+.BI "const char *hostsymname "  ");"
+.SH ARGUMENTS
+.IP "emitter" 12
+Configuration emitter.
+.IP "is_dc" 12
+Discovery controller if true, I/O controller if false.
+.IP "transport" 12
+Transport type. Required.
+.IP "traddr" 12
+Transport address. Required. Written verbatim, even if a
+hostname; resolution happens at connect time, not here.
+.IP "trsvcid" 12
+Transport service ID, or NULL.
+.IP "subsysnqn" 12
+Subsystem NQN. Required unless \fIis_dc\fP is true.
+.IP "host_traddr" 12
+Host transport address, or NULL.
+.IP "host_iface" 12
+Host interface, or NULL.
+.IP "hostnqn" 12
+Host NQN, or NULL.
+.IP "hostid" 12
+Host identifier, or NULL.
+.IP "params" 12
+Connection parameters, or NULL.
+.IP "hostsymname" 12
+Host symbolic name, or NULL.
+.SH "DESCRIPTION"
+The parameter set is copied by the emitter.
+.SH "RETURN"
+
+
+* 0 on success.
+* -EINVAL if a required parameter is missing or if \fIhostsymname\fP
+conflicts with an existing persona.
+* -ENOMEM if memory allocation fails.

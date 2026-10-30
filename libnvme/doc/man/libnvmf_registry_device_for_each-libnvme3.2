@@ -1,0 +1,24 @@
+.TH "libnvmf_registry_device_for_each" 9 "libnvmf_registry_device_for_each" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_registry_device_for_each \- Iterate over live controller registry entries
+.SH SYNOPSIS
+.B "int" libnvmf_registry_device_for_each
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "int (*callback)(const char *device, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "callback" 12
+Callback invoked for each live entry
+.IP "user_data" 12
+User data passed to \fIcallback\fP
+.SH "DESCRIPTION"
+Scans the registry directory and invokes \fIcallback\fP for each entry whose
+corresponding /dev/nvmeN device node exists.  Stale entries left behind
+after a controller is removed are silently skipped.  The existence check is
+advisory: a device may be removed between the check and callback invocation;
+callers should handle ENOENT gracefully.
+.SH "RETURN"
+0 on success, negative errno if the registry directory cannot be
+opened.  Returns 0 when the directory does not exist (nothing registered).

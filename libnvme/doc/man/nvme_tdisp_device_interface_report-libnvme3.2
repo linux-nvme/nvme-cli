@@ -1,0 +1,79 @@
+.TH "libnvme" 9 "struct nvme_tdisp_device_interface_report" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_tdisp_device_interface_report \- NVMe TDISP DEVICE_INTERFACE_REPORT Reporting Structure
+.SH SYNOPSIS
+struct nvme_tdisp_device_interface_report {
+.br
+.BI "    __le32 tni;"
+.br
+.BI "    __le32 ti;"
+.br
+.BI "    __u8 cu;"
+.br
+.BI "    __u8 vu;"
+.br
+.BI "    __u8 rsvd10[2];"
+.br
+.BI "    __le32 aqv;"
+.br
+.BI "    __le32 asv;"
+.br
+.BI "    __le32 acv;"
+.br
+.BI "    __le32 cv;"
+.br
+.BI "    __le32 pmv;"
+.br
+.BI "    __le32 pcv;"
+.br
+.BI "    __u8 qh[48];"
+.br
+.BI "    __u8 rsvd84[44];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "tni" 12
+TDISP NVMe Identifier, shall be NVME_TDISP_NVME_IDENTIFIER
+.IP "ti" 12
+TDISP Information, see \fIenum nvme_tdisp_ti\fP
+.IP "cu" 12
+CSVL Used, the Controller State Version Index of the NVMe
+Controller State data structure used to generate \fIqh\fP
+.IP "vu" 12
+VER Used, the Version field in the NVMe Controller State data
+structure used to generate \fIqh\fP
+.IP "rsvd10" 12
+Reserved
+.IP "aqv" 12
+AQA Value
+.IP "asv" 12
+ASQ Value
+.IP "acv" 12
+ACQ Value
+.IP "cv" 12
+CMBMSC Value
+.IP "pmv" 12
+PMRMSC Value
+.IP "pcv" 12
+PMRCTL Value
+.IP "qh" 12
+Queue Hash, a SHA-384 hash of all the fields in the NVMe
+Controller State data structure, see
+\fIstruct nvme_lm_controller_state_data\fP
+.IP "rsvd84" 12
+Reserved
+.SH "Description"
+
+This is the NVMe class-specific DEVICE_SPECIFIC_INFO payload that a PCIe
+Function returns in response to a PCIe TDISP GET_DEVICE_INTERFACE_REPORT
+request (refer to the NVM Express over PCIe Transport Specification).
+There is no NVMe Admin, I/O, or MI command that transfers this structure
+-- it is produced by the device's Device Security Module and consumed by
+a platform TEE Security Module entirely via the PCIe TDISP protocol,
+outside of any NVMe command/response mechanism. This type is provided
+purely so that software which has otherwise obtained a
+DEVICE_INTERFACE_REPORT (e.g., from a TDISP/SPDM stack) can decode its
+NVMe-specific portion.

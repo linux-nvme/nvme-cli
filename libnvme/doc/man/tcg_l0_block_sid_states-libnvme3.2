@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum tcg_l0_block_sid_states" "October 2026" "API Manual" LINUX
+.SH NAME
+enum tcg_l0_block_sid_states \- Block SID Authentication states
+.SH SYNOPSIS
+enum tcg_l0_block_sid_states {
+.br
+.BI "    TCG_L0_BLOCK_SID_VALUE_STATE"
+, 
+.br
+.br
+.BI "    TCG_L0_BLOCK_SID_BLOCKED_STATE"
+
+};
+.SH Constants
+.IP "TCG_L0_BLOCK_SID_VALUE_STATE" 12
+C_PIN_SID PIN differs from MSID
+.IP "TCG_L0_BLOCK_SID_BLOCKED_STATE" 12
+SID authentication is blocked

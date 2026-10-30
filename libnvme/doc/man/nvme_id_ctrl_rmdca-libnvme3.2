@@ -1,0 +1,49 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_rmdca" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_rmdca \- Restore Manufacturing Configuration Attributes
+.SH SYNOPSIS
+enum nvme_id_ctrl_rmdca {
+.br
+.BI "    NVME_CTRL_RMDCA_RDSCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RMDCA_RDSCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RMDCA_RDNCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RMDCA_RDNCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RMDCA_RDCCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RMDCA_RDCCS_MASK"
+
+};
+.SH Constants
+.IP "NVME_CTRL_RMDCA_RDSCS_SHIFT" 12
+Shift amount to get the Restore Default
+NVM Subsystem Configuration Supported
+(RDSCS) from the \fIstruct
+nvme_id_ctrl\fP.rmdca field.
+.IP "NVME_CTRL_RMDCA_RDSCS_MASK" 12
+Mask to get RDSCS
+.IP "NVME_CTRL_RMDCA_RDNCS_SHIFT" 12
+Shift amount to get the Restore Default
+Namespace Configuration Supported
+(RDNCS)
+.IP "NVME_CTRL_RMDCA_RDNCS_MASK" 12
+Mask to get RDNCS
+.IP "NVME_CTRL_RMDCA_RDCCS_SHIFT" 12
+Shift amount to get the Restore Default
+Capacity Management Configuration
+Supported (RDCCS)
+.IP "NVME_CTRL_RMDCA_RDCCS_MASK" 12
+Mask to get RDCCS

@@ -1,0 +1,16 @@
+.TH "libnvme" 9 "enum nvme_lockdown_cfi_desc_cfia" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_lockdown_cfi_desc_cfia \- Command and Feature Identifier Descriptor - Command and Feature Identifier Attributes (CFIA)
+.SH SYNOPSIS
+enum nvme_lockdown_cfi_desc_cfia {
+.br
+.BI "    NVME_LOCKDOWN_CFI_DESC_CFIA_ACNTL"
+
+};
+.SH Constants
+.IP "NVME_LOCKDOWN_CFI_DESC_CFIA_ACNTL" 12
+All Controllers: if set, then \fIcfi\fP is
+reported by all controllers in the NVM
+subsystem; if cleared, then \fIcfi\fP is
+reported by at least one but not all
+controllers in the NVM subsystem.

@@ -1,0 +1,34 @@
+.TH "libnvmf_connect_args_emit" 9 "libnvmf_connect_args_emit" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_connect_args_emit \- render a connection as "nvme connect" options.
+.SH SYNOPSIS
+.B "int" libnvmf_connect_args_emit
+.BI "(const struct libnvmf_tid *tid "  ","
+.BI "const struct libnvmf_params *params "  ","
+.BI "void (*callback)(const char *arg, void *user_data) "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "tid" 12
+addressing + identity, or NULL to emit the parameters only
+.IP "params" 12
+connection parameters, or NULL to emit the TID only
+.IP "callback" 12
+called once per formatted option, e.g. "--transport=tcp";
+the string is only valid for the duration of the call
+.IP "user_data" 12
+caller context passed to \fIcallback\fP
+.SH "DESCRIPTION"
+Emits the TID's set fields first, in fixed order (--transport, --traddr,
+--trsvcid, --nqn, --host-traddr, --host-iface, --hostnqn, --hostid),
+then the parameters in their iteration order.  Unset and reset
+parameters are skipped so the kernel default applies; a boolean
+parameter is emitted as a bare "--flag" when true and skipped when
+false.  Consumer-private options are the caller's to append.
+
+This is the consumption path for the resolved configuration: each
+connection becomes the option list of one "nvme connect" invocation.
+It also renders a connection as a human-readable, copy-pasteable
+command line for "config show" style output.
+.SH "RETURN"
+0 on success, -EINVAL when \fIcallback\fP is NULL, -ENOMEM when
+formatting an option fails (the emission stops there).

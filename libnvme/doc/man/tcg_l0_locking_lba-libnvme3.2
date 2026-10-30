@@ -1,0 +1,22 @@
+.TH "libnvme" 9 "struct tcg_l0_locking_lba" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_locking_lba \- Locking LBA Ranges Control feature (0x0401)
+.SH SYNOPSIS
+struct tcg_l0_locking_lba {
+.br
+.BI "    __u8 rsvd0;"
+.br
+.BI "    __u8 reserved_range_control[11];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "reserved_range_control" 12
+Reserved for range control
+.SH "Description"
+TCG Storage Enterprise SSC Feature Set: Locking LBA Ranges Control,
+section 4.1.1.

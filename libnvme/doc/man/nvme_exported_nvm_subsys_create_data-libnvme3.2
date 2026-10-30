@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "struct nvme_exported_nvm_subsys_create_data" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_exported_nvm_subsys_create_data \- Create Exported NVM Subsystem Data Buffer
+.SH SYNOPSIS
+struct nvme_exported_nvm_subsys_create_data {
+.br
+.BI "    __u8 esubnqn[256];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "esubnqn" 12
+Exported NVM Subsystem NQN (ESUBNQN): the host may leave this
+field cleared to request an NQN be assigned by the
+controller; the assigned/confirmed NQN is returned in this
+same buffer on successful completion.

@@ -1,0 +1,45 @@
+.TH "libnvme" 9 "enum nvme_security_personality_attrs" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_security_personality_attrs \- Security Personality Attributes data structure
+.SH SYNOPSIS
+enum nvme_security_personality_attrs {
+.br
+.BI "    NVME_SEC_PERSONALITY_ASP"
+, 
+.br
+.br
+.BI "    NVME_SEC_PERSONALITY_TCGP"
+, 
+.br
+.br
+.BI "    NVME_SEC_PERSONALITY_AHATSDP"
+, 
+.br
+.br
+.BI "    NVME_SEC_PERSONALITY_VSP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SEC_PERSONALITY_VSP_MASK"
+
+};
+.SH Constants
+.IP "NVME_SEC_PERSONALITY_ASP" 12
+Allow Security Protocol: If set, then the
+security protocols specified by this data
+structure shall be allowed; if cleared,
+then they shall be prohibited.
+.IP "NVME_SEC_PERSONALITY_TCGP" 12
+TCG Security Protocol: specifies the
+security protocol range 01h to 06h.
+.IP "NVME_SEC_PERSONALITY_AHATSDP" 12
+Authentication in Host Attachments of
+Transient Storage Devices Protocol:
+specifies the security protocol value EEh.
+.IP "NVME_SEC_PERSONALITY_VSP_SHIFT" 12
+Shift amount to get the Vendor Specific
+Protocol Fx bitmap (security protocols F0h
+to FFh) field.
+.IP "NVME_SEC_PERSONALITY_VSP_MASK" 12
+Mask to get the Vendor Specific Protocol
+Fx bitmap field.

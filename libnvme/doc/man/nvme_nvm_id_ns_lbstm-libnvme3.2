@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_nvm_id_ns_lbstm" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_nvm_id_ns_lbstm \- Logical Block Storage Tag Mask
+.SH SYNOPSIS
+enum nvme_nvm_id_ns_lbstm {
+.br
+.BI "    NVME_NVM_LBSTM_DEALLOCATED_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NVM_LBSTM_DEALLOCATED_MASK"
+, 
+.br
+.br
+.BI "    NVME_NVM_LBSTM_WRITTEN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NVM_LBSTM_WRITTEN_MASK"
+
+};
+.SH Constants
+.IP "NVME_NVM_LBSTM_DEALLOCATED_SHIFT" 12
+Shift amount to get Deallocated/Unwritten Logical Block error time
+.IP "NVME_NVM_LBSTM_DEALLOCATED_MASK" 12
+Mask to get Deallocated/Unwritten Logical Block error time
+.IP "NVME_NVM_LBSTM_WRITTEN_SHIFT" 12
+Shift amount to get Written Logical Block error time
+.IP "NVME_NVM_LBSTM_WRITTEN_MASK" 12
+Mask to get Written Logical Block error time

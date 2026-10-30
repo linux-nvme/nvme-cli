@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "struct nvme_ave_access_result" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_ave_access_result \- KX-HMAC-CHAP_Access-Result PDU, sent by an AVE in response to a &struct nvme_ave_access_request PDU
+.SH SYNOPSIS
+struct nvme_ave_access_result {
+.br
+.BI "    __u8 pdu_type;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 hlen;"
+.br
+.BI "    __u8 pdo;"
+.br
+.BI "    __le32 plen;"
+.br
+.BI "    __le64 id;"
+.br
+.BI "    __u8 authres;"
+.br
+.BI "    __u8 rcode;"
+.br
+.BI "    __u16 rsvd18;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "pdu_type" 12
+PDU Type, see \fIenum nvme_ave_pdu_type\fP
+.IP "flags" 12
+Reserved
+.IP "hlen" 12
+Header Length: fixed length of 8 bytes (08h)
+.IP "pdo" 12
+PDU Data Offset, reserved
+.IP "plen" 12
+PDU Length: fixed length of 20 bytes (14h)
+.IP "id" 12
+Identifier matching the corresponding
+\fIstruct nvme_ave_access_request\fP PDU
+.IP "authres" 12
+Authentication Verification Result, see \fIenum nvme_ave_authres\fP
+.IP "rcode" 12
+Reason Code, see \fIenum nvme_ave_rcode\fP
+.IP "rsvd18" 12
+Reserved

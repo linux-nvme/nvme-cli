@@ -766,6 +766,10 @@ Controllers it connects to (including FC targets found via FC
 kickstart). It never disconnects a live controller in response to a
 discovery change; the only disconnects it causes are a side effect of
 stopping its own systemd units, at shutdown or on request.</p></div>
+<div class="paragraph"><p>At shutdown, a unit is stopped only after the file systems mounted
+with the <em>_netdev</em> option are unmounted. A file system on an NVMe-oF
+namespace must use <em>_netdev</em> in fstab(5). Without it, the controller
+can be disconnected while the file system is still mounted.</p></div>
 <div class="paragraph"><p>Every connection attempt is delegated to <em>nvme connect</em>, which runs
 inside a systemd transient unit instead of writing directly to
 /dev/nvme-fabrics. As a result, a stuck connect attempt never blocks
@@ -777,19 +781,30 @@ so they always retry forever. A Discovery Controller found only
 through a referral or FC kickstart is different: it gives up after
 <em>dc-giveup-timeout</em> (default 72hours) of unbroken failure and is
 dropped from tracking.</p></div>
+<div class="paragraph"><p>A TLS connection needs tlshd(8) from ktls-utils. Enable it with
+<em>systemctl enable --now tlshd</em>. When both are enabled, nvme-discoverd
+starts after tlshd.</p></div>
 <div class="paragraph"><p>Before connecting or reconnecting anything, nvme-discoverd checks the
 system-wide exclusion list. It also registers ownership of every
 controller it connects (--owner discoverd, or --owner nbft for an
 NBFT-sourced controller) in the NVMe-oF ownership registry. See
 nvme-registry-list(1) and nvme-exclusion-add(1).</p></div>
+<div class="paragraph"><p>A Discovery Controller that has no owner, for example one connected
+with <em>nvme discover --persistent</em>, is not tracked. When its discovery
+log changes, or when it reconnects, nvme-discoverd runs
+<em>nvme connect-all</em> for it in a transient unit, as the legacy udev
+rules do. The connections it makes have no owner, and
+<em>nvme disconnect-all</em> removes them. Events from a Discovery
+Controller with another owner are ignored.</p></div>
 <div class="paragraph"><p>nvme-discoverd is still experimental. It is meant to replace the
-older udev-rule/systemd-unit autoconnect mechanism (built when the
-<em>nvmf-autoconnect</em> meson option is enabled). For now, nvme-discoverd
-can run alongside the legacy udev rules&#8201;&#8212;&#8201;the goal is to eventually
-eliminate them completely. Switching a host over is a deliberate
-administrator choice (<em>systemctl enable --now nvme-discoverd</em>,
-alongside disabling the legacy units), not something either
-mechanism decides automatically.</p></div>
+older udev-rule/systemd-unit autoconnect mechanism. By default, the
+legacy mechanism is built only when nvme-discoverd is not. Building
+with <em>-Dnvmf-autoconnect=enabled</em> installs both. The legacy udev
+rules are active as soon as they are installed. nvme-discoverd runs
+only when the administrator enables it with
+<em>systemctl enable --now nvme-discoverd</em>. While nvme-discoverd is
+active, nvmf-autoconnect.service and the FC kickstart skip their
+connect step.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -849,28 +864,42 @@ mechanism decides automatically.</p></div>
 <div class="sect1">
 <h2 id="_configuration">CONFIGURATION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>nvme-discoverd.conf holds only the daemon&#8217;s own knobs, in a single
-<em>[Global]</em> section:</p></div>
+<div class="paragraph"><p>nvme-discoverd.conf holds the daemon&#8217;s own knobs, in a <em>[Global]</em>
+section and a <em>[Discovery]</em> section:</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><code>[Global]
 nbft = true
-debug-level = info
-fc-kickstart-interval-minutes = 0
-dc-giveup-timeout = 72hours</code></pre>
+debug-level = info</code></pre>
 </div></div>
-<div class="paragraph"><p><em>nbft</em> (boolean, default true) controls whether NBFT-listed controllers
-are adopted and reconnected. <em>debug-level</em> (err, warn, info, or debug;
+<div class="literalblock">
+<div class="content">
+<pre><code>[Discovery]
+epcsd-poll-interval-minutes = 15
+fc-kickstart-interval-minutes = 0
+dc-giveup-timeout = 72hours
+zeroconf = false</code></pre>
+</div></div>
+<div class="paragraph"><p><em>nbft</em> (boolean, default true) adopts and connects controllers listed
+in the NBFT ACPI table. <em>debug-level</em> (err, warn, info, or debug;
 default info) sets the log threshold; <em>--debug</em> on the command line
-overrides it. <em>fc-kickstart-interval-minutes</em> (default 0, disabled)
-re-probes the FC fabric on a timer. This is independent of the
-kickstart nvme-discoverd already issues at startup and on every FC
-controller drop&#8201;&#8212;&#8201;use it to detect FC equipment replacement sooner
-than the next connection event. <em>dc-giveup-timeout</em> (default 72hours)
-is the give-up horizon described above. It takes a systemd time span
-("72hours", "3 days 5 hours") or a unit-less value in seconds;
-"infinity" makes a dynamically-discovered DC retry forever, same as a
-static/NBFT-sourced one, and 0 gives up on the first failure.</p></div>
+overrides it.</p></div>
+<div class="paragraph"><p><em>epcsd-poll-interval-minutes</em> (default 15, minimum 1) sets how often,
+in minutes, to reconnect and re-check a DC whose effective EPCSD
+(Explicit Persistent Connection Support for Discovery) is 0. Such a DC
+is disconnected between checks. <em>fc-kickstart-interval-minutes</em>
+(default 0) re-issues FC kickstart every N minutes; 0 = only at
+startup and on every FC controller drop. <em>dc-giveup-timeout</em> (default
+72hours) is the give-up horizon described above. It takes a systemd
+time span ("72hours", "3 days 5 hours") or a unit-less value in
+seconds; "infinity" = never give up, 0 = give up on the first failure.</p></div>
+<div class="paragraph"><p>A DC connects with a keep-alive timeout of 30 seconds, or with its
+configured <em>keep-alive-tmo</em> (see nvme-fabrics.conf(5)). A DC
+configured with <em>persistent = no</em> connects with none.</p></div>
+<div class="paragraph"><p><em>zeroconf</em> (boolean, default false) connects to and manages Discovery
+Controllers found through mDNS (TP8009). It requires systemd-resolved
+v258 or later with mDNS enabled (<em>MulticastDNS=yes</em>), and an
+nvme-discoverd built with mDNS support. It is re-read on SIGHUP.</p></div>
 <div class="paragraph"><p>The connections nvme-discoverd manages come entirely from the shared
 fabrics configuration, not from this file: which Discovery Controllers
 and subsystems to connect, host identity, per-connection parameters.
@@ -917,6 +946,16 @@ SIGTERM, SIGINT
 </p>
 </dd>
 <dt class="hdlist1">
+/usr/local/etc/nvme/nvme-discoverd.conf.sample
+</dt>
+<dd>
+<p>
+        A commented example of nvme-discoverd.conf with every knob at its
+        default. It is not read; copy it to nvme-discoverd.conf to change a
+        setting.
+</p>
+</dd>
+<dt class="hdlist1">
 /usr/local/etc/nvme/nvme-fabrics.conf, /usr/local/etc/nvme/nvme-fabrics.conf.d/*.conf
 </dt>
 <dd>
@@ -940,6 +979,7 @@ SIGTERM, SIGINT
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>nvme-fabrics.conf(5)
+tlshd(8)
 nvme-connect(1)
 nvme-registry-list(1)
 nvme-exclusion-add(1)</p></div>
@@ -956,7 +996,7 @@ nvme-exclusion-add(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-09-18 12:15:54 CEST
+ 2026-10-30 19:29:20 CET
 </div>
 </div>
 </body>

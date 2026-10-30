@@ -1,0 +1,30 @@
+.TH "nvme_init_auth_send" 9 "nvme_init_auth_send" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_auth_send \- Initialize passthru command for Authentication Send
+.SH SYNOPSIS
+.B "void" nvme_init_auth_send
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 spsp "  ","
+.BI "__u8 secp "  ","
+.BI "__u32 tl "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "spsp" 12
+Security Protocol Specific field
+.IP "secp" 12
+Security Protocol
+.IP "tl" 12
+Protocol specific transfer length
+.IP "data" 12
+Authentication message payload buffer to send
+.IP "len" 12
+Data length of the payload in bytes
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Fabrics Authentication
+Send command, used to send a KX-HMAC-CHAP authentication message (e.g.
+\fIstruct nvmf_auth_kxchap_reply\fP) to a controller. This is an
+NVMe-over-Fabrics specific command that reuses the SECP/SPSP0/SPSP1/TL
+field encoding of the Security Send command.

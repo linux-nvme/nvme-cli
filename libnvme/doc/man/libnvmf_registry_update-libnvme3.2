@@ -1,0 +1,26 @@
+.TH "libnvmf_registry_update" 9 "libnvmf_registry_update" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_registry_update \- Update an attribute in a controller's registry entry
+.SH SYNOPSIS
+.B "int" libnvmf_registry_update
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *device "  ","
+.BI "const char *attr "  ","
+.BI "const char *value "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+libnvme global context; must not be NULL
+.IP "device" 12
+Kernel device name (e.g. "nvme3")
+.IP "attr" 12
+Attribute name to update (e.g. "owner")
+.IP "value" 12
+New attribute value, or NULL to remove the attribute file
+.SH "DESCRIPTION"
+Writes the attribute value to the controller's registry entry using an
+atomic tmp-file rename.  If the entry does not exist, it is created
+atomically the same way as on connect, including the best-effort seqnum
+stamp for the udev cleanup rule.  If \fIvalue\fP is NULL, the attribute file is
+removed instead; a missing entry is left alone in this case.
+.SH "RETURN"
+0 on success, negative errno from underlying system calls otherwise.

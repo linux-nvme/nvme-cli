@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "enum nvme_voltage_measurement_ovol" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_voltage_measurement_ovol \- Voltage Measurement log page - Overvoltage (OVOL)
+.SH SYNOPSIS
+enum nvme_voltage_measurement_ovol {
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_MASK"
+, 
+.br
+.br
+.BI "    NVME_VOLTAGE_MEASUREMENT_OVOL_OVV"
+
+};
+.SH Constants
+.IP "NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_SHIFT" 12
+Shift amount to get the
+Maximum Overvoltage Value (MOVV)
+.IP "NVME_VOLTAGE_MEASUREMENT_OVOL_MOVV_MASK" 12
+Mask to get MOVV
+.IP "NVME_VOLTAGE_MEASUREMENT_OVOL_OVV" 12
+Overvoltage Valid

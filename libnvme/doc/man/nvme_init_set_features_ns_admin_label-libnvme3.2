@@ -1,0 +1,22 @@
+.TH "nvme_init_set_features_ns_admin_label" 9 "nvme_init_set_features_ns_admin_label" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_ns_admin_label \- Initialize passthru command for Namespace Admin Label
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_ns_admin_label
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "bool sv "  ","
+.BI "void *label "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace Identifier
+.IP "sv" 12
+Save value across power states
+.IP "label" 12
+256 byte, null-terminated UTF-8 Namespace Admin Label (NSAL)
+data buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_NS_ADMIN_LABEL

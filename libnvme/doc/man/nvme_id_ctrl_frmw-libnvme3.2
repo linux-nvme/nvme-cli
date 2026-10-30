@@ -1,0 +1,82 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_frmw" "October 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_frmw \- Flags and values indicates capabilities regarding firmware updates from &struct nvme_id_ctrl.frmw.
+.SH SYNOPSIS
+enum nvme_id_ctrl_frmw {
+.br
+.BI "    NVME_CTRL_FRMW_FFSRO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_NOFS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_FAWR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_SMUD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_FFSRO_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_NOFS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_FAWR_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_SMUD_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_FFSRO"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_NOFS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_FAWR"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_SMUD"
+
+};
+.SH Constants
+.IP "NVME_CTRL_FRMW_FFSRO_SHIFT" 12
+FFSRO shift
+.IP "NVME_CTRL_FRMW_NOFS_SHIFT" 12
+NOFS shift
+.IP "NVME_CTRL_FRMW_FAWR_SHIFT" 12
+FAWR shift
+.IP "NVME_CTRL_FRMW_SMUD_SHIFT" 12
+SMUD shift
+.IP "NVME_CTRL_FRMW_FFSRO_MASK" 12
+FFSRO mask
+.IP "NVME_CTRL_FRMW_NOFS_MASK" 12
+NOFS mask
+.IP "NVME_CTRL_FRMW_FAWR_MASK" 12
+FAWR mask
+.IP "NVME_CTRL_FRMW_SMUD_MASK" 12
+SMUD mask
+.IP "NVME_CTRL_FRMW_FFSRO" 12
+If set, the first firmware slot is readonly
+.IP "NVME_CTRL_FRMW_NOFS" 12
+Mask to get the value of the number of
+firmware slots that the controller supports.
+.IP "NVME_CTRL_FRMW_FAWR" 12
+If set, the controller supports firmware
+activation without a reset.
+.IP "NVME_CTRL_FRMW_SMUD" 12
+If set, the controller is able to detect
+overlapping firmware/boot partition
+image update.

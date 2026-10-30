@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "struct tcg_l0_desc" "October 2026" "API Manual" LINUX
+.SH NAME
+struct tcg_l0_desc \- Level 0 Discovery feature descriptor header
+.SH SYNOPSIS
+struct tcg_l0_desc {
+.br
+.BI "    __be16 code;"
+.br
+.BI "    __u8 version;"
+.br
+.BI "    __u8 length;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "code" 12
+Feature code, see \fIenum tcg_l0_code\fP
+.IP "version" 12
+Feature descriptor version
+.IP "length" 12
+Length of the feature data following this header
+.SH "Description"
+TCG Opal SSC 2.02, section 3.1.1.3.

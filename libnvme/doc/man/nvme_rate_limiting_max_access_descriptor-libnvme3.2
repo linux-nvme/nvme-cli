@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_rate_limiting_max_access_descriptor" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_rate_limiting_max_access_descriptor \- Rate Limiting Maximum Access Descriptor (QMAD)
+.SH SYNOPSIS
+struct nvme_rate_limiting_max_access_descriptor {
+.br
+.BI "    __u8 mbsf;"
+.br
+.BI "    __u8 rsvd1[7];"
+.br
+.BI "    __le64 mrbwv;"
+.br
+.BI "    __le64 mwbwv;"
+.br
+.BI "    __le32 mriops;"
+.br
+.BI "    __le32 mwiops;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "mbsf" 12
+Maximum Bandwidth Scale Factor, see \fIenum nvme_rate_limiting_bw_scale\fP
+.IP "rsvd1" 12
+Reserved
+.IP "mrbwv" 12
+Maximum Read Bandwidth Value, shall not be cleared to 0h
+.IP "mwbwv" 12
+Maximum Write Bandwidth Value, shall not be cleared to 0h
+.IP "mriops" 12
+Maximum Random Read IOPS, shall not be cleared to 0h
+.IP "mwiops" 12
+Maximum Random Write IOPS, shall not be cleared to 0h

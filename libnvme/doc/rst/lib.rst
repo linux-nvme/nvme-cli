@@ -293,6 +293,11 @@ otherwise false.
 ``struct libnvme_transport_handle *hdl``
   Transport handle
 
+**Description**
+
+Handles opened through the privilege separation helper use the IOCTL
+interface as well, in the helper; they have no file descriptor.
+
 **Return**
 
 Return true if transport handle is using IOCTL interface,

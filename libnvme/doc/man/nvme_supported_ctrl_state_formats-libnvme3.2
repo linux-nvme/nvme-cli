@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "struct nvme_supported_ctrl_state_formats" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_supported_ctrl_state_formats \- Supported Controller State Formats Data Structure (CNS 20h)
+.SH SYNOPSIS
+struct nvme_supported_ctrl_state_formats {
+.br
+.BI "    __u8 nv;"
+.br
+.BI "    __u8 nuuid;"
+.br
+.BI "    __u8 data[4094];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nv" 12
+Number of Versions (NV) in the NVMe Controller State Version
+list at the start of \fIdata\fP
+.IP "nuuid" 12
+Number of UUIDs (NUUID) in the Vendor Specific Controller
+State UUID Supported list, immediately following the NVMe
+Controller State Version list in \fIdata\fP
+.IP "data" 12
+NVMe Controller State Version list (\fInv\fP \fI__le16\fP entries)
+immediately followed by the Vendor Specific Controller State
+UUID Supported list (\fInuuid\fP 128-bit UUID entries)

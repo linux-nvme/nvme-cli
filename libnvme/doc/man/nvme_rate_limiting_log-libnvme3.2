@@ -1,0 +1,44 @@
+.TH "libnvme" 9 "struct nvme_rate_limiting_log" "October 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_rate_limiting_log \- Rate Limiting log page (Log Page Identifier 28h)
+.SH SYNOPSIS
+struct nvme_rate_limiting_log {
+.br
+.BI "    __u8 rsvd0[2];"
+.br
+.BI "    __le16 np;"
+.br
+.BI "    __le32 lpl;"
+.br
+.BI "    __le32 gc;"
+.br
+.BI "    __le16 nst;"
+.br
+.BI "    __u8 rsvd14[2];"
+.br
+.BI "    __le32 port_offset[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "np" 12
+Number of Ports in \fIport_offset\fP (0's based)
+.IP "lpl" 12
+Log Page Length, in dwords, of this log page
+.IP "gc" 12
+Generation Count, incremented each time the information in
+this log page changes since the last time the host read it
+.IP "nst" 12
+Number of Supported Targets (0's based)
+.IP "rsvd14" 12
+Reserved
+.IP "port_offset" 12
+Dword offsets, relative to the start of this log page, to
+the Rate Limiting Port Descriptors, \fInp\fP + 1 entries.
+The Rate Limiting Data (referenced by these and nested
+offsets), the Supported Target list, and trailing padding
+follow this array and are located using \fIlpl\fP, \fInp\fP, and \fInst\fP.

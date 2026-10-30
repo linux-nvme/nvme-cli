@@ -1,0 +1,13 @@
+.TH "libnvmf_config_conn_get_host_traddr" 9 "libnvmf_config_conn_get_host_traddr" "October 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_conn_get_host_traddr \- a connection's host transport address.
+.SH SYNOPSIS
+.B "const char *" libnvmf_config_conn_get_host_traddr
+.BI "(const struct libnvmf_config_conn *conn "  ");"
+.SH ARGUMENTS
+.IP "conn" 12
+the resolved connection
+.SH "DESCRIPTION"
+Never a hostname -- always one of the host's own local addresses.
+.SH "RETURN"
+borrowed string, or NULL when the path left it unset.
