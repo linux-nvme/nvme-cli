@@ -7,25 +7,27 @@
 # Authors: Daniel Wagner <dwagner@suse.de>
 
 usage() {
-    echo "Usage: release.sh [-d] VERSION"
+    echo "Usage: release.sh [-d] [-f] [-r REMOTE] VERSION"
     echo ""
     echo "The script does all necessary steps to create a new release."
     echo ""
     echo " -d:  no documentation update"
     echo " -f:  disable all sanity checks and just do the release"
+    echo " -r:  remote to push the release to (default: origin)"
     echo ""
-    echo "Note: The version number needs to be exactly"
-    echo "      '^v[\d]+.[\d]+(.[\d\]+(-rc[0-9]+)?$'"
+    echo "Note: The version number needs to match"
+    echo "      '^v[0-9]+.[0-9]+(.[0-9]+)?(-rc[0-9]+|-(a|b).[0-9]+)?$'"
     echo ""
     echo "example:"
-    echo "  release.sh v2.1-rc0     # v2.1 release candidate 0"
-    echo "  release.sh v2.1         # v2.1 release"
+    echo "  release.sh v3.2-rc1     # v3.2 release candidate 1"
+    echo "  release.sh v3.2         # v3.2 release"
 }
 
 build_doc=true
 force=false
+remote=origin
 
-while getopts "df" o; do
+while getopts "dfr:" o; do
     case "${o}" in
         d)
             build_doc=false
@@ -33,8 +35,12 @@ while getopts "df" o; do
         f)
             force=true
             ;;
+        r)
+            remote="${OPTARG}"
+            ;;
         *)
             usage
+            exit 1
             ;;
     esac
 done
@@ -51,8 +57,18 @@ cleanup() {
     if [ -z "${OLD_HEAD}" ] ; then
         exit
     fi
-    git tag -d "$VERSION"
+    if [ -n "${BUILDDIR}" ] ; then
+        rm -rf -- "${BUILDDIR}"
+    fi
+    if [ "${TAGGED}" = true ] ; then
+        git tag -d "$VERSION"
+    fi
     git reset --hard "${OLD_HEAD}"
+    # The sanity checks ensured a clean tree, so the untracked
+    # files are new pages from update-docs.sh.
+    if [ "$force" = false ] ; then
+        git clean -fdq -- Documentation libnvme/doc completions
+    fi
 }
 
 register_cleanup() {
@@ -66,7 +82,7 @@ unregister_cleanup() {
 trap cleanup EXIT
 
 # expected version regex
-re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-(rc|a|b)\.?[0-9]+)?$'
+re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-rc[0-9]+|-(a|b)\.[0-9]+)?$'
 
 # use the version string provided from the command line
 if [[ "$VERSION" =~ ${re} ]]; then
@@ -78,8 +94,6 @@ else
     echo "invalid version string $VERSION"
     exit 1
 fi
-
-register_cleanup
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
@@ -94,6 +108,8 @@ if [ "$force" = false ] ; then
         exit 1
     fi
 fi
+
+register_cleanup
 
 if [ "$build_doc" = true ]; then
     if ! ./scripts/update-docs.sh; then
@@ -144,7 +160,7 @@ if [[ -n $(git status -s -- completions/bash-nvme-completion.sh completions/_nvm
 fi
 
 if [[ "$ver" != *-* ]]; then
-    news_ver="${ver%%.*}.$(echo "$ver" | cut -d. -f2)"
+    news_ver="$ver"
     news_heading="## Changes in $news_ver (unreleased)"
     if ! grep -qF "$news_heading" NEWS.md; then
         echo "release.sh: could not find '$news_heading' in NEWS.md" >&2
@@ -159,12 +175,13 @@ sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
 git add meson.build
 git commit -s -m "Release $VERSION"
 
-git tag -s -m "Release $VERSION" "$VERSION"
-git push --dry-run origin "$VERSION"^{}:master tag "$VERSION"
+git tag -s -m "Release $VERSION" "$VERSION" || exit 1
+TAGGED=true
+git push --dry-run "$remote" "$VERSION"^{}:master tag "$VERSION"
 
 read -p "All good? Ready to push changes to remote? [Yy]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git push origin "$VERSION"^{}:master tag "$VERSION"
+    git push "$remote" "$VERSION"^{}:master tag "$VERSION"
     unregister_cleanup
 fi
