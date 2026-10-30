@@ -8,14 +8,15 @@
 * The JSON output of `nvme show-regs`, `get-reg` and `get-property` has
   one shape: the value of each register under its name, e.g.
   `{"cc": 4587521}`, with `-v` an object of the value and its decoded
-  fields. Before, `get-reg` printed `{"register: 0x14": [{"name": "cc",
-  "value": ...}]}`, `get-property` the value as a hex string, and `-v`
-  wrapped each register in a one element array.
+  fields. The values are unsigned. Before, `get-reg` printed
+  `{"register: 0x14": [{"name": "cc", "value": ...}]}`, `get-property`
+  the value as a hex string, `-v` wrapped each register in a one
+  element array, and a register with bit 31 set was negative.
 
 * `nvme show-regs`, `get-reg` and `get-property -v` decode the fields of
   the registers as the specification names them, the same in the normal
-  and the JSON output, which differed before. The composite fields are
-  split into theirs: CAP.CSS, CAP.AMS, CAP.CRMS and VS. The normal
+  and the JSON output, which differed before. The composite fields
+  CAP.CSS, CAP.AMS, CAP.CRMS and VS are split into their fields. The normal
   output of `show-regs` names the Version register `vs`, like the JSON
   output and the options, instead of `version`.
 
@@ -72,23 +73,22 @@
   versions other than 1 and 2. Before, every version but 2 printed
   version 1.
 
-* Number options reject text after the number. Before, the rest was
-  ignored: `--timeout=10s` set a timeout of 10 milliseconds.
-
 * Numbers on the command line and in `nvme-cli.conf` are parsed
-  strictly: leading whitespace and a `+` are rejected, a signed option
-  rejects a value out of its range instead of wrapping around, and a
-  floating point option takes a `.` as decimal point in any locale and
-  rejects `nan` and `inf`. Sizes with a suffix (`4Ki`, `1.5G`) reject a
-  value which overflows, take the digits after a `.` in decimal
-  (`1.09k` was rejected as octal, `1.500k` was 1000), and use a `.` in
-  any locale as well. An empty value no longer selects a value name.
-
-* Numbers no longer take a leading zero, on the command line, in
-  `nvme-cli.conf` and in the lists of numbers. Before, a leading zero
-  made a number octal: `--namespace-id=010` was namespace 8 and `08`
-  was rejected. Write `10`, or `0x10` for hexadecimal; `0` itself is
-  fine.
+  strictly:
+  - Text after the number is rejected. Before, the rest was ignored:
+    `--timeout=10s` set a timeout of 10 milliseconds.
+  - Leading whitespace, a `+` and a leading zero are rejected, also in
+    the lists of numbers. Before, a leading zero made a number octal:
+    `--namespace-id=010` was namespace 8 and `08` was rejected. Write
+    `10`, or `0x10` for hexadecimal; `0` itself is fine.
+  - A signed option rejects a value out of its range instead of
+    wrapping around.
+  - A floating point option takes a `.` as decimal point in any locale
+    and rejects `nan` and `inf`.
+  - Sizes with a suffix (`4Ki`, `1.5G`) reject a value which overflows,
+    take the digits after a `.` in decimal (`1.09k` was rejected as
+    octal, `1.500k` was 1000), and use a `.` in any locale as well.
+  - An empty value no longer selects a value name.
 
 * Errors and warnings which repeat a command line argument or a line of
   a config file write its control characters as `\xNN`, so it can't
@@ -195,7 +195,11 @@
   (`nvme-fabrics.conf(5)`) and from the Discovery Log Pages of the
   Discovery Controllers it connects to, including FC kickstart. It
   also keeps them connected and retries failed connections with
-  backoff. See `nvme-discoverd(8)`.
+  backoff. For a Discovery Controller without an owner, for example
+  one connected with `nvme discover --persistent`, it runs
+  `nvme connect-all` on its events, as `70-nvmf-autoconnect.rules`
+  does. The new connections have no owner either. See
+  `nvme-discoverd(8)`.
 
   The `nvme-discoverd` and `nvmf-autoconnect` build options now both
   default to `auto`. nvme-discoverd is built when libsystemd v253 or
@@ -263,6 +267,45 @@
   nvme-discoverd, and `nvme top` are not yet available on this
   platform.
 
+### New: privilege separation and decoder sandbox
+
+* Two technology previews reduce what a bug in the code which decodes
+  the data of a device can do. Both are disabled by default. They are
+  work in progress and may change, or be removed again if they turn
+  out not to be useful or too complicated. See
+  `Documentation/PRIVSEP.md`.
+
+  - Privilege separation (`-Dprivsep=enabled`, Linux only): when root
+    runs nvme-cli for a user, with `sudo` or with `NVME_PRIVSEP_UID`
+    set, nvme-cli starts `nvme-privsep-helper`, which keeps root, and
+    drops its own privileges to that user. The helper issues the NVMe
+    commands. Root without `SUDO_UID` or `NVME_PRIVSEP_UID` keeps its
+    privileges. Commands without a device, like the fabrics, keys and
+    registry commands, and device commands which need root for other
+    reasons still run as root.
+  - Decoder sandbox (`-Dsandbox=enabled`, Linux and FreeBSD): the
+    printers which decode device data run in a child process which can
+    do little more than allocate memory and write to stdout and stderr.
+    A crash in a decoder only ends the child. `NVME_SANDBOX=0` turns it
+    off, `NVME_SANDBOX=1` turns it on in a build without the option.
+
+### New: nvme-keysd
+
+* New daemon, nvme-keysd, a technology preview: it will put NVMe/TCP
+  TLS pre-shared keys into the kernel's .nvme keyring before a
+  connection needs them. Built with the new `nvme-keysd` meson option,
+  `disabled` by default. It imports the PSKs of the entries with
+  `tls-key-source = systemd-creds` from encrypted systemd credentials in
+  `/etc/nvme/creds` at boot, and exits. It does not start when no
+  entry has a key source. It needs systemd 257 or later. See
+  `nvme-keysd(8)`.
+
+* New `tls-key-source` key in `nvme-fabrics.conf`. With
+  `tls-key-source = systemd-creds`, `tls-key` is the name of a systemd
+  credential, not the key. `nvme connect-all` and nvme-discoverd then
+  connect with TLS and let the kernel find the PSK in the keyring. The
+  default, `inline`, keeps today's behavior. See `nvme-fabrics.conf(5)`.
+
 ### nvme-cli
 
 * `nvme top -o json` samples the I/O statistics over `--delay` seconds
@@ -278,13 +321,6 @@
   with `--allow-iopolicy`, it also changes the I/O policy of a
   subsystem and compares the policies under a running workload. See
   `scripts/mcp/README.md`.
-
-* `nvme get-reg --register=NAME[,NAME...]` and `nvme set-reg
-  --register=NAME --value=VAL` name the registers, with completion of
-  the names, and `--offset` of `get-reg`, `set-reg`, `get-property` and
-  `set-property` takes a name too, e.g. `--offset=cc`. The options of a
-  register each of earlier versions, like `get-reg --cc` and `set-reg
-  --cc=VAL`, still work, but are deprecated.
 
 * `nvme help <command>` finds the command like `nvme <command>` does,
   also by a unique prefix, and `nvme help <plugin> <command>` shows the
@@ -328,39 +364,29 @@
   set too late. The DC got no keep-alive timeout, so it was never
   asked for a persistent connection or for AENs.
 
+* `nvme discover` and `nvme connect-all` add the scope of a Discovery
+  Controller connected through a scoped link-local IPv6 address, e.g.
+  `fe80::1%eth0`, to the link-local addresses of its Discovery Log Page
+  entries. Before, these had no scope, and on a host with more than
+  one link the connect could use the wrong one. RDMA has no
+  `host_iface` to select the link.
+
 * New option `nvme connect --discovery`. It tells the kernel that the
   controller is a Discovery Controller, also when it has a unique NQN.
 
-* `nvme connect`: When connecting to a target over TCP, automatically
-  calculates `--nr-io-queues` if the option is not explicitly specified. The
-  number of I/O queues is derived using the following formula:
-
-    ```c
-    if (num_hw_queues > 1)
-      nr_io_queues = min(num_online_cpus, num_hw_queues);
-    ```
-  Here, `num_hw_queues` represents the number of hardware TX/RX queue
-  pair,  and  combined queues currently configured on the NIC, and
-  `num_online_cpus` represents the number of online CPUs. The number of
-  I/O queues is set to the minimum of these two values when `num_hw_queues`
-  is greater than 1. Otherwise, the default number of I/O queues is used.
-
-  If the user explicitly specifies `--nr-io-queues`, the specified value takes
-  precedence over the automatic calculation.
-
-  This behavior also applies when connecting to a TCP target using a config.INI
-  file.
+* `nvme connect` over TCP without `--nr-io-queues` uses one I/O queue
+  per queue of the network interface, at most one per online CPU. The
+  interface is `--host-iface`, or else the one of the route to the
+  target. Its queues are the combined channels plus the smaller of the
+  RX and TX channels, as `ethtool -l` shows them. With one queue, or
+  if the count can't be read, the kernel default applies as before.
+  `nvme connect-all` does the same for a connection of
+  `nvme-fabrics.conf` without `nr-io-queues`.
 
 * `nvme sed revert` now prints an extra `revert LSP` error when the
   kernel cannot revert the Locking SP. `nvme sed password` checks at
   run time, not at build time, whether the kernel can set the SID
   password, and skips that step if it cannot.
-
-* The lm, sandisk, sed, wdc and zns plugins are now built on Windows.
-  Without kernel Opal support, `nvme sed` only supports `discover`.
-
-* The wdc plugin no longer creates its dump directories with a broken
-  mode that only root could write to.
 
 * A device, or a fabrics target, which returns log pages whose lengths
   and counts don't add up no longer makes nvme-cli read past its
@@ -415,61 +441,9 @@
   `--namespace-id`, instead of NSID 0, and refuses a `--max-dw` whose
   data length doesn't fit 32 bits.
 
-* `nvme show-regs` and `get-reg` on a fabrics controller show the
-  properties in the right byte order on big endian hosts, and read the
-  NSSD and CRTO properties too. `show-regs` leaves out the properties
-  the controller doesn't implement, also in the JSON output, which
-  printed all registers of a PCIe controller before, as -1 if they
-  weren't properties.
-
-* `nvme get-reg` and `get-property` on a fabrics controller fail for a
-  property the controller doesn't implement, instead of showing it as
-  all ones, or failing only if the status had the DNR bit set.
-  `show-regs` fails for any other error of an optional property.
-
-* `nvme get-reg` refuses an `--offset` which is no register, which read
-  past a buffer from 0x1000 on. On a fabrics controller it fails for a
-  register which is no property, and prints the status of a failed
-  Property Get.
-
-* `nvme show-regs --verbose` prints the CRTO timeouts in milliseconds.
-  Before, it dropped the half seconds.
-
-* `nvme show-regs -o json` prints the 32 bit registers unsigned. Before,
-  a register with bit 31 set showed as a negative number.
-
-### Plugins
-
-* The JSON output of `nvme wdc vs-smart-add-log` prints the counters,
-  averages and percentages of the C1 performance statistics as 64 bit
-  values. Before, a value above 2^31 - 1 came out wrapped.
-
 * `nvme feat num-queues --nsqr=N` without `--ncqr` keeps the current
   number of completion queues now. Before, it requested a single
   completion queue and a wrong number of submission queues.
-
-* Fixed root command injection in WDC (`vs-internal-log`,
-  `drive-essentials`, SN730 capture) and SanDisk (telemetry capture):
-  a caller-controlled string reached a shell (`system()`), so a
-  crafted input could run arbitrary commands as root.
-
-* `nvme seagate vs-smart-add-log` prints the SMART logs of a drive
-  once. Before, it printed those of legacy drives twice and those of
-  other drives followed by logs which aren't theirs, and its JSON
-  output could crash.
-
-* The dera, ibm, memblaze, ocp, seagate, solidigm and wdc plugins handle
-  unexpected values from the device and free the memory they used.
-
-* WDC, SanDisk, Micron, Solidigm and Samsung plugins no longer spawn
-  external `tar`, `zip`, `cat`, `lsmod`, `uname` or `dmesg` processes;
-  they use libarchive or direct syscalls instead.
-
-* New optional build dependency: `libarchive` (WDC, SanDisk, Micron,
-  Samsung and Solidigm archiving), `auto` by default. Without it, the
-  affected subcommands fail with a clear error instead of depending
-  on whatever `tar`/`zip` happens to be on `PATH`. See
-  [BUILDING.md](Documentation/BUILDING.md).
 
 * `nvme feat perf-characteristics` no longer crashes after it sets the
   feature. It refuses an `--attrl` above 4064 bytes, which overflowed a
@@ -510,6 +484,56 @@
 
 * `nvme dir send` and `dir receive` default to the namespace of a
   namespace device, and `dir send` refuses an `--endir` above 1.
+
+* `nvme get-reg --register=NAME[,NAME...]` and `nvme set-reg
+  --register=NAME --value=VAL` name the registers, with completion of
+  the names, and `--offset` of `get-reg`, `set-reg`, `get-property` and
+  `set-property` takes a name too, e.g. `--offset=cc`. The options of a
+  register each of earlier versions, like `get-reg --cc` and `set-reg
+  --cc=VAL`, still work, but are deprecated.
+
+* `nvme show-regs` and `get-reg` on a fabrics controller show the
+  properties in the right byte order on big endian hosts, and read the
+  NSSD and CRTO properties too. `show-regs` leaves out the properties
+  the controller doesn't implement, also in the JSON output. Before, it
+  printed all registers of a PCIe controller, as -1 if they weren't
+  properties. It fails for any other error of an optional property.
+
+* `nvme get-reg` and `get-property` on a fabrics controller fail for a
+  property the controller doesn't implement, and `get-reg` for a
+  register which is no property. Before, they showed it as all ones, or
+  failed only if the status had the DNR bit set. `get-reg` prints the
+  status of a failed Property Get, and refuses an `--offset` which is
+  no register, which read past a buffer from 0x1000 on.
+
+* `nvme show-regs --verbose` prints the CRTO timeouts in milliseconds.
+  Before, it dropped the half seconds.
+
+### Plugins
+
+* The JSON output of `nvme wdc vs-smart-add-log` prints the counters,
+  averages and percentages of the C1 performance statistics as 64 bit
+  values. Before, a value above 2^31 - 1 came out wrapped.
+
+* The wdc plugin no longer creates its dump directories with a broken
+  mode that only root could write to.
+
+* Fixed root command injection in WDC (`vs-internal-log`,
+  `drive-essentials`, SN730 capture) and SanDisk (telemetry capture):
+  a caller-controlled string reached a shell (`system()`), so a
+  crafted input could run arbitrary commands as root.
+
+* `nvme seagate vs-smart-add-log` prints the SMART logs of a drive
+  once. Before, it printed those of legacy drives twice and those of
+  other drives followed by logs which aren't theirs, and its JSON
+  output could crash.
+
+* The dera, ibm, memblaze, ocp, seagate, solidigm and wdc plugins handle
+  unexpected values from the device and free the memory they used.
+
+* WDC, SanDisk, Micron, Solidigm and Samsung plugins no longer spawn
+  external `tar`, `zip`, `cat`, `lsmod`, `uname` or `dmesg` processes;
+  they use libarchive or direct syscalls instead.
 
 ### nvme-discoverd
 
@@ -568,13 +592,6 @@
   Before, the connection was skipped until the next reload. While the
   first lookups run, nvme-discoverd does not release any controller.
 
-* nvme-discoverd handles the events of a Discovery Controller that has
-  no owner, for example one connected with
-  `nvme discover --persistent`. It runs `nvme connect-all` for it, as
-  `70-nvmf-autoconnect.rules` does. The new connections have no owner
-  either. Before, nothing handled these events when the legacy udev
-  rules were not installed.
-
 ### libnvme
 
 * Built with liburing, libnvme sends a passthru command through
@@ -618,22 +635,16 @@
   inherit. The byte order is not spelled out in the specification,
   see [#4278](https://github.com/linux-nvme/nvme-cli/issues/4278).
 
-### nvme-keysd
+### Build
 
-* New daemon, nvme-keysd, a technology preview: it will put NVMe/TCP
-  TLS pre-shared keys into the kernel's .nvme keyring before a
-  connection needs them. Built with the new `nvme-keysd` meson option,
-  `disabled` by default. It imports the PSKs of the entries with
-  `tls-key-source = systemd-creds` from encrypted systemd credentials in
-  `/etc/nvme/creds` at boot, and exits. It does not start when no
-  entry has a key source. It needs systemd 257 or later. See
-  `nvme-keysd(8)`.
+* New optional build dependency: `libarchive` (WDC, SanDisk, Micron,
+  Samsung and Solidigm archiving), `auto` by default. Without it, the
+  affected subcommands fail with a clear error instead of depending
+  on whatever `tar`/`zip` happens to be on `PATH`. See
+  [BUILDING.md](Documentation/BUILDING.md).
 
-* New `tls-key-source` key in `nvme-fabrics.conf`. With
-  `tls-key-source = systemd-creds`, `tls-key` is the name of a systemd
-  credential, not the key. `nvme connect-all` and nvme-discoverd then
-  connect with TLS and let the kernel find the PSK in the keyring. The
-  default, `inline`, keeps today's behavior. See `nvme-fabrics.conf(5)`.
+* The lm, sandisk, sed, wdc and zns plugins are now built on Windows.
+  Without kernel Opal support, `nvme sed` only supports `discover`.
 
 ## Changes in 3.1 (2026-09-18)
 
