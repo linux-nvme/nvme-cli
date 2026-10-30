@@ -545,3 +545,26 @@ if want_tests and py3_doc.found()
         suite: 'check',
     )
 endif
+
+# cmds-main.txt and cmd-plugins.txt are generated from the command
+# metadata of nvme. The metadata dump lives in the "utils" plugin and
+# needs json-c.
+if (want_nvme and py3_doc.found() and json_c_dep.found() and
+        'utils' in selected_plugins)
+    gen_cmd_lists = files('../scripts/generate-cmd-lists.py')
+    run_target(
+        'update-cmd-lists',
+        command: [py3_doc, gen_cmd_lists, '--nvme', nvme_exe,
+                  meson.current_source_dir()],
+        depends: nvme_exe,
+    )
+    if want_tests and meson.can_run_host_binaries()
+        test(
+            'nvme-cli - cmd-lists',
+            py3_doc,
+            args: [gen_cmd_lists, '--check', '--nvme', nvme_exe,
+                   meson.current_source_dir()],
+            suite: 'check',
+        )
+    endif
+endif
