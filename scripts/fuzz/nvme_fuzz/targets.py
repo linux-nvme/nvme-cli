@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -89,6 +90,16 @@ SANITIZER_ENV = {
     'ASAN_OPTIONS': 'allocator_may_return_null=1:max_allocation_size_mb=1024',
     'UBSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1',
 }
+
+
+def fuzz_env() -> dict[str, str]:
+    """The environment to run a fuzz target in, without FUZZ_PLUGINS: it
+    rejects the inputs of the other commands, and a merge of the corpus
+    with it set drops them. nvme-fuzz run sets it only for --plugins, on a
+    copy of the corpus."""
+    env = dict(os.environ)
+    env.pop('FUZZ_PLUGINS', None)
+    return env
 
 
 def sanitizer_env(base: dict[str, str]) -> dict[str, str]:

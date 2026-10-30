@@ -16,6 +16,11 @@ The device target runs in stages of equal time, with more device data in
 each: its findings are named data-<limit>-*, and check and triage replay
 them with that limit. Ahead of each stage, its corpus is minimized for
 the data limit of the stage, so that its jobs start fast.
+
+With --plugins, the device target runs only the commands of those plugins,
+which it takes from FUZZ_PLUGINS, on a copy of their inputs of the corpus:
+a merge with FUZZ_PLUGINS set would drop all others. What the run adds to
+the copy goes into the corpus at its end.
 """
 
 from __future__ import annotations
@@ -27,6 +32,7 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
@@ -35,7 +41,7 @@ from types import FrameType
 
 from . import device, seeds
 from .libfuzzer import copy_new, is_slow_unit
-from .targets import TARGETS, Target, parse_targets, sanitizer_env
+from .targets import TARGETS, Target, fuzz_env, parse_targets, sanitizer_env
 
 # libFuzzer stops at the end of the run itself. Only after this more is
 # it stopped, with SIGTERM, and with SIGKILL after the grace time.
@@ -89,8 +95,14 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         '--targets',
         type=parse_targets,
-        default=list(TARGETS.values()),
-        help=f'comma-separated list ({",".join(TARGETS)})',
+        help=f'comma-separated list ({",".join(TARGETS)}; device only '
+        'with --plugins)',
+    )
+    p.add_argument(
+        '--plugins',
+        type=device.parse_plugins,
+        help='the commands of the device target to fuzz, by plugin or '
+        'built-in command, e.g. ocp,micron (all)',
     )
     p.add_argument(
         '--results', type=Path, help='results directory (BUILD_DIR/fuzz)'
@@ -206,9 +218,17 @@ def job_env() -> dict[str, str]:
     settings, and allocation stacks of two frames instead of 30, which
     makes a job about a tenth faster. A finding is still reported; triage
     and check replay it with the whole stacks."""
-    env = sanitizer_env(dict(os.environ))
+    env = sanitizer_env(fuzz_env())
     env['ASAN_OPTIONS'] += ':malloc_context_size=2'
     return env
+
+
+def _link(f: Path, d: Path) -> None:
+    """Add @f to the directory @d, as a hard link if it can."""
+    try:
+        os.link(f, d / f.name)
+    except OSError:
+        shutil.copy(f, d / f.name)
 
 
 def _partitions(corpus: Path, parts: Path) -> list[Path]:
@@ -227,10 +247,7 @@ def _partitions(corpus: Path, parts: Path) -> list[Path]:
         if d not in sizes:
             d.mkdir(parents=True)
             sizes[d] = 0
-        try:
-            os.link(f, d / f.name)
-        except OSError:
-            shutil.copy(f, d / f.name)
+        _link(f, d)
         sizes[d] += 1
     return sorted(sizes, key=lambda d: -sizes[d])
 
@@ -243,6 +260,7 @@ def _merge(
     stop: _Stop,
     jobs: int,
     limit: int | None,
+    plugins: tuple[str, ...] | None = None,
 ) -> None:
     """Keep only the inputs of @corpus which add coverage, with the data
     limit @limit. The corpus grows by each input which added some when it
@@ -268,6 +286,8 @@ def _merge(
     env['ASAN_OPTIONS'] += ':detect_leaks=0'
     if limit is not None:
         env['FUZZ_DATA_LIMIT'] = str(limit)
+    if plugins:
+        env['FUZZ_PLUGINS'] = ','.join(plugins)
 
     def merge(out: Path, src: Path, log_name: str) -> bool:
         if stop.interrupted:
@@ -326,6 +346,46 @@ def _findings(artifacts: Path, since: float) -> list[Path]:
     )
 
 
+def _unselect(corpus: Path, work: Path) -> None:
+    """Add what the run of the selected commands found in @work to
+    @corpus, and remove @work."""
+    if work.is_dir():
+        copy_new(work, corpus)
+        shutil.rmtree(work)
+
+
+def _select(corpus: Path, plugins: tuple[str, ...]) -> Path:
+    """A copy of the inputs of @corpus which run a command of @plugins,
+    hard links to them, and an input without device data of each of these
+    commands, for each PCI ID its plugin checks: one which has none in the
+    corpus is reached as well."""
+    work = corpus.with_name(f'{corpus.name}.select')
+    # What a run which did not end left
+    _unselect(corpus, work)
+    work.mkdir()
+    cmds = device.of_plugins(device.commands(), plugins)
+    indices = {c.index for c in cmds}
+    n = 0
+    for f in corpus.iterdir():
+        with f.open('rb') as fh:
+            parts = device.split(fh.read(2))
+        if parts is None or parts[0] not in indices:
+            continue
+        _link(f, work)
+        n += 1
+    for c in cmds:
+        for vid, did in c.pci_ids or ((0, 0),):
+            name = f'header-{c.index}'
+            if c.pci:
+                name += f'-{vid:04x}{did:04x}'
+            (work / name).write_bytes(c.header(pci_ids=(vid, did)))
+    print(
+        f'fuzz-device: {len(cmds)} commands of {",".join(plugins)}, '
+        f'{n} inputs of the corpus'
+    )
+    return work
+
+
 def _run_target(
     t: Target,
     binary: Path,
@@ -335,6 +395,7 @@ def _run_target(
     data_limits: tuple[int, ...] | None,
     mock_seeds: Path | None,
     stop: _Stop,
+    plugins: tuple[str, ...] | None = None,
 ) -> tuple[list[Path], int, Path]:
     corpus = results / 'corpus' / t.name
     artifacts = results / 'artifacts' / t.name
@@ -347,6 +408,9 @@ def _run_target(
     # The build of the mock tests whose answers seed the device target
     if mock_seeds and t.name == 'device':
         seeds.add_seeds(mock_seeds, corpus)
+    if t.name != 'device':
+        plugins = None
+    work = _select(corpus, plugins) if plugins else corpus
 
     # The jobs are independent processes on the shared corpus. The -fork
     # mode is newer, but the libFuzzer of clang 22 crashes in it. A job
@@ -360,6 +424,8 @@ def _run_target(
     for i, limit in enumerate(stages):
         secs = max(1, seconds // len(stages) + (i < seconds % len(stages)))
         env = job_env()
+        if plugins:
+            env['FUZZ_PLUGINS'] = ','.join(plugins)
         prefix = f'{artifacts}/'
         cwd = logs
         what = ''
@@ -371,7 +437,7 @@ def _run_target(
             what = f', {limit} bytes of device data'
         # Each stage starts with the corpus minimized for its limit, and
         # each of its jobs loads all of it
-        _merge(t, binary, corpus, cwd, stop, jobs, limit)
+        _merge(t, binary, work, cwd, stop, jobs, limit, plugins)
         if stop.interrupted:
             break
         cmd = [
@@ -383,7 +449,7 @@ def _run_target(
             f'-reload={RELOAD_SECONDS}',
             f'-artifact_prefix={prefix}',
             *t.libfuzzer_options(),
-            str(corpus),
+            str(work),
         ]
         print(
             f'fuzz-{t.name}: {secs}s, {jobs} jobs{what}, logs in {cwd}',
@@ -403,6 +469,8 @@ def _run_target(
             status = res
         if stop.interrupted:
             break
+    if work != corpus:
+        _unselect(corpus, work)
     # What jobs which crashed left behind, e.g. the sysfs of the device
     # target
     for d in logs.rglob(f'fuzz-{t.name}-??????'):
@@ -433,7 +501,17 @@ def main(args: argparse.Namespace) -> int:
             f.write(''.join(f'{x}\n' for x in (line, *details)))
 
     with _Stop() as stop:
-        for t in args.targets:
+        targets = args.targets or (
+            [TARGETS['device']] if args.plugins else list(TARGETS.values())
+        )
+        if args.plugins and TARGETS['device'] not in targets:
+            print(
+                'nvme-fuzz run: --plugins selects commands of the device '
+                'target, which --targets leaves out',
+                file=sys.stderr,
+            )
+            return 2
+        for t in targets:
             binary = t.binary(args.build_dir)
             if not binary.exists():
                 print(f'fuzz-{t.name}: not built, skipped')
@@ -447,6 +525,7 @@ def main(args: argparse.Namespace) -> int:
                 args.data_limits,
                 None if args.no_mock_seeds else args.build_dir,
                 stop,
+                args.plugins,
             )
             if found:
                 failed.append(t.name)

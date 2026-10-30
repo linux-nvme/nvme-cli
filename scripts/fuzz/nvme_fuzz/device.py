@@ -14,6 +14,7 @@ device ID, and then the answers of the device.
 
 from __future__ import annotations
 
+import argparse
 import re
 import struct
 from dataclasses import dataclass
@@ -210,6 +211,26 @@ def parse_entries(spec: str, n: int) -> list[int]:
         first, _, last = part.partition('-')
         res += range(int(first), int(last or first) + 1)
     return [i for i in res if 0 <= i < n]
+
+
+def of_plugins(cmds: list[Command], plugins: tuple[str, ...]) -> list[Command]:
+    """The commands of @cmds whose first word is one of @plugins: the
+    plugin, or the built-in command."""
+    return [c for c in cmds if c.argv[0] in plugins]
+
+
+def parse_plugins(spec: str) -> tuple[str, ...]:
+    """The plugins of a comma-separated list of them, for FUZZ_PLUGINS of
+    the device target."""
+    known = dict.fromkeys(c.argv[0] for c in commands())
+    plugins = tuple(spec.split(','))
+    for name in plugins:
+        if name not in known:
+            raise argparse.ArgumentTypeError(
+                f"no command of '{name}' in the device target, one of: "
+                f'{", ".join(sorted(known))}'
+            )
+    return plugins
 
 
 def describe(data: bytes, cmds: list[Command]) -> str:
