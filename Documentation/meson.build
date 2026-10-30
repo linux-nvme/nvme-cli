@@ -531,3 +531,17 @@ if want_nvme
         endforeach
     endforeach
 endif
+
+py3_doc = find_program('python3', required: false)
+if want_tests and py3_doc.found()
+    test(
+        'nvme-cli - doc-sources',
+        py3_doc,
+        args: [
+            files('../scripts/check-doc-sources.py'),
+            meson.current_source_dir(),
+        ] + adoc_sources_man1 + adoc_sources_man5 + adoc_sources_man8 +
+            adoc_includes,
+        suite: 'check',
+    )
+endif
