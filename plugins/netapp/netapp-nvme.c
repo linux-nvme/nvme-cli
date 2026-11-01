@@ -365,16 +365,43 @@ static void netapp_ontapdevice_json(struct json_object *devices, char *devname,
 	json_array_add_value_object(devices, device_attrs);
 }
 
-static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
-		int count, int format, const char *devname)
+static void netapp_smdevice_get_labels(struct smdevice_info *device,
+		char *array_label, char *volume_label, char *nguid_str,
+		int *slta)
 {
-	int i, slta;
+	netapp_convert_string(array_label, (char *)&device->ctrl.vs[20],
+			ARRAY_LABEL_LEN / 2);
+	*slta = device->ctrl.vs[0] & 0x1;
+	netapp_convert_string(volume_label, (char *)device->ns.vs,
+			VOLUME_LABEL_LEN / 2);
+	netapp_nguid_to_str(nguid_str, device->ns.nguid);
+}
+
+static void netapp_smdevice_show_verbose(struct smdevice_info *device,
+		const char *formatstr)
+{
 	char array_label[ARRAY_LABEL_LEN / 2 + 1];
 	char volume_label[VOLUME_LABEL_LEN / 2 + 1];
 	char nguid_str[NETAPP_NGUID_LEN];
 	unsigned long long lba;
 	char size[NETAPP_ATTR_LEN], used[NETAPP_ATTR_LEN];
 	char blk_size[NETAPP_ATTR_LEN], version[9];
+	int slta;
+
+	netapp_get_ns_attrs(size, used, blk_size, version, &lba,
+			&device->ctrl, &device->ns);
+	netapp_smdevice_get_labels(device, array_label, volume_label,
+			nguid_str, &slta);
+
+	printf(formatstr, device->dev, array_label, volume_label,
+			device->nsid, nguid_str, slta ? 'A' : 'B', "unknown",
+			size, blk_size, version);
+}
+
+static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
+		int count, int format, const char *devname)
+{
+	int i;
 
 	char *formatstr = NULL;
 	char basestr[] =
@@ -398,63 +425,45 @@ static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
 			"------------", "---------",
 			"---------", "---------");
 		formatstr = columnstr;
-	}
-	else
+	} else
 		return;
 
 	for (i = 0; i < count; i++) {
-		if (devname && !strcmp(devname, basename(devices[i].dev))) {
-			/* found the device, fetch info for that alone */
-			netapp_get_ns_attrs(size, used, blk_size, version,
-					&lba, &devices[i].ctrl, &devices[i].ns);
-			netapp_convert_string(array_label,
-					(char *)&devices[i].ctrl.vs[20],
-					ARRAY_LABEL_LEN / 2);
-			slta = devices[i].ctrl.vs[0] & 0x1;
-			netapp_convert_string(volume_label,
-					(char *)devices[i].ns.vs,
-					VOLUME_LABEL_LEN / 2);
-			netapp_nguid_to_str(nguid_str, devices[i].ns.nguid);
-
-			printf(formatstr, devices[i].dev, array_label,
-					volume_label, devices[i].nsid,
-					nguid_str,
-					slta ? 'A' : 'B', "unknown", size,
-					blk_size, version);
+		/* when a specific device is requested, skip the others */
+		if (devname && strcmp(devname, basename(devices[i].dev)))
+			continue;
+		netapp_smdevice_show_verbose(&devices[i], formatstr);
+		if (devname)
 			return;
-		}
 	}
 
-	for (i = 0; i < count; i++) {
-		/* fetch info and print for all devices */
-		netapp_get_ns_attrs(size, used, blk_size, version,
-				&lba, &devices[i].ctrl, &devices[i].ns);
-		netapp_convert_string(array_label,
-				(char *)&devices[i].ctrl.vs[20],
-				ARRAY_LABEL_LEN / 2);
-		slta = devices[i].ctrl.vs[0] & 0x1;
-		netapp_convert_string(volume_label,
-				(char *)devices[i].ns.vs,
-				VOLUME_LABEL_LEN / 2);
-		netapp_nguid_to_str(nguid_str, devices[i].ns.nguid);
-
-		printf(formatstr, devices[i].dev, array_label,
-				volume_label, devices[i].nsid,
-				nguid_str,
-				slta ? 'A' : 'B', "unknown", size,
-				blk_size, version);
-	}
+	if (devname)
+		nvme_show_error("/dev/%s is not an smdevice", devname);
 }
 
-static void netapp_smdevices_print_regular(struct smdevice_info *devices,
-		int count, int format, const char *devname)
+static void netapp_smdevice_show_regular(struct smdevice_info *device,
+		const char *formatstr)
 {
-	int i, slta;
 	char array_label[ARRAY_LABEL_LEN / 2 + 1];
 	char volume_label[VOLUME_LABEL_LEN / 2 + 1];
 	char nguid_str[NETAPP_NGUID_LEN];
 	unsigned long long lba;
 	char size[NETAPP_ATTR_LEN];
+	int slta;
+
+	netapp_get_ns_size(size, &lba, &device->ns);
+	netapp_smdevice_get_labels(device, array_label, volume_label,
+			nguid_str, &slta);
+
+	printf(formatstr, device->dev, array_label, volume_label,
+			device->nsid, nguid_str, slta ? 'A' : 'B', "unknown",
+			size);
+}
+
+static void netapp_smdevices_print_regular(struct smdevice_info *devices,
+		int count, int format, const char *devname)
+{
+	int i;
 
 	char *formatstr = NULL;
 	char basestr[] =
@@ -476,41 +485,39 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 		formatstr = basestr;
 
 	for (i = 0; i < count; i++) {
-		if (devname && !strcmp(devname, basename(devices[i].dev))) {
-			/* found the device, fetch info for that alone */
-			netapp_get_ns_size(size, &lba, &devices[i].ns);
-			netapp_convert_string(array_label,
-					(char *)&devices[i].ctrl.vs[20],
-					ARRAY_LABEL_LEN / 2);
-			slta = devices[i].ctrl.vs[0] & 0x1;
-			netapp_convert_string(volume_label,
-					(char *)devices[i].ns.vs,
-					VOLUME_LABEL_LEN / 2);
-			netapp_nguid_to_str(nguid_str, devices[i].ns.nguid);
-
-			printf(formatstr, devices[i].dev, array_label,
-					volume_label, devices[i].nsid,
-					nguid_str,
-					slta ? 'A' : 'B', "unknown", size);
+		/* when a specific device is requested, skip the others */
+		if (devname && strcmp(devname, basename(devices[i].dev)))
+			continue;
+		netapp_smdevice_show_regular(&devices[i], formatstr);
+		if (devname)
 			return;
-		}
 	}
 
-	for (i = 0; i < count; i++) {
-		/* fetch info for all devices */
-		netapp_get_ns_size(size, &lba, &devices[i].ns);
-		netapp_convert_string(array_label,
-				(char *)&devices[i].ctrl.vs[20],
-				ARRAY_LABEL_LEN / 2);
-		slta = devices[i].ctrl.vs[0] & 0x1;
-		netapp_convert_string(volume_label, (char *)devices[i].ns.vs,
-				VOLUME_LABEL_LEN / 2);
-		netapp_nguid_to_str(nguid_str, devices[i].ns.nguid);
+	if (devname)
+		nvme_show_error("/dev/%s is not an smdevice", devname);
+}
 
-		printf(formatstr, devices[i].dev, array_label,
-				volume_label, devices[i].nsid, nguid_str,
-				slta ? 'A' : 'B', "unknown", size);
-	}
+static void netapp_smdevice_show_json(struct smdevice_info *device,
+		struct json_object *json_devices)
+{
+	char array_label[ARRAY_LABEL_LEN / 2 + 1];
+	char volume_label[VOLUME_LABEL_LEN / 2 + 1];
+	char nguid_str[NETAPP_NGUID_LEN];
+	unsigned long long lba;
+	char size[NETAPP_ATTR_LEN], used[NETAPP_ATTR_LEN];
+	char blk_size[NETAPP_ATTR_LEN], version[9];
+	int slta;
+
+	netapp_get_ns_attrs(size, used, blk_size, version, &lba,
+			&device->ctrl, &device->ns);
+	netapp_smdevice_get_labels(device, array_label, volume_label,
+			nguid_str, &slta);
+
+	netapp_smdevice_json(json_devices, device->dev, array_label,
+			volume_label, device->nsid, nguid_str,
+			slta ? "A" : "B", "unknown", version, lba,
+			le64_to_cpu(device->ns.nsze),
+			le64_to_cpu(device->ns.nuse));
 }
 
 static void netapp_smdevices_print_json(struct smdevice_info *devices,
@@ -518,61 +525,23 @@ static void netapp_smdevices_print_json(struct smdevice_info *devices,
 {
 	struct json_object *root = NULL;
 	struct json_object *json_devices = NULL;
-	int i, slta;
-	char array_label[ARRAY_LABEL_LEN / 2 + 1];
-	char volume_label[VOLUME_LABEL_LEN / 2 + 1];
-	char nguid_str[NETAPP_NGUID_LEN];
-	unsigned long long lba;
-	char size[NETAPP_ATTR_LEN], used[NETAPP_ATTR_LEN];
-	char blk_size[NETAPP_ATTR_LEN], version[9];
+	int i;
 
 	/* prepare for the json output */
 	root = json_create_object();
 	json_devices = json_create_array();
 
 	for (i = 0; i < count; i++) {
-		if (devname && !strcmp(devname, basename(devices[i].dev))) {
-			/* found the device, fetch info for that alone */
-			netapp_get_ns_attrs(size, used, blk_size, version,
-					&lba, &devices[i].ctrl, &devices[i].ns);
-			netapp_convert_string(array_label,
-					(char *)&devices[i].ctrl.vs[20],
-					ARRAY_LABEL_LEN / 2);
-			slta = devices[i].ctrl.vs[0] & 0x1;
-			netapp_convert_string(volume_label,
-					(char *)devices[i].ns.vs,
-					VOLUME_LABEL_LEN / 2);
-			netapp_nguid_to_str(nguid_str, devices[i].ns.nguid);
-			netapp_smdevice_json(json_devices, devices[i].dev,
-					array_label, volume_label,
-					devices[i].nsid, nguid_str,
-					slta ? "A" : "B", "unknown",
-					version, lba,
-					le64_to_cpu(devices[i].ns.nsze),
-					le64_to_cpu(devices[i].ns.nuse));
+		/* when a specific device is requested, skip the others */
+		if (devname && strcmp(devname, basename(devices[i].dev)))
+			continue;
+		netapp_smdevice_show_json(&devices[i], json_devices);
+		if (devname)
 			goto out;
-		}
 	}
 
-	for (i = 0; i < count; i++) {
-		/* fetch info for all devices */
-		netapp_get_ns_attrs(size, used, blk_size, version,
-				&lba, &devices[i].ctrl, &devices[i].ns);
-		netapp_convert_string(array_label,
-				(char *)&devices[i].ctrl.vs[20],
-				ARRAY_LABEL_LEN / 2);
-		slta = devices[i].ctrl.vs[0] & 0x1;
-		netapp_convert_string(volume_label,
-				(char *)devices[i].ns.vs,
-				VOLUME_LABEL_LEN / 2);
-		netapp_nguid_to_str(nguid_str, devices[i].ns.nguid);
-		netapp_smdevice_json(json_devices, devices[i].dev,
-				array_label, volume_label, devices[i].nsid,
-				nguid_str, slta ? "A" : "B", "unknown",
-				version, lba,
-				le64_to_cpu(devices[i].ns.nsze),
-				le64_to_cpu(devices[i].ns.nuse));
-	}
+	if (devname)
+		nvme_show_error("/dev/%s is not an smdevice", devname);
 
 out:
 	/* complete the json output */
