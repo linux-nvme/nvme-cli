@@ -732,7 +732,9 @@ test_status=0
 "${test_fn}" || test_status=$?
 # Write the report also when a test fails.
 if [[ "${use_coverage}" -eq 1 ]]; then
-    gcovr -r . "${BUILDDIR}" --xml-pretty -o coverage.xml
+    gcovr -r . "${BUILDDIR}" --xml-pretty \
+        --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
+        -o coverage.xml
 fi
 if [[ "${test_status}" -ne 0 ]]; then
     exit "${test_status}"

@@ -104,7 +104,9 @@ jobs:
 
             cd ../nvme-cli
             sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
-            gcovr -r . --object-directory .build-ci --xml-pretty -o coverage.xml
+            gcovr -r . --object-directory .build-ci --xml-pretty \
+                --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
+                -o coverage.xml
             cp coverage.xml ../blktests/results/coverage-blktests.xml
 
             if [ "${build_status}" -ne 0 ]; then
@@ -241,6 +243,7 @@ jobs:
 
             sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
             gcovr -r . --object-directory .build-ci --xml-pretty \
+                --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
                 -o daemon-results/coverage-daemons.xml
 
             if [ "${discoverd_status}" -ne 0 ]; then
@@ -281,6 +284,7 @@ jobs:
           meson test -C .build-ci --suite fuzz --logbase testlog-fuzz \
               || fuzz_status=$?
           gcovr -r . .build-ci --xml-pretty \
+              --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
               -o test-results/coverage-fuzz-seeds.xml
           exit "${fuzz_status}"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
