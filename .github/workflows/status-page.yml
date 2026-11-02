@@ -1,0 +1,94 @@
+---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
+# The public status page: the nightly results and the clang analyzer
+# report. scripts/nightly/nvme-nightly builds it as a plain directory;
+# this workflow only collects its inputs and uploads it.
+
+name: Status page
+
+on:
+  workflow_run:
+    workflows: ["Analyzers", "Run nightly tests"]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  publish-status-page:
+    if: ${{ github.repository == 'linux-nvme/nvme-cli' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    env:
+      PAGE_URL: https://linux-nvme.github.io/nvme-cli/
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Download the latest reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The latest scheduled runs of the default branch.
+          latest() {
+            gh run list -R "${GITHUB_REPOSITORY}" -w "$1" -b master \
+                -e schedule -s completed -L 1 \
+                --json databaseId -q '.[0].databaseId'
+          }
+          run="$(latest analyzer.yml)"
+          if [ -n "${run}" ]; then
+            gh run download "${run}" -R "${GITHUB_REPOSITORY}" \
+                -n clang-analyzer-report -D reports/analyzer || true
+          fi
+          run="$(latest run-nightly-tests.yml)"
+          if [ -n "${run}" ]; then
+            gh run download "${run}" -R "${GITHUB_REPOSITORY}" \
+                -p 'artifact-*' -D reports/nightly || true
+          fi
+
+      - name: Build the page
+        run: |
+          # scan-build writes one directory per run. It writes none when
+          # it finds nothing.
+          analyzer="$(find reports/analyzer -mindepth 1 -maxdepth 1 -type d \
+              2>/dev/null | head -n 1)"
+          if [ -z "${analyzer}" ]; then
+            analyzer=reports/no-analyzer-report
+            mkdir -p "${analyzer}"
+            printf '<!DOCTYPE html>\n<title>clang analyzer</title>\n<p>No reports.</p>\n' \
+              > "${analyzer}/index.html"
+          fi
+          summary="$(find reports/nightly -name blktests-summary.json \
+              2>/dev/null | head -n 1)"
+          # The CI image has the jinja2 of the page templates.
+          docker run --rm -v "${PWD}:/w" -w /w \
+              ghcr.io/linux-nvme/debian:latest \
+              scripts/nightly/nvme-nightly site -o site \
+                  --history "${PAGE_URL}history.json" \
+                  ${summary:+--summary "${summary}"} \
+                  --analyzer "${analyzer}" \
+                  --link "Codecov=https://app.codecov.io/gh/${GITHUB_REPOSITORY}" \
+                  --link "Known failures=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/issues?q=is%3Aissue+is%3Aopen+label%3Ablktests-known-failure"
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

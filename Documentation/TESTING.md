@@ -438,7 +438,9 @@ is closed by hand, as the test may be flapping.
 
 The tooling, `scripts/nightly/nvme-nightly`, does not depend on GitHub
 beyond reading the issues: the list is a plain text file which can also
-be written by hand, and the summary of a run is a JSON file.
+be written by hand, and the summary of a run is a JSON file. It is plain
+Python; only the status page needs Jinja2 for its templates
+(`scripts/nightly/nvme_nightly/templates`).
 
 ```
 # the list of the open issues, and the blktests config lines for it
@@ -447,7 +449,16 @@ scripts/nightly/nvme-nightly known-failures --github linux-nvme/nvme-cli \
 # judge a blktests results directory: exit status 1 for a failed run
 scripts/nightly/nvme-nightly blktests-summary blktests/results \
     --known-failures known-failures.txt -o blktests-summary.json
+# build the status page from the summary and the previous history
+scripts/nightly/nvme-nightly site -o site --summary blktests-summary.json \
+    --history https://linux-nvme.github.io/nvme-cli/history.json
 ```
+
+The status page, <https://linux-nvme.github.io/nvme-cli/>, shows the
+result of the last night, the known failures and the history of the
+failed tests, and links the clang analyzer report. The `Status page`
+workflow builds it after each nightly and analyzer run; the page keeps
+no state but its `history.json`, which the next build reads back.
 
 ## NVMe-oF failover tests
 
