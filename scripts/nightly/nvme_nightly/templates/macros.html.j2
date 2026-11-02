@@ -1,0 +1,21 @@
+{#- SPDX-License-Identifier: GPL-2.0-or-later -#}
+
+{#- The status of a test run: color, glyph and label, never color alone. -#}
+{% macro cell(status, title='', href='') -%}
+  {%- set c = cells[status] -%}
+  {%- set label = title ~ ': ' ~ c.label if title else c.label -%}
+  {%- if href | weburl -%}
+    <a href="{{ href | weburl }}" class="cell {{ c.cls }}" title="{{ label }}" aria-label="{{ label }}">{{ c.glyph }}</a>
+  {%- else -%}
+    <span class="cell {{ c.cls }}" title="{{ label }}" aria-label="{{ label }}">{{ c.glyph }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{#- A reference: a link for a web URL (an issue as #N), else the text. -#}
+{% macro ref(value, text='') -%}
+  {%- if value | weburl -%}
+    <a href="{{ value | weburl }}">{{ text or value | short_ref }}</a>
+  {%- else -%}
+    {{ text or value }}
+  {%- endif -%}
+{%- endmacro %}

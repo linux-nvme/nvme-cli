@@ -1,0 +1,20 @@
+{#- SPDX-License-Identifier: GPL-2.0-or-later -#}
+{#- The layout of the pages of the status site. -#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="viz-root">
+<main>
+  <h1>{{ title }}</h1>
+  {% if links %}
+  <p>{% for link in links %}<a href="{{ link.href }}">{{ link.text }}</a>{{ ' &middot; ' | safe if not loop.last }}{% endfor %}</p>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>
