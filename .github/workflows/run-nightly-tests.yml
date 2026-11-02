@@ -18,8 +18,37 @@ permissions:
   contents: read
 
 jobs:
-  nightly-tests:
+  # The blktests failures which are known and tracked in an issue each:
+  # the open issues with the label, see Documentation/TESTING.md. They
+  # run, but do not fail the night. A closed issue counts again.
+  known-failures:
     if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    outputs:
+      list: ${{ steps.list.outputs.list }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Collect the known failures
+        id: list
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # The entries are checked: test names only, no shell code.
+          scripts/nightly/nvme-nightly known-failures \
+              --github "${GITHUB_REPOSITORY}" -o known-failures.txt
+          cat known-failures.txt
+          {
+            echo 'list<<KNOWN_FAILURES_EOF'
+            cat known-failures.txt
+            echo 'KNOWN_FAILURES_EOF'
+          } >> "${GITHUB_OUTPUT}"
+
+  nightly-tests:
+    # Also without the list: then the known failures fail the run.
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
+    needs: known-failures
     runs-on: arc-vm-nvme-cli
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -48,7 +77,8 @@ jobs:
             bc libnl3-cli cryptsetup sg3_utils pciutils unzip jq git wget \
             meson json-c-devel openssl-devel keyutils-libs-devel dbus-devel \
             swig xz-devel libcurl-devel curl libarchive libarchive-devel json-c \
-            expect gcovr autoconf automake gnutls-devel glib2-devel libnl3-devel
+            expect gcovr autoconf automake gnutls-devel glib2-devel libnl3-devel \
+            python3
 
             # mdadm has a buffer overflow in v4.3 and was fixed with this commit:
             # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7f960c3bd050e76f8bf0a8a0c8fbdcbaa565fc78
@@ -107,16 +137,38 @@ jobs:
             nvme --version | tee -a results/nvme-cli.version
             sudo env PATH="$PWD/.build-ci:$PATH" nvme --version | tee -a results/nvme-cli.version
 
+            cat > results/known-failures.txt << 'KNOWN_FAILURES_EOF'
+            ${{ needs.known-failures.outputs.list }}
+            KNOWN_FAILURES_EOF
+            nightly=../nvme-cli/scripts/nightly/nvme-nightly
+            "${nightly}" known-failures --file results/known-failures.txt \
+                -o /dev/null --config known-failures.cfg
+
             # Run blktests nvme and md group
             cat > config << EF
             TEST_DEVS=(${BDEV0})
             NVMET_TRTYPES="loop rdma tcp"
-            EXCLUDE=(nvme/010 nvme/012 nvme/034 nvme/035)
             EF
+            # The tests not to run come from the issues as well.
+            cat known-failures.cfg >> config
             set +e
             sudo env PATH="$PWD/.build-ci:$PATH" ./check nvme md/001
-            blktests_status=$?
+            check_status=$?
             set -e
+
+            # The known failures do not fail the run, with or without the
+            # IGNORE_FAILURE support of blktests.
+            blktests_status=0
+            "${nightly}" blktests-summary results \
+                --known-failures results/known-failures.txt \
+                --check-status "${check_status}" \
+                --meta run_id=${{ github.run_id }} \
+                --meta run_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} \
+                --meta date="$(date -u '+%F %T')" \
+                --meta kernel="$(uname -r)" \
+                --meta nvme_cli=${{ github.sha }} \
+                --meta blktests="$(git rev-parse HEAD)" \
+                -o results/blktests-summary.json || blktests_status=$?
 
             cd ../nvme-cli
             sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
