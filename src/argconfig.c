@@ -22,6 +22,7 @@
 
 #include <libnvme.h>
 
+#include <shared/compiler-attributes-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
 #include <shared/suffix-util.h>
@@ -552,6 +553,19 @@ static struct {
 	int argc;
 } operands;
 
+/*
+ * Backing store for operands.argv. argconfig_parse() frees the previous one
+ * on the next call; this releases the final one when the program exits, so
+ * it is not reported as still reachable.
+ */
+static char **operand_buf;
+
+static void __shr_destructor argconfig_free_operands(void)
+{
+	free(operand_buf);
+	operand_buf = NULL;
+}
+
 int argconfig_nr_operands(void)
 {
 	return operands.argc;
@@ -1036,7 +1050,6 @@ static bool argconfig_check_verbose(struct argconfig_commandline_options *root)
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
-	static char **operand_buf;
 	struct argconfig_parser p = {
 		.argc = argc,
 		.argv = argv,
