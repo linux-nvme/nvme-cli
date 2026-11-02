@@ -27,3 +27,25 @@ pip install \
 When a tag matching `vX.Y`, `vX.Y.Z` or a release candidate `vX.Y[.Z]-rcN` is pushed, the same workflow publishes the release sdist to the official [PyPI](https://pypi.org/) registry. Alpha and beta tags (`-a.N`, `-b.N`) are not published.
 
 Publishing uses OIDC (`id-token: write`) — no API token is required.
+
+## Removing old dev releases
+
+PyPI has no API to delete releases, and the OIDC publishing cannot delete
+either. Remove old dev releases from TestPyPI by hand with
+[pypi-cleanup](https://github.com/arcivanov/pypi-cleanup). It logs in with
+the password and the 2FA code of a TestPyPI owner of `libnvme3`:
+
+```bash
+pip install pypi-cleanup
+
+# list what would be deleted, no login needed
+pypi-cleanup -t https://test.pypi.org -p libnvme3 \
+  --leave-most-recent-only --query-only
+
+# delete all versions except the most recent one
+pypi-cleanup -t https://test.pypi.org -p libnvme3 -u <username> \
+  --leave-most-recent-only --do-it
+```
+
+`--leave-most-recent-only` deletes every version except the newest,
+not only the dev versions. Do not run it against PyPI.
