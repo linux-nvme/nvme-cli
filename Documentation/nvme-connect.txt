@@ -24,7 +24,11 @@ specified by the --nqn option.
 OPTIONS
 -------
 --config=<filename>::
-	Use the specified JSON configuration file instead of the default.
+	Connect every connection of the specified INI configuration file
+	(see nvme-fabrics.conf(5)) directly, without discovery, instead of
+	the one given on the command line. A legacy JSON file is converted
+	first. Without this option, 'nvme connect' reads no configuration
+	file. 'none' is the same as no option.
 
 --devid-file=<filename>::
 	Write the kernel-assigned device name (for example, nvme0) to

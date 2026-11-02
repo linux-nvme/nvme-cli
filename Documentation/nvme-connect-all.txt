@@ -27,10 +27,12 @@ DESCRIPTION
 Send one or more Discovery requests to a NVMe over Fabrics Discovery
 Controller, and create controllers for the returned discovery records.
 
-If no parameters are given, then 'nvme connect-all' will attempt to
-find a @SYSCONFDIR@/nvme/discovery.conf file to use to supply a list of
-connect-all commands to run. If no @SYSCONFDIR@/nvme/discovery.conf file
-exists, the command will quit with an error.
+If no Discovery Controller is given, 'nvme connect-all' reads the
+NVMe-oF configuration, @SYSCONFDIR@/nvme/nvme-fabrics.conf and its
+drop-in files (see nvme-fabrics.conf(5)), and connects to every Discovery
+Controller in it. A missing configuration is the same as an empty one.
+A legacy @SYSCONFDIR@/nvme/discovery.conf or config.json is converted
+first; see nvme-config-convert(1).
 
 Otherwise a specific Discovery Controller should be specified using the
 --transport, --traddr and if necessary the --trsvcid and a Discovery
@@ -56,11 +58,11 @@ OPTIONS
 
 -J <filename>::
 --config=<filename>::
-	Use the specified JSON configuration file instead of the
-	default @SYSCONFDIR@/nvme/config.json file or 'none' to not read in
-	an existing configuration file. The JSON configuration file
-	format is documented in
-	https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/doc/config-schema.json
+	Use the specified INI configuration file instead of the default
+	@SYSCONFDIR@/nvme/nvme-fabrics.conf, or 'none' to not read a
+	configuration file. The file is read only when no Discovery
+	Controller is given on the command line. A legacy JSON file is
+	converted first. The format is described in nvme-fabrics.conf(5).
 
 -p::
 --persistent[=<no|auto|force>]::
@@ -137,22 +139,21 @@ the RDMA network. Port 4420 is used by default:
 * Issue a 'nvme connect-all' command with a user-defined path for the NBFT table:
 +
 -----------
-# nvme connet-all --nbft-path=/sys/firmware/acpi/tables/NBFT1
+# nvme connect-all --nbft-path=/sys/firmware/acpi/tables/NBFT1
 ------------
 +
-* Issue a 'nvme connect-all' command using a @SYSCONFDIR@/nvme/discovery.conf file:
+* Issue a 'nvme connect-all' command for every Discovery Controller in
+@SYSCONFDIR@/nvme/nvme-fabrics.conf. Query the two ports of the
+Discovery Controller, because some resources may be accessible on one
+port only:
 +
 -----------
-# Machine default 'nvme discover' commands. Query the
-# Discovery Controller's two ports (some resources may only
-# be accessible on a single port). Note an official
-# nqn (Host) name defined in the NVMe specification is being used
-# in this example.
--t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
--t rdma -a 192.168.1.4   -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
+# @SYSCONFDIR@/nvme/nvme-fabrics.conf
+[Discovery Controller]
+controller = transport=rdma;traddr=192.168.69.33;trsvcid=4420
+controller = transport=rdma;traddr=192.168.1.4;trsvcid=4420
 
-At the prompt type "nvme connect-all".
-
+# nvme connect-all
 ------------
 
 SEE ALSO

@@ -18,8 +18,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Build one NVMe-oF connection entry from command-line options and add it to
-the INI configuration used by 'nvme connect', 'nvme discover', and
-'nvme connect-all'. The format is documented at
+the INI configuration used by 'nvme discover' and 'nvme connect-all',
+and by 'nvme connect --config'. The format is documented at
 https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
 
 If the target file exists, its connections are kept and the new entry is
@@ -33,6 +33,9 @@ is then optional.
 
 A connection with an explicit --hostnqn or --hostid is written to a
 drop-in under '<file>.d/'. One without either goes into the main file.
+
+The file can hold KX-HMAC-CHAP secrets and TLS PSKs. A new file is
+created with mode 0600. An existing file keeps its mode.
 
 OPTIONS
 -------
