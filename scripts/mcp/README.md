@@ -7,7 +7,15 @@ I/O policies compare under a workload.
 
 It reads `nvme top --output-format=json`, see nvme-top(1). It needs Python
 3.10 or newer and nothing beyond its standard library, and runs from the
-source tree. Like nvme top, it has to run as root.
+source tree.
+
+Like nvme top, it runs as any user: the statistics and counters it reads
+are world-readable in sysfs. Two things need root. `nvme_watch` reads the
+kernel log from `/dev/kmsg`, which only root can read when
+`kernel.dmesg_restrict` is set; without it, the watch reports
+`KernelLogError` instead of the log lines. The tools of
+`--allow-iopolicy` write the `iopolicy` of a subsystem, which only root
+can.
 
 ## Tools
 
@@ -30,12 +38,13 @@ the whole call.
 With Claude Code, for example:
 
 ```
-claude mcp add nvme -- sudo /path/to/nvme-cli/scripts/mcp/nvme-mcp
+claude mcp add nvme -- /path/to/nvme-cli/scripts/mcp/nvme-mcp
 claude mcp add nvme -- sudo /path/to/nvme-cli/scripts/mcp/nvme-mcp \
     --allow-iopolicy --nvme /path/to/build/nvme
 ```
 
-`--nvme` picks the nvme binary, which needs `nvme top -o json`.
+`--nvme` picks the nvme binary, which needs `nvme top -o json`. The
+second form runs as root for the I/O policy tools and the kernel log.
 
 ## Development
 
