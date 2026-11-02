@@ -48,7 +48,7 @@ jobs:
             bc libnl3-cli cryptsetup sg3_utils pciutils unzip jq git wget \
             meson json-c-devel openssl-devel keyutils-libs-devel dbus-devel \
             swig xz-devel libcurl-devel curl libarchive libarchive-devel json-c \
-            expect gcovr
+            expect gcovr autoconf automake gnutls-devel glib2-devel libnl3-devel
 
             # mdadm has a buffer overflow in v4.3 and was fixed with this commit:
             # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7f960c3bd050e76f8bf0a8a0c8fbdcbaa565fc78
@@ -64,6 +64,22 @@ jobs:
             git checkout mdadm-4.6
             make -j$(nproc)
             sudo make install
+            cd -
+
+            # The tlshd of ktls-utils 1.4.0 (Fedora 44) loses the .nvme
+            # keyring when TLS handshakes run in parallel, which nvme-tcp
+            # does since 7.4. ktls-utils 1.5.0 fixes this (3a6658e).
+            # TODO: once Fedora ships ktls-utils 1.5.0 or later, drop this
+            # block.
+            git clone --depth 1 -b ktls-utils-1.5.0 \
+                https://github.com/oracle/ktls-utils.git
+            cd ktls-utils
+            ./autogen.sh
+            ./configure
+            make -j$(nproc)
+            # cp keeps the SELinux label of the packaged binary.
+            sudo cp src/tlshd/tlshd /usr/bin/tlshd
+            /usr/bin/tlshd --version
             cd -
 
             git clone https://github.com/${{ github.repository }} nvme-cli
@@ -197,7 +213,24 @@ jobs:
 
             sudo dnf install -y gcc meson git kmod iproute systemd \
             systemd-devel json-c-devel openssl-devel keyutils-libs-devel \
-            dbus-devel gcovr avahi avahi-tools ktls-utils python3
+            dbus-devel gcovr avahi avahi-tools ktls-utils python3 \
+            make autoconf automake gnutls-devel glib2-devel libnl3-devel
+
+            # The tlshd of ktls-utils 1.4.0 (Fedora 44) loses the .nvme
+            # keyring when TLS handshakes run in parallel, which nvme-tcp
+            # does since 7.4. ktls-utils 1.5.0 fixes this (3a6658e).
+            # TODO: once Fedora ships ktls-utils 1.5.0 or later, drop this
+            # block.
+            git clone --depth 1 -b ktls-utils-1.5.0 \
+                https://github.com/oracle/ktls-utils.git
+            cd ktls-utils
+            ./autogen.sh
+            ./configure
+            make -j$(nproc)
+            # cp keeps the SELinux label of the packaged binary.
+            sudo cp src/tlshd/tlshd /usr/bin/tlshd
+            /usr/bin/tlshd --version
+            cd -
 
             # The KMS for the KMIP phases of the nvme-keysd wringer.
             python3 -m venv "$HOME/pykmip"
