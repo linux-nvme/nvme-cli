@@ -34,10 +34,11 @@ The converted configuration is written to the file specified by
 --output. If --output is not specified, the default location,
 @SYSCONFDIR@/nvme/nvme-fabrics.conf, is used. Unless --force is specified,
 the command refuses to overwrite an existing configuration. On success,
-the converted legacy file(s) are renamed to '<name>.converted' to prevent
-conversion on subsequent runs. Running the command again is safe: a source
-file that is missing only because a prior run already converted and
-renamed it is treated as already done, not as an error.
+each converted legacy file is kept for a rollback, and a symlink
+'<name>.converted' to it marks it as converted. Running the command
+again is safe: a legacy file with such a marker is treated as already
+done, not as an error. nvme-config-status(1) shows the state of the
+legacy files.
 
 Malformed entries (for example, invalid addressing or an unreadable port)
 are skipped with a log message. Conversion continues unless a memory
@@ -79,7 +80,7 @@ EXAMPLES
 +
 Note: unlike config.json, discovery.conf has no --config-style override —
 its path is always @SYSCONFDIR@/nvme/discovery.conf. If that file exists on
-the system, this command still converts it and renames it to
+the system, this command still converts it and marks it with the symlink
 'discovery.conf.converted', even though --config points elsewhere.
 
 SEE ALSO
