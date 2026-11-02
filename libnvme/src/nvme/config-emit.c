@@ -333,6 +333,8 @@ static int emit_tmpfile(struct libnvme_global_ctx *ctx, const char *final,
 			const struct emit_persona *persona, char **tmp_out)
 {
 	struct libnvmf_conf_file *raw;
+	mode_t mode = 0600;
+	struct stat st;
 	char *tmp;
 	FILE *fp;
 	int fd, ret;
@@ -345,7 +347,13 @@ static int emit_tmpfile(struct libnvme_global_ctx *ctx, const char *final,
 		ret = fd;
 		goto err_free;
 	}
-	if (fchmod(fd, 0644) < 0) {
+	/*
+	 * The file can hold KX-HMAC-CHAP secrets and TLS PSKs: keep the mode
+	 * the admin gave an existing file, and make a new one root-only.
+	 */
+	if (stat(final, &st) == 0)
+		mode = st.st_mode & 07777;
+	if (fchmod(fd, mode) < 0) {
 		ret = -errno;
 		close(fd);
 		goto err_unlink;

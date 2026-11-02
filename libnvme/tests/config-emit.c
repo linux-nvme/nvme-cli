@@ -27,6 +27,8 @@
 #include <nvme/generated/accessors-fabrics.h>
 
 static const char *g_hostid = "46ba5037-7ce5-41fa-9452-48477bf00080";
+static const char *g_secret =
+	"DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:";
 
 struct fixture {
 	char dir[32];
@@ -414,6 +416,70 @@ static bool test_force_overwrite(struct libnvme_global_ctx *ctx,
 	return pass;
 }
 
+static bool install_one(struct libnvme_global_ctx *ctx, const char *path,
+			bool force)
+{
+	struct libnvmf_config_emitter *e;
+	int ret;
+
+	e = libnvmf_config_emit_new(ctx);
+	shr_assert(e);
+	shr_assert(add(e, false, "10.0.0.9",
+		   "nqn.2014-08.org.nvmexpress:mode-vol", NULL, NULL, NULL,
+		   "kxchap-secret", g_secret) == 0);
+	ret = libnvmf_config_emit_install(e, path, force);
+	libnvmf_config_emit_free(e);
+
+	return ret == 0;
+}
+
+static bool check_mode(const char *path, mode_t want, const char *what)
+{
+	struct stat st;
+
+	shr_assert(stat(path, &st) == 0);
+	if ((st.st_mode & 07777) != want) {
+		printf(" - %s: mode %04o, expected %04o [FAIL]\n", what,
+		       (unsigned int)(st.st_mode & 07777), (unsigned int)want);
+		return false;
+	}
+	printf(" - %s: mode %04o [PASS]\n", what, (unsigned int)want);
+
+	return true;
+}
+
+/*
+ * The file can hold secrets: a new file is readable by its owner only, an
+ * existing one keeps its mode.
+ */
+static bool test_file_mode(struct libnvme_global_ctx *ctx, struct fixture *fx)
+{
+	bool pass = true;
+	FILE *f;
+
+	printf("test_file_mode:\n");
+
+	if (!install_one(ctx, fx->main_path, false)) {
+		printf(" - install failed [FAIL]\n");
+		return false;
+	}
+	pass &= check_mode(fx->main_path, 0600, "new file");
+
+	fixture_wipe(fx);
+	f = fopen(fx->main_path, "w");
+	shr_assert(f);
+	shr_assert(fclose(f) == 0);
+	shr_assert(chmod(fx->main_path, 0640) == 0);
+
+	if (!install_one(ctx, fx->main_path, true)) {
+		printf(" - force install failed [FAIL]\n");
+		return false;
+	}
+	pass &= check_mode(fx->main_path, 0640, "overwritten file");
+
+	return pass;
+}
+
 static bool test_all_dropins(struct libnvme_global_ctx *ctx, struct fixture *fx)
 {
 	struct libnvmf_config_emitter *e;
@@ -593,6 +659,8 @@ int main(void)
 	pass &= test_refuse_existing(ctx, &fx);
 	fixture_wipe(&fx);
 	pass &= test_force_overwrite(ctx, &fx);
+	fixture_wipe(&fx);
+	pass &= test_file_mode(ctx, &fx);
 	fixture_wipe(&fx);
 	pass &= test_all_dropins(ctx, &fx);
 	fixture_wipe(&fx);
