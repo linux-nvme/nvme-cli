@@ -9,9 +9,9 @@ A **source distribution** (sdist) is published — not a binary wheel. The packa
 
 ## Workflows
 
-### Test PyPI — on every push to `master`
+### Test PyPI — once a week
 
-The `libnvme-release-python.yml` workflow runs on every push to `master`. It builds a dev sdist (version derived from `git describe`, e.g. `3.0.dev123`) and publishes it to [TestPyPI](https://test.pypi.org/).
+The `libnvme-release-python.yml` workflow builds a dev sdist on every push to `master` (version derived from `git describe`, e.g. `3.0.dev123`). It publishes it to [TestPyPI](https://test.pypi.org/) only from the weekly schedule or a manual run of the workflow. A version that is already on TestPyPI is skipped.
 
 To install from TestPyPI:
 
@@ -19,7 +19,7 @@ To install from TestPyPI:
 pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  libnvme==<version>
+  libnvme3==<version>
 ```
 
 ### PyPI — on release tags
