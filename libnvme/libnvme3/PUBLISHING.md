@@ -24,6 +24,6 @@ pip install \
 
 ### PyPI — on release tags
 
-When a tag matching `vX.Y` or `vX.Y.Z` is pushed, the same workflow publishes the release sdist to the official [PyPI](https://pypi.org/) registry.
+When a tag matching `vX.Y`, `vX.Y.Z` or a release candidate `vX.Y[.Z]-rcN` is pushed, the same workflow publishes the release sdist to the official [PyPI](https://pypi.org/) registry. Alpha and beta tags (`-a.N`, `-b.N`) are not published.
 
 Publishing uses OIDC (`id-token: write`) — no API token is required.
