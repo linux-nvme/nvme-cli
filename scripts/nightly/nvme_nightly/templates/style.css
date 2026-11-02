@@ -1,0 +1,51 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+/* The style of the nightly status page, colors: dataviz reference palette. */
+.viz-root {
+  --surface-1: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e;
+  --grid: #e1e0d9; --border: rgba(11,11,11,0.10);
+  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b; --none: #e1e0d9;
+  --on-status: #ffffff; --on-warning: #0b0b0b; --link: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  .viz-root {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --text-primary: #f0efec; --text-secondary: #c3c2b7;
+    --grid: #2c2c2a; --border: rgba(255,255,255,0.10); --none: #383835;
+    --link: #3987e5;
+  }
+}
+body.viz-root { margin: 0; background: var(--surface-1);
+  color: var(--text-primary);
+  font: 14px/1.45 system-ui, sans-serif; }
+main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+a { color: var(--link); }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 28px 0 8px; }
+.meta { color: var(--text-secondary); }
+.tiles { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.tile { border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; min-width: 110px; }
+.tile .v { font-size: 24px; font-variant-numeric: tabular-nums; }
+.tile .l { color: var(--text-secondary); font-size: 12px; }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 8px;
+  font-weight: 600; color: var(--on-status); }
+.badge.good { background: var(--good); }
+.badge.critical { background: var(--critical); }
+table { border-collapse: collapse; }
+th, td { text-align: left; padding: 4px 10px 4px 0;
+  border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { color: var(--text-secondary); font-weight: 500; font-size: 12px; }
+.matrix td.c { padding: 2px; border: none; }
+.matrix th.n { writing-mode: vertical-rl; transform: rotate(180deg);
+  font-size: 11px; padding: 4px 0; }
+.cell { display: block; width: 20px; height: 20px; border-radius: 4px;
+  text-align: center; line-height: 20px; font-size: 12px; font-weight: 700;
+  text-decoration: none; color: var(--on-status); }
+.cell.good { background: var(--good); }
+.cell.critical { background: var(--critical); }
+.cell.warning { background: var(--warning); color: var(--on-warning); }
+.cell.none { background: var(--none); color: var(--text-secondary); }
+.legend span { margin-right: 14px; }
+.legend .cell { display: inline-block; vertical-align: middle;
+  margin-right: 4px; }
+.scroll { overflow-x: auto; }

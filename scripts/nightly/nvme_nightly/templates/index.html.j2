@@ -1,0 +1,96 @@
+{#- SPDX-License-Identifier: GPL-2.0-or-later -#}
+{#- The state of the last nights. -#}
+{% extends "base.html.j2" %}
+{% from "macros.html.j2" import cell, ref with context %}
+
+{% block content %}
+{% if not latest %}
+  <p>No nightly results yet.</p>
+{% else %}
+  <h2>Last night: blktests</h2>
+  <p>
+    {% if latest.ok %}
+    <span class="badge good">✓ passed</span>
+    {% else %}
+    <span class="badge critical">✗ failed</span> {{ latest.problems | join('; ') }}
+    {% endif %}
+  </p>
+  <p class="meta">
+    {% for key, value in latest.meta %}{{ key }} {{ value }} &middot; {% endfor %}{{ ref(latest.run_url, 'CI run') if latest.run_url }}
+  </p>
+
+  <div class="tiles">
+    {% for tile in latest.tiles %}
+    <div class="tile"><div class="v">{{ tile.count }}</div><div class="l">{{ tile.label }}</div></div>
+    {% endfor %}
+  </div>
+
+  {% if latest.failed %}
+  <h2>Failed test runs</h2>
+  <table>
+    <tr><th></th><th>test</th><th>config</th><th>reason</th><th>known failure</th></tr>
+    {% for t in latest.failed %}
+    <tr>
+      <td>{{ cell(t.status) }}</td>
+      <td>{{ t.test }}</td>
+      <td>{{ t.config }}</td>
+      <td>{{ t.reason }}</td>
+      <td>{{ ref(t.known) if t.known }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {% if latest.known %}
+  <h2>Known failures</h2>
+  <p class="meta">From the open issues with the known failure label. A known
+    failure which passes may be fixed, or flapping: close its issue by hand.</p>
+  <table>
+    <tr><th>action</th><th>test</th><th>issue</th><th>this night</th></tr>
+    {% for k in latest.known %}
+    <tr>
+      <td>{{ k.action }}</td>
+      <td>{{ k.test }}</td>
+      <td>{{ ref(k.ref) }}</td>
+      <td>{{ k.note }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  <h2>History</h2>
+  <p class="meta">The test runs which failed at least once in the last
+    {{ matrix.nights | length }} nights, oldest night first.</p>
+  <p class="legend">
+    {% for status in ('pass', 'fail', 'ignored', 'not run') %}
+    <span>{{ cell(status) }}{{ cells[status].label }}</span>
+    {% endfor %}
+  </p>
+  <div class="scroll">
+    <table class="matrix">
+      <tr>
+        <th>test</th><th>config</th>
+        {% for night in matrix.nights %}
+        <th class="n">{{ night.label }}</th>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td><b>outcome</b></td><td></td>
+        {% for night in matrix.nights %}
+        <td class="c">{{ cell(night.status, night.label, night.run_url) }}</td>
+        {% endfor %}
+      </tr>
+      {% for row in matrix.rows %}
+      <tr>
+        <td>{{ row.test }}</td><td>{{ row.config }}</td>
+        {% for c in row.cells %}
+        <td class="c">{{ cell(c.status, c.title, c.run_url) }}</td>
+        {% endfor %}
+      </tr>
+      {% else %}
+      <tr><td colspan="2">no failures</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endif %}
+{% endblock %}

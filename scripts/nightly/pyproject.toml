@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# The linters for nvme-nightly: ruff check and mypy, run from this directory
+# or with meson compile lint-nightly-tool.
+
+[project]
+name = "nvme-nightly"
+version = "0.1.0"
+description = "The tooling of the nightly tests of nvme-cli"
+requires-python = ">=3.10"
+license = { text = "GPL-2.0-or-later" }
+# Stdlib, but the status page (nvme-nightly site) needs Jinja2. The steps
+# which run in the test VM do not import it.
+dependencies = ["jinja2"]
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+extend-include = ["nvme-nightly"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "W",
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "SIM",  # simplify
+    "RUF",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["nvme_nightly", "tests"]
+
