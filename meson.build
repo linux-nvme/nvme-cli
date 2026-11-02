@@ -6,7 +6,7 @@
 #       major.minor[.patch]              e.g. 3.0, 3.0.1
 
 #   Release Candidates:
-#       major.minor[.patch]-rc.*         e.g. 3.0-rc.1, 3.0.1-rc.1
+#       major.minor[.patch]-rcN          e.g. 3.0-rc1, 3.0.1-rc1
 #
 #   Development versions:
 #       alpha: major.minor[.patch]-a.*   e.g. 3.0-a.1, 3.0.1-a.1
