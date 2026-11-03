@@ -46,10 +46,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # The latest scheduled runs of the default branch.
+          # The latest runs of the default branch, scheduled or started
+          # by hand.
           latest() {
             gh run list -R "${GITHUB_REPOSITORY}" -w "$1" -b master \
-                -e schedule -s completed -L 1 \
+                -s completed -L 1 \
                 --json databaseId -q '.[0].databaseId'
           }
           run="$(latest nightly-analyzers.yml)"
