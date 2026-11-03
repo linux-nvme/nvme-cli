@@ -1,11 +1,17 @@
+---
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 # This file is part of nvme.
+# Copyright (c) 2025 Dell Technologies Inc. or its subsidiaries.
+# Copyright (c) 2026 Micron Technology, Inc.
 # Copyright (c) 2026 SUSE LLC
 #
-# Authors: Daniel Wagner <dwagner@suse.de>
+# Authors: Martin Belanger <Martin.Belanger@dell.com>
+#          Daniel Wagner <dwagner@suse.de>
+#
+# Checks of generated files and of the libnvme ABI.
 
-name: ABI Check
+name: Checks
 
 on:
   push:
@@ -16,6 +22,58 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Verify that all committed generated accessor files (.h, .c, .i, .ld)
+  # are in sync with the generate-accessors tool and the annotated
+  # private*.h files.
+  #
+  # .h, .c, and .i files must be byte-identical to what the generator
+  # produces. .ld files are checked at the symbol level: the committed
+  # file may carry different version-section labels but must export the
+  # same set of symbols.
+  #
+  # If this check fails:
+  #   - For .h/.c/.i: run 'meson compile -C <build-dir> update-accessors'
+  #                   and commit the result.
+  #   - For .ld:      manually add/remove the symbols listed in the
+  #                   WARNING and commit the result.
+  check-accessors:
+    name: check generated accessor files are up to date
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Configure
+        run: meson setup .build-ci -Dcheck-accessors=true
+      - name: Check generated accessor files are in sync
+        run: meson compile -C .build-ci update-accessors
+
+  # Verify that the committed shell completion files are in sync with the
+  # generate-completions.py tool and the command/option metadata dumped
+  # by the freshly built nvme binary.
+  #
+  # The bash, zsh, and PowerShell files must be byte-identical to what
+  # the generator produces from a default build (all plugins).
+  #
+  # If this check fails, run:
+  #   meson compile -C <build-dir> update-completions
+  # and commit the result.
+  check-completions:
+    name: check generated completion files are up to date
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Configure
+        run: meson setup .build-ci
+      - name: Check completion files are in sync
+        run: meson compile -C .build-ci check-completions
+
   libnvme-abi:
     # Starting with the 3.0 release, libnvme's exported symbols must not
     # change in an incompatible way (removed or renamed functions/variables,
