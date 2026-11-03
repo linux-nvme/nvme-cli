@@ -11,7 +11,7 @@ A **source distribution** (sdist) is published — not a binary wheel. The packa
 
 ### Test PyPI — once a week
 
-The `libnvme-release-python.yml` workflow builds a dev sdist on every push to `master` (version derived from `git describe`, e.g. `3.0.dev123`). It publishes it to [TestPyPI](https://test.pypi.org/) only from the weekly schedule or a manual run of the workflow. A version that is already on TestPyPI is skipped.
+The `release-python.yml` workflow builds a dev sdist on every push to `master` (version derived from `git describe`, e.g. `3.0.dev123`). It publishes it to [TestPyPI](https://test.pypi.org/) only from the weekly schedule or a manual run of the workflow. A version that is already on TestPyPI is skipped.
 
 To install from TestPyPI:
 
@@ -27,6 +27,9 @@ pip install \
 When a tag matching `vX.Y`, `vX.Y.Z` or a release candidate `vX.Y[.Z]-rcN` is pushed, the same workflow publishes the release sdist to the official [PyPI](https://pypi.org/) registry. Alpha and beta tags (`-a.N`, `-b.N`) are not published.
 
 Publishing uses OIDC (`id-token: write`) — no API token is required.
+The trusted publisher on PyPI and TestPyPI names the workflow file
+`release-python.yml` and the environment `pypi`. Renaming the file
+needs a new trusted publisher on both, or uploads fail.
 
 ## Removing old dev releases
 

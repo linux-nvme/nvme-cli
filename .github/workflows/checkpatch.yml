@@ -6,7 +6,7 @@
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
 
-name: Checkpatch Review
+name: Checkpatch
 on:
   pull_request:
   workflow_dispatch:

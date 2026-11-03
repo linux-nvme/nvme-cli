@@ -8,7 +8,7 @@
 #          Nilay Shroff <nilay@linux.ibm.com>
 
 
-name: Analyzers
+name: Nightly analyzers
 
 on:
   workflow_dispatch:

@@ -8,8 +8,8 @@
 name: Build FreeBSD
 
 # Runs against the FreeBSD containerDisk (ghcr.io/linux-nvme/blktests-freebsd-
-# containerdisk) on the same ARC/KubeVirt infrastructure as run-nightly-
-# tests.yml, via linux-blktests/blktests-ci's kubevirt-action.
+# containerdisk) on the same ARC/KubeVirt infrastructure as
+# nightly-tests.yml, via linux-blktests/blktests-ci's kubevirt-action.
 on:
   push:
     branches:

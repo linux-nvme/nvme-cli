@@ -16,7 +16,7 @@ CI Containers Repository:
 [linux-nvme/ci-containers](https://github.com/linux-nvme/ci-containers)
 
 CI Build Workflow Reference:
-[libnvme-build.yml](https://github.com/linux-nvme/nvme-cli/blob/master/.github/workflows/libnvme-build.yml)
+[build.yml](https://github.com/linux-nvme/nvme-cli/blob/master/.github/workflows/build.yml)
 
 ### 1. Pull a CI Container
 
@@ -405,7 +405,7 @@ use the libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
 
 ## Nightly tests and known failures
 
-The nightly workflow (`.github/workflows/run-nightly-tests.yml`) runs
+The nightly workflow (`.github/workflows/nightly-tests.yml`) runs
 blktests, the end-to-end tests and the daemon tests in a VM with the
 latest mainline kernel. A kernel bug can make a blktests test fail for
 weeks. To keep the nightly run meaningful in the meantime, such a test is
