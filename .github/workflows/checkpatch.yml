@@ -13,6 +13,12 @@ on:
   schedule:
     - cron: '41 21 * * *'
 
+concurrency:
+  # A new push to a pull request cancels its older run. Each push to
+  # master gets a run of its own, to show which commit broke something.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # A pull request reads only the caches of its own branch and of the
 # default branch. So only a run on the default branch saves the copy of
 # checkpatch.pl. A scheduled run always runs there.
