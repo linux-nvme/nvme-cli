@@ -22,6 +22,12 @@ on:
 
   workflow_dispatch:
 
+concurrency:
+  # A new push to a pull request cancels its older run. Each push to
+  # master gets a run of its own, to show which commit broke something.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build-docs:
     name: build documentation
