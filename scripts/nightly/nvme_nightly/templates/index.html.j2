@@ -28,13 +28,17 @@
   {% if latest.failed %}
   <h2>Failed test runs</h2>
   <table>
-    <tr><th></th><th>test</th><th>config</th><th>reason</th><th>known failure</th></tr>
+    <tr><th></th><th>test</th><th>config</th><th>reason</th><th>log</th><th>known failure</th></tr>
     {% for t in latest.failed %}
     <tr>
       <td>{{ cell(t.status) }}</td>
       <td>{{ t.test }}</td>
       <td>{{ t.config }}</td>
       <td>{{ t.reason }}</td>
+      <td>
+        {%- if t.log | weburl %}{{ ref(t.log, 'job log') }}{% endif %}
+        {%- for f in t.files %}{{ ' · ' if t.log | weburl or not loop.first }}<a href="{{ f.href }}">{{ f.name }}</a>{% endfor -%}
+      </td>
       <td>{{ ref(t.known) if t.known }}</td>
     </tr>
     {% endfor %}

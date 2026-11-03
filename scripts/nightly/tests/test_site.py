@@ -158,6 +158,29 @@ class Model(unittest.TestCase):
             m['rows'][0]['cells'][1]['run_url'], 'https://e.org/2'
         )
 
+    def test_matrix_log(self) -> None:
+        log = 'https://e.org/2/job/3#step:3:7'
+        s = summary(
+            '2',
+            '2026-11-02',
+            outcome='fail',
+            run_url='https://e.org/2',
+            tests=[
+                {'test': 'md/001', 'config': 'nodev', 'status': 'fail'},
+                {
+                    'test': 'md/002',
+                    'config': 'nodev',
+                    'status': 'fail',
+                    'log': log,
+                },
+            ],
+        )
+        m = site.matrix_model([s])
+        self.assertEqual(
+            [r['cells'][0]['run_url'] for r in m['rows']],
+            ['https://e.org/2', log],
+        )
+
     def test_window(self) -> None:
         history = [summary(str(i), f'2026-{i:04d}') for i in range(40)]
         self.assertEqual(
@@ -268,6 +291,78 @@ class Render(unittest.TestCase):
         self.assertIn('No nightly results yet', site.render([]))
 
 
+class CopyLogs(unittest.TestCase):
+    def test_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            res, out = Path(tmp, 'results'), Path(tmp, 'site')
+            d = res / 'nodev_tr_tcp' / 'nvme'
+            d.mkdir(parents=True)
+            (d / '073.full').write_text('full log', encoding='utf-8')
+            (d / '073.out.bad').write_text('bad', encoding='utf-8')
+            (d / '074.full').write_bytes(b'x' * (site.LOG_MAX + 10))
+            (d / '075.full').symlink_to('/etc/passwd')
+            (res / 'secret').write_text('no', encoding='utf-8')
+            s = summary(
+                '1',
+                '2026-11-01',
+                tests=[
+                    {
+                        'test': f'nvme/{n}',
+                        'config': 'nodev_tr_tcp',
+                        'status': st,
+                    }
+                    for n, st in (
+                        ('073', 'fail'),
+                        ('074', 'fail'),
+                        ('075', 'fail'),
+                        ('076', 'pass'),
+                    )
+                ]
+                + [
+                    {'test': '../secret', 'config': '..', 'status': 'fail'},
+                    {
+                        'test': 'nvme/001',
+                        'config': '.hidden',
+                        'status': 'fail',
+                    },
+                ],
+            )
+            logs = site.copy_logs(res, s, out)
+            self.assertEqual(
+                logs,
+                {
+                    ('nvme/073', 'nodev_tr_tcp'): [
+                        {
+                            'name': 'out.bad',
+                            'href': 'logs/nodev_tr_tcp/nvme/073.out.bad.txt',
+                        },
+                        {
+                            'name': 'full',
+                            'href': 'logs/nodev_tr_tcp/nvme/073.full.txt',
+                        },
+                    ],
+                    ('nvme/074', 'nodev_tr_tcp'): [
+                        {
+                            'name': 'full',
+                            'href': 'logs/nodev_tr_tcp/nvme/074.full.txt',
+                        }
+                    ],
+                },
+            )
+            self.assertEqual(
+                (out / 'logs/nodev_tr_tcp/nvme/073.full.txt').read_text(
+                    encoding='utf-8'
+                ),
+                'full log',
+            )
+            big = (out / 'logs/nodev_tr_tcp/nvme/074.full.txt').read_bytes()
+            self.assertTrue(big.endswith(b'\n[truncated]\n'))
+            self.assertEqual(
+                sorted(p.name for p in out.rglob('*') if p.is_file()),
+                ['073.full.txt', '073.out.bad.txt', '074.full.txt'],
+            )
+
+
 @needs_jinja2
 class Build(unittest.TestCase):
     def test_build(self) -> None:
@@ -290,6 +385,42 @@ class Build(unittest.TestCase):
             page = (out / 'index.html').read_text(encoding='utf-8')
             self.assertIn('href="analyzer/"', page)
             self.assertIn('href="https://c.io"', page)
+
+    def test_logs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            res, out = Path(tmp, 'results'), Path(tmp, 'site')
+            (res / 'nodev' / 'md').mkdir(parents=True)
+            (res / 'nodev' / 'md' / '001.full').write_text(
+                'log', encoding='utf-8'
+            )
+            log = 'https://e.org/1/job/2#step:3:7'
+            s = summary(
+                '1',
+                '2026-11-01',
+                outcome='fail',
+                tests=[
+                    {
+                        'test': 'md/001',
+                        'config': 'nodev',
+                        'status': 'fail',
+                        'log': log,
+                    },
+                    {
+                        'test': 'md/002',
+                        'config': 'nodev',
+                        'status': 'fail',
+                        'log': 'javascript:x',
+                    },
+                ],
+            )
+            site.build(out, [s], results=res)
+            page = (out / 'index.html').read_text(encoding='utf-8')
+            failed = page.split('<h2>Failed test runs')[1].split('<h2>')[0]
+            self.assertIn(f'<a href="{log}">job log</a>', failed)
+            self.assertIn(
+                '<a href="logs/nodev/md/001.full.txt">full</a>', failed
+            )
+            self.assertNotIn('javascript', page)
 
 
 if __name__ == '__main__':

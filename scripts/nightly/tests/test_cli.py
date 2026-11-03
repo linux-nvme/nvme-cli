@@ -61,6 +61,9 @@ class EndToEnd(unittest.TestCase):
                 (res / config / 'nvme' / '004').write_text(
                     f'status\t{status}\n', encoding='utf-8'
                 )
+            (res / 'nodev_tr_rdma' / 'nvme' / '004.full').write_text(
+                'the log', encoding='utf-8'
+            )
             args = [
                 'blktests-summary',
                 str(res),
@@ -84,6 +87,50 @@ class EndToEnd(unittest.TestCase):
                 run('blktests-summary', str(res), '--check-status', '1'), 1
             )
 
+            url = 'https://github.com/o/r/actions/runs/7/job/8'
+            (d / 'job.json').write_text(
+                json.dumps(
+                    {
+                        'html_url': url,
+                        'steps': [
+                            {
+                                'number': 1,
+                                'started_at': '2026-11-02T01:00:00Z',
+                            },
+                            {
+                                'number': 2,
+                                'name': 'Run blktests in VM',
+                                'started_at': '2026-11-02T01:00:01Z',
+                            },
+                        ],
+                    }
+                ),
+                encoding='utf-8',
+            )
+            (d / 'job.log').write_text(
+                '2026-11-02T01:00:00.1Z Current runner version\n'
+                '2026-11-02T01:00:01.1Z ##[group]Run blktests\n'
+                '2026-11-02T01:00:02.1Z nvme/004 (tr=tcp) (x) [passed]\n'
+                '2026-11-02T01:00:03.1Z nvme/004 (tr=rdma) (x) [failed]\n',
+                encoding='utf-8',
+            )
+            args = [
+                'log-links',
+                str(d / 's.json'),
+                '--job',
+                str(d / 'job.json'),
+                '--log',
+                str(d / 'job.log'),
+                '-o',
+                str(d / 's.json'),
+            ]
+            self.assertEqual(run(*args), 0)
+            s = json.loads((d / 's.json').read_text(encoding='utf-8'))
+            self.assertEqual(
+                [t.get('log') for t in s['tests']],
+                [f'{url}#step:2:3', None],
+            )
+
             if importlib.util.find_spec('jinja2') is None:
                 return
             out = d / 'site'
@@ -97,6 +144,8 @@ class EndToEnd(unittest.TestCase):
                         str(d / 's.json'),
                         '--history',
                         str(out / 'history.json'),
+                        '--results',
+                        str(res),
                     ),
                     0,
                 )
@@ -104,6 +153,12 @@ class EndToEnd(unittest.TestCase):
                 (out / 'history.json').read_text(encoding='utf-8')
             )
             self.assertEqual([h['run_id'] for h in history], ['7'])
+            self.assertEqual(
+                (out / 'logs/nodev_tr_rdma/nvme/004.full.txt').read_text(
+                    encoding='utf-8'
+                ),
+                'the log',
+            )
 
     def test_bad_meta(self) -> None:
         with self.assertRaises(SystemExit):
