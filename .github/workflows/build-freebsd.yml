@@ -10,13 +10,12 @@ name: Build FreeBSD
 # Runs against the FreeBSD containerDisk (ghcr.io/linux-nvme/blktests-freebsd-
 # containerdisk) on the same ARC/KubeVirt infrastructure as run-nightly-
 # tests.yml, via linux-blktests/blktests-ci's kubevirt-action.
-#
-# The VM build is slow, so it only runs when master is updated rather than
-# on every pull request.
 on:
   push:
     branches:
       - master
+  pull_request:
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
@@ -51,9 +50,11 @@ jobs:
 
             sudo pkg install -y git meson ninja pkgconf json-c openssl
 
+            # A clone has no pull request commits: fetch the one to test.
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
-            git checkout ${{ github.sha }}
+            git fetch origin ${{ github.sha }}
+            git checkout FETCH_HEAD
 
             meson setup .build
             ninja -C .build
