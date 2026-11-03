@@ -11,7 +11,7 @@ name: Run nightly tests
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 01 * * *'
+    - cron: '17 21 * * *'
 
 permissions:
   actions: read
