@@ -25,6 +25,7 @@ jobs:
   publish-status-page:
     if: ${{ github.repository == 'linux-nvme/nvme-cli' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       actions: read
       contents: read

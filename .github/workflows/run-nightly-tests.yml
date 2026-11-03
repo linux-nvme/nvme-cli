@@ -24,6 +24,7 @@ jobs:
   known-failures:
     if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       issues: read
     outputs:
@@ -50,6 +51,7 @@ jobs:
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
     needs: known-failures
     runs-on: arc-vm-nvme-cli
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -303,6 +305,7 @@ jobs:
   test-coverage:
     if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     env:
@@ -347,6 +350,7 @@ jobs:
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
     needs: [nightly-tests, test-coverage]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     continue-on-error: true
     strategy:
       fail-fast: false

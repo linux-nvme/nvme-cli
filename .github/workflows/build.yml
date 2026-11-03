@@ -25,6 +25,7 @@ concurrency:
 jobs:
   nvme-cli:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       matrix:
         distro: [debian, fedora, tumbleweed]
@@ -85,6 +86,7 @@ jobs:
   nvme-cli-no-valgrind:
     name: nvme-cli unit tests without valgrind
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/fedora:latest
     steps:
@@ -112,6 +114,7 @@ jobs:
 
   libnvme:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         distro: [debian]
@@ -136,6 +139,7 @@ jobs:
 
   cross:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -172,6 +176,7 @@ jobs:
   fallback-shared-libraries:
     name: fallback shared libraries
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     if: github.ref == 'refs/heads/master'
@@ -192,6 +197,7 @@ jobs:
   build-muon:
     name: muon minimal static
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -205,6 +211,7 @@ jobs:
   build-make-static:
     name: make static
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -218,6 +225,7 @@ jobs:
   build-musl:
     name: musl libc build on Debian
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -231,6 +239,7 @@ jobs:
   build-musl-minimal-static:
     name: musl libc minimal static build on Debian
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -244,6 +253,7 @@ jobs:
   build-nofabrics:
     name: no-fabrics build with unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -264,6 +274,7 @@ jobs:
   build-alpine:
     name: musl libc build on Alpine
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/alpine:latest
     steps:
@@ -277,6 +288,7 @@ jobs:
   build-distro:
     name: build libnvme and nvme-cli separately
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -290,6 +302,7 @@ jobs:
   build-liburing:
     name: build with liburing support enabled
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:

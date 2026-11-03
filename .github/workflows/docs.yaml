@@ -32,6 +32,7 @@ jobs:
   build-docs:
     name: build documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
