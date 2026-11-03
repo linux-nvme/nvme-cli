@@ -18,7 +18,7 @@ on:
         required: false
         default: ''
   schedule:
-    - cron: '0 01 * * *'
+    - cron: '23 21 * * *'
 
 jobs:
   build-with-clang-analyzer:
