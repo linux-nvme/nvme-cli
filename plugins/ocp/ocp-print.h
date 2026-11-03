@@ -48,6 +48,9 @@ void ocp_show_telemetry_log(const struct ocp_telemetry_logs *logs,
 			    nvme_print_flags_t flags);
 void ocp_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data,
 		nvme_print_flags_t flags);
+/* Returns @invalid for an all-FF stamp, else the time of bytes 5:0 in @buf. */
+const char *ocp_c3_stamp_str(const struct nvme_timestamp *stamp, char *buf,
+			     const char *invalid);
 void ocp_c5_log(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data,
 		nvme_print_flags_t flags);
 void ocp_c1_log(struct ocp_error_recovery_log_page *log_data, nvme_print_flags_t flags);

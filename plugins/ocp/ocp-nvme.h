@@ -25,13 +25,13 @@ struct __packed ssd_latency_monitor_log {
 	__u8	rsvd2[0x13];			/* 0x0D */
 
 	__le32	active_bucket_counter[4][4];	/* 0x20 - 0x5F */
-	__le64	active_latency_timestamp[4][3];	/* 0x60 - 0xBF */
+	struct nvme_timestamp active_latency_timestamp[4][3]; /* 0x60 - 0xBF */
 	__le16	active_measured_latency[4][3];	/* 0xC0 - 0xD7 */
 	__le16	active_latency_stamp_units;	/* 0xD8 */
 	__u8	rsvd3[0x16];			/* 0xDA */
 
 	__le32	static_bucket_counter[4][4];	/* 0x0F0 - 0x12F */
-	__le64	static_latency_timestamp[4][3];	/* 0x130 - 0x18F */
+	struct nvme_timestamp static_latency_timestamp[4][3]; /* 0x130 - 0x18F */
 	__le16	static_measured_latency[4][3];	/* 0x190 - 0x1A7 */
 	__le16	static_latency_stamp_units;	/* 0x1A8 */
 	__u8	rsvd4[0x0A];			/* 0x1AA */
@@ -39,7 +39,7 @@ struct __packed ssd_latency_monitor_log {
 	__u8	latency_monitor_debug_log_size[0x0C]; /* 0x1B4 */
 	__le16	debug_log_trigger_enable;	/* 0x1C0 */
 	__le16	debug_log_measured_latency;	/* 0x1C2 */
-	__le64	debug_log_latency_stamp;	/* 0x1C4 */
+	struct nvme_timestamp debug_log_latency_stamp; /* 0x1C4 */
 	__le16	debug_log_ptr;			/* 0x1CC */
 	__le16	debug_log_counter_trigger;	/* 0x1CE */
 	__u8	debug_log_stamp_units;		/* 0x1D0 */
@@ -48,6 +48,9 @@ struct __packed ssd_latency_monitor_log {
 	__le16	log_page_version;		/* 0x1EE */
 	__u8	log_page_guid[0x10];		/* 0x1F0 */
 };
+
+_Static_assert(sizeof(struct ssd_latency_monitor_log) == 512,
+	"ssd_latency_monitor_log is not 512 bytes");
 
 #define GUID_LEN 16
 

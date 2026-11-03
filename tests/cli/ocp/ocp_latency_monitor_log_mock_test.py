@@ -20,17 +20,17 @@ Tests in this module verify:
     specification gives it, in text and JSON.
   * The Bucket Counters, Latency Stamps and Measured Latencies of each
     bucket and counter, Active and Static, map as the specification lays
-    them out, and a stamp of all FFh shows as not valid.
+    them out, a stamp of all FFh shows as not valid, and the Timestamp
+    attributes in byte 6 of a stamp are not part of its time.
   * The Debug Telemetry Log Size is left out below log page version 4 and
     is shown in hex without its leading zero bytes from version 4.
   * A failed Get Log Page, a controller without the OCP UUID and a page
     with a different GUID fail, naming the cause in text and reporting
     only the error under -o json; without the OCP UUID nothing is read.
 
-Known defects are covered by expectedFailure tests asserting the behavior
-the specification defines: the Timestamp attributes in byte 6 of a Latency
-Stamp are taken as part of its time, and a stamp whose Stamp Units bit is
-cleared, which counts from power on, is shown as a date.
+A known defect is covered by an expectedFailure test asserting the
+behavior the specification defines: a Latency Stamp whose Stamp Units bit
+is cleared, which counts from power on, is shown as a date.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -349,11 +349,9 @@ class TestLatencyMonitorLogStamps(LatencyMonitorLogDecodeTestBase):
         self.assertEqual(self.text_value(text, DEBUG_STAMP), 'N/A')
         self.assertEqual(log[DEBUG_STAMP], 'NA')
 
-    @unittest.expectedFailure
     def test_stamp_attributes_are_not_part_of_the_time(self):
-        """Defect: the printers take all 64 bits of a Latency Stamp as
-        its time; bytes 5:0 are the timestamp and byte 6 holds the Synch
-        and Timestamp Origin attributes."""
+        """Bytes 5:0 of a Latency Stamp are its time; byte 6 holds the
+        Synch and Timestamp Origin attributes."""
         # Synch set, Timestamp Origin 001b: set by a Set Features command
         attributes = 0x03
         text, log = self.reports(self._stamped_page(

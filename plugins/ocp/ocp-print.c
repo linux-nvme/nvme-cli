@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <libnvme.h>
+#include <shared/int-util.h>
+#include <shared/time-util.h>
 
 #include "nvme-print.h"
 #include "ocp-hardware-component-log.h"
@@ -64,6 +66,22 @@ void ocp_c3_log(struct libnvme_transport_handle *hdl,
 		nvme_print_flags_t flags)
 {
 	ocp_print(c3_log, flags, hdl, log_data);
+}
+
+static bool ocp_c3_stamp_is_invalid(const struct nvme_timestamp *stamp)
+{
+	return int48_to_long(stamp->timestamp) == 0xffffffffffffULL &&
+	       stamp->attr == 0xff && stamp->rsvd == 0xff;
+}
+
+const char *ocp_c3_stamp_str(const struct nvme_timestamp *stamp, char *buf,
+			     const char *invalid)
+{
+	if (ocp_c3_stamp_is_invalid(stamp))
+		return invalid;
+
+	shr_format_ts(int48_to_long(stamp->timestamp), buf);
+	return buf;
 }
 
 void ocp_c5_log(struct libnvme_transport_handle *hdl,

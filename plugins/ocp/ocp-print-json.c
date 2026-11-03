@@ -6,7 +6,6 @@
 #include <shared/hex-util.h>
 #include <shared/int-util.h>
 #include <shared/string-util.h>
-#include <shared/time-util.h>
 #include <shared/uint128-util.h>
 #include <shared/unaligned-util.h>
 #include <shared/uuid-util.h>
@@ -616,13 +615,11 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		snprintf(buf, sizeof(buf),
 			 "Active Latency Time Stamp: Bucket %d", i);
 		for (j = 2; j >= 0; j--) {
-			if (le64_to_cpu(log_data->active_latency_timestamp[3-i][j]) == -1) {
-				json_object_add_value_string(bucket, operation[j], "NA");
-			} else {
-				shr_format_ts(le64_to_cpu(log_data->active_latency_timestamp[3-i][j]),
-					   ts_buf);
-				json_object_add_value_string(bucket, operation[j], ts_buf);
-			}
+			const struct nvme_timestamp *stamp =
+				&log_data->active_latency_timestamp[3 - i][j];
+
+			json_object_add_value_string(bucket, operation[j],
+				ocp_c3_stamp_str(stamp, ts_buf, "NA"));
 		}
 		json_object_add_value_object(root, buf, bucket);
 	}
@@ -663,13 +660,11 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		snprintf(buf, sizeof(buf),
 			 "Static Latency Time Stamp: Bucket %d", i);
 		for (j = 2; j >= 0; j--) {
-			if (le64_to_cpu(log_data->static_latency_timestamp[3-i][j]) == -1) {
-				json_object_add_value_string(bucket, operation[j], "NA");
-			} else {
-				shr_format_ts(le64_to_cpu(log_data->static_latency_timestamp[3-i][j]),
-					   ts_buf);
-				json_object_add_value_string(bucket, operation[j], ts_buf);
-			}
+			const struct nvme_timestamp *stamp =
+				&log_data->static_latency_timestamp[3 - i][j];
+
+			json_object_add_value_string(bucket, operation[j],
+				ocp_c3_stamp_str(stamp, ts_buf, "NA"));
 		}
 		json_object_add_value_object(root, buf, bucket);
 	}
@@ -705,12 +700,9 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		le16_to_cpu(log_data->debug_log_trigger_enable));
 	json_object_add_value_uint(root, "Debug Log Measured Latency",
 		le16_to_cpu(log_data->debug_log_measured_latency));
-	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1) {
-		json_object_add_value_string(root, "Debug Log Latency Time Stamp", "NA");
-	} else {
-		shr_format_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
-		json_object_add_value_string(root, "Debug Log Latency Time Stamp", ts_buf);
-	}
+	json_object_add_value_string(root, "Debug Log Latency Time Stamp",
+		ocp_c3_stamp_str(&log_data->debug_log_latency_stamp, ts_buf,
+				 "NA"));
 	json_object_add_value_uint(root, "Debug Log Pointer",
 		le16_to_cpu(log_data->debug_log_ptr));
 	json_object_add_value_uint(root, "Debug Counter Trigger Source",
