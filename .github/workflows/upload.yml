@@ -12,6 +12,9 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: read
+
 jobs:
   build-static:
     name: build static binary

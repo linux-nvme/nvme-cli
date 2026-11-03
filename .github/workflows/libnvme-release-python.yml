@@ -21,6 +21,9 @@ on:
         description: 'Tag to check out'
         required: false
 
+permissions:
+  contents: read
+
 jobs:
   build_sdist:
     name: Build source distribution
