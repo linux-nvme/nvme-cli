@@ -45,6 +45,7 @@ jobs:
   check-accessors:
     name: check generated accessor files are up to date
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -69,6 +70,7 @@ jobs:
   check-completions:
     name: check generated completion files are up to date
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -94,6 +96,7 @@ jobs:
     # table is checked here, not struct layouts.
     name: libnvme exported symbols
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     # Container jobs default to "sh" rather than bash; the comparison step

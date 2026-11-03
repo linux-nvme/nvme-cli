@@ -26,6 +26,7 @@ concurrency:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'push' && github.repository == 'linux-nvme/nvme-cli'
     permissions:
       contents: write
@@ -47,6 +48,7 @@ jobs:
 
   build-linux-static:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -102,6 +104,7 @@ jobs:
 
   upload-release-assets:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [create-release, build-linux-static, build-windows-static]
     permissions:
       contents: write

@@ -25,6 +25,7 @@ jobs:
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       PYTHON_VERSION: "3.10"
     container:
@@ -52,6 +53,7 @@ jobs:
   build_test_sdist:
     name: Build test source distribution
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       PYTHON_VERSION: "3.10"
     container:
@@ -112,6 +114,7 @@ jobs:
   upload_test_pypi:
     needs: [build_test_sdist]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: pypi
     permissions:
       id-token: write
@@ -135,6 +138,7 @@ jobs:
   upload_pypi:
     needs: [build_sdist]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: pypi
     permissions:
       id-token: write

@@ -16,6 +16,7 @@ jobs:
   build-static:
     name: build static binary
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
@@ -42,6 +43,7 @@ jobs:
   update-nightly-release:
     name: update nightly release
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build-static
     if: ${{ github.event_name == 'push' && github.repository == 'linux-nvme/nvme-cli' }}
     permissions:
