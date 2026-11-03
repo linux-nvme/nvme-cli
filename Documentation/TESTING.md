@@ -449,16 +449,24 @@ scripts/nightly/nvme-nightly known-failures --github linux-nvme/nvme-cli \
 # judge a blktests results directory: exit status 1 for a failed run
 scripts/nightly/nvme-nightly blktests-summary blktests/results \
     --known-failures known-failures.txt -o blktests-summary.json
+# link the failed test runs to their lines in the job log (job.json is
+# the job of the GitHub REST API, job.log its log)
+scripts/nightly/nvme-nightly log-links blktests-summary.json \
+    --job job.json --log job.log -o blktests-summary.json
 # build the status page from the summary and the previous history
 scripts/nightly/nvme-nightly site -o site --summary blktests-summary.json \
+    --results blktests/results \
     --history https://linux-nvme.github.io/nvme-cli/history.json
 ```
 
 The status page, <https://linux-nvme.github.io/nvme-cli/>, shows the
 result of the last night, the known failures and the history of the
-failed tests, and links the clang analyzer report. The `Status page`
-workflow builds it after each nightly and analyzer run; the page keeps
-no state but its `history.json`, which the next build reads back.
+failed tests, and links the clang analyzer report. A failed test run
+links its result line in the job log, and for the last night also its
+blktests logs (`.full`, `.out.bad`, `.dmesg`), which the page copies.
+The `Status page` workflow builds it after each nightly and analyzer
+run; the page keeps no state but its `history.json`, which the next
+build reads back.
 
 ## NVMe-oF failover tests
 

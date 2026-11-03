@@ -12,6 +12,8 @@ A plain directory of files, to be uploaded to any web server:
     style.css       its style
     history.json    the blktests summaries of the last nights, the input
                     of the next build, newest first
+    logs/           the logs of the failed test runs of the last night,
+                    when given its results directory
     analyzer/       the clang analyzer report, when given
 
 The page keeps no state of its own: each build takes the history.json
@@ -22,6 +24,7 @@ summary and writes everything again.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -29,6 +32,16 @@ from typing import Any
 KEEP_NIGHTS = 60
 MATRIX_NIGHTS = 30
 TEMPLATES = Path(__file__).resolve().parent / 'templates'
+
+# The logs blktests writes next to the result of a test run, which the
+# page includes for a failed one: as .txt, which a web server shows
+# instead of offering a download.
+LOG_SUFFIXES = ('out.bad', 'full', 'dmesg')
+LOG_MAX = 1 << 20
+_NAME_RE = re.compile(r'^[A-Za-z0-9_][A-Za-z0-9_.-]*$')
+
+# The copied logs of a test run (test, config): name and path.
+Logs = dict[tuple[str, str], list[dict[str, str]]]
 
 # The status of a test run in a cell: CSS class, glyph, label.
 CELLS = {
@@ -90,7 +103,38 @@ def _night_label(s: dict[str, Any]) -> str:
     return str(s.get('date', '?'))[:10]
 
 
-def latest_model(s: dict[str, Any]) -> dict[str, Any]:
+def copy_logs(results: Path, summary: dict[str, Any], out: Path) -> Logs:
+    """Copy the logs of the failed test runs of the summary from its
+    results directory into out/logs. The names in the summary are not
+    trusted: no paths but plain names."""
+    files: Logs = {}
+    for t in summary.get('tests', []):
+        if t.get('status') != 'fail':
+            continue
+        test, config = str(t.get('test', '')), str(t.get('config', ''))
+        group, _, num = test.partition('/')
+        if not all(_NAME_RE.match(x) for x in (group, num, config)):
+            continue
+        for suffix in LOG_SUFFIXES:
+            src = results / config / group / f'{num}.{suffix}'
+            if src.is_symlink() or not src.is_file():
+                continue
+            with src.open('rb') as f:
+                data = f.read(LOG_MAX + 1)
+            if len(data) > LOG_MAX:
+                data = data[:LOG_MAX] + b'\n[truncated]\n'
+            rel = f'logs/{config}/{group}/{num}.{suffix}.txt'
+            (out / rel).parent.mkdir(parents=True, exist_ok=True)
+            (out / rel).write_bytes(data)
+            files.setdefault((test, config), []).append(
+                {'name': suffix, 'href': rel}
+            )
+    return files
+
+
+def latest_model(
+    s: dict[str, Any], logs: Logs | None = None
+) -> dict[str, Any]:
     """What the page shows of the last night."""
     counts = s.get('counts', {})
     failed = [t for t in s.get('tests', []) if t['status'] == 'fail']
@@ -136,6 +180,8 @@ def latest_model(s: dict[str, Any]) -> dict[str, Any]:
                 'status': cell_status(t),
                 'reason': t.get('reason', ''),
                 'known': t.get('known', ''),
+                'log': t.get('log', ''),
+                'files': (logs or {}).get((t['test'], t['config']), []),
             }
             for t in failed
         ],
@@ -170,7 +216,9 @@ def matrix_model(history: list[dict[str, Any]]) -> dict[str, Any]:
                     {
                         'status': cell_status(runs.get((test, config))),
                         'title': f'{_night_label(s)} {test} {config}',
-                        'run_url': s.get('run_url', ''),
+                        # the log line of a failed run, else the run
+                        'run_url': runs.get((test, config), {}).get('log')
+                        or s.get('run_url', ''),
                     }
                     for s, runs in zip(nights, lookup, strict=True)
                 ],
@@ -184,13 +232,14 @@ def page_model(
     history: list[dict[str, Any]],
     title: str = 'nvme-cli nightly status',
     links: list[tuple[str, str]] | None = None,
+    logs: Logs | None = None,
 ) -> dict[str, Any]:
     """Everything index.html shows, as plain data."""
     return {
         'title': title,
         'links': [{'text': t, 'href': h} for t, h in links or []],
         'cells': CELLS,
-        'latest': latest_model(history[0]) if history else None,
+        'latest': latest_model(history[0], logs) if history else None,
         'matrix': matrix_model(history),
     }
 
@@ -199,6 +248,7 @@ def render(
     history: list[dict[str, Any]],
     title: str = 'nvme-cli nightly status',
     links: list[tuple[str, str]] | None = None,
+    logs: Logs | None = None,
 ) -> str:
     """Return the index.html for the history (newest first)."""
     # Only the page needs jinja2, not the steps which run in the test VM.
@@ -214,7 +264,7 @@ def render(
     env.filters['weburl'] = weburl
     env.filters['short_ref'] = short_ref
     page = env.get_template('index.html.j2')
-    return str(page.render(page_model(history, title, links)))
+    return str(page.render(page_model(history, title, links, logs)))
 
 
 def build(
@@ -222,9 +272,14 @@ def build(
     history: list[dict[str, Any]],
     analyzer: Path | None = None,
     links: list[tuple[str, str]] | None = None,
+    results: Path | None = None,
 ) -> None:
-    """Write the site into the directory out."""
+    """Write the site into the directory out. results is the blktests
+    results directory of the newest summary, for its logs."""
     out.mkdir(parents=True, exist_ok=True)
+    logs = None
+    if results is not None and history:
+        logs = copy_logs(results, history[0], out)
     links = list(links or [])
     if analyzer is not None:
         shutil.copytree(analyzer, out / 'analyzer', dirs_exist_ok=True)
@@ -235,5 +290,5 @@ def build(
         json.dumps(history, indent=1) + '\n', encoding='utf-8'
     )
     (out / 'index.html').write_text(
-        render(history, links=links), encoding='utf-8'
+        render(history, links=links, logs=logs), encoding='utf-8'
     )

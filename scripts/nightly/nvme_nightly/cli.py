@@ -17,7 +17,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from . import blktests, known_failures, site
+from . import blktests, joblog, known_failures, site
 
 
 def _warn(lines: list[str]) -> None:
@@ -96,6 +96,24 @@ def cmd_blktests_summary(args: argparse.Namespace) -> int:
     return 0 if summary['outcome'] == 'pass' else 1
 
 
+def cmd_log_links(args: argparse.Namespace) -> int:
+    summary = json.loads(args.summary.read_text(encoding='utf-8'))
+    job = json.loads(args.job.read_text(encoding='utf-8'))
+    log = args.log.read_text(encoding='utf-8', errors='replace')
+    count = joblog.add_links(summary, job, log, args.step)
+    failed = sum(t.get('status') == 'fail' for t in summary.get('tests', []))
+    text = json.dumps(summary, indent=1) + '\n'
+    if args.output:
+        args.output.write_text(text, encoding='utf-8')
+    else:
+        sys.stdout.write(text)
+    print(
+        f'log-links: {count} of {failed} failed test runs linked',
+        file=sys.stderr,
+    )
+    return 0
+
+
 def _load_history(src: str | None) -> list[dict[str, Any]]:
     """The history.json of the last build: a file or a URL.
 
@@ -134,7 +152,11 @@ def cmd_site(args: argparse.Namespace) -> int:
         if not sep:
             raise SystemExit(f'--link wants TEXT=URL, not {pair!r}')
         links.append((text, href))
-    site.build(args.output, history, args.analyzer, links)
+    # The logs of the results directory are those of the new summary.
+    results = None
+    if args.results and history and history[0] is summary:
+        results = args.results
+    site.build(args.output, history, args.analyzer, links, results)
     return 0
 
 
@@ -205,6 +227,34 @@ def parser() -> argparse.ArgumentParser:
     )
     b.set_defaults(func=cmd_blktests_summary)
 
+    g = sub.add_parser(
+        'log-links',
+        help='add the links to the job log lines of the failed test runs '
+        'to a blktests summary',
+    )
+    g.add_argument('summary', type=Path, help='the blktests summary')
+    g.add_argument(
+        '--job',
+        type=Path,
+        required=True,
+        help='the job which ran blktests, as JSON of the GitHub REST API',
+    )
+    g.add_argument(
+        '--log', type=Path, required=True, help='the log of the job'
+    )
+    g.add_argument(
+        '--step',
+        default='Run blktests in VM',
+        help='the name of the step which ran blktests (%(default)s)',
+    )
+    g.add_argument(
+        '-o',
+        '--output',
+        type=Path,
+        help='write the summary here (default: stdout)',
+    )
+    g.set_defaults(func=cmd_log_links)
+
     s = sub.add_parser('site', help='build the status page')
     s.add_argument(
         '-o',
@@ -220,6 +270,12 @@ def parser() -> argparse.ArgumentParser:
         '--history',
         metavar='FILE|URL',
         help='the history.json of the last build',
+    )
+    s.add_argument(
+        '--results',
+        type=Path,
+        help='the blktests results directory of the summary: the page '
+        'includes the logs of its failed test runs',
     )
     s.add_argument(
         '--analyzer', type=Path, help='the clang analyzer report to include'
