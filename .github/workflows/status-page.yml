@@ -62,6 +62,18 @@ jobs:
           if [ -n "${run}" ]; then
             gh run download "${run}" -R "${GITHUB_REPOSITORY}" \
                 -p 'artifact-*' -D reports/nightly || true
+            # The job and its log, for the links to the lines of the
+            # failed test runs.
+            mkdir -p reports
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run}/jobs" \
+                -q '.jobs[] | select(.name == "nightly-tests")' \
+                > reports/job.json || true
+            job="$(jq -r '.id // empty' reports/job.json 2>/dev/null || true)"
+            if [ -n "${job}" ]; then
+              curl -sSfL -H "Authorization: Bearer ${GH_TOKEN}" \
+                  "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${job}/logs" \
+                  -o reports/job.log || rm -f reports/job.log
+            fi
           fi
 
       - name: Build the page
@@ -78,12 +90,22 @@ jobs:
           fi
           summary="$(find reports/nightly -name blktests-summary.json \
               2>/dev/null | head -n 1)"
+          results="${summary:+$(dirname "${summary}")}"
+          # Without the links the page still builds.
+          if [ -n "${summary}" ] && [ -s reports/job.json ] && \
+              [ -s reports/job.log ] && \
+              python3 scripts/nightly/nvme-nightly log-links "${summary}" \
+                  --job reports/job.json --log reports/job.log \
+                  -o reports/blktests-summary.json; then
+            summary=reports/blktests-summary.json
+          fi
           # The CI image has the jinja2 of the page templates.
           docker run --rm -v "${PWD}:/w" -w /w \
               ghcr.io/linux-nvme/debian:latest \
               scripts/nightly/nvme-nightly site -o site \
                   --history "${PAGE_URL}history.json" \
                   ${summary:+--summary "${summary}"} \
+                  ${results:+--results "${results}"} \
                   --analyzer "${analyzer}" \
                   --link "Codecov=https://app.codecov.io/gh/${GITHUB_REPOSITORY}" \
                   --link "Known failures=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/issues?q=is%3Aissue+is%3Aopen+label%3Ablktests-known-failure"
