@@ -19,6 +19,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 # A pull request reads only the caches of its own branch and of the
 # default branch. So only a run on the default branch saves the copy of
 # checkpatch.pl. A scheduled run always runs there.

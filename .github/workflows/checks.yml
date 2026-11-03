@@ -27,6 +27,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 jobs:
   # Verify that all committed generated accessor files (.h, .c, .i, .ld)
   # are in sync with the generate-accessors tool and the annotated
