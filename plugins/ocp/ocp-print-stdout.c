@@ -326,7 +326,7 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 
 	printf("%64s     %27s     %27s\n", "Read", "Write", "Deallocate/Trim");
 	for (i = 0; i < C3_BUCKET_NUM; i++) {
-		printf("  Active Bucket Counter: Bucket %d    %27d     %27d     %27d\n",
+		printf("  Active Bucket Counter: Bucket %d    %27u     %27u     %27u\n",
 		       i,
 		       le32_to_cpu(log_data->active_bucket_counter[i][READ]),
 		       le32_to_cpu(log_data->active_bucket_counter[i][WRITE]),
@@ -358,7 +358,7 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 
 	printf("\n");
 	for (i = 0; i < C3_BUCKET_NUM; i++) {
-		printf("  Static Bucket Counter: Bucket %d    %27d     %27d     %27d\n",
+		printf("  Static Bucket Counter: Bucket %d    %27u     %27u     %27u\n",
 		       i,
 		       le32_to_cpu(log_data->static_bucket_counter[i][READ]),
 		       le32_to_cpu(log_data->static_bucket_counter[i][WRITE]),
