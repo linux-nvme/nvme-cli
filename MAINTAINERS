@@ -83,7 +83,7 @@ S:	Orphan
 F:	plugins/intel/
 
 MANGOBOOST PLUGIN
-M:	Jonghyeon Kim <jonghyeon.kim@mangoboost.io> (@mango-jonghyeonkim)
+M:	Jonghyeon Kim <jonghyeon.kim@mangoboost.io> (@jhk16)
 S:	Supported
 F:	plugins/mangoboost/
 
