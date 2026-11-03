@@ -103,7 +103,7 @@ nvme-completion.ps1.
 Regenerate on Linux using the default build, which includes every plugin. A
 Windows build -- and any build configured with a reduced -Dplugins= set --
 leaves some plugins out, so completions generated there would be missing
-commands. A CI check (.github/workflows/check-completions.yml) regenerates from
+commands. A CI check (.github/workflows/checks.yml) regenerates from
 a full Linux build and fails if the committed files differ, so a partial
 regeneration will be caught.
 
