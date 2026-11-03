@@ -6,7 +6,7 @@
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
 
-name: Run nightly tests
+name: Nightly tests
 
 on:
   workflow_dispatch:

@@ -14,7 +14,7 @@ name: Status page
 
 on:
   workflow_run:
-    workflows: ["Analyzers", "Run nightly tests"]
+    workflows: ["Nightly analyzers", "Nightly tests"]
     types: [completed]
     branches: [master]
   workflow_dispatch:
@@ -52,12 +52,12 @@ jobs:
                 -e schedule -s completed -L 1 \
                 --json databaseId -q '.[0].databaseId'
           }
-          run="$(latest analyzer.yml)"
+          run="$(latest nightly-analyzers.yml)"
           if [ -n "${run}" ]; then
             gh run download "${run}" -R "${GITHUB_REPOSITORY}" \
                 -n clang-analyzer-report -D reports/analyzer || true
           fi
-          run="$(latest run-nightly-tests.yml)"
+          run="$(latest nightly-tests.yml)"
           if [ -n "${run}" ]; then
             gh run download "${run}" -R "${GITHUB_REPOSITORY}" \
                 -p 'artifact-*' -D reports/nightly || true
