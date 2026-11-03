@@ -272,21 +272,21 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 	       le16_to_cpu(log_data->active_bucket_timer_threshold));
 	printf("  Active Threshold A                 %d ms\n",
 	       C3_ACTIVE_THRESHOLD_INCREMENT *
-	       le16_to_cpu(log_data->active_threshold_a+1));
+	       (log_data->active_threshold_a + 1));
 	printf("  Active Threshold B                 %d ms\n",
 	       C3_ACTIVE_THRESHOLD_INCREMENT *
-	       le16_to_cpu(log_data->active_threshold_b+1));
+	       (log_data->active_threshold_b + 1));
 	printf("  Active Threshold C                 %d ms\n",
 	       C3_ACTIVE_THRESHOLD_INCREMENT *
-	       le16_to_cpu(log_data->active_threshold_c+1));
+	       (log_data->active_threshold_c + 1));
 	printf("  Active Threshold D                 %d ms\n",
 	       C3_ACTIVE_THRESHOLD_INCREMENT *
-	       le16_to_cpu(log_data->active_threshold_d+1));
+	       (log_data->active_threshold_d + 1));
 	printf("  Active Latency Configuration       0x%x\n",
 	       le16_to_cpu(log_data->active_latency_config));
 	printf("  Active Latency Minimum Window      %d ms\n",
 	       C3_MINIMUM_WINDOW_INCREMENT *
-	       le16_to_cpu(log_data->active_latency_min_window));
+	       log_data->active_latency_min_window);
 	printf("  Active Latency Stamp Units         %d\n",
 	       le16_to_cpu(log_data->active_latency_stamp_units));
 	printf("  Static Latency Stamp Units         %d\n",
@@ -317,7 +317,7 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 	printf("  Debug Counter Trigger Source       %d\n",
 	       le16_to_cpu(log_data->debug_log_counter_trigger));
 	printf("  Debug Log Stamp Units              %d\n",
-	       le16_to_cpu(log_data->debug_log_stamp_units));
+	       log_data->debug_log_stamp_units);
 	printf("  Log Page Version                   %d\n", log_page_version);
 
 	char guid[(GUID_LEN * 2) + 1];

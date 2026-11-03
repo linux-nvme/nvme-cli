@@ -580,21 +580,21 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 		le16_to_cpu(log_data->active_bucket_timer_threshold));
 	json_object_add_value_uint(root, "Active Threshold A",
 		C3_ACTIVE_THRESHOLD_INCREMENT *
-		le16_to_cpu(log_data->active_threshold_a + 1));
+		(log_data->active_threshold_a + 1));
 	json_object_add_value_uint(root, "Active Threshold B",
 		C3_ACTIVE_THRESHOLD_INCREMENT *
-		le16_to_cpu(log_data->active_threshold_b + 1));
+		(log_data->active_threshold_b + 1));
 	json_object_add_value_uint(root, "Active Threshold C",
 		C3_ACTIVE_THRESHOLD_INCREMENT *
-		le16_to_cpu(log_data->active_threshold_c + 1));
+		(log_data->active_threshold_c + 1));
 	json_object_add_value_uint(root, "Active Threshold D",
 		C3_ACTIVE_THRESHOLD_INCREMENT *
-		le16_to_cpu(log_data->active_threshold_d + 1));
+		(log_data->active_threshold_d + 1));
 	json_object_add_value_uint(root, "Active Latency Configuration",
 		le16_to_cpu(log_data->active_latency_config));
 	json_object_add_value_uint(root, "Active Latency Minimum Window",
 		C3_MINIMUM_WINDOW_INCREMENT *
-		le16_to_cpu(log_data->active_latency_min_window));
+		log_data->active_latency_min_window);
 
 	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		struct json_object *bucket;
@@ -716,7 +716,7 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 	json_object_add_value_uint(root, "Debug Counter Trigger Source",
 		le16_to_cpu(log_data->debug_log_counter_trigger));
 	json_object_add_value_uint(root, "Debug Log Stamp Units",
-		le16_to_cpu(log_data->debug_log_stamp_units));
+		log_data->debug_log_stamp_units);
 	json_object_add_value_uint(root, "Log Page Version", log_page_version);
 
 	char guid[(GUID_LEN * 2) + 1];
