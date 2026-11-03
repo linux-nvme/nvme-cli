@@ -235,10 +235,11 @@ class TestLatencyMonitorLogBuckets(LatencyMonitorLogDecodeTestBase):
 
     @staticmethod
     def _value(name, bucket, counter, width):
-        """A value unique to the counter that fits in @width bits."""
+        """A value unique to the counter that fits in @width bits, with
+        the top bit set."""
         index = list(SETS).index(name) + 1
         shift = width // 4
-        return (index << 3 * shift | bucket << 2 * shift |
+        return (1 << width - 1 | index << 3 * shift | bucket << 2 * shift |
                 layout.COUNTERS.index(counter) + 1)
 
     def test_bucket_counters_map_per_spec(self):
