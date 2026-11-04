@@ -24,9 +24,12 @@ Tests in this module verify:
     attributes in byte 6 of a stamp are not part of its time.
   * The Debug Telemetry Log Size is left out below log page version 4 and
     is shown in hex without its leading zero bytes from version 4.
+  * A successful read reports no NVMe status.
   * A failed Get Log Page, a controller without the OCP UUID and a page
     with a different GUID fail, naming the cause in text and reporting
-    only the error under -o json; without the OCP UUID nothing is read.
+    only the error under -o json, plus the NVMe status for a failed Get
+    Log Page; a different GUID is reported with the expected and actual
+    GUIDs on one line; without the OCP UUID nothing is read.
 
 A known defect is covered by an expectedFailure test asserting the
 behavior the specification defines: a Latency Stamp whose Stamp Units bit
@@ -98,6 +101,12 @@ class TestLatencyMonitorLog(LatencyMonitorLogTestBase):
                 self.assertEqual(values, [f'{status:x}'], text)
                 log = self.json_log()
                 self.assertEqual(log['Feature Status'], status)
+
+    def test_text_output_reports_no_status_line_on_success(self):
+        """A successful command has no NVMe status to report."""
+        self.serve(layout.pack())
+        result = self.assertOk(self.run_c3())
+        self.assertNotIn('nvme status', (result.stdout + result.stderr).lower())
 
 
 GUID_TEXT = layout.GUID_BYTES[::-1].hex().upper()
@@ -424,22 +433,32 @@ class TestLatencyMonitorLogDebugLogSize(LatencyMonitorLogDecodeTestBase):
 
 class TestLatencyMonitorLogErrors(LatencyMonitorLogTestBase):
 
-    def assertFails(self, cause):
+    def assertFails(self, cause, status=None):
         """A failed text run naming @cause on stderr, and a failed -o json
-        run whose report is the error alone."""
+        run whose report is the error alone, or the error and the NVMe
+        @status the read failed with. Return the text run's stderr and the
+        JSON report."""
         result = self.run_c3()
         self.assertNotEqual(result.returncode, 0, result.stderr)
         self.assertIn(cause, result.stderr)
+        stderr = result.stderr
         result = self.run_c3('-o', 'json')
         self.assertNotEqual(result.returncode, 0, result.stdout)
         report = json.loads(result.stdout)
-        self.assertEqual(list(report), ['error'], report)
+        keys = {'error'}
+        if status is not None:
+            keys.add(f'status: {status}')
+        self.assertEqual(set(report), keys, report)
         self.assertIn('Failure reading the C3 Log Page', report['error'])
+        return stderr, report
 
     def test_get_log_error_fails(self):
-        # Invalid Field in Command
-        self.server.logs = {layout.LID: 0x0002}
-        self.assertFails('Unable to read C3 data')
+        status = 0x0002
+        self.server.logs = {layout.LID: status}
+        stderr, report = self.assertFails('Unable to read C3 data', status)
+        self.assertIn('NVMe status: Invalid Field in Command', stderr)
+        self.assertEqual(report[f'status: {status}'][0]['error'].split(':')[0],
+                         'Invalid Field in Command')
 
     def test_no_ocp_uuid_fails_without_reading(self):
         self.serve(layout.pack())
@@ -449,7 +468,10 @@ class TestLatencyMonitorLogErrors(LatencyMonitorLogTestBase):
 
     def test_unknown_guid_reports_only_the_error_in_json(self):
         self.serve(layout.pack(guid=bytes(16)))
-        self.assertFails(UNKNOWN_GUID_MSG)
+        stderr, _ = self.assertFails(UNKNOWN_GUID_MSG)
+        self.assertIn(f'{UNKNOWN_GUID_MSG}: '
+                      f'expected 0x{layout.GUID_BYTES[::-1].hex()}, '
+                      f'actual 0x{bytes(16).hex()}', stderr)
 
 
 if __name__ == '__main__':

@@ -11,8 +11,6 @@
 
 #include <libnvme.h>
 
-#include <shared/hex-util.h>
-
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
@@ -30,12 +28,6 @@ static const __u8 scao_guid[GUID_LEN] = {
 	0x9C, 0x4F, 0x6F, 0x7C,
 	0xC9, 0x14, 0xD5, 0xAF
 };
-
-/* Render a log page GUID as GUID_LEN * 2 lower-case hex digits. */
-static void format_guid(char str[GUID_LEN * 2 + 1], const __u8 guid[GUID_LEN])
-{
-	shr_bin_to_hex(str, GUID_LEN * 2 + 1, guid, GUID_LEN, 0);
-}
 
 static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 			   unsigned int format_version, bool uuid)
@@ -75,12 +67,8 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
 	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
-
-	if (ret && strcmp(format, "json"))
-		nvme_show_error("NVMe Status:%s(%x)",
-			libnvme_status_to_string(ret, false), ret);
-
 	if (ret) {
+		nvme_show_status(ret);
 		nvme_show_error(
 			"ERROR : OCP : Unable to read C0 data from buffer");
 		goto out;
@@ -88,17 +76,7 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 
 	/* A page carrying any other GUID is not OCP's SCAO layout. */
 	if (memcmp(scao_guid, data->log_page_guid, GUID_LEN)) {
-		char expected[GUID_LEN * 2 + 1];
-		char actual[GUID_LEN * 2 + 1];
-
-		format_guid(expected, scao_guid);
-		format_guid(actual, data->log_page_guid);
-
-		nvme_show_error(
-			"ERROR : OCP : Unknown GUID in C0 Log Page data");
-		nvme_show_error("ERROR : OCP : Expected GUID: 0x%s", expected);
-		nvme_show_error("ERROR : OCP : Actual GUID:   0x%s", actual);
-
+		ocp_show_guid_error("C0", scao_guid, data->log_page_guid);
 		ret = -1;
 		goto out;
 	}

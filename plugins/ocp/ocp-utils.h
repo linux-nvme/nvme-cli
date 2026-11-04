@@ -52,3 +52,15 @@ int ocp_get_log_simple(struct libnvme_transport_handle *hdl, enum ocp_dssd_log_i
  */
 bool ocp_is_tcg_activity_event(struct nvme_persistent_event_entry *pevent_entry_head,
 			       __u16 el, __u16 vsil);
+
+/**
+ * ocp_show_guid_error() - Report a log page GUID other than the expected one
+ * @log:	log page name, e.g. "C3"
+ * @expected:	GUID_LEN byte GUID identifying the log page
+ * @actual:	GUID_LEN byte GUID the device returned
+ *
+ * Both GUIDs are shown most significant byte first, as the OCP specification
+ * and the log page decoders write them.
+ */
+void ocp_show_guid_error(const char *log, const void *expected,
+			 const void *actual);
