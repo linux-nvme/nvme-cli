@@ -119,11 +119,13 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
     def test_nvm_cs_ns_other_status_error_falls_back_without_pi(self):
         """Any other failure (Internal Error here) is tolerated too: only
         ECLI_INVALID_TAGS aborts. More lenient than write-zeroes/copy and
-        submit_io() with --block-size (see below)."""
+        submit_io() with --block-size (see below). The message names the
+        failing Identify, not the read."""
         self.server.identify[CNS_CSI_NS] = SC_INTERNAL
         result = self._read()
         self.assertEqual(result.returncode, 0,
                          f'nvme read failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+        self.assertIn('identify NVM CS NS', result.stderr)
 
     def test_extended_lba_cs_ns_failure_still_uses_full_transfer_size(self):
         """A failing Identify NVM CS NS only means "no PI" -- it must not
