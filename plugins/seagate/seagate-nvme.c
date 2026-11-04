@@ -945,8 +945,10 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 
 	flags = nvme_args.output_flags;
 
-	if (flags & JSON) {
+	if (!(flags & JSON))
 		printf("Seagate Extended SMART Information :\n");
+
+	if (flags & JSON) {
 		root = json_create_object();
 		lbafs = json_create_array();
 		json_object_add_value_array(root, "SMART-Attributes", lbafs);
@@ -1125,11 +1127,15 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	if (!cf_err) {
 		scCurrentTemp = logPageCF.AttrCF.SuperCapCurrentTemperature;
 		scCurrentTemp = scCurrentTemp ? scCurrentTemp - 273 : 0;
-		printf("%-20s : %d C\n", "Super-cap Current Temperature", scCurrentTemp);
+		if (!(flags & JSON))
+			printf("%-20s : %d C\n",
+			       "Super-cap Current Temperature", scCurrentTemp);
 
 		scMaxTemp = logPageCF.AttrCF.SuperCapMaximumTemperature;
 		scMaxTemp = scMaxTemp ? scMaxTemp - 273 : 0;
-		printf("%-20s : %d C\n", "Super-cap Max Temperature", scMaxTemp);
+		if (!(flags & JSON))
+			printf("%-20s : %d C\n",
+			       "Super-cap Max Temperature", scMaxTemp);
 	}
 
 	if (flags & JSON)
