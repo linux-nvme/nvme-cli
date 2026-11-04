@@ -61,12 +61,10 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		nvme_show_err(err, "Failed to fetch the log from drive");
 
-	int guid_cmp_res = memcmp(fw_history.log_page_guid, ocp_fw_activation_history_guid,
-				  sizeof(ocp_fw_activation_history_guid));
-
-	if (!err && guid_cmp_res) {
-		nvme_show_error(
-			"Error: Unexpected data. Log page guid does not match with expected.\n");
+	if (!err && memcmp(fw_history.log_page_guid,
+			   ocp_fw_activation_history_guid, GUID_LEN)) {
+		ocp_show_guid_error("C2", ocp_fw_activation_history_guid,
+				    fw_history.log_page_guid);
 		err = -EINVAL;
 	}
 

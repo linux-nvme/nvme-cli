@@ -208,7 +208,6 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
-	int i;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -224,36 +223,19 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format, b
 
 	ret = ocp_get_log_simple(hdl, OCP_LID_LMLOG, C3_LATENCY_MON_LOG_BUF_LEN, data, uuid);
 
-	if (strcmp(format, "json"))
-		nvme_show_error("NVMe Status:%s(%x)", libnvme_status_to_string(ret, false), ret);
-
 	if (!ret) {
 		log_data = (struct ssd_latency_monitor_log *)data;
 
-		/*
-		 * check log page guid
-		 * Verify GUID matches
-		 */
-		for (i = 0; i < 16; i++) {
-			if (lat_mon_guid[i] != log_data->log_page_guid[i]) {
-				int j;
-
-				nvme_show_error("ERROR : OCP : Unknown GUID in C3 Log Page data");
-				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", lat_mon_guid[j]);
-
-				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", log_data->log_page_guid[j]);
-				nvme_show_error("");
-
-				ret = -1;
-				goto out;
-			}
+		if (memcmp(lat_mon_guid, log_data->log_page_guid, GUID_LEN)) {
+			ocp_show_guid_error("C3", lat_mon_guid,
+					    log_data->log_page_guid);
+			ret = -1;
+			goto out;
 		}
 		ocp_c3_log(hdl, log_data, fmt);
 	} else {
+		if (ret > 0)
+			nvme_show_status(ret);
 		nvme_show_error("ERROR : OCP : Unable to read C3 data from buffer");
 	}
 
@@ -285,7 +267,7 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error(
-			"ERROR : OCP : Failure reading the C3 Log Page, ret = %d\n",
+			"ERROR : OCP : Failure reading the C3 Log Page, ret = %d",
 			ret);
 
 	return ret;
@@ -1257,9 +1239,7 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
-	int i;
 	struct unsupported_requirement_log *log_data;
-	int j;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -1277,28 +1257,16 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	if (!ret) {
 		log_data = (struct unsupported_requirement_log *)data;
 
-		/*
-		 * check log page guid
-		 * Verify GUID matches
-		 */
-		for (i = 0; i < 16; i++) {
-			if (unsupported_req_guid[i] != log_data->log_page_guid[i]) {
-				nvme_show_error("ERROR : OCP : Unknown GUID in C5 Log Page data");
-				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", unsupported_req_guid[j]);
-				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", log_data->log_page_guid[j]);
-				nvme_show_error("");
-
-				ret = -1;
-				goto out;
-			}
+		if (memcmp(unsupported_req_guid, log_data->log_page_guid,
+			   GUID_LEN)) {
+			ocp_show_guid_error("C5", unsupported_req_guid,
+					    log_data->log_page_guid);
+			ret = -1;
+			goto out;
 		}
 		ocp_c5_log(hdl, log_data, fmt);
 	} else {
-		nvme_show_error("ERROR : OCP : Unable to read C3 data from buffer");
+		nvme_show_error("ERROR : OCP : Unable to read C5 data from buffer");
 	}
 
 out:
@@ -1364,7 +1332,6 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
-	int i, j;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -1383,24 +1350,12 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	if (!ret) {
 		log_data = (struct ocp_error_recovery_log_page *)data;
 
-		/*
-		 * check log page guid
-		 * Verify GUID matches
-		 */
-		for (i = 0; i < 16; i++) {
-			if (error_recovery_guid[i] != log_data->log_page_guid[i]) {
-				nvme_show_error("ERROR : OCP : Unknown GUID in C1 Log Page data");
-				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", error_recovery_guid[j]);
-				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", log_data->log_page_guid[j]);
-				nvme_show_error("");
-
-				ret = -1;
-				goto out;
-			}
+		if (memcmp(error_recovery_guid, log_data->log_page_guid,
+			   GUID_LEN)) {
+			ocp_show_guid_error("C1", error_recovery_guid,
+					    log_data->log_page_guid);
+			ret = -1;
+			goto out;
 		}
 		ocp_c1_log(log_data, fmt);
 	} else {
@@ -1468,7 +1423,6 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
-	int i, j;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -1487,24 +1441,12 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	if (!ret) {
 		log_data = (struct ocp_device_capabilities_log_page *)data;
 
-		/*
-		 * check log page guid
-		 * Verify GUID matches
-		 */
-		for (i = 0; i < 16; i++) {
-			if (dev_cap_req_guid[i] != log_data->log_page_guid[i]) {
-				nvme_show_error("ERROR : OCP : Unknown GUID in C4 Log Page data");
-				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", dev_cap_req_guid[j]);
-				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", log_data->log_page_guid[j]);
-				nvme_show_error("");
-
-				ret = -1;
-				goto out;
-			}
+		if (memcmp(dev_cap_req_guid, log_data->log_page_guid,
+			   GUID_LEN)) {
+			ocp_show_guid_error("C4", dev_cap_req_guid,
+					    log_data->log_page_guid);
+			ret = -1;
+			goto out;
 		}
 		ocp_c4_log(log_data, fmt);
 	} else {
@@ -2169,9 +2111,7 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
-	int i;
 	struct tcg_configuration_log *log_data;
-	int j;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -2189,24 +2129,12 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format, b
 	if (!ret) {
 		log_data = (struct tcg_configuration_log *)data;
 
-		/*
-		 * check log page guid
-		 * Verify GUID matches
-		 */
-		for (i = 0; i < 16; i++) {
-			if (tcg_configuration_guid[i] != log_data->log_page_guid[i]) {
-				nvme_show_error("ERROR : OCP : Unknown GUID in C7 Log Page data");
-				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", tcg_configuration_guid[j]);
-				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j < 16; j++)
-					nvme_show_error("%02x", log_data->log_page_guid[j]);
-				nvme_show_error("");
-
-				ret = -1;
-				goto out;
-			}
+		if (memcmp(tcg_configuration_guid, log_data->log_page_guid,
+			   GUID_LEN)) {
+			ocp_show_guid_error("C7", tcg_configuration_guid,
+					    log_data->log_page_guid);
+			ret = -1;
+			goto out;
 		}
 		ocp_c7_log(hdl, log_data, fmt);
 	} else {

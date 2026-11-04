@@ -337,6 +337,19 @@ class TestOCPSmartAddLogGuid(OCPSmartAddLogTestBase):
                             'a non-OCP GUID must not exit successfully')
         self.assertIn(_UNKNOWN_GUID_MSG, result.stdout + result.stderr)
 
+    def test_wrong_guid_is_reported_on_one_line(self):
+        """Both GUIDs are shown as the printers render them, in the one
+        message that names the mismatch."""
+        guid = bytes(range(16))
+        self.server.page = layout.pack(
+            version=layout.MAX_LOG_PAGE_VERSION, guid=guid)
+        result = self.run_smart()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            f'{_UNKNOWN_GUID_MSG}: '
+            f'expected {layout.render_guid(layout.SCAO_GUID_BYTES)}, '
+            f'actual {layout.render_guid(guid)}', result.stderr)
+
     def test_all_zero_guid_is_rejected(self):
         self.server.page = layout.pack(
             version=layout.MAX_LOG_PAGE_VERSION, guid=bytes(16))
@@ -518,7 +531,8 @@ class TestOCPSmartAddLogOutputModes(OCPSmartAddLogTestBase):
     def test_text_output_reports_no_status_line_on_success(self):
         """A successful command has no NVMe status to report."""
         result = self.assertOk(self.run_smart())
-        self.assertNotIn('NVMe Status', result.stdout + result.stderr)
+        self.assertNotIn('nvme status',
+                         (result.stdout + result.stderr).lower())
 
 
 class TestOCPSmartAddLogErrors(OCPSmartAddLogTestBase):
@@ -530,12 +544,16 @@ class TestOCPSmartAddLogErrors(OCPSmartAddLogTestBase):
         self.assertNotEqual(result.returncode, 0,
                             'a failed Get Log Page must not exit 0')
         self.assertIn(_READ_FAILURE_MSG, result.stdout + result.stderr)
+        self.assertIn('NVMe status: ', result.stderr)
 
     def test_failing_get_log_page_is_reported_in_json_mode(self):
         self.server.log_sc_status = _SC_INVALID_LOG_PAGE
         result = self.run_smart('-o', 'json')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn(_READ_FAILURE_MSG, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue(any(key.startswith('status: ') for key in report),
+                        report)
 
     def test_truncated_log_page_is_rejected(self):
         """A short transfer leaves the GUID unset, so the page must be

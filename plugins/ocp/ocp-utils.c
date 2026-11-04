@@ -11,6 +11,7 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+#include <shared/hex-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
@@ -88,4 +89,18 @@ bool ocp_is_tcg_activity_event(struct nvme_persistent_event_entry *pevent_entry_
 	       le16_to_cpu(vs_desc->vsec) == 0x01 &&
 	       le16_to_cpu(vs_desc->vsedl) == 0x26 &&
 	       vs_desc->vsedt == NVME_PEL_VSEDT_BINARY;
+}
+
+void ocp_show_guid_error(const char *log, const void *expected,
+			 const void *actual)
+{
+	char exp[GUID_LEN * 2 + 1];
+	char act[GUID_LEN * 2 + 1];
+
+	shr_bin_to_hex(exp, sizeof(exp), expected, GUID_LEN, SHR_HEX_REVERSE);
+	shr_bin_to_hex(act, sizeof(act), actual, GUID_LEN, SHR_HEX_REVERSE);
+
+	nvme_show_error(
+		"ERROR : OCP : Unknown GUID in %s Log Page data: expected 0x%s, actual 0x%s",
+		log, exp, act);
 }
