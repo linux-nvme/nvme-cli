@@ -45,7 +45,7 @@ EXAMPLES
 
 SEE ALSO
 --------
-nvme-ocp-clear-pcie-correctable-error-counters(1)
+linknvme:nvme-ocp-clear-pcie-correctable-errors[1]
 
 NVME
 ----

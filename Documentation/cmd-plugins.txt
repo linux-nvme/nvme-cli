@@ -13,7 +13,7 @@ linknvme:nvme-dapustor-smart-log-add[1]::
 nvme dell id-ctrl::
 	Send NVMe Identify Controller
 
-nvme dera smart-log-add::
+linknvme:nvme-dera-smart-log-add[1]::
 	Retrieve Dera SMART Log, show it
 
 linknvme:nvme-huawei-id-ctrl[1]::
@@ -115,7 +115,7 @@ nvme memblaze smart-log-add-x::
 nvme micron clear-fw-activate-history::
 	Clear FW activation history
 
-linknvme:nvme-micron-clear-pcie-errors[1]::
+linknvme:nvme-micron-clear-pcie-correctable-errors[1]::
 	Clear correctable PCIe errors
 
 nvme micron cloud-SSD-plugin-version::
@@ -142,7 +142,7 @@ nvme micron log-page-directory::
 nvme micron plugin-version::
 	Display plugin version info
 
-linknvme:nvme-micron-selective-download[1]::
+linknvme:nvme-micron-select-download[1]::
 	Selective Firmware Download
 
 linknvme:nvme-micron-smart-log[1]::
@@ -160,16 +160,16 @@ nvme micron vs-drive-info::
 nvme micron vs-fw-activate-history::
 	Display FW activation history
 
-linknvme:nvme-micron-internal-log[1]::
+linknvme:nvme-micron-vs-internal-log[1]::
 	Retrieve Micron logs
 
-linknvme:nvme-micron-nand-stats[1]::
+linknvme:nvme-micron-vs-nand-stats[1]::
 	Retrieve NAND Stats
 
-linknvme:nvme-micron-pcie-stats[1]::
+linknvme:nvme-micron-vs-pcie-stats[1]::
 	Retrieve Micron PCIe error stats
 
-linknvme:nvme-micron-smart-add-log[1]::
+linknvme:nvme-micron-vs-smart-add-log[1]::
 	Retrieve extended SMART data
 
 nvme micron vs-smart-ext-log::
@@ -181,7 +181,7 @@ nvme micron vs-smbus-option::
 nvme micron vs-telemetry-controller-option::
 	Enable/Disable controller telemetry log generation
 
-linknvme:nvme-micron-temperature-stats[1]::
+linknvme:nvme-micron-vs-temperature-stats[1]::
 	Retrieve Micron temperature statistics
 
 nvme micron vs-vendor-telemetry-log::
@@ -202,7 +202,7 @@ nvme nvidia id-ctrl::
 linknvme:nvme-ocp-clear-fw-activate-history[1]::
 	Clear Firmware Update History
 
-linknvme:nvme-ocp-clear-pcie-correctable-error-counters[1]::
+linknvme:nvme-ocp-clear-pcie-correctable-errors[1]::
 	Clear PCIe Correctable Error Counters
 
 linknvme:nvme-ocp-device-capability-log[1]::

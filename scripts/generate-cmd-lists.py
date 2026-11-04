@@ -49,22 +49,6 @@ VENDOR_PLUGINS = {
     'solidigm', 'ssstc', 'toshiba', 'transcend', 'virtium', 'wdc', 'ymtc',
 }
 
-# Man pages which are not named after their command.
-PAGES = {
-    ('feat', 'perf-characteristics'): 'nvme-feat-perfc',
-    ('log', 'supported-pages'): 'nvme-supported-log-pages',
-    ('micron', 'clear-pcie-correctable-errors'):
-        'nvme-micron-clear-pcie-errors',
-    ('micron', 'select-download'): 'nvme-micron-selective-download',
-    ('micron', 'vs-internal-log'): 'nvme-micron-internal-log',
-    ('micron', 'vs-nand-stats'): 'nvme-micron-nand-stats',
-    ('micron', 'vs-pcie-stats'): 'nvme-micron-pcie-stats',
-    ('micron', 'vs-smart-add-log'): 'nvme-micron-smart-add-log',
-    ('micron', 'vs-temperature-stats'): 'nvme-micron-temperature-stats',
-    ('ocp', 'clear-pcie-correctable-errors'):
-        'nvme-ocp-clear-pcie-correctable-error-counters',
-}
-
 # A build without fabrics has no connect command.
 FABRICS_COMMAND = 'connect'
 
@@ -81,9 +65,7 @@ def load_metadata(args):
 
 
 def entry(docdir, plugin, cmd):
-    key = (plugin, cmd['name'])
-    page = PAGES.get(key, 'nvme-' + (plugin + '-' if plugin else '') +
-                     cmd['name'])
+    page = 'nvme-' + (plugin + '-' if plugin else '') + cmd['name']
     if os.path.isfile(os.path.join(docdir, page + '.txt')):
         term = f'linknvme:{page}[1]'
     else:
