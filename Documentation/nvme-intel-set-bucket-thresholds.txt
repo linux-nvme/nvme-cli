@@ -1,0 +1,43 @@
+nvme-intel-set-bucket-thresholds(1)
+===================================
+
+NAME
+----
+nvme-intel-set-bucket-thresholds - Set Latency Stats Bucket Values, save it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'intel set-bucket-thresholds' <device>
+			[--write | -w]
+			[--bucket-thresholds=<list> | -t <list>]
+
+DESCRIPTION
+-----------
+Set Latency Stats Bucket Values, save it.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-w::
+--write::
+	Set write bucket Thresholds for latency tracking (read default)
+
+-t <list>::
+--bucket-thresholds=<list>::
+	Bucket Threshold List, comma separated list: 0, 10, 20 ...
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

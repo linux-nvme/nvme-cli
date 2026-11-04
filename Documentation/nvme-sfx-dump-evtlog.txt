@@ -1,0 +1,62 @@
+nvme-sfx-dump-evtlog(1)
+=======================
+
+NAME
+----
+nvme-sfx-dump-evtlog - dump evtlog into file and parse warning and error log
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'sfx dump-evtlog' <device>
+			[--file=<file> | -f <file>]
+			[--namespace_id=<num> | -n <num>]
+			[--storage_medium=<num> | -s <num>]
+			[--parse | -p]
+			[--output=<file> | -O <file>]
+
+DESCRIPTION
+-----------
+Dump evtlog into file and parse warning and error log.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-f <file>::
+--file=<file>::
+	evtlog file(required)
+
+-n <num>::
+--namespace_id=<num>::
+	desired namespace
+
+-s <num>::
+--storage_medium=<num>::
+	evtlog storage medium
++
+....
+0: nand(default) 1: nor
+....
+
+-p::
+--parse::
+	parse error and warning evtlog from evtlog file
+
+-O <file>::
+--output=<file>::
+	parse result output file
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,106 @@
+nvme-lm-migration-send(1)
+=========================
+
+NAME
+----
+nvme-lm-migration-send - Migration Send
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'lm migration-send' <device>
+			[--sel=<num> | -s <num>]
+			[--cntlid=<num> | -c <num>]
+			[--stype=<num> | -t <num>]
+			[--dudmq | -d]
+			[--seq-ind=<num> | -S <num>]
+			[--csuuidi=<num> | -U <num>]
+			[--csvi=<num> | -V <num>]
+			[--uidx=<num> | -u <num>]
+			[--offset=<num> | -O <num>]
+			[--numd=<num> | -n <num>]
+			[--input-file=<file> | -f <file>]
+
+DESCRIPTION
+-----------
+Migration Send.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-s <num>::
+--sel=<num>::
+	Select (SEL) the type of management operation to perform (CDW10[07:00])
++
+....
+0h = Suspend
+1h = Resume
+2h = Set Controller State
+....
+
+-c <num>::
+--cntlid=<num>::
+	Controller Identifier (CDW11[15:00])
+
+-t <num>::
+--stype=<num>::
+	Type of suspend (STYPE) (CDW11[23:16]
++
+....
+0h = Suspend Notification
+1h = Suspend
+....
+
+-d::
+--dudmq::
+	Delete user data migration queue (DUDMQ) as part of suspend operation (CDW11[31])
+
+-S <num>::
+--seq-ind=<num>::
+	Sequence Indicator (CDW10[17:16])
++
+....
+0h = Not first not last
+1h = First in two or more
+2h = Last in two or more
+3h = Entire state info
+....
+
+-U <num>::
+--csuuidi=<num>::
+	Controller State UUID Index (CSUUIDI) (CDW11[31:24])
+
+-V <num>::
+--csvi=<num>::
+	Controller State Version Index (CSVI) (CDW11[23:16])
+
+-u <num>::
+--uidx=<num>::
+	UUID Index (UIDX) (CDW14[16:00])
+
+-O <num>::
+--offset=<num>::
+	Controller State Offset
+
+-n <num>::
+--numd=<num>::
+	Number of Dwords (NUMD)
+
+-f <file>::
+--input-file=<file>::
+	Controller State Data input file
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

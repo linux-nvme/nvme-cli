@@ -85,7 +85,7 @@ linknvme:nvme-reset[1]::
 linknvme:nvme-sanitize[1]::
 	Submit a sanitize command
 
-nvme sanitize-ns::
+linknvme:nvme-sanitize-ns[1]::
 	Submit a sanitize namespace command
 
 linknvme:nvme-set-feature[1]::
@@ -337,25 +337,25 @@ linknvme:nvme-keys-insert-tls-psk[1]::
 linknvme:nvme-keys-revoke[1]::
 	Revoke an NVMeoF TLS PSK from a keyring
 
-nvme lm create-cdq::
+linknvme:nvme-lm-create-cdq[1]::
 	Create Controller Data Queue
 
-nvme lm delete-cdq::
+linknvme:nvme-lm-delete-cdq[1]::
 	Delete Controller Data Queue
 
-nvme lm get-cdq::
+linknvme:nvme-lm-get-cdq[1]::
 	Get Feature - Controller Data Queue (FID 21h)
 
-nvme lm migration-recv::
+linknvme:nvme-lm-migration-recv[1]::
 	Migration Receive
 
-nvme lm migration-send::
+linknvme:nvme-lm-migration-send[1]::
 	Migration Send
 
-nvme lm set-cdq::
+linknvme:nvme-lm-set-cdq[1]::
 	Set Feature - Controller Data Queue (FID 21h)
 
-nvme lm track-send::
+linknvme:nvme-lm-track-send[1]::
 	Track Send Command
 
 linknvme:nvme-log-ana[1]::
@@ -415,7 +415,7 @@ linknvme:nvme-log-persistent-event[1]::
 linknvme:nvme-log-phy-rx-eom[1]::
 	Retrieve Physical Interface Receiver Eye Opening Measurement, show it
 
-nvme log power-measurement::
+linknvme:nvme-log-power-measurement[1]::
 	Retrieve Power Measurement Log, show it
 
 linknvme:nvme-log-pred-lat-event-agg[1]::
@@ -424,7 +424,7 @@ linknvme:nvme-log-pred-lat-event-agg[1]::
 linknvme:nvme-log-predictable-lat[1]::
 	Retrieve Predictable Latency per Nvmset Log, show it
 
-nvme log pull-model-ddc-req::
+linknvme:nvme-log-pull-model-ddc-req[1]::
 	Retrieve Pull Model DDC Request Log, show it
 
 linknvme:nvme-log-reachability-associations[1]::
@@ -457,7 +457,7 @@ linknvme:nvme-log-supported-pages[1]::
 linknvme:nvme-log-telemetry[1]::
 	Retrieve FW Telemetry log write to file
 
-nvme nbft show::
+linknvme:nvme-nbft-show[1]::
 	Show contents of ACPI NBFT tables
 
 linknvme:nvme-ns-attach[1]::
@@ -550,7 +550,7 @@ linknvme:nvme-sed-revert[1]::
 linknvme:nvme-sed-unlock[1]::
 	Unlock a SED Opal Device
 
-nvme utils dump-command-metadata::
+linknvme:nvme-utils-dump-command-metadata[1]::
 	Dump all commands and their options as JSON
 
 linknvme:nvme-zns-changed-zone-list[1]::
@@ -568,7 +568,7 @@ linknvme:nvme-zns-id-ctrl[1]::
 linknvme:nvme-zns-id-ns[1]::
 	Send NVMe Identify Zoned Namespace Namespace, display structure
 
-nvme zns list::
+linknvme:nvme-zns-list[1]::
 	List all NVMe devices with Zoned Namespace Command Set support
 
 linknvme:nvme-zns-offline-zone[1]::

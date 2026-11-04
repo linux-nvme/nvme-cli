@@ -1,0 +1,40 @@
+nvme-micron-latency-stats(1)
+============================
+
+NAME
+----
+nvme-micron-latency-stats - Latency information for tracked commands
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'micron latency-stats' <device>
+			[--command=<name> | -c <name>]
+
+DESCRIPTION
+-----------
+Latency information for tracked commands.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-c <name>::
+--command=<name>::
+	command to display stats - all|read|write|trim, default is all
++
+Values: 'all', 'read', 'write', 'trim'.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,47 @@
+nvme-ocp-get-enable-ieee1667-silo(1)
+====================================
+
+NAME
+----
+nvme-ocp-get-enable-ieee1667-silo - Get Enable IEEE1667 Silo Feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'ocp get-enable-ieee1667-silo' <device>
+			[--sel=<num> | -s <num>]
+			[--no-uuid | -n]
+
+DESCRIPTION
+-----------
+Get Enable IEEE1667 Silo Feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-s <num>::
+--sel=<num>::
+	[0-3]: current/default/saved/supported
++
+Values: 'current', 'default', 'saved', 'supported'.
++
+Range: 0 to 3.
+
+-n::
+--no-uuid::
+	Skip UUID index search (UUID index not required for OCP 1.0)
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

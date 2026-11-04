@@ -1,0 +1,52 @@
+nvme-micron-latency-tracking(1)
+===============================
+
+NAME
+----
+nvme-micron-latency-tracking - Latency monitoring feature control
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'micron latency-tracking' <device>
+			[--option=<name> | -O <name>]
+			[--command=<name> | -c <name>]
+			[--threshold=<num> | -t <num>]
+
+DESCRIPTION
+-----------
+Latency monitoring feature control.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-O <name>::
+--option=<name>::
+	enable or disable or status, default is status
++
+Values: 'enable', 'disable', 'status'.
+
+-c <name>::
+--command=<name>::
+	commands to monitor for - all|read|write|trim, default is all i.e, enabled for all commands
++
+Values: 'all', 'read', 'write', 'trim'.
+
+-t <num>::
+--threshold=<num>::
+	The threshold value to use for latency monitoring in milliseconds, default is 800ms
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

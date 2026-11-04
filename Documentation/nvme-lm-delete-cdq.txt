@@ -1,0 +1,38 @@
+nvme-lm-delete-cdq(1)
+=====================
+
+NAME
+----
+nvme-lm-delete-cdq - Delete Controller Data Queue
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'lm delete-cdq' <device>
+			[--cdqid=<num> | -C <num>]
+
+DESCRIPTION
+-----------
+Delete Controller Data Queue.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-C <num>::
+--cdqid=<num>::
+	Controller Data Queue ID
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,83 @@
+nvme-ocp-set-latency-monitor-feature(1)
+=======================================
+
+NAME
+----
+nvme-ocp-set-latency-monitor-feature - Set Latency Monitor Feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'ocp set-latency-monitor-feature' <device>
+			[--active_bucket_timer_threshold=<num> | -t <num>]
+			[--active_threshold_a=<num> | -a <num>]
+			[--active_threshold_b=<num> | -b <num>]
+			[--active_threshold_c=<num> | -c <num>]
+			[--active_threshold_d=<num> | -d <num>]
+			[--active_latency_config=<num> | -f <num>]
+			[--active_latency_minimum_window=<num> | -w <num>]
+			[--debug_log_trigger_enable=<num> | -r <num>]
+			[--discard_debug_log=<num> | -l <num>]
+			[--latency_monitor_feature_enable=<num> | -e <num>]
+
+DESCRIPTION
+-----------
+Set Latency Monitor Feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-t <num>::
+--active_bucket_timer_threshold=<num>::
+	This is the value that loads the Active Bucket Timer Threshold.
+
+-a <num>::
+--active_threshold_a=<num>::
+	This is the value that loads into the Active Threshold A.
+
+-b <num>::
+--active_threshold_b=<num>::
+	This is the value that loads into the Active Threshold B.
+
+-c <num>::
+--active_threshold_c=<num>::
+	This is the value that loads into the Active Threshold C.
+
+-d <num>::
+--active_threshold_d=<num>::
+	This is the value that loads into the Active Threshold D.
+
+-f <num>::
+--active_latency_config=<num>::
+	This is the value that loads into the Active Latency Configuration.
+
+-w <num>::
+--active_latency_minimum_window=<num>::
+	This is the value that loads into the Active Latency Minimum Window.
+
+-r <num>::
+--debug_log_trigger_enable=<num>::
+	This is the value that loads into the Debug Log Trigger Enable.
+
+-l <num>::
+--discard_debug_log=<num>::
+	Discard Debug Log.
+
+-e <num>::
+--latency_monitor_feature_enable=<num>::
+	Latency Monitor Feature Enable.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

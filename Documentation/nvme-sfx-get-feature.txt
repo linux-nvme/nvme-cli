@@ -1,0 +1,45 @@
+nvme-sfx-get-feature(1)
+=======================
+
+NAME
+----
+nvme-sfx-get-feature - Get a feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'sfx get-feature' <device>
+			[--namespace-id=<num> | -n <num>]
+			[--feature-id=<num> | -f <num>]
+
+DESCRIPTION
+-----------
+Get a feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-n <num>::
+--namespace-id=<num>::
+	desired namespace
++
+Values: 'all', '-1'.
+
+-f <num>::
+--feature-id=<num>::
+	hex feature name (required)
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,65 @@
+nvme-shannon-set-additioal-feature(1)
+=====================================
+
+NAME
+----
+nvme-shannon-set-additioal-feature - Set additional Shannon feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'shannon set-additioal-feature' <device>
+			[--namespace-id=<num> | -n <num>]
+			[--feature-id=<num> | -f <num>]
+			[--value=<num> | -V <num>]
+			[--data-len=<num> | -l <num>]
+			[--data=<file> | -d <file>]
+			[--save | -s]
+
+DESCRIPTION
+-----------
+Set additional Shannon feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-n <num>::
+--namespace-id=<num>::
+	desired namespace
++
+Values: 'all', '-1'.
+
+-f <num>::
+--feature-id=<num>::
+	hex feature name (required)
+
+-V <num>::
+--value=<num>::
+	new value of feature (required)
+
+-l <num>::
+--data-len=<num>::
+	buffer length if data required
+
+-d <file>::
+--data=<file>::
+	optional file for feature data (default stdin)
+
+-s::
+--save::
+	specifies that the controller shall save the attribute
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

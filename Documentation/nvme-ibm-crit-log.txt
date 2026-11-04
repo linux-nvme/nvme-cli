@@ -1,0 +1,38 @@
+nvme-ibm-crit-log(1)
+====================
+
+NAME
+----
+nvme-ibm-crit-log - Display IBM Smart Log Information
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'ibm crit-log' <device>
+			[--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Display IBM Smart Log Information.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Dump output in binary format
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

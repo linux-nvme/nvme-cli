@@ -1,0 +1,52 @@
+nvme-lm-create-cdq(1)
+=====================
+
+NAME
+----
+nvme-lm-create-cdq - Create Controller Data Queue
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'lm create-cdq' <device>
+			[--size=<num> | -s <num>]
+			[--cntlid=<num> | -c <num>]
+			[--queue-type=<num> | -q <num>]
+			[--consent]
+
+DESCRIPTION
+-----------
+Create Controller Data Queue.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-s <num>::
+--size=<num>::
+	CDQ Size (in dwords)
+
+-c <num>::
+--cntlid=<num>::
+	Controller ID
+
+-q <num>::
+--queue-type=<num>::
+	Queue Type (default: 0 = User Data Migration Queue)
+
+--consent::
+	I consent this will not work and understand a CDQ cannot be mapped to user space. If I proceed with the creation of a CDQ, the device will write to invalid memory, inevitably leading to MMU faults or worse.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,61 @@
+nvme-lm-track-send(1)
+=====================
+
+NAME
+----
+nvme-lm-track-send - Track Send Command
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'lm track-send' <device>
+			[--sel=<num> | -s <num>]
+			[--mos=<num> | -m <num>]
+			[--cdqid=<num> | -C <num>]
+			[--start]
+			[--stop]
+
+DESCRIPTION
+-----------
+Track Send Command.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-s <num>::
+--sel=<num>::
+	Type of management operation to perform
++
+....
+0h = Log User Data Changes
+1h = Track Memory Changes
+....
+
+-m <num>::
+--mos=<num>::
+	Management operation specific
+
+-C <num>::
+--cdqid=<num>::
+	Controller Data Queue ID
+
+--start::
+	Equivalent to start tracking with defaults
+
+--stop::
+	Equivalent to stop tracking with defaults
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

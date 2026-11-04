@@ -1,0 +1,47 @@
+nvme-lm-set-cdq(1)
+==================
+
+NAME
+----
+nvme-lm-set-cdq - Set Feature - Controller Data Queue (FID 21h)
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'lm set-cdq' <device>
+			[--cdqid=<num> | -C <num>]
+			[--hp=<num>]
+			[--tpt=<num> | -T <num>]
+
+DESCRIPTION
+-----------
+Set Feature - Controller Data Queue (FID 21h).
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-C <num>::
+--cdqid=<num>::
+	Controller Data Queue ID
+
+--hp=<num>::
+	The slot of the head pointer for the specified CDQ
+
+-T <num>::
+--tpt=<num>::
+	If specified, the slot that causes the controller  to issue a CDQ Tail Pointer event
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

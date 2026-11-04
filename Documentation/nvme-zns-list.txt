@@ -1,0 +1,32 @@
+nvme-zns-list(1)
+================
+
+NAME
+----
+nvme-zns-list - List all NVMe devices with Zoned Namespace Command Set support
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'zns list'
+
+DESCRIPTION
+-----------
+List all NVMe devices with Zoned Namespace Command Set support.
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+none
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

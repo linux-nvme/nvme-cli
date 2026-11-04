@@ -1,0 +1,55 @@
+nvme-sfx-set-feature(1)
+=======================
+
+NAME
+----
+nvme-sfx-set-feature - Set a feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'sfx set-feature' <device>
+			[--namespace-id=<num> | -n <num>]
+			[--feature-id=<num> | -f <num>]
+			[--value=<num> | -V <num>]
+			[--force | -s]
+
+DESCRIPTION
+-----------
+Set a feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-n <num>::
+--namespace-id=<num>::
+	desired namespace
++
+Values: 'all', '-1'.
+
+-f <num>::
+--feature-id=<num>::
+	hex feature name (required)
+
+-V <num>::
+--value=<num>::
+	new value of feature (required)
+
+-s::
+--force::
+	The "I know what I'm doing" flag, skip confirmation before sending command
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

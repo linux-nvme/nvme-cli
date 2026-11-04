@@ -1,0 +1,66 @@
+nvme-sfx-expand-cap(1)
+======================
+
+NAME
+----
+nvme-sfx-expand-cap - expand the last namespace capacity lossless
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'sfx expand-cap' <device>
+			[--namespace_id=<num> | -n <num>]
+			[--namespace_size=<num> | -s <num>]
+			[--namespace_cap=<num> | -c <num>]
+			[--lbaf=<num> | -l <num>]
+			[--units=<num> | -u <num>]
+
+DESCRIPTION
+-----------
+Expand the last namespace capacity lossless.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-n <num>::
+--namespace_id=<num>::
+	desired namespace
+
+-s <num>::
+--namespace_size=<num>::
+	namespace size(required)
+
+-c <num>::
+--namespace_cap=<num>::
+	namespace capacity(required)
+
+-l <num>::
+--lbaf=<num>::
+	LBA format to apply
++
+....
+0: 512(default) 1: 4096
+....
+
+-u <num>::
+--units=<num>::
+	namespace size/capacity units
++
+....
+0: GB(default) 1: LBA
+....
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,70 @@
+nvme-memblaze-lat-set-feature-x(1)
+==================================
+
+NAME
+----
+nvme-memblaze-lat-set-feature-x - Set Enable/Disable for Latency Monitor feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'memblaze lat-set-feature-x' <device>
+			[--sel-perf-log=<num> | -s <num>]
+			[--set-commands-mask=<num> | -m <num>]
+			[--set-read-threshold=<num> | -r <num>]
+			[--set-write-threshold=<num> | -w <num>]
+			[--set-trim-threshold=<num> | -t <num>]
+
+DESCRIPTION
+-----------
+Set Enable/Disable for Latency Monitor feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-s <num>::
+--sel-perf-log=<num>::
+	Select features to turn on, default: Disable
++
+....
+bit 0: latency statistics
+bit 1: high latency log
+bit 2: Performance stat
+....
+
+-m <num>::
+--set-commands-mask=<num>::
+	Set Enable, default: Disable
++
+....
+bit 0: Read commands
+bit 1: high Write commands
+bit 2: Deallocate/TRIM (no Performance stat)
+....
+
+-r <num>::
+--set-read-threshold=<num>::
+	read high latency log threshold, 0-based, unit is 10ms
+
+-w <num>::
+--set-write-threshold=<num>::
+	write high latency log threshold, 0-based, unit is 10ms
+
+-t <num>::
+--set-trim-threshold=<num>::
+	trim high latency log threshold, 0-based, unit is 10ms
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

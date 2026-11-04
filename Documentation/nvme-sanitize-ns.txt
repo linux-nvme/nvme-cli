@@ -1,0 +1,72 @@
+nvme-sanitize-ns(1)
+===================
+
+NAME
+----
+nvme-sanitize-ns - Submit a sanitize namespace command
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'sanitize-ns' <device>
+			[--ish | -I]
+			[--namespace-id=<num> | -n <num>]
+			[--ause | -u]
+			[--sanact=<num> | -a <num>]
+			[--emvs | -e]
+			[--preq | -q]
+
+DESCRIPTION
+-----------
+Submit a sanitize namespace command.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-I::
+--ish::
+	Ignore Shutdown (for NVMe-MI command)
+
+-n <num>::
+--namespace-id=<num>::
+	identifier of desired namespace
++
+Values: 'all', '-1'.
+
+-u::
+--ause::
+	Allow unrestricted sanitize exit.
+
+-a <num>::
+--sanact=<num>::
+	Sanitize action: 1 = Exit failure mode,
++
+....
+4 = Start a crypto erase namespace sanitize operation,
+5 = Exit media verification state
+....
++
+Values: 'exit-failure', 'start-crypto-erase', 'exit-media-verification'.
+
+-e::
+--emvs::
+	Enter media verification state.
+
+-q::
+--preq::
+	Require the sanitize operation to purge user data, as defined by IEEE Std 2883, or fail.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite
