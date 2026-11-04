@@ -399,6 +399,7 @@ enum nvme_mi_chscf {
  * @NVME_MI_CSTS_CECO:	Controller Enable Change Occurred
  * @NVME_MI_CSTS_NAC:	Namespace Attribute Changed
  * @NVME_MI_CSTS_FA:	Firmware Activated
+ * @NVME_MI_CSTS_TCIDA:	Telemetry Controller-Initiated Data Available
  */
 enum nvme_mi_csts {
 	NVME_MI_CSTS_RDY	= 1 << 0,
@@ -408,7 +409,22 @@ enum nvme_mi_csts {
 	NVME_MI_CSTS_CECO	= 1 << 5,
 	NVME_MI_CSTS_NAC	= 1 << 6,
 	NVME_MI_CSTS_FA		= 1 << 7,
+	NVME_MI_CSTS_TCIDA	= 1 << 8,
 };
+
+#define NVME_MI_CHSC_RDY	NVME_MI_CHSCF_RDYF
+#define NVME_MI_CHSC_CFS	NVME_MI_CHSCF_CFSF
+#define NVME_MI_CHSC_SHST	NVME_MI_CHSCF_SHSTF
+#define NVME_MI_CHSC_NSSRO	NVME_MI_CHSCF_NSSROF
+#define NVME_MI_CHSC_CECO	NVME_MI_CHSCF_CECOF
+#define NVME_MI_CHSC_NAC	NVME_MI_CHSCF_NACF
+#define NVME_MI_CHSC_FA		NVME_MI_CHSCF_FAF
+#define NVME_MI_CHSC_CSTS	NVME_MI_CHSCF_CSF
+#define NVME_MI_CHSC_CTEMP	NVME_MI_CHSCF_CTEMPF
+#define NVME_MI_CHSC_PDLU	NVME_MI_CHSCF_PDLUF
+#define NVME_MI_CHSC_SPARE	NVME_MI_CHSCF_SPAREF
+#define NVME_MI_CHSC_CWARN	NVME_MI_CHSCF_CWARNF
+#define NVME_MI_CHSC_TCIDA	NVME_MI_CHSCF_TCIDAF
 
 /**
  * enum nvme_mi_cwarn - Controller Health Data Structure (CHDS) - Critical Warning (CWARN)
