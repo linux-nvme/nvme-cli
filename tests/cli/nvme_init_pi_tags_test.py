@@ -15,7 +15,8 @@ import signal
 
 from tests.cli.nvme_mock import (CNS_CSI_NS, CNS_NS, FLBAS_META_EXT,
                                  OPC_NVM_READ, PIC_QPIFS, SC_INTERNAL,
-                                 SC_INVALID_FIELD, MockTestCase, Reply,
+                                 SC_INVALID_FIELD, STATUS_DNR, MockTestCase,
+                                 Reply,
                                  id_ns, main, nvm_id_ns)
 
 PIF_16B_GUARD = 0
@@ -104,6 +105,16 @@ class SubmitIOAutoDiscoveredBlockSizeTest(SubmitIOMockTestBase):
         result = self._read()
         self.assertEqual(result.returncode, 0,
                          f'nvme read failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+
+    def test_nvm_cs_ns_invalid_field_with_dnr_falls_back_silently(self):
+        """Controllers set DNR and More along with the status code, e.g.
+        0x4002. Invalid Field still means "not supported": no error
+        message, the read proceeds without PI."""
+        self.server.identify[CNS_CSI_NS] = STATUS_DNR | SC_INVALID_FIELD
+        result = self._read()
+        self.assertEqual(result.returncode, 0,
+                         f'nvme read failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}')
+        self.assertNotIn('NVMe status', result.stderr)
 
     def test_nvm_cs_ns_other_status_error_falls_back_without_pi(self):
         """Any other failure (Internal Error here) is tolerated too: only
