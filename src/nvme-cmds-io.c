@@ -1173,8 +1173,13 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			/* Namespace's reported PI format is self-inconsistent. */
 			return err;
 		default:
-			/* Identify NVM CS NS failed/unsupported: PI unavailable. */
-			nvme_show_err(err, "identify NVM CS NS: continuing without protection information");
+			/* Identify NVM CS NS failed: PI unavailable. */
+			if (err > 0)
+				nvme_show_error_status(err,
+					"identify NVM CS NS failed, continuing without protection information");
+			else
+				nvme_show_err(err,
+					"identify NVM CS NS failed, continuing without protection information");
 			pi_available = false;
 			break;
 		}
