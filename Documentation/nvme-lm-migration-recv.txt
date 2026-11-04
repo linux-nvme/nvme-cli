@@ -1,0 +1,77 @@
+nvme-lm-migration-recv(1)
+=========================
+
+NAME
+----
+nvme-lm-migration-recv - Migration Receive
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'lm migration-recv' <device>
+			[--sel=<num> | -s <num>]
+			[--cntlid=<num> | -c <num>]
+			[--csuuidi=<num> | -U <num>]
+			[--csvi=<num> | -V <num>]
+			[--uidx=<num> | -u <num>]
+			[--offset=<num> | -O <num>]
+			[--numd=<num> | -n <num>]
+			[--output-file=<file> | -f <file>]
+
+DESCRIPTION
+-----------
+Migration Receive.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-s <num>::
+--sel=<num>::
+	Select (SEL) the type of management operation to perform (CDW10[07:00])
++
+....
+0h = Get Controller State
+....
+
+-c <num>::
+--cntlid=<num>::
+	Controller Identifier (CDW10[31:16])
+
+-U <num>::
+--csuuidi=<num>::
+	Controller State UUID Index (CSUUIDI) (CDW11[23:16])
+
+-V <num>::
+--csvi=<num>::
+	Controller State Version Index (CSVI) (CDW11[7:0])
+
+-u <num>::
+--uidx=<num>::
+	UUID Index (UIDX) (CDW14[16:00])
+
+-O <num>::
+--offset=<num>::
+	Controller State Offset
+
+-n <num>::
+--numd=<num>::
+	Number of Dwords (NUMD)
+
+-f <file>::
+--output-file=<file>::
+	Controller State Data output file
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

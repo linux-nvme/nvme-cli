@@ -1,0 +1,43 @@
+nvme-dell-id-ctrl(1)
+====================
+
+NAME
+----
+nvme-dell-id-ctrl - Send NVMe Identify Controller
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'dell id-ctrl' <device>
+			[--vendor-specific | -V]
+			[--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Send NVMe Identify Controller.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-V::
+--vendor-specific::
+	dump binary vendor field
+
+-b::
+--raw-binary::
+	show identify in binary format
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

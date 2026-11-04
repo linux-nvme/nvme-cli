@@ -1,0 +1,32 @@
+nvme-utils-dump-command-metadata(1)
+===================================
+
+NAME
+----
+nvme-utils-dump-command-metadata - Dump all commands and their options as JSON
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'utils dump-command-metadata'
+
+DESCRIPTION
+-----------
+Dump all commands and their options as JSON.
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+none
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

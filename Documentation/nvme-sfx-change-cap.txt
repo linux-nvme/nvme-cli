@@ -1,0 +1,48 @@
+nvme-sfx-change-cap(1)
+======================
+
+NAME
+----
+nvme-sfx-change-cap - Dynamic change capacity
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'sfx change-cap' <device>
+			[--cap=<num> | -c <num>]
+			[--cap-byte=<ionum> | -z <ionum>]
+			[--force | -f]
+
+DESCRIPTION
+-----------
+Dynamic change capacity.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-c <num>::
+--cap=<num>::
+	cap size in GB
+
+-z <ionum>::
+--cap-byte=<ionum>::
+	cap size in byte
+
+-f::
+--force::
+	The "I know what I'm doing" flag, skip confirmation before sending command
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

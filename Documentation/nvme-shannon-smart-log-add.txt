@@ -1,0 +1,45 @@
+nvme-shannon-smart-log-add(1)
+=============================
+
+NAME
+----
+nvme-shannon-smart-log-add - Retrieve Shannon SMART Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'shannon smart-log-add' <device>
+			[--namespace-id=<num> | -n <num>]
+			[--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieve Shannon SMART Log, show it.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-n <num>::
+--namespace-id=<num>::
+	(optional) desired namespace
++
+Values: 'all', '-1'.
+
+-b::
+--raw-binary::
+	dump output in binary format
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,35 @@
+nvme-memblaze-get-pm-status(1)
+==============================
+
+NAME
+----
+nvme-memblaze-get-pm-status - Get Memblaze Power Manager Status
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'memblaze get-pm-status' <device>
+
+DESCRIPTION
+-----------
+Get Memblaze Power Manager Status.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+none
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

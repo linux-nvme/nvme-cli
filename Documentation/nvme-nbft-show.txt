@@ -1,0 +1,48 @@
+nvme-nbft-show(1)
+=================
+
+NAME
+----
+nvme-nbft-show - Show contents of ACPI NBFT tables
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'nbft show'
+			[--subsystem | -s]
+			[--hfi]
+			[--discovery | -d]
+			[--nbft-path=<directory>]
+
+DESCRIPTION
+-----------
+Show contents of ACPI NBFT tables.
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-s::
+--subsystem::
+	show NBFT subsystems
+
+--hfi::
+	show NBFT HFIs
+
+-d::
+--discovery::
+	show NBFT discovery controllers
+
+--nbft-path=<directory>::
+	user-defined path for NBFT tables
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

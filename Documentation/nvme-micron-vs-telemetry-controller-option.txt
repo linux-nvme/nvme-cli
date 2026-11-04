@@ -1,0 +1,45 @@
+nvme-micron-vs-telemetry-controller-option(1)
+=============================================
+
+NAME
+----
+nvme-micron-vs-telemetry-controller-option - Enable/Disable controller telemetry log generation
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'micron vs-telemetry-controller-option' <device>
+			[--option=<name> | -O <name>]
+			[--select=<num> | -s <num>]
+
+DESCRIPTION
+-----------
+Enable/Disable controller telemetry log generation.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-O <name>::
+--option=<name>::
+	enable or disable or status
++
+Values: 'enable', 'disable', 'status'.
+
+-s <num>::
+--select=<num>::
+	select/save values: enable/disable options1 - save (persistent), 0 - non-persistent and for status options: 0 - current, 1 - default, 2-saved
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

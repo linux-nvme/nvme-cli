@@ -1,0 +1,43 @@
+nvme-memblaze-lat-stats(1)
+==========================
+
+NAME
+----
+nvme-memblaze-lat-stats - Enable and disable Latency Statistics logging
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'memblaze lat-stats' <device>
+			[--enable | -e]
+			[--disable | -d]
+
+DESCRIPTION
+-----------
+Enable and disable Latency Statistics logging.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-e::
+--enable::
+	Enable LST
+
+-d::
+--disable::
+	Disable LST
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

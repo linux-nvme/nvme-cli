@@ -1,0 +1,43 @@
+nvme-amzn-stats(1)
+==================
+
+NAME
+----
+nvme-amzn-stats - Get EBS volume stats
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'amzn stats' <device>
+			[--details | -d]
+			[--interval=<num> | -i <num>]
+
+DESCRIPTION
+-----------
+Get EBS volume stats.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-d::
+--details::
+	Detail IO histogram of each block size ranges
+
+-i <num>::
+--interval=<num>::
+	Polling interval in seconds
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

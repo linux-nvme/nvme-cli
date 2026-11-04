@@ -1,0 +1,32 @@
+nvme-micron-cloud-SSD-plugin-version(1)
+=======================================
+
+NAME
+----
+nvme-micron-cloud-SSD-plugin-version - Display plugin version info
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'micron cloud-SSD-plugin-version'
+
+DESCRIPTION
+-----------
+Display plugin version info.
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+none
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

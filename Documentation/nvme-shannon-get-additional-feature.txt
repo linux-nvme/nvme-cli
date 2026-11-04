@@ -1,0 +1,69 @@
+nvme-shannon-get-additional-feature(1)
+======================================
+
+NAME
+----
+nvme-shannon-get-additional-feature - Get additional Shannon feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'shannon get-additional-feature' <device>
+			[--namespace-id=<num> | -n <num>]
+			[--feature-id=<num> | -f <num>]
+			[--sel=<num> | -s <num>]
+			[--data-len=<num> | -l <num>]
+			[--raw-binary | -b]
+			[--cdw11=<num> | -c <num>]
+
+DESCRIPTION
+-----------
+Get additional Shannon feature.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-n <num>::
+--namespace-id=<num>::
+	identifier of desired namespace
++
+Values: 'all', '-1'.
+
+-f <num>::
+--feature-id=<num>::
+	hexadecimal feature name
+
+-s <num>::
+--sel=<num>::
+	[0-3]: curr./default/saved/supp.
++
+Values: 'current', 'default', 'saved', 'supported'.
++
+Range: 0 to 3.
+
+-l <num>::
+--data-len=<num>::
+	buffer len (if) data is returned
+
+-b::
+--raw-binary::
+	show infos in binary format
+
+-c <num>::
+--cdw11=<num>::
+	dword 11 for interrupt vector config
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

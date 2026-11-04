@@ -1,0 +1,50 @@
+nvme-micron-vs-smbus-option(1)
+==============================
+
+NAME
+----
+nvme-micron-vs-smbus-option - Enable/Disable SMBUS on the drive
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'micron vs-smbus-option' <device>
+			[--option=<name> | -O <name>]
+			[--value=<num> | -V <num>]
+			[--save=<num> | -s <num>]
+
+DESCRIPTION
+-----------
+Enable/Disable SMBUS on the drive.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-O <name>::
+--option=<name>::
+	enable or disable or status
++
+Values: 'enable', 'disable', 'status'.
+
+-V <num>::
+--value=<num>::
+	1 - hottest component temperature, 0 - composite temperature (default) for enable option, 0 (current), 1 (default), 2 (saved) for status options
+
+-s <num>::
+--save=<num>::
+	1 - persistent, 0 - non-persistent (default)
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

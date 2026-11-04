@@ -1,0 +1,38 @@
+nvme-memblaze-lat-log-print-x(1)
+================================
+
+NAME
+----
+nvme-memblaze-lat-log-print-x - Get High Latency log and show it.
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'memblaze lat-log-print-x' <device>
+			[--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Get High Latency log and show it.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This page only lists the help texts of the command. A detailed
+description is still missing.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	dump the whole log buffer in binary format
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite
