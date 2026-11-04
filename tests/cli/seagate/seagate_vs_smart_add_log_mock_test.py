@@ -38,11 +38,6 @@ class SeagateVsSmartAddLogTest(MockTestCase):
     def _lids(self):
         return [c.lid for c in self.server.log_reads()]
 
-    @staticmethod
-    def _json(out):
-        # the JSON follows a heading line
-        return json.loads(out.split('\n', 1)[1])
-
     def test_jaguar_logs_read_and_printed_once(self):
         self._model(_JAGUAR_MN)
         out = self._run()
@@ -51,7 +46,7 @@ class SeagateVsSmartAddLogTest(MockTestCase):
 
     def test_jaguar_json_printed_once(self):
         self._model(_JAGUAR_MN)
-        out = self._json(self._run('-o', 'json'))
+        out = json.loads(self._run('-o', 'json'))
         self.assertEqual(self._lids(), [0xc4, 0xcf])
         self.assertEqual(len(out['SMART-Attributes']), 2)
 
@@ -60,7 +55,7 @@ class SeagateVsSmartAddLogTest(MockTestCase):
         self.assertEqual(self._lids(), [0xc0])
 
     def test_log_c0_json(self):
-        out = self._json(self._run('-o', 'json'))
+        out = json.loads(self._run('-o', 'json'))
         self.assertEqual(self._lids(), [0xc0])
         self.assertEqual(len(out['SMART-Attributes']), 1)
 
