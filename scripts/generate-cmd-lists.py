@@ -11,7 +11,8 @@ Writes cmds-main.txt (the built-in commands and the command groups) and
 cmd-plugins.txt (the vendor plugins) into DOCDIR. A command links to its
 man page if DOCDIR has one. Deprecated commands are left out.
 
-With --check, compare the lists with the ones in DOCDIR instead. A
+With --check, compare the lists with the ones in DOCDIR instead, and
+check that every man page of section 1 is named after a command. A
 build without all plugins or without fabrics has fewer commands: then
 only the listed commands of the build are checked.
 
@@ -51,6 +52,9 @@ VENDOR_PLUGINS = {
 
 # A build without fabrics has no connect command.
 FABRICS_COMMAND = 'connect'
+
+# Every plugin has these commands, but they are not in the metadata.
+PLUGIN_BUILTINS = ('help', 'version')
 
 
 def load_metadata(args):
@@ -116,7 +120,34 @@ def is_subsequence(blocks, text):
     return all(any(b == c.rstrip('\n') for c in it) for b in have)
 
 
-def check(lists, docdir, complete):
+def page_names(meta):
+    names = {'nvme'} | {'nvme-' + b for b in PLUGIN_BUILTINS}
+    names |= {'nvme-' + c['name'] for c in meta['commands']}
+    for p in meta['plugins']:
+        prefix = 'nvme-' + p['name'] + '-'
+        names |= {prefix + b for b in PLUGIN_BUILTINS}
+        names |= {prefix + c['name'] for c in p['commands']}
+
+    return names
+
+
+def misnamed_pages(meta, docdir):
+    names = page_names(meta)
+    misnamed = []
+    for f in sorted(os.listdir(docdir)):
+        page, ext = os.path.splitext(f)
+        if ext != '.txt' or not page.startswith('nvme'):
+            continue
+        with open(os.path.join(docdir, f), encoding='utf-8') as fp:
+            if fp.readline().strip() != page + '(1)':
+                continue
+        if page not in names:
+            misnamed.append(page)
+
+    return misnamed
+
+
+def check(lists, docdir, complete, misnamed):
     stale = []
     for name, blocks in lists.items():
         try:
@@ -134,8 +165,11 @@ def check(lists, docdir, complete):
         print(f'{name} is not up to date. Run: '
               'meson compile -C <build-dir> update-cmd-lists',
               file=sys.stderr)
+    for page in misnamed:
+        print(f'{page}.txt is not named after a command',
+              file=sys.stderr)
 
-    return 1 if stale else 0
+    return 1 if stale or misnamed else 0
 
 
 def main():
@@ -158,7 +192,9 @@ def main():
 
     lists = generate(meta, args.docdir)
     if args.check:
-        return check(lists, args.docdir, is_complete(meta))
+        complete = is_complete(meta)
+        misnamed = misnamed_pages(meta, args.docdir) if complete else []
+        return check(lists, args.docdir, complete, misnamed)
 
     if not is_complete(meta):
         sys.exit('the lists need a build with all plugins and fabrics')
