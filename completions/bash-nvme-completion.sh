@@ -2947,6 +2947,15 @@ plugin_log_opts () {
 			               "--timeout" "infinite -1"
 			_nvme_opt_files "--output-file -O"
 			;;
+
+		"voltage-measurement")
+			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --raw-binary -b --set-options= --timeout= --verbose -v"
+			valopts+=" --output-format -o --output-format-version --set-options --timeout"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2" \
+			               "--timeout" "infinite -1"
+			;;
 	esac
 	_nvme_finish_completion "$1" 3
 }
@@ -5778,7 +5787,7 @@ _nvme_subcmds () {
 		[io-mgmt]="recv send"
 		[keys]="check-kxchap-secret check-tls-psk export gen-kxchap-secret gen-tls-psk import insert-tls-psk revoke"
 		[lm]="create-cdq delete-cdq get-cdq migration-recv migration-send set-cdq track-send"
-		[log]="ana ave-discovery boot-part changed-alloc-ns-list changed-ns-list dispersed-ns-participating-nss effects endurance endurance-event-agg error fid-support-effects fw host-discovery lba-status media-unit-stat mgmt-addr-list mi-cmd-support-effects persistent-event phy-rx-eom power-measurement pred-lat-event-agg predictable-lat pull-model-ddc-req reachability-associations reachability-groups resv-notif rotational-media-info sanitize self-test smart supported-cap-config supported-pages telemetry"
+		[log]="ana ave-discovery boot-part changed-alloc-ns-list changed-ns-list dispersed-ns-participating-nss effects endurance endurance-event-agg error fid-support-effects fw host-discovery lba-status media-unit-stat mgmt-addr-list mi-cmd-support-effects persistent-event phy-rx-eom power-measurement pred-lat-event-agg predictable-lat pull-model-ddc-req reachability-associations reachability-groups resv-notif rotational-media-info sanitize self-test smart supported-cap-config supported-pages telemetry voltage-measurement"
 		[mangoboost]="id-ctrl"
 		[memblaze]="clear-error-log get-pm-status lat-get-feature-x lat-log lat-log-print lat-log-print-x lat-set-feature-x lat-stats lat-stats-print lat-stats-print-x perf-stats-print-x select-download set-pm-status smart-log-add smart-log-add-x"
 		[micron]="clear-fw-activate-history clear-pcie-correctable-errors cloud-SSD-plugin-version cloud-boot-SSD-version id-ctrl latency-logs latency-stats latency-tracking log-page-directory plugin-version select-download smart-log vs-cloud-log vs-device-waf vs-drive-info vs-fw-activate-history vs-internal-log vs-nand-stats vs-pcie-stats vs-smart-add-log vs-smart-ext-log vs-smbus-option vs-telemetry-controller-option vs-temperature-stats vs-vendor-telemetry-log vs-work-load-log"

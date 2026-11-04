@@ -3878,6 +3878,7 @@ _nvme () {
 					'supported-cap-config:Retrieve the list of Supported Capacity Configuration Descriptors'
 					'supported-pages:Retrieve the Supported Log pages details, show it'
 					'telemetry:Retrieve FW Telemetry log write to file'
+					'voltage-measurement:Retrieve Voltage Measurement Log, show it'
 				)
 				_describe -t commands "nvme log commands" _sub
 				return
@@ -4830,6 +4831,33 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme log telemetry options" _log_telemetry
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(voltage-measurement)
+					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					               "--output-format-version" "1 2" \
+					               "--timeout" "infinite -1" && return
+					local _log_voltage_measurement
+					_log_voltage_measurement=(
+						--dry-run':show command instead of executing'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--no-retries':disable retry logic on errors'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--output-format-version=':output format version: 1|2'
+						--quiet':suppress informational output'
+						--raw-binary':output in binary format'
+						-b':alias for --raw-binary'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--timeout=':timeout value, in milliseconds'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log voltage-measurement options" _log_voltage_measurement
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
