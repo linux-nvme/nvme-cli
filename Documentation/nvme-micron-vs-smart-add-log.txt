@@ -1,9 +1,9 @@
-nvme-micron-smart-add-log(1)
-============================
+nvme-micron-vs-smart-add-log(1)
+===============================
 
 NAME
 ----
-nvme-micron-smart-add-log - Retrieves NAND statistics (2200 model drives)
+nvme-micron-vs-smart-add-log - Retrieves NAND statistics (2200 model drives)
 or Extended SMART information (OCP complaint models) of given micron device
 
 SYNOPSIS
@@ -42,12 +42,12 @@ EXAMPLES
 * Retrieve NAND/extended SMART data and display in json format
 +
 ------------
-# nvme micron vs-nand-stats /dev/nvme0
+# nvme micron vs-smart-add-log /dev/nvme0
 
 * Retrieve NAND/extended SMART data and display in non-json format
 +
 ------------
-# nvme micron vs-nand-stats /dev/nvme0 -f normal
+# nvme micron vs-smart-add-log /dev/nvme0 -f normal
 
 ------------
 

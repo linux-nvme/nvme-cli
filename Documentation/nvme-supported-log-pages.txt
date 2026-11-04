@@ -3,7 +3,7 @@ nvme-supported-log-pages(1)
 
 NAME
 ----
-nvme-supported-log-pages - Send NVMe Supported Log pages request, returns result and log
+nvme-supported-log-pages - Send NVMe Supported Log pages request, returns result and log (deprecated)
 
 SYNOPSIS
 --------
@@ -12,24 +12,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the NVMe supported log pages details from an NVMe device and provides
-the returned structure.
+Deprecated alias for linknvme:nvme-log-supported-pages[1], kept for scripts
+written against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and should be the NVMe character
-device (ex: /dev/nvme0).
+New scripts should use 'nvme log supported-pages' instead. This alias prints
+a deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned supported log pages log structure will be printed
-for each command that is supported.
-
-OPTIONS
--------
+See linknvme:nvme-log-supported-pages[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-No examples provided yet.
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme:nvme-log-supported-pages[1]

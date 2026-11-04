@@ -1,14 +1,14 @@
-nvme-dera-stat(1)
-=================
+nvme-dera-smart-log-add(1)
+==========================
 
 NAME
 ----
-nvme-dera-stat - Send NVMe Dera Device status and Additional SMART log page request, returns result and log
+nvme-dera-smart-log-add - Send NVMe Dera Device status and Additional SMART log page request, returns result and log
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'dera stat' <device>
+'nvme' [<global-options>] 'dera smart-log-add' <device>
 
 DESCRIPTION
 -----------
@@ -31,7 +31,7 @@ EXAMPLES
 * Print the Dera Device status and Additional SMART log page in a human readable format:
 +
 ------------
-# nvme dera stat /dev/nvme0
+# nvme dera smart-log-add /dev/nvme0
 ------------
 
 NVME

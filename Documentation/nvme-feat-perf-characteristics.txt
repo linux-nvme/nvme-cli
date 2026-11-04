@@ -1,14 +1,14 @@
-nvme-feat-perfc(1)
-==================
+nvme-feat-perf-characteristics(1)
+=================================
 
 NAME
 ----
-nvme-feat-perfc - Get and set performance characteristics feature
+nvme-feat-perf-characteristics - Get and set performance characteristics feature
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'feat perfc' <device>
+'nvme' [<global-options>] 'feat perf-characteristics' <device>
 			[--namespace-id=<nsid> | -n <nsid>] [--attri=<attri> | -a <attri>]
 			[--rvspa | -r] [--r4karl=<r4karl> | -R <r4karl>]
 			[--paid=<paid> | -p <paid>] [--attrl=<attrl> | -A <attrl>]
@@ -84,19 +84,19 @@ EXAMPLES
 * Has the program issue a feat perfc to get the current configuration:
 +
 ------------
-# nvme feat perfc /dev/nvme0
+# nvme feat perf-characteristics /dev/nvme0
 ------------
 
 * Has the program issue a feat perfc to set standard performance attributes:
 +
 ------------
-# nvme feat perfc /dev/nvme0 --attri=0 --r4karl=10 --save
+# nvme feat perf-characteristics /dev/nvme0 --attri=0 --r4karl=10 --save
 ------------
 
 * Has the program issue a feat perfc to set vendor specific data from a file:
 +
 ------------
-# nvme feat perfc /dev/nvme0 --attri=128 --paid=12345678-1234-1234-1234-123456789abc --attrl=64 --vs-data=vs_buf.bin
+# nvme feat perf-characteristics /dev/nvme0 --attri=128 --paid=12345678-1234-1234-1234-123456789abc --attrl=64 --vs-data=vs_buf.bin
 ------------
 
 NVME

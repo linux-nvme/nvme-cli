@@ -1,14 +1,14 @@
-nvme-ocp-clear-pcie-correctable-error-counters(1)
-=================================================
+nvme-ocp-clear-pcie-correctable-errors(1)
+=========================================
 
 NAME
 ----
-nvme-ocp-clear-pcie-correctable-error-counters - Clear PCIe correctable error counters
+nvme-ocp-clear-pcie-correctable-errors - Clear PCIe correctable error counters
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ocp clear-pcie-correctable-error-counters' <device>
+'nvme' [<global-options>] 'ocp clear-pcie-correctable-errors' <device>
 			[--no-uuid | -n]
 
 DESCRIPTION
@@ -44,7 +44,7 @@ EXAMPLES
 * Clears PCIe correctable error counters Log for the device:
 +
 ------------
-# nvme ocp clear-pcie-correctable-error-counters /dev/nvme0
+# nvme ocp clear-pcie-correctable-errors /dev/nvme0
 ------------
 
 NVME

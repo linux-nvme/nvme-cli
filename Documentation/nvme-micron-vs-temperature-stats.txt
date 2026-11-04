@@ -1,18 +1,19 @@
-nvme-micron-clear-pcie-errors(1)
-===============================
+nvme-micron-vs-temperature-stats(1)
+===================================
 
 NAME
 ----
-nvme-micron-clear-pcie-errors - Clears correctable PCIe correctable errors of given Micron device
+nvme-micron-vs-temperature-stats - Retrieves temperature information of given micron device
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'micron clear-pcie-correctable-errors' <device>
+'nvme' [<global-options>] 'micron vs-temperature-stats' <device>
 
 DESCRIPTION
 -----------
-This command clears correctable pcie errors for the specified Micron device.
+This command prints temperature information (composite temperature and number of active
+temperature sensors) for the given micron device.
 
 The <device> parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
@@ -29,10 +30,10 @@ include::global-options.txt[]
 
 EXAMPLES
 --------
-* Retrieve NAND statistics information
+* Retrieve temperature information
 +
 ------------
-# nvme micron clear-pcie-correctable-errors /dev/nvme0
+# nvme micron vs-temperature-stats /dev/nvme0
 
 ------------
 

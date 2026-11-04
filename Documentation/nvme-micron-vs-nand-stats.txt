@@ -1,19 +1,19 @@
-nvme-micron-pcie-stats(1)
-=========================
+nvme-micron-vs-nand-stats(1)
+============================
 
 NAME
 ----
-nvme-micron-pcie-stats - Retrieves pcie error statistics for given micron device
+nvme-micron-vs-nand-stats - Retrieves NAND statistics of given micron device
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'micron vs-pcie-stats' <device>
+'nvme' [<global-options>] 'micron vs-nand-stats' <device>
 
 DESCRIPTION
 -----------
-This command prints pcie correctable and uncorrectable error information for the
-given micron device.
+This command prints NAND information (Total bytes written, Bad block count and 
+Erase failures etc) for the given micron device.
 
 The <device> parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
@@ -30,10 +30,10 @@ include::global-options.txt[]
 
 EXAMPLES
 --------
-* Retrieve PCIe error information
+* Retrieve NAND statistics information
 +
 ------------
-# nvme micron vs-pcie-stats /dev/nvme0
+# nvme micron vs-nand-stats /dev/nvme0
 
 ------------
 

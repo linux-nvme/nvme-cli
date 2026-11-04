@@ -1,9 +1,9 @@
-nvme-micron-internal-log(1)
-==========================
+nvme-micron-vs-internal-log(1)
+==============================
 
 NAME
 ----
-nvme-micron-internal-log - Retrieve Micron device's internal logs and save to
+nvme-micron-vs-internal-log - Retrieve Micron device's internal logs and save to
 given zip file.
 
 SYNOPSIS

@@ -1,16 +1,16 @@
-nvme-micron-selective-download(1)
-=================================
+nvme-micron-select-download(1)
+==============================
 
 NAME
 ----
-nvme-micron-selective-download - Performs selective firmware download that
+nvme-micron-select-download - Performs selective firmware download that
 allows user select which firmware binary to update for 9200 devices. This
 requires power cycle the update completes.
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'micron selective-download' <device>
+'nvme' [<global-options>] 'micron select-download' <device>
 			[--fw=<FILE>, -f <FILE>]
 			[--select=<flag>, -s <flag>]
 
@@ -47,21 +47,21 @@ EXAMPLES
 * Update OOB and main firmware
 +
 ------------
-# nvme micron selective-download /dev/nvme0 --fw=firmware_bin --select=OOB
-# nvme micron selective-download /dev/nvme0 -f firmware_bin -s OOB
+# nvme micron select-download /dev/nvme0 --fw=firmware_bin --select=OOB
+# nvme micron select-download /dev/nvme0 -f firmware_bin -s OOB
 
 ------------
 * Update OOB and main firmware
 +
 ------------
-# nvme micron selective-download /dev/nvme0 --fw=firmware_bin --select=EEP
-# nvme micron selective-download /dev/nvme0 -f firmware_bin --s EEP
+# nvme micron select-download /dev/nvme0 --fw=firmware_bin --select=EEP
+# nvme micron select-download /dev/nvme0 -f firmware_bin --s EEP
 ------------
 * Update eeprom, OOB and main firmware
 +
 ------------
-# nvme micron selective-download /dev/nvme0 --fw=firmware_bin --select=ALL
-# nvme micron selective-download /dev/nvme0 -f firmware_bin --s ALL
+# nvme micron select-download /dev/nvme0 --fw=firmware_bin --select=ALL
+# nvme micron select-download /dev/nvme0 -f firmware_bin --s ALL
 ------------
 
 NVME

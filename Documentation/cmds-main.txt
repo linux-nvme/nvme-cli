@@ -220,7 +220,7 @@ linknvme:nvme-feat-lba-range-type[1]::
 linknvme:nvme-feat-num-queues[1]::
 	Get and set number of queues feature
 
-linknvme:nvme-feat-perfc[1]::
+linknvme:nvme-feat-perf-characteristics[1]::
 	Get and set perf characteristics feature
 
 linknvme:nvme-feat-power-limit[1]::
@@ -451,7 +451,7 @@ linknvme:nvme-log-smart[1]::
 linknvme:nvme-log-supported-cap-config[1]::
 	Retrieve the list of Supported Capacity Configuration Descriptors
 
-linknvme:nvme-supported-log-pages[1]::
+linknvme:nvme-log-supported-pages[1]::
 	Retrieve the Supported Log pages details, show it
 
 linknvme:nvme-log-telemetry[1]::
