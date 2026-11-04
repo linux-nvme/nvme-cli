@@ -87,6 +87,8 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 
 static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_object *r)
 {
+	__cleanup_free char *hw_comp_id = NULL;
+
 	json_object_add_value_string(r, "Description",
 				     hwcomp_id_to_string(le32_to_cpu(e->desc->id)));
 	json_object_add_nprix64(r, "Date/Lot Size", e->date_lot_size);
@@ -96,7 +98,17 @@ static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_obje
 	json_object_add_0nprix64(r, "Revision", le64_to_cpu(e->desc->rev), 16);
 	json_object_add_0nprix64(r, "Manufacture Code", le64_to_cpu(e->desc->mfg_code), 16);
 	json_object_add_byte_array(r, "Date/Lot Code", e->date_lot_code, e->date_lot_size);
-	json_object_add_byte_array(r, "Additional Information", e->add_info, e->add_info_size);
+	if (le32_to_cpu(e->desc->id) == HWCOMP_ID_COUNTRY) {
+		hw_comp_id = shr_buf2str((const char *)e->add_info, e->add_info_size);
+		json_object_add_value_string(r,
+				"Additional Information",
+				hw_comp_id);
+	} else {
+		json_object_add_byte_array(r,
+				"Additional Information",
+				e->add_info,
+				e->add_info_size);
+	}
 }
 
 static void print_hwcomp_desc_list_json(struct json_object *r, struct hwcomp_desc_entry *e,
