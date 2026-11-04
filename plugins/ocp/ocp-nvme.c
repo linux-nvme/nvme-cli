@@ -30,7 +30,7 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#define OCP_PLUGIN_VERSION   "3.0.0"
+#define OCP_PLUGIN_VERSION   "3.2.0"
 
 #include "ocp-clear-features.h"
 #include "ocp-fw-activation-history.h"
