@@ -23,6 +23,7 @@
 #include <shared/cleanup-util.h>
 
 #include "state.h"
+#include "sysfs.h"
 #include "units.h"
 
 /*
@@ -563,10 +564,16 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 	 * double-quoted to tolerate spaces.
 	 */
 	{
-		char exec_start_post[512];
-		char exec_stop[PATH_MAX + 512];
+		__cleanup_free char *nvme_dir = sysfs_path("/sys/class/nvme");
+		char exec_start_post[PATH_MAX + 512];
+		char exec_stop[2 * PATH_MAX + 512];
 		char exec_stop_post[512];
 		int n1, n2, n3;
+
+		if (!nvme_dir) {
+			r = -ENOMEM;
+			goto err;
+		}
 
 		n1 = snprintf(exec_start_post, sizeof(exec_start_post),
 			      "DEV=$(cat %s 2>/dev/null) && "
@@ -575,7 +582,7 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 			      "stat -Lc %%i %s/$DEV > %s/$DEV/ino",
 			      devid_path, STATE_CTRLS_DIR,
 			      unit_name, STATE_CTRLS_DIR,
-			      SYSFS_NVME_DIR, STATE_CTRLS_DIR);
+			      nvme_dir, STATE_CTRLS_DIR);
 
 		/*
 		 * The kernel reuses device names. The inode check makes sure
@@ -589,7 +596,7 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 			      "\"$(cat %s/$DEV/ino 2>/dev/null)\" ] && "
 			      "\"%s\" disconnect -d $DEV",
 			      devid_path, STATE_CTRLS_DIR, unit_name,
-			      SYSFS_NVME_DIR, STATE_CTRLS_DIR, mgr->nvme_path);
+			      nvme_dir, STATE_CTRLS_DIR, mgr->nvme_path);
 
 		n3 = snprintf(exec_stop_post, sizeof(exec_stop_post),
 			      "DEV=$(cat %s 2>/dev/null); "

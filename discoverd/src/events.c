@@ -12,12 +12,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include <systemd/sd-device.h>
 #include <systemd/sd-event.h>
 
 #include <daemon-util/log.h>
+#include <shared/cleanup-util.h>
 
 #include "events.h"
+#include "sysfs.h"
 #include "tid.h"
 
 /* Sysfs soak delay: kernel sysfs attributes settle ~1 s after the add uevent. */
@@ -28,7 +31,6 @@
 
 struct soak_entry {
 	struct soak_entry *next;
-	char *syspath;
 	char *devname;
 	sd_event_source *timer;
 	struct events_ctx *ctx;
@@ -43,89 +45,11 @@ struct events_ctx {
 	struct soak_entry *soaking;
 };
 
-/*
- * Extract a named field from a comma-separated "key=value,..." string such
- * as the address sysattr: "traddr=192.0.2.1,trsvcid=4420,src_addr=10.0.0.1".
- * Returns an allocated string on success, NULL if not found.
- */
-static char *extract_addr_field(const char *address, const char *key)
-{
-	char search[64];
-	const char *p, *end;
-	size_t len;
-
-	if (!address || !key)
-		return NULL;
-
-	snprintf(search, sizeof(search), "%s=", key);
-	p = strstr(address, search);
-	if (!p)
-		return NULL;
-
-	p += strlen(search);
-	end = strchr(p, ',');
-	len = end ? (size_t)(end - p) : strlen(p);
-	if (!len)
-		return NULL;
-
-	return strndup(p, len);
-}
-
-/*
- * Build a TID from sysfs attributes of an nvme device.
- * Returns NULL on error (e.g. required attributes missing).
- */
-struct libnvmf_tid *tid_from_sysfs(sd_device *dev, bool *is_dc)
-{
-	const char *transport = NULL, *address = NULL;
-	const char *subsysnqn = NULL, *hostnqn = NULL, *hostid = NULL;
-	const char *host_iface = NULL, *cntrltype = NULL;
-	char *traddr = NULL, *trsvcid = NULL, *host_traddr = NULL;
-	struct libnvmf_tid *t = NULL;
-
-	if (is_dc)
-		*is_dc = false;
-
-	sd_device_get_sysattr_value(dev, "transport", &transport);
-	sd_device_get_sysattr_value(dev, "address", &address);
-	sd_device_get_sysattr_value(dev, "subsysnqn", &subsysnqn);
-	sd_device_get_sysattr_value(dev, "hostnqn", &hostnqn);
-	sd_device_get_sysattr_value(dev, "hostid", &hostid);
-	sd_device_get_sysattr_value(dev, "host_iface", &host_iface);
-	sd_device_get_sysattr_value(dev, "cntrltype", &cntrltype);
-
-	if (!transport || !address || !subsysnqn)
-		return NULL;
-
-	traddr = extract_addr_field(address, "traddr");
-	trsvcid = extract_addr_field(address, "trsvcid");
-
-	// host_traddr may appear as "src_addr" in some kernel versions; try both
-	host_traddr = extract_addr_field(address, "host_traddr");
-	if (!host_traddr)
-		host_traddr = extract_addr_field(address, "src_addr");
-
-	if (traddr) {
-		bool dc = shr_streq0(cntrltype, "discovery");
-
-		t = tid_new(transport, traddr, trsvcid, subsysnqn,
-			    host_traddr, host_iface, hostnqn, hostid, dc);
-		if (is_dc)
-			*is_dc = dc;
-	}
-
-	free(traddr);
-	free(trsvcid);
-	free(host_traddr);
-	return t;
-}
-
 static void soak_entry_free(struct soak_entry *e)
 {
 	if (!e)
 		return;
 	sd_event_source_unref(e->timer);
-	free(e->syspath);
 	free(e->devname);
 	free(e);
 }
@@ -148,17 +72,20 @@ static int soak_timeout(sd_event_source *src __attribute__((unused)),
 {
 	struct soak_entry *e = user_data;
 	struct events_ctx *ctx = e->ctx;
-	sd_device *dev = NULL;
-	const char *cntrltype = NULL;
+	__cleanup_free char *cntrltype = NULL;
+	__cleanup_free char *path = sysfs_nvme_path(e->devname);
 
-	if (sd_device_new_from_syspath(&dev, e->syspath) < 0) {
+	if (!path)
+		goto out;
+
+	if (access(path, F_OK) < 0) {
 		// Device disappeared during soak — treat as removal.
 		if (ctx->callbacks.nvme_remove)
 			ctx->callbacks.nvme_remove(e->devname, ctx->user_data);
 		goto out;
 	}
 
-	sd_device_get_sysattr_value(dev, "cntrltype", &cntrltype);
+	cntrltype = sysfs_nvme_attr(e->devname, "cntrltype");
 
 	if (shr_streq0(cntrltype, "discovery")) {
 		if (ctx->callbacks.dc_add)
@@ -168,33 +95,25 @@ static int soak_timeout(sd_event_source *src __attribute__((unused)),
 			ctx->callbacks.ioc_add(e->devname, ctx->user_data);
 	}
 
-	sd_device_unref(dev);
 out:
 	soak_unlink(ctx, e);
 	soak_entry_free(e);
 	return 0;
 }
 
-static int schedule_soak(struct events_ctx *ctx, sd_device *dev,
-			  const char *devname)
+static int schedule_soak(struct events_ctx *ctx, const char *devname)
 {
 	struct soak_entry *e;
-	const char *syspath = NULL;
 	uint64_t now;
 	int r;
-
-	sd_device_get_syspath(dev, &syspath);
-	if (!syspath)
-		return -EINVAL;
 
 	e = calloc(1, sizeof(*e));
 	if (!e)
 		return -ENOMEM;
 
-	e->syspath = strdup(syspath);
 	e->devname = strdup(devname);
 	e->ctx = ctx;
-	if (!e->syspath || !e->devname) {
+	if (!e->devname) {
 		soak_entry_free(e);
 		return -ENOMEM;
 	}
@@ -235,7 +154,7 @@ static int nvme_monitor_handler(sd_device_monitor *monitor __attribute__((unused
 	case SD_DEVICE_ADD:
 		// Schedule a soak timer; the soak callback reads cntrltype
 		// and calls the appropriate add handler.
-		schedule_soak(ctx, dev, devname);
+		schedule_soak(ctx, devname);
 		break;
 
 	case SD_DEVICE_REMOVE:
