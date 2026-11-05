@@ -10,7 +10,16 @@ After=tlshd.service
 
 [Service]
 Type=notify-reload
+# Mask the legacy autoconnect rule while nvme-discoverd runs: both would
+# connect on the same events. A rule in /run overrides the one in
+# /usr/lib, including one left over from an older installation. The
+# daemon starts even if masking fails.
+ExecStartPre=-mkdir -p /run/udev/rules.d
+ExecStartPre=-ln -sfn /dev/null /run/udev/rules.d/70-nvmf-autoconnect.rules
+ExecStartPre=-udevadm control --reload
 ExecStart=@SBINDIR@/nvme-discoverd
+ExecStopPost=-rm -f /run/udev/rules.d/70-nvmf-autoconnect.rules
+ExecStopPost=-udevadm control --reload
 Restart=on-failure
 RuntimeDirectory=nvme/discoverd nvme/discoverd/units nvme/discoverd/controllers
 RuntimeDirectoryPreserve=yes

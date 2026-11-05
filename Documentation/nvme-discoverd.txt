@@ -65,8 +65,12 @@ with '-Dnvmf-autoconnect=enabled' installs both. The legacy udev
 rules are active as soon as they are installed. nvme-discoverd runs
 only when the administrator enables it with
 'systemctl enable --now nvme-discoverd'. While nvme-discoverd is
-active, nvmf-autoconnect.service and the FC kickstart skip their
-connect step.
+active, its service masks the legacy udev rule
+70-nvmf-autoconnect.rules with a link to /dev/null in
+/run/udev/rules.d, and nvmf-autoconnect.service and the FC kickstart
+skip their connect step. The mask also covers a rule of that name
+left over from an older installation. Stopping nvme-discoverd removes
+the mask.
 
 OPTIONS
 -------
