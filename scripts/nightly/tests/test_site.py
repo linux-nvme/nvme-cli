@@ -21,35 +21,101 @@ HAVE_JINJA2 = importlib.util.find_spec('jinja2') is not None
 needs_jinja2 = unittest.skipUnless(HAVE_JINJA2, 'needs python3 jinja2')
 
 
-def summary(run_id: str, date: str, **kw: Any) -> dict[str, Any]:
+def section(name: str, kind: str = 'meson', **kw: Any) -> dict[str, Any]:
     s: dict[str, Any] = {
-        'run_id': run_id,
-        'date': date,
+        'name': name,
+        'kind': kind,
         'outcome': 'pass',
         'problems': [],
         'counts': {},
-        'known_failures': [],
         'tests': [],
     }
     s.update(kw)
     return s
 
 
+def record(
+    run_id: str,
+    date: str,
+    *sections: dict[str, Any],
+    workflow: str = 'Nightly tests',
+    **kw: Any,
+) -> dict[str, Any]:
+    r: dict[str, Any] = {
+        'version': 2,
+        'workflow': workflow,
+        'run_id': run_id,
+        'run_url': f'https://e.org/{run_id}',
+        'event': 'schedule',
+        'date': date,
+        'outcome': 'pass',
+        'problems': [],
+        'warnings': [],
+        'jobs': [],
+        'sections': list(sections),
+    }
+    r.update(kw)
+    return r
+
+
+def blktests(*tests: tuple[str, str, str], **kw: Any) -> dict[str, Any]:
+    return section(
+        'blktests',
+        'blktests',
+        tests=[{'test': t, 'config': c, 'status': st} for t, c, st in tests],
+        **kw,
+    )
+
+
 class MergeHistory(unittest.TestCase):
     def test_merge(self) -> None:
-        old = [summary('2', '2026-11-02'), summary('1', '2026-11-01')]
-        new = summary('3', '2026-11-03')
+        old = [record('2', '2026-11-02'), record('1', '2026-11-01')]
+        new = record('3', '2026-11-03')
         self.assertEqual(
-            [s['run_id'] for s in site.merge_history(old, new)],
+            [r['run_id'] for r in site.merge_history(old, [new])],
             ['3', '2', '1'],
         )
         # the page is built again for the same run
-        again = summary('2', '2026-11-02', outcome='fail')
-        merged = site.merge_history(old, again)
-        self.assertEqual([s['run_id'] for s in merged], ['2', '1'])
+        again = record('2', '2026-11-02', outcome='fail')
+        merged = site.merge_history(old, [again])
+        self.assertEqual([r['run_id'] for r in merged], ['2', '1'])
         self.assertEqual(merged[0]['outcome'], 'fail')
-        self.assertEqual(len(site.merge_history(old, new, keep=2)), 2)
-        self.assertEqual(site.merge_history(old, None), old)
+        self.assertEqual(site.merge_history(old, []), old)
+
+    def test_keep_per_workflow(self) -> None:
+        old = [record(str(i), f'2026-11-0{i}') for i in range(5, 0, -1)]
+        new = record('a', '2026-11-06', workflow='Nightly analyzers')
+        merged = site.merge_history(old, [new], keep=2)
+        self.assertEqual(
+            [(r['workflow'], r['run_id']) for r in merged],
+            [
+                ('Nightly analyzers', 'a'),
+                ('Nightly tests', '5'),
+                ('Nightly tests', '4'),
+            ],
+        )
+        # the same run id of another workflow is another run
+        other = record('5', '2026-11-07', workflow='Nightly analyzers')
+        merged = site.merge_history(old, [other])
+        self.assertEqual(len(merged), 6)
+
+    def test_migrate(self) -> None:
+        # a blktests summary of the history before the records
+        old = {
+            'run_id': '1',
+            'date': '2026-11-01 02:00:00',
+            'outcome': 'pass',
+            'problems': [],
+            'counts': {},
+            'tests': [],
+        }
+        merged = site.merge_history([old], [record('2', '2026-11-02')])
+        self.assertEqual(merged[1]['workflow'], 'Nightly tests')
+        self.assertEqual(merged[1]['sections'][0]['name'], 'blktests')
+        # the record of the same run replaces it
+        merged = site.merge_history([old], [record('1', '2026-11-01')])
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]['version'], 2)
 
 
 class Model(unittest.TestCase):
@@ -67,34 +133,39 @@ class Model(unittest.TestCase):
     def test_cell_status(self) -> None:
         self.assertEqual(site.cell_status(None), 'none')
         self.assertEqual(site.cell_status({'status': 'fail'}), 'fail')
+        self.assertEqual(site.cell_status({'status': 'timeout'}), 'timeout')
         self.assertEqual(
             site.cell_status({'status': 'fail', 'known': 'x'}), 'ignored'
         )
         self.assertEqual(site.cell_status({'status': 'odd'}), 'not run')
 
+    def test_counts_text(self) -> None:
+        self.assertEqual(site.counts_text({}), '0 passed, 0 failed')
+        self.assertEqual(
+            site.counts_text(
+                {'skip': 18, 'pass': 278, 'timeout': 1, 'fail': 0}
+            ),
+            '278 passed, 0 failed, 1 timed out, 18 skipped',
+        )
+
+    def test_event(self) -> None:
+        self.assertEqual(site.event_label({'event': 'schedule'}), '')
+        self.assertEqual(
+            site.event_label({'event': 'workflow_dispatch'}), 'manual'
+        )
+        self.assertEqual(site.event_label({'event': 'push'}), 'push')
+        self.assertEqual(site.event_label({}), '')
+
     def test_latest(self) -> None:
-        s = summary(
-            '1',
-            '2026-11-01',
-            kernel='7.4',
-            tests=[
-                {
-                    'test': 'nvme/073',
-                    'config': c,
-                    'status': st,
-                    'known': 'https://e.org/issues/9',
-                }
-                for c, st in (
-                    ('nodev_tr_loop', 'pass'),
-                    ('nodev_tr_tcp', 'fail'),
-                )
-            ]
-            + [{'test': 'nvme/005', 'config': 'nodev', 'status': 'fail'}],
+        known = 'https://e.org/issues/9'
+        b = blktests(
+            ('nvme/005', 'nodev', 'fail'),
+            blktests='def',
             known_failures=[
                 {
                     'action': 'ignore',
                     'test': 'nvme/073',
-                    'ref': 'https://e.org/issues/9',
+                    'ref': known,
                     'matched': 2,
                 },
                 {
@@ -111,94 +182,202 @@ class Model(unittest.TestCase):
                 },
             ],
         )
-        m = site.latest_model(s)
-        self.assertEqual(
-            m['meta'], [('date', '2026-11-01'), ('kernel', '7.4')]
+        b['tests'] += [
+            {'test': 'nvme/073', 'config': c, 'status': st, 'known': known}
+            for c, st in (('nodev_tr_loop', 'pass'), ('nodev_tr_tcp', 'fail'))
+        ]
+        m = section(
+            'nvme-cli tests',
+            outcome='fail',
+            url='https://e.org/1/job/2#step:4:1',
+            counts={'pass': 3, 'timeout': 1},
+            tests=[
+                {
+                    'test': 'mock / print',
+                    'config': '',
+                    'status': 'timeout',
+                    'reason': 'TIMEOUT',
+                    'duration': 300.2,
+                    'files': [{'href': 'logs/x.txt', 'name': 'output'}],
+                },
+                {'test': 'unit / skipped', 'config': '', 'status': 'skip'},
+            ],
         )
-        # new failures first
+        r = record(
+            '1',
+            '2026-11-01 01:00:00',
+            b,
+            m,
+            event='workflow_dispatch',
+            kernel='7.4',
+            nvme_cli='abc',
+            outcome='fail',
+            problems=['nvme-cli tests: 1 test timed out'],
+        )
+        lm = site.latest_model(r)
+        self.assertFalse(lm['ok'])
         self.assertEqual(
-            [(t['test'], t['status']) for t in m['failed']],
-            [('nvme/005', 'fail'), ('nvme/073', 'ignored')],
+            lm['meta'],
+            [
+                ('date', '2026-11-01 01:00:00'),
+                ('started', 'manual'),
+                ('kernel', '7.4'),
+                ('nvme-cli', 'abc'),
+                ('blktests', 'def'),
+            ],
         )
         self.assertEqual(
-            [k['note'] for k in m['known']],
+            [(s['name'], s['ok'], s['counts']) for s in lm['sections']],
+            [
+                ('blktests', True, '0 passed, 0 failed'),
+                ('nvme-cli tests', False, '3 passed, 0 failed, 1 timed out'),
+            ],
+        )
+        # new failures first, of any section; the known ones last
+        self.assertEqual(
+            [(t['section'], t['test'], t['status']) for t in lm['failed']],
+            [
+                ('blktests', 'nvme/005', 'fail'),
+                ('nvme-cli tests', 'mock / print', 'timeout'),
+                ('blktests', 'nvme/073', 'ignored'),
+            ],
+        )
+        self.assertEqual(lm['failed'][1]['duration'], 300.2)
+        self.assertEqual(lm['failed'][1]['files'][0]['href'], 'logs/x.txt')
+        self.assertEqual(
+            [k['note'] for k in lm['known']],
             ['passed 1 of 2 runs', 'matched no test run', 'excluded, not run'],
         )
 
+    def test_overview(self) -> None:
+        history = [
+            record('a2', '2026-11-03', workflow='Nightly analyzers'),
+            record('t2', '2026-11-02', outcome='fail'),
+            record('z', '2026-11-02', workflow='A first by name'),
+            record('t1', '2026-11-01'),
+        ]
+        o = site.overview_model(history)
+        self.assertEqual(
+            [(w['workflow'], w['ok']) for w in o],
+            [
+                ('Nightly tests', False),
+                ('A first by name', True),
+                ('Nightly analyzers', True),
+            ],
+        )
+        self.assertFalse(site.page_model(history)['ok'])
+        self.assertTrue(site.page_model(history[2:])['ok'])
+
     def test_matrix(self) -> None:
-        old = summary(
+        old = record(
             '1',
-            '2026-11-01',
+            '2026-11-01 01:00:00',
+            blktests(
+                ('md/001', 'nodev', 'fail'), ('nvme/004', 'nodev', 'pass')
+            ),
             outcome='fail',
-            tests=[
-                {'test': 'md/001', 'config': 'nodev', 'status': 'fail'},
-                {'test': 'nvme/004', 'config': 'nodev', 'status': 'pass'},
-            ],
         )
-        new = summary(
+        new = record(
             '2',
-            '2026-11-02',
-            run_url='https://e.org/2',
-            tests=[
-                {'test': 'md/001', 'config': 'nodev', 'status': 'pass'},
-                {'test': 'nvme/004', 'config': 'nodev', 'status': 'pass'},
+            '2026-11-02 01:00:00',
+            blktests(
+                ('md/001', 'nodev', 'pass'), ('nvme/004', 'nodev', 'pass')
+            ),
+            section(
+                'nvme-cli tests',
+                outcome='fail',
+                url='https://e.org/2/job/3#step:4:1',
+                tests=[
+                    {'test': 'mock / print', 'config': '', 'status': 'fail'}
+                ],
+            ),
+            event='workflow_dispatch',
+        )
+        later = record(
+            '3',
+            '2026-11-03 01:00:00',
+            blktests(),
+            # the meson section has only the tests which did not pass
+            section('nvme-cli tests'),
+        )
+        analyzer = record(
+            'a',
+            '2026-11-02 01:30:00',
+            workflow='Nightly analyzers',
+            outcome='fail',
+        )
+        m = site.matrix_model([later, analyzer, new, old])
+        self.assertEqual(
+            [(n['label'], n['status'], n['event']) for n in m['nights']],
+            [
+                ('2026-11-01', 'fail', ''),
+                ('2026-11-02', 'pass', 'manual'),
+                ('2026-11-03', 'pass', ''),
             ],
         )
-        m = site.matrix_model([new, old])
         self.assertEqual(
-            [(n['label'], n['status']) for n in m['nights']],
-            [('2026-11-01', 'fail'), ('2026-11-02', 'pass')],
+            [
+                (r['label'], [c['status'] for c in r['cells']])
+                for r in m['rows']
+            ],
+            [
+                ('blktests', ['pass', 'pass', 'pass']),
+                ('nvme-cli tests', ['none', 'fail', 'pass']),
+                ('Nightly analyzers', ['none', 'fail', 'none']),
+            ],
         )
-        # only the runs which failed once
-        self.assertEqual([r['test'] for r in m['rows']], ['md/001'])
         self.assertEqual(
-            [c['status'] for c in m['rows'][0]['cells']], ['fail', 'pass']
+            m['rows'][1]['cells'][1]['run_url'],
+            'https://e.org/2/job/3#step:4:1',
         )
         self.assertEqual(
-            m['rows'][0]['cells'][1]['run_url'], 'https://e.org/2'
+            m['rows'][2]['cells'][1]['run_url'], 'https://e.org/a'
+        )
+        # only the tests which failed once, by section
+        self.assertEqual(
+            [
+                (r['section'], r['test'], [c['status'] for c in r['cells']])
+                for r in m['tests']
+            ],
+            [
+                # not in the blktests results of the last night
+                ('blktests', 'md/001', ['fail', 'pass', 'none']),
+                ('nvme-cli tests', 'mock / print', ['none', 'fail', 'pass']),
+            ],
+        )
+        self.assertEqual(
+            m['tests'][0]['cells'][1]['run_url'], 'https://e.org/2'
         )
 
     def test_matrix_log(self) -> None:
         log = 'https://e.org/2/job/3#step:3:7'
-        s = summary(
-            '2',
-            '2026-11-02',
-            outcome='fail',
-            run_url='https://e.org/2',
-            tests=[
-                {'test': 'md/001', 'config': 'nodev', 'status': 'fail'},
-                {
-                    'test': 'md/002',
-                    'config': 'nodev',
-                    'status': 'fail',
-                    'log': log,
-                },
-            ],
-        )
-        m = site.matrix_model([s])
+        b = blktests(('md/001', 'nodev', 'fail'), ('md/002', 'nodev', 'fail'))
+        b['tests'][1]['log'] = log
+        m = site.matrix_model([record('2', '2026-11-02', b, outcome='fail')])
         self.assertEqual(
-            [r['cells'][0]['run_url'] for r in m['rows']],
+            [r['cells'][0]['run_url'] for r in m['tests']],
             ['https://e.org/2', log],
         )
 
     def test_window(self) -> None:
-        history = [summary(str(i), f'2026-{i:04d}') for i in range(40)]
-        self.assertEqual(
-            len(site.matrix_model(history)['nights']), site.MATRIX_NIGHTS
-        )
+        history = [record(str(i), f'2026-{i:04d}') for i in range(40)]
+        history.append(record('a', '2026-0001', workflow='other'))
+        m = site.matrix_model(history)
+        self.assertEqual(len(m['nights']), site.MATRIX_NIGHTS)
+        self.assertEqual(m['nights'][-1]['label'], '2026-0000')
+        m = site.matrix_model(history, primary='other')
+        self.assertEqual(len(m['nights']), 1)
 
 
 @needs_jinja2
 class Render(unittest.TestCase):
     def test_escapes(self) -> None:
         evil = '<script>alert(1)</script>'
-        s = summary(
-            '1',
-            '2026-11-01',
+        b = blktests(
+            ('nvme/004', evil, 'fail'),
             outcome='fail',
             problems=[evil],
-            kernel=evil,
-            run_url='javascript:alert(1)',
+            url='javascript:alert(1)',
             known_failures=[
                 {
                     'action': 'ignore',
@@ -207,36 +386,37 @@ class Render(unittest.TestCase):
                     'matched': 1,
                 }
             ],
-            tests=[
-                {
-                    'test': 'nvme/004',
-                    'config': evil,
-                    'status': 'fail',
-                    'reason': evil,
-                    'known': '"><script>',
-                }
-            ],
+            files=[{'href': 'javascript:x', 'name': evil}],
         )
-        page = site.render([s])
-        self.assertNotIn('<script>', page)
-        self.assertNotIn('href="javascript', page)
-
-    def test_states(self) -> None:
-        tests = [
-            {
-                'test': 'nvme/004',
-                'config': 'nodev_tr_rdma',
-                'status': 'fail',
-                'known': 'https://e.org/issues/7',
-            },
-            {'test': 'nvme/005', 'config': 'nodev', 'status': 'fail'},
-            {'test': 'md/001', 'config': 'nodev', 'status': 'pass'},
-        ]
-        s = summary(
+        b['tests'][0].update(
+            reason=evil,
+            known='"><script>',
+            log='javascript:y',
+            files=[{'href': 'https://evil.org', 'name': evil}],
+        )
+        r = record(
             '1',
             '2026-11-01',
+            b,
             outcome='fail',
-            tests=tests,
+            problems=[evil],
+            warnings=[evil],
+            kernel=evil,
+            workflow=evil,
+            run_url='javascript:alert(1)',
+        )
+        page = site.render([r], primary=evil)
+        self.assertNotIn('<script>', page)
+        self.assertNotIn('href="javascript', page)
+        # the log files are those the page copied, nothing else
+        self.assertNotIn('evil.org', page)
+
+    def test_states(self) -> None:
+        b = blktests(
+            ('nvme/004', 'nodev_tr_rdma', 'fail'),
+            ('nvme/005', 'nodev', 'fail'),
+            ('md/001', 'nodev', 'pass'),
+            outcome='fail',
             known_failures=[
                 {
                     'action': 'ignore',
@@ -252,115 +432,88 @@ class Render(unittest.TestCase):
                 },
             ],
         )
-        page = site.render([s, summary('0', '2026-10-31')])
-        self.assertIn('✗ failed', page)
-        self.assertIn('>#7</a>', page)
-        self.assertIn('matched no test run', page)
-        # the matrix lists the failed runs only
-        self.assertIn('nodev_tr_rdma', page.split('<h2>History')[1])
-        self.assertNotIn('md/001', page.split('<h2>History')[1])
-
-    def test_known_failure_passed(self) -> None:
-        s = summary(
-            '1',
-            '2026-11-01',
+        b['tests'][0]['known'] = 'https://e.org/issues/7'
+        m = section(
+            'nvme-cli tests',
+            outcome='fail',
             tests=[
                 {
-                    'test': 'nvme/073',
-                    'config': c,
-                    'status': st,
-                    'known': 'https://e.org/issues/9',
+                    'test': 'mock / print',
+                    'config': '',
+                    'status': 'timeout',
+                    'duration': 300.2,
+                    'files': [{'href': 'logs/t/print.txt', 'name': 'output'}],
                 }
-                for c, st in (
-                    ('nodev_tr_loop', 'pass'),
-                    ('nodev_tr_tcp', 'fail'),
-                )
             ],
+        )
+        page = site.render(
+            [
+                record(
+                    '2',
+                    '2026-11-02',
+                    b,
+                    m,
+                    outcome='fail',
+                    problems=['nvme-cli tests: 1 test timed out'],
+                    event='workflow_dispatch',
+                ),
+                record('a', '2026-11-02', workflow='Nightly analyzers'),
+                record('1', '2026-10-31'),
+            ]
+        )
+        top = page.split('<section')[0]
+        self.assertIn('✗ failed', top)
+        self.assertIn('Nightly tests', top)
+        self.assertNotIn('Nightly analyzers', top)
+        self.assertIn('nvme-cli tests: 1 test timed out', page)
+        self.assertIn('>#7</a>', page)
+        self.assertIn('matched no test run', page)
+        self.assertIn('300.2s', page)
+        self.assertIn('<a href="logs/t/print.txt">output</a>', page)
+        self.assertIn('<h2>Nightly analyzers <span class="badge good">', page)
+        history = page.split('<h2>History')[1]
+        # the matrix lists the failed runs only
+        self.assertIn('nodev_tr_rdma', history)
+        self.assertIn('mock / print', history)
+        self.assertNotIn('md/001', history)
+        self.assertIn('<span title="manual">*</span>', history)
+
+    def test_known_failure_passed(self) -> None:
+        known = 'https://e.org/issues/9'
+        b = blktests(
             known_failures=[
                 {
                     'action': 'ignore',
                     'test': 'nvme/073',
-                    'ref': 'https://e.org/issues/9',
+                    'ref': known,
                     'matched': 2,
                 }
-            ],
+            ]
         )
-        self.assertIn('passed 1 of 2 runs', site.render([s]))
+        b['tests'] = [
+            {'test': 'nvme/073', 'config': c, 'status': st, 'known': known}
+            for c, st in (('nodev_tr_loop', 'pass'), ('nodev_tr_tcp', 'fail'))
+        ]
+        page = site.render([record('1', '2026-11-01', b)])
+        self.assertIn('passed 1 of 2 runs', page)
+
+    def test_old_history(self) -> None:
+        # the history.json before the records still renders
+        old = {
+            'run_id': '1',
+            'date': '2026-11-01',
+            'outcome': 'fail',
+            'problems': ['1 failed test runs'],
+            'counts': {},
+            'known_failures': [],
+            'tests': [{'test': 'md/001', 'config': 'nodev', 'status': 'fail'}],
+        }
+        page = site.render([old])
+        self.assertIn('blktests: 1 failed test runs', page)
+        self.assertIn('md/001', page.split('<h2>History')[1])
 
     def test_empty(self) -> None:
         self.assertIn('No nightly results yet', site.render([]))
-
-
-class CopyLogs(unittest.TestCase):
-    def test_copy(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            res, out = Path(tmp, 'results'), Path(tmp, 'site')
-            d = res / 'nodev_tr_tcp' / 'nvme'
-            d.mkdir(parents=True)
-            (d / '073.full').write_text('full log', encoding='utf-8')
-            (d / '073.out.bad').write_text('bad', encoding='utf-8')
-            (d / '074.full').write_bytes(b'x' * (site.LOG_MAX + 10))
-            (d / '075.full').symlink_to('/etc/passwd')
-            (res / 'secret').write_text('no', encoding='utf-8')
-            s = summary(
-                '1',
-                '2026-11-01',
-                tests=[
-                    {
-                        'test': f'nvme/{n}',
-                        'config': 'nodev_tr_tcp',
-                        'status': st,
-                    }
-                    for n, st in (
-                        ('073', 'fail'),
-                        ('074', 'fail'),
-                        ('075', 'fail'),
-                        ('076', 'pass'),
-                    )
-                ]
-                + [
-                    {'test': '../secret', 'config': '..', 'status': 'fail'},
-                    {
-                        'test': 'nvme/001',
-                        'config': '.hidden',
-                        'status': 'fail',
-                    },
-                ],
-            )
-            logs = site.copy_logs(res, s, out)
-            self.assertEqual(
-                logs,
-                {
-                    ('nvme/073', 'nodev_tr_tcp'): [
-                        {
-                            'name': 'out.bad',
-                            'href': 'logs/nodev_tr_tcp/nvme/073.out.bad.txt',
-                        },
-                        {
-                            'name': 'full',
-                            'href': 'logs/nodev_tr_tcp/nvme/073.full.txt',
-                        },
-                    ],
-                    ('nvme/074', 'nodev_tr_tcp'): [
-                        {
-                            'name': 'full',
-                            'href': 'logs/nodev_tr_tcp/nvme/074.full.txt',
-                        }
-                    ],
-                },
-            )
-            self.assertEqual(
-                (out / 'logs/nodev_tr_tcp/nvme/073.full.txt').read_text(
-                    encoding='utf-8'
-                ),
-                'full log',
-            )
-            big = (out / 'logs/nodev_tr_tcp/nvme/074.full.txt').read_bytes()
-            self.assertTrue(big.endswith(b'\n[truncated]\n'))
-            self.assertEqual(
-                sorted(p.name for p in out.rglob('*') if p.is_file()),
-                ['073.full.txt', '073.out.bad.txt', '074.full.txt'],
-            )
 
 
 @needs_jinja2
@@ -370,57 +523,37 @@ class Build(unittest.TestCase):
             analyzer = Path(tmp, 'scan')
             analyzer.mkdir()
             (analyzer / 'index.html').write_text('report', encoding='utf-8')
+            logs = Path(tmp, 'logs')
+            (logs / 'blktests').mkdir(parents=True)
+            (logs / 'blktests' / 'x.txt').write_text('log', encoding='utf-8')
             out = Path(tmp, 'site')
-            history = [summary('1', '2026-11-01')]
-            site.build(out, history, analyzer, [('Codecov', 'https://c.io')])
-            self.assertEqual(
-                json.loads((out / 'history.json').read_text(encoding='utf-8')),
-                history,
+            b = blktests(('md/001', 'nodev', 'fail'), outcome='fail')
+            b['tests'][0]['files'] = [
+                {'href': 'logs/blktests/x.txt', 'name': 'full'}
+            ]
+            history = [record('1', '2026-11-01', b, outcome='fail')]
+            site.build(
+                out, history, analyzer, [('Codecov', 'https://c.io')], logs
             )
+            stored = json.loads(
+                (out / 'history.json').read_text(encoding='utf-8')
+            )
+            # the log files are only of this build
+            self.assertNotIn('files', stored[0]['sections'][0]['tests'][0])
+            self.assertEqual(stored[0]['run_id'], '1')
             self.assertEqual(
                 (out / 'analyzer/index.html').read_text(encoding='utf-8'),
                 'report',
+            )
+            self.assertEqual(
+                (out / 'logs/blktests/x.txt').read_text(encoding='utf-8'),
+                'log',
             )
             self.assertTrue((out / 'style.css').exists())
             page = (out / 'index.html').read_text(encoding='utf-8')
             self.assertIn('href="analyzer/"', page)
             self.assertIn('href="https://c.io"', page)
-
-    def test_logs(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            res, out = Path(tmp, 'results'), Path(tmp, 'site')
-            (res / 'nodev' / 'md').mkdir(parents=True)
-            (res / 'nodev' / 'md' / '001.full').write_text(
-                'log', encoding='utf-8'
-            )
-            log = 'https://e.org/1/job/2#step:3:7'
-            s = summary(
-                '1',
-                '2026-11-01',
-                outcome='fail',
-                tests=[
-                    {
-                        'test': 'md/001',
-                        'config': 'nodev',
-                        'status': 'fail',
-                        'log': log,
-                    },
-                    {
-                        'test': 'md/002',
-                        'config': 'nodev',
-                        'status': 'fail',
-                        'log': 'javascript:x',
-                    },
-                ],
-            )
-            site.build(out, [s], results=res)
-            page = (out / 'index.html').read_text(encoding='utf-8')
-            failed = page.split('<h2>Failed test runs')[1].split('<h2>')[0]
-            self.assertIn(f'<a href="{log}">job log</a>', failed)
-            self.assertIn(
-                '<a href="logs/nodev/md/001.full.txt">full</a>', failed
-            )
-            self.assertNotIn('javascript', page)
+            self.assertIn('<a href="logs/blktests/x.txt">full</a>', page)
 
 
 if __name__ == '__main__':

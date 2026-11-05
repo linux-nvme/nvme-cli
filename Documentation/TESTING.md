@@ -449,9 +449,10 @@ failure which passes is reported, but stays on the list until its issue
 is closed by hand, as the test may be flapping.
 
 The tooling, `scripts/nightly/nvme-nightly`, does not depend on GitHub
-beyond reading the issues: the list is a plain text file which can also
-be written by hand, and the summary of a run is a JSON file. It is plain
-Python; only the status page needs Jinja2 for its templates
+beyond reading the issues and the state of the CI runs: the list is a
+plain text file which can also be written by hand, and the summaries and
+the record of a run are JSON files. It is plain Python; only the status
+page needs Jinja2 for its templates
 (`scripts/nightly/nvme_nightly/templates`).
 
 ```
@@ -461,24 +462,39 @@ scripts/nightly/nvme-nightly known-failures --github linux-nvme/nvme-cli \
 # judge a blktests results directory: exit status 1 for a failed run
 scripts/nightly/nvme-nightly blktests-summary blktests/results \
     --known-failures known-failures.txt -o blktests-summary.json
-# link the failed test runs to their lines in the job log (job.json is
-# the job of the GitHub REST API, job.log its log)
-scripts/nightly/nvme-nightly log-links blktests-summary.json \
-    --job job.json --log job.log -o blktests-summary.json
-# build the status page from the summary and the previous history
-scripts/nightly/nvme-nightly site -o site --summary blktests-summary.json \
-    --results blktests/results \
+# the record of a CI run: the conclusions of its jobs and steps (run.json
+# and jobs.json of the GitHub REST API) and a section per test run, each
+# linked to its step and, with the job log, the failed tests to their
+# lines in it
+scripts/nightly/nvme-nightly night --run run.json --jobs jobs.json \
+    --job-log nightly-tests=job.log \
+    --section blktests \
+        blktests 'nightly-tests/Run blktests in VM' \
+        blktests/results/blktests-summary.json \
+    --section meson 'nvme-cli tests' 'nightly-tests/Run nvme-cli tests in VM' \
+        .build-ci/meson-logs/testlog.json \
+    --section wringer nvme-keysd 'nightly-tests/Run daemon tests in VM' \
+        keysd-wringer.log \
+    --logs logs -o night.json
+# build the status page from the records and the previous history
+scripts/nightly/nvme-nightly site -o site --record night.json --logs logs \
     --history https://linux-nvme.github.io/nvme-cli/history.json
 ```
 
 The status page, <https://linux-nvme.github.io/nvme-cli/>, shows the
-result of the last night, the known failures and the history of the
-failed tests, and links the clang analyzer report. A failed test run
-links its result line in the job log, and for the last night also its
-blktests logs (`.full`, `.out.bad`, `.dmesg`), which the page copies.
-The `Status page` workflow builds it after each nightly and analyzer
-run; the page keeps no state but its `history.json`, which the next
-build reads back.
+state of the last run of each nightly workflow (the nightly tests and the
+clang analyzer), then the sections of the nightly tests: blktests, the
+test suite in the VMs and in a container, the fuzz seeds and the daemon
+wringers. A run fails when one of its sections fails, or when a step
+fails without a failed section to explain it, e.g. a build or a VM which
+did not boot. The test suites have no known failures: a failed or timed
+out meson test fails its section. The page lists the failed tests with
+their result lines in the job log and their logs (the blktests `.full`,
+`.out.bad` and `.dmesg`, the output of a meson test, the wringer logs),
+the known failures, and the history of the sections and of the failed
+tests, where a run started by hand is marked. The `Status page` workflow
+builds it after each nightly and analyzer run; the page keeps no state
+but its `history.json`, which the next build reads back.
 
 ## NVMe-oF failover tests
 
