@@ -112,6 +112,12 @@ class Command(collections.namedtuple('Command', [
         """Log page offset of Get Log Page"""
         return (self.cdw13 << 32) | self.cdw12
 
+    @property
+    def numd(self):
+        """Number of dwords Get Log Page transfers, from the 0's based
+        NUMDU:NUMDL"""
+        return ((self.cdw11 & 0xffff) << 16 | self.cdw10 >> 16) + 1
+
 
 def resolve_mock_lib_path(default="./libmock_nvme.so"):
     """Locates libmock_nvme.so. Reads argv[2], the built shared_library()
