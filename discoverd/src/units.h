@@ -57,6 +57,11 @@ struct unit_mgr *unit_mgr_new_local(sd_event *event, const char *dir,
 				     unit_job_callback callback,
 				     void *user_data, const char *nvme_path);
 void unit_mgr_free(struct unit_mgr *mgr);
+/*
+ * Pass --set-options=@opts to every nvme the units run, e.g. the test
+ * directories of the daemon. Returns 0 or -ENOMEM.
+ */
+int unit_mgr_set_nvme_options(struct unit_mgr *mgr, const char *opts);
 
 /*
  * Create a transient DC connection unit.  @params carries the resolved

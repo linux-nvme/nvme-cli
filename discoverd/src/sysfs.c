@@ -22,7 +22,7 @@
 /* A sysfs attribute fits in one page. */
 #define SYSFS_ATTR_MAX 4096
 
-static char *sysfs_root;
+static char *sysfs_root_dir;
 
 int sysfs_set_root(const char *dir)
 {
@@ -34,17 +34,27 @@ int sysfs_set_root(const char *dir)
 			return -ENOMEM;
 	}
 
-	free(sysfs_root);
-	sysfs_root = dup;
+	free(sysfs_root_dir);
+	sysfs_root_dir = dup;
 
 	return 0;
+}
+
+const char *sysfs_root(void)
+{
+	return sysfs_root_dir;
+}
+
+static const char *prefix(void)
+{
+	return sysfs_root_dir ? sysfs_root_dir : "";
 }
 
 char *sysfs_path(const char *path)
 {
 	char *p;
 
-	if (asprintf(&p, "%s%s", sysfs_root ? sysfs_root : "", path) < 0)
+	if (asprintf(&p, "%s%s", prefix(), path) < 0)
 		return NULL;
 
 	return p;
@@ -54,8 +64,7 @@ char *sysfs_nvme_path(const char *devname)
 {
 	char *p;
 
-	if (asprintf(&p, "%s/sys/class/nvme/%s",
-		     sysfs_root ? sysfs_root : "", devname) < 0)
+	if (asprintf(&p, "%s/sys/class/nvme/%s", prefix(), devname) < 0)
 		return NULL;
 
 	return p;

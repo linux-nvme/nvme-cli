@@ -87,6 +87,28 @@ OPTIONS
 	Enable debug-level logging for both nvme-discoverd and the
 	libnvme calls it makes, overriding the configured debug-level.
 
+--set-options=<KEY=VALUE[,KEY=VALUE...]>::
+	For tests, as with nvme(1). The keys are:
++
+--
+test-sysfs-dir=<DIR>;;
+	Read sysfs under <DIR>: /sys/class/nvme becomes
+	<DIR>/sys/class/nvme. This covers the controllers, the NBFT
+	tables and the FC kickstart attribute.
+test-base-dir=<DIR>;;
+	Run in a sandbox in <DIR>, which must be under /tmp. The
+	ownership registry, the state of /run/nvme/discoverd and the
+	fabrics configuration (<DIR>/nvme-fabrics.conf) are taken from
+	<DIR>. nvme-discoverd does not use systemd: the connection units
+	run in the daemon and are kept in <DIR>/units, with a journal of
+	what ran. It does not listen to udev either: a test sends the
+	uevents through the control socket <DIR>/discoverd.sock, which
+	also answers "sync" and "dump" requests.
+--
++
+The option may be repeated. The nvme(1) of the connection units gets the
+same test directories.
+
 -h::
 --help::
 	Print usage and exit.
