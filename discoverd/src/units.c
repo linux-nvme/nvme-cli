@@ -21,6 +21,7 @@
 
 #include <daemon-util/log.h>
 #include <shared/cleanup-util.h>
+#include <shared/time-util.h>
 
 #include "state.h"
 #include "sysfs.h"
@@ -47,7 +48,7 @@
  * state_ctrls_dir() in state.h) and the unit name.  The per-unit devid file is
  * <state_units_dir()>/<unit-name-without-.service>.devid; the connect writes
  * the kernel device name into it and the ExecStartPost/ExecStop/ExecStopPost
- * shell commands (built in build_start_transient) read it back.
+ * shell commands (built in connection_commands()) read it back.
  */
 static int unit_devid_path(char *buf, size_t len, const char *unit_name)
 {
@@ -194,7 +195,7 @@ static int append_strv_prop(sd_bus_message *m, const char *name,
  * ignore=true means non-zero exit is acceptable (the `-` prefix).
  */
 static int append_exec_prop(sd_bus_message *m, const char *name,
-			     const char **argv, bool ignore)
+			     const char *const *argv, bool ignore)
 {
 	int bv = ignore ? 1 : 0;
 	int r;
@@ -221,7 +222,7 @@ static int append_exec_prop(sd_bus_message *m, const char *name,
 	r = sd_bus_message_open_container(m, 'a', "s");
 	if (r < 0)
 		return r;
-	for (const char **a = argv; *a; a++) {
+	for (const char *const *a = argv; *a; a++) {
 		r = sd_bus_message_append_basic(m, 's', *a);
 		if (r < 0)
 			return r;
@@ -422,69 +423,100 @@ static bool unit_wait_gone(struct unit_mgr *mgr, const char *unit_name)
 }
 
 /*
- * Internal: call StartTransientUnit and track the returned job.
- *
- * Caller has built the message up through the properties array and must
- * close the properties array container and the aux array before calling.
- * We call sd_bus_call() synchronously — StartTransientUnit only enqueues a
- * systemd job; the actual nvme-connect subprocess is managed by systemd and
- * reports back via JobRemoved.
+ * What a transient unit runs, independent of how it is started:
+ * spec_to_message() turns it into a StartTransientUnit call.
  */
-static int do_start_transient(struct unit_mgr *mgr, sd_bus_message *msg,
-			       const char *unit_name)
+struct unit_spec {
+	const char *name;
+	const char *description;
+	/*
+	 * A connection unit stays active after the connect (RemainAfterExit=),
+	 * is ordered before the remote file systems, and disconnects on stop.
+	 * A connect-all unit is none of this.
+	 */
+	bool connection;
+	bool is_fc;                    // no After=network.target
+	const char *const *exec_start; // argv, argv[0] is the binary
+	char *exec_start_post;         // shell commands, NULL for none
+	char *exec_stop;
+	char *exec_stop_post;
+};
+
+static void unit_spec_clear(struct unit_spec *s)
 {
-	sd_bus_error err = SD_BUS_ERROR_NULL;
-	sd_bus_message *reply = NULL;
-	const char *job_path;
-	int r;
-
-	r = sd_bus_call(mgr->bus, msg, 0, &err, &reply);
-	if (r == -EEXIST) {
-		/*
-		 * A unit from an earlier daemon lifetime still holds the
-		 * name. Its connection is gone and its parameters may be
-		 * stale, so replace it rather than restart it. msg is
-		 * unmodified by a failed sd_bus_call() and safe to resend.
-		 */
-		sd_bus_error_free(&err);
-		err = SD_BUS_ERROR_NULL;
-		log_info("%s - name held by a stale unit, replacing it",
-			 unit_name);
-		unit_stop(mgr, unit_name);
-		if (unit_wait_gone(mgr, unit_name))
-			r = sd_bus_call(mgr->bus, msg, 0, &err, &reply);
-		else
-			log_warn("%s - still loaded after stop, giving up",
-				 unit_name);
-	}
-	if (r < 0) {
-		log_err("StartTransientUnit(%s): %s",
-			unit_name, err.message ?: strerror(-r));
-		sd_bus_error_free(&err);
-		return r;
-	}
-
-	r = sd_bus_message_read(reply, "o", &job_path);
-	if (r < 0)
-		goto out;
-
-	r = track_job(mgr, job_path, unit_name);
-out:
-	sd_bus_message_unref(reply);
-	return r;
+	free(s->exec_start_post);
+	free(s->exec_stop);
+	free(s->exec_stop_post);
 }
 
+#define __cleanup_unit_spec __attribute__((cleanup(unit_spec_clear)))
+
 /*
- * Build a StartTransientUnit message for an nvme connect unit.
- *
- * connect_argv is a NULL-terminated argv starting at the nvme binary path.
- * desc is the Description= value.
- * is_fc determines whether After=network.target is added.
+ * Build the post/stop shell commands of connection unit @unit_name with the
+ * real devid path, state directory and unit name substituted (systemd does
+ * not expand %t/%N/%n here — see unit_devid_path()). The nvme path in
+ * ExecStop is double-quoted to tolerate spaces.
  */
-static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
-				  const char *devid_path, const char *desc,
-				  bool is_fc, const char **connect_argv,
-				  sd_bus_message **out)
+static int connection_commands(const struct unit_mgr *mgr,
+			       const char *unit_name, const char *devid_path,
+			       struct unit_spec *s)
+{
+	__cleanup_free char *nvme_dir = sysfs_path("/sys/class/nvme");
+	const char *ctrls = state_ctrls_dir();
+
+	if (!nvme_dir)
+		return -ENOMEM;
+
+	if (asprintf(&s->exec_start_post,
+		     "set -e; "
+		     "DEV=$(cat %s 2>/dev/null); "
+		     "mkdir -p %s/$DEV; "
+		     "echo %s > %s/$DEV/unit; "
+		     "stat -Lc %%i %s/$DEV > %s/$DEV/ino",
+		     devid_path, ctrls, unit_name, ctrls,
+		     nvme_dir, ctrls) < 0) {
+		s->exec_start_post = NULL;
+		return -ENOMEM;
+	}
+
+	/*
+	 * The kernel reuses device names. The inode check makes sure
+	 * $DEV is still the controller this unit connected.
+	 */
+	if (asprintf(&s->exec_stop,
+		     "DEV=$(cat %s 2>/dev/null); "
+		     "[ -n \"$DEV\" ] || exit 0; "
+		     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
+		     "[ \"$UNIT\" = \"%s\" ] || exit 0; "
+		     "INO=$(cat %s/$DEV/ino 2>/dev/null); "
+		     "CUR=$(stat -Lc %%i %s/$DEV 2>/dev/null); "
+		     "[ \"$CUR\" = \"$INO\" ] || exit 0; "
+		     "\"%s\" disconnect -d $DEV",
+		     devid_path, ctrls, unit_name, ctrls,
+		     nvme_dir, mgr->nvme_path) < 0) {
+		s->exec_stop = NULL;
+		return -ENOMEM;
+	}
+
+	if (asprintf(&s->exec_stop_post,
+		     "DEV=$(cat %s 2>/dev/null); "
+		     "rm -f %s; "
+		     "[ -n \"$DEV\" ] || exit 0; "
+		     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
+		     "[ \"$UNIT\" = \"%s\" ] || exit 0; "
+		     "rm -rf %s/$DEV",
+		     devid_path, devid_path, ctrls,
+		     unit_name, ctrls) < 0) {
+		s->exec_stop_post = NULL;
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+/* Build the StartTransientUnit message for @s. */
+static int spec_to_message(struct unit_mgr *mgr, const struct unit_spec *s,
+			   sd_bus_message **out)
 {
 	sd_bus_message *m = NULL;
 	int r;
@@ -498,7 +530,7 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 		return r;
 
 	/* Name and mode. */
-	r = sd_bus_message_append(m, "ss", unit_name, "replace");
+	r = sd_bus_message_append(m, "ss", s->name, "replace");
 	if (r < 0)
 		goto err;
 
@@ -510,123 +542,71 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 	r = append_string_prop(m, "Type", "oneshot");
 	if (r < 0)
 		goto err;
-	r = append_bool_prop(m, "RemainAfterExit", true);
-	if (r < 0)
-		goto err;
-	r = append_string_prop(m, "Description", desc);
+	if (s->connection) {
+		r = append_bool_prop(m, "RemainAfterExit", true);
+		if (r < 0)
+			goto err;
+	}
+	r = append_string_prop(m, "Description", s->description);
 	if (r < 0)
 		goto err;
 	r = append_string_prop(m, "CollectMode", "inactive-or-failed");
 	if (r < 0)
 		goto err;
-	r = append_uint64_prop(m, "TimeoutStopUSec",
-			       DISCONNECT_TIMEOUT_SEC * UINT64_C(1000000));
-	if (r < 0)
-		goto err;
 
-	/*
-	 * Ordering: Before=nvme-discoverd.service always. At shutdown, the
-	 * unit stops after the _netdev mounts are unmounted, so ExecStop=
-	 * never disconnects a mounted namespace. remote-fs-pre.target is
-	 * passive: Before= has no effect unless the unit also wants it.
-	 */
-	{
+	if (s->connection) {
+		/*
+		 * Ordering: Before=nvme-discoverd.service always. At shutdown,
+		 * the unit stops after the _netdev mounts are unmounted, so
+		 * ExecStop= never disconnects a mounted namespace.
+		 * remote-fs-pre.target is passive: Before= has no effect unless
+		 * the unit also wants it.
+		 */
 		static const char *const before[] = {
 			"nvme-discoverd.service", "remote-fs-pre.target", NULL
 		};
 		static const char *const wants[] = {
 			"remote-fs-pre.target", NULL
 		};
+		static const char *const after[] = { "network.target", NULL };
+		uint64_t stop_timeout = DISCONNECT_TIMEOUT_SEC *
+					SHR_USEC_PER_SEC;
 
+		r = append_uint64_prop(m, "TimeoutStopUSec", stop_timeout);
+		if (r < 0)
+			goto err;
 		r = append_strv_prop(m, "Before", before);
 		if (r < 0)
 			goto err;
 		r = append_strv_prop(m, "Wants", wants);
 		if (r < 0)
 			goto err;
+
+		/* After=network.target for TCP/RDMA (omit for FC). */
+		if (!s->is_fc) {
+			r = append_strv_prop(m, "After", after);
+			if (r < 0)
+				goto err;
+		}
 	}
 
-	/* After=network.target for TCP/RDMA (omit for FC). */
-	if (!is_fc) {
-		static const char *const after[] = { "network.target", NULL };
-
-		r = append_strv_prop(m, "After", after);
-		if (r < 0)
-			goto err;
-	}
-
-	r = append_exec_prop(m, "ExecStart", connect_argv, false);
+	r = append_exec_prop(m, "ExecStart", s->exec_start, false);
 	if (r < 0)
 		goto err;
-
-	/*
-	 * Build the post/stop shell commands with the real devid path, state
-	 * directory and unit name substituted (systemd does not expand %t/%N/%n
-	 * here — see unit_devid_path()).  The nvme path in ExecStop is
-	 * double-quoted to tolerate spaces.
-	 */
-	{
-		__cleanup_free char *nvme_dir = sysfs_path("/sys/class/nvme");
-		__cleanup_free char *exec_start_post = NULL;
-		__cleanup_free char *exec_stop = NULL;
-		__cleanup_free char *exec_stop_post = NULL;
-		const char *ctrls = state_ctrls_dir();
-
-		if (!nvme_dir ||
-		    asprintf(&exec_start_post,
-			     "set -e; "
-			     "DEV=$(cat %s 2>/dev/null); "
-			     "mkdir -p %s/$DEV; "
-			     "echo %s > %s/$DEV/unit; "
-			     "stat -Lc %%i %s/$DEV > %s/$DEV/ino",
-			     devid_path, ctrls, unit_name, ctrls,
-			     nvme_dir, ctrls) < 0) {
-			exec_start_post = NULL;
-			r = -ENOMEM;
-			goto err;
-		}
-
-		/*
-		 * The kernel reuses device names. The inode check makes sure
-		 * $DEV is still the controller this unit connected.
-		 */
-		if (asprintf(&exec_stop,
-			     "DEV=$(cat %s 2>/dev/null); "
-			     "[ -n \"$DEV\" ] || exit 0; "
-			     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
-			     "[ \"$UNIT\" = \"%s\" ] || exit 0; "
-			     "INO=$(cat %s/$DEV/ino 2>/dev/null); "
-			     "CUR=$(stat -Lc %%i %s/$DEV 2>/dev/null); "
-			     "[ \"$CUR\" = \"$INO\" ] || exit 0; "
-			     "\"%s\" disconnect -d $DEV",
-			     devid_path, ctrls, unit_name, ctrls,
-			     nvme_dir, mgr->nvme_path) < 0) {
-			exec_stop = NULL;
-			r = -ENOMEM;
-			goto err;
-		}
-
-		if (asprintf(&exec_stop_post,
-			     "DEV=$(cat %s 2>/dev/null); "
-			     "rm -f %s; "
-			     "[ -n \"$DEV\" ] || exit 0; "
-			     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
-			     "[ \"$UNIT\" = \"%s\" ] || exit 0; "
-			     "rm -rf %s/$DEV",
-			     devid_path, devid_path, ctrls,
-			     unit_name, ctrls) < 0) {
-			exec_stop_post = NULL;
-			r = -ENOMEM;
-			goto err;
-		}
-
-		r = append_shell_exec_prop(m, "ExecStartPost", exec_start_post);
+	if (s->exec_start_post) {
+		r = append_shell_exec_prop(m, "ExecStartPost",
+					   s->exec_start_post);
 		if (r < 0)
 			goto err;
-		r = append_shell_exec_prop(m, "ExecStop", exec_stop);
+	}
+	if (s->exec_stop) {
+		r = append_shell_exec_prop(m, "ExecStop", s->exec_stop);
 		if (r < 0)
 			goto err;
-		r = append_shell_exec_prop(m, "ExecStopPost", exec_stop_post);
+	}
+	if (s->exec_stop_post) {
+		r = append_shell_exec_prop(m, "ExecStopPost",
+					   s->exec_stop_post);
 		if (r < 0)
 			goto err;
 	}
@@ -648,6 +628,64 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 err:
 	sd_bus_message_unref(m);
 	return r;
+}
+
+/*
+ * Call StartTransientUnit for @s and track the returned job. We call
+ * sd_bus_call() synchronously — StartTransientUnit only enqueues a systemd
+ * job; the actual nvme-connect subprocess is managed by systemd and reports
+ * back via JobRemoved. -EEXIST is left to the caller, see start_unit().
+ */
+static int systemd_start(struct unit_mgr *mgr, const struct unit_spec *s)
+{
+	sd_bus_error err = SD_BUS_ERROR_NULL;
+	sd_bus_message *msg = NULL, *reply = NULL;
+	const char *job_path;
+	int r;
+
+	r = spec_to_message(mgr, s, &msg);
+	if (r < 0)
+		return r;
+
+	r = sd_bus_call(mgr->bus, msg, 0, &err, &reply);
+	sd_bus_message_unref(msg);
+	if (r < 0) {
+		if (r != -EEXIST)
+			log_err("StartTransientUnit(%s): %s",
+				s->name, err.message ?: strerror(-r));
+		sd_bus_error_free(&err);
+		return r;
+	}
+
+	r = sd_bus_message_read(reply, "o", &job_path);
+	if (r >= 0)
+		r = track_job(mgr, job_path, s->name);
+
+	sd_bus_message_unref(reply);
+	return r;
+}
+
+/* Start the transient unit @s. */
+static int start_unit(struct unit_mgr *mgr, const struct unit_spec *s)
+{
+	int r = systemd_start(mgr, s);
+
+	if (r != -EEXIST)
+		return r;
+
+	/*
+	 * A unit from an earlier daemon lifetime still holds the name. Its
+	 * connection is gone and its parameters may be stale, so replace it
+	 * rather than restart it.
+	 */
+	log_info("%s - name held by a stale unit, replacing it", s->name);
+	unit_stop(mgr, s->name);
+	if (!unit_wait_gone(mgr, s->name)) {
+		log_warn("%s - still loaded after stop, giving up", s->name);
+		return r;
+	}
+
+	return systemd_start(mgr, s);
 }
 
 /*
@@ -769,152 +807,58 @@ static int build_connect_argv(const char *nvme_bin, const char *devid_path,
 	return 0;
 }
 
-int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
-		  const struct libnvmf_params *params, bool is_nbft)
+static int start_connection(struct unit_mgr *mgr,
+			    const struct libnvmf_tid *t,
+			    const struct libnvmf_params *params,
+			    bool is_dc, bool is_nbft)
 {
+	__cleanup_unit_spec struct unit_spec spec = { };
 	struct connect_scratch scratch = { };
 	char desc[320];
 	char devid_path[PATH_MAX];
-	char *unit_name;
-	sd_bus_message *m = NULL;
-	const char *subsysnqn = libnvmf_tid_get_subsysnqn(t);
-	const char *transport = libnvmf_tid_get_transport(t);
-	const char *traddr = libnvmf_tid_get_traddr(t);
+	__cleanup_free char *unit_name = tid_unit_name(t);
 	const char *trsvcid = libnvmf_tid_get_trsvcid(t);
-	bool is_fc;
 	int r;
 
-	unit_name = tid_unit_name(t);
 	if (!unit_name)
 		return -ENOMEM;
 
 	r = unit_devid_path(devid_path, sizeof(devid_path), unit_name);
 	if (r < 0)
-		goto out;
+		return r;
 
-	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, true,
+	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, is_dc,
 			       is_nbft, &scratch);
 	if (r < 0)
-		goto out;
+		return r;
 
-	snprintf(desc, sizeof(desc),
-		 "NVMe Discovery Controller %s @ %s:%s",
-		 subsysnqn, traddr, trsvcid ? trsvcid : "none");
+	snprintf(desc, sizeof(desc), "NVMe %s Controller %s @ %s:%s",
+		 is_dc ? "Discovery" : "I/O", libnvmf_tid_get_subsysnqn(t),
+		 libnvmf_tid_get_traddr(t), trsvcid ? trsvcid : "none");
 
-	is_fc = shr_streq0(transport, "fc");
+	spec.name = unit_name;
+	spec.description = desc;
+	spec.connection = true;
+	spec.is_fc = shr_streq0(libnvmf_tid_get_transport(t), "fc");
+	spec.exec_start = scratch.argv;
 
-	r = build_start_transient(mgr, unit_name, devid_path, desc, is_fc,
-				   scratch.argv, &m);
+	r = connection_commands(mgr, unit_name, devid_path, &spec);
 	if (r < 0)
-		goto out;
+		return r;
 
-	r = do_start_transient(mgr, m, unit_name);
-	sd_bus_message_unref(m);
-out:
-	free(unit_name);
-	return r;
+	return start_unit(mgr, &spec);
+}
+
+int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
+		  const struct libnvmf_params *params, bool is_nbft)
+{
+	return start_connection(mgr, t, params, true, is_nbft);
 }
 
 int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 		   const struct libnvmf_params *params, bool is_nbft)
 {
-	struct connect_scratch scratch = { };
-	char desc[320];
-	char devid_path[PATH_MAX];
-	char *unit_name;
-	sd_bus_message *m = NULL;
-	const char *subsysnqn = libnvmf_tid_get_subsysnqn(t);
-	const char *transport = libnvmf_tid_get_transport(t);
-	const char *traddr = libnvmf_tid_get_traddr(t);
-	const char *trsvcid = libnvmf_tid_get_trsvcid(t);
-	bool is_fc;
-	int r;
-
-	unit_name = tid_unit_name(t);
-	if (!unit_name)
-		return -ENOMEM;
-
-	r = unit_devid_path(devid_path, sizeof(devid_path), unit_name);
-	if (r < 0)
-		goto out;
-
-	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, false,
-			       is_nbft, &scratch);
-	if (r < 0)
-		goto out;
-
-	snprintf(desc, sizeof(desc),
-		 "NVMe I/O Controller %s @ %s:%s",
-		 subsysnqn, traddr, trsvcid ? trsvcid : "none");
-
-	is_fc = shr_streq0(transport, "fc");
-
-	r = build_start_transient(mgr, unit_name, devid_path, desc, is_fc,
-				   scratch.argv, &m);
-	if (r < 0)
-		goto out;
-
-	r = do_start_transient(mgr, m, unit_name);
-	sd_bus_message_unref(m);
-out:
-	free(unit_name);
-	return r;
-}
-
-static int build_connect_all(struct unit_mgr *mgr, const char *unit_name,
-			     const char *devname, const char **argv,
-			     sd_bus_message **out)
-{
-	sd_bus_message *m = NULL;
-	char desc[128];
-	int r;
-
-	snprintf(desc, sizeof(desc),
-		 "NVMe connect-all for Discovery Controller %s", devname);
-
-	r = sd_bus_message_new_method_call(mgr->bus, &m,
-					   SYSTEMD_BUS_NAME,
-					   SYSTEMD_OBJ_PATH,
-					   SYSTEMD_MGR_IFACE,
-					   "StartTransientUnit");
-	if (r < 0)
-		return r;
-
-	r = sd_bus_message_append(m, "ss", unit_name, "replace");
-	if (r < 0)
-		goto err;
-	r = sd_bus_message_open_container(m, 'a', "(sv)");
-	if (r < 0)
-		goto err;
-	r = append_string_prop(m, "Type", "oneshot");
-	if (r < 0)
-		goto err;
-	r = append_string_prop(m, "Description", desc);
-	if (r < 0)
-		goto err;
-	r = append_string_prop(m, "CollectMode", "inactive-or-failed");
-	if (r < 0)
-		goto err;
-	r = append_exec_prop(m, "ExecStart", argv, false);
-	if (r < 0)
-		goto err;
-	r = sd_bus_message_close_container(m); // a(sv)
-	if (r < 0)
-		goto err;
-
-	/* Empty auxiliary units array. */
-	r = sd_bus_message_open_container(m, 'a', "(sa(sv))");
-	if (r < 0)
-		goto err;
-	r = sd_bus_message_close_container(m);
-	if (r < 0)
-		goto err;
-
-	*out = m;
-	return 0;
-err:
-	sd_bus_message_unref(m);
-	return r;
+	return start_connection(mgr, t, params, false, is_nbft);
 }
 
 int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
@@ -929,9 +873,10 @@ int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
 	};
 	char opts[ARRAY_SIZE(names) + 1][320];
 	const char *argv[ARRAY_SIZE(names) + 5];
+	__cleanup_unit_spec struct unit_spec spec = { };
 	__cleanup_free char *unit_name = NULL;
-	sd_bus_message *m = NULL;
-	int argc = 0, n, r;
+	char desc[128];
+	int argc = 0, n;
 	size_t i;
 
 	if (asprintf(&unit_name, "nvme-discoverd-connect-all-%s.service",
@@ -961,14 +906,14 @@ int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
 	argv[argc++] = "--quiet";
 	argv[argc] = NULL;
 
-	r = build_connect_all(mgr, unit_name, devname, argv, &m);
-	if (r < 0)
-		return r;
+	snprintf(desc, sizeof(desc),
+		 "NVMe connect-all for Discovery Controller %s", devname);
 
-	r = do_start_transient(mgr, m, unit_name);
-	sd_bus_message_unref(m);
+	spec.name = unit_name;
+	spec.description = desc;
+	spec.exec_start = argv;
 
-	return r;
+	return start_unit(mgr, &spec);
 }
 
 int unit_restart(struct unit_mgr *mgr, const char *unit_name)
