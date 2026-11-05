@@ -8,10 +8,31 @@
 #pragma once
 
 #include <stdbool.h>
-#include <systemd/sd-device.h>
 #include <systemd/sd-event.h>
 
 #include "tid.h"
+
+/* Address of a connected DC, as its uevent reports it. */
+struct dc_addr {
+	const char *transport;
+	const char *traddr;
+	const char *trsvcid;
+	const char *host_traddr;
+	const char *host_iface;
+};
+
+/*
+ * The parts of a uevent nvme-discoverd uses. The udev monitor fills it in
+ * from an sd_device; a test injects its own.
+ */
+struct uevent {
+	const char *subsystem; // "nvme" or "fc"
+	const char *action;    // "add", "remove" or "change"
+	const char *devname;   // the sysname, e.g. "nvme3"
+	// The value of property @key, or NULL if the uevent has none.
+	const char *(*property)(const struct uevent *ev, const char *key);
+	void *data;            // for property()
+};
 
 /*
  * Callbacks from the events layer to the main orchestrator.
@@ -27,9 +48,10 @@ struct events_callbacks {
 	/*
 	 * DC sent NVME_AEN=="0x70f002" (DLP changed) or was rediscovered
 	 * after a ctrl-loss (NVME_EVENT=="rediscover"). Caller should
-	 * re-fetch the DLP for the named device. @dev is the uevent.
+	 * re-fetch the DLP for the named device. @addr is the DC's address
+	 * as the uevent reports it.
 	 */
-	void (*dc_changed)(const char *devname, sd_device *dev,
+	void (*dc_changed)(const char *devname, const struct dc_addr *addr,
 			   void *user_data);
 
 	/*
@@ -66,3 +88,6 @@ struct events_ctx *events_start(sd_event *event,
 				void *user_data);
 
 void events_stop(struct events_ctx *ctx);
+
+/* Handle @ev as if the udev monitor had received it. */
+void events_dispatch(struct events_ctx *ctx, const struct uevent *ev);

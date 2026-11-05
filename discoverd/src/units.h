@@ -13,6 +13,7 @@
 
 #include <nvme/config.h>
 
+#include "events.h"
 #include "tid.h"
 
 /*
@@ -65,15 +66,6 @@ int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
  */
 int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 		   const struct libnvmf_params *params, bool is_nbft);
-
-/* Address of a connected DC, as its uevent reports it. */
-struct dc_addr {
-	const char *transport;
-	const char *traddr;
-	const char *trsvcid;
-	const char *host_traddr;
-	const char *host_iface;
-};
 
 /*
  * Run "nvme connect-all" once over the existing connection to DC
