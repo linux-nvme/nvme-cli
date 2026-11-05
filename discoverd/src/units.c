@@ -25,7 +25,9 @@
 
 #include "state.h"
 #include "sysfs.h"
+#include "unit-spec.h"
 #include "units.h"
+#include "units-local.h"
 
 /*
  * NVME_PATH is the absolute path to the nvme binary the transient units exec.
@@ -81,6 +83,8 @@ struct unit_mgr {
 	sd_bus_slot *job_removed_slot;
 	/* nvme binary the transient units exec; borrowed (lives for argv's life). */
 	const char *nvme_path;
+	/* Set when the units run locally instead of through systemd. */
+	struct local_units *local;
 };
 
 /*
@@ -341,12 +345,38 @@ struct unit_mgr *unit_mgr_new(sd_bus *bus, sd_event *event,
 	return mgr;
 }
 
+struct unit_mgr *unit_mgr_new_local(sd_event *event, const char *dir,
+				     unit_job_callback callback,
+				     void *user_data, const char *nvme_path)
+{
+	struct unit_mgr *mgr;
+
+	mgr = calloc(1, sizeof(*mgr));
+	if (!mgr)
+		return NULL;
+
+	mgr->event = event;
+	mgr->callback = callback;
+	mgr->user_data = user_data;
+	mgr->nvme_path = (nvme_path && *nvme_path) ? nvme_path : NVME_PATH;
+	list_head_init(&mgr->jobs);
+
+	mgr->local = local_units_new(event, dir, callback, user_data);
+	if (!mgr->local) {
+		free(mgr);
+		return NULL;
+	}
+
+	return mgr;
+}
+
 void unit_mgr_free(struct unit_mgr *mgr)
 {
 	struct pending_job *e, *next;
 
 	if (!mgr)
 		return;
+	local_units_free(mgr->local);
 	sd_bus_slot_unref(mgr->job_removed_slot);
 	list_for_each_safe(&mgr->jobs, e, next, entry) {
 		free(e->job_path);
@@ -360,6 +390,9 @@ bool unit_exists(struct unit_mgr *mgr, const char *unit_name)
 {
 	sd_bus_error err = SD_BUS_ERROR_NULL;
 	int r;
+
+	if (mgr->local)
+		return local_units_exists(mgr->local, unit_name);
 
 	r = sd_bus_call_method(mgr->bus, SYSTEMD_BUS_NAME, SYSTEMD_OBJ_PATH,
 			       SYSTEMD_MGR_IFACE, "GetUnit",
@@ -421,26 +454,6 @@ static bool unit_wait_gone(struct unit_mgr *mgr, const char *unit_name)
 
 	return false;
 }
-
-/*
- * What a transient unit runs, independent of how it is started:
- * spec_to_message() turns it into a StartTransientUnit call.
- */
-struct unit_spec {
-	const char *name;
-	const char *description;
-	/*
-	 * A connection unit stays active after the connect (RemainAfterExit=),
-	 * is ordered before the remote file systems, and disconnects on stop.
-	 * A connect-all unit is none of this.
-	 */
-	bool connection;
-	bool is_fc;                    // no After=network.target
-	const char *const *exec_start; // argv, argv[0] is the binary
-	char *exec_start_post;         // shell commands, NULL for none
-	char *exec_stop;
-	char *exec_stop_post;
-};
 
 static void unit_spec_clear(struct unit_spec *s)
 {
@@ -665,10 +678,18 @@ static int systemd_start(struct unit_mgr *mgr, const struct unit_spec *s)
 	return r;
 }
 
+static int backend_start(struct unit_mgr *mgr, const struct unit_spec *s)
+{
+	if (mgr->local)
+		return local_units_start(mgr->local, s);
+
+	return systemd_start(mgr, s);
+}
+
 /* Start the transient unit @s. */
 static int start_unit(struct unit_mgr *mgr, const struct unit_spec *s)
 {
-	int r = systemd_start(mgr, s);
+	int r = backend_start(mgr, s);
 
 	if (r != -EEXIST)
 		return r;
@@ -685,7 +706,7 @@ static int start_unit(struct unit_mgr *mgr, const struct unit_spec *s)
 		return r;
 	}
 
-	return systemd_start(mgr, s);
+	return backend_start(mgr, s);
 }
 
 /*
@@ -923,6 +944,9 @@ int unit_restart(struct unit_mgr *mgr, const char *unit_name)
 	const char *job_path;
 	int r;
 
+	if (mgr->local)
+		return local_units_restart(mgr->local, unit_name);
+
 	r = sd_bus_call_method(mgr->bus,
 			       SYSTEMD_BUS_NAME, SYSTEMD_OBJ_PATH,
 			       SYSTEMD_MGR_IFACE, "RestartUnit",
@@ -951,6 +975,9 @@ int unit_stop(struct unit_mgr *mgr, const char *unit_name)
 	sd_bus_error err = SD_BUS_ERROR_NULL;
 	int r;
 
+	if (mgr->local)
+		return local_units_stop(mgr->local, unit_name);
+
 	r = sd_bus_call_method(mgr->bus,
 			       SYSTEMD_BUS_NAME, SYSTEMD_OBJ_PATH,
 			       SYSTEMD_MGR_IFACE, "StopUnit",
@@ -967,6 +994,9 @@ int unit_reset_failed(struct unit_mgr *mgr, const char *unit_name)
 {
 	sd_bus_error err = SD_BUS_ERROR_NULL;
 	int r;
+
+	if (mgr->local)
+		return local_units_reset_failed(mgr->local, unit_name);
 
 	r = sd_bus_call_method(mgr->bus,
 			       SYSTEMD_BUS_NAME, SYSTEMD_OBJ_PATH,

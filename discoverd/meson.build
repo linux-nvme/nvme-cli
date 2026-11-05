@@ -18,6 +18,7 @@ discoverd_sources = files(
     'src/sysfs.c',
     'src/tid.c',
     'src/units.c',
+    'src/units-local.c',
 )
 
 if want_mdns

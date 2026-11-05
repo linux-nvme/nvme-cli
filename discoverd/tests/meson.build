@@ -73,6 +73,21 @@ test_sysfs = executable(
 
 test('nvme-discoverd - sysfs', test_sysfs, suite: 'unit')
 
+test_units_local = executable(
+    'test-units-local',
+    ['test-units-local.c', '../src/units-local.c'],
+    include_directories: discoverd_inc,
+    dependencies: [
+        ccan_dep,
+        daemon_util_dep,
+        libnvme_dep,
+        libsystemd_dep,
+        shared_dep,
+    ],
+)
+
+test('nvme-discoverd - units-local', test_units_local, suite: 'unit')
+
 test_inventory = executable(
     'test-inventory',
     ['test-inventory.c', '../src/inventory.c', '../src/tid.c'],
