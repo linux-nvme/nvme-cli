@@ -265,6 +265,29 @@ static bool test_submit_from_callback(void)
 	return pass;
 }
 
+static bool test_busy(void)
+{
+	struct dmn_work *w;
+	struct job j, k;
+	bool pass = true;
+
+	printf("busy:\n");
+	setup(1);
+	pass &= check("an empty pool is idle", !dmn_work_pool_busy(pool));
+	submit(&j, DELAY_MS, 0, NULL);
+	pass &= check("busy while a job runs", dmn_work_pool_busy(pool));
+	run(1000);
+	pass &= check("idle once its done callback ran",
+		      j.done_calls == 1 && !dmn_work_pool_busy(pool));
+	submit(&k, DELAY_MS, 0, &w);
+	dmn_work_cancel(w);
+	pending--;
+	pass &= check("idle after a cancel", !dmn_work_pool_busy(pool));
+	teardown();
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -280,6 +303,7 @@ int main(void)
 	pass &= test_cancel();
 	pass &= test_free_from_callback();
 	pass &= test_submit_from_callback();
+	pass &= test_busy();
 
 	sd_event_unref(event);
 

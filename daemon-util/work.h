@@ -66,3 +66,10 @@ int dmn_work_submit(struct dmn_work_pool *p, dmn_work_fn fn,
 
 // Cancel @w. Its done callback is not called.
 void dmn_work_cancel(struct dmn_work *w);
+
+/*
+ * Whether @p has works whose done callback has not run yet: queued,
+ * running, or ended and waiting for the event loop. Call it from the event
+ * loop.
+ */
+bool dmn_work_pool_busy(const struct dmn_work_pool *p);
