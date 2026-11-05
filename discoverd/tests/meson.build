@@ -2,7 +2,7 @@
 
 test_dlp = executable(
     'test-dlp',
-    ['test-dlp.c', '../src/dlp.c', '../src/tid.c'],
+    ['test-dlp.c', '../src/dlp.c', '../src/sysfs.c', '../src/tid.c'],
     include_directories: discoverd_inc,
     dependencies: [
         ccan_dep,
@@ -133,3 +133,13 @@ test('nvme-discoverd - missing-config', nvme_discoverd,
      args: ['--config', '/nonexistent/nvme-discoverd.conf'],
      should_fail: true,
      suite: 'mock')
+
+# The daemon in a sandbox (--set-options test-base-dir/test-sysfs-dir):
+# local units, control socket, fake_nvme.py as the units' nvme binary.
+if python3.found()
+    test('nvme-discoverd - sandbox',
+         python3,
+         args: [files('test_sandbox.py'), nvme_discoverd],
+         depends: nvme_discoverd,
+         suite: 'mock')
+endif
