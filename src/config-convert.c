@@ -451,6 +451,7 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
 {
 	struct libnvmf_config_emitter *emitter;
 	const char *json_path = config_file;
+	const char *disc_path = nvme_nvmf_disc_path();
 	const char *ext;
 	bool is_default;
 	bool json_exists, json_done;
@@ -461,11 +462,11 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
 
 	*ini_path = NULL;
 
-	is_default = !strcmp(config_file, PATH_NVMF_INI) ||
-		     !strcmp(config_file, PATH_NVMF_CONFIG);
+	is_default = !strcmp(config_file, nvme_nvmf_ini_path()) ||
+		     !strcmp(config_file, nvme_nvmf_json_path());
 	if (is_default) {
-		json_path = PATH_NVMF_CONFIG;
-		*ini_path = strdup(PATH_NVMF_INI);
+		json_path = nvme_nvmf_json_path();
+		*ini_path = strdup(nvme_nvmf_ini_path());
 	} else {
 		ext = strrchr(config_file, '.');
 		if (!ext || strcmp(ext, ".json")) {
@@ -487,8 +488,8 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
 	json_done = already_converted(json_path);
 	have_json = json_exists && !json_done;
 
-	disc_exists = is_default && !access(PATH_NVMF_DISC, F_OK);
-	disc_done = is_default && already_converted(PATH_NVMF_DISC);
+	disc_exists = is_default && !access(disc_path, F_OK);
+	disc_done = is_default && already_converted(disc_path);
 	have_disc = disc_exists && !disc_done;
 
 	if (!have_json && !have_disc) {
@@ -515,13 +516,13 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
 	}
 
 	if (have_disc) {
-		ret = nvme_config_convert_discovery(emitter, PATH_NVMF_DISC);
+		ret = nvme_config_convert_discovery(emitter, disc_path);
 		if (ret)
 			goto out;
 		converted_disc = true;
 	}
 
-	ret = install_converted(emitter, *ini_path, json_path, PATH_NVMF_DISC,
+	ret = install_converted(emitter, *ini_path, json_path, disc_path,
 				 converted_json, converted_disc, false);
 	if (ret)
 		goto out;
@@ -530,7 +531,7 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
 		"no %s found; converted legacy %s%s%s to it -- the original is preserved for rollback, marked converted by a *.converted symlink; use %s from now on",
 		*ini_path, converted_json ? json_path : "",
 		(converted_json && converted_disc) ? " and " : "",
-		converted_disc ? PATH_NVMF_DISC : "", *ini_path);
+		converted_disc ? disc_path : "", *ini_path);
 
 out:
 	libnvmf_config_emit_free(emitter);
@@ -544,6 +545,7 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 	char *output_file = NULL;
 	const char *target;
 	const char *json_path;
+	const char *disc_path;
 	bool force = false;
 	bool converted_json = false, converted_disc = false;
 	bool json_already_done = false, disc_already_done = false;
@@ -573,7 +575,7 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 	if (!emitter)
 		return -ENOMEM;
 
-	json_path = config_file ? config_file : PATH_NVMF_CONFIG;
+	json_path = config_file ? config_file : nvme_nvmf_json_path();
 	if (already_converted(json_path)) {
 		json_already_done = true;
 	} else if (!access(json_path, F_OK)) {
@@ -594,10 +596,11 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 		converted_json = true;
 	}
 
-	if (already_converted(PATH_NVMF_DISC)) {
+	disc_path = nvme_nvmf_disc_path();
+	if (already_converted(disc_path)) {
 		disc_already_done = true;
-	} else if (!access(PATH_NVMF_DISC, F_OK)) {
-		ret = nvme_config_convert_discovery(emitter, PATH_NVMF_DISC);
+	} else if (!access(disc_path, F_OK)) {
+		ret = nvme_config_convert_discovery(emitter, disc_path);
 		if (ret)
 			goto out;
 		converted_disc = true;
@@ -610,20 +613,20 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 			goto out;
 		}
 		nvme_show_error("nothing to convert: neither %s nor %s exists",
-				 json_path, PATH_NVMF_DISC);
+				 json_path, disc_path);
 		ret = -ENOENT;
 		goto out;
 	}
 
-	target = output_file ? output_file : PATH_NVMF_INI;
-	ret = install_converted(emitter, target, json_path, PATH_NVMF_DISC,
+	target = output_file ? output_file : nvme_nvmf_ini_path();
+	ret = install_converted(emitter, target, json_path, disc_path,
 				 converted_json, converted_disc, force);
 	if (!ret) {
 		nvme_show_result(
 			"converted legacy %s%s%s to %s -- the original is preserved for rollback, marked converted by a *.converted symlink",
 			converted_json ? json_path : "",
 			(converted_json && converted_disc) ? " and " : "",
-			converted_disc ? PATH_NVMF_DISC : "", target);
+			converted_disc ? disc_path : "", target);
 	}
 
 out:
@@ -695,8 +698,8 @@ int nvme_config_status(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	json_found = report_legacy_status(PATH_NVMF_CONFIG);
-	disc_found = report_legacy_status(PATH_NVMF_DISC);
+	json_found = report_legacy_status(nvme_nvmf_json_path());
+	disc_found = report_legacy_status(nvme_nvmf_disc_path());
 
 	if (!json_found && !disc_found) {
 		nvme_show_result(

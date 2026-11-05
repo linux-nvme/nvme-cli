@@ -643,6 +643,51 @@ const char *nvmf_resolve_persistent_arg(bool given, const char *arg)
 	return arg ? arg : "auto";
 }
 
+/* @prod_path, or @name in the test base directory (cached in @cache). */
+static const char *nvmf_config_path(const char *prod_path, const char *name,
+		char **cache)
+{
+	const char *base = nvme_test_base_dir();
+
+	if (!base)
+		return prod_path;
+	if (!*cache && asprintf(cache, "%s/%s", base, name) < 0) {
+		*cache = NULL;
+		return prod_path;
+	}
+
+	return *cache;
+}
+
+const char *nvme_nvmf_disc_path(void)
+{
+	static char *cache;
+
+	return nvmf_config_path(PATH_NVMF_DISC, "discovery.conf", &cache);
+}
+
+const char *nvme_nvmf_json_path(void)
+{
+	static char *cache;
+
+	return nvmf_config_path(PATH_NVMF_CONFIG, "config.json", &cache);
+}
+
+const char *nvme_nvmf_ini_path(void)
+{
+	static char *cache;
+
+	return nvmf_config_path(PATH_NVMF_INI, "nvme-fabrics.conf", &cache);
+}
+
+char *nvme_nvmf_config_file(char *config_file)
+{
+	if (config_file && !strcmp(config_file, PATH_NVMF_INI))
+		return (char *)nvme_nvmf_ini_path();
+
+	return config_file;
+}
+
 /*
  * Parse one discovery.conf line -- the same argv-style syntax 'nvme
  * discover'/'connect-all' accept, reusing nvmf_options() so every short
@@ -856,7 +901,7 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 	/* Custom --config failing is fatal (explicit ask). Default path
 	 * failing isn't: boot-time connect-all must keep going.
 	 */
-	is_default_config = !strcmp(config_file, PATH_NVMF_INI);
+	is_default_config = !strcmp(config_file, nvme_nvmf_ini_path());
 
 	ret = nvme_config_convert_auto(ctx, config_file, &ini_path);
 	if (ret) {
@@ -1010,6 +1055,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		return ret;
 	fa.hostnqn = hnqn;
 	fa.hostid = hid;
+	config_file = nvme_nvmf_config_file(config_file);
 
 	/*
 	 * --nbft defaults the owner to "nbft" so legacy boot scripts that
@@ -1766,6 +1812,7 @@ int fabrics_config_validate(const char *desc, int argc, char **argv)
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
+	config_file = nvme_nvmf_config_file(config_file);
 
 	if (access(config_file, F_OK)) {
 		nvme_show_error("%s: no such file", config_file);
@@ -1803,6 +1850,7 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
+	config_file = nvme_nvmf_config_file(config_file);
 
 	ret = libnvmf_config_read(ctx, config_file, &cfg);
 	if (ret) {

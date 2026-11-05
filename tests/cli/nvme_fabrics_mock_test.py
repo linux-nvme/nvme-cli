@@ -528,6 +528,29 @@ class FabricsMockCLITest(MockTestCase):
             self._connect_all_nbft('--hostnqn', self._OWNER_HOSTNQN),
             self._OWNER_HOSTNQN)
 
+    _DC_TRADDR = '192.168.40.10'
+
+    def _dc_with_one_subsystem(self):
+        self.server.discovery_entries = [{
+            'transport': 'tcp', 'traddr': '192.168.40.20',
+            'trsvcid': '4420',
+            'subsysnqn': 'nqn.2014-08.org.nvmexpress:boot-subsys'}]
+
+    def _connected_nqns(self):
+        return sorted(c['subsysnqn'] for c in self.server.controllers.values())
+
+    def test_connect_all_default_config(self):
+        """connect-all without arguments reads nvme-fabrics.conf; with
+        test-base-dir, the one in it."""
+        self._dc_with_one_subsystem()
+        (Path(self.base_dir) / 'nvme-fabrics.conf').write_text(
+            '[Discovery Controller]\n'
+            f'controller = transport=tcp;traddr={self._DC_TRADDR};'
+            'trsvcid=8009\n')
+        self._run('connect-all', '--no-nbft')
+        self.assertIn('nqn.2014-08.org.nvmexpress:boot-subsys',
+                      self._connected_nqns())
+
     def _devid_file(self):
         return Path(self.base_dir) / 'devid'
 
