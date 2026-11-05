@@ -103,6 +103,30 @@ static int set_test_sysfs_dir(const char *path)
 	return 0;
 }
 
+/*
+ * Mirror of libnvme's test base directory, for the files nvme-cli opens
+ * itself: the fabrics configuration (fabrics.c).
+ */
+static char *test_base_dir;
+
+static int set_test_base_dir(const char *path)
+{
+	char *dup = strdup(path);
+
+	if (!dup)
+		return -ENOMEM;
+
+	free(test_base_dir);
+	test_base_dir = dup;
+
+	return 0;
+}
+
+const char *nvme_test_base_dir(void)
+{
+	return test_base_dir;
+}
+
 int nvme_sysfs_ctrl_path(const char *ctrl_name, char **path)
 {
 	if (asprintf(path, "%s/sys/class/nvme/%s",
@@ -194,6 +218,8 @@ static int apply_set_option(struct libnvme_global_ctx *ctx,
 		break;
 	case SET_TEST_BASE_DIR:
 		ret = libnvme_set_test_base_dir(ctx, opt->val);
+		if (!ret)
+			ret = set_test_base_dir(opt->val);
 		break;
 	case SET_TEST_SYSFS_DIR:
 		ret = libnvme_set_test_sysfs_dir(ctx, opt->val);

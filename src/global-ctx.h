@@ -32,6 +32,14 @@ int nvme_create_global_ctx_hostnqn(struct libnvme_global_ctx **ctx,
 int nvme_create_global_ctx(struct libnvme_global_ctx **ctx);
 
 /*
+ * nvme_test_base_dir() - The "--set-options test-base-dir=" directory
+ *
+ * Return: the directory, or NULL without one. Valid once the global context
+ * is created.
+ */
+const char *nvme_test_base_dir(void);
+
+/*
  * nvme_sysfs_ctrl_path() - Build the sysfs directory path of a controller
  * @ctrl_name: controller name, e.g. "nvme0"
  * @path: output path, allocated; caller frees

@@ -225,7 +225,7 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	if (err)
 		return err;
 
-	target = output_file ? output_file : PATH_NVMF_INI;
+	target = output_file ? output_file : nvme_nvmf_ini_path();
 
 	emitter = libnvmf_config_emit_new(ctx);
 	if (!emitter)

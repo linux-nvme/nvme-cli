@@ -126,6 +126,22 @@ struct libnvmf_config_emitter;
 #define PATH_NVMF_INI		SYSCONFDIR "/nvme/nvme-fabrics.conf"
 
 /*
+ * The paths of the files above, or the same names in the test base
+ * directory ("--set-options test-base-dir="). Valid once the global context
+ * is created.
+ */
+const char *nvme_nvmf_disc_path(void);
+const char *nvme_nvmf_json_path(void);
+const char *nvme_nvmf_ini_path(void);
+
+/*
+ * @config_file, or nvme_nvmf_ini_path() when @config_file is the default
+ * PATH_NVMF_INI: the default of a --config option moves into the test base
+ * directory too.
+ */
+char *nvme_nvmf_config_file(char *config_file);
+
+/*
  * Parse one discovery.conf line (the argv-style syntax 'nvme discover'
  * accepts) and add it to @emitter as a discovery controller entry. @line is
  * modified in place. Returns 0 for a parsed entry, a skipped blank/comment
