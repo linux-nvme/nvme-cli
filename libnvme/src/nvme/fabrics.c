@@ -943,16 +943,21 @@ __shr_public int libnvmf_context_set_devid_file(
 /*
  * O_NOFOLLOW guards the one hazard the caller can't see: a symlink at the
  * final path component. O_TRUNC is deliberately absent -- a name recorded
- * by an earlier successful connect must survive a failed one.
+ * by an earlier successful connect must survive a failed one. *@created
+ * tells whether the file is new: a new file that gets no name is removed
+ * again, see devid_file_done().
  *
  * Return: an open fd, or -errno.
  */
-static int open_devid_file(struct libnvmf_context *fctx)
+static int open_devid_file(struct libnvmf_context *fctx, bool *created)
 {
 	int fd;
 
 	fd = open(fctx->devid_file,
-		O_WRONLY | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0644);
+		O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
+	*created = fd >= 0;
+	if (fd < 0 && errno == EEXIST)
+		fd = open(fctx->devid_file, O_WRONLY | O_CLOEXEC | O_NOFOLLOW);
 	if (fd < 0) {
 		libnvme_msg(fctx->ctx, LIBNVME_LOG_ERR,
 			"failed to open devid-file %s: %s\n",
@@ -964,15 +969,32 @@ static int open_devid_file(struct libnvmf_context *fctx)
 }
 
 static void write_devid_file(struct libnvmf_context *fctx, int fd,
-		struct libnvme_ctrl *c)
+		struct libnvme_ctrl *c, bool *written)
 {
 	if (fd < 0 || !c)
 		return;
 
 	if (ftruncate(fd, 0) < 0 ||
-	    dprintf(fd, "%s\n", libnvme_ctrl_get_name(c)) < 0)
+	    dprintf(fd, "%s\n", libnvme_ctrl_get_name(c)) < 0) {
 		libnvme_msg(fctx->ctx, LIBNVME_LOG_WARN,
 			"failed to write devid-file %s: %s\n",
+			fctx->devid_file, libnvme_strerror(errno));
+		return;
+	}
+	*written = true;
+}
+
+/*
+ * A devid file that this connect created and wrote no name into would be
+ * left empty. A reader such as a unit's ExecStartPost= takes an empty
+ * name for a device. Remove it: no file means no device.
+ */
+static void devid_file_done(struct libnvmf_context *fctx, bool created,
+		bool written)
+{
+	if (created && !written && unlink(fctx->devid_file) < 0)
+		libnvme_msg(fctx->ctx, LIBNVME_LOG_WARN,
+			"failed to remove devid-file %s: %s\n",
 			fctx->devid_file, libnvme_strerror(errno));
 }
 
@@ -4589,20 +4611,12 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 	return err;
 }
 
-__shr_public int libnvmf_connect(
-		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
+static int connect_ctrl(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, int devid_fd, bool *written)
 {
-	__cleanup_fd int devid_fd = -1;
 	struct libnvme_host *h;
 	struct libnvme_ctrl *c;
 	int err;
-
-	/* Open before touching kernel state, so a bad path fails fast. */
-	if (fctx->devid_file) {
-		devid_fd = open_devid_file(fctx);
-		if (devid_fd < 0)
-			return devid_fd;
-	}
 
 	err = libnvme_get_host(ctx, fctx->hostnqn, fctx->hostid, &h);
 	if (err)
@@ -4616,7 +4630,7 @@ __shr_public int libnvmf_connect(
 	if (c && !fctx->ctrl_params.cfg.duplicate_connect) {
 		int instance = ctrl_instance(c);
 
-		write_devid_file(fctx, devid_fd, c);
+		write_devid_file(fctx, devid_fd, c, written);
 		if (instance >= 0)
 			registry_update_on_connect(ctx, instance, false);
 		if (fctx->hooks.already_connected)
@@ -4648,7 +4662,8 @@ __shr_public int libnvmf_connect(
 				if (winner) {
 					int instance = ctrl_instance(winner);
 
-					write_devid_file(fctx, devid_fd, winner);
+					write_devid_file(fctx, devid_fd,
+							 winner, written);
 					if (instance >= 0)
 						registry_update_on_connect(ctx,
 							instance, false);
@@ -4671,9 +4686,30 @@ __shr_public int libnvmf_connect(
 		return err;
 	}
 
-	write_devid_file(fctx, devid_fd, c);
+	write_devid_file(fctx, devid_fd, c, written);
 	if (fctx->hooks.connected)
 		fctx->hooks.connected(fctx, c, fctx->hooks.user_data);
 
 	return 0;
+}
+
+__shr_public int libnvmf_connect(
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
+{
+	__cleanup_fd int devid_fd = -1;
+	bool created = false, written = false;
+	int err;
+
+	/* Open before touching kernel state, so a bad path fails fast. */
+	if (fctx->devid_file) {
+		devid_fd = open_devid_file(fctx, &created);
+		if (devid_fd < 0)
+			return devid_fd;
+	}
+
+	err = connect_ctrl(ctx, fctx, devid_fd, &written);
+	if (fctx->devid_file)
+		devid_file_done(fctx, created, written);
+
+	return err;
 }

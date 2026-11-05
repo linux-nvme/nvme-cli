@@ -44,7 +44,8 @@ OPTIONS
 	The output file is created before attempting the connection. If
 	the file cannot be created, for example because the parent
 	directory does not exist, the command fails without attempting
-	the connection.
+	the connection. A file the command created is removed again when
+	it has no device name to write, so the file never exists empty.
 
 --discovery::
 	The target is a Discovery Controller. The kernel recognizes the
