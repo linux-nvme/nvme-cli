@@ -49,6 +49,13 @@ struct unit_mgr;
 struct unit_mgr *unit_mgr_new(sd_bus *bus, sd_event *event,
 			      unit_job_callback callback, void *user_data,
 			      const char *nvme_path);
+/*
+ * Create a unit manager that runs the units in nvme-discoverd itself and
+ * keeps them in @dir, for tests. See units-local.h.
+ */
+struct unit_mgr *unit_mgr_new_local(sd_event *event, const char *dir,
+				     unit_job_callback callback,
+				     void *user_data, const char *nvme_path);
 void unit_mgr_free(struct unit_mgr *mgr);
 
 /*
