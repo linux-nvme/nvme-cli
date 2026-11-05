@@ -18,6 +18,7 @@
 
 #include <daemon-util/log.h>
 #include <shared/cleanup-util.h>
+#include <shared/string-util.h>
 
 #include "events.h"
 #include "sysfs.h"
@@ -137,69 +138,69 @@ static int schedule_soak(struct events_ctx *ctx, const char *devname)
 	return 0;
 }
 
-static int nvme_monitor_handler(sd_device_monitor *monitor __attribute__((unused)),
-				sd_device *dev, void *user_data)
+static const char *uevent_get(const struct uevent *ev, const char *key)
 {
-	struct events_ctx *ctx = user_data;
-	sd_device_action_t action;
-	const char *devname = NULL, *cntrltype = NULL;
-	const char *nvme_event = NULL, *nvme_aen = NULL;
-
-	if (sd_device_get_action(dev, &action) < 0)
-		return 0;
-	if (sd_device_get_sysname(dev, &devname) < 0)
-		return 0;
-
-	switch (action) {
-	case SD_DEVICE_ADD:
-		// Schedule a soak timer; the soak callback reads cntrltype
-		// and calls the appropriate add handler.
-		schedule_soak(ctx, devname);
-		break;
-
-	case SD_DEVICE_REMOVE:
-		if (ctx->callbacks.nvme_remove)
-			ctx->callbacks.nvme_remove(devname, ctx->user_data);
-		break;
-
-	case SD_DEVICE_CHANGE:
-		/*
-		 * Two relevant CHANGE events:
-		 *   NVME_AEN=="0x70f002"      — DLP changed AEN
-		 *   NVME_EVENT=="rediscover"  — ctrl reconnected after loss
-		 * Both are handled the same way: re-fetch the DLP.
-		 */
-		sd_device_get_property_value(dev, "NVME_AEN", &nvme_aen);
-		sd_device_get_property_value(dev, "NVME_EVENT", &nvme_event);
-		sd_device_get_sysattr_value(dev, "cntrltype", &cntrltype);
-
-		if (shr_streq0(nvme_aen, NVME_AEN_DLP_CHANGED) ||
-		    (shr_streq0(nvme_event, "rediscover") &&
-		     shr_streq0(cntrltype, "discovery"))) {
-			if (ctx->callbacks.dc_changed)
-				ctx->callbacks.dc_changed(devname, dev,
-							  ctx->user_data);
-		}
-		break;
-
-	default:
-		break;
-	}
-
-	return 0;
+	return ev->property ? ev->property(ev, key) : NULL;
 }
 
-static int fc_monitor_handler(sd_device_monitor *monitor __attribute__((unused)),
-			       sd_device *dev, void *user_data)
+static void handle_nvme(struct events_ctx *ctx, const struct uevent *ev)
 {
-	struct events_ctx *ctx = user_data;
-	const char *fc_event = NULL;
-	const char *traddr = NULL, *host_traddr = NULL;
+	__cleanup_free char *cntrltype = NULL;
+	const char *nvme_event, *nvme_aen;
+
+	if (shr_streq0(ev->action, "add")) {
+		// Schedule a soak timer; the soak callback reads cntrltype
+		// and calls the appropriate add handler.
+		schedule_soak(ctx, ev->devname);
+		return;
+	}
+
+	if (shr_streq0(ev->action, "remove")) {
+		if (ctx->callbacks.nvme_remove)
+			ctx->callbacks.nvme_remove(ev->devname, ctx->user_data);
+		return;
+	}
+
+	if (!shr_streq0(ev->action, "change"))
+		return;
+
+	/*
+	 * Two relevant CHANGE events:
+	 *   NVME_AEN=="0x70f002"      — DLP changed AEN
+	 *   NVME_EVENT=="rediscover"  — ctrl reconnected after loss
+	 * Both are handled the same way: re-fetch the DLP.
+	 */
+	nvme_aen = uevent_get(ev, "NVME_AEN");
+	nvme_event = uevent_get(ev, "NVME_EVENT");
+
+	if (!shr_streq0(nvme_aen, NVME_AEN_DLP_CHANGED)) {
+		if (!shr_streq0(nvme_event, "rediscover"))
+			return;
+		cntrltype = sysfs_nvme_attr(ev->devname, "cntrltype");
+		if (!shr_streq0(cntrltype, "discovery"))
+			return;
+	}
+
+	if (ctx->callbacks.dc_changed) {
+		struct dc_addr addr = {
+			.transport   = uevent_get(ev, "NVME_TRTYPE"),
+			.traddr      = uevent_get(ev, "NVME_TRADDR"),
+			.trsvcid     = uevent_get(ev, "NVME_TRSVCID"),
+			.host_traddr = uevent_get(ev, "NVME_HOST_TRADDR"),
+			.host_iface  = uevent_get(ev, "NVME_HOST_IFACE"),
+		};
+
+		ctx->callbacks.dc_changed(ev->devname, &addr, ctx->user_data);
+	}
+}
+
+static void handle_fc(struct events_ctx *ctx, const struct uevent *ev)
+{
+	const char *traddr, *host_traddr;
 	struct libnvmf_tid *t;
 
-	sd_device_get_property_value(dev, "FC_EVENT", &fc_event);
-	if (!shr_streq0(fc_event, "nvmediscovery"))
-		return 0;
+	if (!shr_streq0(uevent_get(ev, "FC_EVENT"), "nvmediscovery"))
+		return;
 
 	/*
 	 * Properties set by the kernel FC nvme-discovery uevent
@@ -208,11 +209,11 @@ static int fc_monitor_handler(sd_device_monitor *monitor __attribute__((unused))
 	 * sends TRSVCID or NQN for this event: FC has no port concept,
 	 * and the target is identified by address only, not by NQN.
 	 */
-	sd_device_get_property_value(dev, "NVMEFC_TRADDR", &traddr);
-	sd_device_get_property_value(dev, "NVMEFC_HOST_TRADDR", &host_traddr);
+	traddr = uevent_get(ev, "NVMEFC_TRADDR");
+	host_traddr = uevent_get(ev, "NVMEFC_HOST_TRADDR");
 
 	if (!traddr)
-		return 0;
+		return;
 
 	/*
 	 * The kernel only fires this uevent for a remote port that
@@ -224,12 +225,67 @@ static int fc_monitor_handler(sd_device_monitor *monitor __attribute__((unused))
 		    "nqn.2014-08.org.nvmexpress.discovery",
 		    host_traddr, NULL, NULL, NULL, true);
 	if (!t)
-		return 0;
+		return;
 
 	if (ctx->callbacks.fc_discovery)
 		ctx->callbacks.fc_discovery(t, ctx->user_data);
 
 	tid_free(t);
+}
+
+void events_dispatch(struct events_ctx *ctx, const struct uevent *ev)
+{
+	if (!ctx || !ev->subsystem || !ev->action)
+		return;
+
+	if (shr_streq0(ev->subsystem, "nvme") && ev->devname)
+		handle_nvme(ctx, ev);
+	else if (shr_streq0(ev->subsystem, "fc"))
+		handle_fc(ctx, ev);
+}
+
+/* A uevent from udev: the properties are the sd_device's. */
+static const char *sd_device_property(const struct uevent *ev,
+				      const char *key)
+{
+	const char *val = NULL;
+
+	sd_device_get_property_value(ev->data, key, &val);
+	return val;
+}
+
+static int monitor_handler(sd_device_monitor *monitor, sd_device *dev,
+			   void *user_data)
+{
+	struct uevent ev = {
+		.property = sd_device_property,
+		.data = dev,
+	};
+	sd_device_action_t action;
+
+	(void)monitor;
+
+	if (sd_device_get_action(dev, &action) < 0)
+		return 0;
+	switch (action) {
+	case SD_DEVICE_ADD:
+		ev.action = "add";
+		break;
+	case SD_DEVICE_REMOVE:
+		ev.action = "remove";
+		break;
+	case SD_DEVICE_CHANGE:
+		ev.action = "change";
+		break;
+	default:
+		return 0;
+	}
+
+	if (sd_device_get_subsystem(dev, &ev.subsystem) < 0)
+		return 0;
+	sd_device_get_sysname(dev, &ev.devname);
+
+	events_dispatch(user_data, &ev);
 	return 0;
 }
 
@@ -259,8 +315,7 @@ struct events_ctx *events_start(sd_event *event,
 	r = sd_device_monitor_attach_event(ctx->nvme_monitor, event);
 	if (r < 0)
 		goto err;
-	r = sd_device_monitor_start(ctx->nvme_monitor,
-				    nvme_monitor_handler, ctx);
+	r = sd_device_monitor_start(ctx->nvme_monitor, monitor_handler, ctx);
 	if (r < 0)
 		goto err;
 
@@ -275,8 +330,7 @@ struct events_ctx *events_start(sd_event *event,
 	r = sd_device_monitor_attach_event(ctx->fc_monitor, event);
 	if (r < 0)
 		goto err;
-	r = sd_device_monitor_start(ctx->fc_monitor,
-				    fc_monitor_handler, ctx);
+	r = sd_device_monitor_start(ctx->fc_monitor, monitor_handler, ctx);
 	if (r < 0)
 		goto err;
 
