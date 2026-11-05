@@ -305,6 +305,25 @@ static bool test_free_in_callback(void)
 	return pass;
 }
 
+static bool test_busy(void)
+{
+	struct result r;
+	bool pass;
+
+	printf("busy:\n");
+	setup(1, true);
+	pass = check("idle without lookups", !dmn_resolver_busy(resolver));
+	start("slow", 0, &r, NULL);
+	pass &= check("busy during a lookup", dmn_resolver_busy(resolver));
+	run(5000);
+	pass &= check("idle once the callback ran",
+		      r.calls == 1 && !dmn_resolver_busy(resolver));
+	dmn_resolver_free(resolver);
+	drain_workers();
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -322,6 +341,7 @@ int main(void)
 	pass &= test_cancel();
 	pass &= test_free_busy();
 	pass &= test_free_in_callback();
+	pass &= test_busy();
 
 	sd_event_unref(event);
 	fflush(stdout);

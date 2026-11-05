@@ -107,6 +107,11 @@ void dmn_resolver_free(struct dmn_resolver *r)
 	free(r);
 }
 
+bool dmn_resolver_busy(const struct dmn_resolver *r)
+{
+	return r && dmn_work_pool_busy(r->pool);
+}
+
 void dmn_resolver_set_lookup(struct dmn_resolver *r, dmn_getaddrinfo_fn fn)
 {
 	r->lookup = fn;

@@ -389,6 +389,11 @@ int dmn_work_submit(struct dmn_work_pool *p, dmn_work_fn fn,
 	return 0;
 }
 
+bool dmn_work_pool_busy(const struct dmn_work_pool *p)
+{
+	return p && !list_empty(&p->active);
+}
+
 void dmn_work_cancel(struct dmn_work *w)
 {
 	if (!w)

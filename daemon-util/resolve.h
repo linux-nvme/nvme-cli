@@ -8,6 +8,7 @@
 #pragma once
 
 #include <netdb.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <systemd/sd-event.h>
@@ -55,6 +56,12 @@ int dmn_resolve(struct dmn_resolver *r, const char *host, const char *service,
 
 /* Cancel @q. Its callback is not called. */
 void dmn_resolve_cancel(struct dmn_resolve_query *q);
+
+/*
+ * Whether @r has lookups whose callback has not run yet. Call it from the
+ * event loop.
+ */
+bool dmn_resolver_busy(const struct dmn_resolver *r);
 
 typedef int (*dmn_getaddrinfo_fn)(const char *host, const char *service,
 				  const struct addrinfo *hints,
