@@ -17,7 +17,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from . import blktests, joblog, known_failures, site
+from . import blktests, joblog, known_failures, meson, night, site, wringer
 
 
 def _warn(lines: list[str]) -> None:
@@ -96,21 +96,78 @@ def cmd_blktests_summary(args: argparse.Namespace) -> int:
     return 0 if summary['outcome'] == 'pass' else 1
 
 
-def cmd_log_links(args: argparse.Namespace) -> int:
-    summary = json.loads(args.summary.read_text(encoding='utf-8'))
-    job = json.loads(args.job.read_text(encoding='utf-8'))
-    log = args.log.read_text(encoding='utf-8', errors='replace')
-    count = joblog.add_links(summary, job, log, args.step)
-    failed = sum(t.get('status') == 'fail' for t in summary.get('tests', []))
-    text = json.dumps(summary, indent=1) + '\n'
+def _read_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding='utf-8'))
+
+
+def _jobs(path: Path | None) -> list[dict[str, Any]]:
+    """The jobs of a run: the answer of the REST API, or a plain list."""
+    if path is None:
+        return []
+    data = _read_json(path)
+    return list(data['jobs'] if isinstance(data, dict) else data)
+
+
+def _section(
+    kind: str, name: str, path: Path, logs: Path | None
+) -> dict[str, Any]:
+    """The summary of a section and, for the page, its log files."""
+    section: dict[str, Any] = {'name': name}
+    if kind == 'blktests':
+        section.update(_read_json(path), kind='blktests')
+        if logs is not None:
+            night.copy_blktests_logs(section, path.parent, logs)
+    elif kind == 'meson':
+        tests = meson.read_testlog(path)
+        section.update(meson.summarize(tests))
+        if logs is not None:
+            night.write_meson_logs(section, tests, logs)
+    else:
+        text = path.read_text(encoding='utf-8', errors='replace')
+        section.update(wringer.summarize(text))
+        if logs is not None:
+            night.copy_log(section, path, logs)
+    return section
+
+
+def cmd_night(args: argparse.Namespace) -> int:
+    run = _read_json(args.run) if args.run else {}
+    jobs = _jobs(args.jobs)
+    record = night.run_record(run, jobs)
+    record.update(_meta(args.meta))
+    job_logs = {}
+    for pair in args.job_log:
+        job, sep, path = pair.partition('=')
+        if not sep:
+            raise SystemExit(f'--job-log wants JOB=PATH, not {pair!r}')
+        job_logs[job] = Path(path)
+    for kind, name, where, path in args.section:
+        src = Path(path)
+        if not path or not src.is_file():
+            _warn([f'{name}: no {path or "file"}, no section'])
+            continue
+        summary = _section(kind, name, src, args.logs)
+        section = night.add_section(record, name, where, summary)
+        job = next((j for j in jobs if j.get('name') == section['job']), None)
+        log = job_logs.get(section['job'])
+        if job is not None and log is not None and log.is_file():
+            joblog.add_links(
+                section,
+                job,
+                log.read_text(encoding='utf-8', errors='replace'),
+                section['step'],
+            )
+    night.judge(record)
+    text = json.dumps(record, indent=1) + '\n'
     if args.output:
         args.output.write_text(text, encoding='utf-8')
     else:
         sys.stdout.write(text)
     print(
-        f'log-links: {count} of {failed} failed test runs linked',
-        file=sys.stderr,
+        f'{record["workflow"] or "run"}: {record["outcome"]}', file=sys.stderr
     )
+    for problem in record['problems']:
+        print(f'  {problem}', file=sys.stderr)
     return 0
 
 
@@ -137,26 +194,22 @@ def _load_history(src: str | None) -> list[dict[str, Any]]:
             return []
         data = json.loads(path.read_text(encoding='utf-8'))
     if not isinstance(data, list):
-        raise SystemExit(f'{src}: not a list of summaries')
+        raise SystemExit(f'{src}: not a list of records')
     return data
 
 
 def cmd_site(args: argparse.Namespace) -> int:
-    summary = None
-    if args.summary:
-        summary = json.loads(args.summary.read_text(encoding='utf-8'))
-    history = site.merge_history(_load_history(args.history), summary)
+    records = [_read_json(path) for path in args.record]
+    history = site.merge_history(_load_history(args.history), records)
     links = []
     for pair in args.link:
         text, sep, href = pair.partition('=')
         if not sep:
             raise SystemExit(f'--link wants TEXT=URL, not {pair!r}')
         links.append((text, href))
-    # The logs of the results directory are those of the new summary.
-    results = None
-    if args.results and history and history[0] is summary:
-        results = args.results
-    site.build(args.output, history, args.analyzer, links, results)
+    site.build(
+        args.output, history, args.analyzer, links, args.logs, args.primary
+    )
     return 0
 
 
@@ -164,7 +217,8 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog='nvme-nightly',
         description='The tooling of the nightly tests of nvme-cli: the '
-        'known blktests failures, the summary of a run, the status page.',
+        'known blktests failures, the summaries and the record of a run, '
+        'the status page.',
     )
     sub = p.add_subparsers(dest='command', required=True)
 
@@ -227,33 +281,58 @@ def parser() -> argparse.ArgumentParser:
     )
     b.set_defaults(func=cmd_blktests_summary)
 
-    g = sub.add_parser(
-        'log-links',
-        help='add the links to the job log lines of the failed test runs '
-        'to a blktests summary',
+    n = sub.add_parser(
+        'night',
+        help='write the record of a CI run: its jobs and the summaries of '
+        'its tests',
     )
-    g.add_argument('summary', type=Path, help='the blktests summary')
-    g.add_argument(
-        '--job',
+    n.add_argument(
+        '--run', type=Path, help='the run, as JSON of the GitHub REST API'
+    )
+    n.add_argument(
+        '--jobs',
         type=Path,
-        required=True,
-        help='the job which ran blktests, as JSON of the GitHub REST API',
+        help='its jobs, as JSON of the GitHub REST API',
     )
-    g.add_argument(
-        '--log', type=Path, required=True, help='the log of the job'
+    n.add_argument(
+        '--job-log',
+        action='append',
+        default=[],
+        metavar='JOB=PATH',
+        help='the log of a job, for the links to the lines of the failed '
+        'tests',
     )
-    g.add_argument(
-        '--step',
-        default='Run blktests in VM',
-        help='the name of the step which ran blktests (%(default)s)',
+    n.add_argument(
+        '--section',
+        action='append',
+        default=[],
+        nargs=4,
+        metavar=('KIND', 'NAME', 'JOB/STEP', 'PATH'),
+        help='add the results of a test run: KIND blktests (PATH: its '
+        'summary, in its results directory), meson (PATH: testlog.json) '
+        'or wringer (PATH: its log), run by the step STEP of the job JOB; '
+        'a missing PATH adds no section',
     )
-    g.add_argument(
+    n.add_argument(
+        '--logs',
+        type=Path,
+        help='copy the logs of the failed tests into this directory, for '
+        'the page (site --logs)',
+    )
+    n.add_argument(
+        '--meta',
+        action='append',
+        default=[],
+        metavar='KEY=VALUE',
+        help='set an item of the record (workflow, run_id, date, ...)',
+    )
+    n.add_argument(
         '-o',
         '--output',
         type=Path,
-        help='write the summary here (default: stdout)',
+        help='write the record here (default: stdout)',
     )
-    g.set_defaults(func=cmd_log_links)
+    n.set_defaults(func=cmd_night)
 
     s = sub.add_parser('site', help='build the status page')
     s.add_argument(
@@ -264,7 +343,11 @@ def parser() -> argparse.ArgumentParser:
         help='the directory of the site',
     )
     s.add_argument(
-        '--summary', type=Path, help='the blktests summary of the new run'
+        '--record',
+        type=Path,
+        action='append',
+        default=[],
+        help='add the record of a new run (see night)',
     )
     s.add_argument(
         '--history',
@@ -272,10 +355,14 @@ def parser() -> argparse.ArgumentParser:
         help='the history.json of the last build',
     )
     s.add_argument(
-        '--results',
+        '--logs',
         type=Path,
-        help='the blktests results directory of the summary: the page '
-        'includes the logs of its failed test runs',
+        help='the log directory of the new records (night --logs)',
+    )
+    s.add_argument(
+        '--primary',
+        default=site.PRIMARY,
+        help='the workflow whose runs the history shows (%(default)s)',
     )
     s.add_argument(
         '--analyzer', type=Path, help='the clang analyzer report to include'

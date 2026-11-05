@@ -1,43 +1,60 @@
 {#- SPDX-License-Identifier: GPL-2.0-or-later -#}
-{#- The state of the last nights. -#}
+{#- The state of the last runs. -#}
 {% extends "base.html.j2" %}
-{% from "macros.html.j2" import cell, ref with context %}
+{% from "macros.html.j2" import badge, cell, files, ref with context %}
 
 {% block content %}
-{% if not latest %}
+{% if not overview %}
   <p>No nightly results yet.</p>
 {% else %}
-  <h2>Last night: blktests</h2>
-  <p>
-    {% if latest.ok %}
-    <span class="badge good">✓ passed</span>
-    {% else %}
-    <span class="badge critical">✗ failed</span> {{ latest.problems | join('; ') }}
-    {% endif %}
-  </p>
-  <p class="meta">
-    {% for key, value in latest.meta %}{{ key }} {{ value }} &middot; {% endfor %}{{ ref(latest.run_url, 'CI run') if latest.run_url }}
+  <p class="overall">{{ badge(ok, 'all passed', 'failed') }}
+    {% if not ok %}{{ overview | rejectattr('ok') | map(attribute='workflow') | join(', ') }}{% endif %}
   </p>
 
+  {% for w in overview %}
+  <section class="workflow">
+  <h2>{{ w.workflow }} {{ badge(w.ok) }}</h2>
+  <p class="meta">
+    {% for key, value in w.meta %}{{ key }} {{ value }} &middot; {% endfor %}{{ ref(w.run_url, 'CI run') if w.run_url }}
+  </p>
+  {% if w.problems %}
+  <ul class="problems">
+    {% for p in w.problems %}<li>{{ p }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  {% if w.warnings %}
+  <ul class="warnings">
+    {% for p in w.warnings %}<li>{{ p }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if w.sections %}
   <div class="tiles">
-    {% for tile in latest.tiles %}
-    <div class="tile"><div class="v">{{ tile.count }}</div><div class="l">{{ tile.label }}</div></div>
+    {% for s in w.sections %}
+    <div class="tile {{ 'good' if s.ok else 'critical' }}">
+      <div class="v">{{ cell('pass' if s.ok else 'fail') }}{{ ref(s.url, s.name) }}</div>
+      <div class="l">{{ s.counts }}</div>
+      {% if s.files %}<div class="l">{{ files(s.files) }}</div>{% endif %}
+    </div>
     {% endfor %}
   </div>
+  {% endif %}
 
-  {% if latest.failed %}
-  <h2>Failed test runs</h2>
+  {% if w.failed %}
+  <h3>Failed tests</h3>
   <table>
-    <tr><th></th><th>test</th><th>config</th><th>reason</th><th>log</th><th>known failure</th></tr>
-    {% for t in latest.failed %}
+    <tr><th></th><th>section</th><th>test</th><th>config</th><th>reason</th><th>duration</th><th>log</th><th>known failure</th></tr>
+    {% for t in w.failed %}
     <tr>
       <td>{{ cell(t.status) }}</td>
+      <td>{{ t.section }}</td>
       <td>{{ t.test }}</td>
       <td>{{ t.config }}</td>
       <td>{{ t.reason }}</td>
+      <td>{{ '%ss' % t.duration if t.duration != '' }}</td>
       <td>
         {%- if t.log | weburl %}{{ ref(t.log, 'job log') }}{% endif %}
-        {%- for f in t.files %}{{ ' · ' if t.log | weburl or not loop.first }}<a href="{{ f.href }}">{{ f.name }}</a>{% endfor -%}
+        {%- if t.files %}{{ ' · ' if t.log | weburl }}{{ files(t.files) }}{% endif -%}
       </td>
       <td>{{ ref(t.known) if t.known }}</td>
     </tr>
@@ -45,13 +62,13 @@
   </table>
   {% endif %}
 
-  {% if latest.known %}
-  <h2>Known failures</h2>
+  {% if w.known %}
+  <h3>Known failures</h3>
   <p class="meta">From the open issues with the known failure label. A known
     failure which passes may be fixed, or flapping: close its issue by hand.</p>
   <table>
-    <tr><th>action</th><th>test</th><th>issue</th><th>this night</th></tr>
-    {% for k in latest.known %}
+    <tr><th>action</th><th>test</th><th>issue</th><th>this run</th></tr>
+    {% for k in w.known %}
     <tr>
       <td>{{ k.action }}</td>
       <td>{{ k.test }}</td>
@@ -61,32 +78,46 @@
     {% endfor %}
   </table>
   {% endif %}
+  </section>
+  {% endfor %}
 
+  {% if matrix.nights %}
   <h2>History</h2>
-  <p class="meta">The test runs which failed at least once in the last
-    {{ matrix.nights | length }} nights, oldest night first.</p>
+  <p class="meta">The last {{ matrix.nights | length }} runs of
+    {{ matrix.workflow }}, oldest first: the outcome of each section, of the
+    other workflows the same day, and the tests which failed at least once.
+    A run marked * was started by hand.</p>
   <p class="legend">
-    {% for status in ('pass', 'fail', 'ignored', 'not run') %}
+    {% for status in ('pass', 'fail', 'timeout', 'ignored', 'skip', 'none') %}
     <span>{{ cell(status) }}{{ cells[status].label }}</span>
     {% endfor %}
   </p>
   <div class="scroll">
     <table class="matrix">
       <tr>
-        <th>test</th><th>config</th>
+        <th></th><th></th>
         {% for night in matrix.nights %}
-        <th class="n">{{ night.label }}</th>
+        <th class="n">{{ night.label }}{% if night.event %}<span title="{{ night.event }}">*</span>{% endif %}</th>
         {% endfor %}
       </tr>
       <tr>
-        <td><b>outcome</b></td><td></td>
+        <td><b>{{ matrix.workflow }}</b></td><td></td>
         {% for night in matrix.nights %}
         <td class="c">{{ cell(night.status, night.label, night.run_url) }}</td>
         {% endfor %}
       </tr>
       {% for row in matrix.rows %}
       <tr>
-        <td>{{ row.test }}</td><td>{{ row.config }}</td>
+        <td>{{ row.label }}</td><td></td>
+        {% for c in row.cells %}
+        <td class="c">{{ cell(c.status, c.title, c.run_url) }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      <tr><th>failed tests</th><th>config</th></tr>
+      {% for row in matrix.tests %}
+      <tr>
+        <td><span class="meta">{{ row.section }}:</span> {{ row.test }}</td><td>{{ row.config }}</td>
         {% for c in row.cells %}
         <td class="c">{{ cell(c.status, c.title, c.run_url) }}</td>
         {% endfor %}
@@ -96,5 +127,6 @@
       {% endfor %}
     </table>
   </div>
+  {% endif %}
 {% endif %}
 {% endblock %}

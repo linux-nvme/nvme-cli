@@ -19,3 +19,19 @@
     {{ text or value }}
   {%- endif -%}
 {%- endmacro %}
+
+{#- An outcome as a badge: color and text. -#}
+{% macro badge(ok, good='passed', bad='failed') -%}
+  {%- if ok -%}
+    <span class="badge good">✓ {{ good }}</span>
+  {%- else -%}
+    <span class="badge critical">✗ {{ bad }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{#- The log files the page copied: relative links only. -#}
+{% macro files(items) -%}
+  {%- for f in items if f.href.startswith('logs/') -%}
+    {{ ' · ' if not loop.first }}<a href="{{ f.href }}">{{ f.name }}</a>
+  {%- endfor -%}
+{%- endmacro %}

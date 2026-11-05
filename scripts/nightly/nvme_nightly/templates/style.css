@@ -25,7 +25,6 @@ h2 { font-size: 16px; margin: 28px 0 8px; }
 .tiles { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
 .tile { border: 1px solid var(--border); border-radius: 8px;
   padding: 10px 14px; min-width: 110px; }
-.tile .v { font-size: 24px; font-variant-numeric: tabular-nums; }
 .tile .l { color: var(--text-secondary); font-size: 12px; }
 .badge { display: inline-block; border-radius: 4px; padding: 1px 8px;
   font-weight: 600; color: var(--on-status); }
@@ -49,3 +48,11 @@ th { color: var(--text-secondary); font-weight: 500; font-size: 12px; }
 .legend .cell { display: inline-block; vertical-align: middle;
   margin-right: 4px; }
 .scroll { overflow-x: auto; }
+h3 { font-size: 14px; margin: 20px 0 8px; }
+.overall { font-size: 16px; }
+.workflow { border-top: 1px solid var(--grid); margin-top: 24px; }
+.tile .v { font-size: 15px; font-weight: 600; display: flex;
+  align-items: center; gap: 8px; }
+.tile.critical { border-color: var(--critical); }
+.problems li { color: var(--critical); }
+.warnings li { color: var(--text-secondary); }

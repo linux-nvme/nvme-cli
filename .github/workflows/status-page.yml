@@ -46,34 +46,42 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # The latest runs of the default branch, scheduled or started
-          # by hand.
+          api="repos/${GITHUB_REPOSITORY}/actions"
+          # The latest run of a workflow of the default branch, scheduled
+          # or started by hand, with its jobs: into the directory $2.
           latest() {
-            gh run list -R "${GITHUB_REPOSITORY}" -w "$1" -b master \
+            local run
+            run="$(gh run list -R "${GITHUB_REPOSITORY}" -w "$1" -b master \
                 -s completed -L 1 \
-                --json databaseId -q '.[0].databaseId'
+                --json databaseId -q '.[0].databaseId')"
+            [ -n "${run}" ] || return 0
+            mkdir -p "$2"
+            gh api "${api}/runs/${run}" > "$2/run.json" &&
+                gh api "${api}/runs/${run}/jobs?per_page=100" \
+                    > "$2/jobs.json" || rm -f "$2/run.json"
+            echo "${run}"
           }
-          run="$(latest nightly-analyzers.yml)"
+          run="$(latest nightly-analyzers.yml reports/analyzers)"
           if [ -n "${run}" ]; then
             gh run download "${run}" -R "${GITHUB_REPOSITORY}" \
                 -n clang-analyzer-report -D reports/analyzer || true
           fi
-          run="$(latest nightly-tests.yml)"
+          run="$(latest nightly-tests.yml reports/nightly)"
           if [ -n "${run}" ]; then
             gh run download "${run}" -R "${GITHUB_REPOSITORY}" \
-                -p 'artifact-*' -D reports/nightly || true
-            # The job and its log, for the links to the lines of the
-            # failed test runs.
-            mkdir -p reports
-            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run}/jobs" \
-                -q '.jobs[] | select(.name == "nightly-tests")' \
-                > reports/job.json || true
-            job="$(jq -r '.id // empty' reports/job.json 2>/dev/null || true)"
-            if [ -n "${job}" ]; then
+                -p 'artifact-*' -D reports/nightly/artifacts || true
+            # The logs of the jobs which ran tests, for the links to the
+            # lines of the failed ones.
+            for job in nightly-tests test-coverage; do
+              id="$(jq -r --arg n "${job}" \
+                  '.jobs[] | select(.name == $n) | .id' \
+                  reports/nightly/jobs.json 2>/dev/null || true)"
+              [ -n "${id}" ] || continue
               curl -sSfL -H "Authorization: Bearer ${GH_TOKEN}" \
-                  "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${job}/logs" \
-                  -o reports/job.log || rm -f reports/job.log
-            fi
+                  "${GITHUB_API_URL}/${api}/jobs/${id}/logs" \
+                  -o "reports/nightly/log-${job}.log" ||
+                  rm -f "reports/nightly/log-${job}.log"
+            done
           fi
 
       - name: Build the page
@@ -88,24 +96,60 @@ jobs:
             printf '<!DOCTYPE html>\n<title>clang analyzer</title>\n<p>No reports.</p>\n' \
               > "${analyzer}/index.html"
           fi
-          summary="$(find reports/nightly -name blktests-summary.json \
-              2>/dev/null | head -n 1)"
-          results="${summary:+$(dirname "${summary}")}"
-          # Without the links the page still builds.
-          if [ -n "${summary}" ] && [ -s reports/job.json ] && \
-              [ -s reports/job.log ] && \
-              python3 scripts/nightly/nvme-nightly log-links "${summary}" \
-                  --job reports/job.json --log reports/job.log \
-                  -o reports/blktests-summary.json; then
-            summary=reports/blktests-summary.json
+          nightly=scripts/nightly/nvme-nightly
+          # A report which is not there adds no section: the record still
+          # has the conclusions of the jobs and steps. Without a record the
+          # page still builds, from the history.
+          report() {
+            find reports/nightly/artifacts -path "$1" -type f 2>/dev/null |
+                head -n 1
+          }
+          records=()
+          if [ -s reports/nightly/run.json ]; then
+            vm=nightly-tests
+            python3 "${nightly}" night \
+                --run reports/nightly/run.json \
+                --jobs reports/nightly/jobs.json \
+                --job-log nightly-tests=reports/nightly/log-nightly-tests.log \
+                --job-log test-coverage=reports/nightly/log-test-coverage.log \
+                --section blktests \
+                    blktests "${vm}/Run blktests in VM" \
+                    "$(report '*/blktests-summary.json')" \
+                --section meson 'unit tests (blktests VM)' \
+                    "${vm}/Run blktests in VM" \
+                    "$(report '*/meson-testlog.json')" \
+                --section meson 'nvme-cli tests' \
+                    "${vm}/Run nvme-cli tests in VM" \
+                    "$(report '*/nvmetests/meson-logs/testlog.json')" \
+                --section wringer nvme-discoverd \
+                    "${vm}/Run daemon tests in VM" \
+                    "$(report '*/discoverd-wringer.log')" \
+                --section wringer nvme-keysd \
+                    "${vm}/Run daemon tests in VM" \
+                    "$(report '*/keysd-wringer.log')" \
+                --section meson 'test suite' \
+                    'test-coverage/Run the test suite' \
+                    "$(report '*/artifact-test-coverage/.build-ci/meson-logs/testlog.json')" \
+                --section meson 'fuzz seeds' \
+                    'test-coverage/Run the fuzz seeds' \
+                    "$(report '*/artifact-test-coverage/.build-ci/meson-logs/testlog-fuzz.json')" \
+                --logs reports/logs -o reports/nightly.json &&
+                records+=(--record reports/nightly.json)
+          fi
+          if [ -s reports/analyzers/run.json ]; then
+            python3 "${nightly}" night \
+                --run reports/analyzers/run.json \
+                --jobs reports/analyzers/jobs.json \
+                -o reports/analyzers.json &&
+                records+=(--record reports/analyzers.json)
           fi
           # The CI image has the jinja2 of the page templates.
           docker run --rm -v "${PWD}:/w" -w /w \
               ghcr.io/linux-nvme/debian:latest \
-              scripts/nightly/nvme-nightly site -o site \
+              "${nightly}" site -o site \
                   --history "${PAGE_URL}history.json" \
-                  ${summary:+--summary "${summary}"} \
-                  ${results:+--results "${results}"} \
+                  "${records[@]}" \
+                  --logs reports/logs \
                   --analyzer "${analyzer}" \
                   --link "Codecov=https://app.codecov.io/gh/${GITHUB_REPOSITORY}" \
                   --link "Known failures=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/issues?q=is%3Aissue+is%3Aopen+label%3Ablktests-known-failure"
