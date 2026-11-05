@@ -143,3 +143,20 @@ if python3.found()
          depends: nvme_discoverd,
          suite: 'mock')
 endif
+
+# The hand-over from the pre-OS environment (the real nvme under
+# libmock_nvme.so, as dracut runs it) to nvme-discoverd in a sandbox. See
+# handover.py and issue #4328.
+if python3.found() and want_fabrics and is_variable('have_mock_nvme') and have_mock_nvme
+    handover_env = environment()
+    handover_env.prepend('PYTHONPATH', meson.project_source_root(),
+                         meson.current_source_dir())
+    handover_env.set('NVME_DISCOVERD', nvme_discoverd.full_path())
+    test('nvme-discoverd - handover',
+         python3,
+         args: [files('test_handover.py'), nvme_exe, mock_nvme_lib],
+         env: handover_env,
+         depends: [nvme_discoverd, nvme_exe, mock_nvme_lib],
+         timeout: 120,
+         suite: 'mock')
+endif
