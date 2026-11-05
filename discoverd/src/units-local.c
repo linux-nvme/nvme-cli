@@ -20,6 +20,7 @@
 #include <shared/cleanup-util.h>
 #include <shared/fs-util.h>
 
+#include "json-util.h"
 #include "units-local.h"
 
 #define SH_PATH "/bin/sh"
@@ -40,28 +41,6 @@ struct job_result {
 	char *unit_name;
 	bool success;
 };
-
-/* Write @s as a JSON string. */
-static void json_string(FILE *f, const char *s)
-{
-	const unsigned char *p;
-
-	if (!s) {
-		fputs("null", f);
-		return;
-	}
-
-	fputc('"', f);
-	for (p = (const unsigned char *)s; *p; p++) {
-		if (*p == '"' || *p == '\\')
-			fprintf(f, "\\%c", *p);
-		else if (*p < 0x20)
-			fprintf(f, "\\u%04x", *p);
-		else
-			fputc(*p, f);
-	}
-	fputc('"', f);
-}
 
 /* Open the journal for one record. The caller adds fields and closes it. */
 static FILE *journal_open(struct local_units *lu, const char *op,

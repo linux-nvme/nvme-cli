@@ -25,6 +25,9 @@
  */
 int sysfs_set_root(const char *dir);
 
+/* The directory set by sysfs_set_root(), or NULL for the real sysfs. */
+const char *sysfs_root(void);
+
 /*
  * The path of @path ("/sys/...") under the sysfs root. Returns an
  * allocated string or NULL. Caller must free.

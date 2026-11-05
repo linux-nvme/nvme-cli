@@ -21,6 +21,7 @@
 
 #include <daemon-util/log.h>
 #include <shared/cleanup-util.h>
+#include <shared/string-util.h>
 #include <shared/time-util.h>
 
 #include "state.h"
@@ -83,6 +84,8 @@ struct unit_mgr {
 	sd_bus_slot *job_removed_slot;
 	/* nvme binary the transient units exec; borrowed (lives for argv's life). */
 	const char *nvme_path;
+	/* "--set-options=..." for the nvme of the units, or NULL. */
+	char *nvme_set_options;
 	/* Set when the units run locally instead of through systemd. */
 	struct local_units *local;
 };
@@ -383,7 +386,20 @@ void unit_mgr_free(struct unit_mgr *mgr)
 		free(e->unit_name);
 		free(e);
 	}
+	free(mgr->nvme_set_options);
 	free(mgr);
+}
+
+int unit_mgr_set_nvme_options(struct unit_mgr *mgr, const char *opts)
+{
+	char *arg;
+
+	if (asprintf(&arg, "--set-options=%s", opts) < 0)
+		return -ENOMEM;
+
+	free(mgr->nvme_set_options);
+	mgr->nvme_set_options = arg;
+	return 0;
 }
 
 bool unit_exists(struct unit_mgr *mgr, const char *unit_name)
@@ -467,17 +483,29 @@ static void unit_spec_clear(struct unit_spec *s)
 /*
  * Build the post/stop shell commands of connection unit @unit_name with the
  * real devid path, state directory and unit name substituted (systemd does
- * not expand %t/%N/%n here — see unit_devid_path()). The nvme path in
- * ExecStop is double-quoted to tolerate spaces.
+ * not expand %t/%N/%n here — see unit_devid_path()). The paths come from
+ * the command line, so each is quoted for the shell.
  */
 static int connection_commands(const struct unit_mgr *mgr,
 			       const char *unit_name, const char *devid_path,
 			       struct unit_spec *s)
 {
-	__cleanup_free char *nvme_dir = sysfs_path("/sys/class/nvme");
-	const char *ctrls = state_ctrls_dir();
+	__cleanup_free char *sysfs_nvme = sysfs_path("/sys/class/nvme");
+	__cleanup_free char *nvme_dir = NULL;
+	__cleanup_free char *devid = NULL;
+	__cleanup_free char *ctrls = NULL;
+	__cleanup_free char *nvme = NULL;
+	__cleanup_free char *opts = NULL;
 
-	if (!nvme_dir)
+	if (!sysfs_nvme)
+		return -ENOMEM;
+	nvme_dir = shr_shell_quote(sysfs_nvme);
+	devid = shr_shell_quote(devid_path);
+	ctrls = shr_shell_quote(state_ctrls_dir());
+	nvme = shr_shell_quote(mgr->nvme_path);
+	opts = mgr->nvme_set_options ?
+		shr_shell_quote(mgr->nvme_set_options) : strdup("");
+	if (!nvme_dir || !devid || !ctrls || !nvme || !opts)
 		return -ENOMEM;
 
 	if (asprintf(&s->exec_start_post,
@@ -486,7 +514,7 @@ static int connection_commands(const struct unit_mgr *mgr,
 		     "mkdir -p %s/$DEV; "
 		     "echo %s > %s/$DEV/unit; "
 		     "stat -Lc %%i %s/$DEV > %s/$DEV/ino",
-		     devid_path, ctrls, unit_name, ctrls,
+		     devid, ctrls, unit_name, ctrls,
 		     nvme_dir, ctrls) < 0) {
 		s->exec_start_post = NULL;
 		return -ENOMEM;
@@ -504,9 +532,9 @@ static int connection_commands(const struct unit_mgr *mgr,
 		     "INO=$(cat %s/$DEV/ino 2>/dev/null); "
 		     "CUR=$(stat -Lc %%i %s/$DEV 2>/dev/null); "
 		     "[ \"$CUR\" = \"$INO\" ] || exit 0; "
-		     "\"%s\" disconnect -d $DEV",
-		     devid_path, ctrls, unit_name, ctrls,
-		     nvme_dir, mgr->nvme_path) < 0) {
+		     "%s %s disconnect -d $DEV",
+		     devid, ctrls, unit_name, ctrls,
+		     nvme_dir, nvme, opts) < 0) {
 		s->exec_stop = NULL;
 		return -ENOMEM;
 	}
@@ -518,7 +546,7 @@ static int connection_commands(const struct unit_mgr *mgr,
 		     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
 		     "[ \"$UNIT\" = \"%s\" ] || exit 0; "
 		     "rm -rf %s/$DEV",
-		     devid_path, devid_path, ctrls,
+		     devid, devid, ctrls,
 		     unit_name, ctrls) < 0) {
 		s->exec_stop_post = NULL;
 		return -ENOMEM;
@@ -722,7 +750,7 @@ struct connect_scratch {
 	char devid_arg[PATH_MAX + 16];
 	char extra[MAX_EXTRA_ARGS][320]; // TID fields + resolved params
 	int n_extra;
-	const char *argv[8 + MAX_EXTRA_ARGS];
+	const char *argv[9 + MAX_EXTRA_ARGS];
 };
 
 /*
@@ -773,7 +801,8 @@ static const char *dc_keep_alive_tmo(const struct libnvmf_params *params)
 	return DC_DEFAULT_KATO;
 }
 
-static int build_connect_argv(const char *nvme_bin, const char *devid_path,
+static int build_connect_argv(const struct unit_mgr *mgr,
+			      const char *devid_path,
 			       const struct libnvmf_tid *t,
 			       const struct libnvmf_params *params,
 			       bool is_dc, bool is_nbft,
@@ -784,7 +813,9 @@ static int build_connect_argv(const char *nvme_bin, const char *devid_path,
 	int i = 0;
 	int r;
 
-	s->argv[i++] = nvme_bin;
+	s->argv[i++] = mgr->nvme_path;
+	if (mgr->nvme_set_options)
+		s->argv[i++] = mgr->nvme_set_options;
 	s->argv[i++] = "connect";
 
 	/*
@@ -848,7 +879,7 @@ static int start_connection(struct unit_mgr *mgr,
 	if (r < 0)
 		return r;
 
-	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, is_dc,
+	r = build_connect_argv(mgr, devid_path, t, params, is_dc,
 			       is_nbft, &scratch);
 	if (r < 0)
 		return r;
@@ -893,7 +924,7 @@ int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
 		addr->host_traddr, addr->host_iface,
 	};
 	char opts[ARRAY_SIZE(names) + 1][320];
-	const char *argv[ARRAY_SIZE(names) + 5];
+	const char *argv[ARRAY_SIZE(names) + 6];
 	__cleanup_unit_spec struct unit_spec spec = { };
 	__cleanup_free char *unit_name = NULL;
 	char desc[128];
@@ -905,6 +936,8 @@ int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
 		return -ENOMEM;
 
 	argv[argc++] = mgr->nvme_path;
+	if (mgr->nvme_set_options)
+		argv[argc++] = mgr->nvme_set_options;
 	argv[argc++] = "connect-all";
 
 	n = snprintf(opts[0], sizeof(opts[0]), "--device=%s", devname);
