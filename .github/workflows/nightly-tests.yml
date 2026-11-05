@@ -91,8 +91,11 @@ jobs:
             tlshd --version
 
             # A unit test failure must not skip blktests or the report.
+            # The kernel has lockdep: process heavy tests run about 15
+            # times slower than on the CI runners, so give them more time.
             build_status=0
-            scripts/build.sh -b release -c gcc -p || build_status=$?
+            scripts/build.sh -b release -c gcc -p --timeout-multiplier 3 \
+                || build_status=$?
             if [ ! -x .build-ci/nvme ]; then
               exit "${build_status}"
             fi
@@ -181,9 +184,11 @@ jobs:
             git checkout ${{ github.sha }}
             CONTROLLER=$(echo "${BDEV0}" | sed 's/n[0-9]*$//')
 
-            # Copy the report also when a test fails.
+            # Copy the report also when a test fails. The kernel has
+            # lockdep: process heavy tests run about 15 times slower than
+            # on the CI runners, so give them more time.
             build_status=0
-            scripts/build.sh -b release -c gcc -p \
+            scripts/build.sh -b release -c gcc -p --timeout-multiplier 3 \
                 --e2e-controller "${CONTROLLER}" \
                 --e2e-ns1 "${BDEV0}" \
                 --e2e-log-dir "/nvme-cli/tests/nvmetests" \
