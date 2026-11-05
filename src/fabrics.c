@@ -718,10 +718,13 @@ static int setup_common_context(struct libnvmf_context *fctx,
 	if (err)
 		return err;
 
-	err = libnvmf_context_set_hostnqn(fctx,
-		fa->hostnqn, fa->hostid);
-	if (err)
-		return err;
+	/* No host: each connection names its own, see fabrics_discover(). */
+	if (fa->hostnqn) {
+		err = libnvmf_context_set_hostnqn(fctx,
+			fa->hostnqn, fa->hostid);
+		if (err)
+			return err;
+	}
 
 	err = libnvmf_context_set_crypto(fctx,
 		fa->hostkey, fa->ctrlkey,
@@ -949,6 +952,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	__cleanup_free char *resolved_traddr = NULL;
 	int ret;
 	struct nvmf_args fa = nvmf_args_defaults();
+	struct nvmf_args ctx_fa;
+	const char *hostnqn_arg, *hostid_arg;
 	__cleanup_free struct argconfig_commandline_options *nvmf =
 		nvmf_options(&fa);
 	char *device = NULL;
@@ -997,6 +1002,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
+	hostnqn_arg = fa.hostnqn;
+	hostid_arg = fa.hostid;
 	ret = nvme_create_global_ctx_hostnqn(&ctx,
 		fa.hostnqn, fa.hostid, &hnqn, &hid);
 	if (ret)
@@ -1044,7 +1051,22 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		.raw = raw,
 	};
 
-	ret = create_discovery_context(ctx, device, &fa, &dld, &fctx);
+	/*
+	 * An NBFT names the host the firmware connected as, and the boot
+	 * connections must connect as that host. Unless the command line
+	 * names a host, as in nvme-cli 2, leave the context without one:
+	 * libnvmf_discover_nbft() then takes the NBFT's and falls back to
+	 * the system's. The configured connections get the system's from
+	 * fabrics_discovery_config().
+	 */
+	ctx_fa = fa;
+	if (!device && !fa.transport && !fa.traddr && !nonbft &&
+	    !hostnqn_arg && !hostid_arg) {
+		ctx_fa.hostnqn = NULL;
+		ctx_fa.hostid = NULL;
+	}
+
+	ret = create_discovery_context(ctx, device, &ctx_fa, &dld, &fctx);
 	if (ret)
 		return ret;
 

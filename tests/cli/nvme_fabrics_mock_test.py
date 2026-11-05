@@ -502,6 +502,32 @@ class FabricsMockCLITest(MockTestCase):
         return ('connect', '-t', 'tcp', '-a', traddr, '-s', '4420',
                 '-n', subsysnqn, '--hostnqn', self._OWNER_HOSTNQN)
 
+    # NBFT-static-ipv4: one TCP boot subsystem, and the firmware's host.
+    _NBFT_TABLE = (Path(__file__).resolve().parents[2] /
+                   'libnvme/tests/nbft/tables/NBFT-static-ipv4')
+    _NBFT_HOSTNQN = ('nqn.2014-08.org.nvmexpress:uuid:'
+                     'a1b759e3-035d-4777-b3cc-1754b8b819b9')
+
+    def _connect_all_nbft(self, *args):
+        tables = Path(self.tmp) / 'tables'
+        tables.mkdir()
+        shutil.copyfile(self._NBFT_TABLE, tables / 'NBFT')
+        self._run('connect-all', '--nbft', f'--nbft-path={tables}', *args)
+        return (self._ctrl_path(0) / 'hostnqn').read_text().strip()
+
+    def test_connect_all_nbft_host(self):
+        """The NBFT boot connections connect as the host the NBFT names,
+        not as the system's host, as with nvme-cli 2."""
+        self.assertEqual(self._connect_all_nbft(), self._NBFT_HOSTNQN)
+        self.assertEqual((self._ctrl_path(0) / 'hostid').read_text().strip(),
+                         'e359b7a1-5d03-7747-b3cc-1754b8b819b9')
+
+    def test_connect_all_nbft_explicit_host(self):
+        """--hostnqn overrides the NBFT's host."""
+        self.assertEqual(
+            self._connect_all_nbft('--hostnqn', self._OWNER_HOSTNQN),
+            self._OWNER_HOSTNQN)
+
     def _devid_file(self):
         return Path(self.base_dir) / 'devid'
 
