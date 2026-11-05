@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,25 +33,79 @@
  * sysfs or re-derived from the unit itself.
  */
 
+static char units_dir[PATH_MAX] = STATE_RUN_DIR "/units";
+static char ctrls_dir[PATH_MAX] = STATE_RUN_DIR "/controllers";
+static char desired_path[PATH_MAX] = STATE_RUN_DIR "/desired";
+
+int state_set_dir(const char *dir)
+{
+	int n1, n2, n3;
+
+	if (!dir)
+		dir = STATE_RUN_DIR;
+
+	n1 = snprintf(units_dir, sizeof(units_dir), "%s/units", dir);
+	n2 = snprintf(ctrls_dir, sizeof(ctrls_dir), "%s/controllers", dir);
+	n3 = snprintf(desired_path, sizeof(desired_path), "%s/desired", dir);
+	if (n1 < 0 || n1 >= (int)sizeof(units_dir) ||
+	    n2 < 0 || n2 >= (int)sizeof(ctrls_dir) ||
+	    n3 < 0 || n3 >= (int)sizeof(desired_path)) {
+		state_set_dir(NULL);
+		return -ENAMETOOLONG;
+	}
+
+	return 0;
+}
+
+const char *state_units_dir(void)
+{
+	return units_dir;
+}
+
+const char *state_ctrls_dir(void)
+{
+	return ctrls_dir;
+}
+
+const char *state_desired_path(void)
+{
+	return desired_path;
+}
+
+/* The path of file @name of @devid's state, or of the directory if NULL. */
+static int ctrl_path(char *buf, size_t len, const char *devid,
+		     const char *name)
+{
+	int n;
+
+	if (name)
+		n = snprintf(buf, len, "%s/%s/%s", ctrls_dir, devid, name);
+	else
+		n = snprintf(buf, len, "%s/%s", ctrls_dir, devid);
+
+	return n < 0 || (size_t)n >= len ? -ENAMETOOLONG : 0;
+}
+
 int state_init(void)
 {
 	int ret;
 
-	ret = shr_mkdir_p(STATE_UNITS_DIR, 0755);
+	ret = shr_mkdir_p(units_dir, 0755);
 	if (ret)
 		return ret;
 
-	return shr_mkdir_p(STATE_CTRLS_DIR, 0755);
+	return shr_mkdir_p(ctrls_dir, 0755);
 }
 
 /* Read the inode recorded for @devid. Returns false if there is none. */
 static bool state_read_ino(const char *devid, uint64_t *ino)
 {
-	char path[512];
+	char path[PATH_MAX];
 	FILE *f;
 	bool ok;
 
-	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s/ino", devid);
+	if (ctrl_path(path, sizeof(path), devid, "ino"))
+		return false;
 	f = fopen(path, "r");
 	if (!f)
 		return false;
@@ -78,7 +133,7 @@ void state_gc(void)
 	struct dirent *de;
 	DIR *d;
 
-	d = opendir(STATE_CTRLS_DIR);
+	d = opendir(ctrls_dir);
 	if (!d)
 		return;
 
@@ -112,18 +167,19 @@ void state_gc(void)
 
 int state_write_desired(const char *content)
 {
-	char tmp[] = STATE_DESIRED ".XXXXXX";
+	char tmp[PATH_MAX + 8];
 	size_t len = strlen(content);
 	ssize_t n;
 	int fd;
 
+	snprintf(tmp, sizeof(tmp), "%s.XXXXXX", desired_path);
 	fd = shr_mkstemp(tmp);
 	if (fd < 0)
 		return -errno;
 
 	n = write(fd, content, len);
 	close(fd);
-	if (n < 0 || (size_t)n != len || rename(tmp, STATE_DESIRED) < 0) {
+	if (n < 0 || (size_t)n != len || rename(tmp, desired_path) < 0) {
 		int r = n < 0 ? -errno : -EIO;
 
 		unlink(tmp);
@@ -139,7 +195,7 @@ char *state_read_desired(void)
 	size_t size = 0;
 	FILE *f;
 
-	f = fopen(STATE_DESIRED, "r");
+	f = fopen(desired_path, "r");
 	if (!f)
 		return NULL;
 
@@ -154,12 +210,13 @@ char *state_read_desired(void)
 
 char *state_read_unit(const char *devid)
 {
-	char path[512];
+	char path[PATH_MAX];
 	char buf[256];
 	FILE *f;
 	char *ret;
 
-	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s/unit", devid);
+	if (ctrl_path(path, sizeof(path), devid, "unit"))
+		return NULL;
 	f = fopen(path, "r");
 	if (!f)
 		return NULL;
@@ -182,21 +239,22 @@ char *state_read_unit(const char *devid)
 
 void state_remove_ctrl(const char *devid)
 {
-	char path[512];
+	char path[PATH_MAX];
 
-	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s/unit", devid);
-	unlink(path);
-	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s/ino", devid);
-	unlink(path);
-	snprintf(path, sizeof(path), STATE_CTRLS_DIR "/%s", devid);
-	rmdir(path);
+	if (!ctrl_path(path, sizeof(path), devid, "unit"))
+		unlink(path);
+	if (!ctrl_path(path, sizeof(path), devid, "ino"))
+		unlink(path);
+	if (!ctrl_path(path, sizeof(path), devid, NULL))
+		rmdir(path);
 }
 
 void state_remove_devid(const char *unit_name)
 {
 	char base[256];
-	char path[512];
+	char path[PATH_MAX];
 	char *dot;
+	int n;
 
 	/* The .devid file is named after %N (unit name without .service). */
 	snprintf(base, sizeof(base), "%s", unit_name);
@@ -204,6 +262,7 @@ void state_remove_devid(const char *unit_name)
 	if (dot && !strcmp(dot, ".service"))
 		*dot = '\0';
 
-	snprintf(path, sizeof(path), STATE_UNITS_DIR "/%s.devid", base);
-	unlink(path);
+	n = snprintf(path, sizeof(path), "%s/%s.devid", units_dir, base);
+	if (n >= 0 && (size_t)n < sizeof(path))
+		unlink(path);
 }
