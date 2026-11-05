@@ -70,8 +70,9 @@ int libnvme_set_owner(struct libnvme_global_ctx *ctx, const char *owner);
  * @path:	Sandbox directory under /tmp, or NULL to restore defaults
  *
  * Redirects the files libnvme reads and writes (the exclusion list, the
- * ownership registry, ...) under @path instead of their production locations,
- * so a test can run against a throwaway directory.  For safety @path must be
+ * ownership registry, the host NQN and host ID files, ...) under @path
+ * instead of their production locations, so a test can run against a
+ * throwaway directory.  For safety @path must be
  * confined to /tmp and contain no ".." component; anything else is rejected.
  * Passing NULL clears a previously set override.
  *
