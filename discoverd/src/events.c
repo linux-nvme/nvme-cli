@@ -44,6 +44,7 @@ struct events_ctx {
 	sd_device_monitor *nvme_monitor;
 	sd_device_monitor *fc_monitor;
 	struct soak_entry *soaking;
+	uint64_t soak_usec;
 };
 
 static void soak_entry_free(struct soak_entry *e)
@@ -126,7 +127,7 @@ static int schedule_soak(struct events_ctx *ctx, const char *devname)
 	}
 
 	r = sd_event_add_time(ctx->event, &e->timer, CLOCK_BOOTTIME,
-			      now + SOAK_DELAY_USEC, 0,
+			      now + ctx->soak_usec, 0,
 			      soak_timeout, e);
 	if (r < 0) {
 		soak_entry_free(e);
@@ -291,7 +292,7 @@ static int monitor_handler(sd_device_monitor *monitor, sd_device *dev,
 
 struct events_ctx *events_start(sd_event *event,
 				const struct events_callbacks *callbacks,
-				void *user_data)
+				void *user_data, bool udev)
 {
 	struct events_ctx *ctx;
 	int r;
@@ -303,6 +304,14 @@ struct events_ctx *events_start(sd_event *event,
 	ctx->event = event;
 	ctx->callbacks = *callbacks;
 	ctx->user_data = user_data;
+
+	/*
+	 * Without udev, a test sends the uevents through events_dispatch()
+	 * after it has written the sysfs attributes: nothing to soak.
+	 */
+	if (!udev)
+		return ctx;
+	ctx->soak_usec = SOAK_DELAY_USEC;
 
 	// nvme subsystem monitor
 	r = sd_device_monitor_new(&ctx->nvme_monitor);

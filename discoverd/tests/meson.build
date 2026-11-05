@@ -88,6 +88,21 @@ test_units_local = executable(
 
 test('nvme-discoverd - units-local', test_units_local, suite: 'unit')
 
+test_control = executable(
+    'test-control',
+    ['test-control.c', '../src/control.c'],
+    include_directories: discoverd_inc,
+    dependencies: [
+        ccan_dep,
+        daemon_util_dep,
+        libnvme_dep,
+        libsystemd_dep,
+        shared_dep,
+    ],
+)
+
+test('nvme-discoverd - control', test_control, suite: 'unit')
+
 test_inventory = executable(
     'test-inventory',
     ['test-inventory.c', '../src/inventory.c', '../src/tid.c'],
