@@ -9,10 +9,12 @@
  */
 
 #include <shared/assert-util.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 #include <nvme/private.h>
@@ -383,6 +385,273 @@ static bool test_subsystem_iteration(void)
 	return pass;
 }
 
+/**
+ * test_host_ref_unref - libnvme_host_ref() must increment h->refcount,
+ * and libnvme_host_unref() must decrement it back down. A freshly
+ * created host starts at refcount 1 (the tree's own reference).
+ */
+static bool test_host_ref_unref(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	bool pass = true;
+
+	printf("test_host_ref_unref:\n");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	if (h->refcount != 1) {
+		printf(" - new host refcount 1, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - new host refcount 1 [PASS]\n");
+	}
+
+	libnvme_host_ref(h);
+	if (h->refcount != 2) {
+		printf(" - ref() refcount 2, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - ref() refcount 2 [PASS]\n");
+	}
+
+	libnvme_host_unref(h);
+	if (h->refcount != 1) {
+		printf(" - unref() refcount 1, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - unref() refcount 1 [PASS]\n");
+	}
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
+/**
+ * test_host_ref_survives_refresh_topology - a host with an outstanding
+ * ref must not be freed by libnvme_refresh_topology()'s unconditional
+ * free-every-host pass; it should only drop back to its pre-refresh
+ * refcount (the reference taken here is released, not the tree's own).
+ */
+static bool test_host_ref_survives_refresh_topology(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	bool pass = true;
+
+	printf("test_host_ref_survives_refresh_topology:\n");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	libnvme_host_ref(h);
+
+	libnvme_refresh_topology(ctx);
+
+	if (h->refcount != 1) {
+		printf(" - survives refresh, got %d [FAIL]\n", h->refcount);
+		pass = false;
+	} else {
+		printf(" - host survives refresh [PASS]\n");
+	}
+
+	libnvme_host_unref(h);
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
+/**
+ * test_host_ref_debug_log_disabled_by_default - ref()/unref() write
+ * nothing to stderr when LIBNVME_REF_DEBUG is unset.
+ */
+static bool test_host_ref_debug_log_disabled_by_default(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	FILE *capture;
+	int saved_stderr;
+	char buf[256];
+	size_t n;
+	bool pass = true;
+
+	printf("test_host_ref_debug_log_disabled_by_default:\n");
+
+	unsetenv("LIBNVME_REF_DEBUG");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	capture = tmpfile();
+	shr_assert(capture);
+	saved_stderr = dup(fileno(stderr));
+	shr_assert(saved_stderr != -1);
+	shr_assert(dup2(fileno(capture), fileno(stderr)) != -1);
+
+	libnvme_host_ref(h);
+	libnvme_host_unref(h);
+
+	fflush(stderr);
+	dup2(saved_stderr, fileno(stderr));
+	close(saved_stderr);
+	rewind(capture);
+	n = fread(buf, 1, sizeof(buf) - 1, capture);
+	buf[n] = '\0';
+	fclose(capture);
+
+	if (n != 0) {
+		printf(" - no stderr, got %zu bytes: %s [FAIL]\n", n, buf);
+		pass = false;
+	} else {
+		printf(" - no stderr output when unset [PASS]\n");
+	}
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
+/**
+ * test_host_ref_debug_log_enabled - with LIBNVME_REF_DEBUG set,
+ * libnvme_host_ref() logs call site and refcount to stderr.
+ */
+static bool test_host_ref_debug_log_enabled(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	FILE *capture;
+	int saved_stderr;
+	char buf[256];
+	size_t n;
+	bool pass = true;
+
+	printf("test_host_ref_debug_log_enabled:\n");
+
+	setenv("LIBNVME_REF_DEBUG", "1", 1);
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	capture = tmpfile();
+	shr_assert(capture);
+	saved_stderr = dup(fileno(stderr));
+	shr_assert(saved_stderr != -1);
+	shr_assert(dup2(fileno(capture), fileno(stderr)) != -1);
+
+	libnvme_host_ref(h);
+	libnvme_host_unref(h);
+
+	fflush(stderr);
+	dup2(saved_stderr, fileno(stderr));
+	close(saved_stderr);
+	rewind(capture);
+	n = fread(buf, 1, sizeof(buf) - 1, capture);
+	buf[n] = '\0';
+	fclose(capture);
+
+	if (n == 0 || !strstr(buf, "tree.c") || !strstr(buf, "ref host=") ||
+	    !strstr(buf, "count=2")) {
+		printf(" - stderr shows call site, got: %s [FAIL]\n", buf);
+		pass = false;
+	} else {
+		printf(" - stderr shows call site and refcount [PASS]\n");
+	}
+
+	unsetenv("LIBNVME_REF_DEBUG");
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
+/* Reliably reproduces the race without being tuned to this machine's
+ * core count: pre-atomic this segfaults every run; post-atomic it's
+ * clean every run.
+ */
+#define STRESS_THREAD_COUNT 8
+#define STRESS_ITERATIONS   50000
+
+static void *ref_unref_thread(void *arg)
+{
+	struct libnvme_host *h = arg;
+	int i;
+
+	for (i = 0; i < STRESS_ITERATIONS; i++) {
+		libnvme_host_ref(h);
+		libnvme_host_unref(h);
+	}
+
+	return NULL;
+}
+
+/**
+ * test_host_ref_unref_is_thread_safe - concurrent libnvme_host_ref()/
+ * libnvme_host_unref() calls from multiple threads must not corrupt
+ * h->refcount via lost updates. Each thread does an equal number of
+ * ref/unref pairs, so the net effect on the shared baseline must be
+ * zero: refcount must be back to 1 once every thread has joined.
+ */
+static bool test_host_ref_unref_is_thread_safe(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	pthread_t threads[STRESS_THREAD_COUNT];
+	int i;
+	bool pass = true;
+
+	printf("test_host_ref_unref_is_thread_safe:\n");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+
+	for (i = 0; i < STRESS_THREAD_COUNT; i++)
+		shr_assert(!pthread_create(&threads[i], NULL,
+				ref_unref_thread, h));
+
+	for (i = 0; i < STRESS_THREAD_COUNT; i++)
+		shr_assert(!pthread_join(threads[i], NULL));
+
+	if (h->refcount != 1) {
+		printf(" - refcount 1 after %d x %d ref/unref, got %d [FAIL]\n",
+			STRESS_THREAD_COUNT, STRESS_ITERATIONS, h->refcount);
+		pass = false;
+	} else {
+		printf(" - refcount 1 after %d x %d ref/unref [PASS]\n",
+			STRESS_THREAD_COUNT, STRESS_ITERATIONS);
+	}
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	bool pass = true;
@@ -395,6 +664,11 @@ int main(int argc, char *argv[])
 	pass &= test_subsystem_attrs();
 	pass &= test_ns_attr_not_null();
 	pass &= test_subsystem_iteration();
+	pass &= test_host_ref_unref();
+	pass &= test_host_ref_survives_refresh_topology();
+	pass &= test_host_ref_debug_log_disabled_by_default();
+	pass &= test_host_ref_debug_log_enabled();
+	pass &= test_host_ref_unref_is_thread_safe();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
