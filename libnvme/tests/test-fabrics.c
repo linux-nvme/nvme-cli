@@ -1360,6 +1360,78 @@ static bool test_null_transport_handle(struct libnvme_global_ctx *ctx)
 	return pass;
 }
 
+/* -------------------------------------------------------------------------
+ * libnvmf_read_hostnqn/hostid — the files move into a test sandbox
+ * -------------------------------------------------------------------------
+ */
+static bool write_host_file(const char *dir, const char *name,
+			    const char *content)
+{
+	char path[PATH_MAX];
+	FILE *f;
+
+	snprintf(path, sizeof(path), "%s/%s", dir, name);
+	f = fopen(path, "w");
+	if (!f)
+		return false;
+	fputs(content, f);
+	return fclose(f) == 0;
+}
+
+static bool test_host_files_in_sandbox(void)
+{
+	static const char id[] = "e359b7a1-5d03-7747-b3cc-1754b8b819b9";
+	char nqn[NVMF_NQN_SIZE];
+	char tmpl[] = "/tmp/test-fabrics-hostfiles-XXXXXX";
+	struct libnvme_global_ctx *ctx;
+	char *dir, *val;
+	bool pass = true;
+
+	printf("\ntest_host_files_in_sandbox:\n");
+
+	snprintf(nqn, sizeof(nqn), "nqn.2014-08.org.nvmexpress:uuid:%s", id);
+
+	dir = mkdtemp(tmpl);
+	ctx = libnvme_create_global_ctx();
+	if (!dir || !ctx ||
+	    libnvme_set_test_base_dir(ctx, dir) < 0) {
+		CHECK(false, "sandbox set up");
+		libnvme_free_global_ctx(ctx);
+		return false;
+	}
+
+	val = libnvmf_read_hostnqn(ctx);
+	CHECK(!val, "no host NQN file in the sandbox");
+	pass &= !val;
+	free(val);
+
+	pass &= write_host_file(dir, "hostnqn", "nqn.bogus\n");
+	val = libnvmf_read_hostnqn(ctx);
+	CHECK(!val, "an invalid host NQN is not used");
+	pass &= !val;
+	free(val);
+
+	pass &= write_host_file(dir, "hostnqn", nqn);
+	pass &= write_host_file(dir, "hostid", id);
+	val = libnvmf_read_hostnqn(ctx);
+	CHECK(val && !strcmp(val, nqn), "host NQN read from the sandbox");
+	pass &= val && !strcmp(val, nqn);
+	free(val);
+	val = libnvmf_read_hostid(ctx);
+	CHECK(val && !strcmp(val, id), "host ID read from the sandbox");
+	pass &= val && !strcmp(val, id);
+	free(val);
+
+	libnvme_free_global_ctx(ctx);
+	snprintf(tmpl, sizeof(tmpl), "%s/hostnqn", dir);
+	unlink(tmpl);
+	snprintf(tmpl, sizeof(tmpl), "%s/hostid", dir);
+	unlink(tmpl);
+	rmdir(dir);
+
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	struct libnvme_global_ctx *ctx;
@@ -1398,6 +1470,7 @@ int main(int argc, char *argv[])
 	test_generate_hostid(ctx);
 	test_kernel_options();
 	test_null_transport_handle(ctx);
+	test_host_files_in_sandbox();
 
 	libnvme_free_global_ctx(ctx);
 
