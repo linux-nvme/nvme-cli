@@ -399,7 +399,7 @@ static void netapp_smdevice_show_verbose(struct smdevice_info *device,
 }
 
 static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
-		int count, int format, const char *devname)
+		int count, int format)
 {
 	int i;
 
@@ -429,16 +429,8 @@ static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
 		return;
 
 	for (i = 0; i < count; i++) {
-		/* when a specific device is requested, skip the others */
-		if (devname && strcmp(devname, basename(devices[i].dev)))
-			continue;
 		netapp_smdevice_show_verbose(&devices[i], formatstr);
-		if (devname)
-			return;
 	}
-
-	if (devname)
-		nvme_show_error("/dev/%s is not an smdevice", devname);
 }
 
 static void netapp_smdevice_show_regular(struct smdevice_info *device,
@@ -461,7 +453,7 @@ static void netapp_smdevice_show_regular(struct smdevice_info *device,
 }
 
 static void netapp_smdevices_print_regular(struct smdevice_info *devices,
-		int count, int format, const char *devname)
+		int count, int format)
 {
 	int i;
 
@@ -485,16 +477,8 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 		formatstr = basestr;
 
 	for (i = 0; i < count; i++) {
-		/* when a specific device is requested, skip the others */
-		if (devname && strcmp(devname, basename(devices[i].dev)))
-			continue;
 		netapp_smdevice_show_regular(&devices[i], formatstr);
-		if (devname)
-			return;
 	}
-
-	if (devname)
-		nvme_show_error("/dev/%s is not an smdevice", devname);
 }
 
 static void netapp_smdevice_show_json(struct smdevice_info *device,
@@ -521,7 +505,7 @@ static void netapp_smdevice_show_json(struct smdevice_info *device,
 }
 
 static void netapp_smdevices_print_json(struct smdevice_info *devices,
-		int count, const char *devname)
+		int count)
 {
 	struct json_object *root = NULL;
 	struct json_object *json_devices = NULL;
@@ -532,18 +516,8 @@ static void netapp_smdevices_print_json(struct smdevice_info *devices,
 	json_devices = json_create_array();
 
 	for (i = 0; i < count; i++) {
-		/* when a specific device is requested, skip the others */
-		if (devname && strcmp(devname, basename(devices[i].dev)))
-			continue;
 		netapp_smdevice_show_json(&devices[i], json_devices);
-		if (devname)
-			goto out;
 	}
-
-	if (devname)
-		nvme_show_error("/dev/%s is not an smdevice", devname);
-
-out:
 	/* complete the json output */
 	json_object_add_value_array(root, "SMdevices", json_devices);
 	json_print_object(root, NULL);
@@ -925,6 +899,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	struct smdevice_info *smdevices;
 	char path[264];
 	char *devname = NULL;
+	int num_paths;
 	int num_smdevices = 0;
 	struct libnvme_transport_handle *hdl;
 
@@ -947,12 +922,6 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	devs.num = scandir(dev_path, &devs.ents, netapp_nvme_filter, alphasort);
-	if (devs.num <= 0) {
-		nvme_show_error("No smdevices detected");
-		return devs.num;
-	}
-
 	if (nvme_args.device)
 		devname = basename(nvme_args.device);
 
@@ -971,17 +940,26 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 			nvme_show_error("%s does not exist", path);
 			return -EINVAL;
 		}
+		num_paths = 1;
+	} else {
+		devs.num = scandir(dev_path, &devs.ents, netapp_nvme_filter,
+				   alphasort);
+		if (devs.num <= 0) {
+			nvme_show_error("No smdevices detected");
+			return devs.num;
+		}
+		num_paths = devs.num;
 	}
 
-	smdevices = calloc(devs.num, sizeof(*smdevices));
+	smdevices = calloc(num_paths, sizeof(*smdevices));
 	if (!smdevices) {
 		nvme_show_error("Unable to allocate memory for devices");
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < devs.num; i++) {
+	for (i = 0; i < num_paths; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev_path,
-			devs.ents[i]->d_name);
+			devname ? devname : devs.ents[i]->d_name);
 		ret = libnvme_open(ctx, path, O_RDONLY, &hdl);
 		if (ret) {
 			nvme_show_error("Unable to open %s: %s", path,
@@ -998,15 +976,17 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		if (fmt == NNORMAL || fmt == NCOLUMN) {
 			if (nvme_args.verbose)
 				netapp_smdevices_print_verbose(smdevices,
-						num_smdevices, fmt, devname);
+						num_smdevices, fmt);
 			else
 				netapp_smdevices_print_regular(smdevices,
-						num_smdevices, fmt, devname);
+						num_smdevices, fmt);
 		}
 		else if (fmt == NJSON)
 			netapp_smdevices_print_json(smdevices,
-					num_smdevices, devname);
-	} else
+					num_smdevices);
+	} else if (devname)
+		nvme_show_error("/dev/%s is not an smdevice", devname);
+	else
 		nvme_show_error("No smdevices detected");
 
 	free(smdevices);
