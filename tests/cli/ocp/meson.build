@@ -14,6 +14,7 @@ if json_c_dep.found()
         'ocp_internal_log_mock_test.py',
         'ocp_latency_monitor_feature_mock_test.py',
         'ocp_latency_monitor_log_mock_test.py',
+        'ocp_persistent_event_log_mock_test.py',
         'ocp_smart_add_log_mock_test.py',
         'ocp_telemetry_string_log_mock_test.py',
     ]

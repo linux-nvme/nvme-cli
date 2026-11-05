@@ -99,6 +99,7 @@ NVME_IOCTL_RESCAN = 0x46
 # Generic command status values
 SC_INVALID_FIELD = 0x02
 SC_INTERNAL = 0x06
+SC_CMD_SEQ_ERROR = 0x0c
 # Command specific status values (status code type 1)
 SC_INVALID_LOG_PAGE = 0x109
 # Do Not Retry, set along with a status code
