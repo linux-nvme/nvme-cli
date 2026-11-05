@@ -688,6 +688,11 @@ char *nvme_nvmf_config_file(char *config_file)
 	return config_file;
 }
 
+static const char *none_to_null(const char *value)
+{
+	return value && !strcmp(value, "none") ? NULL : value;
+}
+
 /*
  * Parse one discovery.conf line -- the same argv-style syntax 'nvme
  * discover'/'connect-all' accept, reusing nvmf_options() so every short
@@ -741,6 +746,17 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
 	if (argconfig_parse(argc, argv, "discovery.conf", opts))
 		return 0;
+
+	/*
+	 * "none" is how discovery.conf says that it has no value, e.g. in
+	 * the lines dracut writes for rd.nvmf.discover=, and how "nvme
+	 * connect-all" takes it. nvme-fabrics.conf has no such value: leave
+	 * the key out.
+	 */
+	fa.traddr = none_to_null(fa.traddr);
+	fa.trsvcid = none_to_null(fa.trsvcid);
+	fa.host_traddr = none_to_null(fa.host_traddr);
+	fa.host_iface = none_to_null(fa.host_iface);
 
 	if (!fa.transport && !fa.traddr)
 		return 0;

@@ -551,6 +551,25 @@ class FabricsMockCLITest(MockTestCase):
         self.assertIn('nqn.2014-08.org.nvmexpress:boot-subsys',
                       self._connected_nqns())
 
+    def test_connect_all_converts_dracut_discovery_conf(self):
+        """dracut writes rd.nvmf.discover= to discovery.conf, with "none"
+        for an address it doesn't have. connect-all converts it to
+        nvme-fabrics.conf and connects. "none" means unset: before, it
+        was copied into nvme-fabrics.conf, which then failed to parse,
+        and nothing was connected."""
+        self._dc_with_one_subsystem()
+        base = Path(self.base_dir)
+        (base / 'discovery.conf').write_text(
+            f'--transport=tcp --traddr={self._DC_TRADDR} '
+            '--host-traddr=none --trsvcid=8009\n')
+        self._run('connect-all', '--no-nbft')
+        self.assertIn('nqn.2014-08.org.nvmexpress:boot-subsys',
+                      self._connected_nqns())
+        ini = (base / 'nvme-fabrics.conf').read_text()
+        self.assertIn(f'traddr={self._DC_TRADDR}', ini)
+        self.assertNotIn('none', ini)
+        self.assertTrue((base / 'discovery.conf.converted').is_symlink())
+
     def _devid_file(self):
         return Path(self.base_dir) / 'devid'
 
