@@ -130,6 +130,7 @@ ID_CTRL_FIELDS = {
     'nn': ('<I', 516),
     'fna': ('B', 524),
     'mnan': ('<I', 540),
+    'subnqn': ('256s', 768),
 }
 
 ID_NS_FIELDS = {

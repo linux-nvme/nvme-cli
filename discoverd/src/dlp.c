@@ -19,6 +19,7 @@
 #include <nvme/tree.h>
 
 #include "dlp.h"
+#include "sysfs.h"
 #include "tid.h"
 
 /*
@@ -168,6 +169,13 @@ static void read_log(void *data)
 		return;
 	}
 	libnvme_set_logging_level(nctx, j->log_level, false, false);
+	if (sysfs_root() &&
+	    libnvme_set_test_sysfs_dir(nctx, sysfs_root()) < 0) {
+		j->failed = "set_test_sysfs_dir";
+		j->ret = -ENOMEM;
+		libnvme_free_global_ctx(nctx);
+		return;
+	}
 
 	j->ret = libnvme_scan_ctrl(nctx, j->devname, &ctrl);
 	if (j->ret < 0)

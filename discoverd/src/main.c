@@ -17,7 +17,6 @@
 
 #include <systemd/sd-bus.h>
 #include <systemd/sd-daemon.h>
-#include <systemd/sd-device.h>
 #include <systemd/sd-event.h>
 
 #include <ccan/list/list.h>
@@ -39,13 +38,16 @@
 #include <nvme/util.h>
 
 #include "inventory.h"
+#include "json-util.h"
 #include "config.h"
+#include "control.h"
 #include "ctx.h"
 #include "dlp.h"
 #include "events.h"
 #include "fc.h"
 #include "mdns.h"
 #include "state.h"
+#include "sysfs.h"
 #include "tid.h"
 #include "units.h"
 
@@ -1254,10 +1256,10 @@ static void on_dc_add(const char *devname,
  * connect-all for it, as those rules do. The connections it makes stay
  * unowned, like the DC.
  */
-static void dc_changed_unowned(const char *devname, sd_device *dev)
+static void dc_changed_unowned(const char *devname,
+			       const struct dc_addr *addr)
 {
 	__cleanup_free char *owner = NULL;
-	struct dc_addr addr = { };
 	int r;
 
 	r = libnvmf_registry_retrieve(ctx.nvme_ctx, devname, "owner", &owner);
@@ -1272,30 +1274,22 @@ static void dc_changed_unowned(const char *devname, sd_device *dev)
 		return;
 	}
 
-	sd_device_get_property_value(dev, "NVME_TRTYPE", &addr.transport);
-	sd_device_get_property_value(dev, "NVME_TRADDR", &addr.traddr);
-	sd_device_get_property_value(dev, "NVME_TRSVCID", &addr.trsvcid);
-	sd_device_get_property_value(dev, "NVME_HOST_TRADDR",
-				     &addr.host_traddr);
-	sd_device_get_property_value(dev, "NVME_HOST_IFACE",
-				     &addr.host_iface);
-
 	log_info("%s - discovery log changed on an unowned DC, running connect-all",
 		 devname);
-	r = unit_start_connect_all(ctx.umgr, devname, &addr);
+	r = unit_start_connect_all(ctx.umgr, devname, addr);
 	if (r < 0)
 		log_err("%s - failed to start connect-all: %s",
 			devname, strerror(-r));
 }
 
-static void on_dc_changed(const char *devname, sd_device *dev,
+static void on_dc_changed(const char *devname, const struct dc_addr *addr,
 			  void *user_data __attribute__((unused)))
 {
 	struct active_ctrl *e;
 
 	e = ctrl_find_by_devname(devname);
 	if (!e) {
-		dc_changed_unowned(devname, dev);
+		dc_changed_unowned(devname, addr);
 		return;
 	}
 	if (!e->tid) {
@@ -1326,20 +1320,9 @@ static void on_ioc_add(const char *devname,
 
 static bool sysfs_ctrl_deleting(const char *devname)
 {
-	sd_device *dev = NULL;
-	const char *state = NULL;
-	char syspath[256];
-	bool deleting;
+	__cleanup_free char *state = sysfs_nvme_attr(devname, "state");
 
-	snprintf(syspath, sizeof(syspath), SYSFS_NVME_DIR "/%s", devname);
-	if (sd_device_new_from_syspath(&dev, syspath) < 0)
-		return true;
-
-	sd_device_get_sysattr_value(dev, "state", &state);
-	deleting = !state || !strncmp(state, "deleting", 8);
-	sd_device_unref(dev);
-
-	return deleting;
+	return !state || !strncmp(state, "deleting", 8);
 }
 
 static void on_nvme_remove(const char *devname,
@@ -1555,24 +1538,10 @@ static void apply_zeroconf(void)
 static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc,
 					   bool *live)
 {
-	sd_device *dev = NULL;
-	const char *state = NULL;
-	char syspath[256];
-	struct libnvmf_tid *t;
+	__cleanup_free char *state = sysfs_nvme_attr(devname, "state");
 
-	if (is_dc)
-		*is_dc = false;
-	*live = false;
-
-	snprintf(syspath, sizeof(syspath), "/sys/class/nvme/%s", devname);
-	if (sd_device_new_from_syspath(&dev, syspath) < 0)
-		return NULL;
-
-	t = tid_from_sysfs(dev, is_dc);
-	sd_device_get_sysattr_value(dev, "state", &state);
 	*live = shr_streq0(state, "live");
-	sd_device_unref(dev);
-	return t;
+	return tid_from_sysfs(devname, is_dc);
 }
 
 /*
@@ -1620,6 +1589,7 @@ static void conn_scan_free(struct conn_scan *scan)
  */
 static void conn_scan_load(struct conn_scan *scan)
 {
+	__cleanup_free char *nvme_dir = sysfs_path("/sys/class/nvme");
 	DIR *d;
 	struct dirent *ent;
 
@@ -1630,11 +1600,10 @@ static void conn_scan_load(struct conn_scan *scan)
 		scan->iface_list = NULL;
 	}
 
-	d = opendir("/sys/class/nvme");
+	d = nvme_dir ? opendir(nvme_dir) : NULL;
 	if (!d) {
-		if (errno != ENOENT)
-			log_warn("opendir /sys/class/nvme: %s",
-				 strerror(errno));
+		if (nvme_dir && errno != ENOENT)
+			log_warn("opendir %s: %s", nvme_dir, strerror(errno));
 		return;
 	}
 
@@ -1758,8 +1727,10 @@ static void reload_config(void *user_data __attribute__((unused)))
 	ctx.cfg = new_cfg;
 	apply_log_level();
 
-	if (libnvmf_config_read(ctx.nvme_ctx, NULL, &new_fabrics_cfg) == 0) {
+	if (libnvmf_config_read(ctx.nvme_ctx, ctx.fabrics_conf_path,
+				&new_fabrics_cfg) == 0) {
 		libnvmf_config_free(ctx.fabrics_cfg);
+	free(ctx.fabrics_conf_path);
 		ctx.fabrics_cfg = new_fabrics_cfg;
 	} else {
 		log_err("failed to reload fabrics config, keeping last-good");
@@ -1795,6 +1766,120 @@ static int resolve_default_host(void)
 	return 0;
 }
 
+/*
+ * The control socket of a test (--set-options test-base-dir=DIR) replaces
+ * udev: hand its uevents to the events layer.
+ */
+static void on_control_uevent(const struct uevent *ev,
+			      void *user_data __attribute__((unused)))
+{
+	events_dispatch(ctx.evts, ev);
+}
+
+static bool on_control_busy(void *user_data __attribute__((unused)))
+{
+	return dmn_work_pool_busy(ctx.dlp_pool) ||
+		dmn_resolver_busy(ctx.resolver);
+}
+
+/* Write ,"@key":true or false. */
+static void json_bool(FILE *f, const char *key, bool val)
+{
+	fprintf(f, ",\"%s\":%s", key, val ? "true" : "false");
+}
+
+/* The tracked controllers, for the control socket's "dump". */
+static void on_control_dump(FILE *f, void *user_data __attribute__((unused)))
+{
+	struct active_ctrl *e;
+	bool first = true;
+
+	fputs("{\"controllers\":[", f);
+	list_for_each(&g_ctrls, e, entry) {
+		fputs(first ? "{" : ",{", f);
+		first = false;
+		fputs("\"unit\":", f);
+		json_string(f, e->unit_name);
+		fputs(",\"devname\":", f);
+		json_string(f, e->devname);
+		fputs(",\"tid\":", f);
+		json_string(f, libnvmf_tid_get_canonical(e->tid));
+		json_bool(f, "dc", e->is_dc);
+		json_bool(f, "nbft", inventory_is_nbft(ctx.inventory, e->tid));
+		json_bool(f, "desired", e->desired);
+		json_bool(f, "dlp_fetched", e->dlp_fetched);
+		fprintf(f, ",\"attempts\":%u", e->attempts);
+		json_bool(f, "retry_pending", e->retry_timer);
+		json_bool(f, "epcsd_parked", e->epcsd_poll_timer);
+		fputc('}', f);
+	}
+	fputs("]}", f);
+}
+
+/*
+ * --set-options "key=value[,key=value...]", as in nvme-cli: the test
+ * directories. The values point into @buf.
+ */
+struct set_options {
+	const char *test_base_dir;
+	const char *test_sysfs_dir;
+};
+
+static int parse_set_options(char *buf, struct set_options *so)
+{
+	char *p = buf, *kv, *val;
+
+	while ((kv = shr_strsep(&p, ",")) != NULL) {
+		if (!*kv)
+			continue;
+
+		val = strchr(kv, '=');
+		if (!val || !val[1]) {
+			fprintf(stderr, "--set-options: '%s' needs a value\n",
+				kv);
+			return -EINVAL;
+		}
+		*val++ = '\0';
+
+		if (streq(kv, "test-base-dir")) {
+			so->test_base_dir = val;
+		} else if (streq(kv, "test-sysfs-dir")) {
+			so->test_sysfs_dir = val;
+		} else {
+			fprintf(stderr, "--set-options: unknown key '%s'\n",
+				kv);
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
+/*
+ * Apply test-base-dir: the registry (libnvme), the state, the fabrics
+ * configuration, the units and the control socket all go into @dir. Only
+ * the registry needs libnvme, and libnvme confines @dir to /tmp.
+ */
+static int apply_test_base_dir(const char *dir)
+{
+	__cleanup_free char *state = NULL;
+	int r;
+
+	r = libnvme_set_test_base_dir(ctx.nvme_ctx, dir);
+	if (r < 0) {
+		fprintf(stderr, "--set-options: test-base-dir=%s: %s\n", dir,
+			strerror(-r));
+		return r;
+	}
+
+	if (asprintf(&state, "%s/discoverd", dir) < 0 ||
+	    asprintf(&ctx.fabrics_conf_path, "%s/nvme-fabrics.conf",
+		     dir) < 0)
+		return -ENOMEM;
+
+	return state_set_dir(state);
+}
+
 int main(int argc, char **argv)
 {
 	static const struct events_callbacks callbacks = {
@@ -1807,12 +1892,15 @@ int main(int argc, char **argv)
 	static const struct option long_opts[] = {
 		{ "config",    required_argument, NULL, 'c' },
 		{ "nvme-path", required_argument, NULL, 'N' },
+		{ "set-options", required_argument, NULL, 'S' },
 		{ "debug",     no_argument,       NULL, 'd' },
 		{ "help",      no_argument,       NULL, 'h' },
 		{ NULL, 0, NULL, 0 },
 	};
 	const char *nvme_path = NULL, *config_path = NULL;
 	char *nvme_path_abs = NULL, *config_path_abs = NULL;
+	__cleanup_free char *set_options_buf = NULL;
+	struct set_options so = { };
 	bool debug = false;
 	int r, c;
 
@@ -1823,6 +1911,13 @@ int main(int argc, char **argv)
 			break;
 		case 'N':
 			nvme_path = optarg;
+			break;
+		case 'S':
+			free(set_options_buf);
+			set_options_buf = strdup(optarg);
+			if (!set_options_buf ||
+			    parse_set_options(set_options_buf, &so) < 0)
+				return 1;
 			break;
 		case 'd':
 			debug = true;
@@ -1836,6 +1931,10 @@ int main(int argc, char **argv)
 			       "  --nvme-path PATH        nvme binary the connection units exec\n"
 			       "                          (default: <sbindir>/nvme)\n"
 			       "  --debug, -d             enable debug logging (journal + libnvme)\n"
+			       "  --set-options KEY=VALUE[,KEY=VALUE...]\n"
+			       "                          for tests: test-base-dir=DIR runs in a\n"
+			       "                          sandbox in DIR, test-sysfs-dir=DIR reads\n"
+			       "                          sysfs in DIR\n"
 			       "  --help, -h              show this help and exit\n",
 			       argv[0]);
 			return 0;
@@ -1881,24 +1980,21 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	r = sd_bus_open_system(&ctx.bus);
-	if (r < 0) {
-		log_err("sd_bus_open_system: %s", strerror(-r));
-		return 1;
-	}
+	// A sandbox has no systemd: its units run locally.
+	if (!so.test_base_dir) {
+		r = sd_bus_open_system(&ctx.bus);
+		if (r < 0) {
+			log_err("sd_bus_open_system: %s", strerror(-r));
+			return 1;
+		}
 
-	r = sd_bus_attach_event(ctx.bus, ctx.event, SD_EVENT_PRIORITY_NORMAL);
-	if (r < 0) {
-		log_err("sd_bus_attach_event: %s", strerror(-r));
-		return 1;
+		r = sd_bus_attach_event(ctx.bus, ctx.event,
+					SD_EVENT_PRIORITY_NORMAL);
+		if (r < 0) {
+			log_err("sd_bus_attach_event: %s", strerror(-r));
+			return 1;
+		}
 	}
-
-	r = state_init();
-	if (r < 0) {
-		log_err("state_init: %s", strerror(-r));
-		return 1;
-	}
-	state_gc();
 
 	ctx.nvme_ctx = libnvme_create_global_ctx();
 	if (!ctx.nvme_ctx) {
@@ -1909,6 +2005,22 @@ int main(int argc, char **argv)
 				  debug ? LIBNVME_LOG_DEBUG : LIBNVME_LOG_ERR,
 				  false, false);
 
+	if (so.test_sysfs_dir &&
+	    (sysfs_set_root(so.test_sysfs_dir) < 0 ||
+	     libnvme_set_test_sysfs_dir(ctx.nvme_ctx, so.test_sysfs_dir) < 0)) {
+		log_err("cannot set test-sysfs-dir");
+		return 1;
+	}
+	if (so.test_base_dir && apply_test_base_dir(so.test_base_dir) < 0)
+		return 1;
+
+	r = state_init();
+	if (r < 0) {
+		log_err("state_init: %s", strerror(-r));
+		return 1;
+	}
+	state_gc();
+
 	ctx.cfg = config_load(ctx.conf_path);
 	if (!ctx.cfg) {
 		log_err("config_load: failed");
@@ -1916,7 +2028,8 @@ int main(int argc, char **argv)
 	}
 	apply_log_level();
 
-	r = libnvmf_config_read(ctx.nvme_ctx, NULL, &ctx.fabrics_cfg);
+	r = libnvmf_config_read(ctx.nvme_ctx, ctx.fabrics_conf_path,
+				&ctx.fabrics_cfg);
 	if (r < 0) {
 		log_err("libnvmf_config_read: %s", strerror(-r));
 		return 1;
@@ -1946,19 +2059,52 @@ int main(int argc, char **argv)
 		return 1;
 	inventory_set_lookup_callback(ctx.inventory, on_config_lookup, NULL);
 
-	if (ctx.cfg->nbft)
-		inventory_load_nbft(ctx.inventory, &ctx, NBFT_SYSFS_PATH);
+	if (ctx.cfg->nbft) {
+		__cleanup_free char *nbft_dir = sysfs_path(NBFT_SYSFS_PATH);
+
+		if (nbft_dir)
+			inventory_load_nbft(ctx.inventory, &ctx, nbft_dir);
+	}
 	inventory_load_config(ctx.inventory, &ctx);
 	load_saved();
 
-	ctx.umgr = unit_mgr_new(ctx.bus, ctx.event, on_job_done, NULL,
-				nvme_path_abs);
+	if (so.test_base_dir) {
+		__cleanup_free char *units = NULL;
+
+		if (asprintf(&units, "%s/units", so.test_base_dir) < 0)
+			return 1;
+		ctx.umgr = unit_mgr_new_local(ctx.event, units, on_job_done,
+					      NULL, nvme_path_abs);
+	} else {
+		ctx.umgr = unit_mgr_new(ctx.bus, ctx.event, on_job_done, NULL,
+					nvme_path_abs);
+	}
 	if (!ctx.umgr)
 		return 1;
 
-	ctx.evts = events_start(ctx.event, &callbacks, NULL);
+	ctx.evts = events_start(ctx.event, &callbacks, NULL,
+				!so.test_base_dir);
 	if (!ctx.evts)
 		return 1;
+
+	if (so.test_base_dir) {
+		static const struct control_callbacks control_callbacks = {
+			.uevent = on_control_uevent,
+			.busy   = on_control_busy,
+			.dump   = on_control_dump,
+		};
+		__cleanup_free char *sock = NULL;
+
+		if (asprintf(&sock, "%s/discoverd.sock",
+			     so.test_base_dir) < 0)
+			return 1;
+		r = control_start(ctx.event, sock, &control_callbacks, NULL,
+				  &ctx.control);
+		if (r < 0) {
+			log_err("cannot listen on %s: %s", sock, strerror(-r));
+			return 1;
+		}
+	}
 
 	if (dmn_add_signal_handlers(ctx.event, reload_config, NULL) < 0)
 		return 1;
@@ -2005,6 +2151,7 @@ int main(int argc, char **argv)
 		log_err("sd_event_loop: %s", strerror(-r));
 
 	mdns_stop(ctx.mdns);
+	control_stop(ctx.control);
 	events_stop(ctx.evts);
 	unit_mgr_free(ctx.umgr);
 	free(nvme_path_abs);
@@ -2016,6 +2163,7 @@ int main(int argc, char **argv)
 	free(ctx.hostid);
 	config_free(ctx.cfg);
 	libnvmf_config_free(ctx.fabrics_cfg);
+	free(ctx.fabrics_conf_path);
 	libnvme_free_global_ctx(ctx.nvme_ctx);
 	sd_bus_unref(ctx.bus);
 	sd_event_unref(ctx.event);

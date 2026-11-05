@@ -22,6 +22,7 @@ struct events_ctx;
 struct mdns_ctx;
 struct dmn_resolver;
 struct dmn_work_pool;
+struct control;
 
 /*
  * Top-level discoverd application context. Created once at startup and
@@ -35,6 +36,7 @@ struct discoverd_ctx {
 	char                      *hostid;       // default host identity
 	const char                *conf_path;    // nvme-discoverd's conf path
 	struct discoverd_config   *cfg;          // parsed @conf_path
+	char                      *fabrics_conf_path; // NULL: libnvme's default
 	struct libnvmf_config     *fabrics_cfg;  // resolved fabrics config
 	struct inventory          *inventory;    // NBFT + config + DLP cache
 	sd_event                  *event;        // sd_event main loop
@@ -44,5 +46,6 @@ struct discoverd_ctx {
 	struct mdns_ctx           *mdns;         // mDNS discovery, or NULL
 	struct dmn_resolver       *resolver;     // config host name lookups
 	struct dmn_work_pool      *dlp_pool;     // DLP reads
+	struct control            *control;      // test control socket, or NULL
 	bool                       force_debug;  // --debug forces DEBUG
 };

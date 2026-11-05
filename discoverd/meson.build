@@ -8,6 +8,7 @@
 
 discoverd_sources = files(
     'src/config.c',
+    'src/control.c',
     'src/dlp.c',
     'src/events.c',
     'src/fc.c',
@@ -15,8 +16,10 @@ discoverd_sources = files(
     'src/main.c',
     'src/netif.c',
     'src/state.c',
+    'src/sysfs.c',
     'src/tid.c',
     'src/units.c',
+    'src/units-local.c',
 )
 
 if want_mdns

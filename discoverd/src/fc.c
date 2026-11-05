@@ -12,22 +12,27 @@
 #include <unistd.h>
 
 #include <daemon-util/log.h>
+#include <shared/cleanup-util.h>
 
 #include "fc.h"
+#include "sysfs.h"
 
 #define FC_NVME_DISCOVERY_PATH \
 	"/sys/class/fc/fc_udev_device/nvme_discovery"
 
 int fc_kickstart(void)
 {
+	__cleanup_free char *path = sysfs_path(FC_NVME_DISCOVERY_PATH);
 	int fd, ret;
 
-	fd = open(FC_NVME_DISCOVERY_PATH, O_WRONLY | O_CLOEXEC);
+	if (!path)
+		return -ENOMEM;
+
+	fd = open(path, O_WRONLY | O_CLOEXEC);
 	if (fd < 0) {
 		if (errno == ENOENT)
 			return 0; // no FC HBA present — not an error
-		log_err("%s: open(%s): %s", __func__,
-			FC_NVME_DISCOVERY_PATH, strerror(errno));
+		log_err("%s: open(%s): %s", __func__, path, strerror(errno));
 		return -errno;
 	}
 
