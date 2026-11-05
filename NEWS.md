@@ -1,6 +1,16 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
+## Changes in 3.3 (unreleased)
+
+### nvme-discoverd
+
+* `nvme-discoverd.service` masks the legacy udev rule
+  `70-nvmf-autoconnect.rules` while it runs, with a link to `/dev/null`
+  in `/run/udev/rules.d`. The legacy rule no longer connects in parallel
+  to nvme-discoverd, also when it is left over from an older
+  installation. Stopping nvme-discoverd removes the mask.
+
 ## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes
