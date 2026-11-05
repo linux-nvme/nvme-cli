@@ -17,9 +17,11 @@
 #include <unistd.h>
 
 #include <daemon-util/log.h>
+#include <shared/cleanup-util.h>
 #include <shared/fs-util.h>
 
 #include "state.h"
+#include "sysfs.h"
 
 /*
  * Manages discoverd's runtime state files under RUNDIR/nvme/discoverd/ (see
@@ -61,12 +63,11 @@ static bool state_read_ino(const char *devid, uint64_t *ino)
 
 bool state_ctrl_present(const char *devid)
 {
-	char syspath[512];
+	__cleanup_free char *syspath = sysfs_nvme_path(devid);
 	struct stat st;
 	uint64_t ino;
 
-	snprintf(syspath, sizeof(syspath), SYSFS_NVME_DIR "/%s", devid);
-	if (stat(syspath, &st))
+	if (!syspath || stat(syspath, &st))
 		return false;
 
 	return state_read_ino(devid, &ino) && ino == (uint64_t)st.st_ino;
@@ -82,15 +83,16 @@ void state_gc(void)
 		return;
 
 	while ((de = readdir(d))) {
-		char syspath[512];
+		__cleanup_free char *syspath = NULL;
 		struct stat st;
 		uint64_t ino;
 
 		if (de->d_name[0] == '.')
 			continue;
 
-		snprintf(syspath, sizeof(syspath), SYSFS_NVME_DIR "/%s",
-			 de->d_name);
+		syspath = sysfs_nvme_path(de->d_name);
+		if (!syspath)
+			continue;
 		if (!stat(syspath, &st)) {
 			if (!state_read_ino(de->d_name, &ino) ||
 			    ino == (uint64_t)st.st_ino)
