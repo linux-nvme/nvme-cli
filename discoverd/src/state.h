@@ -25,8 +25,6 @@
 #define STATE_CTRLS_DIR  STATE_RUN_DIR "/controllers"
 #define STATE_DESIRED    STATE_RUN_DIR "/desired"
 
-#define SYSFS_NVME_DIR   "/sys/class/nvme"
-
 /* Ensure the runtime directories exist. Call once at startup. */
 int state_init(void);
 

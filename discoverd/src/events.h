@@ -66,12 +66,3 @@ struct events_ctx *events_start(sd_event *event,
 				void *user_data);
 
 void events_stop(struct events_ctx *ctx);
-
-/*
- * Build a TID from an nvme controller's sysfs attributes (transport,
- * address, subsysnqn, ...). If @is_dc is non-NULL, *is_dc is set true when
- * the controller's cntrltype is "discovery". Returns an allocated TID, or
- * NULL if the mandatory attributes are missing. Shared by the event
- * monitor and the startup audit.
- */
-struct libnvmf_tid *tid_from_sysfs(sd_device *dev, bool *is_dc);

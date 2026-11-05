@@ -46,6 +46,7 @@
 #include "fc.h"
 #include "mdns.h"
 #include "state.h"
+#include "sysfs.h"
 #include "tid.h"
 #include "units.h"
 
@@ -1326,20 +1327,9 @@ static void on_ioc_add(const char *devname,
 
 static bool sysfs_ctrl_deleting(const char *devname)
 {
-	sd_device *dev = NULL;
-	const char *state = NULL;
-	char syspath[256];
-	bool deleting;
+	__cleanup_free char *state = sysfs_nvme_attr(devname, "state");
 
-	snprintf(syspath, sizeof(syspath), SYSFS_NVME_DIR "/%s", devname);
-	if (sd_device_new_from_syspath(&dev, syspath) < 0)
-		return true;
-
-	sd_device_get_sysattr_value(dev, "state", &state);
-	deleting = !state || !strncmp(state, "deleting", 8);
-	sd_device_unref(dev);
-
-	return deleting;
+	return !state || !strncmp(state, "deleting", 8);
 }
 
 static void on_nvme_remove(const char *devname,
@@ -1555,24 +1545,10 @@ static void apply_zeroconf(void)
 static struct libnvmf_tid *sysfs_read_tid(const char *devname, bool *is_dc,
 					   bool *live)
 {
-	sd_device *dev = NULL;
-	const char *state = NULL;
-	char syspath[256];
-	struct libnvmf_tid *t;
+	__cleanup_free char *state = sysfs_nvme_attr(devname, "state");
 
-	if (is_dc)
-		*is_dc = false;
-	*live = false;
-
-	snprintf(syspath, sizeof(syspath), "/sys/class/nvme/%s", devname);
-	if (sd_device_new_from_syspath(&dev, syspath) < 0)
-		return NULL;
-
-	t = tid_from_sysfs(dev, is_dc);
-	sd_device_get_sysattr_value(dev, "state", &state);
 	*live = shr_streq0(state, "live");
-	sd_device_unref(dev);
-	return t;
+	return tid_from_sysfs(devname, is_dc);
 }
 
 /*
@@ -1620,6 +1596,7 @@ static void conn_scan_free(struct conn_scan *scan)
  */
 static void conn_scan_load(struct conn_scan *scan)
 {
+	__cleanup_free char *nvme_dir = sysfs_path("/sys/class/nvme");
 	DIR *d;
 	struct dirent *ent;
 
@@ -1630,11 +1607,10 @@ static void conn_scan_load(struct conn_scan *scan)
 		scan->iface_list = NULL;
 	}
 
-	d = opendir("/sys/class/nvme");
+	d = nvme_dir ? opendir(nvme_dir) : NULL;
 	if (!d) {
-		if (errno != ENOENT)
-			log_warn("opendir /sys/class/nvme: %s",
-				 strerror(errno));
+		if (nvme_dir && errno != ENOENT)
+			log_warn("opendir %s: %s", nvme_dir, strerror(errno));
 		return;
 	}
 
@@ -1946,8 +1922,12 @@ int main(int argc, char **argv)
 		return 1;
 	inventory_set_lookup_callback(ctx.inventory, on_config_lookup, NULL);
 
-	if (ctx.cfg->nbft)
-		inventory_load_nbft(ctx.inventory, &ctx, NBFT_SYSFS_PATH);
+	if (ctx.cfg->nbft) {
+		__cleanup_free char *nbft_dir = sysfs_path(NBFT_SYSFS_PATH);
+
+		if (nbft_dir)
+			inventory_load_nbft(ctx.inventory, &ctx, nbft_dir);
+	}
 	inventory_load_config(ctx.inventory, &ctx);
 	load_saved();
 
