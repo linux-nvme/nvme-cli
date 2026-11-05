@@ -130,5 +130,63 @@ class AddLinks(unittest.TestCase):
             self.assertNotIn('log', s['tests'][0])
 
 
+# A meson run and a wringer in one step, as the job log has them: the
+# wringer output in color.
+TESTS_LOG = [
+    '2026-11-05T01:00:00.1Z Current runner version',
+    '2026-11-05T01:00:01.1Z ##[group]Run ./.github/actions/kubevirt-action',
+    '2026-11-05T01:10:00.0Z   1/302 nvme-cli:unit / libnvme - uuid'
+    '                OK              0.02s',
+    '2026-11-05T01:20:00.0Z 223/302 nvme-cli:mock / nvme-cli - print'
+    '                TIMEOUT        300.15s   killed by signal 15 SIGTERM',
+    '2026-11-05T01:21:00.0Z  9/276 mock - nvme-cli:nvme-cli - old'
+    ' FAIL 1.00s   exit status 1',
+    '2026-11-05T01:22:00.0Z \x1b[0;31m  FAIL: the unit is active\x1b[0m',
+    '2026-11-05T01:22:01.0Z   PASS: key A is in .nvme',
+    '2026-11-05T01:22:02.0Z \x1b[0;31m  FAIL: the unit is active\x1b[0m',
+]
+TESTS_STEPS = [
+    {'number': 1, 'name': 'Set up job', 'started_at': '2026-11-05T01:00:00Z'},
+    {'number': 2, 'name': 'tests', 'started_at': '2026-11-05T01:00:01Z'},
+]
+
+
+class OtherKinds(unittest.TestCase):
+    def test_meson(self) -> None:
+        s: dict[str, Any] = {
+            'kind': 'meson',
+            'tests': [
+                {
+                    'id': 'nvme-cli:mock / nvme-cli - print',
+                    'status': 'timeout',
+                },
+                {'id': 'mock - nvme-cli:nvme-cli - old', 'status': 'fail'},
+                # passed, or not in the log
+                {'id': 'nvme-cli:unit / libnvme - uuid', 'status': 'skip'},
+                {'id': 'nvme-cli:unit / x', 'status': 'fail'},
+            ],
+        }
+        job = {'html_url': URL, 'steps': TESTS_STEPS}
+        self.assertEqual(
+            joblog.add_links(s, job, '\n'.join(TESTS_LOG), 'tests'), 2
+        )
+        self.assertEqual(
+            [t.get('log') for t in s['tests']],
+            [f'{URL}#step:2:3', f'{URL}#step:2:4', None, None],
+        )
+
+    def test_wringer(self) -> None:
+        s: dict[str, Any] = {
+            'kind': 'wringer',
+            'tests': [{'test': 'the unit is active', 'status': 'fail'}],
+        }
+        job = {'html_url': URL, 'steps': TESTS_STEPS}
+        self.assertEqual(
+            joblog.add_links(s, job, '\n'.join(TESTS_LOG), 'tests'), 1
+        )
+        # the first failure of the check
+        self.assertEqual(s['tests'][0]['log'], f'{URL}#step:2:5')
+
+
 if __name__ == '__main__':
     unittest.main()

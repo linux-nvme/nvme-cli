@@ -24,6 +24,12 @@ blktests prints the result of a test run on a line of its own:
 
 The results directory names that config nodev_tr_rdma,
 nvme1n1_tr_loop_bd_file and nodev (see blktests.py).
+
+meson test prints a line per test, the name padded to a column:
+
+     223/302 nvme-cli:mock / nvme-cli - print   TIMEOUT   300.15s   killed
+
+and the daemon wringers a line per failed check, '  FAIL: TEXT'.
 """
 
 from __future__ import annotations
@@ -34,6 +40,15 @@ from typing import Any
 
 _LINE_RE = re.compile(r'^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)\S*Z ?(.*)$')
 _STEP_START = ('##[group]Run ', 'Prepare all required actions')
+_ANSI_RE = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
+_MESON_RE = re.compile(
+    r'^\s*\d+/\d+\s+(?P<name>.*?)\s+'
+    r'(?:OK|FAIL|SKIP|TIMEOUT|EXPECTEDFAIL|UNEXPECTEDPASS|ERROR|INTERRUPT)'
+    r'\s+\d+(?:\.\d+)?s\b'
+)
+_WRINGER_RE = re.compile(r'^\s+FAIL: (?P<text>.*?)\s*$')
+# The status of the test runs which get a link.
+_FAILED = ('fail', 'timeout')
 _RESULT_RE = re.compile(
     r'^(?P<test>[a-z0-9_-]+/\d{3})'
     r'(?: => (?P<dev>\S+))?'
@@ -100,16 +115,56 @@ def result_lines(
     return found
 
 
+def meson_lines(lines: list[str], start: int = 0) -> dict[str, int]:
+    """The index of the result line of each meson test after start, by
+    its name; the last one, should a test run more than once."""
+    found = {}
+    for i in range(start, len(lines)):
+        m = _MESON_RE.match(_split(lines[i])[1])
+        if m:
+            found[m['name']] = i
+    return found
+
+
+def wringer_lines(lines: list[str], start: int = 0) -> dict[str, int]:
+    """The index of the line of each failed check of a wringer after
+    start, by its text; the first one."""
+    found: dict[str, int] = {}
+    for i in range(start, len(lines)):
+        text = _ANSI_RE.sub('', _split(lines[i])[1])
+        m = _WRINGER_RE.match(text)
+        if m:
+            found.setdefault(m['text'], i)
+    return found
+
+
+def _lookup(
+    kind: str, lines: list[str], start: int
+) -> tuple[dict[Any, int], Any]:
+    """The result lines of a kind of section, and the key of a test run
+    into them."""
+    if kind == 'meson':
+        return meson_lines(lines, start), lambda t: t.get('id')
+    if kind == 'wringer':
+        return wringer_lines(lines, start), lambda t: t.get('test')
+    return result_lines(lines, start), lambda t: (
+        t.get('test'),
+        t.get('config'),
+    )
+
+
 def add_links(
     summary: dict[str, Any],
     job: dict[str, Any],
     log: str,
     step_name: str,
 ) -> int:
-    """Add the 'log' link to the failed test runs of a blktests summary.
+    """Add the 'log' link to the failed test runs of a summary.
 
-    job is the job of the REST API (html_url, steps), log its log and
-    step_name the step which ran blktests. Returns the number of links.
+    The summary is that of blktests, or of a section of the kind
+    (summary['kind']) meson or wringer. job is the job of the REST API
+    (html_url, steps), log its log and step_name the step which ran the
+    tests. Returns the number of links.
     """
     url = str(job.get('html_url') or '')
     if not url.startswith('https://'):
@@ -126,11 +181,11 @@ def add_links(
     start = starts[number]
     # the step ends where the next one starts
     end = min((i for n, i in starts.items() if n > number), default=None)
-    found = result_lines(lines[:end], start)
+    found, key = _lookup(str(summary.get('kind', '')), lines[:end], start)
     count = 0
     for t in summary.get('tests', []):
-        i = found.get((t.get('test'), t.get('config')))
-        if t.get('status') == 'fail' and i is not None:
+        i = found.get(key(t))
+        if t.get('status') in _FAILED and i is not None:
             t['log'] = f'{url}#step:{number}:{i - start + 1}'
             count += 1
     return count
