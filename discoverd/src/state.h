@@ -13,7 +13,7 @@
  * State file management.
  *
  * Layout:
- *   RUNDIR/nvme/discoverd/
+ *   RUNDIR/nvme/discoverd/ (or the directory set by state_set_dir())
  *     units/<unit-name>.devid      — kernel device name written by nvme connect
  *     controllers/<devid>/unit     — transient unit name for this controller
  *     controllers/<devid>/ino      — inode of /sys/class/nvme/<devid>
@@ -21,9 +21,18 @@
  */
 
 #define STATE_RUN_DIR    RUNDIR "/nvme/discoverd"
-#define STATE_UNITS_DIR  STATE_RUN_DIR "/units"
-#define STATE_CTRLS_DIR  STATE_RUN_DIR "/controllers"
-#define STATE_DESIRED    STATE_RUN_DIR "/desired"
+
+/*
+ * Keep the state under @dir instead of STATE_RUN_DIR, for a test. NULL
+ * restores STATE_RUN_DIR. Call before state_init(). Returns 0, or
+ * -ENAMETOOLONG.
+ */
+int state_set_dir(const char *dir);
+
+/* The directories and files of the layout above. */
+const char *state_units_dir(void);
+const char *state_ctrls_dir(void);
+const char *state_desired_path(void);
 
 /* Ensure the runtime directories exist. Call once at startup. */
 int state_init(void);

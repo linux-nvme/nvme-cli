@@ -43,11 +43,11 @@
  * systemd does NOT expand specifiers (%t, %N, %n) in a transient unit's Exec
  * arguments passed over the D-Bus StartTransientUnit API — that expansion only
  * happens when parsing a unit *file*.  So discoverd substitutes the real values
- * itself when building each unit: the runtime directory (/run, via the STATE_*
- * paths in state.h) and the unit name.  The per-unit devid file is
- * STATE_UNITS_DIR/<unit-name-without-.service>.devid; the connect writes the
- * kernel device name into it and the ExecStartPost/ExecStop/ExecStopPost shell
- * commands (built in build_start_transient) read it back.
+ * itself when building each unit: the state directory (state_units_dir() and
+ * state_ctrls_dir() in state.h) and the unit name.  The per-unit devid file is
+ * <state_units_dir()>/<unit-name-without-.service>.devid; the connect writes
+ * the kernel device name into it and the ExecStartPost/ExecStop/ExecStopPost
+ * shell commands (built in build_start_transient) read it back.
  */
 static int unit_devid_path(char *buf, size_t len, const char *unit_name)
 {
@@ -58,8 +58,10 @@ static int unit_devid_path(char *buf, size_t len, const char *unit_name)
 	if (n > slen && !strcmp(unit_name + n - slen, suffix))
 		n -= slen;
 
-	return snprintf(buf, len, STATE_UNITS_DIR "/%.*s.devid",
-			(int)n, unit_name);
+	int r = snprintf(buf, len, "%s/%.*s.devid", state_units_dir(),
+			 (int)n, unit_name);
+
+	return r < 0 || (size_t)r >= len ? -ENAMETOOLONG : 0;
 }
 
 /* Tracked pending systemd job. */
@@ -565,52 +567,56 @@ static int build_start_transient(struct unit_mgr *mgr, const char *unit_name,
 	 */
 	{
 		__cleanup_free char *nvme_dir = sysfs_path("/sys/class/nvme");
-		char exec_start_post[PATH_MAX + 512];
-		char exec_stop[2 * PATH_MAX + 512];
-		char exec_stop_post[512];
-		int n1, n2, n3;
+		__cleanup_free char *exec_start_post = NULL;
+		__cleanup_free char *exec_stop = NULL;
+		__cleanup_free char *exec_stop_post = NULL;
+		const char *ctrls = state_ctrls_dir();
 
-		if (!nvme_dir) {
+		if (!nvme_dir ||
+		    asprintf(&exec_start_post,
+			     "set -e; "
+			     "DEV=$(cat %s 2>/dev/null); "
+			     "mkdir -p %s/$DEV; "
+			     "echo %s > %s/$DEV/unit; "
+			     "stat -Lc %%i %s/$DEV > %s/$DEV/ino",
+			     devid_path, ctrls, unit_name, ctrls,
+			     nvme_dir, ctrls) < 0) {
+			exec_start_post = NULL;
 			r = -ENOMEM;
 			goto err;
 		}
-
-		n1 = snprintf(exec_start_post, sizeof(exec_start_post),
-			      "DEV=$(cat %s 2>/dev/null) && "
-			      "mkdir -p %s/$DEV && "
-			      "echo %s > %s/$DEV/unit && "
-			      "stat -Lc %%i %s/$DEV > %s/$DEV/ino",
-			      devid_path, STATE_CTRLS_DIR,
-			      unit_name, STATE_CTRLS_DIR,
-			      nvme_dir, STATE_CTRLS_DIR);
 
 		/*
 		 * The kernel reuses device names. The inode check makes sure
 		 * $DEV is still the controller this unit connected.
 		 */
-		n2 = snprintf(exec_stop, sizeof(exec_stop),
-			      "DEV=$(cat %s 2>/dev/null); "
-			      "[ -n \"$DEV\" ] && "
-			      "[ \"$(cat %s/$DEV/unit 2>/dev/null)\" = \"%s\" ] && "
-			      "[ \"$(stat -Lc %%i %s/$DEV 2>/dev/null)\" = "
-			      "\"$(cat %s/$DEV/ino 2>/dev/null)\" ] && "
-			      "\"%s\" disconnect -d $DEV",
-			      devid_path, STATE_CTRLS_DIR, unit_name,
-			      nvme_dir, STATE_CTRLS_DIR, mgr->nvme_path);
+		if (asprintf(&exec_stop,
+			     "DEV=$(cat %s 2>/dev/null); "
+			     "[ -n \"$DEV\" ] || exit 0; "
+			     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
+			     "[ \"$UNIT\" = \"%s\" ] || exit 0; "
+			     "INO=$(cat %s/$DEV/ino 2>/dev/null); "
+			     "CUR=$(stat -Lc %%i %s/$DEV 2>/dev/null); "
+			     "[ \"$CUR\" = \"$INO\" ] || exit 0; "
+			     "\"%s\" disconnect -d $DEV",
+			     devid_path, ctrls, unit_name, ctrls,
+			     nvme_dir, mgr->nvme_path) < 0) {
+			exec_stop = NULL;
+			r = -ENOMEM;
+			goto err;
+		}
 
-		n3 = snprintf(exec_stop_post, sizeof(exec_stop_post),
-			      "DEV=$(cat %s 2>/dev/null); "
-			      "rm -f %s; "
-			      "[ -n \"$DEV\" ] && "
-			      "[ \"$(cat %s/$DEV/unit 2>/dev/null)\" = \"%s\" ] && "
-			      "rm -rf %s/$DEV",
-			      devid_path, devid_path, STATE_CTRLS_DIR,
-			      unit_name, STATE_CTRLS_DIR);
-
-		if (n1 < 0 || n1 >= (int)sizeof(exec_start_post) ||
-		    n2 < 0 || n2 >= (int)sizeof(exec_stop) ||
-		    n3 < 0 || n3 >= (int)sizeof(exec_stop_post)) {
-			r = -ENAMETOOLONG;
+		if (asprintf(&exec_stop_post,
+			     "DEV=$(cat %s 2>/dev/null); "
+			     "rm -f %s; "
+			     "[ -n \"$DEV\" ] || exit 0; "
+			     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
+			     "[ \"$UNIT\" = \"%s\" ] || exit 0; "
+			     "rm -rf %s/$DEV",
+			     devid_path, devid_path, ctrls,
+			     unit_name, ctrls) < 0) {
+			exec_stop_post = NULL;
+			r = -ENOMEM;
 			goto err;
 		}
 
@@ -654,7 +660,7 @@ err:
 #define MAX_EXTRA_ARGS 40
 struct connect_scratch {
 	char owner[32];
-	char devid_arg[160];
+	char devid_arg[PATH_MAX + 16];
 	char extra[MAX_EXTRA_ARGS][320]; // TID fields + resolved params
 	int n_extra;
 	const char *argv[8 + MAX_EXTRA_ARGS];
@@ -768,7 +774,7 @@ int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 {
 	struct connect_scratch scratch = { };
 	char desc[320];
-	char devid_path[128];
+	char devid_path[PATH_MAX];
 	char *unit_name;
 	sd_bus_message *m = NULL;
 	const char *subsysnqn = libnvmf_tid_get_subsysnqn(t);
@@ -782,7 +788,9 @@ int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 	if (!unit_name)
 		return -ENOMEM;
 
-	unit_devid_path(devid_path, sizeof(devid_path), unit_name);
+	r = unit_devid_path(devid_path, sizeof(devid_path), unit_name);
+	if (r < 0)
+		goto out;
 
 	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, true,
 			       is_nbft, &scratch);
@@ -812,7 +820,7 @@ int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 {
 	struct connect_scratch scratch = { };
 	char desc[320];
-	char devid_path[128];
+	char devid_path[PATH_MAX];
 	char *unit_name;
 	sd_bus_message *m = NULL;
 	const char *subsysnqn = libnvmf_tid_get_subsysnqn(t);
@@ -826,7 +834,9 @@ int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 	if (!unit_name)
 		return -ENOMEM;
 
-	unit_devid_path(devid_path, sizeof(devid_path), unit_name);
+	r = unit_devid_path(devid_path, sizeof(devid_path), unit_name);
+	if (r < 0)
+		goto out;
 
 	r = build_connect_argv(mgr->nvme_path, devid_path, t, params, false,
 			       is_nbft, &scratch);
