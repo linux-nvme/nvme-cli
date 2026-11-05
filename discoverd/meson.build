@@ -8,6 +8,7 @@
 
 discoverd_sources = files(
     'src/config.c',
+    'src/control.c',
     'src/dlp.c',
     'src/events.c',
     'src/fc.c',
