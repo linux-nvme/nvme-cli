@@ -160,3 +160,11 @@ if python3.found() and want_fabrics and is_variable('have_mock_nvme') and have_m
          timeout: 120,
          suite: 'mock')
 endif
+
+# A build with nvme-discoverd installs none of the legacy autoconnect.
+if python3.found() and get_option('nvmf-autoconnect').auto()
+    test('nvme-discoverd - install',
+         python3,
+         args: [files('test_install.py'), meson.project_build_root()],
+         suite: 'unit')
+endif
