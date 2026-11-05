@@ -80,12 +80,13 @@ struct events_ctx;
 
 /*
  * Start monitoring udev events. The bus must already be attached to the
- * event loop by the caller. Returns an opaque context on success; the
- * caller must call events_stop() when done.
+ * event loop by the caller. Without @udev, no monitor is started and only
+ * events_dispatch() delivers events, for a test. Returns an opaque context
+ * on success; the caller must call events_stop() when done.
  */
 struct events_ctx *events_start(sd_event *event,
 				const struct events_callbacks *callbacks,
-				void *user_data);
+				void *user_data, bool udev);
 
 void events_stop(struct events_ctx *ctx);
 

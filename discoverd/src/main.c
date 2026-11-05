@@ -1927,7 +1927,7 @@ int main(int argc, char **argv)
 	if (!ctx.umgr)
 		return 1;
 
-	ctx.evts = events_start(ctx.event, &callbacks, NULL);
+	ctx.evts = events_start(ctx.event, &callbacks, NULL, true);
 	if (!ctx.evts)
 		return 1;
 
