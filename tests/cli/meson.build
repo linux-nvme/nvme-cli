@@ -355,6 +355,10 @@ if python3.found()
         subdir('ocp')
     endif
 
+    if 'netapp' in selected_plugins
+        subdir('netapp')
+    endif
+
     if 'micron' in selected_plugins
         subdir('micron')
     endif
