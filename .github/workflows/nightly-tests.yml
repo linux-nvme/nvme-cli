@@ -146,6 +146,9 @@ jobs:
                 -o results/blktests-summary.json || blktests_status=$?
 
             cd ../nvme-cli
+            # The results of the test suite, for the status page.
+            cp .build-ci/meson-logs/testlog.json \
+                ../blktests/results/meson-testlog.json || true
             sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
             gcovr -r . --object-directory .build-ci --xml-pretty \
                 --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
@@ -343,6 +346,8 @@ jobs:
             test-results/
             .build-ci/meson-logs/testlog.txt
             .build-ci/meson-logs/testlog-fuzz.txt
+            .build-ci/meson-logs/testlog.json
+            .build-ci/meson-logs/testlog-fuzz.json
 
   # One upload per report, each with its flag, so that Codecov shows what
   # each kind of test reaches.
