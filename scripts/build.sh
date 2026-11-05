@@ -12,6 +12,7 @@ usage() {
     echo "Usage: build.sh [-b [release|debug]] "
     echo "                [-c [gcc|clang]]"
     echo "                [-m [meson|muon]"
+    echo "                [--timeout-multiplier n]"
     echo "                [--e2e-controller /dev/nvme0]"
     echo "                [--e2e-ns1 /dev/nvme0n1]"
     echo "                [--e2e-log-dir dir]"
@@ -33,6 +34,8 @@ usage() {
     echo " -s                   run tests with ASan+UBSan (asanubsan setup)"
     echo " -t [armhf]|ppc64le|s390x|i386 cross compile target"
     echo " -x                   run tests with valgrind (valgrind setup)"
+    echo " --timeout-multiplier n  multiply the test timeouts by n, for slow"
+    echo "                         machines, e.g. with a debug kernel (1)"
     echo ""
     echo "options for the 'tests' config (mirror the e2e-* meson options):"
     echo " --e2e-controller dev    controller device for e2e tests, e.g. /dev/nvme0"
@@ -94,6 +97,7 @@ use_coverage=0
 use_valgrind=0
 use_asan=0
 use_analyzer=0
+TIMEOUT_MULTIPLIER=""
 
 E2E_CONTROLLER=""
 E2E_NS1=""
@@ -185,6 +189,14 @@ while [[ $# -gt 0 ]]; do
         --e2e-nvme-bin)
             E2E_NVME_BIN="$2"
             config_option tests "$1"
+            shift 2
+            ;;
+        --timeout-multiplier)
+            if ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
+                echo "error: $1 takes a positive number" >&2
+                exit 1
+            fi
+            TIMEOUT_MULTIPLIER="$2"
             shift 2
             ;;
         --plugin-tests)
@@ -596,6 +608,9 @@ test_meson() {
         fi
     elif [ "${use_asan:-0}" -eq 1 ]; then
         args+=(--setup asanubsan)
+    fi
+    if [ -n "${TIMEOUT_MULTIPLIER}" ]; then
+        args+=(--timeout-multiplier "${TIMEOUT_MULTIPLIER}")
     fi
 
     "${MESON}" test "${args[@]}"
