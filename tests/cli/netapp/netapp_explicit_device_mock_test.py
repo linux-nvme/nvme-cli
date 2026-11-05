@@ -8,14 +8,16 @@ Usage: python3 netapp_explicit_device_mock_test.py <nvme-binary> <mock-lib>
 import json
 import os
 
-from tests.cli.nvme_mock import (CNS_CTRL, CNS_NS, HAVE_JSON,
-                                 NVME_IOCTL_ID, OPC_IDENTIFY, MockTestCase,
+from tests.cli.nvme_mock import (CNS_CTRL, CNS_NS, CNS_NS_DESC_LIST,
+                                 HAVE_JSON, ID_CTRL_SIZE, NVME_IOCTL_ID,
+                                 OPC_GET_LOG_PAGE, OPC_IDENTIFY, MockTestCase,
                                  Reply, id_ctrl, id_ns, main)
 
 
 _DEVICE = '/dev/nvme999n7'
 _CTRL_INSTANCE = 999
 _NSID = 7
+_ONTAP_LOG_ID = 0xc2
 _SUBNQN_OFFSET = 768
 _SUBNQN_SIZE = 256
 
@@ -58,6 +60,17 @@ class TestNetappExplicitDevice(MockTestCase):
              for command in self.server.commands],
             [(_CTRL_INSTANCE, OPC_IDENTIFY, CNS_CTRL, 0),
              (_CTRL_INSTANCE, OPC_IDENTIFY, CNS_NS, _NSID)])
+
+    def assert_ontapdevice_requests(self):
+        self.assertEqual([ioctl.nr for ioctl in self.server.raw_ioctls],
+                         [NVME_IOCTL_ID])
+        self.assertEqual(
+            [(command.instance, command.opcode, command.cns, command.nsid)
+             for command in self.server.commands],
+            [(_CTRL_INSTANCE, OPC_IDENTIFY, CNS_CTRL, 0),
+             (_CTRL_INSTANCE, OPC_IDENTIFY, CNS_NS, _NSID),
+             (_CTRL_INSTANCE, OPC_IDENTIFY, CNS_NS_DESC_LIST, _NSID),
+             (_CTRL_INSTANCE, OPC_GET_LOG_PAGE, _ONTAP_LOG_ID, _NSID)])
 
     def test_smdevices_queries_only_explicit_namespace(self):
         self.server.identify[CNS_CTRL] = controller('NetApp E-Series')
@@ -105,6 +118,66 @@ class TestNetappExplicitDevice(MockTestCase):
 
     def test_smdevices_rejects_invalid_device_name(self):
         result = self.run_netapp('smdevices', device='/dev/not-nvme')
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Invalid device name not-nvme', result.stderr)
+        self.assertFalse(self.server.raw_ioctls)
+        self.assertFalse(self.server.commands)
+
+    def set_ontap_responses(self):
+        self.server.identify[CNS_CTRL] = controller(
+            'NetApp ONTAP Controller')
+        self.server.identify[CNS_NS_DESC_LIST] = bytearray(ID_CTRL_SIZE)
+        self.server.logs[_ONTAP_LOG_ID] = bytearray(ID_CTRL_SIZE)
+
+    def test_ontapdevices_queries_only_explicit_namespace(self):
+        self.set_ontap_responses()
+
+        result = self.assertOk(self.run_netapp('ontapdevices'))
+
+        self.assertIn(_DEVICE, result.stdout)
+        self.assert_ontapdevice_requests()
+
+    def test_ontapdevices_output_formats_use_selected_namespace(self):
+        self.set_ontap_responses()
+
+        for args, expected in (
+                (('-o', 'column'), ('Device', _DEVICE)),
+                (('-v',), ('Version TESTFW', _DEVICE)),
+                (('-v', '-o', 'column'), ('Version', 'TESTFW', _DEVICE))):
+            with self.subTest(args=args):
+                self.reset_requests()
+                result = self.assertOk(
+                    self.run_netapp('ontapdevices', *args))
+                for text in expected:
+                    self.assertIn(text, result.stdout)
+                self.assert_ontapdevice_requests()
+
+        if HAVE_JSON:
+            self.reset_requests()
+            result = self.assertOk(
+                self.run_netapp('ontapdevices', '-o', 'json'))
+            data = json.loads(result.stdout)
+            self.assertEqual(len(data['ONTAPdevices']), 1)
+            self.assertEqual(data['ONTAPdevices'][0]['Device'], _DEVICE)
+            self.assertEqual(data['ONTAPdevices'][0]['NSID'], _NSID)
+            self.assertEqual(data['ONTAPdevices'][0]['Version'], 'TESTFW')
+            self.assert_ontapdevice_requests()
+
+    def test_ontapdevices_preserves_missing_device_error(self):
+        device = '/dev/nvme999n8'
+
+        result = self.run_netapp('ontapdevices', device=device,
+                                 exists=False)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(f'{device} does not exist', result.stderr)
+        self.assertNotIn('Unable to open', result.stderr)
+        self.assertFalse(self.server.raw_ioctls)
+        self.assertFalse(self.server.commands)
+
+    def test_ontapdevices_rejects_invalid_device_name(self):
+        result = self.run_netapp('ontapdevices', device='/dev/not-nvme')
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Invalid device name not-nvme', result.stderr)

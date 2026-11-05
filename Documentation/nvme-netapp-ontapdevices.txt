@@ -8,12 +8,15 @@ nvme-netapp-ontapdevices - Display information about ONTAP devices
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'netapp ontapdevices'
+'nvme' [<global-options>] 'netapp ontapdevices' [<device>]
 
 DESCRIPTION
 -----------
 Display information about ONTAP devices on the host. The ONTAP devices are
 identified using the Identify Controller data.
+
+When a namespace <device> is specified, display only that path without
+examining the other NVMe namespace devices on the host.
 
 OPTIONS
 -------
@@ -26,6 +29,12 @@ EXAMPLES
 +
 ------------
 # nvme netapp ontapdevices -o column
+------------
+
+* Display information for one namespace only.
++
+------------
+# nvme netapp ontapdevices /dev/nvme0n1
 ------------
 
 NVME
