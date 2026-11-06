@@ -2549,6 +2549,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	nvme_print_flags_t flags;
 	void *pevent_log_info;
+	__u64 xfer_len;
 	int err;
 
 	struct config {
@@ -2615,14 +2616,25 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
 		cfg.action = NVME_PEVENT_LOG_READ;
 
-	pevent_log_info = libnvme_alloc_huge(cfg.log_len, &mh);
+	/*
+	 * Get Log Page transfer lengths are on dword boundaries.
+	 * Round up the nearest whole dword.
+	 */
+	xfer_len = ((__u64)cfg.log_len + 3) & ~3ULL;
+	if (xfer_len > UINT32_MAX) {
+		nvme_show_error("persistent event log of %"PRIu32
+				" bytes is too large", cfg.log_len);
+		return -EINVAL;
+	}
+
+	pevent_log_info = libnvme_alloc_huge(xfer_len, &mh);
 	if (!pevent_log_info) {
 		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
 	}
 
 	err = nvme_get_log_persistent_event(hdl, cfg.action,
-					    pevent_log_info, cfg.log_len);
+					    pevent_log_info, xfer_len);
 	if (!err) {
 		err = nvme_get_log_persistent_event(hdl, cfg.action,
 							pevent,
