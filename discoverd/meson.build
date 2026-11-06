@@ -15,6 +15,7 @@ discoverd_sources = files(
     'src/main.c',
     'src/netif.c',
     'src/state.c',
+    'src/stop.c',
     'src/tid.c',
     'src/units.c',
 )
