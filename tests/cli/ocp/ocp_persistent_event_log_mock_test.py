@@ -28,18 +28,19 @@ Tests in this module verify:
   * Every field of the log header decodes in text and JSON.
   * The events are walked by their lengths, also past Vendor Specific
     Information, and the standard events decode from their offsets.
+  * A TCG Activity Event is recognized by its descriptor, after the Vendor
+    Specific Information.
   * A vendor specific event which is not a TCG Activity Event goes
     through the generic Vendor Specific Event decoder.
   * -b and -o binary print the log as read.
 
 Known defects are covered by expectedFailure tests asserting the behavior
-the specifications define: the default action is reserved, a TCG Activity
-Event is looked for at the Vendor Specific Information instead of at its
-descriptor, its ProtocolID is taken as two bytes, the Vendor Specific
-Information is dumped from byte 1 of the event, a log length under 512
-bytes fails the Generation Number check, a log length which is not a
-multiple of 4 loses the last bytes of the log, and the --log-len option
-of the man page does not exist.
+the specifications define: the default action is reserved, the
+ProtocolID of a TCG Activity Event is taken as two bytes, the Vendor
+Specific Information is dumped from byte 1 of the event, a log length
+under 512 bytes fails the Generation Number check, a log length which is
+not a multiple of 4 loses the last bytes of the log, and the --log-len
+option of the man page does not exist.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -500,12 +501,10 @@ class TestPersistentEventLogVendorSpecific(PersistentEventLogTestBase):
                          '2')
         self.assertNotIn('tcg_activity_event_data', self.events(report)[0])
 
-    @unittest.expectedFailure
     def test_tcg_activity_event_is_decoded(self):
-        """Defect: the TCG Activity Event is recognized by a Vendor
-        Specific Event Descriptor read from byte 24 of the event, the
-        Vendor Specific Information (TCGCE-11), instead of from byte 28
-        (TCGCE-12 to -15), so no TCG Activity Event is ever decoded."""
+        """The TCG Activity Event is recognized by its Vendor Specific
+        Event Descriptor at byte 28 (TCGCE-12 to -15), after the Vendor
+        Specific Information at byte 24 (TCGCE-11)."""
         values = tcg_values()
         text, report = self.tcg_reports(layout.pack_tcg_event(
             uidx=OCP_UUID_INDEX, context=TCG_CONTEXT, **values))
@@ -534,12 +533,10 @@ class TestPersistentEventLogVendorSpecific(PersistentEventLogTestBase):
             with self.subTest(key=key):
                 self.assertEqual(tcg[key], want)
 
-    @unittest.expectedFailure
     def test_vsi_is_not_taken_for_the_descriptor(self):
-        """Defect: the TCG Activity Event is recognized by a Vendor
-        Specific Event Descriptor read from the Vendor Specific
-        Information, so an event whose VSI reads as code 0001h, binary,
-        and whose real event code is 26h, is decoded as one."""
+        """An event whose Vendor Specific Information reads as event code
+        0001h, binary, and whose real event code is 26h, is not a TCG
+        Activity Event."""
         vsi = struct.pack('<HBB', layout.TCG_VSEC, layout.VSEDT_BINARY, 0)
         text, report = self.tcg_reports(layout.pack_tcg_event(
             vsec=layout.TCG_VSEDL, vsi=vsi, **tcg_values()))
@@ -551,8 +548,7 @@ class TestPersistentEventLogVendorSpecific(PersistentEventLogTestBase):
         """Defect: the ProtocolID of the TCG Activity Event is taken as two
         bytes; it is one (TCGCE-21), so the Status, the Process Time and
         the TCG Activity Specific Context (TCGCE-22 to -24) are read one
-        byte late. The defect of test_tcg_activity_event_is_decoded keeps
-        them from being decoded at all."""
+        byte late."""
         values = tcg_values()
         text, report = self.tcg_reports(layout.pack_tcg_event(
             uidx=OCP_UUID_INDEX, context=TCG_CONTEXT, **values))
