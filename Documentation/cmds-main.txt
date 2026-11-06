@@ -457,6 +457,9 @@ linknvme:nvme-log-supported-pages[1]::
 linknvme:nvme-log-telemetry[1]::
 	Retrieve FW Telemetry log write to file
 
+linknvme:nvme-log-voltage-measurement[1]::
+	Retrieve Voltage Measurement Log, show it
+
 linknvme:nvme-nbft-show[1]::
 	Show contents of ACPI NBFT tables
 
