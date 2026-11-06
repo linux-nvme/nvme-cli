@@ -16,9 +16,11 @@ as a test failure.
 
 The Action in bits 1:0 of the Log Specific Parameter selects what a read
 does with the reporting context: Read Log Data (00b) needs an established
-context, Establish Context and Read 512 Bytes of Header (01b) creates one,
-Release Context (10b) releases it. 11b and the other LSP bits are
-reserved.
+context, Establish Context and Read Log Data (01b) creates one and fails
+if one exists, Release Context (10b) releases it, and Establish Context
+and Read 512 Bytes of Header (11b) creates one unless one exists and
+returns the log header, whose Reporting Context Exists bit tells whether
+one existed. The other LSP bits are reserved.
 
 An event is a 24 byte header, Vendor Specific Information of VSIL bytes
 and the event data. The Event Header Length (EHL) does not count the
@@ -41,9 +43,9 @@ LID = 0x0D
 HEADER_SIZE = 512
 
 ACTION_READ = 0
-ACTION_ESTABLISH = 1
-ACTION_RELEASE = 2
-ACTION_RESERVED = 3
+ACTION_EST_CTX_AND_READ = 1
+ACTION_RELEASE_CTX = 2
+ACTION_EST_CTX_AND_READ_HDR = 3
 ACTION_MASK = 0x3
 
 # Log header
@@ -66,6 +68,8 @@ SUBNQN = 116
 SUBNQN_LEN = 256
 GEN_NUMBER = 372
 RCI = 374
+# Reporting Context Exists, in RCI
+RCI_RCE = 1 << 18
 SEB = 480
 SEB_LEN = 32
 

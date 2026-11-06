@@ -10818,11 +10818,14 @@ enum nvme_log_phy_rx_eom_quality {
  * @NVME_PEVENT_LOG_READ:		Read Log Data
  * @NVME_PEVENT_LOG_EST_CTX_AND_READ:	Establish Context and Read Log Data
  * @NVME_PEVENT_LOG_RELEASE_CTX:	Release Context
+ * @NVME_PEVENT_LOG_EST_CTX_AND_READ_HDR: Establish Context and Read 512 Bytes
+ *					of Header
  */
 enum nvme_pevent_log_action {
 	NVME_PEVENT_LOG_READ			= 0x0,
 	NVME_PEVENT_LOG_EST_CTX_AND_READ	= 0x1,
 	NVME_PEVENT_LOG_RELEASE_CTX		= 0x2,
+	NVME_PEVENT_LOG_EST_CTX_AND_READ_HDR	= 0x3,
 };
 
 /**
