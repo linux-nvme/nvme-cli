@@ -2538,7 +2538,10 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	const char *desc = "Retrieve Persistent Event log info for the given " \
 		"device in either decoded format(default), json or binary.";
 	const char *action = "action the controller shall take during " \
-		"processing this persistent log page command.";
+		"processing this persistent log page command: 0 read log " \
+		"data, 1 establish context and read log data, 2 release " \
+		"context, 3 establish context unless established and read " \
+		"512 bytes of header (default; requires ECRH support).";
 	const char *log_len = "number of bytes to retrieve";
 
 	__cleanup_libnvme_free struct nvme_persistent_event_log *pevent = NULL;
@@ -2549,7 +2552,6 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	nvme_print_flags_t flags;
 	void *pevent_log_info;
-	__u8 read_action;
 	__u64 tll, len, xfer_len;
 	int err;
 
@@ -2560,13 +2562,14 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	};
 
 	struct config cfg = {
-		.action		= 0xff,
+		.action		= NVME_PEVENT_LOG_EST_CTX_AND_READ_HDR,
 		.log_len	= 0,
 		.raw_binary	= false,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("action",     'a', &cfg.action,     action),
+		OPT_BYTE("action",     'a', &cfg.action,     action,
+			 .max = NVME_PEVENT_LOG_EST_CTX_AND_READ_HDR),
 		OPT_UINT("log-len",    'l', &cfg.log_len,    log_len,
 			 .old_name = "log_len"),
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
@@ -2601,6 +2604,14 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		return 0;
 	}
 
+	/* ECRH returns only the header, regardless of requested length. */
+	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ_HDR) {
+		ocp_show_persistent_event_log(pevent, cfg.action,
+			sizeof(*pevent), libnvme_transport_handle_get_name(hdl),
+			flags);
+		return 0;
+	}
+
 	if (!cfg.log_len && cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ) {
 		printf("Establishing Persistent Event Log Context\n");
 		return 0;
@@ -2616,16 +2627,6 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	/* Data past the end of the log is undefined */
 	len = cfg.log_len && cfg.log_len < tll ? cfg.log_len : tll;
-
-	/*
-	 * if header already read with context establish action 0x1,
-	 * action shall not be 0x1 again in the subsequent request,
-	 * until the current context is released by issuing action
-	 * with 0x2, otherwise throws command sequence error, make
-	 * it as zero to read the log page
-	 */
-	read_action = cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ ?
-		      NVME_PEVENT_LOG_READ : cfg.action;
 
 	/*
 	 * Get Log Page transfer lengths are on dword boundaries.
@@ -2644,10 +2645,14 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		return -ENOMEM;
 	}
 
-	err = nvme_get_log_persistent_event(hdl, read_action,
+	/*
+	 * Read the log in the context with 00b: once 01b established it,
+	 * another 01b fails with Command Sequence Error until it is released.
+	 */
+	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
 					    pevent_log_info, xfer_len);
 	if (!err) {
-		err = nvme_get_log_persistent_event(hdl, read_action,
+		err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
 							pevent,
 							sizeof(*pevent));
 		if (err < 0) {

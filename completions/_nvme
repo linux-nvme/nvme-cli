@@ -7119,12 +7119,13 @@ _nvme () {
 					;;
 
 				(persistent-event-log)
-					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					_nvme_opt_vals "--action -a" "0 1 2 3" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--timeout" "infinite -1" && return
 					local _ocp_persistent_event_log
 					_ocp_persistent_event_log=(
-						--action=':action the controller shall take during processing this persistent log page command.'
+						--action=':action the controller shall take during processing this persistent log page command: 0 read log data, 1 establish context and read log data, 2 release context, 3 establish context unless established and read 512 bytes of header (default; requires ECRH support).'
 						-a':alias for --action'
 						--dry-run':show command instead of executing'
 						--log-len=':number of bytes to retrieve'

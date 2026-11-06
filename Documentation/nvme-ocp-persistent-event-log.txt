@@ -31,19 +31,22 @@ OPTIONS
 -------
 -a <action>::
 --action=<action>::
-	While try to retrieve this log action the controller shall take
-	during processing this persistent log page command. This mandatory
-	field, based on the value issued it may Read Log Data, Establish
-	Context and Read Log Data or Release Context can occur. For More
-	details see NVM Express 1.4 Spec. Section 5.14.1.13 Persistent
-	Event Log (Log Identifier 0Dh)
+	The action the controller takes with the reporting context of the
+	log. 0 (Read Log Data) reads the log of an established context.
+	1 (Establish Context and Read Log Data) establishes a context, and
+	fails if one is established. 2 (Release Context) releases the
+	context. 3 (Establish Context and Read 512 Bytes of Header)
+	establishes a context unless one is established, and reads only the
+	log header. Defaults to 3. A context stays established until it is
+	released with action 2. Action 3 requires ECRH support. For more
+	details see the NVM Express Base Specification, Revision 2.1,
+	section 5.1.12.1.14 Persistent Event (Log Page Identifier 0Dh).
 
 -l <log-len>::
 --log-len=<log-len>::
-	Allocates a buffer of <log-len> bytes size and requests this
-	many bytes be returned in the constructed NVMe command. This
-	param is mandatory. If <log-len> given is 0 and action is 0,
-	it will read the Total Log Length(TLL) of the page.
+	The number of bytes of the log to read. Without it, or with 0,
+	action 0 reads the Total Log Length (TLL) of the log, and action 1
+	only establishes the context. Actions 2 and 3 ignore it.
 
 -b::
 --raw-binary::
@@ -53,17 +56,30 @@ include::global-options.txt[]
 
 EXAMPLES
 --------
-* Print the persistent event log page in a human readable format:
+* Establish a reporting context if needed and print the log header:
 +
 ------------
 # nvme ocp persistent-event-log /dev/nvme0
 ------------
 +
+NOTE: A context must be released using --action=2 before --action=1
+can be used.
 
-* Print the raw persistent event log to a file:
+* Establish a reporting context (assumes no existing context), print the
+  persistent event log page of the context in a human readable format,
+  and release the context:
 +
 ------------
-# nvme ocp persistent-event-log /dev/nvme0 --raw-binary > persistent_log.raw
+# nvme ocp persistent-event-log /dev/nvme0 --action=1
+# nvme ocp persistent-event-log /dev/nvme0 --action=0
+# nvme ocp persistent-event-log /dev/nvme0 --action=2
+------------
+
+* Print the raw persistent event log of an established context to a
+  file:
++
+------------
+# nvme ocp persistent-event-log /dev/nvme0 --action=0 --raw-binary > persistent_log.raw
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.
