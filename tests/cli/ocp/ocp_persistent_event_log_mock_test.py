@@ -32,6 +32,8 @@ Tests in this module verify:
   * A failed Get Log Page and a Generation Number which changes between
     reading the log and reading its header again fail; a log length under
     512 bytes shows that the header needs 512.
+  * The text output shows the action given with -a, even for -a 1,
+    which reads the log with Action 00b after establishing the context.
   * Every field of the log header decodes in text and JSON.
   * The events are walked by their lengths, also past Vendor Specific
     Information, which is dumped from after the event header, and the
@@ -274,6 +276,17 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.reads()[1].data_len, dword_len(log))
         self.assertEqual(result.stdout, log)
+
+    def test_action_given_is_shown(self):
+        log = layout.pack_log(sample_events())
+        self.serve(log)
+        for action in (layout.ACTION_ESTABLISH, layout.ACTION_READ):
+            with self.subTest(action=action):
+                text = self.text('-a', str(action), '-l',
+                                 str(dword_len(log)))
+                self.assertEqual(
+                    self.text_value(text, 'Action for Persistent Event Log'),
+                    str(action))
 
     def test_unaligned_log_len_is_read_in_whole_dwords(self):
         log = layout.pack_log(sample_events())
