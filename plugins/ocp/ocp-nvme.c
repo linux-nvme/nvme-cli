@@ -2566,7 +2566,8 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	OPT_ARGS(opts) = {
 		OPT_BYTE("action",     'a', &cfg.action,     action),
-		OPT_UINT("log_len",    'l', &cfg.log_len,    log_len),
+		OPT_UINT("log-len",    'l', &cfg.log_len,    log_len,
+			 .old_name = "log_len"),
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_use),
 		OPT_END()
 	};
