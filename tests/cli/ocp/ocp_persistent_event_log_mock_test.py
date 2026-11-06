@@ -22,8 +22,11 @@ Tests in this module verify:
     reads the rest with Action 00b, from the log page of all namespaces
     and without a UUID index; -a 1 alone only establishes it.
   * -a 0 reads the Total Log Length of an established context, and fails
-    without one; -a 2 releases it; -l, --log-len, sets the length of the
-    read, and --log_len, the name of earlier versions, still does.
+    without one, or with a Total Log Length shorter than the log header
+    or too large for a 32 bit read.
+  * -a 2 releases the context; -l, --log-len, sets the length of the
+    read, up to the Total Log Length, and --log_len, the name of earlier
+    versions, still does.
   * A log length which is not a multiple of 4 is read in whole dwords,
     and no more than that length is decoded or printed.
   * A failed Get Log Page and a Generation Number which changes between
@@ -211,6 +214,30 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
         self.assertIn('Command Sequence Error', result.stderr)
         self.assertNotIn(ENTRIES, result.stdout)
 
+    def check_bad_total_log_length(self, tll, message):
+        log = layout.pack_log(sample_events(), tll=tll)
+        self.serve(log)
+        self.server.context = log
+        result = self.run_pel('-a', '0')
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn(message, result.stderr)
+        self.assertEqual([r.data_len for r in self.reads()],
+                         [layout.HEADER_SIZE])
+
+    def test_total_log_length_too_large_fails(self):
+        # Lengths a dword round-up takes past 32 bits, or wraps to 0
+        for tll in ((1 << 32) - 3, 1 << 32, (1 << 64) - 3, (1 << 64) - 1):
+            with self.subTest(tll=tll):
+                self.server.commands.clear()
+                self.check_bad_total_log_length(tll, 'is too large')
+
+    def test_total_log_length_shorter_than_header_fails(self):
+        for tll in (0, layout.HEADER_SIZE - 4):
+            with self.subTest(tll=tll):
+                self.server.commands.clear()
+                self.check_bad_total_log_length(
+                    tll, 'is shorter than its header')
+
     def test_establish_in_context_fails(self):
         log = layout.pack_log(sample_events())
         self.serve(log)
@@ -234,10 +261,19 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
     def test_log_len_sets_the_length_of_the_read(self):
         log = layout.pack_log(sample_events())
         self.serve(log)
-        self.text('-a', '1', '-l', '1024')
+        self.text('-a', '1', '-l', '512')
         reads = self.reads()
         self.assertEqual(reads[1].lsp, layout.ACTION_READ)
-        self.assertEqual(reads[1].data_len, 1024)
+        self.assertEqual(reads[1].data_len, 512)
+
+    def test_log_len_over_total_log_length_reads_the_log(self):
+        log = layout.pack_log(sample_events())
+        self.serve(log)
+        result = self.run_pel('-a', '1', '-l', '1048576', '-b',
+                              encoding=None)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.reads()[1].data_len, dword_len(log))
+        self.assertEqual(result.stdout, log)
 
     def test_unaligned_log_len_is_read_in_whole_dwords(self):
         log = layout.pack_log(sample_events())
@@ -301,16 +337,16 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
     def test_documented_log_len_option(self):
         """The --log-len option of the man page."""
         self.serve(layout.pack_log(sample_events()))
-        self.assertOk(self.run_pel('-a', '1', '--log-len=1024'))
-        self.assertEqual(self.reads()[1].data_len, 1024)
+        self.assertOk(self.run_pel('-a', '1', '--log-len=512'))
+        self.assertEqual(self.reads()[1].data_len, 512)
 
     def test_old_log_len_option(self):
         """--log_len, the name of earlier versions, is still taken, with
         a warning."""
         self.serve(layout.pack_log(sample_events()))
-        result = self.assertOk(self.run_pel('-a', '1', '--log_len=1024'))
+        result = self.assertOk(self.run_pel('-a', '1', '--log_len=512'))
         self.assertIn("'--log_len' is deprecated", result.stderr)
-        self.assertEqual(self.reads()[1].data_len, 1024)
+        self.assertEqual(self.reads()[1].data_len, 512)
 
 
 class TestPersistentEventLogHeader(PersistentEventLogTestBase):
@@ -590,7 +626,7 @@ class TestPersistentEventLogBinary(PersistentEventLogTestBase):
                 result = self.run_pel('-a', '1', '-l', str(length), *args,
                                       encoding=None)
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(result.stdout, log.ljust(length, b'\0'))
+                self.assertEqual(result.stdout, log)
 
 
 if __name__ == '__main__':

@@ -2549,7 +2549,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	nvme_print_flags_t flags;
 	void *pevent_log_info;
-	__u64 xfer_len;
+	__u64 tll, len, xfer_len;
 	int err;
 
 	struct config {
@@ -2600,12 +2600,21 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		return 0;
 	}
 
-	if (!cfg.log_len && cfg.action != NVME_PEVENT_LOG_EST_CTX_AND_READ) {
-		cfg.log_len = le64_to_cpu(pevent->tll);
-	} else if (!cfg.log_len && cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ) {
+	if (!cfg.log_len && cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ) {
 		printf("Establishing Persistent Event Log Context\n");
 		return 0;
 	}
+
+	tll = le64_to_cpu(pevent->tll);
+	if (tll < sizeof(*pevent)) {
+		nvme_show_error("persistent event log of %"PRIu64
+				" bytes is shorter than its header",
+				(uint64_t)tll);
+		return -EINVAL;
+	}
+
+	/* Data past the end of the log is undefined */
+	len = cfg.log_len && cfg.log_len < tll ? cfg.log_len : tll;
 
 	/*
 	 * if header already read with context establish action 0x1,
@@ -2621,12 +2630,12 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	 * Get Log Page transfer lengths are on dword boundaries.
 	 * Round up the nearest whole dword.
 	 */
-	xfer_len = ((__u64)cfg.log_len + 3) & ~3ULL;
-	if (xfer_len > UINT32_MAX) {
-		nvme_show_error("persistent event log of %"PRIu32
-				" bytes is too large", cfg.log_len);
+	if (len > (UINT32_MAX & ~3U)) {
+		nvme_show_error("persistent event log of %"PRIu64
+				" bytes is too large", (uint64_t)len);
 		return -EINVAL;
 	}
+	xfer_len = (len + 3) & ~3ULL;
 
 	pevent_log_info = libnvme_alloc_huge(xfer_len, &mh);
 	if (!pevent_log_info) {
@@ -2649,7 +2658,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		}
 		pevent_collected = pevent_log_info;
 		/* A read shorter than the header has no Generation Number */
-		if (cfg.log_len >= sizeof(*pevent) &&
+		if (len >= sizeof(*pevent) &&
 		    pevent_collected->gen_number != pevent->gen_number) {
 			nvme_show_error("Collected Persistent Event Log may be invalid,\n"
 			       "Re-read the log is required");
@@ -2657,7 +2666,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		}
 
 		ocp_show_persistent_event_log(pevent_log_info, cfg.action,
-			cfg.log_len, libnvme_transport_handle_get_name(hdl), flags);
+			len, libnvme_transport_handle_get_name(hdl), flags);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
