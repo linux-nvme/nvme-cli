@@ -297,8 +297,9 @@ class PrintCLITest(MockTestCase):
 
     def test_persistent_event_entries(self):
         # Three Timestamp Change events. The first one has Vendor Specific
-        # Information, which EL includes. The last one ends at TLL.
-        vsi = b'\xaa' * 4
+        # Information, which EL includes and which follows the header. The
+        # last one ends at TLL.
+        vsi = b'VSI!'
         events = b''
         for i, info in enumerate((vsi, b'', b'')):
             data = info + struct.pack('<QQ', 0x1000 + i, 0)
@@ -314,6 +315,9 @@ class PrintCLITest(MockTestCase):
         result = self.nvme('log', 'persistent-event', self.ctrl)
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout.count('Event Number'), 3)
+        self.assertIn('Vendor Specific Information:', result.stdout)
+        dump = result.stdout.split('Vendor Specific Information:', 1)[1]
+        self.assertIn(' '.join(f'{b:02x}' for b in vsi), dump)
 
         if not HAVE_JSON:
             return
@@ -322,6 +326,7 @@ class PrintCLITest(MockTestCase):
         entries = json.loads(result.stdout)['list_of_event_entries']
         self.assertEqual([e['prev_ts'] for e in entries],
                          [0x1000, 0x1001, 0x1002])
+        self.assertEqual(''.join(entries[0]['vs_info_bin']), vsi.decode())
 
     @unittest.skipIf(os.geteuid() == 0, 'process limits do not apply to root')
     def test_sandbox_used(self):
