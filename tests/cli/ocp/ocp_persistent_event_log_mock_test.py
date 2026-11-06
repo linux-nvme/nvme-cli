@@ -23,6 +23,8 @@ Tests in this module verify:
     and without a UUID index; -a 1 alone only establishes it.
   * -a 0 reads the Total Log Length of an established context, and fails
     without one; -a 2 releases it; -l sets the length of the read.
+  * A log length which is not a multiple of 4 is read in whole dwords,
+    and no more than that length is decoded or printed.
   * A failed Get Log Page and a Generation Number which changes between
     reading the log and reading its header again fail.
   * Every field of the log header decodes in text and JSON.
@@ -37,8 +39,7 @@ Tests in this module verify:
 Known defects are covered by expectedFailure tests asserting the behavior
 the specifications define: the default action is reserved, the Vendor
 Specific Information is dumped from byte 1 of the event, a log length
-under 512 bytes fails the Generation Number check, a log length which is
-not a multiple of 4 loses the last bytes of the log, and the --log-len
+under 512 bytes fails the Generation Number check, and the --log-len
 option of the man page does not exist.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
@@ -200,7 +201,7 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
         self.assertEqual([r.lsp for r in reads],
                          [layout.ACTION_READ] * len(reads))
         self.assertEqual(reads[0].data_len, layout.HEADER_SIZE)
-        self.assertIn(reads[1].data_len, (len(log), dword_len(log)))
+        self.assertEqual(reads[1].data_len, dword_len(log))
         self.assertEqual(text.count('Event Number'), 2, text)
 
     def test_read_without_context_fails(self):
@@ -237,6 +238,16 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
         reads = self.reads()
         self.assertEqual(reads[1].lsp, layout.ACTION_READ)
         self.assertEqual(reads[1].data_len, 1024)
+
+    def test_unaligned_log_len_is_read_in_whole_dwords(self):
+        log = layout.pack_log(sample_events())
+        self.assertNotEqual(len(log) % 4, 0)
+        self.serve(log)
+        result = self.run_pel('-a', '1', '-l', str(len(log)), '-b',
+                              encoding=None)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.reads()[1].data_len, dword_len(log))
+        self.assertEqual(result.stdout, log)
 
     def test_get_log_error_fails(self):
         self.server.logs[layout.LID] = SC_INTERNAL
@@ -429,12 +440,11 @@ class TestPersistentEventLogEvents(PersistentEventLogTestBase):
         self.assertEqual(''.join(self.events(report)[0]['vs_info_bin']),
                          vsi.decode())
 
-    @unittest.expectedFailure
     def test_unaligned_total_log_length_is_read_whole(self):
-        """Defect: a log length which is not a multiple of 4 is asked for
-        as that many dwords rounded down (NUMD), so the last bytes of the
-        log are never read. The Total Log Length of these events is 606,
-        and the Vendor Assigned Firmware Commit Result Code is the last 2
+        """A Total Log Length which is not a multiple of 4 is read as
+        that many dwords rounded up (NUMD), so the last bytes of the log
+        are read. The Total Log Length of these events is 606, and the
+        Vendor Assigned Firmware Commit Result Code is the last 2
         bytes."""
         log = layout.pack_log(sample_events())
         self.assertNotEqual(len(log) % 4, 0)
