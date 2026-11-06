@@ -894,7 +894,8 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
 			nvme_show_pel_set_feature_event(data, el - vsil);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			d(data, 512, 16, 1);
+			if (el - vsil >= 512)
+				d(data, 512, 16, 1);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			nvme_show_pel_thermal_excursion_event(data, 0);

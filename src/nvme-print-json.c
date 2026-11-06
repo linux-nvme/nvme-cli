@@ -1377,9 +1377,9 @@ void nvme_json_pel_set_feature(void *data, __u32 len,
 
 void nvme_json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
 				 struct json_object *valid_attrs,
-				 __le16 el, __u32 size)
+				 __u32 len, __u32 size)
 {
-	if (le16_to_cpu(el) < 512 || offset > size - 512)
+	if (len < 512 || offset > size - 512)
 		return;
 	obj_d(valid_attrs, "create", pevent_log_info + offset, 512, 16, 1);
 }
@@ -1568,8 +1568,7 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
 			nvme_json_pel_telemetry_crt(data, 0, valid_attrs,
-						    pevent_entry_head->el,
-						    data_len);
+						    el - vsil, data_len);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			nvme_json_pel_thermal_excursion(data, 0, valid_attrs);
