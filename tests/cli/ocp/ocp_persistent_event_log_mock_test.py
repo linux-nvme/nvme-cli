@@ -22,7 +22,8 @@ Tests in this module verify:
     reads the rest with Action 00b, from the log page of all namespaces
     and without a UUID index; -a 1 alone only establishes it.
   * -a 0 reads the Total Log Length of an established context, and fails
-    without one; -a 2 releases it; -l sets the length of the read.
+    without one; -a 2 releases it; -l, --log-len, sets the length of the
+    read, and --log_len, the name of earlier versions, still does.
   * A log length which is not a multiple of 4 is read in whole dwords,
     and no more than that length is decoded or printed.
   * A failed Get Log Page and a Generation Number which changes between
@@ -38,9 +39,8 @@ Tests in this module verify:
     through the generic Vendor Specific Event decoder.
   * -b and -o binary print the log as read.
 
-Known defects are covered by expectedFailure tests asserting the behavior
-the specifications define: the default action is reserved, and the
---log-len option of the man page does not exist.
+A known defect is covered by an expectedFailure test asserting the
+behavior the specifications define: the default action is reserved.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -298,12 +298,18 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
         self.assertOk(result)
         self.assertIn(SHORT_LEN_HINT, result.stdout)
 
-    @unittest.expectedFailure
     def test_documented_log_len_option(self):
-        """Defect: the man page documents --log-len, the command takes
-        --log_len."""
+        """The --log-len option of the man page."""
         self.serve(layout.pack_log(sample_events()))
         self.assertOk(self.run_pel('-a', '1', '--log-len=1024'))
+        self.assertEqual(self.reads()[1].data_len, 1024)
+
+    def test_old_log_len_option(self):
+        """--log_len, the name of earlier versions, is still taken, with
+        a warning."""
+        self.serve(layout.pack_log(sample_events()))
+        result = self.assertOk(self.run_pel('-a', '1', '--log_len=1024'))
+        self.assertIn("'--log_len' is deprecated", result.stderr)
         self.assertEqual(self.reads()[1].data_len, 1024)
 
 
