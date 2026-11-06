@@ -2549,6 +2549,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	nvme_print_flags_t flags;
 	void *pevent_log_info;
+	__u8 read_action;
 	__u64 tll, len, xfer_len;
 	int err;
 
@@ -2623,8 +2624,8 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	 * with 0x2, otherwise throws command sequence error, make
 	 * it as zero to read the log page
 	 */
-	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
-		cfg.action = NVME_PEVENT_LOG_READ;
+	read_action = cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ ?
+		      NVME_PEVENT_LOG_READ : cfg.action;
 
 	/*
 	 * Get Log Page transfer lengths are on dword boundaries.
@@ -2643,10 +2644,10 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		return -ENOMEM;
 	}
 
-	err = nvme_get_log_persistent_event(hdl, cfg.action,
+	err = nvme_get_log_persistent_event(hdl, read_action,
 					    pevent_log_info, xfer_len);
 	if (!err) {
-		err = nvme_get_log_persistent_event(hdl, cfg.action,
+		err = nvme_get_log_persistent_event(hdl, read_action,
 							pevent,
 							sizeof(*pevent));
 		if (err < 0) {
