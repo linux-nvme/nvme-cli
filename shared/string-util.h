@@ -256,6 +256,13 @@ static inline size_t shr_linelen(char *s)
 char *shr_escape(const char *s);
 
 /*
+ * A copy of @s quoted for a POSIX shell: in single quotes, each single
+ * quote written as '\''. The shell reads it back as one word, @s
+ * unchanged. The caller frees it. NULL if out of memory.
+ */
+char *shr_shell_quote(const char *s);
+
+/*
  * Copy the string @src to @dst of @size bytes, cut off if it doesn't fit.
  * @dst is always terminated, unless @size is 0.
  * Return: the length of the copy, or -E2BIG if @src was cut off.
