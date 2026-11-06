@@ -37,7 +37,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           # The entries are checked: test names only, no shell code.
-          scripts/nightly/nvme-nightly known-failures \
+          scripts/dashboard/nvme-dashboard known-failures \
               --github "${GITHUB_REPOSITORY}" -o known-failures.txt
           cat known-failures.txt
           {
@@ -115,7 +115,7 @@ jobs:
             cat > results/known-failures.txt << 'KNOWN_FAILURES_EOF'
             ${{ needs.known-failures.outputs.list }}
             KNOWN_FAILURES_EOF
-            nightly=../nvme-cli/scripts/nightly/nvme-nightly
+            nightly=../nvme-cli/scripts/dashboard/nvme-dashboard
             "${nightly}" known-failures --file results/known-failures.txt \
                 -o /dev/null --config known-failures.cfg
 

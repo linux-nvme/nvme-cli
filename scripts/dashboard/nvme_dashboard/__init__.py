@@ -4,4 +4,5 @@
 # Copyright (c) 2026 SUSE Software Solutions
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
-"""The tooling of the nightly tests: known failures, results, status page."""
+"""The dashboard of the nvme-cli tests: known failures, results, the
+status page."""

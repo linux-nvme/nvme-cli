@@ -13,7 +13,7 @@ import unittest
 from pathlib import Path
 from typing import Any
 
-from nvme_nightly import site
+from nvme_dashboard import site
 
 # The CI containers have jinja2; without it only the page models are
 # tested.

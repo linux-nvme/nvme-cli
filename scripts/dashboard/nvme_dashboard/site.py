@@ -364,7 +364,7 @@ def matrix_model(
 
 def page_model(
     history: list[dict[str, Any]],
-    title: str = 'nvme-cli nightly status',
+    title: str = 'nvme-cli dashboard',
     links: list[tuple[str, str]] | None = None,
     primary: str = PRIMARY,
 ) -> dict[str, Any]:
@@ -383,7 +383,7 @@ def page_model(
 
 def render(
     history: list[dict[str, Any]],
-    title: str = 'nvme-cli nightly status',
+    title: str = 'nvme-cli dashboard',
     links: list[tuple[str, str]] | None = None,
     primary: str = PRIMARY,
 ) -> str:

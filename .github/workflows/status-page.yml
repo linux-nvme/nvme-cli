@@ -7,7 +7,7 @@
 # Authors: Daniel Wagner <dwagner@suse.de>
 
 # The public status page: the nightly results and the clang analyzer
-# report. scripts/nightly/nvme-nightly builds it as a plain directory;
+# report. scripts/dashboard/nvme-dashboard builds it as a plain directory;
 # this workflow only collects its inputs and uploads it.
 
 name: Status page
@@ -96,7 +96,7 @@ jobs:
             printf '<!DOCTYPE html>\n<title>clang analyzer</title>\n<p>No reports.</p>\n' \
               > "${analyzer}/index.html"
           fi
-          nightly=scripts/nightly/nvme-nightly
+          nightly=scripts/dashboard/nvme-dashboard
           # A report which is not there adds no section: the record still
           # has the conclusions of the jobs and steps. Without a record the
           # page still builds, from the history.

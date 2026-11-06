@@ -11,8 +11,8 @@ from __future__ import annotations
 import unittest
 from typing import Any
 
-from nvme_nightly import known_failures as kf
-from nvme_nightly.known_failures import Entry
+from nvme_dashboard import known_failures as kf
+from nvme_dashboard.known_failures import Entry
 
 REF = 'https://example.org/issues/1'
 

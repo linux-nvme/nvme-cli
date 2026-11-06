@@ -9,7 +9,7 @@
 import unittest
 from typing import Any
 
-from nvme_nightly import joblog
+from nvme_dashboard import joblog
 
 URL = 'https://github.com/o/r/actions/runs/1/job/2'
 
