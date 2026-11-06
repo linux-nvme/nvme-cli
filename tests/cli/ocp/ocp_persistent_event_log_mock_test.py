@@ -26,7 +26,8 @@ Tests in this module verify:
   * A log length which is not a multiple of 4 is read in whole dwords,
     and no more than that length is decoded or printed.
   * A failed Get Log Page and a Generation Number which changes between
-    reading the log and reading its header again fail.
+    reading the log and reading its header again fail; a log length under
+    512 bytes shows that the header needs 512.
   * Every field of the log header decodes in text and JSON.
   * The events are walked by their lengths, also past Vendor Specific
     Information, which is dumped from after the event header, and the
@@ -38,9 +39,8 @@ Tests in this module verify:
   * -b and -o binary print the log as read.
 
 Known defects are covered by expectedFailure tests asserting the behavior
-the specifications define: the default action is reserved, a log length
-under 512 bytes fails the Generation Number check, and the --log-len
-option of the man page does not exist.
+the specifications define: the default action is reserved, and the
+--log-len option of the man page does not exist.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -289,12 +289,10 @@ class TestPersistentEventLogReads(PersistentEventLogTestBase):
         self.assertEqual(result.stdout.count('Event Number'), 2,
                          result.stdout)
 
-    @unittest.expectedFailure
     def test_short_log_len_shows_hint(self):
-        """Defect: with -l under 512 bytes the Generation Number of the
-        log is taken from beyond what was read, so a log with a non-zero
-        one is taken as changed, and the hint that 512 bytes are needed
-        is not shown."""
+        """With -l under 512 bytes the read has no Generation Number to
+        check, even for a log with a non-zero one, and the hint that 512
+        bytes are needed is shown."""
         self.serve(layout.pack_log(sample_events(), gen_number=5))
         result = self.run_pel('-a', '1', '-l', '256')
         self.assertOk(result)

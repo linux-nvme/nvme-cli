@@ -2647,7 +2647,9 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 			return err;
 		}
 		pevent_collected = pevent_log_info;
-		if (pevent_collected->gen_number != pevent->gen_number) {
+		/* A read shorter than the header has no Generation Number */
+		if (cfg.log_len >= sizeof(*pevent) &&
+		    pevent_collected->gen_number != pevent->gen_number) {
 			nvme_show_error("Collected Persistent Event Log may be invalid,\n"
 			       "Re-read the log is required");
 			return -EINVAL;
