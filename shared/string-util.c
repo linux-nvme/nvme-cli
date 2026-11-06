@@ -37,6 +37,35 @@ char *shr_escape(const char *s)
 	return e;
 }
 
+char *shr_shell_quote(const char *s)
+{
+	const char *p;
+	size_t n = 3;
+	char *e, *q;
+
+	for (p = s; *p; p++)
+		n += *p == '\'' ? 4 : 1;
+
+	e = malloc(n);
+	if (!e)
+		return NULL;
+
+	q = e;
+	*q++ = '\'';
+	for (p = s; *p; p++) {
+		if (*p == '\'') {
+			memcpy(q, "'\\''", 4);
+			q += 4;
+		} else {
+			*q++ = *p;
+		}
+	}
+	*q++ = '\'';
+	*q = '\0';
+
+	return e;
+}
+
 ssize_t shr_strscpy(char *dst, const char *src, size_t size)
 {
 	size_t len;

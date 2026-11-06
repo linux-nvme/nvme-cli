@@ -284,6 +284,34 @@ static bool test_escape(void)
 	return pass;
 }
 
+static bool check_shell_quote(const char *in, const char *want)
+{
+	char *out = shr_shell_quote(in);
+	bool ok = out && !strcmp(out, want);
+
+	printf(" - \"%s\" -> \"%s\" [%s]\n", in, out ? out : "(null)",
+	       ok ? "PASS" : "FAIL");
+	free(out);
+	return ok;
+}
+
+static bool test_shell_quote(void)
+{
+	bool pass = true;
+
+	printf("shr_shell_quote:\n");
+
+	pass &= check_shell_quote("plain", "'plain'");
+	pass &= check_shell_quote("", "''");
+	pass &= check_shell_quote("/tmp/a dir", "'/tmp/a dir'");
+	pass &= check_shell_quote("$HOME;`id`\"\\*", "'$HOME;`id`\"\\*'");
+	pass &= check_shell_quote("it's", "'it'\\''s'");
+	pass &= check_shell_quote("'", "''\\'''");
+	pass &= check_shell_quote("a\nb", "'a\nb'");
+
+	return pass;
+}
+
 static bool check_ret(const char *name, long got, long want)
 {
 	if (got == want) {
@@ -383,6 +411,7 @@ int main(void)
 	pass &= test_kv_strip();
 	pass &= test_kv_keymatch();
 	pass &= test_escape();
+	pass &= test_shell_quote();
 	pass &= test_strscpy();
 	pass &= test_strscat();
 	pass &= test_snprintf_append();
