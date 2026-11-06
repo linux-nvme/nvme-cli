@@ -448,25 +448,25 @@ Once the issue is closed, the next night counts the test again. A known
 failure which passes is reported, but stays on the list until its issue
 is closed by hand, as the test may be flapping.
 
-The tooling, `scripts/nightly/nvme-nightly`, does not depend on GitHub
+The tooling, the dashboard `scripts/dashboard/nvme-dashboard`, does not depend on GitHub
 beyond reading the issues and the state of the CI runs: the list is a
 plain text file which can also be written by hand, and the summaries and
 the record of a run are JSON files. It is plain Python; only the status
 page needs Jinja2 for its templates
-(`scripts/nightly/nvme_nightly/templates`).
+(`scripts/dashboard/nvme_dashboard/templates`).
 
 ```
 # the list of the open issues, and the blktests config lines for it
-scripts/nightly/nvme-nightly known-failures --github linux-nvme/nvme-cli \
+scripts/dashboard/nvme-dashboard known-failures --github linux-nvme/nvme-cli \
     -o known-failures.txt --config known-failures.cfg
 # judge a blktests results directory: exit status 1 for a failed run
-scripts/nightly/nvme-nightly blktests-summary blktests/results \
+scripts/dashboard/nvme-dashboard blktests-summary blktests/results \
     --known-failures known-failures.txt -o blktests-summary.json
 # the record of a CI run: the conclusions of its jobs and steps (run.json
 # and jobs.json of the GitHub REST API) and a section per test run, each
 # linked to its step and, with the job log, the failed tests to their
 # lines in it
-scripts/nightly/nvme-nightly night --run run.json --jobs jobs.json \
+scripts/dashboard/nvme-dashboard night --run run.json --jobs jobs.json \
     --job-log nightly-tests=job.log \
     --section blktests \
         blktests 'nightly-tests/Run blktests in VM' \
@@ -477,7 +477,7 @@ scripts/nightly/nvme-nightly night --run run.json --jobs jobs.json \
         keysd-wringer.log \
     --logs logs -o night.json
 # build the status page from the records and the previous history
-scripts/nightly/nvme-nightly site -o site --record night.json --logs logs \
+scripts/dashboard/nvme-dashboard site -o site --record night.json --logs logs \
     --history https://linux-nvme.github.io/nvme-cli/history.json
 ```
 

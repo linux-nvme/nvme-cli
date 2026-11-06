@@ -8,7 +8,7 @@
 
 import unittest
 
-from nvme_nightly import wringer
+from nvme_dashboard import wringer
 
 CYAN, RED, YELLOW, NORMAL = '\x1b[1;36m', '\x1b[0;31m', '\x1b[1;33m', '\x1b[0m'
 

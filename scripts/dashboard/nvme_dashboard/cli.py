@@ -4,7 +4,7 @@
 # Copyright (c) 2026 SUSE Software Solutions
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
-"""The command line of nvme-nightly."""
+"""The command line of nvme-dashboard."""
 
 from __future__ import annotations
 
@@ -215,8 +215,8 @@ def cmd_site(args: argparse.Namespace) -> int:
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog='nvme-nightly',
-        description='The tooling of the nightly tests of nvme-cli: the '
+        prog='nvme-dashboard',
+        description='The dashboard of the nvme-cli tests: the '
         'known blktests failures, the summaries and the record of a run, '
         'the status page.',
     )

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-/* The style of the nightly status page, colors: dataviz reference palette. */
+/* The style of the dashboard, colors: dataviz reference palette. */
 .viz-root {
   --surface-1: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e;
   --grid: #e1e0d9; --border: rgba(11,11,11,0.10);

@@ -10,9 +10,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nvme_nightly import blktests
-from nvme_nightly.blktests import Result
-from nvme_nightly.known_failures import Entry
+from nvme_dashboard import blktests
+from nvme_dashboard.blktests import Result
+from nvme_dashboard.known_failures import Entry
 
 
 def write(results: Path, config: str, test: str, **items: str) -> None:

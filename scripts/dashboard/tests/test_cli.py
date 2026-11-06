@@ -14,7 +14,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nvme_nightly import cli
+from nvme_dashboard import cli
 
 
 def run(*argv: str) -> int:

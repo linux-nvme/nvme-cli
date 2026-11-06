@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 from typing import Any
 
-from nvme_nightly import night
+from nvme_dashboard import night
 
 RUN_URL = 'https://github.com/o/r/actions/runs/7'
 JOB_URL = RUN_URL + '/job/8'

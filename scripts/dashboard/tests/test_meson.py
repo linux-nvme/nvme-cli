@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 from typing import Any
 
-from nvme_nightly import meson
+from nvme_dashboard import meson
 
 
 def test(name: str, result: str, **kw: Any) -> dict[str, Any]:
