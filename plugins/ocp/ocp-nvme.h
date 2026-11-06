@@ -263,9 +263,13 @@ struct __packed tcg_activity_event_data {
 	__le64  invoking_id;
 	__le64  method_id;
 	__le16  com_id;
-	__le16  protocol_id;
+	__u8    protocol_id;
 	__u8    status;
 	__le16  process_time;
 	__u8    tcg_activity_specific_context[10];
 };
+
+/* The Vendor Specific Event Data Length from TCGCE-15 */
+_Static_assert(sizeof(struct tcg_activity_event_data) == 38,
+	"tcg_activity_event_data is not 38 bytes");
 #endif /* OCP_NVME_H */

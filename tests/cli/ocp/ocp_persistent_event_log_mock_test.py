@@ -29,14 +29,13 @@ Tests in this module verify:
   * The events are walked by their lengths, also past Vendor Specific
     Information, and the standard events decode from their offsets.
   * A TCG Activity Event is recognized by its descriptor, after the Vendor
-    Specific Information.
+    Specific Information, and decodes from its offsets.
   * A vendor specific event which is not a TCG Activity Event goes
     through the generic Vendor Specific Event decoder.
   * -b and -o binary print the log as read.
 
 Known defects are covered by expectedFailure tests asserting the behavior
-the specifications define: the default action is reserved, the
-ProtocolID of a TCG Activity Event is taken as two bytes, the Vendor
+the specifications define: the default action is reserved, the Vendor
 Specific Information is dumped from byte 1 of the event, a log length
 under 512 bytes fails the Generation Number check, a log length which is
 not a multiple of 4 loses the last bytes of the log, and the --log-len
@@ -543,12 +542,10 @@ class TestPersistentEventLogVendorSpecific(PersistentEventLogTestBase):
         self.assertNotIn(TCG_ENTRY, text)
         self.assertNotIn('tcg_activity_event_data', self.events(report)[0])
 
-    @unittest.expectedFailure
     def test_tcg_fields_after_com_id(self):
-        """Defect: the ProtocolID of the TCG Activity Event is taken as two
-        bytes; it is one (TCGCE-21), so the Status, the Process Time and
-        the TCG Activity Specific Context (TCGCE-22 to -24) are read one
-        byte late."""
+        """The ProtocolID of the TCG Activity Event is one byte
+        (TCGCE-21), and the Status, the Process Time and the TCG Activity
+        Specific Context (TCGCE-22 to -24) follow it."""
         values = tcg_values()
         text, report = self.tcg_reports(layout.pack_tcg_event(
             uidx=OCP_UUID_INDEX, context=TCG_CONTEXT, **values))
