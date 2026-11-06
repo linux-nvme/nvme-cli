@@ -29,7 +29,8 @@ Tests in this module verify:
     reading the log and reading its header again fail.
   * Every field of the log header decodes in text and JSON.
   * The events are walked by their lengths, also past Vendor Specific
-    Information, and the standard events decode from their offsets.
+    Information, which is dumped from after the event header, and the
+    standard events decode from their offsets.
   * A TCG Activity Event is recognized by its descriptor, after the Vendor
     Specific Information, and decodes from its offsets.
   * A vendor specific event which is not a TCG Activity Event goes
@@ -37,8 +38,7 @@ Tests in this module verify:
   * -b and -o binary print the log as read.
 
 Known defects are covered by expectedFailure tests asserting the behavior
-the specifications define: the default action is reserved, the Vendor
-Specific Information is dumped from byte 1 of the event, a log length
+the specifications define: the default action is reserved, a log length
 under 512 bytes fails the Generation Number check, and the --log-len
 option of the man page does not exist.
 
@@ -425,11 +425,9 @@ class TestPersistentEventLogEvents(PersistentEventLogTestBase):
         self.assertEqual(self.text_values(text, 'Event Number'), ['0', '1'])
         self.assertEqual(len(self.events(report)), 2)
 
-    @unittest.expectedFailure
     def test_vendor_specific_information_is_dumped(self):
-        """Defect: the Vendor Specific Information of an event is dumped
-        from byte 1 of the event header instead of from byte 24, after
-        the header."""
+        """The Vendor Specific Information of an event is dumped from
+        byte 24, after the event header."""
         vsi = b'VSI!'
         log = layout.pack_log([layout.pack_timestamp_change(1, 2, vsi=vsi,
                                                             cntlid=1)])

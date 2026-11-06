@@ -1260,7 +1260,8 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 
 		if (vsil)
 			obj_d(valid_attrs, "vs_info_bin",
-			      (void *)pevent_entry_head + 1, vsil, 16, 1);
+			      (void *)pevent_entry_head +
+			      pevent_entry_head->ehl + 3, vsil, 16, 1);
 
 		offset += pevent_entry_head->ehl + vsil + 3;
 

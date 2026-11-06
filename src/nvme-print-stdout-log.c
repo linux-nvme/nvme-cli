@@ -245,7 +245,7 @@ void nvme_show_pel_event_header(int i,
 
 	if (vsil) {
 		printf("Vendor Specific Information:\n");
-		d((void *)hdr + 1, vsil, 16, 1);
+		d((void *)hdr + hdr->ehl + 3, vsil, 16, 1);
 	}
 }
 
