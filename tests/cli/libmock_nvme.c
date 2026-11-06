@@ -237,6 +237,9 @@ typedef ssize_t (*orig_write_t)(int fd, const void *buf, size_t count);
 typedef ssize_t (*orig_read_t)(int fd, void *buf, size_t count);
 typedef int (*orig_ioctl_t)(int fd, unsigned long request, ...);
 typedef int (*orig_close_t)(int fd);
+typedef int (*orig_stat_t)(const char *pathname, struct stat *buf);
+typedef int (*orig_stat64_t)(const char *pathname, struct stat64 *buf);
+typedef int (*orig_stat64_time64_t)(const char *pathname, void *buf);
 typedef int (*orig_fstat_t)(int fd, struct stat *buf);
 typedef int (*orig_fstat64_t)(int fd, struct stat64 *buf);
 typedef int (*orig_fstat64_time64_t)(int fd, void *buf);
@@ -258,6 +261,9 @@ static orig_read_t orig_read;
 static orig_ioctl_t orig_ioctl;
 static orig_ioctl_t orig_ioctl_time64;
 static orig_close_t orig_close;
+static orig_stat_t orig_stat;
+static orig_stat64_t orig_stat64;
+static orig_stat64_time64_t orig_stat64_time64;
 static orig_fstat_t orig_fstat;
 static orig_fstat64_t orig_fstat64;
 static orig_fstat64_time64_t orig_fstat64_time64;
@@ -326,6 +332,10 @@ static void init_orig_functions(void)
 	orig_ioctl = (orig_ioctl_t)dlsym(RTLD_NEXT, "ioctl");
 	orig_ioctl_time64 = (orig_ioctl_t)dlsym(RTLD_NEXT, "__ioctl_time64");
 	orig_close = (orig_close_t)dlsym(RTLD_NEXT, "close");
+	orig_stat = (orig_stat_t)dlsym(RTLD_NEXT, "stat");
+	orig_stat64 = (orig_stat64_t)dlsym(RTLD_NEXT, "stat64");
+	orig_stat64_time64 = (orig_stat64_time64_t)dlsym(RTLD_NEXT,
+							  "__stat64_time64");
 	orig_fstat = (orig_fstat_t)dlsym(RTLD_NEXT, "fstat");
 	orig_fstat64 = (orig_fstat64_t)dlsym(RTLD_NEXT, "fstat64");
 	orig_fstat64_time64 = (orig_fstat64_time64_t)dlsym(RTLD_NEXT, "__fstat64_time64");
@@ -1190,6 +1200,55 @@ int close(int fd)
 	}
 
 	return orig_close(fd);
+}
+
+static bool mock_nvme_stat_path(const char *pathname)
+{
+	const char *mock_path = getenv("MOCK_NVME_STAT_PATH");
+
+	return mock_path && pathname && !strcmp(pathname, mock_path);
+}
+
+int stat(const char *pathname, struct stat *buf)
+{
+	init_orig_functions();
+
+	if (mock_nvme_stat_path(pathname)) {
+		memset(buf, 0, sizeof(*buf));
+		buf->st_mode = S_IFBLK | 0600;
+		return 0;
+	}
+
+	return orig_stat(pathname, buf);
+}
+
+int stat64(const char *pathname, struct stat64 *buf)
+{
+	init_orig_functions();
+
+	if (mock_nvme_stat_path(pathname)) {
+		memset(buf, 0, sizeof(*buf));
+		buf->st_mode = S_IFBLK | 0600;
+		return 0;
+	}
+
+	return orig_stat64(pathname, buf);
+}
+
+int __stat64_time64(const char *pathname, void *buf)
+{
+	int ret;
+
+	init_orig_functions();
+
+	if (!mock_nvme_stat_path(pathname))
+		return orig_stat64_time64(pathname, buf);
+
+	ret = orig_stat64_time64("/dev/null", buf);
+	if (ret == 0)
+		((struct stat *)buf)->st_mode = S_IFBLK | 0600;
+
+	return ret;
 }
 
 int fstat(int fd, struct stat *buf)

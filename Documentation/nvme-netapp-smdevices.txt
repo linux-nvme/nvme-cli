@@ -8,13 +8,16 @@ nvme-netapp-smdevices - Display information for each NVMe path to an E-Series vo
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'netapp smdevices'
+'nvme' [<global-options>] 'netapp smdevices' [<device>]
 
 DESCRIPTION
 -----------
 Display vendor-specific information for each NVMe path to an E-Series namespace
 currently connected to the host.  The E-Series paths are identified from the
 NVMe nodes in /dev by sending an Identify Controller.
+
+When a namespace <device> is specified, display only that path without
+examining the other NVMe namespace devices on the host.
 
 OPTIONS
 -------
@@ -28,6 +31,12 @@ namespace.
 +
 ------------
 # nvme netapp smdevices -o column
+------------
+
+* Display information for one namespace only.
++
+------------
+# nvme netapp smdevices /dev/nvme0n1
 ------------
 
 NVME
