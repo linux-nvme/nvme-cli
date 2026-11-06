@@ -1318,8 +1318,7 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
 			nvme_json_pel_telemetry_crt(data, 0, valid_attrs,
-						    pevent_entry_head->el,
-						    data_len);
+						    el - vsil, data_len);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			nvme_json_pel_thermal_excursion(data, 0, valid_attrs);

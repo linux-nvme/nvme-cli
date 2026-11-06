@@ -23,6 +23,7 @@ Usage: python3 nvme_print_test.py <path-to-nvme-binary> <path-to-mock-lib>
 import json
 import os
 import random
+import re
 import struct
 import subprocess
 import unittest
@@ -352,6 +353,37 @@ class PrintCLITest(MockTestCase):
         self.assertEqual(sandboxed.returncode, 1)
         self.assertIn('cannot decode the device data in the sandbox',
                       sandboxed.stderr)
+
+    def test_persistent_event_telemetry_log_create(self):
+        # A Telemetry Log Create event holds a 512 byte Telemetry log
+        # header. Its data is dumped only if the event holds all of it,
+        # not counting the Vendor Specific Information.
+        vsi = b'V' * 8
+        for data, dumped in ((b'T' * 512, True), (b'T' * 504, False)):
+            with self.subTest(data_len=len(data)):
+                # etype, etype_rev, ehl, ehai, cntlid, ets, pelpid, vsil, el
+                events = struct.pack('<BBBBHQH4xHH', 0x0c, 0, 21, 0, 1, 0,
+                                     0, len(vsi), len(vsi) + len(data))
+                events += vsi + data
+                header = bytearray(512)
+                struct.pack_into('<B3xIQ', header, 0, _LID_PERSISTENT_EVENT,
+                                 1, len(header) + len(events))
+                self.server.logs[_LID_PERSISTENT_EVENT] = (bytes(header) +
+                                                           events)
+
+                result = self.nvme('log', 'persistent-event', self.ctrl)
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(
+                    bool(re.search(r'(?m)^0000: 54 54', result.stdout)),
+                    dumped)
+
+                if not HAVE_JSON:
+                    continue
+                result = self.nvme('log', 'persistent-event', self.ctrl,
+                                   '-o', 'json')
+                self.assertEqual(result.returncode, 0)
+                entry = json.loads(result.stdout)['list_of_event_entries'][0]
+                self.assertEqual('create' in entry, dumped)
 
     def test_persistent_event_supported_events(self):
         # Only the Timestamp Change event (bit 3) is supported.

@@ -998,7 +998,7 @@ void nvme_json_pel_set_feature(void *data, __u32 len,
 			       struct json_object *valid_attrs);
 void nvme_json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
 				 struct json_object *valid_attrs,
-				 __le16 el, __u32 size);
+				 __u32 len, __u32 size);
 void nvme_json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
 				     struct json_object *valid_attrs);
 void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,

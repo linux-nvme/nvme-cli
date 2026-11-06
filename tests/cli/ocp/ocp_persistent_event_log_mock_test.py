@@ -37,7 +37,9 @@ Tests in this module verify:
   * Every field of the log header decodes in text and JSON.
   * The events are walked by their lengths, also past Vendor Specific
     Information, which is dumped from after the event header, and the
-    standard events decode from their offsets.
+    standard events decode from their offsets. The data of a Telemetry
+    Log Create event is dumped only when the event data, without the
+    Vendor Specific Information, holds all 512 bytes of it.
   * A TCG Activity Event is recognized by its descriptor, after the Vendor
     Specific Information, and decodes from its offsets.
   * A vendor specific event which is not a TCG Activity Event goes
@@ -490,6 +492,25 @@ class TestPersistentEventLogEvents(PersistentEventLogTestBase):
         self.assertIn(' '.join(f'{b:02x}' for b in vsi), dump)
         self.assertEqual(''.join(self.events(report)[0]['vs_info_bin']),
                          vsi.decode())
+
+    def test_telemetry_log_create_is_dumped_whole(self):
+        """A Telemetry Log Create event holds a 512 byte Telemetry log
+        header. Its data is dumped only if the event holds all of it, not
+        counting the Vendor Specific Information: 504 bytes of data
+        behind 8 of VSI make an Event Length of 512, but no header."""
+        vsi = b'V' * 8
+        for data, dumped in ((b'T' * 512, True), (b'T' * 504, False),
+                             (b'T' * 16, False)):
+            with self.subTest(data_len=len(data)):
+                self.server.context = None
+                text, report = self.reports(layout.pack_log([
+                    layout.pack_event(layout.ETYPE_TELEMETRY_LOG_CREATE,
+                                      data, vsi=vsi)]))
+                self.assertEqual(self.text_values(text, 'Event Type'),
+                                 ['Set Telemetry CRT Event(0xc)'])
+                self.assertEqual(
+                    bool(re.search(r'(?m)^0000: 54 54', text)), dumped)
+                self.assertEqual('create' in self.events(report)[0], dumped)
 
     def test_unaligned_total_log_length_is_read_whole(self):
         """A Total Log Length which is not a multiple of 4 is read as
