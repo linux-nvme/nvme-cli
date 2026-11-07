@@ -274,6 +274,7 @@ static bool test_escape(void)
 
 	printf("test_escape:\n");
 
+	pass &= (shr_escape(NULL) == NULL);
 	pass &= check_escape("plain", "plain");
 	pass &= check_escape("", "");
 	pass &= check_escape("a\033[31mb", "a\\x1b[31mb");
@@ -287,10 +288,15 @@ static bool test_escape(void)
 static bool check_shell_quote(const char *in, const char *want)
 {
 	char *out = shr_shell_quote(in);
-	bool ok = out && !strcmp(out, want);
+	bool ok;
 
-	printf(" - \"%s\" -> \"%s\" [%s]\n", in, out ? out : "(null)",
-	       ok ? "PASS" : "FAIL");
+	if (!want)
+		ok = !out;
+	else
+		ok = out && !strcmp(out, want);
+
+	printf(" - \"%s\" -> \"%s\" [%s]\n", in ? in : "(null)",
+	       out ? out : "(null)", ok ? "PASS" : "FAIL");
 	free(out);
 	return ok;
 }
@@ -301,6 +307,7 @@ static bool test_shell_quote(void)
 
 	printf("shr_shell_quote:\n");
 
+	pass &= check_shell_quote(NULL, NULL);
 	pass &= check_shell_quote("plain", "'plain'");
 	pass &= check_shell_quote("", "''");
 	pass &= check_shell_quote("/tmp/a dir", "'/tmp/a dir'");
