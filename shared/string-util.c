@@ -19,6 +19,9 @@ char *shr_escape(const char *s)
 	size_t n = 1;
 	char *e, *q;
 
+	if (!s)
+		return NULL;
+
 	for (p = (const unsigned char *)s; *p; p++)
 		n += (*p < 0x20 || *p == 0x7f) ? 4 : 1;
 
@@ -42,6 +45,9 @@ char *shr_shell_quote(const char *s)
 	const char *p;
 	size_t n = 3;
 	char *e, *q;
+
+	if (!s)
+		return NULL;
 
 	for (p = s; *p; p++)
 		n += *p == '\'' ? 4 : 1;

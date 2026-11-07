@@ -34,6 +34,9 @@ int shr_parse_bool(const char *value, bool *out)
 	};
 	size_t i;
 
+	if (!value || !out)
+		return -EINVAL;
+
 	for (i = 0; i < ARRAY_SIZE(yes); i++) {
 		if (!strcasecmp(value, yes[i])) {
 			*out = true;
@@ -52,6 +55,9 @@ int shr_parse_bool(const char *value, bool *out)
 
 bool shr_has_leading_zero(const char *s)
 {
+	if (!s)
+		return false;
+
 	return s[0] == '0' && isdigit((unsigned char)s[1]);
 }
 

@@ -38,6 +38,8 @@ static bool test_accepted_spellings(void)
 
 	printf("test_accepted_spellings:\n");
 
+	pass &= check_bool(NULL, -EINVAL, false);
+
 	pass &= check_bool("1", 0, true);
 	pass &= check_bool("yes", 0, true);
 	pass &= check_bool("y", 0, true);
