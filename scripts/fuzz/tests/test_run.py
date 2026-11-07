@@ -402,6 +402,15 @@ class RunTest(unittest.TestCase):
             sorted(f.name for f in corpus.parent.iterdir()), ['device']
         )
 
+    def test_interrupt_before_start(self) -> None:
+        # Ctrl-C between the check of a merge and the start of its
+        # libFuzzer process: the handler has nothing to stop yet
+        stop = run._Stop(interrupted=True)
+        cmd = [sys.executable, '-c', 'import time; time.sleep(60)']
+        start = time.time()
+        run._libfuzzer(cmd, Path(self.tmp.name), 'log', dict(os.environ), stop)
+        self.assertLess(time.time() - start, 30)
+
     def test_deadline(self) -> None:
         with mock.patch.object(run, 'DEADLINE_EXTRA', 0):
             self.assertEqual(self._run('sleep'), 0)
