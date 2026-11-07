@@ -205,6 +205,10 @@ def _libfuzzer(
             start_new_session=True,
         )
         stop.pgids.add(proc.pid)
+        # Ctrl-C before the add above stopped only the processes which
+        # ran then: the handler sets interrupted before it reads pgids
+        if stop.interrupted:
+            stop.kill(proc.pid, signal.SIGTERM)
         if deadline is None:
             status = proc.wait()
         else:
