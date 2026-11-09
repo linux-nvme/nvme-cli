@@ -58,6 +58,7 @@
 #include "cleanup.h"
 #include "config-convert.h"
 #include "fabrics.h"
+#include "pre-os.h"
 #include "global-ctx.h"
 #include "logging.h"
 #include "nvme-print.h"
@@ -458,6 +459,9 @@ enum consume_mode {
 	CONSUME_CONNECT_ONLY,
 };
 
+static const char *nvmf_owner =
+	"registry owner; in the initrd, pre-os also records the connection";
+
 struct consume_state {
 	struct libnvme_global_ctx *ctx;
 	const struct libnvmf_config *cfg;
@@ -468,6 +472,7 @@ struct consume_state {
 	char *raw;
 	const char *hostnqn;
 	const char *hostid;
+	bool pre_os;	/* record the connections for the OS environment */
 	int err;
 };
 
@@ -552,6 +557,50 @@ static int fabrics_connect_nr_io_queues(const char *transport,
 /* libnvmf_config_conn_for_each() callback: settle addressing/identity,
  * check exclusion, then discover or connect.
  */
+/*
+ * Record a connection of the pre-OS environment for the OS environment
+ * (see pre-os.h). A failure is reported, but the connect goes ahead: the
+ * boot must not depend on it.
+ */
+static void pre_os_record(struct libnvme_global_ctx *ctx, bool is_dc,
+		const struct libnvmf_tid *tid,
+		const struct libnvmf_params *params)
+{
+	int err = nvme_pre_os_record(ctx, is_dc, tid, params);
+
+	if (err)
+		nvme_show_error(
+			"%s: failed to record the pre-OS connection: %s",
+			libnvmf_tid_get_canonical(tid),
+			libnvme_strerror(-err));
+}
+
+/*
+ * Record the connection the command line names, see pre_os_record().
+ */
+static void pre_os_record_args(struct libnvme_global_ctx *ctx, bool is_dc,
+		const struct nvmf_args *fa, const char *persistent)
+{
+	__cleanup_nvmf_tid struct libnvmf_tid *tid = NULL;
+	struct libnvmf_params *params;
+
+	if (libnvmf_tid_from_fields(fa->transport, fa->traddr, fa->trsvcid,
+			fa->subsysnqn, fa->host_traddr, fa->host_iface,
+			fa->hostnqn, fa->hostid, &tid) || !tid) {
+		nvme_show_error("failed to record the pre-OS connection");
+		return;
+	}
+
+	params = libnvmf_params_new();
+	if (!params)
+		return;
+	nvmf_args_to_params(params, fa);
+	if (is_dc && persistent)
+		libnvmf_params_set(params, "persistent", persistent);
+	pre_os_record(ctx, is_dc, tid, params);
+	libnvmf_params_free(params);
+}
+
 static void consume_conn(const struct libnvmf_config_conn *conn,
 		void *user_data)
 {
@@ -580,6 +629,10 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 				libnvmf_config_conn_get_source(conn));
 		return;
 	}
+
+	if (st->pre_os)
+		pre_os_record(st->ctx, is_dc, tid,
+			      libnvmf_config_conn_get_params(conn));
 
 	err = libnvmf_context_create(st->ctx, hook_decide_retry, hook_connected,
 			hook_already_connected, &hfd, &fctx);
@@ -904,7 +957,7 @@ unref:
 static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 		char *config_file, const char *hostnqn_arg,
 		const char *hostid_arg, bool connect, bool no_reuse,
-		nvme_print_flags_t flags)
+		bool pre_os, nvme_print_flags_t flags)
 {
 	__cleanup_free char *ini_path = NULL;
 	__cleanup_free char *hostnqn = NULL;
@@ -953,6 +1006,7 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 		.raw = raw,
 		.hostnqn = hostnqn,
 		.hostid = hostid,
+		.pre_os = connect && pre_os,
 	};
 	libnvmf_config_conn_for_each(cfg, consume_conn, &st);
 	libnvmf_config_free(cfg);
@@ -1038,8 +1092,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 			 .old_name = "force"),
 		OPT_FLAG("nbft",    0,   &nbft,   "Only look at NBFT tables"),
 		OPT_FLAG("no-nbft", 0,   &nonbft, "Do not look at NBFT tables"),
-		OPT_STRING("owner", 0, "NAME", &owner,
-			   "record this owner in the registry"),
+		OPT_STRING("owner", 0, "NAME", &owner, nvmf_owner),
 		OPT_DIR("nbft-path", 0, &nbft_path,
 			"user-defined path for NBFT tables"),
 		OPT_END()
@@ -1153,7 +1206,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		if (!nbft && config_file)
 			ret = fabrics_discovery_config(ctx, config_file,
 				fa.hostnqn, fa.hostid, connect, no_reuse,
-				flags);
+				nvme_pre_os_records(owner), flags);
 	} else {
 		ret = check_ctrl_owner(ctx, fctx,
 				owner ? owner : (nbft ? "pre-os" : NULL),
@@ -1165,6 +1218,11 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 		if (ret)
 			return 0;
+
+		if (connect && !device &&
+		    nvme_pre_os_records(owner ? owner :
+					 (nbft ? "pre-os" : NULL)))
+			pre_os_record_args(ctx, true, &fa, persistent);
 
 		ret = libnvmf_discover(ctx, fctx);
 		if (ret == -ENVME_CONNECT_DRY_RUN) {
@@ -1184,7 +1242,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
  */
 static int fabrics_connect_config(struct libnvme_global_ctx *ctx,
 		char *config_file, const char *hostnqn_arg,
-		const char *hostid_arg, nvme_print_flags_t flags)
+		const char *hostid_arg, bool pre_os, nvme_print_flags_t flags)
 {
 	__cleanup_free char *ini_path = NULL;
 	__cleanup_free char *hostnqn = NULL;
@@ -1226,6 +1284,7 @@ static int fabrics_connect_config(struct libnvme_global_ctx *ctx,
 		.raw = raw,
 		.hostnqn = hostnqn,
 		.hostid = hostid,
+		.pre_os = pre_os,
 	};
 	libnvmf_config_conn_for_each(cfg, consume_conn, &st);
 	libnvmf_config_free(cfg);
@@ -1254,8 +1313,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	OPT_ARGS(opts) = {
 		OPT_INCLUDE(nvmf, "Fabrics options"),
 		OPT_FILE("config", 'J', &config_file, nvmf_config_file),
-		OPT_STRING("owner", 0, "NAME", &owner,
-			   "record this owner in the registry"),
+		OPT_STRING("owner", 0, "NAME", &owner, nvmf_owner),
 		OPT_FILE("devid-file", 0, &devid_file,
 			 "write connected device name to FILE"),
 		OPT_FLAG("idempotent", 0, &idempotent,
@@ -1339,7 +1397,7 @@ do_connect:
 
 	if (config_file)
 		return fabrics_connect_config(ctx, config_file, fa.hostnqn,
-			fa.hostid, flags);
+			fa.hostid, nvme_pre_os_records(owner), flags);
 
 	struct hook_fabrics_data hfd = {
 		.flags = flags,
@@ -1372,6 +1430,9 @@ do_connect:
 				fa.subsysnqn ? fa.subsysnqn : "this controller");
 		libnvmf_tid_free(tid);
 	}
+
+	if (nvme_pre_os_records(owner))
+		pre_os_record_args(ctx, discovery, &fa, NULL);
 
 	ret = libnvmf_connect(ctx, fctx);
 	if (ret == -ENVME_CONNECT_ALREADY && idempotent)

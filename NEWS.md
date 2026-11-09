@@ -105,6 +105,14 @@
   This covers the NBFT, the configuration, the I/O controllers of a
   discovery log page and the reconnects of nvme-discoverd.
 
+* In the initrd (`/etc/initrd-release`), `nvme connect` and `connect-all`
+  with the owner `pre-os` record each connection they are asked for in
+  `/run/nvme/pre-os.conf.d`, before they connect, for nvme-discoverd in
+  the real root: one drop-in per host, in the format of
+  nvme-fabrics.conf. The NBFT is not recorded; it is still there after
+  the switch. The help of `--owner` says so, which tells the initrd's
+  scripts that nvme follows this model.
+
 ## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes
