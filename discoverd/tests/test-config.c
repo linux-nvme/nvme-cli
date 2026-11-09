@@ -129,6 +129,12 @@ static bool test_global_key_in_discovery_ignored(void)
 
 	config_free(cfg);
 
+	cfg = load_text("[Global]\n"
+			"nbft = false\n");
+	pass &= check(!cfg->pre_os, "nbft, the old name of pre-os, parses");
+
+	config_free(cfg);
+
 	return pass;
 }
 
