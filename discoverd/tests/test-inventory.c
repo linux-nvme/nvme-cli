@@ -630,6 +630,61 @@ static bool test_config_fc(struct discoverd_ctx *dctx)
 	return pass;
 }
 
+/*
+ * What a pre-OS DC lists is pre-OS too, also behind the last referral
+ * DC within the hop limit, and its connect options are the DC's record.
+ */
+static bool test_pre_os_ancestry(struct discoverd_ctx *dctx)
+{
+	struct libnvmf_tid *chain[INVENTORY_MAX_REFERRAL_HOPS + 1];
+	__cleanup_tid struct libnvmf_tid *io = ioc("10.0.1.1");
+	const struct libnvmf_config_conn *conn;
+	struct libnvmf_tid **dcs;
+	struct libnvmf_config *cfg;
+	struct inventory *inv;
+	const char *tmo;
+	bool pass = true;
+	char addr[32];
+	size_t i;
+
+	printf("test_pre_os_ancestry:\n");
+	inv = inventory_new();
+	if (!inv)
+		exit(EXIT_FAILURE);
+	cfg = read_config(dctx, CFG_DC("10.0.0.1") "ctrl-loss-tmo = 30\n");
+	inventory_load_pre_os(inv, dctx, cfg);
+	dcs = inventory_desired_dcs(inv);
+	chain[0] = libnvmf_tid_dup(find(dcs, "10.0.0.1", DISC_NQN));
+	free_tids(dcs);
+	if (!chain[0]) {
+		printf(" - the pre-OS DC [FAIL]\n");
+		exit(EXIT_FAILURE);
+	}
+	for (i = 1; i <= INVENTORY_MAX_REFERRAL_HOPS; i++) {
+		snprintf(addr, sizeof(addr), "10.0.0.%zu", i + 1);
+		chain[i] = dc(addr);
+		cache_dlp(inv, chain[i - 1], NULL, chain[i]);
+	}
+	cache_dlp(inv, chain[INVENTORY_MAX_REFERRAL_HOPS], io, NULL);
+
+	pass &= check("DC at the hop limit is pre-OS",
+		      inventory_is_pre_os(inv,
+				chain[INVENTORY_MAX_REFERRAL_HOPS]), true);
+	pass &= check("its IOC is pre-OS", inventory_is_pre_os(inv, io), true);
+	conn = inventory_pre_os_conn_for(inv, io);
+	tmo = conn ? libnvmf_params_get(libnvmf_config_conn_get_params(conn),
+					"ctrl-loss-tmo") : NULL;
+	pass &= check("its IOC has the pre-OS DC's options",
+		      tmo && !strcmp(tmo, "30"), true);
+
+	for (i = 0; i <= INVENTORY_MAX_REFERRAL_HOPS; i++)
+		tid_free(chain[i]);
+	inventory_free(inv);
+	libnvmf_config_free(cfg);
+
+	return pass;
+}
+
 int main(void)
 {
 	struct discoverd_ctx dctx = {
@@ -656,6 +711,7 @@ int main(void)
 	pass &= test_config_lookup(&dctx);
 	pass &= test_config_reload(&dctx);
 	pass &= test_config_fc(&dctx);
+	pass &= test_pre_os_ancestry(&dctx);
 	dmn_resolver_free(dctx.resolver);
 	sd_event_unref(dctx.event);
 	// Let the idle workers exit, so that valgrind finds no thread left.
