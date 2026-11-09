@@ -234,6 +234,26 @@ class HandoverTest(unittest.TestCase):
         self.assertEqual(self.host.owner(dev), 'nbft')
         self.assertEqual(len(self.tracked(dev)), 1)
 
+    def configure_fc(self, extra=''):
+        """The FC DC in the fabrics configuration, not the pre-OS
+        environment's."""
+        self.fc_fabric()
+        self.host.fabrics_conf(
+            f'[Discovery Controller]\n{extra}'
+            f'controller = transport=fc;traddr={FC_DC};'
+            f'host-traddr={FC_HOST}\n')
+
+    def test_b7_dc_parked_again(self):
+        """A DC with EPCSD=0 is parked after its DLP is read, also after
+        a re-check whose reconnect gets the name back that parking freed:
+        the old device's remove event is ignored then, and nvme-discoverd
+        must not take the new device for it."""
+        self.configure_fc()
+        self.host.start()
+        self.assertEqual(self.host.find(DISC_NQN), [])
+        (dev,) = self.host.find(IO_NQN)
+        self.assertEqual(self.host.owner(dev), 'discoverd')
+
     def test_b2_reload_drops_configured_boot_path(self):
         """A configuration reload that drops a connection the initrd made
         releases it without a disconnect."""

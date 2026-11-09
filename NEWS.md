@@ -51,6 +51,10 @@
   NVMe-oF, its connection units failed with "Failed to scan topology"
   and retried forever.
 
+* A discovery controller parked for EPCSD=0 is parked again after a
+  re-check whose reconnect gets its old device name back. It stayed
+  connected before.
+
 ### nvmf-autoconnect
 
 * `nvmf-autoconnect.service` wants `network-online.target`; it was only

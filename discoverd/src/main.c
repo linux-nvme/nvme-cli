@@ -1132,6 +1132,10 @@ static void epcsd_park(struct active_ctrl *e)
 
 	unit_stop(ctx.umgr, e->unit_name);
 
+	/* The stop disconnects it; the kernel may reuse the name at once. */
+	free(e->devname);
+	e->devname = NULL;
+
 	if (sd_event_now(ctx.event, CLOCK_BOOTTIME, &now) < 0)
 		return;
 
