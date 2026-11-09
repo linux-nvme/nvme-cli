@@ -77,7 +77,46 @@ static bool test_invalid_input_rejected(void)
 	unsigned char decoded[64];
 	bool pass = true;
 
+	char encoded[64];
+
 	printf("test_invalid_input_rejected:\n");
+
+	if (shr_base64_encode(NULL, 4, encoded) >= 0) {
+		printf(" - encode of NULL src with non-zero len [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - encode of NULL src rejected [PASS]\n");
+	}
+
+	if (shr_base64_encode((const unsigned char *)"test", -1,
+			      encoded) >= 0) {
+		printf(" - encode of a negative length [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - encode of a negative length rejected [PASS]\n");
+	}
+
+	if (shr_base64_encode((const unsigned char *)"test", 4,
+			      NULL) >= 0) {
+		printf(" - encode to NULL dst [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - encode to NULL dst rejected [PASS]\n");
+	}
+
+	if (shr_base64_decode(NULL, 4, decoded) >= 0) {
+		printf(" - decode of NULL src [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - decode of NULL src rejected [PASS]\n");
+	}
+
+	if (shr_base64_decode("Zm9v", 4, NULL) >= 0) {
+		printf(" - decode to NULL dst [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - decode to NULL dst rejected [PASS]\n");
+	}
 
 	if (shr_base64_decode("not valid base64!", 18, decoded) >= 0) {
 		printf(" - decode of non-base64 input [FAIL]\n");
