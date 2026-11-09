@@ -495,6 +495,28 @@ int libnvmf_config_emit_install(struct libnvmf_config_emitter *emitter,
 		const char *file, bool force);
 
 /**
+ * libnvmf_config_emit_write_file() - Write the connections of one host
+ * to one file.
+ * @emitter: Configuration emitter.
+ * @file:    Destination file.
+ *
+ * Writes the connections of @emitter, with their host in a [Host]
+ * section, to @file, which is replaced. Unlike
+ * libnvmf_config_emit_install(), a connection with a host of its own
+ * goes into @file too, so a caller can write a drop-in of its own: all
+ * connections must have the same host. The file is validated by reading
+ * it back, written atomically, and only readable by its owner.
+ *
+ * Return:
+ * * 0 on success.
+ * * -EINVAL if @emitter or @file is NULL, or the connections have
+ *   different hosts.
+ * * A negative errno value on other failures.
+ */
+int libnvmf_config_emit_write_file(struct libnvmf_config_emitter *emitter,
+		const char *file);
+
+/**
  * libnvmf_params_new() - Create a connection parameter set.
  *
  * Return: A new parameter set on success, or NULL on failure.

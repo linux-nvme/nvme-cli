@@ -476,6 +476,39 @@ static void outfiles_free(struct outfile *out, size_t n, bool rollback)
 	free(out);
 }
 
+__shr_public int libnvmf_config_emit_write_file(
+		struct libnvmf_config_emitter *emitter, const char *file)
+{
+	struct emit_persona empty = { 0 };
+	const struct emit_persona *persona, *only = NULL;
+	char *tmp = NULL;
+	int ret;
+
+	if (!emitter || !file)
+		return -EINVAL;
+
+	list_head_init(&empty.conns);
+	list_for_each(&emitter->personas, persona, entry) {
+		if (only) {
+			emit_err(emitter->ctx,
+				 "%s: more than one host for one file", file);
+			return -EINVAL;
+		}
+		only = persona;
+	}
+
+	ret = emit_tmpfile(emitter->ctx, file, only ? only : &empty, &tmp);
+	if (ret)
+		return ret;
+	if (rename(tmp, file) < 0) {
+		ret = -errno;
+		unlink(tmp);
+	}
+	free(tmp);
+
+	return ret;
+}
+
 __shr_public int libnvmf_config_emit_install(
 		struct libnvmf_config_emitter *emitter, const char *file,
 		bool force)
