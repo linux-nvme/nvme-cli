@@ -24,6 +24,11 @@
   controller connected by libnvme 1 under a reused name reads as owned
   by the old owner.
 
+* `nvme disconnect` (`-d`, `-n` and by address) honors the ownership
+  registry, as `disconnect-all` does: a controller with an owner is
+  disconnected only with `--owner` of its owner, or with `--force`. A
+  controller without an owner is disconnected as before.
+
 ### Fabrics
 
 * libnvme applies the defaults of storage vendors for their controllers

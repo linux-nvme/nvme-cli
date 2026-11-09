@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'disconnect' [--device=<device> | -d <device>]
-			[--exclude | -x]
+			[--exclude | -x] [--owner=<NAME>] [--force]
 			[<fabrics-options>]
 
 DESCRIPTION
@@ -45,6 +45,15 @@ OPTIONS
 	disconnecting, so orchestrators do not auto-reconnect the
 	controller. The entry is built from the controller's transport
 	parameters (or, with a bare --nqn, from the subsystem NQN).
+
+--owner=<NAME>::
+	Disconnect a controller owned by NAME too. A controller with an
+	owner in the NVMe ownership registry is disconnected only by its
+	owner: the context that connected it owns it. A controller without
+	an owner is disconnected without this option.
+
+--force::
+	Disconnect regardless of ownership.
 
 include::fabrics-options.txt[]
 

@@ -273,7 +273,7 @@ class SandboxTest(unittest.TestCase):
     def test_stop_disconnects_own_controller(self):
         unit = self.connected_unit()
         self.run_stop(unit)
-        self.assertEqual(self.disconnects(), [['disconnect', '-d', 'nvme900']])
+        self.assertEqual(self.disconnects(), [['disconnect', '-d', 'nvme900', '--owner=discoverd']])
         self.assertFalse((self.sysfs / 'sys/class/nvme/nvme900').exists())
         # ExecStopPost removed the state.
         self.assertFalse(

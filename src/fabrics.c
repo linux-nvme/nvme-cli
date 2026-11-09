@@ -1429,7 +1429,44 @@ static bool nvmf_ctrl_matches_args(struct libnvme_host *h, struct libnvme_ctrl *
 	       opt_matches(fa->hostid, libnvme_host_get_hostid(h));
 }
 
-static int nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
+/*
+ * Who may disconnect a controller: one without an owner, anybody; one
+ * with an owner, only that --owner, or --force.
+ */
+struct disconnect_policy {
+	const char *owner;
+	bool force;
+};
+
+/*
+ * Whether @pol allows to disconnect @c: 0 if it does, 1 if its owner
+ * keeps it, or a negative errno.
+ */
+static int may_disconnect(struct libnvme_global_ctx *ctx,
+		struct libnvme_ctrl *c, const struct disconnect_policy *pol)
+{
+	__cleanup_free char *reg_owner = NULL;
+	const char *name = libnvme_ctrl_get_name(c);
+	int err;
+
+	if (!pol->force) {
+		err = libnvmf_registry_retrieve(ctx, name, "owner", &reg_owner);
+		if (err && err != -ENOENT)
+			return err;
+		if (reg_owner && *reg_owner &&
+		    !shr_streq0(reg_owner, pol->owner)) {
+			nvme_show_error(
+				"%s is owned by '%s': use --owner=%s or --force",
+				name, reg_owner, reg_owner);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn,
+		const struct disconnect_policy *pol)
 {
 	int i = 0;
 	char *n = nqn;
@@ -1446,7 +1483,8 @@ static int nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 				if (strcmp(libnvme_subsystem_get_subsysnqn(s), p))
 					continue;
 				libnvme_subsystem_for_each_ctrl(s, c) {
-					if (!libnvmf_disconnect_ctrl(c))
+					if (!may_disconnect(ctx, c, pol) &&
+					    !libnvmf_disconnect_ctrl(c))
 						i++;
 				}
 			}
@@ -1522,11 +1560,12 @@ static int add_exclusion_subsysnqn(struct libnvme_global_ctx *ctx,
 }
 
 static int disconnect_by_device(struct libnvme_global_ctx *ctx,
-		char *device,  bool exclude)
+		char *device, bool exclude,
+		const struct disconnect_policy *pol)
 {
 	struct libnvme_ctrl *c;
+	int err, ret = 0;
 	char *p;
-	int err;
 
 	while ((p = shr_strsep(&device, ",")) != NULL) {
 		if (!strncmp(p, "/dev/", 5))
@@ -1538,20 +1577,27 @@ static int disconnect_by_device(struct libnvme_global_ctx *ctx,
 			return -ENODEV;
 		}
 
-		if (exclude)
-			add_exclusion_ctrl(ctx, c);
-
-		err = libnvmf_disconnect_ctrl(c);
+		err = may_disconnect(ctx, c, pol);
+		if (err == 1) {
+			ret = -EPERM;
+			continue;
+		}
+		if (!err) {
+			if (exclude)
+				add_exclusion_ctrl(ctx, c);
+			err = libnvmf_disconnect_ctrl(c);
+		}
 		if (err)
 			nvme_show_error("Failed to disconnect %s: %s\n",
 				p, libnvme_strerror(-err));
 	}
 
-	return 0;
+	return ret;
 }
 
 static int disconnect_by_args(struct libnvme_global_ctx *ctx,
-		const struct nvmf_args *fa, bool exclude)
+		const struct nvmf_args *fa, bool exclude,
+		const struct disconnect_policy *pol)
 {
 	struct libnvme_host *h;
 	struct libnvme_subsystem *s;
@@ -1564,10 +1610,14 @@ static int disconnect_by_args(struct libnvme_global_ctx *ctx,
 				if (!nvmf_ctrl_matches_args(h, c, fa))
 					continue;
 
-				if (exclude)
-					add_exclusion_ctrl(ctx, c);
-
-				err = libnvmf_disconnect_ctrl(c);
+				err = may_disconnect(ctx, c, pol);
+				if (err == 1)
+					continue;
+				if (!err) {
+					if (exclude)
+						add_exclusion_ctrl(ctx, c);
+					err = libnvmf_disconnect_ctrl(c);
+				}
 				if (err)
 					nvme_show_error("Failed to disconnect %s: %s\n",
 						libnvme_ctrl_get_name(c),
@@ -1587,7 +1637,7 @@ static int disconnect_by_args(struct libnvme_global_ctx *ctx,
 }
 
 static int disconnect_by_nqn(struct libnvme_global_ctx *ctx, const char *nqn,
-		bool exclude)
+		bool exclude, const struct disconnect_policy *pol)
 {
 	__cleanup_free char *n = NULL;
 
@@ -1611,7 +1661,7 @@ static int disconnect_by_nqn(struct libnvme_global_ctx *ctx, const char *nqn,
 		}
 	}
 
-	return nvmf_disconnect_nqn(ctx, n);
+	return nvmf_disconnect_nqn(ctx, n, pol);
 }
 
 int fabrics_disconnect(const char *desc, int argc, char **argv)
@@ -1630,14 +1680,21 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	struct config {
 		char *device;
 		bool  exclude;
+		char *owner;
+		bool  force;
 	};
 
 	struct config cfg = { 0 };
+	struct disconnect_policy pol;
 
 	OPT_ARGS(opts) = {
 		OPT_INCLUDE(nvmf, "Fabrics options"),
 		OPT_STRING("device", 'd', "DEV",        &cfg.device, device),
 		OPT_FLAG("exclude",  'x', &cfg.exclude, exclude_help),
+		OPT_STRING("owner",  0, "NAME",         &cfg.owner,
+			   "disconnect a controller owned by NAME too"),
+		OPT_FLAG("force",    0, &cfg.force,
+			 "disconnect regardless of ownership"),
 		OPT_END()
 	};
 
@@ -1686,13 +1743,16 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 		return err;
 	}
 
+	pol.owner = cfg.owner;
+	pol.force = cfg.force;
+
 	if (cfg.device)
-		return disconnect_by_device(ctx, cfg.device, cfg.exclude);
+		return disconnect_by_device(ctx, cfg.device, cfg.exclude, &pol);
 
 	if (match_args)
-		return disconnect_by_args(ctx, &fa, cfg.exclude);
+		return disconnect_by_args(ctx, &fa, cfg.exclude, &pol);
 
-	return disconnect_by_nqn(ctx, fa.subsysnqn, cfg.exclude);
+	return disconnect_by_nqn(ctx, fa.subsysnqn, cfg.exclude, &pol);
 }
 
 /* disconnect-all policy: should controller @c be torn down? */
