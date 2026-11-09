@@ -55,6 +55,11 @@
   re-check whose reconnect gets its old device name back. It stayed
   connected before.
 
+* An FC discovery event makes nvme-discoverd read the log page of a
+  connected discovery controller again. An FC I/O controller deleted
+  after `dev_loss_tmo` behind a persistent discovery controller was not
+  connected again.
+
 ### nvmf-autoconnect
 
 * `nvmf-autoconnect.service` wants `network-online.target`; it was only

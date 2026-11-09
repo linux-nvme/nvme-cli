@@ -254,6 +254,19 @@ class HandoverTest(unittest.TestCase):
         (dev,) = self.host.find(IO_NQN)
         self.assertEqual(self.host.owner(dev), 'discoverd')
 
+    def test_b7_fc_path_lost_persistent_dc(self):
+        """An FC I/O controller that is deleted (dev_loss_tmo) behind a
+        persistent DC, which stays connected and has no timer, is
+        connected again: the FC kickstart makes nvme-discoverd read the
+        DC's DLP."""
+        self.configure_fc('persistent = force\n')
+        self.host.start()
+        self.assertEqual(len(self.host.find(DISC_NQN)), 1)
+        (dev,) = self.host.find(IO_NQN)
+        self.host.lose(dev)
+        (dev,) = self.host.find(IO_NQN)
+        self.assertEqual(self.host.owner(dev), 'discoverd')
+
     def test_b2_reload_drops_configured_boot_path(self):
         """A configuration reload that drops a connection the initrd made
         releases it without a disconnect."""

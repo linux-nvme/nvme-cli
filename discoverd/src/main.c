@@ -1414,8 +1414,15 @@ static void ctrl_retry_now(struct active_ctrl *e)
 						     e->retry_timer;
 	int r;
 
-	if (!src)
+	/* A connected DC has no timer: read its DLP again. */
+	if (!src) {
+		if (e->is_dc && e->devname) {
+			log_info("%s | %s - FC discovery event, reading the DLP again",
+				 libnvmf_tid_str(e->tid), e->devname);
+			dlp_fetch(e);
+		}
 		return;
+	}
 
 	log_info("%s - FC discovery event, re-checking now",
 		 libnvmf_tid_str(e->tid));
