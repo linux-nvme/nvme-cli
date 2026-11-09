@@ -71,6 +71,10 @@ static bool test_hex_to_ascii(void)
 			  res, "\x01hello", 6);
 	free(res);
 
+	res = shr_hex_to_ascii(NULL);
+	pass &= check_int("NULL input returns NULL", res == NULL, 1);
+	free(res);
+
 	res = shr_hex_to_ascii("");
 	pass &= check_int("empty input returns NULL", res == NULL, 1);
 	free(res);
@@ -135,6 +139,22 @@ static bool test_bin_to_hex(void)
 		pass = false;
 	} else {
 		printf(" - empty [PASS]\n");
+	}
+
+	ret = shr_bin_to_hex(NULL, sizeof(buf), bin, sizeof(bin), 0);
+	if (ret != -EINVAL) {
+		printf(" - NULL dst [FAIL] got %d\n", ret);
+		pass = false;
+	} else {
+		printf(" - NULL dst [PASS]\n");
+	}
+
+	ret = shr_bin_to_hex(buf, sizeof(buf), NULL, sizeof(bin), 0);
+	if (ret != -EINVAL) {
+		printf(" - NULL src with non-zero len [FAIL] got %d\n", ret);
+		pass = false;
+	} else {
+		printf(" - NULL src with non-zero len [PASS]\n");
 	}
 
 	return pass;

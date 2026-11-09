@@ -64,6 +64,15 @@ static bool test_ptrarray_append(void)
 		printf(" - free() resets to zeroed state [PASS]\n");
 	}
 
+	if (shr_ptrarray_append(NULL, &items[0]) >= 0) {
+		printf(" - append to NULL array [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - append to NULL array rejected [PASS]\n");
+	}
+
+	shr_ptrarray_free(NULL);
+
 	return pass;
 }
 

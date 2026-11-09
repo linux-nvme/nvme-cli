@@ -13,6 +13,9 @@
 
 int shr_ptrarray_append(struct shr_ptrarray *a, void *item)
 {
+	if (!a)
+		return -EINVAL;
+
 	if (a->len == a->cap) {
 		size_t newcap = a->cap ? a->cap * 2 : 8;
 		void **newitems = realloc(a->items, newcap * sizeof(*newitems));
@@ -28,6 +31,9 @@ int shr_ptrarray_append(struct shr_ptrarray *a, void *item)
 
 void shr_ptrarray_free(struct shr_ptrarray *a)
 {
+	if (!a)
+		return;
+
 	free(a->items);
 	a->items = NULL;
 	a->len = 0;

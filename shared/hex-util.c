@@ -26,8 +26,13 @@ int shr_hex_to_int(char c)
 
 char *shr_hex_to_ascii(const char *hex)
 {
-	int hex_length = strlen(hex);
+	int hex_length;
 	char *text = NULL;
+
+	if (!hex)
+		return NULL;
+
+	hex_length = strlen(hex);
 
 	if (hex_length > 0) {
 		int symbol_count;
@@ -84,6 +89,9 @@ int shr_bin_to_hex(char *dst, size_t size, const void *src, size_t len,
 	const unsigned char *p = src;
 	unsigned char b;
 	size_t i;
+
+	if (!dst || (!src && len > 0))
+		return -EINVAL;
 
 	if (size < 2 * len + 1) {
 		if (size)

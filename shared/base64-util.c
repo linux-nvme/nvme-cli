@@ -34,6 +34,9 @@ int shr_base64_encode(const unsigned char *src, int srclen, char *dst)
 	uint32_t ac = 0;
 	char *cp = dst;
 
+	if (srclen < 0 || (!src && srclen > 0) || !dst)
+		return -EINVAL;
+
 	for (i = 0; i < srclen; i++) {
 		ac = (ac << 8) | src[i];
 		bits += 8;
@@ -72,7 +75,7 @@ int shr_base64_decode(const char *src, int srclen, unsigned char *dst)
 	int i, bits = 0, pad = 0;
 	unsigned char *bp = dst;
 
-	if (srclen < 0 || srclen % 4)
+	if (!src || !dst || srclen < 0 || srclen % 4)
 		return -EINVAL;
 
 	while (srclen > 0 && src[srclen - 1] == '=') {
