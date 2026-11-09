@@ -600,6 +600,52 @@ class FabricsMockCLITest(MockTestCase):
             self._connect_all_nbft('--hostnqn', self._OWNER_HOSTNQN),
             self._OWNER_HOSTNQN)
 
+    def test_disconnect_honors_owner(self):
+        """nvme disconnect leaves an owned controller alone unless --owner
+        names its owner or --force is given; an unowned controller is
+        anybody's (issue #4328)."""
+        nqn = 'nqn.2014-08.org.nvmexpress:owned-subsys'
+        self._run(*self._owner_connect_args(nqn), '--owner=nbft')
+        for args in (('-d', 'nvme0'), ('-n', nqn),
+                     ('-d', 'nvme0', '--owner=stas'),
+                     ('-t', 'tcp', '-a', '192.168.20.10', '-n', nqn)):
+            with self.subTest(args=args):
+                self._run('disconnect', *args, expect_fail=args[0] == '-d')
+                self._assert_persisted(0)
+        self._run('disconnect', '-d', 'nvme0', '--owner=nbft')
+        self._assert_disconnected(0)
+
+    def test_disconnect_exclude_before_disconnect(self):
+        """--exclude is written before the disconnect, so an orchestrator
+        that sees the removal finds the exclusion in place."""
+        for args in (('-d', 'nvme{n}'),
+                     ('-t', 'tcp', '-a', '192.168.20.10', '-n', '{nqn}')):
+            n = len(self.server.controllers)
+            nqn = f'nqn.2014-08.org.nvmexpress:excl{n}'
+            with self.subTest(args=args):
+                self._run(*self._owner_connect_args(nqn))
+                self._run('disconnect', '--exclude',
+                          *(a.format(n=n, nqn=nqn) for a in args))
+                self._assert_disconnected(n)
+                excl = Path(self.base_dir) / 'exclusions.conf'
+                self.assertIn(nqn, excl.read_text())
+                delete = self._ctrl_path(n) / 'delete_controller'
+                self.assertLessEqual(excl.stat().st_mtime_ns,
+                                     delete.stat().st_mtime_ns)
+                excl.unlink()
+
+    def test_disconnect_force_and_unowned(self):
+        """--force disconnects whatever the owner; an unowned controller
+        needs neither."""
+        self._run(*self._owner_connect_args(
+            'nqn.2014-08.org.nvmexpress:a'), '--owner=stas')
+        self._run(*self._owner_connect_args(
+            'nqn.2014-08.org.nvmexpress:b'))
+        self._run('disconnect', '-d', 'nvme0', '--force')
+        self._assert_disconnected(0)
+        self._run('disconnect', '-d', 'nvme1')
+        self._assert_disconnected(1)
+
     _DC_TRADDR = '192.168.40.10'
 
     def _dc_with_one_subsystem(self):

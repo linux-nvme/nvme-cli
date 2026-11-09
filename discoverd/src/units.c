@@ -484,11 +484,13 @@ static void unit_spec_clear(struct unit_spec *s)
  * Build the post/stop shell commands of connection unit @unit_name with the
  * real devid path, state directory and unit name substituted (systemd does
  * not expand %t/%N/%n here — see unit_devid_path()). The paths come from
- * the command line, so each is quoted for the shell.
+ * the command line, so each is quoted for the shell. The ExecStop=
+ * disconnects as the unit's owner (@is_nbft: nbft, else discoverd): nvme
+ * disconnect leaves a controller of another owner alone.
  */
 static int connection_commands(const struct unit_mgr *mgr,
 			       const char *unit_name, const char *devid_path,
-			       struct unit_spec *s)
+			       bool is_nbft, struct unit_spec *s)
 {
 	__cleanup_free char *sysfs_nvme = sysfs_path("/sys/class/nvme");
 	__cleanup_free char *nvme_dir = NULL;
@@ -532,9 +534,10 @@ static int connection_commands(const struct unit_mgr *mgr,
 		     "INO=$(cat %s/$DEV/ino 2>/dev/null); "
 		     "CUR=$(stat -Lc %%i %s/$DEV 2>/dev/null); "
 		     "[ \"$CUR\" = \"$INO\" ] || exit 0; "
-		     "%s %s disconnect -d $DEV",
+		     "%s %s disconnect -d $DEV --owner=%s",
 		     devid, ctrls, unit_name, ctrls,
-		     nvme_dir, nvme, opts) < 0) {
+		     nvme_dir, nvme, opts,
+		     is_nbft ? "nbft" : "discoverd") < 0) {
 		s->exec_stop = NULL;
 		return -ENOMEM;
 	}
@@ -894,7 +897,7 @@ static int start_connection(struct unit_mgr *mgr,
 	spec.is_fc = shr_streq0(libnvmf_tid_get_transport(t), "fc");
 	spec.exec_start = scratch.argv;
 
-	r = connection_commands(mgr, unit_name, devid_path, &spec);
+	r = connection_commands(mgr, unit_name, devid_path, is_nbft, &spec);
 	if (r < 0)
 		return r;
 
