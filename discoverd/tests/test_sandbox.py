@@ -55,7 +55,7 @@ class Daemon:
             [DISCOVERD, '--config', str(test.conf),
              '--nvme-path', str(test.nvme), '--debug', *set_options],
             env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE, encoding='utf-8')
+            stderr=self._log_file(test))
         sock = test.base / 'discoverd.sock'
         for _ in range(200):
             if sock.exists() or self.proc.poll() is not None:
@@ -69,6 +69,12 @@ class Daemon:
         self.sock.connect(str(sock))
         self.io = self.sock.makefile('rw', encoding='utf-8')
         self.stderr = ''
+
+    def _log_file(self, test):
+        # A file, not a pipe: the debug log on stderr would fill a pipe
+        # nobody reads, and block the daemon.
+        self.log = tempfile.TemporaryFile('w+', encoding='utf-8')
+        return self.log
 
     def request(self, line):
         self.io.write(line + '\n')
@@ -87,7 +93,11 @@ class Daemon:
             self.sock = None
         if self.proc.poll() is None:
             self.proc.send_signal(signal.SIGTERM)
-        self.stderr = self.proc.communicate(timeout=10)[1]
+        self.proc.wait(timeout=10)
+        if not self.log.closed:
+            self.log.seek(0)
+            self.stderr = self.log.read()
+            self.log.close()
         return self.proc.returncode
 
 
