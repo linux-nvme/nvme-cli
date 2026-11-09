@@ -31,6 +31,11 @@
 
 ### Fabrics
 
+* A connection with the owner `nbft`, an NBFT boot path, gets
+  `ctrl_loss_tmo=-1` unless one is given: the kernel never gives a boot
+  path up. This covers `connect-all --nbft` and the reconnects of
+  nvme-discoverd.
+
 * libnvme applies the defaults of storage vendors for their controllers
   right after it connected one: the I/O policy of the subsystem and
   `ctrl_loss_tmo`, from INI files in `vendor.d`, see nvme-vendor.d(5).

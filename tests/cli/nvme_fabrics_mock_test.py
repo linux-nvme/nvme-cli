@@ -156,6 +156,7 @@ class FabricsController(MockController):
             'traddr': traddr,
             'trsvcid': trsvcid,
             'keep_alive_tmo': opts.get('keep_alive_tmo'),
+            'ctrl_loss_tmo': opts.get('ctrl_loss_tmo'),
             'nr_io_queues': opts.get('nr_io_queues'),
             'discovery': 'discovery' in flags,
             'dhchap_secret': opts.get('dhchap_secret'),
@@ -599,6 +600,39 @@ class FabricsMockCLITest(MockTestCase):
         self.assertEqual(
             self._connect_all_nbft('--hostnqn', self._OWNER_HOSTNQN),
             self._OWNER_HOSTNQN)
+
+    def test_nbft_ctrl_loss_tmo(self):
+        """The kernel never gives up an NBFT boot path: the owner nbft
+        connects with ctrl_loss_tmo=-1, unless one is given. Other
+        owners keep the kernel's default."""
+        self._connect_all_nbft()
+        self.assertEqual(self.server.controllers[0]['ctrl_loss_tmo'], '-1')
+
+        args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:a')
+        self._run(*args, '--owner=nbft', '--ctrl-loss-tmo=30')
+        self.assertEqual(self.server.controllers[1]['ctrl_loss_tmo'], '30')
+
+        args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:b')
+        self._run(*args, '--owner=stas')
+        self.assertEqual(self.server.controllers[2]['ctrl_loss_tmo'], '600')
+
+    def test_nbft_ctrl_loss_tmo_over_vendor(self):
+        """An NBFT boot path keeps ctrl_loss_tmo=-1 over a vendor
+        default: it counts as the connection's own value."""
+        etc = Path(self.base_dir) / 'vendor.d'
+        etc.mkdir()
+        (etc / '90-local.conf').write_text(
+            '[Model]\nmodel = NetApp ONTAP Controller\n'
+            'ctrl-loss-tmo = 30\n')
+        self.server.sysfs_model = 'NetApp ONTAP Controller'
+
+        args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:a')
+        self._run(*args, '--owner=nbft')
+        self.assertEqual(self._vendor_attr(0, 'ctrl_loss_tmo'), '-1')
+
+        args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:b')
+        self._run(*args)
+        self.assertEqual(self._vendor_attr(1, 'ctrl_loss_tmo'), '30')
 
     def test_disconnect_honors_owner(self):
         """nvme disconnect leaves an owned controller alone unless --owner
