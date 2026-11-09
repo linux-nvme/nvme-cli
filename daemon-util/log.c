@@ -8,6 +8,7 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <strings.h>
 #include <syslog.h>
 #include <systemd/sd-journal.h>
@@ -17,6 +18,7 @@
 #include "log.h"
 
 static int log_level = DMN_DEFAULT_LOGLEVEL;
+static bool log_stderr;
 
 static const char * const level_names[] = {
 	[DMN_LOG_ERR]   = "err",
@@ -35,6 +37,11 @@ static const int prio_map[] = {
 void dmn_log_set_level(int level)
 {
 	log_level = level;
+}
+
+void dmn_log_set_stderr(bool on)
+{
+	log_stderr = on;
 }
 
 int dmn_parse_log_level(const char *name, int *level)
@@ -58,6 +65,15 @@ static void log_vmsg(int level, const char *fmt, va_list ap)
 	if (level < DMN_LOG_ERR || level > DMN_LOG_DEBUG)
 		level = DMN_LOG_ERR;
 
+	if (log_stderr) {
+		va_list aq;
+
+		va_copy(aq, ap);
+		fprintf(stderr, "<%d>", prio_map[level]);
+		vfprintf(stderr, fmt, aq);
+		fputc('\n', stderr);
+		va_end(aq);
+	}
 	sd_journal_printv(prio_map[level], fmt, ap);
 }
 

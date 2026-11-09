@@ -31,6 +31,7 @@ import signal
 import socket
 import struct
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -93,6 +94,7 @@ class Fabric(MockController):
         self.ctrls = {}        # instance -> connect options
         self.connects = []     # options of every connect, refused or not
         self.refused = []      # (options, errno)
+        self.deleted = []      # devnames deleted, not reported yet
         self.identify[CNS_CTRL] = self.id_ctrl
         self.logs[_DISCOVERY_LOG_LID] = self.discovery_log
 
@@ -200,7 +202,16 @@ class Fabric(MockController):
         subsys = self.sysfs / 'sys/class/nvme-subsystem' / f'nvme-subsys{inst}'
         subsys.mkdir(parents=True, exist_ok=True)
         (subsys / 'subsysnqn').write_text(f"{opts['nqn']}\n", encoding='utf-8')
+
         (subsys / f'nvme{inst}').mkdir(exist_ok=True)
+
+    def handle_delete(self, conn, instance):
+        """A write to delete_controller: the kernel deletes the
+        controller before the write returns."""
+        if (self._nvme_dir() / f'nvme{instance}').exists():
+            self.remove_ctrl(instance)
+            self.deleted.append(f'nvme{instance}')
+        self.send_response(conn, 0)
 
     def remove_ctrl(self, inst):
         """The kernel deletes the controller."""
@@ -241,8 +252,7 @@ class Daemon:
              f'--set-options=test-base-dir={host.base},'
              f'test-sysfs-dir={host.sysfs}', *extra_args],
             env=env, stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-            encoding='utf-8', errors='replace')
+            stdout=subprocess.DEVNULL, stderr=self._log_file(host))
         sock = host.base / 'discoverd.sock'
         for _ in range(400):
             if sock.exists() or self.proc.poll() is not None:
@@ -256,6 +266,18 @@ class Daemon:
         self.sock.settimeout(60)
         self.sock.connect(str(sock))
         self.io = self.sock.makefile('rw', encoding='utf-8')
+
+    def _log_file(self, host):
+        """The daemon logs to stderr in the sandbox (and to the journal):
+        into a file, as a pipe nobody reads would block it once full."""
+        self.log_path = host.tmp / 'discoverd.log'
+        self.log = open(self.log_path, 'a', encoding='utf-8')
+        return self.log
+
+    def _read_log(self):
+        if not self.log.closed:
+            self.log.close()
+        return self.log_path.read_text(encoding='utf-8', errors='replace')
 
     def request(self, line):
         self.io.write(line + '\n')
@@ -274,7 +296,8 @@ class Daemon:
             self.sock = None
         if self.proc.poll() is None:
             self.proc.send_signal(signal.SIGTERM)
-        self.stderr = self.proc.communicate(timeout=30)[1]
+        self.proc.wait(timeout=30)
+        self.stderr = self._read_log()
         return self.proc.returncode
 
 
@@ -322,6 +345,11 @@ class Host:
         if self.daemon:
             self.daemon.stop()
             self.daemon = None
+        # HANDOVER_LOG=1: show nvme-discoverd's log of each test.
+        log = self.tmp / 'discoverd.log'
+        if os.environ.get('HANDOVER_LOG') and log.exists():
+            sys.stderr.write(log.read_text(encoding='utf-8',
+                                           errors='replace'))
         self.fabric.shutdown()
         self.fabric.join()
         shutil.rmtree(self.tmp, ignore_errors=True)
@@ -368,7 +396,17 @@ class Host:
 
     # -- OS environment ------------------------------------------------ #
 
+    def switch_root(self):
+        """Leave the initrd. /run (the registry) and the
+        controllers stay."""
+        # What the tests check is what the OS environment disconnects;
+        # the kernel reuses the names the initrd freed.
+        self.pump()
+        self.disconnected = []
+
     def start(self, extra_args=()):
+        """Switch to the real root, and start nvme-discoverd there."""
+        self.switch_root()
         self.daemon = Daemon(self, extra_args)
         self.settle()
         return self.daemon
@@ -407,6 +445,11 @@ class Host:
                               'FC_EVENT=nvmediscovery '
                               f'NVMEFC_TRADDR={t.traddr} '
                               f'NVMEFC_HOST_TRADDR={t.host_traddr}')
+        while self.fabric.deleted:
+            name = self.fabric.deleted.pop(0)
+            self.disconnected.append(name)
+            self.announced.discard(name)
+            events.append(f'nvme remove {name}')
         nvme_dir = self.sysfs / 'sys/class/nvme'
         for ctrl in sorted(nvme_dir.iterdir()):
             delete = ctrl / 'delete_controller'

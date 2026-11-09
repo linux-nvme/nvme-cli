@@ -47,6 +47,7 @@ IPC_TYPE_GETPASS = 4  # getpass(), payload is the prompt
 IPC_TYPE_ROUTE = 5  # egress route lookup, payload is "daddr\0saddr"
 IPC_TYPE_NIC_QUEUES = 6  # ETHTOOL_GCHANNELS, payload is the ifname
 IPC_TYPE_NPROCS = 7  # get_nprocs()
+IPC_TYPE_DELETE = 8  # write() on nvmeN/delete_controller, payload N
 # combined_count, tx_count, rx_count -- the handle_nic_queues() payload.
 NIC_QUEUES_FMT = "<III"
 
@@ -279,6 +280,12 @@ class MockIPCServer(threading.Thread):
         if payload:
             conn.sendall(payload)
 
+    def handle_delete(self, conn, instance):
+        """Override for IPC_TYPE_DELETE: the kernel deletes controller
+        nvme@instance before the write to delete_controller returns.
+        Default: nothing; the file has the write."""
+        self.send_response(conn, 0)
+
     def handle_write(self, conn, payload):
         """Override for IPC_TYPE_WRITE. Default: report success."""
         self.send_response(conn, 0)
@@ -376,6 +383,8 @@ class MockIPCServer(threading.Thread):
                 self.handle_nic_queues(conn, payload.decode('utf-8', 'replace'))
             elif req_type == IPC_TYPE_NPROCS:
                 self.handle_nprocs(conn)
+            elif req_type == IPC_TYPE_DELETE:
+                self.handle_delete(conn, int(payload or b'-1'))
         except OSError as e:
             print(f"Exception handling IPC client: {e}", file=sys.stderr)
         except Exception:

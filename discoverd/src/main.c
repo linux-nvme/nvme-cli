@@ -2046,6 +2046,8 @@ int main(int argc, char **argv)
 		log_err("cannot set test-sysfs-dir");
 		return 1;
 	}
+	if (so.test_base_dir)
+		dmn_log_set_stderr(true);
 	if (so.test_base_dir && apply_test_base_dir(so.test_base_dir) < 0)
 		return 1;
 

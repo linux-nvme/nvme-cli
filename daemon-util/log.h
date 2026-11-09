@@ -26,6 +26,9 @@ enum dmn_log_level {
 
 void dmn_log_set_level(int level);
 
+/* Also log to stderr, e.g. in a test sandbox without a journal reader. */
+void dmn_log_set_stderr(bool on);
+
 /*
  * Parse a level name: err, warn, info, or debug (case-insensitive).
  * Return: 0 on success (*level set), -EINVAL otherwise.

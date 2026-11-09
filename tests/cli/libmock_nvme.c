@@ -131,6 +131,7 @@ enum ipc_type {
 	IPC_TYPE_ROUTE		= 5,	/* route lookup, "daddr\0saddr" */
 	IPC_TYPE_NIC_QUEUES	= 6,	/* ETHTOOL_GCHANNELS, the ifname */
 	IPC_TYPE_NPROCS		= 7,	/* get_nprocs() */
+	IPC_TYPE_DELETE		= 8,	/* write() on nvmeN/delete_controller */
 };
 
 /* Direction of a raw ioctl, independent of the arch's _IOC_* values. */
@@ -287,6 +288,50 @@ static struct {
 	bool is_block;
 } mock_ctrl_fds[MAX_MOCK_CTRLS];
 static int num_mock_ctrls;
+
+/*
+ * The open delete_controller files of the controllers, by instance. The
+ * kernel deletes the controller before the write returns: tell the IPC
+ * server at the write, not later, so that a connect right after the
+ * disconnect (a unit restart) finds the controller gone.
+ */
+#define MAX_DELETE_FDS 16
+static struct {
+	int fd;
+	int instance;
+} mock_delete_fds[MAX_DELETE_FDS];
+static int num_mock_delete_fds;
+
+/* The instance N of a ".../nvmeN/delete_controller" path, or -1. */
+static int delete_controller_instance(const char *pathname)
+{
+	static const char suffix[] = "/delete_controller";
+	size_t len, slen = sizeof(suffix) - 1;
+	const char *p;
+	int instance;
+
+	if (!pathname)
+		return -1;
+	len = strlen(pathname);
+	if (len <= slen || strcmp(pathname + len - slen, suffix))
+		return -1;
+	for (p = pathname + len - slen; p > pathname && p[-1] != '/'; p--)
+		;
+	if (sscanf(p, "nvme%d/delete_controller", &instance) != 1)
+		return -1;
+	return instance;
+}
+
+static void track_delete_fd(int fd, const char *pathname)
+{
+	int instance = delete_controller_instance(pathname);
+
+	if (fd < 0 || instance < 0 || num_mock_delete_fds >= MAX_DELETE_FDS)
+		return;
+	mock_delete_fds[num_mock_delete_fds].fd = fd;
+	mock_delete_fds[num_mock_delete_fds].instance = instance;
+	num_mock_delete_fds++;
+}
 
 /*
  * The route lookup reply: the egress interface the IPC server picked,
@@ -489,7 +534,9 @@ int open(const char *pathname, int flags, ...)
 	mode = open_mode_arg(flags, args);
 	va_end(args);
 
-	return orig_open(pathname, flags, mode);
+	fd = orig_open(pathname, flags, mode);
+	track_delete_fd(fd, pathname);
+	return fd;
 }
 
 int open64(const char *pathname, int flags, ...)
@@ -507,7 +554,9 @@ int open64(const char *pathname, int flags, ...)
 	mode = open_mode_arg(flags, args);
 	va_end(args);
 
-	return orig_open64(pathname, flags, mode);
+	fd = orig_open64(pathname, flags, mode);
+	track_delete_fd(fd, pathname);
+	return fd;
 }
 
 int openat(int dirfd, const char *pathname, int flags, ...)
@@ -525,7 +574,9 @@ int openat(int dirfd, const char *pathname, int flags, ...)
 	mode = open_mode_arg(flags, args);
 	va_end(args);
 
-	return orig_openat(dirfd, pathname, flags, mode);
+	fd = orig_openat(dirfd, pathname, flags, mode);
+	track_delete_fd(fd, pathname);
+	return fd;
 }
 
 int openat64(int dirfd, const char *pathname, int flags, ...)
@@ -543,7 +594,9 @@ int openat64(int dirfd, const char *pathname, int flags, ...)
 	mode = open_mode_arg(flags, args);
 	va_end(args);
 
-	return orig_openat64(dirfd, pathname, flags, mode);
+	fd = orig_openat64(dirfd, pathname, flags, mode);
+	track_delete_fd(fd, pathname);
+	return fd;
 }
 
 int __open_2(const char *pathname, int flags)
@@ -555,7 +608,9 @@ int __open_2(const char *pathname, int flags)
 	if (fd != -2)
 		return fd;
 
-	return orig_open(pathname, flags, 0);
+	fd = orig_open(pathname, flags, 0);
+	track_delete_fd(fd, pathname);
+	return fd;
 }
 
 int __open64_2(const char *pathname, int flags)
@@ -831,6 +886,41 @@ static void *ipc_call(int ipc_fd, struct ipc_request *req, const void *data,
 #endif
 }
 
+/*
+ * A write to delete_controller: write the file, as the tests that read
+ * it expect, then let the IPC server delete the controller.
+ */
+static ssize_t mock_delete_write(int fd, int instance, const void *buf,
+				 size_t count)
+{
+	struct ipc_response resp;
+	char payload[16];
+	char *resp_data;
+	ssize_t n;
+	int ipc_fd;
+
+	n = orig_write(fd, buf, count);
+	if (n < 0)
+		return n;
+
+	ipc_fd = connect_ipc_socket();
+	if (ipc_fd < 0)
+		return n;
+
+	snprintf(payload, sizeof(payload), "%d", instance);
+	struct ipc_request req = {
+		.type = IPC_TYPE_DELETE,
+		.fd = instance,
+		.data_len = strlen(payload),
+	};
+
+	resp_data = ipc_call(ipc_fd, &req, payload, &resp);
+	free(resp_data);
+	orig_close(ipc_fd);
+
+	return n;
+}
+
 ssize_t write(int fd, const void *buf, size_t count)
 {
 	struct ipc_response resp;
@@ -838,6 +928,13 @@ ssize_t write(int fd, const void *buf, size_t count)
 	int ipc_fd;
 
 	init_orig_functions();
+
+	for (int i = 0; i < num_mock_delete_fds; i++) {
+		int instance = mock_delete_fds[i].instance;
+
+		if (mock_delete_fds[i].fd == fd)
+			return mock_delete_write(fd, instance, buf, count);
+	}
 
 	if (fd != mock_fabrics_fd)
 		return orig_write(fd, buf, count);
@@ -1180,6 +1277,13 @@ int __ioctl_time64(int fd, unsigned long request, ...)
 int close(int fd)
 {
 	init_orig_functions();
+
+	for (int i = 0; i < num_mock_delete_fds; i++) {
+		if (mock_delete_fds[i].fd != fd)
+			continue;
+		mock_delete_fds[i] = mock_delete_fds[--num_mock_delete_fds];
+		break;
+	}
 
 	if (fd == mock_fabrics_fd)
 		mock_fabrics_fd = -1;
