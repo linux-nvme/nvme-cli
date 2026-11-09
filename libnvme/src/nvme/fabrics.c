@@ -1498,6 +1498,20 @@ static int nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx, struct libnvme_ct
 	return 0;
 }
 
+/*
+ * The paths the OS runs from are never given up: the owner "nbft"
+ * connects with ctrl_loss_tmo=-1, unless one was set.
+ */
+static int ctrl_loss_tmo_for(struct libnvme_global_ctx *ctx,
+			     struct libnvme_ctrl *c)
+{
+	if (c->cfg.ctrl_loss_tmo == NVMF_DEF_CTRL_LOSS_TMO &&
+	    ctx->owner && !strcmp(ctx->owner, "nbft"))
+		return -1;
+
+	return c->cfg.ctrl_loss_tmo;
+}
+
 static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **argstr)
 {
 	const char *transport = libnvme_ctrl_get_transport(c);
@@ -1603,7 +1617,7 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 			     c->cfg.reconnect_delay, false) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_or_minus_one_argument(ctx, argstr, ctrl_loss_tmo,
-			      c->cfg.ctrl_loss_tmo)) ||
+			      ctrl_loss_tmo_for(ctx, c))) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(ctx, argstr, fast_io_fail_tmo,
 			      c->cfg.fast_io_fail_tmo, false)) ||
@@ -2131,7 +2145,8 @@ __shr_public int libnvmf_add_ctrl(struct libnvme_host *h, struct libnvme_ctrl *c
 
 	libnvme_msg(h->ctx, LIBNVME_LOG_INFO, "nvme%d: %s connected\n", ret,
 		 libnvme_ctrl_get_subsysnqn(c));
-	libnvmf_vendor_apply_connected(h->ctx, ret, c->cfg.ctrl_loss_tmo);
+	libnvmf_vendor_apply_connected(h->ctx, ret,
+				       ctrl_loss_tmo_for(h->ctx, c));
 	return libnvme_init_ctrl(h, c, ret);
 }
 
@@ -2152,7 +2167,8 @@ __shr_public int libnvmf_connect_ctrl(struct libnvme_ctrl *c)
 	if (ret < 0)
 		return ret;
 
-	libnvmf_vendor_apply_connected(c->s->h->ctx, ret, c->cfg.ctrl_loss_tmo);
+	libnvmf_vendor_apply_connected(c->s->h->ctx, ret,
+				       ctrl_loss_tmo_for(c->s->h->ctx, c));
 	return 0;
 }
 
