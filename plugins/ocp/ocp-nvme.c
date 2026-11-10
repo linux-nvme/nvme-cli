@@ -536,8 +536,8 @@ static int eol_plp_failure_mode_set(struct libnvme_transport_handle *hdl, const 
 		}
 	}
 
-	err = nvme_set_features(hdl, nsid, fid, sv, mode << 30, 0, 0, uidx, 0, NULL,
-			0, &result);
+	err = nvme_set_features(hdl, nsid, fid, sv, (__u32)mode << 30, 0, 0,
+			uidx, 0, NULL, 0, &result);
 	if (err) {
 		nvme_show_err(err, "Define EOL/PLP failure mode");
 	} else {
@@ -1838,8 +1838,8 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	}
 
 	err = nvme_set_features(hdl, nsid, OCP_FID_PLPI, cfg.sv,
-			cfg.plp_health_interval << 16, 0, 0, uidx, 0, NULL, 0,
-			&result);
+			(__u32)cfg.plp_health_interval << 16, 0, 0, uidx, 0,
+			NULL, 0, &result);
 	if (err) {
 		nvme_show_err(err, "Define PLP Health Check Interval");
 	} else {
