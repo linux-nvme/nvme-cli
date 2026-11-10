@@ -13,6 +13,12 @@ UUID List the OCP UUID index lookup reads, and Get Log Page for whichever
 log IDs a test loads into it, serving each read by its log page offset
 so chunked reads of a large log see the right bytes.
 
+OCPFeatureController and OCPFeatureTestBase add what the suites of a
+Get/Set Features pair share: an answer per SEL for Get Features, a status
+for Set Features, the commands sent for the feature, and the values a Get
+prints. OCPUUIDTests adds the tests of a command that looks up the OCP
+UUID index.
+
 OCPInternalLogTestBase adds what the `ocp internal-log` suites share:
 writing telemetry and string log fixtures to files, running the command,
 and parsing the .json or .txt report it writes.
@@ -22,11 +28,27 @@ tests of its own.
 """
 import json
 import os
+import re
+import unittest
 
 from tests.cli.nvme_mock import (CNS_CTRL, CNS_UUID_LIST, LPA_TELEMETRY,
-                                 MockController, MockTestCase, id_ctrl,
-                                 uuid_list)
+                                 OPC_GET_FEATURES, OPC_SET_FEATURES,
+                                 MockController, MockTestCase, Reply,
+                                 id_ctrl, uuid_list)
 from tests.e2e.plugins.ocp.ocp_c0_layout import OCP_UUID
+
+# uuid_slot 1 puts the OCP UUID in the second entry: UUID index 2, so a
+# command sent with index 0 or 1 shows.
+UUID_SLOT = 1
+UUID_INDEX = UUID_SLOT + 1
+
+NO_UUID_MSG = 'No OCP UUID index found'
+SEL_NAMES = ('Current', 'Default', 'Saved')
+# GETF-5 capabilities (SEL 3) of a saveable, changeable feature that is
+# not per namespace.
+SAVEABLE_CAPABILITIES = 0x5
+# GETF-5 capabilities of a changeable feature that is not saveable.
+CHANGEABLE_CAPABILITIES = 0x4
 
 
 def pack_id_ctrl(lpa=LPA_TELEMETRY):
@@ -73,6 +95,107 @@ class OCPMockTestBase(MockTestCase):
                          device if device is not None else self.ctrl,
                          *args, encoding=encoding,
                          stack_limit_kb=stack_limit_kb)
+
+    def run_json(self, command, *args):
+        """Run @command with -o json and return its parsed output."""
+        result = self.assertOk(self.run_ocp(command, '-o', 'json', *args))
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            self.fail(f'-o json output is not valid JSON ({exc}): '
+                      f'{result.stdout!r}')
+
+
+class OCPFeatureController(OCPController):
+    """Serves the feature @fid with the OCP UUID at UUID_SLOT: Get
+    Features answers @dword0[SEL] in Dword 0, Set Features @set_status."""
+
+    fid = None
+
+    def __init__(self, sock_path):
+        super().__init__(sock_path)
+        self.uuid_slot = UUID_SLOT
+        self.dword0 = {3: SAVEABLE_CAPABILITIES}
+        self.set_status = 0
+        self.features[self.fid] = self.answer_feature
+
+    def answer_feature(self, cmd):
+        if cmd.opcode == OPC_SET_FEATURES:
+            return Reply(status=self.set_status)
+        return Reply(result=self.dword0.get(cmd.sel, 0))
+
+
+class OCPFeatureTestBase(OCPMockTestBase):
+    """Runs the commands of the feature of an OCPFeatureController."""
+
+    controller_class = OCPFeatureController
+
+    def run_cmd(self, command, *args):
+        """Run @command with only its own commands recorded."""
+        self.server.commands.clear()
+        return self.run_ocp(command, *args)
+
+    def cmds(self, opcode):
+        """The recorded commands with @opcode for the feature."""
+        return [c for c in self.server.admin_cmds(opcode)
+                if c.fid == self.controller_class.fid]
+
+    def only(self, opcode):
+        """The one recorded command with @opcode for the feature."""
+        cmds = self.cmds(opcode)
+        self.assertEqual(len(cmds), 1, cmds)
+        return cmds[0]
+
+    def printed_values(self, stdout):
+        """The (SEL name, value) of each "get-feature:0x<FID> <SEL> value:
+        <value>" line of @stdout."""
+        pattern = (rf'get-feature:0x{self.controller_class.fid:02X} (\w+) '
+                   r'value: ((?:0x)?[0-9a-f]+)')
+        return [(m.group(1), int(m.group(2), 16))
+                for m in re.finditer(pattern, stdout)]
+
+    def get_value(self, command, *args):
+        """Run @command; returns the one (SEL name, value) it prints and
+        the Get Features sent."""
+        result = self.assertOk(self.run_cmd(command, *args))
+        printed = self.printed_values(result.stdout)
+        self.assertEqual(len(printed), 1, result.stdout)
+        return printed[0], self.only(OPC_GET_FEATURES)
+
+
+class OCPUUIDTests:
+    """Tests of a command that looks up the OCP UUID index, for a base
+    with run_cmd() and cmds() as in OCPFeatureTestBase. @without_uuid is
+    the opcode it sends for the feature, then the command and its
+    arguments."""
+
+    without_uuid = ()
+
+    def test_without_the_ocp_uuid_nothing_is_sent(self):
+        opcode, *command = self.without_uuid
+        self.server.uuid_slot = None
+        result = self.run_cmd(*command)
+        self.assertIn(NO_UUID_MSG, result.stderr)
+        self.assertEqual(self.cmds(opcode), [])
+
+    @unittest.expectedFailure
+    def test_without_the_ocp_uuid_exits_nonzero(self):
+        """Defect: the lookup reports the missing UUID and returns 0."""
+        self.server.uuid_slot = None
+        result = self.run_cmd(*self.without_uuid[1:])
+        self.assertNotEqual(result.returncode, 0)
+
+
+def report_fields(text):
+    """Label to value for every "label : value" line of a log page
+    report, labels and values stripped of their alignment; the label ends
+    at the first colon."""
+    fields = {}
+    for line in text.splitlines():
+        label, sep, value = line.partition(':')
+        if sep:
+            fields[label.strip()] = value.strip()
+    return fields
 
 
 TEXT_RULE = '=' * 78
@@ -265,5 +388,3 @@ class OCPInternalLogTestBase(OCPMockTestBase):
         if mode == 'json':
             return report[STR_DA_EVENT_FIFO_INFO.format(da)][names[0]]
         return text_records(self.section(report, names[0]))
-
-
