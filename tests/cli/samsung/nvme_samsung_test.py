@@ -18,6 +18,7 @@ rather than in a drive.
 Run from the repository root with PYTHONPATH=.
 Usage: python3 <test-script> <nvme> <mock-lib>
 """
+import errno
 import os
 import stat
 import struct
@@ -28,7 +29,8 @@ import unittest
 from tests.cli.nvme_mock import (CNS_CTRL, FID_HOST_BEHAVIOR, NVME_BIN,
                                  OPC_GET_LOG_PAGE, OPC_SET_FEATURES,
                                  SC_INVALID_FIELD, MockController,
-                                 MockTestCase, host_behavior, main)
+                                 MockTestCase, Reply, host_behavior,
+                                 main)
 from tests.cli.nvme_mock_ipc import built_with_library
 
 _HAS_LIBARCHIVE = built_with_library(NVME_BIN, 'libarchive')
@@ -103,6 +105,8 @@ class SamsungController(MockController):
         self.mcdas = True
         self.last_blocks = (2, 4, 0, 0)
         self.vendor_supported = True
+        self.vendor_units = _VENDOR_DUMP_UNITS
+        self.vendor_data_errno = 0
         self.telemetry_sc_status = 0
         self.identify[CNS_CTRL] = lambda cmd: pack_id_ctrl(
             self.vid, self.serial, self.da4s)
@@ -141,7 +145,9 @@ class SamsungController(MockController):
         if not self.vendor_supported:
             return SC_INVALID_FIELD
         if cmd.data_len == 8 * 1024:
-            return pack_vendor_dump_header()
+            return pack_vendor_dump_header(self.vendor_units)
+        if self.vendor_data_errno:
+            return Reply(errno=self.vendor_data_errno)
         return bytes([0xAB]) * cmd.data_len
 
 
@@ -509,6 +515,23 @@ class SamsungCLITest(MockTestCase):
         result = self.run_cmd('-t', 'vendor', '-O', './dumps/')
         self.assertOk(result)
         self.assertIn('not supported', result.stdout + result.stderr)
+
+    def test_vendor_dump_size_uses_all_32_bits(self):
+        # Bytes 12..15 of the header are an unsigned size: with byte 15
+        # at 0x80 or more, each dump still goes on to its data. The
+        # first data read fails, so that the mock does not stream 16 TiB.
+        # 0xF7 and 0xF8 both read a dump, but their opcodes don't say so
+        # in bits 1:0 (10b): the mock, like the kernel, takes bit 0 as the
+        # direction and answers 0xF7 (11b) as a write, so only the three
+        # 0xF8 dumps get a header to read a size from.
+        self.server.vendor_units = 0x80000000
+        self.server.vendor_data_errno = errno.EIO
+        self.run_cmd('-t', 'vendor', '-O', './dumps/', '--hide-progress')
+        offsets = [cmd.cdw14
+                   for cmd in self.server.admin_cmds(_OPC_VENDOR_F8)
+                   if cmd.data_len == 32 * 1024]
+        self.assertEqual(offsets, [1] * 3,
+                         'each 0xF8 dump reads its data from offset 1')
 
     # ---------------------------------------------------------------- #
     # Option surface                                                    #
