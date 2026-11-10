@@ -31,6 +31,7 @@ endif
 
 # Text output only
 ocp_mock_tests += [
+    'ocp_clear_pcie_correctable_errors_mock_test.py',
     'ocp_dssd_async_event_config_mock_test.py',
     'ocp_dssd_power_state_mock_test.py',
     'ocp_eol_plp_failure_mode_mock_test.py',
