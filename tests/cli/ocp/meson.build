@@ -15,7 +15,6 @@ if json_c_dep.found()
         'ocp_hwcomp_log_mock_test.py',
         'ocp_internal_log_event_fifo_mock_test.py',
         'ocp_internal_log_mock_test.py',
-        'ocp_latency_monitor_feature_mock_test.py',
         'ocp_latency_monitor_log_mock_test.py',
         'ocp_persistent_event_log_mock_test.py',
         'ocp_smart_add_log_mock_test.py',
@@ -38,6 +37,7 @@ ocp_mock_tests += [
     'ocp_error_injection_mock_test.py',
     'ocp_idle_wakeup_time_mock_test.py',
     'ocp_ieee1667_silo_mock_test.py',
+    'ocp_latency_monitor_feature_mock_test.py',
     'ocp_plp_health_check_interval_mock_test.py',
     'ocp_telemetry_profile_mock_test.py',
 ]
