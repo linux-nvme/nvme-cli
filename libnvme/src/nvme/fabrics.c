@@ -4274,8 +4274,14 @@ static int get_vlan_id(const char *ifname)
 	if (!f)
 		return 0;
 
+	/*
+	 * The first line starts with the interface's name:
+	 * "eth0.10  VID: 10  REORDER_HDR: 1  dev->priv_flags: 1021"
+	 */
 	while (fgets(line, sizeof(line), f)) {
-		if (sscanf(line, " VID: %d", &vlan_id) == 1) {
+		char *vid = strstr(line, "VID:");
+
+		if (vid && sscanf(vid, "VID: %d", &vlan_id) == 1) {
 			fclose(f);
 			return vlan_id;
 		}
