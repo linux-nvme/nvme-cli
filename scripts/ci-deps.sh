@@ -65,7 +65,7 @@ build_ktls_utils() {
     local destdir="$1"
 
     git clone --depth 1 -b "ktls-utils-${KTLS_UTILS_VERSION}" \
-        https://github.com/oracle/ktls-utils.git
+        https://github.com/linux-nfs/ktls-utils.git
     (
         cd ktls-utils
         ./autogen.sh
