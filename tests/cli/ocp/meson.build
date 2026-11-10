@@ -10,6 +10,7 @@
 if json_c_dep.found()
     ocp_mock_tests = [
         'ocp_device_capability_log_mock_test.py',
+        'ocp_fw_activation_history_mock_test.py',
         'ocp_hwcomp_log_mock_test.py',
         'ocp_internal_log_event_fifo_mock_test.py',
         'ocp_internal_log_mock_test.py',
