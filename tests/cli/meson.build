@@ -371,6 +371,10 @@ if python3.found()
         subdir('dell')
     endif
 
+    if 'huawei' in selected_plugins
+        subdir('huawei')
+    endif
+
     if 'wdc' in selected_plugins
         subdir('wdc')
     endif
