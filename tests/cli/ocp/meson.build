@@ -36,6 +36,7 @@ ocp_mock_tests += [
     'ocp_dssd_power_state_mock_test.py',
     'ocp_eol_plp_failure_mode_mock_test.py',
     'ocp_error_injection_mock_test.py',
+    'ocp_idle_wakeup_time_mock_test.py',
     'ocp_ieee1667_silo_mock_test.py',
     'ocp_plp_health_check_interval_mock_test.py',
     'ocp_telemetry_profile_mock_test.py',
