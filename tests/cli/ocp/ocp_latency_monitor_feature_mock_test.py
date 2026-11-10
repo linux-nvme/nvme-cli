@@ -5,30 +5,45 @@
 # Copyright (c) 2026 Micron Technology, Inc.
 #
 # Authors: Broc Going <bgoing@micron.com>
-"""Tests for "nvme ocp set-latency-monitor-feature" against a mocked
-controller.
+"""Tests for "nvme ocp set-latency-monitor-feature" and "nvme ocp
+get-latency-monitor" against a mocked controller.
 
 The Set Features data is checked against the Latency Monitor Data
 Structure as the OCP specification lays it out (LMDS-1..11), not against
-nvme-cli's struct.
+nvme-cli's struct. Get Features for FID C5h returns Dword 0 cleared to
+zero for SEL 0, 1 and 2 (2.7 section 4.15.12, LMGF-1), and the feature
+is saved (LMSF-10).
 
 Tests in this module verify:
   * Set Features for FID C5h carries the 4096-byte structure, every field
     at its LMDS offset with its default value.
   * Each option changes its own field and nothing else.
   * A value too large for its field is refused before anything is sent.
+  * get-latency-monitor reads with the SEL and NSID given, the OCP UUID
+    index (UUID-3) or index 0 with --no-uuid, prints what Dword 0
+    reports, and SEL 3 as capabilities.
+
+A known defect is covered by an expectedFailure test: with no OCP UUID
+get-latency-monitor sends nothing yet exits 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
-Usage: python3 ocp_latency_monitor_feature_mock_test.py <nvme-binary> <mock-lib>
+Usage:
+    python3 ocp_latency_monitor_feature_mock_test.py <nvme-binary> <mock-lib>
 """
 import struct
 
-from tests.cli.nvme_mock import OPC_SET_FEATURES, main
-from tests.cli.ocp.ocp_mock_test import OCPMockTestBase
+from tests.cli.nvme_mock import (NSID_ALL, OPC_GET_FEATURES,
+                                 OPC_SET_FEATURES, main)
+from tests.cli.ocp.ocp_mock_test import (SEL_NAMES, UUID_INDEX,
+                                         OCPFeatureController,
+                                         OCPFeatureTestBase, OCPMockTestBase,
+                                         OCPUUIDTests)
 
 FID_LATENCY_MONITOR = 0xC5
 DATA_SIZE = 4096
+
+GET_CMD = 'get-latency-monitor'
 
 # (option, offset, struct format, default) per LMDS field.
 FIELDS = [
@@ -90,6 +105,50 @@ class TestSetLatencyMonitorFeature(OCPMockTestBase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(
                     self.server.admin_cmds(OPC_SET_FEATURES), [])
+
+
+class LatencyMonitorController(OCPFeatureController):
+    """Answers Get Features with Dword 0 cleared for SEL 0..2."""
+
+    fid = FID_LATENCY_MONITOR
+
+
+class TestGetLatencyMonitor(OCPUUIDTests, OCPFeatureTestBase):
+
+    controller_class = LatencyMonitorController
+    without_uuid = (OPC_GET_FEATURES, GET_CMD)
+
+    def test_sel(self):
+        for sel, name in enumerate(SEL_NAMES):
+            with self.subTest(sel=sel):
+                printed, cmd = self.get_value(GET_CMD, '--sel', str(sel))
+                self.assertEqual(cmd.sel, sel)
+                self.assertEqual(printed, (name, 0))
+
+    def test_value_is_dword_0(self):
+        """A device outside LMGF-1 shows what it returns."""
+        self.server.dword0[0] = 0x1234
+        printed, _ = self.get_value(GET_CMD)
+        self.assertEqual(printed, ('Current', 0x1234))
+
+    def test_read_with_nsid_0_and_the_ocp_uuid_index(self):
+        _, cmd = self.get_value(GET_CMD)
+        self.assertEqual((cmd.sel, cmd.nsid, cmd.uuid_index),
+                         (0, 0, UUID_INDEX))
+
+    def test_namespace_id(self):
+        _, cmd = self.get_value(GET_CMD, '--namespace-id', str(NSID_ALL))
+        self.assertEqual(cmd.nsid, NSID_ALL)
+
+    def test_no_uuid_reads_index_0(self):
+        _, cmd = self.get_value(GET_CMD, '--no-uuid')
+        self.assertEqual(cmd.uuid_index, 0)
+
+    def test_sel_3_prints_the_capabilities(self):
+        result = self.assertOk(self.run_cmd(GET_CMD, '--sel', '3'))
+        self.assertIn('Feature is saveable', result.stdout)
+        self.assertIn('Feature is changeable', result.stdout)
+        self.assertNotIn('Feature is per-namespace', result.stdout)
 
 
 if __name__ == '__main__':
