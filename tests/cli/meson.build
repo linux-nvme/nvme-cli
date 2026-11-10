@@ -367,6 +367,10 @@ if python3.found()
         subdir('nvidia')
     endif
 
+    if 'dell' in selected_plugins
+        subdir('dell')
+    endif
+
     if 'wdc' in selected_plugins
         subdir('wdc')
     endif
