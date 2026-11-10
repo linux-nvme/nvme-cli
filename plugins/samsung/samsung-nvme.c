@@ -25,6 +25,7 @@
 #include <shared/io-util.h>
 #include <shared/progress-util.h>
 #include <shared/string-util.h>
+#include <shared/unaligned-util.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
@@ -1106,7 +1107,7 @@ static int samsung_nvme_get_vendor_dump(struct libnvme_transport_handle *hdl,
 }
 
 static int get_vendor_dump_header(struct libnvme_transport_handle *hdl,
-		__u8 op_code, __u8 op_type, __u8 *data, int *total_dump_size)
+		__u8 op_code, __u8 op_type, __u8 *data, __u32 *total_dump_size)
 {
 	int err = 0;
 
@@ -1115,8 +1116,7 @@ static int get_vendor_dump_header(struct libnvme_transport_handle *hdl,
 	if (err != 0)
 		return err;
 
-	*total_dump_size = (data[15] << 24)	| (data[14] << 16)
-					 | (data[13] <<  8) |  data[12];
+	*total_dump_size = shr_get_unaligned_le32(&data[12]);
 
 	return err;
 }
@@ -1135,7 +1135,9 @@ static int get_vendor_dump(struct libnvme_transport_handle *hdl,
 	__cleanup_free char *file_path = NULL;
 	int err = 0;
 	int output = 0;
-	int offset = 0, total_dump_size = 0;
+	/* 64-bit, so that it cannot wrap past a size near 2^32 */
+	__u64 offset = 0;
+	__u32 total_dump_size = 0;
 	struct timeval begin;
 	__u8 *data = libnvme_alloc(UNIT_DATA_SIZE_32KB);
 
