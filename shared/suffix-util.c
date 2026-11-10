@@ -44,9 +44,14 @@ static struct si_suffix {
 
 const char *shr_suffix_si_get(double *value)
 {
-	long double value_ld = *value;
-	const char *suffix = shr_suffix_si_get_ld(&value_ld);
+	long double value_ld;
+	const char *suffix;
 
+	if (!value)
+		return "";
+
+	value_ld = *value;
+	suffix = shr_suffix_si_get_ld(&value_ld);
 	*value = value_ld;
 
 	return suffix;
@@ -69,6 +74,9 @@ static int suffix_si_parse(const char *str, char **endptr, uint64_t *val,
 	uint64_t frac = 0;
 	const char *p;
 	int frac_len = 0, i;
+
+	if (!str || !endptr || !val || !suffix)
+		return -EINVAL;
 
 	/* strtoull() takes whitespace and a sign, a digit must lead */
 	if (!isdigit((unsigned char)*str) || shr_has_leading_zero(str))
@@ -183,6 +191,9 @@ const char *shr_suffix_si_get_ld(long double *value)
 {
 	int i;
 
+	if (!value)
+		return "";
+
 	for (i = 0; i < ARRAY_SIZE(si_suffixes); i++) {
 		struct si_suffix *s = &si_suffixes[i];
 
@@ -210,6 +221,9 @@ const char *shr_suffix_binary_get(long long *value)
 {
 	int i;
 
+	if (!value)
+		return "";
+
 	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
 		struct binary_suffix *s = &binary_suffixes[i];
 
@@ -226,6 +240,9 @@ const char *shr_suffix_binary_get(long long *value)
 const char *shr_suffix_dbinary_get(double *value)
 {
 	int i;
+
+	if (!value)
+		return "";
 
 	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
 		struct binary_suffix *s = &binary_suffixes[i];
@@ -244,6 +261,9 @@ int shr_suffix_binary_parse(const char *str, char **endptr, uint64_t *val)
 	unsigned long long ret;
 	const char *p;
 	int i;
+
+	if (!str || !endptr || !val)
+		return -EINVAL;
 
 	/* strtoull() takes whitespace and a sign, a digit must lead */
 	if (!isdigit((unsigned char)*str) || shr_has_leading_zero(str))

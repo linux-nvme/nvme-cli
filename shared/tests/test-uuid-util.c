@@ -33,6 +33,7 @@ static bool test_uuid_to_string(void)
 
 	printf("test_uuid_to_string:\n");
 
+	pass &= (shr_uuid_to_string(NULL) == NULL);
 	pass &= check_str("canonical uuid", shr_uuid_to_string(uuid),
 			   "1b4e28ba-2fa1-11d2-883f-0016d3cca427");
 
@@ -80,6 +81,7 @@ static bool test_fw_to_string(void)
 
 	printf("test_fw_to_string:\n");
 
+	pass &= (shr_fw_to_string(NULL) == NULL);
 	pass &= check_str("printable revision", shr_fw_to_string(printable), "1B2C3D4E");
 	pass &= check_str("non-printable replaced with '.'", shr_fw_to_string(with_junk),
 			   "..!~..XY");

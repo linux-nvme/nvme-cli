@@ -50,6 +50,9 @@ int main(void)
 
 	printf("test_print_word_wrapped:\n");
 
+	shr_print_word_wrapped(NULL, 0, 0, stdout);
+	shr_print_word_wrapped("short text", 0, 0, NULL);
+
 	out = capture("short text", 0, 0);
 	pass &= check_bool("short text fits on one line", strchr(out, '\n') == NULL);
 	pass &= check_bool("short text is printed verbatim", !strcmp(out, "short text"));
