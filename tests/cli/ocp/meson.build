@@ -21,6 +21,7 @@ if json_c_dep.found()
         'ocp_smart_add_log_mock_test.py',
         'ocp_tcg_configuration_log_mock_test.py',
         'ocp_telemetry_string_log_mock_test.py',
+        'ocp_unsupported_reqs_log_mock_test.py',
     ]
 else
     ocp_mock_tests = [
