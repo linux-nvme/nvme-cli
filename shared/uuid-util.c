@@ -36,6 +36,9 @@ const char *shr_uuid_to_string(unsigned char uuid[SHR_UUID_LEN])
 {
 	static char str[SHR_UUID_LEN_STRING];
 
+	if (!uuid)
+		return NULL;
+
 	snprintf(str, sizeof(str),
 		 "%02x%02x%02x%02x-%02x%02x-%02x%02x-"
 		 "%02x%02x-%02x%02x%02x%02x%02x%02x",
@@ -50,6 +53,9 @@ const char *shr_fw_to_string(char *c)
 {
 	static char ret[9];
 	int i;
+
+	if (!c)
+		return NULL;
 
 	for (i = 0; i < 8; i++)
 		ret[i] = c[i] >= '!' && c[i] <= '~' ? c[i] : '.';

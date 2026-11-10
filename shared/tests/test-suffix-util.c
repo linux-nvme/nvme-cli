@@ -115,6 +115,21 @@ static bool test_suffix_si_parse(void)
 			pass &= check_u64(desc, num, tests[i].exp);
 	}
 
+	{
+		char *endptr;
+		uint64_t num = 0;
+
+		pass &= check_ret("NULL input",
+				  shr_suffix_si_parse(NULL, &endptr, &num),
+				  -EINVAL);
+		pass &= check_ret("NULL endptr",
+				  shr_suffix_si_parse("1k", NULL, &num),
+				  -EINVAL);
+		pass &= check_ret("NULL val",
+				  shr_suffix_si_parse("1k", &endptr, NULL),
+				  -EINVAL);
+	}
+
 	return pass;
 }
 
@@ -200,6 +215,21 @@ static bool test_suffix_binary_parse(void)
 			pass &= check_u64(desc, num, tests[i].exp);
 	}
 
+	{
+		char *endptr;
+		uint64_t num = 0;
+
+		pass &= check_ret("NULL input",
+				  shr_suffix_binary_parse(NULL, &endptr, &num),
+				  -EINVAL);
+		pass &= check_ret("NULL endptr",
+				  shr_suffix_binary_parse("1Ki", NULL, &num),
+				  -EINVAL);
+		pass &= check_ret("NULL val",
+				  shr_suffix_binary_parse("1Ki", &endptr, NULL),
+				  -EINVAL);
+	}
+
 	return pass;
 }
 
@@ -209,6 +239,8 @@ static bool test_suffix_si_get(void)
 	double val;
 
 	printf("test_suffix_si_get:\n");
+
+	pass &= check_str("NULL value", shr_suffix_si_get(NULL), "");
 
 	val = 1500.0;
 	pass &= check_str("1500 -> k suffix", shr_suffix_si_get(&val), "k");
@@ -227,6 +259,8 @@ static bool test_suffix_si_get_ld(void)
 
 	printf("test_suffix_si_get_ld:\n");
 
+	pass &= check_str("NULL value", shr_suffix_si_get_ld(NULL), "");
+
 	pass &= check_str("5000000 -> M suffix", shr_suffix_si_get_ld(&val), "M");
 	pass &= check_ret("5000000 -> value scaled", (int)val, 5);
 
@@ -239,6 +273,8 @@ static bool test_suffix_binary_get(void)
 	long long val = 2048;
 
 	printf("test_suffix_binary_get:\n");
+
+	pass &= check_str("NULL value", shr_suffix_binary_get(NULL), "");
 
 	pass &= check_str("2048 -> Ki suffix", shr_suffix_binary_get(&val), "Ki");
 	pass &= check_ret("2048 -> value scaled", (int)val, 2);
@@ -255,6 +291,8 @@ static bool test_suffix_dbinary_get(void)
 	double val = 3.0 * (1LL << 20);
 
 	printf("test_suffix_dbinary_get:\n");
+
+	pass &= check_str("NULL value", shr_suffix_dbinary_get(NULL), "");
 
 	pass &= check_str("3 Mi -> Mi suffix", shr_suffix_dbinary_get(&val), "Mi");
 	pass &= check_ret("3 Mi -> value scaled", (int)val, 3);
