@@ -30,6 +30,7 @@ endif
 
 # Text output only
 ocp_mock_tests += [
+    'ocp_dssd_power_state_mock_test.py',
     'ocp_error_injection_mock_test.py',
     'ocp_ieee1667_silo_mock_test.py',
 ]
