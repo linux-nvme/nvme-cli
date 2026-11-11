@@ -359,6 +359,10 @@ if python3.found()
         subdir('netapp')
     endif
 
+    if 'amzn' in selected_plugins
+        subdir('amzn')
+    endif
+
     if 'micron' in selected_plugins
         subdir('micron')
     endif
