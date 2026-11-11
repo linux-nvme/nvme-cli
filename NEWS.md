@@ -34,6 +34,10 @@
   such as `lvm2-monitor.service`, waiting for a network that was gone
   (#3309). Controllers with another owner, or none, are left alone.
 
+* `nvmf-connect@.service` skips every event while nvme-discoverd is
+  active, also the AEN and `rediscover` events; it skipped only the FC
+  kickstart. nvme-discoverd handles them itself (#4327).
+
 ## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes
