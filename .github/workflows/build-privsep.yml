@@ -55,32 +55,33 @@ jobs:
           path: |
             .build-ci/meson-logs/*.txt
 
-  # Only when master is updated: build-freebsd.yml already builds
-  # FreeBSD for each pull request.
   privsep-freebsd:
     name: sandbox on FreeBSD
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.repository == 'linux-nvme/nvme-cli') }}
-    runs-on: arc-vm-nvme-cli
+    runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: cpa.sh {0}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Start the FreeBSD VM
+        uses: cross-platform-actions/action@82668f1fbd89d9c99487604f822cbf6716f124d3 # v1.7.0
         with:
-          repository: "linux-blktests/blktests-ci"
-      - name: Build and test nvme-cli in VM
-        id: build
-        uses: ./.github/actions/kubevirt-action
+          operating_system: freebsd
+          version: '15.1'
+          cpu_count: 4
+      - name: Install the dependencies
+        run: |
+          sudo pkg install -y bash git meson ninja pkgconf json-c openssl
+      - name: build
+        run: |
+          set -ex
+          uname -a
+          bash scripts/build.sh -b debug -c cc privsep
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        name: upload logs
+        if: failure()
         with:
-          container_disk_image: ghcr.io/linux-nvme/blktests-freebsd-containerdisk:next
-          distro: freebsd
-          run_cmds: |
-            set -e
-            set -x
-            uname -a
-
-            sudo pkg install -y bash git meson ninja pkgconf json-c openssl
-
-            git clone https://github.com/${{ github.repository }} nvme-cli
-            cd nvme-cli
-            git checkout ${{ github.sha }}
-
-            bash scripts/build.sh -b debug -c cc privsep
+          name: privsep FreeBSD logs files
+          path: |
+            .build-ci/meson-logs/*.txt

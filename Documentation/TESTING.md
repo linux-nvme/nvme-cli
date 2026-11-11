@@ -419,8 +419,9 @@ use the libFuzzer interface, so AFL++ can run them too (`afl-clang-fast` with
 
 The nightly workflow (`.github/workflows/nightly-tests.yml`) runs
 blktests, the end-to-end tests and the daemon tests in a VM with the
-latest mainline kernel. A kernel bug can make a blktests test fail for
-weeks. To keep the nightly run meaningful in the meantime, such a test is
+latest mainline kernel. These jobs are skipped at the moment: their
+self-hosted runners are gone. A kernel bug can make a blktests test fail
+for weeks. To keep the nightly run meaningful in the meantime, such a test is
 marked as a known failure: it still runs and its result is reported, but
 its failure does not fail the run.
 

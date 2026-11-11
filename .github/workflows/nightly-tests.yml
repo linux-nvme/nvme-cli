@@ -21,8 +21,12 @@ jobs:
   # The blktests failures which are known and tracked in an issue each:
   # the open issues with the label, see Documentation/TESTING.md. They
   # run, but do not fail the night. A closed issue counts again.
+  #
+  # Skipped, as is nightly-tests: the self-hosted arc-vm-nvme-cli runners
+  # are gone, their GitHub App authentication had to be removed. The jobs
+  # on the GitHub hosted runners still run.
   known-failures:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
+    if: ${{ false && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -48,7 +52,7 @@ jobs:
 
   nightly-tests:
     # Also without the list: then the known failures fail the run.
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
+    if: ${{ false && !cancelled() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
     needs: known-failures
     runs-on: arc-vm-nvme-cli
     timeout-minutes: 240
