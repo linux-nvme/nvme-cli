@@ -86,6 +86,7 @@ if want_fabrics
         'nvme/config-resolve.c',
         'nvme/exclusion.c',
         'nvme/fabrics.c',
+        'nvme/lib-fabrics.c',
         'nvme/nbft.c',
         'nvme/registry.c',
         'nvme/tid.c',
