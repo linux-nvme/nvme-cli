@@ -11,6 +11,7 @@ After=network-online.target
 After=nvme-discoverd.service
 # A TLS connection fails at once if tlshd is not running.
 After=tlshd.service
+Wants=remote-fs-pre.target
 Before=remote-fs-pre.target
 
 [Service]
@@ -30,6 +31,8 @@ Type=oneshot
 # '+' runs systemctl outside RestrictAddressFamilies, which blocks AF_UNIX.
 ExecCondition=+/bin/sh -c "! @SYSTEMCTL@ -q is-active nvme-discoverd.service"
 ExecStart=@SBINDIR@/nvme connect-all --owner=autoconnect
+RemainAfterExit=yes
+ExecStop=@SBINDIR@/nvme disconnect-all --owner=autoconnect
 
 [Install]
 WantedBy=default.target
