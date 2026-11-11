@@ -815,6 +815,7 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 		__u64 *slbas, __u64 *eilbrts, __u16 *elbatms,
 		__u16 *elbats, __u16 nr)
 {
+	size_t j;
 	int i;
 
 	memset(copy, 0, sizeof(*copy) * nr);
@@ -823,10 +824,13 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		/*
-		 * Unlike the other fields, the 80 bit ELBT is big endian, the
-		 * byte order of the Storage and Reference Space it carries.
+		 * The 80 bit ELBT carries the ELBST and EILBRT laid out as
+		 * in Command Dwords 14, 3 and 2 (NVM Command Set, section
+		 * 5.3.1.4.1), little endian like the other fields. Byte by
+		 * byte: the field is not aligned.
 		 */
-		*(__be64 *)&copy[i].elbt[2] = htobe64(eilbrts[i]);
+		for (j = 0; j < sizeof(eilbrts[i]); j++)
+			copy[i].elbt[j] = eilbrts[i] >> (8 * j);
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
 	}
@@ -881,6 +885,7 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		__u64 *eilbrts, __u16 *elbatms, __u16 *elbats,
 		__u16 nr)
 {
+	size_t j;
 	int i;
 
 	memset(copy, 0, sizeof(*copy) * nr);
@@ -891,10 +896,13 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
 		/*
-		 * Unlike the other fields, the 80 bit ELBT is big endian, the
-		 * byte order of the Storage and Reference Space it carries.
+		 * The 80 bit ELBT carries the ELBST and EILBRT laid out as
+		 * in Command Dwords 14, 3 and 2 (NVM Command Set, section
+		 * 5.3.1.4.1), little endian like the other fields. Byte by
+		 * byte: the field is not aligned.
 		 */
-		*(__be64 *)&copy[i].elbt[2] = htobe64(eilbrts[i]);
+		for (j = 0; j < sizeof(eilbrts[i]); j++)
+			copy[i].elbt[j] = eilbrts[i] >> (8 * j);
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
 	}
