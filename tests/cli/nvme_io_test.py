@@ -295,6 +295,37 @@ class CopyTest(IoTestBase):
                                      8 * i + 7)
                     self.assertEqual(r, bytes(entry))
 
+    def test_tags(self):
+        """The tags of the source ranges are little endian (#4278): ELBT
+        (32 bits for formats 0h and 2h, 80 bits for 1h and 3h, the low
+        bits first, as in Command Dwords 14, 3 and 2), ELBAT and ELBATM"""
+        # format: (ELBT offset, ELBT size, ELBAT offset), ELBATM follows
+        layout = {0: (24, 4, 28), 1: (26, 10, 36),
+                  2: (24, 4, 28), 3: (26, 10, 36)}
+        app_tags, masks = (0x1234, 0xabcd), (0xffff, 0x00f0)
+        for fmt, (elbt_at, elbt_size, elbat_at) in layout.items():
+            ref_tags = ((0x12345678, 0x9abcdef0) if elbt_size == 4 else
+                        (0x0123456789abcdef, 0x1122334455667788))
+            with self.subTest(format=fmt):
+                self.server.commands.clear()
+                args = ['--slbs=0x10,0x20', '--blocks=7,15',
+                        f'--format={fmt}',
+                        '--expected-ref-tags=' +
+                        ','.join(hex(t) for t in ref_tags),
+                        '--expected-app-tags=' +
+                        ','.join(hex(t) for t in app_tags),
+                        '--expected-app-tag-masks=' +
+                        ','.join(hex(m) for m in masks)]
+                if fmt >= 2:
+                    args.append('--snsids=1,2')
+                ranges = self.ranges(self.copy(*args), fmt)
+                for r, ref, app, mask in zip(ranges, ref_tags, app_tags,
+                                             masks):
+                    self.assertEqual(r[elbt_at:elbt_at + elbt_size],
+                                     ref.to_bytes(elbt_size, 'little'))
+                    self.assertEqual(struct.unpack_from('<HH', r, elbat_at),
+                                     (app, mask))
+
     def test_invalid(self):
         cases = [
             (['--slbs=0', '--blocks=1', '--format=4'], 'invalid format'),
