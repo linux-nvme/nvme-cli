@@ -27,6 +27,13 @@
   ordered after it. Without a `_netdev` mount, which pulls the target
   in, it started before the network and failed to connect (#3309).
 
+* `nvmf-autoconnect.service` stays active and disconnects the
+  controllers with the owner `autoconnect` when it stops: at the
+  shutdown after the `_netdev` mounts are unmounted and before the
+  network goes down. A controller left behind kept late shutdown steps,
+  such as `lvm2-monitor.service`, waiting for a network that was gone
+  (#3309). Controllers with another owner, or none, are left alone.
+
 ## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes
