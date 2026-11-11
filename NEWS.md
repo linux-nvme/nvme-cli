@@ -43,6 +43,11 @@
   is active. nvme-discoverd connects the NBFT's subsystems itself
   (#4329).
 
+* `nvmefc-boot-connections.service` skips when nvme-discoverd is
+  enabled: nvme-discoverd replays the FC discovery events itself when it
+  starts, and the unit ran before that, while the legacy rule was not
+  masked yet (#4327).
+
 ## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes

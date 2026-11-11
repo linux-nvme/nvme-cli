@@ -19,6 +19,8 @@ MemoryDenyWriteExecute=yes
 RemoveIPC=yes
 RestrictAddressFamilies=none
 Type=oneshot
+# '+' runs systemctl outside RestrictAddressFamilies.
+ExecCondition=+/bin/sh -c "! @SYSTEMCTL@ -q is-enabled nvme-discoverd.service"
 ExecStart=/bin/sh -c "echo add > /sys/class/fc/fc_udev_device/nvme_discovery"
 
 [Install]
