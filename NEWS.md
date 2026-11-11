@@ -21,6 +21,11 @@
   to nvme-discoverd, also when it is left over from an older
   installation. Stopping nvme-discoverd removes the mask.
 
+* `nvme-discoverd.service` loads `nvme-fabrics` before nvme-discoverd
+  starts (`modprobe@nvme_fabrics.service`). On a host that boots without
+  NVMe-oF, its connection units failed with "Failed to scan topology"
+  and retried forever.
+
 ### nvmf-autoconnect
 
 * `nvmf-autoconnect.service` wants `network-online.target`; it was only
