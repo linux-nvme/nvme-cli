@@ -202,7 +202,6 @@ class Fabric(MockController):
         subsys = self.sysfs / 'sys/class/nvme-subsystem' / f'nvme-subsys{inst}'
         subsys.mkdir(parents=True, exist_ok=True)
         (subsys / 'subsysnqn').write_text(f"{opts['nqn']}\n", encoding='utf-8')
-
         (subsys / f'nvme{inst}').mkdir(exist_ok=True)
 
     def handle_delete(self, conn, instance):

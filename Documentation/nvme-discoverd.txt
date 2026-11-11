@@ -14,8 +14,9 @@ DESCRIPTION
 -----------
 nvme-discoverd is a persistent daemon that connects the host's desired
 NVMe-oF controllers and keeps them connected. It reads three sources to
-build its set of desired connections: the NBFT ACPI table (boot-time
-controllers), the shared NVMe-oF fabrics configuration
+build its set of desired connections: the connections of the pre-OS
+environment (the NBFT ACPI table and @RUNDIR@/nvme/pre-os.conf, see
+below), the shared NVMe-oF fabrics configuration
 (nvme-fabrics.conf(5)), and the Discovery Log Pages of any Discovery
 Controllers it connects to (including FC targets found via FC
 kickstart). It never disconnects a live controller in response to a
@@ -46,9 +47,20 @@ starts after tlshd.
 
 Before connecting or reconnecting anything, nvme-discoverd checks the
 system-wide exclusion list. It also registers ownership of every
-controller it connects (--owner discoverd, or --owner pre-os for an
-NBFT-sourced controller) in the NVMe-oF ownership registry. See
-nvme-registry-list(1) and nvme-exclusion-add(1).
+controller it connects (--owner discoverd) in the NVMe-oF ownership
+registry. See nvme-registry-list(1) and nvme-exclusion-add(1).
+
+The pre-OS environment, the firmware and the initrd, connects the paths
+the system boots from with the owner 'pre-os' (once called 'nbft'). In
+the initrd, nvme records each connection it makes with this owner in a
+drop-in of @RUNDIR@/nvme/pre-os.conf.d, also when the connect fails; the
+NBFT lists the firmware's. nvme-discoverd keeps these connections
+connected, but never owns them: it connects a lost or never connected
+path again with --owner pre-os and the parameters the pre-OS
+environment used, and so is everything a pre-OS Discovery Controller
+lists. Their units never disconnect, also not at the shutdown: the
+kernel keeps the connection until the root file system is gone. The
+exclusion list does not apply to them.
 
 A Discovery Controller that has no owner, for example one connected
 with 'nvme discover --persistent', is not tracked. When its discovery
@@ -101,9 +113,9 @@ test-sysfs-dir=<DIR>;;
 	tables and the FC kickstart attribute.
 test-base-dir=<DIR>;;
 	Run in a sandbox in <DIR>, which must be under /tmp. The
-	ownership registry, the state of /run/nvme/discoverd and the
-	fabrics configuration (<DIR>/nvme-fabrics.conf) are taken from
-	<DIR>. nvme-discoverd does not use systemd: the connection units
+	ownership registry, the state of /run/nvme/discoverd, the
+	fabrics configuration (<DIR>/nvme-fabrics.conf) and pre-os.conf
+	(<DIR>/pre-os.conf) are taken from <DIR>. nvme-discoverd does not use systemd: the connection units
 	run in the daemon and are kept in <DIR>/units, with a journal of
 	what ran. It does not listen to udev either: a test sends the
 	uevents through the control socket <DIR>/discoverd.sock, which
@@ -123,7 +135,7 @@ nvme-discoverd.conf holds the daemon's own knobs, in a '[Global]'
 section and a '[Discovery]' section:
 
 	[Global]
-	nbft = true
+	pre-os = true
 	debug-level = info
 
 	[Discovery]
@@ -132,8 +144,8 @@ section and a '[Discovery]' section:
 	dc-giveup-timeout = 72hours
 	zeroconf = false
 
-'nbft' (boolean, default true) adopts and connects controllers listed
-in the NBFT ACPI table. 'debug-level' (err, warn, info, or debug;
+'pre-os' (boolean, default true) keeps the connections of the pre-OS
+environment connected, see above. 'nbft' is its old name. 'debug-level' (err, warn, info, or debug;
 default info) sets the log threshold; '--debug' on the command line
 overrides it.
 
@@ -164,7 +176,8 @@ See nvme-fabrics.conf(5).
 SIGNALS
 -------
 SIGHUP;;
-	Reload both nvme-discoverd.conf and the shared fabrics configuration.
+	Reload nvme-discoverd.conf, the shared fabrics configuration
+	and pre-os.conf.
 	Newly desired connections are started; nothing already connected
 	is ever disconnected by a reload. If the fabrics configuration
 	fails to reload (e.g. a syntax error), the previous one is kept
@@ -185,6 +198,10 @@ FILES
 
 @SYSCONFDIR@/nvme/nvme-fabrics.conf, @SYSCONFDIR@/nvme/nvme-fabrics.conf.d/*.conf::
 	The connections nvme-discoverd manages; see nvme-fabrics.conf(5).
+
+@RUNDIR@/nvme/pre-os.conf, @RUNDIR@/nvme/pre-os.conf.d/*.conf::
+	The connections of the pre-OS environment, which nvme(1) writes in
+	the initrd; see DESCRIPTION.
 
 @RUNDIR@/nvme/discoverd/::
 	Runtime state linking each connected controller to the systemd

@@ -34,6 +34,16 @@ int inventory_load_nbft(struct inventory *inv,
 			const struct discoverd_ctx *dctx, char *path);
 
 /*
+ * Replace the pre-OS DC/IOC sets with the connections of @cfg, the
+ * resolved RUNDIR/nvme/pre-os.conf the pre-OS environment wrote (see
+ * nvme's pre-os.h), or empty them if @cfg is NULL. @cfg must outlive the
+ * sets: the connections keep pointing into it for their parameters.
+ */
+void inventory_load_pre_os(struct inventory *inv,
+			   const struct discoverd_ctx *dctx,
+			   const struct libnvmf_config *cfg);
+
+/*
  * Called from the event loop when the name lookup of a configured traddr
  * ends. @added is true if the lookup added a connection to the config sets.
  */
@@ -115,9 +125,9 @@ int inventory_referral_hops(const struct inventory *inv,
 			    const struct libnvmf_tid *dc_tid);
 
 /*
- * Where @tid comes from: "nbft", "config", "discovered", or "dlp" with
- * *@parent set to the desired DC whose cached DLP lists it. NULL if @tid
- * is not desired. *@parent is borrowed from @inv.
+ * Where @tid comes from: "nbft", "pre-os", "config", "discovered", or
+ * "dlp" with *@parent set to the desired DC whose cached DLP lists it.
+ * NULL if @tid is not desired. *@parent is borrowed from @inv.
  */
 const char *inventory_source(const struct inventory *inv,
 			     const struct libnvmf_tid *tid,
@@ -135,11 +145,25 @@ bool inventory_is_desired(const struct inventory *inv,
 			  const struct libnvmf_tid *tid);
 
 /*
- * Query: is tid in the NBFT set?
- * Used to determine whether to use --owner nbft.
+ * Query: is tid a connection of the pre-OS environment? True for the
+ * NBFT and pre-os.conf sets, and for what the cached DLP of such a DC
+ * lists. nvme-discoverd keeps these connected with the owner pre-os and
+ * never disconnects them.
  */
-bool inventory_is_nbft(const struct inventory *inv,
-		       const struct libnvmf_tid *t);
+bool inventory_is_pre_os(const struct inventory *inv,
+			 const struct libnvmf_tid *t);
+
+/*
+ * The pre-os.conf entry of @t, or for what a pre-OS DC lists, the entry of
+ * the nearest DC above it that has one: "connect-all" in the pre-OS
+ * environment gave its options to everything it connected. NULL if none.
+ */
+const struct libnvmf_config_conn *inventory_pre_os_conn_for(
+		const struct inventory *inv, const struct libnvmf_tid *t);
+
+/* Whether @conn is an entry of pre-os.conf. */
+bool inventory_is_pre_os_conn(const struct inventory *inv,
+			      const struct libnvmf_config_conn *conn);
 
 /*
  * Iterate over all DC TIDs that should be connected at startup.

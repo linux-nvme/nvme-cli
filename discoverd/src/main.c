@@ -416,7 +416,7 @@ static int release_undesired(sd_event_source *src,
 	list_for_each_safe(&g_ctrls, e, next, entry) {
 		bool desired = inventory_is_desired(ctx.inventory, e->tid);
 
-		if (inventory_is_nbft(ctx.inventory, e->tid))
+		if (inventory_is_pre_os(ctx.inventory, e->tid))
 			continue;
 
 		if (check_exclusions &&
@@ -523,21 +523,29 @@ static const char *find_devname_for_tid(const struct conn_scan *scan,
 /* Frees a conn_scan on scope exit; a zeroed scan is a safe no-op. */
 #define __cleanup_conn_scan __attribute__((cleanup(conn_scan_free)))
 
+/* The owner of @tid: pre-os for a connection of the pre-OS environment. */
+static enum unit_owner owner_of(const struct libnvmf_tid *tid)
+{
+	return inventory_is_pre_os(ctx.inventory, tid) ? UNIT_OWNER_PRE_OS
+						       : UNIT_OWNER_DISCOVERD;
+}
+
 /*
  * Exclusion + registry-owner check — called before every connect decision.
  *
- * Exclusion applies to NBFT-sourced controllers too: the exclusion list is
- * the host administrator's explicit, root-only instruction, and is the
- * supported way to take a boot path out of service for testing or
- * maintenance. owner=pre-os still protects a boot-path controller from every
- * *other* orchestrator via the registry — it just does not override the
- * local admin's own exclusion entry.
+ * The exclusion list does not apply to the pre-OS environment's connections
+ * (inventory_is_pre_os()): the OS environment does not take a pre-OS
+ * path out of service.
  *
  * The registry check skips a controller another orchestrator (e.g.
- * nvme-stas) already owns. "discoverd" and "pre-os" (once "nbft") are
- * discoverd's own registry owner strings (see unit_start_dc()/
- * unit_start_ioc() in units.c), so a controller discoverd itself owns is
- * never skipped here.
+ * nvme-stas) already owns. "discoverd" is discoverd's own registry owner
+ * (see unit_start_dc()/unit_start_ioc() in units.c), so a controller
+ * discoverd itself owns is never skipped here. "pre-os" (or its old name
+ * "nbft") is the pre-OS environment's: discoverd keeps such a controller
+ * connected if it is a pre-OS connection it knows of, and leaves it alone
+ * otherwise.
+ *
+ * @owner: the owner of @tid (owner_of()).
  *
  * @scan is a snapshot the caller built before a loop, or NULL to build a
  * throwaway one for this call. It is only consulted when @known_devname
@@ -556,14 +564,15 @@ static const char *find_devname_for_tid(const struct conn_scan *scan,
  */
 static bool should_connect(const struct conn_scan *scan,
 			   const struct libnvmf_tid *tid,
-			   const char *known_devname)
+			   const char *known_devname, enum unit_owner owner)
 {
 	__cleanup_conn_scan struct conn_scan local = { 0 };
-	__cleanup_free char *owner = NULL;
+	__cleanup_free char *reg_owner = NULL;
 	const char *devname = known_devname;
 	int r;
 
-	if (libnvmf_exclusion_match(ctx.nvme_ctx, tid)) {
+	if (owner != UNIT_OWNER_PRE_OS &&
+	    libnvmf_exclusion_match(ctx.nvme_ctx, tid)) {
 		log_info("%s - excluded, skipping", libnvmf_tid_str(tid));
 		return false;
 	}
@@ -578,7 +587,7 @@ static bool should_connect(const struct conn_scan *scan,
 
 	if (devname) {
 		r = libnvmf_registry_retrieve(ctx.nvme_ctx, devname, "owner",
-					      &owner);
+					      &reg_owner);
 		if (r == -ENOENT)
 			r = 0;
 	} else {
@@ -590,10 +599,11 @@ static bool should_connect(const struct conn_scan *scan,
 			 libnvmf_tid_str(tid), strerror(-r));
 		return false;
 	}
-	if (owner && !streq(owner, "discoverd") &&
-	    !libnvmf_owner_equal(owner, "pre-os")) {
+	if (reg_owner && !streq(reg_owner, "discoverd") &&
+	    !(owner == UNIT_OWNER_PRE_OS &&
+	      libnvmf_owner_equal(reg_owner, "pre-os"))) {
 		log_info("%s - owned by '%s', skipping",
-			 libnvmf_tid_str(tid), owner);
+			 libnvmf_tid_str(tid), reg_owner);
 		return false;
 	}
 
@@ -601,7 +611,9 @@ static bool should_connect(const struct conn_scan *scan,
 }
 
 /*
- * Resolved connect parameters for @t: a statically configured connection's
+ * Resolved connect parameters for @t: those the pre-OS environment
+ * recorded for @t or for the pre-OS DC it was learned through (see
+ * inventory_pre_os_conn_for()), a statically configured connection's
  * own params, or — for anything discoverd found on its own (NBFT, DLP, FC
  * kickstart) — the discovered-controller defaults for the scope @via_dc
  * was learned through (NULL if @t has no configured parent DC either),
@@ -613,9 +625,14 @@ static const struct libnvmf_params *params_for(
 		const struct libnvmf_config_conn *via_dc)
 {
 	const struct libnvmf_config_conn *conn =
-		inventory_config_conn_for(ctx.inventory, t);
+		inventory_pre_os_conn_for(ctx.inventory, t);
 	const struct libnvmf_params *params;
 
+	if (!conn)
+		conn = inventory_config_conn_for(ctx.inventory, t);
+	// A log page is cached after its entries are connected.
+	if (!conn && via_dc && inventory_is_pre_os_conn(ctx.inventory, via_dc))
+		conn = via_dc;
 	if (conn)
 		return libnvmf_config_conn_get_params(conn);
 	if (!ctx.fabrics_cfg)
@@ -697,16 +714,16 @@ static void adopt_ctrl(const char *unit_name, const struct libnvmf_tid *tid,
  * the unit if a previous run of this daemon left it connected. Skipped when
  * a unit for this TID is already tracked, so that the same IOC behind two
  * DCs does not issue a duplicate StartTransient. The caller is responsible
- * for the should_connect() decision. @via_dc is the parent DC's config
- * connection, if @tid was learned via that DC's Discovery Log Page; NULL
- * otherwise.
+ * for the should_connect() decision. @owner: the owner of @tid
+ * (owner_of()). @via_dc is the parent DC's config connection, if @tid was
+ * learned via that DC's Discovery Log Page; NULL otherwise.
  */
 static void start_ctrl(const struct libnvmf_tid *tid, bool is_dc,
+		       enum unit_owner owner,
 		       const struct libnvmf_config_conn *via_dc)
 {
 	__cleanup_free char *unit_name = tid_unit_name(tid);
 	const struct libnvmf_params *params;
-	bool is_nbft;
 	int r;
 
 	if (!unit_name)
@@ -745,10 +762,8 @@ static void start_ctrl(const struct libnvmf_tid *tid, bool is_dc,
 		free(devname);
 	}
 
-	is_nbft = inventory_is_nbft(ctx.inventory, tid);
-
-	r = is_dc ? unit_start_dc(ctx.umgr, tid, params, is_nbft)
-		  : unit_start_ioc(ctx.umgr, tid, params, is_nbft);
+	r = is_dc ? unit_start_dc(ctx.umgr, tid, params, owner)
+		  : unit_start_ioc(ctx.umgr, tid, params, owner);
 	if (r >= 0) {
 		ctrl_add(unit_name, tid, is_dc, params);
 		log_dbg("%s: requested %s unit", libnvmf_tid_str(tid),
@@ -761,11 +776,12 @@ static void start_ctrl(const struct libnvmf_tid *tid, bool is_dc,
 }
 
 struct dlp_fetch_ctx {
-	const struct libnvmf_config_conn *via_dc; // dc_tid's own conn, if any
+	const struct libnvmf_config_conn *via_dc; // conn of dc_tid, or pre-OS
 	const struct conn_scan *scan; // shared by every entry's connect check
 	struct tid_list iocs;      // for the inventory
 	struct tid_list referrals; // for the inventory
 	int hops; // the DC's referral hops from its source, -1 if none
+	enum unit_owner owner; // the DC's, and so of what it lists
 	bool self_seen;
 	bool epcsd; // meaningful only if self_seen
 };
@@ -781,8 +797,8 @@ static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
 		return;
 	}
 
-	if (should_connect(fctx->scan, t, NULL))
-		start_ctrl(t, false, fctx->via_dc);
+	if (should_connect(fctx->scan, t, NULL, fctx->owner))
+		start_ctrl(t, false, fctx->owner, fctx->via_dc);
 }
 
 /*
@@ -830,8 +846,8 @@ static void dlp_dc_callback(const struct libnvmf_tid *t, bool epcsd,
 		return;
 	}
 
-	if (should_connect(fctx->scan, t, NULL)) {
-		start_ctrl(t, true, fctx->via_dc);
+	if (should_connect(fctx->scan, t, NULL, fctx->owner)) {
+		start_ctrl(t, true, fctx->owner, fctx->via_dc);
 		record_parent_epcsd(t, epcsd);
 	}
 }
@@ -868,8 +884,10 @@ static void process_dlp(struct active_ctrl *e,
 	__cleanup_conn_scan struct conn_scan scan = { 0 };
 	const struct libnvmf_tid *dc_tid = e->tid;
 	struct dlp_fetch_ctx fctx = {
-		.via_dc = inventory_config_conn_for(ctx.inventory, dc_tid),
+		.via_dc = inventory_pre_os_conn_for(ctx.inventory, dc_tid) ?:
+			  inventory_config_conn_for(ctx.inventory, dc_tid),
 		.hops = inventory_referral_hops(ctx.inventory, dc_tid),
+		.owner = owner_of(dc_tid),
 	};
 	bool epcsd;
 
@@ -976,7 +994,7 @@ static void ctrl_arm_giveup(struct active_ctrl *e)
 
 	if (e->giveup_at_usec || !e->is_dc)
 		return;
-	if (inventory_is_nbft(ctx.inventory, e->tid) ||
+	if (inventory_is_pre_os(ctx.inventory, e->tid) ||
 	    inventory_config_conn_for(ctx.inventory, e->tid))
 		return;
 	if (ctx.cfg->dc_giveup_timeout_usec == SHR_USEC_INFINITY)
@@ -1041,12 +1059,12 @@ static int restart_or_start(struct active_ctrl *e)
 	if (r < 0) {
 		const struct libnvmf_params *params =
 			params_for(e->tid, e->is_dc, NULL);
-		bool is_nbft = inventory_is_nbft(ctx.inventory, e->tid);
+		enum unit_owner owner = owner_of(e->tid);
 
 		if (e->is_dc)
-			r = unit_start_dc(ctx.umgr, e->tid, params, is_nbft);
+			r = unit_start_dc(ctx.umgr, e->tid, params, owner);
 		else
-			r = unit_start_ioc(ctx.umgr, e->tid, params, is_nbft);
+			r = unit_start_ioc(ctx.umgr, e->tid, params, owner);
 	}
 	return r;
 }
@@ -1364,7 +1382,7 @@ static void on_nvme_remove(const char *devname,
 	 * entry wins even over a still-desired controller — it is the
 	 * administrator's explicit override.
 	 */
-	if (!should_connect(NULL, e->tid, devname)) {
+	if (!should_connect(NULL, e->tid, devname, owner_of(e->tid))) {
 		unit_stop(ctx.umgr, e->unit_name);
 		ctrl_remove(e);
 		return;
@@ -1461,8 +1479,8 @@ static void on_fc_discovery(const struct libnvmf_tid *t,
 		ctrl_retry_now(e);
 		return;
 	}
-	if (should_connect(NULL, tid, NULL))
-		start_ctrl(tid, true, NULL);
+	if (should_connect(NULL, tid, NULL, owner_of(tid)))
+		start_ctrl(tid, true, owner_of(tid), NULL);
 }
 
 /*
@@ -1515,8 +1533,8 @@ static void on_mdns_add(const char *traddr, const char *trsvcid,
 		return;
 
 	inventory_add_discovered_dc(ctx.inventory, tid);
-	if (should_connect(NULL, tid, NULL))
-		start_ctrl(tid, true, NULL);
+	if (should_connect(NULL, tid, NULL, owner_of(tid)))
+		start_ctrl(tid, true, owner_of(tid), NULL);
 }
 
 /*
@@ -1681,8 +1699,10 @@ static void connect_desired(void)
 	dcs = inventory_desired_dcs(ctx.inventory);
 	if (dcs) {
 		for (i = 0; dcs[i]; i++) {
-			if (should_connect(&scan, dcs[i], NULL))
-				start_ctrl(dcs[i], true, NULL);
+			enum unit_owner owner = owner_of(dcs[i]);
+
+			if (should_connect(&scan, dcs[i], NULL, owner))
+				start_ctrl(dcs[i], true, owner, NULL);
 			tid_free(dcs[i]);
 		}
 		free(dcs);
@@ -1691,8 +1711,10 @@ static void connect_desired(void)
 	iocs = inventory_desired_iocs(ctx.inventory);
 	if (iocs) {
 		for (i = 0; iocs[i]; i++) {
-			if (should_connect(&scan, iocs[i], NULL))
-				start_ctrl(iocs[i], false, NULL);
+			enum unit_owner owner = owner_of(iocs[i]);
+
+			if (should_connect(&scan, iocs[i], NULL, owner))
+				start_ctrl(iocs[i], false, owner, NULL);
 			tid_free(iocs[i]);
 		}
 		free(iocs);
@@ -1726,6 +1748,28 @@ static void apply_log_level(void)
 	libnvme_set_logging_level(ctx.nvme_ctx, level, false, false);
 }
 
+/*
+ * (Re)load the pre-OS environment's connections from pre-os.conf, or drop
+ * them when pre-os = false. A file that does not parse keeps the last-good
+ * set.
+ */
+static void load_pre_os(void)
+{
+	const char *path = ctx.pre_os_conf_path ? ctx.pre_os_conf_path :
+			   RUNDIR "/nvme/pre-os.conf";
+	struct libnvmf_config *cfg = NULL;
+
+	if (ctx.cfg->pre_os &&
+	    libnvmf_config_read(ctx.nvme_ctx, path, &cfg) < 0) {
+		log_err("failed to read %s, keeping last-good", path);
+		return;
+	}
+
+	inventory_load_pre_os(ctx.inventory, &ctx, cfg);
+	libnvmf_config_free(ctx.pre_os_cfg);
+	ctx.pre_os_cfg = cfg;
+}
+
 static void reload_config(void *user_data __attribute__((unused)))
 {
 	struct discoverd_config *new_cfg;
@@ -1748,6 +1792,7 @@ static void reload_config(void *user_data __attribute__((unused)))
 		log_err("failed to reload fabrics config, keeping last-good");
 	}
 	inventory_load_config(ctx.inventory, &ctx);
+	load_pre_os();
 
 	/*
 	 * Connect any newly added desired controllers. Release those the
@@ -1817,7 +1862,8 @@ static void on_control_dump(FILE *f, void *user_data __attribute__((unused)))
 		fputs(",\"tid\":", f);
 		json_string(f, libnvmf_tid_get_canonical(e->tid));
 		json_bool(f, "dc", e->is_dc);
-		json_bool(f, "nbft", inventory_is_nbft(ctx.inventory, e->tid));
+		json_bool(f, "pre_os",
+			  inventory_is_pre_os(ctx.inventory, e->tid));
 		json_bool(f, "desired", e->desired);
 		json_bool(f, "dlp_fetched", e->dlp_fetched);
 		fprintf(f, ",\"attempts\":%u", e->attempts);
@@ -1926,7 +1972,8 @@ static int apply_test_base_dir(const char *dir)
 
 	if (asprintf(&state, "%s/discoverd", dir) < 0 ||
 	    asprintf(&ctx.fabrics_conf_path, "%s/nvme-fabrics.conf",
-		     dir) < 0)
+		     dir) < 0 ||
+	    asprintf(&ctx.pre_os_conf_path, "%s/pre-os.conf", dir) < 0)
 		return -ENOMEM;
 
 	return state_set_dir(state);
@@ -2109,12 +2156,13 @@ int main(int argc, char **argv)
 		return 1;
 	inventory_set_lookup_callback(ctx.inventory, on_config_lookup, NULL);
 
-	if (ctx.cfg->nbft) {
+	if (ctx.cfg->pre_os) {
 		__cleanup_free char *nbft_dir = sysfs_path(NBFT_SYSFS_PATH);
 
 		if (nbft_dir)
 			inventory_load_nbft(ctx.inventory, &ctx, nbft_dir);
 	}
+	load_pre_os();
 	inventory_load_config(ctx.inventory, &ctx);
 	load_saved();
 
@@ -2221,6 +2269,8 @@ int main(int argc, char **argv)
 	config_free(ctx.cfg);
 	libnvmf_config_free(ctx.fabrics_cfg);
 	free(ctx.fabrics_conf_path);
+	libnvmf_config_free(ctx.pre_os_cfg);
+	free(ctx.pre_os_conf_path);
 	libnvme_free_global_ctx(ctx.nvme_ctx);
 	sd_bus_unref(ctx.bus);
 	sd_event_unref(ctx.event);

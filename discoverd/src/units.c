@@ -480,17 +480,24 @@ static void unit_spec_clear(struct unit_spec *s)
 
 #define __cleanup_unit_spec __attribute__((cleanup(unit_spec_clear)))
 
+static const char *owner_name(enum unit_owner owner)
+{
+	return owner == UNIT_OWNER_PRE_OS ? "pre-os" : "discoverd";
+}
+
 /*
  * Build the post/stop shell commands of connection unit @unit_name with the
  * real devid path, state directory and unit name substituted (systemd does
  * not expand %t/%N/%n here — see unit_devid_path()). The paths come from
- * the command line, so each is quoted for the shell. The ExecStop=
- * disconnects as the unit's owner (@is_nbft: pre-os, else discoverd): nvme
- * disconnect leaves a controller of another owner alone.
+ * the command line, so each is quoted for the shell.
+ *
+ * The unit of a pre-OS I/O controller has no ExecStop=. A pre-OS DC
+ * (@is_dc) carries no file system: its unit disconnects it, as pre-os.
  */
 static int connection_commands(const struct unit_mgr *mgr,
 			       const char *unit_name, const char *devid_path,
-			       bool is_nbft, struct unit_spec *s)
+			       bool is_dc, enum unit_owner owner,
+			       struct unit_spec *s)
 {
 	__cleanup_free char *sysfs_nvme = sysfs_path("/sys/class/nvme");
 	__cleanup_free char *nvme_dir = NULL;
@@ -526,7 +533,8 @@ static int connection_commands(const struct unit_mgr *mgr,
 	 * The kernel reuses device names. The inode check makes sure
 	 * $DEV is still the controller this unit connected.
 	 */
-	if (asprintf(&s->exec_stop,
+	if ((owner != UNIT_OWNER_PRE_OS || is_dc) &&
+	    asprintf(&s->exec_stop,
 		     "DEV=$(cat %s 2>/dev/null); "
 		     "[ -n \"$DEV\" ] || exit 0; "
 		     "UNIT=$(cat %s/$DEV/unit 2>/dev/null); "
@@ -536,8 +544,7 @@ static int connection_commands(const struct unit_mgr *mgr,
 		     "[ \"$CUR\" = \"$INO\" ] || exit 0; "
 		     "%s %s disconnect -d $DEV --owner=%s",
 		     devid, ctrls, unit_name, ctrls,
-		     nvme_dir, nvme, opts,
-		     is_nbft ? "pre-os" : "discoverd") < 0) {
+		     nvme_dir, nvme, opts, owner_name(owner)) < 0) {
 		s->exec_stop = NULL;
 		return -ENOMEM;
 	}
@@ -743,7 +750,7 @@ static int start_unit(struct unit_mgr *mgr, const struct unit_spec *s)
 /*
  * Build the nvme-connect argv into s->argv[] and return it.
  * @params: resolved connect parameters to emit (kato, ctrl-loss-tmo, tls, …).
- * is_nbft: use --owner=pre-os (once nbft); otherwise --owner=discoverd.
+ * @owner: the --owner of the connection.
  * Strings are formatted into the provided scratch buffers (in the struct);
  * the TID fields and params share the extra[] pool.
  */
@@ -808,7 +815,7 @@ static int build_connect_argv(const struct unit_mgr *mgr,
 			      const char *devid_path,
 			       const struct libnvmf_tid *t,
 			       const struct libnvmf_params *params,
-			       bool is_dc, bool is_nbft,
+			       bool is_dc, enum unit_owner owner,
 			       struct connect_scratch *s)
 {
 	char kato_arg[32];
@@ -851,8 +858,7 @@ static int build_connect_argv(const struct unit_mgr *mgr,
 	}
 
 	s->argv[i++] = "--idempotent";
-	snprintf(s->owner, sizeof(s->owner), "--owner=%s",
-		 is_nbft ? "pre-os" : "discoverd");
+	snprintf(s->owner, sizeof(s->owner), "--owner=%s", owner_name(owner));
 	s->argv[i++] = s->owner;
 	snprintf(s->devid_arg, sizeof(s->devid_arg), "--devid-file=%s",
 		 devid_path);
@@ -865,7 +871,7 @@ static int build_connect_argv(const struct unit_mgr *mgr,
 static int start_connection(struct unit_mgr *mgr,
 			    const struct libnvmf_tid *t,
 			    const struct libnvmf_params *params,
-			    bool is_dc, bool is_nbft)
+			    bool is_dc, enum unit_owner owner)
 {
 	__cleanup_unit_spec struct unit_spec spec = { };
 	struct connect_scratch scratch = { };
@@ -882,8 +888,8 @@ static int start_connection(struct unit_mgr *mgr,
 	if (r < 0)
 		return r;
 
-	r = build_connect_argv(mgr, devid_path, t, params, is_dc,
-			       is_nbft, &scratch);
+	r = build_connect_argv(mgr, devid_path, t, params, is_dc, owner,
+			       &scratch);
 	if (r < 0)
 		return r;
 
@@ -897,7 +903,8 @@ static int start_connection(struct unit_mgr *mgr,
 	spec.is_fc = shr_streq0(libnvmf_tid_get_transport(t), "fc");
 	spec.exec_start = scratch.argv;
 
-	r = connection_commands(mgr, unit_name, devid_path, is_nbft, &spec);
+	r = connection_commands(mgr, unit_name, devid_path, is_dc, owner,
+				&spec);
 	if (r < 0)
 		return r;
 
@@ -905,15 +912,15 @@ static int start_connection(struct unit_mgr *mgr,
 }
 
 int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
-		  const struct libnvmf_params *params, bool is_nbft)
+		  const struct libnvmf_params *params, enum unit_owner owner)
 {
-	return start_connection(mgr, t, params, true, is_nbft);
+	return start_connection(mgr, t, params, true, owner);
 }
 
 int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
-		   const struct libnvmf_params *params, bool is_nbft)
+		   const struct libnvmf_params *params, enum unit_owner owner)
 {
-	return start_connection(mgr, t, params, false, is_nbft);
+	return start_connection(mgr, t, params, false, owner);
 }
 
 int unit_start_connect_all(struct unit_mgr *mgr, const char *devname,
