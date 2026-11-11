@@ -33,6 +33,9 @@
  * - the delete_controller attribute of nvme5 is the file named by the
  *   MOCK_DELETE_CTRL environment variable; writes to the one of nvme6
  *   return 0
+ * - the ctrl_loss_tmo attribute of nvme5 and the iopolicy attribute of
+ *   nvme-subsys5 are the files named by MOCK_CTRL_LOSS_TMO and
+ *   MOCK_IOPOLICY
  * - IOC_OPAL_TAKE_OWNERSHIP and IOC_OPAL_LOCK_UNLOCK on the namespace
  *   return the TCG status MOCK_TCG_NOT_AUTHORIZED unless the key is
  *   MOCK_SED_PASSWORD; IOC_OPAL_LOCK_UNLOCK unlocks only to read-write
@@ -194,6 +197,13 @@ static int mock_open(const char *path, int flags, mode_t mode,
 	else if (!strcmp(path, "/sys/class/nvme/nvme5/delete_controller") &&
 		 getenv("MOCK_DELETE_CTRL"))
 		path = getenv("MOCK_DELETE_CTRL");
+	else if (!strcmp(path, "/sys/class/nvme/nvme5/ctrl_loss_tmo") &&
+		 getenv("MOCK_CTRL_LOSS_TMO"))
+		path = getenv("MOCK_CTRL_LOSS_TMO");
+	else if (!strcmp(path,
+			 "/sys/class/nvme-subsystem/nvme-subsys5/iopolicy") &&
+		 getenv("MOCK_IOPOLICY"))
+		path = getenv("MOCK_IOPOLICY");
 
 	fd = real_open(path, flags, mode);
 	if (fd >= 0 && ctrl)

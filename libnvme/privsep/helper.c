@@ -477,6 +477,83 @@ static int handle_delete_ctrl(__u32 id, const char *payload, __u32 len)
 	return n < 0 ? n : 0;
 }
 
+static bool valid_subsys_name(const char *name)
+{
+	const char *p;
+
+	if (strncmp(name, "nvme-subsys", 11))
+		return false;
+	p = name + 11;
+
+	return parse_number(&p) && !*p;
+}
+
+/* -1, or a number of seconds */
+static bool valid_ctrl_loss_tmo(const char *value)
+{
+	const char *p = value;
+
+	if (!strcmp(value, "-1"))
+		return true;
+	return parse_number(&p) && !*p;
+}
+
+static bool valid_iopolicy(const char *value)
+{
+	return !strcmp(value, "numa") || !strcmp(value, "round-robin") ||
+	       !strcmp(value, "queue-depth");
+}
+
+/*
+ * The vendor defaults libnvme applies after a connect: ctrl_loss_tmo of a
+ * controller, or the iopolicy of a subsystem, and only these.
+ */
+static int handle_set_attr(__u32 id, const char *payload, __u32 len)
+{
+	const char *dev, *attr, *value, *end = payload + len;
+	char path[LIBNVME_PRIVSEP_MAX_NAME * 2 + 64];
+	size_t n;
+	ssize_t w;
+	int fd;
+
+	if (id || !len || len > LIBNVME_PRIVSEP_MAX_NAME * 3 ||
+	    payload[len - 1])
+		return -EINVAL;
+	dev = payload;
+	attr = dev + strlen(dev) + 1;
+	if (attr >= end)
+		return -EINVAL;
+	value = attr + strlen(attr) + 1;
+	if (value >= end || value + strlen(value) + 1 != end)
+		return -EINVAL;
+
+	if (!strcmp(attr, "ctrl_loss_tmo") && valid_ctrl_name(dev) &&
+	    valid_ctrl_loss_tmo(value))
+		n = snprintf(path, sizeof(path),
+			     "/sys/class/nvme/%s/ctrl_loss_tmo", dev);
+	else if (!strcmp(attr, "iopolicy") && valid_subsys_name(dev) &&
+		 valid_iopolicy(value))
+		n = snprintf(path, sizeof(path),
+			     "/sys/class/nvme-subsystem/%s/iopolicy", dev);
+	else
+		return -EINVAL;
+	if (n >= sizeof(path))
+		return -EINVAL;
+
+	fd = open(path, O_WRONLY | O_CLOEXEC);
+	if (fd < 0)
+		return -errno;
+	n = strlen(value);
+	w = write(fd, value, n);
+	if (w < 0)
+		w = -errno;
+	else if ((size_t)w != n)
+		w = -EIO;
+	close(fd);
+
+	return w < 0 ? w : 0;
+}
+
 static void close_handles(void)
 {
 	int i;
@@ -560,6 +637,9 @@ static int serve_one(struct libnvme_global_ctx *ctx, int sock, bool *hello)
 		break;
 	case LIBNVME_PRIVSEP_OP_DELETE_CTRL:
 		ret = handle_delete_ctrl(id, payload, len);
+		break;
+	case LIBNVME_PRIVSEP_OP_SET_ATTR:
+		ret = handle_set_attr(id, payload, len);
 		break;
 	default:
 		ret = -EOPNOTSUPP;

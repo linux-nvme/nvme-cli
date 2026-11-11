@@ -61,3 +61,9 @@ int __libnvme_privsep_delete_ctrl(struct libnvme_privsep *ps,
 {
 	return -ENOTSUP;
 }
+
+int __libnvme_privsep_set_attr(struct libnvme_privsep *ps, const char *dev,
+		const char *attr, const char *value)
+{
+	return -ENOTSUP;
+}

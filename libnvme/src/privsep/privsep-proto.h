@@ -82,7 +82,14 @@ enum libnvme_privsep_op {
 	LIBNVME_PRIVSEP_OP_SED		= 15,
 	LIBNVME_PRIVSEP_OP_FABRICS	= 16,
 	LIBNVME_PRIVSEP_OP_DELETE_CTRL	= 17,
+	LIBNVME_PRIVSEP_OP_SET_ATTR	= 18,
 };
+
+/*
+ * SET_ATTR payload: three NUL-terminated strings, the device, the
+ * attribute and its value: "nvmeN" "ctrl_loss_tmo" and an integer, or
+ * "nvme-subsysN" "iopolicy" and numa, round-robin or queue-depth.
+ */
 
 struct libnvme_privsep_req {
 	__u32 op;
