@@ -586,14 +586,6 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 	__u32 nsid = 1;
 	int rc;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	OPT_ARGS(opts) = {
 		OPT_FLAG("details", 'd', &detail,
 			 "Detail IO histogram of each block size ranges"),
@@ -605,6 +597,8 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 	rc = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (rc)
 		return rc;
+
+	flags = nvme_args.output_flags;
 
 	nvme_init_identify_ctrl(&cmd, &ctrl);
 	rc = libnvme_exec_admin_passthru(hdl, &cmd);
@@ -644,12 +638,6 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		log.base.magic != AMZN_NVME_LOCAL_STORAGE_STATS_MAGIC) {
 		nvme_show_error("[ERROR] %s: Not an EC2 device", __func__);
 		rc = -ENOTSUP;
-		goto done;
-	}
-
-	rc = validate_output_format(cfg.output_format, &flags);
-	if (rc < 0) {
-		nvme_show_error("Invalid output format");
 		goto done;
 	}
 
