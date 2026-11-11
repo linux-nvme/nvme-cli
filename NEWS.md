@@ -21,6 +21,12 @@
   to nvme-discoverd, also when it is left over from an older
   installation. Stopping nvme-discoverd removes the mask.
 
+### nvmf-autoconnect
+
+* `nvmf-autoconnect.service` wants `network-online.target`; it was only
+  ordered after it. Without a `_netdev` mount, which pulls the target
+  in, it started before the network and failed to connect (#3309).
+
 ## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes

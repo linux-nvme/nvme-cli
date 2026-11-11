@@ -6,6 +6,7 @@ ConditionPathExists=|@SYSCONFDIR@/nvme/nvme-fabrics.conf
 ConditionDirectoryNotEmpty=|@SYSCONFDIR@/nvme/nvme-fabrics.conf.d
 Wants=modprobe@nvme_fabrics.service
 After=modprobe@nvme_fabrics.service
+Wants=network-online.target
 After=network-online.target
 After=nvme-discoverd.service
 # A TLS connection fails at once if tlshd is not running.
