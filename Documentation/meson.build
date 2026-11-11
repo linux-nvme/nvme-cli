@@ -484,6 +484,7 @@ adoc_sources_man1 += adoc_sources_deprecated
 adoc_sources_man5 = [
     'nvme-cli.conf',
     'nvme-fabrics.conf',
+    'nvme-vendor.d',
 ]
 
 adoc_sources_man8 = [

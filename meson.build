@@ -158,6 +158,8 @@ libexecdir     = prefixdir / get_option('libexecdir')
 sysconfdir     = prefixdir / get_option('sysconfdir')
 udevrulesdir   = prefixdir / get_option('udevrulesdir')
 dracutrulesdir = prefixdir / get_option('dracutrulesdir')
+# The vendor defaults nvme-cli ships, like udev's rules under PREFIX/lib
+vendorusrdir   = prefixdir / 'lib' / 'nvme' / 'vendor.d'
 systemddir     = prefixdir / get_option('systemddir')
 nmdispatchdir  = prefixdir / get_option('nmdispatchdir')
 
@@ -196,6 +198,7 @@ endif
 conf.set('GIT_VERSION', '"@0@"'.format(git_version))
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
+conf.set('VENDOR_USR_DIR', '"@0@"'.format(vendorusrdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
@@ -700,6 +703,7 @@ substs.set('VERSION', meson.project_version())
 substs.set('NVMECLI_LICENSE', meson.project_license()[0])
 substs.set('LIBNVME_LICENSE', meson.project_license()[1])
 substs.set('UDEVRULESDIR', udevrulesdir)
+substs.set('VENDORUSRDIR', vendorusrdir)
 substs.set('DRACUTRULESDIR', dracutrulesdir)
 substs.set('REQUIRES', requires)
 substs.set('DATADIR', datadir)

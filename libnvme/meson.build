@@ -53,6 +53,14 @@ if want_libnvme
             install_dir:   udevrulesdir,
             install_tag:   'nvmf',
         )
+        # The vendor defaults libnvme applies after a connect (vendor.c)
+        install_data(
+            'sysfiles/vendor.d/50-hpe.conf',
+            'sysfiles/vendor.d/50-netapp.conf',
+            'sysfiles/vendor.d/50-vastdata.conf',
+            install_dir:   vendorusrdir,
+            install_tag:   'nvmf',
+        )
     endif
 else
     # Fallback to using a pre-installed libnvme (if available)

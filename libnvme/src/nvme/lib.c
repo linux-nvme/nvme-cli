@@ -81,6 +81,7 @@ __shr_public int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx,
 	}
 	free(ctx->test_base_dir);
 	ctx->test_base_dir = dup;
+	_libnvmf_ctx_test_base_dir_changed(ctx);
 	return 0;
 }
 

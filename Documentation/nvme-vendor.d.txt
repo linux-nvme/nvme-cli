@@ -1,0 +1,108 @@
+nvme-vendor.d(5)
+================
+
+NAME
+----
+nvme-vendor.d - the defaults of storage vendors for their NVMe-oF controllers
+
+SYNOPSIS
+--------
+[verse]
+'@SYSCONFDIR@/nvme/vendor.d/{asterisk}.conf'
+'@RUNDIR@/nvme/vendor.d/{asterisk}.conf'
+'@VENDORUSRDIR@/{asterisk}.conf'
+
+DESCRIPTION
+-----------
+Storage vendors name defaults for their controllers: the I/O policy of
+the subsystem, and the ctrl_loss_tmo of a controller. libnvme applies
+them to a controller right after it connected it, so every connect
+through libnvme gets them: 'nvme connect', 'nvme connect-all', the
+connections of the NBFT, and those of nvme-discoverd. A controller that
+reconnects after a loss keeps its values; one that is connected anew
+gets them again.
+
+There is one INI file per vendor, with a [Model] section for each set
+of values, e.g. 50-netapp.conf:
+
+	[Model]
+	model = NetApp ONTAP Controller
+	iopolicy = queue-depth
+
+	[Model]
+	model = NetApp ONTAP Controller
+	transport = tcp
+	ctrl-loss-tmo = -1
+
+MATCH
+-----
+'model' matches the controller's model as sysfs shows it, 'transport'
+its transport (any, if not given). Both match as ATTR{model}== and
+ATTR{transport}== in a udev rule do: alternatives separated by '|',
+each a shell glob ('{asterisk}', '?', '[...]'), against the value without its
+trailing whitespace. So 'model = NetApp{asterisk}' or 'transport = tcp|rdma'
+work as in a rule, and the udev rules 71-nvmf-<vendor>.rules translate
+one to one.
+
+VALUES
+------
+'iopolicy'::
+	The I/O policy of the subsystem, if it is an NVM subsystem (as the
+	rules' ATTR{subsystype}=="nvm"): numa, round-robin or queue-depth.
+
+'ctrl-loss-tmo'::
+	The ctrl_loss_tmo of the controller, in seconds, or -1 for no
+	limit. Not for the loop transport.
+
+ORDER
+-----
+For a controller, the first of these that sets a value wins:
+
+. the command line, e.g. 'nvme connect --ctrl-loss-tmo';
+. the connection's 'ctrl-loss-tmo' in nvme-fabrics.conf(5);
+. the files of vendor.d;
+. libnvme's default (a ctrl_loss_tmo of 600, the kernel's iopolicy).
+
+libnvme takes a ctrl_loss_tmo of the connection other than the default
+(600) as given by the user, so a connection that asks for exactly 600
+gets the vendor's value.
+
+The files of vendor.d follow the rules of udev rules and sysctl.d: the
+directories are @SYSCONFDIR@/nvme/vendor.d, @RUNDIR@/nvme/vendor.d and
+@VENDORUSRDIR@. A file in a directory before replaces the file
+of the same name in a directory after it, and a link to /dev/null (or an
+empty file) turns it off. All files are then read in the order of their
+names, whatever their directory, and where several sections match a
+controller, the later one wins. The shipped files are named 50-*.conf,
+so an administrator's 90-local.conf overrides them, and a file named
+like a shipped one replaces it.
+
+FILES
+-----
+@SYSCONFDIR@/nvme/vendor.d/{asterisk}.conf::
+	The administrator's files.
+
+@RUNDIR@/nvme/vendor.d/{asterisk}.conf::
+	Files for the running system only.
+
+@VENDORUSRDIR@/{asterisk}.conf::
+	The defaults nvme-cli ships, with the values of the vendors' udev
+	rules.
+
+THE UDEV RULES
+--------------
+The rules 71-nvmf-<vendor>.rules set the same values after the kernel
+added a controller, also on one whose connection asked for another
+ctrl_loss_tmo. While nvme-discoverd runs, its service masks them in
+/run/udev/rules.d, so that a connection's own ctrl_loss_tmo stays.
+
+SEE ALSO
+--------
+nvme-connect(1)
+nvme-connect-all(1)
+nvme-fabrics.conf(5)
+nvme-discoverd(8)
+
+NVME
+----
+Part of the nvme-user suite

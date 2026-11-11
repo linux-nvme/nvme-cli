@@ -24,6 +24,9 @@ from tests.cli.nvme_mock import (CNS_CTRL, MockController, MockTestCase,
                                  Reply, id_ctrl, main, write_sysfs_ctrl)
 from tests.cli.nvme_mock_ipc import NIC_QUEUES_FMT
 
+# The vendor defaults libnvme ships.
+VENDOR_D = Path(__file__).resolve().parents[2] / 'libnvme/sysfiles/vendor.d'
+
 DISCOVERY_NQN = "nqn.2014-08.org.nvmexpress.discovery"
 # Default TCP port used for discovery controller connections (NVME_DISC_IP_PORT).
 DISCOVERY_PORT = "8009"
@@ -95,6 +98,10 @@ class FabricsController(MockController):
         self.serial_number = "MOCK_SERIAL_NUM_123"
         self.next_instance = 0
         self.sysfs_dir = None
+        # Off by default: with a model, a connected controller also shows
+        # it in sysfs, with its ctrl_loss_tmo, and its subsystem the type
+        # and the kernel's iopolicy (for the vendor defaults).
+        self.sysfs_model = None
         self.controllers = {}        # maps instance (int) -> dict of connect options
         self.log_page_fetch_count = {}  # maps subsysnqn (str) -> completed-fetch count
         # Host network and CPU setup for the default --nr-io-queues. An
@@ -153,6 +160,7 @@ class FabricsController(MockController):
             'discovery': 'discovery' in flags,
             'dhchap_secret': opts.get('dhchap_secret'),
             'dhchap_ctrl_secret': opts.get('dhchap_ctrl_secret'),
+            'ctrl_loss_tmo': opts.get('ctrl_loss_tmo'),
         }
 
         if self.sysfs_dir:
@@ -178,8 +186,18 @@ class FabricsController(MockController):
         # Like the kernel: the secret, or "none" when the connect had none.
         for attr in ('dhchap_secret', 'dhchap_ctrl_secret'):
             attrs[attr] = self.controllers[inst][attr] or 'none'
+        if self.sysfs_model:
+            attrs['model'] = self.sysfs_model
+            attrs['ctrl_loss_tmo'] = self.controllers[inst]['ctrl_loss_tmo']
         write_sysfs_ctrl(self.sysfs_dir, inst, transport, addr_str,
                          subsysnqn, **attrs)
+        if self.sysfs_model:
+            subsys = (Path(self.sysfs_dir) / 'sys/class/nvme-subsystem' /
+                      f'nvme-subsys{inst}')
+            (subsys / 'subsystype').write_text(
+                'discovery\n' if self.controllers[inst]['discovery']
+                else 'nvm\n')
+            (subsys / 'iopolicy').write_text('numa\n')
 
     def handle_route(self, conn, daddr, saddr):
         self.route_lookups.append((daddr, saddr))
@@ -308,6 +326,60 @@ class FabricsMockCLITest(MockTestCase):
         self.assertEqual((ctrl_path / "transport").read_text().strip(), "tcp")
         self.assertEqual(self._subsysnqn(0), subsysnqn)
         self.assertIn("traddr=192.168.1.10", (ctrl_path / "address").read_text())
+
+    def _vendor_attr(self, instance, attr):
+        if attr == 'iopolicy':
+            path = (Path(self.sysfs_dir) / 'sys/class/nvme-subsystem' /
+                    f'nvme-subsys{instance}' / attr)
+        else:
+            path = self._ctrl_path(instance) / attr
+        return path.read_text().strip()
+
+    def test_connect_vendor_defaults(self):
+        """nvme connect applies the vendor defaults (vendor.d) to the
+        controller it connected, as 71-nvmf-netapp.rules does. The order,
+        the first that sets a value wins: the command line, the admin's
+        files in SYSCONFDIR/nvme (sorted after the shipped ones), the
+        shipped ones, libnvme's default."""
+        lib = Path(self.base_dir) / 'usr/vendor.d'
+        lib.mkdir(parents=True)
+        shutil.copyfile(VENDOR_D / '50-netapp.conf', lib / '50-netapp.conf')
+        self.server.sysfs_model = 'NetApp ONTAP Controller'
+        nqn = 'nqn.1992-08.com.netapp:sn.vendor'
+
+        # The shipped file over libnvme's default
+        self._run('connect', '-t', 'tcp', '-a', '192.168.1.10',
+                  '-s', '4420', '-n', nqn)
+        self.assertEqual(self._vendor_attr(0, 'iopolicy'), 'queue-depth')
+        self.assertEqual(self._vendor_attr(0, 'ctrl_loss_tmo'), '-1')
+
+        # The admin's file, sorted after the shipped one, over it
+        etc = Path(self.base_dir) / 'vendor.d'
+        etc.mkdir()
+        (etc / '90-local.conf').write_text(
+            '[Model]\nmodel = NetApp ONTAP Controller\n'
+            'iopolicy = round-robin\nctrl-loss-tmo = 30\n')
+        self._run('connect', '-t', 'tcp', '-a', '192.168.1.11',
+                  '-s', '4420', '-n', nqn)
+        self.assertEqual(self._vendor_attr(1, 'iopolicy'), 'round-robin')
+        self.assertEqual(self._vendor_attr(1, 'ctrl_loss_tmo'), '30')
+
+        # The command line over both
+        self._run('connect', '-t', 'tcp', '-a', '192.168.1.12',
+                  '-s', '4420', '-n', nqn, '--ctrl-loss-tmo=45')
+        self.assertEqual(self._vendor_attr(2, 'iopolicy'), 'round-robin')
+        self.assertEqual(self._vendor_attr(2, 'ctrl_loss_tmo'), '45')
+
+    def test_connect_vendor_defaults_other_model(self):
+        """Another model keeps the kernel's values."""
+        lib = Path(self.base_dir) / 'usr/vendor.d'
+        lib.mkdir(parents=True)
+        shutil.copyfile(VENDOR_D / '50-netapp.conf', lib / '50-netapp.conf')
+        self.server.sysfs_model = 'Some Other Array'
+        self._run('connect', '-t', 'tcp', '-a', '192.168.1.10',
+                  '-s', '4420', '-n', 'nqn.2026-11.org.example:other')
+        self.assertEqual(self._vendor_attr(0, 'iopolicy'), 'numa')
+        self.assertEqual(self._vendor_attr(0, 'ctrl_loss_tmo'), '600')
 
     def test_connect_all_recursive(self):
         """Test connect-all recursive discovery cascade."""
