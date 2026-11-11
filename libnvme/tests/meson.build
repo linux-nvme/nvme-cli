@@ -199,6 +199,18 @@ if want_fabrics
 
     test('libnvme - exclusion', exclusion, suite: 'unit')
 
+    vendor = executable(
+        'test-vendor',
+        ['vendor.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - vendor', vendor, suite: 'unit')
+
     config_ini = executable(
         'test-config-ini',
         ['config-ini.c'],

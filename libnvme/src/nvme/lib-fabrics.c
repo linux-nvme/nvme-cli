@@ -14,10 +14,20 @@
 #include <stddef.h>
 
 #include "private.h"
+#include "private-fabrics.h"
 
 void _libnvmf_ctx_free(struct libnvme_global_ctx *ctx)
 {
 	freeifaddrs(ctx->ifaddrs_cache); /* NULL-safe */
 	ctx->ifaddrs_cache = NULL;
 	_libnvmf_free_kernel_options(ctx);
+	libnvmf_vendor_free(ctx->vendor);
+	ctx->vendor = NULL;
+}
+
+void _libnvmf_ctx_test_base_dir_changed(struct libnvme_global_ctx *ctx)
+{
+	/* The vendor defaults are read from the base directory. */
+	libnvmf_vendor_free(ctx->vendor);
+	ctx->vendor = NULL;
 }

@@ -13,6 +13,20 @@
   `--format=3` inherits this. See
   [#4278](https://github.com/linux-nvme/nvme-cli/issues/4278).
 
+### Fabrics
+
+* libnvme applies the defaults of storage vendors for their controllers
+  right after it connected one: the I/O policy of the subsystem and
+  `ctrl_loss_tmo`, from INI files in `vendor.d`, see nvme-vendor.d(5).
+  nvme-cli ships one per vendor in `/usr/lib/nvme/vendor.d` (NetApp,
+  HPE, VAST Data, with the values of the udev rules `71-nvmf-*.rules`).
+  The directories follow udev and sysctl.d: `/etc/nvme/vendor.d` and
+  `/run/nvme/vendor.d` replace a file of the same name or turn it off,
+  and all files are read in the order of their names. A section matches
+  `model` and `transport` as the udev rules do. A `ctrl_loss_tmo` given
+  on the command line or in `nvme-fabrics.conf` wins over `vendor.d`.
+  While nvme-discoverd runs, its service masks the udev rules.
+
 ### nvme-discoverd
 
 * `nvme-discoverd.service` masks the legacy udev rule

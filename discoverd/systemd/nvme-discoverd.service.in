@@ -18,9 +18,17 @@ Type=notify-reload
 # daemon starts even if masking fails.
 ExecStartPre=-mkdir -p /run/udev/rules.d
 ExecStartPre=-ln -sfn /dev/null /run/udev/rules.d/70-nvmf-autoconnect.rules
+# libnvme applies the vendor defaults at each connect; the rules would set
+# them again, also on a connection that asked for its own ctrl_loss_tmo.
+ExecStartPre=-ln -sfn /dev/null /run/udev/rules.d/71-nvmf-hpe.rules
+ExecStartPre=-ln -sfn /dev/null /run/udev/rules.d/71-nvmf-netapp.rules
+ExecStartPre=-ln -sfn /dev/null /run/udev/rules.d/71-nvmf-vastdata.rules
 ExecStartPre=-udevadm control --reload
 ExecStart=@SBINDIR@/nvme-discoverd
 ExecStopPost=-rm -f /run/udev/rules.d/70-nvmf-autoconnect.rules
+ExecStopPost=-rm -f /run/udev/rules.d/71-nvmf-hpe.rules
+ExecStopPost=-rm -f /run/udev/rules.d/71-nvmf-netapp.rules
+ExecStopPost=-rm -f /run/udev/rules.d/71-nvmf-vastdata.rules
 ExecStopPost=-udevadm control --reload
 Restart=on-failure
 RuntimeDirectory=nvme/discoverd nvme/discoverd/units nvme/discoverd/controllers

@@ -2107,6 +2107,7 @@ __shr_public int libnvmf_add_ctrl(struct libnvme_host *h, struct libnvme_ctrl *c
 
 	libnvme_msg(h->ctx, LIBNVME_LOG_INFO, "nvme%d: %s connected\n", ret,
 		 libnvme_ctrl_get_subsysnqn(c));
+	libnvmf_vendor_apply_connected(h->ctx, ret, c->cfg.ctrl_loss_tmo);
 	return libnvme_init_ctrl(h, c, ret);
 }
 
@@ -2127,6 +2128,7 @@ __shr_public int libnvmf_connect_ctrl(struct libnvme_ctrl *c)
 	if (ret < 0)
 		return ret;
 
+	libnvmf_vendor_apply_connected(c->s->h->ctx, ret, c->cfg.ctrl_loss_tmo);
 	return 0;
 }
 

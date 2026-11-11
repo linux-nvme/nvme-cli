@@ -342,3 +342,27 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
  */
 int libnvmf_registry_delete_instance(struct libnvme_global_ctx *ctx,
 				     int instance);
+
+/*
+ * The vendor defaults of vendor.d (vendor.c): the I/O policy of a
+ * subsystem and the ctrl_loss_tmo of a controller, by model.
+ */
+struct libnvmf_vendor_defaults;
+
+/* Load the files of @dirs, the first directory first (it wins). */
+struct libnvmf_vendor_defaults *libnvmf_vendor_load(
+		struct libnvme_global_ctx *ctx, const char *const *dirs,
+		size_t nr_dirs);
+void libnvmf_vendor_free(struct libnvmf_vendor_defaults *vd);
+unsigned int libnvmf_vendor_count(const struct libnvmf_vendor_defaults *vd);
+/* Apply @vd to controller @devname; keep its ctrl_loss_tmo if asked to. */
+void libnvmf_vendor_apply(struct libnvme_global_ctx *ctx,
+			  const struct libnvmf_vendor_defaults *vd,
+			  const char *devname, bool keep_ctrl_loss_tmo);
+/*
+ * Apply the vendor defaults of @ctx to the controller just connected as
+ * nvme<@instance>, which asked for @ctrl_loss_tmo: a value other than the
+ * default is the connection's own, and stays.
+ */
+void libnvmf_vendor_apply_connected(struct libnvme_global_ctx *ctx,
+				    int instance, int ctrl_loss_tmo);

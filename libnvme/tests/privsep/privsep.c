@@ -386,6 +386,7 @@ static void test_sed(void)
 
 #ifdef TEST_FABRICS
 static char sysfs[64], connect_log[64], delete_ctrl[64];
+static char ctrl_loss_tmo[64], iopolicy[64];
 
 static void write_file(const char *dir, const char *name, const char *text)
 {
@@ -418,6 +419,9 @@ static void create_sysfs(void)
 	write_file(path, "state", "live\n");
 	write_file(path, "subsysnqn", MOCK_NQN "\n");
 	write_file(path, "transport", "tcp\n");
+	/* A model with vendor defaults, see the vendor.d file below */
+	write_file(path, "model", "NetApp ONTAP Controller\n");
+	write_file(path, "ctrl_loss_tmo", "600\n");
 
 	snprintf(path, sizeof(path),
 		 "%s/sys/class/nvme-subsystem/nvme-subsys%d/nvme%d", sysfs,
@@ -427,6 +431,29 @@ static void create_sysfs(void)
 		 "%s/sys/class/nvme-subsystem/nvme-subsys%d", sysfs,
 		 MOCK_INSTANCE);
 	write_file(path, "subsysnqn", MOCK_NQN "\n");
+	write_file(path, "subsystype", "nvm\n");
+	write_file(path, "iopolicy", "numa\n");
+
+	/* The test base directory is @sysfs too: its shipped vendor.d */
+	snprintf(path, sizeof(path), "%s/usr/vendor.d", sysfs);
+	check(!shr_mkdir_p(path, 0755), "mkdir %s", path);
+	write_file(path, "50-netapp.conf",
+		   "[Model]\nmodel = NetApp ONTAP Controller\n"
+		   "iopolicy = queue-depth\nctrl-loss-tmo = -1\n");
+
+	/* What the helper writes to the real sysfs, see mock-ioctl.c */
+	snprintf(ctrl_loss_tmo, sizeof(ctrl_loss_tmo),
+		 "/tmp/test-privsep-tmo-XXXXXX");
+	fd = mkstemp(ctrl_loss_tmo);
+	check(fd >= 0, "mkstemp: %m");
+	close(fd);
+	check(!setenv("MOCK_CTRL_LOSS_TMO", ctrl_loss_tmo, 1), "setenv");
+	snprintf(iopolicy, sizeof(iopolicy),
+		 "/tmp/test-privsep-iopolicy-XXXXXX");
+	fd = mkstemp(iopolicy);
+	check(fd >= 0, "mkstemp: %m");
+	close(fd);
+	check(!setenv("MOCK_IOPOLICY", iopolicy, 1), "setenv");
 
 	snprintf(connect_log, sizeof(connect_log),
 		 "/tmp/test-privsep-connect-XXXXXX");
@@ -497,6 +524,12 @@ static void test_fabrics(void)
 	check(!ret, "connect failed: %d", ret);
 	check(!strcmp(libnvme_ctrl_get_name(c), "nvme5"), "ctrl name %s",
 	      libnvme_ctrl_get_name(c));
+
+	/* The vendor defaults, written through the helper too */
+	read_file(ctrl_loss_tmo, args, sizeof(args));
+	check(!strcmp(args, "-1"), "ctrl_loss_tmo '%s'", args);
+	read_file(iopolicy, args, sizeof(args));
+	check(!strcmp(args, "queue-depth"), "iopolicy '%s'", args);
 
 	read_file(connect_log, args, sizeof(args));
 	check(strstr(args, "nqn=" MOCK_NQN) &&
@@ -597,6 +630,7 @@ int main(int argc, char **argv)
 	libnvme_set_privsep(ctx, ps);
 #ifdef TEST_FABRICS
 	check(!libnvme_set_test_sysfs_dir(ctx, sysfs), "set sysfs dir");
+	check(!libnvme_set_test_base_dir(ctx, sysfs), "set base dir");
 #endif
 
 	test_open_invalid();
