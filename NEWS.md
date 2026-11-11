@@ -3,6 +3,16 @@
 
 ## Changes in 3.3 (unreleased)
 
+### Feature removals and incompatible changes
+
+* The 80 bit Expected Logical Block Tags (ELBT) of the Copy source range
+  formats 1h and 3h are little endian now, like the other tags of the
+  source range entries since 3.2, with the reference tag in the low
+  bytes, as in Command Dwords 14, 3 and 2. 3.2 and earlier sent them big
+  endian. `nvme copy --expected-ref-tags` with `--format=1` or
+  `--format=3` inherits this. See
+  [#4278](https://github.com/linux-nvme/nvme-cli/issues/4278).
+
 ### nvme-discoverd
 
 * `nvme-discoverd.service` masks the legacy udev rule
