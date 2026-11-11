@@ -465,3 +465,25 @@ int __libnvme_privsep_delete_ctrl(struct libnvme_privsep *ps,
 
 	return ret ? ret : reply.status;
 }
+
+int __libnvme_privsep_set_attr(struct libnvme_privsep *ps, const char *dev,
+		const char *attr, const char *value)
+{
+	struct privsep_reply reply;
+	char buf[LIBNVME_PRIVSEP_MAX_NAME * 3];
+	int n, ret;
+
+	if (!dev || !attr || !value)
+		return -EINVAL;
+	n = snprintf(buf, sizeof(buf), "%s%c%s%c%s", dev, '\0', attr, '\0',
+		     value);
+	if (n < 0 || n >= (int)sizeof(buf))
+		return -ENAMETOOLONG;
+
+	ret = privsep_call(ps, LIBNVME_PRIVSEP_OP_SET_ATTR, 0, buf, n + 1,
+			   NULL, 0, NULL, 0, &reply);
+	if (!ret)
+		ret = privsep_check_len(ps, &reply, 0);
+
+	return ret ? ret : reply.status;
+}

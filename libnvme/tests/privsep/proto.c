@@ -437,6 +437,67 @@ static void test_delete_ctrl(void)
 	check(!stop(&h), "helper failed");
 }
 
+/* Three NUL-terminated strings, as __libnvme_privsep_set_attr() sends. */
+static __u32 set_attr_payload(char *buf, size_t size, const char *dev,
+		const char *attr, const char *value)
+{
+	int n = snprintf(buf, size, "%s%c%s%c%s", dev, '\0', attr, '\0',
+			 value);
+
+	check(n > 0 && (size_t)n < size, "payload too long");
+	return n + 1;
+}
+
+static void test_set_attr(void)
+{
+	static const char * const bad[][3] = {
+		/* only these two attributes, each of its own device */
+		{ "nvme5", "delete_controller", "1" },
+		{ "nvme5", "iopolicy", "numa" },
+		{ "nvme-subsys5", "ctrl_loss_tmo", "-1" },
+		/* device names */
+		{ "nvme0n1", "ctrl_loss_tmo", "-1" },
+		{ "nvme5/../../../../tmp/x", "ctrl_loss_tmo", "-1" },
+		{ "../nvme5", "ctrl_loss_tmo", "-1" },
+		{ "nvme-subsys", "iopolicy", "numa" },
+		{ "nvme-subsys5/../x", "iopolicy", "numa" },
+		/* values */
+		{ "nvme5", "ctrl_loss_tmo", "-2" },
+		{ "nvme5", "ctrl_loss_tmo", "10s" },
+		{ "nvme5", "ctrl_loss_tmo", "" },
+		{ "nvme-subsys5", "iopolicy", "random" },
+		{ "nvme-subsys5", "iopolicy", "numa\n" },
+	};
+	struct libnvme_privsep_resp resp;
+	struct helper h = start();
+	char buf[256];
+	__u32 len;
+	size_t i;
+
+	hello(&h);
+
+	for (i = 0; i < ARRAY_SIZE(bad); i++) {
+		len = set_attr_payload(buf, sizeof(buf), bad[i][0], bad[i][1],
+				       bad[i][2]);
+		request(&h, LIBNVME_PRIVSEP_OP_SET_ATTR, 0, buf, len);
+		check(response(&h, &resp) == -EINVAL,
+		      "SET_ATTR %s %s '%s' accepted", bad[i][0], bad[i][1],
+		      bad[i][2]);
+	}
+
+	/* not three strings, a handle id */
+	request(&h, LIBNVME_PRIVSEP_OP_SET_ATTR, 0, "nvme5", 6);
+	check(response(&h, &resp) == -EINVAL, "one string accepted");
+	len = set_attr_payload(buf, sizeof(buf), "nvme5", "ctrl_loss_tmo",
+			       "-1");
+	request(&h, LIBNVME_PRIVSEP_OP_SET_ATTR, 0, buf, len - 1);
+	check(response(&h, &resp) == -EINVAL, "unterminated value accepted");
+	request(&h, LIBNVME_PRIVSEP_OP_SET_ATTR, 1, buf, len);
+	check(response(&h, &resp) == -EINVAL, "SET_ATTR with a handle id");
+
+	check(!stop(&h), "helper failed");
+}
+
 int main(int argc, char **argv)
 {
 	check(argc == 3, "usage: %s HELPER MOCK_LIBRARY", argv[0]);
@@ -454,6 +515,7 @@ int main(int argc, char **argv)
 	test_sed();
 	test_fabrics();
 	test_delete_ctrl();
+	test_set_attr();
 
 	printf("privsep protocol tests passed\n");
 

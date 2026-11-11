@@ -503,6 +503,9 @@ ssize_t __libnvme_privsep_fabrics(struct libnvme_privsep *ps,
 		enum libnvmf_dev_step *step);
 int __libnvme_privsep_delete_ctrl(struct libnvme_privsep *ps,
 		const char *name);
+/* Write @attr of @dev, see LIBNVME_PRIVSEP_OP_SET_ATTR. */
+int __libnvme_privsep_set_attr(struct libnvme_privsep *ps, const char *dev,
+		const char *attr, const char *value);
 
 #ifdef CONFIG_MI
 struct nvme_mi_msg_hdr;
