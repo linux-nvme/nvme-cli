@@ -38,6 +38,11 @@
   active, also the AEN and `rediscover` events; it skipped only the FC
   kickstart. nvme-discoverd handles them itself (#4327).
 
+* `nvmf-connect-nbft.service`, which NetworkManager's dispatcher script
+  starts when an NBFT interface comes up late, skips while nvme-discoverd
+  is active. nvme-discoverd connects the NBFT's subsystems itself
+  (#4329).
+
 ## Changes in 3.2 (2026-10-30)
 
 ### Feature removals and incompatible changes

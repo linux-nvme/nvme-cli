@@ -7,6 +7,7 @@ ConditionPathExists=|/sys/firmware/acpi/tables/NBFT1
 Wants=modprobe@nvme_fabrics.service
 After=modprobe@nvme_fabrics.service
 After=network-online.target
+After=nvme-discoverd.service
 # A TLS connection fails at once if tlshd is not running.
 After=tlshd.service
 Before=remote-fs-pre.target
@@ -25,4 +26,6 @@ MemoryDenyWriteExecute=yes
 RemoveIPC=yes
 RestrictAddressFamilies=AF_INET AF_INET6
 Type=oneshot
+# '+' runs systemctl outside RestrictAddressFamilies, which blocks AF_UNIX.
+ExecCondition=+/bin/sh -c "! @SYSTEMCTL@ -q is-active nvme-discoverd.service"
 ExecStart=@SBINDIR@/nvme connect-all --nbft
