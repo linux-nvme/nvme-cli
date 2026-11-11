@@ -70,6 +70,9 @@ struct cfg_lookup {
 struct inventory {
 	struct tid_list nbft_dcs;
 	struct tid_list nbft_iocs;
+	struct tid_list pre_os_dcs;	// from RUNDIR/nvme/pre-os.conf
+	struct tid_list pre_os_iocs;
+	struct list_head pre_os_conns;	// struct cfg_conn_entry
 	struct tid_list cfg_dcs;
 	struct tid_list cfg_iocs;
 	struct tid_list discovered_dcs; // found through mDNS or FC kickstart
@@ -97,6 +100,7 @@ struct inventory *inventory_new(void)
 		return NULL;
 	list_head_init(&inv->dlp_cache);
 	list_head_init(&inv->cfg_conns);
+	list_head_init(&inv->pre_os_conns);
 	list_head_init(&inv->lookups);
 	return inv;
 }
@@ -148,16 +152,29 @@ static struct libnvmf_tid *with_default_host(const struct discoverd_ctx *dctx,
  * Free an inventory and everything in it: the flat TID sets and every
  * per-DC dlp_entry (and that entry's own list) in dlp_cache.
  */
+static void conns_free(struct list_head *conns)
+{
+	struct cfg_conn_entry *ce, *next;
+
+	list_for_each_safe(conns, ce, next, entry) {
+		tid_free(ce->tid);
+		free(ce);
+	}
+	list_head_init(conns);
+}
+
 void inventory_free(struct inventory *inv)
 {
 	struct dlp_entry *e, *next;
-	struct cfg_conn_entry *ce, *cnext;
 
 	if (!inv)
 		return;
 	lookups_free(inv);
 	tid_list_free_items(&inv->nbft_dcs);
 	tid_list_free_items(&inv->nbft_iocs);
+	tid_list_free_items(&inv->pre_os_dcs);
+	tid_list_free_items(&inv->pre_os_iocs);
+	conns_free(&inv->pre_os_conns);
 	tid_list_free_items(&inv->cfg_dcs);
 	tid_list_free_items(&inv->cfg_iocs);
 	tid_list_free_items(&inv->discovered_dcs);
@@ -167,10 +184,7 @@ void inventory_free(struct inventory *inv)
 		tid_list_free_items(&e->referrals);
 		free(e);
 	}
-	list_for_each_safe(&inv->cfg_conns, ce, cnext, entry) {
-		tid_free(ce->tid);
-		free(ce);
-	}
+	conns_free(&inv->cfg_conns);
 	free(inv);
 }
 
@@ -333,6 +347,7 @@ static int hops(const struct inventory *inv, const struct libnvmf_tid *tid,
 	int best = -1;
 
 	if (tid_list_contains(&inv->nbft_dcs, tid) ||
+	    tid_list_contains(&inv->pre_os_dcs, tid) ||
 	    tid_list_contains(&inv->cfg_dcs, tid) ||
 	    tid_list_contains(&inv->discovered_dcs, tid))
 		return 0;
@@ -373,6 +388,9 @@ const char *inventory_source(const struct inventory *inv,
 	if (tid_list_contains(&inv->nbft_dcs, tid) ||
 	    tid_list_contains(&inv->nbft_iocs, tid))
 		return "nbft";
+	if (tid_list_contains(&inv->pre_os_dcs, tid) ||
+	    tid_list_contains(&inv->pre_os_iocs, tid))
+		return "pre-os";
 	if (tid_list_contains(&inv->cfg_dcs, tid) ||
 	    tid_list_contains(&inv->cfg_iocs, tid))
 		return "config";
@@ -396,6 +414,7 @@ bool inventory_is_desired(const struct inventory *inv,
 	struct dlp_entry *e;
 
 	if (tid_list_contains(&inv->nbft_iocs, t) ||
+	    tid_list_contains(&inv->pre_os_iocs, t) ||
 	    tid_list_contains(&inv->cfg_iocs, t) ||
 	    inventory_referral_hops(inv, t) >= 0)
 		return true;
@@ -409,14 +428,82 @@ bool inventory_is_desired(const struct inventory *inv,
 }
 
 /*
- * Is t firmware-sourced (present in nbft_dcs or nbft_iocs)? Used to
- * decide whether a reconnect should use --owner nbft instead of
- * --owner discoverd, preserving the NBFT ownership invariant.
+ * The steps from what a pre-OS DC lists up to that DC: the referral hops,
+ * and the edge from the last DC to its entries.
  */
-bool inventory_is_nbft(const struct inventory *inv, const struct libnvmf_tid *t)
+#define PRE_OS_ANCESTRY		(INVENTORY_MAX_REFERRAL_HOPS + 1)
+
+static bool is_pre_os(const struct inventory *inv,
+		      const struct libnvmf_tid *t, unsigned int budget)
 {
-	return tid_list_contains(&inv->nbft_dcs, t) ||
-	       tid_list_contains(&inv->nbft_iocs, t);
+	struct dlp_entry *e;
+
+	if (tid_list_contains(&inv->nbft_dcs, t) ||
+	    tid_list_contains(&inv->nbft_iocs, t) ||
+	    tid_list_contains(&inv->pre_os_dcs, t) ||
+	    tid_list_contains(&inv->pre_os_iocs, t))
+		return true;
+	if (!budget)
+		return false;
+
+	// What a pre-OS DC lists is the pre-OS environment's too.
+	list_for_each(&inv->dlp_cache, e, entry) {
+		if ((tid_list_contains(&e->iocs, t) ||
+		     tid_list_contains(&e->referrals, t)) &&
+		    is_pre_os(inv, e->dc_tid, budget - 1))
+			return true;
+	}
+	return false;
+}
+
+bool inventory_is_pre_os(const struct inventory *inv,
+			 const struct libnvmf_tid *t)
+{
+	return is_pre_os(inv, t, PRE_OS_ANCESTRY);
+}
+
+static const struct libnvmf_config_conn *pre_os_conn(
+		const struct inventory *inv, const struct libnvmf_tid *t,
+		unsigned int budget)
+{
+	const struct libnvmf_config_conn *conn;
+	struct cfg_conn_entry *ce;
+	struct dlp_entry *e;
+
+	list_for_each(&inv->pre_os_conns, ce, entry) {
+		if (tid_same(ce->tid, t))
+			return ce->conn;
+	}
+	if (!budget)
+		return NULL;
+
+	list_for_each(&inv->dlp_cache, e, entry) {
+		if (!tid_list_contains(&e->iocs, t) &&
+		    !tid_list_contains(&e->referrals, t))
+			continue;
+		conn = pre_os_conn(inv, e->dc_tid, budget - 1);
+		if (conn)
+			return conn;
+	}
+	return NULL;
+}
+
+const struct libnvmf_config_conn *inventory_pre_os_conn_for(
+		const struct inventory *inv, const struct libnvmf_tid *t)
+{
+	return pre_os_conn(inv, t, PRE_OS_ANCESTRY);
+}
+
+bool inventory_is_pre_os_conn(const struct inventory *inv,
+			      const struct libnvmf_config_conn *conn)
+{
+	struct cfg_conn_entry *ce;
+
+	list_for_each(&inv->pre_os_conns, ce, entry) {
+		if (ce->conn == conn)
+			return true;
+	}
+	return false;
 }
 
 /*
@@ -438,6 +525,15 @@ struct libnvmf_tid **inventory_desired_dcs(const struct inventory *inv)
 
 		if (t)
 			tid_list_append(&combined, t);
+	}
+	for (i = 0; i < inv->pre_os_dcs.len; i++) {
+		if (!tid_list_contains(&combined, inv->pre_os_dcs.items[i])) {
+			struct libnvmf_tid *t =
+				libnvmf_tid_dup(inv->pre_os_dcs.items[i]);
+
+			if (t)
+				tid_list_append(&combined, t);
+		}
 	}
 	for (i = 0; i < inv->cfg_dcs.len; i++) {
 		if (!tid_list_contains(&combined, inv->cfg_dcs.items[i])) {
@@ -579,8 +675,9 @@ int inventory_load_nbft(struct inventory *inv,
  * Add the configured connection @conn, with @traddr as its numeric
  * address. Returns false if the connection cannot be added.
  */
-static bool add_config_conn(struct inventory *inv,
-		const struct discoverd_ctx *dctx,
+static bool add_conn(const struct discoverd_ctx *dctx,
+		struct tid_list *dcs, struct tid_list *iocs,
+		struct list_head *conns,
 		const struct libnvmf_config_conn *conn, const char *traddr)
 {
 	bool is_dc = libnvmf_config_conn_is_dc(conn);
@@ -602,7 +699,7 @@ static bool add_config_conn(struct inventory *inv,
 	// for inventory_config_conn_for() lookups — each list owns its copy.
 	t2 = libnvmf_tid_dup(t);
 	if (!t2 ||
-	    tid_list_append(is_dc ? &inv->cfg_dcs : &inv->cfg_iocs, t2) < 0) {
+	    tid_list_append(is_dc ? dcs : iocs, t2) < 0) {
 		tid_free(t2);
 		tid_free(t);
 		return false;
@@ -615,9 +712,17 @@ static bool add_config_conn(struct inventory *inv,
 	}
 	ce->tid = t;
 	ce->conn = conn;
-	list_add(&inv->cfg_conns, &ce->entry);
+	list_add(conns, &ce->entry);
 
 	return true;
+}
+
+static bool add_config_conn(struct inventory *inv,
+		const struct discoverd_ctx *dctx,
+		const struct libnvmf_config_conn *conn, const char *traddr)
+{
+	return add_conn(dctx, &inv->cfg_dcs, &inv->cfg_iocs, &inv->cfg_conns,
+			conn, traddr);
 }
 
 static int start_lookup(struct cfg_lookup *l);
@@ -786,16 +891,11 @@ void inventory_load_config(struct inventory *inv,
 		       const struct discoverd_ctx *dctx)
 {
 	struct load_config_args args = { .inv = inv, .dctx = dctx };
-	struct cfg_conn_entry *ce, *next;
 
 	lookups_free(inv);
 	tid_list_free_items(&inv->cfg_dcs);
 	tid_list_free_items(&inv->cfg_iocs);
-	list_for_each_safe(&inv->cfg_conns, ce, next, entry) {
-		tid_free(ce->tid);
-		free(ce);
-	}
-	list_head_init(&inv->cfg_conns);
+	conns_free(&inv->cfg_conns);
 
 	if (dctx->fabrics_cfg)
 		libnvmf_config_conn_for_each(dctx->fabrics_cfg,
@@ -803,6 +903,48 @@ void inventory_load_config(struct inventory *inv,
 
 	log_dbg("fabrics config: %zu DC(s), %zu IOC(s), %u name lookup(s)",
 		inv->cfg_dcs.len, inv->cfg_iocs.len, inv->nr_first_lookups);
+}
+
+static void load_pre_os_conn_callback(const struct libnvmf_config_conn *conn,
+				      void *user_data)
+{
+	struct load_config_args *args = user_data;
+	struct inventory *inv = args->inv;
+	const char *transport = libnvmf_config_conn_get_transport(conn);
+	const char *traddr = libnvmf_config_conn_get_traddr(conn);
+
+	/*
+	 * nvme records the address it connected to, so a host name is
+	 * unexpected: it may resolve differently by now.
+	 */
+	if (!libnvmf_traddr_is_numeric(traddr) &&
+	    (!strcmp(transport, "tcp") || !strcmp(transport, "rdma"))) {
+		log_warn("%s - pre-OS connection without an IP address, skipping",
+			 traddr);
+		return;
+	}
+	if (!add_conn(args->dctx, &inv->pre_os_dcs, &inv->pre_os_iocs,
+		      &inv->pre_os_conns, conn, traddr))
+		log_warn("%s - cannot add the pre-OS connection, skipping",
+			 traddr);
+}
+
+void inventory_load_pre_os(struct inventory *inv,
+			   const struct discoverd_ctx *dctx,
+			   const struct libnvmf_config *cfg)
+{
+	struct load_config_args args = { .inv = inv, .dctx = dctx };
+
+	tid_list_free_items(&inv->pre_os_dcs);
+	tid_list_free_items(&inv->pre_os_iocs);
+	conns_free(&inv->pre_os_conns);
+
+	if (cfg)
+		libnvmf_config_conn_for_each(cfg, load_pre_os_conn_callback,
+					     &args);
+
+	log_dbg("pre-OS connections: %zu DC(s), %zu IOC(s)",
+		inv->pre_os_dcs.len, inv->pre_os_iocs.len);
 }
 
 bool inventory_config_pending(const struct inventory *inv)
@@ -815,6 +957,11 @@ const struct libnvmf_config_conn *inventory_config_conn_for(
 {
 	struct cfg_conn_entry *ce;
 
+	// The pre-OS environment's parameters win over the configuration's.
+	list_for_each(&inv->pre_os_conns, ce, entry) {
+		if (tid_same(ce->tid, t))
+			return ce->conn;
+	}
 	list_for_each(&inv->cfg_conns, ce, entry) {
 		if (tid_same(ce->tid, t))
 			return ce->conn;
@@ -841,6 +988,15 @@ struct libnvmf_tid **inventory_desired_iocs(const struct inventory *inv)
 
 		if (t)
 			tid_list_append(&combined, t);
+	}
+	for (i = 0; i < inv->pre_os_iocs.len; i++) {
+		if (!tid_list_contains(&combined, inv->pre_os_iocs.items[i])) {
+			struct libnvmf_tid *t =
+				libnvmf_tid_dup(inv->pre_os_iocs.items[i]);
+
+			if (t)
+				tid_list_append(&combined, t);
+		}
 	}
 	for (i = 0; i < inv->cfg_iocs.len; i++) {
 		if (!tid_list_contains(&combined, inv->cfg_iocs.items[i])) {

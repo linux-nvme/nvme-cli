@@ -21,7 +21,7 @@
 
 static void config_set_defaults(struct discoverd_config *cfg)
 {
-	cfg->nbft = true;
+	cfg->pre_os = true;
 	cfg->debug_level = DMN_LOG_INFO;
 	cfg->fc_kickstart_interval_minutes = 0;
 	cfg->epcsd_poll_interval_minutes = 15;
@@ -62,8 +62,8 @@ static int parse_epcsd_poll_interval(const char *val, unsigned int *out)
 static bool apply_global_key(struct discoverd_config *cfg, const char *key,
 			     const char *val, int *r)
 {
-	if (streq(key, "nbft"))
-		*r = shr_parse_bool(val, &cfg->nbft);
+	if (streq(key, "pre-os") || streq(key, "nbft"))
+		*r = shr_parse_bool(val, &cfg->pre_os);
 	else if (streq(key, "debug-level"))
 		*r = dmn_parse_log_level(val, &cfg->debug_level);
 	else

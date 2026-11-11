@@ -16,7 +16,7 @@
  * (libnvmf_config_read()), not from here. Two sections:
  *
  *   [Global]
- *   nbft = true
+ *   pre-os = true
  *   debug-level = info
  *
  *   [Discovery]
@@ -30,7 +30,12 @@
  * [Global], where releases up to 3.1 placed them, with a warning.
  */
 struct discoverd_config {
-	bool nbft; // adopt/connect NBFT-listed controllers; default true
+	/*
+	 * Keep the pre-OS environment's connections connected (the NBFT and
+	 * RUNDIR/nvme/pre-os.conf), without owning them; default true. The
+	 * key "nbft" is its old name.
+	 */
+	bool pre_os;
 
 	/*
 	 * Log threshold for discoverd and its in-process libnvme context, as

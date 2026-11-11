@@ -323,7 +323,7 @@ static bool test_nbft_ipv4(struct discoverd_ctx *dctx)
 	pass &= check_tid("DC on HFI 1", t, "8009", "172.18.240.1",
 			  R660_HOSTNQN, R660_HOSTID);
 	pass &= check("DC on HFI 1 comes from the NBFT",
-		      t && inventory_is_nbft(inv, t), true);
+		      t && inventory_is_pre_os(inv, t), true);
 	t = find(dcs, "172.18.230.70", DISC_NQN);
 	pass &= check_tid("DC on HFI 2", t, "8009", "172.18.230.2",
 			  R660_HOSTNQN, R660_HOSTID);

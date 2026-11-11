@@ -13,8 +13,13 @@
 # ==============================================================================
 [Global]
 
-# Adopt/Connect controllers listed in the NBFT ACPI table.
-#nbft = true
+# Keep the connections of the pre-OS environment (firmware and initrd)
+# connected: the controllers listed in the NBFT ACPI table and in
+# @RUNDIR@/nvme/pre-os.conf, which nvme writes in the initrd. They keep
+# the owner pre-os: nvme-discoverd reconnects them with the parameters the
+# pre-OS environment used, never disconnects them, and the exclusion list
+# does not apply to them. "nbft" is the old name of this key.
+#pre-os = true
 
 # Log verbosity: err, warn, info, or debug (case-insensitive).
 # The --debug command-line option overrides this setting and enables debug

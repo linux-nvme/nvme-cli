@@ -40,6 +40,15 @@ typedef void (*unit_job_callback)(const char *unit_name,
 struct unit_mgr;
 
 /*
+ * The owner of a connection unit's controller, the --owner of its nvme.
+ * The unit of a pre-OS I/O controller never disconnects it.
+ */
+enum unit_owner {
+	UNIT_OWNER_DISCOVERD,
+	UNIT_OWNER_PRE_OS,
+};
+
+/*
  * Create a unit manager.  Attaches to the given sd_bus connection and
  * sd_event loop.  unit_job_callback is called for every JobRemoved signal.
  * nvme_path is the nvme binary the transient units exec; NULL or "" selects the
@@ -67,18 +76,17 @@ int unit_mgr_set_nvme_options(struct unit_mgr *mgr, const char *opts);
  * Create a transient DC connection unit.  @params carries the resolved
  * connect parameters to emit (may be NULL for none) — see
  * libnvmf_connect_args_emit() in <nvme/config.h>.
- * If is_nbft is true, uses --owner pre-os (once nbft); otherwise
- * --owner discoverd.
+ * @owner is the controller's owner (enum unit_owner).
  */
 int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
-		  const struct libnvmf_params *params, bool is_nbft);
+		  const struct libnvmf_params *params, enum unit_owner owner);
 
 /*
  * Create a transient IOC connection unit.  @params carries the resolved
  * connect parameters to emit (may be NULL for none).
  */
 int unit_start_ioc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
-		   const struct libnvmf_params *params, bool is_nbft);
+		   const struct libnvmf_params *params, enum unit_owner owner);
 
 /*
  * Run "nvme connect-all" once over the existing connection to DC

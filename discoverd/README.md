@@ -1,6 +1,6 @@
 # nvme-discoverd
 
-A persistent daemon that connects the host's desired NVMe-oF controllers and keeps them connected. It tracks three sources: NBFT boot controllers, everything listed in the shared fabrics configuration, and whatever those Discovery Controllers' Discovery Log Pages, FC kickstart, and mDNS (TP8009, opt-in) turn up along the way.
+A persistent daemon that connects the host's desired NVMe-oF controllers and keeps them connected. It tracks three sources: the pre-OS environment's connections (the NBFT and `/run/nvme/pre-os.conf`, which nvme writes in the initrd), everything listed in the shared fabrics configuration, and whatever those Discovery Controllers' Discovery Log Pages, FC kickstart, and mDNS (TP8009, opt-in) turn up along the way.
 
 > The code is the source of truth. This document summarizes behavior and intent; see `nvme-discoverd(8)` for the full CLI/config reference and `src/*.h` for module-level contracts.
 
@@ -15,7 +15,7 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 - **Single-threaded.** One `sd_event` loop, no threads. Every connect goes through a systemd transient unit running `nvme connect`, never a direct `/dev/nvme-fabrics` write. That ioctl blocks in D state until the kernel completes or times out the connection, and nvme-discoverd cannot afford to block its event loop waiting for it.
 - **Connect-only.** nvme-discoverd never disconnects a live controller because of a discovery change. That's TP8010 fabric-zoning territory, out of scope here. The only disconnects it causes are its own transient units' `ExecStop=`, at shutdown or on request. At shutdown, a unit stops only after the `_netdev` mounts are unmounted (`Wants=` and `Before=remote-fs-pre.target`). A file system on an NVMe-oF namespace needs `_netdev` in fstab.
 - **Retry with backoff and a give-up horizon.** A failed (re)connect retries with exponential backoff, capped at 5 minutes. NBFT and fabrics-config controllers represent explicit intent, so they always retry forever. A Discovery Controller found only through a referral, FC kickstart, or mDNS is different: it gives up after `dc-giveup-timeout` (default 72hours) of unbroken failure and is dropped from tracking; `infinity` makes it retry forever too.
-- **Cooperative, not exclusive.** Before connecting or reconnecting anything, nvme-discoverd checks the system-wide exclusion list and registers ownership in the ownership registry (`--owner discoverd`, or `--owner pre-os` (once `nbft`) for an NBFT-sourced controller). See `libnvme/design/REGISTRY.md` and `EXCLUSIONS.md`.
+- **Cooperative, not exclusive.** Before connecting or reconnecting anything, nvme-discoverd checks the system-wide exclusion list and registers ownership in the ownership registry (`--owner discoverd`). The pre-OS environment's connections keep the owner `pre-os`: nvme-discoverd reconnects them with it and the pre-OS parameters, never disconnects them, and doesn't apply the exclusion list to them. See `libnvme/design/REGISTRY.md` and `EXCLUSIONS.md`.
 - **Unowned Discovery Controllers.** A DC that has no owner, e.g. from `nvme discover --persistent`, is not tracked. On its log page change AEN or rediscover event, nvme-discoverd runs `nvme connect-all --device=nvmeX` once in a transient unit, as `70-nvmf-autoconnect.rules` does. It passes no `--owner`, so the new connections have no owner either. Events from a DC with another owner are ignored.
 
 ## Source layout
@@ -24,7 +24,7 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 |---|---|
 | `main.c` | Startup, signal handling, the desired-connection orchestration, retry/give-up |
 | `tid.c` | Transport-identity helpers: unit-name hashing, TID equality |
-| `inventory.c` | The desired-connection set: NBFT, fabrics-config, and per-DC Discovery Log Page tracking |
+| `inventory.c` | The desired-connection set: NBFT, pre-os.conf, fabrics-config, and per-DC Discovery Log Page tracking |
 | `units.c` | Transient systemd units over D-Bus (`StartTransient`/`Restart`/`Stop`/`ResetFailed`) |
 | `events.c` | udev monitoring: device add/remove/change, sysfs TID parsing |
 | `dlp.c` | Discovery Log Page fetch and parsing |
@@ -38,7 +38,7 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 
 nvme-discoverd reads two independent files:
 
-- **`nvme-discoverd.conf`** — the daemon's own knobs: `[Global]` (`nbft`, `debug-level`) and `[Discovery]` (`epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes`, `dc-giveup-timeout`, `zeroconf`). Entirely optional; a missing file or key just keeps its default. The build installs a commented `nvme-discoverd.conf.sample` to copy from.
+- **`nvme-discoverd.conf`** — the daemon's own knobs: `[Global]` (`pre-os`, once `nbft`; `debug-level`) and `[Discovery]` (`epcsd-poll-interval-minutes`, `fc-kickstart-interval-minutes`, `dc-giveup-timeout`, `zeroconf`). Entirely optional; a missing file or key just keeps its default. The build installs a commented `nvme-discoverd.conf.sample` to copy from.
 - **The shared NVMe-oF fabrics configuration** (`nvme-fabrics.conf(5)`) — which Discovery Controllers and subsystems to connect, host identity, per-connection parameters. This is the same file `nvme connect-all`, `nvme discover`, and `nvme-stas` read. nvme-discoverd has no private connection format of its own.
 
 Both are reloaded on `SIGHUP`. Nothing already connected is ever disconnected by a reload.

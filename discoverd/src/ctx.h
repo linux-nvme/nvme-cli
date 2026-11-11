@@ -38,7 +38,9 @@ struct discoverd_ctx {
 	struct discoverd_config   *cfg;          // parsed @conf_path
 	char                      *fabrics_conf_path; // NULL: libnvme's default
 	struct libnvmf_config     *fabrics_cfg;  // resolved fabrics config
-	struct inventory          *inventory;    // NBFT + config + DLP cache
+	char                      *pre_os_conf_path; // NULL: RUNDIR's
+	struct libnvmf_config     *pre_os_cfg;   // resolved pre-os.conf
+	struct inventory          *inventory;    // NBFT + pre-OS + config + DLP
 	sd_event                  *event;        // sd_event main loop
 	sd_bus                    *bus;          // D-Bus connection to systemd
 	struct unit_mgr           *umgr;         // transient unit manager

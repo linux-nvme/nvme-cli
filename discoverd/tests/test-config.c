@@ -56,7 +56,7 @@ static bool test_missing_file_defaults(void)
 
 	cfg = config_load("/nonexistent/nvme-discoverd.conf");
 	pass &= check(cfg != NULL, "config_load never returns NULL");
-	pass &= check(cfg->nbft, "nbft defaults true");
+	pass &= check(cfg->pre_os, "pre-os defaults true");
 	pass &= check(cfg->epcsd_poll_interval_minutes == 15,
 		      "epcsd-poll-interval-minutes defaults 15");
 	pass &= check(cfg->fc_kickstart_interval_minutes == 0,
@@ -78,14 +78,14 @@ static bool test_discovery_section_parsed(void)
 	printf("test_discovery_section_parsed:\n");
 
 	cfg = load_text("[Global]\n"
-			"nbft = false\n"
+			"pre-os = false\n"
 			"\n"
 			"[Discovery]\n"
 			"epcsd-poll-interval-minutes = 30\n"
 			"fc-kickstart-interval-minutes = 5\n"
 			"dc-giveup-timeout = 2hours\n"
 			"zeroconf = true\n");
-	pass &= check(!cfg->nbft, "[Global] nbft parses");
+	pass &= check(!cfg->pre_os, "[Global] pre-os parses");
 	pass &= check(cfg->epcsd_poll_interval_minutes == 30,
 		      "[Discovery] epcsd-poll-interval-minutes parses");
 	pass &= check(cfg->fc_kickstart_interval_minutes == 5,
@@ -124,8 +124,8 @@ static bool test_global_key_in_discovery_ignored(void)
 	printf("test_global_key_in_discovery_ignored:\n");
 
 	cfg = load_text("[Discovery]\n"
-			"nbft = false\n");
-	pass &= check(cfg->nbft, "nbft in [Discovery] ignored");
+			"pre-os = false\n");
+	pass &= check(cfg->pre_os, "pre-os in [Discovery] ignored");
 
 	config_free(cfg);
 

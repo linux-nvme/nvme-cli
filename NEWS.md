@@ -65,6 +65,21 @@
   after `dev_loss_tmo` behind a persistent discovery controller was not
   connected again.
 
+* nvme-discoverd keeps the connections of the pre-OS environment
+  connected without owning them: the NBFT's, those in
+  `/run/nvme/pre-os.conf`, and what a pre-OS discovery controller lists.
+  It connects them with the owner `pre-os` and the parameters the pre-OS
+  environment used, never disconnects their I/O controllers, also not at
+  the shutdown, and does not apply the exclusion list to them.
+  The `[Global]` key `nbft` of `nvme-discoverd.conf` is now `pre-os`;
+  `nbft` stays as its old name.
+  Upgrade note: an initrd needs a dracut that passes `--owner=pre-os`
+  (it checks `nvme connect-all --help` for `pre-os`). With an older one,
+  FC boot paths and configured connections of the initrd have no owner,
+  and nvme-discoverd still adopts them and disconnects them at the
+  shutdown, as before. Update dracut and rebuild the initrd together
+  with nvme-cli.
+
 ### nvmf-autoconnect
 
 * `nvmf-autoconnect.service` wants `network-online.target`; it was only
