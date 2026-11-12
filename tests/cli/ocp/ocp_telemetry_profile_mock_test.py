@@ -16,21 +16,17 @@ FFFFFFFFh); Get Features returns it in Dword 0 bits 7:0 (TEL-CFG-GF-3).
 
 Tests in this module verify:
   * set-telemetry-profile sends the profile with Save, NSID FFFFFFFFh and
-    the OCP UUID index (UUID-3), and fails when Set Features fails.
+    the OCP UUID index (UUID-3), and fails when Set Features fails or
+    no --telemetry-profile-select is given.
   * get-telemetry-profile reads with the SEL and NSID given, the OCP UUID
     index or index 0 with --no-uuid, prints what Dword 0 reports, and
     SEL 3 as capabilities.
   * Without the OCP UUID neither command sends anything, and both fail.
 
-A known defect is covered by an expectedFailure test:
-set-telemetry-profile without --telemetry-profile-select exits 0.
-
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_telemetry_profile_mock_test.py <nvme-binary> <mock-lib>
 """
-import unittest
-
 from tests.cli.nvme_mock import (NSID_ALL, OPC_GET_FEATURES,
                                  OPC_SET_FEATURES, SC_INVALID_FIELD, main)
 from tests.cli.ocp.ocp_mock_test import (SEL_NAMES, UUID_INDEX,
@@ -84,10 +80,7 @@ class TestSetTelemetryProfile(OCPUUIDTests, TelemetryProfileTestBase):
                       result.stderr)
         self.assertEqual(self.cmds(OPC_SET_FEATURES), [])
 
-    @unittest.expectedFailure
     def test_without_a_profile_exits_nonzero(self):
-        """Defect: the command reports the missing argument and exits
-        0."""
         self.assertNotEqual(
             self.run_cmd('set-telemetry-profile').returncode, 0)
 
