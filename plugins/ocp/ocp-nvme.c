@@ -87,6 +87,7 @@ struct erri_entry {
 };
 
 #define ERRI_ENTRIES_MAX 127
+#define ERRI_DATA_LEN 4096
 
 enum erri_type {
 	ERRI_TYPE_CPU_CTRL_HANG = 1,
@@ -2218,12 +2219,9 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 	struct erri_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_ERRI;
 	__u64 result;
-	__u32 data_len = 0;
 	__u8 uidx = 0;
 	int err;
 	int i;
-
-	data_len = sizeof(*entry) * ERRI_ENTRIES_MAX;
 
 	if (uuid) {
 		/* OCP 2.0 requires UUID index support */
@@ -2234,14 +2232,14 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 		}
 	}
 
-	entry = libnvme_alloc(data_len);
+	entry = libnvme_alloc(ERRI_DATA_LEN);
 	if (!entry) {
 		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 
 	err = nvme_get_features(hdl, nsid, fid, sel, 0, uidx, entry,
-			data_len, &result);
+			ERRI_DATA_LEN, &result);
 	if (!err) {
 		cq_entry.nume = result;
 		nvme_show_result("Number of Error Injections (feature: %#0*x): %#0*x (%s: %d)",
@@ -2325,7 +2323,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 	}
 
 	data_len = cfg->number * sizeof(struct erri_entry);
-	entry = libnvme_alloc(data_len);
+	entry = libnvme_alloc(ERRI_DATA_LEN);
 	if (!entry) {
 		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -ENOMEM;
@@ -2351,7 +2349,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 	}
 
 	err = nvme_set_features(hdl, nsid, OCP_FID_ERRI, false, cfg->number,
-			 0, 0, uidx, 0, entry, data_len, NULL);
+			 0, 0, uidx, 0, entry, ERRI_DATA_LEN, NULL);
 	if (err) {
 		if (err < 0)
 			nvme_show_error("set-error-injection: %s",
