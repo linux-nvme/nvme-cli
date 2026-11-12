@@ -22,14 +22,14 @@ Tests in this module verify:
   * get-error-injection prints the number and each entry, its type named
     as the Event Definition Table names it.
   * --all-ns sends NSID FFFFFFFFh and 0 otherwise (NVMe Base 2.1
-    section 4.4, and GETF-4 for the Get), --no-uuid UUID index 0
-    (UUID-3), and a failing Set Features fails the command.
+    section 4.4, and GETF-4 for the Get), the OCP UUID index or with
+    --no-uuid index 0 (UUID-3), and a failing Set Features fails the
+    command.
 
 Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: Set Features goes out with UUID
-index 0 even though the OCP UUID index was looked up, the data is not
-the 4096-byte range SERRI-9 describes, a number too large for CDW11 bits
-6:0 is sent, the capabilities a Get with SEL 3 returns are listed as
+behavior the specification defines: the data is not the 4096-byte range
+SERRI-9 describes, a number too large for CDW11 bits 6:0 is sent, the
+capabilities a Get with SEL 3 returns are listed as
 entries, the types OCP 2.7 adds are named "unknown", and with no OCP UUID
 both commands exit 0.
 
@@ -184,16 +184,13 @@ class TestSetErrorInjection(OCPUUIDTests, EventInjectionTestBase):
                          NSID_ALL)
 
     def test_no_uuid_skips_the_uuid_lookup(self):
-        """With --no-uuid the UUID List is not read. (The index sent is
-        0 either way; see test_sent_with_the_ocp_uuid_index.)"""
+        """With --no-uuid the UUID List is not read and index 0 is
+        sent."""
         cmd = self.sent('--type', '1', '--no-uuid')
         self.assertEqual(self.server.identifies(CNS_UUID_LIST), [])
         self.assertEqual(cmd.uuid_index, 0)
 
-    @unittest.expectedFailure
     def test_sent_with_the_ocp_uuid_index(self):
-        """Defect: error_injection_set() looks up the OCP UUID index and
-        then passes 0 to nvme_set_features()."""
         self.assertEqual(self.sent('--type', '1').uuid_index, UUID_INDEX)
 
     @unittest.expectedFailure

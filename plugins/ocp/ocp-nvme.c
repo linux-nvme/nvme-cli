@@ -2351,7 +2351,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 	}
 
 	err = nvme_set_features(hdl, nsid, OCP_FID_ERRI, false, cfg->number,
-			 0, 0, 0, 0, entry, data_len, NULL);
+			 0, 0, uidx, 0, entry, data_len, NULL);
 	if (err) {
 		if (err < 0)
 			nvme_show_error("set-error-injection: %s",
