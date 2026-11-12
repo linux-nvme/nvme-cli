@@ -507,8 +507,8 @@ static int eol_plp_failure_mode_get(struct libnvme_transport_handle *hdl, const 
 	err = nvme_get_features(hdl, nsid, fid, sel, 0, uidx, NULL, 0, &result);
 	if (!err) {
 		nvme_show_result("End of Life Behavior (feature: %#0*x): %#0*x (%s: %s)",
-				 fid ? 4 : 2, fid, result ? 10 : 8, result,
-				 nvme_select_to_string(sel),
+				 fid ? 4 : 2, fid, result ? 10 : 8,
+				 (__u32)result, nvme_select_to_string(sel),
 				 eol_plp_failure_mode_to_string(result));
 		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, result);
