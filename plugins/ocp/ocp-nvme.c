@@ -549,7 +549,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 	bool no_uuid_flag = false;
 	const char *desc = "Define EOL or PLP circuitry failure mode.\n"
 			   "No argument prints current mode.";
-	const char *mode = "[0-3]: default/rom/wtm/normal";
+	const char *mode = "[1-3]: rom/wtm/normal";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_ROWTM;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -569,7 +569,8 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("mode",    'm', &cfg.mode,     mode),
+		OPT_BYTE("mode",    'm', &cfg.mode,     mode,
+			 .min = 1, .max = 3),
 		OPT_FLAG("save",    's', &cfg.save,     save),
 		OPT_BYTE("sel",     'S', &cfg.sel,      sel,
 			 nvme_sel_values, .max = NVME_SEL_MAX),
