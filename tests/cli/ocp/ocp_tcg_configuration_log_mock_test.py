@@ -18,16 +18,15 @@ Tests in this module verify:
     OCP UUID index, or index 0 with --no-uuid; without the OCP UUID
     nothing is read.
   * Every field of a version 1 and a version 2 page decodes to the value
-    in the page in text and JSON, and the field version 2 adds is absent
-    from version 1.
+    in the page in text and JSON, four-byte counters unsigned, and the
+    field version 2 adds is absent from version 1.
   * A page with a different GUID is rejected.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: a version 3 page (OCP 2.7) is
 decoded with the version 2 layout, JSON shows the Locking SP Revert
 Count as the Tper Revert Count and leaves the Locking SP Revert Count
-out, JSON shows four-byte counters from 80000000h as negative numbers,
-and -o binary prints the text report.
+out, and -o binary prints the text report.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -171,10 +170,8 @@ class TestTcgConfigurationLog(TcgConfigurationLogTestBase):
         Tper Revert Count (TCGL-4) and has no Locking SP Revert Count."""
         self.assertJsonFields(self.json_log(), JSON_REVERT_COUNTS)
 
-    @unittest.expectedFailure
     def test_large_counts_in_json(self):
-        """Defect: the four-byte counters go into JSON as signed 32-bit
-        integers, so a count from 80000000h is negative."""
+        """A four-byte counter from 80000000h is not negative."""
         self.serve(values={name: 0x80000000 + i
                            for i, name in enumerate(layout.DWORDS)})
         self.assertJsonFields(self.json_log(), layout.DWORDS)
