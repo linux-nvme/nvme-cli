@@ -45,14 +45,6 @@ if want_libnvme
     endif
 
     if want_fabrics
-        configure_file(
-            input:         'sysfiles/udev/rules.d/70-nvmf-registry.rules.in',
-            output:        '70-nvmf-registry.rules',
-            configuration: substs,
-            install:       true,
-            install_dir:   udevrulesdir,
-            install_tag:   'nvmf',
-        )
         # The vendor defaults libnvme applies after a connect (vendor.c)
         install_data(
             'sysfiles/vendor.d/50-hpe.conf',

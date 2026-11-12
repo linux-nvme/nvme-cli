@@ -4,10 +4,13 @@
 
 All tests share a single /tmp sandbox directory, applied to each GlobalCtx via
 ctx.set_test_base_dir().  This mirrors production, where there is exactly one
-registry directory.
+registry directory.  The registry reads only the entries of controllers in
+sysfs, so the sandbox also holds sys/class/nvme/nvme0..nvme10
+(ctx.set_test_sysfs_dir()).
 """
 import multiprocessing
 import os
+import shutil
 import tempfile
 import unittest
 
@@ -22,16 +25,22 @@ _under_valgrind = 'VALGRIND_OPTS' in os.environ
 # dir='/tmp' is required: libnvme confines the test base dir to /tmp.
 _tmpdir = None
 _regdir = None
+_ctrldir = None
 
 
 def setUpModule():
-    global _tmpdir, _regdir
+    global _tmpdir, _regdir, _ctrldir
     _tmpdir = tempfile.mkdtemp(prefix='nvme-registry-test-', dir='/tmp')
     _regdir = os.path.join(_tmpdir, 'registry')
+    _ctrldir = os.path.join(_tmpdir, 'sys/class/nvme')
+    for i in range(11):
+        os.makedirs(os.path.join(_ctrldir, f'nvme{i}'))
 
 
 def tearDownModule():
     """Remove the test registry directory tree."""
+    if _tmpdir:
+        shutil.rmtree(os.path.join(_tmpdir, 'sys'), ignore_errors=True)
     if _regdir and os.path.isdir(_regdir):
         for entry in os.scandir(_regdir):
             if entry.is_dir():
@@ -47,6 +56,7 @@ def _new_ctx(tmpdir):
     """Create a GlobalCtx pointed at the shared /tmp sandbox."""
     ctx = nvme.GlobalCtx()
     assert ctx.set_test_base_dir(tmpdir) == 0
+    assert ctx.set_test_sysfs_dir(tmpdir) == 0
     return ctx
 
 
@@ -112,29 +122,28 @@ class TestRegistryDelete(unittest.TestCase):
 
 
 class TestRegistryEntries(unittest.TestCase):
-    """registry_entries() skips entries with no /dev/nvmeN node (all of them
-    in a test environment), so we verify it runs without error and returns
-    an iterable."""
+    """registry_entries() and registry_retrieve() skip the entry of a
+    controller that is not in sysfs: nvme2's controller is removed."""
 
     def setUp(self):
         self.ctx = _new_ctx(_tmpdir)
         nvme.registry_update(self.ctx, 'nvme1', 'owner', 'stas')
         nvme.registry_update(self.ctx, 'nvme2', 'owner', 'nbft')
+        os.rmdir(os.path.join(_ctrldir, 'nvme2'))
 
     def tearDown(self):
+        os.makedirs(os.path.join(_ctrldir, 'nvme2'), exist_ok=True)
         nvme.registry_delete(self.ctx, 'nvme1')
         nvme.registry_delete(self.ctx, 'nvme2')
         self.ctx = None
 
-    def test_entries_returns_iterable(self):
-        entries = list(nvme.registry_entries(self.ctx))
-        # All entries are stale (no /dev/nvme* in test environment) — list
-        # is empty.
-        self.assertIsInstance(entries, list)
-
     def test_entries_skips_stale(self):
-        for device, attrs in nvme.registry_entries(self.ctx):
-            self.assertTrue(os.path.exists('/dev/' + device))
+        devices = [device for device, attrs in
+                   nvme.registry_entries(self.ctx)]
+        self.assertEqual(devices, ['nvme1'])
+
+    def test_retrieve_stale_returns_none(self):
+        self.assertIsNone(nvme.registry_retrieve(self.ctx, 'nvme2', 'owner'))
 
 
 def _writer(device, owner, iterations, tmpdir):

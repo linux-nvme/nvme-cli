@@ -13,6 +13,17 @@
   `--format=3` inherits this. See
   [#4278](https://github.com/linux-nvme/nvme-cli/issues/4278).
 
+* libnvme no longer installs the udev rule `70-nvmf-registry.rules` and
+  no longer writes the `seqnum` attribute into registry entries. The
+  rule removed the entry of a removed controller, and a queued REMOVE
+  event could remove the entry the next controller with the same name
+  had just written. The entry of a removed controller now stays until a
+  connect that gets the name replaces it, and libnvme ignores the entry
+  of a controller that is not in sysfs. A host that mixes tools on
+  libnvme 1 and libnvme 3 to connect controllers is not supported: a
+  controller connected by libnvme 1 under a reused name reads as owned
+  by the old owner.
+
 ### Fabrics
 
 * libnvme applies the defaults of storage vendors for their controllers

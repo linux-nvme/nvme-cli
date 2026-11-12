@@ -29,6 +29,24 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 
 static char tmpdir[256];
 static char regdir[280]; /* <tmpdir>/registry -- where entries actually live */
+static char ctrldir[300]; /* <tmpdir>/sys/class/nvme -- the live controllers */
+
+/* The kernel has the controller @device: give it a sysfs directory. */
+static void ctrl_add(const char *device)
+{
+	char path[400];
+
+	snprintf(path, sizeof(path), "%s/%s", ctrldir, device);
+	shr_assert(mkdir(path, 0755) == 0 || errno == EEXIST);
+}
+
+static void ctrl_remove(const char *device)
+{
+	char path[400];
+
+	snprintf(path, sizeof(path), "%s/%s", ctrldir, device);
+	rmdir(path);
+}
 
 static void setup_tmpdir(struct libnvme_global_ctx *ctx)
 {
@@ -40,6 +58,20 @@ static void setup_tmpdir(struct libnvme_global_ctx *ctx)
 	shr_assert(mkdtemp(tmpdir) != NULL);
 	snprintf(regdir, sizeof(regdir), "%s/registry", tmpdir);
 	shr_assert(libnvme_set_test_base_dir(ctx, tmpdir) == 0);
+
+	snprintf(ctrldir, sizeof(ctrldir), "%s/sys", tmpdir);
+	shr_assert(mkdir(ctrldir, 0755) == 0);
+	snprintf(ctrldir, sizeof(ctrldir), "%s/sys/class", tmpdir);
+	shr_assert(mkdir(ctrldir, 0755) == 0);
+	snprintf(ctrldir, sizeof(ctrldir), "%s/sys/class/nvme", tmpdir);
+	shr_assert(mkdir(ctrldir, 0755) == 0);
+	shr_assert(libnvme_set_test_sysfs_dir(ctx, tmpdir) == 0);
+	for (int i = 0; i <= 10; i++) {
+		char device[16];
+
+		snprintf(device, sizeof(device), "nvme%d", i);
+		ctrl_add(device);
+	}
 }
 
 static void cleanup_tmpdir(struct libnvme_global_ctx *ctx)
@@ -60,6 +92,20 @@ static void cleanup_tmpdir(struct libnvme_global_ctx *ctx)
 		closedir(d);
 	}
 	rmdir(regdir);
+
+	d = opendir(ctrldir);
+	if (d) {
+		while ((de = readdir(d)) != NULL) {
+			if (de->d_name[0] != '.')
+				ctrl_remove(de->d_name);
+		}
+		closedir(d);
+	}
+	rmdir(ctrldir);
+	snprintf(ctrldir, sizeof(ctrldir), "%s/sys/class", tmpdir);
+	rmdir(ctrldir);
+	snprintf(ctrldir, sizeof(ctrldir), "%s/sys", tmpdir);
+	rmdir(ctrldir);
 	rmdir(tmpdir);
 }
 
@@ -88,26 +134,6 @@ static bool test_create(struct libnvme_global_ctx *ctx)
 		pass = false;
 	} else {
 		printf(" - owner='%s' [PASS]\n", value);
-	}
-
-	/*
-	 * create_instance also stamps the entry with /sys/kernel/uevent_seqnum
-	 * for the udev cleanup rule.  It is best-effort, so only verify
-	 * it looks like a number when present rather than requiring it.
-	 */
-	free(value);
-	value = NULL;
-	ret = libnvmf_registry_retrieve(ctx, "nvme3", "seqnum", &value);
-	if (ret == 0 && value) {
-		char *end;
-
-		strtoull(value, &end, 10);
-		if (*value && *end == '\0') {
-			printf(" - seqnum='%s' [PASS]\n", value);
-		} else {
-			printf(" - seqnum='%s' not numeric [FAIL]\n", value);
-			pass = false;
-		}
 	}
 
 	/*
@@ -193,8 +219,8 @@ out:
 
 /*
  * An entry created by libnvmf_registry_update() must look like one created on
- * connect: it carries the seqnum stamp for the udev cleanup rule and appears
- * atomically.  Removing an attribute of a missing entry must not create one.
+ * connect: it appears atomically.  Removing an attribute of a missing entry
+ * must not create one.
  */
 static bool test_update_creates_entry(struct libnvme_global_ctx *ctx)
 {
@@ -222,20 +248,7 @@ static bool test_update_creates_entry(struct libnvme_global_ctx *ctx)
 		return false;
 	}
 
-	/* best-effort, see test_create() */
-	if (access("/sys/kernel/uevent_seqnum", R_OK) == 0) {
-		ret = libnvmf_registry_retrieve(ctx, "nvme6", "seqnum", &value);
-		if (ret || !value || !*value) {
-			printf(" - no seqnum stamp, ret=%d [FAIL]\n", ret);
-			pass = false;
-		} else {
-			printf(" - seqnum='%s' [PASS]\n", value);
-		}
-		free(value);
-		value = NULL;
-	}
-
-	/* updating an existing entry keeps the stamp */
+	/* updating an existing entry keeps the rest of it */
 	ret = libnvmf_registry_update(ctx, "nvme6", "note", "hello");
 	if (ret) {
 		printf(" - second update returned %d [FAIL]\n", ret);
@@ -393,26 +406,24 @@ static bool test_device_for_each(struct libnvme_global_ctx *ctx)
 
 	printf("test_device_for_each:\n");
 
-	/*
-	 * Create two entries.  device_for_each skips entries whose /dev/nvmeN
-	 * node is absent, so both will be skipped here — we are only testing
-	 * that the function runs without error and skips gracefully.
-	 */
+	/* nvme2's controller is gone: its entry is skipped. */
 	if (libnvmf_registry_update(ctx, "nvme1", "owner", "stas") ||
 	    libnvmf_registry_update(ctx, "nvme2", "owner", "nbft")) {
 		printf(" - setup update failed [FAIL]\n");
 		return false;
 	}
+	ctrl_remove("nvme2");
 
 	ret = libnvmf_registry_device_for_each(ctx, collect_device, &result);
-	if (ret) {
-		printf(" - for_each returned %d [FAIL]\n", ret);
+	if (ret || result.count != 1 || strcmp(result.devices[0], "nvme1")) {
+		printf(" - for_each returned %d, visited %d entries [FAIL]\n",
+		       ret, result.count);
 		pass = false;
 	} else {
-		printf(" - for_each returned 0, visited %d live entries [PASS]\n",
-		       result.count);
+		printf(" - for_each visited nvme1 only [PASS]\n");
 	}
 
+	ctrl_add("nvme2");
 	libnvmf_registry_delete(ctx, "nvme1");
 	libnvmf_registry_delete(ctx, "nvme2");
 	return pass;
@@ -427,10 +438,6 @@ struct attr_result {
 static void collect_attr(const char *attr, const char *value, void *user_data)
 {
 	struct attr_result *r = user_data;
-
-	/* the best-effort seqnum stamp, see test_create() */
-	if (!strcmp(attr, "seqnum"))
-		return;
 
 	if (r->count < 8) {
 		snprintf(r->keys[r->count], sizeof(r->keys[0]), "%s", attr);
@@ -481,6 +488,81 @@ static bool test_attr_for_each(struct libnvme_global_ctx *ctx)
 out:
 	libnvmf_registry_delete(ctx, "nvme4");
 
+	return pass;
+}
+
+/*
+ * The entry of a removed controller stays: nothing reads it, and the connect
+ * that gets the name replaces it.
+ */
+static bool test_stale_entry(struct libnvme_global_ctx *ctx)
+{
+	struct attr_result unused = { .count = 0 };
+	char *value = NULL;
+	bool pass = true;
+	int ret;
+
+	printf("test_stale_entry:\n");
+
+	if (libnvmf_registry_update(ctx, "nvme8", "owner", "stas") ||
+	    libnvmf_registry_update(ctx, "nvme8", "note", "old")) {
+		printf(" - setup update failed [FAIL]\n");
+		return false;
+	}
+	ctrl_remove("nvme8");
+
+	ret = libnvmf_registry_retrieve(ctx, "nvme8", "owner", &value);
+	if (ret != -ENOENT || value) {
+		printf(" - retrieve returned %d [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - retrieve: -ENOENT [PASS]\n");
+	}
+	free(value);
+	value = NULL;
+
+	ret = libnvmf_registry_attr_equal(ctx, "nvme8", "owner", NULL);
+	if (ret) {
+		printf(" - attr_equal(NULL) returned %d [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - attr_equal: unowned [PASS]\n");
+	}
+
+	ret = libnvmf_registry_attr_for_each(ctx, "nvme8", collect_attr,
+					     &unused);
+	if (ret != -ENOENT) {
+		printf(" - attr_for_each returned %d [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - attr_for_each: -ENOENT [PASS]\n");
+	}
+
+	/* A new controller gets the name; its connect replaces the entry. */
+	ctrl_add("nvme8");
+	ret = libnvmf_registry_create_instance(ctx, 8, "discoverd");
+	if (ret) {
+		printf(" - create_instance returned %d [FAIL]\n", ret);
+		pass = false;
+	}
+	ret = libnvmf_registry_retrieve(ctx, "nvme8", "note", &value);
+	if (ret != -ENOENT) {
+		printf(" - old attribute survived, ret=%d [FAIL]\n", ret);
+		pass = false;
+	}
+	free(value);
+	value = NULL;
+	ret = libnvmf_registry_retrieve(ctx, "nvme8", "owner", &value);
+	if (ret || !value || strcmp(value, "discoverd")) {
+		printf(" - owner after reuse: ret=%d '%s' [FAIL]\n", ret,
+		       value ? value : "(null)");
+		pass = false;
+	} else {
+		printf(" - reused name: entry replaced [PASS]\n");
+	}
+	free(value);
+
+	libnvmf_registry_delete(ctx, "nvme8");
 	return pass;
 }
 
@@ -632,6 +714,7 @@ int main(int argc, char *argv[])
 	pass &= test_delete(ctx);
 	pass &= test_retrieve_missing(ctx);
 	pass &= test_device_for_each(ctx);
+	pass &= test_stale_entry(ctx);
 	pass &= test_attr_for_each(ctx);
 	pass &= test_null_args(ctx);
 	pass &= test_parallel_writes(ctx);

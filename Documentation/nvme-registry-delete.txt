@@ -23,8 +23,8 @@ positional argument; the /dev/ prefix is optional.
 Without --attr the whole entry is removed.  With --attr only that one
 attribute file is removed, leaving the rest of the entry in place.
 
-Under normal operation registry entries are removed automatically: a
-udev rule fires on the kernel REMOVE event and deletes the entry.  This
+The entry of a controller the kernel removed stays until a connect that
+gets the device name replaces it; nothing reads it in the meantime.  This
 command is provided for manual cleanup or for orchestrators that want to
 explicitly release ownership before disconnecting.
 
