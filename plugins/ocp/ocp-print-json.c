@@ -776,6 +776,9 @@ static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported
 static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 {
 	struct json_object *root;
+	struct json_object *prev_ids;
+	char key[32];
+	int i;
 
 	root = json_create_object();
 	char guid[64];
@@ -801,6 +804,14 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 				  log_data->device_recover_action_2);
 	json_object_add_value_int(root, "Device Recovery Action 2 Timeout",
 				  log_data->device_recover_action_2_timeout);
+	json_object_add_value_uint(root, "Panic Count", log_data->panic_count);
+	prev_ids = json_create_object();
+	for (i = 0; i < C1_PREV_PANIC_IDS_LENGTH; i++) {
+		snprintf(key, sizeof(key), "Panic ID N-%d", i + 1);
+		json_object_add_value_uint64(prev_ids, key,
+			le64_to_cpu(log_data->prev_panic_id[i]));
+	}
+	json_object_add_value_object(root, "Previous Panic IDs", prev_ids);
 	json_object_add_value_int(root, "Log Page Version",
 				  le16_to_cpu(log_data->log_page_version));
 

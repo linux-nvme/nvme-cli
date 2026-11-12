@@ -18,14 +18,13 @@ Tests in this module verify:
     OCP UUID index, or index 0 with --no-uuid; without the OCP UUID
     nothing is read.
   * Every field decodes to the value in the page in text and JSON, the
-    eight-byte Error ID whole and four-byte fields unsigned, and the text
-    report lists the four Previous Error IDs.
+    eight-byte Error ID whole and four-byte fields unsigned, and both
+    reports carry the Error / Assert Count (EREC-16) and list the four
+    Previous Error IDs (EREC-17).
   * A page with a different GUID is rejected.
 
 Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: JSON leaves out the Error / Assert
-Count (EREC-16) and the Previous Error IDs (EREC-17), and -o binary
-prints the text report.
+behavior the specification defines: -o binary prints the text report.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -58,8 +57,6 @@ LABELS = {
         'Device Recovery Action 2 Timeout',
     layout.ERROR_ASSERT_COUNT: 'Panic Count',
 }
-# Fields JSON leaves out, which have a test of their own.
-JSON_MISSING = (layout.ERROR_ASSERT_COUNT,)
 DWORD_FIELDS = (layout.DEVICE_CAPABILITIES, layout.VS_COMMAND_CDW12,
                 layout.VS_COMMAND_CDW13)
 
@@ -144,8 +141,7 @@ class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
 
     def test_fields_in_json(self):
         log = self.json_log()
-        self.assertJsonFields(log, [n for n in layout.FIELDS
-                                    if n not in JSON_MISSING])
+        self.assertJsonFields(log, layout.FIELDS)
         self.assertEqual(log['Log Page Version'], 3)
         self.assertEqual(log['Log page GUID'], GUID_TEXT)
 
@@ -172,14 +168,7 @@ class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
         self.serve({layout.ERROR_ID: 0x1122334455667788})
         self.assertJsonFields(self.json_log(), [layout.ERROR_ID])
 
-    @unittest.expectedFailure
-    def test_error_assert_count_in_json(self):
-        """Defect: JSON has no Error / Assert Count (EREC-16)."""
-        self.assertJsonFields(self.json_log(), JSON_MISSING)
-
-    @unittest.expectedFailure
     def test_previous_error_ids_in_json(self):
-        """Defect: JSON has no Previous Error IDs (EREC-17)."""
         values = scalars(self.json_log())
         for error_id in layout.DEFAULT_PREVIOUS_IDS:
             with self.subTest(error_id=hex(error_id)):
