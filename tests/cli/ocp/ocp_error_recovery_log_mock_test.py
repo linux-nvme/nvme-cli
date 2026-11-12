@@ -18,14 +18,13 @@ Tests in this module verify:
     OCP UUID index, or index 0 with --no-uuid; without the OCP UUID
     nothing is read.
   * Every field decodes to the value in the page in text and JSON, the
-    eight-byte Error ID whole, and the text report lists the four
-    Previous Error IDs.
+    eight-byte Error ID whole and four-byte fields unsigned, and the text
+    report lists the four Previous Error IDs.
   * A page with a different GUID is rejected.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: JSON leaves out the Error / Assert
-Count (EREC-16) and the Previous Error IDs (EREC-17), JSON shows
-four-byte fields from 80000000h as negative numbers, and -o binary
+Count (EREC-16) and the Previous Error IDs (EREC-17), and -o binary
 prints the text report.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
@@ -186,10 +185,8 @@ class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
             with self.subTest(error_id=hex(error_id)):
                 self.assertTrue({error_id, f'0x{error_id:x}'} & values)
 
-    @unittest.expectedFailure
     def test_large_dwords_in_json(self):
-        """Defect: the four-byte fields go into JSON as signed 32-bit
-        integers, so a value from 80000000h is negative."""
+        """A four-byte field from 80000000h is not negative."""
         self.serve({name: 0x80000000 + i
                     for i, name in enumerate(DWORD_FIELDS)})
         self.assertJsonFields(self.json_log(), DWORD_FIELDS)

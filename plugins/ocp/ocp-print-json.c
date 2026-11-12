@@ -787,14 +787,14 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 				  log_data->device_recover_action_1);
 	json_object_add_value_uint64(root, "Panic ID",
 				     le64_to_cpu(log_data->panic_id));
-	json_object_add_value_int(root, "Device Capabilities",
-				  le32_to_cpu(log_data->device_capabilities));
+	json_object_add_value_uint(root, "Device Capabilities",
+				   le32_to_cpu(log_data->device_capabilities));
 	json_object_add_value_int(root, "Vendor Specific Recovery Opcode",
 				  log_data->vendor_specific_recovery_opcode);
-	json_object_add_value_int(root, "Vendor Specific Command CDW12",
-				  le32_to_cpu(log_data->vendor_specific_command_cdw12));
-	json_object_add_value_int(root, "Vendor Specific Command CDW13",
-				  le32_to_cpu(log_data->vendor_specific_command_cdw13));
+	json_object_add_value_uint(root, "Vendor Specific Command CDW12",
+				   le32_to_cpu(log_data->vendor_specific_command_cdw12));
+	json_object_add_value_uint(root, "Vendor Specific Command CDW13",
+				   le32_to_cpu(log_data->vendor_specific_command_cdw13));
 	json_object_add_value_int(root, "Vendor Specific Command Timeout",
 				  log_data->vendor_specific_command_timeout);
 	json_object_add_value_int(root, "Device Recovery Action 2",
@@ -1157,15 +1157,16 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 				  log_data->no_of_write_unlock_locking_obj);
 	json_object_add_value_int(root, "Reserved2", log_data->rsvd15);
 
-	json_object_add_value_int(root, "SID Authentication Try Count",
-				  le32_to_cpu(log_data->sid_auth_try_count));
-	json_object_add_value_int(root, "SID Authentication Try Limit",
-				  le32_to_cpu(log_data->sid_auth_try_limit));
-	json_object_add_value_int(root, "Programmatic TCG Reset Count",
-				  le32_to_cpu(log_data->pro_tcg_rc));
-	json_object_add_value_int(root, "Programmatic Reset Lock Count",
-				  le32_to_cpu(log_data->pro_rlc));
-	json_object_add_value_int(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
+	json_object_add_value_uint(root, "SID Authentication Try Count",
+				   le32_to_cpu(log_data->sid_auth_try_count));
+	json_object_add_value_uint(root, "SID Authentication Try Limit",
+				   le32_to_cpu(log_data->sid_auth_try_limit));
+	json_object_add_value_uint(root, "Programmatic TCG Reset Count",
+				   le32_to_cpu(log_data->pro_tcg_rc));
+	json_object_add_value_uint(root, "Programmatic Reset Lock Count",
+				   le32_to_cpu(log_data->pro_rlc));
+	json_object_add_value_uint(root, "TCG Error Count",
+				   le32_to_cpu(log_data->tcg_ec));
 
 	res_arr[0] = '\0';
 	if (log_page_version == 1) {
