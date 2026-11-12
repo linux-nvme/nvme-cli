@@ -14,8 +14,9 @@ specification (2.7 section 4.8.13) rather than from nvme-cli's struct.
 
 Tests in this module verify:
   * The header is read first, then the descriptors from log page offset
-    64, as long as the Hardware Component Log Size says; the size counts
-    dwords in log page version 1 and bytes from version 2.
+    64, as long as the Hardware Component Log Size says, both with the
+    OCP UUID index; the size counts dwords in log page version 1 and
+    bytes from version 2.
   * Every descriptor field decodes to the value in the page in text and
     JSON, a field of size 0 is absent, and each Component Identifier is
     named as the CITYPE table describes it.
@@ -26,11 +27,10 @@ Tests in this module verify:
     and -o binary writes the page unchanged.
 
 Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: the descriptors are read without the
-OCP UUID index, a page with a different GUID is decoded anyway, the
-Hardware Component Log Size shown is not the HWCLOG-4 value, --comp-id
-vendor selects 8000h only rather than the vendor unique range, and
-0007h is not named a resistor component.
+behavior the specification defines: a page with a different GUID is
+decoded anyway, the Hardware Component Log Size shown is not the
+HWCLOG-4 value, --comp-id vendor selects 8000h only rather than the
+vendor unique range, and 0007h is not named a resistor component.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -158,11 +158,9 @@ class TestHwcompLogReads(HwcompLogTestBase):
              (layout.HEADER_SIZE, len(self.page) - layout.HEADER_SIZE)])
         self.assertEqual(reads[0].uuid_index, UUID_INDEX)
 
-    @unittest.expectedFailure
     def test_descriptors_are_read_with_the_ocp_uuid_index(self):
-        """Defect: the descriptor read is built anew by
-        nvme_init_get_log() and goes out with UUID index 0, so the header
-        and the descriptors may come from different log pages."""
+        """The header and the descriptors come from the same log
+        page."""
         self.assertOk(self.run_c6())
         reads = self.server.log_reads(layout.LID)
         self.assertEqual([r.uuid_index for r in reads],

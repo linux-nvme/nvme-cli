@@ -286,6 +286,9 @@ static int get_hwcomp_log_data(struct libnvme_transport_handle *hdl, struct hwco
 	nvme_init_get_log(&cmd, NVME_NSID_ALL,
 			  (enum nvme_cmd_get_log_lid)OCP_LID_HWCOMP,
 			  NVME_CSI_NVM, log->desc, len);
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
 	nvme_init_get_log_lpo(&cmd, desc_offset);
 	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (ret) {
