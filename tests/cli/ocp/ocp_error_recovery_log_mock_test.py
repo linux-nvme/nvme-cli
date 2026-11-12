@@ -17,16 +17,16 @@ Tests in this module verify:
   * The page is read as LID C1h, 512 bytes, for all namespaces, with the
     OCP UUID index, or index 0 with --no-uuid; without the OCP UUID
     nothing is read.
-  * Every field decodes to the value in the page in text and JSON, and
-    the text report lists the four Previous Error IDs.
+  * Every field decodes to the value in the page in text and JSON, the
+    eight-byte Error ID whole, and the text report lists the four
+    Previous Error IDs.
   * A page with a different GUID is rejected.
 
 Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: the eight-byte Error ID (EREC-4) is
-cut to its low four bytes, JSON leaves out the Error / Assert Count
-(EREC-16) and the Previous Error IDs (EREC-17), JSON shows four-byte
-fields from 80000000h as negative numbers, and -o binary prints the text
-report.
+behavior the specification defines: JSON leaves out the Error / Assert
+Count (EREC-16) and the Previous Error IDs (EREC-17), JSON shows
+four-byte fields from 80000000h as negative numbers, and -o binary
+prints the text report.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -164,16 +164,12 @@ class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
         self.assertIn(UNKNOWN_GUID_MSG, result.stdout + result.stderr)
         self.assertNotIn('Log Page Version', result.stdout)
 
-    @unittest.expectedFailure
     def test_whole_error_id_in_text(self):
-        """Defect: the eight-byte Error ID (EREC-4) goes through
-        le32_to_cpu(), which keeps its low four bytes."""
+        """The Error ID is eight bytes (EREC-4)."""
         self.serve({layout.ERROR_ID: 0x1122334455667788})
         self.assertTextFields(self.text_log(), [layout.ERROR_ID])
 
-    @unittest.expectedFailure
     def test_whole_error_id_in_json(self):
-        """Defect: as test_whole_error_id_in_text."""
         self.serve({layout.ERROR_ID: 0x1122334455667788})
         self.assertJsonFields(self.json_log(), [layout.ERROR_ID])
 
