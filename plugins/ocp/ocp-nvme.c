@@ -1278,14 +1278,6 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	OPT_ARGS(opts) = {
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
 		OPT_END()
@@ -1295,7 +1287,7 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 	if (ret)
 		return ret;
 
-	ret = get_c5_log_page(hdl, cfg.output_format,
+	ret = get_c5_log_page(hdl, nvme_args.output_format,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C5 Log Page, ret = %d", ret);
@@ -1370,14 +1362,6 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, s
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	OPT_ARGS(opts) = {
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
 		OPT_END()
@@ -1387,7 +1371,7 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, s
 	if (ret)
 		return ret;
 
-	ret = get_c1_log_page(hdl, cfg.output_format,
+	ret = get_c1_log_page(hdl, nvme_args.output_format,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C1h Log Page, ret = %d", ret);
@@ -2032,7 +2016,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 	ret = get_c9_log_page_data(hdl, 0, 1, output_file,
 				   &log_data, &string_buffer, &log_page_sz, uuid);
 
-	if ((!ret) && (fmt != BINARY))
+	if (!ret)
 		ocp_c9_log(log_data, string_buffer, log_page_sz, fmt);
 	else if (ret)
 		nvme_show_error("ERROR : OCP : Unable to read C9 data from buffer");
@@ -2055,12 +2039,10 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 			"If requested path does not exist, the directory will be newly created.";
 
 	struct config {
-		char *output_format;
 		char *output_file;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
 		.output_file = NULL,
 	};
 
@@ -2081,7 +2063,7 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 		snprintf(file_path, sizeof(file_path), "%s",
 			 DEFAULT_STRING_BIN);
 
-	ret = get_c9_log_page(hdl, cfg.output_format, file_path,
+	ret = get_c9_log_page(hdl, nvme_args.output_format, file_path,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C9 Log Page, ret = %d", ret);
@@ -2158,14 +2140,6 @@ static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	OPT_ARGS(opts) = {
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
 		OPT_END()
@@ -2175,7 +2149,7 @@ static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd
 	if (ret)
 		return ret;
 
-	ret = get_c7_log_page(hdl, cfg.output_format,
+	ret = get_c7_log_page(hdl, nvme_args.output_format,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C7 Log Page, ret = %d", ret);

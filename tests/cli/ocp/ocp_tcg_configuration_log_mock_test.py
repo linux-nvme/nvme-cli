@@ -20,12 +20,12 @@ Tests in this module verify:
   * Every field of a version 1 and a version 2 page decodes to the value
     in the page in text and JSON, four-byte counters unsigned, and the
     field version 2 adds is absent from version 1.
-  * A page with a different GUID is rejected.
+  * A page with a different GUID is rejected, and -o binary writes the
+    page unchanged.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: a version 3 page (OCP 2.7) is
-decoded with the version 2 layout, and -o binary prints the text
-report.
+decoded with the version 2 layout.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -164,10 +164,7 @@ class TestTcgConfigurationLog(TcgConfigurationLogTestBase):
                            for i, name in enumerate(layout.DWORDS)})
         self.assertJsonFields(self.json_log(), layout.DWORDS)
 
-    @unittest.expectedFailure
     def test_binary_is_the_page(self):
-        """Defect: the output format is fixed to "normal", so -o binary
-        prints the text report."""
         result = self.run_c7('-o', 'binary', encoding=None)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, self.page)

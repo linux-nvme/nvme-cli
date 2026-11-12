@@ -23,6 +23,7 @@ Tests in this module verify:
     lives on the stack.
   * A table that starts past the end of the log, or runs past it, is
     reported and skipped while the other tables still decode.
+  * -o binary writes the log unchanged.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -120,9 +121,10 @@ class TestOCPTelemetryStringLog(OCPMockTestBase):
         self.out_dir = os.path.join(self.tmp, 'c9')
         os.mkdir(self.out_dir)
 
-    def run_c9(self, *args, stack_limit_kb=None):
+    def run_c9(self, *args, stack_limit_kb=None, encoding='utf-8'):
         return self.run_ocp('telemetry-string-log', '-f',
                             os.path.join(self.out_dir, 'c9'), *args,
+                            encoding=encoding,
                             stack_limit_kb=stack_limit_kb)
 
     def json_log(self, *args, stack_limit_kb=None):
@@ -186,6 +188,11 @@ class TestOCPTelemetryStringLog(OCPMockTestBase):
             ascii_text=b'OCP\0STRINGS\0LOG!')
         self.assertEqual(self.json_log()['ASCII Table'],
                          'OCP\0STRINGS\0LOG!')
+
+    def test_binary_is_the_log(self):
+        result = self.run_c9('-o', 'binary', encoding=None)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, pack_page())
 
     def test_table_sizes_too_large_to_fetch_are_refused(self):
         """Table sizes adding up past INT_MAX bytes are refused before

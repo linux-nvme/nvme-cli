@@ -18,17 +18,13 @@ Tests in this module verify:
   * The Unsupported Count and each Requirement ID decode in text and
     JSON, a 16-character ID included, and a count larger than the list
     lists the 253 entries it has.
-  * A page with a different GUID is rejected.
-
-A known defect is covered by an expectedFailure test: -o binary prints
-the text report.
+  * A page with a different GUID is rejected, and -o binary writes the
+    page unchanged.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_unsupported_reqs_log_mock_test.py <nvme-binary> <mock-lib>
 """
-import unittest
-
 from tests.cli.nvme_mock import NSID_ALL, main
 from tests.cli.ocp.ocp_mock_test import (UUID_INDEX, UUID_SLOT,
                                          OCPMockTestBase, report_fields)
@@ -141,10 +137,7 @@ class TestUnsupportedReqsLog(UnsupportedReqsLogTestBase):
         self.assertIn(UNKNOWN_GUID_MSG, result.stdout + result.stderr)
         self.assertNotIn('Log Page Version', result.stdout)
 
-    @unittest.expectedFailure
     def test_binary_is_the_page(self):
-        """Defect: the output format is fixed to "normal", so -o binary
-        prints the text report."""
         result = self.run_c5('-o', 'binary', encoding=None)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, self.page)
