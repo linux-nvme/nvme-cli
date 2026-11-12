@@ -15,6 +15,7 @@
 #include <nvme/fabrics.h>
 #include <nvme/nvme-types-fabrics.h>
 
+#include <shared/hash-util.h>
 #include <shared/net-util.h>
 
 #include "tid.h"
@@ -204,25 +205,6 @@ bool tid_matches_existing(const struct libnvmf_tid *candidate,
 	return true;
 }
 
-/*
- * FNV-1a 64-bit over a byte range. libnvme has its own internal copy
- * (libnvmf_fnv1a_64() in util-fabrics.c) but it is not part of the public
- * API, so discoverd carries this short, dependency-free copy of the same
- * well-known algorithm rather than reaching into libnvme's private headers.
- */
-static uint64_t fnv1a_64(const void *buf, size_t len)
-{
-	const unsigned char *p = buf;
-	uint64_t hash = 14695981039346656037ULL;
-	size_t i;
-
-	for (i = 0; i < len; i++) {
-		hash ^= p[i];
-		hash *= 1099511628211ULL;
-	}
-	return hash;
-}
-
 char *tid_unit_name(const struct libnvmf_tid *t)
 {
 	const char *canon = libnvmf_tid_get_canonical(t);
@@ -233,7 +215,7 @@ char *tid_unit_name(const struct libnvmf_tid *t)
 		return NULL;
 
 	/* Truncate to 48 bits (12 hex chars) — see tid.h. */
-	hash = fnv1a_64(canon, strlen(canon)) & 0xffffffffffffULL;
+	hash = shr_fnv1a_64(canon, strlen(canon)) & 0xffffffffffffULL;
 
 	if (asprintf(&name, "nvme-discoverd-%012" PRIx64 ".service", hash) < 0)
 		return NULL;
