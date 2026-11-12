@@ -43,6 +43,14 @@
 
 static bool g_hide_progress;
 
+/*
+ * -O /dev/null or NUL: every dump is still retrieved from the drive, so what
+ * the command prints covers all of it, but nothing is saved. A global
+ * like g_hide_progress, since the writers sit several calls below the
+ * option.
+ */
+static bool g_discard_dumps;
+
 static const char *samsung_plugin_status_to_string(__s32 status)
 {
 	const char *str;
@@ -548,6 +556,19 @@ static int get_telemetry_header(struct libnvme_transport_handle *hdl, __u32 nsid
 }
 
 /*
+ * Write to one of the dump descriptors, which stay closed when -O is
+ * /dev/null.
+ * Return: 0 on success, non-zero on a failed write.
+ */
+static int write_dump(int fd, const void *buffer, size_t size)
+{
+	if (fd < 0)
+		return 0;
+
+	return shr_write_all(fd, buffer, size);
+}
+
+/*
  * dump_size is 64-bit: Data Area 4 carries a 32-bit last block number, so a
  * telemetry area can be larger than INT_MAX even though each individual
  * transfer stays within transfer_size.
@@ -594,13 +615,16 @@ static int extract_telemetry_dump_data(char *feature_name, char *file_name,
 	if (err != 0)
 		goto end;
 
-	output_header = shr_open_rawdata(file_path_header, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (output_header < 0) {
-		err = SAMSUNG_GENERAL_FILE_OPEN_ERROR;
-		goto end;
+	if (!g_discard_dumps) {
+		output_header = shr_open_rawdata(file_path_header,
+				O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if (output_header < 0) {
+			err = SAMSUNG_GENERAL_FILE_OPEN_ERROR;
+			goto end;
+		}
 	}
 
-	if (shr_write_all(output_header, data, TELEMETRY_HEADER_SIZE)) {
+	if (write_dump(output_header, data, TELEMETRY_HEADER_SIZE)) {
 		err = SAMSUNG_GENERAL_FILE_WRITE_ERROR;
 		goto close_output_header;
 	}
@@ -618,7 +642,7 @@ static int extract_telemetry_dump_data(char *feature_name, char *file_name,
 				goto close_output_header;
 		}
 
-		if (loop == 0) {
+		if (loop == 0 && !g_discard_dumps) {
 			output = shr_open_rawdata(file_path,
 					O_WRONLY | O_CREAT | O_TRUNC, 0666);
 			if (output < 0) {
@@ -627,8 +651,8 @@ static int extract_telemetry_dump_data(char *feature_name, char *file_name,
 			}
 		}
 
-		if (shr_write_all(output, data, retrieve_size)
-				|| shr_write_all(output_header, data, retrieve_size)) {
+		if (write_dump(output, data, retrieve_size)
+				|| write_dump(output_header, data, retrieve_size)) {
 			err = SAMSUNG_GENERAL_FILE_WRITE_ERROR;
 			goto close_output;
 		}
@@ -643,8 +667,11 @@ static int extract_telemetry_dump_data(char *feature_name, char *file_name,
 	/* Completion line: printed even under --hide-progress, see above. */
 	shr_spinner(feature_name, 1.0, stdout);
 	printf("\n");
-	printf("The log file was saved in \"%s\"\n", file_path);
-	printf("The log file was saved in \"%s\"\n", file_path_header);
+	if (!g_discard_dumps) {
+		printf("The log file was saved in \"%s\"\n", file_path);
+		printf("The log file was saved in \"%s\"\n",
+				file_path_header);
+	}
 	measure_time(&begin, false);
 
 close_output:
@@ -663,6 +690,10 @@ static int open_write_close(char *file_name, __u8 *buffer, int size)
 {
 	int err = 0;
 	int output = 0;
+
+	/* -O /dev/null keeps the header in memory and saves nothing. */
+	if (g_discard_dumps)
+		return 0;
 
 	output = shr_open_rawdata(file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
@@ -945,6 +976,10 @@ static int merge_telemetry_log(const char *dump_save_dir, const char *sn,
 	if (total_area_num < 1 || total_area_num > MERGE_MAX_AREA)
 		return SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR;
 
+	/* -O /dev/null saved no area, so there is nothing to merge. */
+	if (g_discard_dumps)
+		return 0;
+
 	err = SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
 
 	if (asprintf(&area_file[0], "%s%s_Telemetry_%s_header_only.bin",
@@ -1134,7 +1169,7 @@ static int get_vendor_dump(struct libnvme_transport_handle *hdl,
 {
 	__cleanup_free char *file_path = NULL;
 	int err = 0;
-	int output = 0;
+	int output = -1;
 	/* 64-bit, so that it cannot wrap past a size near 2^32 */
 	__u64 offset = 0;
 	__u32 total_dump_size = 0;
@@ -1156,13 +1191,16 @@ static int get_vendor_dump(struct libnvme_transport_handle *hdl,
 	if (err != 0)
 		goto end;
 
-	output = shr_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (output < 0) {
-		err = SAMSUNG_GENERAL_FILE_OPEN_ERROR;
-		goto end;
+	if (!g_discard_dumps) {
+		output = shr_open_rawdata(file_path,
+				O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if (output < 0) {
+			err = SAMSUNG_GENERAL_FILE_OPEN_ERROR;
+			goto end;
+		}
 	}
 
-	if (shr_write_all(output, data, UNIT_DATA_SIZE_8KB)) {
+	if (write_dump(output, data, UNIT_DATA_SIZE_8KB)) {
 		err = SAMSUNG_GENERAL_FILE_WRITE_ERROR;
 		goto close_output;
 	}
@@ -1173,7 +1211,7 @@ static int get_vendor_dump(struct libnvme_transport_handle *hdl,
 		if (err < 0) // last piece returns 2 on some devices.
 			goto close_output;
 
-		if (shr_write_all(output, data, UNIT_DATA_SIZE_32KB)) {
+		if (write_dump(output, data, UNIT_DATA_SIZE_32KB)) {
 			err = SAMSUNG_GENERAL_FILE_WRITE_ERROR;
 			goto close_output;
 		}
@@ -1189,12 +1227,14 @@ static int get_vendor_dump(struct libnvme_transport_handle *hdl,
 	 */
 	shr_spinner(feature_name, 1.0, stdout);
 	printf("\n");
-	printf("The log file was saved in \"%s\"\n", file_path);
+	if (!g_discard_dumps)
+		printf("The log file was saved in \"%s\"\n", file_path);
 	measure_time(&begin, false);
 	err = 0;
 
 close_output:
-	close(output);
+	if (output >= 0)
+		close(output);
 
 end:
 	libnvme_free(data);
@@ -1278,10 +1318,12 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 			"ctlr----Controller_Initiated_Telemetry_Dump\n"
 			"vendor--Vendor_Dumps\n";
 	const char *area = "Telemetry Data Area; 1 to 4. Default: 0(all).";
-	const char *file = "Output file name with path;\n"
+	const char *file = "Output file name with path (required);\n"
 			"e.g. '-O ./path/name'\n'-O ./path1/path2/';\n"
-			"If requested path does not exist, "
-			"the directory will be newly created.";
+			"'-O ./' saves in the current directory;\n"
+			"If requested path does not exist, the directory will be newly created;\n"
+			"'-O /dev/null' or '-O NUL' retrieves the dumps\n"
+			"but saves none.";
 	const char *compress = "Save dumps in a compressed file.";
 	const char *hide_progress = "Hide the incremental extraction progress.\n"
 			"The completion line of each dump is still printed.";
@@ -1297,6 +1339,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	int tele_data_area = 0;
+	bool discard;
 
 	OPT_VALS(types) = {
 		VAL_ENUM("host0", DUMP_BIT(DUMP_TYPE_HOST_0)),
@@ -1338,6 +1381,29 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
+	/*
+	 * Every dump is saved under a file name -O prefixes, so -O is
+	 * required, as for log telemetry, and checked before a command is
+	 * sent. -O /dev/null, or NUL as Windows spells it in any case,
+	 * retrieves the dumps and saves none on every platform, which leaves
+	 * -z nothing to archive.
+	 */
+	if (!cfg.file) {
+		fprintf(stderr, "Please provide an output file with -O.\n");
+		samsung_print_error(SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR);
+		return SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR;
+	}
+
+	discard = !strcmp(cfg.file, "/dev/null")
+			|| shr_streqcase0(cfg.file, "NUL");
+	if (discard && cfg.compress) {
+		fprintf(stderr,
+				"-O %s saves no dump for --compress to archive.\n",
+				cfg.file);
+		samsung_print_error(SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR);
+		return SAMSUNG_GENERAL_INVALID_PARAMETER_ERROR;
+	}
+
 	nvme_init_identify_ctrl(&cmd, &ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
@@ -1373,7 +1439,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 	 * shr_mkdir_from_fname() creates. A bare "run1" has no directory
 	 * part and reduces to creating ".", a harmless no-op.
 	 */
-	if (cfg.file) {
+	if (!discard) {
 		err = shr_mkdir_from_fname(cfg.file, 0777);
 		if (err < 0) {
 			fprintf(stderr, "mkdir for %s: %s\n", cfg.file,
@@ -1390,12 +1456,13 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd,
 			return err;
 		}
 	} else {
-		dump_save_dir = strdup(cfg.file ? cfg.file : "./");
+		dump_save_dir = strdup(cfg.file);
 		if (!dump_save_dir)
 			return SAMSUNG_GENERAL_MEM_ALLOC_ERROR;
 	}
 
 	g_hide_progress = cfg.hide_progress;
+	g_discard_dumps = discard;
 
 	/*
 	 * Collection is best effort: every dump is attempted and each failure

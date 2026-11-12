@@ -21,7 +21,8 @@ DESCRIPTION
 Collect the internal firmware logs of a Samsung NVMe SSD and write them to
 disk. Host-initiated telemetry, controller-initiated telemetry and the
 vendor crash, memory and debug dumps are supported. Each dump is saved as
-its own file, so a single run usually produces several files.
+its own file, so a single run usually produces several files. Where they
+are saved is given with '--output-file', which is mandatory.
 
 Use '--dump-type' to pick which dumps to collect; several types may be
 requested in a single run.
@@ -56,8 +57,12 @@ OPTIONS
 --output-file=<FILE>::
 	Output file name, optionally preceded by a path (ex:
 	'./path/name' or './path1/path2/'). Any directory in the path
-	that does not exist yet is created. When this option is omitted,
-	the dumps are written to the current directory.
+	that does not exist yet is created. This option is mandatory;
+	give './' to save the dumps in the current directory.
+	Given as '/dev/null' or 'NUL', the requested dumps are retrieved
+	as usual but none of them is saved: no file or directory is
+	created, and the output is the same, less the names of the saved
+	files. It then cannot be combined with '--compress'.
 
 -z::
 --compress::
@@ -83,14 +88,14 @@ using Log Specific Parameter 1 and the vendor dumps of the given device
 into the current directory.
 
 ------------
-# nvme samsung vs-internal-log /dev/nvme0
+# nvme samsung vs-internal-log /dev/nvme0 -O ./
 ------------
 
 Extract only the controller-initiated telemetry and the vendor dumps,
 naming both types in a single run.
 
 ------------
-# nvme samsung vs-internal-log /dev/nvme0 -t ctlr,vendor
+# nvme samsung vs-internal-log /dev/nvme0 -t ctlr,vendor -O ./
 ------------
 
 Extract the host-initiated telemetry using Log Specific Parameter 0, which
@@ -102,10 +107,18 @@ that directory if it does not exist.
 ------------
 
 Extract data area 2 of the host-initiated telemetry using Log Specific
-Parameter 1, store the result compressed and keep the output quiet.
+Parameter 1 into the current directory, store the result compressed
+and keep the output quiet.
 
 ------------
-# nvme samsung vs-internal-log /dev/nvme0 -t host1 -a 2 -z --hide-progress
+# nvme samsung vs-internal-log /dev/nvme0 -t host1 -a 2 -O ./ -z --hide-progress
+------------
+
+Retrieve the controller-initiated telemetry without saving it, to see
+what the device reports in its telemetry header.
+
+------------
+# nvme samsung vs-internal-log /dev/nvme0 -t ctlr -O /dev/null
 ------------
 
 NVME

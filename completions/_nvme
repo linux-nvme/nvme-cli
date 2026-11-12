@@ -8090,7 +8090,7 @@ _nvme () {
 						--hide-progress':Hide the incremental extraction progress. The completion line of each dump is still printed.'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'
-						--output-file=':Output file name with path; e.g. '\''-O ./path/name'\'' '\''-O ./path1/path2/'\''; If requested path does not exist, the directory will be newly created.'
+						--output-file=':Output file name with path (required); e.g. '\''-O ./path/name'\'' '\''-O ./path1/path2/'\''; '\''-O ./'\'' saves in the current directory; If requested path does not exist, the directory will be newly created; '\''-O /dev/null'\'' or '\''-O NUL'\'' retrieves the dumps but saves none.'
 						-O':alias for --output-file'
 						--output-format=':Output format: normal'
 						-o':alias for --output-format'
