@@ -18,15 +18,14 @@ Tests in this module verify:
   * set-dssd-power-state-feature sends the power state, Save with
     --save, NSID 0 (NVMe Base 2.1 section 4.4) and the OCP UUID index
     (UUID-3), or index 0 with --no-uuid, and fails when Set Features
-    fails.
+    fails; a power state too large for CDW11 bits 6:0 is refused.
   * get-dssd-power-state-feature reads with the SEL given, or SEL 0, 1
     and 2 in turn with --all, and prints what Dword 0 reports, with SEL 3
     as capabilities.
 
 Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: a power state too large for CDW11
-bits 6:0 is sent, either command run without the option it needs exits
-0, and with no OCP UUID both commands exit 0.
+behavior the specification defines: either command run without the
+option it needs exits 0, and with no OCP UUID both commands exit 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -102,10 +101,8 @@ class TestSetDssdPowerState(OCPUUIDTests, DssdPowerStateTestBase):
                               '--power-state', '1')
         self.assertNotEqual(result.returncode, 0)
 
-    @unittest.expectedFailure
     def test_power_state_too_large_for_its_field_is_refused(self):
-        """Defect: the power state goes into CDW11 unchecked, so 128
-        sets reserved bit 7 (SDSSDPS-13)."""
+        """128 would set reserved bit 7 (SDSSDPS-13)."""
         result = self.run_cmd('set-dssd-power-state-feature',
                               '--power-state', '128')
         self.assertNotEqual(result.returncode, 0)

@@ -1673,7 +1673,9 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("power-state", 'p', &cfg.power_state, power_state),
+		/* CDW11 bits 6:0, bits 31:7 reserved (SDSSDPS-13, 14) */
+		OPT_BYTE("power-state", 'p', &cfg.power_state, power_state,
+			 .max = 0x7f),
 		OPT_FLAG("save",        's', &cfg.save,        save),
 		OPT_FLAG("no-uuid",     'n', &no_uuid_flag,    no_uuid),
 		OPT_END()
