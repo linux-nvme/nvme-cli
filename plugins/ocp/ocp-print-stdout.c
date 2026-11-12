@@ -431,7 +431,8 @@ static void stdout_c1_log(struct ocp_error_recovery_log_page *log_data)
 	       le16_to_cpu(log_data->panic_reset_wait_time));
 	printf("  Panic Reset Action                : 0x%x\n", log_data->panic_reset_action);
 	printf("  Device Recovery Action 1          : 0x%x\n", log_data->device_recover_action_1);
-	printf("  Panic ID                          : 0x%x\n", le32_to_cpu(log_data->panic_id));
+	printf("  Panic ID                          : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->panic_id));
 	printf("  Device Capabilities               : 0x%x\n",
 	       le32_to_cpu(log_data->device_capabilities));
 	printf("  Vendor Specific Recovery Opcode   : 0x%x\n",

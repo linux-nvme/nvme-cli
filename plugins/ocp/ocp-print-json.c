@@ -785,7 +785,8 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 	json_object_add_value_int(root, "Panic Reset Action", log_data->panic_reset_action);
 	json_object_add_value_int(root, "Device Recovery Action 1",
 				  log_data->device_recover_action_1);
-	json_object_add_value_int(root, "Panic ID", le32_to_cpu(log_data->panic_id));
+	json_object_add_value_uint64(root, "Panic ID",
+				     le64_to_cpu(log_data->panic_id));
 	json_object_add_value_int(root, "Device Capabilities",
 				  le32_to_cpu(log_data->device_capabilities));
 	json_object_add_value_int(root, "Vendor Specific Recovery Opcode",
