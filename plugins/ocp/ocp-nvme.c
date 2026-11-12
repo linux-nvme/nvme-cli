@@ -1535,10 +1535,12 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 	if (err)
 		return err;
 
-	if (argconfig_given(opts, &cfg.tps))
+	if (argconfig_given(opts, &cfg.tps)) {
 		err = ocp_set_telemetry_profile(hdl, cfg.tps);
-	else
+	} else {
 		nvme_show_error("Telemetry Profile Select is a required argument");
+		err = -EINVAL;
+	}
 
 	return err;
 }
@@ -1686,11 +1688,13 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 	if (err)
 		return err;
 
-	if (argconfig_given(opts, &cfg.power_state))
-		err = set_dssd_power_state(hdl, nsid, OCP_FID_DSSDPS, cfg.power_state, cfg.save,
-					   !no_uuid_flag);
+	if (!argconfig_given(opts, &cfg.power_state)) {
+		nvme_show_error("Power State is a required argument");
+		return -EINVAL;
+	}
 
-	return err;
+	return set_dssd_power_state(hdl, nsid, OCP_FID_DSSDPS, cfg.power_state,
+				    cfg.save, !no_uuid_flag);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1772,11 +1776,13 @@ static int get_dssd_power_state_feature(int argc, char **argv, struct command *a
 			if (err)
 				break;
 		}
-	} else if (argconfig_given(opts, &cfg.sel))
+	} else if (argconfig_given(opts, &cfg.sel)) {
 		err = get_dssd_power_state(hdl, nsid, fid, cfg.sel,
 					       !no_uuid_flag);
-	else
+	} else {
 		nvme_show_error("Required to have --sel as an argument, or pass the --all flag.");
+		err = -EINVAL;
+	}
 
 	return err;
 }
