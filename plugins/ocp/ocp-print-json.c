@@ -1149,6 +1149,8 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 	json_object_add_value_int(root, "Locking SP Activation Count",
 				  log_data->locking_sp_act_count);
 	json_object_add_value_int(root, "Tper Revert Count",
+				  log_data->type_rev_count);
+	json_object_add_value_int(root, "Locking SP Revert Count",
 				  log_data->locking_sp_rev_count);
 	json_object_add_value_int(root, "Number of Locking Objects",
 				  log_data->no_of_locking_obj);
