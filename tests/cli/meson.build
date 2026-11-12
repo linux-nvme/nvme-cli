@@ -394,4 +394,8 @@ if python3.found()
     if 'transcend' in selected_plugins
         subdir('transcend')
     endif
+
+    if 'solidigm' in selected_plugins
+        subdir('solidigm')
+    endif
 endif
