@@ -46,7 +46,7 @@ starts after tlshd.
 
 Before connecting or reconnecting anything, nvme-discoverd checks the
 system-wide exclusion list. It also registers ownership of every
-controller it connects (--owner discoverd, or --owner nbft for an
+controller it connects (--owner discoverd, or --owner pre-os for an
 NBFT-sourced controller) in the NVMe-oF ownership registry. See
 nvme-registry-list(1) and nvme-exclusion-add(1).
 

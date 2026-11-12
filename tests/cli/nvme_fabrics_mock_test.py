@@ -601,24 +601,30 @@ class FabricsMockCLITest(MockTestCase):
             self._connect_all_nbft('--hostnqn', self._OWNER_HOSTNQN),
             self._OWNER_HOSTNQN)
 
-    def test_nbft_ctrl_loss_tmo(self):
-        """The kernel never gives up an NBFT boot path: the owner nbft
+    def test_connect_all_nbft_owner(self):
+        """The NBFT boot connections are the pre-OS environment's: they
+        get the owner pre-os, once called nbft."""
+        self._connect_all_nbft()
+        self.assertEqual(self._owner(0), 'pre-os')
+
+    def test_pre_os_ctrl_loss_tmo(self):
+        """The kernel never gives up a pre-OS path: the owner pre-os
         connects with ctrl_loss_tmo=-1, unless one is given. Other
         owners keep the kernel's default."""
         self._connect_all_nbft()
         self.assertEqual(self.server.controllers[0]['ctrl_loss_tmo'], '-1')
 
         args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:a')
-        self._run(*args, '--owner=nbft', '--ctrl-loss-tmo=30')
+        self._run(*args, '--owner=pre-os', '--ctrl-loss-tmo=30')
         self.assertEqual(self.server.controllers[1]['ctrl_loss_tmo'], '30')
 
         args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:b')
         self._run(*args, '--owner=stas')
         self.assertEqual(self.server.controllers[2]['ctrl_loss_tmo'], '600')
 
-    def test_nbft_ctrl_loss_tmo_over_vendor(self):
-        """An NBFT boot path keeps ctrl_loss_tmo=-1 over a vendor
-        default: it counts as the connection's own value."""
+    def test_pre_os_ctrl_loss_tmo_over_vendor(self):
+        """A pre-OS path keeps ctrl_loss_tmo=-1 over a vendor default:
+        it counts as the connection's own value."""
         etc = Path(self.base_dir) / 'vendor.d'
         etc.mkdir()
         (etc / '90-local.conf').write_text(
@@ -627,7 +633,7 @@ class FabricsMockCLITest(MockTestCase):
         self.server.sysfs_model = 'NetApp ONTAP Controller'
 
         args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:a')
-        self._run(*args, '--owner=nbft')
+        self._run(*args, '--owner=pre-os')
         self.assertEqual(self._vendor_attr(0, 'ctrl_loss_tmo'), '-1')
 
         args = self._owner_connect_args('nqn.2014-08.org.nvmexpress:b')
@@ -636,10 +642,10 @@ class FabricsMockCLITest(MockTestCase):
 
     def test_disconnect_honors_owner(self):
         """nvme disconnect leaves an owned controller alone unless --owner
-        names its owner or --force is given; an unowned controller is
-        anybody's (issue #4328)."""
+        names its owner ("nbft" is "pre-os") or --force is given; an
+        unowned controller is anybody's."""
         nqn = 'nqn.2014-08.org.nvmexpress:owned-subsys'
-        self._run(*self._owner_connect_args(nqn), '--owner=nbft')
+        self._run(*self._owner_connect_args(nqn), '--owner=pre-os')
         for args in (('-d', 'nvme0'), ('-n', nqn),
                      ('-d', 'nvme0', '--owner=stas'),
                      ('-t', 'tcp', '-a', '192.168.20.10', '-n', nqn)):
@@ -679,6 +685,18 @@ class FabricsMockCLITest(MockTestCase):
         self._assert_disconnected(0)
         self._run('disconnect', '-d', 'nvme1')
         self._assert_disconnected(1)
+
+    def test_owner_nbft_is_pre_os(self):
+        """--owner nbft records the owner under its new name, and a
+        controller an older initrd recorded as nbft is pre-os's."""
+        subsysnqn = 'nqn.2014-08.org.nvmexpress:boot-subsys'
+        args = self._owner_connect_args(subsysnqn)
+        self._run(*args, '--owner=nbft')
+        self.assertEqual(self._owner(0), 'pre-os')
+
+        self._owner_path(0).write_text('nbft\n')
+        self._run('disconnect-all', '--owner=pre-os')
+        self._assert_disconnected(0)
 
     _DC_TRADDR = '192.168.40.10'
 

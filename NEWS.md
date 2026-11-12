@@ -31,11 +31,6 @@
 
 ### Fabrics
 
-* A connection with the owner `nbft`, an NBFT boot path, gets
-  `ctrl_loss_tmo=-1` unless one is given: the kernel never gives a boot
-  path up. This covers `connect-all --nbft` and the reconnects of
-  nvme-discoverd.
-
 * libnvme applies the defaults of storage vendors for their controllers
   right after it connected one: the I/O policy of the subsystem and
   `ctrl_loss_tmo`, from INI files in `vendor.d`, see nvme-vendor.d(5).
@@ -96,6 +91,19 @@
   enabled: nvme-discoverd replays the FC discovery events itself when it
   starts, and the unit ran before that, while the legacy rule was not
   masked yet (#4327).
+
+### Fabrics and the ownership registry
+
+* The owner of the connections of the pre-OS environment, the firmware
+  and the initrd, is `pre-os`: `nvme connect-all --nbft` records it, and
+  nvme-discoverd reconnects the NBFT paths with it. `nbft`, the owner
+  nvme-cli 3.0 to 3.2 record, is its old name: `--owner nbft` records
+  `pre-os`, and an `nbft` entry matches `pre-os`.
+
+* A connection with the owner `pre-os` gets `ctrl_loss_tmo=-1` unless one
+  is given: the kernel never gives a path of the pre-OS environment up.
+  This covers the NBFT, the configuration, the I/O controllers of a
+  discovery log page and the reconnects of nvme-discoverd.
 
 ## Changes in 3.2 (2026-10-30)
 

@@ -1499,14 +1499,14 @@ static int nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx, struct libnvme_ct
 }
 
 /*
- * The paths the OS runs from are never given up: the owner "nbft"
+ * The paths the OS runs from are never given up: the owner "pre-os"
  * connects with ctrl_loss_tmo=-1, unless one was set.
  */
 static int ctrl_loss_tmo_for(struct libnvme_global_ctx *ctx,
 			     struct libnvme_ctrl *c)
 {
 	if (c->cfg.ctrl_loss_tmo == NVMF_DEF_CTRL_LOSS_TMO &&
-	    ctx->owner && !strcmp(ctx->owner, "nbft"))
+	    ctx->owner && libnvmf_owner_equal(ctx->owner, "pre-os"))
 		return -1;
 
 	return c->cfg.ctrl_loss_tmo;

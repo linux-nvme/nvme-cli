@@ -94,6 +94,7 @@ LIBNVMF_3 {
 		libnvmf_lookup_keyring;
 		libnvmf_nbft_free;
 		libnvmf_nbft_read_files;
+		libnvmf_owner_equal;
 		libnvmf_params_for_each;
 		libnvmf_params_free;
 		libnvmf_params_get;

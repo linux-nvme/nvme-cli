@@ -72,12 +72,14 @@ From the CLI, pass `--owner NAME` to register ownership at connect time:
 nvme connect     --owner discoverd ...
 nvme discover    --owner discoverd ...
 nvme connect-all --owner discoverd ...
-nvme connect-all --nbft                 # NBFT controllers, owner=nbft
-nvme connect-all --owner boot --nbft    # NBFT controllers, owner=boot (overrides nbft)
+nvme connect-all --nbft                 # NBFT controllers, owner=pre-os
+nvme connect-all --owner boot --nbft    # NBFT controllers, owner=boot (overrides pre-os)
 nvme connect     --owner= ...           # explicitly disown
 ```
 
-`nvme connect-all --nbft` records `owner=nbft` automatically to protect firmware boot volumes. That `nbft` is only a default, though: an explicit `--owner NAME` given alongside `--nbft` overrides it, so `nvme connect-all --owner NAME --nbft` records the controllers as `NAME`. A plain `--nbft` (no `--owner`) keeps `owner=nbft`, which is what lets existing boot scripts get ownership for free without being changed. Without `--owner` and without `--nbft`, new connections are unowned and an already-connected controller keeps whatever entry it has.
+`nvme connect-all --nbft` records `owner=pre-os` automatically to protect firmware boot volumes. That `pre-os` is only a default, though: an explicit `--owner NAME` given alongside `--nbft` overrides it, so `nvme connect-all --owner NAME --nbft` records the controllers as `NAME`. A plain `--nbft` (no `--owner`) keeps `owner=pre-os`, which is what lets existing boot scripts get ownership for free without being changed. Without `--owner` and without `--nbft`, new connections are unowned and an already-connected controller keeps whatever entry it has.
+
+`pre-os` is the owner of the pre-OS environment, the firmware and the initrd, whatever technology set up the connection. Its old name `nbft` is the same owner: `--owner nbft` records `pre-os`, and an `nbft` entry an initrd with an older nvme-cli recorded matches `pre-os` (`libnvmf_owner_equal()`, `libnvmf_registry_attr_equal()`), for example in `nvme disconnect-all --owner pre-os`.
 
 An empty `--owner=` is the explicit disown, and it beats the `--nbft` default: `nvme connect-all --owner= --nbft` leaves the controllers unowned.
 

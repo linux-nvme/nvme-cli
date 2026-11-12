@@ -107,13 +107,13 @@ class HandoverTest(unittest.TestCase):
     # -- A: the hand-over ---------------------------------------------- #
 
     def test_a1_nbft_adopted(self):
-        """The NBFT boot path is adopted with owner nbft, not connected
-        again."""
+        """The NBFT boot path is adopted with owner pre-os (once nbft),
+        not connected again."""
         dev = self.boot_nbft()
-        self.assertEqual(self.host.owner(dev), 'nbft')
+        self.assertEqual(self.host.owner(dev), 'pre-os')
         self.host.start()
         self.assertEqual(self.host.find(NBFT_NQN), [dev])
-        self.assertEqual(self.host.owner(dev), 'nbft')
+        self.assertEqual(self.host.owner(dev), 'pre-os')
         ctrls = self.tracked(dev)
         self.assertEqual(len(ctrls), 1)
         self.assertTrue(ctrls[0]['nbft'])
@@ -174,7 +174,7 @@ class HandoverTest(unittest.TestCase):
 
     def test_a6_nbft_without_registry(self):
         """An initrd with nvme-cli 2 records no owner. The NBFT boot path
-        is still adopted as nbft, not connected again."""
+        is still adopted as pre-os, not connected again."""
         host = self.host
         host.fabric.add_target('tcp', NBFT_TRADDR, '4420', NBFT_NQN)
         host.nbft(NBFT_TABLE)
@@ -184,11 +184,12 @@ class HandoverTest(unittest.TestCase):
         host.discoverd_config('[Global]\nnbft = true\n')
         host.start()
         self.assertEqual(host.find(NBFT_NQN), [dev])
-        self.assertEqual(host.owner(dev), 'nbft')
+        self.assertEqual(host.owner(dev), 'pre-os')
 
     def test_a7_nbft_path_lost_before_switch_root(self):
         """A boot path the initrd connected and lost before switch-root is
-        connected again, with owner nbft."""
+        connected again, with owner pre-os. The initrd's registry entry
+        has the old name of the owner."""
         host = self.host
         host.fabric.add_target('tcp', NBFT_TRADDR, '4420', NBFT_NQN)
         host.nbft(NBFT_TABLE)
@@ -198,7 +199,7 @@ class HandoverTest(unittest.TestCase):
         host.discoverd_config('[Global]\nnbft = true\n')
         host.start()
         (dev,) = host.find(NBFT_NQN)
-        self.assertEqual(host.owner(dev), 'nbft')
+        self.assertEqual(host.owner(dev), 'pre-os')
         self.assertEqual(host.ctrl(dev)['hostnqn'], NBFT_HOST_NQN)
 
     def test_a8_other_owner_skipped(self):
@@ -226,12 +227,12 @@ class HandoverTest(unittest.TestCase):
         self.assertEqual(len(self.tracked(dev)), 1)
 
     def test_b1_nbft_path_lost(self):
-        """A lost boot path is connected again, with owner nbft."""
+        """A lost boot path is connected again, with owner pre-os."""
         dev = self.boot_nbft()
         self.host.start()
         self.host.lose(dev)
         (dev,) = self.host.find(NBFT_NQN)
-        self.assertEqual(self.host.owner(dev), 'nbft')
+        self.assertEqual(self.host.owner(dev), 'pre-os')
         self.assertEqual(len(self.tracked(dev)), 1)
 
     def configure_fc(self, extra=''):
