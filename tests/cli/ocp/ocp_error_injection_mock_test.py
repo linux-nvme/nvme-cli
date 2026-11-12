@@ -27,11 +27,12 @@ Tests in this module verify:
     section 4.4, and GETF-4 for the Get), the OCP UUID index or with
     --no-uuid index 0 (UUID-3), and a failing Set Features fails the
     command.
+  * Without the OCP UUID neither command sends anything, and both fail.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: the capabilities a Get with SEL 3
-returns are listed as entries, the types OCP 2.7 adds are named
-"unknown", and with no OCP UUID both commands exit 0.
+returns are listed as entries, and the types OCP 2.7 adds are named
+"unknown".
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 

@@ -21,10 +21,8 @@ Tests in this module verify:
   * A value too large for its field is refused before anything is sent.
   * get-latency-monitor reads with the SEL and NSID given, the OCP UUID
     index (UUID-3) or index 0 with --no-uuid, prints what Dword 0
-    reports, and SEL 3 as capabilities.
-
-A known defect is covered by an expectedFailure test: with no OCP UUID
-get-latency-monitor sends nothing yet exits 0.
+    reports, and SEL 3 as capabilities; without the OCP UUID it sends
+    nothing and fails.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 

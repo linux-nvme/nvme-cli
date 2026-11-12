@@ -22,10 +22,11 @@ Tests in this module verify:
     Life Behavior value is refused.
   * Without --mode the behavior of the SEL given is read and named, and
     SEL 3 prints the capabilities.
+  * Without the OCP UUID nothing is sent, and the command fails.
 
-Known defects are covered by expectedFailure tests asserting the
+A known defect is covered by an expectedFailure test asserting the
 behavior the specification defines: Get Features decodes bits 7:0 of
-Dword 0 rather than bits 2:0, and with no OCP UUID the command exits 0.
+Dword 0 rather than bits 2:0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 

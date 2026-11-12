@@ -22,9 +22,8 @@ Tests in this module verify:
   * get-plp-health-check-interval reads with the SEL given and NSID 0,
     prints what Dword 0 reports, and SEL 3 as capabilities. It sends UUID
     index 0, which UUID-3 allows.
-
-A known defect is covered by an expectedFailure test: with no OCP UUID
-set-plp-health-check-interval sends nothing yet exits 0.
+  * Without the OCP UUID set-plp-health-check-interval sends nothing
+    and fails.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 

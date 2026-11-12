@@ -18,11 +18,11 @@ Tests in this module verify:
     (UUID-3), or index 0 with --no-uuid.
   * A time of 0 is shown as disabled, any other as the time Dword 0
     reports, and SEL 3 as capabilities.
+  * Without the OCP UUID nothing is read, and the command fails.
 
-Known defects are covered by expectedFailure tests asserting the
+A known defect is covered by an expectedFailure test asserting the
 behavior the specification defines: a disabled time with a reserved bit
-set is shown as a time, and with no OCP UUID the command sends nothing
-yet exits 0.
+set is shown as a time.
 
 With SEL 3 the capabilities are also printed as a wake up time.
 

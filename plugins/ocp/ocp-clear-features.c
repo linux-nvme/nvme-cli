@@ -48,7 +48,7 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -111,7 +111,7 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 

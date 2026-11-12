@@ -441,7 +441,7 @@ static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -494,7 +494,7 @@ static int eol_plp_failure_mode_get(struct libnvme_transport_handle *hdl, const 
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -526,7 +526,7 @@ static int eol_plp_failure_mode_set(struct libnvme_transport_handle *hdl, const 
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1494,7 +1494,7 @@ static int ocp_set_telemetry_profile(struct libnvme_transport_handle *hdl, __u8 
 	err = ocp_get_uuid_index(hdl, &uidx);
 	if (err || !uidx) {
 		nvme_show_error("ERROR: No OCP UUID index found");
-		return err;
+		return err ? err : -ENOENT;
 	}
 
 	err = nvme_set_features(hdl, 0xFFFFFFFF, OCP_FID_TEL_CFG, true, tps, 0, 0,
@@ -1594,7 +1594,7 @@ static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct comma
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1634,7 +1634,7 @@ set_dssd_power_state(struct libnvme_transport_handle *hdl,
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1711,7 +1711,7 @@ static int get_dssd_power_state(struct libnvme_transport_handle *hdl, const __u3
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1830,7 +1830,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1936,7 +1936,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	err = ocp_get_uuid_index(hdl, &uidx);
 	if (err || !uidx) {
 		nvme_show_error("ERROR: No OCP UUID index found");
-		return err;
+		return err ? err : -ENOENT;
 	}
 
 	err = nvme_set_features(hdl, nsid, OCP_FID_DAEC, cfg.sv, cfg.epn ? 1 : 0,
@@ -2228,7 +2228,7 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -2318,7 +2318,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -2420,7 +2420,7 @@ static int enable_ieee1667_silo_get(struct libnvme_transport_handle *hdl, const 
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -2484,7 +2484,7 @@ static int enable_ieee1667_silo_set(struct libnvme_transport_handle *hdl,
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -2738,7 +2738,7 @@ static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
