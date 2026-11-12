@@ -17,22 +17,16 @@ Tests in this module verify:
   * The page is read as LID C7h, 512 bytes, for all namespaces, with the
     OCP UUID index, or index 0 with --no-uuid; without the OCP UUID
     nothing is read.
-  * Every field of a version 1 and a version 2 page decodes to the value
-    in the page in text and JSON, four-byte counters unsigned, and the
-    field version 2 adds is absent from version 1.
+  * Every field of a version 1, 2 and 3 page decodes to the value in the
+    page in text and JSON, four-byte counters unsigned, and the field
+    version 2 adds is absent from version 1.
   * A page with a different GUID is rejected, and -o binary writes the
     page unchanged.
-
-Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: a version 3 page (OCP 2.7) is
-decoded with the version 2 layout.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_tcg_configuration_log_mock_test.py <nvme-binary> <mock-lib>
 """
-import unittest
-
 from tests.cli.nvme_mock import NSID_ALL, main
 from tests.cli.ocp.ocp_mock_test import (UUID_INDEX, UUID_SLOT,
                                          OCPMockTestBase, report_fields)
@@ -100,7 +94,7 @@ class TestTcgConfigurationLog(TcgConfigurationLogTestBase):
         self.assertEqual(self.server.log_reads(layout.LID), [])
 
     def test_fields_in_text(self):
-        for version in (1, 2):
+        for version in (1, 2, 3):
             self.serve(version)
             fields = self.text_log()
             with self.subTest(version=version):
@@ -110,7 +104,7 @@ class TestTcgConfigurationLog(TcgConfigurationLogTestBase):
                 self.assertEqual(fields['Log page GUID'], '0x' + GUID_HEX)
 
     def test_fields_in_json(self):
-        for version in (1, 2):
+        for version in (1, 2, 3):
             self.serve(version)
             log = self.json_log()
             with self.subTest(version=version):
@@ -143,20 +137,6 @@ class TestTcgConfigurationLog(TcgConfigurationLogTestBase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn(UNKNOWN_GUID_MSG, result.stdout + result.stderr)
         self.assertNotIn('Log Page Version', result.stdout)
-
-    @unittest.expectedFailure
-    def test_version_3_fields_in_text(self):
-        """Defect: the struct and the printers know only versions 1 and
-        2, so a version 3 page (OCP 2.7) is decoded at the version 2
-        offsets."""
-        self.serve(3)
-        self.assertTextFields(self.text_log(), layout.field_names(3))
-
-    @unittest.expectedFailure
-    def test_version_3_fields_in_json(self):
-        """Defect: as test_version_3_fields_in_text."""
-        self.serve(3)
-        self.assertJsonFields(self.json_log(), layout.field_names(3))
 
     def test_large_counts_in_json(self):
         """A four-byte counter from 80000000h is not negative."""
