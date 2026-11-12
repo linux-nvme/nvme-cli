@@ -437,6 +437,17 @@ static const struct {
 	{ { "ocp", "internal-log", "--print-only" }, "--host-generate",
 	  .opts = { {}, { "--data-area=2" }, { "--data-area=4" },
 		    { "--telemetry-type=controller", "--data-area=3" } } },
+	/*
+	 * Telemetry data areas 1 to 3 only, sized by 16-bit last blocks:
+	 * area 4 and the vendor dumps, which the default dump types include,
+	 * stream as much as a 32-bit size from the device asks for.
+	 */
+	{ { "samsung", "vs-internal-log", "--output-file=/dev/null",
+	    "--hide-progress" },
+	  .opts = { { "--dump-type=host1", "--telemetry-data-area=1" },
+		    { "--dump-type=ctlr", "--telemetry-data-area=2" },
+		    { "--dump-type=host0", "--telemetry-data-area=3" },
+		    { "--dump-type=host1,ctlr", "--telemetry-data-area=1" } } },
 };
 
 #define NR_COMMANDS ARRAY_SIZE(commands)
