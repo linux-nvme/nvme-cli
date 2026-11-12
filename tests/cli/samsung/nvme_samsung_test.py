@@ -19,6 +19,7 @@ Run from the repository root with PYTHONPATH=.
 Usage: python3 <test-script> <nvme> <mock-lib>
 """
 import errno
+import glob
 import os
 import stat
 import struct
@@ -182,6 +183,18 @@ class SamsungCLITest(MockTestCase):
     # Output path handling: -O is a file name prefix, so directories    #
     # end at the last '/' whichever form is used.                       #
     # ---------------------------------------------------------------- #
+
+    def test_output_file_is_required(self):
+        for extra in ((), ('-t', 'ctlr'), ('-z',)):
+            with self.subTest(extra=extra):
+                result = self.run_cmd(*extra)
+                self.assertNotEqual(result.returncode, 0,
+                                    f'{extra} without -O must be refused')
+                self.assertIn('Please provide an output file with -O',
+                              result.stderr)
+        self.assertEqual(self.server.commands, [],
+                         'a refused command line still reached the device')
+        self.assertEqual(self.files(), [])
 
     def test_output_dir_with_trailing_slash_is_created(self):
         result = self.run_cmd('-t', 'ctlr', '-O', './dumps/')
@@ -499,6 +512,71 @@ class SamsungCLITest(MockTestCase):
         self.assertFalse(any('Area_3.bin' in f for f in names), names)
 
     # ---------------------------------------------------------------- #
+    # -O /dev/null or NUL: every dump is retrieved, none of it is saved #
+    # ---------------------------------------------------------------- #
+
+    @staticmethod
+    def _sent(commands):
+        """What the commands asked of the device, whoever sent them."""
+        return [(c.admin, c.opcode, c.nsid, c.cdw10, c.cdw11, c.cdw12,
+                 c.cdw13, c.cdw14, c.cdw15, c.data_len, c.data)
+                for c in commands]
+
+    def test_dev_null_saves_no_file(self):
+        self.server.last_blocks = (2, 4, 6, 8)
+        result = self.run_cmd('-t', 'host0,host1,ctlr,vendor', '-O', '/dev/null')
+        self.assertOk(result)
+        self.assertEqual(self.files(), [],
+                         'a dump was saved under -O /dev/null')
+        self.assertEqual(glob.glob('/dev/null?*'), [],
+                         '-O /dev/null was taken as a file name prefix')
+        self.assertNotIn('saved in', result.stdout)
+
+    def test_nul_saves_no_file_in_any_case(self):
+        """NUL is the null device of Windows, whatever its case."""
+        self.server.last_blocks = (2, 4, 6, 8)
+        for name in ('NUL', 'nul', 'Nul'):
+            with self.subTest(name=name):
+                result = self.run_cmd('-t', 'ctlr,vendor', '-O', name)
+                self.assertOk(result)
+                self.assertEqual(self.files(), [],
+                                 f'a dump was saved under -O {name}')
+                self.assertNotIn('saved in', result.stdout)
+                refused = self.run_cmd('-t', 'ctlr', '-O', name, '-z')
+                self.assertNotEqual(refused.returncode, 0)
+                self.assertIn(f'-O {name} saves no dump for --compress',
+                              refused.stderr)
+
+    def test_dev_null_sends_what_a_saving_run_sends(self):
+        """The fuzz target runs -O /dev/null: it must read the drive the
+        way a run that saves the dumps does."""
+        self.server.last_blocks = (2, 4, 6, 8)
+        self.assertOk(self.run_cmd('-t', 'host1,ctlr,vendor', '-O', './dumps/'))
+        saving = self._sent(self.server.commands)
+        self.server.commands.clear()
+        self.assertOk(self.run_cmd('-t', 'host1,ctlr,vendor', '-O', '/dev/null'))
+        self.assertEqual(self._sent(self.server.commands), saving,
+                         '-O /dev/null changed what is read from the drive')
+
+    def test_dev_null_prints_the_telemetry_header(self):
+        self.server.last_blocks = (2, 4, 6, 8)
+        result = self.run_cmd('-t', 'ctlr', '-O', '/dev/null')
+        self.assertOk(result)
+        self.assertIn('Telemetry Controller Header', result.stdout)
+        self.assertIn('Data Area 3 Last Block : 0x0006', result.stdout)
+        self.assertIn('100%', result.stdout,
+                      'the completion line went missing under -O /dev/null')
+
+    def test_dev_null_refuses_compress(self):
+        result = self.run_cmd('-t', 'ctlr', '-O', '/dev/null', '-z')
+        self.assertNotEqual(result.returncode, 0,
+                            '-O /dev/null -z must be refused')
+        self.assertIn('saves no dump for --compress', result.stderr)
+        self.assertEqual(self.server.commands, [],
+                         'a refused command line still reached the device')
+        self.assertEqual(self.files(), [])
+
+    # ---------------------------------------------------------------- #
     # Exit status                                                       #
     # ---------------------------------------------------------------- #
 
@@ -553,7 +631,8 @@ class SamsungCLITest(MockTestCase):
 
     def test_direct_telemetry_keeps_127k_transfers(self):
         self.server.last_blocks = (260, 260, 260, 260)
-        result = self.run_cmd('-t', 'ctlr', '-a', '1', '--hide-progress')
+        result = self.run_cmd('-t', 'ctlr', '-a', '1', '-O', './',
+                              '--hide-progress')
         self.assertOk(result)
         self.assertIn('(Xfer 127K)', result.stdout)
         self.assertEqual(self.server.log_transfers, [
@@ -658,8 +737,8 @@ class SamsungCLITest(MockTestCase):
                     self.assertFalse(any(f'Area_{other}.bin' in f for f in names),
                                      f'-a {area} also wrote area {other}: {names}')
 
-    def test_default_output_is_the_current_directory(self):
-        result = self.run_cmd('-t', 'ctlr')
+    def test_dot_slash_writes_to_the_current_directory(self):
+        result = self.run_cmd('-t', 'ctlr', '-O', './')
         self.assertOk(result)
         self.assertTrue(any(f.startswith(SERIAL) for f in self.files()),
                         f'nothing written to the cwd: {self.files()}')
@@ -681,8 +760,8 @@ class SamsungCLITest(MockTestCase):
                       'the completion line went missing under -z -H')
 
     @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
-    def test_compress_without_output_option(self):
-        result = self.run_cmd('-t', 'ctlr', '-z')
+    def test_compress_into_the_current_directory(self):
+        result = self.run_cmd('-t', 'ctlr', '-O', './', '-z')
         self.assertOk(result)
         archive = f'Samsung_Dump_{SERIAL}.tar.gz'
         self.assertTrue(os.path.isfile(os.path.join(self.out_dir, archive)),
