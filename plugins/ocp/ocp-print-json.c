@@ -1174,9 +1174,9 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 			     (__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
 			     2, false);
 	} else {
-		json_object_add_value_int(root,
+		json_object_add_value_uint(root,
 			"Number of Namespace Provisioned Locking Objects Extended",
-			log_data->no_of_ns_prov_locking_obj_ext);
+			le16_to_cpu(log_data->no_of_ns_prov_locking_obj_ext));
 	}
 
 	concat_bytes(res_arr, sizeof(res_arr), log_data->rsvd38, 456, false);
