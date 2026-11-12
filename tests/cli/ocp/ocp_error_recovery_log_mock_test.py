@@ -21,17 +21,14 @@ Tests in this module verify:
     eight-byte Error ID whole and four-byte fields unsigned, and both
     reports carry the Error / Assert Count (EREC-16) and list the four
     Previous Error IDs (EREC-17).
-  * A page with a different GUID is rejected.
-
-Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: -o binary prints the text report.
+  * A page with a different GUID is rejected, and -o binary writes the
+    page unchanged.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_error_recovery_log_mock_test.py <nvme-binary> <mock-lib>
 """
 import re
-import unittest
 
 from tests.cli.nvme_mock import NSID_ALL, main
 from tests.cli.ocp.ocp_mock_test import (UUID_INDEX, UUID_SLOT,
@@ -180,10 +177,7 @@ class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
                     for i, name in enumerate(DWORD_FIELDS)})
         self.assertJsonFields(self.json_log(), DWORD_FIELDS)
 
-    @unittest.expectedFailure
     def test_binary_is_the_page(self):
-        """Defect: the output format is fixed to "normal", so -o binary
-        prints the text report."""
         result = self.run_c1('-o', 'binary', encoding=None)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, self.page)
