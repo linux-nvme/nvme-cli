@@ -32,9 +32,9 @@ OPTIONS
 -------
 -m <mode>::
 --mode=<mode>::
-	Set the EOL or PLP circuitry failure mode to [0-3] ('0: default',
-	'1: rom', '2: wtm' or '3: normal'). Only one mode
-	can be used at a time. The default is rom.
+	Set the EOL or PLP circuitry failure mode to [1-3] ('1: rom',
+	'2: wtm' or '3: normal'). Only one mode
+	can be used at a time.
 
 -n::
 --no-uuid::

@@ -6678,14 +6678,15 @@ _nvme () {
 					;;
 
 				(eol-plp-failure-mode)
-					_nvme_opt_vals "--output-format -o" "normal json binary" \
+					_nvme_opt_vals "--mode -m" "1 2 3" \
+					               "--output-format -o" "normal json binary" \
 					               "--output-format-version" "1 2" \
 					               "--sel -S" "0 1 2 3 current default saved supported" \
 					               "--timeout" "infinite -1" && return
 					local _ocp_eol_plp_failure_mode
 					_ocp_eol_plp_failure_mode=(
 						--dry-run':show command instead of executing'
-						--mode=':[0-3]: default/rom/wtm/normal'
+						--mode=':[1-3]: rom/wtm/normal'
 						-m':alias for --mode'
 						--no-ioctl-probing':disable 64-bit IOCTL support probing'
 						--no-retries':disable retry logic on errors'

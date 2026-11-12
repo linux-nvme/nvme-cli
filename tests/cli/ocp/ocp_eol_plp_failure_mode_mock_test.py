@@ -18,15 +18,14 @@ behaviors are 01b/001b Read Only Mode, 10b/010b Write Through Mode and
 Tests in this module verify:
   * --mode sets the behavior, with Save for --save, NSID 0 (NVMe Base
     2.1 section 4.4) and the OCP UUID index (UUID-3), or index 0 with
-    --no-uuid, and fails when Set Features fails.
+    --no-uuid, and fails when Set Features fails; a mode with no End of
+    Life Behavior value is refused.
   * Without --mode the behavior of the SEL given is read and named, and
     SEL 3 prints the capabilities.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: Get Features decodes bits 7:0 of
-Dword 0 rather than bits 2:0, a mode with no End of Life Behavior value
-(00b reserved, or one too large for two bits) is sent, and with no OCP
-UUID the command exits 0.
+Dword 0 rather than bits 2:0, and with no OCP UUID the command exits 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -110,12 +109,9 @@ class TestSetPlpFailureMode(OCPUUIDTests, PlpFailureModeTestBase):
         self.server.set_status = SC_INVALID_FIELD
         self.assertNotEqual(self.run_eol('--mode', '1').returncode, 0)
 
-    @unittest.expectedFailure
     def test_mode_without_a_behavior_is_refused(self):
-        """Defect: --mode goes into CDW11 unchecked: 0 sends the reserved
-        00b, and the bits above the field are shifted out, so 4 sends 00b
-        as well and 5 to 7 set Read Only Mode, Write Through Mode and
-        normal operation."""
+        """0 is the reserved 00b, and 4 to 7 do not fit the two-bit
+        field."""
         for mode in (0, 4, 5, 6, 7):
             with self.subTest(mode=mode):
                 result = self.run_eol('--mode', str(mode))

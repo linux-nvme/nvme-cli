@@ -3659,7 +3659,8 @@ plugin_ocp_opts () {
 			opts+=" --dry-run --mode= -m --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --mode -m --output-format -o --output-format-version --sel -S --set-options --timeout"
 
-			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			_nvme_opt_vals "--mode -m" "1 2 3" \
+			               "--output-format -o" "normal json binary" \
 			               "--output-format-version" "1 2" \
 			               "--sel -S" "0 1 2 3 current default saved supported" \
 			               "--timeout" "infinite -1"
