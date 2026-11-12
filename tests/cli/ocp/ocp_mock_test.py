@@ -29,7 +29,6 @@ tests of its own.
 import json
 import os
 import re
-import unittest
 
 from tests.cli.nvme_mock import (CNS_CTRL, CNS_UUID_LIST, LPA_TELEMETRY,
                                  OPC_GET_FEATURES, OPC_SET_FEATURES,
@@ -178,9 +177,7 @@ class OCPUUIDTests:
         self.assertIn(NO_UUID_MSG, result.stderr)
         self.assertEqual(self.cmds(opcode), [])
 
-    @unittest.expectedFailure
     def test_without_the_ocp_uuid_exits_nonzero(self):
-        """Defect: the lookup reports the missing UUID and returns 0."""
         self.server.uuid_slot = None
         result = self.run_cmd(*self.without_uuid[1:])
         self.assertNotEqual(result.returncode, 0)

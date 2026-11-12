@@ -27,14 +27,14 @@ Tests in this module verify:
   * clear-fw-activate-history sets bit 31 of CDW11 of Set Features for
     FID C1h with NSID 0 and without Save (CFUH-6, 10, 13), after which
     the history is empty (FAHL-3); a failing Set Features fails the
-    command.
+    command, and without the OCP UUID nothing is sent and the command
+    fails.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: once the circular buffer has wrapped
 the entries are not listed oldest first (FWHST-LOG-1, UTIL-FWHST-3), the
 Result is not shown as Pass or Failed with the status code
-(UTIL-FWHST-15), -o binary prints "unhandled output format" and exits
-0, and with no OCP UUID clear-fw-activate-history sends nothing yet
+(UTIL-FWHST-15), and -o binary prints "unhandled output format" and
 exits 0.
 
 Section 16 also asks for a table (UTIL-NM-3) with the Power on Hours to

@@ -22,10 +22,11 @@ Tests in this module verify:
   * get-dssd-power-state-feature reads with the SEL given, or SEL 0, 1
     and 2 in turn with --all, and prints what Dword 0 reports, with SEL 3
     as capabilities.
+  * Without the OCP UUID neither command sends anything, and both fail.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: either command run without the
-option it needs exits 0, and with no OCP UUID both commands exit 0.
+option it needs exits 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 

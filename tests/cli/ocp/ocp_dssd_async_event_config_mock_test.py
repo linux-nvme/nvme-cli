@@ -24,9 +24,8 @@ Tests in this module verify:
   * get-dssd-async-event-config reads with the SEL given and NSID 0,
     prints what Dword 0 reports, and SEL 3 as capabilities. It sends UUID
     index 0, which UUID-3 allows, so it needs no OCP UUID.
-
-A known defect is covered by an expectedFailure test: with no OCP UUID
-set-dssd-async-event-config sends nothing yet exits 0.
+  * Without the OCP UUID set-dssd-async-event-config sends nothing and
+    fails.
 
 The plugin has no option for Enable Media Ready AENs, so every Set
 clears bit 1, and it prints bit 0 by its pre-2.7 name.

@@ -20,10 +20,10 @@ Tests in this module verify:
   * get-telemetry-profile reads with the SEL and NSID given, the OCP UUID
     index or index 0 with --no-uuid, prints what Dword 0 reports, and
     SEL 3 as capabilities.
+  * Without the OCP UUID neither command sends anything, and both fail.
 
-Known defects are covered by expectedFailure tests: set-telemetry-profile
-without --telemetry-profile-select exits 0, and with no OCP UUID both
-commands exit 0.
+A known defect is covered by an expectedFailure test:
+set-telemetry-profile without --telemetry-profile-select exits 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 

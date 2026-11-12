@@ -22,9 +22,7 @@ Tests in this module verify:
   * get-clear-pcie-correctable-errors reads with the SEL and NSID given,
     the OCP UUID index or index 0 with --no-uuid, prints what Dword 0
     reports, and SEL 3 as capabilities.
-
-Known defects are covered by expectedFailure tests: with no OCP UUID
-both commands send nothing yet exit 0.
+  * Without the OCP UUID neither command sends anything, and both fail.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
