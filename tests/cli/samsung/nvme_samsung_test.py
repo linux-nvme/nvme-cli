@@ -567,6 +567,42 @@ class SamsungCLITest(MockTestCase):
         self.assertIn('100%', result.stdout,
                       'the completion line went missing under -O /dev/null')
 
+    # The option sets of the samsung entry of the device fuzz target
+    # (tests/fuzz/fuzz-device.c), each with the (log ID, data area) pairs
+    # it reads. The runs below give "nvme-fuzz seeds" a seed of each
+    # option set.
+    FUZZ_OPTION_SETS = (
+        (('--dump-type=host1', '--telemetry-data-area=1'), ((0x07, 1),)),
+        (('--dump-type=ctlr', '--telemetry-data-area=2'), ((0x08, 2),)),
+        (('--dump-type=host0', '--telemetry-data-area=3'), ((0x07, 3),)),
+        (('--dump-type=host1,ctlr', '--telemetry-data-area=1'),
+         ((0x07, 1), (0x08, 1))),
+    )
+
+    def test_dev_null_reads_the_one_data_area_asked_for(self):
+        """Data area N runs from the block after the last one of area
+        N - 1 to its own last block, in 512-byte blocks, block 0 being
+        the header."""
+        self.server.last_blocks = (2, 4, 6, 8)
+        last = (0,) + self.server.last_blocks
+        for opts, reads in self.FUZZ_OPTION_SETS:
+            with self.subTest(opts=opts):
+                self.server.commands.clear()
+                result = self.run_cmd('--output-file=/dev/null',
+                                      '--hide-progress', *opts)
+                self.assertOk(result)
+                expect = []
+                for lid, area in reads:
+                    expect += [
+                        (lid, 0, _TELEMETRY_HEADER_SIZE),
+                        (lid, 0, _TELEMETRY_HEADER_SIZE),
+                        (lid, (last[area - 1] + 1) * _BYTES_PER_BLOCK,
+                         (last[area] - last[area - 1]) * _BYTES_PER_BLOCK),
+                    ]
+                self.assertEqual(self.server.log_transfers, expect)
+        self.assertEqual(self.files(), [],
+                         'a dump was saved under -O /dev/null')
+
     def test_dev_null_refuses_compress(self):
         result = self.run_cmd('-t', 'ctlr', '-O', '/dev/null', '-z')
         self.assertNotEqual(result.returncode, 0,
