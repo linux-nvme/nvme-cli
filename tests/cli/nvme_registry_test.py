@@ -14,6 +14,7 @@ Usage: python3 nvme_registry_test.py <path-to-nvme-binary>
 
 """
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -33,9 +34,14 @@ class RegistryCLITest(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp(prefix='nvme-registry-cli-test-', dir='/tmp')
         # The registry lives under <base>/registry within the sandbox.
         self.regdir = os.path.join(self.tmpdir, 'registry')
+        # The registry reads only the entries of controllers in sysfs.
+        self.ctrldir = os.path.join(self.tmpdir, 'sys/class/nvme')
+        for i in range(10):
+            os.makedirs(os.path.join(self.ctrldir, f'nvme{i}'))
         self.env = os.environ.copy()
 
     def tearDown(self):
+        shutil.rmtree(os.path.join(self.tmpdir, 'sys'))
         if os.path.isdir(self.regdir):
             for entry in os.scandir(self.regdir):
                 if entry.is_dir(follow_symlinks=False):
@@ -46,7 +52,9 @@ class RegistryCLITest(unittest.TestCase):
         os.rmdir(self.tmpdir)
 
     def _run(self, *args, expect_fail=False):
-        cmd = [_NVME_BIN, '--set-options', f'test-base-dir={self.tmpdir}'] + list(args)
+        cmd = [_NVME_BIN, '--set-options',
+               f'test-base-dir={self.tmpdir},test-sysfs-dir={self.tmpdir}'
+               ] + list(args)
         # stdin is /dev/null so the owner-change confirmation prompt sees a
         # non-interactive caller and proceeds without asking.
         result = subprocess.run(cmd, env=self.env,
@@ -86,6 +94,14 @@ class RegistryCLITest(unittest.TestCase):
 
     def test_retrieve_missing_device_fails(self):
         result = self._run('registry', 'retrieve', 'nvme99', '-a', 'owner',
+                           expect_fail=True)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_retrieve_removed_controller_fails(self):
+        # The entry of a removed controller stays, but nothing reads it.
+        self._populate('nvme3', 'owner', 'stas')
+        os.rmdir(os.path.join(self.ctrldir, 'nvme3'))
+        result = self._run('registry', 'retrieve', 'nvme3', '-a', 'owner',
                            expect_fail=True)
         self.assertNotEqual(result.returncode, 0)
 
@@ -151,13 +167,13 @@ class RegistryCLITest(unittest.TestCase):
         result = self._run('registry', 'list')
         self.assertEqual(result.returncode, 0)
 
-    def test_list_runs_without_error_with_entries(self):
-        # Entries exist but /dev/nvmeN nodes don't, so list skips them.
-        # Verify the command exits 0 regardless.
+    def test_list_skips_removed_controllers(self):
         self._populate('nvme1', 'owner', 'stas')
         self._populate('nvme2', 'owner', 'nbft')
+        os.rmdir(os.path.join(self.ctrldir, 'nvme2'))
         result = self._run('registry', 'list')
-        self.assertEqual(result.returncode, 0)
+        self.assertIn('nvme1', result.stdout)
+        self.assertNotIn('nvme2', result.stdout)
 
 
 if __name__ == '__main__':

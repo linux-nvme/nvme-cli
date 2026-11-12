@@ -308,7 +308,7 @@ with `meson install --tags`.
 | `python-runtime` | libnvme Python bindings |
 | `man` | man pages |
 | `doc` | HTML and reST documentation |
-| `nvmf` | NVMe-oF files needed with the legacy autoconnect and with nvme-discoverd: registry and vendor udev rules, NBFT interface naming rule, `nvme-fabrics.conf.sample` |
+| `nvmf` | NVMe-oF files needed with the legacy autoconnect and with nvme-discoverd: vendor udev rules and `vendor.d` defaults, NBFT interface naming rule, `nvme-fabrics.conf.sample` |
 | `nvmf-autoconnect` | legacy NVMe-oF autoconnect: udev rules, systemd units, dracut config, NetworkManager dispatcher script |
 | `nvme-discoverd` | nvme-discoverd: binary, systemd unit, config file |
 | `nvme-keysd` | nvme-keysd: binary, systemd unit, config file, credential directory |

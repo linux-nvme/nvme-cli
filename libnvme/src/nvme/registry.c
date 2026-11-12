@@ -106,6 +106,24 @@ static bool valid_attr(const char *attr)
 }
 
 /*
+ * 0 if the kernel has the controller @device, -ENOENT if not.  Nothing
+ * removes the entry of a removed controller: a connect that gets the name
+ * replaces it, and until then the readers skip it.
+ */
+static int ctrl_exists(struct libnvme_global_ctx *ctx, const char *device)
+{
+	__cleanup_free char *path = NULL;
+	const char *dir = libnvme_ctrl_sysfs_dir(ctx);
+	struct stat st;
+
+	if (!dir || asprintf(&path, "%s/%s", dir, device) < 0)
+		return -ENOMEM;
+	if (stat(path, &st) < 0)
+		return errno == ENOENT || errno == ENOTDIR ? -ENOENT : -errno;
+	return 0;
+}
+
+/*
  * read() up to @count bytes into @buf, retrying on EINTR.  Returns the number
  * of bytes read (possibly short, at EOF) or a negative errno.
  */
@@ -235,39 +253,6 @@ err:
 }
 
 /*
- * Read the kernel's global uevent sequence number from
- * /sys/kernel/uevent_seqnum.  This monotonic counter is used to stamp a
- * registry entry at connect time so the udev REMOVE rule can tell a stale
- * entry apart from a recycled-and-live one without relying on event ordering
- * (see 70-nvmf-registry.rules).  Returns a newly allocated decimal string the
- * caller must free, or NULL on any failure -- the stamp is best-effort, and a
- * missing stamp simply makes the rule fall back to its device-existence guard.
- */
-static char *read_uevent_seqnum(void)
-{
-	char buf[32];
-	ssize_t n;
-	int fd;
-
-	fd = open("/sys/kernel/uevent_seqnum", O_RDONLY | O_CLOEXEC);
-	if (fd < 0)
-		return NULL;
-	n = read_full(fd, buf, sizeof(buf) - 1);
-	close(fd);
-	if (n <= 0)
-		return NULL;
-
-	/* Strip the trailing newline the kernel appends. */
-	while (n > 0 && (buf[n - 1] == '\n' || buf[n - 1] == '\r'))
-		n--;
-	if (n == 0)
-		return NULL;
-	buf[n] = '\0';
-
-	return strdup(buf);
-}
-
-/*
  * Remove a registry entry directory and its (flat) attribute files.  Shared by
  * libnvmf_registry_delete() and the create_instance() error/cleanup paths.
  * Returns 0 on success, -ENOENT if @path does not exist, or a negative errno.
@@ -311,9 +296,6 @@ static int delete_dir(const char *path)
  * at leisure.  This keeps a reader (nvme registry list, another orchestrator)
  * from ever seeing a half-emptied entry.  Returns 0 on success, -ENOENT if
  * @path does not exist, or a negative errno.
- *
- * The udev REMOVE rule deletes entries with a plain "rm -rf", which is not
- * atomic; this guarantee therefore covers only library-driven deletes.
  */
 static int delete_dir_atomic(struct libnvme_global_ctx *ctx, const char *path)
 {
@@ -340,14 +322,10 @@ static int delete_dir_atomic(struct libnvme_global_ctx *ctx, const char *path)
 }
 
 /*
- * Create the registry entry for @device holding the seqnum stamp and
- * @attr=@value.
+ * Create the registry entry for @device holding @attr=@value.
  *
- * The entry is built in a temporary directory and rename()'d into place, so it
- * is only ever observed complete or absent — never as a directory that exists
- * but is missing its seqnum stamp.  Without this, the udev REMOVE rule could
- * read a just-created entry between the mkdir and the seqnum write, see no
- * stamp, and delete the live entry the library is still populating.
+ * The entry is built in a temporary directory and rename()'d into place, so a
+ * reader sees it complete or not at all.
  *
  * With @replace, any pre-existing entry is removed first.  Otherwise -EEXIST
  * is returned if an entry already exists.
@@ -357,7 +335,6 @@ static int create_entry(struct libnvme_global_ctx *ctx, const char *device,
 {
 	__cleanup_free char *tmp_dir = NULL;
 	__cleanup_free char *final_path = NULL;
-	__cleanup_free char *seqnum = NULL;
 	int dir_fd, ret;
 
 	final_path = registry_path(ctx, device, NULL);
@@ -386,16 +363,6 @@ static int create_entry(struct libnvme_global_ctx *ctx, const char *device,
 		ret = -errno;
 		goto err;
 	}
-
-	/*
-	 * Stamp the entry with the current uevent sequence number for the udev
-	 * REMOVE rule (see read_uevent_seqnum()).  Best-effort: a missing stamp
-	 * just makes the rule fall back to its device-existence guard, so don't
-	 * fail the create over it.
-	 */
-	seqnum = read_uevent_seqnum();
-	if (seqnum)
-		write_attr_atomic(dir_fd, tmp_dir, "seqnum", seqnum);
 
 	ret = write_attr_atomic(dir_fd, tmp_dir, attr, value);
 	close(dir_fd);
@@ -463,6 +430,10 @@ __shr_public int libnvmf_registry_retrieve(struct libnvme_global_ctx *ctx,
 	if (!valid_device(device))
 		return -EINVAL;
 
+	ret = ctrl_exists(ctx, device);
+	if (ret)
+		return ret;
+
 	path = registry_path(ctx, device, attr);
 	if (!path)
 		return -ENOMEM;
@@ -522,10 +493,6 @@ __shr_public int libnvmf_registry_update(struct libnvme_global_ctx *ctx,
 		if (!value)
 			return 0;
 
-		/*
-		 * A new entry needs its seqnum stamp for the udev REMOVE rule,
-		 * so create it the same way as on connect.
-		 */
 		ret = create_entry(ctx, device, attr, value, false);
 		if (ret != -EEXIST)
 			return ret;
@@ -563,7 +530,6 @@ __shr_public int libnvmf_registry_device_for_each(
 		int (*callback)(const char *device, void *user_data),
 		void *user_data)
 {
-	char dev_path[NAME_MAX + 6]; /* "/dev/" + name + NUL */
 	struct dirent *de;
 	int dir_fd;
 	DIR *d;
@@ -611,9 +577,8 @@ __shr_public int libnvmf_registry_device_for_each(
 				continue;
 		}
 
-		/* Stale-entry check: skip if the device node is gone. */
-		snprintf(dev_path, sizeof(dev_path), "/dev/%s", de->d_name);
-		if (access(dev_path, F_OK) != 0)
+		if (!valid_device(de->d_name) ||
+		    ctrl_exists(ctx, de->d_name))
 			continue;
 
 		ret = callback(de->d_name, user_data);
@@ -633,7 +598,7 @@ __shr_public int libnvmf_registry_attr_for_each(
 {
 	__cleanup_free char *dir_path = NULL;
 	struct dirent *de;
-	int dir_fd;
+	int dir_fd, ret;
 	DIR *d;
 
 	if (!ctx)
@@ -642,6 +607,10 @@ __shr_public int libnvmf_registry_attr_for_each(
 		return -EINVAL;
 	if (!valid_device(device))
 		return -EINVAL;
+
+	ret = ctrl_exists(ctx, device);
+	if (ret)
+		return ret;
 
 	dir_path = registry_path(ctx, device, NULL);
 	if (!dir_path)
@@ -653,8 +622,7 @@ __shr_public int libnvmf_registry_attr_for_each(
 
 	dir_fd = dirfd(d);
 	if (dir_fd < 0) {
-		int ret = -errno;
-
+		ret = -errno;
 		closedir(d);
 		return ret;
 	}

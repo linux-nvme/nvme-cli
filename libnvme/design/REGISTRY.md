@@ -30,10 +30,8 @@ The registry lives under `/run/nvme/registry/` — runtime state that is tied to
 /run/nvme/registry/
     nvme1/
         owner
-        seqnum
     nvme3/
         owner
-        seqnum
 ```
 
 ```sh
@@ -43,7 +41,6 @@ nbft
 
 - **Absence means unowned.** A controller with no directory (or no `owner` file) is managed by nobody. There is no explicit "unowned" marker.
 - The well-known attribute is **`owner`** — the orchestrator identity string (e.g. `stas`, `nbft`, `discoverd`). Orchestrators may write additional private attributes; unknown attributes are ignored by everyone else.
-- libnvme also writes a reserved **`seqnum`** attribute next to `owner` — the value of `/sys/kernel/uevent_seqnum` captured at connect. It is internal bookkeeping for the cleanup rule (see *Automatic cleanup*); orchestrators neither set nor read it.
 - Directories are `0755`, attribute files `0644`: **world-readable, root-writable**. Both the root and per-device directories are created on demand on first write.
 - Writes are atomic (`mkstemp` → `fsync` → `rename`), so concurrent writers never corrupt an entry and readers never see a half-written value.
 - Controllers the kernel manages directly — PCIe and other memory-based transports — are out of scope: they are not reached over a fabric, and `disconnect-all`'s transport-type check already excludes them.
@@ -67,7 +64,7 @@ What a connect does to the entry depends on the owner and on whether the kernel 
 | never set | clear the entry | leave the entry alone |
 | set to `""` | clear the entry | clear the entry (an explicit disown) |
 
-A new controller is cleared because it cannot legitimately be owned by anybody: the entry can only be what a recycled instance number left behind. An already-connected controller may belong to another orchestrator, so an unstated intent must not touch it. Written entries are stamped with the current `/sys/kernel/uevent_seqnum` (used by the cleanup rule below).
+A new controller is cleared because it cannot legitimately be owned by anybody: the entry can only be what a removed controller with the same name left behind. An already-connected controller may belong to another orchestrator, so an unstated intent must not touch it.
 
 From the CLI, pass `--owner NAME` to register ownership at connect time:
 
@@ -84,38 +81,16 @@ nvme connect     --owner= ...           # explicitly disown
 
 An empty `--owner=` is the explicit disown, and it beats the `--nbft` default: `nvme connect-all --owner= --nbft` leaves the controllers unowned.
 
-## Automatic cleanup
+## Stale entries
 
-A controller's entry must be removed once the controller goes away, or stale entries accumulate and a recycled device name looks owned. **Creation and removal deliberately live in different places.** Entries are *written* by libnvme on connect (see *Setting an owner* above) because only the connecting process knows the owner — it lives in that process's libnvme context, never in sysfs or the uevent — so nothing else, a udev rule included, could supply it. *Removal* needs no owner, only the device name, and it must happen even when the kernel drops a controller on its own (connectivity loss, `ctrl-loss-tmo` expiry) with no orchestrator involved, and even on a host running no orchestrator daemon at all. So removal is driven by the device-removal event and performed by a single, always-present agent — udevd: exactly one party cleans up, and it works with no daemon required.
+Nothing removes the entry of a controller the kernel removed, whether an orchestrator disconnected it or the kernel dropped it on its own (connectivity loss, `ctrl-loss-tmo` expiry). The entry stays until the name is used again:
 
-libnvme ships a udev rule for exactly this. The udev daemon — present on essentially every system — removes a controller's registry entry when the kernel removes the controller:
+- **A connect replaces it.** The kernel gives a new controller the lowest free instance number, so a removed controller's name comes back soon. The connect that gets it writes or clears the entry (see *Setting an owner*), in the connecting process, right after the kernel returned the instance number.
+- **Readers skip it.** `libnvmf_registry_retrieve()`, `libnvmf_registry_attr_equal()`, `libnvmf_registry_attr_for_each()` and `libnvmf_registry_device_for_each()` treat an entry whose controller is not in sysfs (`/sys/class/nvme/nvmeN`) as absent. `nvme registry delete` removes one by hand.
 
-```
-ACTION=="remove", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", \
-    RUN+="/bin/sh -c '[ -e /dev/%k ] || [ $env{SEQNUM} -le $$(cat /run/nvme/registry/%k/seqnum 2>/dev/null || echo 0) ] || rm -rf /run/nvme/registry/%k'"
-```
+The kernel and the tools are asynchronous: a uevent reaches userspace after the kernel already moved on, and by then the name can belong to another controller. So the registry is kept by the processes that connect, which know what they just did, and not by a udev rule that acts on a removal some time later. 3.0 to 3.2 shipped such a rule (`70-nvmf-registry.rules`); a queued REMOVE event could delete the entry the next controller with the same name had just written.
 
-(`$$` passes a literal `$` to the shell; `$env{SEQNUM}` is the remove event's sequence number, substituted by udev.)
-
-**Why removal is guarded.** udev rules run asynchronously: udevd processes a `remove` uevent some time *after* the kernel emits it. Meanwhile the kernel is free to recycle the just-freed instance number — it allocates the lowest available id, so the very next controller to connect can be handed the same `nvmeN`. This opens a rare race: a controller is removed and, at almost the same instant, a new one is connected and inherits its id, all before udevd gets around to running the remove rule for the old controller. By the time that rule finally fires, `nvmeN` already refers to a *different*, live controller that has written its own registry entry — and a blind `rm` would clobber it.
-
-Concretely, the dangerous interleaving for the name `nvme4`:
-
-1. The kernel removes the old `nvme4`, frees instance 4, and emits a `remove` uevent — now queued in udevd.
-2. Before udevd runs that queued rule, a new controller connects. The kernel allocates the lowest free instance — 4 again — creates `/dev/nvme4` (devtmpfs, synchronously), and libnvme, *in the connecting process*, writes `/run/nvme/registry/nvme4/owner`.
-3. udevd finally runs the queued `remove` rule for the *old* `nvme4`. Without a guard it would `rm -rf /run/nvme/registry/nvme4` and delete the **new, live** controller's entry.
-
-The rule defends against this in two layers.
-
-**First, the `[ -e /dev/%k ]` check.** devtmpfs removes a controller's device node *synchronously*, before the kernel emits `KOBJ_REMOVE`, so for the controller actually being removed `/dev/nvmeN` is already gone, whereas a recycled-and-live `nvmeN` exists again. If `/dev/nvmeN` is absent the entry is presumed stale; if it exists the id has been recycled, `[ -e /dev/%k ]` is true, the `||` short-circuits, and `rm` is skipped — preserving the new owner's entry. This catches the common recycling case.
-
-**Second, the `seqnum` comparison, which closes the residual window.** The device-existence check alone still leaves a sub-shell TOCTOU: the new controller could create `/dev/nvme4` and write its entry in the instant between `[ -e ]` returning false and `rm` running. To close it, libnvme stamps each entry at connect with the global, monotonic `/sys/kernel/uevent_seqnum`, and the rule removes only when the *remove* event's own `SEQNUM` (from the udev event environment) exceeds that stamp. The stale `remove` for the old `nvme4` was emitted *before* the new `nvme4`'s `add`, so its `SEQNUM` is necessarily lower than the new entry's stamp: the comparison holds, the `||` short-circuits, and the entry survives — independent of timing or scheduling. A genuine removal of the current controller carries a `SEQNUM` higher than that controller's own connect-time stamp, so its entry is removed as intended. (An entry with no stamp — e.g. one written by an older libnvme — compares as `0`, and the rule falls back to the device-existence check alone.)
-
-**Entries appear and disappear atomically.** A new entry would still be vulnerable for the instant between creating its directory and writing the `seqnum` file — the rule could read the missing stamp as `0` and delete the entry the library is still populating. libnvme avoids this by building each entry in a temporary directory, writing its attributes, and `rename()`-ing it into place, so an entry is only ever observed complete or absent. Library-driven removals are atomic the same way: the entry is renamed to a hidden sibling and then purged. This is why a missing stamp means a *legacy* entry from an older libnvme, never a half-written one. (The udev rule's own `rm -rf` is not atomic, but it only ever deletes an entry that is already going away.)
-
-Note that udevd serialising udev *events* does not cover this race: the new controller's entry was written by libnvme during `connect()` — not by a udev rule — so udevd never ordered that write against the remove rule. The two signals the rule does rely on — live device-node state and the monotonic `seqnum` stamp — are exactly what distinguishes a stale entry from a recycled-and-live one without depending on event ordering.
-
-Because the rule lives in libnvme, cleanup works whenever libnvme is installed, independent of nvme-cli.
+Known limitation: a controller that gets a reused name without going through libnvme's connect, e.g. from a tool on libnvme 1, does not replace the entry, and reads as owned by the old owner. Mixing libnvme 1 and libnvme 3 tools that connect controllers on one host is not supported.
 
 ## `disconnect-all` behavior
 

@@ -1626,6 +1626,17 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	int set_test_base_dir(const char *path) {
 		return libnvme_set_test_base_dir($self, path);
 	}
+	%feature("autodoc", "Read sysfs (/sys/class/nvme, ...) below @path, "
+		"for testing.\n"
+		"\n"
+		"Args:\n"
+		"    path: Directory that holds the test sysfs tree, or None.\n"
+		"\n"
+		"Returns:\n"
+		"    0 on success, or a negative errno.") set_test_sysfs_dir;
+	int set_test_sysfs_dir(const char *path) {
+		return libnvme_set_test_sysfs_dir($self, path);
+	}
 }
 
 
