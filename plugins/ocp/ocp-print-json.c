@@ -1128,6 +1128,60 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	json_free_object(root);
 }
 
+static void json_c7_log_v3(const void *page)
+{
+	const struct tcg_configuration_log_v3 *log_data = page;
+	struct json_object *root = json_create_object();
+	char guid_buf[(GUID_LEN * 2) + 1];
+
+	json_object_add_value_int(root, "State", log_data->state);
+	json_object_add_value_uint(root, "Locking SP Activation Count",
+				   le16_to_cpu(log_data->locking_sp_act_count));
+	json_object_add_value_uint(root, "Tper Revert Count",
+				   le16_to_cpu(log_data->type_rev_count));
+	json_object_add_value_uint(root, "Locking SP Revert Count",
+				   le16_to_cpu(log_data->locking_sp_rev_count));
+	json_object_add_value_uint(root, "Number of Locking Objects",
+				   le16_to_cpu(log_data->no_of_locking_obj));
+	json_object_add_value_uint(root, "Number of Single User Mode Locking Objects",
+				   le16_to_cpu(log_data->no_of_single_um_locking_obj));
+	json_object_add_value_uint(root, "Number of Range Provisioned Locking Objects",
+				   le16_to_cpu(log_data->no_of_range_prov_locking_obj));
+	json_object_add_value_uint(root, "Number of Namespace Provisioned Locking Objects",
+				   le16_to_cpu(log_data->no_of_ns_prov_locking_obj));
+	json_object_add_value_uint(root, "Number of Read Locked Locking Objects",
+				   le16_to_cpu(log_data->no_of_read_lock_locking_obj));
+	json_object_add_value_uint(root, "Number of Write Locked Locking Objects",
+				   le16_to_cpu(log_data->no_of_write_lock_locking_obj));
+	json_object_add_value_uint(root, "Number of Read Unlocked Locking Objects",
+				   le16_to_cpu(log_data->no_of_read_unlock_locking_obj));
+	json_object_add_value_uint(root, "Number of Write Unlocked Locking Objects",
+				   le16_to_cpu(log_data->no_of_write_unlock_locking_obj));
+	json_object_add_value_uint(root, "SID Authentication Try Count",
+				   le32_to_cpu(log_data->sid_auth_try_count));
+	json_object_add_value_uint(root, "SID Authentication Try Limit",
+				   le32_to_cpu(log_data->sid_auth_try_limit));
+	json_object_add_value_uint(root, "Programmatic TCG Reset Count",
+				   le32_to_cpu(log_data->pro_tcg_rc));
+	json_object_add_value_uint(root, "Programmatic Reset Lock Count",
+				   le32_to_cpu(log_data->pro_rlc));
+	json_object_add_value_uint(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
+	json_object_add_value_uint(root,
+		"Number of Namespace Provisioned Locking Objects Extended",
+		le16_to_cpu(log_data->no_of_ns_prov_locking_obj_ext));
+	json_object_add_value_int(root, "Log Page Version",
+				  le16_to_cpu(log_data->log_page_version));
+
+	shr_bin_to_hex(guid_buf, sizeof(guid_buf), log_data->log_page_guid,
+		       GUID_LEN, SHR_HEX_REVERSE);
+	json_object_add_value_string(root, "Log page GUID", guid_buf);
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
 static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
 {
 	struct json_object *root;
@@ -1139,6 +1193,11 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 	 */
 	char res_arr[456 * 3 + 2 * 3 + 1];
 	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
+
+	if (log_page_version >= 3) {
+		json_c7_log_v3(log_data);
+		return;
+	}
 
 	root = json_create_object();
 

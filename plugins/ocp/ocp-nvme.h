@@ -217,6 +217,44 @@ struct __packed tcg_configuration_log {
 
 };
 
+/**
+ * struct tcg_configuration_log_v3 - TCG Configuration Log Page, version 3
+ *
+ * OCP 2.7 widens the counters to two bytes, which moves every field after
+ * them. TCGL-23 has a size of 2 though its byte range is 49:46.
+ */
+struct __packed tcg_configuration_log_v3 {
+	__u8    state;
+	__u8    rsvd1[3];
+	__le16  locking_sp_act_count;
+	__le16  type_rev_count;
+	__le16  locking_sp_rev_count;
+	__le16  no_of_locking_obj;
+	__le16  no_of_single_um_locking_obj;
+	__le16  no_of_range_prov_locking_obj;
+	__le16  no_of_ns_prov_locking_obj;
+	__le16  no_of_read_lock_locking_obj;
+	__le16  no_of_write_lock_locking_obj;
+	__le16  no_of_read_unlock_locking_obj;
+	__le16  no_of_write_unlock_locking_obj;
+	__le32  sid_auth_try_count;
+	__le32  sid_auth_try_limit;
+	__le32  pro_tcg_rc;
+	__le32  pro_rlc;
+	__le32  tcg_ec;
+	__le16  no_of_ns_prov_locking_obj_ext;
+	__u8    rsvd48[446];
+	__le16  log_page_version;
+	__u8    log_page_guid[GUID_LEN];
+};
+
+_Static_assert(sizeof(struct tcg_configuration_log_v3) ==
+	       sizeof(struct tcg_configuration_log),
+	"tcg_configuration_log_v3 is not the size of tcg_configuration_log");
+_Static_assert(offsetof(struct tcg_configuration_log_v3,
+			sid_auth_try_count) == 26,
+	"sid_auth_try_count is not at byte 26");
+
 enum ocp_dssd_log_id {
 	OCP_LID_SMART = 0xc0, /* SMART / Helth Information Extended */
 	OCP_LID_EREC, /* Error Recovery */

@@ -722,10 +722,66 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 	}
 }
 
+static void stdout_c7_log_v3(const void *page)
+{
+	const struct tcg_configuration_log_v3 *log_data = page;
+	int j;
+
+	printf("TCG Configuration C7 Log Page Data-\n");
+
+	printf("  State                                                    : 0x%x\n",
+	       log_data->state);
+	printf("  Locking SP Activation Count                              : 0x%x\n",
+	       le16_to_cpu(log_data->locking_sp_act_count));
+	printf("  Tper Revert Count                                        : 0x%x\n",
+	       le16_to_cpu(log_data->type_rev_count));
+	printf("  Locking SP Revert Count                                  : 0x%x\n",
+	       le16_to_cpu(log_data->locking_sp_rev_count));
+	printf("  Number of Locking Objects                                : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_locking_obj));
+	printf("  Number of Single User Mode Locking Objects               : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_single_um_locking_obj));
+	printf("  Number of Range Provisioned Locking Objects              : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_range_prov_locking_obj));
+	printf("  Number of Namespace Provisioned Locking Objects          : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_ns_prov_locking_obj));
+	printf("  Number of Read Locked Locking Objects                    : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_read_lock_locking_obj));
+	printf("  Number of Write Locked Locking Objects                   : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_write_lock_locking_obj));
+	printf("  Number of Read Unlocked Locking Objects                  : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_read_unlock_locking_obj));
+	printf("  Number of Write Unlocked Locking Objects                 : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_write_unlock_locking_obj));
+	printf("  SID Authentication Try Count                             : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_count));
+	printf("  SID Authentication Try Limit                             : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_limit));
+	printf("  Programmatic TCG Reset Count                             : 0x%x\n",
+	       le32_to_cpu(log_data->pro_tcg_rc));
+	printf("  Programmatic Reset Lock Count                            : 0x%x\n",
+	       le32_to_cpu(log_data->pro_rlc));
+	printf("  TCG Error Count                                          : 0x%x\n",
+	       le32_to_cpu(log_data->tcg_ec));
+	printf("  Number of Namespace Provisioned Locking Objects Extended : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_ns_prov_locking_obj_ext));
+	printf("  Log Page Version                                         : 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID                                            : 0x");
+	for (j = GUID_LEN - 1; j >= 0; j--)
+		printf("%02x", log_data->log_page_guid[j]);
+	printf("\n");
+}
+
 static void stdout_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
 {
 	int j;
 	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
+
+	if (log_page_version >= 3) {
+		stdout_c7_log_v3(log_data);
+		return;
+	}
 
 	printf("TCG Configuration C7 Log Page Data-\n");
 
