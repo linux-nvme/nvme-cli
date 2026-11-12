@@ -18,7 +18,8 @@ the number in Dword 0 bits 6:0 (GERRI-2) and the entries in its data.
 Tests in this module verify:
   * set-error-injection sends one enabled, single instance entry of the
     given type and Number of Reads to Trigger Device Event, or the
-    entries of a --data file, never with Save set (SERRI-10).
+    entries of a --data file, never with Save set (SERRI-10), and
+    refuses a number too large for CDW11 bits 6:0.
   * get-error-injection prints the number and each entry, its type named
     as the Event Definition Table names it.
   * --all-ns sends NSID FFFFFFFFh and 0 otherwise (NVMe Base 2.1
@@ -28,10 +29,9 @@ Tests in this module verify:
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: the data is not the 4096-byte range
-SERRI-9 describes, a number too large for CDW11 bits 6:0 is sent, the
-capabilities a Get with SEL 3 returns are listed as
-entries, the types OCP 2.7 adds are named "unknown", and with no OCP UUID
-both commands exit 0.
+SERRI-9 describes, the capabilities a Get with SEL 3 returns are listed
+as entries, the types OCP 2.7 adds are named "unknown", and with no OCP
+UUID both commands exit 0.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -199,11 +199,9 @@ class TestSetErrorInjection(OCPUUIDTests, EventInjectionTestBase):
         command transfers 32 bytes per entry."""
         self.assertEqual(self.sent('--type', '1').data_len, DATA_RANGE)
 
-    @unittest.expectedFailure
     def test_number_too_large_for_its_field_is_refused(self):
-        """Defect: the number goes into CDW11 unchecked, so 128 sets
-        reserved bit 7 (SERRI-13). OCP 2.5 and 2.6 allow up to 127
-        entries, 2.7 only 1 (SERRI-14)."""
+        """128 would set reserved bit 7 (SERRI-13). OCP 2.5 and 2.6 allow
+        up to 127 entries, 2.7 only 1 (SERRI-14)."""
         result = self.run_cmd('set-error-injection', '--type', '1',
                               '--number', str(NUMBER_MASK + 1))
         self.assertNotEqual(result.returncode, 0)

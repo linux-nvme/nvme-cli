@@ -2385,7 +2385,8 @@ static int set_error_injection(int argc, char **argv, struct command *acmd, stru
 
 	OPT_ARGS(opts) = {
 		OPT_FILE("data",    'd', &cfg.file,     data),
-		OPT_BYTE("number",  'n', &cfg.number,   number),
+		OPT_BYTE("number",  'n', &cfg.number,   number,
+			 .max = ERRI_ENTRIES_MAX),
 		OPT_FLAG("no-uuid", 'N', &no_uuid_flag, no_uuid),
 		OPT_FLAG("all-ns",  'a', &all_ns_flag,  all_ns),
 		OPT_SHRT("type",    't', &cfg.type,     type),
@@ -2404,6 +2405,7 @@ static int set_error_injection(int argc, char **argv, struct command *acmd, stru
 	 * OCP v2.5 - NSID: The host should either clear this to zero or set this to FFFFFFFFh
 	 */
 	nsid = all_ns_flag ? NVME_NSID_ALL : 0;
+
 	return error_injection_set(hdl, &cfg, !no_uuid_flag, nsid);
 }
 
