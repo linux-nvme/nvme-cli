@@ -45,10 +45,11 @@ void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx);
 /**
  * libnvme_set_owner() - Set the orchestrator identity for the registry
  * @ctx:	&struct libnvme_global_ctx object
- * @owner:	Orchestrator identity string (e.g. "stas", "nbft").
+ * @owner:	Orchestrator identity string (e.g. "stas", "pre-os").
  *
  * Records the orchestrator identity used when claiming registry ownership of
- * connections made through @ctx.  A later call overwrites the previous value;
+ * connections made through @ctx.  "nbft" is the old name of "pre-os" and is
+ * recorded as "pre-os".  A later call overwrites the previous value;
  * treating the identity as immutable is a policy decision left to the caller.
  * A process that does not participate in the registry simply never calls this.
  *

@@ -696,6 +696,44 @@ static bool test_parallel_writes(struct libnvme_global_ctx *ctx)
 	return pass;
 }
 
+/*
+ * "nbft" is the old name of the pre-OS owner "pre-os": an entry an older
+ * initrd recorded matches either name, and nothing else.
+ */
+static bool test_owner_alias(struct libnvme_global_ctx *ctx)
+{
+	bool pass = true;
+
+	printf("test_owner_alias:\n");
+
+	if (!libnvmf_owner_equal("nbft", "pre-os") ||
+	    !libnvmf_owner_equal("pre-os", "nbft") ||
+	    !libnvmf_owner_equal("pre-os", "pre-os") ||
+	    !libnvmf_owner_equal(NULL, NULL) ||
+	    libnvmf_owner_equal("pre-os", NULL) ||
+	    libnvmf_owner_equal(NULL, "nbft") ||
+	    libnvmf_owner_equal("nbft", "stas")) {
+		printf(" - libnvmf_owner_equal() [FAIL]\n");
+		pass = false;
+	}
+
+	if (libnvmf_registry_update(ctx, "nvme7", "owner", "nbft")) {
+		printf(" - update returned an error [FAIL]\n");
+		return false;
+	}
+	if (libnvmf_registry_attr_equal(ctx, "nvme7", "owner", "pre-os") ||
+	    libnvmf_registry_attr_equal(ctx, "nvme7", "owner", "nbft") ||
+	    libnvmf_registry_attr_equal(ctx, "nvme7", "owner", "stas") != 1) {
+		printf(" - attr_equal() on an 'nbft' entry [FAIL]\n");
+		pass = false;
+	}
+	libnvmf_registry_delete(ctx, "nvme7");
+
+	if (pass)
+		printf(" - nbft and pre-os name the same owner [PASS]\n");
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	struct libnvme_global_ctx *ctx;
@@ -717,6 +755,7 @@ int main(int argc, char *argv[])
 	pass &= test_stale_entry(ctx);
 	pass &= test_attr_for_each(ctx);
 	pass &= test_null_args(ctx);
+	pass &= test_owner_alias(ctx);
 	pass &= test_parallel_writes(ctx);
 
 	cleanup_tmpdir(ctx);

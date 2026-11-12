@@ -993,7 +993,7 @@ static int check_ctrl_owner(struct libnvme_global_ctx *ctx,
 	if (!reg_owner)   /* no owner in registry */
 		return 0;
 
-	if (owner && streq(reg_owner, owner))
+	if (owner && libnvmf_owner_equal(reg_owner, owner))
 		return 0;
 
 	nvme_show_message(false,
@@ -1074,12 +1074,11 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	config_file = nvme_nvmf_config_file(config_file);
 
 	/*
-	 * --nbft defaults the owner to "nbft" so legacy boot scripts that
-	 * call "connect-all --nbft" record ownership unchanged.  An explicit
-	 * --owner overrides that default.
+	 * The NBFT's connections are the pre-OS environment's: --nbft
+	 * defaults the owner to "pre-os". An explicit --owner overrides it.
 	 */
 	if (owner || nbft) {
-		ret = libnvme_set_owner(ctx, owner ? owner : "nbft");
+		ret = libnvme_set_owner(ctx, owner ? owner : "pre-os");
 		if (ret) {
 			nvme_show_error("failed to set owner: %s",
 				libnvme_strerror(-ret));
@@ -1157,7 +1156,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 				flags);
 	} else {
 		ret = check_ctrl_owner(ctx, fctx,
-				owner ? owner : (nbft ? "nbft" : NULL),
+				owner ? owner : (nbft ? "pre-os" : NULL),
 				no_reuse);
 		if (ret < 0) {
 			nvme_show_error("failed to check owner: %s",
@@ -1431,7 +1430,7 @@ static bool nvmf_ctrl_matches_args(struct libnvme_host *h, struct libnvme_ctrl *
 
 /*
  * Who may disconnect a controller: one without an owner, anybody; one
- * with an owner, only that --owner, or --force.
+ * with an owner, only that --owner ("nbft" is "pre-os"), or --force.
  */
 struct disconnect_policy {
 	const char *owner;
@@ -1454,7 +1453,8 @@ static int may_disconnect(struct libnvme_global_ctx *ctx,
 		if (err && err != -ENOENT)
 			return err;
 		if (reg_owner && *reg_owner &&
-		    !shr_streq0(reg_owner, pol->owner)) {
+		    !(pol->owner &&
+		      libnvmf_owner_equal(reg_owner, pol->owner))) {
 			nvme_show_error(
 				"%s is owned by '%s': use --owner=%s or --force",
 				name, reg_owner, reg_owner);

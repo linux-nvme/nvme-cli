@@ -67,7 +67,8 @@ int unit_mgr_set_nvme_options(struct unit_mgr *mgr, const char *opts);
  * Create a transient DC connection unit.  @params carries the resolved
  * connect parameters to emit (may be NULL for none) — see
  * libnvmf_connect_args_emit() in <nvme/config.h>.
- * If is_nbft is true, uses --owner nbft; otherwise --owner discoverd.
+ * If is_nbft is true, uses --owner pre-os (once nbft); otherwise
+ * --owner discoverd.
  */
 int unit_start_dc(struct unit_mgr *mgr, const struct libnvmf_tid *t,
 		  const struct libnvmf_params *params, bool is_nbft);

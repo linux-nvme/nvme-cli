@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <stdbool.h>
+
 /**
  * DOC: registry.h
  *
@@ -32,6 +34,19 @@
 struct libnvme_global_ctx;
 
 /**
+ * libnvmf_owner_equal() - Compare two registry owners
+ * @a:	Owner, or NULL for no owner
+ * @b:	Owner, or NULL for no owner
+ *
+ * The pre-OS environment (firmware and initrd) records the owner "pre-os".
+ * Its old name "nbft", which initrds with older nvme-cli still record, is
+ * the same owner.
+ *
+ * Return: true if @a and @b name the same owner, or both are NULL.
+ */
+bool libnvmf_owner_equal(const char *a, const char *b);
+
+/**
  * libnvmf_registry_retrieve() - Read an attribute from a controller's registry entry
  * @ctx:	libnvme global context; must not be NULL
  * @device:	Kernel device name (e.g. "nvme3")
@@ -53,6 +68,8 @@ int libnvmf_registry_retrieve(struct libnvme_global_ctx *ctx,
  * @device:	Kernel device name (e.g. "nvme3")
  * @attr:	Attribute name to compare (e.g. "owner")
  * @value:	Value to compare against; NULL means "attribute absent"
+ *
+ * The "owner" attribute is compared with libnvmf_owner_equal().
  *
  * Return: 0 if @attr equals @value (a missing attribute equals a NULL
  * @value), >0 if it differs, negative errno on a read error.

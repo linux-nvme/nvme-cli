@@ -57,6 +57,9 @@ __shr_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
 
 	if (!ctx || !owner)
 		return -EINVAL;
+	/* "nbft" is the old name of the pre-OS environment's owner. */
+	if (!strcmp(owner, "nbft"))
+		owner = "pre-os";
 	dup = strdup(owner);
 	if (!dup)
 		return -ENOMEM;

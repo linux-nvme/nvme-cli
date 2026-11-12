@@ -529,14 +529,15 @@ static const char *find_devname_for_tid(const struct conn_scan *scan,
  * Exclusion applies to NBFT-sourced controllers too: the exclusion list is
  * the host administrator's explicit, root-only instruction, and is the
  * supported way to take a boot path out of service for testing or
- * maintenance. owner=nbft still protects a boot-path controller from every
+ * maintenance. owner=pre-os still protects a boot-path controller from every
  * *other* orchestrator via the registry — it just does not override the
  * local admin's own exclusion entry.
  *
  * The registry check skips a controller another orchestrator (e.g.
- * nvme-stas) already owns. "discoverd" and "nbft" are discoverd's own
- * registry owner strings (see unit_start_dc()/unit_start_ioc() in units.c),
- * so a controller discoverd itself owns is never skipped here.
+ * nvme-stas) already owns. "discoverd" and "pre-os" (once "nbft") are
+ * discoverd's own registry owner strings (see unit_start_dc()/
+ * unit_start_ioc() in units.c), so a controller discoverd itself owns is
+ * never skipped here.
  *
  * @scan is a snapshot the caller built before a loop, or NULL to build a
  * throwaway one for this call. It is only consulted when @known_devname
@@ -589,7 +590,8 @@ static bool should_connect(const struct conn_scan *scan,
 			 libnvmf_tid_str(tid), strerror(-r));
 		return false;
 	}
-	if (owner && !streq(owner, "discoverd") && !streq(owner, "nbft")) {
+	if (owner && !streq(owner, "discoverd") &&
+	    !libnvmf_owner_equal(owner, "pre-os")) {
 		log_info("%s - owned by '%s', skipping",
 			 libnvmf_tid_str(tid), owner);
 		return false;

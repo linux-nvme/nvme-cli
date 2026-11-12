@@ -485,7 +485,7 @@ static void unit_spec_clear(struct unit_spec *s)
  * real devid path, state directory and unit name substituted (systemd does
  * not expand %t/%N/%n here — see unit_devid_path()). The paths come from
  * the command line, so each is quoted for the shell. The ExecStop=
- * disconnects as the unit's owner (@is_nbft: nbft, else discoverd): nvme
+ * disconnects as the unit's owner (@is_nbft: pre-os, else discoverd): nvme
  * disconnect leaves a controller of another owner alone.
  */
 static int connection_commands(const struct unit_mgr *mgr,
@@ -537,7 +537,7 @@ static int connection_commands(const struct unit_mgr *mgr,
 		     "%s %s disconnect -d $DEV --owner=%s",
 		     devid, ctrls, unit_name, ctrls,
 		     nvme_dir, nvme, opts,
-		     is_nbft ? "nbft" : "discoverd") < 0) {
+		     is_nbft ? "pre-os" : "discoverd") < 0) {
 		s->exec_stop = NULL;
 		return -ENOMEM;
 	}
@@ -743,7 +743,7 @@ static int start_unit(struct unit_mgr *mgr, const struct unit_spec *s)
 /*
  * Build the nvme-connect argv into s->argv[] and return it.
  * @params: resolved connect parameters to emit (kato, ctrl-loss-tmo, tls, …).
- * is_nbft: use --owner=nbft; otherwise --owner=discoverd.
+ * is_nbft: use --owner=pre-os (once nbft); otherwise --owner=discoverd.
  * Strings are formatted into the provided scratch buffers (in the struct);
  * the TID fields and params share the extra[] pool.
  */
@@ -852,7 +852,7 @@ static int build_connect_argv(const struct unit_mgr *mgr,
 
 	s->argv[i++] = "--idempotent";
 	snprintf(s->owner, sizeof(s->owner), "--owner=%s",
-		 is_nbft ? "nbft" : "discoverd");
+		 is_nbft ? "pre-os" : "discoverd");
 	s->argv[i++] = s->owner;
 	snprintf(s->devid_arg, sizeof(s->devid_arg), "--devid-file=%s",
 		 devid_path);

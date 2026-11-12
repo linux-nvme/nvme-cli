@@ -133,7 +133,8 @@ timeout of 30 seconds, or the --keep-alive-tmo value when it is given.
 	Record NAME as the owner of connected controllers in the NVMe
 	ownership registry, so other orchestrators (and nvme-disconnect-all)
 	leave them alone.  See nvme-disconnect-all(1).  When --nbft is also
-	given, --owner takes precedence over its default owner of 'nbft'.
+	given, --owner takes precedence over its default owner of 'pre-os'.
+	'nbft', the old name of 'pre-os', is recorded as 'pre-os'.
 
 include::fabrics-options.txt[]
 
