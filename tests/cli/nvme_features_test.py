@@ -43,6 +43,7 @@ FID_PERF_CHARACTERISTICS = 0x1c
 FID_POWER_LIMIT = 0x23
 FID_POWER_THRESH = 0x24
 FID_POWER_MEASUREMENT = 0x25
+FID_VOLTAGE_MEASUREMENT = 0x27
 
 PERF_ATTR_SIZE = 4096
 LBA_RANGE_ENTRY_SIZE = 64
@@ -201,6 +202,32 @@ class FeatPluginSetTest(FeaturesTestBase):
                     cmd = self.set_feature('feat', args[0], self.ctrl,
                                            *args[1:], *save)
                     self.assertFields(cmd, fid, sv=bool(save), **fields)
+
+    def test_voltage_measurement_start(self):
+        """Start Voltage Measurements data: LVOLTA, SVMT and LVOLT"""
+        cmd = self.set_feature('feat', 'voltage-meas', self.ctrl, '--act=1',
+                               '--vssel=2', '--vmlt', '--svmt=60',
+                               '--luvt=1100', '--lovt=1300')
+        self.assertFields(cmd, FID_VOLTAGE_MEASUREMENT, cdw11=1)
+        expected = bytearray(PERF_ATTR_SIZE)
+        struct.pack_into('<HHI', expected, 0, 2 | 1 << 2, 60,
+                         1100 | 1300 << 16)
+        self.assertEqual(cmd.data, expected)
+
+    def test_voltage_measurement_stop_clear(self):
+        for act in (0, 2):
+            with self.subTest(act=act):
+                self.server.commands.clear()
+                cmd = self.set_feature('feat', 'voltage-meas', self.ctrl,
+                                       f'--act={act}')
+                self.assertFields(cmd, FID_VOLTAGE_MEASUREMENT, cdw11=act)
+                self.assertIsNone(cmd.data)
+
+    def test_voltage_measurement_start_options_need_start(self):
+        result = self.nvme('feat', 'voltage-meas', self.ctrl, '--act=0',
+                           '--svmt=5')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.set_features(), [])
 
     def test_timestamp(self):
         cmd = self.set_feature('feat', 'timestamp', self.ctrl,

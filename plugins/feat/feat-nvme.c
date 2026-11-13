@@ -27,6 +27,7 @@
 #define POWER_LIMIT_DESC "Get and set power limit feature"
 #define POWER_THRESH_DESC "Get and set power threshold feature"
 #define POWER_MEAS_DESC "Get and set power measurement feature"
+#define VOLTAGE_MEAS_DESC "Get and set voltage measurement feature"
 #define ERR_RECOVERY_DESC "Get and set error recovery feature"
 #define NUM_QUEUES_DESC "Get and set number of queues feature"
 #define HOST_BEHAVIOR_DESC "Get and set host behavior support feature"
@@ -167,6 +168,7 @@ static const char *volatile_wc_feat = "volatile write cache feature";
 static const char *power_limit_feat = "power limit feature";
 static const char *power_thresh_feat = "power threshold feature";
 static const char *power_meas_feat = "power measurement feature";
+static const char *voltage_meas_feat = "voltage measurement feature";
 static const char *err_recovery_feat = "error recovery feature";
 static const char *num_queues_feat = "number of queues feature";
 static const char *host_behavior_feat = "host behavior support feature";
@@ -1008,6 +1010,138 @@ static int feat_power_meas(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
+struct voltage_meas_config {
+	__u8 act;
+	__u8 vssel;
+	bool vmlt;
+	__u16 svmt;
+	__u16 luvt;
+	__u16 lovt;
+	struct feat_args feat;
+};
+
+static int voltage_meas_set(struct libnvme_transport_handle *hdl,
+			    const __u8 fid,
+			    struct argconfig_commandline_options *opts,
+			    struct voltage_meas_config *cfg)
+{
+	const __u8 vssel_max = NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL_MASK;
+	const __u32 lvolt_max = NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT_MASK;
+	struct nvme_voltage_measurement_start_data data = { 0 };
+	struct libnvme_passthru_cmd cmd;
+	bool start_opts;
+	__u16 lvolta;
+	__u32 lvolt;
+	int err;
+
+	start_opts = argconfig_given(opts, &cfg->vssel) || cfg->vmlt ||
+		     argconfig_given(opts, &cfg->svmt) ||
+		     argconfig_given(opts, &cfg->luvt) ||
+		     argconfig_given(opts, &cfg->lovt);
+
+	if (cfg->act > NVME_FEAT_VOLTAGE_MEASUREMENT_ACT_MASK) {
+		nvme_show_error("invalid action %u", cfg->act);
+		return -EINVAL;
+	}
+
+	if (cfg->act != NVME_VOLTAGE_MEASUREMENT_ACT_START) {
+		if (start_opts) {
+			nvme_show_error("--vssel, --vmlt, --svmt, --luvt and --lovt require --act=%u",
+					NVME_VOLTAGE_MEASUREMENT_ACT_START);
+			return -EINVAL;
+		}
+	} else {
+		if (cfg->vssel > vssel_max) {
+			nvme_show_error("invalid voltage sensor %u (max %u)",
+					cfg->vssel, vssel_max);
+			return -EINVAL;
+		}
+		if (cfg->luvt > lvolt_max || cfg->lovt > lvolt_max) {
+			nvme_show_error("log voltage threshold exceeds %u",
+					lvolt_max);
+			return -EINVAL;
+		}
+
+		lvolta = NVME_SET(cfg->vssel,
+				  VOLTAGE_MEASUREMENT_LVOLTA_VSSEL) |
+			 (cfg->vmlt ? NVME_VOLTAGE_MEASUREMENT_LVOLTA_VMLT : 0);
+		data.lvolta = cpu_to_le16(lvolta);
+		data.svmt = cpu_to_le16(cfg->svmt);
+
+		if (cfg->vmlt) {
+			lvolt = NVME_SET(cfg->luvt,
+					 VOLTAGE_MEASUREMENT_LVOLT_LUVT) |
+				NVME_SET(cfg->lovt,
+					 VOLTAGE_MEASUREMENT_LVOLT_LOVT);
+			data.lvolt = cpu_to_le32(lvolt);
+		}
+	}
+
+	nvme_init_set_features_voltage_measurement(&cmd, cfg->feat.save,
+						   cfg->act, &data);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "Set %s", voltage_meas_feat);
+		return err;
+	}
+
+	nvme_show_result("Set %s: 0x%04x (%s)", voltage_meas_feat, cmd.cdw11,
+			 cfg->feat.save ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cmd.cdw11, NULL);
+
+	return err;
+}
+
+static int feat_voltage_meas(int argc, char **argv, struct command *acmd,
+			     struct plugin *plugin)
+{
+	const char *act = "action [0-2]: stop|start|clear OVV/UVV valid";
+	const char *vssel = "voltage sensor selected [0-3], with --act=1";
+	const char *vmlt = "enable log thresholds, with --act=1";
+	const char *svmt = "stop time in minutes (0: none), with --act=1";
+	const char *luvt = "log undervoltage threshold (0: off), with --vmlt";
+	const char *lovt = "log overvoltage threshold (0: off), with --vmlt";
+	const __u8 fid = NVME_FEAT_FID_VOLTAGE_MEASUREMENT;
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	int err;
+
+	struct voltage_meas_config cfg = { 0 };
+
+	__cleanup_free struct argconfig_commandline_options *feat =
+		feat_options(&cfg.feat, true);
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("act",   0, &cfg.act,   act),
+		OPT_BYTE("vssel", 0, &cfg.vssel, vssel),
+		OPT_FLAG("vmlt",  0, &cfg.vmlt,  vmlt),
+		OPT_SHRT("svmt",  0, &cfg.svmt,  svmt),
+		OPT_SHRT("luvt",  0, &cfg.luvt,  luvt),
+		OPT_SHRT("lovt",  0, &cfg.lovt,  lovt),
+		OPT_INCLUDE(feat, "Feature options"),
+		OPT_END()
+	};
+
+	if (!feat)
+		return -ENOMEM;
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, VOLTAGE_MEAS_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_given(opts, &cfg.act) ||
+	    argconfig_given(opts, &cfg.vssel) || cfg.vmlt ||
+	    argconfig_given(opts, &cfg.svmt) ||
+	    argconfig_given(opts, &cfg.luvt) ||
+	    argconfig_given(opts, &cfg.lovt))
+		err = voltage_meas_set(hdl, fid, opts, &cfg);
+	else
+		err = feat_get(hdl, fid, 0, cfg.feat.sel, 0, voltage_meas_feat);
+
+	return err;
+}
+
 static int err_recovery_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 			    __u32 nsid, __u16 tler, bool dulbe, bool sv)
 {
@@ -1818,6 +1952,12 @@ static struct command feat_power_meas_cmd = {
 	.fn = feat_power_meas,
 };
 
+static struct command feat_voltage_meas_cmd = {
+	.name = "voltage-meas",
+	.help = VOLTAGE_MEAS_DESC,
+	.fn = feat_voltage_meas,
+};
+
 static struct command feat_err_recovery_cmd = {
 	.name = "err-recovery",
 	.help = ERR_RECOVERY_DESC,
@@ -1873,6 +2013,7 @@ static struct command *commands[] = {
 	&feat_power_limit_cmd,
 	&feat_power_thresh_cmd,
 	&feat_power_meas_cmd,
+	&feat_voltage_meas_cmd,
 	&feat_err_recovery_cmd,
 	&feat_lba_range_type_cmd,
 	&feat_int_coalesce_cmd,

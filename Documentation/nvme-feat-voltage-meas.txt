@@ -1,0 +1,124 @@
+nvme-feat-voltage-meas(1)
+=========================
+
+NAME
+----
+nvme-feat-voltage-meas - Get and set voltage measurement feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'feat voltage-meas' <device>
+			[--act=<action>] [--vssel=<sensor>] [--vmlt]
+			[--svmt=<minutes>] [--luvt=<luvt>] [--lovt=<lovt>]
+			[--sel=<select> | -S <select>] [--save | -s]
+
+DESCRIPTION
+-----------
+Get and set voltage measurement feature (Feature Identifier 27h), which
+controls collection of interval voltage measurements for the Voltage
+Measurement log page.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+If any of the setting options are specified, the command issues a Set
+Features command. If none of them are specified, it retrieves and displays
+the current configuration.
+
+The `--vssel`, `--vmlt`, `--svmt`, `--luvt` and `--lovt` options form the
+Start Voltage Measurements data structure and are only valid with `--act=1`.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+--act=<action>::
+	Action (ACT): the action the controller takes while processing the
+	command:
++
+[]
+|==================
+|Value|Description
+|0|Stop voltage measurements
+|1|Start voltage measurements
+|2|Clear the Overvoltage Valid and Undervoltage Valid bits in the Voltage
+Measurement log page
+|0xa-0xf|Vendor specific
+|==================
+
+--vssel=<sensor>::
+	Voltage Sensor Selected (VSSEL): voltage sensor, 0-3 (Voltage Sensor
+	1-4), used for the interval voltage measurements reported in the
+	Voltage Measurement log page.
+
+--vmlt::
+	Voltage Measurement Log Threshold (VMLT): compare the interval voltage
+	measurements with the thresholds given by `--lovt` and `--luvt`.
+
+--svmt=<minutes>::
+	Stop Voltage Measurement Time (SVMT): time in minutes after which the
+	controller stops collecting interval voltage measurements. 0 specifies
+	no stop time.
+
+--luvt=<luvt>::
+	Log Undervoltage Threshold (LUVT), 14 bits, in units of the Voltage
+	Sample Scale (VOLSS) reported in the Identify Controller data structure.
+	0 disables the comparison. Used only with `--vmlt`.
+
+--lovt=<lovt>::
+	Log Overvoltage Threshold (LOVT), 14 bits, in units of the Voltage
+	Sample Scale (VOLSS) reported in the Identify Controller data structure.
+	0 disables the comparison. Used only with `--vmlt`.
+
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
++
+[]
+|==================
+|Select|Name|Description
+|0|current|Current
+|1|default|Default
+|2|saved|Saved
+|3|supported|Supported capabilities
+|==================
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and
+	resets. This feature is not saveable, so a controller is expected to
+	reject it.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Get the current voltage measurement configuration:
++
+------------
+# nvme feat voltage-meas /dev/nvme0
+------------
+
+* Start measuring voltage sensor 1 for 60 minutes with log thresholds:
++
+------------
+# nvme feat voltage-meas /dev/nvme0 --act=1 --vssel=0 --svmt=60 --vmlt --luvt=1100 --lovt=1300
+------------
+
+* Stop voltage measurements:
++
+------------
+# nvme feat voltage-meas /dev/nvme0 --act=0
+------------
+
+* Clear the Overvoltage Valid and Undervoltage Valid bits:
++
+------------
+# nvme feat voltage-meas /dev/nvme0 --act=2
+------------
+
+NVME
+----
+Part of the nvme-user suite.
