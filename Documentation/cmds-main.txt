@@ -244,6 +244,9 @@ linknvme:nvme-feat-timestamp[1]::
 linknvme:nvme-feat-volatile-wc[1]::
 	Get and set volatile write cache feature
 
+linknvme:nvme-feat-voltage-meas[1]::
+	Get and set voltage measurement feature
+
 linknvme:nvme-feat-write-atom-normal[1]::
 	Get and set write atomicity normal feature
 
