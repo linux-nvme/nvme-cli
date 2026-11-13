@@ -882,9 +882,10 @@
   Structure's Composite Controller Status field to Composite
   Controller Status Flags, to distinguish per-bit change flags from
   the status/state bits they report. In libnvme,
-  `struct nvme_mi_ctrl_health_status` gains a `chscf` field (and
-  `enum nvme_mi_chscf`) carved out of what was previously trailing
-  reserved space, so its size is unchanged; and
+  `struct nvme_mi_ctrl_health_status` gains a `__le16 chscf` field
+  (and `enum nvme_mi_chscf`) carved out of what was previously
+  trailing reserved space; the struct is now packed so the field
+  sits at its spec offset (byte 9) and its size is unchanged; and
   `struct nvme_mi_nvm_ss_health_status`'s `ccs` field/`enum
   nvme_mi_ccs` are renamed to `ccsf`/`enum nvme_mi_ccsf` with bit
   names getting an `F` suffix (e.g. `NVME_MI_CCS_RDY` is now
