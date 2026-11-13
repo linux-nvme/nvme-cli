@@ -149,7 +149,7 @@ _FEAT = ['arbitration', 'power-mgmt', 'temp-thresh', 'volatile-wc',
          'perf-characteristics', 'power-limit', 'power-thresh', 'power-meas',
          'err-recovery', 'lba-range-type', 'int-coalesce',
          'int-vector-config', 'write-atom-normal', 'async-event-conf',
-         'keep-alive-timer']
+         'keep-alive-timer', 'voltage-meas']
 _PLUGIN = [['fdp', 'configs', '-e', '1'], ['fdp', 'usage', '-e', '1'],
            ['fdp', 'stats', '-e', '1'], ['fdp', 'events', '-e', '1'],
            ['fdp', 'status', 'NS'], ['fdp', 'feature'],
