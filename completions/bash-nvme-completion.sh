@@ -1920,6 +1920,16 @@ plugin_feat_opts () {
 			               "--timeout" "infinite -1"
 			;;
 
+		"voltage-meas")
+			opts+=" --act= --dry-run --lovt= --luvt= --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --svmt= --timeout= --verbose -v --vmlt --vssel="
+			valopts+=" --act --lovt --luvt --output-format -o --output-format-version --sel -S --set-options --svmt --timeout --vssel"
+
+			_nvme_opt_vals "--output-format -o" "normal json binary" \
+			               "--output-format-version" "1 2" \
+			               "--sel -S" "0 1 2 3 current default saved supported" \
+			               "--timeout" "infinite -1"
+			;;
+
 		"write-atom-normal")
 			opts+=" --dn -d --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --sel= -S --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --sel -S --set-options --timeout"
@@ -5778,7 +5788,7 @@ _nvme_subcmds () {
 		[dir]="receive send"
 		[exclusion]="add create delete edit list remove"
 		[fdp]="configs events feature set-events stats status update usage"
-		[feat]="arbitration async-event-conf err-recovery hctm host-behavior-support int-coalesce int-vector-config keep-alive-timer lba-range-type num-queues perf-characteristics power-limit power-meas power-mgmt power-thresh temp-thresh timestamp volatile-wc write-atom-normal"
+		[feat]="arbitration async-event-conf err-recovery hctm host-behavior-support int-coalesce int-vector-config keep-alive-timer lba-range-type num-queues perf-characteristics power-limit power-meas power-mgmt power-thresh temp-thresh timestamp volatile-wc voltage-meas write-atom-normal"
 		[fw]="activate commit download"
 		[huawei]="id-ctrl list"
 		[ibm]="crit-log persist-event-log vpd"
