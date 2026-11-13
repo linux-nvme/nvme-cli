@@ -24,11 +24,11 @@ Tests in this module verify:
     when Set Features fails.
   * get-enable-ieee1667-silo reads with the SEL given, the OCP UUID index
     or index 0 with --no-uuid, and prints SEL 3 as capabilities only.
+  * Without the OCP UUID neither command sends anything, and both fail.
 
-Known defects are covered by expectedFailure tests asserting the
+A known defect is covered by an expectedFailure test asserting the
 behavior the specification defines: the state is printed as "Sifo"
-rather than Silo Enabled, and with no OCP UUID both commands send
-nothing yet exit 0.
+rather than Silo Enabled.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 

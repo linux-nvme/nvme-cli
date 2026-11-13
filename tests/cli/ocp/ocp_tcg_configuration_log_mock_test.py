@@ -18,16 +18,14 @@ Tests in this module verify:
     OCP UUID index, or index 0 with --no-uuid; without the OCP UUID
     nothing is read.
   * Every field of a version 1 and a version 2 page decodes to the value
-    in the page in text and JSON, and the field version 2 adds is absent
-    from version 1.
-  * A page with a different GUID is rejected.
+    in the page in text and JSON, four-byte counters unsigned, and the
+    field version 2 adds is absent from version 1.
+  * A page with a different GUID is rejected, and -o binary writes the
+    page unchanged.
 
 Known defects are covered by expectedFailure tests asserting the
 behavior the specification defines: a version 3 page (OCP 2.7) is
-decoded with the version 2 layout, JSON shows the Locking SP Revert
-Count as the Tper Revert Count and leaves the Locking SP Revert Count
-out, JSON shows four-byte counters from 80000000h as negative numbers,
-and -o binary prints the text report.
+decoded with the version 2 layout.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -42,9 +40,6 @@ from tests.e2e.plugins.ocp import ocp_c7_layout as layout
 
 UNKNOWN_GUID_MSG = 'Unknown GUID in C7 Log Page data'
 GUID_HEX = layout.GUID_BYTES[::-1].hex()
-
-# The fields JSON gets wrong, which have a test of their own.
-JSON_REVERT_COUNTS = (layout.TPER_REVERT, layout.LOCKING_SP_REVERT)
 
 
 class TcgConfigurationLogTestBase(OCPMockTestBase):
@@ -119,9 +114,7 @@ class TestTcgConfigurationLog(TcgConfigurationLogTestBase):
             self.serve(version)
             log = self.json_log()
             with self.subTest(version=version):
-                self.assertJsonFields(
-                    log, [n for n in layout.field_names(version)
-                          if n not in JSON_REVERT_COUNTS])
+                self.assertJsonFields(log, layout.field_names(version))
                 self.assertEqual(log['Log Page Version'], version)
                 self.assertEqual(log['Log page GUID'].lower()
                                  .removeprefix('0x'), GUID_HEX)
@@ -165,24 +158,13 @@ class TestTcgConfigurationLog(TcgConfigurationLogTestBase):
         self.serve(3)
         self.assertJsonFields(self.json_log(), layout.field_names(3))
 
-    @unittest.expectedFailure
-    def test_revert_counts_in_json(self):
-        """Defect: JSON shows the Locking SP Revert Count (TCGL-5) as the
-        Tper Revert Count (TCGL-4) and has no Locking SP Revert Count."""
-        self.assertJsonFields(self.json_log(), JSON_REVERT_COUNTS)
-
-    @unittest.expectedFailure
     def test_large_counts_in_json(self):
-        """Defect: the four-byte counters go into JSON as signed 32-bit
-        integers, so a count from 80000000h is negative."""
+        """A four-byte counter from 80000000h is not negative."""
         self.serve(values={name: 0x80000000 + i
                            for i, name in enumerate(layout.DWORDS)})
         self.assertJsonFields(self.json_log(), layout.DWORDS)
 
-    @unittest.expectedFailure
     def test_binary_is_the_page(self):
-        """Defect: the output format is fixed to "normal", so -o binary
-        prints the text report."""
         result = self.run_c7('-o', 'binary', encoding=None)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, self.page)

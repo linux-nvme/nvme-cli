@@ -17,23 +17,18 @@ Tests in this module verify:
   * The page is read as LID C1h, 512 bytes, for all namespaces, with the
     OCP UUID index, or index 0 with --no-uuid; without the OCP UUID
     nothing is read.
-  * Every field decodes to the value in the page in text and JSON, and
-    the text report lists the four Previous Error IDs.
-  * A page with a different GUID is rejected.
-
-Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: the eight-byte Error ID (EREC-4) is
-cut to its low four bytes, JSON leaves out the Error / Assert Count
-(EREC-16) and the Previous Error IDs (EREC-17), JSON shows four-byte
-fields from 80000000h as negative numbers, and -o binary prints the text
-report.
+  * Every field decodes to the value in the page in text and JSON, the
+    eight-byte Error ID whole and four-byte fields unsigned, and both
+    reports carry the Error / Assert Count (EREC-16) and list the four
+    Previous Error IDs (EREC-17).
+  * A page with a different GUID is rejected, and -o binary writes the
+    page unchanged.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_error_recovery_log_mock_test.py <nvme-binary> <mock-lib>
 """
 import re
-import unittest
 
 from tests.cli.nvme_mock import NSID_ALL, main
 from tests.cli.ocp.ocp_mock_test import (UUID_INDEX, UUID_SLOT,
@@ -59,8 +54,6 @@ LABELS = {
         'Device Recovery Action 2 Timeout',
     layout.ERROR_ASSERT_COUNT: 'Panic Count',
 }
-# Fields JSON leaves out, which have a test of their own.
-JSON_MISSING = (layout.ERROR_ASSERT_COUNT,)
 DWORD_FIELDS = (layout.DEVICE_CAPABILITIES, layout.VS_COMMAND_CDW12,
                 layout.VS_COMMAND_CDW13)
 
@@ -145,8 +138,7 @@ class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
 
     def test_fields_in_json(self):
         log = self.json_log()
-        self.assertJsonFields(log, [n for n in layout.FIELDS
-                                    if n not in JSON_MISSING])
+        self.assertJsonFields(log, layout.FIELDS)
         self.assertEqual(log['Log Page Version'], 3)
         self.assertEqual(log['Log page GUID'], GUID_TEXT)
 
@@ -164,44 +156,28 @@ class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
         self.assertIn(UNKNOWN_GUID_MSG, result.stdout + result.stderr)
         self.assertNotIn('Log Page Version', result.stdout)
 
-    @unittest.expectedFailure
     def test_whole_error_id_in_text(self):
-        """Defect: the eight-byte Error ID (EREC-4) goes through
-        le32_to_cpu(), which keeps its low four bytes."""
+        """The Error ID is eight bytes (EREC-4)."""
         self.serve({layout.ERROR_ID: 0x1122334455667788})
         self.assertTextFields(self.text_log(), [layout.ERROR_ID])
 
-    @unittest.expectedFailure
     def test_whole_error_id_in_json(self):
-        """Defect: as test_whole_error_id_in_text."""
         self.serve({layout.ERROR_ID: 0x1122334455667788})
         self.assertJsonFields(self.json_log(), [layout.ERROR_ID])
 
-    @unittest.expectedFailure
-    def test_error_assert_count_in_json(self):
-        """Defect: JSON has no Error / Assert Count (EREC-16)."""
-        self.assertJsonFields(self.json_log(), JSON_MISSING)
-
-    @unittest.expectedFailure
     def test_previous_error_ids_in_json(self):
-        """Defect: JSON has no Previous Error IDs (EREC-17)."""
         values = scalars(self.json_log())
         for error_id in layout.DEFAULT_PREVIOUS_IDS:
             with self.subTest(error_id=hex(error_id)):
                 self.assertTrue({error_id, f'0x{error_id:x}'} & values)
 
-    @unittest.expectedFailure
     def test_large_dwords_in_json(self):
-        """Defect: the four-byte fields go into JSON as signed 32-bit
-        integers, so a value from 80000000h is negative."""
+        """A four-byte field from 80000000h is not negative."""
         self.serve({name: 0x80000000 + i
                     for i, name in enumerate(DWORD_FIELDS)})
         self.assertJsonFields(self.json_log(), DWORD_FIELDS)
 
-    @unittest.expectedFailure
     def test_binary_is_the_page(self):
-        """Defect: the output format is fixed to "normal", so -o binary
-        prints the text report."""
         result = self.run_c1('-o', 'binary', encoding=None)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, self.page)

@@ -776,6 +776,9 @@ static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported
 static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 {
 	struct json_object *root;
+	struct json_object *prev_ids;
+	char key[32];
+	int i;
 
 	root = json_create_object();
 	char guid[64];
@@ -785,21 +788,30 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 	json_object_add_value_int(root, "Panic Reset Action", log_data->panic_reset_action);
 	json_object_add_value_int(root, "Device Recovery Action 1",
 				  log_data->device_recover_action_1);
-	json_object_add_value_int(root, "Panic ID", le32_to_cpu(log_data->panic_id));
-	json_object_add_value_int(root, "Device Capabilities",
-				  le32_to_cpu(log_data->device_capabilities));
+	json_object_add_value_uint64(root, "Panic ID",
+				     le64_to_cpu(log_data->panic_id));
+	json_object_add_value_uint(root, "Device Capabilities",
+				   le32_to_cpu(log_data->device_capabilities));
 	json_object_add_value_int(root, "Vendor Specific Recovery Opcode",
 				  log_data->vendor_specific_recovery_opcode);
-	json_object_add_value_int(root, "Vendor Specific Command CDW12",
-				  le32_to_cpu(log_data->vendor_specific_command_cdw12));
-	json_object_add_value_int(root, "Vendor Specific Command CDW13",
-				  le32_to_cpu(log_data->vendor_specific_command_cdw13));
+	json_object_add_value_uint(root, "Vendor Specific Command CDW12",
+				   le32_to_cpu(log_data->vendor_specific_command_cdw12));
+	json_object_add_value_uint(root, "Vendor Specific Command CDW13",
+				   le32_to_cpu(log_data->vendor_specific_command_cdw13));
 	json_object_add_value_int(root, "Vendor Specific Command Timeout",
 				  log_data->vendor_specific_command_timeout);
 	json_object_add_value_int(root, "Device Recovery Action 2",
 				  log_data->device_recover_action_2);
 	json_object_add_value_int(root, "Device Recovery Action 2 Timeout",
 				  log_data->device_recover_action_2_timeout);
+	json_object_add_value_uint(root, "Panic Count", log_data->panic_count);
+	prev_ids = json_create_object();
+	for (i = 0; i < C1_PREV_PANIC_IDS_LENGTH; i++) {
+		snprintf(key, sizeof(key), "Panic ID N-%d", i + 1);
+		json_object_add_value_uint64(prev_ids, key,
+			le64_to_cpu(log_data->prev_panic_id[i]));
+	}
+	json_object_add_value_object(root, "Previous Panic IDs", prev_ids);
 	json_object_add_value_int(root, "Log Page Version",
 				  le16_to_cpu(log_data->log_page_version));
 
@@ -1137,6 +1149,8 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 	json_object_add_value_int(root, "Locking SP Activation Count",
 				  log_data->locking_sp_act_count);
 	json_object_add_value_int(root, "Tper Revert Count",
+				  log_data->type_rev_count);
+	json_object_add_value_int(root, "Locking SP Revert Count",
 				  log_data->locking_sp_rev_count);
 	json_object_add_value_int(root, "Number of Locking Objects",
 				  log_data->no_of_locking_obj);
@@ -1156,15 +1170,16 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 				  log_data->no_of_write_unlock_locking_obj);
 	json_object_add_value_int(root, "Reserved2", log_data->rsvd15);
 
-	json_object_add_value_int(root, "SID Authentication Try Count",
-				  le32_to_cpu(log_data->sid_auth_try_count));
-	json_object_add_value_int(root, "SID Authentication Try Limit",
-				  le32_to_cpu(log_data->sid_auth_try_limit));
-	json_object_add_value_int(root, "Programmatic TCG Reset Count",
-				  le32_to_cpu(log_data->pro_tcg_rc));
-	json_object_add_value_int(root, "Programmatic Reset Lock Count",
-				  le32_to_cpu(log_data->pro_rlc));
-	json_object_add_value_int(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
+	json_object_add_value_uint(root, "SID Authentication Try Count",
+				   le32_to_cpu(log_data->sid_auth_try_count));
+	json_object_add_value_uint(root, "SID Authentication Try Limit",
+				   le32_to_cpu(log_data->sid_auth_try_limit));
+	json_object_add_value_uint(root, "Programmatic TCG Reset Count",
+				   le32_to_cpu(log_data->pro_tcg_rc));
+	json_object_add_value_uint(root, "Programmatic Reset Lock Count",
+				   le32_to_cpu(log_data->pro_rlc));
+	json_object_add_value_uint(root, "TCG Error Count",
+				   le32_to_cpu(log_data->tcg_ec));
 
 	res_arr[0] = '\0';
 	if (log_page_version == 1) {
@@ -1172,9 +1187,9 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 			     (__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
 			     2, false);
 	} else {
-		json_object_add_value_int(root,
+		json_object_add_value_uint(root,
 			"Number of Namespace Provisioned Locking Objects Extended",
-			log_data->no_of_ns_prov_locking_obj_ext);
+			le16_to_cpu(log_data->no_of_ns_prov_locking_obj_ext));
 	}
 
 	concat_bytes(res_arr, sizeof(res_arr), log_data->rsvd38, 456, false);

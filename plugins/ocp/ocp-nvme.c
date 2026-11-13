@@ -87,6 +87,7 @@ struct erri_entry {
 };
 
 #define ERRI_ENTRIES_MAX 127
+#define ERRI_DATA_LEN 4096
 
 enum erri_type {
 	ERRI_TYPE_CPU_CTRL_HANG = 1,
@@ -440,7 +441,7 @@ static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -493,7 +494,7 @@ static int eol_plp_failure_mode_get(struct libnvme_transport_handle *hdl, const 
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -525,7 +526,7 @@ static int eol_plp_failure_mode_set(struct libnvme_transport_handle *hdl, const 
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -549,7 +550,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 	bool no_uuid_flag = false;
 	const char *desc = "Define EOL or PLP circuitry failure mode.\n"
 			   "No argument prints current mode.";
-	const char *mode = "[0-3]: default/rom/wtm/normal";
+	const char *mode = "[1-3]: rom/wtm/normal";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_ROWTM;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -569,7 +570,8 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("mode",    'm', &cfg.mode,     mode),
+		OPT_BYTE("mode",    'm', &cfg.mode,     mode,
+			 .min = 1, .max = 3),
 		OPT_FLAG("save",    's', &cfg.save,     save),
 		OPT_BYTE("sel",     'S', &cfg.sel,      sel,
 			 nvme_sel_values, .max = NVME_SEL_MAX),
@@ -1276,14 +1278,6 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	OPT_ARGS(opts) = {
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
 		OPT_END()
@@ -1293,7 +1287,7 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 	if (ret)
 		return ret;
 
-	ret = get_c5_log_page(hdl, cfg.output_format,
+	ret = get_c5_log_page(hdl, nvme_args.output_format,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C5 Log Page, ret = %d", ret);
@@ -1368,14 +1362,6 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, s
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	OPT_ARGS(opts) = {
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
 		OPT_END()
@@ -1385,7 +1371,7 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, s
 	if (ret)
 		return ret;
 
-	ret = get_c1_log_page(hdl, cfg.output_format,
+	ret = get_c1_log_page(hdl, nvme_args.output_format,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C1h Log Page, ret = %d", ret);
@@ -1492,7 +1478,7 @@ static int ocp_set_telemetry_profile(struct libnvme_transport_handle *hdl, __u8 
 	err = ocp_get_uuid_index(hdl, &uidx);
 	if (err || !uidx) {
 		nvme_show_error("ERROR: No OCP UUID index found");
-		return err;
+		return err ? err : -ENOENT;
 	}
 
 	err = nvme_set_features(hdl, 0xFFFFFFFF, OCP_FID_TEL_CFG, true, tps, 0, 0,
@@ -1533,10 +1519,12 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 	if (err)
 		return err;
 
-	if (argconfig_given(opts, &cfg.tps))
+	if (argconfig_given(opts, &cfg.tps)) {
 		err = ocp_set_telemetry_profile(hdl, cfg.tps);
-	else
+	} else {
 		nvme_show_error("Telemetry Profile Select is a required argument");
+		err = -EINVAL;
+	}
 
 	return err;
 }
@@ -1592,7 +1580,7 @@ static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct comma
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1632,7 +1620,7 @@ set_dssd_power_state(struct libnvme_transport_handle *hdl,
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1672,7 +1660,9 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("power-state", 'p', &cfg.power_state, power_state),
+		/* CDW11 bits 6:0, bits 31:7 reserved (SDSSDPS-13, 14) */
+		OPT_BYTE("power-state", 'p', &cfg.power_state, power_state,
+			 .max = 0x7f),
 		OPT_FLAG("save",        's', &cfg.save,        save),
 		OPT_FLAG("no-uuid",     'n', &no_uuid_flag,    no_uuid),
 		OPT_END()
@@ -1682,11 +1672,13 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 	if (err)
 		return err;
 
-	if (argconfig_given(opts, &cfg.power_state))
-		err = set_dssd_power_state(hdl, nsid, OCP_FID_DSSDPS, cfg.power_state, cfg.save,
-					   !no_uuid_flag);
+	if (!argconfig_given(opts, &cfg.power_state)) {
+		nvme_show_error("Power State is a required argument");
+		return -EINVAL;
+	}
 
-	return err;
+	return set_dssd_power_state(hdl, nsid, OCP_FID_DSSDPS, cfg.power_state,
+				    cfg.save, !no_uuid_flag);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1707,7 +1699,7 @@ static int get_dssd_power_state(struct libnvme_transport_handle *hdl, const __u3
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1768,11 +1760,13 @@ static int get_dssd_power_state_feature(int argc, char **argv, struct command *a
 			if (err)
 				break;
 		}
-	} else if (argconfig_given(opts, &cfg.sel))
+	} else if (argconfig_given(opts, &cfg.sel)) {
 		err = get_dssd_power_state(hdl, nsid, fid, cfg.sel,
 					       !no_uuid_flag);
-	else
+	} else {
 		nvme_show_error("Required to have --sel as an argument, or pass the --all flag.");
+		err = -EINVAL;
+	}
 
 	return err;
 }
@@ -1826,7 +1820,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -1932,7 +1926,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	err = ocp_get_uuid_index(hdl, &uidx);
 	if (err || !uidx) {
 		nvme_show_error("ERROR: No OCP UUID index found");
-		return err;
+		return err ? err : -ENOENT;
 	}
 
 	err = nvme_set_features(hdl, nsid, OCP_FID_DAEC, cfg.sv, cfg.epn ? 1 : 0,
@@ -2022,7 +2016,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 	ret = get_c9_log_page_data(hdl, 0, 1, output_file,
 				   &log_data, &string_buffer, &log_page_sz, uuid);
 
-	if ((!ret) && (fmt != BINARY))
+	if (!ret)
 		ocp_c9_log(log_data, string_buffer, log_page_sz, fmt);
 	else if (ret)
 		nvme_show_error("ERROR : OCP : Unable to read C9 data from buffer");
@@ -2045,12 +2039,10 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 			"If requested path does not exist, the directory will be newly created.";
 
 	struct config {
-		char *output_format;
 		char *output_file;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
 		.output_file = NULL,
 	};
 
@@ -2071,7 +2063,7 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 		snprintf(file_path, sizeof(file_path), "%s",
 			 DEFAULT_STRING_BIN);
 
-	ret = get_c9_log_page(hdl, cfg.output_format, file_path,
+	ret = get_c9_log_page(hdl, nvme_args.output_format, file_path,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C9 Log Page, ret = %d", ret);
@@ -2148,14 +2140,6 @@ static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
 	OPT_ARGS(opts) = {
 		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
 		OPT_END()
@@ -2165,7 +2149,7 @@ static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd
 	if (ret)
 		return ret;
 
-	ret = get_c7_log_page(hdl, cfg.output_format,
+	ret = get_c7_log_page(hdl, nvme_args.output_format,
 			      !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C7 Log Page, ret = %d", ret);
@@ -2215,30 +2199,27 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 	struct erri_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_ERRI;
 	__u64 result;
-	__u32 data_len = 0;
 	__u8 uidx = 0;
 	int err;
 	int i;
-
-	data_len = sizeof(*entry) * ERRI_ENTRIES_MAX;
 
 	if (uuid) {
 		/* OCP 2.0 requires UUID index support */
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
-	entry = libnvme_alloc(data_len);
+	entry = libnvme_alloc(ERRI_DATA_LEN);
 	if (!entry) {
 		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 
 	err = nvme_get_features(hdl, nsid, fid, sel, 0, uidx, entry,
-			data_len, &result);
+			ERRI_DATA_LEN, &result);
 	if (!err) {
 		cq_entry.nume = result;
 		nvme_show_result("Number of Error Injections (feature: %#0*x): %#0*x (%s: %d)",
@@ -2317,12 +2298,12 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
 	data_len = cfg->number * sizeof(struct erri_entry);
-	entry = libnvme_alloc(data_len);
+	entry = libnvme_alloc(ERRI_DATA_LEN);
 	if (!entry) {
 		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -ENOMEM;
@@ -2348,7 +2329,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 	}
 
 	err = nvme_set_features(hdl, nsid, OCP_FID_ERRI, false, cfg->number,
-			 0, 0, 0, 0, entry, data_len, NULL);
+			 0, 0, uidx, 0, entry, ERRI_DATA_LEN, NULL);
 	if (err) {
 		if (err < 0)
 			nvme_show_error("set-error-injection: %s",
@@ -2382,7 +2363,8 @@ static int set_error_injection(int argc, char **argv, struct command *acmd, stru
 
 	OPT_ARGS(opts) = {
 		OPT_FILE("data",    'd', &cfg.file,     data),
-		OPT_BYTE("number",  'n', &cfg.number,   number),
+		OPT_BYTE("number",  'n', &cfg.number,   number,
+			 .max = ERRI_ENTRIES_MAX),
 		OPT_FLAG("no-uuid", 'N', &no_uuid_flag, no_uuid),
 		OPT_FLAG("all-ns",  'a', &all_ns_flag,  all_ns),
 		OPT_SHRT("type",    't', &cfg.type,     type),
@@ -2401,6 +2383,7 @@ static int set_error_injection(int argc, char **argv, struct command *acmd, stru
 	 * OCP v2.5 - NSID: The host should either clear this to zero or set this to FFFFFFFFh
 	 */
 	nsid = all_ns_flag ? NVME_NSID_ALL : 0;
+
 	return error_injection_set(hdl, &cfg, !no_uuid_flag, nsid);
 }
 
@@ -2417,7 +2400,7 @@ static int enable_ieee1667_silo_get(struct libnvme_transport_handle *hdl, const 
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -2481,7 +2464,7 @@ static int enable_ieee1667_silo_set(struct libnvme_transport_handle *hdl,
 		err = ocp_get_uuid_index(hdl, &uidx);
 		if (err || !uidx) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 
@@ -2735,7 +2718,7 @@ static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
 			nvme_show_error("ERROR: No OCP UUID index found");
-			return err;
+			return err ? err : -ENOENT;
 		}
 	}
 

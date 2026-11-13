@@ -18,20 +18,21 @@ the number in Dword 0 bits 6:0 (GERRI-2) and the entries in its data.
 Tests in this module verify:
   * set-error-injection sends one enabled, single instance entry of the
     given type and Number of Reads to Trigger Device Event, or the
-    entries of a --data file, never with Save set (SERRI-10).
-  * get-error-injection prints the number and each entry, its type named
-    as the Event Definition Table names it.
+    entries of a --data file, in the 4096-byte data (SERRI-9) and never
+    with Save set (SERRI-10), and refuses a number too large for CDW11
+    bits 6:0.
+  * get-error-injection reads the 4096-byte data and prints the number and
+    each entry, its type named as the Event Definition Table names it.
   * --all-ns sends NSID FFFFFFFFh and 0 otherwise (NVMe Base 2.1
-    section 4.4, and GETF-4 for the Get), --no-uuid UUID index 0
-    (UUID-3), and a failing Set Features fails the command.
+    section 4.4, and GETF-4 for the Get), the OCP UUID index or with
+    --no-uuid index 0 (UUID-3), and a failing Set Features fails the
+    command.
+  * Without the OCP UUID neither command sends anything, and both fail.
 
 Known defects are covered by expectedFailure tests asserting the
-behavior the specification defines: Set Features goes out with UUID
-index 0 even though the OCP UUID index was looked up, the data is not
-the 4096-byte range SERRI-9 describes, a number too large for CDW11 bits
-6:0 is sent, the capabilities a Get with SEL 3 returns are listed as
-entries, the types OCP 2.7 adds are named "unknown", and with no OCP UUID
-both commands exit 0.
+behavior the specification defines: the capabilities a Get with SEL 3
+returns are listed as entries, and the types OCP 2.7 adds are named
+"unknown".
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -184,29 +185,22 @@ class TestSetErrorInjection(OCPUUIDTests, EventInjectionTestBase):
                          NSID_ALL)
 
     def test_no_uuid_skips_the_uuid_lookup(self):
-        """With --no-uuid the UUID List is not read. (The index sent is
-        0 either way; see test_sent_with_the_ocp_uuid_index.)"""
+        """With --no-uuid the UUID List is not read and index 0 is
+        sent."""
         cmd = self.sent('--type', '1', '--no-uuid')
         self.assertEqual(self.server.identifies(CNS_UUID_LIST), [])
         self.assertEqual(cmd.uuid_index, 0)
 
-    @unittest.expectedFailure
     def test_sent_with_the_ocp_uuid_index(self):
-        """Defect: error_injection_set() looks up the OCP UUID index and
-        then passes 0 to nvme_set_features()."""
         self.assertEqual(self.sent('--type', '1').uuid_index, UUID_INDEX)
 
-    @unittest.expectedFailure
     def test_data_is_the_4096_byte_range(self):
-        """Defect: SERRI-9 has DPTR describe a 4096-byte range; the
-        command transfers 32 bytes per entry."""
+        """SERRI-9 has DPTR describe a 4096-byte range."""
         self.assertEqual(self.sent('--type', '1').data_len, DATA_RANGE)
 
-    @unittest.expectedFailure
     def test_number_too_large_for_its_field_is_refused(self):
-        """Defect: the number goes into CDW11 unchecked, so 128 sets
-        reserved bit 7 (SERRI-13). OCP 2.5 and 2.6 allow up to 127
-        entries, 2.7 only 1 (SERRI-14)."""
+        """128 would set reserved bit 7 (SERRI-13). OCP 2.5 and 2.6 allow
+        up to 127 entries, 2.7 only 1 (SERRI-14)."""
         result = self.run_cmd('set-error-injection', '--type', '1',
                               '--number', str(NUMBER_MASK + 1))
         self.assertNotEqual(result.returncode, 0)
@@ -234,6 +228,11 @@ class TestGetErrorInjection(OCPUUIDTests, EventInjectionTestBase):
         _, cmd = self.got('--sel', '1', '--all-ns', '--no-uuid')
         self.assertEqual((cmd.sel, cmd.nsid, cmd.uuid_index),
                          (1, NSID_ALL, 0))
+
+    def test_data_is_the_4096_byte_range(self):
+        """The Get returns the data structure the Set sends (SERRI-9)."""
+        _, cmd = self.got()
+        self.assertEqual(cmd.data_len, DATA_RANGE)
 
     def test_entry_is_printed(self):
         self.server.nume = 1
