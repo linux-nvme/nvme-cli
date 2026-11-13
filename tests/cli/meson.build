@@ -398,4 +398,8 @@ if python3.found()
     if 'solidigm' in selected_plugins
         subdir('solidigm')
     endif
+
+    if 'mangoboost' in selected_plugins
+        subdir('mangoboost')
+    endif
 endif
