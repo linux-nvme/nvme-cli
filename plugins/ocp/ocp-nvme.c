@@ -2013,7 +2013,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 		return ret;
 	}
 
-	ret = get_c9_log_page_data(hdl, 0, 1, output_file,
+	ret = get_c9_log_page_data(hdl, 0, output_file != NULL, output_file,
 				   &log_data, &string_buffer, &log_page_sz, uuid);
 
 	if (!ret)
@@ -2037,6 +2037,9 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 	const char *output_file = "Output file name with path;\n"
 			"e.g. '-f ./path/name'\n'-f ./path1/path2/';\n"
 			"If requested path does not exist, the directory will be newly created.";
+	const char *ponly = "Print the log to stdout and save no file;\n"
+			"incompatible with --output-file";
+	bool print_only = false;
 
 	struct config {
 		char *output_file;
@@ -2049,6 +2052,7 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 	OPT_ARGS(opts) = {
 		OPT_FILE("output-file", 'f', &cfg.output_file, output_file),
 		OPT_FLAG("no-uuid",     'n', &no_uuid_flag,    no_uuid),
+		OPT_FLAG("print-only",  0,   &print_only,      ponly),
 		OPT_END()
 	};
 
@@ -2056,15 +2060,22 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 	if (ret)
 		return ret;
 
-	if (cfg.output_file != NULL)
+	if (print_only) {
+		if (cfg.output_file) {
+			nvme_show_error(
+				"--print-only and --output-file are mutually exclusive.");
+			return -EINVAL;
+		}
+	} else if (cfg.output_file != NULL) {
 		snprintf(file_path, sizeof(file_path), "%s-%s", cfg.output_file,
 			 string_suffix);
-	else
+	} else {
 		snprintf(file_path, sizeof(file_path), "%s",
 			 DEFAULT_STRING_BIN);
+	}
 
-	ret = get_c9_log_page(hdl, nvme_args.output_format, file_path,
-			      !no_uuid_flag);
+	ret = get_c9_log_page(hdl, nvme_args.output_format,
+			      print_only ? NULL : file_path, !no_uuid_flag);
 	if (ret)
 		nvme_show_error("ERROR : OCP : Failure reading the C9 Log Page, ret = %d", ret);
 
