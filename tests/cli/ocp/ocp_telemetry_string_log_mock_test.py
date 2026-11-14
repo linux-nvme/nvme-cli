@@ -24,6 +24,10 @@ Tests in this module verify:
   * A table that starts past the end of the log, or runs past it, is
     reported and skipped while the other tables still decode.
   * -o binary writes the log unchanged.
+  * The log is saved unchanged, by default in the current directory.
+  * --print-only prints what is printed otherwise, from the same reads,
+    and writes no file, also when the fetch fails; --output-file is
+    rejected with it.
 
 Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
@@ -34,7 +38,8 @@ import os
 import re
 import struct
 
-from tests.cli.nvme_mock import main
+from tests.cli.nvme_mock import (CNS_UUID_LIST, NSID_ALL, SC_INVALID_FIELD,
+                                 main)
 from tests.cli.ocp.ocp_mock_test import OCPController, OCPMockTestBase
 
 _OCP_LID_TELSLG = 0xC9
@@ -194,6 +199,25 @@ class TestOCPTelemetryStringLog(OCPMockTestBase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, pack_page())
 
+    def files(self, path):
+        """The contents of the files in @path. Their names are left out:
+        -f <file> saves <file>-.bin, which is not what the help suggests."""
+        contents = []
+        for name in sorted(os.listdir(path)):
+            with open(os.path.join(path, name), 'rb') as f:
+                contents.append(f.read())
+        return contents
+
+    def test_log_is_saved(self):
+        self.assertOk(self.run_c9())
+        self.assertEqual(self.files(self.out_dir), [pack_page()])
+
+    def test_log_is_saved_in_the_current_directory_by_default(self):
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(self.out_dir)
+        self.assertOk(self.run_ocp('telemetry-string-log'))
+        self.assertEqual(self.files(self.out_dir), [pack_page()])
+
     def test_table_sizes_too_large_to_fetch_are_refused(self):
         """Table sizes adding up past INT_MAX bytes are refused before
         the fetch, including a sum that wraps to a size that looks
@@ -262,6 +286,104 @@ class TestOCPTelemetryStringLog(OCPMockTestBase):
                 log = self.json_log()
                 self.assertEqual(log['Errors'], [message])
                 self.assert_json_stats(log, 2)
+
+
+class TestOCPTelemetryStringLogPrintOnly(OCPMockTestBase):
+    """--print-only prints the log and writes no file. The runs use long
+    options only, so that they make seeds for the device fuzz target
+    (scripts/fuzz/nvme_fuzz/seeds.py)."""
+
+    controller_class = OCPTelemetryStringLogController
+
+    def setUp(self):
+        super().setUp()
+        # an empty cwd, where the default string.bin would land
+        self.chdir_out_dir()
+        saved_dir = os.path.join(self.tmp, 'saved')
+        os.mkdir(saved_dir)
+        self.saved_prefix = os.path.join(saved_dir, 'c9')
+
+    def run_print_only(self, *args, encoding='utf-8'):
+        self.server.commands.clear()
+        return self.run_ocp('telemetry-string-log', '--print-only', *args,
+                            encoding=encoding)
+
+    def run_saved(self, *args, encoding='utf-8'):
+        self.server.commands.clear()
+        return self.run_ocp('telemetry-string-log',
+                            f'--output-file={self.saved_prefix}', *args,
+                            encoding=encoding)
+
+    def assert_nothing_written(self):
+        self.assertEqual(os.listdir(self.out_dir), [])
+
+    def reads(self):
+        return [(c.lpo, c.data_len, c.nsid, c.cdw14 & 0x7F)
+                for c in self.server.log_reads(_OCP_LID_TELSLG)]
+
+    def test_prints_what_is_printed_without_it(self):
+        for fmt in ('normal', 'json'):
+            with self.subTest(fmt=fmt):
+                printed = self.assertOk(
+                    self.run_print_only(f'--output-format={fmt}')).stdout
+                self.assert_nothing_written()
+                without = self.assertOk(
+                    self.run_saved(f'--output-format={fmt}')).stdout
+                self.assertEqual(printed, without)
+                if fmt == 'json':
+                    log = json.loads(printed)
+                    self.assertEqual(len(log[_JSON_STAT_KEY]), 2)
+                    self.assertEqual(log['ASCII Table'], 'OCP_STRINGS_LOG!')
+                else:
+                    self.assertEqual(
+                        re.findall(r'Vendor Specific Statistic Identifier'
+                                   r'\s+: 0x([0-9a-f]+)$', printed,
+                                   re.MULTILINE),
+                        [f'{stat_id(i):x}' for i in range(2)])
+
+    def test_binary_is_the_log(self):
+        result = self.run_print_only('--output-format=binary',
+                                     encoding=None)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, pack_page())
+        self.assert_nothing_written()
+
+    def test_log_is_read_like_without_it(self):
+        """The 432-byte header, then the whole log, with the OCP UUID's
+        index, as for a saved log."""
+        self.assertOk(self.run_print_only())
+        printed = self.reads()
+        self.assertEqual(
+            printed,
+            [(0, _HEADER_LEN, NSID_ALL, self.server.uuid_slot + 1),
+             (0, len(pack_page()), NSID_ALL, self.server.uuid_slot + 1)])
+        self.assertOk(self.run_saved())
+        self.assertEqual(printed, self.reads())
+
+    def test_no_uuid_reads_with_index_zero(self):
+        self.server.uuid_slot = None
+        self.assertOk(self.run_print_only('--no-uuid'))
+        self.assertEqual(self.server.identifies(CNS_UUID_LIST), [])
+        self.assertEqual([r[3] for r in self.reads()], [0, 0])
+        self.assert_nothing_written()
+
+    def test_output_file_is_rejected(self):
+        result = self.run_print_only(f'--output-file={self.saved_prefix}')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('--print-only and --output-file are mutually '
+                      'exclusive.', result.stderr)
+        self.assertEqual(self.server.commands, [])
+        self.assertEqual(result.stdout, '')
+        self.assert_nothing_written()
+        self.assertEqual(os.listdir(os.path.dirname(self.saved_prefix)), [])
+
+    def test_failed_fetch_writes_nothing(self):
+        self.server.logs[_OCP_LID_TELSLG] = SC_INVALID_FIELD
+        result = self.run_print_only()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Unable to read C9 data', result.stderr)
+        self.assertEqual(result.stdout, '')
+        self.assert_nothing_written()
 
 
 if __name__ == '__main__':

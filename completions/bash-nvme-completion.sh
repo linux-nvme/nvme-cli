@@ -3901,7 +3901,7 @@ plugin_ocp_opts () {
 			;;
 
 		"telemetry-string-log")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --quiet --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-file= -f --output-format= -o --output-format-version= --print-only --quiet --set-options= --timeout= --verbose -v"
 			valopts+=" --output-file -f --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \

@@ -10,10 +10,13 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'ocp telemetry-string-log' <device>
 			[--output-file=<file> | -f <file>] [--no-uuid | -n]
+			[--print-only]
 
 DESCRIPTION
 -----------
 For the NVMe device given, Retrieve OCP Telemetry String Log page
+and print it. The log is also saved as a binary file unless
+--print-only is specified.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
@@ -28,11 +31,16 @@ OPTIONS
 -f <file>::
 --output-file=<file>::
 	Filepath name to where binary output data will be saved to.
+	Defaults to string.bin in the current directory.
 
 -n::
 --no-uuid::
 	Do not try to automatically detect UUID index for this command (default
 	UUID index to 0).
+
+--print-only::
+	Print the log to stdout and save no file. Incompatible with
+	--output-file.
 
 include::global-options.txt[]
 
@@ -43,6 +51,12 @@ EXAMPLES
 ------------
 # nvme ocp telemetry-string-log /dev/nvme0n1
 ------------
+
+* Print the log as JSON to stdout, saving no file.
++
+------------------------------------------------------------
+# nvme ocp telemetry-string-log /dev/nvme0 --print-only -o json
+------------------------------------------------------------
 
 NVME
 ----
