@@ -449,6 +449,8 @@ static const struct {
 		    { "--dump-type=ctlr", "--telemetry-data-area=2" },
 		    { "--dump-type=host0", "--telemetry-data-area=3" },
 		    { "--dump-type=host1,ctlr", "--telemetry-data-area=1" } } },
+	{ { "ocp", "telemetry-string-log", "--print-only" },
+	  .opts = { {}, { "--no-uuid" } } },
 };
 
 #define NR_COMMANDS ARRAY_SIZE(commands)
