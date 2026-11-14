@@ -664,7 +664,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	struct libnvme_passthru_cmd cmd;
 	struct list_head log_pages;
 	nvme_effects_log_node_t *node;
-
+	__u64 cap = 0;
 	int err = -1;
 	nvme_print_flags_t flags;
 
@@ -700,7 +700,6 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	list_head_init(&log_pages);
 
 	if (cfg.csi < 0) {
-		__u64 cap;
 		if (libnvme_transport_handle_is_ns(hdl)) {
 			nvme_show_error("Namespace device isn't allowed without csi");
 			return -EINVAL;
@@ -711,9 +710,8 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 		} else {
 			nvme_init_get_property(&cmd, NVME_REG_CAP);
 			err = libnvme_exec_admin_passthru(hdl, &cmd);
-			if (err)
-				goto cleanup_list;
-			cap = cmd.result;
+			if (!err)
+				cap = cmd.result;
 		}
 
 		if (NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM)
