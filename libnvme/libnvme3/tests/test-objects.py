@@ -5,11 +5,50 @@
 These tests cover object creation, property access, and error handling.
 They do not require real NVMe hardware to run.
 """
+import contextlib
 import errno
 import gc
 import os
 import unittest
 from libnvme3 import nvme
+
+
+def _drain(fd):
+    """Read everything currently buffered on a non-blocking fd."""
+    chunks = []
+    while True:
+        try:
+            chunk = os.read(fd, 65536)
+        except BlockingIOError:
+            break
+        if not chunk:
+            break
+        chunks.append(chunk)
+    return b''.join(chunks).decode(errors='replace')
+
+
+@contextlib.contextmanager
+def capture_libnvme_ref_debug_log():
+    """Capture everything libnvme's ref/unref debug log writes to the
+    real OS-level stderr fd (LIBNVME_REF_DEBUG is read by C code that
+    calls fprintf(stderr, ...), so sys.stderr monkeypatching won't see
+    it -- only an fd-level redirect does). Yields a callable that
+    returns everything captured so far, without blocking.
+    """
+    os.environ['LIBNVME_REF_DEBUG'] = '1'
+    stderr_fd = 2
+    saved_fd = os.dup(stderr_fd)
+    read_fd, write_fd = os.pipe()
+    os.set_blocking(read_fd, False)
+    os.dup2(write_fd, stderr_fd)
+    os.close(write_fd)
+    try:
+        yield lambda: _drain(read_fd)
+    finally:
+        os.dup2(saved_fd, stderr_fd)
+        os.close(saved_fd)
+        os.close(read_fd)
+        del os.environ['LIBNVME_REF_DEBUG']
 
 
 class TestConstants(unittest.TestCase):
@@ -325,6 +364,75 @@ class TestCtrlErrorHandling(unittest.TestCase):
             })
         self.assertEqual(cm.exception.errno, -errno.EINVAL)
         self.assertEqual(cm.exception.message, os.strerror(errno.EINVAL))
+
+
+class TestHostRefCounting(unittest.TestCase):
+    """Host objects obtained via ctx.hosts() must take/release a real
+    libnvme refcount on the underlying C object (see issue #3736),
+    not just extend the parent ctx's Python lifetime via __parent.
+    """
+
+    def setUp(self):
+        self.ctx = nvme.GlobalCtx()
+        (hostnqn, hostid) = nvme.host_get_ids(self.ctx)
+        self.ctx.hostnqn = hostnqn
+        self.ctx.hostid = hostid
+        # Created before capturing starts, so only the iterator's own
+        # ref/unref show up in the captured window below.
+        self.host = nvme.Host(self.ctx)
+
+    def tearDown(self):
+        self.host = None
+        self.ctx = None
+        gc.collect()
+
+    def test_iterator_refs_and_unrefs_the_host(self):
+        with capture_libnvme_ref_debug_log() as drain:
+            hosts = list(self.ctx.hosts())
+            self.assertEqual(len(hosts), 1)
+            after_iterate = drain()
+
+            del hosts
+            gc.collect()
+            after_drop = drain()
+
+        self.assertIn('ref host=', after_iterate)
+        self.assertIn('unref host=', after_drop)
+
+    def test_iterator_ref_logs_the_real_caller_location(self):
+        """The ref debug log must name this test file and a real line
+        number -- the caller's actual location -- not a fixed
+        placeholder string baked into nvme.i.
+        """
+        with capture_libnvme_ref_debug_log() as drain:
+            list(self.ctx.hosts())
+            after_iterate = drain()
+
+        self.assertIn(os.path.basename(__file__), after_iterate)
+        self.assertNotIn('nvme.i', after_iterate)
+
+    def test_constructor_ref_logs_the_real_caller_location(self):
+        """Same requirement as above, for the Host() constructor path."""
+        with capture_libnvme_ref_debug_log() as drain:
+            nvme.Host(self.ctx)
+            after_ctor = drain()
+
+        self.assertIn(os.path.basename(__file__), after_ctor)
+        self.assertNotIn('nvme.i', after_ctor)
+
+    def test_destructor_unref_logs_gc_marker(self):
+        """Destructor runs from GC, not caller code; must log "<gc>", not a
+        fake location.
+        """
+        with capture_libnvme_ref_debug_log() as drain:
+            host = nvme.Host(self.ctx)
+            drain()  # discard the constructor's own ref line
+            del host
+            gc.collect()
+            after_drop = drain()
+
+        self.assertIn('unref host=', after_drop)
+        self.assertIn('<gc>', after_drop)
 
 
 class TestHelperFunctions(unittest.TestCase):
