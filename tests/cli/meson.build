@@ -402,4 +402,8 @@ if python3.found()
     if 'mangoboost' in selected_plugins
         subdir('mangoboost')
     endif
+
+    if 'dapustor' in selected_plugins
+        subdir('dapustor')
+    endif
 endif
