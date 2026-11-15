@@ -425,6 +425,10 @@ enum nvme_cap {
 #define NVME_CAP_CRMS(cap)	NVME_GET(cap, CAP_CRMS)
 #define NVME_CAP_NSSES(cap)	NVME_GET(cap, CAP_NSSES)
 
+#define NVME_CAP_CSS_NCSS(cap)	NVME_GET(NVME_CAP_CSS(cap), CAP_CSS_NCSS)
+#define NVME_CAP_CSS_IOCSS(cap)	NVME_GET(NVME_CAP_CSS(cap), CAP_CSS_IOCSS)
+#define NVME_CAP_CSS_NOIOCSS(cap) NVME_GET(NVME_CAP_CSS(cap), CAP_CSS_NOIOCSS)
+
 /**
  * enum nvme_vs - This field indicates the version
  * @NVME_VS_TER_SHIFT:	Shift amount to get the tertiary version
