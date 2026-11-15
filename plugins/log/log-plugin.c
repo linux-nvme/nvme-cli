@@ -684,7 +684,6 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 		OPT_END()
 	};
 
-
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
@@ -714,11 +713,11 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 				cap = cmd.result;
 		}
 
-		if (err || NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM)
+		if (err || NVME_CAP_CSS_NCSS(cap))
 			err = collect_effects_log(hdl, NVME_CSI_NVM,
 						  &log_pages, flags);
 
-		if (!err && (NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI))
+		if (!err && NVME_CAP_CSS_IOCSS(cap))
 			err = collect_effects_log(hdl, NVME_CSI_ZNS,
 						  &log_pages, flags);
 	} else {
