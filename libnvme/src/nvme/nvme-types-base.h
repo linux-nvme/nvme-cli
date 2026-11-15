@@ -322,6 +322,9 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_NSSS_SHIFT:	Shift amount to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_SHIFT:	Shift amount to get the controller ready modes supported
  * @NVME_CAP_NSSES_SHIFT:	Shift amount to get the NVM subsystem shutdown enhancements supported
+ * @NVME_CAP_CSS_NCSS_SHIFT:	Shift amount to get the CSS.NCSS
+ * @NVME_CAP_CSS_IOCSS_SHIFT:	Shift amount to get the CSS.IOCSS
+ * @NVME_CAP_CSS_NOIOCSS_SHIFT:	Shift amount to get the CSS.NOIOCSS
  * @NVME_CAP_MQES_MASK:		Mask to get the maximum queue entries supported
  * @NVME_CAP_CQR_MASK:		Mask to get the contiguous queues required
  * @NVME_CAP_AMS_MASK:		Mask to get the arbitration mechanism supported
@@ -338,6 +341,9 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_NSSS_MASK:		Mask to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_MASK:		Mask to get the controller ready modes supported
  * @NVME_CAP_NSSES_MASK:	Mask to get the NVM subsystem shutdown enhancements supported
+ * @NVME_CAP_CSS_NCSS_MASK:	Mask to get the CSS.NCSS
+ * @NVME_CAP_CSS_IOCSS_MASK:	Mask to get the CSS.IOCSS
+ * @NVME_CAP_CSS_NOIOCSS_MASK:	Mask to get the CSS.NOIOCSS
  * @NVME_CAP_AMS_WRR:		Weighted round robin with urgent priority class
  * @NVME_CAP_AMS_VS:		Vendor specific
  * @NVME_CAP_CSS_NVM:		NVM command set or a discovery controller
@@ -367,6 +373,9 @@ enum nvme_cap {
 	NVME_CAP_NSSS_SHIFT		= 58,
 	NVME_CAP_CRMS_SHIFT		= 59,
 	NVME_CAP_NSSES_SHIFT		= 61,
+	NVME_CAP_CSS_NCSS_SHIFT		= 0x0,
+	NVME_CAP_CSS_IOCSS_SHIFT	= 0x6,
+	NVME_CAP_CSS_NOIOCSS_SHIFT	= 0x7,
 	NVME_CAP_MQES_MASK		= 0xffff,
 	NVME_CAP_CQR_MASK		= 0x1,
 	NVME_CAP_AMS_MASK		= 0x3,
@@ -383,11 +392,14 @@ enum nvme_cap {
 	NVME_CAP_NSSS_MASK		= 0x1,
 	NVME_CAP_CRMS_MASK		= 0x3,
 	NVME_CAP_NSSES_MASK		= 0x1,
+	NVME_CAP_CSS_NCSS_MASK		= 0x1,
+	NVME_CAP_CSS_IOCSS_MASK		= 0x1,
+	NVME_CAP_CSS_NOIOCSS_MASK	= 0x1,
 	NVME_CAP_AMS_WRR		= 1 << 0,
 	NVME_CAP_AMS_VS			= 1 << 1,
-	NVME_CAP_CSS_NVM		= 1 << 0,
-	NVME_CAP_CSS_CSI		= 1 << 6,
-	NVME_CAP_CSS_ADMIN		= 1 << 7,
+	NVME_CAP_CSS_NVM		= NVME_VAL(CAP_CSS_NCSS),
+	NVME_CAP_CSS_CSI		= NVME_VAL(CAP_CSS_IOCSS),
+	NVME_CAP_CSS_ADMIN		= NVME_VAL(CAP_CSS_NOIOCSS),
 	NVME_CAP_CPS_NONE		= 0,
 	NVME_CAP_CPS_CTRL		= 1,
 	NVME_CAP_CPS_DOMAIN		= 2,
