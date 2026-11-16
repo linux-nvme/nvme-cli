@@ -286,6 +286,10 @@ static bool test_tls(void)
 	srv.cert = certs.srv_name;
 	pass &= check(!run(&srv, &cfg, 64), "exchange with a host name");
 
+	srv.cert = certs.srv_wrong;
+	pass &= check(run(&srv, &cfg, 64) == -EKEYREJECTED,
+		      "server certificate for another host name");
+
 	cfg.server = "127.0.0.1";
 	srv.cert = certs.srv_wrong;
 	pass &= check(run(&srv, &cfg, 64) == -EKEYREJECTED,

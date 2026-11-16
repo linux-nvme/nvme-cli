@@ -215,7 +215,7 @@ static int set_peer_name(SSL *ssl, const char *server)
 	}
 
 	if (!SSL_set_tlsext_host_name(ssl, server) ||
-	    !SSL_set1_host(ssl, server))
+	    !X509_VERIFY_PARAM_set1_host(SSL_get0_param(ssl), server, 0))
 		return -EINVAL;
 
 	return 0;
