@@ -29,6 +29,15 @@
   disconnected only with `--owner` of its owner, or with `--force`. A
   controller without an owner is disconnected as before.
 
+### Build
+
+* On Linux, nvme loads libarchive when a vendor plugin creates a log
+  archive, instead of linking it. nvme no longer depends on libarchive
+  and the compression libraries it brings, nor does an initrd that
+  carries nvme. Packages can make libarchive a weak dependency; without
+  it, only the archive options fail. nvme declares it in an ELF
+  `.note.dlopen` note. Static builds, FreeBSD and Windows still link it.
+
 ### Fabrics
 
 * libnvme applies the defaults of storage vendors for their controllers
