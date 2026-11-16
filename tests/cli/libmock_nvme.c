@@ -1701,3 +1701,22 @@ int get_nprocs(void)
 
 	return resp.result;
 }
+
+/*
+ * With MOCK_DLOPEN_FAIL=<name>, fail every dlopen() of a library whose name
+ * contains <name>, as if it were not installed. Tests use it for the libraries
+ * nvme loads at runtime, such as libarchive.
+ */
+void *dlopen(const char *file, int mode)
+{
+	static void *(*orig_dlopen)(const char *file, int mode);
+	const char *fail = getenv("MOCK_DLOPEN_FAIL");
+
+	if (fail && *fail && file && strstr(file, fail))
+		return NULL;
+
+	if (!orig_dlopen)
+		orig_dlopen = (void *(*)(const char *, int))dlsym(RTLD_NEXT,
+								  "dlopen");
+	return orig_dlopen(file, mode);
+}

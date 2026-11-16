@@ -306,7 +306,7 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 		err = -EINVAL;
 		if (nRet == -ENOTSUP)
 			nvme_show_error(
-				"Failed to create log data package, nvme-cli was built without libarchive support!\n");
+				"Failed to create log data package, libarchive is not available!\n");
 		else
 			nvme_show_error("Failed to create log data package!\n");
 	}

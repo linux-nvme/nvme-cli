@@ -65,7 +65,12 @@ shared_deps = [ccan_dep]
 if host_system != 'windows'
     shared_deps += [openssl_dep]
 endif
-if libarchive_dep.found()
+if libarchive_dlopen
+    shared_deps += [
+        libarchive_dep.partial_dependency(compile_args: true, includes: true),
+        dl_dep,
+    ]
+elif libarchive_dep.found()
     shared_deps += [libarchive_dep]
 endif
 
