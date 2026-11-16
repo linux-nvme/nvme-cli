@@ -103,22 +103,35 @@ static void run(const uint8_t *data, size_t size)
 	alarm(0);
 }
 
+static int is_seed(const struct dirent *e)
+{
+	return e->d_name[0] != '.';
+}
+
+static int name_cmp(const struct dirent **a, const struct dirent **b)
+{
+	return strcmp((*a)->d_name, (*b)->d_name);
+}
+
+/*
+ * The seeds in the order of their names: the mutations pick seeds by
+ * index, and readdir() gives another order on another file system.
+ */
 static int load_seeds(const char *dir)
 {
-	struct dirent *e;
+	struct dirent **names;
 	char path[4096];
-	DIR *d = opendir(dir);
+	int n, i, ret = 0;
 
-	if (!d)
+	n = scandir(dir, &names, is_seed, name_cmp);
+	if (n < 0)
 		return 0;
 
-	while ((e = readdir(d)) && nr_seeds < FUZZ_MAX_SEEDS) {
+	for (i = 0; i < n && nr_seeds < FUZZ_MAX_SEEDS && !ret; i++) {
 		FILE *f;
-		size_t n;
+		size_t len;
 
-		if (e->d_name[0] == '.')
-			continue;
-		snprintf(path, sizeof(path), "%s/%s", dir, e->d_name);
+		snprintf(path, sizeof(path), "%s/%s", dir, names[i]->d_name);
 		f = fopen(path, "rb");
 		if (!f)
 			continue;
@@ -127,21 +140,23 @@ static int load_seeds(const char *dir)
 			fclose(f);
 			break;
 		}
-		n = fread(seeds[nr_seeds].data, 1, FUZZ_MAX_INPUT + 1, f);
+		len = fread(seeds[nr_seeds].data, 1, FUZZ_MAX_INPUT + 1, f);
 		fclose(f);
 		/* a cut seed tests something else */
-		if (n > FUZZ_MAX_INPUT) {
+		if (len > FUZZ_MAX_INPUT) {
 			fprintf(stderr, "%s: larger than %d bytes\n", path,
 				FUZZ_MAX_INPUT);
 			free(seeds[nr_seeds].data);
-			closedir(d);
-			return -1;
+			ret = -1;
+			break;
 		}
-		seeds[nr_seeds].size = n;
+		seeds[nr_seeds].size = len;
 		nr_seeds++;
 	}
-	closedir(d);
-	return 0;
+	for (i = 0; i < n; i++)
+		free(names[i]);
+	free(names);
+	return ret;
 }
 
 /* The bytes which separate or mark things for the parsers */
