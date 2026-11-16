@@ -1508,6 +1508,14 @@ PyObject *exclusion_match(struct libnvme_global_ctx *ctx,
 			  const char *host_traddr, const char *host_iface,
 			  const char *hostnqn, const char *hostid);
 
+/* The git version of the loaded libnvme, libnvme3.__git_version__ */
+%inline %{
+const char *_git_version(void)
+{
+	return libnvme_get_version(LIBNVME_VERSION_GIT);
+}
+%}
+
 %rename(_libnvme_first_host)        libnvme_first_host;
 %rename(_libnvme_next_host)         libnvme_next_host;
 %rename(_libnvme_first_subsystem)   libnvme_first_subsystem;

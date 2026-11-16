@@ -173,32 +173,38 @@ std_prefix = prefixdir == '/usr' or prefixdir == '/usr/local'
 conf = configuration_data()
 requires = ''
 
+# The git version of the source tree. vcs_tag() runs git describe on
+# every build and rewrites its output only when the version changed, so
+# a new commit rebuilds only the files which print it. Without .git, a
+# tarball maybe inside another repository, it is the project version.
 version_tag = get_option('version-tag')
-if version_tag != ''
-    git_version = version_tag
-else
-    git_version = meson.project_version()
-
+git_version = version_tag != '' ? version_tag : meson.project_version()
+git_describe = []
+if version_tag == ''
     git = find_program('git', required: false)
     if git.found() and fs.exists(meson.current_source_dir() / '.git')
-        r = run_command(
-            git,
-            '-C', meson.current_source_dir(),
-            'describe',
-            '--abbrev=7',
-            '--dirty=+',
-            check: false,
-        )
-
-        if r.returncode() == 0
-            git_version = r.stdout().strip()
-            if git_version.startswith('v')
-                git_version = git_version.substring(1)
-            endif
-        endif
+        git_describe = [git, '-C', meson.current_source_dir(), 'describe',
+                        '--abbrev=7', '--dirty=+']
     endif
 endif
-conf.set('GIT_VERSION', '"@0@"'.format(git_version))
+
+# git-version.h.in with @GIT_VERSION@ replaced; libnvme/libnvme3 does the
+# same for the Python package
+if git_describe.length() > 0
+    git_version_h = vcs_tag(
+        input: 'git-version.h.in',
+        output: 'git-version.h',
+        command: git_describe,
+        fallback: git_version,
+        replace_string: '@GIT_VERSION@',
+    )
+else
+    git_version_h = configure_file(
+        input: 'git-version.h.in',
+        output: 'git-version.h',
+        configuration: {'GIT_VERSION': git_version},
+    )
+endif
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('VENDOR_USR_DIR', '"@0@"'.format(vendorusrdir))
@@ -641,7 +647,7 @@ conf.set(
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
 config_dep = declare_dependency(
-    sources: nvme_config_h,
+    sources: [nvme_config_h, git_version_h],
     include_directories: '.',
 )
 
@@ -1073,7 +1079,7 @@ endif
 c_args = get_option('c_args')
 c_link_args = get_option('c_link_args')
 conf_dict = {
-    'git version':      conf.get('GIT_VERSION'),
+    'git version':      git_describe.length() > 0 ? 'git describe at build time' : git_version,
     'CFLAGS':           c_args.length() > 0 ? ' '.join(c_args) : '(none)',
     'LDFLAGS':          c_link_args.length() > 0 ? ' '.join(c_link_args) : '(none)',
 }
