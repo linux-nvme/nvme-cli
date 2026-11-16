@@ -241,7 +241,7 @@ static void test_apply(struct libnvme_global_ctx *ctx)
 	int i;
 
 	printf("apply:\n");
-	/* The match of 71-nvmf-netapp.rules, and udev's patterns */
+	/* The match of 80-nvmf-storage_arrays.rules, and udev's patterns */
 	write_in(lib_dir, "netapp.conf",
 		 "[Model]\nmodel = NetApp ONTAP Controller\n"
 		 "iopolicy = queue-depth\n"
