@@ -58,6 +58,9 @@ NVME_BIN = _resolve_nvme_bin()
 MOCK_LIB = _resolve_mock_lib()
 # Without json-c, some commands ignore '-o json' and print text.
 HAVE_JSON = os.environ.get('NVME_TEST_JSON', '1') == '1'
+# Built with libarchive, which the archive options of the vendor plugins
+# need.
+HAVE_LIBARCHIVE = os.environ.get('NVME_TEST_LIBARCHIVE', '1') == '1'
 
 # Admin command opcodes
 OPC_GET_LOG_PAGE = 0x02
