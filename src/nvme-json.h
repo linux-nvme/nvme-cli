@@ -15,7 +15,8 @@
 #define json_free_object(o) json_object_put(o)
 #define json_free_array(a) json_object_put(a)
 #define json_object_add_value_uint(o, k, v) json_object_object_add(o, k, json_object_new_uint64(v))
-#define json_object_add_value_int(o, k, v) json_object_object_add(o, k, json_object_new_int(v))
+#define json_object_add_value_int(o, k, v) \
+	json_object_object_add(o, k, json_object_new_int64(v))
 #define json_object_add_value_bool(o, k, v) json_object_object_add(o, k, json_object_new_boolean(v))
 #ifndef CONFIG_JSONC_14
 #define json_object_new_uint64(v) util_json_object_new_uint64(v)

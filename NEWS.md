@@ -29,6 +29,11 @@
   disconnected only with `--owner` of its owner, or with `--force`. A
   controller without an owner is disconnected as before.
 
+* The JSON output keeps integers past 32 bits. Before, a 48 or 64 bit
+  counter above 2^31 - 1 came out truncated, and an unsigned 32 bit
+  value above 2^31 - 1 came out negative, such as the counters of
+  `nvme intel smart-log-add`.
+
 ### Plugins
 
 * The normal output of `nvme seagate vs-temperature-stats` prints a

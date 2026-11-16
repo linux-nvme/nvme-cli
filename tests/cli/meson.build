@@ -408,4 +408,8 @@ if python3.found()
     if 'dapustor' in selected_plugins
         subdir('dapustor')
     endif
+
+    if 'intel' in selected_plugins
+        subdir('intel')
+    endif
 endif
