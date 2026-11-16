@@ -723,8 +723,9 @@ static void fuzz_read(void *buf, size_t len)
  * Answer a command from the fuzz input: a control byte, the result
  * dword, and then the data the command reads, none for a write. Most
  * control bytes mean success, the rest an NVMe status (from the next two
- * bytes) or a failed ioctl(). Everything that is no device command
- * fails, so the real function takes over where there is one.
+ * bytes, 0 is a success) or a failed ioctl(). Everything that is no
+ * device command fails, so the real function takes over where there is
+ * one.
  */
 static void *fuzz_ipc_call(struct ipc_request *req,
 			   struct ipc_response *resp)
@@ -775,7 +776,9 @@ static void *fuzz_ipc_call(struct ipc_request *req,
 	if (ctl >= 0xe0) {
 		fuzz_read(&sc, sizeof(sc));
 		resp->sc_status = le16toh(sc) & 0x7fff;
-		return NULL;
+		/* Status 0 is a success, which transfers the data */
+		if (resp->sc_status)
+			return NULL;
 	}
 
 	if (!resp->data_len)
