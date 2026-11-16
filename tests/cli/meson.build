@@ -8,6 +8,8 @@ cli_test_env = environment()
 cli_test_env.prepend('PYTHONPATH', meson.project_source_root())
 # Without json-c, some commands ignore '-o json' and print text.
 cli_test_env.set('NVME_TEST_JSON', json_c_dep.found() ? '1' : '0')
+# Without libarchive, the archive options of the vendor plugins fail.
+cli_test_env.set('NVME_TEST_LIBARCHIVE', libarchive_dep.found() ? '1' : '0')
 
 if python3.found()
     # Standalone CLI test for the ownership registry.  It needs no device

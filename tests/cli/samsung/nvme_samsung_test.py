@@ -27,14 +27,12 @@ import subprocess
 import tarfile
 import unittest
 
-from tests.cli.nvme_mock import (CNS_CTRL, FID_HOST_BEHAVIOR, NVME_BIN,
-                                 OPC_GET_LOG_PAGE, OPC_SET_FEATURES,
-                                 SC_INVALID_FIELD, MockController,
-                                 MockTestCase, Reply, host_behavior,
-                                 main)
-from tests.cli.nvme_mock_ipc import built_with_library
+from tests.cli.nvme_mock import (CNS_CTRL, FID_HOST_BEHAVIOR,
+                                 HAVE_LIBARCHIVE, NVME_BIN, OPC_GET_LOG_PAGE,
+                                 OPC_SET_FEATURES, SC_INVALID_FIELD,
+                                 MockController, MockTestCase, Reply,
+                                 host_behavior, main)
 
-_HAS_LIBARCHIVE = built_with_library(NVME_BIN, 'libarchive')
 _NO_LIBARCHIVE_MSG = 'built without libarchive'
 
 SAMSUNG_VID = 0x144D
@@ -317,7 +315,7 @@ class SamsungCLITest(MockTestCase):
         self.assertEqual(self.files(), ['serial'],
                          'the serial escaped the designated output directory')
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_serial_is_sanitized_before_it_is_used_in_the_archive_name(self):
         self.server.serial = self.BAD_SERIAL
         result = self.run_cmd('-t', 'ctlr', '-O', './serial/', '-z')
@@ -332,7 +330,7 @@ class SamsungCLITest(MockTestCase):
     # -z archiving                                                      #
     # ---------------------------------------------------------------- #
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_produces_an_archive_and_removes_the_temp_dir(self):
         result = self.run_cmd('-t', 'ctlr', '-O', './dumps/', '-z')
         self.assertOk(result)
@@ -346,7 +344,7 @@ class SamsungCLITest(MockTestCase):
                                                     'dumps/temp_samsung_dumps')),
                          'the temporary directory was left behind')
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_archives_the_dump_files_and_nothing_else(self):
         """A directory member would carry the staging directory's mode, and
         tar applies that mode to the directory the archive is extracted
@@ -358,7 +356,7 @@ class SamsungCLITest(MockTestCase):
         self.assertTrue(all(member.isfile() for member in members),
                         [member.name for member in members])
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_treats_shell_metacharacters_as_literal_path_data(self):
         for component in ("odd'; touch PWNED; #", 'odd& echo PWNED &'):
             with self.subTest(component=component):
@@ -373,7 +371,7 @@ class SamsungCLITest(MockTestCase):
                 self.assertFalse(os.path.exists(os.path.join(
                     self.out_dir, component, 'temp_samsung_dumps')))
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_keeps_file_name_prefixes_local(self):
         cases = (
             ('./dumps/run1', f'dumps/run1Samsung_Dump_{SERIAL}.tar.gz',
@@ -779,14 +777,14 @@ class SamsungCLITest(MockTestCase):
         self.assertTrue(any(f.startswith(SERIAL) for f in self.files()),
                         f'nothing written to the cwd: {self.files()}')
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_with_single_data_area(self):
         result = self.run_cmd('-t', 'ctlr', '-a', '2', '-O', './dumps/', '-z')
         self.assertOk(result)
         self.assertTrue(any(f.endswith('.tar.gz') for f in self.files('dumps')),
                         f'no archive: {self.files("dumps")}')
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_with_hide_progress(self):
         result = self.run_cmd('-t', 'ctlr', '-O', './dumps/', '-z', '--hide-progress')
         self.assertOk(result)
@@ -795,7 +793,7 @@ class SamsungCLITest(MockTestCase):
         self.assertIn('100%', result.stdout,
                       'the completion line went missing under -z -H')
 
-    @unittest.skipUnless(_HAS_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
+    @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_into_the_current_directory(self):
         result = self.run_cmd('-t', 'ctlr', '-O', './', '-z')
         self.assertOk(result)
