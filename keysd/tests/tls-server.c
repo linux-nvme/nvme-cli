@@ -56,20 +56,28 @@ static X509 *make_cert(EVP_PKEY *key, const char *cn, const char *san,
 {
 	static long serial = 1;
 	X509V3_CTX ctx;
+	X509_NAME *name;
 	X509 *x;
 
 	x = X509_new();
 	if (!x)
 		return NULL;
 
+	name = X509_NAME_new();
+	if (!name) {
+		X509_free(x);
+		return NULL;
+	}
+
 	X509_set_version(x, 2);		// X.509 v3
 	ASN1_INTEGER_set(X509_get_serialNumber(x), serial++);
 	X509_gmtime_adj(X509_getm_notBefore(x), -60);
 	X509_gmtime_adj(X509_getm_notAfter(x), 3600);
 	X509_set_pubkey(x, key);
-	X509_NAME_add_entry_by_txt(X509_get_subject_name(x), "CN",
-				   MBSTRING_ASC, (const unsigned char *)cn,
-				   -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
+				   (const unsigned char *)cn, -1, -1, 0);
+	X509_set_subject_name(x, name);
+	X509_NAME_free(name);
 	X509_set_issuer_name(x, X509_get_subject_name(issuer ? issuer : x));
 
 	X509V3_set_ctx(&ctx, issuer ? issuer : x, x, NULL, NULL, 0);
