@@ -1035,9 +1035,9 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 /***************************************
  * Temperature-Stats information
  ***************************************/
-static void json_temp_stats(__u32 temperature, __u32 PcbTemp, __u32 SocTemp,
-			    __u32 maxTemperature, __u32 MaxSocTemp,
-			    __u32 cf_err, __u32 scCurrentTemp, __u32 scMaxTem)
+static void json_temp_stats(int temperature, int PcbTemp, int SocTemp,
+			    int maxTemperature, int MaxSocTemp,
+			    __u32 cf_err, int scCurrentTemp, int scMaxTem)
 {
 	__cleanup_json_object struct json_object *root = json_create_object();
 
@@ -1064,8 +1064,9 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	int index;
 	const char *desc = "Retrieve Seagate Temperature Stats information for the given device ";
 	nvme_print_flags_t flags;
-	unsigned int temperature = 0, PcbTemp = 0, SocTemp = 0, scCurrentTemp = 0, scMaxTemp = 0;
-	unsigned long long maxTemperature = 0, MaxSocTemp = 0;
+	int temperature = 0, PcbTemp = 0, SocTemp = 0;
+	int scCurrentTemp = 0, scMaxTemp = 0;
+	long long maxTemperature = 0, MaxSocTemp = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -1091,9 +1092,12 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 		SocTemp = le16_to_cpu(smart_log.temp_sensor[1]);
 		SocTemp = SocTemp ? SocTemp - 273 : 0;
 		if (!(flags & JSON)) {
-			printf("%-20s : %u C\n", "Current Temperature", temperature);
-			printf("%-20s : %u C\n", "Current PCB Temperature", PcbTemp);
-			printf("%-20s : %u C\n", "Current SOC Temperature", SocTemp);
+			printf("%-20s : %d C\n", "Current Temperature",
+			       temperature);
+			printf("%-20s : %d C\n", "Current PCB Temperature",
+			       PcbTemp);
+			printf("%-20s : %d C\n", "Current SOC Temperature",
+			       SocTemp);
 		}
 	}
 
@@ -1106,14 +1110,18 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 				maxTemperature = smart_attribute_vs(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index]);
 				maxTemperature = maxTemperature ? maxTemperature - 273 : 0;
 				if (!(flags & JSON))
-					printf("%-20s : %d C\n", "Highest Temperature", (unsigned int)maxTemperature);
+					printf("%-20s : %d C\n",
+					       "Highest Temperature",
+					       (int)maxTemperature);
 			}
 
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_SOC_LIFE_TEMPERATURE) {
 				MaxSocTemp = smart_attribute_vs(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index]);
 				MaxSocTemp = MaxSocTemp ? MaxSocTemp - 273 : 0;
 				if (!(flags & JSON))
-					printf("%-20s : %d C\n", "Max SOC Temperature", (unsigned int)MaxSocTemp);
+					printf("%-20s : %d C\n",
+					       "Max SOC Temperature",
+					       (int)MaxSocTemp);
 			}
 		}
 	} else {

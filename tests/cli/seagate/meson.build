@@ -10,4 +10,11 @@ if have_mock_nvme and json_c_dep.found()
          env: cli_test_env,
          depends: nvme_runtime + [mock_nvme_lib],
          suite: 'mock')
+    test('seagate - vs-temperature-stats',
+         python3,
+         args: [files('seagate_vs_temperature_stats_mock_test.py'), nvme_exe,
+                mock_nvme_lib],
+         env: cli_test_env,
+         depends: nvme_runtime + [mock_nvme_lib],
+         suite: 'mock')
 endif
