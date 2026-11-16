@@ -119,3 +119,12 @@ checkpatch-diff:
 	  git ls-files --others --exclude-standard | \
 		xargs -r -I{} perl ${CHECKPATCH} --file {} ; } 2>&1 | \
 		perl scripts/checkpatch-filter.pl
+
+# make coccicheck      → report code that should use a shared/ helper
+# make coccicheck-fix  → apply the changes
+.PHONY: coccicheck coccicheck-fix
+coccicheck:
+	scripts/coccicheck.sh
+
+coccicheck-fix:
+	scripts/coccicheck.sh --fix
