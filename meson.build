@@ -183,8 +183,9 @@ git_describe = []
 if version_tag == ''
     git = find_program('git', required: false)
     if git.found() and fs.exists(meson.current_source_dir() / '.git')
+        # --always: the commit of a clone without tags
         git_describe = [git, '-C', meson.current_source_dir(), 'describe',
-                        '--abbrev=7', '--dirty=+']
+                        '--always', '--abbrev=7', '--dirty=+']
     endif
 endif
 
