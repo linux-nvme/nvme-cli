@@ -85,6 +85,30 @@ jobs:
       - name: Check completion files are in sync
         run: meson compile -C .build-ci check-completions
 
+  # Run the semantic patches in scripts/coccinelle/: report code that
+  # should use a shared/ helper.
+  #
+  # If this check fails, run:
+  #   make coccicheck-fix
+  # and commit the result.
+  coccicheck:
+    name: check that the code uses the shared helpers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Install coccinelle
+        run: |
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            --no-install-recommends coccinelle
+      - name: Run the semantic patches
+        run: scripts/coccicheck.sh
+
   libnvme-abi:
     # Starting with the 3.0 release, libnvme's exported symbols must not
     # change in an incompatible way (removed or renamed functions/variables,
