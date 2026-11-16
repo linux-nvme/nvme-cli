@@ -31,16 +31,14 @@ static void config_set_defaults(struct discoverd_config *cfg)
 
 static int parse_uint(const char *val, unsigned int *out)
 {
-	char *end;
-	unsigned long v;
+	uint64_t v;
+	int r;
 
-	if (val[0] == '-')
-		return -EINVAL;
-
-	v = strtoul(val, &end, 10);
-	if (end == val || *end != '\0' || v > UINT_MAX)
-		return -EINVAL;
+	r = shr_parse_u64(val, UINT_MAX, &v);
+	if (r < 0)
+		return r;
 	*out = (unsigned int)v;
+
 	return 0;
 }
 

@@ -6,6 +6,7 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -179,6 +180,28 @@ static bool test_epcsd_poll_interval_zero_ignored(void)
 	return pass;
 }
 
+static bool test_uint_range(void)
+{
+	struct discoverd_config *cfg;
+	bool pass = true;
+
+	printf("test_uint_range:\n");
+
+	cfg = load_text("[Discovery]\n"
+			"fc-kickstart-interval-minutes = 4294967295\n");
+	pass &= check(cfg->fc_kickstart_interval_minutes == UINT_MAX,
+		      "UINT_MAX accepted");
+	config_free(cfg);
+
+	cfg = load_text("[Discovery]\n"
+			"fc-kickstart-interval-minutes = 4294967296\n");
+	pass &= check(cfg->fc_kickstart_interval_minutes == 0,
+		      "UINT_MAX + 1 rejected, default kept");
+	config_free(cfg);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -189,6 +212,7 @@ int main(void)
 	pass &= test_global_key_in_discovery_ignored();
 	pass &= test_invalid_and_unknown_ignored();
 	pass &= test_epcsd_poll_interval_zero_ignored();
+	pass &= test_uint_range();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
