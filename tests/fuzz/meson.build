@@ -52,7 +52,7 @@ if want_nvme and have_mock_nvme
         'device': {
             'sources': ['fuzz-device.c', '../cli/libmock_nvme.c'],
             'objects': nvme_exe.extract_objects(sources),
-            'link_whole': plugin_libs,
+            'link_whole': nvme_link_whole,
             'c_args': ['-DMOCK_FUZZ'],
             'deps': link_deps,
             'link_args': link_args_list,
@@ -77,12 +77,12 @@ if want_top and have_mock_nvme
 endif
 
 # nvme nbft show with the table from the input
-if want_nvme and want_fabrics
+if want_nvme and want_fabrics and 'nbft' in enabled_plugins
     fuzz_targets += {
         'nbft': {
             'sources': ['fuzz-nbft.c'],
             'objects': nvme_exe.extract_objects(sources),
-            'link_whole': plugin_libs,
+            'link_whole': nvme_link_whole,
             'deps': link_deps,
             'link_args': link_args_list,
         },
@@ -96,6 +96,7 @@ foreach name, t : fuzz_targets
             t['sources'],
             objects: t.get('objects', []),
             link_whole: t.get('link_whole', []),
+            export_dynamic: want_plugin_modules and 'link_whole' in t,
             c_args: t.get('c_args', []),
             include_directories: include_directories('../../src'),
             dependencies: t['deps'],
@@ -107,6 +108,7 @@ foreach name, t : fuzz_targets
             t['sources'] + ['fuzz-driver.c'],
             objects: t.get('objects', []),
             link_whole: t.get('link_whole', []),
+            export_dynamic: want_plugin_modules and 'link_whole' in t,
             c_args: t.get('c_args', []),
             include_directories: include_directories('../../src'),
             dependencies: t['deps'],
@@ -119,6 +121,11 @@ foreach name, t : fuzz_targets
             workdir: meson.current_build_dir(),
             suite: 'fuzz',
             timeout: 120,
+            # the plugin modules of the build tree, for the targets which
+            # run nvme
+            env: want_plugin_modules ?
+                {'NVME_PLUGIN_DIR': meson.project_build_root() / 'plugins'} : {},
+            depends: 'objects' in t ? plugin_module_targets : [],
         )
     endif
 endforeach

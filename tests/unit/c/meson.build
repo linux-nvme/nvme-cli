@@ -98,3 +98,30 @@ if want_top
 
     test('nvme-cli - iostat', test_iostat, suite: 'unit')
 endif
+
+if want_plugin_modules
+    # A module outside of the module directory, for path names
+    test_plugin_modules = [shared_module(
+        'outside',
+        'plugin-test-module.c',
+        name_prefix: '',
+        name_suffix: 'so',
+        c_args: ['-DTEST_ABI=NVME_PLUGIN_ABI', '-DTEST_NAME="outside"',
+                 '-DTEST_ID=outside'],
+        dependencies: [config_dep, shared_dep.partial_dependency(includes: true)],
+        override_options: ['b_lundef=false'],
+    )]
+    subdir('plugin-modules')
+
+    test_plugin_loader = executable(
+        'test-plugin-loader',
+        ['test-plugin-loader.c', '../../../src/plugin-loader.c'],
+        include_directories: [include_directories('../../../src'),
+                              plugin_names_inc],
+        dependencies: [config_dep, ccan_dep, dl_dep],
+        export_dynamic: true,
+    )
+    test('nvme-cli - plugin-loader', test_plugin_loader, suite: 'unit',
+         depends: test_plugin_modules,
+         env: {'NVME_PLUGIN_DIR': test_plugin_module_dir})
+endif

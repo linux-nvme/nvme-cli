@@ -33,6 +33,7 @@
 #include <shared/string-util.h>
 
 #include "command-metadata.h"
+#include "plugin-loader.h"
 #include "nvme-json.h"
 #include "plugin.h"
 
@@ -517,6 +518,9 @@ static struct command_metadata_program *build_model(struct program *prog)
 	model = calloc(1, sizeof(*model));
 	if (!model)
 		return NULL;
+
+	/* all commands, of every plugin */
+	nvme_load_plugins();
 
 	model->name = prog->name;
 	model->version = prog->version;

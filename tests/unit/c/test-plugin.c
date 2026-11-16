@@ -28,6 +28,7 @@
 #include "../src/argconfig.h"
 #include "../src/args.h"
 #include "../src/plugin.h"
+#include "../src/plugin-loader.h"
 
 const char *libnvme_strerror(int errnum);
 
@@ -130,6 +131,74 @@ static struct program prog = {
 	.desc = "test program description",
 	.extensions = &builtin_plugin,
 };
+
+#if NVME_PLUGIN_MODULES
+/*
+ * The plugin "lazy" is a module: the stub loader adds it to the list of
+ * extensions, and records what dispatch asked it to load.
+ */
+DEFINE_STUB(lazy_fn, "lazy-cmd", 88)
+
+static struct command cmd_lazy = {
+	"lazy-cmd", "lazy command", lazy_fn, NULL, false
+};
+static struct command *lazy_commands[] = { &cmd_lazy, NULL };
+
+static struct plugin lazy_plugin = {
+	.name = "lazy",
+	.desc = "test module",
+	.version = "1.0",
+	.parent = &prog,
+};
+
+static char loaded_name[32];
+static int nr_load_plugin, nr_load_plugins;
+
+static void load_lazy(void)
+{
+	if (!ext_plugin.next) {
+		plugin_add_group(&lazy_plugin, NULL, lazy_commands);
+		ext_plugin.next = &lazy_plugin;
+	}
+}
+
+void nvme_load_plugin(const char *name)
+{
+	nr_load_plugin++;
+	snprintf(loaded_name, sizeof(loaded_name), "%s", name);
+	if (!strcmp(name, "lazy"))
+		load_lazy();
+}
+
+void nvme_load_plugins(void)
+{
+	nr_load_plugins++;
+	load_lazy();
+}
+
+/* "gone" is a plugin of the build without its module */
+bool nvme_plugin_known(const char *name)
+{
+	return !strcmp(name, "gone") || !strcmp(name, "lazy");
+}
+
+const char *nvme_plugin_dir(void)
+{
+	return "/test/plugins";
+}
+
+static void unload_lazy(void)
+{
+	ext_plugin.next = NULL;
+	free(lazy_plugin.commands);
+	lazy_plugin.commands = NULL;
+	free(lazy_plugin.groups);
+	lazy_plugin.groups = NULL;
+	nr_load_plugin = 0;
+	nr_load_plugins = 0;
+	loaded_name[0] = '\0';
+}
+#endif
 
 struct captured_output {
 	char out[4096];
@@ -457,6 +526,75 @@ static void test_extension_unknown_subcommand(void)
 	      "extension_unknown_subcommand: stderr names the extension");
 }
 
+#if NVME_PLUGIN_MODULES
+#define ANY_RET 1000
+
+/* A command line, and what dispatch loads and prints for it */
+static const struct {
+	const char *args[3];
+	int ret;
+	int nr_load_plugin;	/* nvme_load_plugin() calls */
+	const char *loaded;	/* its last name */
+	int nr_load_plugins;	/* nvme_load_plugins() calls */
+	const char *out;
+	const char *err;
+	const char *desc;
+} lazy_cases[] = {
+	{ { "foo" }, 11, 0, "", 0, "", "",
+	  "a built-in command loads no module" },
+	{ { "ext", "sub" }, 77, 0, "", 0, "", "",
+	  "a registered plugin loads no module" },
+	{ { "lazy", "lazy-cmd" }, 88, 1, "lazy", 0, "", "",
+	  "only the module of the plugin is loaded" },
+	{ { "lazy-lazy-cmd" }, 88, 1, "lazy-lazy-cmd", 1, "", "",
+	  "<plugin>-<command> loads all modules" },
+	{ { "zzz" }, -ENOTTY, 1, "zzz", 1, "",
+	  "invalid sub-command 'zzz'",
+	  "an unknown command loads all modules, and is no plugin" },
+	{ { "help" }, 0, 0, "", 1, "lazy", "",
+	  "the help loads and lists all modules" },
+	{ { "ext", "help" }, 0, 0, "", 0, "", "",
+	  "the help of a plugin loads no module" },
+	{ { "help", "lazy" }, ANY_RET, 1, "lazy", 0, "lazy-cmd", "",
+	  "help <plugin> loads the module of the plugin" },
+	{ { "gone", "cmd" }, -ENOTTY, 1, "gone", 1, "",
+	  "plugin gone not installed: no module in /test/plugins",
+	  "a plugin without its module is not installed" },
+};
+
+/* Modules are loaded only for the commands which need them */
+static void test_lazy_loading(void)
+{
+	struct captured_output cap;
+	char *argv[4];
+	size_t i, j;
+	int argc, ret;
+
+	for (i = 0; i < ARRAY_SIZE(lazy_cases); i++) {
+		argv[0] = "test-prog";
+		argc = 1;
+		for (j = 0; j < ARRAY_SIZE(lazy_cases[i].args) &&
+			    lazy_cases[i].args[j]; j++)
+			argv[argc++] = (char *)lazy_cases[i].args[j];
+
+		unload_lazy();
+		reset_last_call();
+		ret = run_handle_plugin(argv, argc, &builtin_plugin, &cap);
+
+		check((lazy_cases[i].ret == ANY_RET ||
+		       ret == lazy_cases[i].ret) &&
+		      nr_load_plugin == lazy_cases[i].nr_load_plugin &&
+		      !strcmp(loaded_name, lazy_cases[i].loaded) &&
+		      nr_load_plugins == lazy_cases[i].nr_load_plugins &&
+		      strstr(cap.out, lazy_cases[i].out) &&
+		      strstr(cap.err, lazy_cases[i].err),
+		      lazy_cases[i].desc);
+	}
+
+	unload_lazy();
+}
+#endif
+
 /* The global options test_lookup() gives in front of a command */
 static struct argconfig_commandline_options global_options[] = {
 	OPT_INCR("verbose", 'v', &nvme_args.verbose, "verbose"),
@@ -571,6 +709,9 @@ int main(void)
 	test_extension_dispatch_concatenated();
 	test_extension_unknown_subcommand();
 	test_lookup();
+#if NVME_PLUGIN_MODULES
+	test_lazy_loading();
+#endif
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

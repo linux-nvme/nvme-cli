@@ -6,6 +6,6 @@ if json_c_dep.found() and have_mock_nvme
          args: [files('huawei_id_ctrl_mock_test.py'), nvme_exe,
                 mock_nvme_lib],
          env: cli_test_env,
-         depends: [nvme_exe, mock_nvme_lib],
+         depends: nvme_runtime + [mock_nvme_lib],
          suite: 'mock')
 endif

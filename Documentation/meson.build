@@ -636,7 +636,7 @@ if (want_nvme and py3_doc.found() and json_c_dep.found() and
         'update-cmd-lists',
         command: [py3_doc, gen_cmd_lists, '--nvme', nvme_exe,
                   meson.current_source_dir()],
-        depends: nvme_exe,
+        depends: nvme_runtime,
     )
     if want_tests and meson.can_run_host_binaries()
         test(
@@ -644,6 +644,7 @@ if (want_nvme and py3_doc.found() and json_c_dep.found() and
             py3_doc,
             args: [gen_cmd_lists, '--check', '--nvme', nvme_exe,
                    meson.current_source_dir()],
+            depends: nvme_runtime,
             suite: 'check',
         )
     endif

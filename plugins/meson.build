@@ -69,21 +69,76 @@ foreach d : [config_dep, ccan_dep, libnvme_dep, shared_dep, json_c_dep,
                                       sources: true)
 endforeach
 
-# Every plugin is a library of its own, linked into nvme as a whole
+# Every plugin is a library of its own: a module nvme loads when the
+# plugin is used, or linked into nvme as a whole. Modules take the symbols
+# of nvme from the program, which exports them. The plugins other plugins
+# need are shared libraries, as modules cannot be linked to.
 plugin_libs = []
+plugin_targets = {}
+plugin_module_targets = []
+if want_plugin_modules
+  # Marks the module directory of the build tree, see plugin-loader.c
+  configure_file(
+    output: 'nvme-plugin-dir',
+    configuration: {'NVME_PLUGIN_ABI': '"' + conf.get_unquoted('NVME_PLUGIN_ABI') + '"'},
+  )
+
+  # The plugins of this build, a missing module is "not installed"
+  plugin_names = []
+  foreach def : plugin_defs
+    plugin_names += '"@0@"'.format(def['name'])
+  endforeach
+  configure_file(
+    output: 'plugin-names.h',
+    configuration: {'NVME_PLUGIN_NAMES': ', '.join(plugin_names)},
+  )
+endif
+plugin_names_inc = include_directories('.')
 foreach def : ordered_plugin_defs
   srcs = []
   foreach s : def['sources']
     srcs += meson.project_source_root() / s
   endforeach
-  plugin_libs += static_library(
-    'plugin-' + def['dir'],
-    srcs,
-    include_directories: include_directories('../src'),
-    c_args: ['-DNVME_PLUGIN_NAME="@0@"'.format(def['name'])],
-    dependencies: plugin_deps,
-    install: false,
-  )
+  c_args = ['-DNVME_PLUGIN_NAME="@0@"'.format(def['name'])]
+  if not want_plugin_modules
+    plugin_libs += static_library(
+      'plugin-' + def['dir'],
+      srcs,
+      include_directories: include_directories('../src'),
+      c_args: c_args,
+      dependencies: plugin_deps,
+      install: false,
+    )
+    continue
+  endif
+
+  link_with = []
+  foreach need : def['needs']
+    link_with += plugin_targets[need]
+  endforeach
+  module_kwargs = {
+    'name_prefix': '',
+    'name_suffix': 'so',
+    'include_directories': include_directories('../src'),
+    'c_args': c_args + [
+      '-DNVME_PLUGIN_MODULE',
+      '-DNVME_PLUGIN_ID=' + def['name'].replace('-', '_'),
+    ],
+    'dependencies': plugin_deps,
+    'link_with': link_with,
+    'override_options': ['b_lundef=false'],
+    'build_rpath': '$ORIGIN',
+    'install_rpath': '$ORIGIN',
+    'install': true,
+    'install_dir': plugin_module_dir,
+  }
+  if def['dir'] in plugin_providers
+    target = shared_library(def['name'], srcs, kwargs: module_kwargs)
+  else
+    target = shared_module(def['name'], srcs, kwargs: module_kwargs)
+  endif
+  plugin_targets += {def['dir']: target}
+  plugin_module_targets += target
 endforeach
 
 # Pull the full list of valid plugin names straight out of the 'plugins'

@@ -19,7 +19,7 @@ if python3.found()
                 nvme_exe,
                 meson.project_source_root() / 'plugins' / 'utils' / 'command-metadata-schema.json',
             ],
-            depends: nvme_exe,
+            depends: nvme_runtime,
             timeout: 120,
             suite: 'check',
         )
@@ -34,7 +34,7 @@ if python3.found()
                 nvme_exe,
                 meson.project_source_root() / 'Documentation',
             ],
-            depends: nvme_exe,
+            depends: nvme_runtime,
             timeout: 60,
             suite: 'check',
         )
@@ -48,7 +48,7 @@ if python3.found()
                 files('test_option_names.py'),
                 nvme_exe,
             ],
-            depends: nvme_exe,
+            depends: nvme_runtime,
             timeout: 60,
             suite: 'check',
         )

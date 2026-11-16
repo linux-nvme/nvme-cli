@@ -19,7 +19,7 @@ if python3.found()
              python3,
              args: [files('nvme_registry_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe,
+             depends: nvme_runtime,
              suite: 'mock')
     endif
 
@@ -31,7 +31,7 @@ if python3.found()
              python3,
              args: [files('nvme_keys_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe,
+             depends: nvme_runtime,
              suite: 'mock')
     endif
 
@@ -44,7 +44,7 @@ if python3.found()
              python3,
              args: [files('nvme_config_convert_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe,
+             depends: nvme_runtime,
              suite: 'mock')
     endif
 
@@ -56,7 +56,7 @@ if python3.found()
              python3,
              args: [files('nvme_config_create_test.py'), nvme_exe],
              env: cli_test_env,
-             depends: nvme_exe,
+             depends: nvme_runtime,
              suite: 'mock')
     endif
 
@@ -71,7 +71,7 @@ if python3.found()
                  files('nbft/NBFT-unlinked-discovery'),
              ],
              env: cli_test_env,
-             depends: nvme_exe,
+             depends: nvme_runtime,
              suite: 'mock')
 
         test('nvme-cli - nbft-show',
@@ -84,7 +84,7 @@ if python3.found()
                  meson.project_source_root() / 'libnvme/tests/nbft/tables/NBFT-synthetic-2hfi-3ssns-disc-sec',
              ],
              env: cli_test_env,
-             depends: nvme_exe,
+             depends: nvme_runtime,
              suite: 'mock')
     endif
 
@@ -98,7 +98,7 @@ if python3.found()
                  meson.project_source_root() / 'libnvme/tests/sysfs/data',
              ],
              env: cli_test_env,
-             depends: nvme_exe,
+             depends: nvme_runtime,
              timeout: 60,
              suite: 'mock')
     endif
@@ -129,7 +129,7 @@ if python3.found()
                  python3,
                  args: [files('nvme_fabrics_mock_test.py'), nvme_exe, mock_nvme_lib],
                  env: cli_test_env,
-                 depends: [nvme_exe, mock_nvme_lib],
+                 depends: nvme_runtime + [mock_nvme_lib],
                  suite: 'mock')
         endif
 
@@ -253,7 +253,7 @@ if python3.found()
             test('nvme-cli - usage',
                  python3,
                  args: [files('nvme_usage_test.py'), nvme_exe],
-                 depends: nvme_exe,
+                 depends: nvme_runtime,
                  suite: 'mock')
         endif
 
@@ -286,7 +286,7 @@ if python3.found()
                  args: [files('nvme_print_test.py'), nvme_exe,
                         mock_nvme_lib],
                  env: compare_env,
-                 depends: [nvme_exe, mock_nvme_lib],
+                 depends: nvme_runtime + [mock_nvme_lib],
                  timeout: 600,
                  suite: 'mock')
         endif
@@ -311,7 +311,7 @@ if python3.found()
                  python3,
                  args: [files(t[1]), nvme_exe, mock_nvme_lib],
                  env: t[2],
-                 depends: [nvme_exe, mock_nvme_lib],
+                 depends: nvme_runtime + [mock_nvme_lib],
                  timeout: t[3],
                  suite: 'mock')
 
@@ -321,7 +321,7 @@ if python3.found()
                  python3,
                  args: [files(t[1]), nvme_exe, mock_nvme_lib],
                  env: sandbox_env,
-                 depends: [nvme_exe, mock_nvme_lib],
+                 depends: nvme_runtime + [mock_nvme_lib],
                  timeout: t[3],
                  suite: 'mock')
         endforeach
@@ -334,7 +334,7 @@ if python3.found()
                      args: [files('nvme_privsep_test.py'), nvme_exe,
                             mock_nvme_lib, privsep_helper],
                      env: cli_test_env,
-                     depends: [nvme_exe, mock_nvme_lib, privsep_helper],
+                     depends: nvme_runtime + [mock_nvme_lib, privsep_helper],
                      suite: 'mock')
             endif
 
@@ -346,7 +346,7 @@ if python3.found()
                      python3,
                      args: [files(t[1]), nvme_exe, mock_nvme_lib],
                      env: privsep_env,
-                     depends: [nvme_exe, mock_nvme_lib, privsep_helper],
+                     depends: nvme_runtime + [mock_nvme_lib, privsep_helper],
                      timeout: t[3],
                      suite: 'mock')
             endforeach
