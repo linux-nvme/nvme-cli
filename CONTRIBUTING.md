@@ -133,21 +133,41 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "foo",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Foo plugin",
 	.version = NVME_VERSION,
 	/* .core = true,   -- for a "core" plugin, shown in its own section of `nvme help` */
 };
 
-static void __attribute__((constructor)) register_plugin(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);
 }
 ```
 
-Then append `plugins/foo/foo-nvme.c` to the `all_plugins` dict in
-`plugins/meson.build`.
+Then add `plugins/foo/meson.build`, which appends the sources:
+
+```meson
+plugin_sources += [
+    'plugins/foo/foo-nvme.c',
+]
+```
+
+and add `'foo'` to the choices of the `plugins` option in
+`meson_options.txt`.
+
+The build gives the plugin its name, `NVME_PLUGIN_NAME`: the name of the
+directory, unless `meson.build` sets `plugin_name = 'other'`. A plugin
+which calls functions of another plugin names it in `plugin_needs`, as
+`plugins/sandisk` does with `plugin_needs = ['wdc']`.
+
+`NVME_PLUGIN_INIT()` defines the function which registers the plugin. In
+a build with plugin modules (see `Documentation/BUILDING.md`), every
+plugin is a module of its own, which nvme loads when the plugin is used,
+and the function runs then. Otherwise the plugin is linked into nvme and
+the function runs at start, as a constructor. A module uses the
+functions of nvme like a plugin linked in does.
 
 "Core" vs. "vendor" plugin is just the `.core` flag on `struct plugin` --
 it only affects which heading a plugin's listed under on `nvme help`. Both
@@ -164,10 +184,11 @@ not merged into the flat top-level command namespace.
 
 A plugin can span multiple `.c` files (see `plugins/ocp` or
 `plugins/solidigm` for real examples): put the `struct plugin` definition
-and any shared declarations in a small header, `#include` it from each
-file, and have each file call `plugin_add_group()` with its own commands
-(and its own title, if you want `nvme <plugin> help` to show sub-headings)
-. only *one* file should call `register_extension()`.
+and any shared declarations in a small header, and `#include` it from each
+file. A plugin has one `NVME_PLUGIN_INIT()` function. To show the commands
+of the other files under sub-headings in `nvme <plugin> help`, have it
+call a function of each file which calls `plugin_add_group()` with that
+file's commands and title.
 
 ### Add tests for a command
 
