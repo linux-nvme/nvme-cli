@@ -338,7 +338,7 @@ class FabricsMockCLITest(MockTestCase):
 
     def test_connect_vendor_defaults(self):
         """nvme connect applies the vendor defaults (vendor.d) to the
-        controller it connected, as 71-nvmf-netapp.rules does. The order,
+        controller it connected, as 80-nvmf-storage_arrays.rules does. The order,
         the first that sets a value wins: the command line, the admin's
         files in SYSCONFDIR/nvme (sorted after the shipped ones), the
         shipped ones, libnvme's default."""

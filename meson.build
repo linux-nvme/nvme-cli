@@ -943,9 +943,7 @@ if want_nvme
     udev_files = {
         '65-persistent-net-nbft.rules': 'nvmf',
         '70-nvmf-keys.rules':           'nvmf-autoconnect',
-        '71-nvmf-hpe.rules':            'nvmf',
-        '71-nvmf-netapp.rules':         'nvmf',
-        '71-nvmf-vastdata.rules':       'nvmf',
+        '80-nvmf-storage_arrays.rules': 'nvmf',
     }
     if want_nvmf_autoconnect
         udev_files += {'70-nvmf-autoconnect.rules': 'nvmf-autoconnect'}
