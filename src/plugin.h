@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <shared/compiler-attributes-util.h>
+
 #include "nvme-json.h"
 
 struct program {
@@ -129,6 +131,27 @@ int run_replacement_command(struct plugin *plugin, struct command *cmd,
 			    const char *command, int argc, char **argv);
 
 void register_extension(struct plugin *plugin);
+
+/*
+ * NVME_PLUGIN_INIT() - Define the function which registers a plugin
+ *
+ * Used in place of the function's head:
+ *
+ *	NVME_PLUGIN_INIT(register_plugin)
+ *	{
+ *		plugin_add_group(&plugin, NULL, commands);
+ *		register_extension(&plugin);
+ *	}
+ *
+ * A plugin built into nvme registers from a constructor.
+ */
+#define NVME_PLUGIN_INIT(fn)						\
+	static void fn(void);						\
+	static void __shr_constructor fn##_constructor(void)		\
+	{								\
+		fn();							\
+	}								\
+	static void fn(void)
 
 /* The program: main() in main.c, and the fuzz tests, call it */
 int nvme_main(int argc, char **argv);

@@ -13634,7 +13634,7 @@ static struct plugin plugin = {
 	.version = WDC_PLUGIN_VERSION,
 };
 
-static void __shr_constructor register_plugin(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);
