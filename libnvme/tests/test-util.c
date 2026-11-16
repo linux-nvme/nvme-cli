@@ -19,8 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/array_size/array_size.h>
+
 #include <libnvme.h>
 #include <nvme/private.h>
+
+#include "git-version.h"
 
 static size_t safe_strlen(const char *p) {
 	return p ? strlen(p) : strlen("null");
@@ -30,6 +34,35 @@ static bool test_nvme_get_version(enum libnvme_version type, const char * exp_st
 	const char * str;
 	str = libnvme_get_version(type);
 	return !strcmp(str, exp_str);
+}
+
+/* The "v" of a tag is dropped, nothing else */
+static bool test_git_version_strip_v(void)
+{
+	static const struct {
+		const char *describe;
+		const char *version;
+	} cases[] = {
+		{ "v3.2-181-gb5b1b9f+", "3.2-181-gb5b1b9f+" },
+		{ "v3.2", "3.2" },
+		{ "3.2", "3.2" },
+		{ "vendor-1", "vendor-1" },
+		{ "v", "v" },
+		{ "", "" },
+	};
+	bool pass = true;
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
+		const char *v = git_version_strip_v(cases[i].describe);
+
+		if (strcmp(v, cases[i].version)) {
+			printf("git_version_strip_v(\"%s\"): \"%s\"\n",
+			       cases[i].describe, v);
+			pass = false;
+		}
+	}
+	return pass;
 }
 
 static bool test_ipaddrs_eq() {
@@ -170,8 +203,14 @@ int main(int argc, char *argv[]) {
 		exit_val = EXIT_FAILURE;
 
 	printf("\n------------------------------------------------------------------------------\n");
-	pass = test_nvme_get_version(LIBNVME_VERSION_GIT, GIT_VERSION);
+	pass = test_nvme_get_version(LIBNVME_VERSION_GIT,
+				     git_version());
 	printf("libnvme_get_version(LIBNVME_VERSION_GIT) %s\n", pass ? "[PASS]" : "[FAIL]");
+	if (!pass)
+		exit_val = EXIT_FAILURE;
+
+	pass = test_git_version_strip_v();
+	printf("git_version_strip_v() %s\n", pass ? "[PASS]" : "[FAIL]");
 	if (!pass)
 		exit_val = EXIT_FAILURE;
 

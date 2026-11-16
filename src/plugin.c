@@ -13,6 +13,7 @@
 #include "argconfig.h"
 #include "args.h"
 #include "cleanup.h"
+#include "git-version.h"
 #include "plugin.h"
 #include "privsep.h"
 
@@ -21,11 +22,11 @@ static int version_cmd(struct plugin *plugin)
 	struct program *prog = plugin->parent;
 
 	if (plugin->name) {
-		printf("%s %s version %s (git %s)\n",
-			prog->name, plugin->name, plugin->version, GIT_VERSION);
+		printf("%s %s version %s (git %s)\n", prog->name,
+		       plugin->name, plugin->version, git_version());
 	} else {
 		printf("%s version %s (git %s)\n",
-		       prog->name, prog->version, GIT_VERSION);
+		       prog->name, prog->version, git_version());
 	}
 	printf("libnvme version %s (git %s)\n",
 		libnvme_get_version(LIBNVME_VERSION_PROJECT),

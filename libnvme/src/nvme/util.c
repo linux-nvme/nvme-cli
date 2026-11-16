@@ -40,6 +40,7 @@
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
+#include "git-version.h"
 #include "private.h"
 #include "util.h"
 
@@ -513,7 +514,7 @@ __shr_public const char *libnvme_get_version(enum libnvme_version type)
 	case LIBNVME_VERSION_PROJECT:
 		return LIBNVME_VERSION;
 	case LIBNVME_VERSION_GIT:
-		return GIT_VERSION;
+		return git_version();
 	default:
 		return "n/a";
 	}

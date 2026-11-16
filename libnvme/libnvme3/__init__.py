@@ -6,4 +6,11 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 
 __version__ = @LIBNVME_VERSION@
-__git_version__ = @GIT_VERSION@
+
+
+def __getattr__(name):
+    # The git version of the loaded libnvme, not of the build of this file
+    if name == '__git_version__':
+        from .nvme import _git_version
+        return _git_version()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

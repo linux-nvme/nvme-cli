@@ -100,6 +100,7 @@ if want_python
         [ 'config', [ files('tests/test-config.py'), ] ],
         [ 'setattr-guards', [ files('tests/test-setattr.py'), ] ],
         [ 'ctrl-crypto', [ files('tests/test-ctrl-crypto.py'), ] ],
+        [ 'version', [ files('tests/test-version.py'), ] ],
     ]
     foreach test: py_tests
         description = test[0]

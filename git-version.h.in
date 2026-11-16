@@ -1,0 +1,23 @@
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
+/*
+ * This file is part of nvme-cli. Generated on every build, see
+ * meson.build.
+ */
+#pragma once
+
+/* git describe of the source tree, or the version without git */
+#define GIT_VERSION "@GIT_VERSION@"
+
+/* @describe without the "v" of the tag: v3.2-1-gabc1234 is 3.2-1-gabc1234 */
+static inline const char *git_version_strip_v(const char *describe)
+{
+	if (describe[0] == 'v' && describe[1] >= '0' && describe[1] <= '9')
+		return describe + 1;
+	return describe;
+}
+
+/* The git version, GIT_VERSION without the "v" of the tag */
+static inline const char *git_version(void)
+{
+	return git_version_strip_v(GIT_VERSION);
+}
