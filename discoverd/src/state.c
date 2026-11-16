@@ -259,7 +259,7 @@ void state_remove_devid(const char *unit_name)
 	/* The .devid file is named after %N (unit name without .service). */
 	snprintf(base, sizeof(base), "%s", unit_name);
 	dot = strrchr(base, '.');
-	if (dot && !strcmp(dot, ".service"))
+	if (shr_streq0(dot, ".service"))
 		*dot = '\0';
 
 	n = snprintf(path, sizeof(path), "%s/%s.devid", units_dir, base);

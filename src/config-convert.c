@@ -15,6 +15,8 @@
 
 #include <ccan/array_size/array_size.h>
 
+#include <shared/string-util.h>
+
 #include "argconfig.h"
 #include "cleanup.h"
 #include "config-convert.h"
@@ -469,7 +471,7 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
 		*ini_path = strdup(nvme_nvmf_ini_path());
 	} else {
 		ext = strrchr(config_file, '.');
-		if (!ext || strcmp(ext, ".json")) {
+		if (!shr_streq0(ext, ".json")) {
 			*ini_path = strdup(config_file);
 			return *ini_path ? 0 : -ENOMEM;
 		}

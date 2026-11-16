@@ -449,7 +449,7 @@ __shr_public int libnvmf_registry_retrieve(struct libnvme_global_ctx *ctx,
 
 static const char *owner_name(const char *owner)
 {
-	return owner && !strcmp(owner, "nbft") ? "pre-os" : owner;
+	return shr_streq0(owner, "nbft") ? "pre-os" : owner;
 }
 
 __shr_public bool libnvmf_owner_equal(const char *a, const char *b)
@@ -475,7 +475,7 @@ __shr_public int libnvmf_registry_attr_equal(struct libnvme_global_ctx *ctx,
 	rc = libnvmf_registry_retrieve(ctx, device, attr, &stored);
 	if (rc < 0 && rc != -ENOENT)
 		return rc;
-	if (attr && !strcmp(attr, "owner"))
+	if (shr_streq0(attr, "owner"))
 		rc = libnvmf_owner_equal(stored, value) ? 0 : 1;
 	else if (!stored)
 		rc = value ? 1 : 0;

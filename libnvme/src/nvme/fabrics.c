@@ -3353,7 +3353,7 @@ static bool dc_visited_has(const struct dc_visited *v,
 	for (size_t i = 0; i < v->len; i++) {
 		const char *seen = libnvmf_tid_get_canonical(v->items[i]);
 
-		if (seen && !strcmp(seen, canon))
+		if (shr_streq0(seen, canon))
 			return true;
 	}
 
@@ -4160,7 +4160,7 @@ static bool validate_uri(struct libnvme_global_ctx *ctx,
 			 dd->index, uri->scheme);
 		return false;
 	}
-	if (!uri->protocol || strcmp(uri->protocol, "tcp") != 0) {
+	if (!shr_streq0(uri->protocol, "tcp")) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "Discovery Descriptor %d: unsupported transport '%s'\n",
 			 dd->index, uri->protocol);

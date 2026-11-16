@@ -237,7 +237,7 @@ static int global_config_event(enum shr_ini_event event, const char *section,
 	case SHR_INI_SECTION:
 		return 0;
 	case SHR_INI_KV:
-		if (section && !strcmp(section, "Global"))
+		if (shr_streq0(section, "Global"))
 			return apply_kv(gc, key, value, line);
 		k = shr_escape(key);
 		fprintf(stderr,

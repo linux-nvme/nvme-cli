@@ -506,7 +506,7 @@ void libnvmf_vendor_apply(struct libnvme_global_ctx *ctx,
 			set_attr(ctx, devname, strrchr(subsys, '/') + 1,
 				 policy_path, "iopolicy", m->iopolicy, m);
 		if (m->ctrl_loss_tmo && !keep_ctrl_loss_tmo &&
-		    !(transport && !strcmp(transport, "loop")))
+		    !shr_streq0(transport, "loop"))
 			set_attr(ctx, devname, devname, tmo_path,
 				 "ctrl_loss_tmo", m->ctrl_loss_tmo, m);
 	}

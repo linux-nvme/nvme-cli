@@ -133,7 +133,7 @@ static bool extension_matches(struct plugin *extension, enum ext_filter filter,
 {
 	switch (filter) {
 	case EXT_GROUP:
-		return extension->group && !strcmp(extension->group, group_title);
+		return shr_streq0(extension->group, group_title);
 	case EXT_CORE_ONLY:
 		return extension->core && !extension->group;
 	case EXT_VENDOR:
