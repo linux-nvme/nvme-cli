@@ -191,7 +191,10 @@ else
         )
 
         if r.returncode() == 0
-            git_version = r.stdout().strip().replace('^v', '')
+            git_version = r.stdout().strip()
+            if git_version.startswith('v')
+                git_version = git_version.substring(1)
+            endif
         endif
     endif
 endif
