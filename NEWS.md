@@ -29,6 +29,12 @@
   disconnected only with `--owner` of its owner, or with `--force`. A
   controller without an owner is disconnected as before.
 
+### Plugins
+
+* The normal output of `nvme seagate vs-temperature-stats` prints a
+  temperature below 0 C as negative. Before, -10 C came out as
+  4294967286 C.
+
 ### Build
 
 * On Linux, nvme loads libarchive when a vendor plugin creates a log
