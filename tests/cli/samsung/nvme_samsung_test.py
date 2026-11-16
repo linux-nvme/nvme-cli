@@ -344,6 +344,18 @@ class SamsungCLITest(MockTestCase):
                                                     'dumps/temp_samsung_dumps')),
                          'the temporary directory was left behind')
 
+    def test_compress_fails_cleanly_without_the_libarchive_library(self):
+        """nvme loads libarchive at runtime: when it isn't installed, only
+        the archive fails, and the dump files stay where they were staged."""
+        self.env['MOCK_DLOPEN_FAIL'] = 'libarchive'
+        result = self.run_cmd('-t', 'ctlr', '-O', './dumps/', '-z')
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn('Operation not supported', result.stderr)
+        archives = [f for f in self.files('dumps') if f.endswith('.tar.gz')]
+        self.assertFalse(archives, f'an archive appeared: {archives}')
+        self.assertTrue(self.files('dumps/temp_samsung_dumps'),
+                        'the staged dump files are gone')
+
     @unittest.skipUnless(HAVE_LIBARCHIVE, _NO_LIBARCHIVE_MSG)
     def test_compress_archives_the_dump_files_and_nothing_else(self):
         """A directory member would carry the staging directory's mode, and

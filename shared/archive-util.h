@@ -16,11 +16,12 @@
  * its path with any leading '/' stripped, matching how "tar -cf tar_file
  * path..." would name it.
  *
- * No external process is spawned; this links directly against libarchive.
- * When nvme-cli was built without libarchive, this is a stub that always
- * fails, so the feature is disabled rather than falling back to a shell.
+ * No external process is spawned; this uses libarchive, which is loaded at
+ * runtime on Linux. When nvme-cli was built without libarchive or it is not
+ * installed, this fails, so the feature is disabled rather than falling back
+ * to a shell.
  *
- * Return: 0 on success, -ENOTSUP when built without libarchive, -errno
+ * Return: 0 on success, -ENOTSUP when libarchive is not available, -errno
  * otherwise (a path could not be read, or the archive could not be written).
  */
 int shr_tar_create(const char *tar_file, const char *const *paths,
@@ -47,11 +48,12 @@ enum shr_archive_format {
  *
  * Symlinks and other non-regular, non-directory entries are skipped.
  *
- * No external process is spawned; this links directly against libarchive.
- * When nvme-cli was built without libarchive, this is a stub that always
- * fails, so the feature is disabled rather than falling back to a shell.
+ * No external process is spawned; this uses libarchive, which is loaded at
+ * runtime on Linux. When nvme-cli was built without libarchive or it is not
+ * installed, this fails, so the feature is disabled rather than falling back
+ * to a shell.
  *
- * Return: 0 on success, -ENOTSUP when built without libarchive, -errno
+ * Return: 0 on success, -ENOTSUP when libarchive is not available, -errno
  * otherwise.
  */
 int shr_archive_create_dir(const char *archive_file, const char *dir_path,

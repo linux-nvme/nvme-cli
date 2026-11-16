@@ -456,6 +456,17 @@ else
     libarchive_dep = dependency('libarchive', required: get_option('libarchive'))
 endif
 conf.set('CONFIG_LIBARCHIVE', libarchive_dep.found(), description: 'Is libarchive available?')
+# Load libarchive at runtime, so that nvme, and with it every initrd that
+# carries nvme, doesn't depend on it and its compression libraries for the
+# log archives of a few vendor plugins. Only the headers are needed to build.
+libarchive_dlopen = (libarchive_dep.found() and host_system == 'linux'
+    and not is_static)
+conf.set('CONFIG_LIBARCHIVE_DLOPEN', libarchive_dlopen,
+    description: 'Is libarchive loaded at runtime?')
+if libarchive_dlopen
+    # The soname of libarchive 3.
+    conf.set_quoted('LIBARCHIVE_SONAME', 'libarchive.so.13')
+endif
 
 if not discoverd_opt.allowed() and not keysd_opt.allowed()
     libsystemd_dep = dependency('', required: false)

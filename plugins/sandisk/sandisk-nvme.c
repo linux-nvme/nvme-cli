@@ -220,7 +220,7 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 	if (ret) {
 		if (ret == -ENOTSUP)
 			nvme_show_error(
-				"%s: nvme-cli was built without libarchive, archive creation is unavailable",
+				"%s: libarchive is not available, cannot create the tar file",
 				__func__);
 		else
 			nvme_show_error("%s: Failed to create tar file: %s",

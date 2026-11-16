@@ -4193,7 +4193,7 @@ static int wdc_tar_dir_files(const char *tar_file, const char *dir,
 					 (const char *const *)paths, d.num);
 		if (ret == -ENOTSUP)
 			nvme_show_error(
-				"ERROR: WDC: nvme-cli was built without libarchive, archive creation is unavailable");
+				"WDC: libarchive is not available, cannot create the archive");
 	}
 
 	if (!ret && remove_after) {
