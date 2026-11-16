@@ -1140,7 +1140,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "virtium",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Virtium vendor specific extensions",
 	.version = NVME_VERSION,
 };

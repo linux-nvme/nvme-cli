@@ -1177,7 +1177,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "id",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Send NVMe Identify commands, show the results",
 	.version = NVME_VERSION,
 	.core = true,

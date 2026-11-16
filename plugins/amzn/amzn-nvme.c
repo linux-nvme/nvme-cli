@@ -716,7 +716,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "amzn",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Amazon vendor specific extensions",
 	.version = NVME_VERSION,
 };

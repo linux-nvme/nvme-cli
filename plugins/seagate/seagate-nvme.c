@@ -1984,7 +1984,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "seagate",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Seagate vendor specific extensions",
 	.version = NVME_VERSION,
 };

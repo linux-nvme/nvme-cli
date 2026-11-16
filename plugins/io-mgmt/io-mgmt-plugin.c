@@ -222,7 +222,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "io-mgmt",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Submit NVMe I/O Management commands",
 	.version = NVME_VERSION,
 	.core = true,

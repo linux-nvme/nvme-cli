@@ -639,7 +639,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "fdp",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Manage Flexible Data Placement enabled devices",
 	.version = NVME_VERSION,
 	.core = true,

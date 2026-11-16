@@ -1987,7 +1987,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "memblaze",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Memblaze vendor specific extensions",
 	.version = NVME_VERSION,
 };

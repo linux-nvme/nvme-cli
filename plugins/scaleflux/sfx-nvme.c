@@ -2134,7 +2134,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "sfx",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "ScaleFlux vendor specific extensions",
 	.version = NVME_VERSION,
 };

@@ -715,7 +715,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "nbft",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "ACPI NBFT table extensions",
 	.version = NVME_VERSION,
 	.core = true,

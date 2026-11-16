@@ -196,7 +196,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "nvme-mi",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Submit NVMe-MI commands",
 	.version = NVME_VERSION,
 	.core = true,

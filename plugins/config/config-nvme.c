@@ -102,7 +102,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "config",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "NVMeoF connection configuration",
 	.version = NVME_VERSION,
 	.core = true,

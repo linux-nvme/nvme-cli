@@ -237,7 +237,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "solidigm",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Solidigm vendor specific extensions",
 	.version = SOLIDIGM_PLUGIN_VERSION,
 };

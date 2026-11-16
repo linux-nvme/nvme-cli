@@ -1218,7 +1218,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "rpmb",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Replay Protected Memory Block commands",
 	.version = NVME_VERSION,
 	.core = true,

@@ -663,7 +663,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "ibm",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "IBM vendor specific extensions",
 	.version = NVME_VERSION,
 };

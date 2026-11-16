@@ -246,7 +246,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "inspur",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Inspur vendor specific extensions",
 	.version = NVME_VERSION,
 };

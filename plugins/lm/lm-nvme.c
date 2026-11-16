@@ -665,7 +665,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "lm",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Live Migration NVMe extensions",
 	.version = NVME_VERSION,
 	.core = true,

@@ -215,7 +215,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "dera",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Dera vendor specific extensions",
 	.version = NVME_VERSION,
 };

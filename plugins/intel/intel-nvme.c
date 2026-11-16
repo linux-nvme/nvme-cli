@@ -1762,7 +1762,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "intel",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Intel vendor specific extensions",
 	.version = NVME_VERSION,
 };

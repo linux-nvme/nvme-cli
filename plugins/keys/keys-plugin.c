@@ -1186,7 +1186,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "keys",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Manage NVMeoF KX-HMAC-CHAP secrets and TLS PSKs",
 	.version = NVME_VERSION,
 	.core = true,

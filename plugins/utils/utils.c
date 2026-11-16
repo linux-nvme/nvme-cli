@@ -35,7 +35,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "utils",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "General purpose utilities",
 	.version = NVME_VERSION,
 	.core = true,
