@@ -494,8 +494,7 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 	libnvme_for_each_host(ctx, h) {
 		if (strcmp(h->hostnqn, hostnqn))
 			continue;
-		if (hostid && (!h->hostid ||
-		    strcmp(h->hostid, hostid)))
+		if (hostid && !shr_streq0(h->hostid, hostid))
 			continue;
 		return h;
 	}
@@ -1472,7 +1471,7 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, struct libnvme_subsystem 
 
 	FREE_CTRL_ATTR(c->address);
 	c->address = shr_xstrdup(addr);
-	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
+	if (shr_streq0(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
 	ret = libnvme_reconfigure_ctrl(ctx, c, path, name);
 	if (ret)

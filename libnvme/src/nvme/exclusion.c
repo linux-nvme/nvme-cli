@@ -389,7 +389,7 @@ __shr_public bool libnvmf_exclusion_match(struct libnvme_global_ctx *ctx,
 		const char *dot = strrchr(de->d_name, '.');
 		size_t nlen;
 
-		if (!dot || strcmp(dot, ".conf"))
+		if (!shr_streq0(dot, ".conf"))
 			continue;
 
 		nlen = (size_t)(dot - de->d_name);
@@ -447,7 +447,7 @@ __shr_public int libnvmf_exclusion_list_for_each(
 		size_t nlen;
 
 		dot = strrchr(de->d_name, '.');
-		if (!dot || strcmp(dot, ".conf"))
+		if (!shr_streq0(dot, ".conf"))
 			continue;
 
 		nlen = (size_t)(dot - de->d_name);

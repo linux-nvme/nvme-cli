@@ -20,6 +20,7 @@
 #include <libnvme.h>
 
 #include <shared/hash-util.h>
+#include <shared/string-util.h>
 
 #include "args.h"
 #include "cleanup.h"
@@ -183,7 +184,7 @@ int nvme_pre_os_record(struct libnvme_global_ctx *ctx, bool is_dc,
 	 * The kernel takes a connection to the well-known discovery NQN for
 	 * a discovery controller, also without --discovery.
 	 */
-	if (nqn && !strcmp(nqn, NVME_DISC_SUBSYS_NAME))
+	if (shr_streq0(nqn, NVME_DISC_SUBSYS_NAME))
 		is_dc = true;
 
 	parent = strdup(conf);

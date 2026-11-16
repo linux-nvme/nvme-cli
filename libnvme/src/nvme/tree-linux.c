@@ -314,7 +314,7 @@ __shr_public int libnvme_init_ctrl(
 		return -ENVME_CONNECT_LOOKUP_SUBSYS;
 	}
 
-	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
+	if (shr_streq0(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
 
 	c->s = s;

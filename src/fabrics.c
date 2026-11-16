@@ -527,7 +527,7 @@ static int fabrics_connect_nr_io_queues(const char *transport,
 	char ifname[IF_NAMESIZE] = {};
 	int nr_cpus, nr_hw_queues = 0;
 
-	if (!transport || strcmp(transport, "tcp"))
+	if (!shr_streq0(transport, "tcp"))
 		return 0;
 
 	nr_cpus = get_nprocs();
@@ -735,7 +735,7 @@ const char *nvme_nvmf_ini_path(void)
 
 char *nvme_nvmf_config_file(char *config_file)
 {
-	if (config_file && !strcmp(config_file, PATH_NVMF_INI))
+	if (shr_streq0(config_file, PATH_NVMF_INI))
 		return (char *)nvme_nvmf_ini_path();
 
 	return config_file;
@@ -743,7 +743,7 @@ char *nvme_nvmf_config_file(char *config_file)
 
 static const char *none_to_null(const char *value)
 {
-	return value && !strcmp(value, "none") ? NULL : value;
+	return shr_streq0(value, "none") ? NULL : value;
 }
 
 /*
@@ -1334,7 +1334,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	flags = nvme_args.output_flags;
 
-	if (config_file && !strcmp(config_file, "none"))
+	if (shr_streq0(config_file, "none"))
 		config_file = NULL;
 
 	if (config_file)
