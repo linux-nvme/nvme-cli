@@ -252,19 +252,29 @@ class Daemon:
              f'test-sysfs-dir={host.sysfs}', *extra_args],
             env=env, stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL, stderr=self._log_file(host))
-        sock = host.base / 'discoverd.sock'
-        for _ in range(400):
-            if sock.exists() or self.proc.poll() is not None:
-                break
-            time.sleep(0.025)
         self.stderr = ''
-        if not sock.exists():
+        self.sock = self._connect(host.base / 'discoverd.sock')
+        if not self.sock:
             self.stop()
             raise RuntimeError(f'nvme-discoverd did not start:\n{self.stderr}')
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.settimeout(60)
-        self.sock.connect(str(sock))
         self.io = self.sock.makefile('rw', encoding='utf-8')
+
+    def _connect(self, path):
+        """Connect to the control socket, retrying until nvme-discoverd
+        accepts the connection or exits: a loaded machine may run the
+        test before the daemon has set the socket up."""
+        for _ in range(400):
+            if self.proc.poll() is not None:
+                return None
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.settimeout(60)
+            try:
+                sock.connect(str(path))
+                return sock
+            except (FileNotFoundError, ConnectionRefusedError):
+                sock.close()
+            time.sleep(0.025)
+        return None
 
     def _log_file(self, host):
         """The daemon logs to stderr in the sandbox (and to the journal):

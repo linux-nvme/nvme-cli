@@ -56,19 +56,29 @@ class Daemon:
              '--nvme-path', str(test.nvme), '--debug', *set_options],
             env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
             stderr=self._log_file(test))
-        sock = test.base / 'discoverd.sock'
-        for _ in range(200):
-            if sock.exists() or self.proc.poll() is not None:
-                break
-            time.sleep(0.025)
-        if not sock.exists():
+        self.stderr = ''
+        self.sock = self._connect(test.base / 'discoverd.sock')
+        if not self.sock:
             self.stop()
             raise RuntimeError(f'no control socket:\n{self.stderr}')
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.settimeout(10)
-        self.sock.connect(str(sock))
         self.io = self.sock.makefile('rw', encoding='utf-8')
-        self.stderr = ''
+
+    def _connect(self, path):
+        """Connect to the control socket, retrying until nvme-discoverd
+        accepts the connection or exits: a loaded machine may run the
+        test before the daemon has set the socket up."""
+        for _ in range(200):
+            if self.proc.poll() is not None:
+                return None
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            try:
+                sock.connect(str(path))
+                return sock
+            except (FileNotFoundError, ConnectionRefusedError):
+                sock.close()
+            time.sleep(0.025)
+        return None
 
     def _log_file(self, test):
         # A file, not a pipe: the debug log on stderr would fill a pipe
