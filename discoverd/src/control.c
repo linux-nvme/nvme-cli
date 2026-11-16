@@ -392,9 +392,14 @@ int control_start(sd_event *event, const char *path,
 	struct control *c;
 	int r;
 
-	if (strlen(path) >= sizeof(addr.sun_path))
+	/*
+	 * Bind and listen on a temporary name and rename it to path only
+	 * then: a client that sees path can connect. Bound to path itself,
+	 * the socket would exist before listen() and refuse a connection.
+	 */
+	r = snprintf(addr.sun_path, sizeof(addr.sun_path), "%s.new", path);
+	if (r < 0 || (size_t)r >= sizeof(addr.sun_path))
 		return -ENAMETOOLONG;
-	memcpy(addr.sun_path, path, strlen(path) + 1);
 
 	c = calloc(1, sizeof(*c));
 	if (!c)
@@ -416,20 +421,32 @@ int control_start(sd_event *event, const char *path,
 		goto err;
 	}
 
-	unlink(path); // left over from an earlier run
-	if (bind(c->fd, (struct sockaddr *)&addr, sizeof(addr)) < 0 ||
-	    chmod(path, 0600) < 0 || listen(c->fd, 4) < 0) {
+	unlink(addr.sun_path); // left over from an earlier run
+	if (bind(c->fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		r = -errno;
 		goto err;
+	}
+	if (chmod(addr.sun_path, 0600) < 0 || listen(c->fd, 4) < 0) {
+		r = -errno;
+		goto err_unlink;
 	}
 
 	r = sd_event_add_io(event, &c->listen_src, c->fd, EPOLLIN, on_accept,
 			    c);
 	if (r < 0)
-		goto err;
+		goto err_unlink;
+
+	// replaces a socket left over from an earlier run
+	if (rename(addr.sun_path, path) < 0) {
+		r = -errno;
+		sd_event_source_disable_unref(c->listen_src);
+		goto err_unlink;
+	}
 
 	*ret = c;
 	return 0;
+err_unlink:
+	unlink(addr.sun_path);
 err:
 	if (c->fd >= 0)
 		close(c->fd);
