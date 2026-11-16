@@ -38,6 +38,17 @@
   it, only the archive options fail. nvme declares it in an ELF
   `.note.dlopen` note. Static builds, FreeBSD and Windows still link it.
 
+* The plugins are modules, which nvme loads when a command uses them:
+  a command loads at most the module of its plugin, so nvme starts as
+  fast as before. They are installed in
+  `<libdir>/nvme-cli/<version>/plugins`. Without the module of a
+  plugin, `nvme <plugin>` says the plugin is not installed, so packages
+  can ship plugins on their own. The new `plugin-modules` option
+  (`auto` by default) decides; static builds, Windows and fuzz builds
+  link the plugins in, as before. An initramfs which runs a plugin
+  command needs its module, e.g. `nbft.so` for `nvme nbft show`. See
+  [BUILDING.md](Documentation/BUILDING.md).
+
 ### Fabrics
 
 * libnvme applies the defaults of storage vendors for their controllers
