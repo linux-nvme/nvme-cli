@@ -645,7 +645,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "ns",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Manage NVMe namespaces",
 	.version = NVME_VERSION,
 	.core = true,

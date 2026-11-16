@@ -13629,7 +13629,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "wdc",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Western Digital vendor specific extensions",
 	.version = WDC_PLUGIN_VERSION,
 };

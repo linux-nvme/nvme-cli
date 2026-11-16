@@ -320,7 +320,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "dir",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Submit NVMe Directive commands",
 	.version = NVME_VERSION,
 	.core = true,

@@ -446,7 +446,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "ssstc",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "SSSTC vendor specific extensions",
 	.version = NVME_VERSION,
 };

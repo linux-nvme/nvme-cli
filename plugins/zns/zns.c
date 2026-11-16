@@ -1266,7 +1266,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "zns",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Zoned Namespace Command Set",
 	.version = NVME_VERSION,
 	.core = true,

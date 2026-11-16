@@ -408,7 +408,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "innogrit",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "innogrit vendor specific extensions",
 	.version = NVME_VERSION,
 };

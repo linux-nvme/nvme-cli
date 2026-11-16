@@ -297,7 +297,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "registry",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "NVMeoF controller ownership registry",
 	.version = NVME_VERSION,
 	.core = true,

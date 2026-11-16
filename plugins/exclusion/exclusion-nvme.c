@@ -682,7 +682,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "exclusion",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "NVMeoF system-wide exclusion list",
 	.version = NVME_VERSION,
 	.core = true,

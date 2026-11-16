@@ -427,7 +427,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "ymtc",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "YMTC vendor specific extensions",
 	.version = NVME_VERSION,
 };

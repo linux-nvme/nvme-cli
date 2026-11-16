@@ -69,7 +69,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "mangoboost",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "MangoBoost vendor specific extensions",
 	.version = NVME_VERSION,
 };

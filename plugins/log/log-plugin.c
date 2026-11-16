@@ -3176,7 +3176,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "log",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Retrieve and show NVMe log pages",
 	.version = NVME_VERSION,
 	.core = true,

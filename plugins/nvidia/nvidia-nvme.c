@@ -63,7 +63,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "nvidia",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "NVIDIA vendor specific extensions",
 	.version = NVME_VERSION,
 };

@@ -9,7 +9,9 @@ if 'sandisk' in selected_plugins and 'wdc' not in selected_plugins
 endif
 
 # Each plugin directory appends its sources to plugin_sources. It may set
-# plugin_needs to the plugins whose functions it calls.
+# plugin_name, the name of the plugin on the command line, when it is not
+# the name of the directory, and plugin_needs to the plugins whose
+# functions it calls.
 plugin_sources = []
 enabled_plugins = []
 plugin_defs = []
@@ -17,6 +19,7 @@ foreach plugin_dir : selected_plugins
   plugin_dir = plugin_dir.strip()
   if plugin_dir != ''
     n_sources_before = plugin_sources.length()
+    plugin_name = plugin_dir
     plugin_needs = []
     subdir(plugin_dir)
     if plugin_sources.length() > n_sources_before
@@ -27,6 +30,7 @@ foreach plugin_dir : selected_plugins
       endforeach
       plugin_defs += {
         'dir': plugin_dir,
+        'name': plugin_name,
         'sources': srcs,
         'needs': plugin_needs,
       }
@@ -76,6 +80,7 @@ foreach def : ordered_plugin_defs
     'plugin-' + def['dir'],
     srcs,
     include_directories: include_directories('../src'),
+    c_args: ['-DNVME_PLUGIN_NAME="@0@"'.format(def['name'])],
     dependencies: plugin_deps,
     install: false,
   )

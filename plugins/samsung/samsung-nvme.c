@@ -1551,7 +1551,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "samsung",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Samsung vendor specific extensions",
 	.version = SAMSUNG_PLUGIN_VERSION,
 };

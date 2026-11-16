@@ -240,7 +240,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "sed",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "SED Opal Command Set",
 	.version = NVME_VERSION,
 	.core = true,

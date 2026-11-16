@@ -2956,7 +2956,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "ocp",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "OCP cloud SSD extensions",
 	.version = OCP_PLUGIN_VERSION,
 	.core = true,

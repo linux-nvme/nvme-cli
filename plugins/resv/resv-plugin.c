@@ -442,7 +442,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "resv",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Submit NVMe Reservation commands",
 	.version = NVME_VERSION,
 	.core = true,

@@ -4805,7 +4805,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "micron",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Micron vendor specific extensions",
 	.version = NVME_VERSION,
 };

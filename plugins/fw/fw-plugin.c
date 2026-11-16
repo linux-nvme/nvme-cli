@@ -506,7 +506,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "fw",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Manage NVMe controller firmware",
 	.version = NVME_VERSION,
 	.core = true,

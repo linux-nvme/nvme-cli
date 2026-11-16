@@ -1616,7 +1616,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "sndk",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Sandisk vendor specific extensions",
 	.version = SANDISK_PLUGIN_VERSION,
 };

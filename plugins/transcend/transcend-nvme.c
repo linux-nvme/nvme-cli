@@ -106,7 +106,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "transcend",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Transcend vendor specific extensions",
 	.version = NVME_VERSION,
 };

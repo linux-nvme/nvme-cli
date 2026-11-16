@@ -1100,7 +1100,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "netapp",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "NetApp vendor specific extensions",
 	.version = NVME_VERSION,
 };

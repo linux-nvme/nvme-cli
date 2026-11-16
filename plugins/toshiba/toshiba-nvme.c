@@ -566,7 +566,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "toshiba",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "Toshiba NVME plugin",
 	.version = NVME_VERSION,
 };

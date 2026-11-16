@@ -574,7 +574,7 @@ static struct command *commands[] = {
 };
 
 static struct plugin plugin = {
-	.name = "dapustor",
+	.name = NVME_PLUGIN_NAME,
 	.desc = "DapuStor vendor specific extensions",
 	.version = NVME_VERSION,
 };
