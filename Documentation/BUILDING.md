@@ -282,6 +282,36 @@ To build without any vendor plugins:
 $ make PLUGINS=""
 ```
 
+## Plugin modules
+
+The plugins are modules of their own, which nvme loads when a command
+uses them, so a command loads at most the module of its plugin. nvme
+loads all modules only for the lists of commands, `nvme help` and
+`nvme utils dump-command-metadata`, and for a command it doesn't know.
+The `plugin-modules` option decides:
+
+```shell
+$ meson setup .build -Dplugin-modules=disabled
+```
+
+| Value | Plugins |
+|-------|---------|
+| `auto` (default) | modules in a dynamic build on Linux and FreeBSD, linked in otherwise (static builds, Windows, `-Dfuzzing=true`) |
+| `enabled` | modules, an error where they are not possible |
+| `disabled` | linked into nvme |
+
+The modules are installed in `<libdir>/nvme-cli/<version>/plugins`, with
+the `runtime` install tag. A module works only with an nvme of the same
+version, built with the same `src/plugin.h`: nvme ignores another one with
+a warning.
+Without the module of a plugin, `nvme <plugin>` says the plugin is not
+installed, so a distribution can package plugins on their own.
+
+Run from the build tree, nvme takes the modules of the build tree
+(`.build/plugins`). The environment variable `NVME_PLUGIN_DIR` names
+another directory; nvme ignores it when it runs set-user-ID or with file
+capabilities.
+
 ## Building on Windows
 
 nvme-cli can be built on Windows using the [msys2](https://www.msys2.org/)
@@ -303,7 +333,7 @@ with `meson install --tags`.
 
 | Tag | Files |
 |-----|-------|
-| `runtime` | `nvme`, the libnvme shared library, `nvme-privsep-helper`, shell completions |
+| `runtime` | `nvme` and its plugin modules, the libnvme shared library, `nvme-privsep-helper`, shell completions |
 | `devel` | libnvme headers, `libnvme3.so` link, pkg-config file |
 | `python-runtime` | libnvme Python bindings |
 | `man` | man pages |
