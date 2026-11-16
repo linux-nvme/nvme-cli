@@ -52,6 +52,7 @@ if want_nvme and have_mock_nvme
         'device': {
             'sources': ['fuzz-device.c', '../cli/libmock_nvme.c'],
             'objects': nvme_exe.extract_objects(sources),
+            'link_whole': plugin_libs,
             'c_args': ['-DMOCK_FUZZ'],
             'deps': link_deps,
             'link_args': link_args_list,
@@ -81,6 +82,7 @@ if want_nvme and want_fabrics
         'nbft': {
             'sources': ['fuzz-nbft.c'],
             'objects': nvme_exe.extract_objects(sources),
+            'link_whole': plugin_libs,
             'deps': link_deps,
             'link_args': link_args_list,
         },
@@ -93,6 +95,7 @@ foreach name, t : fuzz_targets
             'fuzz-' + name,
             t['sources'],
             objects: t.get('objects', []),
+            link_whole: t.get('link_whole', []),
             c_args: t.get('c_args', []),
             include_directories: include_directories('../../src'),
             dependencies: t['deps'],
@@ -103,6 +106,7 @@ foreach name, t : fuzz_targets
             'fuzz-' + name,
             t['sources'] + ['fuzz-driver.c'],
             objects: t.get('objects', []),
+            link_whole: t.get('link_whole', []),
             c_args: t.get('c_args', []),
             include_directories: include_directories('../../src'),
             dependencies: t['deps'],

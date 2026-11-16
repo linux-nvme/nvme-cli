@@ -8,17 +8,77 @@ if 'sandisk' in selected_plugins and 'wdc' not in selected_plugins
     selected_plugins += 'wdc'
 endif
 
+# Each plugin directory appends its sources to plugin_sources. It may set
+# plugin_needs to the plugins whose functions it calls.
 plugin_sources = []
 enabled_plugins = []
-foreach plugin_name : selected_plugins
-  plugin_name_stripped = plugin_name.strip()
-  if plugin_name_stripped != ''
+plugin_defs = []
+foreach plugin_dir : selected_plugins
+  plugin_dir = plugin_dir.strip()
+  if plugin_dir != ''
     n_sources_before = plugin_sources.length()
-    subdir(plugin_name_stripped)
+    plugin_needs = []
+    subdir(plugin_dir)
     if plugin_sources.length() > n_sources_before
-      enabled_plugins += plugin_name_stripped
+      enabled_plugins += plugin_dir
+      srcs = []
+      foreach i : range(n_sources_before, plugin_sources.length())
+        srcs += plugin_sources[i]
+      endforeach
+      plugin_defs += {
+        'dir': plugin_dir,
+        'sources': srcs,
+        'needs': plugin_needs,
+      }
     endif
   endif
+endforeach
+
+# The plugins other plugins need come first, they are linked to them
+plugin_providers = []
+foreach def : plugin_defs
+  foreach need : def['needs']
+    if need not in enabled_plugins
+      error('the @0@ plugin needs the @1@ plugin'.format(def['dir'], need))
+    endif
+    if need not in plugin_providers
+      plugin_providers += need
+    endif
+  endforeach
+endforeach
+ordered_plugin_defs = []
+foreach def : plugin_defs
+  if def['dir'] in plugin_providers
+    ordered_plugin_defs += def
+  endif
+endforeach
+foreach def : plugin_defs
+  if def['dir'] not in plugin_providers
+    ordered_plugin_defs += def
+  endif
+endforeach
+
+plugin_deps = []
+foreach d : [config_dep, ccan_dep, libnvme_dep, shared_dep, json_c_dep,
+             libkmod_dep]
+  plugin_deps += d.partial_dependency(compile_args: true, includes: true,
+                                      sources: true)
+endforeach
+
+# Every plugin is a library of its own, linked into nvme as a whole
+plugin_libs = []
+foreach def : ordered_plugin_defs
+  srcs = []
+  foreach s : def['sources']
+    srcs += meson.project_source_root() / s
+  endforeach
+  plugin_libs += static_library(
+    'plugin-' + def['dir'],
+    srcs,
+    include_directories: include_directories('../src'),
+    dependencies: plugin_deps,
+    install: false,
+  )
 endforeach
 
 # Pull the full list of valid plugin names straight out of the 'plugins'

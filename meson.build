@@ -772,10 +772,8 @@ subdir('shared')    # declares: shared_dep
 subdir('libnvme')   # declares: libnvme_dep
 
 if want_nvme
-    subdir('plugins')   # declares: plugin_sources
+    subdir('plugins')   # declares: plugin_libs
     subdir('src')       # declares: sources
-
-    sources += plugin_sources
 
     link_args_list = []
     link_deps = [
@@ -814,6 +812,7 @@ if want_nvme
         include_directories: 'src',
         dependencies: link_deps,
         link_args: link_args_list,
+        link_whole: plugin_libs,
         install: true,
         install_dir: sbindir,
     )

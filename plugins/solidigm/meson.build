@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 if json_c_dep.found()
+  plugin_needs = ['ocp']
   plugin_sources += [
       'plugins/solidigm/solidigm-nvme.c',
       'plugins/solidigm/solidigm-id-ctrl.c',
