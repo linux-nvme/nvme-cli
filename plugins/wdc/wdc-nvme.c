@@ -12532,7 +12532,8 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 
 		root = json_create_object();
 
-		json_object_add_value_int(root, "Current Composite Temperature", le32_to_cpu(temperature));
+		json_object_add_value_int(root, "Current Composite Temperature",
+					  temperature);
 		json_object_add_value_int(root, "WCTEMP", le16_to_cpu(id_ctrl.wctemp - 273));
 		json_object_add_value_int(root, "CCTEMP", le16_to_cpu(id_ctrl.cctemp - 273));
 		json_object_add_value_int(root, "DITT support", 0);

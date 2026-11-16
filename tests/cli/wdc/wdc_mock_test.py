@@ -93,9 +93,9 @@ def ocp_c0_log():
     return log
 
 
-def smart_log():
+def smart_log(temperature=310):
     log = bytearray(512)
-    struct.pack_into('<H', log, 1, 310)                 # temperature
+    struct.pack_into('<H', log, 1, temperature)         # Kelvin
     struct.pack_into('<Q', log, 32, 2000)               # data units read
     struct.pack_into('<Q', log, 48, 1000)               # data units written
     return log
@@ -237,6 +237,25 @@ class SN820CLTest(WdcModel, MockTestCase):
         'wdc vs-hw-rev-log',
         'wdc vs-device-waf',
     )
+
+    def test_temperature_stats_below_zero(self):
+        """A composite temperature below 0 C is negative"""
+        self.server.logs[0x02] = smart_log(temperature=263)
+        result = self.check('wdc vs-temperature-stats')
+        self.assertRegex(result.stdout,
+                         r'Current Composite Temperature +: -10 °C')
+
+    def test_temperature_stats_below_zero_json(self):
+        """A composite temperature below 0 C is negative in the JSON
+        output, as in the normal output"""
+        if not HAVE_JSON:
+            self.skipTest('nvme built without json-c')
+        self.server.logs[0x02] = smart_log(temperature=263)
+        result = self.check('wdc vs-temperature-stats',
+                            '--output-format=json')
+        # A status object follows the temperatures.
+        doc, _ = json.JSONDecoder().raw_decode(result.stdout)
+        self.assertEqual(doc['Current Composite Temperature'], -10)
 
 
 def c1_perf_log(hr_cmds, hr_blks, interval=14):
