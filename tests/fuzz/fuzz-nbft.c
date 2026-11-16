@@ -32,6 +32,7 @@
 #include "args.h"
 #include "fuzz.h"
 #include "plugin.h"
+#include "plugin-loader.h"
 
 /* The bits of the variant byte */
 #define VARIANT_JSON		0x01
@@ -57,10 +58,25 @@ static void cleanup(void)
 	rmdir(dir);
 }
 
+/* Without the plugin, from a module maybe, the inputs would test nothing */
+static void check_plugin(void)
+{
+	struct plugin *plugin;
+
+	nvme_load_plugin("nbft");
+	for (plugin = builtin.next; plugin; plugin = plugin->next) {
+		if (!strcmp(plugin->name, "nbft"))
+			return;
+	}
+	fprintf(stderr, "no plugin nbft (module in %s?)\n", nvme_plugin_dir());
+	exit(EXIT_FAILURE);
+}
+
 int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
 	(void)argc;
 	(void)argv;
+	check_plugin();
 	defaults = nvme_args;
 	if (!getcwd(dir, sizeof(dir) - sizeof(NBFT_DIR_TEMPLATE) - 1))
 		abort();

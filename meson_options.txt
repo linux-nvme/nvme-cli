@@ -294,3 +294,9 @@ option(
   value : [],
   description : 'comma-separated list of plugin test suites to run against real hardware ([] = none)'
 )
+option(
+    'plugin-modules',
+    type: 'feature',
+    value: 'auto',
+    description: 'Build the plugins as modules which nvme loads when they are used',
+)

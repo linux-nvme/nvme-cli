@@ -11,7 +11,7 @@ if have_mock_nvme
          python3,
          args: [files('nvme_samsung_test.py'), nvme_exe, mock_nvme_lib],
          env: cli_test_env,
-         depends: [nvme_exe, mock_nvme_lib],
+         depends: nvme_runtime + [mock_nvme_lib],
          suite: 'mock')
 
     if want_mi
@@ -19,7 +19,7 @@ if have_mock_nvme
              python3,
              args: [files('nvme_samsung_mctp_test.py'), nvme_exe, mock_mctp_lib],
              env: cli_test_env,
-             depends: [nvme_exe, mock_mctp_lib],
+             depends: nvme_runtime + [mock_mctp_lib],
              suite: 'mock')
     endif
 endif

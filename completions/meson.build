@@ -47,13 +47,13 @@ if json_c_dep.found() and _py3.found() and 'utils' in selected_plugins
     run_target(
         'update-completions',
         command: _completions_cmd,
-        depends: nvme_exe,
+        depends: nvme_runtime,
     )
 
     run_target(
         'check-completions',
         command: _completions_cmd + ['--check'],
-        depends: nvme_exe,
+        depends: nvme_runtime,
     )
 endif
 

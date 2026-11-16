@@ -646,6 +646,24 @@ conf.set(
 )
 
 project_config_file = 'nvme-config.h'
+# Plugin modules need dlopen() and a dynamic build. The fuzz targets link
+# the plugins in.
+want_plugin_modules = get_option('plugin-modules') \
+    .disable_auto_if(get_option('fuzzing')) \
+    .require(host_system != 'windows' and not is_static,
+             error_message: 'plugin modules need a dynamic non-Windows build') \
+    .require(not get_option('fuzzing'),
+             error_message: 'the fuzz targets link the plugins in') \
+    .allowed()
+plugin_module_dir = prefixdir / get_option('libdir') / 'nvme-cli' / \
+    meson.project_version() / 'plugins'
+conf.set10('NVME_PLUGIN_MODULES', want_plugin_modules)
+conf.set_quoted('NVME_PLUGIN_DIR', plugin_module_dir)
+# The interface between nvme and its modules: the release, and the
+# structures nvme reads from a module
+conf.set_quoted('NVME_PLUGIN_ABI', '@0@-@1@'.format(meson.project_version(),
+    fs.hash(meson.project_source_root() / 'src' / 'plugin.h', 'sha256')))
+
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
 config_dep = declare_dependency(
     sources: [nvme_config_h, git_version_h],
@@ -806,16 +824,23 @@ if want_nvme
         link_args_list = ['-ldl']
     endif
 
+    # Modules take nvme's symbols from the program: all of them
+    nvme_link_whole = want_plugin_modules ? [libshared, libccan] : plugin_libs
+
     nvme_exe = executable(
         'nvme',
         sources + ['src/main.c'],
-        include_directories: 'src',
+        include_directories: ['src', plugin_names_inc],
         dependencies: link_deps,
         link_args: link_args_list,
-        link_whole: plugin_libs,
+        link_whole: nvme_link_whole,
+        export_dynamic: want_plugin_modules,
         install: true,
         install_dir: sbindir,
     )
+
+    # What runs nvme needs the plugin modules too
+    nvme_runtime = [nvme_exe] + plugin_module_targets
 
     if host_system == 'windows' and want_libnvme and (not is_static)
         # Copy libnvme DLL next to nvme.exe so it can be found at
@@ -1072,6 +1097,7 @@ if want_nvme
         'core':      ', '.join(core_plugins),
         'vendor':    ', '.join(vendor_plugins),
         'disabled':  ', '.join(disabled_plugins),
+        'modules':   want_plugin_modules ? plugin_module_dir : 'no, built in',
     }
     summary(plugin_dict, section: 'Plugins')
 endif

@@ -31,7 +31,7 @@ if json_c_dep.found()
                 python3,
                 args: [files(t), nvme_exe, mock_nvme_lib],
                 env: cli_test_env,
-                depends: [nvme_exe, mock_nvme_lib],
+                depends: nvme_runtime + [mock_nvme_lib],
                 timeout: 120,
                 suite: 'mock')
         endforeach
@@ -41,6 +41,6 @@ if json_c_dep.found()
          python3,
          args: [files('micron_plugin_version_test.py'), nvme_exe],
          env: cli_test_env,
-         depends: nvme_exe,
+         depends: nvme_runtime,
          suite: 'mock')
 endif

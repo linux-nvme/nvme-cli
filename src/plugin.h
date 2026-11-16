@@ -143,8 +143,31 @@ void register_extension(struct plugin *plugin);
  *		register_extension(&plugin);
  *	}
  *
- * A plugin built into nvme registers from a constructor.
+ * A plugin built into nvme registers from a constructor. A plugin module
+ * exports nvme_plugin_<id>_init(), which the loader calls once it has
+ * checked nvme_plugin_<id>_abi, the interface the module was built for.
+ * <id> is the name of the plugin with '_' for '-': a module which uses
+ * another one, as sndk uses wdc, has the symbols of both.
  */
+#define __NVME_PLUGIN_SYM(id, sym)	nvme_plugin_##id##_##sym
+#define NVME_PLUGIN_SYM(id, sym)	__NVME_PLUGIN_SYM(id, sym)
+
+#ifdef NVME_PLUGIN_MODULE
+#define NVME_PLUGIN_ABI_SYM	NVME_PLUGIN_SYM(NVME_PLUGIN_ID, abi)
+#define NVME_PLUGIN_INIT_SYM	NVME_PLUGIN_SYM(NVME_PLUGIN_ID, init)
+
+extern __shr_public const char NVME_PLUGIN_ABI_SYM[];
+__shr_public void NVME_PLUGIN_INIT_SYM(void);
+
+#define NVME_PLUGIN_INIT(fn)						\
+	static void fn(void);						\
+	const char NVME_PLUGIN_ABI_SYM[] = NVME_PLUGIN_ABI;		\
+	void NVME_PLUGIN_INIT_SYM(void)					\
+	{								\
+		fn();							\
+	}								\
+	static void fn(void)
+#else
 #define NVME_PLUGIN_INIT(fn)						\
 	static void fn(void);						\
 	static void __shr_constructor fn##_constructor(void)		\
@@ -152,6 +175,7 @@ void register_extension(struct plugin *plugin);
 		fn();							\
 	}								\
 	static void fn(void)
+#endif
 
 /* The program: main() in main.c, and the fuzz tests, call it */
 int nvme_main(int argc, char **argv);

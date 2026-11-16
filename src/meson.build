@@ -33,6 +33,10 @@ sources = [
     'src/field-parser.c',
 ]
 
+if want_plugin_modules
+    sources += ['src/plugin-loader.c']
+endif
+
 if host_system == 'linux'
     sources += [
         'src/nvme-pci-ids-linux.c',
