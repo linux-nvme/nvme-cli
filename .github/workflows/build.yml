@@ -165,9 +165,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: compile and run unit tests
+        # The seccomp profile of Docker 29 makes socket() fail with ENOSYS
+        # for 32-bit x86 processes, and the i386 mock tests run natively:
+        # libmock_nvme can't reach the test and nvme-cli gets the real
+        # ioctl. The container runs only the build and its tests.
         run: |
           docker run --rm \
             --platform linux/amd64 \
+            --security-opt seccomp=unconfined \
             -v "${{ github.workspace }}:/build" \
             -w /build \
             ghcr.io/linux-nvme/ubuntu-cross-${{ matrix.arch }}:latest \
