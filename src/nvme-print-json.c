@@ -5153,39 +5153,13 @@ static void json_output_perror(const char *msg, va_list ap)
 		    libnvme_strerror(err));
 }
 
-static char *trim_white_space(char *str)
-{
-	char *end;
-
-	if (!str)
-		return NULL;
-
-	/* Trim leading space */
-	while (isspace((unsigned char)*str))
-		str++;
-
-	/* All spaces */
-	if (!*str)
-		return str;
-
-	/* Trim trailing space */
-	end = str + strlen(str) - 1;
-	while (end > str && isspace((unsigned char)*end))
-		end--;
-
-	/* Write new null terminator character */
-	end[1] = '\0';
-
-	return str;
-}
-
 static void json_output_key_value(const char *key, const char *val, va_list ap)
 {
 	struct json_object *r = json_r;
 
 	__cleanup_free char *value = NULL;
 	__cleanup_free char *key_dup = strdup(key);
-	char *key_trim = trim_white_space(key_dup);
+	char *key_trim = key_dup ? shr_trim(key_dup) : NULL;
 
 	if (vasprintf(&value, val, ap) < 0)
 		value = NULL;

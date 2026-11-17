@@ -168,18 +168,6 @@ int libnvme_get_ctrl_transport(__shr_unused struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-/*
- * Trim an NVMe spec ASCII field (space-padded, not NUL-terminated) of up
- * to @len characters into a newly allocated, NUL-terminated string.
- */
-static char *dup_ascii_field(const char *field, size_t len)
-{
-	while (len > 0 && field[len - 1] == ' ')
-		len--;
-
-	return strndup(field, len);
-}
-
 __shr_public int libnvme_scan_ctrl(
 		struct libnvme_global_ctx *ctx,
 		const char *name,
@@ -213,12 +201,12 @@ __shr_public int libnvme_scan_ctrl(
 		return ret;
 
 	if (id->subnqn[0])
-		subsysnqn = dup_ascii_field(id->subnqn, sizeof(id->subnqn));
+		subsysnqn = shr_buf2str(id->subnqn, sizeof(id->subnqn));
 	else {
 		__cleanup_free char *model =
-			dup_ascii_field(id->mn, sizeof(id->mn));
+			shr_buf2str(id->mn, sizeof(id->mn));
 		__cleanup_free char *serial =
-			dup_ascii_field(id->sn, sizeof(id->sn));
+			shr_buf2str(id->sn, sizeof(id->sn));
 
 		/*
 		 * Same "no subsysnqn reported" placeholder scheme the
