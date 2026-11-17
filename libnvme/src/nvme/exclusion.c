@@ -600,8 +600,7 @@ __shr_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
 			fputs(line, fout);
 
 			/* Classify a scratch copy; "line" must stay intact. */
-			strncpy(parsebuf, line, sizeof(parsebuf) - 1);
-			parsebuf[sizeof(parsebuf) - 1] = '\0';
+			shr_strscpy(parsebuf, line, sizeof(parsebuf));
 			classify_line(shr_trim(parsebuf), &in_excl, &val);
 			has_section |= in_excl;
 		}
@@ -771,8 +770,7 @@ __shr_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
 		 * would otherwise clobber the trailing newline in "line" before
 		 * it gets passed through to fout.
 		 */
-		strncpy(parsebuf, line, sizeof(parsebuf) - 1);
-		parsebuf[sizeof(parsebuf) - 1] = '\0';
+		shr_strscpy(parsebuf, line, sizeof(parsebuf));
 
 		/* Everything except the entry being removed passes through. */
 		if (classify_line(shr_trim(parsebuf), &in_excl,

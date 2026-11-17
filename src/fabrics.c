@@ -534,7 +534,7 @@ static int fabrics_connect_nr_io_queues(const char *transport,
 		return 0;
 
 	if (host_iface && host_iface[0]) {
-		strncpy(ifname, host_iface, IF_NAMESIZE - 1);
+		shr_strscpy(ifname, host_iface, sizeof(ifname));
 	} else {
 		if (shr_route_get_egress_iface(host_traddr, traddr,
 				ifname, IF_NAMESIZE))

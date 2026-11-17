@@ -16,6 +16,7 @@
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/nqn-util.h>
+#include <shared/string-util.h>
 
 #include <libnvme.h>
 
@@ -291,9 +292,8 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 
 	ssns->index = le16_to_cpu(raw_ssns->index);
-	strncpy(ssns->transport, trtype_to_string(raw_ssns->trtype),
-		sizeof(ssns->transport) - 1);
-	ssns->transport[sizeof(ssns->transport) - 1] = '\0';
+	shr_strscpy(ssns->transport, trtype_to_string(raw_ssns->trtype),
+		    sizeof(ssns->transport));
 
 	/* transport specific flags */
 	ssns->trflags = le16_to_cpu(raw_ssns->trflags);
@@ -556,9 +556,8 @@ static int read_hfi(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft,
 		/* TCP */
 		struct nbft_hfi_info_tcp *raw_hfi_info_tcp;
 
-		strncpy(hfi->transport, trtype_to_string(raw_hfi->trtype),
-			sizeof(hfi->transport) - 1);
-		hfi->transport[sizeof(hfi->transport) - 1] = '\0';
+		shr_strscpy(hfi->transport, trtype_to_string(raw_hfi->trtype),
+			    sizeof(hfi->transport));
 
 		ret = get_heap_obj(ctx, raw_hfi, trinfo_obj,
 			0, &raw_hfi_info_tcp);

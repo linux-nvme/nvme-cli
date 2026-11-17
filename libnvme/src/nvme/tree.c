@@ -1153,7 +1153,7 @@ char *libnvme_parse_src_addr(struct libnvme_global_ctx *ctx,
 		return NULL;
 	}
 
-	strncpy(src_addr, p, l);
+	memcpy(src_addr, p, l);
 	src_addr[l] = '\0';
 	return src_addr;
 }
