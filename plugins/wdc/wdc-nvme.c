@@ -56,7 +56,7 @@
 #include "plugin.h"
 #include "src/cleanup.h"
 
-#define WDC_PLUGIN_VERSION   "2.15.1"
+#define WDC_PLUGIN_VERSION   "3.2.0"
 
 #include "wdc-nvme-cmds.h"
 #include "wdc-utils.h"
@@ -5328,10 +5328,10 @@ static int wdc_print_latency_monitor_log_normal(struct libnvme_transport_handle 
 	printf("  Feature Status                     0x%x\n", log_data->feature_status);
 	printf("  Active Bucket Timer                %d min\n", 5*le16_to_cpu(log_data->active_bucket_timer));
 	printf("  Active Bucket Timer Threshold      %d min\n", 5*le16_to_cpu(log_data->active_bucket_timer_threshold));
-	printf("  Active Threshold A                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_a+1)));
-	printf("  Active Threshold B                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_b+1)));
-	printf("  Active Threshold C                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_c+1)));
-	printf("  Active Threshold D                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_d+1)));
+	printf("  Active Threshold A                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_a)+1));
+	printf("  Active Threshold B                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_b)+1));
+	printf("  Active Threshold C                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_c)+1));
+	printf("  Active Threshold D                 %d ms\n", 5*(le16_to_cpu(log_data->active_threshold_d)+1));
 	printf("  Active Latency Config              0x%x\n", le16_to_cpu(log_data->active_latency_config));
 	printf("  Active Latency Minimum Window      %d ms\n", 100*log_data->active_latency_min_window);
 	printf("  Active Latency Stamp Units         %d\n", le16_to_cpu(log_data->active_latency_stamp_units));
@@ -5412,10 +5412,10 @@ static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_lo
 	json_object_add_value_int(root, "Feature Status", log_data->feature_status);
 	json_object_add_value_int(root, "Active Bucket Timer", 5*le16_to_cpu(log_data->active_bucket_timer));
 	json_object_add_value_int(root, "Active Bucket Timer Threshold", 5*le16_to_cpu(log_data->active_bucket_timer_threshold));
-	json_object_add_value_int(root, "Active Threshold A", 5*le16_to_cpu(log_data->active_threshold_a+1));
-	json_object_add_value_int(root, "Active Threshold B", 5*le16_to_cpu(log_data->active_threshold_b+1));
-	json_object_add_value_int(root, "Active Threshold C", 5*le16_to_cpu(log_data->active_threshold_c+1));
-	json_object_add_value_int(root, "Active Threshold D", 5*le16_to_cpu(log_data->active_threshold_d+1));
+	json_object_add_value_int(root, "Active Threshold A", 5*(le16_to_cpu(log_data->active_threshold_a)+1));
+	json_object_add_value_int(root, "Active Threshold B", 5*(le16_to_cpu(log_data->active_threshold_b)+1));
+	json_object_add_value_int(root, "Active Threshold C", 5*(le16_to_cpu(log_data->active_threshold_c)+1));
+	json_object_add_value_int(root, "Active Threshold D", 5*(le16_to_cpu(log_data->active_threshold_d)+1));
 	json_object_add_value_int(root, "Active Latency Config", le16_to_cpu(log_data->active_latency_config));
 	json_object_add_value_int(root, "Active Lantency Minimum Window", 100*log_data->active_latency_min_window);
 	json_object_add_value_int(root, "Active Latency Stamp Units", le16_to_cpu(log_data->active_latency_stamp_units));
@@ -12514,18 +12514,27 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 		       libnvme_transport_handle_get_name(hdl), WDC_DE_GLOBAL_NSID);
 
 		printf("Current Composite Temperature           : %d °C\n", temperature);
-		printf("WCTEMP                                  : %"PRIu16" °C\n", id_ctrl.wctemp - 273);
-		printf("CCTEMP                                  : %"PRIu16" °C\n", id_ctrl.cctemp - 273);
+		printf("WCTEMP                                  : %"PRIu16" °C\n",
+				(le16_to_cpu(id_ctrl.wctemp) - 273));
+		printf("CCTEMP                                  : %"PRIu16" °C\n",
+				(le16_to_cpu(id_ctrl.cctemp) - 273));
 		printf("DITT support                            : 0\n");
-		printf("HCTM support                            : %"PRIu16"\n", id_ctrl.hctma);
+		printf("HCTM support                            : %"PRIu16"\n",
+				le16_to_cpu(id_ctrl.hctma));
 
-		printf("HCTM Light (TMT1)                       : %"PRIu16" °C\n", temp_tmt1);
-		printf("TMT1 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp1_trans_count);
-		printf("TMT1 Total Time                         : %"PRIu32"\n", smart_log.thm_temp1_total_time);
+		printf("HCTM Light (TMT1)                       : %"PRIu16" °C\n",
+				le16_to_cpu(temp_tmt1));
+		printf("TMT1 Transition Counter                 : %"PRIu32"\n",
+				le32_to_cpu(smart_log.thm_temp1_trans_count));
+		printf("TMT1 Total Time                         : %"PRIu32"\n",
+				le32_to_cpu(smart_log.thm_temp1_total_time));
 
-		printf("HCTM Heavy (TMT2)                       : %"PRIu16" °C\n", temp_tmt2);
-		printf("TMT2 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp2_trans_count);
-		printf("TMT2 Total Time                         : %"PRIu32"\n", smart_log.thm_temp2_total_time);
+		printf("HCTM Heavy (TMT2)                       : %"PRIu16" °C\n",
+				le16_to_cpu(temp_tmt2));
+		printf("TMT2 Transition Counter                 : %"PRIu32"\n",
+				le32_to_cpu(smart_log.thm_temp2_trans_count));
+		printf("TMT2 Total Time                         : %"PRIu32"\n",
+				le32_to_cpu(smart_log.thm_temp2_total_time));
 		printf("Thermal Shutdown Threshold              : 95 °C\n");
 	} else if (fmt == JSON) {
 		struct json_object *root;
@@ -12534,8 +12543,8 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 
 		json_object_add_value_int(root, "Current Composite Temperature",
 					  temperature);
-		json_object_add_value_int(root, "WCTEMP", le16_to_cpu(id_ctrl.wctemp - 273));
-		json_object_add_value_int(root, "CCTEMP", le16_to_cpu(id_ctrl.cctemp - 273));
+		json_object_add_value_int(root, "WCTEMP", (le16_to_cpu(id_ctrl.wctemp) - 273));
+		json_object_add_value_int(root, "CCTEMP", (le16_to_cpu(id_ctrl.cctemp) - 273));
 		json_object_add_value_int(root, "DITT support", 0);
 		json_object_add_value_int(root, "HCTM support", le16_to_cpu(id_ctrl.hctma));
 
