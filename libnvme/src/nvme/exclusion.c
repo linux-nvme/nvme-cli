@@ -652,7 +652,8 @@ __shr_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
  */
 static int excl_entry_from_ctrl(struct libnvme_ctrl *c, char *buf, size_t len)
 {
-	int n = 0;
+	size_t n = 0;
+	int ret = 0;
 
 	if (!c->transport || !c->traddr || !c->subsysnqn)
 		return -EINVAL;
@@ -660,8 +661,9 @@ static int excl_entry_from_ctrl(struct libnvme_ctrl *c, char *buf, size_t len)
 	/* Emit only the fields that are present; never a bare "trsvcid=". */
 #define APPEND(fmt, ...) \
 	do { \
-		if (n >= 0 && (size_t)n < len) \
-			n += snprintf(buf + n, len - n, fmt, ##__VA_ARGS__); \
+		if (!ret) \
+			ret = shr_snprintf_append(buf, len, &n, fmt, \
+						  ##__VA_ARGS__); \
 	} while (0)
 
 	APPEND("transport=%s;traddr=%s", c->transport, c->traddr);
@@ -673,7 +675,7 @@ static int excl_entry_from_ctrl(struct libnvme_ctrl *c, char *buf, size_t len)
 
 #undef APPEND
 
-	return (n > 0 && (size_t)n < len) ? 0 : -ENAMETOOLONG;
+	return ret ? -ENAMETOOLONG : 0;
 }
 
 __shr_public int libnvmf_exclusion_add_ctrl(struct libnvme_global_ctx *ctx,

@@ -827,22 +827,23 @@ static void stdout_zns_report_zone_attrs_decoded(char *buf, size_t len,
 		__u8 za, __u8 zai)
 {
 	const char * const recommended_limit[4] = {"", "1", "2", "3"};
-	int n;
+	size_t n = 0;
 
-	n = snprintf(buf, len, "%sValid", za & NVME_ZNS_ZA_ZDEV ? "" : "Not ");
+	shr_snprintf_append(buf, len, &n, "%sValid",
+			    za & NVME_ZNS_ZA_ZDEV ? "" : "Not ");
 
 	if (za & NVME_ZNS_ZA_RZR)
-		n += snprintf(buf + n, len - n,
-			      ", Reset Recommended (Limit %s)",
-			      recommended_limit[NVME_ZNS_ZAI_RZRTL(zai)]);
+		shr_snprintf_append(buf, len, &n,
+				    ", Reset Recommended (Limit %s)",
+				    recommended_limit[NVME_ZNS_ZAI_RZRTL(zai)]);
 
 	if (za & NVME_ZNS_ZA_FZR)
-		n += snprintf(buf + n, len - n,
-			      ", Finish Recommended (Limit %s)",
-			      recommended_limit[NVME_ZNS_ZAI_FZRTL(zai)]);
+		shr_snprintf_append(buf, len, &n,
+				    ", Finish Recommended (Limit %s)",
+				    recommended_limit[NVME_ZNS_ZAI_FZRTL(zai)]);
 
 	if (za & NVME_ZNS_ZA_ZFC)
-		snprintf(buf + n, len - n, ", Finished by Controller");
+		shr_snprintf_append(buf, len, &n, ", Finished by Controller");
 }
 
 static struct nvme_zns_desc *stdout_zns_report_zones_desc(void *report,
