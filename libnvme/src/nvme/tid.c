@@ -527,7 +527,7 @@ __shr_public const char *libnvmf_tid_get_canonical(
 {
 	struct libnvmf_tid *p = (struct libnvmf_tid *)tid;
 	char buf[CANONICAL_MAX] = "";
-	int n = 0;
+	size_t n = 0;
 
 	if (!tid)
 		return NULL;
@@ -535,12 +535,12 @@ __shr_public const char *libnvmf_tid_get_canonical(
 	if (p->_canonical)
 		return p->_canonical;
 
-	/* n stays < CANONICAL_MAX so (CANONICAL_MAX - n) cannot wrap. */
 #define APPEND(key, field) \
 	do { \
-		if (p->field && n < (int)CANONICAL_MAX) \
-			n += snprintf(buf + n, CANONICAL_MAX - n, "%s%s=%s", \
-				      n ? ";" : "", key, p->field); \
+		if (p->field) \
+			shr_snprintf_append(buf, CANONICAL_MAX, &n, \
+					    "%s%s=%s", n ? ";" : "", key, \
+					    p->field); \
 	} while (0)
 
 	APPEND("transport",   transport);
@@ -571,7 +571,7 @@ __shr_public const char *libnvmf_tid_str(const struct libnvmf_tid *tid)
 	struct libnvmf_tid *p = (struct libnvmf_tid *)tid;
 	char buf[CANONICAL_MAX];
 	const char *sep = "";
-	int n = 1;
+	size_t n = 1;
 
 	if (!tid)
 		return NULL;
@@ -583,9 +583,9 @@ __shr_public const char *libnvmf_tid_str(const struct libnvmf_tid *tid)
 
 #define APPEND(field) \
 	do { \
-		if (p->field && p->field[0] && n < (int)CANONICAL_MAX) { \
-			n += snprintf(buf + n, CANONICAL_MAX - n, "%s%s", \
-				      sep, p->field); \
+		if (p->field && p->field[0]) { \
+			shr_snprintf_append(buf, CANONICAL_MAX, &n, "%s%s", \
+					    sep, p->field); \
 			sep = ", "; \
 		} \
 	} while (0)
@@ -596,8 +596,7 @@ __shr_public const char *libnvmf_tid_str(const struct libnvmf_tid *tid)
 	APPEND(subsysnqn);
 	APPEND(host_iface);
 	APPEND(host_traddr);
-	if (n < (int)CANONICAL_MAX)
-		snprintf(buf + n, CANONICAL_MAX - n, ")");
+	shr_snprintf_append(buf, CANONICAL_MAX, &n, ")");
 
 #undef APPEND
 
