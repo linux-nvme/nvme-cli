@@ -921,7 +921,7 @@ __shr_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 	if (!tls_key)
 		return 0;
 
-	if (!strncmp(tls_key, "pin:", 4)) {
+	if (shr_startswith(tls_key, "pin:")) {
 		unsigned char *raw_secret = NULL;
 		char *encoded_key = NULL;
 		int key_len = 32;
@@ -1527,7 +1527,7 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 		return -ENVME_CONNECT_TARG;
 	}
 
-	if (strncmp(transport, "loop", 4)) {
+	if (!shr_startswith(transport, "loop")) {
 		if (!libnvme_ctrl_get_traddr(c)) {
 			libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "need a address (-a) argument\n");
 			return -ENVME_CONNECT_AARG;
@@ -4467,7 +4467,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 
 				params.host_traddr = NULL;
 				if (!fctx->ctrl_params.host_traddr &&
-				    !strncmp((*ss)->transport, "tcp", 3))
+				    shr_startswith((*ss)->transport, "tcp"))
 					params.host_traddr =
 						hfi->tcp_info.ipaddr;
 
@@ -4568,7 +4568,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 
 			host_traddr = NULL;
 			if (!fctx->ctrl_params.host_traddr &&
-			    !strncmp(uri->protocol, "tcp", 3))
+			    shr_startswith(uri->protocol, "tcp"))
 				host_traddr = hfi->tcp_info.ipaddr;
 			if (uri->port > 0) {
 				if (asprintf(&trsvcid, "%d", uri->port) < 0) {

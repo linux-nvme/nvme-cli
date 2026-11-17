@@ -2588,7 +2588,7 @@ static void stdout_dev_full_path(struct libnvme_ns *n, char *path, size_t len)
 	struct stat st;
 
 	snprintf(path, len, "%s", libnvme_ns_get_name(n));
-	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
+	if (shr_startswith(path, "/dev/spdk/") && stat(path, &st) == 0)
 		return;
 
 	snprintf(path, len, "/dev/%s", libnvme_ns_get_name(n));
@@ -2613,7 +2613,7 @@ static void stdout_generic_full_path(struct libnvme_ns *n, char *path, size_t le
 	 * chardevice.
 	 */
 	snprintf(path, len, "%s", libnvme_ns_get_name(n));
-	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
+	if (shr_startswith(path, "/dev/spdk/") && stat(path, &st) == 0)
 		return;
 
 	if (sscanf(libnvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance) != 2)

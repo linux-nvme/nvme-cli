@@ -101,8 +101,8 @@ int libnvme_ctrl_load_phy_slot(struct libnvme_ctrl *c)
 		__cleanup_free char *addr = NULL;
 
 		if (entry->d_type != DT_DIR ||
-		    !strncmp(entry->d_name, ".", 1) ||
-		    !strncmp(entry->d_name, "..", 2))
+		    shr_startswith(entry->d_name, ".") ||
+		    shr_startswith(entry->d_name, ".."))
 			continue;
 
 		ret = asprintf(&path, "%s/%s", slots_sysfs_dir, entry->d_name);

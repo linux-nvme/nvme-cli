@@ -1258,9 +1258,10 @@ int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "No transport specified\n");
 		return -EINVAL;
 	}
-	if (strncmp(params->transport, "loop", 4) &&
-	    strncmp(params->transport, "pcie", 4) &&
-	    strncmp(params->transport, "apple-nvme", 10) && !params->traddr) {
+	if (!shr_startswith(params->transport, "loop") &&
+	    !shr_startswith(params->transport, "pcie") &&
+	    !shr_startswith(params->transport, "apple-nvme") &&
+	    !params->traddr) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"No transport address for '%s'\n", params->transport);
 		return -EINVAL;

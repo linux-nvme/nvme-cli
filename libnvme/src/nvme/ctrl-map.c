@@ -304,7 +304,7 @@ static char *ctrl_name_extract(const char *ctrl_name)
 		return NULL;
 
 	/* ctrl_name must start with "nvme" */
-	if (strncmp(p, "nvme", 4))
+	if (!shr_startswith(p, "nvme"))
 		return NULL;
 	p += 4;
 
@@ -571,9 +571,9 @@ libnvme_ctrl_map_lookup_by_physdrive(struct libnvme_global_ctx *ctx,
 	 * device number X from the path.
 	 */
 	num_str = drive_path;
-	if (strncmp(num_str, "\\\\.\\PhysicalDrive", 17) == 0)
+	if (shr_startswith(num_str, "\\\\.\\PhysicalDrive"))
 		num_str += 17;
-	else if (strncmp(num_str, "PhysicalDrive", 13) == 0)
+	else if (shr_startswith(num_str, "PhysicalDrive"))
 		num_str += 13;
 
 	target_num = strtoul(num_str, &endptr, 10);

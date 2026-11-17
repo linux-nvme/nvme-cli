@@ -42,8 +42,8 @@ static __shr_unused int __libnvme_transport_handle_open_direct(
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 
 	/* Convert device name to Windows path */
-	if (strncmp(name, "\\\\.\\", 4) == 0
-	    || strncmp(name, "\\\\?\\", 4) == 0) {
+	if (shr_startswith(name, "\\\\.\\")
+	    || shr_startswith(name, "\\\\?\\")) {
 		/* Already a Windows device path */
 		device_path = strdup(name);
 		if (!device_path)
@@ -127,7 +127,7 @@ __shr_public int libnvme_open(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 
 	/* Handle test devices */
-	if (!strncmp(name, "NVME_TEST_FD", 12)) {
+	if (shr_startswith(name, "NVME_TEST_FD")) {
 		hdl->name = strdup(name);
 		if (!hdl->name) {
 			free(hdl);
@@ -145,7 +145,7 @@ __shr_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	}
 
 	/* MI transport not supported on Windows */
-	if (!strncmp(name, "mctp:", strlen("mctp:"))) {
+	if (shr_startswith(name, "mctp:")) {
 		libnvme_close(hdl);
 		return -ENOTSUP;
 	}
@@ -194,7 +194,7 @@ __shr_public void libnvme_close(struct libnvme_transport_handle *hdl)
 
 	is_test_fd = hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT &&
 		hdl->fd == LIBNVME_TEST_FD &&
-		hdl->name && !strncmp(hdl->name, "NVME_TEST_FD", 12);
+		hdl->name && shr_startswith(hdl->name, "NVME_TEST_FD");
 
 	free(hdl->name);
 

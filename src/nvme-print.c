@@ -17,6 +17,7 @@
 #include <shared/int-util.h>
 #include <shared/mmio-util.h>
 #include <shared/sandbox-util.h>
+#include <shared/string-util.h>
 #include <shared/temp-util.h>
 
 #include "cleanup.h"
@@ -1685,7 +1686,7 @@ void nvme_dev_full_path(struct libnvme_ns *n, char *path, size_t len)
 	struct stat st;
 
 	snprintf(path, len, "%s", libnvme_ns_get_name(n));
-	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
+	if (shr_startswith(path, "/dev/spdk/") && stat(path, &st) == 0)
 		return;
 
 	snprintf(path, len, "/dev/%s", libnvme_ns_get_name(n));
@@ -1709,7 +1710,7 @@ void nvme_generic_full_path(struct libnvme_ns *n, char *path, size_t len)
 	 * chardevice.
 	 */
 	snprintf(path, len, "%s", libnvme_ns_get_name(n));
-	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
+	if (shr_startswith(path, "/dev/spdk/") && stat(path, &st) == 0)
 		return;
 
 	if (sscanf(libnvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance) != 2)

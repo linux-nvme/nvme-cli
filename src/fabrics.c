@@ -49,7 +49,6 @@
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-#include <ccan/str/str.h>
 #include <shared/io-util.h>
 #include <shared/net-util.h>
 #include <shared/sig-util.h>
@@ -1150,7 +1149,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	if (device) {
 		if (!strcmp(device, "none"))
 			device = NULL;
-		else if (!strncmp(device, "/dev/", 5))
+		else if (shr_startswith(device, "/dev/"))
 			device += 5;
 	}
 
@@ -1629,7 +1628,7 @@ static int disconnect_by_device(struct libnvme_global_ctx *ctx,
 	char *p;
 
 	while ((p = shr_strsep(&device, ",")) != NULL) {
-		if (!strncmp(p, "/dev/", 5))
+		if (shr_startswith(p, "/dev/"))
 			p += 5;
 
 		c = lookup_nvme_ctrl(ctx, p);
@@ -2068,9 +2067,9 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 	}
 
 	/* Allow partial name (e.g. "reg" for "register" */
-	if (strstarts("register", cfg.tas)) {
+	if (shr_startswith("register", cfg.tas)) {
 		tas = NVMF_DIM_TAS_REGISTER;
-	} else if (strstarts("deregister", cfg.tas)) {
+	} else if (shr_startswith("deregister", cfg.tas)) {
 		tas = NVMF_DIM_TAS_DEREGISTER;
 	} else {
 		nvme_show_error("Invalid --task: %s", cfg.tas);
@@ -2115,7 +2114,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		char *d = cfg.device;
 
 		while ((p = shr_strsep(&d, ",")) != NULL) {
-			if (!strncmp(p, "/dev/", 5))
+			if (shr_startswith(p, "/dev/"))
 				p += 5;
 			ret = libnvme_scan_ctrl(ctx, p, &c);
 			if (ret) {

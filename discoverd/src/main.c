@@ -1346,7 +1346,7 @@ static bool sysfs_ctrl_deleting(const char *devname)
 {
 	__cleanup_free char *state = sysfs_nvme_attr(devname, "state");
 
-	return !state || !strncmp(state, "deleting", 8);
+	return !state || shr_startswith(state, "deleting");
 }
 
 static void on_nvme_remove(const char *devname,
