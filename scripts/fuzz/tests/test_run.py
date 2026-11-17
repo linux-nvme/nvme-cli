@@ -62,6 +62,17 @@ time.sleep(60)
 """
 
 
+def _ctrl_c() -> None:
+    """Press Ctrl-C after a second. The SIGINT goes to the main thread,
+    as the kernel delivers it to nvme-fuzz run. Valgrind may deliver a
+    SIGINT to the process to this thread instead. Python 3.15 waits for
+    a process in one poll(), which nothing interrupts then."""
+    main = threading.main_thread().ident
+    assert main is not None
+    time.sleep(1)
+    signal.pthread_kill(main, signal.SIGINT)
+
+
 class JobEnvTest(unittest.TestCase):
     def test_short_allocation_stacks(self) -> None:
         with mock.patch.dict(os.environ, {'ASAN_OPTIONS': 'verbosity=1'}):
@@ -388,11 +399,7 @@ class RunTest(unittest.TestCase):
         corpus.mkdir(parents=True)
         (corpus / 'redundant-1').write_bytes(b'\x01x')
 
-        def ctrl_c() -> None:
-            time.sleep(1)
-            os.kill(os.getpid(), signal.SIGINT)
-
-        threading.Thread(target=ctrl_c).start()
+        threading.Thread(target=_ctrl_c).start()
         start = time.time()
         self.assertEqual(self._run('merge-sleep', 600, jobs=2), 130)
         self.assertLess(time.time() - start, 30)
@@ -426,11 +433,7 @@ class RunTest(unittest.TestCase):
         self.assertLess(time.time() - start, 30)
 
     def test_interrupt(self) -> None:
-        def ctrl_c() -> None:
-            time.sleep(1)
-            os.kill(os.getpid(), signal.SIGINT)
-
-        threading.Thread(target=ctrl_c).start()
+        threading.Thread(target=_ctrl_c).start()
         start = time.time()
         self.assertEqual(self._run('sleep', seconds=600), 130)
         self.assertLess(time.time() - start, 30)
