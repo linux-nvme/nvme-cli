@@ -38,10 +38,11 @@ for rule in scripts/coccinelle/*.cocci; do
 	fi
 done
 
-# One file per group (groups are separated by a blank line), tests left out.
+# One file per group (groups are separated by a blank line). Tests and
+# generated files are left out.
 groups=$(mktemp)
 trap 'rm -f "$out" "$res" "$groups"' EXIT
-git ls-files -- $dirs | grep '\.c$' | grep -v '/tests/' | \
+git ls-files -- $dirs | grep '\.c$' | grep -v -e '/tests/' -e '/generated/' | \
 	awk '{ print; print "" }' > "$groups"
 
 for rule in scripts/coccinelle/*.cocci; do
