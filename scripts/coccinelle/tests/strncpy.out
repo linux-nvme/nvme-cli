@@ -1,0 +1,7 @@
+@@ -3,6 +3,5 @@
+
+ void f(char *d, const char *s, size_t n)
+ {
+-	strncpy(d, s, n);
+ 	memcpy(d, s, n);
+ }
