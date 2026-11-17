@@ -83,18 +83,14 @@ size_t shr_dir_prefix_len(const char *path)
 static char *join_path(const char *dir, const char *path)
 {
 	char *out;
-	size_t len;
 
 	if (!dir)
 		return strdup(path);
 	if (!path || !*path)
 		return strdup(dir);
 
-	len = strlen(dir) + 1 + strlen(path) + 1;
-	out = malloc(len);
-	if (!out)
+	if (asprintf(&out, "%s/%s", dir, path) < 0)
 		return NULL;
-	snprintf(out, len, "%s/%s", dir, path);
 
 	return out;
 }

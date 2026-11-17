@@ -51,15 +51,10 @@ static __shr_unused int __libnvme_transport_handle_open_direct(
 	} else {
 		/* Assume it's a device name, prepend Windows device prefix */
 		/* PhysicalDriveN format */
-		size_t len = strlen(name) + 5;
-		int ret;
-
-		device_path = malloc(len);
-		if (!device_path)
+		if (asprintf(&device_path, "\\\\.\\%s", name) < 0) {
+			device_path = NULL;
 			return -ENOMEM;
-		ret = snprintf(device_path, len, "\\\\.\\%s", name);
-		if (ret < 0 || (size_t)ret >= len)
-			return -EINVAL;
+		}
 	}
 
 	hdl->fd = CreateFileA(device_path,
