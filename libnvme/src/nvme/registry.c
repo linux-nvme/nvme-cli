@@ -78,7 +78,7 @@ static bool valid_device(const char *device)
 {
 	const char *p;
 
-	if (!device || strncmp(device, "nvme", 4) != 0)
+	if (!device || !shr_startswith(device, "nvme"))
 		return false;
 	p = device + 4;
 	if (!*p)

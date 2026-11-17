@@ -35,6 +35,7 @@
 
 #include <ccan/minmax/minmax.h>
 #include <shared/sig-util.h>
+#include <shared/string-util.h>
 
 #include "dashboard.h"
 #include "nvme-print.h"
@@ -491,17 +492,18 @@ again:
 				for (i = 0; i < n; ) {
 					char *s = &buf[i];
 
-					if (!strncmp(s, "SUBSYSTEM=block", 15))
+					if (shr_startswith(s,
+						"SUBSYSTEM=block"))
 						is_subsys_block = 1;
 
-					if (!strncmp(s, "DEVNAME=nvme", 12))
+					if (shr_startswith(s, "DEVNAME=nvme"))
 						is_devname_nvme = 1;
 
-					if (!strncmp(s,
-						"SUBSYSTEM=nvme-subsystem", 24))
+					if (shr_startswith(s,
+						"SUBSYSTEM=nvme-subsystem"))
 						is_subsys_nvme_subsys = 1;
 
-					if (!strncmp(s, "SUBSYSTEM=nvme", 14))
+					if (shr_startswith(s, "SUBSYSTEM=nvme"))
 						is_subsys_nvme = 1;
 
 					i += strlen(s) + 1;

@@ -274,9 +274,9 @@ static int resolve_txt(sd_json_variant *parameters,
 		if (!kv)
 			continue;
 
-		if (!*ret_transport && !strncmp(kv, "p=", 2))
+		if (!*ret_transport && shr_startswith(kv, "p="))
 			*ret_transport = proto_to_transport(kv + 2);
-		else if (!*ret_nqn && !strncmp(kv, "nqn=", 4))
+		else if (!*ret_nqn && shr_startswith(kv, "nqn="))
 			*ret_nqn = kv + 4;
 	}
 

@@ -863,8 +863,8 @@ static int argconfig_parse_long(struct argconfig_parser *p, char *arg)
 
 	s = argconfig_find_long_any(p->root, name, len);
 	if (!s) {
-		bool help = len == 4 && !strncmp(name, "help", 4);
-		bool version = len == 7 && !strncmp(name, "version", 7);
+		bool help = len == 4 && shr_startswith(name, "help");
+		bool version = len == 7 && shr_startswith(name, "version");
 
 		if (help && !p->global)
 			return ARGCONFIG_HELP;

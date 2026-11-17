@@ -27,7 +27,7 @@
  */
 static bool is_valid_test_base_dir(const char *path)
 {
-	return path && !strncmp(path, "/tmp/", 5) && !strstr(path, "..");
+	return path && shr_startswith(path, "/tmp/") && !strstr(path, "..");
 }
 
 __shr_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)

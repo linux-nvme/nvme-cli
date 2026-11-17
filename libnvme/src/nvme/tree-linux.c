@@ -621,7 +621,7 @@ int libnvme_get_ctrl_transport(__shr_unused struct libnvme_global_ctx *ctx,
 			if (_a)
 				p = _a;
 			_a = a;
-			if (!strncmp(a, "nvme", 4))
+			if (shr_startswith(a, "nvme"))
 				break;
 			a = strtok_r(NULL, "/", &e);
 		}
@@ -640,13 +640,13 @@ int libnvme_get_ctrl_transport(__shr_unused struct libnvme_global_ctx *ctx,
 
 		a = strtok_r(address, ",", &e);
 		while (a && strlen(a)) {
-			if (!strncmp(a, "traddr=", 7))
+			if (shr_startswith(a, "traddr="))
 				*traddr = strdup(a + 7);
-			else if (!strncmp(a, "trsvcid=", 8))
+			else if (shr_startswith(a, "trsvcid="))
 				*trsvcid = strdup(a + 8);
-			else if (!strncmp(a, "host_traddr=", 12))
+			else if (shr_startswith(a, "host_traddr="))
 				*host_traddr = strdup(a + 12);
-			else if (!strncmp(a, "host_iface=", 11))
+			else if (shr_startswith(a, "host_iface="))
 				*host_iface = strdup(a + 11);
 			a = strtok_r(NULL, ",", &e);
 		}

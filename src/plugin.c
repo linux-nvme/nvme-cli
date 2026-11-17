@@ -572,7 +572,7 @@ static int lookup_joined_command(int argc, char **argv, struct plugin *plugin,
 	nvme_load_plugins();
 
 	for (extension = plugin->next; extension; extension = extension->next) {
-		if (!strncmp(argv[0], extension->name, strlen(extension->name)))
+		if (shr_startswith(argv[0], extension->name))
 			break;
 	}
 	if (!extension) {

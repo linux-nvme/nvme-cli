@@ -63,13 +63,13 @@ bool shr_nqn_valid(const char *nqn)
 	if (len > SHR_NQN_MAX_LEN)
 		return false;
 
-	if (strncmp(nqn, NQN_PREFIX, strlen(NQN_PREFIX)))
+	if (!shr_startswith(nqn, NQN_PREFIX))
 		return false;
 
 	if (!charset_valid(nqn))
 		return false;
 
-	if (!strncmp(nqn, NQN_UUID_PREFIX, strlen(NQN_UUID_PREFIX)))
+	if (shr_startswith(nqn, NQN_UUID_PREFIX))
 		return shr_uuid_str_valid(nqn + strlen(NQN_UUID_PREFIX));
 
 	/* "nqn." + "yyyy-mm" + "." + at least one more character */
@@ -94,7 +94,7 @@ bool shr_nqn_normalize(char *nqn)
 	if (!nqn)
 		return false;
 
-	if (strncmp(nqn, NQN_UUID_PREFIX, strlen(NQN_UUID_PREFIX)))
+	if (!shr_startswith(nqn, NQN_UUID_PREFIX))
 		return false;
 
 	/* tolower is locale aware, thus hand role our own version */
