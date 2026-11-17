@@ -32,18 +32,6 @@ int libnvmf_ctrl_load_fabrics_attrs(__shr_unused struct libnvme_ctrl *c)
 	return 0;
 }
 
-/*
- * Trim an NVMe spec ASCII field (space-padded, not NUL-terminated) of up
- * to @len characters into a newly allocated, NUL-terminated string.
- */
-static char *dup_ascii_field(const char *field, size_t len)
-{
-	while (len > 0 && field[len - 1] == ' ')
-		len--;
-
-	return strndup(field, len);
-}
-
 int libnvme_ctrl_load_identity(struct libnvme_ctrl *c)
 {
 	struct nvme_id_ctrl id_ctrl;
@@ -53,9 +41,9 @@ int libnvme_ctrl_load_identity(struct libnvme_ctrl *c)
 	if (ret != 0)
 		return ret;
 
-	c->attrs->firmware = dup_ascii_field(id_ctrl.fr, sizeof(id_ctrl.fr));
-	c->attrs->model = dup_ascii_field(id_ctrl.mn, sizeof(id_ctrl.mn));
-	c->attrs->serial = dup_ascii_field(id_ctrl.sn, sizeof(id_ctrl.sn));
+	c->attrs->firmware = shr_buf2str(id_ctrl.fr, sizeof(id_ctrl.fr));
+	c->attrs->model = shr_buf2str(id_ctrl.mn, sizeof(id_ctrl.mn));
+	c->attrs->serial = shr_buf2str(id_ctrl.sn, sizeof(id_ctrl.sn));
 	if (!c->attrs->firmware || !c->attrs->model || !c->attrs->serial)
 		return -ENOMEM;
 

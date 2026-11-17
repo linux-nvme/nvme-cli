@@ -952,32 +952,11 @@ char *libnvme_ctrl_map_entry_get_subsys_name(
 	return subsysname;
 }
 
-static char *copy_and_rtrim(const char *src, size_t src_size)
-{
-	char *dst;
-	size_t len = src_size;
-
-	if (!src)
-		return NULL;
-
-	while (len > 0 && isspace((unsigned char)src[len - 1]))
-		len--;
-
-	dst = malloc(len + 1);
-	if (!dst)
-		return NULL;
-
-	memcpy(dst, src, len);
-	dst[len] = '\0';
-
-	return dst;
-}
-
 char *libnvme_ctrl_map_entry_get_subnqn(const struct ctrl_map_entry *entry)
 {
 	if (!entry)
 		return NULL;
-	return copy_and_rtrim(entry->id_ctrl.subnqn,
+	return shr_buf2str(entry->id_ctrl.subnqn,
 			      sizeof(entry->id_ctrl.subnqn));
 }
 
@@ -985,21 +964,21 @@ char *libnvme_ctrl_map_entry_get_serial(const struct ctrl_map_entry *entry)
 {
 	if (!entry)
 		return NULL;
-	return copy_and_rtrim(entry->id_ctrl.sn, sizeof(entry->id_ctrl.sn));
+	return shr_buf2str(entry->id_ctrl.sn, sizeof(entry->id_ctrl.sn));
 }
 
 char *libnvme_ctrl_map_entry_get_model(const struct ctrl_map_entry *entry)
 {
 	if (!entry)
 		return NULL;
-	return copy_and_rtrim(entry->id_ctrl.mn, sizeof(entry->id_ctrl.mn));
+	return shr_buf2str(entry->id_ctrl.mn, sizeof(entry->id_ctrl.mn));
 }
 
 char *libnvme_ctrl_map_entry_get_firmware(const struct ctrl_map_entry *entry)
 {
 	if (!entry)
 		return NULL;
-	return copy_and_rtrim(entry->id_ctrl.fr, sizeof(entry->id_ctrl.fr));
+	return shr_buf2str(entry->id_ctrl.fr, sizeof(entry->id_ctrl.fr));
 }
 
 HDEVINFO libnvme_ctrl_map_entry_get_devinfo(
