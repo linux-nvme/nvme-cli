@@ -117,7 +117,7 @@ int shr_parse_double(const char *s, double *out)
 
 	/* strtod() takes the decimal point of LC_NUMERIC */
 	old = setlocale(LC_NUMERIC, NULL);
-	old = old ? strdup(old) : NULL;
+	old = shr_xstrdup(old);
 	setlocale(LC_NUMERIC, "C");
 
 	errno = 0;

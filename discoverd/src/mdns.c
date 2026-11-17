@@ -22,6 +22,7 @@
 #include <ccan/list/list.h>
 #include <ccan/str/str.h>
 #include <daemon-util/log.h>
+#include <shared/string-util.h>
 #include <shared/time-util.h>
 #include <systemd/sd-json.h>
 #include <systemd/sd-varlink.h>
@@ -599,7 +600,7 @@ static int resolve_reply_cb(sd_varlink *link __attribute__((unused)),
 	list_head_init(&svc->checks);
 	svc->name = req->name;
 	svc->transport = transport;
-	svc->nqn = nqn ? strdup(nqn) : NULL;
+	svc->nqn = shr_xstrdup(nqn);
 	req->name = NULL;
 
 	n = sd_json_variant_elements(services);

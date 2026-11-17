@@ -17,6 +17,7 @@
 #include <daemon-util/log.h>
 #include <daemon-util/resolve.h>
 #include <nvme/crypto.h>
+#include <shared/string-util.h>
 
 #include "config.h"
 #include "kmip.h"
@@ -315,7 +316,7 @@ int kmip_get_psk(struct dmn_resolver *resolver,
 	if (!g)
 		return -ENOMEM;
 	g->name = strdup(name);
-	g->key_path = key_path ? strdup(key_path) : NULL;
+	g->key_path = shr_xstrdup(key_path);
 	if (!g->name || (key_path && !g->key_path)) {
 		get_free(g);
 		return -ENOMEM;

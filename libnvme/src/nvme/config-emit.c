@@ -125,8 +125,8 @@ static struct emit_persona *persona_for(struct libnvmf_config_emitter *emitter,
 	p = calloc(1, sizeof(*p));
 	if (!p)
 		return NULL;
-	p->hostnqn = hostnqn ? strdup(hostnqn) : NULL;
-	p->hostid = hostid ? strdup(hostid) : NULL;
+	p->hostnqn = shr_xstrdup(hostnqn);
+	p->hostid = shr_xstrdup(hostid);
 	if ((hostnqn && !p->hostnqn) || (hostid && !p->hostid)) {
 		free(p->hostnqn);
 		free(p->hostid);
