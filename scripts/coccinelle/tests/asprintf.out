@@ -1,0 +1,17 @@
+@@ -9,16 +9,12 @@ char *f(const char *a, const char *b)
+ 	char *p;
+ 	int ret;
+
+-	p = malloc(len);
+ 	if (!p)
+ 		return NULL;
+-	snprintf(p, len, "%s/%s", a, b);
+ 	free(p);
+
+-	p = malloc(len);
+ 	if (!p)
+ 		return NULL;
+-	ret = snprintf(p, len, "%s", a);
+ 	if (ret < 0)
+ 		return NULL;
+ 	free(p);
