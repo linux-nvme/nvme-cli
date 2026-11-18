@@ -216,7 +216,6 @@ struct print_ops {
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*lba_status)(struct nvme_lba_status *list, unsigned long len);
 	void (*relatives)(struct libnvme_global_ctx *ctx, const char *name);
-	void (*resv_report)(struct nvme_resv_status *status, int bytes, bool eds);
 	void (*select_result)(enum nvme_features_id fid, __u64 result);
 	void (*show_feature)(enum nvme_features_id fid, int sel,
 			     unsigned int result, void *buf, __u32 data_len);
@@ -326,8 +325,6 @@ void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags);
-void nvme_show_resv_report(struct nvme_resv_status *status, int bytes, bool eds,
-	nvme_print_flags_t flags);
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
 	nvme_print_flags_t flags);
 

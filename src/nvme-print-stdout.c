@@ -728,94 +728,6 @@ char *stdout_power_and_scale_str(__u16 power, __u8 scale)
 	return s;
 }
 
-static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
-			       bool eds)
-{
-	struct shr_table *t;
-	int i, regstrnt, entries;
-	char hex[33];
-
-	regstrnt = status->regstrnt[0] | (status->regstrnt[1] << 8);
-
-	printf("\nNVME Reservation status:\n\n");
-
-	t = stdout_kv_table_create();
-	if (!t)
-		return;
-
-	stdout_kv_add(t, "gen", "%u", le32_to_cpu(status->gen));
-	stdout_kv_add(t, "rtype", "%d", status->rtype);
-	stdout_kv_add(t, "regstrnt", "%d", regstrnt);
-	stdout_kv_add(t, "ptpls", "%d", status->ptpls);
-
-	stdout_kv_table_finish(t, "resv-report");
-
-	/* check Extended Data Structure bit */
-	if (!eds) {
-		/*
-		 * if status buffer was too small, don't loop past the end of
-		 * the buffer
-		 */
-		entries = (bytes - 24) / 24;
-		if (entries < regstrnt)
-			regstrnt = entries;
-
-		for (i = 0; i < regstrnt; i++) {
-			struct nvme_registrant *reg = &status->registrant_ds[i];
-
-			printf("registrant[%d] :\n", i);
-
-			t = stdout_kv_table_create();
-			if (!t)
-				return;
-			shr_table_set_indent(t, 2);
-
-			stdout_kv_add(t, "cntlid", "%x",
-				      le16_to_cpu(reg->cntlid));
-			stdout_kv_add(t, "rcsts", "%x", reg->rcsts);
-			stdout_kv_add(t, "hostid", "%"PRIx64,
-				      le64_to_cpu(reg->hostid));
-			stdout_kv_add(t, "rkey", "%"PRIx64,
-				      le64_to_cpu(reg->rkey));
-
-			stdout_kv_table_finish(t, "registrant");
-		}
-	} else {
-		/*
-		 * if status buffer was too small, don't loop past the end of
-		 * the buffer
-		 */
-		entries = (bytes - 64) / 64;
-		if (entries < regstrnt)
-			regstrnt = entries;
-
-		for (i = 0; i < regstrnt; i++) {
-			struct nvme_registrant_ext *reg =
-				&status->registrant_eds[i];
-
-			printf("registrantext[%d] :\n", i);
-
-			t = stdout_kv_table_create();
-			if (!t)
-				return;
-			shr_table_set_indent(t, 2);
-
-			stdout_kv_add(t, "cntlid", "%x",
-				      le16_to_cpu(reg->cntlid));
-			stdout_kv_add(t, "rcsts", "%x", reg->rcsts);
-			stdout_kv_add(t, "rkey", "%"PRIx64,
-				      le64_to_cpu(reg->rkey));
-
-			shr_bin_to_hex(hex, sizeof(hex), reg->hostid,
-				       sizeof(reg->hostid), 0);
-			stdout_kv_add(t, "hostid", "%s", hex);
-
-			stdout_kv_table_finish(t, "registrant");
-		}
-	}
-	printf("\n");
-}
-
 static void stdout_select_result(enum nvme_features_id fid, __u64 result)
 {
 	struct shr_table *t;
@@ -3265,7 +3177,6 @@ struct print_ops stdout_print_ops = {
 	.discovery_log			= stdout_discovery_log,
 	.lba_status			= stdout_lba_status,
 	.relatives			= stdout_relatives,
-	.resv_report			= stdout_resv_report,
 	.select_result			= stdout_select_result,
 	.show_feature			= stdout_feature_show,
 	.show_feature_fields		= stdout_feature_show_fields,

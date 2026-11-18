@@ -435,12 +435,6 @@ void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags)
 	nvme_print(id_ctrl_rpmbs, flags, ctrl_rpmbs);
 }
 
-void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
-			   bool eds, nvme_print_flags_t flags)
-{
-	nvme_print(resv_report, flags, status, bytes, eds);
-}
-
 const char *nvme_degrees_string(long t)
 {
 	static char str[STR_LEN];
