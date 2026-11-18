@@ -61,8 +61,9 @@ string, a callback, and optionally an alias, a `deprecated` flag, or a
 ### Add a command to an existing group
 
 The built-in (no-plugin-prefix) commands are split by feature area across
-`src/nvme-cmds-*.c` (e.g. `src/nvme-cmds-io.c` for read/write/flush/...,
-`src/nvme-cmds-registers.c` for register access, etc.). Pick the file that
+`src/nvme-cmds-*.c` (e.g. `src/nvme-cmds-registers.c` for register
+access, etc.) and plugins with only top-level commands (e.g.
+`plugins/cmds-io` for read/write/flush/...). Pick the file that
 matches your command's area, or add a new `src/nvme-cmds-<area>.c` if none
 fit -- just add the one line to `src/meson.build`'s `sources` list. Each
 such file ends with a block like this one from `src/nvme-cmds-discovery.c`:

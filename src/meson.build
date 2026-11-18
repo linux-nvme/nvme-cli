@@ -19,7 +19,6 @@ sources = [
     'src/nvme-cmds-discovery.c',
     'src/nvme-cmds-fabrics.c',
     'src/nvme-cmds-feature.c',
-    'src/nvme-cmds-io.c',
     'src/nvme-cmds-passthru.c',
     'src/nvme-cmds-registers.c',
     'src/nvme-cmds-sanitize.c',

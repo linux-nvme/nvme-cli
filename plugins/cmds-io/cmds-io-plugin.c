@@ -1704,7 +1704,7 @@ static struct command *commands[] = {
 	NULL,
 };
 
-static void __shr_constructor register_group(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&builtin, "I/O Commands", commands);
 }

@@ -6,7 +6,8 @@
 
 nvme loads the module of a top-level command it doesn't have from the
 command index. The deprecated commands are such commands: "nvme smart-log"
-loads cmds-deprecated.so, which runs "nvme log smart" from cmds-log.so.
+loads cmds-deprecated.so, which runs "nvme log smart" from cmds-log.so. So are the
+I/O commands: "nvme read" loads cmds-io.so.
 
 Each test runs nvme with NVME_PLUGIN_DIR on a directory with links to some
 of the modules, and a file which is no module. nvme reports that file when
@@ -67,6 +68,13 @@ class CommandModulesTest(unittest.TestCase):
         self.assertIn('Usage: nvme log smart <device>', r.stdout)
         self.assertNotIn(LOAD_ERROR, r.stderr)
 
+    def test_io_command_loads_only_its_module(self):
+        self.modules('cmds-io')
+        r = self.nvme('read', '--help')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('Usage: nvme read <device>', r.stdout)
+        self.assertNotIn(LOAD_ERROR, r.stderr)
+
     def test_alias(self):
         self.modules('cmds-deprecated', 'cmds-fw')
         r = self.nvme('fw-activate', '--help')
@@ -105,6 +113,14 @@ class CommandModulesTest(unittest.TestCase):
         self.assertEqual(r.stdout, '')
         self.assertIn('command smart-log not installed: plugin cmds-deprecated '
                       'has no module in ' + self.dir, r.stderr)
+        self.assertNotIn(LOAD_ERROR, r.stderr)
+
+    def test_io_module_not_installed(self):
+        r = self.nvme('read', '/dev/nvme0n1')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(r.stdout, '')
+        self.assertIn('command read not installed: plugin cmds-io has no '
+                      'module in ' + self.dir, r.stderr)
         self.assertNotIn(LOAD_ERROR, r.stderr)
 
 
