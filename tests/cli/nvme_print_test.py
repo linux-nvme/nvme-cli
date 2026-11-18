@@ -158,7 +158,8 @@ _PLUGIN = [['fdp', 'configs', '-e', '1'], ['fdp', 'usage', '-e', '1'],
            ['dir', 'receive', 'NS', '-D', '0', '-O', '1'],
            ['dir', 'receive', 'NS', '-D', '1', '-O', '1'],
            ['dir', 'receive', 'NS', '-D', '1', '-O', '2', '-l', '64'],
-           ['dir', 'receive', 'NS', '-D', '1', '-O', '3']]
+           ['dir', 'receive', 'NS', '-D', '1', '-O', '3'],
+           ['rpmb', 'info']]
 _FORMATS = [[], ['-v'], ['-o', 'json'], ['-o', 'binary']]
 
 # sysfs trees captured from real systems, from the libnvme tests.

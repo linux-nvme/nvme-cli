@@ -5,20 +5,21 @@
 # Copyright (c) 2026 SUSE LLC
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
-"""Tests the files of the rpmb plugin: an absolute --msgfile names the
-file to write as it is, not one below the current directory,
-read-data writes the sectors it read, read-counter reads the write
-counter, and write-data / write-config write authenticated frames.
+"""Tests the rpmb plugin: an absolute --msgfile names the file to write
+as it is, not one below the current directory, info decodes the RPMBS
+field, read-data writes the sectors it read, read-counter reads the
+write counter, and write-data / write-config write authenticated frames.
 
 Usage: python3 nvme_rpmb_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
 import hashlib
 import hmac
+import json
 import os
 import struct
 
-from tests.cli.nvme_mock import (CNS_CTRL, OPC_SECURITY_RECV, MockTestCase,
-                                 id_ctrl, main)
+from tests.cli.nvme_mock import (CNS_CTRL, HAVE_JSON, OPC_SECURITY_RECV,
+                                 MockTestCase, id_ctrl, main)
 
 _CONFIG_BLOCK_SIZE = 512
 _SECTOR = 512
@@ -70,6 +71,39 @@ class RpmbCLITest(MockTestCase):
         self.assertIn(f'Saving received config data to {path}',
                       result.stdout + result.stderr)
         self.assertEqual(os.path.getsize(path), _CONFIG_BLOCK_SIZE)
+
+
+class RpmbInfoTest(MockTestCase):
+    """info decodes the RPMBS field of Identify Controller"""
+
+    def setUp(self):
+        super().setUp()
+        self.server.identify[CNS_CTRL] = id_ctrl(rpmbs=0x12340a5b)
+
+    def test_info(self):
+        result = self.assertOk(self.nvme('rpmb', 'info', self.ctrl))
+        self.assertEqual(result.stdout,
+                         '  [31:24] : 0x12   Access Size\n'
+                         '  [23:16] : 0x34   Total Size\n'
+                         '   [15:6] : 0x29   Reserved\n'
+                         '    [5:3] : 0x3    Authentication Method\n'
+                         '    [2:0] : 0x3    Number of RPMB Units\n'
+                         '\n')
+
+    def test_info_json(self):
+        if not HAVE_JSON:
+            self.skipTest('built without json-c')
+        result = self.assertOk(self.nvme('rpmb', 'info', self.ctrl,
+                                         '-o', 'json'))
+        self.assertEqual(json.loads(result.stdout),
+                         {'[31:24]: Access Size': '0x12',
+                          '[23:16]: Total Size': '0x34',
+                          '[15:6]: Reserved': '0x29',
+                          '[5:3]: Authentication Method': '0x3',
+                          '[2:0]: Number of RPMB Units': '0x3'})
+
+    def test_info_decoded_in_sandbox(self):
+        self.assertDecodedInSandbox('rpmb', 'info', self.ctrl)
 
 
 class RpmbReadDataTest(MockTestCase):
