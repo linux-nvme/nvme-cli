@@ -140,7 +140,6 @@ struct libnvmf_config;
 struct print_ops {
 	/* libnvme types.h print functions */
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
-	void (*relatives)(struct libnvme_global_ctx *ctx, const char *name);
 	void (*d)(unsigned char *buf, int len, int width, int group);
 	void (*show_init)(void);
 	void (*show_finish)(void);
@@ -244,7 +243,6 @@ void nvme_show_err(int err, const char *fmt, ...);
 void nvme_show_io_cmd_err(const char *msg, __u8 opcode, int err);
 void nvme_show_admin_cmd_err(const char *msg, __u8 opcode, int err);
 void nvme_show_opcode_status(int status, bool admin, __u8 opcode);
-void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
 /*
  * The Metadata Element Descriptor at offset *@off of a Host Metadata data

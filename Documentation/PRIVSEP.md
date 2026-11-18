@@ -219,12 +219,12 @@ writes its report to a file.
 
 Some printers stay in process (`nvme_print_sandboxed()`):
 
-- the libnvme tree printers (`list`, `list-subsys`, `show-topology`,
-  `relatives`), which read sysfs while they print and decode no device
-  data;
+- the libnvme tree printers (`list`, `list-subsys`, `show-topology`),
+  which read sysfs while they print and decode no device data;
 - plugin printers run through `nvme_print_decoder()` with `sandbox` set
   to false, e.g. the zns zone list printers, which pass a JSON object from
-  one call to the next;
+  one call to the next, and the cmds-admin `relatives` printer, which
+  reads sysfs like the libnvme tree printers;
 - `top`, which is interactive, and `config_conn_list`;
 - `show_init`/`show_finish`, and the status and error messages, unless
   a sandboxed printer prints them.
