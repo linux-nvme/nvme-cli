@@ -223,8 +223,6 @@ conf.set('LIBNVME_PRIVSEP_HELPER',
 conf.set('CONFIG_LOOPBACK', want_ioctl_tests,
     description: 'Is the ioctl loopback test transport enabled')
 conf.set('CONFIG_TOP', want_top, description: 'Is nvme top enabled')
-conf.set('CONFIG_DEPRECATED_CMDS', want_deprecated_cmds,
-    description: 'Deprecated commands enabled')
 
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)

@@ -90,6 +90,22 @@ if python3.found()
              suite: 'mock')
     endif
 
+    # The modules of the top-level commands, with the deprecated ones
+    if want_plugin_modules and want_deprecated_cmds and \
+       'log' in selected_plugins and 'fw' in selected_plugins and \
+       'ns' in selected_plugins
+        test('nvme-cli - command-modules',
+             python3,
+             args: [
+                 files('nvme_command_modules_test.py'),
+                 nvme_exe,
+                 meson.project_build_root() / 'plugins',
+             ],
+             env: cli_test_env,
+             depends: nvme_runtime,
+             suite: 'mock')
+    endif
+
     # nvme top in a pseudo terminal, and its JSON output, on captured sysfs
     if want_top
         test('nvme-cli - top',

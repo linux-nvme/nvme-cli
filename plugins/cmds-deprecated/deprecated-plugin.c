@@ -17,14 +17,10 @@
 
 #include <ccan/str/str.h>
 
-#include <shared/compiler-attributes-util.h>
-
 #include "argconfig.h"
 #include "args.h"
 #include "cleanup.h"
 #include "plugin.h"
-
-#ifdef CONFIG_DEPRECATED_CMDS
 
 #ifdef CONFIG_FABRICS
 /*
@@ -446,10 +442,8 @@ static struct command *commands[] = {
 	NULL,
 };
 
-static void __shr_constructor register_group(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
 	/* The help lists no deprecated command, nor the title */
 	plugin_add_group(&builtin, "Deprecated", commands);
 }
-
-#endif /* CONFIG_DEPRECATED_CMDS */
