@@ -38,10 +38,6 @@ void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 		      struct nvme_id_ns *ns, unsigned int lba_index,
 		      bool cap_only);
 void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs);
-void stdout_fdp_configs(struct nvme_fdp_config_log *log, size_t len);
-void stdout_fdp_events(struct nvme_fdp_events_log *log);
-void stdout_fdp_stats(struct nvme_fdp_stats_log *log);
-void stdout_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len);
 #ifdef CONFIG_FABRICS
 void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec);
 #else /* CONFIG_FABRICS */

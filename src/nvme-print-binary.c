@@ -10,32 +10,6 @@
 
 static struct print_ops binary_print_ops;
 
-static void binary_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
-{
-	 d_raw((unsigned char *)log, len);
-}
-
-static void binary_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
-{
-
-	d_raw((unsigned char *)log, len);
-}
-
-static void binary_fdp_stats(struct nvme_fdp_stats_log *log)
-{
-	d_raw((unsigned char*)log, sizeof(*log));
-}
-
-static void binary_fdp_events(struct nvme_fdp_events_log *log)
-{
-	d_raw((unsigned char*)log, sizeof(*log));
-}
-
-static void binary_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len)
-{
-	d_raw((unsigned char *)status, len);
-}
-
 /*
  * The registers as they are in BAR0, 0h to E1Bh, the ones not read zero:
  * all of them for a PCIe controller, the properties of a fabrics one.
@@ -181,11 +155,6 @@ static struct print_ops binary_print_ops = {
 	.directive			= binary_directive,
 	.discovery_log			= binary_discovery_log,
 	.endurance_group_list		= NULL,
-	.fdp_config_log			= binary_fdp_configs,
-	.fdp_event_log			= binary_fdp_events,
-	.fdp_ruh_status			= binary_fdp_ruh_status,
-	.fdp_stats_log			= binary_fdp_stats,
-	.fdp_usage_log			= binary_fdp_usage,
 	.id_ctrl			= binary_id_ctrl,
 	.id_ctrl_nvm			= binary_id_ctrl_nvm,
 	.id_domain_list			= binary_id_domain_list,

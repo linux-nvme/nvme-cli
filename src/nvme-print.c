@@ -305,24 +305,6 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 	return "Unknown";
 }
 
-void nvme_show_fdp_configs(struct nvme_fdp_config_log *log, size_t len,
-		nvme_print_flags_t flags)
-{
-	nvme_print(fdp_config_log, flags, log, len);
-}
-
-void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
-		nvme_print_flags_t flags)
-{
-	nvme_print(fdp_usage_log, flags,log, len);
-}
-
-void nvme_show_fdp_stats(struct nvme_fdp_stats_log *log,
-		nvme_print_flags_t flags)
-{
-	nvme_print(fdp_stats_log, flags, log);
-}
-
 const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
 {
 	switch (event) {
@@ -335,18 +317,6 @@ const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
 	}
 
 	return "Unknown";
-}
-
-void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
-		nvme_print_flags_t flags)
-{
-	nvme_print(fdp_event_log, flags, log);
-}
-
-void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
-		nvme_print_flags_t flags)
-{
-	nvme_print(fdp_ruh_status, flags, status, len);
 }
 
 void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
@@ -1358,18 +1328,6 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		   __u8 lsp, void *log, __u32 len, nvme_print_flags_t flags)
 {
 	switch (lid) {
-	case NVME_LOG_LID_FDP_CONFIGS:
-		nvme_show_fdp_configs(log, len, flags);
-		break;
-	case NVME_LOG_LID_FDP_RUH_USAGE:
-		nvme_show_fdp_usage(log, len, flags);
-		break;
-	case NVME_LOG_LID_FDP_STATS:
-		nvme_show_fdp_stats(log, flags);
-		break;
-	case NVME_LOG_LID_FDP_EVENTS:
-		nvme_show_fdp_events(log, flags);
-		break;
 	case NVME_LOG_LID_DISCOVERY: {
 		struct nvmf_discovery_log *discovery_log = log;
 		/* no more records than the log holds, before size_t cuts it */
