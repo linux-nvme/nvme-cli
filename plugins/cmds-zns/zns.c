@@ -16,6 +16,7 @@
 
 #include "global-ctx.h"
 #include "nvme-print.h"
+#include "plugins/cmds-list/cmds-list-print.h"
 #include "plugin.h"
 #include "src/cleanup.h"
 #include "zns-print.h"

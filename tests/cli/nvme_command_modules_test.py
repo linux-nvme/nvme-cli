@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 if len(sys.argv) < 3:
     print("usage: %s <nvme-binary> <module-dir>" % sys.argv[0])
@@ -29,6 +30,8 @@ if len(sys.argv) < 3:
 NVME_BIN = sys.argv[1]
 MODULE_DIR = os.path.abspath(sys.argv[2])
 LOAD_ERROR = 'cannot load plugin'
+# sysfs trees captured from real systems, from the libnvme tests
+SYSFS_DATA = Path(__file__).resolve().parents[2] / 'libnvme/tests/sysfs/data'
 
 
 class CommandModulesTest(unittest.TestCase):
@@ -88,6 +91,29 @@ class CommandModulesTest(unittest.TestCase):
         self.assertEqual(r.stdout, '')
         self.assertIn('command list not installed: plugin cmds-list has no '
                       'module in ' + self.dir, r.stderr)
+
+    @unittest.skipUnless(sys.platform.startswith('linux'),
+                         'the sysfs tree is a Linux one')
+    def test_zns_list_needs_cmds_list(self):
+        """zns list prints its rows with the printer of cmds-list."""
+        if not os.path.exists(os.path.join(MODULE_DIR, 'cmds-zns.so')):
+            self.skipTest('nvme has no zns plugin')
+        self.modules('cmds-zns', 'cmds-list')
+        sysfs = os.path.join(self.dir, 'sysfs')
+        os.mkdir(sysfs)
+        subprocess.run(['tar', 'xJf', SYSFS_DATA / 'tree-pcie.tar.xz',
+                        '-C', sysfs], check=True)
+        zoned = os.path.join(sysfs, 'sys/class/nvme/nvme0/nvme0n1',
+                             'queue/zoned')
+        os.chmod(zoned, 0o644)
+        with open(zoned, 'w', encoding='utf-8') as f:
+            f.write('host-managed\n')
+        r = self.nvme('--set-options', 'test-sysfs-dir=' + sysfs,
+                      'zns', 'list')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(r.stdout.splitlines()[2].split()[:3],
+                         ['nvme0n1', 'ng0n1', 'S7DFNG0W700063'])
+        self.assertNotIn(LOAD_ERROR, r.stderr)
 
     def test_alias(self):
         self.modules('cmds-deprecated', 'cmds-fw')

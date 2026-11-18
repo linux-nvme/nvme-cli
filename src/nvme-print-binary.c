@@ -23,14 +23,6 @@ static struct print_ops binary_print_ops = {
 	.show_init			= NULL,
 	.show_finish			= NULL,
 
-	/* libnvme tree print functions */
-	.list_item			= NULL,
-	.list_items			= NULL,
-	.print_nvme_subsystem_list	= NULL,
-	.topology_ctrl			= NULL,
-	.topology_namespace		= NULL,
-	.topology_multipath		= NULL,
-
 	/* status and error messages */
 	.connect_msg			= NULL,
 	.show_message			= NULL,

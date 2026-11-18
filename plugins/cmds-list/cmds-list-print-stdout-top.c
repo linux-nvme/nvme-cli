@@ -29,6 +29,7 @@
 #include "dashboard.h"
 #include "global-ctx.h"
 #include "nvme-iostat.h"
+#include "cmds-list-print.h"
 #include "nvme-print.h"
 
 static bool stdout_top_nvme_ctrl_is_fabric(struct libnvme_ctrl *c)

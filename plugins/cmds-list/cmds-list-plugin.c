@@ -27,6 +27,7 @@
 #include "global-ctx.h"
 #include "logging.h"
 #include "nvme-cmds-common.h"
+#include "cmds-list-print.h"
 #include "nvme-print.h"
 #include "plugin.h"
 
