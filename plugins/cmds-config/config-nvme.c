@@ -7,10 +7,10 @@
  */
 #include <shared/compiler-attributes-util.h>
 
-#include "config-convert.h"
 #include "config-create.h"
-#include "fabrics.h"
 #include "plugin.h"
+#include "plugins/cmds-fabrics/config-convert.h"
+#include "plugins/cmds-fabrics/fabrics.h"
 
 static int config_validate_cmd(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)

@@ -33,7 +33,6 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
@@ -47,8 +46,6 @@
 #include "nvme-print.h"
 #include "plugin.h"
 #include "privsep.h"
-
-#ifdef CONFIG_FABRICS
 
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
@@ -248,9 +245,7 @@ static struct command *commands[] = {
 	NULL,
 };
 
-static void __shr_constructor register_group(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&builtin, "Fabrics", commands);
 }
-
-#endif /* CONFIG_FABRICS */

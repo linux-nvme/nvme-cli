@@ -37,6 +37,8 @@ pending_plugins += 'cmds-passthru'
 pending_plugins += 'feat'
 # The device enumeration commands
 pending_plugins += 'cmds-list'
+# The fabrics top-level commands
+pending_plugins += 'cmds-fabrics'
 foreach round : range(16)
   if pending_plugins.length() == 0
     break

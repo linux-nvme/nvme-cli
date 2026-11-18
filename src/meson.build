@@ -14,7 +14,6 @@ sources = [
     'src/nvme-print.c',
     'src/nvme-resources.c',
     'src/nvme.c',
-    'src/nvme-cmds-fabrics.c',
     'src/plugin.c',
     'src/privsep.c',
     'src/field-parser.c',
@@ -45,10 +44,3 @@ if json_c_dep.found()
     ]
 endif
 
-if want_fabrics
-    sources += [
-        'src/fabrics.c',
-        'src/config-convert.c',
-        'src/pre-os.c',
-    ]
-endif
