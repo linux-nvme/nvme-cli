@@ -14,7 +14,6 @@ sources = [
     'src/nvme-print.c',
     'src/nvme.c',
     'src/nvme-cmds-enumerate.c',
-    'src/nvme-cmds-discovery.c',
     'src/nvme-cmds-fabrics.c',
     'src/nvme-cmds-feature.c',
     'src/plugin.c',

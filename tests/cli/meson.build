@@ -12,6 +12,8 @@ cli_test_env.set('NVME_TEST_JSON', json_c_dep.found() ? '1' : '0')
 cli_test_env.set('NVME_TEST_LIBARCHIVE', libarchive_dep.found() ? '1' : '0')
 # Without libkmod, nvme doesn't load the nvme-fabrics module.
 cli_test_env.set('NVME_TEST_LIBKMOD', libkmod_dep.found() ? '1' : '0')
+# get-log is a command of the log plugin.
+cli_test_env.set('NVME_TEST_GET_LOG', 'log' in selected_plugins ? '1' : '0')
 
 if python3.found()
     # Standalone CLI test for the ownership registry.  It needs no device

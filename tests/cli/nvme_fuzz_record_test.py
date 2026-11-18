@@ -16,8 +16,8 @@ import tempfile
 from pathlib import Path
 
 from tests.cli import nvme_mock_ipc
-from tests.cli.nvme_mock import (OPC_GET_LOG_PAGE, SC_INVALID_FIELD,
-                                 MockTestCase, main)
+from tests.cli.nvme_mock import (HAVE_GET_LOG, OPC_GET_LOG_PAGE,
+                                 SC_INVALID_FIELD, MockTestCase, main)
 from tests.cli.nvme_mock_ipc import MockIPCServer
 
 _LOG_LEN = 512
@@ -59,6 +59,8 @@ class FuzzRecordTest(MockTestCase):
         nvme_mock_ipc._fuzz_recorder.dir = self.record_dir
 
     def _record(self, *args):
+        if not args and not HAVE_GET_LOG:
+            self.skipTest('built without the log plugin')
         args = args or ('get-log', self.ctrl, '--log-id=2',
                         f'--log-len={_LOG_LEN}')
         result = self.nvme(*args)
@@ -93,6 +95,8 @@ class FuzzRecordTest(MockTestCase):
         self.assertEqual(self._record()['pci'], [0x1344, 0x51c0])
 
     def test_off(self):
+        if not HAVE_GET_LOG:
+            self.skipTest('built without the log plugin')
         nvme_mock_ipc._fuzz_recorder.dir = None
         self.nvme('get-log', self.ctrl, '--log-id=2', '--log-len=512')
         self.assertEqual(list(Path(self.record_dir).iterdir()), [])

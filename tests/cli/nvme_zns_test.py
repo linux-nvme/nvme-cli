@@ -13,9 +13,9 @@ Usage: python3 nvme_zns_test.py <path-to-nvme-binary> <mock-lib>
 """
 import os
 
-from tests.cli.nvme_mock import (CNS_CSI_NS, CNS_NS, HAVE_JSON,
-                                 NVME_IOCTL_ID, MockTestCase, Reply, id_ns,
-                                 main)
+from tests.cli.nvme_mock import (CNS_CSI_NS, CNS_NS, HAVE_GET_LOG,
+                                 HAVE_JSON, NVME_IOCTL_ID, MockTestCase,
+                                 Reply, id_ns, main)
 from tests.cli.nvme_mock_ipc import run_nvme
 
 OPC_ZONE_MGMT_SEND = 0x79
@@ -257,6 +257,8 @@ class ZnsPrintTest(ZnsTestBase):
     def test_get_log_decoded(self):
         """get-log -v decodes the Changed Zone List log through the
         plugin, with and without the sandbox."""
+        if not HAVE_GET_LOG:
+            self.skipTest('built without the log plugin')
         out = []
         for sandbox in ('0', '1'):
             result = run_nvme(self.nvme_bin,
