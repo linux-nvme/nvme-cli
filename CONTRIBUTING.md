@@ -60,35 +60,36 @@ string, a callback, and optionally an alias, a `deprecated` flag, or a
 
 ### Add a command to an existing group
 
-The built-in (no-plugin-prefix) commands are split by feature area across
-plugins with only top-level commands (e.g. `plugins/cmds-io` for
-read/write/flush/...). Pick the file that
-matches your command's area, or add a new `src/nvme-cmds-<area>.c` if none
-fit -- just add the one line to `src/meson.build`'s `sources` list. Each
-such file ends with a block like this one from `src/nvme-cmds-ctrl.c`:
+The top-level commands (`nvme read`, `nvme connect`, ...) live in plugins
+without a command group of their own, one per feature area: e.g.
+`plugins/cmds-io` for read/write/flush, `plugins/cmds-admin` for format,
+sanitize and reset, `plugins/cmds-fabrics` for connect and discover. Pick
+the plugin that matches the area of your command. Each ends with a block
+like this one from `plugins/cmds-io/cmds-io-plugin.c`:
 
 ```c
-static struct command reset_cmd = {
-	.name = "reset",
-	.help = "Resets the controller",
-	.fn = reset,
+static struct command flush_cmd_cmd = {
+	.name = "flush",
+	.help = "Submit a Flush command, return results",
+	.fn = flush_cmd,
 };
 
 static struct command *commands[] = {
-	&reset_cmd,
+	&flush_cmd_cmd,
 	/* ... */
 	NULL,
 };
 
-static void __shr_constructor register_group(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
-	plugin_add_group(&builtin, "Controller Management", commands);
+	plugin_add_group(&builtin, "I/O Commands", commands);
 }
 ```
 
 To add a command, write its callback function, add a `struct command`
-literal for it, and add that entry to the `commands[]` array. The
-callback's prototype is:
+literal for it, add that entry to the `commands[]` array, and add its name
+to `plugin_commands` in the plugin's `meson.build` (see "Top-level
+commands in a plugin" below). The callback's prototype is:
 
 ```c
 int f(int argc, char **argv, struct command *command, struct plugin *plugin);
@@ -104,9 +105,9 @@ Set `.no_device = true` for a command that doesn't take a positional
 `<device>` from its usage line and, when none of a plugin's commands need
 one, from that plugin's `--help` output too.
 
-The `title` passed to `plugin_add_group()` (`"Controller Management"` above)
-is the heading shown for that group's commands in `nvme help`; pass `NULL`
-for no heading (that's what plugins normally do, see below).
+The `title` passed to `plugin_add_group()` (`"I/O Commands"` above) is the
+heading of the group in `nvme help`. Pass `NULL` for no heading, as plugins
+with their own command group normally do (see below).
 
 ### Add a new plugin
 
