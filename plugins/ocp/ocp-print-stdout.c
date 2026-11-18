@@ -18,6 +18,7 @@
 #include "ocp-smart-extended-log.h"
 #include "ocp-telemetry-decode.h"
 #include "ocp-utils.h"
+#include "plugins/log/log-print.h"
 
 static struct ocp_print_ops stdout_print_ops;
 

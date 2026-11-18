@@ -13,6 +13,7 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "plugins/log/log-print.h"
 
 #pragma pack(push, 1)
 struct nvme_ibm_log_f0_item {

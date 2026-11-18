@@ -43,3 +43,8 @@ void obj_add_result(struct json_object *o, const char *v, ...)
 	__attribute__((format(printf, 2, 3)));
 void obj_add_key(struct json_object *o, const char *k, const char *v, ...)
 	__attribute__((format(printf, 3, 4)));
+
+/* log */
+void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
+			      unsigned char *buf);
+void json_timestamp(struct json_object *r, struct nvme_timestamp *ts);
