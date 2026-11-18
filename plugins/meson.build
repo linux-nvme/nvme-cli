@@ -50,11 +50,24 @@ foreach def : plugin_defs
     endif
   endforeach
 endforeach
+# A provider can depend on another provider (solidigm -> ocp -> log), so
+# order the providers by their dependencies
 ordered_plugin_defs = []
-foreach def : plugin_defs
-  if def['dir'] in plugin_providers
-    ordered_plugin_defs += def
-  endif
+ordered_providers = []
+foreach i : range(plugin_providers.length())
+  foreach def : plugin_defs
+    ready = (def['dir'] in plugin_providers and
+             def['dir'] not in ordered_providers)
+    foreach need : def['needs']
+      if need not in ordered_providers
+        ready = false
+      endif
+    endforeach
+    if ready
+      ordered_plugin_defs += def
+      ordered_providers += def['dir']
+    endif
+  endforeach
 endforeach
 foreach def : plugin_defs
   if def['dir'] not in plugin_providers
