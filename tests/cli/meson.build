@@ -210,6 +210,11 @@ if python3.found()
             ]
         endif
 
+        if 'fdp' in selected_plugins
+            mock_cli_tests += [
+                ['fdp', 'nvme_fdp_test.py', cli_test_env, 30],
+            ]
+        endif
         if 'lm' in selected_plugins
             mock_cli_tests += [
                 ['lm', 'nvme_lm_test.py', cli_test_env, 30],
