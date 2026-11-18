@@ -331,6 +331,13 @@ class PrintCLITest(MockTestCase):
     def test_sandbox_used(self):
         self.assertDecodedInSandbox('log', 'smart', self.ctrl)
 
+    def test_get_log_decoded(self):
+        # get-log -v uses the decoder of the log plugin
+        result = self.nvme('get-log', self.ctrl, '--log-id=2',
+                           '--log-len=512', '--verbose')
+        self.assertOk(result)
+        self.assertIn('Smart Log for NVME device:nvme0', result.stdout)
+
     def test_persistent_event_telemetry_log_create(self):
         # A Telemetry Log Create event holds a 512 byte Telemetry log
         # header. Its data is dumped only if the event holds all of it,
