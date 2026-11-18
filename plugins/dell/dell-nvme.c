@@ -13,6 +13,7 @@
 #include <shared/compiler-attributes-util.h>
 
 #include "plugin.h"
+#include "plugins/id/id.h"
 
 #define ARRAY_NAME_LEN 80
 

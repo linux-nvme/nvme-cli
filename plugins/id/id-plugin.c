@@ -19,6 +19,7 @@
 #include "argconfig.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "id.h"
 #include "nvme-print.h"
 #include "plugin.h"
 
@@ -263,6 +264,70 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 	}
 
 	nvme_show_endurance_group_list(endgrp_list, flags);
+
+	return err;
+}
+
+int __id_ctrl(int argc, char **argv, struct command *acmd,
+	      struct plugin *plugin,
+	      void (*vs)(__u8 *vs, struct json_object *root))
+{
+	const char *desc = (
+	    "Send an Identify Controller command to the given device and report information about the specified controller in human-readable or binary format. May also return vendor-specific controller attributes in hex-dump if requested.");
+	const char *vendor_specific = "dump binary vendor field";
+
+	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
+		NULL;
+	struct libnvme_passthru_cmd cmd;
+	nvme_print_flags_t flags;
+	int err;
+
+	struct config {
+		bool	vendor_specific;
+		bool	raw_binary;
+	};
+
+	struct config cfg = {
+		.vendor_specific	= false,
+		.raw_binary		= false,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific,
+			 vendor_specific),
+		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary, raw_identify),
+		OPT_END()
+	};
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	flags = nvme_args.output_flags;
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	if (cfg.vendor_specific)
+		flags |= VS;
+
+	if (nvme_args.verbose)
+		flags |= VERBOSE;
+
+	ctrl = libnvme_alloc(sizeof(*ctrl));
+	if (!ctrl)
+		return -ENOMEM;
+
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "identify controller");
+		return err;
+	}
+
+	nvme_show_id_ctrl(ctx, hdl, ctrl, flags, vs);
 
 	return err;
 }
