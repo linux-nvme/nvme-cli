@@ -151,6 +151,13 @@ class ReportTest(ResvTestBase):
         cmd, = self.resv(OPC_RESV_REPORT, 'report', self.ns, '--numd=11')
         self.assertEqual((cmd.cdw10, cmd.data_len), (11, 48))
 
+    def test_decoded_in_sandbox(self):
+        self.server.io[OPC_RESV_REPORT] = resv_status(2)
+        for args in ([], ['--eds']):
+            with self.subTest(args=args):
+                self.assertDecodedInSandbox('resv', 'report', self.ns,
+                                            *args)
+
 
 if __name__ == '__main__':
     main()

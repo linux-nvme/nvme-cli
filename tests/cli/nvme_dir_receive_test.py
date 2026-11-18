@@ -93,6 +93,14 @@ class DirReceiveCLITest(MockTestCase):
         result = self._receive(DTYPE_IDENTIFY, 1, '--data-len=16')
         self.assertIn(TOO_SHORT, result.stderr)
 
+    def test_decoded_in_sandbox(self):
+        for args in ([], ['--verbose']):
+            with self.subTest(args=args):
+                self.assertDecodedInSandbox(
+                    'dir', 'receive', self.ctrl,
+                    f'--dir-type={DTYPE_STREAMS}',
+                    f'--dir-oper={DOPER_STREAMS_STATUS}', *args)
+
     def test_namespace_id(self):
         """The namespace of a namespace device, namespace 1 of a
         controller device, unless --namespace-id is given"""
