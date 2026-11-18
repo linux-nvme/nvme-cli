@@ -37,16 +37,6 @@ static void binary_ctrl_registers(const struct nvme_reg_val *vals,
 	d_raw(page, size);
 }
 
-
-static void binary_directive(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
-	void *buf, __u32 len)
-{
-	if (!buf)
-		return;
-
-	d_raw(buf, len);
-}
-
 static void binary_lba_status(struct nvme_lba_status *list, unsigned long len)
 {
 	d_raw((unsigned char *)list, len);
@@ -71,7 +61,6 @@ static void binary_feature_show(enum nvme_features_id fid, int sel,
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ctrl_registers			= binary_ctrl_registers,
-	.directive			= binary_directive,
 	.discovery_log			= binary_discovery_log,
 	.lba_status			= binary_lba_status,
 	.select_result			= NULL,

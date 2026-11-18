@@ -80,27 +80,6 @@ static inline int nvme_id_ns_nr_lbaf(struct nvme_id_ns *ns)
 }
 
 /*
- * The bytes of the Identify Directive Return Parameters the printers
- * decode: the directives supported, enabled and persistent across
- * controller level resets.
- */
-#define NVME_DIRECTIVE_IDENTIFY_PARAM_LEN	96
-
-/*
- * The Stream Identifiers of a Streams Directive Get Status data structure
- * of @len bytes, which holds at least its Open Stream Count: the count
- * the device reports, but at most as many as fit.
- */
-static inline int nvme_streams_status_nr_sid(
-	struct nvme_streams_directive_status *status, __u32 len)
-{
-	int max = (len - sizeof(*status)) / sizeof(status->sid[0]);
-	int n = le16_to_cpu(status->osc);
-
-	return n < max ? n : max;
-}
-
-/*
  * A log page counts its entries, but the count comes from the device and
  * the page may be shorter: a later read can report more entries than the
  * buffer was sized for. Return: @nr, but at most the number of @size byte
@@ -212,7 +191,6 @@ struct print_ops {
 	/* libnvme types.h print functions */
 	void (*ctrl_registers)(const struct nvme_reg_val *vals, unsigned int nr,
 			       enum nvme_regs_style style);
-	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result, void *buf, __u32 len);
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*lba_status)(struct nvme_lba_status *list, unsigned long len);
 	void (*relatives)(struct libnvme_global_ctx *ctx, const char *name);
@@ -373,8 +351,6 @@ void nvme_show_feature(enum nvme_features_id fid, int sel, unsigned int result,
 		       void *buf, __u32 data_len, nvme_print_flags_t flags);
 void nvme_show_top(nvme_print_flags_t flags, int refresh_interval);
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
-void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
-	void *buf, __u32 len, nvme_print_flags_t flags);
 void nvme_show_select_result(enum nvme_features_id fid, __u64 result);
 
 void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t);
