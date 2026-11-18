@@ -34,6 +34,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <ccan/str/str.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
@@ -205,7 +206,7 @@ static void nvme_sandbox_init(void)
 	enable = true;
 #endif
 	if (env)
-		enable = strcmp(env, "0");
+		enable = !streq(env, "0");
 	shr_sandbox_enable(enable);
 }
 

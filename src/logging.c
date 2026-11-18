@@ -11,6 +11,7 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+#include <ccan/str/str.h>
 #include <shared/sig-util.h>
 
 #include "logging.h"
@@ -27,7 +28,7 @@ static struct submit_data sb;
 bool is_printable_at_level(int level)
 {
 	return ((log_level >= level) &&
-		(strcmp(nvme_args.output_format, "normal") == 0));
+		(streq(nvme_args.output_format, "normal")));
 }
 
 int map_log_level(int verbose, bool quiet)

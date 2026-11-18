@@ -13,6 +13,7 @@
 
 #include <ccan/hash/hash.h>
 #include <ccan/htable/htable_type.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 
@@ -51,7 +52,7 @@ static size_t ctrl_map_entry_hash(const char *ctrl_name)
 static bool ctrl_map_entry_eq(const struct ctrl_map_entry *entry,
 			      const char *ctrl_name)
 {
-	return strcmp(entry->ctrl_name, ctrl_name) == 0;
+	return streq(entry->ctrl_name, ctrl_name);
 }
 
 HTABLE_DEFINE_TYPE(struct ctrl_map_entry, ctrl_map_entry_keyof,

@@ -33,6 +33,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <ccan/str/str.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
@@ -314,8 +315,8 @@ static int passthru(int argc, char **argv, bool admin,
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
 	if (cfg.latency)
 		nvme_show_result("%s Command %s latency: %llu us", admin ? "Admin" : "IO",
-		                 strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
-		                 shr_elapsed_utime(start_time, end_time));
+				 !streq(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
+				 shr_elapsed_utime(start_time, end_time));
 
 	if (err) {
 		nvme_show_err(err, __func__);
@@ -324,7 +325,7 @@ static int passthru(int argc, char **argv, bool admin,
 
 	nvme_show_verbose_result("%s Command %s is Success and result: 0x%" PRIx64,
 				 admin ? "Admin" : "IO",
-				 strcmp(cmd_name, "Unknown") ?
+				 !streq(cmd_name, "Unknown") ?
 				 cmd_name : "Vendor Specific", (uint64_t)cmd.result);
 	if (cfg.read)
 		passthru_print_read_output(cfg, data, dfd, mdata, mfd, err);

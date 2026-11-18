@@ -18,6 +18,7 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <daemon-util/log.h>
 #include <shared/cleanup-util.h>
@@ -59,7 +60,7 @@ static int unit_devid_path(char *buf, size_t len, const char *unit_name)
 	size_t slen = sizeof(suffix) - 1;
 	size_t n = strlen(unit_name);
 
-	if (n > slen && !strcmp(unit_name + n - slen, suffix))
+	if (n > slen && streq(unit_name + n - slen, suffix))
 		n -= slen;
 
 	int r = snprintf(buf, len, "%s/%.*s.devid", state_units_dir(),

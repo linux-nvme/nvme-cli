@@ -549,7 +549,7 @@ __shr_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 
 	/* sanity checks */
 	nqn = libnvme_hostid_from_hostnqn(hnqn);
-	if (nqn && strcmp(nqn, hid)) {
+	if (nqn && !streq(nqn, hid)) {
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "warning: use hostid '%s' which does not match uuid in hostnqn '%s'\n",
 			 hid, hnqn);
@@ -1225,7 +1225,7 @@ static int __add_argument(char **argstr, const char *tok, const char *arg)
 {
 	char *nstr;
 
-	if (!arg || arg[0] == '\0' || !strcmp(arg, "none"))
+	if (!arg || arg[0] == '\0' || streq(arg, "none"))
 		return 0;
 	if (asprintf(&nstr, "%s,%s=%s", *argstr, tok, arg) < 0) {
 		return -ENOMEM;
@@ -1430,9 +1430,9 @@ bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 {
 	if (!traddr || !transport)
 		return false;
-	if (!strcmp(traddr, "none"))
+	if (streq(traddr, "none"))
 		return false;
-	if (strcmp(transport, "tcp") && strcmp(transport, "rdma"))
+	if (!streq(transport, "tcp") && !streq(transport, "rdma"))
 		return false;
 
 	return !libnvmf_traddr_is_numeric(traddr);
@@ -1540,7 +1540,7 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 		return -ENOMEM;
 	}
 
-	if (!strcmp(libnvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME)) {
+	if (streq(libnvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME)) {
 		libnvme_ctrl_set_discovery_ctrl(c, true);
 		libnvme_ctrl_set_unique_discovery_ctrl(c, false);
 		discovery_nqn = true;
@@ -1615,28 +1615,28 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 			     c->cfg.keep_alive_tmo, false) ||
 	    add_int_argument(ctx, argstr, reconnect_delay,
 			     c->cfg.reconnect_delay, false) ||
-	    (strcmp(transport, "loop") &&
+	    (!streq(transport, "loop") &&
 	     add_int_or_minus_one_argument(ctx, argstr, ctrl_loss_tmo,
 			      ctrl_loss_tmo_for(ctx, c))) ||
-	    (strcmp(transport, "loop") &&
+	    (!streq(transport, "loop") &&
 	     add_int_argument(ctx, argstr, fast_io_fail_tmo,
 			      c->cfg.fast_io_fail_tmo, false)) ||
-	    (strcmp(transport, "loop") &&
+	    (!streq(transport, "loop") &&
 	     add_int_argument(ctx, argstr, tos, c->cfg.tos, true)) ||
 	    add_hex_argument(ctx, argstr, keyring, keyring_id, false) ||
-	    (!strcmp(transport, "tcp") &&
+	    (streq(transport, "tcp") &&
 	     add_hex_argument(ctx, argstr, tls_key, key_id, false)) ||
 	    add_bool_argument(ctx, argstr, duplicate_connect,
 			      c->cfg.duplicate_connect) ||
 	    add_bool_argument(ctx, argstr, disable_sqflow,
 			      c->cfg.disable_sqflow) ||
-	    (!strcmp(transport, "tcp") &&
+	    (streq(transport, "tcp") &&
 	     add_bool_argument(ctx, argstr, hdr_digest, c->cfg.hdr_digest)) ||
-	    (!strcmp(transport, "tcp") &&
+	    (streq(transport, "tcp") &&
 	     add_bool_argument(ctx, argstr, data_digest, c->cfg.data_digest)) ||
-	    (!strcmp(transport, "tcp") &&
+	    (streq(transport, "tcp") &&
 	     add_bool_argument(ctx, argstr, tls, c->cfg.tls)) ||
-	    (!strcmp(transport, "tcp") &&
+	    (streq(transport, "tcp") &&
 	     add_bool_argument(ctx, argstr, concat, c->cfg.concat)))
 		return -1;
 
@@ -1644,7 +1644,7 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 }
 
 #define parse_option(ctx, v, name)	   		\
-	if (!strcmp(v, stringify(name))) {	 	\
+	if (streq(v, stringify(name))) {	 	\
 		ctx->options->name = true;		\
 		continue;		   		\
 	}
@@ -1781,7 +1781,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "%s ", v);
 
 		/* "instance" & "cntlid" are returned values, not options. */
-		if (strcmp(v, "instance") && strcmp(v, "cntlid")) {
+		if (!streq(v, "instance") && !streq(v, "cntlid")) {
 			err = add_kernel_option(ctx, &count, v);
 			if (err)
 				goto out_free;
@@ -1859,7 +1859,7 @@ __shr_public int libnvmf_kernel_option_supported(
 
 	*supported = false;
 	for (opt = ctx->kernel_options; *opt; opt++) {
-		if (!strcmp(*opt, name)) {
+		if (streq(*opt, name)) {
 			*supported = true;
 			break;
 		}
@@ -2075,7 +2075,7 @@ __shr_public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
 	if (fctx->discovery_ctrl) {
 		libnvme_ctrl_set_discovery_ctrl(c, true);
 		libnvme_ctrl_set_unique_discovery_ctrl(c,
-			strcmp(fctx->ctrl_params.subsysnqn,
+			!streq(fctx->ctrl_params.subsysnqn,
 			       NVME_DISC_SUBSYS_NAME));
 	}
 
@@ -2377,7 +2377,7 @@ static int nvmf_connect_disc_entry(struct libnvmf_context *fctx,
 	case NVME_NQN_DISC:
 		libnvme_ctrl_set_discovery_ctrl(c, true);
 		libnvme_ctrl_set_unique_discovery_ctrl(c,
-				strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME));
+				!streq(e->subnqn, NVME_DISC_SUBSYS_NAME));
 		break;
 	default:
 		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "unsupported subtype %d\n",
@@ -2745,7 +2745,7 @@ static int nvmf_dim(struct libnvme_ctrl *c, enum nvmf_dim_tas tas, __u8 trtype,
 		return -EINVAL;
 	}
 
-	if (strcmp(c->transport, "tcp")) {
+	if (!streq(c->transport, "tcp")) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "%s: DIM only supported for TCP connections.\n",
 			 c->name);
@@ -3737,7 +3737,7 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 		/* Skip connect if the transport types don't match */
 		transport = libnvmf_trtype_str(e->trtype);
-		if (strcmp(libnvme_ctrl_get_transport(c), transport)) {
+		if (!streq(libnvme_ctrl_get_transport(c), transport)) {
 			dc_log_decision(fctx, e, &d, "transport mismatch");
 			continue;
 		}
@@ -3788,13 +3788,13 @@ __shr_public const char *libnvmf_get_default_trsvcid(const char *transport,
 {
 	if (!transport)
 		return NULL;
-	if (!strcmp(transport, "tcp")) {
+	if (streq(transport, "tcp")) {
 		if (discovery_ctrl)
 			/* Default port for NVMe/TCP discovery controllers */
 			return stringify(NVME_DISC_IP_PORT);
 		/* Default port for NVMe/TCP io controllers */
 		return stringify(NVME_RDMA_IP_PORT);
-	} else if (!strcmp(transport, "rdma")) {
+	} else if (streq(transport, "rdma")) {
 		/* Default port for NVMe/RDMA controllers */
 		return stringify(NVME_RDMA_IP_PORT);
 	}
@@ -3834,7 +3834,7 @@ static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 
 	libnvme_ctrl_set_discovery_ctrl(c, true);
 	libnvme_ctrl_set_unique_discovery_ctrl(c,
-		strcmp(params->subsysnqn, NVME_DISC_SUBSYS_NAME));
+		!streq(params->subsysnqn, NVME_DISC_SUBSYS_NAME));
 
 	/*
 	 * TP8017: no bidirectional authentication with the well-known
@@ -3905,7 +3905,7 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	subnqn[NVME_NQN_LENGTH] = '\0';
 	shr_rtrim(subnqn);
 
-	if (!strcmp(subnqn, NVME_DISC_SUBSYS_NAME)) {
+	if (streq(subnqn, NVME_DISC_SUBSYS_NAME)) {
 		*ctrl = c;
 		return 0;
 	}
@@ -4052,7 +4052,7 @@ static int dc_open(struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
 		 * is a complete no-op for the general path.
 		 */
 		if (err == -ENVME_CONNECT_ADDRNOTAVAIL && fctx->nbft_hfi &&
-		    !strcmp(params->transport, "tcp") &&
+		    streq(params->transport, "tcp") &&
 		    strlen(fctx->nbft_hfi->tcp_info.dhcp_server_ipaddr) > 0) {
 			params->host_traddr = NULL;
 			err = nvmf_create_discovery_ctrl(ctx, fctx, params,
@@ -4154,7 +4154,7 @@ static bool validate_uri(struct libnvme_global_ctx *ctx,
 			 dd->index, dd->uri);
 		return false;
 	}
-	if (strcmp(uri->scheme, "nvme") != 0) {
+	if (!streq(uri->scheme, "nvme")) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "Discovery Descriptor %d: unsupported scheme '%s'\n",
 			 dd->index, uri->scheme);
@@ -4288,7 +4288,7 @@ static int nbft_connect_leaf(struct libnvme_global_ctx *ctx,
 	 * without host_traddr.
 	 */
 	if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
-	    !strcmp(params->transport, "tcp") && fctx->nbft_hfi &&
+	    streq(params->transport, "tcp") && fctx->nbft_hfi &&
 	    strlen(fctx->nbft_hfi->tcp_info.dhcp_server_ipaddr) > 0) {
 		params->host_traddr = NULL;
 		ret = nbft_connect(ctx, fctx, params, h, e, NULL, &c);
@@ -4342,7 +4342,7 @@ static char *nbft_find_hfi_iface(struct libnbft_hfi *hfi)
 	struct ifaddrs *ifaddr, *ifa;
 	char *result = NULL;
 
-	if (strcmp((char *)hfi->transport, "tcp"))
+	if (!streq((char *)hfi->transport, "tcp"))
 		return NULL;
 
 	if (getifaddrs(&ifaddr) != 0)
@@ -4449,8 +4449,8 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 				}
 
 				/* Skip discovery NQN records */
-				if (strcmp((*ss)->subsys_nqn,
-						NVME_DISC_SUBSYS_NAME) == 0) {
+				if (streq((*ss)->subsys_nqn,
+					  NVME_DISC_SUBSYS_NAME)) {
 					libnvme_msg(ctx, LIBNVME_LOG_INFO,
 						"SSNS %d points to well-known discovery NQN, skipping\n",
 						(*ss)->index);
@@ -4490,8 +4490,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 				 * firmware had. Retry without host_traddr.
 				 */
 				if (rr == -ENVME_CONNECT_ADDRNOTAVAIL &&
-				    !strcmp(params.transport,
-					    "tcp") &&
+				    streq(params.transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
 					params.host_traddr = NULL;
 
@@ -4536,8 +4535,8 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 				     * and may get transferred along with a well-known
 				     * discovery NQN into an SSNS record.
 				     */
-				    strcmp((*ss)->subsys_nqn,
-						NVME_DISC_SUBSYS_NAME) != 0) {
+				    !streq((*ss)->subsys_nqn,
+					   NVME_DISC_SUBSYS_NAME)) {
 					linked = true;
 					break;
 				}

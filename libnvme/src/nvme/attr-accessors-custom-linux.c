@@ -8,6 +8,7 @@
 
 #include <ccan/endian/endian.h>
 #include <ccan/ilog/ilog.h>
+#include <ccan/str/str.h>
 #include <dirent.h>
 #include <errno.h>
 
@@ -113,7 +114,7 @@ int libnvme_ctrl_load_phy_slot(struct libnvme_ctrl *c)
 		addr = libnvme_get_attr(path, "address");
 		if (!addr)
 			continue;
-		if (strcmp(addr, target_addr))
+		if (!streq(addr, target_addr))
 			continue;
 
 		c->attrs->phy_slot = strdup(entry->d_name);

@@ -18,6 +18,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/io-util.h>
@@ -458,7 +460,7 @@ __shr_public bool libnvmf_owner_equal(const char *a, const char *b)
 	b = owner_name(b);
 	if (!a || !b)
 		return a == b;
-	return !strcmp(a, b);
+	return streq(a, b);
 }
 
 __shr_public int libnvmf_registry_attr_equal(struct libnvme_global_ctx *ctx,
@@ -480,7 +482,7 @@ __shr_public int libnvmf_registry_attr_equal(struct libnvme_global_ctx *ctx,
 	else if (!stored)
 		rc = value ? 1 : 0;
 	else
-		rc = (value && !strcmp(stored, value)) ? 0 : 1;
+		rc = (value && streq(stored, value)) ? 0 : 1;
 	free(stored);
 	return rc;
 }

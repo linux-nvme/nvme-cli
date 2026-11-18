@@ -49,6 +49,7 @@
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <ccan/str/str.h>
 #include <shared/io-util.h>
 #include <shared/net-util.h>
 #include <shared/sig-util.h>
@@ -367,8 +368,8 @@ static int nvmf_resolve_addr(const char *transport, const char *addr, char **res
 	if (!addr)
 		return 0;
 
-	if (!transport || (strcmp(transport, "tcp") && strcmp(transport, "rdma")) ||
-	    !strcmp(addr, "none") || libnvmf_traddr_is_numeric(addr))
+	if (!transport || (!streq(transport, "tcp") && !streq(transport, "rdma")) ||
+	    streq(addr, "none") || libnvmf_traddr_is_numeric(addr))
 		goto copy_through;
 
 #ifdef NVME_HAVE_NETDB
@@ -969,7 +970,7 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 	/* Custom --config failing is fatal (explicit ask). Default path
 	 * failing isn't: boot-time connect-all must keep going.
 	 */
-	is_default_config = !strcmp(config_file, nvme_nvmf_ini_path());
+	is_default_config = streq(config_file, nvme_nvmf_ini_path());
 
 	ret = nvme_config_convert_auto(ctx, config_file, &ini_path);
 	if (ret) {
@@ -1112,7 +1113,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	persistent = nvmf_resolve_persistent_arg(
 			argconfig_given(opts, &persistent_arg), persistent_arg);
 
-	if (!strcmp(config_file, "none"))
+	if (streq(config_file, "none"))
 		config_file = NULL;
 
 	hostnqn_arg = fa.hostnqn;
@@ -1147,7 +1148,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 
 	if (device) {
-		if (!strcmp(device, "none"))
+		if (streq(device, "none"))
 			device = NULL;
 		else if (shr_startswith(device, "/dev/"))
 			device += 5;
@@ -1351,7 +1352,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
-	if (strcmp(fa.transport, "loop")) {
+	if (!streq(fa.transport, "loop")) {
 		if (!fa.traddr) {
 			nvme_show_error(
 				"required argument [--traddr | -a] not specified for transport %s\n",
@@ -1462,7 +1463,7 @@ static struct libnvme_ctrl *lookup_nvme_ctrl(struct libnvme_global_ctx *ctx,
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
-				if (!strcmp(libnvme_ctrl_get_name(c), name))
+				if (streq(libnvme_ctrl_get_name(c), name))
 					return c;
 			}
 		}
@@ -1472,7 +1473,7 @@ static struct libnvme_ctrl *lookup_nvme_ctrl(struct libnvme_global_ctx *ctx,
 
 static bool opt_matches(const char *want, const char *have)
 {
-	return !want || (have && !strcmp(want, have));
+	return !want || (have && streq(want, have));
 }
 
 static bool nvmf_ctrl_matches_args(struct libnvme_host *h, struct libnvme_ctrl *c,
@@ -1540,7 +1541,7 @@ static int nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn,
 			continue;
 		libnvme_for_each_host(ctx, h) {
 			libnvme_for_each_subsystem(h, s) {
-				if (strcmp(libnvme_subsystem_get_subsysnqn(s), p))
+				if (!streq(libnvme_subsystem_get_subsysnqn(s), p))
 					continue;
 				libnvme_subsystem_for_each_ctrl(s, c) {
 					if (!may_disconnect(ctx, c, pol) &&
@@ -1820,7 +1821,7 @@ static bool disconnect_all_match(struct libnvme_global_ctx *ctx,
 				 struct libnvme_ctrl *c, const char *transport,
 				 const char *owner, bool force)
 {
-	if (transport && strcmp(transport, libnvme_ctrl_get_transport(c)))
+	if (transport && !streq(transport, libnvme_ctrl_get_transport(c)))
 		return false;
 	if (!libnvme_ctrl_is_transport_fabric(c))
 		return false;
@@ -1887,7 +1888,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 			return -EINVAL;
 		}
 		ans[strcspn(ans, "\n")] = '\0';
-		if (strcmp(ans, "yes") != 0) {
+		if (!streq(ans, "yes")) {
 			nvme_show_error("Aborted.");
 			return -EINVAL;
 		}
@@ -2098,7 +2099,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 				continue;
 			libnvme_for_each_host(ctx, h) {
 				libnvme_for_each_subsystem(h, s) {
-					if (strcmp(libnvme_subsystem_get_subsysnqn(s), p))
+					if (!streq(libnvme_subsystem_get_subsysnqn(s), p))
 						continue;
 					libnvme_subsystem_for_each_ctrl(s, c) {
 						ret = dim_operation(c, tas, p);

@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 #include <windows.h>
 
+#include <ccan/str/str.h>
+
 #include "cleanup-util.h"
 #include "compiler-attributes-util.h"
 #include "fs-util.h"
@@ -47,7 +49,7 @@ int shr_mkstemp(char *template)
 	}
 
 	len = strlen(template);
-	if (len < 6 || strcmp(&template[len - 6], "XXXXXX") != 0) {
+	if (len < 6 || !streq(&template[len - 6], "XXXXXX")) {
 		errno = EINVAL;
 		return -EINVAL;
 	}

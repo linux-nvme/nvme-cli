@@ -14,6 +14,7 @@
 #include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
+#include <ccan/str/str.h>
 
 #include <shared/string-util.h>
 
@@ -68,7 +69,7 @@ static const char *map_key(const struct legacy_key *table, size_t n,
 	size_t i;
 
 	for (i = 0; i < n; i++)
-		if (!strcmp(table[i].json_key, json_key))
+		if (streq(table[i].json_key, json_key))
 			return table[i].ini_key;
 
 	return NULL;
@@ -135,7 +136,7 @@ static void apply_dhchap_default(struct libnvmf_params *params,
 
 	if (!port_value) {
 		libnvmf_params_set(params, "kxchap-secret", host_default);
-	} else if (strcmp(port_value, host_default)) {
+	} else if (!streq(port_value, host_default)) {
 		nvme_show_verbose_info(
 			"config convert: dhchap_key differs between host default and one connection; keeping the connection's own value");
 	}
@@ -212,7 +213,7 @@ static int convert_subsys(struct libnvmf_config_emitter *emitter,
 	int p, ret;
 
 	/* The well-known discovery NQN is the emitter's default value. */
-	if (nqn && (!*nqn || !strcmp(nqn, NVME_DISC_SUBSYS_NAME)))
+	if (nqn && (!*nqn || streq(nqn, NVME_DISC_SUBSYS_NAME)))
 		nqn = NULL;
 
 	port_array = json_object_object_get(subsys_obj, "ports");
@@ -464,8 +465,8 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
 
 	*ini_path = NULL;
 
-	is_default = !strcmp(config_file, nvme_nvmf_ini_path()) ||
-		     !strcmp(config_file, nvme_nvmf_json_path());
+	is_default = streq(config_file, nvme_nvmf_ini_path()) ||
+		     streq(config_file, nvme_nvmf_json_path());
 	if (is_default) {
 		json_path = nvme_nvmf_json_path();
 		*ini_path = strdup(nvme_nvmf_ini_path());

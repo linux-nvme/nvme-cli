@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
@@ -159,14 +160,14 @@ static int check_persona_identity(struct libnvmf_config_emitter *emitter,
 	}
 
 	list_for_each(&emitter->personas, p, entry) {
-		if (hostnqn && p->hostnqn && !strcmp(hostnqn, p->hostnqn) &&
+		if (hostnqn && p->hostnqn && streq(hostnqn, p->hostnqn) &&
 		    !shr_streq0(hostid, p->hostid)) {
 			emit_err(emitter->ctx,
 				 "config emit: hostnqn %s used with two hostids",
 				 hostnqn);
 			return -EINVAL;
 		}
-		if (hostid && p->hostid && !strcmp(hostid, p->hostid) &&
+		if (hostid && p->hostid && streq(hostid, p->hostid) &&
 		    !shr_streq0(hostnqn, p->hostnqn)) {
 			emit_err(emitter->ctx,
 				 "config emit: hostid %s shared by two hostnqns",
@@ -214,7 +215,7 @@ __shr_public int libnvmf_config_emit_add(
 
 	if (hostsymname) {
 		if (persona->hostsymname &&
-		    strcmp(persona->hostsymname, hostsymname)) {
+		    !streq(persona->hostsymname, hostsymname)) {
 			emit_err(emitter->ctx,
 				 "config emit: conflicting hostsymname '%s' for persona %s",
 				 hostsymname, persona->hostnqn ?
@@ -277,7 +278,7 @@ static void write_conn(FILE *fp, const struct emit_conn *conn)
 		fprintf(fp, "[Discovery Controller]\n");
 		/* Omit the default well-known discovery NQN. */
 		if (conn->subsysnqn &&
-		    strcmp(conn->subsysnqn, NVME_DISC_SUBSYS_NAME))
+		    !streq(conn->subsysnqn, NVME_DISC_SUBSYS_NAME))
 			fprintf(fp, "nqn = %s\n", conn->subsysnqn);
 	} else {
 		fprintf(fp, "[Subsystem]\n");

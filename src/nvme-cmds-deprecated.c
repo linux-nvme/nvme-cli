@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 
 #include "argconfig.h"
@@ -206,7 +208,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		args[nargs++] = cfg.keyring;
 	}
 
-	if (!strcmp(subcmd, "revoke")) {
+	if (streq(subcmd, "revoke")) {
 		if (argconfig_given(opts, &cfg.keytype)) {
 			args[nargs++] = "--keytype";
 			args[nargs++] = cfg.keytype;

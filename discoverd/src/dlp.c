@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/str/str.h>
+
 #include <daemon-util/log.h>
 #include <daemon-util/work.h>
 #include <nvme/fabrics.h>
@@ -104,7 +106,7 @@ void dlp_process_log(const struct nvmf_discovery_log *log,
 				continue;
 			}
 		} else if (dc_tid &&
-			   strcmp(libnvmf_tid_get_transport(dc_tid),
+			   !streq(libnvmf_tid_get_transport(dc_tid),
 				  libnvmf_tid_get_transport(t))) {
 			log_warn("%s | skipping %s - transport mismatch",
 				 libnvmf_tid_str(dc_tid), libnvmf_tid_str(t));

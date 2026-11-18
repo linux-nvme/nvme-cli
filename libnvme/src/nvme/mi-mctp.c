@@ -26,6 +26,7 @@
 #endif
 
 #include <ccan/endian/endian.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 
@@ -846,15 +847,15 @@ static int handle_mctp_endpoint(struct libnvme_global_ctx *ctx, const char* objp
 
 		dbus_message_iter_recurse(&prop, &val);
 
-		if (!strcmp(propname, "EID")) {
+		if (streq(propname, "EID")) {
 			rc = read_variant_basic(&val, DBUS_TYPE_BYTE, &eid);
 			have_eid = true;
 
-		} else if (!strcmp(propname, "NetworkId")) {
+		} else if (streq(propname, "NetworkId")) {
 			rc = read_variant_basic(&val, DBUS_TYPE_INT32, &net);
 			have_net = true;
 
-		} else if (!strcmp(propname, "SupportedMessageTypes")) {
+		} else if (streq(propname, "SupportedMessageTypes")) {
 			have_nvmemi = has_message_type(&val, MCTP_TYPE_NVME);
 		}
 
@@ -925,7 +926,7 @@ static int handle_mctp_obj(struct libnvme_global_ctx *ctx, DBusMessageIter *obj)
 
 		dbus_message_iter_get_basic(&intf, &intfname);
 
-		if (strcmp(intfname, MCTP_DBUS_IFACE_ENDPOINT)) {
+		if (!streq(intfname, MCTP_DBUS_IFACE_ENDPOINT)) {
 			if (!dbus_message_iter_next(&intfs))
 				break;
 			continue;

@@ -15,6 +15,8 @@
 #include <libnvme-mi.h>
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/string-util.h>
 
 #include "argconfig.h"
@@ -168,7 +170,7 @@ struct set_options {
 
 static bool is_true(const char *val)
 {
-	return !strcmp(val, "1") ||
+	return streq(val, "1") ||
 		!strcasecmp(val, "true") ||
 		!strncasecmp(val, "enable", 6);
 }
@@ -191,7 +193,7 @@ static void parse_set_options(struct set_options *so)
 		*val++ = '\0';
 
 		for (key = 0; key < SET_KEYS; key++)
-			if (!strcmp(kv, set_option_keys[key]))
+			if (streq(kv, set_option_keys[key]))
 				break;
 		if (key == SET_KEYS) {
 			so->unknown_key = kv;

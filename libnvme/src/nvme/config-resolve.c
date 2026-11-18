@@ -29,6 +29,7 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 
@@ -278,8 +279,8 @@ struct libnvmf_config_subsys *libnvmf_config_subsys_find(
 		return NULL;
 
 	list_for_each(subsystems, s, entry) {
-		if (s->is_dc == is_dc && !strcmp(s->nqn, nqn) &&
-		    !strcmp(s->source, source))
+		if (s->is_dc == is_dc && streq(s->nqn, nqn) &&
+		    streq(s->source, source))
 			return s;
 	}
 
@@ -302,7 +303,7 @@ static int subsys_merge(struct libnvme_global_ctx *ctx,
 		if (!value)
 			continue;
 		old = libnvmf_params_get(s->keys, subsys_keys[i]);
-		if (old && strcmp(old, value)) {
+		if (old && !streq(old, value)) {
 			resolve_err(ctx, s->source,
 				    "line %u: nqn %s: %s differs from line %u",
 				    line, s->nqn, subsys_keys[i], s->line);
@@ -337,7 +338,7 @@ static int resolve_subsys(struct libnvme_global_ctx *ctx,
 	int ret;
 
 	if (ep->is_dc &&
-	    (!ep->nqn || !strcmp(ep->nqn, NVME_DISC_SUBSYS_NAME))) {
+	    (!ep->nqn || streq(ep->nqn, NVME_DISC_SUBSYS_NAME))) {
 		value = libnvmf_params_get(ep->params, "kxchap-ctrl-secret");
 		if (value && *value)
 			resolve_warn(ctx, f->path,
@@ -502,16 +503,16 @@ static int check_personas(struct libnvme_global_ctx *ctx,
 			 * or not the hostid also matches.
 			 */
 			if (real_value(f->hostnqn) && real_value(o->hostnqn) &&
-			    !strcmp(f->hostnqn, o->hostnqn)) {
+			    streq(f->hostnqn, o->hostnqn)) {
 				resolve_err(ctx, f->path,
 					    "hostnqn %s already used by the persona in %s",
 					    f->hostnqn, o->path);
 				return -EINVAL;
 			}
 			if (real_value(f->hostid) && real_value(o->hostid) &&
-			    !strcmp(f->hostid, o->hostid) &&
+			    streq(f->hostid, o->hostid) &&
 			    real_value(f->hostnqn) && real_value(o->hostnqn) &&
-			    strcmp(f->hostnqn, o->hostnqn)) {
+			    !streq(f->hostnqn, o->hostnqn)) {
 				resolve_err(ctx, f->path,
 					    "hostid %s already used by persona %s (%s); same hostid means same host",
 					    f->hostid, o->hostnqn, o->path);
@@ -527,7 +528,7 @@ int libnvmf_conf_dropin_filter(const struct dirent *d)
 {
 	const char *dot = strrchr(d->d_name, '.');
 
-	return dot && dot != d->d_name && !strcmp(dot, ".conf");
+	return dot && dot != d->d_name && streq(dot, ".conf");
 }
 
 int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,

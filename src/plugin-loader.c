@@ -21,6 +21,7 @@
 #include <sys/auxv.h>
 
 #include <ccan/array_size/array_size.h>
+#include <ccan/str/str.h>
 
 #include "plugin-loader.h"
 #include "plugin-names.h"
@@ -160,7 +161,7 @@ static void load_module(const char *dir, const char *name)
 		dlclose(handle);
 		return;
 	}
-	if (strcmp(abi, NVME_PLUGIN_ABI)) {
+	if (!streq(abi, NVME_PLUGIN_ABI)) {
 		fprintf(stderr,
 			"ignoring %s: built for nvme %s, this is nvme %s\n",
 			path, abi, NVME_PLUGIN_ABI);
@@ -209,7 +210,7 @@ bool nvme_plugin_known(const char *name)
 	size_t i;
 
 	for (i = 0; i < ARRAY_SIZE(names); i++) {
-		if (!strcmp(name, names[i]))
+		if (streq(name, names[i]))
 			return true;
 	}
 	return false;
@@ -221,7 +222,7 @@ static int is_module(const struct dirent *entry)
 	size_t suffix = strlen(MODULE_SUFFIX);
 
 	return len > suffix &&
-	       !strcmp(entry->d_name + len - suffix, MODULE_SUFFIX);
+	       streq(entry->d_name + len - suffix, MODULE_SUFFIX);
 }
 
 void nvme_load_plugins(void)

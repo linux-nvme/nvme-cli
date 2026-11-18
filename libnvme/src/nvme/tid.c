@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 #include <shared/string-util.h>
 
@@ -137,7 +139,7 @@ static int tid_sanitize_addr(struct libnvmf_tid *t)
 	if (!t->transport)
 		return 0;
 
-	if (!strcmp(t->transport, "fc")) {
+	if (streq(t->transport, "fc")) {
 		if (t->traddr)
 			fc_wwn_normalize(t->traddr);
 		if (t->host_traddr)
@@ -150,7 +152,7 @@ static int tid_sanitize_addr(struct libnvmf_tid *t)
 		return 0;
 	}
 
-	if (strcmp(t->transport, "tcp") && strcmp(t->transport, "rdma"))
+	if (!streq(t->transport, "tcp") && !streq(t->transport, "rdma"))
 		return 0;
 
 	if (t->traddr) {
@@ -391,35 +393,35 @@ static int tid_parse(struct libnvme_global_ctx *ctx, int level, const char *str,
 					    "tid_parse: ignoring empty value for \"%s\"\n",
 					    key);
 				bad = strict;
-			} else if (!strcmp(key, "transport")) {
+			} else if (streq(key, "transport")) {
 				free(t->transport);
 				t->transport = strdup(val);
 				oom = !t->transport;
-			} else if (!strcmp(key, "traddr")) {
+			} else if (streq(key, "traddr")) {
 				free(t->traddr);
 				t->traddr = strdup(val);
 				oom = !t->traddr;
-			} else if (!strcmp(key, "trsvcid")) {
+			} else if (streq(key, "trsvcid")) {
 				free(t->trsvcid);
 				t->trsvcid = strdup(val);
 				oom = !t->trsvcid;
-			} else if (!strcmp(key, "nqn")) {
+			} else if (streq(key, "nqn")) {
 				free(t->subsysnqn);
 				t->subsysnqn = strdup(val);
 				oom = !t->subsysnqn;
-			} else if (!strcmp(key, "host-traddr")) {
+			} else if (streq(key, "host-traddr")) {
 				free(t->host_traddr);
 				t->host_traddr = strdup(val);
 				oom = !t->host_traddr;
-			} else if (!strcmp(key, "host-iface")) {
+			} else if (streq(key, "host-iface")) {
 				free(t->host_iface);
 				t->host_iface = strdup(val);
 				oom = !t->host_iface;
-			} else if (!strcmp(key, "hostnqn")) {
+			} else if (streq(key, "hostnqn")) {
 				free(t->hostnqn);
 				t->hostnqn = strdup(val);
 				oom = !t->hostnqn;
-			} else if (!strcmp(key, "hostid")) {
+			} else if (streq(key, "hostid")) {
 				free(t->hostid);
 				t->hostid = strdup(val);
 				oom = !t->hostid;

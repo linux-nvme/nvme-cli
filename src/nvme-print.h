@@ -8,6 +8,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include "args.h"
 #include "nvme-json.h"
@@ -351,17 +352,17 @@ static inline bool subsystem_iopolicy_filter(const char *name, void *arg)
 
 	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
 
-	if (!strcmp(iopolicy, "queue-depth")) {
+	if (streq(iopolicy, "queue-depth")) {
 		/* exclude "Nodes" for iopolicy queue-depth */
-		if (!strcmp(name, "Nodes"))
+		if (streq(name, "Nodes"))
 			return false;
-	} else if (!strcmp(iopolicy, "numa")) {
+	} else if (streq(iopolicy, "numa")) {
 		/* exclude "Qdepth" for iopolicy numa */
-		if (!strcmp(name, "Qdepth"))
+		if (streq(name, "Qdepth"))
 			return false;
 	} else { /* round-robin */
 		/* exclude "Nodes" and "Qdepth" for iopolicy round-robin */
-		if (!strcmp(name, "Nodes") || !strcmp(name, "Qdepth"))
+		if (streq(name, "Nodes") || streq(name, "Qdepth"))
 			return false;
 	}
 

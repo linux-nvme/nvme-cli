@@ -20,6 +20,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/ini-util.h>
 #include <shared/string-util.h>
 
@@ -121,13 +123,13 @@ static int set_key(struct parse_ctx *pc, const char *key, const char *value,
 	struct vendor_model *m = pc->cur;
 	char **field;
 
-	if (!strcmp(key, "model"))
+	if (streq(key, "model"))
 		field = &m->model;
-	else if (!strcmp(key, "transport"))
+	else if (streq(key, "transport"))
 		field = &m->transport;
-	else if (!strcmp(key, "iopolicy"))
+	else if (streq(key, "iopolicy"))
 		field = &m->iopolicy;
-	else if (!strcmp(key, "ctrl-loss-tmo"))
+	else if (streq(key, "ctrl-loss-tmo"))
 		field = &m->ctrl_loss_tmo;
 	else {
 		libnvme_msg(pc->ctx, LIBNVME_LOG_WARN,
@@ -156,7 +158,7 @@ static int parse_event(enum shr_ini_event event, const char *section,
 	switch (event) {
 	case SHR_INI_SECTION:
 		close_section(pc);
-		if (!strcmp(key, "Model"))
+		if (streq(key, "Model"))
 			return open_section(pc, line);
 		libnvme_msg(pc->ctx, LIBNVME_LOG_WARN,
 			    "%s:%u: unknown section [%s], ignored\n", pc->path,
@@ -205,7 +207,7 @@ static int conf_filter(const struct dirent *d)
 	size_t n = strlen(d->d_name);
 
 	return d->d_name[0] != '.' && n > 5 &&
-	       !strcmp(d->d_name + n - 5, ".conf");
+	       streq(d->d_name + n - 5, ".conf");
 }
 
 struct vendor_file {
@@ -241,7 +243,7 @@ static int collect_dir(const char *dir, struct vendor_file **files,
 		size_t j;
 
 		for (j = 0; j < *nr && !seen; j++)
-			seen = !strcmp((*files)[j].name, name);
+			seen = streq((*files)[j].name, name);
 		if (!r && !seen) {
 			grown = realloc(*files, (*nr + 1) * sizeof(**files));
 			if (!grown) {
@@ -276,7 +278,7 @@ static bool masked(const char *path)
 	if (n < 0)
 		return false;
 	target[n] = '\0';
-	return !strcmp(target, "/dev/null");
+	return streq(target, "/dev/null");
 }
 
 struct libnvmf_vendor_defaults *libnvmf_vendor_load(
@@ -453,8 +455,8 @@ static void set_attr(struct libnvme_global_ctx *ctx, const char *devname,
 	int r;
 
 	/* The kernel shows a ctrl_loss_tmo of -1 as "off". */
-	if (cur && (!strcmp(cur, want) ||
-		    (!strcmp(cur, "off") && !strcmp(want, "-1"))))
+	if (cur && (streq(cur, want) ||
+		    (streq(cur, "off") && streq(want, "-1"))))
 		return;
 	if (ctx->privsep)
 		r = __libnvme_privsep_set_attr(ctx->privsep, dev, name, want);
@@ -502,7 +504,7 @@ void libnvmf_vendor_apply(struct libnvme_global_ctx *ctx,
 			continue;
 		/* Only an NVM subsystem, as ATTR{subsystype}=="nvm" */
 		if (m->iopolicy && policy_path && subsystype &&
-		    !strcmp(subsystype, "nvm"))
+		    streq(subsystype, "nvm"))
 			set_attr(ctx, devname, strrchr(subsys, '/') + 1,
 				 policy_path, "iopolicy", m->iopolicy, m);
 		if (m->ctrl_loss_tmo && !keep_ctrl_loss_tmo &&

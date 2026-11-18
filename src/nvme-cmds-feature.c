@@ -33,6 +33,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <ccan/str/str.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
@@ -188,7 +189,7 @@ static int get_feature_id_changed(struct libnvme_transport_handle *hdl, struct f
 		result = cfg.cdw11;
 
 	if (err || !cfg.changed || err_def || result != result_def ||
-	    (buf && buf_def && !strcmp(buf, buf_def)))
+	    (buf && buf_def && streq(buf, buf_def)))
 		get_feature_id_print(cfg, err, result, buf, flags);
 
 	return err;
