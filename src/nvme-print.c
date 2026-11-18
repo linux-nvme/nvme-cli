@@ -33,7 +33,8 @@
 	do {							\
 		struct print_ops *ops = nvme_print_ops(flags);	\
 		if (nvme_print_check(ops, ops->name) &&		\
-		    nvme_print_begin(ops, ops->name)) {		\
+		    nvme_print_begin(ops,			\
+			nvme_print_sandboxed(ops, ops->name))) {	\
 			ops->name(__VA_ARGS__);			\
 			nvme_print_end(ops);			\
 		}						\
@@ -133,17 +134,17 @@ static void nvme_print_error(int err)
 }
 
 /*
- * Return: whether to run the printer here, in process or in the sandbox.
- * A sandboxed printer writes to stdout as it does in process. What it
- * writes elsewhere, the output plugin captures in the child and adds in
- * the caller.
+ * Return: true if the caller should run the printer, either in process or,
+ * if @sandbox is set, in the sandboxed child. A sandboxed printer writes to
+ * stdout as usual. Any other output is captured by the output plugin in the
+ * child and added in the parent.
  */
-static bool nvme_print_begin(struct print_ops *ops, void *func)
+static bool nvme_print_begin(struct print_ops *ops, bool sandbox)
 {
 	struct shr_sandbox_output out;
 	int ret;
 
-	if (print_depth++ || !nvme_print_sandboxed(ops, func))
+	if (print_depth++ || !sandbox)
 		return true;
 
 	ret = shr_sandbox_begin(&out);
@@ -208,6 +209,21 @@ static bool nvme_print_check(struct print_ops *ops, void *func)
 		return false;
 
 	return true;
+}
+
+bool nvme_print_decoder_begin(nvme_print_flags_t flags, bool sandbox)
+{
+	struct print_ops *ops = nvme_print_ops(flags);
+
+	if (!ops || nvme_args.dry_run)
+		return false;
+
+	return nvme_print_begin(ops, sandbox);
+}
+
+void nvme_print_decoder_end(nvme_print_flags_t flags)
+{
+	nvme_print_end(nvme_print_ops(flags));
 }
 
 const char *nvme_ana_state_to_string(enum nvme_ana_state state)

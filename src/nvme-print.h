@@ -523,6 +523,28 @@ static inline struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags
 /* A printer failed in the sandbox */
 bool nvme_show_failed(void);
 
+/*
+ * Run a printer from a plugin's printer table the same way nvme_print()
+ * runs the core printers: skip it for dry runs, and run it in the decoder
+ * sandbox if that is enabled and @sandbox is set. Pass false for printers
+ * that open files, issue commands or pass data back to the caller. See
+ * Documentation/PRIVSEP.md.
+ */
+bool nvme_print_decoder_begin(nvme_print_flags_t flags, bool sandbox);
+void nvme_print_decoder_end(nvme_print_flags_t flags);
+
+#define nvme_print_decoder(ops, name, sandbox, flags, ...)		\
+	do {								\
+		typeof(ops) __ops = (ops);				\
+									\
+		if (!__ops || !__ops->name)				\
+			nvme_show_error("unhandled output format");	\
+		else if (nvme_print_decoder_begin(flags, sandbox)) {	\
+			__ops->name(__VA_ARGS__);			\
+			nvme_print_decoder_end(flags);			\
+		}							\
+	} while (false)
+
 struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
