@@ -285,9 +285,12 @@ $ make PLUGINS=""
 ## Plugin modules
 
 The plugins are modules of their own, which nvme loads when a command
-uses them, so a command loads at most the module of its plugin. nvme
-loads all modules only for the lists of commands, `nvme help` and
-`nvme utils dump-command-metadata`, and for a command it doesn't know.
+uses them. The top-level commands live in modules too: `cmds-io` for the
+I/O commands, `cmds-fabrics` for connect and discover, `cmds-list` for
+list and top, and so on. A command loads only the module which provides
+it, and the plugins that module needs. nvme loads all modules only for
+the lists of commands, `nvme help` and `nvme utils dump-command-metadata`,
+and for a command it doesn't know.
 The `plugin-modules` option decides:
 
 ```shell
@@ -306,7 +309,11 @@ plugin, e.g. `sandisk.so` for `nvme sndk`. A module works only with an nvme of t
 version, built with the same `src/plugin.h`: nvme ignores another one with
 a warning.
 Without the module of a plugin, `nvme <plugin>` says the plugin is not
-installed, so a distribution can package plugins on their own.
+installed, and without the module of a top-level command, nvme says the
+command is not installed. So a distribution can package plugins on their
+own. An initramfs needs the modules of the commands it runs, e.g.
+`cmds-fabrics.so` for `nvme connect-all`, `cmds-list.so` for
+`nvme list-subsys` and `cmds-nbft.so` for `nvme nbft show`.
 
 Run from the build tree, nvme takes the modules of the build tree
 (`.build/plugins`). The environment variable `NVME_PLUGIN_DIR` names
