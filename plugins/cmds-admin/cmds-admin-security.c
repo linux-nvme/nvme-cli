@@ -9,12 +9,12 @@
 
 #include <libnvme.h>
 
-#include <shared/compiler-attributes-util.h>
-
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
+
+#include "cmds-admin.h"
 
 static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
@@ -128,12 +128,7 @@ static struct command lockdown_cmd_cmd = {
 	.fn = lockdown_cmd,
 };
 
-static struct command *commands[] = {
+struct command *admin_security_commands[] = {
 	&lockdown_cmd_cmd,
 	NULL,
 };
-
-static void __shr_constructor register_group(void)
-{
-	plugin_add_group(&builtin, "Security & Access Control", commands);
-}

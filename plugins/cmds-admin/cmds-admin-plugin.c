@@ -33,7 +33,6 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
@@ -48,6 +47,8 @@
 #include "nvme-cmds-common.h"
 #include "nvme-print.h"
 #include "plugin.h"
+
+#include "cmds-admin.h"
 
 static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
@@ -1027,7 +1028,11 @@ static struct command *commands[] = {
 	NULL,
 };
 
-static void __shr_constructor register_group(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
+	plugin_add_group(&builtin, "Controller Management",
+			 admin_ctrl_commands);
 	plugin_add_group(&builtin, "Media Management", commands);
+	plugin_add_group(&builtin, "Security & Access Control",
+			 admin_security_commands);
 }

@@ -20,8 +20,6 @@
 
 #include <libnvme.h>
 
-#include <shared/compiler-attributes-util.h>
-
 #include "argconfig.h"
 #include "cleanup.h"
 #include "global-ctx.h"
@@ -29,6 +27,8 @@
 #include "nvme-cmds-common.h"
 #include "nvme-print.h"
 #include "plugin.h"
+
+#include "cmds-admin.h"
 
 static const char *only_ctrl_dev = "Only controller device is allowed";
 
@@ -216,15 +216,10 @@ static struct command virtual_mgmt_cmd = {
 	.fn = virtual_mgmt,
 };
 
-static struct command *commands[] = {
+struct command *admin_ctrl_commands[] = {
 	&reset_cmd,
 	&subsystem_reset_cmd,
 	&ns_rescan_cmd,
 	&virtual_mgmt_cmd,
 	NULL,
 };
-
-static void __shr_constructor register_group(void)
-{
-	plugin_add_group(&builtin, "Controller Management", commands);
-}
