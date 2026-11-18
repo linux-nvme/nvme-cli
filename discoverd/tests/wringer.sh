@@ -668,8 +668,16 @@ connect_onto_dev() {
 	return 1
 }
 
+# The position of the last journal entry. A phase searches the entries
+# after it, so it does not see the messages of the previous one. Unlike a
+# time, a cursor does not move when the clock goes back.
+journal_cursor() {
+	journalctl -n 0 --show-cursor 2>/dev/null | sed -n 's/^-- cursor: //p'
+}
+
 journal_has() {
-	journalctl -t nvme-discoverd --since "$1" 2>/dev/null | grep -q -- "$2"
+	journalctl -t nvme-discoverd --after-cursor "$1" 2>/dev/null |
+		grep -q -- "$2"
 }
 
 # Poll for up to $4 seconds (default 0) for the journal line. On a
@@ -962,7 +970,7 @@ else
 	fail "setup: expected the unit to outlive the daemon"
 fi
 
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_dev_stable "restart adopts the live connection" \
 	"${TARGET_NQN}" "${P_DEV}"
@@ -976,7 +984,7 @@ phase "an adopted controller that drops is reconnected"
 #
 # Continues from the previous phase: the controller is tracked because it
 # was adopted, not because this daemon connected it.
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 disconnect_out_of_band "${TARGET_NQN}"
 assert_connected "reconnects the adopted controller" "${TARGET_NQN}" 30
 assert_journal_has "treated the drop as a desired controller" \
@@ -995,7 +1003,7 @@ else
 	fail "setup: expected a stale unit, found none"
 fi
 
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_connected "replaces the stale unit and reconnects" \
 	"${TARGET_NQN}" 30
@@ -1017,7 +1025,7 @@ disconnect_out_of_band "${TARGET_NQN}"
 if ! connect_onto_dev "${FOREIGN_NQN}" "${P_DEV}"; then
 	skip "could not get ${FOREIGN_NQN} onto ${P_DEV}"
 else
-	P_START=$(date +%H:%M:%S)
+	P_START=$(journal_cursor)
 	discoverd_start
 	assert_connected "reconnects its own controller" "${TARGET_NQN}" 30
 	assert_dev_holds "leaves the other connection on the reused name" \
@@ -1047,7 +1055,7 @@ P_DEV=$(connected_dev "${CONF_NQN}")
 log "connected as ${P_DEV}"
 
 discoverd_stop_daemon_only
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_dev_stable "restart adopts the configured IOC" \
 	"${CONF_NQN}" "${P_DEV}"
@@ -1108,7 +1116,7 @@ controller = transport=tcp;traddr=${TRADDR};trsvcid=${MAP_PORT}
 nqn        = ${MAP_NQN}
 controller = transport=tcp;traddr=${TRADDR};trsvcid=${MAP_PORT}
 EOF
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_connected "connects the subsystem" "${MAP_NQN}" 30
 countdown 5 "let both sources of the IOC settle"
@@ -1167,7 +1175,7 @@ P_DEV=$(connected_dev "${CONF_NQN}")
 P_UNIT=$(dev_unit "${P_DEV}")
 sed -i "/^\[Subsystem\]\$/,/trsvcid=${CONF_PORT}\$/d" \
 	"${ETC_NVME_DIR}/nvme-fabrics.conf"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 systemctl reload "${DISCOVERD_UNIT}"
 assert_released "the configured IOC" "${CONF_NQN}" "${P_DEV}" \
 	"${P_UNIT}"
@@ -1198,7 +1206,7 @@ P_UNIT=$(dev_unit "${P_DEV}")
 log "nvmet: ${REL_NQN} no longer allows any host"
 echo 0 > "/sys/kernel/config/nvmet/subsystems/${REL_NQN}/attr_allow_any_host"
 nvmet_add_subsystem "${REL2_NQN}"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 log "nvmet: port ${REL_PORT} also serves ${REL2_NQN}"
 ln -s "/sys/kernel/config/nvmet/subsystems/${REL2_NQN}" \
 	"/sys/kernel/config/nvmet/ports/${REL_PORT_ID}/subsystems/${REL2_NQN}"
@@ -1218,7 +1226,7 @@ P_UNIT=$(dev_unit "${P_DEV}")
 discoverd_stop_daemon_only
 sed -i "/traddr=::1;trsvcid=${V6_PORT}\$/d" \
 	"${ETC_NVME_DIR}/nvme-fabrics.conf"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_released "the IOC of the removed DC" "${V6_NQN}" \
 	"${P_DEV}" "${P_UNIT}"
@@ -1230,7 +1238,7 @@ P_DEV=$(connected_dev "${TARGET_NQN}")
 P_UNIT=$(dev_unit "${P_DEV}")
 printf '[exclusions]\nexclusion = nqn=%s\n' "${TARGET_NQN}" \
 	> "${ETC_NVME_DIR}/exclusions.conf"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 systemctl reload "${DISCOVERD_UNIT}"
 assert_released "the excluded IOC" "${TARGET_NQN}" "${P_DEV}" \
 	"${P_UNIT}"
@@ -1274,7 +1282,7 @@ else
 	fail "setup: the DC is connecting"
 fi
 
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_journal_has "the DC was adopted" \
 	"${P_START}" "${P_DEV} - adopted" 10
@@ -1320,7 +1328,7 @@ chmod a+r "${ETC_NVME_DIR}/nvme-discoverd.conf"
 log "nvmet: remove port ${REF_PORT}"
 rm -f "/sys/kernel/config/nvmet/ports/${REF_PORT_ID}/subsystems/${REF_NQN}"
 rmdir "/sys/kernel/config/nvmet/ports/${REF_PORT_ID}"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_journal_has "the referred DC was given up" "${P_START}" \
 	"${TRADDR}, ${REF_PORT}, .* - giving up after repeated failures" 30
@@ -1370,7 +1378,7 @@ phase "an excluded controller that drops is not reconnected"
 # the IOC. When the IOC drops, the exclusion list is checked again.
 printf '[exclusions]\nexclusion = nqn=%s\n' "${NL_NQN}" \
 	> "${ETC_NVME_DIR}/exclusions.conf"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 disconnect_out_of_band "${NL_NQN}"
 assert_journal_has "the drop was checked against the exclusions" \
 	"${P_START}" "${NL_NQN}.* - excluded, skipping" 10
@@ -1391,7 +1399,7 @@ cat >> "${ETC_NVME_DIR}/nvme-fabrics.conf" <<EOF
 nqn        = ${HN_NQN}
 controller = transport=tcp;traddr=wringer-ioc.test;trsvcid=${HN_PORT}
 EOF
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 systemctl reload "${DISCOVERD_UNIT}"
 assert_journal_has "the host name was resolved" \
 	"${P_START}" "wringer-ioc.test - resolved to ${TRADDR}" 15
@@ -1409,7 +1417,7 @@ cat >> "${ETC_NVME_DIR}/nvme-fabrics.conf" <<EOF
 nqn        = ${HN2_NQN}
 controller = transport=tcp;traddr=wringer-late.test;trsvcid=${HN_PORT}
 EOF
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 systemctl reload "${DISCOVERD_UNIT}"
 assert_journal_has "the failed lookup was logged" \
 	"${P_START}" "wringer-late.test - failed to resolve" 30
@@ -1422,7 +1430,7 @@ phase "a restart adopts a controller configured by host name"
 # the pass could run before the lookup ends and release the IOC.
 P_DEV=$(connected_dev "${HN_NQN}")
 discoverd_stop_daemon_only
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 discoverd_start
 assert_dev_stable "restart adopts the IOC configured by host name" \
 	"${HN_NQN}" "${P_DEV}"
@@ -1447,7 +1455,7 @@ else
 	pass "the DC is connected by hand"
 fi
 nvmet_add_subsystem "${UO2_NQN}"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 log "nvmet: port ${UO_PORT} also serves ${UO2_NQN}"
 ln -s "/sys/kernel/config/nvmet/subsystems/${UO2_NQN}" \
 	"/sys/kernel/config/nvmet/ports/${UO_PORT_ID}/subsystems/${UO2_NQN}"
@@ -1473,7 +1481,7 @@ phase "an AEN from a DC owned by another orchestrator is ignored"
 	--persistent=force --owner "${FOREIGN_OWNER}" >/dev/null 2>&1
 P_DC=$(port_dc_dev "${UO_PORT}")
 nvmet_add_subsystem "${UO3_NQN}"
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 log "nvmet: port ${UO_PORT} also serves ${UO3_NQN}"
 ln -s "/sys/kernel/config/nvmet/subsystems/${UO3_NQN}" \
 	"/sys/kernel/config/nvmet/ports/${UO_PORT_ID}/subsystems/${UO3_NQN}"
@@ -1494,7 +1502,7 @@ mdns_setup
 phase "SIGHUP enables mDNS; an advertised DC is connected"
 mdns_port_open
 zeroconf_enable
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 if timeout 20 systemctl reload "${DISCOVERD_UNIT}"; then
 	pass "systemctl reload completes"
 else
@@ -1519,7 +1527,7 @@ phase "a DC advertised before its port is open"
 # TCP connect is retried silently until the port opens. No NVMe connect is
 # attempted before then.
 mdns_phase_reset
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 publish_start "p=tcp"
 sleep 3
 assert_not_connected "does not connect while the port is closed" \
@@ -1532,7 +1540,7 @@ assert_connected "connects once the port opens" "${MDNS_NQN}" 30
 phase "an unusable TXT record"
 mdns_phase_reset
 mdns_port_open
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 publish_start "p=bogus"
 sleep 3
 assert_not_connected "unknown p= value: not connected" "${MDNS_NQN}"
@@ -1558,7 +1566,7 @@ phase "an rdma DC is not checked first"
 # No RDMA hardware is needed: the test only checks that the connect is
 # requested at once, without a TCP check.
 mdns_phase_reset
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 publish_start "p=roce"
 sleep 3
 assert_journal_has "rdma: connect requested at once" \
@@ -1578,7 +1586,7 @@ assert_connected "connects a DC advertised 50 s after startup" \
 phase "mDNS recovers from a systemd-resolved restart"
 mdns_phase_reset
 mdns_port_open
-P_START=$(date +%H:%M:%S)
+P_START=$(journal_cursor)
 systemctl restart systemd-resolved
 sleep 1
 resolved_mdns_link_enable
