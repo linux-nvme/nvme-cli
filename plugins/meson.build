@@ -11,6 +11,12 @@ selected_plugins = get_option('plugins')
 # to the plugins whose functions it calls. Plugins needed by a selected
 # plugin are selected as well: each round visits the plugins needed by the
 # previous round.
+#
+# A plugin which adds top-level commands ("nvme <command>") lists them in
+# plugin_commands, and their aliases in plugin_command_aliases, a dict
+# from command to alias. nvme loads the module for these commands. A
+# plugin with only top-level commands, without "nvme <plugin>", sets
+# plugin_extension to false.
 plugin_sources = []
 enabled_plugins = []
 plugin_defs = []
@@ -34,6 +40,9 @@ foreach round : range(16)
     n_sources_before = plugin_sources.length()
     plugin_name = plugin_subdir
     plugin_needs = []
+    plugin_extension = true
+    plugin_commands = []
+    plugin_command_aliases = {}
     subdir(plugin_subdir)
     if plugin_sources.length() > n_sources_before
       enabled_plugins += plugin_dir
@@ -47,6 +56,9 @@ foreach round : range(16)
         'name': plugin_name,
         'sources': srcs,
         'needs': plugin_needs,
+        'extension': plugin_extension,
+        'commands': plugin_commands,
+        'aliases': plugin_command_aliases,
       }
       foreach need : plugin_needs
         if need not in visited_plugins and need not in needed_plugins
@@ -107,6 +119,28 @@ foreach def : plugin_defs
   endif
 endforeach
 
+# The top-level commands of the plugins: "<plugin>:<command>[=<alias>]"
+plugin_command_index = []
+command_index = []
+foreach def : plugin_defs
+  foreach cmd, alias : def['aliases']
+    if cmd not in def['commands']
+      error('the @0@ plugin has an alias for no command: @1@'.format(
+            def['dir'], cmd))
+    endif
+  endforeach
+  foreach cmd : def['commands']
+    alias = def['aliases'].get(cmd, '')
+    entry = '@0@:@1@'.format(def['subdir'], cmd)
+    if alias != ''
+      entry += '=' + alias
+    endif
+    plugin_command_index += entry
+    command_index += '{ "@0@", @1@, "@2@" }, '.format(
+      cmd, alias != '' ? '"' + alias + '"' : 'NULL', def['subdir'])
+  endforeach
+endforeach
+
 plugin_deps = []
 foreach d : [config_dep, ccan_dep, libnvme_dep, shared_dep, json_c_dep,
              libkmod_dep]
@@ -132,11 +166,21 @@ if want_plugin_modules
   # the directory of the plugin. A missing module is "not installed".
   plugin_names = []
   foreach def : plugin_defs
-    plugin_names += '{ "@0@", "@1@" }'.format(def['name'], def['subdir'])
+    if def['extension']
+      plugin_names += '{ "@0@", "@1@" }'.format(def['name'], def['subdir'])
+    endif
   endforeach
   configure_file(
     output: 'plugin-names.h',
     configuration: {'NVME_PLUGIN_NAMES': ', '.join(plugin_names)},
+  )
+
+  # The top-level commands of the modules, see plugin-loader.c
+  configure_file(
+    output: 'command-index.h',
+    configuration: {
+      'NVME_COMMAND_INDEX': ''.join(command_index) + '{ NULL, NULL, NULL }',
+    },
   )
 endif
 plugin_names_inc = include_directories('.')
