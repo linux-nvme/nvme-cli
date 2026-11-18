@@ -75,6 +75,20 @@ class CommandModulesTest(unittest.TestCase):
         self.assertIn('Usage: nvme read <device>', r.stdout)
         self.assertNotIn(LOAD_ERROR, r.stderr)
 
+    def test_list_loads_only_its_module(self):
+        self.modules('cmds-list')
+        r = self.nvme('list', '--help')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('Usage: nvme list', r.stdout)
+        self.assertNotIn(LOAD_ERROR, r.stderr)
+
+    def test_list_module_not_installed(self):
+        r = self.nvme('list')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(r.stdout, '')
+        self.assertIn('command list not installed: plugin cmds-list has no '
+                      'module in ' + self.dir, r.stderr)
+
     def test_alias(self):
         self.modules('cmds-deprecated', 'cmds-fw')
         r = self.nvme('fw-activate', '--help')
