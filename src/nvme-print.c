@@ -23,6 +23,7 @@
 #include "cleanup.h"
 #include "nvme-models.h"
 #include "nvme-print.h"
+#include "plugin-loader.h"
 
 /*
  * A printer runs between nvme_print_begin() and nvme_print_end(). The
@@ -1959,6 +1960,35 @@ void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 	nvme_print(pull_model_ddc_req_log, flags, log, len);
 }
 
+static struct nvme_log_decoder *log_decoders;
+
+void nvme_register_log_decoder(struct nvme_log_decoder *dec)
+{
+	dec->next = log_decoders;
+	log_decoders = dec;
+}
+
+/* Plugins that register log page decoders */
+static const char *const log_decoder_plugins[] = { "log", "fdp", "zns" };
+
+static bool nvme_show_log_decoded(const char *devname,
+				  enum nvme_cmd_get_log_lid lid, __u32 nsid,
+				  __u16 lsi, __u8 lsp, void *log, __u32 len,
+				  nvme_print_flags_t flags)
+{
+	struct nvme_log_decoder *dec;
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(log_decoder_plugins); i++)
+		nvme_load_plugin(log_decoder_plugins[i]);
+
+	for (dec = log_decoders; dec; dec = dec->next)
+		if (dec->show(devname, lid, nsid, lsi, lsp, log, len, flags))
+			return true;
+
+	return false;
+}
+
 void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u16 lsi,
 		   __u8 lsp, void *log, __u32 len, nvme_print_flags_t flags)
 {
@@ -2106,6 +2136,8 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		nvme_show_zns_changed(log, flags);
 		break;
 	default:
+		nvme_show_log_decoded(devname, lid, nsid, lsi, lsp, log, len,
+				      flags);
 		break;
 	}
 }

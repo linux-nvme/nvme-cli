@@ -545,6 +545,19 @@ void nvme_print_decoder_end(nvme_print_flags_t flags);
 		}							\
 	} while (false)
 
+/*
+ * Log page decoder registered by a plugin for get-log -v. ->show returns
+ * true if it decoded the log page.
+ */
+struct nvme_log_decoder {
+	bool (*show)(const char *devname, enum nvme_cmd_get_log_lid lid,
+		     __u32 nsid, __u16 lsi, __u8 lsp, void *log, __u32 len,
+		     nvme_print_flags_t flags);
+	struct nvme_log_decoder *next;
+};
+
+void nvme_register_log_decoder(struct nvme_log_decoder *dec);
+
 struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
