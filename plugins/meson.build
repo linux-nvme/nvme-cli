@@ -22,6 +22,10 @@ enabled_plugins = []
 plugin_defs = []
 visited_plugins = []
 pending_plugins = selected_plugins
+# The deprecated top-level commands are a plugin of their own
+if want_deprecated_cmds
+  pending_plugins += 'deprecated'
+endif
 foreach round : range(16)
   if pending_plugins.length() == 0
     break

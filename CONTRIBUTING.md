@@ -97,8 +97,8 @@ int f(int argc, char **argv, struct command *command, struct plugin *plugin);
 `argc`/`argv` are adjusted to start after the sub-command. For
 `nvme foo --option=bar`, `argc` is 1 and `argv` starts at `--option`.
 Use `.alias = "other-name"` for an alias, and `.deprecated = true` for a
-deprecated command (deprecated built-ins live in
-`src/nvme-cmds-deprecated.c`, gated by `#ifdef CONFIG_DEPRECATED_CMDS`).
+deprecated command (the deprecated top-level commands live in the
+`plugins/cmds-deprecated` plugin, built with `-Ddeprecated-cmds=enabled`).
 Set `.no_device = true` for a command that doesn't take a positional
 `<device>` argument (e.g. `nvme list` or `nvme gen-hostnqn`) -- this drops
 `<device>` from its usage line and, when none of a plugin's commands need
