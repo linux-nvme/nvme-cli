@@ -459,6 +459,26 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 		obj_add_array(r, "ns-descs", json_array);
 }
 
+static void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+{
+	struct json_object *r = json_root();
+	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
+	__u32 asz = (rpmbs & 0xFF000000) >> 24;
+	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
+	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
+	__u32 auth = (rpmbs & 0x38) >> 3;
+	__u32 rpmb = rpmbs & 7;
+
+	obj_add_uint_nx(r, "[31:24]: Access Size", asz);
+	obj_add_uint_nx(r, "[23:16]: Total Size", tsz);
+
+	if (rsvd)
+		obj_add_uint_nx(r, "[15:6]: Reserved", rsvd);
+
+	obj_add_uint_nx(r, "[5:3]: Authentication Method", auth);
+	obj_add_uint_nx(r, "[2:0]: Number of RPMB Units", rpmb);
+}
+
 static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
 	struct json_object *r = json_root();
@@ -756,6 +776,7 @@ static struct id_print_ops id_json_print_ops = {
 	.endurance_group_list		= json_nvme_endurance_group_list,
 	.id_ctrl			= json_nvme_id_ctrl,
 	.id_ctrl_nvm			= json_nvme_id_ctrl_nvm,
+	.id_ctrl_rpmbs			= json_id_ctrl_rpmbs,
 	.id_domain_list			= json_id_domain_list,
 	.id_independent_id_ns		= json_nvme_cmd_set_independent_id_ns,
 	.id_iocs			= json_id_iocs,

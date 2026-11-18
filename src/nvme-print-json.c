@@ -1325,26 +1325,6 @@ void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 	obj_print(r);
 }
 
-void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
-{
-	struct json_object *r = json_r;
-	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
-	__u32 asz = (rpmbs & 0xFF000000) >> 24;
-	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
-	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
-	__u32 auth = (rpmbs & 0x38) >> 3;
-	__u32 rpmb = rpmbs & 7;
-
-	obj_add_uint_nx(r, "[31:24]: Access Size", asz);
-	obj_add_uint_nx(r, "[23:16]: Total Size", tsz);
-
-	if (rsvd)
-		obj_add_uint_nx(r, "[15:6]: Reserved", rsvd);
-
-	obj_add_uint_nx(r, "[5:3]: Authentication Method", auth);
-	obj_add_uint_nx(r, "[2:0]: Number of RPMB Units", rpmb);
-}
-
 static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 {
 	struct json_object *r = json_r;
@@ -2626,7 +2606,6 @@ static struct print_ops json_print_ops = {
 	.select_result			= json_select_result,
 	.show_feature			= json_feature_show,
 	.show_feature_fields		= json_feature_show_fields,
-	.id_ctrl_rpmbs			= json_id_ctrl_rpmbs,
 	.lba_range			= json_lba_range,
 	.lba_status_info		= json_lba_status_info,
 	.d				= json_d,

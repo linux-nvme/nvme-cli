@@ -14,6 +14,7 @@ struct id_print_ops {
 	void (*id_ctrl)(struct nvme_id_ctrl *ctrl, const char *product_name,
 			void (*vs)(__u8 *vs, struct json_object *root));
 	void (*id_ctrl_nvm)(struct nvme_id_ctrl_nvm *ctrl_nvm);
+	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
 	void (*id_domain_list)(struct nvme_id_domain_list *id_dom);
 	void (*id_independent_id_ns)(struct nvme_id_independent_id_ns *ns,
 				     unsigned int nsid);

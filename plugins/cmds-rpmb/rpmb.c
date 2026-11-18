@@ -38,6 +38,7 @@
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "plugins/cmds-id/id.h"
 
 /* Read data from given file into buffer and return its length */
 static int read_file(const char *file, unsigned char **data, unsigned int *len)
