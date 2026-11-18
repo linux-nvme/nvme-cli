@@ -34,7 +34,6 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 #include <ccan/str/str.h>
-#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
@@ -46,13 +45,37 @@
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "logging.h"
-#include "nvme-cmds-common.h"
 #include "nvme-print.h"
 #include "plugin.h"
 
 static const char *latency = "output latency statistics";
 static const char *namespace_desired = "desired namespace";
 static const char *raw_dump = "dump output in binary format";
+
+struct passthru_config {
+	__u8	opcode;
+	__u8	flags;
+	__u16	rsvd;
+	__u32	namespace_id;
+	__u32	data_len;
+	__u32	metadata_len;
+	__u32	cdw2;
+	__u32	cdw3;
+	__u32	cdw10;
+	__u32	cdw11;
+	__u32	cdw12;
+	__u32	cdw13;
+	__u32	cdw14;
+	__u32	cdw15;
+	char	*input_file;
+	char	*metadata;
+	bool	raw_binary;
+	bool	show_command;
+	bool	read;
+	bool	write;
+	__u8	prefill;
+	bool	latency;
+};
 
 static void passthru_print_read_output(struct passthru_config cfg, void *data, int dfd, void *mdata,
 				       int mfd, int err)
@@ -367,7 +390,7 @@ static struct command *commands[] = {
 	NULL,
 };
 
-static void __shr_constructor register_group(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&builtin, "Passthrough", commands);
 }

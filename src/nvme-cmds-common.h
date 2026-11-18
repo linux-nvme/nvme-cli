@@ -27,31 +27,6 @@ struct feat_cfg {
 	bool changed;
 };
 
-struct passthru_config {
-	__u8	opcode;
-	__u8	flags;
-	__u16	rsvd;
-	__u32	namespace_id;
-	__u32	data_len;
-	__u32	metadata_len;
-	__u32	cdw2;
-	__u32	cdw3;
-	__u32	cdw10;
-	__u32	cdw11;
-	__u32	cdw12;
-	__u32	cdw13;
-	__u32	cdw14;
-	__u32	cdw15;
-	char	*input_file;
-	char	*metadata;
-	bool	raw_binary;
-	bool	show_command;
-	bool	read;
-	bool	write;
-	__u8	prefill;
-	bool	latency;
-};
-
 struct nvme_get_log_args {
 	__u32 nsid;
 	bool rae;
