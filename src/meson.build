@@ -19,7 +19,6 @@ sources = [
     'src/nvme-cmds-fabrics.c',
     'src/nvme-cmds-feature.c',
     'src/nvme-cmds-passthru.c',
-    'src/nvme-cmds-registers.c',
     'src/plugin.c',
     'src/privsep.c',
     'src/bitfields.c',
