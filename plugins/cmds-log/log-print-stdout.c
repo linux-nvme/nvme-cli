@@ -14,6 +14,7 @@
 #include "log-print.h"
 #include "logging.h"
 #include "nvme-print.h"
+#include "plugins/cmds-feat/feat-print.h"
 #include "nvme-print-stdout.h"
 
 static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,

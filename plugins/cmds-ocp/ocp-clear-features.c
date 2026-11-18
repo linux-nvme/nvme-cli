@@ -14,6 +14,7 @@
 #include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "plugins/cmds-feat/feat-print.h"
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 #include "plugin.h"

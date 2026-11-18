@@ -16,6 +16,7 @@
 #include "plugin.h"
 
 #include "feat-cmds.h"
+#include "feat-print.h"
 
 #define FEAT_PLUGIN_VERSION "1.0"
 

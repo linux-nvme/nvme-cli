@@ -25,6 +25,7 @@
 #include "log-print.h"
 #include "nvme-json.h"
 #include "nvme-print.h"
+#include "plugins/cmds-feat/feat-print.h"
 #include "nvme-print-json.h"
 
 static void json_error_log(struct nvme_error_log_page *err_log, int entries,

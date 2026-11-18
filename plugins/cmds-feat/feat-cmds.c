@@ -52,6 +52,7 @@
 #include "plugin.h"
 
 #include "feat-cmds.h"
+#include "feat-print.h"
 
 static const char *buf_len = "buffer len (if) data is sent or received";
 static const char *namespace_desired = "desired namespace";

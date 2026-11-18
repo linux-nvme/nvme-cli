@@ -15,8 +15,6 @@ struct shr_table *stdout_bits_table_create(void);
 void stdout_bits_add(struct shr_table *t, const char *bits,
 		unsigned int val, const char *desc_fmt, ...);
 const char *stdout_format_timestamp(__u8 *timestamp_bytes);
-void stdout_feature_show_fields(enum nvme_features_id fid, unsigned int result,
-				unsigned char *buf);
 #ifdef CONFIG_FABRICS
 void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec);
 #else /* CONFIG_FABRICS */

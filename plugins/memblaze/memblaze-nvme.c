@@ -507,7 +507,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *acm
 	if (!err)
 		printf("get-feature:0x%02x (%s), %s value: %#016" PRIx64 "\n",
 			feature_id, mb_feature_to_string(feature_id),
-			nvme_select_to_string(0), (uint64_t)result);
+			"Current", (uint64_t)result);
 	else
 		nvme_show_err(err, "get-feature");
 	return err;
