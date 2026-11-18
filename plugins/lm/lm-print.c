@@ -6,13 +6,8 @@
 #include "nvme-print.h"
 
 #define lm_print(name, flags, ...) \
-	do { \
-		struct lm_print_ops *ops = lm_print_ops(flags); \
-		if (ops && ops->name) \
-			ops->name(__VA_ARGS__); \
-		else \
-			nvme_show_error("unhandled output format"); \
-	} while (false)
+	nvme_print_decoder(lm_print_ops(flags), name, true, flags, \
+			   ##__VA_ARGS__)
 
 static struct lm_print_ops *lm_print_ops(nvme_print_flags_t flags)
 {
