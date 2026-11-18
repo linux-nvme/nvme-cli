@@ -66,7 +66,10 @@ endif
 if want_top and have_mock_nvme
     fuzz_targets += {
         'iostat': {
-            'sources': ['fuzz-iostat.c', '../../src/nvme-iostat.c'],
+            'sources': [
+                'fuzz-iostat.c',
+                '../../plugins/cmds-list/nvme-iostat.c',
+            ],
             'c_args': [
                 '-DFUZZ_IOSTAT_TREE="' + (meson.project_source_root() /
                     'libnvme/tests/sysfs/data/tree-pcie.tar.xz') + '"',

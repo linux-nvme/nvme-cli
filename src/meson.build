@@ -27,7 +27,6 @@ endif
 if host_system == 'linux'
     sources += [
         'src/nvme-pci-ids-linux.c',
-        'src/dashboard.c',
     ]
 elif host_system == 'windows'
     sources += [
@@ -53,8 +52,4 @@ if want_fabrics
         'src/config-create.c',
         'src/pre-os.c',
     ]
-endif
-
-if want_top
-    sources += ['src/nvme-iostat.c']
 endif

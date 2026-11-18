@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "nvme-iostat.h"
+#include "plugins/cmds-list/nvme-iostat.h"
 
 static bool report(const char *what, bool pass)
 {

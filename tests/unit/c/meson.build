@@ -92,7 +92,7 @@ test('nvme-cli - regs', test_regs, suite: 'unit')
 if want_top
     test_iostat = executable(
         'test-iostat',
-        ['test-iostat.c', '../../../src/nvme-iostat.c'],
+        ['test-iostat.c', '../../../plugins/cmds-list/nvme-iostat.c'],
         include_directories: '../../../src',
         dependencies: [config_dep, libnvme_dep],
     )
