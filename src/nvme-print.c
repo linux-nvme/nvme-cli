@@ -765,12 +765,6 @@ const char *nvme_bpwps_to_string(__u8 bpwps)
 	}
 }
 
-void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
-			 void *buf, __u32 len, nvme_print_flags_t flags)
-{
-	nvme_print(directive, flags, type, oper, spec, nsid, result, buf, len);
-}
-
 const char *nvme_plm_window_to_string(__u32 plm)
 {
 	switch (NVME_FEAT_PLMW_WS(plm)) {

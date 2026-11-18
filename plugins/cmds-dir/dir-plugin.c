@@ -22,6 +22,7 @@
 
 #include "argconfig.h"
 #include "cleanup.h"
+#include "dir-print.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
