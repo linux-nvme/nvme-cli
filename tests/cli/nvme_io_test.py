@@ -8,16 +8,19 @@
 """Tests the NVM command set I/O commands: flush, dsm, write-zeroes,
 write-uncor, verify, read, write, compare and copy, and the admin command
 get-lba-status. Checks the fields and data of the commands against the
-NVM Express NVM Command Set Specification 1.3.
+NVM Express NVM Command Set Specification 1.3, and the output of
+get-lba-status.
 
 Usage: python3 nvme_io_test.py <path-to-nvme-binary> <mock-lib>
 """
+import json
 import os
 import struct
 
-from tests.cli.nvme_mock import (CNS_NS, NVME_IOCTL_ID, OPC_NVM_READ,
-                                 OPC_NVM_WRITE, MockTestCase, Reply, id_ns,
-                                 main)
+from tests.cli.nvme_mock import (CNS_NS, HAVE_JSON, NVME_IOCTL_ID,
+                                 OPC_NVM_READ, OPC_NVM_WRITE, MockTestCase,
+                                 Reply, id_ns, main)
+from tests.cli.nvme_mock_ipc import run_nvme
 
 OPC_NVM_FLUSH = 0x00
 OPC_NVM_COMPARE = 0x05
@@ -341,6 +344,15 @@ class CopyTest(IoTestBase):
                                    OPC_NVM_COPY)
 
 
+def lba_status():
+    """An LBA Status Data with two descriptors, the scan completed"""
+    # NLSD, CMPC; per descriptor DSLBA, NLB, Status
+    data = struct.pack('<IB3x', 2, 2)
+    data += struct.pack('<QIxB2x', 0x1000, 8, 1)
+    data += struct.pack('<QIxB2x', 0x2000, 16, 0)
+    return data
+
+
 class GetLbaStatusTest(IoTestBase):
 
     def test_fields(self):
@@ -375,6 +387,66 @@ class GetLbaStatusTest(IoTestBase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('action type (--action) has to be given', result.stderr)
         self.assertEqual(self.server.admin_cmds(OPC_GET_LBA_STATUS), [])
+
+    def lba_status(self, *args, **kwargs):
+        """Run get-lba-status for the LBA Status Data of lba_status()"""
+        self.server.admin[OPC_GET_LBA_STATUS] = Reply(data=lba_status())
+        return self.assertOk(self.nvme('get-lba-status', self.ns,
+                                       '--action=2', '--max-dw=9', *args,
+                                       **kwargs))
+
+    def test_output(self):
+        self.assertEqual(
+            self.lba_status().stdout,
+            'Number of LBA Status Descriptors(NLSD) : 2\n'
+            'Completion Condition(CMPC)             : 2\n'
+            '\tCompleted the specified action over the number of LBAs '
+            'specified\n'
+            '\tin the Range Length field and transferred all available '
+            'LBA Status\n'
+            '\tDescriptor Entries\n'
+            'DSLBA            NLB      Status\n'
+            '---------------- -------- ------\n'
+            '0x00000000001000 0x000008 0x1\n'
+            '0x00000000002000 0x000010 00\n')
+
+    def test_output_json(self):
+        if not HAVE_JSON:
+            self.skipTest('built without json-c')
+        self.assertEqual(json.loads(self.lba_status('-o', 'json').stdout), {
+            'Number of LBA Status Descriptors (NLSD)': 2,
+            'Completion Condition (CMPC)': 2,
+            'cmpc-definition':
+                'Completed the specified action over the number of LBAs '
+                'specifiedin the Range Length field and transferred all '
+                'available LBA StatusDescriptor Entries',
+            'LSD entry 0': {'DSLBA': '0x0000000000001000',
+                            'NLB': '0x00000008', 'status': '0x01'},
+            'LSD entry 1': {'DSLBA': '0x0000000000002000',
+                            'NLB': '0x00000010', 'status': '0x00'},
+        })
+
+    def test_output_binary(self):
+        self.server.admin[OPC_GET_LBA_STATUS] = Reply(data=lba_status())
+        result = run_nvme(self.nvme_bin, self.env, self.sysfs_dir,
+                          self.base_dir, 'get-lba-status', self.ns,
+                          '--action=2', '--max-dw=9', '-o', 'binary',
+                          encoding=None)
+        self.assertOk(result)
+        self.assertEqual(result.stdout, lba_status())
+
+    def test_dry_run(self):
+        """--dry-run prints the command and decodes no data"""
+        result = self.lba_status('--dry-run')
+        self.assertNotIn('LBA Status Descriptors', result.stdout)
+
+    def test_decoded_in_sandbox(self):
+        self.server.admin[OPC_GET_LBA_STATUS] = Reply(data=lba_status())
+        for args in ([], ['-o', 'binary']):
+            with self.subTest(args=args):
+                self.assertDecodedInSandbox('get-lba-status', self.ns,
+                                            '--action=2', '--max-dw=9',
+                                            *args)
 
 
 if __name__ == '__main__':
