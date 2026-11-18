@@ -41,16 +41,13 @@
 #include <sys/socket.h>
 #endif
 
-#ifdef NVME_HAVE_LIBKMOD
-#include <libkmod.h>
-#endif
-
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 #include <ccan/str/str.h>
 #include <shared/io-util.h>
+#include <shared/kmod-util.h>
 #include <shared/net-util.h>
 #include <shared/sig-util.h>
 #include <shared/string-util.h>
@@ -907,46 +904,14 @@ err:
 
 static void load_nvme_fabrics_module(void)
 {
-#ifdef NVME_HAVE_LIBKMOD
-	struct kmod_ctx *ctx;
-	struct kmod_module *mod;
-	int err, state;
-	int timeout = 20; /* 2 seconds */
+	int err;
 
-	ctx = kmod_new(NULL, NULL);
-	if (!ctx)
-		return;
-
-	err = kmod_module_new_from_name(ctx, "nvme-fabrics", &mod);
-	if (err)
-		goto unref;
-
-	state = kmod_module_get_initstate(mod);
-	if (state != KMOD_MODULE_LIVE && state != KMOD_MODULE_BUILTIN) {
-		err = kmod_module_probe_insert_module(mod,
-			KMOD_PROBE_APPLY_BLACKLIST, NULL, NULL, NULL, NULL);
-		if (err)
-			goto mod_unref;
-
-		while (timeout--) {
-			state = kmod_module_get_initstate(mod);
-			if (state == KMOD_MODULE_LIVE)
-				goto mod_unref;
-
-			/* 100 ms */
-			usleep(100 * 1000);
-		}
-		err = -ENOENT;
-	}
-
-mod_unref:
-	kmod_module_unref(mod);
-unref:
-	kmod_unref(ctx);
-
-	if (err)
+	err = shr_kmod_load_module("nvme-fabrics");
+	if (err == -ENOTSUP)
+		nvme_show_verbose_info(
+			"libkmod is not available, not loading nvme-fabrics");
+	else if (err)
 		nvme_show_error("Couldn't load the nvme-fabrics module");
-#endif
 }
 
 /*

@@ -419,6 +419,16 @@ else
     libkmod_dep = dependency('libkmod', required: libkmod_opt)
 endif
 conf.set('NVME_HAVE_LIBKMOD', libkmod_dep.found(), description: 'Is libkmod available?')
+# Load libkmod at runtime: nvme only loads the nvme-fabrics module with
+# it, which doesn't make it a dependency of nvme. Only the headers are
+# needed to build.
+libkmod_dlopen = libkmod_dep.found() and not is_static
+conf.set('NVME_HAVE_LIBKMOD_DLOPEN', libkmod_dlopen,
+    description: 'Is libkmod loaded at runtime?')
+if libkmod_dlopen
+    # The soname of libkmod.
+    conf.set_quoted('LIBKMOD_SONAME', 'libkmod.so.2')
+endif
 
 openssl_opt = get_option('openssl').require(host_system == 'linux',
     error_message: 'openssl requires Linux')
@@ -800,7 +810,6 @@ if want_nvme
         libnvme_dep,
         shared_dep,
         json_c_dep,
-        libkmod_dep,
     ]
 
     if host_system == 'windows'

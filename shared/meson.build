@@ -61,6 +61,12 @@ else
     sources += ['archive-util-stub.c']
 endif
 
+if libkmod_dep.found()
+    sources += ['kmod-util.c']
+else
+    sources += ['kmod-util-stub.c']
+endif
+
 shared_deps = [ccan_dep]
 if host_system != 'windows'
     shared_deps += [openssl_dep]
@@ -72,6 +78,14 @@ if libarchive_dlopen
     ]
 elif libarchive_dep.found()
     shared_deps += [libarchive_dep]
+endif
+if libkmod_dlopen
+    shared_deps += [
+        libkmod_dep.partial_dependency(compile_args: true, includes: true),
+        dl_dep,
+    ]
+elif libkmod_dep.found()
+    shared_deps += [libkmod_dep]
 endif
 
 libshared = static_library(
