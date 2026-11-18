@@ -25,6 +25,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
 
+#include "command-index.h"
 #include "plugin-loader.h"
 #include "plugin-names.h"
 
@@ -234,6 +235,15 @@ bool nvme_plugin_known(const char *name)
 			return true;
 	}
 	return false;
+}
+
+const struct nvme_command_entry *nvme_command_index(void)
+{
+	static const struct nvme_command_entry index[] = {
+		NVME_COMMAND_INDEX
+	};
+
+	return index;
 }
 
 static int is_module(const struct dirent *entry)

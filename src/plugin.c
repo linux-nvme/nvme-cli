@@ -37,30 +37,99 @@ static int version_cmd(struct plugin *plugin)
 	return 0;
 }
 
-/*
- * The command @name selects: an exact name or alias, otherwise the only
- * command whose name starts with @name.
- */
-static struct command *find_command(struct plugin *plugin, const char *name)
+/* The command of @plugin with the name or alias @name */
+static struct command *find_exact_command(struct plugin *plugin,
+					  const char *name)
 {
-	struct command **cmd, *match = NULL;
-	size_t len = strlen(name);
-	bool unique = false;
+	struct command **cmd;
 
 	for (cmd = plugin->commands; *cmd; cmd++) {
 		if (streq(name, (*cmd)->name) ||
 		    ((*cmd)->alias && streq(name, (*cmd)->alias)))
 			return *cmd;
 	}
+	return NULL;
+}
+
+/*
+ * The command @name selects: an exact name or alias, otherwise the only
+ * command whose name starts with @name. The top-level commands of the
+ * modules which aren't loaded take part, from the command index. When
+ * @name selects one of them, it is returned in @entry instead.
+ */
+static struct command *lookup_command(struct plugin *plugin, const char *name,
+				      const struct nvme_command_entry **entry)
+{
+	const struct nvme_command_entry *e;
+	struct command **cmd, *match = NULL;
+	size_t len = strlen(name);
+	unsigned int n = 0;
+
+	*entry = NULL;
+	match = find_exact_command(plugin, name);
+	if (match)
+		return match;
+
+	/* Only the built-in plugin has the top-level commands */
+	if (!plugin->name) {
+		for (e = nvme_command_index(); e->name; e++) {
+			if (streq(name, e->name) ||
+			    (e->alias && streq(name, e->alias))) {
+				*entry = e;
+				return NULL;
+			}
+		}
+	}
 
 	for (cmd = plugin->commands; *cmd; cmd++) {
 		if (strncmp(name, (*cmd)->name, len))
 			continue;
-		unique = !match;
 		match = *cmd;
+		n++;
+	}
+	if (!plugin->name) {
+		for (e = nvme_command_index(); e->name; e++) {
+			/* the commands of loaded modules are counted above */
+			if (strncmp(name, e->name, len) ||
+			    find_exact_command(plugin, e->name))
+				continue;
+			*entry = e;
+			n++;
+		}
 	}
 
-	return unique ? match : NULL;
+	if (n != 1) {
+		*entry = NULL;
+		return NULL;
+	}
+	return *entry ? NULL : match;
+}
+
+/*
+ * The command @name selects. A top-level command of a module which isn't
+ * loaded yet loads it.
+ */
+static struct command *find_command(struct plugin *plugin, const char *name)
+{
+	const struct nvme_command_entry *entry;
+	struct command *cmd;
+
+	cmd = lookup_command(plugin, name, &entry);
+	if (!entry)
+		return cmd;
+
+	nvme_load_plugin(entry->module);
+	return find_exact_command(plugin, entry->name);
+}
+
+/* The top-level command @name selects, of a module which isn't loaded */
+static const struct nvme_command_entry *find_module_command(
+	struct plugin *plugin, const char *name)
+{
+	const struct nvme_command_entry *entry;
+
+	lookup_command(plugin, name, &entry);
+	return entry;
 }
 
 static struct plugin *__find_extension(struct plugin *plugin, const char *name)
@@ -209,35 +278,58 @@ static void build_command_usage(char *use, size_t size, struct program *prog,
 			 plugin->name, cmd->name, device[cmd->device]);
 }
 
+/* The position of the group @title in the help of @plugin */
+static int group_rank(struct plugin *plugin, const char *title)
+{
+	int i;
+
+	if (!plugin->group_order)
+		return 0;
+	for (i = 0; plugin->group_order[i]; i++) {
+		if (shr_streq0(title, plugin->group_order[i]))
+			break;
+	}
+	return i;
+}
+
 void plugin_add_group(struct plugin *plugin, const char *title,
 		      struct command **commands)
 {
-	struct command_group *group, **tail;
+	struct command_group *group, **pos;
 	struct command **merged;
-	size_t old_count = 0, new_count = 0;
+	size_t count = 0, i;
+	int rank;
 
 	group = malloc(sizeof(*group));
 	if (!group)
 		return;
 	group->title = title;
 	group->commands = commands;
-	group->next = NULL;
 
-	for (tail = &plugin->groups; *tail; tail = &(*tail)->next)
-		;
-	*tail = group;
+	/* before the first group which comes after it */
+	rank = group_rank(plugin, title);
+	for (pos = &plugin->groups; *pos; pos = &(*pos)->next) {
+		if (group_rank(plugin, (*pos)->title) > rank)
+			break;
+	}
+	group->next = *pos;
+	*pos = group;
 
-	if (plugin->commands)
-		while (plugin->commands[old_count])
-			old_count++;
-	while (commands[new_count])
-		new_count++;
+	for (group = plugin->groups; group; group = group->next) {
+		for (i = 0; group->commands[i]; i++)
+			count++;
+	}
 
-	merged = realloc(plugin->commands, (old_count + new_count + 1) * sizeof(*merged));
+	merged = realloc(plugin->commands, (count + 1) * sizeof(*merged));
 	if (!merged)
 		return;
 
-	memcpy(&merged[old_count], commands, (new_count + 1) * sizeof(*merged));
+	count = 0;
+	for (group = plugin->groups; group; group = group->next) {
+		for (i = 0; group->commands[i]; i++)
+			merged[count++] = group->commands[i];
+	}
+	merged[count] = NULL;
 	plugin->commands = merged;
 }
 
@@ -656,7 +748,7 @@ int plugin_lookup(int argc, char **argv, struct plugin *plugin,
 		return 0;
 
 	/* Only the built-in plugin has extensions */
-	if (plugin->name) {
+	if (plugin->name || find_module_command(plugin, argv[0])) {
 		call->action = PLUGIN_ERROR;
 		call->err = -ENOTTY;
 		call->str = argv[0];
@@ -680,6 +772,7 @@ void plugin_call_free(struct plugin_call *call)
 
 int plugin_call_run(struct plugin_call *call)
 {
+	const struct nvme_command_entry *entry;
 	struct plugin *plugin = call->plugin;
 	__cleanup_free char *e = NULL;
 
@@ -694,6 +787,14 @@ int plugin_call_run(struct plugin_call *call)
 		general_help(plugin, NULL);
 		return 0;
 	case PLUGIN_ERROR:
+		entry = call->str && !plugin->name ?
+			find_module_command(plugin, call->str) : NULL;
+		if (entry) {
+			argconfig_error(
+				"command %s not installed: plugin %s has no module in %s",
+				entry->name, entry->module, nvme_plugin_dir());
+			return call->err;
+		}
 		if (call->str && !plugin->name &&
 		    nvme_plugin_known(call->str)) {
 			argconfig_error(

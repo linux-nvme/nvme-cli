@@ -117,11 +117,16 @@ static struct plugin ext_plugin = {
 	.core = true,
 };
 
+static const char *const builtin_groups[] = {
+	"Core Commands", "Module Commands", "List Commands", NULL,
+};
+
 static struct plugin builtin_plugin = {
 	.name = NULL,
 	.desc = "test built-in",
 	.version = "1.0",
 	.next = &ext_plugin,
+	.group_order = builtin_groups,
 };
 
 static struct program prog = {
@@ -151,6 +156,41 @@ static struct plugin lazy_plugin = {
 	.parent = &prog,
 };
 
+/*
+ * The module "cmds" adds top-level commands. The module of "missing-cmd" is
+ * not installed.
+ */
+DEFINE_STUB(top_fn, "top-cmd", 99)
+DEFINE_STUB(list_c_fn, "list-c", 111)
+DEFINE_STUB(stop_fn, "stop-cmd", 122)
+
+static struct command cmd_top = {
+	"top-cmd", "top-level command", top_fn, "tc", false
+};
+static struct command cmd_list_c = {
+	"list-c", "list-c command", list_c_fn, NULL, false
+};
+static struct command cmd_stop = {
+	"stop-cmd", "stop command", stop_fn, NULL, false
+};
+static struct command *cmds_commands[] = {
+	&cmd_top, &cmd_list_c, &cmd_stop, NULL
+};
+static bool cmds_loaded;
+
+const struct nvme_command_entry *nvme_command_index(void)
+{
+	static const struct nvme_command_entry index[] = {
+		{ "top-cmd", "tc", "cmds" },
+		{ "list-c", NULL, "cmds" },
+		{ "stop-cmd", NULL, "cmds" },
+		{ "missing-cmd", NULL, "missing" },
+		{ NULL },
+	};
+
+	return index;
+}
+
 static char loaded_name[32];
 static int nr_load_plugin, nr_load_plugins;
 
@@ -162,18 +202,30 @@ static void load_lazy(void)
 	}
 }
 
+static void load_cmds(void)
+{
+	if (!cmds_loaded) {
+		plugin_add_group(&builtin_plugin, "Module Commands",
+				 cmds_commands);
+		cmds_loaded = true;
+	}
+}
+
 void nvme_load_plugin(const char *name)
 {
 	nr_load_plugin++;
 	snprintf(loaded_name, sizeof(loaded_name), "%s", name);
 	if (!strcmp(name, "lazy"))
 		load_lazy();
+	if (!strcmp(name, "cmds"))
+		load_cmds();
 }
 
 void nvme_load_plugins(void)
 {
 	nr_load_plugins++;
 	load_lazy();
+	load_cmds();
 }
 
 /* "gone" is a plugin of the build without its module */
@@ -187,13 +239,28 @@ const char *nvme_plugin_dir(void)
 	return "/test/plugins";
 }
 
+static void add_builtin_groups(void);
+
 static void unload_lazy(void)
 {
+	struct command_group *group;
+
 	ext_plugin.next = NULL;
 	free(lazy_plugin.commands);
 	lazy_plugin.commands = NULL;
 	free(lazy_plugin.groups);
 	lazy_plugin.groups = NULL;
+	if (cmds_loaded) {
+		while (builtin_plugin.groups) {
+			group = builtin_plugin.groups;
+			builtin_plugin.groups = group->next;
+			free(group);
+		}
+		free(builtin_plugin.commands);
+		builtin_plugin.commands = NULL;
+		add_builtin_groups();
+		cmds_loaded = false;
+	}
 	nr_load_plugin = 0;
 	nr_load_plugins = 0;
 	loaded_name[0] = '\0';
@@ -560,7 +627,56 @@ static const struct {
 	{ { "gone", "cmd" }, -ENOTTY, 1, "gone", 1, "",
 	  "plugin gone not installed: no module in /test/plugins",
 	  "a plugin without its module is not installed" },
+	{ { "top-cmd" }, 99, 1, "cmds", 0, "", "",
+	  "a top-level command loads only its module" },
+	{ { "tc" }, 99, 1, "cmds", 0, "", "",
+	  "the alias of a top-level command loads its module" },
+	{ { "top" }, 99, 1, "cmds", 0, "", "",
+	  "the prefix of a top-level command loads its module" },
+	{ { "list" }, -ENOTTY, 1, "list", 1, "",
+	  "invalid sub-command 'list'",
+	  "a prefix of commands of the program and a module is no command" },
+	{ { "st" }, -ENOTTY, 1, "st", 1, "",
+	  "invalid sub-command 'st'",
+	  "a prefix of a program and a module command is no command" },
+	{ { "sto" }, 122, 1, "cmds", 0, "", "",
+	  "a prefix of only a command of a module loads its module" },
+	{ { "missing-cmd" }, -ENOTTY, 1, "missing", 0, "",
+	  "command missing-cmd not installed: plugin missing has no module in /test/plugins",
+	  "a top-level command without its module is not installed" },
 };
+
+/* The commands of a module are listed at the place of their group */
+static void test_group_order(void)
+{
+	static const char *const expect[] = {
+		"foo", "bar", "status", "old-cmd", "top-cmd", "list-c",
+		"stop-cmd", "list-a", "list-b",
+	};
+	struct captured_output cap;
+	char *argv[2];
+	size_t i;
+
+	unload_lazy();
+	load_cmds();
+	for (i = 0; i < ARRAY_SIZE(expect); i++) {
+		check(builtin_plugin.commands[i] &&
+		      !strcmp(builtin_plugin.commands[i]->name, expect[i]),
+		      "group_order: command order");
+	}
+	check(!builtin_plugin.commands[i], "group_order: command count");
+
+	argv[0] = "test-prog";
+	argv[1] = "help";
+	run_handle_plugin(argv, ARRAY_SIZE(argv), &builtin_plugin, &cap);
+	check(strstr(cap.out, "Core Commands:") <
+	      strstr(cap.out, "Module Commands:") &&
+	      strstr(cap.out, "Module Commands:") <
+	      strstr(cap.out, "List Commands:"),
+	      "group_order: help lists the group at its place");
+
+	unload_lazy();
+}
 
 /* Modules are loaded only for the commands which need them */
 static void test_lazy_loading(void)
@@ -681,6 +797,12 @@ static void test_lookup(void)
 	argconfig_set_global_options(NULL);
 }
 
+static void add_builtin_groups(void)
+{
+	plugin_add_group(&builtin_plugin, "Core Commands", core_commands);
+	plugin_add_group(&builtin_plugin, "List Commands", list_commands);
+}
+
 int main(void)
 {
 	test_rc = 0;
@@ -688,8 +810,7 @@ int main(void)
 	builtin_plugin.parent = &prog;
 	ext_plugin.parent = &prog;
 
-	plugin_add_group(&builtin_plugin, "Core Commands", core_commands);
-	plugin_add_group(&builtin_plugin, "List Commands", list_commands);
+	add_builtin_groups();
 	plugin_add_group(&ext_plugin, NULL, ext_commands);
 
 	test_dispatch_exact();
@@ -711,6 +832,7 @@ int main(void)
 	test_lookup();
 #if NVME_PLUGIN_MODULES
 	test_lazy_loading();
+	test_group_order();
 #endif
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;

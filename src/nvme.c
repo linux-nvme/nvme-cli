@@ -54,11 +54,28 @@
 
 static const char nvme_version_string[] = NVME_VERSION;
 
+/* The groups of the top-level commands, in the order of the help */
+static const char *const builtin_groups[] = {
+	"Device Enumeration",
+	"Controller Management",
+	"Deprecated",
+	"Log Page & Identify",
+	"Fabrics",
+	"Features",
+	"I/O Commands",
+	"Passthrough",
+	"Registers",
+	"Media Management",
+	"Security & Access Control",
+	NULL,
+};
+
 struct plugin builtin = {
 	.name = NULL,
 	.desc = NULL,
 	.next = NULL,
 	.tail = &builtin,
+	.group_order = builtin_groups,
 };
 
 static struct program nvme = {

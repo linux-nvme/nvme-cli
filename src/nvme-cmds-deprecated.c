@@ -448,7 +448,8 @@ static struct command *commands[] = {
 
 static void __shr_constructor register_group(void)
 {
-	plugin_add_group(&builtin, NULL, commands);
+	/* The help lists no deprecated command, nor the title */
+	plugin_add_group(&builtin, "Deprecated", commands);
 }
 
 #endif /* CONFIG_DEPRECATED_CMDS */

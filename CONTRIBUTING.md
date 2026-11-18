@@ -180,6 +180,25 @@ group's commands instead of in the flat "core NVMe/NVMeoF plugins" list.
 This only affects display -- the plugin is still invoked as `nvme foo bar`,
 not merged into the flat top-level command namespace.
 
+#### Top-level commands in a plugin
+
+A plugin can add top-level commands, `nvme bar` rather than `nvme foo bar`.
+Its `NVME_PLUGIN_INIT()` function calls
+`plugin_add_group(&builtin, title, commands)` with one of the titles of
+`builtin_groups` in `src/nvme.c`. The title gives the commands their place
+in `nvme help` and in the command lists. A plugin with only top-level
+commands calls no `register_extension()` and sets
+`plugin_extension = false` in its `meson.build`. The `meson.build` lists
+the top-level commands and their aliases:
+
+```meson
+plugin_commands = ['bar', 'baz']
+plugin_command_aliases = {'bar': 'old-bar'}
+```
+
+nvme looks a top-level command it doesn't have up in these lists and
+loads the module.
+
 #### Multi-file plugins
 
 A plugin can span multiple `.c` files (see `plugins/cmds-ocp` or

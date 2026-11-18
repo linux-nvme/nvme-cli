@@ -40,6 +40,12 @@ struct plugin {
 	 * flat "core NVMe/NVMeoF plugins" list.
 	 */
 	const char *group;
+	/*
+	 * The titles of the groups in the order the help lists them, up to
+	 * NULL. A plugin module adds its group at its place. Groups with
+	 * other titles follow, in the order they are added.
+	 */
+	const char *const *group_order;
 };
 
 /* The operand of a command */
@@ -83,6 +89,11 @@ struct command {
  * files attach to it directly with plugin_add_group() rather than going
  * through register_extension(), since it's already the root of the
  * extensions list.
+ *
+ * A plugin adds top-level commands the same way, from its
+ * NVME_PLUGIN_INIT() function, with a title of builtin.group_order. A
+ * module lists them in plugin_commands in its meson.build: nvme looks up a
+ * top-level command it doesn't have there and loads the module.
  */
 extern struct plugin builtin;
 
