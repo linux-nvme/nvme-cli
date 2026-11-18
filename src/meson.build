@@ -49,7 +49,6 @@ if want_fabrics
     sources += [
         'src/fabrics.c',
         'src/config-convert.c',
-        'src/config-create.c',
         'src/pre-os.c',
     ]
 endif
