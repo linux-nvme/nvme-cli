@@ -197,7 +197,8 @@ plugin_command_aliases = {'bar': 'old-bar'}
 ```
 
 nvme looks a top-level command it doesn't have up in these lists and
-loads the module.
+loads the module. The `command-index` test checks that the lists name
+exactly the commands of the plugin.
 
 #### Multi-file plugins
 
