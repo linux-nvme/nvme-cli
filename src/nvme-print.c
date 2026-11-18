@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -16,7 +15,6 @@
 #include <shared/int-util.h>
 #include <shared/mmio-util.h>
 #include <shared/sandbox-util.h>
-#include <shared/string-util.h>
 #include <shared/temp-util.h>
 
 #include "cleanup.h"
@@ -72,17 +70,14 @@ bool nvme_show_failed(void)
 }
 
 /*
- * The printers which stay in process: the ones of the libnvme tree, which
- * read sysfs while printing, the ones which hand JSON objects to their
- * caller, the interactive one and the document.
+ * The printers which stay in process: the one of the libnvme tree, which
+ * reads sysfs while printing, the ones which hand JSON objects to their
+ * caller and the document.
  */
 static bool nvme_print_sandboxed(struct print_ops *ops, void *func)
 {
 	void *in_process[] = {
-		ops->relatives, ops->list_item, ops->list_items,
-		ops->print_nvme_subsystem_list, ops->topology_ctrl,
-		ops->topology_namespace, ops->topology_multipath,
-		ops->topology_tabular, ops->config_conn_list, ops->top,
+		ops->relatives, ops->config_conn_list,
 		ops->show_init, ops->show_finish,
 		ops->connect_msg,
 	};
@@ -295,12 +290,6 @@ const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
 	}
 
 	return "Unknown";
-}
-
-void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
-			      nvme_print_flags_t flags)
-{
-	nvme_print(print_nvme_subsystem_list, flags, ctx, show_ana);
 }
 
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name,
@@ -550,84 +539,6 @@ const char *nvme_ipmsr_srs_to_string(__u8 srs)
 	default:
 		return "Reserved";
 	}
-}
-
-void nvme_dev_full_path(struct libnvme_ns *n, char *path, size_t len)
-{
-	struct stat st;
-
-	snprintf(path, len, "%s", libnvme_ns_get_name(n));
-	if (shr_startswith(path, "/dev/spdk/") && stat(path, &st) == 0)
-		return;
-
-	snprintf(path, len, "/dev/%s", libnvme_ns_get_name(n));
-	if (stat(path, &st) == 0)
-		return;
-	/*
-	 * We could start trying to search for it but let's make
-	 * it simple and just don't show the path at all.
-	 */
-	snprintf(path, len, "%s", libnvme_ns_get_name(n));
-}
-
-void nvme_generic_full_path(struct libnvme_ns *n, char *path, size_t len)
-{
-	int head_instance;
-	int instance;
-	struct stat st;
-
-	/*
-	 * There is no block devices for SPDK, point generic path to existing
-	 * chardevice.
-	 */
-	snprintf(path, len, "%s", libnvme_ns_get_name(n));
-	if (shr_startswith(path, "/dev/spdk/") && stat(path, &st) == 0)
-		return;
-
-	if (sscanf(libnvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance) != 2)
-		return;
-
-	snprintf(path, len, "/dev/ng%dn%d", instance, head_instance);
-
-	if (stat(path, &st) == 0)
-		return;
-	/*
-	 * We could start trying to search for it but let's make
-	 * it simple and just don't show the path at all.
-	 */
-	snprintf(path, len, "%s", libnvme_ns_get_generic_name(n));
-}
-
-void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t)
-{
-	nvme_print(list_item, NORMAL, n, t);
-}
-
-void nvme_show_list_items(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags)
-{
-	nvme_print(list_items, flags, ctx);
-}
-
-void nvme_show_top(nvme_print_flags_t flags, int refresh_interval)
-{
-	nvme_print(top, flags, refresh_interval);
-}
-
-void nvme_show_topology(struct libnvme_global_ctx *ctx,
-			enum nvme_cli_topo_ranking ranking,
-			nvme_print_flags_t flags)
-{
-	if (ranking == NVME_CLI_TOPO_NAMESPACE)
-		nvme_print(topology_namespace, flags, ctx);
-	else if (ranking == NVME_CLI_TOPO_CTRL)
-		nvme_print(topology_ctrl, flags, ctx);
-	else
-		nvme_print(topology_multipath, flags, ctx);
-}
-
-void nvme_show_topology_tabular(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags)
-{
-	nvme_print(topology_tabular, flags, ctx);
 }
 
 /*

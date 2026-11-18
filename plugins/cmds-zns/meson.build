@@ -2,6 +2,9 @@
 
 plugin_name = 'zns'
 
+# zns list prints its table with the row printer of nvme list
+plugin_needs = ['cmds-list']
+
 plugin_sources += [
     'plugins/cmds-zns/zns.c',
     'plugins/cmds-zns/zns-print.c',

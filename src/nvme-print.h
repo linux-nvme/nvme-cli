@@ -42,12 +42,6 @@ typedef struct nvme_effects_log_node {
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 
-enum nvme_cli_topo_ranking {
-	NVME_CLI_TOPO_NAMESPACE,
-	NVME_CLI_TOPO_CTRL,
-	NVME_CLI_TOPO_MULTIPATH,
-};
-
 /*
  * NPSS is a 0's based value. A device can report more power states than
  * the power state descriptor table holds.
@@ -137,42 +131,6 @@ static inline unsigned int nvme_lbaf_data_size(__u8 ds)
 	return ds < 32 ? 1U << ds : 0;
 }
 
-static inline bool nvme_is_multipath(struct libnvme_subsystem *s)
-{
-	struct libnvme_ns *n;
-	struct libnvme_path *p;
-
-	libnvme_subsystem_for_each_ns(s, n)
-		libnvme_namespace_for_each_path(n, p)
-			return true;
-
-	return false;
-}
-
-static inline bool subsystem_iopolicy_filter(const char *name, void *arg)
-{
-	struct libnvme_subsystem *s = arg;
-	const char *iopolicy;
-
-	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
-
-	if (streq(iopolicy, "queue-depth")) {
-		/* exclude "Nodes" for iopolicy queue-depth */
-		if (streq(name, "Nodes"))
-			return false;
-	} else if (streq(iopolicy, "numa")) {
-		/* exclude "Qdepth" for iopolicy numa */
-		if (streq(name, "Qdepth"))
-			return false;
-	} else { /* round-robin */
-		/* exclude "Nodes" and "Qdepth" for iopolicy round-robin */
-		if (streq(name, "Nodes") || streq(name, "Qdepth"))
-			return false;
-	}
-
-	return true;
-}
-
 
 /* config.h is fabrics-only; forward-declare so this header stays valid in a
  * -Dfabrics=disabled build.
@@ -187,20 +145,8 @@ struct print_ops {
 	void (*show_init)(void);
 	void (*show_finish)(void);
 
-	/* libnvme tree print functions */
-	void (*list_item)(struct libnvme_ns *n, struct shr_table *t);
-	void (*list_items)(struct libnvme_global_ctx *ctx);
-	void (*print_nvme_subsystem_list)(struct libnvme_global_ctx *ctx, bool show_ana);
-	void (*topology_ctrl)(struct libnvme_global_ctx *ctx);
-	void (*topology_namespace)(struct libnvme_global_ctx *ctx);
-	void (*topology_multipath)(struct libnvme_global_ctx *ctx);
-	void (*topology_tabular)(struct libnvme_global_ctx *ctx);
-
 	/* config show */
 	void (*config_conn_list)(struct libnvmf_config *config);
-
-	/* nvme top */
-	void (*top)(int refresh_interval);
 
 	/* status and error messages */
 	void (*connect_msg)(struct libnvme_ctrl *c);
@@ -292,7 +238,6 @@ bool nvme_show_log_decoded(const char *devname, enum nvme_cmd_get_log_lid lid,
 struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
-void stdout_top(int refresh_interval);
 
 void nvme_show_status(int status);
 void nvme_show_err(int err, const char *fmt, ...);
@@ -330,16 +275,6 @@ nvme_host_metadata_element(const struct nvme_host_metadata *data,
 	return val;
 }
 
-void nvme_show_list_items(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags);
-void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
-			      nvme_print_flags_t flags);
-void nvme_show_topology(struct libnvme_global_ctx *ctx,
-			enum nvme_cli_topo_ranking ranking,
-			nvme_print_flags_t flags);
-void nvme_show_topology_tabular(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags);
-void nvme_show_top(nvme_print_flags_t flags, int refresh_interval);
-
-void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t);
 
 void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
 			     uint64_t numrec, nvme_print_flags_t flags);
@@ -354,8 +289,6 @@ const char *nvme_feature_power_limit_scale_to_string(__u8 pls);
 const char *nvme_power_measurement_type_to_string(__u8 pmt);
 const char *nvme_ipmsr_srs_to_string(__u8 srs);
 
-void nvme_dev_full_path(struct libnvme_ns *n, char *path, size_t len);
-void nvme_generic_full_path(struct libnvme_ns *n, char *path, size_t len);
 void nvme_show_message(bool error, const char *msg, ...);
 void nvme_show_verbose_message(const char *msg, ...);
 void nvme_show_perror(const char *msg, ...);
