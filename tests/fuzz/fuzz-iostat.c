@@ -31,7 +31,7 @@
 #include <libnvme.h>
 
 #include "fuzz.h"
-#include "nvme-iostat.h"
+#include "plugins/cmds-list/nvme-iostat.h"
 
 #define MAX_STATS	16
 

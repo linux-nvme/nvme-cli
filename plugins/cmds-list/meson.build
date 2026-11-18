@@ -25,6 +25,8 @@ plugin_commands = [
 if want_top
   plugin_sources += [
       'plugins/cmds-list/cmds-list-print-stdout-top.c',
+      'plugins/cmds-list/dashboard.c',
+      'plugins/cmds-list/nvme-iostat.c',
   ]
   plugin_commands += [
       'top',
