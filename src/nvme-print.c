@@ -208,14 +208,22 @@ static bool nvme_print_check(struct print_ops *ops, void *func)
 	return true;
 }
 
-bool nvme_print_decoder_begin(nvme_print_flags_t flags, bool sandbox)
+bool nvme_print_decoder_begin_always(nvme_print_flags_t flags, bool sandbox)
 {
 	struct print_ops *ops = nvme_print_ops(flags);
 
-	if (!ops || nvme_args.dry_run)
+	if (!ops)
 		return false;
 
 	return nvme_print_begin(ops, sandbox);
+}
+
+bool nvme_print_decoder_begin(nvme_print_flags_t flags, bool sandbox)
+{
+	if (nvme_args.dry_run)
+		return false;
+
+	return nvme_print_decoder_begin_always(flags, sandbox);
 }
 
 void nvme_print_decoder_end(nvme_print_flags_t flags)
