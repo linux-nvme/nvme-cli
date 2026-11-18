@@ -7,6 +7,7 @@
 
 #include <libnvme.h>
 
+#include "args.h"
 #include "nvme-json.h"
 #include "plugin.h"
 
@@ -17,3 +18,8 @@
 int __id_ctrl(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin,
 	void (*vs)(uint8_t *vs, struct json_object *root));
+
+void nvme_show_id_ctrl(struct libnvme_global_ctx *ctx,
+	struct libnvme_transport_handle *hdl, struct nvme_id_ctrl *ctrl,
+	nvme_print_flags_t flags, void (*vendor_show)(__u8 *vs,
+	struct json_object *root));

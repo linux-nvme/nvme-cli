@@ -210,30 +210,13 @@ struct libnvmf_config;
 
 struct print_ops {
 	/* libnvme types.h print functions */
-	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
 	void (*ctrl_registers)(const struct nvme_reg_val *vals, unsigned int nr,
 			       enum nvme_regs_style style);
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result, void *buf, __u32 len);
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
-	void (*endurance_group_list)(struct nvme_id_endurance_group_list *endgrp_list);
-	void (*id_ctrl)(struct nvme_id_ctrl *ctrl, const char *product_name,
-			void (*vs)(__u8 *vs, struct json_object *root));
-	void (*id_ctrl_nvm)(struct nvme_id_ctrl_nvm *ctrl_nvm);
-	void (*id_domain_list)(struct nvme_id_domain_list *id_dom);
-	void (*id_independent_id_ns)(struct nvme_id_independent_id_ns *ns, unsigned int nsid);
-	void (*id_iocs)(struct nvme_id_iocs *ioscs);
-	void (*id_ns)(struct nvme_id_ns *ns, unsigned int nsid, unsigned int lba_index, bool cap_only);
-	void (*id_ns_descs)(void *data, unsigned int nsid);
-	void (*id_ns_granularity_list)(const struct nvme_id_ns_granularity_list *list);
-	void (*id_nvmset_list)(struct nvme_id_nvmset_list *nvmset, unsigned int nvmeset_id);
-	void (*id_uuid_list)(const struct nvme_id_uuid_list  *uuid_list);
 	void (*lba_status)(struct nvme_lba_status *list, unsigned long len);
-	void (*ns_list)(struct nvme_ns_list *ns_list);
-	void (*nvm_id_ns)(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid, struct nvme_id_ns *ns, unsigned int lba_index, bool cap_only);
-	void (*primary_ctrl_cap)(const struct nvme_primary_ctrl_cap *caps);
 	void (*relatives)(struct libnvme_global_ctx *ctx, const char *name);
 	void (*resv_report)(struct nvme_resv_status *status, int bytes, bool eds);
-	void (*secondary_ctrl_list)(const struct nvme_secondary_ctrl_list *sc_list, __u32 count);
 	void (*select_result)(enum nvme_features_id fid, __u64 result);
 	void (*show_feature)(enum nvme_features_id fid, int sel,
 			     unsigned int result, void *buf, __u32 data_len);
@@ -342,17 +325,7 @@ void nvme_show_opcode_status(int status, bool admin, __u8 opcode);
 void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
-void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags);
-void nvme_show_id_ctrl(struct libnvme_global_ctx *ctx,
-	struct libnvme_transport_handle *hdl, struct nvme_id_ctrl *ctrl,
-	nvme_print_flags_t flags, void (*vendor_show)(__u8 *vs,
-	struct json_object *root));
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags);
-void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
-		unsigned int lba_index, bool cap_only, nvme_print_flags_t flags);
-void nvme_show_cmd_set_independent_id_ns(
-	struct nvme_id_independent_id_ns *ns, unsigned int nsid,
-	nvme_print_flags_t flags);
 void nvme_show_resv_report(struct nvme_resv_status *status, int bytes, bool eds,
 	nvme_print_flags_t flags);
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
@@ -390,30 +363,11 @@ nvme_host_metadata_element(const struct nvme_host_metadata *data,
 void nvme_show_ctrl_registers(const struct nvme_reg_val *vals, unsigned int nr,
 			      enum nvme_regs_style style,
 			      nvme_print_flags_t flags);
-void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	nvme_print_flags_t flags);
 void nvme_show_list_items(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags);
 void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
 			      nvme_print_flags_t flags);
-void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
-	nvme_print_flags_t flags);
-void nvme_show_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *cap,
-	nvme_print_flags_t flags);
-void nvme_show_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc_list,
-	__u32 count, nvme_print_flags_t flags);
-void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist,
-	nvme_print_flags_t flags);
-void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
-	nvme_print_flags_t flags);
-void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
-	 nvme_print_flags_t flags);
-void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
-	nvme_print_flags_t flags);
-void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list,
-	nvme_print_flags_t flags);
-void nvme_show_list_ns(struct nvme_ns_list *ns_list,
-	nvme_print_flags_t flags);
 void nvme_show_topology(struct libnvme_global_ctx *ctx,
 			enum nvme_cli_topo_ranking ranking,
 			nvme_print_flags_t flags);
@@ -426,11 +380,6 @@ void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 res
 	void *buf, __u32 len, nvme_print_flags_t flags);
 void nvme_show_select_result(enum nvme_features_id fid, __u64 result);
 
-void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
-	nvme_print_flags_t flags);
-void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
-						struct nvme_id_ns *ns, unsigned int lba_index,
-						bool cap_only, nvme_print_flags_t flags);
 void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t);
 
 void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
