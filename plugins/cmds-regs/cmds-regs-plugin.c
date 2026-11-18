@@ -30,6 +30,7 @@
 #include "nvme-cmds-common.h"
 #include "nvme-print.h"
 #include "nvme-regs.h"
+#include "regs-print.h"
 #include "plugin.h"
 
 #define ALL_REGS	((UINT32_C(1) << NVME_NR_REGS) - 1)

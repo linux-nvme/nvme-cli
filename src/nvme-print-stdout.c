@@ -577,64 +577,6 @@ void stdout_kv_table_finish(struct shr_table *t, const char *what)
 	shr_table_free(t);
 }
 
-/*
- * The "field : value" table of the fields @fields of @value, decoded: the
- * subtable of a row with the value itself.
- */
-struct shr_table *stdout_bitfields_table(const struct bitfield *fields,
-					 unsigned int nr, uint64_t value)
-{
-	struct shr_table *t;
-	char buf[128];
-	unsigned int i;
-
-	t = stdout_kv_table_create();
-	if (!t)
-		return NULL;
-
-	for (i = 0; i < nr; i++) {
-		bitfield_str(&fields[i], value, buf, sizeof(buf));
-		stdout_kv_add(t, fields[i].name, "%s", buf);
-	}
-
-	return t;
-}
-
-static void stdout_ctrl_registers(const struct nvme_reg_val *vals,
-				  unsigned int nr, enum nvme_regs_style style)
-{
-	bool verbose = !!(stdout_print_ops.flags & VERBOSE);
-	struct shr_table *t;
-	unsigned int i;
-	int row;
-
-	t = stdout_kv_table_create();
-	if (!t)
-		return;
-
-	for (i = 0; i < nr; i++) {
-		const struct nvme_reg *reg = vals[i].reg;
-		uint64_t value = vals[i].value;
-
-		if (style == NVME_REGS_TABLE)
-			row = stdout_kv_add(t, reg->sym, "%#"PRIx64, value);
-		else if (verbose)
-			row = stdout_kv_add(t, reg->name, "%#"PRIx64, value);
-		else
-			row = stdout_kv_add(t,
-				style == NVME_REGS_PROPERTY ? "property" :
-							      "register",
-				"%#04x (%s), value: %#"PRIx64, reg->offset,
-				reg->name, value);
-		if (verbose && reg->nr_fields)
-			shr_table_set_row_subtable(t, row,
-				stdout_bitfields_table(reg->fields,
-						       reg->nr_fields, value));
-	}
-
-	stdout_kv_table_finish(t, "registers");
-}
-
 /* The status line, which may follow other text */
 static void stdout_status_line(int status)
 {
@@ -2928,7 +2870,6 @@ static void stdout_relatives(struct libnvme_global_ctx *ctx, const char *name)
 
 struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
-	.ctrl_registers			= stdout_ctrl_registers,
 	.discovery_log			= stdout_discovery_log,
 	.relatives			= stdout_relatives,
 	.select_result			= stdout_select_result,

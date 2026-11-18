@@ -12,7 +12,6 @@
 
 #include "args.h"
 #include "nvme-json.h"
-#include "nvme-regs.h"
 #include <shared/int-util.h>
 #include <shared/mem-util.h>
 #include <shared/table-util.h>
@@ -47,13 +46,6 @@ enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_NAMESPACE,
 	NVME_CLI_TOPO_CTRL,
 	NVME_CLI_TOPO_MULTIPATH,
-};
-
-/* How nvme_show_ctrl_registers() shows the registers */
-enum nvme_regs_style {
-	NVME_REGS_TABLE,	/* show-regs: a row for each */
-	NVME_REGS_REGISTER,	/* get-reg: "register : offset (name), value" */
-	NVME_REGS_PROPERTY,	/* get-property: "property : ..." */
 };
 
 /*
@@ -189,8 +181,6 @@ struct libnvmf_config;
 
 struct print_ops {
 	/* libnvme types.h print functions */
-	void (*ctrl_registers)(const struct nvme_reg_val *vals, unsigned int nr,
-			       enum nvme_regs_style style);
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*relatives)(struct libnvme_global_ctx *ctx, const char *name);
 	void (*select_result)(enum nvme_features_id fid, __u64 result);
@@ -332,9 +322,6 @@ nvme_host_metadata_element(const struct nvme_host_metadata *data,
 	return val;
 }
 
-void nvme_show_ctrl_registers(const struct nvme_reg_val *vals, unsigned int nr,
-			      enum nvme_regs_style style,
-			      nvme_print_flags_t flags);
 void nvme_show_list_items(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags);
 void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
 			      nvme_print_flags_t flags);
@@ -396,8 +383,6 @@ const char *nvme_format_timestamp_sync(__u8 attr);
 void print_array(char *name, __u8 *data, int size);
 void json_print(struct json_object *r);
 struct json_object *obj_create_array_obj(struct json_object *o, const char *k);
-void json_bitfields(struct json_object *o, const struct bitfield *fields,
-		    unsigned int nr, uint64_t value);
 void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u16 lsi,
 		   __u8 lsp, void *log, __u32 len, nvme_print_flags_t flags);
 const char *nvme_support_str(bool support);

@@ -324,13 +324,6 @@ void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
 	nvme_print(print_nvme_subsystem_list, flags, ctx, show_ana);
 }
 
-void nvme_show_ctrl_registers(const struct nvme_reg_val *vals, unsigned int nr,
-			      enum nvme_regs_style style,
-			      nvme_print_flags_t flags)
-{
-	nvme_print(ctrl_registers, flags, vals, nr, style);
-}
-
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name,
 			 nvme_print_flags_t flags)
 {
