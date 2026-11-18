@@ -10,8 +10,16 @@ if want_fabrics
       'plugins/cmds-fabrics/cmds-fabrics-plugin.c',
       'plugins/cmds-fabrics/config-convert.c',
       'plugins/cmds-fabrics/fabrics.c',
+      'plugins/cmds-fabrics/fabrics-print.c',
+      'plugins/cmds-fabrics/fabrics-print-binary.c',
+      'plugins/cmds-fabrics/fabrics-print-stdout.c',
       'plugins/cmds-fabrics/pre-os.c',
   ]
+  if json_c_dep.found()
+    plugin_sources += [
+        'plugins/cmds-fabrics/fabrics-print-json.c',
+    ]
+  endif
 
   plugin_commands = [
       'discover',

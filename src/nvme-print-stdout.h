@@ -15,8 +15,3 @@ struct shr_table *stdout_bits_table_create(void);
 void stdout_bits_add(struct shr_table *t, const char *bits,
 		unsigned int val, const char *desc_fmt, ...);
 const char *stdout_format_timestamp(__u8 *timestamp_bytes);
-#ifdef CONFIG_FABRICS
-void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec);
-#else /* CONFIG_FABRICS */
-#define stdout_discovery_log NULL
-#endif /* CONFIG_FABRICS */

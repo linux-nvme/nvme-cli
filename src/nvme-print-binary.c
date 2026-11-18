@@ -8,17 +8,8 @@
 
 static struct print_ops binary_print_ops;
 
-static void binary_discovery_log(const struct nvmf_discovery_log *log,
-				  int numrec)
-{
-	d_raw((unsigned char *)log,
-	      sizeof(struct nvmf_discovery_log) +
-	      numrec * sizeof(struct nvmf_disc_log_entry));
-}
-
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
-	.discovery_log			= binary_discovery_log,
 	.d				= NULL,
 	.show_init			= NULL,
 	.show_finish			= NULL,

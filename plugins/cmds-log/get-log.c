@@ -39,7 +39,9 @@ static const char *namespace_desired = "desired namespace";
 static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 
 /* Plugins that register log page decoders */
-static const char *const log_decoder_plugins[] = { "fdp", "zns" };
+static const char *const log_decoder_plugins[] = {
+	"fdp", "zns", "cmds-fabrics",
+};
 
 static void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid,
 			  __u32 nsid, __u16 lsi, __u8 lsp, void *log,
@@ -47,29 +49,12 @@ static void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid,
 {
 	size_t i;
 
-	switch (lid) {
-	case NVME_LOG_LID_DISCOVERY: {
-		struct nvmf_discovery_log *discovery_log = log;
-		/* no more records than the log holds, before size_t cuts it */
-		__u64 nr = min_t(__u64, le64_to_cpu(discovery_log->numrec),
-				 len);
+	for (i = 0; i < ARRAY_SIZE(log_decoder_plugins); i++)
+		nvme_load_plugin(log_decoder_plugins[i]);
 
-		nvme_show_discovery_log(discovery_log,
-			nvme_log_nr_entries(nr, len, sizeof(*discovery_log),
-					    sizeof(discovery_log->entries[0])),
-			flags);
-		break;
-	}
-	default:
-		for (i = 0; i < ARRAY_SIZE(log_decoder_plugins); i++)
-			nvme_load_plugin(log_decoder_plugins[i]);
-
-		if (!log_show_log(devname, lid, nsid, lsi, lsp, log, len,
-				  flags))
-			nvme_show_log_decoded(devname, lid, nsid, lsi, lsp,
-					      log, len, flags);
-		break;
-	}
+	if (!log_show_log(devname, lid, nsid, lsi, lsp, log, len, flags))
+		nvme_show_log_decoded(devname, lid, nsid, lsi, lsp, log, len,
+				      flags);
 }
 
 static int get_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)

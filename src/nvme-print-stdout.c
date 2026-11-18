@@ -7,11 +7,6 @@
 #include <sys/types.h>
 #include <time.h>
 
-#ifdef CONFIG_FABRICS
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#endif
-
 #include <libnvme-mi.h>
 #include <libnvme.h>
 
@@ -415,116 +410,13 @@ static void stdout_key_value(const char *key, const char *val, va_list ap)
 	printf("%s: %s\n", key, value ? value : alloc_error);
 }
 
-#ifdef CONFIG_FABRICS
-/*
- * libnvmf_connect_args_emit() callback for "nvme config show": print each
- * formatted "--option=value" straight to stdout as part of the running
- * "nvme connect" line.
- */
-static void stdout_print_conn_arg(const char *arg, void *user_data)
-{
-	printf(" %s", arg);
-}
-
-static void stdout_print_conn_field(const char *name, const char *value)
-{
-	if (value)
-		printf(" --%s=%s", name, value);
-}
-
-/*
- * libnvmf_config_conn_for_each() callback for "nvme config show": render
- * one resolved connection as its equivalent "nvme connect" command line.
- *
- * Identity is deliberately left unresolved here (unlike build_conn_tid()'s
- * connect-time callers): a persona with no hostnqn/hostid falls back to the
- * system default at connect time, not parse time, so showing the concrete
- * value here would suggest a fixed identity the config doesn't actually pin.
- *
- * Addressing is not resolved either, and no TID is built for a hostname:
- * "show" must never touch the network, and a hostname traddr is legitimate
- * INI content a TID (numeric-only) can't represent. The canonicalized TID
- * rendering is used when the address is already numeric; a raw hostname
- * falls back to printing the field as configured.
- */
-static void stdout_print_conn(const struct libnvmf_config_conn *conn,
-			       void *user_data)
-{
-	bool is_dc = libnvmf_config_conn_is_dc(conn);
-	const char *hostnqn = libnvmf_config_conn_get_hostnqn(conn);
-	const char *hostid = libnvmf_config_conn_get_hostid(conn);
-	const struct libnvmf_params *params =
-		libnvmf_config_conn_get_params(conn);
-	__cleanup_nvmf_tid struct libnvmf_tid *tid = NULL;
-
-	printf("# %s: %s\n", libnvmf_config_conn_get_source(conn),
-		is_dc ? "Discovery Controller" : "I/O Controller");
-
-	libnvmf_tid_from_fields(
-			libnvmf_config_conn_get_transport(conn),
-			libnvmf_config_conn_get_traddr(conn),
-			libnvmf_config_conn_get_trsvcid(conn),
-			libnvmf_config_conn_get_subsysnqn(conn),
-			libnvmf_config_conn_get_host_traddr(conn),
-			libnvmf_config_conn_get_host_iface(conn),
-			hostnqn, hostid, &tid);
-
-	/*
-	 * A DC entry is consumed via libnvmf_discover() (log in, fetch the
-	 * discovery log, connect everything returned) -- "nvme connect-all"
-	 * is its real equivalent, not a bare "nvme connect" (which would
-	 * only open the admin queue, matching just the niche "connect -J"
-	 * mode instead of the primary discover/connect-all consumption
-	 * path this command documents).
-	 */
-	printf("nvme %s", is_dc ? "connect-all" : "connect");
-	if (tid) {
-		libnvmf_connect_args_emit(tid, params, stdout_print_conn_arg,
-					   NULL);
-	} else {
-		const char *transport = libnvmf_config_conn_get_transport(conn);
-		const char *traddr = libnvmf_config_conn_get_traddr(conn);
-		const char *trsvcid = libnvmf_config_conn_get_trsvcid(conn);
-		const char *subsysnqn = libnvmf_config_conn_get_subsysnqn(conn);
-		const char *host_traddr =
-			libnvmf_config_conn_get_host_traddr(conn);
-		const char *host_iface =
-			libnvmf_config_conn_get_host_iface(conn);
-
-		stdout_print_conn_field("transport", transport);
-		stdout_print_conn_field("traddr", traddr);
-		stdout_print_conn_field("trsvcid", trsvcid);
-		stdout_print_conn_field("nqn", subsysnqn);
-		stdout_print_conn_field("host-traddr", host_traddr);
-		stdout_print_conn_field("host-iface", host_iface);
-		stdout_print_conn_field("hostnqn", hostnqn);
-		stdout_print_conn_field("hostid", hostid);
-		libnvmf_connect_args_emit(NULL, params, stdout_print_conn_arg,
-					   NULL);
-	}
-	printf("\n");
-	if (!hostnqn || !hostid)
-		printf("    (hostnqn/hostid: system default)\n");
-	printf("\n");
-}
-
-static void stdout_config_conn_list(struct libnvmf_config *config)
-{
-	libnvmf_config_conn_for_each(config, stdout_print_conn, NULL);
-}
-#else /* CONFIG_FABRICS */
-static void stdout_config_conn_list(struct libnvmf_config *config) {}
-#endif /* CONFIG_FABRICS */
-
 struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
-	.discovery_log			= stdout_discovery_log,
 	.d				= stdout_d,
 	.show_init			= NULL,
 	.show_finish			= NULL,
 
 	/* config show */
-	.config_conn_list		= stdout_config_conn_list,
 
 	/* status and error messages */
 	.show_message			= stdout_message,

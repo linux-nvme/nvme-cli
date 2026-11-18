@@ -55,6 +55,7 @@
 #include "cleanup.h"
 #include "config-convert.h"
 #include "fabrics.h"
+#include "fabrics-print.h"
 #include "pre-os.h"
 #include "global-ctx.h"
 #include "logging.h"
@@ -335,7 +336,7 @@ static void hook_discovery_log(struct libnvmf_context *fctx,
 	if (hfd->raw)
 		save_discovery_log(hfd->raw, log);
 	else if (!libnvmf_context_get_connect(fctx))
-		nvme_show_discovery_log(log, numrec, hfd->flags);
+		fabrics_show_discovery_log(log, numrec, hfd->flags);
 }
 
 /*
@@ -1961,7 +1962,7 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 		return ret;
 	}
 
-	nvme_show_config_conn_list(cfg, flags);
+	fabrics_show_config_conn_list(cfg, flags);
 	libnvmf_config_free(cfg);
 
 	return 0;
