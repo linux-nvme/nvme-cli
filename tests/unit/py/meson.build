@@ -24,6 +24,22 @@ if python3.found()
             suite: 'check',
         )
 
+        # The index of the top-level commands of the plugins lists the
+        # commands each module adds.
+        test(
+            'nvme-cli - command-index',
+            python3,
+            args: [
+                files('test_command_index.py'),
+                nvme_exe,
+                want_plugin_modules ?
+                    meson.project_build_root() / 'plugins' : '-',
+            ] + plugin_command_index,
+            depends: nvme_runtime,
+            timeout: 120,
+            suite: 'check',
+        )
+
         # The global options are one table; the documentation has to list
         # each of them, also as a key of nvme-cli.conf.
         test(
