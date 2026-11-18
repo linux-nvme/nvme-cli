@@ -19,9 +19,10 @@ import errno
 import os
 import struct
 
-from tests.cli.nvme_mock import (FID_HOST_BEHAVIOR, NSID_ALL, NVME_IOCTL_ID,
-                                 OPC_GET_FEATURES, OPC_SET_FEATURES,
-                                 MockTestCase, Reply, host_behavior, main)
+from tests.cli.nvme_mock import (FID_HOST_BEHAVIOR, HAVE_JSON, NSID_ALL,
+                                 NVME_IOCTL_ID, OPC_GET_FEATURES,
+                                 OPC_SET_FEATURES, MockTestCase, Reply,
+                                 host_behavior, main)
 
 SV = 1 << 31
 
@@ -410,6 +411,36 @@ class FeatPluginReadModifyWriteTest(FeaturesTestBase):
                            '--hlbars=0', '--slbas=0', '--nlbs=1')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('No valid type definition', result.stderr)
+        self.assertEqual(self.set_features(), [])
+
+
+class DryRunTest(FeaturesTestBase):
+    """--dry-run sends no Set Features. The feat commands still show the
+    fields of the value they would set, the other decoders don't run."""
+
+    def test_feat_shows_the_fields(self):
+        for fmt, expected in (
+                ([], 'Volatile Write Cache Enable (WCE) : Enabled\n'),
+                (['--output-format=json'],
+                 '"Volatile Write Cache Enable (WCE)":"Enabled"')):
+            if fmt and not HAVE_JSON:
+                continue
+            with self.subTest(fmt=fmt):
+                result = self.assertOk(self.nvme('feat', 'volatile-wc',
+                                                 self.ctrl, '--wce',
+                                                 '--dry-run', *fmt))
+                self.assertIn(expected, result.stdout)
+                self.assertEqual(self.set_features(), [])
+
+    def test_set_feature_skips_the_decoder(self):
+        args = ('set-feature', self.ctrl, '--feature-id=0x15',
+                '--value=0x10002')
+        result = self.assertOk(self.nvme(*args))
+        self.assertIn('Information Poll Interval (LSIPI)', result.stdout)
+
+        self.server.commands.clear()
+        result = self.assertOk(self.nvme(*args, '--dry-run'))
+        self.assertNotIn('Information Poll Interval', result.stdout)
         self.assertEqual(self.set_features(), [])
 
 
