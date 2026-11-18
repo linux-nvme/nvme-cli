@@ -21,7 +21,6 @@
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {
 	char *description_str = NULL;
-	char temp_buffer[3] = { 0 };
 
 	/* Allocate 2 chars for each value in the data + 2 bytes for the null terminator */
 	description_str = (char *) calloc(1, data_size*2 + 2);
@@ -30,10 +29,8 @@ void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t dat
 		return;
 	}
 
-	for (size_t i = 0; i < data_size; ++i) {
-		sprintf(temp_buffer, "%02X", pdata[i]);
-		strcat(description_str, temp_buffer);
-	}
+	shr_bin_to_hex(description_str, data_size * 2 + 2, pdata, data_size,
+		       SHR_HEX_UPPER);
 
 	if (!fp)
 		fp = stdout;
@@ -155,8 +152,8 @@ char *process_field_size_default(int offset, const char *sfield, __u8 *buf,
 
 	datastr[0] = '0';
 	datastr[1] = 'x';
-	for (int i = 0; i < size; i++)
-		sprintf(&datastr[2 + i * 2], "%02X", buf[offset + i]);
+	shr_bin_to_hex(datastr + 2, size * 2 + 1, buf + offset, size,
+		       SHR_HEX_UPPER);
 
 	return datastr;
 }

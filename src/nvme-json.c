@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <shared/hex-util.h>
+
 #include "cleanup.h"
 #include "nvme-json.h"
 
@@ -91,8 +93,6 @@ void json_object_add_uint_0x(struct json_object *o, const char *k, uint32_t v)
 
 void json_object_add_byte_array(struct json_object *o, const char *k, unsigned char *buf, int len)
 {
-	int i;
-
 	__cleanup_free char *value = NULL;
 
 	if (!buf || !len) {
@@ -108,8 +108,7 @@ void json_object_add_byte_array(struct json_object *o, const char *k, unsigned c
 	}
 
 	sprintf(value, "0x");
-	for (i = 1; i <= len; i++)
-		sprintf(&value[i * 2], "%02x", buf[len - i]);
+	shr_bin_to_hex(value + 2, 2 * len + 1, buf, len, SHR_HEX_REVERSE);
 
 	json_object_add_value_string(o, k, value);
 }

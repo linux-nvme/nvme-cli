@@ -24,6 +24,7 @@
 #include <ccan/htable/htable_type.h>
 #include <ccan/minmax/minmax.h>
 #include <ccan/strset/strset.h>
+#include <shared/hex-util.h>
 #include <shared/int-util.h>
 #include <shared/mmio-util.h>
 #include <shared/suffix-util.h>
@@ -1155,8 +1156,8 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 			       bool eds)
 {
 	struct shr_table *t;
-	int i, j, regstrnt, entries;
-	char hex[33], *hp;
+	int i, regstrnt, entries;
+	char hex[33];
 
 	regstrnt = status->regstrnt[0] | (status->regstrnt[1] << 8);
 
@@ -1229,9 +1230,8 @@ static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
 			stdout_kv_add(t, "rkey", "%"PRIx64,
 				      le64_to_cpu(reg->rkey));
 
-			hp = hex;
-			for (j = 0; j < 16; j++)
-				hp += sprintf(hp, "%02x", reg->hostid[j]);
+			shr_bin_to_hex(hex, sizeof(hex), reg->hostid,
+				       sizeof(reg->hostid), 0);
 			stdout_kv_add(t, "hostid", "%s", hex);
 
 			stdout_kv_table_finish(t, "registrant");
@@ -1260,13 +1260,12 @@ static void stdout_select_result(enum nvme_features_id fid, __u64 result)
 
 static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 {
-	int i, j;
+	int i;
 
 	for (i = 0; i <= nr_ranges; i++) {
 		struct nvme_lba_range_type_entry *e = &lbrt->entry[i];
 		struct shr_table *t;
 		char guid[2 * ARRAY_SIZE(e->guid) + 1];
-		char *p = guid;
 
 		t = stdout_kv_table_create();
 		if (!t)
@@ -1289,8 +1288,7 @@ static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 		stdout_kv_add(t, "slba", "%#"PRIx64, le64_to_cpu(e->slba));
 		stdout_kv_add(t, "nlb", "%#"PRIx64, le64_to_cpu(e->nlb));
 
-		for (j = 0; j < ARRAY_SIZE(e->guid); j++)
-			p += sprintf(p, "%02x", e->guid[j]);
+		shr_bin_to_hex(guid, sizeof(guid), e->guid, sizeof(e->guid), 0);
 		stdout_kv_add(t, "guid", "%s", guid);
 
 		stdout_kv_table_finish(t, "lba-range");
