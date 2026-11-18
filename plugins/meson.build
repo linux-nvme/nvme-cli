@@ -3,27 +3,28 @@
 fs = import('fs')
 
 selected_plugins = get_option('plugins')
-# The sandisk plugin runs the commands of the wdc one for older drives
-if 'sandisk' in selected_plugins and 'wdc' not in selected_plugins
-    selected_plugins += 'wdc'
-endif
-# These plugins use the log page decoders of the log plugin
-foreach p : ['ibm', 'ocp', 'solidigm']
-  if p in selected_plugins and 'log' not in selected_plugins
-    selected_plugins += 'log'
-  endif
-endforeach
 
 # Each plugin directory appends its sources to plugin_sources. It may set
 # plugin_name, the name of the plugin on the command line, when it is not
 # the name of the directory, and plugin_needs to the plugins whose
-# functions it calls.
+# functions it calls. Plugins needed by a selected plugin are selected as
+# well: each round visits the plugins needed by the previous round.
 plugin_sources = []
 enabled_plugins = []
 plugin_defs = []
-foreach plugin_dir : selected_plugins
-  plugin_dir = plugin_dir.strip()
-  if plugin_dir != ''
+visited_plugins = []
+pending_plugins = selected_plugins
+foreach round : range(16)
+  if pending_plugins.length() == 0
+    break
+  endif
+  needed_plugins = []
+  foreach plugin_dir : pending_plugins
+    plugin_dir = plugin_dir.strip()
+    if plugin_dir == '' or plugin_dir in visited_plugins
+      continue
+    endif
+    visited_plugins += plugin_dir
     n_sources_before = plugin_sources.length()
     plugin_name = plugin_dir
     plugin_needs = []
@@ -40,11 +41,27 @@ foreach plugin_dir : selected_plugins
         'sources': srcs,
         'needs': plugin_needs,
       }
+      foreach need : plugin_needs
+        if need not in visited_plugins and need not in needed_plugins
+          needed_plugins += need
+        endif
+      endforeach
     endif
+  endforeach
+  pending_plugins = needed_plugins
+endforeach
+if pending_plugins.length() > 0
+  error('plugin_needs nest too deep: @0@'.format(pending_plugins))
+endif
+# Treat the implicitly selected plugins as selected
+foreach plugin_dir : visited_plugins
+  if plugin_dir not in selected_plugins
+    selected_plugins += plugin_dir
   endif
 endforeach
 
-# The plugins other plugins need come first, they are linked to them
+# Build the providers first, each after the providers it needs, as they
+# are linked to it. The other plugins follow in their original order.
 plugin_providers = []
 foreach def : plugin_defs
   foreach need : def['needs']
@@ -56,25 +73,27 @@ foreach def : plugin_defs
     endif
   endforeach
 endforeach
-# A provider can depend on another provider (solidigm -> ocp -> log), so
-# order the providers by their dependencies
 ordered_plugin_defs = []
 ordered_providers = []
-foreach i : range(plugin_providers.length())
+foreach round : range(plugin_providers.length())
   foreach def : plugin_defs
-    ready = (def['dir'] in plugin_providers and
-             def['dir'] not in ordered_providers)
-    foreach need : def['needs']
-      if need not in ordered_providers
-        ready = false
+    if def['dir'] in plugin_providers and def['dir'] not in ordered_providers
+      ready = true
+      foreach need : def['needs']
+        if need not in ordered_providers
+          ready = false
+        endif
+      endforeach
+      if ready
+        ordered_plugin_defs += def
+        ordered_providers += def['dir']
       endif
-    endforeach
-    if ready
-      ordered_plugin_defs += def
-      ordered_providers += def['dir']
     endif
   endforeach
 endforeach
+if ordered_providers.length() != plugin_providers.length()
+  error('the plugins need each other: @0@'.format(plugin_providers))
+endif
 foreach def : plugin_defs
   if def['dir'] not in plugin_providers
     ordered_plugin_defs += def
