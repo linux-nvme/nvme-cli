@@ -42,7 +42,7 @@ the default is `auto` (use if found) unless noted otherwise.
 | `json-c` | `auto` | 0.13 | `/etc/nvme/config.json` parsing; all vendor plugins; JSON output format |
 | `openssl` | `auto` | 3.0 | TLS over NVMe-TCP; host authentication. LibreSSL works if it provides `openssl/core_names.h` |
 | `keyutils` | `auto` | 1.5 | Key management for NVMe-oF authentication |
-| `libkmod` | `auto` | 5 | Loading the nvme-fabrics module when needed |
+| `libkmod` | `auto` | 5 | Loading the nvme-fabrics module when needed. On Linux, nvme loads `libkmod.so.2` before it connects or discovers and doesn't link it, so nvme doesn't depend on libkmod; packages can make it a weak dependency. Without it, nvme doesn't load the module, which then has to be loaded beforehand |
 | `libdbus` | `disabled` | | End-point discovery for NVMe-MI |
 | `liburing` | `disabled` | 2.2 | Asynchronous admin and I/O passthrough commands through io_uring |
 | `libarchive` | `auto` | | Archiving vendor plugin log captures (WDC, SanDisk, Micron, Samsung, Solidigm) as `.tar`/`.tar.gz`/`.zip`, without spawning an external `tar`/`zip` process. On Linux, nvme loads `libarchive.so.13` when it creates an archive and doesn't link it, so nvme and an initrd that carries it don't depend on libarchive; packages can make it a weak dependency. Without it, those capture subcommands fail with a clear error instead |

@@ -18,10 +18,12 @@ Usage: python3 nvme_fabrics_mock_test.py <path-to-nvme-binary> <path-to-mock-lib
 import errno
 import shutil
 import struct
+import unittest
 from pathlib import Path
 
-from tests.cli.nvme_mock import (CNS_CTRL, MockController, MockTestCase,
-                                 Reply, id_ctrl, main, write_sysfs_ctrl)
+from tests.cli.nvme_mock import (CNS_CTRL, HAVE_LIBKMOD, MockController,
+                                 MockTestCase, Reply, id_ctrl, main,
+                                 write_sysfs_ctrl)
 from tests.cli.nvme_mock_ipc import NIC_QUEUES_FMT
 
 # The vendor defaults libnvme ships.
@@ -452,6 +454,20 @@ class FabricsMockCLITest(MockTestCase):
 
         by_nqn = {c['subsysnqn']: c['traddr'] for c in self.server.controllers.values()}
         self.assertEqual(by_nqn.get(io_subsys), 'fe80::2')
+
+    @unittest.skipUnless(HAVE_LIBKMOD, 'nvme was built without libkmod')
+    def test_connect_without_the_libkmod_library(self):
+        """nvme loads libkmod at runtime to load the nvme-fabrics module:
+        when it isn't installed, nvme connects without loading the module
+        and doesn't complain about it, except with --verbose."""
+        self.env['MOCK_DLOPEN_FAIL'] = 'libkmod'
+        subsysnqn = "nqn.2014-08.org.nvmexpress:my-io-subsys-1"
+        res = self._run('connect', '-t', 'tcp', '-a', '192.168.1.10',
+                        '-s', '4420', '-n', subsysnqn, '--verbose')
+        self.assertIn('libkmod is not available', res.stdout + res.stderr)
+        self.assertNotIn("Couldn't load the nvme-fabrics module",
+                         res.stdout + res.stderr)
+        self.assertEqual(self._subsysnqn(0), subsysnqn)
 
     def test_connect_dry_run(self):
         """--dry-run does not write the connect arguments to the kernel."""
