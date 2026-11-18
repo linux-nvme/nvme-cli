@@ -12,7 +12,6 @@ sources = [
     'src/nvme-print-stdout.c',
     'src/nvme-print-stdout-log.c',
     'src/nvme-print.c',
-    'src/nvme-regs.c',
     'src/nvme.c',
     'src/nvme-cmds-enumerate.c',
     'src/nvme-cmds-discovery.c',
@@ -21,7 +20,6 @@ sources = [
     'src/nvme-cmds-passthru.c',
     'src/plugin.c',
     'src/privsep.c',
-    'src/bitfields.c',
     'src/field-parser.c',
 ]
 
