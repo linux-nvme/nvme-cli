@@ -115,6 +115,15 @@ class CommandModulesTest(unittest.TestCase):
                          ['nvme0n1', 'ng0n1', 'S7DFNG0W700063'])
         self.assertNotIn(LOAD_ERROR, r.stderr)
 
+    def test_fabrics_command_loads_only_its_module(self):
+        if not os.path.exists(os.path.join(MODULE_DIR, 'cmds-fabrics.so')):
+            self.skipTest('nvme has no fabrics commands')
+        self.modules('cmds-fabrics')
+        r = self.nvme('connect-all', '--help')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('Usage: nvme connect-all', r.stdout)
+        self.assertNotIn(LOAD_ERROR, r.stderr)
+
     def test_alias(self):
         self.modules('cmds-deprecated', 'cmds-fw')
         r = self.nvme('fw-activate', '--help')
