@@ -110,6 +110,9 @@ class ErrorRecoveryLogTestBase(OCPMockTestBase):
 
 class TestErrorRecoveryLog(ErrorRecoveryLogTestBase):
 
+    def test_decoded_in_sandbox(self):
+        self.assertDecodedInSandbox('ocp', 'error-recovery-log', self.ctrl)
+
     def test_page_is_read_with_the_ocp_uuid_index(self):
         self.assertOk(self.run_c1())
         reads = self.server.log_reads(layout.LID)

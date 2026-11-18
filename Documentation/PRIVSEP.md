@@ -210,6 +210,13 @@ has printed. Printers that the sandboxed printer calls itself (e.g. the
 hex dump) run inline in the same child, and so do the status and error
 messages they print, which do not use the macro.
 
+Plugins with their own printer tables call their printers through
+`nvme_print_decoder()` in `src/nvme-print.h`, which applies the same
+dry-run check and sandbox. The caller decides per printer whether it can
+run in the sandbox: printers that open files, issue commands or pass data
+back to the caller must run in process, e.g. `ocp internal-log`, which
+writes its report to a file.
+
 Some printers stay in process (`nvme_print_sandboxed()`):
 
 - the libnvme tree printers (`list`, `list-subsys`, `show-topology`,
