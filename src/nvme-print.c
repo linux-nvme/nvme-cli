@@ -430,11 +430,6 @@ void nvme_show_error_status(int status, const char *msg, ...)
 	va_end(ap);
 }
 
-void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags)
-{
-	nvme_print(id_ctrl_rpmbs, flags, ctrl_rpmbs);
-}
-
 const char *nvme_degrees_string(long t)
 {
 	static char str[STR_LEN];

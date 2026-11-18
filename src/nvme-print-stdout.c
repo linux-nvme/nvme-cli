@@ -3005,7 +3005,6 @@ struct print_ops stdout_print_ops = {
 	.select_result			= stdout_select_result,
 	.show_feature			= stdout_feature_show,
 	.show_feature_fields		= stdout_feature_show_fields,
-	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
 	.lba_range			= stdout_lba_range,
 	.lba_status_info		= stdout_lba_status_info,
 	.d				= stdout_d,

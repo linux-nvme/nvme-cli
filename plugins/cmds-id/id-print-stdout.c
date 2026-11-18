@@ -704,6 +704,30 @@ static struct shr_table *stdout_id_ctrl_unvmcap_table(__u8 *unvmcap)
 	return t;
 }
 
+static struct shr_table *stdout_id_ctrl_rpmbs_table(__le32 ctrl_rpmbs)
+{
+	struct shr_table *t;
+	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
+	__u32 asz = (rpmbs & 0xFF000000) >> 24;
+	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
+	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
+	__u32 auth = (rpmbs & 0x38) >> 3;
+	__u32 rpmb = rpmbs & 0x7;
+
+	t = stdout_bits_table_create();
+	if (!t)
+		return NULL;
+
+	stdout_bits_add(t, "[31:24]", asz, "Access Size");
+	stdout_bits_add(t, "[23:16]", tsz, "Total Size");
+	if (rsvd)
+		stdout_bits_add(t, "[15:6]", rsvd, "Reserved");
+	stdout_bits_add(t, "[5:3]", auth, "Authentication Method");
+	stdout_bits_add(t, "[2:0]", rpmb, "Number of RPMB Units");
+
+	return t;
+}
+
 static struct shr_table *stdout_id_ctrl_dsto_table(__u8 dsto)
 {
 	struct shr_table *t;
@@ -3088,6 +3112,13 @@ static const char *stdout_id_ctrl_nvm_lbamqf_str(__u8 lbamqf)
 	}
 }
 
+static void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+{
+	stdout_kv_table_finish(stdout_id_ctrl_rpmbs_table(ctrl_rpmbs),
+				"id-ctrl-rpmbs");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
 	bool verbose = id_stdout_print_ops.flags & VERBOSE;
@@ -3782,6 +3813,7 @@ static struct id_print_ops id_stdout_print_ops = {
 	.endurance_group_list		= stdout_endurance_group_list,
 	.id_ctrl			= stdout_id_ctrl,
 	.id_ctrl_nvm			= stdout_id_ctrl_nvm,
+	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
 	.id_domain_list			= stdout_id_domain_list,
 	.id_independent_id_ns		= stdout_cmd_set_independent_id_ns,
 	.id_iocs			= stdout_id_iocs,

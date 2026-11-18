@@ -23,3 +23,5 @@ void nvme_show_id_ctrl(struct libnvme_global_ctx *ctx,
 	struct libnvme_transport_handle *hdl, struct nvme_id_ctrl *ctrl,
 	nvme_print_flags_t flags, void (*vendor_show)(__u8 *vs,
 	struct json_object *root));
+/* Show the RPMB Support field of Identify Controller */
+void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags);

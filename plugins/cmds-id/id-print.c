@@ -71,6 +71,11 @@ void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 	id_print(id_ctrl_nvm, flags, ctrl_nvm);
 }
 
+void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags)
+{
+	id_print(id_ctrl_rpmbs, flags, ctrl_rpmbs);
+}
+
 void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	struct nvme_id_ns *ns, unsigned int lba_index, bool cap_only,
 	nvme_print_flags_t flags)

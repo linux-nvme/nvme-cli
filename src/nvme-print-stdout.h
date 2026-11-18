@@ -19,12 +19,8 @@ void stdout_bits_add(struct shr_table *t, const char *bits,
 const char *stdout_format_timestamp(__u8 *timestamp_bytes);
 void stdout_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 				unsigned char *buf);
-void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs);
 #ifdef CONFIG_FABRICS
 void stdout_discovery_log(const struct nvmf_discovery_log *log, int numrec);
 #else /* CONFIG_FABRICS */
 #define stdout_discovery_log NULL
 #endif /* CONFIG_FABRICS */
-
-/* id */
-struct shr_table *stdout_id_ctrl_rpmbs_table(__le32 ctrl_rpmbs);

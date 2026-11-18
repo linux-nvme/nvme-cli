@@ -198,7 +198,6 @@ struct print_ops {
 	void (*show_feature)(enum nvme_features_id fid, int sel,
 			     unsigned int result, void *buf, __u32 data_len);
 	void (*show_feature_fields)(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
-	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
 	void (*lba_status_info)(__u64 result);
 	void (*d)(unsigned char *buf, int len, int width, int group);
@@ -302,7 +301,6 @@ void nvme_show_opcode_status(int status, bool admin, __u8 opcode);
 void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
-void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags);
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
 	nvme_print_flags_t flags);
 

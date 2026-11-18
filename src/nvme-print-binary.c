@@ -66,7 +66,6 @@ static struct print_ops binary_print_ops = {
 	.select_result			= NULL,
 	.show_feature			= binary_feature_show,
 	.show_feature_fields		= NULL,
-	.id_ctrl_rpmbs			= NULL,
 	.lba_range			= NULL,
 	.lba_status_info		= NULL,
 	.d				= NULL,
