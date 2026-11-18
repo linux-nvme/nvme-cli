@@ -38,5 +38,11 @@ class LmCreateCdqTest(MockTestCase):
         self.assertEqual(cmd.data_len, 4096)
 
 
+class LmPrintTest(MockTestCase):
+
+    def test_cdq_decoded_in_sandbox(self):
+        self.assertDecodedInSandbox('lm', 'get-cdq', self.ctrl)
+
+
 if __name__ == '__main__':
     main()
