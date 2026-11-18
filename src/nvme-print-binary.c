@@ -24,7 +24,6 @@ static struct print_ops binary_print_ops = {
 	.show_finish			= NULL,
 
 	/* status and error messages */
-	.connect_msg			= NULL,
 	.show_message			= NULL,
 	.show_perror			= NULL,
 	.show_status			= NULL,

@@ -148,7 +148,6 @@ struct print_ops {
 	void (*config_conn_list)(struct libnvmf_config *config);
 
 	/* status and error messages */
-	void (*connect_msg)(struct libnvme_ctrl *c);
 	void (*show_message)(bool error, const char *msg, va_list ap);
 	void (*show_perror)(const char *msg, va_list ap);
 	void (*show_status)(int status);
@@ -276,7 +275,6 @@ nvme_host_metadata_element(const struct nvme_host_metadata *data,
 
 void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
 			     uint64_t numrec, nvme_print_flags_t flags);
-void nvme_show_connect_msg(struct libnvme_ctrl *c, nvme_print_flags_t flags);
 void nvme_show_config_conn_list(struct libnvmf_config *config,
 				 nvme_print_flags_t flags);
 
