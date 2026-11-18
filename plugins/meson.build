@@ -35,6 +35,8 @@ pending_plugins += 'cmds-regs'
 pending_plugins += 'cmds-passthru'
 # get-feature and set-feature are top-level commands of the feat plugin
 pending_plugins += 'feat'
+# The device enumeration commands
+pending_plugins += 'cmds-list'
 foreach round : range(16)
   if pending_plugins.length() == 0
     break

@@ -20,7 +20,6 @@
 
 #include <libnvme.h>
 
-#include <shared/compiler-attributes-util.h>
 #include <shared/sig-util.h>
 
 #include "argconfig.h"
@@ -293,7 +292,7 @@ static struct command *commands[] = {
 	NULL,
 };
 
-static void __shr_constructor register_group(void)
+NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&builtin, "Device Enumeration", commands);
 }
