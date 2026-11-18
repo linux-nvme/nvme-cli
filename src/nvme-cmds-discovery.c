@@ -187,20 +187,6 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (!log)
 		return -ENOMEM;
 
-	struct nvme_get_log_args args = {
-		.nsid		= cfg.namespace_id,
-		.rae		= cfg.rae,
-		.lsp		= cfg.lsp,
-		.lid		= cfg.log_id,
-		.lsi		= cfg.lsi,
-		.csi		= cfg.csi,
-		.ot		= cfg.ot,
-		.uidx		= cfg.uuid_index,
-		.lpo		= cfg.lpo,
-		.log		= log,
-		.len		= cfg.log_len,
-		.result		= NULL,
-	};
 	nvme_init_get_log(&cmd, cfg.namespace_id, cfg.log_id,
 			  cfg.csi, log, cfg.log_len);
 	if (cfg.ish) {
@@ -236,9 +222,9 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 		                 cfg.namespace_id);
 		d(log, cfg.log_len, 16, 1);
 		if (nvme_args.verbose)
-			nvme_show_log(libnvme_transport_handle_get_name(hdl), args.lid,
-				      args.nsid, args.lsi, args.lsp, args.log, args.len,
-				      VERBOSE);
+			nvme_show_log(libnvme_transport_handle_get_name(hdl),
+				      cfg.log_id, cfg.namespace_id, cfg.lsi,
+				      cfg.lsp, log, cfg.log_len, VERBOSE);
 	} else {
 		d_raw((unsigned char *)log, cfg.log_len);
 	}

@@ -27,21 +27,6 @@ struct feat_cfg {
 	bool changed;
 };
 
-struct nvme_get_log_args {
-	__u32 nsid;
-	bool rae;
-	__u8 lsp;
-	enum nvme_cmd_get_log_lid lid;
-	__u16 lsi;
-	enum nvme_csi csi;
-	bool ot;
-	__u8 uidx;
-	__u64 lpo;
-	void *log;
-	__u32 len;
-	__u64 *result;
-};
-
 static inline bool nvme_match_devname(char *devname, struct libnvme_ns *ns)
 {
 	struct libnvme_ctrl *c = libnvme_ns_get_ctrl(ns);
