@@ -19,9 +19,6 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
-#include <ccan/hash/hash.h>
-#include <ccan/htable/htable.h>
-#include <ccan/htable/htable_type.h>
 #include <ccan/minmax/minmax.h>
 #include <ccan/str/str.h>
 #include <ccan/strset/strset.h>
@@ -39,6 +36,7 @@
 #include "logging.h"
 #include "nvme-print.h"
 #include "nvme-print-stdout.h"
+#include "nvme-resources.h"
 
 enum simple_list_col {
 	SIMPLE_LIST_COL_NODE,
@@ -54,70 +52,6 @@ enum simple_list_col {
 const char dash[100] = {[0 ... 99] = '-'};
 
 struct print_ops stdout_print_ops;
-
-static const char *subsys_key(const struct libnvme_subsystem *s)
-{
-	return libnvme_subsystem_get_name((struct libnvme_subsystem *)s);
-}
-
-static const char *ctrl_key(const struct libnvme_ctrl *c)
-{
-	return libnvme_ctrl_get_name((struct libnvme_ctrl *)c);
-}
-
-static const char *ns_key(const struct libnvme_ns *n)
-{
-	return libnvme_ns_get_name((struct libnvme_ns *)n);
-}
-
-static bool subsys_cmp(const struct libnvme_subsystem *s, const char *name)
-{
-	return streq(libnvme_subsystem_get_name((struct libnvme_subsystem *)s),
-		     name);
-}
-
-static bool ctrl_cmp(const struct libnvme_ctrl *c, const char *name)
-{
-	return streq(libnvme_ctrl_get_name((struct libnvme_ctrl *)c), name);
-}
-
-static bool ns_cmp(const struct libnvme_ns *n, const char *name)
-{
-	return streq(libnvme_ns_get_name((struct libnvme_ns *)n), name);
-}
-
-HTABLE_DEFINE_TYPE(struct libnvme_subsystem, subsys_key, hash_string,
-		   subsys_cmp, htable_subsys);
-HTABLE_DEFINE_TYPE(struct libnvme_ctrl, ctrl_key, hash_string,
-		   ctrl_cmp, htable_ctrl);
-HTABLE_DEFINE_TYPE(struct libnvme_ns, ns_key, hash_string,
-		   ns_cmp, htable_ns);
-
-static void htable_ctrl_add_unique(struct htable_ctrl *ht, struct libnvme_ctrl *c)
-{
-	if (htable_ctrl_get(ht, libnvme_ctrl_get_name(c)))
-		return;
-
-	htable_ctrl_add(ht, c);
-}
-
-static void htable_ns_add_unique(struct htable_ns *ht, struct libnvme_ns *n)
-{
-	struct htable_ns_iter it;
-	struct libnvme_ns *_n;
-
-	/*
-	 * Test if namespace pointer is already in the hash, and thus avoid
-	 * inserting severaltimes the same pointer.
-	 */
-	for (_n = htable_ns_getfirst(ht, libnvme_ns_get_name(n), &it);
-	     _n;
-	     _n = htable_ns_getnext(ht, libnvme_ns_get_name(n), &it)) {
-		if (_n == n)
-			return;
-	}
-	htable_ns_add(ht, n);
-}
 
 /*
  * Device names share a common textual prefix (e.g. "nvme", "nvme0n")
@@ -211,80 +145,10 @@ static void strset_iterate_sorted_(const struct strset *set,
 	free(nc.names);
 }
 
-struct nvme_resources {
-	struct libnvme_global_ctx *ctx;
-
-	struct htable_subsys ht_s;
-	struct htable_ctrl ht_c;
-	struct htable_ns ht_n;
-	struct strset subsystems;
-	struct strset ctrls;
-	struct strset namespaces;
-};
-
 struct nvme_resources_table {
 	struct nvme_resources *res;
 	struct shr_table *t;
 };
-
-static int nvme_resources_init(struct libnvme_global_ctx *ctx, struct nvme_resources *res)
-{
-	struct libnvme_host *h;
-	struct libnvme_subsystem *s;
-	struct libnvme_ctrl *c;
-	struct libnvme_ns *n;
-	struct libnvme_path *p;
-
-	res->ctx = ctx;
-	htable_subsys_init(&res->ht_s);
-	htable_ctrl_init(&res->ht_c);
-	htable_ns_init(&res->ht_n);
-	strset_init(&res->subsystems);
-	strset_init(&res->ctrls);
-	strset_init(&res->namespaces);
-
-	libnvme_for_each_host(ctx, h) {
-		libnvme_for_each_subsystem(h, s) {
-			htable_subsys_add(&res->ht_s, s);
-			strset_add(&res->subsystems, libnvme_subsystem_get_name(s));
-
-			libnvme_subsystem_for_each_ctrl(s, c) {
-				htable_ctrl_add_unique(&res->ht_c, c);
-				strset_add(&res->ctrls, libnvme_ctrl_get_name(c));
-
-				libnvme_ctrl_for_each_ns(c, n) {
-					htable_ns_add_unique(&res->ht_n, n);
-					strset_add(&res->namespaces, libnvme_ns_get_name(n));
-				}
-
-				libnvme_ctrl_for_each_path(c, p) {
-					n = libnvme_path_get_ns(p);
-					if (n) {
-						htable_ns_add_unique(&res->ht_n, n);
-						strset_add(&res->namespaces, libnvme_ns_get_name(n));
-					}
-				}
-			}
-
-			libnvme_subsystem_for_each_ns(s, n) {
-				htable_ns_add_unique(&res->ht_n, n);
-				strset_add(&res->namespaces, libnvme_ns_get_name(n));
-			}
-		}
-	}
-
-	return 0;
-}
-
-static void nvme_resources_free(struct nvme_resources *res)
-{
-	strset_clear(&res->namespaces);
-	strset_clear(&res->ctrls);
-	strset_clear(&res->subsystems);
-	htable_ns_clear(&res->ht_n);
-	htable_ctrl_clear(&res->ht_c);
-	htable_subsys_clear(&res->ht_s);
-}
 
 static void stdout_kv_render(FILE *stream, struct shr_table *t);
 
