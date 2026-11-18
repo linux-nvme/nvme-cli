@@ -28,6 +28,7 @@ if want_deprecated_cmds
 endif
 # The I/O commands
 pending_plugins += 'cmds-io'
+pending_plugins += 'cmds-admin'
 foreach round : range(16)
   if pending_plugins.length() == 0
     break
