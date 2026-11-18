@@ -210,10 +210,11 @@ check() {
 	fi
 }
 
-# The time, in microseconds: a phase must not see the messages of the
-# previous one.
-now() {
-	date '+%Y-%m-%d %H:%M:%S.%6N'
+# The position of the last journal entry. A phase searches the entries
+# after it, so it does not see the messages of the previous one. Unlike a
+# time, a cursor does not move when the clock goes back.
+journal_cursor() {
+	journalctl -n 0 --show-cursor 2>/dev/null | sed -n 's/^-- cursor: //p'
 }
 
 # Start the next phase, numbered in order. Under GitHub Actions, each phase
@@ -491,16 +492,16 @@ keysd_restart() {
 	systemctl restart "${UNIT}" >"${SCRATCH}" 2>&1
 }
 
-# nvme-keysd ran since $1, and exited with status 0. With Type=notify,
-# systemctl returns at READY=1, before the exit: wait for it.
+# nvme-keysd ran after the cursor $1, and exited with status 0. With
+# Type=notify, systemctl returns at READY=1, before the exit: wait for it.
 keysd_ran() {
 	wait_until 10 journal_match -u "${UNIT}" "$1" "Deactivated successfully"
 }
 
-# The journal has, for the selector $1 $2, a message since $3 that
-# contains $4.
+# The journal has, for the selector $1 $2, a message after the cursor $3
+# that contains $4.
 journal_match() {
-	journalctl "$1" "$2" --since "$3" 2>/dev/null | grep -q -- "$4"
+	journalctl "$1" "$2" --after-cursor "$3" 2>/dev/null | grep -q -- "$4"
 }
 
 # journald stores a message some time after it is sent: the *_has checks
@@ -516,7 +517,8 @@ unit_journal_has() {
 }
 
 journal_count() {
-	journalctl -t nvme-keysd --since "$1" 2>/dev/null | grep -c -- "$2"
+	journalctl -t nvme-keysd --after-cursor "$1" 2>/dev/null |
+		grep -c -- "$2"
 }
 
 keysd_active() {
@@ -682,15 +684,15 @@ helper_journal_has() {
 }
 
 helper_journal_count() {
-	journalctl -t nvme-keysd-kmip --since "$1" 2>/dev/null |
+	journalctl -t nvme-keysd-kmip --after-cursor "$1" 2>/dev/null |
 		grep -c -- "$2"
 }
 
-# The helper logged since $1, and never as root.
+# The helper logged after the cursor $1, and never as root.
 helper_not_root() {
 	local uids
 
-	uids=$(journalctl -t nvme-keysd-kmip --since "$1" -o export \
+	uids=$(journalctl -t nvme-keysd-kmip --after-cursor "$1" -o export \
 		2>/dev/null | sed -n 's/^_UID=//p' | sort -u)
 	[ -n "${uids}" ] && ! grep -qx 0 <<< "${uids}"
 }
@@ -766,7 +768,7 @@ fi
 
 phase "the unit does not start without a key source"
 write_fabrics_conf inline
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "the unit is not active" test "$(systemctl is-active "${UNIT}")" = inactive
 check "the unit is not failed" \
@@ -777,7 +779,7 @@ check "the check was logged" journal_has "${PHASE_START}" "nothing to do"
 write_fabrics_conf systemd-creds
 
 phase "a missing credential is reported"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd runs without its credential" keysd_ran "${PHASE_START}"
 check "the missing credential was logged" \
@@ -785,7 +787,7 @@ check "the missing credential was logged" \
 
 phase "a credential is imported at startup"
 write_cred "${CRED_FILE}" "${KEY_A}" "${CRED_NAME}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "key A is in .nvme with the expected identity" key_present "${ID_A}"
@@ -799,7 +801,7 @@ check "the connection uses key A" ctrl_uses_key "${ID_A}"
 
 phase "a restart with nothing changed changes nothing"
 SERIAL_A=$(key_serial "${ID_A}")
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "key A keeps its serial" test "$(key_serial "${ID_A}")" = "${SERIAL_A}"
@@ -808,7 +810,7 @@ check "'already present' was logged" \
 
 phase "a new credential and a restart replace the key"
 write_cred "${CRED_FILE}" "${KEY_B}" "${CRED_NAME}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "key B is in .nvme" key_present "${ID_B}"
@@ -832,7 +834,7 @@ disconnect
 
 phase "a credential with the wrong name is rejected"
 write_cred "${CRED_FILE}" "${KEY_A}" wrong-name
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "the name mismatch was logged" \
@@ -844,7 +846,7 @@ phase "every path of a subsystem imports the key once"
 write_cred "${CRED_FILE}" "${KEY_B}" "${CRED_NAME}"
 sed -i "/^controller/a controller = transport=tcp;traddr=${TRADDR};trsvcid=$((TRSVCID + 1))" \
 	"${FABRICS_CONF}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "'already present' was logged once" \
@@ -874,7 +876,7 @@ write_cred "${CRED_DIR}/keysd-wringer-keyring" "${KEY_A}" \
 		"tls-key = keysd-wringer-keyring" \
 		"keyring = keysd-wringer-nosuch"
 } > "${DROPIN}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "the inline entry is ignored" \
@@ -899,7 +901,7 @@ check "the main file is still imported" \
 
 phase "a fabrics configuration that does not parse is reported"
 printf '[Subsystem]\nnqn = not-an-nqn\n' > "${DROPIN}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "the unit is skipped" \
 	unit_journal_has "${PHASE_START}" "Skipped due to 'exec-condition'"
@@ -939,7 +941,7 @@ UID_A=$(kms register-secret "${NAME_A}" "${KEY_A}")
 check "key A is on the KMS" test -n "${UID_A}"
 write_keysd_conf "${KMIP_DIR}/ca.pem" "${TRADDR}"
 write_fabrics_conf kmip:wringer "${NAME_A}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd keeps running" keysd_active
 check "NoSuchKey was logged" wait_until 5 kmip_failed "${NAME_A}" NoSuchKey 5
@@ -985,7 +987,7 @@ check "an unknown key gets NoSuchKey" grep -q "${VARLINK_IF}.NoSuchKey" "${SCRAT
 phase "a Symmetric Key of 32 bytes is a SHA-256 PSK"
 kms register-symmetric --activate "${NAME_S32}" "${HEX_32}" >/dev/null
 write_fabrics_conf kmip:wringer "${NAME_S32}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "the key is in .nvme" wait_until 10 key_present "${ID_S32}"
 check "the PSK uses SHA-256" test "${PSK_S32#NVMeTLSkey-1:01:}" != "${PSK_S32}"
@@ -994,7 +996,7 @@ check "key A is revoked" key_absent "${ID_A}"
 phase "a Symmetric Key of 48 bytes is a SHA-384 PSK"
 kms register-symmetric --activate "${NAME_S48}" "${HEX_48}" >/dev/null
 write_fabrics_conf kmip:wringer "${NAME_S48}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "the key is in .nvme" wait_until 10 key_present "${ID_S48}"
 check "the PSK uses SHA-384" test "${PSK_S48#NVMeTLSkey-1:02:}" != "${PSK_S48}"
@@ -1013,7 +1015,7 @@ kms register-certificate --activate keysd-wringer-cert \
 	subsys_entry short "tls-key = keysd-wringer-short"
 	subsys_entry cert "tls-key = keysd-wringer-cert"
 } >> "${FABRICS_CONF}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "Secret Data that is not a PSK gets InvalidKey" \
 	wait_until 10 kmip_failed keysd-wringer-notpsk InvalidKey 5
@@ -1029,7 +1031,7 @@ phase "two Active keys with one name are refused"
 UID_DUP=$(kms register-secret --activate "${NAME_DUP}" "${KEY_A}")
 kms register-secret --activate "${NAME_DUP}" "${KEY_B}" >/dev/null
 write_fabrics_conf kmip:wringer "${NAME_DUP}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "KeyNotUnique was logged" \
 	wait_until 5 kmip_failed "${NAME_DUP}" KeyNotUnique 5
@@ -1041,7 +1043,7 @@ check "the remaining key is imported" wait_until 15 key_present "${ID_B}"
 phase "a KMS that is down at startup is asked again"
 kms_stop
 revoke_key "${ID_B}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "KmsFailed was logged" \
 	wait_until 5 kmip_failed "${NAME_DUP}" KmsFailed 5
@@ -1059,7 +1061,7 @@ kms register-secret --activate "${NAME_B2}" "${KEY_B}" >/dev/null
 write_keysd_conf "${KMIP_DIR}/ca.pem" 127.0.0.2 "${TRADDR}"
 write_fabrics_conf kmip:wringer "${NAME_A}"
 subsys_entry second "tls-key = ${NAME_B2}" >> "${FABRICS_CONF}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "key A is in .nvme" wait_until 10 key_present "${ID_A}"
 check "the second key is in .nvme" wait_until 10 key_present "${ID_B2}"
@@ -1073,7 +1075,7 @@ write_fabrics_conf kmip:wringer "${NAME_A}"
 phase "a server certificate from another CA is refused"
 write_keysd_conf "${KMIP_DIR}/other-ca.pem" "${TRADDR}"
 revoke_key "${ID_A}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "KmsFailed was logged" \
 	wait_until 10 kmip_failed "${NAME_A}" KmsFailed 5
@@ -1084,7 +1086,7 @@ check "key A is not in .nvme" key_absent "${ID_A}"
 phase "a KMS that requires a client certificate refuses a client without one"
 write_keysd_conf "${KMIP_DIR}/ca.pem" "${TRADDR}"
 sed -i '/^client-/d' "${KEYSD_CONF}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "KmsFailed was logged" \
 	wait_until 10 kmip_failed "${NAME_A}" KmsFailed 5
@@ -1095,7 +1097,7 @@ check "key A is not in .nvme" key_absent "${ID_A}"
 phase "a missing client key is reported"
 write_keysd_conf "${KMIP_DIR}/ca.pem" "${TRADDR}"
 sed -i 's/^client-key .*/client-key  = nosuch/' "${KEYSD_CONF}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "KmsFailed was logged" \
 	wait_until 10 kmip_failed "${NAME_A}" KmsFailed 5
@@ -1109,7 +1111,7 @@ printf '\n[kmip:other]\nserver = %s\n' "${TRADDR}" >> "${KEYSD_CONF}"
 write_fabrics_conf kmip "${NAME_A}"
 subsys_entry nosuchkms "tls-key-source = kmip:nosuch" "tls-key = ${NAME_A}" \
 	>> "${FABRICS_CONF}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "nvme-keysd ran" keysd_ran "${PHASE_START}"
 check "a plain kmip source was logged" journal_has "${PHASE_START}" \
@@ -1120,7 +1122,7 @@ check "an unknown KMS was logged" journal_has "${PHASE_START}" \
 phase "nvme-keysd is restarted after a crash"
 write_keysd_conf "${KMIP_DIR}/ca.pem" "${TRADDR}"
 write_fabrics_conf kmip:wringer "${NAME_A}"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 keysd_restart
 check "key A is in .nvme" wait_until 10 key_present "${ID_A}"
 OLD_PID=$(keysd_main_pid)
@@ -1131,7 +1133,7 @@ check "nvme-keysd keeps running" wait_until 10 keysd_active
 check "key A is still in .nvme" key_present "${ID_A}"
 
 phase "nvme-keysd stops on SIGTERM"
-PHASE_START=$(now)
+PHASE_START=$(journal_cursor)
 systemctl stop "${UNIT}"
 check "the unit is not active" test "$(systemctl is-active "${UNIT}")" = inactive
 check "the unit is not failed" \
