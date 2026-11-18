@@ -15,6 +15,8 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
+#include "feat-cmds.h"
+
 #define FEAT_PLUGIN_VERSION "1.0"
 
 #define POWER_MGMT_DESC "Get and set power management feature"
@@ -2035,5 +2037,6 @@ static struct plugin plugin = {
 NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&plugin, NULL, commands);
+	plugin_add_group(&builtin, "Features", feat_builtin_commands);
 	register_extension(&plugin);
 }

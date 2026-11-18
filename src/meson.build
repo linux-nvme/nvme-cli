@@ -15,7 +15,6 @@ sources = [
     'src/nvme.c',
     'src/nvme-cmds-enumerate.c',
     'src/nvme-cmds-fabrics.c',
-    'src/nvme-cmds-feature.c',
     'src/plugin.c',
     'src/privsep.c',
     'src/field-parser.c',

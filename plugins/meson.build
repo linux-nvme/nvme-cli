@@ -33,6 +33,8 @@ pending_plugins += 'cmds-admin'
 pending_plugins += 'cmds-regs'
 # The passthru commands
 pending_plugins += 'cmds-passthru'
+# get-feature and set-feature are top-level commands of the feat plugin
+pending_plugins += 'feat'
 foreach round : range(16)
   if pending_plugins.length() == 0
     break
