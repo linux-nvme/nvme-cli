@@ -20,6 +20,7 @@
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "resv-print.h"
 
 static const char *crkey = "current reservation key";
 static const char *iekey = "ignore existing res. key";

@@ -37,12 +37,6 @@ static void binary_ctrl_registers(const struct nvme_reg_val *vals,
 	d_raw(page, size);
 }
 
-static void binary_resv_report(struct nvme_resv_status *status, int bytes,
-	bool eds)
-{
-	d_raw((unsigned char *)status, bytes);
-}
-
 
 static void binary_directive(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 	void *buf, __u32 len)
@@ -80,7 +74,6 @@ static struct print_ops binary_print_ops = {
 	.directive			= binary_directive,
 	.discovery_log			= binary_discovery_log,
 	.lba_status			= binary_lba_status,
-	.resv_report			= binary_resv_report,
 	.select_result			= NULL,
 	.show_feature			= binary_feature_show,
 	.show_feature_fields		= NULL,
