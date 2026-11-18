@@ -216,11 +216,6 @@ struct print_ops {
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result, void *buf, __u32 len);
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*endurance_group_list)(struct nvme_id_endurance_group_list *endgrp_list);
-	void (*fdp_config_log)(struct nvme_fdp_config_log *log, size_t len);
-	void (*fdp_event_log)(struct nvme_fdp_events_log *log);
-	void (*fdp_ruh_status)(struct nvme_fdp_ruh_status *status, size_t len);
-	void (*fdp_stats_log)(struct nvme_fdp_stats_log *log);
-	void (*fdp_usage_log)(struct nvme_fdp_ruhu_log *log, size_t len);
 	void (*id_ctrl)(struct nvme_id_ctrl *ctrl, const char *product_name,
 			void (*vs)(__u8 *vs, struct json_object *root));
 	void (*id_ctrl_nvm)(struct nvme_id_ctrl_nvm *ctrl_nvm);
@@ -437,17 +432,6 @@ void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 						struct nvme_id_ns *ns, unsigned int lba_index,
 						bool cap_only, nvme_print_flags_t flags);
 void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t);
-
-void nvme_show_fdp_configs(struct nvme_fdp_config_log *configs, size_t len,
-		nvme_print_flags_t flags);
-void nvme_show_fdp_stats(struct nvme_fdp_stats_log *log,
-		nvme_print_flags_t flags);
-void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
-		nvme_print_flags_t flags);
-void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
-		nvme_print_flags_t flags);
-void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
-		nvme_print_flags_t flags);
 
 void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
 			     uint64_t numrec, nvme_print_flags_t flags);

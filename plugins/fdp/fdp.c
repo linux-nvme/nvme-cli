@@ -16,6 +16,7 @@
 #include <shared/parse-util.h>
 
 #include "cleanup.h"
+#include "fdp-print.h"
 #include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
@@ -89,7 +90,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	nvme_show_fdp_configs(log, size, flags);
+	fdp_show_configs(log, size, flags);
 
 	return 0;
 }
@@ -154,7 +155,7 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	nvme_show_fdp_usage(log, len, flags);
+	fdp_show_usage(log, len, flags);
 
 	return 0;
 }
@@ -215,7 +216,7 @@ static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	nvme_show_fdp_stats(&stats, flags);
+	fdp_show_stats(&stats, flags);
 
 	return 0;
 }
@@ -277,7 +278,7 @@ static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	nvme_show_fdp_events(&events, flags);
+	fdp_show_events(&events, flags);
 
 	return 0;
 }
@@ -351,7 +352,7 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	nvme_show_fdp_ruh_status(buf, len, flags);
+	fdp_show_ruh_status(buf, len, flags);
 
 	return 0;
 }
@@ -650,4 +651,5 @@ NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);
+	fdp_register_log_decoder();
 }

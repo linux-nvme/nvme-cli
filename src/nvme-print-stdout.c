@@ -288,39 +288,6 @@ static void nvme_resources_free(struct nvme_resources *res)
 
 static void stdout_kv_render(FILE *stream, struct shr_table *t);
 
-static void stdout_fdp_ruh_status(struct nvme_fdp_ruh_status *status,
-				  size_t len)
-{
-	uint16_t nruhsd = nvme_log_nr_entries(le16_to_cpu(status->nruhsd),
-					      len, sizeof(*status),
-					      sizeof(status->ruhss[0]));
-	struct shr_table *t;
-
-	for (unsigned int i = 0; i < nruhsd; i++) {
-		struct nvme_fdp_ruh_status_desc *ruhs = &status->ruhss[i];
-
-		t = stdout_kv_table_create();
-		if (!t)
-			return;
-
-		shr_table_set_indent(t, 2);
-
-		stdout_kv_add(t, "Placement Identifier (PID)", "%"PRIu16,
-			      le16_to_cpu(ruhs->pid));
-		stdout_kv_add(t, "Reclaim Unit Handle Identifier", "%"PRIu16,
-			      le16_to_cpu(ruhs->ruhid));
-		stdout_kv_add(t,
-			      "Estimated Active Reclaim Unit Time Remaining (EARUTR)",
-			      "%"PRIu32, le32_to_cpu(ruhs->earutr));
-		stdout_kv_add(t, "Reclaim Unit Available Media Writes (RUAMW)",
-			      "%"PRIu64, le64_to_cpu(ruhs->ruamw));
-
-		stdout_kv_table_finish(t, "fdp-ruh-status");
-
-		printf("\n");
-	}
-}
-
 static unsigned int stdout_subsystem_multipath(struct libnvme_subsystem *s)
 {
 	struct libnvme_ns *n;
@@ -3545,11 +3512,6 @@ struct print_ops stdout_print_ops = {
 	.directive			= stdout_directive_show,
 	.discovery_log			= stdout_discovery_log,
 	.endurance_group_list		= stdout_endurance_group_list,
-	.fdp_config_log			= stdout_fdp_configs,
-	.fdp_event_log			= stdout_fdp_events,
-	.fdp_ruh_status			= stdout_fdp_ruh_status,
-	.fdp_stats_log			= stdout_fdp_stats,
-	.fdp_usage_log			= stdout_fdp_usage,
 	.id_ctrl			= stdout_id_ctrl,
 	.id_ctrl_nvm			= stdout_id_ctrl_nvm,
 	.id_domain_list			= stdout_id_domain_list,
