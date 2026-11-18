@@ -43,6 +43,7 @@
 #include "argconfig.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "log-print.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
@@ -3180,8 +3181,13 @@ static struct plugin plugin = {
 	.group = "Log Page & Identify",
 };
 
+static struct nvme_log_decoder log_decoder = {
+	.show = log_show_log,
+};
+
 NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);
+	nvme_register_log_decoder(&log_decoder);
 }

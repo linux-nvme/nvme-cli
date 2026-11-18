@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+plugin_needs = ['log']
+
 plugin_sources += [
   'plugins/ocp/ocp-utils.c',
   'plugins/ocp/ocp-nvme.c',

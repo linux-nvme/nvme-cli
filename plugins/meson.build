@@ -7,6 +7,12 @@ selected_plugins = get_option('plugins')
 if 'sandisk' in selected_plugins and 'wdc' not in selected_plugins
     selected_plugins += 'wdc'
 endif
+# These plugins use the log page decoders of the log plugin
+foreach p : ['ibm', 'ocp', 'solidigm']
+  if p in selected_plugins and 'log' not in selected_plugins
+    selected_plugins += 'log'
+  endif
+endforeach
 
 # Each plugin directory appends its sources to plugin_sources. It may set
 # plugin_name, the name of the plugin on the command line, when it is not

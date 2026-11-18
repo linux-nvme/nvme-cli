@@ -20,6 +20,7 @@
 #include "ocp-smart-extended-log.h"
 #include "ocp-telemetry-decode.h"
 #include "ocp-utils.h"
+#include "plugins/log/log-print.h"
 
 #define array_add_obj json_array_add_value_object
 #define array_add_str json_array_add_value_string
