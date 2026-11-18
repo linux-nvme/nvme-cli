@@ -21,7 +21,7 @@
 #include <ccan/array_size/array_size.h>
 #include <libnvme.h>
 
-#include "../src/nvme-regs.h"
+#include "nvme-regs.h"
 
 static bool report(const char *what, bool pass)
 {

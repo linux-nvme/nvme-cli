@@ -7,6 +7,8 @@ plugin_extension = false
 
 plugin_sources += [
     'plugins/cmds-regs/cmds-regs-plugin.c',
+    'plugins/cmds-regs/bitfields.c',
+    'plugins/cmds-regs/nvme-regs.c',
     'plugins/cmds-regs/regs-print.c',
     'plugins/cmds-regs/regs-print-stdout.c',
     'plugins/cmds-regs/regs-print-binary.c',
