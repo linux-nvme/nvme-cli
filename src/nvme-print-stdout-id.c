@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <ccan/array_size/array_size.h>
+#include <shared/hex-util.h>
 #include <shared/string-util.h>
 
 #include "cleanup.h"
@@ -1859,9 +1860,9 @@ void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	bool verbose = stdout_print_ops.flags & VERBOSE;
 	int vs = stdout_print_ops.flags & VS;
 	struct shr_table *t;
-	char nguid_buf[2 * sizeof(ns->nguid) + 1], *nguid = nguid_buf;
-	char eui64_buf[2 * sizeof(ns->eui64) + 1], *eui64 = eui64_buf;
-	int row, i;
+	char nguid[2 * sizeof(ns->nguid) + 1];
+	char eui64[2 * sizeof(ns->eui64) + 1];
+	int row;
 
 	t = stdout_kv_table_create();
 	if (!t)
@@ -1984,13 +1985,13 @@ void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		stdout_kv_add(t, "nvmsetid", "%d", le16_to_cpu(ns->nvmsetid));
 		stdout_kv_add(t, "endgid", "%d", le16_to_cpu(ns->endgid));
 
-		for (i = 0; i < (int)sizeof(ns->nguid); i++)
-			nguid += sprintf(nguid, "%02x", ns->nguid[i]);
-		stdout_kv_add(t, "nguid", "%s", nguid_buf);
+		shr_bin_to_hex(nguid, sizeof(nguid), ns->nguid,
+			       sizeof(ns->nguid), 0);
+		stdout_kv_add(t, "nguid", "%s", nguid);
 
-		for (i = 0; i < (int)sizeof(ns->eui64); i++)
-			eui64 += sprintf(eui64, "%02x", ns->eui64[i]);
-		stdout_kv_add(t, "eui64", "%s", eui64_buf);
+		shr_bin_to_hex(eui64, sizeof(eui64), ns->eui64,
+			       sizeof(ns->eui64), 0);
+		stdout_kv_add(t, "eui64", "%s", eui64);
 	}
 
 	row = stdout_kv_add(t, "lbaf", "%d formats",
@@ -2130,14 +2131,14 @@ void stdout_id_ns_descs(void *data, unsigned int nsid)
 {
 	struct nvme_ns_id_desc *cur;
 	size_t pos;
-	int i, verbose = stdout_print_ops.flags & VERBOSE;
+	int verbose = stdout_print_ops.flags & VERBOSE;
 	__u8 uuid[NVME_UUID_LEN];
 	char uuid_str[NVME_UUID_LEN_STRING];
 	__u8 eui64[8];
 	__u8 nguid[16];
 	__u8 csi;
 	struct shr_table *t;
-	char hex[NVME_UUID_LEN * 2 + 1], *hp;
+	char hex[NVME_UUID_LEN * 2 + 1];
 
 	printf("NVME Namespace Identification Descriptors NS %d:\n", nsid);
 
@@ -2158,18 +2159,16 @@ void stdout_id_ns_descs(void *data, unsigned int nsid)
 			memcpy(eui64, data + pos + sizeof(*cur), sizeof(eui64));
 			if (verbose)
 				stdout_kv_add(t, "type", "%s", "eui64");
-			hp = hex;
-			for (i = 0; i < 8; i++)
-				hp += sprintf(hp, "%02x", eui64[i]);
+			shr_bin_to_hex(hex, sizeof(hex), eui64,
+				       sizeof(eui64), 0);
 			stdout_kv_add(t, "eui64", "%s", hex);
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
 			if (verbose)
 				stdout_kv_add(t, "type", "%s", "nguid");
-			hp = hex;
-			for (i = 0; i < 16; i++)
-				hp += sprintf(hp, "%02x", nguid[i]);
+			shr_bin_to_hex(hex, sizeof(hex), nguid,
+				       sizeof(nguid), 0);
 			stdout_kv_add(t, "nguid", "%s", hex);
 			break;
 		case NVME_NIDT_UUID:

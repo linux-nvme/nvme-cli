@@ -19,6 +19,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/hex-util.h>
 #include <shared/mmio-util.h>
 #include <shared/string-util.h>
 #include <shared/unaligned-util.h>
@@ -293,9 +294,8 @@ static void json_nvme_id_ns_lbaf(struct nvme_id_ns *ns, int i, struct json_objec
 static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			    unsigned int lba_index, bool cap_only)
 {
-	char nguid_buf[2 * sizeof(ns->nguid) + 1],
-		eui64_buf[2 * sizeof(ns->eui64) + 1];
-	char *nguid = nguid_buf, *eui64 = eui64_buf;
+	char nguid[2 * sizeof(ns->nguid) + 1];
+	char eui64[2 * sizeof(ns->eui64) + 1];
 	struct json_object *r = json_r;
 	struct json_object *lbafs = json_create_array();
 	struct json_object *vs = json_create_array();
@@ -356,18 +356,13 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		obj_add_int(r, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 		obj_add_int(r, "endgid", le16_to_cpu(ns->endgid));
 
-		memset(eui64, 0, sizeof(eui64_buf));
+		shr_bin_to_hex(eui64, sizeof(eui64), ns->eui64,
+			       sizeof(ns->eui64), 0);
+		shr_bin_to_hex(nguid, sizeof(nguid), ns->nguid,
+			       sizeof(ns->nguid), 0);
 
-		for (i = 0; i < sizeof(ns->eui64); i++)
-			eui64 += sprintf(eui64, "%02x", ns->eui64[i]);
-
-		memset(nguid, 0, sizeof(nguid_buf));
-
-		for (i = 0; i < sizeof(ns->nguid); i++)
-			nguid += sprintf(nguid, "%02x", ns->nguid[i]);
-
-		obj_add_str(r, "nguid", nguid_buf);
-		obj_add_str(r, "eui64", eui64_buf);
+		obj_add_str(r, "nguid", nguid);
+		obj_add_str(r, "eui64", eui64);
 	}
 
 	obj_add_array(r, "lbafs", lbafs);
@@ -618,7 +613,7 @@ void json_nvme_resv_report(struct nvme_resv_status *status,
 {
 	struct json_object *r = json_r;
 	struct json_object *rcs = json_create_array();
-	int i, j, entries;
+	int i, entries;
 	int regstrnt = status->regstrnt[0] | (status->regstrnt[1] << 8);
 
 	obj_add_uint(r, "gen", le32_to_cpu(status->gen));
@@ -665,8 +660,10 @@ void json_nvme_resv_report(struct nvme_resv_status *status,
 			obj_add_int(rc, "rcsts", status->registrant_eds[i].rcsts);
 			obj_add_uint64(rc, "rkey", le64_to_cpu(status->registrant_eds[i].rkey));
 
-			for (j = 0; j < 16; j++)
-				sprintf(hostid + j * 2, "%02x", status->registrant_eds[i].hostid[j]);
+			shr_bin_to_hex(hostid, sizeof(hostid),
+				       status->registrant_eds[i].hostid,
+				       sizeof(status->registrant_eds[i].hostid),
+				       0);
 
 			obj_add_str(rc, "hostid", hostid);
 			array_add_obj(rcs, rc);
@@ -2543,7 +2540,6 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 {
 	/* large enough to hold uuid str (37) or nguid str (32) + zero byte */
 	char json_str[STR_LEN];
-	char *json_str_p;
 	union {
 		__u8 eui64[NVME_NIDT_EUI64_LEN];
 		__u8 nguid[NVME_NIDT_NGUID_LEN];
@@ -2554,27 +2550,25 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 	struct json_object *json_array = NULL;
 	struct nvme_ns_id_desc *cur;
 	size_t pos, off;
-	int i;
 
 	for (pos = 0; (cur = nvme_ns_id_desc(data, pos));
 	     pos += sizeof(*cur) + cur->nidl) {
 		const char *nidt_name = NULL;
 
 		memset(json_str, 0, sizeof(json_str));
-		json_str_p = json_str;
 		off = pos + sizeof(*cur);
 
 		switch (nvme_ns_id_desc_type(cur)) {
 		case NVME_NIDT_EUI64:
 			memcpy(desc.eui64, data + off, sizeof(desc.eui64));
-			for (i = 0; i < sizeof(desc.eui64); i++)
-				json_str_p += sprintf(json_str_p, "%02x", desc.eui64[i]);
+			shr_bin_to_hex(json_str, sizeof(json_str), desc.eui64,
+				       sizeof(desc.eui64), 0);
 			nidt_name = "eui64";
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(desc.nguid, data + off, sizeof(desc.nguid));
-			for (i = 0; i < sizeof(desc.nguid); i++)
-				json_str_p += sprintf(json_str_p, "%02x", desc.nguid[i]);
+			shr_bin_to_hex(json_str, sizeof(json_str), desc.nguid,
+				       sizeof(desc.nguid), 0);
 			nidt_name = "nguid";
 			break;
 		case NVME_NIDT_UUID:
@@ -2584,7 +2578,7 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 			break;
 		case NVME_NIDT_CSI:
 			memcpy(&desc.csi, data + off, sizeof(desc.csi));
-			sprintf(json_str_p, "%#x", desc.csi);
+			sprintf(json_str, "%#x", desc.csi);
 			nidt_name = "csi";
 			break;
 		default:
@@ -2840,7 +2834,6 @@ static void json_lba_range_entry(struct nvme_lba_range_type *lbrt, int nr_ranges
 	char json_str[STR_LEN];
 	struct json_object *lbare;
 	int i;
-	int j;
 	struct json_object *lbara = json_create_array();
 
 	obj_add_array(r, "LBA Ranges", lbara);
@@ -2869,8 +2862,8 @@ static void json_lba_range_entry(struct nvme_lba_range_type *lbrt, int nr_ranges
 
 		obj_add_nprix64(lbare, "nlb", le64_to_cpu(lbrt->entry[i].nlb));
 
-		for (j = 0; j < ARRAY_SIZE(lbrt->entry[i].guid); j++)
-			sprintf(&json_str[j * 2], "%02x", lbrt->entry[i].guid[j]);
+		shr_bin_to_hex(json_str, sizeof(json_str), lbrt->entry[i].guid,
+			       sizeof(lbrt->entry[i].guid), 0);
 
 		obj_add_str(lbare, "guid", json_str);
 	}
