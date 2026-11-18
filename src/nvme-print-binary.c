@@ -175,28 +175,6 @@ static void binary_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	d_raw((unsigned char *)nvm_ns, sizeof(*nvm_ns));
 }
 
-static void binary_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
-{
-	d_raw((unsigned char *)ctrl, sizeof(*ctrl));
-}
-
-static void binary_zns_id_ns(struct nvme_zns_id_ns *ns, struct nvme_id_ns *id_ns)
-{
-	d_raw((unsigned char *)ns, sizeof(*ns));
-}
-
-static void binary_zns_changed(struct nvme_zns_changed_zone_log *log)
-{
-	d_raw((unsigned char *)log, sizeof(*log));
-}
-
-static void binary_zns_report_zones(void *report, __u32 descs,
-	__u8 ext_size, __u32 report_size,
-	struct json_object *zone_list)
-{
-	d_raw((unsigned char *)report, report_size);
-}
-
 static void binary_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 {
 	d_raw((unsigned char *)ctrl_list, sizeof(*ctrl_list));
@@ -443,12 +421,6 @@ static struct print_ops binary_print_ops = {
 	.supported_cap_config_list_log	= binary_supported_cap_config_log,
 	.supported_log_pages		= binary_supported_log,
 	.voltage_meas_log		= binary_voltage_meas_log,
-	.zns_start_zone_list		= NULL,
-	.zns_changed_zone_log		= binary_zns_changed,
-	.zns_finish_zone_list		= NULL,
-	.zns_id_ctrl			= binary_zns_id_ctrl,
-	.zns_id_ns			= binary_zns_id_ns,
-	.zns_report_zones		= binary_zns_report_zones,
 	.show_feature			= binary_feature_show,
 	.show_feature_fields		= NULL,
 	.id_ctrl_rpmbs			= NULL,

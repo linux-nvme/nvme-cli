@@ -37,9 +37,6 @@ void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list);
 void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 		      struct nvme_id_ns *ns, unsigned int lba_index,
 		      bool cap_only);
-void stdout_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl);
-void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
-		      struct nvme_id_ns *id_ns);
 void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs);
 void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 		    size_t len);
@@ -89,7 +86,6 @@ void stdout_supported_cap_config_log(
 		struct nvme_supported_cap_config_list_log *cap, size_t len);
 void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 			  const char *devname);
-void stdout_zns_changed(struct nvme_zns_changed_zone_log *log);
 void stdout_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list);
 void stdout_rotational_media_info_log(
 	struct nvme_rotational_media_info_log *info);

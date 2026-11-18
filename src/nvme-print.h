@@ -443,12 +443,6 @@ struct print_ops {
 	void (*smart_log)(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 	void (*supported_cap_config_list_log)(struct nvme_supported_cap_config_list_log *cap_log, size_t len);
 	void (*supported_log_pages)(struct nvme_supported_log_pages *support_log, const char *devname);
-	void (*zns_start_zone_list)(__u64 nr_zones, struct json_object **zone_list);
-	void (*zns_changed_zone_log)(struct nvme_zns_changed_zone_log *log);
-	void (*zns_finish_zone_list)(__u64 nr_zones, struct json_object *zone_list);
-	void (*zns_id_ctrl)(struct nvme_zns_id_ctrl *ctrl);
-	void (*zns_id_ns)(struct nvme_zns_id_ns *ns, struct nvme_id_ns *id_ns);
-	void (*zns_report_zones)(void *report, __u32 descs, __u8 ext_size, __u32 report_size, struct json_object *zone_list);
 	void (*show_feature)(enum nvme_features_id fid, int sel,
 			     unsigned int result, void *buf, __u32 data_len);
 	void (*show_feature_fields)(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
@@ -865,27 +859,11 @@ void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 res
 	void *buf, __u32 len, nvme_print_flags_t flags);
 void nvme_show_select_result(enum nvme_features_id fid, __u64 result);
 
-void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl,
-			   nvme_print_flags_t flags);
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 	nvme_print_flags_t flags);
 void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 						struct nvme_id_ns *ns, unsigned int lba_index,
 						bool cap_only, nvme_print_flags_t flags);
-void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
-			 struct nvme_id_ns *id_ns, nvme_print_flags_t flags);
-void nvme_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_list,
-			      nvme_print_flags_t flags);
-void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
-			   nvme_print_flags_t flags);
-void nvme_zns_finish_zone_list(__u64 nr_zones, struct json_object *zone_list,
-			       nvme_print_flags_t flags);
-void nvme_show_zns_report_zones(void *report, __u32 descs,
-				__u8 ext_size, __u32 report_size,
-				struct json_object *zone_list,
-				nvme_print_flags_t flags);
-void json_nvme_finish_zone_list(__u64 nr_zones, 
-	struct json_object *zone_list);
 void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t);
 
 void nvme_show_fdp_configs(struct nvme_fdp_config_log *configs, size_t len,
@@ -924,8 +902,6 @@ const char *nvme_resv_notif_to_string(__u8 type);
 const char *nvme_select_to_string(int sel);
 const char *nvme_sstat_status_to_string(__u16 status);
 const char *nvme_trtype_to_string(__u8 trtype);
-const char *nvme_zone_state_to_string(__u8 state);
-const char *nvme_zone_type_to_string(__u8 cond);
 const char *nvme_plm_window_to_string(__u32 plm);
 const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state);
 const char *nvme_pel_rci_rcpit_to_string(enum nvme_pel_rci_rcpit rcpit);
