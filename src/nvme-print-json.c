@@ -30,29 +30,12 @@
 #include "nvme-iostat.h"
 #include "nvme-json.h"
 #include "nvme-print.h"
+#include "nvme-print-json.h"
 
 #define ERROR_MSG_LEN 100
 #define NAME_LEN 128
 #define BUF_LEN 320
 #define VAL_LEN 4096
-
-#define array_add_obj json_array_add_value_object
-#define array_add_str json_array_add_value_string
-
-#define obj_add_array json_object_add_value_array
-#define obj_add_bool json_object_add_value_bool
-#define obj_add_int json_object_add_value_int
-#define obj_add_obj json_object_add_value_object
-#define obj_add_uint json_object_add_value_uint
-#define obj_add_uint128 json_object_add_value_uint128
-#define obj_add_uint64 json_object_add_value_uint64
-#define obj_add_uint_02x json_object_add_uint_02x
-#define obj_add_uint_0x json_object_add_uint_0x
-#define obj_add_byte_array json_object_add_byte_array
-#define obj_add_nprix64 json_object_add_nprix64
-#define obj_add_uint_0nx json_object_add_uint_0nx
-#define obj_add_0nprix64 json_object_add_0nprix64
-#define obj_add_str json_object_add_value_string
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -83,8 +66,8 @@ static void d_json(unsigned char *buf, int len, int width, int group, struct jso
 	}
 }
 
-static void obj_d(struct json_object *o, const char *k, unsigned char *buf, int len, int width,
-		  int group)
+void obj_d(struct json_object *o, const char *k, unsigned char *buf, int len,
+	   int width, int group)
 {
 	struct json_object *data = json_create_array();
 
@@ -93,7 +76,7 @@ static void obj_d(struct json_object *o, const char *k, unsigned char *buf, int 
 }
 
 
-static void obj_add_uint_nx(struct json_object *o, const char *k, __u32 v)
+void obj_add_uint_nx(struct json_object *o, const char *k, __u32 v)
 {
 	char str[STR_LEN];
 
@@ -150,7 +133,7 @@ static void obj_add_ctrl_address_details(struct json_object *o, const char *k,
 }
 
 
-static void obj_add_result(struct json_object *o, const char *v, ...)
+void obj_add_result(struct json_object *o, const char *v, ...)
 {
 	va_list ap;
 
@@ -166,7 +149,7 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 	va_end(ap);
 }
 
-static void obj_add_key(struct json_object *o, const char *k, const char *v, ...)
+void obj_add_key(struct json_object *o, const char *k, const char *v, ...)
 {
 	va_list ap;
 
@@ -193,7 +176,7 @@ struct json_object *obj_create_array_obj(struct json_object *o, const char *k)
 	return obj;
 }
 
-static struct json_object *obj_create(const char *k)
+struct json_object *obj_create(const char *k)
 {
 	struct json_object *array;
 	struct json_object *obj = json_create_object();
@@ -214,7 +197,7 @@ void json_print(struct json_object *r)
 	json_free_object(r);
 }
 
-static void obj_print(struct json_object *o)
+void obj_print(struct json_object *o)
 {
 	if (!json_r)
 		json_print(o);
@@ -240,6 +223,16 @@ static void json_id_iocs_iocsc(struct json_object *obj_iocsc, __u64 iocsc)
 static bool verbose_mode(void)
 {
 	return json_print_ops.flags & VERBOSE;
+}
+
+bool json_verbose_mode(void)
+{
+	return verbose_mode();
+}
+
+struct json_object *json_root(void)
+{
+	return json_r;
 }
 
 static void json_id_iocs(struct nvme_id_iocs *iocs)
@@ -4885,7 +4878,7 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 	sprintf(json_str, "%#x", nsid);
 	obj_add_str(r, "NSID", json_str);
 	sprintf(json_str, "%#"PRIx64, (uint64_t)result);
-	obj_add_result(r, json_str);
+	obj_add_result(r, "%s", json_str);
 
 	if (verbose_mode()) {
 		json_directive_show_fields(type, oper, result, buf, len, r);
