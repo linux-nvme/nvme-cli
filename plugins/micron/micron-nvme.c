@@ -43,6 +43,7 @@
 #include "nvme-pci-ids.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "plugins/id/id.h"
 #include "src/cleanup.h"
 
 /* Supported Vendor specific feature ids */

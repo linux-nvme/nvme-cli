@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+plugin_needs += 'id'
+
 plugin_sources += [
     'plugins/micron/micron-nvme.c',
     'plugins/micron/micron-utils.c',

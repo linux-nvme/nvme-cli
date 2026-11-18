@@ -19,7 +19,7 @@
 #include "argconfig.h"
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "id.h"
+#include "id-print.h"
 #include "nvme-print.h"
 #include "plugin.h"
 

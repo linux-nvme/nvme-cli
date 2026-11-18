@@ -7,7 +7,6 @@ sources = [
     'src/global-ctx.c',
     'src/global-options.c',
     'src/logging.c',
-    'src/nvme-models.c',
     'src/nvme-pci-ids.c',
     'src/nvme-print-binary.c',
     'src/nvme-print-stdout.c',
