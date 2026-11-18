@@ -2,6 +2,7 @@
 
 if json_c_dep.found()
   plugin_needs = ['ocp', 'log']
+  plugin_needs += 'id'
   plugin_sources += [
       'plugins/solidigm/solidigm-nvme.c',
       'plugins/solidigm/solidigm-id-ctrl.c',

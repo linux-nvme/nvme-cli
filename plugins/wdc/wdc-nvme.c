@@ -54,6 +54,7 @@
 #include "nvme-pci-ids.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "plugins/id/id.h"
 #include "src/cleanup.h"
 
 #define WDC_PLUGIN_VERSION   "3.2.0"

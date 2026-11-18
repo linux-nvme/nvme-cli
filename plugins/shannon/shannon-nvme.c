@@ -16,6 +16,7 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "plugins/id/id.h"
 
 enum {
 	PROGRAM_FAIL_CNT,

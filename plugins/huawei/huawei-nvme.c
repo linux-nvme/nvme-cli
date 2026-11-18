@@ -37,6 +37,7 @@
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "plugins/id/id.h"
 
 #define HW_SSD_PCI_VENDOR_ID 0x19E5
 #define ARRAY_NAME_LEN 80

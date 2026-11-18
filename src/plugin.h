@@ -188,6 +188,3 @@ int nvme_main(int argc, char **argv);
  */
 void plugin_add_group(struct plugin *plugin, const char *title,
 		      struct command **commands);
-
-int __id_ctrl(int argc, char **argv, struct command *acmd,
-	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
