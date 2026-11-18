@@ -69,14 +69,10 @@ bool nvme_show_failed(void)
 	return print_failed;
 }
 
-/*
- * The printers which stay in process: the ones which read sysfs while
- * printing and the hooks of the JSON document.
- */
+/* The hooks of the JSON document stay in process */
 static bool nvme_print_sandboxed(struct print_ops *ops, void *func)
 {
 	void *in_process[] = {
-		ops->config_conn_list,
 		ops->show_init, ops->show_finish,
 	};
 	size_t i;
@@ -629,18 +625,6 @@ void nvme_show_verbose_key_value(const char *key, const char *val, ...)
 	show_key_value(key, val, ap);
 
 	va_end(ap);
-}
-
-void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
-			     uint64_t numrec, nvme_print_flags_t flags)
-{
-	nvme_print(discovery_log, flags, log, numrec);
-}
-
-void nvme_show_config_conn_list(struct libnvmf_config *config,
-				 nvme_print_flags_t flags)
-{
-	nvme_print(config_conn_list, flags, config);
 }
 
 void nvme_show_init(void)

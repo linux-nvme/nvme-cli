@@ -131,21 +131,11 @@ static inline unsigned int nvme_lbaf_data_size(__u8 ds)
 	return ds < 32 ? 1U << ds : 0;
 }
 
-
-/* config.h is fabrics-only; forward-declare so this header stays valid in a
- * -Dfabrics=disabled build.
- */
-struct libnvmf_config;
-
 struct print_ops {
 	/* libnvme types.h print functions */
-	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*d)(unsigned char *buf, int len, int width, int group);
 	void (*show_init)(void);
 	void (*show_finish)(void);
-
-	/* config show */
-	void (*config_conn_list)(struct libnvmf_config *config);
 
 	/* status and error messages */
 	void (*show_message)(bool error, const char *msg, va_list ap);
@@ -272,11 +262,6 @@ nvme_host_metadata_element(const struct nvme_host_metadata *data,
 	return val;
 }
 
-
-void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
-			     uint64_t numrec, nvme_print_flags_t flags);
-void nvme_show_config_conn_list(struct libnvmf_config *config,
-				 nvme_print_flags_t flags);
 
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
 const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event);

@@ -43,6 +43,7 @@
 #include "argconfig.h"
 #include "cleanup.h"
 #include "fabrics.h"
+#include "fabrics-print.h"
 #include "nvme-print.h"
 #include "plugin.h"
 #include "privsep.h"
@@ -248,4 +249,5 @@ static struct command *commands[] = {
 NVME_PLUGIN_INIT(register_plugin)
 {
 	plugin_add_group(&builtin, "Fabrics", commands);
+	fabrics_register_log_decoder();
 }
