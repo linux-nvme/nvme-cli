@@ -250,19 +250,32 @@ bool nvme_show_failed(void);
  * Documentation/PRIVSEP.md.
  */
 bool nvme_print_decoder_begin(nvme_print_flags_t flags, bool sandbox);
+bool nvme_print_decoder_begin_always(nvme_print_flags_t flags, bool sandbox);
 void nvme_print_decoder_end(nvme_print_flags_t flags);
 
-#define nvme_print_decoder(ops, name, sandbox, flags, ...)		\
+#define __nvme_print_decoder(begin, ops, name, sandbox, flags, ...)	\
 	do {								\
 		typeof(ops) __ops = (ops);				\
 									\
 		if (!__ops || !__ops->name)				\
 			nvme_show_error("unhandled output format");	\
-		else if (nvme_print_decoder_begin(flags, sandbox)) {	\
+		else if (begin(flags, sandbox)) {			\
 			__ops->name(__VA_ARGS__);			\
 			nvme_print_decoder_end(flags);			\
 		}							\
 	} while (false)
+
+#define nvme_print_decoder(ops, name, sandbox, flags, ...)		\
+	__nvme_print_decoder(nvme_print_decoder_begin, ops, name,	\
+			     sandbox, flags, ##__VA_ARGS__)
+
+/*
+ * Like nvme_print_decoder(), but run the printer for dry runs as well.
+ * A command uses it to show the fields of the value it sets.
+ */
+#define nvme_print_decoder_always(ops, name, sandbox, flags, ...)	\
+	__nvme_print_decoder(nvme_print_decoder_begin_always, ops, name, \
+			     sandbox, flags, ##__VA_ARGS__)
 
 /*
  * Log page decoder registered by a plugin for get-log -v. ->show returns
