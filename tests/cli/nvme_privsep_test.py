@@ -59,6 +59,15 @@ class TestPrivsep(MockTestCase):
         result = self.nvme('/nonexistent/nvme-privsep-helper', 'list')
         self.assertNotIn(_HELPER_ERROR, result.stderr)
 
+    def test_module_needs_root_command_skips_helper(self):
+        """A command of a module which keeps root does not start the
+        helper either: nvme loads the module before it decides."""
+        if self.nvme(None, 'show-hostnqn', '--help').returncode:
+            self.skipTest('nvme has no fabrics commands')
+        result = self.nvme('/nonexistent/nvme-privsep-helper',
+                           'show-hostnqn')
+        self.assertNotIn(_HELPER_ERROR, result.stderr)
+
     def test_mi_device_skips_helper(self):
         """An MI device keeps root, a file named like one does not."""
         result = self.nvme('/nonexistent/nvme-privsep-helper',
