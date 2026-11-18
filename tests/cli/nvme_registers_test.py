@@ -516,6 +516,20 @@ class PcieRegsTest(MockTestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.regs(), self.expected())
 
+    def test_show_regs_binary(self):
+        """The registers as they are in BAR0, 0h to E1Bh"""
+        result = self.nvme('show-regs', self.ctrl, '--output-format=binary',
+                           encoding=None)
+        self.assertOk(result)
+        self.assertEqual(result.stdout, self.resource0.read_bytes()[:0xe1c])
+
+    def test_decoded_in_sandbox(self):
+        for cmd in (['show-regs'], ['get-reg', '--register=cc']):
+            for args in ([], ['--verbose'], ['--output-format=binary']):
+                with self.subTest(cmd=cmd, args=args):
+                    self.assertDecodedInSandbox(cmd[0], self.ctrl,
+                                                *cmd[1:], *args)
+
 
 class FabricsRegsTest(MockTestCase):
     """A fabrics controller, whose properties are REGS"""
@@ -589,6 +603,12 @@ class FabricsRegsTest(MockTestCase):
                 self.assertEqual(result.stdout.strip(),
                                  'property : 0000 (Controller Capabilities), '
                                  'value: 0x2028030fff')
+
+    def test_decoded_in_sandbox(self):
+        for args in ([], ['--verbose']):
+            with self.subTest(args=args):
+                self.assertDecodedInSandbox('get-property', self.ctrl,
+                                            '--offset=0', *args)
 
     def test_get_property_json(self):
         """The same as show-regs, for the property asked for, also one
