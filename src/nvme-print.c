@@ -964,12 +964,6 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 	nvme_print(show_feature_fields, NORMAL, fid, result, buf);
 }
 
-void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
-			  nvme_print_flags_t flags)
-{
-	nvme_print(lba_status, flags, list, len);
-}
-
 void nvme_dev_full_path(struct libnvme_ns *n, char *path, size_t len)
 {
 	struct stat st;

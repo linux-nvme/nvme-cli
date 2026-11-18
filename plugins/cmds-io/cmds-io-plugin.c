@@ -43,6 +43,7 @@
 
 #include "argconfig.h"
 #include "cleanup.h"
+#include "cmds-io-print.h"
 #include "global-ctx.h"
 #include "nvme-errno.h"
 #include "nvme-print.h"

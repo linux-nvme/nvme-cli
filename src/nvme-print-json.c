@@ -231,55 +231,6 @@ static void json_select_result(enum nvme_features_id fid, __u64 result)
 	obj_add_array(r, json_str, feature);
 }
 
-static void json_lba_status(struct nvme_lba_status *list,
-			      unsigned long len)
-{
-	struct json_object *r = json_r;
-	__u32 nlsd = le32_to_cpu(list->nlsd);
-	size_t nr = nvme_log_nr_entries(nlsd, len, sizeof(*list),
-					sizeof(list->descs[0]));
-	size_t idx;
-	struct nvme_lba_status_desc *e;
-	struct json_object *lsde;
-	char json_str[STR_LEN];
-
-	obj_add_uint(r, "Number of LBA Status Descriptors (NLSD)", nlsd);
-	obj_add_uint(r, "Completion Condition (CMPC)", list->cmpc);
-
-	switch (list->cmpc) {
-	case NVME_LBA_STATUS_CMPC_NO_CMPC:
-		obj_add_str(r, "cmpc-definition", "No indication of the completion condition");
-		break;
-	case NVME_LBA_STATUS_CMPC_INCOMPLETE:
-		obj_add_str(r, "cmpc-definition",
-			"Completed transferring the amount of data specified in the"\
-			"MNDW field. But, additional LBA Status Descriptor Entries are"\
-			"available to transfer or scan did not complete (if ATYPE = 10h)");
-		break;
-	case NVME_LBA_STATUS_CMPC_COMPLETE:
-		obj_add_str(r, "cmpc-definition",
-			"Completed the specified action over the number of LBAs specified"\
-			"in the Range Length field and transferred all available LBA Status"\
-			"Descriptor Entries");
-		break;
-	default:
-		break;
-	}
-
-	for (idx = 0; idx < nr; idx++) {
-		lsde = json_create_object();
-		sprintf(json_str, "LSD entry %zu", idx);
-		obj_add_obj(r, json_str, lsde);
-		e = &list->descs[idx];
-		sprintf(json_str, "0x%016"PRIx64"", le64_to_cpu(e->dslba));
-		obj_add_str(lsde, "DSLBA", json_str);
-		sprintf(json_str, "0x%08x", le32_to_cpu(e->nlb));
-		obj_add_str(lsde, "NLB", json_str);
-		sprintf(json_str, "0x%02x", e->status);
-		obj_add_str(lsde, "status", json_str);
-	}
-}
-
 static unsigned int json_print_nvme_subsystem_multipath(struct libnvme_subsystem *s, json_object *paths)
 {
 	struct libnvme_ns *n;
@@ -2602,7 +2553,6 @@ static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ctrl_registers			= json_ctrl_registers,
 	.discovery_log			= json_discovery_log,
-	.lba_status			= json_lba_status,
 	.select_result			= json_select_result,
 	.show_feature			= json_feature_show,
 	.show_feature_fields		= json_feature_show_fields,
