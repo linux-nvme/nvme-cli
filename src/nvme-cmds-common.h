@@ -15,18 +15,6 @@
 
 #include "nvme-print.h"
 
-struct feat_cfg {
-	__u8 feature_id;   /* enum nvme_features_id */
-	__u8 sel;          /* enum nvme_get_features_sel */
-	__u32 namespace_id;
-	__u32 cdw11;
-	__u32 cdw12;
-	__u8 uuid_index;
-	__u32 data_len;
-	bool raw_binary;
-	bool changed;
-};
-
 static inline bool nvme_match_devname(char *devname, struct libnvme_ns *ns)
 {
 	struct libnvme_ctrl *c = libnvme_ns_get_ctrl(ns);

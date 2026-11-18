@@ -51,9 +51,23 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
+#include "feat-cmds.h"
+
 static const char *buf_len = "buffer len (if) data is sent or received";
 static const char *namespace_desired = "desired namespace";
 static const char *uuid_index_specify = "specify uuid index";
+
+struct feat_cfg {
+	__u8 feature_id;   /* enum nvme_features_id */
+	__u8 sel;          /* enum nvme_get_features_sel */
+	__u32 namespace_id;
+	__u32 cdw11;
+	__u32 cdw12;
+	__u8 uuid_index;
+	__u32 data_len;
+	bool raw_binary;
+	bool changed;
+};
 
 static OPT_VALS(feature_name) = {
 	VAL_BYTE("arbitration", NVME_FEAT_FID_ARBITRATION),
@@ -493,13 +507,8 @@ static struct command set_feature_cmd = {
 	.fn = set_feature,
 };
 
-static struct command *commands[] = {
+struct command *feat_builtin_commands[] = {
 	&get_feature_cmd,
 	&set_feature_cmd,
 	NULL,
 };
-
-static void __shr_constructor register_group(void)
-{
-	plugin_add_group(&builtin, "Features", commands);
-}
