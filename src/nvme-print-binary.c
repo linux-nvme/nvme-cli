@@ -37,11 +37,6 @@ static void binary_ctrl_registers(const struct nvme_reg_val *vals,
 	d_raw(page, size);
 }
 
-static void binary_lba_status(struct nvme_lba_status *list, unsigned long len)
-{
-	d_raw((unsigned char *)list, len);
-}
-
 static void binary_discovery_log(const struct nvmf_discovery_log *log,
 				  int numrec)
 {
@@ -62,7 +57,6 @@ static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ctrl_registers			= binary_ctrl_registers,
 	.discovery_log			= binary_discovery_log,
-	.lba_status			= binary_lba_status,
 	.select_result			= NULL,
 	.show_feature			= binary_feature_show,
 	.show_feature_fields		= NULL,

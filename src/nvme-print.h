@@ -192,7 +192,6 @@ struct print_ops {
 	void (*ctrl_registers)(const struct nvme_reg_val *vals, unsigned int nr,
 			       enum nvme_regs_style style);
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
-	void (*lba_status)(struct nvme_lba_status *list, unsigned long len);
 	void (*relatives)(struct libnvme_global_ctx *ctx, const char *name);
 	void (*select_result)(enum nvme_features_id fid, __u64 result);
 	void (*show_feature)(enum nvme_features_id fid, int sel,
@@ -336,8 +335,6 @@ nvme_host_metadata_element(const struct nvme_host_metadata *data,
 void nvme_show_ctrl_registers(const struct nvme_reg_val *vals, unsigned int nr,
 			      enum nvme_regs_style style,
 			      nvme_print_flags_t flags);
-void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
-	nvme_print_flags_t flags);
 void nvme_show_list_items(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags);
 void nvme_show_subsystem_list(struct libnvme_global_ctx *ctx, bool show_ana,
 			      nvme_print_flags_t flags);
