@@ -22,6 +22,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
@@ -985,7 +987,7 @@ static int argconfig_parse_args(struct argconfig_parser *p)
 	for (p->ind = 1; p->ind < p->argc && p->argv[p->ind]; p->ind++) {
 		arg = p->argv[p->ind];
 
-		if (!strcmp(arg, "--")) {
+		if (streq(arg, "--")) {
 			p->ind++;
 			if (p->global)
 				return 0;

@@ -12,6 +12,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 
@@ -100,7 +102,7 @@ __shr_public int libnvme_open(
 		hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 		hdl->fd = LIBNVME_TEST_FD;
 
-		if (!strcmp(name, "NVME_TEST_FD64"))
+		if (streq(name, "NVME_TEST_FD64"))
 			hdl->ioctl_admin_state = IOCTL_STATE_IOCTL64;
 
 		*hdlp = hdl;

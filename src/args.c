@@ -11,6 +11,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/string-util.h>
 
 #include "argconfig.h"
@@ -96,15 +98,15 @@ int validate_output_format(const char *format, nvme_print_flags_t *flags)
 	if (!format)
 		return -EINVAL;
 
-	if (!strcmp(format, "normal"))
+	if (streq(format, "normal"))
 		f = NORMAL;
 #ifdef CONFIG_JSONC
-	else if (!strcmp(format, "json") && (supported_formats & JSON))
+	else if (streq(format, "json") && (supported_formats & JSON))
 		f = JSON;
 #endif /* CONFIG_JSONC */
-	else if (!strcmp(format, "binary") && (supported_formats & BINARY))
+	else if (streq(format, "binary") && (supported_formats & BINARY))
 		f = BINARY;
-	else if (!strcmp(format, "tabular") && (supported_formats & TABULAR))
+	else if (streq(format, "tabular") && (supported_formats & TABULAR))
 		f = TABULAR;
 	else
 		return -EINVAL;

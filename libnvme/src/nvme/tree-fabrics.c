@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 
 #include <libnvme.h>
@@ -31,7 +33,7 @@ static bool _tcp_ctrl_not_live(struct libnvme_ctrl *c)
 
 	state = libnvme_ctrl_get_state(c);
 
-	return state && strcmp(state, "live");
+	return state && !streq(state, "live");
 }
 
 /**
@@ -381,9 +383,9 @@ static void libnvmf_read_sysfs_tls_mode(struct libnvme_global_ctx *ctx,
 	if (!mode)
 		return;
 
-	if (!strcmp(mode, "tls"))
+	if (streq(mode, "tls"))
 		c->cfg.tls = true;
-	else if (!strcmp(mode, "concat"))
+	else if (streq(mode, "concat"))
 		c->cfg.concat = true;
 }
 

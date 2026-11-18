@@ -21,6 +21,7 @@
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 
@@ -295,7 +296,7 @@ __shr_public int libnvme_init_ctrl(
 		return ret;
 
 	c->address = libnvme_get_attr(path, "address");
-	if (!c->address && strcmp(c->transport, "loop"))
+	if (!c->address && !streq(c->transport, "loop"))
 		return -ENVME_CONNECT_INVAL_TR;
 
 	ret = libnvme_ctrl_lookup_subsystem_name(h->ctx, name, &subsys_name);
@@ -605,12 +606,12 @@ int libnvme_get_ctrl_transport(__shr_unused struct libnvme_global_ctx *ctx,
 		char *p = NULL, *_a = NULL;
 
 		/* loop transport might not have an address */
-		if (!strcmp(*transport, "loop"))
+		if (streq(*transport, "loop"))
 			goto skip_address;
 
 		/* Older kernels don't support pcie transport addresses */
-		if (strcmp(*transport, "pcie") &&
-		    strcmp(*transport, "apple-nvme"))
+		if (!streq(*transport, "pcie") &&
+		    !streq(*transport, "apple-nvme"))
 			return -ENXIO;
 		/* Figure out the PCI address from the attribute path */
 		rpath = realpath(path, NULL);
@@ -627,8 +628,8 @@ int libnvme_get_ctrl_transport(__shr_unused struct libnvme_global_ctx *ctx,
 		}
 		if (p)
 			*addr = strdup(p);
-	} else if (!strcmp(*transport, "pcie") ||
-		   !strcmp(*transport, "apple-nvme")) {
+	} else if (streq(*transport, "pcie") ||
+		   streq(*transport, "apple-nvme")) {
 		/* The 'address' string is the transport address */
 		*traddr = strdup(*addr);
 		if (!*traddr)
@@ -665,7 +666,7 @@ int libnvme_init_subsystem(struct libnvme_subsystem *s, const char *name)
 
 	s->subsystype = libnvme_get_attr(path, "subsystype");
 	if (!s->subsystype) {
-		if (!strcmp(s->subsysnqn, NVME_DISC_SUBSYS_NAME))
+		if (streq(s->subsysnqn, NVME_DISC_SUBSYS_NAME))
 			s->subsystype = strdup("discovery");
 		else
 			s->subsystype = strdup("nvm");

@@ -11,6 +11,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include "nvme-print.h"
 
 struct feat_cfg {
@@ -69,9 +71,9 @@ static inline bool nvme_match_devname(char *devname, struct libnvme_ns *ns)
 {
 	struct libnvme_ctrl *c = libnvme_ns_get_ctrl(ns);
 
-	if (!strcmp(devname, libnvme_ns_get_name(ns)) ||
-	    (c && !strcmp(devname, libnvme_ctrl_get_name(c))) ||
-	    !strcmp(devname, libnvme_ns_get_generic_name(ns)))
+	if (streq(devname, libnvme_ns_get_name(ns)) ||
+	    (c && streq(devname, libnvme_ctrl_get_name(c))) ||
+	    streq(devname, libnvme_ns_get_generic_name(ns)))
 		return true;
 
 	return false;
@@ -95,7 +97,7 @@ static inline bool nvme_match_device_filter(struct libnvme_subsystem *s,
 	}
 	if (s) {
 		libnvme_subsystem_for_each_ns(s, n) {
-			if (!strcmp(devname, libnvme_ns_get_name(n)))
+			if (streq(devname, libnvme_ns_get_name(n)))
 				return true;
 		}
 	}

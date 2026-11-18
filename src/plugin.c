@@ -7,6 +7,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/string-util.h>
 #include <shared/wrap-util.h>
 
@@ -46,8 +48,8 @@ static struct command *find_command(struct plugin *plugin, const char *name)
 	bool unique = false;
 
 	for (cmd = plugin->commands; *cmd; cmd++) {
-		if (!strcmp(name, (*cmd)->name) ||
-		    ((*cmd)->alias && !strcmp(name, (*cmd)->alias)))
+		if (streq(name, (*cmd)->name) ||
+		    ((*cmd)->alias && streq(name, (*cmd)->alias)))
 			return *cmd;
 	}
 
@@ -66,7 +68,7 @@ static struct plugin *__find_extension(struct plugin *plugin, const char *name)
 	struct plugin *extension;
 
 	for (extension = plugin->next; extension; extension = extension->next) {
-		if (!strcmp(name, extension->name))
+		if (streq(name, extension->name))
 			return extension;
 	}
 
@@ -642,10 +644,10 @@ int plugin_lookup(int argc, char **argv, struct plugin *plugin,
 	call->argv = argv;
 
 	call->action = PLUGIN_HELP;
-	if (!strcmp(argv[0], "help"))
+	if (streq(argv[0], "help"))
 		return 0;
 	call->action = PLUGIN_VERSION;
-	if (!strcmp(argv[0], "version"))
+	if (streq(argv[0], "version"))
 		return 0;
 
 	call->action = PLUGIN_RUN;

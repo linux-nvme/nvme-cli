@@ -26,6 +26,8 @@
 #include <linux/sockios.h>
 #endif
 
+#include <ccan/str/str.h>
+
 #include "net-util.h"
 
 /*
@@ -218,7 +220,7 @@ bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 
 	/* Walk through the linked list */
 	for (iface_it = iface_list; iface_it; iface_it = iface_it->ifa_next) {
-		if (strcmp(iface, iface_it->ifa_name))
+		if (!streq(iface, iface_it->ifa_name))
 			continue; /* Not the interface we're looking for*/
 
 		/* The interface list is ordered in a way that the primary

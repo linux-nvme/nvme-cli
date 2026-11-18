@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <ccan/str/str.h>
+
 #include "fs-util.h"
 
 const char *shr_dev_null(void)
@@ -53,7 +55,7 @@ int shr_mkstemp(char *template)
 	 * creates the template as given. Reject it everywhere, like
 	 * fs-util-win.c does.
 	 */
-	if (len < 6 || strcmp(&template[len - 6], "XXXXXX"))
+	if (len < 6 || !streq(&template[len - 6], "XXXXXX"))
 		return -EINVAL;
 
 	/*

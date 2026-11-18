@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <daemon-util/log.h>
 #include <daemon-util/resolve.h>
@@ -878,7 +879,7 @@ static void load_config_conn_callback(const struct libnvmf_config_conn *conn,
 
 	// Only tcp and rdma have host names. An FC address is used as it is.
 	if (libnvmf_traddr_is_numeric(traddr) ||
-	    (strcmp(transport, "tcp") && strcmp(transport, "rdma"))) {
+	    (!streq(transport, "tcp") && !streq(transport, "rdma"))) {
 		if (!add_config_conn(args->inv, args->dctx, conn, traddr))
 			log_warn("%s - cannot add, skipping", traddr);
 		return;
@@ -918,7 +919,7 @@ static void load_pre_os_conn_callback(const struct libnvmf_config_conn *conn,
 	 * unexpected: it may resolve differently by now.
 	 */
 	if (!libnvmf_traddr_is_numeric(traddr) &&
-	    (!strcmp(transport, "tcp") || !strcmp(transport, "rdma"))) {
+	    (streq(transport, "tcp") || streq(transport, "rdma"))) {
 		log_warn("%s - pre-OS connection without an IP address, skipping",
 			 traddr);
 		return;

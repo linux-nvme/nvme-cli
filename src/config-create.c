@@ -10,6 +10,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 
 #include "argconfig.h"
@@ -33,7 +35,7 @@ static bool same_str(const char *a, const char *b)
 {
 	if (!a || !b)
 		return a == b;
-	return !strcmp(a, b);
+	return streq(a, b);
 }
 
 static bool same_connection(const struct libnvmf_config_conn *conn,

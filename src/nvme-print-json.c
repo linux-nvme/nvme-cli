@@ -18,6 +18,7 @@
 #include <ccan/compiler/compiler.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+#include <ccan/str/str.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/hex-util.h>
 #include <shared/mmio-util.h>
@@ -4356,14 +4357,14 @@ static unsigned int json_subsystem_topology_multipath(struct libnvme_subsystem *
 			 * queue-depth exclude "NUMANodes" and for iopolicy
 			 * round-robin exclude both "Qdepth" and "NUMANodes".
 			 */
-			if (!strcmp(iopolicy, "numa")) {
+			if (streq(iopolicy, "numa")) {
 				const char *numa_nodes;
 
 				libnvme_path_get_numa_nodes(p, &numa_nodes,
 							     "");
 				obj_add_str(path_attrs, "NUMANodes",
 						numa_nodes);
-			} else if (!strcmp(iopolicy, "queue-depth")) {
+			} else if (streq(iopolicy, "queue-depth")) {
 				int queue_depth;
 
 				libnvme_path_get_queue_depth(p, &queue_depth,

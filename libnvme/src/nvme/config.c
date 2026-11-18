@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/parse-util.h>
@@ -181,7 +182,7 @@ static const struct libnvmf_config_persona *persona_find(
 
 	list_for_each(&config->personas, p, entry) {
 		if (!hostnqn) {
-			if (!strcmp(p->source, config->top_source))
+			if (streq(p->source, config->top_source))
 				return p;
 		} else if (shr_streq0(p->hostnqn, hostnqn)) {
 			return p;
@@ -263,7 +264,7 @@ static bool tls_key_is_inline(const struct libnvmf_params *params)
 {
 	const char *src = get_param_nonempty(params, "tls-key-source");
 
-	return !src || !strcmp(src, "inline");
+	return !src || streq(src, "inline");
 }
 
 struct emit_state {
@@ -319,9 +320,9 @@ static void emit_param(const char *key, const char *value, void *user_data)
 		return;
 
 	/* tls-key-source is for nvme-keysd, not an "nvme connect" option. */
-	if (!strcmp(key, "tls-key-source"))
+	if (streq(key, "tls-key-source"))
 		return;
-	if (!strcmp(key, "tls-key") && !state->tls_key_inline)
+	if (streq(key, "tls-key") && !state->tls_key_inline)
 		return;
 
 	if (k->type == LIBNVMF_KEY_BOOL) {
@@ -390,47 +391,47 @@ static void apply_param(const char *key, const char *value, void *user_data)
 		return;
 
 	/* base 0 matches check_int()'s parsing in config-ini.c. */
-	if (!strcmp(key, "nr-io-queues"))
+	if (streq(key, "nr-io-queues"))
 		cfg->nr_io_queues = strtol(value, NULL, 0);
-	else if (!strcmp(key, "nr-write-queues"))
+	else if (streq(key, "nr-write-queues"))
 		cfg->nr_write_queues = strtol(value, NULL, 0);
-	else if (!strcmp(key, "nr-poll-queues"))
+	else if (streq(key, "nr-poll-queues"))
 		cfg->nr_poll_queues = strtol(value, NULL, 0);
-	else if (!strcmp(key, "queue-size"))
+	else if (streq(key, "queue-size"))
 		cfg->queue_size = strtol(value, NULL, 0);
-	else if (!strcmp(key, "keep-alive-tmo"))
+	else if (streq(key, "keep-alive-tmo"))
 		/* Applied verbatim; set_discovery_kato() may still
 		 * override it at connect time for persistent discovery
 		 * controllers.
 		 */
 		cfg->keep_alive_tmo = strtol(value, NULL, 0);
-	else if (!strcmp(key, "reconnect-delay"))
+	else if (streq(key, "reconnect-delay"))
 		cfg->reconnect_delay = strtol(value, NULL, 0);
-	else if (!strcmp(key, "ctrl-loss-tmo"))
+	else if (streq(key, "ctrl-loss-tmo"))
 		cfg->ctrl_loss_tmo = strtol(value, NULL, 0);
-	else if (!strcmp(key, "fast-io-fail-tmo"))
+	else if (streq(key, "fast-io-fail-tmo"))
 		cfg->fast_io_fail_tmo = strtol(value, NULL, 0);
-	else if (!strcmp(key, "tos"))
+	else if (streq(key, "tos"))
 		cfg->tos = strtol(value, NULL, 0);
-	else if (!strcmp(key, "duplicate-connect")) {
+	else if (streq(key, "duplicate-connect")) {
 		if (!shr_parse_bool(value, &bval))
 			cfg->duplicate_connect = bval;
-	} else if (!strcmp(key, "disable-sqflow")) {
+	} else if (streq(key, "disable-sqflow")) {
 		if (!shr_parse_bool(value, &bval))
 			cfg->disable_sqflow = bval;
-	} else if (!strcmp(key, "hdr-digest")) {
+	} else if (streq(key, "hdr-digest")) {
 		if (!shr_parse_bool(value, &bval))
 			cfg->hdr_digest = bval;
-	} else if (!strcmp(key, "data-digest")) {
+	} else if (streq(key, "data-digest")) {
 		if (!shr_parse_bool(value, &bval))
 			cfg->data_digest = bval;
-	} else if (!strcmp(key, "tls")) {
+	} else if (streq(key, "tls")) {
 		if (!shr_parse_bool(value, &bval))
 			cfg->tls = bval;
-	} else if (!strcmp(key, "concat")) {
+	} else if (streq(key, "concat")) {
 		if (!shr_parse_bool(value, &bval))
 			cfg->concat = bval;
-	} else if (!strcmp(key, "persistent")) {
+	} else if (streq(key, "persistent")) {
 		libnvmf_context_set_persistent(fctx, value);
 	}
 	/* Identity/addressing and crypto keys never reach here -- only

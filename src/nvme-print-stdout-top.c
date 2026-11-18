@@ -22,6 +22,7 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/minmax/minmax.h>
+#include <ccan/str/str.h>
 #include <shared/table-util.h>
 
 #include "cleanup.h"
@@ -32,7 +33,7 @@
 
 static bool stdout_top_nvme_ctrl_is_fabric(struct libnvme_ctrl *c)
 {
-	if (strcmp(libnvme_ctrl_get_transport(c), "pcie"))
+	if (!streq(libnvme_ctrl_get_transport(c), "pcie"))
 		return true;
 	else
 		return false;
@@ -45,12 +46,12 @@ static bool stdout_top_print_ctrl_summary_tbl_filter(const char *name,
 	struct libnvme_subsystem *s = arg;
 	bool multipath = nvme_is_multipath(s);
 
-	if (!strcmp(name, "Paths")) {
+	if (streq(name, "Paths")) {
 		if (!multipath)
 			return false;
 	}
 
-	if (!strcmp(name, "Reconnects")) {
+	if (streq(name, "Reconnects")) {
 		c = libnvme_subsystem_first_ctrl(s);
 		if (c) {
 			if (stdout_top_nvme_ctrl_is_fabric(c))
@@ -229,7 +230,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 				sizeof(w_clat_str));
 
 		libnvme_ctrl_get_numa_node(c, &node, "-1");
-		if (!strcmp(node, "-1"))
+		if (streq(node, "-1"))
 			node = "NUMA_NO_NODE";
 
 		col = -1;
@@ -590,13 +591,13 @@ static int stdout_top_print_path_perf(FILE *stream, struct libnvme_subsystem *s)
 			shr_table_set_value_str(t, ++col, row,
 					libnvme_path_get_name(p), LEFT);
 
-			if (!strcmp(iopolicy, "numa")) {
+			if (streq(iopolicy, "numa")) {
 				const char *numa_nodes;
 
 				libnvme_path_get_numa_nodes(p, &numa_nodes, "");
 				shr_table_set_value_str(t, ++col, row,
 				    numa_nodes, CENTERED);
-			} else if (!strcmp(iopolicy, "queue-depth")) {
+			} else if (streq(iopolicy, "queue-depth")) {
 				int queue_depth;
 
 				libnvme_path_get_queue_depth(p, &queue_depth,
@@ -731,7 +732,7 @@ static struct libnvme_subsystem *stdout_top_search_subsystem(
 
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
-			if (!strcmp(libnvme_subsystem_get_name(s), subsys_name))
+			if (streq(libnvme_subsystem_get_name(s), subsys_name))
 				return s;
 		}
 	}
@@ -780,7 +781,7 @@ static int stdout_top_find_subsys_by_name(struct libnvme_subsystem **subsys_arr,
 	for (idx = 0; idx < num_subsys; idx++) {
 		s = subsys_arr[idx];
 
-		if (!strcmp(libnvme_subsystem_get_name(s), subsys_name))
+		if (streq(libnvme_subsystem_get_name(s), subsys_name))
 			return idx;
 	}
 

@@ -15,6 +15,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <ccan/str/str.h>
+
 #include "cleanup-util.h"
 #include "fs-util.h"
 
@@ -119,7 +121,7 @@ int shr_rmdir_recursive(const char *path)
 	while ((entry = readdir(dir))) {
 		int saved_errno;
 
-		if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+		if (streq(entry->d_name, ".") || streq(entry->d_name, ".."))
 			continue;
 
 		if (snprintf(child, sizeof(child), "%s/%s",

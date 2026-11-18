@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <ccan/array_size/array_size.h>
+#include <ccan/str/str.h>
 #include <shared/hex-util.h>
 #include <shared/string-util.h>
 
@@ -1773,9 +1774,9 @@ static bool stdout_id_ns_lbaf_table_filter(const char *name, void *arg)
 	const struct stdout_id_ns_lbaf_table_support *sup = arg;
 
 	if (!sup->verbose &&
-	    (!strcmp(name, "data_size") || !strcmp(name, "performance")))
+	    (streq(name, "data_size") || streq(name, "performance")))
 		return false;
-	if (sup->cap_only && !strcmp(name, "in_use"))
+	if (sup->cap_only && streq(name, "in_use"))
 		return false;
 
 	return true;
@@ -2353,19 +2354,19 @@ static bool stdout_id_ctrl_ps_table_filter(const char *name, void *arg)
 
 	if (sup->verbose)
 		return true;
-	if (!sup->iiellss && !strcmp(name, "miiell"))
+	if (!sup->iiellss && streq(name, "miiell"))
 		return false;
-	if (!sup->plsepf && (!strcmp(name, "epfrt") || !strcmp(name, "epfvt")))
+	if (!sup->plsepf && (streq(name, "epfrt") || streq(name, "epfvt")))
 		return false;
-	if (!sup->plsfq && !strcmp(name, "fqvt"))
+	if (!sup->plsfq && streq(name, "fqvt"))
 		return false;
-	if (!sup->idle_power_used && !strcmp(name, "idle_power"))
+	if (!sup->idle_power_used && streq(name, "idle_power"))
 		return false;
-	if (!sup->active_power_used && !strcmp(name, "active_power"))
+	if (!sup->active_power_used && streq(name, "active_power"))
 		return false;
-	if (!sup->workload_used && !strcmp(name, "workload"))
+	if (!sup->workload_used && streq(name, "workload"))
 		return false;
-	if (!sup->max_bandwidth_used && !strcmp(name, "max_bandwidth"))
+	if (!sup->max_bandwidth_used && streq(name, "max_bandwidth"))
 		return false;
 
 	return true;

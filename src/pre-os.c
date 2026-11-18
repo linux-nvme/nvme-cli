@@ -19,6 +19,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/hash-util.h>
 #include <shared/string-util.h>
 
@@ -94,7 +96,7 @@ static void copy_conn(const struct libnvmf_config_conn *conn, void *user_data)
 		cc->err = -EINVAL;
 		return;
 	}
-	same = !strcmp(libnvmf_tid_get_canonical(tid), cc->skip);
+	same = streq(libnvmf_tid_get_canonical(tid), cc->skip);
 	libnvmf_tid_free(tid);
 	if (same)
 		return;
@@ -131,9 +133,9 @@ static void strip_param(const char *key, const char *value, void *user_data)
 
 	if (sc->err)
 		return;
-	if (!strcmp(key, "kxchap-secret") ||
-	    !strcmp(key, "kxchap-ctrl-secret") ||
-	    (!strcmp(key, "tls-key") && sc->tls_key_inline))
+	if (streq(key, "kxchap-secret") ||
+	    streq(key, "kxchap-ctrl-secret") ||
+	    (streq(key, "tls-key") && sc->tls_key_inline))
 		return;
 	sc->err = libnvmf_params_set(sc->params, key, value);
 }
@@ -152,7 +154,7 @@ static struct libnvmf_params *strip_credentials(
 		return NULL;
 	if (params) {
 		src = libnvmf_params_get(params, "tls-key-source");
-		sc.tls_key_inline = !src || !*src || !strcmp(src, "inline");
+		sc.tls_key_inline = !src || !*src || streq(src, "inline");
 		libnvmf_params_for_each(params, strip_param, &sc);
 	}
 	if (sc.err) {

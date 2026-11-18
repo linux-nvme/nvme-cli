@@ -23,6 +23,7 @@
 #include <ccan/htable/htable.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/minmax/minmax.h>
+#include <ccan/str/str.h>
 #include <ccan/strset/strset.h>
 #include <shared/hex-util.h>
 #include <shared/int-util.h>
@@ -71,17 +72,18 @@ static const char *ns_key(const struct libnvme_ns *n)
 
 static bool subsys_cmp(const struct libnvme_subsystem *s, const char *name)
 {
-	return !strcmp(libnvme_subsystem_get_name((struct libnvme_subsystem *)s), name);
+	return streq(libnvme_subsystem_get_name((struct libnvme_subsystem *)s),
+		     name);
 }
 
 static bool ctrl_cmp(const struct libnvme_ctrl *c, const char *name)
 {
-	return !strcmp(libnvme_ctrl_get_name((struct libnvme_ctrl *)c), name);
+	return streq(libnvme_ctrl_get_name((struct libnvme_ctrl *)c), name);
 }
 
 static bool ns_cmp(const struct libnvme_ns *n, const char *name)
 {
-	return !strcmp(libnvme_ns_get_name((struct libnvme_ns *)n), name);
+	return streq(libnvme_ns_get_name((struct libnvme_ns *)n), name);
 }
 
 HTABLE_DEFINE_TYPE(struct libnvme_subsystem, subsys_key, hash_string,
@@ -3005,7 +3007,7 @@ static int subsystem_topology_multipath_add_row(struct shr_table *t,
 	shr_table_set_value_str(t, ++col, row, nsid, CENTERED);
 	shr_table_set_value_str(t, ++col, row, nspath, CENTERED);
 	shr_table_set_value_str(t, ++col, row, anastate, CENTERED);
-	if (!strcmp(iopolicy, "numa") || !strcmp(iopolicy, "queue-depth"))
+	if (streq(iopolicy, "numa") || streq(iopolicy, "queue-depth"))
 		shr_table_set_value_str(t, ++col, row, iopolicy_info, CENTERED);
 	shr_table_set_value_str(t, ++col, row, ctrl, CENTERED);
 	shr_table_set_value_str(t, ++col, row, trtype, CENTERED);
@@ -3081,11 +3083,11 @@ static void stdout_tabular_subsystem_topology_multipath(struct libnvme_subsystem
 
 			snprintf(nsid, sizeof(nsid), "%u", libnvme_ns_get_nsid(n));
 
-			if (!strcmp(iopolicy, "numa")) {
+			if (streq(iopolicy, "numa")) {
 				libnvme_path_get_numa_nodes(p, &numa_nodes, "");
 				snprintf(iopolicy_info, sizeof(iopolicy_info),
 					"%s", numa_nodes);
-			} else if (!strcmp(iopolicy, "queue-depth")) {
+			} else if (streq(iopolicy, "queue-depth")) {
 				libnvme_path_get_queue_depth(p, &queue_depth,
 							      0);
 				snprintf(iopolicy_info, sizeof(iopolicy_info),
@@ -3211,7 +3213,7 @@ static void stdout_subsystem_topology_multipath(struct libnvme_subsystem *s,
 				c = libnvme_path_get_ctrl(p);
 				libnvme_path_get_ana_state(p, &ana_state, "");
 
-				if (!strcmp(iopolicy, "numa")) {
+				if (streq(iopolicy, "numa")) {
 					const char *numa_nodes;
 
 					/*
@@ -3229,7 +3231,7 @@ static void stdout_subsystem_topology_multipath(struct libnvme_subsystem *s,
 						libnvme_ctrl_get_address(c),
 						libnvme_ctrl_get_state(c));
 
-				} else if (!strcmp(iopolicy, "queue-depth")) {
+				} else if (streq(iopolicy, "queue-depth")) {
 					int queue_depth;
 
 					/*

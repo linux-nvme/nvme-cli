@@ -11,6 +11,8 @@
 #include <libgen.h>
 #include <strings.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/compiler-attributes-util.h>
 
 #include <libnvme.h>
@@ -58,7 +60,7 @@ __shr_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
 	if (!ctx || !owner)
 		return -EINVAL;
 	/* "nbft" is the old name of the pre-OS environment's owner. */
-	if (!strcmp(owner, "nbft"))
+	if (streq(owner, "nbft"))
 		owner = "pre-os";
 	dup = strdup(owner);
 	if (!dup)

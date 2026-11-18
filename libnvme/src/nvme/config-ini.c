@@ -18,6 +18,7 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/ini-util.h>
@@ -79,7 +80,7 @@ const struct libnvmf_key *libnvmf_key_lookup(const char *name)
 	if (!name)
 		return NULL;
 	for (i = 0; i < ARRAY_SIZE(keys); i++) {
-		if (!strcmp(keys[i].name, name))
+		if (streq(keys[i].name, name))
 			return &keys[i];
 	}
 
@@ -175,7 +176,7 @@ static struct kv *kv_find(const struct libnvmf_params *p, const char *key)
 	struct kv *e;
 
 	list_for_each(&p->list, e, entry) {
-		if (!strcmp(e->key, key))
+		if (streq(e->key, key))
 			return e;
 	}
 
@@ -404,7 +405,7 @@ static int enter_section(struct conf_parse *pc, const char *name,
 
 	pc->ep = NULL;
 
-	if (!strcmp(name, "Discovery Controller Defaults")) {
+	if (streq(name, "Discovery Controller Defaults")) {
 		if (f->dc_defaults)
 			conf_warn(pc, line, "repeated [%s] section", name);
 		else
@@ -412,7 +413,7 @@ static int enter_section(struct conf_parse *pc, const char *name,
 		pc->sect = f->dc_defaults ? SECT_DC_DEFAULTS : SECT_IGNORED;
 		return f->dc_defaults ? 0 : -ENOMEM;
 	}
-	if (!strcmp(name, "I/O Controller Defaults")) {
+	if (streq(name, "I/O Controller Defaults")) {
 		if (f->ioc_defaults)
 			conf_warn(pc, line, "repeated [%s] section", name);
 		else
@@ -421,7 +422,7 @@ static int enter_section(struct conf_parse *pc, const char *name,
 					     SECT_IGNORED;
 		return f->ioc_defaults ? 0 : -ENOMEM;
 	}
-	if (!strcmp(name, "Host")) {
+	if (streq(name, "Host")) {
 		/* Hard singleton: personas never merge (CONFIG.md). */
 		if (f->has_host) {
 			conf_err(pc, line,
@@ -435,11 +436,11 @@ static int enter_section(struct conf_parse *pc, const char *name,
 		pc->sect = SECT_HOST;
 		return 0;
 	}
-	if (!strcmp(name, "Discovery Controller")) {
+	if (streq(name, "Discovery Controller")) {
 		pc->sect = SECT_DC;
 		return new_endpoint(pc, true, line);
 	}
-	if (!strcmp(name, "Subsystem")) {
+	if (streq(name, "Subsystem")) {
 		pc->sect = SECT_SUBSYS;
 		return new_endpoint(pc, false, line);
 	}
@@ -460,15 +461,15 @@ struct path_addr {
 
 static const char **addr_slot(struct path_addr *a, const char *key)
 {
-	if (!strcmp(key, "transport"))
+	if (streq(key, "transport"))
 		return &a->transport;
-	if (!strcmp(key, "traddr"))
+	if (streq(key, "traddr"))
 		return &a->traddr;
-	if (!strcmp(key, "trsvcid"))
+	if (streq(key, "trsvcid"))
 		return &a->trsvcid;
-	if (!strcmp(key, "host-traddr"))
+	if (streq(key, "host-traddr"))
 		return &a->host_traddr;
-	if (!strcmp(key, "host-iface"))
+	if (streq(key, "host-iface"))
 		return &a->host_iface;
 
 	return NULL;
@@ -654,7 +655,7 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 	case LIBNVMF_KEY_IDENTITY:
 		if (pc->sect != SECT_HOST)
 			break;
-		if (!strcmp(key, "hostnqn")) {
+		if (streq(key, "hostnqn")) {
 			if (*value && !shr_nqn_valid(value)) {
 				conf_err(pc, line,
 					 "hostnqn \"%s\" is not a valid NQN",
@@ -663,7 +664,7 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 			}
 			return set_identity(pc, &pc->f->hostnqn, value);
 		}
-		if (!strcmp(key, "hostid")) {
+		if (streq(key, "hostid")) {
 			if (*value && !shr_hostid_valid(value)) {
 				conf_err(pc, line,
 					 "hostid \"%s\" is not a valid, non-zero 128-bit UUID",

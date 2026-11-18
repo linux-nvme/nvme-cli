@@ -21,6 +21,7 @@
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
+#include <ccan/str/str.h>
 
 #include <shared/compiler-attributes-util.h>
 
@@ -378,10 +379,10 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 
 	libnvme_for_each_subsystem(h, s) {
 		if (subsysnqn && s->subsysnqn &&
-		    strcmp(s->subsysnqn, subsysnqn))
+		    !streq(s->subsysnqn, subsysnqn))
 			continue;
 		if (name && s->name &&
-		    strcmp(s->name, name))
+		    !streq(s->name, name))
 			continue;
 		return s;
 	}
@@ -492,7 +493,7 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		return NULL;
 
 	libnvme_for_each_host(ctx, h) {
-		if (strcmp(h->hostnqn, hostnqn))
+		if (!streq(h->hostnqn, hostnqn))
 			continue;
 		if (hostid && !shr_streq0(h->hostid, hostid))
 			continue;
@@ -594,7 +595,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 			 */
 			if (!_s->name)
 				continue;
-			if (strcmp(_s->name, name))
+			if (!streq(_s->name, name))
 				continue;
 			if (nvme_subsystem_scan_namespaces(ctx, _s))
 				return -EINVAL;
@@ -617,7 +618,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 			return ret;
 		if (nvme_subsystem_scan_namespaces(ctx, s))
 			return -EINVAL;
-	} else if (strcmp(s->subsysnqn, subsysnqn)) {
+	} else if (!streq(s->subsysnqn, subsysnqn)) {
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "NQN mismatch for subsystem '%s'\n",
 			 name);
 		return -EINVAL;
@@ -1333,7 +1334,7 @@ int libnvme_subsystem_create_ctrl(struct libnvme_subsystem *s,
 	if (!s)
 		return -EINVAL;
 
-	if (in->subsysnqn && strcmp(in->subsysnqn, s->subsysnqn))
+	if (in->subsysnqn && !streq(in->subsysnqn, s->subsysnqn))
 		return -EINVAL;
 
 	ctx = s->h ? s->h->ctx : NULL;
@@ -1411,8 +1412,8 @@ int libnvme_ctrl_scan_namespaces(struct libnvme_global_ctx *ctx,
 __shr_public bool libnvme_transport_is_fabric(const char *transport)
 {
 	return transport &&
-	       strcmp(transport, "pcie") &&
-	       strcmp(transport, "apple-nvme");
+	       !streq(transport, "pcie") &&
+	       !streq(transport, "apple-nvme");
 }
 
 __shr_public bool libnvme_ctrl_is_transport_fabric(struct libnvme_ctrl *c)
@@ -1449,7 +1450,7 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, struct libnvme_subsystem 
 		if (c) {
 			if (!c->name)
 				break;
-			if (!strcmp(c->name, name)) {
+			if (streq(c->name, name)) {
 				libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 					"found existing ctrl %s\n", c->name);
 				break;
@@ -1784,7 +1785,7 @@ static void libnvme_ns_head_scan_path(struct libnvme_subsystem *s,
 
 	libnvme_subsystem_for_each_ctrl(s, c) {
 		libnvme_ctrl_for_each_path(c, p) {
-			if (!strcmp(libnvme_path_get_name(p), name)) {
+			if (streq(libnvme_path_get_name(p), name)) {
 				list_add_tail(&n->head->paths, &p->nentry);
 				p->n = n;
 				return;
@@ -1859,7 +1860,7 @@ static int libnvme_ctrl_scan_namespace(struct libnvme_global_ctx *ctx,
 		return ret;
 	}
 	libnvme_ctrl_for_each_ns_safe(c, _n, __n) {
-		if (strcmp(n->name, _n->name))
+		if (!streq(n->name, _n->name))
 			continue;
 		__nvme_free_ns(_n);
 	}
@@ -1885,7 +1886,7 @@ static int libnvme_subsystem_scan_namespace(struct libnvme_global_ctx *ctx,
 		return ret;
 	}
 	libnvme_subsystem_for_each_ns_safe(s, _n, __n) {
-		if (strcmp(n->name, _n->name))
+		if (!streq(n->name, _n->name))
 			continue;
 		__nvme_free_ns(_n);
 	}

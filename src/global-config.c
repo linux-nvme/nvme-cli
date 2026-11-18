@@ -23,6 +23,8 @@
 
 #include <libnvme.h>
 
+#include <ccan/str/str.h>
+
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
@@ -111,7 +113,7 @@ static struct argconfig_commandline_options *find_key(const char *key)
 	for (s = argconfig_get_global_options(); s && s->option; s++) {
 		if (s->config_type == CFG_GROUP_SEPARATOR || s->deprecated)
 			continue;
-		if (!strcmp(s->option, key))
+		if (streq(s->option, key))
 			return s;
 	}
 

@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
+#include <ccan/str/str.h>
 
 #include "archive-util.h"
 #include "cleanup-util.h"
@@ -252,7 +253,7 @@ static int add_dir_recursive(struct archive *a, const char *dir_path,
 			break;
 		}
 
-		if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
+		if (streq(ent->d_name, ".") || streq(ent->d_name, ".."))
 			continue;
 
 		if (asprintf(&child_path, "%s/%s", dir_path, ent->d_name) < 0 ||
