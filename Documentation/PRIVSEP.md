@@ -222,7 +222,9 @@ Some printers stay in process (`nvme_print_sandboxed()`):
 - the libnvme tree printers (`list`, `list-subsys`, `show-topology`,
   `relatives`), which read sysfs while they print and decode no device
   data;
-- the ZNS zone list printers, which hand JSON objects to their caller;
+- plugin printers run through `nvme_print_decoder()` with `sandbox` set
+  to false, e.g. the zns zone list printers, which pass a JSON object from
+  one call to the next;
 - `top`, which is interactive, and `config_conn_list`;
 - `show_init`/`show_finish`, and the status and error messages, unless
   a sandboxed printer prints them.

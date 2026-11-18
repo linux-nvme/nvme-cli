@@ -18,6 +18,7 @@
 #include "nvme-print.h"
 #include "plugin.h"
 #include "src/cleanup.h"
+#include "zns-print.h"
 
 static const char *namespace_id = "Namespace identifier to use";
 
@@ -163,7 +164,7 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 	nvme_init_zns_identify_ctrl(&cmd, &ctrl);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err)
-		nvme_show_zns_id_ctrl(&ctrl, flags);
+		zns_show_id_ctrl(&ctrl, flags);
 	else
 		nvme_show_err(err, "zns identify controller");
 
@@ -228,7 +229,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	nvme_init_zns_identify_ns(&cmd, cfg.namespace_id, &ns);
 	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err)
-		nvme_show_zns_id_ns(&ns, &id_ns, flags);
+		zns_show_id_ns(&ns, &id_ns, flags);
 	else
 		nvme_show_err(err, "zns identify namespace");
 
@@ -862,7 +863,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 
 	offset = cfg.zslba;
 
-	nvme_zns_start_zone_list(total_nr_zones, &zone_list, flags);
+	zns_start_zone_list(total_nr_zones, &zone_list, flags);
 
 	while (nr_zones_retrieved < nr_zones) {
 		if (nr_zones_retrieved >= nr_zones)
@@ -883,14 +884,14 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 		}
 
 		if (!err)
-			nvme_show_zns_report_zones(report, nr_zones_chunks,
-						   zdes, log_len, zone_list, flags);
+			zns_show_report_zones(report, nr_zones_chunks,
+					      zdes, log_len, zone_list, flags);
 
 		nr_zones_retrieved += nr_zones_chunks;
 		offset = le64_to_cpu(report->entries[nr_zones_chunks-1].zslba) + zsze;
 	}
 
-	nvme_zns_finish_zone_list(total_nr_zones, zone_list, flags);
+	zns_finish_zone_list(total_nr_zones, zone_list, flags);
 
 free_buff:
 	free(buff);
@@ -1146,7 +1147,7 @@ static int changed_zone_list(int argc, char **argv, struct command *acmd, struct
 
 	err = libnvme_get_log(hdl, &cmd, cfg.rae, sizeof(log));
 	if (!err)
-		nvme_show_zns_changed(&log, flags);
+		zns_show_changed(&log, flags);
 	else
 		nvme_show_err(err, "zns changed-zone-list");
 
@@ -1272,8 +1273,13 @@ static struct plugin plugin = {
 	.core = true,
 };
 
+static struct nvme_log_decoder log_decoder = {
+	.show = zns_show_log,
+};
+
 NVME_PLUGIN_INIT(register_plugin)
 {
+	nvme_register_log_decoder(&log_decoder);
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);
 }

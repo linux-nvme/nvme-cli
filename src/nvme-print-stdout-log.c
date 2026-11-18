@@ -1687,37 +1687,6 @@ void stdout_supported_cap_config_log(
 	}
 }
 
-void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
-{
-	struct shr_table *t;
-	uint16_t nrzid;
-	int i;
-
-	nrzid = le16_to_cpu(log->nrzid);
-	printf("NVMe Changed Zone List:\n");
-
-	if (nrzid == 0xFFFF) {
-		printf("Too many zones have changed to fit into the log. Use "
-		       "report zones for changes.\n");
-		return;
-	}
-
-	t = stdout_kv_table_create();
-	if (!t)
-		return;
-
-	stdout_kv_add(t, "nrzid", "%u", nrzid);
-	for (i = 0; i < nrzid && i < ARRAY_SIZE(log->zid); i++) {
-		char name[16];
-
-		snprintf(name, sizeof(name), "zid %03d", i);
-		stdout_kv_add(t, name, "%"PRIu64,
-			      (uint64_t)le64_to_cpu(log->zid[i]));
-	}
-
-	stdout_kv_table_finish(t, "zns-changed-zone-log");
-}
-
 void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		      const char *devname, struct nvme_error_log_filter *flt)
 {

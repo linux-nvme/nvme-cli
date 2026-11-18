@@ -109,8 +109,7 @@ static bool nvme_print_sandboxed(struct print_ops *ops, void *func)
 		ops->print_nvme_subsystem_list, ops->topology_ctrl,
 		ops->topology_namespace, ops->topology_multipath,
 		ops->topology_tabular, ops->config_conn_list, ops->top,
-		ops->zns_start_zone_list, ops->zns_finish_zone_list,
-		ops->zns_report_zones, ops->show_init, ops->show_finish,
+		ops->show_init, ops->show_finish,
 		ops->connect_msg,
 	};
 	size_t i;
@@ -806,81 +805,9 @@ void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	nvme_print(nvm_id_ns, flags, nvm_ns, nsid, ns, lba_index, cap_only);
 }
 
-void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl,
-			   nvme_print_flags_t flags)
-{
-	nvme_print(zns_id_ctrl, flags, ctrl);
-}
-
-void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
-			 struct nvme_id_ns *id_ns,
-			 nvme_print_flags_t flags)
-{
-	nvme_print(zns_id_ns, flags, ns, id_ns);
-}
-
 void nvme_show_list_ns(struct nvme_ns_list *ns_list, nvme_print_flags_t flags)
 {
 	nvme_print(ns_list, flags, ns_list);
-}
-
-void nvme_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_list,
-			      nvme_print_flags_t flags)
-{
-	nvme_print(zns_start_zone_list, flags, nr_zones, zone_list);
-}
-
-void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
-			   nvme_print_flags_t flags)
-{
-	nvme_print(zns_changed_zone_log, flags, log);
-}
-
-void nvme_zns_finish_zone_list(__u64 nr_zones, struct json_object *zone_list,
-			       nvme_print_flags_t flags)
-{
-	nvme_print(zns_finish_zone_list, flags, nr_zones, zone_list);
-}
-
-const char *nvme_zone_type_to_string(__u8 cond)
-{
-	switch (cond) {
-	case NVME_ZONE_TYPE_SEQWRITE_REQ:
-		return "SEQWRITE_REQ";
-	default:
-		return "Unknown";
-	}
-}
-
-const char *nvme_zone_state_to_string(__u8 state)
-{
-	switch (state) {
-	case NVME_ZNS_ZS_EMPTY:
-		return "EMPTY";
-	case NVME_ZNS_ZS_IMPL_OPEN:
-		return "IMP_OPENED";
-	case NVME_ZNS_ZS_EXPL_OPEN:
-		return "EXP_OPENED";
-	case NVME_ZNS_ZS_CLOSED:
-		return "CLOSED";
-	case NVME_ZNS_ZS_READ_ONLY:
-		return "READONLY";
-	case NVME_ZNS_ZS_FULL:
-		return "FULL";
-	case NVME_ZNS_ZS_OFFLINE:
-		return "OFFLINE";
-	default:
-		return "Unknown State";
-	}
-}
-
-void nvme_show_zns_report_zones(void *report, __u32 descs,
-				__u8 ext_size, __u32 report_size,
-				struct json_object *zone_list,
-				nvme_print_flags_t flags)
-{
-	nvme_print(zns_report_zones, flags,
-		   report, descs, ext_size, report_size, zone_list);
 }
 
 void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
@@ -2131,9 +2058,6 @@ void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsi
 		break;
 	case NVME_LOG_LID_SANITIZE:
 		nvme_show_sanitize_log(log, devname, flags);
-		break;
-	case NVME_LOG_LID_ZNS_CHANGED_ZONES:
-		nvme_show_zns_changed(log, flags);
 		break;
 	default:
 		nvme_show_log_decoded(devname, lid, nsid, lsi, lsp, log, len,

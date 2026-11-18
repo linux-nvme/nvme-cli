@@ -13,8 +13,10 @@ Usage: python3 nvme_zns_test.py <path-to-nvme-binary> <mock-lib>
 """
 import os
 
-from tests.cli.nvme_mock import (CNS_CSI_NS, CNS_NS, NVME_IOCTL_ID,
-                                 MockTestCase, Reply, id_ns, main)
+from tests.cli.nvme_mock import (CNS_CSI_NS, CNS_NS, HAVE_JSON,
+                                 NVME_IOCTL_ID, MockTestCase, Reply, id_ns,
+                                 main)
+from tests.cli.nvme_mock_ipc import run_nvme
 
 OPC_ZONE_MGMT_SEND = 0x79
 OPC_ZONE_MGMT_RECV = 0x7a
@@ -240,6 +242,51 @@ class ZoneAppendTest(ZnsTestBase):
         self.assertRefused(['zone-append', self.ns, '--data-size=512',
                             '--prinfo=16'],
                            'Invalid value for prinfo:0x10', OPC_ZONE_APPEND)
+
+
+class ZnsPrintTest(ZnsTestBase):
+    """The zns printers run in the sandbox, except for the zone list
+    printers, which pass a JSON object from one call to the next."""
+
+    def test_decoded_in_sandbox(self):
+        for args in (['id-ctrl', self.ctrl], ['id-ns', self.ns],
+                     ['changed-zone-list', self.ctrl]):
+            with self.subTest(args=args):
+                self.assertDecodedInSandbox('zns', *args)
+
+    def test_get_log_decoded(self):
+        """get-log -v decodes the Changed Zone List log through the
+        plugin, with and without the sandbox."""
+        out = []
+        for sandbox in ('0', '1'):
+            result = run_nvme(self.nvme_bin,
+                              dict(self.env, NVME_SANDBOX=sandbox),
+                              self.sysfs_dir, self.base_dir, 'get-log',
+                              self.ctrl, '--log-id=0xbf', '--log-len=1024',
+                              '-v')
+            self.assertOk(result)
+            self.assertIn('NVMe Changed Zone List:', result.stdout)
+            out.append(result.stdout)
+        self.assertEqual(out[0], out[1])
+
+    def test_zone_list_in_process(self):
+        if os.geteuid() == 0:
+            self.skipTest('process limits do not apply to root')
+        wrapper = self.file('nvme-no-fork',
+                            b'#!/bin/sh\nulimit -u 1 || exit 99\n'
+                            b'exec "$REAL_NVME" "$@"\n')
+        os.chmod(wrapper, 0o755)
+        env = dict(self.env, REAL_NVME=self.nvme_bin, NVME_SANDBOX='1')
+        env.pop('NVME_PRIVSEP_TEST_HELPER', None)
+        for fmt in ([], ['-o', 'json']) if HAVE_JSON else ([],):
+            with self.subTest(fmt=fmt):
+                result = run_nvme(wrapper, env, self.sysfs_dir,
+                                  self.base_dir, 'zns', 'report-zones',
+                                  self.ns, '-d', '2', *fmt)
+                if result.returncode == 99:
+                    self.skipTest('ulimit -u not supported')
+                self.assertOk(result)
+                self.assertIn('nr_zones', result.stdout)
 
 
 if __name__ == '__main__':
