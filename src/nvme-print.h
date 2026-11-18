@@ -183,12 +183,6 @@ struct print_ops {
 	/* libnvme types.h print functions */
 	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*relatives)(struct libnvme_global_ctx *ctx, const char *name);
-	void (*select_result)(enum nvme_features_id fid, __u64 result);
-	void (*show_feature)(enum nvme_features_id fid, int sel,
-			     unsigned int result, void *buf, __u32 data_len);
-	void (*show_feature_fields)(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
-	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
-	void (*lba_status_info)(__u64 result);
 	void (*d)(unsigned char *buf, int len, int width, int group);
 	void (*show_init)(void);
 	void (*show_finish)(void);
@@ -305,11 +299,7 @@ void nvme_show_err(int err, const char *fmt, ...);
 void nvme_show_io_cmd_err(const char *msg, __u8 opcode, int err);
 void nvme_show_admin_cmd_err(const char *msg, __u8 opcode, int err);
 void nvme_show_opcode_status(int status, bool admin, __u8 opcode);
-void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
-
-void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
-	nvme_print_flags_t flags);
 
 /*
  * The Metadata Element Descriptor at offset *@off of a Host Metadata data
@@ -347,11 +337,7 @@ void nvme_show_topology(struct libnvme_global_ctx *ctx,
 			enum nvme_cli_topo_ranking ranking,
 			nvme_print_flags_t flags);
 void nvme_show_topology_tabular(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags);
-void nvme_show_feature(enum nvme_features_id fid, int sel, unsigned int result,
-		       void *buf, __u32 data_len, nvme_print_flags_t flags);
 void nvme_show_top(nvme_print_flags_t flags, int refresh_interval);
-void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
-void nvme_show_select_result(enum nvme_features_id fid, __u64 result);
 
 void nvme_show_list_item(struct libnvme_ns *n, struct shr_table *t);
 
@@ -363,24 +349,9 @@ void nvme_show_config_conn_list(struct libnvmf_config *config,
 
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
 const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event);
-const char *nvme_feature_lba_type_to_string(__u8 type);
-const char *nvme_feature_temp_sel_to_string(__u8 sel);
-const char *nvme_feature_temp_type_to_string(__u8 type);
-const char *nvme_feature_to_string(enum nvme_features_id feature);
-const char *nvme_feature_wl_hints_to_string(__u8 wh);
-const char *nvme_feature_perfc_attri_to_string(__u8 attri);
-const char *nvme_feature_perfc_r4karl_to_string(__u8 r4karl);
-const char *nvme_feature_perfc_attrtyp_to_string(__u8 attrtyp);
-const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid, __u8 type);
-const char *nvme_select_to_string(int sel);
-const char *nvme_plm_window_to_string(__u32 plm);
-const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state);
 const char *nvme_time_scale_to_string(__u8 ts);
-const char *nvme_pls_mode_to_string(__u8 mode);
-const char *nvme_bpwps_to_string(__u8 bpwps);
 const char *nvme_feature_power_limit_scale_to_string(__u8 pls);
 const char *nvme_power_measurement_type_to_string(__u8 pmt);
-const char *nvme_power_measurement_action_to_string(__u8 act);
 const char *nvme_ipmsr_srs_to_string(__u8 srs);
 
 void nvme_dev_full_path(struct libnvme_ns *n, char *path, size_t len);
@@ -405,24 +376,3 @@ const char *nvme_support_str(bool support);
 const char *nvme_yes_str(bool yes);
 
 extern const char *alloc_error;
-extern const char *feat_ae_dlpcn;
-extern const char *feat_ae_hdlpcn;
-extern const char *feat_ae_adlpcn;
-extern const char *feat_ae_pmdrlpcn;
-extern const char *feat_ae_zdcn;
-extern const char *feat_ae_rlccn;
-extern const char *feat_ae_lhcn;
-extern const char *feat_ae_ccrcn;
-extern const char *feat_ae_ansan;
-extern const char *feat_ae_rgrp0;
-extern const char *feat_ae_rassn;
-extern const char *feat_ae_tthry;
-extern const char *feat_ae_nnsshdn;
-extern const char *feat_ae_ega;
-extern const char *feat_ae_lbas;
-extern const char *feat_ae_pla;
-extern const char *feat_ae_ana;
-extern const char *feat_ae_telem;
-extern const char *feat_ae_fw;
-extern const char *feat_ae_nan;
-extern const char *feat_ae_smart;

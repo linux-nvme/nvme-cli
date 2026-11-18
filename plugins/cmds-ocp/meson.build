@@ -2,7 +2,7 @@
 
 plugin_name = 'ocp'
 
-plugin_needs = ['log']
+plugin_needs = ['log', 'feat']
 
 plugin_sources += [
   'plugins/cmds-ocp/ocp-utils.c',

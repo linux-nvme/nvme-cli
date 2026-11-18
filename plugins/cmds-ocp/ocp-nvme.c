@@ -28,6 +28,7 @@
 #include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "plugins/cmds-feat/feat-print.h"
 #include "plugin.h"
 
 #define OCP_PLUGIN_VERSION   "3.2.0"

@@ -2,6 +2,8 @@
 
 plugin_name = 'log'
 
+plugin_needs = ['feat']
+
 plugin_sources += [
     'plugins/cmds-log/log-plugin.c',
     'plugins/cmds-log/get-log.c',

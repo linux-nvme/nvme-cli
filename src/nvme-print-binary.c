@@ -16,22 +16,9 @@ static void binary_discovery_log(const struct nvmf_discovery_log *log,
 	      numrec * sizeof(struct nvmf_disc_log_entry));
 }
 
-static void binary_feature_show(enum nvme_features_id fid, int sel,
-				unsigned int result, void *buf, __u32 data_len)
-{
-	if (buf) {
-		d_raw(buf, data_len);
-	}
-}
-
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.discovery_log			= binary_discovery_log,
-	.select_result			= NULL,
-	.show_feature			= binary_feature_show,
-	.show_feature_fields		= NULL,
-	.lba_range			= NULL,
-	.lba_status_info		= NULL,
 	.d				= NULL,
 	.show_init			= NULL,
 	.show_finish			= NULL,
