@@ -6,7 +6,7 @@
 #
 # Authors: Daniel Wagner <dwagner@suse.com>
 """Tests for get_pif_sts()/get_pif_sts_via_qpif() and invalid_tags() in
-src/nvme-cmds-io.c.
+plugins/cmds-io/cmds-io-plugin.c.
 
 Usage: python3 nvme_pif_sts_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
