@@ -16,15 +16,17 @@ data, and simulated errno failures.
 Usage: python3 nvme_fabrics_mock_test.py <path-to-nvme-binary> <path-to-mock-lib>
 """
 import errno
+import json
+import os
 import shutil
 import struct
 import unittest
 from pathlib import Path
 
-from tests.cli.nvme_mock import (CNS_CTRL, HAVE_LIBKMOD, MockController,
-                                 MockTestCase, Reply, id_ctrl, main,
-                                 write_sysfs_ctrl)
-from tests.cli.nvme_mock_ipc import NIC_QUEUES_FMT
+from tests.cli.nvme_mock import (CNS_CTRL, HAVE_JSON, HAVE_LIBKMOD,
+                                 MockController, MockTestCase, Reply, id_ctrl,
+                                 main, write_sysfs_ctrl)
+from tests.cli.nvme_mock_ipc import NIC_QUEUES_FMT, run_nvme
 
 # The vendor defaults libnvme ships.
 VENDOR_D = Path(__file__).resolve().parents[2] / 'libnvme/sysfiles/vendor.d'
@@ -316,6 +318,89 @@ class FabricsMockCLITest(MockTestCase):
         self.assertIn("mock-target-nvm-subsystem", res.stdout)
         self.assertIn("192.168.1.200", res.stdout)
         self.assertIn("4420", res.stdout)
+
+    _DLP_NQN = 'nqn.2014-08.org.nvmexpress:mock-dlp-subsystem'
+
+    def _one_dlp_entry(self):
+        self.server.discovery_entries = [
+            {'traddr': '192.168.1.201', 'subsysnqn': self._DLP_NQN},
+        ]
+
+    def test_discover_json(self):
+        """discover -o json lists the records of the log page."""
+        if not HAVE_JSON:
+            self.skipTest('needs json-c')
+        self._one_dlp_entry()
+        res = self._run('discover', '-t', 'tcp', '-a', '192.168.1.1',
+                        '-o', 'json')
+        (rec,) = json.loads(res.stdout)['records']
+        self.assertEqual(rec['subnqn'], self._DLP_NQN)
+        self.assertEqual(rec['traddr'], '192.168.1.201')
+
+    def test_discover_decodes_in_sandbox(self):
+        """discover decodes the log page of the DC in the sandbox."""
+        self._one_dlp_entry()
+        self.assertDecodedInSandbox('discover', '-t', 'tcp',
+                                    '-a', '192.168.1.1')
+
+    def test_get_log_decodes_discovery_log(self):
+        """get-log --verbose decodes a Discovery log page, in text and
+        in JSON."""
+        self._one_dlp_entry()
+        args = ('get-log', self.ctrl, '--log-id=0x70', '--log-len=2048',
+                '--verbose')
+        res = self._run(*args)
+        self.assertIn('Discovery Log Number of Records 1', res.stdout)
+        self.assertIn('=====Discovery Log Entry 0======', res.stdout)
+        self.assertIn(self._DLP_NQN, res.stdout)
+        if not HAVE_JSON:
+            return
+        res = self._run(*args, '-o', 'json')
+        (rec,) = json.loads(res.stdout)['records']
+        self.assertEqual(rec['subnqn'], self._DLP_NQN)
+
+    def _config_show_conf(self):
+        if self.nvme('config', 'show', '--help').returncode:
+            self.skipTest('nvme has no config plugin')
+        conf = Path(self.base_dir) / 'show.conf'
+        conf.write_text(
+            '[Subsystem]\n'
+            'nqn = nqn.2014-08.org.nvmexpress:show\n'
+            'controller = transport=tcp;traddr=192.168.50.10;'
+            'trsvcid=4420\n')
+        return str(conf)
+
+    def test_config_show(self):
+        """config show prints the connections, in text and in JSON."""
+        conf = self._config_show_conf()
+        res = self._run('config', 'show', '-J', conf)
+        self.assertIn('nvme connect', res.stdout)
+        self.assertIn('--traddr=192.168.50.10', res.stdout)
+        if not HAVE_JSON:
+            return
+        res = self._run('config', 'show', '-J', conf, '-o', 'json')
+        (conn,) = json.loads(res.stdout)['connections']
+        self.assertEqual(conn['traddr'], '192.168.50.10')
+        self.assertEqual(conn['nqn'], 'nqn.2014-08.org.nvmexpress:show')
+
+    def test_config_show_in_process(self):
+        """config show reads no device data: it prints in process, also
+        with the sandbox on and no child process allowed."""
+        if os.geteuid() == 0:
+            self.skipTest('process limits do not apply to root')
+        conf = self._config_show_conf()
+        wrapper = Path(self.tmp) / 'nvme-no-fork'
+        wrapper.write_text('#!/bin/sh\nulimit -u 1 || exit 99\n'
+                           'exec "$REAL_NVME" "$@"\n')
+        wrapper.chmod(0o755)
+        env = dict(self.env, REAL_NVME=self.nvme_bin, NVME_SANDBOX='1')
+        env.pop('NVME_PRIVSEP_TEST_HELPER', None)
+        res = run_nvme(str(wrapper), env, self.sysfs_dir, self.base_dir,
+                       'config', 'show', '-J', conf)
+        if res.returncode == 99:
+            self.skipTest('ulimit -u not supported')
+        self.assertOk(res)
+        self.assertIn('--traddr=192.168.50.10', res.stdout)
 
     def test_connect_simple(self):
         """Test connecting to a single target."""
