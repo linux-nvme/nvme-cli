@@ -13,8 +13,8 @@ Usage: python3 nvme_fdp_test.py <path-to-nvme-binary> <mock-lib>
 """
 import struct
 
-from tests.cli.nvme_mock import (HAVE_JSON, NVME_IOCTL_ID, MockTestCase,
-                                 Reply, main)
+from tests.cli.nvme_mock import (HAVE_GET_LOG, HAVE_JSON, NVME_IOCTL_ID,
+                                 MockTestCase, Reply, main)
 
 LID_FDP_CONFIGS = 0x20
 LID_FDP_RUH_USAGE = 0x21
@@ -66,6 +66,11 @@ class FdpTestCase(MockTestCase):
 
 
 class FdpGetLogTest(FdpTestCase):
+
+    def setUp(self):
+        super().setUp()
+        if not HAVE_GET_LOG:
+            self.skipTest('built without the log plugin')
 
     def get_log(self, lid, *args):
         log = _LOGS[lid][0]

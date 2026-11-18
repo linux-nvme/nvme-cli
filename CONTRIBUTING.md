@@ -65,24 +65,24 @@ plugins with only top-level commands (e.g. `plugins/cmds-io` for
 read/write/flush/...). Pick the file that
 matches your command's area, or add a new `src/nvme-cmds-<area>.c` if none
 fit -- just add the one line to `src/meson.build`'s `sources` list. Each
-such file ends with a block like this one from `src/nvme-cmds-discovery.c`:
+such file ends with a block like this one from `src/nvme-cmds-ctrl.c`:
 
 ```c
-static struct command get_log_cmd = {
-	.name = "get-log",
-	.help = "Generic NVMe get log, returns log in raw format",
-	.fn = get_log,
+static struct command reset_cmd = {
+	.name = "reset",
+	.help = "Resets the controller",
+	.fn = reset,
 };
 
 static struct command *commands[] = {
-	&get_log_cmd,
+	&reset_cmd,
 	/* ... */
 	NULL,
 };
 
 static void __shr_constructor register_group(void)
 {
-	plugin_add_group(&builtin, "Log Page & Identify", commands);
+	plugin_add_group(&builtin, "Controller Management", commands);
 }
 ```
 
@@ -104,7 +104,7 @@ Set `.no_device = true` for a command that doesn't take a positional
 `<device>` from its usage line and, when none of a plugin's commands need
 one, from that plugin's `--help` output too.
 
-The `title` passed to `plugin_add_group()` (`"Log Page & Identify"` above)
+The `title` passed to `plugin_add_group()` (`"Controller Management"` above)
 is the heading shown for that group's commands in `nvme help`; pass `NULL`
 for no heading (that's what plugins normally do, see below).
 

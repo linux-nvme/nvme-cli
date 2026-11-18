@@ -13,7 +13,6 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
-#include <ccan/minmax/minmax.h>
 #include <shared/int-util.h>
 #include <shared/mmio-util.h>
 #include <shared/sandbox-util.h>
@@ -22,7 +21,6 @@
 
 #include "cleanup.h"
 #include "nvme-print.h"
-#include "plugin-loader.h"
 
 /*
  * A printer runs between nvme_print_begin() and nvme_print_end(). The
@@ -1168,48 +1166,17 @@ void nvme_register_log_decoder(struct nvme_log_decoder *dec)
 	log_decoders = dec;
 }
 
-/* Plugins that register log page decoders */
-static const char *const log_decoder_plugins[] = { "log", "fdp", "zns" };
-
-static bool nvme_show_log_decoded(const char *devname,
-				  enum nvme_cmd_get_log_lid lid, __u32 nsid,
-				  __u16 lsi, __u8 lsp, void *log, __u32 len,
-				  nvme_print_flags_t flags)
+bool nvme_show_log_decoded(const char *devname, enum nvme_cmd_get_log_lid lid,
+			   __u32 nsid, __u16 lsi, __u8 lsp, void *log,
+			   __u32 len, nvme_print_flags_t flags)
 {
 	struct nvme_log_decoder *dec;
-	size_t i;
-
-	for (i = 0; i < ARRAY_SIZE(log_decoder_plugins); i++)
-		nvme_load_plugin(log_decoder_plugins[i]);
 
 	for (dec = log_decoders; dec; dec = dec->next)
 		if (dec->show(devname, lid, nsid, lsi, lsp, log, len, flags))
 			return true;
 
 	return false;
-}
-
-void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u16 lsi,
-		   __u8 lsp, void *log, __u32 len, nvme_print_flags_t flags)
-{
-	switch (lid) {
-	case NVME_LOG_LID_DISCOVERY: {
-		struct nvmf_discovery_log *discovery_log = log;
-		/* no more records than the log holds, before size_t cuts it */
-		__u64 nr = min_t(__u64, le64_to_cpu(discovery_log->numrec),
-				 len);
-
-		nvme_show_discovery_log(discovery_log,
-			nvme_log_nr_entries(nr, len, sizeof(*discovery_log),
-					    sizeof(discovery_log->entries[0])),
-			flags);
-		break;
-	}
-	default:
-		nvme_show_log_decoded(devname, lid, nsid, lsi, lsp, log, len,
-				      flags);
-		break;
-	}
 }
 
 const char *nvme_support_str(bool support)

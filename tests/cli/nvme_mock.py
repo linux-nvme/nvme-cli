@@ -64,6 +64,8 @@ HAVE_LIBARCHIVE = os.environ.get('NVME_TEST_LIBARCHIVE', '1') == '1'
 # Built with libkmod, which nvme connect and discover use to load the
 # nvme-fabrics module.
 HAVE_LIBKMOD = os.environ.get('NVME_TEST_LIBKMOD', '1') == '1'
+# Built with the log plugin, which has the get-log command.
+HAVE_GET_LOG = os.environ.get('NVME_TEST_GET_LOG', '1') == '1'
 
 # Admin command opcodes
 OPC_GET_LOG_PAGE = 0x02
