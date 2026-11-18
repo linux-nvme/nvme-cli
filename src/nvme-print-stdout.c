@@ -516,11 +516,6 @@ static void stdout_config_conn_list(struct libnvmf_config *config)
 static void stdout_config_conn_list(struct libnvmf_config *config) {}
 #endif /* CONFIG_FABRICS */
 
-static void stdout_connect_msg(struct libnvme_ctrl *c)
-{
-	printf("connecting to device: %s\n", libnvme_ctrl_get_name(c));
-}
-
 struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.discovery_log			= stdout_discovery_log,
@@ -532,7 +527,6 @@ struct print_ops stdout_print_ops = {
 	.config_conn_list		= stdout_config_conn_list,
 
 	/* status and error messages */
-	.connect_msg			= stdout_connect_msg,
 	.show_message			= stdout_message,
 	.show_perror			= stdout_perror,
 	.show_status			= stdout_status,

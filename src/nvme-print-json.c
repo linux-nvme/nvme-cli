@@ -287,13 +287,6 @@ static void json_config_conn_list(struct libnvmf_config *config)
 static void json_config_conn_list(struct libnvmf_config *config) {}
 #endif
 
-static void json_connect_msg(struct libnvme_ctrl *c)
-{
-	struct json_object *r = json_r;
-
-	obj_add_str(r, "device", libnvme_ctrl_get_name(c));
-}
-
 static void json_output_object(struct json_object *r)
 {
 	json_print(r);
@@ -635,7 +628,6 @@ static struct print_ops json_print_ops = {
 	.config_conn_list		= json_config_conn_list,
 
 	/* status and error messages */
-	.connect_msg			= json_connect_msg,
 	.show_message			= json_output_message,
 	.show_perror			= json_output_perror,
 	.show_status			= json_output_status,
