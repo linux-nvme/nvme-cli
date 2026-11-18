@@ -49,6 +49,7 @@
 #include "plugin.h"
 
 #include "cmds-admin.h"
+#include "cmds-admin-print.h"
 
 static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};

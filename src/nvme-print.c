@@ -70,14 +70,13 @@ bool nvme_show_failed(void)
 }
 
 /*
- * The printers which stay in process: the one of the libnvme tree, which
- * reads sysfs while printing, the ones which hand JSON objects to their
- * caller and the document.
+ * The printers which stay in process: the ones which read sysfs while
+ * printing and the hooks of the JSON document.
  */
 static bool nvme_print_sandboxed(struct print_ops *ops, void *func)
 {
 	void *in_process[] = {
-		ops->relatives, ops->config_conn_list,
+		ops->config_conn_list,
 		ops->show_init, ops->show_finish,
 		ops->connect_msg,
 	};
@@ -290,12 +289,6 @@ const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
 	}
 
 	return "Unknown";
-}
-
-void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name,
-			 nvme_print_flags_t flags)
-{
-	nvme_print(relatives, flags, ctx, name);
 }
 
 void d(unsigned char *buf, int len, int width, int group)

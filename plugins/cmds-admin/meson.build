@@ -9,6 +9,8 @@ plugin_sources += [
     'plugins/cmds-admin/cmds-admin-plugin.c',
     'plugins/cmds-admin/cmds-admin-ctrl.c',
     'plugins/cmds-admin/cmds-admin-security.c',
+    'plugins/cmds-admin/cmds-admin-print.c',
+    'plugins/cmds-admin/cmds-admin-print-stdout.c',
 ]
 
 plugin_commands = [
