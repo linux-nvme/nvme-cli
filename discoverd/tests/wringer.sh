@@ -444,18 +444,18 @@ discoverd_stop() {
 	systemctl stop 'nvme-discoverd-*.service' >/dev/null 2>&1 || true
 	systemctl reset-failed 'nvme-discoverd-*.service' \
 		>/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${TARGET_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${CONF_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${MDNS_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${V6_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${LL_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${HN_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${HN2_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${TARGET_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${CONF_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${MDNS_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${V6_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${LL_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${REL_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${REL2_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${NL_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${MAP_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${REF_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${HN_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${HN2_NQN}" >/dev/null 2>&1 || true
 	disconnect_unowned
 }
 
@@ -480,11 +480,11 @@ disconnect_unowned() {
 	local dev
 
 	while dev=$(port_dc_dev "${UO_PORT}"); do
-		"${NVME_BIN}" disconnect -d "${dev}" >/dev/null 2>&1 || break
+		"${NVME_BIN}" disconnect --force -d "${dev}" >/dev/null 2>&1 || break
 	done
-	"${NVME_BIN}" disconnect -n "${UO_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${UO2_NQN}" >/dev/null 2>&1 || true
-	"${NVME_BIN}" disconnect -n "${UO3_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${UO_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${UO2_NQN}" >/dev/null 2>&1 || true
+	"${NVME_BIN}" disconnect --force -n "${UO3_NQN}" >/dev/null 2>&1 || true
 }
 
 # Is any nvme-discoverd transient unit loaded?
@@ -741,13 +741,14 @@ assert_journal_lacks() {
 }
 
 # Disconnect subsystem $1 behind nvme-discoverd's back, bypassing the unit's
-# ExecStop=, as a target reboot or a cable pull would.
+# ExecStop=, as a target reboot or a cable pull would. nvme-discoverd owns
+# the controller, so the disconnect needs --force.
 disconnect_out_of_band() {
 	local nqn="$1" dev
 
 	dev=$(connected_dev "${nqn}") || return 0
 	log "Disconnect ${dev} (${nqn}) out of band"
-	"${NVME_BIN}" disconnect -d "${dev}" >/dev/null 2>&1
+	"${NVME_BIN}" disconnect --force -d "${dev}" >/dev/null 2>&1
 	wait_for_disconnected "${nqn}" 10
 }
 
@@ -919,19 +920,19 @@ trap cleanup EXIT
 
 # A prior run killed before reaching cleanup() could have left these
 # connected on the real host.
-"${NVME_BIN}" disconnect -n "${TARGET_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${TARGET_NQN}" >/dev/null 2>&1 || true
 disconnect_foreign
-"${NVME_BIN}" disconnect -n "${CONF_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${MDNS_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${V6_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${LL_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${REL_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${REL2_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${NL_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${MAP_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${REF_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${HN_NQN}" >/dev/null 2>&1 || true
-"${NVME_BIN}" disconnect -n "${HN2_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${CONF_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${MDNS_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${V6_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${LL_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${REL_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${REL2_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${NL_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${MAP_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${REF_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${HN_NQN}" >/dev/null 2>&1 || true
+"${NVME_BIN}" disconnect --force -n "${HN2_NQN}" >/dev/null 2>&1 || true
 disconnect_unowned
 # ... and left its desired controllers saved.
 rm -f "${DESIRED_FILE}"
