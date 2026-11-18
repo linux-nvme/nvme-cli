@@ -7,14 +7,17 @@
 #include "ocp-hardware-component-log.h"
 #include "ocp-print.h"
 
+/*
+ * Run the printers in the sandbox, except for the telemetry printer, which
+ * writes its report to a file.
+ */
 #define ocp_print(name, flags, ...) \
-	do { \
-		struct ocp_print_ops *ops = ocp_print_ops(flags); \
-		if (ops && ops->name) \
-			ops->name(__VA_ARGS__); \
-		else \
-			nvme_show_error("unhandled output format"); \
-	} while (false)
+	nvme_print_decoder(ocp_print_ops(flags), name, true, flags, \
+			   ##__VA_ARGS__)
+
+#define ocp_print_in_process(name, flags, ...) \
+	nvme_print_decoder(ocp_print_ops(flags), name, false, flags, \
+			   ##__VA_ARGS__)
 
 static struct ocp_print_ops *ocp_print_ops(nvme_print_flags_t flags)
 {
@@ -58,7 +61,7 @@ void ocp_show_telemetry_log(const struct ocp_telemetry_logs *logs,
 			    struct ocp_telemetry_parse_options *options,
 			    nvme_print_flags_t flags)
 {
-	ocp_print(telemetry_log, flags, logs, options);
+	ocp_print_in_process(telemetry_log, flags, logs, options);
 }
 
 void ocp_c3_log(struct libnvme_transport_handle *hdl,

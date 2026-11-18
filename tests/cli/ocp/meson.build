@@ -53,5 +53,15 @@ if have_mock_nvme
              depends: nvme_runtime + [mock_nvme_lib],
              timeout: 120,
              suite: 'mock')
+
+        sandbox_env = cli_test_env
+        sandbox_env.set('NVME_SANDBOX', '1')
+        test('ocp - ' + name + '-sandbox',
+             python3,
+             args: [files(t), nvme_exe, mock_nvme_lib],
+             env: sandbox_env,
+             depends: nvme_runtime + [mock_nvme_lib],
+             timeout: 120,
+             suite: 'mock')
     endforeach
 endif
