@@ -182,6 +182,19 @@ int nvme_main(int argc, char **argv)
 #endif
 
 	nvme.extensions->parent = &nvme;
+
+	/*
+	 * The top-level commands come from plugins, which may not be loaded
+	 * yet. Start with an empty list.
+	 */
+	if (!builtin.commands) {
+		builtin.commands = calloc(1, sizeof(*builtin.commands));
+		if (!builtin.commands) {
+			fprintf(stderr, "%s: out of memory\n", argv[0]);
+			return 1;
+		}
+	}
+
 	if (argc < 2) {
 		general_help(&builtin, NULL);
 		return 0;
