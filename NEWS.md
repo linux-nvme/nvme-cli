@@ -49,6 +49,12 @@
   it, only the archive options fail. nvme declares it in an ELF
   `.note.dlopen` note. Static builds, FreeBSD and Windows still link it.
 
+* nvme loads libkmod at runtime, to load the nvme-fabrics module before
+  it connects or discovers, instead of linking it. Packages can make
+  libkmod a weak dependency; without it, nvme doesn't load the module, as
+  in a build without libkmod. nvme declares it in an ELF `.note.dlopen`
+  note. Static builds still link it.
+
 * The plugins are modules, which nvme loads when a command uses them:
   a command loads at most the module of its plugin, so nvme starts as
   fast as before. They are installed in
