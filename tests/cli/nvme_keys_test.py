@@ -45,13 +45,15 @@ _NVME_BIN = sys.argv[1] \
 
 
 def _has_deprecated_cmds():
-    """The deprecated aliases need -Ddeprecated-cmds=enabled to exist."""
+    """The deprecated aliases need -Ddeprecated-cmds=enabled to exist.
+    The help doesn't list them, so ask for the help of one."""
     import subprocess
-    result = subprocess.run([_NVME_BIN, 'help'],
+    result = subprocess.run([_NVME_BIN, 'gen-dhchap-key', '--help'],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
+                            stdin=subprocess.DEVNULL,
                             encoding='utf-8')
-    return 'gen-dhchap-key' in result.stdout + result.stderr
+    return result.returncode == 0
 
 
 _DEPRECATED_CMDS = _has_deprecated_cmds()
