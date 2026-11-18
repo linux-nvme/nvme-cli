@@ -12,6 +12,7 @@ sources = [
     'src/nvme-print-stdout.c',
     'src/nvme-print-stdout-log.c',
     'src/nvme-print.c',
+    'src/nvme-resources.c',
     'src/nvme.c',
     'src/nvme-cmds-enumerate.c',
     'src/nvme-cmds-fabrics.c',
