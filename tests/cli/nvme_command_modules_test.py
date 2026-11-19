@@ -111,7 +111,9 @@ class CommandModulesTest(unittest.TestCase):
         r = self.nvme('--set-options', 'test-sysfs-dir=' + sysfs,
                       'zns', 'list')
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(r.stdout.splitlines()[2].split()[:3],
+        # The printer adds /dev/ when the host has these devices.
+        row = r.stdout.splitlines()[2].split()[:3]
+        self.assertEqual([os.path.basename(c) for c in row],
                          ['nvme0n1', 'ng0n1', 'S7DFNG0W700063'])
         self.assertNotIn(LOAD_ERROR, r.stderr)
 
