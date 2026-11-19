@@ -48,6 +48,25 @@ struct libnvme_global_ctx *libnvme_create_global_ctx(void);
 void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx);
 
 /**
+ * libnvme_topology_lock() - Lock a context's topology for this thread
+ * @ctx:	&struct libnvme_global_ctx object
+ *
+ * A host from libnvme_get_host() or libnvme_first_host()/_next_host()
+ * is borrowed: another thread can detach and free it right after.
+ * Hold this lock across such a lookup and the libnvme_host_ref() that
+ * follows, so the two are atomic with respect to libnvme_free_host(),
+ * libnvme_refresh_topology() and libnvme_free_global_ctx(). Recursive:
+ * safe to call again while already held.
+ */
+void libnvme_topology_lock(struct libnvme_global_ctx *ctx);
+
+/**
+ * libnvme_topology_unlock() - Undo libnvme_topology_lock()
+ * @ctx:	&struct libnvme_global_ctx object
+ */
+void libnvme_topology_unlock(struct libnvme_global_ctx *ctx);
+
+/**
  * libnvme_set_owner() - Set the orchestrator identity for the registry
  * @ctx:	&struct libnvme_global_ctx object
  * @owner:	Orchestrator identity string (e.g. "stas", "pre-os").

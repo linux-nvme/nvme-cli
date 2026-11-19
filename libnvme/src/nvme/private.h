@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <pthread.h>
 #include <stdatomic.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -451,6 +452,18 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=l
 	 * either kind, in __libnvme_global_ctx_unref().
 	 */
 	atomic_int refcount;
+
+	/* Serializes ctx->hosts lookup/iteration against create/detach.
+	 * Recursive, so a function that already holds it (or a caller
+	 * using libnvme_topology_lock() around a lookup+ref) can call
+	 * into another locking function without deadlocking itself.
+	 */
+	pthread_mutex_t topology_lock;
+	/* Set under topology_lock by libnvme_free_global_ctx(), so a
+	 * concurrent libnvme_create_host() can reject new hosts instead
+	 * of racing the teardown.
+	 */
+	bool destroying;
 	/*
 	 * Orchestrator identity. Tri-state: NULL means --owner was never
 	 * given, "" means an explicit disown, and a name means a claim.

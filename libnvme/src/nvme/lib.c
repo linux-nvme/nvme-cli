@@ -35,10 +35,22 @@ static bool is_valid_test_base_dir(const char *path)
 __shr_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 {
 	struct libnvme_global_ctx *ctx;
+	pthread_mutexattr_t attr;
+	int err;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx)
 		return NULL;
+
+	err = pthread_mutexattr_init(&attr);
+	if (err)
+		goto fail;
+	err = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	if (!err)
+		err = pthread_mutex_init(&ctx->topology_lock, &attr);
+	pthread_mutexattr_destroy(&attr);
+	if (err)
+		goto fail;
 
 	atomic_init(&ctx->refcount, 1);
 
@@ -52,6 +64,21 @@ __shr_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 	ctx->mi_probe_enabled = true;
 
 	return ctx;
+
+fail:
+	free(ctx);
+	errno = err;
+	return NULL;
+}
+
+__shr_public void libnvme_topology_lock(struct libnvme_global_ctx *ctx)
+{
+	pthread_mutex_lock(&ctx->topology_lock);
+}
+
+__shr_public void libnvme_topology_unlock(struct libnvme_global_ctx *ctx)
+{
+	pthread_mutex_unlock(&ctx->topology_lock);
 }
 
 void __libnvme_global_ctx_ref(struct libnvme_global_ctx *ctx)
@@ -152,6 +179,7 @@ void __libnvme_global_ctx_unref(struct libnvme_global_ctx *ctx)
 	free(ctx->test_base_dir);
 	free(ctx->test_sysfs_dir);
 	libnvme_free_sysfs_paths(ctx);
+	pthread_mutex_destroy(&ctx->topology_lock);
 	free(ctx);
 }
 
@@ -162,8 +190,11 @@ __shr_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	if (!ctx)
 		return;
 
+	libnvme_topology_lock(ctx);
+	ctx->destroying = true;
 	libnvme_for_each_host_safe(ctx, h, _h)
 		libnvme_free_host(h);
+	libnvme_topology_unlock(ctx);
 	__libnvme_global_ctx_unref(ctx);
 }
 

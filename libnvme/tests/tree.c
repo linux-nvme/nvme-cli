@@ -770,6 +770,99 @@ static bool test_host_ref_unref_is_thread_safe(void)
 	return pass;
 }
 
+#define RACE_THREAD_COUNT 4
+#define RACE_ITERATIONS   5000
+
+static void *lookup_ref_thread(void *arg)
+{
+	struct libnvme_global_ctx *ctx = arg;
+	int i;
+
+	for (i = 0; i < RACE_ITERATIONS; i++) {
+		struct libnvme_host *h;
+
+		libnvme_topology_lock(ctx);
+		if (libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h))
+			h = NULL;
+		else
+			libnvme_host_ref(h);
+		libnvme_topology_unlock(ctx);
+
+		if (h) {
+			shr_assert(streq(libnvme_host_get_hostnqn(h),
+					  HOSTNQN_1));
+			libnvme_host_unref(h);
+		}
+	}
+
+	return NULL;
+}
+
+static void *churn_thread(void *arg)
+{
+	struct libnvme_global_ctx *ctx = arg;
+	int i;
+
+	for (i = 0; i < RACE_ITERATIONS; i++) {
+		struct libnvme_host *h;
+
+		libnvme_topology_lock(ctx);
+		h = libnvme_first_host(ctx);
+		if (h)
+			libnvme_free_host(h);
+		libnvme_topology_unlock(ctx);
+	}
+
+	return NULL;
+}
+
+/**
+ * test_lookup_ref_races_with_free - a lookup+ref must not race with
+ * another thread detaching and freeing the same host (reported in
+ * review: lookup could return a host whose count another thread had
+ * just dropped to zero). Both sides hold topology_lock, so a lookup
+ * always sees either the live host or a freshly recreated one --
+ * never a stale pointer.
+ */
+static bool test_lookup_ref_races_with_free(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_host *h;
+	pthread_t lookers[RACE_THREAD_COUNT], churners[RACE_THREAD_COUNT];
+	int i;
+	bool pass = true;
+
+	printf("test_lookup_ref_races_with_free:\n");
+
+	ctx = libnvme_create_global_ctx();
+	shr_assert(ctx);
+
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	for (i = 0; i < RACE_THREAD_COUNT; i++) {
+		shr_assert(!pthread_create(&lookers[i], NULL,
+				lookup_ref_thread, ctx));
+		shr_assert(!pthread_create(&churners[i], NULL,
+				churn_thread, ctx));
+	}
+	for (i = 0; i < RACE_THREAD_COUNT; i++) {
+		shr_assert(!pthread_join(lookers[i], NULL));
+		shr_assert(!pthread_join(churners[i], NULL));
+	}
+
+	if (libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h) ||
+	    !streq(libnvme_host_get_hostnqn(h), HOSTNQN_1)) {
+		printf(" - tree unusable after the race [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - concurrent lookup/ref vs free survived [PASS]\n");
+	}
+
+	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	bool pass = true;
@@ -792,6 +885,7 @@ int main(int argc, char *argv[])
 	pass &= test_host_ref_debug_log_disabled_by_default();
 	pass &= test_host_ref_debug_log_enabled();
 	pass &= test_host_ref_unref_is_thread_safe();
+	pass &= test_lookup_ref_races_with_free();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

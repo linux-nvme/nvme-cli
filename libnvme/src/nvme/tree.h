@@ -86,6 +86,12 @@ struct libnvme_global_ctx *libnvme_host_get_global_ctx(struct libnvme_host *h);
  * Returns a host object based on the hostnqn/hostid values or the default if
  * hostnqn/hostid are NULL.
  *
+ * The returned host is borrowed from @ctx. To keep it past this call,
+ * take a reference with libnvme_host_ref(). When sharing @ctx between
+ * threads, hold libnvme_topology_lock() across this call and that
+ * libnvme_host_ref(): a borrowed pointer alone does not stop another
+ * thread from detaching and freeing it right after this returns.
+ *
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_get_host(struct libnvme_global_ctx *ctx, const char *hostnqn,
