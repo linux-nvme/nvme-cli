@@ -19,7 +19,7 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "plugins/id/id.h"
+#include "plugins/cmds-id/id.h"
 
 struct __packed nvme_additional_smart_log_item {
 	__u8			key;

@@ -5,7 +5,7 @@
 # Copyright (c) 2026 SUSE LLC
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
-"""Tests for the sed plugin (plugins/sed/) and the libnvme sed module
+"""Tests for the sed plugin (plugins/cmds-sed/) and the libnvme sed module
 it uses. Level 0 Discovery is answered as an admin passthru Security
 Receive. The Opal operations are kernel ioctls, which libmock_nvme.c
 forwards raw. The test decodes their arguments and checks them.

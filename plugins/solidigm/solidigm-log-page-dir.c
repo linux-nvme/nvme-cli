@@ -18,9 +18,9 @@
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "plugins/log/log-print.h"
-#include "plugins/ocp/ocp-nvme.h"
-#include "plugins/ocp/ocp-utils.h"
+#include "plugins/cmds-log/log-print.h"
+#include "plugins/cmds-ocp/ocp-nvme.h"
+#include "plugins/cmds-ocp/ocp-utils.h"
 #include "solidigm-log-page-dir.h"
 #include "solidigm-util.h"
 

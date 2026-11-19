@@ -182,7 +182,7 @@ not merged into the flat top-level command namespace.
 
 #### Multi-file plugins
 
-A plugin can span multiple `.c` files (see `plugins/ocp` or
+A plugin can span multiple `.c` files (see `plugins/cmds-ocp` or
 `plugins/solidigm` for real examples): put the `struct plugin` definition
 and any shared declarations in a small header, and `#include` it from each
 file. A plugin has one `NVME_PLUGIN_INIT()` function. To show the commands
@@ -199,7 +199,7 @@ Neither needs hardware. `Documentation/TESTING.md` describes the tools.
 **Mock tests** run the real `nvme` binary against a mocked controller:
 `tests/cli/libmock_nvme.c` intercepts the ioctls and hands every command
 to a Python object in the test, which answers it (`tests/cli/nvme_mock.py`).
-Vendor tests live in `tests/cli/<plugin>/`; `tests/cli/ocp/` (a shared
+Vendor tests live in `tests/cli/<plugin>/`; `tests/cli/cmds_ocp/` (a shared
 controller class, one file per command), `tests/cli/wdc/` (several
 models) and `tests/cli/micron/` are examples. A test
 
@@ -507,7 +507,7 @@ how to triage and fix findings. Give it precise input data:
   checks.
 
 For example: "Add mock tests for `nvme <plugin> <command>` in
-`tests/cli/<plugin>/` following `tests/cli/ocp/`. The log layout is in
+`tests/cli/<plugin>/` following `tests/cli/cmds_ocp/`. The log layout is in
 `<file>`, the output of a real drive in `<file>`. Use non-zero values in
 every field and check normal and JSON output. Then add the command to the
 device fuzz table, sweep it and compare its coverage with and without the

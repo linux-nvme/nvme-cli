@@ -113,8 +113,8 @@ M:	Broc Going <bgoing@micron.com> (@brgoing)
 M:	Jeff Lien <jeff.lien@sandisk.com> (@jeff-lien-sndk)
 M:	Brandon Paupore <brandon.paupore@sandisk.com> (@brandon-paupore-sndk)
 S:	Supported
-F:	plugins/ocp/
-F:	tests/cli/ocp/
+F:	plugins/cmds-ocp/
+F:	tests/cli/cmds_ocp/
 
 SAMSUNG PLUGIN
 M:	Hyuntae Kim <h1219.kim@samsung.com> (@h1219-kim)

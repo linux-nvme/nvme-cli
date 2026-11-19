@@ -15,7 +15,7 @@
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "plugins/id/id.h"
+#include "plugins/cmds-id/id.h"
 
 #define AMZN_NVME_STATS_LOGPAGE_ID 0xD0
 #define AMZN_NVME_STATS_DETAIL_IO_VERSION 1

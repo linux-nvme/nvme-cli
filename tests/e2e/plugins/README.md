@@ -92,7 +92,7 @@ meson test -C .build "ocp - e2e-smart-add-log"
 ## Writing a New Test
 
 1. Create a file in the appropriate plugin directory (e.g.,
-   `tests/e2e/plugins/ocp/ocp_smart_add_log_test.py`).
+   `tests/e2e/plugins/cmds_ocp/ocp_smart_add_log_test.py`).
 
 2. Inherit from the plugin base class and write test methods.
 

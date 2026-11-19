@@ -63,7 +63,7 @@
   can ship plugins on their own. The new `plugin-modules` option
   (`auto` by default) decides; static builds, Windows and fuzz builds
   link the plugins in, as before. An initramfs which runs a plugin
-  command needs its module, e.g. `nbft.so` for `nvme nbft show`. See
+  command needs its module, e.g. `cmds-nbft.so` for `nvme nbft show`. See
   [BUILDING.md](Documentation/BUILDING.md).
 
 ### Fabrics
