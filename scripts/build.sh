@@ -433,7 +433,7 @@ config_meson_static_windows() {
         --buildtype=release                     \
         --default-library=static                \
         -Dc_link_args="-static"                 \
-        -Dlibarchive=disabled                   \
+        -Dlibarchive=enabled                    \
         -Dpython=disabled                       \
         -Dopenssl=disabled                      \
         -Dtests=false                           \
@@ -672,6 +672,7 @@ config_muon_default() {
         -Dkeyutils=disabled                             \
         -Djson-c=disabled                               \
         -Dnvme-discoverd=disabled                       \
+        -Dlibarchive=disabled                           \
         "${BUILDDIR}"
 }
 

@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 Micron Technology, Inc.
+
+[wrap-file]
+directory = libarchive-3.8.9
+source_url = https://github.com/libarchive/libarchive/releases/download/v3.8.9/libarchive-3.8.9.tar.xz
+source_filename = libarchive-3.8.9.tar.xz
+source_hash = 888c934f9d95648ecb9163dc8e23ab80a476ecb81a8f1154704a227b5b676dde
+source_fallback_url = https://wrapdb.mesonbuild.com/v2/libarchive_3.8.9-1/get_source/libarchive-3.8.9.tar.xz
+patch_filename = libarchive_3.8.9-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libarchive_3.8.9-1/get_patch
+patch_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libarchive_3.8.9-1/libarchive_3.8.9-1_patch.zip
+patch_hash = 78f21d8e126616c803acc228ae9251e91486e5f8016e3954541e883772342a69
+wrapdb_version = 3.8.9-1
+
+[provide]
+dependency_names = libarchive
+program_names = bsdcat, bsdcpio, bsdtar

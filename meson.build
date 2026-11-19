@@ -472,8 +472,37 @@ conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils a
 
 if get_option('libarchive').disabled()
     libarchive_dep = dependency('', required: false)
+elif is_static and get_option('libarchive').enabled()
+    # A static link embeds everything a system libarchive was built with,
+    # OpenSSL and libiconv included. Build the wrap with zlib alone (the
+    # plugins only write zip, tar and tar.gz); the subprojects override the
+    # libarchive and zlib dependencies.
+    subproject('zlib', default_options: ['werror=false'])
+    subproject('libarchive', default_options: [
+        'progs=[]',
+        'zlib=enabled',
+        'bz2lib=disabled',
+        'libb2=disabled',
+        'iconv=disabled',
+        'lz4=disabled',
+        'zstd=disabled',
+        'lzma=disabled',
+        'lzo2=disabled',
+        'cng=disabled',
+        'openssl=disabled',
+        'xml2=disabled',
+        'expat=disabled',
+        'regex=disabled',
+        'xattr=disabled',
+        'acl=disabled',
+        'tests=disabled',
+        'werror=false',
+    ])
+    libarchive_dep = dependency('libarchive')
 else
-    libarchive_dep = dependency('libarchive', required: get_option('libarchive'))
+    # Only static builds with libarchive enabled use the wraps.
+    libarchive_dep = dependency('libarchive', required: get_option('libarchive'),
+        allow_fallback: false)
 endif
 conf.set('CONFIG_LIBARCHIVE', libarchive_dep.found(), description: 'Is libarchive available?')
 # Load libarchive at runtime, so that nvme, and with it every initrd that
