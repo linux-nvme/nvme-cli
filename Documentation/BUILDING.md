@@ -301,7 +301,8 @@ $ meson setup .build -Dplugin-modules=disabled
 | `disabled` | linked into nvme |
 
 The modules are installed in `<libdir>/nvme-cli/<version>/plugins`, with
-the `runtime` install tag. A module works only with an nvme of the same
+the `runtime` install tag. A module is named after the directory of its
+plugin, e.g. `sandisk.so` for `nvme sndk`. A module works only with an nvme of the same
 version, built with the same `src/plugin.h`: nvme ignores another one with
 a warning.
 Without the module of a plugin, `nvme <plugin>` says the plugin is not
