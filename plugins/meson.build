@@ -4,11 +4,13 @@ fs = import('fs')
 
 selected_plugins = get_option('plugins')
 
-# Each plugin directory appends its sources to plugin_sources. It may set
-# plugin_name, the name of the plugin on the command line, when it is not
-# the name of the directory, and plugin_needs to the plugins whose
-# functions it calls. Plugins needed by a selected plugin are selected as
-# well: each round visits the plugins needed by the previous round.
+# A plugin lives in plugins/<plugin>, or in plugins/cmds-<plugin> for the
+# plugins of nvme itself. Its directory appends its sources to
+# plugin_sources. It may set plugin_name, the name of the plugin on the
+# command line, when it is not the name of the directory, and plugin_needs
+# to the plugins whose functions it calls. Plugins needed by a selected
+# plugin are selected as well: each round visits the plugins needed by the
+# previous round.
 plugin_sources = []
 enabled_plugins = []
 plugin_defs = []
@@ -25,10 +27,14 @@ foreach round : range(16)
       continue
     endif
     visited_plugins += plugin_dir
+    plugin_subdir = plugin_dir
+    if fs.is_dir(meson.current_source_dir() / ('cmds-' + plugin_dir))
+      plugin_subdir = 'cmds-' + plugin_dir
+    endif
     n_sources_before = plugin_sources.length()
-    plugin_name = plugin_dir
+    plugin_name = plugin_subdir
     plugin_needs = []
-    subdir(plugin_dir)
+    subdir(plugin_subdir)
     if plugin_sources.length() > n_sources_before
       enabled_plugins += plugin_dir
       srcs = []
@@ -37,6 +43,7 @@ foreach round : range(16)
       endforeach
       plugin_defs += {
         'dir': plugin_dir,
+        'subdir': plugin_subdir,
         'name': plugin_name,
         'sources': srcs,
         'needs': plugin_needs,
@@ -195,11 +202,16 @@ endforeach
 core_plugins = []
 vendor_plugins = []
 disabled_plugins = []
+plugin_subdirs = {}
+foreach def : plugin_defs
+  plugin_subdirs += {def['dir']: def['subdir']}
+endforeach
 foreach plugin_name : all_plugin_names
   if plugin_name in enabled_plugins
     is_core = false
+    plugin_subdir = plugin_subdirs.get(plugin_name, plugin_name)
     foreach src : plugin_sources
-      if src.startswith('plugins/' + plugin_name + '/') and fs.read(meson.project_source_root() / src).contains('.core = true')
+      if src.startswith('plugins/' + plugin_subdir + '/') and fs.read(meson.project_source_root() / src).contains('.core = true')
         is_core = true
       endif
     endforeach
