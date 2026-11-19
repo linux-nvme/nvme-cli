@@ -17,7 +17,7 @@ if python3.found()
             args: [
                 files('test_command_metadata_schema.py'),
                 nvme_exe,
-                meson.project_source_root() / 'plugins' / 'utils' / 'command-metadata-schema.json',
+                meson.project_source_root() / 'plugins' / 'cmds-utils' / 'command-metadata-schema.json',
             ],
             depends: nvme_runtime,
             timeout: 120,
@@ -119,7 +119,7 @@ if python3.found()
         args: [
             files('test_completion_fixture_schema.py'),
             meson.project_source_root() / 'completions' / 'test-command-metadata.json',
-            meson.project_source_root() / 'plugins' / 'utils' / 'command-metadata-schema.json',
+            meson.project_source_root() / 'plugins' / 'cmds-utils' / 'command-metadata-schema.json',
         ],
         timeout: 60,
         suite: 'check',

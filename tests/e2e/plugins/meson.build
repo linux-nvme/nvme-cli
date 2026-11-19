@@ -12,8 +12,15 @@ known_plugin_tests = ['micron', 'ocp']
 
 plugin_tests = get_option('plugin-tests')
 
+# The tests of a plugin of nvme itself live in cmds_<plugin>, see
+# plugins/meson.build. Python can't import a package with a '-'.
+fs = import('fs')
 foreach name : known_plugin_tests
     if name in plugin_tests and name in selected_plugins
-        subdir(name)
+        if fs.is_dir(meson.current_source_dir() / ('cmds_' + name))
+            subdir('cmds_' + name)
+        else
+            subdir(name)
+        endif
     endif
 endforeach

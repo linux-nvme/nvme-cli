@@ -12,10 +12,10 @@
 
 #define SOLIDIGM_PLUGIN_VERSION "1.27"
 
-#include "plugins/id/id.h"
-#include "plugins/ocp/ocp-clear-features.h"
-#include "plugins/ocp/ocp-fw-activation-history.h"
-#include "plugins/ocp/ocp-smart-extended-log.h"
+#include "plugins/cmds-id/id.h"
+#include "plugins/cmds-ocp/ocp-clear-features.h"
+#include "plugins/cmds-ocp/ocp-fw-activation-history.h"
+#include "plugins/cmds-ocp/ocp-smart-extended-log.h"
 #include "solidigm-garbage-collection.h"
 #include "solidigm-get-drive-info.h"
 #include "solidigm-id-ctrl.h"

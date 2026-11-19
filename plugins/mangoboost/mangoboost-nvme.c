@@ -18,7 +18,7 @@
 #include <shared/compiler-attributes-util.h>
 
 #include "plugin.h"
-#include "plugins/id/id.h"
+#include "plugins/cmds-id/id.h"
 
 struct nvme_vu_id_ctrl_field {
 	__u16		json_rpc_2_0_mjr;

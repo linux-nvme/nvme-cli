@@ -1,0 +1,1009 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include <libnvme.h>
+
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
+#include <shared/hex-util.h>
+#include <shared/int-util.h>
+#include <shared/uint128-util.h>
+#include <shared/uuid-util.h>
+#include <shared/string-util.h>
+
+#include "cleanup.h"
+#include "nvme-print.h"
+#include "ocp-fw-activation-history.h"
+#include "ocp-hardware-component-log.h"
+#include "ocp-nvme.h"
+#include "ocp-print.h"
+#include "ocp-smart-extended-log.h"
+#include "ocp-telemetry-decode.h"
+#include "ocp-utils.h"
+#include "plugins/cmds-log/log-print.h"
+
+static struct ocp_print_ops stdout_print_ops;
+
+static void print_hwcomp_desc(struct hwcomp_desc_entry *e, bool list, int num)
+{
+	__cleanup_free char *hw_comp_id = NULL;
+
+	printf("  Component %d: %s\n", num, hwcomp_id_to_string(le32_to_cpu(e->desc->id)));
+
+	if (list)
+		return;
+
+	printf("    Date/Lot Size: 0x%"PRIx64"\n", (uint64_t)e->date_lot_size);
+	printf("    Additional Information Size: 0x%"PRIx64"\n", (uint64_t)e->add_info_size);
+	printf("    Identifier: 0x%08x\n", le32_to_cpu(e->desc->id));
+	printf("    Manufacture: 0x%016"PRIx64"\n", le64_to_cpu(e->desc->mfg));
+	printf("    Revision: 0x%016"PRIx64"\n", le64_to_cpu(e->desc->rev));
+	printf("    Manufacture Code: 0x%016"PRIx64"\n", le64_to_cpu(e->desc->mfg_code));
+	print_array("    Date/Lot Code", e->date_lot_code, e->date_lot_size);
+	if (le32_to_cpu(e->desc->id) == HWCOMP_ID_COUNTRY) {
+		hw_comp_id = shr_buf2str((const char *)e->add_info, e->add_info_size);
+		printf("    Additional Information: %s\n", hw_comp_id);
+	} else {
+		print_array("    Additional Information",
+				e->add_info,
+				e->add_info_size);
+	}
+}
+
+static void stdout_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
+{
+	struct hwcomp_desc_entry e;
+	__u64 offset;
+	int num = 1;
+
+	printf("Log Identifier: 0x%02xh\n", OCP_LID_HWCOMP);
+	printf("Log Page Version: 0x%x\n", le16_to_cpu(log->ver));
+	print_array("Reserved2", log->rsvd2, ARRAY_SIZE(log->rsvd2));
+	print_array("Log page GUID", log->guid, ARRAY_SIZE(log->guid));
+	printf("Hardware Component Log Size: 0x%"PRIx64"\n",
+	       (uint64_t)log->desc_len);
+	print_array("Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
+	printf("Component Descriptions\n");
+	for (offset = 0; hwcomp_desc_entry(log, offset, &e);
+	     offset += e.desc_size) {
+		if (!id || id == le32_to_cpu(e.desc->id))
+			print_hwcomp_desc(&e, list, num++);
+	}
+}
+
+static void stdout_fw_activation_history(const struct fw_activation_history *fw_history)
+{
+	printf("Firmware History Log:\n");
+
+	printf("  %-26s%d\n", "log identifier:", fw_history->log_id);
+	printf("  %-26s%d\n", "valid entries:", le32_to_cpu(fw_history->valid_entries));
+
+	printf("  entries:\n");
+
+	for (int index = 0; index < le32_to_cpu(fw_history->valid_entries) &&
+	     index < ARRAY_SIZE(fw_history->entries); index++) {
+		const struct fw_activation_history_entry *entry = &fw_history->entries[index];
+
+		printf("    entry[%d]:\n", index);
+		printf("      %-22s%d\n", "version number:", entry->ver_num);
+		printf("      %-22s%d\n", "entry length:", entry->entry_length);
+		printf("      %-22s%d\n", "activation count:",
+		       le16_to_cpu(entry->activation_count));
+		printf("      %-22s%"PRIu64"\n", "timestamp:", int48_to_long(entry->ts.timestamp));
+		printf("      %-22s%"PRIu64"\n", "power cycle count:",
+		       le64_to_cpu(entry->power_cycle_count));
+		printf("      %-22s%.*s\n", "previous firmware:", (int)sizeof(entry->previous_fw),
+		       entry->previous_fw);
+		printf("      %-22s%.*s\n", "new firmware:", (int)sizeof(entry->new_fw),
+		       entry->new_fw);
+		printf("      %-22s%d\n", "slot number:", entry->slot_number);
+		printf("      %-22s%d\n", "commit action type:", entry->commit_action);
+		printf("      %-22s%d\n", "result:",  le16_to_cpu(entry->result));
+	}
+
+	printf("  %-26s%d\n", "log page version:",
+	       le16_to_cpu(fw_history->log_page_version));
+
+	printf("  %-26s0x%016"PRIx64"%016"PRIx64"\n", "log page guid:",
+	       le64_to_cpu(fw_history->log_page_guid[1]),
+	       le64_to_cpu(fw_history->log_page_guid[0]));
+
+	printf("\n");
+}
+
+static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int version)
+{
+	uint16_t smart_log_ver = 0;
+	uint16_t dssd_version = 0;
+
+	printf("SMART Cloud Attributes :-\n");
+
+	printf("  Physical media units written -		%s\n",
+		uint128_t_to_string(le128_to_cpu(log->physical_media_units_written)));
+	printf("  Physical media units read    -		%s\n",
+		uint128_t_to_string(le128_to_cpu(log->physical_media_units_read)));
+	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
+		int48_to_long(log->bad_user_nand_blocks_raw));
+	printf("  Bad user nand blocks - Normalized		%d\n",
+		le16_to_cpu(log->bad_user_nand_blocks_normalized));
+	printf("  Bad system nand blocks - Raw			%"PRIu64"\n",
+		int48_to_long(log->bad_system_nand_blocks_raw));
+	printf("  Bad system nand blocks - Normalized		%d\n",
+		le16_to_cpu(log->bad_system_nand_blocks_normalized));
+	printf("  XOR recovery count				%"PRIu64"\n",
+		le64_to_cpu(log->xor_recovery_count));
+	printf("  Uncorrectable read error count		%"PRIu64"\n",
+		le64_to_cpu(log->uncorrectable_read_err_count));
+	printf("  Soft ecc error count				%"PRIu64"\n",
+		le64_to_cpu(log->soft_ecc_err_count));
+	printf("  End to end detected errors			%"PRIu32"\n",
+		le32_to_cpu(log->end_to_end_detected_err));
+	printf("  End to end corrected errors			%"PRIu32"\n",
+		le32_to_cpu(log->end_to_end_corrected_err));
+	printf("  System data percent used			%d\n",
+		log->system_data_used_percent);
+	printf("  Refresh counts				%"PRIu64"\n",
+		int56_to_long(log->refresh_counts));
+	printf("  Max User data erase counts			%"PRIu32"\n",
+		le32_to_cpu(log->user_data_erase_count_max));
+	printf("  Min User data erase counts			%"PRIu32"\n",
+		le32_to_cpu(log->user_data_erase_count_min));
+	printf("  Number of Thermal throttling events		%d\n",
+		log->thermal_throttling_event_count);
+	printf("  Current throttling status			0x%x\n",
+		log->thermal_throttling_current_status);
+	printf("  PCIe correctable error count			%"PRIu64"\n",
+		le64_to_cpu(log->pcie_correctable_err_count));
+	printf("  Incomplete shutdowns				%"PRIu32"\n",
+		le32_to_cpu(log->incomplete_shoutdowns));
+	printf("  Percent free blocks				%d\n",
+		log->percent_free_blocks);
+	printf("  Capacitor health				%"PRIu16"\n",
+		le16_to_cpu(log->capacitor_health));
+	printf("  Unaligned I/O					%"PRIu64"\n",
+		le64_to_cpu(log->unaligned_io));
+	printf("  Security Version Number			%"PRIu64"\n",
+		le64_to_cpu(log->security_version));
+	printf("  NUSE - Namespace utilization			%"PRIu64"\n",
+		le64_to_cpu(log->total_nuse));
+	printf("  PLP start count				%s\n",
+		uint128_t_to_string(le128_to_cpu(log->plp_start_count)));
+	printf("  Endurance estimate				%s\n",
+		uint128_t_to_string(le128_to_cpu(log->endurance_estimate)));
+	smart_log_ver = le16_to_cpu(log->log_page_version);
+	printf("  Log page version				%"PRIu16"\n", smart_log_ver);
+	printf("  Log page GUID					0x");
+	printf("%016"PRIx64"%016"PRIx64"\n",
+		le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
+		le64_to_cpu(*(uint64_t *)&log->log_page_guid));
+	switch (smart_log_ver) {
+	case 0 ... 1:
+		break;
+	default:
+	case 6:
+		printf("  Form factor					%d\n",
+			log->form_factor);
+		printf("  Die in use badnandblock-Raw		%"PRIu64"\n",
+			int48_to_long(log->die_in_use_bad_nand_block_raw));
+		printf("  Die in use badnandblock-Normal		%d\n",
+			le16_to_cpu(log->die_in_use_bad_nand_block_normalized));
+		fallthrough;
+	case 5:
+		printf("  NVMe Over Pcie Errata Version			%d\n",
+			log->nvme_over_pcie_errate_version);
+		printf("  NVMe Mi Errata Version			%d\n",
+			log->nvme_mi_errata_version);
+		printf("  Total media dies				%"PRIu16"\n",
+			le16_to_cpu(log->total_media_dies));
+		printf("  Total die failure tolerance			%"PRIu16"\n",
+			le16_to_cpu(log->total_die_failure_tolerance));
+		printf("  Media dies offline				%"PRIu16"\n",
+			le16_to_cpu(log->media_dies_offline));
+		printf("  Max temperature recorded			%d\n",
+			log->max_temperature_recorded);
+		printf("  Nand avg erase count				%"PRIu64"\n",
+			le64_to_cpu(log->nand_avg_erase_count));
+		printf("  Command timeouts				%"PRIu32"\n",
+			le32_to_cpu(log->command_timeouts));
+		printf("  Sys area program fail count raw		%"PRIu32"\n",
+			le32_to_cpu(log->sys_area_program_fail_count_raw));
+		printf("  Sys area program fail count noralized		%d\n",
+			le32_to_cpu(log->sys_area_program_fail_count_normalized));
+		printf("  Sys area uncorrectable read count raw		%"PRIu32"\n",
+			le32_to_cpu(log->sys_area_uncorr_read_count_raw));
+		printf("  Sys area uncorrectable read count noralized	%d\n",
+			le32_to_cpu(log->sys_area_uncorr_read_count_normalized));
+		printf("  Sys area erase fail count raw			%"PRIu32"\n",
+			le32_to_cpu(log->sys_area_erase_fail_count_raw));
+		printf("  Sys area erase fail count noralized		%d\n",
+			le32_to_cpu(log->sys_area_erase_fail_count_normalized));
+		printf("  Max peak power capability			%"PRIu16"\n",
+			le16_to_cpu(log->max_peak_power_capability));
+		printf("  Current max avg power				%"PRIu16"\n",
+			le16_to_cpu(log->current_max_avg_power));
+		printf("  Lifetime power consumed			%"PRIu64"\n",
+			int48_to_long(log->lifetime_power_consumed));
+		printf("  Dssd firmware revision			%.*s\n",
+			(int)sizeof(log->dssd_firmware_revision),
+			(char *)log->dssd_firmware_revision);
+		printf("  Dssd firmware build UUID			%s\n",
+			shr_uuid_to_string(log->dssd_firmware_build_uuid));
+		printf("  Dssd firmware build label			%.*s\n",
+			(int)sizeof(log->dssd_firmware_build_label),
+			(char *)log->dssd_firmware_build_label);
+		fallthrough;
+	case 4:
+		printf("  NVMe Command Set Errata Version               %d\n",
+			log->nvme_cmdset_errata_version);
+		printf("  Lowest Permitted Firmware Revision            %"PRIu64"\n",
+			le64_to_cpu(log->lowest_permitted_fw_rev));
+		fallthrough;
+	case 2 ... 3:
+		printf("  Errata Version Field                          %d\n",
+			log->dssd_errata_version);
+		memcpy(&dssd_version, log->dssd_point_version, sizeof(dssd_version));
+		printf("  Point Version Field                           %"PRIu16"\n",
+			le16_to_cpu(dssd_version));
+		memcpy(&dssd_version, log->dssd_minor_version, sizeof(dssd_version));
+		printf("  Minor Version Field                           %"PRIu16"\n",
+			le16_to_cpu(dssd_version));
+		printf("  Major Version Field                           %d\n",
+			log->dssd_major_version);
+		printf("  NVMe Base Errata Version                      %d\n",
+			log->nvme_base_errata_version);
+		printf("  PCIe Link Retraining Count                    %"PRIu64"\n",
+			le64_to_cpu(log->pcie_link_retaining_count));
+		printf("  Power State Change Count                      %"PRIu64"\n",
+			le64_to_cpu(log->power_state_change_count));
+	}
+	printf("\n");
+}
+
+static void stdout_telemetry_log(const struct ocp_telemetry_logs *logs,
+				 struct ocp_telemetry_parse_options *options)
+{
+	print_ocp_telemetry_normal(logs, options);
+}
+
+static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data)
+{
+	char ts_buf[128];
+	int i, j;
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
+
+	printf("-Latency Monitor/C3 Log Page Data-\n");
+	printf("  Controller   :  %s\n",
+	       libnvme_transport_handle_get_name(hdl));
+	printf("  Feature Status                     0x%x\n",
+	       log_data->feature_status);
+	printf("  Active Bucket Timer                %d min\n",
+	       C3_ACTIVE_BUCKET_TIMER_INCREMENT *
+	       le16_to_cpu(log_data->active_bucket_timer));
+	printf("  Active Bucket Timer Threshold      %d min\n",
+	       C3_ACTIVE_BUCKET_TIMER_INCREMENT *
+	       le16_to_cpu(log_data->active_bucket_timer_threshold));
+	printf("  Active Threshold A                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       (log_data->active_threshold_a + 1));
+	printf("  Active Threshold B                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       (log_data->active_threshold_b + 1));
+	printf("  Active Threshold C                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       (log_data->active_threshold_c + 1));
+	printf("  Active Threshold D                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       (log_data->active_threshold_d + 1));
+	printf("  Active Latency Configuration       0x%x\n",
+	       le16_to_cpu(log_data->active_latency_config));
+	printf("  Active Latency Minimum Window      %d ms\n",
+	       C3_MINIMUM_WINDOW_INCREMENT *
+	       log_data->active_latency_min_window);
+	printf("  Active Latency Stamp Units         %d\n",
+	       le16_to_cpu(log_data->active_latency_stamp_units));
+	printf("  Static Latency Stamp Units         %d\n",
+	       le16_to_cpu(log_data->static_latency_stamp_units));
+
+	if (log_page_version >= 0x4) {
+		printf("    Debug Telemetry Log Size         0x");
+		for (i = ARRAY_SIZE(log_data->latency_monitor_debug_log_size) - 1;
+			i > 0 && (log_data->latency_monitor_debug_log_size[i] == 0); i--)
+			;
+		while (i >= 0)
+			printf("%02x", log_data->latency_monitor_debug_log_size[i--]);
+		printf("\n");
+	}
+
+	printf("  Debug Log Trigger Enable           %d\n",
+	       le16_to_cpu(log_data->debug_log_trigger_enable));
+	printf("  Debug Log Measured Latency         %d\n",
+	       le16_to_cpu(log_data->debug_log_measured_latency));
+	printf("  Debug Log Latency Time Stamp       %s\n",
+	       ocp_c3_stamp_str(&log_data->debug_log_latency_stamp, ts_buf,
+				"N/A"));
+	printf("  Debug Log Pointer                  %d\n",
+	       le16_to_cpu(log_data->debug_log_ptr));
+	printf("  Debug Counter Trigger Source       %d\n",
+	       le16_to_cpu(log_data->debug_log_counter_trigger));
+	printf("  Debug Log Stamp Units              %d\n",
+	       log_data->debug_log_stamp_units);
+	printf("  Log Page Version                   %d\n", log_page_version);
+
+	char guid[(GUID_LEN * 2) + 1];
+
+	shr_bin_to_hex(guid, sizeof(guid), log_data->log_page_guid, GUID_LEN,
+		       SHR_HEX_UPPER | SHR_HEX_REVERSE);
+
+	printf("  Log Page GUID                      %s\n", guid);
+	printf("\n");
+
+	printf("%64s     %27s     %27s\n", "Read", "Write", "Deallocate/Trim");
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Active Bucket Counter: Bucket %d    %27u     %27u     %27u\n",
+		       i,
+		       le32_to_cpu(log_data->active_bucket_counter[i][READ]),
+		       le32_to_cpu(log_data->active_bucket_counter[i][WRITE]),
+		       le32_to_cpu(log_data->active_bucket_counter[i][TRIM]));
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Active Latency Time Stamp: Bucket %d    ", i);
+		for (j = 2; j >= 0; j--) {
+			const struct nvme_timestamp *stamp =
+				&log_data->active_latency_timestamp[3 - i][j];
+			const char *ts = ocp_c3_stamp_str(stamp, ts_buf, NULL);
+
+			if (ts)
+				printf("%s     ", ts);
+			else
+				printf("                    N/A         ");
+		}
+		printf("\n");
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Active Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms\n",
+		       i,
+		       le16_to_cpu(log_data->active_measured_latency[3-i][READ-1]),
+		       le16_to_cpu(log_data->active_measured_latency[3-i][WRITE-1]),
+		       le16_to_cpu(log_data->active_measured_latency[3-i][TRIM-1]));
+	}
+
+	printf("\n");
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Static Bucket Counter: Bucket %d    %27u     %27u     %27u\n",
+		       i,
+		       le32_to_cpu(log_data->static_bucket_counter[i][READ]),
+		       le32_to_cpu(log_data->static_bucket_counter[i][WRITE]),
+		       le32_to_cpu(log_data->static_bucket_counter[i][TRIM]));
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Static Latency Time Stamp: Bucket %d    ", i);
+		for (j = 2; j >= 0; j--) {
+			const struct nvme_timestamp *stamp =
+				&log_data->static_latency_timestamp[3 - i][j];
+			const char *ts = ocp_c3_stamp_str(stamp, ts_buf, NULL);
+
+			if (ts)
+				printf("%s     ", ts);
+			else
+				printf("                    N/A         ");
+		}
+		printf("\n");
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Static Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms\n",
+		       i,
+		       le16_to_cpu(log_data->static_measured_latency[3-i][READ-1]),
+		       le16_to_cpu(log_data->static_measured_latency[3-i][WRITE-1]),
+		       le16_to_cpu(log_data->static_measured_latency[3-i][TRIM-1]));
+	}
+}
+
+static void stdout_c5_log(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data)
+{
+	int j;
+
+	printf("Unsupported Requirement-C5 Log Page Data-\n");
+
+	printf("  Number Unsupported Req IDs		: 0x%x\n",
+	       le16_to_cpu(log_data->unsupported_count));
+
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count) &&
+		    j < ARRAY_SIZE(log_data->unsupported_req_list); j++)
+		printf("  Unsupported Requirement List %d	: %.*s\n", j,
+		       (int)sizeof(log_data->unsupported_req_list[j]),
+		       (char *)log_data->unsupported_req_list[j]);
+
+	printf("  Log Page Version			: 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID				: 0x");
+	for (j = GUID_LEN - 1; j >= 0; j--)
+		printf("%02x", log_data->log_page_guid[j]);
+	printf("\n");
+}
+
+static void stdout_c1_log(struct ocp_error_recovery_log_page *log_data)
+{
+	int i;
+
+	printf("  Error Recovery/C1 Log Page Data\n");
+	printf("  Panic Reset Wait Time             : 0x%x\n",
+	       le16_to_cpu(log_data->panic_reset_wait_time));
+	printf("  Panic Reset Action                : 0x%x\n", log_data->panic_reset_action);
+	printf("  Device Recovery Action 1          : 0x%x\n", log_data->device_recover_action_1);
+	printf("  Panic ID                          : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->panic_id));
+	printf("  Device Capabilities               : 0x%x\n",
+	       le32_to_cpu(log_data->device_capabilities));
+	printf("  Vendor Specific Recovery Opcode   : 0x%x\n",
+	       log_data->vendor_specific_recovery_opcode);
+	printf("  Vendor Specific Command CDW12     : 0x%x\n",
+	       le32_to_cpu(log_data->vendor_specific_command_cdw12));
+	printf("  Vendor Specific Command CDW13     : 0x%x\n",
+	       le32_to_cpu(log_data->vendor_specific_command_cdw13));
+	printf("  Vendor Specific Command Timeout   : 0x%x\n",
+	       log_data->vendor_specific_command_timeout);
+	printf("  Device Recovery Action 2          : 0x%x\n",
+	       log_data->device_recover_action_2);
+	printf("  Device Recovery Action 2 Timeout  : 0x%x\n",
+	       log_data->device_recover_action_2_timeout);
+	printf("  Panic Count                       : 0x%x\n", log_data->panic_count);
+	printf("  Previous Panic IDs:");
+	for (i = 0; i < C1_PREV_PANIC_IDS_LENGTH; i++)
+		printf("%s Panic ID N-%d : 0x%"PRIx64"\n", i ? "                     " : "", i + 1,
+		       le64_to_cpu(log_data->prev_panic_id[i]));
+	printf("  Log Page Version                  : 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID                     : 0x");
+	for (i = GUID_LEN - 1; i >= 0; i--)
+		printf("%02x", log_data->log_page_guid[i]);
+	printf("\n");
+}
+
+static void stdout_c4_log(struct ocp_device_capabilities_log_page *log_data)
+{
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
+	int i;
+
+	printf("  Device Capability/C4 Log Page Data\n");
+	printf("  PCI Express Ports						: 0x%x\n",
+	       le16_to_cpu(log_data->pcie_exp_port));
+	printf("  OOB Management Support				: 0x%x\n",
+	       le16_to_cpu(log_data->oob_management_support));
+	printf("  Write Zeroes Command Support			: 0x%x\n",
+	       le16_to_cpu(log_data->wz_cmd_support));
+	printf("  Sanitize Command Support				: 0x%x\n",
+	       le16_to_cpu(log_data->sanitize_cmd_support));
+	printf("  Dataset Management Command Support	: 0x%x\n",
+	       le16_to_cpu(log_data->dsm_cmd_support));
+	printf("  Write Uncorrectable Command Support	: 0x%x\n",
+	       le16_to_cpu(log_data->wu_cmd_support));
+	printf("  Fused Operation Support				: 0x%x\n",
+	       le16_to_cpu(log_data->fused_operation_support));
+	printf("  Minimum Valid DSSD Power State		: 0x%x\n",
+	       le16_to_cpu(log_data->min_valid_dssd_pwr_state));
+	printf("  DSSD Power State Descriptors					: 0x");
+	for (i = 0; i <= 127; i++)
+		printf("%x", log_data->dssd_pwr_state_desc[i]);
+	printf("\n");
+	if (log_page_version >= 0x2) {
+		__u16 fips = le16_to_cpu(log_data->fips_140_validation);
+
+		printf("  FIPS 140 Validation					: 0x%x\n", fips);
+		printf("    FIPS 140 Validation Status			: %s\n",
+		       ocp_c4_fips_140_status(fips));
+	}
+	printf("  Log Page Version						: 0x%x\n",
+	       log_page_version);
+	printf("  Log page GUID							: 0x");
+	for (i = GUID_LEN - 1; i >= 0; i--)
+		printf("%02x", log_data->log_page_guid[i]);
+	printf("\n");
+}
+
+static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
+			  size_t total_log_page_size)
+{
+	__u64 sits = le64_to_cpu(log_data->sits);
+	__u64 sitsz = le64_to_cpu(log_data->sitsz);
+	__u64 ests = le64_to_cpu(log_data->ests);
+	__u64 estsz = le64_to_cpu(log_data->estsz);
+	__u64 vu_eve_sts = le64_to_cpu(log_data->vu_eve_sts);
+	__u64 vu_eve_st_sz = le64_to_cpu(log_data->vu_eve_st_sz);
+	__u64 ascts = le64_to_cpu(log_data->ascts);
+	__u64 asctsz = le64_to_cpu(log_data->asctsz);
+	struct statistics_id_str_table_entry stat_entry;
+	struct event_id_str_table_entry eve_entry;
+	struct vu_event_id_str_table_entry vu_eve_entry;
+	__u64 entries = 0, i;
+	__u8 *table;
+	int j;
+
+	printf("  Log Page Version                                : 0x%x\n",
+	       log_data->log_page_version);
+
+	printf("  Reserved                                        : ");
+	for (j = 0; j < 15; j++)
+		printf("%d", log_data->reserved1[j]);
+	printf("\n");
+
+	printf("  Log page GUID                                   : 0x");
+	for (j = GUID_LEN - 1; j >= 0; j--)
+		printf("%02x", log_data->log_page_guid[j]);
+	printf("\n");
+
+	printf("  Telemetry String Log Size                       : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->sls));
+
+	printf("  Reserved                                        : ");
+	for (j = 0; j < 24; j++)
+		printf("%d", log_data->reserved2[j]);
+	printf("\n");
+
+	printf("  Statistics Identifier String Table Start        : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->sits));
+	printf("  Statistics Identifier String Table Size         : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->sitsz));
+	printf("  Event String Table Start                        : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->ests));
+	printf("  Event String Table Size                         : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->estsz));
+	printf("  VU Event String Table Start                     : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->vu_eve_sts));
+	printf("  VU Event String Table Size                      : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->vu_eve_st_sz));
+	printf("  ASCII Table Start                               : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->ascts));
+	printf("  ASCII Table Size                                : 0x%"PRIx64"\n",
+	       le64_to_cpu(log_data->asctsz));
+
+	printf("  FIFO 1 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo1[j],
+		       log_data->fifo1[j]);
+
+	printf("  FIFO 2 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo2[j],
+		       log_data->fifo2[j]);
+
+	printf("  FIFO 3 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo3[j],
+		       log_data->fifo3[j]);
+
+	printf("  FIFO 4 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo4[j], log_data->fifo4[j]);
+
+	printf("  FIFO 5 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo5[j], log_data->fifo5[j]);
+
+	printf("  FIFO 6 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo6[j], log_data->fifo6[j]);
+
+	printf("  FIFO 7 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo7[j], log_data->fifo7[j]);
+
+	printf("  FIFO 8 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo8[j], log_data->fifo8[j]);
+
+	printf("  FIFO 9 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo9[j], log_data->fifo9[j]);
+
+	printf("  FIFO 10 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo10[j], log_data->fifo10[j]);
+
+	printf("  FIFO 11 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo11[j], log_data->fifo11[j]);
+
+	printf("  FIFO 12 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo12[j], log_data->fifo12[j]);
+
+	printf("  FIFO 13 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo13[j], log_data->fifo13[j]);
+
+	printf("  FIFO 14 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo14[j], log_data->fifo14[j]);
+
+	printf("  FIFO 15 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo15[j], log_data->fifo15[j]);
+
+	printf("  FIFO 16 ASCII String\n");
+	printf("   index    value    ascii_val\n");
+	for (j = 0; j < 16; j++)
+		printf("  %d       %d        %c\n", j, log_data->fifo16[j], log_data->fifo16[j]);
+
+	printf("  Reserved                                        : ");
+	for (j = 0; j < 48; j++)
+		printf("%d", log_data->reserved3[j]);
+	printf("\n");
+
+	table = ocp_string_table(log_data_buf, total_log_page_size, sits, sitsz,
+				 sizeof(stat_entry), &entries);
+	if (sitsz && !table) {
+		nvme_show_error("Statistics Identifier String Table exceeds the log page");
+	} else if (sitsz) {
+		printf("  Statistics Identifier String Table\n");
+		for (i = 0; i < entries; i++) {
+			memcpy(&stat_entry, table + i * sizeof(stat_entry), sizeof(stat_entry));
+			printf("   Vendor Specific Statistic Identifier : 0x%x\n",
+			       le16_to_cpu(stat_entry.vs_si));
+			printf("   Reserved                             : 0x%x\n",
+			       stat_entry.reserved1);
+			printf("   ASCII ID Length                      : 0x%x\n",
+			       stat_entry.ascii_id_len);
+			printf("   ASCII ID offset                      : 0x%"PRIx64"\n",
+			       le64_to_cpu(stat_entry.ascii_id_ofst));
+			printf("   Reserved                             : 0x%x\n",
+			       le32_to_cpu(stat_entry.reserved2));
+		}
+	}
+
+	table = ocp_string_table(log_data_buf, total_log_page_size, ests, estsz,
+				 sizeof(eve_entry), &entries);
+	if (estsz && !table) {
+		nvme_show_error("Event String Table exceeds the log page");
+	} else if (estsz) {
+		printf("  Event Identifier String Table Entry\n");
+		for (i = 0; i < entries; i++) {
+			memcpy(&eve_entry, table + i * sizeof(eve_entry), sizeof(eve_entry));
+			printf("   Debug Event Class        : 0x%x\n",
+			       eve_entry.deb_eve_class);
+			printf("   Event Identifier         : 0x%x\n",
+			       le16_to_cpu(eve_entry.ei));
+			printf("   ASCII ID Length          : 0x%x\n",
+			       eve_entry.ascii_id_len);
+			printf("   ASCII ID offset          : 0x%"PRIx64"\n",
+			       le64_to_cpu(eve_entry.ascii_id_ofst));
+			printf("   Reserved                 : 0x%x\n",
+			       le32_to_cpu(eve_entry.reserved2));
+		}
+	}
+
+	table = ocp_string_table(log_data_buf, total_log_page_size, vu_eve_sts, vu_eve_st_sz,
+				 sizeof(vu_eve_entry), &entries);
+	if (vu_eve_st_sz && !table) {
+		nvme_show_error("VU Event String Table exceeds the log page");
+	} else if (vu_eve_st_sz) {
+		printf("  VU Event Identifier String Table Entry\n");
+		for (i = 0; i < entries; i++) {
+			memcpy(&vu_eve_entry, table + i * sizeof(vu_eve_entry),
+			       sizeof(vu_eve_entry));
+			printf("   Debug Event Class        : 0x%x\n",
+			       vu_eve_entry.deb_eve_class);
+			printf("   VU Event Identifier      : 0x%x\n",
+			       le16_to_cpu(vu_eve_entry.vu_ei));
+			printf("   ASCII ID Length          : 0x%x\n",
+			       vu_eve_entry.ascii_id_len);
+			printf("   ASCII ID offset          : 0x%"PRIx64"\n",
+			       le64_to_cpu(vu_eve_entry.ascii_id_ofst));
+			printf("   Reserved                 : 0x%x\n",
+			       le32_to_cpu(vu_eve_entry.reserved));
+		}
+	}
+
+	if (asctsz && !ocp_c9_table_fits(ascts, asctsz, total_log_page_size)) {
+		nvme_show_error("ASCII Table exceeds the log page");
+	} else if (asctsz) {
+		printf("  ASCII Table\n");
+		printf("   Byte    Data_Byte    ASCII_Character\n");
+		for (i = 0; i < asctsz * 4; i++)
+			printf("    %"PRIu64"        %d             %c\n",
+			       (uint64_t)(ascts * 4 + i),
+			       log_data_buf[ascts * 4 + i],
+			       (char)log_data_buf[ascts * 4 + i]);
+	}
+}
+
+static void stdout_c7_log_v3(const void *page)
+{
+	const struct tcg_configuration_log_v3 *log_data = page;
+	int j;
+
+	printf("TCG Configuration C7 Log Page Data-\n");
+
+	printf("  State                                                    : 0x%x\n",
+	       log_data->state);
+	printf("  Locking SP Activation Count                              : 0x%x\n",
+	       le16_to_cpu(log_data->locking_sp_act_count));
+	printf("  Tper Revert Count                                        : 0x%x\n",
+	       le16_to_cpu(log_data->type_rev_count));
+	printf("  Locking SP Revert Count                                  : 0x%x\n",
+	       le16_to_cpu(log_data->locking_sp_rev_count));
+	printf("  Number of Locking Objects                                : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_locking_obj));
+	printf("  Number of Single User Mode Locking Objects               : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_single_um_locking_obj));
+	printf("  Number of Range Provisioned Locking Objects              : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_range_prov_locking_obj));
+	printf("  Number of Namespace Provisioned Locking Objects          : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_ns_prov_locking_obj));
+	printf("  Number of Read Locked Locking Objects                    : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_read_lock_locking_obj));
+	printf("  Number of Write Locked Locking Objects                   : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_write_lock_locking_obj));
+	printf("  Number of Read Unlocked Locking Objects                  : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_read_unlock_locking_obj));
+	printf("  Number of Write Unlocked Locking Objects                 : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_write_unlock_locking_obj));
+	printf("  SID Authentication Try Count                             : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_count));
+	printf("  SID Authentication Try Limit                             : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_limit));
+	printf("  Programmatic TCG Reset Count                             : 0x%x\n",
+	       le32_to_cpu(log_data->pro_tcg_rc));
+	printf("  Programmatic Reset Lock Count                            : 0x%x\n",
+	       le32_to_cpu(log_data->pro_rlc));
+	printf("  TCG Error Count                                          : 0x%x\n",
+	       le32_to_cpu(log_data->tcg_ec));
+	printf("  Number of Namespace Provisioned Locking Objects Extended : 0x%x\n",
+	       le16_to_cpu(log_data->no_of_ns_prov_locking_obj_ext));
+	printf("  Log Page Version                                         : 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID                                            : 0x");
+	for (j = GUID_LEN - 1; j >= 0; j--)
+		printf("%02x", log_data->log_page_guid[j]);
+	printf("\n");
+}
+
+static void stdout_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
+{
+	int j;
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
+
+	if (log_page_version >= 3) {
+		stdout_c7_log_v3(log_data);
+		return;
+	}
+
+	printf("TCG Configuration C7 Log Page Data-\n");
+
+	printf("  State                                                    : 0x%x\n",
+		log_data->state);
+	printf("  Reserved1                                              : ");
+	for (j = 0; j < 3; j++)
+		printf("%d", log_data->rsvd1[j]);
+	printf("\n");
+	printf("  Locking SP Activation Count                              : 0x%x\n",
+	       log_data->locking_sp_act_count);
+	printf("  Tper Revert Count                                        : 0x%x\n",
+	       log_data->type_rev_count);
+	printf("  Locking SP Revert Count                                  : 0x%x\n",
+	       log_data->locking_sp_rev_count);
+	printf("  Number of Locking Objects                                : 0x%x\n",
+	       log_data->no_of_locking_obj);
+	printf("  Number of Single User Mode Locking Objects               : 0x%x\n",
+	       log_data->no_of_single_um_locking_obj);
+	printf("  Number of Range Provisioned Locking Objects              : 0x%x\n",
+	       log_data->no_of_range_prov_locking_obj);
+	printf("  Number of Namespace Provisioned Locking Objects          : 0x%x\n",
+	       log_data->no_of_ns_prov_locking_obj);
+	printf("  Number of Read Locked Locking Objects                    : 0x%x\n",
+	       log_data->no_of_read_lock_locking_obj);
+	printf("  Number of Write Locked Locking Objects                   : 0x%x\n",
+	       log_data->no_of_write_lock_locking_obj);
+	printf("  Number of Read Unlocked Locking Objects                  : 0x%x\n",
+	       log_data->no_of_read_unlock_locking_obj);
+	printf("  Number of Write Unlocked Locking Objects                 : 0x%x\n",
+	       log_data->no_of_write_unlock_locking_obj);
+	printf("  Reserved2                                              : %x\n",
+		log_data->rsvd15);
+	printf("  SID Authentication Try Count                             : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_count));
+	printf("  SID Authentication Try Limit                             : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_limit));
+	printf("  Programmatic TCG Reset Count                             : 0x%x\n",
+	       le32_to_cpu(log_data->pro_tcg_rc));
+	printf("  Programmatic Reset Lock Count                            : 0x%x\n",
+	       le32_to_cpu(log_data->pro_rlc));
+	printf("  TCG Error Count                                          : 0x%x\n",
+	       le32_to_cpu(log_data->tcg_ec));
+
+	if (log_page_version == 1) {
+		printf("  Reserved3                                                : %d%d",
+			*(__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
+			*((__u8 *)&log_data->no_of_ns_prov_locking_obj_ext + 1));
+	} else {
+		printf("  Number of Namespace Provisioned Locking Objects Extended : 0x%x\n",
+			le16_to_cpu(log_data->no_of_ns_prov_locking_obj_ext));
+		printf("  Reserved3                                                : ");
+	}
+	for (j = 0; j < 456; j++)
+		printf("%d", log_data->rsvd38[j]);
+	printf("\n");
+
+	printf("  Log Page Version                                         : 0x%x\n",
+	       log_page_version);
+	printf("  Log page GUID                                            : 0x");
+	for (j = GUID_LEN - 1; j >= 0; j--)
+		printf("%02x", log_data->log_page_guid[j]);
+	printf("\n");
+}
+
+static void pel_tcg_activity_event(void *pevent_log_info, __u32 offset)
+{
+	__u16 vsedl;
+	struct nvme_vs_event_desc *vs_desc;
+	struct tcg_activity_event_data *tcg_event_data;
+
+	printf("TCG Activity Event Entry:\n");
+	vs_desc = pevent_log_info + offset;
+	tcg_event_data = (struct tcg_activity_event_data *)(vs_desc + 1);
+	vsedl = le16_to_cpu(vs_desc->vsedl);
+
+	printf("Vendor Specific Event Descriptor 0:\n");
+	printf("Vendor Specific Event Code: %u\n", le16_to_cpu(vs_desc->vsec));
+	printf("Vendor Specific Event Data Type: %u\n", vs_desc->vsedt);
+	printf("Vendor Specific Event UIndex: %u\n", vs_desc->uidx);
+	printf("Vendor Specific Event Data Length: %u\n", vsedl);
+	printf("TCG Activity Event Data:\n");
+	printf("TCG Command Count: %u\n",
+	       le32_to_cpu(tcg_event_data->tcg_command_count));
+	printf("Invoking ID: %" PRIu64 "\n",
+	       le64_to_cpu(tcg_event_data->invoking_id));
+	printf("Method ID: %" PRIu64 "\n",
+	       le64_to_cpu(tcg_event_data->method_id));
+	printf("Com ID: %u\n", le16_to_cpu(tcg_event_data->com_id));
+	printf("Protocol ID: %u\n", tcg_event_data->protocol_id);
+	printf("Status: %u\n", tcg_event_data->status);
+	printf("Process Time: %u\n",
+	       le16_to_cpu(tcg_event_data->process_time));
+	printf("TCG Activity Specific Context:\n");
+	d((void *)tcg_event_data->tcg_activity_specific_context, 10, 16, 1);
+}
+
+static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
+					__u32 size, const char *devname)
+{
+	struct nvme_persistent_event_log *pevent_log_head;
+	__u32 offset = sizeof(*pevent_log_head);
+	__u16 vsil, el;
+	__u32 data_len;
+	struct nvme_persistent_event_entry *pevent_entry_head;
+	int human = stdout_print_ops.flags & VERBOSE;
+
+	printf("Persistent Event Log for device: %s\n", devname);
+	printf("Action for Persistent Event Log: %u\n", action);
+
+	if (size < offset) {
+		printf("No log data can be shown with this log len at least " \
+		       "512 bytes is required or can be 0 to read the complete " \
+		       "log page after context established\n");
+		return;
+	}
+
+	pevent_log_head = pevent_log_info;
+
+	nvme_show_pel_header(pevent_log_head, human);
+
+	printf("\n");
+	printf("\nPersistent Event Entries:\n");
+	for (int i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
+		pevent_entry_head = nvme_pel_event(pevent_log_info, size,
+						   offset);
+		if (!pevent_entry_head)
+			break;
+
+		vsil = le16_to_cpu(pevent_entry_head->vsil);
+		el = le16_to_cpu(pevent_entry_head->el);
+
+		nvme_show_pel_event_header(i, pevent_entry_head, human);
+
+		offset += pevent_entry_head->ehl + vsil + 3;
+
+		__cleanup_free void *data =
+			nvme_pel_event_data(pevent_log_info, offset,
+					    el - vsil, &data_len);
+
+		if (!data)
+			break;
+
+		switch (pevent_entry_head->etype) {
+		case NVME_PEL_SMART_HEALTH_EVENT:
+			nvme_show_pel_smart_health_event(data, 0, devname);
+			break;
+		case NVME_PEL_FW_COMMIT_EVENT:
+			nvme_show_pel_fw_commit_event(data, 0);
+			break;
+		case NVME_PEL_TIMESTAMP_EVENT:
+			nvme_show_pel_timestamp_event(data, 0);
+			break;
+		case NVME_PEL_POWER_ON_RESET_EVENT:
+			nvme_show_pel_power_on_reset_event(data, 0,
+							   pevent_entry_head);
+			break;
+		case NVME_PEL_NSS_HW_ERROR_EVENT:
+			nvme_show_pel_nss_hw_error_event(data, 0);
+			break;
+		case NVME_PEL_CHANGE_NS_EVENT:
+			nvme_show_pel_change_ns_event(data, 0);
+			break;
+		case NVME_PEL_FORMAT_START_EVENT:
+			nvme_show_pel_format_start_event(data, 0);
+			break;
+		case NVME_PEL_FORMAT_COMPLETION_EVENT:
+			nvme_show_pel_format_completion_event(data, 0);
+			break;
+		case NVME_PEL_SANITIZE_START_EVENT:
+			nvme_show_pel_sanitize_start_event(data, 0);
+			break;
+		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
+			nvme_show_pel_sanitize_completion_event(data, 0);
+			break;
+		case NVME_PEL_SET_FEATURE_EVENT:
+			nvme_show_pel_set_feature_event(data, el - vsil);
+			break;
+		case NVME_PEL_TELEMETRY_CRT:
+			if (el - vsil >= 512)
+				d(data, 512, 16, 1);
+			break;
+		case NVME_PEL_THERMAL_EXCURSION_EVENT:
+			nvme_show_pel_thermal_excursion_event(data, 0);
+			break;
+		case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
+			printf("Sanitize Media Verification Event\n");
+			break;
+		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
+			if (ocp_is_tcg_activity_event(pevent_entry_head, el,
+						      vsil))
+				pel_tcg_activity_event(data, 0);
+			else
+				nvme_show_pel_vendor_specific_event(data, 0,
+								    el - vsil);
+			break;
+		default:
+			printf("Reserved Event\n\n");
+			break;
+		}
+		offset += el - vsil;
+		printf("\n");
+	}
+}
+
+static struct ocp_print_ops stdout_print_ops = {
+	.hwcomp_log = stdout_hwcomp_log,
+	.fw_act_history = stdout_fw_activation_history,
+	.persistent_event_log = stdout_persistent_event_log,
+	.smart_extended_log = stdout_smart_extended_log,
+	.telemetry_log = stdout_telemetry_log,
+	.c3_log = stdout_c3_log,
+	.c5_log = stdout_c5_log,
+	.c1_log = stdout_c1_log,
+	.c4_log = stdout_c4_log,
+	.c9_log = stdout_c9_log,
+	.c7_log = stdout_c7_log,
+};
+
+struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)
+{
+	stdout_print_ops.flags = flags;
+	return &stdout_print_ops;
+}

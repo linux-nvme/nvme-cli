@@ -361,7 +361,7 @@ if python3.found()
     endif
 
     if 'ocp' in selected_plugins
-        subdir('ocp')
+        subdir('cmds_ocp')
     endif
 
     if 'netapp' in selected_plugins
