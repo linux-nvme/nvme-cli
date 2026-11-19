@@ -128,10 +128,11 @@ if want_plugin_modules
     configuration: {'NVME_PLUGIN_ABI': '"' + conf.get_unquoted('NVME_PLUGIN_ABI') + '"'},
   )
 
-  # The plugins of this build, a missing module is "not installed"
+  # The plugins of this build and their modules, which are named after
+  # the directory of the plugin. A missing module is "not installed".
   plugin_names = []
   foreach def : plugin_defs
-    plugin_names += '"@0@"'.format(def['name'])
+    plugin_names += '{ "@0@", "@1@" }'.format(def['name'], def['subdir'])
   endforeach
   configure_file(
     output: 'plugin-names.h',
@@ -167,7 +168,7 @@ foreach def : ordered_plugin_defs
     'include_directories': include_directories('../src'),
     'c_args': c_args + [
       '-DNVME_PLUGIN_MODULE',
-      '-DNVME_PLUGIN_ID=' + def['name'].replace('-', '_'),
+      '-DNVME_PLUGIN_ID=' + def['subdir'].replace('-', '_'),
     ],
     'dependencies': plugin_deps,
     'link_with': link_with,
@@ -178,9 +179,9 @@ foreach def : ordered_plugin_defs
     'install_dir': plugin_module_dir,
   }
   if def['dir'] in plugin_providers
-    target = shared_library(def['name'], srcs, kwargs: module_kwargs)
+    target = shared_library(def['subdir'], srcs, kwargs: module_kwargs)
   else
-    target = shared_module(def['name'], srcs, kwargs: module_kwargs)
+    target = shared_module(def['subdir'], srcs, kwargs: module_kwargs)
   endif
   plugin_targets += {def['dir']: target}
   plugin_module_targets += target
