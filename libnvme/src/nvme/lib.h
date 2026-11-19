@@ -38,7 +38,12 @@ struct libnvme_global_ctx *libnvme_create_global_ctx(void);
  * libnvme_free_global_ctx() - Free global context object
  * @ctx:	&struct libnvme_global_ctx object
  *
- * Free an &struct libnvme_global_ctx object and all attached objects
+ * Detaches and releases the tree's reference on every host in @ctx,
+ * then releases the caller's own reference on @ctx. A host that is
+ * still referenced elsewhere survives this call (see
+ * libnvme_host_ref()), and keeps @ctx's memory valid until that
+ * host's own last reference is released -- so @ctx is not necessarily
+ * freed by the time this returns.
  */
 void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx);
 

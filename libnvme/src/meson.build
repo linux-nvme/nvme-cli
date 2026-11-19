@@ -178,6 +178,7 @@ deps = [
     liburing_dep,
     openssl_dep,
     shared_dep,
+    threads_dep,
 ]
 if host_system == 'windows'
     deps += [

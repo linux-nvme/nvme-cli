@@ -71,7 +71,8 @@ struct libnvme_host *libnvme_next_host(struct libnvme_global_ctx *ctx,
  * libnvme_host_get_global_ctx() - Returns libnvme_global_ctx object
  * @h:	&struct libnvme_host object
  *
- * Return: &struct libnvme_global_ctx object from @h
+ * Return: &struct libnvme_global_ctx object from @h, or NULL if @h has
+ * been detached (see libnvme_free_host()).
  */
 struct libnvme_global_ctx *libnvme_host_get_global_ctx(struct libnvme_host *h);
 
@@ -892,10 +893,51 @@ int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 void libnvme_host_release_fds(struct libnvme_host *h);
 
 /**
- * libnvme_free_host() - Free struct libnvme_host object
+ * libnvme_free_host() - Detach and release the tree's reference
  * @h:	struct libnvme_host object
+ *
+ * Unlinks @h from its ctx and drops the tree's reference. If no
+ * other reference is outstanding, @h is freed. Otherwise @h survives,
+ * detached (libnvme_host_get_global_ctx() then returns NULL), until
+ * its last reference is released.
  */
 void libnvme_free_host(struct libnvme_host *h);
+
+/**
+ * libnvme_host_ref_at() - libnvme_host_ref() backing function
+ * @h:		struct libnvme_host object
+ * @file:	Caller file
+ * @line:	Caller line
+ */
+void libnvme_host_ref_at(struct libnvme_host *h, const char *file, int line);
+
+/**
+ * libnvme_host_unref_at() - libnvme_host_unref() backing function
+ * @h:		struct libnvme_host object
+ * @file:	Caller file
+ * @line:	Caller line
+ */
+void libnvme_host_unref_at(struct libnvme_host *h, const char *file, int line);
+
+/**
+ * libnvme_host_ref() - Take a reference on a host
+ * @h:	struct libnvme_host object
+ *
+ * Pair with libnvme_host_unref(). LIBNVME_REF_DEBUG logs each call's
+ * file:line to stderr, independent of libnvme_set_logging_level().
+ */
+#define libnvme_host_ref(h) libnvme_host_ref_at(h, __FILE__, __LINE__)
+
+/**
+ * libnvme_host_unref() - Release a reference on a host
+ * @h:	struct libnvme_host object
+ *
+ * Frees @h once the count reaches zero. Must match every
+ * libnvme_host_ref(). libnvme_get_host() does not itself take a
+ * reference: the pointer it returns is borrowed from the tree's own
+ * reference, valid for as long as @h stays in the tree.
+ */
+#define libnvme_host_unref(h) libnvme_host_unref_at(h, __FILE__, __LINE__)
 
 /**
  * libnvme_refresh_topology() - Refresh libnvme_root_t object contents

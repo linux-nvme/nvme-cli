@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -193,7 +194,7 @@ __shr_public struct libnvme_host *libnvme_next_host(
 __shr_public struct libnvme_global_ctx *libnvme_host_get_global_ctx(
 		struct libnvme_host *h)
 {
-	return h->ctx;
+	return h->attached ? h->ctx : NULL;
 }
 
 __shr_public struct libnvme_subsystem *libnvme_first_subsystem(struct libnvme_host *h)
@@ -211,8 +212,10 @@ __shr_public int libnvme_refresh_topology(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
 
-	libnvme_for_each_host_safe(ctx, h, _h)
-		__libnvme_free_host(h);
+	libnvme_for_each_host_safe(ctx, h, _h) {
+		__libnvme_detach_host(h);
+		libnvme_host_unref(h);
+	}
 	return libnvme_scan_topology(ctx, NULL, NULL);
 }
 
@@ -342,6 +345,9 @@ int libnvme_create_subsystem(struct libnvme_host *h,
 {
 	struct libnvme_subsystem *s;
 
+	if (!h->attached)
+		return -ENODEV;
+
 	s = calloc(1, sizeof(*s));
 	if (!s)
 		return -ENOMEM;
@@ -414,6 +420,7 @@ found:
 void __libnvme_free_host(struct libnvme_host *h)
 {
 	struct libnvme_subsystem *s, *_s;
+	struct libnvme_global_ctx *ctx = h->ctx;
 
 	list_del_init(&h->entry);
 	libnvme_for_each_subsystem_safe(h, s, _s)
@@ -423,6 +430,64 @@ void __libnvme_free_host(struct libnvme_host *h)
 	free(h->kxchap_host_key);
 	libnvme_host_set_hostsymname(h, NULL);
 	free(h);
+	__libnvme_global_ctx_unref(ctx);
+}
+
+/* Unlink @h from its ctx. After this, @h is still valid memory for as
+ * long as a reference remains -- it holds its own reference on ctx
+ * (see libnvme_create_host()), so ctx can't be freed out from under
+ * it -- but @h is no longer reachable from the ctx, and @ctx is no
+ * longer reachable from @h: use libnvme_host_get_global_ctx() rather
+ * than reading h->ctx directly, since it returns NULL once detached.
+ */
+void __libnvme_detach_host(struct libnvme_host *h)
+{
+	list_del_init(&h->entry);
+	h->attached = false;
+}
+
+static pthread_once_t ref_debug_once = PTHREAD_ONCE_INIT;
+static bool ref_debug_enabled;
+
+/* getenv() is read once, here, instead of on every ref/unref: it's not
+ * safe to call concurrently with setenv(), and Python assigning to
+ * os.environ does exactly that.
+ */
+static void __libnvme_ref_debug_init(void)
+{
+	const char *value = getenv("LIBNVME_REF_DEBUG");
+
+	ref_debug_enabled = value && *value && strcmp(value, "0");
+}
+
+static void __libnvme_ref_debug_log(const char *obj, const char *action,
+		void *ptr, int refcount, const char *file, int line)
+{
+	pthread_once(&ref_debug_once, __libnvme_ref_debug_init);
+	if (!ref_debug_enabled)
+		return;
+
+	fprintf(stderr, "%s:%d %s %s=%p count=%d\n",
+		file, line, action, obj, ptr, refcount);
+}
+
+__shr_public void libnvme_host_ref_at(struct libnvme_host *h,
+		const char *file, int line)
+{
+	int n = atomic_fetch_add(&h->refcount, 1) + 1;
+
+	__libnvme_ref_debug_log("host", "ref", h, n, file, line);
+}
+
+__shr_public void libnvme_host_unref_at(struct libnvme_host *h,
+		const char *file, int line)
+{
+	int n = atomic_fetch_sub(&h->refcount, 1) - 1;
+
+	__libnvme_ref_debug_log("host", "unref", h, n, file, line);
+	if (n > 0)
+		return;
+	__libnvme_free_host(h);
 }
 
 __shr_public void libnvme_host_release_fds(struct libnvme_host *h)
@@ -436,10 +501,17 @@ __shr_public void libnvme_host_release_fds(struct libnvme_host *h)
 /* Stub for SWIG */
 __shr_public void libnvme_free_host(struct libnvme_host *h)
 {
-	if (!h)
+	/* h->attached is only ever false once the tree's reference is
+	 * already gone (see __libnvme_detach_host()). Without this check,
+	 * calling this twice on the same host unrefs it an extra time --
+	 * stealing a decrement that belongs to whoever still holds a real
+	 * reference, and freeing the host out from under them.
+	 */
+	if (!h || !h->attached)
 		return;
 
-	__libnvme_free_host(h);
+	__libnvme_detach_host(h);
+	libnvme_host_unref(h);
 }
 
 int libnvme_create_host(struct libnvme_global_ctx *ctx,
@@ -472,10 +544,13 @@ int libnvme_create_host(struct libnvme_global_ctx *ctx,
 
 	h->hostnqn = hnqn;
 	h->hostid = hid;
+	h->refcount = 1;
 
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->ctx = ctx;
+	h->attached = true;
+	__libnvme_global_ctx_ref(ctx);
 
 	list_add_tail(&ctx->hosts, &h->entry);
 
