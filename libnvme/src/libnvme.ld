@@ -57,7 +57,9 @@ LIBNVME_3 {
 		libnvme_get_uuid_list;
 		libnvme_get_version;
 		libnvme_host_get_global_ctx;
+		libnvme_host_ref_at;
 		libnvme_host_release_fds;
+		libnvme_host_unref_at;
 		libnvme_init_ctrl;
 		libnvme_mi_status_to_string;
 		libnvme_namespace_first_path;
@@ -140,6 +142,8 @@ LIBNVME_3 {
 		libnvme_subsystem_next_ctrl;
 		libnvme_subsystem_next_ns;
 		libnvme_subsystem_release_fds;
+		libnvme_topology_lock;
+		libnvme_topology_unlock;
 		libnvme_transport_handle_get_fd;
 		libnvme_transport_handle_get_mi_ep;
 		libnvme_transport_handle_get_name;

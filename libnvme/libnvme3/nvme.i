@@ -1141,6 +1141,13 @@ PyObject *exclusion_match(struct libnvme_global_ctx *ctx,
 %}
 
 %pythoncode %{
+import os
+import sys
+
+# Matches tree.c's getenv() check. Read once so hosts() and Host()
+# only call sys._getframe() when it's actually on.
+_REF_DEBUG = os.environ.get('LIBNVME_REF_DEBUG', '') not in ('', '0')
+
 from libnvme3._exceptions import (
 	NvmeError,
 	ConnectError,
@@ -1518,6 +1525,8 @@ const char *_git_version(void)
 
 %rename(_libnvme_first_host)        libnvme_first_host;
 %rename(_libnvme_next_host)         libnvme_next_host;
+%rename(_libnvme_host_ref_at)       libnvme_host_ref_at;
+%rename(_libnvme_host_unref_at)     libnvme_host_unref_at;
 %rename(_libnvme_first_subsystem)   libnvme_first_subsystem;
 %rename(_libnvme_next_subsystem)    libnvme_next_subsystem;
 %rename(_libnvme_subsystem_first_ctrl) libnvme_subsystem_first_ctrl;
@@ -1528,6 +1537,8 @@ const char *_git_version(void)
 %rename(_libnvme_ctrl_next_ns)      libnvme_ctrl_next_ns;
 struct libnvme_host *libnvme_first_host(struct libnvme_global_ctx *ctx);
 struct libnvme_host *libnvme_next_host(struct libnvme_global_ctx *ctx, struct libnvme_host *h);
+void libnvme_host_ref_at(struct libnvme_host *h, const char *file, int line);
+void libnvme_host_unref_at(struct libnvme_host *h, const char *file, int line);
 struct libnvme_subsystem *libnvme_first_subsystem(struct libnvme_host *h);
 struct libnvme_subsystem *libnvme_next_subsystem(struct libnvme_host *h, struct libnvme_subsystem *s);
 struct libnvme_ctrl *libnvme_subsystem_first_ctrl(struct libnvme_subsystem *s);
@@ -1601,6 +1612,13 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	    """Yield each Host in this context."""
 	    h = _libnvme_first_host(self)
 	    while h:
+	        if _REF_DEBUG:
+	            _frame = sys._getframe(1)
+	            file, line = _frame.f_code.co_filename, _frame.f_lineno
+	        else:
+	            file, line = None, 0
+	        _libnvme_host_ref_at(h, file, line)
+	        h.thisown = True
 	        yield h
 	        h = _libnvme_next_host(self, h)
 	%}
@@ -1654,6 +1672,12 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 				   const char *hostid,
 				   const char *hostkey,
 				   const char *hostsymname) {
+	if _REF_DEBUG:
+	    _frame = sys._getframe(1)
+	    file, line = _frame.f_code.co_filename, _frame.f_lineno
+	else:
+	    file, line = None, 0
+	_libnvme_host_ref_at(self, file, line)
 	self.__parent = ctx  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend libnvme_host {
 	%feature("autodoc", "__init__(self, ctx, hostnqn=None, hostid=None, hostkey=None, hostsymname=None)\n"
@@ -1693,7 +1717,7 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		return h;
 	}
 	~libnvme_host() {
-		/* tree-owned, do not free */
+		libnvme_host_unref_at($self, "<gc>", 0);
 	}
 	struct libnvme_host* __enter__() {
 		return $self;

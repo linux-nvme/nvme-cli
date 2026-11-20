@@ -8,8 +8,71 @@ They do not require real NVMe hardware to run.
 import errno
 import gc
 import os
+import subprocess
+import sys
+import tempfile
 import unittest
 from libnvme3 import nvme
+
+
+# LIBNVME_REF_DEBUG is read once per process (see __libnvme_ref_debug_log()
+# in tree.c): some earlier test in this process has already forced that
+# read with the var unset, so setting os.environ later is too late. Each
+# check below runs as its own script in a fresh child process instead,
+# with the var set in its environment before the interpreter even starts.
+_CHILD_PREAMBLE = '''
+import gc
+import os
+from libnvme3 import nvme
+
+
+def _drain(fd):
+    chunks = []
+    while True:
+        try:
+            chunk = os.read(fd, 65536)
+        except BlockingIOError:
+            break
+        if not chunk:
+            break
+        chunks.append(chunk)
+    return b''.join(chunks).decode(errors='replace')
+
+
+_ctx = nvme.GlobalCtx()
+_hostnqn, _hostid = nvme.host_get_ids(_ctx)
+_ctx.hostnqn = _hostnqn
+_ctx.hostid = _hostid
+# Created before capturing starts, so only the scenario below shows up.
+_host = nvme.Host(_ctx)
+
+_stderr_fd = 2
+_saved_fd = os.dup(_stderr_fd)
+_read_fd, _write_fd = os.pipe()
+os.set_blocking(_read_fd, False)
+os.dup2(_write_fd, _stderr_fd)
+os.close(_write_fd)
+
+'''
+
+
+def _run_ref_debug_child(scenario):
+    """Run scenario (a snippet using _ctx/_host/_drain from the preamble
+    above) as a standalone script, with LIBNVME_REF_DEBUG set, and return
+    its CompletedProcess. The snippet should assert its own expectations
+    and let an AssertionError fail the child.
+    """
+    with tempfile.NamedTemporaryFile(
+            mode='w', suffix='_ref_debug_child.py', delete=False) as f:
+        f.write(_CHILD_PREAMBLE + scenario)
+        path = f.name
+    try:
+        env = dict(os.environ)
+        env['LIBNVME_REF_DEBUG'] = '1'
+        return subprocess.run([sys.executable, path], env=env,
+                               capture_output=True, text=True)
+    finally:
+        os.unlink(path)
 
 
 class TestConstants(unittest.TestCase):
@@ -325,6 +388,69 @@ class TestCtrlErrorHandling(unittest.TestCase):
             })
         self.assertEqual(cm.exception.errno, -errno.EINVAL)
         self.assertEqual(cm.exception.message, os.strerror(errno.EINVAL))
+
+
+class TestHostRefCounting(unittest.TestCase):
+    """Host objects from ctx.hosts() should hold a real libnvme refcount
+    on the underlying C object (issue #3736), not rely on __parent to
+    keep the ctx alive.
+    """
+
+    def _assert_child_passes(self, scenario):
+        result = _run_ref_debug_child(scenario)
+        self.assertEqual(result.returncode, 0,
+                          msg=result.stdout + result.stderr)
+
+    def test_iterator_refs_and_unrefs_the_host(self):
+        self._assert_child_passes('''
+hosts = list(_ctx.hosts())
+assert len(hosts) == 1, hosts
+after_iterate = _drain(_read_fd)
+
+del hosts
+gc.collect()
+after_drop = _drain(_read_fd)
+
+assert 'ref host=' in after_iterate, after_iterate
+assert 'unref host=' in after_drop, after_drop
+''')
+
+    def test_iterator_ref_logs_the_real_caller_location(self):
+        """The debug log should show this file and a real line number,
+        not the placeholder baked into nvme.i.
+        """
+        self._assert_child_passes('''
+list(_ctx.hosts())
+after_iterate = _drain(_read_fd)
+
+assert os.path.basename(__file__) in after_iterate, after_iterate
+assert 'nvme.i' not in after_iterate, after_iterate
+''')
+
+    def test_constructor_ref_logs_the_real_caller_location(self):
+        """Same requirement as above, for the Host() constructor path."""
+        self._assert_child_passes('''
+nvme.Host(_ctx)
+after_ctor = _drain(_read_fd)
+
+assert os.path.basename(__file__) in after_ctor, after_ctor
+assert 'nvme.i' not in after_ctor, after_ctor
+''')
+
+    def test_destructor_unref_logs_gc_marker(self):
+        """Destructor runs from GC, so it should log "<gc>" instead of a
+        caller location.
+        """
+        self._assert_child_passes('''
+host = nvme.Host(_ctx)
+_drain(_read_fd)  # discard the constructor's own ref line
+del host
+gc.collect()
+after_drop = _drain(_read_fd)
+
+assert 'unref host=' in after_drop, after_drop
+assert '<gc>' in after_drop, after_drop
+''')
 
 
 class TestHelperFunctions(unittest.TestCase):
