@@ -10,7 +10,7 @@ responsibly.
 
 Please send an email to:
 
-**Daniel Wagner [wagi@kernel.org](mailto:wagi@kernel.org)**
+**Daniel Wagner [wagi@monom.org](mailto:wagi@monom.org)**
 
 Include as much information as possible to help us understand and reproduce the
 issue, such as:
