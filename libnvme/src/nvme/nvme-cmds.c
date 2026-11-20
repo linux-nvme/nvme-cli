@@ -746,7 +746,14 @@ __shr_public int libnvme_get_feature_length(
 	case NVME_FEAT_FID_WRITE_PROTECT:
 	case NVME_FEAT_FID_POWER_LIMIT:
 	case NVME_FEAT_FID_POWER_MEASUREMENT:
+	case NVME_FEAT_FID_VOLTAGE_THRESHOLD:
 		*len = 0;
+		break;
+	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
+		/* only ACT=Start returns a data buffer */
+		*len = NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(cdw11) ==
+			NVME_VOLTAGE_MEASUREMENT_ACT_START ?
+			sizeof(struct nvme_voltage_measurement_start_data) : 0;
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
