@@ -472,7 +472,7 @@ static void __libnvme_ref_debug_init(void)
 {
 	const char *value = getenv("LIBNVME_REF_DEBUG");
 
-	ref_debug_enabled = value && *value && strcmp(value, "0");
+	ref_debug_enabled = value && *value && !streq(value, "0");
 }
 
 static void __libnvme_ref_debug_log(const char *obj, const char *action,
