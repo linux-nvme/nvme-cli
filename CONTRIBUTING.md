@@ -161,7 +161,9 @@ and add `'foo'` to the choices of the `plugins` option in
 The build gives the plugin its name, `NVME_PLUGIN_NAME`: the name of the
 directory, unless `meson.build` sets `plugin_name = 'other'`. A plugin
 which calls functions of another plugin names it in `plugin_needs`, as
-`plugins/sandisk` does with `plugin_needs = ['wdc']`.
+`plugins/sandisk` does with `plugin_needs = ['wdc']`. A plugin which
+needs a library nvme doesn't link adds its dependency to
+`plugin_extra_deps`.
 
 `NVME_PLUGIN_INIT()` defines the function which registers the plugin. In
 a build with plugin modules (see `Documentation/BUILDING.md`), every

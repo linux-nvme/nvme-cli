@@ -46,8 +46,9 @@
   archive, instead of linking it. nvme no longer depends on libarchive
   and the compression libraries it brings, nor does an initrd that
   carries nvme. Packages can make libarchive a weak dependency; without
-  it, only the archive options fail. nvme declares it in an ELF
-  `.note.dlopen` note. Static builds, FreeBSD and Windows still link it.
+  it, only the archive options fail. The plugins which create archives
+  declare it in an ELF `.note.dlopen` note. Static builds, FreeBSD and
+  Windows still link it.
 
 * nvme loads libkmod at runtime, to load the nvme-fabrics module before
   it connects or discovers, instead of linking it. Packages can make

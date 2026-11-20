@@ -37,7 +37,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-#include <shared/archive-util.h>
+#include <shared/archive/archive-util.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/crypto-util.h>
 #include <shared/fs-util.h>

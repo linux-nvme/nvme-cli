@@ -23,10 +23,10 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
+#include <shared/cleanup-util.h>
+#include <shared/fs-util.h>
 
 #include "archive-util.h"
-#include "cleanup-util.h"
-#include "fs-util.h"
 
 #ifdef CONFIG_LIBARCHIVE_DLOPEN
 /*

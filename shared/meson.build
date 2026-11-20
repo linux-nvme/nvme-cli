@@ -55,12 +55,6 @@ else
     ]
 endif
 
-if libarchive_dep.found()
-    sources += ['archive-util.c']
-else
-    sources += ['archive-util-stub.c']
-endif
-
 if libkmod_dep.found()
     sources += ['kmod-util.c']
 else
@@ -70,14 +64,6 @@ endif
 shared_deps = [ccan_dep]
 if host_system != 'windows'
     shared_deps += [openssl_dep]
-endif
-if libarchive_dlopen
-    shared_deps += [
-        libarchive_dep.partial_dependency(compile_args: true, includes: true),
-        dl_dep,
-    ]
-elif libarchive_dep.found()
-    shared_deps += [libarchive_dep]
 endif
 if libkmod_dlopen
     shared_deps += [
@@ -99,6 +85,10 @@ shared_dep = declare_dependency(
     include_directories: '..',
     link_with: libshared,
 )
+
+if want_nvme
+    subdir('archive')   # declares: archive_util_dep
+endif
 
 if want_tests
     subdir('tests')
