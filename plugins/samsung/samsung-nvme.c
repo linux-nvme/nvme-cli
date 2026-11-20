@@ -19,7 +19,7 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-#include <shared/archive-util.h>
+#include <shared/archive/archive-util.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/io-util.h>

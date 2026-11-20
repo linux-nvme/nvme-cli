@@ -8,3 +8,5 @@ Licensed LGPL-2.1-or-later, matching libnvme, so libnvme can link it too. Everyt
 There is no umbrella header. Include the specific file you need, e.g. `#include <string-util.h>`, not `#include <shared.h>`. From outside this directory, `shared_dep` (declared in `meson.build`) puts this directory on the include path, so no `shared/` prefix is needed either. See each header's own comments for what it provides.
 
 Every public function, type, and macro is prefixed `shr_` (e.g. `shr_ptrarray_append()`, `enum shr_ini_event`) -- C has one flat global symbol namespace, and this closes off collisions with everything else in the tree, including libc itself. A `static` symbol private to one file (e.g. a helper used only inside that file) does not need the prefix, since it already has no external linkage to collide with.
+
+`archive/` is not part of the library: it is a static library of its own, `archive_util_dep`, for the plugins which create log archives with libarchive (`#include <shared/archive/archive-util.h>`). Only those plugins link it, through `plugin_extra_deps`, so that with plugin modules the archive code is in their modules rather than in nvme.
