@@ -10,7 +10,8 @@ selected_plugins = get_option('plugins')
 # command line, when it is not the name of the directory, and plugin_needs
 # to the plugins whose functions it calls. Plugins needed by a selected
 # plugin are selected as well: each round visits the plugins needed by the
-# previous round.
+# previous round. plugin_extra_deps are the dependencies only the plugin
+# links, such as archive_util_dep.
 #
 # A plugin which adds top-level commands ("nvme <command>") lists them in
 # plugin_commands, and their aliases in plugin_command_aliases, a dict
@@ -57,6 +58,7 @@ foreach round : range(16)
     n_sources_before = plugin_sources.length()
     plugin_name = plugin_subdir
     plugin_needs = []
+    plugin_extra_deps = []
     plugin_extension = true
     plugin_commands = []
     plugin_command_aliases = {}
@@ -73,6 +75,7 @@ foreach round : range(16)
         'name': plugin_name,
         'sources': srcs,
         'needs': plugin_needs,
+        'extra_deps': plugin_extra_deps,
         'extension': plugin_extension,
         'commands': plugin_commands,
         'aliases': plugin_command_aliases,
@@ -213,7 +216,7 @@ foreach def : ordered_plugin_defs
       srcs,
       include_directories: include_directories('../src'),
       c_args: c_args,
-      dependencies: plugin_deps,
+      dependencies: plugin_deps + def['extra_deps'],
       install: false,
     )
     continue
@@ -231,7 +234,7 @@ foreach def : ordered_plugin_defs
       '-DNVME_PLUGIN_MODULE',
       '-DNVME_PLUGIN_ID=' + def['subdir'].replace('-', '_'),
     ],
-    'dependencies': plugin_deps,
+    'dependencies': plugin_deps + def['extra_deps'],
     'link_with': link_with,
     'override_options': ['b_lundef=false'],
     'build_rpath': '$ORIGIN',
