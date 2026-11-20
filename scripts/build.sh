@@ -421,7 +421,7 @@ config_meson_static() {
         -Dpython=disabled                       \
         -Dopenssl=disabled                      \
         -Dnvme-discoverd=disabled               \
-        -Dlibarchive=disabled                   \
+        -Dlibarchive=enabled                    \
         -Dtests=false                           \
         -Dexamples=false                        \
         "${BUILDDIR}"
