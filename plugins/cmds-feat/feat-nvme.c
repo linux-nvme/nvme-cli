@@ -1109,6 +1109,8 @@ static int feat_voltage_meas(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
+	__u32 cdw11 = 0;
+	bool start_opts;
 
 	struct voltage_meas_config cfg = { 0 };
 
@@ -1133,14 +1135,22 @@ static int feat_voltage_meas(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	if (argconfig_given(opts, &cfg.act) ||
-	    argconfig_given(opts, &cfg.vssel) || cfg.vmlt ||
-	    argconfig_given(opts, &cfg.svmt) ||
-	    argconfig_given(opts, &cfg.luvt) ||
-	    argconfig_given(opts, &cfg.lovt))
+	start_opts = argconfig_given(opts, &cfg.vssel) || cfg.vmlt ||
+		     argconfig_given(opts, &cfg.svmt) ||
+		     argconfig_given(opts, &cfg.luvt) ||
+		     argconfig_given(opts, &cfg.lovt);
+
+	/* ACT=1 is also valid for Get Features, so only issue Set Features if
+	 * start options are provided or ACT is not 1.
+	 */
+	if (start_opts || (argconfig_given(opts, &cfg.act) &&
+			   cfg.act != NVME_VOLTAGE_MEASUREMENT_ACT_START)) {
 		err = voltage_meas_set(hdl, fid, opts, &cfg);
-	else
-		err = feat_get(hdl, fid, 0, cfg.feat.sel, 0, voltage_meas_feat);
+	} else {
+		cdw11 = NVME_SET(cfg.act, FEAT_VOLTAGE_MEASUREMENT_ACT);
+		err = feat_get(hdl, fid, cdw11, cfg.feat.sel, 0,
+			       voltage_meas_feat);
+	}
 
 	return err;
 }

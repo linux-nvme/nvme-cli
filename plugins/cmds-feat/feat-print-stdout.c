@@ -1039,6 +1039,25 @@ void stdout_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 		field = NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result);
 		stdout_kv_add(t, "Action (ACT)", "%u", field);
 
+		if (buf) {
+			struct nvme_voltage_measurement_start_data *d =
+				(struct nvme_voltage_measurement_start_data *)buf;
+			__u16 lvolta = le16_to_cpu(d->lvolta);
+			__u32 lvolt = le32_to_cpu(d->lvolt);
+
+			stdout_kv_add(t, "Voltage Sensor Selected (VSSEL)", "%u",
+				      NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL(lvolta));
+			stdout_kv_add(t, "Voltage Measurement Log Threshold (VMLT)",
+				      "%u",
+				      !!(lvolta & NVME_VOLTAGE_MEASUREMENT_LVOLTA_VMLT));
+			stdout_kv_add(t, "Stop Voltage Measurement Time (SVMT)",
+				      "%u", le16_to_cpu(d->svmt));
+			stdout_kv_add(t, "Log Overvoltage Threshold (LOVT)", "%u",
+				      NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT(lvolt));
+			stdout_kv_add(t, "Log Undervoltage Threshold (LUVT)", "%u",
+				      NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT(lvolt));
+		}
+
 		stdout_kv_table_finish(t, "feature-show-fields");
 		break;
 	case NVME_FEAT_FID_RATE_LIMITING:

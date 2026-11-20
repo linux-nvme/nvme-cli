@@ -305,6 +305,30 @@ class FeatPluginGetTest(FeaturesTestBase):
                 get, = self.server.admin_cmds(OPC_GET_FEATURES)
                 self.assertEqual((get.fid, get.uuid_index), (fid, 3))
 
+    def test_voltage_measurement_start_data(self):
+        """--act=1 without the options of the start data structure gets
+        it: Get Features with ACT 1 in Command Dword 11 and the 4096 byte
+        data structure, which --verbose decodes."""
+        data = bytearray(PERF_ATTR_SIZE)
+        struct.pack_into('<HHI', data, 0, 2 | 1 << 2, 60, 1100 | 1300 << 16)
+        self.server.features[FID_VOLTAGE_MEASUREMENT] = bytes(data)
+        result = self.assertOk(self.nvme('feat', 'voltage-meas', self.ctrl,
+                                         '--act=1', '--verbose'))
+        self.assertEqual(self.set_features(), [])
+        get, = self.server.admin_cmds(OPC_GET_FEATURES)
+        self.assertEqual((get.fid, get.cdw11, get.data_len),
+                         (FID_VOLTAGE_MEASUREMENT, 1, PERF_ATTR_SIZE))
+        for field, value in (('VSSEL', 2), ('VMLT', 1), ('SVMT', 60),
+                             ('LOVT', 1300), ('LUVT', 1100)):
+            self.assertRegex(result.stdout,
+                             rf'\({field}\)\s*:?\s*{value}\b')
+
+    def test_voltage_measurement_no_data_without_act(self):
+        """Without --act=1 the Get has no data structure"""
+        self.assertOk(self.nvme('feat', 'voltage-meas', self.ctrl))
+        get, = self.server.admin_cmds(OPC_GET_FEATURES)
+        self.assertEqual((get.cdw11, get.data_len), (0, 0))
+
 
 class FeatPluginReadModifyWriteTest(FeaturesTestBase):
     """The feat commands which keep the fields not given, from the value

@@ -22,12 +22,17 @@ Measurement log page.
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
-If any of the setting options are specified, the command issues a Set
-Features command. If none of them are specified, it retrieves and displays
-the current configuration.
+The command runs in one of three modes, depending on which options are given:
 
-The `--vssel`, `--vmlt`, `--svmt`, `--luvt` and `--lovt` options form the
-Start Voltage Measurements data structure and are only valid with `--act=1`.
+* Get the current configuration: no options, or only `--sel`.
+* Get the Start Voltage Measurements data structure: `--act=1` without any of
+  the options forming that data structure as mentioned below. This issues Get
+  Features with the Action field set to 1h.
+* Set: all other usages will configure the feature with the provided options
+
+The `--vssel`, `--vmlt`, `--svmt`, `--luvt` and `--lovt` options form the Start
+Voltage Measurements data structure. They are only valid with `--act=1`, and
+giving any of them, even with a value of 0, makes the command a Set.
 
 On success it returns 0, error code otherwise.
 
@@ -99,6 +104,12 @@ EXAMPLES
 +
 ------------
 # nvme feat voltage-meas /dev/nvme0
+------------
+
+* Get the Start Voltage Measurements data structure (Get Features with ACT=1):
++
+------------
+# nvme feat voltage-meas /dev/nvme0 --act=1
 ------------
 
 * Start measuring voltage sensor 1 for 60 minutes with log thresholds:

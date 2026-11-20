@@ -1,6 +1,17 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
+## Changes in 3.4 (unreleased)
+
+### Feature removals and incompatible changes
+
+* `nvme feat voltage-meas` with only `--act=1` issues Get Features with
+  the Action field set to 1h and prints the Start Voltage Measurements
+  data structure (VSSEL, VMLT, SVMT, LOVT and LUVT). 3.3 issued Set
+  Features with an all-zero structure instead. Any of `--vssel`,
+  `--vmlt`, `--svmt`, `--luvt` or `--lovt`, even with a value of 0, and
+  any `--act` other than 1 still issue Set Features.
+
 ## Changes in 3.3 (2026-11-25)
 
 ### Feature removals and incompatible changes
