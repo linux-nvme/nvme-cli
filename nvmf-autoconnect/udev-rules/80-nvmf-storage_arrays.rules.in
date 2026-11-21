@@ -3,10 +3,40 @@
 #### Set iopolicy for NVMe-oF
 ### iopolicy: numa (default), round-robin (>=5.1), or queue-depth (>=6.11)
 
+## Dell EMC
+# PowerFlex
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="powerflex", ATTR{iopolicy}="queue-depth"
+# PowerMax
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="EMC PowerMax*", ATTR{iopolicy}="queue-depth"
+# PowerStore
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="dellemc-powerstore", ATTR{iopolicy}="queue-depth"
+
+## Fujitsu
+# ETERNUS AB/HB
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="Fujitsu ETERNUS AB/HB Series", ATTR{iopolicy}="queue-depth"
+
+## Hitachi Vantara
+# VSP
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="HITACHI SVOS-RF-System", ATTR{iopolicy}="queue-depth"
+
 ## HPE
 # Alletra 9000 / Alletra Storage MP / GreenLake Block Storage MP
 ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="HPE Alletra", ATTR{iopolicy}="round-robin"
 ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{transport}=="tcp", ATTR{model}=="HPE Alletra", ATTR{ctrl_loss_tmo}="-1"
+
+## Huawei
+# OceanStor
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="Huawei-XSG1", ATTR{iopolicy}="queue-depth"
+
+## IBM
+# FlashSystem 900 (RamSan): 9840-AE3, 9843-AE3 and 9843-UF3
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="FlashSystem-9840", ATTR{iopolicy}="queue-depth"
+# FlashSystem (Storwize/SVC)
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="IBM * 2145", ATTR{iopolicy}="queue-depth"
+
+## Infinidat
+# InfiniBox
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="InfiniBox", ATTR{iopolicy}="queue-depth"
 
 ## NetApp
 # ONTAP AFF/ASA Series
@@ -15,9 +45,17 @@ ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{transport}=="tcp", AT
 # E/EF-Series
 ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="NetApp E-Series", ATTR{iopolicy}="round-robin"
 
+## Pure
+# FlashArray
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="Pure Storage FlashArray", ATTR{iopolicy}="queue-depth"
+
 ## VAST Data
 # Block Subsystem
 ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="VASTData", ATTR{iopolicy}="round-robin"
 ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{model}=="VASTData", ATTR{ctrl_loss_tmo}="-1"
+
+## Western Digital
+# OpenFlex
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="OpenFlex*", ATTR{iopolicy}="queue-depth"
 
 ##### EOF

@@ -47,9 +47,17 @@ if want_libnvme
     if want_fabrics
         # The vendor defaults libnvme applies after a connect (vendor.c)
         install_data(
+            'sysfiles/vendor.d/50-dell.conf',
+            'sysfiles/vendor.d/50-fujitsu.conf',
+            'sysfiles/vendor.d/50-hitachi.conf',
             'sysfiles/vendor.d/50-hpe.conf',
+            'sysfiles/vendor.d/50-huawei.conf',
+            'sysfiles/vendor.d/50-ibm.conf',
+            'sysfiles/vendor.d/50-infinidat.conf',
             'sysfiles/vendor.d/50-netapp.conf',
+            'sysfiles/vendor.d/50-pure.conf',
             'sysfiles/vendor.d/50-vastdata.conf',
+            'sysfiles/vendor.d/50-wd.conf',
             install_dir:   vendorusrdir,
             install_tag:   'nvmf',
         )
