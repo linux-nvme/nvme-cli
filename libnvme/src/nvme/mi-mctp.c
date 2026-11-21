@@ -418,7 +418,7 @@ static int libnvme_mi_mctp_submit(struct libnvme_mi_ep *ep,
 	int i, rc, errno_save, timeout;
 	struct sockaddr_mctp addr;
 	struct pollfd pollfds[1];
-	unsigned int mpr_time;
+	unsigned int mpr_time, mpr_total = 0;
 	__le32 mic;
 	__u8 tag;
 
@@ -578,9 +578,18 @@ retry:
 		if (!mpr_time)
 			mpr_time = ep->timeout ?: 0xffff;
 
-		/* clamp to the endpoint max */
-		if (ep->mprt_max && mpr_time > ep->mprt_max)
-			mpr_time = ep->mprt_max;
+		/* clamp cumulative MPR wait time to the endpoint max */
+		if (ep->mprt_max) {
+			if (mpr_total >= ep->mprt_max) {
+				libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
+					 "MPR maximum wait time exceeded\n");
+				rc = -ETIMEDOUT;
+				goto out;
+			}
+			if (mpr_time > ep->mprt_max - mpr_total)
+				mpr_time = ep->mprt_max - mpr_total;
+			mpr_total += mpr_time;
+		}
 
 		timeout = mpr_time;
 		goto retry;
