@@ -583,8 +583,7 @@ retry:
 			if (mpr_total >= ep->mprt_max) {
 				libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 					 "MPR maximum wait time exceeded\n");
-				errno = ETIMEDOUT;
-				rc = -1;
+				rc = -ETIMEDOUT;
 				goto out;
 			}
 			if (mpr_time > ep->mprt_max - mpr_total)
