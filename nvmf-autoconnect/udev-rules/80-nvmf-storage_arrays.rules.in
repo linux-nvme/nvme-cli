@@ -21,7 +21,7 @@ ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}
 
 ## HPE
 # Alletra 9000 / Alletra Storage MP / GreenLake Block Storage MP
-ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="HPE Alletra", ATTR{iopolicy}="round-robin"
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="HPE Alletra", ATTR{iopolicy}="queue-depth"
 ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{transport}=="tcp", ATTR{model}=="HPE Alletra", ATTR{ctrl_loss_tmo}="-1"
 
 ## Huawei
@@ -43,7 +43,7 @@ ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}
 ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="NetApp ONTAP Controller", ATTR{iopolicy}="queue-depth"
 ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{transport}=="tcp", ATTR{model}=="NetApp ONTAP Controller", ATTR{ctrl_loss_tmo}="-1"
 # E/EF-Series
-ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="NetApp E-Series", ATTR{iopolicy}="round-robin"
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="NetApp E-Series", ATTR{iopolicy}="queue-depth"
 
 ## Pure
 # FlashArray
@@ -51,7 +51,7 @@ ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}
 
 ## VAST Data
 # Block Subsystem
-ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="VASTData", ATTR{iopolicy}="round-robin"
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="VASTData", ATTR{iopolicy}="queue-depth"
 ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{model}=="VASTData", ATTR{ctrl_loss_tmo}="-1"
 
 ## Western Digital
