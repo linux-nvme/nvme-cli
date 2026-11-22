@@ -48,14 +48,14 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	struct shr_table *t;
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
 	__u32 dlpcn = NVME_CTRL_OAES_DLPCN(oaes);
-	__u32 rsvd28 = (oaes & 0x70000000) >> 28;
+	__u32 rsvd28 = NVME_CTRL_OAES_RSVD28(oaes);
 	__u32 zdcn = NVME_CTRL_OAES_ZDCN(oaes);
-	__u32 rsvd23 = (oaes >> 23) & 0xf;
+	__u32 rsvd23 = NVME_CTRL_OAES_RSVD23(oaes);
 	__u32 rlcc = NVME_CTRL_OAES_RLCC(oaes);
 	__u32 lhcn = NVME_CTRL_OAES_LHCN(oaes);
 	__u32 ccrcn = NVME_CTRL_OAES_CCRCN(oaes);
 	__u32 ansan = NVME_CTRL_OAES_ANSAN(oaes);
-	__u32 rsvd18 = (oaes >> 18) & 0x1;
+	__u32 rsvd18 = NVME_CTRL_OAES_RSVD18(oaes);
 	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
 	__u32 tthr = NVME_CTRL_OAES_TTHR(oaes);
 	__u32 normal_shn = NVME_CTRL_OAES_NNSS(oaes);
@@ -66,7 +66,7 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	__u32 rsvd10 = (oaes >> 10) & 0x1;
 	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
 	__u32 nace = NVME_CTRL_OAES_NSAN(oaes);
-	__u32 rsvd0 = oaes & 0xFF;
+	__u32 rsvd0 = NVME_CTRL_OAES_RSVD0(oaes);
 
 	t = stdout_bits_table_create();
 	if (!t)

@@ -1842,10 +1842,12 @@ enum nvme_id_ctrl_cmic {
 
 /**
  * enum nvme_id_ctrl_oaes - Optional Asynchronous Events Supported
+ * @NVME_CTRL_OAES_RSVD0_SHIFT:	Shift amount to get Reserved
  * @NVME_CTRL_OAES_NSAN_SHIFT:	Shift amount to get the Attached Namespace
  *				Attribute Notices event supported bit
  * @NVME_CTRL_OAES_FAN_SHIFT:	Shift amount to get the Firmware Activation
  *				Notices event supported bit
+ * @NVME_CTRL_OAES_RSVD10_SHIFT:Shift amount to get Reserved
  * @NVME_CTRL_OAES_ANACN_SHIFT:	Shift amount to get the Asymmetric Namespace
  *				Access Change Notices event supported bit
  * @NVME_CTRL_OAES_PLEAN_SHIFT:	Shift amount to get the Predictable Latency
@@ -1862,6 +1864,7 @@ enum nvme_id_ctrl_cmic {
  *				Hysteresis Recovery event supported bit
  * @NVME_CTRL_OAES_RGCNS_SHIFT:	Shift amount to get the Reachability Groups
  *				Change Notices event supported bit
+ * @NVME_CTRL_OAES_RSVD18_SHIFT:Shift amount to get Reserved
  * @NVME_CTRL_OAES_ANSAN_SHIFT:	Shift amount to get the Allocated Namespace
  *				Attribute Notices event supported bit
  * @NVME_CTRL_OAES_CCRCN_SHIFT:	Shift amount to get the Cross-Controller Reset
@@ -1870,14 +1873,18 @@ enum nvme_id_ctrl_cmic {
  *				Notices event supported bit
  * @NVME_CTRL_OAES_RLCC_SHIFT:	Shift amount to get the Rate Limiting
  *				Configuration Change event supported bit
+ * @NVME_CTRL_OAES_RSVD23_SHIFT:Shift amount to get Reserved
  * @NVME_CTRL_OAES_ZDCN_SHIFT:	Shift amount to get the Zone Descriptor Changed
  *				Notices event supported bit
+ * @NVME_CTRL_OAES_RSVD28_SHIFT:Shift amount to get Reserved
  * @NVME_CTRL_OAES_DLPCN_SHIFT:	Shift amount to get the Discovery Log Page
  *				Change Notification event supported bit
+ * @NVME_CTRL_OAES_RSVD0_MASK:	Mask to get Reserved
  * @NVME_CTRL_OAES_NSAN_MASK:	Mask to get the Attached Namespace Attribute
  *				Notices event supported bit
  * @NVME_CTRL_OAES_FAN_MASK:	Mask to get the Firmware Activation Notices
  *				event supported bit
+ * @NVME_CTRL_OAES_RSVD10_MASK:	Mask to get Reserved
  * @NVME_CTRL_OAES_ANACN_MASK:	Mask to get the Asymmetric Namespace Access
  *				Change Notices event supported bit
  * @NVME_CTRL_OAES_PLEAN_MASK:	Mask to get the Predictable Latency Event
@@ -1892,6 +1899,7 @@ enum nvme_id_ctrl_cmic {
  *				Recovery event supported bit
  * @NVME_CTRL_OAES_RGCNS_MASK:	Mask to get the Reachability Groups Change
  *				Notices event supported bit
+ * @NVME_CTRL_OAES_RSVD18_MASK:	Mask to get Reserved
  * @NVME_CTRL_OAES_ANSAN_MASK:	Mask to get the Allocated Namespace Attribute
  *				Notices event supported bit
  * @NVME_CTRL_OAES_CCRCN_MASK:	Mask to get the Cross-Controller Reset Completed
@@ -1900,8 +1908,10 @@ enum nvme_id_ctrl_cmic {
  *				event supported bit
  * @NVME_CTRL_OAES_RLCC_MASK:	Mask to get the Rate Limiting Configuration
  *				Change event supported bit
+ * @NVME_CTRL_OAES_RSVD23_MASK:	Mask to get Reserved
  * @NVME_CTRL_OAES_ZDCN_MASK:	Mask to get the Zone Descriptor Changed Notices
  *				event supported bit
+ * @NVME_CTRL_OAES_RSVD28_MASK:	Mask to get Reserved
  * @NVME_CTRL_OAES_DLPCN_MASK:	Mask to get the Discovery Log Page Change
  *				Notification event supported bit
  * @NVME_CTRL_OAES_NSAN:	If set, the controller supports the Attached
@@ -1938,8 +1948,10 @@ enum nvme_id_ctrl_cmic {
  *				Log Page Change Notification event.
  */
 enum nvme_id_ctrl_oaes {
+	NVME_CTRL_OAES_RSVD0_SHIFT	= 0,
 	NVME_CTRL_OAES_NSAN_SHIFT	= 8,
 	NVME_CTRL_OAES_FAN_SHIFT	= 9,
+	NVME_CTRL_OAES_RSVD10_SHIFT	= 10,
 	NVME_CTRL_OAES_ANACN_SHIFT	= 11,
 	NVME_CTRL_OAES_PLEAN_SHIFT	= 12,
 	NVME_CTRL_OAES_LSIAN_SHIFT	= 13,
@@ -1947,14 +1959,19 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_NNSS_SHIFT	= 15,
 	NVME_CTRL_OAES_TTHR_SHIFT	= 16,
 	NVME_CTRL_OAES_RGCNS_SHIFT	= 17,
+	NVME_CTRL_OAES_RSVD18_SHIFT	= 18,
 	NVME_CTRL_OAES_ANSAN_SHIFT	= 19,
 	NVME_CTRL_OAES_CCRCN_SHIFT	= 20,
 	NVME_CTRL_OAES_LHCN_SHIFT	= 21,
 	NVME_CTRL_OAES_RLCC_SHIFT	= 22,
+	NVME_CTRL_OAES_RSVD23_SHIFT	= 23,
 	NVME_CTRL_OAES_ZDCN_SHIFT	= 27,
+	NVME_CTRL_OAES_RSVD28_SHIFT	= 28,
 	NVME_CTRL_OAES_DLPCN_SHIFT	= 31,
+	NVME_CTRL_OAES_RSVD0_MASK	= 0xff,
 	NVME_CTRL_OAES_NSAN_MASK	= 0x1,
 	NVME_CTRL_OAES_FAN_MASK		= 0x1,
+	NVME_CTRL_OAES_RSVD10_MASK	= 0x1,
 	NVME_CTRL_OAES_ANACN_MASK	= 0x1,
 	NVME_CTRL_OAES_PLEAN_MASK	= 0x1,
 	NVME_CTRL_OAES_LSIAN_MASK	= 0x1,
@@ -1962,11 +1979,14 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_NNSS_MASK	= 0x1,
 	NVME_CTRL_OAES_TTHR_MASK	= 0x1,
 	NVME_CTRL_OAES_RGCNS_MASK	= 0x1,
+	NVME_CTRL_OAES_RSVD18_MASK	= 0x1,
 	NVME_CTRL_OAES_ANSAN_MASK	= 0x1,
 	NVME_CTRL_OAES_CCRCN_MASK	= 0x1,
 	NVME_CTRL_OAES_LHCN_MASK	= 0x1,
 	NVME_CTRL_OAES_RLCC_MASK	= 0x1,
+	NVME_CTRL_OAES_RSVD23_MASK	= 0xf,
 	NVME_CTRL_OAES_ZDCN_MASK	= 0x1,
+	NVME_CTRL_OAES_RSVD28_MASK	= 0x7,
 	NVME_CTRL_OAES_DLPCN_MASK	= 0x1,
 	NVME_CTRL_OAES_NSAN		= NVME_VAL(CTRL_OAES_NSAN),
 	NVME_CTRL_OAES_FAN		= NVME_VAL(CTRL_OAES_FAN),
@@ -1985,8 +2005,10 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_DLPCN		= NVME_VAL(CTRL_OAES_DLPCN),
 };
 
+#define NVME_CTRL_OAES_RSVD0(oaes)	NVME_GET(oaes, CTRL_OAES_RSVD0)
 #define NVME_CTRL_OAES_NSAN(oaes)	NVME_GET(oaes, CTRL_OAES_NSAN)
 #define NVME_CTRL_OAES_FAN(oaes)	NVME_GET(oaes, CTRL_OAES_FAN)
+#define NVME_CTRL_OAES_RSVD10(oaes)	NVME_GET(oaes, CTRL_OAES_RSVD10)
 #define NVME_CTRL_OAES_ANACN(oaes)	NVME_GET(oaes, CTRL_OAES_ANACN)
 #define NVME_CTRL_OAES_PLEAN(oaes)	NVME_GET(oaes, CTRL_OAES_PLEAN)
 #define NVME_CTRL_OAES_LSIAN(oaes)	NVME_GET(oaes, CTRL_OAES_LSIAN)
@@ -1994,11 +2016,14 @@ enum nvme_id_ctrl_oaes {
 #define NVME_CTRL_OAES_NNSS(oaes)	NVME_GET(oaes, CTRL_OAES_NNSS)
 #define NVME_CTRL_OAES_TTHR(oaes)	NVME_GET(oaes, CTRL_OAES_TTHR)
 #define NVME_CTRL_OAES_RGCNS(oaes)	NVME_GET(oaes, CTRL_OAES_RGCNS)
+#define NVME_CTRL_OAES_RSVD18(oaes)	NVME_GET(oaes, CTRL_OAES_RSVD18)
 #define NVME_CTRL_OAES_ANSAN(oaes)	NVME_GET(oaes, CTRL_OAES_ANSAN)
 #define NVME_CTRL_OAES_CCRCN(oaes)	NVME_GET(oaes, CTRL_OAES_CCRCN)
 #define NVME_CTRL_OAES_LHCN(oaes)	NVME_GET(oaes, CTRL_OAES_LHCN)
 #define NVME_CTRL_OAES_RLCC(oaes)	NVME_GET(oaes, CTRL_OAES_RLCC)
+#define NVME_CTRL_OAES_RSVD23(oaes)	NVME_GET(oaes, CTRL_OAES_RSVD23)
 #define NVME_CTRL_OAES_ZDCN(oaes)	NVME_GET(oaes, CTRL_OAES_ZDCN)
+#define NVME_CTRL_OAES_RSVD28(oaes)	NVME_GET(oaes, CTRL_OAES_RSVD28)
 #define NVME_CTRL_OAES_DLPCN(oaes)	NVME_GET(oaes, CTRL_OAES_DLPCN)
 
 /**
