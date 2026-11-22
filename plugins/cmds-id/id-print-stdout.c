@@ -308,9 +308,9 @@ static struct shr_table *stdout_id_ctrl_rmdca_table(__u8 ctrl_rmdca)
 static struct shr_table *stdout_id_ctrl_plsi_table(__u8 ctrl_plsi)
 {
 	struct shr_table *t;
-	__u8 rsvd2 = (ctrl_plsi >> 2);
-	__u8 plsfq = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSFQ);
-	__u8 plsepf = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSEPF);
+	__u8 rsvd2 = NVME_CTRL_PLSI_RSVD2(ctrl_plsi);
+	__u8 plsfq = NVME_CTRL_PLSI_PLSFQ(ctrl_plsi);
+	__u8 plsepf = NVME_CTRL_PLSI_PLSEPF(ctrl_plsi);
 
 	t = stdout_bits_table_create();
 	if (!t)
