@@ -135,7 +135,7 @@ static struct shr_table *stdout_id_ctrl_ctratt_table(__le32 ctrl_ctratt)
 {
 	struct shr_table *t;
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
-	__u32 rsvd25 = (ctratt >> 25);
+	__u32 rsvd25 = NVME_CTRL_CTRATT_RSVD25(ctratt);
 	__u32 iiellss = NVME_CTRL_CTRATT_IIELLSS(ctratt);
 	__u32 vms = NVME_CTRL_CTRATT_VMS(ctratt);
 	__u32 pms = NVME_CTRL_CTRATT_PMS(ctratt);

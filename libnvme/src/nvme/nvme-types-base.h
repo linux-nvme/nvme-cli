@@ -2052,6 +2052,7 @@ enum nvme_id_ctrl_oaes {
  * @NVME_CTRL_CTRATT_PMS_SHIFT: PMS shift
  * @NVME_CTRL_CTRATT_VMS_SHIFT: VMS shift
  * @NVME_CTRL_CTRATT_IIELLSS_SHIFT: IIELLSS shift
+ * @NVME_CTRL_CTRATT_RSVD25_SHIFT: Reserved shift
  * @NVME_CTRL_CTRATT_HIDS_MASK: HIDS mask
  * @NVME_CTRL_CTRATT_NOPSPM_MASK: NOPSPM mask
  * @NVME_CTRL_CTRATT_NSETS_MASK: NSETS mask
@@ -2076,6 +2077,7 @@ enum nvme_id_ctrl_oaes {
  * @NVME_CTRL_CTRATT_PMS_MASK: PMS mask
  * @NVME_CTRL_CTRATT_VMS_MASK: VMS mask
  * @NVME_CTRL_CTRATT_IIELLSS_MASK: IIELLSS mask
+ * @NVME_CTRL_CTRATT_RSVD25_MASK: Reserved mask
  * @NVME_CTRL_CTRATT_128_ID: 128-bit Host Identifier supported
  * @NVME_CTRL_CTRATT_NON_OP_PSP: Non-Operational Poser State Permissive Mode
  *				 supported
@@ -2130,6 +2132,7 @@ enum nvme_id_ctrl_ctratt {
 	NVME_CTRL_CTRATT_PMS_SHIFT             = 21,
 	NVME_CTRL_CTRATT_VMS_SHIFT             = 22,
 	NVME_CTRL_CTRATT_IIELLSS_SHIFT         = 23,
+	NVME_CTRL_CTRATT_RSVD25_SHIFT          = 25,
 	NVME_CTRL_CTRATT_HIDS_MASK             = 0x1,
 	NVME_CTRL_CTRATT_NOPSPM_MASK           = 0x1,
 	NVME_CTRL_CTRATT_NSETS_MASK            = 0x1,
@@ -2154,6 +2157,7 @@ enum nvme_id_ctrl_ctratt {
 	NVME_CTRL_CTRATT_PMS_MASK              = 0x1,
 	NVME_CTRL_CTRATT_VMS_MASK              = 0x1,
 	NVME_CTRL_CTRATT_IIELLSS_MASK          = 0x3,
+	NVME_CTRL_CTRATT_RSVD25_MASK           = 0x7f,
 	NVME_CTRL_CTRATT_128_ID                = NVME_VAL(CTRL_CTRATT_HIDS),
 	NVME_CTRL_CTRATT_NON_OP_PSP            = NVME_VAL(CTRL_CTRATT_NOPSPM),
 	NVME_CTRL_CTRATT_NVM_SETS              = NVME_VAL(CTRL_CTRATT_NSETS),
@@ -2206,6 +2210,7 @@ enum nvme_id_ctrl_ctratt {
 #define NVME_CTRL_CTRATT_PMS(ctratt)     NVME_GET(ctratt, CTRL_CTRATT_PMS)
 #define NVME_CTRL_CTRATT_VMS(ctratt)     NVME_GET(ctratt, CTRL_CTRATT_VMS)
 #define NVME_CTRL_CTRATT_IIELLSS(ctratt) NVME_GET(ctratt, CTRL_CTRATT_IIELLSS)
+#define NVME_CTRL_CTRATT_RSVD25(ctratt) NVME_GET(ctratt, CTRL_CTRATT_RSVD25)
 
 /**
  * enum nvme_id_ctrl_bpcap - Boot Partition Capabilities
