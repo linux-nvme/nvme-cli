@@ -234,9 +234,9 @@ static struct shr_table *stdout_id_ctrl_ctratt_table(__le32 ctrl_ctratt)
 static struct shr_table *stdout_id_ctrl_bpcap_table(__u8 ctrl_bpcap)
 {
 	struct shr_table *t;
-	__u8 rsvd3 = (ctrl_bpcap >> 3);
-	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_SFBPWPS);
-	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BPCAP_RPMBBPWPS);
+	__u8 rsvd3 = NVME_CTRL_BPCAP_RSVD3(ctrl_bpcap);
+	__u8 sfbpwps = NVME_CTRL_BPCAP_SFBPWPS(ctrl_bpcap);
+	__u8 rpmbbpwps = NVME_CTRL_BPCAP_RPMBBPWPS(ctrl_bpcap);
 	static const char * const rpmbbpwps_def[] = {
 		"Support Not Specified",
 		"Not Supported",
@@ -263,7 +263,7 @@ static struct shr_table *stdout_id_ctrl_bpcap_table(__u8 ctrl_bpcap)
 static struct shr_table *stdout_id_ctrl_chsi_table(__u8 ctrl_chsi)
 {
 	struct shr_table *t;
-	__u8 rsvd1 = (ctrl_chsi >> 1);
+	__u8 rsvd1 = NVME_CTRL_CHSI_RSVD1(ctrl_chsi);
 	__u8 chs = NVME_CTRL_CHSI_CHS(ctrl_chsi);
 
 	t = stdout_bits_table_create();
@@ -281,7 +281,7 @@ static struct shr_table *stdout_id_ctrl_chsi_table(__u8 ctrl_chsi)
 static struct shr_table *stdout_id_ctrl_rmdca_table(__u8 ctrl_rmdca)
 {
 	struct shr_table *t;
-	__u8 rsvd3 = (ctrl_rmdca >> 3);
+	__u8 rsvd3 = NVME_CTRL_RMDCA_RSVD3(ctrl_rmdca);
 	__u8 rdccs = NVME_CTRL_RMDCA_RDCCS(ctrl_rmdca);
 	__u8 rdncs = NVME_CTRL_RMDCA_RDNCS(ctrl_rmdca);
 	__u8 rdscs = NVME_CTRL_RMDCA_RDSCS(ctrl_rmdca);

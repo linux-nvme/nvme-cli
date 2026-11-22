@@ -2223,6 +2223,7 @@ enum nvme_id_ctrl_ctratt {
  *						Protection Support from the
  *						&struct nvme_id_ctrl.bpcap
  *						field.
+ * @NVME_CTRL_BPCAP_RSVD3_SHIFT:		Shift amount to get the Reserved
  * @NVME_CTRL_BPCAP_RPMBBPWPS_MASK:		Mask to get the RPMB Boot
  *						Partition Write Protection
  *						Support from the &struct
@@ -2231,6 +2232,7 @@ enum nvme_id_ctrl_ctratt {
  *						Boot Partition Write Protection
  *						Support from the &struct
  *						nvme_id_ctrl.bpcap field.
+ * @NVME_CTRL_BPCAP_RSVD3_MASK:			Mask to get the Reserved
  * @NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SPECIFIED:	Support for RPMB Boot Partition
  *						Write Protection is not
  *						specified.
@@ -2244,8 +2246,10 @@ enum nvme_id_ctrl_ctratt {
 enum nvme_id_ctrl_bpcap {
 	NVME_CTRL_BPCAP_RPMBBPWPS_SHIFT		= 0,
 	NVME_CTRL_BPCAP_SFBPWPS_SHIFT		= 2,
+	NVME_CTRL_BPCAP_RSVD3_SHIFT		= 3,
 	NVME_CTRL_BPCAP_RPMBBPWPS_MASK		= 0x3,
 	NVME_CTRL_BPCAP_SFBPWPS_MASK		= 0x1,
+	NVME_CTRL_BPCAP_RSVD3_MASK		= 0x1f,
 	NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SPECIFIED	= 0,
 	NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SUPPORTED	= 1,
 	NVME_CTRL_BPCAP_RPMBBPWPS_SUPPORTED	= 2,
@@ -2253,19 +2257,25 @@ enum nvme_id_ctrl_bpcap {
 
 #define NVME_CTRL_BPCAP_RPMBBPWPS(bpcap) NVME_GET(bpcap, CTRL_BPCAP_RPMBBPWPS)
 #define NVME_CTRL_BPCAP_SFBPWPS(bpcap)   NVME_GET(bpcap, CTRL_BPCAP_SFBPWPS)
+#define NVME_CTRL_BPCAP_RSVD3(bpcap)     NVME_GET(bpcap, CTRL_BPCAP_RSVD3)
 
 /**
  * enum nvme_id_ctrl_chsi - CXL HDM Support Information
  * @NVME_CTRL_CHSI_CHS_SHIFT:	Shift amount to get the CXL HDM Support (CHS)
  *				from the &struct nvme_id_ctrl.chsi field.
+ * @NVME_CTRL_CHSI_RSVD1_SHIFT:	Shift amount to get the Reserved
  * @NVME_CTRL_CHSI_CHS_MASK:	Mask to get CHS
+ * @NVME_CTRL_CHSI_RSVD1_MASK:	Mask to get Reserved
  */
 enum nvme_id_ctrl_chsi {
 	NVME_CTRL_CHSI_CHS_SHIFT	= 0,
+	NVME_CTRL_CHSI_RSVD1_SHIFT	= 1,
 	NVME_CTRL_CHSI_CHS_MASK		= 0x1,
+	NVME_CTRL_CHSI_RSVD1_MASK	= 0x7f,
 };
 
 #define NVME_CTRL_CHSI_CHS(chsi)	NVME_GET(chsi, CTRL_CHSI_CHS)
+#define NVME_CTRL_CHSI_RSVD1(chsi)	NVME_GET(chsi, CTRL_CHSI_RSVD1)
 
 /**
  * enum nvme_id_ctrl_rmdca - Restore Manufacturing Configuration Attributes
@@ -2273,15 +2283,17 @@ enum nvme_id_ctrl_chsi {
  *					NVM Subsystem Configuration Supported
  *					(RDSCS) from the &struct
  *					nvme_id_ctrl.rmdca field.
- * @NVME_CTRL_RMDCA_RDSCS_MASK:	Mask to get RDSCS
+ * @NVME_CTRL_RMDCA_RDSCS_MASK:		Mask to get RDSCS
  * @NVME_CTRL_RMDCA_RDNCS_SHIFT:	Shift amount to get the Restore Default
  *					Namespace Configuration Supported
  *					(RDNCS)
- * @NVME_CTRL_RMDCA_RDNCS_MASK:	Mask to get RDNCS
+ * @NVME_CTRL_RMDCA_RDNCS_MASK:		Mask to get RDNCS
  * @NVME_CTRL_RMDCA_RDCCS_SHIFT:	Shift amount to get the Restore Default
  *					Capacity Management Configuration
  *					Supported (RDCCS)
- * @NVME_CTRL_RMDCA_RDCCS_MASK:	Mask to get RDCCS
+ * @NVME_CTRL_RMDCA_RDCCS_MASK:		Mask to get RDCCS
+ * @NVME_CTRL_RMDCA_RSVD3_SHIFT:	Shift amount to get the Reserved
+ * @NVME_CTRL_RMDCA_RSVD3_MASK:		Mask to get Reserved
  */
 enum nvme_id_ctrl_rmdca {
 	NVME_CTRL_RMDCA_RDSCS_SHIFT	= 0,
@@ -2290,11 +2302,14 @@ enum nvme_id_ctrl_rmdca {
 	NVME_CTRL_RMDCA_RDNCS_MASK	= 0x1,
 	NVME_CTRL_RMDCA_RDCCS_SHIFT	= 2,
 	NVME_CTRL_RMDCA_RDCCS_MASK	= 0x1,
+	NVME_CTRL_RMDCA_RSVD3_SHIFT	= 3,
+	NVME_CTRL_RMDCA_RSVD3_MASK	= 0x1fff,
 };
 
 #define NVME_CTRL_RMDCA_RDSCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDSCS)
 #define NVME_CTRL_RMDCA_RDNCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDNCS)
 #define NVME_CTRL_RMDCA_RDCCS(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RDCCS)
+#define NVME_CTRL_RMDCA_RSVD3(rmdca)	NVME_GET(rmdca, CTRL_RMDCA_RSVD3)
 
 /**
  * enum nvme_id_ctrl_plsi - Power Loss Signaling Information
