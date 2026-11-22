@@ -350,25 +350,33 @@ static struct shr_table *stdout_id_ctrl_crcap_table(__u8 ctrl_crcap)
 	return t;
 }
 
+static const char *nvme_cntrltype_to_string(__u8 cntrltype)
+{
+	switch (cntrltype) {
+	case 0:
+		return "Controller type not reported";
+	case NVME_CTRL_CNTRLTYPE_IO:
+		return "I/O Controller";
+	case NVME_CTRL_CNTRLTYPE_DISCOVERY:
+		return "Discovery Controller";
+	case NVME_CTRL_CNTRLTYPE_ADMIN:
+		return "Administrative Controller";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
 static struct shr_table *stdout_id_ctrl_cntrltype_table(__u8 cntrltype)
 {
-	struct shr_table *t;
-	__u8 rsvd = (cntrltype & 0xFC) >> 2;
-	__u8 cntrl = cntrltype & 0x3;
+	struct shr_table *t = stdout_bits_table_create();
 
-	static const char * const type[] = {
-		"Controller type not reported",
-		"I/O Controller",
-		"Discovery Controller",
-		"Administrative Controller"
-	};
-
-	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
-	stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
-	stdout_bits_add(t, "[1:0]", cntrltype, "%s", type[cntrl]);
+	stdout_bits_add(t, "[7:0]", cntrltype, "%s",
+			nvme_cntrltype_to_string(cntrltype));
 
 	return t;
 }
