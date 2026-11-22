@@ -331,9 +331,9 @@ static struct shr_table *stdout_id_ctrl_plsi_table(__u8 ctrl_plsi)
 static struct shr_table *stdout_id_ctrl_crcap_table(__u8 ctrl_crcap)
 {
 	struct shr_table *t;
-	__u8 rsvd2 = (ctrl_crcap >> 2);
-	__u8 rgidc = NVME_GET(ctrl_crcap, CTRL_CRCAP_RGIDC);
-	__u8 rrsup = NVME_GET(ctrl_crcap, CTRL_CRCAP_RRSUP);
+	__u8 rsvd2 = NVME_CTRL_CRCAP_RSVD2(ctrl_crcap);
+	__u8 rgidc = NVME_CTRL_CRCAP_RGIDC(ctrl_crcap);
+	__u8 rrsup = NVME_CTRL_CRCAP_RRSUP(ctrl_crcap);
 
 	t = stdout_bits_table_create();
 	if (!t)

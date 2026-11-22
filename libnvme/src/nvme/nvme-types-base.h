@@ -2343,20 +2343,25 @@ enum nvme_id_ctrl_plsi {
  *					from the &struct nvme_id_ctrl.crcap field.
  * @NVME_CTRL_CRCAP_RGIDC_SHIFT:	Shift amount to get the Reachability Group ID Changeable
  *					from the &struct nvme_id_ctrl.crcap field.
+ * @NVME_CTRL_CRCAP_RSVD2_SHIFT:	Shift amount to get the Reserved
  * @NVME_CTRL_CRCAP_RRSUP_MASK:		Mask to get the Reachability Reporting Supported from the
  *					&struct nvme_id_ctrl.crcap field.
  * @NVME_CTRL_CRCAP_RGIDC_MASK:		Mask to get the Reachability Group ID Changeable from the
  *					&struct nvme_id_ctrl.crcap field.
+ * @NVME_CTRL_CRCAP_RSVD2_MASK:		Mask to get the Reserved
  */
 enum nvme_id_ctrl_crcap {
 	NVME_CTRL_CRCAP_RRSUP_SHIFT	= 0,
 	NVME_CTRL_CRCAP_RGIDC_SHIFT	= 1,
+	NVME_CTRL_CRCAP_RSVD2_SHIFT	= 2,
 	NVME_CTRL_CRCAP_RRSUP_MASK	= 0x1,
 	NVME_CTRL_CRCAP_RGIDC_MASK	= 0x1,
+	NVME_CTRL_CRCAP_RSVD2_MASK	= 0x3f,
 };
 
 #define NVME_CTRL_CRCAP_RRSUP(crcap)	NVME_GET(crcap, CTRL_CRCAP_RRSUP)
-#define NVME_CTRL_CRCAP_RGICS(crcap)	NVME_GET(crcap, CTRL_CRCAP_RGICS)
+#define NVME_CTRL_CRCAP_RGIDC(crcap)	NVME_GET(crcap, CTRL_CRCAP_RGIDC)
+#define NVME_CTRL_CRCAP_RSVD2(crcap)	NVME_GET(crcap, CTRL_CRCAP_RSVD2)
 
 /**
  * enum nvme_id_ctrl_cntrltype - Controller types
