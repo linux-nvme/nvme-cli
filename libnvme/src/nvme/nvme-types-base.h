@@ -2317,20 +2317,25 @@ enum nvme_id_ctrl_rmdca {
  *					&struct nvme_id_ctrl.plsi field.
  * @NVME_CTRL_PLSI_PLSFQ_SHIFT:		Shift amount to get the PLS Forced Quiescence from the
  *					&struct nvme_id_ctrl.plsi field.
+ * @NVME_CTRL_PLSI_RSVD2_SHIFT:		Shift amount to get the Reserved
  * @NVME_CTRL_PLSI_PLSEPF_MASK:		Mask to get the PLS Emergency Power Fail from the
  *					&struct nvme_id_ctrl.plsi field.
  * @NVME_CTRL_PLSI_PLSFQ_MASK:		Mask to get the PLS Forced Quiescence from the
  *					&struct nvme_id_ctrl.plsi field.
+ * @NVME_CTRL_PLSI_RSVD2_MASK:		Mask to get the Reserved
  */
 enum nvme_id_ctrl_plsi {
 	NVME_CTRL_PLSI_PLSEPF_SHIFT	= 0,
 	NVME_CTRL_PLSI_PLSFQ_SHIFT	= 1,
+	NVME_CTRL_PLSI_RSVD2_SHIFT	= 2,
 	NVME_CTRL_PLSI_PLSEPF_MASK	= 0x1,
 	NVME_CTRL_PLSI_PLSFQ_MASK	= 0x1,
+	NVME_CTRL_PLSI_RSVD2_MASK	= 0x3f,
 };
 
 #define NVME_CTRL_PLSI_PLSEPF(plsi)	NVME_GET(plsi, CTRL_PLSI_PLSEPF)
 #define NVME_CTRL_PLSI_PLSFQ(plsi)	NVME_GET(plsi, CTRL_PLSI_PLSFQ)
+#define NVME_CTRL_PLSI_RSVD2(plsi)	NVME_GET(plsi, CTRL_PLSI_RSVD2)
 
 /**
  * enum nvme_id_ctrl_crcap - Power Loss Signaling Information
