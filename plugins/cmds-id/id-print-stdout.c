@@ -866,14 +866,14 @@ static struct shr_table *stdout_id_ctrl_sanicap_table(__le32 ctrl_sanicap)
 static struct shr_table *stdout_id_ctrl_anacap_table(__u8 anacap)
 {
 	struct shr_table *t;
-	__u8 nz = (anacap & 0x80) >> 7;
-	__u8 grpid_static = (anacap & 0x40) >> 6;
-	__u8 rsvd = (anacap & 0x20) >> 5;
-	__u8 ana_change = (anacap & 0x10) >> 4;
-	__u8 ana_persist_loss = (anacap & 0x08) >> 3;
-	__u8 ana_inaccessible = (anacap & 0x04) >> 2;
-	__u8 ana_nonopt = (anacap & 0x02) >> 1;
-	__u8 ana_opt = (anacap & 0x01);
+	__u8 nz = NVME_CTRL_ANACAP_ANAGIDS(anacap);
+	__u8 grpid_static = NVME_CTRL_ANACAP_ANAGIDLWAS(anacap);
+	__u8 rsvd = NVME_CTRL_ANACAP_RSVD5(anacap);
+	__u8 ana_change = NVME_CTRL_ANACAP_RANACS(anacap);
+	__u8 ana_persist_loss = NVME_CTRL_ANACAP_RANAPLS(anacap);
+	__u8 ana_inaccessible = NVME_CTRL_ANACAP_RANAIS(anacap);
+	__u8 ana_nonopt = NVME_CTRL_ANACAP_RANANOS(anacap);
+	__u8 ana_opt = NVME_CTRL_ANACAP_RANAOS(anacap);
 
 	t = stdout_bits_table_create();
 	if (!t)
