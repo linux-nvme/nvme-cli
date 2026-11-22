@@ -63,7 +63,7 @@ static struct shr_table *stdout_id_ctrl_oaes_table(__le32 ctrl_oaes)
 	__u32 lbasin = NVME_CTRL_OAES_LSIAN(oaes);
 	__u32 plealcn = NVME_CTRL_OAES_PLEAN(oaes);
 	__u32 anacn = NVME_CTRL_OAES_ANACN(oaes);
-	__u32 rsvd10 = (oaes >> 10) & 0x1;
+	__u32 rsvd10 = NVME_CTRL_OAES_RSVD10(oaes);
 	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
 	__u32 nace = NVME_CTRL_OAES_NSAN(oaes);
 	__u32 rsvd0 = NVME_CTRL_OAES_RSVD0(oaes);
@@ -384,7 +384,7 @@ static struct shr_table *stdout_id_ctrl_cntrltype_table(__u8 cntrltype)
 static struct shr_table *stdout_id_ctrl_nvmsr_table(__u8 nvmsr)
 {
 	struct shr_table *t;
-	__u8 rsvd = (nvmsr >> 2) & 0xfc;
+	__u8 rsvd = NVME_CTRL_NVMSR_RSVD2(nvmsr);
 	__u8 nvmee = NVME_CTRL_NVMSR_NVMEE(nvmsr);
 	__u8 nvmesd = NVME_CTRL_NVMSR_NVMESD(nvmsr);
 
@@ -425,9 +425,9 @@ static struct shr_table *stdout_id_ctrl_vwci_table(__u8 vwci)
 static struct shr_table *stdout_id_ctrl_mec_table(__u8 mec)
 {
 	struct shr_table *t;
-	__u8 rsvd = (mec >> 2) & 0xfc;
-	__u8 pcieme = (mec >> 1) & 0x1;
-	__u8 smbusme = mec & 0x1;
+	__u8 rsvd = NVME_CTRL_MEC_RSVD2(mec);
+	__u8 pcieme = NVME_CTRL_MEC_PCIEME(mec);
+	__u8 smbusme = NVME_CTRL_MEC_TWPME(mec);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -449,7 +449,7 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 {
 	struct shr_table *t;
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xC000) >> 14;
+	__u16 rsvd = NVME_CTRL_OACS_RSVD14(oacs);
 	__u16 ccfls = NVME_CTRL_OACS_CCFLS(oacs);
 	__u16 enss = NVME_CTRL_OACS_ENSS(oacs);
 	__u16 hmlms = NVME_CTRL_OACS_HMLMS(oacs);
@@ -514,11 +514,11 @@ static struct shr_table *stdout_id_ctrl_oacs_table(__le16 ctrl_oacs)
 static struct shr_table *stdout_id_ctrl_frmw_table(__u8 frmw)
 {
 	struct shr_table *t;
-	__u8 rsvd = (frmw & 0xC0) >> 6;
-	__u8 smud = (frmw >> 5) & 0x1;
-	__u8 fawr = (frmw & 0x10) >> 4;
-	__u8 nfws = (frmw & 0xE) >> 1;
-	__u8 s1ro = frmw & 0x1;
+	__u8 rsvd = NVME_CTRL_FRMW_RSVD6(frmw);
+	__u8 smud = NVME_CTRL_FRMW_SMUD(frmw);
+	__u8 fawr = NVME_CTRL_FRMW_FAWR(frmw);
+	__u8 nfws = NVME_CTRL_FRMW_NOFS(frmw);
+	__u8 s1ro = NVME_CTRL_FRMW_FFSRO(frmw);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -542,14 +542,14 @@ static struct shr_table *stdout_id_ctrl_frmw_table(__u8 frmw)
 static struct shr_table *stdout_id_ctrl_lpa_table(__u8 lpa)
 {
 	struct shr_table *t;
-	__u8 rsvd = (lpa & 0x80) >> 7;
-	__u8 tel = (lpa >> 6) & 0x1;
-	__u8 lid_sup = (lpa >> 5) & 0x1;
-	__u8 persevnt = (lpa & 0x10) >> 4;
-	__u8 telem = (lpa & 0x8) >> 3;
-	__u8 ed = (lpa & 0x4) >> 2;
-	__u8 celp = (lpa & 0x2) >> 1;
-	__u8 smlp = lpa & 0x1;
+	__u8 rsvd = NVME_CTRL_LPA_RSVD7(lpa);
+	__u8 tel = NVME_CTRL_LPA_DA4S(lpa);
+	__u8 lid_sup = NVME_CTRL_LPA_MLPS(lpa);
+	__u8 persevnt = NVME_CTRL_LPA_PES(lpa);
+	__u8 telem = NVME_CTRL_LPA_TS(lpa);
+	__u8 ed = NVME_CTRL_LPA_LPEDS(lpa);
+	__u8 celp = NVME_CTRL_LPA_CSES(lpa);
+	__u8 smlp = NVME_CTRL_LPA_SMARTS(lpa);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -613,8 +613,8 @@ static struct shr_table *stdout_id_ctrl_npss_table(__u8 npss)
 static struct shr_table *stdout_id_ctrl_avscc_table(__u8 avscc)
 {
 	struct shr_table *t;
-	__u8 rsvd = (avscc & 0xFE) >> 1;
-	__u8 fmt = avscc & 0x1;
+	__u8 rsvd = NVME_CTRL_AVSCC_RSVD1(avscc);
+	__u8 fmt = NVME_CTRL_AVSCC_VSCF(avscc);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -632,8 +632,8 @@ static struct shr_table *stdout_id_ctrl_avscc_table(__u8 avscc)
 static struct shr_table *stdout_id_ctrl_apsta_table(__u8 apsta)
 {
 	struct shr_table *t;
-	__u8 rsvd = (apsta & 0xFE) >> 1;
-	__u8 apst = apsta & 0x1;
+	__u8 rsvd = NVME_CTRL_APSTA_RSVD1(apsta);
+	__u8 apst = NVME_CTRL_APSTA_APTS(apsta);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -716,11 +716,11 @@ static struct shr_table *stdout_id_ctrl_rpmbs_table(__le32 ctrl_rpmbs)
 {
 	struct shr_table *t;
 	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
-	__u32 asz = (rpmbs & 0xFF000000) >> 24;
-	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
-	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
-	__u32 auth = (rpmbs & 0x38) >> 3;
-	__u32 rpmb = rpmbs & 0x7;
+	__u32 asz = NVME_CTRL_RPMBS_ASZE(rpmbs);
+	__u32 tsz = NVME_CTRL_RPMBS_TSZE(rpmbs);
+	__u32 rsvd = NVME_CTRL_RPMBS_RSVD6(rpmbs);
+	__u32 auth = NVME_CTRL_RPMBS_AUTHM(rpmbs);
+	__u32 rpmb = NVME_CTRL_RPMBS_NRPMBU(rpmbs);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -739,7 +739,7 @@ static struct shr_table *stdout_id_ctrl_rpmbs_table(__le32 ctrl_rpmbs)
 static struct shr_table *stdout_id_ctrl_dsto_table(__u8 dsto)
 {
 	struct shr_table *t;
-	__u8 rsvd2 = (dsto & 0xfc) >> 2;
+	__u8 rsvd2 = NVME_CTRL_DSTO_RSVD2(dsto);
 	__u8 hirs = NVME_CTRL_DSTO_HIRS(dsto);
 	__u8 sdso = NVME_CTRL_DSTO_SDSO(dsto);
 
@@ -764,8 +764,8 @@ static struct shr_table *stdout_id_ctrl_hctma_table(__le16 ctrl_hctma)
 {
 	struct shr_table *t;
 	__u16 hctma = le16_to_cpu(ctrl_hctma);
-	__u16 rsvd = (hctma & 0xFFFE) >> 1;
-	__u16 hctm = hctma & 0x1;
+	__u16 rsvd = NVME_CTRL_HCTMA_RSVD1(hctma);
+	__u16 hctm = NVME_CTRL_HCTMA_HCTMS(hctma);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -818,7 +818,7 @@ static struct shr_table *stdout_id_ctrl_sanicap_table(__le32 ctrl_sanicap)
 {
 	struct shr_table *t;
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
-	__u32 rsvd6 = (sanicap & 0x1FFFFFC0) >> 6;
+	__u32 rsvd6 = NVME_CTRL_SANICAP_RSVD6(sanicap);
 	__u32 sprrs = NVME_CTRL_SANICAP_SPRRS(sanicap);
 	__u32 vers = NVME_CTRL_SANICAP_NVERS(sanicap);
 	__u32 ows = NVME_CTRL_SANICAP_OWS(sanicap);

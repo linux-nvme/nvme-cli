@@ -2392,8 +2392,10 @@ enum nvme_id_ctrl_dctype {
  *			     NVM Subsystem, see &struct nvme_id_ctrl.nvmsr.
  * @NVME_CTRL_NVMSR_NVMESD_SHIFT: NVMESD shift
  * @NVME_CTRL_NVMSR_NVMEE_SHIFT: NVMEE shift
+ * @NVME_CTRL_NVMSR_RSVD2_SHIFT: Reserved shift
  * @NVME_CTRL_NVMSR_NVMESD_MASK: NVMESD mask
  * @NVME_CTRL_NVMSR_NVMEE_MASK: NVMEE mask
+ * @NVME_CTRL_NVMSR_RSVD2_MASK: Reserved mask
  * @NVME_CTRL_NVMSR_NVMESD: If set, then the NVM Subsystem is part of an NVMe
  *			    Storage Device; if cleared, then the NVM Subsystem
  *			    is not part of an NVMe Storage Device.
@@ -2404,14 +2406,17 @@ enum nvme_id_ctrl_dctype {
 enum nvme_id_ctrl_nvmsr {
 	NVME_CTRL_NVMSR_NVMESD_SHIFT	= 0,
 	NVME_CTRL_NVMSR_NVMEE_SHIFT	= 1,
+	NVME_CTRL_NVMSR_RSVD2_SHIFT	= 2,
 	NVME_CTRL_NVMSR_NVMESD_MASK	= 0x1,
 	NVME_CTRL_NVMSR_NVMEE_MASK	= 0x1,
+	NVME_CTRL_NVMSR_RSVD2_MASK	= 0x3f,
 	NVME_CTRL_NVMSR_NVMESD		= NVME_VAL(CTRL_NVMSR_NVMESD),
 	NVME_CTRL_NVMSR_NVMEE		= NVME_VAL(CTRL_NVMSR_NVMEE),
 };
 
 #define NVME_CTRL_NVMSR_NVMESD(nvmsr)	NVME_GET(nvmsr, CTRL_NVMSR_NVMESD)
 #define NVME_CTRL_NVMSR_NVMEE(nvmsr)	NVME_GET(nvmsr, CTRL_NVMSR_NVMEE)
+#define NVME_CTRL_NVMSR_RSVD2(nvmsr)	NVME_GET(nvmsr, CTRL_NVMSR_RSVD2)
 
 /**
  * enum nvme_id_ctrl_vwci - This field indicates information about remaining
@@ -2452,8 +2457,10 @@ enum nvme_id_ctrl_vwci {
  *			   Endpoint in the Controller, &struct nvme_id_ctrl.mec.
  * @NVME_CTRL_MEC_TWPME_SHIFT: TWPME shift
  * @NVME_CTRL_MEC_PCIEME_SHIFT: PCIEME shift
+ * @NVME_CTRL_MEC_RSVD2_SHIFT: Reserved shift
  * @NVME_CTRL_MEC_TWPME_MASK: TWPME mask
  * @NVME_CTRL_MEC_PCIEME_MASK: PCIEME mask
+ * @NVME_CTRL_MEC_RSVD2_MASK: Reserved mask
  * @NVME_CTRL_MEC_TWPME: If set, then the NVM Subsystem contains one or more
  *			 Management Endpoints on the 2-Wire port.
  * @NVME_CTRL_MEC_PCIEME: If set, then the NVM Subsystem contains one or more
@@ -2462,14 +2469,17 @@ enum nvme_id_ctrl_vwci {
 enum nvme_id_ctrl_mec {
 	NVME_CTRL_MEC_TWPME_SHIFT		= 0,
 	NVME_CTRL_MEC_PCIEME_SHIFT		= 1,
+	NVME_CTRL_MEC_RSVD2_SHIFT		= 2,
 	NVME_CTRL_MEC_TWPME_MASK		= 0x1,
 	NVME_CTRL_MEC_PCIEME_MASK		= 0x1,
+	NVME_CTRL_MEC_RSVD2_MASK		= 0x3f,
 	NVME_CTRL_MEC_TWPME			= NVME_VAL(CTRL_MEC_TWPME),
 	NVME_CTRL_MEC_PCIEME			= NVME_VAL(CTRL_MEC_PCIEME),
 };
 
 #define NVME_CTRL_MEC_TWPME(mec)	NVME_GET(mec, CTRL_MEC_TWPME)
 #define NVME_CTRL_MEC_PCIEME(mec)	NVME_GET(mec, CTRL_MEC_PCIEME)
+#define NVME_CTRL_MEC_RSVD2(mec)	NVME_GET(mec, CTRL_MEC_RSVD2)
 
 /**
  * enum nvme_id_ctrl_oacs - Flags indicating the optional Admin commands and
@@ -2491,6 +2501,7 @@ enum nvme_id_ctrl_mec {
  *			       Support
  * @NVME_CTRL_OACS_CCFLS_SHIFT: Shift amount to get the Controller-scoped
  *			       Command and Feature Lockdown supported
+ * @NVME_CTRL_OACS_RSVD14_SHIFT:Shift amount to get the Reserved
  * @NVME_CTRL_OACS_SSRS_MASK:  Mask to get the Security Send Receive supported
  * @NVME_CTRL_OACS_FNVMS_MASK: Mask to get the Format NVM supported
  * @NVME_CTRL_OACS_FWDS_MASK:  Mask to get the Firmware Download supported
@@ -2506,6 +2517,7 @@ enum nvme_id_ctrl_mec {
  * @NVME_CTRL_OACS_ENSS_MASK:  Mask to get the Exported NVM Subsystem Support
  * @NVME_CTRL_OACS_CCFLS_MASK: Mask to get the Controller-scoped Command and
  *			       Feature Lockdown supported
+ * @NVME_CTRL_OACS_RSVD14_MASK:Mask to get the Reserved
  * @NVME_CTRL_OACS_SSRS:       If set, then the controller supports the
  *			       Security Send and Security Receive commands.
  * @NVME_CTRL_OACS_FNVMS:      If set then the controller supports the Format
@@ -2554,6 +2566,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_HMLMS_SHIFT		= 11,
 	NVME_CTRL_OACS_ENSS_SHIFT		= 12,
 	NVME_CTRL_OACS_CCFLS_SHIFT		= 13,
+	NVME_CTRL_OACS_RSVD14_SHIFT		= 14,
 	NVME_CTRL_OACS_SSRS_MASK		= 1,
 	NVME_CTRL_OACS_FNVMS_MASK		= 1,
 	NVME_CTRL_OACS_FWDS_MASK		= 1,
@@ -2568,6 +2581,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_HMLMS_MASK		= 1,
 	NVME_CTRL_OACS_ENSS_MASK		= 1,
 	NVME_CTRL_OACS_CCFLS_MASK		= 1,
+	NVME_CTRL_OACS_RSVD14_MASK		= 3,
 	NVME_CTRL_OACS_SSRS			= NVME_VAL(CTRL_OACS_SSRS),
 	NVME_CTRL_OACS_FNVMS			= NVME_VAL(CTRL_OACS_FNVMS),
 	NVME_CTRL_OACS_FWDS			= NVME_VAL(CTRL_OACS_FWDS),
@@ -2598,6 +2612,7 @@ enum nvme_id_ctrl_oacs {
 #define NVME_CTRL_OACS_HMLMS(oacs)	NVME_GET(oacs, CTRL_OACS_HMLMS)
 #define NVME_CTRL_OACS_ENSS(oacs)	NVME_GET(oacs, CTRL_OACS_ENSS)
 #define NVME_CTRL_OACS_CCFLS(oacs)	NVME_GET(oacs, CTRL_OACS_CCFLS)
+#define NVME_CTRL_OACS_RSVD14(oacs)	NVME_GET(oacs, CTRL_OACS_RSVD14)
 
 /**
  * enum nvme_id_ctrl_frmw - Flags and values indicates capabilities regarding
@@ -2606,10 +2621,12 @@ enum nvme_id_ctrl_oacs {
  * @NVME_CTRL_FRMW_NOFS_SHIFT:	NOFS shift
  * @NVME_CTRL_FRMW_FAWR_SHIFT:	FAWR shift
  * @NVME_CTRL_FRMW_SMUD_SHIFT:	SMUD shift
+ * @NVME_CTRL_FRMW_RSVD6_SHIFT:	Reserved shift
  * @NVME_CTRL_FRMW_FFSRO_MASK:	FFSRO mask
  * @NVME_CTRL_FRMW_NOFS_MASK:	NOFS mask
  * @NVME_CTRL_FRMW_FAWR_MASK:	FAWR mask
  * @NVME_CTRL_FRMW_SMUD_MASK:	SMUD mask
+ * @NVME_CTRL_FRMW_RSVD6_MASK:	Reserved mask
  * @NVME_CTRL_FRMW_FFSRO:	If set, the first firmware slot is readonly
  * @NVME_CTRL_FRMW_NOFS:	Mask to get the value of the number of
  *				firmware slots that the controller supports.
@@ -2624,10 +2641,12 @@ enum nvme_id_ctrl_frmw {
 	NVME_CTRL_FRMW_NOFS_SHIFT	= 1,
 	NVME_CTRL_FRMW_FAWR_SHIFT	= 4,
 	NVME_CTRL_FRMW_SMUD_SHIFT	= 5,
+	NVME_CTRL_FRMW_RSVD6_SHIFT	= 6,
 	NVME_CTRL_FRMW_FFSRO_MASK	= 0x1,
 	NVME_CTRL_FRMW_NOFS_MASK	= 0x7,
 	NVME_CTRL_FRMW_FAWR_MASK	= 0x1,
 	NVME_CTRL_FRMW_SMUD_MASK	= 0x1,
+	NVME_CTRL_FRMW_RSVD6_MASK	= 0x3,
 	NVME_CTRL_FRMW_FFSRO		= NVME_VAL(CTRL_FRMW_FFSRO),
 	NVME_CTRL_FRMW_NOFS		= NVME_VAL(CTRL_FRMW_NOFS),
 	NVME_CTRL_FRMW_FAWR		= NVME_VAL(CTRL_FRMW_FAWR),
@@ -2638,6 +2657,7 @@ enum nvme_id_ctrl_frmw {
 #define NVME_CTRL_FRMW_NOFS(frmw)	NVME_GET(frmw, CTRL_FRMW_NOFS)
 #define NVME_CTRL_FRMW_FAWR(frmw)	NVME_GET(frmw, CTRL_FRMW_FAWR)
 #define NVME_CTRL_FRMW_SMUD(frmw)	NVME_GET(frmw, CTRL_FRMW_SMUD)
+#define NVME_CTRL_FRMW_RSVD6(frmw)	NVME_GET(frmw, CTRL_FRMW_RSVD6)
 
 /**
  * enum nvme_id_ctrl_lpa - Flags indicating optional attributes for log pages
@@ -2649,6 +2669,7 @@ enum nvme_id_ctrl_frmw {
  * @NVME_CTRL_LPA_PES_SHIFT:	PES shift
  * @NVME_CTRL_LPA_MLPS_SHIFT:	MLPS shift
  * @NVME_CTRL_LPA_DA4S_SHIFT:	DA4S shift
+ * @NVME_CTRL_LPA_RSVD7_SHIFT:	Reserved shift
  * @NVME_CTRL_LPA_SMARTS_MASK:	SMARTS mask
  * @NVME_CTRL_LPA_CSES_MASK:	CSES mask
  * @NVME_CTRL_LPA_LPEDS_MASK:	LPEDS mask
@@ -2656,6 +2677,7 @@ enum nvme_id_ctrl_frmw {
  * @NVME_CTRL_LPA_PES_MASK:	PES mask
  * @NVME_CTRL_LPA_MLPS_MASK:	MLPS mask
  * @NVME_CTRL_LPA_DA4S_MASK:	DA4S mask
+ * @NVME_CTRL_LPA_RSVD7_MASK:	Reserved mask
  * @NVME_CTRL_LPA_SMARTS:	If set, controller supports SMART/Health log
  *				page on a per namespace basis.
  * @NVME_CTRL_LPA_CSES:		If Set, the controller supports the commands
@@ -2688,6 +2710,7 @@ enum nvme_id_ctrl_lpa {
 	NVME_CTRL_LPA_PES_SHIFT		= 4,
 	NVME_CTRL_LPA_MLPS_SHIFT	= 5,
 	NVME_CTRL_LPA_DA4S_SHIFT	= 6,
+	NVME_CTRL_LPA_RSVD7_SHIFT	= 7,
 	NVME_CTRL_LPA_SMARTS_MASK	= 0x1,
 	NVME_CTRL_LPA_CSES_MASK		= 0x1,
 	NVME_CTRL_LPA_LPEDS_MASK	= 0x1,
@@ -2695,6 +2718,7 @@ enum nvme_id_ctrl_lpa {
 	NVME_CTRL_LPA_PES_MASK		= 0x1,
 	NVME_CTRL_LPA_MLPS_MASK		= 0x1,
 	NVME_CTRL_LPA_DA4S_MASK		= 0x1,
+	NVME_CTRL_LPA_RSVD7_MASK	= 0x1,
 	NVME_CTRL_LPA_SMARTS		= NVME_VAL(CTRL_LPA_SMARTS),
 	NVME_CTRL_LPA_CSES		= NVME_VAL(CTRL_LPA_CSES),
 	NVME_CTRL_LPA_LPEDS		= NVME_VAL(CTRL_LPA_LPEDS),
@@ -2711,49 +2735,92 @@ enum nvme_id_ctrl_lpa {
 #define NVME_CTRL_LPA_PES(lpa)		NVME_GET(lpa, CTRL_LPA_PES)
 #define NVME_CTRL_LPA_MLPS(lpa)		NVME_GET(lpa, CTRL_LPA_MLPS)
 #define NVME_CTRL_LPA_DA4S(lpa)		NVME_GET(lpa, CTRL_LPA_DA4S)
+#define NVME_CTRL_LPA_RSVD7(lpa)	NVME_GET(lpa, CTRL_LPA_RSVD7)
 
 /**
  * enum nvme_id_ctrl_avscc - Flags indicating the configuration settings for
  *			     Admin Vendor Specific command handling.
  * @NVME_CTRL_AVSCC_VSCF_SHIFT:	VSCF shift
+ * @NVME_CTRL_AVSCC_RSVD1_SHIFT:Reserved shift
  * @NVME_CTRL_AVSCC_VSCF_MASK:	VSCF mask
+ * @NVME_CTRL_AVSCC_RSVD1_MASK:	Reserved mask
  * @NVME_CTRL_AVSCC_VSCF:	If set, all Admin Vendor Specific Commands use
  *				the optional vendor specific command format with
  *				NDT and NDM fields.
  */
 enum nvme_id_ctrl_avscc {
 	NVME_CTRL_AVSCC_VSCF_SHIFT	= 0,
+	NVME_CTRL_AVSCC_RSVD1_SHIFT	= 1,
 	NVME_CTRL_AVSCC_VSCF_MASK	= 0x1,
+	NVME_CTRL_AVSCC_RSVD1_MASK	= 0x7f,
 	NVME_CTRL_AVSCC_VSCF		= NVME_VAL(CTRL_AVSCC_VSCF),
 };
 
 #define NVME_CTRL_AVSCC_VSCF(avscc)	NVME_GET(avscc, CTRL_AVSCC_VSCF)
+#define NVME_CTRL_AVSCC_RSVD1(avscc)	NVME_GET(avscc, CTRL_AVSCC_RSVD1)
 
 /**
  * enum nvme_id_ctrl_apsta - Flags indicating the attributes of the autonomous
  *			     power state transition feature.
+ * @NVME_CTRL_APSTA_APTS_SHIFT: APTS shift
+ * @NVME_CTRL_APSTA_RSVD1_SHIFT: Reserved shift
+ * @NVME_CTRL_APSTA_APTS_MASK: APTS mask
+ * @NVME_CTRL_APSTA_RSVD1_MASK: Reserved mask
  * @NVME_CTRL_APSTA_APST: If set, then the controller supports autonomous power
  *			  state transitions.
  */
 enum nvme_id_ctrl_apsta {
-	NVME_CTRL_APSTA_APST			= 1 << 0,
+	NVME_CTRL_APSTA_APTS_SHIFT		= 0,
+	NVME_CTRL_APSTA_RSVD1_SHIFT		= 1,
+	NVME_CTRL_APSTA_APTS_MASK		= 0x0,
+	NVME_CTRL_APSTA_RSVD1_MASK		= 0x7f,
+	NVME_CTRL_APSTA_APST			= NVME_VAL(CTRL_APSTA_APTS),
 };
+
+#define NVME_CTRL_APSTA_APTS(apsta)	NVME_GET(apsta, CTRL_APSTA_APTS)
+#define NVME_CTRL_APSTA_RSVD1(apsta)	NVME_GET(apsta, CTRL_APSTA_RSVD1)
 
 /**
  * enum nvme_id_ctrl_rpmbs - This field indicates if the controller supports
  *			     one or more Replay Protected Memory Blocks, from
  *			     &struct nvme_id_ctrl.rpmbs.
+ * @NVME_CTRL_RPMBS_NRPMBU_SHIFT:NRPMBU shift
+ * @NVME_CTRL_RPMBS_AUTHM_SHIFT: AUTHM shift
+ * @NVME_CTRL_RPMBS_RSVD6_SHIFT: Reserved shift
+ * @NVME_CTRL_RPMBS_TSZE_SHIFT:	 TSZE shift
+ * @NVME_CTRL_RPMBS_ASZE_SHIFT:	 ASZE shift
+ * @NVME_CTRL_RPMBS_NRPMBU_MASK: NRPMBU mask
+ * @NVME_CTRL_RPMBS_AUTHM_MASK:	 AUTHM mask
+ * @NVME_CTRL_RPMBS_RSVD6_MASK:	 Reserved mask
+ * @NVME_CTRL_RPMBS_TSZE_MASK:	 TSZE mask
+ * @NVME_CTRL_RPMBS_ASZE_MASK:	 ASZE mask
  * @NVME_CTRL_RPMBS_NR_UNITS:	 Mask to get the value of the Number of RPMB Units
  * @NVME_CTRL_RPMBS_AUTH_METHOD: Mask to get the value of the Authentication Method
  * @NVME_CTRL_RPMBS_TOTAL_SIZE:	 Mask to get the value of Total Size
  * @NVME_CTRL_RPMBS_ACCESS_SIZE: Mask to get the value of Access Size
  */
 enum nvme_id_ctrl_rpmbs {
-	NVME_CTRL_RPMBS_NR_UNITS		= 7 << 0,
-	NVME_CTRL_RPMBS_AUTH_METHOD		= 7 << 3,
-	NVME_CTRL_RPMBS_TOTAL_SIZE		= 0xff << 16,
-	NVME_CTRL_RPMBS_ACCESS_SIZE		= 0xff << 24,
+	NVME_CTRL_RPMBS_NRPMBU_SHIFT		= 0,
+	NVME_CTRL_RPMBS_AUTHM_SHIFT		= 3,
+	NVME_CTRL_RPMBS_RSVD6_SHIFT		= 6,
+	NVME_CTRL_RPMBS_TSZE_SHIFT		= 16,
+	NVME_CTRL_RPMBS_ASZE_SHIFT		= 24,
+	NVME_CTRL_RPMBS_NRPMBU_MASK		= 0x7,
+	NVME_CTRL_RPMBS_AUTHM_MASK		= 0x7,
+	NVME_CTRL_RPMBS_RSVD6_MASK		= 0x3ff,
+	NVME_CTRL_RPMBS_TSZE_MASK		= 0xff,
+	NVME_CTRL_RPMBS_ASZE_MASK		= 0xff,
+	NVME_CTRL_RPMBS_NR_UNITS		= NVME_VAL(CTRL_RPMBS_NRPMBU),
+	NVME_CTRL_RPMBS_AUTH_METHOD		= NVME_VAL(CTRL_RPMBS_AUTHM),
+	NVME_CTRL_RPMBS_TOTAL_SIZE		= NVME_VAL(CTRL_RPMBS_TSZE),
+	NVME_CTRL_RPMBS_ACCESS_SIZE		= NVME_VAL(CTRL_RPMBS_ASZE),
 };
+
+#define NVME_CTRL_RPMBS_NRPMBU(rpmbs)	NVME_GET(rpmbs, CTRL_RPMBS_NRPMBU)
+#define NVME_CTRL_RPMBS_AUTHM(rpmbs)	NVME_GET(rpmbs, CTRL_RPMBS_AUTHM)
+#define NVME_CTRL_RPMBS_RSVD6(rpmbs)	NVME_GET(rpmbs, CTRL_RPMBS_RSVD6)
+#define NVME_CTRL_RPMBS_TSZE(rpmbs)	NVME_GET(rpmbs, CTRL_RPMBS_TSZE)
+#define NVME_CTRL_RPMBS_ASZE(rpmbs)	NVME_GET(rpmbs, CTRL_RPMBS_ASZE)
 
 /**
  * enum nvme_id_ctrl_dsto - Flags indicating the optional Device Self-test
@@ -2763,8 +2830,10 @@ enum nvme_id_ctrl_rpmbs {
  *				Operation from Device Self-test Options field.
  * @NVME_CTRL_DSTO_HIRS_SHIFT:	Shift amount to get the value of  Host-Initiated Refresh
  *				Support from Device Self-test Options field.
+ * @NVME_CTRL_DSTO_RSVD2_SHIFT:	Shift amount to get the Reserved
  * @NVME_CTRL_DSTO_SDSO_MASK:	Mask to get the value of Single Device Self-test Operation
  * @NVME_CTRL_DSTO_HIRS_MASK:	Mask to get the value of Host-Initiated Refresh Support
+ * @NVME_CTRL_DSTO_RSVD2_MASK:	Mask to get the value of Reserved
  * @NVME_CTRL_DSTO_ONE_DST:	If set, then the NVM subsystem supports only one device
  *				self-test operation in progress at a time. If cleared,
  *				then the NVM subsystem supports one device self-test
@@ -2775,26 +2844,40 @@ enum nvme_id_ctrl_rpmbs {
 enum nvme_id_ctrl_dsto {
 	NVME_CTRL_DSTO_SDSO_SHIFT		= 0,
 	NVME_CTRL_DSTO_HIRS_SHIFT		= 1,
+	NVME_CTRL_DSTO_RSVD2_SHIFT		= 2,
 	NVME_CTRL_DSTO_SDSO_MASK		= 0x1,
 	NVME_CTRL_DSTO_HIRS_MASK		= 0x1,
+	NVME_CTRL_DSTO_RSVD2_MASK		= 0x3f,
 	NVME_CTRL_DSTO_ONE_DST			= NVME_VAL(CTRL_DSTO_SDSO),
 	NVME_CTRL_DSTO_HIRS			= NVME_VAL(CTRL_DSTO_HIRS),
 };
 
 #define NVME_CTRL_DSTO_SDSO(dsto)	NVME_GET(dsto, CTRL_DSTO_SDSO)
 #define NVME_CTRL_DSTO_HIRS(dsto)	NVME_GET(dsto, CTRL_DSTO_HIRS)
+#define NVME_CTRL_DSTO_RSVD2(dsto)	NVME_GET(dsto, CTRL_DSTO_RSVD2)
 
 /**
  * enum nvme_id_ctrl_hctm - Flags indicate the attributes of the host
  *			    controlled thermal management feature
+ * @NVME_CTRL_HCTMA_HCTMS_SHIFT: HCTMS shift
+ * @NVME_CTRL_HCTMA_RSVD1_SHIFT: Reserved shift
+ * @NVME_CTRL_HCTMA_HCTMS_MASK: HCTMS mask
+ * @NVME_CTRL_HCTMA_RSVD1_MASK: Reserved mask
  * @NVME_CTRL_HCTMA_HCTM: then the controller supports host controlled thermal
  *			  management, and the Set Features command and Get
  *			  Features command with the Feature Identifier field
  *			  set to %NVME_FEAT_FID_HCTM.
  */
 enum nvme_id_ctrl_hctm {
-	NVME_CTRL_HCTMA_HCTM			= 1 << 0,
+	NVME_CTRL_HCTMA_HCTMS_SHIFT		= 0,
+	NVME_CTRL_HCTMA_RSVD1_SHIFT		= 1,
+	NVME_CTRL_HCTMA_HCTMS_MASK		= 0x1,
+	NVME_CTRL_HCTMA_RSVD1_MASK		= 0x7fff,
+	NVME_CTRL_HCTMA_HCTM			= NVME_VAL(CTRL_HCTMA_HCTMS),
 };
+
+#define NVME_CTRL_HCTMA_HCTMS(hctma)	NVME_GET(hctma, CTRL_HCTMA_HCTMS)
+#define NVME_CTRL_HCTMA_RSVD1(hctma)	NVME_GET(hctma, CTRL_HCTMA_RSVD1)
 
 /**
  * enum nvme_id_ctrl_sanicap - Indicates attributes for sanitize operations.
@@ -2808,6 +2891,7 @@ enum nvme_id_ctrl_hctm {
  *				     shift
  * @NVME_CTRL_SANICAP_SPRRS_SHIFT: Sanitize purge request and reporting
  *				    supported shift
+ * @NVME_CTRL_SANICAP_RSVD6_SHIFT: Reserved shift
  * @NVME_CTRL_SANICAP_CES_MASK: Crypto erase support mask
  * @NVME_CTRL_SANICAP_BES_MASK: Block erase support mask
  * @NVME_CTRL_SANICAP_OWS_MASK: Overwrite support mask
@@ -2818,6 +2902,7 @@ enum nvme_id_ctrl_hctm {
  *				    mask
  * @NVME_CTRL_SANICAP_SPRRS_MASK: Sanitize purge request and reporting
  *				   supported mask
+ * @NVME_CTRL_SANICAP_RSVD6_MASK: Reserved mask
  * @NVME_CTRL_SANICAP_CES:     Crypto Erase Support. If set, then the
  *			       controller supports the Crypto Erase sanitize operation.
  * @NVME_CTRL_SANICAP_BES:     Block Erase Support. If set, then the controller
@@ -2847,6 +2932,7 @@ enum nvme_id_ctrl_sanicap {
 	NVME_CTRL_SANICAP_VERS_SHIFT	= 3,
 	NVME_CTRL_SANICAP_NVERS_SHIFT	= 4,
 	NVME_CTRL_SANICAP_SPRRS_SHIFT	= 5,
+	NVME_CTRL_SANICAP_RSVD6_SHIFT	= 6,
 	NVME_CTRL_SANICAP_NDI_SHIFT	= 29,
 	NVME_CTRL_SANICAP_NODMMAS_SHIFT	= 30,
 	NVME_CTRL_SANICAP_CES_MASK	= 0x1,
@@ -2855,6 +2941,7 @@ enum nvme_id_ctrl_sanicap {
 	NVME_CTRL_SANICAP_VERS_MASK	= 0x1,
 	NVME_CTRL_SANICAP_NVERS_MASK	= 0x1,
 	NVME_CTRL_SANICAP_SPRRS_MASK	= 0x1,
+	NVME_CTRL_SANICAP_RSVD6_MASK	= 0x7fffff,
 	NVME_CTRL_SANICAP_NDI_MASK	= 0x1,
 	NVME_CTRL_SANICAP_NODMMAS_MASK	= 0x3,
 	NVME_CTRL_SANICAP_CES		= NVME_VAL(CTRL_SANICAP_CES),
@@ -2873,6 +2960,7 @@ enum nvme_id_ctrl_sanicap {
 #define NVME_CTRL_SANICAP_VERS(sanicap)    NVME_GET(sanicap, CTRL_SANICAP_VERS)
 #define NVME_CTRL_SANICAP_NVERS(sanicap)   NVME_GET(sanicap, CTRL_SANICAP_NVERS)
 #define NVME_CTRL_SANICAP_SPRRS(sanicap)   NVME_GET(sanicap, CTRL_SANICAP_SPRRS)
+#define NVME_CTRL_SANICAP_RSVD6(sanicap)   NVME_GET(sanicap, CTRL_SANICAP_RSVD6)
 #define NVME_CTRL_SANICAP_NDI(sanicap)     NVME_GET(sanicap, CTRL_SANICAP_NDI)
 #define NVME_CTRL_SANICAP_NODMMAS(sanicap) \
 	NVME_GET(sanicap, CTRL_SANICAP_NODMMAS)
