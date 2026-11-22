@@ -851,14 +851,22 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (cfg.keyfile) {
-		old_umask = umask(0);
+		old_umask = umask(0077);
 
 		fd = fopen(cfg.keyfile, "w");
 		if (!fd) {
-			nvme_show_error("Cannot open keyfile %s, error %d",
-					cfg.keyfile, errno);
-			umask(old_umask);
-			return -errno;
+			err = -errno;
+			nvme_show_error("Failed to open '%s', %s",
+					cfg.keyfile, libnvme_strerror(errno));
+			goto out;
+		}
+
+		if (fchmod(fileno(fd), 0600) < 0) {
+			err = -errno;
+			nvme_show_error(
+				"Failed to restrict permissions on '%s', %s",
+				cfg.keyfile, libnvme_strerror(errno));
+			goto out;
 		}
 	} else {
 		fd = freopen(NULL, "w", stdout);
@@ -868,17 +876,17 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 	if (err < 0) {
 		nvme_show_error("Export of TLS PSKs failed with '%s'",
 			libnvme_strerror(-err));
-		return err;
+		goto out;
 	}
 
 	nvme_show_verbose_info("exporting to %s", cfg.keyfile);
+	err = 0;
 
-	if (cfg.keyfile) {
+out:
+	if (cfg.keyfile)
 		umask(old_umask);
-		chmod(cfg.keyfile, 0600);
-	}
 
-	return 0;
+	return err;
 }
 
 static bool is_kxchap_key(const char *key)

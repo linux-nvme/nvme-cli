@@ -75,11 +75,11 @@ class KeysCLITest(unittest.TestCase):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 encoding='utf-8')
-        if expect_fail:
+        if expect_fail is True:
             self.assertNotEqual(result.returncode, 0,
                                 f'Command {cmd} unexpectedly succeeded:\n'
                                 f'{result.stdout}')
-        else:
+        elif expect_fail is False:
             self.assertEqual(result.returncode, 0,
                              f'Command {cmd} failed:\n{result.stderr}')
         return result
@@ -374,6 +374,33 @@ class KeysCLITest(unittest.TestCase):
     def test_revoke_requires_identity(self):
         result = self._run('revoke', expect_fail=True)
         self.assertIn('--identity', result.stdout + result.stderr)
+
+    def test_export_keyfile_mode_new_file(self):
+        import os
+        import stat
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            keyfile = os.path.join(tmpdir, "new_export.key")
+            self._run('export', f'--keyfile={keyfile}', expect_fail=None)
+            if os.path.exists(keyfile):
+                mode = stat.S_IMODE(os.stat(keyfile).st_mode)
+                self.assertEqual(mode, 0o600,
+                                 f"New keyfile mode 0{oct(mode)} != 0600")
+
+    def test_export_keyfile_mode_tightens_existing_file(self):
+        import os
+        import stat
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            keyfile = os.path.join(tmpdir, "preexisting.key")
+            with open(keyfile, "w") as f:
+                f.write("test\n")
+            os.chmod(keyfile, 0o644)
+            self._run('export', f'--keyfile={keyfile}', expect_fail=None)
+            if os.path.exists(keyfile):
+                mode = stat.S_IMODE(os.stat(keyfile).st_mode)
+                self.assertEqual(mode, 0o600,
+                                 f"Pre-existing keyfile mode 0{oct(mode)} was not tightened to 0600")
 
 
 if __name__ == '__main__':
