@@ -582,6 +582,14 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 int __libnvmf_import_keys_from_config(struct libnvme_host *h,
 		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
 
+/*
+ * A KX-HMAC-CHAP secret that is not key data ("DHHC-1:...") is the
+ * description of a "dhchap" key. Check that the key is in the keyring
+ * of @c (default .nvme). Returns 0 or -ENVME_CONNECT_NOKEY.
+ */
+int __libnvmf_check_kxchap_key(struct libnvme_host *h,
+		struct libnvme_ctrl *c, const char *secret);
+
 /**
  * libnvme_ipaddrs_eq - Check if 2 IP addresses are equal.
  * @addr1: IP address (can be IPv4 or IPv6)

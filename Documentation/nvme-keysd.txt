@@ -64,10 +64,10 @@ this name, and the kernel looks up the key by it. A key with the same
 description is replaced: a controller that uses the old key keeps it
 until it authenticates again.
 
-This needs a kernel that supports KX-HMAC-CHAP keys in the keyring. An
-older kernel rejects the name as a secret: the connection fails, and
-the kernel logs "Invalid DH-CHAP secret <name>". nvme-keysd then logs a
-warning and imports no KX-HMAC-CHAP secrets.
+This needs a kernel that supports KX-HMAC-CHAP keys in the keyring. On
+an older kernel, nvme-keysd logs a warning and imports no KX-HMAC-CHAP
+secrets. The connection then fails before it reaches the kernel, with
+"KX-HMAC-CHAP key '<name>' is not in the keyring".
 
 The kernel interface is not final yet. This part of nvme-keysd may
 change.

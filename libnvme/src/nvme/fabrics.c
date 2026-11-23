@@ -1568,6 +1568,14 @@ static int build_options(struct libnvme_host *h, struct libnvme_ctrl *c, char **
 		return -ENVME_CONNECT_INVAL;
 	}
 
+	if (hostkey) {
+		ret = __libnvmf_check_kxchap_key(h, c, hostkey);
+		if (!ret && ctrlkey)
+			ret = __libnvmf_check_kxchap_key(h, c, ctrlkey);
+		if (ret)
+			return ret;
+	}
+
 	if (c->cfg.tls) {
 		ret = __libnvmf_import_keys_from_config(h, c,
 			&keyring_id, &key_id);
