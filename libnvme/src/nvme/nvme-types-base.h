@@ -3045,21 +3045,43 @@ enum nvme_id_ctrl_anacap {
  *					&struct nvme_id_ctrl.kpioc field.
  * @NVME_CTRL_KPIOC_KPIOSC_SHIFT:	Shift amount to get the Key Per I/O Scope from the
  *					&struct nvme_id_ctrl.kpioc field.
+ * @NVME_CTRL_KPIOC_RSVD2_SHIFT:	Shift amount to get the Reserved
  * @NVME_CTRL_KPIOC_KPIOS_MASK:		Mask to get the Key Per I/O Supported from the
  *					&struct nvme_id_ctrl.kpioc field.
  * @NVME_CTRL_KPIOC_KPIOSC_MASK:	Mask to get the Key Per I/O Scope from the
  *					&struct nvme_id_ctrl.kpioc field.
+ * @NVME_CTRL_KPIOC_RSVD2_MASK:		Mask to get the Reserved
  */
 enum nvme_id_ctrl_kpioc {
 	NVME_CTRL_KPIOC_KPIOS_SHIFT	= 0,
 	NVME_CTRL_KPIOC_KPIOSC_SHIFT	= 1,
+	NVME_CTRL_KPIOC_RSVD2_SHIFT	= 2,
 	NVME_CTRL_KPIOC_KPIOS_MASK	= 0x1,
 	NVME_CTRL_KPIOC_KPIOSC_MASK	= 0x1,
+	NVME_CTRL_KPIOC_RSVD2_MASK	= 0x3f,
 };
 
 #define NVME_CTRL_KPIOC_KPIOS(kpioc)	NVME_GET(kpioc, CTRL_KPIOC_KPIOS)
 #define NVME_CTRL_KPIOC_KPIOSC(kpioc)	NVME_GET(kpioc, CTRL_KPIOC_KPIOSC)
+#define NVME_CTRL_KPIOC_RSVD2(kpioc)	NVME_GET(kpioc, CTRL_KPIOC_RSVD2)
 
+/**
+ * enum nvme_id_ctrl_tmpthha - Temperature Threshold Hysteresis Attributes
+ * @NVME_CTRL_TMPTHHA_TMPTHMH_SHIFT: TMPTHMH shift
+ * @NVME_CTRL_TMPTHHA_RSVD3_SHIFT: Reserved shift
+ * @NVME_CTRL_TMPTHHA_TMPTHMH_MASK: TMPTHMH mask
+ * @NVME_CTRL_TMPTHHA_RSVD3_MASK: Reserved mask
+ */
+enum nvme_id_ctrl_tmpthha {
+	NVME_CTRL_TMPTHHA_TMPTHMH_SHIFT	= 0,
+	NVME_CTRL_TMPTHHA_RSVD3_SHIFT	= 3,
+	NVME_CTRL_TMPTHHA_TMPTHMH_MASK	= 0x7,
+	NVME_CTRL_TMPTHHA_RSVD3_MASK	= 0x1f,
+};
+
+#define NVME_CTRL_TMPTHHA_TMPTHMH(tmpthha) \
+	NVME_GET(tmpthha, CTRL_TMPTHHA_TMPTHMH)
+#define NVME_CTRL_TMPTHHA_RSVD3(tmpthha)   NVME_GET(tmpthha, CTRL_TMPTHHA_RSVD3)
 /**
  * enum nvme_id_ctrl_mupa - Maximum Unlimited Power Attributes
  * @NVME_CTRL_MUPA_MUPS_SHIFT: Shift amount to get the Maximum Unlimited Power
@@ -3075,12 +3097,33 @@ enum nvme_id_ctrl_mupa {
 
 /**
  * enum nvme_id_ctrl_cdpa - Configurable Device Personality Attributes
+ * @NVME_CTRL_CDPA_CDPALG_SHIFT: CDPALG shift
+ * @NVME_CTRL_CDPA_RSVD8_SHIFT: RSVD8 shift
+ * @NVME_CTRL_CDPA_CDPALG_HS3_SHIFT: CDPALG.HS3 shift
+ * @NVME_CTRL_CDPA_CDPALG_RSVD1_SHIFT: CDPALG.RSVD1 shift
+ * @NVME_CTRL_CDPA_CDPALG_MASK: CDPALG mask
+ * @NVME_CTRL_CDPA_RSVD8_MASK: RSVD8 mask
+ * @NVME_CTRL_CDPA_CDPALG_HS3_MASK: CDPALG.HS3 mask
+ * @NVME_CTRL_CDPA_CDPALG_RSVD1_MASK: CDPALG.RSVD1 mask
  * @NVME_CTRL_CDPA_HMAC_SHA_384:    If set, then the controller supports
  *					the HMAC-SHA-384 standard.
  */
 enum nvme_id_ctrl_cdpa {
-	NVME_CTRL_CDPA_HMAC_SHA_384		= 1 << 0,
+	NVME_CTRL_CDPA_CDPALG_SHIFT	  = 0,
+	NVME_CTRL_CDPA_RSVD8_SHIFT	  = 8,
+	NVME_CTRL_CDPA_CDPALG_HS3_SHIFT	  = 0,
+	NVME_CTRL_CDPA_CDPALG_RSVD1_SHIFT = 1,
+	NVME_CTRL_CDPA_CDPALG_MASK	  = 0xff,
+	NVME_CTRL_CDPA_RSVD8_MASK	  = 0xff,
+	NVME_CTRL_CDPA_CDPALG_HS3_MASK	  = 0x1,
+	NVME_CTRL_CDPA_CDPALG_RSVD1_MASK  = 0x7f,
+	NVME_CTRL_CDPA_HMAC_SHA_384	  = NVME_VAL(CTRL_CDPA_CDPALG_HS3),
 };
+
+#define NVME_CTRL_CDPA_CDPALG(cdpa)	  NVME_GET(cdpa, CTRL_CDPA_CDPALG)
+#define NVME_CTRL_CDPA_RSVD8(cdpa)	  NVME_GET(cdpa, CTRL_CDPA_RSVD8)
+#define NVME_CTRL_CDPA_CDPALG_HS3(cdpa)	  NVME_GET(cdpa, CTRL_CDPA_CDPALG_HS3)
+#define NVME_CTRL_CDPA_CDPALG_RSVD1(cdpa) NVME_GET(cdpa, CTRL_CDPA_CDPALG_RSVD1)
 
 /**
  * enum nvme_id_ctrl_ipmsr - Interval Power Measurement Sample Rate
