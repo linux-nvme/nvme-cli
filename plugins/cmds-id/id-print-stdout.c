@@ -1472,13 +1472,13 @@ static struct shr_table *stdout_id_ctrl_dctype_table(__u8 dctype)
 static struct shr_table *stdout_id_ns_nsfeat_table(__u8 nsfeat)
 {
 	struct shr_table *t;
-	__u8 optrperf = (nsfeat & 0x80) >> 7;
-	__u8 mam = (nsfeat & 0x40) >> 6;
-	__u8 optperf = (nsfeat & 0x30) >> 4;
-	__u8 uidreuse = (nsfeat & 0x8) >> 3;
-	__u8 dulbe = (nsfeat & 0x4) >> 2;
-	__u8 na = (nsfeat & 0x2) >> 1;
-	__u8 thin = nsfeat & 0x1;
+	__u8 optrperf = NVME_NS_NSFEAT_OPTRPERF(nsfeat);
+	__u8 mam = NVME_NS_NSFEAT_MAM(nsfeat);
+	__u8 optperf = NVME_NS_NSFEAT_OPTPERF(nsfeat);
+	__u8 uidreuse = NVME_NS_NSFEAT_UIDREUSE(nsfeat);
+	__u8 dulbe = NVME_NS_NSFEAT_DAE(nsfeat);
+	__u8 na = NVME_NS_NSFEAT_NSABP(nsfeat);
+	__u8 thin = NVME_NS_NSFEAT_THINP(nsfeat);
 
 	t = stdout_bits_table_create();
 	if (!t)
