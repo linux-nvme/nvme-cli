@@ -22,7 +22,23 @@ from kmip.pie.client import ProxyKmipClient
 
 
 def serve(args):
+    import ssl
+    import types
+
     from kmip.services.server import server
+
+    # OpenSSL 4.0 has no protocol constants for one TLS version, and
+    # PyKMIP 0.11 still names one for its server. Keep the server at
+    # TLS 1.2, as the constant did.
+    if not hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+        def tls12_context(protocol):
+            ctx = ssl.SSLContext(protocol)
+            ctx.maximum_version = ssl.TLSVersion.TLSv1_2
+            return ctx
+
+        ssl.PROTOCOL_TLSv1_2 = ssl.PROTOCOL_TLS_SERVER
+        server.ssl = types.SimpleNamespace(**vars(ssl))
+        server.ssl.SSLContext = tls12_context
 
     sys.argv = [sys.argv[0], '-f', args.config, '-l', args.log]
     server.main()
