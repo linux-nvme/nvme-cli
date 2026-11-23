@@ -3746,6 +3746,18 @@ enum nvme_id_ns_mc {
 /**
  * enum nvme_id_ns_dpc - This field indicates the capabilities for the
  *			 end-to-end data protection feature.
+ * @NVME_NS_DPC_PIT1S_SHIFT: PIT1S shift
+ * @NVME_NS_DPC_PIT2S_SHIFT: PIT2S shift
+ * @NVME_NS_DPC_PIT3S_SHIFT: PIT3S shift
+ * @NVME_NS_DPC_PIIFB_SHIFT: PIIFB shift
+ * @NVME_NS_DPC_PIILB_SHIFT: PIILB shift
+ * @NVME_NS_DPC_RSVD5_SHIFT: Reserved shift
+ * @NVME_NS_DPC_PIT1S_MASK: PIT1S mask
+ * @NVME_NS_DPC_PIT2S_MASK: PIT2S mask
+ * @NVME_NS_DPC_PIT3S_MASK: PIT3S mask
+ * @NVME_NS_DPC_PIIFB_MASK: PIIFB mask
+ * @NVME_NS_DPC_PIILB_MASK: PIILB mask
+ * @NVME_NS_DPC_RSVD5_MASK: Reserved mask
  * @NVME_NS_DPC_PI_TYPE1: If set, indicates that the namespace supports
  *			  Protection Information Type 1.
  * @NVME_NS_DPC_PI_TYPE2: If set, indicates that the namespace supports
@@ -3760,12 +3772,31 @@ enum nvme_id_ns_mc {
  *			  bytes of metadata.
  */
 enum nvme_id_ns_dpc {
-	NVME_NS_DPC_PI_TYPE1		= 1 << 0,
-	NVME_NS_DPC_PI_TYPE2		= 1 << 1,
-	NVME_NS_DPC_PI_TYPE3		= 1 << 2,
-	NVME_NS_DPC_PI_FIRST		= 1 << 3,
-	NVME_NS_DPC_PI_LAST		= 1 << 4,
+	NVME_NS_DPC_PIT1S_SHIFT		= 0,
+	NVME_NS_DPC_PIT2S_SHIFT		= 1,
+	NVME_NS_DPC_PIT3S_SHIFT		= 2,
+	NVME_NS_DPC_PIIFB_SHIFT		= 3,
+	NVME_NS_DPC_PIILB_SHIFT		= 4,
+	NVME_NS_DPC_RSVD5_SHIFT		= 5,
+	NVME_NS_DPC_PIT1S_MASK		= 0x1,
+	NVME_NS_DPC_PIT2S_MASK		= 0x1,
+	NVME_NS_DPC_PIT3S_MASK		= 0x1,
+	NVME_NS_DPC_PIIFB_MASK		= 0x1,
+	NVME_NS_DPC_PIILB_MASK		= 0x1,
+	NVME_NS_DPC_RSVD5_MASK		= 0x7,
+	NVME_NS_DPC_PI_TYPE1		= NVME_VAL(NS_DPC_PIT1S),
+	NVME_NS_DPC_PI_TYPE2		= NVME_VAL(NS_DPC_PIT2S),
+	NVME_NS_DPC_PI_TYPE3		= NVME_VAL(NS_DPC_PIT3S),
+	NVME_NS_DPC_PI_FIRST		= NVME_VAL(NS_DPC_PIIFB),
+	NVME_NS_DPC_PI_LAST		= NVME_VAL(NS_DPC_PIILB),
 };
+
+#define NVME_NS_DPC_PIT1S(dpc)	NVME_GET(dpc, NS_DPC_PIT1S)
+#define NVME_NS_DPC_PIT2S(dpc)	NVME_GET(dpc, NS_DPC_PIT2S)
+#define NVME_NS_DPC_PIT3S(dpc)	NVME_GET(dpc, NS_DPC_PIT3S)
+#define NVME_NS_DPC_PIIFB(dpc)	NVME_GET(dpc, NS_DPC_PIIFB)
+#define NVME_NS_DPC_PIILB(dpc)	NVME_GET(dpc, NS_DPC_PIILB)
+#define NVME_NS_DPC_RSVD5(dpc)	NVME_GET(dpc, NS_DPC_RSVD5)
 
 /**
  * enum nvme_id_ns_dps - This field indicates the Type settings for the
