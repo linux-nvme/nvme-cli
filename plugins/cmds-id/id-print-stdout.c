@@ -1076,8 +1076,8 @@ static struct shr_table *stdout_id_ctrl_vsen_table(__le32 ctrl_vsen)
 static struct shr_table *stdout_id_ctrl_sqes_table(__u8 sqes)
 {
 	struct shr_table *t;
-	__u8 msqes = (sqes & 0xF0) >> 4;
-	__u8 rsqes = sqes & 0xF;
+	__u8 msqes = NVME_CTRL_SQES_MAXSQES(sqes);
+	__u8 rsqes = NVME_CTRL_SQES_MINSQES(sqes);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1094,8 +1094,8 @@ static struct shr_table *stdout_id_ctrl_sqes_table(__u8 sqes)
 static struct shr_table *stdout_id_ctrl_cqes_table(__u8 cqes)
 {
 	struct shr_table *t;
-	__u8 mcqes = (cqes & 0xF0) >> 4;
-	__u8 rcqes = cqes & 0xF;
+	__u8 mcqes = NVME_CTRL_CQES_MAXCQES(cqes);
+	__u8 rcqes = NVME_CTRL_CQES_MINCQES(cqes);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1113,20 +1113,20 @@ static struct shr_table *stdout_id_ctrl_oncs_table(__le16 ctrl_oncs)
 {
 	struct shr_table *t;
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
-	__u16 rsvd13 = oncs >> 13;
-	bool nszs = !!(oncs & NVME_CTRL_ONCS_NAMESPACE_ZEROES);
-	bool maxwzd = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE);
-	bool nvmafc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
-	bool nvmcsa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
-	bool nvmcpys = !!(oncs & NVME_CTRL_ONCS_COPY);
-	bool nvmvfys = !!(oncs & NVME_CTRL_ONCS_VERIFY);
-	bool tss = !!(oncs & NVME_CTRL_ONCS_TIMESTAMP);
-	bool reservs = !!(oncs & NVME_CTRL_ONCS_RESERVATIONS);
-	bool ssfs = !!(oncs & NVME_CTRL_ONCS_SAVE_FEATURES);
-	bool nvmwzsv = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES);
-	bool nvmdsmsv = !!(oncs & NVME_CTRL_ONCS_DSM);
-	bool nvmwusv = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
-	bool nvmcmps  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
+	__u16 rsvd13 = NVME_CTRL_ONCS_RSVD13(oncs);
+	bool nszs = !!NVME_CTRL_ONCS_NSZS(oncs);
+	bool maxwzd = !!NVME_CTRL_ONCS_MAXWZD(oncs);
+	bool nvmafc  = !!NVME_CTRL_ONCS_NVMAFC(oncs);
+	bool nvmcsa  = !!NVME_CTRL_ONCS_NVMCSA(oncs);
+	bool nvmcpys = !!NVME_CTRL_ONCS_NVMCPYS(oncs);
+	bool nvmvfys = !!NVME_CTRL_ONCS_NVMVFYS(oncs);
+	bool tss = !!NVME_CTRL_ONCS_TSS(oncs);
+	bool reservs = !!NVME_CTRL_ONCS_RESERVS(oncs);
+	bool ssfs = !!NVME_CTRL_ONCS_SSFS(oncs);
+	bool nvmwzsv = !!NVME_CTRL_ONCS_NVMWZSV(oncs);
+	bool nvmdsmsv = !!NVME_CTRL_ONCS_NVMDSMSV(oncs);
+	bool nvmwusv = !!NVME_CTRL_ONCS_NVMWUSV(oncs);
+	bool nvmcmps  = !!NVME_CTRL_ONCS_NVMCMPS(oncs);
 
 	t = stdout_bits_table_create();
 	if (!t)
