@@ -1363,6 +1363,38 @@ out:
 
 	return 0;
 }
+
+int __libnvmf_check_kxchap_key(struct libnvme_host *h,
+		struct libnvme_ctrl *c, const char *secret)
+{
+	const char *keyring = ".nvme";
+	long kr_id = 0, id = 0;
+	int ret;
+
+	// Key data: the kernel parses it.
+	if (shr_startswith(secret, "DHHC-1:"))
+		return 0;
+
+	if (libnvme_ctrl_get_keyring(c, &keyring, NULL) != 0)
+		kr_id = c->cfg.keyring_id;
+	if (!kr_id) {
+		ret = libnvmf_lookup_keyring(h->ctx, keyring, &kr_id);
+		if (!ret)
+			ret = libnvmf_set_keyring(h->ctx, kr_id);
+	} else {
+		ret = libnvmf_set_keyring(h->ctx, kr_id);
+	}
+	if (!ret)
+		ret = libnvmf_lookup_key(h->ctx, "dhchap", secret, &id);
+	if (ret) {
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
+			    "KX-HMAC-CHAP key '%s' is not in the keyring: nvme-keysd did not import it, or the kernel does not support KX-HMAC-CHAP keys in the keyring\n",
+			    secret);
+		return -ENVME_CONNECT_NOKEY;
+	}
+
+	return 0;
+}
 #else
 __shr_public int libnvmf_lookup_keyring(
 		struct libnvme_global_ctx *ctx, const char *keyring, long *key)
@@ -1466,6 +1498,12 @@ int __libnvmf_import_keys_from_config(struct libnvme_host *h, struct libnvme_ctr
 	*keyring_id = 0;
 	*key_id = 0;
 
+	return 0;
+}
+
+int __libnvmf_check_kxchap_key(struct libnvme_host *h,
+		struct libnvme_ctrl *c, const char *secret)
+{
 	return 0;
 }
 #endif
