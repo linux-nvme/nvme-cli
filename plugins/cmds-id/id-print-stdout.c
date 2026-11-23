@@ -1560,12 +1560,12 @@ static struct shr_table *stdout_id_ns_mc_table(__u8 mc)
 static struct shr_table *stdout_id_ns_dpc_table(__u8 dpc)
 {
 	struct shr_table *t;
-	__u8 rsvd = (dpc & 0xE0) >> 5;
-	__u8 pil8 = (dpc & 0x10) >> 4;
-	__u8 pif8 = (dpc & 0x8) >> 3;
-	__u8 pit3 = (dpc & 0x4) >> 2;
-	__u8 pit2 = (dpc & 0x2) >> 1;
-	__u8 pit1 = dpc & 0x1;
+	__u8 rsvd = NVME_NS_DPC_RSVD5(dpc);
+	__u8 pil8 = NVME_NS_DPC_PIILB(dpc);
+	__u8 pif8 = NVME_NS_DPC_PIIFB(dpc);
+	__u8 pit3 = NVME_NS_DPC_PIT3S(dpc);
+	__u8 pit2 = NVME_NS_DPC_PIT2S(dpc);
+	__u8 pit1 = NVME_NS_DPC_PIT1S(dpc);
 
 	t = stdout_bits_table_create();
 	if (!t)
