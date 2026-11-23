@@ -27,8 +27,8 @@ struct kmip_job {
 
 /*
  * Return true if an entry of the fabrics configuration @fabrics_conf (NULL
- * for the default) has a key source other than "inline". Without such an
- * entry, import_keys() has nothing to do.
+ * for the default) has a tls-key-source or kxchap-secret-source other than
+ * "inline". Without such an entry, import_keys() has nothing to do.
  */
 bool import_needed(struct libnvme_global_ctx *ctx, const char *fabrics_conf);
 
@@ -46,6 +46,9 @@ void import_free(struct import_ctx *ic);
  * that is already there is not written again. Any other key for the same
  * host NQN and subsystem NQN is revoked, so the kernel's lookup by NQNs
  * finds only this one.
+ *
+ * Put every KX-HMAC-CHAP secret that comes from a systemd credential into
+ * its keyring, as a "dhchap" key whose description is the credential name.
  *
  * The keys that come from a KMS are only collected: see
  * import_kmip_jobs().

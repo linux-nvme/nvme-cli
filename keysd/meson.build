@@ -23,6 +23,7 @@ nvme_keysd = executable(
     dependencies: [
         ccan_dep,
         daemon_util_dep,
+        keyutils_dep,
         libnvme_dep,
         libsystemd_dep,
         shared_dep,

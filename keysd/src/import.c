@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <keyutils.h>
+
 #include <ccan/str/str.h>
 #include <daemon-util/log.h>
 #include <nvme/config.h>
@@ -33,6 +35,7 @@ struct import_ctx {
 	bool default_read;     // default_hostnqn was looked up
 	char **done;           // "<hostnqn> <subsysnqn>" already handled
 	size_t n_done;
+	bool no_dhchap;        // the kernel has no "dhchap" key type
 };
 
 /* Look up the system host NQN only when an entry needs it. */
@@ -53,6 +56,30 @@ static const char *default_hostnqn(struct import_ctx *ic)
 	return ic->default_hostnqn;
 }
 
+/* Return true the first time @id is seen. Takes @id. */
+static bool first_time_id(struct import_ctx *ic, char *id)
+{
+	char **p;
+	size_t i;
+
+	for (i = 0; i < ic->n_done; i++) {
+		if (streq(ic->done[i], id)) {
+			free(id);
+			return false;
+		}
+	}
+
+	p = realloc(ic->done, (ic->n_done + 1) * sizeof(*p));
+	if (!p) {
+		free(id);
+		return true;
+	}
+	ic->done = p;
+	ic->done[ic->n_done++] = id;
+
+	return true;
+}
+
 /*
  * Every path of a subsystem is a connection of its own, with the same
  * key. Return true the first time a (hostnqn, subsysnqn) pair is seen.
@@ -60,28 +87,12 @@ static const char *default_hostnqn(struct import_ctx *ic)
 static bool first_time(struct import_ctx *ic, const char *hostnqn,
 		       const char *subsysnqn)
 {
-	char *pair, **p;
-	size_t i;
+	char *pair;
 
 	if (asprintf(&pair, "%s %s", hostnqn, subsysnqn) < 0)
 		return true;
 
-	for (i = 0; i < ic->n_done; i++) {
-		if (streq(ic->done[i], pair)) {
-			free(pair);
-			return false;
-		}
-	}
-
-	p = realloc(ic->done, (ic->n_done + 1) * sizeof(*p));
-	if (!p) {
-		free(pair);
-		return true;
-	}
-	ic->done = p;
-	ic->done[ic->n_done++] = pair;
-
-	return true;
+	return first_time_id(ic, pair);
 }
 
 static const char *param(const struct libnvmf_params *params, const char *key)
@@ -303,6 +314,114 @@ static int import_cred(struct import_ctx *ic, const char *source,
 	return r;
 }
 
+/*
+ * The key description is the credential name. The connection passes it
+ * as the KX-HMAC-CHAP secret, and the kernel looks it up in the keyring.
+ * The kernel options are separated by commas.
+ */
+static bool kxchap_name_valid(const char *name)
+{
+	return cred_name_valid(name) && !strpbrk(name, ", \t\n");
+}
+
+/*
+ * Return true the first time the KX-HMAC-CHAP key @name of @keyring is
+ * seen, if it can be imported.
+ */
+static bool kxchap_first_time(struct import_ctx *ic, const char *source,
+			      const char *keyring, const char *subsysnqn,
+			      const char *name)
+{
+	char *id;
+
+	if (ic->no_dhchap)
+		return false;
+
+	if (!kxchap_name_valid(name)) {
+		log_err("%s: %s: invalid KX-HMAC-CHAP key name '%s'", source,
+			subsysnqn, name);
+		return false;
+	}
+
+	if (asprintf(&id, "dhchap %s %s", keyring ?: ".nvme", name) < 0)
+		return true;
+
+	return first_time_id(ic, id);
+}
+
+/*
+ * Put the KX-HMAC-CHAP secret @secret in @keyring, as a "dhchap" key with
+ * the description @name. A key with the same description is replaced in
+ * the keyring, not revoked: a controller that uses it keeps it until it
+ * authenticates again. @origin says where the secret comes from, for the
+ * log.
+ */
+static int import_kxchap(struct import_ctx *ic, const char *source,
+			 const char *keyring, const char *subsysnqn,
+			 const char *name, const char *origin,
+			 const char *secret)
+{
+	long keyring_id, key;
+	int r;
+
+	if (ic->no_dhchap)
+		return -ENODEV;
+
+	r = libnvmf_lookup_keyring(ic->ctx, keyring, &keyring_id);
+	if (!r)
+		r = libnvmf_set_keyring(ic->ctx, keyring_id);
+	if (r < 0) {
+		log_err("%s: %s: keyring '%s' not available: %s", source,
+			subsysnqn, keyring ?: ".nvme", strerror(-r));
+		return r;
+	}
+
+	key = add_key("dhchap", name, secret, strlen(secret), keyring_id);
+	if (key < 0 && errno == ENODEV) {
+		ic->no_dhchap = true;
+		log_warn("the kernel does not support KX-HMAC-CHAP keys in the keyring, kxchap-secret-source skipped");
+		return -ENODEV;
+	}
+	if (key < 0) {
+		r = -errno;
+		log_err("%s: %s: cannot import %s: %s", source, subsysnqn,
+			origin, strerror(-r));
+		return r;
+	}
+	log_info("imported KX-HMAC-CHAP key '%s' (%08lx) from %s", name, key,
+		 origin);
+
+	return 0;
+}
+
+static int import_kxchap_cred(struct import_ctx *ic, const char *source,
+			      const char *keyring, const char *subsysnqn,
+			      const char *name)
+{
+	__cleanup_free char *origin = NULL;
+	__cleanup_free char *error = NULL;
+	char secret[CRED_MAX + 1];
+	int r;
+
+	r = creds_decrypt(ic->creds_dir, name, secret, sizeof(secret),
+			  &error);
+	if (r < 0) {
+		explicit_bzero(secret, sizeof(secret));
+		log_err("%s: %s: cannot decrypt credential '%s': %s", source,
+			subsysnqn, name, error ?: strerror(-r));
+		return r;
+	}
+
+	if (asprintf(&origin, "credential '%s'", name) < 0)
+		r = -ENOMEM;
+	else
+		r = import_kxchap(ic, source, keyring, subsysnqn, name, origin,
+				  secret);
+	explicit_bzero(secret, sizeof(secret));
+
+	return r;
+}
+
 static void free_job(struct kmip_job *job)
 {
 	free(job->source);
@@ -394,12 +513,49 @@ int import_kmip_psk(struct import_ctx *ic, const struct kmip_job *job,
 			  job->subsysnqn, origin, encoded);
 }
 
+static void import_conn_kxchap(struct import_ctx *ic,
+			       const struct libnvmf_config_conn *conn)
+{
+	const struct libnvmf_params *params;
+	const char *source, *src, *subsysnqn, *keyring, *name;
+
+	params = libnvmf_config_conn_get_params(conn);
+	src = param(params, "kxchap-secret-source");
+	if (!src || streq(src, "inline"))
+		return;
+
+	source = libnvmf_config_conn_get_source(conn);
+	subsysnqn = libnvmf_config_conn_get_subsysnqn(conn);
+	if (!streq(src, "systemd-creds")) {
+		log_warn("%s: %s: kxchap-secret-source '%s' is not supported, skipped",
+			 source, subsysnqn, src);
+		return;
+	}
+
+	name = param(params, "kxchap-secret");
+	if (!name) {
+		log_warn("%s: %s: kxchap-secret-source is %s but kxchap-secret is not set, skipped",
+			 source, subsysnqn, src);
+		return;
+	}
+
+	keyring = param(params, "keyring");
+	if (kxchap_first_time(ic, source, keyring, subsysnqn, name))
+		import_kxchap_cred(ic, source, keyring, subsysnqn, name);
+
+	name = param(params, "kxchap-ctrl-secret");
+	if (name && kxchap_first_time(ic, source, keyring, subsysnqn, name))
+		import_kxchap_cred(ic, source, keyring, subsysnqn, name);
+}
+
 static void import_conn(const struct libnvmf_config_conn *conn,
 			void *user_data)
 {
 	struct import_ctx *ic = user_data;
 	const struct libnvmf_params *params;
 	const char *source, *src, *name, *hostnqn, *subsysnqn;
+
+	import_conn_kxchap(ic, conn);
 
 	params = libnvmf_config_conn_get_params(conn);
 	src = param(params, "tls-key-source");
@@ -434,14 +590,23 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 			 source, subsysnqn, src);
 }
 
-static void find_tls_key_source(const struct libnvmf_config_conn *conn,
+static bool key_source_set(const struct libnvmf_params *params,
+			   const char *key)
+{
+	const char *src = param(params, key);
+
+	return src && !streq(src, "inline");
+}
+
+static void find_key_source(const struct libnvmf_config_conn *conn,
 			    void *user_data)
 {
-	const char *src;
+	const struct libnvmf_params *params;
 	bool *found = user_data;
 
-	src = param(libnvmf_config_conn_get_params(conn), "tls-key-source");
-	if (src && !streq(src, "inline"))
+	params = libnvmf_config_conn_get_params(conn);
+	if (key_source_set(params, "tls-key-source") ||
+	    key_source_set(params, "kxchap-secret-source"))
 		*found = true;
 }
 
@@ -458,7 +623,7 @@ bool import_needed(struct libnvme_global_ctx *ctx, const char *fabrics_conf)
 		return false;
 	}
 
-	libnvmf_config_conn_for_each(cfg, find_tls_key_source, &found);
+	libnvmf_config_conn_for_each(cfg, find_key_source, &found);
 	libnvmf_config_free(cfg);
 
 	return found;
