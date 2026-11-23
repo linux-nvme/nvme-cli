@@ -1317,24 +1317,24 @@ static struct shr_table *stdout_id_ctrl_sgls_table(__le32 ctrl_sgls)
 {
 	struct shr_table *t;
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
-	__u32 rsvd0 = (sgls & 0xFFC00000) >> 22;
-	__u32 trsdbd = (sgls & 0x200000) >> 21;
-	__u32 aofdsl = (sgls & 0x100000) >> 20;
-	__u32 mpcsd = (sgls & 0x80000) >> 19;
-	__u32 sglltb = (sgls & 0x40000) >> 18;
-	__u32 bacmdb = (sgls & 0x20000) >> 17;
-	__u32 bbs = (sgls & 0x10000) >> 16;
-	__u32 sdt = (sgls >> 8) & 0xff;
-	__u32 rsvd1 = (sgls & 0xF8) >> 3;
-	__u32 key = (sgls & 0x4) >> 2;
-	__u32 sglsp = sgls & 0x3;
+	__u32 rsvd22 = NVME_CTRL_SGLS_RSVD22(sgls);
+	__u32 trsdbd = NVME_CTRL_SGLS_TSDBDS(sgls);
+	__u32 aofdsl = NVME_CTRL_SGLS_SAOS(sgls);
+	__u32 mpcsd = NVME_CTRL_SGLS_MSDS(sgls);
+	__u32 sglltb = NVME_CTRL_SGLS_LLDTS(sgls);
+	__u32 bacmdb = NVME_CTRL_SGLS_MBA(sgls);
+	__u32 bbs = NVME_CTRL_SGLS_SBBDS(sgls);
+	__u32 sdt = NVME_CTRL_SGLS_SDT(sgls);
+	__u32 rsvd3 = NVME_CTRL_SGLS_RSVD3(sgls);
+	__u32 key = NVME_CTRL_SGLS_KSDBDS(sgls);
+	__u32 sglsp = NVME_CTRL_SGLS_SGLS(sgls);
 
 	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
-	if (rsvd0)
-		stdout_bits_add(t, "[31:22]", rsvd0, "Reserved");
+	if (rsvd22)
+		stdout_bits_add(t, "[31:22]", rsvd22, "Reserved");
 	if (sglsp || (!sglsp && trsdbd))
 		stdout_bits_add(t, "[21:21]", trsdbd,
 				 "Transport SGL Data Block Descriptor %sSupported",
@@ -1359,8 +1359,8 @@ static struct shr_table *stdout_id_ctrl_sgls_table(__le32 ctrl_sgls)
 		stdout_bits_add(t, "[16:16]", bbs, "SGL Bit-Bucket %sSupported",
 				 bbs ? "" : "Not ");
 	stdout_bits_add(t, "[15:8]", sdt, "SGL Descriptor Threshold");
-	if (rsvd1)
-		stdout_bits_add(t, "[7:3]", rsvd1, "Reserved");
+	if (rsvd3)
+		stdout_bits_add(t, "[7:3]", rsvd3, "Reserved");
 	if (sglsp || (!sglsp && key))
 		stdout_bits_add(t, "[2:2]", key,
 				 "Keyed SGL Data Block descriptor %sSupported",
