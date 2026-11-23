@@ -64,7 +64,7 @@ static bool should_start(void)
 static int import_kmip(const struct kmip_job *job, const char *encoded,
 		       void *arg)
 {
-	return import_kmip_psk(arg, job, encoded);
+	return import_kmip_key(arg, job, encoded);
 }
 
 /*

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 [Unit]
-Description=NVMe TLS Key Provisioning KMIP Helper
+Description=NVMe Key Provisioning KMIP Helper
 Documentation=man:nvme-keysd(8)
 Wants=network-online.target
 After=network-online.target

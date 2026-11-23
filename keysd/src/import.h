@@ -21,7 +21,8 @@ struct kmip_job {
 	char *keyring;		// NULL: .nvme
 	char *hostnqn;
 	char *subsysnqn;
-	char *name;		// the KMIP Name, from tls-key
+	char *name;		// the KMIP Name, from tls-key or kxchap-*
+	bool kxchap;		// a KX-HMAC-CHAP secret, not a PSK
 	const struct keysd_kmip *kms;
 };
 
@@ -59,8 +60,9 @@ void import_keys(struct import_ctx *ic, const char *fabrics_conf);
 size_t import_kmip_jobs(struct import_ctx *ic, const struct kmip_job **jobs);
 
 /*
- * Put the PSK @encoded, in the interchange format, from the KMS of @job
- * into its keyring, as import_keys() does. Returns 0 or a negative errno.
+ * Put the key @encoded from the KMS of @job into its keyring, as
+ * import_keys() does: a PSK in the interchange format, or a KX-HMAC-CHAP
+ * secret. Returns 0 or a negative errno.
  */
-int import_kmip_psk(struct import_ctx *ic, const struct kmip_job *job,
+int import_kmip_key(struct import_ctx *ic, const struct kmip_job *job,
 		const char *encoded);
