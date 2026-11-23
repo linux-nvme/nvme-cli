@@ -1642,14 +1642,14 @@ static struct shr_table *stdout_id_ns_nmic_table(__u8 nmic)
 static struct shr_table *stdout_id_ns_rescap_table(__u8 rescap)
 {
 	struct shr_table *t;
-	__u8 iekr = (rescap & 0x80) >> 7;
-	__u8 eaar = (rescap & 0x40) >> 6;
-	__u8 wear = (rescap & 0x20) >> 5;
-	__u8 earo = (rescap & 0x10) >> 4;
-	__u8 wero = (rescap & 0x8) >> 3;
-	__u8 ea = (rescap & 0x4) >> 2;
-	__u8 we = (rescap & 0x2) >> 1;
-	__u8 ptpl = rescap & 0x1;
+	__u8 iekr = NVME_NS_RESCAP_IEKS(rescap);
+	__u8 eaar = NVME_NS_RESCAP_EAARS(rescap);
+	__u8 wear = NVME_NS_RESCAP_WEARS(rescap);
+	__u8 earo = NVME_NS_RESCAP_EAROS(rescap);
+	__u8 wero = NVME_NS_RESCAP_WEROS(rescap);
+	__u8 ea = NVME_NS_RESCAP_EAS(rescap);
+	__u8 we = NVME_NS_RESCAP_WES(rescap);
+	__u8 ptpl = NVME_NS_RESCAP_PTPLS(rescap);
 
 	t = stdout_bits_table_create();
 	if (!t)
