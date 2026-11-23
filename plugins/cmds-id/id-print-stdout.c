@@ -905,7 +905,7 @@ static struct shr_table *stdout_id_ctrl_anacap_table(__u8 anacap)
 static struct shr_table *stdout_id_ctrl_kpioc_table(__u8 ctrl_kpioc)
 {
 	struct shr_table *t;
-	__u8 rsvd2 = (ctrl_kpioc >> 2);
+	__u8 rsvd2 = NVME_CTRL_KPIOC_RSVD2(ctrl_kpioc);
 	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(ctrl_kpioc);
 	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(ctrl_kpioc);
 
@@ -927,8 +927,8 @@ static struct shr_table *stdout_id_ctrl_kpioc_table(__u8 ctrl_kpioc)
 static struct shr_table *stdout_id_ctrl_tmpthha_table(__u8 tmpthha)
 {
 	struct shr_table *t;
-	__u8 rsvd3 = (tmpthha & 0xf8) >> 3;
-	__u8 tmpthmh = tmpthha & 0x7;
+	__u8 rsvd3 = NVME_CTRL_TMPTHHA_RSVD3(tmpthha);
+	__u8 tmpthmh = NVME_CTRL_TMPTHHA_TMPTHMH(tmpthha);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -961,15 +961,19 @@ static struct shr_table *stdout_id_ctrl_cdpa_table(__le16 ctrl_cdpa)
 {
 	struct shr_table *t;
 	__u16 cdpa = le16_to_cpu(ctrl_cdpa);
-	__u16 rsvd1 = (cdpa >> 1);
-	bool hmac_sha_384 = !!(cdpa & NVME_CTRL_CDPA_HMAC_SHA_384);
+	__u16 cdpalg = NVME_CTRL_CDPA_CDPALG(cdpa);
+	__u16 rsvd8 = NVME_CTRL_CDPA_RSVD8(cdpa);
+	__u16 rsvd1 = NVME_CTRL_CDPA_CDPALG_RSVD1(cdpalg);
+	bool hmac_sha_384 = !!NVME_CTRL_CDPA_CDPALG_HS3(cdpalg);
 
 	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
+	if (rsvd8)
+		stdout_bits_add(t, "[15:8]", rsvd8, "Reserved");
 	if (rsvd1)
-		stdout_bits_add(t, "[15:1]", rsvd1, "Reserved");
+		stdout_bits_add(t, "[7:1]", rsvd1, "Reserved");
 	stdout_bits_add(t, "[0:0]", hmac_sha_384, "HMAC-SHA-384 %sSupported",
 			 hmac_sha_384 ? "" : "Not ");
 
@@ -3069,7 +3073,7 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 static struct shr_table *stdout_id_ctrl_nvm_kpiocap_table(__u8 kpiocap)
 {
 	struct shr_table *t;
-	__u8 rsvd2 = (kpiocap & 0xfc) >> 2;
+	__u8 rsvd2 = NVME_CTRL_KPIOC_RSVD2(kpiocap);
 	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(kpiocap);
 	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(kpiocap);
 
