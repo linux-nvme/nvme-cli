@@ -433,7 +433,8 @@ static void free_job(struct kmip_job *job)
 
 /* Find the KMS of "kmip:<name>", or of "kmip" when there is only one. */
 static const struct keysd_kmip *find_kms(struct import_ctx *ic,
-		const char *source, const char *subsysnqn, const char *src)
+		const char *source, const char *subsysnqn, const char *key,
+		const char *src)
 {
 	const char *name = shr_startswith(src, "kmip:");
 	const struct keysd_kmip *kms;
@@ -442,11 +443,11 @@ static const struct keysd_kmip *find_kms(struct import_ctx *ic,
 		if (ic->cfg->nr_kmip == 1)
 			return &ic->cfg->kmip[0];
 		if (ic->cfg->nr_kmip)
-			log_err("%s: %s: several KMSes: use tls-key-source = kmip:<name>",
-				source, subsysnqn);
+			log_err("%s: %s: several KMSes: use %s = kmip:<name>",
+				source, subsysnqn, key);
 		else
-			log_err("%s: %s: tls-key-source is kmip but no KMS is configured, skipped",
-				source, subsysnqn);
+			log_err("%s: %s: %s is kmip but no KMS is configured, skipped",
+				source, subsysnqn, key);
 		return NULL;
 	}
 
@@ -458,22 +459,22 @@ static const struct keysd_kmip *find_kms(struct import_ctx *ic,
 	return kms;
 }
 
-/* Collect a key to get from a KMS. */
+/* Collect a key to get from a KMS. @key is the key source entry. */
 static void add_kmip_job(struct import_ctx *ic, const char *source,
 			 const char *keyring, const char *hostnqn,
-			 const char *subsysnqn, const char *src,
-			 const char *name)
+			 const char *subsysnqn, const char *key,
+			 const char *src, const char *name, bool kxchap)
 {
 	const struct keysd_kmip *kms;
 	struct kmip_job *jobs, *job;
 
 #ifndef CONFIG_KMIP
-	log_warn("%s: %s: this build does not support tls-key-source '%s', skipped",
-		 source, subsysnqn, src);
+	log_warn("%s: %s: this build does not support %s '%s', skipped",
+		 source, subsysnqn, key, src);
 	return;
 #endif
 
-	kms = find_kms(ic, source, subsysnqn, src);
+	kms = find_kms(ic, source, subsysnqn, key, src);
 	if (!kms)
 		return;
 
@@ -486,6 +487,7 @@ static void add_kmip_job(struct import_ctx *ic, const char *source,
 
 	job = &ic->jobs[ic->n_jobs];
 	job->kms = kms;
+	job->kxchap = kxchap;
 	job->source = strdup(source);
 	job->keyring = shr_xstrdup(keyring);
 	job->hostnqn = strdup(hostnqn);
@@ -500,7 +502,7 @@ static void add_kmip_job(struct import_ctx *ic, const char *source,
 	ic->n_jobs++;
 }
 
-int import_kmip_psk(struct import_ctx *ic, const struct kmip_job *job,
+int import_kmip_key(struct import_ctx *ic, const struct kmip_job *job,
 		const char *encoded)
 {
 	__cleanup_free char *origin = NULL;
@@ -509,15 +511,36 @@ int import_kmip_psk(struct import_ctx *ic, const struct kmip_job *job,
 		     job->name) < 0)
 		return -ENOMEM;
 
+	if (job->kxchap)
+		return import_kxchap(ic, job->source, job->keyring,
+				     job->subsysnqn, job->name, origin,
+				     encoded);
+
 	return import_psk(ic, job->source, job->keyring, job->hostnqn,
 			  job->subsysnqn, origin, encoded);
+}
+
+/* Import the KX-HMAC-CHAP secret @name, or collect it for a KMS. */
+static void import_kxchap_entry(struct import_ctx *ic, const char *source,
+				const char *keyring, const char *hostnqn,
+				const char *subsysnqn, const char *src,
+				const char *name)
+{
+	if (!kxchap_first_time(ic, source, keyring, subsysnqn, name))
+		return;
+
+	if (streq(src, "systemd-creds"))
+		import_kxchap_cred(ic, source, keyring, subsysnqn, name);
+	else
+		add_kmip_job(ic, source, keyring, hostnqn, subsysnqn,
+			     "kxchap-secret-source", src, name, true);
 }
 
 static void import_conn_kxchap(struct import_ctx *ic,
 			       const struct libnvmf_config_conn *conn)
 {
 	const struct libnvmf_params *params;
-	const char *source, *src, *subsysnqn, *keyring, *name;
+	const char *source, *src, *subsysnqn, *hostnqn, *keyring, *name;
 
 	params = libnvmf_config_conn_get_params(conn);
 	src = param(params, "kxchap-secret-source");
@@ -526,7 +549,8 @@ static void import_conn_kxchap(struct import_ctx *ic,
 
 	source = libnvmf_config_conn_get_source(conn);
 	subsysnqn = libnvmf_config_conn_get_subsysnqn(conn);
-	if (!streq(src, "systemd-creds")) {
+	if (!streq(src, "systemd-creds") && !streq(src, "kmip") &&
+	    !shr_startswith(src, "kmip:")) {
 		log_warn("%s: %s: kxchap-secret-source '%s' is not supported, skipped",
 			 source, subsysnqn, src);
 		return;
@@ -539,13 +563,15 @@ static void import_conn_kxchap(struct import_ctx *ic,
 		return;
 	}
 
+	hostnqn = libnvmf_config_conn_get_hostnqn(conn) ?: "";
 	keyring = param(params, "keyring");
-	if (kxchap_first_time(ic, source, keyring, subsysnqn, name))
-		import_kxchap_cred(ic, source, keyring, subsysnqn, name);
+	import_kxchap_entry(ic, source, keyring, hostnqn, subsysnqn, src,
+			    name);
 
 	name = param(params, "kxchap-ctrl-secret");
-	if (name && kxchap_first_time(ic, source, keyring, subsysnqn, name))
-		import_kxchap_cred(ic, source, keyring, subsysnqn, name);
+	if (name)
+		import_kxchap_entry(ic, source, keyring, hostnqn, subsysnqn,
+				    src, name);
 }
 
 static void import_conn(const struct libnvmf_config_conn *conn,
@@ -581,7 +607,7 @@ static void import_conn(const struct libnvmf_config_conn *conn,
 
 	if (streq(src, "kmip") || shr_startswith(src, "kmip:"))
 		add_kmip_job(ic, source, param(params, "keyring"), hostnqn,
-			     subsysnqn, src, name);
+			     subsysnqn, "tls-key-source", src, name, false);
 	else if (streq(src, "systemd-creds"))
 		import_cred(ic, source, param(params, "keyring"), hostnqn,
 			    subsysnqn, name);

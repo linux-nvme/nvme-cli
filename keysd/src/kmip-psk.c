@@ -101,6 +101,25 @@ int kmip_psk_from_object(struct libnvme_global_ctx *ctx, uint32_t obj_type,
 	}
 }
 
+int kmip_kxchap_from_object(uint32_t obj_type, const uint8_t *data,
+		size_t len, char secret[KMIP_PSK_MAX])
+{
+	if (obj_type != KMIP_OBJ_SECRET_DATA)
+		return -EMEDIUMTYPE;
+
+	// A trailing newline is common in a key file.
+	while (len && (data[len - 1] == '\n' || data[len - 1] == '\r'))
+		len--;
+	if (len < 11 || len >= KMIP_PSK_MAX || memchr(data, '\0', len) ||
+	    memcmp(data, "DHHC-1:", 7) || data[len - 1] != ':')
+		return -EMEDIUMTYPE;
+
+	memcpy(secret, data, len);
+	secret[len] = '\0';
+
+	return 0;
+}
+
 static void log_kms_failure(const char *server, const char *op,
 		const struct kmip_result *res)
 {
@@ -127,7 +146,8 @@ static int exchange(struct kmip_tls *t, struct ttlv_buf *req, uint8_t *resp,
 static int get_from_server(struct libnvme_global_ctx *ctx,
 		const struct keysd_kmip *kms, const char *server,
 		const struct addrinfo *addrs, int timeout_ms,
-		const char *key_path, const char *name, char psk[KMIP_PSK_MAX])
+		const char *key_path, const char *name, bool kxchap,
+		char psk[KMIP_PSK_MAX])
 {
 	const struct kmip_tls_cfg cfg = {
 		.server = server,
@@ -179,7 +199,10 @@ static int get_from_server(struct libnvme_global_ctx *ctx,
 	if (ret)
 		goto out;
 
-	ret = kmip_psk_from_object(ctx, obj_type, key, key_len, psk);
+	if (kxchap)
+		ret = kmip_kxchap_from_object(obj_type, key, key_len, psk);
+	else
+		ret = kmip_psk_from_object(ctx, obj_type, key, key_len, psk);
 
 out:
 	kmip_tls_close(t);
@@ -205,10 +228,11 @@ struct kmip_get {
 	char *key_path;
 	char *name;
 	size_t first;
+	bool kxchap;
 	size_t n;		// servers tried
 	int64_t deadline;	// of the current server, CLOCK_MONOTONIC in ms
 	int ret;
-	kmip_psk_callback done;
+	kmip_key_callback done;
 	void *user_data;
 };
 
@@ -285,7 +309,7 @@ static void on_resolved(int gai, const struct addrinfo *res,
 		ret = -ETIMEDOUT;
 	} else {
 		ret = get_from_server(g->ctx, g->kms, server, res, (int)left,
-				      g->key_path, g->name, psk);
+				      g->key_path, g->name, g->kxchap, psk);
 	}
 
 	g->ret = ret;
@@ -301,10 +325,11 @@ static void on_resolved(int gai, const struct addrinfo *res,
 	get_free(g);
 }
 
-int kmip_get_psk(struct dmn_resolver *resolver,
+int kmip_get_key(struct dmn_resolver *resolver,
 		struct libnvme_global_ctx *ctx, const struct keysd_kmip *kms,
 		size_t first, const char *key_path, const char *name,
-		kmip_psk_callback done, void *user_data, struct kmip_get **ret)
+		bool kxchap, kmip_key_callback done, void *user_data,
+		struct kmip_get **ret)
 {
 	struct kmip_get *g;
 	int err;
@@ -325,6 +350,7 @@ int kmip_get_psk(struct dmn_resolver *resolver,
 	g->ctx = ctx;
 	g->kms = kms;
 	g->first = first < kms->nr_servers ? first : 0;
+	g->kxchap = kxchap;
 	g->ret = -EHOSTUNREACH;
 	g->done = done;
 	g->user_data = user_data;

@@ -163,7 +163,9 @@ static int start_call(struct kms_queue *q, struct kmip_call *call)
 				SD_JSON_BUILD_PAIR_STRING("kms", q->kms->name),
 				SD_JSON_BUILD_PAIR_STRING("name", job->name),
 				SD_JSON_BUILD_PAIR_UNSIGNED("server",
-							    q->server));
+							    q->server),
+				SD_JSON_BUILD_PAIR_STRING("type",
+					job->kxchap ? "kxchap" : "psk"));
 	if (r < 0) {
 		q->link = sd_varlink_close_unref(q->link);
 		return r;

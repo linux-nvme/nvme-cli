@@ -7,7 +7,8 @@
  */
 
 /*
- * nvme-keysd-kmip: gets a PSK from a KMIP server for nvme-keysd. systemd
+ * nvme-keysd-kmip: gets a TLS PSK or a KX-HMAC-CHAP secret from a KMIP
+ * server for nvme-keysd. systemd
  * starts one instance per connection to the Varlink socket.
  */
 
@@ -26,8 +27,10 @@
 #include <systemd/sd-varlink-idl.h>
 
 #include <daemon-util/log.h>
+#include <ccan/str/str.h>
 #include <daemon-util/resolve.h>
 #include <nvme/lib.h>
+#include <shared/string-util.h>
 
 #include "config.h"
 #include "kmip-psk.h"
@@ -47,7 +50,9 @@ static SD_VARLINK_DEFINE_METHOD(
 	SD_VARLINK_DEFINE_INPUT(name, SD_VARLINK_STRING, 0),
 	SD_VARLINK_FIELD_COMMENT("Index of the server to try first"),
 	SD_VARLINK_DEFINE_INPUT(server, SD_VARLINK_INT, SD_VARLINK_NULLABLE),
-	SD_VARLINK_FIELD_COMMENT("The PSK in the PSK interchange format"),
+	SD_VARLINK_FIELD_COMMENT("Kind of key: psk (default) or kxchap"),
+	SD_VARLINK_DEFINE_INPUT(type, SD_VARLINK_STRING, SD_VARLINK_NULLABLE),
+	SD_VARLINK_FIELD_COMMENT("The PSK (interchange format) or the secret"),
 	SD_VARLINK_DEFINE_OUTPUT(key, SD_VARLINK_STRING, 0),
 	SD_VARLINK_FIELD_COMMENT("Index of the server that answered"),
 	SD_VARLINK_DEFINE_OUTPUT(server, SD_VARLINK_INT, 0));
@@ -61,7 +66,7 @@ static SD_VARLINK_DEFINE_ERROR(KmsFailed);
 static SD_VARLINK_DEFINE_INTERFACE(
 	io_nvme_keysd_Kmip,
 	KMIP_VARLINK_INTERFACE,
-	SD_VARLINK_INTERFACE_COMMENT("Get TLS PSKs from a KMIP server"),
+	SD_VARLINK_INTERFACE_COMMENT("Get NVMe keys from a KMIP server"),
 	SD_VARLINK_SYMBOL_COMMENT("Get the Active key with a name"),
 	&vl_method_GetKey,
 	SD_VARLINK_SYMBOL_COMMENT("The KMS is not configured"),
@@ -70,7 +75,7 @@ static SD_VARLINK_DEFINE_INTERFACE(
 	&vl_error_NoSuchKey,
 	SD_VARLINK_SYMBOL_COMMENT("Several Active keys have this name"),
 	&vl_error_KeyNotUnique,
-	SD_VARLINK_SYMBOL_COMMENT("The key is not a valid PSK"),
+	SD_VARLINK_SYMBOL_COMMENT("The key is not a valid PSK or secret"),
 	&vl_error_InvalidKey,
 	SD_VARLINK_SYMBOL_COMMENT("No server of the KMS can answer"),
 	&vl_error_KmsFailed);
@@ -90,6 +95,7 @@ struct get_key_params {
 	const char *kms;
 	const char *name;
 	uint64_t server;
+	const char *type;
 };
 
 /*
@@ -156,7 +162,7 @@ static void end_call(struct helper_ctx *hc)
 	hc->name = NULL;
 }
 
-static void on_psk(int ret, const char *psk, size_t server, void *user_data)
+static void on_key(int ret, const char *key, size_t server, void *user_data)
 {
 	struct helper_ctx *hc = user_data;
 	const struct keysd_kmip *kms = config_find_kmip(hc->cfg, hc->kms);
@@ -169,7 +175,7 @@ static void on_psk(int ret, const char *psk, size_t server, void *user_data)
 	} else {
 		log_info("KMS '%s': key '%s' sent, from %s", hc->kms,
 			 hc->name, kms->servers[server]);
-		r = reply_key(hc->link, psk, server);
+		r = reply_key(hc->link, key, server);
 	}
 	if (r < 0)
 		log_err("KMS '%s': key '%s': reply: %s", hc->kms, hc->name,
@@ -187,6 +193,8 @@ static int method_get_key(sd_varlink *link, sd_json_variant *params,
 		  offsetof(struct get_key_params, name), SD_JSON_MANDATORY },
 		{ "server", SD_JSON_VARIANT_UNSIGNED, sd_json_dispatch_uint64,
 		  offsetof(struct get_key_params, server), 0 },
+		{ "type", SD_JSON_VARIANT_STRING, sd_json_dispatch_const_string,
+		  offsetof(struct get_key_params, type), 0 },
 		{}
 	};
 	struct helper_ctx *hc = userdata;
@@ -201,6 +209,8 @@ static int method_get_key(sd_varlink *link, sd_json_variant *params,
 
 	if (!p.name[0] || strlen(p.name) >= KEY_NAME_MAX)
 		return sd_varlink_error_invalid_parameter_name(link, "name");
+	if (p.type && !streq(p.type, "psk") && !streq(p.type, "kxchap"))
+		return sd_varlink_error_invalid_parameter_name(link, "type");
 
 	kms = config_find_kmip(hc->cfg, p.kms);
 	if (!kms) {
@@ -214,11 +224,12 @@ static int method_get_key(sd_varlink *link, sd_json_variant *params,
 	hc->kms = kms->name;
 	hc->link = sd_varlink_ref(link);
 
-	// The reply is sent from on_psk().
+	// The reply is sent from on_key().
 	r = client_key_path(kms, &key_path);
 	if (!r)
-		r = kmip_get_psk(hc->resolver, hc->nvme_ctx, kms, p.server,
-				 key_path, p.name, on_psk, hc, &hc->get);
+		r = kmip_get_key(hc->resolver, hc->nvme_ctx, kms, p.server,
+				 key_path, p.name, shr_streq0(p.type, "kxchap"),
+				 on_key, hc, &hc->get);
 	free(key_path);
 	if (r) {
 		log_err("KMS '%s': key '%s': %s", kms->name, p.name,

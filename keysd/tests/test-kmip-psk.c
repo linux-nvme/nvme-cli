@@ -43,6 +43,12 @@ static int from_object(uint32_t type, const void *data, size_t len,
 	return kmip_psk_from_object(ctx, type, data, len, psk);
 }
 
+static int kxchap_from_object(uint32_t type, const void *data, size_t len,
+		char secret[KMIP_PSK_MAX])
+{
+	return kmip_kxchap_from_object(type, data, len, secret);
+}
+
 static bool test_psk_from_object(void)
 {
 	char psk[KMIP_PSK_MAX], text[KMIP_PSK_MAX + 8];
@@ -80,6 +86,47 @@ static bool test_psk_from_object(void)
 		      "empty Secret Data");
 	pass &= check(from_object(0x01, raw32, 32, psk) == -EMEDIUMTYPE,
 		      "a Certificate");
+
+	return pass;
+}
+
+static bool test_kxchap_from_object(void)
+{
+	static const char secret[] =
+		"DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:";
+	char out[KMIP_PSK_MAX], text[KMIP_PSK_MAX];
+	bool pass = true;
+
+	printf("test_kxchap_from_object:\n");
+
+	pass &= check(!kxchap_from_object(KMIP_OBJ_SECRET_DATA, secret,
+					  strlen(secret), out) &&
+		      !strcmp(out, secret),
+		      "Secret Data");
+	snprintf(text, sizeof(text), "%s\r\n", secret);
+	pass &= check(!kxchap_from_object(KMIP_OBJ_SECRET_DATA, text,
+					  strlen(text), out) &&
+		      !strcmp(out, secret),
+		      "Secret Data with a newline");
+	pass &= check(kxchap_from_object(KMIP_OBJ_SECRET_DATA, encoded,
+					 strlen(encoded), out) ==
+		      -EMEDIUMTYPE,
+		      "Secret Data with a PSK");
+	pass &= check(kxchap_from_object(KMIP_OBJ_SECRET_DATA, secret,
+					 strlen(secret) - 1, out) ==
+		      -EMEDIUMTYPE,
+		      "Secret Data without the final ':'");
+	pass &= check(kxchap_from_object(KMIP_OBJ_SECRET_DATA, secret,
+					 sizeof(secret), out) ==
+		      -EMEDIUMTYPE,
+		      "Secret Data with a NUL");
+	pass &= check(kxchap_from_object(KMIP_OBJ_SECRET_DATA,
+					 "DHHC-1:", 7, out) ==
+		      -EMEDIUMTYPE,
+		      "Secret Data too short");
+	pass &= check(kxchap_from_object(KMIP_OBJ_SYMMETRIC_KEY, raw32,
+					 32, out) == -EMEDIUMTYPE,
+		      "a Symmetric Key");
 
 	return pass;
 }
@@ -275,8 +322,8 @@ static int get_psk_sync(const struct keysd_kmip *kms, size_t first,
 	if (!ret && lookup_fn)
 		dmn_resolver_set_lookup(resolver, lookup_fn);
 	if (!ret)
-		ret = kmip_get_psk(resolver, ctx, kms, first, NULL, "key1",
-				   on_psk, &res, NULL);
+		ret = kmip_get_key(resolver, ctx, kms, first, NULL, "key1",
+				   false, on_psk, &res, NULL);
 	while (!ret && !res.done)
 		sd_event_run(event, UINT64_MAX);
 	if (!ret)
@@ -434,6 +481,7 @@ int main(void)
 	pass &= check(tls_test_setup(), "TLS test setup");
 
 	pass &= test_psk_from_object();
+	pass &= test_kxchap_from_object();
 	pass &= test_get_psk();
 	pass &= test_failover();
 	pass &= test_lookup_timeout();

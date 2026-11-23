@@ -50,11 +50,12 @@ nvme_keyring module.
 
 KX-HMAC-CHAP SECRETS
 --------------------
-nvme-keysd also imports the KX-HMAC-CHAP secrets of every entry with
-'kxchap-secret-source = systemd-creds'. 'kxchap-secret' and
-'kxchap-ctrl-secret' are then names of systemd credentials. Each holds
-a secret in the format 'DHHC-1:<hmac>:<base64>:', as created by 'nvme
-keys gen-kxchap-secret'.
+nvme-keysd also imports the KX-HMAC-CHAP secrets of every entry with a
+'kxchap-secret-source' other than 'inline'. With 'systemd-creds',
+'kxchap-secret' and 'kxchap-ctrl-secret' are names of systemd
+credentials. With 'kmip' or 'kmip:<name>', they are KMIP Names of Secret
+Data objects on the KMS. Each holds a secret in the format
+'DHHC-1:<hmac>:<base64>:', as created by 'nvme keys gen-kxchap-secret'.
 
 nvme-keysd puts each secret in the keyring named by 'keyring' (default
 '.nvme') as a key of type 'dhchap'. The key description is the name
