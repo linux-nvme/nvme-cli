@@ -419,6 +419,7 @@ static int libnvme_mi_mctp_submit(struct libnvme_mi_ep *ep,
 	struct sockaddr_mctp addr;
 	struct pollfd pollfds[1];
 	unsigned int mpr_time;
+	bool mpr_seen = false;
 	__le32 mic;
 	__u8 tag;
 
@@ -570,6 +571,19 @@ retry:
 	 * to keep the tag allocated and retry the recvmsg
 	 */
 	if (libnvme_mi_mctp_resp_is_mpr(mctp->resp_buf, len, mic, &mpr_time)) {
+		/* NVMe-MI v2.2 § 4.1.2.3: a More Processing Required
+		 * Response shall only be transmitted once for a Command
+		 * Message. Reject any further MPR, rather than allowing the
+		 * endpoint to extend the wait indefinitely.
+		 */
+		if (mpr_seen) {
+			libnvme_msg(ep->ctx, LIBNVME_LOG_ERR,
+				 "Invalid MCTP response: multiple MPR responses\n");
+			rc = -EPROTO;
+			goto out;
+		}
+		mpr_seen = true;
+
 		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "Received More Processing Required, waiting for response\n");
 
