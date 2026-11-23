@@ -3,7 +3,7 @@ nvme-keysd(8)
 
 NAME
 ----
-nvme-keysd - NVMe/TCP TLS key provisioning daemon
+nvme-keysd - NVMe-oF key provisioning daemon
 
 SYNOPSIS
 --------
@@ -14,10 +14,10 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-nvme-keysd puts the TLS pre-shared keys (PSKs) used by NVMe/TCP into the
-kernel's .nvme keyring, before a connection needs them. The kernel then
-finds the key there when 'nvme connect' or nvme-discoverd connects with
-TLS.
+nvme-keysd puts the TLS pre-shared keys (PSKs) used by NVMe/TCP and the
+KX-HMAC-CHAP secrets into the kernel's .nvme keyring, before a
+connection needs them. The kernel then finds the key there when
+'nvme connect' or nvme-discoverd connects.
 
 Which key belongs to which host and subsystem is configured in the
 shared NVMe-oF fabrics configuration, see nvme-fabrics.conf(5).
@@ -44,8 +44,32 @@ Without a 'kmip' entry, nvme-keysd imports the keys and exits. With a
 because its entry was removed from the configuration.
 
 The unit does not start when no entry of the fabrics configuration has
-a 'tls-key-source' other than 'inline'. In that case, nvme-keysd does not
-run, and the unit does not load the nvme_keyring module.
+a 'tls-key-source' or 'kxchap-secret-source' other than 'inline'. In
+that case, nvme-keysd does not run, and the unit does not load the
+nvme_keyring module.
+
+KX-HMAC-CHAP SECRETS
+--------------------
+nvme-keysd also imports the KX-HMAC-CHAP secrets of every entry with
+'kxchap-secret-source = systemd-creds'. 'kxchap-secret' and
+'kxchap-ctrl-secret' are then names of systemd credentials. Each holds
+a secret in the format 'DHHC-1:<hmac>:<base64>:', as created by 'nvme
+keys gen-kxchap-secret'.
+
+nvme-keysd puts each secret in the keyring named by 'keyring' (default
+'.nvme') as a key of type 'dhchap'. The key description is the name
+from 'kxchap-secret' or 'kxchap-ctrl-secret'. The connection passes
+this name, and the kernel looks up the key by it. A key with the same
+description is replaced: a controller that uses the old key keeps it
+until it authenticates again.
+
+This needs a kernel that supports KX-HMAC-CHAP keys in the keyring. An
+older kernel rejects the name as a secret: the connection fails, and
+the kernel logs "Invalid DH-CHAP secret <name>". nvme-keysd then logs a
+warning and imports no KX-HMAC-CHAP secrets.
+
+The kernel interface is not final yet. This part of nvme-keysd may
+change.
 
 CREDENTIALS
 -----------
@@ -159,7 +183,8 @@ OPTIONS
 
 --should-start::
 	Exit with status 0 if an entry of the fabrics configuration has a
-	'tls-key-source' other than 'inline', and with status 1 otherwise.
+	'tls-key-source' or 'kxchap-secret-source' other than 'inline', and
+	with status 1 otherwise.
 	The unit runs this check before it starts nvme-keysd.
 
 -d::

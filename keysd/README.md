@@ -1,6 +1,6 @@
 # nvme-keysd
 
-A daemon that puts NVMe/TCP TLS pre-shared keys (PSKs) into the kernel's `.nvme` keyring before a connection needs them. The kernel finds the key there when `nvme connect` or `nvme-discoverd` connects with TLS.
+A daemon that puts NVMe/TCP TLS pre-shared keys (PSKs) and KX-HMAC-CHAP secrets into the kernel's `.nvme` keyring before a connection needs them. The kernel finds the key there when `nvme connect` or `nvme-discoverd` connects.
 
 > Technology preview. The `nvme-keysd` meson option defaults to `disabled`. Keys come from systemd credentials (`tls-key-source = systemd-creds`) or from a KMIP key management server (`tls-key-source = kmip:<name>`). The `kmip` meson option (default `auto`) builds the `nvme-keysd-kmip` helper.
 
