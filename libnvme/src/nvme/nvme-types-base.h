@@ -4141,6 +4141,38 @@ struct nvme_id_independent_id_ns {
 };
 
 /**
+ * enum nvme_id_ind_nsfeat - This field defines features of the namespace.
+ * @NVME_IND_NSFEAT_RSVD0_SHIFT: RSVD0 shift
+ * @NVME_IND_NSFEAT_UIDREUSE_SHIFT: UIDREUSE shift
+ * @NVME_IND_NSFEAT_RMEDIA_SHIFT: RMEDIA shift
+ * @NVME_IND_NSFEAT_VWCNP_SHIFT: VWCNP shift
+ * @NVME_IND_NSFEAT_RSVD6_SHIFT: RSVD6 shift
+ * @NVME_IND_NSFEAT_RSVD0_MASK: RSVD0 mask
+ * @NVME_IND_NSFEAT_UIDREUSE_MASK: UIDREUSE mask
+ * @NVME_IND_NSFEAT_RMEDIA_MASK: RMEDIA mask
+ * @NVME_IND_NSFEAT_VWCNP_MASK: VWCNP mask
+ * @NVME_IND_NSFEAT_RSVD6_MASK: RSVD6 mask
+ */
+enum nvme_id_ind_nsfeat {
+	NVME_IND_NSFEAT_RSVD0_SHIFT	= 0,
+	NVME_IND_NSFEAT_UIDREUSE_SHIFT	= 3,
+	NVME_IND_NSFEAT_RMEDIA_SHIFT	= 4,
+	NVME_IND_NSFEAT_VWCNP_SHIFT	= 5,
+	NVME_IND_NSFEAT_RSVD6_SHIFT	= 6,
+	NVME_IND_NSFEAT_RSVD0_MASK	= 0x7,
+	NVME_IND_NSFEAT_UIDREUSE_MASK	= 0x1,
+	NVME_IND_NSFEAT_RMEDIA_MASK	= 0x1,
+	NVME_IND_NSFEAT_VWCNP_MASK	= 0x1,
+	NVME_IND_NSFEAT_RSVD6_MASK	= 0x3,
+};
+
+#define NVME_IND_NSFEAT_RSVD0(nsfeat)	 NVME_GET(nsfeat, IND_NSFEAT_RSVD0)
+#define NVME_IND_NSFEAT_UIDREUSE(nsfeat) NVME_GET(nsfeat, IND_NSFEAT_UIDREUSE)
+#define NVME_IND_NSFEAT_RMEDIA(nsfeat)	 NVME_GET(nsfeat, IND_NSFEAT_RMEDIA)
+#define NVME_IND_NSFEAT_VWCNP(nsfeat)	 NVME_GET(nsfeat, IND_NSFEAT_VWCNP)
+#define NVME_IND_NSFEAT_RSVD6(nsfeat)	 NVME_GET(nsfeat, IND_NSFEAT_RSVD6)
+
+/**
  * struct nvme_id_ns_granularity_desc -	 Namespace Granularity Descriptor
  * @nszegran:	Namespace Size Granularity
  * @ncapgran:	Namespace Capacity Granularity

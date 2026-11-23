@@ -2020,11 +2020,11 @@ static struct shr_table *
 stdout_cmd_set_independent_id_ns_nsfeat_table(__u8 nsfeat)
 {
 	struct shr_table *t;
-	__u8 rsvd6 = (nsfeat & 0xE0) >> 6;
-	__u8 vwcnp = (nsfeat & 0x20) >> 5;
-	__u8 rmedia = (nsfeat & 0x10) >> 4;
-	__u8 uidreuse = (nsfeat & 0x8) >> 3;
-	__u8 rsvd0 = (nsfeat & 0x7);
+	__u8 rsvd6 = NVME_IND_NSFEAT_RSVD6(nsfeat);
+	__u8 vwcnp = NVME_IND_NSFEAT_VWCNP(nsfeat);
+	__u8 rmedia = NVME_IND_NSFEAT_RMEDIA(nsfeat);
+	__u8 uidreuse = NVME_IND_NSFEAT_UIDREUSE(nsfeat);
+	__u8 rsvd0 = NVME_IND_NSFEAT_RSVD0(nsfeat);
 
 	t = stdout_bits_table_create();
 	if (!t)
