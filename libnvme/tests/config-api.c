@@ -1093,6 +1093,44 @@ static bool test_tls_key_source(struct libnvme_global_ctx *ctx)
 }
 
 /*
+ * With kxchap-secret-source other than "inline", kxchap-secret and
+ * kxchap-ctrl-secret name keys in the keyring, and the connection passes
+ * the names. kxchap-secret-source itself is never an "nvme connect"
+ * option.
+ */
+static bool test_kxchap_secret_source(void)
+{
+	struct libnvmf_params *params;
+	struct arg_list args = { 0 };
+	bool pass = true;
+
+	printf("test_kxchap_secret_source:\n");
+
+	params = libnvmf_params_new();
+	shr_assert(params);
+
+	shr_assert(!libnvmf_params_set(params, "kxchap-secret", "vol1-host"));
+	shr_assert(!libnvmf_params_set(params, "kxchap-ctrl-secret",
+				       "vol1-ctrl"));
+	shr_assert(!libnvmf_params_set(params, "kxchap-secret-source",
+				       "systemd-creds"));
+
+	shr_assert(!libnvmf_connect_args_emit(NULL, params, collect_arg,
+					      &args));
+	if (args.n != 2 || !has_arg(&args, "--kxchap-secret=vol1-host") ||
+	    !has_arg(&args, "--kxchap-ctrl-secret=vol1-ctrl")) {
+		printf(" - systemd-creds: emit has the key names [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - systemd-creds: emit has the key names [PASS]\n");
+	}
+
+	libnvmf_params_free(params);
+
+	return pass;
+}
+
+/*
  * persistent must distinguish "not configured" (UNSET, the library default
  * derived elsewhere, e.g. from the discovery log page) from an explicit
  * "no" -- a plain bool cannot represent that third state.
@@ -1376,6 +1414,7 @@ int main(void)
 	pass &= test_apply_params(ctx);
 	pass &= test_persistent_tristate(ctx);
 	pass &= test_tls_key_source(ctx);
+	pass &= test_kxchap_secret_source();
 	pass &= test_set_connection_from_tid(ctx);
 	pass &= test_edge_cases(ctx, &fx);
 

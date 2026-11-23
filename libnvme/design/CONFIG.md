@@ -229,6 +229,7 @@ controller         = transport=tcp;traddr=10.0.0.9;trsvcid=4420
 | `tls-key` | the Pre-Shared Key (PSK): a keyring key id, or the key in interchange format (`NVMeTLSkey-1:01:…`) |
 | `tls-key-identity` | the identity string bound to the PSK |
 | `tls-key-source` | where the PSK comes from: `inline` (default), `tls-key` is the key; `systemd-creds`, `tls-key` is a systemd credential name that nvme-keysd loads into the keyring, and the connection does not use `tls-key` |
+| `kxchap-secret-source` | where the KX-HMAC-CHAP secrets come from: `inline` (default), `kxchap-secret` and `kxchap-ctrl-secret` are the secrets; `systemd-creds`, they are systemd credential names that nvme-keysd loads into the keyring as `dhchap` keys with the name as description, and the connection passes the names |
 | `keyring` | the keyring the PSK is looked up in (default `.nvme`); usually set once as a `[Host]` default, or duplicated in both `*Defaults` sections |
 
 **Bridging the two**

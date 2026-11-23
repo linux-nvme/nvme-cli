@@ -92,35 +92,41 @@ TUNABLE (type default, '[Host]', endpoint section, or 'controller =' line):
 SECURITY ('[Host]' or endpoint section only, never a 'controller =' line):
 
 	tls, tls-key, tls-key-identity, keyring, concat, kxchap-secret,
-	kxchap-ctrl-secret, tls-key-source
+	kxchap-ctrl-secret, tls-key-source, kxchap-secret-source
 
 IDENTITY ('[Host]' only):
 
 	hostnqn, hostid, hostsymname
 
-Every key here except 'tls-key-source' is the same name as its
-'nvme connect' long option (hyphenated). See linknvme:nvme-connect[1]
-for what each one means.
+Every key here except 'tls-key-source' and 'kxchap-secret-source' is
+the same name as its 'nvme connect' long option (hyphenated). See
+linknvme:nvme-connect[1] for what each one means.
 
-'tls-key-source' says where the TLS PSK comes from:
+'tls-key-source' says where the TLS PSK in 'tls-key' comes from.
+'kxchap-secret-source' says the same for the KX-HMAC-CHAP secrets in
+'kxchap-secret' and 'kxchap-ctrl-secret'. Both take these values:
 
 'inline'::
-	The default. 'tls-key' is the key itself.
+	The default. The value is the key or the secret itself.
 
 'systemd-creds'::
-	'tls-key' is the name of a systemd credential. nvme-keysd reads the
-	credential and puts the PSK in the keyring. The connection does not
-	use 'tls-key': the kernel finds the PSK in the keyring by the host
-	NQN and the subsystem NQN. See linknvme:nvme-keysd[8].
+	The value is the name of a systemd credential. nvme-keysd reads
+	the credential and puts the key in the keyring. The connection
+	does not use 'tls-key': the kernel finds the PSK in the keyring by
+	the host NQN and the subsystem NQN. For a KX-HMAC-CHAP secret, the
+	credential name is the key description: the connection passes the
+	name, and the kernel looks up the key by it. See
+	linknvme:nvme-keysd[8].
 
 'kmip:<name>'::
-	'tls-key' is the Name of a key on the key management server
-	(KMS) '<name>', configured in nvme-keysd.conf. nvme-keysd gets the
-	key and puts it in the keyring. 'kmip' alone is enough when only
-	one KMS is configured. See linknvme:nvme-keysd[8].
+	'tls-key-source' only. 'tls-key' is the Name of a key on the key
+	management server (KMS) '<name>', configured in nvme-keysd.conf.
+	nvme-keysd gets the key and puts it in the keyring. 'kmip' alone is
+	enough when only one KMS is configured. See linknvme:nvme-keysd[8].
 
-Any other value also means that 'tls-key' is not the key. libnvme does
-not check the value: nvme-keysd does.
+With any other source, 'tls-key', 'kxchap-secret' and
+'kxchap-ctrl-secret' are not the keys either. libnvme does not check
+the source: nvme-keysd does.
 
 RESETTING A KEY
 ----------------
