@@ -319,8 +319,8 @@ static void emit_param(const char *key, const char *value, void *user_data)
 	if (k->class == LIBNVMF_KEY_DC_TUNABLE)
 		return;
 
-	/* tls-key-source is for nvme-keysd, not an "nvme connect" option. */
-	if (streq(key, "tls-key-source"))
+	/* The key sources are for nvme-keysd, not "nvme connect" options. */
+	if (streq(key, "tls-key-source") || streq(key, "kxchap-secret-source"))
 		return;
 	if (streq(key, "tls-key") && !state->tls_key_inline)
 		return;

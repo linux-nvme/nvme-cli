@@ -124,6 +124,7 @@ static void copy_conn(const struct libnvmf_config_conn *conn, void *user_data)
 struct strip_ctx {
 	struct libnvmf_params *params;
 	bool tls_key_inline;
+	bool kxchap_inline;
 	int err;
 };
 
@@ -133,8 +134,8 @@ static void strip_param(const char *key, const char *value, void *user_data)
 
 	if (sc->err)
 		return;
-	if (streq(key, "kxchap-secret") ||
-	    streq(key, "kxchap-ctrl-secret") ||
+	if (((streq(key, "kxchap-secret") ||
+	      streq(key, "kxchap-ctrl-secret")) && sc->kxchap_inline) ||
 	    (streq(key, "tls-key") && sc->tls_key_inline))
 		return;
 	sc->err = libnvmf_params_set(sc->params, key, value);
@@ -155,6 +156,8 @@ static struct libnvmf_params *strip_credentials(
 	if (params) {
 		src = libnvmf_params_get(params, "tls-key-source");
 		sc.tls_key_inline = !src || !*src || streq(src, "inline");
+		src = libnvmf_params_get(params, "kxchap-secret-source");
+		sc.kxchap_inline = !src || !*src || streq(src, "inline");
 		libnvmf_params_for_each(params, strip_param, &sc);
 	}
 	if (sc.err) {

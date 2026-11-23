@@ -62,6 +62,7 @@ static const struct libnvmf_key keys[] = {
 	{ "keyring",			LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
 	{ "kxchap-secret",		LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
 	{ "kxchap-ctrl-secret",		LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
+	{ "kxchap-secret-source",	LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
 
 	/* host identity -- [Host] only */
 	{ "hostnqn",			LIBNVMF_KEY_STRING,	LIBNVMF_KEY_IDENTITY },
