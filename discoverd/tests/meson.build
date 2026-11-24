@@ -159,6 +159,14 @@ if python3.found() and want_fabrics and is_variable('have_mock_nvme') and have_m
          depends: [nvme_discoverd, mock_nvme_lib] + nvme_runtime,
          timeout: 120,
          suite: 'mock')
+    # When a failed connect is retried, and when it is given up.
+    test('nvme-discoverd - retry',
+         python3,
+         args: [files('test_retry.py'), nvme_exe, mock_nvme_lib],
+         env: handover_env,
+         depends: [nvme_discoverd, mock_nvme_lib] + nvme_runtime,
+         timeout: 120,
+         suite: 'mock')
 endif
 
 # A build with nvme-discoverd installs none of the legacy autoconnect.

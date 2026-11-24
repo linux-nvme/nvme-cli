@@ -127,6 +127,46 @@ static bool test_cached_dlp_needs_source(void)
 	return pass;
 }
 
+/*
+ * Only a DC that mDNS or FC kickstart found, and that no desired DC lists
+ * as a referral, may be given up. A referral follows its parent.
+ */
+static bool test_discovered_only(void)
+{
+	struct inventory *inv = inventory_new();
+	__cleanup_tid struct libnvmf_tid *dc1 = dc("10.0.0.1");
+	__cleanup_tid struct libnvmf_tid *dc2 = dc("10.0.0.2");
+	__cleanup_tid struct libnvmf_tid *ref = dc("10.0.0.3");
+	bool pass = true;
+
+	printf("test_discovered_only:\n");
+
+	inventory_add_discovered_dc(inv, dc1);
+	pass &= check("discovered DC is discovered only",
+		      inventory_is_discovered_only(inv, dc1), true);
+	cache_dlp(inv, dc1, NULL, dc1);
+	pass &= check("listing itself changes nothing",
+		      inventory_is_discovered_only(inv, dc1), true);
+
+	cache_dlp(inv, dc1, NULL, ref);
+	pass &= check("referral is not discovered only",
+		      inventory_is_discovered_only(inv, ref), false);
+
+	inventory_add_discovered_dc(inv, dc2);
+	cache_dlp(inv, dc1, NULL, dc2);
+	pass &= check("discovered DC that is also a referral is not",
+		      inventory_is_discovered_only(inv, dc2), false);
+
+	inventory_forget_dc(inv, dc1);
+	pass &= check("referral of a forgotten DC is not desired",
+		      inventory_is_desired(inv, ref), false);
+	pass &= check("discovered DC no longer referred to is again",
+		      inventory_is_discovered_only(inv, dc2), true);
+
+	inventory_free(inv);
+	return pass;
+}
+
 /* A referral is desired through its parent, and so is what it lists. */
 static bool test_referral_chain(void)
 {
@@ -694,6 +734,7 @@ int main(void)
 
 	pass &= test_discovered_dc();
 	pass &= test_cached_dlp_needs_source();
+	pass &= test_discovered_only();
 	pass &= test_referral_chain();
 	pass &= test_referral_loop();
 	pass &= test_referral_hop_limit();

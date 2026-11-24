@@ -23,6 +23,7 @@
 #include <nvme/lib.h>
 #include <nvme/nbft.h>
 #include <nvme/util.h>
+#include <shared/string-util.h>
 
 #include "ctx.h"
 #include "inventory.h"
@@ -407,6 +408,26 @@ const char *inventory_source(const struct inventory *inv,
 		}
 	}
 	return NULL;
+}
+
+bool inventory_is_discovered_only(const struct inventory *inv,
+				  const struct libnvmf_tid *tid)
+{
+	const struct libnvmf_tid *parent;
+	struct dlp_entry *e;
+
+	if (!shr_streq0(inventory_source(inv, tid, &parent), "discovered"))
+		return false;
+
+	list_for_each(&inv->dlp_cache, e, entry) {
+		if (tid_same(e->dc_tid, tid))
+			continue;
+		if (tid_list_contains(&e->referrals, tid) &&
+		    inventory_referral_hops(inv, e->dc_tid) >= 0)
+			return false;
+	}
+
+	return true;
 }
 
 bool inventory_is_desired(const struct inventory *inv,

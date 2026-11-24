@@ -1317,10 +1317,11 @@ discoverd_start
 assert_connected "connects the subsystem the referred DC lists" \
 	"${REF_NQN}" 30
 
-phase "an unreachable referred DC is given up"
+phase "an unreachable referred DC is not given up"
 #
-# dc-giveup-timeout applies to a DC with no source of its own, such as a
-# referred DC. The poll interval is for the next phase.
+# dc-giveup-timeout applies only to a DC found through mDNS or FC
+# kickstart. A referred DC retries for as long as its DC lists it. The
+# poll interval is for the next phase.
 discoverd_stop_daemon_only
 printf '[Discovery]\nepcsd-poll-interval-minutes = 1\ndc-giveup-timeout = 3s\n' \
 	> "${ETC_NVME_DIR}/nvme-discoverd.conf"
@@ -1330,8 +1331,11 @@ rm -f "/sys/kernel/config/nvmet/ports/${REF_PORT_ID}/subsystems/${REF_NQN}"
 rmdir "/sys/kernel/config/nvmet/ports/${REF_PORT_ID}"
 P_START=$(journal_cursor)
 discoverd_start
-assert_journal_has "the referred DC was given up" "${P_START}" \
-	"${TRADDR}, ${REF_PORT}, .* - giving up after repeated failures" 30
+assert_journal_has "the referred DC is retried" "${P_START}" \
+	"${TRADDR}, ${REF_PORT}, .* - connection unit failed" 30
+countdown 10 "Wait past dc-giveup-timeout"
+assert_journal_lacks "the referred DC is not given up" "${P_START}" \
+	"${TRADDR}, ${REF_PORT}, .* - giving up after repeated failures"
 
 phase "a parked DC is polled"
 #

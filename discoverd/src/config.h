@@ -61,11 +61,10 @@ struct discoverd_config {
 	unsigned int epcsd_poll_interval_minutes;
 
 	/*
-	 * Microseconds a dynamically-discovered DC (found only via referral
-	 * or FC kickstart, not NBFT or the fabrics config) keeps retrying a
-	 * failed (re)connect before it's dropped from tracking. Default 72
-	 * hours. SHR_USEC_INFINITY = never give up, same as a
-	 * static/NBFT-sourced DC; 0 = give up on the first failure.
+	 * Microseconds a DC found only through mDNS or FC kickstart keeps
+	 * retrying a failed (re)connect before it's dropped from tracking.
+	 * Default 72 hours. SHR_USEC_INFINITY = never give up, as every
+	 * other DC does; 0 = give up on the first failure.
 	 */
 	uint64_t dc_giveup_timeout_usec;
 
