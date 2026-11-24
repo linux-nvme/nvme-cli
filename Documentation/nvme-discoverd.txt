@@ -44,6 +44,13 @@ different: no admin asked for it, so it gives up after
 'dc-giveup-timeout' (default 72hours) of unbroken failure and is
 dropped from tracking.
 
+A Discovery Log Page entry of an I/O controller can have NCC (No CDC
+Connectivity) set: a Centralized Discovery Controller sets it while it
+has no connection to the subsystem. With 'connect-attempts-on-ncc' set,
+nvme-discoverd stops after that many failed attempts while NCC is set,
+and tries again when the entry no longer has NCC set. This does not
+apply to an I/O controller from NBFT, pre-os.conf or the fabrics config.
+
 A TLS connection needs tlshd(8) from ktls-utils. Enable it with
 'systemctl enable --now tlshd'. When both are enabled, nvme-discoverd
 starts after tlshd.
@@ -145,6 +152,7 @@ section and a '[Discovery]' section:
 	epcsd-poll-interval-minutes = 15
 	fc-kickstart-interval-minutes = 0
 	dc-giveup-timeout = 72hours
+	connect-attempts-on-ncc = 0
 	zeroconf = false
 
 'pre-os' (boolean, default true) keeps the connections of the pre-OS
@@ -161,6 +169,9 @@ startup and on every FC controller drop. 'dc-giveup-timeout' (default
 72hours) is the give-up horizon described above. It takes a systemd
 time span ("72hours", "3 days 5 hours") or a unit-less value in
 seconds; "infinity" = never give up, 0 = give up on the first failure.
+'connect-attempts-on-ncc' (default 0) is the number of failed attempts
+after which an I/O controller with NCC set is no longer tried, see
+above. 0 = no limit.
 
 A DC connects with a keep-alive timeout of 30 seconds, or with its
 configured 'keep-alive-tmo' (see nvme-fabrics.conf(5)). A DC

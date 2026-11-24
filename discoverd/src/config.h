@@ -23,10 +23,11 @@
  *   epcsd-poll-interval-minutes = 15
  *   fc-kickstart-interval-minutes = 0
  *   dc-giveup-timeout = 72hours
+ *   connect-attempts-on-ncc = 0
  *   zeroconf = false
  *
  * [Global] holds daemon-wide settings. [Discovery] holds the settings for
- * dynamically discovered DCs. The [Discovery] keys are still accepted in
+ * what nvme-discoverd discovers. The [Discovery] keys are still accepted in
  * [Global], where releases up to 3.1 placed them, with a warning.
  */
 struct discoverd_config {
@@ -67,6 +68,13 @@ struct discoverd_config {
 	 * other DC does; 0 = give up on the first failure.
 	 */
 	uint64_t dc_giveup_timeout_usec;
+
+	/*
+	 * Failed connect attempts to an I/O controller whose DLP entry has
+	 * NCC set before nvme-discoverd stops trying. It tries again when
+	 * NCC is cleared. Default 0 = no limit.
+	 */
+	unsigned int connect_attempts_on_ncc;
 
 	/*
 	 * Connect to and manage DCs found through mDNS (TP8009). Default

@@ -25,13 +25,14 @@ struct counters {
 	unsigned int ioc;
 	unsigned int dc;
 	unsigned int self;
+	bool ioc_ncc;
 	bool dc_epcsd;
 	bool self_epcsd;
 	char last_ioc_subnqn[NVME_NQN_LENGTH];
 	char last_ioc_traddr[NVMF_TRADDR_SIZE];
 };
 
-static void ioc_cb(const struct libnvmf_tid *t, void *user_data)
+static void ioc_cb(const struct libnvmf_tid *t, bool ncc, void *user_data)
 {
 	struct counters *c = user_data;
 	const char *nqn = libnvmf_tid_get_subsysnqn(t);
@@ -39,6 +40,7 @@ static void ioc_cb(const struct libnvmf_tid *t, void *user_data)
 	const char *traddr = libnvmf_tid_get_traddr(t);
 
 	c->ioc++;
+	c->ioc_ncc = ncc;
 	snprintf(c->last_ioc_subnqn, sizeof(c->last_ioc_subnqn), "%s",
 		 nqn ? nqn : "");
 	snprintf(c->last_ioc_traddr, sizeof(c->last_ioc_traddr), "%s",
@@ -175,6 +177,31 @@ static bool test_subtype_dispatch(void)
 	pass &= check(!c.dc_epcsd, "referral reports EPCSD=0");
 	pass &= check(!strcmp(c.last_ioc_subnqn, IOC_NQN),
 		      "I/O callback carries the entry's subnqn");
+
+	free(log);
+
+	return pass;
+}
+
+/* An I/O entry passes its NCC bit (EFLAGS bit 2) to the callback. */
+static bool test_ioc_ncc(void)
+{
+	struct nvmf_discovery_log *log;
+	struct counters c = { 0 };
+	bool pass = true;
+
+	printf("test_ioc_ncc:\n");
+
+	log = make_log(1);
+	set_entry(log, 0, NVME_NQN_NVME, NVMF_DISC_EFLAGS_NCC,
+		  "192.168.1.116", "4420", IOC_NQN);
+	dlp_process_log(log, NULL, ioc_cb, dc_cb, self_cb, &c);
+	pass &= check(c.ioc == 1 && c.ioc_ncc, "I/O entry reports NCC=1");
+
+	set_entry(log, 0, NVME_NQN_NVME, NVMF_DISC_EFLAGS_DUPRETINFO,
+		  "192.168.1.116", "4420", IOC_NQN);
+	dlp_process_log(log, NULL, ioc_cb, dc_cb, self_cb, &c);
+	pass &= check(c.ioc == 2 && !c.ioc_ncc, "I/O entry reports NCC=0");
 
 	free(log);
 
@@ -379,6 +406,7 @@ int main(void)
 
 	pass &= test_dupretinfo_does_not_drop_entries();
 	pass &= test_subtype_dispatch();
+	pass &= test_ioc_ncc();
 	pass &= test_multiple_self_entries();
 	pass &= test_cross_transport_skipped();
 	pass &= test_self_entry_other_interface_skipped();

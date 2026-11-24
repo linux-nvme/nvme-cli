@@ -53,6 +53,13 @@
 # 0 = give up after the first failure.
 #dc-giveup-timeout = 72hours
 
+# Failed attempts after which an I/O controller whose Discovery Log Page entry
+# has NCC (No CDC Connectivity) set is no longer tried. It is tried again when
+# the entry no longer has NCC set. Does not apply to controllers from NBFT or
+# the fabrics configuration.
+# 0 = no limit.
+#connect-attempts-on-ncc = 0
+
 # Connect to and manage Discovery Controllers found through mDNS (TP8009).
 # Disabled by default.
 #zeroconf = false
