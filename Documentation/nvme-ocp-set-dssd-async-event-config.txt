@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme' [<global-options>] 'ocp set-dssd-async-event-config' <device>
 			[--enable-panic-notices | -e]
 			[--save | -s]
+			[--no-uuid | -n]
 
 
 DESCRIPTION
@@ -34,6 +35,11 @@ OPTIONS
 -s::
 --save::
 	Save the attribute so that it persists through all power states and resets.
+
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
 
 include::global-options.txt[]
 

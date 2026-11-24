@@ -16,8 +16,9 @@ FFFFFFFFh); Get Features returns it in Dword 0 bits 7:0 (TEL-CFG-GF-3).
 
 Tests in this module verify:
   * set-telemetry-profile sends the profile with Save, NSID FFFFFFFFh and
-    the OCP UUID index (UUID-3), and fails when Set Features fails or
-    no --telemetry-profile-select is given.
+    the OCP UUID index (UUID-3), or index 0 without reading the UUID List
+    with --no-uuid, and fails when Set Features fails or no
+    --telemetry-profile-select is given.
   * get-telemetry-profile reads with the SEL and NSID given, the OCP UUID
     index or index 0 with --no-uuid, prints what Dword 0 reports, and
     SEL 3 as capabilities.
@@ -27,7 +28,7 @@ Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 
 Usage: python3 ocp_telemetry_profile_mock_test.py <nvme-binary> <mock-lib>
 """
-from tests.cli.nvme_mock import (NSID_ALL, OPC_GET_FEATURES,
+from tests.cli.nvme_mock import (CNS_UUID_LIST, NSID_ALL, OPC_GET_FEATURES,
                                  OPC_SET_FEATURES, SC_INVALID_FIELD, main)
 from tests.cli.cmds_ocp.ocp_mock_test import (SEL_NAMES, UUID_INDEX,
                                          OCPFeatureController,
@@ -68,6 +69,15 @@ class TestSetTelemetryProfile(OCPUUIDTests, TelemetryProfileTestBase):
                     (tps, SV, NSID_ALL, UUID_INDEX))
                 self.assertIn(f'Telemetry Profile Select: {hex(tps)}',
                               result.stdout)
+
+    def test_no_uuid_skips_the_uuid_lookup(self):
+        """With --no-uuid the UUID List is not read and index 0 is sent,
+        so a drive without the OCP UUID takes the Set."""
+        self.server.uuid_slot = None
+        self.assertOk(self.run_cmd('set-telemetry-profile', '-t', '1',
+                                   '--no-uuid'))
+        self.assertEqual(self.server.identifies(CNS_UUID_LIST), [])
+        self.assertEqual(self.only(OPC_SET_FEATURES).uuid_index, 0)
 
     def test_failing_set_features_fails(self):
         self.server.set_status = SC_INVALID_FIELD

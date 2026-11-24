@@ -1469,17 +1469,20 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *ac
 ///////////////////////////////////////////////////////////////////////////////
 /// Set Telemetry Profile (Feature Identifier C8h) Set Feature
 
-static int ocp_set_telemetry_profile(struct libnvme_transport_handle *hdl, __u8 tps)
+static int ocp_set_telemetry_profile(struct libnvme_transport_handle *hdl,
+				     __u8 tps, bool uuid)
 {
 	__u64 result;
 	int err;
 	__u8 uidx = 0;
 
-	/* OCP 2.0 requires UUID index support */
-	err = ocp_get_uuid_index(hdl, &uidx);
-	if (err || !uidx) {
-		nvme_show_error("ERROR: No OCP UUID index found");
-		return err ? err : -ENOENT;
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(hdl, &uidx);
+		if (err || !uidx) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err ? err : -ENOENT;
+		}
 	}
 
 	err = nvme_set_features(hdl, 0xFFFFFFFF, OCP_FID_TEL_CFG, true, tps, 0, 0,
@@ -1501,6 +1504,7 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 	const char *tps = "Telemetry Profile Select for device debug data collection";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	bool no_uuid_flag = false;
 	int err;
 
 	struct config {
@@ -1513,6 +1517,7 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 
 	OPT_ARGS(opts) = {
 		OPT_BYTE("telemetry-profile-select", 't', &cfg.tps, tps),
+		OPT_FLAG("no-uuid", 'n', &no_uuid_flag, no_uuid),
 		OPT_END()
 	};
 
@@ -1521,7 +1526,7 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 		return err;
 
 	if (argconfig_given(opts, &cfg.tps)) {
-		err = ocp_set_telemetry_profile(hdl, cfg.tps);
+		err = ocp_set_telemetry_profile(hdl, cfg.tps, !no_uuid_flag);
 	} else {
 		nvme_show_error("Telemetry Profile Select is a required argument");
 		err = -EINVAL;
@@ -1902,6 +1907,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	int err;
 	__u64 result;
 	__u8 uidx = 0;
+	bool no_uuid_flag = false;
 
 	struct config {
 		bool epn;
@@ -1916,6 +1922,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	OPT_ARGS(opts) = {
 		OPT_FLAG("enable-panic-notices", 'e', &cfg.epn, epn),
 		OPT_FLAG("save",                 's', &cfg.sv,  sv),
+		OPT_FLAG("no-uuid",              'n', &no_uuid_flag, no_uuid),
 		OPT_END()
 	};
 
@@ -1923,11 +1930,13 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	if (err)
 		return err;
 
-	/* OCP 2.0 requires UUID index support */
-	err = ocp_get_uuid_index(hdl, &uidx);
-	if (err || !uidx) {
-		nvme_show_error("ERROR: No OCP UUID index found");
-		return err ? err : -ENOENT;
+	if (!no_uuid_flag) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(hdl, &uidx);
+		if (err || !uidx) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err ? err : -ENOENT;
+		}
 	}
 
 	err = nvme_set_features(hdl, nsid, OCP_FID_DAEC, cfg.sv, cfg.epn ? 1 : 0,
