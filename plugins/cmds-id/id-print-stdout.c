@@ -1168,8 +1168,8 @@ static struct shr_table *stdout_id_ctrl_fuses_table(__le16 ctrl_fuses)
 {
 	struct shr_table *t;
 	__u16 fuses = le16_to_cpu(ctrl_fuses);
-	__u16 rsvd = (fuses & 0xFE) >> 1;
-	__u16 cmpw = fuses & 0x1;
+	__u16 rsvd = NVME_CTRL_FUSES_RSVD1(fuses);
+	__u16 cmpw = NVME_CTRL_FUSES_FCWS(fuses);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1186,7 +1186,7 @@ static struct shr_table *stdout_id_ctrl_fuses_table(__le16 ctrl_fuses)
 static struct shr_table *stdout_id_ctrl_fna_table(__u8 fna)
 {
 	struct shr_table *t;
-	__u8 rsvd = (fna & 0xF0) >> 4;
+	__u8 rsvd = NVME_CTRL_FNA_RSVD4(fna);
 	__u8 bcnsid = NVME_CTRL_FNA_NSID_ALL_F(fna);
 	__u8 cese = NVME_CTRL_FNA_CES(fna);
 	__u8 cens = NVME_CTRL_FNA_SEC_ALL_NS(fna);
@@ -1216,9 +1216,9 @@ static struct shr_table *stdout_id_ctrl_fna_table(__u8 fna)
 static struct shr_table *stdout_id_ctrl_vwc_table(__u8 vwc)
 {
 	struct shr_table *t;
-	__u8 rsvd = (vwc & 0xF8) >> 3;
-	__u8 flush = (vwc & 0x6) >> 1;
-	__u8 vwcp = vwc & 0x1;
+	__u8 rsvd = NVME_CTRL_VWC_RSVD3(vwc);
+	__u8 flush = NVME_CTRL_VWC_FB(vwc);
+	__u8 vwcp = NVME_CTRL_VWC_VWCP(vwc);
 
 	static const char * const flush_behavior[] = {
 		"Support for the NSID field set to FFFFFFFFh is not indicated",
@@ -1243,8 +1243,8 @@ static struct shr_table *stdout_id_ctrl_vwc_table(__u8 vwc)
 static struct shr_table *stdout_id_ctrl_icsvscc_table(__u8 icsvscc)
 {
 	struct shr_table *t;
-	__u8 rsvd = (icsvscc & 0xFE) >> 1;
-	__u8 fmt = icsvscc & 0x1;
+	__u8 rsvd = NVME_CTRL_ICSVSCC_RSVD1(icsvscc);
+	__u8 fmt = NVME_CTRL_ICSVSCC_SNVSCF(icsvscc);
 
 	t = stdout_bits_table_create();
 	if (!t)
