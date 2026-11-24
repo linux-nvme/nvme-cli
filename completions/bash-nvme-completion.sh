@@ -3829,7 +3829,7 @@ plugin_ocp_opts () {
 			;;
 
 		"set-dssd-async-event-config")
-			opts+=" --dry-run --enable-panic-notices -e --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --verbose -v"
+			opts+=" --dry-run --enable-panic-notices -e --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --save -s --set-options= --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \
@@ -3884,7 +3884,7 @@ plugin_ocp_opts () {
 			;;
 
 		"set-telemetry-profile")
-			opts+=" --dry-run --no-ioctl-probing --no-retries --output-format= -o --output-format-version= --quiet --set-options= --telemetry-profile-select= -t --timeout= --verbose -v"
+			opts+=" --dry-run --no-ioctl-probing --no-retries --no-uuid -n --output-format= -o --output-format-version= --quiet --set-options= --telemetry-profile-select= -t --timeout= --verbose -v"
 			valopts+=" --output-format -o --output-format-version --set-options --telemetry-profile-select -t --timeout"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary" \

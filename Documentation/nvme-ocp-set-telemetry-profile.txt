@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'ocp set-telemetry-profile' <device>
 			[--telemetry-profile-select=<tps> | -t <tps>]
+			[--no-uuid | -n]
 
 DESCRIPTION
 -----------
@@ -26,9 +27,14 @@ On success it returns 0, error code otherwise.
 OPTIONS
 -------
 -t <tps>::
---tps=<tps>::
+--telemetry-profile-select=<tps>::
 	Telemetry Profile Select. The device shall collect debug data per the
 	specified profile number.
+
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
 
 include::global-options.txt[]
 

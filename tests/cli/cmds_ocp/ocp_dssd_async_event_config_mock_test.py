@@ -19,8 +19,9 @@ Saveable (SDAEC-10).
 Tests in this module verify:
   * set-dssd-async-event-config sets bit 0 with --enable-panic-notices
     and nothing otherwise, Save with --save, NSID 0 (NVMe Base 2.1
-    section 4.4) and the OCP UUID index (UUID-3), and fails when Set
-    Features fails.
+    section 4.4) and the OCP UUID index (UUID-3), or index 0 without
+    reading the UUID List with --no-uuid, and fails when Set Features
+    fails.
   * get-dssd-async-event-config reads with the SEL given and NSID 0,
     prints what Dword 0 reports, and SEL 3 as capabilities. It sends UUID
     index 0, which UUID-3 allows, so it needs no OCP UUID.
@@ -35,7 +36,7 @@ Runs nowhere but Linux: libmock_nvme.so is an LD_PRELOAD shim.
 Usage:
     python3 ocp_dssd_async_event_config_mock_test.py <nvme-binary> <mock-lib>
 """
-from tests.cli.nvme_mock import OPC_SET_FEATURES, main
+from tests.cli.nvme_mock import CNS_UUID_LIST, OPC_SET_FEATURES, main
 from tests.cli.cmds_ocp.ocp_mock_test import (CHANGEABLE_CAPABILITIES,
                                          SEL_NAMES, UUID_INDEX,
                                          OCPFeatureController,
@@ -94,6 +95,14 @@ class TestSetDssdAsyncEventConfig(OCPUUIDTests, AsyncEventConfigTestBase):
         stdout, cmd = self.sent('--enable-panic-notices', '--save')
         self.assertEqual(cmd.cdw10 & SV, SV)
         self.assertIn('Save bit Value: 0x1', stdout)
+
+    def test_no_uuid_skips_the_uuid_lookup(self):
+        """With --no-uuid the UUID List is not read and index 0 is sent,
+        so a drive without the OCP UUID takes the Set."""
+        self.server.uuid_slot = None
+        _, cmd = self.sent('--enable-panic-notices', '--no-uuid')
+        self.assertEqual(self.server.identifies(CNS_UUID_LIST), [])
+        self.assertEqual(cmd.uuid_index, 0)
 
     def test_failing_set_features_fails(self):
         """SDAEC-10: from OCP 2.6 a Save is aborted."""
