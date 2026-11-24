@@ -64,6 +64,8 @@ static bool test_missing_file_defaults(void)
 		      "fc-kickstart-interval-minutes defaults 0");
 	pass &= check(cfg->dc_giveup_timeout_usec == 72 * SHR_USEC_PER_HOUR,
 		      "dc-giveup-timeout defaults 72hours");
+	pass &= check(cfg->connect_attempts_on_ncc == 0,
+		      "connect-attempts-on-ncc defaults 0");
 	pass &= check(!cfg->zeroconf, "zeroconf defaults false");
 
 	config_free(cfg);
@@ -85,6 +87,7 @@ static bool test_discovery_section_parsed(void)
 			"epcsd-poll-interval-minutes = 30\n"
 			"fc-kickstart-interval-minutes = 5\n"
 			"dc-giveup-timeout = 2hours\n"
+			"connect-attempts-on-ncc = 3\n"
 			"zeroconf = true\n");
 	pass &= check(!cfg->pre_os, "[Global] pre-os parses");
 	pass &= check(cfg->epcsd_poll_interval_minutes == 30,
@@ -93,7 +96,15 @@ static bool test_discovery_section_parsed(void)
 		      "[Discovery] fc-kickstart-interval-minutes parses");
 	pass &= check(cfg->dc_giveup_timeout_usec == 2 * SHR_USEC_PER_HOUR,
 		      "[Discovery] dc-giveup-timeout parses");
+	pass &= check(cfg->connect_attempts_on_ncc == 3,
+		      "[Discovery] connect-attempts-on-ncc parses");
 	pass &= check(cfg->zeroconf, "[Discovery] zeroconf parses");
+
+	config_free(cfg);
+
+	cfg = load_text("[Discovery]\nconnect-attempts-on-ncc = 1\n");
+	pass &= check(cfg->connect_attempts_on_ncc == 1,
+		      "connect-attempts-on-ncc = 1 stays 1");
 
 	config_free(cfg);
 

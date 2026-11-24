@@ -62,7 +62,7 @@ static struct libnvmf_tid *tid_from_dlpe(const struct nvmf_disc_log_entry *e,
 void dlp_process_log(const struct nvmf_discovery_log *log,
 		     const struct libnvmf_tid *dc_tid,
 		     void (*ioc_callback)(const struct libnvmf_tid *t,
-					  void *user_data),
+					  bool ncc, void *user_data),
 		     void (*dc_callback)(const struct libnvmf_tid *t,
 					 bool epcsd, void *user_data),
 		     void (*self_callback)(bool epcsd, void *user_data),
@@ -116,7 +116,8 @@ void dlp_process_log(const struct nvmf_discovery_log *log,
 		switch (e->subtype) {
 		case NVME_NQN_NVME:
 			if (ioc_callback)
-				ioc_callback(t, user_data);
+				ioc_callback(t, eflags & NVMF_DISC_EFLAGS_NCC,
+					     user_data);
 			break;
 		case NVME_NQN_DISC:
 			if (dc_callback)

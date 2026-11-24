@@ -26,6 +26,7 @@ static void config_set_defaults(struct discoverd_config *cfg)
 	cfg->fc_kickstart_interval_minutes = 0;
 	cfg->epcsd_poll_interval_minutes = 15;
 	cfg->dc_giveup_timeout_usec = 72 * SHR_USEC_PER_HOUR;
+	cfg->connect_attempts_on_ncc = 0;
 	cfg->zeroconf = false;
 }
 
@@ -82,6 +83,8 @@ static bool apply_discovery_key(struct discoverd_config *cfg, const char *key,
 	else if (streq(key, "dc-giveup-timeout"))
 		*r = shr_parse_time(val, &cfg->dc_giveup_timeout_usec,
 				    SHR_USEC_PER_SEC);
+	else if (streq(key, "connect-attempts-on-ncc"))
+		*r = parse_uint(val, &cfg->connect_attempts_on_ncc);
 	else if (streq(key, "zeroconf"))
 		*r = shr_parse_bool(val, &cfg->zeroconf);
 	else

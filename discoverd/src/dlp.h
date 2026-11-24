@@ -49,6 +49,9 @@ int dlp_read(struct dmn_work_pool *pool, const char *devname, int log_level,
  * all if the log page carries no self entry; the caller must supply its own
  * fallback for that case.
  *
+ * ioc_callback is passed the entry's NCC bit (EFLAGS bit 2): a CDC sets it
+ * while it has no connection to the subsystem.
+ *
  * dc_callback is passed the referral entry's own EPCSD bit, i.e. this DC's
  * report of whether the referred-to DC supports persistent connections.
  * The caller can keep it as a fallback for when that DC is later connected
@@ -60,7 +63,7 @@ int dlp_read(struct dmn_work_pool *pool, const char *devname, int log_level,
 void dlp_process_log(const struct nvmf_discovery_log *log,
 		     const struct libnvmf_tid *dc_tid,
 		     void (*ioc_callback)(const struct libnvmf_tid *t,
-					  void *user_data),
+					  bool ncc, void *user_data),
 		     void (*dc_callback)(const struct libnvmf_tid *t,
 					 bool epcsd, void *user_data),
 		     void (*self_callback)(bool epcsd, void *user_data),
