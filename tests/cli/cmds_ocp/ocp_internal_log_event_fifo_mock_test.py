@@ -57,8 +57,9 @@ Tests in this module verify:
     rejected, and one that ends exactly at the end being decoded.
   * FIFO layout: FIFO naming and numbering, the data area each FIFO is
     decoded in, the end-of-list entry, FIFO bounds, including a log cut
-    short and a Data Area 2 ending before Data Area 1, and a bad FIFO
-    aborting the whole decode.
+    short and a Data Area 2 ending before Data Area 1, a FIFO of size
+    zero decoded as empty but still bounded by its data area, and a bad
+    FIFO aborting the whole decode.
 
 Known defects are covered by expectedFailure tests asserting the correct
 behavior: a snapshot of a statistic with no data is left out of the text
@@ -82,7 +83,7 @@ FIFO_1 = f'EVENT FIFO 1 - {PHYS_NAMES[1]}'
 
 INVALID_EVENT_MSG = 'Invalid NVMe Event FIFO entry'
 FIFO_PARSE_FAILED_MSG = 'Failed to parse Event FIFO'
-INVALID_BOUNDS_MSG = 'Invalid FIFO bounds for FIFO'
+INVALID_BOUNDS_MSG = 'Invalid FIFO bounds for Event FIFO'
 
 
 def strings(fifo_names=None, **tables):
@@ -1189,7 +1190,8 @@ class TestEventFifoLayout(EventFifoTestBase):
         header declares."""
         telemetry = one_fifo(PCIE_EVENT, PCIE_EVENT)
         cut = layout.DA1_START + layout.DA1_HEADER_SIZE + layout.DWORD
-        self.assert_rejected(telemetry[:cut], strings(), INVALID_BOUNDS_MSG)
+        self.assert_rejected(telemetry[:cut], strings(),
+                             f'{INVALID_BOUNDS_MSG} 1')
 
     def test_data_area_2_ending_before_data_area_1_is_empty(self):
         """A Data Area 2 last block below Data Area 1's leaves Data Area 2
@@ -1199,15 +1201,44 @@ class TestEventFifoLayout(EventFifoTestBase):
         self.assert_rejected(telemetry, strings(), INVALID_BOUNDS_MSG,
                              args=('-a', '2'))
 
-    def test_zero_size_fifo_is_rejected(self):
-        """A FIFO assigned to a data area has to hold something."""
-        telemetry = layout.pack_telemetry(fifos={1: layout.Fifo(1)})
-        self.assert_rejected(telemetry, strings(), INVALID_BOUNDS_MSG)
+    def test_zero_size_fifo_is_empty(self):
+        """A FIFO of size zero exists (TELDF-18) and holds no events, so
+        it is listed with none, including one that starts at the very end
+        of its data area. The FIFO after it still decodes."""
+        blocks = 4
+        end_dw = blocks * layout.BLOCK_SIZE // layout.DWORD
+        start_field = layout.DA1_START + layout.DA1_FIFO_OFFSETS
+        for start_dw in (None, end_dw):
+            overlay = ({} if start_dw is None else
+                       {start_field: struct.pack('<Q', start_dw)})
+            telemetry = layout.pack_telemetry(
+                fifos={1: layout.Fifo(1), 2: layout.Fifo(1, [PCIE_EVENT])},
+                da1_blocks=blocks, overlay=overlay)
+            with self.subTest(start_dw=start_dw):
+                self.assert_events(telemetry, strings(), [])
+                self.assert_events(telemetry, strings(), [PCIE_EXPECTED],
+                                   number=2)
+                for mode in MODES:
+                    _, output = self.decode_with_output(
+                        telemetry, strings(), mode=mode)
+                    self.assertNotIn(INVALID_BOUNDS_MSG, output)
+
+    def test_zero_size_fifo_past_its_data_area_is_rejected(self):
+        """A FIFO of size zero still has to start within its data area,
+        here one Dword past the end of Data Area 1."""
+        blocks = 4
+        end_dw = blocks * layout.BLOCK_SIZE // layout.DWORD
+        telemetry = layout.pack_telemetry(
+            fifos={1: layout.Fifo(1)}, da1_blocks=blocks, da2_blocks=1,
+            overlay={layout.DA1_START + layout.DA1_FIFO_OFFSETS:
+                     struct.pack('<Q', end_dw + 1)})
+        self.assert_rejected(telemetry, strings(), f'{INVALID_BOUNDS_MSG} 1')
 
     def test_bad_fifo_after_a_good_one_fails_the_decode(self):
         telemetry = layout.pack_telemetry(fifos={
-            1: layout.Fifo(1, [PCIE_EVENT]), 2: layout.Fifo(1)})
-        self.assert_rejected(telemetry, strings(), INVALID_BOUNDS_MSG)
+            1: layout.Fifo(1, [PCIE_EVENT]),
+            2: layout.Fifo(1, size_dw=FAR_DW)})
+        self.assert_rejected(telemetry, strings(), f'{INVALID_BOUNDS_MSG} 2')
 
 
 class TestDecodeFailureExitStatus(EventFifoTestBase):
@@ -1231,7 +1262,8 @@ class TestDecodeFailureExitStatus(EventFifoTestBase):
     def test_invalid_fifo_bounds_exit_nonzero(self):
         """Defect: parse_ocp_telemetry_log() returns 0 whatever the
         printer reported."""
-        self._assert_fails(layout.pack_telemetry(fifos={1: layout.Fifo(1)}))
+        self._assert_fails(layout.pack_telemetry(
+            fifos={1: layout.Fifo(1, size_dw=FAR_DW)}))
 
 
 # Far enough past any fixture that reading there faults rather than

@@ -1730,10 +1730,10 @@ int parse_event_fifos(const struct ocp_telemetry_logs *logs,
 			__u64 fifo_offset, fifo_size;
 			__u8 *pfifo_start = NULL;
 
-			if (!size_dw || start_dw > da_dw || size_dw > da_dw - start_dw) {
+			if (start_dw > da_dw || size_dw > da_dw - start_dw) {
 				nvme_show_error(
-					"Invalid FIFO bounds for FIFO %d",
-					fifo_no);
+					"Invalid FIFO bounds for Event FIFO %d",
+					fifo_no + 1);
 				return -1;
 			}
 			fifo_offset = start_dw * SIZE_OF_DWORD;
