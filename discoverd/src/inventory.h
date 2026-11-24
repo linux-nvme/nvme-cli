@@ -134,6 +134,14 @@ const char *inventory_source(const struct inventory *inv,
 			     const struct libnvmf_tid **parent);
 
 /*
+ * Whether only mDNS or FC kickstart vouch for the DC @tid: no NBFT,
+ * pre-os.conf or configuration entry names it, and no desired DC lists
+ * it as a referral. nvme-discoverd may give up on such a DC.
+ */
+bool inventory_is_discovered_only(const struct inventory *inv,
+				  const struct libnvmf_tid *tid);
+
+/*
  * Query: is tid in the desired connection set?
  * Returns true if tid appears in the NBFT set, the config set, or the
  * discovered DCs, or in the cached DLP of a DC that is itself desired.

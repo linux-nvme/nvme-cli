@@ -52,12 +52,10 @@
 #include "units.h"
 
 // Exponential backoff for failed (re)connect attempts: 1s, 2s, 4s, ... capped
-// at 5 min. A dynamically-discovered DC (not NBFT- or config-sourced — a
-// referral or FC-kickstart find) additionally gives up after
-// dc-giveup-timeout (default 72hours) of unbroken failure and is dropped
-// from tracking, since nothing but its own retries vouches for it any more.
-// Static and NBFT-sourced DCs represent deliberate admin/firmware intent
-// and always retry forever.
+// at 5 min. A DC found only through mDNS or FC kickstart additionally gives
+// up after dc-giveup-timeout (default 72hours) of unbroken failure and is
+// dropped from tracking: no admin asked for it. Everything an admin asked
+// for retries forever: the NBFT, the configuration, and what a DLP lists.
 #define RETRY_INITIAL_DELAY_SEC 1
 #define RETRY_MAX_DELAY_SEC     300
 
@@ -979,10 +977,11 @@ static void dlp_fetch(struct active_ctrl *e)
 }
 
 /*
- * Arm a dynamically-discovered DC's give-up deadline the first time it is
- * seen failing to (re)connect. Static/NBFT-sourced DCs and IOCs never get
- * one and retry forever, and so does a dynamic DC when dc-giveup-timeout
- * is configured to infinity.
+ * Arm the give-up deadline of a DC found only through mDNS or FC kickstart
+ * the first time it is seen failing to (re)connect. Other DCs and IOCs
+ * never get one and retry forever, and so does such a DC when
+ * dc-giveup-timeout is configured to infinity. A referral needs none: it
+ * follows the DC that lists it.
  *
  * Note the two distinct zeros: giveup_at_usec == 0 means no deadline is
  * armed, while a dc-giveup-timeout of 0 means give up on the first
@@ -994,8 +993,7 @@ static void ctrl_arm_giveup(struct active_ctrl *e)
 
 	if (e->giveup_at_usec || !e->is_dc)
 		return;
-	if (inventory_is_pre_os(ctx.inventory, e->tid) ||
-	    inventory_config_conn_for(ctx.inventory, e->tid))
+	if (!inventory_is_discovered_only(ctx.inventory, e->tid))
 		return;
 	if (ctx.cfg->dc_giveup_timeout_usec == SHR_USEC_INFINITY)
 		return;

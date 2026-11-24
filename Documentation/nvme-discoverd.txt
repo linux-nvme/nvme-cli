@@ -34,10 +34,13 @@ inside a systemd transient unit instead of writing directly to
 the daemon's event loop. Each unit is named after a hash of the
 controller's transport identity.
 
-Failed connections retry with exponential backoff. Discovery
-Controllers from NBFT or the fabrics config represent explicit intent,
-so they always retry forever. A Discovery Controller found only
-through a referral or FC kickstart is different: it gives up after
+Failed connections retry with exponential backoff. What an admin asked
+for retries forever: the controllers from NBFT and the fabrics config,
+and the I/O controllers and referrals a Discovery Log Page lists (an
+admin configures them on the storage system). A referral stops when
+the Discovery Controller that lists it no longer does, or is given up.
+A Discovery Controller found only through mDNS or FC kickstart is
+different: no admin asked for it, so it gives up after
 'dc-giveup-timeout' (default 72hours) of unbroken failure and is
 dropped from tracking.
 
