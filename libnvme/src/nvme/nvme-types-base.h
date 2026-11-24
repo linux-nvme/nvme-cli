@@ -3368,12 +3368,23 @@ enum nvme_id_ctrl_oncs {
 /**
  * enum nvme_id_ctrl_fuses - This field indicates the fused operations that the
  *			     controller supports.
+ * @NVME_CTRL_FUSES_FCWS_SHIFT: FCWS shift
+ * @NVME_CTRL_FUSES_RSVD1_SHIFT: Reserved shift
+ * @NVME_CTRL_FUSES_FCWS_MASK: FCWS mask
+ * @NVME_CTRL_FUSES_RSVD1_MASK: Reserved mask
  * @NVME_CTRL_FUSES_COMPARE_AND_WRITE: If set, then the controller supports the
  *				       Compare and Write fused operation.
  */
 enum nvme_id_ctrl_fuses {
-	NVME_CTRL_FUSES_COMPARE_AND_WRITE	= 1 << 0,
+	NVME_CTRL_FUSES_FCWS_SHIFT		= 0,
+	NVME_CTRL_FUSES_RSVD1_SHIFT		= 1,
+	NVME_CTRL_FUSES_FCWS_MASK		= 0x1,
+	NVME_CTRL_FUSES_RSVD1_MASK		= 0x7fff,
+	NVME_CTRL_FUSES_COMPARE_AND_WRITE	= NVME_VAL(CTRL_FUSES_FCWS),
 };
+
+#define NVME_CTRL_FUSES_FCWS(fuses)	NVME_GET(fuses, CTRL_FUSES_FCWS)
+#define NVME_CTRL_FUSES_RSVD1(fuses)	NVME_GET(fuses, CTRL_FUSES_RSVD1)
 
 /**
  * enum nvme_id_ctrl_fna - This field indicates attributes for the Format NVM
@@ -3382,10 +3393,12 @@ enum nvme_id_ctrl_fuses {
  * @NVME_CTRL_FNA_SEC_ALL_NS_SHIFT:   Shift amount to get the secure erase applied to all namespaces
  * @NVME_CTRL_FNA_CES_SHIFT:          Shift amount to get the cryptographic erase supported
  * @NVME_CTRL_FNA_NSID_ALL_F_SHIFT:   Shift amount to get the format supported an NSID FFFFFFFFh
+ * @NVME_CTRL_FNA_RSVD4_SHIFT:        Shift amount to get the Reserved
  * @NVME_CTRL_FNA_FMT_ALL_NS_MASK:    Mask to get the format applied to all namespaces
  * @NVME_CTRL_FNA_SEC_ALL_NS_MASK:    Mask to get the secure erase applied to all namespaces
  * @NVME_CTRL_FNA_CES_MASK:           Mask to get the cryptographic erase supported
  * @NVME_CTRL_FNA_NSID_ALL_F_MASK:    Mask to get the format supported an NSID FFFFFFFFh
+ * @NVME_CTRL_FNA_RSVD4_MASK:         Mask to get the Reserved
  * @NVME_CTRL_FNA_FMT_ALL_NAMESPACES: If set, then all namespaces in an NVM
  *				      subsystem shall be configured with the
  *				      same attributes and a format (excluding
@@ -3414,10 +3427,12 @@ enum nvme_id_ctrl_fna {
 	NVME_CTRL_FNA_SEC_ALL_NS_SHIFT		= 1,
 	NVME_CTRL_FNA_CES_SHIFT			= 2,
 	NVME_CTRL_FNA_NSID_ALL_F_SHIFT		= 3,
+	NVME_CTRL_FNA_RSVD4_SHIFT		= 4,
 	NVME_CTRL_FNA_FMT_ALL_NS_MASK		= 0x1,
 	NVME_CTRL_FNA_SEC_ALL_NS_MASK		= 0x1,
 	NVME_CTRL_FNA_CES_MASK			= 0x1,
 	NVME_CTRL_FNA_NSID_ALL_F_MASK		= 0x1,
+	NVME_CTRL_FNA_RSVD4_MASK		= 0xf,
 	NVME_CTRL_FNA_FMT_ALL_NAMESPACES	= NVME_VAL(CTRL_FNA_FMT_ALL_NS),
 	NVME_CTRL_FNA_SEC_ALL_NAMESPACES	= NVME_VAL(CTRL_FNA_SEC_ALL_NS),
 	NVME_CTRL_FNA_CRYPTO_ERASE		= NVME_VAL(CTRL_FNA_CES),
@@ -3428,9 +3443,16 @@ enum nvme_id_ctrl_fna {
 #define NVME_CTRL_FNA_SEC_ALL_NS(fna)	NVME_GET(fna, CTRL_FNA_SEC_ALL_NS)
 #define NVME_CTRL_FNA_CES(fna)		NVME_GET(fna, CTRL_FNA_CES)
 #define NVME_CTRL_FNA_NSID_ALL_F(fna)	NVME_GET(fna, CTRL_FNA_NSID_ALL_F)
+#define NVME_CTRL_FNA_RSVD4(fna)	NVME_GET(fna, CTRL_FNA_RSVD4)
 
 /**
  * enum nvme_id_ctrl_vwc - Volatile write cache
+ * @NVME_CTRL_VWC_VWCP_SHIFT: VWCP shift
+ * @NVME_CTRL_VWC_FB_SHIFT: FB shift
+ * @NVME_CTRL_VWC_RSVD3_SHIFT: Reserved shiftt
+ * @NVME_CTRL_VWC_VWCP_MASK: VWCP mask
+ * @NVME_CTRL_VWC_FB_MASK: FB mask
+ * @NVME_CTRL_VWC_RSVD3_MASK: Reserved mask
  * @NVME_CTRL_VWC_PRESENT: If set, indicates a volatile write cache is present.
  *			   If a volatile write cache is present, then the host
  *			   controls whether the volatile write cache is enabled
@@ -3439,19 +3461,40 @@ enum nvme_id_ctrl_fna {
  * @NVME_CTRL_VWC_FLUSH:   Mask to get the value of the flush command behavior.
  */
 enum nvme_id_ctrl_vwc {
-	NVME_CTRL_VWC_PRESENT			= 1 << 0,
-	NVME_CTRL_VWC_FLUSH			= 3 << 1,
+	NVME_CTRL_VWC_VWCP_SHIFT		= 0,
+	NVME_CTRL_VWC_FB_SHIFT			= 1,
+	NVME_CTRL_VWC_RSVD3_SHIFT		= 3,
+	NVME_CTRL_VWC_VWCP_MASK			= 0x1,
+	NVME_CTRL_VWC_FB_MASK			= 0x3,
+	NVME_CTRL_VWC_RSVD3_MASK		= 0x1f,
+	NVME_CTRL_VWC_PRESENT			= NVME_VAL(CTRL_VWC_VWCP),
+	NVME_CTRL_VWC_FLUSH			= NVME_VAL(CTRL_VWC_FB),
 };
+
+#define NVME_CTRL_VWC_VWCP(vwc)		NVME_GET(vwc, CTRL_VWC_VWCP)
+#define NVME_CTRL_VWC_FB(vwc)		NVME_GET(vwc, CTRL_VWC_FB)
+#define NVME_CTRL_VWC_RSVD3(vwc)	NVME_GET(vwc, CTRL_VWC_RSVD3)
 
 /**
  * enum nvme_id_ctrl_nvscc - This field indicates the configuration settings
  *			     for NVM Vendor Specific command handling.
+ * @NVME_CTRL_ICSVSCC_SNVSCF_SHIFT: SNVSCF shift
+ * @NVME_CTRL_ICSVSCC_RSVD1_SHIFT: Reserved shift
+ * @NVME_CTRL_ICSVSCC_SNVSCF_MASK: SNVSCF mask
+ * @NVME_CTRL_ICSVSCC_RSVD1_MASK: Reserved mask
  * @NVME_CTRL_NVSCC_FMT: If set, all NVM Vendor Specific Commands use the
  *			 format with NDT and NDM fields.
  */
 enum nvme_id_ctrl_nvscc {
-	NVME_CTRL_NVSCC_FMT			= 1 << 0,
+	NVME_CTRL_ICSVSCC_SNVSCF_SHIFT		= 0,
+	NVME_CTRL_ICSVSCC_RSVD1_SHIFT		= 1,
+	NVME_CTRL_ICSVSCC_SNVSCF_MASK		= 0x1,
+	NVME_CTRL_ICSVSCC_RSVD1_MASK		= 0x7f,
+	NVME_CTRL_NVSCC_FMT			= NVME_VAL(CTRL_ICSVSCC_SNVSCF),
 };
+
+#define NVME_CTRL_ICSVSCC_SNVSCF(icsvscc) NVME_GET(icsvscc, CTRL_ICSVSCC_SNVSCF)
+#define NVME_CTRL_ICSVSCC_RSVD1(icsvscc)  NVME_GET(icsvscc, CTRL_ICSVSCC_RSVD1)
 
 /**
  * enum nvme_id_ctrl_nwpc - This field indicates the optional namespace write
