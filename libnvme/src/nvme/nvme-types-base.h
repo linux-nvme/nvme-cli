@@ -3500,6 +3500,14 @@ enum nvme_id_ctrl_nvscc {
  * enum nvme_id_ctrl_nwpc - This field indicates the optional namespace write
  *			    protection capabilities supported by the
  *			    controller.
+ * @NVME_CTRL_NWPC_NWPWPS_SHIFT:	     NWPWPS shift
+ * @NVME_CTRL_NWPC_WPUPCS_SHIFT:	     WPUPCS shift
+ * @NVME_CTRL_NWPC_PWPS_SHIFT:		     PWPS shift
+ * @NVME_CTRL_NWPC_RSVD3_SHIFT:		     Reserved shift
+ * @NVME_CTRL_NWPC_NWPWPS_MASK:		     NWPWPS mask
+ * @NVME_CTRL_NWPC_WPUPCS_MASK:		     WPUPCS mask
+ * @NVME_CTRL_NWPC_PWPS_MASK:		     PWPS mask
+ * @NVME_CTRL_NWPC_RSVD3_MASK:		     Reserved mask
  * @NVME_CTRL_NWPC_WRITE_PROTECT:	     If set, then the controller shall
  *					      support the No Write Protect and
  *					      Write Protect namespace write
@@ -3516,10 +3524,60 @@ enum nvme_id_ctrl_nvscc {
  *					      Protect state.
  */
 enum nvme_id_ctrl_nwpc {
-	NVME_CTRL_NWPC_WRITE_PROTECT		= 1 << 0,
-	NVME_CTRL_NWPC_WRITE_PROTECT_POWER_CYCLE= 1 << 1,
-	NVME_CTRL_NWPC_WRITE_PROTECT_PERMANENT	= 1 << 2,
+	NVME_CTRL_NWPC_NWPWPS_SHIFT		 = 0,
+	NVME_CTRL_NWPC_WPUPCS_SHIFT		 = 1,
+	NVME_CTRL_NWPC_PWPS_SHIFT		 = 2,
+	NVME_CTRL_NWPC_RSVD3_SHIFT		 = 3,
+	NVME_CTRL_NWPC_NWPWPS_MASK		 = 0x1,
+	NVME_CTRL_NWPC_WPUPCS_MASK		 = 0x1,
+	NVME_CTRL_NWPC_PWPS_MASK		 = 0x1,
+	NVME_CTRL_NWPC_RSVD3_MASK		 = 0x1f,
+	NVME_CTRL_NWPC_WRITE_PROTECT		 = NVME_VAL(CTRL_NWPC_NWPWPS),
+	NVME_CTRL_NWPC_WRITE_PROTECT_POWER_CYCLE = NVME_VAL(CTRL_NWPC_WPUPCS),
+	NVME_CTRL_NWPC_WRITE_PROTECT_PERMANENT	 = NVME_VAL(CTRL_NWPC_PWPS),
 };
+
+#define NVME_CTRL_NWPC_NWPWPS(nwpc)	NVME_GET(nwpc, CTRL_NWPC_NWPWPS)
+#define NVME_CTRL_NWPC_WPUPCS(nwpc)	NVME_GET(nwpc, CTRL_NWPC_WPUPCS)
+#define NVME_CTRL_NWPC_PWPS(nwpc)	NVME_GET(nwpc, CTRL_NWPC_PWPS)
+#define NVME_CTRL_NWPC_RSVD3(nwpc)	NVME_GET(nwpc, CTRL_NWPC_RSVD3)
+
+/**
+ * enum nvme_id_ctrl_cdfs - Copy descriptor formats supported
+ * @NVME_CTRL_CDFS_CDFS0S_SHIFT: CDFS0S shift
+ * @NVME_CTRL_CDFS_CDFS1S_SHIFT: CDFS1S shift
+ * @NVME_CTRL_CDFS_CDFS2S_SHIFT: CDFS2S shift
+ * @NVME_CTRL_CDFS_CDFS3S_SHIFT: CDFS3S shift
+ * @NVME_CTRL_CDFS_CDFS4S_SHIFT: CDFS4S shift
+ * @NVME_CTRL_CDFS_RSVD5_SHIFT: Reserved shift
+ * @NVME_CTRL_CDFS_CDFS0S_MASK: CDFS0S mask
+ * @NVME_CTRL_CDFS_CDFS1S_MASK: CDFS1S mask
+ * @NVME_CTRL_CDFS_CDFS2S_MASK: CDFS2S mask
+ * @NVME_CTRL_CDFS_CDFS3S_MASK: CDFS3S mask
+ * @NVME_CTRL_CDFS_CDFS4S_MASK: CDFS4S mask
+ * @NVME_CTRL_CDFS_RSVD5_MASK: Reserved mask
+ */
+enum nvme_id_ctrl_cdfs {
+	NVME_CTRL_CDFS_CDFS0S_SHIFT = 0,
+	NVME_CTRL_CDFS_CDFS1S_SHIFT = 1,
+	NVME_CTRL_CDFS_CDFS2S_SHIFT = 2,
+	NVME_CTRL_CDFS_CDFS3S_SHIFT = 3,
+	NVME_CTRL_CDFS_CDFS4S_SHIFT = 4,
+	NVME_CTRL_CDFS_RSVD5_SHIFT = 5,
+	NVME_CTRL_CDFS_CDFS0S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDFS1S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDFS2S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDFS3S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDFS4S_MASK = 0x1,
+	NVME_CTRL_CDFS_RSVD5_MASK = 0x7ff,
+};
+
+#define NVME_CTRL_CDFS_CDFS0S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS0S)
+#define NVME_CTRL_CDFS_CDFS1S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS1S)
+#define NVME_CTRL_CDFS_CDFS2S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS2S)
+#define NVME_CTRL_CDFS_CDFS3S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS3S)
+#define NVME_CTRL_CDFS_CDFS4S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS4S)
+#define NVME_CTRL_CDFS_RSVD5(cdfs) NVME_GET(cdfs, CTRL_CDFS_RSVD5)
 
 /**
  * enum nvme_id_ctrl_sgls - This field indicates if SGLs are supported for the

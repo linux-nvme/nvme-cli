@@ -1262,10 +1262,10 @@ static struct shr_table *stdout_id_ctrl_icsvscc_table(__u8 icsvscc)
 static struct shr_table *stdout_id_ctrl_nwpc_table(__u8 nwpc)
 {
 	struct shr_table *t;
-	__u8 no_wp_wp = (nwpc & 0x01);
-	__u8 wp_power_cycle = (nwpc & 0x02) >> 1;
-	__u8 wp_permanent = (nwpc & 0x04) >> 2;
-	__u8 rsvd = (nwpc & 0xF8) >> 3;
+	__u8 no_wp_wp = NVME_CTRL_NWPC_NWPWPS(nwpc);
+	__u8 wp_power_cycle = NVME_CTRL_NWPC_WPUPCS(nwpc);
+	__u8 wp_permanent = NVME_CTRL_NWPC_PWPS(nwpc);
+	__u8 rsvd = NVME_CTRL_NWPC_RSVD3(nwpc);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1290,20 +1290,21 @@ static struct shr_table *stdout_id_ctrl_ocfs_table(__le16 ctrl_ocfs)
 {
 	struct shr_table *t;
 	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
-	__u16 rsvd = ocfs >> 4;
-	int copy_fmt;
+	__u16 rsvd = NVME_CTRL_CDFS_RSVD5(ocfs);
+	int copy_fmt = NVME_CTRL_CDFS_CDFS4S_SHIFT;
+	__u8 supported;
+	char *bits;
+	char *desc;
 
 	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
 	if (rsvd)
-		stdout_bits_add(t, "[15:4]", rsvd, "Reserved");
+		stdout_bits_add(t, "[15:5]", rsvd, "Reserved");
 
-	for (copy_fmt = 3; copy_fmt >= 0; copy_fmt--) {
-		__cleanup_free char *bits = NULL;
-		__cleanup_free char *desc = NULL;
-		__u8 supported = ocfs >> copy_fmt & 1;
+	for (; copy_fmt >= 0; copy_fmt--) {
+		supported = ocfs >> copy_fmt & 1;
 
 		if (asprintf(&bits, "[%d:%d]", copy_fmt, copy_fmt) < 0)
 			bits = NULL;
@@ -1312,6 +1313,8 @@ static struct shr_table *stdout_id_ctrl_ocfs_table(__le16 ctrl_ocfs)
 			desc = NULL;
 
 		stdout_bits_add(t, bits ?: "", supported, desc ?: "");
+		free(bits);
+		free(desc);
 	}
 
 	return t;
