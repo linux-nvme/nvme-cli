@@ -3666,47 +3666,79 @@ enum nvme_id_ctrl_sgls {
  *					from the &struct nvme_id_ctrl.trattr field.
  * @NVME_CTRL_TRATTR_MRTLL_SHIFT:	Shift amount to get the Memory Range Tracking Length Limit
  *					from the &struct nvme_id_ctrl.trattr field.
+ * @NVME_CTRL_TRATTR_RSVD3_SHIFT:	Shift amount to get the Reserved
  * @NVME_CTRL_TRATTR_THMCS_MASK:	Mask to get the Track Host Memory Changes Support
  *					from the &struct nvme_id_ctrl.trattr field.
  * @NVME_CTRL_TRATTR_TUDCS_MASK:	Mask to get the Track User Data Changes Support
  *					from the &struct nvme_id_ctrl.trattr field.
  * @NVME_CTRL_TRATTR_MRTLL_MASK:	Mask to get the Memory Range Tracking Length Limit
  *					from the &struct nvme_id_ctrl.trattr field.
+ * @NVME_CTRL_TRATTR_RSVD3_MASK:	Mask to get the Reserved
  */
 enum nvme_id_ctrl_trattr {
 	NVME_CTRL_TRATTR_THMCS_SHIFT	= 0,
 	NVME_CTRL_TRATTR_TUDCS_SHIFT	= 1,
 	NVME_CTRL_TRATTR_MRTLL_SHIFT	= 2,
+	NVME_CTRL_TRATTR_RSVD3_SHIFT	= 3,
 	NVME_CTRL_TRATTR_THMCS_MASK	= 0x1,
 	NVME_CTRL_TRATTR_TUDCS_MASK	= 0x1,
 	NVME_CTRL_TRATTR_MRTLL_MASK	= 0x1,
+	NVME_CTRL_TRATTR_RSVD3_MASK	= 0x1f,
 };
 
 #define NVME_CTRL_TRATTR_THMCS(trattr)	NVME_GET(trattr, CTRL_TRATTR_THMCS)
 #define NVME_CTRL_TRATTR_TUDCS(trattr)	NVME_GET(trattr, CTRL_TRATTR_TUDCS)
 #define NVME_CTRL_TRATTR_MRTLL(trattr)	NVME_GET(trattr, CTRL_TRATTR_MRTLL)
+#define NVME_CTRL_TRATTR_RSVD3(trattr)	NVME_GET(trattr, CTRL_TRATTR_RSVD3)
 
 /**
  * enum nvme_id_ctrl_fcatt - This field indicates attributes of the controller
  *			     that are specific to NVMe over Fabrics.
+ * @NVME_CTRL_FCATT_DCMS_SHIFT: DCMS shift
+ * @NVME_CTRL_FCATT_NZNSETIDS_SHIFT: NZNSETIDS shift
+ * @NVME_CTRL_FCATT_RSVD2_SHIFT: Reserved shift
+ * @NVME_CTRL_FCATT_DCMS_MASK: DCMS mask
+ * @NVME_CTRL_FCATT_NZNSETIDS_MASK: NZNSETIDS mask
+ * @NVME_CTRL_FCATT_RSVD2_MASK: Reserved mask
  * @NVME_CTRL_FCATT_DYNAMIC: If cleared, then the NVM subsystem uses a dynamic
  *			     controller model. If set, then the NVM subsystem
  *			     uses a static controller model.
  */
 enum nvme_id_ctrl_fcatt {
-	NVME_CTRL_FCATT_DYNAMIC			= 1 << 0,
+	NVME_CTRL_FCATT_DCMS_SHIFT		= 0,
+	NVME_CTRL_FCATT_NZNSETIDS_SHIFT		= 1,
+	NVME_CTRL_FCATT_RSVD2_SHIFT		= 2,
+	NVME_CTRL_FCATT_DCMS_MASK		= 0x1,
+	NVME_CTRL_FCATT_NZNSETIDS_MASK		= 0x1,
+	NVME_CTRL_FCATT_RSVD2_MASK		= 0x3f,
+	NVME_CTRL_FCATT_DYNAMIC			= NVME_VAL(CTRL_FCATT_DCMS),
 };
+
+#define NVME_CTRL_FCATT_DCMS(fcatt)	 NVME_GET(fcatt, CTRL_FCATT_DCMS)
+#define NVME_CTRL_FCATT_NZNSETIDS(fcatt) NVME_GET(fcatt, CTRL_FCATT_NZNSETIDS)
+#define NVME_CTRL_FCATT_RSVD2(fcatt)	 NVME_GET(fcatt, CTRL_FCATT_RSVD2)
 
 /**
  * enum nvme_id_ctrl_ofcs - Indicate whether the controller supports optional
  *			    fabric commands.
+ * @NVME_CTRL_OFCS_DCS_SHIFT:  DCS shift
+ * @NVME_CTRL_OFCS_RSVD1_SHIFT:Reserved shift
+ * @NVME_CTRL_OFCS_DCS_MASK:   DCS mask
+ * @NVME_CTRL_OFCS_RSVD1_MASK: Reserved mask
  * @NVME_CTRL_OFCS_DISCONNECT: If set, then the controller supports the
  *			       Disconnect command and deletion of individual
  *			       I/O Queues.
  */
 enum nvme_id_ctrl_ofcs {
-	NVME_CTRL_OFCS_DISCONNECT		= 1 << 0,
+	NVME_CTRL_OFCS_DCS_SHIFT		= 0,
+	NVME_CTRL_OFCS_RSVD1_SHIFT		= 1,
+	NVME_CTRL_OFCS_DCS_MASK			= 0x1,
+	NVME_CTRL_OFCS_RSVD1_MASK		= 0x7fff,
+	NVME_CTRL_OFCS_DISCONNECT		= NVME_VAL(CTRL_OFCS_DCS),
 };
+
+#define NVME_CTRL_OFCS_DCS(ofcs)	NVME_GET(ofcs, CTRL_OFCS_DCS)
+#define NVME_CTRL_OFCS_RSVD1(ofcs)	NVME_GET(ofcs, CTRL_OFCS_RSVD1)
 
 /**
  * struct nvme_lbaf - LBA Format Data Structure

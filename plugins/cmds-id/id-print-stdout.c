@@ -1410,7 +1410,7 @@ static struct shr_table *stdout_id_ctrl_sgls_table(__le32 ctrl_sgls)
 static struct shr_table *stdout_id_ctrl_trattr_table(__u8 ctrl_trattr)
 {
 	struct shr_table *t;
-	__u8 rsvd3 = (ctrl_trattr >> 3);
+	__u8 rsvd3 = NVME_CTRL_TRATTR_RSVD3(ctrl_trattr);
 	__u8 mrtll = NVME_CTRL_TRATTR_MRTLL(ctrl_trattr);
 	__u8 tudcs = NVME_CTRL_TRATTR_TUDCS(ctrl_trattr);
 	__u8 thmcs = NVME_CTRL_TRATTR_THMCS(ctrl_trattr);
@@ -1435,18 +1435,21 @@ static struct shr_table *stdout_id_ctrl_trattr_table(__u8 ctrl_trattr)
 
 static struct shr_table *stdout_id_ctrl_fcatt_table(__u8 fcatt)
 {
-	struct shr_table *t;
-	__u8 rsvd = (fcatt & 0xFE) >> 1;
-	__u8 scm = fcatt & 0x1;
+	struct shr_table *t = stdout_bits_table_create();
+	__u8 rsvd = NVME_CTRL_FCATT_RSVD2(fcatt);
+	__u8 nznsetids = NVME_CTRL_FCATT_NZNSETIDS(fcatt);
+	__u8 scm = NVME_CTRL_FCATT_DCMS(fcatt);
 
-	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
 	if (rsvd)
-		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", nznsetids,
+			"Non-Zero NVM Set ID %sSupported",
+			nznsetids ? "" : "Not ");
 	stdout_bits_add(t, "[0:0]", scm, "%s Controller Model",
-			 scm ? "Static" : "Dynamic");
+			scm ? "Static" : "Dynamic");
 
 	return t;
 }
@@ -1455,8 +1458,8 @@ static struct shr_table *stdout_id_ctrl_ofcs_table(__le16 ofcs_le)
 {
 	struct shr_table *t;
 	__u16 ofcs = le16_to_cpu(ofcs_le);
-	__u16 rsvd = (ofcs & 0xfffe) >> 1;
-	__u8 disconn = ofcs & 0x1;
+	__u16 rsvd = NVME_CTRL_OFCS_RSVD1(ofcs);
+	__u8 disconn = NVME_CTRL_OFCS_DCS(ofcs);
 
 	t = stdout_bits_table_create();
 	if (!t)
