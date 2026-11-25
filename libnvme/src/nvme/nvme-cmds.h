@@ -264,8 +264,8 @@ int libnvme_get_lba_status_log(struct libnvme_transport_handle *hdl, bool rae,
  * libnvme_get_feature_length() - Retrieve the command payload length for a
  *			       specific feature identifier
  * @fid:   Feature identifier, see &enum nvme_features_id.
- * @cdw11: The cdw11 value may affect the transfer (only known fid is
- *	   %NVME_FEAT_FID_HOST_ID)
+ * @cdw11: The cdw11 value may affect the transfer (such as with
+ *	   %NVME_FEAT_FID_HOST_ID or %NVME_FEAT_FID_VOLTAGE_MEASUREMENT)
  * @dir:   Data transfer direction: false - host to controller, true -
  *	   controller to host may affect the transfer (only known fid is
  *	   %NVME_FEAT_FID_HOST_MEM_BUF).

@@ -805,10 +805,32 @@ static void json_feature_show_fields_voltage_threshold(struct json_object *r,
 }
 
 static void json_feature_show_fields_voltage_measurement(struct json_object *r,
-							  unsigned int result)
+							  unsigned int result,
+							  unsigned char *buf)
 {
+	struct nvme_voltage_measurement_start_data *d =
+		(struct nvme_voltage_measurement_start_data *)buf;
+	__u16 lvolta;
+	__u32 lvolt;
+
 	obj_add_uint(r, "Action (ACT)",
 		     NVME_FEAT_VOLTAGE_MEASUREMENT_ACT(result));
+
+	if (!d)
+		return;
+
+	lvolta = le16_to_cpu(d->lvolta);
+	lvolt = le32_to_cpu(d->lvolt);
+	obj_add_uint(r, "Voltage Sensor Selected (VSSEL)",
+		     NVME_VOLTAGE_MEASUREMENT_LVOLTA_VSSEL(lvolta));
+	obj_add_uint(r, "Voltage Measurement Log Threshold (VMLT)",
+		     !!(lvolta & NVME_VOLTAGE_MEASUREMENT_LVOLTA_VMLT));
+	obj_add_uint(r, "Stop Voltage Measurement Time (SVMT)",
+		     le16_to_cpu(d->svmt));
+	obj_add_uint(r, "Log Overvoltage Threshold (LOVT)",
+		     NVME_VOLTAGE_MEASUREMENT_LVOLT_LOVT(lvolt));
+	obj_add_uint(r, "Log Undervoltage Threshold (LUVT)",
+		     NVME_VOLTAGE_MEASUREMENT_LVOLT_LUVT(lvolt));
 }
 
 static void json_rate_limiting_data(struct json_object *r,
@@ -1004,7 +1026,7 @@ void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 		json_feature_show_fields_voltage_threshold(r, result);
 		break;
 	case NVME_FEAT_FID_VOLTAGE_MEASUREMENT:
-		json_feature_show_fields_voltage_measurement(r, result);
+		json_feature_show_fields_voltage_measurement(r, result, buf);
 		break;
 	case NVME_FEAT_FID_RATE_LIMITING:
 		json_feature_show_fields_rate_limiting(r, buf);
