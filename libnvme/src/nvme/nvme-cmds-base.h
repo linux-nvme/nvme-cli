@@ -5412,22 +5412,22 @@ nvme_init_manage_export_nvms_send_set_config_state(
 }
 
 /**
-  * nvme_init_lockdown() - Initialize passthru command for Lockdown
-  * @cmd:	Passthru command to use
-  * @scp:	Scope of the command
-  * @prhbt:	Prohibit or allow the command opcode or Set Features command
-  * @ifc:	Affected interface
-  * @ofi:	Opcode or Feature Identifier
-  * @uidx:	UUID Index if controller supports this id selection method
-  * @csel:	Controller Select (CSEL): specifies the controller(s)
-  *		affected by this command, see &enum nvme_lockdown_csel
-  * @css:	Controller Select Specific (CSS): meaning is specific to
-  *		@csel (a Controller Identifier, a Primary Controller
-  *		Identifier, or vendor specific). Ignored if @csel is
-  *		%NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM.
-  *
-  * Initializes the passthru command buffer for the Lockdown command.
-  */
+ * nvme_init_lockdown() - Initialize passthru command for Lockdown
+ * @cmd:	Passthru command to use
+ * @scp:	Scope of the command
+ * @prhbt:	Prohibit or allow the command opcode or Set Features command
+ * @ifc:	Affected interface
+ * @ofi:	Opcode or Feature Identifier
+ * @uidx:	UUID Index if controller supports this id selection method
+ * @csel:	Controller Select (CSEL): specifies the controller(s)
+ *		affected by this command, see &enum nvme_lockdown_csel
+ * @css:	Controller Select Specific (CSS): meaning is specific to
+ *		@csel (a Controller Identifier, a Primary Controller
+ *		Identifier, or vendor specific). Ignored if @csel is
+ *		%NVME_LOCKDOWN_CSEL_NVM_SUBSYSTEM.
+ *
+ * Initializes the passthru command buffer for the Lockdown command.
+ */
 static inline void
 nvme_init_lockdown(struct libnvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
 		__u8 ifc, __u8 ofi, __u8 uidx, __u8 csel, __u16 css)

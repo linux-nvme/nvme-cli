@@ -3,14 +3,8 @@
 
 file=$1
 
-for func in $(sed -n 's/ \* \([a-z_][a-z_0-9]*\)() -.*/\1/p' $file); do
-	echo ${func}
-done
-
-for struct in $(sed -n 's/ \* struct \([a-z_][a-z_0-9]*\) -.*/\1/p' $file); do
-	echo ${struct}
-done
-
-for enum in $(sed -n 's/ \* enum \([a-z_][a-z_0-9]*\) -.*/\1/p' $file); do
-	echo ${enum}
-done
+# kernel-doc takes the identifier from the line after '/**'. Plain '/*'
+# comments, e.g. on opaque structs, have no page.
+sed -n '\|^/\*\*$|{n;p}' "$file" |
+	sed -n -e 's/^ \* \([a-z_][a-z_0-9]*\)() -.*/\1/p' \
+	       -e 's/^ \* \(struct\|enum\) \([a-z_][a-z_0-9]*\) -.*/\2/p'
