@@ -1286,12 +1286,32 @@ static struct shr_table *stdout_id_ctrl_nwpc_table(__u8 nwpc)
 	return t;
 }
 
-static struct shr_table *stdout_id_ctrl_ocfs_table(__le16 ctrl_ocfs)
+static __u16 get_cdfs(__u16 cdfs, int format)
+{
+	switch (format) {
+	case NVME_CTRL_CDFS_CDF0S_SHIFT:
+		return NVME_CTRL_CDFS_CDF0S(cdfs);
+	case NVME_CTRL_CDFS_CDF1S_SHIFT:
+		return NVME_CTRL_CDFS_CDF1S(cdfs);
+	case NVME_CTRL_CDFS_CDF2S_SHIFT:
+		return NVME_CTRL_CDFS_CDF2S(cdfs);
+	case NVME_CTRL_CDFS_CDF3S_SHIFT:
+		return NVME_CTRL_CDFS_CDF3S(cdfs);
+	case NVME_CTRL_CDFS_CDF4S_SHIFT:
+		return NVME_CTRL_CDFS_CDF4S(cdfs);
+	default:
+		break;
+	}
+
+	return NVME_CTRL_CDFS_RSVD5(cdfs);
+}
+
+static struct shr_table *stdout_id_ctrl_cdfs_table(__le16 ctrl_cdfs)
 {
 	struct shr_table *t;
-	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
-	__u16 rsvd = NVME_CTRL_CDFS_RSVD5(ocfs);
-	int copy_fmt = NVME_CTRL_CDFS_CDFS4S_SHIFT;
+	__u16 cdfs = le16_to_cpu(ctrl_cdfs);
+	__u16 rsvd = NVME_CTRL_CDFS_RSVD5(cdfs);
+	int copy_fmt = NVME_CTRL_CDFS_CDF4S_SHIFT;
 	__u8 supported;
 	char *bits;
 	char *desc;
@@ -1304,7 +1324,7 @@ static struct shr_table *stdout_id_ctrl_ocfs_table(__le16 ctrl_ocfs)
 		stdout_bits_add(t, "[15:5]", rsvd, "Reserved");
 
 	for (; copy_fmt >= 0; copy_fmt--) {
-		supported = ocfs >> copy_fmt & 1;
+		supported = get_cdfs(cdfs, copy_fmt);
 
 		if (asprintf(&bits, "[%d:%d]", copy_fmt, copy_fmt) < 0)
 			bits = NULL;
@@ -2964,10 +2984,10 @@ static void stdout_id_ctrl_nvm_attr(struct nvme_id_ctrl *ctrl,
 
 	stdout_kv_add(t, "acwu", "%d", le16_to_cpu(ctrl->acwu));
 
-	row = stdout_kv_add(t, "ocfs", "%#x", le16_to_cpu(ctrl->ocfs));
+	row = stdout_kv_add(t, "cdfs", "%#x", le16_to_cpu(ctrl->cdfs));
 	if (verbose)
 		shr_table_set_row_subtable(t, row,
-				stdout_id_ctrl_ocfs_table(ctrl->ocfs));
+				stdout_id_ctrl_cdfs_table(ctrl->cdfs));
 
 	row = stdout_kv_add(t, "sgls", "%#x", le32_to_cpu(ctrl->sgls));
 	if (verbose)

@@ -1552,7 +1552,7 @@ struct nvme_id_psd {
  *	       all namespaces with any supported namespace format for a Compare
  *	       and Write fused operation. This field is specified in logical
  *	       blocks and is a 0’s based value.
- * @ocfs:      Optional Copy Formats Supported, each bit n means controller
+ * @cdfs:      Optional Copy Formats Supported, each bit n means controller
  *	       supports Copy Format n.
  * @sgls:      SGL Support, see &enum nvme_id_ctrl_sgls
  * @mnan:      Maximum Number of Allowed Namespaces indicates the maximum
@@ -1742,7 +1742,7 @@ struct nvme_id_ctrl {
 	__u8			icsvscc;
 	__u8			nwpc;
 	__le16			acwu;
-	__le16			ocfs;
+	__le16			cdfs;
 	__le32			sgls;
 	__le32			mnan;
 	__u8			maxdna[16];
@@ -3544,39 +3544,39 @@ enum nvme_id_ctrl_nwpc {
 
 /**
  * enum nvme_id_ctrl_cdfs - Copy descriptor formats supported
- * @NVME_CTRL_CDFS_CDFS0S_SHIFT: CDFS0S shift
- * @NVME_CTRL_CDFS_CDFS1S_SHIFT: CDFS1S shift
- * @NVME_CTRL_CDFS_CDFS2S_SHIFT: CDFS2S shift
- * @NVME_CTRL_CDFS_CDFS3S_SHIFT: CDFS3S shift
- * @NVME_CTRL_CDFS_CDFS4S_SHIFT: CDFS4S shift
+ * @NVME_CTRL_CDFS_CDF0S_SHIFT: CDF0S shift
+ * @NVME_CTRL_CDFS_CDF1S_SHIFT: CDF1S shift
+ * @NVME_CTRL_CDFS_CDF2S_SHIFT: CDF2S shift
+ * @NVME_CTRL_CDFS_CDF3S_SHIFT: CDF3S shift
+ * @NVME_CTRL_CDFS_CDF4S_SHIFT: CDF4S shift
  * @NVME_CTRL_CDFS_RSVD5_SHIFT: Reserved shift
- * @NVME_CTRL_CDFS_CDFS0S_MASK: CDFS0S mask
- * @NVME_CTRL_CDFS_CDFS1S_MASK: CDFS1S mask
- * @NVME_CTRL_CDFS_CDFS2S_MASK: CDFS2S mask
- * @NVME_CTRL_CDFS_CDFS3S_MASK: CDFS3S mask
- * @NVME_CTRL_CDFS_CDFS4S_MASK: CDFS4S mask
+ * @NVME_CTRL_CDFS_CDF0S_MASK: CDF0S mask
+ * @NVME_CTRL_CDFS_CDF1S_MASK: CDF1S mask
+ * @NVME_CTRL_CDFS_CDF2S_MASK: CDF2S mask
+ * @NVME_CTRL_CDFS_CDF3S_MASK: CDF3S mask
+ * @NVME_CTRL_CDFS_CDF4S_MASK: CDF4S mask
  * @NVME_CTRL_CDFS_RSVD5_MASK: Reserved mask
  */
 enum nvme_id_ctrl_cdfs {
-	NVME_CTRL_CDFS_CDFS0S_SHIFT = 0,
-	NVME_CTRL_CDFS_CDFS1S_SHIFT = 1,
-	NVME_CTRL_CDFS_CDFS2S_SHIFT = 2,
-	NVME_CTRL_CDFS_CDFS3S_SHIFT = 3,
-	NVME_CTRL_CDFS_CDFS4S_SHIFT = 4,
+	NVME_CTRL_CDFS_CDF0S_SHIFT = 0,
+	NVME_CTRL_CDFS_CDF1S_SHIFT = 1,
+	NVME_CTRL_CDFS_CDF2S_SHIFT = 2,
+	NVME_CTRL_CDFS_CDF3S_SHIFT = 3,
+	NVME_CTRL_CDFS_CDF4S_SHIFT = 4,
 	NVME_CTRL_CDFS_RSVD5_SHIFT = 5,
-	NVME_CTRL_CDFS_CDFS0S_MASK = 0x1,
-	NVME_CTRL_CDFS_CDFS1S_MASK = 0x1,
-	NVME_CTRL_CDFS_CDFS2S_MASK = 0x1,
-	NVME_CTRL_CDFS_CDFS3S_MASK = 0x1,
-	NVME_CTRL_CDFS_CDFS4S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDF0S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDF1S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDF2S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDF3S_MASK = 0x1,
+	NVME_CTRL_CDFS_CDF4S_MASK = 0x1,
 	NVME_CTRL_CDFS_RSVD5_MASK = 0x7ff,
 };
 
-#define NVME_CTRL_CDFS_CDFS0S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS0S)
-#define NVME_CTRL_CDFS_CDFS1S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS1S)
-#define NVME_CTRL_CDFS_CDFS2S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS2S)
-#define NVME_CTRL_CDFS_CDFS3S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS3S)
-#define NVME_CTRL_CDFS_CDFS4S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDFS4S)
+#define NVME_CTRL_CDFS_CDF0S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDF0S)
+#define NVME_CTRL_CDFS_CDF1S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDF1S)
+#define NVME_CTRL_CDFS_CDF2S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDF2S)
+#define NVME_CTRL_CDFS_CDF3S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDF3S)
+#define NVME_CTRL_CDFS_CDF4S(cdfs) NVME_GET(cdfs, CTRL_CDFS_CDF4S)
 #define NVME_CTRL_CDFS_RSVD5(cdfs) NVME_GET(cdfs, CTRL_CDFS_RSVD5)
 
 /**
