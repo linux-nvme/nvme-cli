@@ -1655,7 +1655,7 @@ sub push_parameter($$$$$) {
 
 	if ($type eq "" && $param =~ /\.\.\.$/)
 	{
-	    if (!$param =~ /\w\.\.\.$/) {
+	    if ($param !~ /\w\.\.\.$/) {
 	      # handles unnamed variable parameters
 	      $param = "...";
 	    }
