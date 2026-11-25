@@ -1074,9 +1074,14 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		else if (fmt == NJSON)
 			netapp_ontapdevices_print_json(ontapdevices,
 					num_ontapdevices);
-	} else if (devname)
-		nvme_show_error("/dev/%s is not an ontapdevice", devname);
-	else
+	} else if (devname) {
+		/*
+		 * Only report that the device is not an ontapdevice when it
+		 * was opened; if the open failed, that error was already shown.
+		 */
+		if (!ret)
+			nvme_show_error("/dev/%s is not an ontapdevice", devname);
+	} else
 		nvme_show_error("No ontapdevices detected");
 
 	free(ontapdevices);
