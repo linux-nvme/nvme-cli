@@ -958,9 +958,14 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		else if (fmt == NJSON)
 			netapp_smdevices_print_json(smdevices,
 					num_smdevices);
-	} else if (devname)
-		nvme_show_error("/dev/%s is not an smdevice", devname);
-	else
+	} else if (devname) {
+		/*
+		 * Only report that the device is not an smdevice when it was
+		 * opened; if the open failed, that error was already shown.
+		 */
+		if (!ret)
+			nvme_show_error("/dev/%s is not an smdevice", devname);
+	} else
 		nvme_show_error("No smdevices detected");
 
 	free(smdevices);
