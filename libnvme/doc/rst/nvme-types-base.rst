@@ -464,6 +464,15 @@ true if given offset is 64bit register, otherwise it returns false.
 ``NVME_CAP_NSSES_SHIFT``
   Shift amount to get the NVM subsystem shutdown enhancements supported
 
+``NVME_CAP_CSS_NCSS_SHIFT``
+  Shift amount to get the CSS.NCSS
+
+``NVME_CAP_CSS_IOCSS_SHIFT``
+  Shift amount to get the CSS.IOCSS
+
+``NVME_CAP_CSS_NOIOCSS_SHIFT``
+  Shift amount to get the CSS.NOIOCSS
+
 ``NVME_CAP_MQES_MASK``
   Mask to get the maximum queue entries supported
 
@@ -511,6 +520,15 @@ true if given offset is 64bit register, otherwise it returns false.
 
 ``NVME_CAP_NSSES_MASK``
   Mask to get the NVM subsystem shutdown enhancements supported
+
+``NVME_CAP_CSS_NCSS_MASK``
+  Mask to get the CSS.NCSS
+
+``NVME_CAP_CSS_IOCSS_MASK``
+  Mask to get the CSS.IOCSS
+
+``NVME_CAP_CSS_NOIOCSS_MASK``
+  Mask to get the CSS.NOIOCSS
 
 ``NVME_CAP_AMS_WRR``
   Weighted round robin with urgent priority class
@@ -2519,6 +2537,9 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_OAES_RSVD0_SHIFT``
+  Shift amount to get Reserved
+
 ``NVME_CTRL_OAES_NSAN_SHIFT``
   Shift amount to get the Attached Namespace
   Attribute Notices event supported bit
@@ -2526,6 +2547,9 @@ power scale value
 ``NVME_CTRL_OAES_FAN_SHIFT``
   Shift amount to get the Firmware Activation
   Notices event supported bit
+
+``NVME_CTRL_OAES_RSVD10_SHIFT``
+  Shift amount to get Reserved
 
 ``NVME_CTRL_OAES_ANACN_SHIFT``
   Shift amount to get the Asymmetric Namespace
@@ -2557,6 +2581,9 @@ power scale value
   Shift amount to get the Reachability Groups
   Change Notices event supported bit
 
+``NVME_CTRL_OAES_RSVD18_SHIFT``
+  Shift amount to get Reserved
+
 ``NVME_CTRL_OAES_ANSAN_SHIFT``
   Shift amount to get the Allocated Namespace
   Attribute Notices event supported bit
@@ -2573,13 +2600,22 @@ power scale value
   Shift amount to get the Rate Limiting
   Configuration Change event supported bit
 
+``NVME_CTRL_OAES_RSVD23_SHIFT``
+  Shift amount to get Reserved
+
 ``NVME_CTRL_OAES_ZDCN_SHIFT``
   Shift amount to get the Zone Descriptor Changed
   Notices event supported bit
 
+``NVME_CTRL_OAES_RSVD28_SHIFT``
+  Shift amount to get Reserved
+
 ``NVME_CTRL_OAES_DLPCN_SHIFT``
   Shift amount to get the Discovery Log Page
   Change Notification event supported bit
+
+``NVME_CTRL_OAES_RSVD0_MASK``
+  Mask to get Reserved
 
 ``NVME_CTRL_OAES_NSAN_MASK``
   Mask to get the Attached Namespace Attribute
@@ -2588,6 +2624,9 @@ power scale value
 ``NVME_CTRL_OAES_FAN_MASK``
   Mask to get the Firmware Activation Notices
   event supported bit
+
+``NVME_CTRL_OAES_RSVD10_MASK``
+  Mask to get Reserved
 
 ``NVME_CTRL_OAES_ANACN_MASK``
   Mask to get the Asymmetric Namespace Access
@@ -2617,6 +2656,9 @@ power scale value
   Mask to get the Reachability Groups Change
   Notices event supported bit
 
+``NVME_CTRL_OAES_RSVD18_MASK``
+  Mask to get Reserved
+
 ``NVME_CTRL_OAES_ANSAN_MASK``
   Mask to get the Allocated Namespace Attribute
   Notices event supported bit
@@ -2633,9 +2675,15 @@ power scale value
   Mask to get the Rate Limiting Configuration
   Change event supported bit
 
+``NVME_CTRL_OAES_RSVD23_MASK``
+  Mask to get Reserved
+
 ``NVME_CTRL_OAES_ZDCN_MASK``
   Mask to get the Zone Descriptor Changed Notices
   event supported bit
+
+``NVME_CTRL_OAES_RSVD28_MASK``
+  Mask to get Reserved
 
 ``NVME_CTRL_OAES_DLPCN_MASK``
   Mask to get the Discovery Log Page Change
@@ -2784,6 +2832,9 @@ power scale value
 ``NVME_CTRL_CTRATT_IIELLSS_SHIFT``
   IIELLSS shift
 
+``NVME_CTRL_CTRATT_RSVD25_SHIFT``
+  Reserved shift
+
 ``NVME_CTRL_CTRATT_HIDS_MASK``
   HIDS mask
 
@@ -2855,6 +2906,9 @@ power scale value
 
 ``NVME_CTRL_CTRATT_IIELLSS_MASK``
   IIELLSS mask
+
+``NVME_CTRL_CTRATT_RSVD25_MASK``
+  Reserved mask
 
 ``NVME_CTRL_CTRATT_128_ID``
   128-bit Host Identifier supported
@@ -2958,6 +3012,9 @@ power scale value
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.bpcap
   field.
 
+``NVME_CTRL_BPCAP_RSVD3_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_BPCAP_RPMBBPWPS_MASK``
   Mask to get the RPMB Boot
   Partition Write Protection
@@ -2969,6 +3026,9 @@ power scale value
   Boot Partition Write Protection
   Support from the :c:type:`struct
   nvme_id_ctrl <nvme_id_ctrl>`.bpcap field.
+
+``NVME_CTRL_BPCAP_RSVD3_MASK``
+  Mask to get the Reserved
 
 ``NVME_CTRL_BPCAP_RPMBBPWPS_NOT_SPECIFIED``
   Support for RPMB Boot Partition
@@ -2998,8 +3058,14 @@ power scale value
   Shift amount to get the CXL HDM Support (CHS)
   from the :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.chsi field.
 
+``NVME_CTRL_CHSI_RSVD1_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_CHSI_CHS_MASK``
   Mask to get CHS
+
+``NVME_CTRL_CHSI_RSVD1_MASK``
+  Mask to get Reserved
 
 
 
@@ -3035,6 +3101,12 @@ power scale value
 ``NVME_CTRL_RMDCA_RDCCS_MASK``
   Mask to get RDCCS
 
+``NVME_CTRL_RMDCA_RSVD3_SHIFT``
+  Shift amount to get the Reserved
+
+``NVME_CTRL_RMDCA_RSVD3_MASK``
+  Mask to get Reserved
+
 
 
 
@@ -3052,6 +3124,9 @@ power scale value
   Shift amount to get the PLS Forced Quiescence from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.plsi field.
 
+``NVME_CTRL_PLSI_RSVD2_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_PLSI_PLSEPF_MASK``
   Mask to get the PLS Emergency Power Fail from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.plsi field.
@@ -3059,6 +3134,9 @@ power scale value
 ``NVME_CTRL_PLSI_PLSFQ_MASK``
   Mask to get the PLS Forced Quiescence from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.plsi field.
+
+``NVME_CTRL_PLSI_RSVD2_MASK``
+  Mask to get the Reserved
 
 
 
@@ -3077,6 +3155,9 @@ power scale value
   Shift amount to get the Reachability Group ID Changeable
   from the :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.crcap field.
 
+``NVME_CTRL_CRCAP_RSVD2_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_CRCAP_RRSUP_MASK``
   Mask to get the Reachability Reporting Supported from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.crcap field.
@@ -3084,6 +3165,9 @@ power scale value
 ``NVME_CTRL_CRCAP_RGIDC_MASK``
   Mask to get the Reachability Group ID Changeable from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.crcap field.
+
+``NVME_CTRL_CRCAP_RSVD2_MASK``
+  Mask to get the Reserved
 
 
 
@@ -3136,11 +3220,17 @@ power scale value
 ``NVME_CTRL_NVMSR_NVMEE_SHIFT``
   NVMEE shift
 
+``NVME_CTRL_NVMSR_RSVD2_SHIFT``
+  Reserved shift
+
 ``NVME_CTRL_NVMSR_NVMESD_MASK``
   NVMESD mask
 
 ``NVME_CTRL_NVMSR_NVMEE_MASK``
   NVMEE mask
+
+``NVME_CTRL_NVMSR_RSVD2_MASK``
+  Reserved mask
 
 ``NVME_CTRL_NVMSR_NVMESD``
   If set, then the NVM Subsystem is part of an NVMe
@@ -3204,11 +3294,17 @@ power scale value
 ``NVME_CTRL_MEC_PCIEME_SHIFT``
   PCIEME shift
 
+``NVME_CTRL_MEC_RSVD2_SHIFT``
+  Reserved shift
+
 ``NVME_CTRL_MEC_TWPME_MASK``
   TWPME mask
 
 ``NVME_CTRL_MEC_PCIEME_MASK``
   PCIEME mask
+
+``NVME_CTRL_MEC_RSVD2_MASK``
+  Reserved mask
 
 ``NVME_CTRL_MEC_TWPME``
   If set, then the NVM Subsystem contains one or more
@@ -3271,6 +3367,9 @@ power scale value
   Shift amount to get the Controller-scoped
   Command and Feature Lockdown supported
 
+``NVME_CTRL_OACS_RSVD14_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_OACS_SSRS_MASK``
   Mask to get the Security Send Receive supported
 
@@ -3313,6 +3412,9 @@ power scale value
 ``NVME_CTRL_OACS_CCFLS_MASK``
   Mask to get the Controller-scoped Command and
   Feature Lockdown supported
+
+``NVME_CTRL_OACS_RSVD14_MASK``
+  Mask to get the Reserved
 
 ``NVME_CTRL_OACS_SSRS``
   If set, then the controller supports the
@@ -3395,6 +3497,9 @@ power scale value
 ``NVME_CTRL_FRMW_SMUD_SHIFT``
   SMUD shift
 
+``NVME_CTRL_FRMW_RSVD6_SHIFT``
+  Reserved shift
+
 ``NVME_CTRL_FRMW_FFSRO_MASK``
   FFSRO mask
 
@@ -3406,6 +3511,9 @@ power scale value
 
 ``NVME_CTRL_FRMW_SMUD_MASK``
   SMUD mask
+
+``NVME_CTRL_FRMW_RSVD6_MASK``
+  Reserved mask
 
 ``NVME_CTRL_FRMW_FFSRO``
   If set, the first firmware slot is readonly
@@ -3453,6 +3561,9 @@ power scale value
 ``NVME_CTRL_LPA_DA4S_SHIFT``
   DA4S shift
 
+``NVME_CTRL_LPA_RSVD7_SHIFT``
+  Reserved shift
+
 ``NVME_CTRL_LPA_SMARTS_MASK``
   SMARTS mask
 
@@ -3473,6 +3584,9 @@ power scale value
 
 ``NVME_CTRL_LPA_DA4S_MASK``
   DA4S mask
+
+``NVME_CTRL_LPA_RSVD7_MASK``
+  Reserved mask
 
 ``NVME_CTRL_LPA_SMARTS``
   If set, controller supports SMART/Health log
@@ -3523,8 +3637,14 @@ power scale value
 ``NVME_CTRL_AVSCC_VSCF_SHIFT``
   VSCF shift
 
+``NVME_CTRL_AVSCC_RSVD1_SHIFT``
+  Reserved shift
+
 ``NVME_CTRL_AVSCC_VSCF_MASK``
   VSCF mask
+
+``NVME_CTRL_AVSCC_RSVD1_MASK``
+  Reserved mask
 
 ``NVME_CTRL_AVSCC_VSCF``
   If set, all Admin Vendor Specific Commands use
@@ -3540,6 +3660,18 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_APSTA_APTS_SHIFT``
+  APTS shift
+
+``NVME_CTRL_APSTA_RSVD1_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_APSTA_APTS_MASK``
+  APTS mask
+
+``NVME_CTRL_APSTA_RSVD1_MASK``
+  Reserved mask
+
 ``NVME_CTRL_APSTA_APST``
   If set, then the controller supports autonomous power
   state transitions.
@@ -3552,6 +3684,36 @@ power scale value
    This field indicates if the controller supports one or more Replay Protected Memory Blocks, from :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.rpmbs.
 
 **Constants**
+
+``NVME_CTRL_RPMBS_NRPMBU_SHIFT``
+  NRPMBU shift
+
+``NVME_CTRL_RPMBS_AUTHM_SHIFT``
+  AUTHM shift
+
+``NVME_CTRL_RPMBS_RSVD6_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_RPMBS_TSZE_SHIFT``
+  TSZE shift
+
+``NVME_CTRL_RPMBS_ASZE_SHIFT``
+  ASZE shift
+
+``NVME_CTRL_RPMBS_NRPMBU_MASK``
+  NRPMBU mask
+
+``NVME_CTRL_RPMBS_AUTHM_MASK``
+  AUTHM mask
+
+``NVME_CTRL_RPMBS_RSVD6_MASK``
+  Reserved mask
+
+``NVME_CTRL_RPMBS_TSZE_MASK``
+  TSZE mask
+
+``NVME_CTRL_RPMBS_ASZE_MASK``
+  ASZE mask
 
 ``NVME_CTRL_RPMBS_NR_UNITS``
   Mask to get the value of the Number of RPMB Units
@@ -3582,11 +3744,17 @@ power scale value
   Shift amount to get the value of  Host-Initiated Refresh
   Support from Device Self-test Options field.
 
+``NVME_CTRL_DSTO_RSVD2_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_DSTO_SDSO_MASK``
   Mask to get the value of Single Device Self-test Operation
 
 ``NVME_CTRL_DSTO_HIRS_MASK``
   Mask to get the value of Host-Initiated Refresh Support
+
+``NVME_CTRL_DSTO_RSVD2_MASK``
+  Mask to get the value of Reserved
 
 ``NVME_CTRL_DSTO_ONE_DST``
   If set, then the NVM subsystem supports only one device
@@ -3606,6 +3774,18 @@ power scale value
    Flags indicate the attributes of the host controlled thermal management feature
 
 **Constants**
+
+``NVME_CTRL_HCTMA_HCTMS_SHIFT``
+  HCTMS shift
+
+``NVME_CTRL_HCTMA_RSVD1_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_HCTMA_HCTMS_MASK``
+  HCTMS mask
+
+``NVME_CTRL_HCTMA_RSVD1_MASK``
+  Reserved mask
 
 ``NVME_CTRL_HCTMA_HCTM``
   then the controller supports host controlled thermal
@@ -3641,6 +3821,9 @@ power scale value
   Sanitize purge request and reporting
   supported shift
 
+``NVME_CTRL_SANICAP_RSVD6_SHIFT``
+  Reserved shift
+
 ``NVME_CTRL_SANICAP_NDI_SHIFT``
   No-deallocate inhibited shift
 
@@ -3666,6 +3849,9 @@ power scale value
 ``NVME_CTRL_SANICAP_SPRRS_MASK``
   Sanitize purge request and reporting
   supported mask
+
+``NVME_CTRL_SANICAP_RSVD6_MASK``
+  Reserved mask
 
 ``NVME_CTRL_SANICAP_NDI_MASK``
   No-deallocate inhibited mask
@@ -3720,6 +3906,54 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_ANACAP_RANAOS_SHIFT``
+  RANAOS shift
+
+``NVME_CTRL_ANACAP_RANANOS_SHIFT``
+  RANANOS shift
+
+``NVME_CTRL_ANACAP_RANAIS_SHIFT``
+  RANAIS shift
+
+``NVME_CTRL_ANACAP_RANAPLS_SHIFT``
+  RANPLOS shift
+
+``NVME_CTRL_ANACAP_RANACS_SHIFT``
+  RANACS shift
+
+``NVME_CTRL_ANACAP_RSVD5_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_ANACAP_ANAGIDLWAS_SHIFT``
+  RANAGIDLWAS shift
+
+``NVME_CTRL_ANACAP_ANAGIDS_SHIFT``
+  RANAGIDS shift
+
+``NVME_CTRL_ANACAP_RANAOS_MASK``
+  RANAOS mask
+
+``NVME_CTRL_ANACAP_RANANOS_MASK``
+  RANANOS shift
+
+``NVME_CTRL_ANACAP_RANAIS_MASK``
+  RANAIS shift
+
+``NVME_CTRL_ANACAP_RANAPLS_MASK``
+  RANAPLS shift
+
+``NVME_CTRL_ANACAP_RANACS_MASK``
+  RANACS shift
+
+``NVME_CTRL_ANACAP_RSVD5_MASK``
+  Reserved shift
+
+``NVME_CTRL_ANACAP_ANAGIDLWAS_MASK``
+  RANAGIDLWAS shift
+
+``NVME_CTRL_ANACAP_ANAGIDS_MASK``
+  RANAGIDS shift
+
 ``NVME_CTRL_ANACAP_OPT``
   If set, then the controller is able to
   report ANA Optimized state.
@@ -3769,6 +4003,9 @@ power scale value
   Shift amount to get the Key Per I/O Scope from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.kpioc field.
 
+``NVME_CTRL_KPIOC_RSVD2_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_KPIOC_KPIOS_MASK``
   Mask to get the Key Per I/O Supported from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.kpioc field.
@@ -3776,6 +4013,30 @@ power scale value
 ``NVME_CTRL_KPIOC_KPIOSC_MASK``
   Mask to get the Key Per I/O Scope from the
   :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.kpioc field.
+
+``NVME_CTRL_KPIOC_RSVD2_MASK``
+  Mask to get the Reserved
+
+
+
+
+.. c:enum:: nvme_id_ctrl_tmpthha
+
+   Temperature Threshold Hysteresis Attributes
+
+**Constants**
+
+``NVME_CTRL_TMPTHHA_TMPTHMH_SHIFT``
+  TMPTHMH shift
+
+``NVME_CTRL_TMPTHHA_RSVD3_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_TMPTHHA_TMPTHMH_MASK``
+  TMPTHMH mask
+
+``NVME_CTRL_TMPTHHA_RSVD3_MASK``
+  Reserved mask
 
 
 
@@ -3801,6 +4062,30 @@ power scale value
    Configurable Device Personality Attributes
 
 **Constants**
+
+``NVME_CTRL_CDPA_CDPALG_SHIFT``
+  CDPALG shift
+
+``NVME_CTRL_CDPA_RSVD8_SHIFT``
+  RSVD8 shift
+
+``NVME_CTRL_CDPA_CDPALG_HS3_SHIFT``
+  CDPALG.HS3 shift
+
+``NVME_CTRL_CDPA_CDPALG_RSVD1_SHIFT``
+  CDPALG.RSVD1 shift
+
+``NVME_CTRL_CDPA_CDPALG_MASK``
+  CDPALG mask
+
+``NVME_CTRL_CDPA_RSVD8_MASK``
+  RSVD8 mask
+
+``NVME_CTRL_CDPA_CDPALG_HS3_MASK``
+  CDPALG.HS3 mask
+
+``NVME_CTRL_CDPA_CDPALG_RSVD1_MASK``
+  CDPALG.RSVD1 mask
 
 ``NVME_CTRL_CDPA_HMAC_SHA_384``
   If set, then the controller supports
@@ -3889,6 +4174,18 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_SQES_MINSQES_SHIFT``
+  MINSQES shift
+
+``NVME_CTRL_SQES_MAXSQES_SHIFT``
+  MAXSQES shift
+
+``NVME_CTRL_SQES_MINSQES_MASK``
+  MINSQES mask
+
+``NVME_CTRL_SQES_MAXSQES_MASK``
+  MAXSQES mask
+
 ``NVME_CTRL_SQES_MIN``
   Mask to get the value of the required Submission Queue
   Entry size when using the NVM Command Set.
@@ -3906,6 +4203,18 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_CQES_MINCQES_SHIFT``
+  MINCQES shift
+
+``NVME_CTRL_CQES_MAXCQES_SHIFT``
+  MAXCQES shift
+
+``NVME_CTRL_CQES_MINCQES_MASK``
+  MINCQES mask
+
+``NVME_CTRL_CQES_MAXCQES_MASK``
+  MAXCQES mask
+
 ``NVME_CTRL_CQES_MIN``
   Mask to get the value of the required Completion Queue
   Entry size when using the NVM Command Set.
@@ -3922,6 +4231,90 @@ power scale value
    This field indicates the optional NVM commands and features supported by the controller.
 
 **Constants**
+
+``NVME_CTRL_ONCS_NVMCMPS_SHIFT``
+  NVMCMPS shift
+
+``NVME_CTRL_ONCS_NVMWUSV_SHIFT``
+  NVMWUSV shift
+
+``NVME_CTRL_ONCS_NVMDSMSV_SHIFT``
+  NVMDSMSV shift
+
+``NVME_CTRL_ONCS_NVMWZSV_SHIFT``
+  NVMWZSV shift
+
+``NVME_CTRL_ONCS_SSFS_SHIFT``
+  SSFS shift
+
+``NVME_CTRL_ONCS_RESERVS_SHIFT``
+  RESERVS shift
+
+``NVME_CTRL_ONCS_TSS_SHIFT``
+  TSS shift
+
+``NVME_CTRL_ONCS_NVMVFYS_SHIFT``
+  NVMVFYS shift
+
+``NVME_CTRL_ONCS_NVMCPYS_SHIFT``
+  NVMCPYS shift
+
+``NVME_CTRL_ONCS_NVMCSA_SHIFT``
+  NVMCSA shift
+
+``NVME_CTRL_ONCS_NVMAFC_SHIFT``
+  NVMAFC shift
+
+``NVME_CTRL_ONCS_MAXWZD_SHIFT``
+  MAXWZD shift
+
+``NVME_CTRL_ONCS_NSZS_SHIFT``
+  NSZS shift
+
+``NVME_CTRL_ONCS_RSVD13_SHIFT``
+  RSVD13 shift
+
+``NVME_CTRL_ONCS_NVMCMPS_MASK``
+  NVMCMPS mask
+
+``NVME_CTRL_ONCS_NVMWUSV_MASK``
+  NVMWUSV mask
+
+``NVME_CTRL_ONCS_NVMDSMSV_MASK``
+  NVMDSMSV mask
+
+``NVME_CTRL_ONCS_NVMWZSV_MASK``
+  NVMWASV mask
+
+``NVME_CTRL_ONCS_SSFS_MASK``
+  SSFS mask
+
+``NVME_CTRL_ONCS_RESERVS_MASK``
+  RESERVS mask
+
+``NVME_CTRL_ONCS_TSS_MASK``
+  TSS mask
+
+``NVME_CTRL_ONCS_NVMVFYS_MASK``
+  NVMVFYS mask
+
+``NVME_CTRL_ONCS_NVMCPYS_MASK``
+  NVMCPYS mask
+
+``NVME_CTRL_ONCS_NVMCSA_MASK``
+  NVMCSA mask
+
+``NVME_CTRL_ONCS_NVMAFC_MASK``
+  NVMAFC mask
+
+``NVME_CTRL_ONCS_MAXWZD_MASK``
+  MAXWZD mask
+
+``NVME_CTRL_ONCS_NSZS_MASK``
+  NSZS mask
+
+``NVME_CTRL_ONCS_RSVD13_MASK``
+  Reserved mask
 
 ``NVME_CTRL_ONCS_COMPARE``
   If set, then the controller supports
@@ -3996,6 +4389,18 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_FUSES_FCWS_SHIFT``
+  FCWS shift
+
+``NVME_CTRL_FUSES_RSVD1_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_FUSES_FCWS_MASK``
+  FCWS mask
+
+``NVME_CTRL_FUSES_RSVD1_MASK``
+  Reserved mask
+
 ``NVME_CTRL_FUSES_COMPARE_AND_WRITE``
   If set, then the controller supports the
   Compare and Write fused operation.
@@ -4021,6 +4426,9 @@ power scale value
 ``NVME_CTRL_FNA_NSID_ALL_F_SHIFT``
   Shift amount to get the format supported an NSID FFFFFFFFh
 
+``NVME_CTRL_FNA_RSVD4_SHIFT``
+  Shift amount to get the Reserved
+
 ``NVME_CTRL_FNA_FMT_ALL_NS_MASK``
   Mask to get the format applied to all namespaces
 
@@ -4032,6 +4440,9 @@ power scale value
 
 ``NVME_CTRL_FNA_NSID_ALL_F_MASK``
   Mask to get the format supported an NSID FFFFFFFFh
+
+``NVME_CTRL_FNA_RSVD4_MASK``
+  Mask to get the Reserved
 
 ``NVME_CTRL_FNA_FMT_ALL_NAMESPACES``
   If set, then all namespaces in an NVM
@@ -4072,6 +4483,24 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_VWC_VWCP_SHIFT``
+  VWCP shift
+
+``NVME_CTRL_VWC_FB_SHIFT``
+  FB shift
+
+``NVME_CTRL_VWC_RSVD3_SHIFT``
+  Reserved shiftt
+
+``NVME_CTRL_VWC_VWCP_MASK``
+  VWCP mask
+
+``NVME_CTRL_VWC_FB_MASK``
+  FB mask
+
+``NVME_CTRL_VWC_RSVD3_MASK``
+  Reserved mask
+
 ``NVME_CTRL_VWC_PRESENT``
   If set, indicates a volatile write cache is present.
   If a volatile write cache is present, then the host
@@ -4091,6 +4520,18 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_ICSVSCC_SNVSCF_SHIFT``
+  SNVSCF shift
+
+``NVME_CTRL_ICSVSCC_RSVD1_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_ICSVSCC_SNVSCF_MASK``
+  SNVSCF mask
+
+``NVME_CTRL_ICSVSCC_RSVD1_MASK``
+  Reserved mask
+
 ``NVME_CTRL_NVSCC_FMT``
   If set, all NVM Vendor Specific Commands use the
   format with NDT and NDM fields.
@@ -4103,6 +4544,30 @@ power scale value
    This field indicates the optional namespace write protection capabilities supported by the controller.
 
 **Constants**
+
+``NVME_CTRL_NWPC_NWPWPS_SHIFT``
+  NWPWPS shift
+
+``NVME_CTRL_NWPC_WPUPCS_SHIFT``
+  WPUPCS shift
+
+``NVME_CTRL_NWPC_PWPS_SHIFT``
+  PWPS shift
+
+``NVME_CTRL_NWPC_RSVD3_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_NWPC_NWPWPS_MASK``
+  NWPWPS mask
+
+``NVME_CTRL_NWPC_WPUPCS_MASK``
+  WPUPCS mask
+
+``NVME_CTRL_NWPC_PWPS_MASK``
+  PWPS mask
+
+``NVME_CTRL_NWPC_RSVD3_MASK``
+  Reserved mask
 
 ``NVME_CTRL_NWPC_WRITE_PROTECT``
   If set, then the controller shall
@@ -4127,11 +4592,100 @@ power scale value
 
 
 
+.. c:enum:: nvme_id_ctrl_cdfs
+
+   Copy descriptor formats supported
+
+**Constants**
+
+``NVME_CTRL_CDFS_CDFS0S_SHIFT``
+  CDFS0S shift
+
+``NVME_CTRL_CDFS_CDFS1S_SHIFT``
+  CDFS1S shift
+
+``NVME_CTRL_CDFS_CDFS2S_SHIFT``
+  CDFS2S shift
+
+``NVME_CTRL_CDFS_CDFS3S_SHIFT``
+  CDFS3S shift
+
+``NVME_CTRL_CDFS_CDFS4S_SHIFT``
+  CDFS4S shift
+
+``NVME_CTRL_CDFS_RSVD5_SHIFT``
+  Reserved shift
+
+``NVME_CTRL_CDFS_CDFS0S_MASK``
+  CDFS0S mask
+
+``NVME_CTRL_CDFS_CDFS1S_MASK``
+  CDFS1S mask
+
+``NVME_CTRL_CDFS_CDFS2S_MASK``
+  CDFS2S mask
+
+``NVME_CTRL_CDFS_CDFS3S_MASK``
+  CDFS3S mask
+
+``NVME_CTRL_CDFS_CDFS4S_MASK``
+  CDFS4S mask
+
+``NVME_CTRL_CDFS_RSVD5_MASK``
+  Reserved mask
+
+
+
+
 .. c:enum:: nvme_id_ctrl_sgls
 
    This field indicates if SGLs are supported for the NVM Command Set and the particular SGL types supported.
 
 **Constants**
+
+``NVME_CTRL_SGLS_SGLS_SHIFT``
+
+``NVME_CTRL_SGLS_KSDBDS_SHIFT``
+
+``NVME_CTRL_SGLS_RSVD3_SHIFT``
+
+``NVME_CTRL_SGLS_SDT_SHIFT``
+
+``NVME_CTRL_SGLS_SBBDS_SHIFT``
+
+``NVME_CTRL_SGLS_MBA_SHIFT``
+
+``NVME_CTRL_SGLS_LLDTS_SHIFT``
+
+``NVME_CTRL_SGLS_MSDS_SHIFT``
+
+``NVME_CTRL_SGLS_SAOS_SHIFT``
+
+``NVME_CTRL_SGLS_TSDBDS_SHIFT``
+
+``NVME_CTRL_SGLS_RSVD22_SHIFT``
+
+``NVME_CTRL_SGLS_SGLS_MASK``
+
+``NVME_CTRL_SGLS_KSDBDS_MASK``
+
+``NVME_CTRL_SGLS_RSVD3_MASK``
+
+``NVME_CTRL_SGLS_SDT_MASK``
+
+``NVME_CTRL_SGLS_SBBDS_MASK``
+
+``NVME_CTRL_SGLS_MBA_MASK``
+
+``NVME_CTRL_SGLS_LLDTS_MASK``
+
+``NVME_CTRL_SGLS_MSDS_MASK``
+
+``NVME_CTRL_SGLS_SAOS_MASK``
+
+``NVME_CTRL_SGLS_TSDBDS_MASK``
+
+``NVME_CTRL_SGLS_RSVD22_MASK``
 
 ``NVME_CTRL_SGLS_SUPPORTED``
 
@@ -4527,6 +5081,48 @@ power scale value
 
 **Constants**
 
+``NVME_NS_NSFEAT_THINP_SHIFT``
+  THINP shift
+
+``NVME_NS_NSFEAT_NSABP_SHIFT``
+  NSABP shift
+
+``NVME_NS_NSFEAT_DAE_SHIFT``
+  DAE shift
+
+``NVME_NS_NSFEAT_UIDREUSE_SHIFT``
+  UIDREUSE shift
+
+``NVME_NS_NSFEAT_OPTPERF_SHIFT``
+  OPTPERF shift
+
+``NVME_NS_NSFEAT_MAM_SHIFT``
+  MAM shift
+
+``NVME_NS_NSFEAT_OPTRPERF_SHIFT``
+  OPTRPERF shift
+
+``NVME_NS_NSFEAT_THINP_MASK``
+  THINP mask
+
+``NVME_NS_NSFEAT_NSABP_MASK``
+  NSABP mask
+
+``NVME_NS_NSFEAT_DAE_MASK``
+  DAE mask
+
+``NVME_NS_NSFEAT_UIDREUSE_MASK``
+  UIDREUSE mask
+
+``NVME_NS_NSFEAT_OPTPERF_MASK``
+  OPTPERF mask
+
+``NVME_NS_NSFEAT_MAM_MASK``
+  MAM mask
+
+``NVME_NS_NSFEAT_OPTRPERF_MASK``
+  OPTRPERF mask
+
 ``NVME_NS_FEAT_THIN``
   If set, indicates that the namespace supports thin
   provisioning. Specifically, the Namespace Capacity
@@ -4629,6 +5225,42 @@ power scale value
 
 **Constants**
 
+``NVME_NS_DPC_PIT1S_SHIFT``
+  PIT1S shift
+
+``NVME_NS_DPC_PIT2S_SHIFT``
+  PIT2S shift
+
+``NVME_NS_DPC_PIT3S_SHIFT``
+  PIT3S shift
+
+``NVME_NS_DPC_PIIFB_SHIFT``
+  PIIFB shift
+
+``NVME_NS_DPC_PIILB_SHIFT``
+  PIILB shift
+
+``NVME_NS_DPC_RSVD5_SHIFT``
+  Reserved shift
+
+``NVME_NS_DPC_PIT1S_MASK``
+  PIT1S mask
+
+``NVME_NS_DPC_PIT2S_MASK``
+  PIT2S mask
+
+``NVME_NS_DPC_PIT3S_MASK``
+  PIT3S mask
+
+``NVME_NS_DPC_PIIFB_MASK``
+  PIIFB mask
+
+``NVME_NS_DPC_PIILB_MASK``
+  PIILB mask
+
+``NVME_NS_DPC_RSVD5_MASK``
+  Reserved mask
+
 ``NVME_NS_DPC_PI_TYPE1``
   If set, indicates that the namespace supports
   Protection Information Type 1.
@@ -4710,6 +5342,54 @@ power scale value
    This field indicates the reservation capabilities of the namespace.
 
 **Constants**
+
+``NVME_NS_RESCAP_PTPLS_SHIFT``
+  PTPLS shift
+
+``NVME_NS_RESCAP_WES_SHIFT``
+  WES shift
+
+``NVME_NS_RESCAP_EAS_SHIFT``
+  EAS shift
+
+``NVME_NS_RESCAP_WEROS_SHIFT``
+  WEROS shift
+
+``NVME_NS_RESCAP_EAROS_SHIFT``
+  EAROS shift
+
+``NVME_NS_RESCAP_WEARS_SHIFT``
+  WEARS shift
+
+``NVME_NS_RESCAP_EAARS_SHIFT``
+  EAARS shift
+
+``NVME_NS_RESCAP_IEKS_SHIFT``
+  IEKS shift
+
+``NVME_NS_RESCAP_PTPLS_MASK``
+  PTPLS mask
+
+``NVME_NS_RESCAP_WES_MASK``
+  WES mask
+
+``NVME_NS_RESCAP_EAS_MASK``
+  EAS mask
+
+``NVME_NS_RESCAP_WEROS_MASK``
+  WEROS mask
+
+``NVME_NS_RESCAP_EAROS_MASK``
+  EAROS mask
+
+``NVME_NS_RESCAP_WEARS_MASK``
+  WEARS mask
+
+``NVME_NS_RESCAP_EAARS_MASK``
+  EAARS mask
+
+``NVME_NS_RESCAP_IEKS_MASK``
+  IEKS mask
 
 ``NVME_NS_RESCAP_PTPL``
   If set, indicates that the namespace supports the
@@ -5072,6 +5752,45 @@ power scale value
 ``rsvd24``
   Reserved
 
+
+
+
+
+.. c:enum:: nvme_id_ind_nsfeat
+
+   This field defines features of the namespace.
+
+**Constants**
+
+``NVME_IND_NSFEAT_RSVD0_SHIFT``
+  RSVD0 shift
+
+``NVME_IND_NSFEAT_UIDREUSE_SHIFT``
+  UIDREUSE shift
+
+``NVME_IND_NSFEAT_RMEDIA_SHIFT``
+  RMEDIA shift
+
+``NVME_IND_NSFEAT_VWCNP_SHIFT``
+  VWCNP shift
+
+``NVME_IND_NSFEAT_RSVD6_SHIFT``
+  RSVD6 shift
+
+``NVME_IND_NSFEAT_RSVD0_MASK``
+  RSVD0 mask
+
+``NVME_IND_NSFEAT_UIDREUSE_MASK``
+  UIDREUSE mask
+
+``NVME_IND_NSFEAT_RMEDIA_MASK``
+  RMEDIA mask
+
+``NVME_IND_NSFEAT_VWCNP_MASK``
+  VWCNP mask
+
+``NVME_IND_NSFEAT_RSVD6_MASK``
+  RSVD6 mask
 
 
 
@@ -16001,6 +16720,10 @@ true if **status** is of the specified type and value
 
 ``NVME_PEVENT_LOG_RELEASE_CTX``
   Release Context
+
+``NVME_PEVENT_LOG_EST_CTX_AND_READ_HDR``
+  Establish Context and Read 512 Bytes
+  of Header
 
 
 

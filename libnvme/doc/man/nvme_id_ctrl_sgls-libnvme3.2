@@ -1,8 +1,96 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_sgls" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_sgls" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_sgls \- This field indicates if SGLs are supported for the NVM Command Set and the particular SGL types supported.
 .SH SYNOPSIS
 enum nvme_id_ctrl_sgls {
+.br
+.BI "    NVME_CTRL_SGLS_SGLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_KSDBDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_RSVD3_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_SDT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_SBBDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_MBA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_LLDTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_MSDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_SAOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_TSDBDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_RSVD22_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_SGLS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_KSDBDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_RSVD3_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_SDT_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_SBBDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_MBA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_LLDTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_MSDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_SAOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_TSDBDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SGLS_RSVD22_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_SGLS_SUPPORTED"
 , 
@@ -36,6 +124,28 @@ enum nvme_id_ctrl_sgls {
 
 };
 .SH Constants
+.IP "NVME_CTRL_SGLS_SGLS_SHIFT" 12
+.IP "NVME_CTRL_SGLS_KSDBDS_SHIFT" 12
+.IP "NVME_CTRL_SGLS_RSVD3_SHIFT" 12
+.IP "NVME_CTRL_SGLS_SDT_SHIFT" 12
+.IP "NVME_CTRL_SGLS_SBBDS_SHIFT" 12
+.IP "NVME_CTRL_SGLS_MBA_SHIFT" 12
+.IP "NVME_CTRL_SGLS_LLDTS_SHIFT" 12
+.IP "NVME_CTRL_SGLS_MSDS_SHIFT" 12
+.IP "NVME_CTRL_SGLS_SAOS_SHIFT" 12
+.IP "NVME_CTRL_SGLS_TSDBDS_SHIFT" 12
+.IP "NVME_CTRL_SGLS_RSVD22_SHIFT" 12
+.IP "NVME_CTRL_SGLS_SGLS_MASK" 12
+.IP "NVME_CTRL_SGLS_KSDBDS_MASK" 12
+.IP "NVME_CTRL_SGLS_RSVD3_MASK" 12
+.IP "NVME_CTRL_SGLS_SDT_MASK" 12
+.IP "NVME_CTRL_SGLS_SBBDS_MASK" 12
+.IP "NVME_CTRL_SGLS_MBA_MASK" 12
+.IP "NVME_CTRL_SGLS_LLDTS_MASK" 12
+.IP "NVME_CTRL_SGLS_MSDS_MASK" 12
+.IP "NVME_CTRL_SGLS_SAOS_MASK" 12
+.IP "NVME_CTRL_SGLS_TSDBDS_MASK" 12
+.IP "NVME_CTRL_SGLS_RSVD22_MASK" 12
 .IP "NVME_CTRL_SGLS_SUPPORTED" 12
 .IP "NVME_CTRL_SGLS_KEYED" 12
 .IP "NVME_CTRL_SGLS_BIT_BUCKET" 12

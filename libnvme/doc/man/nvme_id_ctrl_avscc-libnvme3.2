@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_avscc" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_avscc" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_avscc \- Flags indicating the configuration settings for Admin Vendor Specific command handling.
 .SH SYNOPSIS
@@ -8,7 +8,15 @@ enum nvme_id_ctrl_avscc {
 , 
 .br
 .br
+.BI "    NVME_CTRL_AVSCC_RSVD1_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CTRL_AVSCC_VSCF_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_AVSCC_RSVD1_MASK"
 , 
 .br
 .br
@@ -18,8 +26,12 @@ enum nvme_id_ctrl_avscc {
 .SH Constants
 .IP "NVME_CTRL_AVSCC_VSCF_SHIFT" 12
 VSCF shift
+.IP "NVME_CTRL_AVSCC_RSVD1_SHIFT" 12
+Reserved shift
 .IP "NVME_CTRL_AVSCC_VSCF_MASK" 12
 VSCF mask
+.IP "NVME_CTRL_AVSCC_RSVD1_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_AVSCC_VSCF" 12
 If set, all Admin Vendor Specific Commands use
 the optional vendor specific command format with

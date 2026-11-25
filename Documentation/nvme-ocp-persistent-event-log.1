@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-persistent-event-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-PERSISTEN" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-PERSISTEN" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,12 +48,12 @@ On success, the returned persistent event log structure may be returned in one o
 .PP
 \-a <action>, \-\-action=<action>
 .RS 4
-While try to retrieve this log action the controller shall take during processing this persistent log page command\&. This mandatory field, based on the value issued it may Read Log Data, Establish Context and Read Log Data or Release Context can occur\&. For More details see NVM Express 1\&.4 Spec\&. Section 5\&.14\&.1\&.13 Persistent Event Log (Log Identifier 0Dh)
+The action the controller takes with the reporting context of the log\&. 0 (Read Log Data) reads the log of an established context\&. 1 (Establish Context and Read Log Data) establishes a context, and fails if one is established\&. 2 (Release Context) releases the context\&. 3 (Establish Context and Read 512 Bytes of Header) establishes a context unless one is established, and reads only the log header\&. Defaults to 3\&. A context stays established until it is released with action 2\&. Action 3 requires ECRH support\&. For more details see the NVM Express Base Specification, Revision 2\&.1, section 5\&.1\&.12\&.1\&.14 Persistent Event (Log Page Identifier 0Dh)\&.
 .RE
 .PP
 \-l <log\-len>, \-\-log\-len=<log\-len>
 .RS 4
-Allocates a buffer of <log\-len> bytes size and requests this many bytes be returned in the constructed NVMe command\&. This param is mandatory\&. If <log\-len> given is 0 and action is 0, it will read the Total Log Length(TLL) of the page\&.
+The number of bytes of the log to read\&. Without it, or with 0, action 0 reads the Total Log Length (TLL) of the log, and action 1 only establishes the context\&. Actions 2 and 3 ignore it\&.
 .RE
 .PP
 \-b, \-\-raw\-binary
@@ -136,13 +136,51 @@ These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&
 .sp -1
 .IP \(bu 2.3
 .\}
-Print the persistent event log page in a human readable format:
+Establish a reporting context if needed and print the log header:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
 # nvme ocp persistent\-event\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+A context must be released using \-\-action=2 before \-\-action=1 can be used\&.
+.sp .5v
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Establish a reporting context (assumes no existing context), print the persistent event log page of the context in a human readable format, and release the context:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp persistent\-event\-log /dev/nvme0 \-\-action=1
+# nvme ocp persistent\-event\-log /dev/nvme0 \-\-action=0
+# nvme ocp persistent\-event\-log /dev/nvme0 \-\-action=2
 .fi
 .if n \{\
 .RE
@@ -157,13 +195,13 @@ Print the persistent event log page in a human readable format:
 .sp -1
 .IP \(bu 2.3
 .\}
-Print the raw persistent event log to a file:
+Print the raw persistent event log of an established context to a file:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme ocp persistent\-event\-log /dev/nvme0 \-\-raw\-binary > persistent_log\&.raw
+# nvme ocp persistent\-event\-log /dev/nvme0 \-\-action=0 \-\-raw\-binary > persistent_log\&.raw
 .fi
 .if n \{\
 .RE

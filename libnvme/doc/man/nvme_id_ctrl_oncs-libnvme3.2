@@ -1,8 +1,120 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_oncs" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_oncs" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_oncs \- This field indicates the optional NVM commands and features supported by the controller.
 .SH SYNOPSIS
 enum nvme_id_ctrl_oncs {
+.br
+.BI "    NVME_CTRL_ONCS_NVMCMPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMWUSV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMDSMSV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMWZSV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_SSFS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_RESERVS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_TSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMVFYS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMCPYS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMCSA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMAFC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_MAXWZD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NSZS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_RSVD13_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMCMPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMWUSV_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMDSMSV_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMWZSV_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_SSFS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_RESERVS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_TSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMVFYS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMCPYS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMCSA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NVMAFC_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_MAXWZD_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NSZS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_RSVD13_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_ONCS_COMPARE"
 , 
@@ -56,6 +168,62 @@ enum nvme_id_ctrl_oncs {
 
 };
 .SH Constants
+.IP "NVME_CTRL_ONCS_NVMCMPS_SHIFT" 12
+NVMCMPS shift
+.IP "NVME_CTRL_ONCS_NVMWUSV_SHIFT" 12
+NVMWUSV shift
+.IP "NVME_CTRL_ONCS_NVMDSMSV_SHIFT" 12
+NVMDSMSV shift
+.IP "NVME_CTRL_ONCS_NVMWZSV_SHIFT" 12
+NVMWZSV shift
+.IP "NVME_CTRL_ONCS_SSFS_SHIFT" 12
+SSFS shift
+.IP "NVME_CTRL_ONCS_RESERVS_SHIFT" 12
+RESERVS shift
+.IP "NVME_CTRL_ONCS_TSS_SHIFT" 12
+TSS shift
+.IP "NVME_CTRL_ONCS_NVMVFYS_SHIFT" 12
+NVMVFYS shift
+.IP "NVME_CTRL_ONCS_NVMCPYS_SHIFT" 12
+NVMCPYS shift
+.IP "NVME_CTRL_ONCS_NVMCSA_SHIFT" 12
+NVMCSA shift
+.IP "NVME_CTRL_ONCS_NVMAFC_SHIFT" 12
+NVMAFC shift
+.IP "NVME_CTRL_ONCS_MAXWZD_SHIFT" 12
+MAXWZD shift
+.IP "NVME_CTRL_ONCS_NSZS_SHIFT" 12
+NSZS shift
+.IP "NVME_CTRL_ONCS_RSVD13_SHIFT" 12
+RSVD13 shift
+.IP "NVME_CTRL_ONCS_NVMCMPS_MASK" 12
+NVMCMPS mask
+.IP "NVME_CTRL_ONCS_NVMWUSV_MASK" 12
+NVMWUSV mask
+.IP "NVME_CTRL_ONCS_NVMDSMSV_MASK" 12
+NVMDSMSV mask
+.IP "NVME_CTRL_ONCS_NVMWZSV_MASK" 12
+NVMWASV mask
+.IP "NVME_CTRL_ONCS_SSFS_MASK" 12
+SSFS mask
+.IP "NVME_CTRL_ONCS_RESERVS_MASK" 12
+RESERVS mask
+.IP "NVME_CTRL_ONCS_TSS_MASK" 12
+TSS mask
+.IP "NVME_CTRL_ONCS_NVMVFYS_MASK" 12
+NVMVFYS mask
+.IP "NVME_CTRL_ONCS_NVMCPYS_MASK" 12
+NVMCPYS mask
+.IP "NVME_CTRL_ONCS_NVMCSA_MASK" 12
+NVMCSA mask
+.IP "NVME_CTRL_ONCS_NVMAFC_MASK" 12
+NVMAFC mask
+.IP "NVME_CTRL_ONCS_MAXWZD_MASK" 12
+MAXWZD mask
+.IP "NVME_CTRL_ONCS_NSZS_MASK" 12
+NSZS mask
+.IP "NVME_CTRL_ONCS_RSVD13_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_ONCS_COMPARE" 12
 If set, then the controller supports
 the Compare command.

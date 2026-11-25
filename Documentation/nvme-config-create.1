@@ -2,12 +2,12 @@
 .\"     Title: nvme-config-create
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONFIG\-CREATE" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONFIG\-CREATE" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -41,13 +41,15 @@ nvme-config-create \- Add an NVMe\-oF connection entry to the INI configuration
 .fi
 .SH "DESCRIPTION"
 .sp
-Build one NVMe\-oF connection entry from command\-line options and add it to the INI configuration used by \fInvme connect\fR, \fInvme discover\fR, and \fInvme connect\-all\fR\&. The format is documented at \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/design/CONFIG\&.md\fR\m[]
+Build one NVMe\-oF connection entry from command\-line options and add it to the INI configuration used by \fInvme discover\fR and \fInvme connect\-all\fR, and by \fInvme connect \-\-config\fR\&. The format is documented at \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/design/CONFIG\&.md\fR\m[]
 .sp
 If the target file exists, its connections are kept and the new entry is merged in alongside them\&. Running the same command again is a no\-op\&. Unlike \fInvme config convert\fR, this is not a one\-shot migration; it is the ongoing way to build an INI configuration from the command line\&.
 .sp
 The entry is an I/O controller (subsystem) entry by default, and \-\-nqn is required\&. Use \-\-discovery for a discovery controller entry instead; \-\-nqn is then optional\&.
 .sp
 A connection with an explicit \-\-hostnqn or \-\-hostid is written to a drop\-in under \fI<file>\&.d/\fR\&. One without either goes into the main file\&.
+.sp
+The file can hold KX\-HMAC\-CHAP secrets and TLS PSKs\&. A new file is created with mode 0600\&. An existing file keeps its mode\&.
 .SH "OPTIONS"
 .PP
 \-\-discovery

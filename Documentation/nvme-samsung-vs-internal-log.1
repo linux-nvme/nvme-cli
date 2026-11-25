@@ -2,12 +2,12 @@
 .\"     Title: nvme-samsung-vs-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SAMSUNG\-VS\-I" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SAMSUNG\-VS\-I" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,7 @@ nvme-samsung-vs-internal-log \- Retrieve Samsung vendor specific internal firmwa
 .fi
 .SH "DESCRIPTION"
 .sp
-Collect the internal firmware logs of a Samsung NVMe SSD and write them to disk\&. Host\-initiated telemetry, controller\-initiated telemetry and the vendor crash, memory and debug dumps are supported\&. Each dump is saved as its own file, so a single run usually produces several files\&.
+Collect the internal firmware logs of a Samsung NVMe SSD and write them to disk\&. Host\-initiated telemetry, controller\-initiated telemetry and the vendor crash, memory and debug dumps are supported\&. Each dump is saved as its own file, so a single run usually produces several files\&. Where they are saved is given with \fI\-\-output\-file\fR, which is mandatory\&.
 .sp
 Use \fI\-\-dump\-type\fR to pick which dumps to collect; several types may be requested in a single run\&.
 .sp
@@ -73,7 +73,13 @@ Telemetry data area to retrieve, 1 to 4\&. Defaults to 0, which retrieves every 
 Output file name, optionally preceded by a path (ex:
 \fI\&./path/name\fR
 or
-\fI\&./path1/path2/\fR)\&. Any directory in the path that does not exist yet is created\&. When this option is omitted, the dumps are written to the current directory\&.
+\fI\&./path1/path2/\fR)\&. Any directory in the path that does not exist yet is created\&. This option is mandatory; give
+\fI\&./\fR
+to save the dumps in the current directory\&. Given as
+\fI/dev/null\fR
+or
+\fINUL\fR, the requested dumps are retrieved as usual but none of them is saved: no file or directory is created, and the output is the same, less the names of the saved files\&. It then cannot be combined with
+\fI\-\-compress\fR\&.
 .RE
 .PP
 \-z, \-\-compress
@@ -161,7 +167,7 @@ Extract the controller\-initiated telemetry, the host\-initiated telemetry using
 .RS 4
 .\}
 .nf
-# nvme samsung vs\-internal\-log /dev/nvme0
+# nvme samsung vs\-internal\-log /dev/nvme0 \-O \&./
 .fi
 .if n \{\
 .RE
@@ -173,7 +179,7 @@ Extract only the controller\-initiated telemetry and the vendor dumps, naming bo
 .RS 4
 .\}
 .nf
-# nvme samsung vs\-internal\-log /dev/nvme0 \-t ctlr,vendor
+# nvme samsung vs\-internal\-log /dev/nvme0 \-t ctlr,vendor \-O \&./
 .fi
 .if n \{\
 .RE
@@ -191,13 +197,25 @@ Extract the host\-initiated telemetry using Log Specific Parameter 0, which is n
 .RE
 .\}
 .sp
-Extract data area 2 of the host\-initiated telemetry using Log Specific Parameter 1, store the result compressed and keep the output quiet\&.
+Extract data area 2 of the host\-initiated telemetry using Log Specific Parameter 1 into the current directory, store the result compressed and keep the output quiet\&.
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme samsung vs\-internal\-log /dev/nvme0 \-t host1 \-a 2 \-z \-\-hide\-progress
+# nvme samsung vs\-internal\-log /dev/nvme0 \-t host1 \-a 2 \-O \&./ \-z \-\-hide\-progress
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Retrieve the controller\-initiated telemetry without saving it, to see what the device reports in its telemetry header\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme samsung vs\-internal\-log /dev/nvme0 \-t ctlr \-O /dev/null
 .fi
 .if n \{\
 .RE

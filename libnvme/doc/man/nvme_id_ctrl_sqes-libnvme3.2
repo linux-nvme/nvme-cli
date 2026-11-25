@@ -1,8 +1,24 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_sqes" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_sqes" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_sqes \- Defines the required and maximum Submission Queue entry size when using the NVM Command Set.
 .SH SYNOPSIS
 enum nvme_id_ctrl_sqes {
+.br
+.BI "    NVME_CTRL_SQES_MINSQES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SQES_MAXSQES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SQES_MINSQES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SQES_MAXSQES_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_SQES_MIN"
 , 
@@ -12,6 +28,14 @@ enum nvme_id_ctrl_sqes {
 
 };
 .SH Constants
+.IP "NVME_CTRL_SQES_MINSQES_SHIFT" 12
+MINSQES shift
+.IP "NVME_CTRL_SQES_MAXSQES_SHIFT" 12
+MAXSQES shift
+.IP "NVME_CTRL_SQES_MINSQES_MASK" 12
+MINSQES mask
+.IP "NVME_CTRL_SQES_MAXSQES_MASK" 12
+MAXSQES mask
 .IP "NVME_CTRL_SQES_MIN" 12
 Mask to get the value of the required Submission Queue
 Entry size when using the NVM Command Set.

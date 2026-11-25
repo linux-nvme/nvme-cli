@@ -765,8 +765,8 @@ attribute from it.  The registry entry is the directory
 positional argument; the /dev/ prefix is optional.</p></div>
 <div class="paragraph"><p>Without --attr the whole entry is removed.  With --attr only that one
 attribute file is removed, leaving the rest of the entry in place.</p></div>
-<div class="paragraph"><p>Under normal operation registry entries are removed automatically: a
-udev rule fires on the kernel REMOVE event and deletes the entry.  This
+<div class="paragraph"><p>The entry of a controller the kernel removed stays until a connect that
+gets the device name replaces it; nothing reads it in the meantime.  This
 command is provided for manual cleanup or for orchestrators that want to
 explicitly release ownership before disconnecting.</p></div>
 <div class="paragraph"><p>Removing the whole entry, or the <em>owner</em> attribute specifically, drops
@@ -937,7 +937,7 @@ nvme-disconnect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:20 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

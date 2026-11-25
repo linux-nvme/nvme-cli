@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-set-telemetry-profile
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-SET\-TELE" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-SET\-TELE" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ nvme-ocp-set-telemetry-profile \- Set Telemetry Profile
 .nf
 \fInvme\fR [<global\-options>] \fIocp set\-telemetry\-profile\fR <device>
                         [\-\-telemetry\-profile\-select=<tps> | \-t <tps>]
+                        [\-\-no\-uuid | \-n]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -46,9 +47,14 @@ This will only work on OCP compliant devices supporting this feature\&. Results 
 On success it returns 0, error code otherwise\&.
 .SH "OPTIONS"
 .PP
-\-t <tps>, \-\-tps=<tps>
+\-t <tps>, \-\-telemetry\-profile\-select=<tps>
 .RS 4
 Telemetry Profile Select\&. The device shall collect debug data per the specified profile number\&.
+.RE
+.PP
+\-n, \-\-no\-uuid
+.RS 4
+Do not try to automatically detect UUID index for this command (required for old OCP 1\&.0 support)
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

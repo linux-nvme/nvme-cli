@@ -1,8 +1,32 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_vwc" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_vwc" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_vwc \- Volatile write cache
 .SH SYNOPSIS
 enum nvme_id_ctrl_vwc {
+.br
+.BI "    NVME_CTRL_VWC_VWCP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VWC_FB_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VWC_RSVD3_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VWC_VWCP_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VWC_FB_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VWC_RSVD3_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_VWC_PRESENT"
 , 
@@ -12,6 +36,18 @@ enum nvme_id_ctrl_vwc {
 
 };
 .SH Constants
+.IP "NVME_CTRL_VWC_VWCP_SHIFT" 12
+VWCP shift
+.IP "NVME_CTRL_VWC_FB_SHIFT" 12
+FB shift
+.IP "NVME_CTRL_VWC_RSVD3_SHIFT" 12
+Reserved shiftt
+.IP "NVME_CTRL_VWC_VWCP_MASK" 12
+VWCP mask
+.IP "NVME_CTRL_VWC_FB_MASK" 12
+FB mask
+.IP "NVME_CTRL_VWC_RSVD3_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_VWC_PRESENT" 12
 If set, indicates a volatile write cache is present.
 If a volatile write cache is present, then the host

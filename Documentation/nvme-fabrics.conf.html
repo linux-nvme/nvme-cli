@@ -864,24 +864,26 @@ tos, duplicate-connect, disable-sqflow, hdr-digest, data-digest</code></pre>
 <div class="literalblock">
 <div class="content">
 <pre><code>tls, tls-key, tls-key-identity, keyring, concat, kxchap-secret,
-kxchap-ctrl-secret, tls-key-source</code></pre>
+kxchap-ctrl-secret, tls-key-source, kxchap-secret-source</code></pre>
 </div></div>
 <div class="paragraph"><p>IDENTITY (<em>[Host]</em> only):</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><code>hostnqn, hostid, hostsymname</code></pre>
 </div></div>
-<div class="paragraph"><p>Every key here except <em>tls-key-source</em> is the same name as its
-<em>nvme connect</em> long option (hyphenated). See <a href="nvme-connect.html">nvme-connect(1)</a>
-for what each one means.</p></div>
-<div class="paragraph"><p><em>tls-key-source</em> says where the TLS PSK comes from:</p></div>
+<div class="paragraph"><p>Every key here except <em>tls-key-source</em> and <em>kxchap-secret-source</em> is
+the same name as its <em>nvme connect</em> long option (hyphenated). See
+<a href="nvme-connect.html">nvme-connect(1)</a> for what each one means.</p></div>
+<div class="paragraph"><p><em>tls-key-source</em> says where the TLS PSK in <em>tls-key</em> comes from.
+<em>kxchap-secret-source</em> says the same for the KX-HMAC-CHAP secrets in
+<em>kxchap-secret</em> and <em>kxchap-ctrl-secret</em>. Both take these values:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 <em>inline</em>
 </dt>
 <dd>
 <p>
-        The default. <em>tls-key</em> is the key itself.
+        The default. The value is the key or the secret itself.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -889,10 +891,13 @@ for what each one means.</p></div>
 </dt>
 <dd>
 <p>
-        <em>tls-key</em> is the name of a systemd credential. nvme-keysd reads the
-        credential and puts the PSK in the keyring. The connection does not
-        use <em>tls-key</em>: the kernel finds the PSK in the keyring by the host
-        NQN and the subsystem NQN. See <a href="nvme-keysd.html">nvme-keysd(8)</a>.
+        The value is the name of a systemd credential. nvme-keysd reads
+        the credential and puts the key in the keyring. The connection
+        does not use <em>tls-key</em>: the kernel finds the PSK in the keyring by
+        the host NQN and the subsystem NQN. For a KX-HMAC-CHAP secret, the
+        credential name is the key description: the connection passes the
+        name, and the kernel looks up the key by it. See
+        <a href="nvme-keysd.html">nvme-keysd(8)</a>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -900,15 +905,17 @@ for what each one means.</p></div>
 </dt>
 <dd>
 <p>
-        <em>tls-key</em> is the Name of a key on the key management server
-        (KMS) <em>&lt;name&gt;</em>, configured in nvme-keysd.conf. nvme-keysd gets the
-        key and puts it in the keyring. <em>kmip</em> alone is enough when only
-        one KMS is configured. See <a href="nvme-keysd.html">nvme-keysd(8)</a>.
+        The value is the Name of a key on the key management server (KMS)
+        <em>&lt;name&gt;</em>, configured in nvme-keysd.conf. nvme-keysd gets the key
+        and puts it in the keyring, as for <em>systemd-creds</em>. A KX-HMAC-CHAP
+        secret must be a Secret Data object. <em>kmip</em> alone is enough when
+        only one KMS is configured. See <a href="nvme-keysd.html">nvme-keysd(8)</a>.
 </p>
 </dd>
 </dl></div>
-<div class="paragraph"><p>Any other value also means that <em>tls-key</em> is not the key. libnvme does
-not check the value: nvme-keysd does.</p></div>
+<div class="paragraph"><p>With any other source, <em>tls-key</em>, <em>kxchap-secret</em> and
+<em>kxchap-ctrl-secret</em> are not the keys either. libnvme does not check
+the source: nvme-keysd does.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1016,7 +1023,7 @@ nvme-config-convert(1)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:20 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

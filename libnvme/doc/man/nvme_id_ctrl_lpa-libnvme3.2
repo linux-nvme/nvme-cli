@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_lpa" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_lpa" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_lpa \- Flags indicating optional attributes for log pages that are accessed via the Get Log Page command.
 .SH SYNOPSIS
@@ -32,6 +32,10 @@ enum nvme_id_ctrl_lpa {
 , 
 .br
 .br
+.BI "    NVME_CTRL_LPA_RSVD7_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CTRL_LPA_SMARTS_MASK"
 , 
 .br
@@ -57,6 +61,10 @@ enum nvme_id_ctrl_lpa {
 .br
 .br
 .BI "    NVME_CTRL_LPA_DA4S_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_RSVD7_MASK"
 , 
 .br
 .br
@@ -102,6 +110,8 @@ PES shift
 MLPS shift
 .IP "NVME_CTRL_LPA_DA4S_SHIFT" 12
 DA4S shift
+.IP "NVME_CTRL_LPA_RSVD7_SHIFT" 12
+Reserved shift
 .IP "NVME_CTRL_LPA_SMARTS_MASK" 12
 SMARTS mask
 .IP "NVME_CTRL_LPA_CSES_MASK" 12
@@ -116,6 +126,8 @@ PES mask
 MLPS mask
 .IP "NVME_CTRL_LPA_DA4S_MASK" 12
 DA4S mask
+.IP "NVME_CTRL_LPA_RSVD7_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_LPA_SMARTS" 12
 If set, controller supports SMART/Health log
 page on a per namespace basis.

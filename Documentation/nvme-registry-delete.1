@@ -2,12 +2,12 @@
 .\"     Title: nvme-registry-delete
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-REGISTRY\-DELE" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-REGISTRY\-DELE" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,7 +43,7 @@ The <device> is the NVMe controller name (e\&.g\&. nvme3), given as a positional
 .sp
 Without \-\-attr the whole entry is removed\&. With \-\-attr only that one attribute file is removed, leaving the rest of the entry in place\&.
 .sp
-Under normal operation registry entries are removed automatically: a udev rule fires on the kernel REMOVE event and deletes the entry\&. This command is provided for manual cleanup or for orchestrators that want to explicitly release ownership before disconnecting\&.
+The entry of a controller the kernel removed stays until a connect that gets the device name replaces it; nothing reads it in the meantime\&. This command is provided for manual cleanup or for orchestrators that want to explicitly release ownership before disconnecting\&.
 .sp
 Removing the whole entry, or the \fIowner\fR attribute specifically, drops ownership and can stop an orchestrator from protecting the controller, so it prompts for confirmation when run interactively; non\-interactive callers (scripts) proceed without prompting\&. Removing any other attribute does not affect ownership and proceeds silently\&.
 .SH "OPTIONS"

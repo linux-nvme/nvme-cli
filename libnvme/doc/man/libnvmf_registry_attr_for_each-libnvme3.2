@@ -1,4 +1,4 @@
-.TH "libnvmf_registry_attr_for_each" 9 "libnvmf_registry_attr_for_each" "October 2026" "libnvme API manual" LINUX
+.TH "libnvmf_registry_attr_for_each" 9 "libnvmf_registry_attr_for_each" "November 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvmf_registry_attr_for_each \- Iterate over attributes in a controller's registry entry
 .SH SYNOPSIS
@@ -21,5 +21,5 @@ Opens the registry directory for \fIdevice\fP and invokes \fIcallback\fP for eac
 attribute file found.  Attribute files that disappear during iteration
 (e.g. because the device is removed concurrently) are silently skipped.
 .SH "RETURN"
-0 on success, -ENOENT if the device directory does not exist at the
-time of the initial open, negative errno otherwise.
+0 on success, -ENOENT if the controller or its registry entry does
+not exist at the time of the initial open, negative errno otherwise.

@@ -1,0 +1,26 @@
+.TH "libnvmf_config_emit_write_file" 9 "libnvmf_config_emit_write_file" "November 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_emit_write_file \- Write the connections of one host to one file.
+.SH SYNOPSIS
+.B "int" libnvmf_config_emit_write_file
+.BI "(struct libnvmf_config_emitter *emitter "  ","
+.BI "const char *file "  ");"
+.SH ARGUMENTS
+.IP "emitter" 12
+Configuration emitter.
+.IP "file" 12
+Destination file.
+.SH "DESCRIPTION"
+Writes the connections of \fIemitter\fP, with their host in a [Host]
+section, to \fIfile\fP, which is replaced. Unlike
+\fBlibnvmf_config_emit_install\fP, a connection with a host of its own
+goes into \fIfile\fP too, so a caller can write a drop-in of its own: all
+connections must have the same host. The file is validated by reading
+it back, written atomically, and only readable by its owner.
+.SH "RETURN"
+
+
+* 0 on success.
+* -EINVAL if \fIemitter\fP or \fIfile\fP is NULL, or the connections have
+different hosts.
+* A negative errno value on other failures.

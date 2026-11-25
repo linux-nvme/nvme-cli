@@ -749,7 +749,7 @@ nvme-netapp-ontapdevices(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>netapp ontapdevices</em></pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>netapp ontapdevices</em> [&lt;device&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -759,6 +759,8 @@ nvme-netapp-ontapdevices(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>Display information about ONTAP devices on the host. The ONTAP devices are
 identified using the Identify Controller data.</p></div>
+<div class="paragraph"><p>When a namespace &lt;device&gt; is specified, display only that path without
+examining the other NVMe namespace devices on the host.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -877,6 +879,15 @@ Display information, in a column-based format, for ONTAP devices.
 <pre><code># nvme netapp ontapdevices -o column</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+Display information for one namespace only.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme netapp ontapdevices /dev/nvme0n1</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
@@ -891,7 +902,7 @@ Display information, in a column-based format, for ONTAP devices.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:19 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

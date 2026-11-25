@@ -1,4 +1,4 @@
-.TH "libnvmf_registry_retrieve" 9 "libnvmf_registry_retrieve" "October 2026" "libnvme API manual" LINUX
+.TH "libnvmf_registry_retrieve" 9 "libnvmf_registry_retrieve" "November 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvmf_registry_retrieve \- Read an attribute from a controller's registry entry
 .SH SYNOPSIS
@@ -18,6 +18,6 @@ Attribute name to retrieve (e.g. "owner")
 On success, set to a newly allocated string with the attribute
 value.  The caller must free this string.
 .SH "RETURN"
-0 on success, -ENOENT if the controller is not registered or the
-attribute is not present, -ENOMEM on allocation failure, negative errno
-from underlying system calls otherwise.
+0 on success, -ENOENT if the controller does not exist, is not
+registered or the attribute is not present, -ENOMEM on allocation
+failure, negative errno from underlying system calls otherwise.

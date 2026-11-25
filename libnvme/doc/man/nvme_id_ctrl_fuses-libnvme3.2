@@ -1,13 +1,37 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_fuses" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_fuses" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_fuses \- This field indicates the fused operations that the controller supports.
 .SH SYNOPSIS
 enum nvme_id_ctrl_fuses {
 .br
+.BI "    NVME_CTRL_FUSES_FCWS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FUSES_RSVD1_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FUSES_FCWS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FUSES_RSVD1_MASK"
+, 
+.br
+.br
 .BI "    NVME_CTRL_FUSES_COMPARE_AND_WRITE"
 
 };
 .SH Constants
+.IP "NVME_CTRL_FUSES_FCWS_SHIFT" 12
+FCWS shift
+.IP "NVME_CTRL_FUSES_RSVD1_SHIFT" 12
+Reserved shift
+.IP "NVME_CTRL_FUSES_FCWS_MASK" 12
+FCWS mask
+.IP "NVME_CTRL_FUSES_RSVD1_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_FUSES_COMPARE_AND_WRITE" 12
 If set, then the controller supports the
 Compare and Write fused operation.

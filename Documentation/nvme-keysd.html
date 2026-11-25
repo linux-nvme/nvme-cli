@@ -740,7 +740,7 @@ nvme-keysd(8) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-keysd -
-   NVMe/TCP TLS key provisioning daemon
+   NVMe-oF key provisioning daemon
 </p>
 </div>
 </div>
@@ -759,10 +759,10 @@ nvme-keysd(8) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>nvme-keysd puts the TLS pre-shared keys (PSKs) used by NVMe/TCP into the
-kernel&#8217;s .nvme keyring, before a connection needs them. The kernel then
-finds the key there when <em>nvme connect</em> or nvme-discoverd connects with
-TLS.</p></div>
+<div class="paragraph"><p>nvme-keysd puts the TLS pre-shared keys (PSKs) used by NVMe/TCP and the
+KX-HMAC-CHAP secrets into the kernel&#8217;s .nvme keyring, before a
+connection needs them. The kernel then finds the key there when
+<em>nvme connect</em> or nvme-discoverd connects.</p></div>
 <div class="paragraph"><p>Which key belongs to which host and subsystem is configured in the
 shared NVMe-oF fabrics configuration, see nvme-fabrics.conf(5).</p></div>
 <div class="paragraph"><p>This is a technology preview.</p></div>
@@ -786,8 +786,32 @@ so that the kernel finds only one key for the pair.</p></div>
 <em>kmip</em> entry, it keeps running: see KMIP. nvme-keysd never revokes a key
 because its entry was removed from the configuration.</p></div>
 <div class="paragraph"><p>The unit does not start when no entry of the fabrics configuration has
-a <em>tls-key-source</em> other than <em>inline</em>. In that case, nvme-keysd does not
-run, and the unit does not load the nvme_keyring module.</p></div>
+a <em>tls-key-source</em> or <em>kxchap-secret-source</em> other than <em>inline</em>. In
+that case, nvme-keysd does not run, and the unit does not load the
+nvme_keyring module.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_kx_hmac_chap_secrets">KX-HMAC-CHAP SECRETS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>nvme-keysd also imports the KX-HMAC-CHAP secrets of every entry with a
+<em>kxchap-secret-source</em> other than <em>inline</em>. With <em>systemd-creds</em>,
+<em>kxchap-secret</em> and <em>kxchap-ctrl-secret</em> are names of systemd
+credentials. With <em>kmip</em> or <em>kmip:&lt;name&gt;</em>, they are KMIP Names of Secret
+Data objects on the KMS. Each holds a secret in the format
+<em>DHHC-1:&lt;hmac&gt;:&lt;base64&gt;:</em>, as created by <em>nvme keys gen-kxchap-secret</em>.</p></div>
+<div class="paragraph"><p>nvme-keysd puts each secret in the keyring named by <em>keyring</em> (default
+<em>.nvme</em>) as a key of type <em>dhchap</em>. The key description is the name
+from <em>kxchap-secret</em> or <em>kxchap-ctrl-secret</em>. The connection passes
+this name, and the kernel looks up the key by it. A key with the same
+description is replaced: a controller that uses the old key keeps it
+until it authenticates again.</p></div>
+<div class="paragraph"><p>This needs a kernel that supports KX-HMAC-CHAP keys in the keyring. On
+an older kernel, nvme-keysd logs a warning and imports no KX-HMAC-CHAP
+secrets. The connection then fails before it reaches the kernel, with
+"KX-HMAC-CHAP key <em>&lt;name&gt;</em> is not in the keyring".</p></div>
+<div class="paragraph"><p>The kernel interface is not final yet. This part of nvme-keysd may
+change.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -943,7 +967,8 @@ tls-key    = my-vol1-psk</code></pre>
 <dd>
 <p>
         Exit with status 0 if an entry of the fabrics configuration has a
-        <em>tls-key-source</em> other than <em>inline</em>, and with status 1 otherwise.
+        <em>tls-key-source</em> or <em>kxchap-secret-source</em> other than <em>inline</em>, and
+        with status 1 otherwise.
         The unit runs this check before it starts nvme-keysd.
 </p>
 </dd>
@@ -1104,7 +1129,7 @@ nvme-connect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:20 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

@@ -1,13 +1,37 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_apsta" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_apsta" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_apsta \- Flags indicating the attributes of the autonomous power state transition feature.
 .SH SYNOPSIS
 enum nvme_id_ctrl_apsta {
 .br
+.BI "    NVME_CTRL_APSTA_APTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_APSTA_RSVD1_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_APSTA_APTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_APSTA_RSVD1_MASK"
+, 
+.br
+.br
 .BI "    NVME_CTRL_APSTA_APST"
 
 };
 .SH Constants
+.IP "NVME_CTRL_APSTA_APTS_SHIFT" 12
+APTS shift
+.IP "NVME_CTRL_APSTA_RSVD1_SHIFT" 12
+Reserved shift
+.IP "NVME_CTRL_APSTA_APTS_MASK" 12
+APTS mask
+.IP "NVME_CTRL_APSTA_RSVD1_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_APSTA_APST" 12
 If set, then the controller supports autonomous power
 state transitions.

@@ -1,0 +1,18 @@
+.TH "libnvmf_owner_equal" 9 "libnvmf_owner_equal" "November 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_owner_equal \- Compare two registry owners
+.SH SYNOPSIS
+.B "bool" libnvmf_owner_equal
+.BI "(const char *a "  ","
+.BI "const char *b "  ");"
+.SH ARGUMENTS
+.IP "a" 12
+Owner, or NULL for no owner
+.IP "b" 12
+Owner, or NULL for no owner
+.SH "DESCRIPTION"
+The pre-OS environment (firmware and initrd) records the owner "pre-os".
+Its old name "nbft", which initrds with older nvme-cli still record, is
+the same owner.
+.SH "RETURN"
+true if \fIa\fP and \fIb\fP name the same owner, or both are NULL.

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_rmdca" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_rmdca" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_rmdca \- Restore Manufacturing Configuration Attributes
 .SH SYNOPSIS
@@ -25,6 +25,14 @@ enum nvme_id_ctrl_rmdca {
 .br
 .br
 .BI "    NVME_CTRL_RMDCA_RDCCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RMDCA_RSVD3_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RMDCA_RSVD3_MASK"
 
 };
 .SH Constants
@@ -47,3 +55,7 @@ Capacity Management Configuration
 Supported (RDCCS)
 .IP "NVME_CTRL_RMDCA_RDCCS_MASK" 12
 Mask to get RDCCS
+.IP "NVME_CTRL_RMDCA_RSVD3_SHIFT" 12
+Shift amount to get the Reserved
+.IP "NVME_CTRL_RMDCA_RSVD3_MASK" 12
+Mask to get Reserved

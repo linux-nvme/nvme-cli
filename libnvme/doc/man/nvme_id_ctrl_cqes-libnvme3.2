@@ -1,8 +1,24 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_cqes" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_cqes" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_cqes \- Defines the required and maximum Completion Queue entry size when using the NVM Command Set.
 .SH SYNOPSIS
 enum nvme_id_ctrl_cqes {
+.br
+.BI "    NVME_CTRL_CQES_MINCQES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CQES_MAXCQES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CQES_MINCQES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CQES_MAXCQES_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_CQES_MIN"
 , 
@@ -12,6 +28,14 @@ enum nvme_id_ctrl_cqes {
 
 };
 .SH Constants
+.IP "NVME_CTRL_CQES_MINCQES_SHIFT" 12
+MINCQES shift
+.IP "NVME_CTRL_CQES_MAXCQES_SHIFT" 12
+MAXCQES shift
+.IP "NVME_CTRL_CQES_MINCQES_MASK" 12
+MINCQES mask
+.IP "NVME_CTRL_CQES_MAXCQES_MASK" 12
+MAXCQES mask
 .IP "NVME_CTRL_CQES_MIN" 12
 Mask to get the value of the required Completion Queue
 Entry size when using the NVM Command Set.

@@ -759,8 +759,9 @@ nvme-discoverd(8) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>nvme-discoverd is a persistent daemon that connects the host&#8217;s desired
 NVMe-oF controllers and keeps them connected. It reads three sources to
-build its set of desired connections: the NBFT ACPI table (boot-time
-controllers), the shared NVMe-oF fabrics configuration
+build its set of desired connections: the connections of the pre-OS
+environment (the NBFT ACPI table and /run/nvme/pre-os.conf, see
+below), the shared NVMe-oF fabrics configuration
 (nvme-fabrics.conf(5)), and the Discovery Log Pages of any Discovery
 Controllers it connects to (including FC targets found via FC
 kickstart). It never disconnects a live controller in response to a
@@ -775,20 +776,39 @@ inside a systemd transient unit instead of writing directly to
 /dev/nvme-fabrics. As a result, a stuck connect attempt never blocks
 the daemon&#8217;s event loop. Each unit is named after a hash of the
 controller&#8217;s transport identity.</p></div>
-<div class="paragraph"><p>Failed connections retry with exponential backoff. Discovery
-Controllers from NBFT or the fabrics config represent explicit intent,
-so they always retry forever. A Discovery Controller found only
-through a referral or FC kickstart is different: it gives up after
+<div class="paragraph"><p>Failed connections retry with exponential backoff. What an admin asked
+for retries forever: the controllers from NBFT and the fabrics config,
+and the I/O controllers and referrals a Discovery Log Page lists (an
+admin configures them on the storage system). A referral stops when
+the Discovery Controller that lists it no longer does, or is given up.
+A Discovery Controller found only through mDNS or FC kickstart is
+different: no admin asked for it, so it gives up after
 <em>dc-giveup-timeout</em> (default 72hours) of unbroken failure and is
 dropped from tracking.</p></div>
+<div class="paragraph"><p>A Discovery Log Page entry of an I/O controller can have NCC (No CDC
+Connectivity) set: a Centralized Discovery Controller sets it while it
+has no connection to the subsystem. With <em>connect-attempts-on-ncc</em> set,
+nvme-discoverd stops after that many failed attempts while NCC is set,
+and tries again when the entry no longer has NCC set. This does not
+apply to an I/O controller from NBFT, pre-os.conf or the fabrics config.</p></div>
 <div class="paragraph"><p>A TLS connection needs tlshd(8) from ktls-utils. Enable it with
 <em>systemctl enable --now tlshd</em>. When both are enabled, nvme-discoverd
 starts after tlshd.</p></div>
 <div class="paragraph"><p>Before connecting or reconnecting anything, nvme-discoverd checks the
 system-wide exclusion list. It also registers ownership of every
-controller it connects (--owner discoverd, or --owner nbft for an
-NBFT-sourced controller) in the NVMe-oF ownership registry. See
-nvme-registry-list(1) and nvme-exclusion-add(1).</p></div>
+controller it connects (--owner discoverd) in the NVMe-oF ownership
+registry. See nvme-registry-list(1) and nvme-exclusion-add(1).</p></div>
+<div class="paragraph"><p>The pre-OS environment, the firmware and the initrd, connects the paths
+the system boots from with the owner <em>pre-os</em> (once called <em>nbft</em>). In
+the initrd, nvme records each connection it makes with this owner in a
+drop-in of /run/nvme/pre-os.conf.d, also when the connect fails; the
+NBFT lists the firmware&#8217;s. nvme-discoverd keeps these connections
+connected, but never owns them: it connects a lost or never connected
+path again with --owner pre-os and the parameters the pre-OS
+environment used, and so is everything a pre-OS Discovery Controller
+lists. Their units never disconnect, also not at the shutdown: the
+kernel keeps the connection until the root file system is gone. The
+exclusion list does not apply to them.</p></div>
 <div class="paragraph"><p>A Discovery Controller that has no owner, for example one connected
 with <em>nvme discover --persistent</em>, is not tracked. When its discovery
 log changes, or when it reconnects, nvme-discoverd runs
@@ -803,8 +823,12 @@ with <em>-Dnvmf-autoconnect=enabled</em> installs both. The legacy udev
 rules are active as soon as they are installed. nvme-discoverd runs
 only when the administrator enables it with
 <em>systemctl enable --now nvme-discoverd</em>. While nvme-discoverd is
-active, nvmf-autoconnect.service and the FC kickstart skip their
-connect step.</p></div>
+active, its service masks the legacy udev rule
+70-nvmf-autoconnect.rules with a link to /dev/null in
+/run/udev/rules.d, and nvmf-autoconnect.service and the FC kickstart
+skip their connect step. The mask also covers a rule of that name
+left over from an older installation. Stopping nvme-discoverd removes
+the mask.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -848,6 +872,46 @@ connect step.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+--set-options=&lt;KEY=VALUE[,KEY=VALUE&#8230;]&gt;
+</dt>
+<dd>
+<p>
+        For tests, as with nvme(1). The keys are:
+</p>
+<div class="openblock">
+<div class="content">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+test-sysfs-dir=&lt;DIR&gt;
+</dt>
+<dd>
+<p>
+        Read sysfs under &lt;DIR&gt;: /sys/class/nvme becomes
+        &lt;DIR&gt;/sys/class/nvme. This covers the controllers, the NBFT
+        tables and the FC kickstart attribute.
+</p>
+</dd>
+<dt class="hdlist1">
+test-base-dir=&lt;DIR&gt;
+</dt>
+<dd>
+<p>
+        Run in a sandbox in &lt;DIR&gt;, which must be under /tmp. The
+        ownership registry, the state of /run/nvme/discoverd, the
+        fabrics configuration (&lt;DIR&gt;/nvme-fabrics.conf) and pre-os.conf
+        (&lt;DIR&gt;/pre-os.conf) are taken from &lt;DIR&gt;. nvme-discoverd does not use systemd: the connection units
+        run in the daemon and are kept in &lt;DIR&gt;/units, with a journal of
+        what ran. It does not listen to udev either: a test sends the
+        uevents through the control socket &lt;DIR&gt;/discoverd.sock, which
+        also answers "sync" and "dump" requests.
+</p>
+</dd>
+</dl></div>
+</div></div>
+<div class="paragraph"><p>The option may be repeated. The nvme(1) of the connection units gets the
+same test directories.</p></div>
+</dd>
+<dt class="hdlist1">
 -h
 </dt>
 <dt class="hdlist1">
@@ -869,7 +933,7 @@ section and a <em>[Discovery]</em> section:</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><code>[Global]
-nbft = true
+pre-os = true
 debug-level = info</code></pre>
 </div></div>
 <div class="literalblock">
@@ -878,10 +942,11 @@ debug-level = info</code></pre>
 epcsd-poll-interval-minutes = 15
 fc-kickstart-interval-minutes = 0
 dc-giveup-timeout = 72hours
+connect-attempts-on-ncc = 0
 zeroconf = false</code></pre>
 </div></div>
-<div class="paragraph"><p><em>nbft</em> (boolean, default true) adopts and connects controllers listed
-in the NBFT ACPI table. <em>debug-level</em> (err, warn, info, or debug;
+<div class="paragraph"><p><em>pre-os</em> (boolean, default true) keeps the connections of the pre-OS
+environment connected, see above. <em>nbft</em> is its old name. <em>debug-level</em> (err, warn, info, or debug;
 default info) sets the log threshold; <em>--debug</em> on the command line
 overrides it.</p></div>
 <div class="paragraph"><p><em>epcsd-poll-interval-minutes</em> (default 15, minimum 1) sets how often,
@@ -892,7 +957,10 @@ is disconnected between checks. <em>fc-kickstart-interval-minutes</em>
 startup and on every FC controller drop. <em>dc-giveup-timeout</em> (default
 72hours) is the give-up horizon described above. It takes a systemd
 time span ("72hours", "3 days 5 hours") or a unit-less value in
-seconds; "infinity" = never give up, 0 = give up on the first failure.</p></div>
+seconds; "infinity" = never give up, 0 = give up on the first failure.
+<em>connect-attempts-on-ncc</em> (default 0) is the number of failed attempts
+after which an I/O controller with NCC set is no longer tried, see
+above. 0 = no limit.</p></div>
 <div class="paragraph"><p>A DC connects with a keep-alive timeout of 30 seconds, or with its
 configured <em>keep-alive-tmo</em> (see nvme-fabrics.conf(5)). A DC
 configured with <em>persistent = no</em> connects with none.</p></div>
@@ -915,7 +983,8 @@ SIGHUP
 </dt>
 <dd>
 <p>
-        Reload both nvme-discoverd.conf and the shared fabrics configuration.
+        Reload nvme-discoverd.conf, the shared fabrics configuration
+        and pre-os.conf.
         Newly desired connections are started; nothing already connected
         is ever disconnected by a reload. If the fabrics configuration
         fails to reload (e.g. a syntax error), the previous one is kept
@@ -964,6 +1033,15 @@ SIGTERM, SIGINT
 </p>
 </dd>
 <dt class="hdlist1">
+/run/nvme/pre-os.conf, /run/nvme/pre-os.conf.d/*.conf
+</dt>
+<dd>
+<p>
+        The connections of the pre-OS environment, which nvme(1) writes in
+        the initrd; see DESCRIPTION.
+</p>
+</dd>
+<dt class="hdlist1">
 /run/nvme/discoverd/
 </dt>
 <dd>
@@ -996,7 +1074,7 @@ nvme-exclusion-add(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:20 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

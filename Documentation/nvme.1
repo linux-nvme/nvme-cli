@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -193,7 +193,7 @@ Resets the controller
 Submit a sanitize command
 .RE
 .PP
-nvme sanitize\-ns
+\fBnvme-sanitize-ns\fR(1)
 .RS 4
 Submit a sanitize namespace command
 .RE
@@ -418,7 +418,7 @@ Get and set lba range type feature
 Get and set number of queues feature
 .RE
 .PP
-\fBnvme-feat-perfc\fR(1)
+\fBnvme-feat-perf-characteristics\fR(1)
 .RS 4
 Get and set perf characteristics feature
 .RE
@@ -456,6 +456,11 @@ Get and set timestamp feature
 \fBnvme-feat-volatile-wc\fR(1)
 .RS 4
 Get and set volatile write cache feature
+.RE
+.PP
+\fBnvme-feat-voltage-meas\fR(1)
+.RS 4
+Get and set voltage measurement feature
 .RE
 .PP
 \fBnvme-feat-write-atom-normal\fR(1)
@@ -613,37 +618,37 @@ Insert NVMeoF TLS PSK into a keyring
 Revoke an NVMeoF TLS PSK from a keyring
 .RE
 .PP
-nvme lm create\-cdq
+\fBnvme-lm-create-cdq\fR(1)
 .RS 4
 Create Controller Data Queue
 .RE
 .PP
-nvme lm delete\-cdq
+\fBnvme-lm-delete-cdq\fR(1)
 .RS 4
 Delete Controller Data Queue
 .RE
 .PP
-nvme lm get\-cdq
+\fBnvme-lm-get-cdq\fR(1)
 .RS 4
 Get Feature \- Controller Data Queue (FID 21h)
 .RE
 .PP
-nvme lm migration\-recv
+\fBnvme-lm-migration-recv\fR(1)
 .RS 4
 Migration Receive
 .RE
 .PP
-nvme lm migration\-send
+\fBnvme-lm-migration-send\fR(1)
 .RS 4
 Migration Send
 .RE
 .PP
-nvme lm set\-cdq
+\fBnvme-lm-set-cdq\fR(1)
 .RS 4
 Set Feature \- Controller Data Queue (FID 21h)
 .RE
 .PP
-nvme lm track\-send
+\fBnvme-lm-track-send\fR(1)
 .RS 4
 Track Send Command
 .RE
@@ -743,7 +748,7 @@ Retrieve Persistent Event Log, show it
 Retrieve Physical Interface Receiver Eye Opening Measurement, show it
 .RE
 .PP
-nvme log power\-measurement
+\fBnvme-log-power-measurement\fR(1)
 .RS 4
 Retrieve Power Measurement Log, show it
 .RE
@@ -758,7 +763,7 @@ Retrieve Predictable Latency Event Aggregate Log, show it
 Retrieve Predictable Latency per Nvmset Log, show it
 .RE
 .PP
-nvme log pull\-model\-ddc\-req
+\fBnvme-log-pull-model-ddc-req\fR(1)
 .RS 4
 Retrieve Pull Model DDC Request Log, show it
 .RE
@@ -803,7 +808,7 @@ Retrieve SMART Log, show it
 Retrieve the list of Supported Capacity Configuration Descriptors
 .RE
 .PP
-\fBnvme-supported-log-pages\fR(1)
+\fBnvme-log-supported-pages\fR(1)
 .RS 4
 Retrieve the Supported Log pages details, show it
 .RE
@@ -813,7 +818,12 @@ Retrieve the Supported Log pages details, show it
 Retrieve FW Telemetry log write to file
 .RE
 .PP
-nvme nbft show
+\fBnvme-log-voltage-measurement\fR(1)
+.RS 4
+Retrieve Voltage Measurement Log, show it
+.RE
+.PP
+\fBnvme-nbft-show\fR(1)
 .RS 4
 Show contents of ACPI NBFT tables
 .RE
@@ -968,7 +978,7 @@ Revert a SED Opal Device from locking
 Unlock a SED Opal Device
 .RE
 .PP
-nvme utils dump\-command\-metadata
+\fBnvme-utils-dump-command-metadata\fR(1)
 .RS 4
 Dump all commands and their options as JSON
 .RE
@@ -998,7 +1008,7 @@ Send NVMe Identify Zoned Namespace Controller, display structure
 Send NVMe Identify Zoned Namespace Namespace, display structure
 .RE
 .PP
-nvme zns list
+\fBnvme-zns-list\fR(1)
 .RS 4
 List all NVMe devices with Zoned Namespace Command Set support
 .RE
@@ -1049,12 +1059,12 @@ Flush LBAs associated with a ZRWA to a zone\&.
 .RE
 .SS "Plugins/Vendor extension commands"
 .PP
-nvme amzn id\-ctrl
+\fBnvme-amzn-id-ctrl\fR(1)
 .RS 4
 Send NVMe Identify Controller
 .RE
 .PP
-nvme amzn stats
+\fBnvme-amzn-stats\fR(1)
 .RS 4
 Get EBS volume stats
 .RE
@@ -1064,12 +1074,12 @@ Get EBS volume stats
 Retrieve DapuStor SMART Log, show it
 .RE
 .PP
-nvme dell id\-ctrl
+\fBnvme-dell-id-ctrl\fR(1)
 .RS 4
 Send NVMe Identify Controller
 .RE
 .PP
-nvme dera smart\-log\-add
+\fBnvme-dera-smart-log-add\fR(1)
 .RS 4
 Retrieve Dera SMART Log, show it
 .RE
@@ -1084,27 +1094,27 @@ Huawei identify controller
 List all Huawei NVMe devices and namespaces on machine
 .RE
 .PP
-nvme ibm crit\-log
+\fBnvme-ibm-crit-log\fR(1)
 .RS 4
 Display IBM Smart Log Information
 .RE
 .PP
-nvme ibm persist\-event\-log
+\fBnvme-ibm-persist-event-log\fR(1)
 .RS 4
 IBM specific Persistent Event Log
 .RE
 .PP
-nvme ibm vpd
+\fBnvme-ibm-vpd\fR(1)
 .RS 4
 Display IBM VPD Information
 .RE
 .PP
-nvme innogrit get\-cdump
+\fBnvme-innogrit-get-cdump\fR(1)
 .RS 4
 get cdump data
 .RE
 .PP
-nvme innogrit get\-eventlog
+\fBnvme-innogrit-get-eventlog\fR(1)
 .RS 4
 get event log
 .RE
@@ -1129,7 +1139,7 @@ Retrieve Intel internal firmware log, save it
 Retrieve Intel IO Latency Statistics log, show it
 .RE
 .PP
-nvme intel lat\-stats\-tracking
+\fBnvme-intel-lat-stats-tracking\fR(1)
 .RS 4
 Enable and disable Latency Statistics logging\&.
 .RE
@@ -1139,7 +1149,7 @@ Enable and disable Latency Statistics logging\&.
 Retrieve Intel Marketing Name log, show it
 .RE
 .PP
-nvme intel set\-bucket\-thresholds
+\fBnvme-intel-set-bucket-thresholds\fR(1)
 .RS 4
 Set Latency Stats Bucket Values, save it
 .RE
@@ -1159,97 +1169,97 @@ Retrieve Intel Temperature Statistics log, show it
 Send NVMe Identify Controller
 .RE
 .PP
-nvme memblaze clear\-error\-log
+\fBnvme-memblaze-clear-error-log\fR(1)
 .RS 4
 Clear error log
 .RE
 .PP
-nvme memblaze get\-pm\-status
+\fBnvme-memblaze-get-pm-status\fR(1)
 .RS 4
 Get Memblaze Power Manager Status
 .RE
 .PP
-nvme memblaze lat\-get\-feature\-x
+\fBnvme-memblaze-lat-get-feature-x\fR(1)
 .RS 4
 Get Enabled/Disabled of Latency Monitor feature
 .RE
 .PP
-nvme memblaze lat\-log
+\fBnvme-memblaze-lat-log\fR(1)
 .RS 4
 Set Memblaze High Latency Log
 .RE
 .PP
-nvme memblaze lat\-log\-print
+\fBnvme-memblaze-lat-log-print\fR(1)
 .RS 4
 Output Memblaze High Latency Log
 .RE
 .PP
-nvme memblaze lat\-log\-print\-x
+\fBnvme-memblaze-lat-log-print-x\fR(1)
 .RS 4
 Get High Latency log and show it\&.
 .RE
 .PP
-nvme memblaze lat\-set\-feature\-x
+\fBnvme-memblaze-lat-set-feature-x\fR(1)
 .RS 4
 Set Enable/Disable for Latency Monitor feature
 .RE
 .PP
-nvme memblaze lat\-stats
+\fBnvme-memblaze-lat-stats\fR(1)
 .RS 4
 Enable and disable Latency Statistics logging
 .RE
 .PP
-nvme memblaze lat\-stats\-print
+\fBnvme-memblaze-lat-stats-print\fR(1)
 .RS 4
 Retrieve IO Latency Statistics log, show it
 .RE
 .PP
-nvme memblaze lat\-stats\-print\-x
+\fBnvme-memblaze-lat-stats-print-x\fR(1)
 .RS 4
 Get Latency Statistics log and show it\&.
 .RE
 .PP
-nvme memblaze perf\-stats\-print\-x
+\fBnvme-memblaze-perf-stats-print-x\fR(1)
 .RS 4
 Get Performance Stat log and show it\&.
 .RE
 .PP
-nvme memblaze select\-download
+\fBnvme-memblaze-select-download\fR(1)
 .RS 4
 Selective Firmware Download
 .RE
 .PP
-nvme memblaze set\-pm\-status
+\fBnvme-memblaze-set-pm-status\fR(1)
 .RS 4
 Set Memblaze Power Manager Status
 .RE
 .PP
-nvme memblaze smart\-log\-add
+\fBnvme-memblaze-smart-log-add\fR(1)
 .RS 4
 Retrieve Memblaze SMART Log, show it
 .RE
 .PP
-nvme memblaze smart\-log\-add\-x
+\fBnvme-memblaze-smart-log-add-x\fR(1)
 .RS 4
 Retrieve Memblaze SMART Log, show it
 .RE
 .PP
-nvme micron clear\-fw\-activate\-history
+\fBnvme-micron-clear-fw-activate-history\fR(1)
 .RS 4
 Clear FW activation history
 .RE
 .PP
-\fBnvme-micron-clear-pcie-errors\fR(1)
+\fBnvme-micron-clear-pcie-correctable-errors\fR(1)
 .RS 4
 Clear correctable PCIe errors
 .RE
 .PP
-nvme micron cloud\-SSD\-plugin\-version
+\fBnvme-micron-cloud-SSD-plugin-version\fR(1)
 .RS 4
 Display plugin version info
 .RE
 .PP
-nvme micron cloud\-boot\-SSD\-version
+\fBnvme-micron-cloud-boot-SSD-version\fR(1)
 .RS 4
 Prints HyperScale Boot Version
 .RE
@@ -1259,32 +1269,32 @@ Prints HyperScale Boot Version
 Identify Controller
 .RE
 .PP
-nvme micron latency\-logs
+\fBnvme-micron-latency-logs\fR(1)
 .RS 4
 Latency log details tracked by drive
 .RE
 .PP
-nvme micron latency\-stats
+\fBnvme-micron-latency-stats\fR(1)
 .RS 4
 Latency information for tracked commands
 .RE
 .PP
-nvme micron latency\-tracking
+\fBnvme-micron-latency-tracking\fR(1)
 .RS 4
 Latency monitoring feature control
 .RE
 .PP
-nvme micron log\-page\-directory
+\fBnvme-micron-log-page-directory\fR(1)
 .RS 4
 Retrieve log page directory
 .RE
 .PP
-nvme micron plugin\-version
+\fBnvme-micron-plugin-version\fR(1)
 .RS 4
 Display plugin version info
 .RE
 .PP
-\fBnvme-micron-selective-download\fR(1)
+\fBnvme-micron-select-download\fR(1)
 .RS 4
 Selective Firmware Download
 .RE
@@ -1294,72 +1304,72 @@ Selective Firmware Download
 Retrieve SMART/Health Log
 .RE
 .PP
-nvme micron vs\-cloud\-log
+\fBnvme-micron-vs-cloud-log\fR(1)
 .RS 4
 Retrieve Extended Health Information of Hyperscale NVMe Boot SSD
 .RE
 .PP
-nvme micron vs\-device\-waf
+\fBnvme-micron-vs-device-waf\fR(1)
 .RS 4
 Reports SLC and TLC WAF ratio
 .RE
 .PP
-nvme micron vs\-drive\-info
+\fBnvme-micron-vs-drive-info\fR(1)
 .RS 4
 Retrieve Drive information
 .RE
 .PP
-nvme micron vs\-fw\-activate\-history
+\fBnvme-micron-vs-fw-activate-history\fR(1)
 .RS 4
 Display FW activation history
 .RE
 .PP
-\fBnvme-micron-internal-log\fR(1)
+\fBnvme-micron-vs-internal-log\fR(1)
 .RS 4
 Retrieve Micron logs
 .RE
 .PP
-\fBnvme-micron-nand-stats\fR(1)
+\fBnvme-micron-vs-nand-stats\fR(1)
 .RS 4
 Retrieve NAND Stats
 .RE
 .PP
-\fBnvme-micron-pcie-stats\fR(1)
+\fBnvme-micron-vs-pcie-stats\fR(1)
 .RS 4
 Retrieve Micron PCIe error stats
 .RE
 .PP
-\fBnvme-micron-smart-add-log\fR(1)
+\fBnvme-micron-vs-smart-add-log\fR(1)
 .RS 4
 Retrieve extended SMART data
 .RE
 .PP
-nvme micron vs\-smart\-ext\-log
+\fBnvme-micron-vs-smart-ext-log\fR(1)
 .RS 4
 Retrieve extended SMART logs
 .RE
 .PP
-nvme micron vs\-smbus\-option
+\fBnvme-micron-vs-smbus-option\fR(1)
 .RS 4
 Enable/Disable SMBUS on the drive
 .RE
 .PP
-nvme micron vs\-telemetry\-controller\-option
+\fBnvme-micron-vs-telemetry-controller-option\fR(1)
 .RS 4
 Enable/Disable controller telemetry log generation
 .RE
 .PP
-\fBnvme-micron-temperature-stats\fR(1)
+\fBnvme-micron-vs-temperature-stats\fR(1)
 .RS 4
 Retrieve Micron temperature statistics
 .RE
 .PP
-nvme micron vs\-vendor\-telemetry\-log
+\fBnvme-micron-vs-vendor-telemetry-log\fR(1)
 .RS 4
 Retrieve Vendor Telemetry logs
 .RE
 .PP
-nvme micron vs\-work\-load\-log
+\fBnvme-micron-vs-work-load-log\fR(1)
 .RS 4
 Retrieve Workload logs
 .RE
@@ -1374,7 +1384,7 @@ NetApp ONTAPdevices
 NetApp SMdevices
 .RE
 .PP
-nvme nvidia id\-ctrl
+\fBnvme-nvidia-id-ctrl\fR(1)
 .RS 4
 Send NVMe Identify Controller
 .RE
@@ -1384,7 +1394,7 @@ Send NVMe Identify Controller
 Clear Firmware Update History
 .RE
 .PP
-\fBnvme-ocp-clear-pcie-correctable-error-counters\fR(1)
+\fBnvme-ocp-clear-pcie-correctable-errors\fR(1)
 .RS 4
 Clear PCIe Correctable Error Counters
 .RE
@@ -1404,7 +1414,7 @@ Define EOL or PLP Circuitry Failure Mode
 Retrieve Error Recovery Log Page
 .RE
 .PP
-nvme ocp fw\-activate\-history
+\fBnvme-ocp-fw-activate-history\fR(1)
 .RS 4
 Retrieve Firmware Activation History Log Page
 .RE
@@ -1424,7 +1434,7 @@ Get DSSD Asynchronous Event Configuration
 Get DSSD Power State Feature
 .RE
 .PP
-nvme ocp get\-enable\-ieee1667\-silo
+\fBnvme-ocp-get-enable-ieee1667-silo\fR(1)
 .RS 4
 Get Enable IEEE1667 Silo Feature
 .RE
@@ -1484,7 +1494,7 @@ Set DSSD Asynchronous Event Configuration
 Set DSSD Power State Feature
 .RE
 .PP
-nvme ocp set\-enable\-ieee1667\-silo
+\fBnvme-ocp-set-enable-ieee1667-silo\fR(1)
 .RS 4
 Set Enable IEEE1667 Silo Feature
 .RE
@@ -1494,7 +1504,7 @@ Set Enable IEEE1667 Silo Feature
 Set Error Injection Feature
 .RE
 .PP
-nvme ocp set\-latency\-monitor\-feature
+\fBnvme-ocp-set-latency-monitor-feature\fR(1)
 .RS 4
 Set Latency Monitor Feature
 .RE
@@ -1594,72 +1604,72 @@ Retrieve Seagate extended\-SMART Information
 Retrieve Seagate temperature statistics
 .RE
 .PP
-nvme sfx change\-cap
+\fBnvme-sfx-change-cap\fR(1)
 .RS 4
 Dynamic change capacity
 .RE
 .PP
-nvme sfx dump\-evtlog
+\fBnvme-sfx-dump-evtlog\fR(1)
 .RS 4
 dump evtlog into file and parse warning & error log
 .RE
 .PP
-nvme sfx expand\-cap
+\fBnvme-sfx-expand-cap\fR(1)
 .RS 4
 expand the last namespace capacity lossless
 .RE
 .PP
-nvme sfx get\-bad\-block
+\fBnvme-sfx-get-bad-block\fR(1)
 .RS 4
 Retrieve bad block table of block device, show it
 .RE
 .PP
-nvme sfx get\-feature
+\fBnvme-sfx-get-feature\fR(1)
 .RS 4
 Get a feature
 .RE
 .PP
-nvme sfx lat\-stats
+\fBnvme-sfx-lat-stats\fR(1)
 .RS 4
 Retrieve ScaleFlux IO Latency Statistics log, show it
 .RE
 .PP
-nvme sfx query\-cap
+\fBnvme-sfx-query-cap\fR(1)
 .RS 4
 Query current capacity info
 .RE
 .PP
-nvme sfx set\-feature
+\fBnvme-sfx-set-feature\fR(1)
 .RS 4
 Set a feature
 .RE
 .PP
-nvme sfx smart\-log\-add
+\fBnvme-sfx-smart-log-add\fR(1)
 .RS 4
 Retrieve ScaleFlux SMART Log, show it
 .RE
 .PP
-nvme sfx status
+\fBnvme-sfx-status\fR(1)
 .RS 4
 Retrieve the ScaleFlux status output, show it
 .RE
 .PP
-nvme shannon get\-additional\-feature
+\fBnvme-shannon-get-additional-feature\fR(1)
 .RS 4
 Get additional Shannon feature
 .RE
 .PP
-nvme shannon id\-ctrl
+\fBnvme-shannon-id-ctrl\fR(1)
 .RS 4
 Retrieve Shannon ctrl id, show it
 .RE
 .PP
-nvme shannon set\-additioal\-feature
+\fBnvme-shannon-set-additioal-feature\fR(1)
 .RS 4
 Set additional Shannon feature
 .RE
 .PP
-nvme shannon smart\-log\-add
+\fBnvme-shannon-smart-log-add\fR(1)
 .RS 4
 Retrieve Shannon SMART Log, show it
 .RE
@@ -1884,7 +1894,7 @@ Get SMART / health extended log (redirects to ocp plug\-in)
 Real Time capture Workload Tracker samples
 .RE
 .PP
-nvme ssstc smart\-log\-add
+\fBnvme-ssstc-smart-log-add\fR(1)
 .RS 4
 Retrieve ssstc SMART Log, show it
 .RE
@@ -2089,7 +2099,7 @@ WDC Internal Firmware Log
 WDC NAND Statistics
 .RE
 .PP
-nvme wdc vs\-pcie\-stats
+\fBnvme-wdc-vs-pcie-stats\fR(1)
 .RS 4
 WDC VS PCIE Statistics
 .RE
@@ -2109,7 +2119,7 @@ WDC Enable/Disable Controller Initiated Telemetry Log
 WDC Get Temperature Stats
 .RE
 .PP
-nvme ymtc smart\-log\-add
+\fBnvme-ymtc-smart-log-add\fR(1)
 .RS 4
 Retrieve YMTC SMART Log, show it
 .RE

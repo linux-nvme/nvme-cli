@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-set-dssd-async-event-config
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-SET\-DSSD" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-SET\-DSSD" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,6 +35,7 @@ nvme-ocp-set-dssd-async-event-config \- Set DSSD asynchronous event configuratio
 \fInvme\fR [<global\-options>] \fIocp set\-dssd\-async\-event\-config\fR <device>
                         [\-\-enable\-panic\-notices | \-e]
                         [\-\-save | \-s]
+                        [\-\-no\-uuid | \-n]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -55,6 +56,11 @@ Set enable panic notices [0]
 \-s, \-\-save
 .RS 4
 Save the attribute so that it persists through all power states and resets\&.
+.RE
+.PP
+\-n, \-\-no\-uuid
+.RS 4
+Do not try to automatically detect UUID index for this command (required for old OCP 1\&.0 support)
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

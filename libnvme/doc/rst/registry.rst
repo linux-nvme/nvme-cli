@@ -16,6 +16,34 @@ assumed to be cooperative; there is no OS-level enforcement.  Its primary
 purpose is to prevent accidental disconnection of controllers managed by one
 orchestrator by another.
 
+Nothing removes the entry of a controller the kernel removed.  A connect
+that gets the device name replaces the entry, and until then the functions
+that read the registry treat an entry without a controller in sysfs as
+absent.
+
+.. c:function:: bool libnvmf_owner_equal (const char *a, const char *b)
+
+   Compare two registry owners
+
+**Parameters**
+
+``const char *a``
+  Owner, or NULL for no owner
+
+``const char *b``
+  Owner, or NULL for no owner
+
+**Description**
+
+The pre-OS environment (firmware and initrd) records the owner "pre-os".
+Its old name "nbft", which initrds with older nvme-cli still record, is
+the same owner.
+
+**Return**
+
+true if **a** and **b** name the same owner, or both are NULL.
+
+
 .. c:function:: int libnvmf_registry_retrieve (struct libnvme_global_ctx *ctx, const char *device, const char *attr, char **value)
 
    Read an attribute from a controller's registry entry
@@ -37,9 +65,9 @@ orchestrator by another.
 
 **Return**
 
-0 on success, -ENOENT if the controller is not registered or the
-attribute is not present, -ENOMEM on allocation failure, negative errno
-from underlying system calls otherwise.
+0 on success, -ENOENT if the controller does not exist, is not
+registered or the attribute is not present, -ENOMEM on allocation
+failure, negative errno from underlying system calls otherwise.
 
 
 .. c:function:: int libnvmf_registry_attr_equal (struct libnvme_global_ctx *ctx, const char *device, const char *attr, const char *value)
@@ -59,6 +87,10 @@ from underlying system calls otherwise.
 
 ``const char *value``
   Value to compare against; NULL means "attribute absent"
+
+**Description**
+
+The "owner" attribute is compared with libnvmf_owner_equal().
 
 **Return**
 
@@ -88,9 +120,8 @@ from underlying system calls otherwise.
 
 Writes the attribute value to the controller's registry entry using an
 atomic tmp-file rename.  If the entry does not exist, it is created
-atomically the same way as on connect, including the best-effort seqnum
-stamp for the udev cleanup rule.  If **value** is NULL, the attribute file is
-removed instead; a missing entry is left alone in this case.
+atomically the same way as on connect.  If **value** is NULL, the attribute
+file is removed instead; a missing entry is left alone in this case.
 
 **Return**
 
@@ -111,10 +142,7 @@ removed instead; a missing entry is left alone in this case.
 
 **Description**
 
-Removes the registry directory and all attribute files for **device**.  Called
-by the owning orchestrator on intentional disconnect.  The udev REMOVE rule
-handles the common case of kernel-driven removal directly via rm -rf and
-does not call this function.
+Removes the registry directory and all attribute files for **device**.
 
 **Return**
 
@@ -140,8 +168,8 @@ underlying system calls otherwise.
 **Description**
 
 Scans the registry directory and invokes **callback** for each entry whose
-corresponding /dev/nvmeN device node exists.  Stale entries left behind
-after a controller is removed are silently skipped.  The existence check is
+controller exists in sysfs.  Entries left behind by a removed controller
+are skipped.  The existence check is
 advisory: a device may be removed between the check and callback invocation;
 callers should handle ENOENT gracefully.
 
@@ -177,7 +205,7 @@ attribute file found.  Attribute files that disappear during iteration
 
 **Return**
 
-0 on success, -ENOENT if the device directory does not exist at the
-time of the initial open, negative errno otherwise.
+0 on success, -ENOENT if the controller or its registry entry does
+not exist at the time of the initial open, negative errno otherwise.
 
 

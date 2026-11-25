@@ -1039,3 +1039,86 @@ queue data, plus optional response data.
 
 
 
+
+
+.. c:struct:: nvme_mi_pcie_req_hdr
+
+   PCIe command request header.
+
+**Definition**
+
+::
+
+  struct nvme_mi_pcie_req_hdr {
+    struct nvme_mi_msg_hdr hdr;
+    __u8 opcode;
+    __u8 rsvd;
+    __le16 ctrlid;
+    __le32 nmd0, nmd1, nmd2;
+  };
+
+**Members**
+
+``hdr``
+  generic MI message header
+
+``opcode``
+  opcode (OPC) for the specific PCIe command
+
+``rsvd``
+  reserved
+
+``ctrlid``
+  Controller ID (CTLID) of the NVMe Controller this command targets
+
+``nmd0``
+  PCIe Request Dword 0 - command specific usage
+
+``nmd1``
+  PCIe Request Dword 1 - command specific usage
+
+``nmd2``
+  PCIe Request Dword 2 - command specific usage
+
+
+**Description**
+
+Wire format for PCIe command request headers (20 bytes), defined in the
+NVMe-MI PCIe Command Set. NMIMT in **hdr.nmp** is set to NVME_MI_MT_PCIE (4)
+by libnvme_mi_pcie_xfer().
+
+
+
+
+.. c:struct:: nvme_mi_pcie_resp_hdr
+
+   PCIe command response header.
+
+**Definition**
+
+::
+
+  struct nvme_mi_pcie_resp_hdr {
+    struct nvme_mi_msg_hdr hdr;
+    __u8 status;
+    __u8 rsvd[3];
+  };
+
+**Members**
+
+``hdr``
+  generic MI message header
+
+``status``
+  generic response status from command; non-zero on failure
+
+``rsvd``
+  reserved
+
+
+**Description**
+
+Wire format for PCIe command response headers (8 bytes), defined in the
+NVMe-MI PCIe Command Set.
+
+

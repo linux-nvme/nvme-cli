@@ -1,0 +1,161 @@
+'\" t
+.\"     Title: nvme-vendor.d
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 11/25/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-VENDOR\&.D" "5" "11/25/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-vendor.d \- the defaults of storage vendors for their NVMe\-oF controllers
+.SH "SYNOPSIS"
+.sp
+.nf
+\fI/usr/local/etc/nvme/vendor\&.d/*\&.conf\fR
+\fI/run/nvme/vendor\&.d/*\&.conf\fR
+\fI/usr/local/lib/nvme/vendor\&.d/*\&.conf\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+Storage vendors name defaults for their controllers: the I/O policy of the subsystem, and the ctrl_loss_tmo of a controller\&. libnvme applies them to a controller right after it connected it, so every connect through libnvme gets them: \fInvme connect\fR, \fInvme connect\-all\fR, the connections of the NBFT, and those of nvme\-discoverd\&. A controller that reconnects after a loss keeps its values; one that is connected anew gets them again\&.
+.sp
+There is one INI file per vendor, with a [Model] section for each set of values, e\&.g\&. 50\-netapp\&.conf:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Model]
+model = NetApp ONTAP Controller
+iopolicy = queue\-depth
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Model]
+model = NetApp ONTAP Controller
+transport = tcp
+ctrl\-loss\-tmo = \-1
+.fi
+.if n \{\
+.RE
+.\}
+.SH "MATCH"
+.sp
+\fImodel\fR matches the controller\(cqs model as sysfs shows it, \fItransport\fR each a shell glob (\fI*\fR, \fI?\fR, \fI[\&...]\fR), against the value without its trailing whitespace\&. So \fImodel = NetApp*\fR or \fItransport = tcp|rdma\fR work as in a rule, and the udev rules 71\-nvmf\-<vendor>\&.rules translate one to one\&.
+.SH "VALUES"
+.PP
+\fIiopolicy\fR
+.RS 4
+The I/O policy of the subsystem, if it is an NVM subsystem (as the
+.RE
+.PP
+\fIctrl\-loss\-tmo\fR
+.RS 4
+The ctrl_loss_tmo of the controller, in seconds, or \-1 for no limit\&. Not for the loop transport\&.
+.RE
+.SH "ORDER"
+.sp
+For a controller, the first of these that sets a value wins:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+the command line, e\&.g\&.
+\fInvme connect \-\-ctrl\-loss\-tmo\fR;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+the connection\(cqs
+\fIctrl\-loss\-tmo\fR
+in nvme\-fabrics\&.conf(5);
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+the files of vendor\&.d;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+libnvme\(cqs default (a ctrl_loss_tmo of 600, the kernel\(cqs iopolicy)\&.
+.RE
+.sp
+libnvme takes a ctrl_loss_tmo of the connection other than the default (600) as given by the user, so a connection that asks for exactly 600 gets the vendor\(cqs value\&.
+.sp
+The files of vendor\&.d follow the rules of udev rules and sysctl\&.d: the directories are /usr/local/etc/nvme/vendor\&.d, /run/nvme/vendor\&.d and /usr/local/lib/nvme/vendor\&.d\&. A file in a directory before replaces the file of the same name in a directory after it, and a link to /dev/null (or an empty file) turns it off\&. All files are then read in the order of their names, whatever their directory, and where several sections match a controller, the later one wins\&. The shipped files are named 50\-*\&.conf, so an administrator\(cqs 90\-local\&.conf overrides them, and a file named like a shipped one replaces it\&.
+.SH "FILES"
+.PP
+/usr/local/etc/nvme/vendor\&.d/*\&.conf
+.RS 4
+The administrator\(cqs files\&.
+.RE
+.PP
+/run/nvme/vendor\&.d/*\&.conf
+.RS 4
+Files for the running system only\&.
+.RE
+.PP
+/usr/local/lib/nvme/vendor\&.d/*\&.conf
+.RS 4
+The defaults nvme\-cli ships, with the values of the vendors\*(Aq udev rules\&.
+.RE
+.SH "THE UDEV RULES"
+.sp
+The rules 71\-nvmf\-<vendor>\&.rules set the same values after the kernel added a controller, also on one whose connection asked for another ctrl_loss_tmo\&. While nvme\-discoverd runs, its service masks them in /run/udev/rules\&.d, so that a connection\(cqs own ctrl_loss_tmo stays\&.
+.SH "SEE ALSO"
+.sp
+nvme\-connect(1) nvme\-connect\-all(1) nvme\-fabrics\&.conf(5) nvme\-discoverd(8)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

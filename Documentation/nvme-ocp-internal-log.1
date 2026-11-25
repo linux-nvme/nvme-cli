@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-INTERNAL\" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-INTERNAL\" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,11 +39,11 @@ nvme-ocp-internal-log \- Conditionally retrieves 07h Telemetry Host\-Initiated l
                         [\-\-data\-area=<da> | \-a <da>]
                         [\-\-telemetry\-type=<type> | \-t <type>]
                         [\-\-host\-generate=<gen> | \-g <gen>]
-                        [\-\-no\-uuid | \-n]
+                        [\-\-no\-uuid | \-n] [\-\-print\-only]
 .fi
 .SH "DESCRIPTION"
 .sp
-Conditionally retrieves 07h Telemetry Host\-Initiated log, C9h OCP Strings Log from an NVMe device or from user\-specified file path\&. Takes retrieved logs and decodes (or) parses into human\-readable output format specified by user\&. Without \-\-output\-format, the report is written as JSON to <file>\&.json, or as normal text to <file>\&.txt when nvme\-cli is built without json\-c\&.
+Conditionally retrieves 07h Telemetry Host\-Initiated log, C9h OCP Strings Log from an NVMe device or from user\-specified file path\&. Takes retrieved logs and decodes (or) parses into human\-readable output format specified by user\&. Without \-\-output\-format, the report is written as JSON to <file>\&.json, or as normal text to <file>\&.txt when nvme\-cli is built without json\-c\&. With \-\-print\-only, the report is printed to stdout instead and no file is written\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
@@ -96,6 +96,11 @@ If set to 1, the controller shall capture the Telemetry Host\-Initiated data rep
 \-n, \-\-no\-uuid
 .RS 4
 Do not try to automatically detect UUID index when retrieving the OCP String Log from <device> (default UUID index to 0)\&.
+.RE
+.PP
+\-\-print\-only
+.RS 4
+Print the decoded report to stdout and save no files: neither the telemetry and string log bin files nor the report file\&. Logs provided with \-\-telemetry\-log and \-\-string\-log are still read\&. Incompatible with \-\-output\-file\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -201,6 +206,27 @@ Retrieve the OCP String Log and the existing Telemetry Host\-Initiated data with
 .\}
 .nf
 # nvme ocp internal\-log /dev/nvme0 \-\-host\-generate=0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve both logs from the device and print the decoded Data Areas 1 and 2 as JSON to stdout, saving no files\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp internal\-log /dev/nvme0 \-\-print\-only \-\-data\-area=2 \-o json
 .fi
 .if n \{\
 .RE

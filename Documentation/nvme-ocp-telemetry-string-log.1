@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-telemetry-string-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-TELEMETRY" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-TELEMETRY" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,10 +34,11 @@ nvme-ocp-telemetry-string-log \- Retrieve OCP Telemetry String Log page
 .nf
 \fInvme\fR [<global\-options>] \fIocp telemetry\-string\-log\fR <device>
                         [\-\-output\-file=<file> | \-f <file>] [\-\-no\-uuid | \-n]
+                        [\-\-print\-only]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, Retrieve OCP Telemetry String Log page
+For the NVMe device given, Retrieve OCP Telemetry String Log page and print it\&. The log is also saved as a binary file unless \-\-print\-only is specified\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
 .sp
@@ -48,12 +49,17 @@ On success it returns 0, error code otherwise\&.
 .PP
 \-f <file>, \-\-output\-file=<file>
 .RS 4
-Filepath name to where binary output data will be saved to\&.
+Filepath name to where binary output data will be saved to\&. Defaults to string\&.bin in the current directory\&.
 .RE
 .PP
 \-n, \-\-no\-uuid
 .RS 4
 Do not try to automatically detect UUID index for this command (default UUID index to 0)\&.
+.RE
+.PP
+\-\-print\-only
+.RS 4
+Print the log to stdout and save no file\&. Incompatible with \-\-output\-file\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -138,6 +144,27 @@ Has the program issue a telemetry\-string\-log command to get the log page data 
 .\}
 .nf
 # nvme ocp telemetry\-string\-log /dev/nvme0n1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the log as JSON to stdout, saving no file\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp telemetry\-string\-log /dev/nvme0 \-\-print\-only \-o json
 .fi
 .if n \{\
 .RE

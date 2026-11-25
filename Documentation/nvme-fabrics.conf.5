@@ -2,12 +2,12 @@
 .\"     Title: nvme-fabrics.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FABRICS\&.CONF" "5" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-FABRICS\&.CONF" "5" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -121,7 +121,7 @@ SECURITY (\fI[Host]\fR or endpoint section only, never a \fIcontroller =\fR line
 .\}
 .nf
 tls, tls\-key, tls\-key\-identity, keyring, concat, kxchap\-secret,
-kxchap\-ctrl\-secret, tls\-key\-source
+kxchap\-ctrl\-secret, tls\-key\-source, kxchap\-secret\-source
 .fi
 .if n \{\
 .RE
@@ -139,36 +139,33 @@ hostnqn, hostid, hostsymname
 .RE
 .\}
 .sp
-Every key here except \fItls\-key\-source\fR is the same name as its \fInvme connect\fR long option (hyphenated)\&. See \fBnvme-connect\fR(1) for what each one means\&.
+Every key here except \fItls\-key\-source\fR and \fIkxchap\-secret\-source\fR is the same name as its \fInvme connect\fR long option (hyphenated)\&. See \fBnvme-connect\fR(1) for what each one means\&.
 .sp
-\fItls\-key\-source\fR says where the TLS PSK comes from:
+\fItls\-key\-source\fR says where the TLS PSK in \fItls\-key\fR comes from\&. \fIkxchap\-secret\-source\fR says the same for the KX\-HMAC\-CHAP secrets in \fIkxchap\-secret\fR and \fIkxchap\-ctrl\-secret\fR\&. Both take these values:
 .PP
 \fIinline\fR
 .RS 4
-The default\&.
-\fItls\-key\fR
-is the key itself\&.
+The default\&. The value is the key or the secret itself\&.
 .RE
 .PP
 \fIsystemd\-creds\fR
 .RS 4
-\fItls\-key\fR
-is the name of a systemd credential\&. nvme\-keysd reads the credential and puts the PSK in the keyring\&. The connection does not use
-\fItls\-key\fR: the kernel finds the PSK in the keyring by the host NQN and the subsystem NQN\&. See
+The value is the name of a systemd credential\&. nvme\-keysd reads the credential and puts the key in the keyring\&. The connection does not use
+\fItls\-key\fR: the kernel finds the PSK in the keyring by the host NQN and the subsystem NQN\&. For a KX\-HMAC\-CHAP secret, the credential name is the key description: the connection passes the name, and the kernel looks up the key by it\&. See
 \fBnvme-keysd\fR(8)\&.
 .RE
 .PP
 \fIkmip:<name>\fR
 .RS 4
-\fItls\-key\fR
-is the Name of a key on the key management server (KMS)
-\fI<name>\fR, configured in nvme\-keysd\&.conf\&. nvme\-keysd gets the key and puts it in the keyring\&.
+The value is the Name of a key on the key management server (KMS)
+\fI<name>\fR, configured in nvme\-keysd\&.conf\&. nvme\-keysd gets the key and puts it in the keyring, as for
+\fIsystemd\-creds\fR\&. A KX\-HMAC\-CHAP secret must be a Secret Data object\&.
 \fIkmip\fR
 alone is enough when only one KMS is configured\&. See
 \fBnvme-keysd\fR(8)\&.
 .RE
 .sp
-Any other value also means that \fItls\-key\fR is not the key\&. libnvme does not check the value: nvme\-keysd does\&.
+With any other source, \fItls\-key\fR, \fIkxchap\-secret\fR and \fIkxchap\-ctrl\-secret\fR are not the keys either\&. libnvme does not check the source: nvme\-keysd does\&.
 .SH "RESETTING A KEY"
 .sp
 An empty assignment (\fIkey =\fR) resets that key to the kernel default, undoing whatever an outer scope (a \fI*Defaults\fR section or \fI[Host]\fR) set\&. This differs from simply not writing the key, which instead inherits through the cascade below\&.

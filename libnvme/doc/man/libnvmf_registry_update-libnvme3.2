@@ -1,4 +1,4 @@
-.TH "libnvmf_registry_update" 9 "libnvmf_registry_update" "October 2026" "libnvme API manual" LINUX
+.TH "libnvmf_registry_update" 9 "libnvmf_registry_update" "November 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvmf_registry_update \- Update an attribute in a controller's registry entry
 .SH SYNOPSIS
@@ -19,8 +19,7 @@ New attribute value, or NULL to remove the attribute file
 .SH "DESCRIPTION"
 Writes the attribute value to the controller's registry entry using an
 atomic tmp-file rename.  If the entry does not exist, it is created
-atomically the same way as on connect, including the best-effort seqnum
-stamp for the udev cleanup rule.  If \fIvalue\fP is NULL, the attribute file is
-removed instead; a missing entry is left alone in this case.
+atomically the same way as on connect.  If \fIvalue\fP is NULL, the attribute
+file is removed instead; a missing entry is left alone in this case.
 .SH "RETURN"
 0 on success, negative errno from underlying system calls otherwise.

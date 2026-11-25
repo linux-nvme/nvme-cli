@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_cap" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_cap" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_cap \- This field indicates the controller capabilities register
 .SH SYNOPSIS
@@ -68,6 +68,18 @@ enum nvme_cap {
 , 
 .br
 .br
+.BI "    NVME_CAP_CSS_NCSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_IOCSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_NOIOCSS_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CAP_MQES_MASK"
 , 
 .br
@@ -129,6 +141,18 @@ enum nvme_cap {
 .br
 .br
 .BI "    NVME_CAP_NSSES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_NCSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_IOCSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_NOIOCSS_MASK"
 , 
 .br
 .br
@@ -208,6 +232,12 @@ Shift amount to get the NVM subsystem shutdown supported
 Shift amount to get the controller ready modes supported
 .IP "NVME_CAP_NSSES_SHIFT" 12
 Shift amount to get the NVM subsystem shutdown enhancements supported
+.IP "NVME_CAP_CSS_NCSS_SHIFT" 12
+Shift amount to get the CSS.NCSS
+.IP "NVME_CAP_CSS_IOCSS_SHIFT" 12
+Shift amount to get the CSS.IOCSS
+.IP "NVME_CAP_CSS_NOIOCSS_SHIFT" 12
+Shift amount to get the CSS.NOIOCSS
 .IP "NVME_CAP_MQES_MASK" 12
 Mask to get the maximum queue entries supported
 .IP "NVME_CAP_CQR_MASK" 12
@@ -240,6 +270,12 @@ Mask to get the NVM subsystem shutdown supported
 Mask to get the controller ready modes supported
 .IP "NVME_CAP_NSSES_MASK" 12
 Mask to get the NVM subsystem shutdown enhancements supported
+.IP "NVME_CAP_CSS_NCSS_MASK" 12
+Mask to get the CSS.NCSS
+.IP "NVME_CAP_CSS_IOCSS_MASK" 12
+Mask to get the CSS.IOCSS
+.IP "NVME_CAP_CSS_NOIOCSS_MASK" 12
+Mask to get the CSS.NOIOCSS
 .IP "NVME_CAP_AMS_WRR" 12
 Weighted round robin with urgent priority class
 .IP "NVME_CAP_AMS_VS" 12

@@ -2,12 +2,12 @@
 .\"     Title: nvme-keysd
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-KEYSD" "8" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-KEYSD" "8" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-keysd \- NVMe/TCP TLS key provisioning daemon
+nvme-keysd \- NVMe\-oF key provisioning daemon
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -38,7 +38,7 @@ nvme-keysd \- NVMe/TCP TLS key provisioning daemon
 .fi
 .SH "DESCRIPTION"
 .sp
-nvme\-keysd puts the TLS pre\-shared keys (PSKs) used by NVMe/TCP into the kernel\(cqs \&.nvme keyring, before a connection needs them\&. The kernel then finds the key there when \fInvme connect\fR or nvme\-discoverd connects with TLS\&.
+nvme\-keysd puts the TLS pre\-shared keys (PSKs) used by NVMe/TCP and the KX\-HMAC\-CHAP secrets into the kernel\(cqs \&.nvme keyring, before a connection needs them\&. The kernel then finds the key there when \fInvme connect\fR or nvme\-discoverd connects\&.
 .sp
 Which key belongs to which host and subsystem is configured in the shared NVMe\-oF fabrics configuration, see nvme\-fabrics\&.conf(5)\&.
 .sp
@@ -51,7 +51,16 @@ nvme\-keysd puts the PSK in the keyring named by \fIkeyring\fR (default \fI\&.nv
 .sp
 Without a \fIkmip\fR entry, nvme\-keysd imports the keys and exits\&. With a \fIkmip\fR entry, it keeps running: see KMIP\&. nvme\-keysd never revokes a key because its entry was removed from the configuration\&.
 .sp
-The unit does not start when no entry of the fabrics configuration has a \fItls\-key\-source\fR other than \fIinline\fR\&. In that case, nvme\-keysd does not run, and the unit does not load the nvme_keyring module\&.
+The unit does not start when no entry of the fabrics configuration has a \fItls\-key\-source\fR or \fIkxchap\-secret\-source\fR other than \fIinline\fR\&. In that case, nvme\-keysd does not run, and the unit does not load the nvme_keyring module\&.
+.SH "KX\-HMAC\-CHAP SECRETS"
+.sp
+nvme\-keysd also imports the KX\-HMAC\-CHAP secrets of every entry with a \fIkxchap\-secret\-source\fR other than \fIinline\fR\&. With \fIsystemd\-creds\fR, \fIkxchap\-secret\fR and \fIkxchap\-ctrl\-secret\fR are names of systemd credentials\&. With \fIkmip\fR or \fIkmip:<name>\fR, they are KMIP Names of Secret Data objects on the KMS\&. Each holds a secret in the format \fIDHHC\-1:<hmac>:<base64>:\fR, as created by \fInvme keys gen\-kxchap\-secret\fR\&.
+.sp
+nvme\-keysd puts each secret in the keyring named by \fIkeyring\fR (default \fI\&.nvme\fR) as a key of type \fIdhchap\fR\&. The key description is the name from \fIkxchap\-secret\fR or \fIkxchap\-ctrl\-secret\fR\&. The connection passes this name, and the kernel looks up the key by it\&. A key with the same description is replaced: a controller that uses the old key keeps it until it authenticates again\&.
+.sp
+This needs a kernel that supports KX\-HMAC\-CHAP keys in the keyring\&. On an older kernel, nvme\-keysd logs a warning and imports no KX\-HMAC\-CHAP secrets\&. The connection then fails before it reaches the kernel, with "KX\-HMAC\-CHAP key \fI<name>\fR is not in the keyring"\&.
+.sp
+The kernel interface is not final yet\&. This part of nvme\-keysd may change\&.
 .SH "CREDENTIALS"
 .sp
 Each credential is a file in /usr/local/etc/nvme/creds/, encrypted with systemd\-creds(1)\&. The directory is installed with mode 0700\&. The file name is the credential name\&. nvme\-keysd decrypts the file through systemd\-creds, which checks that the name in the credential is the file name\&. When \fI\-\-name\fR is not given, systemd\-creds takes the name from the output file name:
@@ -206,6 +215,8 @@ Connect to the nvme\-keysd\-kmip Varlink socket at <PATH> instead of /run/nvme/k
 .RS 4
 Exit with status 0 if an entry of the fabrics configuration has a
 \fItls\-key\-source\fR
+or
+\fIkxchap\-secret\-source\fR
 other than
 \fIinline\fR, and with status 1 otherwise\&. The unit runs this check before it starts nvme\-keysd\&.
 .RE

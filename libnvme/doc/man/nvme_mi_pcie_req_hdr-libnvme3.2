@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_mi_pcie_req_hdr" "November 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_pcie_req_hdr \- PCIe command request header.
+.SH SYNOPSIS
+struct nvme_mi_pcie_req_hdr {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 opcode;"
+.br
+.BI "    __u8 rsvd;"
+.br
+.BI "    __le16 ctrlid;"
+.br
+.BI "    __le32 nmd0, nmd1, nmd2;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+generic MI message header
+.IP "opcode" 12
+opcode (OPC) for the specific PCIe command
+.IP "rsvd" 12
+reserved
+.IP "ctrlid" 12
+Controller ID (CTLID) of the NVMe Controller this command targets
+.IP "nmd0" 12
+PCIe Request Dword 0 - command specific usage
+.IP "nmd1" 12
+PCIe Request Dword 1 - command specific usage
+.IP "nmd2" 12
+PCIe Request Dword 2 - command specific usage
+.SH "Description"
+Wire format for PCIe command request headers (20 bytes), defined in the
+NVMe-MI PCIe Command Set. NMIMT in \fIhdr.nmp\fP is set to NVME_MI_MT_PCIE (4)
+by \fBlibnvme_mi_pcie_xfer\fP.

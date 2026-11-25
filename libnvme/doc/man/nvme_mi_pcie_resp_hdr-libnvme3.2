@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "struct nvme_mi_pcie_resp_hdr" "November 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_pcie_resp_hdr \- PCIe command response header.
+.SH SYNOPSIS
+struct nvme_mi_pcie_resp_hdr {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd[3];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+generic MI message header
+.IP "status" 12
+generic response status from command; non-zero on failure
+.IP "rsvd" 12
+reserved
+.SH "Description"
+Wire format for PCIe command response headers (8 bytes), defined in the
+NVMe-MI PCIe Command Set.

@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -46,7 +46,11 @@ Create a transport connection to a remote system (specified by \-\-traddr and \-
 .PP
 \-\-config=<filename>
 .RS 4
-Use the specified JSON configuration file instead of the default\&.
+Connect every connection of the specified INI configuration file (see nvme\-fabrics\&.conf(5)) directly, without discovery, instead of the one given on the command line\&. A legacy JSON file is converted first\&. Without this option,
+\fInvme connect\fR
+reads no configuration file\&.
+\fInone\fR
+is the same as no option\&.
 .RE
 .PP
 \-\-devid\-file=<filename>
@@ -73,7 +77,8 @@ later disconnect operation\&.
 The output file is created before attempting the connection\&. If
 the file cannot be created, for example because the parent
 directory does not exist, the command fails without attempting
-the connection\&.
+the connection\&. A file the command created is removed again when
+it has no device name to write, so the file never exists empty\&.
 .fi
 .if n \{\
 .RE

@@ -1,8 +1,56 @@
-.TH "libnvme" 9 "enum nvme_id_ns_dpc" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ns_dpc" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ns_dpc \- This field indicates the capabilities for the end-to-end data protection feature.
 .SH SYNOPSIS
 enum nvme_id_ns_dpc {
+.br
+.BI "    NVME_NS_DPC_PIT1S_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIT2S_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIT3S_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIIFB_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIILB_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_RSVD5_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIT1S_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIT2S_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIT3S_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIIFB_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PIILB_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_RSVD5_MASK"
+, 
+.br
 .br
 .BI "    NVME_NS_DPC_PI_TYPE1"
 , 
@@ -24,6 +72,30 @@ enum nvme_id_ns_dpc {
 
 };
 .SH Constants
+.IP "NVME_NS_DPC_PIT1S_SHIFT" 12
+PIT1S shift
+.IP "NVME_NS_DPC_PIT2S_SHIFT" 12
+PIT2S shift
+.IP "NVME_NS_DPC_PIT3S_SHIFT" 12
+PIT3S shift
+.IP "NVME_NS_DPC_PIIFB_SHIFT" 12
+PIIFB shift
+.IP "NVME_NS_DPC_PIILB_SHIFT" 12
+PIILB shift
+.IP "NVME_NS_DPC_RSVD5_SHIFT" 12
+Reserved shift
+.IP "NVME_NS_DPC_PIT1S_MASK" 12
+PIT1S mask
+.IP "NVME_NS_DPC_PIT2S_MASK" 12
+PIT2S mask
+.IP "NVME_NS_DPC_PIT3S_MASK" 12
+PIT3S mask
+.IP "NVME_NS_DPC_PIIFB_MASK" 12
+PIIFB mask
+.IP "NVME_NS_DPC_PIILB_MASK" 12
+PIILB mask
+.IP "NVME_NS_DPC_RSVD5_MASK" 12
+Reserved mask
 .IP "NVME_NS_DPC_PI_TYPE1" 12
 If set, indicates that the namespace supports
 Protection Information Type 1.

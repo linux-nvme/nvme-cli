@@ -2,12 +2,12 @@
 .\"     Title: nvme-config-convert
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONFIG\-CONVER" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONFIG\-CONVER" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,7 +44,7 @@ Converts a pre\-3\&.0 NVMe\-oF configuration from the legacy \fIconfig\&.json\fR
 .sp
 By default, the command looks for the legacy files /usr/local/etc/nvme/config\&.json and /usr/local/etc/nvme/discovery\&.conf and converts any that exist into a single configuration, matching the behavior of \fInvme connect\-all\fR\&. Use \-\-config to convert a config\&.json at a non\-default path instead; as with \fInvme connect\-all\fR, discovery\&.conf conversion is not gated by \-\-config \(em /usr/local/etc/nvme/discovery\&.conf is always converted when it exists, whether or not \-\-config is given\&.
 .sp
-The converted configuration is written to the file specified by \-\-output\&. If \-\-output is not specified, the default location, /usr/local/etc/nvme/nvme\-fabrics\&.conf, is used\&. Unless \-\-force is specified, the command refuses to overwrite an existing configuration\&. On success, the converted legacy file(s) are renamed to \fI<name>\&.converted\fR to prevent conversion on subsequent runs\&. Running the command again is safe: a source file that is missing only because a prior run already converted and renamed it is treated as already done, not as an error\&.
+The converted configuration is written to the file specified by \-\-output\&. If \-\-output is not specified, the default location, /usr/local/etc/nvme/nvme\-fabrics\&.conf, is used\&. Unless \-\-force is specified, the command refuses to overwrite an existing configuration\&. On success, each converted legacy file is kept for a rollback, and a symlink \fI<name>\&.converted\fR to it marks it as converted\&. Running the command again is safe: a legacy file with such a marker is treated as already done, not as an error\&. nvme\-config\-status(1) shows the state of the legacy files\&.
 .sp
 Malformed entries (for example, invalid addressing or an unreadable port) are skipped with a log message\&. Conversion continues unless a memory allocation failure occurs\&.
 .SH "OPTIONS"
@@ -111,7 +111,7 @@ Convert one specific configuration file for testing, without touching the system
 .RE
 .\}
 .sp
-Note: unlike config\&.json, discovery\&.conf has no \-\-config\-style override \(em its path is always /usr/local/etc/nvme/discovery\&.conf\&. If that file exists on the system, this command still converts it and renames it to
+Note: unlike config\&.json, discovery\&.conf has no \-\-config\-style override \(em its path is always /usr/local/etc/nvme/discovery\&.conf\&. If that file exists on the system, this command still converts it and marks it with the symlink
 \fIdiscovery\&.conf\&.converted\fR, even though \-\-config points elsewhere\&.
 .RE
 .SH "SEE ALSO"

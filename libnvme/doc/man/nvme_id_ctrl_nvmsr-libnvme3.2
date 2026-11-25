@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_nvmsr" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_nvmsr" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_nvmsr \- This field reports information associated with the NVM Subsystem, see &struct nvme_id_ctrl.nvmsr.
 .SH SYNOPSIS
@@ -12,11 +12,19 @@ enum nvme_id_ctrl_nvmsr {
 , 
 .br
 .br
+.BI "    NVME_CTRL_NVMSR_RSVD2_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CTRL_NVMSR_NVMESD_MASK"
 , 
 .br
 .br
 .BI "    NVME_CTRL_NVMSR_NVMEE_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NVMSR_RSVD2_MASK"
 , 
 .br
 .br
@@ -32,10 +40,14 @@ enum nvme_id_ctrl_nvmsr {
 NVMESD shift
 .IP "NVME_CTRL_NVMSR_NVMEE_SHIFT" 12
 NVMEE shift
+.IP "NVME_CTRL_NVMSR_RSVD2_SHIFT" 12
+Reserved shift
 .IP "NVME_CTRL_NVMSR_NVMESD_MASK" 12
 NVMESD mask
 .IP "NVME_CTRL_NVMSR_NVMEE_MASK" 12
 NVMEE mask
+.IP "NVME_CTRL_NVMSR_RSVD2_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_NVMSR_NVMESD" 12
 If set, then the NVM Subsystem is part of an NVMe
 Storage Device; if cleared, then the NVM Subsystem

@@ -1499,3 +1499,45 @@ completed MI transactions.  Called with the opaque pointer returned by the
 corresponding libnvme_mi_submit_entry() call.
 
 
+.. c:function:: int libnvme_mi_pcie_xfer (struct libnvme_mi_ep *ep, struct nvme_mi_pcie_req_hdr *pcie_req, size_t req_data_size, struct nvme_mi_pcie_resp_hdr *pcie_resp, size_t *resp_data_size)
+
+   Raw PCIe transfer interface.
+
+**Parameters**
+
+``struct libnvme_mi_ep *ep``
+  endpoint to send the PCIe command to
+
+``struct nvme_mi_pcie_req_hdr *pcie_req``
+  request data
+
+``size_t req_data_size``
+  size of request data payload
+
+``struct nvme_mi_pcie_resp_hdr *pcie_resp``
+  buffer for response data
+
+``size_t *resp_data_size``
+  size of response data buffer, updated to received size
+
+**Description**
+
+Performs an arbitrary NVMe-MI PCIe command, using the provided request data,
+in **pcie_req**. The size of the request data *payload* is specified in
+**req_data_size** - this does not include the standard header length (so a
+header-only request would have a size of 0). Note that the PCIe Request
+Doublewords are considered part of the header data.
+
+On success, response data is stored in **pcie_resp**, which has an optional
+appended payload buffer of **resp_data_size** bytes. The actual payload
+size transferred will be stored in **resp_data_size**. This size does not
+include the PCIe response header, so 0 represents no payload.
+
+See: :c:type:`struct nvme_mi_pcie_req_hdr <nvme_mi_pcie_req_hdr>` and :c:type:`struct nvme_mi_pcie_resp_hdr <nvme_mi_pcie_resp_hdr>`.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+

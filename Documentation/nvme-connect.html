@@ -776,7 +776,11 @@ specified by the --nqn option.</p></div>
 </dt>
 <dd>
 <p>
-        Use the specified JSON configuration file instead of the default.
+        Connect every connection of the specified INI configuration file
+        (see nvme-fabrics.conf(5)) directly, without discovery, instead of
+        the one given on the command line. A legacy JSON file is converted
+        first. Without this option, <em>nvme connect</em> reads no configuration
+        file. <em>none</em> is the same as no option.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -801,7 +805,8 @@ later disconnect operation.</code></pre>
 <pre><code>The output file is created before attempting the connection. If
 the file cannot be created, for example because the parent
 directory does not exist, the command fails without attempting
-the connection.</code></pre>
+the connection. A file the command created is removed again when
+it has no device name to write, so the file never exists empty.</code></pre>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1338,7 +1343,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:19 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

@@ -1,14 +1,22 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_oaes" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_oaes" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_oaes \- Optional Asynchronous Events Supported
 .SH SYNOPSIS
 enum nvme_id_ctrl_oaes {
+.br
+.BI "    NVME_CTRL_OAES_RSVD0_SHIFT"
+, 
+.br
 .br
 .BI "    NVME_CTRL_OAES_NSAN_SHIFT"
 , 
 .br
 .br
 .BI "    NVME_CTRL_OAES_FAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RSVD10_SHIFT"
 , 
 .br
 .br
@@ -40,6 +48,10 @@ enum nvme_id_ctrl_oaes {
 , 
 .br
 .br
+.BI "    NVME_CTRL_OAES_RSVD18_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CTRL_OAES_ANSAN_SHIFT"
 , 
 .br
@@ -56,11 +68,23 @@ enum nvme_id_ctrl_oaes {
 , 
 .br
 .br
+.BI "    NVME_CTRL_OAES_RSVD23_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CTRL_OAES_ZDCN_SHIFT"
 , 
 .br
 .br
+.BI "    NVME_CTRL_OAES_RSVD28_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CTRL_OAES_DLPCN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RSVD0_MASK"
 , 
 .br
 .br
@@ -69,6 +93,10 @@ enum nvme_id_ctrl_oaes {
 .br
 .br
 .BI "    NVME_CTRL_OAES_FAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RSVD10_MASK"
 , 
 .br
 .br
@@ -100,6 +128,10 @@ enum nvme_id_ctrl_oaes {
 , 
 .br
 .br
+.BI "    NVME_CTRL_OAES_RSVD18_MASK"
+, 
+.br
+.br
 .BI "    NVME_CTRL_OAES_ANSAN_MASK"
 , 
 .br
@@ -116,7 +148,15 @@ enum nvme_id_ctrl_oaes {
 , 
 .br
 .br
+.BI "    NVME_CTRL_OAES_RSVD23_MASK"
+, 
+.br
+.br
 .BI "    NVME_CTRL_OAES_ZDCN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RSVD28_MASK"
 , 
 .br
 .br
@@ -184,12 +224,16 @@ enum nvme_id_ctrl_oaes {
 
 };
 .SH Constants
+.IP "NVME_CTRL_OAES_RSVD0_SHIFT" 12
+Shift amount to get Reserved
 .IP "NVME_CTRL_OAES_NSAN_SHIFT" 12
 Shift amount to get the Attached Namespace
 Attribute Notices event supported bit
 .IP "NVME_CTRL_OAES_FAN_SHIFT" 12
 Shift amount to get the Firmware Activation
 Notices event supported bit
+.IP "NVME_CTRL_OAES_RSVD10_SHIFT" 12
+Shift amount to get Reserved
 .IP "NVME_CTRL_OAES_ANACN_SHIFT" 12
 Shift amount to get the Asymmetric Namespace
 Access Change Notices event supported bit
@@ -213,6 +257,8 @@ Hysteresis Recovery event supported bit
 .IP "NVME_CTRL_OAES_RGCNS_SHIFT" 12
 Shift amount to get the Reachability Groups
 Change Notices event supported bit
+.IP "NVME_CTRL_OAES_RSVD18_SHIFT" 12
+Shift amount to get Reserved
 .IP "NVME_CTRL_OAES_ANSAN_SHIFT" 12
 Shift amount to get the Allocated Namespace
 Attribute Notices event supported bit
@@ -225,18 +271,26 @@ Notices event supported bit
 .IP "NVME_CTRL_OAES_RLCC_SHIFT" 12
 Shift amount to get the Rate Limiting
 Configuration Change event supported bit
+.IP "NVME_CTRL_OAES_RSVD23_SHIFT" 12
+Shift amount to get Reserved
 .IP "NVME_CTRL_OAES_ZDCN_SHIFT" 12
 Shift amount to get the Zone Descriptor Changed
 Notices event supported bit
+.IP "NVME_CTRL_OAES_RSVD28_SHIFT" 12
+Shift amount to get Reserved
 .IP "NVME_CTRL_OAES_DLPCN_SHIFT" 12
 Shift amount to get the Discovery Log Page
 Change Notification event supported bit
+.IP "NVME_CTRL_OAES_RSVD0_MASK" 12
+Mask to get Reserved
 .IP "NVME_CTRL_OAES_NSAN_MASK" 12
 Mask to get the Attached Namespace Attribute
 Notices event supported bit
 .IP "NVME_CTRL_OAES_FAN_MASK" 12
 Mask to get the Firmware Activation Notices
 event supported bit
+.IP "NVME_CTRL_OAES_RSVD10_MASK" 12
+Mask to get Reserved
 .IP "NVME_CTRL_OAES_ANACN_MASK" 12
 Mask to get the Asymmetric Namespace Access
 Change Notices event supported bit
@@ -258,6 +312,8 @@ Recovery event supported bit
 .IP "NVME_CTRL_OAES_RGCNS_MASK" 12
 Mask to get the Reachability Groups Change
 Notices event supported bit
+.IP "NVME_CTRL_OAES_RSVD18_MASK" 12
+Mask to get Reserved
 .IP "NVME_CTRL_OAES_ANSAN_MASK" 12
 Mask to get the Allocated Namespace Attribute
 Notices event supported bit
@@ -270,9 +326,13 @@ event supported bit
 .IP "NVME_CTRL_OAES_RLCC_MASK" 12
 Mask to get the Rate Limiting Configuration
 Change event supported bit
+.IP "NVME_CTRL_OAES_RSVD23_MASK" 12
+Mask to get Reserved
 .IP "NVME_CTRL_OAES_ZDCN_MASK" 12
 Mask to get the Zone Descriptor Changed Notices
 event supported bit
+.IP "NVME_CTRL_OAES_RSVD28_MASK" 12
+Mask to get Reserved
 .IP "NVME_CTRL_OAES_DLPCN_MASK" 12
 Mask to get the Discovery Log Page Change
 Notification event supported bit

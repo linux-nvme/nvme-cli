@@ -1,8 +1,72 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_anacap" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_anacap" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_anacap \- This field indicates the capabilities associated with Asymmetric Namespace Access Reporting.
 .SH SYNOPSIS
 enum nvme_id_ctrl_anacap {
+.br
+.BI "    NVME_CTRL_ANACAP_RANAOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANANOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANAIS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANAPLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANACS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RSVD5_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_ANAGIDLWAS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_ANAGIDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANAOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANANOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANAIS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANAPLS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RANACS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_RSVD5_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_ANAGIDLWAS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_ANAGIDS_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_ANACAP_OPT"
 , 
@@ -32,6 +96,38 @@ enum nvme_id_ctrl_anacap {
 
 };
 .SH Constants
+.IP "NVME_CTRL_ANACAP_RANAOS_SHIFT" 12
+RANAOS shift
+.IP "NVME_CTRL_ANACAP_RANANOS_SHIFT" 12
+RANANOS shift
+.IP "NVME_CTRL_ANACAP_RANAIS_SHIFT" 12
+RANAIS shift
+.IP "NVME_CTRL_ANACAP_RANAPLS_SHIFT" 12
+RANPLOS shift
+.IP "NVME_CTRL_ANACAP_RANACS_SHIFT" 12
+RANACS shift
+.IP "NVME_CTRL_ANACAP_RSVD5_SHIFT" 12
+Reserved shift
+.IP "NVME_CTRL_ANACAP_ANAGIDLWAS_SHIFT" 12
+RANAGIDLWAS shift
+.IP "NVME_CTRL_ANACAP_ANAGIDS_SHIFT" 12
+RANAGIDS shift
+.IP "NVME_CTRL_ANACAP_RANAOS_MASK" 12
+RANAOS mask
+.IP "NVME_CTRL_ANACAP_RANANOS_MASK" 12
+RANANOS shift
+.IP "NVME_CTRL_ANACAP_RANAIS_MASK" 12
+RANAIS shift
+.IP "NVME_CTRL_ANACAP_RANAPLS_MASK" 12
+RANAPLS shift
+.IP "NVME_CTRL_ANACAP_RANACS_MASK" 12
+RANACS shift
+.IP "NVME_CTRL_ANACAP_RSVD5_MASK" 12
+Reserved shift
+.IP "NVME_CTRL_ANACAP_ANAGIDLWAS_MASK" 12
+RANAGIDLWAS shift
+.IP "NVME_CTRL_ANACAP_ANAGIDS_MASK" 12
+RANAGIDS shift
 .IP "NVME_CTRL_ANACAP_OPT" 12
 If set, then the controller is able to
 report ANA Optimized state.

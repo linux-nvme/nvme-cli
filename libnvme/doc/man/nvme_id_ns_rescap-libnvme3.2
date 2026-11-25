@@ -1,8 +1,72 @@
-.TH "libnvme" 9 "enum nvme_id_ns_rescap" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ns_rescap" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ns_rescap \- This field indicates the reservation capabilities of the namespace.
 .SH SYNOPSIS
 enum nvme_id_ns_rescap {
+.br
+.BI "    NVME_NS_RESCAP_PTPLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EAS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WEROS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EAROS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WEARS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EAARS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_IEKS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_PTPLS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WES_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EAS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WEROS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EAROS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WEARS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EAARS_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_IEKS_MASK"
+, 
+.br
 .br
 .BI "    NVME_NS_RESCAP_PTPL"
 , 
@@ -36,6 +100,38 @@ enum nvme_id_ns_rescap {
 
 };
 .SH Constants
+.IP "NVME_NS_RESCAP_PTPLS_SHIFT" 12
+PTPLS shift
+.IP "NVME_NS_RESCAP_WES_SHIFT" 12
+WES shift
+.IP "NVME_NS_RESCAP_EAS_SHIFT" 12
+EAS shift
+.IP "NVME_NS_RESCAP_WEROS_SHIFT" 12
+WEROS shift
+.IP "NVME_NS_RESCAP_EAROS_SHIFT" 12
+EAROS shift
+.IP "NVME_NS_RESCAP_WEARS_SHIFT" 12
+WEARS shift
+.IP "NVME_NS_RESCAP_EAARS_SHIFT" 12
+EAARS shift
+.IP "NVME_NS_RESCAP_IEKS_SHIFT" 12
+IEKS shift
+.IP "NVME_NS_RESCAP_PTPLS_MASK" 12
+PTPLS mask
+.IP "NVME_NS_RESCAP_WES_MASK" 12
+WES mask
+.IP "NVME_NS_RESCAP_EAS_MASK" 12
+EAS mask
+.IP "NVME_NS_RESCAP_WEROS_MASK" 12
+WEROS mask
+.IP "NVME_NS_RESCAP_EAROS_MASK" 12
+EAROS mask
+.IP "NVME_NS_RESCAP_WEARS_MASK" 12
+WEARS mask
+.IP "NVME_NS_RESCAP_EAARS_MASK" 12
+EAARS mask
+.IP "NVME_NS_RESCAP_IEKS_MASK" 12
+IEKS mask
 .IP "NVME_NS_RESCAP_PTPL" 12
 If set, indicates that the namespace supports the
 Persist Through Power Loss capability.

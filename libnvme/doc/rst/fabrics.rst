@@ -831,6 +831,9 @@ connected.
 The output file is created before attempting the connection. If the
 file cannot be created, for example because the parent directory does
 not exist, libnvmf_connect() fails without attempting the connection.
+A file that libnvmf_connect() created and has no device name to write
+into is removed again, so it never exists empty. An existing file keeps
+its content unless a device name is written.
 
 This is intended for applications that need to identify the device
 associated with a connection, for example to disconnect it later.

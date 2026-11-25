@@ -763,8 +763,8 @@ nvme-config-create(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Build one NVMe-oF connection entry from command-line options and add it to
-the INI configuration used by <em>nvme connect</em>, <em>nvme discover</em>, and
-<em>nvme connect-all</em>. The format is documented at
+the INI configuration used by <em>nvme discover</em> and <em>nvme connect-all</em>,
+and by <em>nvme connect --config</em>. The format is documented at
 <a href="https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md">https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md</a></p></div>
 <div class="paragraph"><p>If the target file exists, its connections are kept and the new entry is
 merged in alongside them. Running the same command again is a no-op.
@@ -775,6 +775,8 @@ required. Use --discovery for a discovery controller entry instead; --nqn
 is then optional.</p></div>
 <div class="paragraph"><p>A connection with an explicit --hostnqn or --hostid is written to a
 drop-in under <em>&lt;file&gt;.d/</em>. One without either goes into the main file.</p></div>
+<div class="paragraph"><p>The file can hold KX-HMAC-CHAP secrets and TLS PSKs. A new file is
+created with mode 0600. An existing file keeps its mode.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1352,7 +1354,7 @@ nvme-discover(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:19 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

@@ -749,7 +749,7 @@ nvme-netapp-smdevices(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>netapp smdevices</em></pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>netapp smdevices</em> [&lt;device&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -760,6 +760,8 @@ nvme-netapp-smdevices(1) Manual Page
 <div class="paragraph"><p>Display vendor-specific information for each NVMe path to an E-Series namespace
 currently connected to the host.  The E-Series paths are identified from the
 NVMe nodes in /dev by sending an Identify Controller.</p></div>
+<div class="paragraph"><p>When a namespace &lt;device&gt; is specified, display only that path without
+examining the other NVMe namespace devices on the host.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -879,6 +881,15 @@ namespace.
 <pre><code># nvme netapp smdevices -o column</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+Display information for one namespace only.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme netapp smdevices /dev/nvme0n1</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
@@ -893,7 +904,7 @@ namespace.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:19 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

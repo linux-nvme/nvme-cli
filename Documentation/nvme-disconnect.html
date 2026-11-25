@@ -750,7 +750,7 @@ nvme-disconnect(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>disconnect</em> [--device=&lt;device&gt; | -d &lt;device&gt;]
-                        [--exclude | -x]
+                        [--exclude | -x] [--owner=&lt;NAME&gt;] [--force]
                         [&lt;fabrics-options&gt;]</pre>
 <div class="attribution">
 </div></div>
@@ -805,6 +805,26 @@ exclusion list overview for details.</p></div>
         disconnecting, so orchestrators do not auto-reconnect the
         controller. The entry is built from the controller&#8217;s transport
         parameters (or, with a bare --nqn, from the subsystem NQN).
+</p>
+</dd>
+<dt class="hdlist1">
+--owner=&lt;NAME&gt;
+</dt>
+<dd>
+<p>
+        Disconnect a controller owned by NAME too. A controller with an
+        owner in the NVMe ownership registry is disconnected only by its
+        owner: the context that connected it owns it. <em>nbft</em> is the old
+        name of <em>pre-os</em>. A controller without an owner is disconnected
+        without this option.
+</p>
+</dd>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+        Disconnect regardless of ownership.
 </p>
 </dd>
 </dl></div>
@@ -1328,7 +1348,7 @@ nvme-exclusion-add(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:19 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

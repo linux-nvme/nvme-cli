@@ -777,10 +777,11 @@ always converted when it exists, whether or not --config is given.</p></div>
 --output. If --output is not specified, the default location,
 /usr/local/etc/nvme/nvme-fabrics.conf, is used. Unless --force is specified,
 the command refuses to overwrite an existing configuration. On success,
-the converted legacy file(s) are renamed to <em>&lt;name&gt;.converted</em> to prevent
-conversion on subsequent runs. Running the command again is safe: a source
-file that is missing only because a prior run already converted and
-renamed it is treated as already done, not as an error.</p></div>
+each converted legacy file is kept for a rollback, and a symlink
+<em>&lt;name&gt;.converted</em> to it marks it as converted. Running the command
+again is safe: a legacy file with such a marker is treated as already
+done, not as an error. nvme-config-status(1) shows the state of the
+legacy files.</p></div>
 <div class="paragraph"><p>Malformed entries (for example, invalid addressing or an unreadable port)
 are skipped with a log message. Conversion continues unless a memory
 allocation failure occurs.</p></div>
@@ -858,7 +859,7 @@ Convert one specific configuration file for testing, without touching
 </div></div>
 <div class="paragraph"><p>Note: unlike config.json, discovery.conf has no --config-style override —
 its path is always /usr/local/etc/nvme/discovery.conf. If that file exists on
-the system, this command still converts it and renames it to
+the system, this command still converts it and marks it with the symlink
 <em>discovery.conf.converted</em>, even though --config points elsewhere.</p></div>
 </li>
 </ul></div>
@@ -886,7 +887,7 @@ nvme-discover(1)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:19 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

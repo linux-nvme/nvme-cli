@@ -2,12 +2,12 @@
 .\"     Title: nvme-netapp-smdevices
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/30/2026
+.\"      Date: 11/25/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-NETAPP\-SMDEVI" "1" "10/30/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-NETAPP\-SMDEVI" "1" "11/25/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,11 +32,13 @@ nvme-netapp-smdevices \- Display information for each NVMe path to an E\-Series 
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fInetapp smdevices\fR
+\fInvme\fR [<global\-options>] \fInetapp smdevices\fR [<device>]
 .fi
 .SH "DESCRIPTION"
 .sp
 Display vendor\-specific information for each NVMe path to an E\-Series namespace currently connected to the host\&. The E\-Series paths are identified from the NVMe nodes in /dev by sending an Identify Controller\&.
+.sp
+When a namespace <device> is specified, display only that path without examining the other NVMe namespace devices on the host\&.
 .SH "OPTIONS"
 .SH "GLOBAL OPTIONS"
 .sp
@@ -121,6 +123,27 @@ Display information, in a column\-based format, for each path to an E\-Series na
 .\}
 .nf
 # nvme netapp smdevices \-o column
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Display information for one namespace only\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme netapp smdevices /dev/nvme0n1
 .fi
 .if n \{\
 .RE

@@ -750,7 +750,8 @@ nvme-ocp-set-telemetry-profile(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>ocp set-telemetry-profile</em> &lt;device&gt;
-                        [--telemetry-profile-select=&lt;tps&gt; | -t &lt;tps&gt;]</pre>
+                        [--telemetry-profile-select=&lt;tps&gt; | -t &lt;tps&gt;]
+                        [--no-uuid | -n]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -774,12 +775,24 @@ Results for any other device are undefined.</p></div>
 -t &lt;tps&gt;
 </dt>
 <dt class="hdlist1">
---tps=&lt;tps&gt;
+--telemetry-profile-select=&lt;tps&gt;
 </dt>
 <dd>
 <p>
         Telemetry Profile Select. The device shall collect debug data per the
         specified profile number.
+</p>
+</dd>
+<dt class="hdlist1">
+-n
+</dt>
+<dt class="hdlist1">
+--no-uuid
+</dt>
+<dd>
+<p>
+        Do not try to automatically detect UUID index for this command (required
+        for old OCP 1.0 support)
 </p>
 </dd>
 </dl></div>
@@ -910,7 +923,7 @@ Has the program issue a set-telemetry-profile command to use profile five.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:20 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

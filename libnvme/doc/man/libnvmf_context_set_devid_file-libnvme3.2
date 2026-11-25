@@ -1,4 +1,4 @@
-.TH "libnvmf_context_set_devid_file" 9 "libnvmf_context_set_devid_file" "October 2026" "libnvme API manual" LINUX
+.TH "libnvmf_context_set_devid_file" 9 "libnvmf_context_set_devid_file" "November 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvmf_context_set_devid_file \- Set devid file for context
 .SH SYNOPSIS
@@ -21,6 +21,9 @@ connected.
 The output file is created before attempting the connection. If the
 file cannot be created, for example because the parent directory does
 not exist, \fBlibnvmf_connect\fP fails without attempting the connection.
+A file that \fBlibnvmf_connect\fP created and has no device name to write
+into is removed again, so it never exists empty. An existing file keeps
+its content unless a device name is written.
 
 This is intended for applications that need to identify the device
 associated with a connection, for example to disconnect it later.

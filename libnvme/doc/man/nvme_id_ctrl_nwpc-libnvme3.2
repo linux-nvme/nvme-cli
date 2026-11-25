@@ -1,8 +1,40 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_nwpc" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_nwpc" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_nwpc \- This field indicates the optional namespace write protection capabilities supported by the controller.
 .SH SYNOPSIS
 enum nvme_id_ctrl_nwpc {
+.br
+.BI "    NVME_CTRL_NWPC_NWPWPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_WPUPCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_PWPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_RSVD3_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_NWPWPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_WPUPCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_PWPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_RSVD3_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_NWPC_WRITE_PROTECT"
 , 
@@ -16,6 +48,22 @@ enum nvme_id_ctrl_nwpc {
 
 };
 .SH Constants
+.IP "NVME_CTRL_NWPC_NWPWPS_SHIFT" 12
+NWPWPS shift
+.IP "NVME_CTRL_NWPC_WPUPCS_SHIFT" 12
+WPUPCS shift
+.IP "NVME_CTRL_NWPC_PWPS_SHIFT" 12
+PWPS shift
+.IP "NVME_CTRL_NWPC_RSVD3_SHIFT" 12
+Reserved shift
+.IP "NVME_CTRL_NWPC_NWPWPS_MASK" 12
+NWPWPS mask
+.IP "NVME_CTRL_NWPC_WPUPCS_MASK" 12
+WPUPCS mask
+.IP "NVME_CTRL_NWPC_PWPS_MASK" 12
+PWPS mask
+.IP "NVME_CTRL_NWPC_RSVD3_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_NWPC_WRITE_PROTECT" 12
 If set, then the controller shall
 support the No Write Protect and

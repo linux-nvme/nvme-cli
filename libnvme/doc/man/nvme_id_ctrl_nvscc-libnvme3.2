@@ -1,13 +1,37 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_nvscc" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_nvscc" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_nvscc \- This field indicates the configuration settings for NVM Vendor Specific command handling.
 .SH SYNOPSIS
 enum nvme_id_ctrl_nvscc {
 .br
+.BI "    NVME_CTRL_ICSVSCC_SNVSCF_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ICSVSCC_RSVD1_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ICSVSCC_SNVSCF_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ICSVSCC_RSVD1_MASK"
+, 
+.br
+.br
 .BI "    NVME_CTRL_NVSCC_FMT"
 
 };
 .SH Constants
+.IP "NVME_CTRL_ICSVSCC_SNVSCF_SHIFT" 12
+SNVSCF shift
+.IP "NVME_CTRL_ICSVSCC_RSVD1_SHIFT" 12
+Reserved shift
+.IP "NVME_CTRL_ICSVSCC_SNVSCF_MASK" 12
+SNVSCF mask
+.IP "NVME_CTRL_ICSVSCC_RSVD1_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_NVSCC_FMT" 12
 If set, all NVM Vendor Specific Commands use the
 format with NDT and NDM fields.

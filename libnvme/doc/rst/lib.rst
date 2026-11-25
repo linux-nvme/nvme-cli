@@ -43,12 +43,13 @@ Free an :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object and all 
   :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
 
 ``const char *owner``
-  Orchestrator identity string (e.g. "stas", "nbft").
+  Orchestrator identity string (e.g. "stas", "pre-os").
 
 **Description**
 
 Records the orchestrator identity used when claiming registry ownership of
-connections made through **ctx**.  A later call overwrites the previous value;
+connections made through **ctx**.  "nbft" is the old name of "pre-os" and is
+recorded as "pre-os".  A later call overwrites the previous value;
 treating the identity as immutable is a policy decision left to the caller.
 A process that does not participate in the registry simply never calls this.
 
@@ -80,8 +81,9 @@ controller's registry entry directly.
 **Description**
 
 Redirects the files libnvme reads and writes (the exclusion list, the
-ownership registry, ...) under **path** instead of their production locations,
-so a test can run against a throwaway directory.  For safety **path** must be
+ownership registry, the host NQN and host ID files, ...) under **path**
+instead of their production locations, so a test can run against a
+throwaway directory.  For safety **path** must be
 confined to /tmp and contain no ".." component; anything else is rejected.
 Passing NULL clears a previously set override.
 

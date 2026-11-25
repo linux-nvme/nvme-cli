@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_frmw" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_frmw" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_frmw \- Flags and values indicates capabilities regarding firmware updates from &struct nvme_id_ctrl.frmw.
 .SH SYNOPSIS
@@ -20,6 +20,10 @@ enum nvme_id_ctrl_frmw {
 , 
 .br
 .br
+.BI "    NVME_CTRL_FRMW_RSVD6_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_CTRL_FRMW_FFSRO_MASK"
 , 
 .br
@@ -33,6 +37,10 @@ enum nvme_id_ctrl_frmw {
 .br
 .br
 .BI "    NVME_CTRL_FRMW_SMUD_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_RSVD6_MASK"
 , 
 .br
 .br
@@ -60,6 +68,8 @@ NOFS shift
 FAWR shift
 .IP "NVME_CTRL_FRMW_SMUD_SHIFT" 12
 SMUD shift
+.IP "NVME_CTRL_FRMW_RSVD6_SHIFT" 12
+Reserved shift
 .IP "NVME_CTRL_FRMW_FFSRO_MASK" 12
 FFSRO mask
 .IP "NVME_CTRL_FRMW_NOFS_MASK" 12
@@ -68,6 +78,8 @@ NOFS mask
 FAWR mask
 .IP "NVME_CTRL_FRMW_SMUD_MASK" 12
 SMUD mask
+.IP "NVME_CTRL_FRMW_RSVD6_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_FRMW_FFSRO" 12
 If set, the first firmware slot is readonly
 .IP "NVME_CTRL_FRMW_NOFS" 12

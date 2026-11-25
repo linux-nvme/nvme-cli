@@ -1,13 +1,37 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_hctm" "October 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_hctm" "November 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_hctm \- Flags indicate the attributes of the host controlled thermal management feature
 .SH SYNOPSIS
 enum nvme_id_ctrl_hctm {
 .br
+.BI "    NVME_CTRL_HCTMA_HCTMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_HCTMA_RSVD1_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_HCTMA_HCTMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_HCTMA_RSVD1_MASK"
+, 
+.br
+.br
 .BI "    NVME_CTRL_HCTMA_HCTM"
 
 };
 .SH Constants
+.IP "NVME_CTRL_HCTMA_HCTMS_SHIFT" 12
+HCTMS shift
+.IP "NVME_CTRL_HCTMA_RSVD1_SHIFT" 12
+Reserved shift
+.IP "NVME_CTRL_HCTMA_HCTMS_MASK" 12
+HCTMS mask
+.IP "NVME_CTRL_HCTMA_RSVD1_MASK" 12
+Reserved mask
 .IP "NVME_CTRL_HCTMA_HCTM" 12
 then the controller supports host controlled thermal
 management, and the Set Features command and Get

@@ -760,7 +760,8 @@ nvme-samsung-vs-internal-log(1) Manual Page
 <div class="paragraph"><p>Collect the internal firmware logs of a Samsung NVMe SSD and write them to
 disk. Host-initiated telemetry, controller-initiated telemetry and the
 vendor crash, memory and debug dumps are supported. Each dump is saved as
-its own file, so a single run usually produces several files.</p></div>
+its own file, so a single run usually produces several files. Where they
+are saved is given with <em>--output-file</em>, which is mandatory.</p></div>
 <div class="paragraph"><p>Use <em>--dump-type</em> to pick which dumps to collect; several types may be
 requested in a single run.</p></div>
 <div class="paragraph"><p>This command will only work on Samsung devices supporting this feature.</p></div>
@@ -815,8 +816,12 @@ device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1).</p></div>
 <p>
         Output file name, optionally preceded by a path (ex:
         <em>./path/name</em> or <em>./path1/path2/</em>). Any directory in the path
-        that does not exist yet is created. When this option is omitted,
-        the dumps are written to the current directory.
+        that does not exist yet is created. This option is mandatory;
+        give <em>./</em> to save the dumps in the current directory.
+        Given as <em>/dev/null</em> or <em>NUL</em>, the requested dumps are retrieved
+        as usual but none of them is saved: no file or directory is
+        created, and the output is the same, less the names of the saved
+        files. It then cannot be combined with <em>--compress</em>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -955,13 +960,13 @@ using Log Specific Parameter 1 and the vendor dumps of the given device
 into the current directory.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme samsung vs-internal-log /dev/nvme0</code></pre>
+<pre><code># nvme samsung vs-internal-log /dev/nvme0 -O ./</code></pre>
 </div></div>
 <div class="paragraph"><p>Extract only the controller-initiated telemetry and the vendor dumps,
 naming both types in a single run.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme samsung vs-internal-log /dev/nvme0 -t ctlr,vendor</code></pre>
+<pre><code># nvme samsung vs-internal-log /dev/nvme0 -t ctlr,vendor -O ./</code></pre>
 </div></div>
 <div class="paragraph"><p>Extract the host-initiated telemetry using Log Specific Parameter 0, which
 is not collected unless it is named explicitly, into ./dumps/, creating
@@ -971,10 +976,17 @@ that directory if it does not exist.</p></div>
 <pre><code># nvme samsung vs-internal-log /dev/nvme0 -t host0 -O ./dumps/</code></pre>
 </div></div>
 <div class="paragraph"><p>Extract data area 2 of the host-initiated telemetry using Log Specific
-Parameter 1, store the result compressed and keep the output quiet.</p></div>
+Parameter 1 into the current directory, store the result compressed
+and keep the output quiet.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme samsung vs-internal-log /dev/nvme0 -t host1 -a 2 -z --hide-progress</code></pre>
+<pre><code># nvme samsung vs-internal-log /dev/nvme0 -t host1 -a 2 -O ./ -z --hide-progress</code></pre>
+</div></div>
+<div class="paragraph"><p>Retrieve the controller-initiated telemetry without saving it, to see
+what the device reports in its telemetry header.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme samsung vs-internal-log /dev/nvme0 -t ctlr -O /dev/null</code></pre>
 </div></div>
 </div>
 </div>
@@ -989,7 +1001,7 @@ Parameter 1, store the result compressed and keep the output quiet.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:20 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>

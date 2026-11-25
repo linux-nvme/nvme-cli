@@ -756,7 +756,7 @@ nvme-ocp-internal-log(1) Manual Page
                         [--data-area=&lt;da&gt; | -a &lt;da&gt;]
                         [--telemetry-type=&lt;type&gt; | -t &lt;type&gt;]
                         [--host-generate=&lt;gen&gt; | -g &lt;gen&gt;]
-                        [--no-uuid | -n]</pre>
+                        [--no-uuid | -n] [--print-only]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -768,7 +768,8 @@ nvme-ocp-internal-log(1) Manual Page
 from an NVMe device or from user-specified file path. Takes retrieved logs and
 decodes (or) parses into human-readable output format specified by user.
 Without --output-format, the report is written as JSON to &lt;file&gt;.json, or as
-normal text to &lt;file&gt;.txt when nvme-cli is built without json-c.</p></div>
+normal text to &lt;file&gt;.txt when nvme-cli is built without json-c. With
+--print-only, the report is printed to stdout instead and no file is written.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
 /dev/nvme0n1).</p></div>
@@ -873,6 +874,17 @@ Results for any other device are undefined.</p></div>
 <p>
         Do not try to automatically detect UUID index when retrieving the OCP
         String Log from &lt;device&gt; (default UUID index to 0).
+</p>
+</dd>
+<dt class="hdlist1">
+--print-only
+</dt>
+<dd>
+<p>
+        Print the decoded report to stdout and save no files: neither the
+        telemetry and string log bin files nor the report file.
+        Logs provided with --telemetry-log and --string-log are still read.
+        Incompatible with --output-file.
 </p>
 </dd>
 </dl></div>
@@ -1003,6 +1015,16 @@ and output to the default ./telemetry-log.json.
 </li>
 <li>
 <p>
+Retrieve both logs from the device and print the decoded Data Areas 1 and 2
+as JSON to stdout, saving no files.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme ocp internal-log /dev/nvme0 --print-only --data-area=2 -o json</code></pre>
+</div></div>
+</li>
+<li>
+<p>
 Retrieve Telemetry Host-Initiated data, reads in the OCP String Log locally.
 Decode default data-area(s) in default format.
 </p>
@@ -1049,7 +1071,7 @@ Decode data-areas 1 and 2, and output in normal text format.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-10-30 19:29:20 CET
+ 2026-11-25 13:56:30 CET
 </div>
 </div>
 </body>
