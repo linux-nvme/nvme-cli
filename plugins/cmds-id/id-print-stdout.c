@@ -1476,25 +1476,29 @@ static struct shr_table *stdout_id_ctrl_ofcs_table(__le16 ofcs_le)
 static struct shr_table *stdout_id_ctrl_dctype_table(__u8 dctype)
 {
 	struct shr_table *t;
-	__u8 rsvd = (dctype & 0xFC) >> 2;
-	__u8 dctype_val = dctype & 0x3;
 	char *dctype_str;
 
 	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
-	if (rsvd)
-		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
-	if (dctype_val == NVME_CTRL_DCTYPE_CDC)
-		dctype_str = "CDC";
-	else if (dctype_val == NVME_CTRL_DCTYPE_DDC)
-		dctype_str = "DDC";
-	else
+	switch (dctype) {
+	case NVME_CTRL_DCTYPE_NOT_REPORTED:
 		dctype_str = "not reported";
+		break;
+	case NVME_CTRL_DCTYPE_CDC:
+		dctype_str = "CDC";
+		break;
+	case NVME_CTRL_DCTYPE_DDC:
+		dctype_str = "DDC";
+		break;
+	default:
+		dctype_str = "Reserved";
+		break;
+	}
 
-	stdout_bits_add(t, "[0:2]", dctype_val, "Discovery Controller Type: %s",
-			 dctype_str);
+	stdout_bits_add(t, "[7:0]", dctype, "Discovery Controller Type: %s",
+			dctype_str);
 
 	return t;
 }
