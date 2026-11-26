@@ -19,12 +19,16 @@
 
 #include <ccan/list/list.h>
 
+#include <shared/compiler-attributes-util.h>
 #include <shared/string-util.h>
 
 #include "nvme/nvme-types.h"
 #include "nvme/lib-types.h"
 
+#include <nvme/lib.h>
 #include <nvme/tree.h>
+
+#include "cleanup.h"
 
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
@@ -499,6 +503,42 @@ int libnvme_set_attr(const char *dir, const char *attr, const char *value);
 
 void __libnvme_global_ctx_ref(struct libnvme_global_ctx *ctx);
 void __libnvme_global_ctx_unref(struct libnvme_global_ctx *ctx);
+
+/* RAII-style guard for ctx->topology_lock: libnvme_topology_guard(ctx)
+ * locks @ctx and declares a variable that unlocks it on every exit
+ * from the enclosing scope (return, break, goto), so an error path
+ * can't forget to undo the lock.
+ *
+ * Don't let the guard's scope outlive a call that may be the last
+ * unref of @ctx (e.g. libnvme_host_unref()): that can destroy
+ * topology_lock while this guard still expects to unlock it. Close
+ * the scope first, then make that call.
+ */
+struct libnvme_topology_guard {
+	struct libnvme_global_ctx *ctx;
+};
+
+static inline void __libnvme_topology_guard_release(
+		struct libnvme_topology_guard *g)
+{
+	libnvme_topology_unlock(g->ctx);
+}
+
+static inline struct libnvme_topology_guard __libnvme_topology_guard_acquire(
+		struct libnvme_global_ctx *ctx)
+{
+	libnvme_topology_lock(ctx);
+	return (struct libnvme_topology_guard){ .ctx = ctx };
+}
+
+#define __LIBNVME_CONCAT_(a, b) a##b
+#define __LIBNVME_CONCAT(a, b) __LIBNVME_CONCAT_(a, b)
+
+#define libnvme_topology_guard(ctx) \
+	struct libnvme_topology_guard \
+		__cleanup(__libnvme_topology_guard_release) __shr_unused \
+		__LIBNVME_CONCAT(__libnvme_topology_guard_, __LINE__) = \
+			__libnvme_topology_guard_acquire(ctx)
 
 void *__libnvme_submit_entry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);

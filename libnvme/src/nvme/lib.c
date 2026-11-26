@@ -190,11 +190,18 @@ __shr_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	if (!ctx)
 		return;
 
-	libnvme_topology_lock(ctx);
-	ctx->destroying = true;
-	libnvme_for_each_host_safe(ctx, h, _h)
-		libnvme_free_host(h);
-	libnvme_topology_unlock(ctx);
+	{
+		libnvme_topology_guard(ctx);
+
+		ctx->destroying = true;
+		libnvme_for_each_host_safe(ctx, h, _h)
+			libnvme_free_host(h);
+
+		/* The guard's unlock must happen before the unref below:
+		 * this may be the last reference, which destroys
+		 * topology_lock.
+		 */
+	}
 	__libnvme_global_ctx_unref(ctx);
 }
 

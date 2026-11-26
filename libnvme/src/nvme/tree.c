@@ -174,16 +174,12 @@ static int libnvme_scan_topology_locked(struct libnvme_global_ctx *ctx,
 __shr_public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 		libnvme_scan_filter_t f, void *f_args)
 {
-	int err;
-
 	if (!ctx)
 		return 0;
 
-	libnvme_topology_lock(ctx);
-	err = libnvme_scan_topology_locked(ctx, f, f_args);
-	libnvme_topology_unlock(ctx);
+	libnvme_topology_guard(ctx);
 
-	return err;
+	return libnvme_scan_topology_locked(ctx, f, f_args);
 }
 
 __shr_public void libnvme_skip_namespaces(struct libnvme_global_ctx *ctx)
@@ -223,15 +219,13 @@ __shr_public struct libnvme_subsystem *libnvme_next_subsystem(struct libnvme_hos
 __shr_public int libnvme_refresh_topology(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
-	int err;
 
-	libnvme_topology_lock(ctx);
+	libnvme_topology_guard(ctx);
+
 	libnvme_for_each_host_safe(ctx, h, _h)
 		libnvme_free_host(h);
-	err = libnvme_scan_topology(ctx, NULL, NULL);
-	libnvme_topology_unlock(ctx);
 
-	return err;
+	return libnvme_scan_topology(ctx, NULL, NULL);
 }
 
 void nvme_root_release_fds(struct libnvme_global_ctx *ctx)
@@ -525,20 +519,26 @@ __shr_public void libnvme_free_host(struct libnvme_host *h)
 	 * it's safe to read before taking the lock.
 	 */
 	ctx = h->ctx;
-	libnvme_topology_lock(ctx);
-	/* h->attached is only ever false once the tree's reference is
-	 * already gone (see __libnvme_detach_host()). Without this check,
-	 * calling this twice on the same host unrefs it an extra time --
-	 * stealing a decrement that belongs to whoever still holds a real
-	 * reference, and freeing the host out from under them.
-	 */
-	if (!h->attached) {
-		libnvme_topology_unlock(ctx);
-		return;
-	}
+	{
+		libnvme_topology_guard(ctx);
 
-	__libnvme_detach_host(h);
-	libnvme_topology_unlock(ctx);
+		/* h->attached is only ever false once the tree's reference
+		 * is already gone (see __libnvme_detach_host()). Without
+		 * this check, calling this twice on the same host unrefs it
+		 * an extra time -- stealing a decrement that belongs to
+		 * whoever still holds a real reference, and freeing the host
+		 * out from under them.
+		 */
+		if (!h->attached)
+			return;
+
+		__libnvme_detach_host(h);
+
+		/* The guard's unlock must happen before libnvme_host_unref()
+		 * below: if this is the host's last reference, that call
+		 * frees @ctx too, which destroys topology_lock.
+		 */
+	}
 	libnvme_host_unref(h);
 }
 
@@ -578,9 +578,9 @@ int libnvme_create_host(struct libnvme_global_ctx *ctx,
 	list_node_init(&h->entry);
 	h->ctx = ctx;
 
-	libnvme_topology_lock(ctx);
+	libnvme_topology_guard(ctx);
+
 	if (ctx->destroying) {
-		libnvme_topology_unlock(ctx);
 		free(h->hostnqn);
 		free(h->hostid);
 		free(h);
@@ -589,7 +589,6 @@ int libnvme_create_host(struct libnvme_global_ctx *ctx,
 	h->attached = true;
 	__libnvme_global_ctx_ref(ctx);
 	list_add_tail(&ctx->hosts, &h->entry);
-	libnvme_topology_unlock(ctx);
 
 	*host = h;
 
@@ -632,24 +631,20 @@ __shr_public int libnvme_get_host(
 	if (!hostid)
 		hostid = NVME_DEFAULT_HOSTID;
 
-	libnvme_topology_lock(ctx);
+	libnvme_topology_guard(ctx);
 
 	h = libnvme_lookup_host(ctx, hostnqn, hostid);
-	if (h)
-		goto found;
-
-	err = libnvme_create_host(ctx, hostnqn, hostid, &h);
-	if (err) {
-		libnvme_topology_unlock(ctx);
-		libnvme_msg(ctx, LIBNVME_LOG_ERR,
-			"Failed to create host '%s'\n",
-			hostnqn ? hostnqn : "<unset>");
-		return err;
+	if (!h) {
+		err = libnvme_create_host(ctx, hostnqn, hostid, &h);
+		if (err) {
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
+				"Failed to create host '%s'\n",
+				hostnqn ? hostnqn : "<unset>");
+			return err;
+		}
 	}
 
-found:
 	*host = h;
-	libnvme_topology_unlock(ctx);
 	return 0;
 }
 
