@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <pthread.h>
+#include <stdatomic.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
@@ -17,12 +19,16 @@
 
 #include <ccan/list/list.h>
 
+#include <shared/compiler-attributes-util.h>
 #include <shared/string-util.h>
 
 #include "nvme/nvme-types.h"
 #include "nvme/lib-types.h"
 
+#include <nvme/lib.h>
 #include <nvme/tree.h>
+
+#include "cleanup.h"
 
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
@@ -393,12 +399,21 @@ struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !ge
 struct libnvme_host {  // !generate-accessors:read=generated,write=none !generate-python:alias=Host
 	struct list_node entry;
 	struct list_head subsystems;
+
+	/* Always valid for as long as @h is: a host holds a reference on
+	 * its ctx (see __libnvme_global_ctx_ref()/_unref() in lib.c), so
+	 * ctx can't be freed out from under a still-referenced host. Use
+	 * libnvme_host_get_global_ctx() to check @attached instead of
+	 * reading this directly.
+	 */
 	struct libnvme_global_ctx *ctx;
+	bool attached;			// !access:read=none
 
 	char *hostnqn;
 	char *hostid;
 	char *kxchap_host_key;		// !access:write=generated
 	char *hostsymname;		// !access:write=generated
+	atomic_int refcount;		// !access:read=none
 };
 
 struct libnvme_fabric_options { // !generate-accessors
@@ -435,6 +450,24 @@ struct libnvme_fabric_options { // !generate-accessors
 };
 
 struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=libnvme !generate-python:alias=GlobalCtx
+	/* The caller's own hold from libnvme_create_global_ctx(), plus one
+	 * per host still referencing this ctx (see struct libnvme_host
+	 * above). Actual teardown is deferred to the last __unref() of
+	 * either kind, in __libnvme_global_ctx_unref().
+	 */
+	atomic_int refcount;
+
+	/* Serializes ctx->hosts lookup/iteration against create/detach.
+	 * Recursive, so a function that already holds it (or a caller
+	 * using libnvme_topology_lock() around a lookup+ref) can call
+	 * into another locking function without deadlocking itself.
+	 */
+	pthread_mutex_t topology_lock;
+	/* Set under topology_lock by libnvme_free_global_ctx(), so a
+	 * concurrent libnvme_create_host() can reject new hosts instead
+	 * of racing the teardown.
+	 */
+	bool destroying;
 	/*
 	 * Orchestrator identity. Tri-state: NULL means --owner was never
 	 * given, "" means an explicit disown, and a name means a claim.
@@ -467,6 +500,45 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=l
 	char *hostid;		// !access:read=none,write=generated
 };
 int libnvme_set_attr(const char *dir, const char *attr, const char *value);
+
+void __libnvme_global_ctx_ref(struct libnvme_global_ctx *ctx);
+void __libnvme_global_ctx_unref(struct libnvme_global_ctx *ctx);
+
+/* RAII-style guard for ctx->topology_lock: libnvme_topology_guard(ctx)
+ * locks @ctx and declares a variable that unlocks it on every exit
+ * from the enclosing scope (return, break, goto), so an error path
+ * can't forget to undo the lock.
+ *
+ * Don't let the guard's scope outlive a call that may be the last
+ * unref of @ctx (e.g. libnvme_host_unref()): that can destroy
+ * topology_lock while this guard still expects to unlock it. Close
+ * the scope first, then make that call.
+ */
+struct libnvme_topology_guard {
+	struct libnvme_global_ctx *ctx;
+};
+
+static inline void __libnvme_topology_guard_release(
+		struct libnvme_topology_guard *g)
+{
+	libnvme_topology_unlock(g->ctx);
+}
+
+static inline struct libnvme_topology_guard __libnvme_topology_guard_acquire(
+		struct libnvme_global_ctx *ctx)
+{
+	libnvme_topology_lock(ctx);
+	return (struct libnvme_topology_guard){ .ctx = ctx };
+}
+
+#define __LIBNVME_CONCAT_(a, b) a##b
+#define __LIBNVME_CONCAT(a, b) __LIBNVME_CONCAT_(a, b)
+
+#define libnvme_topology_guard(ctx) \
+	struct libnvme_topology_guard \
+		__cleanup(__libnvme_topology_guard_release) __shr_unused \
+		__LIBNVME_CONCAT(__libnvme_topology_guard_, __LINE__) = \
+			__libnvme_topology_guard_acquire(ctx)
 
 void *__libnvme_submit_entry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
@@ -555,6 +627,7 @@ void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl *c);
 
 void __libnvme_free_host(struct libnvme_host * h);
+void __libnvme_detach_host(struct libnvme_host *h);
 
 #if (LOG_FUNCNAME == 1)
 #define __libnvme_log_func __func__
