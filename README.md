@@ -40,18 +40,12 @@ summary with `nvme help`.
 
 ## Documentation
 
-| Topic | Where |
-|---|---|
-| Building from source: dependencies, alternative build systems, packaging, plugin selection | [BUILDING.md](Documentation/guide/building.md) |
-| Configuring host identity, NVMe-oF connections, and multi-orchestrator coordination | [NVMe-oF configuration](Documentation/guide/fabrics-config.md), [registry and exclusions](Documentation/guide/registry-exclusions.md) |
-| Pre-built binaries, reproducing CI builds, memory/sanitizer testing | [TESTING.md](Documentation/guide/testing.md) |
-| libnvme coverage against NVMe specifications, chapter by chapter | [SPEC-COVERAGE.md](Documentation/guide/spec-coverage.md) |
-| Privilege separation and the decoder sandbox: design, threat model, helper protocol | [PRIVSEP.md](Documentation/guide/privsep-design.md) |
-| Command/plugin man pages | `man nvme`, or browse [Documentation](Documentation/) |
-| Contributing: adding commands/plugins, API naming, commit & PR workflow | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Reporting security vulnerabilities | [SECURITY.md](SECURITY.md) |
-| Release history | [NEWS.md](NEWS.md) |
+The guide at https://nvme-cli.readthedocs.io is the entry point to the
+documentation: building, connecting to NVMe-oF targets, security,
+troubleshooting, contributing, and the man pages of all commands. Its
+sources are in [Documentation/guide](Documentation/guide).
 
-AI-assisted development resources live in the companion repository
-[nvme-cli-ai](https://github.com/linux-nvme/nvme-cli-ai); see
-[CONTRIBUTING.md](CONTRIBUTING.md) for how they fit into the workflow.
+Report security vulnerabilities as [SECURITY.md](SECURITY.md) describes.
+[CONTRIBUTING.md](CONTRIBUTING.md) explains how to contribute, including the
+AI-assisted development resources in the companion repository
+[nvme-cli-ai](https://github.com/linux-nvme/nvme-cli-ai).
