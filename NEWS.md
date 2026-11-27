@@ -1,6 +1,17 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 # NEWS
 
+## Changes in 3.4 (unreleased)
+
+### Documentation
+
+* The documentation of the GitHub wiki moved into the source tree, as
+  the guide in `Documentation/guide`. https://nvme-cli.readthedocs.io
+  shows the guide and the man pages; before, it showed only the man
+  pages. The Markdown documents of `Documentation/` (`BUILDING.md`,
+  `TESTING.md`, `PRIVSEP.md`, ...) are part of the guide now. The wiki
+  is disabled.
+
 ## Changes in 3.3 (2026-11-25)
 
 ### Feature removals and incompatible changes
