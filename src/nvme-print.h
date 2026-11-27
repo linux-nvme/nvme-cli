@@ -175,7 +175,7 @@ bool nvme_show_failed(void);
  * runs the core printers: skip it for dry runs, and run it in the decoder
  * sandbox if that is enabled and @sandbox is set. Pass false for printers
  * that open files, issue commands or pass data back to the caller. See
- * Documentation/PRIVSEP.md.
+ * Documentation/guide/privsep-design.md.
  */
 bool nvme_print_decoder_begin(nvme_print_flags_t flags, bool sandbox);
 bool nvme_print_decoder_begin_always(nvme_print_flags_t flags, bool sandbox);

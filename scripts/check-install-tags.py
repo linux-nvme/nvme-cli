@@ -9,7 +9,7 @@
 
 "meson install --tags" skips a file without a tag. Packagers who split
 nvme-cli with tags would then lose that file. See the "Install tags"
-section in Documentation/BUILDING.md.
+section in Documentation/guide/building.md.
 
 Files of subprojects (meson wraps) are not checked: their tags are set
 by the subproject, not by nvme-cli.

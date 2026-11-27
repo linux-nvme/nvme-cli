@@ -81,7 +81,7 @@ The GitHub Actions workflow uses `scripts/build.sh`. To reproduce the CI build l
 
 Privilege separation and the decoder sandbox are disabled by default and
 have their own config, which runs the tests as a user (the privsep tests
-skip as root), see [PRIVSEP.md](PRIVSEP.md):
+skip as root), see [the design of privilege separation](privsep-design.md):
 
 ```bash
 ./scripts/build.sh privsep

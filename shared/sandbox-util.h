@@ -45,7 +45,7 @@
  * child keeps them, whatever a descriptor opened while one was closed
  * refers to.
  *
- * See Documentation/PRIVSEP.md for the design.
+ * See Documentation/guide/privsep-design.md for the design.
  */
 
 /*
