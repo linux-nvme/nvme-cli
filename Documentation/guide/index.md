@@ -67,6 +67,7 @@ mcp
 :caption: Reference
 :maxdepth: 1
 
+commands
 breaking-changes
 migrating-2-to-3
 ocp
