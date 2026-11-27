@@ -10119,8 +10119,8 @@ bytes, in size. This log captures the controller’s internal state.
     __le16 right;
     __le16 nrows;
     __le16 ncols;
-    __le16 edlen;
-    __u8 rsvd18[14];
+    __le32 edlen;
+    __u8 rsvd20[12];
     __u8 eye_desc[];
   };
 
@@ -10159,7 +10159,7 @@ bytes, in size. This log captures the controller’s internal state.
 ``edlen``
   Eye Data Length
 
-``rsvd18``
+``rsvd20``
   Reserved
 
 ``eye_desc``

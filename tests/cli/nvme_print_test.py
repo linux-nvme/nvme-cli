@@ -46,6 +46,7 @@ _DIR_STREAMS_STATUS = 0x0102     # directive type 1, operation 2
 _LID_PERSISTENT_EVENT = 0x0d
 _LID_MEDIA_UNIT_STATUS = 0x10
 _LID_SUPPORTED_CAP_CONFIG = 0x11
+_LID_PHY_RX_EOM = 0x19
 
 
 def _put(buf, fmt, offset, value):
@@ -239,6 +240,30 @@ class PrintCLITest(MockTestCase):
 
     def test_log(self):
         self._run_all([['log', c, self.ctrl] for c in _LOG])
+
+    def test_phy_rx_eom_edlen(self):
+        # EDLEN is 32 bits, so 0x10000 must not be truncated.
+        edlen = 0x10000
+        desc = bytearray(32 + edlen)
+        desc[1] = 1
+        struct.pack_into('<I', desc, 16, edlen)
+        header = bytearray(64)
+        struct.pack_into('<BBHI', header, 0, _LID_PHY_RX_EOM, 2, 64, 0)
+        struct.pack_into('<I', header, 20, len(desc))
+        struct.pack_into('<H', header, 24, 1)
+        self.server.logs[_LID_PHY_RX_EOM] = bytes(header) + bytes(desc)
+
+        result = self.nvme('log', 'phy-rx-eom', self.ctrl)
+        self.assertEqual(result.returncode, 0)
+        self.assertRegex(result.stdout, r'Eye Data Length\s*:\s*65536')
+
+        if not HAVE_JSON:
+            return
+        result = self.nvme('log', 'phy-rx-eom', self.ctrl, '-o', 'json')
+        self.assertEqual(result.returncode, 0)
+        descs = json.loads(result.stdout)['descs']
+        self.assertEqual(descs[0]['edlen'], edlen)
+        self.assertEqual(len(descs[0]['vsdata_hex'].split()), edlen)
 
     def test_feat(self):
         self._run_all([['feat', c, self.ctrl] for c in _FEAT])

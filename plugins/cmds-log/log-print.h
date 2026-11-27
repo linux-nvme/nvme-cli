@@ -248,11 +248,11 @@ static inline unsigned char *eom_desc_iter_eye(struct eom_desc_iter *it)
  * *vsdatalen == 0 if it doesn't fit.
  */
 static inline unsigned char *eom_desc_iter_vsdata(struct eom_desc_iter *it,
-		const struct nvme_eom_lane_desc *desc, uint16_t *vsdatalen)
+		const struct nvme_eom_lane_desc *desc, uint32_t *vsdatalen)
 {
 	uint16_t nrows = le16_to_cpu(desc->nrows);
 	uint16_t ncols = le16_to_cpu(desc->ncols);
-	uint16_t edlen = le16_to_cpu(desc->edlen);
+	uint32_t edlen = le32_to_cpu(desc->edlen);
 	size_t vsdataoffset = (size_t)nrows * ncols + sizeof(*desc);
 
 	if (vsdataoffset > it->dsize || edlen > it->dsize - vsdataoffset ||

@@ -24,9 +24,9 @@ struct nvme_eom_lane_desc {
 .br
 .BI "    __le16 ncols;"
 .br
-.BI "    __le16 edlen;"
+.BI "    __le32 edlen;"
 .br
-.BI "    __u8 rsvd18[14];"
+.BI "    __u8 rsvd20[12];"
 .br
 .BI "    __u8 eye_desc[];"
 .br
@@ -57,7 +57,7 @@ Number of Rows
 Number of Columns
 .IP "edlen" 12
 Eye Data Length
-.IP "rsvd18" 12
+.IP "rsvd20" 12
 Reserved
 .IP "eye_desc" 12
 Printable Eye, Eye Data, and any Padding
