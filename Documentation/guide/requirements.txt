@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+sphinx==9.2.0
+sphinx-rtd-theme==3.1.0
+myst-parser==5.2.0

@@ -1,15 +1,20 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# The guide in Documentation/guide, built with Sphinx. Its conf.py copies
+# the HTML man pages (Documentation/*.html) next to the guide pages.
 version: 2
 
 build:
   os: ubuntu-24.04
   tools:
     python: "3.14"
-  jobs:
-    build:
-      html:
-        - mkdir -p $READTHEDOCS_OUTPUT/html/
-        - cp Documentation/*.html $READTHEDOCS_OUTPUT/html/
-        - mv $READTHEDOCS_OUTPUT/html/nvme.html $READTHEDOCS_OUTPUT/html/index.html
+
+python:
+  install:
+    - requirements: Documentation/guide/requirements.txt
+
+sphinx:
+  configuration: Documentation/guide/conf.py
+  fail_on_warning: true
 
 formats: []

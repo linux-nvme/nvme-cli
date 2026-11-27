@@ -109,6 +109,23 @@ jobs:
       - name: Run the semantic patches
         run: scripts/coccicheck.sh
 
+  # Build the guide in Documentation/guide like Read the Docs does. A
+  # broken link or a page missing in the table of contents fails it.
+  check-guide:
+    name: check that the guide builds without warnings
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Sphinx
+        run: |
+          python3 -m venv /tmp/venv
+          /tmp/venv/bin/pip install -q -r Documentation/guide/requirements.txt
+      - name: Build the guide
+        run: |
+          /tmp/venv/bin/sphinx-build -W --keep-going -b html \
+            Documentation/guide /tmp/guide
+
   libnvme-abi:
     # Starting with the 3.0 release, libnvme's exported symbols must not
     # change in an incompatible way (removed or renamed functions/variables,
