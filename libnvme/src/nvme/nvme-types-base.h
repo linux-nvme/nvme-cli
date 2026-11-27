@@ -4139,11 +4139,13 @@ enum nvme_id_ns_dpc {
  * @NVME_NS_DPS_PI_TYPE3: Protection information is enabled, Type 3
  * @NVME_NS_DPS_PI_SHIFT: Protection information type shift
  * @NVME_NS_DPS_PI_MASK:  Mask to get the value of the PI type
+ * @NVME_NS_DPS_PI_FIRST_SHIFT: Protection information in first bytes shift
+ * @NVME_NS_DPS_PI_FIRST_MASK: Protection information in first bytes mask
+ * @NVME_NS_DPS_RSVD4_SHIFT: Reserved shift
+ * @NVME_NS_DPS_RSVD4_MASK: Reserved mask
  * @NVME_NS_DPS_PI_FIRST: If set, indicates that the protection information, if
  *			  enabled, is transferred as the first eight bytes of
  *			  metadata.
- * @NVME_NS_DPS_PI_FIRST_SHIFT: Protection information in first bytes shift
- * @NVME_NS_DPS_PI_FIRST_MASK: Protection information in first bytes mask
  */
 enum nvme_id_ns_dps {
 	NVME_NS_DPS_PI_NONE		= 0,
@@ -4154,21 +4156,40 @@ enum nvme_id_ns_dps {
 	NVME_NS_DPS_PI_MASK		= 0x7,
 	NVME_NS_DPS_PI_FIRST_SHIFT	= 3,
 	NVME_NS_DPS_PI_FIRST_MASK	= 0x1,
+	NVME_NS_DPS_RSVD4_SHIFT		= 4,
+	NVME_NS_DPS_RSVD4_MASK		= 0xf,
 	NVME_NS_DPS_PI_FIRST		= NVME_VAL(NS_DPS_PI_FIRST),
 };
 
 #define NVME_NS_DPS_PI(dps)		NVME_GET(dps, NS_DPS_PI)
 #define NVME_NS_DPS_PI_FIRST(dps)	NVME_GET(dps, NS_DPS_PI_FIRST)
+#define NVME_NS_DPS_RSVD4(dps)		NVME_GET(dps, NS_DPS_RSVD4)
 
 /**
  * enum nvme_id_ns_nmic - This field specifies multi-path I/O and namespace
  *			  sharing capabilities of the namespace.
+ * @NVME_NS_NMIC_SHRNS_SHIFT: SHRNS shift
+ * @NVME_NS_NMIC_DISNS_SHIFT: DISNS shift
+ * @NVME_NS_NMIC_RSVD2_SHIFT: Reserved shift
+ * @NVME_NS_NMIC_SHRNS_MASK: SHRNS mask
+ * @NVME_NS_NMIC_DISNS_MASK: DISNS mask
+ * @NVME_NS_NMIC_RSVD2_MASK: RSVD2 mask
  * @NVME_NS_NMIC_SHARED: If set, then the namespace may be attached to two or
  *			 more controllers in the NVM subsystem concurrently
  */
 enum nvme_id_ns_nmic {
-	NVME_NS_NMIC_SHARED		= 1 << 0,
+	NVME_NS_NMIC_SHRNS_SHIFT	= 0,
+	NVME_NS_NMIC_DISNS_SHIFT	= 1,
+	NVME_NS_NMIC_RSVD2_SHIFT	= 2,
+	NVME_NS_NMIC_SHRNS_MASK		= 0x1,
+	NVME_NS_NMIC_DISNS_MASK		= 0x1,
+	NVME_NS_NMIC_RSVD2_MASK		= 0x3f,
+	NVME_NS_NMIC_SHARED		= NVME_VAL(NS_NMIC_SHRNS),
 };
+
+#define NVME_NS_NMIC_SHRNS(nmic)	NVME_SET(nmic, NS_NMIC_SHRNS)
+#define NVME_NS_NMIC_DISNS(nmic)	NVME_SET(nmic, NS_NMIC_DISNS)
+#define NVME_NS_NMIC_RSVD2(nmic)	NVME_SET(nmic, NS_NMIC_RSVD2)
 
 /**
  * enum nvme_id_ns_rescap - This field indicates the reservation capabilities

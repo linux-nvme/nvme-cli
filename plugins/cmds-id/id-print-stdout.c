@@ -1629,7 +1629,7 @@ static struct shr_table *stdout_id_ns_dpc_table(__u8 dpc)
 static struct shr_table *stdout_id_ns_dps_table(__u8 dps)
 {
 	struct shr_table *t;
-	__u8 rsvd = (dps & 0xF0) >> 4;
+	__u8 rsvd = NVME_NS_DPS_RSVD4(dps);
 	__u8 pif8 = NVME_NS_DPS_PI_FIRST(dps);
 	__u8 pit = NVME_NS_DPS_PI(dps);
 
@@ -1654,9 +1654,9 @@ static struct shr_table *stdout_id_ns_dps_table(__u8 dps)
 static struct shr_table *stdout_id_ns_nmic_table(__u8 nmic)
 {
 	struct shr_table *t;
-	__u8 rsvd = (nmic & 0xfc) >> 2;
-	__u8 disns = (nmic & 0x2) >> 1;
-	__u8 shrns = nmic & 0x1;
+	__u8 rsvd = NVME_NS_NMIC_RSVD2(nmic);
+	__u8 disns = NVME_NS_NMIC_DISNS(nmic);
+	__u8 shrns = NVME_NS_NMIC_SHRNS(nmic);
 
 	t = stdout_bits_table_create();
 	if (!t)
