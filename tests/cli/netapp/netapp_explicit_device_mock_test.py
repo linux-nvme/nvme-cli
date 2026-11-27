@@ -124,6 +124,21 @@ class TestNetappExplicitDevice(MockTestCase):
         self.assertFalse(self.server.raw_ioctls)
         self.assertFalse(self.server.commands)
 
+    def test_smdevices_rejects_wrong_type_device(self):
+        self.server.identify[CNS_CTRL] = controller('NetApp ONTAP Controller')
+
+        result = self.run_netapp('smdevices')
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(f'{_DEVICE} is not an smdevice', result.stderr)
+        self.assertNotIn('Unable to open', result.stderr)
+        self.assertNotIn('SMdevices', result.stdout)
+        self.assertFalse(self.server.raw_ioctls)
+        self.assertEqual(
+            [(command.instance, command.opcode, command.cns, command.nsid)
+             for command in self.server.commands],
+            [(_CTRL_INSTANCE, OPC_IDENTIFY, CNS_CTRL, 0)])
+
     def set_ontap_responses(self):
         self.server.identify[CNS_CTRL] = controller(
             'NetApp ONTAP Controller')
@@ -183,6 +198,21 @@ class TestNetappExplicitDevice(MockTestCase):
         self.assertIn('Invalid device name not-nvme', result.stderr)
         self.assertFalse(self.server.raw_ioctls)
         self.assertFalse(self.server.commands)
+
+    def test_ontapdevices_rejects_wrong_type_device(self):
+        self.server.identify[CNS_CTRL] = controller('NetApp E-Series')
+
+        result = self.run_netapp('ontapdevices')
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(f'{_DEVICE} is not an ontapdevice', result.stderr)
+        self.assertNotIn('Unable to open', result.stderr)
+        self.assertNotIn('ONTAPdevices', result.stdout)
+        self.assertFalse(self.server.raw_ioctls)
+        self.assertEqual(
+            [(command.instance, command.opcode, command.cns, command.nsid)
+             for command in self.server.commands],
+            [(_CTRL_INSTANCE, OPC_IDENTIFY, CNS_CTRL, 0)])
 
 
 if __name__ == '__main__':

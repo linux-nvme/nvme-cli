@@ -912,7 +912,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		snprintf(path, sizeof(path), "/dev/%s", devname);
 		if (stat(path, &st) != 0) {
 			nvme_show_error("%s does not exist", path);
-			return -EINVAL;
+			return -ENODEV;
 		}
 		num_paths = 1;
 	} else {
@@ -920,7 +920,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 				   alphasort);
 		if (devs.num <= 0) {
 			nvme_show_error("No smdevices detected");
-			return devs.num;
+			return devs.num < 0 ? devs.num : -ENODEV;
 		}
 		num_paths = devs.num;
 	}
@@ -958,13 +958,23 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		else if (fmt == NJSON)
 			netapp_smdevices_print_json(smdevices,
 					num_smdevices);
-	} else if (devname)
-		nvme_show_error("/dev/%s is not an smdevice", devname);
-	else
+		ret = 0;
+	} else if (devname) {
+		/*
+		 * Only report that the device is not an smdevice when it was
+		 * opened; if the open failed, that error was already shown.
+		 */
+		if (!ret) {
+			nvme_show_error("/dev/%s is not an smdevice", devname);
+			ret = -ENODEV;
+		}
+	} else {
 		nvme_show_error("No smdevices detected");
+		ret = -ENODEV;
+	}
 
 	free(smdevices);
-	return 0;
+	return ret;
 }
 
 /* handler for 'nvme netapp ontapdevices' */
@@ -1017,7 +1027,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		snprintf(path, sizeof(path), "/dev/%s", devname);
 		if (stat(path, &st) != 0) {
 			nvme_show_error("%s does not exist", path);
-			return -EINVAL;
+			return -ENODEV;
 		}
 		num_paths = 1;
 	} else {
@@ -1025,7 +1035,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 				   alphasort);
 		if (devs.num <= 0) {
 			nvme_show_error("No ontapdevices detected");
-			return devs.num;
+			return devs.num < 0 ? devs.num : -ENODEV;
 		}
 		num_paths = devs.num;
 	}
@@ -1064,13 +1074,23 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		else if (fmt == NJSON)
 			netapp_ontapdevices_print_json(ontapdevices,
 					num_ontapdevices);
-	} else if (devname)
-		nvme_show_error("/dev/%s is not an ontapdevice", devname);
-	else
+		ret = 0;
+	} else if (devname) {
+		/*
+		 * Only report that the device is not an ontapdevice when it
+		 * was opened; if the open failed, that error was already shown.
+		 */
+		if (!ret) {
+			nvme_show_error("/dev/%s is not an ontapdevice", devname);
+			ret = -ENODEV;
+		}
+	} else {
 		nvme_show_error("No ontapdevices detected");
+		ret = -ENODEV;
+	}
 
 	free(ontapdevices);
-	return 0;
+	return ret;
 }
 
 static struct command netapp_smdevices_cmd = {
