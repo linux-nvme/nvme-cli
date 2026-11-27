@@ -5,7 +5,7 @@
 # target runs as a test, with the seeds in corpus/<target> and a few
 # seconds of mutations of them (FUZZ_SECONDS, FUZZ_SEED). With
 # -Dfuzzing=true and clang, the targets are built for libFuzzer, see
-# Documentation/TESTING.md:
+# Documentation/guide/testing.md:
 #
 #   CC=clang CXX=clang++ meson setup fuzz -Dfuzzing=true \
 #       -Db_sanitize=address,undefined -Db_lundef=false

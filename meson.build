@@ -1057,7 +1057,8 @@ run_target('update-docs',
     depends: doc_tgts,
 )
 
-# Every installed file needs an install tag; see Documentation/BUILDING.md.
+# Every installed file needs an install tag; see
+# Documentation/guide/building.md.
 py3_prog = find_program('python3', required: false)
 if want_tests and py3_prog.found()
     test(

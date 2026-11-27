@@ -166,7 +166,7 @@ needs a library nvme doesn't link adds its dependency to
 `plugin_extra_deps`.
 
 `NVME_PLUGIN_INIT()` defines the function which registers the plugin. In
-a build with plugin modules (see `Documentation/BUILDING.md`), every
+a build with plugin modules (see `Documentation/guide/building.md`), every
 plugin is a module of its own, which nvme loads when the plugin is used,
 and the function runs then. Otherwise the plugin is linked into nvme and
 the function runs at start, as a constructor. A module uses the
@@ -217,7 +217,7 @@ file's commands and title.
 
 Every command that reads data from the device should have a mock test,
 and, if it only reads and prints, an entry in the device fuzz target.
-Neither needs hardware. `Documentation/TESTING.md` describes the tools.
+Neither needs hardware. `Documentation/guide/testing.md` describes the tools.
 
 **Mock tests** run the real `nvme` binary against a mocked controller:
 `tests/cli/libmock_nvme.c` intercepts the ioctls and hands every command

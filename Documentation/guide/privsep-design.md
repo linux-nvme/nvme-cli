@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
-# Privilege separation and the decoder sandbox
+# Design of privilege separation and the decoder sandbox
 
 nvme-cli decodes a lot of data it should not trust: whatever a device, or a
 fabrics target, returns. Much of it runs as root, because opening

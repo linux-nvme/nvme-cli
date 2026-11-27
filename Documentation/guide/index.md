@@ -52,6 +52,7 @@ secure-erase
 tcg-opal
 keysd
 privsep
+Reporting security issues <https://github.com/linux-nvme/nvme-cli/blob/master/SECURITY.md>
 ```
 
 ```{toctree}
@@ -71,11 +72,29 @@ migrating-2-to-3
 ocp
 troubleshooting
 faq
+Release notes <https://github.com/linux-nvme/nvme-cli/blob/master/NEWS.md>
 ```
 
 ```{toctree}
 :caption: Contributing
 :maxdepth: 1
 
+Contribution guidelines <https://github.com/linux-nvme/nvme-cli/blob/master/CONTRIBUTING.md>
+testing
+spec-coverage
 ini-parameter
+privsep-design
+Tests and fuzz coverage with Claude Code <https://github.com/linux-nvme/nvme-cli-ai/blob/main/docs/tests-and-fuzz-coverage.md>
+```
+
+```{toctree}
+:caption: libnvme design
+:maxdepth: 1
+
+Configuration file format <https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md>
+Ownership registry <https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/REGISTRY.md>
+Exclusion list <https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/EXCLUSIONS.md>
+Pre-OS hand-over <https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/PRE-OS.md>
+Transport ID (TID) <https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/TID.md>
+Integrating libnvme into an application <https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/INTEGRATION.md>
 ```

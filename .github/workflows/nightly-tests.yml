@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   # The blktests failures which are known and tracked in an issue each:
-  # the open issues with the label, see Documentation/TESTING.md. They
+  # the open issues with the label, see Documentation/guide/testing.md. They
   # run, but do not fail the night. A closed issue counts again.
   #
   # Skipped, as is nightly-tests: the self-hosted arc-vm-nvme-cli runners

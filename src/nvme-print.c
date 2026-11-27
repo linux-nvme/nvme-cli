@@ -23,7 +23,7 @@
 /*
  * A printer runs between nvme_print_begin() and nvme_print_end(). The
  * printers which decode device data run in the sandbox, if enabled. See
- * Documentation/PRIVSEP.md.
+ * Documentation/guide/privsep-design.md.
  */
 #define nvme_print(name, flags, ...)				\
 	do {							\

@@ -3,7 +3,7 @@
 # This file is part of nvme-cli.
 #
 # nvme-dashboard is the dashboard of the tests (.github/workflows), see
-# Documentation/TESTING.md. It runs from the source tree, nothing here is
+# Documentation/guide/testing.md. It runs from the source tree, nothing here is
 # built or installed: only its unit tests run, and its linters on request.
 
 if python3.found()

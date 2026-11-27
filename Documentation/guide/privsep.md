@@ -14,9 +14,7 @@ Both are **technology previews**. Both are disabled by default. They are work
 in progress and may change. They may also be removed again if they turn out
 not to be useful or too complicated. The design was discussed in [issue
 #3879](https://github.com/linux-nvme/nvme-cli/issues/3879). The full design
-is in
-[`Documentation/PRIVSEP.md`](https://github.com/linux-nvme/nvme-cli/blob/master/Documentation/PRIVSEP.md)
-in the source tree.
+is in [Design of privilege separation and the decoder sandbox](privsep-design.md).
 
 ## Why does it exist?
 
@@ -138,6 +136,6 @@ the sandbox. A plugin that decodes inside the command code is not covered.
 
 ## See also
 
-- [`Documentation/PRIVSEP.md`](https://github.com/linux-nvme/nvme-cli/blob/master/Documentation/PRIVSEP.md)
+- [Design of privilege separation and the decoder sandbox](privsep-design.md)
 - [Issue #3879: Privilege Separation](https://github.com/linux-nvme/nvme-cli/issues/3879)
 - [Building nvme-cli](building.md)

@@ -67,7 +67,7 @@
   plugins in, as before. An initramfs needs the modules of the commands
   it runs, e.g. `cmds-fabrics.so` for `nvme connect-all`, `cmds-list.so`
   for `nvme list-subsys` and `cmds-nbft.so` for `nvme nbft show`. See
-  [BUILDING.md](Documentation/BUILDING.md).
+  [the build guide](Documentation/guide/building.md).
 
 ### Fabrics
 
@@ -440,7 +440,7 @@
   the data of a device can do. Both are disabled by default. They are
   work in progress and may change, or be removed again if they turn
   out not to be useful or too complicated. See
-  `Documentation/PRIVSEP.md`.
+  `Documentation/guide/privsep-design.md`.
 
   - Privilege separation (`-Dprivsep=enabled`, Linux only): when root
     runs nvme-cli for a user, with `sudo` or with `NVME_PRIVSEP_UID`
@@ -808,7 +808,7 @@
   Samsung and Solidigm archiving), `auto` by default. Without it, the
   affected subcommands fail with a clear error instead of depending
   on whatever `tar`/`zip` happens to be on `PATH`. See
-  [BUILDING.md](Documentation/BUILDING.md).
+  [the build guide](Documentation/guide/building.md).
 
 * The lm, sandisk, sed, wdc and zns plugins are now built on Windows.
   Without kernel Opal support, `nvme sed` only supports `discover`.

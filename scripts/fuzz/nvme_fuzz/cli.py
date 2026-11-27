@@ -30,7 +30,7 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog='nvme-fuzz',
         description='Build, run and evaluate the libFuzzer targets of '
-        'nvme-cli, see Documentation/TESTING.md.',
+        'nvme-cli, see Documentation/guide/testing.md.',
     )
     p.add_argument(
         '-C',

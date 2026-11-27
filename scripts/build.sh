@@ -370,7 +370,7 @@ config_meson_fallback() {
         "${BUILDDIR}"
 }
 
-# The cross files work on Debian and Ubuntu, see Documentation/TESTING.md
+# The cross files work on Debian and Ubuntu, see Documentation/guide/testing.md
 config_meson_cross() {
     local triplet
     local opts=()
@@ -554,7 +554,7 @@ test_meson_libnvme_abi() {
     :
 }
 
-# Coverage guided fuzzing with libFuzzer, see Documentation/TESTING.md:
+# Coverage guided fuzzing with libFuzzer, see Documentation/guide/testing.md:
 # scripts/fuzz/nvme-fuzz does it, with the options given here. The results
 # are in the --fuzz-dir, by default in the build directory: per target the
 # corpus, the logs and the inputs which found a bug, and a summary. The

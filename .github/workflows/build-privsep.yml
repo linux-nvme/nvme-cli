@@ -10,7 +10,8 @@ name: Build privsep
 
 # Privilege separation (Linux only) and the decoder sandbox (Linux and
 # FreeBSD) are disabled by default for now. Build and test them here, so
-# they do not bitrot: scripts/build.sh privsep. See Documentation/PRIVSEP.md.
+# they do not bitrot: scripts/build.sh privsep. See
+# Documentation/guide/privsep-design.md.
 on:
   push:
     branches: [master]
