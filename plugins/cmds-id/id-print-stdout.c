@@ -1547,7 +1547,7 @@ static struct shr_table *stdout_id_ns_nsfeat_table(__u8 nsfeat)
 static struct shr_table *stdout_id_ns_flbas_table(__u8 flbas)
 {
 	struct shr_table *t;
-	__u8 rsvd = (flbas & 0x80) >> 7;
+	__u8 rsvd = NVME_FLBAS_RSVD7(flbas);
 	__u8 msb2_lbaf = NVME_FLBAS_HIGHER(flbas);
 	__u8 mdedata = NVME_FLBAS_META_EXT(flbas);
 	__u8 lsb4_lbaf = NVME_FLBAS_LOWER(flbas);
@@ -1572,9 +1572,9 @@ static struct shr_table *stdout_id_ns_flbas_table(__u8 flbas)
 static struct shr_table *stdout_id_ns_mc_table(__u8 mc)
 {
 	struct shr_table *t;
-	__u8 rsvd = (mc & 0xFC) >> 2;
-	__u8 mdp = (mc & 0x2) >> 1;
-	__u8 extdlba = mc & 0x1;
+	__u8 rsvd = NVME_MC_RSVD2(mc);
+	__u8 mdp = NVME_MC_MTSBS(mc);
+	__u8 extdlba = NVME_MC_MTELBAS(mc);
 
 	t = stdout_bits_table_create();
 	if (!t)

@@ -1094,22 +1094,49 @@ static const __u64 NVME_PMRMSC_CBA_MASK = 0xfffffffffffffull;
  * @NVME_FLBAS_LOWER_SHIFT:	Shift amount to get the format index least significant 4 bits
  * @NVME_FLBAS_META_EXT_SHIFT:	Shift amount to get the metadata transferred
  * @NVME_FLBAS_HIGHER_SHIFT:	Shift amount to get the format index most significant 2 bits
+ * @NVME_FLBAS_RSVD7_SHIFT:	Shift amount to get the Reserved
  * @NVME_FLBAS_LOWER_MASK:	Mask to get the format index least significant 4 bits
  * @NVME_FLBAS_META_EXT_MASK:	Mask to get the metadata transferred
  * @NVME_FLBAS_HIGHER_MASK:	Mask to get the format index most significant 2 bits
+ * @NVME_FLBAS_RSVD7_MASK:	Mask to get the Reserved
  */
 enum nvme_flbas {
 	NVME_FLBAS_LOWER_SHIFT		= 0,
 	NVME_FLBAS_META_EXT_SHIFT	= 4,
 	NVME_FLBAS_HIGHER_SHIFT		= 5,
+	NVME_FLBAS_RSVD7_SHIFT		= 7,
 	NVME_FLBAS_LOWER_MASK		= 0xf,
 	NVME_FLBAS_META_EXT_MASK	= 0x1,
 	NVME_FLBAS_HIGHER_MASK		= 0x3,
+	NVME_FLBAS_RSVD7_MASK		= 0x1,
 };
 
 #define NVME_FLBAS_LOWER(flbas)		NVME_GET(flbas, FLBAS_LOWER)
 #define NVME_FLBAS_META_EXT(flbas)	NVME_GET(flbas, FLBAS_META_EXT)
 #define NVME_FLBAS_HIGHER(flbas)	NVME_GET(flbas, FLBAS_HIGHER)
+#define NVME_FLBAS_RSVD7(flbas)		NVME_GET(flbas, FLBAS_RSVD7)
+
+/**
+ * enum nvme_mc - This field indicates the Metadata capabilities
+ * @NVME_MC_MTELBAS_SHIFT:	MTELBAS shift
+ * @NVME_MC_MTSBS_SHIFT:	MTSBS shift
+ * @NVME_MC_RSVD2_SHIFT:	Reserved shift
+ * @NVME_MC_MTELBAS_MASK:	MTELBAS mask
+ * @NVME_MC_MTSBS_MASK:		MTSBS mask
+ * @NVME_MC_RSVD2_MASK:		Reserved mask
+ */
+enum nvme_mc {
+	NVME_MC_MTELBAS_SHIFT	= 0,
+	NVME_MC_MTSBS_SHIFT	= 1,
+	NVME_MC_RSVD2_SHIFT	= 2,
+	NVME_MC_MTELBAS_MASK	= 0x1,
+	NVME_MC_MTSBS_MASK	= 0x1,
+	NVME_MC_RSVD2_MASK	= 0x3f,
+};
+
+#define NVME_MC_MTELBAS(mc)	NVME_GET(mc, MC_MTELBAS)
+#define NVME_MC_MTSBS(mc)	NVME_GET(mc, MC_MTSBS)
+#define NVME_MC_RSVD2(mc)	NVME_GET(mc, MC_RSVD2)
 
 /**
  * enum nvme_psd_flags - Possible flag values in nvme power state descriptor
