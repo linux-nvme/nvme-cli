@@ -81,23 +81,27 @@ if want_kmip
     test('nvme-keysd - kmip-client', test_kmip_client, suite: 'unit')
 
     test('nvme-keysd-kmip - help', nvme_keysd_kmip, args: ['--help'], suite: 'mock')
-    test('nvme-keysd-kmip - not-socket-activated', nvme_keysd_kmip,
-         should_fail: true,
-         suite: 'mock')
+    if meson.version().version_compare('>=1.11.0')
+        test('nvme-keysd-kmip - not-socket-activated', nvme_keysd_kmip,
+             expected_fail: true, suite: 'mock')
+    else
+        test('nvme-keysd-kmip - not-socket-activated', nvme_keysd_kmip,
+             should_fail: true, suite: 'mock')
+    endif
 endif
 
 test('nvme-keysd - help', nvme_keysd, args: ['--help'], suite: 'mock')
-test('nvme-keysd - unknown-option', nvme_keysd,
-     args: ['--bogus'], should_fail: true,
-     suite: 'mock')
-test('nvme-keysd - missing-config', nvme_keysd,
-     args: ['--config', '/nonexistent/nvme-keysd.conf'],
-     should_fail: true,
-     suite: 'mock')
-test('nvme-keysd - missing-creds-dir', nvme_keysd,
-     args: ['--creds-dir', '/nonexistent/creds'], should_fail: true,
-     suite: 'mock')
-test('nvme-keysd - missing-fabrics-config', nvme_keysd,
-     args: ['--fabrics-config', '/nonexistent/config.ini'],
-     should_fail: true,
-     suite: 'mock')
+foreach name, args : {
+    'unknown-option': ['--bogus'],
+    'missing-config': ['--config', '/nonexistent/nvme-keysd.conf'],
+    'missing-creds-dir': ['--creds-dir', '/nonexistent/creds'],
+    'missing-fabrics-config': ['--fabrics-config', '/nonexistent/config.ini'],
+}
+    if meson.version().version_compare('>=1.11.0')
+        test('nvme-keysd - ' + name, nvme_keysd,
+             args: args, expected_fail: true, suite: 'mock')
+    else
+        test('nvme-keysd - ' + name, nvme_keysd,
+             args: args, should_fail: true, suite: 'mock')
+    endif
+endforeach
