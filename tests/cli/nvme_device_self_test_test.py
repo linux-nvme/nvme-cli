@@ -11,11 +11,12 @@ waits for the progress of a self-test from the Device Self-test log page.
 
 Usage: python3 nvme_device_self_test_test.py <path-to-nvme-binary> <mock-lib>
 """
+import json
 import os
 import signal
 import threading
 
-from tests.cli.nvme_mock import NSID_ALL, MockTestCase, main
+from tests.cli.nvme_mock import HAVE_JSON, NSID_ALL, MockTestCase, main
 
 OPC_DEVICE_SELF_TEST = 0x14
 LID_DEVICE_SELF_TEST = 0x06
@@ -60,6 +61,30 @@ class DeviceSelfTestTest(MockTestCase):
                            '--self-test-code=1')
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn('started', result.stdout)
+
+    def test_failed_reports_message_and_status(self):
+        """A failed Device Self-test names the command and the status.
+
+        Regression test for #4453: nvme_show_err() dropped the message
+        for a positive NVMe status, printing only the bare status line.
+        """
+        self.server.admin[OPC_DEVICE_SELF_TEST] = 0x11d    # in progress
+        result = self.nvme('device-self-test', self.ctrl,
+                           '--self-test-code=1')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Device self-test', result.stderr)
+        self.assertIn('NVMe status: Device Self-test In Progress',
+                      result.stderr)
+
+        if not HAVE_JSON:
+            self.skipTest('built without json-c')
+        result = self.nvme('device-self-test', self.ctrl,
+                           '--self-test-code=1', '-o', 'json')
+        self.assertNotEqual(result.returncode, 0)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['error'], 'Device self-test')
+        self.assertEqual(report['status: 285'][0]['error'].split(':')[0],
+                         'Device Self-test In Progress')
 
     def test_progress(self):
         """Without a self-test code, the progress of the self-test"""

@@ -315,10 +315,13 @@ static void nvme_show_cmd_err(const char *msg, bool admin, __u8 opcode, int err)
 		return;
 	else if (err < 0)
 		nvme_show_error("%s: %s", msg, libnvme_strerror(-err));
-	else if (opcode)
+	else if (opcode) {
+		nvme_show_error("%s", msg);
 		nvme_show_opcode_status(err, admin, opcode);
-	else
+	} else {
+		nvme_show_error("%s", msg);
 		nvme_show_status(err);
+	}
 }
 
 static void show_err(int err, const char *fmt, va_list ap)
