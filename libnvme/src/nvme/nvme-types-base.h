@@ -4267,14 +4267,25 @@ enum nvme_id_ns_rescap {
  * enum nvme_nd_ns_fpi - If a format operation is in progress, this field
  *			 indicates the percentage of the namespace that remains
  *			 to be formatted.
+ * @NVME_NS_FPI_RFNVM_SHIFT: RFNVM shift
+ * @NVME_NS_FPI_FPIS_SHIFT: FPIS shift
+ * @NVME_NS_FPI_RFNVM_MASK: RFNVM mask
+ * @NVME_NS_FPI_FPIS_MASK: FPIS mask
  * @NVME_NS_FPI_REMAINING: Mask to get the format percent remaining value
  * @NVME_NS_FPI_SUPPORTED: If set, indicates that the namespace supports the
  *			   Format Progress Indicator defined for the field.
  */
 enum nvme_nd_ns_fpi {
-	NVME_NS_FPI_REMAINING		= 0x7f << 0,
-	NVME_NS_FPI_SUPPORTED		= 1 << 7,
+	NVME_NS_FPI_RFNVM_SHIFT	= 0,
+	NVME_NS_FPI_FPIS_SHIFT	= 7,
+	NVME_NS_FPI_RFNVM_MASK	= 0x7f,
+	NVME_NS_FPI_FPIS_MASK	= 0x1,
+	NVME_NS_FPI_REMAINING	= NVME_VAL(NS_FPI_RFNVM),
+	NVME_NS_FPI_SUPPORTED	= NVME_VAL(NS_FPI_FPIS),
 };
+
+#define NVME_NS_FPI_RFNVM(fpi)	NVME_SET(fpi, NS_FPI_RFNVM)
+#define NVME_NS_FPI_FPIS(fpi)	NVME_SET(fpi, NS_FPI_FPIS)
 
 /**
  * enum nvme_id_ns_dlfeat - This field indicates information about features
@@ -4327,13 +4338,24 @@ enum nvme_id_ns_kpios {
 
 /**
  * enum nvme_id_ns_attr - Specifies attributes of the namespace.
+ * @NVME_NS_NSATTR_CWP_SHIFT: CWP shift
+ * @NVME_NS_NSATTR_RSVD1_SHIFT: Reserved shift
+ * @NVME_NS_NSATTR_CWP_MASK: CWP mask
+ * @NVME_NS_NSATTR_RSVD1_MASK: Reserved mask
  * @NVME_NS_NSATTR_WRITE_PROTECTED: If set, then the namespace is currently
  *				    write protected and all write access to the
  *				    namespace shall fail.
  */
 enum nvme_id_ns_attr {
-	NVME_NS_NSATTR_WRITE_PROTECTED	= 1 << 0
+	NVME_NS_NSATTR_CWP_SHIFT	= 0,
+	NVME_NS_NSATTR_RSVD1_SHIFT	= 1,
+	NVME_NS_NSATTR_CWP_MASK		= 0x1,
+	NVME_NS_NSATTR_RSVD1_MASK	= 0x7f,
+	NVME_NS_NSATTR_WRITE_PROTECTED	= NVME_VAL(NS_NSATTR_CWP),
 };
+
+#define NVME_NS_NSATTR_CWP(nsattr)	NVME_SET(nsattr, NS_NSATTR_CWP)
+#define NVME_NS_NSATTR_RSVD1(nsattr)	NVME_SET(nsattr, NS_NSATTR_RSVD1)
 
 /**
  * struct nvme_ns_id_desc - Namespace identifier type descriptor

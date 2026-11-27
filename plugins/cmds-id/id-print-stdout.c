@@ -1718,8 +1718,8 @@ static struct shr_table *stdout_id_ns_rescap_table(__u8 rescap)
 static struct shr_table *stdout_id_ns_fpi_table(__u8 fpi)
 {
 	struct shr_table *t;
-	__u8 fpis = (fpi & 0x80) >> 7;
-	__u8 fpii = fpi & 0x7F;
+	__u8 fpis = NVME_NS_FPI_FPIS(fpi);
+	__u8 fpii = NVME_NS_FPI_RFNVM(fpi);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1739,8 +1739,8 @@ static struct shr_table *stdout_id_ns_fpi_table(__u8 fpi)
 static struct shr_table *stdout_id_ns_nsattr_table(__u8 nsattr)
 {
 	struct shr_table *t;
-	__u8 rsvd = (nsattr & 0xFE) >> 1;
-	__u8 write_protected = nsattr & 0x1;
+	__u8 rsvd = NVME_NS_NSATTR_RSVD1(nsattr);
+	__u8 write_protected = NVME_NS_NSATTR_CWP(nsattr);
 
 	t = stdout_bits_table_create();
 	if (!t)
