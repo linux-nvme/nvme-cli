@@ -1344,7 +1344,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		int idx = i++;
 		__cleanup_free char *hexstr = NULL;
 		unsigned char *vsdata;
-		uint16_t vsdatalen;
+		uint32_t vsdatalen;
 		struct json_object *jdesc;
 		char *hexdata;
 
@@ -1361,7 +1361,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		obj_add_uint(jdesc, "right", le16_to_cpu(desc.right));
 		obj_add_uint(jdesc, "nrows", le16_to_cpu(desc.nrows));
 		obj_add_uint(jdesc, "ncols", le16_to_cpu(desc.ncols));
-		obj_add_uint(jdesc, "edlen", le16_to_cpu(desc.edlen));
+		obj_add_uint(jdesc, "edlen", le32_to_cpu(desc.edlen));
 
 		vsdata = eom_desc_iter_vsdata(&it, &desc, &vsdatalen);
 		if (!vsdata) {
@@ -1379,7 +1379,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		}
 
 		/* 2 hex chars + space per byte */
-		hexstr = malloc(vsdatalen * 3 + 1);
+		hexstr = malloc((size_t)vsdatalen * 3 + 1);
 
 		if (!hexstr) {
 			json_free_object(jdesc);
@@ -1389,7 +1389,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		/* Hex dump Vendor Specific Eye Data */
 		hexdata = hexstr;
 
-		for (int offset = 0; offset < vsdatalen; offset++)
+		for (uint32_t offset = 0; offset < vsdatalen; offset++)
 			hexdata += sprintf(hexdata, "%02X ", vsdata[offset]);
 		/* remove trailing space */
 		*(hexdata - 1) = '\0';

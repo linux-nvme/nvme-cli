@@ -7006,7 +7006,7 @@ struct nvme_mgmt_addr_list_log {
  * @nrows:	Number of Rows
  * @ncols:	Number of Columns
  * @edlen:	Eye Data Length
- * @rsvd18:	Reserved
+ * @rsvd20:	Reserved
  * @eye_desc:	Printable Eye, Eye Data, and any Padding
  */
 struct nvme_eom_lane_desc {
@@ -7020,8 +7020,8 @@ struct nvme_eom_lane_desc {
 	__le16	right;
 	__le16	nrows;
 	__le16	ncols;
-	__le16	edlen;
-	__u8	rsvd18[14];
+	__le32	edlen;
+	__u8	rsvd20[12];
 	__u8	eye_desc[];
 };
 

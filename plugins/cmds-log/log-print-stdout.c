@@ -1148,7 +1148,7 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log, size_t len)
 
 	while (eom_desc_iter_next(&it, &desc)) {
 		unsigned char *vsdata;
-		uint16_t vsdatalen;
+		uint32_t vsdatalen;
 		struct shr_table *t;
 
 		t = stdout_kv_table_create();
@@ -1168,7 +1168,7 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log, size_t len)
 		stdout_kv_add(t, "Number of Columns", "%u",
 			      le16_to_cpu(desc.ncols));
 		stdout_kv_add(t, "Eye Data Length", "%u",
-			      le16_to_cpu(desc.edlen));
+			      le32_to_cpu(desc.edlen));
 
 		stdout_kv_table_finish(t, "phy-rx-eom-descs");
 
