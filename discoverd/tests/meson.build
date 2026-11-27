@@ -123,16 +123,19 @@ test_inventory = executable(
 test('nvme-discoverd - inventory', test_inventory, suite: 'unit')
 
 test('nvme-discoverd - help', nvme_discoverd, args: ['--help'], suite: 'mock')
-test('nvme-discoverd - unknown-option', nvme_discoverd,
-     args: ['--bogus'], should_fail: true,
-     suite: 'mock')
-test('nvme-discoverd - missing-nvme-path', nvme_discoverd,
-     args: ['--nvme-path', '/nonexistent/nvme'], should_fail: true,
-     suite: 'mock')
-test('nvme-discoverd - missing-config', nvme_discoverd,
-     args: ['--config', '/nonexistent/nvme-discoverd.conf'],
-     should_fail: true,
-     suite: 'mock')
+foreach name, args : {
+    'unknown-option': ['--bogus'],
+    'missing-nvme-path': ['--nvme-path', '/nonexistent/nvme'],
+    'missing-config': ['--config', '/nonexistent/nvme-discoverd.conf'],
+}
+    if meson.version().version_compare('>=1.11.0')
+        test('nvme-discoverd - ' + name, nvme_discoverd,
+             args: args, expected_fail: true, suite: 'mock')
+    else
+        test('nvme-discoverd - ' + name, nvme_discoverd,
+             args: args, should_fail: true, suite: 'mock')
+    endif
+endforeach
 
 # The daemon in a sandbox (--set-options test-base-dir/test-sysfs-dir):
 # local units, control socket, fake_nvme.py as the units' nvme binary.
