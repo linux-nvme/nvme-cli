@@ -3125,8 +3125,8 @@ static struct shr_table *stdout_id_ctrl_nvm_kpiocap_table(__u8 kpiocap)
 static struct shr_table *stdout_id_ctrl_nvm_aocs_table(__u16 aocs)
 {
 	struct shr_table *t;
-	__u16 rsvd = (aocs & 0xfffe) >> 1;
-	__u8 ralbas = aocs & 0x1;
+	__u16 rsvd = NVME_ID_CTRL_NVM_AOCS_RSVD1(aocs);
+	__u8 ralbas = NVME_ID_CTRL_NVM_AOCS_RALBAS(aocs);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -3217,11 +3217,11 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 static struct shr_table *stdout_nvm_id_ns_pic_table(__u8 pic)
 {
 	struct shr_table *t;
-	__u8 rsvd = (pic & 0xF0) >> 4;
-	__u8 qpifs = (pic & 0x8) >> 3;
-	__u8 stcrs = (pic & 0x4) >> 2;
-	__u8 pic_16bpistm = (pic & 0x2) >> 1;
-	__u8 pic_16bpists = pic & 0x1;
+	__u8 rsvd = NVME_NVM_PIC_RSVD4(pic);
+	__u8 qpifs = NVME_NVM_PIC_QPIFS(pic);
+	__u8 stcrs = NVME_NVM_PIC_STCRS(pic);
+	__u8 pic_16bpistm = NVME_NVM_PIC_PISTM16B(pic);
+	__u8 pic_16bpists = NVME_NVM_PIC_PITPS16B(pic);
 
 	t = stdout_bits_table_create();
 	if (!t)

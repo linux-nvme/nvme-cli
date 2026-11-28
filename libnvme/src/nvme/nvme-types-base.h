@@ -4830,14 +4830,19 @@ enum nvme_id_ctrl_nvm_kpiocap {
  * enum nvme_id_ctrl_nvm_aocs - Admin Optional Command Support
  * @NVME_ID_CTRL_NVM_AOCS_RALBAS_SHIFT:	Shift amount to get Reporting
  *						Allocated LBA Supported (RALBAS)
+ * @NVME_ID_CTRL_NVM_AOCS_RSVD1_SHIFT:	Shift amount to get Reserved
  * @NVME_ID_CTRL_NVM_AOCS_RALBAS_MASK:	Mask to get RALBAS
+ * @NVME_ID_CTRL_NVM_AOCS_RSVD1_MASK:	Mask to get Reserved
  */
 enum nvme_id_ctrl_nvm_aocs {
 	NVME_ID_CTRL_NVM_AOCS_RALBAS_SHIFT	= 0,
+	NVME_ID_CTRL_NVM_AOCS_RSVD1_SHIFT	= 1,
 	NVME_ID_CTRL_NVM_AOCS_RALBAS_MASK	= 0x1,
+	NVME_ID_CTRL_NVM_AOCS_RSVD1_MASK	= 0x7fff,
 };
 
 #define NVME_ID_CTRL_NVM_AOCS_RALBAS(aocs)	NVME_GET(aocs, ID_CTRL_NVM_AOCS_RALBAS)
+#define NVME_ID_CTRL_NVM_AOCS_RSVD1(aocs) NVME_GET(aocs, ID_CTRL_NVM_AOCS_RSVD1)
 
 /**
  * struct nvme_id_ctrl_nvm - I/O Command Set Specific Identify Controller data structure
