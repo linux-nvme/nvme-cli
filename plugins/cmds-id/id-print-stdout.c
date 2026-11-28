@@ -1787,9 +1787,9 @@ static struct shr_table *stdout_id_ns_dlfeat_table(__u8 dlfeat)
 static struct shr_table *stdout_id_ns_kpios_table(__u8 kpios)
 {
 	struct shr_table *t;
-	__u8 rsvd = (kpios & 0xfc) >> 2;
-	__u8 kpiosns = (kpios & 0x2) >> 1;
-	__u8 kpioens = kpios & 0x1;
+	__u8 rsvd = NVME_NS_KPIOS_RSVD2(kpios);
+	__u8 kpiosns = NVME_NS_KPIOS_KPIOSNS(kpios);
+	__u8 kpioens = NVME_NS_KPIOS_KPIOENS(kpios);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -2085,9 +2085,9 @@ static struct shr_table *
 stdout_cmd_set_independent_id_ns_nstat_table(__u8 nstat)
 {
 	struct shr_table *t;
-	__u8 rsvd3 = (nstat & 0xf8) >> 3;
-	__u8 ioi = (nstat & 0x6) >> 1;
-	__u8 nrdy = nstat & 0x1;
+	__u8 rsvd3 = NVME_NS_NSTAT_RSVD3(nstat);
+	__u8 ioi = NVME_NS_NSTAT_IOI(nstat);
+	__u8 nrdy = NVME_NS_NSTAT_NRDY(nstat);
 
 	static const char * const ioi_string[] = {
 		"I/O performance degradation is not reported",
@@ -2558,13 +2558,13 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		workload = stdout_psd_workload_str(psd->apws);
 		if (sup.plsepf) {
 			epfrt = stdout_psd_time_str(psd->epfrt,
-						     psd->epfr_fqv_ts & 0xf);
+			    NVME_PSD_EPFRTS(psd->epfr_fqv_ts));
 			epfvt = stdout_psd_time_str(psd->epfvt,
-						     psd->epfvts & 0xf);
+			    NVME_PSD_EPFVTS(psd->epfvts));
 		}
 		if (sup.plsfq)
 			fqvt = stdout_psd_time_str(psd->fqvt,
-						    psd->epfr_fqv_ts >> 4);
+			    NVME_PSD_FQVTS(psd->epfr_fqv_ts));
 		max_bandwidth = stdout_bandwidth_and_scale_str(psd->mbw,
 								psd->mbws);
 		enlat = stdout_psd_latency_str(le32_to_cpu(psd->enlat));

@@ -1253,6 +1253,40 @@ enum nvme_psd_workload {
 };
 
 /**
+ * enum nvme_psd_epfr_fqv_ts - Specifies a EPFRTS and FQVTS
+ * @NVME_PSD_EPFRTS_SHIFT: EPFRTS shift
+ * @NVME_PSD_FQVTS_SHIFT: FQVTS shift
+ * @NVME_PSD_EPFRTS_MASK: EPFRTS mask
+ * @NVME_PSD_FQVTS_MASK: FQVTS mask
+ */
+enum nvme_psd_epfr_fqv_ts {
+	NVME_PSD_EPFRTS_SHIFT	= 0,
+	NVME_PSD_FQVTS_SHIFT	= 4,
+	NVME_PSD_EPFRTS_MASK	= 0xf,
+	NVME_PSD_FQVTS_MASK	= 0xf,
+};
+
+#define NVME_PSD_EPFRTS(epfr_fqv_ts)	NVME_GET(epfr_fqv_ts, PSD_EPFRTS)
+#define NVME_PSD_FQVTS(epfr_fqv_ts)	NVME_GET(epfr_fqv_ts, PSD_FQVTS)
+
+/**
+ * enum nvme_psd_epfvts - Specifies a EPFVTS
+ * @NVME_PSD_EPFVTS_SHIFT: EPFVTS shift
+ * @NVME_PSD_RSVD4_SHIFT: Reserved shift
+ * @NVME_PSD_EPFVTS_MASK: EPFVTS mask
+ * @NVME_PSD_RSVD4_MASK: Reserved mask
+ */
+enum nvme_psd_epfvts {
+	NVME_PSD_EPFVTS_SHIFT	= 0,
+	NVME_PSD_RSVD4_SHIFT	= 4,
+	NVME_PSD_EPFVTS_MASK	= 0xf,
+	NVME_PSD_RSVD4_MASK	= 0xf,
+};
+
+#define NVME_PSD_EPFVTS(epfvts)	NVME_GET(epfvts, PSD_EPFVTS)
+#define NVME_PSD_RSVD4(epfvts)	NVME_GET(epfvts, PSD_RSVD4)
+
+/**
  * struct nvme_id_psd - Power Management data structure
  * @mp:	   Maximum Power indicates the sustained maximum power consumed by the
  *	   NVM subsystem in this power state. The power in Watts is equal to
@@ -4337,6 +4371,28 @@ enum nvme_id_ns_dlfeat {
 #define NVME_NS_DLFEAT_RSVD5(dlfeat)	NVME_SET(dlfeat, NS_DLFEAT_RSVD5)
 
 /**
+ * enum nvme_id_ns_nstat - Namespace Status
+ * @NVME_NS_NSTAT_NRDY_SHIFT:	NRDY shift
+ * @NVME_NS_NSTAT_IOI_SHIFT:	IOI shift
+ * @NVME_NS_NSTAT_RSVD3_SHIFT:	Reserved shift
+ * @NVME_NS_NSTAT_NRDY_MASK:	NRDY mask
+ * @NVME_NS_NSTAT_IOI_MASK:	IOI mask
+ * @NVME_NS_NSTAT_RSVD3_MASK:	Reserved mask
+ */
+enum nvme_id_ns_nstat {
+	NVME_NS_NSTAT_NRDY_SHIFT	= 0,
+	NVME_NS_NSTAT_IOI_SHIFT		= 1,
+	NVME_NS_NSTAT_RSVD3_SHIFT	= 3,
+	NVME_NS_NSTAT_NRDY_MASK		= 0x1,
+	NVME_NS_NSTAT_IOI_MASK		= 0x3,
+	NVME_NS_NSTAT_RSVD3_MASK	= 0x1f,
+};
+
+#define NVME_NS_NSTAT_NRDY(nstat)	NVME_GET(nstat, NS_NSTAT_NRDY)
+#define NVME_NS_NSTAT_IOI(nstat)	NVME_GET(nstat, NS_NSTAT_IOI)
+#define NVME_NS_NSTAT_RSVD3(nstat)	NVME_GET(nstat, NS_NSTAT_RSVD3)
+
+/**
  * enum nvme_id_ns_kpios - Key Per I/O Status
  * @NVME_NS_KPIOS_KPIOENS_SHIFT:	Shift amount to get Key Per I/O Enabled
  *					in Namespace from the &struct nvme_id_ns.kpios field.
@@ -4346,16 +4402,21 @@ enum nvme_id_ns_dlfeat {
  *					in Namespace from the &struct nvme_id_ns.kpios field.
  * @NVME_NS_KPIOS_KPIOSNS_MASK:	Mask to get Key Per I/O Supported in Namespace
  *					from the &struct nvme_id_ns.kpios field.
+ * @NVME_NS_KPIOS_RSVD2_SHIFT:		Shift amount to get Reserved
+ * @NVME_NS_KPIOS_RSVD2_MASK:		Mask to get Reserved
  */
 enum nvme_id_ns_kpios {
 	NVME_NS_KPIOS_KPIOENS_SHIFT	= 0,
 	NVME_NS_KPIOS_KPIOENS_MASK	= 0x1,
 	NVME_NS_KPIOS_KPIOSNS_SHIFT	= 1,
 	NVME_NS_KPIOS_KPIOSNS_MASK	= 0x1,
+	NVME_NS_KPIOS_RSVD2_SHIFT	= 2,
+	NVME_NS_KPIOS_RSVD2_MASK	= 0x3f,
 };
 
 #define NVME_NS_KPIOS_KPIOENS(kpios)	NVME_GET(kpios, NS_KPIOS_KPIOENS)
 #define NVME_NS_KPIOS_KPIOSNS(kpios)	NVME_GET(kpios, NS_KPIOS_KPIOSNS)
+#define NVME_NS_KPIOS_RSVD2(kpios)	NVME_GET(kpios, NS_KPIOS_RSVD2)
 
 /**
  * enum nvme_id_ns_attr - Specifies attributes of the namespace.
