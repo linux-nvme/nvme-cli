@@ -1140,6 +1140,12 @@ enum nvme_mc {
 
 /**
  * enum nvme_psd_flags - Possible flag values in nvme power state descriptor
+ * @NVME_PSD_FLAGS_MXPS_SHIFT: MXPS shift
+ * @NVME_PSD_FLAGS_NOPS_SHIFT: NOPS shift
+ * @NVME_PSD_FLAGS_RSVD2_SHIFT: Reserved shift
+ * @NVME_PSD_FLAGS_MXPS_MASK: MXPS mask
+ * @NVME_PSD_FLAGS_NOPS_MASK: NOPS mask
+ * @NVME_PSD_FLAGS_RSVD2_MASK: Reserved mask
  * @NVME_PSD_FLAGS_MXPS: Indicates the scale for the Maximum Power
  *			 field. If this bit is cleared, then the scale of the
  *			 Maximum Power field is in 0.01 Watts. If this bit is
@@ -1152,9 +1158,19 @@ enum nvme_mc {
  *			 does not process I/O commands in this power state.
  */
 enum nvme_psd_flags {
-	NVME_PSD_FLAGS_MXPS		= 1 << 0,
-	NVME_PSD_FLAGS_NOPS		= 1 << 1,
+	NVME_PSD_FLAGS_MXPS_SHIFT	= 0,
+	NVME_PSD_FLAGS_NOPS_SHIFT	= 1,
+	NVME_PSD_FLAGS_RSVD2_SHIFT	= 2,
+	NVME_PSD_FLAGS_MXPS_MASK	= 0x1,
+	NVME_PSD_FLAGS_NOPS_MASK	= 0x1,
+	NVME_PSD_FLAGS_RSVD2_MASK	= 0x3f,
+	NVME_PSD_FLAGS_MXPS		= NVME_VAL(PSD_FLAGS_MXPS),
+	NVME_PSD_FLAGS_NOPS		= NVME_VAL(PSD_FLAGS_NOPS),
 };
+
+#define NVME_PSD_FLAGS_MXPS(flags)	NVME_SET(flags, PSD_FLAGS_MXPS)
+#define NVME_PSD_FLAGS_NOPS(flags)	NVME_SET(flags, PSD_FLAGS_NOPS)
+#define NVME_PSD_FLAGS_RSVD2(flags)	NVME_SET(flags, PSD_FLAGS_RSVD2)
 
 /**
  * enum nvme_psd_ps - Known values for &struct nvme_psd %ips and %aps. Use with
@@ -4030,6 +4046,8 @@ struct nvme_id_ns {
  * @NVME_NS_FEAT_OPTRPERF: If set, indicates that the NPRG, NPRA, and NORS
  *			   fields are defined for this namespace and should be
  *			   used by the host for I/O optimization.
+ * @NVME_NS_NSFEAT_OPTPERF_NPDG: If set NPDG supported
+ * @NVME_NS_NSFEAT_OPTPERF_LARGE: If set NPDGL and NPDAL supported
  */
 enum nvme_id_nsfeat {
 	NVME_NS_NSFEAT_THINP_SHIFT	= 0,
@@ -4053,6 +4071,8 @@ enum nvme_id_nsfeat {
 	NVME_NS_FEAT_IO_OPT		= NVME_VAL(NS_NSFEAT_OPTPERF),
 	NVME_NS_FEAT_MAM		= NVME_VAL(NS_NSFEAT_MAM),
 	NVME_NS_FEAT_OPTRPERF		= NVME_VAL(NS_NSFEAT_OPTRPERF),
+	NVME_NS_NSFEAT_OPTPERF_NPDG	= 0x1,
+	NVME_NS_NSFEAT_OPTPERF_LARGE	= 0x2,
 };
 
 #define NVME_NS_NSFEAT_THINP(nsfeat)	NVME_GET(nsfeat, NS_NSFEAT_THINP)
@@ -4062,6 +4082,11 @@ enum nvme_id_nsfeat {
 #define NVME_NS_NSFEAT_OPTPERF(nsfeat)	NVME_GET(nsfeat, NS_NSFEAT_OPTPERF)
 #define NVME_NS_NSFEAT_MAM(nsfeat)	NVME_GET(nsfeat, NS_NSFEAT_MAM)
 #define NVME_NS_NSFEAT_OPTRPERF(nsfeat)	NVME_GET(nsfeat, NS_NSFEAT_OPTRPERF)
+
+#define NVME_NS_NSFEAT_OPTPERF_NPDG(nsfeat) \
+	(NVME_NS_NSFEAT_OPTRPERF(nsfeat) & NVME_NS_NSFEAT_OPTPERF_NPDG)
+#define NVME_NS_NSFEAT_OPTPERF_LARGE(nsfeat) \
+	(NVME_NS_NSFEAT_OPTRPERF(nsfeat) & NVME_NS_NSFEAT_OPTPERF_LARGE)
 
 /**
  * enum nvme_id_ns_flbas - This field indicates the LBA data size & metadata
@@ -4944,6 +4969,24 @@ struct nvme_primary_ctrl_cap {
 	__le16	vigran;
 	__u8	rsvd80[4016];
 };
+
+/**
+ * enum nvme_secondary_ctrl_scs - Secondary Controller State
+ * @NVME_SECONDARY_CTRL_SCS_OLS_SHIFT:		OLS shift
+ * @NVME_SECONDARY_CTRL_SCS_RSVD1_SHIFT:	Reserved shift
+ * @NVME_SECONDARY_CTRL_SCS_OLS_MASK:		OLS mask
+ * @NVME_SECONDARY_CTRL_SCS_RSVD1_MASK:		Reserved mask
+ */
+enum nvme_secondary_ctrl_scs {
+	NVME_SECONDARY_CTRL_SCS_OLS_SHIFT	= 0,
+	NVME_SECONDARY_CTRL_SCS_RSVD1_SHIFT	= 1,
+	NVME_SECONDARY_CTRL_SCS_OLS_MASK	= 0x1,
+	NVME_SECONDARY_CTRL_SCS_RSVD1_MASK	= 0x7f,
+};
+
+#define NVME_SECONDARY_CTRL_SCS_OLS(scs) NVME_GET(scs, SECONDARY_CTRL_SCS_OLS)
+#define NVME_SECONDARY_CTRL_SCS_RSVD1(scs) \
+	NVME_GET(scs, SECONDARY_CTRL_SCS_RSVD1)
 
 /**
  * struct nvme_secondary_ctrl -	 Secondary Controller Entry

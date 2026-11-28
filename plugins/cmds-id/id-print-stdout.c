@@ -1525,10 +1525,12 @@ static struct shr_table *stdout_id_ns_nsfeat_table(__u8 nsfeat)
 			 "%s Atomicity Mode applies to write operations",
 			 mam ? "Multiple" : "Single");
 	stdout_bits_add(t, "[5:4]", optperf,
-			 "NPWG, NPWA, %s%sNPDA, and NOWS are %sSupported",
-			 ((optperf & 0x1) || (!optperf)) ? "NPDG, " : "",
-			 ((optperf & 0x2) || (!optperf)) ? "NPDGL, " : "",
-			 optperf ? "" : "Not ");
+	    "NPWG, NPWA, %sNPDA, %sand NOWS are %sSupported",
+	    ((optperf & NVME_NS_NSFEAT_OPTPERF_NPDG) || (!optperf)) ?
+	    "NPDG, " : "",
+	    ((optperf & NVME_NS_NSFEAT_OPTPERF_LARGE) || (!optperf)) ?
+	    "NPDGL, NPDAL, " : "",
+	    optperf ? "" : "Not ");
 	stdout_bits_add(t, "[3:3]", uidreuse,
 			 "NGUID and EUI64 fields if non-zero, %sReused",
 			 uidreuse ? "Never " : "");
@@ -1996,10 +1998,10 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		stdout_kv_add(t, "nvmcap", "%s",
 			      uint128_t_to_l10n_string(
 					      le128_to_cpu(ns->nvmcap)));
-		if (ns->nsfeat & 0x30) {
+		if (NVME_NS_NSFEAT_OPTPERF(ns->nsfeat)) {
 			stdout_kv_add(t, "npwg", "%u", le16_to_cpu(ns->npwg));
 			stdout_kv_add(t, "npwa", "%u", le16_to_cpu(ns->npwa));
-			if (ns->nsfeat & 0x10)
+			if (NVME_NS_NSFEAT_OPTPERF_NPDG(ns->nsfeat))
 				stdout_kv_add(t, "npdg", "%u",
 					      le16_to_cpu(ns->npdg));
 			stdout_kv_add(t, "npda", "%u", le16_to_cpu(ns->npda));
@@ -2539,7 +2541,7 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		if (!max_power) {
 			if (asprintf(&mp, "-") < 0)
 				mp = NULL;
-		} else if (psd->flags & NVME_PSD_FLAGS_MXPS) {
+		} else if (NVME_PSD_FLAGS_MXPS(psd->flags)) {
 			if (asprintf(&mp, "%01u.%04uW",
 				     max_power / 10000, max_power % 10000) < 0)
 				mp = NULL;
@@ -2586,7 +2588,7 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		shr_table_set_value_int(t, ++col, row, i, RIGHT);
 		shr_table_set_value_str(t, ++col, row, mp ?: "-", RIGHT);
 		shr_table_set_value_str(t, ++col, row,
-				psd->flags & NVME_PSD_FLAGS_NOPS ?
+				NVME_PSD_FLAGS_NOPS(psd->flags) ?
 				"non-operational" : "operational",
 				LEFT);
 		shr_table_set_value_str(t, ++col, row, enlat ?: "-", RIGHT);
@@ -3290,7 +3292,7 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 			     bool cap_only)
 {
 	bool verbose = id_stdout_print_ops.flags & VERBOSE;
-	bool qpifs = (nvm_ns->pic & 0x8) >> 3;
+	bool qpifs = NVME_NVM_PIC_QPIFS(nvm_ns->pic);
 	struct shr_table *t;
 	__u32 elbaf;
 	__u8 lbaf;
@@ -3328,9 +3330,9 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 
 	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
-		qpif = (elbaf >> 9) & 0xF;
-		pif = (elbaf >> 7) & 0x3;
-		sts = elbaf & 0x7f;
+		qpif = NVME_NVM_ELBAF_QPIF(elbaf);
+		pif = NVME_NVM_ELBAF_PIF(elbaf);
+		sts = NVME_NVM_ELBAF_STS(elbaf);
 		if (verbose)
 			printf(
 			       "Extended LBA Format %2d : Qualified Protection Information Format: %s(%d) - Protection Information Format: %s(%d) - Storage Tag Size (MSB): %-2d %s\n",
@@ -3346,13 +3348,14 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	if (!t)
 		return;
 
-	if (ns->nsfeat & 0x20)
+	if (NVME_NS_NSFEAT_OPTPERF_LARGE(ns->nsfeat))
 		stdout_kv_add(t, "npdgl", "%#x", le32_to_cpu(nvm_ns->npdgl));
 
 	stdout_kv_add(t, "nprg", "%#x", le32_to_cpu(nvm_ns->nprg));
 	stdout_kv_add(t, "npra", "%#x", le32_to_cpu(nvm_ns->npra));
 	stdout_kv_add(t, "nors", "%#x", le32_to_cpu(nvm_ns->nors));
-	stdout_kv_add(t, "npdal", "%#x", le32_to_cpu(nvm_ns->npdal));
+	if (NVME_NS_NSFEAT_OPTPERF_LARGE(ns->nsfeat))
+		stdout_kv_add(t, "npdal", "%#x", le32_to_cpu(nvm_ns->npdal));
 	stdout_kv_add(t, "lbapss", "%#x", le32_to_cpu(nvm_ns->lbapss));
 	stdout_kv_add(t, "tlbaag", "%#x", le32_to_cpu(nvm_ns->tlbaag));
 
@@ -3799,8 +3802,8 @@ static void stdout_list_secondary_ctrl(
 		stdout_kv_add(t, "Primary Controller Identifier (PCID)",
 			      "%#.04x", le16_to_cpu(sc_entry[i].pcid));
 		stdout_kv_add(t, "Secondary Controller State (SCS)",
-			      "%#.04x (%s)", sc_entry[i].scs,
-			      state_desc[sc_entry[i].scs & 0x1]);
+		    "%#.04x (%s)", sc_entry[i].scs,
+		    state_desc[NVME_SECONDARY_CTRL_SCS_OLS(sc_entry[i].scs)]);
 		stdout_kv_add(t, "Virtual Function Number (VFN)",
 			      "%#.04x", le16_to_cpu(sc_entry[i].vfn));
 		stdout_kv_add(t, "Num VQ Flex Resources Assigned (NVQ)",
