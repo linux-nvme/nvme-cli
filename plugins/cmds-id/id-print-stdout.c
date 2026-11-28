@@ -1758,10 +1758,10 @@ static struct shr_table *stdout_id_ns_nsattr_table(__u8 nsattr)
 static struct shr_table *stdout_id_ns_dlfeat_table(__u8 dlfeat)
 {
 	struct shr_table *t;
-	__u8 rsvd = (dlfeat & 0xE0) >> 5;
-	__u8 guard = (dlfeat & 0x10) >> 4;
-	__u8 dwz = (dlfeat & 0x8) >> 3;
-	__u8 val = dlfeat & 0x7;
+	__u8 rsvd = NVME_NS_DLFEAT_RSVD5(dlfeat);
+	__u8 guard = NVME_NS_DLFEAT_GDS(dlfeat);
+	__u8 dwz = NVME_NS_DLFEAT_WZDS(dlfeat);
+	__u8 val = NVME_NS_DLFEAT_DRB(dlfeat);
 
 	t = stdout_bits_table_create();
 	if (!t)

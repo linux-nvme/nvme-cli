@@ -4291,6 +4291,14 @@ enum nvme_nd_ns_fpi {
  * enum nvme_id_ns_dlfeat - This field indicates information about features
  *			    that affect deallocating logical blocks for this
  *			    namespace.
+ * @NVME_NS_DLFEAT_DRB_SHIFT:	 DRB shift
+ * @NVME_NS_DLFEAT_WZDS_SHIFT:	 WADS shift
+ * @NVME_NS_DLFEAT_GDS_SHIFT:	 GDS shift
+ * @NVME_NS_DLFEAT_RSVD5_SHIFT:	 Reserved shift
+ * @NVME_NS_DLFEAT_DRB_MASK:	 DRB mask
+ * @NVME_NS_DLFEAT_WZDS_MASK:	 WZDS mask,
+ * @NVME_NS_DLFEAT_GDS_MASK:	 GDS mask
+ * @NVME_NS_DLFEAT_RSVD5_MASK:	 Reserved mask
  * @NVME_NS_DLFEAT_RB:		 Mask to get the value of the read behavior
  * @NVME_NS_DLFEAT_RB_NR:	 Read behvaior is not reported
  * @NVME_NS_DLFEAT_RB_ALL_0S:	 A deallocated logical block returns all bytes
@@ -4307,13 +4315,26 @@ enum nvme_nd_ns_fpi {
  *				 block and its metadata
  */
 enum nvme_id_ns_dlfeat {
-	NVME_NS_DLFEAT_RB		= 7 << 0,
+	NVME_NS_DLFEAT_DRB_SHIFT	= 0,
+	NVME_NS_DLFEAT_WZDS_SHIFT	= 3,
+	NVME_NS_DLFEAT_GDS_SHIFT	= 4,
+	NVME_NS_DLFEAT_RSVD5_SHIFT	= 5,
+	NVME_NS_DLFEAT_DRB_MASK		= 0x7,
+	NVME_NS_DLFEAT_WZDS_MASK	= 0x1,
+	NVME_NS_DLFEAT_GDS_MASK		= 0x1,
+	NVME_NS_DLFEAT_RSVD5_MASK	= 0x7,
+	NVME_NS_DLFEAT_RB		= NVME_VAL(NS_DLFEAT_DRB),
 	NVME_NS_DLFEAT_RB_NR		= 0,
 	NVME_NS_DLFEAT_RB_ALL_0S	= 1,
 	NVME_NS_DLFEAT_RB_ALL_FS	= 2,
-	NVME_NS_DLFEAT_WRITE_ZEROES	= 1 << 3,
-	NVME_NS_DLFEAT_CRC_GUARD	= 1 << 4,
+	NVME_NS_DLFEAT_WRITE_ZEROES	= NVME_VAL(NS_DLFEAT_WZDS),
+	NVME_NS_DLFEAT_CRC_GUARD	= NVME_VAL(NS_DLFEAT_GDS),
 };
+
+#define NVME_NS_DLFEAT_DRB(dlfeat)	NVME_SET(dlfeat, NS_DLFEAT_DRB)
+#define NVME_NS_DLFEAT_WZDS(dlfeat)	NVME_SET(dlfeat, NS_DLFEAT_WZDS)
+#define NVME_NS_DLFEAT_GDS(dlfeat)	NVME_SET(dlfeat, NS_DLFEAT_GDS)
+#define NVME_NS_DLFEAT_RSVD5(dlfeat)	NVME_SET(dlfeat, NS_DLFEAT_RSVD5)
 
 /**
  * enum nvme_id_ns_kpios - Key Per I/O Status
