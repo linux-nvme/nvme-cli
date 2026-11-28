@@ -1286,12 +1286,32 @@ static struct shr_table *stdout_id_ctrl_nwpc_table(__u8 nwpc)
 	return t;
 }
 
-static struct shr_table *stdout_id_ctrl_ocfs_table(__le16 ctrl_ocfs)
+static __u16 get_cdfs(__u16 cdfs, int format)
+{
+	switch (format) {
+	case NVME_CTRL_CDFS_CDF0S_SHIFT:
+		return NVME_CTRL_CDFS_CDF0S(cdfs);
+	case NVME_CTRL_CDFS_CDF1S_SHIFT:
+		return NVME_CTRL_CDFS_CDF1S(cdfs);
+	case NVME_CTRL_CDFS_CDF2S_SHIFT:
+		return NVME_CTRL_CDFS_CDF2S(cdfs);
+	case NVME_CTRL_CDFS_CDF3S_SHIFT:
+		return NVME_CTRL_CDFS_CDF3S(cdfs);
+	case NVME_CTRL_CDFS_CDF4S_SHIFT:
+		return NVME_CTRL_CDFS_CDF4S(cdfs);
+	default:
+		break;
+	}
+
+	return NVME_CTRL_CDFS_RSVD5(cdfs);
+}
+
+static struct shr_table *stdout_id_ctrl_cdfs_table(__le16 ctrl_cdfs)
 {
 	struct shr_table *t;
-	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
-	__u16 rsvd = NVME_CTRL_CDFS_RSVD5(ocfs);
-	int copy_fmt = NVME_CTRL_CDFS_CDFS4S_SHIFT;
+	__u16 cdfs = le16_to_cpu(ctrl_cdfs);
+	__u16 rsvd = NVME_CTRL_CDFS_RSVD5(cdfs);
+	int copy_fmt = NVME_CTRL_CDFS_CDF4S_SHIFT;
 	__u8 supported;
 	char *bits;
 	char *desc;
@@ -1304,7 +1324,7 @@ static struct shr_table *stdout_id_ctrl_ocfs_table(__le16 ctrl_ocfs)
 		stdout_bits_add(t, "[15:5]", rsvd, "Reserved");
 
 	for (; copy_fmt >= 0; copy_fmt--) {
-		supported = ocfs >> copy_fmt & 1;
+		supported = get_cdfs(cdfs, copy_fmt);
 
 		if (asprintf(&bits, "[%d:%d]", copy_fmt, copy_fmt) < 0)
 			bits = NULL;
@@ -1390,7 +1410,7 @@ static struct shr_table *stdout_id_ctrl_sgls_table(__le32 ctrl_sgls)
 static struct shr_table *stdout_id_ctrl_trattr_table(__u8 ctrl_trattr)
 {
 	struct shr_table *t;
-	__u8 rsvd3 = (ctrl_trattr >> 3);
+	__u8 rsvd3 = NVME_CTRL_TRATTR_RSVD3(ctrl_trattr);
 	__u8 mrtll = NVME_CTRL_TRATTR_MRTLL(ctrl_trattr);
 	__u8 tudcs = NVME_CTRL_TRATTR_TUDCS(ctrl_trattr);
 	__u8 thmcs = NVME_CTRL_TRATTR_THMCS(ctrl_trattr);
@@ -1415,18 +1435,21 @@ static struct shr_table *stdout_id_ctrl_trattr_table(__u8 ctrl_trattr)
 
 static struct shr_table *stdout_id_ctrl_fcatt_table(__u8 fcatt)
 {
-	struct shr_table *t;
-	__u8 rsvd = (fcatt & 0xFE) >> 1;
-	__u8 scm = fcatt & 0x1;
+	struct shr_table *t = stdout_bits_table_create();
+	__u8 rsvd = NVME_CTRL_FCATT_RSVD2(fcatt);
+	__u8 nznsetids = NVME_CTRL_FCATT_NZNSETIDS(fcatt);
+	__u8 scm = NVME_CTRL_FCATT_DCMS(fcatt);
 
-	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
 	if (rsvd)
-		stdout_bits_add(t, "[7:1]", rsvd, "Reserved");
+		stdout_bits_add(t, "[7:2]", rsvd, "Reserved");
+	stdout_bits_add(t, "[1:1]", nznsetids,
+			"Non-Zero NVM Set ID %sSupported",
+			nznsetids ? "" : "Not ");
 	stdout_bits_add(t, "[0:0]", scm, "%s Controller Model",
-			 scm ? "Static" : "Dynamic");
+			scm ? "Static" : "Dynamic");
 
 	return t;
 }
@@ -1435,8 +1458,8 @@ static struct shr_table *stdout_id_ctrl_ofcs_table(__le16 ofcs_le)
 {
 	struct shr_table *t;
 	__u16 ofcs = le16_to_cpu(ofcs_le);
-	__u16 rsvd = (ofcs & 0xfffe) >> 1;
-	__u8 disconn = ofcs & 0x1;
+	__u16 rsvd = NVME_CTRL_OFCS_RSVD1(ofcs);
+	__u8 disconn = NVME_CTRL_OFCS_DCS(ofcs);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1453,25 +1476,29 @@ static struct shr_table *stdout_id_ctrl_ofcs_table(__le16 ofcs_le)
 static struct shr_table *stdout_id_ctrl_dctype_table(__u8 dctype)
 {
 	struct shr_table *t;
-	__u8 rsvd = (dctype & 0xFC) >> 2;
-	__u8 dctype_val = dctype & 0x3;
 	char *dctype_str;
 
 	t = stdout_bits_table_create();
 	if (!t)
 		return NULL;
 
-	if (rsvd)
-		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
-	if (dctype_val == NVME_CTRL_DCTYPE_CDC)
-		dctype_str = "CDC";
-	else if (dctype_val == NVME_CTRL_DCTYPE_DDC)
-		dctype_str = "DDC";
-	else
+	switch (dctype) {
+	case NVME_CTRL_DCTYPE_NOT_REPORTED:
 		dctype_str = "not reported";
+		break;
+	case NVME_CTRL_DCTYPE_CDC:
+		dctype_str = "CDC";
+		break;
+	case NVME_CTRL_DCTYPE_DDC:
+		dctype_str = "DDC";
+		break;
+	default:
+		dctype_str = "Reserved";
+		break;
+	}
 
-	stdout_bits_add(t, "[0:2]", dctype_val, "Discovery Controller Type: %s",
-			 dctype_str);
+	stdout_bits_add(t, "[7:0]", dctype, "Discovery Controller Type: %s",
+			dctype_str);
 
 	return t;
 }
@@ -1498,10 +1525,12 @@ static struct shr_table *stdout_id_ns_nsfeat_table(__u8 nsfeat)
 			 "%s Atomicity Mode applies to write operations",
 			 mam ? "Multiple" : "Single");
 	stdout_bits_add(t, "[5:4]", optperf,
-			 "NPWG, NPWA, %s%sNPDA, and NOWS are %sSupported",
-			 ((optperf & 0x1) || (!optperf)) ? "NPDG, " : "",
-			 ((optperf & 0x2) || (!optperf)) ? "NPDGL, " : "",
-			 optperf ? "" : "Not ");
+	    "NPWG, NPWA, %sNPDA, %sand NOWS are %sSupported",
+	    ((optperf & NVME_NS_NSFEAT_OPTPERF_NPDG) || (!optperf)) ?
+	    "NPDG, " : "",
+	    ((optperf & NVME_NS_NSFEAT_OPTPERF_LARGE) || (!optperf)) ?
+	    "NPDGL, NPDAL, " : "",
+	    optperf ? "" : "Not ");
 	stdout_bits_add(t, "[3:3]", uidreuse,
 			 "NGUID and EUI64 fields if non-zero, %sReused",
 			 uidreuse ? "Never " : "");
@@ -1520,7 +1549,7 @@ static struct shr_table *stdout_id_ns_nsfeat_table(__u8 nsfeat)
 static struct shr_table *stdout_id_ns_flbas_table(__u8 flbas)
 {
 	struct shr_table *t;
-	__u8 rsvd = (flbas & 0x80) >> 7;
+	__u8 rsvd = NVME_FLBAS_RSVD7(flbas);
 	__u8 msb2_lbaf = NVME_FLBAS_HIGHER(flbas);
 	__u8 mdedata = NVME_FLBAS_META_EXT(flbas);
 	__u8 lsb4_lbaf = NVME_FLBAS_LOWER(flbas);
@@ -1545,9 +1574,9 @@ static struct shr_table *stdout_id_ns_flbas_table(__u8 flbas)
 static struct shr_table *stdout_id_ns_mc_table(__u8 mc)
 {
 	struct shr_table *t;
-	__u8 rsvd = (mc & 0xFC) >> 2;
-	__u8 mdp = (mc & 0x2) >> 1;
-	__u8 extdlba = mc & 0x1;
+	__u8 rsvd = NVME_MC_RSVD2(mc);
+	__u8 mdp = NVME_MC_MTSBS(mc);
+	__u8 extdlba = NVME_MC_MTELBAS(mc);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1602,7 +1631,7 @@ static struct shr_table *stdout_id_ns_dpc_table(__u8 dpc)
 static struct shr_table *stdout_id_ns_dps_table(__u8 dps)
 {
 	struct shr_table *t;
-	__u8 rsvd = (dps & 0xF0) >> 4;
+	__u8 rsvd = NVME_NS_DPS_RSVD4(dps);
 	__u8 pif8 = NVME_NS_DPS_PI_FIRST(dps);
 	__u8 pit = NVME_NS_DPS_PI(dps);
 
@@ -1627,9 +1656,9 @@ static struct shr_table *stdout_id_ns_dps_table(__u8 dps)
 static struct shr_table *stdout_id_ns_nmic_table(__u8 nmic)
 {
 	struct shr_table *t;
-	__u8 rsvd = (nmic & 0xfc) >> 2;
-	__u8 disns = (nmic & 0x2) >> 1;
-	__u8 shrns = nmic & 0x1;
+	__u8 rsvd = NVME_NS_NMIC_RSVD2(nmic);
+	__u8 disns = NVME_NS_NMIC_DISNS(nmic);
+	__u8 shrns = NVME_NS_NMIC_SHRNS(nmic);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1691,8 +1720,8 @@ static struct shr_table *stdout_id_ns_rescap_table(__u8 rescap)
 static struct shr_table *stdout_id_ns_fpi_table(__u8 fpi)
 {
 	struct shr_table *t;
-	__u8 fpis = (fpi & 0x80) >> 7;
-	__u8 fpii = fpi & 0x7F;
+	__u8 fpis = NVME_NS_FPI_FPIS(fpi);
+	__u8 fpii = NVME_NS_FPI_RFNVM(fpi);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1712,8 +1741,8 @@ static struct shr_table *stdout_id_ns_fpi_table(__u8 fpi)
 static struct shr_table *stdout_id_ns_nsattr_table(__u8 nsattr)
 {
 	struct shr_table *t;
-	__u8 rsvd = (nsattr & 0xFE) >> 1;
-	__u8 write_protected = nsattr & 0x1;
+	__u8 rsvd = NVME_NS_NSATTR_RSVD1(nsattr);
+	__u8 write_protected = NVME_NS_NSATTR_CWP(nsattr);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1731,10 +1760,10 @@ static struct shr_table *stdout_id_ns_nsattr_table(__u8 nsattr)
 static struct shr_table *stdout_id_ns_dlfeat_table(__u8 dlfeat)
 {
 	struct shr_table *t;
-	__u8 rsvd = (dlfeat & 0xE0) >> 5;
-	__u8 guard = (dlfeat & 0x10) >> 4;
-	__u8 dwz = (dlfeat & 0x8) >> 3;
-	__u8 val = dlfeat & 0x7;
+	__u8 rsvd = NVME_NS_DLFEAT_RSVD5(dlfeat);
+	__u8 guard = NVME_NS_DLFEAT_GDS(dlfeat);
+	__u8 dwz = NVME_NS_DLFEAT_WZDS(dlfeat);
+	__u8 val = NVME_NS_DLFEAT_DRB(dlfeat);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1760,9 +1789,9 @@ static struct shr_table *stdout_id_ns_dlfeat_table(__u8 dlfeat)
 static struct shr_table *stdout_id_ns_kpios_table(__u8 kpios)
 {
 	struct shr_table *t;
-	__u8 rsvd = (kpios & 0xfc) >> 2;
-	__u8 kpiosns = (kpios & 0x2) >> 1;
-	__u8 kpioens = kpios & 0x1;
+	__u8 rsvd = NVME_NS_KPIOS_RSVD2(kpios);
+	__u8 kpiosns = NVME_NS_KPIOS_KPIOSNS(kpios);
+	__u8 kpioens = NVME_NS_KPIOS_KPIOENS(kpios);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -1969,10 +1998,10 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		stdout_kv_add(t, "nvmcap", "%s",
 			      uint128_t_to_l10n_string(
 					      le128_to_cpu(ns->nvmcap)));
-		if (ns->nsfeat & 0x30) {
+		if (NVME_NS_NSFEAT_OPTPERF(ns->nsfeat)) {
 			stdout_kv_add(t, "npwg", "%u", le16_to_cpu(ns->npwg));
 			stdout_kv_add(t, "npwa", "%u", le16_to_cpu(ns->npwa));
-			if (ns->nsfeat & 0x10)
+			if (NVME_NS_NSFEAT_OPTPERF_NPDG(ns->nsfeat))
 				stdout_kv_add(t, "npdg", "%u",
 					      le16_to_cpu(ns->npdg));
 			stdout_kv_add(t, "npda", "%u", le16_to_cpu(ns->npda));
@@ -2058,9 +2087,9 @@ static struct shr_table *
 stdout_cmd_set_independent_id_ns_nstat_table(__u8 nstat)
 {
 	struct shr_table *t;
-	__u8 rsvd3 = (nstat & 0xf8) >> 3;
-	__u8 ioi = (nstat & 0x6) >> 1;
-	__u8 nrdy = nstat & 0x1;
+	__u8 rsvd3 = NVME_NS_NSTAT_RSVD3(nstat);
+	__u8 ioi = NVME_NS_NSTAT_IOI(nstat);
+	__u8 nrdy = NVME_NS_NSTAT_NRDY(nstat);
 
 	static const char * const ioi_string[] = {
 		"I/O performance degradation is not reported",
@@ -2512,7 +2541,7 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		if (!max_power) {
 			if (asprintf(&mp, "-") < 0)
 				mp = NULL;
-		} else if (psd->flags & NVME_PSD_FLAGS_MXPS) {
+		} else if (NVME_PSD_FLAGS_MXPS(psd->flags)) {
 			if (asprintf(&mp, "%01u.%04uW",
 				     max_power / 10000, max_power % 10000) < 0)
 				mp = NULL;
@@ -2531,13 +2560,13 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		workload = stdout_psd_workload_str(psd->apws);
 		if (sup.plsepf) {
 			epfrt = stdout_psd_time_str(psd->epfrt,
-						     psd->epfr_fqv_ts & 0xf);
+			    NVME_PSD_EPFRTS(psd->epfr_fqv_ts));
 			epfvt = stdout_psd_time_str(psd->epfvt,
-						     psd->epfvts & 0xf);
+			    NVME_PSD_EPFVTS(psd->epfvts));
 		}
 		if (sup.plsfq)
 			fqvt = stdout_psd_time_str(psd->fqvt,
-						    psd->epfr_fqv_ts >> 4);
+			    NVME_PSD_FQVTS(psd->epfr_fqv_ts));
 		max_bandwidth = stdout_bandwidth_and_scale_str(psd->mbw,
 								psd->mbws);
 		enlat = stdout_psd_latency_str(le32_to_cpu(psd->enlat));
@@ -2559,7 +2588,7 @@ static struct shr_table *stdout_id_ctrl_ps_table(struct nvme_id_ctrl *ctrl)
 		shr_table_set_value_int(t, ++col, row, i, RIGHT);
 		shr_table_set_value_str(t, ++col, row, mp ?: "-", RIGHT);
 		shr_table_set_value_str(t, ++col, row,
-				psd->flags & NVME_PSD_FLAGS_NOPS ?
+				NVME_PSD_FLAGS_NOPS(psd->flags) ?
 				"non-operational" : "operational",
 				LEFT);
 		shr_table_set_value_str(t, ++col, row, enlat ?: "-", RIGHT);
@@ -2964,10 +2993,10 @@ static void stdout_id_ctrl_nvm_attr(struct nvme_id_ctrl *ctrl,
 
 	stdout_kv_add(t, "acwu", "%d", le16_to_cpu(ctrl->acwu));
 
-	row = stdout_kv_add(t, "ocfs", "%#x", le16_to_cpu(ctrl->ocfs));
+	row = stdout_kv_add(t, "cdfs", "%#x", le16_to_cpu(ctrl->cdfs));
 	if (verbose)
 		shr_table_set_row_subtable(t, row,
-				stdout_id_ctrl_ocfs_table(ctrl->ocfs));
+				stdout_id_ctrl_cdfs_table(ctrl->cdfs));
 
 	row = stdout_kv_add(t, "sgls", "%#x", le32_to_cpu(ctrl->sgls));
 	if (verbose)
@@ -3098,8 +3127,8 @@ static struct shr_table *stdout_id_ctrl_nvm_kpiocap_table(__u8 kpiocap)
 static struct shr_table *stdout_id_ctrl_nvm_aocs_table(__u16 aocs)
 {
 	struct shr_table *t;
-	__u16 rsvd = (aocs & 0xfffe) >> 1;
-	__u8 ralbas = aocs & 0x1;
+	__u16 rsvd = NVME_ID_CTRL_NVM_AOCS_RSVD1(aocs);
+	__u8 ralbas = NVME_ID_CTRL_NVM_AOCS_RALBAS(aocs);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -3190,11 +3219,11 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 static struct shr_table *stdout_nvm_id_ns_pic_table(__u8 pic)
 {
 	struct shr_table *t;
-	__u8 rsvd = (pic & 0xF0) >> 4;
-	__u8 qpifs = (pic & 0x8) >> 3;
-	__u8 stcrs = (pic & 0x4) >> 2;
-	__u8 pic_16bpistm = (pic & 0x2) >> 1;
-	__u8 pic_16bpists = pic & 0x1;
+	__u8 rsvd = NVME_NVM_PIC_RSVD4(pic);
+	__u8 qpifs = NVME_NVM_PIC_QPIFS(pic);
+	__u8 stcrs = NVME_NVM_PIC_STCRS(pic);
+	__u8 pic_16bpistm = NVME_NVM_PIC_PISTM16B(pic);
+	__u8 pic_16bpists = NVME_NVM_PIC_PITPS16B(pic);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -3220,8 +3249,8 @@ static struct shr_table *stdout_nvm_id_ns_pic_table(__u8 pic)
 static struct shr_table *stdout_nvm_id_ns_pifa_table(__u8 pifa)
 {
 	struct shr_table *t;
-	__u8 rsvd = (pifa & 0xF8) >> 3;
-	__u8 stmla = pifa & 0x7;
+	__u8 rsvd = NVME_NVM_PIFA_RSVD3(pifa);
+	__u8 stmla = NVME_NVM_PIFA_STMLA(pifa);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -3230,10 +3259,13 @@ static struct shr_table *stdout_nvm_id_ns_pifa_table(__u8 pifa)
 	if (rsvd)
 		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
 	stdout_bits_add(t, "[2:0]", stmla,
-			 "Storage Tag Masking Level Attribute : %s",
-			 stmla == 0 ? "Bit Granularity Masking" :
-			 stmla == 1 ? "Byte Granularity Masking" :
-			 stmla == 2 ? "Masking Not Supported" : "Reserved");
+			"Storage Tag Masking Level Attribute : %s",
+			stmla == NVME_NVM_PIFA_BIT_GRANULARITY_MASKING ?
+			"Bit Granularity Masking" :
+			stmla == NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING ?
+			"Byte Granularity Masking" :
+			stmla == NVME_NVM_PIFA_MASKING_NOT_SUPPORTED ?
+			"Masking Not Supported" : "Reserved");
 
 	return t;
 }
@@ -3260,7 +3292,7 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 			     bool cap_only)
 {
 	bool verbose = id_stdout_print_ops.flags & VERBOSE;
-	bool qpifs = (nvm_ns->pic & 0x8) >> 3;
+	bool qpifs = NVME_NVM_PIC_QPIFS(nvm_ns->pic);
 	struct shr_table *t;
 	__u32 elbaf;
 	__u8 lbaf;
@@ -3298,9 +3330,9 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 
 	for (i = 0; i < nvme_id_ns_nr_lbaf(ns); i++) {
 		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
-		qpif = (elbaf >> 9) & 0xF;
-		pif = (elbaf >> 7) & 0x3;
-		sts = elbaf & 0x7f;
+		qpif = NVME_NVM_ELBAF_QPIF(elbaf);
+		pif = NVME_NVM_ELBAF_PIF(elbaf);
+		sts = NVME_NVM_ELBAF_STS(elbaf);
 		if (verbose)
 			printf(
 			       "Extended LBA Format %2d : Qualified Protection Information Format: %s(%d) - Protection Information Format: %s(%d) - Storage Tag Size (MSB): %-2d %s\n",
@@ -3316,13 +3348,14 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	if (!t)
 		return;
 
-	if (ns->nsfeat & 0x20)
+	if (NVME_NS_NSFEAT_OPTPERF_LARGE(ns->nsfeat))
 		stdout_kv_add(t, "npdgl", "%#x", le32_to_cpu(nvm_ns->npdgl));
 
 	stdout_kv_add(t, "nprg", "%#x", le32_to_cpu(nvm_ns->nprg));
 	stdout_kv_add(t, "npra", "%#x", le32_to_cpu(nvm_ns->npra));
 	stdout_kv_add(t, "nors", "%#x", le32_to_cpu(nvm_ns->nors));
-	stdout_kv_add(t, "npdal", "%#x", le32_to_cpu(nvm_ns->npdal));
+	if (NVME_NS_NSFEAT_OPTPERF_LARGE(ns->nsfeat))
+		stdout_kv_add(t, "npdal", "%#x", le32_to_cpu(nvm_ns->npdal));
 	stdout_kv_add(t, "lbapss", "%#x", le32_to_cpu(nvm_ns->lbapss));
 	stdout_kv_add(t, "tlbaag", "%#x", le32_to_cpu(nvm_ns->tlbaag));
 
@@ -3769,8 +3802,8 @@ static void stdout_list_secondary_ctrl(
 		stdout_kv_add(t, "Primary Controller Identifier (PCID)",
 			      "%#.04x", le16_to_cpu(sc_entry[i].pcid));
 		stdout_kv_add(t, "Secondary Controller State (SCS)",
-			      "%#.04x (%s)", sc_entry[i].scs,
-			      state_desc[sc_entry[i].scs & 0x1]);
+		    "%#.04x (%s)", sc_entry[i].scs,
+		    state_desc[NVME_SECONDARY_CTRL_SCS_OLS(sc_entry[i].scs)]);
 		stdout_kv_add(t, "Virtual Function Number (VFN)",
 			      "%#.04x", le16_to_cpu(sc_entry[i].vfn));
 		stdout_kv_add(t, "Num VQ Flex Resources Assigned (NVQ)",

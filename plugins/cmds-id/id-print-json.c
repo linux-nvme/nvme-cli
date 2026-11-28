@@ -292,7 +292,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	obj_add_int(r, "icsvscc", ctrl->icsvscc);
 	obj_add_int(r, "nwpc", ctrl->nwpc);
 	obj_add_int(r, "acwu", le16_to_cpu(ctrl->acwu));
-	obj_add_int(r, "ocfs", le16_to_cpu(ctrl->ocfs));
+	obj_add_int(r, "cdfs", le16_to_cpu(ctrl->cdfs));
 	obj_add_uint(r, "sgls", le32_to_cpu(ctrl->sgls));
 	obj_add_uint(r, "mnan", le32_to_cpu(ctrl->mnan));
 	obj_add_uint128(r, "maxdna", maxdna);
