@@ -133,20 +133,25 @@ enum nvme_nvm_id_ns_pic {
 /**
  * enum nvme_nvm_id_ns_pifa - Protection Information Format Attribute
  * @NVME_NVM_PIFA_STMLA_SHIFT:			Shift amount to get Storage Tag Masking Level Attribute
+ * @NVME_NVM_PIFA_RSVD3_SHIFT:			Shift amount to get Reserved
  * @NVME_NVM_PIFA_STMLA_MASK:			Mask to get Storage Tag Masking Level Attribute
+ * @NVME_NVM_PIFA_RSVD3_MASK:			Mask to get Reserved
  * @NVME_NVM_PIFA_BIT_GRANULARITY_MASKING:	Bit Granularity Masking
  * @NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING:	Byte Granularity Masking
  * @NVME_NVM_PIFA_MASKING_NOT_SUPPORTED:	Masking Not Supported
  */
 enum nvme_nvm_id_ns_pifa {
 	NVME_NVM_PIFA_STMLA_SHIFT		= 0,
-	NVME_NVM_PIFA_STMLA_MASK		= 0xf,
+	NVME_NVM_PIFA_RSVD3_SHIFT		= 3,
+	NVME_NVM_PIFA_STMLA_MASK		= 0x7,
+	NVME_NVM_PIFA_RSVD3_MASK		= 0x1f,
 	NVME_NVM_PIFA_BIT_GRANULARITY_MASKING	= 0x0,
 	NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING	= 0x1,
 	NVME_NVM_PIFA_MASKING_NOT_SUPPORTED	= 0x2,
 };
 
 #define NVME_NVM_PIFA_STMLA(pifa)	NVME_GET(pifa, NVM_PIFA_STMLA)
+#define NVME_NVM_PIFA_RSVD3(pifa)	NVME_GET(pifa, NVM_PIFA_RSVD3)
 
 /**
  * struct nvme_nvm_id_ns - NVME Command Set I/O Command Set Specific Identify Namespace Data Structure

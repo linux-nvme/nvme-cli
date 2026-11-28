@@ -3247,8 +3247,8 @@ static struct shr_table *stdout_nvm_id_ns_pic_table(__u8 pic)
 static struct shr_table *stdout_nvm_id_ns_pifa_table(__u8 pifa)
 {
 	struct shr_table *t;
-	__u8 rsvd = (pifa & 0xF8) >> 3;
-	__u8 stmla = pifa & 0x7;
+	__u8 rsvd = NVME_NVM_PIFA_RSVD3(pifa);
+	__u8 stmla = NVME_NVM_PIFA_STMLA(pifa);
 
 	t = stdout_bits_table_create();
 	if (!t)
@@ -3257,10 +3257,13 @@ static struct shr_table *stdout_nvm_id_ns_pifa_table(__u8 pifa)
 	if (rsvd)
 		stdout_bits_add(t, "[7:3]", rsvd, "Reserved");
 	stdout_bits_add(t, "[2:0]", stmla,
-			 "Storage Tag Masking Level Attribute : %s",
-			 stmla == 0 ? "Bit Granularity Masking" :
-			 stmla == 1 ? "Byte Granularity Masking" :
-			 stmla == 2 ? "Masking Not Supported" : "Reserved");
+			"Storage Tag Masking Level Attribute : %s",
+			stmla == NVME_NVM_PIFA_BIT_GRANULARITY_MASKING ?
+			"Bit Granularity Masking" :
+			stmla == NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING ?
+			"Byte Granularity Masking" :
+			stmla == NVME_NVM_PIFA_MASKING_NOT_SUPPORTED ?
+			"Masking Not Supported" : "Reserved");
 
 	return t;
 }
